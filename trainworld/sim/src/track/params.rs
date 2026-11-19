@@ -508,6 +508,85 @@ pub const PERIOD_PLACE: [[usize; 5]; 3] = [[0, 0, 0, 1, 2], [0, 3, 0, 1, 2], [0,
 pub const PERIOD_SLOT_N: [[usize; 5]; 3] = [[0, 0, 0, 3, 4], [0, 1, 0, 3, 4], [0, 1, 2, 3, 4]];
 /// A line's rows in the day's order, as places.
 pub const ROW_PLACES: [&[usize]; 3] = [&[0, 1, 2], &[0, 3, 1, 2], &[0, 3, 4, 1, 2]];
+/// T-3542: the hours a line's day splits at (the cuts), local whole hours: where its morning (rush,
+/// high), midday, afternoon, evening and night stretches start, in that order (`PERIOD_HOURS`'s).
+/// Stretch `i` runs from `cuts[i]` to `cuts[i + 1]` (the night to the next morning's, 24 h on). Each
+/// stretch is at least `STRETCH_MIN_H`, the first starts in 0-23 and the night reaches past
+/// midnight only as far as the morning leaves it (`cuts_ok`). Stretch `i`'s row is
+/// `PERIOD_PLACE[n][i]`, so a line of three rows only shows cuts 0, 3 and 4 (high, medium, low);
+/// the other two stay inside high, at least two hours apart.
+pub type Cuts = [u8; 5];
+pub const CUTS_DEFAULT: Cuts = [6, 10, 16, 20, 24];
+/// The shortest stretch a line's hours may have (Anita, 2026-11-17: shortest row 2 hours).
+pub const STRETCH_MIN_H: u8 = 2;
+/// Whether `c` is a line's hours: whole hours in order, every stretch at least `STRETCH_MIN_H`.
+pub fn cuts_ok(c: Cuts) -> bool {
+    c[0] < 24 && (0..5).all(|i| {
+        let next = if i == 4 { c[0] as u32 + 24 } else { c[i + 1] as u32 };
+        next >= c[i] as u32 + STRETCH_MIN_H as u32
+    })
+}
+/// Stretch `i`'s hours (start, end) by `c`, the end past the start (night's past 24).
+pub fn stretch_hours(c: Cuts, i: usize) -> (u32, u32) {
+    (c[i] as u32, if i == 4 { c[0] as u32 + 24 } else { c[i + 1] as u32 })
+}
+/// One piece of a line's local day: hours `a..b` (0-24) inside one demand period `q` and one
+/// stretch of the line's own hours, run by place `k` (`params::places`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub struct DayPiece {
+    pub a: u8,
+    pub b: u8,
+    pub q: u8,
+    pub k: u8,
+}
+/// The most pieces a day splits into (five periods cut at five more hours, plus midnight).
+pub const PIECES_MAX: usize = 12;
+/// A line's local day in pieces (`DayPiece`), from midnight, by its hours `c` and rows `n` (3-5): cut
+/// at every period bound and every cut, joined where the period and the place stay the same. At
+/// the default hours the five periods (night, morning, midday, afternoon, evening).
+pub fn day_pieces(c: Cuts, n: usize) -> ([DayPiece; PIECES_MAX], usize) {
+    let mut at: Vec<u8> = vec![0, 24];
+    at.extend(PERIOD_HOURS.iter().map(|p| p.0 as u8));
+    at.extend(c.iter().map(|&h| h % 24));
+    at.sort_unstable();
+    at.dedup();
+    let period = |h: u8| PERIOD_HOURS.iter().position(|&(a, b)| (h as f64) >= a && (h as f64) < b).unwrap_or(0);
+    // the stretch in force at local hour h
+    let stretch = |h: u8| (0..5).find(|&i| { let (a, b) = stretch_hours(c, i); let h = h as u32; (a..b).contains(&h) || (a..b).contains(&(h + 24)) }).unwrap_or(0);
+    let mut out = [DayPiece::default(); PIECES_MAX];
+    let mut m = 0;
+    for w in at.windows(2) {
+        let (q, k) = (period(w[0]) as u8, PERIOD_PLACE[n - ROWS_MIN][stretch(w[0])] as u8);
+        if m > 0 && out[m - 1].q == q && out[m - 1].k == k {
+            out[m - 1].b = w[1];
+        } else {
+            out[m] = DayPiece { a: w[0], b: w[1], q, k };
+            m += 1;
+        }
+    }
+    (out, m)
+}
+/// Half the shortest row of a line's hours `c` with `n` rows, seconds: the most its departures may
+/// lead a stretch's start (`service::LEAD_MAX_S` at the default hours, four-hour rows). A row is the
+/// stretches next to each other with one place (high's three on a line of three rows).
+pub fn shortest_row_h(c: Cuts, n: usize) -> u32 {
+    let p = PERIOD_PLACE[n - ROWS_MIN];
+    let mut best = 24;
+    for i in 0..5 {
+        // a row's first stretch: its place differs from the stretch before's
+        if p[i] == p[(i + 4) % 5] { continue; }
+        let mut h = 0;
+        let mut j = i;
+        loop {
+            let (a, b) = stretch_hours(c, j);
+            h += b - a;
+            j = (j + 1) % 5;
+            if j == i || p[j] != p[i] { break; }
+        }
+        best = best.min(h);
+    }
+    best
+}
 /// Three rows' values and the midday and afternoon ones as the five places.
 pub fn places<T: Copy>(m: [T; ROWS], x: [T; 2]) -> [T; 5] {
     [m[0], m[1], m[2], x[0], x[1]]

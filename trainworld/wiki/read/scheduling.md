@@ -2,7 +2,7 @@
 
 You tell a line how many trains to run, and the game works out the timetable.
 
-**Three levels.** A line has a train count for high, medium and low demand. High runs in the morning peak, midday and evening peak, medium in the evening and low at night ([rush hours](rush-hours.md)), every day. A new line starts at none at every level, so you set each one. A line given trains at high alone stops running when high ends.
+**Three levels.** A line has a train count for high, medium and low demand. High runs in the morning peak, midday and evening peak, medium in the evening and low at night ([rush hours](rush-hours.md)), every day, at the hours in the schedule window. A new line starts at none at every level, so you set each one. A line given trains at high alone stops running when high ends.
 
 **Counts or headways.** A count is a whole number of trains on the whole line, both directions together. The game turns it into a gap between trains from the round trip: running time, dwell at the stops, the turnaround at the ends and any waiting. A line in headway mode keeps a gap instead, from one minute up to 4 hours, and the game works out how many trains that takes. Zero means no trains.
 

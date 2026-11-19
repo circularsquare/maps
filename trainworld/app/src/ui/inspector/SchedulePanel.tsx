@@ -223,7 +223,7 @@ function LineBody({ l, st }: { l: LineInput; st: LineStats }) {
   return (
     <div class="sp-body">
       <div class="sp-left">
-        <Schedule l={l} st={st} period={periodAt(lineSeconds(st))} limits={limits} crowd={periods} label={t("schedulePanel.setBy")} weekends above={<Periods l={l} st={st} />} />
+        <Schedule l={l} st={st} period={periodAt(lineSeconds(st))} limits={limits} crowd={periods} label={t("schedulePanel.setBy")} weekends hours above={<Periods l={l} st={st} />} />
         <Board key={l.num} l={l} st={st} />
       </div>
       <div class="sp-right">

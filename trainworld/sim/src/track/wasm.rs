@@ -193,18 +193,21 @@ const ERAS_TAG_1: &[u8; 4] = b"ERA1";
 /// T-3542: `ERA3` eras carry every slot and each period's slot, written only where some era runs
 /// other slots than three rows' (`Service::eras_wide`).
 const ERAS_TAG_3: &[u8; 4] = b"ERA3";
+/// T-3542: `ERA4` eras are `ERA3`'s with the pieces of moved hours (`Service::eras_hours`).
+const ERAS_TAG_4: &[u8; 4] = b"ERA4";
 
 /// A save's network bytes and its eras, if it has any, whether they carry phases and whether
 /// every slot (`ERA3`).
-fn split_eras(bytes: &[u8]) -> (&[u8], Option<(&[u8], bool, bool)>) {
+fn split_eras(bytes: &[u8]) -> (&[u8], Option<(&[u8], bool, bool, bool)>) {
     let n = bytes.len();
-    if n < 8 || ![ERAS_TAG, ERAS_TAG_1, ERAS_TAG_3].iter().any(|t| &bytes[n - 4..] == *t) {
+    if n < 8 || ![ERAS_TAG, ERAS_TAG_1, ERAS_TAG_3, ERAS_TAG_4].iter().any(|t| &bytes[n - 4..] == *t) {
         return (bytes, None);
     }
-    let (phases, wide) = (&bytes[n - 4..] != ERAS_TAG_1, &bytes[n - 4..] == ERAS_TAG_3);
+    let (phases, hours) = (&bytes[n - 4..] != ERAS_TAG_1, &bytes[n - 4..] == ERAS_TAG_4);
+    let wide = hours || &bytes[n - 4..] == ERAS_TAG_3;
     let len = u32::from_le_bytes(bytes[n - 8..n - 4].try_into().unwrap()) as usize;
     match (n - 8).checked_sub(len) {
-        Some(start) => (&bytes[..start], Some((&bytes[start..n - 8], phases, wide))),
+        Some(start) => (&bytes[..start], Some((&bytes[start..n - 8], phases, wide, hours))),
         None => (bytes, None),
     }
 }
@@ -777,8 +780,8 @@ impl TrackApi {
                     self.w.reload();
                 }
                 // a save made while trains changed over loads with them where they were (T-1071)
-                if let Some((e, phases, wide)) = eras {
-                    if self.w.svc.decode_eras(e, phases, wide).is_err() {
+                if let Some((e, phases, wide, hours)) = eras {
+                    if self.w.svc.decode_eras(e, phases, wide, hours).is_err() {
                         self.w.svc.eras.clear();
                         self.w.svc.shifts.clear();
                     }
@@ -863,7 +866,7 @@ impl TrackApi {
             let n = eras.len() as u32;
             out.extend(eras);
             out.extend(n.to_le_bytes());
-            out.extend_from_slice(if self.w.svc.eras_wide(&self.w.net) { ERAS_TAG_3 } else { ERAS_TAG });
+            out.extend_from_slice(if self.w.svc.eras_hours(&self.w.net) { ERAS_TAG_4 } else if self.w.svc.eras_wide(&self.w.net) { ERAS_TAG_3 } else { ERAS_TAG });
         }
         out
     }

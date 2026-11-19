@@ -26,7 +26,7 @@ import { repeatedEdge } from "../../game/repeatTrack";
 import { runsAgainstOneWay } from "../../game/oneWay";
 import { gameStamp } from "../../workers/clockClient";
 import { noteHeadwayLimits, edit, linesAt, say, stationNames, stationsById, stationsByNum, stepLineCars, pendingCars, world, linesById, linesByNum, pairStats, queueStopEdit, rowCount, fleetOf } from "../../game/world";
-import { periodAt, rowOfPeriod } from "../../game/periods";
+import { CUTS_DEFAULT, periodAt, rowAt } from "../../game/periods";
 import { live } from "../../map/live";
 import { setListHot } from "../../map/hovered";
 import { Alert, Check, Chip, Icon, Row, Segmented, shakeEl, Stepper, SwapLabel } from "../widgets";
@@ -669,7 +669,8 @@ function RailLineInspector({ id }: { id: string }) {
   // T-3542: a line of four or five rows reads its row now (`lev` indexes its rows' figures) and asks by period
   const own = w?.lineStats[id], rv: Vehicle = own ? vehicleOf(own) : "train";
   const period = periodAt(lineSeconds(own)), byRow = !!own?.rows;
-  const lev = byRow ? rowOfPeriod(rowCount(own), period) : DEMAND_INDEX[now];
+  // (its row by its own hours; the delays asked by the period now, whose slot its trains run in)
+  const lev = rowAt(own?.hours ?? CUTS_DEFAULT, byRow ? rowCount(own) : 3, lineSeconds(own));
   const at = byRow ? { period } : {};
   // where it loses time to busy track, asked again after every edit and when the level turns
   const spots = useClockQuery(l ? { what: "lineDelays", line: l.num, level: DEMAND_INDEX[now], ...at } : null, [l?.num, w?.version, lev, rv, byRow], (d) => spotsFrom(d, rv)) ?? NO_SPOTS;

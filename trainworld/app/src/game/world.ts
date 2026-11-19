@@ -127,7 +127,7 @@ export async function edit(op: EditOp, quiet = false, silent = false, early: boo
   return a;
 }
 
-const TRAIN_OPS = new Set(["setStops", "insertStop", "oneWayStop", "dropStop", "endLineAt", "stopPassed", "orderStops", "sortStops", "turnEnd", "openLoop", "setTrainCount", "setHeadway", "weekendShare", "weekendCounts", "weekendShareAll", "setPeriods", "setRowTrains", "setRowHeadways", "rowWeekend", "lineCars", "copyLine", "undo", "redo"]);
+const TRAIN_OPS = new Set(["setStops", "insertStop", "oneWayStop", "dropStop", "endLineAt", "stopPassed", "orderStops", "sortStops", "turnEnd", "openLoop", "setTrainCount", "setHeadway", "weekendShare", "weekendCounts", "weekendShareAll", "setPeriods", "setHours", "setRowTrains", "setRowHeadways", "rowWeekend", "lineCars", "copyLine", "undo", "redo"]);
 const BUILD_OPS = new Set(["route", "construct", "constructAll", "constructLine", "addStation", "crossover", "doubleUp", "stationUpgrade", "rebuild"]);
 /** What a refused-for-money edit would have paid for: line edits cost trains only, track edits construction. */
 function buysOf(op: EditOp): Buys | undefined {
@@ -856,6 +856,11 @@ export function typeRowWeekendHeadway(id: LineId, row: number, minutes: number, 
 /** Set the game's rows (`line` undefined) or line `line`'s own (0: the game's). */
 export function setPeriods(rows: number, line?: LineId) {
   void edit(line === undefined ? { op: "setPeriods", rows } : { op: "setPeriods", line: num(line), rows });
+}
+
+/** T-3542: set the game's hours (`line` undefined) or line `line`'s own (five, game/periods.ts `Cuts`). */
+export function setHours(cuts: number[], line?: LineId) {
+  void edit(line === undefined ? { op: "setHours", cuts } : { op: "setHours", line: num(line), cuts });
 }
 
 /** The fare curve for the whole network (T-883, game/fareCurve.ts): its nodes, km and US$. */

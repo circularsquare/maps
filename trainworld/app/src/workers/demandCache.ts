@@ -81,7 +81,7 @@ function withoutEras(track: Uint8Array): Uint8Array {
   const n = track.length;
   if (n < 8) return track;
   const tag = String.fromCharCode(...track.subarray(n - 4));
-  if (tag !== "ERA2" && tag !== "ERA1" && tag !== "ERA3") return track;
+  if (tag !== "ERA2" && tag !== "ERA1" && tag !== "ERA3" && tag !== "ERA4") return track;
   const len = new DataView(track.buffer, track.byteOffset, n).getUint32(n - 8, true);
   return len <= n - 8 ? track.subarray(0, n - 8 - len) : track;
 }

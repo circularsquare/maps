@@ -1618,6 +1618,7 @@ function buildState(): ClockState {
     markers,
     fullTrack,
     periods: a.game_periods(),
+    hours: Array.from(a.game_hours()),
     crossings,
     conflicts,
     singles,
@@ -3129,7 +3130,7 @@ function buildSnapshot(): NetworkSnapshot {
       }
     }
     lines.push({
-      id, name: a.line_name(id), stops: [...a.line_run_stops(id)], ...(back.length ? { backStops: [...back] } : {}), tph: Array.from(a.line_tph_by_period(id)), hopS, dwellS,
+      id, name: a.line_name(id), stops: [...a.line_run_stops(id)], ...(back.length ? { backStops: [...back] } : {}), tph: Array.from(a.line_demand_tph(id)), hopS, dwellS,
       hopKm: [0, 1].map((run) => { const s = a.line_stop_s(id, run); return Array.from({ length: s.length - 1 }, (_, k) => (s[k + 1] - s[k]) / 1000); }),
       ...(!bus && !ferry && a.line_fast(id) ? { fast: true } : {}),
       ...(ferry ? { ferry: true } : {}),
@@ -3652,6 +3653,8 @@ function applyInner(op: EditOp): Applied {
       return { r: a.set_weekend_share_all(op.share) };
     case "setPeriods":
       return { r: op.line === undefined ? a.set_game_periods(op.rows) : a.set_line_periods(op.line, op.rows) };
+    case "setHours":
+      return { r: op.line === undefined ? a.set_game_hours(new Uint32Array(op.cuts)) : a.set_line_hours(op.line, new Uint32Array(op.cuts)) };
     case "setRowTrains":
       return { r: a.set_line_row_trains(op.line, Uint32Array.from(op.trains)) };
     case "setRowHeadways":
@@ -4264,7 +4267,7 @@ async function handleMessage(msg: ToClock) {
     const bpRemove = msg.op.op === "removeEdge" && posted.edges.get(msg.op.edge)?.built === false;
     // T-1071: a train count takes effect a moment ahead, once its trips are on screen
     // T-1073: so is an undo or redo of one
-    const service = msg.op.op === "setTrainCount" || msg.op.op === "setHeadway" || msg.op.op === "weekendShare" || msg.op.op === "weekendCounts" || msg.op.op === "weekendShareAll" || msg.op.op === "setPeriods" || msg.op.op === "setRowTrains" || msg.op.op === "setRowHeadways" || msg.op.op === "rowWeekend"
+    const service = msg.op.op === "setTrainCount" || msg.op.op === "setHeadway" || msg.op.op === "weekendShare" || msg.op.op === "weekendCounts" || msg.op.op === "weekendShareAll" || msg.op.op === "setPeriods" || msg.op.op === "setHours" || msg.op.op === "setRowTrains" || msg.op.op === "setRowHeadways" || msg.op.op === "rowWeekend"
       || ((msg.op.op === "undo" || msg.op.op === "redo") && api.step_is_service(msg.op.op === "redo"));
     if (service) {
       api.set_now(gameNow());

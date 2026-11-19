@@ -1349,7 +1349,12 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   line" under it gives the line its own (at the rows it has), shown as a "This line" 3 / 4 / 5 under the game's and a
   "Same as game" button in the same place. Three rows are High, Medium, Low under "Demand" (as before); four are
   Rush (06:00-10:00 and 16:00-20:00), Midday, Evening, Night and five Morning, Midday, Afternoon, Evening, Night,
-  under "Period", each name's hover its hours ("Rush: 06:00-10:00, 16:00-20:00"). A switch to fewer rows (the game's,
+  under "Period", each name's hover its hours ("Rush: 06:00-10:00, 16:00-20:00"). **Hours** (stage 2): a column
+  "Hours" after the names in the Weekdays rows, each row's hours in a box ("6-10", rush "6-10, 16-20", an evening
+  past midnight "20-1"), typed in whole hours; the game's, or the line's own once it has its own periods. Hours that
+  leave a row under two hours (high on three rows under six) are refused: the box shakes with the refusal's knock
+  and a red line under the row says "2 hours at least" for five seconds. The row now (bold) and the names' hovers
+  follow the hours; the window's left side is 330 px wide. A switch to fewer rows (the game's,
   this line's, or Same as game) first asks "Confirm?" with the rows it joins and what they run: "Morning, midday and
   afternoon will run 26 trains, the most of the three" (a headway line: "will run every 4 min, the shortest of the
   three"; the game's: "... will run the most trains of the three on every line without its own periods"), yes "Use 3

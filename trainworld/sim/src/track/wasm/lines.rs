@@ -6,6 +6,12 @@ use crate::track::net::Extra;
 /// T-2987: the lowest speed limit a rail line can be given, km/h.
 const LINE_LIMIT_MIN: u32 = 40;
 
+/// T-3542: five hours as `params::Cuts` (None for another count or an hour past 255).
+fn cuts_of(c: &[u32]) -> Option<Cuts> {
+    let v: Vec<u8> = c.iter().map(|&h| u8::try_from(h).ok()).collect::<Option<_>>()?;
+    v.try_into().ok()
+}
+
 #[wasm_bindgen]
 impl TrackApi {
     // ---- lines
@@ -817,6 +823,51 @@ impl TrackApi {
         net.period_slot().iter().map(|&s| t[s]).collect()
     }
 
+    /// T-3542: line `id`'s trains an hour in each of the five periods as demand reads them
+    /// (`Service::demand_tph`: in a period its hours share between rows, the rate of the mean
+    /// headway its riders meet), weekdays.
+    pub fn line_demand_tph(&self, id: u32) -> Vec<f32> {
+        if !self.w.net.line_ok(id) { return vec![] }
+        self.w.svc.demand_tph(&self.w.net, id as usize).to_vec()
+    }
+    /// T-3542: the hours the lines following the game's split their day at (`params::Cuts`: where
+    /// the morning, midday, afternoon, evening and night start, local whole hours, the later ones
+    /// past 24 where they reach past midnight).
+    pub fn game_hours(&self) -> Vec<u32> {
+        self.w.net.hours_default.iter().map(|&c| c as u32).collect()
+    }
+    /// T-3542: the hours line `id` splits its day at (its own, else the game's), empty for no line.
+    pub fn line_hours(&self, id: u32) -> Vec<u32> {
+        if !self.w.net.line_ok(id) { return vec![] }
+        self.w.net.hours(id as usize).iter().map(|&c| c as u32).collect()
+    }
+    /// T-3542: line `id`'s own hours, empty where it follows the game's.
+    pub fn line_hours_own(&self, id: u32) -> Vec<u32> {
+        let net = &self.w.net;
+        match net.line_x.get(id as usize).filter(|_| net.line_ok(id) && net.line_rows[id as usize] != 0).map(|x| x.hours) {
+            Some(c) if c != [0; 5] => c.iter().map(|&c| c as u32).collect(),
+            _ => vec![],
+        }
+    }
+    /// T-3542: set the game's hours (five, as `game_hours`), one undoable edit. Refused unless
+    /// every stretch is at least two hours (`params::cuts_ok`).
+    pub fn set_game_hours(&mut self, cuts: Vec<u32>) -> u32 {
+        match cuts_of(&cuts) {
+            Some(c) if cuts_ok(c) => if c == self.w.net.hours_default { 0 } else { self.run(Op::Hours { line: None, cuts: c }) },
+            _ => self.refuse(Issue::LineSchedule { line: u32::MAX }),
+        }
+    }
+    /// T-3542: set line `id`'s own hours as `set_game_hours` (empty: the game's). A bus or ferry
+    /// line keeps the default hours.
+    pub fn set_line_hours(&mut self, id: u32, cuts: Vec<u32>) -> u32 {
+        let net = &self.w.net;
+        if !net.line_ok(id) || net.is_twin(id) { return self.refuse(Issue::NoSuchLine { line: id }) }
+        let c = if cuts.is_empty() { Some([0; 5]) } else { cuts_of(&cuts).filter(|&c| cuts_ok(c)) };
+        match c {
+            Some(c) if !net.is_bus(id) && !net.is_ferry(id) => if c == net.line_x[id as usize].hours { 0 } else { self.run(Op::Hours { line: Some(id), cuts: c }) },
+            _ => self.refuse(Issue::LineSchedule { line: id }),
+        }
+    }
     /// T-3542: line `id`'s trains an hour in demand period `period` (0-4) on kind of day `row` (0
     /// weekdays, 1 weekends), its slot's (`line_tph_on`).
     pub fn line_tph_period_on(&self, id: u32, row: u32, period: u32) -> f32 {
@@ -834,18 +885,20 @@ impl TrackApi {
         if !net.line_ok(id) { return vec![] }
         let svc = self.w.svc.lines.get(l).filter(|s| s.ok);
         let twin = net.twin_line(id);
-        let rest = |s: usize| net.line_tph_on(l, WEEKEND, s) + twin.map_or(0.0, |t| net.line_tph_on(t as usize, WEEKEND, s));
         let placed = net.trains_of(l).unwrap_or([0; 5]);
         let mut out = vec![];
         for (k, slots) in net.row_slots(l) {
             let most = |f: &dyn Fn(usize) -> f64| slots.iter().map(|&s| f(s)).fold(f64::NEG_INFINITY, f64::max).max(0.0);
             let least = |f: &dyn Fn(usize) -> f64| slots.iter().map(|&s| f(s)).fold(f64::INFINITY, f64::min);
             match svc {
-                Some(s) => out.extend([most(&|x| s.round_trip[x]), most(&|x| s.trains[x] as f64), most(&|x| s.delay[x])]),
+                // (a slot its hours share with another row: its own trains, not the slot's fleet)
+                Some(s) => out.extend([most(&|x| s.round_trip[x]), most(&|x| if net.mixed(l, x).is_some() { placed[k] as f64 } else { s.trains[x] as f64 }), most(&|x| s.delay[x])]),
                 None => out.extend([0.0, placed[k] as f64, 0.0]),
             }
-            let tph = least(&|x| net.line_tph[l][x] as f64);
-            let rest = least(&|x| rest(x) as f64);
+            // T-3542: in a slot its hours share between rows, the row's own rate there
+            let trip = |x: usize| svc.map_or(0.0, |s| s.round_trip[x]);
+            let tph = least(&|x| net.place_tph(l, x, k, net.line_tph[l][x], trip(x)) as f64);
+            let rest = least(&|x| (net.place_tph(l, x, k, net.line_tph_on(l, WEEKEND, x), trip(x)) + twin.map_or(0.0, |t| net.place_tph(t as usize, x, k, net.line_tph_on(t as usize, WEEKEND, x), trip(x)))) as f64);
             out.extend([if tph.is_finite() { tph } else { 0.0 }, if rest.is_finite() { rest } else { 0.0 }]);
         }
         out

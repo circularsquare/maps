@@ -44,6 +44,12 @@ fn figures(a: &TrackApi, lines: &[u32]) -> String {
             }
         }
     }
+    // T-3542: what demand reads per period (`TW_DEMAND=1`; the slots' rates and the riders' mean)
+    if std::env::var("TW_DEMAND").is_ok() {
+        for &l in lines {
+            s += &format!("period {l} {:?}\ndemand {l} {:?}\nhours {l} {:?}\n", a.line_tph_by_period(l), a.line_demand_tph(l), a.line_hours(l));
+        }
+    }
     let meta = a.profile_meta();
     for day in [2.0, 6.0] {
         for h in 0..24 {
@@ -132,6 +138,37 @@ fn main() {
         let t = Instant::now();
         let r = a.set_line_periods(best, p);
         eprintln!("periods {p} (line {best}) {:.1} ms r={r}, slots {:?}", t.elapsed().as_secs_f64() * 1e3, a.period_slots());
+    }
+    // T-3542: `TW_HOURS=<five hours>` sets the game's hours (timed, not in the mean);
+    // `TW_HOURS_LINE=<five hours>` the busiest line's own, on five rows of its own
+    let cuts = |v: &str| -> Vec<u32> { v.split(',').map(|x| x.trim().parse().unwrap()).collect() };
+    if let Ok(v) = std::env::var("TW_HOURS") {
+        let t = Instant::now();
+        let r = a.set_game_hours(cuts(&v));
+        eprintln!("hours {v} (game) {:.1} ms r={r}", t.elapsed().as_secs_f64() * 1e3);
+    }
+    if let Ok(v) = std::env::var("TW_HOURS_LINE") {
+        a.set_line_periods(best, 5);
+        let t = Instant::now();
+        let r = a.set_line_hours(best, cuts(&v));
+        eprintln!("hours {v} (line {best}) {:.1} ms r={r}", t.elapsed().as_secs_f64() * 1e3);
+    }
+    // T-3542: `TW_HOURS_CHECK=<from h>,<to h>`: per line, departures from its first stop in that local
+    // hour and in 7-8, a weekday, where the first are more (a borrowed hour outrunning the peak)
+    if let Ok(v) = std::env::var("TW_HOURS_CHECK") {
+        let h = cuts(&v);
+        let (mut more, mut seen) = (0, 0);
+        for &l in &lines {
+            let Some(&stop) = a.line_stops(l).first() else { continue };
+            let n = |from: f64, to: f64| { let s = a.line_shift(l); a.station_departures(l, stop, 3.0 * 86400.0 + from * 3600.0 - s, 3.0 * 86400.0 + to * 3600.0 - s).len() / 3 };
+            let (x, peak) = (n(h[0] as f64, h[1] as f64), n(7.0, 8.0));
+            seen += 1;
+            if x > peak {
+                more += 1;
+                eprintln!("line {l} {}: {x} departures {}-{} against {peak} in 7-8", a.line_name(l), h[0], h[1]);
+            }
+        }
+        eprintln!("hours check: {more} of {seen} lines leave more often in {}-{} than in 7-8", h[0], h[1]);
     }
     let mut all = vec![];
     all.push(time(&mut a, "headway 300/600/1200", &|a| a.set_auto_headway(best, 300, 600, 1200)));

@@ -8,7 +8,7 @@ use super::world::{Op, TrackWorld};
 
 /// A synthetic network with shared track, two of its lines switched to headways and one line's
 /// weekends at 70%, so the settle, the pacing, the spacing and the weekend settle all run.
-fn busy(slots: Option<[usize; 5]>) -> TrackWorld {
+pub(super) fn busy(slots: Option<[usize; 5]>) -> TrackWorld {
     let mut net: Network = synth(400.0, 90, 14, 11);
     if let Some(p) = slots {
         // the lines were set under the three-row slots: each row's rate into its slots again
@@ -87,12 +87,12 @@ fn t3542_five_slots_settle_as_three() {
 }
 
 /// The lines that run (a line in `busy`'s order).
-fn running(w: &TrackWorld) -> Vec<u32> {
+pub(super) fn running(w: &TrackWorld) -> Vec<u32> {
     (0..w.net.line_count() as u32).filter(|&l| w.svc.lines[l as usize].ok && w.net.line_trains[l as usize].is_some()).collect()
 }
 
 /// Everything a save and its load keep of the service, to the bit.
-fn kept(w: &TrackWorld) -> (Vec<u8>, Vec<Vec<u32>>, Vec<(u32, usize, u32, u64, u32)>) {
+pub(super) fn kept(w: &TrackWorld) -> (Vec<u8>, Vec<Vec<u32>>, Vec<(u32, usize, u32, u64, u32)>) {
     let rates = (0..w.net.line_count()).map(|l| w.net.line_tph[l].iter().chain(&w.net.line_tph_rest[l]).map(|x| x.to_bits()).collect()).collect();
     let mut k = w.net.settle_kept.clone();
     k.sort_unstable();

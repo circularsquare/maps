@@ -1139,7 +1139,7 @@ pub fn build(net: &Network, lines: &[LineSvc]) -> Capacity {
 /// runs over has no train to keep the margin from, so it takes the track for its transit alone;
 /// with two or more trains, or another line on the track, the margin counts.
 fn occ_at(net: &Network, us: &[User], single: bool, u: &User, lev: usize) -> f64 {
-    let lone = single && net.line_trains[u.line as usize].is_some() && net.trains_at(u.line as usize, lev) <= 1 && us.iter().all(|x| x.line == u.line);
+    let lone = single && net.line_trains[u.line as usize].is_some() && net.trains_most(u.line as usize, lev) <= 1 && us.iter().all(|x| x.line == u.line);
     if lone { (u.occ - SINGLE_TRACK_MARGIN_S).max(0.0) } else { u.occ }
 }
 

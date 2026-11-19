@@ -297,6 +297,8 @@ pub fn span_key(ls: &LineSvc, lat: &Lattice) -> u64 {
         add(lat.phase[lev].to_bits());
     }
     add(lat.lead.to_bits());
+    // T-3542: moved hours (nothing at the default hours, so their keys stay as they were)
+    for v in lat.hours.words() { add(v); }
     for r in 0..2 {
         for (k, _) in ls.runs[r].pass.iter().enumerate().filter(|x| *x.1) {
             add(k as u64 | 1 << 40);

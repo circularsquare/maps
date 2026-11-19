@@ -263,7 +263,7 @@ svg .stroke2 { stroke-width: 2; }
 .sp-title .sp-mode { margin-left: 14px; }
 .sp-title .sp-close { margin-left: auto; }
 .sp-body { display: flex; gap: 28px; align-items: flex-start; }
-.sp-left { flex: 0 0 270px; min-width: 0; }
+.sp-left { flex: 0 0 330px; min-width: 0; }
 .sp-left .h:first-child { margin-top: 6px; }
 .sp-left .h.set-by { font-weight: 400; color: var(--muted); align-items: center; }
 .sp-left .h.set-by .right { margin-left: 12px; color: var(--text); }
@@ -710,6 +710,14 @@ table.sched td:first-child { width: 100%; max-width: 0; overflow: hidden; text-o
 /* T-625, T-679: a count refused for cash, a headway shorter than the track allows; the headway a
    line runs at when its track holds it just over the one set (no readout of it); a refused edit's control shakes once */
 table.sched .bad { color: var(--bad); }
+/* T-3542: a row's hours, a typed box as a stepper's value */
+.sched-hours { display: inline-flex; vertical-align: middle; }
+.sched-hours .v { height: 24px; min-width: 52px; box-sizing: border-box; border: 1px solid var(--rule); border-radius: 0; margin: 0; padding: 0 5px;
+                  font: inherit; color: var(--text); background: var(--bg); font-variant-numeric: tabular-nums; }
+.sched-hours button.v { cursor: text; }
+.sched-hours button.v:hover { background: var(--shade); }
+.sched-hours input.v { width: 84px; text-align: center; border-color: var(--accent); outline: 0; }
+table.sched tr.sched-short td { padding: 0 0 4px; font-size: 12px; }
 .shake { display: inline-block; animation: shake 300ms linear !important; }
 @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-3px); } 40%, 80% { transform: translateX(3px); } }
 .stepper.shake { display: inline-flex; }

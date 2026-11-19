@@ -261,6 +261,9 @@ export interface LineStats {
   /** T-3542: the rows it sets its trains in (3, 4 or 5) and its own choice (0: the game's) */
   periods: number;
   periodsOwn: number;
+  /** T-3542: the hours it splits its day at (five, `Cuts`), and whether they are its own */
+  hours: number[];
+  hoursOwn: boolean;
   /** T-3542: a line of four or five rows: its figures per row in the day's order (`RowFigs`) */
   rows?: RowFigs;
   /** T-1464: a bus line's route and stops (its stops that are no station are in `nodes` only,
@@ -342,6 +345,8 @@ export interface WorldView {
   fullTrack: Map<EdgeId, { rho: number; tph: number }>[];
   /** T-3542: the rows (3, 4 or 5) lines following the game's set their trains in */
   periods: number;
+  /** T-3542: the hours lines following the game's split their day at (five, `Cuts`) */
+  hours: number[];
   save: Save;
   lineStats: Record<LineId, LineStats>;
   /** T-3333: each hidden twin's line (twin id to line id) */

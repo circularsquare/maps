@@ -509,6 +509,11 @@ impl Boarding {
             h.add(net.line_auto[l].map_or(0, |a| a[lev] as u64 + 1));
         }
         h.f(ls.shift);
+        // T-3542: moved hours, which cut the departures elsewhere (nothing at the default hours)
+        if net.mix(l).is_some() {
+            for c in net.hours(l) { h.add(c as u64 + 1000); }
+            h.add(net.rows(l) as u64);
+        }
         if ls.is_loop() {
             h.add(ls.kind as u64 + 100 + 10 * ls.one_way as u64);
         }
@@ -535,6 +540,7 @@ impl Boarding {
             }
             h.f(e.lat.lead);
             h.f(e.lat.shift);
+            for v in e.lat.hours.words() { h.add(v); }
         }
         for r in 0..2 {
             for lev in net.slots() {

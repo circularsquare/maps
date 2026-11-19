@@ -282,10 +282,54 @@ pub struct Lattice {
     /// T-3542: the slot serving each period (`Network::period_slot`): the periods of one slot
     /// join into one stretch of departures.
     pub period_slot: [usize; 5],
+    /// T-3542: the line's day in pieces where its hours differ from the default's (`n` 0: the
+    /// periods, as at the default hours).
+    pub hours: Hours,
+}
+
+/// T-3542: a line's day cut at its own hours as well as the periods' (`params::day_pieces`), each
+/// piece run by its row: in a slot of one row at the slot's rate, offset and phase; in a slot its
+/// hours share between rows (`Network::mixed`) at that row's own (`own`, per kind of day).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Hours {
+    pub n: u8,
+    pub pieces: [DayPiece; PIECES_MAX],
+    /// Per piece: whether it runs `own` rather than its slot's.
+    pub own_on: [bool; PIECES_MAX],
+    /// Per piece, weekdays then weekends: trains an hour, offset, phase.
+    pub own: [[(f32, f64, f64); DAY_ROWS]; PIECES_MAX],
+}
+
+impl Hours {
+    pub const NONE: Hours = Hours { n: 0, pieces: [DayPiece { a: 0, b: 0, q: 0, k: 0 }; PIECES_MAX], own_on: [false; PIECES_MAX], own: [[(0.0, 0.0, 0.0); DAY_ROWS]; PIECES_MAX] };
+    /// What a hash of a pattern reads of its hours (`span::span_key`): nothing at `n` 0.
+    pub fn words(&self) -> Vec<u64> {
+        let mut out = vec![];
+        for i in 0..self.n as usize {
+            let p = self.pieces[i];
+            out.push(1 << 48 | (p.a as u64) << 24 | (p.b as u64) << 16 | (p.q as u64) << 8 | p.k as u64);
+            if self.own_on[i] {
+                for &(t, o, ph) in &self.own[i] { out.extend([t.to_bits() as u64, o.to_bits(), ph.to_bits()]); }
+            }
+        }
+        out
+    }
+}
+
+/// One stretch of a day's departures (`day_stretches`): local hours, level (`Lattice::levels_on`),
+/// trains an hour, offset and phase.
+#[derive(Clone, Copy, Debug)]
+struct Stretch {
+    h0: f64,
+    h1: f64,
+    lev: usize,
+    tph: f32,
+    off: f64,
+    phase: f64,
 }
 
 impl Lattice {
-    pub const NONE: Lattice = Lattice { tph: [0.0; SLOTS], off: [0.0; SLOTS], lead: 0.0, shift: 0.0, phase: [0.0; SLOTS], rest_tph: [0.0; SLOTS], rest_off: [0.0; SLOTS], rest_phase: [0.0; SLOTS], rest_on: false, cal: Cal::NONE, period_slot: PERIOD_SLOT_3 };
+    pub const NONE: Lattice = Lattice { tph: [0.0; SLOTS], off: [0.0; SLOTS], lead: 0.0, shift: 0.0, phase: [0.0; SLOTS], rest_tph: [0.0; SLOTS], rest_off: [0.0; SLOTS], rest_phase: [0.0; SLOTS], rest_on: false, cal: Cal::NONE, period_slot: PERIOD_SLOT_3, hours: Hours::NONE };
     /// Each period's slot on local day `day` (`period_slot`) plus `SLOTS` times the day's kind
     /// (weekdays or weekends; always weekdays without `rest_on`).
     pub fn levels_on(&self, day: i64) -> [usize; 5] {
@@ -395,21 +439,44 @@ pub(crate) fn level_stretches(levels: &[usize; 5]) -> Vec<(usize, usize)> {
     out
 }
 
-/// A stretch (`level_stretches`) of `day` for run `r` of a pattern: (first departure, headway,
+/// Local day `day`'s stretches of departures from midnight: runs of periods of one level
+/// (`level_stretches`), or where the line's hours moved (`Lattice::hours`) runs of pieces of one
+/// row, level and rate.
+fn day_stretches(lat: &Lattice, day: i64) -> Vec<Stretch> {
+    let levels = lat.levels_on(day);
+    let h = &lat.hours;
+    if h.n == 0 {
+        return level_stretches(&levels).into_iter().map(|(first, last)| {
+            let (tph, off, phase) = lat.slot(levels[first]);
+            Stretch { h0: PERIOD_HOURS[first].0, h1: PERIOD_HOURS[last].1, lev: levels[first], tph, off, phase }
+        }).collect();
+    }
+    let row = levels[0] / SLOTS;
+    let mut out: Vec<(Stretch, u8)> = Vec::with_capacity(h.n as usize);
+    for i in 0..h.n as usize {
+        let p = h.pieces[i];
+        let lev = levels[p.q as usize];
+        let (tph, off, phase) = if h.own_on[i] { h.own[i][row] } else { lat.slot(lev) };
+        match out.last_mut() {
+            Some((x, k)) if *k == p.k && x.lev == lev && x.tph.to_bits() == tph.to_bits() && x.off.to_bits() == off.to_bits() && x.phase.to_bits() == phase.to_bits() => x.h1 = p.b as f64,
+            _ => out.push((Stretch { h0: p.a as f64, h1: p.b as f64, lev, tph, off, phase }, p.k)),
+        }
+    }
+    out.into_iter().map(|x| x.0).collect()
+}
+
+/// A stretch (`day_stretches`) of `day` for run `r` of a pattern: (first departure, headway,
 /// departures), or None without service.
-/// `next`: the levels of the day after, for a stretch that ends at midnight.
-fn stretch_points(lat: &Lattice, r: usize, day: i64, (first, last): (usize, usize), levels: &[usize; 5], next: &[usize; 5]) -> Option<(f64, f64, i64)> {
-    let (tph, off, phase) = lat.slot(levels[first]);
-    let tph = tph as f64;
+/// `next`: the trains an hour of the stretch after (the next day's first for the day's last).
+fn stretch_points(lat: &Lattice, r: usize, day: i64, st: &Stretch, next: f32) -> Option<(f64, f64, i64)> {
+    let (tph, off, phase) = (st.tph as f64, st.off, st.phase);
     if tph <= 0.0 || (r == 1 && off.is_infinite()) {
         return None;
     }
     let hw = 3600.0 / tph;
-    let (h0, h1) = (PERIOD_HOURS[first].0, PERIOD_HOURS[last].1);
+    let (h0, h1) = (st.h0, st.h1);
     // a period followed by no service runs to its own end, so a line's last trains of the evening
     // or of a peak are not pulled early (T-835)
-    // (a stretch ending at midnight is followed by the next day's night, whose row may differ)
-    let next = PERIOD_HOURS.iter().position(|&(a, _)| a == h1 % 24.0).map_or(0.0, |q| lat.slot(if h1 >= 24.0 { next[q] } else { levels[q] }).0 as f64);
     let end_lead = if next > 0.0 { lat.lead } else { 0.0 };
     let (start, end) = (day as f64 * DAY_S + h0 * 3600.0 - lat.lead, day as f64 * DAY_S + h1 * 3600.0 - end_lead);
     let ps = start + phase + if r == 1 { off } else { 0.0 };
@@ -459,10 +526,12 @@ pub(crate) fn lattice_deps_local(lat: &Lattice, r: usize, a: f64, b: f64, out: &
     let d1 = (b / DAY_S).floor() as i64;
     // the last departure before day d0: the day before's last stretch with service
     let mut last: Option<f64> = None;
+    let mut next_day = day_stretches(lat, d0);
+    let after = |st: &[Stretch], i: usize, next: &[Stretch]| st.get(i + 1).or(next.first()).map_or(0.0, |x| x.tph);
     {
-        let (levels, next) = (lat.levels_on(d0 - 1), lat.levels_on(d0));
-        for &s in level_stretches(&levels).iter().rev() {
-            if let Some((ps, hw, n)) = stretch_points(lat, r, d0 - 1, s, &levels, &next) {
+        let st = day_stretches(lat, d0 - 1);
+        for (i, s) in st.iter().enumerate().rev() {
+            if let Some((ps, hw, n)) = stretch_points(lat, r, d0 - 1, s, after(&st, i, &next_day)) {
                 last = Some(ps + (n - 1) as f64 * hw);
                 break;
             }
@@ -470,9 +539,9 @@ pub(crate) fn lattice_deps_local(lat: &Lattice, r: usize, a: f64, b: f64, out: &
     }
     // the next day's first stretch starts `lead` before it
     for day in d0..=d1 + 1 {
-        let (levels, next) = (lat.levels_on(day), lat.levels_on(day + 1));
-        for &s in &level_stretches(&levels) {
-            let Some((ps, hw, n)) = stretch_points(lat, r, day, s, &levels, &next) else { continue };
+        let st = std::mem::replace(&mut next_day, day_stretches(lat, day + 1));
+        for (i, s) in st.iter().enumerate() {
+            let Some((ps, hw, n)) = stretch_points(lat, r, day, s, after(&st, i, &next_day)) else { continue };
             let mut k0 = 0i64;
             if let Some(l) = last {
                 while k0 < n && ps + k0 as f64 * hw - l < MIN_GAP_SHARE * hw {
@@ -482,7 +551,7 @@ pub(crate) fn lattice_deps_local(lat: &Lattice, r: usize, a: f64, b: f64, out: &
             if k0 >= n {
                 continue;
             }
-            let lev = (levels[s.0] % SLOTS) as u8;
+            let lev = (s.lev % SLOTS) as u8;
             let mut k = k0.max(((a - ps) / hw).floor() as i64 - 1).max(k0);
             while k < n {
                 let d = ps + k as f64 * hw;
@@ -1108,15 +1177,47 @@ impl Service {
     /// (1e-3 trains: what a settle leaves of a round trip that is whole headways), and a count line's
     /// kept in step at a merge (T-2973); 0 for any other fleet set by count and a loop.
     pub fn spare(&self, net: &Network, l: usize, lev: usize) -> f64 {
-        let Some(ls) = self.lines.get(l) else { return 0.0 };
         let t = net.line_tph.get(l).map_or(0.0, |x| x[lev] as f64);
-        let paced = net.auto_at(l, lev).is_some_and(|a| a > 0) || net.line_pace_of(l as u32)[lev] > 0.0;
+        self.spare_with(net, l, lev, t, net.auto_at(l, lev))
+    }
+    /// `spare` at `t` trains an hour for a place keeping headway `auto` (T-3542: a row's own rate in
+    /// a slot its hours share with another).
+    pub fn spare_with(&self, net: &Network, l: usize, lev: usize, t: f64, auto: Option<u32>) -> f64 {
+        let Some(ls) = self.lines.get(l) else { return 0.0 };
+        let paced = auto.is_some_and(|a| a > 0) || net.line_pace_of(l as u32)[lev] > 0.0;
         if t <= 0.0 || ls.is_loop() || !paced {
             return 0.0;
         }
         let h = 3600.0 / t;
         let trip = ls.trip_len(net, l as u32, 0, lev) + ls.trip_len(net, l as u32, 1, lev);
         ((trip / h - 1e-3).ceil() * h - trip).clamp(0.0, h)
+    }
+
+    /// T-3542: line `l`'s trains an hour in each demand period as demand reads them: its slot's
+    /// rate, but in a period its hours share between rows (`Network::mixed`) the rate of the mean
+    /// headway its riders meet there. Riders arrive by the period's shape (`span::period_cum`), each
+    /// row's piece of the period waits its own headway, and a piece with no trains counts for
+    /// nobody: those riders are the span's (`span::line_span`, the share with a train due).
+    pub fn demand_tph(&self, net: &Network, l: usize) -> [f32; 5] {
+        let ps = net.period_slot();
+        let Some(t) = net.line_tph.get(l) else { return [0.0; 5] };
+        let mut out: [f32; 5] = std::array::from_fn(|q| t[ps[q]]);
+        let (Some(m), Some(ls)) = (net.mix(l), self.lines.get(l)) else { return out };
+        for q in 0..5 {
+            let s = ps[q];
+            if !m.mixed[s] { continue; }
+            let (mut riders, mut wait) = (0.0, 0.0);
+            for p in m.pieces[..m.n_pieces].iter().filter(|p| p.q as usize == q) {
+                let r = net.place_tph(l, s, p.k as usize, t[s], ls.round_trip[s]) as f64;
+                let c = super::span::period_cum(q, p.b as f64 * 3600.0) - super::span::period_cum(q, p.a as f64 * 3600.0);
+                if r > 0.0 && c > 0.0 {
+                    riders += c;
+                    wait += c * 3600.0 / r;
+                }
+            }
+            out[q] = if riders > 0.0 && wait > 0.0 { (3600.0 * riders / wait) as f32 } else { 0.0 };
+        }
+        out
     }
 
     /// A running line's departure pattern now (None when it is not running).
@@ -1128,7 +1229,7 @@ impl Service {
         let tph = net.line_tph[l];
         // The reverse departure follows the forward trip's turnaround, so an odd whole-line fleet
         // stays evenly spaced around the complete circuit.
-        let off_of = |lev: usize, t: f32| {
+        let off_at = |lev: usize, t: f32, spare: &dyn Fn(usize, f64) -> f64| {
             let t = t as f64;
             if ls.one_way {
                 return f64::INFINITY;
@@ -1139,17 +1240,35 @@ impl Service {
             let (h, there) = (3600.0 / t, ls.trip_len(net, l as u32, 0, lev));
             // T-2607, T-2972: a headway line's trains wait out the time its round trip leaves them,
             // the share the spacing chose at its last stop, the rest at its first
-            (there + net.line_split_of(l as u32)[lev] as f64 * self.spare(net, l, lev)) % h
+            (there + net.line_split_of(l as u32)[lev] as f64 * spare(lev, t)) % h
         };
+        let off_of = |lev: usize, t: f32| off_at(lev, t, &|lev, _| self.spare(net, l, lev));
         // (a slot no period uses keeps 0, as one read back from a save's eras)
         let off = std::array::from_fn(|lev| if net.slot_worked(lev) { off_of(lev, tph[lev]) } else { 0.0 });
         // a loop's middle is half a lap from its first stop (T-798): the same figure
-        let lead = (0.25 * (ls.runs[0].prof[MEDIUM].duration + ls.runs[1].prof[MEDIUM].duration)).clamp(0.0, LEAD_MAX_S);
+        let lead = (0.25 * (ls.runs[0].prof[MEDIUM].duration + ls.runs[1].prof[MEDIUM].duration)).clamp(0.0, net.mix(l).map_or(LEAD_MAX_S, |m| m.lead_max_s.min(LEAD_MAX_S)));
         // T-1925: under a headway, whatever the headway has become since it was placed
         let p = net.line_phase_of(l as u32);
         let phase_of = |lev: usize, t: f32| if t > 0.0 { (p[lev] as f64).rem_euclid(3600.0 / t as f64) } else { 0.0 };
         let phase = std::array::from_fn(|lev| phase_of(lev, tph[lev]));
-        let week = Lattice { tph, off, lead, shift: ls.shift, phase, rest_tph: tph, rest_off: off, rest_phase: phase, rest_on: false, cal: Cal::NONE, period_slot: net.period_slot() };
+        // T-3542: pieces of a slot the line's hours share between rows run each row's own rate
+        let hours_of = |rest: &[f32; SLOTS]| -> Hours {
+            let Some(m) = net.mix(l) else { return Hours::NONE };
+            let (auto, ps) = (net.auto_of(l), net.period_slot());
+            let mut h = Hours { n: m.n_pieces as u8, pieces: m.pieces, ..Hours::NONE };
+            for (i, p) in m.pieces[..m.n_pieces].iter().enumerate() {
+                let s = ps[p.q as usize];
+                if !m.mixed[s] { continue; }
+                h.own_on[i] = true;
+                let a = auto.map(|a| a[p.k as usize]);
+                for (row, t) in [(WEEKDAYS, &tph), (WEEKEND, rest)] {
+                    let tk = net.place_tph(l, s, p.k as usize, t[s], ls.round_trip[s]);
+                    h.own[i][row] = (tk, off_at(s, tk, &|lev, t| self.spare_with(net, l, lev, t, a)), phase_of(s, tk));
+                }
+            }
+            h
+        };
+        let week = Lattice { tph, off, lead, shift: ls.shift, phase, rest_tph: tph, rest_off: off, rest_phase: phase, rest_on: false, cal: Cal::NONE, period_slot: net.period_slot(), hours: hours_of(&tph) };
         // T-3521: no line runs other trains on weekends: every day the weekdays' pattern, at no cost
         if !net.rest_solved {
             return Some(self.joined(net, l, week));
@@ -1178,7 +1297,7 @@ impl Service {
             return Some(self.joined(net, l, week));
         }
         let cal = self.cal.get(l).copied().unwrap_or(Cal::NONE);
-        Some(self.joined(net, l, Lattice { rest_tph, rest_off, rest_phase, rest_on: true, cal, ..week }))
+        Some(self.joined(net, l, Lattice { rest_tph, rest_off, rest_phase, rest_on: true, cal, hours: hours_of(&rest_tph), ..week }))
     }
 
     /// T-3542: `lat` with the day's periods of one row of line `l` that run alike joined into one
@@ -1192,7 +1311,7 @@ impl Service {
         for (q, p) in [(0, 1), (1, 2)] {
             let (j, s) = (ps[q], ps[p]);
             let same = |a: &[f64; SLOTS]| a[j].to_bits() == a[s].to_bits();
-            if s != j && net.place(l, s) == net.place(l, j) && lat.tph[j].to_bits() == lat.tph[s].to_bits() && lat.rest_tph[j].to_bits() == lat.rest_tph[s].to_bits()
+            if s != j && net.mixed(l, s).is_none() && net.mixed(l, j).is_none() && net.place(l, s) == net.place(l, j) && lat.tph[j].to_bits() == lat.tph[s].to_bits() && lat.rest_tph[j].to_bits() == lat.rest_tph[s].to_bits()
                 && same(&lat.off) && same(&lat.phase) && same(&lat.rest_off) && same(&lat.rest_phase) && same(&ls.round_trip) {
                 ps[p] = j;
             }
@@ -1324,7 +1443,8 @@ impl Service {
     /// T-3542 (`ERA3`, `wide`): every slot of each era and the slot of each period, where some era
     /// runs other slots than three rows' (`eras_wide`); otherwise each row's slot, as before slots.
     pub fn encode_eras(&self, net: &Network) -> Vec<u8> {
-        let wide = self.eras_wide(net);
+        let hours = self.eras_hours(net);
+        let wide = hours || self.eras_wide(net);
         let mut out = vec![];
         let mut n = 0u32;
         let mut body = vec![];
@@ -1352,6 +1472,21 @@ impl Service {
                 if wide {
                     e.lat.phase.iter().for_each(|x| body.extend(x.to_le_bytes()));
                     body.extend(e.lat.period_slot.map(|s| s as u8));
+                    // T-3542 (`ERA4`): the pieces of moved hours and their own rates, weekdays'
+                    if hours {
+                        let h = &e.lat.hours;
+                        body.push(h.n);
+                        for i in 0..h.n as usize {
+                            let p = h.pieces[i];
+                            body.extend([p.a, p.b, p.q, p.k, h.own_on[i] as u8]);
+                            if h.own_on[i] {
+                                let (t, o, ph) = h.own[i][WEEKDAYS];
+                                body.extend(t.to_le_bytes());
+                                body.extend(o.to_le_bytes());
+                                body.extend(ph.to_le_bytes());
+                            }
+                        }
+                    }
                 } else {
                     slots_to_rows(e.lat.phase).iter().for_each(|x| body.extend(x.to_le_bytes()));
                 }
@@ -1383,8 +1518,14 @@ impl Service {
         (0..net.line_count()).filter(|&l| net.line_ok(l as u32)).any(|l| self.eras_of(l).iter().any(|e| e.lat.period_slot != PERIOD_SLOT_3))
     }
 
-    /// `wide`: `ERA3` eras, with every slot and each period's slot (T-3542).
-    pub fn decode_eras(&mut self, bytes: &[u8], phases: bool, wide: bool) -> Result<(), String> {
+    /// T-3542: some era of a live line runs moved hours (`Lattice::hours`; `encode_eras` then writes`ERA4`).
+    pub fn eras_hours(&self, net: &Network) -> bool {
+        (0..net.line_count()).filter(|&l| net.line_ok(l as u32)).any(|l| self.eras_of(l).iter().any(|e| e.lat.hours.n > 0))
+    }
+
+    /// `wide`: `ERA3` eras, with every slot and each period's slot (T-3542); `hours`: `ERA4`, with
+    /// the pieces of moved hours too.
+    pub fn decode_eras(&mut self, bytes: &[u8], phases: bool, wide: bool, hours: bool) -> Result<(), String> {
         let mut at = 0usize;
         let mut take = |n: usize| -> Result<&[u8], String> {
             let b = bytes.get(at..at + n).ok_or("truncated eras")?;
@@ -1419,13 +1560,26 @@ impl Service {
                 } else if phases {
                     phase = rows_to_slots([num!(f64), num!(f64), num!(f64)], 0.0);
                 }
+                let mut h = Hours::NONE;
+                if hours {
+                    h.n = num!(u8).min(PIECES_MAX as u8);
+                    for i in 0..h.n as usize {
+                        let (a, b, q, k, on) = (num!(u8), num!(u8), num!(u8).min(4), num!(u8).min(4), num!(u8));
+                        h.pieces[i] = DayPiece { a, b, q, k };
+                        h.own_on[i] = on != 0;
+                        if on != 0 {
+                            let o = (num!(f32), num!(f64), num!(f64));
+                            h.own[i] = [o; DAY_ROWS];
+                        }
+                    }
+                }
                 let mut drawn = vec![];
                 for _ in 0..num!(u32) {
                     drawn.push((num!(u8), num!(f64)));
                 }
                 // T-3521: weekend trains are not in the era bytes: an old pattern loads running its
                 // weekday trains every day
-                v.push(Era { until, lat: Lattice { tph, off, lead, shift, phase, rest_tph: tph, rest_off: off, rest_phase: phase, rest_on: false, cal: Cal::NONE, period_slot }, drawn });
+                v.push(Era { until, lat: Lattice { tph, off, lead, shift, phase, rest_tph: tph, rest_off: off, rest_phase: phase, rest_on: false, cal: Cal::NONE, period_slot, hours: h }, drawn });
             }
             let mut s = vec![];
             for _ in 0..num!(u32) {

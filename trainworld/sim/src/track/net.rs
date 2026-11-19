@@ -304,13 +304,16 @@ pub struct Extra {
     pub auto: [u32; 2],
     pub weekend_counts: [u32; 2],
     pub weekend_headways: [u32; 2],
+    /// T-3542: the line's own hours (`params::Cuts`), all 0 for the game's (`Network::hours`).
+    /// Saved in `LHR1`.
+    pub hours: Cuts,
 }
 
 impl Extra {
     /// Midday and afternoon as the high row of `d` (a new line, a row split off high).
     pub fn of_high(d: &LineData) -> Extra {
         let h = |a: Option<[u32; 3]>| [a.map_or(0, |a| a[0]); 2];
-        Extra { tph: [d.tph[0]; 2], trains: h(d.trains), auto: h(d.auto), weekend_counts: h(d.weekend.counts), weekend_headways: [d.weekend.headways[0]; 2] }
+        Extra { tph: [d.tph[0]; 2], trains: h(d.trains), auto: h(d.auto), weekend_counts: h(d.weekend.counts), weekend_headways: [d.weekend.headways[0]; 2], hours: d.x.hours }
     }
 }
 
@@ -343,6 +346,56 @@ fn slot_list(p: [usize; 5]) -> ([usize; SLOTS], usize) {
         n += 1;
     }
     (l, n)
+}
+
+/// T-3542: how a line's hours (`Network::hours`) fall into the slots, kept where they differ from
+/// the default hours' (one row alone in each slot, its periods' own).
+#[derive(Clone, Debug, PartialEq)]
+pub struct Mix {
+    /// Per slot, each place's share of the slot's hours.
+    pub w: [[f64; 5]; SLOTS],
+    /// Per slot, whether more than one place runs some of its hours.
+    pub mixed: [bool; SLOTS],
+    /// Per slot, the place with the most of its hours (the first in the day of equals).
+    pub main: [u8; SLOTS],
+    /// The line's day in pieces (`params::day_pieces`).
+    pub pieces: [DayPiece; PIECES_MAX],
+    pub n_pieces: usize,
+    /// Half the shortest row, seconds (`params::shortest_row_h`).
+    pub lead_max_s: f64,
+}
+
+impl Mix {
+    /// The mix of hours `c` on a line of `n` rows with the game's `period_slot`, None where its day
+    /// splits into the pieces the default hours give.
+    pub fn of(c: Cuts, n: usize, period_slot: [usize; 5]) -> Option<Mix> {
+        // (every edit asks for every line's: the default hours answer at once)
+        if c == CUTS_DEFAULT {
+            return None;
+        }
+        let (pieces, m) = day_pieces(c, n);
+        if (pieces, m) == day_pieces(CUTS_DEFAULT, n) {
+            return None;
+        }
+        let mut hrs = [[0u32; 5]; SLOTS];
+        let mut first = [[usize::MAX; 5]; SLOTS];
+        for (i, p) in pieces[..m].iter().enumerate() {
+            let s = period_slot[p.q as usize];
+            hrs[s][p.k as usize] += (p.b - p.a) as u32;
+            first[s][p.k as usize] = first[s][p.k as usize].min(i);
+        }
+        let mut w = [[0.0; 5]; SLOTS];
+        let mut mixed = [false; SLOTS];
+        let mut main = [0u8; SLOTS];
+        for s in 0..SLOTS {
+            let all: u32 = hrs[s].iter().sum();
+            if all == 0 { continue; }
+            for k in 0..5 { w[s][k] = hrs[s][k] as f64 / all as f64; }
+            mixed[s] = hrs[s].iter().filter(|&&h| h > 0).count() > 1;
+            main[s] = (0..5).filter(|&k| hrs[s][k] > 0).max_by(|&a, &b| hrs[s][a].cmp(&hrs[s][b]).then(first[s][b].cmp(&first[s][a]))).unwrap_or(0) as u8;
+        }
+        Some(Mix { w, mixed, main, pieces, n_pieces: m, lead_max_s: 0.5 * shortest_row_h(c, n) as f64 * 3600.0 })
+    }
 }
 
 /// T-3521: a headway on weekends at `share` percent of the weekdays': `headway_s` divided by the
@@ -678,6 +731,14 @@ pub struct Network {
     /// `LineData::rows` and `x` by line.
     pub line_rows: Vec<u8>,
     pub line_x: Vec<Extra>,
+    /// T-3542: the hours (`params::Cuts`) a line following the game's splits its day at.
+    pub hours_default: Cuts,
+    /// Derived (`refresh_slots`), by line: how its hours fall into the slots, None where every slot
+    /// is one of its rows alone, the one its periods have at the default hours (the default hours
+    /// always), so those lines take the paths they took before hours could move.
+    line_mix: Vec<Option<Box<Mix>>>,
+    /// The lines whose `Mix` the last `refresh_slots` changed.
+    pub mix_moved: Vec<u32>,
     #[cfg(test)]
     slots_pinned: bool,
     /// Derived: the path uses a deleted edge or no longer fits the stops.
@@ -862,6 +923,11 @@ impl Network {
     /// T-3542: `period_slot` from the lines' rows as they stand; true when it changed (the slots a
     /// change newly splits or joins are seeded or cleared by `TrackWorld::reslot`).
     pub fn refresh_slots(&mut self) -> bool {
+        let moved = self.slots_from_rows();
+        self.mix_moved = self.refresh_mix();
+        moved
+    }
+    fn slots_from_rows(&mut self) -> bool {
         #[cfg(test)]
         if self.slots_pinned { return false; }
         let n = (0..self.line_count()).filter(|&l| self.line_ok(l as u32)).map(|l| self.rows(l)).max().unwrap_or(ROWS_MIN);
@@ -870,6 +936,60 @@ impl Network {
         self.period_slot = p;
         self.slot_list = slot_list(p);
         true
+    }
+    /// T-3542: every line's `Mix` from its hours, rows and the slots; returns the lines whose mix
+    /// changed.
+    pub fn refresh_mix(&mut self) -> Vec<u32> {
+        let n = self.line_count();
+        self.line_mix.resize(n, None);
+        let mut moved = vec![];
+        for l in 0..n {
+            let m = if self.line_ok(l as u32) { Mix::of(self.hours(l), self.rows(l), self.period_slot).map(Box::new) } else { None };
+            if m != self.line_mix[l] {
+                self.line_mix[l] = m;
+                moved.push(l as u32);
+            }
+        }
+        moved
+    }
+    /// T-3542: the hours line `l` splits its day at: its own, else the game's. A bus or ferry line
+    /// keeps the default hours; a quad twin its line's.
+    pub fn hours(&self, l: usize) -> Cuts {
+        let l = match self.line_twin.get(l) { Some(super::twin::Twin::Of(p)) => *p as usize, _ => l };
+        if self.line_bus.get(l).is_some_and(|b| b.is_some()) || self.line_ferry.get(l).is_some_and(|f| f.is_some()) {
+            return CUTS_DEFAULT;
+        }
+        // a line's own hours go with its own periods (a line following the game's periods follows its hours)
+        if self.line_rows.get(l).copied().unwrap_or(0) == 0 {
+            return self.hours_default;
+        }
+        match self.line_x.get(l).map_or([0; 5], |x| x.hours) { [0, 0, 0, 0, 0] => self.hours_default, c => c }
+    }
+    /// T-3542: the game's hours (`line` None) or line `line`'s own (all 0 for the game's); returns
+    /// the old setting. Every line it moves is rescheduled.
+    pub fn set_hours(&mut self, line: Option<u32>, cuts: Cuts) -> Result<Cuts, Issue> {
+        let old = match line {
+            None if cuts_ok(cuts) => std::mem::replace(&mut self.hours_default, cuts),
+            Some(id) if self.line_ok(id) && (cuts == [0; 5] || cuts_ok(cuts)) => std::mem::replace(&mut self.line_x[id as usize].hours, cuts),
+            Some(id) if !self.line_ok(id) => return Err(Issue::NoSuchLine { line: id }),
+            _ => return Err(Issue::LineSchedule { line: line.unwrap_or(u32::MAX) }),
+        };
+        let moved: Vec<u32> = (0..self.line_count() as u32).filter(|&l| self.line_ok(l) && match line {
+            None => true,
+            Some(id) => l == id || self.line_twin_of(l) == super::twin::Twin::Of(id),
+        }).collect();
+        self.touch.schedules.extend(moved);
+        Ok(old)
+    }
+    /// T-3542: line `l`'s `Mix`, None where its hours put one row alone in every slot, the one its
+    /// periods have at the default hours.
+    pub fn mix(&self, l: usize) -> Option<&Mix> {
+        self.line_mix.get(l).and_then(|m| m.as_deref())
+    }
+    /// T-3542: each place's share of slot `s`'s hours on line `l`, where more than one place runs in
+    /// it (None: `place(l, s)` alone).
+    pub fn mixed(&self, l: usize, s: usize) -> Option<&[f64; 5]> {
+        self.mix(l).filter(|m| m.mixed[s]).map(|m| &m.w[s])
     }
     /// T-3542: after `period_slot` changed from `old`: each slot now worked out that was not takes
     /// what its periods' slot had (rates both kinds of day, phase, split, pace, kept lines), so the
@@ -906,14 +1026,29 @@ impl Network {
         }
         (match self.line_rows.get(l).copied().unwrap_or(0) { 0 => self.rows_default, r => r } as usize).clamp(ROWS_MIN, ROWS_MAX)
     }
-    /// The place (`params::places`) whose value line `l` runs in slot `s`.
+    /// The place (`params::places`) whose value line `l` runs in slot `s`; where its hours put more
+    /// than one there (`mixed`), the one with the most of them.
     pub fn place(&self, l: usize, s: usize) -> usize {
-        PERIOD_PLACE[self.rows(l) - ROWS_MIN][s]
+        match self.mix(l) {
+            Some(m) => m.main[s] as usize,
+            None => PERIOD_PLACE[self.rows(l) - ROWS_MIN][s],
+        }
+    }
+    /// Whether place `k` of line `l` runs any of slot `s`'s hours.
+    pub fn place_in(&self, l: usize, s: usize, k: usize) -> bool {
+        match self.mixed(l, s) {
+            Some(w) => w[k] > 0.0,
+            None => self.place(l, s) == k,
+        }
     }
     /// Line `l`'s rows in the day's order: each its place and the slots worked out it covers (one
-    /// or more: a row of three rows covers three in a game of five).
+    /// or more: a row of three rows covers three in a game of five; a row whose hours reach into
+    /// another period, T-3542, that period's slot too).
     pub fn row_slots(&self, l: usize) -> Vec<(usize, Vec<usize>)> {
         let n = self.rows(l) - ROWS_MIN;
+        if self.mix(l).is_some() {
+            return ROW_PLACES[n].iter().map(|&k| (k, self.slots().filter(|&s| self.place_in(l, s, k)).collect())).collect();
+        }
         ROW_PLACES[n].iter().map(|&k| {
             let mut s: Vec<usize> = (0..5).filter(|&p| PERIOD_PLACE[n][p] == k).map(|p| self.period_slot[p]).collect();
             s.dedup();
@@ -930,9 +1065,40 @@ impl Network {
         let a = self.line_auto.get(l).copied().flatten()?;
         Some(places(a, self.line_x.get(l).map_or([0; 2], |x| x.auto)))
     }
-    /// Line `l`'s whole trains in slot `s` (0 for none).
+    /// Line `l`'s whole trains in slot `s` (0 for none): its place's (`place`).
     pub fn trains_at(&self, l: usize, s: usize) -> u32 {
         self.trains_of(l).map_or(0, |t| t[self.place(l, s)])
+    }
+    /// T-3542: line `l`'s trains in slot `s` as its hours share it (`mixed`): each place's count
+    /// times its share of the slot's hours; `trains_at` where one place runs it.
+    pub fn trains_in(&self, l: usize, s: usize) -> f64 {
+        match (self.mixed(l, s), self.trains_of(l)) {
+            (Some(w), Some(t)) => (0..5).filter(|&k| w[k] > 0.0).map(|k| w[k] * t[k] as f64).sum(),
+            _ => self.trains_at(l, s) as f64,
+        }
+    }
+    /// T-3542: the most whole trains any of line `l`'s places runs in slot `s` (the fleet there).
+    pub fn trains_most(&self, l: usize, s: usize) -> u32 {
+        match (self.mixed(l, s), self.trains_of(l)) {
+            (Some(w), Some(t)) => (0..5).filter(|&k| w[k] > 0.0).map(|k| t[k]).max().unwrap_or(0),
+            _ => self.trains_at(l, s),
+        }
+    }
+    /// T-3542: what a settle keeps a line by in slot `s` (`settle_kept`): its trains there, or where
+    /// its hours mix places a hash of their counts, so another count there is another state.
+    pub fn trains_key(&self, l: usize, s: usize) -> u32 {
+        match (self.mixed(l, s), self.trains_of(l)) {
+            (Some(w), Some(t)) => (0..5).filter(|&k| w[k] > 0.0).fold(0x811c9dc5u32, |h, k| (h ^ t[k] ^ (k as u32) << 28).wrapping_mul(0x01000193)),
+            _ => self.trains_at(l, s),
+        }
+    }
+    /// T-3542: line `l`'s fleet per slot: each slot's most trains of the places it runs there
+    /// (`trains_most`), 0 in the slots not worked out.
+    pub fn slot_trains(&self, l: usize) -> [u32; SLOTS] {
+        match (self.mix(l), self.trains_of(l)) {
+            (Some(_), Some(_)) => std::array::from_fn(|s| if self.slot_worked(s) { self.trains_most(l, s) } else { 0 }),
+            (_, t) => self.places_in(l, t.unwrap_or([0; 5]), 0),
+        }
     }
     /// Line `l`'s headway in slot `s`, None for a line set by count.
     pub fn auto_at(&self, l: usize, s: usize) -> Option<u32> {
@@ -983,6 +1149,12 @@ impl Network {
     pub fn places_most<T: Copy + PartialOrd>(&self, l: usize, s: [T; SLOTS]) -> [T; 5] {
         let mut out: [Option<T>; 5] = [None; 5];
         for k in self.slots() {
+            if let Some(w) = self.mixed(l, k) {
+                for p in (0..5).filter(|&p| w[p] > 0.0) {
+                    if out[p].map_or(true, |v| s[k] > v) { out[p] = Some(s[k]); }
+                }
+                continue;
+            }
             let o = &mut out[self.place(l, k)];
             if o.map_or(true, |v| s[k] > v) { *o = Some(s[k]); }
         }
@@ -1002,8 +1174,48 @@ impl Network {
     /// on a line keeping a headway no more than the headway needs (a fraction), the time left over
     /// spent waiting at the ends, so the headway set is the headway run.
     pub fn running_trains(&self, l: usize, lev: usize, trip_s: f64) -> f64 {
-        let n = self.trains_at(l, lev) as f64;
-        match self.auto_at(l, lev) {
+        // T-3542: a slot whose hours several places run: each place's trains for its share of them
+        if let Some(w) = self.mixed(l, lev) {
+            return (0..5).filter(|&k| w[k] > 0.0).map(|k| w[k] * self.running_borrowed(l, lev, k, trip_s)).sum();
+        }
+        self.running_place(l, lev, self.trains_at(l, lev), self.auto_at(l, lev), trip_s)
+    }
+    /// T-3542: the trains an hour place `k` of line `l` runs in slot `s` where its hours mix places
+    /// there (`mixed`): the slot's rate `tph` (the places' time-weighted mean, as settled) shared
+    /// out by what each place's trains run over the round trip `trip_s`. `tph` itself elsewhere.
+    pub fn place_tph(&self, l: usize, s: usize, k: usize, tph: f32, trip_s: f64) -> f32 {
+        let (Some(w), Some(t)) = (self.mixed(l, s), self.trains_of(l)) else { return tph };
+        let auto = self.auto_of(l);
+        let run = |k: usize| self.running_borrowed(l, s, k, trip_s);
+        let all: f64 = (0..5).filter(|&j| w[j] > 0.0).map(|j| w[j] * run(j)).sum();
+        if !(all > 0.0 && w[k] > 0.0 && trip_s > 0.0) { return 0.0; }
+        // where the slot runs what its trains would (no full track cut it, within the settle's
+        // tolerance), each place its own: a headway place exactly its headway
+        if (tph as f64 * trip_s / (3600.0 * all) - 1.0).abs() < 2e-4 {
+            return match auto.map(|a| a[k]) {
+                Some(a) if a > 0 && t[k] as f64 >= trip_s / a as f64 && run(k) * a as f64 >= trip_s * (1.0 - 1e-9) => (3600.0 / a as f64) as f32,
+                _ => (run(k) * 3600.0 / trip_s) as f32,
+            };
+        }
+        (tph as f64 * run(k) / all) as f32
+    }
+    /// T-3542: the trains place `k` of line `l` runs in slot `lev` over a round trip of `trip_s`
+    /// (`running_place`), where its hours reach into a period other than its own no more than it
+    /// runs in its own (the rate of a slot it runs alone, the least of them): the borrowed hour of a
+    /// row on full track never leaves more often than the row does on that track.
+    pub fn running_borrowed(&self, l: usize, lev: usize, k: usize, trip_s: f64) -> f64 {
+        let (Some(t), auto) = (self.trains_of(l), self.auto_of(l)) else { return 0.0 };
+        let run = self.running_place(l, lev, t[k], auto.map(|a| a[k]), trip_s);
+        let own =self.slots().filter(|&s| s != lev && self.mixed(l, s).is_none() && self.place(l, s) == k).map(|s| self.line_tph[l][s] as f64).reduce(f64::min);
+        match own {
+            Some(r) if trip_s > 0.0 => run.min(r * trip_s / 3600.0),
+            _ => run,
+        }
+    }
+    /// T-3542: `running_trains` of one place: `n` trains, headway `auto`, in slot `lev`.
+    pub fn running_place(&self, l: usize, lev: usize, n: u32, auto: Option<u32>, trip_s: f64) -> f64 {
+        let n = n as f64;
+        match auto {
             Some(a) if a > 0 && trip_s > 0.0 => n.min(trip_s / a as f64),
             _ => {
                 // T-2973: a count line in step with others at a merge
@@ -1192,6 +1404,9 @@ impl Network {
             rows_default: ROWS_MIN as u8,
             line_rows: vec![],
             line_x: vec![],
+            hours_default: CUTS_DEFAULT,
+            line_mix: vec![],
+            mix_moved: vec![],
             #[cfg(test)]
             slots_pinned: false,
             line_broken: vec![],

@@ -5,20 +5,20 @@
 import { effect } from "@preact/signals";
 import { t } from "../i18n";
 import { computed } from "@preact/signals";
-import { demandAt, lineSeconds } from "./clock";
+import { lineSeconds } from "./clock";
 import { lineCountry, rowIn } from "./holidays";
-import { DEMAND_INDEX, type LineStats } from "./types";
+import type { LineStats } from "./types";
 import { linesById, restShown, rowTrainsShown, rowWeekendShown, world } from "./world";
-import { periodAt, rowOfPeriod } from "./periods";
+import { CUTS_DEFAULT, rowAt } from "./periods";
 
 /** T-3521: a line's trains at level `lev` on its kind of day now in its own local time (weekdays or
  * weekends, by its country's calendar; `restShown`). */
 export function trainsNowAt(id: string, lev: number): number {
   const row = rowNow(id);
   if (row === null) return 0;
-  // T-3542: a line of four or five rows reads its row now, by the period in its local time
+  // T-3542: a line of four or five rows reads its row now, by its hours in its local time
   const st = world.value?.lineStats[id];
-  if (st?.rows) return (row === 0 ? rowTrainsShown(id) : rowWeekendShown(id)?.counts)?.[rowOfPeriod(st.periods, periodAt(lineSeconds(st)))] ?? 0;
+  if (st?.rows) return (row === 0 ? rowTrainsShown(id) : rowWeekendShown(id)?.counts)?.[rowAt(st.hours ?? CUTS_DEFAULT, st.periods, lineSeconds(st))] ?? 0;
   return restShown(id, row)?.[lev] ?? 0;
 }
 
@@ -39,7 +39,8 @@ export const idleLines = computed<ReadonlySet<string>>(() => {
   if (w) {
     for (const id in w.lineStats) {
       const st: LineStats = w.lineStats[id];
-      const lev = DEMAND_INDEX[demandAt(lineSeconds(st))];
+      // (T-3542: its row by its own hours)
+      const lev = rowAt(st.hours ?? CUTS_DEFAULT, 3, lineSeconds(st));
       // a line whose weekend count is 0 is idle on a Saturday though its weekday count is not
       const n = trainsNowAt(id, lev);
       // a headway is the weekdays' alone: a weekend or holiday count runs whatever it says

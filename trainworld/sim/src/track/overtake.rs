@@ -26,6 +26,7 @@ const CYCLE_MAX_S: f64 = 7200.0;
 const CYCLE_MAX_K: usize = 12;
 /// A line running less often than this is timetabled as if it ran this often (s): a sweep's trains
 /// number the longer headway over the shorter, so a rate near zero would take it minutes (T-3238).
+/// Its shortest row where that is shorter (T-3542: rows from two hours).
 const HEADWAY_MAX_S: f64 = 4.0 * 3600.0;
 /// Results kept per plan, by the two lines' rates.
 const MEMO: usize = 8;
@@ -78,7 +79,7 @@ pub struct Plan {
     next: Vec<usize>,
     /// What a train keeps behind the one ahead (s), at the faster run's speed.
     pub spacing: f64,
-    memo: Mutex<Vec<([u32; 2], Arc<Outcome>)>>,
+    memo: Mutex<Vec<([u32; 3], Arc<Outcome>)>>,
 }
 
 /// The plan for path entries `i0..=i1` of the faster run `fr`, shared with the slower run `sr` from
@@ -164,11 +165,13 @@ impl Plan {
     /// The outcome at level `lev`, at the headways the lines keep now (`pattern_tph`).
     pub fn outcome(&self, net: &Network, lev: usize) -> Arc<Outcome> {
         let (tf, ts) = (pattern_tph(net, self.fast.0, lev), pattern_tph(net, self.slow.0, lev));
-        let key = [tf.to_bits(), ts.to_bits()];
+        // T-3542: a line with rows shorter than four hours caps its headway at its shortest row
+        let cap = [self.fast.0, self.slow.0].iter().map(|&l| net.mix(l as usize).map_or(HEADWAY_MAX_S, |m| (2.0 * m.lead_max_s).min(HEADWAY_MAX_S))).fold(HEADWAY_MAX_S, f64::min);
+        let key = [tf.to_bits(), ts.to_bits(), cap as u32];
         if let Some(o) = self.memo.lock().unwrap().iter().find(|m| m.0 == key) {
             return o.1.clone();
         }
-        let o = Arc::new(self.best(tf as f64, ts as f64));
+        let o = Arc::new(self.best(tf as f64, ts as f64, cap));
         let mut m = self.memo.lock().unwrap();
         if m.len() >= MEMO {
             m.remove(0);
@@ -179,12 +182,12 @@ impl Plan {
 
     /// The relative phase (of `PHASES` a faster headway) with the least waiting, loss and time the
     /// slower trains are held behind faster ones (`Outcome::behind`) an hour.
-    fn best(&self, tf: f64, ts: f64) -> Outcome {
+    fn best(&self, tf: f64, ts: f64, cap: f64) -> Outcome {
         let n = self.points.len();
         if !(tf > 0.0 && ts > 0.0) {
             return Outcome { loss: 0.0, waits: vec![0.0; n], behind: 0.0, offset: 0.0 };
         }
-        let (hf, hs) = ((3600.0 / tf).min(HEADWAY_MAX_S), (3600.0 / ts).min(HEADWAY_MAX_S));
+        let (hf, hs) = ((3600.0 / tf).min(cap), (3600.0 / ts).min(cap));
         let c = cycle(hs, hf);
         let mut best: Option<(f64, Outcome)> = None;
         for k in 0..PHASES {
@@ -201,7 +204,7 @@ impl Plan {
     /// whole cycles, its wait at each point: for checks.
     pub fn trains_at(&self, hs: f64, hf: f64) -> (Outcome, Vec<Vec<f64>>) {
         let (hs, hf) = (hs.min(HEADWAY_MAX_S), hf.min(HEADWAY_MAX_S));
-        let o = self.best(3600.0 / hf, 3600.0 / hs);
+        let o = self.best(3600.0 / hf, 3600.0 / hs, HEADWAY_MAX_S);
         let c = cycle(hs, hf);
         self.sweep(hs, hf, o.offset, (3600.0 / c).ceil().max(1.0) * c)
     }

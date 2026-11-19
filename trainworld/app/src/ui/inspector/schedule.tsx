@@ -4,12 +4,13 @@
 // Changing to trains row) the panel passes in.
 
 import type { ComponentChildren } from "preact";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { lineMoneyTip, Money } from "../MoneyText";
 import { count, duration, headway, money, speed, trainKind } from "../../game/format";
 import { lowerWord, t, tList, tNumber, tSeries } from "../../i18n";
 import { pctWhole } from "./tripText";
 import { crowdColour } from "../../game/palette";
-import { hourSpan, levelHours, PERIODS, rowHours, rowOfPeriod, rowsOf, type Row as PeriodRow } from "../../game/periods";
+import { CUTS_DEFAULT, hourSpan, levelHours, PERIODS, rowAt, rowHourSpans, rowHoursText, rowsOf, typedHours, type Cuts, type Row as PeriodRow } from "../../game/periods";
 import { lineReversed } from "../../game/northUp";
 import { crowdIn, dayNote, endNames, hasTrains, PERIOD_STRIDE, pendingOf, pendingRiders, profitKnown, runningToday, today, upkeepToday } from "../../game/today";
 import { accountVersion, capacity } from "../../game/boarding";
@@ -24,8 +25,8 @@ import { pendingLabel } from "../../game/lineFigures";
 import { headwaysFor, lineKind, makeDefaultHeadway, newHeadway, applyDefaultHeadway } from "../../game/newHeadway";
 import { liveMoney, moneyState, type MoneyState } from "../../game/money";
 import { demandView, lineFiguresIn } from "../../game/demand";
-import { AUTO_SLACK, autoTrainsFor, headwayFromMinutes, headwayShown, nextHeadway, pairRows, refusedForCash, restHeadwayStep, restRowTphShown, rowCount, rowHeadwayShown, rowTrainsShown, rowWeekendShown, setRowAuto, setRowCount, setRowHeadway, setRowWeekendCount, setRowWeekendShare, setWeekendShareAll, stepRowCount, stepRowHeadway, stepRowWeekendCount, stepRowWeekendHeadway, trainCap, typeRowWeekendHeadway, world, MAX_TYPED_VEHICLES, WEEKEND_SHARE_STEP } from "../../game/world";
-import { Row, Segmented, Stepper } from "../widgets";
+import { AUTO_SLACK, autoTrainsFor, headwayFromMinutes, headwayShown, nextHeadway, pairRows, refusedForCash, restHeadwayStep, restRowTphShown, rowCount, rowHeadwayShown, rowTrainsShown, rowWeekendShown, knock, setHours, setRowAuto, setRowCount, setRowHeadway, setRowWeekendCount, setRowWeekendShare, setWeekendShareAll, stepRowCount, stepRowHeadway, stepRowWeekendCount, stepRowWeekendHeadway, trainCap, typeRowWeekendHeadway, world, MAX_TYPED_VEHICLES, WEEKEND_SHARE_STEP } from "../../game/world";
+import { Row, Segmented, shakeEl, Stepper } from "../widgets";
 import { demandPending, Spinner } from "../Spinner";
 
 /** A demand level's name, capitalised: "High". */
@@ -257,7 +258,7 @@ function WeekendCells({ l, st, lev, auto, limits }: { l: LineInput; st: LineStat
 /** The Weekends section's heading row: its name, the line's percent of its weekdays (greyed while its
  * counts are set by hand, since it no longer says what runs), and the button that sets every line's
  * weekends to that percent after a question. */
-function WeekendHead({ l }: { l: LineInput }) {
+function WeekendHead({ l, cols }: { l: LineInput; cols: number }) {
   const wk = rowWeekendShown(l.id);
   const share = wk?.share ?? 100, custom = !!wk?.custom;
   const pct = pctWhole(share / 100);
@@ -271,7 +272,7 @@ function WeekendHead({ l }: { l: LineInput }) {
   };
   return (
     <tr class="sched-day">
-      <th colSpan={3}>
+      <th colSpan={cols}>
         <span class="sched-day-row">
           <span data-tip={t("schedule.weekendsTip")}>{t("schedule.weekends")}</span>
           <Stepper value={<span class={custom ? "muted" : undefined}>{pct}</span>} label={t("schedule.weekendShareLabel")}
@@ -291,21 +292,25 @@ export function rowLabel(n: number, r: number): string {
   if (!row) return "";
   return n === 3 ? demandLabel(DEMANDS[r]) : t("schedule.rowName", { row: row.code });
 }
-/** Row `r`'s hours, its name's hover: "High demand period: 06:00-20:00", "Rush: 06:00-10:00, 16:00-20:00". */
-function rowTimes(n: number, r: number): string {
+/** Row `r`'s hours by the line's hours `c`, its name's hover: "High demand period: 06:00-20:00", "Rush:
+ * 06:00-10:00, 16:00-20:00". */
+function rowTimes(c: Cuts, n: number, r: number): string {
   const row = rowsOf(n)[r];
-  if (n === 3 || !row) return levelTimes(DEMANDS[r]);
-  return t("schedule.rowTimes", { row: row.code, hours: tSeries(rowHours(row).map(([a, b]) => hourSpan(a, b))) });
+  if (!row) return levelTimes(DEMANDS[r]);
+  const hours = tSeries(rowHourSpans(c, row));
+  return n === 3 ? t("schedule.levelTimes", { demand: DEMANDS[r], hours }) : t("schedule.rowTimes", { row: row.code, hours });
 }
+/** The line's hours (T-3542 stage 2), the default's for a line read before they were kept. */
+const hoursOf = (st: LineStats): Cuts => st.hours ?? CUTS_DEFAULT;
 
 /** T-477, T-515, T-2236, T-2335: a row's name in the schedule table, after its crowding dot
  * on today's kind of day (`crowdIn`, from the boarding account) while `v` has one: the fill graded
  * over the line's stretches, the ring (1 px out with a 1 px gap) at its fullest. One hover for both
  * (T-2334): the row's hours, then the dot's. */
-function LevelName({ v, n, r, stops, flip, pending, ends, vehicle }: { v: Float64Array | null; n: number; r: number; stops: number; flip: boolean; pending: boolean; ends?: [string, string]; vehicle: Vehicle }) {
+function LevelName({ v, n, r, stops, flip, pending, ends, vehicle, hours }: { v: Float64Array | null; n: number; r: number; stops: number; flip: boolean; pending: boolean; ends?: [string, string]; vehicle: Vehicle; hours: Cuts }) {
   const c = v ? crowdIn(v, rowsOf(n)[r].periods, stops, flip, ends, vehicle) : null;
   return (
-    <span data-tip={c ? `${rowTimes(n, r)}\n${c.tip}` : rowTimes(n, r)}>
+    <span data-tip={c ? `${rowTimes(hours, n, r)}\n${c.tip}` : rowTimes(hours, n, r)}>
       {c ? <i class="crowd-dot" style={{ background: c.fill, outlineColor: crowdColour(c.peak) }} data-guide={r === 0 ? "crowd" : undefined} />
         : pending && <Spinner class="row-dot" tip={t("schedule.waitingDemand")} />}
       {rowLabel(n, r)}
@@ -316,16 +321,17 @@ function LevelName({ v, n, r, stops, flip, pending, ends, vehicle }: { v: Float6
 /** The Schedule heading, its Trains (Buses, Boats) or Headway switch, and the table of rows. `period`:
  * the period now in the line's local time (its row is bold); `crowd`: the line's periods for the
  * crowding dots (a rail line's); `copy`: the copy and paste buttons; `label`: the heading's words in
- * place of "Schedule" (the schedule panel's "Set by", T-3346); `weekends`: a Weekdays and a Weekends
- * section (the schedule panel's, T-3521); `above`: rows the schedule panel puts under the heading
+ * place of "Schedule" (the schedule panel's "Set by", T-3346); `hours`: the Hours column (a rail line's
+ * schedule window, T-3542); `weekends`: a Weekdays and a Weekends
+ * section (the schedule panel's, T-3521; T-3542: the row now by the line's own hours, `period` unread); `above`: rows the schedule panel puts under the heading
  * (T-3542: the periods). */
-export function Schedule({ l, st, period, limits = NO_LIMITS, crowd = null, canAuto = true, copy, label, weekends = false, above }: {
-  l: LineInput; st: LineStats; period: number; limits?: (Limit | null)[]; crowd?: Float64Array | null; canAuto?: boolean; copy?: ComponentChildren; label?: string; weekends?: boolean; above?: ComponentChildren;
+export function Schedule({ l, st, limits = NO_LIMITS, crowd = null, canAuto = true, copy, label, weekends = false, hours = false, above }: {
+  l: LineInput; st: LineStats; period: number; limits?: (Limit | null)[]; crowd?: Float64Array | null; canAuto?: boolean; copy?: ComponentChildren; label?: string; weekends?: boolean; hours?: boolean; above?: ComponentChildren;
 }) {
   const v = vehicleOf(st);
   const auto = rowHeadwayShown(l.id);
   const stops = l.stops.length;
-  const f = rowsFigs(st), now = rowOfPeriod(f.n, period);
+  const f = rowsFigs(st), now = rowAt(hoursOf(st), f.n, lineSeconds(st));
   // T-2661: the crowding bar in a level's hover reads west to east
   const w = world.value, flip = !!w && lineReversed(l, w, !!st.loop);
   return (
@@ -350,6 +356,7 @@ export function Schedule({ l, st, period, limits = NO_LIMITS, crowd = null, canA
       <table class="sched">
         <tr>
           <th>{f.n === 3 ? t("schedule.demand") : t("schedule.period")}</th>
+          {weekends && hours && <th>{t("schedule.hours")}</th>}
           <th>{manyCap(v)}</th>
           <th>{t("schedule.headway")}</th>
         </tr>
@@ -359,12 +366,12 @@ export function Schedule({ l, st, period, limits = NO_LIMITS, crowd = null, canA
           const p = dot && crowd && lineFiguresIn(demandView.value, l.id, stops) ? crowd : null;
           return (
             <tr class={r === now ? "now" : ""}>
-              <td><LevelName v={p} n={f.n} r={r} stops={stops} flip={flip} ends={endNames(l)} vehicle={vehicleOf(st)} pending={dot && !p && demandPending.value} /></td>
+              <td><LevelName v={p} n={f.n} r={r} stops={stops} flip={flip} ends={endNames(l)} vehicle={vehicleOf(st)} pending={dot && !p && demandPending.value} hours={hoursOf(st)} /></td>
               <LevelCells l={l} st={st} lev={r} auto={auto} limits={limits} />
             </tr>
           );
         })}
-        {weekends && <DaySections l={l} st={st} now={now} limits={limits} crowd={crowd} auto={auto} flip={flip} />}
+        {weekends && <DaySections l={l} st={st} now={now} limits={limits} crowd={crowd} auto={auto} flip={flip} hours={hours} />}
       </table>
       {weekends && <DefaultHeadways id={l.id} auto={headwayShown(l.id)} />}
     </>
@@ -396,7 +403,8 @@ const KIND_TITLE = { rail: "schedule.defaultTitle", tram: "schedule.defaultTitle
 /** T-3521: the schedule panel's table body: a Weekdays section and a Weekends section, each a row a
  * row of the line's (T-3542). Today's kind of day bolds its row now (`now`), as the line panel does, and has `crowd`'s dots;
  * the other section's dots are a weekday's or a Saturday's (the boarding account's kinds 0 and 1). */
-function DaySections({ l, st, now, limits, crowd, auto, flip }: { l: LineInput; st: LineStats; now: number; limits: (Limit | null)[]; crowd: Float64Array | null; auto: readonly number[] | null; flip: boolean }) {
+function DaySections({ l, st, now, limits, crowd, auto, flip, hours }: { l: LineInput; st: LineStats; now: number; limits: (Limit | null)[]; crowd: Float64Array | null; auto: readonly number[] | null; flip: boolean; hours: boolean }) {
+  const cols = hours ? 4 : 3;
   const w = world.value, stops = l.stops.length;
   const today = rowIn(lineCountry(l.stops), Math.floor(lineSeconds(st) / 86400));
   const acct = accountVersion.value;
@@ -404,11 +412,18 @@ function DaySections({ l, st, now, limits, crowd, auto, flip }: { l: LineInput; 
   const asked = useClockQuery(st.status === "running" ? { what: "linePeriods", line: l.num, day: other } : null, [l.num, w?.version, acct, other], (x) => (x.length ? x : null)) ?? null;
   const crowdOf = (row: number) => (row === today ? crowd : asked);
   const f = rowsFigs(st);
+  // T-3542: the row whose typed hours left some row too short, and the hours it needs
+  const [short, setShort] = useState<{ r: number; need: number } | null>(null);
+  useEffect(() => {
+    if (!short) return;
+    const id = setTimeout(() => setShort(null), SHORT_SHOWN_MS);
+    return () => clearTimeout(id);
+  }, [short]);
   return (
     <>
       {[0, 1].map((row) => (
         <>
-          {row === 0 ? <tr class="sched-day"><th colSpan={3}>{t("schedule.weekdays")}</th></tr> : <WeekendHead l={l} />}
+          {row === 0 ? <tr class="sched-day"><th colSpan={cols}>{t("schedule.weekdays")}</th></tr> : <WeekendHead l={l} cols={cols} />}
           {f.rows.map((_, lev) => {
             const shown = row === 0 ? rowTrainsShown(l.id) ?? f.settled : rowWeekendShown(l.id)?.counts ?? f.settled;
             // T-1783: no dot on a row with no vehicles that day
@@ -416,15 +431,65 @@ function DaySections({ l, st, now, limits, crowd, auto, flip }: { l: LineInput; 
             const c = crowdOf(row);
             const p = dot && c && lineFiguresIn(demandView.value, l.id, stops) ? c : null;
             return (
+              <>
               <tr class={lev === now && today === row ? "now" : ""}>
-                <td><LevelName v={p} n={f.n} r={lev} stops={stops} flip={flip} ends={endNames(l)} vehicle={vehicleOf(st)} pending={dot && !p && demandPending.value} /></td>
+                <td><LevelName v={p} n={f.n} r={lev} stops={stops} flip={flip} ends={endNames(l)} vehicle={vehicleOf(st)} pending={dot && !p && demandPending.value} hours={hoursOf(st)} /></td>
+                {hours && <td>{row === 0 && <HoursBox l={l} st={st} n={f.n} r={lev} onShort={(need) => setShort(need ? { r: lev, need } : null)} />}</td>}
                 {row === 0 ? <LevelCells l={l} st={st} lev={lev} auto={auto} limits={limits} /> : <WeekendCells l={l} st={st} lev={lev} auto={auto !== null} limits={limits} />}
               </tr>
+              {row === 0 && short?.r === lev && <tr class="sched-short"><td colSpan={cols} class="bad">{t("schedule.hoursShort", { count: short.need })}</td></tr>}
+              </>
             );
           })}
         </>
       ))}
     </>
+  );
+}
+
+/** How long the hours a row's box was refused for show under it, ms. */
+const SHORT_SHOWN_MS = 5000;
+
+/** T-3542 stage 2: a row's hours in the schedule window ("6-10"; rush "6-10, 16-20"), typed in whole
+ * hours. They set the game's hours, or the line's own once it has its own periods. Hours that leave
+ * some row under two hours (a line of three rows' high under six) are refused: the box shakes and
+ * `onShort` gets the hours that row needs (0 clears it). */
+function HoursBox({ l, st, n, r, onShort }: { l: LineInput; st: LineStats; n: number; r: number; onShort: (need: number) => void }) {
+  const cuts = hoursOf(st), row = rowsOf(n)[r];
+  const text = row ? rowHoursText(cuts, row) : "";
+  const [draft, setDraft] = useState<string | null>(null);
+  const done = useRef(false), fresh = useRef(false);
+  const box = useRef<HTMLSpanElement>(null);
+  const open = (el: HTMLInputElement | null) => {
+    if (!el || !fresh.current) return;
+    fresh.current = false;
+    el.focus();
+    el.select();
+  };
+  const commit = () => {
+    if (done.current) return;
+    done.current = true;
+    const d = draft;
+    setDraft(null);
+    if (d === null || d.trim() === text) return;
+    const got = typedHours(cuts, n, r, d);
+    if (!got) return;
+    if ("short" in got) { knock(); shakeEl(box.current); onShort(got.short); return; }
+    onShort(0);
+    setHours(got.cuts, st.periodsOwn > 0 ? l.id : undefined);
+  };
+  const label = t("schedule.hoursLabel", { row: rowLabel(n, r) });
+  return (
+    <span ref={box} class="sched-hours" onAnimationEnd={() => box.current?.classList.remove("shake")}>
+      {draft === null
+        ? <button class="v typed" aria-label={t("widgets.type", { label })} onClick={() => { done.current = false; fresh.current = true; setDraft(text); }}>{text}</button>
+        : <input class="v typing" ref={open} value={draft} aria-label={label}
+          onInput={(e) => setDraft(e.currentTarget.value)} onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") commit();
+            if (e.key === "Escape") { done.current = true; setDraft(null); }
+          }} />}
+    </span>
   );
 }
 

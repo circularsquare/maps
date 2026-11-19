@@ -10,7 +10,7 @@ A day is cut into five periods, each solved on its own.
 | Evening | 20 to 24 | medium |
 | Night | 0 to 6 | low |
 
-Your high, medium and low train settings run in those hours.
+Your high, medium and low train settings run in those hours. In a line's schedule window you can split them into four or five periods and move their hours, two hours at least; the periods above stay put, so a setting that reaches into another period is averaged into it.
 
 Commutes bunch up. 70% of the day's trips to work start in the morning peak, and 58% of the trips home in the evening peak. Errands and visits spread more evenly through the day.
 

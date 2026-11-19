@@ -175,6 +175,10 @@ export type EditOp =
   | { op: "setPeriods"; line?: number; rows: number }
   | { op: "setRowTrains"; line: number; trains: number[] }
   | { op: "setRowHeadways"; line: number; seconds: number[] }
+  /** T-3542: the hours the lines split their day at, five (where the morning, midday, afternoon, evening
+   * and night start; game/periods.ts `Cuts`): the game's (no `line`) or one line's own (empty: the game's;
+   * `TrackApi.set_game_hours`, `set_line_hours`) */
+  | { op: "setHours"; line?: number; cuts: number[] }
   /** T-3542: a line of four or five rows' weekend trains per row by hand, and the headways stepped
    * to (empty: kept where the count did not change; `TrackApi.set_line_row_weekend`) */
   | { op: "rowWeekend"; line: number; counts: number[]; headways: number[] }
@@ -653,6 +657,10 @@ export interface ClockLine {
    * the game's; `line_periods_own`) */
   periods: number;
   periodsOwn: number;
+  /** T-3542: the hours it splits its day at, five (`line_hours`), and whether they are its own
+   * (`line_hours_own`) */
+  hours: number[];
+  hoursOwn: boolean;
   /** T-3542: a line of four or five rows: per row in the day's order its figures (`line_rows`), its
    * whole trains as set (`line_row_trains`), its headways (`line_row_headways`, absent on counts) and
    * its weekends (`line_row_weekend`) */
@@ -753,6 +761,8 @@ export interface ClockState {
   fullTrack: Float64Array[];
   /** T-3542: the rows (3, 4 or 5) lines following the game's set their trains in (`TrackApi.game_periods`) */
   periods: number;
+  /** T-3542: the hours lines following the game's split their day at (`TrackApi.game_hours`) */
+  hours: number[];
   /** US$M */
   cash: number;
   builtCost: number;

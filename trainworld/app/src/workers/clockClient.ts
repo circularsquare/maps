@@ -342,6 +342,8 @@ function toWorld(s: ClockState): WorldView {
       ...(l.twinOf !== undefined ? { twinOf: String(l.twinOf) } : {}),
       periods: l.periods,
       periodsOwn: l.periodsOwn,
+      hours: l.hours,
+      hoursOwn: l.hoursOwn,
       ...(l.rows ? { rows: rowFigsOf(l.rows) } : {}),
       ...(l.bus ? { bus: l.bus } : {}),
     };
@@ -359,6 +361,7 @@ function toWorld(s: ClockState): WorldView {
   return {
     version: s.version,
     periods: s.periods,
+    hours: s.hours,
     capacity: s.markers,
     fullTrack: (s.fullTrack ?? []).map((v) => {
       const m = new Map<number, { rho: number; tph: number }>();

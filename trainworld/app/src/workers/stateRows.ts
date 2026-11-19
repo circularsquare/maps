@@ -108,15 +108,18 @@ interface LineRead {
   tphP: number[];
   periods: number;
   periodsOwn: number;
+  hours: number[];
+  hoursOwn: boolean;
   rows: ClockLine["rows"];
 }
 
 /** T-3542: a line's trains an hour per period and its rows; for four or five rows, its figures per row. */
-function periodsOf(a: TrackApi, id: number): Pick<LineRead, "tphP" | "periods" | "periodsOwn" | "rows"> {
+function periodsOf(a: TrackApi, id: number): Pick<LineRead, "tphP" | "periods" | "periodsOwn" | "hours" | "hoursOwn" | "rows"> {
   const periods = a.line_period_count(id), periodsOwn = a.line_periods_own(id), tphP = Array.from(a.line_tph_by_period(id));
-  if (periods <= 3) return { tphP, periods, periodsOwn, rows: undefined };
+  const hours = Array.from(a.line_hours(id)), hoursOwn = a.line_hours_own(id).length > 0;
+  if (periods <= 3) return { tphP, periods, periodsOwn, hours, hoursOwn, rows: undefined };
   const auto = a.line_row_headways(id);
-  return { tphP, periods, periodsOwn, rows: { figs: Array.from(a.line_rows(id)), set: Array.from(a.line_row_trains(id)), ...(auto.length ? { auto: Array.from(auto) } : {}), weekend: Array.from(a.line_row_weekend(id)) } };
+  return { tphP, periods, periodsOwn, hours, hoursOwn, rows: { figs: Array.from(a.line_rows(id)), set: Array.from(a.line_row_trains(id)), ...(auto.length ? { auto: Array.from(auto) } : {}), weekend: Array.from(a.line_row_weekend(id)) } };
 }
 
 export function upgradesOf(a: TrackApi): Map<number, number> {
@@ -392,11 +395,11 @@ export class StateRows {
     }
     const out: ClockLine[] = [];
     for (const r of read) {
-      const { i, id, ok, running, prev, fresh, heavy, auto, fast, tram, loopKind, oneWay, limit, weekend, restTph, shift, upkeep, pairs, twinOf, tphP, periods, periodsOwn, rows } = r;
+      const { i, id, ok, running, prev, fresh, heavy, auto, fast, tram, loopKind, oneWay, limit, weekend, restTph, shift, upkeep, pairs, twinOf, tphP, periods, periodsOwn, hours, hoursOwn, rows } = r;
       // the numbers behind the cheap fields: when all are as kept (and the heavy parts are), the row is the kept one
       const raw = li.slice(i, i + 22);
       const extra = [upkeep, fast ? 1 : 0, tram ? 1 : 0, loopKind, oneWay ? 1 : 0, limit, shift, pairs, twinOf, ...auto, weekend.length, ...weekend, ...restTph,
-        ...tphP, periods, periodsOwn, ...(rows ? [rows.figs.length, ...rows.figs, rows.set.length, ...rows.set, rows.auto?.length ?? -1, ...(rows.auto ?? []), rows.weekend.length, ...rows.weekend] : [])];
+        ...tphP, periods, periodsOwn, ...hours, hoursOwn ? 1 : 0, ...(rows ? [rows.figs.length, ...rows.figs, rows.set.length, ...rows.set, rows.auto?.length ?? -1, ...(rows.auto ?? []), rows.weekend.length, ...rows.weekend] : [])];
       if (!fresh && prev && sameNumbers(raw, prev.raw) && sameNumbers(extra, prev.extra)) {
         out.push(prev.row);
         continue;
@@ -426,7 +429,7 @@ export class StateRows {
         limit,
         ...(weekend.length ? { weekend } : {}),
         restTph,
-        tphP, periods, periodsOwn,
+        tphP, periods, periodsOwn, hours, hoursOwn,
         ...(rows ? { rows } : {}),
         ...(pairs === 1 || pairs === 2 ? { pairs } : {}),
         ...(twinOf >= 0 ? { twinOf } : {}),

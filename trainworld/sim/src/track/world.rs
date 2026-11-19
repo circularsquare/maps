@@ -37,6 +37,9 @@ pub enum Op {
     Rows { line: Option<u32>, rows: u8 },
     /// T-3542: set a line's midday and afternoon rows (`LineData::x`).
     Extra { id: u32, x: Extra },
+    /// T-3542: the hours (`params::Cuts`) the game's lines split their day at (`line` None), or
+    /// line `line`'s own (all 0: the game's).
+    Hours { line: Option<u32>, cuts: Cuts },
     /// Split `edge` at chainage `s` with a new node `node`; the far part becomes `new_edge`.
     /// Line paths through it are rewritten. Geometry does not change.
     Split { edge: u32, s: f64, node: u32, new_edge: u32 },
@@ -250,6 +253,15 @@ impl TrackWorld {
             return None;
         }
         let mut ops = vec![Op::Rows { line, rows }];
+        // a line back to the game's rows takes the game's hours too; one taking its own rows keeps
+        // the game's hours as its own, so the game's next hours leave it as it is
+        let own_hours = |l: u32| net.line_x.get(l as usize).is_some_and(|x| x.hours != [0; 5]);
+        let hours_after = match (line, rows) {
+            (Some(l), 0) if own_hours(l) => Some([0; 5]),
+            (Some(l), _) if rows != 0 && !own_hours(l) && net.line_rows.get(l as usize) == Some(&0) => Some(net.hours_default),
+            _ => None,
+        };
+        if let Some(cuts) = hours_after { ops.push(Op::Hours { line, cuts }); }
         // a line's rows after the edit
         let after = |l: usize| -> usize {
             let own = if line.is_some() { rows } else { net.line_rows[l] };
@@ -276,6 +288,7 @@ impl TrackWorld {
             };
             let Some(d) = net.line_data(l) else { continue };
             let mut x = d.x;
+            if let Some(c) = hours_after { x.hours = c; }
             if let Some(t) = net.trains_of(i) {
                 let (m, tx) = unplace(remap(t, true));
                 x.trains = tx;
@@ -462,7 +475,8 @@ impl TrackWorld {
                 let mut hs: Vec<(f64, usize, bool, u32)> = vec![];
                 for &l in lines {
                     let ls = &self.svc.lines[l];
-                    if !self.net.line_ok(l as u32) || !ls.ok || !ls.running || ls.is_loop() || ls.is_bus() {
+                    // T-3542: a slot its hours share between rows runs no one headway to pace
+                    if !self.net.line_ok(l as u32) || !ls.ok || !ls.running || ls.is_loop() || ls.is_bus() || self.net.mixed(l, lev).is_some() {
                         continue;
                     }
                     let last = self.pace_in[l][lev];
@@ -966,7 +980,7 @@ impl TrackWorld {
                         sw.2 = short.abs();
                     }
                     if sign != 0 { sw.0 = sign; }
-                    let left = (id, lev, rates[j][lev].to_bits(), trips[j][lev].to_bits(), self.net.trains_at(id as usize, lev));
+                    let left = (id, lev, rates[j][lev].to_bits(), trips[j][lev].to_bits(), self.net.trains_key(id as usize, lev));
                     keep[j][lev] = (sw.1 >= SWING_TURNS && short > 0.0) || self.net.settle_kept.contains(&left);
                     // T-1787: on an edit a settled line is left as it is, not probed and stepped
                     // with the rest of its level: on shared track each line moved re-times its
@@ -994,7 +1008,7 @@ impl TrackWorld {
             for (j, &id) in ids.iter().enumerate() {
                 let i = id as usize;
                 for lev in (0..SLOTS).filter(|&lev| active[lev]) {
-                    let count = self.net.trains_at(i, lev);
+                    let count = self.net.trains_in(i, lev);
                     if !off[j][lev] {
                         self.net.line_tph[i][lev] = rates[j][lev];
                         continue;
@@ -1005,7 +1019,7 @@ impl TrackWorld {
                     let old = rates[j][lev] as f64;
                     let runs = self.net.running_trains(i, lev, trip);
                     let residual = old * trip - runs * 3600.0;
-                    self.net.line_tph[i][lev] = (if count == 0 || trip <= 0.0 { 0.0 } else if runs < count as f64 {
+                    self.net.line_tph[i][lev] = (if count == 0.0 || trip <= 0.0 { 0.0 } else if runs < count {
                         // T-2607: the headway set, whatever the round trip
                         runs * 3600.0 / trip
                     } else {
@@ -1028,11 +1042,11 @@ impl TrackWorld {
             if still { break; }
             last_rates = Some(rates);
         }
-        for &id in &ids { self.svc.lines[id as usize].trains = self.net.places_in(id as usize, self.net.trains_of(id as usize).unwrap(), 0); }
+        for &id in &ids { self.svc.lines[id as usize].trains = self.net.slot_trains(id as usize); }
         self.net.settle_kept.clear();
         for (j, &id) in ids.iter().enumerate() {
             for lev in (0..SLOTS).filter(|&lev| kept_now[j][lev]) {
-                self.net.settle_kept.push((id, lev, self.net.line_tph[id as usize][lev].to_bits(), self.svc.lines[id as usize].round_trip[lev].to_bits(), self.net.trains_at(id as usize, lev)));
+                self.net.settle_kept.push((id, lev, self.net.line_tph[id as usize][lev].to_bits(), self.svc.lines[id as usize].round_trip[lev].to_bits(), self.net.trains_key(id as usize, lev)));
             }
         }
         affected.extend(ids.into_iter().filter(|&id| before[id as usize] != self.net.line_tph[id as usize]));
@@ -1049,7 +1063,7 @@ impl TrackWorld {
     pub fn step_is_service(&self, redo: bool) -> bool {
         fn only_counts(op: &Op) -> bool {
             match op {
-                Op::TrainCounts { .. } | Op::AutoTrains { .. } | Op::Weekend { .. } | Op::Rows { .. } | Op::Extra { .. } => true,
+                Op::TrainCounts { .. } | Op::AutoTrains { .. } | Op::Weekend { .. } | Op::Rows { .. } | Op::Extra { .. } | Op::Hours { .. } => true,
                 Op::Batch(ops) => !ops.is_empty() && ops.iter().all(only_counts),
                 _ => false,
             }
@@ -1237,6 +1251,9 @@ impl TrackWorld {
     fn commit_with(&mut self, op: Op, checked: bool, service: bool) -> Result<(EditResult, Op), Vec<Issue>> {
         let (cost_before, built_before) = self.net.total_and_built_cost();
         let again = op.clone();
+        // T-3542: the game's hours move every line (see `reslot` below)
+        let game_hours = |o: &Op| matches!(o, Op::Hours { line: None, .. });
+        let hours_game = match &op { Op::Batch(v) => v.iter().any(game_hours), o => game_hours(o) };
         // T-3482: each line's rates before the edit, weekdays' and weekends', None for a line not there
         let had: Vec<Option<[[f32; SLOTS]; 2]>> = (0..self.net.line_count()).map(|l| self.net.line_ok(l as u32).then(|| [WEEKDAYS, WEEKEND].map(|row| std::array::from_fn(|lev| self.net.line_tph_on(l, row, lev))))).collect();
         let worked: [bool; SLOTS] = std::array::from_fn(|s| self.net.slot_worked(s));
@@ -1272,7 +1289,18 @@ impl TrackWorld {
         }
         // T-3542: rows that split or join the slots work every line out again, as a load does
         let old_slots = self.net.period_slot();
-        if service && self.net.refresh_slots() {
+        let reslotted = service && self.net.refresh_slots();
+        // T-3542: a line whose hours fall into the slots otherwise (its hours, its rows) settles
+        // afresh: what kept it no longer says where its rates go
+        let moved = if service { std::mem::take(&mut self.net.mix_moved) } else { vec![] };
+        if !moved.is_empty() {
+            self.net.settle_kept.retain(|k| !moved.contains(&k.0));
+            self.net.settle_kept_rest.retain(|k| !moved.contains(&k.0));
+        }
+        // the game's hours move every line: worked out again as a periods switch is (London 0.9 s
+        // natively against 1.8-6.8 s as an edit of every line's schedule)
+        let hours_all = hours_game && !moved.is_empty();
+        if reslotted || hours_all {
             self.reslot(old_slots);
             let (cost_after, built_after) = self.net.total_and_built_cost();
             let all: Vec<u32> = (0..self.net.line_count() as u32).filter(|&l| self.net.line_ok(l)).collect();
@@ -1703,6 +1731,7 @@ impl TrackWorld {
             Op::Weekend { id, weekend } => Op::Weekend { id, weekend: n.set_weekend(id, weekend)? },
             Op::Rows { line, rows } => Op::Rows { line, rows: n.set_rows(line, rows)? },
             Op::Extra { id, x } => Op::Extra { id, x: n.set_extra(id, x)? },
+            Op::Hours { line, cuts } => Op::Hours { line, cuts: n.set_hours(line, cuts)? },
             Op::Split { edge, s, node, new_edge } => {
                 if n.node_ok(node) {
                     return Err(Issue::NoSuchNode { node });

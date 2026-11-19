@@ -66,6 +66,9 @@ use super::twin::Twin;
 /// rated lines' rates there and the kept lines there as `LRT1`'s with the slot in place of the row.
 /// The other blocks keep three rows: each from the row's slot (`ROW_SLOT`), so a line of four or five
 /// rows reads there as its rush or morning, evening and night. Without it every line sets three.
+/// A trailing `LHR1` block (T-3542) gives the hours lines split their day at (`params::Cuts`) where
+/// they are other than the default: the game's five, then the lines with their own (count, then index
+/// and five); without it every line splits it at the default hours.
 const MAGIC: &[u8; 4] = b"TWT4";
 /// TWT5 (T-125) is TWT4 byte for byte except that the metres are in the Lambert conformal world
 /// frame (`frame.rs`). TWT4 and older are always the legacy equirectangular frame, and a network
@@ -78,12 +81,12 @@ const MAGIC_TWT6: &[u8; 4] = b"TWT6";
 
 /// T-1826: the trailing blocks this build reads, in the order they are written. A block it does not
 /// know stops the decoder, which then reports the bytes left over (`decode_read`).
-pub const BLOCKS: [&[u8; 4]; 29] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1", b"LPS1", b"LWE1", b"LOS1", b"LPD1"];
+pub const BLOCKS: [&[u8; 4]; 30] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1", b"LPS1", b"LWE1", b"LOS1", b"LPD1", b"LHR1"];
 /// T-1826: the save level this build writes into the game header (`level`) and reads up to. Raised
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over. Saves from before it have none, read as 0.
-pub const LEVEL: u32 = 24;
+pub const LEVEL: u32 = 25;
 /// T-3750: the last level whose station buildings all carry a name, a copy of a station's for one the
 /// player never named; from 24 an empty name is none, and the building shows its complex's.
 pub const OLD_BUILDING_NAMES: u32 = 23;
@@ -661,6 +664,17 @@ pub fn encode(net: &Network) -> Vec<u8> {
             }
         }
     }
+    // T-3542: after LPD1, only where some hours are other than the default
+    let own: Vec<(usize, Cuts)> = lines.iter().enumerate().map(|(i, &l)| (i, net.line_x[l as usize].hours)).filter(|x| x.1 != [0; 5]).collect();
+    if net.hours_default != CUTS_DEFAULT || !own.is_empty() {
+        w.0.extend_from_slice(b"LHR1");
+        for c in net.hours_default { w.u(c as u64); }
+        w.u(own.len() as u64);
+        for (i, c) in own {
+            w.u(i as u64);
+            for h in c { w.u(h as u64); }
+        }
+    }
     w.0
 }
 
@@ -1190,6 +1204,20 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
         r.1 += 4;
         read_lpd1(&mut r, &mut net, n_lines)?;
     }
+    if r.0.get(r.1..r.1 + 4) == Some(b"LHR1") {
+        r.1 += 4;
+        let mut cuts = || -> Result<Cuts, String> { let mut c = [0u8; 5]; for x in c.iter_mut() { *x = r.u()?.min(255) as u8; } Ok(c) };
+        let game = cuts()?;
+        if cuts_ok(game) { net.hours_default = game; }
+        let n = r.u()?;
+        for _ in 0..n {
+            let i = r.u()? as usize;
+            let mut c = [0u8; 5];
+            for x in c.iter_mut() { *x = r.u()?.min(255) as u8; }
+            if i < n_lines && cuts_ok(c) { net.line_x[i].hours = c; }
+        }
+        net.refresh_mix();
+    }
     for l in manual {
         fold_manual(&mut net, l);
     }
@@ -1424,7 +1452,7 @@ mod tests {
         for tag in &written {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
-        assert_eq!((LEVEL, BLOCKS.len()), (24, 29), "a new block raises LEVEL: raise it, then update this pin");
+        assert_eq!((LEVEL, BLOCKS.len()), (25, 30), "a new block raises LEVEL: raise it, then update this pin");
     }
 
     /// T-2217: buildings come back as they were, in their order; a network without them encodes as

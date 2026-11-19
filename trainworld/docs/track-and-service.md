@@ -1259,7 +1259,22 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   High runs 6-20 (the morning peak, midday and evening peak), medium 20-24, low 0-6
   (`PERIOD_ROW`; Anita, 2026-10-27, T-1536) on every kind of day. The track side keeps its figures
   per period (`SLOTS`, slot = period, T-3542); a row's periods share its first period's slot
-  (`Network::period_slot`), so only three are worked out. **Weekends** (T-3521, from
+  (`Network::period_slot`), so only three are worked out. **Hours** (T-3542 stage 2, Anita
+  2026-11-17): the five hours a line's day splits at (`params::Cuts`, 6, 10, 16, 20 and 24 at first)
+  are the game's, or a line's own once it has its own periods (it keeps the game's hours as its own
+  then; "Same as game" drops both). Whole hours, each stretch two hours at least (high on a line of
+  three rows holds three stretches, so six), the evening may run past midnight. Demand's periods
+  never move: a row reaching into another period is **averaged into that period's slot**
+  (`Network::mixed`, `Mix`): the slot runs the time-weighted rate of its rows (the settle counts each
+  row's trains for its share of the slot's hours), each row's piece of it leaves at the row's own
+  rate there (the slot's shared out by what each row's trains run, `place_tph`), departures break
+  at the line's hours and at the period bounds (`service::Hours`, `day_stretches`), and demand reads
+  the rate of the mean headway the period's riders meet, riders arriving by the period's shape and
+  those in a piece with no trains left to the span (`Service::demand_tph`). A row's borrowed hours
+  run no more often than the row does in a slot of its own (`running_borrowed`), a mixed slot is
+  not paced at merges, and the lead and the overtake sweep's longest headway are capped at half and
+  all of the line's shortest row (2 h and 4 h at the default hours, so those games run as before).
+  Weekends keep the same hours. **Weekends** (T-3521, from
   GabrielMoraez's PR 13; `LineData::weekend`): Saturday and Sunday (a country's own weekend) and
   public holidays run a line's weekend trains; a superholiday's days and the weekend days a country
   works run its weekday ones (`rowOfIn` in `game/holidayCalendar.ts`, sent per line as
