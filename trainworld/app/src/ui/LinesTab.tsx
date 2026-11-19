@@ -42,7 +42,7 @@ const lineTypeRank = (st: LineStats | undefined) => {
   const v = vehicleOf(st);
   return v === "train" ? (st.fast ? 1 : 0) : v === "tram" ? 2 : v === "bus" ? 3 : 4;
 };
-/** T-3798: a row's type while the list is sorted by it, its icon with its name in the hover */
+/** T-3808: a row's type, its icon with its name in the hover */
 const TYPE_ICONS = [Icon.train, Icon.highSpeed, Icon.tram, Icon.bus, Icon.ferry];
 const typeName = (rank: number) => [t("settingsTab.shapeTrain"), t("toolBar.highSpeed"), t("toolBar.tram"), t("buildTab.bus"), t("buildTab.ferry")][rank];
 function TypeCell({ rank }: { rank: number }) {
@@ -421,7 +421,7 @@ export function LinesTab() {
             <TrainsNow line={l.id} n={trainsNowAt(l.id, levOf(l.id))} period={periodOf(l)} at={periodAt(lineSeconds(st))} bus={!!st.bus} ferry={!!st.bus?.ferry} tram={!!st.tram} v={crowdOf(l)} lev={demandAt(lineSeconds(st))} stops={l.stops.length} flip={lineReversed(l, w, !!st.loop)} ends={endNames(l)} />
           </>
         )}
-        {key === "kind" && <TypeCell rank={lineTypeRank(st)} />}
+        <TypeCell rank={lineTypeRank(st)} />
         {key === "near" && <Near m={sc.lineDist.get(l.id)} />}
       </li>
     );
@@ -446,7 +446,7 @@ export function LinesTab() {
           )}
           {showCity && <span class="val muted w-city">{cityOf.get(it.ls[0].id)}</span>}
           <GroupFigures ls={it.ls} w={w} trains={trains} period={periodOf(it.ls[0])} />
-          {key === "kind" && <TypeCell rank={typeOf(it.ls)} />}
+          <TypeCell rank={typeOf(it.ls)} />
           {key === "near" && <Near m={near(it.ls)} />}
         </li>
         {isOpen && it.kids.map((k) => (k.g ? groupRows(k, depth + 1) : lineRow(k.ls[0], depth + 1)))}
@@ -458,7 +458,6 @@ export function LinesTab() {
     const n = typed.trim();
     if (n && n !== it.name) void edit({ op: "groupName", group: it.g, name: n });
   };
-  const typeCol = { key: "kind" as const, label: t("linesTab.colType"), tip: t("linesTab.sortType"), first: 1 as const, ...(key === "kind" ? { cls: "w-kind", left: true } : { beside: true }) };
   const ghost = drag?.on ? w.save.lines.find((l) => l.id === drag.id) : undefined;
   const ghostGroup = drag?.on && drag.id.startsWith("g:") ? findGroup(Number(drag.id.slice(2))) : undefined;
   return (
@@ -475,16 +474,14 @@ export function LinesTab() {
         </span>
       </div>
       {items.length === 0 && <p class="muted">{listedLines(w).length === 0 ? t("linesTab.none") : t("linesTab.noneHere")}</p>}
-      <div class={"lines-box" + (showCity ? " with-city" : "") + (key === "near" ? " near-on" : "") + (key === "kind" ? " kind-on" : "") + (eyes ? " vis-on" : "")}>
+      <div class={"lines-box" + (showCity ? " with-city" : "") + (key === "near" ? " near-on" : "") + (eyes ? " vis-on" : "")}>
       {listedLines(w).length > 0 && <SortHead sort={lineSort} hand={hand.length ? () => setHandOrder("lines", []) : undefined} cols={[
         { key: "name", label: t("linesTab.colName"), tip: t("linesTab.sortName"), first: 1 },
-        // T-3798: beside Name, or over its column once sorted by it
-        ...(key === "kind" ? [] : [typeCol]),
         ...(showCity ? [{ key: "city" as const, label: t("linesTab.colCity"), tip: t("linesTab.sortCity"), first: 1 as const, cls: "w-city", left: true }] : []),
         { key: "riders", label: t("linesTab.colRiders"), tip: t("linesTab.sortRiders"), first: -1, cls: "w-riders" },
         { key: "money", label: t("linesTab.colMoney"), tip: t("linesTab.sortMoney"), first: -1, cls: "w-linemoney" },
         { key: "trains", label: t("linesTab.colTrains"), tip: t("linesTab.sortTrains"), first: -1, cls: "w-trains" },
-        ...(key === "kind" ? [typeCol] : []),
+        { key: "kind", label: t("linesTab.colType"), tip: t("linesTab.sortType"), first: 1, cls: "w-kind", left: true },
         { key: "near", label: t("linesTab.colNear"), tip: t("linesTab.sortNear"), first: 1, ...(key === "near" ? { cls: "w-near" } : { cls: "near-off", beside: true }) },
       ]} />}
       <ul class={"rows pick" + (drag?.on ? " dragging" : "")}>

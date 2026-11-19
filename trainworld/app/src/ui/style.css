@@ -368,7 +368,7 @@ body.resizing, body.resizing * { user-select: none; }
 .rows .val.w-mode svg { width: 14px; height: 14px; }
 .w-riders { width: 56px; }
 .w-near { width: 58px; white-space: nowrap; }
-/* T-3798: a line's type icon, sorted by type */
+/* T-3808: a line's type icon, its own column */
 .lines-box .w-kind { width: 38px; display: inline-flex; justify-content: flex-end; }
 .lines-box .rows .w-kind svg { width: 14px; height: 14px; }
 /* T-670: the Lines list's city column, left aligned and cut to the room */
@@ -392,11 +392,11 @@ body.resizing, body.resizing * { user-select: none; }
 .rows .val.pending.stacked { display: flex; flex-direction: column; align-items: flex-end; line-height: 13px; }
 .rows .val.pending .pending-label { font-size: 11px; line-height: 11px; }
 .h .pending-note { margin-left: auto; font-weight: 400; font-size: 12px; }
-@container lines (max-width: 244px) { .lines-box .w-linemoney { display: none; } }
-@container lines (max-width: 310px) { .lines-box.with-city .w-linemoney { display: none; } }
-@container lines (max-width: 310px) { .lines-box.near-on .w-linemoney { display: none; } }
-@container lines (max-width: 376px) { .lines-box.with-city.near-on .w-linemoney { display: none; } }
-@container lines (max-width: 314px) { .lines-box.with-city.near-on .w-city { display: none; } }
+@container lines (max-width: 290px) { .lines-box .w-linemoney { display: none; } }
+@container lines (max-width: 356px) { .lines-box.with-city .w-linemoney { display: none; } }
+@container lines (max-width: 356px) { .lines-box.near-on .w-linemoney { display: none; } }
+@container lines (max-width: 422px) { .lines-box.with-city.near-on .w-linemoney { display: none; } }
+@container lines (max-width: 360px) { .lines-box.with-city.near-on .w-city { display: none; } }
 /* T-3020: the long words for million and billion make the figure columns wider (German, Russian and
    Turkish by about 18 px each, French, Spanish and Portuguese by 8), and the drops come at a wider list */
 :root:lang(de), :root:lang(ru), :root:lang(tr) { --dock-w: clamp(344px, 26vw, 396px); }
@@ -410,14 +410,14 @@ body.resizing, body.resizing * { user-select: none; }
 :root:lang(fr) :is(.lines-box, .lines-box.with-city) .w-riders, :root:lang(es) :is(.lines-box, .lines-box.with-city) .w-riders, :root:lang(pt) :is(.lines-box, .lines-box.with-city) .w-riders { width: 48px; }
 :root:lang(fr) .lines-box .w-linemoney, :root:lang(es) .lines-box .w-linemoney, :root:lang(pt) .lines-box .w-linemoney { width: 70px; }
 :root:lang(fr) .w-num, :root:lang(es) .w-num, :root:lang(pt) .w-num { width: 48px; }
-@container lines (max-width: 290px) { :root:lang(de) .lines-box .w-linemoney, :root:lang(ru) .lines-box .w-linemoney, :root:lang(tr) .lines-box .w-linemoney { display: none; } }
-@container lines (max-width: 356px) { :root:lang(de) .lines-box:is(.with-city, .near-on) .w-linemoney, :root:lang(ru) .lines-box:is(.with-city, .near-on) .w-linemoney, :root:lang(tr) .lines-box:is(.with-city, .near-on) .w-linemoney { display: none; } }
-@container lines (max-width: 422px) { :root:lang(de) .lines-box.with-city.near-on .w-linemoney, :root:lang(ru) .lines-box.with-city.near-on .w-linemoney, :root:lang(tr) .lines-box.with-city.near-on .w-linemoney { display: none; } }
-@container lines (max-width: 360px) { :root:lang(de) .lines-box.with-city.near-on .w-city, :root:lang(ru) .lines-box.with-city.near-on .w-city, :root:lang(tr) .lines-box.with-city.near-on .w-city { display: none; } }
-@container lines (max-width: 268px) { :root:lang(fr) .lines-box .w-linemoney, :root:lang(es) .lines-box .w-linemoney, :root:lang(pt) .lines-box .w-linemoney { display: none; } }
-@container lines (max-width: 334px) { :root:lang(fr) .lines-box:is(.with-city, .near-on) .w-linemoney, :root:lang(es) .lines-box:is(.with-city, .near-on) .w-linemoney, :root:lang(pt) .lines-box:is(.with-city, .near-on) .w-linemoney { display: none; } }
-@container lines (max-width: 400px) { :root:lang(fr) .lines-box.with-city.near-on .w-linemoney, :root:lang(es) .lines-box.with-city.near-on .w-linemoney, :root:lang(pt) .lines-box.with-city.near-on .w-linemoney { display: none; } }
-@container lines (max-width: 338px) { :root:lang(fr) .lines-box.with-city.near-on .w-city, :root:lang(es) .lines-box.with-city.near-on .w-city, :root:lang(pt) .lines-box.with-city.near-on .w-city { display: none; } }
+@container lines (max-width: 336px) { :root:lang(de) .lines-box .w-linemoney, :root:lang(ru) .lines-box .w-linemoney, :root:lang(tr) .lines-box .w-linemoney { display: none; } }
+@container lines (max-width: 402px) { :root:lang(de) .lines-box:is(.with-city, .near-on) .w-linemoney, :root:lang(ru) .lines-box:is(.with-city, .near-on) .w-linemoney, :root:lang(tr) .lines-box:is(.with-city, .near-on) .w-linemoney { display: none; } }
+@container lines (max-width: 468px) { :root:lang(de) .lines-box.with-city.near-on .w-linemoney, :root:lang(ru) .lines-box.with-city.near-on .w-linemoney, :root:lang(tr) .lines-box.with-city.near-on .w-linemoney { display: none; } }
+@container lines (max-width: 406px) { :root:lang(de) .lines-box.with-city.near-on .w-city, :root:lang(ru) .lines-box.with-city.near-on .w-city, :root:lang(tr) .lines-box.with-city.near-on .w-city { display: none; } }
+@container lines (max-width: 314px) { :root:lang(fr) .lines-box .w-linemoney, :root:lang(es) .lines-box .w-linemoney, :root:lang(pt) .lines-box .w-linemoney { display: none; } }
+@container lines (max-width: 380px) { :root:lang(fr) .lines-box:is(.with-city, .near-on) .w-linemoney, :root:lang(es) .lines-box:is(.with-city, .near-on) .w-linemoney, :root:lang(pt) .lines-box:is(.with-city, .near-on) .w-linemoney { display: none; } }
+@container lines (max-width: 446px) { :root:lang(fr) .lines-box.with-city.near-on .w-linemoney, :root:lang(es) .lines-box.with-city.near-on .w-linemoney, :root:lang(pt) .lines-box.with-city.near-on .w-linemoney { display: none; } }
+@container lines (max-width: 384px) { :root:lang(fr) .lines-box.with-city.near-on .w-city, :root:lang(es) .lines-box.with-city.near-on .w-city, :root:lang(pt) .lines-box.with-city.near-on .w-city { display: none; } }
 /* T-1791: a line group's row (chevron, its lines' chips, its name) and its lines indented under it;
    a dragged row's target outlined */
 /* T-1818: the figure columns never shrink, and a group's row has the same gaps as a line's, so the

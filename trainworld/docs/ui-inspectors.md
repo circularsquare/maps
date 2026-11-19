@@ -114,9 +114,8 @@ purpose filter the purpose drawn is ringed in the bar.
 ### The Lines tab
 
 - **The Lines tab** has New line above its list (actions go above lists of any length; new bus and ferry lines are started from the Build tab or U and O, T-3420). The list
-  sorts by clicking a column header [T-310]: Name, Type (T-3798: train, high speed, tram, bus, ferry; beside Name,
-  like Near, until it is used, then a column at the row's end of each line's type icon, `Icon.highSpeed` for high
-  speed, its name in the hover; a group goes with the type most of its lines are), City (below), Riders (today), Money (the line's expected profit today, fares less running cost and its share of upkeep, in the money format with negatives red; its hover gives "Expected profit today", the fares, the running cost, the upkeep and, on a weekend or holiday, a line saying so) [T-735, T-1893], Trains and Near. A click sorts by that
+  sorts by clicking a column header [T-310]: Name, Type (T-3798, T-3808: train, high speed, tram, bus, ferry; a narrow column before Near of each line's type icon,
+  `Icon.highSpeed` for high speed, its name in the hover, always shown; a group goes with the type most of its lines are), City (below), Riders (today), Money (the line's expected profit today, fares less running cost and its share of upkeep, in the money format with negatives red; its hover gives "Expected profit today", the fares, the running cost, the upkeep and, on a weekend or holiday, a line saying so) [T-735, T-1893], Trains and Near. A click sorts by that
   column (names A to Z, figures biggest first, Type and Near in their order), a second reverses it, the sorted
   column has a small arrow, and each header's hover says what it sorts by. Names sort naturally, ties
   by name. The name keeps at least about six characters; the Money column goes first when the
