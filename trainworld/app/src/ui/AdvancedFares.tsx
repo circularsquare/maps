@@ -8,7 +8,7 @@ import { signal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { busFare, fareAt, ferryFare, HSR_FARE, hsrFare, isCustomCurve, MAX_NODES, NODE_KM, scaleNodes, transferFare, type FareArea, type FareNode, type Fares } from "../game/fareCurve";
 import { chargedPrices, MAX_ZONES } from "../game/fareZones";
-import { newArea, removeArea, renameArea, setZonePrice, startPainting, topZone } from "../game/fareZonePaint";
+import { newArea, removeArea, renameArea, setAreaOff, setZonePrice, startPainting, topZone } from "../game/fareZonePaint";
 import { roundTo } from "../game/currency";
 import { countryFareScales, roundedDefault } from "../game/fareDefault";
 import { defaultScale, fareScale, SHOWN_STEP, shownScale, storedScale } from "../game/income";
@@ -22,7 +22,7 @@ import { t, tCountry, tNumber, tRich } from "../i18n";
 import { useModalDialog } from "./Modal";
 import { advancedFares, fareAdding, FareButtons, FareGraph, FareNodeRows } from "./FareGraph";
 import { BusFareRow, FareEffect, fareRef, FerryFareRow, HsrFareRow, TransferFareRow } from "./MoneyTab";
-import { Icon, Stepper } from "./widgets";
+import { Check, Icon, Stepper } from "./widgets";
 
 /** The panel's own drag preview: its country's scale may differ from the dock's graph's. */
 const panelPreview = signal<FareNode[] | null>(null);
@@ -91,7 +91,7 @@ function FareAreas({ f, country }: { f: Fares; country: string }) {
   };
   return (
     <ul class="rows fare-rows af-zones">
-      <li class="af-head"><span class="af-title">{t("advancedFares.zones")}</span><span /><span /></li>
+      <li class="af-head"><span class="af-title" data-tip={t("advancedFares.zonesTip")}>{t("advancedFares.zones")}</span><span /><span /></li>
       {areas.map((a) => {
         const n = Math.min(MAX_ZONES, Math.max(3, topZone(a.id)));
         const charged = chargedPrices(f, a);
@@ -106,12 +106,13 @@ function FareAreas({ f, country }: { f: Fares; country: string }) {
               <button class="btn text mini" onClick={() => paint(a.id)}><Icon.brush />{t("advancedFares.paint")}</button>
               <button class="btn icon mini" aria-label={t("advancedFares.removeArea")} data-tip={t("advancedFares.removeArea")} onClick={() => remove(a)}><Icon.bin /></button>
             </li>
+            <li class="af-use"><span class="fr-what"><Check checked={!a.off} onChange={(on) => setAreaOff(a.id, !on)}>{t("advancedFares.useArea")}</Check></span><span /><span /></li>
             {Array.from({ length: n }, (_, k) => {
               const shown = (charged[Math.min(k, charged.length - 1)] ?? 0) * scale;
               const set = (v: number) => setZonePrice(a.id, k + 1, Math.max(0, v) / scale);
               return (
-                <li>
-                  <span class="fr-what">{t("advancedFares.zonePrice", { count: k + 1 })}</span>
+                <li class={a.off ? "af-off" : undefined}>
+                  <span class="fr-what" data-tip={k ? t("advancedFares.zonePriceTip", { count: k + 1 }) : t("advancedFares.zonePriceOneTip")}>{t("advancedFares.zonePrice", { count: k + 1 })}</span>
                   <Stepper value={price(shown)} wide label={t("advancedFares.zonePriceLabel", { count: k + 1 })}
                     onStep={(d) => set(fromShown(roundTo(toShown(shown), sp.grain) + d * sp.fareStep))}
                     type={{ text: priceTyped(shown), set: (v) => set(fromShown(v)) }} />
@@ -216,11 +217,11 @@ function Panel({ start }: { start: string }) {
             <TransferFareRow fare={transferFare(f)} base={f.nodes[0]?.[1] ?? f.base} scale={scale} />
           </>} />
         <FareEffect preview={panelPreview.value} scale={scale} />
+        <FareAreas f={f} country={country} />
         <ul class="rows fare-rows af-countries">
           <li class="af-head"><span class="af-title">{t("advancedFares.byCountry")}</span><span>{t("advancedFares.multiple")}</span><span>{t("fareGraph.baseFare")}</span><span /></li>
           {listed.map((c) => <CountryRow f={f} country={c} refCountry={ref} />)}
         </ul>
-        <FareAreas f={f} country={country} />
       </div>
     </dialog>
   );

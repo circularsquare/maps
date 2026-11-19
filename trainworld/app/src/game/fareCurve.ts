@@ -55,7 +55,8 @@ export interface Fares {
 
 /** T-3740: a fare area: its id (in its stations' codes), name and prices for 1, 2, ... zones in the curve's units
  * (the last for any more), never falling. */
-export interface FareArea { id: number; name: string; prices: number[] }
+/** `off`: the area is switched off, so trips pay as if it did not exist (its paint, name and prices are kept). */
+export interface FareArea { id: number; name: string; prices: number[]; off?: boolean }
 
 /** The base fare of `f` (the curve's first node), curve units. */
 function baseOf(f: { base?: number; nodes?: FareNode[] }): number {

@@ -64,8 +64,9 @@ export class FareZoneTool {
   /** the last frame's numbers: painted sites on screen, and the boxes of the numbers drawn (CSS px), for checks */
   lastBadges: { sites: number; boxes: number[][] } = { sites: 0, boxes: [] };
   private dirty = false;
-  /** the loop being drawn (CSS px), or a press that may still be a click */
-  private loop: { pts: [number, number][]; moved: boolean; id: number } | null = null;
+  /** the loop being drawn, its points as lng/lat so it stays on the ground when the camera moves, or a press that
+   * may still be a click (`start` and `last` are CSS px of the press and of the last point added) */
+  private loop: { ll: [number, number][]; start: [number, number]; last: [number, number]; moved: boolean; id: number } | null = null;
   /** a right or middle drag panning the map */
   private pan: { x: number; y: number } | null = null;
   private fingers = new Set<number>();
@@ -163,6 +164,16 @@ export class FareZoneTool {
     return hit;
   }
 
+  /** The loop's points at CSS px with the camera as it is now; NaN points (behind the globe) dropped. */
+  private loopPx(lp: { ll: [number, number][] }): [number, number][] {
+    const out: [number, number][] = [], at: [number, number] = [NaN, NaN];
+    for (const [lng, lat] of lp.ll) {
+      this.overlay.toScreenInto(...toLocal(lng, lat), at);
+      if (!Number.isNaN(at[0])) out.push([at[0], at[1]]);
+    }
+    return out;
+  }
+
   /** The stations inside the loop `pts` (CSS px, closed back to its start). */
   private within(pts: [number, number][]): { num: number; x: number; y: number }[] {
     let l = Infinity, t = Infinity, r = -Infinity, b = -Infinity;
@@ -188,7 +199,8 @@ export class FareZoneTool {
     }
     if (e.button !== 0) return;
     if (e.pointerType !== "touch") e.preventDefault();
-    this.loop = { pts: [[x, y]], moved: false, id: e.pointerId };
+    const g = this.map.unproject([x, y]);
+    this.loop = { ll: [[g.lng, g.lat]], start: [x, y], last: [x, y], moved: false, id: e.pointerId };
   }
 
   private onMove(e: PointerEvent) {
@@ -208,15 +220,17 @@ export class FareZoneTool {
       return;
     }
     if (e.pointerId !== lp.id) return;
-    const [x0, y0] = lp.pts[0], [lx, ly] = lp.pts[lp.pts.length - 1];
+    const [x0, y0] = lp.start, [lx, ly] = lp.last;
     if (!lp.moved && Math.hypot(x - x0, y - y0) < CLICK_PX) return;
     lp.moved = true;
-    if (Math.hypot(x - lx, y - ly) >= 3) lp.pts.push([x, y]);
+    if (Math.hypot(x - lx, y - ly) >= 3) {
+      const g = this.map.unproject([x, y]);
+      lp.ll.push([g.lng, g.lat]);
+      lp.last = [x, y];
+    }
     // the stations it would take follow the loop, at most once a frame
     if (!this.frame) this.frame = requestAnimationFrame(() => {
       this.frame = 0;
-      const now = this.loop;
-      this.inside = now && now.pts.length >= 3 ? this.within(now.pts).map((s) => [s.x, s.y]) : [];
       this.draw(true);
     });
   }
@@ -236,8 +250,9 @@ export class FareZoneTool {
     this.draw();
     if (!this.active) return;
     if (lp.moved) {
-      if (lp.pts.length < 3) return;
-      const nums = this.within(lp.pts).map((s) => s.num);
+      const pts = this.loopPx(lp);
+      if (pts.length < 3) return;
+      const nums = this.within(pts).map((s) => s.num);
       if (nums.length) void paintStations(nums);
       return;
     }
@@ -419,10 +434,13 @@ export class FareZoneTool {
   /** The loop being drawn, shaded inside, and a ring on each station it would take in the tool's colour. */
   private drawLoop(m: CanvasRenderingContext2D) {
     const lp = this.loop;
-    if (!lp || !lp.moved || lp.pts.length < 2) return;
+    if (!lp || !lp.moved) return;
+    const pts = this.loopPx(lp);
+    if (pts.length < 2) return;
+    this.inside = pts.length >= 3 ? this.within(pts).map((s) => [s.x, s.y]) : [];
     const z = paintZone.peek(), col = z > 0 ? fareZoneColour(z) : "#8a8a8a", ink = shadeColours().stationInk;
     m.beginPath();
-    lp.pts.forEach(([x, y], i) => (i ? m.lineTo(x, y) : m.moveTo(x, y)));
+    pts.forEach(([x, y], i) => (i ? m.lineTo(x, y) : m.moveTo(x, y)));
     m.closePath();
     m.globalAlpha = 0.18;
     m.fillStyle = col;

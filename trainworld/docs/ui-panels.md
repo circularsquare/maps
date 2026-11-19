@@ -891,12 +891,12 @@ change over trips 0.4 to 1.6 times its mean length (`fareEstimate.ts`), so movin
 left below the fare zones for a fare per stop (T-3744).
 
 **Fare zones** [T-3740, `AdvancedFares.tsx` `FareAreas`, the rule in track-and-service.md "Fares and the ledgers"]:
-under the countries, the heading "Fare zones" (bold, over a rule), then each fare area: its name in a box that reads
+above the countries, the heading "Fare zones" (bold, over a rule, with a hover on the charging rule), then each fare area: its name in a box that reads
 as plain text until hovered (typed over, Enter or leaving it renames; no recalculation), "Paint stations" with a
 brush, which closes the panel and starts the Fare zones tool on that area, and a bin ("Remove fare area", asking
 "Remove {name}? Trips between its stations pay by distance again."; its stations keep their codes, which count as
-none until Z3 tidies them); then one row per zone count, "1 fare zone", "2 fare zones" ..., as many as the area's
-highest zone painted and at least three, each its price as charged in the panel's country (the stored price times
+none until Z3 tidies them); under it an "Enable" checkbox (T-3778: off, trips pay by distance as if the area did not exist, its paint, name and prices kept and its price rows dimmed; `FareArea.off` in the header's `fares.zones`, sent as a `fareZones` edit like removal, so not undone; `demandFares()` leaves an off area out); then one row per zone count, "1 fare zone", "2 fare zones" ..., as many as the area's
+highest zone painted and at least three, each its price as charged in the panel's country (a hover on each: what rides it is for; the stored price times
 that country's rate multiple, `countryFareScales`, as demand charges it; never below the base fare) in a stepper by the base fare's step, typed on a click. A price
 change keeps prices from falling: the later ones rise to it, the earlier ones come down to it. Last, "New fare area",
 which makes an area named "{city} fare zones" for the city in view ("Fare area 2" with none), its prices the curve's
@@ -908,7 +908,7 @@ that button; nothing else in the game changes.
 (a picker once there are two) and "Fare zone" with a stepper of the zone a click gives, 1 to 12 on its colour or
 "none" (which takes stations out of their fare zone); the click mode's descriptor "Painting fare zones" and the hint
 "Click a station or drag around several." ("Tap a station or draw around several." on touch). A click on a station
-(within 14 px, from zoom 9 where stations are drawn) gives it and its whole complex the zone; a left drag draws a loop, dashed and shaded in the
+(within 14 px, from zoom 9 where stations are drawn) gives it and its whole complex the zone; a left drag draws a loop (kept in map coordinates, so zooming or panning mid-drag leaves it on the ground), dashed and shaded in the
 zone's colour, ringing the stations it would take, and on release every station inside (and their complexes) takes
 it. Each click or loop is one `stationFares` edit (one recalculation of trips, one Ctrl+Z), and none when no station
 would change. The right or middle button drags the map; on touch one finger draws the loop, a tap paints, two

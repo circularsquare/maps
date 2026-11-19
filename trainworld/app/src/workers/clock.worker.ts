@@ -155,7 +155,7 @@ function demandFares(): Fares {
   // T-3740: nor do an area's name, the next id or an area no station is in, so none of them starts a solve
   const codes = api?.station_fares() ?? [], used = new Set<number>();
   for (let k = 1; k < codes.length; k += 2) used.add(areaOfCode(codes[k]));
-  const kept = zones.filter((a) => used.has(a.id)).map((a) => ({ id: a.id, name: "", prices: a.prices }));
+  const kept = zones.filter((a) => !a.off && used.has(a.id)).map((a) => ({ id: a.id, name: "", prices: a.prices }));
   return kept.length ? { ...rest, zones: kept } : rest;
 }
 /** T-2679: the first built station's lng and lat (lowest node id), as the last state was built. */

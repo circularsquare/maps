@@ -78,6 +78,13 @@ export function setZonePrice(id: number, k: number, v: number) {
   void sendAreas(areas.map((x) => (x.id === id ? { ...x, prices: tidyPrices(prices) } : x)));
 }
 
+/** Switch area `id` off or on; its paint, name and prices stay. */
+export function setAreaOff(id: number, off: boolean) {
+  const areas = fareAreas();
+  if (!areas.some((a) => a.id === id && !!a.off !== off)) return;
+  void sendAreas(areas.map((a) => (a.id === id ? (off ? { ...a, off: true } : { id: a.id, name: a.name, prices: a.prices }) : a)));
+}
+
 export function removeArea(id: number) {
   void sendAreas(fareAreas().filter((a) => a.id !== id));
 }

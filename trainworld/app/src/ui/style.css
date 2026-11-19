@@ -864,6 +864,8 @@ svg.trip-graph { display: block; width: 100%; height: auto; margin: 2px 0 4px; u
 .af-zones .af-area > .btn.text svg { width: 12px; height: 12px; margin-right: 4px; vertical-align: -2px; }
 .af-zones .af-area > .btn.icon { justify-self: start; }
 .af-zones .af-area ~ .af-area > * { margin-top: 10px; }
+.af-zones .af-use .check { font-size: inherit; }
+.af-zones .af-off > * { opacity: 0.5; }
 /* a fare zone's number on its colour (the tool's bar, the station panel) */
 .fz-chip { display: inline-block; min-width: 18px; height: 18px; line-height: 18px; padding: 0 3px; box-sizing: border-box; font-weight: 700;
   text-align: center; font-variant-numeric: tabular-nums; }

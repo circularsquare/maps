@@ -34,7 +34,7 @@ export function tidyAreas(list: unknown): FareArea[] {
     const id = a?.id;
     if (!Number.isInteger(id) || id < 1 || id >= 1 << 23 || seen.has(id) || !Array.isArray(a.prices)) continue;
     seen.add(id);
-    out.push({ id, name: typeof a.name === "string" ? a.name.slice(0, 80) : "", prices: tidyPrices(a.prices.filter((v: unknown) => typeof v === "number")) });
+    out.push({ id, name: typeof a.name === "string" ? a.name.slice(0, 80) : "", prices: tidyPrices(a.prices.filter((v: unknown) => typeof v === "number")), ...(a.off === true ? { off: true } : {}) });
   }
   return out;
 }
