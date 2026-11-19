@@ -2,10 +2,12 @@
 // row, a search hit, the diagram's label), it is the member whose name the player typed; with several
 // of those, or none, the member with the most lines, then a constructed one, then the first in save
 // order. Nothing else picks the name, so adding a station or a line never changes a typed name.
-// T-3288: the members nobody typed a name for all show one name already (`nameSource`, applied where
-// the worker reads its rows), so with no typed name the lead's name is that one.
+// T-3288, T-3750: the members nobody typed a name for all show one name already, the complex's
+// (`nameSource`, applied where the worker reads its rows), so the lead's name is that one unless two
+// members have typed names.
 
 import type { StationInput } from "./types";
+import type { EditOp } from "../workers/protocol";
 
 /** The lead of `members` (not empty), `lines` the number of lines stopping at a member. */
 export function leadOf<S extends { id: string; built?: boolean; named?: true }>(members: readonly S[], lines: (id: string) => number): S {
@@ -18,12 +20,24 @@ export function leadOf<S extends { id: string; built?: boolean; named?: true }>(
   return lead;
 }
 
-/** The member whose name the rest of a complex show (T-3288): the oldest (lowest `key`) of those no
- * one typed a name for. None when every member has a typed name, and then every member keeps its own. */
+/** The member whose name is the complex's (T-3288, T-3750): the oldest (lowest `key`) member whose name
+ * the player typed, else the oldest member. Every member with no typed name shows it, and so does a
+ * station building nobody named; a member with a typed name shows its own. The one rule for the
+ * complex's name: the worker's rows (`StateRows.foldNames`) and the renames go through it. */
 export function nameSource<S>(members: readonly S[], key: (s: S) => number, typed: (s: S) => boolean): S | undefined {
   let best: S | undefined;
-  for (const m of members) if (!typed(m) && (best === undefined || key(m) < key(best))) best = m;
+  for (const m of members) {
+    if (best === undefined) best = m;
+    else if (typed(m) !== typed(best)) { if (typed(m)) best = m; }
+    else if (key(m) < key(best)) best = m;
+  }
   return best;
+}
+
+/** The edit that renames a complex through its name source `head` (`nameSource`): a typed name stays
+ * typed; an untyped one is set with no typed flag, so it stays the one the others follow (T-3288). */
+export function complexRename(head: Pick<StationInput, "num" | "length" | "named">, name: string): EditOp {
+  return head.named ? { op: "stationProps", node: head.num, platform: head.length, name } : { op: "stationName", node: head.num, name };
 }
 
 /** The lead of the complex holding `id`, for the checks and anything holding the lists: `members`

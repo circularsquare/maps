@@ -83,7 +83,10 @@ pub const BLOCKS: [&[u8; 4]; 29] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1",
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over. Saves from before it have none, read as 0.
-pub const LEVEL: u32 = 23;
+pub const LEVEL: u32 = 24;
+/// T-3750: the last level whose station buildings all carry a name, a copy of a station's for one the
+/// player never named; from 24 an empty name is none, and the building shows its complex's.
+pub const OLD_BUILDING_NAMES: u32 = 23;
 /// T-3647: the last level written by builds where a station on single track made its run two-way (v0.3.5 and
 /// older; T-3386 changed the rule after it, and v0.4.0 wrote 21).
 pub const OLD_STATION_WAYS: u32 = 18;
@@ -1421,7 +1424,7 @@ mod tests {
         for tag in &written {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
-        assert_eq!((LEVEL, BLOCKS.len()), (23, 29), "a new block raises LEVEL: raise it, then update this pin");
+        assert_eq!((LEVEL, BLOCKS.len()), (24, 29), "a new block raises LEVEL: raise it, then update this pin");
     }
 
     /// T-2217: buildings come back as they were, in their order; a network without them encodes as

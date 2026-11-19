@@ -45,17 +45,17 @@ try {
   }, [row(0), row(1), row(2)]);
   console.log(JSON.stringify(r));
   ok(!r.err && r.ok.every(Boolean), 'the scene builds ' + (r.err ?? r.issues.join(',')));
-  // T-3288: Delta joins the complex and shows the name of the oldest untyped station, Beta
-  ok(r.names?.includes('Hand Name') && r.names.includes('Beta') && !r.names.includes('Delta'), 'the player-named station keeps its name after a station and a line are added, and the new one takes the complex name');
+  // T-3750: the typed name is the complex's: Beta and the joining Delta show it
+  ok(r.names?.filter((n) => n === 'Hand Name').length === 3, 'the player-named station keeps its name after a station and a line are added, and the others take it as the complex name ' + JSON.stringify(r.names));
   const lead = await page.evaluate(async () => {
     const mod = await import('/src/game/complexLead.ts').catch((e) => ({ err: String(e) }));
     const cv = await import('/src/game/complexView.ts').catch((e) => ({ err: String(e) }));
     if (!mod.complexLead || !cv.complexOf) return { err: mod.err ?? cv.err ?? 'no complexLead' };
     const w = window.tw.world.value, st = w.save.stations;
-    const named = st.find((s) => s.name === 'Hand Name');
+    const named = st.find((s) => s.named);
     const members = cv.complexOf(named.id);
     const lead = mod.complexLead(st, w.save.lines, members);
-    return { shown: lead?.name, members: members.length, flagged: st.filter((s) => s.named).map((s) => s.name), beta: st.find((s) => s.name === 'Beta').id };
+    return { shown: lead?.name, members: members.length, flagged: st.filter((s) => s.named).map((s) => s.name) };
   });
   console.log(JSON.stringify(lead));
   ok(lead.members === 3 && lead.flagged?.length === 1 && lead.flagged[0] === 'Hand Name', 'the three stations are one complex and only the typed name is flagged: ' + JSON.stringify(lead));

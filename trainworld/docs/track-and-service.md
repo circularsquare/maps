@@ -320,9 +320,12 @@ Full design, numbers and sources: `notes/T-008.md`.
   track", T-3333).
   A station's name the player typed is flagged (`StationData::named`, bit 8 of its node flags in the save,
   set by `set_station_props` when the name changes; the twin copies it): load's tidying of capitals
-  skips it, and a building's default name prefers such a member [T-2683].
-  The stations of a complex that carry no typed name show one name, the oldest's (T-3288, ui-map.md "Station
-  complexes"); `set_station_name` sets a name without the flag, for the complex's rename.
+  skips it [T-2683].
+  The stations of a complex that carry no typed name show the complex's name: its oldest typed name, else its
+  oldest station's (T-3288, T-3750, ui-map.md "Station complexes"); `set_station_name` sets a name without the
+  flag, for the complex's rename. A station building keeps only a name the player gave it (empty for none:
+  it then shows its complex's name, worked out in the app); saves of level 23 and older stored a copy of a
+  station's name in every building, so they load with none (T-3750).
 - **No automatic crossovers** (T-1688): nothing the player does adds a crossover by itself, not
   drawing (quad included), placing stations or doubling up. The player draws crossing track between
   the pairs where lines should change over. A line whose stops lie on two pairs with no way between

@@ -1622,7 +1622,7 @@ function buildState(): ClockState {
     nodes,
     lines,
     links: Array.from(a.station_links()),
-    buildings: buildingsOf(a),
+    buildings: shownBuildings(a, nodes),
     render: {
       edgeParts: drawn,
       edgeSpeedParts: speedParts,
@@ -3032,9 +3032,31 @@ function stationGeo(a: TrackApi, ni: ArrayLike<number>, i: number): StationGeo {
   const line = platformLineOf(a, ni[i], ni[i + 1], ni[i + 2], ni[i + 7]);
   return { id: String(ni[i]), x: ni[i + 1], y: ni[i + 2], heading: ni[i + 9], length: ni[i + 7], ...(line ? { line } : {}) };
 }
-/** T-2217: the station buildings as the track model lists them */
+/** T-2217: the station buildings as the track model lists them; "" for a name nobody gave (T-3750) */
 function buildingsOf(a: TrackApi) {
-  return buildingsFrom(a.buildings_info(), (id) => a.building_name(id));
+  return buildingsFrom(a.buildings_info(), (id) => (a.building_named(id) ? a.building_name(id) : ""));
+}
+/** T-3750: each unnamed building's first member, kept while the station rows and those outlines stay */
+let bldFirst: { rows: readonly ClockNode[]; key: string; first: Map<number, number> } | null = null;
+/** The station buildings as shown: one nobody named shows its complex's name (`StateRows.complexName`,
+ * read with `nodes`), the part before any slash, as the track model's own default. */
+function shownBuildings(a: TrackApi, nodes: readonly ClockNode[]) {
+  const blds = buildingsOf(a);
+  const open = blds.filter((b) => !b.name);
+  if (!open.length) return blds;
+  const key = open.map((b) => `${b.id}:${b.corners.join(",")}`).join("|");
+  if (!bldFirst || bldFirst.key !== key || bldFirst.rows.length !== nodes.length || bldFirst.rows.some((r, i) => r !== nodes[i])) {
+    const geo = nodes.filter((r) => r.platform > 0 && !r.port).map((r) => ({ id: String(r.id), x: r.x, y: r.y, heading: r.heading, length: r.platform, ...(r.line ? { line: r.line } : {}) }));
+    const members = buildingMembers(open, geo, groundK);
+    bldFirst = { rows: nodes, key, first: new Map(open.map((b, i) => [b.id, members[i].length ? Number(members[i][0]) : -1])) };
+  }
+  const first = bldFirst.first;
+  return blds.map((b) => {
+    if (b.name) return b;
+    const m = first.get(b.id) ?? -1;
+    const name = (m >= 0 ? stateRows.complexName(m) : undefined) ?? a.building_name(b.id);
+    return { ...b, name: name.split("/")[0].trim() };
+  });
 }
 /** The complexes of `geo` with the player's `links` and the station buildings' members (T-2217). */
 function complexesOf(builder: ComplexBuilder, geo: StationGeo[], playerLinks: [string, string][]): Complexes {
@@ -3470,9 +3492,11 @@ function applyInner(op: EditOp): Applied {
     case "reverseStation":
       return { r: a.reverse_station(op.node) };
     case "stationProps": {
-      // the name a complex's station shows is not its own: sent back unchanged it is no typing (T-3288)
-      const own = a.node_name(op.node);
-      return { r: a.set_station_props(op.node, op.platform, op.name !== own && op.name === stateRows.shownName(op.node) ? own : op.name) };
+      // the name a complex's station shows is not its own: sent back unchanged it is no typing (T-3288);
+      // its own name typed over the one it shows is (T-3750)
+      const own = a.node_name(op.node), shown = stateRows.shownName(op.node);
+      if (shown !== undefined && op.name === own && op.platform === stateRows.nodeRow(op.node)?.platform) return { r: a.type_station_name(op.node, own) };
+      return { r: a.set_station_props(op.node, op.platform, op.name !== own && op.name === shown ? own : op.name) };
     }
     case "stationName":
       return { r: a.set_station_name(op.node, op.name) };

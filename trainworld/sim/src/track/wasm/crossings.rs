@@ -399,6 +399,13 @@ impl TrackApi {
         self.run(Op::Station { node, data: Some(StationData { name, ..old }) })
     }
 
+    /// T-3750: set a station's name as the player's own even when it is the name it has: typed over
+    /// the complex's name it shows, its own name stops following.
+    pub fn type_station_name(&mut self, node: u32, name: String) -> u32 {
+        let Some(old) = self.w.net.station_data(node) else { return self.refuse(Issue::NoSuchNode { node }) };
+        self.run(Op::Station { node, data: Some(StationData { name, named: true, ..old }) })
+    }
+
     /// `station` (an `Op::Station` on `node`) preceded by the joins a longer platform needs
     /// (T-3286): the pieces of track that only meet at a clicked corner become one edge under the
     /// platform's reach, as for a new station (`unjoin_near`); a junction, another station or a joint

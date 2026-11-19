@@ -3815,6 +3815,11 @@ fn a_complex_rename_does_not_flag_the_station() {
     let n = a.nodes_info().chunks(10).find(|c| c[7] > 0.0).unwrap()[0] as u32;
     assert_eq!(a.set_station_name(n, "New".into()), 0, "{}", a.issues());
     assert_eq!((a.node_name(n), a.named_stations()), ("New".to_string(), vec![]));
+    // T-3750: its own name typed over the complex's name it shows flags it, the name as it was
+    assert_eq!(a.type_station_name(n, "New".into()), 0);
+    assert_eq!((a.node_name(n), a.named_stations()), ("New".to_string(), vec![n]));
+    assert_eq!(a.undo(), 0);
+    assert_eq!(a.named_stations(), Vec::<u32>::new());
     assert_eq!(a.set_station_props(n, 60, "Typed".into()), 0);
     assert_eq!(a.named_stations(), vec![n]);
     assert_eq!(a.set_station_name(n, "Again".into()), 0);

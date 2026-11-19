@@ -30,14 +30,8 @@ impl TrackApi {
         true
     }
 
-    /// The name a building gets: `name` trimmed, or with none its first constructed member's.
-    fn building_name_for(&self, name: &str, corners: &[[f64; 2]]) -> String {
-        let name = name.trim();
-        if name.is_empty() { building::default_name(&self.w.net, &building::members(&self.w.net, corners)) } else { name.to_string() }
-    }
-
-    /// Add a station building round `corners` (x, y pairs), named `name` (none: its first
-    /// constructed member's, the part before any slash). Paid at once, US$2,000 a m²; not undoable.
+    /// Add a station building round `corners` (x, y pairs), named `name` (none: it shows its
+    /// complex's name, T-3750). Paid at once, US$2,000 a m²; not undoable.
     /// 0 done (`last_building`, `building_charge`); 1 refused.
     pub fn add_building(&mut self, corners: &[f64], name: String) -> u32 {
         self.building_last = (u32::MAX, 0.0);
@@ -49,9 +43,8 @@ impl TrackApi {
         if !self.pay_building(price) {
             return 1;
         }
-        let name = self.building_name_for(&name, &c);
         let id = self.w.net.buildings.len() as u32;
-        self.w.net.buildings.push(Some(Building { name, corners: c }));
+        self.w.net.buildings.push(Some(Building { name: name.trim().to_string(), corners: c }));
         self.building_last = (id, price);
         0
     }
@@ -74,11 +67,12 @@ impl TrackApi {
         0
     }
 
-    /// Rename building `id` (an empty name: its first constructed member's). 0 done; 1 no such building.
+    /// Rename building `id` (an empty name: none, it shows its complex's). 0 done; 1 no such building.
     pub fn rename_building(&mut self, id: u32, name: String) -> u32 {
-        let Some(c) = self.building(id).map(|b| b.corners.clone()) else { return self.refuse(Issue::NoSuchBuilding { building: id }) };
-        let name = self.building_name_for(&name, &c);
-        self.w.net.buildings[id as usize].as_mut().unwrap().name = name;
+        if self.building(id).is_none() {
+            return self.refuse(Issue::NoSuchBuilding { building: id });
+        }
+        self.w.net.buildings[id as usize].as_mut().unwrap().name = name.trim().to_string();
         self.issues.clear();
         self.money_short = None;
         0
@@ -127,9 +121,18 @@ impl TrackApi {
         }
         out
     }
-    /// Building `id`'s name ("" for none).
+    /// Building `id`'s name: the player's, else its first typed or constructed member's
+    /// (`building::default_name`; the app shows the complex's instead). "" for no such building.
     pub fn building_name(&self, id: u32) -> String {
-        self.building(id).map(|b| b.name.clone()).unwrap_or_default()
+        match self.building(id) {
+            Some(b) if b.name.is_empty() => building::default_name(&self.w.net, &building::members(&self.w.net, &b.corners)),
+            Some(b) => b.name.clone(),
+            None => String::new(),
+        }
+    }
+    /// Whether the player named building `id` (T-3750): if not, it shows its complex's name.
+    pub fn building_named(&self, id: u32) -> bool {
+        self.building(id).is_some_and(|b| !b.name.is_empty())
     }
     /// Building `id`'s floor, m² (0 for none).
     pub fn building_area(&self, id: u32) -> f64 {
@@ -200,6 +203,7 @@ mod tests {
         assert!((cash - a.cash() - 20.0).abs() < 1e-9);
         assert_eq!((a.last_building(), a.building_charge()), (0, 20.0));
         assert_eq!(a.building_name(0), "Central", "the part before the slash");
+        assert!(!a.building_named(0), "T-3750: no name given, it follows its complex");
         assert_eq!(a.building_members(0), vec![st[0]]);
         assert_eq!(a.buildings_info(), vec![0.0, 4.0, -100.0, -25.0, 100.0, -25.0, 100.0, 25.0, -100.0, 25.0]);
         // reaching to y = 53 takes in the low station: its platform is within 8 m (any level)
@@ -217,6 +221,7 @@ mod tests {
         assert_eq!(a.building_charge(), 0.0);
         assert_eq!(a.rename_building(0, "  Grand hall ".into()), 0);
         assert_eq!(a.building_name(0), "Grand hall");
+        assert!(a.building_named(0));
         // the built value counts it
         let (total, built) = (a.w.net.total_cost(), a.w.net.built_cost());
         let floor = a.building_area(0);
@@ -286,6 +291,31 @@ mod tests {
         assert_eq!(b.building_name(0), "Hall");
         assert_eq!(b.building_members(0).len(), 1);
         assert_eq!(b.save(), bytes);
+    }
+
+    /// T-3750: a building's name stays the player's through a save and load; a save from level 23 or
+    /// older, where every building carried a copy of a station's name, loads with none, so each shows
+    /// its complex's name and no copy is left behind by a renamed station.
+    #[test]
+    fn building_names_from_older_saves_load_as_none() {
+        let (mut a, st) = net();
+        assert_eq!(a.add_building(&rect(-100.0, -25.0, 100.0, 25.0), "Central".into()), 0, "{}", a.issue_kinds());
+        assert_eq!(a.add_building(&rect(900.0, -25.0, 1100.0, 25.0), "East hall".into()), 0, "{}", a.issue_kinds());
+        assert!(a.building_named(0) && a.building_named(1));
+        let bytes = a.save();
+        let mut b = TrackApi::new(-73.985, 40.758, true);
+        assert!(b.load(&bytes));
+        assert!(b.building_named(0) && b.building_named(1), "this level keeps them");
+        let mut c = TrackApi::new(-73.985, 40.758, true);
+        c.set_load_level(crate::track::save::OLD_BUILDING_NAMES);
+        assert!(c.load(&bytes));
+        assert!(!c.building_named(0) && !c.building_named(1));
+        assert_eq!((c.building_name(0), c.building_name(1)), ("Central".to_string(), "East".to_string()));
+        assert_eq!(c.set_station_props(st[0], 200, "Grand Central".into()), 0, "{}", c.issues());
+        assert_eq!(c.building_name(0), "Grand Central");
+        assert_eq!(c.rename_building(1, "East hall".into()), 0);
+        assert_eq!(c.rename_building(1, " ".into()), 0);
+        assert!(!c.building_named(1), "an empty name is none again");
     }
 
     /// T-2683: a name the player typed is flagged; the flag survives a platform change, undo, a

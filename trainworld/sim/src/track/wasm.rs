@@ -755,6 +755,13 @@ impl TrackApi {
                 net.terrain = self.w.net.terrain.clone();
                 net.roads = self.w.net.roads.clone();
                 net.streets = self.w.net.streets.clone();
+                // T-3750: names those saves gave buildings are copies of a station's name, the typed
+                // ones not told apart: each building then shows its complex's name
+                if level <= save::OLD_BUILDING_NAMES {
+                    for b in net.buildings.iter_mut().flatten() {
+                        b.name.clear();
+                    }
+                }
                 self.w = TrackWorld::new(net);
                 if level <= save::OLD_STATION_WAYS && self.w.net.pin_station_runs() {
                     self.w.reload();

@@ -29,6 +29,7 @@ const EPS: f64 = 1e-9;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Building {
+    /// The name the player gave it; empty when none, and then it shows its complex's name (T-3750).
     pub name: String,
     /// Plane x, y on the 1 mm grid, in the order drawn.
     pub corners: Vec<[f64; 2]>,
@@ -340,7 +341,8 @@ pub fn refusal(net: &Network, id: u32, c: &[P]) -> Option<Issue> {
 }
 
 /// A building's name when the player gave none: the first member whose name the player typed, else
-/// the first constructed member's, the part before any slash.
+/// the first constructed member's, the part before any slash. The app shows the complex's name
+/// instead (`StateRows.complexName`); this is the track model's own answer, for its tests and reads.
 pub fn default_name(net: &Network, members: &[u32]) -> String {
     members
         .iter()

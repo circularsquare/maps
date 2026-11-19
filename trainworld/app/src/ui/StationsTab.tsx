@@ -8,7 +8,7 @@ import { count } from "../game/format";
 import { type LineInput, type StationInput } from "../game/types";
 import { complexes } from "../game/complexView";
 import { membersOf } from "../game/complexes";
-import { leadOf, nameSource } from "../game/complexLead";
+import { complexRename, leadOf, nameSource } from "../game/complexLead";
 import type { EditOp } from "../workers/protocol";
 import { listedLines, edit } from "../game/world";
 import { display, selection, shownDayPhrase, stationSort, uiScale, type StationUseMode } from "../game/ui";
@@ -172,7 +172,7 @@ function stationRows(stations: readonly StationInput[], all: readonly StationInp
 /** The edit a row's rename makes (T-3288): in a complex where nobody typed a name, the station the
  * others follow takes it with no typed flag, so the whole complex shows it; otherwise the lead's own. */
 function rowName(r: StationRow, name: string): EditOp {
-  return r.head ? { op: "stationName", node: r.head.num, name } : { op: "stationProps", node: r.lead.num, platform: r.lead.length, name };
+  return r.head ? complexRename(r.head, name) : { op: "stationProps", node: r.lead.num, platform: r.lead.length, name };
 }
 
 /** T-2788: list each station of a complex on its own row (off: one row per complex) */

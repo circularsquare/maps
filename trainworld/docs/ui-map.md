@@ -555,9 +555,10 @@ centres are within 100 m (demand's merge distance) are linked too, whatever thei
 directly or through others, plus the player's links [T-197] and every station touching one station
 building [T-2217]. Worked out whenever stations or links change; only links and buildings are saved.
 Riders change between any two stations of a complex on foot [T-161, [demand-kernel.md](demand-kernel.md) 4.4].
-A complex has one name by default [T-3288]: the stations nobody typed a name for all show the name of the oldest
-of them (`workers/stateRows.ts` `foldNames`; the model keeps each station's own name), so the map labels it once;
-a station with a typed name keeps its own. Where one name stands for the complex (Stations tab row, diagram label)
+A complex has one name by default [T-3288, T-3750]: its oldest typed name, else its oldest station's
+(`game/complexLead.ts` `nameSource`, applied in `workers/stateRows.ts` `foldNames`; the model keeps each station's
+own name). Every station nobody typed a name for shows it, so the map labels it once, and so does a station
+building nobody named; a station with a typed name keeps its own. Where one name stands for the complex (Stations tab row, diagram label)
 it is the member's whose name the player typed, else the one with the most lines [T-2683, `game/complexLead.ts`].
 A splitting or merging complex changes no typed name; stations that were following a name show the shared name of
 their new complex, or their own if they are alone.
@@ -589,7 +590,8 @@ works out in the clock worker, the inside's geometry `game/buildingLayout.ts`; t
   platforms spilling first; red when the hall is full. A member's side turns red only when it is past
   its room and the hall is full; zoomed out a member's dot reads its fullest side against its own room
   plus an even share of the hall.
-- **The name**: one label for the building, its name, and its stations' own names go. From zoom 14
+- **The name**: one label for the building, its name (the complex's when the player gave it none, T-3750),
+  and its stations' own names go. From zoom 14
   it sits in the middle of the cross-hall, dark and bold on the floor in both themes, when the
   building's short side on screen is at least the name's width plus 24 px; otherwise below the floor
   (right of it when the floor is taller than wide on screen). Placed before the stations' names.
