@@ -45,7 +45,12 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    - maps-6f's: namechk (checker on tree namebind, 6166; both of her changes made, r-d4dfa211); busverify (6167,
      master: do bus/ferry fleet edits recalculate? all reports were v0.4.1, T-3704 fixed it in v0.4.2);
      periods5 (T-3767): done in tree (save level bump, no block; OLD_BUS_ROWS = level before; c015 reworded);
-     checker periods5chk (6178/6179) running. zonerule (T-3758, r-8206de31) checker PASSED (quad twin
+     checker PASSED 5/5. zonerule landed 0777f81c (level 28; c021 reworded). periodsrebase (Opus, 6184/6185)
+     rebasing periods5 as level 29, then land. zonefollow (Sonnet, T-3778, tree, 6186): her 4 Z2 follow-ups.
+     Smoke on master running (scratch smoke-master.log).
+   - Server levels: master 27 (LSN1) and shonei-server's TestTwSaveCheckFollowsTheGame now fails (server at 26).
+     Once zonerule (28) and periods5 (29) land: one agent adds 27-29 to shonei-server; one deploy ask with
+     93718d1 (T-3775 savehealth route) and 5bf10c7 (T-3382). zonerule (T-3758, r-8206de31) checker PASSED (quad twin
      unchecked; after export/reload a ferry's figure moved 3286 -> 3207, likely load vs live solve, unchased):
      lands right after Z2, LFD1 renumbered to level 28. fbversion (Sonnet, T-3770, main tree tools only).
    - Z2 landed ec9841de (c021; her look: vector cells, numbers on every painted station; numbers crowd at zoom 10,

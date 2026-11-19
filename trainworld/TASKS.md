@@ -118,9 +118,12 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-3777 [P2] {L:real-networks} Nagoya's Tokaido Main Line takes a weird route (taking, 2026-11-19, agent realjapan)
   - Context: You, 2026-11-19: "nagoya looks good. theres a lot of "reversal" alerts for the jr tokaido main line tho. seemst o be taking a really weird route". Nagoya was built by realauto in T-3769.
   - Goal: The Tokaido Main Line runs its real route through Nagoya with no reversal alerts, and the cause is fixed in realauto if other cities share it.
-- T-3778 [P2] {L:fares} {after:T-3758 landing} Fare zones follow-ups: hovers, off switch, loop in world space, order
+- T-3778 [P2] {L:fares} {after:T-3758 landing} Fare zones follow-ups: hovers, off switch, loop in world space, order (taking, 2026-11-19, agent zonefollow)
   - Context: You, 2026-11-19, on Z2 on 8800: hovers explaining the rule (drafts agreed, ending "...pays by distance instead."); "add a button to disable fare zones without deleting it entirely"; "when drawing fare zones and we are zooming in and out while holdign down the mouse to continue drawing, we should have the shape be pinned to world space rather than screen space"; "put fare zones above fares by coutnry".
   - Goal: The four done: heading and price-row hovers; an area can be switched off and on with its paint kept; a loop being drawn stays fixed to the map while zooming; Fare zones sits above the country fares in Advanced fares.
+- T-3779 [P3] {L:small-fixes} Chart button smaller than the schedule button
+  - Context: `checks/t3543-default-headways` fails on master: "the chart button is as big as the schedule button", 21.6 against 23.4 px (found by T-3767's checker, 2026-11-19).
+  - Goal: The two line panel buttons are the same size and the check passes.
 - T-3766 [P2] {L:fares} {after:T-3758} Fare multiples by city
   - Context: You, 2026-11-19: "some people also wanna do fares by city... i guess we can support that maybe? seems like it should be similar to the country fare mult. i think we can just have it that you have to pick either country mults or city mults. cant do both, which would be weird." A player, 11-19: "I would like to adjusts the fare prices for each city individually." Waits for the fare zone trees (T-3758, T-3740 Z2) to land, since they touch the same panels.
   - Goal: Advanced fares has a choice of country or city multiples (never both); in city mode each city has its own multiple, applied the way a country's is.
