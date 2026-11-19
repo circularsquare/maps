@@ -228,7 +228,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Open-source issue 6: Suzhou to Shanghai's airports, Seoul to Incheon. Ground trips fade out from 40 km and stop at 80 km. You, 2026-11-17: "sure we can do big airports drawing ground trips from far away, not super high prio tho."
   - Goal: Hubs above a passenger threshold draw from cities 80-150 km away, sized by passengers, measured on a few hubs against published catchments.
   - Other: notes/T-3485.md
-- T-3542 [P2] {L:timetables} {after:T-3521 and T-3346 stage 2} Four or five service periods
+- T-3542 [P2] {L:timetables} Four or five service periods (taking, 2026-11-18, agent periods0)
   - Context: Design done and answered 2026-11-17 (notes/T-3542.md "Her answers"): 5 period slots in the sim; periods and hours set for the whole game by default, per line as an extra step; no cap on a row's headway; about 19-29 h in three stages. You, 2026-11-17: "would also like to separately add the feature where we cn enable 4 tiers (rush, midday, evening=med, night=low) or 5 (morning, midday, afternoon, evening, night) in there [the timetables window]. that should update the always visible in line view to show 5 rows instead of 3. but it sitll shouldnt show weekends separately. similrly the timetables should only show up in the dedicated popup window."
   - Goal: Built in the three stages, reusing T-3346's Detailed mode (rows by hours averaged into demand's five periods, so no extra solve time) and your 2026-11-17 add: "being able to tweak the periods customizably ... set the morning hours to like start an hour earlier".
   - Other: notes/T-3346.md
@@ -340,13 +340,16 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: Measured in notes/T-909.md option 1.
 
 ## Interface
-- T-3736 [P2] {L:small-fixes} Ferry and bus icons in the line hover (taking, 2026-11-18, agent hovericons)
-  - Context: You, 2026-11-18: "in tnhe hover over a line, for a ferry and bus lets use the ferry icon and bus icon rather than saying like "Ferry line"."
-- T-3737 [P2] {L:small-fixes} No hover on the calculating trips row (taking, 2026-11-18, agent hovericons)
-  - Context: You, 2026-11-18: hovering "Calculating trips..." in the line view, just above the riders row, shows a tooltip that only says "Calculating trips..." again; remove that tooltip.
+- T-3739 [P2] {L:fares} Advanced fare panel with a fare curve (taking, 2026-11-18, agent faredesign)
+  - Context: You, 2026-11-18, for v0.4.3: keep the current fare controls, add an "advanced" button that opens a panel like the schedule's advanced one, with everything in the simple view, a list of countries with their multiples (tweak each, or set the reference country), and nodes you can add to the fare curve to make a staircase or any other shape. Plan first, not built yet.
+  - Goal: A design for you, with an hour estimate.
+- T-3740 [P2] {L:fares} Zone fares players draw (taking, 2026-11-18, agent faredesign)
+  - Context: You, 2026-11-18: "people have requested zone fares ... people wanna draw these. in a city that kinda makes sense but idk how multi-city fare zones would work." Plan first, not built yet.
+  - Goal: Ideas and a recommended design for you (drawing zones, how a trip's fare is counted, what happens across cities), with an hour estimate.
 - T-3738 [P2] {L:community} Shared save links preview the player's map (taking, 2026-11-18, agent sharepreview)
   - Context: You, 2026-11-18: "currently if people share their links to saves, it just shows the generic "train world!" logo banner preview sorta thing. could we have it show the actual image of their map?"
   - Goal: A design and an hour estimate for you first (where the preview image comes from and what serves it), then built.
+  - Other: notes/T-3738.md
 - T-3729 [P2] {L:steam} {waits:Anita} Steam store page
   - Need from Anita: Start the Steamworks account and put your screenshot picks (from your Twitter posts) in a folder; then agents make the store images from the landing page's "trains world!" logo.
   - Context: You, 2026-11-18: a free downloadable version on Steam, no paid DLC, a Ko-fi link if allowed; disclose AI code and translations regardless; "idrc about art style ... a low effort way to get another thing that might have a chance to get algo boosted". Checklist done (research/steam-page.md). Valve bans links in the description since 2024-09; the store page's website link field is allowed. No standalone build yet.
@@ -763,14 +766,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Goal: Design first, then the mode.
 
 ## Track and trains
-- T-3712 [P3] {L:station-placement} Branching off a ramp says too close to the end (taking, 2026-11-18, agent rampend)
-  - Context: From T-3690: the "Too close to the end of a piece of track" refusal also fires on ramps, which T-1964's sweep found far more often than piece ends; T-3690 left ramps alone. Stations on ramps are T-2268.
-  - Goal: Branching track off a ramp either works or the refusal says it is a ramp.
-  - Other: notes/T-3690.md
-- T-3713 [P3] {L:track-drawing} Route ending near a bare end refused as too tight (taking, 2026-11-18, agent rampend)
-  - Context: From T-3690: a route ending about 1 m from a bare end snaps to that end and is refused with "The curve is too tight"; same before and after T-3690.
-  - Goal: That route joins the bare end smoothly or ends where the player let go.
-  - Other: notes/T-3690.md
 - T-3691 [P3] {L:track-kinds} {waits:Anita} Track levels -5 to +5
   - Need from Anita: Where it fits (advanced mode only, which task or update); you said you'd give input later.
   - Context: Your old TODO: "-5 to +5 for track level, in advanced mode only? maybe -4 maroon, -5 dark magenta, and lighten +3 to like periwinkle, +4 light purple, +5 light violet".
@@ -840,7 +835,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Goal: Open while its parts are: buses and ferries (T-3360), the continent-scale view (T-2724), rivers (T-3358, paused). Nothing lands before you review it.
   - Other: notes/T-3345.md
 - T-3346 [P2] {L:timetables} Timetables, stage 2 onward
-  - Context: Design revised twice after your replies: Simple, Detailed and Exact modes, six stages. Stage 1 landed (ac72df8d) and weekend counts per line landed as T-3521; stage 2 is built in a tree, not landed. Your board note 11-16 (weekday/weekend headways, five day periods, tweakable hours, no per-train detail) is Detailed mode, stages 3-4.
+  - Context: Design revised twice after your replies: Simple, Detailed and Exact modes, six stages. Stage 1 landed (ac72df8d) and weekend counts per line landed as T-3521; stage 2 is built in tree tt2 (stale since 11-12, one 30/10 case failing, 4-6 h fix left) and is ported after T-3542's five periods land. Your board note 11-16 (weekday/weekend headways, five day periods, tweakable hours, no per-train detail) is Detailed mode, stages 3-4.
   - Goal: Stage 2 landed, then the rest built in stages (about 44-63 h before Exact).
   - Other: Stage 4 reuses the sim parts of GabrielMoraez's PR 13 (per-line calendar, crowding and running cost per kind of day, fleets sized to the busiest day, tests), credited; the PR itself is not merged (notes/pr-survey-2026-11-16.md). notes/T-3346.md
 - T-3348 [P3] {L:quad-track} {after:T-3444} Quad platforms

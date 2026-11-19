@@ -19,9 +19,14 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
      T-3461 (docs/code-tour.md), T-3732. Master 28e475a2 pushed. 8800 = 94a62a96 (needs a rebuild for T-3732 etc.
      after the next landings). Batch smoke on 94a62a96 PASSED (29).
    - Server deployed 23:08 UTC (0846bef + fa61219) and pushed, on her "yes can deploy server now".
-   - Running: walkstart (Opus, adopted) T-3718, needs a checker; slotown (Opus, adopted) T-3734 stage 1, stage 2
-     can start now (copylabel and panelstops landed); weekpace (Sonnet) T-3584; speedsel (Opus) T-3525 port 6186;
-     rampend (Sonnet) T-3712+T-3713 port 6191; pairschk (Sonnet) checker on tree servedpairs (T-2880 done there).
+   - Later landed (to 00:10 UTC): T-2880, T-3584, T-3734 stage 1 (checks), T-3736, T-3737, T-3741, T-3712, T-3713
+     (c004). 8800 = 24fbf73c. No smoke on master since 94a62a96: run one after walkstart lands.
+   - Running: walkchk (checker, T-3718 tree walkstart, rebased on 96575add); speedsel (Opus) fixing the Mixed
+     stepper stuck bug limitchk found, then land T-3525; slotown2 (Opus) T-3734 stage 2 port 6193; freightsnap
+     (Sonnet) T-3495 port 6195 (graph build, ~100 MB); faredesign (Opus) T-3739+T-3740 design only;
+     periods0 (Opus) T-3542 stage 0 port 6199 (T-3542 before T-3346 stage 2: DECISIONS 11-18; tt2 untouched).
+   - T-3738 share previews: design done (notes/T-3738.md), asks 25-26 open (worker + deploy, schematic picture).
+   - Ask 27: what she means by "train adjustments" (her v0.4.3 pad note).
    - Refactor: she leaves the pick to us ("i am not suited to make a call"), skip track (rework coming). T-3734 picked.
    - Next: T-3726 comments A/B after group 1 lands (advisor's design in handoff-log 20:47); then the up-next list.
 3. Up next: T-3495, T-2054, T-2901, T-3354, T-3518, T-2598; T-3720 after T-3734 (same slot code).
@@ -36,6 +41,9 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
   (docs/orchestrator.md, notes/changelog-review.md). Player text says "manually", never "by hand" (CLAUDE.md).
 - 11-18 23:35: a task kept open after its main work gets its title/Context/Goal rewritten to what's left; Goal
   dropped when the title says it (CLAUDE.md Tasks; tasks.py check no longer requires Goal). Sweep: tasksweep agent.
+- 11-18 23:55: "editing stops feels good!"; text reused word for word from the game needs no ack (CLAUDE.md);
+  T-3736 (ferry/bus icons in line hover), T-3737 (drop the calculating-trips tooltip), T-3738 (share links preview
+  the map: design to her first, sharepreview agent) filed from her message. "Speed limit"/"Mixed" acked.
 - No route: "showing anything, even if its not eprfect, is better than showing nothing at all" (T-3724).
 - Track look: no halos on the map; only the count icon beside the level in the hovers (T-3714, T-3727).
 - Points scale with each line's cost recovery capped at 1 (T-3657, shipped in v0.4.2).
