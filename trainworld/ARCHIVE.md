@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2054 [P2] {L:world-tooling} Terrain and drives missing for new zones (2026-11-18): The join routes the new zones' drives itself (market_drives.py after its market step, new places only from its caches); terrain needs no step since T-2901's blocks; a freeze holds the drives table; proven on a scratch New Zealand join, drives identical to the manual table. notes/T-2054.md.
 - T-3698 [P3] {L:accounts-server} Refused save by hand says it could not be saved (2026-11-18): fixed in T-3734 stage 2; slotchk PASS 5 cases. notes/T-3734.md.
 - T-3495 [P2] {L:world-map} Snap to freight and abandoned rail (2026-11-18): train and tram track snap to freight and abandoned rail drawn under All: graph kinds 8 and 9 (freight from the extract, abandoned from the extra tiles), 120 graphs 149 MB (+87 MB); landing rebuilds them with realgraph.py, notes/T-3495.md.
 - T-3741 [P2] {L:small-fixes} No hover on the other calculating trips labels (2026-11-18): Removed the hover from the line panel's Riders row calculating label and the Lines tab's pending cell; labels stay; unused keys schedule.recalculating and linesTab.pendingTip removed from all locales.

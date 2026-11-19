@@ -34,9 +34,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Every border pair gets the national factor 0.05, but Tijuana-San Diego and Juarez-El Paso are very busy crossings.
   - Goal: A pair factor in borders.json, checked against published crossing counts.
   - Other: notes/T-2436.md
-- T-2054 [P2] {L:world-tooling} Terrain and drives missing for new zones (taking, 2026-11-18, agent jointerrain)
-  - Context: The join builds no terrain grids or routed drives for new zones, so 250 zones priced track on flat ground and 542 used the drive rule until the Philippines run built them by hand.
-  - Other: See notes/T-2054.md.
 - T-2106 [P3] {L:census-totals} Other zones on census totals, Indonesia and Philippines
   - Context: Since T-2038 the zone rules use census totals (admin_totals), but only the rebuilt rows carry them.
   - Other: notes/T-1738.md 15; notes/T-2106.md
@@ -274,7 +271,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3460 [P3] {L:cleanup} Code written twice
   - Context: From the code tour: the schematic's sheet maths in Rust (diagram.rs) and again in JavaScript (sheetLines.ts, kept as a fallback); the real-rail route finder in the game (realRoute.worker.ts) and copied in the pipeline (realroute.py); car street speeds twice in Rust.
   - Goal: One copy of each, or a written reason to keep both.
-- T-3734 [P2] {L:cleanup} Save code moved out of the clock worker (taking, 2026-11-18, agent slotown3)
+- T-3734 [P2] {L:cleanup} Save code moved out of the clock worker (taking, 2026-11-18, agent slotown4)
   - Context: Refactor survey area 1 (notes/refactor-survey-2026-11-18.md). Stages 1-3 are done: standing checks for the save races; one answer for whether the slot may be written (T-2843's machine C), which fixed T-3698 and a second tab that could not go back to the menu; and one game stamp on the worker's messages in place of the money's slot tag and the stop clicks' game count. Left: stage 4, the save, slot, lease and cloud code moves out of clock.worker.ts into a module of its own, with no behaviour change.
   - Goal: The three t3734 checks, t1826-saves, t3478-new-game and smoke passing after the move; no save format change.
   - Other: notes/refactor-survey-2026-11-18.md; notes/T-3734.md
@@ -513,7 +510,7 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
 - T-3027 [P3] {L:track-speed} Slopes slow trains
   - Context: You asked 2026-11-10 how slopes could slow trains without annoying people; a player suggested using the cross section.
   - Goal: A design for slope slowing, then built if you agree.
-- T-2901 [P2] {L:terrain} Remove the old zone terrain
+- T-2901 [P2] {L:terrain} Remove the old zone terrain (taking, 2026-11-18, agent terrain4)
   - Context: Terrain worldwide stages 1-3 are done: blocks are on R2 and the game reads them. Stage 4 removes the old zone terrain after a release has run on blocks.
   - Goal: Zone terrain removed, with the 553 wrongly flat zones fixed by the blocks.
   - Other: notes/T-2901.md.
