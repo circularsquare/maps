@@ -251,10 +251,14 @@ def cut(pack, rels, stops, ways, xy_of):
             nodes[r] = ll
     kept = set(keep)
     shapes = defaultdict(list)
+    reordered = {}
     for rid in keep:
         ms = rels[rid][1]
         q = chain([ways[r][1] for ty, r, role in ms if ty == "w" and r in ways and role in ("", "forward", "backward")], xy_of, k)
         if len(q) >= 2:
+            fixed = along_order([(r, nodes[r]) for ty, r, role in ms if ty == "n" and r in nodes and role.startswith("stop")], q, k)
+            if fixed:
+                reordered[rid] = fixed
             key = f"m{max(masters[rid])}" if masters.get(rid) else f"r{rid}"
             shapes[key].append([[round(a, 6), round(b, 6)] for a, b in q])
     el = []
@@ -267,6 +271,8 @@ def cut(pack, rels, stops, ways, xy_of):
         if t.get("route") == "train" and not masters.get(rid) and not t.get("ref") and not t.get("interval"):
             tags["interval"] = SUBURBAN_INTERVAL
         mem = [{"type": "node", "ref": r, "role": role} for ty, r, role in ms if ty == "n" and r in nodes and role.startswith(("stop", "platform"))]
+        if rid in reordered:
+            mem = [{"type": "node", "ref": r, "role": "stop"} for r in reordered[rid]]
         el.append({"type": "relation", "id": rid, "tags": tags, "members": mem})
     for mid in sorted({m for rid in keep for m in masters.get(rid, [])}):
         t, ms = rels[mid]
@@ -280,8 +286,51 @@ def cut(pack, rels, stops, ways, xy_of):
     lines = [[r"\| r(" + "|".join(str(r) for r in heavy) + r")$",
               {"train_m": realnet.OSM_TRAIN_M["commuter"], "kmh": realnet.OSM_KMH["commuter"]}]] if heavy else []
     return {"elements": el, "shapes": shapes, "lines": lines,
-            "realauto": {"kept": len(keep), "kinds": dict(kinds), "heavy_light_rail": len(heavy), "dropped": dict(why),
+            "realauto": {"kept": len(keep), "kinds": dict(kinds), "heavy_light_rail": len(heavy), "reordered": len(reordered), "dropped": dict(why),
                          "dropped_routes": {k: sorted(v) for k, v in gone.items()}}}
+
+
+ORDER_RATIO = 2.5
+ORDER_NEAR_M = 300.0
+
+
+def along_order(stops, q, k):
+    """T-3777: a relation whose stop members are not in line order (JR Tokaido Main Line's two relations
+    list Tokyo, Mishima, Bentenjima, Araimachi, Futagawa...: a route 5 times longer than the track) gets
+    its stops sorted by where they lie along its own chained ways. `stops` is [(node id, (lon, lat))] in
+    member order. Returns the node ids in order, or None when the order is fine (the member order is under
+    ORDER_RATIO times the length of the sorted one) or the ways do not carry the stops (under 90% of them
+    within ORDER_NEAR_M of the chain: a branching or broken chain)."""
+    if len(stops) < 4:
+        return None
+    P = [(lon * k * 111195.0, lat * 111195.0) for lon, lat in q]
+    A = [P[i] for i in range(len(P) - 1)]
+    sx = [(P[i + 1][0] - P[i][0], P[i + 1][1] - P[i][1]) for i in range(len(P) - 1)]
+    L = [math.hypot(*d) for d in sx]
+    cum = [0.0]
+    for v in L:
+        cum.append(cum[-1] + v)
+    at, near = [], 0
+    for _, (lon, lat) in stops:
+        cx, cy = lon * k * 111195.0, lat * 111195.0
+        best = (1e18, 0.0)
+        for i, (a, d) in enumerate(zip(A, sx)):
+            ll = L[i] * L[i]
+            t = 0.0 if ll < 1e-9 else max(0.0, min(1.0, ((cx - a[0]) * d[0] + (cy - a[1]) * d[1]) / ll))
+            dist = math.hypot(cx - a[0] - d[0] * t, cy - a[1] - d[1] * t)
+            if dist < best[0]:
+                best = (dist, cum[i] + t * L[i])
+        near += best[0] <= ORDER_NEAR_M
+        at.append(best[1])
+    if near < 0.9 * len(stops):
+        return None
+    order = sorted(range(len(stops)), key=lambda i: at[i])
+
+    def length(idx):
+        return sum(math.hypot((stops[a][1][0] - stops[b][1][0]) * k, stops[a][1][1] - stops[b][1][1]) for a, b in zip(idx, idx[1:])) * 111195.0
+    if length(range(len(stops))) < ORDER_RATIO * length(order):
+        return None
+    return [stops[i][0] for i in order]
 
 
 def chain(wlist, xy_of, k):
