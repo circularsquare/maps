@@ -107,11 +107,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-3620: ase (La Gonave, Haiti) is parked at top_zone_jobs_share 0.43 (one zone holds too many of its jobs).
   - Goal: Merged into a neighbouring Haitian zone and shipped, or left out with the reason in DECISIONS.md.
   - Other: notes/T-3620.md
-- T-3755 [P3] {L:new-countries} University students for the new Caribbean countries
-  - Context: From T-3620: Haiti, Trinidad and Tobago, the Bahamas, Dominica and the Cayman Islands have no tertiary figure (Haiti's gate relaxed), as Venezuela and Nicaragua had before T-3518.
-  - Goal: National tertiary figures in tier0.NATIONAL_TERTIARY with sources, taken up at their next rebuild.
-  - Other: notes/T-3518.md for the method
-- T-3756 [P3] {L:translations} Japanese and Chinese names for the 79 new zones
+- T-3756 [P3] {L:translations} Japanese and Chinese names for the 79 new zones (taking, 2026-11-19, agent znames)
   - Context: From T-3620: the Caribbean, Bolivia and Paraguay zones (shipped 2026-11-19) have English names only.
   - Goal: Each new zone has Japanese and Chinese names, as earlier countries' zones do.
   - Other: notes/T-3620.md
@@ -230,7 +226,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: You, 2026-11-18, for v0.4.3 ("train adjustments"), from a player: "the ability to offset departure times from whatever the game defaults to (like for example +4 minutes or -5 minutes) to have finer control over train movements and minimise conflicts between lines that share tracks". Per-train nudges are T-3346's Exact mode (stage 6, 24-34 h); a per-line offset is a smaller piece, but it meets the automatic pacing of lines sharing track (T-3584, `pace_merges`).
   - Goal: A design for you first (per line or per row, how it meets automatic pacing, where the control sits), with an hour estimate.
   - Other: notes/T-3742.md
-- T-3542 [P2] {L:timetables} Four or five service periods (taking, 2026-11-19, agent periods1)
+- T-3542 [P2] {L:timetables} Four or five service periods (taking, 2026-11-19, agent periods1b)
   - Context: Design done and answered 2026-11-17 (notes/T-3542.md "Her answers"): 5 period slots in the sim; periods and hours set for the whole game by default, per line as an extra step; no cap on a row's headway; about 19-29 h in three stages. You, 2026-11-17: "would also like to separately add the feature where we cn enable 4 tiers (rush, midday, evening=med, night=low) or 5 (morning, midday, afternoon, evening, night) in there [the timetables window]. that should update the always visible in line view to show 5 rows instead of 3. but it sitll shouldnt show weekends separately. similrly the timetables should only show up in the dedicated popup window."
   - Goal: Built in the three stages, reusing T-3346's Detailed mode (rows by hours averaged into demand's five periods, so no extra solve time) and your 2026-11-17 add: "being able to tweak the periods customizably ... set the morning hours to like start an hour earlier".
   - Other: notes/T-3346.md

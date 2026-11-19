@@ -500,6 +500,21 @@ NATIONAL_TERTIARY = {
            "Tiempos, 2022-06-10), over the public share of tertiary enrolment, 78.4% in 2021 (Red IndicES as cited by "
            "Chequeado): about 607,000 students, over the World Bank's 2020 population, 11,816,299 (T-3620)",
            "https://www.lostiempos.com/node/570312"),
+    # the World Bank has no tertiary enrolment for these since 2010; Haiti has no usable count at all (T-3755)
+    "TT": (20_889 / 1_367_764, 2025, "UNESCO UIS enrolment in tertiary education, all programmes, 2025, 20,889, over the "
+           "World Bank's 2025 population, 1,367,764 (the Ministry of Education's 2019/20 digest counts 28,280 in public "
+           "institutions plus an estimated 16,193 in private ones, not used; T-3755)",
+           "https://api.uis.unesco.org/api/public/data/indicators?indicator=25053&geoUnit=TTO"),
+    "KY": (1_423 / 73_038, 2023, "UNESCO UIS enrolment in tertiary education, all programmes, 2023, 1,423, over the "
+           "World Bank's 2023 population, 73,038 (T-3755)",
+           "https://api.uis.unesco.org/api/public/data/indicators?indicator=25053&geoUnit=CYM"),
+    "BS": ((5_000 + 2_666) / 397_538, 2022, "University of The Bahamas, about 5,000 students across its campuses and "
+           "online (Board of Trustees statement, 2022-02), plus BTVI fall 2022 enrolment, 2,666 (Tribune, 2023-10-19), "
+           "over the World Bank's 2022 population, 397,538 (T-3755)",
+           "https://tribune242.com/news/2023/oct/19/btvi-saw-small-rise-enrolment-spring-2023-over-pre"),
+    "DM": (1_500 / 66_510, 2023, "Dominica State College, about 1,500 students (the college's own page, 2023), over the "
+           "World Bank's 2023 population, 66,510; excludes the UWI Open Campus and offshore medical schools (T-3755)",
+           "https://dsc.edu.dm/about/"),
 }
 
 
