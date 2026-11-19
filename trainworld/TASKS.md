@@ -216,10 +216,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3457 [P3] {L:checks} Slim the standing checks
   - Context: The code tour (notes/code-tour.md) counts 283 of 320 checks named after the task that made them, 42 more in checks/old, 45,700 lines, more than the pipeline. You 11-16: Claude leans a bit too much toward writing checks.
   - Goal: Checks that no longer guard anything are deleted, the rest named by what they check; smoke and the standing set still pass.
-- T-3495 [P2] {L:world-map} Snap to freight and abandoned rail (taking, 2026-11-18, agent freightsnap)
-  - Context: You, 2026-11-16: "people want to be able to snap to freight / all track", and "if something is visible we shoudl let people snap to it". Done: unused rail (stage 1), trams, monorail, funicular, narrow gauge and heritage (T-3069, graph v2 with kinds 8 and up free). Left: freight and abandoned, whose tiles (T-3464) shipped with v0.4.0; abandoned rail is snappable too (DECISIONS 2026-11-17, your rule "if something is visible we should let people snap to it").
-  - Goal: Freight and abandoned rail drawn under All can be snapped to by train track, about 2-3 h plus about 100 MB of graph files.
-  - Other: notes/T-3495.md
 - T-3501 [P2] {L:airports} {after:next world rebuild} Border airports lose ground trips in the build
   - Context: From T-3485: the airport's pack share counts people across a border at full weight, then the border factor drops what doesn't land: Hong Kong loses 54% of its ground trips, Luton 77%, Basel 71%, Geneva 42%; 0.6M a day worldwide.
   - Goal: Outside people weighed by the border factor in the pack share at the next world rebuild; Hong Kong near its published ground trips.
@@ -228,6 +224,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Open-source issue 6: Suzhou to Shanghai's airports, Seoul to Incheon. Ground trips fade out from 40 km and stop at 80 km. You, 2026-11-17: "sure we can do big airports drawing ground trips from far away, not super high prio tho."
   - Goal: Hubs above a passenger threshold draw from cities 80-150 km away, sized by passengers, measured on a few hubs against published catchments.
   - Other: notes/T-3485.md
+- T-3742 [P2] {L:timetables} {after:v0.4.3} Nudge a line's departure times (taking, 2026-11-18, agent offsetdesign)
+  - Context: You, 2026-11-18, for v0.4.3 ("train adjustments"), from a player: "the ability to offset departure times from whatever the game defaults to (like for example +4 minutes or -5 minutes) to have finer control over train movements and minimise conflicts between lines that share tracks". Per-train nudges are T-3346's Exact mode (stage 6, 24-34 h); a per-line offset is a smaller piece, but it meets the automatic pacing of lines sharing track (T-3584, `pace_merges`).
+  - Goal: A design for you first (per line or per row, how it meets automatic pacing, where the control sits), with an hour estimate.
 - T-3542 [P2] {L:timetables} Four or five service periods (taking, 2026-11-18, agent periods0)
   - Context: Design done and answered 2026-11-17 (notes/T-3542.md "Her answers"): 5 period slots in the sim; periods and hours set for the whole game by default, per line as an extra step; no cap on a row's headway; about 19-29 h in three stages. You, 2026-11-17: "would also like to separately add the feature where we cn enable 4 tiers (rush, midday, evening=med, night=low) or 5 (morning, midday, afternoon, evening, night) in there [the timetables window]. that should update the always visible in line view to show 5 rows instead of 3. but it sitll shouldnt show weekends separately. similrly the timetables should only show up in the dedicated popup window."
   - Goal: Built in the three stages, reusing T-3346's Detailed mode (rows by hours averaged into demand's five periods, so no extra solve time) and your 2026-11-17 add: "being able to tweak the periods customizably ... set the morning hours to like start an hour earlier".
@@ -274,15 +273,15 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3460 [P3] {L:cleanup} Code written twice
   - Context: From the code tour: the schematic's sheet maths in Rust (diagram.rs) and again in JavaScript (sheetLines.ts, kept as a fallback); the real-rail route finder in the game (realRoute.worker.ts) and copied in the pipeline (realroute.py); car street speeds twice in Rust.
   - Goal: One copy of each, or a written reason to keep both.
-- T-3734 [P2] {L:cleanup} One owner for the save slot and the playing game (taking, 2026-11-18, agent slotown)
-  - Context: Refactor survey area 1 (notes/refactor-survey-2026-11-18.md): who may write the save slot and which game the page thinks is playing caused T-3687, T-3611, T-3698 and T-3722's worker half today; each fix added a flag. Takes in T-2843's state machine C and T-3698.
-  - Goal: Four stages, each landed alone: (1) standing checks for the races already met; (2) one write-block answer (machine C); (3) every worker message stamped with its game; (4) the save code moved out of clock.worker.ts. Checks pass at each stage; no save format change.
-  - Other: notes/refactor-survey-2026-11-18.md
+- T-3734 [P2] {L:cleanup} Game stamp on worker messages and save code moved out (taking, 2026-11-18, agent slotown)
+  - Context: Refactor survey area 1 (notes/refactor-survey-2026-11-18.md). Stages 1-2 are done: standing checks for the save races, and one answer for whether the slot may be written (T-2843's machine C), which fixed T-3698 and a second tab that could not go back to the menu. Left: (3) every worker message about a game carries one stamp, replacing the money's slot tag and the stop clicks' game count; (4) the save code moves out of clock.worker.ts into its own module.
+  - Goal: Each stage landed alone, the three t3734 checks, t1826-saves and t3478-new-game passing at each; no save format change.
+  - Other: notes/refactor-survey-2026-11-18.md; notes/T-3734.md
 - T-3726 [P3] {L:cleanup} {after:v0.4.2 publish} Are code comments worth keeping, A/B test
   - Context: You said yes, after the release (2026-11-18). You, 2026-11-18: "deciding whether or not code comments rae actually helpful ... what procedure do you think we might be able to try to get a rough sense of whether this would be really harmful? ... just a rough measured anecdotal sense." Proposal: replay 2-3 tasks landed today from their parent commits, one tree with comments and one with them stripped by script, same blind brief, scored on the real fix's tests first, then wrong causes, tokens and time; one task run twice per arm to see the noise.
   - Goal: A rough answer: no visible difference, comments help, or comments hurt; any mass strip only when no trees are open.
-- T-2843 [P3] {L:cleanup} State machines B and C
-  - Context: The code review report is done and state machine A is built (T-2848). B is demand health; C is who may write the save slot (in T-3734).
+- T-2843 [P3] {L:cleanup} State machine B for demand health
+  - Context: The code review report is done; state machines A (T-2848) and C (who may write the save slot, T-3734 stage 2) are built. B, demand health, is left.
   - Other: See notes/T-2843.md.
 - T-3160 [P2] {L:memory} Phone memory left over from T-2802
   - Context: An emulated phone uses about 600 MB at the first line, peaking at 825; MapLibre's worker, Blink buffers, ArrayBuffers and WebGL hold most of the rest. T-3472 (desktop Chrome): 1.0 GB at the start menu, 1.6 GB in a one-city game. You, 2026-11-16: "lots of people are unable to really play properly cuz tehy dont have enoguh ram. especially on phones. if we can get that working itll increase reach."
@@ -343,9 +342,11 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3739 [P2] {L:fares} Advanced fare panel with a fare curve (taking, 2026-11-18, agent faredesign)
   - Context: You, 2026-11-18, for v0.4.3: keep the current fare controls, add an "advanced" button that opens a panel like the schedule's advanced one, with everything in the simple view, a list of countries with their multiples (tweak each, or set the reference country), and nodes you can add to the fare curve to make a staircase or any other shape. Plan first, not built yet.
   - Goal: A design for you, with an hour estimate.
+  - Other: notes/T-3739.md
 - T-3740 [P2] {L:fares} Zone fares players draw (taking, 2026-11-18, agent faredesign)
   - Context: You, 2026-11-18: "people have requested zone fares ... people wanna draw these. in a city that kinda makes sense but idk how multi-city fare zones would work." Plan first, not built yet.
   - Goal: Ideas and a recommended design for you (drawing zones, how a trip's fare is counted, what happens across cities), with an hour estimate.
+  - Other: notes/T-3739.md (section 2); research/fares-zones-2026-11-18.md
 - T-3738 [P2] {L:community} Shared save links preview the player's map (taking, 2026-11-18, agent sharepreview)
   - Context: You, 2026-11-18: "currently if people share their links to saves, it just shows the generic "train world!" logo banner preview sorta thing. could we have it show the actual image of their map?"
   - Goal: A design and an hour estimate for you first (where the preview image comes from and what serves it), then built.

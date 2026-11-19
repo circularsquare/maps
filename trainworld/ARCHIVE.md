@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3495 [P2] {L:world-map} Snap to freight and abandoned rail (2026-11-18): train and tram track snap to freight and abandoned rail drawn under All: graph kinds 8 and 9 (freight from the extract, abandoned from the extra tiles), 120 graphs 149 MB (+87 MB); landing rebuilds them with realgraph.py, notes/T-3495.md.
 - T-3741 [P2] {L:small-fixes} No hover on the other calculating trips labels (2026-11-18): Removed the hover from the line panel's Riders row calculating label and the Lines tab's pending cell; labels stay; unused keys schedule.recalculating and linesTab.pendingTip removed from all locales.
 - T-3713 [P3] {L:track-drawing} Route ending near a bare end refused as too tight (2026-11-18): A route ending just short of a bare track end, coming from the track's side, now branches off 5 m in instead of being refused as too tight; notes/T-3713.md.
 - T-3712 [P3] {L:station-placement} Branching off a ramp says too close to the end (2026-11-18): Branching off a ramp stays refused (a node has one level) but the refusal now says "Can't branch off a ramp. Use a flat stretch of track."; notes/T-3712.md.

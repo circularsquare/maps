@@ -25,8 +25,17 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
      stepper stuck bug limitchk found, then land T-3525; slotown2 (Opus) T-3734 stage 2 port 6193; freightsnap
      (Sonnet) T-3495 port 6195 (graph build, ~100 MB); faredesign (Opus) T-3739+T-3740 design only;
      periods0 (Opus) T-3542 stage 0 port 6199 (T-3542 before T-3346 stage 2: DECISIONS 11-18; tt2 untouched).
-   - T-3738 share previews: design done (notes/T-3738.md), asks 25-26 open (worker + deploy, schematic picture).
-   - Ask 27: what she means by "train adjustments" (her v0.4.3 pad note).
+   - T-3738 share previews: her yes 00:12 UTC ("built as described yes, as long as theres no substantial new costs";
+     schematic with no names OK). sharebuild (Opus) building server route + worker, commits in shonei-server, no
+     deploy; then the server deploy and her `wrangler login` + deploy, each on her word.
+   - "Train adjustments": she doesn't recall; dropped. T-3346 stage 2's failing 30/10 case: she's open to fixing it
+     "if we think its worthwhile" (part of porting stage 2 after T-3542).
+   - Text acked: "Can't branch off a ramp. Use a flat stretch of track."; T-3698's "This game was saved in another tab
+     first. Save again to overwrite it."
+   - T-3742 nudge a line's departures (her "train adjustments"): "can do nudges later, not in the same round"
+     ({after:v0.4.3}); offsetdesign agent finishing a design for later.
+   - Fares: design in notes/T-3739.md; ask 28 open (four calls + build T-3739 now?).
+   - T-3718 landed b191eede (c006). slotchk checking T-3734 stage 2 (tree slotown2; closes T-3698 at landing).
    - Refactor: she leaves the pick to us ("i am not suited to make a call"), skip track (rework coming). T-3734 picked.
    - Next: T-3726 comments A/B after group 1 lands (advisor's design in handoff-log 20:47); then the up-next list.
 3. Up next: T-3495, T-2054, T-2901, T-3354, T-3518, T-2598; T-3720 after T-3734 (same slot code).
