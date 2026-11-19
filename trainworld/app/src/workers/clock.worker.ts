@@ -17,7 +17,7 @@ import { PERIODS } from "../game/periods";
 import { headwaysFor, headwaysIn, NEW_LINE } from "../game/newLine";
 import { LOAN_AMOUNTS, loanAllowed, loanBalance, loanDrain, loanFromSave, loanProfit, loanToSave, newLoan, type Loan } from "../game/loan";
 import { startNodes } from "../game/fareDefault";
-import { areaOfCode, zonesOf } from "../game/fareZones";
+import { areaOfCode, NEIGHBOUR_FARE_M, zonesOf } from "../game/fareZones";
 import { letterOf } from "../game/lineLetter";
 import { cloneName, cloneSymbol } from "../game/cloneNames";
 import { shapesFrom, type LineShape } from "../game/lineShape";
@@ -178,6 +178,12 @@ function demandFares(): Fares {
   for (let k = 1; k < codes.length; k += 2) used.add(areaOfCode(codes[k]));
   const kept = zones.filter((a) => !a.off && used.has(a.id)).map((a) => ({ id: a.id, name: "", prices: a.prices }));
   return kept.length ? { ...rest, zones: kept } : rest;
+}
+/** T-3740: stations whose code names an area the fares no longer have lose it (on no undo history: removing an
+ * area is a setting), so the model and the save never hold a removed area's code; after an area goes, an undo or
+ * redo, and a load. How many changed. */
+function tidyStationFares(a: TrackApi): number {
+  return a.tidy_station_fares(Uint32Array.from(fares.zones ?? [], (z) => z.id));
 }
 /** T-2679: the first built station's lng and lat (lowest node id), as the last state was built. */
 let firstBuiltAt: [number, number] | null = null;
@@ -2474,6 +2480,7 @@ async function openSave(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   api!.set_fleet_tram(h.fleetTram ?? 0);
   fares = fresh ? startFares(fresh) : loadFares(h.fares);
   goneLineFares.clear();
+  tidyStationFares(api!);
   setStartZone(h.start, h.dayShift); // before the ledgers, whose days follow its local time
   ledger = mergeLedger(h.ledger, (d) => d.day);
   hourLedger = mergeLedger(h.hours, (d) => d.hour);
@@ -3293,9 +3300,38 @@ function buildSnapshot(): NetworkSnapshot {
       ...(span.some((v) => v !== 1) ? { span: Array.from(span) } : {}),
     });
   }
+  if (fz.size) busStopFares(stations);
   snapStations = stationsKey(ni);
   tidyLineFares(a);
   return { version: ++snapVersion, city, frame: frameSpec(), stations, lines, fare: demandFares(), ...(passages.length ? { passages } : {}) };
+}
+
+/** T-3740: a bus stop that is no station takes the fare zone of the nearest station with one within
+ * `NEIGHBOUR_FARE_M` on the ground (as a new station does, sim `neighbour_fare`), else none, so it pays by
+ * distance. Only real stations count, never another stop, so zones don't creep along a route. Worked out for each
+ * snapshot, never stored. */
+function busStopFares(stations: NetworkSnapshot["stations"]) {
+  const cell = NEIGHBOUR_FARE_M * 2, grid = new Map<string, NetworkSnapshot["stations"]>();
+  const key = (i: number, j: number) => `${i},${j}`;
+  for (const s of stations) {
+    if (s.bus || !s.fare) continue;
+    const k = key(Math.floor(s.x / cell), Math.floor(s.y / cell));
+    const list = grid.get(k);
+    if (list) list.push(s); else grid.set(k, [s]);
+  }
+  if (!grid.size) return;
+  for (const b of stations) {
+    if (!b.bus) continue;
+    const r = NEIGHBOUR_FARE_M * groundK(b.y), i0 = Math.floor((b.x - r) / cell), i1 = Math.floor((b.x + r) / cell), j0 = Math.floor((b.y - r) / cell), j1 = Math.floor((b.y + r) / cell);
+    let best = r * r, code = 0;
+    for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) {
+      for (const s of grid.get(key(i, j)) ?? []) {
+        const d = (s.x - b.x) ** 2 + (s.y - b.y) ** 2;
+        if (d <= best) { best = d; code = s.fare!; }
+      }
+    }
+    if (code) b.fare = code;
+  }
 }
 
 /** T-3758: per run and hop, the fare zone codes of the stations line `id` passes without stopping; nothing where
@@ -4425,6 +4461,9 @@ async function handleMessage(msg: ToClock) {
       const ok = apply(msg.op).r === 0 || msg.op.op !== "fareLine";
       if (ok) {
         saves.dirty = saves.edited = true; saves.editAt = Date.now();
+        // T-3740: a removed area's stations come out of it, which the map and panels show
+        const tidied = msg.op.op === "fareZones" && tidyStationFares(api) > 0;
+        if (tidied) { forget(); sendState(); }
         sendMoney();
         scheduleSnapshot();
       }
@@ -4514,6 +4553,7 @@ async function handleMessage(msg: ToClock) {
     // T-3581: a line deleted or brought back by an undo or redo has its fare multiple dropped or given back in the
     // state this edit sends, not only at the next network for demand
     if (op.op === "removeLine" || op.op === "undo" || op.op === "redo") tidyLineFares(api);
+    if (op.op === "undo" || op.op === "redo") tidyStationFares(api);
     if (charge > 0) bookCharge(seq, charge, trainCharge ?? api.last_train_charge());
     forget();
     const demand = api.dirty_demand_lines();

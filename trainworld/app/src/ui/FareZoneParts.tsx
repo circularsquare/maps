@@ -2,11 +2,12 @@
 // panel's Fare zone row, shown only while the fares have an area. docs/ui-panels.md "Advanced fares".
 
 import { MAX_ZONES, zoneCode, zoneOfCode, areaOfCode } from "../game/fareZones";
-import { complexCode, currentArea, fareAreas, paintArea, paintZone, setStationCodes } from "../game/fareZonePaint";
+import { complexCode, currentArea, fareAreas, paintArea, paintZone, RING_STEPS, ringsArmed, ringWidth, ringWidthShown, setStationCodes } from "../game/fareZonePaint";
+import { unitShort } from "../game/format";
 import { CLICK_MODE_COLOURS, fareZoneColour, inkOn } from "../game/palette";
 import type { StationInput } from "../game/types";
-import { t } from "../i18n";
-import { Stepper } from "./widgets";
+import { t, tNumber } from "../i18n";
+import { Icon, Stepper } from "./widgets";
 
 /** A zone number on a square of its colour; "none" for 0. */
 export function ZoneChip({ zone }: { zone: number }) {
@@ -18,7 +19,7 @@ export function ZoneChip({ zone }: { zone: number }) {
 /** The tool's bar: the area (a picker once there are two), and the zone a click or loop gives (none takes
  * stations out of their fare zone). Neither is an edit. */
 export function FareBar() {
-  const areas = fareAreas(), a = currentArea(areas), z = paintZone.value;
+  const areas = fareAreas(), a = currentArea(areas), z = paintZone.value, armed = ringsArmed.value, width = ringWidthShown();
   if (!a) return null;
   return (
     <div class="tool-bar fare-bar" role="group" aria-label={t("fareZoneParts.title")} style={{ "--mode": CLICK_MODE_COLOURS.fares }}>
@@ -35,6 +36,20 @@ export function FareBar() {
           paintZone.value = to;
           return undefined;
         }} />
+      </div>
+      <div class="tb-row">
+        <button class={"btn text mini" + (armed ? " on" : "")} aria-pressed={armed} onClick={() => (ringsArmed.value = !armed)}>
+          <Icon.rings />{t("fareZoneParts.rings")}
+        </button>
+        {armed && <>
+          <span class="muted">{t("fareZoneParts.ringWidth")}</span>
+          <Stepper value={t("fareGraph.tickUnit", { value: tNumber(width), unit: unitShort() })} label={t("fareZoneParts.ringWidthLabel")} onStep={(d) => {
+            const i = RING_STEPS.indexOf(width), to = RING_STEPS[Math.max(0, Math.min(RING_STEPS.length - 1, (i < 0 ? RING_STEPS.findIndex((s) => s >= width) : i) + d))];
+            if (to === undefined || to === width) return false;
+            ringWidth.value = to;
+            return undefined;
+          }} />
+        </>}
       </div>
     </div>
   );

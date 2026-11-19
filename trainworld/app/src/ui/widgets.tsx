@@ -25,6 +25,8 @@ export const Icon = {
   pencil: () => <svg viewBox="0 0 16 16"><path d="M10.5 3l2.5 2.5L6 12.5H3.5V10z" /></svg>,
   /** T-3740: the Fare zones tool's paint brush */
   brush: () => <svg viewBox="0 0 16 16"><path d="M13.5 2.5L7.6 8.4M7.6 8.4c-1.7-.5-3.4.7-3.4 2.6 0 1.1-.6 1.8-1.7 2.2 2.6 1 6 .3 6.3-2.6z" /></svg>,
+  /** T-3740: set fare zones by distance, rings around a center */
+  rings: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="1.2" /><circle cx="8" cy="8" r="3.8" /><circle cx="8" cy="8" r="6.3" /></svg>,
   check: () => <svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7" /></svg>,
   // the station name's suggestions, round and round
   cycle: () => <svg viewBox="0 0 16 16"><path d="M12.8 6.5A5 5 0 004 5M3.2 9.5A5 5 0 0012 11M4 2v3h3M12 14v-3H9" /></svg>,

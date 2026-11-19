@@ -4,6 +4,11 @@
 use super::*;
 use crate::track::upgrades;
 
+/// T-3740: a new station within this many ground metres of a station with a fare zone takes the nearest one's
+/// (DECISIONS 2026-11-19): about half the widest stop spacing inside a fare area, so infill joins and a line
+/// drawn far out of the area does not.
+pub(super) const NEIGHBOUR_FARE_M: f64 = 2000.0;
+
 #[wasm_bindgen]
 impl TrackApi {
     /// Add or remove one station upgrade (`upgrades::TERMINAL` and the like) at each of `nodes`, in
@@ -118,6 +123,45 @@ impl TrackApi {
             return 1;
         }
         self.run(if ops.len() == 1 { ops.pop().unwrap() } else { Op::Batch(ops) })
+    }
+
+    /// T-3740: take every station whose code names an area not in `areas` (the fares' area ids) out of its
+    /// fare zone, as one edit on neither undo nor redo: removing an area is a setting, not undone, and an
+    /// undo or redo may bring back a code from before it went. How many stations changed (0: none).
+    pub fn tidy_station_fares(&mut self, areas: &[u32]) -> u32 {
+        let net = &self.w.net;
+        let ops: Vec<Op> = (0..net.node_count() as u32)
+            .filter(|&n| net.is_station(n) && net.node_fare[n as usize] != 0 && !areas.contains(&(net.node_fare[n as usize] >> 8)))
+            .filter_map(|node| net.station_data(node).map(|d| Op::Station { node, data: Some(StationData { fare: 0, ..d }) }))
+            .collect();
+        let n = ops.len() as u32;
+        if n == 0 {
+            return 0;
+        }
+        // the edit before (an undo this follows) stays the last one, whose changes the caller still reads
+        let last = self.last.take();
+        let r = self.run_unrecorded(Op::Batch(ops));
+        self.last = last;
+        if r != 0 { 0 } else { n }
+    }
+
+    /// T-3740: the fare zone code a new station at plane (x, y) takes: the code of the nearest station with
+    /// one within `NEIGHBOUR_FARE_M` on the ground, else 0. Codes of removed areas are never left on the
+    /// model (`tidy_station_fares`), so any code found is live.
+    pub(super) fn neighbour_fare(&self, x: f64, y: f64) -> u32 {
+        let net = &self.w.net;
+        let reach = NEIGHBOUR_FARE_M * net.k_at(y);
+        let (mut best, mut code) = (reach * reach, 0);
+        for n in 0..net.node_count() {
+            if net.node_fare[n] == 0 || !net.is_station(n as u32) {
+                continue;
+            }
+            let d = (net.node_x[n] - x).powi(2) + (net.node_y[n] - y).powi(2);
+            if d <= best {
+                (best, code) = (d, net.node_fare[n]);
+            }
+        }
+        code
     }
 
     /// Stations whose name the player typed (T-2683): their nodes.

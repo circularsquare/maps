@@ -900,8 +900,8 @@ left below the fare zones for a fare per stop (T-3744).
 above the countries, the heading "Fare zones" (bold, over a rule, with a hover on the charging rule), then each fare area: its name in a box that reads
 as plain text until hovered (typed over, Enter or leaving it renames; no recalculation), "Paint stations" with a
 brush, which closes the panel and starts the Fare zones tool on that area, and, left of a bin ("Remove fare area", asking
-"Remove {name}? Trips between its stations pay by distance again."; its stations keep their codes, which count as
-none until Z3 tidies them), the game's usual checkbox with no text, ticked while the area is on (hover "Disable {name}" or "Enable {name}"; T-3783, T-3791; off, trips pay by distance as if the area did not exist, its paint, name and prices kept and its price rows dimmed; `FareArea.off` in the header's `fares.zones`, sent as a `fareZones` edit like removal, so not undone; `demandFares()` leaves an off area out); then one row per zone count, "1 fare zone", "2 fare zones" ..., as many as the area's
+"Remove {name}? Trips between its stations pay by distance again."; its stations leave it, not undone, as the
+removal isn't), the game's usual checkbox with no text, ticked while the area is on (hover "Disable {name}" or "Enable {name}"; T-3783, T-3791; off, trips pay by distance as if the area did not exist, its paint, name and prices kept and its price rows dimmed; `FareArea.off` in the header's `fares.zones`, sent as a `fareZones` edit like removal, so not undone; `demandFares()` leaves an off area out); then one row per zone count, "1 fare zone", "2 fare zones" ..., as many as the area's
 highest zone painted and at least three, each its price as charged in the panel's country (a hover on each: what rides it is for; the stored price times
 that country's rate multiple, `countryFareScales`, as demand charges it; never below the base fare) in a stepper by the base fare's step, typed on a click. A price
 change keeps prices from falling: the later ones rise to it, the earlier ones come down to it. Last, "New fare area",
@@ -914,7 +914,14 @@ that button; nothing else in the game changes.
 (no Build tab button; started from the panel): its bar at the map's top centre, as the station tool's, with the area
 (a picker once there are two) and "Fare zone" with a stepper of the zone a click gives, 1 to 12 on its colour or
 "none" (which takes stations of that area out of it, leaving other areas' stations alone); the click mode's descriptor "Painting fare zones" and the hint
-"Click a station or drag around several." ("Tap a station or draw around several." on touch). A click on a station
+"Click a station or drag around several." ("Tap a station or draw around several." on touch). Under them a second
+row: "Set zones by distance" (rings, a toggle like "Add point"), which while on shows "Ring width" with a stepper
+(0.5 to 30 km or mi, 5 km or 3 mi at first, kept for the session, not an edit) and the hint "Click the station at the
+center." ("Tap ..." on touch); a left drag then pans the map, the station under the pointer previews its rings (each
+ring filled faintly in its zone's colour, dashed lines between), and a click on a station gives every station or
+complex whose middle is under 12 rings from that complex's middle (ground distance) zone floor(d / width) + 1 in the
+picked area, one `stationFares` edit (one Ctrl+Z), turning the toggle off; stations past ring 12 stay as they are,
+and complexes in another area ask the "Move stations" question as a loop does. Esc turns it off. A click on a station
 (within 14 px, from zoom 9 where stations are drawn) gives it and its whole complex the zone; a left drag draws a loop (kept in map coordinates, so zooming or panning mid-drag leaves it on the ground), dashed and shaded in the
 zone's colour, ringing the stations it would change (with "none", only those of the picked area), and on release every station inside (and their complexes) takes
 it. A station is in one fare area at most (T-3791): when a click or loop takes in a complex shown in another area, the

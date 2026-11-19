@@ -10,7 +10,9 @@ import { tPlace } from "../i18n/places";
 import { cityById, cityWithin, isCity, viewedZone, type CityId } from "./cities";
 import { complexOf } from "./complexView";
 import type { FareArea } from "./fareCurve";
-import { areaOfCode, MAX_ZONES, startPrices, tidyPrices, zoneCode, zoneOfCode } from "./fareZones";
+import { areaOfCode, MAX_ZONES, START_KM_PER_ZONE, startPrices, tidyPrices, zoneCode, zoneOfCode } from "./fareZones";
+import { unitMetres } from "./format";
+import { groundM } from "../map/geo";
 import { live } from "../map/live";
 import { moneyState } from "./money";
 import type { StationId, StationInput } from "./types";
@@ -155,11 +157,95 @@ function complexesOf(nums: Iterable<number>): StationInput[][] {
 }
 
 /** Complexes `groups` into `code`: one edit, none when no station's code would change. True when an edit went. */
-async function setCodes(groups: readonly StationInput[][], code: number): Promise<boolean> {
-  const nodes = groups.flat().filter((o) => (o.fare ?? 0) !== code).map((o) => o.num);
+function setCodes(groups: readonly StationInput[][], code: number): Promise<boolean> {
+  return setEach(groups.map((g) => [g, code]));
+}
+
+/** Each complex into its own code, all in one edit, none when no station's code would change. */
+async function setEach(list: readonly (readonly [readonly StationInput[], number])[]): Promise<boolean> {
+  const nodes: number[] = [], codes: number[] = [];
+  for (const [g, code] of list) for (const o of g) if ((o.fare ?? 0) !== code) { nodes.push(o.num); codes.push(code); }
   if (!nodes.length) return false;
-  const a = await edit({ op: "stationFares", nodes, codes: nodes.map(() => code) });
+  const a = await edit({ op: "stationFares", nodes, codes });
   return a.ok;
+}
+
+// ---------------------------------------------------------------- set zones by distance (rings)
+
+/** Ring widths offered, in the player's unit (km or mi). */
+export const RING_STEPS = [0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 6, 7, 8, 10, 12, 15, 20, 25, 30];
+/** The next station click sets zones by distance from it ("Set zones by distance" pressed). */
+export const ringsArmed = signal(false);
+/** The ring width picked, in the player's unit; null for the step nearest `START_KM_PER_ZONE` km. */
+export const ringWidth = signal<number | null>(null);
+
+export function ringWidthShown(): number {
+  const v = ringWidth.value;
+  if (v !== null) return v;
+  const want = (START_KM_PER_ZONE * 1000) / unitMetres();
+  return RING_STEPS.reduce((best, s) => (Math.abs(s - want) < Math.abs(best - want) ? s : best));
+}
+
+/** A complex's (or lone station's) middle, lng/lat. */
+function middle(g: readonly StationInput[]): [number, number] {
+  let lng = 0, lat = 0;
+  for (const s of g) { lng += s.lng; lat += s.lat; }
+  return [lng / g.length, lat / g.length];
+}
+
+export interface RingPlan {
+  /** the centre complex's middle, lng/lat */
+  at: [number, number];
+  /** ring width, ground m */
+  widthM: number;
+  /** each complex the rings reach, with its zone (1 at the centre, one more each `widthM` out) */
+  zones: { group: StationInput[]; zone: number }[];
+  /** the highest zone given */
+  top: number;
+}
+
+/** Zones by distance from station `centre` (its complex's middle): a complex `d` ground m from it gets zone
+ * floor(d / width) + 1; those past the last zone are left as they are, so a far city is never pulled in. */
+export function ringPlan(centre: number, widthM = ringWidthShown() * unitMetres()): RingPlan | null {
+  const w = world.peek();
+  if (!w || !(widthM > 0)) return null;
+  const groups = complexesOf(w.save.stations.map((s) => s.num));
+  const home = groups.find((g) => g.some((s) => s.num === centre));
+  if (!home) return null;
+  const at = middle(home), zones: RingPlan["zones"] = [];
+  let top = 0;
+  for (const g of groups) {
+    const [lng, lat] = middle(g), zone = Math.floor(groundM(at[0], at[1], lng, lat) / widthM) + 1;
+    if (zone > MAX_ZONES) continue;
+    zones.push({ group: g, zone });
+    top = Math.max(top, zone);
+  }
+  return { at, widthM, zones, top };
+}
+
+/** The rings helper's click: stations around `centre` into the tool's area by distance, one edit (one Ctrl+Z). As
+ * a loop does, a complex in another area moves only once the player says so. */
+export function paintRings(centre: number): Promise<boolean> {
+  const a = currentArea();
+  ringsArmed.value = false;
+  if (!a) return Promise.resolve(false);
+  const split = () => {
+    const plan = ringPlan(centre), areas = fareAreas(), mine: [StationInput[], number][] = [], other: [StationInput[], number][] = [];
+    for (const { group, zone } of plan?.zones ?? []) {
+      const c = complexCode(group, areas);
+      (c && areaOfCode(c) !== a.id ? other : mine).push([group, zoneCode(a.id, zone)]);
+    }
+    return { mine, other };
+  };
+  const now = split();
+  if (!now.other.length) return setEach(now.mine);
+  return new Promise((done) => {
+    ask.value = {
+      text: t("fareZonePaint.moveAsk"), yes: t("fareZonePaint.move"), no: t("toolNotes.cancel"),
+      run: () => { const s = split(); void setEach([...s.mine, ...s.other]).then(done); },
+      stay: () => void setEach(split().mine).then(done),
+    };
+  });
 }
 
 /** Stations `nums` with their complexes into `code` (0: out of any). True when an edit went. */

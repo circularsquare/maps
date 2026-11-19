@@ -9,6 +9,7 @@ import { clickColour, clickMode, type ClickMode } from "./ToolBar";
 import { busDraft } from "../map/busDraw";
 import { ferryDraft } from "../map/ferryDraw";
 import { buildingDraft } from "../game/buildingView";
+import { ringsArmed } from "../game/fareZonePaint";
 import { touchInput } from "../map/touch";
 import { useModalDialog } from "./Modal";
 import { Chip, Icon } from "./widgets";
@@ -92,7 +93,7 @@ function Notice() {
     : tl === "trip" && sel?.kind === "trip" && !sel.to ? t("toolNotes.tripEnd", { touch })
     : tl === "line" ? t("toolNotes.lineHint", { touch })
     : tl === "trip" ? t("toolNotes.tripHint", { touch })
-    : tl === "fares" ? t("toolNotes.fareHint", { touch })
+    : tl === "fares" ? t(ringsArmed.value ? "toolNotes.fareRingHint" : "toolNotes.fareHint", { touch })
     : "";
   const show = n && performance.now() - n.at < NOTICE_MS;
   // T-1464: the bus line tool: which line, how many points, and the way to finish (also on touch)

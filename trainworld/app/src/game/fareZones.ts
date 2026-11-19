@@ -11,6 +11,9 @@ import { FARE_MAX, fareAt, type FareArea, type FareNode, type Fares } from "./fa
 export const MAX_ZONES = 12;
 /** A new area's prices: the curve's fares at this many km times the zone count (5, 10, 15 km ...). */
 export const START_KM_PER_ZONE = 5;
+/** A new station, or a bus stop that is no station, within this many ground metres of a station with a fare zone
+ * takes the nearest one's (sim track/wasm/upgrades.rs `NEIGHBOUR_FARE_M`, the same number; DECISIONS 2026-11-19). */
+export const NEIGHBOUR_FARE_M = 2000;
 
 /** A station's code for zone `zone` of area `id`; 0 is none. */
 export const zoneCode = (id: number, zone: number): number => (id << 8) | zone;

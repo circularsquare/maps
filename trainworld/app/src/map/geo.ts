@@ -77,7 +77,7 @@ export function anchorWanted(lng: number, lat: number, zoom: number, a: Anchor):
 }
 
 /** Great-circle distance, metres. */
-function groundM(lng1: number, lat1: number, lng2: number, lat2: number): number {
+export function groundM(lng1: number, lat1: number, lng2: number, lat2: number): number {
   const p1 = lat1 * RAD, p2 = lat2 * RAD;
   const h = Math.sin((p2 - p1) / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(((lng2 - lng1) * RAD) / 2) ** 2;
   return 2 * EARTH_R * Math.asin(Math.min(1, Math.sqrt(h)));

@@ -881,6 +881,7 @@ svg.trip-graph { display: block; width: 100%; height: auto; margin: 2px 0 4px; u
 .fz-chip { display: inline-block; min-width: 18px; height: 18px; line-height: 18px; padding: 0 3px; box-sizing: border-box; font-weight: 700;
   text-align: center; font-variant-numeric: tabular-nums; }
 .fare-bar .fz-area { font-weight: 700; }
+.fare-bar .btn.text svg { width: 12px; height: 12px; margin-right: 4px; vertical-align: -2px; }
 .fg-off { cursor: pointer; }
 .fg-arrow { fill: var(--accent); stroke: var(--bg); stroke-width: 1; }
 .fg-off:hover .fg-arrow { stroke: var(--text); }

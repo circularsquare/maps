@@ -1126,7 +1126,17 @@ impl TrackApi {
         }
         let (mut nodes, mut edges) = (vec![], vec![]);
         for (&(e, s), &one) in at.iter().zip(&ones) {
-            let st = &StationData { one, ..st.clone() };
+            // T-3740: a new station takes its neighbours' fare zone, in the same edit (one Ctrl+Z)
+            let fare = if st.fare != 0 || dry {
+                st.fare
+            } else if e == u32::MAX {
+                let n = s as usize;
+                self.neighbour_fare(self.w.net.node_x[n], self.w.net.node_y[n])
+            } else {
+                let (x, y, _) = geom::pos_at(self.w.net.edge_pieces(e), s);
+                self.neighbour_fare(x, y)
+            };
+            let st = &StationData { one, fare, ..st.clone() };
             if e == u32::MAX {
                 // an existing node, `s` its id; at a loose end the platform runs its whole length
                 // back along the track, so the joints within it go first as they do for a split (T-860)

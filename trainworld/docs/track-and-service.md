@@ -1919,7 +1919,12 @@ is over `FARE_MAX`, curve US$1,000 (T-3303: a typed 90 billion once went into ev
   boarding and alighting stations are in one area is a zone ride; zone rides one after another in one area
   (changes between them allowed) are a run, paying that area's price for the zones from the lowest to the highest
   of its stations the rides stop at or pass (2 -> 1 -> 2 is 2 zones; stations without a zone between count
-  nothing). Every other ride, one to or from a bus stop that is no station included, is a distance ride. A trip pays
+  nothing). Every other ride is a distance ride. A new station (track, free or a port) takes the zone of the nearest station with one within 2 km on the
+  ground, in the placing edit itself (`neighbour_fare`, `NEIGHBOUR_FARE_M`), else none; a bus stop that is no
+  station is in the zone of the nearest station with one within the same 2 km, worked out for each network demand
+  reads and never stored (the clock's `busStopFares`), else it has none. Removing an area takes its stations out
+  of it, on no undo history, and so do a load and every undo or redo that brings back a removed area's code
+  (`tidy_station_fares`), so neither the model nor a save holds one. A trip pays
   base x M + (curve(distance rides' km) - base) x their multiplier + the sum over its runs of (price - base) x each
   run's multiplier, a zone, distance, zone trip paying two runs (`kernel::ZoneWork`; exact on a single route, where
   riders split onto runs in one area their lowest and highest zones are averaged before pricing). A change between two

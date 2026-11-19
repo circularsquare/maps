@@ -13,7 +13,7 @@
 import { effect } from "@preact/signals";
 import type { Map as MlMap } from "maplibre-gl";
 import { complexes } from "../game/complexView";
-import { fareAreas, liveCode, paintChanges, paintStations, paintZone } from "../game/fareZonePaint";
+import { fareAreas, liveCode, paintChanges, paintRings, paintStations, paintZone, ringPlan, ringsArmed, ringWidth, type RingPlan } from "../game/fareZonePaint";
 import { zoneOfCode } from "../game/fareZones";
 import { fareZoneColour, inkOn } from "../game/palette";
 import { shadeColours } from "../game/shades";
@@ -21,7 +21,7 @@ import { mapShade, tool } from "../game/ui";
 import { world } from "../game/world";
 import { buildCells, type Cell, type Site } from "./fareZoneCells";
 import { fitSparse } from "./gl";
-import { EARTH_C, toLocal, toMerc01 } from "./geo";
+import { EARTH_C, kAtLat, toLocal, toMerc01 } from "./geo";
 import { BoxGrid } from "./labelLayout";
 import type { Overlay } from "./overlay";
 import { STATIONS_ZOOM } from "./stationGeometry";
@@ -74,6 +74,11 @@ export class FareZoneTool {
   private inside: [number, number][] = [];
   private frame = 0;
   private touchPanRule: ((n: number) => boolean) | null = null;
+  /** "Set zones by distance": a left press, which pans the map when dragged and picks the centre when not */
+  private ringPress: { x: number; y: number; id: number } | null = null;
+  /** the station under the pointer while it is armed, and the rings it would give, drawn as a preview */
+  private ringHover: number | null = null;
+  private ringPreview: { key: string; plan: RingPlan | null } | null = null;
 
   constructor(private map: MlMap, private overlay: Overlay) {
     this.tintCanvas = document.createElement("canvas");
@@ -92,9 +97,11 @@ export class FareZoneTool {
       complexes.value;
       paintZone.value;
       mapShade.value;
+      ringWidth.value;
+      if (!ringsArmed.value) this.ringHover = null;
       const on = tool.value === "fares";
       this.holdTouchPan(on);
-      if (!on) this.cancel();
+      if (!on) { this.cancel(); if (ringsArmed.peek()) ringsArmed.value = false; }
       this.invalidate();
     });
     const host = map.getCanvasContainer();
@@ -123,14 +130,17 @@ export class FareZoneTool {
     }
   }
 
-  /** Esc while drawing a loop: it goes, nothing changes. True if there was one. */
+  /** Esc while drawing a loop: it goes, nothing changes; else "Set zones by distance" is let go. True if either. */
   cancel(): boolean {
     const had = !!this.loop || !!this.pan;
     this.loop = null;
     this.pan = null;
+    this.ringPress = null;
     this.inside = [];
-    if (had) this.invalidate();
-    return had;
+    const armed = !had && ringsArmed.peek();
+    if (armed) ringsArmed.value = false;
+    if (had || armed) this.invalidate();
+    return had || armed;
   }
 
   private point(e: PointerEvent): [number, number] {
@@ -199,6 +209,12 @@ export class FareZoneTool {
     }
     if (e.button !== 0) return;
     if (e.pointerType !== "touch") e.preventDefault();
+    if (ringsArmed.peek()) {
+      // picking the centre: a drag pans, a click picks
+      this.pan = { x, y };
+      this.ringPress = { x, y, id: e.pointerId };
+      return;
+    }
     const g = this.map.unproject([x, y]);
     this.loop = { ll: [[g.lng, g.lat]], start: [x, y], last: [x, y], moved: false, id: e.pointerId };
   }
@@ -214,8 +230,14 @@ export class FareZoneTool {
     const lp = this.loop;
     if (!lp) {
       if (e.pointerType !== "touch" && e.buttons === 0 && e.target === this.map.getCanvas()) {
-        const c = this.map.getZoom() >= STATIONS_ZOOM && this.stationAt(x, y) !== null ? "pointer" : "crosshair";
+        const hit = this.map.getZoom() >= STATIONS_ZOOM ? this.stationAt(x, y) : null;
+        const c = hit !== null ? "pointer" : "crosshair";
         if (this.map.getCanvas().style.cursor !== c) this.map.getCanvas().style.cursor = c;
+        // the rings a click there would give
+        if (ringsArmed.peek() && hit !== this.ringHover) {
+          this.ringHover = hit;
+          this.draw(true);
+        }
       }
       return;
     }
@@ -237,8 +259,18 @@ export class FareZoneTool {
 
   private onUp(e: PointerEvent) {
     if (e.pointerType === "touch") this.fingers.delete(e.pointerId);
+    const rp = this.ringPress;
+    this.ringPress = null;
     if (this.pan) {
       this.pan = null;
+      if (!rp || rp.id !== e.pointerId || !this.active || !ringsArmed.peek()) return;
+      const [x, y] = this.point(e);
+      if (Math.hypot(x - rp.x, y - rp.y) >= CLICK_PX || this.map.getZoom() < STATIONS_ZOOM) return;
+      const hit = this.stationAt(x, y);
+      if (hit !== null) {
+        this.ringHover = null;
+        void paintRings(hit);
+      }
       return;
     }
     const lp = this.loop;
@@ -320,7 +352,8 @@ export class FareZoneTool {
     const on = this.active && !!this.overlay.cam;
     const cells = on ? this.cellsNow() : [];
     if (!marksOnly) fitSparse(this.tintCanvas, this.map, cells.length > 0);
-    fitSparse(this.marks, this.map, on && (cells.length > 0 || !!this.loop));
+    const rings = on && ringsArmed.peek() ? this.ringsNow() : null;
+    fitSparse(this.marks, this.map, on && (cells.length > 0 || !!this.loop || !!rings));
     if (!on) return;
     const W = this.overlay.cssW, H = this.overlay.cssH;
     // device px per CSS px, as fitSparse sizes both canvases
@@ -338,8 +371,67 @@ export class FareZoneTool {
     m.setTransform(1, 0, 0, 1, 0, 0);
     m.clearRect(0, 0, this.marks.width, this.marks.height);
     m.setTransform(k, 0, 0, k, 0, 0);
+    if (rings) this.drawRings(m, rings);
     this.badges(m, shown, k);
     this.drawLoop(m);
+  }
+
+  /** The rings the hovered station would give, worked out again only when it, the width, the stations or the areas
+   * change. */
+  private ringsNow(): RingPlan | null {
+    const c = this.ringHover;
+    if (c === null) return null;
+    const key = `${c}|${ringWidth.peek()}`, from = this.cellsFrom;
+    if (this.ringPreview?.key !== key || this.ringFrom !== from) {
+      this.ringPreview = { key, plan: ringPlan(c) };
+      this.ringFrom = from;
+    }
+    return this.ringPreview.plan;
+  }
+  private ringFrom: unknown[] = [];
+
+  /** Each ring of `plan` out to the highest zone it gives, filled faintly in its zone's colour, with a dashed line
+   * where one zone meets the next, under the zone numbers. */
+  private drawRings(m: CanvasRenderingContext2D, plan: RingPlan) {
+    const [cx, cy] = toLocal(plan.at[0], plan.at[1]), k = kAtLat(plan.at[1]), at: [number, number] = [NaN, NaN];
+    const ink = shadeColours().stationInk;
+    const circle = (rM: number, path: Path2D, back: boolean) => {
+      const r = rM * k, n = 120;
+      for (let i = 0; i <= n; i++) {
+        const a = ((back ? n - i : i) / n) * 2 * Math.PI;
+        this.overlay.toScreenInto(cx + r * Math.cos(a), cy + r * Math.sin(a), at);
+        if (i === 0) path.moveTo(at[0], at[1]); else path.lineTo(at[0], at[1]);
+      }
+      path.closePath();
+    };
+    for (let z = 1; z <= plan.top; z++) {
+      const ring = new Path2D();
+      circle(z * plan.widthM, ring, false);
+      if (z > 1) circle((z - 1) * plan.widthM, ring, true);
+      m.globalAlpha = 0.16;
+      m.fillStyle = fareZoneColour(z);
+      m.fill(ring, "evenodd");
+    }
+    m.globalAlpha = 0.85;
+    m.lineWidth = 1.5;
+    m.strokeStyle = ink;
+    m.setLineDash([6, 4]);
+    for (let z = 1; z <= plan.top; z++) {
+      const edge = new Path2D();
+      circle(z * plan.widthM, edge, false);
+      m.stroke(edge);
+    }
+    m.setLineDash([]);
+    m.globalAlpha = 1;
+    // each ring's number, straight north of the centre midway across it
+    const px = this.map.getCanvas().width / Math.max(1, this.overlay.cssW), d = 2 * BADGE_R + 2;
+    for (let z = 1; z <= plan.top; z++) {
+      this.overlay.toScreenInto(cx, cy - (z - 0.5) * plan.widthM * k, at);
+      if (Number.isNaN(at[0])) continue;
+      let art = this.badgeArt.get(z);
+      if (!art) this.badgeArt.set(z, (art = badgeArt(z, ink, px, d)));
+      m.drawImage(art, at[0] - d / 2, at[1] - d / 2, d, d);
+    }
   }
 
   /** The cells on screen projected: each code's cells one path, filled at CELL_FILL; then, clipped to that path, its
