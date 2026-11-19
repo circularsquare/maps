@@ -11,8 +11,9 @@ import { Icon } from "../widgets";
 
 export function NameEdit({ name, onRename, prompt = false, onPrompted, control, children }: {
   name: string;
-  /** called with the trimmed new name when it is not empty and differs */
-  onRename: (name: string) => void;
+  /** called with the trimmed new name when it is not empty and differs; while a promise it returns is out, the
+   * new name is shown (T-3793) */
+  onRename: (name: string) => unknown;
   /** open the editor now (a new line's name, say) */
   prompt?: boolean;
   onPrompted?: () => void;
@@ -28,6 +29,10 @@ export function NameEdit({ name, onRename, prompt = false, onPrompted, control, 
   const input = useRef<HTMLInputElement>(null);
   const done = useRef(false);
   const prompted = useRef(false);
+  // T-3793: the name just kept, shown until its edit is answered (the world is up to date by then) or the name changes;
+  // on a big save the edit takes a moment, and the old name coming back looked like a rename that had not gone through
+  const [kept, setKept] = useState<string | null>(null);
+  useEffect(() => setKept(null), [name]);
   useEffect(() => {
     if (prompt) {
       prompted.current = !editing;
@@ -50,8 +55,15 @@ export function NameEdit({ name, onRename, prompt = false, onPrompted, control, 
   }, [editing]);
   const commit = (close: boolean) => {
     if (done.current) return;
-    const n = (draft ?? name).trim();
-    if (n && n !== name) onRename(n);
+    const shown = kept ?? name, n = (draft ?? shown).trim();
+    if (n && n !== shown) {
+      const out = onRename(n);
+      if (out instanceof Promise) {
+        setKept(n);
+        const drop = () => setKept((k) => (k === n ? null : k));
+        out.then(drop, drop);
+      }
+    }
     if (close) {
       done.current = true;
       setEditing(false);
@@ -62,7 +74,7 @@ export function NameEdit({ name, onRename, prompt = false, onPrompted, control, 
       {editing ? (
         <input
           class="name-edit"
-          value={draft ?? name}
+          value={draft ?? kept ?? name}
           ref={input}
           aria-label={t("nameEdit.name")}
           onInput={(e) => setDraft(e.currentTarget.value)}
@@ -77,7 +89,7 @@ export function NameEdit({ name, onRename, prompt = false, onPrompted, control, 
         />
       ) : (
         <span class="name" onDblClick={() => setEditing(true)}>
-          {name}
+          {kept ?? name}
         </span>
       )}
       {children}

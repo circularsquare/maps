@@ -3157,6 +3157,16 @@ function renameComplex(a: TrackApi, node: number, name: string): number {
   if (stateRows.complexSize(node) <= 1 && a.station_own(node)) return a.set_station_own(node, name, true);
   return a.type_station_name(stateRows.headOf(node) ?? node, name);
 }
+/** T-3793: an edit that changes only what a station or line is called (asked before it is applied): no train's run
+ * changes, and the network drawn has no names in it */
+function nameOnly(op: EditOp): boolean {
+  switch (op.op) {
+    case "renameStation": case "renameComplex": case "bindStation": case "bindAll": return true;
+    case "stationProps": return op.platform === stateRows.nodeRow(op.node)?.platform;
+    case "lineLook": return op.colour === undefined && op.letter === undefined;
+    default: return false;
+  }
+}
 /** The complexes of `geo` with the player's `links` and the station buildings' members (T-2217). */
 function complexesOf(builder: ComplexBuilder, geo: StationGeo[], playerLinks: [string, string][]): Complexes {
   const links = withBuildingLinks(playerLinks, buildingsOf(api!), geo, groundK);
@@ -4427,6 +4437,7 @@ async function handleMessage(msg: ToClock) {
       api.set_now(gameNow());
       api.set_edit_lead(clk.rate * serviceLeadS());
     }
+    const named = nameOnly(msg.op);
     const { r, fault, line, node, skipped, charge: charged, trainCharge, why } = apply(msg.op);
     api.set_edit_lead(0); // a refused edit leaves it set
     if (import.meta.env.DEV && panicAfterEdit) { panicAfterEdit = false; panicNow(); }
@@ -4448,7 +4459,7 @@ async function handleMessage(msg: ToClock) {
     // T-1780: blueprint track changes no train's run, so the trips and boarding account stand
     // (about 60 ms on New York's real save, more on shared track); T-1805: nor does the
     // junction it pays for when it branches off constructed track
-    const trips = !((op.op === "route" || bpRemove) && !demand.length);
+    const trips = !((op.op === "route" || bpRemove || named) && !demand.length);
     const effectiveAt = service ? api.edit_time() : undefined;
     // T-1407: the track tool's free segment is answered now (its next ghost needs only the model),
     // its state a moment later (a junction it pays for has its money's split read off that state)
@@ -4466,12 +4477,16 @@ async function handleMessage(msg: ToClock) {
     // real save), which the schedule window does not need: its rows go first. The answer stays after the full state,
     // and the follow-up is not held as a stop click's is.
     if (!stops && !early && op.op === "setPeriods") sendRows();
+    // T-3793: a name edit's rows (the world: labels, panels, lists) now and its answer after them; its full state follows
+    // unheld (on a big save that network is most of a second, and nothing drawn in it has a name)
+    const renamed = named && !early && !service && !msg.rows && sendRows();
+    if (renamed) answer();
     // T-1407: the state, the trips and the boarding hour (and the answer, so the world is up to
     // date when it arrives) after the previews asked meanwhile
     const rest = () => {
       // T-3758: a line's fare mode changes no train's run, yet demand reads it
       if (demand.length || op.op === "undo" || op.op === "redo" || op.op === "lineFareDist" || stationsKey() !== snapStations) scheduleSnapshot();
-      if (!early && !stops) answer();
+      if (!early && !stops && !renamed) answer();
       keep();
       // Paid for something: keep it (T-029, autosave on construct).
       if (charge > 0) void autosave();
@@ -4481,7 +4496,7 @@ async function handleMessage(msg: ToClock) {
       sendState(service, effectiveAt, trips, early, true);
       if (service) serviceEditMs = performance.now() - tA;
       rest();
-    }, () => { if (!early && !stops) failAnswer(msg); }, early ? EARLY_WAIT_MS : 0,
+    }, () => { if (!early && !stops && !renamed) failAnswer(msg); }, early ? EARLY_WAIT_MS : 0,
     // the boarding account's lines the edit moved (~1.5 ms a line; a train count on New York's
     // real save moves ~90 of them), a few a task, so a ghost asked meanwhile waits for one step
     trips && api.has_riders() ? () => (todayGen++, api!.boarding_step(BOARDING_STEP_LINES)) : undefined,

@@ -387,7 +387,8 @@ the button is gone.
   junction or station (a tag on plain track selects nothing).
 - **Cheap on big networks**: the capacity tags and reversals come with the world as the map draws
   them; the past 24 hours' counts are asked once a game hour and when riders are worked out again
-  (`accountVersion`), not the panels' four times a second.
+  (`accountVersion`), not on the panels' refresh (up to four times a second, and no sooner than twice the last
+  answer's time after it, so about once a second on the largest games) [T-3793].
 
 ## Tutorial card
 
