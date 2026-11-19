@@ -340,10 +340,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: Measured in notes/T-909.md option 1.
 
 ## Interface
-- T-3740 [P2] {L:fares} Zone fares, stage Z3 (taking, 2026-11-19, agent zonez3)
-  - Context: You, 2026-11-18: "people have requested zone fares ... people wanna draw these." Z1 (sim and saves) and Z2 (paint tool, tint, panels) landed 2026-11-19; drawn outlines (C) were agreed for later.
-  - Goal: A "Set zones by distance" rings helper, new stations and plain bus stops take their neighbours' zone, a deleted area's stations tidied; about 3-4 h.
-  - Other: notes/T-3740.md
 - T-3744 [P3] {L:fares} Fare per stop made
   - Context: You, 2026-11-19, from players: a fare for each stop the train makes, so set below zero an express that stops less costs more; "i guess you'd probably always make this negative so maybe we flip the sign but then idk how we'd describe it"; floor the fare at the base fare. Unknown whether other games do it.
   - Goal: A short design (wording, sign, how a ride's stops are counted, other games) for you, then built in the advanced fares panel.
@@ -396,12 +392,27 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3799 [P2] {L:small-fixes} Choose which Lines tab columns show
   - Context: Your pad, 2026-11-19: "perhaps have the column headers that are shown be customizable so that we dont have too many columns".
   - Goal: A short design for you first (where the choice lives, which columns show by default), then built.
+- T-3803 [P2] {L:edit-speed} Next edit waits behind the last edit's full state (taking, 2026-11-19, agent editwait)
+  - Context: Found by T-3801's audit on a 2,647-station save: after an edit the worker builds the full state for 0.6-2.7 s, and an edit made meanwhile waits behind it; most of what's left at 1 s between edits.
+  - Goal: An edit made right after another shows up within about 0.3 s on that save.
+  - Other: notes/T-3801.md
+- T-3804 [P3] {L:edit-speed} Other worker work that holds edits up
+  - Context: From T-3801's audit: the hour turn (0.14-1.1 s every game hour), one today answer (70-250 ms, 0.5-0.8 s under load; splitting it is a design call), the snapshot timer and next-hour boarding step (0.2-0.5 s). Not measured: undo of a rename, unbind all, the junction panel.
+  - Goal: Each is under 0.2 s or yields to edits, per docs/architecture.md "Edits never queue behind polling".
+  - Other: notes/T-3801.md
+- T-3805 [P3] {L:map-look} Trip routes and gap flash drift on big screens
+  - Context: Found by T-3802: the trip view's route drawing and the gap flash scale by the map's pixel ratio, so on a map over 4096 device px wide (5K screens, some Macs on 4K monitors) or after moving the window to another screen they sit off their places, like the station rings did. Reach: few.
+  - Goal: Both scale by their canvas's real size, as the rings now do.
+  - Other: notes/T-3802.md
 - T-3802 [P1] {L:real-networks} Real world station rings drift while zooming (taking, 2026-11-19, agent ringfix)
   - Context: You, relaying a player, 11-19: "bugs out when zooming and is like completely offset from the actual tracks (no fixed position). Also i would like it to keep showing the station name on hover like with the normal dot. And also show it for tram lines which it currently doesnt, maybe have the dot a little smaller or smth to differentiate from train... would be nice to prepare this for a potential hotfix". T-3760's ring canvas, shown only while placing stations since T-3792.
-  - Goal: Rings stay on their stations at every zoom and while zooming, hover shows the station name, tram stops show as smaller rings; ready as hotfix v0.4.4 on a tree from d39db027 (before save level 30).
-- T-3801 [P2] {L:edit-speed} Edits stuck behind panel polling, audit (taking, 2026-11-19, agent pollaudit)
-  - Context: T-3793 found a station rename waiting 1-5.5 s in the clock worker's queue behind the station panel's 250 ms "today" polling (140-745 ms each on a 2,647-station save) and a full network rebuild. You, 2026-11-19: "i could imagine like we build some future feature and it fails like this ... also can check to see if there are any current parallel failures". Leads from T-3793 (landed 366f1078): the hourly `epoch` once took 4.3 s in the worker; `linesPeriods` bursts (up to 9 in flight) and a second `today` asker aren't paced; undo/redo of a rename and the new unbindAll still take the slow path.
-  - Goal: Every panel or window that polls the clock worker is listed with its cost on a big save; any that can hold an edit up is fixed the T-3793 way (poll waits on its own cost, edits go first); a rule in the docs so new polls follow it.
+  - Goal: Rings stay on their stations at every zoom and while zooming, hover shows the station name, tram stops show as smaller rings; ready as hotfix v0.4.4 on a tree from d39db027 (before save level 30). Rings fixed (43d9cc9b, on 8800); left: you, 11-19, "have hover for station name even if its backgrounded / non-ring", i.e. the faint dots outside the station tool too.
+- T-3807 [P1] {L:accounts-server} Change display name in account settings (taking, 2026-11-19, agent dispname)
+  - Context: You, 11-19: "some people get confused by this and put what they want the map to be called rather than what they want their display name to be, and then they cant change it and they're sad. lets make it changeable in account settings? maybe throttle twice a day or something". For hotfix v0.4.4; needs a server deploy.
+  - Goal: Account settings can change the display name, at most twice a day, enforced by the server.
+- T-3809 [P3] {L:buses} Ferry waypoints without a port
+  - Context: You, 11-19: "ferry waypoint placeability (maybe with shift click or something, if thats not used) so that people can path their ferries without placing a port. sometimes we are unable to path through some archipelagos. or its too long or smth."
+  - Goal: A player can place a waypoint a ferry route passes through without a port (shift click if free), so routes get through archipelagos.
 - T-3325 [P3] {L:real-networks} {after:real-network rebuild batch} Rebuild Sendai so Senzan Line stops at Toshogu
   - Context: You parked this 2026-11-12 since few players open Sendai. The fix is in realnet.py build_lines.
   - Other: Commands in notes/T-3318.md.
@@ -756,9 +767,10 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: You asked 2026-11-16 to replace the list: Indonesian first, then Italian, Polish, Arabic (interface mirrors), maybe Malay, Dutch, Thai. It replaces T-2851. Indonesian was added 2026-11-17 (no native read yet; "halte" for bus stops and "Pendapatan tarif" for fare income are open wording calls).
   - Goal: Italian, Polish, Arabic added in order.
   - Other: Non-Latin scripts need a font and place-name check. research/localization.md
-- T-3409 [P2] {L:schematic} Schematic of one city or chosen cities (taking, 2026-11-19, agent cityschem)
-  - Context: Your TODO 2026-11-15 asks whether building far away hurts the local schematic, and wants a schematic of just one city or a set.
-  - Goal: Answer your question, and add a way to draw a schematic of chosen cities.
+- T-3409 [P2] {L:schematic} Schematic of one city or chosen cities (taking, 2026-11-19, agent citysheet)
+  - Context: Your TODO 2026-11-15. You picked B, 11-19: "they should be redrawn so that they can get full precision as if they were the only things in the world. we shouldnt just take the world map and hide the stuff outside." Answered 11-19 (cityschem): a line over 500 km away and unconnected changes nothing; a line within 500 km or one that connects puts both on one sheet and redraws the city (up to 40% in drawn distances). A far region is drawn after the city in view and doesn't make it wait, except for an edit made while it is still drawing.
+  - Goal: A city checklist on the schematic; the chosen cities (zones) get a fresh layout of their own, lines cut at the last station inside with a stub, the choice saved per game; about 3-4 h.
+  - Other: notes/T-3409.md
 - T-3413 [P3] {L:community} Save lineage, original author and copies
   - Context: Your TODO 2026-11-15: on metrodreamin people "steal" maps. You want saves to record the original author and who copied it.
   - Goal: A design for you first; then a save traces back to its original.

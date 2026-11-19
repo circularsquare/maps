@@ -17,10 +17,17 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    or deployed: that deploy must go out before the next game publish. Rebuild 8800 once after
    this round's landings (board's master hash stale till then).
 1b. HOTFIX v0.4.4 (her ~21:35 via maps-e8, which relays her by remote control ~2 h): ringfix (Opus, T-3802, tree
-   from d39db027, i.e. v0.4.3 + de/ca, NOT master's level 30; 6178). Publish from that branch only, with only its
-   changelog item; work out before publishing how deploy.py builds a non-master commit and keep c001/c002 and
-   cityfares' items unpublished. Then land the fix on master too. T-3766 landed 87c811bf (cityfchk passed; next
+   from d39db027, i.e. v0.4.3 + de/ca, NOT master's level 30; 6178). 23:20 8800 = 43d9cc9b (hotfix-v0.4.4 branch),
+   smoke8800 light+dark PASSED, test list + publish ask sent via maps-e8. ringfix DONE (cause: ring canvas scaled by
+   map.getPixelRatio, wrong past 4096 device px); in the tree: changelog published to v0.4.4 (tree's own next.json,
+   line "update v0.4.4: station rings stay put"), l10n044 translating. Then: commit on tw/ringfix (+ branch
+   hotfix-v0.4.4 to keep the hash), snap8800 <that hash>, smoke8800, test list to her via maps-e8, on her yes
+   deploy.py --skip-data --version 2026-11-19 (data unchanged), website push, verify; then finish ringfix onto master
+   and snap8800 master. Master's own next.json (c001-c005) stays unpublished. T-3766 landed 87c811bf (cityfchk passed; next
    translation pass drops advancedFares.byCountry). zonez3 (Opus, T-3740 Z3, tree from 87c811bf, 6180) running.
+   T-3360 + T-3785 landed 9f6125e0 (option A; sheet sent, asks: A/B/C, buses over rail?). T-3409: she picked B (fresh layout of
+   chosen cities "as if they were the only things in the world"); citysheet (Opus, tree, 6184) building; lands after
+   bareframe (Sonnet, T-3806, 6183, postDiagram frame). editwait (Opus, T-3803, 6182) running.
 2. Next to start: T-3740 Z3 after cityfares lands (same fare panels); T-1738 / T-3763 after guianas; T-3790 step 4
    once she answers a-2026-11-19-20 (limitcheck's answer in notes/T-3790.md); T-3780 timetables, T-3799 design to
    her, T-3726 commentab pairs 1 and 3.
@@ -30,6 +37,11 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 5. Later: T-3744 per-stop fare, T-3754, T-3747, busverify's train 4.14 min gap read (a short probe).
 
 ## Her words
+- 11-19 ~23:30: hotfix "not super urgent ... lets wait and get a few other requested things out with it": dot hover
+  for station names outside the station tool (ringfix, resumed), display name change in account settings, "throttle
+  twice a day" (T-3807, dispname, tree from hotfix-v0.4.4 + shonei-server; needs a server deploy). Lines Type: "i
+  dont want that to be the default ... have type as a column and can sort by it" (T-3808 typecol). Filed T-3809
+  ferry waypoints (shift click). T-3409 B: "as if they were the only things in the world".
 - 11-19 ~20:20: the rename stuck behind polling is a shape to remember for future features; check for current
   parallel failures, "no rush" (T-3801).
 - 11-19 ~19:30: "changelog looks good (i think lets not change it at all)"; start line hers: "update v0.4.3: separate

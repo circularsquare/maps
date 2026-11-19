@@ -1,6 +1,10 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3740 [P2] {L:fares} Zone fares, stage Z3 (2026-11-19): Z3 built: rings helper (0.5-30 km, one undo), new stations and bus stops inherit the nearest zone within 2 km, removed areas tidied on undo/redo and load; checker z3chk passed money parity, undo, bus stops, edges and recalculation. notes/T-3740.md.
+- T-3808 [P2] {L:small-fixes} Type as a sortable Lines tab column (2026-11-19): Type column after Fleet, always shown, sortable; default sort unchanged (Riders); panel width thresholds raised 46 px; c002 reworded. notes/T-3808.md.
+- T-3806 [P3] {L:schematic} Track with no line shifts the schematic (2026-11-19): postDiagram's per-region framing runs for a lone region too; real save layout hashes identical with and without bare track in Chicago. notes/T-3806.md.
+- T-3801 [P2] {L:edit-speed} Edits stuck behind panel polling, audit (2026-11-19): One answered poll in the worker at a time, resting 2x its cost up to 3 s; edits, previews and tool reads never held; rule 'Edits never queue behind polling' in architecture.md; remaining holders filed as T-3803 and T-3804. notes/T-3801.md.
 - T-3785 [P3] {L:schematic} Hidden lines leave the schematic (2026-11-19): Buses and ferries thin with white stops (option A), bus-only networks laid out on their own, mode buttons when a game has two or more kinds, hidden lines left out at paint time; rail layout hashes unchanged. notes/T-3360.md.
 - T-3360 [P2] {L:schematic} Schematic settings for buses and ferries (2026-11-19): Buses and ferries thin with white stops (option A), bus-only networks laid out on their own, mode buttons when a game has two or more kinds, hidden lines left out at paint time; rail layout hashes unchanged. notes/T-3360.md.
 - T-3766 [P2] {L:fares} Fare multiples by city (2026-11-19): Fares by country or city switch in advanced fares; one fare resolver for income, demand, zones, market and panels; checker cityfchk passed money, mode switch, saves, zone fares and demand. notes/T-3766.md.
