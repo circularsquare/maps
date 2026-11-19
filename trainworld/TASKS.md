@@ -34,7 +34,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Every border pair gets the national factor 0.05, but Tijuana-San Diego and Juarez-El Paso are very busy crossings.
   - Goal: A pair factor in borders.json, checked against published crossing counts.
   - Other: notes/T-2436.md
-- T-2054 [P2] {L:world-tooling} Terrain and drives missing for new zones
+- T-2054 [P2] {L:world-tooling} Terrain and drives missing for new zones (taking, 2026-11-18, agent jointerrain)
   - Context: The join builds no terrain grids or routed drives for new zones, so 250 zones priced track on flat ground and 542 used the drive rule until the Philippines run built them by hand.
   - Other: See notes/T-2054.md.
 - T-2106 [P3] {L:census-totals} Other zones on census totals, Indonesia and Philippines
@@ -274,9 +274,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3460 [P3] {L:cleanup} Code written twice
   - Context: From the code tour: the schematic's sheet maths in Rust (diagram.rs) and again in JavaScript (sheetLines.ts, kept as a fallback); the real-rail route finder in the game (realRoute.worker.ts) and copied in the pipeline (realroute.py); car street speeds twice in Rust.
   - Goal: One copy of each, or a written reason to keep both.
-- T-3734 [P2] {L:cleanup} Game stamp on worker messages and save code moved out
-  - Context: Refactor survey area 1 (notes/refactor-survey-2026-11-18.md). Stages 1-2 are done: standing checks for the save races, and one answer for whether the slot may be written (T-2843's machine C), which fixed T-3698 and a second tab that could not go back to the menu. Left: (3) every worker message about a game carries one stamp, replacing the money's slot tag and the stop clicks' game count; (4) the save code moves out of clock.worker.ts into its own module.
-  - Goal: Each stage landed alone, the three t3734 checks, t1826-saves and t3478-new-game passing at each; no save format change.
+- T-3734 [P2] {L:cleanup} Save code moved out of the clock worker (taking, 2026-11-18, agent slotown3)
+  - Context: Refactor survey area 1 (notes/refactor-survey-2026-11-18.md). Stages 1-3 are done: standing checks for the save races; one answer for whether the slot may be written (T-2843's machine C), which fixed T-3698 and a second tab that could not go back to the menu; and one game stamp on the worker's messages in place of the money's slot tag and the stop clicks' game count. Left: stage 4, the save, slot, lease and cloud code moves out of clock.worker.ts into a module of its own, with no behaviour change.
+  - Goal: The three t3734 checks, t1826-saves, t3478-new-game and smoke passing after the move; no save format change.
   - Other: notes/refactor-survey-2026-11-18.md; notes/T-3734.md
 - T-3726 [P3] {L:cleanup} {after:v0.4.2 publish} Are code comments worth keeping, A/B test
   - Context: You said yes, after the release (2026-11-18). You, 2026-11-18: "deciding whether or not code comments rae actually helpful ... what procedure do you think we might be able to try to get a rough sense of whether this would be really harmful? ... just a rough measured anecdotal sense." Proposal: replay 2-3 tasks landed today from their parent commits, one tree with comments and one with them stripped by script, same blind brief, scored on the real fix's tests first, then wrong causes, tokens and time; one task run twice per arm to see the noise.
