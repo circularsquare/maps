@@ -1740,9 +1740,11 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
 #### Fares and the ledgers
 
 - Running costs, upkeep and **fares**
-  are settled by the clock worker into the cash and a ledger per day (every day kept, T-2143) and per hour (48
+  are settled by the clock worker into the cash and a ledger per day (every day kept, T-2143; once a ledger spans more
+  than 90 weeks, its days older than 120 fold into one entry per calendar month, where the History chart groups by month
+  anyway, T-3757, `workers/ledgerFold.ts`) and per hour (48
   kept, T-447) as the game runs, not once an hour (T-284). The ledgers hold one entry per day or
-  hour, in order; a day runs midnight to midnight in the start zone's local time, an hour is the
+  hour (or folded month, keyed by its earliest day), in order; a day runs midnight to midnight in the start zone's local time, an hour is the
   clock's ([world.md](world.md) "Local time", T-2271); a load merges any day or hour an older save lists twice. Money time never goes
   back: a clock set behind the time already settled adds nothing until it passes it, and a charge
   meanwhile lands on the latest day. Both threads time the clock on `performance.timeOrigin +

@@ -25,6 +25,7 @@ import { capTransfer, faresOf, simpleNodes, START_FARE, START_NODES, tidyHsr, ti
 import { EVERY, FARE_BASELINE, FARE_E, incomeScale, keepOwn, OLD_FARE_E, oldCurveFactor, oldIncomeScale, runFactorOf, scaleFromOld, START, startFromOld, tidyOwn } from "../game/income";
 import { SHADES } from "../game/shadeTable";
 import { DAY_KINDS, dayKindOf } from "../game/days";
+import { foldLedger } from "./ledgerFold";
 import { kindOfIn, rowOfDay, rowOfIn, type DayRow, type HolidayData } from "../game/holidayCalendar";
 import { shiftAt, timeZoneTable } from "../game/localTime";
 import { between, lagged, runLag, strengths, table, type KindOf, type PerHour } from "../game/moneyTiming";
@@ -170,8 +171,8 @@ function pinFareRef() {
 /** Autosave (T-029): this long after the last one if anything changed, wall ms; at once after a
  * construct or other paid edit, and when the page is hidden. */
 const AUTOSAVE_MS = 60_000;
-/** Days of money kept in the ledger (every one, for the History chart's all time: T-2143), and hours
- * in the hourly one (T-447). */
+/** Days of money kept in the ledger (every one, for the History chart's all time: T-2143; old ones folded by month,
+ * `foldLedger`), and hours in the hourly one (T-447). */
 const LEDGER_DAYS = Infinity;
 const LEDGER_HOURS = 48;
 /** T-3521, T-3542: each period on each kind of day, weekdays' first, then weekends' (`TrackApi.running_cost_period`). */
@@ -1697,7 +1698,14 @@ function entryIn<T extends { fares: number; running: number; trains: number; bui
 
 /** Game day `day`'s ledger entry; the ledger keeps LEDGER_DAYS days. */
 function dayEntry(day: number): DayLedger {
-  return entryIn(ledger, (d) => d.day, day, () => newDay(day), LEDGER_DAYS);
+  return dayIn(ledger, day);
+}
+
+/** Day `day`'s entry in a day ledger, made if missing; a new day folds the ledger's old days (T-3757) */
+function dayIn(list: DayLedger[], day: number): DayLedger {
+  const n = list.length, e = entryIn(list, (d) => d.day, day, () => newDay(day), LEDGER_DAYS);
+  if (list.length > n) foldLedger(list, day);
+  return e;
 }
 
 /** The hour's entry in the hourly ledger (T-447); it keeps LEDGER_HOURS hours. */
@@ -1710,7 +1718,7 @@ function regionEntries(zone: string, day: number, hour: number): [DayLedger, Hou
   let r = regions.get(zone);
   if (!r) regions.set(zone, (r = { days: [], hours: [] }));
   return [
-    entryIn(r.days, (d) => d.day, day, () => newDay(day), LEDGER_DAYS),
+    dayIn(r.days, day),
     entryIn(r.hours, (d) => d.hour, hour, () => newHour(hour), LEDGER_HOURS),
   ];
 }
@@ -2402,6 +2410,9 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   ledger = mergeLedger(h.ledger, (d) => d.day);
   hourLedger = mergeLedger(h.hours, (d) => d.hour);
   loadRegions(h.regions);
+  // T-3757: a save from before the fold shrinks here and at its next save
+  foldLedger(ledger, ledgerDay(h.clock));
+  for (const r of regions.values()) foldLedger(r.days, ledgerDay(h.clock));
   loadLineDays(h.lineDays, ledgerDay(h.clock));
   stars = new Map(Object.entries(h.stars ?? {}));
   goals = new Map(Object.entries(h.goals ?? {}));

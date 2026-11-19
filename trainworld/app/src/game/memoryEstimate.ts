@@ -1,34 +1,36 @@
 // T-3329: the memory a game takes, shown to the player: an estimate for a saved game from its station count
 // (the saves list and the warning on Open), and a reading of the running game (Settings). Fitted on 13 real-network
-// saves and a fresh game in headless Chrome, all processes of the tab, notes/T-3329.md. The all-China save is left
-// out of the fit (it is a hand-drawn network of long straight lines, not a reference).
+// saves and a fresh game in headless Chrome, all processes of the tab, notes/T-3329.md, refitted with players'
+// largest networks and 3 solving workers in notes/T-3757.md. The all-China save is left out of the fit (it is a
+// hand-drawn network of long straight lines, not a reference).
 // memoryCheck.ts judges a save before it loads from its zones and must stay cautious; this is the plain figure.
 
-import { workersFor, demandWorkersMB } from "../workers/demandClient";
+import { workersFor, demandWorkersWasmMB } from "../workers/demandClient";
 import { addressLimited, budgetKnown, deviceGB, memBudget } from "../workers/deviceMemory";
+import { liveBytes } from "../workers/liveMemory";
 import { t } from "../i18n";
 
 const GB = 2 ** 30;
-/** GB all of the browser's processes take with a small saved game open, one solving worker */
-const BASE_GB = 1.8;
-/** GB more for each 1,000 stations (R2 0.85 over the 13 saves, error about 0.2 GB) */
-const PER_1000_STATIONS_GB = 0.65;
+/** GB all of the browser's processes take with a small saved game open, one solving worker, and GB more for each
+ * 1,000 stations (T-3757 refit with two 53-64 city saves of 1,174 and 7,070 stations: error within about 20%) */
+const BASE_GB = 1.64, PER_1000_STATIONS_GB = 0.8;
 /** GB a solving worker takes, and more per 1,000 stations: each past the first adds it, and its size sets how many
- * run (T-3373; New York 0.55 measured 0.49, notes/T-3373.md) */
-const PER_EXTRA_WORKER_GB = 0.2, PER_EXTRA_WORKER_1000_GB = 0.2;
-/** The running game: GB outside the workers' own WASM and heap, and GB of browser per GB of them (R2 0.90, error about 0.2 GB) */
-const LIVE_BASE_GB = 1.15, LIVE_PER_WORKER_GB = 1.76;
+ * run (T-3373; T-3757: 7,070 stations measured 2.2 a worker) */
+const PER_EXTRA_WORKER_GB = 0.1, PER_EXTRA_WORKER_1000_GB = 0.3;
 
-/** GB a saved game of `stations` will take on this device (its solving workers counted). */
+/** GB a saved game of `stations` will take on this device (its solving workers counted). Past one, solving workers
+ * count only while they fit in the budget, as the pool cuts them there (`capPool`). */
 export function estimateGB(stations: number): number {
   const worker = PER_EXTRA_WORKER_GB + (PER_EXTRA_WORKER_1000_GB * stations) / 1000;
-  return BASE_GB + (PER_1000_STATIONS_GB * stations) / 1000 + worker * (workersFor(worker * GB) - 1);
+  const one = BASE_GB + (PER_1000_STATIONS_GB * stations) / 1000;
+  const fit = Math.max(0, Math.floor((budgetGB() - one) / worker));
+  return one + worker * Math.min(workersFor(worker * GB) - 1, fit);
 }
 
 /** GB the running game takes now, from what its demand workers report; null before they have. */
 export function liveGB(): number | null {
-  const mb = demandWorkersMB();
-  return mb === null ? null : LIVE_BASE_GB + (LIVE_PER_WORKER_GB * mb) / 1024;
+  const w = demandWorkersWasmMB();
+  return w === null ? null : liveBytes(w.solving.map((m) => m * 2 ** 20), w.aux * 2 ** 20) / GB;
 }
 
 /** GB the game may take here: Settings' limit, and what a saved game is compared with. */

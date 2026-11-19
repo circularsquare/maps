@@ -391,7 +391,8 @@ Web first, so it can be shared as a link.
   whose memory is at least 384 MB and 15% above its need is restarted through the panic path above,
   together and without counting as a panic; the network is solved once more, questions wait for that
   final, and a worker is not restarted again until its memory or need has moved by 384 MB. Before
-  each solve the pool drops solving workers while 0.6 GB for the page, each worker's need plus 0.15 GB
+  each solve the pool drops solving workers while the page outside the workers' WASM (at least 0.6 GB, and as
+  the live memory reading counts it, `liveMemory.ts`: about 5 GB on a 7,000-station game, T-3757), each worker's need plus 0.15 GB
   for its JS heap (or, on a cross-origin isolated page, `measureUserAgentSpecificMemory`'s measure of
   everything outside the WASM) would pass `memBudget`: 8 GB (Anita's target, T-1199), the device's
   memory (`deviceGB`) x 0.75 under 8, 6 GB where it is not reported; or while the solving workers

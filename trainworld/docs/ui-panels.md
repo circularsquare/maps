@@ -698,8 +698,10 @@ the game is paused start no demand solve; the first moment the game runs again, 
 (the lighter map and its Auto are gone, DECISIONS.md 2026-11-12; a stored Low is dropped). A **Memory** row ends the section:
 "1.4 GB / 8 GB", the memory the game takes now against the most it aims for here (`memBudget`: 8 GB, or 0.75 of a device
 that reports less; 6 where the browser does not say), red above 85% of it, refreshed every 2 s while Settings is open; hover, two lines,
-"About 0.5 GB more per 1,000 stations" and "8 GB limit is an estimate" [T-3329; `game/memoryEstimate.ts`]. The reading is 1.15 GB plus
-1.76 times what the demand workers report (WASM and heap), within about 0.2 GB of the browser's own total over 22 runs (notes/T-3329.md).
+"About 0.5 GB more per 1,000 stations" and "8 GB limit is an estimate" [T-3329; `game/memoryEstimate.ts`]. The reading is from the demand
+workers' WASM memory (`workers/liveMemory.ts`, T-3757): 1.17 GB, plus 2.69 times the largest solving worker's and the aux
+worker's (what grows with the network), plus 1.56 times each further solving worker's; within about 20% of the browser's own
+total from a fresh game to a 7,070-station game on 3 solving workers (notes/T-3757.md).
 
 **Game** [T-728], right after the Show section [T-3579]: the game's mode, "Normal" or "Sandbox" (hover: what
 it means). A normal game has "Switch to sandbox mode", which asks first ("Confirm?", then
@@ -1096,8 +1098,9 @@ keeps what it had and earns no more.
     next load.
 
 **Memory a game takes** [T-3329]: a line under the facts of every card with stations, just "2.5 GB" (hover "Uses about 2.5 GB of memory"), from the
-station count (1.8 GB plus 0.65 GB per 1,000 stations plus, per solving worker past the first, 0.2 GB and 0.2 GB per 1,000
-stations, as many as the pool's memory rule lets run, T-3373; within about 0.2 GB on the real-network saves). Where the browser reports the device's memory (Chrome, Edge) or is 32-bit, a game over the budget
+station count (1.64 GB plus 0.8 GB per 1,000 stations plus, per solving worker past the first, 0.1 GB and 0.3 GB per 1,000
+stations, as many as the pool's memory rule lets run and, past the first, only while they fit in the budget, T-3373,
+T-3757; within about 20% on the real-network saves and players' 53-64 city games). Where the browser reports the device's memory (Chrome, Edge) or is 32-bit, a game over the budget
 shows it in red and its Open (saves panel and start menu, not the versions list) first asks "This game needs about 5 GB of
 memory and this device has about 4. It may not load." with Open anyway and Cancel. Elsewhere the line is plain and nothing asks.
 This is separate from the refusal [T-1197], which judges a save by its zones and still blocks a game no worker can hold.

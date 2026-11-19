@@ -8,7 +8,8 @@
 
 import { signal } from "@preact/signals";
 import { clockTime, count, money } from "../game/format";
-import { DAY1_OF_YEAR, dateName, dateOf, dateRange, shortDate, weekdayOf, withYear, yearOf } from "../game/days";
+import { dateName, dateRange, shortDate, weekdayOf, withYear, yearOf } from "../game/days";
+import { HISTORY_COLS as MAX_COLS, monthIndex, weeksSpanned } from "../workers/ledgerFold";
 import { clock } from "../game/clock";
 import { moneyState } from "../game/money";
 import { cityById, isCity } from "../game/cities";
@@ -33,8 +34,6 @@ const W = 300, H = 96, PAD = 3;
 const GAP = 1.5;
 /** A young game's few entries sit at the right of this many slots, not stretched over the width. */
 const MIN_SLOTS = { day: 7, hour: 12 };
-/** T-2143: at most this many columns of days; past it a column is a week, then a month, then several months. */
-const MAX_COLS = 90;
 
 const oneOff = (e: Entry) => e.trains + e.build;
 /** T-867: the cost line, running trains plus upkeep, and loan payments (T-1661, T-2022) */
@@ -66,16 +65,14 @@ function entries(hours: boolean, zone: string | null): Entry[] {
   return list;
 }
 
-/** The month count of game day `d` since the calendar's start (game/days.ts: 365-day years). */
-const monthIndex = (d: number) => Math.floor((d - 1 + DAY1_OF_YEAR) / 365) * 12 + dateOf(d).month;
-
 /** T-2143: days as they are while they fit in MAX_COLS columns, else grouped by week (from Monday),
  * month, or runs of months, each group's figures a day's average over the days it covers, the day
  * now counted as far as it has gone. Days missing from a region's ledger count as days of nothing. */
 function binDays(list: Entry[], shift: number): { cols: Entry[]; binned: boolean } {
   const first = list[0].at, last = list[list.length - 1].at;
   if (last - first + 1 <= MAX_COLS) return { cols: list, binned: false };
-  const weeks = Math.floor((last - weekdayOf(last) - (first - weekdayOf(first))) / 7) + 1;
+  // T-3757: past HISTORY_COLS weeks the clock worker folds old days by month (ledgerFold.ts), so this must group by month there
+  const weeks = weeksSpanned(first, last);
   const months = monthIndex(last) - monthIndex(first) + 1;
   const per = Math.ceil(months / MAX_COLS);
   const key = weeks <= MAX_COLS ? (d: number) => d - weekdayOf(d) : (d: number) => Math.floor(monthIndex(d) / per);

@@ -80,6 +80,7 @@ import {
 } from "../game/demand";
 import { FOCUS_WORKERS, FocusPool } from "./demandFocus";
 import { addressLimited, deviceGB, heapStep, memBudget, mobileDevice, smallDevice } from "./deviceMemory";
+import { outsideWasmBytes } from "./liveMemory";
 import { isMemoryFailure } from "../game/loadText";
 import { makeFrame } from "../game/frame";
 import { noteEditSolve } from "../game/editLeft";
@@ -3000,6 +3001,14 @@ class DemandClient {
    * that is not available: not a cross-origin isolated page) */
   private pageOther: number | null = null;
 
+  /** T-3757: the page outside the demand workers' WASM where it cannot be measured, which grows with the network: on a
+   * 7,000-station save about 5 GB, far over MEM_OTHER, so a pool of more cores ran past the budget */
+  private otherGuess(): number {
+    let first = 0;
+    for (let i = 0; i < this.computeN; i++) first = Math.max(first, this.mem[i]?.wasm ?? 0);
+    return Math.max(MEM_OTHER, outsideWasmBytes(first, this.mem[this.computeN]?.wasm ?? 0));
+  }
+
   /** `solved`: after a solve, whose heap peak stands until something closes (it held what closed) */
   private noteMem(i: number, wasm: number, heap: Heap | undefined, solved = false, closed = false) {
     const m = (this.mem[i] ??= { wasm: 0, heap: null, solvePeak: 0 });
@@ -3057,6 +3066,16 @@ class DemandClient {
   private memCheck() {
     this.memTimer = 0;
     if (this.failed) return;
+    // T-3757: the budget's cut once quiet after a final too, so a big save opened with more cores does not hold
+    // every worker until the next solve; the workers left hold periods they never solved, so the network is solved
+    // again as after a growth
+    if (this.computeN > 1) {
+      const wait = this.quietIn();
+      if (wait > 0) return this.memSoon(wait);
+      const n0 = this.computeN;
+      this.capPool();
+      if (this.computeN < n0) return this.solveAgain();
+    }
     const over = this.overNeed();
     const n0 = this.computeN, n = this.growTo(new Set(over.map((o) => o.i)));
     if (!over.length && n <= n0) return;
@@ -3091,7 +3110,7 @@ class DemandClient {
     let per = 0;
     for (let i = 0; i < n0; i++) { const h = held(i); if (h === null) return n0; per = Math.max(per, h); }
     this.growPer = per;
-    const js = this.pageOther === null ? MEM_WORKER : 0, other = this.pageOther ?? MEM_OTHER;
+    const js = this.pageOther === null ? MEM_WORKER : 0, other = this.pageOther ?? this.otherGuess();
     const aux = (held(n0) ?? 0) + js, budget = memBudget();
     const share = shareCapped() ? SOLVING_SHARE * budget : Infinity;
     let n = n0;
@@ -3135,7 +3154,7 @@ class DemandClient {
     for (let i = 0; i < this.computeN; i++) per = Math.max(per, this.needOf(i) ?? 0);
     if (!per) return;
     // (a measured page counts each worker's JS heap in `pageOther`)
-    const js = this.pageOther === null ? MEM_WORKER : 0, other = this.pageOther ?? MEM_OTHER;
+    const js = this.pageOther === null ? MEM_WORKER : 0, other = this.pageOther ?? this.otherGuess();
     const aux = (this.needOf(this.computeN) ?? 0) + js, budget = memBudget();
     let n = this.computeN;
     const share = shareCapped() ? SOLVING_SHARE * budget : Infinity;
@@ -3145,10 +3164,12 @@ class DemandClient {
   }
 
   /** T-3373: a loading save's pool cut to what workers of `perWorker` bytes may be (`workersFor`), before
-   * its packs open; `capPool` judges again by what they then hold */
+   * its packs open; `capPool` judges again by what they then hold. T-3757: with "Use more cores", by the budget alone,
+   * the rest of the page guessed as `capPool` does (a 7,000-station save otherwise loaded on 5 workers, 13 GB). */
   private capAhead(perWorker: number) {
-    if (this.computeN <= 1 || this.respawn.size || perfOff("cap") || !shareCapped() || this.solving()) return;
-    const n = Math.min(this.computeN, workersFor(perWorker));
+    if (this.computeN <= 1 || this.respawn.size || perfOff("cap") || workersAsked() !== null || this.solving()) return;
+    const byBudget = () => Math.max(1, Math.floor((memBudget() - outsideWasmBytes(perWorker, 0)) / perWorker));
+    const n = Math.min(this.computeN, shareCapped() ? workersFor(perWorker) : byBudget());
     if (n < this.computeN) this.shrink(n, `about ${mb(perWorker)} MB a solving worker by the save's zones`); // i18n-ignore
   }
 
@@ -5409,8 +5430,12 @@ let client: DemandClient | null = null;
 /** T-3313: the pool's state for a feedback report ("" before it starts) */
 export const demandDiagnosis = () => client?.diagnosis() ?? "";
 export const demandStuckSince = () => client?.stuckSince() ?? null;
-/** T-3329: MB the demand workers hold (each one's WASM and JS heap, the aux worker too); null before the pool starts */
-export const demandWorkersMB = (): number | null => client ? client.memory().reduce((a, m) => a + m.wasm + m.heap, 0) : null;
+/** T-3329, T-3757: MB of WASM memory each solving worker and the aux worker hold; null before the pool starts */
+export function demandWorkersWasmMB(): { solving: number[]; aux: number } | null {
+  if (!client) return null;
+  const m = client.memory();
+  return { solving: m.filter((x) => !x.aux).map((x) => x.wasm), aux: m.filter((x) => x.aux).reduce((a, x) => a + x.wasm, 0) };
+}
 
 const TEST = new URLSearchParams(location.search).get("demandTest") === "1";
 const DEBUG_LOD = new URLSearchParams(location.search).get("debug") === "1";
