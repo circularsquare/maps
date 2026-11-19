@@ -114,8 +114,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: A player: you can no longer give a station complex a separate name (since T-3750). You, 2026-11-19: a setting to bind, default on, for new stations; turning it off keeps earlier bound stations as they are; a manual rename separates; turning it on applies to new stations "unless u choose to make everything bound".
   - Goal: The setting, a way to unbind one station, and a "bind all" action, with T-3750's every-zoom fix kept.
   - Other: notes/T-3750.md
-- T-3762 [P2] {L:new-countries} Guyana, Suriname and French Guiana
-  - Context: You, 2026-11-19: "yeah we could also cover guyana/suriname/guiana sure." French Guiana sits inside France's Natural Earth feature, like Guadeloupe and Martinique (T-3620), so it needs planner work. A world run: overnight.
+- T-3762 [P2] {L:new-countries} Guyana, Suriname, French Guiana and the rest of the Caribbean
+  - Context: You, 2026-11-19: "yeah we could also cover guyana/suriname/guiana sure." And: "we should probably also try to add martinique / the other european caribbean parts... otherwise can't really island hop here which is i think what most people would want to do." Left out by T-3620: Guadeloupe and Martinique (inside France's Natural Earth feature, like French Guiana: planner work), the US Virgin Islands and Saint Kitts and Nevis (under the zone floor); also Sint Maarten and Saint-Martin, the Caribbean Netherlands, Montserrat, Anguilla, the British Virgin Islands, Turks and Caicos. A world run: overnight.
+  - Goal: Every inhabited Caribbean island group playable so a player can island hop, plus Guyana, Suriname and French Guiana.
   - Other: notes/T-3620.md
 - T-3754 [P3] {L:region-redraws} La Gonave zone parked
   - Context: From T-3620: ase (La Gonave, Haiti) is parked at top_zone_jobs_share 0.43 (one zone holds too many of its jobs).
