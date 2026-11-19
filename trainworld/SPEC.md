@@ -234,7 +234,8 @@ The player draws curved track (straights and circular arcs, regular double or hi
 to 350 degrees round [T-418, T-422, T-442], its curves laid out for a target max speed the player picks
 (160 to 320 km/h, wider curves for faster; T-817; high-speed track is double track at 1.5x the
 price, its target max speed 320 by default; track caps trains at 160 km/h, high-speed track at 320, and the
-player may set any piece a lower speed limit in its panel, free [T-3405]),
+player may set any piece a lower speed limit in its panel, or a whole pick in the Select tool's bar, free [T-3405,
+T-3525]),
 places stations (on track only [T-1820]), and makes lines, all as
 **blueprints** that are free to edit and undo, then pays to **construct** them. The track and station tools' options sit in a bar on the map while the tool is on, and each click mode but plain selecting has its colour as an aura round the map [T-2282, T-2284]. A segment is one
 piece of track [T-244]; the Select tool picks many at once, blueprint or else constructed, to

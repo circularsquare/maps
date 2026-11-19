@@ -5,9 +5,9 @@ import { useLatestAnswer } from "./useClockQuery";
 import { queryClock } from "../workers/clockClient";
 import { inkOn, LEVEL_COLOURS } from "../game/palette";
 import type { Level } from "../game/types";
-import { distUnit, distance, levelLabel, levelName, millions, money, moneyCash, perDistance, unitShort, upkeepText } from "../game/format";
+import { distUnit, distance, levelLabel, levelName, millions, money, moneyCash, perDistance, speed, unitShort, upkeepText } from "../game/format";
 import { edgeUpkeep, stationUpkeepOf } from "../game/regionMoney";
-import { bpPicked, clearBpPicked, doubleUpPicked, doubleUpPieces, enableAll, oneWayPicked, oneWayPieces, reversePicked, kindPicked, levelPicked, offTotals, pickedState, removePicked, switchPicked, tracksPicked } from "../game/blueprintPick";
+import { bpPicked, clearBpPicked, doubleUpPicked, doubleUpPieces, enableAll, limitPieces, oneWayPicked, oneWayPieces, reversePicked, kindPicked, levelPicked, offTotals, pickedState, removePicked, switchPicked, tracksPicked } from "../game/blueprintPick";
 import { canRebuild, type RebuildKind, rebuildKind, rebuildLevel, rebuildPicked, rebuildQuote, rebuildTip, rebuildTracks } from "../game/rebuild";
 import { liveMoney, moneyState } from "../game/money";
 import { tool } from "../game/ui";
@@ -18,7 +18,8 @@ import { useBlueprintPieces, useBlueprintQuote } from "../game/quotes";
 import { blueprintParts, bpHover, switchRow, type BpPart } from "../game/blueprintStretches";
 import { locateNodes } from "./locate";
 import { redo, undo } from "../game/fareUndo";
-import { Icon, LevelButtons, TrackCountButtons } from "./widgets";
+import { Icon, LevelButtons, Stepper, TrackCountButtons } from "./widgets";
+import { usePieceLimit } from "./inspector/PieceLimit";
 import { SWITCH_PICK_KEY } from "./toolKeys";
 import { TERRAIN_NAMES, TERRAIN_SURCHARGES, WATER_SURCHARGE } from "../game/terrain";
 import { kindLevelMult, TRACK_SPECS } from "../game/trackKinds";
@@ -241,6 +242,22 @@ function PickOneWay() {
   );
 }
 
+/** T-3525: the track panel's speed limit for every picked piece but a crossover, one edit and one undo; with the
+ * Select tool only, since plain selecting picks one piece whose panel has the same control. */
+function PickLimit() {
+  const p = bpPicked.value, w = world.value;
+  const pieces = useMemo(() => limitPieces(p), [p, w]);
+  const { value, on, toggle, step } = usePieceLimit(pieces);
+  if (!pieces.length || tool.value !== "blueprint") return null;
+  const label = t("blueprint.speedLimit");
+  return (
+    <span class="bp-limit">
+      <button class={"btn text" + (on ? " on" : "")} aria-pressed={on} onClick={toggle}>{label}</button>
+      {on && <Stepper wide label={label} value={value === null ? t("blueprint.limitMixed") : speed(value)} onStep={step} />}
+    </span>
+  );
+}
+
 /** T-353, T-815, T-829: while the Select tool has a selection (or a blueprint piece is clicked, T-2283), a bar at the map's top centre, the
  * selection's inspector: how many pieces and how much track, then for blueprint the elevation
  * buttons, regular or high-speed track (T-1898, for its double track), Disable and Enable; Remove
@@ -305,6 +322,7 @@ export function BlueprintBar() {
       )}
       <PickDoubleUp />
       <PickOneWay />
+      <PickLimit />
       <button class="btn text" data-tip={t("blueprint.removeTip", { keyed: keys })} onClick={() => void removePicked()}><Icon.bin /><span class="bp-label">{t("blueprint.remove")}</span></button>
       <button class="btn text" data-tip={t("blueprint.clearTip")} onClick={() => clearBpPicked()}><Icon.cross /><span class="bp-label">{t("blueprint.clear")}</span></button>
       </div>

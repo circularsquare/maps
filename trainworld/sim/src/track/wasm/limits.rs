@@ -10,9 +10,9 @@ impl TrackApi {
         (0..n.edge_count() as u32).filter(|&e| n.edge_ok(e) && n.edge_limit[e as usize] > 0).flat_map(|e| [e, n.edge_limit[e as usize] as u32]).collect()
     }
 
-    /// Hold trains on these pieces to `kmh` (40 up to the kind of track's top speed; 0 takes the limit
-    /// off). Free and one undoable edit, constructed track or blueprint; refused on a crossover. Returns
-    /// 1 when nothing changed.
+    /// Hold trains on these pieces to `kmh` (at least 40; 0, or the kind of track's top speed or more,
+    /// takes the limit off, T-3525). Free and one undoable edit, constructed track or blueprint; refused
+    /// on a crossover. Returns 1 when nothing changed.
     pub fn set_edges_limit(&mut self, ids: &[u32], kmh: u32) -> u32 {
         let mut ops = vec![];
         for &e in ids {
@@ -20,8 +20,7 @@ impl TrackApi {
             if d.crossover {
                 return self.refuse(Issue::Crossover { edge: e });
             }
-            let top = (d.kind.v_cap() * 3.6).round() as u32;
-            let lim = if kmh == 0 { 0 } else { kmh.clamp(EDGE_LIMIT_MIN as u32, top) as u16 };
+            let lim = crate::track::net::piece_limit(kmh.min(u16::MAX as u32) as u16, d.kind, false);
             if lim != d.limit {
                 d.limit = lim;
                 ops.push(Op::Edge { id: e, data: Some(d) });

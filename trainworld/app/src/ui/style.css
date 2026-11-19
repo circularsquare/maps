@@ -1388,6 +1388,10 @@ button.save-add:hover { color: var(--text); }
   flex-wrap: wrap; justify-content: center; width: max-content; max-width: max(300px, calc(100% - 600px)); }
 .blueprint-bar .count { min-width: 58px; }
 .blueprint-bar .btn.lv { min-width: 27px; }
+.blueprint-bar .bp-limit { display: inline-flex; align-items: center; gap: 6px; }
+/* the bar's buttons are 28 px: the stepper as tall, so their edges line up */
+.blueprint-bar .bp-limit .stepper .btn { height: 28px; width: 28px; min-width: 28px; }
+.blueprint-bar .bp-limit .stepper .v { height: 28px; }
 @container map-column (max-width: 1350px) { .blueprint-bar, .tool-bar { top: 46px; } }
 @container map-column (max-width: 1000px) { .blueprint-bar, .tool-bar { top: 80px; } }
 @container map-column (max-width: 680px) { .blueprint-bar, .tool-bar { top: 148px; } }
@@ -2065,6 +2069,8 @@ button.save-add:hover { color: var(--text); }
   .blueprint-bar .count { min-width: 0; display: inline-flex; align-items: center; gap: 4px; margin-right: 6px; }
   .blueprint-bar .bp-ico { display: inline-flex; }
   .blueprint-bar .bp-levels { display: none; }
+  /* T-3525: no room for the speed limit in the phone's one row */
+  .blueprint-bar .bp-limit { display: none; }
   .blueprint-bar .btn, .blueprint-bar .btn.bp-level { height: calc(36px / var(--ui, 1)); min-width: calc(36px / var(--ui, 1)); padding: 0; }
   .blueprint-bar .btn.bp-level { display: inline-grid; }
   .blueprint-levels .btn.lv { min-width: calc(40px / var(--ui, 1)); }

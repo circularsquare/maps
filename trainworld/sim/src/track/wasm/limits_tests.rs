@@ -71,9 +71,9 @@ fn a_piece_limit_is_kept_within_its_kind_and_never_on_a_crossover() {
     let (mut a, l, e) = two_pieces();
     assert_eq!(a.set_edges_limit(&[e[0], e[1]], 10), 0);
     assert_eq!(a.edge_limits(), vec![e[0], 40, e[1], 40], "40 at least");
+    // T-3525: at or over ordinary track's 160 is no limit
     assert_eq!(a.set_edges_limit(&[e[0]], 500), 0);
-    assert_eq!(a.edge_limits(), vec![e[0], 160, e[1], 40], "ordinary track's 160 at most");
-    // with the limit on both, the slower one sets the stretch, named as the piece's limit
+    assert_eq!(a.edge_limits(), vec![e[1], 40], "over the top is none");
     let sp = a.line_stretch_speeds(l);
     assert_eq!((sp[1].round(), sp[2]), (160.0, 0.0));
     assert_eq!(a.set_edges_limit(&[e[0]], 100), 0);
@@ -109,6 +109,33 @@ fn a_split_keeps_the_limit_on_both_halves_and_unlike_pieces_never_join() {
             assert_eq!(d.limit, 60);
         }
     }
+}
+
+/// T-3525: a limit at the kind's top speed is none, set on many pieces at once (one undo), so the piece
+/// joins its unlimited neighbour; an old save's limit at the top loads as none.
+#[test]
+fn a_limit_at_the_top_is_none_and_joins_unlimited_track() {
+    let (mut a, _l, e) = two_pieces();
+    assert_eq!(a.set_edges_limit(&[e[0], e[1]], 100), 0);
+    assert_eq!(a.edge_limits(), vec![e[0], 100, e[1], 100]);
+    assert_eq!(a.set_edges_limit(&[e[0], e[1]], 160), 0);
+    assert!(a.edge_limits().is_empty(), "160 on ordinary track is none: {:?}", a.edge_limits());
+    assert_eq!(a.undo(), 0);
+    assert_eq!(a.edge_limits(), vec![e[0], 100, e[1], 100], "one undo puts both back");
+    assert_eq!(a.set_edges_limit(&[e[1]], 160), 0);
+    assert_eq!(a.set_edges_limit(&[e[0]], 0), 0);
+    assert!(a.edge_limits().is_empty());
+    assert_eq!(a.set_edges_limit(&[e[1]], 160), 1, "the top again changes nothing");
+    let (ops, _) = a.unjoin_near(e[1], 1000.0, 30000.0).expect("the pieces join");
+    let gone: Vec<u32> = ops.iter().filter_map(|o| match o { Op::Edge { id, data: None } => Some(*id), _ => None }).collect();
+    assert!(gone.contains(&e[0]) || gone.contains(&e[1]), "a piece set to its top joins the unlimited one: {gone:?}");
+    // a save written with a limit at the top (before T-3525) loads with none: `LPS1` is read through
+    // `set_edge`, as here
+    let d = a.w.net.edge_data(e[1]).unwrap();
+    a.w.net.set_edge(e[1], Some(EdgeData { limit: 160, ..d.clone() })).unwrap();
+    assert_eq!(a.w.net.edge_limit[e[1] as usize], 0);
+    a.w.net.set_edge(e[1], Some(EdgeData { limit: 150, ..d })).unwrap();
+    assert_eq!(a.w.net.edge_limit[e[1] as usize], 150);
 }
 
 #[test]

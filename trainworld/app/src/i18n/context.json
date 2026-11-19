@@ -217,6 +217,8 @@
   "blueprint.lengthTip": "Hover of the length figure in the selection bar.",
   "blueprint.levelMixed": "Hover of the level button in the selection bar when the selected track is at several levels.",
   "blueprint.level": "Screen-reader label of the level button in the selection bar.",
+  "blueprint.speedLimit": "Toggle button in the selection bar that shows a stepper setting a speed limit on all the selected track (the same limit as the track view's Speed limit row); also the stepper's accessible name.",
+  "blueprint.limitMixed": "Value shown in the selection bar's speed limit stepper when the selected pieces of track run at different speeds.",
   "blueprint.trackType": "Screen-reader label of the Regular / High speed button pair in the selection bar.",
   "blueprint.regular": "Button in the selection bar: ordinary track.",
   "blueprint.highSpeed": "Button in the selection bar: high-speed track.",

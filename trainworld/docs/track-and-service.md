@@ -1035,8 +1035,10 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   names it as "the trains". Saved in the `LSL1` block (count, then line index and km/h), save level 13; old saves load
   with none. Bus and ferry lines ignore it.
   **A piece's speed limit** (T-3405; Anita 2026-11-15 and 2026-11-17): any piece of track but a crossover may carry
-  a limit, 40 km/h up to its kind's top speed in whole km/h (`EdgeData::limit`, 0 none, kept in range by `set_edge`;
-  `TrackApi.set_edges_limit`, free, one undoable edit, constructed or blueprint). It lowers the piece's cap
+  a limit, 40 km/h up to under its kind's top speed in whole km/h (`EdgeData::limit`, 0 none, kept in range by
+  `set_edge` through `piece_limit`: a limit at or over the top is none, T-3525, so such a piece joins unlimited track
+  and an old save's limit at the top loads as none; `TrackApi.set_edges_limit`, free, one undoable edit for any
+  number of pieces, constructed or blueprint). It lowers the piece's cap
   (`Network::v_cap`; the kind's own is `v_kind_cap`), so every train on it, the run times, headway fleets, routing
   times, the map's speed colours and the stop-time hover ("A speed limit on the track") follow; with a line's limit
   too, the lower holds. The track panel's "Slowest curve" and the curve labels stay the curves'. A split keeps it on

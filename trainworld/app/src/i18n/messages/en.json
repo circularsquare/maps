@@ -217,6 +217,8 @@
   "blueprint.lengthTip": "Length of the selected track",
   "blueprint.levelMixed": "Level of the selected track: mixed",
   "blueprint.level": "Level",
+  "blueprint.speedLimit": "Speed limit",
+  "blueprint.limitMixed": "Mixed",
   "blueprint.trackType": "Track type",
   "blueprint.regular": "Regular",
   "blueprint.highSpeed": "High speed",

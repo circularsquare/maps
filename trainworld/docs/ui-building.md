@@ -866,6 +866,16 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   built track to single track? It's free. Nothing is refunded for what is there now." Under "N of M pieces can't change"
   the hover says what keeps double track double. Either edit is final. Rules in
   [track-and-service.md](track-and-service.md) "Rebuilding constructed track".
+- **Speed limit** [T-3525; `PickLimit` in `ui/Blueprint.tsx`, `usePieceLimit` in `ui/inspector/PieceLimit.tsx`]: the
+  track panel's limit for every picked piece but a crossover, blueprint or built, free and at once (no Rebuild), after
+  the one-way buttons; with the Select tool only (plain selecting picks one piece, whose panel has it). A **Speed
+  limit** toggle, on while any picked piece has a limit, opens a stepper beside it (steps of 10 km/h, 40 up to the
+  highest top speed in the pick) showing the speed all the picked track runs at (its limit, else its kind's top),
+  "Mixed" when the pieces differ; from mixed a step down starts from the slowest piece and a step up from the slowest
+  piece still under its own top (`nextLimit` in `game/pieceLimit.ts`), so a piece at its top never holds the rest
+  back. Each step sets every piece to that speed
+  in one edit and one undo; a piece whose top speed it reaches or passes has no limit. The toggle off takes every
+  limit off. Not on the phone's one-row bar.
 - **Level** [T-815; `TrackApi.set_edges_level`]: a button puts every picked blueprint stretch
   on that level, one undoable edit: each piece's corners as the track inspector's "Level" buttons
   do for one, and every node all of whose track is picked (a joint, a loose end, a
@@ -977,7 +987,9 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   to 320. Beside the cap a mini **Limit** toggle, as on a line's Top speed row [T-3405; `ui/inspector/PieceLimit.tsx`]:
   on, a **Speed limit** row with a stepper (steps of 10 km/h, 40 up to the cap, starting at the cap) holds trains on
   this piece to it; free, one undoable edit a step ([track-and-service.md](track-and-service.md) "A piece's speed
-  limit"). One piece at a time: the Select tool's bar has no limit.
+  limit"). A limit at the cap is none [T-3525], so turning Limit on only opens the row, storing nothing until a step
+  down, and stepping back up to the cap takes the limit off with the row still open. The Select tool's bar sets it on
+  a whole pick ([below](#the-select-tool) "Speed limit").
 - **Rebuild in the track inspector** [T-3408; `ui/inspector/PieceRebuild.tsx`]: built track that is not a crossover
   has, under its header, the bar's level buttons, the track count buttons (1-line and 2-line icons) and the track
   type (Regular / High speed on rail, Tram on tram track), the piece's own on; then **Rebuild** (wrench and word) on

@@ -200,6 +200,12 @@ export function oneWayPieces(p: BpPicked): TrackEdge[] {
   return (world.peek()?.edges ?? []).filter((e) => picked.has(e.id) && e.tracks === 1 && !e.crossover);
 }
 
+/** T-3525: the picked pieces a speed limit can go on (no crossover). */
+export function limitPieces(p: BpPicked): TrackEdge[] {
+  const picked = new Set(p.edges);
+  return (world.peek()?.edges ?? []).filter((e) => picked.has(e.id) && !e.crossover);
+}
+
 /** T-3101: the track panel's switch for every picked single-track piece: all one way gives them back both ways
  * (or the way their run takes), else those not yet one way run one way. One confirmation, one undo. */
 export function oneWayPicked(pieces: readonly TrackEdge[]) {

@@ -176,9 +176,17 @@ pub struct EdgeData {
     /// the left, 2 the right. Single track only; read only where the node has double track on the
     /// end's other side (`Network::join_away`).
     pub join: [u8; 2],
-    /// T-3405: the player's speed limit on this piece, km/h; 0 none. Never on a crossover, never above
-    /// the kind's top speed (`Network::set_edge` keeps it so).
+    /// T-3405: the player's speed limit on this piece, km/h; 0 none. Never on a crossover, always below
+    /// the kind's top speed: a limit at or over the top is none (T-3525), so the piece joins unlimited
+    /// track (`Network::set_edge` keeps it so).
     pub limit: u16,
+}
+
+/// The speed limit a piece of `kind` keeps when asked for `kmh` (T-3405): none on a crossover, for 0,
+/// or at or over the kind's top speed (T-3525); else at least `EDGE_LIMIT_MIN`.
+pub fn piece_limit(kmh: u16, kind: TrackKind, crossover: bool) -> u16 {
+    let top = (kind.v_cap() * 3.6).round() as u16;
+    if crossover || kmh == 0 || kmh >= top { 0 } else { kmh.max(EDGE_LIMIT_MIN) }
 }
 
 /// T-3332: `StationData::one` for trains travelling heading `th`: 1 eastward (northward where the
@@ -1665,7 +1673,7 @@ impl Network {
                 self.edge_sep[i] = d.sep;
                 self.edge_oneway[i] = if d.tracks == 1 { d.oneway } else { 0 };
                 self.edge_join[i] = if d.tracks == 1 { d.join } else { [0; 2] };
-                self.edge_limit[i] = if d.crossover || d.limit == 0 { 0 } else { d.limit.clamp(EDGE_LIMIT_MIN, (d.kind.v_cap() * 3.6).round() as u16) };
+                self.edge_limit[i] = piece_limit(d.limit, d.kind, d.crossover);
                 self.node_ports[d.a as usize].add(id << 1);
                 self.node_ports[d.b as usize].add(id << 1 | 1);
                 self.touch_node(d.a);

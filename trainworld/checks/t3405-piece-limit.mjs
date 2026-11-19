@@ -1,6 +1,7 @@
 // T-3405: a speed limit on a piece of track. On a new game in New York, a straight line of three stations
 // (A, M halfway, B) built with the edit API, so the track is two pieces of about 5 km. In the M-B piece's panel the Top speed
-// row shows 160 km/h; the Limit button beside it adds a Speed limit row, whose stepper is clicked down to 60.
+// row shows 160 km/h; the Limit button beside it adds a Speed limit row at 160 storing no limit (T-3525), whose
+// stepper is clicked down to 60.
 // Checks M to B takes what a stop-to-stop run at 60 instead of 160 adds and the round trip grows, the stop-time hover
 // names the track's limit, the cash is unchanged, a save reloads with the limit and the same round trip, and turning
 // Limit off restores the first round trip exactly. Screenshots of the panel in artifacts/trainworld/t3405_*.png.
@@ -85,9 +86,10 @@ try {
   await shot('t3405_off_light.png');
 
   await row.locator('button', { hasText: /^Limit$/ }).click();
-  await waitFor(async () => (await limited()).length === 1, 'the limit to turn on');
-  check(JSON.stringify(await limited()) === JSON.stringify([[built.mb, 160]]), 'Limit on starts at the track\'s 160', JSON.stringify(await limited()));
-  check((await row.locator('.stepper').count()) === 1, 'a Speed limit row with a stepper appears');
+  await page.waitForTimeout(600);
+  // T-3525: a limit at the track's top is none, so Limit on opens the row at 160 and stores nothing
+  check((await limited()).length === 0, 'Limit on stores no limit at the track\'s 160', JSON.stringify(await limited()));
+  check((await row.locator('.stepper').count()) === 1 && /160 km\/h/.test(await row.locator('.stepper').innerText()), 'a Speed limit row with a stepper at 160 appears');
   const minus = row.locator('.stepper button').first();
   for (let i = 0; i < 10; i++) { await minus.click(); await page.waitForTimeout(350); }
   await waitFor(async () => (await limited())[0]?.[1] === 60, 'the limit to reach 60');
