@@ -62,7 +62,7 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 ## Waiting on her (asks.py list has the open ones)
 - Asked 21:25 in chat: Moscow's last 8 routes (T-3790 step 4) need the sim's 8-end junction and turn-back limits
   relaxed; first find out whether those limits also bind player-built track (then it's her call). She'll tell Rus
-  his game is back herself.
+  their game is back herself.
 - a-1 (T-3746 text), a-13 (read today's 2 damaged saves over ssh; or wait for the deploy), a-14 (drop the load
   card once the city in view is ready), a-15 (server deploy: part of the one release ask).
 - She sends the T-3635 player reply herself (draft in notes/T-3635.md).
