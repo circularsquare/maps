@@ -899,7 +899,7 @@ none until Z3 tidies them), the game's usual checkbox with no text, ticked while
 highest zone painted and at least three, each its price as charged in the panel's country (a hover on each: what rides it is for; the stored price times
 that country's rate multiple, `countryFareScales`, as demand charges it; never below the base fare) in a stepper by the base fare's step, typed on a click. A price
 change keeps prices from falling: the later ones rise to it, the earlier ones come down to it. Last, "New fare area",
-which makes an area named "{city} fare zones" for the city in view ("Fare area 2" with none), "{city} fare zones 2",
+which makes an area named "{city} fare zones" for the city in view, or the one holding most of the player's stations when none is in view ("Fare area 2" with none), "{city} fare zones 2",
 3 ... when an area has that name already (T-3791: names never repeat, so an area made twice by mistake shows), its prices the curve's
 fares at 5, 10, 15 km and so on, and starts the tool on it. A game with no fare area shows only the heading and
 that button; nothing else in the game changes.
@@ -910,10 +910,10 @@ that button; nothing else in the game changes.
 "none" (which takes stations of that area out of it, leaving other areas' stations alone); the click mode's descriptor "Painting fare zones" and the hint
 "Click a station or drag around several." ("Tap a station or draw around several." on touch). A click on a station
 (within 14 px, from zoom 9 where stations are drawn) gives it and its whole complex the zone; a left drag draws a loop (kept in map coordinates, so zooming or panning mid-drag leaves it on the ground), dashed and shaded in the
-zone's colour, ringing the stations it would take, and on release every station inside (and their complexes) takes
+zone's colour, ringing the stations it would change (with "none", only those of the picked area), and on release every station inside (and their complexes) takes
 it. A station is in one fare area at most (T-3791): when a click or loop takes in a complex shown in another area, the
 game asks first ("Some of these stations are in another fare area. Move them to this one?", "Move stations" or
-Cancel); Move stations moves them into this area, Cancel (or Esc) paints only the others. Each click or loop is one
+Cancel); Move stations moves them into this area, Cancel (or Esc) paints only the others. Linking stations (the passage) asks the same when their complexes are in different areas: Move stations puts both in the first station's area, Cancel makes no link; with an area on one side only the other joins it, no question (the link and the move are two Ctrl+Z steps; a link has none of its own, T-3796). Each click or loop is one
 `stationFares` edit (one recalculation of trips, one Ctrl+Z), and none when no station would change. The right or middle button drags the map; on touch one finger draws the loop, a tap paints, two
 fingers pan and zoom (MapLibre's touch pan held to two fingers while the tool is on). Esc drops a loop being drawn,
 then leaves the tool. While the tool is on the ground near each painted station is tinted in its zone's colour (one

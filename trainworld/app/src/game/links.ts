@@ -11,7 +11,9 @@ import { LINK_MAX_M } from "./complexes";
 import { groundDist } from "./coords";
 import { complexOf } from "./complexView";
 import { distance, money, roughDistance } from "./format";
+import { linkFarePlan } from "./fareZonePaint";
 import type { Selection, StationId } from "./types";
+import { ask } from "./ui";
 import { edit, say, world } from "./world";
 
 /** The station a link starts from while the player picks the other one; null otherwise. */
@@ -58,7 +60,13 @@ export async function linkPicked(picked: Selection): Promise<void> {
   linking.value = null;
   const st = world.peek()?.save.stations ?? [];
   const sa = st.find((s) => s.id === from)!, sb = st.find((s) => s.id === picked.station)!;
+  // a complex is in one fare area: stations in different ones ask first (Cancel leaves them unlinked)
+  const fares = linkFarePlan(sa.id, sb.id);
+  if (fares?.ask && !(await new Promise<boolean>((yes) => {
+    ask.value = { text: t("fareZonePaint.moveAsk"), yes: t("fareZonePaint.move"), no: t("toolNotes.cancel"), run: () => yes(true), stay: () => yes(false) };
+  }))) return;
   const a = await edit({ op: "link", a: sa.num, b: sb.num, on: true });
+  if (a.ok && fares) await fares.apply();
   if (a.ok) say(a.charge > 0 ? t("links.built", { a: sa.name, b: sb.name, cost: money(a.charge * 1e6) }) : t("links.added", { a: sa.name, b: sb.name }));
 }
 

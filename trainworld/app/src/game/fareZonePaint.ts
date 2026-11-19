@@ -7,12 +7,14 @@
 import { signal } from "@preact/signals";
 import { t } from "../i18n";
 import { tPlace } from "../i18n/places";
-import { cityById, isCity, viewedZone } from "./cities";
+import { cityById, cityWithin, isCity, viewedZone, type CityId } from "./cities";
 import { complexOf } from "./complexView";
 import type { FareArea } from "./fareCurve";
 import { areaOfCode, MAX_ZONES, startPrices, tidyPrices, zoneCode, zoneOfCode } from "./fareZones";
+import { live } from "../map/live";
 import { moneyState } from "./money";
-import type { StationInput } from "./types";
+import type { StationId, StationInput } from "./types";
+import { stationZone } from "./listScope";
 import { ask, tool } from "./ui";
 import { edit, stationsById, world } from "./world";
 
@@ -59,13 +61,30 @@ export function newAreaName(areas: readonly FareArea[], city: string | null): st
   }
 }
 
-/** A new area named for the city in view, its prices the curve's fares at 5, 10, 15 km ...; its id, or null. */
+/** The city a new area is named for: the one under the map's centre, or the viewed one before the map exists; when
+ * the player has stations and none is in it (a game opened with the camera still at the default view), the city
+ * holding most of their stations. */
+function namingCity(): CityId | null {
+  const m = live.map?.getCenter();
+  const view = m ? cityWithin(m.lng, m.lat) : viewedZone.peek();
+  const count = new Map<CityId, number>();
+  for (const s of world.peek()?.save.stations ?? []) {
+    const z = stationZone(s);
+    if (z && isCity(z)) count.set(z, (count.get(z) ?? 0) + 1);
+  }
+  if (view && (!count.size || count.has(view))) return view;
+  let best: CityId | null = view, top = 0;
+  for (const [z, n] of count) if (n > top) { best = z; top = n; }
+  return best;
+}
+
+/** A new area named for the city it is made in, its prices the curve's fares at 5, 10, 15 km ...; its id, or null. */
 export async function newArea(): Promise<number | null> {
   const f = moneyState.peek()?.fares;
   if (!f) return null;
   const areas = f.zones ?? [];
   const id = Math.max(f.zoneNext ?? 1, ...areas.map((a) => a.id + 1));
-  const z = viewedZone.peek(), c = isCity(z) ? cityById(z!) : null;
+  const z = namingCity(), c = isCity(z) ? cityById(z!) : null;
   const name = newAreaName(areas, c ? tPlace(c.id, c.name) : null);
   const a = await sendAreas([...areas, { id, name, prices: startPrices(f.nodes) }], id + 1);
   return a.ok ? id : null;
@@ -146,6 +165,34 @@ async function setCodes(groups: readonly StationInput[][], code: number): Promis
 /** Stations `nums` with their complexes into `code` (0: out of any). True when an edit went. */
 export function setStationCodes(nums: Iterable<number>, code: number): Promise<boolean> {
   return setCodes(complexesOf(nums), code);
+}
+
+/** Linking station `from` to `to` makes one complex, which is in one fare area: `from`'s, or the only one either has.
+ * `ask` is true when both have an area and the areas differ (the link then waits for the player's answer); `apply` writes the code onto both complexes once the link is made. Null when nothing is painted. */
+export function linkFarePlan(from: StationId, to: StationId): { ask: boolean; apply: () => Promise<boolean> } | null {
+  const w = world.peek();
+  if (!w) return null;
+  const byId = stationsById(w), a = byId.get(from), b = byId.get(to);
+  if (!a || !b) return null;
+  const ga = complexesOf([a.num])[0] ?? [a], gb = complexesOf([b.num])[0] ?? [b], areas = fareAreas();
+  const ca = complexCode(ga, areas), cb = complexCode(gb, areas), code = ca || cb;
+  if (!code || ca === cb) return null;
+  const ask = !!ca && !!cb && areaOfCode(ca) !== areaOfCode(cb);
+  return { ask, apply: () => setCodes([ga, gb], code) };
+}
+
+/** Of stations `nums`, those the tool would change now (none: only stations of the picked area, or of a removed one,
+ * stay as they are otherwise); a loop rings just these. */
+export function paintChanges(nums: readonly number[]): Set<number> {
+  const a = currentArea(), out = new Set<number>(nums);
+  if (!a || paintZone.peek()) return out;
+  const areas = fareAreas(), keep = new Set<number>();
+  for (const g of complexesOf(nums)) {
+    const c = complexCode(g, areas);
+    if (c ? areaOfCode(c) !== a.id : !g.some((o) => o.fare)) for (const o of g) keep.add(o.num);
+  }
+  for (const n of keep) out.delete(n);
+  return out;
 }
 
 /** The tool's click or loop: stations `nums` into the picked area and zone. A station is in one area at most, so

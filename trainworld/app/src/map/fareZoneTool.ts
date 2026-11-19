@@ -13,7 +13,7 @@
 import { effect } from "@preact/signals";
 import type { Map as MlMap } from "maplibre-gl";
 import { complexes } from "../game/complexView";
-import { fareAreas, liveCode, paintStations, paintZone } from "../game/fareZonePaint";
+import { fareAreas, liveCode, paintChanges, paintStations, paintZone } from "../game/fareZonePaint";
 import { zoneOfCode } from "../game/fareZones";
 import { fareZoneColour, inkOn } from "../game/palette";
 import { shadeColours } from "../game/shades";
@@ -437,7 +437,8 @@ export class FareZoneTool {
     if (!lp || !lp.moved) return;
     const pts = this.loopPx(lp);
     if (pts.length < 2) return;
-    this.inside = pts.length >= 3 ? this.within(pts).map((s) => [s.x, s.y]) : [];
+    const hit = pts.length >= 3 ? this.within(pts) : [], take = paintChanges(hit.map((s) => s.num));
+    this.inside = hit.filter((s) => take.has(s.num)).map((s) => [s.x, s.y]);
     const z = paintZone.peek(), col = z > 0 ? fareZoneColour(z) : "#8a8a8a", ink = shadeColours().stationInk;
     m.beginPath();
     pts.forEach(([x, y], i) => (i ? m.lineTo(x, y) : m.moveTo(x, y)));
