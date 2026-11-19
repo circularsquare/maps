@@ -285,7 +285,7 @@ export function MoneyTab() {
           <TodayCell zone={zone} v={ledgerNet} />
         </tr>
       </table>
-      <div class="h">{t("moneyTab.fare")}<span class="right">
+      <div class="h">{t("moneyTab.fare")}<span class="right fare-head">
         {/* T-3739: the Advanced fares panel, opened on this country */}
         <button class="btn text mini fare-advanced" aria-pressed={advancedFares.value !== null} onClick={() => (advancedFares.value = country)}>{t("moneyTab.advanced")}</button>
         <FareButtons nodes={f} />

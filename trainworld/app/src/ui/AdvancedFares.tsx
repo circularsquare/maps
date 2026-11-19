@@ -8,7 +8,6 @@ import { signal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { busFare, fareAt, ferryFare, HSR_FARE, hsrFare, isCustomCurve, MAX_NODES, NODE_KM, scaleNodes, transferFare, type FareNode, type Fares } from "../game/fareCurve";
 import { roundedDefault } from "../game/fareDefault";
-import { CITIES } from "../game/cities";
 import { defaultScale, fareScale, SHOWN_STEP, shownScale, storedScale } from "../game/income";
 import { moneyState, stationCountry } from "../game/money";
 import { redo, undo, changeFares } from "../game/fareUndo";
@@ -20,12 +19,10 @@ import { t, tCountry, tNumber, tRich } from "../i18n";
 import { useModalDialog } from "./Modal";
 import { advancedFares, fareAdding, FareButtons, FareGraph, FareNodeRows } from "./FareGraph";
 import { BusFareRow, FareEffect, fareRef, FerryFareRow, HsrFareRow, TransferFareRow } from "./MoneyTab";
-import { Check, Icon, Stepper } from "./widgets";
+import { Icon, Stepper } from "./widgets";
 
 /** The panel's own drag preview: its country's scale may differ from the dock's graph's. */
 const panelPreview = signal<FareNode[] | null>(null);
-/** "Show all countries", kept while the game is open. */
-const allCountries = signal(false);
 
 const fix2 = (v: number) => tNumber(v, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const mulText = (v: number) => `${fix2(v)}x`;
@@ -43,8 +40,6 @@ function builtCountries(): string[] {
   }
   return [...out];
 }
-let everyCountry: string[] | null = null;
-const allCountryCodes = () => (everyCountry ??= [...new Set(CITIES.flatMap((c) => (c.country ? [c.country] : [])))]);
 const byName = (a: string, b: string) => tCountry(a).localeCompare(tCountry(b));
 
 /** One country's row: its multiple of the reference's fares (a plain 1.00x for the reference), its base
@@ -93,9 +88,9 @@ function Panel({ start }: { start: string }) {
   const ref = fareRef(f);
   const built = builtCountries().filter((c) => c !== ref).sort(byName);
   const listed = [ref, ...built];
-  const rest = allCountries.value ? allCountryCodes().filter((c) => !listed.includes(c)).sort(byName) : [];
   const country = picked;
-  const options = [...listed, ...(listed.includes(country) ? [] : [country]), ...rest.filter((c) => c !== country)];
+  // the Money tab's country may have no station built: the picker still offers it
+  const options = [...listed, ...(listed.includes(country) ? [] : [country])];
   const scale = fareScale(country, f.scales);
   const shown = nodesIn(f, country);
   const nodes = panelPreview.value ?? shown;
@@ -122,7 +117,8 @@ function Panel({ start }: { start: string }) {
       onClick={(e) => { if (e.target === e.currentTarget) close(); }}
       onKeyDown={(e) => {
         e.stopPropagation();
-        if (e.key === "Escape") { e.preventDefault(); escape(); return; }
+        // Esc in a typed value's box only cancels the typing (the box's own handler)
+        if (e.key === "Escape") { e.preventDefault(); if (!(e.target instanceof HTMLInputElement)) escape(); return; }
         // the game's undo keys, which stop at the dialog: fare changes and then the track's (T-1130)
         const typing = e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement;
         if ((e.ctrlKey || e.metaKey) && !e.altKey && !typing) {
@@ -162,12 +158,10 @@ function Panel({ start }: { start: string }) {
             <TransferFareRow fare={transferFare(f)} base={f.nodes[0]?.[1] ?? f.base} scale={scale} />
           </>} />
         <FareEffect preview={panelPreview.value} scale={scale} />
-        <div class="h">{t("advancedFares.byCountry")}</div>
         <ul class="rows fare-rows af-countries">
-          <li class="af-head"><span /><span>{t("advancedFares.multiple")}</span><span>{t("fareGraph.baseFare")}</span><span /></li>
-          {[...listed, ...rest].map((c) => <CountryRow f={f} country={c} refCountry={ref} />)}
+          <li class="af-head"><span class="af-title">{t("advancedFares.byCountry")}</span><span>{t("advancedFares.multiple")}</span><span>{t("fareGraph.baseFare")}</span><span /></li>
+          {listed.map((c) => <CountryRow f={f} country={c} refCountry={ref} />)}
         </ul>
-        <Check checked={allCountries.value} onChange={(v) => (allCountries.value = v)}>{t("advancedFares.showAll")}</Check>
       </div>
     </dialog>
   );

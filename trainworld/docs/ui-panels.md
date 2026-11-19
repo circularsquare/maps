@@ -853,13 +853,20 @@ fixed (rows coming and going under the graph never move the graph under the poin
 click outside. Top to bottom: "Fares in [country]" (a picker of the listed countries, starting on the Money tab's)
 with the graph's undo and zoom; the fare graph at 560 by 260 units, the Money tab's rules but for drags, which may
 come right up to a neighbour (0.1 km) so a drag can make a step; the rows as the Money tab's, each stretch's with a
-bin ("Remove point"; the base fare has none); "Add point" (pressed while armed; off at 12 points, hover "At most 12
-points") and, for a curve of other than three points, "Use the simple curve", which asks "Go back to three points at
-0, 20 and 100 km? The other points are dropped." and keeps the fares at those distances; the high-speed, bus, ferry
-and transfer rows as the Money tab shows them; the estimate rows while a change is unsolved; "Fares by country":
-the reference country, then every country with a built station by name, with "Show all countries" every other
-country of the game's cities, each row its multiple (the reference a plain 1.00x), its base fare as charged and the
-anchor and undo buttons, under the column heads "Multiple" and "Base fare". **Add point**: pressed, the next click
+bin ("Remove point"; the base fare has none), their amount boxes one width (64 px, seven characters such as "+$55.50"
+or "+¥1,500") with the figure at the right [T-3749]; "Add point" (pressed while armed; off at 12 points, hover "At
+most 12 points") and, for a curve of other than three points, "Use simple curve", which asks "Go back to three points
+at 0, 20 and 100 km? The other points are dropped." and keeps the fares at those distances; the high-speed, bus, ferry
+and transfer rows as the Money tab shows them; the estimate rows while a change is unsolved; the countries: the
+reference country, then every country with a built station by name, each row its multiple (the reference a plain
+1.00x), its base fare as charged and the anchor and undo buttons, under one row of column heads, "Fares by country"
+(bold, over the names), "Multiple" and "Base fare" [T-3749]. Esc in a typed value's box cancels the typing and keeps
+the panel. **Steps in the rows** (the panel's only; the Money tab's three rows stay rates) [T-3749]: a stretch of
+0.5 km or less that is not the last reads as a step, one row
+"10 km" with the fare's jump there, "+$2.50" with no "per km" (stepped by the base fare's step, typed, never below
+$0; a change keeps the step's width and moves every later point's fare by the same amount); the stretch after it
+reads from the step's distance ("10 - 40 km", "Past 70 km"), and typing the end of the stretch before a step moves
+the step with it, its width kept. **Add point**: pressed, the next click
 on the graph adds a point there (the dock's graph never adds), and the button lets go; Esc lets go first, a second
 Esc closes. While armed the points take no clicks, the curve with the new point is drawn dashed over the faded one
 with a hollow dot where it would go, and the plot's hover reads "Click to add a point here" over its distance and

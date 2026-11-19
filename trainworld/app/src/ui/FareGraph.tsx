@@ -156,6 +156,13 @@ const rateText = (r: number) => currencySpec().symbol + rateNum(r);
 /** The rate per km of the stretch ending at node `i` (from 1), US$. */
 const rateOf = (nodes: FareNode[], i: number) => (nodes[i][1] - nodes[i - 1][1]) / (nodes[i][0] - nodes[i - 1][0]);
 
+/** T-3749: a stretch at most this long reads as a step, its row the fare's jump rather than a rate per km.
+ * "Add point" and the panel's drags make steps `NODE_GAP_KM` wide; a drag's sideways snap at a closer zoom
+ * (a 100 km view's is 0.5 km) can leave one up to this. */
+const STEP_KM = 0.5;
+/** Whether the stretch ending at node `i` is a step. Never the last: its rate carries on past it. */
+const isStep = (nodes: FareNode[], i: number) => i > 0 && i < nodes.length - 1 && nodes[i][0] - nodes[i - 1][0] <= STEP_KM + 1e-6;
+
 /** Nodes from the rows' own values: the base fare, then each stretch's end (km) and rate per km.
  * Fares are cents, so rows left alone keep their nodes' fares. */
 function fromRows(base: number, stretches: [number, number][]): FareNode[] {
@@ -181,6 +188,17 @@ export function FareNodeRows({ nodes, scale, last, remove = false, custom }: { n
   const base = nodes[0][1];
   const put = (b: number, s: [number, number][]) => void setFares(fromRows(b, s));
   const setBase = (v: number) => put(v, stretches);
+  // T-3749: steps read as steps in the Advanced fares panel only; the Money tab's three rows stay rates per km.
+  // Where each stretch reads as starting (by the node it ends at): one after a step from the step's own distance,
+  // so "10 km +$2.50" is followed by "10 - 40 km", not "10.1 - 40 km"
+  const step = (i: number) => remove && isStep(nodes, i);
+  const startKm = [0, 0];
+  for (let i = 2; i < nodes.length; i++) startKm.push(step(i - 1) ? startKm[i - 1] : nodes[i - 1][0]);
+  const sp = currencySpec();
+  const bin = (i: number) => (
+    <button class="btn icon mini" aria-label={t("fareGraph.removePoint")} data-tip={t("fareGraph.removePoint")}
+      onClick={() => { playBuild("pop"); void setFares(nodes.filter((_, k) => k !== i)); }}><Icon.bin /></button>
+  );
   return (
     <ul class="rows fare-rows">
       <li>
@@ -193,14 +211,39 @@ export function FareNodeRows({ nodes, scale, last, remove = false, custom }: { n
       {stretches.map(([km, rate], j) => {
         const i = j + 1;
         const lim = limits(nodes, i);
-        const from = nodes[i - 1][0] / kpu, u = km / kpu;
+        const from = startKm[i] / kpu, u = km / kpu;
         const fromText = from === 0 ? "0" : nodeDist(from);
+        if (step(i)) {
+          // T-3749: a step's row is the fare's jump there; a change keeps its width and every other row's value
+          const jump = nodes[i][1] - nodes[i - 1][1];
+          const setJump = (v: number) => put(base, stretches.map((s, k) => (k === j ? [s[0], Math.max(0, v) / (s[0] - nodes[i - 1][0])] : s)));
+          return (
+            <li>
+              <span class="fr-what">{t("fareGraph.stepAt", { at: fromText, unit })}</span>
+              <Stepper value={`+${usd(jump)}`} wide label={t("fareGraph.stepLabel", { at: fromText, unit })}
+                onStep={(s) => (s < 0 && jump <= 0 ? false : setJump(fromShown(Math.max(0, roundTo(toShown(jump), sp.grain) + s * sp.fareStep))))}
+                type={{ text: priceTyped(jump), set: (v) => setJump(fromShown(v)) }} />
+              {/* its bin kept in the bins' place by an unseen "per km" */}
+              <span class="fr-end"><span class="fr-unseen" aria-hidden="true">{t("fareGraph.perUnit", { unit })}</span>{bin(i)}</span>
+            </li>
+          );
+        }
         const rateU = rate * kpu;
         const last = i === nodes.length - 1;
-        const setU = (v: number) => { if (lim.kLo <= lim.kHi) put(base, stretches.map((s, k) => (k === j ? [clamp(v * kpu, lim.kLo, lim.kHi), s[1]] : s))); };
+        const setU = (v: number) => {
+          // T-3749: a step right after this stretch moves with its end, keeping its width (its top has no box)
+          if (step(i + 1)) {
+            const w = nodes[i + 1][0] - km, hi = limits(nodes, i + 1).kHi - w;
+            if (lim.kLo > hi) return;
+            const k = clamp(v * kpu, lim.kLo, hi);
+            put(base, stretches.map((s, m) => (m === j ? [k, s[1]] : m === j + 1 ? [k + w, s[1]] : s)));
+            return;
+          }
+          if (lim.kLo <= lim.kHi) put(base, stretches.map((s, k) => (k === j ? [clamp(v * kpu, lim.kLo, lim.kHi), s[1]] : s)));
+        };
         const withRate = (r: number) => fromRows(base, stretches.map((s, k) => (k === j ? [s[0], Math.max(0, r) / kpu] : s)));
         // typed to a tenth of a step of the shown currency (a tenth of a cent in dollars), then back to US$
-        const sp = currencySpec(), rg = sp.rateGrain;
+        const rg = sp.rateGrain;
         const setRate = (v: number) => void setFares(withRate(fromShown(roundTo(v, rg / 10))));
         // a step goes to the next whole step (a cent) of the shown currency above or below
         const stepRate = (s: number) => {
@@ -224,9 +267,7 @@ export function FareNodeRows({ nodes, scale, last, remove = false, custom }: { n
             <Stepper value={`+${rateText(rateU)}`} wide label={t("fareGraph.rateLabel", { n: tNumber(i) })} onStep={stepRate}
               type={{ text: rateTyped(rateU), set: setRate, tip: t("fareGraph.rateTip", { last, rate: rateText(rateU), unit, from: fromText, to: nodeDist(u) }) }} />
             {remove
-              ? <span class="fr-end">{t("fareGraph.perUnit", { unit })}
-                  <button class="btn icon mini" aria-label={t("fareGraph.removePoint")} data-tip={t("fareGraph.removePoint")}
-                    onClick={() => { playBuild("pop"); void setFares(nodes.filter((_, k) => k !== i)); }}><Icon.bin /></button></span>
+              ? <span class="fr-end">{t("fareGraph.perUnit", { unit })}{bin(i)}</span>
               : <span>{t("fareGraph.perUnit", { unit })}</span>}
           </li>
         );
