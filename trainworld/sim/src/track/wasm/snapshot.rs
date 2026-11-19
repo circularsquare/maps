@@ -93,12 +93,15 @@ impl TrackApi {
     pub fn nodes_info(&self) -> Vec<f64> {
         let n = &self.w.net;
         let mut out = vec![];
+        let busy = crate::track::capacity::conflict_nodes(n, &self.w.svc.lines);
         for k in 0..n.node_count() as u32 {
             if !n.node_ok(k) {
                 continue;
             }
             let i = k as usize;
-            let flags = n.node_flying[i] as u8 | (crate::track::capacity::junction_crosses(n, k) as u8) << 1 | n.node_unusable(k) << 2;
+            // T-3745: a built junction shows only where two moves some line runs cross; a blueprint one always
+            let crosses = crate::track::capacity::junction_crosses(n, k) && (n.built_ports(k) < 3 || busy.binary_search(&k).is_ok());
+            let flags = n.node_flying[i] as u8 | (crosses as u8) << 1 | n.node_unusable(k) << 2;
             out.extend([k as f64, n.node_x[i], n.node_y[i], n.node_level[i] as f64, n.node_ports[i].n as f64, n.built_ports(k) as f64, flags as f64, n.node_platform[i] as f64, n.node_built[i] as u8 as f64, n.node_heading[i]]);
         }
         out
@@ -109,6 +112,7 @@ impl TrackApi {
     pub fn crossings_info(&self) -> Vec<f64> {
         let n = &self.w.net;
         let mut out = vec![];
+        let used = crate::track::capacity::edges_in_use(&self.w.svc.lines);
         for c in &n.crossings {
             let (kind, level) = match c.kind {
                 CrossKind::Flat(l) => (0.0, l as f64),
@@ -116,6 +120,10 @@ impl TrackApi {
                 CrossKind::Overlap => continue,
             };
             let built = n.edge_built[c.e1 as usize] && n.edge_built[c.e2 as usize];
+            // T-3745: a built flat crossing shows only with a line on both its edges
+            if built && kind == 0.0 && !(used.binary_search(&c.e1).is_ok() && used.binary_search(&c.e2).is_ok()) {
+                continue;
+            }
             out.extend([c.x, c.y, kind, level, built as u8 as f64, n.crossing_trams(c.e1, c.e2) as f64]);
         }
         out

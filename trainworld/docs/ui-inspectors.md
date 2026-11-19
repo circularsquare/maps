@@ -424,7 +424,9 @@ The stops (above Schedule while being edited [T-670]),
   flat crossings on the route** [T-629, `TrackApi.line_marks`] as small marks on the diagram's bar between the
   two stops they lie between, spread evenly in the gap (the diagram is not to scale): a white diamond for a
   junction with no flyover and no station, a cross for a flat crossing, each with a hover naming it and
-  the lines that use or cross it ("Flat crossing near Harbour", "Crosses Cross"); **in the Traffic
+  the lines that use or cross it ("Flat crossing near Harbour", "Crosses Cross"), only where something
+  could hold the line's trains: a junction move of its own that crosses another move a line runs, a
+  crossing with a line on its other edge [T-3745]; **in the Traffic
   track display** [T-1272] (not while stops are edited) each stretch of the diagram's bar is as wide as
   its riders over the day shown (both directions, the map's purpose filter, `dailyRiders`; after an
   edit, until demand has riders for the new stops, the last figures carried onto them by station or

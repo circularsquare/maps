@@ -790,8 +790,11 @@ as a short crossover (ui-map.md "Single-lead crossovers", T-3161). One-way singl
 train can use (pieces pointing into each other, or away from each other, so a node's table has no
 move out of one or into another) is badged on the map (`Network::node_unusable`, T-3164). A **flyover** removes it: real one-way legs that send the crossing move over the main
 (T-3092, 6.1 "Flyovers"), or the junction inspector's flying flag, for its price (6.4). The map's
-flat-junction badge marks a junction only where two moves in its table could cross, run by a line
-or not (`capacity::junction_crosses`, T-3103). A **flat crossing** makes every move on one
+flat-junction badge marks a junction only where two moves in its table could cross
+(`capacity::junction_crosses`, T-3103), and on built track only where two moves that lines run do cross
+(`capacity::conflict_nodes`, T-3745: a line's own two directions count; a line going straight
+through without taking the branch, or two lines merging or diverging, do not), since a junction
+with no crossing pair run holds nothing. A **flat crossing** makes every move on one
 route conflict with every move on the other; one with no train on its other route (blueprint, or
 constructed track no line runs on) holds nothing. A **tram** crossing a train route at a flat
 crossing yields (T-3032): the train route's crossing resource is loaded by trains only, so tram passes

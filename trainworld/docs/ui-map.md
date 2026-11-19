@@ -408,7 +408,7 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   (built):
   - A **flat crossing** (an X) and a **flat junction** (a fork, a node with three or more track ends
     and no station, not a flyover, where two moves through it can cross at its level by the rule of
-    track-and-service.md 6.2: T-3103, `capacity::junction_crosses`, so no badge where every move merges or diverges) in a round badge with a thin ring. On blueprint track and in the
+    track-and-service.md 6.2: T-3103, `capacity::junction_crosses`, so no badge where every move merges or diverges; on built track also none until two moves lines run cross there, or, for a crossing, until a line is on each of its edges: T-3745, `capacity::conflict_nodes`, `edges_in_use`; blueprint marks and the drawing preview always show) in a round badge with a thin ring. On blueprint track and in the
     drawing tool's preview (the crossings and junctions the new track would make, from the track
     model) the badge is big: radius 7 px at zoom 9, 11 at 12, 15 at 15. On built track it is small
     and quiet from zoom 11, at 85% opacity: 7.5 px at zoom 14, following the square root of the

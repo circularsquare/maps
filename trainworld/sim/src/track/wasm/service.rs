@@ -418,6 +418,17 @@ impl TrackApi {
         let others = |uses: &dyn Fn(&crate::track::service::Run) -> bool| -> Vec<f64> {
             (0..svc.lines.len()).filter(|&o| o != line as usize && svc.lines[o].ok && uses(&svc.lines[o].runs[0])).map(|o| o as f64).collect()
         };
+        // T-3745: only where something could hold this line's trains: a junction move of its own that
+        // crosses another move some line runs, a crossing with a line on its other edge
+        let pairs = crate::track::capacity::move_conflicts(net, &svc.lines);
+        let used = crate::track::capacity::edges_in_use(&svc.lines);
+        // its moves through junctions over every run, so its other direction's crossing counts too
+        let mut mine = std::collections::HashSet::new();
+        for r in ls.runs.iter().take(ls.live_runs()) {
+            for k in 1..r.nodes.len().saturating_sub(1) {
+                mine.insert((r.nodes[k], r.segs[k - 1], r.segs[k]));
+            }
+        }
         let mut marks: Vec<(f64, [f64; 5], Vec<f64>)> = vec![];
         // a looped route passes a junction or crossing twice: drawn once, at its first pass
         let mut seen_nodes = std::collections::HashSet::new();
@@ -428,6 +439,9 @@ impl TrackApi {
                 continue;
             }
             let s = run.node_s[k];
+            if !pairs.iter().any(|c| c[0] == n && [[c[1], c[2]], [c[3], c[4]]].iter().any(|m| mine.contains(&(n, m[0], m[1])))) {
+                continue;
+            }
             if s <= stop_s[0] || s >= stop_s[stop_s.len() - 1] || !seen_nodes.insert(n) {
                 continue;
             }
@@ -438,6 +452,9 @@ impl TrackApi {
             let mut best: Option<(f64, Vec<f64>)> = None;
             for (own, s_own, other) in [(c.e1, c.s1, c.e2), (c.e2, c.s2, c.e1)] {
                 let Some(j) = run.segs.iter().position(|&p| path_edge(p) == own) else { continue };
+                if used.binary_search(&other).is_err() {
+                    continue;
+                }
                 let len = net.edge_len[own as usize];
                 let s = run.seg_off[j] + if path_dir(run.segs[j]) == 0 { s_own } else { len - s_own };
                 if s <= stop_s[0] || s >= stop_s[stop_s.len() - 1] || best.as_ref().is_some_and(|b| b.0 <= s) {

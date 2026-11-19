@@ -776,6 +776,29 @@ pub fn move_conflicts(net: &Network, lines: &[LineSvc]) -> Vec<[u32; 5]> {
     out
 }
 
+/// T-3745: the junction nodes where two moves some line runs cross (a line's own two directions
+/// count), sorted. A flat junction no line's moves cross at holds nothing, so the map hides its badge.
+pub fn conflict_nodes(net: &Network, lines: &[LineSvc]) -> Vec<u32> {
+    let mut nodes: Vec<u32> = move_conflicts(net, lines).iter().map(|p| p[0]).collect();
+    nodes.sort_unstable();
+    nodes.dedup();
+    nodes
+}
+
+/// T-3745: the edges some rail line (ok, not a bus) runs over, sorted. A flat crossing needs a line
+/// on both its edges to hold anything.
+pub fn edges_in_use(lines: &[LineSvc]) -> Vec<u32> {
+    let mut edges: Vec<u32> = vec![];
+    for ls in lines.iter().filter(|l| l.ok && !l.is_bus()) {
+        for run in ls.runs.iter().take(ls.live_runs()) {
+            edges.extend(run.segs.iter().map(|&p| path_edge(p)));
+        }
+    }
+    edges.sort_unstable();
+    edges.dedup();
+    edges
+}
+
 /// When a run leaves offset `s` (after standing there), from its free profile.
 pub(super) fn leave_at(run: &super::service::Run, s: f64) -> f64 {
     let first = run.stop_s.first().copied().unwrap_or(0.0);
