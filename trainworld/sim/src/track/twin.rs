@@ -305,6 +305,7 @@ pub fn twin_data(parent: u32, p: &LineData, stops: Vec<u32>, path: Vec<u32>, was
     d.group = 0;
     d.group_name = String::new();
     d.group_look = Default::default();
+    d.outer.clear();
     d.hand = false;
     d.twin = Twin::Of(parent);
     if let Some(w) = was {

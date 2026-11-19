@@ -8,7 +8,7 @@
 // model's frame); what the renderer draws comes back in local units (map/geo.ts). Money in
 // messages is US$M, as in the track model.
 
-import type { BuildingInput, EdgeId, Level, NodeId } from "../game/types";
+import type { BuildingInput, EdgeId, Level, NodeId, OuterGroup } from "../game/types";
 import type { FrameSpec } from "../game/frame";
 import type { LineShape } from "../game/lineShape";
 import type { Loan } from "../game/loan";
@@ -208,6 +208,8 @@ export type EditOp =
   | { op: "lineFareDist"; line: number; dist: boolean }
   /** T-1791: put lines in a group (a line's group number, "new" for a fresh one, 0 for none), or name one ("" for its oldest line's name); one undoable edit, no service change */
   | { op: "lineGroup"; lines: number[]; group: number | "new" }
+  /** T-3423: put lines and groups straight in a group (0 for none); "new" makes one inside `parent` (0: at the top) */
+  | { op: "groupMembers"; lines: number[]; groups: number[]; group: number | "new"; parent: number }
   | { op: "groupName"; group: number; name: string }
   /** T-1813: a group's bullet text ("" for its name's) and colour (null for its lines') */
   | { op: "groupLook"; group: number; symbol: string; colour: string | null }
@@ -602,6 +604,8 @@ export interface ClockLine {
   /** T-1813: the group's bullet text and colour ("#rrggbb") set by hand, "" for none */
   groupSymbol: string;
   groupColour: string;
+  /** T-3423: the groups around `group`, nearest first */
+  outer: OuterGroup[];
   colour: string;
   ok: boolean;
   running: boolean;

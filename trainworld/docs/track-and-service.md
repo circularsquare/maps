@@ -1172,16 +1172,24 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
 - **Line groups** (T-1791; Anita 2026-10-29): a grouping for the player's eyes only, each line
   still its own service. A group is a number on each line (`LineData::group`, 0 for none) with
   the group's name beside it (`group_name`, empty for its oldest line's name, the same on every
-  line of it), so a copy, an undo and a delete carry it. `TrackApi.set_line_group(lines, group)`
-  moves lines in or out (0) as one undoable edit, a joining line taking the group's name; a group
-  left with one line stops being one, in the same edit, and so on deleting a line.
-  `set_line_group_name` renames every line of it in one edit. Copy line puts the copy in its
+  line of it), so a copy, an undo and a delete carry it. **Groups nest** to any depth (T-3423): a
+  line also carries the groups its group sits in, nearest first, each with its name and bullet
+  (`LineData::outer`), so every line below a group has that group's name and bullet, and a group
+  holding only groups needs no table of its own. `TrackApi.set_group_members(lines, groups, group,
+  parent)` puts lines and groups straight in a group (0: none) as one undoable edit, making a new
+  one inside `parent`, refused for a group put in itself or in one inside it; `set_line_group(lines,
+  group)` is the same for lines alone, a new group at the top. A joining line takes the group's
+  chain; a group left with one member (lines straight in it and groups straight under it) stops
+  being one in the same edit and its member moves to the group around it, and so on deleting a line.
+  `set_line_group_name` renames the group on every line in it at any depth, in one edit. Copy line puts the copy in its
   source's group, making a new one of the two when the source had none (one edit). The service
   never reads the group: a group edit rebuilds the lines' service like a colour change, wakes no
   demand and shows no pending label. Saved in a trailing `LGR1` block (architecture.md, the
   save format); a save without it loads every line ungrouped. The group's bullet set by hand
   (`group_look`, text and colour, T-1813) rides beside the name the same way, `set_line_group_look`
-  one undoable edit, saved in `LGL1`. The Lines and Stations tabs' hand order is a rank per line
+  one undoable edit, saved in `LGL1`. A group in another is saved in `LGN1` (each such group, the
+  group around it and that one's name and bullet); a save without it loads no group in another.
+  The Lines and Stations tabs' hand order is a rank per line
   and per node on the network (`set_list_order`, `list_order`), outside the undo history, saved in
   `LOR1`; a deleted line's rank stays with its id, so a new line reusing it takes its place.
   The group view edits stops without moving the line (`wasm/lines.rs`): `drop_stop(line, i)`

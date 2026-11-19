@@ -5,13 +5,14 @@ import { PERIODS, periodAt } from "../game/periods";
 import { t } from "../i18n";
 import { tPlace } from "../i18n/places";
 import { useEffect, useRef, useState } from "preact/hooks";
+import type { JSX } from "preact";
 import { COUNT_MS, countingRiders, openings } from "../game/openingDay";
 import { createLine } from "../game/lineActions";
 import { boatsText, busesText, count, money } from "../game/format";
 import { DEMAND_INDEX, type Demand, type LineInput, type LineStats } from "../game/types";
 import { lineSort, selection, uiScale } from "../game/ui";
 import { listedLines, edit, renameLine, stationsById } from "../game/world";
-import { closedGroups, groupName, lineGroups, toggleGroup } from "../game/lineGroups";
+import { closedGroups, groupName, groupTree, lineGroups, toggleGroup } from "../game/lineGroups";
 import { byHand, handOrder, setHandOrder } from "../game/handOrder";
 import { GroupPill } from "./GroupPill";
 import { trainsNowAt } from "../game/lineRunning";
@@ -31,9 +32,23 @@ import { locateLine } from "./locate";
 import { byNear, natural, Near, ScopeToggle } from "./listParts";
 import { pendingLabel, type PendingKind } from "../game/lineFigures";
 import { hiddenLines, setLinesHidden, showAllLines, visToggles } from "../game/lineVisibility";
+import { vehicleOf } from "../game/vehicle";
 
 /** the word for a line that is not running; nothing for a running one */
 const statusText = (s: string) => (s === "planned" ? t("linesTab.planned") : s === "broken" ? t("linesTab.broken") : "");
+/** T-3798: the Type sort's order: train, high speed, tram, bus, ferry */
+const lineTypeRank = (st: LineStats | undefined) => {
+  if (!st) return 0;
+  const v = vehicleOf(st);
+  return v === "train" ? (st.fast ? 1 : 0) : v === "tram" ? 2 : v === "bus" ? 3 : 4;
+};
+/** T-3798: a row's type while the list is sorted by it, its icon with its name in the hover */
+const TYPE_ICONS = [Icon.train, Icon.highSpeed, Icon.tram, Icon.bus, Icon.ferry];
+const typeName = (rank: number) => [t("settingsTab.shapeTrain"), t("toolBar.highSpeed"), t("toolBar.tram"), t("buildTab.bus"), t("buildTab.ferry")][rank];
+function TypeCell({ rank }: { rank: number }) {
+  const I = TYPE_ICONS[rank];
+  return <span class="val w-kind muted" data-tip={typeName(rank)}><I /></span>;
+}
 /** how far a row is dragged before it counts as a drag, not a click (px) */
 const DRAG_PX = 6;
 
@@ -207,54 +222,74 @@ export function LinesTab() {
   }
   const showCity = new Set([...cityOf.values()].filter(Boolean)).size >= 2;
   // T-1791: a group is one row, sorted by its lines' figures added up; it shows, with all its
-  // lines, when any of them is in the viewed place
-  const groups = lineGroups(listedLines(w));
-  const groupOf = new Map<string, number>();
-  for (const [g, ls] of groups) for (const l of ls) groupOf.set(l.id, g);
-  type Item = { ls: LineInput[]; g: number; name: string };
-  const itemsOf = (lines: readonly LineInput[]) => {
-    const out: Item[] = [];
-    const placed = new Set<number>();
-    for (const l of lines) {
-      const g = groupOf.get(l.id);
-      if (g === undefined) out.push({ ls: [l], g: 0, name: l.name });
-      else if (!placed.has(g)) {
-        placed.add(g);
-        out.push({ ls: groups.get(g)!, g, name: groupName(groups.get(g)!) });
-      }
-    }
-    return out;
+  // lines, when any of them is in the viewed place. T-3423: a group's members are lines and groups,
+  // to any depth; `ls` is every line in it.
+  const listed = listedLines(w);
+  const groups = lineGroups(listed), tree = groupTree(listed);
+  const parentOf = (g: number) => { const p = tree.get(g)?.parent ?? 0; return tree.has(p) ? p : 0; };
+  /** the group a line sits straight in, 0 for none */
+  const homeOf = (l: LineInput) => (l.group && tree.has(l.group) ? l.group : 0);
+  /** `g` and the groups around it, nearest first */
+  const upFrom = (g: number) => { const out: number[] = []; for (let c = g; c && !out.includes(c); c = parentOf(c)) out.push(c); return out; };
+  type Item = { ls: LineInput[]; g: number; name: string; kids: Item[] };
+  const lineItem = (l: LineInput): Item => ({ ls: [l], g: 0, name: l.name, kids: [] });
+  const groupItem = (g: number): Item => {
+    const n = tree.get(g)!, ls = groups.get(g) ?? n.lines;
+    return { ls, g, name: groupName(ls, g), kids: [...n.lines.map(lineItem), ...n.groups.filter((k) => tree.has(k)).map(groupItem)] };
   };
   const shownIds = new Set(sc.lines.map((l) => l.id));
   // every line's item, the viewed place's or not, so a hand order made here keeps the others' places
-  const allItems = itemsOf(listedLines(w));
+  const allItems = [...listed.filter((l) => !homeOf(l)).map(lineItem), ...[...tree.keys()].filter((g) => !parentOf(g)).map(groupItem)];
   const sum = (ls: LineInput[], f: (l: LineInput) => number) => ls.reduce((n, l) => n + f(l), 0);
   const riders = (ls: LineInput[]) => sum(ls, (l) => tod.get(l.id)?.riders ?? 0);
   const net = (ls: LineInput[]) => sum(ls, (l) => lineNet(tod.get(l.id), l, w.lineStats[l.id]));
   const near = (ls: LineInput[]) => ls.reduce<number | undefined>((m, l) => { const d = sc.lineDist.get(l.id); return d === undefined ? m : m === undefined ? d : Math.min(m, d); }, undefined);
+  // T-3798: a group goes with the type most of its lines are, the earlier type on a tie
+  const typeOf = (ls: LineInput[]) => {
+    const n = [0, 0, 0, 0, 0];
+    for (const l of ls) n[lineTypeRank(w.lineStats[l.id])]++;
+    return n.indexOf(Math.max(...n));
+  };
   const order = (a: Item, b: Item) =>
-    (key === "city" ? natural(cityOf.get(a.ls[0].id) ?? "", cityOf.get(b.ls[0].id) ?? "") * dir
+    (key === "kind" ? (typeOf(a.ls) - typeOf(b.ls)) * dir
+      : key === "city" ? natural(cityOf.get(a.ls[0].id) ?? "", cityOf.get(b.ls[0].id) ?? "") * dir
       : key === "riders" ? (riders(a.ls) - riders(b.ls)) * dir
       : key === "money" ? (net(a.ls) - net(b.ls)) * dir
       : key === "trains" ? (sum(a.ls, (l) => trains(l.id)) - sum(b.ls, (l) => trains(l.id))) * dir
       : key === "near" ? byNear(near(a.ls), near(b.ls), dir) : 0)
     || natural(a.name, b.name) * (key === "name" ? dir : 1) || a.ls[0].num - b.ls[0].num;
-  const one = (l: LineInput): Item => ({ ls: [l], g: 0, name: l.name });
-  /** a group's lines in the order shown: the hand order, else the tab's sort */
-  const membersOf = (it: Item) => (hand.length ? byHand(it.ls, (l) => [l.id], hand) : [...it.ls].sort((a, b) => order(one(a), one(b))));
-  const sorted = hand.length ? byHand([...allItems].sort(order), (it) => it.ls.map((l) => l.id), hand) : [...allItems].sort(order);
+  /** items in the order shown, a group's members too: the hand order, else the tab's sort */
+  const sortItems = (its: readonly Item[]): Item[] => {
+    const out = hand.length ? byHand([...its].sort(order), (it) => it.ls.map((l) => l.id), hand) : [...its].sort(order);
+    for (const it of out) if (it.g) it.kids = sortItems(it.kids);
+    return out;
+  };
+  const sorted = sortItems(allItems);
   const items = sorted.filter((it) => it.ls.some((l) => shownIds.has(l.id)));
+  /** an item's lines in the order shown */
+  const linesIn = (it: Item): string[] => (it.g ? it.kids.flatMap(linesIn) : [it.ls[0].id]);
   /** every line in the order shown, the hidden ones included */
-  const fullOrder = () => sorted.flatMap((it) => membersOf(it).map((l) => l.id));
+  const fullOrder = () => sorted.flatMap(linesIn);
+  const findGroup = (g: number, its: readonly Item[] = sorted): Item | undefined => {
+    for (const it of its) {
+      if (it.g === g) return it;
+      const k = it.g ? findGroup(g, it.kids) : undefined;
+      if (k) return k;
+    }
+    return undefined;
+  };
   const closed = closedGroups.value;
   const periodOf = (l: LineInput) => PERIODS[periodAt(lineSeconds(w.lineStats[l.id]))]?.name ?? "";
 
-  // T-1791, T-1813: drag a line's row onto the middle of another to group the two, or into a gap
-  // between rows to put it there, out of its group unless the gap is inside it (or another open
-  // group, which it then joins); a group's row moves the whole group, between rows only
-  type Row = { key: string; it: Item; line?: LineInput; member: number };
-  const rowList: Row[] = items.flatMap((it): Row[] => it.g === 0 ? [{ key: "l:" + it.ls[0].id, it, line: it.ls[0], member: 0 }]
-    : [{ key: "g:" + it.g, it, member: 0 }, ...(!closed.has(it.g) ? membersOf(it).map((l) => ({ key: "l:" + l.id, it, line: l, member: it.g })) : [])]);
+  // T-1791, T-1813, T-3423: drag a row onto the middle of a group's row to put it in that group, or
+  // onto a line's row to join the line's group (or, beside it where it is, to make a new group of the
+  // two); into a gap between rows to put it there, out of its group unless the gap is inside it (or
+  // another open group, which it then joins). A line and a group's row move alike; never into itself.
+  type Row = { key: string; it: Item; line?: LineInput; home: number; depth: number };
+  const rowsOf = (it: Item, home: number, depth: number): Row[] => it.g === 0
+    ? [{ key: "l:" + it.ls[0].id, it, line: it.ls[0], home, depth }]
+    : [{ key: "g:" + it.g, it, home, depth }, ...(!closed.has(it.g) ? it.kids.flatMap((k) => rowsOf(k, it.g, depth + 1)) : [])];
+  const rowList: Row[] = items.flatMap((it) => rowsOf(it, 0, 0));
   /** What a drop does: `with` the line or group dropped onto, or `at` the gap (a row index) */
   type Drop = { with: Row } | { at: number };
   const dropAt = (d: Drag): Drop | null => {
@@ -263,54 +298,59 @@ export function LinesTab() {
     if (d.part === "on") return { with: rowList[i] };
     return { at: d.part === "before" ? i : i + 1 };
   };
-  /** the gap's group (0 for none) for the dragged line, and the line it goes before or after */
+  /** the gap's group (0 for none) for a row from group `from`, and the line it goes before or after:
+   * the group of the row under the gap, unless `from` closes between the rows (the gap under its last
+   * row counts as inside it for its own members) */
   const gapOf = (at: number, from: number): { g: number; before?: string; after?: string } => {
     const a = rowList[at - 1], b = rowList[at];
-    if (b?.member) return { g: b.member, before: b.line!.id };
-    if (a?.member && from === a.member) return { g: a.member, after: a.line!.id };
+    const under = b ? b.home : 0;
+    if (a && from && from !== under && upFrom(a.home).includes(from) && !upFrom(under).includes(from)) { const ls = linesIn(a.it); return { g: from, after: ls[ls.length - 1] }; }
     if (!b) return { g: 0 };
-    return { g: 0, before: membersOf(b.it)[0].id };
+    return { g: under, before: linesIn(b.it)[0] };
   };
   /** what the drag would change, or null for nothing */
-  const plan = (d: Drag): { join?: number | "new"; with?: string; leave?: boolean; order?: string[] } | null => {
+  type Plan = { join?: number | "new"; with?: string; parent?: number; order?: string[] };
+  const plan = (d: Drag): Plan | null => {
     const to = dropAt(d);
     if (!to) return null;
     const grp = d.id.startsWith("g:") ? Number(d.id.slice(2)) : 0;
-    const from = grp || (groupOf.get(d.id) ?? 0);
+    const dragged = grp ? undefined : listed.find((l) => l.id === d.id);
+    const from = grp ? parentOf(grp) : dragged ? homeOf(dragged) : 0;
+    /** `g` is the dragged group or inside it */
+    const within = (g: number) => !!grp && upFrom(g).includes(grp);
     if ("with" in to) {
-      if (grp) return null;
-      const r = to.with, g = r.it.g;
-      if (r.line?.id === d.id || (g !== 0 && g === from)) return null;
-      return g ? { join: g } : { join: "new", with: r.line!.id };
+      const r = to.with;
+      if (r.line?.id === d.id || r.it.g === grp && grp) return null;
+      if (r.it.g) return within(r.it.g) || r.it.g === from ? null : { join: r.it.g };
+      const c = r.home;
+      if (within(c)) return null;
+      return c && c !== from ? { join: c } : { join: "new", with: r.line!.id, parent: c };
     }
-    const moved = grp ? membersOf(sorted.find((it) => it.g === grp)!).map((l) => l.id) : [d.id];
-    const gap = gapOf(to.at, grp ? -1 : from);
+    const gap = gapOf(to.at, from);
+    if (within(gap.g)) return null;
+    const moved = grp ? linesIn(findGroup(grp)!) : [d.id];
     let order = fullOrder().filter((id) => !moved.includes(id));
     const anchor = gap.before ?? gap.after;
     if (anchor && moved.includes(anchor)) return null; // onto its own place
     const i = anchor ? order.indexOf(anchor) + (gap.after ? 1 : 0) : order.length;
     order = [...order.slice(0, i), ...moved, ...order.slice(i)];
-    const same = order.join() === fullOrder().join();
-    // a group's row only moves the group (T-1855: it once sent a leave for "g:N", which became line 0)
-    const g = grp ? 0 : gap.g;
-    const out: { order?: string[]; join?: number; leave?: boolean } = { order: same ? undefined : order, ...(!grp && g !== from ? (g ? { join: g } : { leave: true }) : {}) };
-    return out.order || out.join || out.leave ? out : null;
+    const out: Plan = { ...(order.join() === fullOrder().join() ? {} : { order }), ...(gap.g !== from ? { join: gap.g } : {}) };
+    return out.order || out.join !== undefined ? out : null;
   };
   const dropLine = (d: Drag) => {
     const p = plan(d);
     if (!p) return;
-    const num = Number(d.id);
     if (p.order) setHandOrder("lines", p.order);
-    if (!Number.isInteger(num)) return; // a group's row: no line to group or ungroup
-    if (p.join === "new") void edit({ op: "lineGroup", lines: [Number(p.with), num], group: "new" });
-    else if (p.join) void edit({ op: "lineGroup", lines: [num], group: p.join });
-    else if (p.leave) void edit({ op: "lineGroup", lines: [num], group: 0 });
+    // T-1855: a group's row is never sent as a line
+    const grp = d.id.startsWith("g:") ? Number(d.id.slice(2)) : 0;
+    const lines = grp ? [] : [Number(d.id)], groups = grp ? [grp] : [];
+    if (p.join === "new") void edit({ op: "groupMembers", lines: [Number(p.with), ...lines], groups, group: "new", parent: p.parent ?? 0 });
+    else if (p.join !== undefined) void edit({ op: "groupMembers", lines, groups, group: p.join, parent: 0 });
   };
   const pointerDown = (e: PointerEvent, id: string) => {
     if (e.button !== 0 || e.pointerType === "touch") return;
     if ((e.target as Element | null)?.closest?.("button, input")) return;
     const d: Drag = { id, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, on: false, over: null, part: "on" };
-    const group = id.startsWith("g:");
     const move = (m: PointerEvent) => {
       if (!d.on && Math.hypot(m.clientX - d.x0, m.clientY - d.y0) < DRAG_PX) return;
       d.on = true;
@@ -318,9 +358,9 @@ export function LinesTab() {
       const row = document.elementFromPoint(m.clientX, m.clientY)?.closest("[data-drop]") as HTMLElement | null;
       d.over = row?.dataset.drop ?? null;
       if (row) {
-        // the middle third groups, the rest is the gap above or below (a group's row has no middle)
+        // the middle third groups, the rest is the gap above or below
         const b = row.getBoundingClientRect(), f = (m.clientY - b.top) / Math.max(1, b.height);
-        d.part = group ? (f < 0.5 ? "before" : "after") : f < 1 / 3 ? "before" : f > 2 / 3 ? "after" : "on";
+        d.part = f < 1 / 3 ? "before" : f > 2 / 3 ? "after" : "on";
       }
       setDrag({ ...d });
     };
@@ -346,17 +386,20 @@ export function LinesTab() {
     const p = plan(drag), to = p && dropAt(drag);
     if (to && "with" in to) {
       marks.set(to.with.key, " drop-on");
-      if (to.with.member) marks.set("g:" + to.with.member, " drop-on");
+      if (typeof p.join === "number" && to.with.line) marks.set("g:" + p.join, " drop-on");
     } else if (to) marks.set(drag.over!, drag.part === "before" ? " drop-before" : " drop-after");
   }
   const pick = (id: string) => { if (!dragged.current) selection.value = { kind: "line", line: id }; };
   // T-3420: the lines hidden on the map, and whether the rows show their eyes
-  const hid = hiddenLines.value, eyes = visToggles.value;  const lineRow = (l: LineInput, inGroup: boolean) => {
+  const hid = hiddenLines.value, eyes = visToggles.value;
+  /** T-3423: a row in a group, indented a step for each group it is in */
+  const depthOf = (depth: number) => (depth ? { cls: " in-group", style: { "--depth": depth } } : { cls: "", style: undefined });
+  const lineRow = (l: LineInput, depth: number) => {
     const st = w.lineStats[l.id];
     const on = (sel?.kind === "line" || sel?.kind === "train") && sel.line === l.id;
-    const drop = "l:" + l.id;
+    const drop = "l:" + l.id, dp = depthOf(depth);
     return (
-      <li class={(on ? "on" : "") + (inGroup ? " in-group" : "") + (hid.has(l.id) ? " hidden-line" : "") + (marks.get(drop) ?? "") + (drag?.on && drag.id === l.id ? " dragged" : "")}
+      <li class={(on ? "on" : "") + dp.cls + (hid.has(l.id) ? " hidden-line" : "") + (marks.get(drop) ?? "") + (drag?.on && drag.id === l.id ? " dragged" : "")} style={dp.style}
         data-drop={drop} onPointerDown={(e) => pointerDown(e, l.id)} onClick={() => pick(l.id)} onDblClick={() => locateLine(l.stops)}>
         {eyes && <VisToggle ids={[l.id]} />}
         <Chip line={l} />
@@ -378,22 +421,22 @@ export function LinesTab() {
             <TrainsNow line={l.id} n={trainsNowAt(l.id, levOf(l.id))} period={periodOf(l)} at={periodAt(lineSeconds(st))} bus={!!st.bus} ferry={!!st.bus?.ferry} tram={!!st.tram} v={crowdOf(l)} lev={demandAt(lineSeconds(st))} stops={l.stops.length} flip={lineReversed(l, w, !!st.loop)} ends={endNames(l)} />
           </>
         )}
+        {key === "kind" && <TypeCell rank={lineTypeRank(st)} />}
         {key === "near" && <Near m={sc.lineDist.get(l.id)} />}
       </li>
     );
   };
-  const groupRows = (it: Item) => {
-    const isOpen = !closed.has(it.g), drop = "g:" + it.g;
+  const groupRows = (it: Item, depth: number): JSX.Element => {
+    const isOpen = !closed.has(it.g), drop = "g:" + it.g, dp = depthOf(depth);
     const on = !isOpen && sel?.kind === "group" && sel.group === it.g;
-    const ls = isOpen ? membersOf(it) : [];
     return (
       <>
-        <li class={"group-row" + (on ? " on" : "") + (it.ls.every((l) => hid.has(l.id)) ? " hidden-line" : "") + (marks.get(drop) ?? "") + (drag?.on && drag.id === drop ? " dragged" : "")} data-drop={drop} onPointerDown={(e) => pointerDown(e, drop)}
+        <li class={"group-row" + (on ? " on" : "") + dp.cls + (it.ls.every((l) => hid.has(l.id)) ? " hidden-line" : "") + (marks.get(drop) ?? "") + (drag?.on && drag.id === drop ? " dragged" : "")} style={dp.style} data-drop={drop} onPointerDown={(e) => pointerDown(e, drop)}
           onClick={() => { if (!dragged.current) selection.value = { kind: "group", group: it.g }; }} onDblClick={() => locateLine(it.ls.flatMap((l) => l.stops))}>
           {eyes && <VisToggle ids={it.ls.map((l) => l.id)} group />}
           <button class={"btn icon mini chevron" + (isOpen ? " open" : "")} data-tip={isOpen ? t("linesTab.closeGroup") : t("linesTab.openGroup")} aria-label={isOpen ? t("linesTab.closeGroup") : t("linesTab.openGroup")}
             aria-expanded={isOpen} onClick={(e) => { e.stopPropagation(); toggleGroup(it.g); }} onDblClick={(e) => e.stopPropagation()}><Icon.chevron /></button>
-          <GroupPill ls={it.ls} tip={it.ls.map((l) => l.name).join("\n")} />
+          <GroupPill ls={it.ls} g={it.g} tip={it.ls.map((l) => l.name).join("\n")} />
           {renaming === it.g ? (
             <input class="name-edit grow" value={it.name} aria-label={t("linesTab.groupName")} ref={(el) => { if (el && document.activeElement !== el) { el.focus(); el.select(); } }}
               onClick={(e) => e.stopPropagation()} onDblClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}
@@ -403,9 +446,10 @@ export function LinesTab() {
           )}
           {showCity && <span class="val muted w-city">{cityOf.get(it.ls[0].id)}</span>}
           <GroupFigures ls={it.ls} w={w} trains={trains} period={periodOf(it.ls[0])} />
+          {key === "kind" && <TypeCell rank={typeOf(it.ls)} />}
           {key === "near" && <Near m={near(it.ls)} />}
         </li>
-        {ls.map((l) => lineRow(l, true))}
+        {isOpen && it.kids.map((k) => (k.g ? groupRows(k, depth + 1) : lineRow(k.ls[0], depth + 1)))}
       </>
     );
   };
@@ -414,8 +458,9 @@ export function LinesTab() {
     const n = typed.trim();
     if (n && n !== it.name) void edit({ op: "groupName", group: it.g, name: n });
   };
+  const typeCol = { key: "kind" as const, label: t("linesTab.colType"), tip: t("linesTab.sortType"), first: 1 as const, ...(key === "kind" ? { cls: "w-kind", left: true } : { beside: true }) };
   const ghost = drag?.on ? w.save.lines.find((l) => l.id === drag.id) : undefined;
-  const ghostGroup = drag?.on && drag.id.startsWith("g:") ? items.find((it) => it.g === Number(drag.id.slice(2))) : undefined;
+  const ghostGroup = drag?.on && drag.id.startsWith("g:") ? findGroup(Number(drag.id.slice(2))) : undefined;
   return (
     <>
       <div class="line-list-actions">
@@ -430,17 +475,20 @@ export function LinesTab() {
         </span>
       </div>
       {items.length === 0 && <p class="muted">{listedLines(w).length === 0 ? t("linesTab.none") : t("linesTab.noneHere")}</p>}
-      <div class={"lines-box" + (showCity ? " with-city" : "") + (key === "near" ? " near-on" : "") + (eyes ? " vis-on" : "")}>
+      <div class={"lines-box" + (showCity ? " with-city" : "") + (key === "near" ? " near-on" : "") + (key === "kind" ? " kind-on" : "") + (eyes ? " vis-on" : "")}>
       {listedLines(w).length > 0 && <SortHead sort={lineSort} hand={hand.length ? () => setHandOrder("lines", []) : undefined} cols={[
         { key: "name", label: t("linesTab.colName"), tip: t("linesTab.sortName"), first: 1 },
+        // T-3798: beside Name, or over its column once sorted by it
+        ...(key === "kind" ? [] : [typeCol]),
         ...(showCity ? [{ key: "city" as const, label: t("linesTab.colCity"), tip: t("linesTab.sortCity"), first: 1 as const, cls: "w-city", left: true }] : []),
         { key: "riders", label: t("linesTab.colRiders"), tip: t("linesTab.sortRiders"), first: -1, cls: "w-riders" },
         { key: "money", label: t("linesTab.colMoney"), tip: t("linesTab.sortMoney"), first: -1, cls: "w-linemoney" },
         { key: "trains", label: t("linesTab.colTrains"), tip: t("linesTab.sortTrains"), first: -1, cls: "w-trains" },
-        { key: "near", label: t("linesTab.colNear"), tip: t("linesTab.sortNear"), first: 1, cls: key === "near" ? "w-near" : "near-off" },
+        ...(key === "kind" ? [typeCol] : []),
+        { key: "near", label: t("linesTab.colNear"), tip: t("linesTab.sortNear"), first: 1, ...(key === "near" ? { cls: "w-near" } : { cls: "near-off", beside: true }) },
       ]} />}
       <ul class={"rows pick" + (drag?.on ? " dragging" : "")}>
-        {items.map((it) => (it.g ? groupRows(it) : lineRow(it.ls[0], false)))}
+        {items.map((it) => (it.g ? groupRows(it, 0) : lineRow(it.ls[0], 0)))}
       </ul>
       </div>
       {ghost && drag && (
@@ -451,7 +499,7 @@ export function LinesTab() {
       )}
       {ghostGroup && drag && (
         <div class="row-ghost" style={{ left: (drag.x + 12) / uiScale.value + "px", top: (drag.y + 8) / uiScale.value + "px" }}>
-          <GroupPill ls={ghostGroup.ls} /><span>{ghostGroup.name}</span>
+          <GroupPill ls={ghostGroup.ls} g={ghostGroup.g} /><span>{ghostGroup.name}</span>
         </div>
       )}
       <div class="pane-foot">

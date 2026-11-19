@@ -13,7 +13,8 @@ import { stopKey } from "../../game/complexView";
 import { BAR, CHIP, CHIP_GAP, CHIP_W, groupLayout, pathPlaces, PITCH, type GroupLayout } from "../../game/groupLayout";
 import { bulletDraw, bulletText } from "../bullet";
 import { shapeOf } from "../../game/lineShapeState";
-import { groupAllStops, groupBullet, groupHover, groupLabel, groupName, lineGroups } from "../../game/lineGroups";
+import { groupAllStops, groupBullet, groupHover, groupLabel, groupMeta, groupName, lineGroups } from "../../game/lineGroups";
+import { GroupParent } from "./LineGroup";
 import { byHand, handOrder } from "../../game/handOrder";
 import { LINE_PALETTE } from "../../game/palette";
 import { ColourPicker } from "../ColourPicker";
@@ -113,10 +114,11 @@ export function GroupInspector({ group }: { group: number }) {
   if (!w || !ls || !byNum) return <p class="muted">{t("groupInspector.none")}</p>;
   const names = stationNames(w);
   const nm = (s: string) => names.get(s) ?? "";
-  const name = groupName(byNum);
+  const name = groupName(byNum, group);
   const rename = (n: string) => void edit({ op: "groupName", group, name: n });
   // T-1813: the bullet's text and colour set by hand, sent together
-  const look = { symbol: byNum[0].groupSymbol ?? "", colour: byNum[0].groupColour || null };
+  const meta = groupMeta(byNum, group);
+  const look = { symbol: meta?.symbol ?? "", colour: meta?.colour || null };
   const setLook = (v: { symbol?: string; colour?: string | null }) => void edit({ op: "groupLook", group, symbol: v.symbol ?? look.symbol, colour: v.colour === undefined ? look.colour : v.colour }).then(() => setPreview(null));
   const commitSymbol = () => {
     if (symbol === null) return;
@@ -198,7 +200,7 @@ export function GroupInspector({ group }: { group: number }) {
     <>
       <div class="title" data-group-edit ref={titleEl}>
         <button class={"badge-edit" + (editing ? " on" : "")} data-tip={t("lineTitle.edit")} aria-label={t("lineTitle.edit")}
-          onClick={() => setEditing(true)} onDblClick={() => setEditing(true)}><GroupPill ls={byNum} size="lg" look={preview ? { colour: preview } : undefined} /></button>
+          onClick={() => setEditing(true)} onDblClick={() => setEditing(true)}><GroupPill ls={byNum} g={group} size="lg" look={preview ? { colour: preview } : undefined} /></button>
         <NameEdit key={group} name={name} onRename={rename} control={{ open: editing, set: setEditing }}>
           <button class="btn icon" data-tip={t("lineTitle.show")} aria-label={t("lineTitle.show")} onClick={() => locateLine(ls.flatMap((l) => l.stops))}>
             <Icon.locate />
@@ -211,9 +213,10 @@ export function GroupInspector({ group }: { group: number }) {
             onInput={(e) => setSymbol(e.currentTarget.value)} onBlur={commitSymbol} onKeyDown={(e) => { if (e.key === "Enter") commitSymbol(); }} />
             {look.colour && <button class="btn icon mini" data-tip={t("groupInspector.backToColour")} aria-label={t("groupInspector.backToColour")} onClick={(e) => { e.preventDefault(); setLook({ colour: null }); }}><Icon.cycle /></button>}
           </label>
-          <ColourPicker value={preview ?? groupBullet(byNum, (id) => today.value.get(id)?.riders ?? 0).colour} presets={LINE_PALETTE} onPreview={setPreview} onCommit={(hex) => { setPreview(hex); setLook({ colour: hex }); }} />
+          <ColourPicker value={preview ?? groupBullet(byNum, group, (id) => today.value.get(id)?.riders ?? 0).colour} presets={LINE_PALETTE} onPreview={setPreview} onCommit={(hex) => { setPreview(hex); setLook({ colour: hex }); }} />
         </div>
       )}
+      <GroupParent group={group} />
       <div class="h divided">
         {t("groupInspector.stopsHeading")}
         <button class={"btn icon mini related-toggle" + (all ? " on" : "")} data-tip={t(all ? "groupInspector.fewer" : "groupInspector.all")} aria-label={t(all ? "groupInspector.fewer" : "groupInspector.all")} aria-pressed={all} onClick={() => (groupAllStops.value = !all)}>

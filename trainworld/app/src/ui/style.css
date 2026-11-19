@@ -368,6 +368,9 @@ body.resizing, body.resizing * { user-select: none; }
 .rows .val.w-mode svg { width: 14px; height: 14px; }
 .w-riders { width: 56px; }
 .w-near { width: 58px; white-space: nowrap; }
+/* T-3798: a line's type icon, sorted by type */
+.lines-box .w-kind { width: 38px; display: inline-flex; justify-content: flex-end; }
+.lines-box .rows .w-kind svg { width: 14px; height: 14px; }
 /* T-670: the Lines list's city column, left aligned and cut to the room */
 .rows .val.w-city { width: 62px; flex: none; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sort-btn.val.w-city { justify-content: flex-start; width: 62px; }
@@ -424,7 +427,8 @@ body.resizing, body.resizing * { user-select: none; }
 .lines-box .chevron svg { width: 12px; height: 12px; }
 .lines-box .chevron.open svg { transform: rotate(90deg); }
 .lines-box .group-chips { display: flex; gap: 2px; flex: none; max-width: 45%; overflow-x: clip; }
-.lines-box .rows > li.in-group { padding-left: 24px; }
+/* T-3423: a step of 18 px for each group a row is in (24 px in all for one) */
+.lines-box .rows > li.in-group { padding-left: calc(6px + 18px * var(--depth, 1)); }
 .lines-box .rows > li .name-edit { min-width: 56px; }
 .lines-box .rows.dragging > li { cursor: grabbing; }
 .lines-box .rows > li.drop-on { box-shadow: inset 0 0 0 2px var(--accent); }
@@ -440,8 +444,8 @@ body.resizing, body.resizing * { user-select: none; }
 .lines-box .vis-check.some { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 40%, var(--tint)); box-shadow: inset 0 0 0 calc(2 * var(--px)) var(--tint); }
 .lines-box .rows > li:has(> .vis-check) { min-height: 24px; }
 .lines-box.vis-on .rows > li.in-group { padding-left: 6px; }
-.lines-box.vis-on .rows > li.in-group > .vis-check { margin-right: 16px; }
-.lines-box.vis-on .sort-head > .sort-btn:first-child { padding-left: calc(11 * var(--px) + 8px); }
+.lines-box.vis-on .rows > li.in-group > .vis-check { margin-right: calc(18px * var(--depth, 1) - 2px); }
+.lines-box.vis-on .sort-head > :is(.sort-btn, .sort-lead):first-child { padding-left: calc(11 * var(--px) + 8px); }
 /* T-3420: Settings' Show levels, the label over the level buttons */
 :is(:root, :root[data-shade="dark"]) .level-toggles .btn.lv.on { border-color: color-mix(in srgb, var(--lc) 60%, var(--bg)); box-shadow: none; }
 .level-head { display: flex; align-items: center; gap: 10px; height: 24px; }
@@ -551,6 +555,10 @@ body.resizing, body.resizing * { user-select: none; }
 .sort-btn.val { flex: none; justify-content: flex-end; }
 /* T-332: the Near header with no distance column under it sits beside "Name" instead */
 .sort-btn.near-off { position: absolute; left: 58px; }
+/* T-3798: headers with no column under them, in a row after the first one's label */
+.sort-lead { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
+.sort-lead > .sort-btn.grow { flex: none; }
+.sort-lead > .sort-btn.near-off { position: static; }
 .sort-btn:hover, .sort-btn.on { color: var(--text); }
 .sort-arrow { display: none; width: 0; height: 0; border-left: 3.5px solid transparent; border-right: 3.5px solid transparent; }
 .sort-arrow.up { display: block; border-bottom: 5px solid currentColor; }

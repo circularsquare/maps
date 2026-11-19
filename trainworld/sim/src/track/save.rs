@@ -5,7 +5,7 @@
 
 use super::frame::FrameKind;
 use super::geom::Pi;
-use super::net::{EdgeData, GroupLook, LineData, Network, NodeData, StationData, Weekend, DAY_UNKNOWN};
+use super::net::{EdgeData, GroupLook, LineData, OuterGroup, Network, NodeData, StationData, Weekend, DAY_UNKNOWN};
 use super::params::*;
 use super::twin::Twin;
 
@@ -77,6 +77,9 @@ use super::twin::Twin;
 /// A trailing `LFD1` block (T-3758) gives the lines that pay the distance fare in a game with fare
 /// zones (`LineData::fare_dist`): count, then line indexes; without it every line pays zone fares.
 /// Level 29 (T-3767): bus and ferry lines set their rows and hours as rail lines do (`OLD_BUS_ROWS`).
+/// A trailing `LGN1` block (T-3423, level 30) gives the line groups that sit in another group: count,
+/// then per such group its number, the number of the group around it and that one's name, bullet text
+/// and colour (as `LGL1`'s); without it no group sits in another.
 const MAGIC: &[u8; 4] = b"TWT4";
 /// TWT5 (T-125) is TWT4 byte for byte except that the metres are in the Lambert conformal world
 /// frame (`frame.rs`). TWT4 and older are always the legacy equirectangular frame, and a network
@@ -89,12 +92,12 @@ const MAGIC_TWT6: &[u8; 4] = b"TWT6";
 
 /// T-1826: the trailing blocks this build reads, in the order they are written. A block it does not
 /// know stops the decoder, which then reports the bytes left over (`decode_read`).
-pub const BLOCKS: [&[u8; 4]; 33] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1", b"LPS1", b"LWE1", b"LOS1", b"LPD1", b"LHR1", b"LFZ1", b"LSN1", b"LFD1"];
+pub const BLOCKS: [&[u8; 4]; 34] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1", b"LPS1", b"LWE1", b"LOS1", b"LPD1", b"LHR1", b"LFZ1", b"LSN1", b"LFD1", b"LGN1"];
 /// T-1826: the save level this build writes into the game header (`level`) and reads up to. Raised
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over. Saves from before it have none, read as 0.
-pub const LEVEL: u32 = 29;
+pub const LEVEL: u32 = 30;
 /// T-3759: the last level from before stations could be unbound from their complex's name; a typed
 /// station there showed its own name, so loading one makes such a station unbound (the app's pass).
 pub const OLD_BOUND_NAMES: u32 = 26;
@@ -717,6 +720,28 @@ pub fn encode(net: &Network) -> Vec<u8> {
         w.u(dist.len() as u64);
         for i in dist { w.u(i as u64); }
     }
+    // T-3423: after LFD1, only where a group sits in another: count, then per such group its number,
+    // the number of the group around it and that group's name, bullet text and colour (as LGL1's)
+    let mut nested: Vec<(u32, &OuterGroup)> = vec![];
+    for &l in &lines {
+        let i = l as usize;
+        let mut inner = net.line_group[i];
+        for o in &net.line_group_outer[i] {
+            if !nested.iter().any(|x| x.0 == inner) { nested.push((inner, o)); }
+            inner = o.group;
+        }
+    }
+    if !nested.is_empty() {
+        w.0.extend_from_slice(b"LGN1");
+        w.u(nested.len() as u64);
+        for (g, o) in nested {
+            w.u(g as u64);
+            w.u(o.group as u64);
+            w.s(&o.name);
+            w.s(&o.look.symbol);
+            w.u(o.look.colour.map_or(0, |c| c as u64 + 1));
+        }
+    }
     w.0
 }
 
@@ -925,7 +950,7 @@ fn decode_read_at(bytes: &[u8], level: u32) -> Result<(Network, usize), String> 
             let e = if (e as usize) < n_edges { e } else { *dead_edge.get_or_insert_with(|| net.alloc_edge()) };
             path.push(e << 1 | (v & 1) as u32);
         }
-        net.set_line(id, Some(LineData { rows: 0, x: Default::default(), symbol: String::new(), trains, auto: None, name, colour, stops, path, tph, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![], fare_dist: false })).map_err(|e| format!("{e:?}"))?;
+        net.set_line(id, Some(LineData { rows: 0, x: Default::default(), symbol: String::new(), trains, auto: None, name, colour, stops, path, tph, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), outer: vec![], day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![], fare_dist: false })).map_err(|e| format!("{e:?}"))?;
     }
     net.next_line_number = n_lines as u32 + 1;
     if r.0.get(r.1..r.1 + 4) == Some(b"LUI1") {
@@ -1295,6 +1320,26 @@ fn decode_read_at(bytes: &[u8], level: u32) -> Result<(Network, usize), String> 
             if i < n_lines { net.line_fare_dist[i] = true; }
         }
     }
+    if r.0.get(r.1..r.1 + 4) == Some(b"LGN1") {
+        r.1 += 4;
+        let mut up: Vec<(u32, OuterGroup)> = vec![];
+        for _ in 0..r.u()? {
+            let (g, group, name, symbol, c) = (r.u()? as u32, r.u()? as u32, r.s()?, r.s()?, r.u()?);
+            let look = GroupLook { symbol, colour: c.checked_sub(1).map(|c| (c as u32) & 0xff_ffff) };
+            if g != 0 && group != 0 && !up.iter().any(|x| x.0 == g) { up.push((g, OuterGroup { group, name, look })); }
+        }
+        for i in 0..n_lines {
+            let mut at = net.line_group[i];
+            let mut chain: Vec<OuterGroup> = vec![];
+            // a parent missing or met twice ends the chain
+            while let Some((_, o)) = up.iter().find(|x| x.0 == at && at != 0) {
+                if o.group == net.line_group[i] || chain.iter().any(|c| c.group == o.group) { break; }
+                chain.push(o.clone());
+                at = o.group;
+            }
+            net.line_group_outer[i] = chain;
+        }
+    }
     for l in manual {
         fold_manual(&mut net, l);
     }
@@ -1402,7 +1447,7 @@ mod tests {
         let e = net.alloc_edge();
         net.set_edge(e, Some(EdgeData { a: 0, b: 1, tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0, join: [0; 2], limit: 0 })).unwrap();
         let l = net.alloc_line();
-        net.set_line(l, Some(LineData { rows: 0, x: Default::default(), symbol: String::new(), trains: Some([2, 2, 1]), auto: None, name: "A".into(), colour: 0xff0000, stops: vec![0, 1], path: vec![0], tph: [0.0; 3], dwell_s: 30.0, turnaround_s: 120.0, cars: 4, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![], fare_dist: false })).unwrap();
+        net.set_line(l, Some(LineData { rows: 0, x: Default::default(), symbol: String::new(), trains: Some([2, 2, 1]), auto: None, name: "A".into(), colour: 0xff0000, stops: vec![0, 1], path: vec![0], tph: [0.0; 3], dwell_s: 30.0, turnaround_s: 120.0, cars: 4, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), outer: vec![], day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![], fare_dist: false })).unwrap();
         encode(&net)
     }
 
@@ -1540,7 +1585,7 @@ mod tests {
         for tag in &written {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
-        assert_eq!((LEVEL, BLOCKS.len()), (29, 33), "a new block raises LEVEL: raise it, then update this pin");
+        assert_eq!((LEVEL, BLOCKS.len()), (30, 34), "a new block raises LEVEL: raise it, then update this pin");
     }
 
     /// T-2217: buildings come back as they were, in their order; a network without them encodes as

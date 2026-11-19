@@ -114,8 +114,10 @@ purpose filter the purpose drawn is ringed in the bar.
 ### The Lines tab
 
 - **The Lines tab** has New line above its list (actions go above lists of any length; new bus and ferry lines are started from the Build tab or U and O, T-3420). The list
-  sorts by clicking a column header [T-310]: Name, City (below), Riders (today), Money (the line's expected profit today, fares less running cost and its share of upkeep, in the money format with negatives red; its hover gives "Expected profit today", the fares, the running cost, the upkeep and, on a weekend or holiday, a line saying so) [T-735, T-1893], Trains and Near. A click sorts by that
-  column (names A to Z, figures biggest first, Near nearest first), a second reverses it, the sorted
+  sorts by clicking a column header [T-310]: Name, Type (T-3798: train, high speed, tram, bus, ferry; beside Name,
+  like Near, until it is used, then a column at the row's end of each line's type icon, `Icon.highSpeed` for high
+  speed, its name in the hover; a group goes with the type most of its lines are), City (below), Riders (today), Money (the line's expected profit today, fares less running cost and its share of upkeep, in the money format with negatives red; its hover gives "Expected profit today", the fares, the running cost, the upkeep and, on a weekend or holiday, a line saying so) [T-735, T-1893], Trains and Near. A click sorts by that
+  column (names A to Z, figures biggest first, Type and Near in their order), a second reverses it, the sorted
   column has a small arrow, and each header's hover says what it sorts by. Names sort naturally, ties
   by name. The name keeps at least about six characters; the Money column goes first when the
   dock is too narrow, then the City column beside Near [T-746]. Lines default to by riders, most first [T-905]. The sort is kept while the page is open and re-runs each game hour.
@@ -182,16 +184,19 @@ purpose filter the purpose drawn is ringed in the bar.
   Trains columns.
 - **Line groups and dragging** [T-1791, T-1813, `game/lineGroups.ts`, `game/handOrder.ts`; the model in [track-and-service.md](track-and-service.md) 6.3]:
   a row is dragged with the mouse or a pen once the pointer has moved 6 px (touch scrolls the list
-  as before). Let go over the middle third of a line's row and the two make a group; over the
-  middle of a group's row or one of its lines, the line joins that group. Let go over the top or
-  bottom third, and the line goes into the gap there: out of its group if it was in one, unless the
-  gap is inside an open group (between its row and its first line, or between two of its lines),
-  where it goes into that group at that place; the gap under a group's last line counts as inside
-  for that group's own lines and outside for any other. A group's row is dragged the same way, its
-  whole row only into gaps (top or bottom half). While dragging, the row's bullet and name follow
-  the pointer, the dragged row is faded, the row it would join is outlined and a gap is a 2 px
+  as before). **Groups nest** to any depth [T-3423]: a group's members are lines and groups, and a
+  group's row is dragged exactly as a line's, never into itself or a group inside it. Let go over
+  the middle third of a group's row and the row joins that group; over a line's row in a group, it
+  joins that line's group; over a line's row at the dragged row's own level (both outside any group,
+  or both straight in one group), the two make a new group there. Let go over the top or
+  bottom third, and the row goes into the gap there: out of its group if it was in one, unless the
+  gap is inside an open group (between its row and its first member, or between two of its members),
+  where it goes into that group at that place; the gap under a group's last row counts as inside
+  for that group's own members and outside for any other. While dragging, the row's bullet and name follow
+  the pointer, the dragged row is faded, the row it would join is outlined (and the group it joins) and a gap is a 2 px
   line in the accent colour; a drop that would change nothing shows nothing; Esc cancels. A group
-  left with one line is no group. **The hand order**: a drop into a gap that moves a row puts the
+  left with one member is no group: that member moves to the group around it, so a group in the
+  middle gone keeps its contents one level up. **The hand order**: a drop into a gap that moves a row puts the
   whole list, every line in every place, in the player's own order (the order shown, then the
   move), saved with the game; while it holds, no column header is lit and new lines go last. A
   click on a header sorts by it and drops the hand order. Inside a group, the hand order is also
@@ -202,9 +207,9 @@ purpose filter the purpose drawn is ringed in the bar.
   typing the oldest line's name back clears it), and its lines' riders, money and trains added up,
   each hover listing the lines' own figures (riders "1.59M riders in past 24h in total", money
   "Expected profit today in total: $x"; a rider changing between two of its lines counts twice), the trains
-  uncoloured. Only running lines count; a group with none reads Planned (or Broken). A group
-  shows open by default [T-1818], its lines indented 24 px, each a line row as any other, sorted
-  by the tab's sort (or the hand order); the chevron closes it, and what the player closed stays
+  uncoloured; a group's figures and hovers are all its lines', at any depth. Only running lines count; a group with none reads Planned (or Broken). A group
+  shows open by default [T-1818], its members indented 24 px and each level deeper another 18 px, each a row as any other, sorted
+  by the tab's sort (or the hand order); the chevron closes it and everything in it, and what the player closed stays
   closed while the page is open. The riders, money and trains columns have fixed widths that
   never shrink, so every row, a group's and its lines' and the header's, has them in the same
   place at any dock width; a wide bullet or a long group name gives up room from the name,
@@ -284,7 +289,9 @@ purpose filter the purpose drawn is ringed in the bar.
   group", the group's bullet inline (a click opens the group view, hover "Open the group", led
   by the group's full name where the bullet reads it shorter; a long name is cut with an
   ellipsis), and a Leave group button at the right (an arrow out of a box, hover "Leave group"),
-  there for touch, where dragging rows is not; a bus line's panel has the same row. The row
+  there for touch, where dragging rows is not; a bus line's panel has the same row, and so does a
+  group's view for a group in another (T-3423). Leaving moves out one level, into the group around
+  the one left, if any. The row
   starts 6 px below the title, which covers that much of whatever follows it.
 - **Actions** at the top, under the title and the planned or broken notice: Edit stops (hover; while stops are being edited it reads "Stop editing" and shows pressed, the button as wide in both states so the row never wraps differently, T-2525, T-2601), Copy line (duplicates route and settings with no trains, T-1161;
   the copy joins its source's group, making one of the

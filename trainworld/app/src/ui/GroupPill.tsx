@@ -8,9 +8,11 @@ import type { LineInput } from "../game/types";
 import { shade } from "../game/ui";
 import { bulletEpoch, inkBox } from "./bullet";
 
-export function GroupPill({ ls, size = "", tip, onClick, look }: {
-  /** the group's lines, oldest first */
+export function GroupPill({ ls, g, size = "", tip, onClick, look }: {
+  /** the group's lines at any depth, oldest first */
   ls: readonly LineInput[];
+  /** the group */
+  g: number;
   size?: "" | "lg";
   tip?: string;
   onClick?: (e: MouseEvent) => void;
@@ -18,7 +20,7 @@ export function GroupPill({ ls, size = "", tip, onClick, look }: {
   look?: { colour?: string };
 }) {
   const t = today.value;
-  const b = groupBullet(ls, (id) => t.get(id)?.riders ?? 0);
+  const b = groupBullet(ls, g, (id) => t.get(id)?.riders ?? 0);
   // T-1817: kept readable on the page's shade
   const c = legibleOn(look?.colour ?? b.colour, shade.value === "dark");
   // T-1835: the text's capitals (or, in other scripts, its ink) centred in the pill. Measured where the

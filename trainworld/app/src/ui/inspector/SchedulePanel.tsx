@@ -311,9 +311,9 @@ export function SchedulePanel() {
     // the longest line's stops down the side
     const axis = rail.reduce<LineInput | undefined>((a, l) => (!a || w.lineStats[l.id].km > w.lineStats[a.id].km ? l : a), undefined);
     if (axis && rail.length >= 2) {
-      const name = groupName(ls);
+      const name = groupName(ls, s.group);
       body = (
-        <Frame label={t("schedulePanel.label", { line: name })} title={<><GroupPill ls={ls} /><span class="sp-name">{name}</span></>}>
+        <Frame label={t("schedulePanel.label", { line: name })} title={<><GroupPill ls={ls} g={s.group} /><span class="sp-name">{name}</span></>}>
           <GroupBody axis={axis} st={w.lineStats[axis.id]} others={rail.filter((l) => l !== axis)} />
         </Frame>
       );

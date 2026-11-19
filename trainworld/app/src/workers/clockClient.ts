@@ -287,7 +287,7 @@ function toWorld(s: ClockState): WorldView {
     if (!v) lineViews.set(l, v = {
       id: String(l.id), num: l.id, letter: l.letter || letterOf(l.name), symbol: l.letter, name: l.name, colour: l.colour, stops: l.stops.map(String),
       ...(l.planStops ? { planStops: l.planStops.map(String), stopStart: l.stopStart ?? 0 } : {}),
-      ...(l.group ? { group: l.group, groupName: l.groupName, groupSymbol: l.groupSymbol, groupColour: l.groupColour } : {}),
+      ...(l.group ? { group: l.group, groupName: l.groupName, groupSymbol: l.groupSymbol, groupColour: l.groupColour, ...(l.outer.length ? { outer: l.outer } : {}) } : {}),
       tph: { high: l.tph[0], medium: l.tph[1], low: l.tph[2] },
       tphP: l.tphP,
       ...(l.twinOf !== undefined ? { twinOf: String(l.twinOf) } : {}),

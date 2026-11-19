@@ -71,6 +71,10 @@ export interface StationInput {
   onePlatform?: true;
 }
 
+/** T-3423: a group around a line's own group: its number, name ("" for its oldest line's) and bullet
+ * text and colour set by hand ("" for none) */
+export interface OuterGroup { group: number; name: string; symbol: string; colour: string }
+
 export interface LineInput {
   id: LineId;
   num: number;
@@ -96,6 +100,8 @@ export interface LineInput {
   /** T-1813: the group's bullet text and colour set by hand, absent or "" for none */
   groupSymbol?: string;
   groupColour?: string;
+  /** T-3423: the groups `group` sits in, nearest first; absent for none */
+  outer?: OuterGroup[];
   /** T-3333: the hidden twin of a line run on both pairs of quad track, the line it runs the other pair
    * for: in every sum, never in a list (`listedLines`) */
   twinOf?: LineId;

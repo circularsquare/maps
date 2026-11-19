@@ -15,7 +15,7 @@ use super::bridge;
 use super::cost::{BlockIndex, ClassGrid, GeoMask, MaskSet, NoWater, RunMask, TransformedMask, UnionMask, WaterMask, WorldWater};
 use super::frame::FrameKind;
 use super::geom::{self, design_radii, GeomIssue, Pi};
-use super::net::{CrossKind, EdgeData, GroupLook, Issue, LineData, LoopKind, Network, NodeData, StationData, Weekend, SPLIT_ROOM};
+use super::net::{CrossKind, EdgeData, GroupLook, Issue, OuterGroup, LineData, LoopKind, Network, NodeData, StationData, Weekend, SPLIT_ROOM};
 use super::params::*;
 use super::profile;
 use super::roads::{self, RoadTile, Roads};
@@ -2242,7 +2242,7 @@ impl TrackApi {
         let Some(path) = self.w.net.route(stops, &[]) else {
             return self.refuse(Issue::LinePath { line: id });
         };
-        let mut d = LineData { rows: 0, x: Default::default(), symbol: String::new(), trains: None, auto: None, name, colour, stops: stops.to_vec(), path, tph: [high, medium, low], dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![], fare_dist: false };
+        let mut d = LineData { rows: 0, x: Default::default(), symbol: String::new(), trains: None, auto: None, name, colour, stops: stops.to_vec(), path, tph: [high, medium, low], dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), outer: vec![], day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![], fare_dist: false };
         d.x = crate::track::net::Extra::of_high(&d);
         self.run(Op::Line { id, data: Some(d) })
     }

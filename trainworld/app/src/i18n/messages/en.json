@@ -1299,6 +1299,8 @@
   "linesTab.noneHere": "No lines here.",
   "linesTab.colName": "Name",
   "linesTab.sortName": "Sort by name",
+  "linesTab.colType": "Type",
+  "linesTab.sortType": "Sort by type, trains first",
   "linesTab.colCity": "City",
   "linesTab.sortCity": "Sort by the city of the first stop",
   "linesTab.colRiders": "Riders",

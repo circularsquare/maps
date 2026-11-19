@@ -1296,6 +1296,8 @@
   "linesTab.noneHere": "Shown in the Lines tab when there are lines but none in the viewed place.",
   "linesTab.colName": "Column heading of the line name column in the Lines tab.",
   "linesTab.sortName": "Hover of the Name column heading in the Lines tab.",
+  "linesTab.colType": "Column heading in the Lines tab that sorts lines by their kind of vehicle (train, high speed, tram, bus, ferry); one short word.",
+  "linesTab.sortType": "Hover of the Type column heading in the Lines tab. The order is train, high speed, tram, bus, ferry, so trains come first.",
   "linesTab.colCity": "Column heading of the city column in the Lines tab.",
   "linesTab.sortCity": "Hover of the City column heading in the Lines tab.",
   "linesTab.colRiders": "Column heading of the riders column in the Lines tab.",

@@ -3839,6 +3839,8 @@ function applyInner(op: EditOp): Applied {
       return { r: a.set_line_fare_dist(op.line, op.dist) };
     case "lineGroup":
       return { r: a.set_line_group(new Uint32Array(op.lines), op.group === "new" ? a.new_line_group() : op.group) };
+    case "groupMembers":
+      return { r: a.set_group_members(new Uint32Array(op.lines), new Uint32Array(op.groups), op.group === "new" ? a.new_line_group() : op.group, op.parent) };
     case "groupName":
       return { r: a.set_line_group_name(op.group, op.name) };
     case "groupLook":

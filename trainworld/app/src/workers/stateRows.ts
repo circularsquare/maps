@@ -16,6 +16,7 @@
 // (checks/t1382-rows.mjs; `?patch=check` compares them in the page).
 import type { TrackApi } from "../wasm/track/sim";
 import type { ClockEdge, ClockLine, ClockNode } from "./protocol";
+import type { OuterGroup } from "../game/types";
 import type { Complexes } from "../game/complexes";
 import { nameSource } from "../game/complexLead";
 import { META_PER_LINE, PROFILES_PER_LINE } from "../map/profiles";
@@ -48,6 +49,8 @@ interface Heavy {
   /** T-1813: the group's bullet text and colour set by hand, "" for none */
   groupSymbol: string;
   groupColour: string;
+  /** T-3423: the groups around `group`, nearest first */
+  outer: OuterGroup[];
   /** the stops its trains serve and the path they run: the plan, or the part of it a partly built line runs (T-3474) */
   stops: number[];
   path: number[];
@@ -471,7 +474,7 @@ export class StateRows {
       const t3 = (k: number) => [li[i + k], li[i + k + 1], li[i + k + 2]] as [number, number, number];
       const row: ClockLine = {
         upkeep,
-        id, name: heavy.name, letter: heavy.letter, group: heavy.group, groupName: heavy.groupName, groupSymbol: heavy.groupSymbol, groupColour: heavy.groupColour, colour: hex(li[i + 1]), ok, running, broken: li[i + 4] === 1, tph: t3(5), cars: li[i + 21] || li[i + 8], carsSet: li[i + 8],
+        id, name: heavy.name, letter: heavy.letter, group: heavy.group, groupName: heavy.groupName, groupSymbol: heavy.groupSymbol, groupColour: heavy.groupColour, outer: heavy.outer, colour: hex(li[i + 1]), ok, running, broken: li[i + 4] === 1, tph: t3(5), cars: li[i + 21] || li[i + 8], carsSet: li[i + 8],
         lengthM: li[i + 9], roundTrip: t3(10), trains: t3(13), auto: autoOf(auto), delay: t3(16), dwell: li[i + 19], turnaround: li[i + 20],
         stops: heavy.stops, path: heavy.path,
         ...(heavy.planStops.length ? { planStops: heavy.planStops, planPath: heavy.planPath, stopStart: heavy.stopStart, pathStart: heavy.pathStart } : {}),
@@ -599,6 +602,7 @@ export class StateRows {
       groupName: a.line_group_name(id),
       groupSymbol: a.line_group_symbol(id),
       groupColour: ((c) => (c < 0 ? "" : hex(c)))(a.line_group_colour(id)),
+      outer: [...a.line_group_outer(id)].map((group, k) => ({ group, name: a.line_group_outer_name(id, k), symbol: a.line_group_outer_symbol(id, k), colour: ((c) => (c < 0 ? "" : hex(c)))(a.line_group_outer_colour(id, k)) })),
       back: [...a.line_back_path(id)],
       backStops: [...a.line_back_stops(id)],
       fromStart: [0, 1, 2].map((lev) => [...a.stop_times(id, 0, lev)]),

@@ -132,6 +132,8 @@ export const Icon = {
   ride: () => <svg viewBox="0 0 16 16"><path d="M1.8 11.2V8.4l1.6-3.4h9.2l1.6 3.4v2.8zM1.8 8.4h12.4" /><circle cx="4.8" cy="11.4" r="1.3" class="bg" /><circle cx="11.2" cy="11.4" r="1.3" class="bg" /></svg>,
   // an inter-region trip's modes (with `ride` for the car)
   train: () => <svg viewBox="0 0 16 16"><rect x="3.8" y="1.8" width="8.4" height="9.7" rx="2" /><path d="M3.8 7h8.4M6 14.2l1-2.7M10 14.2l-1-2.7" /></svg>,
+  // T-3798: a high-speed train's long nose, side on, over the rail
+  highSpeed: () => <svg viewBox="0 0 16 16"><path d="M1.5 11.5h9.6c2 0 3.4-.7 3.4-1.7 0-1.4-3-3.9-6.8-4.3H1.5zM9 5.8l1.6 2.6h2.8M1.5 13.8h13" /></svg>,
   plane: () => <svg viewBox="0 0 16 16"><path d={PLANE_PATH} /></svg>,
   // an alert's mark, a circled exclamation point, coloured by its severity
   alert: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.2" /><path d="M8 4.6v3.2" /><circle class="solid" stroke="none" cx="8" cy="11.1" r="1.4" /></svg>,
@@ -348,20 +350,25 @@ export function Check(p: { checked: boolean; onChange: (v: boolean) => void; chi
  * over the figures. */
 /** `hand` (T-1813): the list is in the player's own order, so no column is on; a click sorts again
  * and calls it to drop the order. */
-export function SortHead<K extends string>({ sort, cols, hand }: { sort: Signal<ListSort<K>>; cols: { key: K; label: string; tip: string; first: 1 | -1; cls?: string; left?: boolean }[]; hand?: () => void }) {
+/** `beside` (T-3798): a header with no column under it, set right after the first one's label. */
+export function SortHead<K extends string>({ sort, cols, hand }: { sort: Signal<ListSort<K>>; cols: { key: K; label: string; tip: string; first: 1 | -1; cls?: string; left?: boolean; beside?: boolean }[]; hand?: () => void }) {
   const s = sort.value;
+  const btn = (c: (typeof cols)[number]) => {
+    const on = !hand && s.key === c.key;
+    const arrow = <i class={"sort-arrow" + (on ? (s.dir > 0 ? " up" : " down") : "")} />;
+    return (
+      <button key={c.key} class={"sort-btn" + (c.beside ? (c.cls ? " " + c.cls : "") : c.cls ? " val " + c.cls : " grow") + (on ? " on" : "")} data-tip={c.tip}
+        onClick={() => { hand?.(); sort.value = on ? { key: c.key, dir: s.dir === 1 ? -1 : 1 } : { key: c.key, dir: c.first }; }}>
+        {c.cls && !c.left && !c.beside && arrow}{c.label}{(!c.cls || c.left || c.beside) && arrow}
+      </button>
+    );
+  };
+  const beside = cols.filter((c) => c.beside);
+  if (!beside.length) return <div class="sort-head">{cols.map(btn)}</div>;
   return (
     <div class="sort-head">
-      {cols.map((c) => {
-        const on = !hand && s.key === c.key;
-        const arrow = <i class={"sort-arrow" + (on ? (s.dir > 0 ? " up" : " down") : "")} />;
-        return (
-          <button class={"sort-btn" + (c.cls ? " val " + c.cls : " grow") + (on ? " on" : "")} data-tip={c.tip}
-            onClick={() => { hand?.(); sort.value = on ? { key: c.key, dir: s.dir === 1 ? -1 : 1 } : { key: c.key, dir: c.first }; }}>
-            {c.cls && !c.left && arrow}{c.label}{(!c.cls || c.left) && arrow}
-          </button>
-        );
-      })}
+      <span class="sort-lead">{btn(cols[0])}{beside.map(btn)}</span>
+      {cols.slice(1).filter((c) => !c.beside).map(btn)}
     </div>
   );
 }

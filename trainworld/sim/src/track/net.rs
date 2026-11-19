@@ -272,6 +272,8 @@ pub struct LineData {
     pub group_name: String,
     /// The group's bullet as the player set it (T-1813), the same on every line of it.
     pub group_look: GroupLook,
+    /// T-3423: the groups `group` sits in, nearest first, each named and drawn as on every line of it.
+    pub outer: Vec<OuterGroup>,
     /// T-2871: the day this line was added, or for a bus or ferry line its route constructed, as
     /// `EdgeData::day` (0 for a planned route).
     pub day: u32,
@@ -421,6 +423,14 @@ pub fn weekend_headway(headway_s: u32, share: u16) -> u32 {
 pub struct GroupLook {
     pub symbol: String,
     pub colour: Option<u32>,
+}
+
+/// T-3423: a group a line's own group sits in, with its name (empty for its oldest line's) and bullet.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct OuterGroup {
+    pub group: u32,
+    pub name: String,
+    pub look: GroupLook,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -716,6 +726,7 @@ pub struct Network {
     pub line_group: Vec<u32>,
     pub line_group_name: Vec<String>,
     pub line_group_look: Vec<GroupLook>,
+    pub line_group_outer: Vec<Vec<OuterGroup>>,
     /// T-1813: the Lines and Stations tabs' hand order, by line and by node id: 1 first, 0 for none.
     /// Outside the undo history, like the sort it replaces.
     pub line_rank: Vec<u32>,
@@ -1405,6 +1416,7 @@ impl Network {
             line_group: vec![],
             line_group_name: vec![],
             line_group_look: vec![],
+            line_group_outer: vec![],
             line_rank: vec![],
             node_rank: vec![],
             line_phase: vec![],
@@ -1646,6 +1658,7 @@ impl Network {
         self.line_group.push(0);
         self.line_group_name.push(String::new());
         self.line_group_look.push(GroupLook::default());
+        self.line_group_outer.push(vec![]);
         self.line_broken.push(false);
         self.line_day.push(0);
         self.line_hand.push(false);
@@ -1728,6 +1741,7 @@ impl Network {
                 group: self.line_group[i],
                 group_name: self.line_group_name[i].clone(),
                 group_look: self.line_group_look[i].clone(),
+                outer: self.line_group_outer[i].clone(),
                 day: self.line_day[i],
                 hand: self.line_hand[i],
                 ones: self.line_ones[i].clone(),
@@ -2271,6 +2285,7 @@ impl Network {
                 self.line_group[i] = d.group;
                 self.line_group_name[i] = if d.group == 0 { String::new() } else { d.group_name };
                 self.line_group_look[i] = if d.group == 0 { GroupLook::default() } else { d.group_look };
+                self.line_group_outer[i] = if d.group == 0 { vec![] } else { d.outer };
             }
             None => {
                 if old.is_none() {
@@ -2292,6 +2307,7 @@ impl Network {
                 self.line_ferry[i] = None;
                 self.line_group[i] = 0;
                 self.line_group_look[i] = GroupLook::default();
+                self.line_group_outer[i].clear();
                 self.stops.free(self.line_stops[i]);
                 self.paths.free(self.line_path[i]);
                 self.line_stops[i] = Span::default();
