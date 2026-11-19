@@ -20,5 +20,5 @@ A trip pays the scale of the country it starts in, on its whole length, even if 
 
 **Higher fares lose riders.** A fare is money, and money is minutes ([[perceived-minutes]]), so raising it changes how many trips pick the train ([[how-people-choose]]). The Money tab shows a new fare at once, but a line's income keeps the old fares until riders solved with the new ones appear.
 
-Exact rule: `docs/track-and-service.md` "Fares and the ledgers" for the curve, the scales, the multipliers and the split between lines. Trips between cities use the curve itself, not a country's scale, and change lines free.
+Exact rule: `docs/track-and-service.md` "Fares and the ledgers" for the curve, the scales, the multipliers and the split between lines. Trips between cities change lines free.
 In the code: **main** `app/src/game/fareCurve.ts` `faresFor`, also `fareAt`, `lineFareMul`, `START_NODES`, `HSR_FARE` `app/src/game/income.ts` `incomeScale`, `FARE_E` `app/src/game/fareDefault.ts` `startNodesAt`

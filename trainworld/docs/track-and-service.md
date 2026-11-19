@@ -1804,8 +1804,11 @@ is over `FARE_MAX`, curve US$1,000 (T-3303: a typed 90 billion once went into ev
   reads back as typed. A trip that changes lines pays it once on its whole length, at the scale of
   the country it starts in: each zone's populations get the curve times their country's scale, and
   the regional market the curve itself. Fare income takes each stretch at its starting stop's
-  country's scale and the base at the boarding stop's (`stopScales`, game/money.ts), and so does
-  the split between regions. In
+  country's scale and the base at the boarding stop's (`stopFareScales`, game/money.ts), and so does
+  the split between regions. The market's curve extra and base extra come back in the curve's dollars
+  and are charged the same way, each route node's at the scale of the stop it leaves (`DemandNetwork`
+  `fareS` and `baseS`, read by the demand worker as it adds up the market's figures; T-3748), so income is
+  the curve times the scale on every trip. In
   demand, route search charges the first stretch as a base and a rate per km on each ride
   (`set_fares`; T-3739: a first stretch shorter than 10 km charges no more a km than the curve's average
   over its first 10 km, `firstStretch`, so a step 0.1 km out does not price every long ride at the step's

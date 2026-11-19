@@ -97,7 +97,8 @@ import { packToLngLat } from "../game/coords";
 import { addOpened, reportDemandFine } from "../game/openedZones";
 import { memoryNeed } from "../game/memoryCheck";
 import { builtKeep, firstFine, LEFT_ALONE_MS, LOD_COARSE, LOD_FINE, lodBudgetGB, lodMode, planFine, VIEW_SETTLE_MS, EDIT_KEEP_MS, zonesGB } from "./demandLod";
-import { world } from "../game/world";
+import { stopsById, world } from "../game/world";
+import { stopFareScales } from "../game/money";
 import { trackZones } from "../game/trackZones";
 import { viewCentre } from "../game/listScope";
 import { ALL_PERIODS, isQuery, type SelSquares, type BareFigures, type DemandNetwork, type FromDemand, type Heap, type OpenRejected, type QueryKind, type ToDemand } from "./demandProtocol";
@@ -687,6 +688,23 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
   // T-3578: the line's own multiple scales the base too, a trip paying it times the largest of its lines'
   const own = lines.map((l) => ownLineFare(svc.fare, l.id));
   if (own.some((m) => m !== 1)) net.baseW = perNode(own);
+  // T-3748: the market's extras are charged at the scale of the stop each route node leaves
+  const w = world.peek();
+  if (w) {
+    const byId = stopsById(w), fareS = new Float32Array(2 * nStops).fill(1), baseS = new Float32Array(2 * nStops).fill(1);
+    let o = 0;
+    for (const l of lines) {
+      const n = l.stops.length, at = l.stops.map((id) => stopFareScales(byId.get(id), svc.fare));
+      // run 1's k-th route node leaves stop n - 1 - k
+      for (let k = 0; k < n; k++) {
+        fareS[2 * o + k] = at[k].rate; fareS[2 * o + n + k] = at[n - 1 - k].rate;
+        baseS[2 * o + k] = at[k].base; baseS[2 * o + n + k] = at[n - 1 - k].base;
+      }
+      o += n;
+    }
+    if (fareS.some((v) => v !== 1)) net.fareS = fareS;
+    if (baseS.some((v) => v !== 1)) net.baseS = baseS;
+  }
   const span = net.span!;
   const layout: Solve["layout"] = [];
   let a = 0;

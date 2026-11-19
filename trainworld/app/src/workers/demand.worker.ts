@@ -2162,10 +2162,15 @@ async function run() {
       answerWaiting(); // an older version's get nulls; this one's wait on
       let stale = false;
       // the clusters' loads, all their populations', per route node of the whole network
-      // (`pick`: only those populations, T-1607)
-      const sumAll = (cs: JobCluster[], read: (a: Population) => Float32Array, out = new Float32Array(jobNodes), at = 0, pick?: (a: Population) => boolean): Float32Array => {
+      // (`pick`: only those populations, T-1607; `market`: the market's times this per route node, T-3748)
+      const sumAll = (cs: JobCluster[], read: (a: Population) => Float32Array, out = new Float32Array(jobNodes), at = 0, pick?: (a: Population) => boolean, market?: Float32Array): Float32Array => {
         for (const c of cs) {
-          for (const a of c.pops) { if (pick && !pick(a)) continue; const map = viewOf(c, a).nodeGlobal, v = read(a); for (let k = 0; k < map.length; k++) out[at + map[k]] += v[k] ?? 0; }
+          for (const a of c.pops) {
+            if (pick && !pick(a)) continue;
+            const map = viewOf(c, a).nodeGlobal, v = read(a), s = a instanceof IntercityApi ? market : undefined;
+            if (s) for (let k = 0; k < map.length; k++) out[at + map[k]] += (v[k] ?? 0) * s[map[k]];
+            else for (let k = 0; k < map.length; k++) out[at + map[k]] += v[k] ?? 0;
+          }
         }
         return out;
       };
@@ -2312,7 +2317,7 @@ async function run() {
         // the market's figures are all its parts' as they stand, whichever clusters are asked for
         const hasMarket = !!regional && cs.some((c) => c.market);
         const market = hasMarket && !part?.noMarket ? marketFigures(jobClusters.flatMap((c) => c.part ? [c.part] : []), q) : null;
-        const seg = sumAll(cs, a => a.seg(q), undefined, 0, pick), board = sumAll(cs, a => a.board(q), undefined, 0, pick), alight = sumAll(cs, a => a.alight(q), undefined, 0, pick), loadOfCrush = sumAll(cs, a => a.load_of_crush(q), undefined, 0, pick), fareX = sumAll(cs, a => a.fare_extra(q), undefined, 0, pick), baseX = sumAll(cs, a => a.base_extra(q), undefined, 0, pick), xferIn = xferDays(cs, q, pick);
+        const seg = sumAll(cs, a => a.seg(q), undefined, 0, pick), board = sumAll(cs, a => a.board(q), undefined, 0, pick), alight = sumAll(cs, a => a.alight(q), undefined, 0, pick), loadOfCrush = sumAll(cs, a => a.load_of_crush(q), undefined, 0, pick), fareX = sumAll(cs, a => a.fare_extra(q), undefined, 0, pick, n.fareS), baseX = sumAll(cs, a => a.base_extra(q), undefined, 0, pick, n.baseS), xferIn = xferDays(cs, q, pick);
         if (extra) for (let k = 0; k < jobNodes; k++) { seg[k] += extra[k]; board[k] += extra[jobNodes + k]; alight[k] += extra[2 * jobNodes + k]; }
         // (less a window's old loads, which can pass a node's own)
         if (delta?.[0]) { const d = delta[0]; for (let k = 0; k < jobNodes; k++) { seg[k] = Math.max(0, seg[k] + d[k]); board[k] = Math.max(0, board[k] + d[jobNodes + k]); alight[k] = Math.max(0, alight[k] + d[2 * jobNodes + k]); } }

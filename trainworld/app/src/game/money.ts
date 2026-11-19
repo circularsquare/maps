@@ -317,14 +317,21 @@ export function scalesOf(g: LineGeo, l: LineInput, byId: Map<string, StationInpu
   if (g.scales?.of !== fares || !g.scales) {
     const n = l.stops.length, sc: number[] = [], rate: number[] = [];
     for (const id of l.stops) {
-      const s = byId.get(id), c = (s && stationCountry(s)) ?? undefined;
-      const scale = fareScale(c, fares.scales), r = roundedDefault(fares, c);
-      sc.push(r && fares.base > 0 ? r.base / fares.base : scale);
-      rate.push(r && fares.perKm > 0 ? r.perKm / fares.perKm : scale);
+      const m = stopFareScales(byId.get(id), fares);
+      sc.push(m.base);
+      rate.push(m.rate);
     }
     g.scales = { of: fares, sc, from: [...rate.slice(0, n - 1), ...[...rate].reverse().slice(0, n - 1)] };
   }
   return g.scales;
+}
+/** A stop's multipliers on the curve as set (T-1277): on the base of a boarding there and on the rate of a stretch
+ * from there, its country's fare scale (T-1662: a country's rounded default fares are not the curve times its scale).
+ * T-3748: the regional market's curve extra and base extra are charged at these too (demandClient `packService`). */
+export function stopFareScales(s: Pick<StationInput, "id" | "lng" | "lat"> | undefined, fares: Pick<Fares, "base" | "perKm" | "scales"> & { nodes?: Fares["nodes"] }): { base: number; rate: number } {
+  const c = (s && stationCountry(s)) ?? undefined;
+  const scale = fareScale(c, fares.scales), r = roundedDefault(fares, c);
+  return { base: r && fares.base > 0 ? r.base / fares.base : scale, rate: r && fares.perKm > 0 ? r.perKm / fares.perKm : scale };
 }
 
 /** T-1277: the country of the zone a station is in (null outside every zone). */

@@ -59,6 +59,11 @@ export interface DemandNetwork {
   /** T-3578 (`DemandApi.set_base_mul`): each route node's line's own fare multiplier, which the base takes
    * too, as `hopKm`; absent: all 1 */
   baseW?: Float32Array;
+  /** T-3748: the regional market is given the curve as set, so its curve extra and base extra come back in curve
+   * dollars; each route node's is charged at the scale of the stop it leaves, `fareS` the extra's and `baseS` the
+   * base's (`stopFareScales`), as `hopKm`. Read only by the market's figures, never sent to a solve; absent: all 1 */
+  fareS?: Float32Array;
+  baseS?: Float32Array;
   /** T-842 (`DemandApi.set_span`): per period and route node (`q * route nodes + r`, route nodes
    * as `hopKm`), the share of riders with a train due within their tolerance; empty or absent:
    * 1 everywhere */
