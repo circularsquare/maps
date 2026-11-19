@@ -498,6 +498,8 @@ function deal() {
 }
 /** `debugPanic` (dev server only): the next step of a solve panics */
 let panicInSolve = false;
+/** T-3781 `debugPanic` "stall" (dev server only): the next step of a solve waits forever, as a stuck period would */
+let stallInSolve = false;
 /** T-2867: `debugPanic`'s `oom`: dies as a failed grow does, with the words of a real one */
 let oomPanic = false;
 function oomNow() {
@@ -1065,7 +1067,8 @@ onmessage = (e: MessageEvent<ToDemand>) => {
   } else if (msg.kind === "debugPanic") {
     if (!import.meta.env.DEV) return;
     oomPanic = !!msg.oom;
-    if (msg.when === "solve") panicInSolve = true;
+    if (msg.when === "stall") stallInSolve = true;
+    else if (msg.when === "solve") panicInSolve = true;
     else if (oomPanic) oomNow();
     else try { panicNow(); } catch (err) { failed(err); }
   } else {
@@ -2230,6 +2233,7 @@ async function run() {
         if (total) for (const a of c.pops) if (here(a)) keepTrail(a, q, round - 1);
         for (const a of c.solveOrder) {
           if (import.meta.env.DEV && panicInSolve && a instanceof DemandApi) { panicInSolve = false; if (oomPanic) { oomNow(); return false; } a.debug_panic(); }
+          if (import.meta.env.DEV && stallInSolve) { stallInSolve = false; await new Promise<never>(() => {}); }
           if (!here(a) || (total === null && skip?.has(a))) continue;
           const t1 = performance.now();
           if (total === null) a.solve(q);
@@ -2790,6 +2794,7 @@ async function run() {
             // The period is part way between rounds until every population has had it; a query in
             // between (the yields below) must not read it.
             roundsHeld[q] = -2;
+            sendMessage({ kind: "unit", version: job.version, round, period: q });
             // T-1538: a rough solve's free flow is the worker's first period alone, its others
             // estimated from it
             const from = mine.find((r) => !(late.some((c) => c.reuse & (1 << r))));

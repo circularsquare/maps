@@ -9,7 +9,7 @@
 import { h, render } from "preact";
 import { clock } from "../game/clock";
 import { world } from "../game/world";
-import { cardEnding, choosing, continueWithoutDemand, demandIdle, gameFailed, graphicsGone, lastAlive, loadCannotFinish, loadFailure, loadProgress, noSimd, noWebgl2, startup } from "../game/loading";
+import { cardEnding, choosing, continueWithoutDemand, demandIdle, gameFailed, graphicsGone, lastAlive, loadCannotFinish, loadFailure, loadStuck, loadProgress, noSimd, noWebgl2, startup } from "../game/loading";
 import { leftText, STAGE_TEXT } from "../game/loadBar";
 import { isMemoryFailure, loadFailText } from "../game/loadText";
 import { marketOff } from "../game/ui";
@@ -116,8 +116,10 @@ function startWatchdog() {
     lastCheck = now;
     const limit = quietMs(!!loadProgress.peek());
     if (now - Math.max(from, lastAlive()) < limit) return;
-    const m = Math.round(limit / 60_000), mins = m >= 1 ? t("loadingScreen.minutes", { count: m }) : t("loadingScreen.seconds", { count: Math.round(limit / 1000) });
     const started = !!world.peek();
+    // T-3781: a stuck demand load is restarted once before the failure screen
+    if (started && loadStuck()) return;
+    const m = Math.round(limit / 60_000), mins = m >= 1 ? t("loadingScreen.minutes", { count: m }) : t("loadingScreen.seconds", { count: Math.round(limit / 1000) });
     loadCannotFinish(t(started ? "loadingScreen.demandTimeout" : "loadingScreen.simTimeout", { time: mins }), !started);
   }, WATCH_MS);
   window.addEventListener("error", (e) => {

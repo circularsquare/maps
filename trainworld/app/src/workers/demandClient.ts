@@ -84,7 +84,7 @@ import { outsideWasmBytes } from "./liveMemory";
 import { isMemoryFailure } from "../game/loadText";
 import { makeFrame } from "../game/frame";
 import { noteEditSolve } from "../game/editLeft";
-import { choosing, demandIdle, endCardFull, gameLoadArmed, gameLoadSeq, viewFiguresIn, gameWait, loadComplete, loadFailed, loadProgress, lastStep, markAlive, markStep, memoryResolve, onLoadStop, setDownloadProbe, solveLeft, startup, takeGameLoadHold, zoneFailures, zoneLoads, zoneSteps, type ZoneStep } from "../game/loading";
+import { choosing, demandIdle, endCardFull, gameLoadArmed, gameLoadSeq, viewFiguresIn, gameWait, loadComplete, loadFailed, loadProgress, lastStep, markAlive, markStep, memoryResolve, onLoadStop, onLoadStuck, setDownloadProbe, solveLeft, startup, takeGameLoadHold, zoneFailures, zoneLoads, zoneSteps, type ZoneStep } from "../game/loading";
 import { type BarPlace, CACHE_SHOW_MS, GAME_MS, GUESS_SHARES, keepPlace, LATER_GUESS, lastWait, loadPace, nextLeft, rememberPace, rememberWait, sameSize, type Pace, sharesOf, shownShare, solveStage, STAGE_TEXT, stagedFraction, stageInHand, STEP_CAP, timeShare, type StageMs, zoneShare } from "../game/loadBar";
 import { linesSettled } from "../game/lineFigures";
 import { clock } from "../game/clock";
@@ -1010,8 +1010,14 @@ class DemandClient {
     // T-325: the aux worker is told every solving worker's periods, for the zones it holds bare
     const msg: ToDemand = { kind: "init", packs: [], periods: this.periodsOf[i], ...(i < n ? this.marketsMsg(i) : {}), aux: i === n, warmEveryday, ...(perfOff("allSums") ? { allSums: true } : {}), ...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}), heapStep: heapStep() };
     w.postMessage(msg);
+    // T-3781, dev server only: `?debugStall=i` has worker i's first solve wait forever (a replacement does not)
+    if (import.meta.env.DEV && Number(new URLSearchParams(location.search).get("debugStall") ?? -1) === i && !this.stallSent) {
+      this.stallSent = true;
+      w.postMessage({ kind: "debugPanic", when: "stall" } satisfies ToDemand);
+    }
     return w;
   }
+  private stallSent = false;
 
   /**
    * T-351: in a game with no station (a bare start), a building tool picked opens the viewed zone,
@@ -1684,15 +1690,35 @@ class DemandClient {
   private downloadsOpen = new Map<object, number>();
   /** T-3313: the last worker panic or replacement, for a feedback report */
   lastTrouble = "";
+  /** T-3781: each worker's last message (when, its kind), and the barrier solve period it started and has not
+   * sent the result of; the status a failure replaced; when the stuck load's workers were restarted */
+  private heard: ({ at: number; kind: string } | undefined)[] = [];
+  private inUnit: ({ round: number; period: number; at: number } | null | undefined)[] = [];
+  private statusBefore = "";
+  private stuckRestarted = 0;
   /** T-3313: where the pool stands, one line for a feedback report: the newest solve's age and how far it got,
    * the last step, the oldest download in flight and what is still being fetched (seconds) */
   diagnosis(): string {
     const now = performance.now(), s = (t: number | undefined) => (t === undefined ? "-" : Math.round((now - t) / 1000) + "s");
     const c = this.cur, v = demandView.peek(), oldest = this.oldestDownload();
     const open = [...this.downloads].filter(([, d]) => d.end === undefined).map(([f, d]) => `${f} ${Math.round(d.got / 1024)}k ${s(d.at)}`);
+    // T-3781: while round 0 is not published, the periods of it that came; each worker's last message and the
+    // period it is in (a barrier solve's `unit` not yet ended by its result)
+    const r0 = c && c.published < 0 ? c.byRound[0].map((r, q) => (r ? q : -1)).filter((q) => q >= 0) : null;
+    const who = this.workers.map((_, k) => {
+      const h = this.heard[k], u = this.inUnit[k];
+      return `w${k} ${h ? `${h.kind} ${s(h.at)}` : "silent"}${u ? ` in r${u.round} p${u.period} ${s(u.at)}` : ""}`;
+    });
     const parts = [
       `status ${this.status.slice(0, 120)}`,
+      this.statusBefore ? `before ${this.statusBefore.slice(0, 60)}` : "", // i18n-ignore
       c ? `solve v${c.version} came ${s(c.arrivedAt)} ago, sent ${c.sentAt ? s(c.sentAt) : "not yet"}, rounds ${c.roundAt?.length ?? 0}, final ${c.results.every((r) => r) ? "yes" : "no"}` : "no solve", // i18n-ignore
+      c ? `lines ${c.svc.lines.length}` : "", // i18n-ignore
+      r0 ? `round 0 periods in ${r0.join(",") || "none"} of ${c!.byRound[0].length}` : "", // i18n-ignore
+      who.join(", "),
+      this.pausedSnap ? `network held while paused ${s(this.pausedAt)}` : "", // i18n-ignore
+      `focus ${this.fpool?.alive ? "on" : "off"}`, // i18n-ignore
+      this.stuckRestarted ? `restarted when stuck ${s(this.stuckRestarted)} ago` : "", // i18n-ignore
       `shown v${v?.version ?? "-"}${v?.final ? " final" : ""}`, // i18n-ignore
       this.waiting ? `network waiting ${s(this.waiting.arrivedAt)}` : "", // i18n-ignore
       `step ${s(lastStep())} ago`, // i18n-ignore
@@ -2806,6 +2832,7 @@ class DemandClient {
 
   /** Stop the pool; also called for a load that cannot finish for another reason (T-950). */
   fail(why: string) {
+    if (!this.status.startsWith("failed")) this.statusBefore = this.status;
     this.status = "failed: " + why;
     demandUpdating.value = false;
 
@@ -2989,6 +3016,29 @@ class DemandClient {
   private unack(item: string) {
     this.acks.delete(item);
     for (const by of this.ackedBy) by?.delete(item);
+  }
+
+  /** T-3781: the loading card's watchdog found nothing moving. Once per page, every worker is replaced (as a
+   * planned restart: not counted as a panic), reopens what it held and the newest network is solved again; the
+   * focus pool stops (its figures stay shown). False when there is
+   * nothing to restart, or it was done already: the failure screen then goes up. */
+  restartStuck(): boolean {
+    if (this.stuckRestarted || this.failed || !this.workers.length || this.respawn.size) return false;
+    this.stuckRestarted = performance.now();
+    const quiet = this.diagnosis();
+    this.lastTrouble = `stuck, workers restarted: ${quiet}`.slice(0, 600); // i18n-ignore
+    console.warn("demand: nothing moved while loading, restarting the workers:", quiet); // i18n-ignore
+    this.endFocus();
+    this.endQueries();
+    for (let i = 0; i < this.workers.length; i++) {
+      this.respawn.set(i, { left: null, solving: false, planned: true });
+      this.workers[i].terminate();
+      if (this.isReady.delete(i)) this.ready--;
+      this.heard[i] = undefined;
+      this.inUnit[i] = null;
+      this.workers[i] = this.spawn(i, false);
+    }
+    return true;
   }
 
   /** T-1174, dev server only (`?debug=1`, `twDemand.client.debugPanic`): make worker `i` panic. */
@@ -3337,7 +3387,7 @@ class DemandClient {
     this.fpool = new FocusPool(n, Array.from({ length: n }, (_, i) => periodsOfWorker(i, n)), {
       message: (i, msg) => this.focusMessage(i, msg),
       opened: (id) => { (this.fopened ??= new Map()).set(id, performance.now()); this.focusSoon(); },
-      failed: (why) => { console.warn(`demand: the focus pool stopped (${why})`); this.endFocus(); },
+      failed: (why) => { console.warn(`demand: the focus pool stopped (${why})`); this.lastTrouble = `focus pool stopped: ${why}`; this.endFocus(); }, // i18n-ignore
     }, this.viewMsg(), perfOff("focusAux"));
   }
 
@@ -3630,6 +3680,7 @@ class DemandClient {
   }
 
   private receive(i: number, msg: FromDemand) {
+    this.heard[i] = { at: performance.now(), kind: msg.kind };
     if (msg.kind === "failed") return isMemoryFailure(msg.error) ? this.workerDied(i, msg.error) : this.fail(`worker ${i}: ${msg.error}`); // i18n-ignore
     // i18n-ignore
     if (msg.kind === "dead") return this.workerDied(i, `${msg.error}${msg.panic ? ` (${msg.panic})` : ""}, ${Math.round(msg.memBytes / 2 ** 20)} MB of WASM memory`);
@@ -3643,6 +3694,8 @@ class DemandClient {
     if (this.reply(i, msg)) return;
     markAlive(); // T-950: (not a query's answer, which an idle worker gives while another is stuck)
     markStep();
+    if (msg.kind === "unit") { this.inUnit[i] = { round: msg.round, period: msg.period, at: performance.now() }; return; }
+    if (msg.kind === "result") this.inUnit[i] = null;
     if (msg.kind === "loads") {
       // T-1607: on to the worker solving the period's other side
       const to = msg.side === "cities" ? this.marketsOf.findIndex((qs) => qs.includes(msg.period)) : this.periodsOf.findIndex((qs, j) => j < this.computeN && qs.includes(msg.period));
@@ -3930,6 +3983,7 @@ class DemandClient {
 
   /** the newest network held while paused, or null */
   private pausedSnap: NetworkSnapshot | null = null;
+  private pausedAt = 0;
   private pauseWatch: (() => void) | null = null;
 
   /** Whether `snap` waits for the game to run ("Recalculate trips while paused" off and the game paused).
@@ -3941,6 +3995,7 @@ class DemandClient {
       demandHeld.value = false;
       return false;
     }
+    if (!this.pausedSnap) this.pausedAt = performance.now();
     this.pausedSnap = snap;
     demandHeld.value = true;
     this.pauseWatch ??= effect(() => {
@@ -5468,6 +5523,7 @@ export function startDemand(city = HOME_CITY, newGame = false) {
   SAVED_GAME = !newGame && !TEST;
   const c = (client = new DemandClient(city));
   onLoadStop((why) => c.fail(why));
+  onLoadStuck(() => c.restartStuck()); // T-3781
   setDownloadProbe(() => c.oldestDownload()); // T-2756
   setTripQuery((from, to, purpose) => c.trip(from, to, purpose)); // T-195
   setMarketTripQuery((end, cells, far, farGid, near) => c.marketTrip(end, cells, far, farGid, near)); // T-866, T-885

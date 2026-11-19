@@ -238,7 +238,7 @@ export type ToDemand =
   | { kind: "rows"; id: number; key: string; place: number }
   /** T-1174, dev server only (`twDemand.client.debugPanic`): make this worker's WASM panic, `now`
    * or in the running solve's next step */
-  | { kind: "debugPanic"; when: "now" | "solve"; oom?: boolean }
+  | { kind: "debugPanic"; when: "now" | "solve" | "stall"; oom?: boolean }
   /** T-1205: the pool has shrunk: this worker's periods from now on (`init`'s `periods`, `groups`) */
   | { kind: "periods"; periods: number[]; groups?: number[][]; markets?: number[]; share?: boolean }
   /** T-1607: a period's loads from the worker solving the other side of it (`FromDemand` "loads") */
@@ -463,6 +463,9 @@ export type FromDemand =
    * none once one has ended); `ran`, `ranExp` and `ranN`, this solve's units ended with one, their ms as run
    * and as expected and how many; `viewLeft`, `viewBlind` and `curView` the same for the units before the
    * zone in view's figures; `leftQ`, `ranQ`, `expQ`, `nQ` and `curQ` the whole solve's by period */
+  /** T-3781: a barrier solve's period `period` of round `round` started here (its `result` ends it); a report's
+   * diagnosis names the period a quiet worker is in */
+  | { kind: "unit"; version: number; round: number; period: number }
   | { kind: "work"; version: number; stage: 0 | 1; busy: boolean; done: [number, number]; of: [number, number]; unitMs: [number, number]; left: [number, number]; blind: [number, number]; cur: number | null; curSize: number; sizeMs: [number, number]; ran: [number, number]; ranExp: [number, number]; ranN: [number, number]; viewLeft: [number, number]; viewBlind: [number, number]; curView: boolean; leftQ: number[]; ranQ: number[]; expQ: number[]; nQ: number[]; curQ: number }
   | { kind: "done"; version: number; memBytes: number; heap?: Heap; clusters?: [number, number]; periods?: [number, number]; local?: CityId[] }
   /** a worker's `sub_sums` for one city once all its periods have `round` (sent unasked, T-119);

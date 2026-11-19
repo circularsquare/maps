@@ -299,6 +299,15 @@ export const oldestDownload = () => downloadProbe();
  * its work too */
 let stopDemand: ((why: string) => void) | null = null;
 export function onLoadStop(f: (why: string) => void) { stopDemand = f; }
+/** T-3781: the demand pool's restart of a load that stopped moving (once; false when it cannot) */
+let restartStuck: (() => boolean) | null = null;
+export function onLoadStuck(f: () => boolean) { restartStuck = f; }
+/** T-3781: the watchdog found the load quiet: restart demand's workers, once, before the failure screen */
+export function loadStuck(): boolean {
+  if (!restartStuck?.()) return false;
+  markAlive();
+  return true;
+}
 /** T-950: the game itself never started (the clock worker or the page's setup failed), so there is
  * nothing to play without demand either */
 export const gameFailed = signal(false);
