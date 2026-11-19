@@ -1,52 +1,47 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session 96357f14-1979-4190-bef7-751a0544778a, name maps-6f, since 2026-11-19 14:21 UTC
-Updated: 2026-11-19 17:00 UTC (maps-6f past 500k, starting its successor)
+Orchestrator: session a0ff2795-d3f6-4076-b0f1-e96b327ba6cf, name maps-e8, since 2026-11-19 17:00 UTC
+Updated: 2026-11-19 17:38 UTC
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status` (T-3667). This file is plan and her words.
 Diary: notes/handoff-log.md. Her local time is UTC-5.
 
 ## Next
-0. Live v0.4.2. Master at level 29, 8800 = 2a5413b4. Unpublished changelog c001-c025 (+ tree items). Cap 14.
+0. Live v0.4.2. Master at level 29, 8800 = 2a5413b4 (rebuild after this round's landings). Cap 14.
    shonei-server: e604291 (levels 27-29), 93718d1 (T-3775 savehealth route), 5bf10c7 (T-3382) committed, not
-   deployed or pushed: ask a-2026-11-19-15. The server is at level 26 until then.
-1. v0.4.3 scope (her 11-19 16:20): hold for T-3781, T-3773, T-3686 (landed), T-3346 stage 2, T-3782, T-3767 (landed),
-   plus the fare zone fixes. Then: server deploy on her yes, data upload (new/reshipped data/packs/real saves:
-   ngo, fuk, spk, hir, osa), changelog review agent + highlights (25+ items), she edits the changelog on the board,
-   her playtest list (docs/orchestrator.md), smoke8800, publish on her yes.
-2. In flight (maps-6f's agents report to the inbox; a follow-up goes to a fresh agent on the tree):
-   - zonepolish T-3783 done in tree zonepolish (Enable as an icon left of the bin with "Disable/Enable {name}", her
-     heading hover + "Transfers in fare zones are free. Multipliers for mode of transport are applied
-     proportionally.", 3 px gap under the Fare zones rule; fares proved per game). Land TOGETHER with zonexfer.
-   - zonexfer (Opus, T-3784, tree zonexfer, 6193): no transfer fare between zone rides of one run. Needs a checker
-     (demand numbers), then land with zonepolish.
-   - failopen T-3773 done in tree failopen (failed opens go to the menu; notice "{name} could not be opened." per
-     her; record tw-open-failures). Checker failopenchk (6194) running. After it: update t3395-saves.mjs (expects
-     the old two-sentence notice), ui-panels.md and notes/T-3773.md to the new text, then land. Then start T-3774.
-   - demandload T-3781 stage 2 in tree demandload (workers restart once on the watchdog; report diagnostics):
-     rebasing onto 2a5413b4 now; then a concise checker; land; T-3781 stays open (cause unknown, one player).
-   - ttfix (Opus, T-3346 stage 2, tree ttport, 6175/6176): fixing t2233-passing-map at 10/10 (map 50 s vs bar 52),
-     an extra pass at a non-passing place, untested reload. Then land; remove tt2 after.
-   - realjapan T-3782 (Sonnet, tree realfix2, 6173): Nagoya station missing from the Tokaido Main Line (add stops a
-     line's track passes through), Fukuoka's 11 reversals. Reship only changed cities.
-   - russave T-3786 (notes/T-3786.md): Rus's Java game was deleted (4 tombstones 11-19); copy likely in R2 backups
-     11-18 and 11-19 (drop off ~11-25). Ask a-2026-11-19-17 (her backup key, one account folder). On yes, a fresh
-     Opus agent per the plan in notes/T-3786.md. T-3787 filed (card delete check counts only the top version).
-   - commentab T-3726: pair 2 scored (no difference; notes/T-3726.md). Pairs 1 and 3, then pair 2 again on fresh
-     trees, once cores allow (scoring.md in maps-6b's scratchpad commentab; ab-1-*, ab-3-* trees still there).
-3. Queued, not for v0.4.3: T-3774 (feedback carries save state, after T-3773), T-3787, T-3788, T-3779, T-3766
-   (fares by city: country or city multiples, never both), T-3780 (station/complex timetables, after T-3346 stage 2
-   lands), T-3785 (schematic hides hidden lines, with the next schematic work), T-3762 / T-1738 / T-3763 countries,
-   T-3409, T-3360.
-4. Steam (T-3729): fee paid, tax form in; her screenshots go in artifacts/trainworld/steam/screenshots.
-5. Later: T-3744 per-stop fare, T-3740 Z3, T-3754, T-3747, busverify's train 4.14 min gap read (a short probe).
+   deployed or pushed: ask a-2026-11-19-15. keepdel's T-3789 commits join that deploy.
+1. v0.4.3 (her 11-19 16:20 scope; I told her ~2-3 pm her time for playtest list + changelog review): left are
+   T-3346 stage 2, T-3788, T-3782. If realjapan T-3782 is the last thing, ship without it (her ~17:35: "people
+   can just fix them themselves ... its still mostly perfect"). Then: 8800 rebuild + smoke on master, changelog
+   review agent + highlights, she edits the changelog on the board, her playtest list (docs/orchestrator.md),
+   server deploy on her yes, data upload (ngo, fuk, spk, hir, osa + any realjapan reships), smoke8800, publish.
+2. In flight (maps-6f's ttfix/realjapan live in its tab; follow-ups go to a fresh agent on the tree):
+   - T-3346 stage 2, tree ttport: ttfix done (guard lag fix, following-loss cap in timing.rs). Checker ttchk2
+     (6158) running, incl. whether master's reload trips/day differ (767.8M vs 836.3M). Then land; remove tt2.
+   - T-3788 landed 9f22d830 (openchk: a badRev device never overwrites the newer rev; its edits split off).
+   - T-3782 landed 9163ebd4 (pipeline only); 22 cities reshipped into data/packs/real, but rebuilds drop lines
+     (Moscow 106 -> 90). linedrift (Opus, T-3790, 6161): count lines vs v0.4.2 for all 22, put v0.4.2 saves back
+     where lines dropped, then the cause. The data upload waits for its step 2.
+   - keepdel (Opus, T-3789): deleted games kept 7 days (her yes ~17:30), create-only admin restore route,
+     tools/ops/restore_game.py, privacy line draft; then Rus's day 423 game (artifacts/trainworld/rus-recovery,
+     from R2: her "do the R2") restored under a new id after the deploy; delete rus-recovery once restored.
+   - T-3784 landed 7db542f2 (+ T-3783 2c541578). Fare hover now "... and {xferFare} in transfer fares"
+     (48296702, her yes 11-19); its 12 translations are stale: the v0.4.3 translation batch covers them.
+   - Her ~17:45: core cap lowered 14 -> 10 "for a few hrs"; raise back to 14 when she says (or ask ~21:00 UTC).
+   - commentab T-3726: pairs 1 and 3, then pair 2 again on fresh trees, once cores allow (notes/T-3726.md).
+3. Landed this session (on master, not 8800): T-3787, T-3779, T-3773 (c027), T-3774, T-3781 stage 2 (c028),
+   T-3783. T-3781 stays open for the next report's diagnosis; T-3786 closes once Rus has the game.
+4. Queued: T-3766 (fares by city), T-3780 (after T-3346 stage 2), T-3785, T-3762 / T-1738 / T-3763 countries
+   (after the v0.4.3 data upload, so data/packs isn't shared), T-3409, T-3360, T-3740 Z3.
+5. Steam (T-3729): fee paid, tax form in; her screenshots go in artifacts/trainworld/steam/screenshots.
+6. Later: T-3744 per-stop fare, T-3754, T-3747, busverify's train 4.14 min gap read (a short probe).
 
 ## Her words
-- 11-19 v0.4.3 scope above ("yea no rush"); "player complaints take precedent over other new features", "only
-  applies to like actual bugs". Fares by city: country or city multiples, never both.
+- 11-19 v0.4.3 scope ("yea no rush"); "player complaints take precedent over other new features", "only applies
+  to like actual bugs". Fares by city: country or city multiples, never both.
+- 11-19 saves: deleted games kept 7 days ("i think it makes sense"); restore Rus "under new game id", "do the R2".
 - 11-19 fares: transfers inside fare zones free; heading hover her wording; Enable as an icon left of the bin
-  ("Disable Caracas fare zones"); fare settings must be per game (they are). Failed-open notice "{name} could not
-  be opened."; Josh's failure line stays as is.
+  ("Disable Caracas fare zones"); fare settings per game. Failed-open notice "{name} could not be opened.".
 - 11-19: before every publish, a full playtest list (docs/orchestrator.md). Scratch of finished sessions 2+ days
   old is deleted without asking (memory). Money history: keep the global record forever; per-line a month.
 - 11-19 zones: "if a trip from zone 2 to 2 counts as 1 that does feel pretty weird to me"; lines choose zone or
@@ -61,12 +56,13 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 
 ## Waiting on her (asks.py list has the open ones)
 - a-1 (T-3746 text), a-13 (read today's 2 damaged saves over ssh; or wait for the deploy), a-14 (drop the load
-  card once the city in view is ready), a-15 (server deploy), a-17 (Rus's backup). Rus's tweet time asked too.
+  card once the city in view is ready), a-15 (server deploy).
 - She sends the T-3635 player reply herself (draft in notes/T-3635.md).
 
 ## Only a person knows
 - Uncommitted on purpose: TODO.md (hers), notes/T-3397.md, jordan-save-investigation-2026-11-15.md,
   tools/ops/archive_bad_saves.py, changelog/roadmap.json, changelog/next.json, notes/asks-log.jsonl,
   notes/board-live.json; maps .claude/settings.json.
+- A yes she gives in another session's tab doesn't pass the permission check here: ask again in this tab.
 - Old tree tt2: keep until ttport lands. Empty locked folders .tw-trees/touchrule and .tw-trees/timekeys.
 - Never delete a tree folder by hand (its app/node_modules junction deletes the main tree's).

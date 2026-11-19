@@ -658,7 +658,8 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   deletion from the account taking off an unchanged copy, `settleSlot`) deletes it, its backups,
   sync record and demand cache. A card's delete deletes every slot and account game of its origin
   (T-2037); one version is deleted from the card's list of other versions. T-1827 had kept deleted slots 30 days under `deleted:<ms>-<id>`;
-  Anita removed it the same day, and `sweepDeleted` clears any such keys at every start.
+  Anita removed it the same day, and `sweepDeleted` clears any such keys at every start. On the account,
+  the server keeps a deleted game 7 days for an admin restore under a new id (T-3789); the browser never sees it.
 - **Storage full or cleared while open** [T-1829]: a connection the browser closes (site data
   cleared, the database deleted from another page: `close` and `versionchange`) is forgotten, and
   every call that fails to open a transaction drops the connection and tries once more, so the

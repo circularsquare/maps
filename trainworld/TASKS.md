@@ -103,39 +103,27 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: A cold run takes 4.4-5.1 min at 4 jobs, against the 3 min aimed for; most of it is zone_water's 368 windows.
   - Goal: A cold run is near 3 min.
   - Other: See notes/T-1992.md.
-- T-3774 [P2] {L:feedback} Feedback reports carry the save state
-  - Context: A "lost my save" report carries nothing about saves today, so it can't be placed in a cause.
-  - Goal: The report's context lists slot count, slots marked damaged, unreadable copies, signed in or not, the playing slot's last sync error, whether storage is persisted, and the last failed open's reason; counts only, no save contents; about 1 hour.
+- T-3775 [P2] {L:accounts-server} {after:the v0.4.3 server deploy} Save health route deployed
+  - Context: Built 2026-11-19: shonei-server 93718d1 adds an inbox-key GET for the scan report and quarantine summary, and tools/ops/save_health.py prints it (05678308). Not deployed yet (ask a-2026-11-19-15).
+  - Goal: After the deploy, save_health.py prints the live report, then close.
   - Other: notes/T-3772.md
-- T-3775 [P2] {L:accounts-server} Save health readable without ssh (taking, 2026-11-19, agent savehealth)
-  - Context: The daily scan's reports and the quarantine records are only on the box, so counting damaged saves needs ssh and your yes each time.
-  - Goal: An inbox-key GET gives the latest scan report and a quarantine summary (by verdict, reason, level and day; ids and counts only), and a small tool prints it; about 1.5 hours plus a server deploy on your yes.
-  - Other: notes/T-3772.md
-- T-3779 [P3] {L:small-fixes} Chart button smaller than the schedule button
-  - Context: `checks/t3543-default-headways` fails on master: "the chart button is as big as the schedule button", 21.6 against 23.4 px (found by T-3767's checker, 2026-11-19).
-  - Goal: The two line panel buttons are the same size and the check passes.
-- T-3781 [P1] {L:loading} Demand data not loading within 10 minutes (taking, 2026-11-19, agent demandload)
+- T-3781 [P1] {L:loading} {after:a report with the new diagnosis} Demand data not loading within 10 minutes
   - Context: One player hit it twice on v0.4.2 (feedback 1795092485-688b2e15, 1795083347-52a31102); the only such reports in 7 days. Their saves load normally on master. A stuck load now restarts once, and the report names the stuck worker and period (tree demandload).
   - Goal: The cause found from the next report's diagnosis, or closed if no report comes.
   - Other: notes/T-3781.md
-- T-3782 [P2] {L:real-networks} Nagoya station missing from the Tokaido Main Line, Fukuoka reversals (taking, 2026-11-19, agent realjapan)
-  - Context: From T-3777, 2026-11-19: OSM's Tokaido Main Line relations list no Nagoya station stop, so the line skips it; Fukuoka has 11 reversals on 8 lines from another cause.
-  - Goal: A line whose track runs through a station platform of its own operator stops there unless OSM says it doesn't, and Fukuoka has no reversals that its real routes don't.
-- T-3784 [P2] {L:fares} Transfers inside a fare zone run are free (taking, 2026-11-19, agent zonexfer)
-  - Context: You, 2026-11-19: "ok we can drop the transfer fare for zones"; the heading hover says "Transfers in fare zones are free. Multipliers for mode of transport are applied proportionally." Today the transfer fare (T-1801) is charged at every change of line.
-  - Goal: A change between two zone rides of one run pays no transfer fare; changes elsewhere still do.
 - T-3785 [P3] {L:schematic} {after:the next schematic work} Hidden lines leave the schematic
   - Context: A player asked, 2026-11-19; you: "hidden lines should hide on the schematic (we should hide them fully, instead of just fading them), we can do that later when we do other schematic work".
   - Goal: A line hidden on the map is not drawn on the schematic at all.
-- T-3786 [P1] {L:accounts-server} Rus's lost Java save (taking, 2026-11-19, agent russave)
-  - Context: Feedback 1795105988-26e9a0c4 (v0.4.2, Safari 26.6, signed in): a Jakarta game expanded across Java, about 4 hours and 500+ game days, saved to the account, now gone; they don't remember deleting it.
-  - Goal: Know what happened to it (and recover it if a copy exists); if it's a cause others can hit, a fix filed.
-- T-3787 [P2] {L:accounts-server} Deleting a game card can remove a big game behind a small version
-  - Context: From T-3786, 2026-11-19: a card delete removes every version on the card, but the "type the station count" check (100+ stations) counts only the top version's stations, and "Delete this version" has a plain confirm, so a big game under a small top version goes in one click. Possibly how Rus lost a 500-day game.
-  - Goal: The delete check counts the biggest version on the card, and deleting a big version asks the same typed confirm.
-- T-3788 [P3] {L:accounts-server} Failed opens left after T-3773
-  - Context: From T-3773, 2026-11-19: a newer account copy loaded in place during play (`openOnAccount`) replaces the slot before loading, so if that load throws the slot and the game in hand disagree; and a real-network new game that fails still starts empty in its own new slot.
-  - Goal: Both end on the menu with the save untouched, as other failed opens do.
+- T-3786 [P1] {L:accounts-server} {waits:Anita} Give Rus back the recovered Java save
+  - Need from Anita: look in Hetzner's 11-19 06:42 disk image for anything newer than day 423 (a temporary server from that backup in the Hetzner console, then copy one folder off), or restore day 423 as is? You said day 423 is fine and to restore it to the account under a new id (T-3789).
+  - Context: Feedback 1795105988-26e9a0c4: a Jakarta game across Java, 500+ days, gone. It was deleted 11-19 10:13 UTC (game kqfkjgprapz5); the 11-19 R2 backup has it at day 423, 1855 stations, 85 lines, and it opens on master. The card's top version was the big one, so T-3787's gap wasn't the cause.
+  - Goal: The player has the game back; then close.
+  - Other: notes/T-3786.md
+- T-3789 [P1] {L:accounts-server} {waits:Anita} Restoring a deleted game to its account (taking, 2026-11-19, agent keepdel)
+  - Need from Anita: keep deleted games on the server for 7 days with an admin undelete (recommended; no backup decrypting for the usual accidental delete), or only a tool that pulls a game from the R2 backup and writes it back under a new id?
+  - Context: You, 2026-11-19, after Rus's game (T-3786) came back from the R2 backup: "we should have this as a pipeline in case anyone else wants to restore a backed up save. lets juts restore it to their account under new game id". Today a delete erases the game and its three backups at once; only the nightly R2 tar (03:17 UTC) and Hetzner's disk image (06:42 UTC) keep a copy, 7 days each.
+  - Goal: A deleted game can be put back into its account under a new id by one command through a create-only admin route, proven against a local server with the old id tombstoned; shipped with a server deploy on your yes. Then Rus's day 423 game restored this way.
+  - Other: notes/T-3786.md
 - T-3780 [P2] {L:timetables} {after:T-3346 stage 2 landing} Station and complex timetables
   - Context: Your pad, 2026-11-19: players ask for per-station timetables, "could be cool and not so hard". Per station and per complex, every line in its line colour; for a complex, pick the direction most platforms roughly align with and show trains as that way or the opposite ("eastbound"), "people should mostly use the station timetables anyways"; line numbers show the bullet and line name on hover; opened by a timetable icon button on the station or complex view, like the line's schedule button. Waits for the timetables port so it reads the new departure times.
   - Goal: A timetable icon on the station and complex views opens departures by line in line colours, a complex's split into two directions, with bullet and line name on hover.
@@ -310,7 +298,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3460 [P3] {L:cleanup} Code written twice
   - Context: From the code tour: the schematic's sheet maths in Rust (diagram.rs) and again in JavaScript (sheetLines.ts, kept as a fallback); the real-rail route finder in the game (realRoute.worker.ts) and copied in the pipeline (realroute.py); car street speeds twice in Rust.
   - Goal: One copy of each, or a written reason to keep both.
-- T-3726 [P3] {L:cleanup} Are code comments worth keeping, A/B test (taking, 2026-11-19, agent commentab)
+- T-3726 [P3] {L:cleanup} {after:cores free up} Are code comments worth keeping, A/B test
   - Context: You said yes, after the release (2026-11-18). You, 2026-11-18: "deciding whether or not code comments rae actually helpful ... what procedure do you think we might be able to try to get a rough sense of whether this would be really harmful? ... just a rough measured anecdotal sense." Proposal: replay 2-3 tasks landed today from their parent commits, one tree with comments and one with them stripped by script, same blind brief, scored on the real fix's tests first, then wrong causes, tokens and time; one task run twice per arm to see the noise.
   - Goal: A rough answer: no visible difference, comments help, or comments hurt; any mass strip only when no trees are open.
 - T-2843 [P3] {L:cleanup} State machine B for demand health
@@ -372,8 +360,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: Measured in notes/T-909.md option 1.
 
 ## Interface
-- T-3740 [P2] {L:fares} Zone fares players draw (taking, 2026-11-19, agent zonefares2)
-  - Context: You, 2026-11-18: "people have requested zone fares ... people wanna draw these." Design agreed 11-19: paint stations (A) with a rings helper (B), new stations take their neighbours' zone, a trip leaving its fare area pays distance; drawn outlines (C) later. About 14-20 h.
+- T-3740 [P2] {L:fares} Zone fares, stage Z3
+  - Context: You, 2026-11-18: "people have requested zone fares ... people wanna draw these." Z1 (sim and saves) and Z2 (paint tool, tint, panels) landed 2026-11-19; drawn outlines (C) were agreed for later.
+  - Goal: A "Set zones by distance" rings helper, new stations and plain bus stops take their neighbours' zone, a deleted area's stations tidied; about 3-4 h.
+  - Other: notes/T-3740.md
 - T-3744 [P3] {L:fares} Fare per stop made
   - Context: You, 2026-11-19, from players: a fare for each stop the train makes, so set below zero an express that stops less costs more; "i guess you'd probably always make this negative so maybe we flip the sign but then idk how we'd describe it"; floor the fare at the base fare. Unknown whether other games do it.
   - Goal: A short design (wording, sign, how a ride's stops are counted, other games) for you, then built in the advanced fares panel.
@@ -418,6 +408,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-3431.md
 - T-3434 [P3] {L:region-redraws} Sabang Island missing from the Banda Aceh zone
   - Context: Player report 2026-11-16. Reach: few.
+- T-3790 [P1] {L:real-networks} Reshipped real networks lose lines (taking, 2026-11-19, agent linedrift)
+  - Context: T-3782 reshipped 22 cities on 2026-11-19 into data/packs/real (not uploaded). A rebuild with the current sim leaves out lines the shipped save had: Moscow 106 to 90, Hong Kong 46 to 42 (not reshipped); the other cities weren't counted.
+  - Goal: No city in v0.4.3's data upload has fewer lines than in v0.4.2; the cause found, or the v0.4.2 save kept for that city.
+  - Other: notes/T-3782.md
 - T-3325 [P3] {L:real-networks} {after:real-network rebuild batch} Rebuild Sendai so Senzan Line stops at Toshogu
   - Context: You parked this 2026-11-12 since few players open Sendai. The fix is in realnet.py build_lines.
   - Other: Commands in notes/T-3318.md.
