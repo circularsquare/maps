@@ -464,3 +464,85 @@ fn a_bus_lines_rate_follows_its_headway() {
         assert!((tph - 3600.0 / h as f64).abs() < 0.01, "a {h} s headway runs {tph} an hour");
     }
 }
+
+/// T-3767: a bus line sets five rows as a rail line does: made in a game of five, its midday and
+/// afternoon start at its high headway; a midday headway or count edit moves the midday's rate at once
+/// (T-3704), and only the midday's running cost.
+#[test]
+fn a_bus_line_runs_five_periods() {
+    let mut a = api();
+    assert_eq!(a.set_game_periods(5), 0, "{}", a.issues());
+    let b = a.new_line_id();
+    assert_eq!(a.set_bus_line(b, &[0.0, 0.0, 1.0, 6000.0, 0.0, 1.0], 480, 900, 1800, 30.0, 120.0, 0, "B".into()), 0, "{}", a.issues());
+    assert_eq!(a.construct_line(b), 0, "{}", a.issues());
+    assert_eq!(a.line_period_count(b), 5);
+    assert_eq!(a.line_row_headways(b), vec![480, 480, 480, 900, 1800]);
+    let tph = |a: &TrackApi, s: usize| a.w.net.line_tph[b as usize][s] as f64;
+    assert!((tph(&a, 1) - 7.5).abs() < 0.01, "midday at high's 8 minutes: {}", tph(&a, 1));
+    let cost = |a: &TrackApi| (0..5).map(|k| a.running_cost_period(k)).collect::<Vec<_>>();
+    let before = cost(&a);
+    assert_eq!(a.set_line_row_headways(b, vec![480, 1200, 480, 900, 1800]), 0, "{}", a.issues());
+    assert!((tph(&a, 1) - 3.0).abs() < 0.01 && (tph(&a, 0) - 7.5).abs() < 0.01 && (tph(&a, 2) - 7.5).abs() < 0.01, "a 20 minute midday: {:?}", a.w.net.line_tph[b as usize]);
+    let after = cost(&a);
+    assert!(after[1] < before[1] && [0, 2, 3, 4].iter().all(|&k| after[k] == before[k]), "only midday's cost moves: {before:?} {after:?}");
+    // its buses by count, then a midday count of its own
+    assert_eq!(a.clear_auto_headway(b), 0, "{}", a.issues());
+    let trip = a.w.svc.lines[b as usize].round_trip[1];
+    let mut t = a.line_row_trains(b);
+    t[1] = 1;
+    assert_eq!(a.set_line_row_trains(b, t.clone()), 0, "{}", a.issues());
+    assert!((tph(&a, 1) - 3600.0 / trip).abs() < 0.01, "one midday bus over a {trip} s round trip: {}", tph(&a, 1));
+    t[1] = 3;
+    assert_eq!(a.set_line_row_trains(b, t), 0, "{}", a.issues());
+    assert!((tph(&a, 1) - 3.0 * 3600.0 / trip).abs() < 0.01, "three midday buses: {}", tph(&a, 1));
+}
+
+/// T-3767: a bus line follows the game's hours: the morning from 5 puts an hour of its 5 minute
+/// morning into the night's slot, (5 x 3 + 12) / 6 = 4.5 an hour (hours_tests `t3542_morning_from_five`).
+#[test]
+fn a_bus_line_follows_the_games_hours() {
+    let mut a = api();
+    assert_eq!(a.set_game_periods(5), 0, "{}", a.issues());
+    let b = a.new_line_id();
+    assert_eq!(a.set_bus_line(b, &[0.0, 0.0, 1.0, 6000.0, 0.0, 1.0], 300, 900, 1200, 30.0, 120.0, 0, "B".into()), 0, "{}", a.issues());
+    assert_eq!(a.construct_line(b), 0, "{}", a.issues());
+    assert!((a.w.net.line_tph[b as usize][4] - 3.0).abs() < 1e-3);
+    assert_eq!(a.set_game_hours(vec![5, 10, 16, 20, 24]), 0, "{}", a.issues());
+    assert_eq!(a.line_hours(b), vec![5, 10, 16, 20, 24]);
+    let night = a.w.net.line_tph[b as usize][4];
+    assert!((night - 4.5).abs() < 1e-3, "night slot {night} against 4.5");
+    // its own periods and hours, as a rail line's
+    assert_eq!(a.set_line_periods(b, 4), 0, "{}", a.issues());
+    assert_eq!((a.line_period_count(b), a.line_periods_own(b)), (4, 4));
+    assert_eq!(a.set_line_hours(b, vec![6, 10, 16, 20, 24]), 0, "{}", a.issues());
+    assert_eq!(a.line_hours_own(b), vec![6, 10, 16, 20, 24]);
+    assert!((a.w.net.line_tph[b as usize][4] - 3.0).abs() < 1e-3);
+}
+
+/// T-3767: a save from before bus lines followed the game's rows (level 28) loads with its bus lines
+/// on three rows of their own at the default hours, as it ran; one of this level follows the game.
+#[test]
+fn an_older_saves_bus_lines_keep_three_rows() {
+    let mut a = api();
+    let b = a.new_line_id();
+    assert_eq!(a.set_bus_line(b, &[0.0, 0.0, 1.0, 6000.0, 0.0, 1.0], 480, 900, 1800, 30.0, 120.0, 0, "B".into()), 0, "{}", a.issues());
+    assert_eq!(a.construct_line(b), 0, "{}", a.issues());
+    assert_eq!(a.set_game_periods(5), 0, "{}", a.issues());
+    assert_eq!(a.set_game_hours(vec![5, 10, 16, 20, 24]), 0, "{}", a.issues());
+    let saved = a.save();
+    assert!(a.load(&saved));
+    assert_eq!((a.line_period_count(b), a.line_periods_own(b), a.line_hours(b)), (5, 0, vec![5, 10, 16, 20, 24]));
+    a.set_load_level(crate::track::save::OLD_BUS_ROWS);
+    assert!(a.load(&saved));
+    assert_eq!((a.line_period_count(b), a.line_periods_own(b), a.line_hours(b)), (3, 3, CUTS_DEFAULT.iter().map(|&c| c as u32).collect::<Vec<_>>()));
+    assert_eq!(a.line_row_headways(b), vec![480, 900, 1800]);
+    // a game of three rows at the default hours is left as it was
+    let mut c = api();
+    let b = c.new_line_id();
+    assert_eq!(c.set_bus_line(b, &[0.0, 0.0, 1.0, 6000.0, 0.0, 1.0], 480, 900, 1800, 30.0, 120.0, 0, "B".into()), 0, "{}", c.issues());
+    let saved = c.save();
+    c.set_load_level(crate::track::save::OLD_BUS_ROWS);
+    assert!(c.load(&saved));
+    assert_eq!(c.line_periods_own(b), 0);
+    assert_eq!(c.save(), saved);
+}

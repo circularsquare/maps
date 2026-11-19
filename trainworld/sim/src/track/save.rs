@@ -76,6 +76,7 @@ use super::twin::Twin;
 /// is bound.
 /// A trailing `LFD1` block (T-3758) gives the lines that pay the distance fare in a game with fare
 /// zones (`LineData::fare_dist`): count, then line indexes; without it every line pays zone fares.
+/// Level 29 (T-3767): bus and ferry lines set their rows and hours as rail lines do (`OLD_BUS_ROWS`).
 const MAGIC: &[u8; 4] = b"TWT4";
 /// TWT5 (T-125) is TWT4 byte for byte except that the metres are in the Lambert conformal world
 /// frame (`frame.rs`). TWT4 and older are always the legacy equirectangular frame, and a network
@@ -93,13 +94,16 @@ pub const BLOCKS: [&[u8; 4]; 33] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1",
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over. Saves from before it have none, read as 0.
-pub const LEVEL: u32 = 28;
+pub const LEVEL: u32 = 29;
 /// T-3759: the last level from before stations could be unbound from their complex's name; a typed
 /// station there showed its own name, so loading one makes such a station unbound (the app's pass).
 pub const OLD_BOUND_NAMES: u32 = 26;
 /// T-3750: the last level whose station buildings all carry a name, a copy of a station's for one the
 /// player never named; from 24 an empty name is none, and the building shows its complex's.
 pub const OLD_BUILDING_NAMES: u32 = 23;
+/// T-3767: the last level whose bus and ferry lines always set three rows at the default hours, whatever the
+/// game's; such a save's bus and ferry lines take those as their own (`pin_old_buses`), so it runs as it did.
+pub const OLD_BUS_ROWS: u32 = 28;
 /// T-3647: the last level written by builds where a station on single track made its run two-way (v0.3.5 and
 /// older; T-3386 changed the rule after it, and v0.4.0 wrote 21).
 pub const OLD_STATION_WAYS: u32 = 18;
@@ -808,10 +812,19 @@ pub fn decode(bytes: &[u8]) -> Result<Network, String> {
     decode_read(bytes).map(|(net, _)| net)
 }
 
+/// `decode` of a save written at save level `level` (the game header's).
+pub fn decode_at(bytes: &[u8], level: u32) -> Result<Network, String> {
+    decode_read_at(bytes, level).map(|(net, _)| net)
+}
+
 /// `decode`, and how much of the save this build did not read (T-1826): the bytes after the last
 /// block it knows, plus one per node or edge with flag bits it does not know. Not 0 means a newer
 /// build wrote it, and writing the network back would lose that part.
 pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
+    decode_read_at(bytes, LEVEL)
+}
+
+fn decode_read_at(bytes: &[u8], level: u32) -> Result<(Network, usize), String> {
     let mut unknown = 0usize;
     if bytes.len() < 20 || (&bytes[..4] != MAGIC && &bytes[..4] != MAGIC_TWT5 && &bytes[..4] != MAGIC_TWT6) {
         return Err("not a trainworld track save".into());
@@ -1240,7 +1253,7 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
     }
     if r.0.get(r.1..r.1 + 4) == Some(b"LPD1") {
         r.1 += 4;
-        read_lpd1(&mut r, &mut net, n_lines)?;
+        read_lpd1(&mut r, &mut net, n_lines, level)?;
     }
     if r.0.get(r.1..r.1 + 4) == Some(b"LHR1") {
         r.1 += 4;
@@ -1254,6 +1267,7 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
             for x in c.iter_mut() { *x = r.u()?.min(255) as u8; }
             if i < n_lines && cuts_ok(c) { net.line_x[i].hours = c; }
         }
+        if level <= OLD_BUS_ROWS && net.hours_default != CUTS_DEFAULT { pin_old_buses(&mut net, n_lines); }
         net.refresh_mix();
     }
     if r.0.get(r.1..r.1 + 4) == Some(b"LFZ1") {
@@ -1290,13 +1304,14 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
 
 /// T-3542: an `LPD1` block (`encode`): the rows, the midday and afternoon rows, then the slots they
 /// split off seeded from the high row's (`Network::seed_slots`) and set to what was saved.
-fn read_lpd1(r: &mut R, net: &mut Network, n_lines: usize) -> Result<(), String> {
+fn read_lpd1(r: &mut R, net: &mut Network, n_lines: usize, level: u32) -> Result<(), String> {
     let rows = |v: u64| (v as usize).clamp(ROWS_MIN, ROWS_MAX) as u8;
     net.rows_default = rows(r.u()?);
     for _ in 0..r.u()? {
         let (i, v) = (r.u()? as usize, r.u()?);
         if i < n_lines { net.line_rows[i] = if v == 0 { 0 } else { rows(v) }; }
     }
+    if level <= OLD_BUS_ROWS && net.rows_default as usize != ROWS_MIN { pin_old_buses(net, n_lines); }
     for _ in 0..r.u()? {
         let i = r.u()? as usize;
         let mut v = [0u32; 8];
@@ -1345,6 +1360,16 @@ fn read_lpd1(r: &mut R, net: &mut Network, n_lines: usize) -> Result<(), String>
         }
     }
     Ok(())
+}
+
+/// T-3767: a save from before bus and ferry lines followed the game's rows and hours (`OLD_BUS_ROWS`): each
+/// following the game's, in a game of other rows or hours, takes three rows and the default hours as its own.
+fn pin_old_buses(net: &mut Network, n_lines: usize) {
+    for i in 0..n_lines {
+        if (net.line_bus[i].is_none() && net.line_ferry[i].is_none()) || net.line_rows[i] != 0 { continue; }
+        net.line_rows[i] = ROWS_MIN as u8;
+        net.line_x[i].hours = CUTS_DEFAULT;
+    }
 }
 
 /// A line saved in manual mode (T-3023) whose stops and path read the same both ways, `[A, B, C, B, A]`,
@@ -1515,7 +1540,7 @@ mod tests {
         for tag in &written {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
-        assert_eq!((LEVEL, BLOCKS.len()), (28, 33), "a new block raises LEVEL: raise it, then update this pin");
+        assert_eq!((LEVEL, BLOCKS.len()), (29, 33), "a new block raises LEVEL: raise it, then update this pin");
     }
 
     /// T-2217: buildings come back as they were, in their order; a network without them encodes as

@@ -747,13 +747,24 @@ export function stepRowHeadway(id: LineId, row: number, dir: number): boolean {
   setRowHeadway(id, row, to);
   return true;
 }
+/** Every row's headway at once, any number of rows (`setHeadways`), as one edit (T-3767: a default's). */
+export function setRowHeadways(id: LineId, secs: readonly number[]) {
+  if (!world.value?.lineStats[id]?.rows) return setHeadways(id, [secs[0], secs[1], secs[2]]);
+  queueRowHeadway(id, [...secs]);
+}
+/** The headways per row a line's trains give now (`headwaysOfTrains`, any number of rows). */
+export function rowHeadwaysOfTrains(id: LineId): number[] | null {
+  const st = world.value?.lineStats[id];
+  if (!st?.rows) return headwaysOfTrains(id);
+  const n = rowTrainsShown(id) ?? st.rows.trains;
+  return n.map((k, i) => headwayOfTrains(st, st.rows!.roundTrip[i], k));
+}
 /** Switch a line between counts and a headway (`setAutoTrains`), any number of rows. */
 export function setRowAuto(id: LineId, on: boolean) {
   const st = world.value?.lineStats[id];
   if (!st?.rows) return setAutoTrains(id, on);
   if (!on) return queueRowHeadway(id, null);
-  const n = rowTrainsShown(id) ?? st.rows.trains;
-  queueRowHeadway(id, n.map((k, i) => headwayOfTrains(st, st.rows!.roundTrip[i], k)));
+  queueRowHeadway(id, rowHeadwaysOfTrains(id)!);
 }
 
 /** A line's weekends per row as they show (`WeekendShown` for any number of rows). */

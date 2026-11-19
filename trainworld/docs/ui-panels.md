@@ -1390,7 +1390,7 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   line's bullet and name, "schedule" in grey, then the mode choice, drawn only once Detailed and
   Exact are built (stages 3 and 6; Simple alone shows no choice). A player who never opens it sees nothing else new.
 - **Left**: the line panel's schedule table, its steppers, dots and hovers, under a "Set by" Trains / Headway
-  switch; an edit here is the line panel's edit. **Periods** (T-3542, a rail line's window only): under Set by,
+  switch; an edit here is the line panel's edit. **Periods** (T-3542; a bus or ferry line's window too, T-3767): under Set by,
   "Periods" 3 / 4 / 5 sets every line's rows for the whole game (lines with their own setting aside); "Set for this
   line" under it gives the line its own (at the rows it has), shown as a "This line" 3 / 4 / 5 under the game's and a
   "Same as game" button in the same place. Three rows are High, Medium, Low under "Demand" (as before); four are
@@ -1413,10 +1413,10 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   set by hand" once a weekend count is stepped, and "Apply to all lines", which asks "Set weekends to 70% of weekdays on every line, and on new lines too?" first (new lines start on that percent, `SaveHeader.newWeekendShare`, T-3588). The level in force is bold in today's section only; each section's dots are its
   own kind of day's (today's, else a weekday's or a Saturday's). A stepper's hover counts the fleet over both
   kinds of day. Under the table, **Headways for new regular, tram, high-speed, bus or ferry lines** (the heading names the selected line's kind): the headways every new line of that kind starts with, "Default not set" until the player sets one (a new game has none, so a first rail line runs on train counts; without a default a rail line starts on counts, which give no fixed headway to show; a bus or ferry line shows its tool's headways until one is set, 8, 15 and 30 min for a bus, 20, 30 and 60 for a boat, `NEW_LINE`), a "Set as default" button that makes this line's headways the default for its kind (a line on counts is switched to Headway first at the headways its trains give, so it runs the same service; off while they already are) and "Use default", which gives the line its kind's default (off while there is none or the line already runs it). The row uses the table's 12 px text
-  (T-3542: the defaults are three headways; a line of four or five rows gives its rush or morning, evening and night, and Use default runs midday and afternoon at the first) (T-3543, T-3588, T-3703; saved with the game, `SaveHeader.newHeadway` {rail, tram, fast, bus, ferry}; the clock worker applies them to each new rail line after it is
+  (T-3767: the list has one headway per row of the selected line; a default set from a line of three rows is high, medium and low, and read at four or five rows runs high's in the morning, at midday and in the afternoon; one set from a line of four or five rows keeps a headway per period, and a line of fewer rows reads each row as the shortest of its periods'; a new line takes one for each of the game's rows) (T-3543, T-3588, T-3703; saved with the game, `SaveHeader.newHeadway` {rail, tram, fast, bus, ferry}; the clock worker applies them to each new rail line after it is
   made, as a second edit, a line that cannot pay for the trains they ask staying on its counts, and makes a new bus or ferry line at them; a new bus or ferry line takes the weekend percent for new lines as a rail line does). Then the departures board.
-- **A bus or ferry line's** (T-3703): the left side alone, in buses or boats, in a panel 360 px wide: the table with
-  its Weekdays and Weekends sections and the default headways, with no track limits and no departures board or
+- **A bus or ferry line's** (T-3703): the left side alone, in buses or boats, in a panel 360 px wide: the periods,
+  the table with its Weekdays and Weekends sections and its hours, and the default headways, with no track limits and no departures board or
   timetable (the sim keeps no trip timetable for bus and ferry lines).
 - **Right**: the timetable over the chart.
 - **Departures**: headed "Departures" with a station picker (the line's stops in order, each station once, the first stop to start), then

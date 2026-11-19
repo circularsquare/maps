@@ -2,11 +2,13 @@
 // high speed, bus, ferry; T-3703), set from the timetables window. Saved with the game (the header's `newHeadway`,
 // kept by the clock worker, outside the undo history). A new game has none: a new rail line starts on train counts
 // until the player sets a default for its kind, and a new bus or ferry line on its tool's headways (`NEW_LINE`).
+// T-3767: a default set from a line of four or five rows keeps one headway per period; each line reads it at its own
+// rows (`headwaysFor`).
 
 import { signal } from "@preact/signals";
 import type { NewHeadways, Headways } from "../workers/saveFile";
-import { headwaysFor } from "./newLine";
-import { world, headwayShown, headwaysOfTrains, setHeadways, setRowAuto } from "./world";
+import { headwaysFor, headwaysOfRows } from "./newLine";
+import { world, rowCount, rowHeadwayShown, rowHeadwaysOfTrains, setRowAuto, setRowHeadways } from "./world";
 
 export type { Headways, NewHeadways };
 export { headwaysFor };
@@ -34,16 +36,15 @@ export function lineKind(id: string): LineKind | null {
  * Headway first, at the headways its trains give, so it runs the same service; false when it has none
  * to give. */
 export function makeDefaultHeadway(id: string): boolean {
-  const kind = lineKind(id);
+  const kind = lineKind(id), n = rowCount(world.value?.lineStats[id]);
   if (!kind) return false;
-  let h = headwayShown(id);
+  let h = rowHeadwayShown(id);
   if (!h) {
-    h = headwaysOfTrains(id);
+    h = rowHeadwaysOfTrains(id);
     if (!h) return false;
-    // T-3542: a line of four or five rows switches each of its rows (setRowAuto)
     setRowAuto(id, true);
   }
-  newHeadway.value = { ...newHeadway.value, [kind]: h };
+  newHeadway.value = { ...newHeadway.value, [kind]: headwaysOfRows(h, n) };
   sink?.(newHeadway.value);
   return true;
 }
@@ -51,8 +52,8 @@ export function makeDefaultHeadway(id: string): boolean {
 /** Give line `id` the default headways of its kind, as the edit a player's own headway change is; false
  * when its kind has no default. */
 export function applyDefaultHeadway(id: string): boolean {
-  const kind = lineKind(id), h = kind && headwaysFor(kind, newHeadway.value);
+  const kind = lineKind(id), h = kind && headwaysFor(kind, newHeadway.value, rowCount(world.value?.lineStats[id]));
   if (!h) return false;
-  setHeadways(id, h);
+  setRowHeadways(id, h);
   return true;
 }

@@ -751,8 +751,7 @@ impl TrackApi {
     pub fn game_periods(&self) -> u32 {
         self.w.net.rows_default as u32
     }
-    /// T-3542: the rows line `id` sets its trains in (3, 4 or 5; a bus or ferry line's three), 0 for
-    /// no line.
+    /// T-3542: the rows line `id` sets its trains in (3, 4 or 5), 0 for no line.
     pub fn line_period_count(&self, id: u32) -> u32 {
         if self.w.net.line_ok(id) { self.w.net.rows(id as usize) as u32 } else { 0 }
     }
@@ -770,12 +769,11 @@ impl TrackApi {
         if !(ROWS_MIN..=ROWS_MAX).contains(&(rows as usize)) { return self.refuse(Issue::LineSchedule { line: u32::MAX }) }
         match self.w.rows_ops(None, rows as u8) { Some(op) => self.run(op), None => 0 }
     }
-    /// T-3542: set line `id`'s own rows (3 to 5; 0 to follow the game's) as `set_game_periods`. A bus
-    /// or ferry line keeps three.
+    /// T-3542: set line `id`'s own rows (3 to 5; 0 to follow the game's) as `set_game_periods`.
     pub fn set_line_periods(&mut self, id: u32, rows: u32) -> u32 {
         let net = &self.w.net;
         if !net.line_ok(id) || net.is_twin(id) { return self.refuse(Issue::NoSuchLine { line: id }) }
-        if net.is_bus(id) || net.is_ferry(id) || (rows != 0 && !(ROWS_MIN..=ROWS_MAX).contains(&(rows as usize))) { return self.refuse(Issue::LineSchedule { line: id }) }
+        if rows != 0 && !(ROWS_MIN..=ROWS_MAX).contains(&(rows as usize)) { return self.refuse(Issue::LineSchedule { line: id }) }
         match self.w.rows_ops(Some(id), rows as u8) { Some(op) => self.run(op), None => 0 }
     }
     /// T-3542: line `id`'s whole trains per row in the day's order (`line_period_count` of them; rush or
@@ -873,14 +871,13 @@ impl TrackApi {
             _ => self.refuse(Issue::LineSchedule { line: u32::MAX }),
         }
     }
-    /// T-3542: set line `id`'s own hours as `set_game_hours` (empty: the game's). A bus or ferry
-    /// line keeps the default hours.
+    /// T-3542: set line `id`'s own hours as `set_game_hours` (empty: the game's).
     pub fn set_line_hours(&mut self, id: u32, cuts: Vec<u32>) -> u32 {
         let net = &self.w.net;
         if !net.line_ok(id) || net.is_twin(id) { return self.refuse(Issue::NoSuchLine { line: id }) }
         let c = if cuts.is_empty() { Some([0; 5]) } else { cuts_of(&cuts).filter(|&c| cuts_ok(c)) };
         match c {
-            Some(c) if !net.is_bus(id) && !net.is_ferry(id) => if c == net.line_x[id as usize].hours { 0 } else { self.run(Op::Hours { line: Some(id), cuts: c }) },
+            Some(c) => if c == net.line_x[id as usize].hours { 0 } else { self.run(Op::Hours { line: Some(id), cuts: c }) },
             _ => self.refuse(Issue::LineSchedule { line: id }),
         }
     }

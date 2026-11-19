@@ -744,7 +744,7 @@ impl TrackApi {
     pub fn load(&mut self, bytes: &[u8]) -> bool {
         let level = std::mem::replace(&mut self.load_level, save::LEVEL);
         let (bytes, eras) = split_eras(bytes);
-        match save::decode(bytes) {
+        match save::decode_at(bytes, level) {
             Ok(mut net) => {
                 // saves made from a real network before T-1442 carry its untidy names
                 super::names::tidy_network(&mut net);

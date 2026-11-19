@@ -268,7 +268,7 @@ impl TrackWorld {
             let game = if line.is_none() { rows } else { net.rows_default };
             (if own == 0 { game } else { own } as usize).clamp(ROWS_MIN, ROWS_MAX)
         };
-        let lines: Vec<u32> = (0..net.line_count() as u32).filter(|&l| net.line_ok(l) && !net.is_twin(l) && !net.is_bus(l) && !net.is_ferry(l) && match line {
+        let lines: Vec<u32> = (0..net.line_count() as u32).filter(|&l| net.line_ok(l) && !net.is_twin(l) && match line {
             None => net.line_rows[l as usize] == 0,
             Some(id) => l == id,
         }).collect();

@@ -25,7 +25,7 @@ import { pendingLabel } from "../../game/lineFigures";
 import { headwaysFor, lineKind, makeDefaultHeadway, newHeadway, applyDefaultHeadway } from "../../game/newHeadway";
 import { liveMoney, moneyState, type MoneyState } from "../../game/money";
 import { demandView, lineFiguresIn } from "../../game/demand";
-import { AUTO_SLACK, autoTrainsFor, headwayFromMinutes, headwayShown, nextHeadway, pairRows, refusedForCash, restHeadwayStep, restRowTphShown, rowCount, rowHeadwayShown, rowTrainsShown, rowWeekendShown, knock, setHours, setRowAuto, setRowCount, setRowHeadway, setRowWeekendCount, setRowWeekendShare, setWeekendShareAll, stepRowCount, stepRowHeadway, stepRowWeekendCount, stepRowWeekendHeadway, trainCap, typeRowWeekendHeadway, world, MAX_TYPED_VEHICLES, WEEKEND_SHARE_STEP } from "../../game/world";
+import { AUTO_SLACK, autoTrainsFor, headwayFromMinutes, nextHeadway, pairRows, refusedForCash, restHeadwayStep, restRowTphShown, rowCount, rowHeadwayShown, rowTrainsShown, rowWeekendShown, knock, setHours, setRowAuto, setRowCount, setRowHeadway, setRowWeekendCount, setRowWeekendShare, setWeekendShareAll, stepRowCount, stepRowHeadway, stepRowWeekendCount, stepRowWeekendHeadway, trainCap, typeRowWeekendHeadway, world, MAX_TYPED_VEHICLES, WEEKEND_SHARE_STEP } from "../../game/world";
 import { Row, Segmented, shakeEl, Stepper } from "../widgets";
 import { demandPending, Spinner } from "../Spinner";
 
@@ -373,19 +373,18 @@ export function Schedule({ l, st, limits = NO_LIMITS, crowd = null, canAuto = tr
         })}
         {weekends && <DaySections l={l} st={st} now={now} limits={limits} crowd={crowd} auto={auto} flip={flip} hours={hours} />}
       </table>
-      {weekends && <DefaultHeadways id={l.id} auto={headwayShown(l.id)} />}
+      {weekends && <DefaultHeadways id={l.id} n={f.n} auto={rowHeadwayShown(l.id)} />}
     </>
   );
 }
 
 /** T-3543, T-3588: the headways every new line of this line's kind starts with, in the schedule panel: what they
  * are now, the button that makes this line's the default for the kind, and the way back. A bus or ferry line's
- * (T-3703) are its tool's until one is set. T-3542: three headways (high, medium, low); a line of four or five
- * rows gives its rush or morning, evening and night, and takes midday and afternoon from the first. */
-function DefaultHeadways({ id, auto }: { id: string; auto: [number, number, number] | null }) {
+ * (T-3703) are its tool's until one is set. T-3767: one headway per row of the line's `n` (`headwaysFor`). */
+function DefaultHeadways({ id, n, auto }: { id: string; n: number; auto: readonly number[] | null }) {
   const kind = lineKind(id);
   if (!kind) return null;
-  const now = headwaysFor(kind, newHeadway.value);
+  const now = headwaysFor(kind, newHeadway.value, n);
   const same = !!auto && !!now && auto.every((s, i) => s === now[i]);
   return (
     <div class="sched-default">

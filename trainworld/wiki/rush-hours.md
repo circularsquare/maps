@@ -10,7 +10,7 @@ A day is cut into five periods, each solved on its own.
 | Evening | {{sim/src/track/params.rs:PERIOD_HOURS[3][0]|0}} to {{sim/src/track/params.rs:PERIOD_HOURS[3][1]|0}} | medium |
 | Night | {{sim/src/track/params.rs:PERIOD_HOURS[4][0]|0}} to {{sim/src/track/params.rs:PERIOD_HOURS[4][1]|0}} | low |
 
-Your high, medium and low train settings run in those hours. In a line's schedule window you can split them into four or five periods and move their hours, two hours at least; the periods above stay put, so a setting that reaches into another period is averaged into it.
+Your high, medium and low train settings run in those hours. In a line's schedule window you can split them into four or five periods and move their hours, two hours at least, on bus and ferry lines too; the periods above stay put, so a setting that reaches into another period is averaged into it.
 
 Commutes bunch up. {{sim/src/demand/api.rs:TO_WORK[0]*100|0}}% of the day's trips to work start in the morning peak, and {{sim/src/demand/api.rs:TO_HOME[2]*100|0}}% of the trips home in the evening peak. Errands and visits spread more evenly through the day.
 

@@ -233,13 +233,14 @@ function LineBody({ l, st }: { l: LineInput; st: LineStats }) {
   );
 }
 
-/** T-3703: a bus or ferry line's: the left side alone, with no track limits (no track) and no board (no timetable). */
+/** T-3703: a bus or ferry line's: the left side alone, with no track limits (no track) and no board (no timetable).
+ * T-3767: its periods and hours as a rail line's. */
 function BusBody({ l, st }: { l: LineInput; st: LineStats }) {
   const { periods } = useLinePeriods(l.id, l);
   return (
     <div class="sp-body">
       <div class="sp-left">
-        <Schedule l={l} st={st} period={periodAt(lineSeconds(st))} crowd={periods} label={t("schedulePanel.setBy")} weekends />
+        <Schedule l={l} st={st} period={periodAt(lineSeconds(st))} crowd={periods} label={t("schedulePanel.setBy")} weekends hours above={<Periods l={l} st={st} />} />
       </div>
     </div>
   );

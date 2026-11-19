@@ -61,10 +61,12 @@ impl TrackApi {
         if let Err(i) = ferry::check(&self.w.net, id, ports, &r) {
             return self.refuse(i);
         }
-        let data = LineData {
+        let mut data = LineData {
             name, symbol: String::new(), colour, stops: ports.to_vec(), path: vec![], tph: [0.0; 3], trains: Some([0; 3]), auto: Some([high, medium, low]),
             dwell_s, turnaround_s, cars: 1, fast: false, bus: None, ferry: Some(r), group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: true, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![], rows: 0, x: Default::default(), fare_dist: false,
         };
+        // T-3767: as a bus line's (`set_bus_line`)
+        data.x = crate::track::net::Extra::of_high(&data);
         self.run(Op::Line { id, data: Some(data) })
     }
     /// Draw a ferry line's route again, with its ports, keeping everything else. The route is free;

@@ -14,7 +14,7 @@ import { CITIES, cityById, cityWithin, HOME_CITY, NEW_GAME_FRAME, WORLD_ID, zone
 import { blockFile, blocksTouching, indexHas, parseBlockIndex, type BlockIndex } from "../game/terrainBlocks";
 import { frameKindName, frameKindNumber, M_PER_DEG, makeFrame, mercK, type Frame, type FrameSpec } from "../game/frame";
 import { PERIODS } from "../game/periods";
-import { headwaysFor, NEW_LINE } from "../game/newLine";
+import { headwaysFor, headwaysIn, NEW_LINE } from "../game/newLine";
 import { LOAN_AMOUNTS, loanAllowed, loanBalance, loanDrain, loanFromSave, loanProfit, loanToSave, newLoan, type Loan } from "../game/loan";
 import { startNodes } from "../game/fareDefault";
 import { areaOfCode, zonesOf } from "../game/fareZones";
@@ -3315,13 +3315,29 @@ function addPorts(a: TrackApi, ports: FerryPortIn[]): Uint32Array | null {
   return Uint32Array.from(out);
 }
 
-/** T-3588, T-3703: a new bus or ferry line (`r` its edit's answer) at the weekend percent "Apply to all lines" set for
- * new lines, as a second edit, as a rail line's; both edits' charges. */
-function newLineWeekends(a: TrackApi, r: number, line: number): { r: number; line: number; charge?: number; trainCharge?: number } {
-  if (r !== 0 || newLineWeekendShare === null || newLineWeekendShare === 100) return { r, line };
+/** A new line's edits' answer: the first's, and where more than one edit made it, every edit's charges. */
+type Made = { r: number; line: number; charge?: number; trainCharge?: number };
+
+/** T-3767: a new line (`r` its edit's answer) in a game of four or five rows with a default of its kind
+ * (`kind`) whose midday or afternoon differs from its high (the sim starts them at high's): every row's
+ * headway, as a second edit. */
+function newLineRows(a: TrackApi, r: number, line: number, kind: keyof NewHeadways): Made {
+  if (r !== 0) return { r, line };
+  const n = a.line_period_count(line), h = n > 3 ? headwaysFor(kind, newLineHeadway, n) : null;
+  const three = headwaysFor(kind, newLineHeadway);
+  if (!h || !three || headwaysIn(three, n).every((s, i) => s === h[i])) return { r, line };
   const charge = a.last_charge(), trainCharge = a.last_train_charge();
-  if (a.set_line_weekend_share(line, newLineWeekendShare) !== 0) return { r, line, charge, trainCharge };
+  if (a.set_line_row_headways(line, Uint32Array.from(h)) !== 0) return { r, line, charge, trainCharge };
   return { r, line, charge: charge + a.last_charge(), trainCharge: trainCharge + a.last_train_charge() };
+}
+
+/** T-3588, T-3703: a new bus or ferry line at the weekend percent "Apply to all lines" set for new lines, as one
+ * more edit, as a rail line's; every edit's charges. */
+function newLineWeekends(a: TrackApi, made: Made): Made {
+  if (made.r !== 0 || newLineWeekendShare === null || newLineWeekendShare === 100) return made;
+  const charge = made.charge ?? a.last_charge(), trainCharge = made.trainCharge ?? a.last_train_charge();
+  if (a.set_line_weekend_share(made.line, newLineWeekendShare) !== 0) return { ...made, charge, trainCharge };
+  return { ...made, charge: charge + a.last_charge(), trainCharge: trainCharge + a.last_train_charge() };
 }
 
 /** T-1475: a new bus line's name, "Bus n" with n the sim's next free line number (T-2194: "Ferry n"). */
@@ -3605,7 +3621,7 @@ function applyInner(op: EditOp): Applied {
       const id = a.new_line_id();
       const { dwellS, turnaroundS } = NEW_LINE.bus;
       const [h, m, l] = headwaysFor("bus", newLineHeadway)!;
-      return newLineWeekends(a, a.set_bus_line(id, Float64Array.from(op.route), h, m, l, dwellS, turnaroundS, colourInt(op.colour), op.name || nextBusName(a)), id);
+      return newLineWeekends(a, newLineRows(a, a.set_bus_line(id, Float64Array.from(op.route), h, m, l, dwellS, turnaroundS, colourInt(op.colour), op.name || nextBusName(a)), id, "bus"));
     }
     case "busRoute":
       return { r: a.set_bus_route(op.line, Float64Array.from(op.route)) };
@@ -3621,7 +3637,7 @@ function applyInner(op: EditOp): Applied {
       const id = a.new_line_id();
       const { dwellS, turnaroundS } = NEW_LINE.ferry;
       const [h, m, l] = headwaysFor("ferry", newLineHeadway)!;
-      return newLineWeekends(a, a.set_ferry_line(id, ports, Float64Array.from(op.route), h, m, l, dwellS, turnaroundS, colourInt(op.colour), op.name || nextBusName(a, "Ferry ")), id); // i18n-ignore: a line's saved name
+      return newLineWeekends(a, newLineRows(a, a.set_ferry_line(id, ports, Float64Array.from(op.route), h, m, l, dwellS, turnaroundS, colourInt(op.colour), op.name || nextBusName(a, "Ferry ")), id, "ferry")); // i18n-ignore: a line's saved name
     }
     case "ferryRoute": {
       const ports = addPorts(a, op.ports);
@@ -3644,8 +3660,9 @@ function applyInner(op: EditOp): Applied {
         trainCharge += a.last_train_charge();
       }
       // T-3543, T-3588: the headways the player made the default for this kind of line; a refused edit (cash) leaves it on its counts
-      const wanted = newLineHeadway[tram ? "tram" : fast ? "fast" : "rail"];
-      if (wanted && a.set_auto_headway(id, ...wanted) === 0) {
+      // T-3767: one for each of the line's rows
+      const rows = a.line_period_count(id), wanted = headwaysFor(tram ? "tram" : fast ? "fast" : "rail", newLineHeadway, rows);
+      if (wanted && (rows === 3 ? a.set_auto_headway(id, wanted[0], wanted[1], wanted[2]) : a.set_line_row_headways(id, Uint32Array.from(wanted))) === 0) {
         charge += a.last_charge();
         trainCharge += a.last_train_charge();
       }

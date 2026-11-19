@@ -229,3 +229,18 @@ fn riders_wait_at_ports() {
     assert_eq!(a.w.svc.lines[l as usize].crush(), 480.0);
     assert_eq!(a.w.svc.lines[l as usize].rated(), 320.0);
 }
+
+/// T-3767: a ferry line sets five rows as a rail line does; a midday edit moves the midday's rate at once.
+#[test]
+fn a_ferry_line_runs_five_periods() {
+    let mut a = api();
+    let (p, q) = (port(&mut a, 0.0, "Whitehall"), port(&mut a, 8000.0, "St George"));
+    let l = ferry_line(&mut a, &[p, q], &straight(&[0.0, 8000.0], &[0, 1], 25.0));
+    assert_eq!(a.construct_line(l), 0, "{}", a.issues());
+    assert_eq!(a.set_game_periods(5), 0, "{}", a.issues());
+    assert_eq!(a.line_period_count(l), 5);
+    assert_eq!(a.line_row_headways(l), vec![900, 900, 900, 1200, 1800]);
+    assert_eq!(a.set_line_row_headways(l, vec![900, 3600, 900, 1200, 1800]), 0, "{}", a.issues());
+    let r = a.w.net.line_tph[l as usize];
+    assert!((r[1] - 1.0).abs() < 0.01 && (r[0] - 4.0).abs() < 0.01 && (r[2] - 4.0).abs() < 0.01, "{r:?}");
+}

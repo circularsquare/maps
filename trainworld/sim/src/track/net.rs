@@ -967,13 +967,10 @@ impl Network {
         }
         moved
     }
-    /// T-3542: the hours line `l` splits its day at: its own, else the game's. A bus or ferry line
-    /// keeps the default hours; a quad twin its line's.
+    /// T-3542: the hours line `l` splits its day at: its own, else the game's (bus and ferry lines
+    /// too, T-3767); a quad twin its line's.
     pub fn hours(&self, l: usize) -> Cuts {
         let l = match self.line_twin.get(l) { Some(super::twin::Twin::Of(p)) => *p as usize, _ => l };
-        if self.line_bus.get(l).is_some_and(|b| b.is_some()) || self.line_ferry.get(l).is_some_and(|f| f.is_some()) {
-            return CUTS_DEFAULT;
-        }
         // a line's own hours go with its own periods (a line following the game's periods follows its hours)
         if self.line_rows.get(l).copied().unwrap_or(0) == 0 {
             return self.hours_default;
@@ -1033,12 +1030,9 @@ impl Network {
         }
     }
     /// T-3542: the rows line `l` sets its trains in (3, 4 or 5): its own, else the game's
-    /// (`rows_default`). A bus or ferry line always sets three; a quad twin its line's.
+    /// (`rows_default`), bus and ferry lines too (T-3767); a quad twin its line's.
     pub fn rows(&self, l: usize) -> usize {
         let l = match self.line_twin.get(l) { Some(super::twin::Twin::Of(p)) => *p as usize, _ => l };
-        if self.line_bus.get(l).is_some_and(|b| b.is_some()) || self.line_ferry.get(l).is_some_and(|f| f.is_some()) {
-            return ROWS_MIN;
-        }
         (match self.line_rows.get(l).copied().unwrap_or(0) { 0 => self.rows_default, r => r } as usize).clamp(ROWS_MIN, ROWS_MAX)
     }
     /// The place (`params::places`) whose value line `l` runs in slot `s`; where its hours put more
