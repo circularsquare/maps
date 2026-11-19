@@ -11,18 +11,27 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    13:14 UTC 11-19 (shonei-server c19200d, save levels 23-26, pushed). 8800 = 5e5f6e30; master since adds T-3382
    (d4195ede, game side). maps-6b handed over ~14:25 UTC at 500k.
 1. Agents running (maps-6b's; reports reach you through the inbox; follow-ups go to fresh agents on their trees):
-   - savesize (Opus, T-3757 P1, tree savesize, 6154): players' "estimated memory usage" readout shows 6-14 GB on
-     some machines, far above ours ("a general pattern"); she saw 6 GB RAM loading a 14 GB-readout save. Checker.
+   - T-3757 landed 305b446c (c022, c023; checker passed 1-4, undo/redo of a build's money inconclusive).
+     linehist (Sonnet, T-3771, tree, 6181): per-line history 30 days, network for ever; also answers whether undo
+     refunds on master.
    - zonerule (Opus, T-3758, tree zonerule, 6155): zones counted lowest-to-highest the route touches; per-line
      zone/distance mode kept on copy; may take a save level. Checker. Lands AFTER Z2; fix the wiki rule line then.
-   - From her pad 15:00: settingslayout (Opus, T-3768, tree, 6172: one spacing rule for settings, a check that
-     fails on touching controls) and realjapan (Sonnet, T-3769, tree, 6173: realauto starts for Nagoya, Fukuoka,
+   - From her pad 15:00: settingslayout (Opus, T-3768, tree, 6172): done (settings flex column 8 px gap, new
+     t3768-panel-gaps check); resumed for 3 phone Finances overflows and an edge/clip test, then land and realjapan (Sonnet, T-3769, tree, 6173: realauto starts for Nagoya, Fukuoka,
      Sapporo, Hiroshima and more; writes only new cities under data/packs/real).
+   - realjapan resumed on T-3777 (tree nagoyafix, 6173): Tokaido Main Line reversals in Nagoya. T-3778 (fare zone
+     hovers) after zonerule lands; drafts went to her 11-19.
    - busverify: bus and ferry fleet/headway edits recalculate on master (28 clean steps). Its train control read a
      4.14 min departure gap at every count (it calls its read invalid for trains): a short probe someday.
-   - 8800 = e764f8a9 since ~15:10.
+   - 8800 = ec9841de since ~15:40 (Z2, Japan starts, T-3770).
    - namebind T-3759 landed 9fa4bf6e (checker 5/5 pass; c019); T-956 Safari 1c1b3d21 (c018); T-3765 1e793d04 (c017).
-   - ttport (Opus, T-3346 stage 2, 6159): compares tree tt2 with T-3542 first; may stop and recommend closing.
+   - ttport (T-3346 stage 2, r-e302ee5c): ported in tree ttport (locals wait for the express; 30/10 floored to
+     master's waits; NYC to the bit; no level). Checker ttportchk (6175/6176) running. Same schedule code as
+     periods5: land whichever is first, the other rebases. Remove tt2 after ttport lands. Follow-up: round trips
+     on actual waits (design note first, 4-6 h).
+   - savelost (Opus, T-3772 P1, no tree, 6177): lost/damaged saves in 2 weeks, causes, fixes (may file T-3773-3776);
+     no ssh: it lists server read commands for her yes.
+   - realjapan T-3769 landed aa41f74e (c020): 4 new packs in data/packs/real need the next data upload.
    - focusload (Opus, T-3686, tree focusload, 6160): focused city slow on big saves; measure, cut save-size steps.
    - commentab (T-3726): setup done (r-c119e957; <S> = maps-6b's scratchpad\commentab, scoring.md there). Arms run
      one pair at a time so both sides share the same load; all Sonnet. Pair 2 (T-3603) ran 14:24 UTC (maps-6f):
@@ -32,13 +41,13 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
      hold 36 GB; remove each ab tree once scored.
    - maps-6f's: namechk (checker on tree namebind, 6166; both of her changes made, r-d4dfa211); busverify (6167,
      master: do bus/ferry fleet edits recalculate? all reports were v0.4.1, T-3704 fixed it in v0.4.2);
-     periods5 (Opus, T-3767 P1, tree periods5, 6169: new lines' auto headways for every period, buses and ferries
-     get 3/4/5 periods; same schedule code as ttport). zonerule (T-3758, r-8206de31) checker PASSED (quad twin
+     periods5 (T-3767): done in tree (save level bump, no block; OLD_BUS_ROWS = level before; c015 reworded);
+     checker periods5chk (6178/6179) running. zonerule (T-3758, r-8206de31) checker PASSED (quad twin
      unchecked; after export/reload a ferry's figure moved 3286 -> 3207, likely load vs live solve, unchased):
      lands right after Z2, LFD1 renumbered to level 28. fbversion (Sonnet, T-3770, main tree tools only).
-   - zonelook (Opus, T-3740 Z2, tree zonefares2, 6162; maps-6f's): zonechk2 passed (r-c5657fdf); now her look
-     (vector Voronoi B, zone numbers while painting) plus save/reload and station delete/move cases. Then land Z2,
-     then zonerule.
+   - Z2 landed ec9841de (c021; her look: vector cells, numbers on every painted station; numbers crowd at zoom 10,
+     her Check). zonerebase (Opus, 6180) rebasing tree zonerule onto master as level 28 (LFD1 after LSN1); land
+     it after, then periods5 as 29. Smoke on master after that batch.
    - T-956 Safari bubbles landed 11-19 (blank overlay canvases hidden); not reproducible here, real Safari check
      at publish.
 2. Save levels: master 27 (LSN1, namebind landed 9fa4bf6e). zonerule's LFD1 becomes 28 at landing; periods5 and
