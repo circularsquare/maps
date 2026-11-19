@@ -104,7 +104,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Goal: A cold run is near 3 min.
   - Other: See notes/T-1992.md.
 - T-3757 [P1] {L:memory} Saves of 6-14 GB crash players' games (taking, 2026-11-19, agent savesize)
-  - Context: You, 2026-11-19: "people are having issues with their saves getting too big and crashing. on their computers they're reporting big saves that say like 6GB or even like 14GB used ... i tried loading someones 14GB save and it was using 6GB of ram on my system."
+  - Context: You, 2026-11-19: "people are having issues with their saves getting too big and crashing. on their computers they're reporting big saves that say like 6GB or even like 14GB used ... i tried loading someones 14GB save and it was using 6GB of ram on my system." Then: the number is the game's estimated memory usage readout, and "its a general pattern that sometimes people are reporting way higher "estimated memory usage" than on our end."
   - Goal: The cause named and fixed so saves stay their normal size, with existing huge saves loading.
 - T-3758 [P1] {L:fares} Fare zones count the zones a trip passes, and lines choose zone or distance (taking, 2026-11-19, agent zonerule)
   - Context: You, 2026-11-19: "if a trip from zone 2 to 2 counts as 1 that does feel pretty weird to me"; "lets also maybe allow setting specific lines to use distance-based or zone-based. so that like you can exempt metro lines from zones and only include what you consider as commuter or whatever. copying lines should do the same thing."
@@ -121,8 +121,14 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-3620: ase (La Gonave, Haiti) is parked at top_zone_jobs_share 0.43 (one zone holds too many of its jobs).
   - Goal: Merged into a neighbouring Haitian zone and shipped, or left out with the reason in DECISIONS.md.
   - Other: notes/T-3620.md
-- T-1738 [P3] {L:new-countries} Myanmar, Laos and Timor-Leste
-  - Context: Eight countries shipped 2026-10-28 to 11-03 (516 rows). Myanmar has thin OSM; Laos and Timor-Leste have no plan rows or unit source yet.
+- T-1738 [P2] {L:new-countries} Myanmar, Laos and Timor-Leste
+  - Context: Eight countries shipped 2026-10-28 to 11-03 (516 rows). Myanmar has thin OSM; Laos and Timor-Leste have no plan rows or unit source yet. You, 2026-11-19: players asked for Laos and Myanmar; they're next after Guyana, Suriname and French Guiana.
+- T-3763 [P2] {L:new-countries} Iraq and Iran
+  - Context: You, 2026-11-19: players asked for Iraq and Iran; next with Laos and Myanmar.
+  - Goal: Iraq and Iran built, shipped and joined per docs/adding-a-country.md.
+- T-3764 [P3] {L:new-countries} Fill the gaps, Pakistan, Bangladesh and Central Asia
+  - Context: You, 2026-11-19: "after that i guess we fill in the gaps (pakistan/bangladesh, central asia, etc)". After T-1738 and T-3763.
+  - Goal: The countries still missing between built regions listed, then built in batches.
   - Goal: Myanmar, Laos and Timor-Leste are built and shipped.
   - Other: notes/T-1738.md section 5
 - T-1765 [P3] {L:region-redraws} Origins on the densest pixel, far from town
@@ -195,7 +201,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-2136's checker (by reading the code): a request for one place's rows lost in a demand worker restart times out after 20 s and is asked again only with the next result, so that zone's panel can wait that long.
   - Goal: A request lost in a restart is asked again once the worker is back; probed with a forced restart.
   - Other: notes/T-2136.md
-- T-3686 [P2] {L:loading} Focused city takes minutes on a big save
+- T-3686 [P2] {L:loading} Focused city takes minutes on a big save (taking, 2026-11-19, agent focusload)
   - Context: Your old TODO: "loading focused city demand still feels kinda too long... am waiting like >3 min in my big asia save. why does this need to scale with save size at all, anyways?" Nearest: T-3256, T-3373.
   - Goal: The time to a focused city's trips on a big save measured and split by step, and the steps that scale with save size cut or filed.
 - T-3550 [P3] {L:edit-speed} London train-count edits still take 1-4 s
@@ -278,7 +284,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3460 [P3] {L:cleanup} Code written twice
   - Context: From the code tour: the schematic's sheet maths in Rust (diagram.rs) and again in JavaScript (sheetLines.ts, kept as a fallback); the real-rail route finder in the game (realRoute.worker.ts) and copied in the pipeline (realroute.py); car street speeds twice in Rust.
   - Goal: One copy of each, or a written reason to keep both.
-- T-3726 [P3] {L:cleanup} {after:v0.4.2 publish} Are code comments worth keeping, A/B test
+- T-3726 [P3] {L:cleanup} Are code comments worth keeping, A/B test (taking, 2026-11-19, agent commentab)
   - Context: You said yes, after the release (2026-11-18). You, 2026-11-18: "deciding whether or not code comments rae actually helpful ... what procedure do you think we might be able to try to get a rough sense of whether this would be really harmful? ... just a rough measured anecdotal sense." Proposal: replay 2-3 tasks landed today from their parent commits, one tree with comments and one with them stripped by script, same blind brief, scored on the real fix's tests first, then wrong causes, tokens and time; one task run twice per arm to see the noise.
   - Goal: A rough answer: no visible difference, comments help, or comments hurt; any mass strip only when no trees are open.
 - T-2843 [P3] {L:cleanup} State machine B for demand health
@@ -350,9 +356,8 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: You, 2026-11-18: "currently if people share their links to saves, it just shows the generic "train world!" logo banner preview sorta thing. could we have it show the actual image of their map?"
   - Goal: Live since 2026-11-19 on a free Cloudflare Worker; closed after a week of daily request counts stays well under the free plan's 100k a day.
   - Other: notes/T-3738.md
-- T-3729 [P2] {L:steam} {waits:Anita} Steam store page
-  - Need from Anita: Start the Steamworks account and put your screenshot picks (from your Twitter posts) in a folder; then agents make the store images from the landing page's "trains world!" logo.
-  - Context: You, 2026-11-18: a free downloadable version on Steam, no paid DLC, a Ko-fi link if allowed; disclose AI code and translations regardless; "idrc about art style ... a low effort way to get another thing that might have a chance to get algo boosted". Checklist done (research/steam-page.md). Valve bans links in the description since 2024-09; the store page's website link field is allowed. No standalone build yet.
+- T-3729 [P2] {L:steam} {after:her screenshots in artifacts/trainworld/steam/screenshots} Steam store page
+  - Context: 2026-11-19: Steamworks account made, fee paid, tax form in (Valve's checks take up to about 45 days); you're taking screenshots into artifacts/trainworld/steam/screenshots; then agents make the store images from the landing page's "trains world!" logo. You, 2026-11-18: a free downloadable version on Steam, no paid DLC, a Ko-fi link if allowed; disclose AI code and translations regardless; "idrc about art style ... a low effort way to get another thing that might have a chance to get algo boosted". Checklist done (research/steam-page.md). Valve bans links in the description since 2024-09; the store page's website link field is allowed. No standalone build yet.
   - Goal: A live Coming soon page, then the downloadable build at least 2 weeks later.
   - Other: research/steam-page.md
 - T-3695 [P3] {L:map-look} Travel by mode overview
@@ -741,7 +746,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: You asked 2026-11-16 to replace the list: Indonesian first, then Italian, Polish, Arabic (interface mirrors), maybe Malay, Dutch, Thai. It replaces T-2851. Indonesian was added 2026-11-17 (no native read yet; "halte" for bus stops and "Pendapatan tarif" for fare income are open wording calls).
   - Goal: Italian, Polish, Arabic added in order.
   - Other: Non-Latin scripts need a font and place-name check. research/localization.md
-- T-3409 [P3] {L:schematic} Schematic of one city or chosen cities
+- T-3409 [P2] {L:schematic} Schematic of one city or chosen cities
   - Context: Your TODO 2026-11-15 asks whether building far away hurts the local schematic, and wants a schematic of just one city or a set.
   - Goal: Answer your question, and add a way to draw a schematic of chosen cities.
 - T-3413 [P3] {L:community} Save lineage, original author and copies
@@ -781,7 +786,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Each solving worker holds its own copy of the zones (250-550 MB a big city, 1.3 GB all-China); you saw 7.4 GB in Firefox after 43 minutes. You, 2026-11-16: do A (fewer, faster workers capped by memory on big saves) then B (split zones and the market between workers, T-1560, 25-40 h); queue C (one shared memory, threaded WASM, 60-100 h, Cloudflare header) only if it would help noticeably. A landed 2026-11-16 (b3d2ea95): NYC runs 2 workers (-0.5 GB, load about 15 s slower), all-China 1 (-2.9 GB, 30-50 s slower), figures identical.
   - Goal: B built, with memory and solve time measured before and after on NYC and all-China.
   - Other: notes/pr-survey-2026-11-16.md "T-3373 options"; notes/T-3329.md and notes/T-3071.md.
-- T-3382 [P3] {L:twstats} Where people play in twstats
+- T-3382 [P3] {L:twstats} Where people play in twstats (taking, 2026-11-19, agent wherestats)
   - Context: Your 2026-11-13: "we dont have a way of seeing what cities people are actually building in". The server records only each play's start city. About 3-4 h.
   - Goal: twstats shows minutes per city. The 15-minute ring has been live since 2026-11-13 (you: "i think we already did 15-minute live a week").
   - Other: notes/T-3382.md
@@ -805,7 +810,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Ports, industrial estates and airports with no residents stay dark (Tuas and Jurong were fixed by hand 11-13). Half done: units keep outlines with 0.2 km2 of built surface.
   - Goal: A free unit under the floor sharing half its land border with one metro joins it, after a worldwide count.
   - Other: notes/T-3287.md
-- T-3360 [P3] {L:schematic} Schematic settings for buses and ferries
+- T-3360 [P2] {L:schematic} Schematic settings for buses and ferries
   - Context: Your TODO 2026-11-12: schematic settings to show buses and ferries. It follows T-3345's stage 2 (same code) and takes in T-3019. Your pad, 2026-11-17: "want buses and ferries drawn on schematic map eventually, also p3 prob. also want the ability to toggle their visibility, as well as tram and train visibility i guess with buttons on the top. can use icons. when we draw the buses, they can just appear as really thin lines, stops not labelled, and i think we can basically just draw them as the last step, and not have them impact distortion ... i suppose this should be relaxed in cases where people are building bus-only networks but yeah like they should definitely not be a priority. same for ferries, not have much distortion power."
   - Goal: Buses and ferries are drawn last as very thin lines with unlabelled stops, fitted into the layout the rail lines set (little or no pull on it, except on a bus-only network), with icon buttons at the top to show or hide trains, trams, buses and ferries.
 - T-3358 [P2] {L:schematic-rivers} Schematic river continuity
@@ -826,7 +831,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your umbrella for schematic work (2026-11-16). Both fixes you picked from mocks landed 2026-11-12: cities keep their turn on big maps, and bigger city centres.
   - Goal: Open while its parts are: buses and ferries (T-3360), the continent-scale view (T-2724), rivers (T-3358, paused). Nothing lands before you review it.
   - Other: notes/T-3345.md
-- T-3346 [P2] {L:timetables} Timetables, stage 2 onward
+- T-3346 [P2] {L:timetables} Timetables, stage 2 onward (taking, 2026-11-19, agent ttport)
   - Context: Design revised twice after your replies: Simple, Detailed and Exact modes, six stages. Stage 1 landed (ac72df8d) and weekend counts per line landed as T-3521; stage 2 is built in tree tt2 (stale since 11-12, one 30/10 case failing, 4-6 h fix left) and is ported after T-3542's five periods land. Your board note 11-16 (weekday/weekend headways, five day periods, tweakable hours, no per-train detail) is Detailed mode, stages 3-4.
   - Goal: Stage 2 landed, then the rest built in stages (about 44-63 h before Exact).
   - Other: Stage 4 reuses the sim parts of GabrielMoraez's PR 13 (per-line calendar, crowding and running cost per kind of day, fleets sized to the busiest day, tests), credited; the PR itself is not merged (notes/pr-survey-2026-11-16.md). notes/T-3346.md

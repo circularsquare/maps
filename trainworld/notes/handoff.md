@@ -18,8 +18,21 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    - namebind (Opus, T-3759): per-station bound flag, setting for new stations (default on), bind-all; may need a
      save level (renumber at landing; server change then). Port 6156.
    - irlstations (Sonnet, T-3760): real stations as rings above blueprints and track. Port 6157.
-   - hourstext (Sonnet, T-3761): "Each period needs at least 2 hours". Port 6158.
-2. Tonight: T-3762 Guyana, Suriname, French Guiana world run (French Guiana needs planner work: inside France's
+   - T-3761 and T-3760 (rings) LANDED; 8800 rebuild 5e5f6e30 + smoke started ~13:25 UTC.
+   - The "GB" is the estimated memory usage readout, a general pattern (her 13:25); relayed to savesize.
+   - namebind: "ideally just one button for binding": one toggle in the station panel; bind-all folded into the
+     setting's confirm.
+   - ttport (Opus, T-3346 stage 2: compare tt2 with T-3542 first, port only what's left; port 6159) and
+     focusload (Opus, T-3686; port 6160), her picks 13:25.
+   - commentab (Opus, T-3726): sets up the comments A/B (3 tasks, -c/-s trees ab-<n>-*, blind briefs in scratchpad
+     commentab); then I launch the arms (same model both), score per scoring.md, report to her.
+   - 8800 = 5e5f6e30 (T-3760 rings, T-3761, Z1), smoke passed, pushed ~13:40 UTC.
+   - Steam: she is shooting screenshots now into artifacts/trainworld/steam/screenshots; guide research/steam-page.md.
+2. Her country order (11-19): Guyana/Suriname/French Guiana (T-3762), then Laos and Myanmar (T-1738, players
+   asked), Iraq and Iran (T-3763, players asked); then gaps (T-3764: Pakistan, Bangladesh, Central Asia). Up next
+   queue: T-3762, T-1738, T-3763, T-3409 + T-3360 (schematic: chosen cities, buses and ferries; "would feel quite
+   nice for players"). wherestats (Sonnet, T-3382, her pick; game tree + shonei-server commit, deploy her yes).
+   Tonight: T-3762 Guyana, Suriname, French Guiana world run (French Guiana needs planner work: inside France's
    Natural Earth feature). Start it at her bedtime, as T-3620 (agent keeps GATES/JOIN lines; hold app/ landings).
 3. Isolated work offered to her 11-19 (pick or I start): T-3346 stage 2 port (timetables, tree tt2, unblocked),
    T-3060 rebuild preview before spending, T-3686 focused city slow on big saves, T-2268 station placement over
@@ -27,7 +40,6 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 4. Fares later: T-3744 per-stop fare (design for her first); Z3 (rings, new-station zones, bus stops).
 5. T-3738 share previews: watch Workers requests daily for a week, then close. T-3395: close after clean scans.
    T-3354 needs her exact drag. T-3729 Steam: she is making the store page 11-19 (screenshots can change later).
-6. Slip 11-19 05:36: landed app/ two minutes into a world run's gates; check the run's notes for GATES/JOIN first.
 
 ## Her words
 - 11-19: "the schedule periods look really nice!", "fare fixes also look good"; no changelog text acks needed
@@ -56,7 +68,6 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
   publish, deploy and push needs her yes to that action, none overnight; advisor trial (log calls in handoff-log).
 
 ## Waiting on her (asks.py list has the open ones)
-- Discord paste test of a share link (she said she'd test after Cloudflare).
 - She sends the T-3635 player reply herself (draft in notes/T-3635.md).
 
 ## Only a person knows
