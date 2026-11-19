@@ -19,8 +19,40 @@ impl TrackApi {
         self.flyover_fell_back = 0;
         self.join_at = self.route_join.take().unwrap_or([f64::NAN; 4]);
         (self.route_join_out, self.route_pieces) = ([0; 2], vec![]);
-        let r = self.route_op_plain(ends, pis, tracks)?;
+        let beside = self.route_beside;
+        let first = self.route_op_plain(ends, pis, tracks);
+        let viable = |s: &mut Self, r: &Result<(Op, Vec<Pi>, Vec<u32>, Vec<u32>), Issue>| match r {
+            Ok((op, ..)) => s.w.sketch(op.clone(), true).map(|inv| s.w.unsketch(inv)).is_ok(),
+            Err(_) => false,
+        };
+        // T-3713: a route that must turn back on itself to meet a bare end (the player let go on the track
+        // near its end) is tried as a branch 5 m in; the route as drawn stays when that does no better
+        let r = if !self.route_end_bare(ends) || viable(self, &first) {
+            first
+        } else {
+            if let Ok((_, _, nn, ne)) = &first {
+                self.release(nn, ne);
+            }
+            self.route_beside = beside;
+            self.bare_slide = true;
+            let again = self.route_op_plain(ends, pis, tracks);
+            self.bare_slide = false;
+            if viable(self, &again) {
+                again
+            } else {
+                if let Ok((_, _, nn, ne)) = &again {
+                    self.release(nn, ne);
+                }
+                self.route_beside = beside;
+                self.route_op_plain(ends, pis, tracks)
+            }
+        }?;
         Ok(if flying { self.with_flyovers(r, tracks) } else { r })
+    }
+
+    /// The route's last end is an existing bare track end (T-3713); its start is the player's own pick of that end.
+    fn route_end_bare(&self, ends: &[f64]) -> bool {
+        matches!(end_from(&ends[5..10]), End::Node(n) if bare_end(&self.w.net, n))
     }
 
     fn route_op_plain(&mut self, ends: &[f64], pis: &[f64], tracks: u8) -> Result<(Op, Vec<Pi>, Vec<u32>, Vec<u32>), Issue> {
@@ -97,6 +129,7 @@ impl TrackApi {
         let toward_a = pis.first().map_or(b_at, |p| (p.x, p.y));
         let (a, from_a) = branch_end(net, a, toward_a)?;
         let a = split_room(net, a, toward_a);
+        on_ramp_end(net, a)?;
         // Both ends on one edge: the second split must name the half it falls in.
         let first_split = if let End::Edge { e, x, y } = a { Some((e, self.w.net.project(e, x, y).0)) } else { None };
         let mut ra = self.resolve(a, None, &mut new_nodes, &mut new_edges)?;
@@ -109,7 +142,11 @@ impl TrackApi {
                 return Err(i);
             }
         };
-        let b = split_room(&self.w.net, b, toward_b);
+        let b = split_room(&self.w.net, if self.bare_slide { back_on_bare(&self.w.net, b, toward_b) } else { b }, toward_b);
+        if let Err(i) = on_ramp_end(&self.w.net, b) {
+            self.release(&new_nodes, &new_edges);
+            return Err(i);
+        }
         let existing = [matches!(a, End::Node(_)), matches!(b, End::Node(_))];
         at_station = [at_station[0] || from_a.is_some(), at_station[1] || from_b.is_some()];
         let mut rb = self.resolve(b, first_split, &mut new_nodes, &mut new_edges)?;
@@ -1519,6 +1556,52 @@ fn split_room(net: &Network, end: End, toward: (f64, f64)) -> End {
     }
     let (x, y, _) = geom::pos_at(net.edge_pieces(e), if which == 0 { room } else { len - room });
     End::Edge { e, x, y }
+}
+
+fn bare_end(net: &Network, n: u32) -> bool {
+    net.node_ok(n) && net.node_ports[n as usize].n == 1 && net.node_platform[n as usize] == 0
+}
+
+/// T-3713: a bare track end the route reaches from the track's own side (it would turn back on itself
+/// there) becomes a spot `SPLIT_ROOM` + 0.1 m in along that track, a branch as one clicked there. A piece
+/// under twice that is left as it is.
+fn back_on_bare(net: &Network, end: End, toward: (f64, f64)) -> End {
+    let End::Node(n) = end else { return end };
+    if !bare_end(net, n) {
+        return end;
+    }
+    let i = n as usize;
+    let (e, which) = (net.node_ports[i].end[0] >> 1, net.node_ports[i].end[0] & 1);
+    if !net.edge_ok(e) || net.edge_a[e as usize] == net.edge_b[e as usize] || net.edge_crossover[e as usize] {
+        return end;
+    }
+    let len = net.edge_len[e as usize];
+    let room = SPLIT_ROOM + 0.1;
+    if len < 2.0 * room {
+        return end;
+    }
+    let pcs = net.edge_pieces(e);
+    let inner = geom::pos_at(pcs, if which == 0 { len.min(1.0) } else { (len - 1.0).max(0.0) });
+    let (nx, ny) = (net.node_x[i], net.node_y[i]);
+    if (inner.0 - nx) * (toward.0 - nx) + (inner.1 - ny) * (toward.1 - ny) <= 0.0 {
+        return end;
+    }
+    let (x, y, _) = geom::pos_at(pcs, if which == 0 { room } else { len - room });
+    End::Edge { e, x, y }
+}
+
+/// T-3712: a route end on a ramp would split it, and a node has one level: the refusal names the ramp
+/// (`split_plan` reads the same +-1 m).
+fn on_ramp_end(net: &Network, end: End) -> Result<(), Issue> {
+    let End::Edge { e, x, y } = end else { return Ok(()) };
+    if !net.edge_ok(e) {
+        return Ok(());
+    }
+    let (s, _) = net.project(e, x, y);
+    if geom::on_ramp(net.edge_vert(e), s - 1.0, s + 1.0) {
+        return Err(Issue::SplitRamp { edge: e });
+    }
+    Ok(())
 }
 
 /// A branch past a platform (`branch_end`) leaves its junction away from the station at `from`.

@@ -3898,3 +3898,35 @@ fn a_route_end_near_a_piece_end_goes_on_the_joint_or_slides_in() {
     assert_eq!(a.undo(), 0);
     assert_eq!(live(&a), nodes);
 }
+
+#[test]
+fn a_branch_off_a_ramp_says_ramp() {
+    let mut a = api();
+    piece(&mut a, Err((0.0, 0.0, 0)), &[], (1000.0, 0.0, 1));
+    let e = edge_under(&a, 500.0, 0.0);
+    assert!(crate::track::geom::on_ramp(a.w.net.edge_vert(e), 499.0, 501.0));
+    let ends: Vec<f64> = vec![2.0, e as f64, 500.0, 0.0, 0.0].into_iter().chain(free_at(700.0, 250.0, 0)).collect();
+    assert_ne!(a.add_route(&ends, &[], 2, false), 0);
+    assert!(a.issue_kinds().contains("SplitRamp"), "{}", a.issue_kinds());
+    assert_eq!(a.preview_route(&ends, &[], 2, false)[0], 0.0);
+    assert!(a.issue_kinds().contains("SplitRamp"), "{}", a.issue_kinds());
+}
+
+#[test]
+fn a_route_ending_beside_a_bare_end_from_the_tracks_side_branches_in() {
+    let node_at = |a: &TrackApi, x: f64, y: f64| (0..a.w.net.node_count() as u32).find(|&n| a.w.net.node_ok(n) && (a.w.net.node_x[n as usize] - x).abs() < 0.5 && (a.w.net.node_y[n as usize] - y).abs() < 0.5);
+    let mut a = api();
+    piece(&mut a, Err((0.0, 0.0, 0)), &[], (1000.0, 0.0, 0));
+    let end = node_at(&a, 0.0, 0.0).unwrap();
+    // from beside the track, 100 m along it: the end would have to be turned back to
+    let ends: Vec<f64> = free_at(100.0, 70.0, 0).into_iter().chain([1.0, end as f64, 0.0, 0.0, 0.0]).collect();
+    assert_eq!(a.preview_route(&ends, &[], 2, false)[0], 1.0, "{}", a.issue_kinds());
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issue_kinds());
+    assert!(node_at(&a, 5.1, 0.0).is_some());
+    assert_eq!(a.w.net.node_ports[end as usize].n, 1);
+    // from beyond the end it joins the end itself, as before
+    assert_eq!(a.undo(), 0);
+    let ends: Vec<f64> = free_at(-100.0, 70.0, 0).into_iter().chain([1.0, end as f64, 0.0, 0.0, 0.0]).collect();
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issue_kinds());
+    assert_eq!(a.w.net.node_ports[end as usize].n, 2);
+}

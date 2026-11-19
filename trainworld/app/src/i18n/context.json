@@ -1034,6 +1034,7 @@
   "issues.dropStop": "Refusal when removing a stop from a line.",
   "issues.lineSchedule": "Refusal when setting a line's trains an hour.",
   "issues.splitPoint": "Refusal of placing a station or junction on track.",
+  "issues.splitRamp": "Refusal of drawing track that starts or ends on a ramp of existing track, which would branch off it.",
   "issues.nodeInUse": "Refusal of moving constructed track.",
   "issues.noSuchEdge": "Refusal of an edit on track that has since gone.",
   "issues.noSuchNode": "Refusal of an edit on a junction or station that has since gone.",

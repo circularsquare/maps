@@ -407,6 +407,8 @@ pub enum Issue {
     LineSchedule { line: u32 },
     /// A split point on a ramp, too near a node, or outside the edge.
     SplitPoint { edge: u32 },
+    /// A route end that would branch off a ramp: a node has one level, so a ramp is not split.
+    SplitRamp { edge: u32 },
     /// A node or PI nearer the poles than 85 degrees or past the antimeridian (Mercator frame,
     /// docs/world.md).
     OutsideWorld { x: f64, y: f64 },

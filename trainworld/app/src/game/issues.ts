@@ -48,6 +48,7 @@ const TEXT: Record<string, () => string> = {
   LineSchedule: () => t("issues.lineSchedule"),
   StationCurveTight: () => t("issues.stationCurveTight"),
   SplitPoint: () => t("issues.splitPoint"),
+  SplitRamp: () => t("issues.splitRamp"),
   NodeInUse: () => t("issues.nodeInUse"),
   NoSuchEdge: () => t("issues.noSuchEdge"),
   StationTrack: () => t("issues.stationTrack"),

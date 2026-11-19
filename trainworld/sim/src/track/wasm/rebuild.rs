@@ -566,6 +566,7 @@ fn culprits(net: &Network, cand: &[u32], issues: &[Issue], flats: &[(u32, u32)],
             | Issue::Tracks { edge: e }
             | Issue::NodeHeading { edge: e, .. }
             | Issue::SplitPoint { edge: e }
+            | Issue::SplitRamp { edge: e }
             | Issue::Crossover { edge: e }
             | Issue::NoParallel { edge: e }
             | Issue::Alongside { edge: e }
