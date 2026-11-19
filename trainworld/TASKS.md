@@ -103,10 +103,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: A cold run takes 4.4-5.1 min at 4 jobs, against the 3 min aimed for; most of it is zone_water's 368 windows.
   - Goal: A cold run is near 3 min.
   - Other: See notes/T-1992.md.
-- T-3773 [P2] {L:accounts-server} A saved game that fails to load goes back to the menu (taking, 2026-11-19, agent failopen)
-  - Context: Today a saved game whose load fails inside the clock worker (damage, a load panic, an allocation error) keeps its slot untouched but puts the player in a new empty game with a notice, which reads as a lost save; the 11-15 Discord report's empty January 27 world may be this, and nothing counts how often it happens. You, 2026-11-16, about New game: "if we fail, we should end up on the menu" (T-3478 did that for New game only).
-  - Goal: A failed open lands on the start menu with the reason on that game's card, the game untouched and nothing new written; about 2 hours.
-  - Other: notes/T-3772.md
 - T-3774 [P2] {L:feedback} Feedback reports carry the save state
   - Context: A "lost my save" report carries nothing about saves today, so it can't be placed in a cause.
   - Goal: The report's context lists slot count, slots marked damaged, unreadable copies, signed in or not, the playing slot's last sync error, whether storage is persisted, and the last failed open's reason; counts only, no save contents; about 1 hour.
@@ -115,15 +111,31 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: The daily scan's reports and the quarantine records are only on the box, so counting damaged saves needs ssh and your yes each time.
   - Goal: An inbox-key GET gives the latest scan report and a quarantine summary (by verdict, reason, level and day; ids and counts only), and a small tool prints it; about 1.5 hours plus a server deploy on your yes.
   - Other: notes/T-3772.md
-- T-3777 [P2] {L:real-networks} Nagoya's Tokaido Main Line takes a weird route (taking, 2026-11-19, agent realjapan)
-  - Context: You, 2026-11-19: "nagoya looks good. theres a lot of "reversal" alerts for the jr tokaido main line tho. seemst o be taking a really weird route". Nagoya was built by realauto in T-3769.
-  - Goal: The Tokaido Main Line runs its real route through Nagoya with no reversal alerts, and the cause is fixed in realauto if other cities share it.
-- T-3778 [P2] {L:fares} {after:T-3758 landing} Fare zones follow-ups: hovers, off switch, loop in world space, order (taking, 2026-11-19, agent zonefollow)
-  - Context: You, 2026-11-19, on Z2 on 8800: hovers explaining the rule (drafts agreed, ending "...pays by distance instead."); "add a button to disable fare zones without deleting it entirely"; "when drawing fare zones and we are zooming in and out while holdign down the mouse to continue drawing, we should have the shape be pinned to world space rather than screen space"; "put fare zones above fares by coutnry".
-  - Goal: The four done: heading and price-row hovers; an area can be switched off and on with its paint kept; a loop being drawn stays fixed to the map while zooming; Fare zones sits above the country fares in Advanced fares.
 - T-3779 [P3] {L:small-fixes} Chart button smaller than the schedule button
   - Context: `checks/t3543-default-headways` fails on master: "the chart button is as big as the schedule button", 21.6 against 23.4 px (found by T-3767's checker, 2026-11-19).
   - Goal: The two line panel buttons are the same size and the check passes.
+- T-3781 [P1] {L:loading} Demand data not loading within 10 minutes (taking, 2026-11-19, agent demandload)
+  - Context: One player hit it twice on v0.4.2 (feedback 1795092485-688b2e15, 1795083347-52a31102); the only such reports in 7 days. Their saves load normally on master. A stuck load now restarts once, and the report names the stuck worker and period (tree demandload).
+  - Goal: The cause found from the next report's diagnosis, or closed if no report comes.
+  - Other: notes/T-3781.md
+- T-3782 [P2] {L:real-networks} Nagoya station missing from the Tokaido Main Line, Fukuoka reversals (taking, 2026-11-19, agent realjapan)
+  - Context: From T-3777, 2026-11-19: OSM's Tokaido Main Line relations list no Nagoya station stop, so the line skips it; Fukuoka has 11 reversals on 8 lines from another cause.
+  - Goal: A line whose track runs through a station platform of its own operator stops there unless OSM says it doesn't, and Fukuoka has no reversals that its real routes don't.
+- T-3784 [P2] {L:fares} Transfers inside a fare zone run are free (taking, 2026-11-19, agent zonexfer)
+  - Context: You, 2026-11-19: "ok we can drop the transfer fare for zones"; the heading hover says "Transfers in fare zones are free. Multipliers for mode of transport are applied proportionally." Today the transfer fare (T-1801) is charged at every change of line.
+  - Goal: A change between two zone rides of one run pays no transfer fare; changes elsewhere still do.
+- T-3785 [P3] {L:schematic} {after:the next schematic work} Hidden lines leave the schematic
+  - Context: A player asked, 2026-11-19; you: "hidden lines should hide on the schematic (we should hide them fully, instead of just fading them), we can do that later when we do other schematic work".
+  - Goal: A line hidden on the map is not drawn on the schematic at all.
+- T-3786 [P1] {L:accounts-server} Rus's lost Java save (taking, 2026-11-19, agent russave)
+  - Context: Feedback 1795105988-26e9a0c4 (v0.4.2, Safari 26.6, signed in): a Jakarta game expanded across Java, about 4 hours and 500+ game days, saved to the account, now gone; they don't remember deleting it.
+  - Goal: Know what happened to it (and recover it if a copy exists); if it's a cause others can hit, a fix filed.
+- T-3787 [P2] {L:accounts-server} Deleting a game card can remove a big game behind a small version
+  - Context: From T-3786, 2026-11-19: a card delete removes every version on the card, but the "type the station count" check (100+ stations) counts only the top version's stations, and "Delete this version" has a plain confirm, so a big game under a small top version goes in one click. Possibly how Rus lost a 500-day game.
+  - Goal: The delete check counts the biggest version on the card, and deleting a big version asks the same typed confirm.
+- T-3788 [P3] {L:accounts-server} Failed opens left after T-3773
+  - Context: From T-3773, 2026-11-19: a newer account copy loaded in place during play (`openOnAccount`) replaces the slot before loading, so if that load throws the slot and the game in hand disagree; and a real-network new game that fails still starts empty in its own new slot.
+  - Goal: Both end on the menu with the save untouched, as other failed opens do.
 - T-3780 [P2] {L:timetables} {after:T-3346 stage 2 landing} Station and complex timetables
   - Context: Your pad, 2026-11-19: players ask for per-station timetables, "could be cool and not so hard". Per station and per complex, every line in its line colour; for a complex, pick the direction most platforms roughly align with and show trains as that way or the opposite ("eastbound"), "people should mostly use the station timetables anyways"; line numbers show the bullet and line name on hover; opened by a timetable icon button on the station or complex view, like the line's schedule button. Waits for the timetables port so it reads the new departure times.
   - Goal: A timetable icon on the station and complex views opens departures by line in line colours, a complex's split into two directions, with bullet and line name on hover.
@@ -218,9 +230,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-2136's checker (by reading the code): a request for one place's rows lost in a demand worker restart times out after 20 s and is asked again only with the next result, so that zone's panel can wait that long.
   - Goal: A request lost in a restart is asked again once the worker is back; probed with a forced restart.
   - Other: notes/T-2136.md
-- T-3686 [P2] {L:loading} Focused city takes minutes on a big save (taking, 2026-11-19, agent focusload)
-  - Context: Your old TODO: "loading focused city demand still feels kinda too long... am waiting like >3 min in my big asia save. why does this need to scale with save size at all, anyways?" Nearest: T-3256, T-3373.
-  - Goal: The time to a focused city's trips on a big save measured and split by step, and the steps that scale with save size cut or filed.
 - T-3550 [P3] {L:edit-speed} London train-count edits still take 1-4 s
   - Context: After T-3388, track and station edits on London settle in 0.02-0.3 s, but a train-count edit on a line at its big merge still takes 0.5-1.3 s natively (up to 3.3 s for every level on a 3-train line) and 1.4-3.7 s in the browser: each settle round works out 100-190 line profiles again at about 1 ms each.
   - Goal: Train-count edits on London under 0.5 s natively, settled figures unchanged.
