@@ -38,7 +38,8 @@ or "parked" with the failing checks, unregistered again); then the region's down
 The next region downloads and reads while this one builds (T-1980, one ahead). After the last
 region, the joint gravity groups the batch's gated packs joined, one solve a group for the whole
 batch (T-723), the group re-gated after it (a FAIL restores the group and parks its new packs);
-then market_zones and local trips, and a freeze of the data for publishing (pipeline/freeze.py,
+then market_zones and local trips, the routed drives of the new places (market_drives.py, T-2054), and
+a freeze of the data for publishing (pipeline/freeze.py,
 T-928). Status and a record of
 times live in each row of pipeline/world_plan.json; a report a batch goes to
 ../artifacts/trainworld/world_run/<batch>/.
@@ -91,6 +92,7 @@ MODULE_OUTLINES = {"england", "france", "germany", "usa"}  # plan_hooks giving a
 # over BIG_PEOPLE): the longest seen, a 20M pack's build, takes under an hour on 3 cores.
 STEP_LIMIT_S = {"build_city": 5400, "routes": 3600, "pack_gate": 5400, "intercity": 7200, None: 1800}
 MARKET_BASE_S, MARKET_S_PER_ZONE = 1800, 2  # the join's market step: 1800 s plus 2 s per registered zone (T-2627)
+DRIVES_S = 3600  # the join's routed drives (T-2054): minutes for a country; routing every place, after a recipe change, is longer
 BIG_PEOPLE = 15e6
 # T-1978: while a region builds, its built rows are gated in chunks of at least this many (each
 # chunk pays a snapshot, a register and a Vite start, about 2 minutes); the rest once its builds
@@ -232,7 +234,7 @@ def run_main(modname, args):
     """A pipeline script's `if __name__ == "__main__":` block, run in its already imported (and,
     with --root, redirected) module, with sys.argv as the script would see it."""
     m = importlib.import_module(modname)
-    tree = ast.parse(Path(m.__file__).read_text(encoding="utf-8"))
+    tree = ast.parse(Path(m.__file__).read_text(encoding="utf-8-sig"))  # market_drives.py starts with a BOM
     blocks = [n for n in tree.body if isinstance(n, ast.If) and isinstance(n.test, ast.Compare)
               and isinstance(n.test.left, ast.Name) and n.test.left.id == "__name__"]
     if not blocks:
@@ -1495,7 +1497,19 @@ class Run:
         if not ok:
             # the packs are registered and gated; a market failure leaves them so and says it
             self.report.setdefault("problems", []).append(f"market step failed: {str(tail)[-300:]}")
+            return ok
+        self.drives(L)
         return ok
+
+    def drives(self, L):
+        """T-2054: the routed drives (market_drives.py) for the places the market step added or moved, over the market
+        rows it wrote. Each place's searches are cached, so a join routes its new places and their partners within
+        ZONE_MAX_KM only. A failure leaves the old table, where a missing place takes the drive rule, so it parks
+        nothing and does not stop the freeze."""
+        ok, _, tail = self.step("market_drives", ["build", "--jobs", str(self.jobs)], f"{L}.drives.log", threads=1, limit=DRIVES_S)
+        if not ok:
+            self.report.setdefault("problems", []).append(
+                f"routed drives not rebuilt, so the new zones take the drive rule (again: world_run.py step market_drives build): {str(tail)[-300:]}")
 
     def market_only(self):
         """T-2777: a failed join's market and trips step again, on its own. The ids are the join's own
@@ -1532,6 +1546,7 @@ class Run:
                 self.report["fault"] = str(x)
                 print(f"\nRUN FAULT, the market step stops: {x}", flush=True)
             self.report["seconds"] = round(time.time() - t0)
+            self.report["stopped"] = False
             self.write_report()
             print(f"market step {'ok' if not self.report.get('problems') else 'with problems: ' + '; '.join(self.report['problems'])}"
                   f"; {self.report['seconds']} s", flush=True)

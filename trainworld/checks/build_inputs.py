@@ -1,7 +1,8 @@
 """The files a production build copies for the registry (app/vite.config.ts `writeBundle`), checked without a build:
-each registered pack's five files, every zone's terrain grid, the world water mask, the outlines, the real networks
-and their graphs, and the market's routed drives holding a place for every zone (a zone without one takes the drive
-rule; the build only warns when the file is missing). One FLAG line per gap, exit 1 if any.
+each registered pack's five files, the world's terrain blocks' index, the world water mask, the outlines, the real
+networks and their graphs, and the market's routed drives holding a place for every zone (a zone without one takes the
+drive rule; the build only warns when the file is missing; the join makes them, T-2054). One FLAG line per gap, exit 1
+if any.
 
     venv\\Scripts\\python.exe -I trainworld\\checks\\build_inputs.py [--list]     (--list: every id, not the first 20)
 """
@@ -12,7 +13,7 @@ import sys
 from pathlib import Path
 
 TW = Path(__file__).resolve().parents[1]
-PACKS, TERRAIN = TW / "data" / "packs", TW / "data" / "terrain"
+PACKS, TERRAIN, TERRAIN_WORLD = TW / "data" / "packs", TW / "data" / "terrain", TW / "data" / "terrain-world-v2"
 EXTS = (".json", ".bin", ".boundary.geojson", ".places.json", ".market.json")
 
 
@@ -43,9 +44,9 @@ def main():
     for ext in EXTS:
         flag(f"packs without {ext}", [c for c in cities if not (PACKS / (c["id"] + ext)).exists()],
              "the runner's register step or build_city/places/market_zones")
-    flag("zones without a terrain file", [c for c in cities if not (TERRAIN / f"{c['id']}.terrain").exists()],
-         "pipeline/zone_terrain.py build (terrain_fine.py first where the intermediate has no blocks)")
-    for f, fix in ((TERRAIN / "world.water", "pipeline/world_water.py build"), (PACKS / "outlines.json", "pipeline/zone_outlines.py"),
+    # T-2054: terrain is the world's blocks (T-2901), the same for every zone, so a zone needs no terrain file of its own
+    for f, fix in ((TERRAIN_WORLD / "index.bin", "pipeline/world_terrain.py build"),
+                   (TERRAIN / "world.water", "pipeline/world_water.py build"), (PACKS / "outlines.json", "pipeline/zone_outlines.py"),
                    (PACKS / "real", "pipeline/realnet.py ship"), (PACKS / "realgraph", "pipeline/realgraph.py <regions>")):
         if not f.exists():
             flags.append(f"FLAG {f.relative_to(TW)} missing: {fix}")

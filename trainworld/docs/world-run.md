@@ -21,7 +21,7 @@ Logs, check outputs and images go in `../artifacts/trainworld/` (from the maps r
   Freezes (`pipeline/freeze.py`), 8800's snapbuild and terrain-world in every build hold those files as hard links, so
   an in-place write changes the served game and the freeze too. Every writer today replaces (`packio.write`,
   `put_arrays`, `nocar.append_array`, `realnet.py ship`, `joint_gravity`, `market_zones`, `zone_outlines`,
-  `realgraph`, `zone_terrain`, `world_terrain`'s blocks and its `index.bin`, since T-3372).
+  `realgraph`, `zone_terrain`, `world_terrain`'s blocks and its `index.bin`, since T-3372; `market_drives`' table).
 - A pack rebuild backs up to `data/work/pre-T###/` first; the backup goes, without asking, once a later
   state is checked clean. `data/work/res9/` stays.
 - Cities added through the plan need no calibration beyond the gate (Anita, 2026-10-16).
@@ -201,7 +201,13 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
   <shipped and changed> --market --trips` (its zone files over `--jobs` processes from 100 zones, T-2627) (or `market_zones.py --rows`
   when only parks happened). That step's time limit is 1800 s plus 2 s per registered zone, since the local trips
   run over every registered zone whatever the ids (3,545 zones took 26 minutes on a busy machine, T-2595); a hung
-  step is told by the quiet-log stack dump, not the limit. Then a check that every file `vite.config.ts` copies into a
+  step is told by the quiet-log stack dump, not the limit. After a market step that did not fail, `market_drives.py
+  build --jobs N` (T-2054; log `join.drives.log`, limit `DRIVES_S` 3600 s) routes the drives of the places it added or
+  moved over the rows it wrote: each place's searches are cached in `data/work/market_drives/sources/`, so only new
+  places and their partners within 400 km are routed (2 s for New Zealand's 6 zones, about 5 minutes for 540 places).
+  A failure is a report problem that parks nothing and does not stop the freeze: the old table stays, and a zone missing
+  from it takes the drive rule. A new zone needs no terrain step: track is priced from the world's terrain blocks
+  (`data/terrain-world-v2/`, T-2901), which hold all land. Then a check that every file `vite.config.ts` copies into a
   production build exists for each shipped pack (it copies the registry's packs, so nothing more
   needs listing). Last, `zone_outlines.py` rewrites `data/packs/outlines.json`, the coarse outline of
   every registered zone with the sea off its coast (T-800, T-1145; over the run's `--jobs`, with its sea work kept in `data/work/zone_outlines_cache`, T-1977: about 4.5 minutes at 4 jobs from an empty cache, under a minute when a few zones changed; a failure only prints a warning and leaves the old file, so
@@ -216,7 +222,7 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
   a group, its neighbours fixed), so 4 rebuilt rows in Mexico cost all Mexico's solve (55 min of the 460 min of that
   join). Batch small fixes in a big country with its next rebuild.
 - **The market step again** (T-2777): a join whose market step failed leaves the solves done and the packs shipped.
-  `join --market-only` redoes just that step, with the id list of the failed join's own `register ... --market
+  `join --market-only` redoes just that step and the routed drives after it, with the id list of the failed join's own `register ... --market
   --trips` line (the last one in the newest `<batch>/join.market.log`; `--from-log <that file>` picks another,
   `--ids a,b` names them; ids no longer registered are left out), under the `packs` lock after waiting for gates,
   then the freeze the failed join skipped. Outlines, realms and aliases are not rerun (they ran in the failed
@@ -226,7 +232,8 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
   shows as hard. After a join, `venv\Scripts\python.exe trainworld\pipeline\start_difficulty.py --fresh --jobs N`
   (claim N cores; docs/zones.md "Start tiers").
 - **Freeze** (T-928): a join with no market failure and no other run live ends with
-  `pipeline/freeze.py`, which hard-links every file a production build copies into
+  `pipeline/freeze.py`, which hard-links every file a production build copies from data/packs (the routed drives' table
+  included, T-2054) into
   `data/frozen/<stamp>/` (seconds, no space; the newest three kept). A publish during a later
   batch builds on it (`freeze.py build`, then `tools/deploy.py --dist`), so it never waits for one.
 - **Clean up**: the region's `.osm.pbf` files and the OSM caches the runner made go once the

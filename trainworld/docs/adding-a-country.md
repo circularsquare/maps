@@ -278,12 +278,10 @@ Done when: `world_run.py status` shows the country's gated rows shipped.
 - Load check on the biggest metro and one rural zone: `ROWS=<kit>\rows.json node <tw>\checks\city-browser.mjs`
   (rows from `world_run/<batch>/gate/<id>.row.json`) on your Vite: PASS, and the `-line.png` opened: the
   line runs through the town.
-- Terrain and routed drives, which the join does not make: `<tw>\pipeline\terrain_fine.py blocks <kit>\blocks.json`,
-  then `terrain_fine.py run <kit>\blocks.json <tw>\data\work\terrain-fine --jobs 1 --fetch 8` (only the blocks its
-  manifest lacks, a new part tar; Southeast Asia's 3.6 GB took 12 minutes from home), then `zone_terrain.py build
-  --jobs N` (zones with no file only) and `market_drives.py build --jobs N` (the new places only); these three run
-  without `-I`. Then `<tw>\checks\build_inputs.py`: no FLAG (the files a production build copies, and a routed-drive
-  place for every zone).
+- `<tw>\checks\build_inputs.py`: no FLAG (the files a production build copies, and a routed-drive place for every
+  zone). The join routes the new zones' drives itself (`join.drives.log`); terrain needs no step (the world's blocks,
+  T-2901). After a "routed drives not rebuilt" problem in the join's report: `<tw>\pipeline\world_run.py step
+  market_drives build --jobs N`.
 - Start tiers: a start missing from `app/src/game/start-difficulty.json` shows as hard, so after the join run
   `venv\Scripts\python.exe trainworld\pipeline\start_difficulty.py --fresh --jobs N` (claim N cores; about 20 minutes)
   and check the country's big cities are not all hard (docs/zones.md "Start tiers").
