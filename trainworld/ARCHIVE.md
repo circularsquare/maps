@@ -1,6 +1,9 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3775 [P2] {L:accounts-server} Save health route deployed (2026-11-19): deployed 11-19; save_health.py reads the live route.
+- T-3786 [P1] {L:accounts-server} Give Rus back the recovered Java save (2026-11-19): deleted 11-19 10:13 UTC by a delete from their browser; day 423 copy from the R2 backup restored into the account as 35kkah6wvvxq. notes/T-3786.md.
+- T-3789 [P1] {L:accounts-server} Deleted games kept 7 days, deploy and Rus's restore (2026-11-19): deployed 11-19 20:46 with SHONEI_GAMES_ADMIN_KEY; Rus's game restored as 35kkah6wvvxq. notes/T-3789.md.
 - T-3793 [P1] {L:edit-speed} Station rename takes about 4 s to show up (2026-11-19): rename 0.65-0.8 s to 0.2-0.3 s on a 2,647-station save; panel shows the name at once. notes/T-3793.md.
 - T-3795 [P1] {L:edit-speed} Schedule window periods row layout and lag (2026-11-19): rows share a line; her hover; period count shows in about 0.4 s on NYC (was 1.3-4.6 s) notes/T-3795.md.
 - T-3796 [P2] {L:fares} Fare zone leftovers after T-3791 (2026-11-19): link asks with T-3791's confirm; none loop; area named for the city under the map centre.

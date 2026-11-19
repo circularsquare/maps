@@ -103,26 +103,13 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: A cold run takes 4.4-5.1 min at 4 jobs, against the 3 min aimed for; most of it is zone_water's 368 windows.
   - Goal: A cold run is near 3 min.
   - Other: See notes/T-1992.md.
-- T-3775 [P2] {L:accounts-server} {after:the v0.4.3 server deploy} Save health route deployed
-  - Context: Built 2026-11-19: shonei-server 93718d1 adds an inbox-key GET for the scan report and quarantine summary, and tools/ops/save_health.py prints it (05678308). Not deployed yet (ask a-2026-11-19-15).
-  - Goal: After the deploy, save_health.py prints the live report, then close.
-  - Other: notes/T-3772.md
 - T-3781 [P1] {L:loading} {after:a report with the new diagnosis} Demand data not loading within 10 minutes
   - Context: One player hit it twice on v0.4.2 (feedback 1795092485-688b2e15, 1795083347-52a31102); the only such reports in 7 days. Their saves load normally on master. A stuck load now restarts once, and the report names the stuck worker and period (tree demandload).
   - Goal: The cause found from the next report's diagnosis, or closed if no report comes.
   - Other: notes/T-3781.md
-- T-3785 [P3] {L:schematic} {after:the next schematic work} Hidden lines leave the schematic
+- T-3785 [P3] {L:schematic} {after:the next schematic work} Hidden lines leave the schematic (taking, 2026-11-19, agent schembus)
   - Context: A player asked, 2026-11-19; you: "hidden lines should hide on the schematic (we should hide them fully, instead of just fading them), we can do that later when we do other schematic work".
   - Goal: A line hidden on the map is not drawn on the schematic at all.
-- T-3786 [P1] {L:accounts-server} {waits:Anita} Give Rus back the recovered Java save
-  - Need from Anita: look in Hetzner's 11-19 06:42 disk image for anything newer than day 423 (a temporary server from that backup in the Hetzner console, then copy one folder off), or restore day 423 as is? You said day 423 is fine and to restore it to the account under a new id (T-3789).
-  - Context: Feedback 1795105988-26e9a0c4: a Jakarta game across Java, 500+ days, gone. It was deleted 11-19 10:13 UTC (game kqfkjgprapz5); the 11-19 R2 backup has it at day 423, 1855 stations, 85 lines, and it opens on master. The card's top version was the big one, so T-3787's gap wasn't the cause.
-  - Goal: The player has the game back; then close.
-  - Other: notes/T-3786.md
-- T-3789 [P1] {L:accounts-server} {after:the v0.4.3 server deploy} Deleted games kept 7 days, deploy and Rus's restore
-  - Context: You, 2026-11-19: "lets set up that keep deleted games for 7 days thing". Built in shonei-server 6ab8b68, ada0bce, 8ba8657 (held 7 days, create-only admin restore under a new id) and tools/ops/restore_game.py; proven locally with Rus's file. Not deployed.
-  - Goal: Deployed with SHONEI_GAMES_ADMIN_KEY set on the box, the privacy page's two lines changed in the same release, and Rus's day 423 game put into their account; then close.
-  - Other: notes/T-3789.md
 - T-3780 [P2] {L:timetables} {after:T-3346 stage 2 landing} Station and complex timetables
   - Context: Your pad, 2026-11-19: players ask for per-station timetables, "could be cool and not so hard". Per station and per complex, every line in its line colour; for a complex, pick the direction most platforms roughly align with and show trains as that way or the opposite ("eastbound"), "people should mostly use the station timetables anyways"; line numbers show the bullet and line name on hover; opened by a timetable icon button on the station or complex view, like the line's schedule button. Waits for the timetables port so it reads the new departure times.
   - Goal: A timetable icon on the station and complex views opens departures by line in line colours, a complex's split into two directions, with bullet and line name on hover.
@@ -411,7 +398,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: v0.4.3 keeps v0.4.2's Moscow, Saint Petersburg and Berlin saves (DECISIONS 11-19). The sim isn't the cause: a junction given a 9th track end refuses an edge, or a line turns back at a node it doesn't stop at, and realauto build leaves those lines out; small upstream changes decide which (today's graph and T-3782's extract: Moscow 110 to 90; T-3318's pattern order: Berlin tram 93). Since 664cffd5 ship refuses a city that loses a route or station, and each build starts with a fresh drop list.
   - Goal: realgraph also writes a real-networks graph by the old chain rule (outside data/packs/realgraph, not deployed), which brings Saint Petersburg and Berlin back whole; then the sim's 8-end and turn-back limits for Moscow's last 8 routes; Moscow, Saint Petersburg and Berlin reshipped with nothing lost.
   - Other: plan in notes/T-3790.md
-- T-3798 [P2] {L:small-fixes} Sort lines by kind in the Lines tab
+- T-3798 [P2] {L:small-fixes} Sort lines by kind in the Lines tab (taking, 2026-11-19, agent linesort)
   - Context: Your pad, 2026-11-19: "commonly requested feature: sort lines by type (tram, ferry, hsr, bus, etc)".
   - Goal: The Lines tab can sort by kind (tram, ferry, high speed, bus and the rest), beside its other sorts.
 - T-3799 [P2] {L:small-fixes} Choose which Lines tab columns show
@@ -420,7 +407,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3800 [P3] {L:translations} One word for a demand period in German and Catalan
   - Context: From the v0.4.3 review, 2026-11-19: the schedule window now says Tageszeit (de) and període (ca), but marketTrip.*, oneRider.*, tripInspector.* and routeParts.byPeriod still say Zeitraum and franja.
   - Goal: Every key in de and ca uses the one word, with the glossary's rendering changed to match.
-- T-3801 [P2] {L:edit-speed} Edits stuck behind panel polling, audit
+- T-3801 [P2] {L:edit-speed} Edits stuck behind panel polling, audit (taking, 2026-11-19, agent pollaudit)
   - Context: T-3793 found a station rename waiting 1-5.5 s in the clock worker's queue behind the station panel's 250 ms "today" polling (140-745 ms each on a 2,647-station save) and a full network rebuild. You, 2026-11-19: "i could imagine like we build some future feature and it fails like this ... also can check to see if there are any current parallel failures". Leads from T-3793 (landed 366f1078): the hourly `epoch` once took 4.3 s in the worker; `linesPeriods` bursts (up to 9 in flight) and a second `today` asker aren't paced; undo/redo of a rename and the new unbindAll still take the slow path.
   - Goal: Every panel or window that polls the clock worker is listed with its cost on a big save; any that can hold an edit up is fixed the T-3793 way (poll waits on its own cost, edits go first); a rule in the docs so new polls follow it.
 - T-3325 [P3] {L:real-networks} {after:real-network rebuild batch} Rebuild Sendai so Senzan Line stops at Toshogu
@@ -783,7 +770,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3413 [P3] {L:community} Save lineage, original author and copies
   - Context: Your TODO 2026-11-15: on metrodreamin people "steal" maps. You want saves to record the original author and who copied it.
   - Goal: A design for you first; then a save traces back to its original.
-- T-3423 [P3] {L:small-fixes} Line groups inside line groups
+- T-3423 [P3] {L:small-fixes} Line groups inside line groups (taking, 2026-11-19, agent linesort)
   - Context: Your scratch pad 2026-11-16: players asked for line group groups; nested many levels deep.
   - Goal: Groups nest without limit in the lines list and group view; saves keep loading.
 - T-3417 [P3] {L:map-look} Pixel-art city map style
@@ -837,7 +824,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Ports, industrial estates and airports with no residents stay dark (Tuas and Jurong were fixed by hand 11-13). Half done: units keep outlines with 0.2 km2 of built surface.
   - Goal: A free unit under the floor sharing half its land border with one metro joins it, after a worldwide count.
   - Other: notes/T-3287.md
-- T-3360 [P2] {L:schematic} Schematic settings for buses and ferries
+- T-3360 [P2] {L:schematic} Schematic settings for buses and ferries (taking, 2026-11-19, agent schembus)
   - Context: Your TODO 2026-11-12: schematic settings to show buses and ferries. It follows T-3345's stage 2 (same code) and takes in T-3019. Your pad, 2026-11-17: "want buses and ferries drawn on schematic map eventually, also p3 prob. also want the ability to toggle their visibility, as well as tram and train visibility i guess with buttons on the top. can use icons. when we draw the buses, they can just appear as really thin lines, stops not labelled, and i think we can basically just draw them as the last step, and not have them impact distortion ... i suppose this should be relaxed in cases where people are building bus-only networks but yeah like they should definitely not be a priority. same for ferries, not have much distortion power."
   - Goal: Buses and ferries are drawn last as very thin lines with unlabelled stops, fitted into the layout the rail lines set (little or no pull on it, except on a bus-only network), with icon buttons at the top to show or hide trains, trams, buses and ferries.
 - T-3358 [P2] {L:schematic-rivers} Schematic river continuity

@@ -7,23 +7,9 @@
     "by": "maps-6b"
   },
   {
-    "id": "a-2026-11-19-13",
-    "title": "Read today's 2 damaged saves",
-    "text": "The 11-19 scan found 2 corrupt revisions. To see what kind of damage, which game version and whether a good copy is pinned, I need to read scans/2026-11-19.json and the quarantine records on the server: one read-only ssh run of save_health.py (counts and ids only, no player lookup). OK to run it now? T-3775 makes this readable without ssh after a server deploy.",
-    "since": "2026-11-19",
-    "by": "maps-6f"
-  },
-  {
     "id": "a-2026-11-19-14",
     "title": "Drop the load card once the city in view is ready",
     "text": "T-3686: on your big Asia save the city you're looking at now has its trips at about 27 s and its last round at about 77 s, but the loading card stays up until every city is done (about 320 s at 1 worker), per the T-2049 rule. Should the card go once the city in view is done, with the rest calculating behind?",
-    "since": "2026-11-19",
-    "by": "maps-6f"
-  },
-  {
-    "id": "a-2026-11-19-15",
-    "title": "Deploy the server for v0.4.3",
-    "text": "shonei-server has three commits waiting: e604291 (the save check reads levels 27-29, which 8800 and v0.4.3 write; today the server is at 26), 93718d1 (a read-only route so I can count damaged saves without ssh, T-3775) and 5bf10c7 (twstats minutes per city, T-3382). Deploy and push all three?",
     "since": "2026-11-19",
     "by": "maps-6f"
   }
