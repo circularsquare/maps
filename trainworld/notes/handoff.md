@@ -1,7 +1,8 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session a0ff2795-d3f6-4076-b0f1-e96b327ba6cf, name maps-e8, since 2026-11-19 17:00 UTC
-Updated: 2026-11-19 20:30 UTC
+Updated: 2026-11-19 21:25 UTC (maps-e8 past 500k, starting its successor; agents linesort, schembus, pollaudit,
+guianas run in maps-e8's tab and report to the inbox)
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status` (T-3667). This file is plan and her words.
 Diary: notes/handoff-log.md. Her local time is UTC-5.
@@ -23,7 +24,9 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    all PASS, open-source f7446ec pushed. Old R2 versions (2026-11-13 etc.) can be purged with r2_purge.py later.
    Running for the next round (her ~20:50 "lets also pick up and start work for the next round"): linesort (Opus,
    T-3798 + T-3423 nested groups, 6170), schembus (Opus, T-3360 [+T-3785], 6171), pollaudit (Opus, T-3801, 6172),
-   oldgraph (Opus, T-3790 3b; never writes data/packs). Countries T-3762 etc. wait for the upload to finish.
+   T-3790 3b landed 7b5ea227 (lines graph in data/work/realgraph-lines, filled; sai and ber reshipped into
+   data/packs/real for the next update; Moscow waits for step 4, the sim limits), guianas (Opus, T-3762, 6173, writes data/packs; started
+   ~21:10 after the upload). T-1738 / T-3763 countries after it.
 2. After the release: T-3790 step 4 (old-rule real-networks graph, ~1 h + rebuild; notes/T-3790.md, saves in
    artifacts/trainworld/t3790/corridors), T-3801 (edits stuck behind panel polling + docs rule), T-3798 / T-3799
    (Lines tab sort and columns; T-3799 design to her first), T-3800 (de/ca period word), T-3766 (fares by city),
@@ -57,6 +60,9 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
   push needs her yes to that action, none overnight; advisor trial (log calls in handoff-log).
 
 ## Waiting on her (asks.py list has the open ones)
+- Asked 21:25 in chat: Moscow's last 8 routes (T-3790 step 4) need the sim's 8-end junction and turn-back limits
+  relaxed; first find out whether those limits also bind player-built track (then it's her call). She'll tell Rus
+  his game is back herself.
 - a-1 (T-3746 text), a-13 (read today's 2 damaged saves over ssh; or wait for the deploy), a-14 (drop the load
   card once the city in view is ready), a-15 (server deploy: part of the one release ask).
 - She sends the T-3635 player reply herself (draft in notes/T-3635.md).

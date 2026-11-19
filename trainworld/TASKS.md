@@ -116,7 +116,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-3766 [P2] {L:fares} {after:T-3758} Fare multiples by city
   - Context: You, 2026-11-19: "some people also wanna do fares by city... i guess we can support that maybe? seems like it should be similar to the country fare mult. i think we can just have it that you have to pick either country mults or city mults. cant do both, which would be weird." A player, 11-19: "I would like to adjusts the fare prices for each city individually." Waits for the fare zone trees (T-3758, T-3740 Z2) to land, since they touch the same panels.
   - Goal: Advanced fares has a choice of country or city multiples (never both); in city mode each city has its own multiple, applied the way a country's is.
-- T-3762 [P2] {L:new-countries} Guyana, Suriname, French Guiana and the rest of the Caribbean
+- T-3762 [P2] {L:new-countries} Guyana, Suriname, French Guiana and the rest of the Caribbean (taking, 2026-11-19, agent guianas)
   - Context: You, 2026-11-19: "yeah we could also cover guyana/suriname/guiana sure." And: "we should probably also try to add martinique / the other european caribbean parts... otherwise can't really island hop here which is i think what most people would want to do." Left out by T-3620: Guadeloupe and Martinique (inside France's Natural Earth feature, like French Guiana: planner work), the US Virgin Islands and Saint Kitts and Nevis (under the zone floor); also Sint Maarten and Saint-Martin, the Caribbean Netherlands, Montserrat, Anguilla, the British Virgin Islands, Turks and Caicos. A world run: overnight.
   - Goal: Every inhabited Caribbean island group playable so a player can island hop, plus Guyana, Suriname and French Guiana.
   - Other: notes/T-3620.md
@@ -396,7 +396,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Player report 2026-11-16. Reach: few.
 - T-3790 [P1] {L:real-networks} Real network rebuilds drop lines (taking, 2026-11-19, agent corridors)
   - Context: v0.4.3 keeps v0.4.2's Moscow, Saint Petersburg and Berlin saves (DECISIONS 11-19). The sim isn't the cause: a junction given a 9th track end refuses an edge, or a line turns back at a node it doesn't stop at, and realauto build leaves those lines out; small upstream changes decide which (today's graph and T-3782's extract: Moscow 110 to 90; T-3318's pattern order: Berlin tram 93). Since 664cffd5 ship refuses a city that loses a route or station, and each build starts with a fresh drop list.
-  - Goal: realgraph also writes a real-networks graph by the old chain rule (outside data/packs/realgraph, not deployed), which brings Saint Petersburg and Berlin back whole; then the sim's 8-end and turn-back limits for Moscow's last 8 routes; Moscow, Saint Petersburg and Berlin reshipped with nothing lost.
+  - Goal: Moscow reshipped with nothing lost (8 routes and 25 stations short now, Kazansky station among them), by easing the sim's 8-end junction and turn-back limits; Berlin tram 93's Bisamkiez pattern back. Saint Petersburg and Berlin were reshipped 11-19 on the lines graph (7b5ea227), not yet published.
   - Other: plan in notes/T-3790.md
 - T-3798 [P2] {L:small-fixes} Sort lines by kind in the Lines tab (taking, 2026-11-19, agent linesort)
   - Context: Your pad, 2026-11-19: "commonly requested feature: sort lines by type (tram, ferry, hsr, bus, etc)".
