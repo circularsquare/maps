@@ -47,7 +47,7 @@ try {
   check(!labels.some((x) => /Copy the schedule|Paste the schedule/.test(x ?? '')), 'no copy or paste schedule button', labels.join(' | '));
   check(!(await page.getByRole('button', { name: /Paste a schedule|Paste the schedule|Copy the schedule/ }).count()), 'none of them anywhere on the page');
   const sched = buttons.find((b) => b.label === 'Detailed schedule'), other = buttons.find((b) => b.label !== 'Detailed schedule');
-  check(!!sched && !!other && Math.abs(sched.w - other.w) < 0.5 && sched.w >= 21, 'the chart button is as big as the schedule button', JSON.stringify(buttons));
+  check(!!sched && !!other && sched.w > other.w && sched.w - other.w < 4 && other.w >= 18, 'the schedule button is a little bigger than the chart button (Anita, 2026-11-17)', JSON.stringify(buttons));
   await g.shot('t3543_line_panel_full.png', { element: '#inspector' });
   await page.evaluate(() => document.querySelector('#inspector .h .sched-copy')?.scrollIntoView({ block: 'center' }));
   const head = await page.evaluate(() => { const r = document.querySelector('#inspector .h .sched-copy').parentElement.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; });
