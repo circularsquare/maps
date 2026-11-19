@@ -202,7 +202,9 @@ def browser_check():
         script.write_text(FAKE_BROWSER, encoding="utf-8")
         os.environ["SESSIONS"] = str(sessions)
         ids = ["a1", "big", "a2", "a3", "hang1", "a4", "a5", "a6"]
-        rows = [{"id": i, "row": "", "out": str(d / f"{i}-"), "json": str(d / f"{i}.browser.json"),
+        for i in ids:  # browser_run reads each row file for its water pair: 8 checks with one, 7 without (T-2897)
+            (d / f"{i}.row.json").write_text(json.dumps({"water": [[0, 0], [1, 1]]}), encoding="utf-8")
+        rows = [{"id": i, "row": str(d / f"{i}.row.json"), "out": str(d / f"{i}-"), "json": str(d / f"{i}.browser.json"),
                  "people": 30e6 if i == "big" else 1e6} for i in ids]
         t = time.time()
         old = pack_gate.BROWSER_SESSIONS
