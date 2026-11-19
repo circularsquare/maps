@@ -1756,6 +1756,17 @@ function loadLineDays(saved: SaveHeader["lineDays"], last: number) {
     for (let i = 0; i + 2 < v.length; i += 3) if (v[i] <= last) l.push([v[i], v[i + 1], v[i + 2]]);
     if (l.length) lineDays.set(Number(id), l.slice(-LINE_DAYS));
   }
+  dropOldLineDays(last);
+}
+
+/** A line's days older than the month kept go, also those of a line that has made none since (T-3771). */
+function dropOldLineDays(today: number) {
+  for (const [id, l] of lineDays) {
+    const n = l.findIndex((e) => e[0] > today - LINE_DAYS);
+    if (n === 0) continue;
+    if (n < 0) lineDays.delete(id);
+    else l.splice(0, n);
+  }
 }
 
 /** T-531: every region's today and this hour that has an entry today. */
@@ -2077,6 +2088,7 @@ function settle(): boolean {
     if (full) { ended = true; hourShape.delete(h); }
   }
   if (ended && lineDays.size) { // T-2787: a deleted line's days go with it
+    dropOldLineDays(ledgerDay(now));
     const li = api.lines_info(), have = new Set<number>();
     for (let i = 0; i < li.length; i += 22) have.add(li[i]);
     for (const id of [...lineDays.keys()]) if (!have.has(id)) lineDays.delete(id);

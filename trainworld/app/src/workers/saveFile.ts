@@ -121,7 +121,7 @@ export interface SaveHeader {
   /** T-531: the same two per region (a zone id; "" outside every zone); absent in older saves */
   regions?: Record<string, { ledger: DayLedger[]; hours: HourLedger[] }>;
   /** T-2787: each line's recent days of money, by line id: [day, fares, running cost] flattened, US$M,
-   * oldest first (the last 8 days); absent in older saves, which start with no history */
+   * oldest first (the last month); absent in older saves, which start with no history */
   lineDays?: Record<string, number[]>;
   /** T-685: each region's star, the game second it was earned; absent in older saves */
   stars?: Record<string, number>;
