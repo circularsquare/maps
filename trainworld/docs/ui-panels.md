@@ -33,6 +33,13 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
   Cities lists'), rows holding a stepper, button or box 28 px [T-1802].
   A rule only separates sections about different things (the line panel's `.h.divided`, the
   inspector's top edge); a list's column headers keep their thin rule over the rows.
+- **Spacing comes from the container** [T-3768]: Settings (and the start menu's settings) is one column with
+  an 8 px gap between rows, a heading 14 px under the row above and 4 px over its first row; a row brings no
+  margin of its own. `checks/t3768-panel-gaps.mjs` fails when two controls or lines of text in the main panels
+  come within 3 px of each other, at 1400 and 390 px, unless they are one control (a Segmented, a stepper), and when
+  one reaches past the panel's side or a label is cut to almost nothing; the one pair it lets through is a 28 px
+  row of buttons right under a stepper row (2 px, from the row heights above). Where a heading's right part or a
+  row's buttons do not fit beside their text, they go under it.
 - **Motion where it helps** (Anita 2026-10-29, dropping the old "no motion but trains" rule): state
   changes stay quick and no control waits on an animation. Camera moves the game makes (search, Go to)
   jump with no flight [T-182]; the map's own gestures keep MapLibre's easing.

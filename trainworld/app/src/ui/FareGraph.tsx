@@ -309,10 +309,15 @@ export function FareGraph({ nodes, scale, big = false, preview = farePreview }: 
   const pinch = useRef<{ ids: Map<number, { x: number; y: number }>; d0: number; span0: number } | null>(null);
   const [hoverX, setHoverX] = useState<number | null>(null);
   // T-1705: the viewBox is scaled to the panel, so a narrow screen sets the labels in units that draw at 12 px
+  const [drawnW, setDrawnW] = useState<number | null>(null);
   useEffect(() => {
     const el = svg.current;
     if (!el) return;
-    const ro = new ResizeObserver(() => el.style.setProperty("--fg-fs", `${(12 * W / el.getBoundingClientRect().width).toFixed(2)}px`));
+    const ro = new ResizeObserver(() => {
+      const w = el.getBoundingClientRect().width;
+      el.style.setProperty("--fg-fs", `${(12 * W / w).toFixed(2)}px`);
+      setDrawnW(w);
+    });
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
@@ -438,7 +443,10 @@ export function FareGraph({ nodes, scale, big = false, preview = farePreview }: 
     ? t("fareGraph.addTip") + (ghostAt ? "\n" + t("fareGraph.hoverTip", { distance: nodeDist(ghostAt[0] / kpu), unit, fare: usd(ghostAt[1]) }) : "")
     : hoverU === null ? undefined : t("fareGraph.hoverTip", { distance: distText(hoverU), unit, fare: usd(fareU(hoverU)) });
   const clipId = big ? "fare-clip-big" : "fare-clip";
-  const xStep = niceUp(span / 5);
+  // T-3768: at most five distance labels, fewer where the graph is drawn narrow, about 50 px apart at the least
+  // (the last one's unit makes it the widest)
+  const xLabels = drawnW ? Math.max(2, Math.min(5, Math.floor((drawnW * (R - L)) / W / 50))) : 5;
+  const xStep = niceUp(span / xLabels);
   const xTicks = Array.from({ length: Math.floor(span / xStep + 1e-9) }, (_, i) => (i + 1) * xStep);
   // the fare axis in the shown currency (T-2798): ticks `yTicks` are in it, and drawn at their US$ height
   const rate = currencySpec().rate;
@@ -467,7 +475,8 @@ export function FareGraph({ nodes, scale, big = false, preview = farePreview }: 
       {yTicks.map((v) => <line class="fg-grid" x1={L} x2={R} y1={y(v / rate)} y2={y(v / rate)} />)}
       <line class="fg-axis" x1={L} x2={R} y1={B} y2={B} />
       <line class="fg-axis" x1={L} x2={L} y1={T} y2={B} />
-      <text class="fg-label" x={L} y={B + 12} text-anchor="middle">0</text>
+      {/* centred under the axis unless half of it (about 4 px drawn) would be cut off at the graph's left edge */}
+      <text class="fg-label" x={L} y={B + 12} text-anchor={drawnW !== null && (4 * W) / drawnW > L ? "start" : "middle"}>0</text>
       {xTicks.map((tk, i) => (
         <text class="fg-label" x={x(tk)} y={B + 12} text-anchor={i === lastX && x(tk) > R - 30 ? "end" : "middle"}>{i === lastX ? t("fareGraph.tickUnit", { value: tickText(tk), unit }) : tickText(tk)}</text>
       ))}
