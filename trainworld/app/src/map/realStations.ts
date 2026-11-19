@@ -2,7 +2,7 @@
 // tiles (the base map/realNetwork.ts reads them from, so R2 for players), one region's file fetched the first
 // time it is needed. Junction points (`j`) are not stations and are left out.
 //
-// Marks: soft purple dots (the real metro colour, low opacity, like the track) over the real network from MIN_ZOOM, when Settings > Real world network > Show stations
+// Marks: purple rings (the real metro colour) with a pale halo, over the real network and the game's own network from MIN_ZOOM, when Settings > Real world network > Show stations
 // is on (off by default) and the network itself is shown; the name only on hover. A station whose every line
 // is a tram, funicular, monorail or narrow gauge one shows only where those lines do (All, or tram track
 // snapping), which takes the region's lines.json too (only while the marks are on).
@@ -13,7 +13,6 @@
 // gives no name, and naming goes on as before. For a Japanese, Chinese or Korean player the local name comes
 // first where it is in a script they read (i18n/nativeNames.ts, T-3631).
 
-import type { Feature } from "geojson";
 import * as maplibregl from "maplibre-gl";
 import { effect } from "@preact/signals";
 import { SHADES } from "../game/shadeTable";
@@ -22,8 +21,9 @@ import { inRing, ringBox } from "../game/rings";
 import { M_PER_DEG, M_PER_DEG_LAT } from "../game/frame";
 import { patientFetch } from "../workers/patientFetch";
 import { regionsJson } from "./regionsJson";
-import { firstSymbolId } from "./basemap";
-import { styleUp } from "./styleReady";
+import { shadeColours } from "../game/shades";
+import { fitSparse } from "./gl";
+import type { Overlay } from "./overlay";
 import { addFinder } from "./demandHover";
 import { hiddenOnGlobe } from "./live";
 import { language } from "../i18n";
@@ -38,7 +38,6 @@ const MIN_ZOOM = 10;
 const HOVER_PX = 6;
 /** the grid the lookups use, degrees */
 const CELL = 0.01;
-export const REAL_STATIONS_LAYER = "tw-realst";
 
 interface Stations {
   lng: Float64Array;
@@ -172,7 +171,7 @@ type Shown = "passenger" | "tram" | "all";
 /** line kinds the Passenger setting leaves out (map/realNetwork.ts) */
 const NOT_PASSENGER = new Set(["tram", "funicular", "monorail", "narrow_gauge"]);
 
-export function startRealStations(map: maplibregl.Map) {
+export function startRealStations(map: maplibregl.Map, overlay: Overlay) {
   /** line id -> kind, per region, read for the marks only */
   const kinds = new Map<string, Promise<Map<string, string> | null>>();
   const kindsOf = (base: string, cc: string) => {
@@ -190,7 +189,6 @@ export function startRealStations(map: maplibregl.Map) {
   const drawn = new Map<string, { st: Stations; kinds: Map<string, string> | null }>();
   let on = false;
   let shown: Shown = "passenger";
-  let painted = false;
 
   const keep = (r: { st: Stations; kinds: Map<string, string> | null }, i: number) => {
     if (shown === "all" || !r.kinds) return true;
@@ -202,47 +200,54 @@ export function startRealStations(map: maplibregl.Map) {
     });
   };
 
-  const data = () => {
-    const features: Feature[] = [];
-    for (const r of drawn.values())
-      for (let i = 0; i < r.st.lng.length; i++)
-        if (keep(r, i)) features.push({ type: "Feature", properties: {}, geometry: { type: "Point", coordinates: [r.st.lng[i], r.st.lat[i]] } });
-    return { type: "FeatureCollection" as const, features };
-  };
-
-  const paint = () => {
-    const c = SHADES[mapShade.peek()];
-    map.setPaintProperty(REAL_STATIONS_LAYER, "circle-color", c.realMetro);
-    map.setPaintProperty(REAL_STATIONS_LAYER, "circle-opacity", c.realStationOpacity);
+  // Drawn on a 2D canvas of its own above the game's network canvas (a map layer sits under it), so the
+  // rings show over blueprints, track and platforms; under the station names (z 2 DOM) and the stop marks (z 3).
+  const canvas = document.createElement("canvas");
+  canvas.className = "overlay realst";
+  overlay.canvas.after(canvas);
+  const ctx = canvas.getContext("2d")!;
+  /** ring radius in CSS px by zoom */
+  const RADIUS: [number, number][] = [[10, 3], [12, 3.8], [14, 5], [16, 6.5], [18, 8.5]];
+  const radius = (z: number) => {
+    if (z <= RADIUS[0][0]) return RADIUS[0][1];
+    for (let k = 1; k < RADIUS.length; k++)
+      if (z <= RADIUS[k][0]) return RADIUS[k - 1][1] + ((RADIUS[k][1] - RADIUS[k - 1][1]) * (z - RADIUS[k - 1][0])) / (RADIUS[k][0] - RADIUS[k - 1][0]);
+    return RADIUS[RADIUS.length - 1][1];
   };
 
   const draw = () => {
-    if (!styleUp(map)) return; // style.load runs it again
-    const src = map.getSource(REAL_STATIONS_LAYER) as maplibregl.GeoJSONSource | undefined;
-    if (!src) {
-      if (!on) return;
-      map.addSource(REAL_STATIONS_LAYER, { type: "geojson", data: data() });
-      drawnKey = `${shown}:${[...drawn.keys()].join()}`;
-      map.addLayer(
-        {
-          id: REAL_STATIONS_LAYER, type: "circle", source: REAL_STATIONS_LAYER, minzoom: MIN_ZOOM,
-          paint: {
-            "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 2, 12, 2.6, 14, 3.8, 16, 5.2, 18, 7],
-          },
-        },
-        map.getLayer("tw-reach") ? "tw-reach" : firstSymbolId(map),
-      );
-      paint();
-      painted = true;
-      return;
-    }
-    map.setLayoutProperty(REAL_STATIONS_LAYER, "visibility", on ? "visible" : "none");
-    if (!painted) paint(), (painted = true);
-    const key = `${shown}:${[...drawn.keys()].join()}`;
-    if (on && key !== drawnKey) src.setData(data()), (drawnKey = key);
+    const z = map.getZoom();
+    const live = on && z >= MIN_ZOOM && drawn.size > 0;
+    fitSparse(canvas, map, live);
+    if (!live) return;
+    const dpr = map.getPixelRatio();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const b = map.getBounds(), r = radius(z), pad = 0.002;
+    const w = b.getWest() - pad, e = b.getEast() + pad, s = b.getSouth() - pad, n = b.getNorth() + pad;
+    const path = new Path2D();
+    for (const g of drawn.values())
+      for (let i = 0; i < g.st.lng.length; i++) {
+        const lng = g.st.lng[i], lat = g.st.lat[i];
+        if (lng < w || lng > e || lat < s || lat > n || !keep(g, i)) continue;
+        const p = map.project([lng, lat]);
+        path.moveTo(p.x + r, p.y);
+        path.arc(p.x, p.y, r, 0, 2 * Math.PI);
+      }
+    const c = SHADES[mapShade.peek()];
+    // a halo in the map's casing colour keeps the ring readable on track and on both themes
+    ctx.globalAlpha = 0.7;
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = shadeColours().casing;
+    ctx.stroke(path);
+    ctx.globalAlpha = c.realStationOpacity;
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = c.realMetro;
+    ctx.stroke(path);
+    ctx.globalAlpha = 1;
   };
-  /** what the source holds now, so a repaint does not send it again */
-  let drawnKey = "";
+  overlay.afterMapFrame.push(draw);
 
   /** fetches the stations (and lines) of the regions in view and draws them */
   const asked = new Set<string>();
@@ -258,7 +263,7 @@ export function startRealStations(map: maplibregl.Map) {
         asked.delete(g.cc);
         if (!st) return;
         drawn.set(g.cc, { st, kinds: k });
-        draw();
+        map.triggerRepaint();
       });
     }
   };
@@ -270,15 +275,10 @@ export function startRealStations(map: maplibregl.Map) {
     on = d.realStations && (real !== "none" || snap);
     shown = real === "all" ? "all" : snap && mode === "tram" ? "tram" : "passenger";
     mapShade.value;
-    painted = false;
-    draw();
+    map.triggerRepaint();
     void ensure();
   });
   map.on("moveend", () => void ensure());
-  map.on("style.load", () => {
-    painted = false;
-    draw();
-  });
 
   const escape = (s: string) => s.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
   // the hover: the name only; above the bubbles (10), under the airports (11)

@@ -31,7 +31,6 @@ import { styleUp } from "./styleReady";
 import { ringBox } from "../game/rings";
 import { regionsJson } from "./regionsJson";
 import { perfOff } from "../perfFlags";
-import { REAL_STATIONS_LAYER } from "./realStations";
 
 const OSM_ATTRIBUTION = '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a> (ODbL)';
 /** below this the view spans too many regions and the lines are too small to follow; at 4 a view of
@@ -181,8 +180,7 @@ export function startRealNetwork(map: maplibregl.Map) {
       .sort((x, y) => dist(x) - dist(y))
       .slice(0, PER_PASS);
     if (!hits.length) return void ensureExtra();
-    // under the real stations' rings (T-3570) and the reach
-    const before = map.getLayer(REAL_STATIONS_LAYER) ? REAL_STATIONS_LAYER : map.getLayer(REACH) ? REACH : firstSymbolId(map);
+    const before = map.getLayer(REACH) ? REACH : firstSymbolId(map);
     const colours = colour(SHADES[mapShade.peek()]);
     for (const { cc } of hits) {
       added.add(cc);
