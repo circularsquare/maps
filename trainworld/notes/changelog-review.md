@@ -11,3 +11,24 @@ Hidden in this pass:
 - c011: fixed the start menu covering the out of memory message after a game failed to load (rare failure path)
 
 Reworded: none.
+
+## 2026-11-19, v0.4.3
+
+Ids restarted at c001 after the v0.4.2 publish, so the lists above are a different numbering. Reviewed: all 29 shown items c001-c029. Items marked (edited) by Anita were kept without re-judging.
+
+Hidden:
+- c028: stuck trip calculation restarts once on load (failure path)
+- c024: crash at startup when the browser drops graphics (rare)
+- c023: settings memory reading too high with several workers (diagnostic)
+- c014: renamed station showing old name at some zooms (minor)
+- c012: wrong fare on a bent fare curve (bug in a feature new in this release)
+- c010: unused flat junctions and crossings no longer show a mark (tiny)
+- c007: second tab unable to go back to the main menu (rare)
+- c004: track ending just short of a bare track end refused (minor)
+- c003: Copy shown instead of Sandbox on a kept copy (minor)
+
+Reworded:
+- c022: "fixed long games using more memory every game day; past about 2 years, money history older than 4 months is kept by month, so a 50 year game uses 1 GB less memory" -> "fixed long games using more memory every game day, so a 50 year game uses 1 GB less memory"
+
+Areas: all items have one.
+Proposed highlights: c021, c011, c015, c020, c005, c013

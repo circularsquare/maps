@@ -119,11 +119,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Feedback 1795105988-26e9a0c4: a Jakarta game across Java, 500+ days, gone. It was deleted 11-19 10:13 UTC (game kqfkjgprapz5); the 11-19 R2 backup has it at day 423, 1855 stations, 85 lines, and it opens on master. The card's top version was the big one, so T-3787's gap wasn't the cause.
   - Goal: The player has the game back; then close.
   - Other: notes/T-3786.md
-- T-3789 [P1] {L:accounts-server} {waits:Anita} Restoring a deleted game to its account (taking, 2026-11-19, agent keepdel)
-  - Need from Anita: keep deleted games on the server for 7 days with an admin undelete (recommended; no backup decrypting for the usual accidental delete), or only a tool that pulls a game from the R2 backup and writes it back under a new id?
-  - Context: You, 2026-11-19, after Rus's game (T-3786) came back from the R2 backup: "we should have this as a pipeline in case anyone else wants to restore a backed up save. lets juts restore it to their account under new game id". Today a delete erases the game and its three backups at once; only the nightly R2 tar (03:17 UTC) and Hetzner's disk image (06:42 UTC) keep a copy, 7 days each.
-  - Goal: A deleted game can be put back into its account under a new id by one command through a create-only admin route, proven against a local server with the old id tombstoned; shipped with a server deploy on your yes. Then Rus's day 423 game restored this way.
-  - Other: notes/T-3786.md
+- T-3789 [P1] {L:accounts-server} {after:the v0.4.3 server deploy} Deleted games kept 7 days, deploy and Rus's restore
+  - Context: You, 2026-11-19: "lets set up that keep deleted games for 7 days thing". Built in shonei-server 6ab8b68, ada0bce, 8ba8657 (held 7 days, create-only admin restore under a new id) and tools/ops/restore_game.py; proven locally with Rus's file. Not deployed.
+  - Goal: Deployed with SHONEI_GAMES_ADMIN_KEY set on the box, the privacy page's two lines changed in the same release, and Rus's day 423 game put into their account; then close.
+  - Other: notes/T-3789.md
 - T-3780 [P2] {L:timetables} {after:T-3346 stage 2 landing} Station and complex timetables
   - Context: Your pad, 2026-11-19: players ask for per-station timetables, "could be cool and not so hard". Per station and per complex, every line in its line colour; for a complex, pick the direction most platforms roughly align with and show trains as that way or the opposite ("eastbound"), "people should mostly use the station timetables anyways"; line numbers show the bullet and line name on hover; opened by a timetable icon button on the station or complex view, like the line's schedule button. Waits for the timetables port so it reads the new departure times.
   - Goal: A timetable icon on the station and complex views opens departures by line in line colours, a complex's split into two directions, with bullet and line name on hover.
@@ -408,10 +407,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-3431.md
 - T-3434 [P3] {L:region-redraws} Sabang Island missing from the Banda Aceh zone
   - Context: Player report 2026-11-16. Reach: few.
-- T-3790 [P1] {L:real-networks} Reshipped real networks lose lines (taking, 2026-11-19, agent linedrift)
-  - Context: T-3782 reshipped 22 cities on 2026-11-19 into data/packs/real (not uploaded). A rebuild with the current sim leaves out lines the shipped save had: Moscow 106 to 90, Hong Kong 46 to 42 (not reshipped); the other cities weren't counted.
-  - Goal: No city in v0.4.3's data upload has fewer lines than in v0.4.2; the cause found, or the v0.4.2 save kept for that city.
-  - Other: notes/T-3782.md
+- T-3790 [P1] {L:real-networks} Real network rebuilds silently drop lines (taking, 2026-11-19, agent linedrift)
+  - Context: v0.4.2's saves are back in data/packs/real for the 9 cities whose T-3782 rebuild had fewer lines (bei ber chg ist mad mos osa sai shz). The sim isn't the cause: a junction given a 9th track end refuses an edge, or a line turns back at a node it doesn't stop at, and realauto build leaves those lines out. Small upstream changes decide which lines: today's real-network graph and T-3782's extract (Moscow 110 to 90), T-3318's pattern order (Berlin tram 93), stale drop lists.
+  - Goal: A rebuild of any real network serves every route and station its shipped save did, and ship refuses one that doesn't.
+  - Other: plan in notes/T-3790.md
 - T-3325 [P3] {L:real-networks} {after:real-network rebuild batch} Rebuild Sendai so Senzan Line stops at Toshogu
   - Context: You parked this 2026-11-12 since few players open Sendai. The fix is in realnet.py build_lines.
   - Other: Commands in notes/T-3318.md.
@@ -847,9 +846,9 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your umbrella for schematic work (2026-11-16). Both fixes you picked from mocks landed 2026-11-12: cities keep their turn on big maps, and bigger city centres.
   - Goal: Open while its parts are: buses and ferries (T-3360), the continent-scale view (T-2724), rivers (T-3358, paused). Nothing lands before you review it.
   - Other: notes/T-3345.md
-- T-3346 [P2] {L:timetables} Timetables, stage 2 onward (taking, 2026-11-19, agent ttport)
-  - Context: Design revised twice after your replies: Simple, Detailed and Exact modes, six stages. Stage 1 landed (ac72df8d) and weekend counts per line landed as T-3521; stage 2 is built in tree tt2 (stale since 11-12, one 30/10 case failing, 4-6 h fix left) and is ported after T-3542's five periods land. Your board note 11-16 (weekday/weekend headways, five day periods, tweakable hours, no per-train detail) is Detailed mode, stages 3-4.
-  - Goal: Stage 2 landed, then the rest built in stages (about 44-63 h before Exact).
+- T-3346 [P2] {L:timetables} Timetables, stage 3 onward
+  - Context: Design revised twice after your replies: Simple, Detailed and Exact modes, six stages. Stages 1 and 2 landed (ac72df8d; e40d878e on 11-19, locals wait for the express at passing stations); T-3542 covered part of 3-4. Left of 3-4: up to 6 freely split rows, weekend-only lines, weekend rows with their own hours, the board's weekday/weekend tabs. Old tree tt2's unported work is kept as artifacts/trainworld/tt2-unported-2026-11-19.patch. At 30/10 one direction still falls back to averaged waits (sizing round trips on real waits, 4-6 h, needs a design note).
+  - Goal: The rest built in stages (about 40-60 h before Exact).
   - Other: Stage 4 reuses the sim parts of GabrielMoraez's PR 13 (per-line calendar, crowding and running cost per kind of day, fleets sized to the busiest day, tests), credited; the PR itself is not merged (notes/pr-survey-2026-11-16.md). notes/T-3346.md
 - T-3348 [P3] {L:quad-track} {after:T-3444} Quad platforms
   - Context: Choose which pair a line stops on at a quad station, and quad paired by direction. Stage 1 (per-direction stops, demand per run included) landed 2026-11-16; the stop list and edit-stops markers for the return station are stage 4. Paused by you 2026-11-16 until the track rework design (T-3444) is discussed.

@@ -16,15 +16,21 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    review agent + highlights, she edits the changelog on the board, her playtest list (docs/orchestrator.md),
    server deploy on her yes, data upload (ngo, fuk, spk, hir, osa + any realjapan reships), smoke8800, publish.
 2. In flight (maps-6f's ttfix/realjapan live in its tab; follow-ups go to a fresh agent on the tree):
-   - T-3346 stage 2, tree ttport: ttfix done (guard lag fix, following-loss cap in timing.rs). Checker ttchk2
-     (6158) running, incl. whether master's reload trips/day differ (767.8M vs 836.3M). Then land; remove tt2.
+   - T-3346 stage 2 landed e40d878e (ttchk2 pass; c029); tt2 removed, its leftovers in
+     artifacts/trainworld/tt2-unported-2026-11-19.patch. Smoke on master passed 29/29; 8800 = e40d878e.
+     clreview hid 9 (c003 c004 c007 c010 c012 c014 c023 c024 c028), 20 shown, no highlights (<= 20).
+     ~18:40 playtest list sent to her; next: her board edit of the changelog, linedrift step 2, then the
+     publish/deploy/data-upload asks.
    - T-3788 landed 9f22d830 (openchk: a badRev device never overwrites the newer rev; its edits split off).
-   - T-3782 landed 9163ebd4 (pipeline only); 22 cities reshipped into data/packs/real, but rebuilds drop lines
-     (Moscow 106 -> 90). linedrift (Opus, T-3790, 6161): count lines vs v0.4.2 for all 22, put v0.4.2 saves back
-     where lines dropped, then the cause. The data upload waits for its step 2.
-   - keepdel (Opus, T-3789): deleted games kept 7 days (her yes ~17:30), create-only admin restore route,
-     tools/ops/restore_game.py, privacy line draft; then Rus's day 423 game (artifacts/trainworld/rus-recovery,
-     from R2: her "do the R2") restored under a new id after the deploy; delete rus-recovery once restored.
+   - T-3782 landed 9163ebd4. T-3790 (linedrift): data/packs/real now has v0.4.2's mos, sai, ber and the new
+     save for the other 19 (DECISIONS 11-19). Cause: 9-end junctions and turn-backs at non-stops drop lines,
+     decided by graph/extract changes; plan in notes/T-3790.md (ship guard first). Saves in artifacts/trainworld/t3790.
+   - T-3789 built: shonei-server 6ab8b68, ada0bce, 8ba8657 (not pushed); restore_game.py committed 6a39f09e.
+     Checker delchk passed 5/5 (go tests; -race unavailable). Before/at the deploy: SHONEI_GAMES_ADMIN_KEY on the box
+     and ~/shonei-games-admin-key.txt (her yes ~18:05 to setting it with the deploy; the deploy itself still
+     needs a-15's yes), privacy.html changed to her wording (committed, ships with v0.4.3),
+     then `restore_game.py put uef1fbdd21e42c812 "artifacts/trainworld/rus-recovery/Jakarta 3.save" --name
+     "Jakarta 3" --stations 1855 --lines 85` dry run, then --yes; delete rus-recovery once restored.
    - T-3784 landed 7db542f2 (+ T-3783 2c541578). Fare hover now "... and {xferFare} in transfer fares"
      (48296702, her yes 11-19); its 12 translations are stale: the v0.4.3 translation batch covers them.
    - Her ~17:45: core cap lowered 14 -> 10 "for a few hrs"; raise back to 14 when she says (or ask ~21:00 UTC).
@@ -65,4 +71,6 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
   notes/board-live.json; maps .claude/settings.json.
 - A yes she gives in another session's tab doesn't pass the permission check here: ask again in this tab.
 - Old tree tt2: keep until ttport lands. Empty locked folders .tw-trees/touchrule and .tw-trees/timekeys.
-- Never delete a tree folder by hand (its app/node_modules junction deletes the main tree's).
+- Never delete a tree folder by hand (its app/node_modules junction deletes the main tree's). It happened again
+  11-19 (~18:20 UTC found: .bin and 15 packages gone; `npm install` inside trainworld/app put them back); cause
+  not traced, one of the day's tree removals.
