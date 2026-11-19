@@ -2500,7 +2500,7 @@
   "tripText.aStation": "a station",
   "tripText.apart": "{distance} apart",
   "tripText.apartAfter": "{head}, {distance} apart",
-  "tripText.baseFare": "Base fare {fare} once a trip, plus the distance fare{xfer, select, true { and a transfer fare of {xferFare} at each change} other {}}",
+  "tripText.baseFare": "Base fare {fare} once a trip, plus the distance fare{xfer, select, true { and {xferFare} in transfer fares} other {}}",
   "tripText.byCar": "By car",
   "tripText.byTrain": "By transit",
   "tripText.car": "Car",

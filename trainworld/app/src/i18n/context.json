@@ -2497,7 +2497,7 @@
   "tripText.aStation": "Stands in for a station's name in a route row when the name is unknown. Lower case, inside a sentence.",
   "tripText.apart": "Summary line of a trip panel: how far apart the two places are. distance: 12.5 km.",
   "tripText.apartAfter": "Summary line of a trip panel: the trips, then how far apart the two places are. head: '312k trips on weekdays'. distance: 12.5 km.",
-  "tripText.baseFare": "Hover of the fare row of a trip. fare: $2.90. xfer: true when changing trains costs a fee. xferFare: $0.50 (empty when xfer is false).",
+  "tripText.baseFare": "Hover of the fare row of a trip. fare: $2.90. xfer: true when the trip pays any transfer fare. xferFare: $1.00, the total of the transfer fares the trip pays (empty when xfer is false).",
   "tripText.byCar": "Heading of the car section of a trip panel.",
   "tripText.byTrain": "Heading of the transit section of a trip panel.",
   "tripText.car": "Row label in the trip panels: what the car costs in dollars.",
