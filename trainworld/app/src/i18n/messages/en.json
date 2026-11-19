@@ -1839,6 +1839,7 @@
   "schedulePanel.setBy": "Set by",
   "schedulePanel.periods": "Periods",
   "schedulePanel.setForLine": "Set for this line",
+  "schedulePanel.setForLineTip": "By default, periods are set globally. Click to set just for this line",
   "schedulePanel.thisLine": "This line",
   "schedulePanel.useGame": "Same as game",
   "schedulePanel.rowWord": "{row, select, rush {rush} morning {morning} midday {midday} afternoon {afternoon} evening {evening} other {night}}",

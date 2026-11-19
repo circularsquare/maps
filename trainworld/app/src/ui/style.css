@@ -268,10 +268,10 @@ svg .stroke2 { stroke-width: 2; }
 .sp-left .h.set-by { font-weight: 400; color: var(--muted); align-items: center; }
 .sp-left .h.set-by .right { margin-left: 12px; color: var(--text); }
 /* T-3542: the periods rows under Set by: the game's, then this line's own, their switches in one column */
-.sp-periods { display: grid; grid-template-columns: max-content 1fr; align-items: center; column-gap: 12px; row-gap: 6px; margin: 8px 0 10px; }
+.sp-periods { display: grid; grid-template-columns: max-content 1fr auto; align-items: center; column-gap: 12px; row-gap: 6px; margin: 8px 0 10px; }
 .sp-periods-label { color: var(--muted); }
 .sp-periods .group { justify-self: start; }
-.sp-periods-own { grid-column: 1 / -1; justify-self: end; }
+.sp-periods-own { justify-self: end; }
 .sp-periods .btn.text.mini { height: 26px; padding: 0 7px; }
 .sp-right, .sp-group { flex: 1; min-width: 0; }
 .sp-tabs { display: flex; align-items: center; gap: 8px; margin: 6px 0 10px; }

@@ -194,20 +194,25 @@ function switchPeriods(l: LineInput, to: number, line: boolean, from: number, af
   ask.value = { text, yes: t("schedulePanel.usePeriods", { n: after }), no: t("schedulePanel.keepPeriods", { n: from }), run: send };
 }
 
-/** The window's periods: the game's 3 / 4 / 5 (every line on the game's), then this line's own as an extra step. */
+/** The window's periods: the game's 3 / 4 / 5 (every line on the game's), "Set for this line" at its end; once the
+ * line has its own, a "This line" 3 / 4 / 5 under it with "Same as game" at its end (Anita, 2026-11-19). */
 function Periods({ l, st }: { l: LineInput; st: LineStats }) {
   const w = world.value!, game = w.periods, own = st.periodsOwn, n = rowCount(st);
   return (
     <div class="sp-periods">
       <span class="sp-periods-label">{t("schedulePanel.periods")}</span>
       <Segmented<number> options={PERIOD_CHOICES} value={game} onChange={(to) => switchPeriods(l, to, false, game, to)} />
-      {own > 0 && <span class="sp-periods-label">{t("schedulePanel.thisLine")}</span>}
-      {own > 0 && <Segmented<number> options={PERIOD_CHOICES} value={own} onChange={(to) => switchPeriods(l, to, true, n, to)} />}
-      <span class="sp-periods-own">
-        {own > 0
-          ? <button type="button" class="btn text mini" onClick={() => switchPeriods(l, 0, true, n, game)}>{t("schedulePanel.useGame")}</button>
-          : <button type="button" class="btn text mini" onClick={() => setPeriods(n, l.id)}>{t("schedulePanel.setForLine")}</button>}
-      </span>
+      {own > 0 ? <span /> : (
+        <button type="button" class="btn text mini sp-periods-own" data-tip={t("schedulePanel.setForLineTip")}
+          onClick={() => setPeriods(n, l.id)}>{t("schedulePanel.setForLine")}</button>
+      )}
+      {own > 0 && (
+        <>
+          <span class="sp-periods-label">{t("schedulePanel.thisLine")}</span>
+          <Segmented<number> options={PERIOD_CHOICES} value={own} onChange={(to) => switchPeriods(l, to, true, n, to)} />
+          <button type="button" class="btn text mini sp-periods-own" onClick={() => switchPeriods(l, 0, true, n, game)}>{t("schedulePanel.useGame")}</button>
+        </>
+      )}
     </div>
   );
 }

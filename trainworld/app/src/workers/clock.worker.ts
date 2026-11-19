@@ -4462,6 +4462,10 @@ async function handleMessage(msg: ToClock) {
     // stops this one left; the network, trips and boarding wait for the clicks to stop
     const stops = !!msg.rows && !early && !service && sendRows();
     if (stops) answer();
+    // T-3795: a change of periods redoes every line's boarding before the full state (about a second on New York's
+    // real save), which the schedule window does not need: its rows go first. The answer stays after the full state,
+    // and the follow-up is not held as a stop click's is.
+    if (!stops && !early && op.op === "setPeriods") sendRows();
     // T-1407: the state, the trips and the boarding hour (and the answer, so the world is up to
     // date when it arrives) after the previews asked meanwhile
     const rest = () => {

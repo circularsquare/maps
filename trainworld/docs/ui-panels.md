@@ -1399,8 +1399,9 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
 - **Left**: the line panel's schedule table, its steppers, dots and hovers, under a "Set by" Trains / Headway
   switch; an edit here is the line panel's edit. **Periods** (T-3542; a bus or ferry line's window too, T-3767): under Set by,
   "Periods" 3 / 4 / 5 sets every line's rows for the whole game (lines with their own setting aside); "Set for this
-  line" under it gives the line its own (at the rows it has), shown as a "This line" 3 / 4 / 5 under the game's and a
-  "Same as game" button in the same place. Three rows are High, Medium, Low under "Demand" (as before); four are
+  line" at the end of that row (hover "By default, periods are set globally. Click to set just for this line", T-3795)
+  gives the line its own (at the rows it has), shown as a "This line" 3 / 4 / 5 under the game's with "Same as game"
+  at the end of its row. A change of periods shows its rows before the trains and riders catch up (T-3795). Three rows are High, Medium, Low under "Demand" (as before); four are
   Rush (06:00-10:00 and 16:00-20:00), Midday, Evening, Night and five Morning, Midday, Afternoon, Evening, Night,
   under "Period", each name's hover its hours ("Rush: 06:00-10:00, 16:00-20:00"). **Hours** (stage 2): a column
   "Hours" after the names in the Weekdays rows, each row's hours in a box ("6-10", rush "6-10, 16-20", an evening
