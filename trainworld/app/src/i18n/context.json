@@ -1778,6 +1778,8 @@
   "savesPanel.signedOutTip": "Hover on the crossed cloud in the head of the saved games panel when not signed in.",
   "savesPanel.stations": "A number of stations, on a saved game card, its picture and its other-version rows. count: 12.",
   "savesPanel.typeToDelete": "Label of the box to type a big game's station count in before it can be deleted. count: 240.",
+  "savesPanel.typeToDeleteBiggest": "Label of the box to type the station count of a card's biggest version in, when the card has other versions. count: 240.",
+  "savesPanel.typeToDeleteVersion": "Label of the box to type a big version's station count in before that one version can be deleted. count: 240.",
   "savesPanel.syncedAt": "Hover on the cloud beside the game being played. time: a clock time, or a date and time when not today, e.g. \"3:31 PM\" or \"Oct 24 at 3:31 PM\".",
   "savesPanel.thumbTip": "Hover on the picture of a saved game card. name: the name the player gave the game, e.g. \"New York\".",
   "savesPanel.title": "Title of the saved games panel.",

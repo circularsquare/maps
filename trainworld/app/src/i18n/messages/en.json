@@ -1781,6 +1781,8 @@
   "savesPanel.signedOutTip": "Kept in this browser only. Sign in to keep your games on your account.",
   "savesPanel.stations": "{count, plural, one {# station} other {# stations}}",
   "savesPanel.typeToDelete": "This game has {count} stations. Type {count} to delete it.",
+  "savesPanel.typeToDeleteBiggest": "Its biggest version has {count} stations. Type {count} to delete it.",
+  "savesPanel.typeToDeleteVersion": "This version has {count} stations. Type {count} to delete it.",
   "savesPanel.syncedAt": "On your account, saved {time}",
   "savesPanel.thumbTip": "The network in \"{name}\" when it was last saved",
   "savesPanel.title": "Saved games",
