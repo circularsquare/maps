@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3760 [P2] {L:real-networks} Real world stations over blueprints, as rings (2026-11-19): real stations drawn as hollow rings on a canvas above the network (over blueprints, track, platforms; under labels; no clicks)
+- T-3761 [P2] {L:timetables} Period hours error says what's wrong (2026-11-19): schedule hours red line reads 'Each period needs at least 2 hours' and 'High needs at least 6 hours' (new key schedule.hoursShortHigh); it already sits under the typed row in the weekday block.
 - T-3542 [P2] {L:timetables} Tweakable hours for the service periods (2026-11-19): Period hours you can move (whole hours, 2 h rows at least), set for the game or with a line's own periods in the schedule window; rows crossing a period averaged into its slot; default-hours games match master to the bit; save level 25 (LHR1, ERA4) notes/T-3542.md.
 - T-3753 [P3] {L:fares} Cross-border trips still about 1% off the fare curve (2026-11-19): Cross-border income now matches the fare curve to the cent: city riders' curve extra was charged at their home country's scale, now at the stop's like the base and rate; two smaller lies named in DECISIONS. notes/T-3753.md.
 - T-3756 [P3] {L:translations} Japanese and Chinese names for the 79 new zones (2026-11-19): 71 new zones and 7 new city rows (Caribbean, Bolivia, Paraguay) have ja, zh-Hans and zh-TW names from Wikidata labels (place_names.mjs --zones, and without), plus Central America and Venezuela zones missing before; 6 label gaps hand-filled in HAND_LABELS; realm names are not localized by the existing method.
