@@ -103,6 +103,24 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: A cold run takes 4.4-5.1 min at 4 jobs, against the 3 min aimed for; most of it is zone_water's 368 windows.
   - Goal: A cold run is near 3 min.
   - Other: See notes/T-1992.md.
+- T-3757 [P1] {L:memory} Saves of 6-14 GB crash players' games (taking, 2026-11-19, agent savesize)
+  - Context: You, 2026-11-19: "people are having issues with their saves getting too big and crashing. on their computers they're reporting big saves that say like 6GB or even like 14GB used ... i tried loading someones 14GB save and it was using 6GB of ram on my system."
+  - Goal: The cause named and fixed so saves stay their normal size, with existing huge saves loading.
+- T-3758 [P1] {L:fares} Fare zones count the zones a trip passes, and lines choose zone or distance (taking, 2026-11-19, agent zonerule)
+  - Context: You, 2026-11-19: "if a trip from zone 2 to 2 counts as 1 that does feel pretty weird to me"; "lets also maybe allow setting specific lines to use distance-based or zone-based. so that like you can exempt metro lines from zones and only include what you consider as commuter or whatever. copying lines should do the same thing."
+  - Goal: A trip pays from the lowest to the highest zone its route touches; each line is set to zone or distance fares (default zone), kept when a line is copied.
+  - Other: notes/T-3740.md
+- T-3759 [P1] {L:station-placement} Station names bound to their complex by choice (taking, 2026-11-19, agent namebind)
+  - Context: A player: you can no longer give a station complex a separate name (since T-3750). You, 2026-11-19: a setting to bind, default on, for new stations; turning it off keeps earlier bound stations as they are; a manual rename separates; turning it on applies to new stations "unless u choose to make everything bound".
+  - Goal: The setting, a way to unbind one station, and a "bind all" action, with T-3750's every-zoom fix kept.
+  - Other: notes/T-3750.md
+- T-3760 [P2] {L:real-networks} Real world stations over blueprints, as rings (taking, 2026-11-19, agent irlstations)
+  - Context: Discord, via you 2026-11-19: with a blueprint snapped to real rail you can't see the real stations to place yours. You: show them on top (of blueprints and built rail too); players who don't want them turn them off; a ring look instead of the faded purple filled circle.
+- T-3761 [P2] {L:timetables} Period hours error says what's wrong (taking, 2026-11-19, agent hourstext)
+  - Context: You, 2026-11-19: "2 hours at least" doesn't always show under the period that'd be too short: "maybe we say "each period needs at least 2 hours" istnead."
+- T-3762 [P2] {L:new-countries} Guyana, Suriname and French Guiana
+  - Context: You, 2026-11-19: "yeah we could also cover guyana/suriname/guiana sure." French Guiana sits inside France's Natural Earth feature, like Guadeloupe and Martinique (T-3620), so it needs planner work. A world run: overnight.
+  - Other: notes/T-3620.md
 - T-3754 [P3] {L:region-redraws} La Gonave zone parked
   - Context: From T-3620: ase (La Gonave, Haiti) is parked at top_zone_jobs_share 0.43 (one zone holds too many of its jobs).
   - Goal: Merged into a neighbouring Haitian zone and shipped, or left out with the reason in DECISIONS.md.
@@ -326,7 +344,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: Measured in notes/T-909.md option 1.
 
 ## Interface
-- T-3740 [P2] {L:fares} Zone fares players draw
+- T-3740 [P2] {L:fares} Zone fares players draw (taking, 2026-11-19, agent zonefares2)
   - Context: You, 2026-11-18: "people have requested zone fares ... people wanna draw these." Design agreed 11-19: paint stations (A) with a rings helper (B), new stations take their neighbours' zone, a trip leaving its fare area pays distance; drawn outlines (C) later. About 14-20 h.
 - T-3744 [P3] {L:fares} Fare per stop made
   - Context: You, 2026-11-19, from players: a fare for each stop the train makes, so set below zero an express that stops less costs more; "i guess you'd probably always make this negative so maybe we flip the sign but then idk how we'd describe it"; floor the fare at the base fare. Unknown whether other games do it.

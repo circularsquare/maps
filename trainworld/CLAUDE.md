@@ -34,7 +34,8 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
   updating after a change are "calculating trips" ("trips are calculated 10x faster"), never "settle", "demand" or
   "rides" for that wait; memory "uses N MB less memory".
 - **Review**: list every in-game string you add or change, old -> new, exactly as shown. Landing doesn't wait; she
-  answers "text acknowledged" or names lines. Propose wording; never ask her to write it.
+  answers "text acknowledged" or names lines. Propose wording; never ask her to write it. Changelog items are not
+  asked about: she reviews them separately on the board (Anita, 2026-11-19).
 - **Changelog** (when in doubt, no item; Anita 2026-11-18: "we need to be less willing to put stuff on the
   changelog"): a change a player would notice (a new control, a changed number, a fixed bug they'd have met) gets
   one item before you report: `venv\Scripts\python.exe trainworld/tools/changelog.py add "<one plain line, lowercase;

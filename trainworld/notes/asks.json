@@ -5,47 +5,5 @@
     "text": "T-3746 text (landed, on 8800): panel title hover 'Shift+click to add to selection.' (reused); removed panel strings ('3 pieces of track', 'Limit', 'Remove track', 'Use the Select tool (4) to rebuild longer stretches', Double up label); bar length hover gains 'Upkeep $40k/day'; Remove hover 'Remove the selection (Delete)'; changelog c005 'moved track controls to the bar at the top for one piece or many, speed limit included, and shift click now selects the track in between'. Text acknowledged, or name lines?",
     "since": "2026-11-19",
     "by": "maps-6b"
-  },
-  {
-    "id": "a-2026-11-19-2",
-    "title": "Five service periods text",
-    "text": "T-3542 stage 1b text (landed): 'Periods', 'Set for this line', 'This line', 'Same as game', column 'Period', rows Rush/Morning/Afternoon, hover 'Rush: 06:00-10:00, 16:00-20:00'; down-switch questions ('Morning, midday and afternoon will run 26 trains, the most of the three.' and the headway and game-wide versions), buttons 'Use 3 periods' / 'Keep 5 periods'; 'at high demand' readouts become 'in the morning peak' etc.; changelog c015 'added 4 and 5 service periods (rush, or morning and afternoon apart), set for the whole game or per line in the schedule window'. Text acknowledged, or name lines?",
-    "since": "2026-11-19",
-    "by": "maps-6b"
-  },
-  {
-    "id": "a-2026-11-19-3",
-    "title": "New countries changelog line",
-    "text": "Changelog c013: 'added Cuba, the Dominican Republic, Haiti, Jamaica, Trinidad and Tobago, the Bahamas, Barbados, Saint Lucia, Curaçao, Grenada, Saint Vincent, Aruba, Antigua, Dominica, the Cayman Islands, Bolivia and Paraguay'. Text acknowledged, or reword?",
-    "since": "2026-11-19",
-    "by": "maps-6b"
-  },
-  {
-    "id": "a-2026-11-19-4",
-    "title": "Guyana, Suriname, French Guiana",
-    "text": "They are all that is left of the Americas after T-3620. Do them next (one world run, overnight), or leave them?",
-    "since": "2026-11-19",
-    "by": "maps-6b"
-  },
-  {
-    "id": "a-2026-11-19-7",
-    "title": "Period hours text",
-    "text": "T-3542 stage 2 text: column head 'Hours', boxes like '6-10', error ' 2 hours at least' (or '6 hours at least' for High on 3-period lines), period hovers with the line's own hours ('Morning: 05:00-10:00'), screen reader 'hours of Morning'; changelog c015 reworded to 'added 4 and 5 service periods with hours you can move, set for the whole game or per line in the schedule window'. Text acknowledged, or name lines?",
-    "since": "2026-11-19",
-    "by": "maps-6b"
-  },
-  {
-    "id": "a-2026-11-19-8",
-    "title": "Deploy server save levels 23-26",
-    "text": "shonei-server c19200d (on f5309bf, 1f29b5a) teaches the server's save check levels 23 (service periods), 24 (station names), 25 (period hours) and 26 (fare zones, once stage 1 lands). Must go out with or before the next publish; early is harmless (it only accepts more). Deploy, and push shonei-server after?",
-    "since": "2026-11-19",
-    "by": "maps-6b"
-  },
-  {
-    "id": "a-2026-11-19-9",
-    "title": "Fare zone charging rule",
-    "text": "Fare zones (T-3740) charge by start and end zones only: zone 1 to 3 is 3 zones, zone 2 to zone 2 through zone 1 is 1 zone. Keep that, or count every zone the route passes? Recommended: keep (predictable).",
-    "since": "2026-11-19",
-    "by": "maps-6b"
   }
 ]
