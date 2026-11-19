@@ -10,11 +10,14 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 0. Live v0.4.2. Master at level 29, 8800 = 2a5413b4 (rebuild after this round's landings). Cap 14.
    shonei-server: e604291 (levels 27-29), 93718d1 (T-3775 savehealth route), 5bf10c7 (T-3382) committed, not
    deployed or pushed: ask a-2026-11-19-15. keepdel's T-3789 commits join that deploy.
-1. v0.4.3 (her 11-19 16:20 scope; I told her ~2-3 pm her time for playtest list + changelog review): left are
-   T-3346 stage 2, T-3788, T-3782. If realjapan T-3782 is the last thing, ship without it (her ~17:35: "people
-   can just fix them themselves ... its still mostly perfect"). Then: 8800 rebuild + smoke on master, changelog
-   review agent + highlights, she edits the changelog on the board, her playtest list (docs/orchestrator.md),
-   server deploy on her yes, data upload (ngo, fuk, spk, hir, osa + any realjapan reships), smoke8800, publish.
+1. v0.4.3: playtest list sent ~18:40; her playtest (~19:05) asked for T-3791-T-3794 first ("lets just work on
+   all this stuff first"); she's editing the changelog. T-3791 landed 5c8a8514 (zonefix2, Sonnet, T-3796, 6167: linking asks too,
+   "none" loop, area name city; T-3791 strings acked); tramrow (Sonnet, T-3797, 6168: drop "Vehicle Tram" row);
+    ringtool (Sonnet,
+   T-3792 landed 9626e139), renamefast (Opus, T-3793, 6164), T-3794 landed f59e3e6d (text acked), periodsrow (Opus,
+   T-3795, 6166: schedule window rows, her hover text, period count lag). Changelog sorted (now a standing step).
+   Core cap back to 14 (her ~19:10). Then land, smoke, 8800
+   rebuild, her look; then server deploy (a-15, with restore key: her yes given), data upload, smoke8800, publish.
 2. In flight (maps-6f's ttfix/realjapan live in its tab; follow-ups go to a fresh agent on the tree):
    - T-3346 stage 2 landed e40d878e (ttchk2 pass; c029); tt2 removed, its leftovers in
      artifacts/trainworld/tt2-unported-2026-11-19.patch. Smoke on master passed 29/29; 8800 = e40d878e.
@@ -24,7 +27,9 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    - T-3788 landed 9f22d830 (openchk: a badRev device never overwrites the newer rev; its edits split off).
    - T-3782 landed 9163ebd4. T-3790 (linedrift): data/packs/real now has v0.4.2's mos, sai, ber and the new
      save for the other 19 (DECISIONS 11-19). Cause: 9-end junctions and turn-backs at non-stops drop lines,
-     decided by graph/extract changes; plan in notes/T-3790.md (ship guard first). Saves in artifacts/trainworld/t3790.
+     decided by graph/extract changes; plan in notes/T-3790.md. Saves in artifacts/trainworld/t3790.
+     Steps 1-2 landed 664cffd5. Step 3 (6f696bc2, notes only): the new chain cuts are the cause; next is an
+     old-rule real-networks graph (~1 h + rebuild), after v0.4.3. Graphs and saves in artifacts/trainworld/t3790/corridors.
    - T-3789 built: shonei-server 6ab8b68, ada0bce, 8ba8657 (not pushed); restore_game.py committed 6a39f09e.
      Checker delchk passed 5/5 (go tests; -race unavailable). Before/at the deploy: SHONEI_GAMES_ADMIN_KEY on the box
      and ~/shonei-games-admin-key.txt (her yes ~18:05 to setting it with the deploy; the deploy itself still
@@ -43,6 +48,12 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 6. Later: T-3744 per-stop fare, T-3754, T-3747, busverify's train 4.14 min gap read (a short probe).
 
 ## Her words
+- 11-19 ~19:30 (heading out, remote control on): "changelog looks good (i think lets not change it at all)"; she
+  approves the final deploy remotely. Plan: last agents land, smoke master, 8800 rebuild, smoke8800 light+dark,
+  translate new keys, then ONE ask: server deploy + restore key + Rus restore, data upload, publish + website
+  push + open-source sync. ~19:55: changelog published into the game (updates.ts, her board edits: 18 shown,
+  uncommitted), translation pass 1 running (l10n-eu de fr es ca, l10n-mix pt id tr ru, l10n-cjk ja ko zh);
+  then pass 2 back-translate (Sonnet) + pass 3 review (Opus) per group. Start line set to hers: "update v0.4.3: separate rush periods, advanced fares, caribbean!".
 - 11-19 v0.4.3 scope ("yea no rush"); "player complaints take precedent over other new features", "only applies
   to like actual bugs". Fares by city: country or city multiples, never both.
 - 11-19 saves: deleted games kept 7 days ("i think it makes sense"); restore Rus "under new game id", "do the R2".

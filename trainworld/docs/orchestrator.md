@@ -161,6 +161,9 @@ headless Chrome, about 3 minutes; `$env:TW_CORES='4'` for a light run on your ow
   shown item not yet reviewed and asks as a player "would i ever care about this / want to read it in a
   changelog"; it hides each no (`changelog.py hide <id>`), may tighten wording, and lists what it hid and why in
   `notes/changelog-review.md` (ids reviewed, so the next pass skips them). Tell her what was hidden in one line.
+  Then sort it before her final check (Anita, 2026-11-19): by area in the game's order (`AREAS` in
+  tools/changelog.py), within an area features before fixes and the biggest first, hidden items last
+  (`changelog.py move <id> --before <id>`).
 - New zones image (Anita, 2026-11-18, T-3614): every publish that adds or grows zones, before deploy.py, run
   `venv\Scripts\python.exe trainworld/tools/release/new_zones_map.py --version vX.Y.Z` (about 12 s; compares the live
   game's zones with data/packs) and give her `artifacts/trainworld/review/<version>-new-zones.png`. Nothing new, no image.

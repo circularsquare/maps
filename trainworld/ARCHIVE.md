@@ -1,6 +1,12 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3795 [P1] {L:edit-speed} Schedule window periods row layout and lag (2026-11-19): rows share a line; her hover; period count shows in about 0.4 s on NYC (was 1.3-4.6 s) notes/T-3795.md.
+- T-3796 [P2] {L:fares} Fare zone leftovers after T-3791 (2026-11-19): link asks with T-3791's confirm; none loop; area named for the city under the map centre.
+- T-3797 [P3] {L:small-fixes} Tram line panel shows a Vehicle Tram row (2026-11-19): row shown only for non-tram lines, where it is the Normal/High speed picker.
+- T-3791 [P1] {L:fares} Fare zone painting fixes from your test (2026-11-19): confirm before moving stations between areas; unique default names; checkbox Enable; fares unchanged without overlaps. notes/T-3791.md.
+- T-3794 [P1] {L:station-placement} Station name setting asks both ways (2026-11-19): on and off each ask; click-off or Escape changes the setting for new stations only; strings text acknowledged.
+- T-3792 [P1] {L:real-networks} Real world station rings on top only while placing stations (2026-11-19): rings with the station tool only, the old dots otherwise.
 - T-3782 [P2] {L:real-networks} Nagoya station missing from the Tokaido Main Line, Fukuoka reversals (2026-11-19): stops the relation leaves out added (Nagoya, Gifu, Kiyosu on the Tokaido) and shuttle relations read out and back; Fukuoka reversals 11 -> 3, no city worse; 22 cities reshipped. notes/T-3782.md.
 - T-3788 [P3] {L:accounts-server} Failed opens left after T-3773 (2026-11-19): both paths end on the menu, slot untouched; sync badRev; checker openchk passed 3 of 3 risky cases. notes/T-3788.md.
 - T-3784 [P2] {L:fares} Transfers inside a fare zone run are free (2026-11-19): a change between two zone rides of one fare zone run pays no transfer fare, in route cost, mode choice, the market, income and the trip explorer (route choice inside the network still weighs it); every other change pays as before; real save and \ fare-area games bit-identical to master. notes/T-3740.md.

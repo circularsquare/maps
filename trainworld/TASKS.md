@@ -407,10 +407,22 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-3431.md
 - T-3434 [P3] {L:region-redraws} Sabang Island missing from the Banda Aceh zone
   - Context: Player report 2026-11-16. Reach: few.
-- T-3790 [P1] {L:real-networks} Real network rebuilds silently drop lines (taking, 2026-11-19, agent linedrift)
-  - Context: v0.4.2's saves are back in data/packs/real for the 9 cities whose T-3782 rebuild had fewer lines (bei ber chg ist mad mos osa sai shz). The sim isn't the cause: a junction given a 9th track end refuses an edge, or a line turns back at a node it doesn't stop at, and realauto build leaves those lines out. Small upstream changes decide which lines: today's real-network graph and T-3782's extract (Moscow 110 to 90), T-3318's pattern order (Berlin tram 93), stale drop lists.
-  - Goal: A rebuild of any real network serves every route and station its shipped save did, and ship refuses one that doesn't.
+- T-3790 [P1] {L:real-networks} Real network rebuilds drop lines (taking, 2026-11-19, agent corridors)
+  - Context: v0.4.3 keeps v0.4.2's Moscow, Saint Petersburg and Berlin saves (DECISIONS 11-19). The sim isn't the cause: a junction given a 9th track end refuses an edge, or a line turns back at a node it doesn't stop at, and realauto build leaves those lines out; small upstream changes decide which (today's graph and T-3782's extract: Moscow 110 to 90; T-3318's pattern order: Berlin tram 93). Since 664cffd5 ship refuses a city that loses a route or station, and each build starts with a fresh drop list.
+  - Goal: realgraph also writes a real-networks graph by the old chain rule (outside data/packs/realgraph, not deployed), which brings Saint Petersburg and Berlin back whole; then the sim's 8-end and turn-back limits for Moscow's last 8 routes; Moscow, Saint Petersburg and Berlin reshipped with nothing lost.
   - Other: plan in notes/T-3790.md
+- T-3793 [P1] {L:edit-speed} Station rename takes about 4 s to show up (taking, 2026-11-19, agent renamefast)
+  - Context: You, 2026-11-19: "station renaming takes a long time to show up. it looks like it doesnt go through for a while ... takes like ~4s to update on my large save."
+  - Goal: A rename shows up on the map and panels within about half a second on a large save.
+- T-3798 [P2] {L:small-fixes} Sort lines by kind in the Lines tab
+  - Context: Your pad, 2026-11-19: "commonly requested feature: sort lines by type (tram, ferry, hsr, bus, etc)".
+  - Goal: The Lines tab can sort by kind (tram, ferry, high speed, bus and the rest), beside its other sorts.
+- T-3799 [P2] {L:small-fixes} Choose which Lines tab columns show
+  - Context: Your pad, 2026-11-19: "perhaps have the column headers that are shown be customizable so that we dont have too many columns".
+  - Goal: A short design for you first (where the choice lives, which columns show by default), then built.
+- T-3800 [P3] {L:translations} One word for a demand period in German and Catalan
+  - Context: From the v0.4.3 review, 2026-11-19: the schedule window now says Tageszeit (de) and període (ca), but marketTrip.*, oneRider.*, tripInspector.* and routeParts.byPeriod still say Zeitraum and franja.
+  - Goal: Every key in de and ca uses the one word, with the glossary's rendering changed to match.
 - T-3325 [P3] {L:real-networks} {after:real-network rebuild batch} Rebuild Sendai so Senzan Line stops at Toshogu
   - Context: You parked this 2026-11-12 since few players open Sendai. The fix is in realnet.py build_lines.
   - Other: Commands in notes/T-3318.md.
