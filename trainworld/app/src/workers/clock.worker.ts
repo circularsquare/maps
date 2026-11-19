@@ -196,6 +196,10 @@ let version = 0;
 let snapVersion = 0;
 let epoch = NaN;
 let snapTimer = 0;
+/** T-3686: a game is being loaded (`loadGame` to its `restart`): the track model holds no network or a half-made one
+ * (empty while masks come in, then the save's before its last mask), so no state or snapshot of it goes out; one
+ * that did was taken by demand as the loaded game's network (a zone in view solved with no lines) */
+let midLoad = false;
 /** the last edit's time by step, ms (T-229): sent with its answer for `?debug=1` */
 let timing: Record<string, number> = {};
 
@@ -715,10 +719,12 @@ function fetchWater(id: string): Promise<WaterRaster | null> {
 }
 
 /** Install the masks of `ids` (fetching those not fetched); resolves once each is in or failed. The
- * raster is laid out in the pack's own frame; the track model puts it in the game's (T-125). */
-async function ensureMasks(ids: Iterable<string>): Promise<void> {
+ * raster is laid out in the pack's own frame; the track model puts it in the game's (T-125). `streets`: the zones'
+ * street speeds come too (T-3686: not for a load's masks, which are every zone the track meets, hundreds on a
+ * continent at 8 fetches each beside the packs; the loaded network's buses take theirs in `masksForLoaded`). */
+async function ensureMasks(ids: Iterable<string>, streets = true): Promise<void> {
   const all = [...new Set(ids)];
-  void ensureStreets(all);
+  if (streets) void ensureStreets(all);
   const todo = all.filter((id) => !masksIn.has(id));
   if (!todo.length) return;
   const got = await Promise.all(todo.map((id) => fetchWater(id).then((r) => ({ r }), () => null)));
@@ -1341,7 +1347,7 @@ async function masksBeforeLoad(net: Uint8Array) {
   frame = shown;
   if (!missing.length) return;
   api!.load(emptyTrack!);
-  await ensureMasks(missing);
+  await ensureMasks(missing, false);
 }
 
 /** Put a network (in the world frame) in the track model, with the masks of the zones it meets. `level`: the
@@ -1383,7 +1389,7 @@ async function masksForLoaded(net: Uint8Array, level?: number) {
   const missing = zonesOfPoints(xy).filter((id) => !masksIn.has(id));
   if (!missing.length) return;
   a.load(emptyTrack!);
-  await ensureMasks(missing);
+  await ensureMasks(missing, false);
   if (level !== undefined) a.set_load_level(level);
   if (!a.load(net)) throw new Error(SAVE_DAMAGED);
 }
@@ -2381,6 +2387,14 @@ let convertedOnLoad = false;
  * (`unsettleAfter`). With `fresh`, the save is a real network a new game starts from (T-731): only
  * its network and fleet are kept, the rest is a new game's (fares too, T-1906). */
 async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fresh?: NewGameSpec): Promise<boolean> {
+  midLoad = true;
+  try {
+    return await openSave(bytes, from, fresh);
+  } finally {
+    midLoad = false;
+  }
+}
+async function openSave(bytes: Uint8Array, from: "autosave" | "file" | "new", fresh?: NewGameSpec): Promise<boolean> {
   todayGen++;
   todayLast = null;
   rowsSent = ""; // a load's service starts with no line calendars (`TrackApi.set_line_rows`)
@@ -2519,6 +2533,7 @@ async function newGame(spec?: NewGameSpec) {
 
 /** After a load or a new game: the clock, fresh state, a new snapshot for demand. */
 function restart(t: number, from: "autosave" | "file" | "new", reason?: "rebuilt") {
+  midLoad = false;
   clk = { t, rate: clk.rate, at: wallNow() };
   game++;
   saves.edited = false;
@@ -2589,6 +2604,7 @@ function sendRows(): boolean {
  * again, which was about half the edit's time on New York's real network.
  * `split`: the trips' next hour a task later (`sendTrips`), as after an edit (T-1407) */
 function sendState(service = false, effectiveAt?: number, trips = true, ghostFirst = false, split = false) {
+  if (midLoad) return; // (`restart` sends the loaded game's)
   freezeCheckpoint("build-state-start");
   const t0 = performance.now();
   const s = buildState();
@@ -3428,7 +3444,8 @@ function complexOfNodes(): Uint32Array {
 
 function scheduleSnapshot() {
   clearTimeout(snapTimer);
-  snapTimer = setTimeout(() => send({ kind: "snapshot", snapshot: buildSnapshot() }), SNAPSHOT_DEBOUNCE_MS) as unknown as number;
+  if (midLoad) return;
+  snapTimer = setTimeout(() => { if (!midLoad) send({ kind: "snapshot", snapshot: buildSnapshot() }); }, SNAPSHOT_DEBOUNCE_MS) as unknown as number;
 }
 
 // ---------------------------------------------------------------- edits

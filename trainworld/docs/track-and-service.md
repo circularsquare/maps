@@ -2228,11 +2228,12 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   15 seats, so crowding is counted and shown as a train's (`BUS_CRUSH`, demand's `BUS_CARS`); the
   boarding account keeps no platform crowd at its stops that are no station.
 - **Street speeds**: a zone's pack gives its cells' people and jobs, the zone of each cell and the zones'
-  squares and land, which the clock worker fetches as ranges of the `.bin` with the zone's mask (and
-  for the zones a bus route is drawn or loaded in) and `TrackApi::add_pack_streets` turns into a grid of
-  the car's local street speed per zone. A game's load waits for the zones under its bus routes, so its
-  network comes from the save alone and a reload finds its demand cache (T-2499); otherwise nothing waits
-  for them, bus lines are timed again when one lands. Not saved, carried over a load like the terrain.
+  squares and land, which the clock worker fetches as ranges of the `.bin` with the masks of the view and
+  of edits (and for the zones a bus route is drawn or loaded in) and `TrackApi::add_pack_streets` turns into
+  a grid of the car's local street speed per zone. A game's load fetches only the zones under its bus routes
+  (not every zone its track meets, T-3686) and waits for them, so its network comes from the save alone and
+  a reload finds its demand cache (T-2499); otherwise nothing waits for them, bus lines are timed again when
+  one lands. Not saved, carried over a load like the terrain.
   Every Range fetch takes the bytes it asked for whether the answer is a 206, the whole file or a 200
   holding the range alone (`workers/rangeFetch.ts`; Chrome's cache gives the last while the pack
   downloads whole for demand).

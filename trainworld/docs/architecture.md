@@ -702,7 +702,8 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   renumbers ids. Its key is a SHA-256 of the network demand reads, of every pack the solve covered
   (the packs open as it was sent, one closed while it ran included, T-2579) and of the market, the app build, the worker count and the perfOff flags; the zones must be the
   ones the new solve covers. A load's network is worked out from the save alone (it waits for the
-  bus routes' street speeds, [track-and-service.md](track-and-service.md) 6.7, T-2499), so a reload
+  bus routes' street speeds, [track-and-service.md](track-and-service.md) 6.7, T-2499; the clock worker sends no state
+  or snapshot between a load's start and the loaded game's, T-3686), so a reload
   of an unchanged game finds the result its last final wrote. When a whole game loads and the key matches, the result shows at once
   (the bubbles once the zone's cells are open), and once the network is in the loading card goes
   and the clock runs (T-2560). The workers solve the
