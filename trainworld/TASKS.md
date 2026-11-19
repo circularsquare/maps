@@ -124,6 +124,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-3779 [P3] {L:small-fixes} Chart button smaller than the schedule button
   - Context: `checks/t3543-default-headways` fails on master: "the chart button is as big as the schedule button", 21.6 against 23.4 px (found by T-3767's checker, 2026-11-19).
   - Goal: The two line panel buttons are the same size and the check passes.
+- T-3780 [P2] {L:timetables} {after:T-3346 stage 2 landing} Station and complex timetables
+  - Context: Your pad, 2026-11-19: players ask for per-station timetables, "could be cool and not so hard". Per station and per complex, every line in its line colour; for a complex, pick the direction most platforms roughly align with and show trains as that way or the opposite ("eastbound"), "people should mostly use the station timetables anyways"; line numbers show the bullet and line name on hover; opened by a timetable icon button on the station or complex view, like the line's schedule button. Waits for the timetables port so it reads the new departure times.
+  - Goal: A timetable icon on the station and complex views opens departures by line in line colours, a complex's split into two directions, with bullet and line name on hover.
 - T-3766 [P2] {L:fares} {after:T-3758} Fare multiples by city
   - Context: You, 2026-11-19: "some people also wanna do fares by city... i guess we can support that maybe? seems like it should be similar to the country fare mult. i think we can just have it that you have to pick either country mults or city mults. cant do both, which would be weird." A player, 11-19: "I would like to adjusts the fare prices for each city individually." Waits for the fare zone trees (T-3758, T-3740 Z2) to land, since they touch the same panels.
   - Goal: Advanced fares has a choice of country or city multiples (never both); in city mode each city has its own multiple, applied the way a country's is.
