@@ -18,7 +18,12 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    Deploy needs her yes (ask a-2026-11-19-5), with or before the v0.4.3 publish.
 3. Open asks a-2026-11-19-1..5: text acks (T-3746, T-3542 1b, c013), Guyana/Suriname/French Guiana, the deploy.
 4. T-3542 DONE: stage 2 (period hours, level 25) LANDED 875b0070 after periods2chk passed; c015 reworded.
-   shonei-server 1f29b5a (levels 23-25) committed, not pushed or deployed (ask a-2026-11-19-6). T-3753 LANDED 20147ede (not on 8800 yet;
+   shonei-server 1f29b5a (levels 23-25) committed, not pushed or deployed (ask a-2026-11-19-6); go test passes
+   against master. 8800 = 38075a1a (everything above), smoke passed, pushed (~11:50 UTC).
+   T-3740 Z1 (sim charging + save, level 26 LFZ1, no UI) BUILT in tree zonefares; rule: start and end zones only
+   (DECISIONS line uncommitted in main; tell her, she can reverse). Checker zonechk (6151/6152) running, srvlevel
+   adding level 26. Then land Z1, then Z2 (paint tool, tint, panels, strings; 5-7 h) as a fresh Opus agent from
+   notes/T-3740.md, then Z3 (rings, new stations, bus stops; 3-4 h). T-3753 LANDED 20147ede (not on 8800 yet;
    rebuild with periods2's landing). Then T-3346 stage 2 ports (tree
    tt2). Fares: T-3740 zones (14-20 h: stage it first), T-3744 per-stop fare (design for her first), T-3753 (P3).
    T-3754 La Gonave, T-3747 Brazil RAIS (ends in a rebuild run: overnight).
