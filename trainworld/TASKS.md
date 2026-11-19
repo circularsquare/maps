@@ -72,10 +72,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Russia's rows use GHSL alone (T-2295) and nothing checks them. Not opened yet.
   - Goal: Municipal totals from Rosstat's 2021 census as an admin_totals config, rows moving over 10% rebuilt.
   - Other: Needs a polygon file whose codes join (OKTMO); geoBoundaries has none. notes/T-2295.md
-- T-2598 [P3] {L:jobs-places} Brazil jobs from RAIS
-  - Context: The data register has a "?" for Brazil's jobs (T-2437).
-  - Goal: Know whether RAIS (the formal-jobs register) is accessible and beats OSM jobs outside Sao Paulo.
-  - Other: notes/T-2437.md
+- T-3747 [P3] {L:jobs-places} Brazil jobs placed from RAIS
+  - Context: T-2598 found RAIS establishments (formal jobs by postcode, free FTP, CC BY-ND) place jobs; CNEFE gives postcode points; totals are 63-70% of today's proxy in Recife and Goiania, so it mainly moves where jobs sit. Informal work (38% nationally, over half in the Northeast) needs a state top-up spread by population.
+  - Goal: Brazil's tier 0 jobs placed from RAIS plus the informal top-up, checked against the proxy on rec, goi, sal and a few interior zones, then a Brazil rebuild (about 5-6 h plus the run); Sao Paulo stays on its survey.
+  - Other: notes/T-2598.md
 - T-2558 [P3] {L:jobs-places} Mexico everyday trips from DENUE
   - Context: The data register lists this as a task to file (T-2081).
   - Goal: An everyday-trips hook for Mexico from DENUE codes: errands 46 and 81, leisure 71 and 72.
@@ -225,6 +225,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Design done and answered 2026-11-17 (notes/T-3542.md "Her answers"): 5 period slots in the sim; periods and hours set for the whole game by default, per line as an extra step; no cap on a row's headway; about 19-29 h in three stages. You, 2026-11-17: "would also like to separately add the feature where we cn enable 4 tiers (rush, midday, evening=med, night=low) or 5 (morning, midday, afternoon, evening, night) in there [the timetables window]. that should update the always visible in line view to show 5 rows instead of 3. but it sitll shouldnt show weekends separately. similrly the timetables should only show up in the dedicated popup window."
   - Goal: Built in the three stages, reusing T-3346's Detailed mode (rows by hours averaged into demand's five periods, so no extra solve time) and your 2026-11-17 add: "being able to tweak the periods customizably ... set the morning hours to like start an hour earlier".
   - Other: notes/T-3346.md
+- T-3720 [P3] {L:accounts-server} New game in the autosave slot may inherit a sandbox latch (taking, 2026-11-18, agent latchfix2)
+  - Context: Reproduced and fixed in tree autolatch (score entries carry the game's origin; tieNew always mints a new id), but the checker found the fix can retire the same game's entry when the account's newer copy has a different origin (saves from before T-2037 on two devices), deleting its Community share.
+  - Goal: The fix lands with a guard (never retire the slot's own current cloud id) and passes a second checker.
+  - Other: notes/T-3720.md (in tree autolatch)
 - T-3572 [P4] {L:accounts-server} Money and costs much higher on another device
   - Context: Player report (Japanese, via your pad 2026-11-17): "別の端末で自分のアカウントにログインした際に資金がとても多くなり、建設費もとても高くなってしまうバグが発生しています。" (signing in on another device, their money became very large and building costs very high). Reach guess: players who switch devices; a currency shown differently per device. You, 2026-11-17: "we can store currency in save i guess yeah. but like p4 can do whenever".
   - Goal: The chosen currency is stored in each save, so every device shows a game in the currency it was saved in; old saves keep the device's choice (about 1-1.5 h).
@@ -870,10 +874,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 ## Held features
 
 ## Code health
-- T-3743 [P3] {L:checks} Pack gate's runner test 5 crashes
-  - Context: From T-2901: runner_fixes test 5 crashes in `pack_gate.browser_run` on `open('')`, on master too, so tests 6 and 7 never run.
-  - Goal: Tests 5-7 run and pass, or the dead ones are removed.
-  - Other: notes/T-2901.md
 - T-3699 [P3] {L:solve-speed} Goals wait for good if the intercity result never comes
   - Context: From T-3509's checker: with intercity trips on, goals and achievements now wait for a market table with at least one row; after a worker failure that never delivers one, they would wait for good. Not tested.
   - Goal: After a worker failure or a long wait, goals fall back to local figures or wait for the restarted worker's result; probed once.
