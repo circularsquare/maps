@@ -3,7 +3,7 @@
     python pipeline/realauto.py extract [id ...]          # the extract cut to each city -> $REALNET_OUT/osm_<id>.json
     python pipeline/realauto.py build [id ...] [--jobs N] # extract, net, geom, corridors, realsave, gamesave; a report per city
     python pipeline/realauto.py report [id ...]           # the reports' table again
-    python pipeline/realauto.py ship [id ...]             # realnet.py ship for the cities that passed, and the app's list
+    python pipeline/realauto.py ship [id ...] [--force]   # realnet.py ship for the cities that passed and lose no route or station the shipped save serves, and the app's list
     python pipeline/realauto.py drop <id>                 # (a build step) the lines in auto_<id>_drop.json out of the network JSON
 
 The cities are `realauto.json` (a city pack id each, how they were picked in its "what"); with no ids a
@@ -637,6 +637,9 @@ def build_one(city, exe):
              ("realsave", [str(exe), "--dir", OUT, "--city", city, "--out", OUT, "--shared", "--slow"] + (["--left"] if any(c["id"] == city and c.get("left") for c in listed()) else [])),
              ("gamesave", py(os.path.join(HERE, "realnet.py"), "gamesave", city))]
     times = {}
+    # a drop list from an earlier build would leave out lines this one could run
+    if os.path.exists(os.path.join(OUT, f"auto_{city}_drop.json")):
+        os.remove(os.path.join(OUT, f"auto_{city}_drop.json"))
     for attempt in (0, 1):
         with open(log, "a" if attempt else "w", encoding="utf-8") as f:
             for name, cmd in steps[attempt:]:  # the second time from the network JSON already made
@@ -728,7 +731,38 @@ def cmd_build(ids, jobs):
     table(rows)
 
 
-def cmd_ship(ids):
+def shipped_dir():
+    """The folder of shipped saves; REALNET_PACKS_REAL points the ship gate elsewhere (a test)."""
+    return os.environ.get("REALNET_PACKS_REAL") or os.path.join(ROOT, "data", "packs", "real")
+
+
+def save_service(path):
+    """(routes, served stations) of a save: route = a line name, station = a stop name some line stops at."""
+    from readsave import read
+    d = read(path)
+    routes, stations = set(), set()
+    for l in d["lines"]:
+        routes.add(l["name"])
+        for s in l["stops"]:
+            n = d["nodes"][s].get("name", "")
+            if n:
+                stations.add(n)
+    return routes, stations
+
+
+def lost_service(city):
+    """(routes, stations) the city's new save no longer serves against the save in the shipped folder;
+    both empty when nothing went or the city has no shipped save yet."""
+    import realnet
+    old = os.path.join(shipped_dir(), f"{city}.save")
+    if not os.path.exists(old):
+        return [], []
+    ro, so = save_service(old)
+    rn, sn = save_service(realnet.out_or_work(f"{city}_real.save"))
+    return sorted(ro - rn), sorted(so - sn)
+
+
+def cmd_ship(ids, force=False):
     sys.path.insert(0, HERE)
     ok = {c["id"] for c in listed() if c.get("ship")}
     go = []
@@ -737,6 +771,12 @@ def cmd_ship(ids):
         r = json.load(open(p, encoding="utf-8")) if os.path.exists(p) else {}
         if i not in ok or not r.get("pass"):
             print(f"{i}: not shipped ({'not listed to ship' if i not in ok else 'did not pass'})")
+            continue
+        routes, stations = lost_service(i)
+        if (routes or stations) and not force:
+            print(f"{i}: not shipped, the new save loses {len(routes)} routes and {len(stations)} stations the shipped one serves (--force ships it anyway)")
+            print(f"   routes: {routes}")
+            print(f"   stations: {stations}")
             continue
         go.append(i)
     if go:
@@ -764,6 +804,9 @@ if __name__ == "__main__":
         i = a.index("--jobs")
         jobs = int(a[i + 1])
         del a[i:i + 2]
+    force = "--force" in a
+    if force:
+        a.remove("--force")
     ids = a[1:] or [c["id"] for c in listed()]
     if cmd == "extract":
         cmd_extract(ids)
@@ -774,6 +817,6 @@ if __name__ == "__main__":
     elif cmd == "drop":
         cmd_drop(ids[0])
     elif cmd == "ship":
-        cmd_ship(ids)
+        cmd_ship(ids, force)
     else:
         sys.exit(__doc__)
