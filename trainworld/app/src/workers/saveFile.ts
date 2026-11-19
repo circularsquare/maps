@@ -451,6 +451,8 @@ export interface SyncRecord {
   error?: string;
   /** T-3395: the slot's `at` whose bytes the account refused as damaged: not sent again until the slot changes */
   refused?: number;
+  /** T-3788: the account rev that failed to load in place: not fetched again until the account has a newer one */
+  badRev?: number;
 }
 export const ORIGINAL_SLOT = "autosave";
 export const ORIGINAL_NAME = "Original game"; // i18n-ignore: a slot's saved name

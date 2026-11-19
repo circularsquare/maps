@@ -25,6 +25,8 @@ export interface SlotHost {
   inQueue(f: () => Promise<void>): Promise<void>;
   isPanic(err: unknown): boolean;
   panicLater(err: unknown, what: string): void;
+  /** T-3788: the game in hand failed to load in place: no slot is held, the page goes to the start menu */
+  openFailed(err: unknown, name: string): void;
 }
 let host: SlotHost;
 export function bindSlots(h: SlotHost) { host = h; }
@@ -425,6 +427,7 @@ async function openOnAccount(ctx: CloudContext) {
     if (saves.activeSlot === key) upFailed(r === "failed");
     return;
   }
+  if (rec.badRev === g.rev) return; // T-3788: this copy did not load here
   const got = await fetchGame(ctx, g);
   if (!got) return;
   let took = false;
@@ -433,9 +436,15 @@ async function openOnAccount(ctx: CloudContext) {
     if (saves.activeSlot !== key || !saves.activeLease) return;
     stored = (await readStored(key)) ?? stored;
     if (changed()) return; // a change came meanwhile: settled at the next save
-    await writeFetched(ctx, key, got);
+    // T-3788: the slot is replaced only once the copy has loaded; a copy that fails leaves it as it was
     saves.switching = true;
-    try { await loadGame(got.stored.bytes, "autosave"); } finally { saves.switching = false; }
+    try { await loadGame(got.stored.bytes, "autosave"); }
+    catch (err) {
+      await writeSync(key, { ...rec!, badRev: g.rev }).catch(() => {});
+      host.openFailed(err, slotName(key, stored));
+      return;
+    } finally { saves.switching = false; }
+    try { await writeFetched(ctx, key, got); } catch { saves.dirty = true; } // the game in hand is the account's: autosave writes it
     heldFrom(got.stored);
     saves.dirty = false;
     saves.savedAt = got.stored.at;

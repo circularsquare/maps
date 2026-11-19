@@ -258,8 +258,8 @@ export type ToClock =
       guide?: boolean;
       /** T-2703: reads of the saved game to fail on purpose, for checks (`?debug=1&readFails=N`) */
       readFails?: number;
-      /** T-3773: the next game opened panics after its decode, for checks (dev server, `?debug=1&loadPanic=1`) */
-      loadPanic?: boolean;
+      /** T-3773: the next game opened panics after its decode, for checks (dev server, `?debug=1&loadPanic=1`); "late": the first load after the game has opened (T-3788) */
+      loadPanic?: boolean | "late";
       /** T-2802: the least the WASM memory grows by, bytes (`heapStep` in deviceMemory.ts) */
       heapStep?: number }
   /** T-2802: every zone's coarse outline, the page's parse of `packs/outlines.json` (null: unavailable), after init */
@@ -929,7 +929,7 @@ export type FromClock =
   | { kind: "loaded"; from: "autosave" | "file" | "new"; clock: number; frame: FrameSpec; error?: string; why?: string; converted?: boolean; game: number; slot?: string; reason?: "rebuilt" }
   /** T-3773: the game the page started with did not open (`error` a message key or text, `why` a panic's): the worker
    * holds no slot and the page goes to the start menu. `slot`: the saved game's slot, `from` what was opened, `name` it */
-  | { kind: "openFailed"; from: "slot" | "file" | "restore" | "view"; slot?: string; name: string; error: string; why?: string }
+  | { kind: "openFailed"; from: "slot" | "file" | "restore" | "view" | "new"; slot?: string; name: string; error: string; why?: string }
   /** T-1196: "leave" done (the page may reload), or why the game in hand could not be saved */
   | { kind: "left"; error?: string }
   /** T-889: a save being loaded: its built stations' x, y in `frame`, before its network is worked out;

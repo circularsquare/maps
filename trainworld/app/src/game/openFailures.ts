@@ -9,7 +9,7 @@ declare const __TW_VERSION__: string | undefined;
 export interface OpenFailure {
   /** wall ms */
   at: number;
-  from: "slot" | "file" | "restore" | "view";
+  from: "slot" | "file" | "restore" | "view" | "new";
   /** the saved game's slot (a backup's: the slot it backs up); none for a file or a viewed network */
   slot?: string;
   name: string;
@@ -69,5 +69,5 @@ export function takeOpenFailNotice(): string | null {
   const v = readOpenFailures(), f = v.recent[0];
   if (!v.unseen || !f) return null;
   write({ ...v, unseen: false });
-  return f.from === "slot" ? t("startMenu.openFailed", { name: f.name }) : textOf(f);
+  return f.from === "slot" || f.from === "new" ?t("startMenu.openFailed", { name: f.name }) : textOf(f);
 }

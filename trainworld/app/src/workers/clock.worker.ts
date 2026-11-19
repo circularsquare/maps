@@ -402,7 +402,15 @@ const hourShape = new Map<number, Float32Array>();
 /** the cash and today's fares last sent in a "cash" message */
 let sentCash = NaN, sentFares = NaN;
 // T-3734: the save slot (slots.ts) and what it needs of the game in hand
-bindSlots({ api: () => api, game: () => game, send, gameNow, saveBytes, slotSummary, loadGame, inQueue: (f) => (messages = messages.then(f).catch((err) => send({ kind: "error", message: String(err) }))), isPanic, panicLater });
+bindSlots({ api: () => api, game: () => game, send, gameNow, saveBytes, slotSummary, loadGame, inQueue: (f) => (messages = messages.then(f).catch((err) => send({ kind: "error", message: String(err) }))), isPanic, panicLater, openFailed: failInPlace });
+/** T-3788: a load into the running game failed (the slot is untouched): the same ending as an open that failed */
+function failInPlace(err: unknown, name: string) {
+  const panicked = isPanic(err) ? afterLoadPanic(err) : null;
+  const slot = saves.activeSlot;
+  letGoSlot();
+  send({ kind: "openFailed", from: "slot", slot, name, ...openFailReason(err, panicked, loadFailKey(String(err))) });
+  if (panicked === null) console.error("account copy did not load:", err);
+}
 /** T-728: the game's mode, start zone and opened zones, kept in the save's header (`opened` absent
  * in a save from before it) */
 let mode: GameMode = "normal";
@@ -4042,7 +4050,7 @@ async function processMessage(msg: ToClock) {
       guideWanted = msg.guide === true;
       if (msg.backupMs && msg.backupMs > 0) saves.backupSteps = BACKUP_STEPS.map((s) => s / BACKUP_STEPS[0] * msg.backupMs!);
       if (msg.readFails) failReads(msg.readFails);
-      if (import.meta.env.DEV && msg.loadPanic) panicOnLoad = true;
+      if (import.meta.env.DEV && msg.loadPanic === true) panicOnLoad = true;
       // T-1196: the game picked in the saves panel before the page reloaded; a file or backup goes
       // into a slot of its own below, the slot it was picked from held until then (one that fails goes to the start menu, T-3773)
       const pending = msg.pending ? await takePending() : null;
@@ -4102,6 +4110,14 @@ async function processMessage(msg: ToClock) {
             void autosave();
             return;
           } catch (err) {
+            if (msg.newSlot) {
+              // T-3788: a start from the menu that fails leaves no empty slot behind: back to the start menu, as an open that failed
+              const panicked = isPanic(err) ? afterLoadPanic(err) : null;
+              letGoSlot();
+              send({ kind: "openFailed", from: "new", name: msg.newSlot, ...openFailReason(err, panicked, loadFailKey(String(err))) });
+              if (panicked === null) console.error("real network did not load:", err);
+              return;
+            }
             if (isPanic(err)) send({ kind: "loaded", from: "new", clock: START_CLOCK, error: SAVE_PANIC, why: afterLoadPanic(err), frame: frameSpec(), game });
             else send({ kind: "loaded", from: "new", clock: START_CLOCK, error: (console.error("real network did not load:", err), loadFailKey(String(err))), frame: frameSpec(), game });
           }
@@ -4148,7 +4164,7 @@ async function processMessage(msg: ToClock) {
       send({ kind: "failed", error: storage ? err.message : isPanic(err) ? panicWhy(err) : String(err), storage });
     });
     // T-988: the game in hand claimed on the account, the other slots settled
-    void ready.then(() => { saves.initDone = true; void cloudKick(); });
+    void ready.then(() => { saves.initDone = true; if (import.meta.env.DEV && msg.loadPanic === "late") panicOnLoad = true; void cloudKick(); });
     addEventListener("online", () => { void cloudKick(); if (saves.cloudRetryAt) void cloudUp(saves.activeSlot); });
     setInterval(tick, 1000);
     setInterval(liveMoney, LIVE_MONEY_MS);

@@ -710,7 +710,7 @@ export class ClockClient {
     if (!choice.slot) try { slot = localStorage.getItem("anitabuilder-save-slot") || slot; } catch { /* storage unavailable */ }
     const backupMs = Number(q.get("backupMs")) || undefined;
     const readFails = q.get("debug") === "1" ? Number(q.get("readFails")) || undefined : undefined;
-    const loadPanic = (q.get("debug") === "1" && q.get("loadPanic") === "1") || undefined;
+    const loadPanic = q.get("debug") !== "1" ? undefined : q.get("loadPanic") === "1" ? true : q.get("loadPanic") === "late" ? "late" as const : undefined;
     this.patchMode = q.get("patch") ?? "1";
     // (first, before any message posted ahead of the start)
     this.waiting.unshift([{ kind: "init", pack: dataUrl(this.cityId), terrain: TERRAIN_BASE, fresh, testPage: this.testPage, slot, newSlot: choice.newSlot, backupMs, game: choice.game, pending: choice.pending, patch: this.patchMode, guide: !guideFinished.peek(), bandMode: bandTry(), readFails, loadPanic, heapStep: heapStep() } satisfies ToClock, choice.game?.real ? [choice.game.real] : []]);
