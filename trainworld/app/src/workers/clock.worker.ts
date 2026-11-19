@@ -3645,6 +3645,8 @@ function applyInner(op: EditOp): Applied {
       return { r: a.set_station_bound(op.node, op.bound) };
     case "bindAll":
       return { r: a.bind_stations(a.unbound_stations()) };
+    case "unbindAll":
+      return { r: a.unbind_stations(new Uint32Array(op.nodes), op.names) };
     case "removeStation":
       return { r: a.remove_station(op.node) };
     case "construct":

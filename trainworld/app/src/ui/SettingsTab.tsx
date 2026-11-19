@@ -297,12 +297,19 @@ function Slider({ label, min, max, step, value, tip, percent: pct, set }: { labe
   );
 }
 
-/** T-3759: new stations named after their complex or not; turned on with stations already unbound, a
- * question offers to bind them too (one undo). */
+/** T-3759, T-3794: new stations named after their complex or not; changing it asks about the existing
+ * stations too (one undo). No, Escape and a click outside all leave them as they are. */
 function bindNew(on: boolean) {
   setBindNew(on);
-  if (!on || !world.peek()?.save.stations.some((s) => s.unbound)) return;
-  ask.value = { text: t("settingsTab.bindAllQuestion"), yes: t("settingsTab.bindAll"), no: t("settingsTab.bindNewOnly"), run: () => void edit({ op: "bindAll" }) };
+  const stations = world.peek()?.save.stations.filter((s) => !s.port) ?? [];
+  if (on) {
+    if (!stations.some((s) => s.unbound)) return;
+    ask.value = { text: t("settingsTab.bindAllQuestion"), yes: t("settingsTab.bindAll"), no: t("settingsTab.bindNewOnly"), run: () => void edit({ op: "bindAll" }) };
+    return;
+  }
+  const bound = stations.filter((s) => !s.unbound);
+  if (!bound.length) return;
+  ask.value = { text: t("settingsTab.unbindAllQuestion"), yes: t("settingsTab.unbindAll"), no: t("settingsTab.bindNewOnly"), run: () => void edit({ op: "unbindAll", nodes: bound.map((s) => s.num), names: bound.map((s) => s.name) }) };
 }
 
 /** T-728: the game's mode; a normal game can be made a sandbox once, after a confirmation, never back. */

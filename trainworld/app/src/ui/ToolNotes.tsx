@@ -34,7 +34,10 @@ function Ask() {
   useLayoutEffect(() => { if (q) cancel.current?.focus(); }, [q]);
   if (!q) return null;
   return (
-    <dialog class="confirmation" ref={dialog} aria-labelledby="confirmation-title" aria-describedby="confirmation-text" onCancel={() => { ask.value = null; q.stay?.(); }} onKeyDown={e => {
+    <dialog class="confirmation" ref={dialog} aria-labelledby="confirmation-title" aria-describedby="confirmation-text" onCancel={() => { ask.value = null; q.stay?.(); }} onClick={(e) => {
+      const r = e.currentTarget.getBoundingClientRect();
+      if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) { ask.value = null; q.stay?.(); }
+    }} onKeyDown={e => {
       e.stopPropagation();
       if (e.key !== "Tab") return;
       const buttons = [...e.currentTarget.querySelectorAll<HTMLButtonElement>("button:not(:disabled)")];

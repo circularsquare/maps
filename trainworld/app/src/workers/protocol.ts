@@ -114,6 +114,8 @@ export type EditOp =
   | { op: "bindStation"; node: NodeId; bound: boolean }
   /** T-3759: bind every station to its complex's name, one undo */
   | { op: "bindAll" }
+  /** T-3794: unbind these stations, each keeping the name it shows now (`names[i]` for `nodes[i]`), one undo */
+  | { op: "unbindAll"; nodes: NodeId[]; names: string[] }
   /** T-3332: a station's platforms on one track (`one`) or both; a constructed one pays the difference to both, nothing back to one */
   | { op: "stationTracks"; node: NodeId; one: boolean }
   | { op: "stationWay"; node: NodeId; heading: number }

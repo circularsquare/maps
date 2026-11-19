@@ -459,6 +459,15 @@ impl TrackApi {
         self.run(Op::Batch(ops))
     }
 
+    /// T-3794: unbind these stations, each keeping the name it shows now (`names[i]` for `nodes[i]`), one undoable edit.
+    pub fn unbind_stations(&mut self, nodes: &[u32], names: Vec<String>) -> u32 {
+        let ops: Vec<Op> = nodes.iter().zip(names).filter(|(_, n)| !n.is_empty()).filter_map(|(&node, own)| self.w.net.station_data(node).filter(|d| d.own.is_empty()).map(|d| Op::Station { node, data: Some(StationData { own, ..d }) })).collect();
+        if ops.is_empty() {
+            return 0;
+        }
+        self.run(Op::Batch(ops))
+    }
+
     /// T-3759: after an older save loads (`take_old_names`), these typed stations keep showing their own
     /// names: each is unbound with its stored name. Not an edit the player made, so not on undo.
     pub fn adopt_old_names(&mut self, nodes: &[u32]) -> u32 {
