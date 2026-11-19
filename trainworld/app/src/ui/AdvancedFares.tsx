@@ -12,10 +12,11 @@ import { chargedPrices, MAX_ZONES } from "../game/fareZones";
 import { newArea, removeArea, renameArea, setAreaOff, setZonePrice, startPainting, topZone } from "../game/fareZonePaint";
 import { roundTo } from "../game/currency";
 import { countryFareScales, faresIn } from "../game/fareDefault";
-import { isCity, zoneCountry } from "../game/cities";
+import { cityById, isCity, zoneCountry } from "../game/cities";
+import { goToCity } from "./Cities";
 import { moneyState, stationCity, stationCountry } from "../game/money";
 import { redo, undo, changeFares } from "../game/fareUndo";
-import { ask } from "../game/ui";
+import { ask, selection } from "../game/ui";
 import { setFareByCity, setFareRef, world } from "../game/world";
 import { currencySpec, fromShown, price, priceTyped, toShown, unitMetres, unitShort } from "../game/format";
 import { playBuild } from "../map/buildSound";
@@ -43,16 +44,25 @@ function builtIn(of: (st: StationInput) => string | null): string[] {
   return [...out];
 }
 
+const openCity = (id: string) => {
+  const s = selection.peek();
+  if (s?.kind !== "city" || s.city !== id) selection.value = { kind: "city", city: id };
+};
+
 /** One country's or (T-3766) city's row: its multiple of the reference's fares (a plain 1.00x for the reference
  * country), its base fare, and the Money tab's anchor (countries only) and undo buttons. */
 function PlaceRow({ f, place }: { f: Fares; place: string }) {
   const name = placeName(f, place);
+  // T-3811: a city's name opens its view (a click) and centres the map on it (a double click) behind the panel
+  const label = f.byCity && isCity(place)
+    ? <span class="place-link" onMouseDown={(e) => { if (e.detail > 1) e.preventDefault(); }} onClick={() => openCity(place)} onDblClick={() => { goToCity(cityById(place)); openCity(place); }}>{name}</span>
+    : name;
   const base = <span class="af-base">{price(chargedAt(f, place).nodes[0][1])}</span>;
   const m = placeMultiple(f, place);
   if (m.isRef) {
     return (
       <li>
-        <span class="fr-what">{name}</span>
+        <span class="fr-what">{label}</span>
         <span class="fr-ref" data-tip={t("moneyTab.referenceTip", { name })}>{mulText(1)}</span>
         {base}
         <span />
@@ -62,7 +72,7 @@ function PlaceRow({ f, place }: { f: Fares; place: string }) {
   const set = (v: number) => void m.set(v);
   return (
     <li>
-      <span class="fr-what">{name}</span>
+      <span class="fr-what">{label}</span>
       <Stepper value={mulText(m.shown)} wide label={t("moneyTab.fareScale")} onStep={(d) => set(stepMultiple(m.shown, d))}
         type={{ text: m.shown.toFixed(2), set, tip: t("moneyTab.countryFaresTip", { name, ref: tCountry(m.ref) }) }} />
       {base}
