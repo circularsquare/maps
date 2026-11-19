@@ -224,7 +224,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Open-source issue 6: Suzhou to Shanghai's airports, Seoul to Incheon. Ground trips fade out from 40 km and stop at 80 km. You, 2026-11-17: "sure we can do big airports drawing ground trips from far away, not super high prio tho."
   - Goal: Hubs above a passenger threshold draw from cities 80-150 km away, sized by passengers, measured on a few hubs against published catchments.
   - Other: notes/T-3485.md
-- T-3742 [P2] {L:timetables} {after:v0.4.3} Nudge a line's departure times (taking, 2026-11-18, agent offsetdesign)
+- T-3742 [P2] {L:timetables} {after:v0.4.3} Nudge a line's departure times
   - Context: You, 2026-11-18, for v0.4.3 ("train adjustments"), from a player: "the ability to offset departure times from whatever the game defaults to (like for example +4 minutes or -5 minutes) to have finer control over train movements and minimise conflicts between lines that share tracks". Per-train nudges are T-3346's Exact mode (stage 6, 24-34 h); a per-line offset is a smaller piece, but it meets the automatic pacing of lines sharing track (T-3584, `pace_merges`).
   - Goal: A design for you first (per line or per row, how it meets automatic pacing, where the control sits), with an hour estimate.
   - Other: notes/T-3742.md
@@ -274,7 +274,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3460 [P3] {L:cleanup} Code written twice
   - Context: From the code tour: the schematic's sheet maths in Rust (diagram.rs) and again in JavaScript (sheetLines.ts, kept as a fallback); the real-rail route finder in the game (realRoute.worker.ts) and copied in the pipeline (realroute.py); car street speeds twice in Rust.
   - Goal: One copy of each, or a written reason to keep both.
-- T-3734 [P2] {L:cleanup} Game stamp on worker messages and save code moved out (taking, 2026-11-18, agent slotown)
+- T-3734 [P2] {L:cleanup} Game stamp on worker messages and save code moved out
   - Context: Refactor survey area 1 (notes/refactor-survey-2026-11-18.md). Stages 1-2 are done: standing checks for the save races, and one answer for whether the slot may be written (T-2843's machine C), which fixed T-3698 and a second tab that could not go back to the menu. Left: (3) every worker message about a game carries one stamp, replacing the money's slot tag and the stop clicks' game count; (4) the save code moves out of clock.worker.ts into its own module.
   - Goal: Each stage landed alone, the three t3734 checks, t1826-saves and t3478-new-game passing at each; no save format change.
   - Other: notes/refactor-survey-2026-11-18.md; notes/T-3734.md
@@ -340,15 +340,15 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: Measured in notes/T-909.md option 1.
 
 ## Interface
-- T-3739 [P2] {L:fares} Advanced fare panel with a fare curve (taking, 2026-11-18, agent faredesign)
-  - Context: You, 2026-11-18, for v0.4.3: keep the current fare controls, add an "advanced" button that opens a panel like the schedule's advanced one, with everything in the simple view, a list of countries with their multiples (tweak each, or set the reference country), and nodes you can add to the fare curve to make a staircase or any other shape. Plan first, not built yet.
-  - Goal: A design for you, with an hour estimate.
+- T-3739 [P2] {L:fares} {waits:Anita} Advanced fare panel with a fare curve
+  - Need from Anita: Say yes to the design in notes/T-3739.md (curve all Lines or all Steps; build now for v0.4.3, about 7-11 h).
+  - Context: You, 2026-11-18, for v0.4.3: keep the current fare controls, add an "advanced" button that opens a panel like the schedule's advanced one, with everything in the simple view, a list of countries with their multiples (tweak each, or set the reference country), and nodes you can add to the fare curve to make a staircase or any other shape. Design done.
   - Other: notes/T-3739.md
-- T-3740 [P2] {L:fares} Zone fares players draw (taking, 2026-11-18, agent faredesign)
-  - Context: You, 2026-11-18: "people have requested zone fares ... people wanna draw these. in a city that kinda makes sense but idk how multi-city fare zones would work." Plan first, not built yet.
-  - Goal: Ideas and a recommended design for you (drawing zones, how a trip's fare is counted, what happens across cities), with an hour estimate.
+- T-3740 [P2] {L:fares} {waits:Anita} Zone fares players draw
+  - Need from Anita: Say yes to the zone design in notes/T-3739.md section 2 (painted stations with a rings helper; zone price replaces the distance curve; a trip leaving its fare area pays distance), about 14-20 h after T-3739.
+  - Context: You, 2026-11-18: "people have requested zone fares ... people wanna draw these. in a city that kinda makes sense but idk how multi-city fare zones would work." Design done.
   - Other: notes/T-3739.md (section 2); research/fares-zones-2026-11-18.md
-- T-3738 [P2] {L:community} Shared save links preview the player's map (taking, 2026-11-18, agent sharepreview)
+- T-3738 [P2] {L:community} Shared save links preview the player's map (taking, 2026-11-18, agent sharebuild)
   - Context: You, 2026-11-18: "currently if people share their links to saves, it just shows the generic "train world!" logo banner preview sorta thing. could we have it show the actual image of their map?"
   - Goal: A design and an hour estimate for you first (where the preview image comes from and what serves it), then built.
   - Other: notes/T-3738.md
@@ -887,10 +887,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: From T-3509's checker: with intercity trips on, goals and achievements now wait for a market table with at least one row; after a worker failure that never delivers one, they would wait for good. Not tested.
   - Goal: After a worker failure or a long wait, goals fall back to local figures or wait for the restarted worker's result; probed once.
   - Other: notes/T-3509.md
-- T-3698 [P3] {L:accounts-server} Refused save by hand says it could not be saved
-  - Context: From T-3611's checker: when another tab wrote the slot while this tab still held its lease (a late lock message), this tab's save by hand is refused by the new edit check and shows "This game could not be saved. Download it as a file to keep it."; the next save by hand takes the slot back and works. Rare (two tabs, a narrow race).
-  - Goal: That save by hand takes the slot back as the keepOtherTabs path does, or says the game was saved in another tab.
-  - Other: notes/T-3611.md
 - T-3697 [P3] {L:checks} Old-layout diagram checks fail
   - Context: From T-3446: once diagram-game.mjs's syntax error was fixed, checks that test the old unsheeted diagram layout ran again for the first time since T-2590, and fail: t2289 on jpn (at HEAD too), t2407's movement and distance lines, t2162's time limits on nyc and tyo (tyo misses one interchange name).
   - Goal: Each retired to checks/old/ if it only tests the old layout, or rewritten to the sheet layout and passing.

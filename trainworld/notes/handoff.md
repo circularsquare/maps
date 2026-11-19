@@ -33,7 +33,8 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    - Text acked: "Can't branch off a ramp. Use a flat stretch of track."; T-3698's "This game was saved in another tab
      first. Save again to overwrite it."
    - T-3742 nudge a line's departures (her "train adjustments"): "can do nudges later, not in the same round"
-     ({after:v0.4.3}); offsetdesign agent finishing a design for later.
+     ({after:v0.4.3}); design done (notes/T-3742.md, 4-6.5 h, save level bump, after T-3542 stage 0). Its three
+     questions and draft strings go to her when that round starts, not before.
    - Fares: design in notes/T-3739.md; ask 28 open (four calls + build T-3739 now?).
    - T-3718 landed b191eede (c006). slotchk checking T-3734 stage 2 (tree slotown2; closes T-3698 at landing).
    - Refactor: she leaves the pick to us ("i am not suited to make a call"), skip track (rework coming). T-3734 picked.
