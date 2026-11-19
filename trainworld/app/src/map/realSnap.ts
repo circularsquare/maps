@@ -13,7 +13,8 @@ import type { ClockClient, PreviewAnswer } from "../workers/clockClient";
 import type { PiInput, RouteEnd } from "../workers/protocol";
 import type { FromRouter, ToRouter } from "../workers/realRoute.worker";
 import type { Level } from "../game/types";
-import { designSpeed, singleTrack } from "../game/ui";
+import { effect } from "@preact/signals";
+import { designSpeed, display, singleTrack } from "../game/ui";
 import { dataUrl } from "../game/dataBase";
 import { regionsJson } from "./regionsJson";
 import type { Overlay } from "./overlay";
@@ -122,6 +123,8 @@ export class RealSnap {
       this.worker = new Worker(new URL("../workers/realRoute.worker.ts", import.meta.url), { type: "module" });
       this.worker.onmessage = (e: MessageEvent<FromRouter>) => this.answer(e.data);
       this.post({ kind: "init", graphs: dataUrl("realgraph/") });
+      // freight and abandoned track are in extra graph files, fetched only while the setting is All
+      effect(() => this.worker?.postMessage({ kind: "extra", on: display.value.realNetwork === "all" } satisfies ToRouter));
       void regionsJson().then((j) => this.worker?.postMessage({ kind: "regions", regions: j?.regions ?? null } satisfies ToRouter));
     }
     return this.worker;
@@ -185,7 +188,7 @@ export class RealSnap {
   }
 
   private nearestDrawn(px: number, py: number): [number, number] | null {
-    const layers = this.map.getStyle().layers.filter((l) => l.id.startsWith("tw-real-")).map((l) => l.id);
+    const layers = this.map.getStyle().layers.filter((l) => l.id.startsWith("tw-real-") || l.id.startsWith("tw-realx-")).map((l) => l.id);
     if (!layers.length) return null;
     const fs = this.map.queryRenderedFeatures([[px - SNAP_PX, py - SNAP_PX], [px + SNAP_PX, py + SNAP_PX]], { layers });
     let best = SNAP_PX * SNAP_PX, at: [number, number] | null = null;

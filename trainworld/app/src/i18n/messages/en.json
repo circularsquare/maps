@@ -1865,7 +1865,7 @@
   "settingsTab.ramp0": "0% transit",
   "settingsTab.ramp100": "100% transit",
   "settingsTab.realAll": "All",
-  "settingsTab.realAllTip": "Also freight and abandoned rail, trams, narrow gauge, heritage lines and unused track",
+  "settingsTab.realAllTip": "Also freight and abandoned rail, trams, narrow gauge, heritage lines and unused track. Uses more memory",
   "settingsTab.realNetwork": "Real world network",
   "settingsTab.realNone": "None",
   "settingsTab.realPassenger": "Passenger",

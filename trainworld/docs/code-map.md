@@ -628,7 +628,7 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   `ship` ships the listed cities that passed and writes `app/src/game/realNetworks.json`. `realnet.py`
   makes each listed city a `CITIES` entry (`auto_city`). Rules in its docstring; notes/T-3225.md.
   Browser check: `checks/t3225-real-load.mjs` (every city from the new game sheet to playable).
-- `realgraph.py <cc ...> [--check] [--out DIR]` (T-727b): the real network the layer draws as a routing
+- `realgraph.py <cc ...> [--check] [--out DIR] [--nori DIR]` (T-727b; freight from the extract's ways and abandoned rail from the region's `_extra.pmtiles`, kinds 8 and 9, T-3495; run with the system Python, which has pmtiles and mapbox_vector_tile): the real network the layer draws as a routing
   graph per noritetsu region, plus short undrawn track that fills its gaps (T-816), from noritetsu's
   extract, `ways.json` and `track_extra.json` (the ways tiles flag `x`, T-3043; read only), into `data/packs/realgraph/<cc>.rgr` (gzip, layout in its
   docstring, which has each chain's OSM `layer` in its flags' top bits for the real networks' levels,

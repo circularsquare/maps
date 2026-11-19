@@ -598,11 +598,11 @@ route is found over the basemap's water (track-and-service.md 6.8), never drawn 
 switch on, the track tool follows the real network the layer draws.
 
 - **What each track type follows** [T-3069; `game/realFollow.ts`, one table for the router and the layer]:
-  train track follows rail, light rail, metro, monorail, funicular, narrow gauge and heritage, never tram
-  rail; tram track follows tram and light rail, and rail, metro, funicular, narrow gauge and heritage as
-  other families (tram-trains and street running share rail track), never a monorail. While a type
+  train track follows rail, light rail, metro, monorail, funicular, narrow gauge, heritage, freight and abandoned
+  rail, never tram rail; tram track follows tram and light rail, and rail, metro, funicular, narrow gauge, heritage,
+  freight and abandoned rail as other families (tram-trains and street running share rail track), never a monorail. While a type
   snaps, the layer draws only what it follows: under All, all of that, used or not; under Passenger the
-  passenger track, with every tram line added for tram track. Each kind is its own family but rail and light
+  passenger track, with every tram line added for tram track. Freight and abandoned track are each their own family [T-3495]. Each kind is its own family but rail and light
   rail (one for train track) and tram and light rail (one for tram track). For tram track the 60 degree turn
   rule takes each chain's heading 10 m in, not 30, as a 12-15 m junction curve running on into the cross street
   reads as a sharper turn over 30 m; the graph keeps tram track's shape to 0.5 m (other track to 3 m), as a corner

@@ -258,7 +258,7 @@ export function startRealNetwork(map: maplibregl.Map) {
     // added for tram track (T-3069)
     filter = shown === "all" ? (mode ? routable(mode) : EVERYTHING) : mode === "tram" ? PASSENGER_TRAM : PASSENGER;
     on = shown !== "none" || snap;
-    extraOn = shown === "all" && !snap;
+    extraOn = shown === "all";
     opacity = snap ? (reach ? OPACITY_DIM : OPACITY_SNAP) : SHADES[mapShade.value].realOpacity;
     apply();
   });

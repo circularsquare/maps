@@ -23,10 +23,12 @@ import { NEW_GAME_FRAME } from "../game/cities";
 import { EARTH_R, frameKindNumber, type FrameSpec } from "../game/frame";
 import { inRing, ringBox } from "../game/rings";
 import { realGraph, type RealGraph } from "../game/realGraph";
-import { FOLLOW, type SnapMode } from "../game/realFollow";
+import { followFor, isTramFollow, type SnapMode } from "../game/realFollow";
 
 export type ToRouter =
   | { kind: "init"; graphs: string }
+  /** the Real world network is All: the graphs' extra files (freight and abandoned track) are loaded and followed (T-3495) */
+  | { kind: "extra"; on: boolean }
   /** regions.json's regions, fetched once by the page (null: not reachable); answered ahead of the queue */
   | { kind: "regions"; regions: Record<string, { parts: [number, number][][] }> | null }
   /** the view: the graphs of the regions in it are fetched ahead of a click */
@@ -172,8 +174,25 @@ let built: Promise<Set<string> | null> | null = null;
 function builtRegions() {
   return (built ??= fetch(graphBase + "index.json")
     .then((r) => (r.ok ? r.json() : null))
-    .then((j) => (Array.isArray(j?.regions) ? new Set<string>(j.regions) : null))
+    .then((j) => {
+      extraRegions = new Set<string>(Array.isArray(j?.extra) ? j.extra : []);
+      return Array.isArray(j?.regions) ? new Set<string>(j.regions) : null;
+    })
     .catch(() => null));
+}
+/** the regions that have an extra file (`<cc>.x.rgr`), known once the index is read */
+let extraRegions = new Set<string>();
+let extraOn = false;
+const extraTried = new Map<string, Promise<void>>();
+
+/** Join a region's extra graph (freight and abandoned track); its junctions meet the region's graph by OSM node id. */
+function loadExtra(cc: string): Promise<void> {
+  let p = extraTried.get(cc);
+  if (!p) {
+    p = realGraph(`${cc}.x`, graphBase).then((g) => { if (g) join(g); }, () => undefined);
+    extraTried.set(cc, p);
+  }
+  return p;
 }
 
 /** Tell the page where graphs exist, so it snaps only there. */
@@ -194,7 +213,10 @@ function loadRegion(cc: string): Promise<boolean> {
     }, () => false)));
     tried.set(cc, p);
   }
-  return p;
+  return extraOn ? p.then(async (ok) => {
+    if (ok && extraRegions.has(cc)) await loadExtra(cc);
+    return ok;
+  }) : p;
 }
 
 function join(g: RealGraph) {
@@ -339,7 +361,7 @@ let latest = 0;
 async function search(seq: number, a: [number, number], b: [number, number], ra: number, rb: number, follow: readonly number[]): Promise<{ legs: Leg[] | null; why?: "off" | "none"; states: number; start?: Cand; end?: Cand }> {
   await Promise.all([...(await regionsAt(a[0], a[1], 0)), ...(await regionsAt(b[0], b[1], 0))].map(loadRegion));
   const fam = (c: number) => follow[net.kind[c]];
-  const [ha, hb] = follow === FOLLOW.tram ? [net.ta, net.tb] : [net.ha, net.hb];
+  const [ha, hb] = isTramFollow(follow) ? [net.ta, net.tb] : [net.ha, net.hb];
   const starts = candidates(a[0], a[1], ra, follow), ends = candidates(b[0], b[1], rb, follow);
   if (!starts.length || !ends.length) return { legs: null, why: "off", states: 0 };
   // one end on a metro under a main-line station, the other on rail (T-923): each end also takes the
@@ -431,7 +453,7 @@ async function search(seq: number, a: [number, number], b: [number, number], ra:
     for (let k = net.adjStart[J]; k < net.adjStart[J + 1]; k++) {
       const end = net.adj[k], c2 = end >> 1, fromB = end & 1;
       const hout = fromB ? hb[c2] + Math.PI : ha[c2];
-      if (turn(hin, hout) > TURN_MAX || fam(c2) < 0) continue;
+      if (turn(hin, hout) > TURN_MAX || !(fam(c2) >= 0)) continue;
       const f2 = fac(c2), L = net.len[c2];
       for (const e of endsOn.get(c2) ?? []) {
         const total = g[s] + (fromB ? L - e.along : e.along) * f2 + 2 * e.dist;
@@ -471,7 +493,7 @@ let reached: { key: string; C: number; on: Uint8Array; chains: number } | null =
 function reachFrom(lon: number, lat: number, r: number, follow: readonly number[]): { on: Uint8Array; chains: number } {
   const n2 = net.C * 2, seen = new Uint8Array(n2), on = new Uint8Array(net.C), stack = new Uint32Array(n2);
   let sp = 0, chains = 0;
-  const [ha, hb] = follow === FOLLOW.tram ? [net.ta, net.tb] : [net.ha, net.hb];
+  const [ha, hb] = isTramFollow(follow) ? [net.ta, net.tb] : [net.ha, net.hb];
   for (const { c } of candidates(lon, lat, r, follow)) {
     if (!on[c]) (on[c] = 1), chains++;
     for (const s of [c * 2, c * 2 + 1]) if (!seen[s]) (seen[s] = 1), (stack[sp++] = s);
@@ -481,7 +503,7 @@ function reachFrom(lon: number, lat: number, r: number, follow: readonly number[
     const hin = back ? ha[c] + Math.PI : hb[c];
     for (let k = net.adjStart[J]; k < net.adjStart[J + 1]; k++) {
       const end = net.adj[k], c2 = end >> 1, s2 = end;
-      if (seen[s2] || follow[net.kind[c2]] < 0 || turn(hin, end & 1 ? hb[c2] + Math.PI : ha[c2]) > TURN_MAX) continue;
+      if (seen[s2] || !(follow[net.kind[c2]] >= 0) || turn(hin, end & 1 ? hb[c2] + Math.PI : ha[c2]) > TURN_MAX) continue;
       seen[s2] = 1;
       stack[sp++] = s2;
       if (!on[c2]) (on[c2] = 1), chains++;
@@ -619,6 +641,10 @@ async function handle(m: ToRouter) {
   if (m.kind === "init") {
     graphBase = m.graphs;
     void sendCover();
+  } else if (m.kind === "extra") {
+    extraOn = m.on;
+    // regions already loaded get their extra file; it stays joined if the setting goes back, ignored by the follow tables
+    if (extraOn) await builtRegions(), await Promise.all([...tried].map(([cc, p]) => p.then((ok) => ok && extraRegions.has(cc) ? loadExtra(cc) : undefined)));
   } else if (m.kind === "view") {
     const all = await regionOutlines();
     const cx = (m.w + m.e) / 2, cy = (m.s + m.n) / 2;
@@ -633,20 +659,20 @@ async function handle(m: ToRouter) {
     if (m.seq !== latestReach) return;
     if (!m.a) return void (reached = null);
     const t0 = performance.now();
-    const a = m.a, key = `${a[0]},${a[1]},${m.ra},${m.mode}`;
+    const a = m.a, key = `${a[0]},${a[1]},${m.ra},${m.mode},${extraOn}`;
     const [w, s, e, n] = m.box;
     const here = await regionsAt(a[0], a[1], 0);
     const all = await regionOutlines();
     const inView = all.filter((o) => !here.includes(o.cc) && o.boxes.some((b) => b[0] <= e && b[2] >= w && b[1] <= n && b[3] >= s)).slice(0, 4).map((o) => o.cc);
     await Promise.all([...here, ...inView].map(loadRegion));
     if (m.seq !== latestReach) return;
-    if (reached?.key !== key || reached.C !== net.C) reached = { key, C: net.C, ...reachFrom(a[0], a[1], m.ra, FOLLOW[m.mode]) };
+    if (reached?.key !== key || reached.C !== net.C) reached = { key, C: net.C, ...reachFrom(a[0], a[1], m.ra, followFor(m.mode, extraOn)) };
     const { xy, off, cls } = reachIn(reached.on, m.box, m.step);
     post({ kind: "reach", seq: m.seq, xy, off, cls, chains: reached.chains, ms: performance.now() - t0 }, [xy.buffer, off.buffer, cls.buffer]);
   } else if (m.kind === "route") {
     if (m.seq !== latest) return;
     const t0 = performance.now();
-    const r = await search(m.seq, m.a, m.b, m.ra, m.rb, FOLLOW[m.mode]);
+    const r = await search(m.seq, m.a, m.b, m.ra, m.rb, followFor(m.mode, extraOn));
     if (m.seq !== latest) return;
     if (!r.legs) return post({ kind: "line", seq: m.seq, line: null, lengthM: 0, why: r.why ?? "none", ms: performance.now() - t0, states: r.states });
     const { line, lengthM } = lineOf(r.legs, r.start!, r.end!);

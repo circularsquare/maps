@@ -15,9 +15,9 @@ import { launchChrome, collectErrors } from './lib.mjs';
 const url = process.argv[2] ?? 'http://localhost:6189/';
 const PLACES = { london: [-0.12, 51.5], chicago: [-87.65, 41.88], tokyo: [139.75, 35.68], berlin: [13.4, 52.5], sydney: [151.2, -33.87],
   melbourne: [144.96, -37.81], amsterdam: [4.9, 52.37], zurich: [8.54, 47.38], kaohsiung: [120.3, 22.62],
-  tokyomono: [139.749, 35.596], zurichfun: [8.545, 47.3765] };
+  basel: [7.59, 47.56], ruhr: [6.86, 51.5], manchester: [-2.35, 53.47], tokyomono: [139.749, 35.596], zurichfun: [8.545, 47.3765] };
 const TRAM = process.env.MODE === 'tram';
-const CLASSES = TRAM ? ['tram', 'light_rail', 'rail', 'monorail'] : ['rail', 'rail-unused', 'subway', 'light_rail', 'narrow_gauge', 'monorail', 'funicular', 'heritage', 'tram'];
+const CLASSES = TRAM ? ['tram', 'light_rail', 'rail', 'monorail', 'freight', 'abandoned'] : ['rail', 'rail-unused', 'subway', 'light_rail', 'narrow_gauge', 'monorail', 'funicular', 'heritage', 'tram', 'freight', 'abandoned'];
 const SETTING = process.env.SETTING ?? 'all', ACROSS = !!process.env.ACROSS;
 let placed = !process.env.PLACE;
 const only = process.env.ONLY?.split(',');
@@ -27,9 +27,9 @@ try {
   const page = await chrome.ctx.newPage();
   collectErrors(page, errors);
   if (process.env.GRAPHS) {
-    for (const f of await readdir(process.env.GRAPHS)) if (f.endsWith('.rgr')) {
+    for (const f of await readdir(process.env.GRAPHS)) if (f.endsWith('.rgr') || f === 'index.json') {
       const body = await readFile(process.env.GRAPHS + '/' + f);
-      await page.route('**/realgraph/' + f, (r) => r.fulfill({ status: 200, body, contentType: 'application/octet-stream' }));
+      await page.route('**/realgraph/' + f, (r) => r.fulfill({ status: 200, body, contentType: f.endsWith('.json') ? 'application/json' : 'application/octet-stream' }));
     }
   }
   await page.goto(`${url}?debug=1&new=1&demandWorkers=1&z=${process.env.ZOOM ?? 13}`);
@@ -48,7 +48,7 @@ try {
     // candidate (start, end) screen points per class: a feature's points with 60 to 300 px between them
     const cands = await page.evaluate((across) => {
       const map = window.tw.map, r = map.getContainer().getBoundingClientRect();
-      const layers = map.getStyle().layers.filter((l) => l.id.startsWith('tw-real-')).map((l) => l.id);
+      const layers = map.getStyle().layers.filter((l) => l.id.startsWith('tw-real')).map((l) => l.id);
       const out = {}, feats = {};
       for (const f of map.queryRenderedFeatures(undefined, { layers })) {
         const p = f.properties, cls = (p.k === 'rail' && p.n && !p.x ? 'rail-unused' : p.k) + (p.r === 1 ? '' : '');
@@ -72,7 +72,7 @@ try {
       return out;
     }, ACROSS);
     const drawn = await page.evaluate(() => {
-      const map = window.tw.map, layers = map.getStyle().layers.filter((l) => l.id.startsWith('tw-real-')).map((l) => l.id);
+      const map = window.tw.map, layers = map.getStyle().layers.filter((l) => l.id.startsWith('tw-real')).map((l) => l.id);
       const n = {};
       for (const f of map.queryRenderedFeatures(undefined, { layers })) n[f.properties.k] = (n[f.properties.k] ?? 0) + 1;
       return n;

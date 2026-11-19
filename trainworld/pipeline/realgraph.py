@@ -8,7 +8,8 @@
 Reads noritetsu's extract (`noritetsu/data/proc/<cc>/ways.pkl`, `rels.pkl`, `coords.npz`) and its
 line model (`noritetsu/dist/data/<cc>/ways.json`); never writes there. Keeps the ways the game's
 real-network layer draws under All (`app/src/map/realNetwork.ts`, the same filter as noritetsu's
-build_tiles.py): every kind in KIND at rank 0 or 1, whether a line runs over it or not (T-3495,
+build_tiles.py): freight track (`freight_way`, from the extract's ways) and abandoned rail (from the region's
+`<cc>_extra.pmtiles`, joined to other track within 3 m), and every kind in KIND at rank 0 or 1, whether a line runs over it or not (T-3495,
 T-3069). The track tool snaps only to these, each track type to the kinds it may follow
 (`app/src/game/realFollow.ts`). Short groups of other track that join drawn track at two points or
 more go in too, so a portal or station throat no line runs over does not cut the graph (T-816,
@@ -24,8 +25,8 @@ degrees times 1e6 (0.1 m). Vertices are thinned to 3 m (Douglas-Peucker; tram 0.
     i32[J] lon, i32[J] lat                      junctions (OSM nodes where chains meet or end)
     u32[C] a, u32[C] b                          each chain's two junctions, a at its first vertex
     u8[C] kind (KIND: 0 rail, 1 light rail, 2 subway, 3 tram, 4 monorail, 5 funicular, 6 narrow
-        gauge, 7 heritage; version 1 had only 0, light rail in it, and 2; 8 and up are free for
-        freight and abandoned, T-3464), u8[C] rank (0 main, 1 other), u8[C] flags (1 passenger route,
+        gauge, 7 heritage, 8 freight, 9 abandoned; version 1 had only 0, light rail in it, and 2; an app
+        that does not know 8 and 9 follows neither, T-3495), u8[C] rank (0 main, 1 other), u8[C] flags (1 passenger route,
         2 bridge, 4 tunnel, 8 high speed; the top four bits OSM's `layer`, a signed nibble clamped
         to -8..7, for the real networks' levels, T-1773; `layer_of`)
     u32[C + 1] first vertex of each chain
@@ -60,6 +61,12 @@ THIN_TRAM_M = 0.5
 # OSM railway=* to the graph's kind; `preserved` is heritage (noritetsu build_tiles.KIND)
 KIND = {"rail": 0, "light_rail": 1, "subway": 2, "tram": 3, "monorail": 4, "funicular": 5,
         "narrow_gauge": 6, "preserved": 7}
+# T-3495: freight track comes from the extract's ways, abandoned from the region's extra tiles (real_extra.py)
+KIND_EXTRA = {"freight": 8, "abandoned": 9}
+MAX_Z = 13  # the tiles' last zoom, where geometry is unsimplified
+TILE = 4096
+JOIN_M = 3.0  # an abandoned line's end this close to a node of the graph's other track is that node
+CLUSTER_M = 2.0  # ends of tile pieces this close are one node (each tile rounds its own coordinates)
 URBAN = {"light_rail", "subway", "tram", "monorail", "funicular"}
 # T-816: track the layer leaves out that may still fill a gap in it; the longest group of such ways
 # that goes in, km
@@ -135,6 +142,95 @@ def node_positions(cid, nodes):
         b = np.argmax(ends - starts)
         pos = pos[starts[b]:ends[b]]
     return pos.astype(np.int64) if pos.size >= 2 else None
+
+
+def freight_way(tags):
+    """Track real_extra.py draws as freight (T-3464), by the extract's tags."""
+    if tags.get("railway") != "rail" or tags.get("railway:traffic_mode") == "passenger":
+        return False
+    return (tags.get("service") in ("yard", "siding", "spur") or tags.get("usage") in ("freight", "industrial")
+            or tags.get("railway:traffic_mode") == "freight")
+
+
+def abandoned_pieces(path):
+    """Abandoned rail of a region's extra tiles as lon, lat arrays. The extract keeps no abandoned track, so this reads
+    the tiles real_extra.py wrote: the last zoom's lines, each cut to its own tile so the buffer's overlap is not
+    counted twice."""
+    import math
+    import mapbox_vector_tile
+    from pmtiles.reader import MmapSource, all_tiles
+    from shapely.geometry import LineString, box
+    core = box(0, 0, TILE, TILE)
+    out = []
+    with open(path, "rb") as f:
+        for (z, tx, ty), data in all_tiles(MmapSource(f)):
+            if z != MAX_Z:
+                continue
+            if data[:2] == b"\x1f\x8b":
+                data = gzip.decompress(data)
+            layer = mapbox_vector_tile.decode(data, default_options={"y_coord_down": True}).get("track")
+            for ft in layer["features"] if layer else ():
+                if ft["properties"].get("k") != "abandoned":
+                    continue
+                g = ft["geometry"]
+                lines = [g["coordinates"]] if g["type"] == "LineString" else g["coordinates"] if g["type"] == "MultiLineString" else []
+                for ln in lines:
+                    if len(ln) < 2:
+                        continue
+                    c = LineString(ln).intersection(core)
+                    for p in ([c] if c.geom_type == "LineString" else list(c.geoms) if c.geom_type in ("MultiLineString", "GeometryCollection") else []):
+                        if p.geom_type != "LineString" or len(p.coords) < 2:
+                            continue
+                        a = np.asarray(p.coords, np.float64)
+                        wx = (tx * TILE + a[:, 0]) / (TILE * 2 ** MAX_Z)
+                        wy = (ty * TILE + a[:, 1]) / (TILE * 2 ** MAX_Z)
+                        out.append(np.column_stack([wx * 360 - 180, np.degrees(np.arctan(np.sinh(math.pi * (1 - 2 * wy))))]))
+    return out
+
+
+def add_abandoned(pieces, keep, cid, cx, cy):
+    """The pieces as ways over new nodes appended to the extract's coordinates; an end within JOIN_M of a node of the
+    other drawn track is that node, so the graph connects there. Returns (ways, cid, cx, cy)."""
+    from scipy.sparse import coo_matrix
+    from scipy.sparse.csgraph import connected_components
+    from scipy.spatial import cKDTree
+    planar = lambda lon, lat: np.column_stack([lon * np.cos(np.radians(lat)) * 111320.0, lat * 110950.0])
+    n0 = cid.size
+    ends = np.array([p[i] for p in pieces for i in (0, -1)])
+    em = planar(ends[:, 0], ends[:, 1])
+    drawn = np.unique(np.concatenate([k[0] for k in keep]))
+    node_of = np.full(len(ends), -1, np.int64)
+    d, i = cKDTree(planar(cx[drawn] / 1e7, cy[drawn] / 1e7)).query(em, distance_upper_bound=JOIN_M)
+    ok = np.isfinite(d)
+    node_of[ok] = drawn[i[ok]]
+    pr = np.array(sorted(cKDTree(em).query_pairs(CLUSTER_M)), np.int64).reshape(-1, 2)
+    _, lab = connected_components(coo_matrix((np.ones(len(pr), np.int8), (pr[:, 0], pr[:, 1])), shape=(len(ends),) * 2), directed=False)
+    comp_node = {}
+    for e in np.flatnonzero(node_of >= 0):
+        comp_node.setdefault(lab[e], node_of[e])
+    new_lon, new_lat, nxt = [], [], n0
+    ways = []
+    for pi, p in enumerate(pieces):
+        idx = np.empty(len(p), np.int64)
+        for j, e in ((0, 2 * pi), (len(p) - 1, 2 * pi + 1)):
+            if lab[e] not in comp_node:
+                comp_node[lab[e]] = nxt
+                new_lon.append(ends[e, 0])
+                new_lat.append(ends[e, 1])
+                nxt += 1
+            idx[j] = comp_node[lab[e]]
+        inner = len(p) - 2
+        if inner > 0:
+            idx[1:-1] = np.arange(nxt, nxt + inner)
+            new_lon.extend(p[1:-1, 0])
+            new_lat.extend(p[1:-1, 1])
+            nxt += inner
+        if idx[0] != idx[-1] or len(p) > 2:
+            ways.append(idx)
+    # ids above any OSM node id, so no neighbour's extract shares them
+    ids = (2 ** 52 + np.arange(nxt - n0)).astype(cid.dtype)
+    return (ways, np.concatenate([cid, ids]), np.concatenate([cx, np.round(np.array(new_lon) * 1e7).astype(cx.dtype)]),
+            np.concatenate([cy, np.round(np.array(new_lat) * 1e7).astype(cy.dtype)]))
 
 
 def gap_fillers(keep, spare, cx, cy, n):
@@ -243,7 +339,7 @@ def build(cc, boxes):
                     on_route.add(ref)
     del rels
 
-    keep, spare = [], []
+    keep, spare, freight = [], [], []
     for wid, (tags, nodes) in ways.items():
         rw = tags.get("railway")
         if rw not in KIND:
@@ -261,28 +357,56 @@ def build(cc, boxes):
             shown = True  # track no line runs over is drawn in All, so it is snapped to (T-3495)
         # a way the layer leaves out is kept aside: it may fill a gap between drawn track (T-816)
         service = tags.get("service")
-        if not shown and ((service not in (None, "crossover") and not (rw == "tram" and service in SPARE_TRAM_SERVICE))
-                          or tags.get("usage") in SPARE_USAGE):
+        left_out = not shown and ((service not in (None, "crossover") and not (rw == "tram" and service in SPARE_TRAM_SERVICE))
+                                  or tags.get("usage") in SPARE_USAGE)
+        is_freight = not shown and freight_way(tags)  # drawn from the extra tiles under All, so snapped to (T-3495)
+        if left_out and not is_freight:
             continue
         pos = node_positions(cid, nodes)
         if pos is None:
             continue
+        if is_freight:
+            fl = (2 if tags.get("bridge") not in (None, "no") else 0) | (4 if tags.get("tunnel") not in (None, "no") else 0) \
+                | (layer_tag(tags.get("layer")) & 15) << 4
+            freight.append((pos, KIND_EXTRA["freight"], 1, fl))
+            if left_out:
+                continue
         flags = (1 if pax else 0) | (2 if tags.get("bridge") not in (None, "no") else 0) \
             | (4 if tags.get("tunnel") not in (None, "no") else 0) | (8 if tags.get("highspeed") == "yes" else 0) \
             | (layer_tag(tags.get("layer")) & 15) << 4
         (keep if shown else spare).append((pos, KIND[rw], min(rank, 1), flags))
     del ways
-    keep += gap_fillers(keep, spare, cx, cy, cid.size)
+    fill = gap_fillers(keep, spare, cx, cy, cid.size)
+    keep += fill
     if not keep:
         print(f"{cc}: no drawn track, no graph", flush=True)
         return
+    # the extra file (T-3495): freight not already in as a gap filler, and abandoned rail from the region's tiles; the
+    # page loads it only under All. Nodes both files have are junctions in both and listed as shared, which is how the
+    # page joins the two
+    filled = {id(f[0]) for f in fill}
+    extra = [f for f in freight if id(f[0]) not in filled]
+    tiles = NORI / "dist" / "data" / f"{cc}_extra.pmtiles"
+    if tiles.exists():
+        pieces = abandoned_pieces(tiles)
+        if pieces:
+            ab, cid, cx, cy = add_abandoned(pieces, keep + extra, cid, cx, cy)
+            extra += [(w, KIND_EXTRA["abandoned"], 1, 0) for w in ab]
+            print(f"  abandoned: {len(ab):,} pieces from {tiles.name}", flush=True)
+    both = np.intersect1d(np.concatenate([k[0] for k in keep]), np.concatenate([k[0] for k in extra])) if extra else np.zeros(0, np.int64)
+    write_graph(cc, keep, cid, cx, cy, boxes, both, f"{cc}.rgr", t0)
+    if extra:
+        write_graph(cc, extra, cid, cx, cy, boxes, both, f"{cc}.x.rgr", t0)
 
+
+def write_graph(cc, keep, cid, cx, cy, boxes, both, name, t0):
     allpos = np.concatenate([k[0] for k in keep])
     uniq, counts = np.unique(allpos, return_counts=True)
     isj = np.zeros(cid.size, bool)
     isj[uniq[counts >= 2]] = True
     for k in keep:
         isj[k[0][0]] = isj[k[0][-1]] = True
+    isj[both] = True
 
     lon_all = cx / 1e7
     lat_all = cy / 1e7
@@ -311,7 +435,7 @@ def build(cc, boxes):
     dlon, dlat = np.diff(qlon, prepend=0), np.diff(qlat, prepend=0)
     dlon[off[:-1]], dlat[off[:-1]] = qlon[off[:-1]], qlat[off[:-1]]
 
-    shared_ids = np.intersect1d(cid[jpos], neighbour_ids(cc, boxes))
+    shared_ids = np.intersect1d(cid[jpos], np.union1d(neighbour_ids(cc, boxes), cid[both]))
     shared_j = np.searchsorted(cid[jpos], shared_ids).astype(np.uint32)
 
     J, C, V, S = jpos.size, a.size, flat.size, shared_ids.size
@@ -324,12 +448,12 @@ def build(cc, boxes):
         shared_j.astype("<u4").tobytes(), shared_ids.astype("<f8").tobytes(),
     ])
     OUT.mkdir(parents=True, exist_ok=True)
-    tmp = OUT / f"{cc}.rgr.tmp"
+    tmp = OUT / f"{name}.tmp"
     with open(tmp, "wb") as f:
         f.write(gzip.compress(body, 9))
-    os.replace(tmp, OUT / f"{cc}.rgr")
-    size = (OUT / f"{cc}.rgr").stat().st_size
-    print(f"{cc}: {C:,} chains, {J:,} junctions, {V:,} vertices, {S} shared with neighbours; "
+    os.replace(tmp, OUT / name)
+    size = (OUT / name).stat().st_size
+    print(f"{name}: {C:,} chains, {J:,} junctions, {V:,} vertices, {S} shared with neighbours; "
           f"{size / 1e6:.2f} MB in {time.time() - t0:.0f} s", flush=True)
 
 
@@ -376,7 +500,7 @@ def check(cc):
     km = seg.sum()
     n, lab = connected_components(coo_matrix((np.ones(g["a"].size), (g["a"], g["b"])), shape=(J, J)), directed=False)
     big = np.bincount(lab).max()
-    kinds = {name: int(np.sum(g["kind"] == k)) for name, k in KIND.items() if np.any(g["kind"] == k)}
+    kinds = {name: int(np.sum(g["kind"] == k)) for name, k in {**KIND, **KIND_EXTRA}.items() if np.any(g["kind"] == k)}
     print(f"{cc}: version {g['version']}; chain ends on their junctions {ends_ok}; {km:,.0f} km of track; {n:,} pieces, "
           f"largest {big / J:.0%} of junctions; chains by kind {kinds}; shared {g['shared'].size}")
     return ends_ok
@@ -387,7 +511,11 @@ def main():
     ap.add_argument("regions", nargs="*", help="none: only rewrite index.json")
     ap.add_argument("--check", action="store_true")
     ap.add_argument("--out", help="write or check the files here instead")
+    ap.add_argument("--nori", help="the noritetsu folder to read, for a tree that has no data of its own")
     args = ap.parse_args()
+    if args.nori:
+        global NORI
+        NORI = Path(args.nori)
     if args.out:
         global OUT
         OUT = Path(args.out)
@@ -401,11 +529,13 @@ def main():
 
 def write_index():
     """index.json: the regions with a graph, so the track tool snaps only where one exists (T-913)."""
-    built = sorted(p.stem for p in OUT.glob("*.rgr"))
+    stems = sorted(p.name[:-4] for p in OUT.glob("*.rgr"))
+    built = [x for x in stems if not x.endswith(".x")]
+    extra = [x[:-2] for x in stems if x.endswith(".x")]
     tmp = OUT / "index.json.tmp"
-    tmp.write_text(json.dumps({"regions": built}), encoding="utf-8")
+    tmp.write_text(json.dumps({"regions": built, "extra": extra}), encoding="utf-8")
     os.replace(tmp, OUT / "index.json")
-    print(f"index.json: {len(built)} regions", flush=True)
+    print(f"index.json: {len(built)} regions, {len(extra)} with an extra file", flush=True)
 
 
 if __name__ == "__main__":

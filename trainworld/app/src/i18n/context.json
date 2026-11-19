@@ -1860,7 +1860,7 @@
   "settingsTab.ramp0": "Settings, 2-color scheme: label beside the colour picker for bubbles where 0% of trips go by transit.",
   "settingsTab.ramp100": "Settings, 2-color scheme: label beside the colour picker for bubbles where all trips go by transit.",
   "settingsTab.realAll": "Settings, Real world network: segmented button, draw every kind of track the map data has, beside None and Passenger.",
-  "settingsTab.realAllTip": "Hover on the All button of the real world network setting: what All adds to passenger rail. Abandoned rail: disused lines whose track is gone or overgrown. Unused track: track no train line runs over.",
+  "settingsTab.realAllTip": "Hover on the All button of the real world network setting: what All adds to passenger rail. Abandoned rail: disused lines whose track is gone or overgrown. Unused track: track no train line runs over. The hover also says All uses more memory (about 270 MB more in a US city once the track tool snaps, less elsewhere).",
   "settingsTab.realNetwork": "Settings: section heading over the choice of which real rail network is drawn faintly under the player's own (None, Passenger, All).",
   "settingsTab.realNone": "Settings, Real world network: segmented button, draw no real track, beside Passenger and All.",
   "settingsTab.realPassenger": "Settings, Real world network: segmented button, draw passenger and light rail track, beside None and All.",
