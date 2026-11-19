@@ -24,7 +24,7 @@ import { startPlaytime } from "./playtime";
 import { startGameTime } from "./gameTime";
 import { startAchievementCounts } from "./achievementCounts";
 import { onAccountGone, postAccount, saveSlotsState } from "../workers/clockClient";
-import { newGameId, onTokenGone, type CloudContext } from "../workers/cloud";
+import { listGames, newGameId, onTokenGone, type CloudContext } from "../workers/cloud";
 import { listSlots, writeSync } from "../workers/saveFile";
 import { t } from "../i18n";
 import { patientFetch, CLOUD_STALL_MS } from "../workers/patientFetch";
@@ -276,7 +276,7 @@ const DEVICE = (() => {
 export function cloudContext(): CloudContext | null {
   const s = session.peek();
   if (!BASE || !s) return null;
-  const ids = Object.fromEntries(Object.entries(games()).map(([slot, e]) => [slot, e.id]));
+  const ids = Object.fromEntries(Object.entries(games()).filter(([slot, e]) => !slot.startsWith(EARLIER) && !isStale(slot, e)).map(([slot, e]) => [slot, e.id]));
   // a page opened while the server cannot be reached keeps the account's games as last known, so the
   // game plays with "Not on your account yet" and goes up once the server answers again
   const cfg = accountConfig.peek(), st = accountState.peek();
@@ -322,8 +322,25 @@ export async function fetchBoards(key = boards.peek().key) {
 
 /** Each browser slot's game id, the account it last sent to, what it sent, and whether its
  * sandbox notice went. */
-interface GameEntry { id: string; acct?: string; sent?: string; at?: number; sandbox?: boolean; shared?: boolean }
+interface GameEntry { id: string; acct?: string; sent?: string; at?: number; sandbox?: boolean; shared?: boolean; origin?: string }
 const games = (): Record<string, GameEntry> => lsGet<Record<string, GameEntry>>(GAMES_KEY) ?? {};
+
+/** T-3720: the slot's game, by its origin (versions.ts). A slot key is reused (`autosave`, once its game was deleted), and
+ * an entry left from the game that was there must never become the new game's id or latch. An entry under the slot's own
+ * account id is its game whatever the origin: a pull of that game (writeFetched) can bring another device's origin. */
+const slotAt = (slot: string) => saveSlotsState.peek().slots.find((x) => x.key === slot);
+const originOf = (slot: string) => slotAt(slot)?.origin;
+const isStale = (slot: string, e: GameEntry | undefined) => {
+  const x = slotAt(slot);
+  return !!(e?.origin && x?.origin && e.origin !== x.origin && e.id !== x.cloud?.id);
+};
+/** The slot here that holds game `id` as its account game, if any: that game is live, and its figures and share stay. */
+const holderOf = (id: string) => saveSlotsState.peek().slots.find((x) => x.cloud?.id === id);
+/** An earlier game's entry put aside from its slot (`tidyEntries`), kept until its figures can be taken off. */
+const EARLIER = "earlier:";
+/** The slot's own entry, or none when it is an earlier game's. */
+const entryOf = (slot: string): GameEntry | undefined => { const e = games()[slot]; return isStale(slot, e) ? undefined : e; };
+const stamped = (slot: string, e: GameEntry): GameEntry => ({ ...e, origin: originOf(slot) ?? e.origin });
 
 /** The playing game's slot, when it is a stored one this tab writes (not a `?new=1` page). */
 function playingSlot(): string | null {
@@ -341,13 +358,12 @@ export function shareableSlot(): string | null {
 export function playingGameId(): string | null {
   const slot = playingSlot();
   if (!slot) return null;
-  return saveSlotsState.peek().slots.find((x) => x.key === slot)?.cloud?.id ?? games()[slot]?.id ?? null;
+  return saveSlotsState.peek().slots.find((x) => x.key === slot)?.cloud?.id ?? entryOf(slot)?.id ?? null;
 }
 
 /** T-3132: the stored game in this browser with this id (the leaderboards' and Community's), if any. */
 export function slotOfGame(id: string): string | null {
-  const local = games();
-  return saveSlotsState.peek().slots.find((x) => x.cloud?.id === id || local[x.key]?.id === id)?.key ?? null;
+  return saveSlotsState.peek().slots.find((x) => x.cloud?.id === id || entryOf(x.key)?.id === id)?.key ?? null;
 }
 
 /** T-2887: the id a share of the playing game goes up under, its figures sent first so the server copies the current
@@ -356,9 +372,11 @@ export function slotOfGame(id: string): string | null {
 export async function gameForShare(): Promise<string | null> {
   const s = session.peek(), slot = playingSlot(), m = moneyState.peek(), listed = saveSlotsState.peek().game;
   if (!s || !slot) return null;
+  tidyEntries(); // an earlier game's entry in this slot is put aside first, never written over (T-3720)
+  void dropDeleted();
   await sendScores(true);
   const cid = saveSlotsState.peek().slots.find((x) => x.key === slot)?.cloud?.id;
-  let e = games()[slot] ?? { id: cid ?? newGameId() };
+  let e = entryOf(slot) ?? { id: cid ?? newGameId() };
   if (cid && e.id !== cid) e = { id: cid };
   if (m && unranked(m) && !e.sandbox && m.game === listed) {
     try {
@@ -368,7 +386,7 @@ export async function gameForShare(): Promise<string | null> {
   }
   e.acct = s.account.id;
   e.shared = true;
-  lsSet(GAMES_KEY, { ...games(), [slot]: e });
+  lsSet(GAMES_KEY, { ...games(), [slot]: stamped(slot, e) });
   return e.id;
 }
 
@@ -409,15 +427,16 @@ const BUILD = typeof __TW_BUILD__ === "string" ? __TW_BUILD__ : "dev";
 
 let sending = false;
 /** Send the playing game's figures if they changed and the gap has passed (`now` skips the gap). */
-export async function sendScores(now = false) {
+export async function sendScores(now = false): Promise<void> {
   const s = session.peek(), slot = playingSlot(), m = moneyState.peek();
   // T-3687: while a load is under way the money can be the incoming game's and the slot still the one before; a
   // sandbox or a copy opened from a normal game would latch that game for good. T-3734: so both must be one game's.
   if (sending || !s || accountState.peek() !== "on" || !slot || !m || m.game !== saveSlotsState.peek().game) return;
-  const all = games(), acct = s.account.id;
+  const acct = s.account.id;
+  tidyEntries(); // T-3720: an earlier game's entry in this slot is put aside, never written over or waited on
   // T-988: the slot's game id on the account names its figures too (a fork or a kept copy has a new one)
   const cid = saveSlotsState.peek().slots.find((x) => x.key === slot)?.cloud?.id;
-  let e = all[slot] ?? { id: cid ?? newGameId() };
+  let e = entryOf(slot) ?? { id: cid ?? newGameId() };
   if (cid && e.id !== cid) e = { id: cid };
   let body: unknown;
   if (unranked(m)) {
@@ -445,13 +464,18 @@ export async function sendScores(now = false) {
     }
     e.acct = acct;
     e.at = Date.now();
-    lsSet(GAMES_KEY, { ...games(), [slot]: e });
+    // a share made while this went up (gameForShare) is kept: its mark takes the share down with the game
+    if (games()[slot]?.id === e.id && games()[slot]?.shared) e.shared = true;
+    lsSet(GAMES_KEY, { ...games(), [slot]: stamped(slot, e) });
     if (boards.peek().at) boards.value = { ...boards.peek(), at: 0 }; // the boards may have moved
   } catch (err) {
     // T-3707: not the published build (a dev page, or a tab open since a publish): none of this page's will be kept
     if ((err as ApiError).code === "unpublished") { scoresRefused.value = true; refusedAt = Date.now(); }
     // a game the server knows as a sandbox: it stays unlisted, so stop asking
-    else if ((err as ApiError).status === 403) lsSet(GAMES_KEY, { ...games(), [slot]: { ...e, sandbox: true, acct } });
+    else if ((err as ApiError).status === 403) {
+      const shared = e.shared || (games()[slot]?.id === e.id && games()[slot]?.shared) || undefined;
+      lsSet(GAMES_KEY, { ...games(), [slot]: stamped(slot, { ...e, sandbox: true, acct, ...(shared ? { shared } : {}) }) });
+    }
   } finally {
     sending = false;
   }
@@ -465,20 +489,86 @@ export function forgetScoreSlots(keys: string[]) {
   lsSet(GAMES_KEY, all);
 }
 
-/** Slots gone from this browser take their figures off the account they were sent to. */
-async function dropDeleted() {
-  const s = session.peek(), st = saveSlotsState.peek();
-  if (!st.slots.length) return; // storage unread or blocked: nothing is known to be gone
-  const all = games(), keys = new Set(st.slots.map((x) => x.key));
-  for (const [slot, e] of Object.entries(all)) {
-    if (keys.has(slot) || slot === st.active) continue;
+/** T-3720: each slot's entry matched to its game. One under the slot's account id takes the slot's origin, so a later new
+ * id for the slot (`splitOff`) still finds it the slot's own; an earlier game's is put aside under `EARLIER`, so the
+ * slot's game writes its own entry and the earlier one is still there to take off the account. */
+function tidyEntries() {
+  const all = games();
+  let changed = false;
+  for (const x of saveSlotsState.peek().slots) {
+    const e = all[x.key];
+    if (!e?.origin || !x.origin || e.origin === x.origin) continue;
+    if (e.id === x.cloud?.id) all[x.key] = { ...e, origin: x.origin };
+    else {
+      const k = EARLIER + e.id, had = all[k];
+      all[k] = had ? { ...e, ...had, shared: had.shared || e.shared } : e;
+      delete all[x.key];
+    }
+    changed = true;
+  }
+  if (changed) lsSet(GAMES_KEY, all);
+}
+
+/** T-3720: the account's games as last listed in this page, for `goneFromAccount`. */
+let listed: { acct: string; at: number; ids: Set<string> } | null = null;
+const LISTED_MS = 60_000;
+/** Whether game `id` is known to be off the account: a list fetched in this page lacks it (a deletion still owed counts
+ * as off, `listGames`). An id the account has is another version of a game, maybe played on another device, and its
+ * figures and share stay; with the account unreachable nothing is known. */
+async function goneFromAccount(id: string): Promise<boolean> {
+  const ctx = cloudContext(), cfg = accountConfig.peek();
+  if (!ctx) return false;
+  if (!ctx.on) return !!cfg && accountState.peek() === "on" && !cfg.trainworldGames; // a server that keeps no games
+  if (!listed || listed.acct !== ctx.acct || Date.now() - listed.at > LISTED_MS) {
+    const list = await listGames(ctx).catch(() => null);
+    if (!list) return false;
+    listed = { acct: ctx.acct, at: Date.now(), ids: new Set(list.games.map((g) => g.id)) };
+  }
+  return !listed.ids.has(id);
+}
+
+/** Entry `slot` forgotten here, if it still names game `id`; moved to `to` instead when that slot has none. */
+function forgetEntry(slot: string, id: string, to?: string) {
+  const now = games();
+  if (now[slot]?.id !== id) return;
+  if (to && to !== slot && !now[to]) now[to] = stamped(to, now[slot]);
+  delete now[slot];
+  lsSet(GAMES_KEY, now);
+}
+
+/** Slots gone from this browser take their figures off the account they were sent to. One run at a time, across tabs
+ * too, so an entry's DELETE goes once; a call during a run gets another after it. */
+let dropping: Promise<void> | null = null, dropAgain = false;
+function dropDeleted(): Promise<void> {
+  tidyEntries();
+  if (dropping) { dropAgain = true; return dropping; }
+  dropping = (async () => {
+    try { do { dropAgain = false; await oneTabAtATime(dropOnce); } while (dropAgain); }
+    finally { dropping = null; }
+  })();
+  return dropping;
+}
+/** Another tab's run in progress does this one's work: the entries are shared. */
+const oneTabAtATime = (f: () => Promise<void>): Promise<void> =>
+  typeof navigator !== "undefined" && navigator.locks ? navigator.locks.request("trainworld-score-drop", { ifAvailable: true }, (lock) => lock ? f() : undefined) : f();
+
+async function dropOnce() {
+  if (!saveSlotsState.peek().slots.length) return; // storage unread or blocked: nothing is known to be gone
+  for (const slot of Object.keys(games())) {
+    // read again for each: an earlier one's request may have taken a while
+    const s = session.peek(), st = saveSlotsState.peek(), e = games()[slot];
+    // a slot here, the game played (not written yet), or an earlier game's entry not put aside yet (`tidyEntries`)
+    if (!e || st.slots.some((x) => x.key === slot) || slot === st.active) continue;
+    // a game another slot here holds lives on there (a tab's change kept aside, keepOtherTabs)
+    const holder = holderOf(e.id);
+    if (holder) { forgetEntry(slot, e.id, holder.key); continue; }
     if ((e.sent && !e.sandbox) || e.shared) {
       if (!s || e.acct !== s.account.id || accountState.peek() !== "on") continue; // later, signed in
+      if (!await goneFromAccount(e.id)) continue; // T-3720: later, once the account no longer has it
+      if (games()[slot]?.id !== e.id || holderOf(e.id)) continue; // changed during the list's request
       try { await api("DELETE", `trainworld/score/${e.id}`); } catch (err) { if ((err as ApiError).status !== 404) continue; }
     }
-    const now = games();
-    delete now[slot];
-    lsSet(GAMES_KEY, now);
+    forgetEntry(slot, e.id); // unless the slot's entry changed under the request
   }
 }
 
@@ -538,7 +628,7 @@ export function startAccount() {
     }
     startFeedbackWatch(); // T-2853: after the refresh, so a lapsed session is found out before a claim
     setInterval(() => void sendScores(), 15_000);
-    effect(() => { void saveSlotsState.value; void session.value; void dropDeleted(); });
+    effect(() => { void saveSlotsState.value; void session.value; void accountState.value; void dropDeleted(); });
     document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") void sendScores(true); });
   })();
   // another tab on this origin (noritetsu, or this game) signed in or out
