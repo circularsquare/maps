@@ -4676,6 +4676,7 @@ async function handleMessage(msg: ToClock) {
         .then((data) => send({ kind: "answer", seq, data }, [data.buffer]));
       return;
     }
+    const t0 = performance.now();
     const data =
       q.what === "insertStop" ? api.insert_stop(q.line, q.station)
       : q.what === "stopTiers" ? api.stop_tiers(q.line)
@@ -4713,7 +4714,7 @@ async function handleMessage(msg: ToClock) {
       // T-2232: [station, its passing tracks' price] pairs
       : q.what === "passingSpots" ? Float64Array.from(Array.from(api.passing_spots(q.line), (n) => [n, api!.station_upgrade_cost(n, UPGRADE.passing)]).flat())
       : q.period !== undefined ? api.line_delays_in(q.line, q.period) : api.line_delays(q.line, q.level);
-    send({ kind: "answer", seq: msg.seq, data }, [data.buffer]);
+    send({ kind: "answer", seq: msg.seq, data, ms: performance.now() - t0 }, [data.buffer]);
   } else if (msg.kind === "previewStation") {
     const at = msg.at;
     api.set_station_one(at.one ? new Float64Array([at.one.x, at.one.y]) : new Float64Array(0));

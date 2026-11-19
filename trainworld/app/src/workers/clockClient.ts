@@ -75,6 +75,19 @@ const STOP_READS = new Set(["stopTiers", "stopGap", "insertStop", "passedStation
  * click's network as long): the panels ask a dozen after each world, 0.2 to 0.7 s of the worker's on New York's real
  * save, and the next click waited behind them */
 const STOP_HOLD_MS = 500;
+type ClockQ = Extract<ToClock, { kind: "query" }>["q"];
+/** T-3801: the panels' reads, asked again as the clock, the network or the account moves (docs/architecture.md
+ * "Workers"). The worker answers in turn, so an edit waits behind every one sent before it: they wait on the page
+ * instead, one in the worker at a time, and after each answer the next waits POLL_REST times the worker's own time
+ * for it (at most POLL_REST_MAX_MS), so they take at most a third of the worker. A question the page has never had
+ * answered (a panel just opened) goes at once. */
+const POLL_READS = new Set<ClockQ["what"]>(["today", "linesPeriods", "linePeriods", "lineAccount", "lineHeld", "lineDelays", "lineWaits", "lineMarks",
+  "lineTrips", "stationDeps", "lineRelated", "linePairs", "passingSpots", "upgradeCosts", "upgradeCost", "tracksCost", "platformCost", "junction",
+  "flyover", "blueprintQuote", "blueprintPieces", "lineCost"]);
+const POLL_REST = 2;
+const POLL_REST_MAX_MS = 3000;
+/** a read unanswered this long, ms, no longer counts as queued (a worker that never answers holds no read for ever) */
+const POLL_LOST_MS = 10000;
 export function manageSaveSlot(action: Extract<ToClock, { kind: "saveSlot" }>["action"], key?: string, name?: string) {
   // T-1196: a game opened or restored reloads the page into it, T-1197: if it fits
   if (action === "open" && key && key !== saveSlotsState.peek().active) return void ifItFits({ key }, () => switchGame({ slot: key }));
@@ -543,8 +556,8 @@ export function postAchievements(got: Record<string, Omit<import("./saveFile").A
   current?.post({ kind: "achieve", got });
 }
 /** Ask the clock worker an inspector question (T-031); null before the worker is there. */
-export function queryClock(q: Extract<ToClock, { kind: "query" }>["q"]): Promise<Float64Array | null> {
-  return current ? current.query(q) : Promise.resolve(null);
+export function queryClock(q: Extract<ToClock, { kind: "query" }>["q"], soon = false): Promise<Float64Array | null> {
+  return current ? current.query(q, soon) : Promise.resolve(null);
 }
 
 /** T-3297: every train, tram and bus to the other side; the sites the flip fixed and left (`ToClock` "flipSide"). */
@@ -1319,6 +1332,7 @@ export class ClockClient {
         this.queries.delete(msg.seq);
         this.sent.delete(msg.seq);
         f?.(msg.data);
+        this.pollAnswered(msg.seq, msg.ms);
         break;
       }
       case "trips":
@@ -1378,7 +1392,7 @@ export class ClockClient {
    * previews stop for `PANEL_HOLD_MS`, the same ones asked once: each takes 15-50 ms in the clock
    * worker on a big network, and a preview behind it waits that long */
   private lastPreviewAt = -Infinity;
-  private heldReads = new Map<string, { q: Extract<ToClock, { kind: "query" }>["q"]; res: ((d: Float64Array) => void)[] }>();
+  private heldReads = new Map<string, { q: Extract<ToClock, { kind: "query" }>["q"]; res: ((d: Float64Array) => void)[]; soon: boolean }>();
   private heldTimer = 0;
   /** T-2766: stop clicks sent and not yet answered, when the last was sent, and when the last was answered */
   private stopsOut = 0;
@@ -1400,26 +1414,40 @@ export class ClockClient {
     }
     const held = [...this.heldReads.values()];
     this.heldReads.clear();
-    for (const h of held) void this.query(h.q).then((d) => h.res.forEach((r, k) => r(k ? d.slice() : d)));
+    for (const h of held) void this.query(h.q, h.soon).then((d) => h.res.forEach((r, k) => r(k ? d.slice() : d)));
   }
-  query(q: Extract<ToClock, { kind: "query" }>["q"]): Promise<Float64Array> {
+  /** `soon`: a poll read past its rest (still behind the queued ones), for a count the player just changed */
+  query(q: ClockQ, soon = false): Promise<Float64Array> {
     if (this.holdsRead(q.what)) {
       const key = JSON.stringify(q);
       return new Promise((res) => {
         const h = this.heldReads.get(key);
-        if (h) h.res.push(res);
-        else this.heldReads.set(key, { q, res: [res] });
+        if (h) { h.res.push(res); h.soon ||= soon; }
+        else this.heldReads.set(key, { q, res: [res], soon });
         if (!this.heldTimer) this.releaseHeld();
       });
     }
     // T-2953: the panels each ask the same account read after an edit (the Lines tab, the trouble list, the
-    // goals); with nothing posted since the first, one answer serves them all
-    const key = PANEL_READS.has(q.what) ? JSON.stringify(q) : "";
+    // goals); with nothing posted since the first, one answer serves them all (each its own copy past the account reads)
+    const poll = POLL_READS.has(q.what), key = poll || PANEL_READS.has(q.what) ? JSON.stringify(q) : "";
     const same = key ? this.readsOut.get(key) : undefined;
-    if (same && same.posts === this.posts) return same.p;
+    if (same && same.posts === this.posts) return PANEL_READS.has(q.what) ? same.p : same.p.then((d) => d.slice());
+    if (poll && (this.pollWait.has(key) || !this.pollGoes(key, soon))) {
+      return new Promise((res) => {
+        const h = this.pollWait.get(key);
+        if (h) { h.res.push(res); h.soon ||= soon; }
+        else this.pollWait.set(key, { q, res: [res], soon });
+        this.pumpPolls();
+      });
+    }
+    return this.sendQuery(q, key, poll);
+  }
+  private sendQuery(q: ClockQ, key: string, poll: boolean): Promise<Float64Array> {
     const seq = ++this.seq;
     this.post({ kind: "query", seq, q });
-    this.sent.set(seq, { what: q.what, at: performance.now() });
+    const at = performance.now();
+    this.sent.set(seq, { what: q.what, at });
+    if (poll) this.pollsOut.set(seq, { at, key });
     const p = new Promise<Float64Array>((res) => this.queries.set(seq, res));
     if (key) {
       const read = { posts: this.posts, p };
@@ -1427,6 +1455,52 @@ export class ClockClient {
       void p.then(() => { if (this.readsOut.get(key) === read) this.readsOut.delete(key); });
     }
     return p;
+  }
+
+  /** T-3801: poll reads waiting on the page (`POLL_READS`), by question, in the order first asked */
+  private pollWait = new Map<string, { q: ClockQ; res: ((d: Float64Array) => void)[]; soon: boolean }>();
+  /** poll reads sent and not answered, by seq: when each was sent, and its question */
+  private pollsOut = new Map<number, { at: number; key: string }>();
+  /** questions answered before: a question new to the page (a panel just opened) skips the rest */
+  private pollSeen = new Set<string>();
+  /** no poll read before this time (performance.now), after the last one's answer */
+  private pollRestUntil = 0;
+  private pollTimer = 0;
+  /** a poll read may go: a question never answered at once; else none other in flight and the rest over (`soon` skips
+   * the rest) */
+  private pollGoes(key: string, soon: boolean): boolean {
+    if (!this.pollSeen.has(key)) return true;
+    const now = performance.now();
+    for (const [seq, r] of this.pollsOut) if (now - r.at > POLL_LOST_MS) this.pollsOut.delete(seq);
+    return !this.pollsOut.size && (soon || now >= this.pollRestUntil) && (this.pollWait.size === 0 || this.pollWait.has(key));
+  }
+  /** the first waiting poll read (a `soon` one first) that may go; else a timer for the rest's end (or a lost read's) */
+  private pumpPolls() {
+    clearTimeout(this.pollTimer);
+    this.pollTimer = 0;
+    const waiting = [...this.pollWait];
+    const first = waiting.find(([, h]) => h.soon) ?? waiting[0];
+    if (!first) return;
+    const [key, h] = first;
+    if (this.pollGoes(key, h.soon)) {
+      this.pollWait.delete(key);
+      void this.sendQuery(h.q, key, true).then((d) => h.res.forEach((r, k) => r(k ? d.slice() : d)));
+      return;
+    }
+    const now = performance.now();
+    let at = h.soon ? now : Math.max(now, this.pollRestUntil);
+    for (const r of this.pollsOut.values()) at = Math.max(at, r.at + POLL_LOST_MS);
+    this.pollTimer = setTimeout(() => this.pumpPolls(), Math.max(1, at - now)) as unknown as number;
+  }
+  /** a poll read answered: the rest from the worker's own time for it, then the next waiting one */
+  private pollAnswered(seq: number, ms: number | undefined) {
+    const r = this.pollsOut.get(seq);
+    if (!r) return;
+    this.pollsOut.delete(seq);
+    this.pollSeen.add(r.key);
+    const cost = ms ?? Math.min(performance.now() - r.at, POLL_REST_MAX_MS);
+    this.pollRestUntil = Math.max(this.pollRestUntil, performance.now() + Math.min(POLL_REST_MAX_MS, POLL_REST * cost));
+    this.pumpPolls();
   }
 
   /** T-3297: `flipSide` above. */

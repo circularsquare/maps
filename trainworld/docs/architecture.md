@@ -246,6 +246,15 @@ Web first, so it can be shared as a link.
   started or is waiting for water masks; the end of a run (Esc, another tool) and of a drag drop both.
   The router worker's route search and fit stop at their next look (every 20,000 states, every 25 ms)
   when a newer route is asked or the pointer leaves real track.
+- **Edits never queue behind polling** [T-3801, `ClockClient.query`]: the clock worker answers its messages one at
+  a time, in order, so an edit waits behind every read sent before it and behind whatever the worker does on its own
+  clock. A read a panel asks again as the clock, the network or the riders change (`POLL_READS`; anything new that
+  asks on a timer or on every world joins it) waits on the page: one question already answered before is in the
+  worker at a time, and after each answer the next waits twice the worker's own time for it (at most 3 s), so such
+  repeats take at most a third of the worker. A question the page has never had answered (a panel just opened) goes
+  at once. The target for anything new that the worker answers again and again, or runs on its own clock, is under
+  about 0.2 s on the biggest saves (the 2,647-station save in notes/T-3801.md), or split so edits can come between
+  its parts. Known to miss it there: one `today` answer, the hour's trips and an edit's held full state.
 - **The demand pool** [T-149, T-173, `workers/demandClient.ts`][T-381]: 3 solving workers on 12 or more
   logical threads, 2 on 6 to 11, 1 on fewer; then a phone or tablet (by its user agent), or a device
   of 4 GB or less, gets 1 (T-2794 adds the same check's lean ways: pixel ratio at most 2, coarse outlines held only near the view; notes/T-2794.md; T-2802: the WASM memories grow 8 MB at a time, not 32, notes/T-2802.md; a phone or tablet by user agent, not a 4 GB desktop, also has no demand cache; no device opens market packs (trips between zones) while "Calculate intercity trips" is off, which is its default on a phone or tablet only, T-2833, T-2838, T-3630; a device reporting 4 GB or less gets a note at the bottom of the map, T-2839, `ui/DeviceNote.tsx`) (`workers/deviceMemory.ts` `smallDevice`, T-2122: a phone's tab holds far

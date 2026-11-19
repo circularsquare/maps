@@ -314,17 +314,11 @@ export const stationsToday = computed(() => {
 const ASK_MS = 250;
 let users = 0, timer = 0, busy = false, askedAt = NaN, askedVersion = -1;
 let askedDv: unknown = null;
-/** T-3793: no ask before this (performance.now): twice the last answer's wait after it came, at most REST_MAX_MS, so
- * on a very big game (~0.4 s an answer) the clock worker is not kept busy answering and an edit waits behind one
- * answer at most; the cap, since the wait also counts reads held behind stop clicks or a long hour's turn */
-let restUntil = 0;
-const REST_MAX_MS = 1000;
 
-/** `soon`: past the rest (a stop edit's new count) */
+/** `soon`: past the clock client's rest for panel reads (a stop edit's new count, the panel just opened; T-3801) */
 function ask(force = false, soon = force) {
   // T-1207: the Lines tab's rows re-rendered four times a second while the map was dragged
   if (busy || (!force && cameraMoving.now)) return;
-  if (!soon && performance.now() < restUntil) return;
   // the network or the account (new riders, the hour turning) changed
   const t = clock.now(), v = (world.peek()?.version ?? -1) * 1e6 + accountVersion.peek();
   // the income the worker holds as it answers came from this result (clockClient posts it on each new one)
@@ -337,11 +331,8 @@ function ask(force = false, soon = force) {
   askedDv = dv;
   const service = new Map<string, { tph: number[]; cars: number }>();
   for (const [id, ld] of dv?.lines ?? []) if (ld.tph && ld.cars !== undefined) service.set(id, { tph: ld.tph, cars: ld.cars });
-  const sentAt = performance.now();
-  void queryClock({ what: "today" }).then((d) => {
+  void queryClock({ what: "today" }, soon).then((d) => {
     busy = false;
-    const back = performance.now();
-    restUntil = back + Math.min(REST_MAX_MS, 2 * (back - sentAt));
     if (!d) return;
     const w = world.peek();
     readFor = new Map((w?.save.lines ?? []).map((l) => [l.id, l.stops]));

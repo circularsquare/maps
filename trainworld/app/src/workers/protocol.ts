@@ -979,8 +979,8 @@ export type FromClock =
   /** a crossover preview (T-338): cost US$M, each diagonal's centre line (local x, y, height),
    * relative to draw anchor version `anchor` */
   | { kind: "crossoverCheck"; seq: number; ok: boolean; issues: string[]; cost: number; parts: Float32Array[]; anchor?: number }
-  /** a query's answer, in the track model's flat layout (pack metres) */
-  | { kind: "answer"; seq: number; data: Float64Array }
+  /** a query's answer, in the track model's flat layout (pack metres); `ms`, the worker's own time for it (T-3801) */
+  | { kind: "answer"; seq: number; data: Float64Array; ms?: number }
   /** an autosave was written (Date.now()), its size, and worker ms to encode and to write */
   | { kind: "saved"; at: number }
   /** the answer to a save by hand (T-1251): when it was written, or why not */
