@@ -821,9 +821,11 @@ svg.trip-graph { display: block; width: 100%; height: auto; margin: 2px 0 4px; u
 .fare-rows .af-add .btn svg { width: 12px; height: 12px; margin-right: 2px; vertical-align: -2px; }
 /* T-3749: a step's row has only its bin, in the bins' place */
 .fare-rows .fr-unseen { visibility: hidden; }
-/* T-3749: the panel's fare amounts one width, right-aligned, so rows of different lengths line up */
-.fares-panel .fare-rows:not(.af-countries) .stepper.wide .v { min-width: 64px; justify-items: end; }
-.fares-panel .fare-rows:not(.af-countries) .stepper.wide input.v { width: 64px; text-align: right; }
+/* T-3751: the end of a stretch a step follows, plain text (the step's row has the box) */
+.fare-rows .fr-what .v.fr-plain { min-width: 0; padding: 0; border-color: transparent; background: none; }
+/* T-3749, T-3751: the panel's fare amounts one width, centred, so rows of different lengths line up */
+.fares-panel .fare-rows:not(.af-countries) .stepper.wide .v { min-width: 64px; }
+.fares-panel .fare-rows:not(.af-countries) .stepper.wide input.v { width: 64px; }
 /* T-3749: the heading "Fares by country" is the column heads' first cell, so no empty line sits under it */
 .rows.fare-rows.af-countries { grid-template-columns: minmax(0, 1fr) auto auto auto; grid-template-rows: auto; margin-top: 14px; }
 .af-countries .af-head > span { color: var(--muted); align-self: end; padding-bottom: 2px; border-bottom: 1px solid var(--rule); }

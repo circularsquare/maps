@@ -217,9 +217,20 @@ export function FareNodeRows({ nodes, scale, last, remove = false, custom }: { n
           // T-3749: a step's row is the fare's jump there; a change keeps its width and every other row's value
           const jump = nodes[i][1] - nodes[i - 1][1];
           const setJump = (v: number) => put(base, stretches.map((s, k) => (k === j ? [s[0], Math.max(0, v) / (s[0] - nodes[i - 1][0])] : s)));
+          // T-3751: its distance typed moves the whole step, its width and every rate kept
+          const w = km - nodes[i - 1][0], lo = i > 1 ? limits(nodes, i - 1).kLo : 0, hi = limits(nodes, i).kHi - w;
+          const setAt = (v: number) => {
+            if (i === 1 || lo > hi) return false;
+            const k = clamp(v * kpu, lo, hi);
+            put(base, stretches.map((s, m) => (m === j - 1 ? [k, s[1]] : m === j ? [k + w, s[1]] : s)));
+            return true;
+          };
+          // the step's foot is the end of the stretch before it, so its screen-reader label is that one's
+          const at = i === 1 ? fromText : <TypedValue label={t("fareGraph.endLabel", { n: tNumber(i - 1) })}
+            type={{ text: fromText, set: setAt }}>{fromText}</TypedValue>;
           return (
             <li>
-              <span class="fr-what">{t("fareGraph.stepAt", { at: fromText, unit })}</span>
+              <span class="fr-what">{tRich("fareGraph.stepAt", { at, unit })}</span>
               <Stepper value={`+${usd(jump)}`} wide label={t("fareGraph.stepLabel", { at: fromText, unit })}
                 onStep={(s) => (s < 0 && jump <= 0 ? false : setJump(fromShown(Math.max(0, roundTo(toShown(jump), sp.grain) + s * sp.fareStep))))}
                 type={{ text: priceTyped(jump), set: (v) => setJump(fromShown(v)) }} />
@@ -230,17 +241,7 @@ export function FareNodeRows({ nodes, scale, last, remove = false, custom }: { n
         }
         const rateU = rate * kpu;
         const last = i === nodes.length - 1;
-        const setU = (v: number) => {
-          // T-3749: a step right after this stretch moves with its end, keeping its width (its top has no box)
-          if (step(i + 1)) {
-            const w = nodes[i + 1][0] - km, hi = limits(nodes, i + 1).kHi - w;
-            if (lim.kLo > hi) return;
-            const k = clamp(v * kpu, lim.kLo, hi);
-            put(base, stretches.map((s, m) => (m === j ? [k, s[1]] : m === j + 1 ? [k + w, s[1]] : s)));
-            return;
-          }
-          if (lim.kLo <= lim.kHi) put(base, stretches.map((s, k) => (k === j ? [clamp(v * kpu, lim.kLo, lim.kHi), s[1]] : s)));
-        };
+        const setU = (v: number) => { if (lim.kLo <= lim.kHi) put(base, stretches.map((s, k) => (k === j ? [clamp(v * kpu, lim.kLo, lim.kHi), s[1]] : s))); };
         const withRate = (r: number) => fromRows(base, stretches.map((s, k) => (k === j ? [s[0], Math.max(0, r) / kpu] : s)));
         // typed to a tenth of a step of the shown currency (a tenth of a cent in dollars), then back to US$
         const rg = sp.rateGrain;
@@ -262,8 +263,11 @@ export function FareNodeRows({ nodes, scale, last, remove = false, custom }: { n
             {/* the last node's distance changes no fare, since its rate holds past it: it is only dragged */}
             {last
               ? <span class="fr-what">{t("fareGraph.past", { from: fromText, unit })}</span>
-              : <span class="fr-what">{tRich("fareGraph.stretchEnd", { from: fromText, unit, end: <TypedValue label={t("fareGraph.endLabel", { n: tNumber(i) })}
-                  type={{ text: nodeDist(u), set: setU, tip: t("fareGraph.endTip", { unit }) }}>{nodeDist(u)}</TypedValue> })}</span>}
+              : <span class="fr-what">{tRich("fareGraph.stretchEnd", { from: fromText, unit, end: step(i + 1)
+                  // T-3751: a step follows: its row's box is this same distance, so here it is plain
+                  ? <span class="v fr-plain">{nodeDist(u)}</span>
+                  : <TypedValue label={t("fareGraph.endLabel", { n: tNumber(i) })}
+                    type={{ text: nodeDist(u), set: setU, tip: t("fareGraph.endTip", { unit }) }}>{nodeDist(u)}</TypedValue> })}</span>}
             <Stepper value={`+${rateText(rateU)}`} wide label={t("fareGraph.rateLabel", { n: tNumber(i) })} onStep={stepRate}
               type={{ text: rateTyped(rateU), set: setRate, tip: t("fareGraph.rateTip", { last, rate: rateText(rateU), unit, from: fromText, to: nodeDist(u) }) }} />
             {remove

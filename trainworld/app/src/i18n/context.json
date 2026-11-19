@@ -730,7 +730,7 @@
   "fareGraph.offTip": "Hover of an arrow at the fare graph's edge that stands for a knob outside the view. first: the knob's first hover line, e.g. \"300 km: $9.00\".",
   "fareGraph.addTip": "First line of the fare graph's hover after \"Add point\" is pressed: a click puts a new point of the fare curve at the pointer.",
   "fareGraph.removePoint": "Hover and screen reader label of the bin icon on a fare curve point's row in the Advanced fares panel.",
-  "fareGraph.stepAt": "Label of a fare row for a step, where the fare jumps at one distance instead of rising per km. at: the distance, e.g. \"10\"; unit: \"km\" or \"mi\".",
+  "fareGraph.stepAt": "Label of a fare row for a step, where the fare jumps at one distance instead of rising per km. at: an editable box showing the distance, e.g. \"10\" (plain \"0\" at the start); unit: \"km\" or \"mi\".",
   "fareGraph.stepLabel": "Screen-reader label of the stepper for how much the fare jumps at a step. at: the distance, e.g. \"10\"; unit: \"km\" or \"mi\".",
   "advancedFares.title": "Title of the Advanced fares panel, a centred window opened from the Money tab.",
   "advancedFares.faresIn": "Above the Advanced fares panel's graph. country: a drop-down of country names, e.g. \"Japan\"; the graph and rows show that country's fares.",

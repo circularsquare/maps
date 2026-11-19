@@ -854,7 +854,7 @@ click outside. Top to bottom: "Fares in [country]" (a picker of the listed count
 with the graph's undo and zoom; the fare graph at 560 by 260 units, the Money tab's rules but for drags, which may
 come right up to a neighbour (0.1 km) so a drag can make a step; the rows as the Money tab's, each stretch's with a
 bin ("Remove point"; the base fare has none), their amount boxes one width (64 px, seven characters such as "+$55.50"
-or "+¥1,500") with the figure at the right [T-3749]; "Add point" (pressed while armed; off at 12 points, hover "At
+or "+¥1,500") with the figure centred [T-3749, T-3751]; "Add point" (pressed while armed; off at 12 points, hover "At
 most 12 points") and, for a curve of other than three points, "Use simple curve", which asks "Go back to three points
 at 0, 20 and 100 km? The other points are dropped." and keeps the fares at those distances; the high-speed, bus, ferry
 and transfer rows as the Money tab shows them; the estimate rows while a change is unsolved; the countries: the
@@ -865,8 +865,9 @@ the panel. **Steps in the rows** (the panel's only; the Money tab's three rows s
 0.5 km or less that is not the last reads as a step, one row
 "10 km" with the fare's jump there, "+$2.50" with no "per km" (stepped by the base fare's step, typed, never below
 $0; a change keeps the step's width and moves every later point's fare by the same amount); the stretch after it
-reads from the step's distance ("10 - 40 km", "Past 70 km"), and typing the end of the stretch before a step moves
-the step with it, its width kept. **Add point**: pressed, the next click
+reads from the step's distance ("10 - 40 km", "Past 70 km"). The step's distance is its row's typed box ("[10] km";
+plain at 0 km), which moves the whole step, its width and every rate kept; the stretch before a step shows its end
+as plain text ("0 - 10 km"), since it is the same number [T-3751]. **Add point**: pressed, the next click
 on the graph adds a point there (the dock's graph never adds), and the button lets go; Esc lets go first, a second
 Esc closes. While armed the points take no clicks, the curve with the new point is drawn dashed over the faded one
 with a hollow dot where it would go, and the plot's hover reads "Click to add a point here" over its distance and
