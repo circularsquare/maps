@@ -222,7 +222,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: You, 2026-11-18, for v0.4.3 ("train adjustments"), from a player: "the ability to offset departure times from whatever the game defaults to (like for example +4 minutes or -5 minutes) to have finer control over train movements and minimise conflicts between lines that share tracks". Per-train nudges are T-3346's Exact mode (stage 6, 24-34 h); a per-line offset is a smaller piece, but it meets the automatic pacing of lines sharing track (T-3584, `pace_merges`).
   - Goal: A design for you first (per line or per row, how it meets automatic pacing, where the control sits), with an hour estimate.
   - Other: notes/T-3742.md
-- T-3542 [P2] {L:timetables} Tweakable hours for the service periods
+- T-3542 [P2] {L:timetables} Tweakable hours for the service periods (taking, 2026-11-19, agent periods2)
   - Context: 3, 4 or 5 periods are built and on 8800 (stages 0-1b, 2026-11-19). Left is stage 2, your 2026-11-17 add: "being able to tweak the periods customizably ... set the morning hours to like start an hour earlier". Design in notes/T-3542.md (whole hours, each row at least 2 h, rows crossing a period averaged into its slot, demand's own period hours never move); about 8-12 h.
   - Goal: Period hours set for the game (per line as an extra step) in the schedule window, with the headway and lead caps lowered for 2 h rows.
   - Other: notes/T-3542.md; T-3346 stage 2 (tree tt2) ports after this
@@ -330,10 +330,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: Measured in notes/T-909.md option 1.
 
 ## Interface
-- T-3753 [P3] {L:fares} Cross-border trips still about 1% off the fare curve
-  - Context: After T-3748, a two-country line (Detroit to Windsor, scales 1 and 0.784) earns 0.990 of the hand figure (0.866 before); exact when both scales are 1. Unexplained; a guess is city populations charged at their zone's scale while income uses the stop's. Also the base extra is charged at the scale of the stop each leg leaves, where the docs say the boarding stop's. Reach: few, border lines with differing scales.
-  - Goal: Cross-border income matches the hand figure to the cent, or the lie is named in DECISIONS.md.
-  - Other: notes/T-3748.md; checker probes in the orchestrator's scratchpad farefixchk
 - T-3740 [P2] {L:fares} Zone fares players draw
   - Context: You, 2026-11-18: "people have requested zone fares ... people wanna draw these." Design agreed 11-19: paint stations (A) with a rings helper (B), new stations take their neighbours' zone, a trip leaving its fare area pays distance; drawn outlines (C) later. About 14-20 h.
 - T-3744 [P3] {L:fares} Fare per stop made
