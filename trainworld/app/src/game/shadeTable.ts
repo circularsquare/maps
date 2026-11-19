@@ -58,6 +58,7 @@ export interface ShadeColours {
   realOpacity: number;
   /** the real stations' filled dots (T-3570, T-3577, `map/realStations.ts`): `realMetro`, this opaque */
   realStationOpacity: number;
+  realDotOpacity: number;
   /** riders changing trains walking between stations (T-1124, `map/transferBubbles.ts`); a lighter
    * grey in dark (T-1288) */
   walkers: string;
@@ -79,7 +80,7 @@ export const SHADES: Record<Shade, ShadeColours> = {
     offRail: "#9aa3ae", offMid: "#f2f4f7", offFade: "#ffffff",
     outside: "#182536", outsideOpacity: 0.075, inactive: "#182536", inactiveOpacity: 0.11, thumbTrack: "#b9b4ad",
     markInk: NET_INK, markBlueprint: "#2f62b3",
-    realMain: "#6f7b93", realOther: "#9ea6b5", realMetro: "#9577a6", realFreight: "#8c7a66", realAbandoned: "#a39a8c", realOpacity: 0.15, realStationOpacity: 0.85,
+    realMain: "#6f7b93", realOther: "#9ea6b5", realMetro: "#9577a6", realFreight: "#8c7a66", realAbandoned: "#a39a8c", realOpacity: 0.15, realStationOpacity: 0.85, realDotOpacity: 0.36,
     walkers: "#a4a19d",
     lot: "#e7e3dc", lotLine: "#c4beb4",
     fullTrack: "#c0392b",
@@ -92,7 +93,7 @@ export const SHADES: Record<Shade, ShadeColours> = {
     offRail: "#6c747e", offMid: "#383e46", offFade: "#383e46",
     outside: "#000000", outsideOpacity: 0.35, inactive: "#000000", inactiveOpacity: 0.225, thumbTrack: "#6f6b66",
     markInk: "#e6e4e0", markBlueprint: "#8db6ee",
-    realMain: "#97a2b8", realOther: "#7a8291", realMetro: "#a98ec2", realFreight: "#9c8a74", realAbandoned: "#7d766b", realOpacity: 0.3, realStationOpacity: 0.85,
+    realMain: "#97a2b8", realOther: "#7a8291", realMetro: "#a98ec2", realFreight: "#9c8a74", realAbandoned: "#7d766b", realOpacity: 0.3, realStationOpacity: 0.85, realDotOpacity: 0.42,
     walkers: "#b8b3ac",
     lot: "#39352f", lotLine: "#625b52",
     fullTrack: "#f0584f",
