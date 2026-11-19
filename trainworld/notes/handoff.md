@@ -25,6 +25,9 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    T-3542 stage 1a LANDED c54415b0, T-3750 LANDED 2e962957 (level 24, c014). 8800 = afe1ac79 (~08:45 UTC), smoke
    passed 29, pushed; shonei-server `go test ./...` passes against master (f5309bf ready, not pushed or deployed:
    ask her for the deploy before the v0.4.3 publish). 8800's serve.py was found down ~08:35 and restarted.
+   T-3542 stage 1b BUILT in tree periods1b (window Periods 3/4/5, per-line override, line panel rows, readouts by
+   period; changelog periods1b-1; strings in report, shown to her); checker periods1bchk (Sonnet, 6141/6142)
+   running, then land (WASM rebuild). DECISIONS line added by me (uncommitted). Stage 2 (hours) after.
    Also started ~08:20 UTC: periods1b (Opus, T-3542 stage 1b UI, tree periods1b, port 6139; needs a checker),
    T-3755 committed a14a79b7 (Haiti none; Trinidad UIS 20,889 kept over the ministry's ~44k). T-3756 LANDED ff80b743.
 2b. advfares BUILT (T-3739 archived by it; changelog advfares-1; 14 new strings in its report r-5579da31, to show
