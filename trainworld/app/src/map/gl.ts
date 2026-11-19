@@ -95,12 +95,15 @@ export function sizeCanvasLike(canvas: HTMLCanvasElement, map: { getPixelRatio()
 
 /** T-3497: an overlay canvas that is blank most of the time (the station circles, the demand discs, a trip's
  * routes, the gap flash, the faces) holds no backing store while blank: `on` false makes it 0 by 0, true sizes it
- * like the map's if it is not already. A change of size clears it. */
+ * like the map's if it is not already. A change of size clears it. Blank, it is also hidden (T-956): Safari can
+ * go on showing a WebGL canvas's last frame after it shrinks to 0 by 0, stretched over the map and left there. */
 export function fitSparse(canvas: HTMLCanvasElement, map: { getPixelRatio(): number; getCanvas(): HTMLCanvasElement }, on: boolean) {
   if (!on) {
     if (canvas.width || canvas.height) canvas.width = canvas.height = 0;
+    if (!canvas.style.visibility) canvas.style.visibility = "hidden";
     return;
   }
+  if (canvas.style.visibility) canvas.style.visibility = "";
   const dpr = map.getPixelRatio(), c = map.getCanvas();
   if (canvas.width !== (c.width || Math.round(c.clientWidth * dpr)) || canvas.height !== (c.height || Math.round(c.clientHeight * dpr))) sizeCanvasLike(canvas, map);
 }
