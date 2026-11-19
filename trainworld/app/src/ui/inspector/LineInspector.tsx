@@ -608,9 +608,9 @@ function TrainType({ l, st, lev }: { l: LineInput; st: LineStats; lev: number })
   };
   return (
     <ul class="rows">
-      <li>
-        <span class="grow">{tr("lineInspector.trains", { vehicle: vehicleOf(st) })}</span>
-        {st.tram ? <span>{tr("toolBar.tram")}</span> : (
+      {!st.tram && (
+        <li>
+          <span class="grow">{tr("lineInspector.trains", { vehicle: vehicleOf(st) })}</span>
           <Segmented<boolean>
             options={[
               [false, <span data-tip={tip(false)}>{tr("lineInspector.normal")}</span>],
@@ -619,8 +619,8 @@ function TrainType({ l, st, lev }: { l: LineInput; st: LineStats; lev: number })
             value={st.fast}
             onChange={(fast) => { if (fast !== st.fast) void edit({ op: "lineFast", line: l.num, fast }); }}
           />
-        )}
-      </li>
+        </li>
+      )}
       {l.stops.length >= 2 && <AverageSpeed st={st} lev={lev} />}
     </ul>
   );
