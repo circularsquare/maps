@@ -152,7 +152,7 @@ route search charges fares at a longer trip's weight, 0.4 of that** (`marketFare
 option A, T-3239: every country's three groups average 0.40 by their trips), so a longer trip picks
 between a high-speed line and a slower one at about the weight its groups choose rail at. Each
 trip's fare is weighed again by its group's factor and by its origin's fare scale over its default
-(on the expected fare km of each station pair's strategy as searched, so routes stay as the search
+(its country's, or with fares by city its own city's, T-3766: `set_fare_factors_by`) (on the expected fare km of each station pair's strategy as searched, so routes stay as the search
 gives them) [T-1286]. Commutes and outings between zones keep one group, the car's money at 3
 minutes a dollar and the fare at their home's weight in mode choice, but share the longer trips'
 route search, so they too pick routes at 0.4 (the lie; notes/T-3239.md). All of it is damped by the trip's length as the local walking share is

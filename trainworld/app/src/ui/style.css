@@ -857,9 +857,12 @@ svg.trip-graph { display: block; width: 100%; height: auto; margin: 2px 0 4px; u
 .fares-panel .fare-rows:not(.af-countries) .stepper.wide .v { min-width: 64px; }
 .fares-panel .fare-rows:not(.af-countries) .stepper.wide input.v { width: 64px; }
 /* T-3749: the heading "Fares by country" is the column heads' first cell, so no empty line sits under it */
-.rows.fare-rows.af-countries { grid-template-columns: minmax(0, 1fr) auto auto auto; grid-template-rows: auto; margin-top: 14px; }
+.rows.fare-rows.af-countries { grid-template-columns: minmax(min-content, 1fr) auto auto auto; grid-template-rows: auto; margin-top: 14px; }
 .af-countries .af-head > span { color: var(--muted); align-self: end; padding-bottom: 2px; border-bottom: 1px solid var(--rule); }
 .af-countries .af-head > span.af-title { color: var(--text); font-weight: 700; }
+/* T-3766: "Fares by [country | city]", the switch in the heading's own words */
+.af-countries .af-head > span.af-by { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; }
+.af-countries .af-by .group .btn { font-weight: 400; height: 22px; padding: 0 7px; }
 .af-countries .af-base { justify-self: end; font-variant-numeric: tabular-nums; }
 /* T-3740: the fare areas under the countries: a name box (plain text until hovered), the brush and bin, the prices */
 .rows.fare-rows.af-zones { margin-top: 14px; }
@@ -1866,7 +1869,7 @@ button.save-add:hover { color: var(--text); }
   .fare-rows .fr-what { grid-column: 1 / -1; }
   .fare-rows .stepper.wide .v { min-width: 44px; }
   /* T-3739: the country list keeps its four columns, the name narrowing */
-  .rows.fare-rows.af-countries { grid-template-columns: minmax(0, 1fr) auto auto auto; }
+  .rows.fare-rows.af-countries { grid-template-columns: minmax(min-content, 1fr) auto auto auto; }
   .af-countries .fr-what { grid-column: auto; }
 }
 

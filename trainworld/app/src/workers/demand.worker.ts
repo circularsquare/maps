@@ -28,7 +28,7 @@ import { EVERYDAY_KEYS, EVERYDAY_NAMES } from "../game/purposes";
 import { PERIODS, TIMES_PER_STOP } from "../game/periods";
 import { DEMAND_DAYS } from "../game/days";
 import { curveKnots, scaledKnots, transferFare } from "../game/fareCurve";
-import { countryFareScales, roundedDefault } from "../game/fareDefault";
+import { countryFareScales, faresIn, marketFareFactors, roundedDefault } from "../game/fareDefault";
 import { demandZones } from "../game/fareZones";
 import { fareFactors, fareScale, fareWeight, marketFareWeight } from "../game/income";
 import type { CorridorBook, CorridorRows } from "../game/demand";
@@ -2017,7 +2017,9 @@ async function run() {
           let scale = 1, rounded: ReturnType<typeof roundedDefault> = null;
           if (p instanceof IntercityApi) {
             p.set_fare_weight(marketFareWeight(m.fare.scales));
-            p.set_fare_factors(JSON.stringify(fareFactors(m.fare.scales)));
+            // T-3766: with fares by city, a city with a multiple of its own weighs at its own
+            if (m.fare.byCity) { const fx = marketFareFactors(m.fare); p.set_fare_factors_by(JSON.stringify(fx.byCountry), JSON.stringify(fx.byZone)); }
+            else p.set_fare_factors(JSON.stringify(fareFactors(m.fare.scales)));
             p.set_sampled(!job.exactMarket);
             p.set_far_chunks(!job.nearChunks);
             // T-377: the market takes stations as longitude and latitude, each zone in its own frame
@@ -2033,9 +2035,11 @@ async function run() {
             const city = c.cities.find((id) => cities.get(id) === p || everyday.get(id) === p)!;
             const country = cityById(city).country;
             p.set_fare_weight(fareWeight(country));
-            scale = fareScale(country, m.fare.scales);
-            rounded = roundedDefault(m.fare, country); // T-1662
-            popScales.set(p, countryFareScales(country, m.fare));
+            // T-3766: its own city's multiple with fares by city (`faresIn`), else its country's
+            const here = faresIn(m.fare, city);
+            scale = fareScale(country, here.scales);
+            rounded = roundedDefault(here, country); // T-1662
+            popScales.set(p, countryFareScales(country, here));
             const xy = m.stXY.slice();
             for (let k = 0; k < xy.length; k += 2) {
               const w = worldToCity(xy[k], xy[k + 1], city);
@@ -2352,7 +2356,7 @@ async function run() {
         // population's per perceived minute, summary slot 10, times its minutes a curve dollar), and
         // how far the trips' sensitivity reaches as against their riders: the sensitivity-weighted
         // mean km over the rider-weighted one (slots 11 and 12)
-        const perDollar = (id: CityId) => { const c = cityById(id).country; return fareWeight(c) * fareScale(c, n.fare.scales); };
+        const perDollar = (id: CityId) => { const c = cityById(id).country; return fareWeight(c) * fareScale(c, faresIn(n.fare, id).scales); };
         const reach = (d: number, dKm: number, rail: number, km: number) => (d < 0 && km > 0 && rail > 0 ? (dKm / d) / (km / rail) : 1);
         const ls = ids.reduce((a, id) => {
           const v = citySummary[id], w = perDollar(id);

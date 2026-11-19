@@ -1,6 +1,7 @@
 // T-3739: the Advanced fares panel, opened from the Money tab's Fare heading; centred like the
 // schedule panel. Everything the Money tab's fare rows set, plus points added to and removed from the
-// curve (1 to 12, "Add point" then a click on the graph), and every country's multiple and base fare.
+// curve (1 to 12, "Add point" then a click on the graph), and every country's (T-3766: or every city's) multiple
+// and base fare.
 // Room is left below the countries for fare zones (T-3740) and a fare per stop (T-3744).
 // docs/ui-panels.md "Advanced fares".
 
@@ -10,19 +11,20 @@ import { busFare, fareAt, ferryFare, HSR_FARE, hsrFare, isCustomCurve, MAX_NODES
 import { chargedPrices, MAX_ZONES } from "../game/fareZones";
 import { newArea, removeArea, renameArea, setAreaOff, setZonePrice, startPainting, topZone } from "../game/fareZonePaint";
 import { roundTo } from "../game/currency";
-import { countryFareScales, roundedDefault } from "../game/fareDefault";
-import { defaultScale, fareScale, SHOWN_STEP, shownScale, storedScale } from "../game/income";
-import { moneyState, stationCountry } from "../game/money";
+import { countryFareScales, faresIn } from "../game/fareDefault";
+import { isCity, zoneCountry } from "../game/cities";
+import { moneyState, stationCity, stationCountry } from "../game/money";
 import { redo, undo, changeFares } from "../game/fareUndo";
 import { ask } from "../game/ui";
-import { setFareRef, setFareScale, world } from "../game/world";
+import { setFareByCity, setFareRef, world } from "../game/world";
 import { currencySpec, fromShown, price, priceTyped, toShown, unitMetres, unitShort } from "../game/format";
 import { playBuild } from "../map/buildSound";
 import { t, tCountry, tNumber, tRich } from "../i18n";
+import type { StationInput } from "../game/types";
 import { useModalDialog } from "./Modal";
 import { advancedFares, fareAdding, FareButtons, FareGraph, FareNodeRows } from "./FareGraph";
-import { BusFareRow, FareEffect, fareRef, FerryFareRow, HsrFareRow, TransferFareRow } from "./MoneyTab";
-import { Check, Icon, Stepper } from "./widgets";
+import { BusFareRow, chargedAt, fareCity, FareEffect, fareRef, FerryFareRow, HsrFareRow, placeMultiple, placeName, stepMultiple, TransferFareRow } from "./MoneyTab";
+import { Check, Icon, Segmented, Stepper } from "./widgets";
 
 /** The panel's own drag preview: its country's scale may differ from the dock's graph's. */
 const panelPreview = signal<FareNode[] | null>(null);
@@ -30,27 +32,24 @@ const panelPreview = signal<FareNode[] | null>(null);
 const fix2 = (v: number) => tNumber(v, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const mulText = (v: number) => `${fix2(v)}x`;
 
-/** The curve as charged in `country` (its round default while untouched, T-1662), US$. */
-const nodesIn = (f: Fares, country: string): FareNode[] => roundedDefault(f, country)?.nodes ?? scaleNodes(f.nodes, fareScale(country, f.scales));
-
-/** Every country with a built station, by name. */
-function builtCountries(): string[] {
+/** Every country (T-3766: or city, `of`) with a built station. */
+function builtIn(of: (st: StationInput) => string | null): string[] {
   const w = world.value, out = new Set<string>();
   for (const st of w?.save.stations ?? []) {
     if (!st.built) continue;
-    const c = stationCountry(st);
+    const c = of(st);
     if (c) out.add(c);
   }
   return [...out];
 }
-const byName = (a: string, b: string) => tCountry(a).localeCompare(tCountry(b));
 
-/** One country's row: its multiple of the reference's fares (a plain 1.00x for the reference), its base
- * fare, and the Money tab's anchor and undo buttons. */
-function CountryRow({ f, country, refCountry }: { f: Fares; country: string; refCountry: string }) {
-  const name = tCountry(country);
-  const base = <span class="af-base">{price(nodesIn(f, country)[0][1])}</span>;
-  if (country === refCountry) {
+/** One country's or (T-3766) city's row: its multiple of the reference's fares (a plain 1.00x for the reference
+ * country), its base fare, and the Money tab's anchor (countries only) and undo buttons. */
+function PlaceRow({ f, place }: { f: Fares; place: string }) {
+  const name = placeName(f, place);
+  const base = <span class="af-base">{price(chargedAt(f, place).nodes[0][1])}</span>;
+  const m = placeMultiple(f, place);
+  if (m.isRef) {
     return (
       <li>
         <span class="fr-what">{name}</span>
@@ -60,18 +59,16 @@ function CountryRow({ f, country, refCountry }: { f: Fares; country: string; ref
       </li>
     );
   }
-  const scales = f.scales, refScale = fareScale(refCountry, scales), scale = fareScale(country, scales);
-  const set = (v: number) => void setFareScale(country, storedScale(v, country, scales, refScale));
-  const shown = shownScale(scale, refScale);
+  const set = (v: number) => void m.set(v);
   return (
     <li>
       <span class="fr-what">{name}</span>
-      <Stepper value={mulText(shown)} wide label={t("moneyTab.fareScale")} onStep={(d) => set((d > 0 ? Math.floor(shown / SHOWN_STEP + 1e-6) + d : Math.ceil(shown / SHOWN_STEP - 1e-6) + d) * SHOWN_STEP)}
-        type={{ text: shown.toFixed(2), set, tip: t("moneyTab.countryFaresTip", { name, ref: tCountry(refCountry) }) }} />
+      <Stepper value={mulText(m.shown)} wide label={t("moneyTab.fareScale")} onStep={(d) => set(stepMultiple(m.shown, d))}
+        type={{ text: m.shown.toFixed(2), set, tip: t("moneyTab.countryFaresTip", { name, ref: tCountry(m.ref) }) }} />
       {base}
       <span class="group">
-        <button class="btn icon" aria-label={t("moneyTab.makeRef")} data-tip={`${t("moneyTab.makeRef")}\n${t("moneyTab.makeRefSame")}`} onClick={() => void setFareRef(country)}><Icon.anchor /></button>
-        {scales?.[country] !== undefined && <button class="btn icon" aria-label={t("moneyTab.backToDefault")} data-tip={t("moneyTab.backTo", { value: mulText(shownScale(defaultScale(country, scales), refScale)) })} onClick={() => void setFareScale(country, null)}><Icon.undo /></button>}
+        {!f.byCity && <button class="btn icon" aria-label={t("moneyTab.makeRef")} data-tip={`${t("moneyTab.makeRef")}\n${t("moneyTab.makeRefSame")}`} onClick={() => void setFareRef(place)}><Icon.anchor /></button>}
+        {m.own && <button class="btn icon" aria-label={t("moneyTab.backToDefault")} data-tip={t("moneyTab.backTo", { value: mulText(m.usual) })} onClick={() => void m.set(null)}><Icon.undo /></button>}
       </span>
     </li>
   );
@@ -79,11 +76,10 @@ function CountryRow({ f, country, refCountry }: { f: Fares; country: string; ref
 
 /** T-3740: the fare areas, each its name, the brush that starts the Fare zones tool on it, its bin, and its price
  * for 1, 2, 3 ... fare zones (as many as its highest zone painted, at least three) as charged in the panel's
- * country (times its rate multiple, as demand charges them: `countryFareScales`); then New fare area, which starts the
- * tool on a new one. */
-function FareAreas({ f, country }: { f: Fares; country: string }) {
+ * country or city (times its rate multiple `scale`, as demand charges them: `cityFareScales`); then New fare area,
+ * which starts the tool on a new one. */
+function FareAreas({ f, scale }: { f: Fares; scale: number }) {
   const areas = f.zones ?? [];
-  const scale = countryFareScales(country, f).rate;
   const sp = currencySpec();
   const paint = (id: number) => { advancedFares.value = null; startPainting(id); };
   const remove = (a: FareArea) => {
@@ -148,13 +144,16 @@ function Panel({ start }: { start: string }) {
   // Esc first lets go of "Add point"
   const escape = () => { if (fareAdding.peek()) fareAdding.value = false; else close(); };
   const ref = fareRef(f);
-  const built = builtCountries().filter((c) => c !== ref).sort(byName);
-  const listed = [ref, ...built];
-  const country = picked;
-  // the Money tab's country may have no station built: the picker still offers it
-  const options = [...listed, ...(listed.includes(country) ? [] : [country])];
-  const scale = fareScale(country, f.scales);
-  const shown = nodesIn(f, country);
+  // T-3766: with fares by city the panel lists and shows cities, else countries; a pick of the other kind turns into
+  // its country, or the first listed city of its country
+  const byName = (a: string, b: string) => placeName(f, a).localeCompare(placeName(f, b));
+  const listed = f.byCity ? builtIn(stationCity).sort(byName) : [ref, ...builtIn(stationCountry).filter((c) => c !== ref).sort(byName)];
+  const place = !f.byCity ? (isCity(picked) ? zoneCountry(picked) ?? ref : picked)
+    : isCity(picked) ? picked : listed.find((c) => zoneCountry(c) === picked) ?? listed[0] ?? fareCity();
+  // the Money tab's country or city may have no station built: the picker still offers it
+  const options = [...listed, ...(listed.includes(place) ? [] : [place])];
+  const { scale, nodes: shown, city, country } = chargedAt(f, place);
+  const rate = countryFareScales(country, faresIn(f, city)).rate;
   const nodes = panelPreview.value ?? shown;
   const custom = isCustomCurve(f.nodes);
   const kpu = unitMetres() / 1000, unit = unitShort();
@@ -196,8 +195,8 @@ function Panel({ start }: { start: string }) {
         </div>
         <div class="af-tools">
           <span class="af-country">{tRich("advancedFares.faresIn", {
-            country: <select aria-label={t("advancedFares.country")} value={country} onChange={(e) => { panelPreview.value = null; setPicked(e.currentTarget.value); }}>
-              {options.map((c) => <option value={c}>{tCountry(c)}</option>)}
+            country: <select aria-label={f.byCity ? t("advancedFares.city") : t("advancedFares.country")} value={place} onChange={(e) => { panelPreview.value = null; setPicked(e.currentTarget.value); }}>
+              {options.map((c) => <option value={c}>{placeName(f, c)}</option>)}
             </select>,
           })}</span>
           <span class="right"><FareButtons nodes={nodes} /></span>
@@ -220,10 +219,17 @@ function Panel({ start }: { start: string }) {
             <TransferFareRow fare={transferFare(f)} base={f.nodes[0]?.[1] ?? f.base} scale={scale} />
           </>} />
         <FareEffect preview={panelPreview.value} scale={scale} />
-        <FareAreas f={f} country={country} />
+        <FareAreas f={f} scale={rate} />
         <ul class="rows fare-rows af-countries">
-          <li class="af-head"><span class="af-title">{t("advancedFares.byCountry")}</span><span>{t("advancedFares.multiple")}</span><span>{t("fareGraph.baseFare")}</span><span /></li>
-          {listed.map((c) => <CountryRow f={f} country={c} refCountry={ref} />)}
+          <li class="af-head">
+            {/* T-3766: fares by country or by city, never both */}
+            <span class="af-title af-by">{tRich("advancedFares.faresBy", {
+              mode: <Segmented<boolean> options={[[false, t("advancedFares.byCountryMode")], [true, t("advancedFares.byCityMode")]]} value={!!f.byCity}
+                onChange={(on) => { if (on !== !!f.byCity) { panelPreview.value = null; void setFareByCity(on); } }} />,
+            })}</span>
+            <span>{t("advancedFares.multiple")}</span><span>{t("fareGraph.baseFare")}</span><span />
+          </li>
+          {listed.map((c) => <PlaceRow f={f} place={c} />)}
         </ul>
       </div>
     </dialog>

@@ -116,13 +116,14 @@ export const marketFareWeight = (scales: Record<string, number> | undefined): nu
  * row's country is (checks/t3239-hsr-market-route.mjs). */
 export function fareFactors(scales: Record<string, number> | undefined): Record<string, number> {
   const out: Record<string, number> = {};
-  const unit = curveUnit(scales);
   for (const c of new Set([...Object.keys(GDP), ...Object.keys(scales ?? {})])) {
     if (c === START || c === EVERY) continue;
-    out[c] = (fareScale(c, scales) * unit) / incomeScale(c) / LONG_TRIP_MONEY;
+    out[c] = fareFactor(c, scales);
   }
   return out;
 }
+/** One country's `fareFactors`. */
+export const fareFactor = (c: string, scales: Record<string, number> | undefined): number => (fareScale(c, scales) * curveUnit(scales)) / incomeScale(c) / LONG_TRIP_MONEY;
 /** T-2679: a country's scale in the panel's terms, a multiple of the reference country's (`refScale`),
  * to 0.01x, and back to what is stored: the multiple to 0.01x, so it charges exactly that many times
  * the reference's scale. */

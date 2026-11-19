@@ -10,7 +10,7 @@ import type { MessageKey } from "../i18n"; // type only: this worker sends keys,
 import init, { last_panic, set_heap_step, TrackApi } from "../wasm/track/sim"; // the track model only (T-051)
 import { initWasm } from "./wasmInit";
 import { anchor, anchorShift, EARTH_C, makeAnchor, setAnchor, toLocal, toMerc01, type Anchor } from "../map/geo";
-import { CITIES, cityById, cityWithin, HOME_CITY, NEW_GAME_FRAME, WORLD_ID, zoneBox, zoneCountry, zonesTouching } from "../game/cities";
+import { CITIES, cityById, cityWithin, HOME_CITY, isCity, NEW_GAME_FRAME, WORLD_ID, zoneBox, zoneCountry, zonesTouching } from "../game/cities";
 import { blockFile, blocksTouching, indexHas, parseBlockIndex, type BlockIndex } from "../game/terrainBlocks";
 import { frameKindName, frameKindNumber, M_PER_DEG, makeFrame, mercK, type Frame, type FrameSpec } from "../game/frame";
 import { PERIODS } from "../game/periods";
@@ -99,7 +99,25 @@ function loadFares(f: SaveHeader["fares"] | undefined): Fares {
   const curve = faresOf(old && g.nodes ? { ...g, nodes: simpleNodes(g.nodes) } : g, START_FARES);
   const fare = old || !f.nodes ? faresOf({ nodes: curve.nodes }, START_FARES) : curve;
   // T-3740: fare areas; a save from before has none
-  return capTransfer({ ...fare, scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...hsr, ...ferry, ...bus, ...(transfer > 0 ? { transfer } : {}), ...ref, ...lines, ...zonesOf(f) });
+  return capTransfer({ ...fare, scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...hsr, ...ferry, ...bus, ...(transfer > 0 ? { transfer } : {}), ...ref, ...lines, ...zonesOf(f), ...cityFares(f) });
+}
+/** T-3766: `f` without the list of multiples it does not charge by: by country no city's, by city no country's own
+ * (`faresIn` reads only the start and every-country keys then). */
+function cityFaresInUse<F extends Fares>(f: F): F {
+  if (!f.byCity) {
+    if (!f.cityScales) return f;
+    const { cityScales: _, ...rest } = f;
+    return rest as F;
+  }
+  const scales: Record<string, number> = {};
+  for (const k of [START, EVERY]) if (f.scales?.[k] !== undefined) scales[k] = f.scales[k];
+  return { ...f, scales };
+}
+/** T-3766: fares by city and the cities' own multiples, as kept (a save from before has neither: fares by country). */
+function cityFares(f: { byCity?: unknown; cityScales?: unknown }): Pick<Fares, "byCity" | "cityScales"> {
+  const own: Record<string, number> = {};
+  if (f.cityScales && typeof f.cityScales === "object") for (const [c, v] of Object.entries(f.cityScales)) if (typeof v === "number" && Number.isFinite(v) && isCity(c)) own[c] = keepOwn(v);
+  return { ...(f.byCity === true ? { byCity: true } : {}), ...(Object.keys(own).length ? { cityScales: own } : {}) };
 }
 /** T-3567: line `line`'s own fare multiple set to `mul` (1 clears it), its quad-track twin's with it; false for
  * no such line. */
@@ -150,7 +168,9 @@ function newLineFare(op: EditOp, line: number) {
 }
 /** T-2679: the fares as demand reads them, without the reference country, which changes no fare. */
 function demandFares(): Fares {
-  const { ref: _, zones, zoneNext: __, ...rest } = fares;
+  const { ref: _, zones, zoneNext: __, ...all } = fares;
+  // T-3766: nor does the list of multiples not in use (the cities' with fares by country, the countries' own by city)
+  const rest = cityFaresInUse(all);
   if (!zones) return rest;
   // T-3740: nor do an area's name, the next id or an area no station is in, so none of them starts a solve
   const codes = api?.station_fares() ?? [], used = new Set<number>();
@@ -3846,7 +3866,7 @@ function applyInner(op: EditOp): Applied {
     case "groupLook":
       return { r: a.set_line_group_look(op.group, op.symbol.trim(), op.colour === null ? -1 : colourInt(op.colour)) };
     case "fares":
-      fares = capTransfer({ ...(op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares)), scales: fares.scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...(fares.hsr !== undefined ? { hsr: fares.hsr } : {}), ...(fares.ferry !== undefined ? { ferry: fares.ferry } : {}), ...(fares.bus !== undefined ? { bus: fares.bus } : {}), ...(fares.transfer !== undefined ? { transfer: fares.transfer } : {}), ...(fares.ref ? { ref: fares.ref } : {}), ...(fares.lines ? { lines: fares.lines } : {}), ...zonesOf(fares) });
+      fares = capTransfer({ ...(op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares)), scales: fares.scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...(fares.hsr !== undefined ? { hsr: fares.hsr } : {}), ...(fares.ferry !== undefined ? { ferry: fares.ferry } : {}), ...(fares.bus !== undefined ? { bus: fares.bus } : {}), ...(fares.transfer !== undefined ? { transfer: fares.transfer } : {}), ...(fares.ref ? { ref: fares.ref } : {}), ...(fares.lines ? { lines: fares.lines } : {}), ...zonesOf(fares), ...cityFares(fares) });
       return { r: 0 };
     case "fareZones": {
       // T-3740: the fare areas as a whole; an id is never used twice
@@ -3881,6 +3901,19 @@ function applyInner(op: EditOp): Applied {
       if (op.scale === null || !Number.isFinite(op.scale)) delete scales[op.country];
       else scales[op.country] = keepOwn(op.scale);
       fares = { ...fares, scales };
+      return { r: 0 };
+    }
+    case "fareCityScale": {
+      if (typeof op.city !== "string" || !isCity(op.city)) return { r: 1 };
+      const { cityScales: was, ...rest } = fares, own = { ...was };
+      if (op.scale === null || !Number.isFinite(op.scale)) delete own[op.city];
+      else own[op.city] = keepOwn(op.scale);
+      fares = Object.keys(own).length ? { ...rest, cityScales: own } : rest;
+      return { r: 0 };
+    }
+    case "fareByCity": {
+      const { byCity: _, ...rest } = fares;
+      fares = op.on ? { ...rest, byCity: true } : rest;
       return { r: 0 };
     }
     case "fareRef":
@@ -4361,7 +4394,7 @@ async function handleMessage(msg: ToClock) {
     sendMoney();
     void autosave(); // the slot's card shows the mark at once
   } else if (msg.kind === "edit") {
-    if (msg.op.op === "fares" || msg.op.op === "fareScale" || msg.op.op === "fareHsr" || msg.op.op === "fareFerry" || msg.op.op === "fareBus" || msg.op.op === "fareTransfer" || msg.op.op === "fareLine" || msg.op.op === "fareZones") {
+    if (msg.op.op === "fares" || msg.op.op === "fareScale" || msg.op.op === "fareCityScale" || msg.op.op === "fareByCity" || msg.op.op === "fareHsr" || msg.op.op === "fareFerry" || msg.op.op === "fareBus" || msg.op.op === "fareTransfer" || msg.op.op === "fareLine" || msg.op.op === "fareZones") {
       // T-3567: a line's own multiple for a line that is gone is refused
       const ok = apply(msg.op).r === 0 || msg.op.op !== "fareLine";
       if (ok) {

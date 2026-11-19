@@ -4,7 +4,8 @@
 // train's routes are the market's own through the period's strategies; the walks or drives to the
 // stations are known only as felt minutes, averaged over the area.
 
-import { activeCity, cityById } from "../../game/cities";
+import { activeCity, CITIES, cityById } from "../../game/cities";
+import { faresIn } from "../../game/fareDefault";
 import { count, distance, distUnit, exact, moneyWhole, perDistance, roughDistance, smallMoney, speed, unitWeight, usingUsd } from "../../game/format";
 import {
   AIR_FARE_USD, AIR_FIXED_MIN, AIR_KMH, AIR_NO_DIRECT_MIN, AIR_TERMINAL_MIN, AIR_USD_PER_KM, AIR_WAIT_MIN, CAR_KMH, CAR_SHARED_BY, carPartsOf, corridorOf,
@@ -428,7 +429,9 @@ export function MarketTrip({ m }: { m: MarketShown }) {
   const tm = main ? stationTimes(main) : null;
   // T-1277: the market prices the curve as set; a trip pays it times its starting country's scale
   const start = m.end === "work" ? one : ends.near;
-  const sc = fareScale(start >= 0 ? marketRow(start)?.country : undefined, moneyState.value?.fares.scales);
+  // T-3766: with fares by city, its starting city's
+  const startFares = moneyState.value?.fares;
+  const sc = fareScale(start >= 0 ? marketRow(start)?.country : undefined, startFares && faresIn(startFares, start >= 0 ? CITIES.find((c) => c.place === start)?.id : null).scales);
   const fare = main ? (sc * (baseFareOf(t, main) + main.legs.reduce((s, l) => s + l.farePerceived, 0))) / t.minPerUsd : 0;
   const periodLow = lowerWord(period);
   // T-3374: the routes are the longer trips' while any ride, else every kind's (the sim's

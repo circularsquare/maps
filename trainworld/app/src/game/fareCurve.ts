@@ -46,6 +46,11 @@ export interface Fares {
    * it. Absent until a station is built, and in a save from before, whose own scales are then
    * rounded as they load (game/income.ts `tidyOwn`). */
   ref?: string;
+  /** T-3766: true when each city charges its own multiple (`cityScales`) and no country's applies; absent for
+   * country multiples (a save from before). Both lists are kept whichever applies. */
+  byCity?: boolean;
+  /** T-3766: the player's fare scales by city (zone id), kept as a country's are in `scales` */
+  cityScales?: Record<string, number>;
   /** T-3740: the fare areas (game/fareZones.ts), absent while there are none. The stations' zones are the track
    * model's (`StationData::fare`, area id << 8 | zone). */
   zones?: FareArea[];

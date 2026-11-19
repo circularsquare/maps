@@ -2,13 +2,15 @@
 
 import { boatRunRule, boatsText, busesText, busRouteRule, busRunRule, currencySpec, fromShown, money, moneyCash, price, priceTyped, runCostHere, runCostLine, runCostRule, toShown, upkeepLines } from "../game/format";
 import { roundTo } from "../game/currency";
-import { borrow, repay, setFareBus, setFareFerry, setFareHsr, setFareRef, setFareScale, setFareTransfer, stationsById, world } from "../game/world";
+import { borrow, repay, setFareBus, setFareCityScale, setFareFerry, setFareHsr, setFareRef, setFareScale, setFareTransfer, stationsById, world } from "../game/world";
 import { LOAN_AMOUNTS, LOAN_RATE, LOAN_TERM, loanAllowed, loanBalance, loanPayment, loanProfit, type Loan } from "../game/loan";
-import { liveMoney, moneyState, stationCountry } from "../game/money";
-import { cityById, HOME_CITY, isCity, viewedZone } from "../game/cities";
+import { liveMoney, moneyState, stationCity, stationCountry } from "../game/money";
+import { cityById, HOME_CITY, isCity, viewedZone, zoneCountry } from "../game/cities";
 import { BUS_FARE, busFare, FERRY_FARE, ferryFare, HSR_FARE, hsrFare, isCustomCurve, scaleNodes, tidyHsr, tidyTransfer, transferFare, type FareNode, type Fares } from "../game/fareCurve";
 import { shownEstimate } from "../game/fareEstimate";
-import { roundedDefault } from "../game/fareDefault";
+import { faresIn, roundedDefault } from "../game/fareDefault";
+import { tPlace } from "../i18n/places";
+import type { StationInput } from "../game/types";
 import { defaultScale, FARE_BASELINE, fareScale, runScale, SHOWN_STEP, shownScale, storedScale } from "../game/income";
 import { gameStartZone } from "../game/realms";
 import { selection } from "../game/ui";
@@ -53,8 +55,8 @@ function TodayCell({ v, zone }: { v: (d: DayLedger) => number; zone: string | nu
 /** T-531: how a region's money is counted, in the scope toggle's hover. */
 const regionSplit = () => t("moneyTab.regionSplit");
 
-/** T-1690: the country of the built station nearest the view's centre, null with none built. */
-function nearestBuilt(w: NonNullable<typeof world.value>): string | null {
+/** T-1690: the country (T-3766: or the city, `of`) of the built station nearest the view's centre, null with none built. */
+function nearestBuilt(w: NonNullable<typeof world.value>, of: (st: StationInput) => string | null = stationCountry): string | null {
   const at = viewCentre.value;
   if (!at) return null;
   const [lng, lat] = at, k = Math.cos((lat * Math.PI) / 180);
@@ -63,10 +65,37 @@ function nearestBuilt(w: NonNullable<typeof world.value>): string | null {
     if (!st.built) continue;
     const d = ((st.lng - lng + 540) % 360 - 180) ** 2 * k * k + (st.lat - lat) ** 2;
     if (d >= best) continue;
-    const c = stationCountry(st);
+    const c = of(st);
     if (c) { best = d; country = c; }
   }
   return country;
+}
+
+/** T-3766: the city whose fares the panel shows with fares by city, as `fareCountry` picks a country. */
+export function fareCity(): string {
+  const s = selection.value, w = world.value;
+  let c: string | null | undefined = null;
+  if (s?.kind === "station" && w) {
+    const st = stationsById(w).get(s.station);
+    c = st && stationCity(st);
+  } else if (s?.kind === "city" && isCity(s.city)) c = s.city;
+  if (!c && w) c = nearestBuilt(w, stationCity);
+  if (!c) {
+    const z = viewedZone.value;
+    c = z && isCity(z) ? z : null;
+  }
+  return c ?? HOME_CITY;
+}
+/** T-3766: where the fare controls look: a city (zone id) with fares by city, else a country. */
+export const farePlace = (f: Pick<Fares, "byCity">): string => (f.byCity ? fareCity() : fareCountry());
+/** T-3766: a place's shown name, a city's or a country's. */
+export const placeName = (f: Pick<Fares, "byCity">, place: string): string => (f.byCity && isCity(place) ? tPlace(place, cityById(place).name) : tCountry(place));
+/** T-3766: what the fare controls charge at `place` (`farePlace`'s): its country, its city (null for a country),
+ * its fare scale and the curve as charged there (a country's rounded default while untouched, T-1662). */
+export function chargedAt(f: Fares, place: string): { country: string | undefined; city: string | null; scale: number; nodes: FareNode[] } {
+  const city = f.byCity && isCity(place) ? place : null, country = city ? zoneCountry(city) ?? undefined : place;
+  const here = faresIn(f, city), scale = fareScale(country, here.scales);
+  return { country, city, scale, nodes: roundedDefault(here, country)?.nodes ?? scaleNodes(f.nodes, scale) };
 }
 
 /** T-1277: the country whose fares the panel shows: the selected station's or city's, else the
@@ -94,14 +123,34 @@ export function fareRef(f: Fares): string {
   return f.ref ?? (z && isCity(z) ? cityById(z).country : undefined) ?? cityById(HOME_CITY).country ?? FARE_BASELINE;
 }
 
+/** T-1277: a place's fare multiple (`chargedAt`'s), as a multiple of the reference country's fares (T-2679; T-3766:
+ * with fares by city, of its default fares, since no country's own multiple applies then): its scale, the shown
+ * multiple, whether the player set one, the default's multiple, and setting or clearing it. */
+export function placeMultiple(f: Fares, place: string) {
+  const ref = fareRef(f), at = chargedAt(f, place), country = at.country ?? "";
+  const scales = faresIn(f, at.city).scales, refScale = fareScale(ref, faresIn(f, null).scales);
+  return {
+    ref, refScale, isRef: !at.city && place === ref,
+    shown: shownScale(at.scale, refScale),
+    own: at.city ? f.cityScales?.[at.city] !== undefined : f.scales?.[place] !== undefined,
+    usual: shownScale(defaultScale(country, scales), refScale),
+    set: (v: number | null) => {
+      const s = v === null ? null : storedScale(v, country, scales, refScale);
+      return at.city ? setFareCityScale(at.city, s) : setFareScale(place, s);
+    },
+  };
+}
+/** A step of a multiple stepper: to the next 0.05x up or down (a default is an odd multiple like 0.63x). */
+export const stepMultiple = (shown: number, d: number): number => (d > 0 ? Math.floor(shown / SHOWN_STEP + 1e-6) + d : Math.ceil(shown / SHOWN_STEP - 1e-6) + d) * SHOWN_STEP;
+
 /** T-1277: the fare scale where the panel looks, as a multiple of the reference country's (T-2679):
- * the reference itself a plain 1.00x; any other a stepper to the next 0.05x up or down (a default is
- * an odd multiple like 0.63x), typed on a click, a button that
- * makes it the reference, and one back to its default once the player has set one. */
-export function FareScaleRow({ country, scale, own, scales, refCountry: ref }: { country: string; scale: number; own: boolean; scales: Record<string, number> | undefined; refCountry: string }) {
-  const name = tCountry(country);
+ * the reference itself a plain 1.00x; any other a stepper to the next 0.05x up or down, typed on a click, a button
+ * that makes it the reference (a country), and one back to its default once the player has set one. */
+export function FareScaleRow({ f, place }: { f: Fares; place: string }) {
+  const name = placeName(f, place);
   const text = (v: number) => `${fix2(v)}x`;
-  if (country === ref) {
+  const m = placeMultiple(f, place);
+  if (m.isRef) {
     return (
       <li>
         <span class="fr-what">{t("moneyTab.countryFares", { name })}</span>
@@ -110,17 +159,15 @@ export function FareScaleRow({ country, scale, own, scales, refCountry: ref }: {
       </li>
     );
   }
-  const refScale = fareScale(ref, scales);
-  const set = (v: number) => void setFareScale(country, storedScale(v, country, scales, refScale));
-  const shown = shownScale(scale, refScale);
+  const set = (v: number) => void m.set(v);
   return (
     <li>
       <span class="fr-what">{t("moneyTab.countryFares", { name })}</span>
-      <Stepper value={text(shown)} wide label={t("moneyTab.fareScale")} onStep={(d) => set((d > 0 ? Math.floor(shown / SHOWN_STEP + 1e-6) + d : Math.ceil(shown / SHOWN_STEP - 1e-6) + d) * SHOWN_STEP)}
-        type={{ text: shown.toFixed(2), set, tip: t("moneyTab.countryFaresTip", { name, ref: tCountry(ref) }) }} />
+      <Stepper value={text(m.shown)} wide label={t("moneyTab.fareScale")} onStep={(d) => set(stepMultiple(m.shown, d))}
+        type={{ text: m.shown.toFixed(2), set, tip: t("moneyTab.countryFaresTip", { name, ref: tCountry(m.ref) }) }} />
       <span class="group">
-        <button class="btn icon" aria-label={t("moneyTab.makeRef")} data-tip={`${t("moneyTab.makeRef")}\n${t("moneyTab.makeRefSame")}`} onClick={() => void setFareRef(country)}><Icon.anchor /></button>
-        {own && <button class="btn icon" aria-label={t("moneyTab.backToDefault")} data-tip={t("moneyTab.backTo", { value: text(shownScale(defaultScale(country, scales), refScale)) })} onClick={() => void setFareScale(country, null)}><Icon.undo /></button>}
+        {!f.byCity && <button class="btn icon" aria-label={t("moneyTab.makeRef")} data-tip={`${t("moneyTab.makeRef")}\n${t("moneyTab.makeRefSame")}`} onClick={() => void setFareRef(place)}><Icon.anchor /></button>}
+        {m.own && <button class="btn icon" aria-label={t("moneyTab.backToDefault")} data-tip={t("moneyTab.backTo", { value: text(m.usual) })} onClick={() => void m.set(null)}><Icon.undo /></button>}
       </span>
     </li>
   );
@@ -223,9 +270,10 @@ export function MoneyTab() {
     : regionLedger(zone).ledger.find((d) => d.day === todayDay - 1) ?? { day: todayDay - 1, fares: 0, running: 0, trains: 0, build: 0 };
   const cell = (d: DayLedger | null, v: (d: DayLedger) => number) => <td class="num">{d ? <Money dollars={v(d) * 1e6} /> : ""}</td>;
   // T-1277: the curve as charged in the country of the selected station or city, else the one in view
+  // (T-3766: the city, with fares by city)
+  const place = farePlace(m.fares);
+  const { scale, nodes: shown } = chargedAt(m.fares, place);
   const country = fareCountry();
-  const scale = fareScale(country, m.fares.scales);
-  const shown = roundedDefault(m.fares, country)?.nodes ?? scaleNodes(m.fares.nodes, scale);
   const f = farePreview.value ?? shown;
   // T-1626: shown once a line runs high-speed trains
   const hsr = w.save.lines.some((l) => w.lineStats[l.id]?.fast) ? hsrFare(m.fares) : null;
@@ -287,7 +335,7 @@ export function MoneyTab() {
       </table>
       <div class="h">{t("moneyTab.fare")}<span class="right fare-head">
         {/* T-3739: the Advanced fares panel, opened on this country */}
-        <button class="btn text mini fare-advanced" aria-pressed={advancedFares.value !== null} onClick={() => (advancedFares.value = country)}>{t("moneyTab.advanced")}</button>
+        <button class="btn text mini fare-advanced" aria-pressed={advancedFares.value !== null} onClick={() => (advancedFares.value = place)}>{t("moneyTab.advanced")}</button>
         <FareButtons nodes={f} />
       </span></div>
       <FareGraph nodes={shown} scale={scale} />
@@ -297,7 +345,7 @@ export function MoneyTab() {
           {busLine !== null && <BusFareRow mul={busLine} />}
           {ferry !== null && <FerryFareRow mul={ferry} />}
           <TransferFareRow fare={transferFare(m.fares)} base={m.fares.nodes[0]?.[1] ?? m.fares.base} scale={scale} />
-          <FareScaleRow country={country} scale={scale} own={m.fares.scales?.[country] !== undefined} scales={m.fares.scales} refCountry={fareRef(m.fares)} />
+          <FareScaleRow f={m.fares} place={place} />
         </>} />
       <FareEffect preview={farePreview.value} scale={scale} />
       <MoneyHistory zone={zone} />

@@ -265,7 +265,7 @@ function rememberPoolCap(n: number) {
 /** The service demand reads, with the UI's ids. */
 interface Service {
   frame: FrameSpec;
-  fare: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number>; hsr?: number; ferry?: number; bus?: number; transfer?: number; lines?: Record<string, number>; zones?: FareArea[] };
+  fare: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number>; byCity?: boolean; cityScales?: Record<string, number>; hsr?: number; ferry?: number; bus?: number; transfer?: number; lines?: Record<string, number>; zones?: FareArea[] };
   /** `complex`: the station's complex (T-161); absent = a complex of its own; `fare`: its fare zone's code (T-3740) */
   stations: { id: string; x: number; y: number; complex?: number; upgrades?: number; fare?: number }[];
   /** `wrapS`: a circle's stand at its first stop, riding on round (T-798); `back`: run 1's stations

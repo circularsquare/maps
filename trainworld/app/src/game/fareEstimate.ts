@@ -61,7 +61,7 @@ function curveChange(dv: DemandView, lines: Map<string, { ridersPerDay: number; 
     if (!st || st.status !== "running" || !dm || st.stopS[0]?.length !== n || st.stopS[1]?.length !== n) continue;
     const km: number[] = [];
     for (const s of st.stopS) for (let k = 0; k + 1 < n; k++) km.push((s[k + 1] - s[k]) / 1000);
-    const sc = stopScales(l.stops, byId, m.fares.scales);
+    const sc = stopScales(l.stops, byId, m.fares);
     const boarded = dm.boardings.reduce((a, b) => a + b, 0);
     const scale = boarded > 0 ? dm.boardings.reduce((a, b, k) => a + b * (sc[k] ?? 1), 0) / boarded : (sc[0] ?? 1);
     const pkm = dm.loads.map((seg) => (seg.length === km.length ? seg.reduce((a, v, k) => a + v * km[k], 0) : 0));

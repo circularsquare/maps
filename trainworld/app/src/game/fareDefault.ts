@@ -5,7 +5,8 @@
 // had as a new game's. Demand, income and the Money tab all read this one curve.
 
 import { firstStretch, scaleNodes, START_NODES, type FareNode } from "./fareCurve";
-import { EVERY, fareScale, incomeScale, START } from "./income";
+import { EVERY, fareFactor, fareFactors, fareScale, incomeScale, START } from "./income";
+import { zoneCountry } from "./cities";
 
 /** `v` to the step for its size: a cent under $0.25, 5 cents under $10, 50 cents under $100, then a dollar, 5 dollars from $1,000. */
 export function roundFare(v: number): number {
@@ -43,6 +44,46 @@ export function roundedDefault(f: { nodes?: FareNode[]; scales?: Record<string, 
 export function countryFareScales(country: string | undefined, fares: { base: number; perKm: number; nodes?: FareNode[]; scales?: Record<string, number> }): { base: number; rate: number } {
   const scale = fareScale(country, fares.scales), r = roundedDefault(fares, country);
   return { base: r && fares.base > 0 ? r.base / fares.base : scale, rate: r && fares.perKm > 0 ? r.perKm / fares.perKm : scale };
+}
+
+type Scaled = { scales?: Record<string, number>; byCity?: boolean; cityScales?: Record<string, number> };
+const inCity = new WeakMap<object, Map<string, unknown>>();
+/** T-3766: `f` as charged in zone `city` (null: outside every zone). With fares by city its scales keep only the start
+ * and every-country keys, plus the city's own multiple under its country's key, so every country rule (the default,
+ * the rounded default, the relative storage) applies to the city as it would to its country; else `f` itself. */
+export function faresIn<F extends Scaled>(f: F, city: string | null | undefined): F {
+  if (!f.byCity) return f;
+  let by = inCity.get(f) as Map<string, F> | undefined;
+  if (!by) inCity.set(f, (by = new Map()));
+  const key = city ?? "";
+  let out = by.get(key);
+  if (!out) {
+    const scales: Record<string, number> = {};
+    for (const k of [START, EVERY]) if (f.scales?.[k] !== undefined) scales[k] = f.scales[k];
+    const country = zoneCountry(city), own = city ? f.cityScales?.[city] : undefined;
+    if (country && own !== undefined && Number.isFinite(own)) scales[country] = own;
+    by.set(key, (out = { ...f, scales }));
+  }
+  return out;
+}
+/** T-3766: the multipliers on the curve in zone `city` (its country's, or with fares by city its own): the one rule
+ * every reader charges by. */
+export const cityFareScales = (city: string | null | undefined, f: Parameters<typeof countryFareScales>[1] & Scaled): { base: number; rate: number } =>
+  countryFareScales(zoneCountry(city) ?? undefined, faresIn(f, city));
+/** T-3766: the fare scale in zone `city`, as `fareScale` gives a country's. */
+export const cityScale = (city: string | null | undefined, f: Scaled): number => fareScale(zoneCountry(city) ?? undefined, faresIn(f, city).scales);
+
+/** T-3766: the market's fare factors (`IntercityApi.set_fare_factors_by`): by country, and with fares by city each
+ * city's that has a multiple of its own (the rest take their country's default). */
+export function marketFareFactors(f: Scaled): { byCountry: Record<string, number>; byZone: Record<string, number> } {
+  const byZone: Record<string, number> = {};
+  if (f.byCity) {
+    for (const city of Object.keys(f.cityScales ?? {})) {
+      const c = zoneCountry(city), s = faresIn(f, city).scales;
+      if (c && s?.[c] !== undefined) byZone[city] = fareFactor(c, s);
+    }
+  }
+  return { byCountry: fareFactors(faresIn(f, null).scales), byZone };
 }
 
 /** T-1906: a new game's base fare in the US, US$. */

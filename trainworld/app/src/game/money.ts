@@ -23,9 +23,8 @@ import { awayNear, DAY_KINDS, kindMade, PLAIN_KIND, rushRun } from "./days";
 import { demandByDay, lineLoadsFor, type DemandView } from "./demand";
 import { cityById, isCity } from "./cities";
 import { faresFor, faresOf, lineFareMul, ownLineFare, type Fares } from "./fareCurve";
-import { countryFareScales } from "./fareDefault";
+import { cityFareScales, cityScale } from "./fareDefault";
 import { lineFares } from "./fareInEffect";
-import { fareScale } from "./income";
 import { stationZone } from "./listScope";
 import { PERIODS } from "./periods";
 import { pairRows, pairStats, setCarBuyCheck, setTrainBuyCheck, stopsById, world } from "./world";
@@ -326,11 +325,17 @@ export function scalesOf(g: LineGeo, l: LineInput, byId: Map<string, StationInpu
   }
   return g.scales;
 }
-/** A stop's multipliers on the curve as set: its country's (`countryFareScales`), on the base of a boarding there
- * and on the rate of a stretch from there. T-3748, T-3753: every trip's curve extra and base extra are charged at
- * these too, each route node's at the stop it leaves (demandClient `packService`, the demand worker's `sumAll`). */
-export function stopFareScales(s: Pick<StationInput, "id" | "lng" | "lat"> | undefined, fares: Pick<Fares, "base" | "perKm" | "scales"> & { nodes?: Fares["nodes"] }): { base: number; rate: number } {
-  return countryFareScales((s && stationCountry(s)) ?? undefined, fares);
+/** A stop's multipliers on the curve as set: its zone's (`cityFareScales`: its country's, or with fares by city its
+ * city's), on the base of a boarding there and on the rate of a stretch from there. T-3748, T-3753: every trip's
+ * curve extra and base extra are charged at these too, each route node's at the stop it leaves (demandClient
+ * `packService`, the demand worker's `sumAll`). */
+export function stopFareScales(s: Pick<StationInput, "id" | "lng" | "lat"> | undefined, fares: Pick<Fares, "base" | "perKm" | "scales" | "byCity" | "cityScales"> & { nodes?: Fares["nodes"] }): { base: number; rate: number } {
+  return cityFareScales(s ? stationCity(s) : null, fares);
+}
+/** T-3766: the zone a station is in, null outside every zone. */
+export function stationCity(s: Pick<StationInput, "id" | "lng" | "lat">): string | null {
+  const z = stationZone(s);
+  return z && isCity(z) ? z : null;
 }
 
 /** T-1277: the country of the zone a station is in (null outside every zone). */
@@ -338,11 +343,11 @@ export function stationCountry(s: Pick<StationInput, "id" | "lng" | "lat">): str
   const z = stationZone(s);
   return z && isCity(z) ? cityById(z).country ?? null : null;
 }
-/** T-1277: each stop's fare scale, by the country it is in; a stop outside every zone takes the
- * baseline's. */
-export function stopScales(stops: string[], byId: Map<string, StationInput>, scales: Record<string, number> | undefined): number[] {
+/** T-1277: each stop's fare scale, by the country it is in (T-3766: or with fares by city its city); a stop outside
+ * every zone takes the baseline's. */
+export function stopScales(stops: string[], byId: Map<string, StationInput>, fares: Pick<Fares, "scales" | "byCity" | "cityScales">): number[] {
   return stops.map((id) => {
     const s = byId.get(id);
-    return fareScale((s && stationCountry(s)) ?? undefined, scales);
+    return cityScale(s ? stationCity(s) : null, fares);
   });
 }

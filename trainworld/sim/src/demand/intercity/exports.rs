@@ -330,16 +330,23 @@ impl IntercityApi {
     /// `{"US": 1.25, ...}` (countries left out: 1): the player's fare scale there over its income's.
     /// Each trip takes its origin's (a commute or outing its home's).
     pub fn set_fare_factors(&mut self, json: &str) -> Result<(), String> {
+        self.set_fare_factors_by(json, "{}")
+    }
+    /// T-3766: `set_fare_factors` with some places' own factors (`by_zone`, JSON by zone id, as
+    /// `{"nyc": 1.4}`) in place of their country's: a game whose fares are set by city.
+    pub fn set_fare_factors_by(&mut self, json: &str, by_zone: &str) -> Result<(), String> {
         let by: HashMap<String, f32> = serde_json::from_str(json).map_err(|e| e.to_string())?;
-        if by.values().any(|f| !(f.is_finite() && *f > 0.)) {
+        let own: HashMap<String, f32> = serde_json::from_str(by_zone).map_err(|e| e.to_string())?;
+        if by.values().chain(own.values()).any(|f| !(f.is_finite() && *f > 0.)) {
             return Err("invalid fare factor".into());
         }
         let m = &self.m;
         let of_country: Vec<f32> = m.countries.iter().map(|c| by.get(c).copied().unwrap_or(1.) - 1.).collect();
-        let fx: Vec<f32> = if of_country.iter().all(|&d| d == 0.) {
+        let of_place = |p: &Place| own.get(&p.zone).map_or_else(|| of_country.get(p.country as usize).copied().unwrap_or(0.), |f| f - 1.);
+        let fx: Vec<f32> = if of_country.iter().all(|&d| d == 0.) && own.is_empty() {
             vec![]
         } else {
-            m.zones.iter().map(|z| of_country[m.places[z.place].country as usize]).collect()
+            m.zones.iter().map(|z| of_place(&m.places[z.place])).collect()
         };
         if !same_bits(&fx, &self.zone_fx) {
             self.zone_fx = fx;

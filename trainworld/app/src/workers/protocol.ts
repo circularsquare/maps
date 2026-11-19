@@ -217,6 +217,10 @@ export type EditOp =
   | { op: "fares"; base?: number; perKm?: number; nodes?: [number, number][] }
   /** T-1277: a country's fare scale (ISO alpha-2), null for its income's again; not undoable, a setting */
   | { op: "fareScale"; country: string; scale: number | null }
+  /** T-3766: a city's fare scale (zone id), kept as a country's; null for its default again */
+  | { op: "fareCityScale"; city: string; scale: number | null }
+  /** T-3766: fares by city (each city its own multiple) or by country */
+  | { op: "fareByCity"; on: boolean }
   /** T-2679: the reference country, whose fares the Money tab's multiples are of; changes no fare */
   | { op: "fareRef"; country: string }
   /** T-1626: the fare multiplier on high-speed lines */
@@ -484,7 +488,7 @@ export interface MoneyState {
   economy: number;
   /** T-1661, T-2022: the loan out, null for none */
   loan: Loan | null;
-  fares: { base: number; perKm: number; nodes: [number, number][]; scales?: Record<string, number>; baseline?: string; basis?: "usd"; income?: number; hsr?: number; ferry?: number; bus?: number; transfer?: number; lines?: Record<string, number>; zones?: FareArea[]; zoneNext?: number };
+  fares: { base: number; perKm: number; nodes: [number, number][]; scales?: Record<string, number>; byCity?: boolean; cityScales?: Record<string, number>; baseline?: string; basis?: "usd"; income?: number; hsr?: number; ferry?: number; bus?: number; transfer?: number; lines?: Record<string, number>; zones?: FareArea[]; zoneNext?: number };
   /** running cost per game hour in each demand period on weekdays (T-3542: five, `PERIODS`) */
   runningPerHour: number[];
   /** recent game days, oldest first; the last is today so far (as of the last whole hour; the
@@ -1022,7 +1026,7 @@ export interface NetworkSnapshot {
   stations: SnapshotStation[];
   lines: SnapshotLine[];
   /** The player's fare curve (game/fareCurve.ts): its first stretch as a base and rate, and its nodes. */
-  fare?: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number>; zones?: FareArea[] };
+  fare?: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number>; byCity?: boolean; cityScales?: Record<string, number>; zones?: FareArea[] };
   /** station pairs joined by a passage (T-1281), node ids; absent when there are none */
   passages?: [number, number][];
 }

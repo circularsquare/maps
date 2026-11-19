@@ -820,6 +820,9 @@ to 1.50x") [T-1626]. Then "Transfer fare" with the fare each change of line pays
 ("$0.00" in a new game, by $0.25 as the base fare, a click types one; at most the base fare, T-3689), shown times the country's
 fare scale as the curve is [T-1801]. Last, one row "Japan fares" (the country above; no hover on the label, T-1852)
 with its fares as a multiple of the reference country's (T-2679, docs/track-and-service.md "Fares by country").
+With fares by city (T-3766) the fares and this row are a city's, picked as the country is (the selected station's
+city, the selected city, the nearest built station's, the zone in view, the home city): "Osaka fares", no anchor
+icon, its multiple read against the reference country's default fares.
 The reference country's row shows a plain "1.00x" in the stepper's column, no stepper and no buttons (hover
 "Reference country" over "Other countries' fares are set as a multiple of United States fares."). Any other
 country's is a stepper, its default multiple until set (a US-started game's Mexico 0.40x, Japan 0.63x; hover
@@ -871,8 +874,10 @@ most 12 points") and, for a curve of other than three points, "Use simple curve"
 at 0, 20 and 100 km? The other points are dropped." and keeps the fares at those distances; the high-speed, bus, ferry
 and transfer rows as the Money tab shows them; the estimate rows while a change is unsolved; the countries: the
 reference country, then every country with a built station by name, each row its multiple (the reference a plain
-1.00x), its base fare as charged and the anchor and undo buttons, under one row of column heads, "Fares by country"
-(bold, over the names), "Multiple" and "Base fare" [T-3749]. Esc in a typed value's box cancels the typing and keeps
+1.00x), its base fare as charged and the anchor and undo buttons, under one row of column heads, "Fares by
+[country | city]" (bold, over the names; the two words a switch, T-3766), "Multiple" and "Base fare" [T-3749]. With
+"city" pressed the rows are every city with a built station by name, each its multiple, base fare and undo (no
+reference row, no anchor), and the picker above lists cities ("Fares in [Osaka]"). Esc in a typed value's box cancels the typing and keeps
 the panel. **Steps in the rows** (the panel's only; the Money tab's three rows stay rates) [T-3749]: a stretch of
 0.5 km or less that is not the last reads as a step, one row
 "10 km" with the fare's jump there, "+$2.50" with no "per km" (stepped by the base fare's step, typed, never below

@@ -114,7 +114,7 @@ export interface SaveHeader {
   /** T-2926: tram cars owned; absent for none */
   fleetTram?: number;
   /** fare curve (game/fareCurve.ts): its first stretch as a base and rate, and its nodes (none in a save from before T-883) */
-  fares: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number>; baseline?: string; basis?: "usd"; income?: number; hsr?: number; ferry?: number; bus?: number; transfer?: number; ref?: string; lines?: Record<string, number>; zones?: { id: number; name: string; prices: number[]; off?: boolean }[]; zoneNext?: number };
+  fares: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number>; byCity?: boolean; cityScales?: Record<string, number>; baseline?: string; basis?: "usd"; income?: number; hsr?: number; ferry?: number; bus?: number; transfer?: number; ref?: string; lines?: Record<string, number>; zones?: { id: number; name: string; prices: number[]; off?: boolean }[]; zoneNext?: number };
   /** recent days, oldest first (today last) */
   ledger: DayLedger[];
   /** recent hours, oldest first (T-447; absent in older saves) */

@@ -8,7 +8,9 @@ A new game starts with a base of US${{app/src/game/fareDefault.ts:START_BASE_US}
 
 **Fares by country.** Each country charges the curve times its own scale. The default scale follows income: the US's scale times a country's income per head over the US's, raised to the power {{app/src/game/income.ts:FARE_E}}. Poorer places charge less, and a dollar of fare weighs more in minutes there ([[perceived-minutes]]), so a default fare feels about the same everywhere. A new game's curve is set once for the country it starts in. You can set your own scale for a country as a multiple of a reference country's fares.
 
-A trip that changes lines still pays the curve once, on its whole length. Each part of it pays the scale of the country it leaves from: the base fare at the stop where it boards, each stretch at the stop where that stretch starts.
+**Fares by city.** The Advanced fares panel can switch the multiples from countries to cities, one or the other. Then each city has its own multiple, a city you haven't set charges its country's default, and the country multiples you set are kept for when you switch back but not used.
+
+A trip that changes lines still pays the curve once, on its whole length. Each part of it pays the scale of the country (or city) it leaves from: the base fare at the stop where it boards, each stretch at the stop where that stretch starts.
 
 **Faster lines.** A line with high-speed trains charges the part of the curve above the base times {{app/src/game/fareCurve.ts:HSR_FARE}}, unless you set another. A ferry line has its own multiplier, {{app/src/game/fareCurve.ts:FERRY_FARE}} to start. Any one line can also get its own fare multiple, from nothing up to {{app/src/game/fareCurve.ts:LINE_FARE_MAX}}, at the bottom of its panel; it works the same way, on top of the others, and it scales the base too. The base is paid once a trip, times the highest multiple among the lines the trip rides, so a trip that changes onto a dearer line pays that line's base.
 
@@ -23,4 +25,4 @@ A trip that changes lines still pays the curve once, on its whole length. Each p
 **Higher fares lose riders.** A fare is money, and money is minutes ([[perceived-minutes]]), so raising it changes how many trips pick the train ([[how-people-choose]]). The Money tab shows a new fare at once, but a line's income keeps the old fares until riders solved with the new ones appear.
 
 Exact rule: `docs/track-and-service.md` "Fares and the ledgers" for the curve, the scales, the multipliers, the fare zones and the split between lines. Trips between cities change lines free.
-In the code: **main** `app/src/game/fareCurve.ts` `faresFor`, also `fareAt`, `lineFareMul`, `START_NODES`, `HSR_FARE` `app/src/game/income.ts` `incomeScale`, `FARE_E` `app/src/game/fareDefault.ts` `startNodesAt` `app/src/game/fareZones.ts` `demandZones`, `chargedPrices` `sim/src/demand/kernel/fare_zones.rs` `ZoneWork`
+In the code: **main** `app/src/game/fareCurve.ts` `faresFor`, also `fareAt`, `lineFareMul`, `START_NODES`, `HSR_FARE` `app/src/game/income.ts` `incomeScale`, `FARE_E` `app/src/game/fareDefault.ts` `startNodesAt`, `faresIn` `app/src/game/fareZones.ts` `demandZones`, `chargedPrices` `sim/src/demand/kernel/fare_zones.rs` `ZoneWork`

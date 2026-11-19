@@ -1845,6 +1845,19 @@ is over `FARE_MAX`, curve US$1,000 (T-3303: a typed 90 billion once went into ev
   `incomeScale`, each fare rounded: the US $2.50, $6.50 and $22.50, Japan $1.55, $4.10 and $14. While
   that curve is untouched, a country without the player's scale charges its own round start curve
   (`roundedDefault`: a US start's Japan $1.55, not $1.5733).
+  **Fares by city** (T-3766, Anita 2026-11-19): the player picks country multiples or city multiples,
+  never both (`Fares.byCity`; absent, as in every save from before, is by country). By city each zone
+  (the city a station is in, the Cities list's unit) charges its own multiple (`Fares.cityScales`, by
+  zone id, stored as a country's are) where its country's would stand, and no country's own multiple
+  applies: a city with none charges its country's default (the rounded default included). One resolver
+  does it for every reader (`faresIn`, `cityFareScales`, game/fareDefault.ts: the fares with only the
+  start and every-country keys plus the city's own under its country's key), so a trip between cities
+  pays as one between countries: the base at the boarding stop's city, each stretch at the city of the
+  stop it leaves, each population's riders weigh their own city's, and the market's trips their origin
+  city's (`set_fare_factors_by`). Zone prices are charged times the city's rate multiple, as a country's.
+  Both lists are kept whichever is in use (switching changes no stored number), and demand sees only the
+  one in use (`demandFares`). The multiples read against the reference country's default fares then,
+  since its own multiple does not apply.
   In a save from before, while a country's scale and the curve (the old start's) are untouched, its
   three fares are rounded (`game/fareDefault.ts`, T-1662). A save keeps its whole curve and is marked
   `basis: "usd"`; one from before T-1521 has its curve multiplied by `oldCurveFactor` and each

@@ -9,9 +9,11 @@
 // and a line's early local result does not move the figure. Fares sum to the shown day's.
 
 import type { DemandView } from "./demand";
+import { faresIn } from "./fareDefault";
 import { fareScale, fareWeight } from "./income";
 import { lineCountry } from "./holidays";
-import type { Income } from "./money";
+import { stationCity, type Income } from "./money";
+import { stopsById } from "./world";
 import { PERIODS } from "./periods";
 import type { WorldView } from "./types";
 import type { MoneyState } from "../workers/protocol";
@@ -41,6 +43,7 @@ export function runningADay(m: MoneyState): number {
  * demand carries no fare sensitivity. */
 export function estimateBase(w: WorldView, dv: DemandView, inc: Income, m: MoneyState): EstimateBase {
   const lines = new Map<string, { tph: number[]; board: number[] }>();
+  const byId = stopsById(w);
   let boardings = 0, minutes = 0;
   for (const l of w.save.lines) {
     const ld = dv.lines.get(l.id);
@@ -49,8 +52,10 @@ export function estimateBase(w: WorldView, dv: DemandView, inc: Income, m: Money
     lines.set(l.id, { tph: ld.tph ?? l.tphP, board });
     // the minutes a curve dollar costs, by the country the line is in, as the solve's sensitivity weighed it
     const c = lineCountry(l.stops) ?? undefined, b = board.reduce((a, v) => a + v, 0);
+    // T-3766: with fares by city, its first stop's city's
+    const first = m.fares.byCity ? byId.get(l.stops[0]) : undefined;
     boardings += b;
-    minutes += b * fareWeight(c) * fareScale(c, m.fares.scales);
+    minutes += b * fareWeight(c) * fareScale(c, faresIn(m.fares, first ? stationCity(first) : null).scales);
   }
   const fares = inc.perHour.reduce((a, v, p) => a + v * PERIOD_HOURS[p], 0) * 1e6;
   const rail = dv.railTripsPerDay, local = dv.fareSense?.local ?? 0;

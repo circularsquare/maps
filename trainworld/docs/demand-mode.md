@@ -64,7 +64,7 @@ except on the regional market's longer trips, whose riders come in income groups
 mode's money alike (T-1431, docs/regional.md 5.1). The
 fare is the player's curve of trip length (T-883, T-1112, T-1143, track-and-service.md, fares;
 a new game's matches real fares, T-1521)
-times the trip's country's fare scale, charged once per trip including transfers on actual track
+times the trip's country's fare scale (with fares by city, its city's, T-3766), charged once per trip including transfers on actual track
 length. **A transfer fare** (T-1801, `Params::xfer_fare`, $0 in a new game) is paid on each
 boarding after a trip's first, a change within a station complex included and a circle line ridden
 round not one, in the curve's units times the trip's country's scale like the curve, at `fare_w`.

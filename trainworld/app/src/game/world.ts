@@ -882,6 +882,14 @@ export function setFares(nodes: FareNode[]) {
 export function setFareScale(country: string, scale: number | null) {
   return edit({ op: "fareScale", country, scale });
 }
+/** T-3766: a city's fare scale (zone id), null for its default. */
+export function setFareCityScale(city: string, scale: number | null) {
+  return edit({ op: "fareCityScale", city, scale });
+}
+/** T-3766: fares by city (true) or by country. */
+export function setFareByCity(on: boolean) {
+  return edit({ op: "fareByCity", on });
+}
 /** T-2679: the reference country, whose fares the Money tab's multiples are of. */
 export function setFareRef(country: string) {
   return edit({ op: "fareRef", country });

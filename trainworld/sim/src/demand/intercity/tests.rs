@@ -1771,6 +1771,18 @@ fn fare_factors_weigh_trips_by_their_origin() {
     let cheap = figures(&mut api);
     assert!(cheap.0 > base.0 && cheap.1 > base.1, "{cheap:?} against {base:?}");
     assert!(api.set_fare_factors(r#"{"JP": 0}"#).is_err());
+    // T-3766: a place's own factor stands where its country's would: both zones at 2 are the country at 2, both at 1
+    // over a country at 2 the base, one of them alone at 2 in between
+    api.set_fare_factors_by("{}", r#"{"tyo": 2, "gnm": 2}"#).unwrap();
+    let f = figures(&mut api);
+    assert_eq!((f.0.to_bits(), f.1.to_bits()), (dear.0.to_bits(), dear.1.to_bits()));
+    api.set_fare_factors_by(r#"{"JP": 2}"#, r#"{"tyo": 1, "gnm": 1}"#).unwrap();
+    let f = figures(&mut api);
+    assert_eq!((f.0.to_bits(), f.1.to_bits()), (base.0.to_bits(), base.1.to_bits()));
+    api.set_fare_factors_by("{}", r#"{"gnm": 2}"#).unwrap();
+    let f = figures(&mut api);
+    assert!(f.0 < base.0 && f.0 > dear.0, "{f:?} between {dear:?} and {base:?}");
+    assert!(api.set_fare_factors_by("{}", r#"{"tyo": 0}"#).is_err());
     // T-1300: the rail trips' fare sensitivity is what a dearer base fare does (it moves no route),
     // with a fare factor too; on the base and rate's line, since a bent curve sets every fare itself
     api.set_fare_curve(&[]).unwrap();
