@@ -59,6 +59,7 @@ pub mod roads;
 pub mod save;
 pub mod service;
 pub mod spacing;
+pub mod timing;
 pub mod span;
 pub mod streets;
 pub mod trace;

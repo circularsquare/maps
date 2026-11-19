@@ -7,7 +7,7 @@
 
 import { signal } from "@preact/signals";
 import type { DemandView } from "./demand";
-import { SLOTS, profileLine, profileOf, profileRun } from "../map/profiles";
+import { profileLine, profileRun } from "../map/profiles";
 
 /** Bumped each time an hour of the account arrives, so panels that ask the worker for a line's
  * day in the account ask again (T-230). */
@@ -292,7 +292,8 @@ export function trainStands(h: BoardHour, trips: Float32Array, nexts: Float32Arr
     if (was === undefined || (Q[b + 2] === 0 ? Q[b + 3] < Q[was * QUEUE_STRIDE + 3] : Q[b + 3] > Q[was * QUEUE_STRIDE + 3])) firstStop.set(key, q);
   }
   const tripAt = new Map<string, number>();
-  for (let i = 0; i < n; i++) tripAt.set(`${trips[i * 2]}|${Math.round(trips[i * 2 + 1])}`, i);
+  // by line direction and departure: a trip's slot and variant are its profile's (map/profiles.ts)
+  for (let i = 0; i < n; i++) tripAt.set(`${profileLine(trips[i * 2]) * 2 + profileRun(trips[i * 2])}|${Math.round(trips[i * 2 + 1])}`, i);
   for (let i = 0; i < n; i++) {
     const next = nexts[i];
     if (!Number.isFinite(next)) continue;
@@ -306,11 +307,9 @@ export function trainStands(h: BoardHour, trips: Float32Array, nexts: Float32Arr
     const stop = stoppedAt(h, e);
     out[i * 4] = stop;
     out[i * 4 + 1] = h.events[e * 2];
-    // the next trip: the other run's at any slot (map/profiles.ts)
-    for (let lv = 0; lv < SLOTS; lv++) {
-      const j = tripAt.get(`${profileOf(line, run, lv)}|${Math.round(next)}`);
-      if (j !== undefined && h.offs[j * 2] >= 0) out[i * 4 + 2] = h.offs[j * 2];
-    }
+    // the next trip: the other run's, at any slot and variant
+    const j = tripAt.get(`${line * 2 + run}|${Math.round(next)}`);
+    if (j !== undefined && h.offs[j * 2] >= 0) out[i * 4 + 2] = h.offs[j * 2];
     out[i * 4 + 3] = Math.max(0, waitingAt(h, q, stop - 1e-3) + Q[b + 4] * (h.events[e * 2] - stop) + pulsesBetween(h, q, stop, h.events[e * 2]) - h.events[e * 2 + 1]);
   }
   return out;

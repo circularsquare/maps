@@ -54,7 +54,7 @@ import type { ClockBus, ClockEdge, ClockLine, ClockNode, ClockState, EditOp, Fer
 import { stampAll } from "./cloud";
 import { isMemoryFailure, loadFailKey } from "../game/loadText";
 import { autosave, bindSlots, CLOUD_RETRY_MS, cloudFlush, cloudKick, cloudUp, heldFrom, heldNew, hold, intoNewSlot, intoView, leave, letGoSlot, manageSlot, noteUnsaved, pendingGame, publishSlots, saveConverted, saves } from "./slots";
-import { META_PER_LINE, profileOf, SLOTS } from "../map/profiles";
+import { META_PER_LINE, PROFILE_VARS, profileOf, SLOTS } from "../map/profiles";
 
 /** Run 0 of each line is resampled this often (m) for the renderer's line texture. */
 const SAMPLE_STEP = 50;
@@ -571,6 +571,8 @@ function newModel(): TrackApi {
   api = a;
   // T-3542: trips name profiles by map/profiles.ts's stride, the sim's `params::SLOTS`
   if (a.profile_slots() !== SLOTS) console.error("clock: map/profiles.ts SLOTS disagrees with sim/src/track/params.rs SLOTS", a.profile_slots()); // i18n-ignore
+  // T-3346 stage 2: and each slot's train-by-train variants, the sim's `timing::PROFILE_VARS`
+  if (a.profile_vars() !== PROFILE_VARS) console.error("clock: map/profiles.ts PROFILE_VARS disagrees with sim/src/track/timing.rs PROFILE_VARS", a.profile_vars()); // i18n-ignore
   xferSet = null;
   worldWaterIn = false;
   terrainIndexIn = false;

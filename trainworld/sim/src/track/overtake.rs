@@ -49,8 +49,9 @@ pub struct Point {
     /// The slower run's stop index here, or -1.
     pub stop: i32,
     pub node: u32,
-    /// Offset in the slower run.
+    /// Offset in the slower run, and in the faster run.
     pub at: f64,
+    pub fat: f64,
 }
 
 /// What a plan comes to at one pair of rates.
@@ -116,9 +117,10 @@ pub fn plan(net: &Network, fast: (u32, u8), fr: &Run, slow: (u32, u8), sr: &Run,
             stop: ss.map_or(-1, |x| x as i32),
             node,
             at: sr.node_s[j],
+            fat: fr.node_s[k],
         });
     }
-    points.push(Point { slow: [reach_at(sr, sb) - s0; 2], fast: [reach_at(fr, fb) - f0; 2], passing: false, stop: -1, node: fr.nodes[i1 + 1], at: sb });
+    points.push(Point { slow: [reach_at(sr, sb) - s0; 2], fast: [reach_at(fr, fb) - f0; 2], passing: false, stop: -1, node: fr.nodes[i1 + 1], at: sb, fat: fb });
     let n = points.len();
     let next = (0..n).map(|p| (p + 1..n).find(|&q| points[q].passing).unwrap_or(n - 1)).collect();
     Some(Plan { fast, slow, start: [leave_at(sr, sa) - s0, leave_at(fr, fa) - f0], points, next, spacing, memo: Mutex::new(vec![]) })
@@ -162,11 +164,21 @@ struct Train {
 }
 
 impl Plan {
+    /// The next passing point after point `p`, or the stretch's end.
+    pub fn next_passing(&self, p: usize) -> usize {
+        self.next[p]
+    }
+
+    /// T-3542's headway cap for a sweep of these two lines (`outcome`), for `timing`'s.
+    pub fn headway_cap(&self, net: &Network) -> f64 {
+        [self.fast.0, self.slow.0].iter().map(|&l| net.mix(l as usize).map_or(HEADWAY_MAX_S, |m| (2.0 * m.lead_max_s).min(HEADWAY_MAX_S))).fold(HEADWAY_MAX_S, f64::min)
+    }
+
     /// The outcome at level `lev`, at the headways the lines keep now (`pattern_tph`).
     pub fn outcome(&self, net: &Network, lev: usize) -> Arc<Outcome> {
         let (tf, ts) = (pattern_tph(net, self.fast.0, lev), pattern_tph(net, self.slow.0, lev));
         // T-3542: a line with rows shorter than four hours caps its headway at its shortest row
-        let cap = [self.fast.0, self.slow.0].iter().map(|&l| net.mix(l as usize).map_or(HEADWAY_MAX_S, |m| (2.0 * m.lead_max_s).min(HEADWAY_MAX_S))).fold(HEADWAY_MAX_S, f64::min);
+        let cap = self.headway_cap(net);
         let key = [tf.to_bits(), ts.to_bits(), cap as u32];
         if let Some(o) = self.memo.lock().unwrap().iter().find(|m| m.0 == key) {
             return o.1.clone();
@@ -329,5 +341,55 @@ pub fn passing_spots(net: &Network, lines: &[LineSvc], l: u32) -> Vec<u32> {
     out
 }
 
+/// A faster train at a passing station, as the timetable runs it (T-3346 stage 2): when it leaves
+/// or passes the station (game time, s); how long after that a slower train stepping out behind it
+/// leaves; how long it and the slower train take from there to the next passing point; the
+/// spacing; and one faster headway and the lead, the longest a slower train waits for it on that
+/// side (T-3238).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Pass {
+    pub at: f64,
+    pub lead: f64,
+    pub run_f: f64,
+    pub run_s: f64,
+    pub spacing: f64,
+    pub most: f64,
+}
+
+/// T-3346 stage 2: each slower train's own waits at its passing stations, as `Plan::sweep` has a
+/// slower train wait, against the faster trains as the timetable runs them. `deps`: the slower
+/// trains' departures (game time, any list: a day's, or a cycle's) and each one's headway.
+/// `stations`, in run order: the stop, when a train with no waits leaves it after its departure
+/// (s), and the faster trains there by `at`. A train waits at most its headway less the spacing
+/// (T-3238) and `Pass::most`. Per departure, per station, its wait (s).
+pub fn train_waits(deps: &[(f64, f64)], stations: &[(usize, f64, Vec<Pass>)]) -> Vec<Vec<f64>> {
+    let leads: Vec<f64> = stations.iter().map(|s| s.2.iter().map(|p| p.lead).fold(0.0, f64::max)).collect();
+    deps.iter()
+        .map(|&(d, hs)| {
+            let mut acc = 0.0;
+            stations
+                .iter()
+                .zip(&leads)
+                .map(|((_, off, passes), &most_lead)| {
+                    let normal = d + off + acc;
+                    let mut dep = normal;
+                    let i = passes.partition_point(|p| p.at + most_lead <= dep);
+                    for p in &passes[i..] {
+                        if p.at + p.lead <= dep {
+                            continue;
+                        }
+                        if p.at + p.run_f >= dep + p.run_s + p.spacing || p.at + p.lead - normal > (hs - p.spacing).min(p.most) {
+                            break;
+                        }
+                        dep = p.at + p.lead;
+                    }
+                    acc += dep - normal;
+                    dep - normal
+                })
+                .collect()
+        })
+        .collect()
+}
+
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

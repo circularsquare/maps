@@ -388,7 +388,7 @@ mod tests {
             for tr in w.svc.trips(&w.net, t0 - 7200.0, t0 + 3600.0).into_iter().filter(|tr| tr.run == 1) {
                 let run = &w.svc.lines[tr.line as usize].runs[1];
                 let i = run.nodes.iter().position(|&x| x == j).unwrap();
-                let s = tr.draw + profile::time_at(&run.prof[tr.level as usize].phases, run.node_s[i]);
+                let s = tr.draw + profile::time_at(&w.svc.lines[tr.line as usize].prof_of(1, tr.level as usize, tr.var).phases, run.node_s[i]);
                 if s >= t0 && s < t0 + 3600.0 { at_j.push((s, tr.line)); }
             }
             at_j.sort_by(|x, y| x.0.total_cmp(&y.0));
@@ -450,7 +450,7 @@ mod tests {
                 for tr in w.svc.trips(&w.net, t0 - 7200.0, t0 + 3600.0).into_iter().filter(|tr| tr.run == 1) {
                     let run = &w.svc.lines[tr.line as usize].runs[1];
                     let i = run.nodes.iter().position(|&x| x == j).unwrap();
-                    let s = tr.draw + profile::time_at(&run.prof[tr.level as usize].phases, run.node_s[i]);
+                    let s = tr.draw + profile::time_at(&w.svc.lines[tr.line as usize].prof_of(1, tr.level as usize, tr.var).phases, run.node_s[i]);
                     if s >= t0 && s < t0 + 3600.0 { at_j.push((s, tr.line)); }
                 }
                 at_j.sort_by(|x, y| x.0.total_cmp(&y.0));

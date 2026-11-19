@@ -131,7 +131,7 @@ try {
   out.line = pick;
   log('line', JSON.stringify(pick));
   // a sampler on every draw: every train, from the buffers the GPU reads, as [line, run, offset along
-  // run 0]; a trip's profile is (line * 2 + run) * SLOTS + slot (map/profiles.ts)
+  // run 0]; a trip's profile is ((line * 2 + run) * SLOTS + slot) * PROFILE_VARS + var (map/profiles.ts)
   await page.evaluate(async () => {
     const tw = window.tw, r = tw.renderer;
     const nw = await import('/src/map/network.ts');

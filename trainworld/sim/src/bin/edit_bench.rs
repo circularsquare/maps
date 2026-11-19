@@ -56,7 +56,9 @@ fn figures(a: &TrackApi, lines: &[u32]) -> String {
             let epoch = day * 86400.0 + h as f64 * 3600.0;
             for t in a.trips(epoch).chunks(4) {
                 let p = t[0] as u32;
-                let (line, run, lev) = (p / (2 * stride), (p / stride) % 2, p % stride);
+                // T-3346 stage 2: each slot's variants under it (a trip of a timed line prints its slot)
+                let q = p / a.profile_vars();
+                let (line, run, lev) = (q / (2 * stride), (q / stride) % 2, q % stride);
                 let (draw, end) = (epoch + t[1] as f64, epoch + t[2] as f64);
                 let at = a.train_at(line, run as usize, lev as usize, draw, (draw + end) / 2.0);
                 s += &format!("trip {line} {run} {} {:?} {:?} {:?}\n", slot_of(lev), &t[1..], &meta[p as usize * 4 + 1..p as usize * 4 + 4], at);

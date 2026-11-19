@@ -553,6 +553,7 @@ impl TrackApi {
     pub fn set_time_zones(&mut self, table: &[f64]) {
         self.w.net.time_zones = super::localtime::TimeZones::from_table(table);
         self.w.svc.reshift(&self.w.net);
+        self.w.retime();
     }
     /// Seconds a line's local time runs ahead of the game clock (T-309); 0 for no such line.
     pub fn line_shift(&self, line: u32) -> f64 {

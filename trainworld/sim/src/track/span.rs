@@ -257,7 +257,7 @@ pub fn stop_deps(ls: &LineSvc, lat: &Lattice, r: usize) -> Vec<Vec<f64>> {
     lattice_deps_local(lat, r, DAY, 2.0 * DAY, &mut first);
     (0..ls.stops.len())
         .map(|k| {
-            let mut deps: Vec<f64> = first.iter().map(|&(d, lev, _)| (d + ls.runs[r].prof[lev as usize].dep.get(k).copied().unwrap_or(0.0)).rem_euclid(DAY)).collect();
+            let mut deps: Vec<f64> = first.iter().map(|&(d, lev, _, _)| (d + ls.runs[r].prof[lev as usize].dep.get(k).copied().unwrap_or(0.0)).rem_euclid(DAY)).collect();
             deps.sort_by(f64::total_cmp);
             deps
         })

@@ -25,7 +25,7 @@ fn places(w: &TrackWorld, t: f64) -> Vec<Place> {
         if x.draw > t || x.end < t {
             continue;
         }
-        let p = &w.svc.lines[x.line as usize].runs[x.run as usize].prof[x.level as usize];
+        let p = w.svc.lines[x.line as usize].prof_of(x.run as usize, x.level as usize, x.var);
         let tau = (t - x.draw).min(p.duration);
         let (s, v) = super::profile::state_at(&p.phases, tau);
         let (px, py) = w.svc.position(&w.net, x.line, x.run as usize, s);

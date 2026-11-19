@@ -1024,7 +1024,7 @@ fn changing_the_fleet_moves_no_train() {
         let place = |w: &TrackWorld, t: f64| -> Vec<((u8, f64), (f64, f64))> {
             let ls = &w.svc.lines[id as usize];
             w.svc.trips(&w.net, t, t + 1e-3).iter().filter(|x| x.draw <= t && x.end >= t).map(|x| {
-                let (s, _) = super::profile::state_at(&ls.runs[x.run as usize].prof[x.level as usize].phases, t - x.draw);
+                let (s, _) = super::profile::state_at(&ls.prof_of(x.run as usize, x.level as usize, x.var).phases, t - x.draw);
                 ((x.run, x.dep), w.svc.position(&w.net, id, x.run as usize, s))
             }).collect()
         };
@@ -1508,7 +1508,7 @@ fn the_middle_of_a_long_line_changes_period_on_time() {
         assert!((first.dep - (day + 6.0 * 3600.0 - lat.lead)).abs() < 300.0 + 1e-6, "{first:?}");
         // trains passing the middle stop: the level's headway from its start, at 06:00, with no
         // longer gap at 10:00 or 16:00 where one period of high demand follows another (T-1536)
-        let pass: Vec<(f64, usize)> = deps.iter().map(|t| (t.dep + ls.runs[r].prof[t.level as usize].dep[k], t.level as usize)).collect();
+        let pass: Vec<(f64, usize)> = deps.iter().map(|t| (t.dep + ls.prof_of(r, t.level as usize, t.var).dep[k], t.level as usize)).collect();
         for (h0, h1) in [(6.0, 20.0)] {
             let (s, e) = (day + h0 * 3600.0, day + h1 * 3600.0);
             let hw = 3600.0 / 12.0;

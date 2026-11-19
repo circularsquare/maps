@@ -7,7 +7,7 @@
 // saves, loads into a fresh model, and follows its boats over an hour. Exits 1 on any failure.
 import { readFileSync } from 'node:fs';
 import init, { TrackApi } from '../app/src/wasm/track/sim.js';
-import { PROFILES_PER_LINE, SLOTS } from './lib/profiles.mjs';
+import { PROFILES_PER_LINE, PROFILES_PER_RUN } from './lib/profiles.mjs';
 
 await init({ module_or_path: readFileSync(new URL('../app/src/wasm/track/sim_bg.wasm', import.meta.url)) });
 let failed = 0;
@@ -92,7 +92,7 @@ const stateAt = (p, tau) => {
 let mine = 0, seen = 0, worst = 0;
 const poly = [back.run_polyline(line, 0, 10), back.run_polyline(line, 1, 10)];
 for (let i = 0; i < trips.length; i += 4) {
-  const prof = trips[i], r = Math.floor(prof / SLOTS) % 2;
+  const prof = trips[i], r = Math.floor(prof / PROFILES_PER_RUN) % 2;
   if (Math.floor(prof / PROFILES_PER_LINE) !== line) continue;
   mine++;
   const m = meta.slice(prof * 4, prof * 4 + 4);

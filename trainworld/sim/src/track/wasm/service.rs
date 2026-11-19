@@ -1,6 +1,7 @@
 //! Service: stop times, profiles, trips, junctions, delays and markers.
 
 use super::*;
+use crate::track::timing::PROFILE_VARS;
 
 #[wasm_bindgen]
 impl TrackApi {
@@ -68,20 +69,28 @@ impl TrackApi {
     pub fn profile_slots(&self) -> u32 {
         SLOTS as u32
     }
-    /// Per profile `(line * 2 + run) * SLOTS + slot`: first phase, phase count, trip seconds
-    /// (run plus turnaround), path length m. Absent lines, and slots not worked out, have count 0.
+    /// T-3346 stage 2: profiles per (line, run, slot), the slot's and its train-by-train variants:
+    /// the innermost stride of a trip's profile index; the app's copy is map/profiles.ts `PROFILE_VARS`.
+    pub fn profile_vars(&self) -> u32 {
+        PROFILE_VARS as u32
+    }
+    /// Per profile `((line * 2 + run) * SLOTS + slot) * PROFILE_VARS + var`: first phase, phase
+    /// count, trip seconds (run plus turnaround), path length m. Absent lines, slots not worked out
+    /// and variants a run has not have count 0.
     pub fn profile_meta(&self) -> Vec<f32> {
         let mut out = vec![];
         let mut first = 0usize;
         for (li, l) in self.w.svc.lines.iter().enumerate() {
             for r in 0..2 {
                 for k in 0..SLOTS {
-                    if l.ok && self.w.net.slot_worked(k) {
-                        let n = l.runs[r].prof[k].phases.len();
-                        out.extend([first as f32, n as f32, l.trip_len(&self.w.net, li as u32, r, k) as f32, l.runs[r].len as f32]);
-                        first += n;
-                    } else {
-                        out.extend([first as f32, 0.0, 0.0, 0.0]);
+                    for v in 0..PROFILE_VARS {
+                        if l.ok && self.w.net.slot_worked(k) && (v == 0 || v <= l.runs[r].vars[k].len()) {
+                            let n = l.prof_of(r, k, v as u8).phases.len();
+                            out.extend([first as f32, n as f32, l.trip_len_var(&self.w.net, li as u32, r, k, v as u8) as f32, l.runs[r].len as f32]);
+                            first += n;
+                        } else {
+                            out.extend([first as f32, 0.0, 0.0, 0.0]);
+                        }
                     }
                 }
             }
@@ -100,7 +109,7 @@ impl TrackApi {
             .iter()
             .flat_map(|t| {
                 let next = t.next.map_or(f32::NAN, |n| (n - epoch) as f32);
-                [((t.line * 2 + t.run as u32) * SLOTS as u32 + t.level as u32) as f32, (t.draw - epoch) as f32, (t.end - epoch) as f32, next]
+                [profile_index(t) as f32, (t.draw - epoch) as f32, (t.end - epoch) as f32, next]
             })
             .collect()
     }
@@ -111,7 +120,7 @@ impl TrackApi {
             .svc
             .line_trips(&self.w.net, line as usize, t0, t1)
             .iter()
-            .flat_map(|t| [((t.line * 2 + t.run as u32) * SLOTS as u32 + t.level as u32) as f64, t.draw, t.end, t.next.unwrap_or(f64::NAN)])
+            .flat_map(|t| [profile_index(t) as f64, t.draw, t.end, t.next.unwrap_or(f64::NAN)])
             .collect()
     }
     /// A run's path resampled every `step` m (x, y pairs), for the renderer's line texture.
@@ -133,8 +142,8 @@ impl TrackApi {
     pub fn station_departures(&self, line: u32, node: u32, t0: f64, t1: f64) -> Vec<f64> {
         let svc = &self.w.svc;
         let Some(ls) = svc.lines.get(line as usize).filter(|l| l.ok && !l.is_bus()) else { return vec![] };
-        // The one place this reads a trip's timetable: stage 2 makes it `ls.prof_of(run, level, t.var)`.
-        let prof = |t: &crate::track::service::Trip| &ls.runs[t.run as usize].prof[t.level as usize];
+        // the one place this reads a trip's timetable: its own (T-3346 stage 2)
+        let prof = |t: &crate::track::service::Trip| ls.prof_of(t.run as usize, t.level as usize, t.var);
         let mut out: Vec<(f64, u8, usize)> = vec![];
         for t in svc.line_trips(&self.w.net, line as usize, t0, t1) {
             let p = prof(&t);
@@ -562,7 +571,18 @@ impl TrackApi {
         for r in 0..2 {
             for k in 0..SLOTS {
                 out.extend(l.runs[r].prof[k].phases.iter().flat_map(|p| [p.t as f32, p.s as f32, p.v as f32, p.a as f32]));
+                // T-3346 stage 2: its variants after it, as `profile_meta` counts them
+                if self.w.net.slot_worked(k) {
+                    for x in l.runs[r].vars[k].iter().take(PROFILE_VARS - 1) {
+                        out.extend(x.prof.phases.iter().flat_map(|p| [p.t as f32, p.s as f32, p.v as f32, p.a as f32]));
+                    }
+                }
             }
         }
     }
+}
+
+/// A trip's place in `profile_meta` (T-3346 stage 2: its variant's).
+fn profile_index(t: &crate::track::service::Trip) -> u32 {
+    ((t.line * 2 + t.run as u32) * SLOTS as u32 + t.level as u32) * PROFILE_VARS as u32 + t.var as u32
 }

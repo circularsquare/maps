@@ -50,7 +50,7 @@ fn deps(w: &TrackWorld, l: usize) -> Vec<(f64, u8, f64)> {
     let lat = w.svc.lattice(&w.net, l).expect("runs");
     let mut out = vec![];
     lattice_deps_local(&lat, 0, 3.0 * DAY, 4.0 * DAY, &mut out);
-    out
+    out.into_iter().map(|(d, lev, hw, _)| (d, lev, hw)).collect()
 }
 
 /// The gaps between line `l`'s departures from `from_h` to `to_h` (local hours, each moved by the

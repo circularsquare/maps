@@ -904,9 +904,18 @@ trips, trains needed, average speed and demand. It is run off as slower running 
 stretch (T-2018): one speed cap from the stretch's start to its end, the same in every hop there,
 bisected so the run takes exactly the loss longer (`profile::Hold::span`); the train never stands
 between stops for it. A loss too big even at 0.5 m/s (`FOLLOW_CRAWL_MIN_V`) waits its rest at the
-stop before the stretch. Drawn, the faster train closes on the one ahead while that one stands at
-its stations and is held behind it by the display guard ([ui-map.md](ui-map.md) "Never through the train ahead"), so
-it trails it. Worked example (20 km, a station every
+stop before the stretch. Behind the one slower line it is timetabled with, the drawn timetable times
+each faster train behind the slower train ahead of it (T-3346 stage 2, `timing::follow_one`): a train
+that never comes within `s` of it loses nothing; one that would runs slower from the node before the
+first place it would, losing just enough to keep `s` at every node of the stretch (and stands at the
+stretch's start if it reaches it too close), in at most 8 versions per slot as for waits at passing
+stations below; the averaged loss stays the figure. A train loses at most the averaged loss plus its
+stand at the far end less 60 s (`timing::TURN_MIN_S`), so it still takes its next departure (the fleet
+is sized on the averaged loss); past that it is held behind the slower train by the display guard.
+On t1965's track (8 km, a station a km, one train each): own losses 6-154 s a run against 35
+averaged. Elsewhere the faster train closes on the one ahead
+while that one stands at its stations and is held behind it by the display guard ([ui-map.md](ui-map.md)
+"Never through the train ahead"), so it trails it. Worked example (20 km, a station every
 km, 10 locals an hour, 6 expresses from the second station to the end, double track,
 `express_behind_local_takes_about_its_time`): the local takes 33.4 min one way, the express 8.0 min
 free and 29.5 min behind it. An express and a local on one double track every 3 minutes each, as
@@ -939,10 +948,26 @@ hold at that stop (`stop_holds`; `ResKind::Wait`, wire kind 13, `Resource::node`
 faster run and passing point, with no utilisation, so no map dot, and it neither fills nor caps
 track), and the faster line's remaining loss is its following loss (kind 11) for that slower line;
 behind several slower lines the largest loss counts, as above. The departures placement (6.3) puts
-the faster line's trains at that offset behind the slower one's; the two
-directions each take their own best offset, so where one phase cannot give both, the figures can be
-better than what the drawn trains do. When the headways are multiples of each other every slower trip
-waits at the same stations.
+the faster line's trains at that offset behind the slower one's. These averages are the figures: round
+trips, trains needed and demand. **The drawn timetable is worked out train by train** (T-3346 stage 2,
+`track/timing.rs`): once an edit has settled and the departures are placed, each slower train's waits
+come from the faster trains as they really run (both lines' placed departures, each direction at the
+phase it gets, `overtake::train_waits`, which takes the two lines' departures as lists), by the same
+rule and caps, so a local waits for exactly the expresses that would catch it and leaves 60 s after
+the last of them. A run keeps at most 8 versions of its timetable per slot (`timing::MAX_VARS`; waits
+rounded up to whole 2 s, and past 8 the two versions that add the least waiting merge into one whose
+waits cover both), and each weekday departure names its version by its place in the day, its stretch
+and its number in it (`Run::pattern`, into `Trip::var`; the renderer, boarding, the chart, the board and
+the train's stops read the trip's). Weekends of a line's own run the slot's timetable (the versions
+were worked out against weekday trains). A train whose own version runs longer than the slot's stands
+less at its last stop, down to 60 s (`timing::TURN_MIN_S`), so it still takes its next departure. **The
+floor**: a run whose trains on their own versions would on average stand less than that at their last
+stop (the round trip is sized on the averages, and the trains run at another phase than the plan's
+best, as the two directions of a pair can) keeps the slot's timetable for that slot, as before; so
+does a pair of lines only one of which runs its own weekends. The lie (DECISIONS 2026-11-19): riders
+choose, and fleets are sized, on the averages, so in a direction whose phase is not the plan's best the
+figures can differ from the drawn trains by the difference in waits. When the headways are multiples
+of each other every slower trip waits at the same stations.
 Worked example (180 km of high-speed track, stations every 30 km, high-speed locals at all seven and
 expresses at three, passing tracks at the five between, `passing_tracks_let_the_express_by`): free,
 49.3 and 38.6 min one way; every 10 minutes each, the express loses 8 s to overtakes (9.3 min

@@ -7,8 +7,10 @@
 // run are never drawn overlapping anywhere else. A spur 280 m past E shortens E's outer track's lead
 // there (T-2248): every outer track ends back on the running track. Then zoom 15
 // shots of E, light and dark, with an express passing a local standing there, in
-// artifacts/trainworld/t2233/. From the maps root:
-//   node trainworld/checks/t2233-passing-map.mjs [url] [hours]
+// artifacts/trainworld/t2233/. T-3346 stage 2: each local leaves a passing station at least 60 s
+// (`PASS_CLEAR_S`) after the express that passed it, in the timetable (positions with no lag) and as
+// drawn; other headways (local, express, s) for its 30/10 and 10/30. From the maps root:
+//   node trainworld/checks/t2233-passing-map.mjs [url] [hours] [local s] [express s]
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { ARTIFACTS, launchChrome, collectErrors } from './lib.mjs';
@@ -17,6 +19,11 @@ const OUT = join(ARTIFACTS, 't2233');
 await mkdir(OUT, { recursive: true });
 const url = process.argv[2] ?? 'http://localhost:6187/';
 const HOURS = Number(process.argv[3] ?? 2);
+const HW = [Number(process.argv[4] ?? 600), Number(process.argv[5] ?? 600)];
+const TAG = HW[0] === 600 && HW[1] === 600 ? '' : `-${HW[0] / 60}-${HW[1] / 60}`;
+/** as overtake.rs: a local leaves this long after the express passing it; frames are a few game
+ * seconds apart at 60x, and the express's middle passes the local's a little before the station */
+const PASS_CLEAR_S = 60, CLEAR_SLACK_S = 8;
 let fail = 0;
 const check = (ok, what) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${what}`); if (!ok) fail++; };
 
@@ -38,7 +45,7 @@ try {
   await page.waitForFunction(() => window.tw?.world?.value && window.tw?.client, undefined, { timeout: 180000 });
   await page.evaluate(() => window.tw.client.post({ kind: 'sandbox' }));
   await page.waitForTimeout(1000);
-  const built = await page.evaluate(async ([PTS]) => {
+  const built = await page.evaluate(async ([PTS, HW]) => {
     const tw = window.tw, c = tw.client;
     const pause = (ms) => new Promise((d) => setTimeout(d, ms));
     const xy = PTS.map(([lng, lat]) => { const p = tw.lngLatToPack(lng, lat); return [p.x, p.y]; });
@@ -66,8 +73,8 @@ try {
     await c.edit({ op: 'setStops', line: express, stops: [stops[0], stops[3], stops[6]] });
     await c.edit({ op: 'lineFast', line: express, fast: true });
     await c.edit({ op: 'lineLook', line: express, name: 'Express', colour: '#d9467a', letter: 'X' });
-    await c.edit({ op: 'setHeadway', line: local, seconds: [600, 600, 0] });
-    await c.edit({ op: 'setHeadway', line: express, seconds: [600, 600, 0] });
+    await c.edit({ op: 'setHeadway', line: local, seconds: [HW[0], HW[0], 0] });
+    await c.edit({ op: 'setHeadway', line: express, seconds: [HW[1], HW[1], 0] });
     log.push((await c.edit({ op: 'stationUpgrade', nodes: stops.slice(1, 6), bit: 8, on: true }))?.ok);
     await pause(2500);
     const n = tw.renderer.net, T = n.turnbacks;
@@ -79,7 +86,7 @@ try {
       if (last) outerEnds.push([T.edge[i], T.lane ? T.lane[i * 2 + 1] : -1]);
     }
     return { log, stops, local, express, passing: n.passing ? Array.from(n.passing) : [], outerEnds, cars: [n.lineCars?.[local] ?? 8, n.lineCars?.[express] ?? 8] };
-  }, [PTS]);
+  }, [PTS, HW]);
   console.log('built', JSON.stringify({ ...built, passing: built.passing.length / STRIDE }));
   check(built.log.every(Boolean), 'the test line was built, a spur 280 m past E, passing tracks at B to F');
   // where each line's trains are at passing stations, along run 0 (m): on the outer track (stopsOf) or
@@ -126,7 +133,9 @@ try {
             const prof = r.trips[i * 2];
             const at = tw.tripAt(n, prof, r.trips[i * 2 + 1] + r.tripsEpoch + r.tripLag(i), t, r.tripEnds ? r.tripEnds[i] + r.tripsEpoch : -Infinity);
             if (!at || !LINES.includes(at.line)) continue;
-            trains.push([i, at.line, at.run, +at.s.toFixed(1), prof, n.meta[prof * 4 + 3], +r.tripLag(i).toFixed(1)]);
+            // (and where the timetable has it, with no lag)
+            const tt = tw.tripAt(n, prof, r.trips[i * 2 + 1] + r.tripsEpoch, t, r.tripEnds ? r.tripEnds[i] + r.tripsEpoch : -Infinity);
+            trains.push([i, at.line, at.run, +at.s.toFixed(1), prof, n.meta[prof * 4 + 3], +r.tripLag(i).toFixed(1), tt ? +tt.s.toFixed(1) : null, r.tripBays ? Array.from(r.tripBays.slice(i * 4, i * 4 + 4)) : null, +(r.trips[i * 2 + 1] + r.tripsEpoch).toFixed(1)]);
           }
           frames.push([t, trains]);
         } catch (e) { error = String(e); return done(); }
@@ -153,11 +162,15 @@ try {
   // away from the run's ends, where trains turn (they stand there for their next trip)
   const midRun = (x) => x[3] > 1000 && x[3] < x[5] - 1000;
   let overlaps = 0, besideFrames = 0, passes = 0, passesBad = 0, lagMax = 0;
-  const bad = [], where = {};
+  const bad = [], where = {}, lags = {};
   const nodeName = new Map(built.stops.map((s, k) => [s, 'ABCDEFG'[k]]));
   for (let k = 0; k < f.length; k++) {
     const tr = f[k][1].filter(midRun);
-    for (const x of tr) lagMax = Math.max(lagMax, x[6]);
+    for (const x of tr) {
+      lagMax = Math.max(lagMax, x[6]);
+      // where the guard holds a train back from its timetable (s along its run, m), the longest per place
+      if (x[6] > 20) { const key = `${x[1] === built.local ? 'local' : 'express'} run ${x[2]} at ${Math.round(x[3] / 1000)} km`; lags[key] = Math.max(lags[key] ?? 0, Math.round(x[6])); }
+    }
     for (let a = 0; a < tr.length; a++) for (let b = a + 1; b < tr.length; b++) {
       const x = tr[a], y = tr[b];
       if (x[2] !== y[2]) continue;
@@ -185,16 +198,47 @@ try {
       }
     }
   }
-  const res = { frames: f.length, gameHours: f.length ? +((f[f.length - 1][0] - f[0][0]) / 3600).toFixed(2) : 0, wallS: +(run.wall / 1000).toFixed(0), passes, where, passesBad, overlaps, besideFrames, guardBeside: run.passedBy, lagMax, bad };
+  // T-3346 stage 2: per pass at a passing station, how long after it the local starts on, in the
+  // timetable (S = 7) and as drawn (S = 3): the express passing its middle, the local moving 5 m on
+  const leaves = (S) => {
+    const out = [];
+    for (let k = 1; k < f.length; k++) {
+      const prev = new Map(f[k - 1][1].map((x) => [x[0], x]));
+      for (const x of f[k][1]) {
+        const px = prev.get(x[0]);
+        if (x[1] !== built.express || !px || px[2] !== x[2] || x[S] === null || px[S] === null) continue;
+        for (const y of f[k][1]) {
+          const py = prev.get(y[0]);
+          if (y[1] !== built.local || y[2] !== x[2] || !py || py[2] !== y[2] || y[S] === null || py[S] === null || !(px[S] < py[S] && x[S] >= y[S])) continue;
+          if (!midRun(y)) continue;
+          let moved = null;
+          for (let j = k; j < f.length && moved === null; j++) {
+            const z = f[j][1].find((q) => q[0] === y[0]);
+            if (!z || z[S] === null) break;
+            if (z[S] > y[S] + 5) moved = f[j][0];
+          }
+          if (moved !== null) out.push(+(moved - f[k][0]).toFixed(0));
+        }
+      }
+    }
+    return out;
+  };
+  const leaveT = leaves(7), leaveM = leaves(3);
+  const res = { headways: HW, leaveTimetable: leaveT, leaveMap: leaveM, frames: f.length, gameHours: f.length ? +((f[f.length - 1][0] - f[0][0]) / 3600).toFixed(2) : 0, wallS: +(run.wall / 1000).toFixed(0), passes, where, passesBad, overlaps, besideFrames, guardBeside: run.passedBy, lagMax, lags, bad };
   console.log(JSON.stringify(res));
-  await writeFile(join(OUT, 'passing-map.json'), JSON.stringify(res));
+  await writeFile(join(OUT, `passing-map${TAG}.json`), JSON.stringify(res));
+  if (process.env.DUMP) await writeFile(process.env.DUMP, JSON.stringify(f));
   check(res.gameHours >= HOURS * 0.95, `${res.gameHours} game hours sampled over ${f.length} frames`);
   check(passes > 0, `expresses passed locals ${passes} times (${Object.entries(where).map(([k, v]) => `${k} ${v}`).join(', ')})`);
   check(passesBad === 0, `every pass was at a passing station where the local stands on the outer track and the express is on the running track (${passesBad} elsewhere)`);
   check(overlaps === 0, `no two trains on a run drawn through each other (${overlaps} frame pairs; ${besideFrames} beside each other at passing stations)`);
+  for (const [what, v] of [['timetable', leaveT], ['map', leaveM]])
+    check(v.length > 0 && Math.min(...v) >= PASS_CLEAR_S - CLEAR_SLACK_S, `T-3346: in the ${what} every local leaves ${PASS_CLEAR_S} s after the express passing it (${v.length} passes, soonest ${v.length ? Math.min(...v) : '-'} s)`);
 
-  // zoom 15 at E with an express passing a local standing there: run on until one is
-  const E = built.stops[4];
+  // zoom 15 at E (or, where no express passes there, the station with the most passes) with an
+  // express passing a local standing there: run on until one is
+  const shotK = where.E ? 4 : 'ABCDEFG'.indexOf(Object.entries(where).filter(([k]) => k !== 'none').sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'E');
+  const E = built.stops[shotK], EN = 'ABCDEFG'[shotK];
   const shotAt = await page.evaluate(async ([LOCAL, EXPRESS, eD]) => {
     const tw = window.tw, r = tw.renderer, c = tw.clock;
     c.setSpeed(0);
@@ -220,21 +264,21 @@ try {
     });
     return found;
   }, [built.local, built.express, (stopsOf.get(built.local) ?? []).find((p) => p[2] === E)?.[0] ?? 0]);
-  check(!!shotAt, `an express caught passing a local standing at E${shotAt ? ' at ' + new Date(shotAt.t * 1000).toISOString().slice(11, 19) : ''}`);
+  check(!!shotAt, `an express caught passing a local standing at ${EN}${shotAt ? ' at ' + new Date(shotAt.t * 1000).toISOString().slice(11, 19) : ''}`);
   await page.setViewportSize({ width: 1400, height: 900 });
-  await page.evaluate(([lng, lat]) => window.tw.map.jumpTo({ center: [lng, lat], zoom: 15 }), PTS[4]);
+  await page.evaluate(([lng, lat]) => window.tw.map.jumpTo({ center: [lng, lat], zoom: 15 }), PTS[shotK]);
   await page.waitForTimeout(1500);
   for (const sh of ['light', 'dark']) {
     await page.evaluate((x) => { document.documentElement.dataset.shade = x; window.tw.shade.value = x; }, sh);
     await page.waitForTimeout(1200);
-    await page.screenshot({ path: join(OUT, `passing-z15-${sh}.png`), clip: { x: 300, y: 250, width: 1100, height: 400 } });
+    await page.screenshot({ path: join(OUT, `passing-z15${TAG}-${sh}.png`), clip: { x: 300, y: 250, width: 1100, height: 400 } });
   }
   // D close in (T-2248, T-2249): the express stops on the running track, riders on the islands
   // between it and the outer tracks
   await page.evaluate((x) => { document.documentElement.dataset.shade = x; window.tw.shade.value = x; }, 'light');
   await page.evaluate(([lng, lat]) => window.tw.map.jumpTo({ center: [lng, lat], zoom: 16 }), PTS[3]);
   await page.waitForTimeout(1500);
-  await page.screenshot({ path: join(OUT, 'passing-d-z16-light.png'), clip: { x: 200, y: 250, width: 1000, height: 400 } });
+  await page.screenshot({ path: join(OUT, `passing-d-z16${TAG}-light.png`), clip: { x: 200, y: 250, width: 1000, height: 400 } });
   check(errors.length === 0, `no console errors${errors.length ? ': ' + errors.slice(0, 3).join(' | ') : ''}`);
 } finally {
   await chrome.close();

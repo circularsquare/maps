@@ -225,6 +225,13 @@ impl TrackWorld {
             self.pin_twin_phases();
             self.net.phases_placed = true;
         }
+        self.retime();
+    }
+
+    /// T-3346 stage 2: each train's own timetable worked out again (`timing::retime`), once the
+    /// service has settled and the departures are placed.
+    pub fn retime(&mut self) {
+        super::timing::retime(&self.net, &mut self.svc);
     }
 
     /// T-3542: after an edit split or joined the slots (`Network::refresh_slots`, from `old`): the
@@ -333,6 +340,7 @@ impl TrackWorld {
         self.svc.update(&self.net, &buses, &[], false);
         self.svc_rest = None;
         self.settle_train_counts(!self.net.rates_from_save);
+        self.retime();
     }
 
     /// Solve headways from a fixed whole-line fleet and the capacity-adjusted round trip.
@@ -353,7 +361,7 @@ impl TrackWorld {
             self.net.set_trains_of(l, Some(t));
             any = true;
         }
-        if any { self.settle_train_counts(true); }
+        if any { self.settle_train_counts(true); self.retime(); }
         any
     }
 
@@ -1371,6 +1379,7 @@ impl TrackWorld {
         // T-1925: the lines the edit changed take departure slots among the others
         self.place_departures(&direct);
         self.pin_twin_phases();
+        self.retime();
         let mut resources = vec![];
         for (r, res) in self.svc.cap.res.iter().enumerate() {
             let on_track = (res.edge != u32::MAX && der.edges.binary_search(&res.edge).is_ok())

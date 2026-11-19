@@ -10,7 +10,7 @@ use super::*;
 /// The Shinkansen-style line of notes/T-2228.md 2: 180 km of high-speed track, stations A to G every
 /// 30 km with 400 m platforms; high-speed locals at every station, high-speed expresses at A, D and
 /// G. High demand runs both every 10 minutes, medium locals every 30 and expresses every 10.
-fn shinkansen() -> (TrackWorld, Vec<u32>, u32, u32) {
+pub(crate) fn shinkansen() -> (TrackWorld, Vec<u32>, u32, u32) {
     let mut w = world();
     let n: Vec<u32> = (0..7).map(|k| node(&mut w, k as f64 * 30_000.0, 0.0, 0)).collect();
     for k in 0..6 {
@@ -33,7 +33,7 @@ fn shinkansen() -> (TrackWorld, Vec<u32>, u32, u32) {
     (w, n, local, express)
 }
 
-fn set_passing(w: &mut TrackWorld, nodes: &[u32], on: bool) {
+pub(crate) fn set_passing(w: &mut TrackWorld, nodes: &[u32], on: bool) {
     let ops = nodes.iter().map(|&x| {
         let mut d = w.net.station_data(x).unwrap();
         d.upgrades = if on { d.upgrades | PASSING } else { d.upgrades & !PASSING };

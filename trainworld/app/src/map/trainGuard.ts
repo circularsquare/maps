@@ -169,9 +169,10 @@ export class TrainGuard {
   log: unknown[] | null = null;
   /** T-2233, per line: the passing stations where it stands on the outer track (offset along run 0,
    * half the platform, node, the leads before and after, as `NetworkBuffers.passing`), and those it is
-   * on the running track at, running through or stopping beside a slower line (T-2248) */
+   * on the running track at, running through or stopping beside a slower line (T-2248), each with its
+   * offset along run 0 */
   private passStops = new Map<number, number[]>();
-  private passThrough = new Map<number, Set<number>>();
+  private passThrough = new Map<number, Map<number, number>>();
   /** since the last `resetCounts`: train pairs found beside each other at a passing station, summed
    * over frames (checks) */
   passedBy = 0;
@@ -207,8 +208,8 @@ export class TrainGuard {
         else this.passStops.set(line, at);
       } else {
         const v = this.passThrough.get(line);
-        if (v) v.add(P[k + 3]);
-        else this.passThrough.set(line, new Set([P[k + 3]]));
+        if (v) v.set(P[k + 3], P[k + 1]);
+        else this.passThrough.set(line, new Map([[P[k + 3], P[k + 1]]]));
       }
     }
     this.crossOn.clear();
@@ -555,6 +556,7 @@ export class TrainGuard {
       const p = f.trips[cand[a] * 2], q = f.trips[cand[b] * 2];
       return (outer![a] >= 0 && !!this.passThrough.get(profileLine(q))?.has(outer![a])) || (outer![b] >= 0 && !!this.passThrough.get(profileLine(p))?.has(outer![b]));
     };
+    if (outer && this.waitForPassing(f, cand, cs, outer, tauOf, uTime)) changed = true;
     const besideIn = outer ? lists.map((v) => {
       for (let j = 0; j < v.length; j += REG) if (outer[v[j]] >= 0) return true;
       return false;
@@ -980,6 +982,59 @@ export class TrainGuard {
       }
     }
     return out;
+  }
+
+  /**
+   * T-3346: a train standing on a passing station's outer track waits there on screen for a faster
+   * train its timetable has pass it first. While that train is drawn short of it but due past it, it
+   * takes that train's lag, as far as its stand allows (never drawn back along its run), so the two
+   * keep their timetable's order and the time between them. True when a lag changed.
+   */
+  private waitForPassing(f: GuardFrame, cand: number[], cs: number[], outer: Int32Array, tauOf: number[], uTime: number): boolean {
+    const n = this.net!, meta = n.meta, lag = this.lag;
+    let changed = false;
+    for (let c = 0; c < cand.length; c++) {
+      const o = outer[c];
+      if (o < 0) continue;
+      const i = cand[c], p = f.trips[i * 2], st = this.passStops.get(profileLine(p))!;
+      const L = meta[p * 4 + 3], run0 = profileRun(p) === 0;
+      let at = NaN;
+      for (let k = 0; k < st.length; k += 5) if (st[k + 2] === o) { at = run0 ? st[k] : L - st[k]; break; }
+      const key = this.keyAt(p, at - 1), past = cs[c] - at;
+      if (key < 0) continue;
+      let want = lag[i];
+      for (let e = 0; e < cand.length; e++) {
+        const j = cand[e];
+        if (lag[j] <= want) continue;
+        const q = f.trips[j * 2], d = this.passThrough.get(profileLine(q))?.get(o);
+        if (d === undefined) continue;
+        const atq = profileRun(q) === 0 ? d : meta[q * 4 + 3] - d;
+        if (cs[e] >= atq + past || profileS(n, q, uTime - f.trips[j * 2 + 1]) < atq + past) continue;
+        if (this.keyAt(q, atq - 1) !== key) continue;
+        want = lag[j];
+      }
+      if (want <= lag[i]) continue;
+      const dep = f.trips[i * 2 + 1];
+      const stays = (l: number) => Math.abs(profileS(n, p, uTime - dep - l) - cs[c]) < 0.5;
+      let lo = lag[i], hi = Math.min(want, LAG_MAX);
+      if (!stays(hi)) {
+        for (let it = 0; it < 12; it++) { const mid = (lo + hi) / 2; if (stays(mid)) lo = mid; else hi = mid; }
+        hi = lo;
+      }
+      if (hi > lag[i]) { lag[i] = hi; tauOf[c] = uTime - dep - hi; changed = true; }
+    }
+    return changed;
+  }
+
+  /** The track (an edge in the direction of travel, as the guard's lists key them) trip profile `p`
+   * is on at `s` along its run, -1 none. */
+  private keyAt(p: number, s: number): number {
+    const n = this.net!, T = n.pathTable!, E = n.pathEntry!, PF = n.pathFrom!, PL = n.pathLen!;
+    const { geo, gr: run } = trainFrame(n, p, 0);
+    const first = T[geo * 2], count = T[geo * 2 + 1], d = run === 0 ? s : n.meta[p * 4 + 3] - s;
+    const k = upper(PF, first, first + count, d) - 1;
+    if (k < first || d > PF[k] + PL[k]) return -1;
+    return run === 0 ? E[k] : E[k] ^ 1;
   }
 
   /** Trip `i`'s wait ends: it goes over at `at` (game s - epoch). */

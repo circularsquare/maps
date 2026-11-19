@@ -21,6 +21,7 @@ use super::net::Network;
 use super::params::*;
 use super::service::{LineSvc, Service, Trip};
 use super::span::{self, Mask};
+use super::timing::PROFILE_VARS;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -235,8 +236,11 @@ pub struct RunAccount {
     /// Departures from the first stop, seconds into the day, sorted (one periodic day).
     pub deps: Vec<f64>,
     pub levels: Vec<u8>,
-    /// The departure times from each stop, from the trip's start, per slot (`params::SLOTS`).
-    pub stop_dep: [Vec<f64>; SLOTS],
+    pub vars: Vec<u8>,
+    /// The departure times from each stop, from the trip's start, per slot and variant
+    /// (`slot * PROFILE_VARS + var`; empty for a variant the run has not). T-3346 stage 2: `vars`,
+    /// each departure's timetable variant (`Trip::var`).
+    pub stop_dep: Vec<Vec<f64>>,
     /// `[trip * n + stop]`: riders aboard leaving the stop (0 at the last); riders left on the
     /// platform as it leaves; riders on the platform as it arrived.
     pub load: Vec<f32>,
@@ -549,6 +553,15 @@ impl Boarding {
                 for &v in p.dep.iter() {
                     h.f(v);
                 }
+                // T-3346 stage 2: each train's own timetable
+                let run = &ls.runs[r];
+                if !run.vars[lev].is_empty() {
+                    h.add(ls.timed.is_some() as u64);
+                    for x in &run.vars[lev] {
+                        x.prof.dep.iter().for_each(|&v| h.f(v));
+                    }
+                    run.pattern[lev].iter().for_each(|&(k, v)| h.add((k as u64) << 8 | v as u64));
+                }
             }
         }
         h.0
@@ -666,7 +679,7 @@ impl Boarding {
         for t in &trips {
             let day = self.kind_at(epoch + shift(t.line as usize), t.line as usize);
             offs.push(self.trip_loads(t, day, &mut loads));
-            offs.push(svc.lines[t.line as usize].runs[t.run as usize].prof[t.level as usize].duration as f32);
+            offs.push(svc.lines[t.line as usize].prof_of(t.run as usize, t.level as usize, t.var).duration as f32);
         }
         let mut queues: Vec<f32> = vec![];
         let mut events: Vec<f32> = vec![];
@@ -689,7 +702,6 @@ impl Boarding {
                 if m == 0 {
                     continue;
                 }
-                let run = &ls.runs[r];
                 for k in 0..ra.n {
                     let arr = &ra.arrivals[k];
                     if arr.day <= 0.0 {
@@ -715,7 +727,7 @@ impl Boarding {
                         let (t, i) = at(j);
                         events.push(t as f32);
                         events.push(ra.q_after[i * ra.n + k]);
-                        let stand = if k == 0 { close } else { run.prof.get(ra.levels[i] as usize).and_then(|p| Some(p.dep.get(k)? - p.arr.get(k)?)).unwrap_or(0.0) };
+                        let stand = if k == 0 { close } else { Some(ls.prof_of(r, ra.levels[i] as usize, ra.vars[i])).and_then(|p| Some(p.dep.get(k)? - p.arr.get(k)?)).unwrap_or(0.0) };
                         arrive.push((t - stand.max(0.0)) as f32);
                     }
                     // T-680: empty when the line's trains started, and no train before then
@@ -872,8 +884,8 @@ impl Boarding {
             let ord = &ra.order[kf * m..(kf + 1) * m];
             let h0 = fe.rem_euclid(DAY);
             // T-1124: riders get off as the train stops, its stand before it leaves
-            let stand = |i: usize| run.prof.get(ra.levels[i] as usize).and_then(|p| Some(p.dep.get(kf)? - p.arr.get(kf)?)).unwrap_or(0.0).max(0.0);
-            let most = run.prof.iter().filter_map(|p| Some(p.dep.get(kf)? - p.arr.get(kf)?)).fold(0.0f64, f64::max);
+            let stand = |i: usize| Some(fls.prof_of((f.run as usize).min(1), ra.levels[i] as usize, ra.vars[i])).and_then(|p| Some(p.dep.get(kf)? - p.arr.get(kf)?)).unwrap_or(0.0).max(0.0);
+            let most = run.prof.iter().chain(run.vars.iter().flatten().map(|x| &x.prof)).filter_map(|p| Some(p.dep.get(kf)? - p.arr.get(kf)?)).fold(0.0f64, f64::max);
             for a in [-3600.0, 0.0] {
                 // the trains whose riders reach `q` in [a, a + 3600), weighed by riders aboard
                 trains.clear();
@@ -949,7 +961,7 @@ impl Boarding {
                 }
                 fullest = fullest.max(best / cap);
                 if best >= cap - 0.5 {
-                    let off = ra.stop_dep[ra.levels[j] as usize].get(at).copied().unwrap_or(0.0);
+                    let off = ra.stop_dep_of(j).get(at).copied().unwrap_or(0.0);
                     full.push((ra.deps[j] + off).rem_euclid(DAY));
                 }
             }
@@ -1110,7 +1122,7 @@ impl Boarding {
                 if load.iter().any(|&v| v as f64 >= cap - 0.5) {
                     p[1] += 1.0;
                 }
-                let sd = &ra.stop_dep[ra.levels[j] as usize];
+                let sd = &ra.stop_dep_of(j);
                 for k in 0..n.saturating_sub(1).min(sd.len().saturating_sub(1)) {
                     p[5] += load[k] as f64 * (sd[k + 1] - sd[k]).max(0.0);
                 }
@@ -1268,7 +1280,7 @@ impl Boarding {
             for j in 0..m {
                 let (mut best, mut at_t, mut seen) = (0.0f64, f64::NAN, false);
                 for k in 0..n {
-                    let o = ra.stop_dep[ra.levels[j] as usize].get(k).copied().unwrap_or(0.0);
+                    let o = ra.stop_dep_of(j).get(k).copied().unwrap_or(0.0);
                     let s = (ra.deps[j] + o).rem_euclid(DAY);
                     let from = ra.stop_open.get(k).map_or(line_from, |o| if o - day0 > line_from { o - day0 - 1e-6 } else { line_from });
                     if s > to || s <= from {
@@ -1310,7 +1322,7 @@ impl Boarding {
             add("accounts", v(self.accounts[d].capacity(), size_of::<Option<LineAccount>>()));
             for acc in self.accounts[d].iter().flatten() {
                 for ra in &acc.runs {
-                    add("deps, levels, stop_dep", v(ra.deps.capacity(), 8) + ra.levels.capacity() + ra.stop_dep.iter().map(|x| x.capacity() * 8).sum::<usize>());
+                    add("deps, levels, stop_dep", v(ra.deps.capacity(), 8) + 2 * ra.levels.capacity() + ra.stop_dep.iter().map(|x| x.capacity() * 8).sum::<usize>());
                     add("load, q_after, gone", v(ra.load.capacity() + ra.q_after.capacity() + ra.gone.capacity(), 4));
                     add("order, order_t", v(ra.order.capacity(), 4) + v(ra.order_t.capacity(), 8));
                     add("left_h, wait_h, hour_load", v(ra.left_h.capacity() + ra.wait_h.capacity() + ra.hour_load.capacity(), 4));
@@ -1355,6 +1367,11 @@ pub const QUEUE_STRIDE: usize = 12;
 pub const PERIOD_STRIDE: usize = 11;
 
 impl RunAccount {
+    /// Departure `j`'s times leaving each stop, from its start (its variant's, T-3346 stage 2).
+    pub fn stop_dep_of(&self, j: usize) -> &[f64] {
+        self.stop_dep.get(self.levels[j] as usize * PROFILE_VARS + self.vars.get(j).copied().unwrap_or(0) as usize).map_or(&[], |v| &v[..])
+    }
+
     /// The account's index of a trip leaving its first stop at game time `dep` (any day).
     pub fn find(&self, dep: f64) -> Option<usize> {
         let rel = dep.rem_euclid(DAY);
@@ -1530,7 +1547,8 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
     }
     trips.sort_by(|a, b| a.dep.total_cmp(&b.dep));
     let m = trips.len();
-    let stop_dep: [Vec<f64>; SLOTS] = std::array::from_fn(|lev| ls.runs[r].prof[lev].dep.clone());
+    // T-3346 stage 2: each trip's own timetable
+    let stop_dep = |t: &Trip| &ls.prof_of(r, t.level as usize, t.var).dep;
     let arrivals: Vec<Arrivals> = (0..n)
         .map(|k| {
             let per = std::array::from_fn(|p| {
@@ -1545,7 +1563,7 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
         .collect();
     let alpha = alight_shares(lr, r, wrap);
     let ride_km = ride_km(&alpha, &ls.runs[r].stop_s, n);
-    let time = |i: usize, k: usize| trips[i].dep + stop_dep[trips[i].level as usize].get(k).copied().unwrap_or(0.0);
+    let time = |i: usize, k: usize| trips[i].dep + stop_dep(&trips[i]).get(k).copied().unwrap_or(0.0);
     // the last day's trips are the account, by time of day
     let kept = |i: usize| trips[i].dep >= t0;
     let mut keep: Vec<usize> = (0..m).filter(|&i| kept(i)).collect();
@@ -1559,7 +1577,8 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
         n,
         deps: keep.iter().map(|&i| trips[i].dep.rem_euclid(DAY)).collect(),
         levels: keep.iter().map(|&i| trips[i].level).collect(),
-        stop_dep: stop_dep.clone(),
+        vars: keep.iter().map(|&i| trips[i].var).collect(),
+        stop_dep: (0..SLOTS * PROFILE_VARS).map(|x| { let (lev, v) = (x / PROFILE_VARS, x % PROFILE_VARS); if v == 0 || v <= ls.runs[r].vars[lev].len() { ls.prof_of(r, lev, v as u8).dep.clone() } else { vec![] } }).collect(),
         load: vec![0.0; mk * n],
         q_after: vec![0.0; mk * n],
         gone: vec![0.0; mk * n],

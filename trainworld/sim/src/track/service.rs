@@ -49,6 +49,30 @@ pub struct Run {
     pub holds: [Vec<Hold>; SLOTS],
     pub stop_holds: [Vec<f64>; SLOTS],
     pub prof: [Profile; SLOTS],
+    /// T-3346 stage 2 (`timing`): per slot, the train-by-train variants of this run's timetable,
+    /// at most `timing::MAX_VARS`; a trip's `var` k > 0 runs `vars[slot][k - 1]`. Empty where every
+    /// train runs `prof`.
+    pub vars: [Vec<Variant>; SLOTS],
+    /// Per slot, each weekday departure's `var` by its place in the day (`Dep`'s place), sorted by
+    /// place; a place not listed runs `prof`.
+    pub pattern: [Vec<(u32, u8)>; SLOTS],
+}
+
+/// One train-by-train version of a run's timetable (T-3346 stage 2): its own extra dwell per stop
+/// and track holds in place of the slot's averaged ones, and the profile they give.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Variant {
+    pub stop_holds: Vec<f64>,
+    pub holds: Vec<Hold>,
+    pub prof: Profile,
+}
+
+impl Run {
+    /// The variant a departure at `place` (`Dep`'s) of slot `lev` runs: 0 for the slot's own.
+    pub fn var_at(&self, lev: usize, place: u32) -> u8 {
+        let p = &self.pattern[lev];
+        p.binary_search_by_key(&place, |x| x.0).map_or(0, |i| p[i].1)
+    }
 }
 
 #[derive(Clone, Debug, Default)]
@@ -87,6 +111,9 @@ pub struct LineSvc {
     pub bus: Option<super::bus::Plan>,
     /// A ferry line (T-2193): run like a bus line (`bus` holds its ports as stops), every stop a port.
     pub ferry: bool,
+    /// T-3346 stage 2: the pattern the runs' variants were worked out for (`timing::retime`, as
+    /// `Lattice::timing_key`); a trip takes one only while the line still runs it.
+    pub timed: Option<Lattice>,
 }
 
 impl Run {
@@ -139,6 +166,25 @@ impl LineSvc {
     /// Seconds a trip of this direction is drawn: run, then the closing stand.
     pub fn trip_len(&self, net: &Network, line: u32, run: usize, level: usize) -> f64 {
         self.runs[run].prof[level].duration + self.close_stand(net, line)
+    }
+    /// The profile a trip with variant `var` runs (T-3346 stage 2): the slot's, or its own.
+    pub fn prof_of(&self, run: usize, level: usize, var: u8) -> &Profile {
+        let r = &self.runs[run];
+        match var {
+            0 => &r.prof[level],
+            v => r.vars[level].get(v as usize - 1).map_or(&r.prof[level], |x| &x.prof),
+        }
+    }
+    /// `trip_len` for a trip with variant `var`: a train that ran its own timetable still takes
+    /// its next departure as the slot's would, standing less at the end where it waited longer on
+    /// the way, down to `timing::TURN_MIN_S` (T-3346 stage 2).
+    pub fn trip_len_var(&self, net: &Network, line: u32, run: usize, level: usize, var: u8) -> f64 {
+        let mean = self.trip_len(net, line, run, level);
+        if var == 0 {
+            return mean;
+        }
+        let stand = self.close_stand(net, line).min(super::timing::TURN_MIN_S);
+        mean.max(self.prof_of(run, level, var).duration + stand)
     }
     /// What a train stands at the end of a run: the turnaround, or the dwell where a circle carries
     /// on round (T-798).
@@ -197,6 +243,9 @@ pub struct Trip {
     /// `hand_over`); None when the train leaves service there (T-245: a selected train is
     /// followed onto its next trip).
     pub next: Option<f64>,
+    /// T-3346 stage 2: the timetable variant it runs (`LineSvc::prof_of`), 0 for the slot's.
+    /// Every reader takes it from here.
+    pub var: u8,
 }
 
 /// A train running when an edit is applied: where it is on its profile (T-206).
@@ -205,6 +254,7 @@ pub struct InFlight {
     line: u32,
     run: u8,
     level: u8,
+    var: u8,
     dep: f64,
     s: f64,
     /// Standing at a stop: seconds before it would have left; with `s` infinite, standing at its
@@ -285,6 +335,14 @@ pub struct Lattice {
     /// T-3542: the line's day in pieces where its hours differ from the default's (`n` 0: the
     /// periods, as at the default hours).
     pub hours: Hours,
+}
+
+impl Lattice {
+    /// T-3346 stage 2: what a run's variants are worked out for: the pattern without its calendar,
+    /// which moves on day by day without changing a weekday's departures.
+    pub fn timing_key(&self) -> Lattice {
+        Lattice { cal: Cal::NONE, ..*self }
+    }
 }
 
 /// T-3542: a line's day cut at its own hours as well as the periods' (`params::day_pieces`), each
@@ -401,7 +459,30 @@ pub struct Era {
     /// the change for a departure of the new pattern, so a train that had left service never
     /// comes back.
     pub drawn: Vec<(u8, f64)>,
+    /// T-3346 stage 2: the timetable variant each drawn train was running (run, departure, var):
+    /// it keeps it where the line still has one by that number, so a change moves no train's end.
+    /// Not saved (a loaded era's trains run their slot's).
+    pub vars: Vec<(u8, f64, u8)>,
 }
+
+/// T-3346 stage 2: the variant an era's departure runs: the one its train was running when the era
+/// ended, where the run still has one by that number.
+fn era_var(e: &Era, run: &Run, r: usize, d: f64, lev: u8) -> u8 {
+    e.vars.iter().find(|x| x.0 as usize == r && x.1 == d).map_or(0, |x| if (x.2 as usize) <= run.vars[lev as usize].len() { x.2 } else { 0 })
+}
+
+/// A departure: game (or local) time, slot, headway, and its place in the day (`place_of`), the
+/// key of a run's variant pattern (T-3346 stage 2).
+pub(crate) type Dep = (f64, u8, f64, u32);
+
+/// T-3346 stage 2: a departure's place in its day: the stretch (`day_stretches`' index) and its
+/// number from the stretch's first point. Weekend stretches have none (`NO_PLACE`): their trains run
+/// their slot's timetable.
+fn place_of(stretch: usize, k: i64, weekend: bool) -> u32 {
+    if weekend || !(0..1 << 16).contains(&k) { NO_PLACE } else { (stretch as u32) << 16 | k as u32 }
+}
+/// A place no variant pattern holds.
+pub const NO_PLACE: u32 = u32::MAX;
 
 /// The longest a train stands at a terminal for its next departure before it leaves service.
 pub const HANDOVER_MAX_S: f64 = 3600.0;
@@ -494,7 +575,7 @@ fn stretch_points(lat: &Lattice, r: usize, day: i64, st: &Stretch, next: f32) ->
 /// One run's departures from a pattern in `[a, b)` of game time, with level and headway: the
 /// pattern's periods are laid out in the line's local time (T-309, `Lattice::shift`), and each
 /// departure is the same game time from any window.
-fn lattice_deps(lat: &Lattice, r: usize, a: f64, b: f64, out: &mut Vec<(f64, u8, f64)>) {
+pub(crate) fn lattice_deps(lat: &Lattice, r: usize, a: f64, b: f64, out: &mut Vec<Dep>) {
     let s = lat.shift;
     if s == 0.0 {
         return lattice_deps_local(lat, r, a, b, out);
@@ -504,10 +585,10 @@ fn lattice_deps(lat: &Lattice, r: usize, a: f64, b: f64, out: &mut Vec<(f64, u8,
     lattice_deps_local(lat, r, a + s - 1.0, b + s + 1.0, out);
     let mut k = start;
     for i in start..out.len() {
-        let (d, lev, hw) = out[i];
+        let (d, lev, hw, place) = out[i];
         let d = d - s;
         if d >= a && d < b {
-            out[k] = (d, lev, hw);
+            out[k] = (d, lev, hw, place);
             k += 1;
         }
     }
@@ -518,7 +599,7 @@ fn lattice_deps(lat: &Lattice, r: usize, a: f64, b: f64, out: &mut Vec<(f64, u8,
 /// headway: per stretch of one level (`level_stretches`), `start - lead + off + k * headway`,
 /// leaving out any closer than half a headway after the stretch before's last (MIN_GAP_SHARE). A
 /// pure function of the pattern, so every window agrees.
-pub(crate) fn lattice_deps_local(lat: &Lattice, r: usize, a: f64, b: f64, out: &mut Vec<(f64, u8, f64)>) {
+pub(crate) fn lattice_deps_local(lat: &Lattice, r: usize, a: f64, b: f64, out: &mut Vec<Dep>) {
     if !(b > a) {
         return;
     }
@@ -552,6 +633,7 @@ pub(crate) fn lattice_deps_local(lat: &Lattice, r: usize, a: f64, b: f64, out: &
                 continue;
             }
             let lev = (s.lev % SLOTS) as u8;
+            let weekend = s.lev >= SLOTS;
             let mut k = k0.max(((a - ps) / hw).floor() as i64 - 1).max(k0);
             while k < n {
                 let d = ps + k as f64 * hw;
@@ -559,7 +641,7 @@ pub(crate) fn lattice_deps_local(lat: &Lattice, r: usize, a: f64, b: f64, out: &
                     break;
                 }
                 if d >= a {
-                    out.push((d, lev, hw));
+                    out.push((d, lev, hw, place_of(i, k, weekend)));
                 }
                 k += 1;
             }
@@ -600,6 +682,11 @@ pub struct Service {
     /// Per line id, its own calendar (`Cal`): the kind of day of its holidays and its country's
     /// weekend. Not saved; the clock worker sends it (`TrackApi::set_line_rows`).
     pub cal: Vec<Cal>,
+    /// T-3346 stage 2: the profiles `timing::retime` built last time, by what they were built
+    /// from, so an edit elsewhere builds none of them again.
+    pub timing_memo: std::collections::HashMap<(u32, u8, Vec<u64>), Profile>,
+    /// T-3346 stage 2: what `timing::retime` read last time; the same again keeps its variants.
+    pub timing_key: Vec<u64>,
 }
 
 /// One run of the stops and path its trains run (`line`: the whole plan, or the part of it a
@@ -948,13 +1035,19 @@ fn profile_for(net: &Network, l: u32, run: &Run, level: usize) -> Profile {
     if net.line_bus[l as usize].is_some() || net.line_ferry[l as usize].is_some() {
         return run.free.clone();
     }
+    profile_with(net, l, run, &run.stop_holds[level], &run.holds[level])
+}
+
+/// A rail run's profile with these extra dwells per stop and track holds (T-3346 stage 2: a
+/// variant's, or the slot's).
+pub(crate) fn profile_with(net: &Network, l: u32, run: &Run, stop_holds: &[f64], holds: &[Hold]) -> Profile {
     let turn = net.line_turn[l as usize] as f64;
     let mut dw = stand_times(run, net.line_dwell[l as usize] as f64, turn);
-    for (d, h) in dw.iter_mut().zip(&run.stop_holds[level]) {
+    for (d, h) in dw.iter_mut().zip(stop_holds) {
         *d += h;
     }
-    let mut p = run_profile(run, &dw, turn, &run.holds[level]);
-    p.hold += run.stop_holds[level].iter().sum::<f64>();
+    let mut p = run_profile(run, &dw, turn, holds);
+    p.hold += stop_holds.iter().sum::<f64>();
     p
 }
 
@@ -999,6 +1092,11 @@ impl Service {
         };
         for &l in rebuilt {
             add_path(&self.lines[l as usize]);
+        }
+        // T-3346 stage 2: a rebuilt line has lost its variants, so the next retime works them out
+        // whatever else it reads
+        if !rebuilt.is_empty() {
+            self.timing_key.clear();
         }
         for &l in rebuilt {
             let (old_ok, old_run) = (self.lines[l as usize].ok, self.lines[l as usize].running);
@@ -1063,6 +1161,8 @@ impl Service {
             }
             let resched = rescheduled.binary_search(&(l as u32)).is_ok();
             if changed || resched {
+                // its variants are worked out again once the edit has settled (`timing::retime`)
+                ls.timed = None;
                 let stand = ls.close_stand(net, l as u32);
                 for lev in net.slots() {
                     let (a, b) = (&ls.runs[0].prof[lev], &ls.runs[1].prof[lev]);
@@ -1333,20 +1433,20 @@ impl Service {
         let mut flight = vec![];
         if now.is_finite() {
             for t in self.trips(net, now, now + 1e-3) {
-                let p = &self.lines[t.line as usize].runs[t.run as usize].prof[t.level as usize];
+                let p = self.lines[t.line as usize].prof_of(t.run as usize, t.level as usize, t.var);
                 let tau = now - t.draw;
                 if tau < 0.0 {
                     continue;
                 }
                 if tau >= p.duration {
                     // standing at the terminal: as long again after the new profile's arrival
-                    flight.push(InFlight { line: t.line, run: t.run, level: t.level, dep: t.dep, s: f64::INFINITY, stopped_left: Some(tau - p.duration), at: None });
+                    flight.push(InFlight { line: t.line, run: t.run, level: t.level, var: t.var, dep: t.dep, s: f64::INFINITY, stopped_left: Some(tau - p.duration), at: None });
                     continue;
                 }
                 let (s, v) = profile::state_at(&p.phases, tau);
                 let stopped_left = (v < 0.01).then(|| time_reaching(&p.phases, p.duration, s + 0.05) - tau);
                 let at = ground_at(&self.lines[t.line as usize].runs[t.run as usize], s);
-                flight.push(InFlight { line: t.line, run: t.run, level: t.level, dep: t.dep, s, stopped_left, at });
+                flight.push(InFlight { line: t.line, run: t.run, level: t.level, var: t.var, dep: t.dep, s, stopped_left, at });
             }
         }
         let lens = (0..self.lines.len()).map(|l| self.trip_lens(net, l)).collect();
@@ -1370,28 +1470,6 @@ impl Service {
         }
         self.eras.resize(self.lines.len(), vec![]);
         self.shifts.resize(self.lines.len(), vec![]);
-        for f in &before.flight {
-            let l = f.line as usize;
-            let Some(ls) = self.lines.get(l).filter(|ls| ls.running) else { continue };
-            let p = &ls.runs[f.run as usize].prof[f.level as usize];
-            let moved = f.at.and_then(|a| offset_at(&ls.runs[f.run as usize], a));
-            let f = &InFlight { s: moved.unwrap_or(f.s), ..*f };
-            let tau = match f.stopped_left {
-                Some(stood) if f.s.is_infinite() => p.duration + stood,
-                Some(left) => {
-                    let arrive = time_reaching(&p.phases, p.duration, f.s - 0.05);
-                    let leave = time_reaching(&p.phases, p.duration, f.s + 0.05);
-                    (leave - left).max(arrive).min(leave)
-                }
-                None => time_reaching(&p.phases, p.duration, f.s),
-            };
-            let by = now - tau - f.dep;
-            let v = &mut self.shifts[l];
-            v.retain(|x| !(x.0 == f.run && x.1 == f.dep));
-            if by.abs() > 1e-3 {
-                v.push((f.run, f.dep, by));
-            }
-        }
         for l in 0..self.lines.len() {
             let Some(after) = self.lattice(net, l) else {
                 self.eras[l].clear();
@@ -1408,9 +1486,33 @@ impl Service {
                 Some(e) if e.until >= now => {}
                 _ if was != after || reshaped => {
                     let drawn = before.flight.iter().filter(|f| f.line as usize == l).map(|f| (f.run, f.dep)).collect();
-                    v.push(Era { until: now, lat: was, drawn })
+                    let vars = before.flight.iter().filter(|f| f.line as usize == l && f.var > 0).map(|f| (f.run, f.dep, f.var)).collect();
+                    v.push(Era { until: now, lat: was, drawn, vars })
                 }
                 _ => {}
+            }
+        }
+        for f in &before.flight {
+            let l = f.line as usize;
+            let Some(ls) = self.lines.get(l).filter(|ls| ls.running && l < net.line_count()) else { continue };
+            // T-3346 stage 2: the timetable that departure runs now (after the eras above)
+            let p = ls.prof_of(f.run as usize, f.level as usize, self.var_now(net, l, f.run as usize, f.dep));
+            let moved = f.at.and_then(|a| offset_at(&ls.runs[f.run as usize], a));
+            let f = &InFlight { s: moved.unwrap_or(f.s), ..*f };
+            let tau = match f.stopped_left {
+                Some(stood) if f.s.is_infinite() => p.duration + stood,
+                Some(left) => {
+                    let arrive = time_reaching(&p.phases, p.duration, f.s - 0.05);
+                    let leave = time_reaching(&p.phases, p.duration, f.s + 0.05);
+                    (leave - left).max(arrive).min(leave)
+                }
+                None => time_reaching(&p.phases, p.duration, f.s),
+            };
+            let by = now - tau - f.dep;
+            let v = &mut self.shifts[l];
+            v.retain(|x| !(x.0 == f.run && x.1 == f.dep));
+            if by.abs() > 1e-3 {
+                v.push((f.run, f.dep, by));
             }
         }
     }
@@ -1579,7 +1681,7 @@ impl Service {
                 }
                 // T-3521: weekend trains are not in the era bytes: an old pattern loads running its
                 // weekday trains every day
-                v.push(Era { until, lat: Lattice { tph, off, lead, shift, phase, rest_tph: tph, rest_off: off, rest_phase: phase, rest_on: false, cal: Cal::NONE, period_slot, hours: h }, drawn });
+                v.push(Era { until, lat: Lattice { tph, off, lead, shift, phase, rest_tph: tph, rest_off: off, rest_phase: phase, rest_on: false, cal: Cal::NONE, period_slot, hours: h }, drawn, vars: vec![] });
             }
             let mut s = vec![];
             for _ in 0..num!(u32) {
@@ -1621,6 +1723,24 @@ impl Service {
         self.eras.get(l).map_or(&[], |v| &v[..])
     }
 
+    /// T-3346 stage 2: the variant run `r`'s departure at `dep` (game time) takes now, as
+    /// `run_deps` gives it: an era's train the one it ran, else its place's in the pattern the line's
+    /// variants were worked out for; 0 for a line not timed train by train.
+    pub fn var_now(&self, net: &Network, l: usize, r: usize, dep: f64) -> u8 {
+        let Some(ls) = self.lines.get(l) else { return 0 };
+        let Some(cur) = self.lattice(net, l) else { return 0 };
+        let mut buf: Vec<Dep> = vec![];
+        if let Some(e) = self.eras_of(l).iter().find(|e| dep < e.until) {
+            lattice_deps(&e.lat, r, dep - 1.0, dep + 1.0, &mut buf);
+            return buf.iter().find(|x| x.0 == dep).map_or(0, |x| era_var(e, &ls.runs[r], r, dep, x.1));
+        }
+        if ls.timed != Some(cur.timing_key()) {
+            return 0;
+        }
+        lattice_deps(&cur, r, dep - 1.0, dep + 1.0, &mut buf);
+        buf.iter().find(|x| x.0 == dep).map_or(0, |&(_, lev, _, place)| ls.runs[r].var_at(lev as usize, place))
+    }
+
     /// The longest trip a line draws (run and turnaround) and the longest it may stand at a
     /// terminal for its next departure.
     fn reach(&self, net: &Network, l: usize) -> (f64, f64) {
@@ -1632,6 +1752,9 @@ impl Service {
         for r in 0..2 {
             for lev in net.slots() {
                 dur = dur.max(ls.trip_len(net, l as u32, r, lev));
+                for v in 1..=ls.runs[r].vars[lev].len() {
+                    dur = dur.max(ls.trip_len_var(net, l as u32, r, lev, v as u8));
+                }
             }
         }
         let mut hw = 0.0f64;
@@ -1673,7 +1796,10 @@ impl Service {
         let shifts = self.shifts.get(l).map_or(&[][..], |v| &v[..]);
         let mut seg_start = f64::NEG_INFINITY;
         let mut last: Option<f64> = None;
-        let mut buf: Vec<(f64, u8, f64)> = vec![];
+        let mut buf: Vec<Dep> = vec![];
+        // T-3346 stage 2: the variants were worked out for the pattern the line runs now; an era's
+        // trains run the one they ran at the change
+        let timed = ls.timed.is_some() && ls.timed == Some(cur.timing_key());
         for i in 0..=eras.len() {
             let era = if i < eras.len() { as_row(&eras[i].lat) } else { cur };
             let (lat, seg_end) = (&era, if i < eras.len() { eras[i].until } else { f64::INFINITY });
@@ -1683,15 +1809,22 @@ impl Service {
             buf.clear();
             lattice_deps(lat, r, lo, hi, &mut buf);
             let prev = last;
-            for &(d, lev, hw) in &buf {
+            for &(d, lev, hw, place) in &buf {
                 if prev.is_some_and(|p| d - p < MIN_GAP_SHARE * hw) {
                     continue;
                 }
                 last = Some(d);
                 if d >= a && d < b {
                     let draw = d + shifts.iter().find(|x| x.0 as usize == r && x.1 == d).map_or(0.0, |x| x.2);
-                    let end = draw + ls.trip_len(net, l as u32, r, lev as usize);
-                    out.push(Trip { line: l as u32, run: r as u8, level: lev, dep: d, draw, end, hw, next: None });
+                    let var = if i < eras.len() {
+                        era_var(&eras[i], &ls.runs[r], r, d, lev)
+                    } else if timed {
+                        ls.runs[r].var_at(lev as usize, place)
+                    } else {
+                        0
+                    };
+                    let end = draw + ls.trip_len_var(net, l as u32, r, lev as usize, var);
+                    out.push(Trip { line: l as u32, run: r as u8, level: lev, dep: d, draw, end, hw, next: None, var });
                 }
             }
             seg_start = seg_end;

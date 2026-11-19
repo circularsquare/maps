@@ -94,7 +94,7 @@ fn a_stop_added_at_an_end_moves_no_train() {
     a.set_now(now);
     let at_now = |a: &TrackApi| {
         let mut v: Vec<(u8, f64, f64)> = a.w.svc.trips(&a.w.net, now, now + 1e-3).iter().filter_map(|t| {
-            let p = &a.w.svc.lines[t.line as usize].runs[t.run as usize].prof[t.level as usize];
+            let p = a.w.svc.lines[t.line as usize].prof_of(t.run as usize, t.level as usize, t.var);
             let tau = now - t.draw;
             (tau >= 0.0 && tau < p.duration).then(|| {
                 let (s, _) = crate::track::profile::state_at(&p.phases, tau);

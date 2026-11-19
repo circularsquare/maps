@@ -646,7 +646,11 @@ works out in the clock worker, the inside's geometry `game/buildingLayout.ts`; t
   every zoom, so the faster one is drawn passing. Each direction of a line has one phase while the
   timetable's holds assume each direction's own (track-and-service.md 6.2), so in one direction a
   drawn express can catch a local between stations; it is then held behind it to the next station
-  where the local stops on passing tracks, and passes there. A held train is drawn late in its own run (`lag` per trip, an attribute on the
+  where the local stops on passing tracks, and passes there. A train standing on an outer track waits
+  there for a faster train its timetable has pass it first while that one is drawn late [T-3346,
+  `waitForPassing`]: it takes that train's lag, as far as its stand allows, so the two keep their
+  timetable's order and most of the time between them (a local due out 93 s after its express leaves
+  about 72 s after the drawn one, both making the lag up). A held train is drawn late in its own run (`lag` per trip, an attribute on the
   GPU), so it keeps its stops and speeds and waits outside a station where the train ahead stands;
   once clear it makes the lag up at 0.3 s a game second, drawn up to 30% faster than its timetable.
   A train still held when its next trip is due takes that trip late by the rest. At most 20 minutes

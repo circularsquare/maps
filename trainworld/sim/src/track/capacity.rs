@@ -1095,6 +1095,19 @@ impl Capacity {
         &self.plans[r]
     }
 
+    /// T-3346 stage 2: a wait at a passing station's faster line and its plan's point, or None.
+    pub fn wait_point(&self, r: usize) -> Option<(u32, u16)> {
+        match self.tag[r] {
+            Tag::Wait { line, point } => Some((line, point)),
+            _ => None,
+        }
+    }
+
+    /// T-3346 stage 2: whether the resource is a faster line's following loss.
+    pub fn is_follow(&self, r: usize) -> bool {
+        matches!(self.tag[r], Tag::Follow { .. })
+    }
+
     /// T-2231: the faster line a wait at a passing station is for, or None.
     pub fn wait_for(&self, r: usize) -> Option<u32> {
         matches!(self.tag[r], Tag::Wait { .. }).then(|| self.users_of(r).iter().find(|u| !u.owner).map(|u| u.line)).flatten()
