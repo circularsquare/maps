@@ -149,10 +149,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-3659 [P3] {L:solve-speed} {after:the next performance round} Contributors' speed-up pull requests
   - Context: You, 2026-11-18: "there are some new PRs from caelum418 that have to do with speedups that we should look at the next time we look at this area of performance. they might help." Open on the public repo: caelum418's 24 (station facility and building layout after edits) and 23 (less repeated work in intercity passenger assignment); also CinnamonVII's 18 and 19 (demand CPU speed-ups, bit-exact, SIMD), filed nowhere yet.
   - Goal: Each one measured on our saves, then ported with credit, or closed with a reply you've seen.
-- T-3518 [P3] {L:new-countries} University students in Venezuela and Nicaragua
-  - Context: From T-3399: the World Bank has no tertiary enrolment for Venezuela or Nicaragua since 2010, so their zones count only OSM campuses, unscaled (Zamora's zone 257 students for 1M people); seven rows shipped with the gate's university check relaxed.
-  - Goal: A national figure for each in tier0's NATIONAL_TERTIARY (as Taiwan's, T-3273), taken up at their next rebuild.
-  - Other: notes/T-3399.md
 
 ## Demand
 - T-3632 [P2] {L:route-choice} Fix the causes behind No route
@@ -271,10 +267,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3460 [P3] {L:cleanup} Code written twice
   - Context: From the code tour: the schematic's sheet maths in Rust (diagram.rs) and again in JavaScript (sheetLines.ts, kept as a fallback); the real-rail route finder in the game (realRoute.worker.ts) and copied in the pipeline (realroute.py); car street speeds twice in Rust.
   - Goal: One copy of each, or a written reason to keep both.
-- T-3734 [P2] {L:cleanup} Save code moved out of the clock worker (taking, 2026-11-18, agent slotown4)
-  - Context: Refactor survey area 1 (notes/refactor-survey-2026-11-18.md). Stages 1-3 are done: standing checks for the save races; one answer for whether the slot may be written (T-2843's machine C), which fixed T-3698 and a second tab that could not go back to the menu; and one game stamp on the worker's messages in place of the money's slot tag and the stop clicks' game count. Left: stage 4, the save, slot, lease and cloud code moves out of clock.worker.ts into a module of its own, with no behaviour change.
-  - Goal: The three t3734 checks, t1826-saves, t3478-new-game and smoke passing after the move; no save format change.
-  - Other: notes/refactor-survey-2026-11-18.md; notes/T-3734.md
 - T-3726 [P3] {L:cleanup} {after:v0.4.2 publish} Are code comments worth keeping, A/B test
   - Context: You said yes, after the release (2026-11-18). You, 2026-11-18: "deciding whether or not code comments rae actually helpful ... what procedure do you think we might be able to try to get a rough sense of whether this would be really harmful? ... just a rough measured anecdotal sense." Proposal: replay 2-3 tasks landed today from their parent commits, one tree with comments and one with them stripped by script, same blind brief, scored on the real fix's tests first, then wrong causes, tokens and time; one task run twice per arm to see the noise.
   - Goal: A rough answer: no visible difference, comments help, or comments hurt; any mass strip only when no trees are open.
@@ -354,7 +346,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: You, 2026-11-18: a free downloadable version on Steam, no paid DLC, a Ko-fi link if allowed; disclose AI code and translations regardless; "idrc about art style ... a low effort way to get another thing that might have a chance to get algo boosted". Checklist done (research/steam-page.md). Valve bans links in the description since 2024-09; the store page's website link field is allowed. No standalone build yet.
   - Goal: A live Coming soon page, then the downloadable build at least 2 weeks later.
   - Other: research/steam-page.md
-- T-3720 [P3] {L:accounts-server} New game in the autosave slot may inherit a sandbox latch
+- T-3720 [P3] {L:accounts-server} New game in the autosave slot may inherit a sandbox latch (taking, 2026-11-18, agent autolatch)
   - Context: From T-3687 (possible, not reproduced): a new game in the reused `autosave` slot could inherit a deleted sandbox game's id and so its latch, keeping it off the leaderboards.
   - Goal: Reproduced or ruled out; a new game never carries an old game's id.
   - Other: notes/T-3687.md

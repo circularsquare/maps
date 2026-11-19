@@ -473,6 +473,17 @@ NATIONAL_TERTIARY = {
     "TW": (1_094_829 / 23_400_220, 2023, "Ministry of Education, students in universities and colleges in school year 112 "
            "(2023-24), 1,094,829 (doctoral, master's, bachelor's and junior college), over the registered population "
            "at end 2024, 23,400,220 (T-3274)", "https://stats.moe.gov.tw/files/analysis/113_st_report.pdf"),
+    # the World Bank has no tertiary enrolment for either since 2010 (T-3518)
+    "NI": (193_116 / 6_823_613, 2023, "CNU (Consejo Nacional de Universidades) statistical yearbook, 2023 enrolment "
+           "193,116 as reported by Confidencial and La Prensa, over the World Bank's 2023 population, 6,823,613 "
+           "(the regime's 2024 claim is 180,220, 2026 claim over 200,000; T-3518)",
+           "https://www.laprensani.com/2024/11/18/nacionales/3401896-eduacion-universitaria-crisis-nicaragua"),
+    # no published count since 2018 (government 1,666,157): an independent estimate instead, 17% of ages 18-24
+    "VE": (0.17 * (0.6 * 2_706_262 + 2_220_181) / 28_300_854, 2023, "Observatorio de Universidades: about 17% of "
+           "ages 18-24 in university; 18-24 is 3.84M in 2023 (UN WPP via World Bank, 3/5 of ages 15-19 plus 20-24), "
+           "so about 653,000 students, over the 2023 population 28,300,854. Government's last count, 2018, is "
+           "1,666,157, not used (T-3518)",
+           "https://cotejo.info/2024/10/ct-nicolas-maduro-el-alcance-de-la-educacion-universitaria-en-venezuela-supera-a-cualquier-pais-en-la-region-mentira/"),
 }
 
 
