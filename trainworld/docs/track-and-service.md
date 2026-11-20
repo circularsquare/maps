@@ -1385,7 +1385,8 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   counts as part of that pacing, not as a move. Without this London's 130 lines at one merge paced each
   other back and forth on every edit. A load takes the saved pacing and its sets as they are. On weekends the same
   pacing runs on the weekend counts and service (T-3584: inside `settle_weekend`, from the weekdays'
-  pacing at first; kept beside `svc_rest`, not saved, worked out again at the first edit after a load), so
+  pacing at first, then kept beside `svc_rest`; saved in `LWP1` for the weekend departures, worked out
+  again from the weekdays' at the first weekend settle after a load), so
   lines sharing track are paced from their weekend headways. A headway line there counts with its
   set headway and is never moved. Where a merge is full (98%, `PACE_FULL_RHO`) its count lines share
   it evenly: each that could run more often keeps the even share of their trains an hour together
@@ -1476,7 +1477,16 @@ passes at passing stations (T-2231) its overtake plan's offset. Greedy on
   run, and a line keeps its phase unless another cuts that sum by more than 10%; so two lines on one
   track at one headway leave half a headway apart, and an edit elsewhere moves no one. Outside the undo
   history (a refused or trial edit puts the phases back), saved in trailing `LPH1` and `LSP1` (the
-  shares) blocks and in the eras (`ERA2`, whose reverse offset carries the share); a save without them has every line placed once, in id order, on load. Riders' waits
+  shares) blocks and in the eras (`ERA2`, whose reverse offset carries the share); a save without them has every line placed once, in id order, on load.
+  **On weekends** (T-3735): a line whose weekend rates differ from its weekday ones lays out its weekend
+  departures on its weekend headway, pacing and spare time, with weekend phases and shares of its own
+  (`Network::line_phase_rest`, `line_split_rest`), placed the same way among every line's weekend trains
+  (`TrackWorld::place_weekend`: the lines an edit changes, its weekend-only edits' too, with the weekend
+  rates, headways and pacing swapped in). Every other line runs its weekday departures on weekends too,
+  so the weekday pattern of every line is left to the bit. The run times are the weekdays': weekend
+  trains run their slot's timetable (6.2), and the weekend service's run times differ only where the
+  holds do (DECISIONS 2026-11-20). Saved in a trailing
+  `LWP1` block with the weekend pacing (save level 32); a save without it places them on load. Riders' waits
   are by headway, so demand does not move; it cannot keep an express from catching a local far down a
   long stretch (its slower running above and the display guard keep it trailing). When the pattern changes (a new period, or an edit) a new
   departure closer than half a headway after the old pattern's last one is left out, so trains

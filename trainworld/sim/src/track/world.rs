@@ -177,9 +177,8 @@ pub struct TrackWorld {
     /// T-3388: per line and level, what `pace_merges` last paced it from. Not saved: a load takes
     /// the saved pacing as it is.
     pace_in: Vec<[PaceIn; SLOTS]>,
-    /// T-3584: the weekends' pacing and what it was paced from, kept with `svc_rest` (the weekdays'
-    /// start them at the first weekend settle). Not saved.
-    pub(crate) pace_rest: Vec<[f32; SLOTS]>,
+    /// T-3584: what the weekends' pacing (`Network::line_pace_rest`) was paced from, kept with
+    /// `svc_rest` (the weekdays' start them at the first weekend settle). Not saved.
     pace_in_rest: Vec<[PaceIn; SLOTS]>,
 }
 
@@ -193,7 +192,7 @@ pub enum ChargeError {
 
 impl TrackWorld {
     pub fn new(net: Network) -> TrackWorld {
-        let mut w = TrackWorld { net, svc: Service::default(), undo: vec![], redo: vec![], switching: None, settle_scope: None, settle_edited: vec![], settle_edited_rest: vec![], svc_rest: None, weekend_as_saved: false, pace_in: vec![], pace_rest: vec![], pace_in_rest: vec![] };
+        let mut w = TrackWorld { net, svc: Service::default(), undo: vec![], redo: vec![], switching: None, settle_scope: None, settle_edited: vec![], settle_edited_rest: vec![], svc_rest: None, weekend_as_saved: false, pace_in: vec![], pace_in_rest: vec![] };
         w.reload();
         w
     }
@@ -224,6 +223,11 @@ impl TrackWorld {
             self.place_departures(&all);
             self.pin_twin_phases();
             self.net.phases_placed = true;
+        }
+        // T-3735: the weekends' too, where a save carried none (`LWP1`)
+        if !self.net.rest_solved || self.net.line_phase_rest.is_empty() {
+            let all: Vec<u32> = (0..self.net.line_count() as u32).collect();
+            self.place_weekend(&all);
         }
         self.retime();
     }
@@ -329,6 +333,67 @@ impl TrackWorld {
         super::spacing::place(&self.net, &self.svc, lines, &mut phase, &mut split);
         self.net.line_phase = phase;
         self.net.line_split = split;
+    }
+
+    /// T-3735: `place_departures` on weekends, into `line_phase_rest` and `line_split_rest`: those of
+    /// `lines` that run other rates then (`Network::runs_own_weekend`) are placed among every line's
+    /// weekend trains, on the weekends' rates, headways and pacing swapped in as `settle_weekend`
+    /// swaps them. The service placed on is the weekdays': weekend trains run its timetables. Every
+    /// other line keeps a copy of its weekday phases and splits, as it runs its weekday departures.
+    fn place_weekend(&mut self, lines: &[u32]) {
+        if !self.net.rest_solved {
+            self.net.line_phase_rest.clear();
+            self.net.line_split_rest.clear();
+            return;
+        }
+        let n = self.net.line_count();
+        let own: Vec<bool> = (0..n).map(|l| self.net.runs_own_weekend(l)).collect();
+        let before = (std::mem::take(&mut self.net.line_phase_rest), std::mem::take(&mut self.net.line_split_rest));
+        let copy = |net: &Network, own: &[bool], phase: &mut Vec<[f32; SLOTS]>, split: &mut Vec<[f32; SLOTS]>, from: &(Vec<[f32; SLOTS]>, Vec<[f32; SLOTS]>)| {
+            phase.resize(n, [0.0; SLOTS]);
+            split.resize(n, [0.5; SLOTS]);
+            for l in 0..n {
+                let (p, s) = if own[l] { (from.0.get(l), from.1.get(l)) } else { (None, None) };
+                phase[l] = p.copied().unwrap_or_else(|| net.line_phase_of(l as u32));
+                split[l] = s.copied().unwrap_or_else(|| net.line_split_of(l as u32));
+            }
+        };
+        let (mut phase, mut split) = (vec![], vec![]);
+        copy(&self.net, &own, &mut phase, &mut split, &before);
+        let todo: Vec<u32> = lines.iter().copied().filter(|&l| own.get(l as usize) == Some(&true)).collect();
+        let twins = self.net.line_twin.iter().enumerate().any(|(t, x)| matches!(x, Twin::Of(_)) && own.get(t) == Some(&true));
+        if !todo.is_empty() || twins {
+            let counts = self.weekend_own();
+            let week = self.swap_in_weekend(&counts);
+            std::mem::swap(&mut self.net.line_tph, &mut self.net.line_tph_rest);
+            let paced = !self.net.line_pace_rest.is_empty();
+            if paced { std::mem::swap(&mut self.net.line_pace, &mut self.net.line_pace_rest); }
+            std::mem::swap(&mut self.net.line_phase, &mut phase);
+            std::mem::swap(&mut self.net.line_split, &mut split);
+            // (the lattices read while placing are the weekends', in the weekdays' fields)
+            self.net.rest_solved = false;
+            self.place_departures(&todo);
+            self.pin_twin_phases();
+            self.net.rest_solved = true;
+            std::mem::swap(&mut self.net.line_phase, &mut phase);
+            std::mem::swap(&mut self.net.line_split, &mut split);
+            if paced { std::mem::swap(&mut self.net.line_pace, &mut self.net.line_pace_rest); }
+            std::mem::swap(&mut self.net.line_tph, &mut self.net.line_tph_rest);
+            self.put_back_weekdays(week);
+            // a line placed alongside (its spare time moved) that runs its weekday pattern keeps it
+            let placed = (phase, split);
+            let (mut p2, mut s2) = (vec![], vec![]);
+            copy(&self.net, &own, &mut p2, &mut s2, &placed);
+            (phase, split) = (p2, s2);
+        }
+        let moved: Vec<u32> = (0..n as u32).filter(|&l| {
+            let i = l as usize;
+            before.0.get(i) != phase.get(i) || before.1.get(i) != split.get(i)
+        }).filter(|&l| own[l as usize]).collect();
+        self.net.line_phase_rest = phase;
+        self.net.line_split_rest = split;
+        // their weekend departures are drawn again
+        self.svc.note_changed(&moved);
     }
 
     /// The bus lines timed again (their street speeds changed, T-1577); nothing else is touched.
@@ -751,22 +816,9 @@ impl TrackWorld {
         (!self.net.same_places(l, c, t) || own_headway).then_some(c)
     }
 
-    /// T-3521: a headway line's headways on weekends (`line_auto` while the weekends settle): the
-    /// weekdays' at its percent (`weekend_headway`), none where its weekend counts are set by hand
-    /// (they run as a count line's, bar the headways stepped to, T-3557). None for a count line.
-    /// At the line's five places (`params::places`).
+    /// `Network::weekend_auto`.
     pub(crate) fn weekend_auto(&self, l: usize) -> Option<[u32; 5]> {
-        let a = self.net.auto_of(l)?;
-        match self.net.line_weekend.get(l).copied().unwrap_or_default() {
-            // a headway stepped to by hand keeps the cap on the trains set to run it (T-3557); a level
-            // without one runs as a count line
-            Weekend { counts: Some(_), headways, .. } => {
-                let h = places(headways, self.net.line_x[l].weekend_headways);
-                (!self.net.same_places(l, h, [0; 5])).then_some(h)
-            }
-            Weekend { share: 100, .. } => Some(a),
-            Weekend { share: p, .. } => Some(a.map(|h| weekend_headway(h, p))),
-        }
+        self.net.weekend_auto(l)
     }
 
     /// T-3521: the weekends' headways in `line_auto` for the lines in `own` (`weekend_own`), so
@@ -871,7 +923,7 @@ impl TrackWorld {
                 self.net.line_pace = week_pace.clone();
                 self.pace_in = week_pace_in.clone();
             } else {
-                self.net.line_pace = std::mem::take(&mut self.pace_rest);
+                self.net.line_pace = std::mem::take(&mut self.net.line_pace_rest);
                 self.pace_in = std::mem::take(&mut self.pace_in_rest);
             }
             self.settle_edited = std::mem::take(&mut self.settle_edited_rest);
@@ -884,7 +936,7 @@ impl TrackWorld {
                 self.settle_counts(full);
             }
             self.pace_in.iter_mut().flatten().for_each(|p| p.fresh = false);
-            self.pace_rest = std::mem::replace(&mut self.net.line_pace, week_pace);
+            self.net.line_pace_rest = std::mem::replace(&mut self.net.line_pace, week_pace);
             self.pace_in_rest = std::mem::replace(&mut self.pace_in, week_pace_in);
             self.net.line_tph_rest.clone_from(&self.net.line_tph);
             // a loop's counts set by hand were made even (as its weekday counts are), which it keeps
@@ -1087,6 +1139,17 @@ impl TrackWorld {
         Ok(r)
     }
 
+    /// The departures as placed (phases and splits, weekdays and weekends), to put back where an
+    /// edit is rolled back (T-1925).
+    fn phases(&self) -> [Vec<[f32; SLOTS]>; 4] {
+        let n = &self.net;
+        [n.line_phase.clone(), n.line_split.clone(), n.line_phase_rest.clone(), n.line_split_rest.clone()]
+    }
+    fn set_phases(&mut self, p: [Vec<[f32; SLOTS]>; 4]) {
+        let n = &mut self.net;
+        [n.line_phase, n.line_split, n.line_phase_rest, n.line_split_rest] = p;
+    }
+
     /// Apply an edit and pay for it: its construction charge plus `extra`, evaluated on the
     /// edited network (the trains it makes the lines need, T-028). Refused, with nothing changed,
     /// if that comes to more than `cash`; an edit costing nothing is never refused for money, so
@@ -1099,7 +1162,7 @@ impl TrackWorld {
     /// `apply_paid` with the track's charge set by `price` on the edited network, not the rise in
     /// built value (T-3059: a rebuild pays the full new price).
     pub fn apply_priced(&mut self, op: Op, cash: f64, final_: bool, extra: &dyn Fn(&TrackWorld) -> f64, price: Option<&dyn Fn(&TrackWorld) -> f64>) -> Result<(EditResult, f64), ChargeError> {
-        let phases = (self.net.line_phase.clone(), self.net.line_split.clone());
+        let phases = self.phases();
         let (mut r, inv) = self.commit(op).map_err(ChargeError::Issues)?;
         if let Some(price) = price {
             r.charge = price(self);
@@ -1109,7 +1172,7 @@ impl TrackWorld {
         if need > 1e-9 && need > cash + 1e-6 {
             let _ = self.restore(inv);
             // T-1925: and the departures as they were
-            (self.net.line_phase, self.net.line_split) = phases;
+            self.set_phases(phases);
             return Err(ChargeError::Money { need, have: cash });
         }
         if final_ {
@@ -1124,13 +1187,13 @@ impl TrackWorld {
     /// T-3528: an edit the game makes for the player (the cap lowering on load): applied and paid as
     /// `apply_paid`, but on neither history, so an undo takes back the player's own last edit.
     pub fn apply_unrecorded(&mut self, op: Op, cash: f64, extra: &dyn Fn(&TrackWorld) -> f64) -> Result<(EditResult, f64), ChargeError> {
-        let phases = (self.net.line_phase.clone(), self.net.line_split.clone());
+        let phases = self.phases();
         let (r, inv) = self.commit(op).map_err(ChargeError::Issues)?;
         let x = extra(self);
         let need = r.charge + x;
         if need > 1e-9 && need > cash + 1e-6 {
             let _ = self.restore(inv);
-            (self.net.line_phase, self.net.line_split) = phases;
+            self.set_phases(phases);
             return Err(ChargeError::Money { need, have: cash });
         }
         Ok((r, x))
@@ -1141,7 +1204,7 @@ impl TrackWorld {
     pub fn step_paid(&mut self, redo: bool, cash: f64, extra: &dyn Fn(&TrackWorld) -> f64) -> Option<Result<(EditResult, f64), ChargeError>> {
         let op = if redo { self.redo.pop()? } else { self.undo.pop()? };
         let back = |w: &mut TrackWorld, op: Op| if redo { w.redo.push(op) } else { w.undo.push(op) };
-        let phases = (self.net.line_phase.clone(), self.net.line_split.clone());
+        let phases = self.phases();
         Some(match self.restore(op.clone()) {
             Ok((mut r, inv)) => {
                 // what an undo or redo restores was paid for or removed before: only the trains
@@ -1149,7 +1212,7 @@ impl TrackWorld {
                 let need = extra(self);
                 if need > 1e-9 && need > cash + 1e-6 {
                     let _ = self.restore(inv);
-                    (self.net.line_phase, self.net.line_split) = phases;
+                    self.set_phases(phases);
                     back(self, op);
                     Err(ChargeError::Money { need, have: cash })
                 } else {
@@ -1192,11 +1255,11 @@ impl TrackWorld {
 
     /// Inspect the derived constructed state, then restore it without spending or undo edits.
     pub fn trial_with<T>(&mut self, op: Op, inspect: impl FnOnce(&TrackWorld) -> T) -> Result<(EditResult, T), Vec<Issue>> {
-        let phases = (self.net.line_phase.clone(), self.net.line_split.clone());
+        let phases = self.phases();
         let (r, inv) = self.commit(op)?;
         let value = inspect(self);
         let _ = self.restore(inv);
-        (self.net.line_phase, self.net.line_split) = phases;
+        self.set_phases(phases);
         Ok((r, value))
     }
 
@@ -1379,6 +1442,12 @@ impl TrackWorld {
         // T-1925: the lines the edit changed take departure slots among the others
         self.place_departures(&direct);
         self.pin_twin_phases();
+        // T-3735: and on weekends, with the lines whose weekends alone the edit changed
+        let mut weekend = direct.clone();
+        weekend.extend_from_slice(&t.weekend);
+        weekend.sort_unstable();
+        weekend.dedup();
+        self.place_weekend(&weekend);
         self.retime();
         let mut resources = vec![];
         for (r, res) in self.svc.cap.res.iter().enumerate() {

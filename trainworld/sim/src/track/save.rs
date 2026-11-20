@@ -82,6 +82,12 @@ use super::twin::Twin;
 /// and colour (as `LGL1`'s); without it no group sits in another.
 /// A trailing `LRA1` block (T-3027, level 31) gives the pieces of track drawn since T-3027 with their ramp per
 /// level (`EdgeData::ramp`): count, then edge index and metres; without it every piece is older track.
+/// A trailing `LWP1` block (T-3735, level 32), written where `LWE1` gives the weekends' rates, gives
+/// where the lines running other rates on weekends leave then (`Network::line_phase_rest`,
+/// `line_split_rest`) and their weekend pacing (`line_pace_rest`): a mask of the slots worked out (a
+/// bit per slot), then the lines whose differ from their weekdays' (count, then index and per slot of
+/// the mask its phase, split and pace as f32 bits); every other line's are its weekdays'. Without it a
+/// load places the weekends again.
 const MAGIC: &[u8; 4] = b"TWT4";
 /// TWT5 (T-125) is TWT4 byte for byte except that the metres are in the Lambert conformal world
 /// frame (`frame.rs`). TWT4 and older are always the legacy equirectangular frame, and a network
@@ -94,12 +100,12 @@ const MAGIC_TWT6: &[u8; 4] = b"TWT6";
 
 /// T-1826: the trailing blocks this build reads, in the order they are written. A block it does not
 /// know stops the decoder, which then reports the bytes left over (`decode_read`).
-pub const BLOCKS: [&[u8; 4]; 35] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1", b"LPS1", b"LWE1", b"LOS1", b"LPD1", b"LHR1", b"LFZ1", b"LSN1", b"LFD1", b"LGN1", b"LRA1"];
+pub const BLOCKS: [&[u8; 4]; 36] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1", b"LPS1", b"LWE1", b"LOS1", b"LPD1", b"LHR1", b"LFZ1", b"LSN1", b"LFD1", b"LGN1", b"LRA1", b"LWP1"];
 /// T-1826: the save level this build writes into the game header (`level`) and reads up to. Raised
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over. Saves from before it have none, read as 0.
-pub const LEVEL: u32 = 31;
+pub const LEVEL: u32 = 32;
 /// T-3759: the last level from before stations could be unbound from their complex's name; a typed
 /// station there showed its own name, so loading one makes such a station unbound (the app's pass).
 pub const OLD_BOUND_NAMES: u32 = 26;
@@ -753,6 +759,24 @@ pub fn encode(net: &Network) -> Vec<u8> {
             w.u(v as u64);
         }
     }
+    // T-3735: after LRA1, only with LWE1's weekend rates
+    if net.rates_settled && net.rest_solved && !net.line_phase_rest.is_empty() {
+        w.0.extend_from_slice(b"LWP1");
+        let slots: Vec<usize> = net.slots().collect();
+        w.u(slots.iter().map(|&s| 1u64 << s).sum());
+        let rest = |l: u32| [net.line_phase_rest_of(l), net.line_split_rest_of(l), net.line_pace_rest_of(l)];
+        let week = |l: u32| [net.line_phase_of(l), net.line_split_of(l), net.line_pace_of(l)];
+        let other: Vec<(usize, u32)> = lines.iter().enumerate().filter(|(_, &l)| {
+            let (a, b) = (rest(l), week(l));
+            slots.iter().any(|&k| (0..3).any(|j| a[j][k].to_bits() != b[j][k].to_bits()))
+        }).map(|(i, &l)| (i, l)).collect();
+        w.u(other.len() as u64);
+        for (i, l) in other {
+            w.u(i as u64);
+            let a = rest(l);
+            for &k in &slots { for x in &a { w.u(x[k].to_bits() as u64); } }
+        }
+    }
     w.0
 }
 
@@ -1363,6 +1387,24 @@ fn decode_read_at(bytes: &[u8], level: u32) -> Result<(Network, usize), String> 
             }
         }
     }
+    if r.0.get(r.1..r.1 + 4) == Some(b"LWP1") {
+        r.1 += 4;
+        let mask = r.u()?;
+        let slots: Vec<usize> = (0..64).filter(|&k| mask >> k & 1 == 1).collect();
+        // every line's as on weekdays bar those listed
+        net.line_phase_rest = (0..n_lines as u32).map(|l| net.line_phase_of(l)).collect();
+        net.line_split_rest = (0..n_lines as u32).map(|l| net.line_split_of(l)).collect();
+        net.line_pace_rest = (0..n_lines as u32).map(|l| net.line_pace_of(l)).collect();
+        for _ in 0..r.u()? {
+            let i = r.u()? as usize;
+            for &k in &slots {
+                let (p, s, c) = (f32::from_bits(r.u()? as u32), f32::from_bits(r.u()? as u32), f32::from_bits(r.u()? as u32));
+                if i < n_lines && k < SLOTS && net.slot_worked(k) {
+                    (net.line_phase_rest[i][k], net.line_split_rest[i][k], net.line_pace_rest[i][k]) = (p, s, c);
+                }
+            }
+        }
+    }
     for l in manual {
         fold_manual(&mut net, l);
     }
@@ -1608,7 +1650,7 @@ mod tests {
         for tag in &written {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
-        assert_eq!((LEVEL, BLOCKS.len()), (31, 35), "a new block raises LEVEL: raise it, then update this pin");
+        assert_eq!((LEVEL, BLOCKS.len()), (32, 36), "a new block raises LEVEL: raise it, then update this pin");
     }
 
     /// T-2217: buildings come back as they were, in their order; a network without them encodes as

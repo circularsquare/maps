@@ -529,6 +529,12 @@ impl Boarding {
             for lev in net.slots() {
                 h.f(net.line_tph_on(l, WEEKEND, lev) as f64);
             }
+            // T-3735: and where they differ, the weekends' own departures
+            if net.runs_own_weekend(l) {
+                for p in net.line_phase_rest_of(l as u32).into_iter().chain(net.line_split_rest_of(l as u32)) {
+                    h.f(p as f64);
+                }
+            }
         }
         // T-1925: the departure phases
         for p in net.line_phase_of(l as u32) {

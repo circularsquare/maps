@@ -750,6 +750,15 @@ pub struct Network {
     /// in step with the lines it meets at a merge (`TrackWorld::pace_merges`), s; 0 none. Its trains
     /// stand the time over at its ends, as a headway line's do. Not saved: every settle works it out.
     pub line_pace: Vec<[f32; SLOTS]>,
+    /// T-3735: `line_phase` and `line_split` of the weekends, placed on the weekends' rates where a
+    /// line's differ from its weekdays' (`TrackWorld::place_weekend`), a copy of the weekdays' for
+    /// every other line. Read only where `rest_solved` says so; empty (or short): the weekdays'.
+    /// Saved in `LWP1`.
+    pub line_phase_rest: Vec<[f32; SLOTS]>,
+    pub line_split_rest: Vec<[f32; SLOTS]>,
+    /// T-3584: `line_pace` of the weekends (`TrackWorld::settle_weekend`), saved in `LWP1`; empty:
+    /// the weekdays'.
+    pub line_pace_rest: Vec<[f32; SLOTS]>,
     /// T-1925: `line_phase` is placed (a save carried it, or a load placed every line), so a
     /// reload keeps it rather than placing every line
     pub phases_placed: bool,

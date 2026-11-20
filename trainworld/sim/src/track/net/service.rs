@@ -109,6 +109,9 @@ impl Network {
         fix(&mut self.line_phase, &new, &gone, 0.0);
         fix(&mut self.line_split, &new, &gone, 0.5);
         fix(&mut self.line_pace, &new, &gone, 0.0);
+        fix(&mut self.line_phase_rest, &new, &gone, 0.0);
+        fix(&mut self.line_split_rest, &new, &gone, 0.5);
+        fix(&mut self.line_pace_rest, &new, &gone, 0.0);
         for kept in [&mut self.settle_kept, &mut self.settle_kept_rest] {
             kept.retain(|k| !gone.contains(&k.1));
             let add: Vec<_> = kept.iter().flat_map(|k| new.iter().filter(move |n| n.1 == k.1).map(move |n| (k.0, n.0, k.2, k.3, k.4))).collect();
@@ -345,6 +348,42 @@ impl Network {
     /// T-2972: the share of a line's spare time stood at its last stop per level (`line_split`).
     pub fn line_split_of(&self, l: u32) -> [f32; SLOTS] {
         self.line_split.get(l as usize).copied().unwrap_or([0.5; SLOTS])
+    }
+    /// T-3735: `line_phase_of` on weekends (`line_phase_rest`, else the weekdays').
+    pub fn line_phase_rest_of(&self, l: u32) -> [f32; SLOTS] {
+        self.line_phase_rest.get(l as usize).copied().unwrap_or_else(|| self.line_phase_of(l))
+    }
+    /// T-3735: `line_split_of` on weekends (`line_split_rest`, else the weekdays').
+    pub fn line_split_rest_of(&self, l: u32) -> [f32; SLOTS] {
+        self.line_split_rest.get(l as usize).copied().unwrap_or_else(|| self.line_split_of(l))
+    }
+    /// T-3584: `line_pace_of` on weekends (`line_pace_rest`; the weekdays' before a weekend settle
+    /// has paced them).
+    pub fn line_pace_rest_of(&self, l: u32) -> [f32; SLOTS] {
+        if self.line_pace_rest.is_empty() { self.line_pace_of(l) } else { self.line_pace_rest.get(l as usize).copied().unwrap_or([0.0; SLOTS]) }
+    }
+    /// T-3735: whether line `l` runs other rates on weekends than on weekdays at some slot, so its
+    /// weekend departures are laid out on their own (`Service::lattice`, `TrackWorld::place_weekend`);
+    /// every other line runs its weekday departures every day.
+    pub fn runs_own_weekend(&self, l: usize) -> bool {
+        self.rest_solved && l < self.line_count() && (0..SLOTS).any(|lev| self.line_tph_on(l, WEEKEND, lev) != self.line_tph[l][lev])
+    }
+    /// T-3521: a headway line's headways on weekends (`line_auto` while the weekends settle): the
+    /// weekdays' at its percent (`weekend_headway`), none where its weekend counts are set by hand
+    /// (they run as a count line's, bar the headways stepped to, T-3557). None for a count line.
+    /// At the line's five places (`params::places`).
+    pub fn weekend_auto(&self, l: usize) -> Option<[u32; 5]> {
+        let a = self.auto_of(l)?;
+        match self.line_weekend.get(l).copied().unwrap_or_default() {
+            // a headway stepped to by hand keeps the cap on the trains set to run it (T-3557); a level
+            // without one runs as a count line
+            Weekend { counts: Some(_), headways, .. } => {
+                let h = places(headways, self.line_x[l].weekend_headways);
+                (!self.same_places(l, h, [0; 5])).then_some(h)
+            }
+            Weekend { share: 100, .. } => Some(a),
+            Weekend { share: p, .. } => Some(a.map(|h| weekend_headway(h, p))),
+        }
     }
     /// Seconds a line's local time runs ahead of the game clock (T-309): the region of its first
     /// stop's. 0 without a time zone table or stops.

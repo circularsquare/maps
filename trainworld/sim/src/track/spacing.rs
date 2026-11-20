@@ -523,12 +523,109 @@ mod tests {
         assert!(hi / lo - 1.0 < 0.03, "weekend headways {own:?} within the pacing share");
         let rest: Vec<f64> = ls.iter().map(|&l| 3600.0 / w.net.line_tph_on(l as usize, WEEKEND, HIGH) as f64).collect();
         assert!((rest[0] - rest[1]).abs() < 0.01, "one weekend headway: {rest:?} (own {own:?})");
-        assert!(w.pace_rest.iter().any(|p| p[HIGH] > 0.0), "weekend pacing kept");
+        assert!(w.net.line_pace_rest.iter().any(|p| p[HIGH] > 0.0), "weekend pacing kept");
         // the same through an edit elsewhere on the weekends' kept service
         let kept = rest.clone();
         w.apply(Op::Weekend { id: ls[0], weekend: Weekend { share: 100, counts: Some([counts[0], 2, 0]), headways: [0; 3] } }).unwrap();
         let again: Vec<f64> = ls.iter().map(|&l| 3600.0 / w.net.line_tph_on(l as usize, WEEKEND, HIGH) as f64).collect();
         assert!(again.iter().zip(&kept).all(|(a, b)| (a - b).abs() < 1.0), "{again:?} against {kept:?}");
         assert_eq!(before, week(&w));
+    }
+
+    /// T-3735: two headway lines into one track at J (T-2960's branches, 6 min) run 12 min on
+    /// weekends: there they take even turns through J and leaving T, their departures placed on the
+    /// weekend headway and its spare time, the weekdays' left to the bit; a save keeps them.
+    #[test]
+    fn weekend_departures_are_placed_on_the_weekend_service() {
+        use super::super::net::Weekend;
+        use super::super::params::{HIGH, WEEKEND};
+        use super::super::profile;
+        let mut w = world();
+        let t = node(&mut w, 0.0, 0.0, 0);
+        let j = node(&mut w, 3000.0, 0.0, 0);
+        let m = node(&mut w, 6000.0, 0.0, 0);
+        let br = node(&mut w, 4400.0, 1500.0, 0);
+        edge(&mut w, t, j, &[], 0).unwrap();
+        edge(&mut w, j, m, &[], 0).unwrap();
+        edge(&mut w, j, br, &[(3400.0, 0.0)], 0).unwrap();
+        for x in [t, m, br] { station(&mut w, x, 200); }
+        crate::track::tests::terminals_at_dead_ends(&mut w);
+        let mut ls = vec![];
+        for end in [br, m] {
+            let l = line(&mut w, &[t, end], [0.0; 3]);
+            w.apply(Op::AutoTrains { id: l, auto: Some([360, 720, 0]), trains: Some([4, 2, 0]) }).unwrap();
+            ls.push(l);
+        }
+        // the trips of an hour from `h0` of `day`, at J towards T and leaving T
+        let hour = |w: &TrackWorld, day: f64, h0: f64| {
+            let t0 = day * 86400.0 + h0 * 3600.0;
+            let (mut at_j, mut from_t): (Vec<(f64, u32)>, Vec<(f64, u32)>) = (vec![], vec![]);
+            for tr in w.svc.trips(&w.net, t0 - 7200.0, t0 + 3600.0) {
+                if tr.run == 0 {
+                    if tr.dep >= t0 && tr.dep < t0 + 3600.0 { from_t.push((tr.dep, tr.line)); }
+                    continue;
+                }
+                let run = &w.svc.lines[tr.line as usize].runs[1];
+                let i = run.nodes.iter().position(|&x| x == j).unwrap();
+                let s = tr.draw + profile::time_at(&w.svc.lines[tr.line as usize].prof_of(1, tr.level as usize, tr.var).phases, run.node_s[i]);
+                if s >= t0 && s < t0 + 3600.0 { at_j.push((s, tr.line)); }
+            }
+            for v in [&mut at_j, &mut from_t] { v.sort_by(|x, y| x.0.total_cmp(&y.0)); }
+            (at_j, from_t)
+        };
+        let ratio = |v: &[(f64, u32)]| {
+            let gaps: Vec<f64> = v.windows(2).map(|p| p[1].0 - p[0].0).collect();
+            let (lo, hi) = gaps.iter().fold((f64::INFINITY, 0.0f64), |(a, b), &g| (a.min(g), b.max(g)));
+            (hi / lo, gaps)
+        };
+        let tuesday: Vec<_> = [9.0, 13.0].map(|h| hour(&w, 2.0, h)).into();
+        let trips: Vec<_> = ls.iter().map(|&l| w.svc.lines[l as usize].round_trip).collect();
+        for &l in &ls {
+            w.apply(Op::Weekend { id: l, weekend: Weekend { share: 50, counts: None, headways: [0; 3] } }).unwrap();
+        }
+        let rest: Vec<f64> = ls.iter().map(|&l| 3600.0 / w.net.line_tph_on(l as usize, WEEKEND, HIGH) as f64).collect();
+        assert!(rest.iter().all(|&h| (h - 720.0).abs() < 0.01), "12 min on weekends: {rest:?}");
+        // Saturday
+        for h0 in [9.0, 13.0] {
+            let (at_j, from_t) = hour(&w, 6.0, h0);
+            assert_eq!(at_j.len(), 10, "{h0}h: {at_j:?}");
+            assert!(at_j.windows(2).all(|p| p[0].1 != p[1].1), "{h0}h: the lines take turns at J: {at_j:?}");
+            let (r, gaps) = ratio(&at_j);
+            eprintln!("{h0}h: Saturday gaps at J {gaps:.0?}");
+            assert!(r < 1.25, "{h0}h: gaps at J {gaps:.0?}, weekend phases {:?} splits {:?}", ls.iter().map(|&l| w.net.line_phase_rest_of(l)).collect::<Vec<_>>(), ls.iter().map(|&l| w.net.line_split_rest_of(l)).collect::<Vec<_>>());
+            let (r, gaps) = ratio(&from_t);
+            assert!(r < 1.5, "{h0}h: gaps leaving T {gaps:.0?}");
+        }
+        // every Saturday midday train turns around into its next departure, standing at the far end
+        // the turnaround and its weekend share of the spare time a 12-minute headway leaves it
+        let t0 = 6.0 * 86400.0 + 10.0 * 3600.0;
+        for &l in &ls {
+            let ls_ = &w.svc.lines[l as usize];
+            let trip = ls_.trip_len(&w.net, l, 0, HIGH) + ls_.trip_len(&w.net, l, 1, HIGH);
+            let spare = ((trip / 720.0 - 1e-3).ceil() * 720.0 - trip).clamp(0.0, 720.0);
+            let share = w.net.line_split_rest_of(l)[HIGH] as f64;
+            let turn = ls_.close_stand(&w.net, l);
+            for tr in w.svc.trips(&w.net, t0, t0 + 3600.0).into_iter().filter(|tr| tr.line == l && tr.dep >= t0 && tr.dep < t0 + 3000.0) {
+                let next = tr.next.unwrap_or_else(|| panic!("line {l}: a Saturday train leaves service: {tr:?}"));
+                let stand = next - (tr.draw + ls_.prof_of(tr.run as usize, HIGH, tr.var).duration);
+                let want = turn + if tr.run == 0 { share } else { 1.0 - share } * spare;
+                assert!((stand - want).abs() < 1.0, "line {l} run {}: stands {stand:.1} s, want {want:.1} (turnaround {turn}, weekend spare {spare:.1}, share {share})", tr.run);
+            }
+        }
+        // the weekdays as they were, round trips and every trip
+        assert_eq!(trips, ls.iter().map(|&l| w.svc.lines[l as usize].round_trip).collect::<Vec<_>>());
+        assert_eq!(tuesday, Vec::from([9.0, 13.0].map(|h| hour(&w, 2.0, h))));
+        // a save keeps the weekend departures to the bit
+        let bytes = super::super::save::encode(&w.net);
+        assert!(bytes.windows(4).any(|x| x == b"LWP1"));
+        let back = TrackWorld::new(super::super::save::decode(&bytes).unwrap());
+        assert_eq!(hour(&back, 6.0, 9.0), hour(&w, 6.0, 9.0));
+        assert_eq!(hour(&back, 2.0, 9.0), hour(&w, 2.0, 9.0));
+        // and weekends back at 100% run the weekdays' departures, with nothing saved for them
+        for &l in &ls {
+            w.apply(Op::Weekend { id: l, weekend: Weekend::default() }).unwrap();
+        }
+        assert!(!w.net.rest_solved && w.net.line_phase_rest.is_empty());
+        assert!(!super::super::save::encode(&w.net).windows(4).any(|x| x == b"LWP1"));
     }
 }
