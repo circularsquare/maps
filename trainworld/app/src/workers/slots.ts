@@ -20,6 +20,11 @@ export interface SlotHost {
   gameNow(): number;
   saveBytes(): Promise<Uint8Array>;
   slotSummary(): Promise<SlotSummary>;
+  /** T-3869: `make` tried again while it fails for want of memory, the page's demand workers replaced first
+   * (`always`: whenever it comes to that, else at most once in ten minutes) */
+  roomFor<T>(make: () => Promise<T>, always: boolean): Promise<T>;
+  /** T-3869: a failure for want of memory */
+  outOfRoom(err: unknown): boolean;
   loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new"): Promise<boolean>;
   /** `f` run in the game's own message queue, after the messages queued before it */
   inQueue(f: () => Promise<void>): Promise<void>;
@@ -130,6 +135,8 @@ export function letGoSlot() {
 const slotChanges = typeof BroadcastChannel === "undefined" ? null : new BroadcastChannel("anitabuilder-save-slots");
 slotChanges?.addEventListener("message", () => { if (host.api()) void publishSlots(); });
 const NEWER: MessageKey = "clockWorker.newer";
+/** T-3869: a save or download that found no memory even after the demand workers were replaced */
+export const NO_MEMORY_TO_SAVE: MessageKey = "clockWorker.noMemoryToSave";
 
 /** T-2037: the game in hand is now `s`'s (a slot opened, a copy taken in) */
 export function heldFrom(s: { origin?: string; edit?: number; at: number }) {
@@ -532,22 +539,24 @@ export function autosave(): Promise<boolean> {
   saves.dirty = saves.edited = false;
   saves.saveInFlight = (async () => {
     try {
-      const day = Math.floor(gameNow() / 86400);
-      const bytesP = saveBytes(), summaryP = slotSummary();
-      const bytes = await bytesP;
-      const summary = await summaryP;
-      const at = Date.now();
-      const name = saves.newSlotName?.key === key ? saves.newSlotName.name : undefined;
-      // T-2037: a game from before T-2037 is given its origin by `stampAll`, kept by writeSlot meanwhile
-      const edit = saves.editAt || undefined;
-      const record: StoredSave = { bytes, at, day, city, ...summary, name, origin: saves.gameOrigin, edit };
-      const lastName = saves.activeName?.key === key ? saves.activeName.name : undefined;
-      // T-1829: a failed write tries once more, on a connection opened again and, when the browser
-      // is out of room, with the demand caches dropped
-      // T-3611: the lease may have been taken while the save was built, and the message saying so may not have
-      // arrived: the write itself refuses a slot another tab saved since this one read it
-      const write = () => { if (saves.activeLease !== lease) throw new SlotTakenError(); return writeSlot(key, record, lastName, saves.seenEdit); };
-      const fresh = await write().catch(async (err) => { if (err instanceof SlotTakenError || !await makeRoom(err)) throw err; return write(); });
+      // T-3869: made and written again while it fails for want of memory, the page's demand workers replaced first
+      const { bytes, at, day, summary, edit, name, fresh } = await host.roomFor(async () => {
+        const day = Math.floor(gameNow() / 86400);
+        const [bytes, summary] = await Promise.all([saveBytes(), slotSummary()]);
+        const at = Date.now();
+        const name = saves.newSlotName?.key === key ? saves.newSlotName.name : undefined;
+        // T-2037: a game from before T-2037 is given its origin by `stampAll`, kept by writeSlot meanwhile
+        const edit = saves.editAt || undefined;
+        const record: StoredSave = { bytes, at, day, city, ...summary, name, origin: saves.gameOrigin, edit };
+        const lastName = saves.activeName?.key === key ? saves.activeName.name : undefined;
+        // T-1829: a failed write tries once more, on a connection opened again and, when the browser
+        // is out of room, with the demand caches dropped
+        // T-3611: the lease may have been taken while the save was built, and the message saying so may not have
+        // arrived: the write itself refuses a slot another tab saved since this one read it
+        const write = () => { if (saves.activeLease !== lease) throw new SlotTakenError(); return writeSlot(key, record, lastName, saves.seenEdit); };
+        const fresh = await write().catch(async (err) => { if (err instanceof SlotTakenError || !await makeRoom(err)) throw err; return write(); });
+        return { bytes, at, day, summary, edit, name, fresh };
+      }, force);
       // T-1829: a slot this game had written found gone (the browser's storage cleared under it):
       // the game is written again above, and its tie to the account put back
       const first = fresh && saves.unwritten === key;
@@ -574,8 +583,11 @@ export function autosave(): Promise<boolean> {
         return false;
       }
       if (isPanic(err)) { panicLater(err, "autosave"); return false; } // not the browser's fault, and rebuilt then saved
+      console.error("the game could not be saved:", err); // i18n-ignore
       saves.savedAt = Date.now(); // retry on the next autosave interval, rather than every tick
-      saves.saveFailure = "clockWorker.browserCouldNotSave";
+      // T-3869: short of memory even after the demand workers were replaced: Download needs memory too, so the player is
+      // told to free some rather than sent to it
+      saves.saveFailure = host.outOfRoom(err) ? NO_MEMORY_TO_SAVE : "clockWorker.browserCouldNotSave";
       await publishSlots(saves.saveFailure);
       return false;
     } finally { saves.saveInFlight = null; }
@@ -642,12 +654,14 @@ export async function manageSlot(msg: Extract<ToClock, { kind: "saveSlot" }>) {
       const lease = await leaseSlot(key);
       if (!lease) throw new Error("This browser cannot protect save slots. Download the game as a file instead.");
       try {
-        const bytesP = saveBytes(), summaryP = slotSummary();
-        const bytes = await bytesP;
         // T-2037: a copy is another version of the same game
         saves.gameOrigin ??= newGameId();
-        // i18n-ignore: a stored name or a developer diagnostic
-        await writeSlot(key, { bytes, at: Date.now(), day: Math.floor(gameNow() / 86400), city, name: msg.name?.trim() || "Saved game", ...await summaryP, origin: saves.gameOrigin, edit: saves.editAt || undefined });
+        // T-3869: made and written again while it fails for want of memory, as a save by hand is
+        await host.roomFor(async () => {
+          const [bytes, summary] = await Promise.all([saveBytes(), slotSummary()]);
+          // i18n-ignore: a stored name or a developer diagnostic
+          await writeSlot(key, { bytes, at: Date.now(), day: Math.floor(gameNow() / 86400), city, name: msg.name?.trim() || "Saved game", ...summary, origin: saves.gameOrigin, edit: saves.editAt || undefined });
+        }, true).catch((err) => { throw host.outOfRoom(err) ? new Error(NO_MEMORY_TO_SAVE) : err; });
         saves.seenEdit = saves.editAt;
         void cloudAfterWrite(key, false, true); // T-988: a new game on the account
         // Finish earlier writes before releasing the old slot's guard. The new copy is already safe.

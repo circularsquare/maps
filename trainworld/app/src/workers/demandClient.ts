@@ -3041,6 +3041,31 @@ class DemandClient {
     return true;
   }
 
+  /** T-3869: a save found no memory. Every worker is replaced at once (`restartStuck`'s path: the focus pool stops,
+   * the replacements reopen what the workers held and the newest network is solved again; the figures shown stay),
+   * which gives back all they held while the replacements start, the moment the save is tried again. Half the
+   * solving workers go for the tab's session, as when a worker itself runs out (T-2867). */
+  restartForSave() {
+    if (this.failed || !this.workers.length) return;
+    console.warn("demand: a save found no memory; the workers are replaced"); // i18n-ignore
+    this.endFocus();
+    this.endQueries();
+    if (this.computeN > 1 && !this.respawn.size) {
+      const n = Math.floor(this.computeN / 2);
+      rememberPoolCap(n);
+      this.shrink(n, "a save found no memory"); // i18n-ignore
+    }
+    for (let i = 0; i < this.workers.length; i++) {
+      this.respawn.set(i, { left: null, solving: false, planned: true });
+      this.workers[i].terminate();
+      if (this.isReady.delete(i)) this.ready--;
+      this.heard[i] = undefined;
+      this.inUnit[i] = null;
+      this.workers[i] = this.spawn(i, false);
+    }
+    if (demandView.peek()?.final) memoryResolve.value = true;
+  }
+
   /** T-1174, dev server only (`?debug=1`, `twDemand.client.debugPanic`): make worker `i` panic. */
   debugPanic(i = 0, when: "now" | "solve" = "now", oom = false) {
     if (import.meta.env.DEV) this.workers[i]?.postMessage({ kind: "debugPanic", when, oom } satisfies ToDemand);
@@ -5549,6 +5574,11 @@ export function netAhead(key: string) {
 /** Hand the clock worker's NetworkSnapshot to the pool (from clockClient's onNetworkSnapshot). */
 export function submitNetwork(snap: NetworkSnapshot) {
   if (!TEST) client?.submitNetwork(snap);
+}
+
+/** T-3869: a save that found no memory has the workers replaced (clockClient's onSaveRoom). */
+export function saveRoom() {
+  client?.restartForSave();
 }
 
 /** T-3628: try the packs that failed to download again now (the tab came back, the browser went online). */

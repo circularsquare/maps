@@ -477,7 +477,11 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
 - **Format** [T-029, `workers/saveFile.ts`]: `TWG1`, a JSON header and the track model's network
   bytes, gzipped. Saves use the bundled gzip codec rather than browser compression streams, and
   compression must round-trip byte for byte before a slot or its backups can be replaced. Loading
-  checks the complete gzip stream and its checksum. The header keeps `city: nyc` and adds optional region and pack metadata. The
+  checks the complete gzip stream and its checksum. The clock worker packs and reads back a save in 64 KB
+  parts, and Download puts the parts in the file without joining them [T-3869]: a page short of memory refuses big
+  buffers first. A save, copy or download that fails for memory is tried again after 1 s, then just after every demand
+  worker is replaced (the memory they held is free until the replacements reopen it; half the solving workers go
+  for the session, as at T-2867); an autosave has them replaced at most once in 10 minutes. The header keeps `city: nyc` and adds optional region and pack metadata. The
   network bytes are TWT6 (the Mercator world frame, T-306), which is TWT5 byte for byte but for the
   magic; its origin fields keep the game's home origin, unused by the frame, and its radii are ground
   metres. After the lines come optional trailing blocks (`sim/src/track/save.rs`): `LUI1` (custom

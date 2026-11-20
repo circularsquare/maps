@@ -163,6 +163,11 @@ const roadsListeners: (() => void)[] = [];
 export function onRoadsLanded(f: () => void) {
   roadsListeners.push(f);
 }
+let roomSink: (() => void) | null = null;
+/** T-3869: call `f` when a save finds no memory (the demand workers are replaced, giving theirs back). */
+export function onSaveRoom(f: () => void) {
+  roomSink = f;
+}
 let netAheadSink: ((key: string) => void) | null = null;
 /** T-1539: call `f` with a loading save's `saveNetKey`, before its first snapshot. */
 export function onNetAhead(f: (key: string) => void) {
@@ -439,11 +444,12 @@ export function leaveViewed(): Promise<boolean> {
     ask.value = { text: t("clockClient.leaveView", { name: v.name }), yes: t("clockClient.leaveViewYes"), no: t("clockClient.leaveViewNo"), run: () => done(true), stay: () => done(false) };
   });
 }
-/** A save's bytes downloaded as "trainsworld-<name>-day-<day>.save". */
-function downloadSave(bytes: Uint8Array, name: string, day: number, slot?: string) {
+/** A save's bytes, in parts (T-3869: put in the file one by one, never joined here), downloaded as
+ * "trainsworld-<name>-day-<day>.save". */
+function downloadSave(parts: Uint8Array[], name: string, day: number, slot?: string) {
   markDownloaded(slot); // T-1832: the "saved in this browser only" card has nothing more to say
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([bytes as BlobPart], { type: "application/octet-stream" }));
+  a.href = URL.createObjectURL(new Blob(parts as BlobPart[], { type: "application/octet-stream" }));
   const named = name.toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "")
     .replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "").replace(/-+/g, "-").replace(/^-|-$/g, "");
   a.download = `trainsworld-${named || "game"}-day-${day}.save`; // i18n-ignore
@@ -455,7 +461,7 @@ function downloadSave(bytes: Uint8Array, name: string, day: number, slot?: strin
 export async function exportSlot(slot: SaveSlot): Promise<boolean> {
   const stored = await readStored(slot.key).catch(() => null);
   if (!stored) return false;
-  downloadSave(stored.bytes, slot.name, stored.day, slot.key);
+  downloadSave([stored.bytes], slot.name, stored.day, slot.key);
   return true;
 }
 /** Load a save file the player picked, into a new slot named after the file (T-743).
@@ -728,9 +734,11 @@ export class ClockClient {
     const backupMs = Number(q.get("backupMs")) || undefined;
     const readFails = q.get("debug") === "1" ? Number(q.get("readFails")) || undefined : undefined;
     const loadPanic = q.get("debug") !== "1" ? undefined : q.get("loadPanic") === "1" ? true : q.get("loadPanic") === "late" ? "late" as const : undefined;
+    const room = q.get("debug") === "1" ? q.get("saveRoom") : null;
+    const saveRoom = room === "big" || room === "all" ? room : undefined;
     this.patchMode = q.get("patch") ?? "1";
     // (first, before any message posted ahead of the start)
-    this.waiting.unshift([{ kind: "init", pack: dataUrl(this.cityId), terrain: TERRAIN_BASE, fresh, testPage: this.testPage, slot, newSlot: choice.newSlot, backupMs, game: choice.game, pending: choice.pending, patch: this.patchMode, guide: !guideFinished.peek(), bandMode: bandTry(), readFails, loadPanic, heapStep: heapStep() } satisfies ToClock, choice.game?.real ? [choice.game.real] : []]);
+    this.waiting.unshift([{ kind: "init", pack: dataUrl(this.cityId), terrain: TERRAIN_BASE, fresh, testPage: this.testPage, slot, newSlot: choice.newSlot, backupMs, game: choice.game, pending: choice.pending, patch: this.patchMode, guide: !guideFinished.peek(), bandMode: bandTry(), readFails, loadPanic, saveRoom, heapStep: heapStep() } satisfies ToClock, choice.game?.real ? [choice.game.real] : []]);
     // T-2802: the page's parse of the outlines, copied, in place of the worker's own fetch and parse
     void packedOutlines().then((packed) => this.post({ kind: "outlines", packed }));
   }
@@ -1328,11 +1336,16 @@ export class ClockClient {
         askBeforeLeaving(msg.on);
         break;
       case "exported": {
-        if (msg.share) { shareExport?.(msg.bytes); break; }
+        if (msg.share) { shareExport?.(msg.bytes ?? null); break; }
+        if (msg.error) { say(workerText(msg.error), true); break; }
         const { slots, active, viewing } = saveSlotsState.value;
-        downloadSave(msg.bytes, viewing?.name || slots.find((s) => s.key === active)?.name || this.cityId, msg.day, active);
+        downloadSave(msg.parts ?? (msg.bytes ? [msg.bytes] : []), viewing?.name || slots.find((s) => s.key === active)?.name || this.cityId, msg.day, active);
         break;
       }
+      case "room":
+        roomSink?.();
+        this.post({ kind: "roomMade" });
+        break;
       case "saveSlots": {
         const before = saveSlotsState.value;
         saveSlotsState.value = { slots: msg.slots, active: msg.active, game: msg.game, writable: msg.writable, at: msg.at, reason: workerText(msg.reason), error: workerText(msg.error), backups: msg.backups, newer: msg.newer, viewing: msg.viewing };

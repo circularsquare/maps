@@ -19,7 +19,7 @@ import registry from "../game/registry.json";
 import successors from "../game/zone-successors.json";
 import { zoneName } from "../game/zoneNames";
 import { compressGzip, decompressGzip } from "./gzip";
-import { GZIP_DAMAGED } from "./gzipCore";
+import { compressGzipParts, GZIP_DAMAGED } from "./gzipCore";
 import { editOf } from "./versions";
 import type { LineShape } from "../game/lineShape";
 
@@ -296,8 +296,10 @@ export function isRetiredTrackFormat(track: Uint8Array): boolean {
   return m === "TWT2" || m === "TWT3";
 }
 
-/** Header and network bytes -> the compressed file. */
+/** Header and network bytes -> the compressed file. In a worker (the clock worker's saves) it is made in parts
+ * (`encodeSaveParts`) and joined; on the page the codec worker packs it. */
 export async function encodeSave(h: SaveHeader, track: Uint8Array): Promise<Uint8Array> {
+  if (typeof document === "undefined") return joinParts(encodeSaveParts(h, track));
   const json = new TextEncoder().encode(JSON.stringify(h));
   const raw = new Uint8Array(8 + json.length + track.length);
   raw.set(new TextEncoder().encode(SAVE_MAGIC), 0);
@@ -305,6 +307,70 @@ export async function encodeSave(h: SaveHeader, track: Uint8Array): Promise<Uint
   raw.set(json, 8);
   raw.set(track, 8 + json.length);
   return compressGzip(raw);
+}
+
+/** T-3869: a buffer the save asks for, refused as a browser short of memory refuses one; checks only
+ * (`refuseSaveBuffers`), null otherwise */
+let refuse: ((bytes: number) => boolean) | null = null;
+export function refuseSaveBuffers(f: ((bytes: number) => boolean) | null) { refuse = f; }
+/** V8's own words for a buffer it could not get */
+export const NO_BUFFER = "Array buffer allocation failed"; // i18n-ignore: an engine's error text
+function room(n: number) { if (refuse?.(n)) throw new RangeError(NO_BUFFER); }
+
+/** T-3869: the compressed file in parts of at most GZ_PART bytes, the same bytes `encodeSave` gives joined, without
+ * the file or the bytes it packs ever held whole: the header is written out a piece at a time (`savePieces`). Worker
+ * only (it compresses on the thread that calls it). */
+export function encodeSaveParts(h: SaveHeader, track: Uint8Array): Uint8Array<ArrayBuffer>[] {
+  room(track.length);
+  const json = JSON.stringify(h);
+  return compressGzipParts(() => savePieces(json, track), room);
+}
+
+/** The file's bytes before compression, in pieces: the magic and the header's length, the header (UTF-8, at most
+ * 16,384 characters a piece in one reused buffer, so each piece is read before the next is made), the network. */
+function* savePieces(json: string, track: Uint8Array): Generator<Uint8Array> {
+  const length = utf8Length(json);
+  const head = new Uint8Array(8);
+  head.set(MAGIC_BYTES, 0);
+  new DataView(head.buffer).setUint32(4, length, true);
+  yield head;
+  const enc = new TextEncoder(), buf = new Uint8Array(3 * JSON_PIECE);
+  let written = 0;
+  for (let i = 0; i < json.length;) {
+    let j = Math.min(json.length, i + JSON_PIECE);
+    if (j < json.length && (json.charCodeAt(j - 1) & 0xfc00) === 0xd800) j--; // a surrogate pair stays whole
+    const n = enc.encodeInto(json.slice(i, j), buf).written;
+    written += n;
+    i = j;
+    yield buf.subarray(0, n);
+  }
+  if (written !== length) throw new Error("The save's header changed length as it was written."); // i18n-ignore: internal
+  if (track.length) yield track;
+}
+const JSON_PIECE = 16384;
+const MAGIC_BYTES = new TextEncoder().encode(SAVE_MAGIC);
+/** bytes `TextEncoder` makes of `s` (a lone surrogate becomes U+FFFD, 3 bytes) */
+function utf8Length(s: string): number {
+  let n = 0;
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    if (c < 0x80) n += 1;
+    else if (c < 0x800) n += 2;
+    else if ((c & 0xfc00) === 0xd800 && i + 1 < s.length && (s.charCodeAt(i + 1) & 0xfc00) === 0xdc00) { n += 4; i++; }
+    else n += 3;
+  }
+  return n;
+}
+
+/** Parts as one buffer (what a slot keeps) */
+export function joinParts(parts: Uint8Array[]): Uint8Array<ArrayBuffer> {
+  let n = 0;
+  for (const p of parts) n += p.length;
+  room(n);
+  const out = new Uint8Array(n);
+  n = 0;
+  for (const p of parts) { out.set(p, n); n += p.length; }
+  return out;
 }
 
 /** T-3395: the message key a damaged save's load throws (a gzip that does not unpack to its end, a header

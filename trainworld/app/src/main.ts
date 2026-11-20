@@ -116,8 +116,8 @@ import { choiceFromUrl, showStartMenu, START_LOGO, worldCover } from "./ui/Start
 import { viewStart } from "./ui/locate";
 import { enterGame, fitAhead, startOpenFit } from "./ui/locate";
 import { realmsAhead } from "./game/realms";
-import { ClockClient, clockWorkerStatus, manageSaveSlot, onNetAhead, onNetworkSnapshot, onStationsAhead, retryGround } from "./workers/clockClient";
-import { demandStuckSince, netAhead, retryPackDownloads, startDemand, stationsAhead, submitNetwork } from "./workers/demandClient";
+import { ClockClient, clockWorkerStatus, manageSaveSlot, onNetAhead, onNetworkSnapshot, onSaveRoom, onStationsAhead, retryGround } from "./workers/clockClient";
+import { demandStuckSince, netAhead, retryPackDownloads, saveRoom, startDemand, stationsAhead, submitNetwork } from "./workers/demandClient";
 import { startDemandViews, viewStats } from "./map/demandViews";
 import { startTripView } from "./map/tripView";
 import { modeColours } from "./game/palette";
@@ -795,6 +795,7 @@ render(h(ToolNotes, null), document.getElementById("tools-root")!);
 
 // ---- demand (the pool started at the top, or with the pick) ----
 onNetworkSnapshot(submitNetwork);
+onSaveRoom(saveRoom); // T-3869
 onStationsAhead((frame, xy, fine, built, home) => {
   stationsAhead(frame, xy, fine, built);
   // T-1539: the camera on the loading save's network now, so its cached figures can show before it is worked out

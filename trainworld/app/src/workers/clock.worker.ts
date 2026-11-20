@@ -47,7 +47,7 @@ import { buildingMembers, buildingsFrom, withBuildingLinks } from "../game/build
 import { IN_BUILDING, UPGRADE, UPGRADE_BITS } from "../game/upgrades";
 import { saveNetKey } from "./demandCache";
 import { fetchRange } from "./rangeFetch";
-import { newDay, newHour, addEntry, currentZones, decodeSave, encodeSave, isThisWorld, isRetiredTrackFormat, trackFrameKind, readStored, failReads, StorageReadError, SAVE_FORMAT, START_CASH, NEW_LINE_CARS, START_CLOCK, writeStored, listSlots, leaseSlot, ORIGINAL_SLOT, SAVE_DAMAGED, isDamagedError, unreadableKey, setNetworkCheck, markDamaged, rescueGood, BACKUP_STEPS, headerUnread, newGameName, slotName, backupSlot, takePending, sweepDeleted, WHOLE_PANEL, type GameMode, type NewGameSpec, type SlotSummary, type DayLedger, type HourLedger, type SaveHeader, type NewHeadways, cleanNewHeadways, type GuideSave, type Achieved } from "./saveFile";
+import { newDay, newHour, addEntry, currentZones, decodeSave, encodeSave, encodeSaveParts, refuseSaveBuffers, isThisWorld, isRetiredTrackFormat, trackFrameKind, readStored, failReads, StorageReadError, SAVE_FORMAT, START_CASH, NEW_LINE_CARS, START_CLOCK, writeStored, listSlots, leaseSlot, ORIGINAL_SLOT, SAVE_DAMAGED, isDamagedError, unreadableKey, setNetworkCheck, markDamaged, rescueGood, BACKUP_STEPS, headerUnread, newGameName, slotName, backupSlot, takePending, sweepDeleted, WHOLE_PANEL, type GameMode, type NewGameSpec, type SlotSummary, type DayLedger, type HourLedger, type SaveHeader, type NewHeadways, cleanNewHeadways, type GuideSave, type Achieved } from "./saveFile";
 import { StateRows, upgradesOf, type RowEnv } from "./stateRows";
 import { PlatformLines } from "./platformLines";
 import { lineProfile } from "./lineProfile";
@@ -56,7 +56,7 @@ import type { ClockBus, ClockEdge, ClockLine, ClockNode, ClockState, EditOp, Fer
 import { applyPatch, diffValue } from "./valuePatch";
 import { stampAll } from "./cloud";
 import { isMemoryFailure, loadFailKey } from "../game/loadText";
-import { autosave, bindSlots, CLOUD_RETRY_MS, cloudFlush, cloudKick, cloudUp, heldFrom, heldNew, hold, intoNewSlot, intoView, leave, letGoSlot, manageSlot, noteUnsaved, pendingGame, publishSlots, saveConverted, saves } from "./slots";
+import { autosave, bindSlots, CLOUD_RETRY_MS, cloudFlush, cloudKick, cloudUp, heldFrom, heldNew, hold, intoNewSlot, intoView, leave, letGoSlot, manageSlot, NO_MEMORY_TO_SAVE, noteUnsaved, pendingGame, publishSlots, saveConverted, saves } from "./slots";
 import { META_PER_LINE, PROFILE_VARS, profileOf, SLOTS } from "../map/profiles";
 
 /** Run 0 of each line is resampled this often (m) for the renderer's line texture. */
@@ -435,7 +435,7 @@ const hourShape = new Map<number, Float32Array>();
 /** the cash and today's fares last sent in a "cash" message */
 let sentCash = NaN, sentFares = NaN;
 // T-3734: the save slot (slots.ts) and what it needs of the game in hand
-bindSlots({ api: () => api, game: () => game, send, gameNow, saveBytes, slotSummary, loadGame, inQueue: (f) => (messages = messages.then(f).catch((err) => send({ kind: "error", message: String(err) }))), isPanic, panicLater, openFailed: failInPlace });
+bindSlots({ api: () => api, game: () => game, send, gameNow, saveBytes, slotSummary, roomFor, outOfRoom, loadGame, inQueue: (f) => (messages = messages.then(f).catch((err) => send({ kind: "error", message: String(err) }))), isPanic, panicLater, openFailed: failInPlace });
 /** T-3788: a load into the running game failed (the slot is untouched): the same ending as an open that failed */
 function failInPlace(err: unknown, name: string) {
   const panicked = isPanic(err) ? afterLoadPanic(err) : null;
@@ -2412,6 +2412,70 @@ function saveBytes(): Promise<Uint8Array> {
   settle();
   return encodeSave(header(), api!.save());
 }
+/** T-3869: the same in parts of at most 64 KB, never joined (a download) */
+function saveParts(): Uint8Array[] {
+  settle();
+  return encodeSaveParts(header(), api!.save());
+}
+
+// T-3869: a save that finds no memory. A browser short of memory refuses new buffers while the rest of the game runs
+// on, so making the save and writing it are tried again: after a moment (other threads' garbage collected), then just
+// after the page has replaced its demand workers, which gives back most of a big game's memory until the
+// replacements have reopened what they held.
+/** a failure for want of memory, not a panic (which the model's recovery handles) */
+function outOfRoom(err: unknown): boolean { return !isPanic(err) && isMemoryFailure(String((err as Error | null)?.message ?? err)); }
+/** the page answered "room": its demand workers were replaced (checks' refused buffers are given while it holds) */
+let roomMade = false;
+/** the saves waiting on the replaced workers, and the page's answer they wait for */
+let roomUsers = 0;
+let roomAsked: Promise<void> | null = null;
+let roomAnswered: (() => void) | null = null;
+/** when the demand workers were last replaced for a save (wall ms): an autosave has them replaced at most once in
+ * ROOM_GAP_MS, so a game always short of memory is not solved again at every autosave */
+let roomAt = -Infinity;
+const ROOM_GAP_MS = 10 * 60_000;
+/** the wait before the second try, ms */
+const ROOM_WAIT_MS = 1000;
+/** the waits before each try after the workers were replaced, ms (an old worker's memory goes back as its thread
+ * ends; the replacements take it again as they reopen) */
+const ROOM_TRIES_MS = [250, 500, 1000, 2000];
+const pause = (ms: number) => new Promise<void>((go) => setTimeout(go, ms));
+/** `make` run, and tried again as above while it fails for want of memory; `always`: a save the player asked for (or
+ * a download), which has the workers replaced however recently they were. Throws the last failure. */
+async function roomFor<T>(make: () => Promise<T>, always: boolean): Promise<T> {
+  let last: unknown;
+  const attempt = async (): Promise<{ v: T } | null> => {
+    try { return { v: await make() }; } catch (err) { if (!outOfRoom(err)) throw err; last = err; return null; }
+  };
+  let got = await attempt();
+  if (got) return got.v;
+  await pause(ROOM_WAIT_MS);
+  if ((got = await attempt())) return got.v;
+  if (!always && Date.now() - roomAt < ROOM_GAP_MS) throw last;
+  roomAt = Date.now();
+  if (roomUsers++ === 0) {
+    console.warn("T-3869: a save found no memory; the demand workers are replaced:", String(last)); // i18n-ignore
+    roomAsked = new Promise<void>((go) => { roomAnswered = go; setTimeout(go, 15_000); });
+    send({ kind: "room" });
+  }
+  try {
+    await roomAsked;
+    for (const ms of ROOM_TRIES_MS) {
+      await pause(ms);
+      if ((got = await attempt())) return got.v;
+    }
+    throw last;
+  } finally {
+    if (--roomUsers === 0) {
+      roomMade = false;
+      roomAsked = roomAnswered = null;
+    }
+  }
+}
+function roomIsMade() {
+  roomMade = true;
+  roomAnswered?.();
+}
 
 // T-251: drawn at twice the size the saves list shows it (240 x 160, T-894), for sharp lines on high-density screens
 const THUMB_W = 480, THUMB_H = 320;
@@ -2426,9 +2490,23 @@ const THUMB_LAYOUTS: [number, number, number, number][][] = [
 const THUMB_GAP = 4, THUMB_PAD = 14, THUMB_TOP = 34;
 /** the theme the page is in (main.ts sends it): a thumbnail is drawn on that theme's land (T-543) */
 let thumbShade: "light" | "dark" = "light";
+/** T-3869: the game's last card, for a save whose card found no memory */
+let lastSummary: { game: number; summary: SlotSummary } | null = null;
 /** T-241: the saves list's picture of the network and its figures. Read at once, before anything
- * awaits (call it straight after saveBytes); a failure leaves the picture out, never the save. */
+ * awaits (call it straight after saveBytes); a failure leaves the picture out, never the save. T-3869: a card that
+ * finds no memory is the game's last one. */
 async function slotSummary(): Promise<SlotSummary> {
+  const g = game;
+  try {
+    const summary = await drawSummary();
+    lastSummary = { game: g, summary };
+    return summary;
+  } catch (err) {
+    if (!outOfRoom(err) || lastSummary?.game !== g) throw err;
+    return lastSummary.summary;
+  }
+}
+async function drawSummary(): Promise<SlotSummary> {
   // a save never waits long on them: without them a station takes the nearest centre's name
   await Promise.race([outlinesRead, new Promise((go) => setTimeout(go, 3000))]);
   const a = api!;
@@ -4312,6 +4390,7 @@ onmessage = (e: MessageEvent<ToClock>) => {
     thumbShade = msg.shade;
     return;
   }
+  if (msg.kind === "roomMade") return roomIsMade(); // T-3869: a save in the queue waits on it
   if (msg.kind === "roadTiles") {
     roadFeed.setTemplate(msg.template);
     if (api) void roadsUnder(...blueprintPolylines());
@@ -4371,6 +4450,7 @@ async function processMessage(msg: ToClock) {
       if (msg.backupMs && msg.backupMs > 0) saves.backupSteps = BACKUP_STEPS.map((s) => s / BACKUP_STEPS[0] * msg.backupMs!);
       if (msg.readFails) failReads(msg.readFails);
       if (import.meta.env.DEV && msg.loadPanic === true) panicOnLoad = true;
+      if (import.meta.env.DEV && msg.saveRoom) { const all = msg.saveRoom === "all"; refuseSaveBuffers((n) => !roomMade && (all || n >= 1 << 20)); }
       // T-1196: the game picked in the saves panel before the page reloaded; a file or backup goes
       // into a slot of its own below, the slot it was picked from held until then (one that fails goes to the start menu, T-3773)
       const pending = msg.pending ? await takePending() : null;
@@ -4597,9 +4677,26 @@ function liveMoney() {
 /** Messages that replace or copy the whole game. */
 async function whole(msg: Extract<ToClock, { kind: "import" | "export" | "newGame" }>) {
   if (msg.kind === "export") {
-    // T-1826: a newer game downloads as the newer build saved it, with everything this one cannot read
-    const bytes = saves.newer && saves.newerFile ? saves.newerFile.slice() : await saveBytes();
-    send({ kind: "exported", bytes, day: Math.floor(gameNow() / 86400), ...(msg.share ? { share: true } : {}) }, [bytes.buffer]);
+    const day = Math.floor(gameNow() / 86400), share = msg.share ? { share: true as const } : {};
+    try {
+      // T-1826: a newer game downloads as the newer build saved it, with everything this one cannot read
+      if (saves.newer && saves.newerFile) {
+        const bytes = saves.newerFile.slice();
+        send({ kind: "exported", bytes, day, ...share }, [bytes.buffer]);
+      } else if (msg.share) {
+        const bytes = await roomFor(saveBytes, true);
+        send({ kind: "exported", bytes, day, ...share }, [bytes.buffer]);
+      } else {
+        // T-3869: a download is made in parts the page puts in the file one by one, so it needs no buffer the size
+        // of the file, nor the slot's write: a game that cannot be saved for memory can still be downloaded
+        const parts = await roomFor(async () => saveParts(), true);
+        send({ kind: "exported", parts, day }, [...new Set(parts.map((p) => p.buffer))]);
+      }
+    } catch (err) {
+      if (isPanic(err)) throw err;
+      console.error("T-3869: the game could not be downloaded:", err); // i18n-ignore
+      send({ kind: "exported", day, ...share, error: outOfRoom(err) ? NO_MEMORY_TO_SAVE : "savesPanel.downloadFailed" });
+    }
   } else {
     try {
       const name = msg.name?.trim();

@@ -525,6 +525,7 @@
   "clockWorker.modelDown": "Notice after the train simulation hit internal errors it could not recover from.",
   "clockWorker.savePanic": "Notice when opening a save stopped the train simulation with an internal error. The game carries on without that save. why: the simulation's error text, in English.",
   "clockWorker.browserCouldNotSave": "Error shown when the browser refused to write an autosave.",
+  "clockWorker.noMemoryToSave": "Error shown when a save, a copy of the game or a download as a file failed because the browser ran out of memory, after the game had already freed what it could and tried again.",
   "clockWorker.saveDamaged": "Error shown when a saved game or save file is damaged (cut short or unreadable) and cannot be opened; also a line on that game's card.",
   "clockWorker.couldNotSave": "Error shown when saving by hand failed and no reason is known.",
   "clockWorker.savedInOtherTab": "Error shown when a manual save is refused because another browser tab with the same game saved it a moment before. Saving again from this tab overwrites the slot (the other tab's version is kept as a separate save).",

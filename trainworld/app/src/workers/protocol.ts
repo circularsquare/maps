@@ -269,8 +269,14 @@ export type ToClock =
       readFails?: number;
       /** T-3773: the next game opened panics after its decode, for checks (dev server, `?debug=1&loadPanic=1`); "late": the first load after the game has opened (T-3788) */
       loadPanic?: boolean | "late";
+      /** T-3869, checks (dev server, `?debug=1&saveRoom=`): the buffers a save asks for refused as a browser short of
+       * memory refuses them, "big" those of 1 MB or more, "all" every one, until the page has made room ("roomMade") */
+      saveRoom?: "big" | "all";
       /** T-2802: the least the WASM memory grows by, bytes (`heapStep` in deviceMemory.ts) */
       heapStep?: number }
+  /** T-3869: the page has replaced its demand workers for a save that found no memory (answering "room"), outside
+   * the queue */
+  | { kind: "roomMade" }
   /** T-2802: every zone's coarse outline, the page's parse of `packs/outlines.json` (null: unavailable), after init */
   | { kind: "outlines"; packed: PackedOutlines | null }
   /** T-1822: the Getting started card's progress, to keep in the save */
@@ -995,8 +1001,12 @@ export type FromClock =
   | { kind: "diagramCities"; cities: string[] }
   /** T-2395: the home of the game in hand (`SaveHeader.home`), sent with "opened" */
   | { kind: "home"; home: string | null }
-  /** the save file, for the player to keep */
-  | { kind: "exported"; bytes: Uint8Array; day: number; share?: true }
+  /** the save file, for the player to keep: `bytes` for a share, else in `parts` (T-3869: never one buffer); `error`
+   * (a message key) when it could not be made */
+  | { kind: "exported"; bytes?: Uint8Array; parts?: Uint8Array[]; day: number; share?: true; error?: string }
+  /** T-3869: a save found no memory: the page replaces its demand workers, giving back what they hold, and answers
+   * "roomMade" */
+  | { kind: "room" }
   /** a station placement's check (T-311): `issues` as an edit's; `cost` what it adds to the
    * blueprint, US$M */
   | { kind: "stationCheck"; seq: number; ok: boolean; issues: string[]; cost: number }
