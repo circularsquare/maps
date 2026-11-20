@@ -179,6 +179,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Goal: Each one measured on our saves, then ported with credit, or closed with a reply you've seen.
 
 ## Demand
+- T-3823 [P3] {L:route-choice} Intercity hover shows the full first wait
+  - Context: Found by T-3822: the intercity market counts the first wait as planned (T-1430), but the hover's legs show it in full (Newark Penn 33.6 min by the legs, 16.2 planned). It only takes minutes off, so the shown sum runs high. Reach: anyone reading an intercity hover.
+  - Goal: The intercity route rows and equation show the planned first wait.
+  - Other: notes/T-3822.md
 - T-3632 [P2] {L:route-choice} Fix the causes behind No route
   - Context: You, 2026-11-18: "i think showing "no trip found" is a separate type of bug that we shuold probably address individually. it is a fairly common complaint i think". The reports are gathered (3 direct: New York - Philadelphia and Milan - Bologna, not reproduced on today's code, and Seattle - Victoria, islands; 18 cousins: a route found but not taken, areas with no trips, odd routes, cities not loading), and the panel's By transit line now says which cause applies (7d14a945). Left: the causes themselves, islands first (T-2216).
   - Goal: The common causes of No route fixed or filed one by one.
@@ -890,10 +894,11 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: From T-3446: once diagram-game.mjs's syntax error was fixed, checks that test the old unsheeted diagram layout ran again for the first time since T-2590, and fail: t2289 on jpn (at HEAD too), t2407's movement and distance lines, t2162's time limits on nyc and tyo (tyo misses one interchange name).
   - Goal: Each retired to checks/old/ if it only tests the old layout, or rewritten to the sheet layout and passing.
   - Other: notes/T-3446.md
-- T-3821 [P2] {L:accounts-server} Games store growth on the server (taking, 2026-11-19, agent gamestore)
-  - Context: 11-20 resource check: 5.0 of 16 GB, +643 MB a day, 80% in about 12 days; box disk 9.4 of 37 GB. You, 11-20: "do we think theres potential for additional like compression / efficiency there? or is there a better cheap way to store?"
-  - Goal: Measured options (smaller saves, cheaper backups, other storage) with GB saved and cost each, for you to pick.
-  - Other: notes/T-3243.md "Games"
+- T-3821 [P2] {L:accounts-server} {waits:Anita} Games store growth on the server
+  - Need from Anita: pack idle games' backups as differences from the current save (keeps old copies, about 5-6 h), or drop backups of games idle 7+ days (about 1 h, a returning player loses old copies)? Recommended: pack.
+  - Context: You, 11-20: "do we think theres potential for additional like compression / efficiency there? or is there a better cheap way to store?" Measured 11-20 (gamestore): 5.05 GB is 55% backups, 35% current saves, 9.5% pictures; the 16 GB cap fills Dec 5-10 at today's growth. Better codecs only reach 0.76-0.82 of today's size; a backup stored as a difference is 6-16% of its size. Packing frees about 1.26 GB now and 0.3 GB a day.
+  - Goal: The chosen option deployed, and the cap raised to about 24 GB (safe on the disk).
+  - Other: notes/T-3821.md, notes/T-3243.md "Games"
 - T-3395 [P1] {L:accounts-server} {after:the 11-20 and 11-21 scan reports} Close once the save scan runs clean
   - Context: Requested by you 2026-11-15: damaged saves caught on upload and in a daily scan, their bytes kept, the last intact version pinned with a way to restore it. All three stages are live (server 2026-11-18 13:30 UTC, game v0.4.0). The 11-19 pass found two damaged games on one account, each a first save never saved again; most likely older than the upload check, or the scan's check lagging newer save levels (scanchk, 11-20). Still damaged on 11-20 means old damage: close; intact means check lag.
   - Goal: The scan has run a day clean.
