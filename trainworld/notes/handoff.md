@@ -7,21 +7,20 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`. This f
 Diary: notes/handoff-log.md. Her local time is UTC-5.
 
 ## Next
-0. Live v0.4.4. Cap 14. 8800 = 6aa611ce. Landed since by maps-60 [6ba449], no smoke or push yet (one smoke, 8800
-   rebuild, push after this batch): T-3809 ferry waypoints, T-3834 copied line periods (no checker: narrow, probed),
-   T-3832, T-3828, T-3358 rivers E (06:12; her look call on 8800). Filed T-3837, T-3838, T-3839. 8800 = d99839a6, smoke
-   passed on it, master pushed 06:25. T-3835 loops landed after loopchk passed (2c797d10, not on 8800 yet;
-   text ack asked); T-3840 filed; smoke's missing rideTipPlanned context note added. Running, mine: coastround (Opus, T-3833 then T-3824, tree coastround, Vite 6145). Asked in chat: T-3809 text ack, 400 km per leg. Ask a-2026-11-20-1: T-2216
-   island design (A/B/C, stage 2). Resources 11-20 05:25: all flags known.
-1. Running (old maps-60 [23a293]'s agents, adopted; reports via the inbox): editfirst (Opus, T-3803 option 1, compacted 06:43, near done; a
-   fresh Sonnet checker before landing: edit path and money, the player's 15-20 stop-click burst),.
-   07:15: seasia done, T-1738 committed (eef718c9; Bhamo left), 8800 = 2ad4cfbd (loops + new countries; seasia's
-   smoke 29/29 on that state). Running, mine: iraniraq (Opus, T-3763, main tree; messages me before/after gates and
-   join: hold app/ landings then), maperr (Opus, T-3842 Myanmar map error, tree maperr, Vite 6148; needed before the
-   publish that ships Myanmar). Filed T-3841, T-3842; T-1376 retry noted.
+0. Live v0.4.4. Cap 14. 8800 = master = 2ad4cfbd (07:15, pushed; seasia's smoke 29/29 on that state). Landed
+   tonight by maps-60 [6ba449]: T-3809 ferry waypoints, T-3834, T-3832, T-3828, T-3358 rivers E (her look call),
+   T-3835 loops (loopchk passed), T-1738 Myanmar/Laos/Timor-Leste (Bhamo left). Filed T-3837-T-3842.
+   Asked in chat, unanswered: T-3809 text ack, 400 km per leg, T-3835 text ack. Ask a-2026-11-20-1: T-2216 island
+   design (A/B/C, stage 2). Resources 11-20 05:25: all flags known.
+1. Running, mine: coastround (Opus, T-3833 then T-3824, tree coastround, Vite 6145), iraniraq (Opus, T-3763, main
+   tree; messages me before/after gates and join: hold app/ landings then), maperr (Opus, T-3842 Myanmar map error,
+   tree maperr, Vite 6148; needed before the publish that ships Myanmar). Adopted from maps-60 [23a293], reports via
+   the inbox: editfirst (Opus, T-3803 option 1, compacted 06:43; a fresh Sonnet checker before landing: edit path
+   and money, the player's 15-20 stop-click burst).
 2. T-3395: 11-20 scan (pass 1, not done) found 0 new damage. Run `tools/ops/save_health.py` after the 11-21
    04:00 UTC scan; clean = close it (the two rev-1 games of ue83342ed78f8fc4c are old 11-19 damage).
-3. Up next: T-3763 (Iraq, Iran) once seasia reaches its join; T-3804 after editfirst; T-2216 stages once she picks; T-3838 after seasia; T-3836 (design for her).
+3. Up next: T-3804 after editfirst; T-2216 stages once she picks; T-3838 and T-1376 retry after iraniraq's run;
+   T-1738 Bhamo; T-3836 (design for her).
 4. Next update: unpublished changelog c001-c015 plus tonight's; untranslated: T-3822's and T-3823's hover strings,
    diagramView.addCity; use the publish skill (review agent, sort, playtest list, translations, new zones image).
 5. Leftover: stale Vite pid 33736 on 6181 (leave), trees ttchk2base, touchrule, timekeys.
