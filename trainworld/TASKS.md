@@ -803,6 +803,11 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Ports, industrial estates and airports with no residents stay dark (Tuas and Jurong were fixed by hand 11-13). Half done: units keep outlines with 0.2 km2 of built surface.
   - Goal: A free unit under the floor sharing half its land border with one metro joins it, after a worldwide count.
   - Other: notes/T-3287.md
+- T-3835 [P2] {L:line-rates} Loop line station says it turns trains (taking, 2026-11-20, agent looptag)
+  - Context: Player on Discord, 11-20 (via your pad): a tram station on a continuous loop (McKinney & Harwood, Dallas) shows "turning at 80% of capacity, 12/15 trams per hour"; "is this a technical limitation". Reach: some (loop lines).
+  - Goal: A station on a loop never shows or counts as a turn, unless trains really turn there.
+- T-3836 [P3] {L:real-networks} Real network names in the player's language
+  - Context: In-game feedback 11-20 (1795147183-e2778951, Japanese): on a real network, station and line names should follow the game's language. OSM often has name:ja and name:en. A design call for you: which languages, and what when a name has none. Reach: players on real networks in another language.
 - T-3834 [P2] {L:small-fixes} A copied line leaves most periods empty (taking, 2026-11-20, agent copyline)
   - Context: Your pad, 11-20: "if i copy a line, and am using 4 demand intervals, it uses the default for midday but leaves the other ones empty (lets just have it use the default for all of them)".
   - Goal: A copied line gets the default service in every period the game is using.
