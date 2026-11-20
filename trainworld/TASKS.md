@@ -809,9 +809,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Other: notes/T-3287.md
 - T-3832 [P3] {L:small-fixes} Lines gear part-ticked box shows a minus
   - Context: The schematic's cities list (T-3826) marks a part-ticked region with a minus; the Lines tab gear's part-filled box has none. Same look in both.
-- T-3827 [P3] {L:checks} Weekend timetable checks gone stale (taking, 2026-11-19, agent weekchk)
-  - Context: t3521-weekends, t3557-weekend-headway and t3603-weekend-flash fail on master 6c8dc0ef (found by ttzoom 11-20, confirmed on master): a weekend share button not found, Medium and Low weekend headways read as NaN, a null click; most likely the panel changed under them (five periods, T-3542).
-  - Goal: The three checks pass on master, or each failure is a real bug filed.
 - T-3828 [P3] {L:timetables} Pinch zoom for the timetable on touch
   - Context: T-3817 zooms the timetable with the scroll wheel; a phone only gets the opening view. Reach: phone players opening timetables.
 - T-3824 [P2] {L:schematic-rivers} {after:T-3358 prototype} Schematic ferries drawn after the water

@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3827 [P3] {L:checks} Weekend timetable checks gone stale (2026-11-19): All three were stale, no game bug: t3603 stepper label, t3521 stepper column after T-3542's Hours column, t3557 profile index via tw.profiles.profileRow. notes/T-3827.md.
 - T-3823 [P3] {L:route-choice} Intercity hover shows the full first wait (2026-11-19): plannedFirstWait in game/trip.ts: min(half headway, 5 + headway/6, 30) on a market route's first ride; Newark Penn 33.6 -> 16.2 min, matching the worker. notes/T-3823.md.
 - T-3790 [P4] {L:real-networks} Ship the rebuilt Moscow, Berlin and Hong Kong (2026-11-19): mos (--force), ber, hon (--force) shipped from moscowfix's saves; sai kept at 123 lines by realauto_keep/sai.json. notes/T-3790.md.
 - T-3826 [P2] {L:schematic} Add a neighbouring city from the schematic (2026-11-19): Pan keeps the nearest station 40 px inside; zoom cap half the view; fit on cities change; 1 px divider; regions from realms with chevrons and a minus box; hover spots for cities with stations within 500 km, placed just past the drawing's edge in their real direction. notes/T-3826.md.
