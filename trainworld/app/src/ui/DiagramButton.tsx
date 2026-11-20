@@ -74,6 +74,7 @@ function byRealm(cities: string[]): { realms: { id: string; name: string; cities
  * region with a box (ticked when all its cities are, half lit when some are) and its cities under it when opened */
 function CityChoice() {
   const [open, setOpen] = useState(false);
+  const [none, setNone] = useState(false);
   /** the regions opened; a list of one region opens on it */
   const [opened, setOpened] = useState<ReadonlySet<string>>(new Set());
   const box = useRef<HTMLDivElement>(null);
@@ -86,18 +87,31 @@ function CityChoice() {
     document.addEventListener("keydown", esc, true);
     return () => { document.removeEventListener("pointerdown", away, true); document.removeEventListener("keydown", esc, true); };
   }, [open]);
-  const cities = listedCities(), chosen = diagramCities.value;
-  if (cities.length < 2 && !chosen.length) return null;
-  const set = (next: string[]) => (diagramCities.value = [...new Set(next)].sort());
+  const cities = listedCities(), saved = diagramCities.value;
+  if (cities.length < 2 && !saved.length) return null;
+  // an empty saved choice is the whole network, shown as every city ticked; `none` is the list with nothing ticked, which
+  // still draws the whole network
+  const chosen = none ? [] : saved.length ? saved : cities;
+  const set = (next: string[]) => {
+    const u = [...new Set(next)].sort();
+    setNone(!u.length);
+    // every city ticked is the whole network's layout, saved as the empty choice
+    diagramCities.value = u.length === cities.length ? [] : u.length ? u : [];
+  };
+  const allN = cities.filter((c) => chosen.includes(c)).length;
   const { realms, bare } = byRealm(cities);
   const city = (c: string, inRealm: boolean) => <li key={c} class={inRealm ? "in-realm" : undefined}>
     <Check checked={chosen.includes(c)} onChange={(on) => set(on ? [...chosen, c] : chosen.filter((x) => x !== c))}>{cityName(c)}</Check>
   </li>;
   return <div class="diagram-cities" ref={box}>
-    <button type="button" class={"btn icon" + (chosen.length ? " on" : "")} data-tip={t("diagramButton.chooseCities")} aria-label={t("diagramButton.chooseCities")} aria-expanded={open}
+    <button type="button" class={"btn icon" + (open ? " on" : "")} data-tip={t("diagramButton.chooseCities")} aria-label={t("diagramButton.chooseCities")} aria-expanded={open}
       onClick={() => setOpen(!open)}><Icon.cities /></button>
     {open && <ul class="diagram-cities-list">
-      <li><Check checked={!chosen.length} onChange={() => set([])}>{t("cities.all")}</Check></li>
+      <li><label class="check">
+        <input type="checkbox" class={allN > 0 && allN < cities.length ? "some" : undefined} checked={allN === cities.length}
+          onChange={() => set(allN === cities.length ? [] : cities)} />
+        <span>{t("cities.all")}</span>
+      </label></li>
       {realms.flatMap((r) => {
         // `opened` holds the regions flipped from how they start: open when the list has one region, else closed
         const n = r.cities.filter((c) => chosen.includes(c)).length, isOpen = opened.has(r.id) !== (realms.length === 1);
