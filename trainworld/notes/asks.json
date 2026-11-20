@@ -1,16 +1,9 @@
 [
   {
-    "id": "a-2026-11-19-1",
-    "title": "One track selection text",
-    "text": "T-3746 text (landed, on 8800): panel title hover 'Shift+click to add to selection.' (reused); removed panel strings ('3 pieces of track', 'Limit', 'Remove track', 'Use the Select tool (4) to rebuild longer stretches', Double up label); bar length hover gains 'Upkeep $40k/day'; Remove hover 'Remove the selection (Delete)'; changelog c005 'moved track controls to the bar at the top for one piece or many, speed limit included, and shift click now selects the track in between'. Text acknowledged, or name lines?",
-    "since": "2026-11-19",
-    "by": "maps-6b"
-  },
-  {
-    "id": "a-2026-11-19-14",
-    "title": "Drop the load card once the city in view is ready",
-    "text": "T-3686: on your big Asia save the city you're looking at now has its trips at about 27 s and its last round at about 77 s, but the loading card stays up until every city is done (about 320 s at 1 worker), per the T-2049 rule. Should the card go once the city in view is done, with the rest calculating behind?",
-    "since": "2026-11-19",
-    "by": "maps-6f"
+    "id": "a-2026-11-20-1",
+    "title": "Island pairs: cut-off and stage 2",
+    "text": "T-2216 design (notes/T-2216.md): trips between two landmasses with no road or flight (Seattle - Victoria, Tenerife - Gran Canaria) get solved, so a ferry or line between them carries riders. Which cut-off? A (recommended): the existing local island rule, everyone rides up to 3x the cost of an imagined drive across a bridge that isn't there, nobody from 4x (Vancouver - Victoria keeps every rider up to about a 48 dollar fare, none past 114). B: the same as a smooth curve at 3.5x. C: a tighter 2-3x, closer to real ferry shares but an island-only rule. And yes or no to stage 2: island zones inside a mainland pack (Sado - Tokyo, mostly Indonesia and the Philippines, 16.3M people) whose trips go from car to No route until a ferry joins them. Note for all of it: today these trips quietly count as car; once solved they show No route until something joins them.",
+    "since": "2026-11-20",
+    "by": "maps-60-6ba449"
   }
 ]

@@ -702,10 +702,14 @@ Passing tracks (T-2228, archived; built as T-2231 to T-2233; notes/T-2228.md):
   - Context: Overtake plans are pairwise, so a local's waits for several faster lines are added up.
   - Goal: Measured on a three-line test, then changed only if it matters.
   - Other: notes/T-2228.md section 8
-- T-2216 [P3] {L:islands} Ground-only solve for island pairs (taking, 2026-11-20, agent islanddesign)
-  - Context: Market zone pairs on two landmasses are "fixed, never solved" today (1.45M longer trips, 631,000 commutes a day).
+- T-2216 [P3] {L:islands} {waits:Anita} Ground-only solve for island pairs
+  - Need from Anita: pick how transit is cut off between islands (A, the local island rule: all ride up to 3x an imagined drive, none from 4x; B, the same as a smooth curve at 3.5x; C, a tighter 2-3x) and say yes or no to stage 2 (island zones inside a mainland pack, Sado - Tokyo); A recommended.
+  - Context: Design done 11-20 (notes/T-2216.md, 4 stages, about 7-10 h). Market zone pairs on two landmasses are "fixed, never solved" today (1.49M longer trips, 662,000 commutes a day), and the commutes are quietly counted as car; once solved they show "No route" until a ferry or line joins them. Stage 0 (wrong landmasses) is T-3838.
   - Goal: They solve with rail as the only ground mode, with a point past which trips don't go by transit at all, so fares can't be raised without limit (your pad, 2026-11-18: "we should probably have a certain point at which transit is just not taken even if its the only option"); closes T-1396.
   - Other: Own worktree (intercity). notes/T-2216.md
+- T-3838 [P3] {L:islands} {after:seasia's world run} Places on the wrong landmass
+  - Context: Found in the T-2216 design: 13 rows whose landmass differs from their pack's main land. Reggio Calabria sits on Sicily's, so Cosenza - Reggio (10,000 trips each way) has no car today; the Isle of Wight is joined to Great Britain; Naval (Biliran) isn't joined to Leyte. A pipeline and market-rows.json fix, about 1-2 h.
+  - Other: notes/T-2216.md
 - T-2256 [P3] {L:islands} Island land-parts rule in local demand
   - Context: Local demand still lacks the rule in far-end selection and the regional layer's commutes (intercity.rs, cross.rs).
   - Goal: Sado and Salamis show no car or walk off the island.

@@ -1,29 +1,24 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 79e26413-4648-481b-ba5a-8ddcd716a0f0, name maps-60 [6ba449], since 2026-11-20 05:20 UTC
-Updated: 2026-11-20 05:20 UTC (both sessions are named maps-60: message by ref)
+Updated: 2026-11-20 05:58 UTC (both sessions are named maps-60: message by ref)
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`. This file is plan and her words.
 Diary: notes/handoff-log.md. Her local time is UTC-5.
 
 ## Next
-0. Live v0.4.4. Cap 14 (full at 05:25). 8800 = 6aa611ce. Landed by maps-60 [6ba449]: T-3809 ferry waypoints
-   (05e01f72), T-3834 copied line periods (eaad00b8, no checker: narrow, probed per period count), T-3837 filed;
-   text ack for T-3809's strings and the 400 km per-leg call asked in chat; master not pushed since, no smoke since: one smoke + 8800 rebuild after this batch.
-   Resources 11-20 05:25: flags all known (Resend, R2 storage/Class B, cache, games store SOON, website repo 1.1 GB).
-   Landed 11-20 by maps-60: T-3812, T-3820, T-3805, T-3822, T-3823, T-3827, T-3803 option 3, T-3817, T-3819,
-   T-3818, T-3825, T-3826; T-3762 Caribbean committed and closed; T-3790 shipped (mos, ber, hon; sai kept);
-   CLAUDE.md review applied (b8e0c41b; transituniversalis and shonei CLAUDE.md edited, left for their sessions).
-1. Running (old maps-60 [23a293]'s agents, adopted; reports arrive through the inbox): editfirst (Opus, T-3803
-   option 1, tree editfirst; a fresh Sonnet checker before landing: edit path and money; includes the player's 15-20
-   stop-click burst), riverbuild (Opus, T-3358 option E build, tree riverbuild:
-   UI, look at its shots, no checker), looptag (Opus, T-3835; checker if sim rates
-   changed), seasia (Opus, T-1738 Myanmar, Laos, Timor-Leste overnight; writes data/packs and game json; notes
-   T-1738.md section 16 has its PIDs and restart lines).
+0. Live v0.4.4. Cap 14. 8800 = 6aa611ce. Landed since by maps-60 [6ba449], no smoke or push yet (one smoke, 8800
+   rebuild, push after this batch): T-3809 ferry waypoints, T-3834 copied line periods (no checker: narrow, probed),
+   T-3832, T-3828. Filed T-3837, T-3838. Asked in chat: T-3809 text ack, 400 km per leg. Ask a-2026-11-20-1: T-2216
+   island design (A/B/C, stage 2). Resources 11-20 05:25: all flags known.
+1. Running (old maps-60 [23a293]'s agents, adopted; reports via the inbox): editfirst (Opus, T-3803 option 1; a
+   fresh Sonnet checker before landing: edit path and money, the player's 15-20 stop-click burst), riverbuild (Opus,
+   T-3358 option E: UI, look at its shots, no checker), looptag (Opus, T-3835; checker if sim rates changed), seasia
+   (Opus, T-1738 overnight; writes data/packs and game json; T-1738.md section 16 has PIDs and restart lines).
 2. T-3395: 11-20 scan (pass 1, not done) found 0 new damage. Run `tools/ops/save_health.py` after the 11-21
    04:00 UTC scan; clean = close it (the two rev-1 games of ue83342ed78f8fc4c are old 11-19 damage).
 3. Up next: T-3763 (Iraq, Iran) once seasia reaches its join; T-3833 coastline corners and T-3824 ferries after
-   T-3358 lands; T-3804 after editfirst; T-3632 islands; P3s T-3828-T-3832, T-3836 (design for her).
+   T-3358 lands; T-3804 after editfirst; T-2216 stages once she picks; T-3838 after seasia; T-3836 (design for her).
 4. Next update: unpublished changelog c001-c015 plus tonight's; untranslated: T-3822's and T-3823's hover strings,
    diagramView.addCity; use the publish skill (review agent, sort, playtest list, translations, new zones image).
 5. Leftover: stale Vite pid 33736 on 6181 (leave), trees ttchk2base, touchrule, timekeys.
