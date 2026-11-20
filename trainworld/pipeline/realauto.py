@@ -5,6 +5,7 @@
     python pipeline/realauto.py report [id ...]           # the reports' table again
     python pipeline/realauto.py ship [id ...] [--force]   # realnet.py ship for the cities that passed and lose no route or station the shipped save serves, and the app's list
     python pipeline/realauto.py drop <id>                 # (a build step) the lines in auto_<id>_drop.json out of the network JSON
+    python pipeline/realauto.py keep <id> <save> [label]  # the city's keep list from a save's lines (label: where the save is from)
 
 The cities are `realauto.json` (a city pack id each, how they were picked in its "what"); with no ids a
 command takes them all. Any registry city with a pack can be built: `build <id>` takes ids not in the
@@ -39,9 +40,11 @@ track, terminals and pacing as for the hand-made ones (realcorridors.py, reallev
 `realsave` bin).
 
 `build` runs each city's steps as subprocesses, `--jobs` cities at once (default 2), each city's log
-in $REALNET_OUT/auto_<id>.log. Lines the track model cannot run (a terminal or junction with more
-tracks than a game node's 8 ends) go into auto_<id>_drop.json, `drop` takes them out of the network
-JSON after `net`, and the city is built again, until every line runs (at most BUILD_PASSES builds). It writes $REALNET_OUT/auto_<id>.json: stations,
+in $REALNET_OUT/auto_<id>.log. A city with a keep list (`realauto_keep/<id>.json`, written by `keep`
+from a save: each line's name and stop names) is built from the lines it picks only (`kept`: each
+listed line picks the line of its name sharing the most stop names), so it keeps the size it had
+(T-3790: Moscow keeps v0.4.2's lines, not the extract's ~358). Lines the track model still cannot run go into auto_<id>_drop.json, `drop` takes them out of the network
+JSON after `net` (with the lines the keep list does not pick), and the city is built again, until every line runs (at most BUILD_PASSES builds). It writes $REALNET_OUT/auto_<id>.json: stations,
 lines, lines running, names in Latin letters, track km off the real-network graph, high-demand holds
 against the free run, the network's price, the save's size, and `pass`: the save was written, 2 or
 more lines, at least 90% of them running.
@@ -63,6 +66,7 @@ ROOT = os.path.dirname(HERE)
 MAPS = os.path.dirname(ROOT)
 NORI_PROC = os.path.join(MAPS, "noritetsu", "data", "proc")
 LIST = os.path.join(HERE, "realauto.json")
+KEEP_DIR = os.path.join(HERE, "realauto_keep")
 OUT = os.path.abspath(os.environ.get("REALNET_OUT", os.path.join(ROOT, "data", "work", "realnet")))
 APP_LIST = os.path.join(ROOT, "app", "src", "game", "realNetworks.json")
 
@@ -588,13 +592,65 @@ def dropped(city):
     return json.load(open(p, encoding="utf-8")) if os.path.exists(p) else {}
 
 
+def keep_path(city):
+    return os.path.join(KEEP_DIR, f"{city}.json")
+
+
+def cmd_keep(city, save, label=None):
+    """Write the city's keep list from a save: each of its lines' name and stop names in order."""
+    from readsave import read
+    d = read(save)
+    pats = [{"name": l["name"], "stops": [d["nodes"][s].get("name", "") for s in l["stops"]]} for l in d["lines"]]
+    os.makedirs(KEEP_DIR, exist_ok=True)
+    rows = ",\n".join(json.dumps(p, ensure_ascii=False) for p in pats)
+    body = f'{{"from": {json.dumps(label or save, ensure_ascii=False)},\n"lines": [\n{rows}\n]}}\n'
+    open(keep_path(city), "w", encoding="utf-8", newline="\n").write(body)
+    print(f"{city}: {len(pats)} lines, {len({p['name'] for p in pats})} routes -> {keep_path(city)}")
+
+
+def kept(city, net):
+    """The indices of the network JSON's lines the city's keep list picks, or None with no list. Each
+    listed line picks one line of its name, the one sharing the most stop names (share of both lists' names,
+    then the nearer stop count), one each where there are enough (most shared first)."""
+    p = keep_path(city)
+    if not os.path.exists(p):
+        return None
+    pats = json.load(open(p, encoding="utf-8"))["lines"]
+    by_name = defaultdict(list)
+    for j, l in enumerate(net["lines"]):
+        by_name[l["name"]].append((j, {net["stations"][i]["name"] for i in l["stops"]}, len(l["stops"])))
+    pairs = []
+    for k, pat in enumerate(pats):
+        S = set(pat["stops"])
+        for j, T, n in by_name.get(pat["name"], []):
+            share = len(S & T) / max(len(S | T), 1)
+            if share > 0:
+                pairs.append((-share, abs(n - len(pat["stops"])), k, j))
+    pairs.sort()
+    got, used = {}, set()
+    for _, _, k, j in pairs:
+        if k not in got and j not in used:
+            got[k] = j
+            used.add(j)
+    for _, _, k, j in pairs:  # more listed lines of a name than the network has: they share
+        got.setdefault(k, j)
+    missing = sorted({pats[k]["name"] for k in range(len(pats)) if k not in got})
+    if missing:
+        print(f"{city}: keep list lines with no line of their name and stops: {missing}")
+    return set(got.values())
+
+
 def cmd_drop(city):
-    """Take the dropped lines out of the city's network JSON (after `realnet.py net`), its demand
-    arrays made again as `net` makes them, stations no line stops at left out."""
+    """Take the dropped lines out of the city's network JSON (after `realnet.py net`), and with a keep
+    list every line it does not pick; its demand arrays made again as `net` makes them, stations no
+    line stops at left out."""
     drop = dropped(city)
     p = os.path.join(OUT, f"{city}_real.json")
     net = json.load(open(p, encoding="utf-8"))
-    keep = [l for l in net["lines"] if line_key(net, l) not in drop]
+    pick = kept(city, net)
+    keep = [l for j, l in enumerate(net["lines"]) if line_key(net, l) not in drop and (pick is None or j in pick)]
+    if pick is not None:
+        print(f"{city}: the keep list picks {len(pick)} of {len(net['lines'])} lines")
     print(f"{city}: {len(net['lines']) - len(keep)} of {len(net['lines'])} lines left out ({len(drop)} listed)")
     used = sorted({i for l in keep for i in l["stops"]})
     new = {i: k for k, i in enumerate(used)}
@@ -820,6 +876,9 @@ if __name__ == "__main__":
         table([report(i) for i in ids if os.path.exists(os.path.join(OUT, f"auto_{i}.log"))])
     elif cmd == "drop":
         cmd_drop(ids[0])
+    elif cmd == "keep":
+        sys.path.insert(0, HERE)
+        cmd_keep(a[1], a[2], a[3] if len(a) > 3 else None)
     elif cmd == "ship":
         cmd_ship(ids, force)
     else:

@@ -12,7 +12,21 @@ A group with no stops is one
 plain or junction node. Every node gets a heading from its ends, and every edge leaves it along
 that heading through a lead point, as `realsave` does for a station. A line changing pair at a
 node is a junction there (the crossover). Every node starts on LEVEL; `reallevels.assign` then puts
-nodes and stretches of edge on their real levels (T-1773). Every edge is grade separated (`sep`)."""
+nodes and stretches of edge on their real levels (T-1773). Every edge is grade separated (`sep`).
+
+No node gets more than a game node's 8 edge ends (MAX_PORTS), the limit a player's junction has too
+(T-3790), and no line turns back where a player's line couldn't:
+- A group with no stops and more than 8 ends is split (`fabric`): on each side, junctions of at most
+  FABRIC_G neighbouring ends (in order across the heading), each joined to the other side's junctions
+  its lines run to by as many links as their trains need (PLAT_LOAD a link: one direct edge, then more
+  through a plain node between, fewer where the ports run out); a lone end with one link sits on the
+  junction it links to. Each move keeps to one link, binned by load.
+- A station side with 8 ends or more leaves half its junction's ports for platforms and takes its ends
+  on the rest, neighbouring ends sharing a port through a fan farther out (`fan_out`).
+- A line turning back at a stop-less node with two or more ends (which the game refuses) turns as a
+  player's line does, at a track end: a short dead end (half its longest train plus STUB_CLEAR) leaves
+  the node on the other side, and the line runs into it and back.
+A group that needs none of these is built exactly as before."""
 import math
 from collections import Counter, defaultdict
 
@@ -31,6 +45,13 @@ MAX_PORTS = 8
 DWELL_S, MARGIN_S, PASSING_S, TURN_S = 30.0, 60.0, 40.0, 180.0
 SECTION_S = 144.0
 PLAT_LOAD = 0.8
+# T-3790: a split junction's junctions stand at most LINK_OFF either side of its centre; a fan at most
+# FAN_OFF beyond its junction; a turn-back stub reaches half the longest train turning plus STUB_CLEAR
+LINK_OFF = 40.0
+FAN_OFF = 40.0
+STUB_CLEAR = 40.0
+# at most this many neighbouring ends to a junction of a split one (fewer where the links need the ports)
+FABRIC_G = 3
 
 
 def platform_len(cars):
@@ -152,6 +173,132 @@ def track_model(doc, polys, net):
     nodes, edges = [], []
     placed, reoriented = [], []
     g_chain, g_side, node_of, plat_of = {}, {}, {}, {}
+    fan_up, link_edges, stub_of, route_of = {}, [], {}, {}
+
+    def across(e, base, perp):
+        """Where an end lies across the heading, HEAD_M out from the node."""
+        poly = pair_poly[e[:2]]
+        p0 = poly[-1] if e[2] == 1 else poly[0]
+        return float((p0 + HEAD_M * along_dir(poly, e[2] == 1) - base) @ perp)
+
+    def lateral(run, off, base, perp):
+        """Across the heading, where a junction `off` out from the node meets its ends: their mean
+        `across`, scaled from HEAD_M to `off`."""
+        return min(1.0, off / HEAD_M) * float(np.mean([across(e, base, perp) for e in run]))
+
+    def chunks(xs, n):
+        """xs in n runs as even as can be, in order."""
+        return [xs[i * len(xs) // n:(i + 1) * len(xs) // n] for i in range(n)]
+
+    def fan_out(g, chain, sids, ends, side, hv, perp, base, side_off):
+        """T-3790: a station's junction whose side has more ends than it takes beside its platform edges
+        takes them on every port it has left, neighbouring ends (in order across the heading) sharing a
+        port through a fan farther out, a junction with one edge in to it."""
+        for sd, jn in chain:
+            es = [e for e in ends if side[e] == sd]
+            q = MAX_PORTS - len(sids)
+            if len(es) <= q:
+                continue
+            es.sort(key=lambda e: across(e, base, perp))
+            sgn = 1 if sd == 1 else -1
+            off_j = float((np.array(nodes[jn]["xy"]) - base) @ (sgn * hv))
+            _, room = side_off(sd, math.inf)
+            off_f = min(off_j + FAN_OFF, max(off_j + NUDGE, 0.7 * room))
+            for i, run in enumerate(chunks(es, q)):
+                if len(run) < 2:
+                    continue
+                p = base + sgn * off_f * hv + perp * lateral(run, off_f, base, perp)
+                f = len(nodes)
+                nodes.append({"xy": p.round(3).tolist(), "level": LEVEL, "station": None})
+                fan_up[f] = jn
+                link_edges.append((f, jn) if sd == 0 else (jn, f))
+                link_hv[(f, jn) if sd == 0 else (jn, f)] = hv
+                for e in run:
+                    node_of[e] = f
+                st["fans (station junctions over 8 ends)"] += 1
+
+    link_hv = {}
+
+    def fabric(g, ends, side, hv, perp, base, side_off):
+        """T-3790: a plain junction with more ends than a game node takes (8): on each side, junctions of
+        at most G neighbouring ends (in order across the heading), each joined to the other side's
+        junctions its lines run to, by as many links as their trains need (one direct edge, then more
+        through a plain node between); a lone end with one link sits on the other side's junction."""
+        X = sorted((e for e in ends if side[e] == 0), key=lambda e: across(e, base, perp))
+        Y = sorted((e for e in ends if side[e] == 1), key=lambda e: across(e, base, perp))
+        mv = defaultdict(list)  # (x, y) -> [(li, j)]
+        for li, j, a, b, stop in visits[g]:
+            if a is not None and b is not None and side[a] != side[b]:
+                mv[(a, b) if side[a] == 0 else (b, a)].append((li, j))
+
+        def load(vs):
+            return sum(max(clines[li]["tph"][:2]) * max([PASSING_S] + [clines[li]["occ"][x] for x in (j - 1, j) if 0 <= x < len(clines[li]["occ"])])
+                       for li, j in vs) / 3600
+        for G in range(FABRIC_G, 0, -1):
+            A, B = chunks(X, math.ceil(len(X) / G)), chunks(Y, math.ceil(len(Y) / G))
+            ai = {x: i for i, r in enumerate(A) for x in r}
+            bj = {y: j for j, r in enumerate(B) for y in r}
+            W = defaultdict(float)
+            for (x, y), vs in mv.items():
+                W[(ai[x], bj[y])] += load(vs)
+            L = {p: max(1, math.ceil(w / PLAT_LOAD - 1e-9)) for p, w in W.items()}
+            for sd, R in ((0, A), (1, B)):
+                for k in range(len(R)):
+                    mine = [p for p in L if p[sd] == k]
+                    while len(R[k]) + sum(L[p] for p in mine) > MAX_PORTS and any(L[p] > 1 for p in mine):
+                        L[max(mine, key=lambda p: L[p])] -= 1
+            ports = [len(R[k]) + sum(n for p, n in L.items() if p[sd] == k) for sd, R in ((0, A), (1, B)) for k in range(len(R))]
+            if max(ports) <= MAX_PORTS:
+                break
+        else:
+            st["split junctions still over 8 ends"] += 1
+        # a lone end with one link sits on the junction it links to
+        on = {}
+        for sd, R in ((0, A), (1, B)):
+            for k, r in enumerate(R):
+                mine = [p for p in L if p[sd] == k]
+                if len(r) == 1 and len(mine) == 1 and L[mine[0]] == 1 and (1 - sd, mine[0][1 - sd]) not in on:
+                    on[(sd, k)] = (1 - sd, mine[0][1 - sd])
+        jn = {}
+        for sd, R in ((0, A), (1, B)):
+            sgn = 1 if sd == 1 else -1
+            off, _ = side_off(sd, LINK_OFF)
+            for k, r in enumerate(R):
+                if (sd, k) in on:
+                    continue
+                jn[(sd, k)] = len(nodes)
+                p = base + sgn * off * hv + perp * lateral(r, off, base, perp)
+                nodes.append({"xy": p.round(3).tolist(), "level": LEVEL, "station": None})
+        for (sd, k), host in on.items():
+            jn[(sd, k)] = jn[host]
+        for sd, R in ((0, A), (1, B)):
+            for k, r in enumerate(R):
+                for e in r:
+                    node_of[e] = jn[(sd, k)]
+        # each pair's moves binned over its links by load
+        for (i, j), n in L.items():
+            a, b = jn[(0, i)], jn[(1, j)]
+            hops = [[a, b]] if a != b else [[a]]
+            for x in range(1, n):
+                m = len(nodes)
+                p = (np.array(nodes[a]["xy"]) + np.array(nodes[b]["xy"])) / 2 + perp * NUDGE * x
+                nodes.append({"xy": p.round(3).tolist(), "level": LEVEL, "station": None})
+                hops.append([a, m, b])
+            for h in hops:
+                for u, v in zip(h, h[1:]):
+                    link_edges.append((u, v))
+                    link_hv[(u, v)] = hv
+            bins = [0.0] * len(hops)
+            for (x, y), vs in sorted(((k, v) for k, v in mv.items() if (ai[k[0]], bj[k[1]]) == (i, j)), key=lambda kv: -load(kv[1])):
+                k = int(np.argmin(bins))
+                bins[k] += load(vs)
+                for li, jj in vs:
+                    a_end = line_ends[li][jj - 1][1]
+                    route_of[(li, jj)] = hops[k] if side[a_end] == 0 else hops[k][::-1]
+            st["links at split junctions"] += len(hops) - (1 if a == b else 0)
+        st["junctions split (over 8 ends)"] += 1
+        st["nodes at split junctions"] += len(set(jn.values()))
+
     for g, ends in groups.items():
         pts = np.array([pair_poly[e[:2]][0] if e[2] == 0 else pair_poly[e[:2]][-1] for e in ends])
         us = [along_dir(pair_poly[e[:2]], e[2] == 1) for e in ends]
@@ -193,6 +340,20 @@ def track_model(doc, polys, net):
         placed.append(base)
         stops = gstops.get(g, [])
         per_side = [sum(1 for e in ends if side[e] == s) for s in (0, 1)]
+        # T-3790: a side with more ends than a junction takes beside one platform edge shares half the
+        # junction's ports through fans (`fan_out`), leaving the other half for platforms
+        per_port = [p if p < MAX_PORTS else MAX_PORTS // 2 for p in per_side]
+        perp = np.array([-hv[1], hv[0]])
+
+        def side_off(sd, most):
+            """How far along the heading a junction on side sd stands: short of the next node that side
+            (a junction beyond it would take its edges back in a hairpin), at most `most`."""
+            sgn = 1 if sd == 1 else -1
+            far = [float((pair_poly[e[:2]][-1 if e[2] == 0 else 0] - base) @ (sgn * hv)) for e in ends if side[e] == sd]
+            room = min([f for f in far if f > 1.0], default=math.inf)
+            return min(most, max(0.4 * room, JUNCTION_MIN)), room
+        # a node with one end is a track end already, where a train may turn
+        stub_sides = sorted({1 - side[a] for _, _, a, b, stop in visits[g] if a is not None and b is not None and side[a] == side[b] and not stop}) if len(ends) > 1 else []
         if stops:
             li0, k0 = stops[0]
             s = stations[lines[li0]["stops"][k0]]
@@ -212,7 +373,7 @@ def track_model(doc, polys, net):
                 sec = max([occ[x] for x in (j - 1, j) if 0 <= x < len(occ)], default=SECTION_S)
                 return max(platform_s(*m, side, dead), sec)
             mload = {m: sum(max(clines[li]["tph"][:2]) * hold_s(m, li, j) for li, j in v) / 3600 for m, v in moves.items()}
-            n_plat = min(max(1, math.ceil(sum(mload.values()) / PLAT_LOAD - 1e-9)), max(1, MAX_PORTS - max(per_side)), len(moves))
+            n_plat = min(max(1, math.ceil(sum(mload.values()) / PLAT_LOAD - 1e-9)), max(1, MAX_PORTS - max(per_port)), len(moves))
             bins = [0.0] * n_plat
             for m in sorted(moves, key=lambda m: -mload[m]):
                 k = int(np.argmin(bins))
@@ -222,7 +383,6 @@ def track_model(doc, polys, net):
             if n_plat > 1:
                 st["stations with more than one platform track"] += 1
                 st["platform tracks added"] += n_plat - 1
-            perp = np.array([-hv[1], hv[0]])
             sids = []
             for k in range(n_plat):
                 q = base + perp * PAIR_GAP * (k - (n_plat - 1) / 2)
@@ -232,22 +392,19 @@ def track_model(doc, polys, net):
             chain = []
             for sd in (0, 1):
                 if per_side[sd] > 1 or (n_plat > 1 and per_side[sd] > 0):
-                    # past the platform, but short of the next node that side: a junction beyond
-                    # it would take its edges back in a hairpin
-                    sgn = 1 if sd == 1 else -1
-                    far = [float((pair_poly[e[:2]][-1 if e[2] == 0 else 0] - base) @ (sgn * hv)) for e in ends if side[e] == sd]
-                    room = min([f for f in far if f > 1.0], default=math.inf)
-                    off = min(plat / 2 + BRANCH_CLEAR + 10, max(0.4 * room, JUNCTION_MIN))
+                    # past the platform
+                    off, _ = side_off(sd, plat / 2 + BRANCH_CLEAR + 10)
                     if off < plat / 2 + BRANCH_CLEAR:
                         st["junctions inside a platform's clearance (no room)"] += 1
-                    q = base + sgn * off * hv
+                    q = base + (1 if sd == 1 else -1) * off * hv
                     chain.append((sd, len(nodes)))
                     nodes.append({"xy": q.round(3).tolist(), "level": LEVEL, "station": None})
             for e in ends:
                 j = next((n for sd, n in chain if sd == side[e]), sid)
                 node_of[e] = j
             g_chain[g] = (chain, sids)
-        else:
+            fan_out(g, chain, sids, ends, side, hv, perp, base, side_off)
+        elif len(ends) + len(stub_sides) <= MAX_PORTS or min(per_side) == 0:
             nid = len(nodes)
             nodes.append({"xy": base.round(3).tolist(), "level": LEVEL, "station": None})
             for e in ends:
@@ -255,6 +412,20 @@ def track_model(doc, polys, net):
             g_chain[g] = ([], [])
             if len(ends) > MAX_PORTS:
                 st["nodes over 8 ends"] += 1
+            elif len(ends) + len(stub_sides) <= MAX_PORTS:
+                # T-3790: a line turning back here, at no stop, turns as a player's line does: at a track end,
+                # a short dead end leaving on the other side
+                for sd in stub_sides:
+                    turners = [li for li, _, a, b, _ in visits[g] if a is not None and b is not None and side[a] == side[b] == 1 - sd]
+                    q = base + (1 if sd == 1 else -1) * (max(platform_len(lines[li]["cars"]) for li in turners) / 2 + STUB_CLEAR) * hv
+                    stub_of[(g, 1 - sd)] = (nid, len(nodes), sd)
+                    nodes.append({"xy": q.round(3).tolist(), "level": LEVEL, "station": None})
+                    st["turn-back stubs"] += 1
+        else:
+            fabric(g, ends, side, hv, perp, base, side_off)
+            g_chain[g] = ([], [])
+            if stub_sides:
+                st["turns back at a split junction (no stub)"] += 1
         g_side[g] = (hv, side)
 
     def add_edge(a, b, ha, da, hb, db, poly):
@@ -295,6 +466,12 @@ def track_model(doc, polys, net):
                 else:
                     A, B = np.array(nodes[a]["xy"]), np.array(nodes[b]["xy"])
                     conn[(a, b)] = add_edge(a, b, hv, 1, hv, -1, np.array([A, B]))
+    # T-3790: fans and split junctions' links, each from the node behind along the heading to the one ahead
+    for a, b in link_edges:
+        conn[(a, b)] = add_edge(a, b, link_hv[(a, b)], 1, link_hv[(a, b)], -1, np.array([nodes[a]["xy"], nodes[b]["xy"]], float))
+    for (g, _), (n, t, sd) in stub_of.items():
+        hv, da = g_side[g][0], (1 if sd == 1 else -1)
+        conn[(n, t)] = add_edge(n, t, hv, da, hv, -da, np.array([nodes[n]["xy"], nodes[t]["xy"]], float))
 
     piece_edge = {}
     for (pid, k), poly in pair_poly.items():
@@ -341,6 +518,10 @@ def track_model(doc, polys, net):
             here = j in matched
             arrive = node_of[ends[j - 1][1]] if j > 0 else None
             leave = node_of[ends[j][0]] if j < n_path else None
+            # in from a fan to its junction, and out again after (T-3790)
+            fan_in, fan_out_to = arrive, leave
+            arrive, leave = fan_up.get(arrive, arrive), fan_up.get(leave, leave)
+            hop(fan_in, arrive, path)
             sids = g_chain[find(ends[j - 1][1] if j > 0 else ends[j][0])][1]
             sid = sids[plat_of.get((li, j), 0)] if sids else None
             if here:
@@ -353,20 +534,36 @@ def track_model(doc, polys, net):
                 a_end, b_end = ends[j - 1][1], ends[j][0]
                 sd = g_side[find(a_end)][1]
                 if sd[a_end] == sd[b_end]:
-                    nm = nodes[sid]["station"]["name"] if sid is not None else "a junction"
-                    reversals.append(f"{lines[li]['feed']} {lines[li]['name']} (line {li}) at {nm}{'' if here else ', not a stop'}")
+                    nm = nodes[sid]["station"]["name"] if sid is not None and nodes[sid]["station"] else "a junction"
+                    stub = stub_of.get((find(a_end), sd[a_end]))
+                    reversals.append(f"{lines[li]['feed']} {lines[li]['name']} (line {li}) at {nm}{'' if here else ', not a stop'}{', at a stub' if stub and not here else ''}")
             if sid is not None and (here or arrive != leave):
                 hop(arrive, sid, path)
                 hop(sid, leave, path)
+            elif (li, j) in route_of:
+                r = route_of[(li, j)]
+                for u, v in zip(r, r[1:]):
+                    hop(u, v, path)
             elif arrive is not None and leave is not None:
-                hv, side = g_side[find(ends[j - 1][1])]
+                g = find(ends[j - 1][1])
+                hv, side = g_side[g]
                 if arrive == leave and side[ends[j - 1][1]] == side[ends[j][0]]:
-                    st["turns back at a node it does not stop at"] += 1
+                    stub = stub_of.get((g, side[ends[j - 1][1]]))
+                    if stub:
+                        hop(stub[0], stub[1], path)
+                        hop(stub[1], stub[0], path)
+                    else:
+                        st["turns back at a node it does not stop at"] += 1
+            hop(leave, fan_out_to, path)
             if j < n_path:
                 pid, d, k = L["path"][j]
                 es = piece_edge[(pid, k)]
                 path += [e << 1 | (0 if d == 1 else 1) for e in (es if d == 1 else es[::-1])]
         out_lines.append({"index": li, "stops": stops, "path": path, "tph": L["tph"]})
+    n_ends = Counter(n for e in edges for n in (e["a"], e["b"]))
+    over = sum(1 for k in n_ends.values() if k > MAX_PORTS)
+    if over:  # their edges past the 8th are refused, and lines over them don't run
+        st["nodes still over 8 ends"] = over
     st.update({"nodes": len(nodes), "stations": sum(1 for n in nodes if n["station"]), "edges": len(edges),
                "lines": sum(1 for l in out_lines if l)})
     st["partway reversals"] = len(reversals)

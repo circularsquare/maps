@@ -600,7 +600,9 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   (T-1774), parallel chains grouped into corridors, cut at stations and where the
   lines change, as many double-track pairs a piece as its trains need and OSM's tracks allow and
   the lines on each, with a picture, (`realshared.py`) the track model's nodes, edges, platform
-  tracks and line paths from them, and (`reallevels.py`, T-1773) each node's level and each edge's
+  tracks and line paths from them (T-3790: no node over a game node's 8 ends, a bigger junction split into
+  several joined by links, a station side over 8 through fans, and a short dead end where a line turns back at
+  no stop; rules in its docstring), and (`reallevels.py`, T-1773) each node's level and each edge's
   stretches of level from OSM's layer, tunnel and bridge tags (rules in its docstring, notes/T-1773.md),
   which `realsave --shared` builds into the save, a ramp per change placed clear of platforms
   (routed on realgraph.py's lines graphs in `data/work/realgraph-lines/`, T-3790; `REALGRAPH_DIR` reads a staged
@@ -628,7 +630,9 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   reason (`dropped_routes`) and its own `lines` overrides, which the `osm` adapter reads after the
   source's (S-Bahn mapped as light rail, T-3265); `build [ids] [--jobs N]`
   runs net, geom, corridors, `realsave --shared --slow` and gamesave per city, builds a city again
-  without the lines that did not run (`auto_<id>_drop.json`) until every line runs (`BUILD_PASSES`), and writes a report per city
+  without the lines that did not run (`auto_<id>_drop.json`) until every line runs (`BUILD_PASSES`), builds a city
+  with a keep list (`realauto_keep/<id>.json`, written by `keep <id> <save>`; Moscow's is v0.4.2's lines, T-3790)
+  from the lines it picks only, and writes a report per city
   (`auto_<id>.json`: stations, lines running, names in Latin letters, km off the graph, holds);
   `ship` ships the listed cities that passed and writes `app/src/game/realNetworks.json`. `realnet.py`
   makes each listed city a `CITIES` entry (`auto_city`). Rules in its docstring; notes/T-3225.md.
