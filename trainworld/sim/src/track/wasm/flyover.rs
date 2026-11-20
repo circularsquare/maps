@@ -276,7 +276,8 @@ impl TrackApi {
         if !rail(re) || !rail(fwd) || !rail(back) {
             return None;
         }
-        Some(self.lay_flyover(j, re, fwd, rside, route_edges))
+        // T-3027: a flyover's ramps are 200 m a level, as `RAMP_ROOM` has them
+        Some(geom::with_ramps(geom::Ramps::exact(RAMP_PER_LEVEL), || self.lay_flyover(j, re, fwd, rside, route_edges)))
     }
 
     /// T-3120: the flyover at `j`, as tight as its curves allow (T-3169: each curve at least the
@@ -514,7 +515,7 @@ impl TrackApi {
             ops.push(Op::Edge { id, data: Some(d) });
         }
         let pis = shape[1..shape.len() - 1].to_vec();
-        ops.push(Op::Edge { id: leg, data: Some(EdgeData { a: j, b: j3, tracks: 1, pis, built: false, off: false, thru: vec![], crossover: false, kind: net.edge_kind[re as usize], sep: false, day: 0, oneway: if crossing_out { 1 } else { 2 }, join: [join_for(crossing_out, net.right_hand), join_for(!crossing_out, net.right_hand)], limit: 0 }) });
+        ops.push(Op::Edge { id: leg, data: Some(EdgeData { a: j, b: j3, tracks: 1, pis, built: false, off: false, thru: vec![], crossover: false, kind: net.edge_kind[re as usize], sep: false, day: 0, oneway: if crossing_out { 1 } else { 2 }, join: [join_for(crossing_out, net.right_hand), join_for(!crossing_out, net.right_hand)], limit: 0, ramp: super::draw::stored_ramp(RAMP_PER_LEVEL as u16, net.edge_kind[re as usize]) }) });
         Some((ops, vec![j3], vec![e3b, leg], shape))
     }
 }

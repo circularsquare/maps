@@ -27,7 +27,7 @@ import type { Overlay } from "./overlay";
 import { trackAt } from "./pick";
 import { marksLayer, placeAt } from "./screenPlace";
 import { touchInput } from "./touch";
-import { curveLabelled, curveLabels, CurveLabelPool, type CurveLabel } from "./trackTagRows";
+import { curveLabelled, curveLabels, CurveLabelPool, rampLabels, type CurveLabel } from "./trackTagRows";
 
 /** A PI of a stretch, pack metres. */
 export interface EdgePi {
@@ -219,7 +219,7 @@ export class EdgeEditor {
     const labels: CurveLabel[] = !on
       ? []
       : pv
-        ? curveLabels(pv.verts)
+        ? [...rampLabels(pv.ramps), ...curveLabels(pv.verts)]
         : this.shape.legacy
           ? []
           : this.shape.pis

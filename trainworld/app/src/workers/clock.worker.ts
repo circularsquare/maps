@@ -5049,7 +5049,14 @@ async function handleMessage(msg: ToClock) {
       const [x, y] = packLocal(legRows[k], legRows[k + 1]);
       legs.set([x, y, legRows[k + 2], legRows[k + 3]], k);
     }
-    send({ kind: "preview", seq: msg.seq, ok, cost: out[1], lengthM: out[2], mult: out[4], ground, issues: ok ? [] : issues(), verts, pts, speeds, lanes, arc, anchor: anchor().version, marks, ...(joins ? { joins } : {}), ...(flatJunctions > 0 ? { noFlyover: true } : {}), ...(legs.length ? { legs } : {}) }, [verts.buffer, pts.buffer, speeds.buffer, lanes.buffer, marks.buffer]);
+    // T-3027: each ramp slower than the track's top speed, labelled as a curve is
+    const rampRows = a.preview_ramp_labels();
+    const ramps = new Float32Array(rampRows.length);
+    for (let k = 0; k + 2 < rampRows.length; k += 3) {
+      const [x, y] = packLocal(rampRows[k], rampRows[k + 1]);
+      ramps.set([x, y, rampRows[k + 2]], k);
+    }
+    send({ kind: "preview", seq: msg.seq, ok, cost: out[1], lengthM: out[2], mult: out[4], ground, issues: ok ? [] : issues(), verts, pts, speeds, lanes, arc, anchor: anchor().version, marks, ...(joins ? { joins } : {}), ...(flatJunctions > 0 ? { noFlyover: true } : {}), ...(legs.length ? { legs } : {}), ...(ramps.length ? { ramps } : {}) }, [verts.buffer, pts.buffer, speeds.buffer, lanes.buffer, marks.buffer]);
   } else if (msg.kind === "epoch") {
     if (msg.epoch !== epoch) {
       epoch = msg.epoch;

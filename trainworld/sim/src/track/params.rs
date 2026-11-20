@@ -64,8 +64,23 @@ pub const MAX_LEVEL: i8 = 3;
 /// Height between levels, m.
 pub const LEVEL_H: f64 = 8.0;
 pub const MAX_GRADE: f64 = 0.04;
-/// Ramp length per level of height change, m (8 m at 4%).
+/// Ramp length per level of height change, m (8 m at 4%): every ramp before T-3027, and the ramps
+/// laid by tools other than the drawing tool (a flyover's, T-3120).
 pub const RAMP_PER_LEVEL: f64 = LEVEL_H / MAX_GRADE;
+/// T-3027 (Anita, 2026-11-20): a ramp's speed limit, km/h per metre of ramp per level, so 200 m a
+/// level is 160 and 400 m is 320. The lie: real ramps this short would need vertical curves good
+/// for about 65 km/h at 200 m (DECISIONS.md).
+pub const RAMP_KMH_PER_M: f64 = 0.8;
+/// T-3027: the shortest ramp per level where there is no room for a longer one, m: 5% on rail
+/// (128 km/h), 8% on tram track (80).
+pub const RAMP_FLOOR: f64 = 160.0;
+pub const TRAM_RAMP_FLOOR: f64 = 100.0;
+
+/// T-3027: the ramp per level the drawing tool aims for at a target of `kmh`, m: the length whose
+/// speed limit is that target (400 m at 320), never under `floor`.
+pub fn ramp_for(kmh: f64, floor: f64) -> u16 {
+    (kmh / RAMP_KMH_PER_M - 1e-9).ceil().max(floor).min(u16::MAX as f64) as u16
+}
 
 // ---- stations and trains (SPEC 6.1, 6.3) ----
 
@@ -393,6 +408,11 @@ impl TrackKind {
         self == TrackKind::HighSpeed
     }
 
+    /// T-3027: the shortest ramp per level this kind takes where room is short, m.
+    pub fn ramp_floor(self) -> f64 {
+        if self.spec().family == 1 { TRAM_RAMP_FLOOR } else { RAMP_FLOOR }
+    }
+
     /// The kind a high-speed flag stands for.
     pub fn from_hsr(hsr: bool) -> TrackKind {
         if hsr { TrackKind::HighSpeed } else { TrackKind::Regular }
@@ -699,7 +719,7 @@ mod kind_tests {
         }
         for (k, kind) in kinds.into_iter().enumerate() {
             let e = net.alloc_edge();
-            net.set_edge(e, Some(EdgeData { a: k as u32, b: k as u32 + 1, tracks: 2, pis: vec![], built: false, off: false, thru: vec![], crossover: false, kind, sep: false, day: 0, oneway: 0, join: [0; 2], limit: 0 })).unwrap();
+            net.set_edge(e, Some(EdgeData { a: k as u32, b: k as u32 + 1, tracks: 2, pis: vec![], built: false, off: false, thru: vec![], crossover: false, kind, sep: false, day: 0, oneway: 0, join: [0; 2], limit: 0, ramp: 0 })).unwrap();
         }
         net
     }

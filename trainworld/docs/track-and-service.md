@@ -67,7 +67,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   it like a turnout, so it has the lead-in shape (a lead-in PI at each end). Refused: a curve under
   100 m (the ghost and circle red), a click within 5 degrees of straight behind the start ("turn
   back on itself": the circle grows without bound), and anything the edit refuses (water, crossing
-  other track at its level, a ramp, 200 m per level, that does not fit). The preview gives the arc's
+  other track at its level, a ramp shorter than the floor, "Levels" below). The preview gives the arc's
   circle (centre and radius, `TrackApi::route_arc`) and an edit the segment's end node (`route_end`)
   to chain from. Segment ends are plain joints. **Quad drawn through points** (T-423): a segment
   ending on open ground leaves each pair its own loose end, the express pair's 8 m to its side; a
@@ -212,14 +212,29 @@ Full design, numbers and sources: `notes/T-008.md`.
   at 100 m or wider (`TRACE_MIN_RADIUS`).
   Each piece of track runs at the **lowest of its curve speed, its track's cap and the line's
   trains' top speed** (T-817): track caps at **160 km/h**, high-speed track at **320**, a crossover
-  at 50; ordinary trains top out at 160, high-speed trains at 320 (6.3). Grades do not change speed.
-- **Levels** -3 to +3, **8 m apart** (+1 viaduct, -1 cut and cover, -2 bored, -3 deep). **Max
-  grade 4%**, so a ramp is **200 m per level**. Level is set per PI, at the level selected when it
-  was clicked; a ramp is centred between vertices of different levels. A ramp longer than its leg
-  spreads into the legs either side at its two levels, as near its centre as they allow, so it
-  starts sooner and a corner inside it is part way up (T-1895); only when those legs together are
-  too short is it refused ("Not enough room to change elevation"). A piece is never cut where a
-  ramp is. Nodes and platforms sit at whole levels. Tracks cross freely
+  at 50; ordinary trains top out at 160, high-speed trains at 320 (6.3). **A ramp is a limit too**
+  (T-3027, Anita 2026-11-20): **0.8 km/h per metre of ramp per level** (`RAMP_KMH_PER_M`), so 200 m
+  a level is 160, 250 m 200, 400 m 320, over the whole ramp (`geom::limits`). The ground's own
+  slope plays no part (T-3871). Ramps on track from before T-3027 (`EdgeData::ramp` 0) are 200 m
+  a level with no limit, so no line got slower; such a ramp squeezed shorter by a reshape takes
+  the rule.
+- **Levels** -3 to +3, **8 m apart** (+1 viaduct, -1 cut and cover, -2 bored, -3 deep). **Ramp
+  length per level** is the piece's (`EdgeData::ramp`, saved in `LRA1`): the drawing tool's is the
+  target max speed's (`ramp_for`: 200 m at 160, 400 m at 320 on high-speed track; ordinary track at
+  most its 160's 200 m, tram track 100 m), stored as 0 where it is 200 m off high-speed track. Other
+  tools' ramps are 200 m (a flyover's) or the piece's own (a rebuild's, a split's, a bridge laid
+  again). Level is set per PI, at the level selected when it was clicked; a ramp is centred
+  between vertices of different levels. A ramp longer than its leg spreads into the legs either
+  side at its two levels, as near its centre as they allow, so it starts sooner and a corner
+  inside it is part way up (T-1895). Where those legs together are too short it takes all they
+  have, steeper and slower, down to the **floor: 160 m a level on rail (5%, 128 km/h), 100 m on
+  tram track (8%, 80)** (`RAMP_FLOOR`, `TRAM_RAMP_FLOOR`); shorter is refused ("Not enough room to
+  change level. Each level up or down needs at least 160 m of ramp."). A route with a level change
+  that its ramps' length gets refused (a platform or crossing on a long ramp, no room for a bridge's
+  or an over-track ramp) is laid again with 200 m ramps, then the floor, before it is refused or a
+  ramp over track gives way to a flat crossing (`draw.rs` `route_op`, `ramp_tries`). The preview
+  colours the ramp by its speed and labels a ramp slower than the track's cap as a curve is. A
+  piece is never cut where a ramp is. Nodes and platforms sit at whole levels. Tracks cross freely
   where their heights differ by a level or more; at the same level they make a flat crossing; in
   between is invalid.
 
@@ -557,8 +572,8 @@ Full design, numbers and sources: `notes/T-008.md`.
   ground, so the low end of a ramp counts too: bridge and tunnel approaches start on land.
 - **A bridge by itself** (T-656, `track/bridge.rs`): a segment drawn through points at level 0
   (every vertex level 0, no clicked corners) that crosses water is raised to level 1 over each
-  crossing. The ramp up (200 m) ends 14.5 m before the water and the ramp down starts 14.5 m after
-  it, so both lie on land; everything else stays level 0. Crossings less than 429 m apart share
+  crossing. The ramp up (the route's length, "Levels": 200 m at 160) ends 14.5 m before the water and the ramp down starts 14.5 m after
+  it, so both lie on land; everything else stays level 0. Crossings less than two ramps and their shores apart (429 m with 200 m ramps) share
   one bridge, since the ramp down and the ramp up would not fit between them. The shape is
   unchanged: a ramp is centred between two vertices of different levels, so each ramp gets a
   vertex either side of it (at least 100 m from its centre, nearer an existing vertex where that
@@ -602,8 +617,8 @@ Full design, numbers and sources: `notes/T-008.md`.
   at the route's level, the other not on a ramp, more than `SHARED_NODE_CLEAR` 25 m from the
   route's ends) goes a level over it, or under it from -1 down. It is the bridge above with the
   crossings as the stretches to clear (each a point, 14.5 m clear on either side), seen with the
-  route's level as 0 and the way taken as up: the same 200 m ramps, vertex placement, 25 m shifts
-  and sharing of one rise between crossings less than 429 m apart. A crossing with a station
+  route's level as 0 and the way taken as up: the same ramps, vertex placement, 25 m shifts
+  and sharing of one rise between crossings closer than two ramps and their shores. A crossing with a station
   within 400 m of it (any track's) is a stretch half that station's platform plus 10 m each way
   instead, so the bridge keeps a level stretch for a station of the new track there; where its
   ramps have no room that way, the point is tried (T-1708). At level 0 going up the water
@@ -1658,7 +1673,7 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   between regular, high speed and tram (T-3088), in place, with the same edge, node and station ids, so lines,
   names and upgrades stay and no train is removed. **Stations go with the track** (T-3241, Anita 2026-11-11):
   every station on the picked track takes the new level, picked or not. A station at an end of the pick ramps on
-  the track beyond it, outside the pick: the ramp (200 m a level) starts 2 m past the platform's end, held by two
+  the track beyond it, outside the pick: the ramp (the piece's own length a level) starts 2 m past the platform's end, held by two
   new vertices with no turn on a straight (as a bridge's; on high-speed track at its design radius, so no speed is
   lost) or by the corners up to one put on the new level, whichever changes less track, the shape kept. Where the
   next piece has no room it moves whole and the ramp runs on through plain joints, up to 8 pieces. Track that

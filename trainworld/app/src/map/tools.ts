@@ -58,7 +58,7 @@ import type { Overlay } from "./overlay";
 import { marksLayer, placeAt } from "./screenPlace";
 import type { StopMarkers, StopTier } from "./stopMarkers";
 import type { BusStopMarkers } from "./busStops";
-import { curveLabels, legCurveLabels, placeCurveLabels, placementTag } from "./trackTagRows";
+import { curveLabels, legCurveLabels, placeCurveLabels, placementTag, rampLabels } from "./trackTagRows";
 import { firstAccepted, fractionAlong, layoutIssues, layoutOf, likelyFirst, nearestOn, orderOverlapping, pointAlong, roomNear, type Candidate, type Layout } from "./stationSnap";
 import { M_CROSSING, MARK_STRIDE } from "./markData";
 import { RealSnap, type RealClick, type RealRoute } from "./realSnap";
@@ -2272,7 +2272,7 @@ export class Tools {
       else put(this.el(k++, "pi-mark"), ...toLocal(this.start.lng, this.start.lat));
       if (pv) {
         const from = k;
-        k += placeCurveLabels([...legCurveLabels(pv.legs), ...curveLabels(pv.verts)], (x, y) => this.screen(x, y), this.overlay.cssW, this.overlay.cssH, (i) => this.el(from + i, "pi-label"));
+        k += placeCurveLabels([...legCurveLabels(pv.legs), ...rampLabels(pv.ramps), ...curveLabels(pv.verts)], (x, y) => this.screen(x, y), this.overlay.cssW, this.overlay.cssH, (i) => this.el(from + i, "pi-label"));
       }
     }
     for (let i = k; i < this.marks.length; i++) this.marks[i].style.display = "none";

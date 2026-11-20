@@ -925,6 +925,8 @@ export type FromClock =
       noFlyover?: true;
       /** T-3168: each flyover crossing leg's slowest curve, as `verts` (x, y local units, radius, km/h) */
       legs?: Float64Array;
+      /** T-3027: each ramp that holds trains under the track's top speed: x, y (local units, its middle), km/h */
+      ramps?: Float32Array;
       /** the draw anchor version `verts`, `pts`, `arc` and `marks` are relative to (T-307) */
       anchor?: number;
       /** where the track makes a crossing or a flat junction (T-629): x, y (local units), then 1 for a

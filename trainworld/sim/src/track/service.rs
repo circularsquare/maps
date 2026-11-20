@@ -720,20 +720,21 @@ fn build_run(net: &Network, l: u32, on: &Served, rev: bool, train_len: f64, dwel
         let e = path_edge(p);
         let len = net.edge_len[e as usize];
         run.seg_off.push(s);
-        let pcs = net.edge_pieces(e);
-        // T-817: the lowest of the curve's speed, the track's cap and the trains' top speed
+        // T-817: the lowest of the curve's speed, the track's cap and the trains' top speed; T-3027:
+        // and a ramp's
         let cap = net.v_cap(e).min(top);
+        let lims = net.edge_limits(e, cap);
         let mut add = |a: f64, v: f64| match raw.last() {
             Some(l) if l[1] == v => {}
             _ => raw.push([a, v]),
         };
         if path_dir(p) == 0 {
-            for pc in pcs {
-                add(s + pc.s0, pc.v_curve().min(cap));
+            for l in &lims {
+                add(s + l.s0, l.v);
             }
         } else {
-            for pc in pcs.iter().rev() {
-                add(s + len - (pc.s0 + pc.len), pc.v_curve().min(cap));
+            for l in lims.iter().rev() {
+                add(s + len - l.s1, l.v);
             }
         }
         s += len;

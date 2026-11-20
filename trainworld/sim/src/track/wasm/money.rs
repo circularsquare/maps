@@ -308,7 +308,8 @@ impl TrackApi {
     }
     /// Per stretch between stops of run 0 (T-817): the highest speed the trains reach there, the
     /// highest the limits allow, km/h, and what sets that limit: 0 the trains' top speed, 1 the
-    /// track (ordinary track's 160), 2 curves, 3 a crossover, 4 a piece's own speed limit (T-3405).
+    /// track (ordinary track's 160), 2 curves, 3 a crossover, 4 a piece's own speed limit (T-3405), 5 a ramp
+    /// (T-3027).
     pub fn line_stretch_speeds(&self, line: u32) -> Vec<f64> {
         let net = &self.w.net;
         let Some(s) = self.w.svc.lines.get(line as usize).filter(|s| s.ok) else { return vec![] };
@@ -324,15 +325,17 @@ impl TrackApi {
             for &p in &run.segs[n0..n1] {
                 let e = crate::track::net::path_edge(p);
                 let cap = net.v_cap(e);
-                for pc in net.edge_pieces(e) {
-                    if long && pc.len < SHORT_PIECE_M {
+                let pcs = net.edge_pieces(e);
+                for l in net.edge_limits(e, f64::INFINITY) {
+                    if long && pcs[l.piece].len < SHORT_PIECE_M {
                         continue;
                     }
-                    let curve = pc.v_curve();
-                    let v = curve.min(cap).min(top);
+                    // the curve's or (T-3027) the ramp's own limit
+                    let own = l.v;
+                    let v = own.min(cap).min(top);
                     if v > best + 1e-9 {
                         best = v;
-                        why = if top <= cap && top <= curve { 0.0 } else if cap <= curve { if net.edge_crossover[e as usize] { 3.0 } else if cap < net.v_kind_cap(e) { 4.0 } else { 1.0 } } else { 2.0 };
+                        why = if top <= cap && top <= own { 0.0 } else if cap <= own { if net.edge_crossover[e as usize] { 3.0 } else if cap < net.v_kind_cap(e) { 4.0 } else { 1.0 } } else if l.ramp { 5.0 } else { 2.0 };
                     }
                 }
             }

@@ -16,7 +16,7 @@ const TEXT: Record<string, () => string> = {
   "Geom:ZeroLeg": () => t("issues.zeroLeg"),
   "Geom:Reversal": () => t("issues.reversal"),
   "Geom:RadiusTooSmall": () => t("issues.radiusTooSmall", { radius: length(TRACK_SPECS[onTram() ? "tram" : onHsr() ? "highSpeed" : "regular"].minRadius) }),
-  "Geom:RampTooShort": () => t("issues.rampTooShort", { ramp: length(200) }),
+  "Geom:RampTooShort": () => t("issues.rampTooShort", { ramp: length(onTram() ? 100 : 160) }), // T-3027: the floor, params.rs RAMP_FLOOR
   "Geom:LevelRange": () => t("issues.levelRange"),
   NodeLevel: () => t("issues.levelRange"),
   GroundOverWater: () => t("issues.groundOverWater"),

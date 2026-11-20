@@ -113,6 +113,11 @@ fn changed_to(old: &[[f64; 2]], new: &[[f64; 2]], len: f64) -> f64 {
 /// some corner, or by two new vertices on a straight with no turn (as a bridge's are, track/bridge.rs), the
 /// one that changes the least track. The shape stays as it is. None where no ramp fits.
 fn ramp_in(net: &Network, e: u32, p: u32, l: i8, reach: f64, reach_m: f64) -> Option<(EdgeData, f64)> {
+    // T-3027: the piece's ramps as its own are laid
+    geom::with_ramps(net.edge_ramps(e), || ramp_in_at(net, e, p, l, reach, reach_m))
+}
+
+fn ramp_in_at(net: &Network, e: u32, p: u32, l: i8, reach: f64, reach_m: f64) -> Option<(EdgeData, f64)> {
     let mut d = net.edge_data(e)?;
     let flip = net.edge_a[e as usize] != p;
     let mut old = net.edge_vertices(e);
@@ -176,7 +181,7 @@ fn ramp_in(net: &Network, e: u32, p: u32, l: i8, reach: f64, reach_m: f64) -> Op
                 continue;
             }
             let u = (q.s0 + 1.0).max(reach + PAST_PLATFORM);
-            let w = u + RAMP_PER_LEVEL * (l as f64 - old[i].level as f64).abs() + 0.01;
+            let w = u + geom::ramps().per_level * (l as f64 - old[i].level as f64).abs() + 0.01;
             if w > q.s0 + q.len - 1.0 {
                 continue;
             }

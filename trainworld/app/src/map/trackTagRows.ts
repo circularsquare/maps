@@ -353,6 +353,13 @@ export function legCurveLabels(legs: Float64Array | undefined): CurveLabel[] {
   return out;
 }
 
+/** T-3027: a label for each ramp slower than the track's top speed (`PreviewAnswer.ramps`), as a curve's. */
+export function rampLabels(ramps: Float32Array | undefined): CurveLabel[] {
+  const out: CurveLabel[] = [];
+  for (let k = 0; ramps && k + 2 < ramps.length; k += 3) out.push({ x: ramps[k], y: ramps[k + 1], kmh: ramps[k + 2] });
+  return out;
+}
+
 /** A curve label's content (T-417; the radius left out, T-530): the speed limit on the speed colour,
  * as the track tool's tag colours the speed. Set only when it changes, since the labels are placed
  * every frame. */

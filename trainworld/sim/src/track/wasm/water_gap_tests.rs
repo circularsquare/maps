@@ -189,7 +189,8 @@ fn close_crossings_islands_and_banks_build() {
     println!("T-2414 sweep: {} of {} refused", refused.len(), res.len());
     for (name, r) in &res {
         let short = |d: f64| ["F", "G", "H"].iter().any(|p| name.starts_with(p)) && name.contains(&format!(" {d} m short"));
-        let want = if [60.0, 120.0, 180.0].iter().any(|&d| short(d)) {
+        // T-3027: 180 m short now builds, its ramp steeper (160 m, the floor)
+        let want = if [60.0, 120.0].iter().any(|&d| short(d)) {
             Some("BridgeNoRoomStation")
         } else if short(20.0) {
             Some("BridgeNoRoomJunction")

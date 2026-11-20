@@ -1,6 +1,6 @@
 # Train speed
 
-A train goes as fast as the slowest thing in front of it. That is its own top speed, the cap of the track it is on, or the bend it is in.
+A train goes as fast as the slowest thing in front of it. That is its own top speed, the cap of the track it is on, the bend it is in, or a ramp.
 
 **Bends.** A curve of radius R can be taken at a speed that grows with the square root of R: top speed in m/s is the root of 1.1 times the radius in metres. A tight 25 m bend, the tightest the game lets you build on rail, tops out at 19 km/h. High-speed track needs at least 50 m. A bend a kilometre in radius allows 119 km/h. Reaching the speed of an ordinary train takes a radius of about 1,796 m, and a high-speed train about 7,183 m.
 
@@ -14,9 +14,9 @@ So stations close together mean slow lines, because the train spends its time sp
 
 **Joins.** The whole train has to be under a limit before it may speed up again, so a train brakes before the joint where fast track meets slower track, just as it does before a bend.
 
-**Hills don't count.** Ramps don't slow a train. Only the bend, the track and the train do.
+**Ramps.** A ramp from one level to the next is good for 0.8 km/h for every metre of it. A 200 m ramp holds trains to 160 km/h, and one twice as long to twice that. The track tool makes ramps long enough for the target max speed where there's room, and shorter, slower ones where there isn't, down to 160 m (100 m on tram track). Ramps on track from older saves don't slow trains. The ground itself doesn't count, only the ramps you build.
 
 The line panel's hover on a stop's time says what limited the speed on that stretch. How long a trip takes feeds into the cost of a ride in [perceived minutes](perceived-minutes.md).
 
 Exact rule: `docs/track-and-service.md` "Placing stations, curve speed and levels" for bends and caps, "Trains and lines" for the two kinds and how they speed up. Stop times and turnaround at the ends of a line are in "Scheduling".
-In the code: **main** `sim/src/track/params.rs` `A_LAT`, also `MIN_RADIUS`, `V_TOP`, `V_HSR`, `ACCEL_LOW`, `ACCEL_HIGH`, `ACCEL_TOP`, `BRAKE`, `DEFAULT_DWELL_S`, `design_radius` `sim/src/track/profile.rs` `BANDS`
+In the code: **main** `sim/src/track/params.rs` `A_LAT`, also `MIN_RADIUS`, `V_TOP`, `V_HSR`, `ACCEL_LOW`, `ACCEL_HIGH`, `ACCEL_TOP`, `BRAKE`, `DEFAULT_DWELL_S`, `design_radius`, `RAMP_KMH_PER_M`, `RAMP_FLOOR`, `ramp_for` `sim/src/track/geom.rs` `limits`, `ramp_speed` `sim/src/track/profile.rs` `BANDS`

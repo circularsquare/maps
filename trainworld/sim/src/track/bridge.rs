@@ -34,8 +34,10 @@ fn fit_here(v: &[Pi], scaled: bool) -> Fit {
 
 /// The level a bridge runs at.
 const BRIDGE_LEVEL: i8 = 1;
-/// A ramp up to the bridge, m.
-const RAMP: f64 = RAMP_PER_LEVEL;
+/// A ramp up to the bridge, m: the ramps of the track being laid (T-3027, `geom::with_ramps`).
+fn ramp() -> f64 {
+    geom::ramps().per_level
+}
 /// Land kept between a ramp and the water's edge: the mask is read every `WATER_STEP`.
 const SHORE: f64 = WATER_STEP + 2.0;
 /// Ramps that a curve in the way keeps off their place move back by this, up to `MAX_SHIFT`.
@@ -163,7 +165,7 @@ fn bridge_in(verts: &[Pi], scaled: bool, spans: Spans, fine: bool, lift: [bool; 
     for w in &wet {
         let z = [w[0] - SHORE, w[1] + SHORE];
         match zones.last_mut() {
-            Some(last) if last[1] > 0.0 && z[0] - last[1] < 2.0 * RAMP + 2.0 * SHORE => last[1] = last[1].max(z[1]),
+            Some(last) if last[1] > 0.0 && z[0] - last[1] < 2.0 * ramp() + 2.0 * SHORE => last[1] = last[1].max(z[1]),
             _ => zones.push(z),
         }
     }
@@ -188,8 +190,8 @@ fn lay(f: &Fit, verts: &[Pi], scaled: bool, zones: &[[f64; 2]], wet: &[[f64; 2]]
     for (i, z) in zones.iter().enumerate() {
         if !is_up {
             // the ramp up, ending at the stretch's start, moved back while a curve keeps it off
-            let floor = ramps.last().map_or(0.0, |r| r.c + RAMP / 2.0);
-            let mut at = shifts().map(|s| z[0] - s - RAMP / 2.0).take_while(|&c| c - RAMP / 2.0 >= floor - 1e-9);
+            let floor = ramps.last().map_or(0.0, |r| r.c + ramp() / 2.0);
+            let mut at = shifts().map(|s| z[0] - s - ramp() / 2.0).take_while(|&c| c - ramp() / 2.0 >= floor - 1e-9);
             match at.find_map(|c| one_ramp(f, verts, scaled, &ramps, start_up, c)) {
                 Some(r) => ramps.push(r),
                 // the start, a new node, stays up
@@ -206,8 +208,8 @@ fn lay(f: &Fit, verts: &[Pi], scaled: bool, zones: &[[f64; 2]], wet: &[[f64; 2]]
             break;
         }
         // the ramp down, starting at the stretch's end, leaving room for the next ramp up
-        let ceil = if i < last { zones[i + 1][0] - RAMP } else { f.len };
-        let mut at = shifts().map(|s| z[1] + s + RAMP / 2.0).take_while(|&c| c + RAMP / 2.0 <= ceil + 1e-9);
+        let ceil = if i < last { zones[i + 1][0] - ramp() } else { f.len };
+        let mut at = shifts().map(|s| z[1] + s + ramp() / 2.0).take_while(|&c| c + ramp() / 2.0 <= ceil + 1e-9);
         match at.find_map(|c| one_ramp(f, verts, scaled, &ramps, start_up, c)) {
             Some(r) => {
                 ramps.push(r);
@@ -227,7 +229,7 @@ fn lay(f: &Fit, verts: &[Pi], scaled: bool, zones: &[[f64; 2]], wet: &[[f64; 2]]
 /// A ramp centred at `c` after `ramps`, with the nearest vertices that hold it; None where none do
 /// or it would not lie on the alignment.
 fn one_ramp(f: &Fit, verts: &[Pi], scaled: bool, ramps: &[Ramp], up: bool, c: f64) -> Option<Ramp> {
-    if c < RAMP / 2.0 - 1e-9 || c > f.len - RAMP / 2.0 + 1e-9 {
+    if c < ramp() / 2.0 - 1e-9 || c > f.len - ramp() / 2.0 + 1e-9 {
         return None;
     }
     let cap = c.min(f.len - c);
@@ -241,7 +243,7 @@ fn one_ramp(f: &Fit, verts: &[Pi], scaled: bool, ramps: &[Ramp], up: bool, c: f6
     for d in spans {
         // a vertex next to the end node is the end node
         let d = if d > cap - 0.5 { cap } else { d };
-        if d < RAMP / 2.0 - 1e-9 || tried.contains(&d) {
+        if d < ramp() / 2.0 - 1e-9 || tried.contains(&d) {
             continue;
         }
         tried.push(d);
@@ -428,7 +430,7 @@ fn raised(sub: &[(Pi, f64)], s0: f64, s1: f64, stay_up: [bool; 2], scaled: bool)
 fn ramp_in_place(g: &Fit, c: f64, down: bool) -> bool {
     let (lo, hi) = if down { (LEVEL_H, 0.0) } else { (0.0, LEVEL_H) };
     let h = |s: f64| geom::height_at(&g.vert, s);
-    (h(c - RAMP / 2.0 - 0.02) - lo).abs() < 0.05 && (h(c + RAMP / 2.0 + 0.02) - hi).abs() < 0.05 && (h(c) - LEVEL_H / 2.0).abs() < 0.05
+    (h(c - ramp() / 2.0 - 0.02) - lo).abs() < 0.05 && (h(c + ramp() / 2.0 + 0.02) - hi).abs() < 0.05 && (h(c) - LEVEL_H / 2.0).abs() < 0.05
 }
 
 fn floor_mm(v: f64) -> f64 {
@@ -511,7 +513,7 @@ fn slice(piece: &Piece, scaled: bool, reqs: &[Req]) -> Option<Vec<V>> {
             // it can be, so that one is as narrow as it can, since the pair reaches that far past
             // the second end.
             let gap = r.x - cur;
-            let h = if gap - (RAMP - MIN_CUT) < MIN_CUT { gap } else { RAMP - MIN_CUT };
+            let h = if gap - (ramp() - MIN_CUT) < MIN_CUT { gap } else { ramp() - MIN_CUT };
             (left, right) = (r.x - h, r.x + h);
         } else {
             // the second end is further on: this piece runs to the end of the arc

@@ -180,6 +180,10 @@ pub struct EdgeData {
     /// the kind's top speed: a limit at or over the top is none (T-3525), so the piece joins unlimited
     /// track (`Network::set_edge` keeps it so).
     pub limit: u16,
+    /// T-3027: the ramp per level this piece's ramps aim for, m (`geom::Ramps::of`): the drawing
+    /// tool's for its target speed, shorter where it had no room; 0 on track from before, whose
+    /// ramps are 200 m with no speed limit.
+    pub ramp: u16,
 }
 
 /// The speed limit a piece of `kind` keeps when asked for `kmh` (T-3405): none on a crossover, for 0,
@@ -647,6 +651,8 @@ pub struct Network {
     pub edge_join: Vec<[u8; 2]>,
     /// T-3405: `EdgeData::limit`.
     pub edge_limit: Vec<u16>,
+    /// T-3027: `EdgeData::ramp`.
+    pub edge_ramp: Vec<u16>,
     /// Derived (T-3137): the way single track's run takes by itself (`lanes.rs` `derive_ways`): 0
     /// both, 1 a to b, 2 b to a.
     pub edge_infer: Vec<u8>,
@@ -1308,6 +1314,21 @@ impl Network {
         geom::fit_in(v, self.frame.scaled())
     }
 
+    /// T-3027: how edge `e`'s ramps are laid (`EdgeData::ramp`).
+    pub fn edge_ramps(&self, e: u32) -> geom::Ramps {
+        geom::Ramps::of(self.edge_ramp[e as usize], self.edge_kind[e as usize])
+    }
+
+    /// `fit` of `v` as edge `e`'s shape, its ramps laid as its own are.
+    pub fn fit_edge(&self, e: u32, v: &[Pi]) -> geom::Fit {
+        geom::with_ramps(self.edge_ramps(e), || self.fit(v))
+    }
+
+    /// T-3027: edge `e`'s speed limits from its a end, capped at `cap` (`geom::limits`).
+    pub fn edge_limits(&self, e: u32, cap: f64) -> Vec<geom::Limit> {
+        geom::limits(self.edge_pieces(e), self.edge_vert(e), self.edge_ramp[e as usize] == 0, cap)
+    }
+
     /// True if a node may be placed here: anywhere in the unscaled frames; in the Mercator frame
     /// within 85 degrees of the equator and not across the antimeridian (docs/world.md).
     pub fn inside_world(&self, x: f64, y: f64) -> bool {
@@ -1365,6 +1386,7 @@ impl Network {
             edge_oneway: vec![],
             edge_join: vec![],
             edge_limit: vec![],
+            edge_ramp: vec![],
             edge_infer: vec![],
             edge_len: vec![],
             edge_pieces: vec![],
@@ -1627,6 +1649,7 @@ impl Network {
         self.edge_oneway.push(0);
         self.edge_join.push([0; 2]);
         self.edge_limit.push(0);
+        self.edge_ramp.push(0);
         self.edge_infer.push(0);
         self.edge_len.push(0.0);
         self.edge_pieces.push(Span::default());
@@ -1713,7 +1736,7 @@ impl Network {
     pub fn edge_data(&self, e: u32) -> Option<EdgeData> {
         self.edge_ok(e).then(|| {
             let i = e as usize;
-            EdgeData { a: self.edge_a[i], b: self.edge_b[i], tracks: self.edge_tracks[i], pis: self.pis.get(self.edge_pis[i]).to_vec(), built: self.edge_built[i], off: self.edge_off[i], thru: self.edge_thru[i].clone(), crossover: self.edge_crossover[i], kind: self.edge_kind[i], sep: self.edge_sep[i], day: self.edge_day[i], oneway: self.edge_oneway[i], join: self.edge_join[i], limit: self.edge_limit[i] }
+            EdgeData { a: self.edge_a[i], b: self.edge_b[i], tracks: self.edge_tracks[i], pis: self.pis.get(self.edge_pis[i]).to_vec(), built: self.edge_built[i], off: self.edge_off[i], thru: self.edge_thru[i].clone(), crossover: self.edge_crossover[i], kind: self.edge_kind[i], sep: self.edge_sep[i], day: self.edge_day[i], oneway: self.edge_oneway[i], join: self.edge_join[i], limit: self.edge_limit[i], ramp: self.edge_ramp[i] }
         })
     }
     pub fn station_data(&self, n: u32) -> Option<StationData> {
@@ -2128,6 +2151,7 @@ impl Network {
                 self.edge_oneway[i] = if d.tracks == 1 { d.oneway } else { 0 };
                 self.edge_join[i] = if d.tracks == 1 { d.join } else { [0; 2] };
                 self.edge_limit[i] = piece_limit(d.limit, d.kind, d.crossover);
+                self.edge_ramp[i] = d.ramp;
                 self.node_ports[d.a as usize].add(id << 1);
                 self.node_ports[d.b as usize].add(id << 1 | 1);
                 self.touch_node(d.a);
@@ -2151,6 +2175,7 @@ impl Network {
                 self.edge_oneway[i] = 0;
                 self.edge_join[i] = [0; 2];
                 self.edge_limit[i] = 0;
+                self.edge_ramp[i] = 0;
                 self.edge_infer[i] = 0;
                 self.edge_free.push(id);
             }
@@ -2588,7 +2613,7 @@ impl Network {
                 self.edge_time[i] = 0.0;
                 continue;
             }
-            let f = self.fit(&self.edge_vertices(e));
+            let f = self.fit_edge(e, &self.edge_vertices(e));
             let mut wet = vec![];
             cost::water_spans(f.len, |s| { let (x, y, _) = geom::pos_at(&f.pieces, s); (x, y) }, self.water_mask.as_ref(), &mut wet);
             let mut ground = vec![];
@@ -2603,7 +2628,7 @@ impl Network {
             self.edge_terrain[i] = self.terrain_spans.replace(self.edge_terrain[i], &ground);
             self.edge_roads[i] = self.road_spans.replace(self.edge_roads[i], &cross);
             let cap = self.v_cap(e);
-            self.edge_time[i] = f.pieces.iter().map(|p| p.len / p.v_curve().min(cap)).sum::<f64>().max(1e-3);
+            self.edge_time[i] = geom::run_time(&f.pieces, &f.vert, self.edge_ramp[i] == 0, cap).max(1e-3);
             self.edge_pieces[i] = self.pieces.replace(old, &f.pieces);
             self.edge_vert[i] = self.verts.replace(self.edge_vert[i], &f.vert);
             self.edge_water[i] = self.water.replace(self.edge_water[i], &wet);
@@ -2872,7 +2897,7 @@ impl Network {
         if let Some(p) = verts.iter().find(|p| !self.inside_world(p.x, p.y)) {
             out.push(Issue::OutsideWorld { x: p.x, y: p.y });
         }
-        let f = geom::fit_min(&verts, self.frame.scaled(), R_CAP, self.edge_kind[e as usize].spec().min_radius);
+        let f = geom::with_ramps(self.edge_ramps(e), || geom::fit_min(&verts, self.frame.scaled(), R_CAP, self.edge_kind[e as usize].spec().min_radius));
         for issue in f.issues {
             out.push(Issue::Geom { edge: e, issue });
         }
@@ -3927,6 +3952,10 @@ impl Network {
         if !self.edge_ok(e) {
             return Err(Issue::NoSuchEdge { edge: e });
         }
+        geom::with_ramps(self.edge_ramps(e), || self.split_plan_in(e, s))
+    }
+
+    fn split_plan_in(&self, e: u32, s: f64) -> Result<(NodeData, EdgeData, EdgeData), Issue> {
         if self.edge_crossover[e as usize] {
             return Err(Issue::Crossover { edge: e });
         }
@@ -4032,9 +4061,16 @@ impl Network {
             // the track, no turn) holds it where it was, on whichever side of the cut it is.
             if !drop_prev && !drop_next && v[i].level != v[i + 1].level {
                 let (l0, l1) = (v[i].level, v[i + 1].level);
-                let half = RAMP_PER_LEVEL * (l1 as f64 - l0 as f64).abs() / 2.0 + 0.01;
-                let c = (f.vert_s[i] + f.vert_s[i + 1]) / 2.0;
-                let (r0, r1) = (c - half, c + half);
+                // the ramp as laid (T-3027: its length is the edge's), one vertex pair per level change
+                let m = (0..i).filter(|&k| v[k].level != v[k + 1].level).count();
+                let (r0, r1) = match (f.vert.get(1 + 2 * m), f.vert.get(2 + 2 * m)) {
+                    (Some(a), Some(b)) => (a[0] - 0.01, b[0] + 0.01),
+                    _ => {
+                        let half = geom::ramps().per_level * (l1 as f64 - l0 as f64).abs() / 2.0 + 0.01;
+                        let c = (f.vert_s[i] + f.vert_s[i + 1]) / 2.0;
+                        (c - half, c + half)
+                    }
+                };
                 let (j0, j1) = (geom::piece_at(&f.pieces, r0), geom::piece_at(&f.pieces, r1));
                 if r0 > 0.5 && r1 < f.len - 0.5 && j0 == j1 && f.pieces[j0].k == 0.0 {
                     let at = |r: f64, level: i8| {
@@ -4078,9 +4114,9 @@ impl Network {
                 t2.push(*p);
             }
         }
-        let (join, limit) = (self.edge_join[i], self.edge_limit[i]);
-        let a = EdgeData { a: self.edge_a[i], b: u32::MAX, tracks, pis: p1[1..p1.len() - 1].to_vec(), built, off, thru: t1, crossover: false, kind, sep, day: self.edge_day[i], oneway, join: [join[0], 0], limit };
-        let b = EdgeData { a: u32::MAX, b: self.edge_b[i], tracks, pis: p2[1..p2.len() - 1].to_vec(), built, off, thru: t2, crossover: false, kind, sep, day: self.edge_day[i], oneway, join: [0, join[1]], limit };
+        let (join, limit, ramp) = (self.edge_join[i], self.edge_limit[i], self.edge_ramp[i]);
+        let a = EdgeData { a: self.edge_a[i], b: u32::MAX, tracks, pis: p1[1..p1.len() - 1].to_vec(), built, off, thru: t1, crossover: false, kind, sep, day: self.edge_day[i], oneway, join: [join[0], 0], limit, ramp };
+        let b = EdgeData { a: u32::MAX, b: self.edge_b[i], tracks, pis: p2[1..p2.len() - 1].to_vec(), built, off, thru: t2, crossover: false, kind, sep, day: self.edge_day[i], oneway, join: [0, join[1]], limit, ramp };
         Ok((node, a, b))
     }
 }

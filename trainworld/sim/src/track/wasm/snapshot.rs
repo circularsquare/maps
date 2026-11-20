@@ -58,7 +58,7 @@ impl TrackApi {
             }
             let i = e as usize;
             // the track's own: the player's limit on it (T-3405) is not a curve
-            let vmin = n.edge_pieces(e).iter().map(|p| p.v_curve()).fold(n.v_kind_cap(e), f64::min);
+            let vmin = n.edge_limits(e, n.v_kind_cap(e)).iter().map(|l| l.v).fold(n.v_kind_cap(e), f64::min);
             let zs = n.edge_vert(e).iter().map(|v| v[1]);
             let (lo, hi) = zs.fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), z| (a.min(z), b.max(z)));
             out.extend([e as f64, n.edge_a[i] as f64, n.edge_b[i] as f64, n.edge_tracks[i] as f64, n.edge_built[i] as u8 as f64, n.edge_len[i], n.edge_cost[i], vmin * 3.6, (lo / LEVEL_H).round(), (hi / LEVEL_H).round()]);
@@ -70,7 +70,7 @@ impl TrackApi {
     pub fn edge_render_speeds(&self, e: u32) -> Vec<f32> {
         let n = &self.w.net;
         if !n.edge_ok(e) { return vec![]; }
-        render_speeds(n.edge_pieces(e), n.edge_vert(e), n.v_cap(e))
+        render_speeds(n.edge_pieces(e), n.edge_vert(e), n.v_cap(e), n.edge_ramp[e as usize] == 0)
     }
 
     pub fn edge_render(&self, e: u32) -> Vec<f64> {

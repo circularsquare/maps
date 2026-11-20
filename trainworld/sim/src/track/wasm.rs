@@ -14,7 +14,7 @@ use super::boarding::Boarding;
 use super::bridge;
 use super::cost::{BlockIndex, ClassGrid, GeoMask, MaskSet, NoWater, RunMask, TransformedMask, UnionMask, WaterMask, WorldWater};
 use super::frame::FrameKind;
-use super::geom::{self, design_radii, GeomIssue, Pi};
+use super::geom::{self, design_radii, GeomIssue, Pi, Ramps};
 use super::net::{CrossKind, EdgeData, GroupLook, Issue, OuterGroup, LineData, LoopKind, Network, NodeData, StationData, Weekend, SPLIT_ROOM};
 use super::params::*;
 use super::profile;
@@ -60,6 +60,8 @@ pub struct TrackApi {
     route_legs: Vec<Vec<Pi>>,
     /// T-3168: the last preview's crossing legs' vertex rows (`preview_leg_curves`).
     preview_leg_rows: Vec<f64>,
+    /// T-3027: the last route or edge preview's ramps slower than the track's cap (`preview_ramp_labels`).
+    preview_ramps: Vec<f64>,
     /// T-3092: how many junctions of the last route asked about fell back to flat for want of room.
     flyover_fell_back: u32,
     /// T-656: the last route's alignment once bridged over water (what is built and drawn), else
@@ -73,6 +75,10 @@ pub struct TrackApi {
     route_tangent: bool,
     /// T-817: the auto radius cap of the corners the drawing tool makes, ground m (`set_design_speed`).
     route_cap: f64,
+    /// T-3027: the target speed itself, km/h (`set_design_speed`): it sizes the ramps drawn.
+    route_kmh: f64,
+    /// T-3027: the ramp per level the route being laid out (or the last one) aims for, m (`route_op`).
+    route_ramp_m: u16,
     /// T-3169: the radius a real flyover's crossing leg aims for at every curve, ground m
     /// (`set_flyover_speed`).
     flyover_r: f64,
@@ -109,6 +115,11 @@ pub struct TrackApi {
     ramp_found: bool,
     /// The ramp tried had no room.
     ramp_failed: bool,
+    /// T-3027: the route being laid out changes level (a ramp, a bridge, a ramp over track), so a
+    /// shorter ramp might fit where this one did not (`route_op`).
+    route_levels: bool,
+    /// T-3027: this is the last ramp length `route_op` tries: a ramp over track may give up for a flat crossing.
+    ramp_last: bool,
     /// The last tangent route's circle: centre x, y and ground radius, else empty.
     route_arc: Vec<f64>,
     /// The end node of the last route asked about (new or existing).
@@ -376,12 +387,15 @@ impl TrackApi {
             route_express: vec![],
             route_legs: vec![],
             preview_leg_rows: vec![],
+            preview_ramps: vec![],
             flyover_fell_back: 0,
             route_bridged: vec![],
             bridge_refused: false,
             bridge_short: Issue::BridgeNoRoom,
             route_tangent: false,
             route_cap: R_CAP,
+            route_kmh: DESIGN_SPEEDS[0],
+            route_ramp_m: RAMP_PER_LEVEL as u16,
             flyover_r: design_radius(FLYOVER_KMH),
             route_hsr: false,
             route_kind: TrackKind::Regular,
@@ -399,6 +413,8 @@ impl TrackApi {
             ramp_try: Ramp::Flat,
             ramp_found: false,
             ramp_failed: false,
+            route_levels: false,
+            ramp_last: true,
             route_arc: vec![],
             route_end: u32::MAX,
             preview_speeds: vec![],
@@ -2018,17 +2034,20 @@ fn lead_in_capped(x: f64, y: f64, level: i8, dir: f64, toward: (f64, f64), scale
     Some(Pi::new(x + dir.cos() * d, y + dir.sin() * d, 0.0, level).quantised())
 }
 
-/// Points along an alignment for drawing: x, y, height triples; arcs within 5 cm, straights
-/// every 100 m (so ramps show), ramp ends included.
-fn render_speeds(pieces: &[geom::Piece], vert: &[[f64; 2]], cap: f64) -> Vec<f32> {
+/// The speed limit of each segment `render_samples` draws, km/h: curves and (T-3027) ramps, as
+/// `geom::limits` with `old` for track from before T-3027.
+fn render_speeds(pieces: &[geom::Piece], vert: &[[f64; 2]], cap: f64, old: bool) -> Vec<f32> {
     if pieces.is_empty() { return vec![]; }
+    let lims = geom::limits(pieces, vert, old, cap);
     render_chainages(pieces, vert).windows(2).map(|pair| {
         let mid = (pair[0] + pair[1]) * 0.5;
-        let i = pieces.partition_point(|p| p.s0 <= mid).saturating_sub(1);
-        (pieces[i].v_curve().min(cap) * 3.6) as f32
+        let i = lims.partition_point(|l| l.s0 <= mid).saturating_sub(1);
+        (lims[i].v * 3.6) as f32
     }).collect()
 }
 
+/// Points along an alignment for drawing: x, y, height triples; arcs within 5 cm, straights
+/// every 100 m (so ramps show), ramp ends included.
 fn render_chainages(pieces: &[geom::Piece], vert: &[[f64; 2]]) -> Vec<f64> {
     let mut ss: Vec<f64> = vec![];
     for p in pieces {
@@ -2174,7 +2193,7 @@ impl TrackApi {
         if self.w.net.edge_ok(id) && self.w.net.edge_built[id as usize] {
             return self.refuse(Issue::NoSuchEdge { edge: id });
         }
-        self.run(Op::Edge { id, data: Some(EdgeData { a, b, tracks, pis: pis_from(pis), built: false, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0, join: [0; 2], limit: 0 }) })
+        self.run(Op::Edge { id, data: Some(EdgeData { a, b, tracks, pis: pis_from(pis), built: false, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0, join: [0; 2], limit: 0, ramp: 0 }) })
     }
     pub fn set_station(&mut self, node: u32, platform: u16, name: String) -> u32 {
         self.run(Op::Station { node, data: Some(StationData { platform, name, named: false, built: false, off: false, upgrades: 0, berth: None, day: 0, one: 0, fare: 0, own: String::new() }) })
@@ -2280,6 +2299,8 @@ mod quad_edit_tests;
 /// T-1615: routes ramp over or under track they would cross flat.
 #[cfg(test)]
 mod ramp_tests;
+#[cfg(test)]
+mod ramp_speed_tests;
 #[cfg(test)]
 mod beside_tests;
 

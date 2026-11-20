@@ -94,7 +94,7 @@ fn an_order_with_no_route_names_its_hop() {
     let z0 = node(&mut w, 0.0, 9000.0, 0);
     let z1 = node(&mut w, 3000.0, 9000.0, 0);
     let id = w.net.alloc_edge();
-    w.apply(Op::Edge { id, data: Some(EdgeData { a: s0, b: t, tracks: 1, pis: vec![], built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 1, join: [0; 2], limit: 0 }) }).unwrap();
+    w.apply(Op::Edge { id, data: Some(EdgeData { a: s0, b: t, tracks: 1, pis: vec![], built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 1, join: [0; 2], limit: 0, ramp: 0 }) }).unwrap();
     edge(&mut w, t, j, &[], 0).unwrap();
     edge(&mut w, j, m, &[], 0).unwrap();
     edge(&mut w, j, b, &[(3400.0, 0.0)], 0).unwrap();

@@ -449,21 +449,155 @@ pub fn design_radii(verts: &mut [Pi], made: &[usize], cap: f64, scaled: bool) {
     }
 }
 
-/// Height breakpoints: level at every vertex, a ramp of 200 m per level centred between two
-/// vertices of different levels (so the result does not depend on the drawing direction). A ramp
-/// longer than its leg spreads into the legs either side that are at its two levels, as near its
-/// centre as they allow (T-1895: it starts sooner), so a vertex inside it is part way up; only
-/// those runs of legs being too short is `RampTooShort`.
+/// T-3027: how long the ramps of the alignment being fitted are. A piece of track keeps the length
+/// it was drawn with (`EdgeData::ramp`); the drawing tool's follows its target speed.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Ramps {
+    /// The ramp per level aimed for, m.
+    pub per_level: f64,
+    /// The shortest per level it may take where its legs have no room for that, m.
+    pub floor: f64,
+    /// Track from before T-3027, whose 200 m ramps have no speed limit (so no line got slower).
+    pub old: bool,
+}
+
+impl Ramps {
+    /// Any fit that names no track: 200 m a level, no shorter, as before T-3027.
+    pub const PLAIN: Ramps = Ramps { per_level: RAMP_PER_LEVEL, floor: RAMP_PER_LEVEL, old: true };
+
+    /// A piece's ramps from its stored length per level (0: before T-3027) and its kind.
+    pub fn of(ramp: u16, kind: TrackKind) -> Ramps {
+        let floor = kind.ramp_floor();
+        if ramp == 0 {
+            Ramps { per_level: RAMP_PER_LEVEL, floor: floor.min(RAMP_PER_LEVEL), old: true }
+        } else {
+            Ramps { per_level: ramp as f64, floor: floor.min(ramp as f64), old: false }
+        }
+    }
+
+    /// Exactly `per_level` m a level, as a planner that places its ramps by that length wants.
+    pub fn exact(per_level: f64) -> Ramps {
+        Ramps { per_level, floor: per_level, old: false }
+    }
+}
+
+thread_local! {
+    static RAMPS: std::cell::Cell<Ramps> = const { std::cell::Cell::new(Ramps::PLAIN) };
+}
+
+/// `f` with every fit inside it laying ramps as `r` says (`ramps`).
+pub fn with_ramps<T>(r: Ramps, f: impl FnOnce() -> T) -> T {
+    let was = RAMPS.with(|c| c.replace(r));
+    let out = f();
+    RAMPS.with(|c| c.set(was));
+    out
+}
+
+/// `with_ramps` until the value this returns is dropped.
+#[must_use]
+pub struct RampsScope(Ramps);
+
+pub fn ramps_scope(r: Ramps) -> RampsScope {
+    RampsScope(RAMPS.with(|c| c.replace(r)))
+}
+
+impl Drop for RampsScope {
+    fn drop(&mut self) {
+        RAMPS.with(|c| c.set(self.0));
+    }
+}
+
+/// The ramps fits lay now (`with_ramps`); `Ramps::PLAIN` outside any.
+pub fn ramps() -> Ramps {
+    RAMPS.with(|c| c.get())
+}
+
+/// T-3027: the speed limit of a ramp `per_level` m long per level, m/s; none on old track's ramps
+/// of the 200 m they were built with.
+pub fn ramp_speed(per_level: f64, old: bool) -> f64 {
+    if old && per_level >= RAMP_PER_LEVEL - 1e-3 {
+        f64::INFINITY
+    } else {
+        RAMP_KMH_PER_M * per_level / 3.6
+    }
+}
+
+/// One stretch of an alignment at one speed limit, m/s: a piece's curve speed capped, or lower
+/// where a ramp is (`ramp`). `piece` is the piece it lies on.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Limit {
+    pub s0: f64,
+    pub s1: f64,
+    pub v: f64,
+    pub ramp: bool,
+    pub piece: usize,
+}
+
+/// The ramps of height breakpoints `vert`: start, end and length per level.
+pub fn ramp_spans(vert: &[[f64; 2]]) -> impl Iterator<Item = (f64, f64, f64)> + '_ {
+    vert.windows(2).filter(|w| w[0][1] != w[1][1] && w[1][0] - w[0][0] > 1e-6).map(|w| (w[0][0], w[1][0], (w[1][0] - w[0][0]) * LEVEL_H / (w[1][1] - w[0][1]).abs()))
+}
+
+/// The speed limits along an alignment, in order from its start and covering it: each piece's
+/// curve speed capped at `cap`, and a ramp's (`ramp_speed`) where that is lower (T-3027).
+pub fn limits(pieces: &[Piece], vert: &[[f64; 2]], old: bool, cap: f64) -> Vec<Limit> {
+    let ramps: Vec<(f64, f64, f64)> = ramp_spans(vert).map(|(a, b, l)| (a, b, ramp_speed(l, old))).filter(|r| r.2 < cap).collect();
+    let mut out = Vec::with_capacity(pieces.len() + 2 * ramps.len());
+    for (j, p) in pieces.iter().enumerate() {
+        let v = p.v_curve().min(cap);
+        let (s0, s1) = (p.s0, p.s0 + p.len);
+        let mut s = s0;
+        for &(a, b, vr) in ramps.iter().filter(|r| r.1 > s0 + 1e-9 && r.0 < s1 - 1e-9) {
+            if vr >= v {
+                continue;
+            }
+            let (a, b) = (a.max(s), b.min(s1));
+            if a > s + 1e-9 {
+                out.push(Limit { s0: s, s1: a, v, ramp: false, piece: j });
+            }
+            if b > a {
+                out.push(Limit { s0: a, s1: b, v: vr, ramp: true, piece: j });
+                s = b;
+            }
+        }
+        if s1 > s + 1e-9 || s == s0 {
+            out.push(Limit { s0: s, s1, v, ramp: false, piece: j });
+        }
+    }
+    out
+}
+
+/// The time to run an alignment at its limits (`limits`), s: piece by piece as before T-3027,
+/// plus what its slower ramps add, so track with none is timed to the bit as it was.
+pub fn run_time(pieces: &[Piece], vert: &[[f64; 2]], old: bool, cap: f64) -> f64 {
+    let mut t: f64 = pieces.iter().map(|p| p.len / p.v_curve().min(cap)).sum();
+    if ramp_spans(vert).next().is_some() {
+        for l in limits(pieces, vert, old, cap).iter().filter(|l| l.ramp) {
+            let p = &pieces[l.piece];
+            t += (l.s1 - l.s0) * (1.0 / l.v - 1.0 / p.v_curve().min(cap));
+        }
+    }
+    t
+}
+
+/// Height breakpoints: level at every vertex, a ramp (`ramps`: 200 m per level unless the track
+/// says otherwise, T-3027) centred between two vertices of different levels (so the result does
+/// not depend on the drawing direction). A ramp longer than its leg spreads into the legs either
+/// side that are at its two levels, as near its centre as they allow (T-1895: it starts sooner),
+/// so a vertex inside it is part way up; where those runs of legs are too short it takes all they
+/// have, down to the floor (T-3027: steeper and slower); shorter still is `RampTooShort`.
 fn vertical(v: &[Pi], vs: &[f64], issues: &mut Vec<GeomIssue>) -> Vec<[f64; 2]> {
     let n = v.len();
     let z = |i: usize| v[i].level as f64 * LEVEL_H;
     let mut pts = vec![[0.0, z(0)]];
     let mut prev_end = vs[0];
+    let rs = ramps();
     for k in 0..n - 1 {
         if v[k].level == v[k + 1].level {
             continue;
         }
-        let r = RAMP_PER_LEVEL * (v[k + 1].level as f64 - v[k].level as f64).abs();
+        let dl = (v[k + 1].level as f64 - v[k].level as f64).abs();
+        let r = rs.per_level * dl;
         let c = (vs[k] + vs[k + 1]) / 2.0;
         let (mut a, mut b) = (c - r / 2.0, c + r / 2.0);
         if a < vs[k] - 1e-6 || b > vs[k + 1] + 1e-6 {
@@ -473,6 +607,8 @@ fn vertical(v: &[Pi], vs: &[f64], issues: &mut Vec<GeomIssue>) -> Vec<[f64; 2]> 
             if w1 - w0 >= r - 1e-6 {
                 a = a.clamp(w0, (w1 - r).max(w0));
                 b = a + r;
+            } else if w1 - w0 >= rs.floor * dl - 1e-6 {
+                (a, b) = (w0, w1);
             } else {
                 issues.push(GeomIssue::RampTooShort(k));
                 a = a.max(vs[k]);
@@ -704,6 +840,57 @@ mod tests {
         // runs too short either side together are still too short
         let f = fit(&[p(0.0, 0), p(40.0, 0), p(140.0, 1), p(180.0, 1)]);
         assert!(f.issues.contains(&GeomIssue::RampTooShort(1)));
+    }
+
+    /// T-3027: a ramp's length per level sets its speed (200 m 160 km/h, 400 m 320); where its legs
+    /// have no room it takes what they have down to the floor, slower; old track's 200 m ramps have
+    /// no limit.
+    #[test]
+    fn ramps_take_the_room_they_have_and_set_their_speed() {
+        let p = |x: f64, l: i8| Pi::new(x, 0.0, 0.0, l);
+        let kmh = |f: &Fit, old: bool, cap: f64| limits(&f.pieces, &f.vert, old, cap / 3.6).iter().map(|l| l.v * 3.6).fold(f64::INFINITY, f64::min);
+        let hsr = Ramps::of(400, TrackKind::HighSpeed);
+        // room for 400 m: 300 to 700, 320 km/h
+        let f = with_ramps(hsr, || fit(&[p(0.0, 0), p(1000.0, 1)]));
+        assert!(f.issues.is_empty());
+        assert_eq!((height_at(&f.vert, 299.0), height_at(&f.vert, 701.0)), (0.0, 8.0));
+        assert!((kmh(&f, false, 320.0) - 320.0).abs() < 1e-9);
+        // 250 m of room: the whole leg, 200 km/h
+        let f = with_ramps(hsr, || fit(&[p(0.0, 0), p(250.0, 1)]));
+        assert!(f.issues.is_empty());
+        assert!((kmh(&f, false, 320.0) - 200.0).abs() < 1e-9);
+        let lims = limits(&f.pieces, &f.vert, false, 320.0 / 3.6);
+        assert!(lims.len() == 1 && lims[0].ramp);
+        // 130 m is under rail's 160 m floor; tram track's 100 m floor takes it at 104 km/h, capped at its 80
+        let f = with_ramps(hsr, || fit(&[p(0.0, 0), p(130.0, 1)]));
+        assert!(f.issues.contains(&GeomIssue::RampTooShort(0)));
+        let f = with_ramps(Ramps::of(100, TrackKind::Tram), || fit(&[p(0.0, 0), p(130.0, 1)]));
+        assert!(f.issues.is_empty());
+        assert!((kmh(&f, false, 80.0) - 80.0).abs() < 1e-9);
+        let f = with_ramps(Ramps::of(100, TrackKind::Tram), || fit(&[p(0.0, 0), p(99.0, 1)]));
+        assert!(f.issues.contains(&GeomIssue::RampTooShort(0)));
+        // a 200 m ramp holds trains at 160 on new track and not at all on old
+        let f = fit(&[p(0.0, 0), p(1000.0, 1)]);
+        assert!((kmh(&f, false, 320.0) - 160.0).abs() < 1e-9);
+        assert!((kmh(&f, true, 320.0) - 320.0).abs() < 1e-9);
+        // old track shortened to 180 m follows the rule: 144
+        let f = with_ramps(Ramps::of(0, TrackKind::HighSpeed), || fit(&[p(0.0, 0), p(180.0, 1)]));
+        assert!(f.issues.is_empty());
+        assert!((kmh(&f, true, 320.0) - 144.0).abs() < 1e-9);
+        // a ramp over two levels: 800 m at 400 a level
+        let f = with_ramps(hsr, || fit(&[p(0.0, 0), p(2000.0, 2)]));
+        assert_eq!((height_at(&f.vert, 599.0), height_at(&f.vert, 1401.0)), (0.0, 16.0));
+        assert!((kmh(&f, false, 320.0) - 320.0).abs() < 1e-9);
+        // the limits cover the alignment in order; the time adds the ramp's slow stretch
+        let f = with_ramps(Ramps::of(200, TrackKind::HighSpeed), || fit(&[p(0.0, 0), p(1000.0, 1)]));
+        let lims = limits(&f.pieces, &f.vert, false, 320.0 / 3.6);
+        assert_eq!(lims.iter().map(|l| (l.s0, l.s1, l.ramp)).collect::<Vec<_>>(), vec![(0.0, 400.0, false), (400.0, 600.0, true), (600.0, 1000.0, false)]);
+        let t = run_time(&f.pieces, &f.vert, false, 320.0 / 3.6);
+        assert!((t - (800.0 / (320.0 / 3.6) + 200.0 / (160.0 / 3.6))).abs() < 1e-9);
+        assert_eq!(ramp_for(320.0, RAMP_FLOOR), 400);
+        assert_eq!(ramp_for(160.0, RAMP_FLOOR), 200);
+        assert_eq!(ramp_for(120.0, RAMP_FLOOR), 160);
+        assert_eq!(ramp_for(80.0, TRAM_RAMP_FLOOR), 100);
     }
 
     #[test]

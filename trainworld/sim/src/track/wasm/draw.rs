@@ -14,7 +14,42 @@ impl TrackApi {
     /// the preferred way, else the other, else crosses flat: the first whose edit passes the checks.
     /// T-3092: `flying` lays each new junction on double track as a flyover of real track where it
     /// has room (`with_flyovers`).
+    ///
+    /// T-3027: its ramps aim for the target speed's length per level (`ramp_for`: 400 m at 320 on
+    /// high-speed track), shorter where their legs have no room (`geom::Ramps`). Where a route with
+    /// a level change is refused at that length (a platform, a crossing, no room for a bridge's
+    /// ramps), it is tried again with 200 m ramps, then the kind's floor; a ramp over track is tried
+    /// at every length before the route crosses flat. The last try's answer stands.
     pub(super) fn route_op(&mut self, ends: &[f64], pis: &[f64], tracks: u8, flying: bool) -> Result<(Op, Vec<Pi>, Vec<u32>, Vec<u32>), Issue> {
+        let kind = self.route_kind_of(tracks);
+        let tries = ramp_tries(self.route_kmh, kind);
+        for (k, &len) in tries.iter().enumerate() {
+            self.route_ramp_m = len;
+            self.ramp_last = k + 1 == tries.len();
+            self.route_levels = false;
+            let r = geom::with_ramps(Ramps::of(len, kind), || {
+                let r = self.route_op_at(ends, pis, tracks, flying);
+                // only a route with a level change is worth another try
+                let ok = self.ramp_last || !self.route_levels || match &r {
+                    Ok((op, ..)) => self.w.sketch(op.clone(), true).map(|inv| self.w.unsketch(inv)).is_ok(),
+                    Err(_) => false,
+                };
+                (r, ok)
+            });
+            if r.1 {
+                self.ramp_last = true;
+                return r.0;
+            }
+            if let Ok((_, _, nn, ne)) = &r.0 {
+                let (nn, ne) = (nn.clone(), ne.clone());
+                self.release(&nn, &ne);
+            }
+        }
+        unreachable!("ramp_tries is never empty")
+    }
+
+    /// `route_op` with the ramps the scope lays (`geom::with_ramps`).
+    fn route_op_at(&mut self, ends: &[f64], pis: &[f64], tracks: u8, flying: bool) -> Result<(Op, Vec<Pi>, Vec<u32>, Vec<u32>), Issue> {
         self.route_legs.clear();
         self.flyover_fell_back = 0;
         self.join_at = self.route_join.take().unwrap_or([f64::NAN; 4]);
@@ -92,6 +127,7 @@ impl TrackApi {
                     self.ramp_try = Ramp::Flat;
                     return r;
                 }
+                self.route_levels = true;
                 if let Ok((op, _, nn, ne)) = &r {
                     if !self.ramp_failed {
                         if let Ok(inv) = self.w.sketch(op.clone(), true) {
@@ -103,6 +139,11 @@ impl TrackApi {
                     let (nn, ne) = (nn.clone(), ne.clone());
                     self.release(&nn, &ne);
                 }
+            }
+            // T-3027: shorter ramps over the track before a flat crossing
+            if self.route_levels && !self.ramp_last {
+                self.ramp_try = Ramp::Flat;
+                return Err(Issue::BridgeNoRoom);
             }
         }
         self.ramp_try = Ramp::Flat;
@@ -283,6 +324,8 @@ impl TrackApi {
             _ => clicks,
         };
         let (shape, clicks) = (bridged.as_deref().unwrap_or(&verts), cut(&bridged, verts.len(), pis.len()));
+        // T-3027: a route whose ramps a shorter length might fit (`route_op`)
+        self.route_levels |= self.bridge_refused || shape.iter().any(|p| p.level != shape[0].level);
         // T-2927: street tram track's curves that leave the street are tram track
         let pieces = if kind == TrackKind::StreetTram {
             street_over_water(&self.w.net, street_pieces(shape, first_click, clicks, scaled, &self.route_street))
@@ -509,7 +552,7 @@ impl TrackApi {
         let f = geom::fit_in(shape, net.frame().scaled());
         let wet = bridge::water(net.water_mask.as_ref())(&f, false);
         let (Some(first), Some(last)) = (wet.first(), wet.last()) else { return Issue::BridgeNoRoom };
-        let reach = RAMP_PER_LEVEL + 2.0 * WATER_STEP;
+        let reach = geom::ramps().per_level + 2.0 * WATER_STEP;
         for k in 0..2 {
             let near = if k == 0 { first[0] < reach } else { f.len - last[1] < reach };
             if !near || free[k] {
@@ -542,6 +585,8 @@ impl TrackApi {
         }
         let net = &self.w.net;
         let e = net.node_ports[n as usize].ends()[0] >> 1;
+        // T-3027: its ramps laid again as its own are
+        let _ramps = geom::ramps_scope(net.edge_ramps(e));
         let mut d = net.edge_data(e)?;
         if d.built || d.crossover || !d.thru.is_empty() || d.a == d.b || d.pis.iter().any(|p| !(0..=1).contains(&p.level)) {
             return None;
@@ -680,6 +725,7 @@ impl TrackApi {
         self.preview_lanes.clear();
         self.preview_speeds.clear();
         self.preview_marks.clear();
+        self.preview_ramps.clear();
         let (op, verts, nn, ne) = match self.route_op(ends, pis, tracks, flying) {
             Ok(v) => v,
             Err(i) => {
@@ -687,6 +733,8 @@ impl TrackApi {
                 return vec![0.0; 5];
             }
         };
+        // T-3027: the shape is fitted with the ramps it was laid with
+        let _ramps = geom::ramps_scope(Ramps::of(self.route_ramp_m, self.route_kind_of(tracks)));
         // T-3103: a junction's flat badge only where two moves through it can cross; on a refused
         // edit, every junction it would make
         let js: Vec<u32> = self.route_junctions.iter().map(|j| j.0).collect();
@@ -734,7 +782,7 @@ impl TrackApi {
             self.preview_speeds.push(joint);
             self.preview_lanes.push(255);
             render_samples(&f.pieces, &f.vert, &mut out);
-            self.preview_speeds.extend(render_speeds(&f.pieces, &f.vert, kind.v_cap()));
+            self.preview_speeds.extend(render_speeds(&f.pieces, &f.vert, kind.v_cap(), false));
             self.preview_lanes.resize(self.preview_speeds.len(), 255);
         }
         // T-3092: each flyover's crossing leg, after a step with no track; T-3168: its slowest
@@ -743,11 +791,11 @@ impl TrackApi {
         if out.len() > 5 {
             let cap = self.route_kind_of(tracks).v_cap();
             for leg in &self.route_legs {
-                let f = self.w.net.fit(leg);
+                let f = geom::with_ramps(Ramps::exact(RAMP_PER_LEVEL), || self.w.net.fit(leg));
                 self.preview_speeds.push(-1.0);
                 self.preview_lanes.push(0);
                 render_samples(&f.pieces, &f.vert, &mut out);
-                self.preview_speeds.extend(render_speeds(&f.pieces, &f.vert, cap));
+                self.preview_speeds.extend(render_speeds(&f.pieces, &f.vert, cap, false));
                 self.preview_lanes.resize(self.preview_speeds.len(), 0);
                 let mut rows = vec![];
                 vertex_rows(&f, leg, &mut rows, cap);
@@ -786,6 +834,7 @@ impl TrackApi {
     pub fn set_design_speed(&mut self, kmh: f64) {
         let kmh = if kmh.is_finite() { kmh.clamp(DESIGN_MIN_KMH, DESIGN_SPEEDS[DESIGN_SPEEDS.len() - 1]) } else { DESIGN_SPEEDS[0] };
         self.route_cap = design_radius(kmh);
+        self.route_kmh = kmh;
     }
 
     /// T-3169: the flyover target max speed of routes after this, km/h, clamped as the design
@@ -917,7 +966,7 @@ impl TrackApi {
             };
             let edge = self.w.net.alloc_edge();
             edges.push(edge);
-            ops.push(Op::Edge { id: edge, data: Some(EdgeData { a: from, b: to, tracks, pis: p[1..p.len() - 1].to_vec(), built: false, off: false, thru: vec![], crossover: false, kind, sep: false, day: 0, oneway: 0, join: [0; 2], limit: 0 }) });
+            ops.push(Op::Edge { id: edge, data: Some(EdgeData { a: from, b: to, tracks, pis: p[1..p.len() - 1].to_vec(), built: false, off: false, thru: vec![], crossover: false, kind, sep: false, day: 0, oneway: 0, join: [0; 2], limit: 0, ramp: stored_ramp(self.route_ramp_m, kind) }) });
             from = to;
         }
     }
@@ -1604,6 +1653,20 @@ fn back_on_bare(net: &Network, end: End, toward: (f64, f64)) -> End {
     End::Edge { e, x, y }
 }
 
+/// T-3027: the ramp lengths per level `route_op` tries, m: the target's (up to the kind's top speed),
+/// then 200 m and the kind's floor where shorter.
+pub(super) fn ramp_tries(kmh: f64, kind: TrackKind) -> Vec<u16> {
+    let floor = kind.ramp_floor();
+    let want = ramp_for(kmh.min(kind.spec().v_cap_kmh), floor);
+    let mut out = vec![want];
+    for l in [RAMP_PER_LEVEL as u16, floor as u16] {
+        if l < *out.last().unwrap() {
+            out.push(l);
+        }
+    }
+    out
+}
+
 /// T-3712: a route end on a ramp would split it, and a node has one level: the refusal names the ramp
 /// (`split_plan` reads the same +-1 m).
 fn on_ramp_end(net: &Network, end: End) -> Result<(), Issue> {
@@ -1623,4 +1686,11 @@ fn leave_away(r: &mut Resolved, from: Option<(f64, f64)>) {
     if let Some((sx, sy)) = from {
         r.dirs.retain(|d| d.cos() * (r.x - sx) + d.sin() * (r.y - sy) > 0.0);
     }
+}
+
+/// T-3027: what a drawn piece stores for ramps of `m` per level: 0 for 200 m off high-speed track,
+/// where old track's 200 m ramps (no limit) and new ones (160 km/h) run alike under the track's
+/// cap, so a save with none of the other kinds is as it was.
+pub(super) fn stored_ramp(m: u16, kind: TrackKind) -> u16 {
+    if m == RAMP_PER_LEVEL as u16 && !kind.is_hsr() { 0 } else { m }
 }

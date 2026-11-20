@@ -636,7 +636,8 @@ function stretchTip(s: { reached: number; limit: number; why: number } | undefin
   // T-2927: on a tram line the track's cap is street tram track's 60 km/h or tram track's 80
   const track = !tram ? "track" : s.limit <= TRACK_SPECS.streetTram.vCapKmh + 0.5 ? "street" : "tram";
   // i18n-ignore: select option names; T-3405: 4 is a piece's own speed limit
-  const why = s.why === 4 ? tr("lineInspector.whyLimit", { speed: lim, vehicle }) : tr("lineInspector.why", { why: s.why === 0 ? "top" : s.why === 1 ? track : s.why === 2 ? "curve" : "crossover", speed: lim, vehicle });
+  // T-3027: 5 is a ramp
+  const why = s.why === 4 ? tr("lineInspector.whyLimit", { speed: lim, vehicle }) : s.why === 5 ? tr("lineInspector.whyRamp", { speed: lim, vehicle }) : tr("lineInspector.why", { why: s.why === 0 ? "top" : s.why === 1 ? track : s.why === 2 ? "curve" : "crossover", speed: lim, vehicle });
   return tr("lineInspector.reach", { speed: speed(s.reached), vehicle }) + "\n" + why + (s.reached < s.limit - 1 ? "\n" + tr("lineInspector.tooClose") : "");
 }
 
