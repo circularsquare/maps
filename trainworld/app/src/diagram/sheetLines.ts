@@ -12,7 +12,8 @@
 import type { DiagramGraph } from "./graph";
 import { dialled, layoutDiagram, type DiagramLayout, type LastPlaces } from "./layout";
 import { massAt, massCoasts, sheetFinest, sheetWarp, type Sheet, type SheetRaster } from "./sheet";
-import { fitOcti, rounded, segD, stationZones, type DiagramBorders, type ZoneShape } from "./borders";
+import { filleted, fitOcti, rounded, segD, stationZones, type DiagramBorders, type ZoneShape } from "./borders";
+import { bandFillets, cleanRing } from "./coastRound";
 import { chamfer, type RealWater } from "./waterReal";
 import type { DiagramWater } from "./water";
 import { smoothEdges, thinPass, THIN, type CarryMap, type MapGrid, type ThinOptions, type ThinStats } from "./sheetThin";
@@ -685,8 +686,10 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
         tolL.push(Math.max(Math.min(Math.max(0.2, clear - (PR - 0.3)), Math.max(0.25 * hd, Math.min(step, 0.45 * wl))), Math.min(10, 0.35 * wl, clear - PR)));
         tolS.push(Math.max(0.25 * hd, Math.min(step, 0.45 * ww), Math.min(10, 0.35 * ww)));
       });
-      const fit = scaled(fitOcti(px, py, tolL, undefined, { tol: tolS, left: true }));
-      rounded(fit, true, 3 * K, seaCmd);
+      // its small features taken out, so each corner has room to round (T-3833)
+      const fit = scaled(cleanRing(fitOcti(px, py, tolL, undefined, { tol: tolS, left: true }), SX, SY));
+      if (!fit.length) continue;
+      filleted(fit, true, 3 * K, seaCmd);
       seaRings.push(fit);
     }
   }
@@ -810,9 +813,16 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
   const stats = { arcs: rivers?.arcs ?? 0, crossings: rivers?.crossings ?? 0, leftOut: 0, turned: 0, sections: 0, widened: 0, noRoute: 0, falseCross: 0, rivers: rivers?.routed.length ?? 0, dropped: 0, uncrossed: 0, mouths: 0, dry: 0, open: 0, channels: 0, ms: Math.round(t3 - t0) };
   // the rivers' bands per width, in layout units
   const widths = rivers ? [...rivers.cmds.keys()].sort((a, b) => a - b) : [];
-  const water: DiagramWater | null = withWater
-    ? { rivers: widths.map((w) => Float64Array.from(rivers!.cmds.get(w)!)), bands: widths.map((w) => w * K), riverEnds: widths.map((w) => Float64Array.from(rivers!.ends.get(w) ?? [])), sea: Float64Array.from(seaCmd), seaRings, stats }
-    : null;
+  let water: DiagramWater | null = null, msFillets = 0, fillets = 0, filletsTight = 0;
+  if (withWater) {
+    water = { rivers: widths.map((w) => Float64Array.from(rivers!.cmds.get(w)!)), bands: widths.map((w) => w * K), riverEnds: widths.map((w) => Float64Array.from(rivers!.ends.get(w) ?? [])), sea: Float64Array.from(seaCmd), seaRings, stats };
+    // where a band meets the sea or another band, the corner of land between them filled along an arc (T-3833)
+    if (widths.length) {
+      const tf = performance.now(), f = bandFillets(water.sea!, water.rivers, water.bands, water.riverEnds!, K, SX, SY);
+      if (f.cmds.length) water.fillets = Float64Array.from(f.cmds);
+      (fillets = f.made), (filletsTight = f.tight), (msFillets = performance.now() - tf);
+    }
+  }
   return {
     water,
     borders: { cmds: Float64Array.from(borderCmd), zones, zoneOf },
@@ -820,7 +830,7 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
     riverFits: detail ? rivers?.fits : undefined,
     riverRoutes: detail ? rivers?.routed : undefined,
     riverSkipped: detail ? rivers?.skipped : undefined,
-    info: { cell: +hd.toFixed(2), cells: NC, cutKm2: Math.round(cutKm2), offLand: offLand.length, bent, zoneFixed, wrongZone, wrongSide, bends, wholeZones, rings: seaRings.length, riverBands: rivers?.routed.length ?? 0, riverWrong: rivers?.wrong.length ?? 0, msRivers: Math.round(rivers?.ms ?? 0), thinPieces: thinStats.pieces, thinBands: thinStats.bands, thinSkipped: thinStats.skipped, msThin: Math.round(thinStats.ms), msGrid: Math.round(t1 - t0), msClean: Math.round(t2 - t1), msCoast: Math.round(t3 - t2), msBorders: Math.round(t4 - t3) },
+    info: { cell: +hd.toFixed(2), cells: NC, cutKm2: Math.round(cutKm2), offLand: offLand.length, bent, zoneFixed, wrongZone, wrongSide, bends, wholeZones, rings: seaRings.length, riverBands: rivers?.routed.length ?? 0, riverWrong: rivers?.wrong.length ?? 0, fillets, filletsTight, msFillets: Math.round(msFillets), msRivers: Math.round(rivers?.ms ?? 0), thinPieces: thinStats.pieces, thinBands: thinStats.bands, thinSkipped: thinStats.skipped, msThin: Math.round(thinStats.ms), msGrid: Math.round(t1 - t0), msClean: Math.round(t2 - t1), msCoast: Math.round(t3 - t2), msBorders: Math.round(t4 - t3) },
     grid: detail ? { d: D, w: GW, h: GH, x0: qx0, y0: qy0, cell: hd } : undefined,
     borderFits: detail ? borderFits : undefined,
     zoneShares: detail ? zoneShares : undefined,

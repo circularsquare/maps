@@ -8,6 +8,8 @@ import { simplifyLine } from "./graph";
 import type { CarryMap } from "./sheetThin";
 import type { DiagramLayout } from "./layout";
 import { STUB, stubEnd, type Drawing, type V } from "./draw";
+import type { DiagramWater } from "./water";
+import { toCoast, waterGrid, waterPath, wetAt } from "./ferryWater";
 
 /** a bus or ferry line as the page sends it, in its region's graph metres */
 export interface ThinIn {
@@ -45,6 +47,73 @@ const ROUTE_TOL_M = 15;
 const FIT_TOL = 2, FIT_TOL_FERRY = 4;
 /** corners rounded with this radius, pitches */
 const CORNER = 2;
+
+/** T-3824: a ferry over the drawn water within this many pitches of its carried route; a stop that is no station moved
+ * onto the drawn coast where its route first meets the water, else the coast within PORT_REACH pitches; the way fitted
+ * within FIT_TOL_WATER pitches of the way found, over no more land than it */
+const WATER_PAD = 12, PORT_REACH = 6, FIT_TOL_WATER = 3;
+
+/** T-3824: a ferry's way over the drawn water (`water`, before the thin lines): each stop that is no station moved onto
+ * the drawn coast, then from stop to stop the cheapest way over a grid of the drawn water (land far dearer). The way
+ * (layout units), the indices of its stops in it, each moved port by its route vertex, and a fit's guard that no run
+ * crosses more land than the way found did. */
+function overWater(water: DiagramWater, X: Float64Array, Y: Float64Array, anchors: [number, number, number, number][], pitch: number) {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (let i = 0; i < X.length; i++) (x0 = Math.min(x0, X[i])), (x1 = Math.max(x1, X[i])), (y0 = Math.min(y0, Y[i])), (y1 = Math.max(y1, Y[i]));
+  const pad = WATER_PAD * pitch, span = Math.max(x1 - x0, y1 - y0) + 2 * pad;
+  const G = waterGrid(water, [x0 - pad, y0 - pad, x1 + pad, y1 + pad], Math.max(0.5 * pitch, span / 500));
+  const at = new Map<number, [number, number]>();
+  /** a port on land: where its route, toward the next stop (the last stop's toward the one before), first meets the
+   * drawn water */
+  const alongRoute = (q: number): [number, number] | null => {
+    const v = anchors[q][0], w = anchors[q + 1]?.[0] ?? anchors[q - 1][0], dir = w > v ? 1 : -1, step = G.cell / 3;
+    for (let i = v; i !== w; i += dir) {
+      const n = Math.max(1, Math.ceil(Math.hypot(X[i + dir] - X[i], Y[i + dir] - Y[i]) / step));
+      for (let t = 1; t <= n; t++) { const x = X[i] + ((X[i + dir] - X[i]) * t) / n, y = Y[i] + ((Y[i + dir] - Y[i]) * t) / n; if (wetAt(G, x, y)) return [x, y]; }
+    }
+    return null;
+  };
+  const ends = anchors.map(([v, , , station], q): [number, number] => {
+    if (station) return [X[v], Y[v]];
+    const c = (!wetAt(G, X[v], Y[v]) && alongRoute(q)) || toCoast(G, X[v], Y[v], PORT_REACH * pitch) || [X[v], Y[v]];
+    at.set(v, c);
+    return c;
+  });
+  // the route before the first stop and after the last (to the chosen cities' edge, where a stub goes on) kept as
+  // carried
+  const px: number[] = [], py: number[] = [], cuts: number[] = [];
+  const v0 = anchors[0][0], vN = anchors[anchors.length - 1][0];
+  for (let i = 0; i < v0; i++) px.push(X[i]), py.push(Y[i]);
+  cuts.push(px.length);
+  for (let a = 0; a + 1 < ends.length; a++) {
+    const p = waterPath(G, ends[a][0], ends[a][1], ends[a + 1][0], ends[a + 1][1]) ?? [...ends[a], ...ends[a + 1]];
+    // steps going on the same way joined, so the fit has few points to try
+    for (let q = a ? 2 : 0; q < p.length; q += 2) {
+      const n = px.length;
+      if (n >= 2 && q + 2 < p.length && Math.abs((px[n - 1] - px[n - 2]) * (p[q + 1] - py[n - 1]) - (py[n - 1] - py[n - 2]) * (p[q] - px[n - 1])) < 1e-9 * G.cell * G.cell && cuts[cuts.length - 1] < n - 1) (px[n - 1] = p[q]), (py[n - 1] = p[q + 1]);
+      else px.push(p[q]), py.push(p[q + 1]);
+    }
+    cuts.push(px.length - 1);
+  }
+  for (let i = vN + 1; i < X.length; i++) px.push(X[i]), py.push(Y[i]);
+  if (px.length - 1 > cuts[cuts.length - 1]) cuts.push(px.length - 1);
+  if (cuts[0] > 0) cuts.unshift(0);
+  // land along the way found, summed from its start (layout units)
+  const step = G.cell / 2, landTo = new Float64Array(px.length);
+  const landOn = (ax: number, ay: number, bx: number, by: number) => {
+    const l = Math.hypot(bx - ax, by - ay), n = Math.max(1, Math.ceil(l / step));
+    let land = 0;
+    for (let t = 0; t < n; t++) if (!wetAt(G, ax + ((bx - ax) * (t + 0.5)) / n, ay + ((by - ay) * (t + 0.5)) / n)) land += l / n;
+    return land;
+  };
+  for (let k = 1; k < px.length; k++) landTo[k] = landTo[k - 1] + landOn(px[k - 1], py[k - 1], px[k], py[k]);
+  /** for the piece from way point i0 on: a run from its point i to j (bent at bx, by) crosses no more land than the way */
+  const keeps = (i0: number) => (i: number, j: number, bx: number, by: number) => {
+    const a = i0 + i, b = i0 + j, land = bx === bx ? landOn(px[a], py[a], bx, by) + landOn(bx, by, px[b], py[b]) : landOn(px[a], py[a], px[b], py[b]);
+    return land <= landTo[b] - landTo[a] + G.cell;
+  };
+  return { x: Float64Array.from(px), y: Float64Array.from(py), cuts, at, keeps };
+}
 
 /** where along polyline `p` (x, y pairs) point (x, y) is nearest, searching segments from `from`: segment and share */
 function nearestOn(p: ArrayLike<number>, x: number, y: number, from: number): [number, number, number] {
@@ -137,14 +206,17 @@ export function thinLines(ins: readonly ThinIn[], map: CarryMap, K: number, layo
         (X[i] += dx), (Y[i] += dy);
       }
     }
+    // T-3824: a ferry over the drawn water, its ports on the drawn coast
+    const sea = L.ferry && d.water && anchors.length > 1 ? overWater(d.water, X, Y, anchors, pitch) : null;
+    const PX = sea ? sea.x : X, PY = sea ? sea.y : Y, pm = PX.length;
     // fitted piece by piece between the station stops, each piece's ends kept
-    const cuts = [0, ...anchors.filter((a) => a[3]).map((a) => a[0]).filter((v) => v > 0 && v < m - 1), m - 1];
-    const fit: number[] = [], tol = (L.ferry ? FIT_TOL_FERRY : FIT_TOL) * pitch;
+    const cuts = sea ? sea.cuts : [0, ...anchors.filter((a) => a[3]).map((a) => a[0]).filter((v) => v > 0 && v < m - 1), m - 1];
+    const fit: number[] = [], tol = (sea ? FIT_TOL_WATER : L.ferry ? FIT_TOL_FERRY : FIT_TOL) * pitch;
     for (let c = 0; c + 1 < cuts.length; c++) {
       const i0 = cuts[c], i1 = cuts[c + 1];
-      if (i1 <= i0) continue;
-      const px = Array.from(X.subarray(i0, i1 + 1)), py = Array.from(Y.subarray(i0, i1 + 1));
-      const f = fitOcti(px, py, px.map(() => tol));
+      if (i1 <= i0 || i1 >= pm) continue;
+      const px = Array.from(PX.subarray(i0, i1 + 1)), py = Array.from(PY.subarray(i0, i1 + 1));
+      const f = fitOcti(px, py, px.map(() => tol), sea ? sea.keeps(i0) : undefined);
       for (let q = fit.length ? 2 : 0; q < f.length; q++) fit.push(f[q]);
     }
     if (fit.length < 4) continue;
@@ -161,7 +233,8 @@ export function thinLines(ins: readonly ThinIn[], map: CarryMap, K: number, layo
     for (let q = 0; q < ns; q++) {
       const v = stopV[q];
       if (L.node[q] >= 0 || drawn.has(v)) continue;
-      const [i, t] = nearestOn(ribbon, X[v], Y[v], 0);
+      // a port moved onto the coast sits where the way over the water starts
+      const at = sea?.at.get(v), [i, t] = nearestOn(ribbon, at ? at[0] : X[v], at ? at[1] : Y[v], 0);
       stops.push(ribbon[i] + (ribbon[i + 2] - ribbon[i]) * t, ribbon[i + 1] + (ribbon[i + 3] - ribbon[i + 1]) * t);
     }
     out.push({ id: L.id, colour: L.colour, ferry: L.ferry, cmds: Float64Array.from(cmd), ribbon, stops: Float64Array.from(stops) });

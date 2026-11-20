@@ -203,10 +203,11 @@ for (const city of which) {
   const st = { coast: stairs(W.seaRings, true, K), borders: stairs(M.borderFits, false, K), rivers: stairs((M.riverFits ?? []).map((f) => Float64Array.from(f.fit, (v) => v * K)), false, K) };
   say(st.coast.per1000 < STAIRS && st.borders.per1000 < STAIRS && st.rivers.per1000 < STAIRS, `${city}: no stair steps in the coast, the rivers or the borders`, JSON.stringify(st));
   // stations
-  const seaRings = flat(W.sea);
+  // T-3833: the fillets where bands meet the sea or each other are drawn water too
+  const seaRings = flat(W.sea), filletRings = W.fillets ? flat(W.fillets) : [];
   const wet = [], under = [];
   for (let i = 0; i < n; i++) {
-    if (L.inRings(seaRings, lay.x[i], lay.y[i])) wet.push(i);
+    if (L.inRings(seaRings, lay.x[i], lay.y[i]) || filletRings.some((r) => L.inRings([r], lay.x[i], lay.y[i]))) wet.push(i);
     const x = lay.x[i] / K, y = lay.y[i] / K;
     if ((M.riverFits ?? []).some(({ fit, w }) => { for (let q = 0; q + 3 < fit.length; q += 2) if (segDist(x, y, fit[q], fit[q + 1], fit[q + 2], fit[q + 3]) < w / 2) return true; return false; })) under.push(i);
   }

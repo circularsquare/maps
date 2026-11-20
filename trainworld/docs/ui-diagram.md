@@ -110,6 +110,13 @@ networks"). The rail lines alone make the graph, so a network's rail layout is t
   degrees between the stations (within 2 pitches, a ferry 4, corners rounded at 2 pitches), and posted back. Nothing is
   laid out again, and a change to the buses alone asks for this only. The names were placed without them, so a thin line
   can pass under a name.
+- **A ferry over the drawn water** (T-3824; Anita, 2026-11-20: "draw ferries after drawing water so that their ports
+  actually line up closer to the coastline"): with the water on, the drawn sea, bands and fillets are put on a grid
+  (half a pitch, coarser for a long route) within 12 pitches of the ferry's carried route. Each port that is no station
+  moves onto the drawn coast where its route toward the next stop first meets the water (else the coast within 6
+  pitches); from stop to stop the ferry takes the cheapest way over the grid, land 12 times dearer, so it leaves a
+  station's pill for the water by the shortest way. Fitted at 0, 45 and 90 degrees within 3 pitches of that way, a run
+  kept only where it crosses no more land than the way did (`ferryWater.ts`, thin.ts `overWater`).
 - **Drawn** under the rail lines, whose casings cut them where they cross: 0.3 of a stroke wide in the line's colour, a
   ferry dashed (1.6 pitches on, 1.1 off); each stop off a station a small white dot with the ink outline (0.36 and 0.14 of
   a stroke), no name. Muted with the rail lines while something else is picked; a click selects the line, a hover shows
@@ -626,8 +633,16 @@ the sheet (a tenth), the lines and the carry (seven tenths) and the map.
     Kong's Tuen Mun River has 3 bends (22 before).
   - **Ends**: an end at the sea or at another river goes into wider water (the map's, or a band routed before it:
     courses go widest first, so a tributary meets its river), past the crossing nearest it; an end on land runs at
-    least 3 pitches past its last crossing. A band's two ends are round, a width step square; corners rounded at 2.5
-    pitches. A band under 2 pitches long (its crossing already in wider water) is not drawn.
+    least 3 pitches past its last crossing. A band's two ends are round, and so is the wider run's end at a width
+    step; its middle's corners are circular arcs of 2.5 pitches, or half the band and a pitch more where that is larger,
+    so the inside of a bend is round too (T-3833). A band under 2 pitches long (its crossing already in wider water) is
+    not drawn.
+  - **Fillets** (T-3833; Anita, 2026-11-20: "it would be cool if we got the entire coastline, the entire surface
+    between land and water, to not have any perfect corners"): where a band's side or round end crosses the coast,
+    another band or its own other side, the corner of land between them is filled with water along an arc of 1.5
+    pitches touching both (less where either runs straight for less, or the arc would come within 0.75 of a station's
+    centre), drawn over the water as a patch reaching 0.04 of a pitch into it either side, so no seam shows
+    (`coastRound.ts` `bandFillets`).
   - The map's own water along a routed course (out to 2.5 of its half width at the drawing's scale and a pitch and a
     half) and within a band's reach becomes land where narrower than 8 pitches, so the band's edges are the only ones
     there. **Every routed river is one piece** and leaves every station near it on its own bank but where the second
@@ -657,10 +672,16 @@ the sheet (a tenth), the lines and the carry (seven tenths) and the map.
   other zones' borders would be slivers), and only within 30 km (on the ground) of built track, so a zone is an open
   outline that shows where lines cross it or come near (T-2639). Where that would draw more than 50% of the borders of a
   zone a line passes through (coasts not counted), the zone's whole outline is drawn instead, so no small gap is left on
-  its far side. Any map, city or country. Corners
-  rounded at 3 pitches. **Every edge of the water runs at 0, 45 or 90
-  degrees, with no stair steps** (checks/t2580-sheet-water.mjs). The sea and rivers are drawn only with the water button
-  on; the borders always.
+  its far side. Any map, city or country. Border corners rounded at 3 pitches. **The coast's corners rounded, as far as
+  its runs allow** (T-3833, `coastRound.ts` `cleanRing`): first its small features go. A run under 3 pitches between two turns is taken
+  out (the runs either side run on to meet; at a step the shorter side moves onto the other's line; a nib or notch under
+  3 pitches deep, or under 1.2 wide and 8 deep, is cut off at its base), each move at most 3 pitches, never sweeping
+  over a station's centre or bringing the coast nearer one than 1.2 pitches (or than it already was); a ring left under
+  6 square pitches with no station near goes. Then each corner is a circular arc of up to 3 pitches (drawn as curves of
+  at most 45 degrees each, so a 135-degree tip is round too), a run too short for both its corners split between them
+  by what each asks, so both get the same radius. **Every edge of the water runs at 0, 45 or 90 degrees, with no stair
+  steps** (checks/t2580-sheet-water.mjs). The sea and rivers are drawn only with the water button on; the borders
+  always.
 - **City names** take the towns' places through the sheet.
 
 ## Regions

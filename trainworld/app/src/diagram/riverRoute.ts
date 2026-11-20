@@ -5,7 +5,7 @@
 // lines a cost and never walls. Then a light straightening pass, and the stations still on the wrong bank are handed
 // back so the lines round them can be laid out again (sheetLines.ts `sheetLayout`). Pure: no DOM, no fetch.
 
-import { fitOcti, rounded, segD } from "./borders";
+import { filleted, fitOcti, segD } from "./borders";
 import { chamfer, type RealWater } from "./waterReal";
 import type { DiagramGraph } from "./graph";
 import type { DiagramLayout } from "./layout";
@@ -47,8 +47,8 @@ const CORR_M = 3000;
 /** a band's width, pitches: at least three lines' width; a course whose own would be wider than WMAX is the grid's area
  * water (the Hudson, the East River); toward a sea it may widen to WWIDE */
 const WMIN = 3 * (5 / 6.4), WMAX = 8, WWIDE = 12;
-/** corners rounded at this radius, pitches (the lines' own) */
-const BEND_R = 2.5;
+/** corners rounded at this radius, pitches (the lines' own); a band's inside edge at a bend at least BEND_IN (T-3833) */
+const BEND_R = 2.5, BEND_IN = 1;
 
 export function riverCourses(real: RealWater): RiverCourse[] {
   const arcs = real.arcs, byNode = new Map<number, number[]>();
@@ -595,15 +595,19 @@ export function routeRivers(G: MapGrid, g: DiagramGraph, lg: DiagramGraph, layou
     hops.forEach((hp, q) => { const dc = polyCross(hp.pts, PR); if (dc % 2 !== ownCross[q] % 2) dc ? hopWrong++ : hopMissed++; });
     const wMax = Math.max(...segW);
     out.routed.push({ course: all.indexOf(C), arcs: C.arcs.map((a) => a.arc), path: P, w: W0, wMax, pairs, wrongPairs, wrong, under, bends: bendsOf(P), ends: down < 0 ? [kE, kS] : [kS, kE], hopWrong, hopMissed, fallback: r.fallback, ms: performance.now() - t1 });
-    // drawn: runs of one width (square where the width steps), round at the band's two ends
+    // drawn: runs of one width, round at the band's two ends and where the width steps (the wider run's end, T-3833)
+    const stubs: number[][] = [[P[0], P[1], P[2], P[3], segW[0]], [P[P.length - 2], P[P.length - 1], P[P.length - 4], P[P.length - 3], segW[segW.length - 1]]];
     for (let q0 = 0, q = 1; q <= segW.length; q++) {
       if (q < segW.length && segW[q] === segW[q0]) continue;
       const w = segW[q0], seg = P.slice(2 * q0, 2 * q + 2), cmd = out.cmds.get(w) ?? out.cmds.set(w, []).get(w)!;
-      rounded(Float64Array.from(seg, (v) => v * k), false, BEND_R * k, cmd);
+      // the inside of a bend kept round too: its middle's radius at least half the band and BEND_IN more
+      filleted(Float64Array.from(seg, (v) => v * k), false, Math.max(BEND_R, w / 2 + BEND_IN) * k, cmd);
       out.fits.push({ fit: Float64Array.from(seg), w, arc: C.arcs[0].arc, arcs: C.arcs.map((a) => a.arc) });
+      if (q0 > 0 && segW[q0 - 1] < w) stubs.push([P[2 * q0], P[2 * q0 + 1], P[2 * q0 + 2], P[2 * q0 + 3], w]);
+      if (q < segW.length && segW[q] < w) stubs.push([P[2 * q], P[2 * q + 1], P[2 * q - 2], P[2 * q - 1], w]);
       q0 = q;
     }
-    for (const [ex, ey, qx, qy, w] of [[P[0], P[1], P[2], P[3], segW[0]], [P[P.length - 2], P[P.length - 1], P[P.length - 4], P[P.length - 3], segW[segW.length - 1]]]) {
+    for (const [ex, ey, qx, qy, w] of stubs) {
       const l = Math.hypot(qx - ex, qy - ey) || 1, e = out.ends.get(w) ?? out.ends.set(w, []).get(w)!;
       e.push(0, ex * k, ey * k, 1, (ex + ((qx - ex) / l) * 0.01) * k, (ey + ((qy - ey) / l) * 0.01) * k);
     }

@@ -230,7 +230,7 @@ export function mergeParts(parts: Part[], at: Placed[]): Part & { partOf: Int32A
   const d: Drawing = { pitch: P, stroke: parts[0].d.stroke * at[0].s, lines: [], lineOf: [], ribbons: [], chainAt: [], pills: [], pillOf: [], passages: [], passageOf: [], hooks: [], small, box: [Infinity, Infinity, -Infinity, -Infinity] };
   const anyBorders = parts.some((p) => p.d.borders), anyWater = parts.some((p) => p.d.water);
   const bCmds: Float64Array[] = [], bZones: string[] = [], bZoneOf = new Int32Array(nn).fill(-1);
-  const water = { rivers: [] as Float64Array[], bands: [] as number[], riverEnds: [] as Float64Array[], sea: [] as Float64Array[], seaRings: [] as Float64Array[] };
+  const water = { rivers: [] as Float64Array[], bands: [] as number[], riverEnds: [] as Float64Array[], sea: [] as Float64Array[], seaRings: [] as Float64Array[], fillets: [] as Float64Array[] };
   const p0 = parts[0].names;
   const at2: { node: number[]; x: number[]; y: number[]; dir: number[]; slide: number[]; lift: number[]; wrap: number[] }[] = p0.levels.map(() => ({ node: [], x: [], y: [], dir: [], slide: [], lift: [], wrap: [] }));
   const text: string[] = [], width: number[] = [], width2: number[] = [];
@@ -273,6 +273,7 @@ export function mergeParts(parts: Part[], at: Placed[]): Part & { partOf: Int32A
       for (const w of wa.bands) water.bands.push(w * t.s);
       for (const r of wa.riverEnds ?? []) water.riverEnds.push(moveCmds(r, t));
       if (wa.sea) water.sea.push(moveCmds(wa.sea, t));
+      if (wa.fillets) water.fillets.push(moveCmds(wa.fillets, t));
       for (const r of wa.seaRings ?? []) water.seaRings.push(movePairs(r, t));
     }
     // the names
@@ -299,10 +300,13 @@ export function mergeParts(parts: Part[], at: Placed[]): Part & { partOf: Int32A
     d.borders = { cmds: all, zones: bZones, zoneOf: bZoneOf };
   }
   if (anyWater) {
-    const sea = new Float64Array(water.sea.reduce((s, c) => s + c.length, 0));
-    let o = 0;
-    for (const c of water.sea) sea.set(c, o), (o += c.length);
-    d.water = { rivers: water.rivers, bands: water.bands, riverEnds: water.riverEnds, sea, seaRings: water.seaRings, stats: parts.find((p) => p.d.water)!.d.water!.stats };
+    const join = (cs: Float64Array[]) => {
+      const all = new Float64Array(cs.reduce((s, c) => s + c.length, 0));
+      let o = 0;
+      for (const c of cs) all.set(c, o), (o += c.length);
+      return all;
+    };
+    d.water = { rivers: water.rivers, bands: water.bands, riverEnds: water.riverEnds, sea: join(water.sea), seaRings: water.seaRings, ...(water.fillets.length ? { fillets: join(water.fillets) } : {}), stats: parts.find((p) => p.d.water)!.d.water!.stats };
   }
   const names: NamePlan = {
     levels: p0.levels, faint: p0.faint, fontPx: p0.fontPx, ms, text, width: Float32Array.from(width), width2: Float32Array.from(width2),

@@ -12,6 +12,9 @@ export interface DiagramWater {
   riverEnds?: Float64Array[];
   /** the sea's outline as path commands, filled even-odd */
   sea?: Float64Array;
+  /** where a band meets the sea or another band, the corner of land between them filled with water along an arc
+   * (T-3833): path commands, filled nonzero over the sea and the bands */
+  fillets?: Float64Array;
   /** checks only: the sea's rings as fitted */
   seaRings?: Float64Array[];
   /** checks only: counts of the river finding and the map's time, ms */

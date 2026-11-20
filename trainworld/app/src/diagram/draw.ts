@@ -87,7 +87,7 @@ export interface Drawing {
    * first painted */
   borders?: DiagramBorders & { path?: Path2D };
   /** the water (water.ts), set on the page when the layout worker posts it; the Path2Ds made when first painted */
-  water?: DiagramWater & { riverPaths?: Path2D[]; endPaths?: Path2D[]; seaPath?: Path2D };
+  water?: DiagramWater & { riverPaths?: Path2D[]; endPaths?: Path2D[]; seaPath?: Path2D; filletPath?: Path2D };
   /** T-3360: the bus and ferry lines drawn thin under the rail lines (thin.ts), set on the page when the layout worker
    * posts them */
   thin?: ThinDrawn[];
@@ -715,6 +715,7 @@ export function paint(ctx: CanvasRenderingContext2D, d: Drawing, w: number, h: n
       ctx.lineWidth = Math.max(wa.bands[k], 1 / scale);
       ctx.stroke(re[k]);
     }
+    if (wa.fillets?.length) ctx.fill((wa.filletPath ??= toPath(wa.fillets)), "nonzero");
   }
   // the zones' borders under everything else; the lines' casings cut them
   const bd = d.borders;

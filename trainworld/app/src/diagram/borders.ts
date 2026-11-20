@@ -193,6 +193,74 @@ export function rounded(v: Float64Array, closed: boolean, r: number, cmd: number
   }
 }
 
+/** the polyline `v` as path commands, each corner a circular arc of radius up to `r` drawn as curves of at most 45
+ * degrees each (T-3833: `rounded`'s single curve comes to a point at a 135-degree turn). Where two corners share a run
+ * too short for both, the run is split between them in proportion to what each asks, so both get the same radius. */
+export function filleted(v0: ArrayLike<number>, closed: boolean, r: number, cmd: number[]): void {
+  // vertices where the way goes straight on dropped first, so a run is whole between its two corners
+  const v = joinStraight(Array.from(v0));
+  let m = v.length / 2;
+  if (closed && m > 2 && hyp(v[0] - v[m * 2 - 2], v[1] - v[m * 2 - 1]) < 1e-9) m--;
+  if (closed && m > 2) {
+    // and the start, when the ring goes straight on through it
+    const ax = v[0] - v[m * 2 - 2], ay = v[1] - v[m * 2 - 1], bx = v[2] - v[0], by = v[3] - v[1];
+    if (Math.abs(ax * by - ay * bx) < 1e-9 * hyp(ax, ay) * hyp(bx, by) && ax * bx + ay * by > 0) (v.splice(0, 2), m--);
+  }
+  if (m < 2) return;
+  const X = (k: number) => v[((k + m) % m) * 2], Y = (k: number) => v[((k + m) % m) * 2 + 1];
+  // per vertex: the run before it, its turn (radians, signed) and the tangent length it asks for
+  const len = new Float64Array(m), turn = new Float64Array(m), ask = new Float64Array(m);
+  for (let k = 0; k < m; k++) len[k] = hyp(X(k) - X(k - 1), Y(k) - Y(k - 1));
+  for (let k = 0; k < m; k++) {
+    if (!closed && (k === 0 || k === m - 1)) continue;
+    const la = len[k], lb = len[(k + 1) % m];
+    if (la < 1e-12 || lb < 1e-12) continue;
+    const ax = (X(k) - X(k - 1)) / la, ay = (Y(k) - Y(k - 1)) / la, bx = (X(k + 1) - X(k)) / lb, by = (Y(k + 1) - Y(k)) / lb;
+    const th = Math.atan2(ax * by - ay * bx, ax * bx + ay * by);
+    if (Math.abs(th) < 1e-9 || Math.abs(th) > Math.PI - 1e-6) continue;
+    (turn[k] = th), (ask[k] = r * Math.tan(Math.abs(th) / 2));
+  }
+  const tan = new Float64Array(m);
+  for (let k = 0; k < m; k++) {
+    if (!ask[k]) continue;
+    const p = ask[(k - 1 + m) % m], q = ask[(k + 1) % m], la = len[k], lb = len[(k + 1) % m];
+    tan[k] = Math.min(ask[k], (0.999 * la * ask[k]) / (ask[k] + (closed || k > 1 ? p : 0)), (0.999 * lb * ask[k]) / (ask[k] + (closed || k < m - 2 ? q : 0)));
+  }
+  const arc = (k: number) => {
+    const t = tan[k], th = turn[k], la = len[k], lb = len[(k + 1) % m];
+    const ax = (X(k) - X(k - 1)) / la, ay = (Y(k) - Y(k - 1)) / la, bx = (X(k + 1) - X(k)) / lb, by = (Y(k + 1) - Y(k)) / lb;
+    const n = Math.max(1, Math.ceil(Math.abs(th) / (Math.PI / 4) - 1e-6)), d = th / n, rad = t / Math.tan(Math.abs(th) / 2), h = rad * Math.tan(Math.abs(d) / 2);
+    let px = X(k) - ax * t, py = Y(k) - ay * t, dx = ax, dy = ay;
+    if (n === 1) return void cmd.push(2, X(k), Y(k), X(k) + bx * t, Y(k) + by * t);
+    for (let i = 1; i <= n; i++) {
+      const c = Math.cos(d * i), s = Math.sin(d * i), ex = i === n ? bx : ax * c - ay * s, ey = i === n ? by : ax * s + ay * c;
+      const qx = px + dx * h, qy = py + dy * h, nx = i === n ? X(k) + bx * t : qx + ex * h, ny = i === n ? Y(k) + by * t : qy + ey * h;
+      cmd.push(2, qx, qy, nx, ny);
+      (px = nx), (py = ny), (dx = ex), (dy = ey);
+    }
+  };
+  if (!closed) {
+    cmd.push(0, v[0], v[1]);
+    for (let k = 1; k < m - 1; k++) {
+      if (!tan[k]) continue;
+      const la = len[k];
+      cmd.push(1, X(k) - ((X(k) - X(k - 1)) / la) * tan[k], Y(k) - ((Y(k) - Y(k - 1)) / la) * tan[k]);
+      arc(k);
+    }
+    cmd.push(1, X(m - 1), Y(m - 1));
+    return;
+  }
+  const lb0 = len[1 % m];
+  cmd.push(0, tan[0] ? X(0) + ((X(1) - X(0)) / lb0) * tan[0] : X(0), tan[0] ? Y(0) + ((Y(1) - Y(0)) / lb0) * tan[0] : Y(0));
+  for (let k = 1; k <= m; k++) {
+    const kk = k % m;
+    if (!tan[kk]) { cmd.push(1, X(k), Y(k)); continue; }
+    const la = len[kk];
+    cmd.push(1, X(k) - ((X(k) - X(k - 1)) / la) * tan[kk], Y(k) - ((Y(k) - Y(k - 1)) / la) * tan[kk]);
+    arc(kk);
+  }
+}
+
 export function segD(px: number, py: number, ax: number, ay: number, bx: number, by: number): number {
   const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
   const t = l2 > 0 ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / l2)) : 0;
