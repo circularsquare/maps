@@ -43,6 +43,8 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
   push to the website needs her yes in this tab, none overnight; advisor trial (log calls in handoff-log).
 
 ## Waiting on her (asks.py list has the open ones)
+- CLAUDE.md changes staged (reviewed): on her OK to the For you and push wordings, run
+  `python <maps-60 scratchpad>\mdreview\apply.py --yes` (dry run without --yes), then commit the maps paths.
 - a-25 rivers pick (now superseded by prototype 4's sheet). She sends the T-3635 player reply herself.
 
 ## Only a person knows
