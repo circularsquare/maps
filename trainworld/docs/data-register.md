@@ -287,9 +287,9 @@ lengths are not used; its share of trips under 2 km is the check (docs/demand-wo
 
 | Country | Rates | Lengths |
 |---|---|---|
-| United States | U NHTS 2017 microdata, weekday legs by purpose (on disk); N NHTS 2022 | U NHTS New York CBSA legs by length band, the check behind the worldwide set (T-637) |
+| United States | U NHTS 2017 microdata, weekday legs by purpose (on disk); N NHTS 2022 | U NHTS New York CBSA legs by length band, the check behind the worldwide set (T-637); N ACS ambulatory difficulty (6.7%), for a share who won't walk far (T-3888) |
 | Canada | - (TTS is Toronto-only, not opened); worldwide | worldwide |
-| England (UK) | U NTS0504b weekday trips by purpose, 2015-19; G NTS and LTDS microdata (UKDS) | U LTDS 2024/25 London residents' trips by length band (Travel in London 2025), the check (T-637); skip NTS0413 mean errand lengths |
+| England (UK) | U NTS0504b weekday trips by purpose, 2015-19; G NTS and LTDS microdata (UKDS) | U LTDS 2024/25 London residents' trips by length band (Travel in London 2025), the check (T-637); skip NTS0413 mean errand lengths; N NTS0709 trips by mobility difficulty and ELSA's walking 100 yards by age, for a share who won't walk far (T-3888) |
 | France | U EMP 2019 weekday motifs table (SDES); N EMP microdata (open, media/5052) for medical; G EGT 2018-20 (omnil.fr 403) | skip EMP declared km (means; T-637) |
 | Germany | U MiD 2017 Ergebnisbericht by Zweck, made weekday; G MiD tables tool (login) | skip SrV 2018 Berlin Steckbrief (means; T-637) |
 | Japan | U Tokyo PT 2018 press tables (private split); U national survey 2021 (MLIT Excel) as a check; G Tokyo PT tabulations (application form, login) | skip Tokyo welfare bureau 2021 straight-line km by purpose (means; T-637) |

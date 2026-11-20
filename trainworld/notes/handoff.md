@@ -8,24 +8,24 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 
 ## Next
 0. Live v0.4.4. Cap 14. 8800 = 89d6ca0d (14 behind). Master pushed through aaac102d.
-1. Evening update (her: "wait until this evening"). Before it: land T-3735 (tree weekenddep) if weekendchk passes
-   and T-3883 (tree rampbug) if rampbugchk passes (both checkers report via inbox; finish with --task). If
-   rampbug fails, ramps (T-3027, c025) wait: hide c025 or hold. Then smoke on master, 8800 rebuild, ping her, publish
-   skill (sort, highlights, playtest list, translations incl. T-3822/3823 hovers + addCity + today's strings, new
+1. Evening update (her: "wait until this evening"). T-3831, T-3883, T-3735 landed (c031-c033). Smoke on master
+   running (scratchpad smoke-master.txt); then 8800 rebuild, ping her, publish skill (sort, highlights, playtest list, translations incl. T-3822/3823 hovers + addCity + today's strings, new
    zones image for PK/BD, smoke8800). Server first, her yes: shonei-server 2754ba1, fd294e7, 43360be, 39e1bd2 (not
    pushed; 39e1bd2's follow-the-game test needs T-3735 landed; if T-3735 doesn't ship, revert 39e1bd2 or ship it
    anyway: level 32 accepted is harmless). After publish: post PR 24 reply (notes/T-3659.md, her OK), open-source sync.
-2. Running agents (their reports reach the inbox; follow-ups to fresh agents on their tree): hourturn (T-3804 st1,
-   ~1 h left, edits clock.worker.ts; checker before landing), trainrate (T-3550; checker before landing),
-   frontier (T-3887 research then chart, 3-4 h), weekendchk, rampbugchk (maps-b4's); walktiers (mine, T-3888
-   design, notes only). T-3831 landed 2bf49311 (c031).
-3. T-3889 tram joins rail (her go 11-20 ~19:10 UTC): start Opus agent in a tree once rampbug + weekenddep landed.
-   Then: T-3856 plain buses (after frontier's first chart; rerun it after), T-3888 design to her when walktiers reports,
+2. hourturn done (T-3804 st1, report r-ade4440a); checker hourturnchk running (mine); on pass land, fold its
+   follow-ups (rename leaves 12-57 accounts stale; sendMoney 15-100 ms/hour) into T-3804 Context. Running: trainrate (T-3550; checker before landing),
+   frontier (T-3887 research then chart, 3-4 h; maps-b4's). Mine: tramrail (T-3889, tree), busstop (T-3890 bus
+   stop panel + connectors, tree, Opus), busname (T-3891 construct while naming, tree, Sonnet).
+3. T-3888 walk tiers design done, ask a-2026-11-20-7 (A and D). Then: T-3856 plain buses (after frontier's first chart; rerun it after),
    T-3378 BRT design to her; held T-3655, T-3646 until trainrate lands; T-2374 clock worker split after hourturn.
    Board queue: `tasks.py upnext list`. Track rework design (T-3444) after cleanup + edit speed, her order.
 4. T-3395: run `tools/ops/save_health.py` after the 11-21 04:00 UTC scan; clean = close it.
 
 ## Her words
+- 11-20 ~19:15-19:30 UTC: tram track joins rail, "trams can go on train track but trains cannot path onto tram
+  track" (T-3889); bus stops clickable with a station-like panel + hallway-like connectors (T-3890); Construct
+  while naming should just construct (T-3891). Her words in those tasks.
 - 11-20 15:20 UTC: "cleaning up some of the minor seeming tasks in code/docs cleanup, and edit speed ... not sure
   how many of them still make sense / would be valuable to do. and after that ... full track rework."
 - 11-20 ~19:00 UTC: "for handling the bus / mode comparison graph, we should probably do research into what actual
