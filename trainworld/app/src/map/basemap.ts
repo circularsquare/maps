@@ -365,6 +365,7 @@ function restyle(style: maplibregl.StyleSpecification): maplibregl.StyleSpecific
       if (layout["text-field"] !== undefined) {
         layout["text-font"] = FONT;
         layout["text-field"] = guardEnglishName(layout["text-field"]);
+        if ((layout["symbol-placement"] ?? "point") === "point") layout["text-field"] = guardWrapMarks(layout["text-field"]);
         // T-1692: plain one-colour text, no halo (a halo in the land colour shows as an outline over shade)
         paint["text-halo-width"] = 0;
         L["text-color"] = placeNameInk("light");
@@ -513,6 +514,35 @@ function guardEnglishName(e: unknown): unknown {
     return ["case", [">=", ["length", ["to-string", ["coalesce", ["get", "name_en"], ""]]], 3],
       ["get", "name_en"], ["coalesce", ["get", "name:latin"], ["get", "name"]]];
   return e.map(guardEnglishName);
+}
+
+/**
+ * T-3842: spacing marks that MapLibre 6.13-6.19 joins to the letter before only when the text around them holds some
+ * other mark (its `textCanContainGraphemeClusters` leaves them out, `canCombineGraphemes` takes every gc=Mc). A
+ * wrapped label whose line holds these but no such other mark is re-split into more clusters than it had sections
+ * for, and the worker throws ("Cannot use 'in' operator to search for 'imageName'"), losing the whole tile: roads,
+ * water and all. Mostly Burmese (aa, visarga), Shan and Karen tones; Tai Tham, Myanmar Extended-A and Ahom too.
+ * Myanmar's letters are in the list as well, so every Myanmar-script name goes the same way: Burmese is in nearly
+ * every name with those marks, and villages with and without their Burmese line would read as a fault.
+ */
+const WRAP_MARKS = [
+  [0x102b, 0x102c], [0x1038, 0x1038], [0x1062, 0x1064], [0x1067, 0x106d], [0x1083, 0x1083], [0x1087, 0x108c],
+  [0x108f, 0x108f], [0x109a, 0x109c], [0x1a61, 0x1a61], [0x1a63, 0x1a64], [0xaa7b, 0xaa7b], [0xaa7d, 0xaa7d],
+  [0x11720, 0x11721],
+  // Myanmar letters: Burmese, Pali, Mon, Karen, Shan, Palaung
+  [0x1000, 0x102a], [0x103f, 0x103f], [0x1050, 0x1055], [0x105a, 0x105d], [0x1061, 0x1061], [0x1065, 0x1066],
+  [0x106e, 0x1070], [0x1075, 0x1081], [0x108e, 0x108e],
+].flatMap(([a, b]) => Array.from({ length: b - a + 1 }, (_, i) => String.fromCodePoint(a + i)));
+const hasWrapMark = (s: unknown) => ["any", ...WRAP_MARKS.map((c) => ["in", c, s])];
+
+/** T-3842: a point label whose place name holds one of those shows its Latin name alone, or no name where it has
+ * none. Only point labels wrap; a line label is laid out as one line. Tested on the `name` property, not the label
+ * text: a `var` is evaluated afresh at every use, so testing a bound label would build it once per character. */
+function guardWrapMarks(field: unknown): unknown {
+  const latin = ["coalesce", ["get", "name:latin"], ""];
+  return ["case", hasWrapMark(["coalesce", ["get", "name"], ""]),
+    ["case", hasWrapMark(latin), "", latin],
+    field];
 }
 
 /** T-1270: the hillshade on or off (and the water drawn over it with it); the shade never on the lighter map. */
