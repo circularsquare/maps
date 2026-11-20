@@ -19,11 +19,16 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    guianas; T-3803 option 1 after fullstate; T-3804, T-3805.
 4. Next full update (master): unpublished changelog c001-c007; before publishing: changelog review agent, sort,
    playtest list, translations of new keys (advancedFares.byCountry to drop).
-5. Leftover: .tw-trees\ringfix folder (worktree unregistered, held; never delete by hand), stale Vite pid 33736 on
+5. Silent hotfix 11-20 ~01:30: website 2a040d9 (0f9f1f7d on hotfix-v0.4.4; master d426a3d5). Leftover:
+   .tw-trees\gearfix (held, probably by this session's shell; `agent-tree.mjs remove gearfix` later), .tw-trees\ringfix folder (worktree unregistered, held; never delete by hand), stale Vite pid 33736 on
    6181 (from 11-18; stopping it was refused, leave), trees ab-1-*, ab-3-*, ttchk2base, touchrule, timekeys.
 6. T-3781 open for the next report's diagnosis. Steam (T-3729): her screenshots in artifacts/trainworld/steam.
 
 ## Her words
+- 11-20 ~01:15: start page gear and Settings "- 90% +" not centered: "do want to get this out as a silent hotfix"
+  (gearfix, tree from hotfix-v0.4.4; then snap8800 it, smoke8800, deploy.py --skip-data --version 2026-11-19
+  --smoked, website push, verify, land onto master, 8800 back to master). No screenshot-compare check: "lets not
+  implement it".
 - 11-20 ~00:55: v0.4.4 changelog in her words ("added tram stops to real world reference network, and stations show
   names on hover"; naming default item dropped). "yes okay to publish 4.4". Naming: questions both ways, no
   "Confirm?". Change name as a pencil icon. Real-network fixes and additions P4, Japan P3, reference map a bit
