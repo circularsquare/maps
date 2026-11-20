@@ -815,15 +815,13 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Ports, industrial estates and airports with no residents stay dark (Tuas and Jurong were fixed by hand 11-13). Half done: units keep outlines with 0.2 km2 of built surface.
   - Goal: A free unit under the floor sharing half its land border with one metro joins it, after a worldwide count.
   - Other: notes/T-3287.md
+- T-3832 [P3] {L:small-fixes} Lines gear part-ticked box shows a minus
+  - Context: The schematic's cities list (T-3826) marks a part-ticked region with a minus; the Lines tab gear's part-filled box has none. Same look in both.
 - T-3827 [P3] {L:checks} Weekend timetable checks gone stale
   - Context: t3521-weekends, t3557-weekend-headway and t3603-weekend-flash fail on master 6c8dc0ef (found by ttzoom 11-20, confirmed on master): a weekend share button not found, Medium and Low weekend headways read as NaN, a null click; most likely the panel changed under them (five periods, T-3542).
   - Goal: The three checks pass on master, or each failure is a real bug filed.
 - T-3828 [P3] {L:timetables} Pinch zoom for the timetable on touch
   - Context: T-3817 zooms the timetable with the scroll wheel; a phone only gets the opening view. Reach: phone players opening timetables.
-- T-3825 [P2] {L:schematic} Schematic pan limit and city selector fixes (taking, 2026-11-19, agent schemcity)
-  - Context: You, 11-20, trying the cities list for the first time: the drawing was off screen so it looked broken. Panning must not take the whole drawing off screen; the zoom-out cap goes from a tenth to a half lengthwise; a small divider with gaps between the ferry toggle and the cities button; the "Drawing diagram" bar shows while cities are added or removed.
-- T-3826 [P2] {L:schematic} Add a neighbouring city from the schematic (taking, 2026-11-19, agent schemcity)
-  - Context: You, 11-20: the alphabetical cities list is long; like picking a start city on the map, with a few cities chosen, hovering a neighbouring region shows a small ghost circle and a click adds that city ("i can select new york in the drop down, then just mouse over philly and add it"). The cities list becomes a region selector: top-level regions alphabetical, each expanding to its cities alphabetical, a region's box showing a minus when only some of its cities are ticked.
 - T-3824 [P2] {L:schematic-rivers} {after:T-3358 prototype} Schematic ferries drawn after the water
   - Context: You, 11-20: "now that we're drawing ferries, it might be nice to draw ferries after drawing water so that their ports actually line up cloesr to the coastline".
   - Goal: In the schematic, ferry ports sit on the drawn coast and ferry routes run over drawn water.
