@@ -1,4 +1,4 @@
-// An edit's follow-up queue, and the previews the main thread no longer wants (T-2374: moved out of clock.worker.ts).
+// An edit's follow-up queue, and the previews the main thread no longer wants (T-2374).
 
 import { toMerc01 } from "../map/geo";
 import type { ClockState, EditOp, ToClock } from "./protocol";
@@ -144,7 +144,7 @@ export function goesAhead(m: ToClock, f: FollowUp): boolean {
   if (m.game !== undefined && m.game !== game) return false;
   return !OWN_STATE_OPS.has(m.op.op) && !isServiceOp(m.op);
 }
-/** edits that post their own state or money and answer at once: as before, after any follow-up */
+/** edits that post their own state or money and answer at once, after any follow-up */
 const OWN_STATE_OPS = new Set<EditOp["op"]>(["fares", "fareScale", "fareCityScale", "fareByCity", "fareHsr", "fareFerry", "fareBus", "fareTransfer", "fareLine", "fareZones", "fareRef", "borrow", "repay", "link", "addBuilding", "reshapeBuilding", "renameBuilding", "removeBuilding"]);
 /** T-1071, T-1073: an edit that changes only the service (a train count takes effect a moment ahead) */
 export function isServiceOp(op: EditOp): boolean {

@@ -164,7 +164,6 @@ async function drawSummary(): Promise<SlotSummary> {
   // a save never waits long on them: without them a station takes the nearest centre's name
   await Promise.race([outlinesRead, new Promise((go) => setTimeout(go, 3000))]);
   const a = api!;
-  // stations and the cities they are in
   const ni = a.nodes_info();
   const byCity = new Map<string, number>();
   const stationXY: { city: string | null; x: number; y: number }[] = [];
@@ -209,7 +208,7 @@ async function drawSummary(): Promise<SlotSummary> {
     function* points(xy: ArrayLike<number>): Generator<[number, number]> { for (let k = 0; k < xy.length; k += 2) yield [xy[k], xy[k + 1]]; }
     const drawn = [...track.map((xy) => ({ xy, colour: "" })), ...routes].map((p) => ({ ...p, box: boxOf(points(p.xy)) })).filter((p) => p.box[2] >= p.box[0]);
     const all = boxOf(drawn.flatMap((p) => [[p.box[0], p.box[1]], [p.box[2], p.box[3]]] as [number, number][]));
-    if (!(all[2] >= all[0])) return summary; // nothing built or drawn
+    if (!(all[2] >= all[0])) return summary;
     // T-894: the biggest cities by stations, each framed on its own stations; a city with under 8%
     // of the biggest's stations is a fringe of its network, not a panel. A network with no station
     // in a city is one panel over all of it, unnamed. T-2394: with more than 3 cities to show, the
@@ -227,7 +226,7 @@ async function drawSummary(): Promise<SlotSummary> {
     const canvas = new OffscreenCanvas(THUMB_W, THUMB_H);
     const ctx = canvas.getContext("2d")!;
     ctx.lineCap = ctx.lineJoin = "round";
-    ctx.fillStyle = sh.casing; // the rule between panels
+    ctx.fillStyle = sh.casing;
     ctx.fillRect(0, 0, THUMB_W, THUMB_H);
     summary.shade = thumbShade;
     summary.panels = [];
@@ -253,7 +252,6 @@ async function drawSummary(): Promise<SlotSummary> {
       ctx.clip();
       ctx.fillStyle = sh.land;
       ctx.fillRect(px0, py0, pw, ph);
-      // a smaller panel draws thinner strokes
       const k = Math.max(0.8, Math.sqrt((pw * ph) / (THUMB_W * THUMB_H)));
       for (const p of drawn) {
         if (!inside(p.box)) continue;

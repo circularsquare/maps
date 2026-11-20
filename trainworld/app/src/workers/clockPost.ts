@@ -1,4 +1,4 @@
-// The network diagram's graph, and posting to the main thread only what changed (T-2374: moved out of clock.worker.ts).
+// The network diagram's graph, and posting to the main thread only what changed (T-2374).
 
 import { TrackApi } from "../wasm/track/sim"; // the track model only (T-051)
 import { anchor, EARTH_C, makeAnchor, toMerc01, type Anchor } from "../map/geo";

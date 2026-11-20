@@ -1,4 +1,4 @@
-// The clock worker's shared state and its small helpers: the model, the frame, the ledgers, the clock, the mode (T-2374: moved out of clock.worker.ts). Other clock worker modules read these bindings and write them through the `put` functions.
+// The clock worker's shared state and its small helpers: the model, the frame, the ledgers, the clock, the mode (T-2374). Other clock worker modules read these bindings and write them through the `put` functions.
 
 import { TrackApi } from "../wasm/track/sim"; // the track model only (T-051)
 import { anchor, toLocal } from "../map/geo";
@@ -177,7 +177,6 @@ export let upkeepRegions: [string, number][] = [];
  * game/regionMoney.ts `lineRunFactor`), given to the track model, which drains the cash by it. Again
  * after each state is built, since a load clears them there. */
 let runFactorsSent = "";
-/** Returns whether they changed. */
 export function applyRunFactors(): boolean {
   if (!api) return false;
   const pairs: number[] = [];

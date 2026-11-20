@@ -1,4 +1,4 @@
-// The ground the model needs, fetched on demand: water masks, terrain classes, street speeds, the world's water, road crossings, and the masks an edit or a load waits for (T-2374: moved out of clock.worker.ts).
+// The ground the model needs, fetched on demand: water masks, terrain classes, street speeds, the world's water, road crossings, and the masks an edit or a load waits for (T-2374).
 
 import { TrackApi } from "../wasm/track/sim"; // the track model only (T-051)
 import { NEW_GAME_FRAME, zoneBox, zonesTouching } from "../game/cities";
@@ -384,7 +384,7 @@ export async function ensureStreets(ids: Iterable<string>): Promise<void> {
 // One file for the whole world (`world.water` among the packs, pipeline/world_water.py, about 1 MB),
 // deciding water wherever no zone's mask does: the open sea between zones. Fetched once at start;
 // previews, edits and loads wait for it as for a zone's mask. A server without it (a 404) leaves the
-// sea outside the zones as land, as before.
+// sea outside the zones as land.
 
 let worldWaterFetch: Promise<ArrayBuffer | null> | null = null;
 /** the current track model has the world's water (or there is none to have) */

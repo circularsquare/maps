@@ -1,4 +1,4 @@
-// Rust panics (T-1007): the model's recovery, and the failures that name one (T-2374: moved out of clock.worker.ts).
+// Rust panics (T-1007): the model's recovery, and the failures that name one (T-2374).
 
 import type { MessageKey } from "../i18n"; // type only: this worker sends keys, the page words them (docs/localization.md "Workers")
 import { last_panic, TrackApi } from "../wasm/track/sim"; // the track model only (T-051)

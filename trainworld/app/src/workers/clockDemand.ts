@@ -1,4 +1,4 @@
-// Boarding and the hour's trips, and the snapshot demand runs on (T-2374: moved out of clock.worker.ts).
+// Boarding and the hour's trips, and the snapshot demand runs on (T-2374).
 
 import { TrackApi } from "../wasm/track/sim"; // the track model only (T-051)
 import { mercK } from "../game/frame";

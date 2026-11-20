@@ -1,4 +1,4 @@
-// Edits: `apply` and its helpers (T-2374: moved out of clock.worker.ts).
+// Edits: `apply` and its helpers (T-2374).
 
 import { TrackApi } from "../wasm/track/sim"; // the track model only (T-051)
 import { isCity } from "../game/cities";
@@ -510,7 +510,6 @@ export function buildingQuoteAnswer(id: number | null, corners: number[]): Float
   return new Float64Array([...q, ...Array.from(kinds, (c) => c.charCodeAt(0))]);
 }
 
-/** The "doubleUp" query's answer (protocol.ts). */
 /** T-3321: the "rebuildQuote" query's answer: the quote's length, `TrackApi::rebuild_quote`'s quote, then the
  * kinds of why pieces are refused as character codes, joined by newlines. */
 export function rebuildQuoteAnswer(edges: number[], stations: number[], level: number | null, kind: number, tracks: number): Float64Array {

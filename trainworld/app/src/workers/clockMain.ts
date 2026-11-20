@@ -1,4 +1,4 @@
-// The state built for the main thread, and sending it (T-2374: moved out of clock.worker.ts).
+// The state built for the main thread, and sending it (T-2374).
 
 import { TrackApi } from "../wasm/track/sim"; // the track model only (T-051)
 import { anchor, anchorShift, EARTH_C, toMerc01, type Anchor } from "../map/geo";
@@ -111,7 +111,6 @@ export function previewMarkRows(rows: Float64Array): Float32Array {
 /** T-1859: each station's platform line, for the complexes */
 const platformLines = new PlatformLines();
 export const platformLineOf = (a: TrackApi, id: number, x: number, y: number, platform: number) => platformLines.of(a, id, x, y, platform, groundK(y));
-/** what `StateRows` needs of the worker */
 /** T-3288: the complexes of the station rows, for the one name their untyped members show */
 function rowComplexes(rows: readonly ClockNode[]): Complexes {
   const geo: StationGeo[] = rows.map((r) => ({ id: String(r.id), x: r.x, y: r.y, heading: r.heading, length: r.platform, ...(r.line ? { line: r.line } : {}) }));

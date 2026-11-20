@@ -1,4 +1,4 @@
-// Money and the ledger: the day and hour entries, regions, settling, and what the Money panel reads (T-2374: moved out of clock.worker.ts).
+// Money and the ledger: the day and hour entries, regions, settling, and what the Money panel reads (T-2374).
 
 import { TrackApi } from "../wasm/track/sim"; // the track model only (T-051)
 import { PERIODS } from "../game/periods";

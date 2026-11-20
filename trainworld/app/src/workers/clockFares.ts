@@ -1,4 +1,4 @@
-// The clock worker's fares: a new game's, a save's, a line's and a station's (T-2374: moved out of clock.worker.ts).
+// The clock worker's fares: a new game's, a save's, a line's and a station's (T-2374).
 
 import { TrackApi } from "../wasm/track/sim"; // the track model only (T-051)
 import { CITIES, cityById, cityWithin, HOME_CITY, isCity } from "../game/cities";
