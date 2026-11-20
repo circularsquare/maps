@@ -7,22 +7,29 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`. This f
 Diary: notes/handoff-log.md. Her local time is UTC-5.
 
 ## Next
-0. Live v0.4.4. Cap 14. 8800 = 89d6ca0d (14 behind). Master pushed through aaac102d.
+0. Live v0.4.4. Cap 14. 8800 = cc1b84b9 (T-3891 1f61c1a5 not on it). Master pushed through aaac102d.
 1. Evening update (her: "wait until this evening"). T-3831, T-3883, T-3735 landed (c031-c033). Smoke on master
    running (scratchpad smoke-master.txt); then 8800 rebuild, ping her, publish skill (sort, highlights, playtest list, translations incl. T-3822/3823 hovers + addCity + today's strings, new
    zones image for PK/BD, smoke8800). Server first, her yes: shonei-server 2754ba1, fd294e7, 43360be, 39e1bd2 (not
    pushed; 39e1bd2's follow-the-game test needs T-3735 landed; if T-3735 doesn't ship, revert 39e1bd2 or ship it
    anyway: level 32 accepted is harmless). After publish: post PR 24 reply (notes/T-3659.md, her OK), open-source sync.
 2. hourturn done (T-3804 st1, report r-ade4440a); checker hourturnchk running (mine); on pass land, fold its
-   follow-ups (rename leaves 12-57 accounts stale; sendMoney 15-100 ms/hour) into T-3804 Context. Running: trainrate (T-3550; checker before landing),
+   follow-ups (rename leaves 12-57 accounts stale; sendMoney 15-100 ms/hour) into T-3804 Context. trainrate done (r-326ad1fa), checker trainratechk running (mine). Running:
    frontier (T-3887 research then chart, 3-4 h; maps-b4's). Mine: tramrail (T-3889, tree), busstop (T-3890 bus
-   stop panel + connectors, tree, Opus), busname (T-3891 construct while naming, tree, Sonnet).
-3. T-3888 walk tiers design done, ask a-2026-11-20-7 (A and D). Then: T-3856 plain buses (after frontier's first chart; rerun it after),
+   stop panel + connectors, tree, Opus), binzip (T-2486 .bin compression, measure then build, no uploads).
+   T-3804 st1 landed fe72ec68 (task stays open, stage 2 next). clocksplit + drawsplit (T-2374 clock worker and
+   renderer, Sonnet, trees). Queued: T-2843 after the splits; T-1183 after tramrail; tools.ts station split after
+   tramrail; T-3655/T-3646 after trainrate. Plan: notes/review-cleanup-2026-11-20.md table.
+3. T-3888: her call ~19:35 UTC head start 10 -> 0, +2 min entering first train station +2 leaving last (not tram/bus/ferry), + option A, "keep the rail balance roughly in the same spot";
+   walkab (mine, tree, Opus) builds + measures; rail trips/day off >5% = options to her. Checker before landing. Then: T-3856 plain buses (after frontier's first chart; rerun it after),
    T-3378 BRT design to her; held T-3655, T-3646 until trainrate lands; T-2374 clock worker split after hourturn.
    Board queue: `tasks.py upnext list`. Track rework design (T-3444) after cleanup + edit speed, her order.
 4. T-3395: run `tools/ops/save_health.py` after the 11-21 04:00 UTC scan; clean = close it.
 
 ## Her words
+- 11-20 ~19:45 UTC: out ~5 h (back ~00:45 UTC), remote control here only, can't playtest; after a handoff the old
+  tab relays her messages. Evening update maybe tomorrow, "dont worry about it". "if you find idle resources /
+  compute ... please pick up additional tasks ... mostly self contained and can be done without too much input."
 - 11-20 ~19:15-19:30 UTC: tram track joins rail, "trams can go on train track but trains cannot path onto tram
   track" (T-3889); bus stops clickable with a station-like panel + hallway-like connectors (T-3890); Construct
   while naming should just construct (T-3891). Her words in those tasks.
