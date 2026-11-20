@@ -138,6 +138,8 @@ export interface TrackEdge {
   vminKmh: number;
   /** T-3405: the player's speed limit on it, km/h; absent for none */
   limit?: number;
+  /** T-3893: the ramp length per level its ramps aim for, m; absent for the default. Pieces join only when equal. */
+  ramp?: number;
   levelMin: Level;
   levelMax: Level;
   /** lines whose path uses it */

@@ -10,6 +10,13 @@ impl TrackApi {
         (0..n.edge_count() as u32).filter(|&e| n.edge_ok(e) && n.edge_limit[e as usize] > 0).flat_map(|e| [e, n.edge_limit[e as usize] as u32]).collect()
     }
 
+    /// T-3893: the pieces with a ramp length of their own (`EdgeData::ramp` not 0), as pairs: edge, m. Pieces join
+    /// across a joint only with equal ramp, so the page's guess at a platform's room needs it.
+    pub fn edge_ramps(&self) -> Vec<u32> {
+        let n = &self.w.net;
+        (0..n.edge_count() as u32).filter(|&e| n.edge_ok(e) && n.edge_ramp[e as usize] > 0).flat_map(|e| [e, n.edge_ramp[e as usize] as u32]).collect()
+    }
+
     /// Hold trains on these pieces to `kmh` (at least 40; 0, or the kind of track's top speed or more,
     /// takes the limit off, T-3525). Free and one undoable edit, constructed track or blueprint; refused
     /// on a crossover. Returns 1 when nothing changed.

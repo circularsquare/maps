@@ -554,6 +554,8 @@ export interface ClockEdge {
   vminKmh: number;
   /** T-3405: the player's speed limit on it, km/h (`TrackApi::edge_limits`); 0 none */
   limit: number;
+  /** T-3893: the ramp length per level its ramps aim for, m (`TrackApi::edge_ramps`); 0 the default */
+  ramp: number;
   levelMin: number;
   levelMax: number;
 }

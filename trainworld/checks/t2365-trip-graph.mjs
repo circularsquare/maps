@@ -32,9 +32,11 @@ const figures = (page) => page.evaluate(async (zone) => {
   const tl = await import('/src/game/tripLengths.ts');
   const zl = await import('/src/game/zoneLengths.ts');
   const dm = await import('/src/game/demand.ts');
+  const ui = await import('/src/game/ui.ts');
   const { cityById } = await import('/src/game/cities.ts');
   const city = cityById(zone);
-  const v = dm.cityDemandViews.value.get(zone);
+  // T-3509: cityDemandViews folds the market's within-place trips in; the graph's bins are the zone's local trips only
+  const v = dm.demandByDay.value[ui.shownDay.value]?.cities.get(zone);
   const local = zl.lengthsOf(zone);
   const market = dm.intercityDemand.value;
   if (!v || !local || !market) return { error: `view ${!!v}, lengths ${!!local}, market ${!!market}` };
