@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3890 [P2] {L:buses} Bus stop panel and stop connectors (2026-11-20): bus stop panel from the station panel's parts, places merged within 100 m, walk changes to 300 m, connectors drawn like a complex's; Build a station here opens the Station tool. notes/T-3890.md.
+- T-3891 [P2] {L:buses} Construct button works while naming a new bus line (2026-11-20): Construct button counts as part of the title editor, so its press no longer closes naming first; all line types. notes/T-3891.md.
 - T-3735 [P2] {L:timetables} Weekend departures use the weekday round trip (2026-11-20): weekend departures placed from the weekend service; weekdays unchanged to the bit; checker passed (unequal weekend headways can still bunch, as weekdays do) notes/T-3735.md.
 - T-3883 [P1] {L:track-speed} Long high-speed ramps still run at 160 (2026-11-20): arcs turning under 3e-4 rad carry no speed limit; checker passed on 7 saves, only high-speed lines change, all faster. notes/T-3883.md.
 - T-3831 [P2] {L:buses} Trams on highways (2026-11-20): street tram snap and hint follow motorways like bus routes; 60 km/h cap and costs unchanged. notes/T-3831.md.

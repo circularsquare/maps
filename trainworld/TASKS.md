@@ -193,9 +193,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-2136's checker (by reading the code): a request for one place's rows lost in a demand worker restart times out after 20 s and is asked again only with the next result, so that zone's panel can wait that long.
   - Goal: A request lost in a restart is asked again once the worker is back; probed with a forced restart.
   - Other: notes/T-2136.md
-- T-3550 [P3] {L:edit-speed} Train-count and headway edits on shared track are slow (taking, 2026-11-20, agent trainrate)
-  - Context: London train-count edits inside its 130-line merge group take 0.5-1.3 s natively (up to 3.3 s on a 3-train line), 1.4-3.7 s in the browser (T-3388); New York's busiest shared line took 150-400 ms (T-1794, before T-1863). Each settle round works out 100-190 profiles at about 1 ms, mostly the crawl-speed bisection in `run_with`. Folds in T-1794 and T-1936.
-  - Goal: London train-count edits under 0.5 s natively; figures within the pacing's own noise (T-3388's tolerance). Measure master first with `t3388_probe`.
+- T-3550 [P3] {L:edit-speed} Shared-track edits still over 0.5 s on the windrush save
+  - Context: Stage 1 landed 11-20: the crawl speeds are solved by a secant, so London's typical train-count edit went 0.95 to 0.23 s natively, but 22 of 143 lines still pass 0.5 s at every level, windrush edits take 1.2-2.3 s in the browser, and a follow-up gap of 0.4-1.9 s outside the timed parts (once 5 s) is in both builds, cause not measured. Folds in T-1794 and T-1936.
+  - Goal: London and windrush train-count and headway edits under 0.5 s in the browser, the gap explained or gone; figures within the pacing's own noise (T-3388's tolerance).
   - Other: notes/T-3388.md, notes/T-1779.md "T-1787", notes/T-1936.md, notes/review-edit-speed-2026-11-20.md
 - T-2761 [P3] {L:track-drawing} Highlight crossings between stationed and unstationed track
   - Context: Your note 2026-11-07: "its probably an accident, but might not be an accident". Waits until after the post.
@@ -393,13 +393,13 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: `stop_every_pass` adds a stop to line 150 on each load, costing one extra derive and settle.
   - Goal: realsave saves after `stop_every_pass`, so London loads without the fix-up.
   - Other: Reshipping London moves its settled rates. notes/T-3234.md.
-- T-3646 [P2] {L:timetables} Undo leaves other lines' trains cut
+- T-3646 [P2] {L:timetables} Undo leaves other lines' trains cut (taking, 2026-11-20, agent fullrate)
   - Context: Found checking T-3482: adding a line on full track cuts the lines sharing it (Tokyo's line 42 from 23.12 to 15.00 trains an hour at the peak), and undoing the new line leaves them at 15.00, on master too; a later edit then shares the track out from there, so an undo and redo can end at different rates from the first build.
   - Other: notes/T-3482.md
 - T-3654 [P3] {L:map-look} Draw on the map for planning
   - Context: Your pad, 2026-11-18, from Discord, "not high prio": "some people want draw on map tool for planning stuff. could add it in a discreet way, hideable".
   - Goal: A design to you first (what can be drawn, whether it saves and shares, where the hide control sits), then a first version.
-- T-3655 [P2] {L:line-rates} A line on full track keeps its old rate after a new count
+- T-3655 [P2] {L:line-rates} A line on full track keeps its old rate after a new count (taking, 2026-11-20, agent fullrate)
   - Context: Found by T-3482's agent and again by T-3645's checker: a line held on full track keeps its rate when given a new count or headway until a line beside it moves (London's busiest line keeps 8 trains at medium as its headway goes 540 -> 360 s; a local raised from 3 to 40 beside a 40-train express still draws 1 train for 3 hours). Master and the fixes alike. Stepping it cost London's shared save about 300 ms an edit in one try.
   - Goal: A new count or headway on full track takes its share at the edit, within about 50 ms an edit on London's shared save.
   - Other: notes/T-3482.md "Follow-ups"
@@ -538,9 +538,9 @@ Anita's notes 2026-11-04 late (verbatim in notes/todo-2026-11-04j.md):
   - Context: Found by T-3876: "Calculating trips here..." (the zone in view's quick pass, 40-60 s on your North America save) shows a bar at 0 and no hover; and the first 90 s of a cold calculation have no time left yet.
   - Other: notes/T-3876.md
 - T-2486 [P2] {L:loading} Compress .bin files to cut download size (taking, 2026-11-20, agent binzip)
-  - Context: .bin files are 76% of R2 (2.2 of 2.9 GB), and the first line pulls 14.4 MB of worldwide data.
-  - Goal: .bin is compressed for whole-file reads, Range reads still work, and market files load by region.
-  - Other: notes/T-2472.md, section 6.
+  - Context: built in tree binzip, not published: packs go up as gzip members per array (0.57 of the size, New York 7.6 to 4.1 MB), Range reads still work, same figures on a new game and the real save. The market drives table is still one global file (10 MB gzipped).
+  - Goal: lands and ships with the next publish; then the market drives and rows load by region (a US line needs 8% of the table).
+  - Other: notes/T-2486.md; notes/T-2472.md, section 6.
 - T-2458 [P3] {L:solve-speed} Zone selected during a load solves coarse
   - Context: A zone selected in the city view during a load is solved coarse, then refined only by a second whole solve.
   - Goal: Pick the zone level before the load solve is sent.
@@ -798,9 +798,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3837 [P3] {L:buses} Ferry routes found without a waypoint, and waypoints on touch
   - Context: T-3809 added shift click waypoints. A leg is still searched only in a box around its two ports, so a sea path that leaves it (Ma Liu Shui to Sai Kung) needs a waypoint; a wider third search would find it alone. Phones have no shift click.
   - Other: notes/T-3809.md
-- T-3890 [P2] {L:buses} Bus stop panel and stop connectors (taking, 2026-11-20, agent busstop)
-  - Context: Players keep asking why two bus lines don't connect; they do (a shared stop at a crossing, stops within 100 m as one, a walk up to 300 m), but nothing on the map says so. You, 11-20: "i think maybe we can just make bus stops clickable and show a view sorta like we show for all the other stations. there we can show connections, an option to build a station, etc. and if bus stops connect but dont actually like visually connect or overlap we can draw a little connector between them sorta like how we draw connecting halwlays between train stations."
-  - Goal: Clicking a bus stop opens a panel like a station's with the lines there, what it connects with and a way to build a station; connecting stops that don't overlap get a connector drawn like a station hallway.
 - T-3889 [P2] {L:trams} Tram track joins rail and high-speed track (taking, 2026-11-20, agent tramrail)
   - Context: You, 11-20: "people keep requesting connecting tram track to normal track (and high speed). theres apparently a bunch of real world setups that are like this. would this be hard to do? if not i think its fine to just allow. tram trains can keep the low speed limit of course." Then: "trams can go on train track but trains cannot path onto tram track." Today tram and train track can only cross ("Tram track and train track can't join").
   - Goal: Tram track joins regular and high-speed track at a junction; a tram line runs onto them at the tram's 80 km/h; train lines stay off tram track.

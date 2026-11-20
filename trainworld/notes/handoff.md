@@ -17,9 +17,11 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    follow-ups (rename leaves 12-57 accounts stale; sendMoney 15-100 ms/hour) into T-3804 Context. trainrate done (r-326ad1fa), checker trainratechk running (mine). Running:
    frontier (T-3887 research then chart, 3-4 h; maps-b4's). Mine: tramrail (T-3889, tree), busstop (T-3890 bus
    stop panel + connectors, tree, Opus), binzip (T-2486 .bin compression, measure then build, no uploads).
-   T-3804 st1 landed fe72ec68 (task stays open, stage 2 next). clocksplit + drawsplit (T-2374 clock worker and
+   T-3804 st1 landed fe72ec68 (task stays open, stage 2 next). T-3550 st1 landed cfcc4e7a (c035; task rewritten to
+   what's left). T-3890 landed 73843d96 (c036; strings sent to her 20:00 UTC). fullrate (T-3655+T-3646, Opus, tree;
+   checker before landing). clocksplit + drawsplit (T-2374 clock worker and
    renderer, Sonnet, trees). Queued: T-2843 after the splits; T-1183 after tramrail; tools.ts station split after
-   tramrail; T-3655/T-3646 after trainrate. Plan: notes/review-cleanup-2026-11-20.md table.
+   tramrail; Plan: notes/review-cleanup-2026-11-20.md table.
 3. T-3888: her call ~19:35 UTC head start 10 -> 0, +2 min entering first train station +2 leaving last (not tram/bus/ferry), + option A, "keep the rail balance roughly in the same spot";
    walkab (mine, tree, Opus) builds + measures; rail trips/day off >5% = options to her. Checker before landing. Then: T-3856 plain buses (after frontier's first chart; rerun it after),
    T-3378 BRT design to her; held T-3655, T-3646 until trainrate lands; T-2374 clock worker split after hourturn.
