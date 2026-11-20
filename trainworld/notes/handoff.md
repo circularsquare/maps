@@ -7,15 +7,16 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`. This f
 Diary: notes/handoff-log.md. Her local time is UTC-5.
 
 ## Next
-0. Live v0.4.4. Cap 14. 8800 = c0a5dbc1. Master pushed through aaac102d; push soon. Landed since the last smoke:
-   clock worker split d82a6dd9, clockcomments 2c256699, fourbugs cbd0b059: smoke these with the next batch.
+0. Live v0.4.4. Cap 14. 8800 = 78c7f12f (rebuild 20:55 UTC; smoke passed). Master pushed through 78c7f12f.
 1. Evening update, maybe tomorrow (her call, needs her playtest). Publish skill (sort, highlights, playtest list,
    translations incl. T-3822/3823 hovers + addCity + today's strings, zones image for PK/BD, smoke8800). Server
    first, her yes: shonei-server 2754ba1, fd294e7, 43360be, 39e1bd2 (not pushed; T-3735 landed so 39e1bd2's test
    passes). After publish: PR 24 reply (notes/T-3659.md, her OK), open-source sync, then land binzip.
-2. Agents (mine unless noted): tramrail T-3889 (tree); walkab T-3888 (bonus 0, 2+2 min train, option A; rail
-   trips/day off >5% = options to her; checker before landing); fullrate T-3655+T-3646 (checker before landing);
-   drawsplit T-2374 renderer piece; binzip T-2486 done, checker binzipchk running, land AFTER the evening publish;
+2. Agents (mine unless noted): tramrail T-3889 done (strings to her), checker tramrailchk running; its two
+   clock.worker.ts one-liners will conflict with the clock split at landing (addLine/copyLine moved); walkab T-3888 stopped on the rule: Houston test A 79 with all
+   three; ask a-2026-11-20-8 (options 1-4); tree walkab holds all three as --set switches, defaults = her three, don't
+   land until she picks (then docs, WASM, smoke, checker); fullrate T-3655+T-3646 (checker before landing);
+   drawsplit T-2374 renderer piece; binzip T-2486 done + checker's 3 fixes done (tree binzip, ready), land AFTER the evening publish;
    frontier T-3887 (maps-b4's, reports via inbox; her new axes relayed via maps-b4).
 3. Then: T-3856 plain buses (after frontier's chart), T-3378 BRT design to her, ferry ideas (her 20:25 ask);
    cleanup table notes/review-cleanup-2026-11-20.md: T-1183 and tools.ts station split after tramrail,
@@ -23,6 +24,10 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 4. T-3395: run `tools/ops/save_health.py` after the 11-21 04:00 UTC scan; clean = close it.
 
 ## Her words
+- 11-20 ~21:00 UTC: ferry types yes, a fare multiplier per type in advanced fares; fans slightly up, all purposes,
+  half for work/medical/airport; check her Okinawa line after the islands fix first; wants revenue/cost of a full
+  ferry vs train/bus/tram on long trips at China fares (all sent to ferrydesign). T-3889 string -> "Trains can't run
+  on tram track." (done in the tree).
 - 11-20 ~20:25 UTC: ferries with buses: long-distance ferries more traffic, fans stronger/more common, small and
   large boats (current = medium).
 - 11-20 ~20:15 UTC: frontier chart axes: x trip length, z stop spacing, y share by mode (T-3887 Goal).
