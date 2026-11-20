@@ -169,7 +169,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Goal: Each one measured on our saves, then ported with credit, or closed with a reply you've seen.
 
 ## Demand
-- T-3823 [P3] {L:route-choice} Intercity hover shows the full first wait
+- T-3823 [P3] {L:route-choice} Intercity hover shows the full first wait (taking, 2026-11-19, agent firstwait)
   - Context: Found by T-3822: the intercity market counts the first wait as planned (T-1430), but the hover's legs show it in full (Newark Penn 33.6 min by the legs, 16.2 planned). It only takes minutes off, so the shown sum runs high. Reach: anyone reading an intercity hover.
   - Goal: The intercity route rows and equation show the planned first wait.
   - Other: notes/T-3822.md
@@ -385,10 +385,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-3431.md
 - T-3434 [P3] {L:region-redraws} Sabang Island missing from the Banda Aceh zone
   - Context: Player report 2026-11-16. Reach: few.
-- T-3790 [P4] {L:real-networks} Ship the rebuilt Moscow, Berlin and Hong Kong
-  - Context: You, 11-19: "yes only fix in real network build so players are unchanged. sure can keep moscow unless people ask". Built 11-20 (e9a6f91b, moscowfix): junctions over 8 ends split, turn-backs given a dead end, a keep list holds Moscow to 105 of v0.4.2's 106 lines with nothing unserved; Berlin's tram 93 and Hong Kong's 751, 761P, 751P run whole. Saves wait in artifacts/trainworld/t3790/moscowfix until guianas stops writing data/packs.
-  - Goal: mos (--force: one tram stop name), ber and hon (--force: three street names, same places) shipped for the next update; Saint Petersburg kept at its 123 lines with a keep list (it would grow to 151).
-  - Other: notes/T-3790.md
 - T-3803 [P2] {L:edit-speed} Next edit waits behind the last edit's full state (taking, 2026-11-19, agent editfirst)
   - Context: Renames fixed 11-19 (e9cba56e). The cheaper full state landed 11-20 (70845536, about 35% off): the next edit's wait on the 2,647-station save went from 580 to 333 ms median (844 ms p90), 81% of it still the previous edit's full state with no single hot spot left. Left: option 1, a waiting edit runs before the last edit's full state, in pieces (4-6 h). Player on X, 11-20 (v0.4.4, Japan save their browser counts at 6 GB): stop editing on a long line gets slower until the "figures stopped" notice; your pad, 11-20.
   - Goal: An edit made right after another shows up within about 0.3 s on that save.
@@ -397,7 +393,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3801's audit: the hour turn (0.14-1.1 s every game hour), one today answer (70-250 ms, 0.5-0.8 s under load; splitting it is a design call), the snapshot timer and next-hour boarding step (0.2-0.5 s). Not measured: undo of a rename, unbind all, the junction panel.
   - Goal: Each is under 0.2 s or yields to edits, per docs/architecture.md "Edits never queue behind polling".
   - Other: notes/T-3801.md
-- T-3809 [P3] {L:buses} Ferry waypoints without a port
+- T-3809 [P3] {L:buses} Ferry waypoints without a port (taking, 2026-11-19, agent ferrywp)
   - Context: You, 11-19: "ferry waypoint placeability (maybe with shift click or something, if thats not used) so that people can path their ferries without placing a port. sometimes we are unable to path through some archipelagos. or its too long or smth."
   - Goal: A player can place a waypoint a ferry route passes through without a port (shift click if free), so routes get through archipelagos.
 - T-3325 [P3] {L:real-networks} {after:real-network rebuild batch} Rebuild Sendai so Senzan Line stops at Toshogu
@@ -817,7 +813,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Other: notes/T-3287.md
 - T-3832 [P3] {L:small-fixes} Lines gear part-ticked box shows a minus
   - Context: The schematic's cities list (T-3826) marks a part-ticked region with a minus; the Lines tab gear's part-filled box has none. Same look in both.
-- T-3827 [P3] {L:checks} Weekend timetable checks gone stale
+- T-3827 [P3] {L:checks} Weekend timetable checks gone stale (taking, 2026-11-19, agent weekchk)
   - Context: t3521-weekends, t3557-weekend-headway and t3603-weekend-flash fail on master 6c8dc0ef (found by ttzoom 11-20, confirmed on master): a weekend share button not found, Medium and Low weekend headways read as NaN, a null click; most likely the panel changed under them (five periods, T-3542).
   - Goal: The three checks pass on master, or each failure is a real bug filed.
 - T-3828 [P3] {L:timetables} Pinch zoom for the timetable on touch

@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3790 [P4] {L:real-networks} Ship the rebuilt Moscow, Berlin and Hong Kong (2026-11-19): mos (--force), ber, hon (--force) shipped from moscowfix's saves; sai kept at 123 lines by realauto_keep/sai.json. notes/T-3790.md.
 - T-3826 [P2] {L:schematic} Add a neighbouring city from the schematic (2026-11-19): Pan keeps the nearest station 40 px inside; zoom cap half the view; fit on cities change; 1 px divider; regions from realms with chevrons and a minus box; hover spots for cities with stations within 500 km, placed just past the drawing's edge in their real direction. notes/T-3826.md.
 - T-3825 [P2] {L:schematic} Schematic pan limit and city selector fixes (2026-11-19): Pan keeps the nearest station 40 px inside; zoom cap half the view; fit on cities change; 1 px divider; regions from realms with chevrons and a minus box; hover spots for cities with stations within 500 km, placed just past the drawing's edge in their real direction. notes/T-3826.md.
 - T-3818 [P2] {L:timetables} Related lines in the same timetable (2026-11-19): Related = lines drawn beside the line (lineRelated beside, running); rank 1 columns, bullets 2 px lower, times 60% (30% past); toggle shows whenever there are related lines; drag-to-pan already worked. notes/T-3817.md.
