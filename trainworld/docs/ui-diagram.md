@@ -224,51 +224,8 @@ worker finds the sea on the ground (the coarse and far grids and the land masses
   one ending free within 1 km of the sea ends at it. Where a river meets the sea, its end takes the body nearest. A
   hop crosses a river where its track crosses the centre line an odd number of times; one hop crossing two arcs within
   600 m of each other (where rivers meet) crosses the wider only.
-- **Which rivers are drawn**: only rivers (water connected on the ground) some hop crosses, and each drawn **whole,
-  as one band**: its crossed arcs, the arcs joining them along it, the way from them to its nearest mouth, and the way
-  to each mouth at least 150 m wide each side of its middle within 25 km (so the East River runs from the harbour to
-  Long Island Sound). A river with no mouth runs on to its open end; one with neither (it stops on the ground at both
-  ends) is not drawn. A narrow arc at an end of what is drawn (all its crossings under 150 m each side) that crosses
-  another line is left out, and an arc left ending free with no crossing goes with it; a river narrow wherever it is
-  crossed is drawn only where it crosses no other line, else not at all. So **no band is drawn in pieces**.
-- **How wide** (T-2528): a band is the river's real width (its median along each arc) at the drawing's scale around it,
-  the scale field: at each place, the nearest 16 stations' own scales (their local maps', drawn over real), a geometric
-  mean weighted by exp(-d^2 / 2 R^2), R 1.5 km or the fourth nearest's distance, so it changes smoothly from place to
-  place. Smoothed along the river over 1.5 km either side, then at least half the river's widest drawn stretch times
-  their real widths' ratio (so a big river narrows gently downstream and a narrow branch stays narrow), between three
-  lines' width (3 x 5/6.4 of a pitch) and 18 pitches. So the Hudson and East River beside Manhattan, drawn large, are
-  wide, the Hudson up past Yonkers stays a band, and an outskirt river such as the Navesink stays near the least
-  width. Where the band would cover a pill, or a line running alongside it (within 30 degrees) that it does not cross,
-  it narrows to keep half a pitch off it. It is drawn as runs of one width, in quarter-pitch steps, so **every edge
-  of the water runs at 0, 45 or 90 degrees** (Anita, 2026-11-05): a run holds its width at least 4 pitches,
-  narrowing early to the least room ahead and widening only by half a pitch or more where that holds as long; a width
-  never changes at a bend, and where it changes the step is square (the runs cut square there), while a band's own
-  ends, and where rivers meet, are round.
-- **Rivers in the drawing**: bands with round ends. Each crossing is a straight
-  run square to the hop's bundle, at the real share of the hop (kept within 25 to 75%; moved to 20, 35, 50, 65 or 80%
-  where it would otherwise end on another line), from the side the river comes from on the ground, on past the
-  outermost casing by half a pitch; a run that crosses every line of another hop the river crosses serves for both.
-  Between crossings the band is routed on a one-pitch grid like a line (runs at 0, 45 and 90 degrees, a 45 degree bend
-  costing 10 pitches of length and a 90 degree one 30), dearer within a pitch of a casing, near the river's course
-  carried into the drawing through the nearest stations' local maps (T-2488's border lines), within 24 pitches of it.
-  It may cross other lines: each pitch inside a casing costs 10 pitches of length, inside a hop the river crosses
-  elsewhere 60, inside a pill 150, so it crosses a line where going around costs more (T-2516: a band that runs on
-  smoothly reads better than one winding through the gaps, and the drawing often puts a river's two banks on the wrong
-  sides of a line). Where that way crosses lines, the run is tried the other way around too, and the one crossing
-  fewer taken. So **a band crosses each hop that crosses that river once**, save where it has to cross its own hop
-  again, and other lines where the drawing leaves no way around.
-- **Ends**: a mouth goes into the drawn sea of the body it meets: to the nearest cell of that body's drawn sea, at
-  least a pitch past the band's edge from the coast, within 80 pitches of where its place on the ground is carried. A
-  mouth at a sea not drawn near (Newark Bay) goes on by water on the ground (the coarse grid's water, the shortest way
-  within 30 km) to a sea that is drawn, as its own band (the Kill Van Kull to the harbour); failing both, into whatever
-  drawn sea is nearest within those 80 pitches. An open end runs on
-  straight, away from the drawing's middle, to 12 pitches past the drawing's box. A free end (the river ends on the
-  ground) runs 3 pitches past its last crossing, a wide river's 5. A river whose mouths all find no drawn sea that way is
-  not drawn.
-- **Connected seas**: pieces of one body drawn apart (each 60 square pitches or more) and not joined by a drawn river
-  are joined by a channel band, the shortest way between them on the drawing's grid, routed like a river, where that
-  is within 40 pitches.
-- Corners are rounded at 2.5 pitches, unless that would cut across a line.
+- **Which rivers are drawn, and how**: the rubber sheet's Narrow rivers, below (T-3358): each river course some hop
+  crosses, routed after the layout as one band.
 - **The sea everywhere** (T-2540): past the coarse grid, a far grid (1 km a cell, coarser for a big network, at most
   1.5 million cells; 100 km past the coarse grid) holds the masks' water at least three of its cells wide; a place no
   mask covers takes the nearest known cell's (so open sea far from the stations is sea, and land between them land).
@@ -616,7 +573,10 @@ the sheet (a tenth), the lines and the carry (seven tenths) and the map.
   mass (the sheet's raster: its real place's, or the nearest land within 1 km) with water on the straight way between
   them on the ground keeps at least 0.8 of their sheet gap along the sheet's direction between them, in B (weight 3) and
   as a term of the separation. So rivers and straits between land masses stay open (the East River at the Brooklyn
-  Bridge). About 86% of New York's hops and 88% of all Japan's are drawn as one straight run.
+  Bridge). About 86% of New York's hops and 88% of all Japan's are drawn as one straight run. With the water on, a city map whose
+  routed rivers (Narrow rivers, below) leave stations on the wrong bank is laid out once more, those stations and their
+  neighbours on the lines ending the lines' pieces, so each hop there is straightened on its own (T-3358, Anita
+  2026-11-20: "yeah i like E"); a second layout leaving more stations on a wrong bank than the first is dropped.
 - **The carry**: a field of moves on the sheet's finest lattice, smooth by least squares, links on land stiff (5) and on
   water nearly free (0.004), met at each station (its place on its own land carried to its drawn place, weight 1). A
   station whose drawn place does not lie on its own land in the carried map is met 8 times harder, and the field solved
@@ -642,16 +602,37 @@ the sheet (a tenth), the lines and the carry (seven tenths) and the map.
   3 by 3 majority; water under 40 square pitches and land with no station under 30 dropped, before the bands below and
   again after them).
 - **Narrow rivers** (with the water button on, on a city map; a map 600 km across or more draws only water wide enough
-  to show as area): every arc of a river some hop crosses, from the river finder of Water above run with a 25 m cell (so
-  the Harlem River is found whole), its middle carried through the map and moved so each crossing lies on its drawn hop
-  at the hop's share (the river within 3 km of a crossing moving with it), is a band 3.5 pitches wide where the grid's
-  water there is narrower. A band is pushed off stations nearer than half its width and a pill, narrowed (to 1.5 pitches
-  at least) where they leave no room, and stops either side of a station it still cannot pass, as at a bridge; its middle
-  is fitted with runs at 0, 45 and 90 degrees, straying up to 6 pitches but at least 1.5, less near a station, and split
-  round any station the fitted band would cover. A stub under twice its width crossing none of its hops is not drawn.
-  The grid's own water within a band's reach (and its river's carried middle's) that is narrower than the band becomes
-  land, so the band's are the only edges there. Bands are stroked one width each, round at their ends, corners rounded
-  at 2.5 pitches.
+  to show as area; `riverRoute.ts`, T-3358, notes/T-3358.md): the river finder's arcs (Water above, a 25 m cell) joined
+  into **courses**, the widest way at each junction. Each course some hop crosses is drawn after the layout as **one
+  band**, from 3 km before its first crossing to 3 km past its last, or on to its end where that meets the sea or
+  another river within 8 km. A course wider than 8 pitches at the drawing's scale is left to the map's own water (the
+  Hudson, the East River); a course no hop crosses is not drawn.
+  - **Width**: one per course, its stretch's typical real width (the median of its arcs' half widths by length) at the
+    drawing's scale at its crossings, at least three lines' width (2.34 pitches). Toward a sea end it steps up by powers
+    of 2 where an arc 500 m or longer is at least twice as wide, at most 12 pitches, never narrowing again (Anita,
+    2026-11-20: "leans to only widen toward the ocean"; Osaka's Yodo goes from 3.8 to 12 pitches).
+  - **Its way**: a path at 0, 45 and 90 degrees on a half-pitch grid, near the course carried into the drawing (each
+    crossing moved onto its hop as drawn, at the hop's share, the river within 3 km of it moving with it): free within 2
+    pitches of that middle, then ((d - 2) / 4)^2 a pitch, never past 15; a 45 degree bend costs 10 pitches of length
+    and a 90 degree one 30. Lines are a cost, never walls: 10 a pitch inside another hop's casing, 1 inside a hop the
+    river crosses on the ground, so it may run under a line between stations. **Banks**: the drawn straight way between
+    two stations within 2 km of each other that the river does not part on the ground (one within 1.5 km of it, the
+    other within 3 km) costs 3,000 a cell crossed, so every station near the river keeps its own bank. A station's
+    place grown by half the band and 0.2 is a wall (where no way round exists, 150 a pitch, like the rest of its pill).
+  - **Straightened lightly** (Anita, 2026-11-20: "straighten/smoothen ever so slightly even when space is tight"): the
+    path fitted again with runs at 0, 45 and 90 degrees straying up to 2 pitches, a way kept only where the area it
+    sweeps holds no station (so no station changes bank and no line is crossed a different number of times), comes no
+    nearer a station or its pill than half the band and 0.2 (or than the path did) and crosses no more lines. Hong
+    Kong's Tuen Mun River has 3 bends (22 before).
+  - **Ends**: an end at the sea or at another river goes into wider water (the map's, or a band routed before it:
+    courses go widest first, so a tributary meets its river), past the crossing nearest it; an end on land runs at
+    least 3 pitches past its last crossing. A band's two ends are round, a width step square; corners rounded at 2.5
+    pitches. A band under 2 pitches long (its crossing already in wider water) is not drawn.
+  - The map's own water along a routed course (out to 2.5 of its half width at the drawing's scale and a pitch and a
+    half) and within a band's reach becomes land where narrower than 8 pitches, so the band's edges are the only ones
+    there. **Every routed river is one piece** and leaves every station near it on its own bank but where the second
+    layout cannot (checks/t3358-river-banks.mjs: London's Thames from Battersea Park to Greenwich, the Harlem River,
+    Newtown Creek and the Tuen Mun River, 0 pairs wrong).
 - **Thin water and thin land as bands** (`sheetThin.ts`): water or land that a disc 8 pitches across (four cells on a
   coarse grid) does not fit is a thin piece (a strait, a creek, a spit, a pier, Bayonne's two peninsulas). Each piece is
   thinned to its middle lines (Zhang and Suen), spurs shorter than twice its width dropped, and each line drawn again as

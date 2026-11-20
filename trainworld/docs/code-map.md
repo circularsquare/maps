@@ -285,10 +285,11 @@ rivers thinned to centre lines, their crossings with the hops' tracks),
 `borders.ts`' pill regions were deleted in T-2590), `regions.ts` (the network's regions, one sheet each, and their drawings put together and placed, T-3448; the clock worker builds a graph per region), `sheet.ts` (the rubber sheet, the diagram's default: a quadtree lattice
 stretched by multigrid so the network has room, `rubberSheet` and `sheetWarp`, T-2568; the cut T-2609 and the floor's fall from the networks T-2625), `sheetLines.ts` (the layout's
 octilinear stages run from the sheet, the map carried with the stations, and its sea and zone borders, `sheetLines` and
-`sheetMap`, T-2567; its carry's solve in WASM through `carryWasm.ts`, T-2589), `thin.ts` (buses and ferries fitted
+`sheetMap`, T-2567; `sheetLayout`, laid out again round stations a routed river finds on the wrong bank, T-3358; its carry's solve in WASM through `carryWasm.ts`, T-2589), `thin.ts` (buses and ferries fitted
 thin into a laid-out region through its carried map, T-3360), `busGraph.ts` (buses and ferries with no rail near, a graph
 of their own, T-3360), `sheetThin.ts` (the sheet's map before its coasts are traced: thin water and land drawn again as
-bands, nibs smoothed, a city map's narrow rivers as bands, T-2580), `lsqr.ts`
+bands, nibs smoothed, T-2580), `riverRoute.ts` (a city map's narrow rivers routed after the layout, one band a
+course, stations held on their banks, T-3358), `lsqr.ts`
 (sparse least squares), `fmath.ts` (atan2 and powers from + - * / and sqrt, so every engine lays a graph out alike, T-2255), `draw.ts` (ribbons, rounded bends and pills, pieces going out of a node the same way drawn as one bundle (T-2405), made in the layout worker, painted
 on a 2D canvas, the focus faded and `pickAt`, T-2163), `names.ts` (station names placed per zoom level
 in the layout worker, painted, and `nameAt`, T-2162), `cityNames.ts` (a name per city block far out, centred on its own

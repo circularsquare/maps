@@ -44,8 +44,9 @@ export interface LayoutOptions {
   iters: number;
   /** T-2567: a layout of the rubber sheet's places (sheetLines.ts): no blocks' stage; a rebuild's B holds each station
    * to its start with `wGeo`; `pairs` (a, b, ux, uy, gap) are the stations with water between them, kept their gap
-   * apart along (ux, uy) in B and in the separation */
-  sheet?: { pairs: Float64Array; wGeo: number };
+   * apart along (ux, uy) in B and in the separation; `keep` stations (T-3358: those a routed river finds on the wrong
+   * bank, and their neighbours on the lines) end the lines' pieces, so each hop at them is straightened on its own */
+  sheet?: { pairs: Float64Array; wGeo: number; keep?: ArrayLike<number> };
 }
 
 /** round 2's mockups (artifacts/trainworld/t2146/r2-*.png), for comparison */
@@ -1871,6 +1872,10 @@ export function layoutDiagram(g: DiagramGraph, o: LayoutOptions = LAYOUT, last?:
   const n = g.key.length;
   const P = prep(g, o);
   if (o.sheet) (P.seaPairs = o.sheet.pairs), (P.sepPairs = o.sheet.pairs);
+  if (o.sheet?.keep?.length) {
+    P.keyNodes ??= new Uint8Array(n);
+    for (let q = 0; q < o.sheet.keep.length; q++) if (o.sheet.keep[q] < n) P.keyNodes[o.sheet.keep[q]] = 1;
+  }
   const hop = median(P.L);
   const blocks = findBlocks(g, P.city, P.cross);
   const tied = tiedBlocks(g, blocks, P.cross);
@@ -1930,7 +1935,7 @@ export function layoutDiagram(g: DiagramGraph, o: LayoutOptions = LAYOUT, last?:
     // the hops between blocks keep the length placed, so B and the drawing do not pull the cities together again;
     // a station between blocks on a long hop ends a segment, so the routing draws each long hop on its own and
     // cannot slide the stops along one long piece into a block
-    P.keyNodes = new Uint8Array(n);
+    P.keyNodes ??= new Uint8Array(n);
     for (let e = 0; e < P.ea.length; e++) if (skip[e]) {
       const a = P.ea[e], b = P.eb[e];
       P.L[e] = Math.max(P.L[e], hyp(start[b * 2] - start[a * 2], start[b * 2 + 1] - start[a * 2 + 1]));

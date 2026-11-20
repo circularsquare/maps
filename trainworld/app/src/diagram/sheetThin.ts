@@ -1,14 +1,11 @@
 // The rubber sheet's map, before its coasts are traced (sheetLines.ts `sheetMap`; T-2580; docs/ui-diagram.md "The
-// rubber sheet"). Narrow rivers a hop crosses are drawn as bands at least `riverMin` pitches wide, and every thin
-// piece of water or land (a river, a strait, a creek, a spit, a pier) is drawn again as a band: one width along a middle
+// rubber sheet"; the narrow rivers are riverRoute.ts'). Every thin piece of water or land (a river, a strait, a creek, a spit, a pier) is drawn again as a band: one width along a middle
 // fitted with runs at 0, 45 and 90 degrees. Two shores fitted apart can only follow a thin piece's own wiggles, so its
 // edges came out as stair steps (Anita, 2026-11-06: "these peninsulas are very wiggly"); a band's edges are straight, and
 // the coast's fit then follows them. Pure: no DOM, no fetch.
 
-import { fitOcti, rounded, segD } from "./borders";
-import { chamfer, type RealWater } from "./waterReal";
-import type { DiagramGraph } from "./graph";
-import type { DiagramLayout } from "./layout";
+import { fitOcti } from "./borders";
+import { chamfer } from "./waterReal";
 
 /** the drawn grid: per cell its label (0 water, OUT off the carried map, NOZ land in no zone, else a zone), `cell`
  * pitches a side from (x0, y0); `pill` cells are a station's own land, `band` cells drawn as a band */
@@ -19,14 +16,13 @@ export interface ThinOptions {
   thinW: number;
   /** a band's middle may move this far at most from the piece's own, pitches */
   tolMax: number;
-  /** the least width of a band, pitches; of a river a hop crosses */
+  /** the least width of a band, pitches */
   minW: number;
-  riverMin: number;
   /** the coast's and a band's least tolerance, cells (a straight edge drawn on the grid steps a cell) */
   tolCell: number;
 }
 
-export const THIN: ThinOptions = { thinW: 8, tolMax: 6, minW: 1.5, riverMin: 3.5, tolCell: 0.85 };
+export const THIN: ThinOptions = { thinW: 8, tolMax: 6, minW: 1.5, tolCell: 0.85 };
 
 export interface ThinStats { pieces: number; bands: number; skipped: number; ms: number }
 
@@ -230,7 +226,7 @@ export function smoothEdges(G: MapGrid) {
 }
 
 /** cells marked `fresh` (land with no zone yet) take the zone of the nearest zoned land, by steps of a side */
-function fillZones(G: MapGrid, fresh: Uint8Array) {
+export function fillZones(G: MapGrid, fresh: Uint8Array) {
   const { w: W, h: H } = G, N = W * H, q: number[] = [];
   // the first of c's side neighbours (left, right, up, down) that is zoned and not fresh, -1 none
   const zonedBy = (c: number) => {
@@ -323,195 +319,5 @@ function chainsOf(img: Uint8Array, bw: number, bh: number): { px: number[]; a: n
 /** the carried map (sheetLines.ts `Carry`'s lattice) at a place on the ground, pitches */
 export interface CarryMap { at(x: number, y: number): [number, number] }
 
-/** narrow rivers as bands: per width (pitches) its middles as path commands and its ends' stubs (layout units), and
- * each band as fitted (pitches; checks) */
-export interface RiverBands { cmds: Map<number, number[]>; ends: Map<number, number[]>; fits: { fit: Float64Array; w: number; arc: number }[]; arcs: number; crossings: number }
-
-/** Narrow rivers a hop crosses (the river finder's, waterReal.ts, every arc of such a river), drawn as bands over the
- * map: each river's middle carried into the drawing, each crossing put on its drawn hop at the hop's share and the river
- * round it moved with it (out to CORR_M on the ground); `riverMin` pitches wide, pushed off stations and narrower where
- * they leave too little room (to `minW`); drawn only where the grid's water there is narrower than the band, and
- * stopping either side of a station it cannot pass (as at a bridge); its middle fitted with runs at 0, 45 and 90
- * degrees, straying up to `tolMax` but keeping clear of the stations. The grid's own water under and beside a band, where
- * narrower than it, goes to land, so the band's edges are the only ones there. */
-export function riverBands(G: MapGrid, g: DiagramGraph, layout: DiagramLayout, k: number, real: RealWater, map: CarryMap, o: ThinOptions): RiverBands {
-  const { w: W, h: H, cell } = G, n = g.key.length;
-  const SX = Float64Array.from(layout.x, (v) => v / k), SY = Float64Array.from(layout.y, (v) => v / k);
-  // each hop as drawn, from its piece, pitches
-  const hopPoly = new Map<number, { pts: number[]; from: number }>();
-  for (const pc of layout.pieces) for (let q = 0; q + 1 < pc.nodes.length; q++) {
-    const a = pc.nodes[q], b = pc.nodes[q + 1], pts: number[] = [];
-    for (let v = pc.at[q]; v <= pc.at[q + 1]; v++) pts.push(pc.verts[v * 2] / k, pc.verts[v * 2 + 1] / k);
-    hopPoly.set(Math.min(a, b) * n + Math.max(a, b), { pts, from: a });
-  }
-  const along = (p: ArrayLike<number>, s: number): [number, number] => {
-    for (let q = 0; q + 3 < p.length; q += 2) {
-      const l = Math.hypot(p[q + 2] - p[q], p[q + 3] - p[q + 1]);
-      if (s <= l || q + 4 >= p.length) { const f = l ? Math.min(1, s / l) : 0; return [p[q] + f * (p[q + 2] - p[q]), p[q + 1] + f * (p[q + 3] - p[q + 1])]; }
-      s -= l;
-    }
-    return [p[0], p[1]];
-  };
-  const lengthOf = (p: ArrayLike<number>) => { let t = 0; for (let q = 0; q + 3 < p.length; q += 2) t += Math.hypot(p[q + 2] - p[q], p[q + 3] - p[q + 1]); return t; };
-  /** whether polylines a and b cross */
-  const crosses = (a: ArrayLike<number>, b: ArrayLike<number>) => {
-    for (let i = 0; i + 3 < a.length; i += 2) for (let j = 0; j + 3 < b.length; j += 2) {
-      const ax = a[i], ay = a[i + 1], bx = a[i + 2], by = a[i + 3], cx = b[j], cy = b[j + 1], dx = b[j + 2], dy = b[j + 3];
-      const d1 = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax), d2 = (bx - ax) * (dy - ay) - (by - ay) * (dx - ax);
-      const d3 = (dx - cx) * (ay - cy) - (dy - cy) * (ax - cx), d4 = (dx - cx) * (by - cy) - (dy - cy) * (bx - cx);
-      if (d1 * d2 < 0 && d3 * d4 < 0) return true;
-    }
-    return false;
-  };
-  const crossed = new Set<number>();
-  const corr = new Map<number, number[]>();
-  let crossings = 0;
-  for (const A of real.arcs) for (const c of A.cross) {
-    crossed.add(A.river);
-    const key = Math.min(g.ea[c.e], g.eb[c.e]) * n + Math.max(g.ea[c.e], g.eb[c.e]), hp = hopPoly.get(key);
-    if (!hp) continue;
-    crossings++;
-    const [tx, ty] = along(hp.pts, (hp.from === g.ea[c.e] ? c.t : 1 - c.t) * lengthOf(hp.pts)), [rx, ry] = along(A.pts, c.s), [px, py] = map.at(rx, ry);
-    let l = corr.get(A.river);
-    if (!l) corr.set(A.river, (l = []));
-    l.push(rx, ry, tx - px, ty - py);
-  }
-  const corrAt = (river: number, x: number, y: number): [number, number] => {
-    let sx = 0, sy = 0, sw = 1 / (CORR_M * CORR_M);
-    const l = corr.get(river) ?? [];
-    for (let q = 0; q < l.length; q += 4) {
-      const d2 = (l[q] - x) ** 2 + (l[q + 1] - y) ** 2;
-      if (d2 > CORR_M * CORR_M) continue;
-      const wt = 1 / (d2 + 1) - 1 / (CORR_M * CORR_M);
-      (sx += wt * l[q + 2]), (sy += wt * l[q + 3]), (sw += wt);
-    }
-    return [sx / sw, sy / sw];
-  };
-  // stations by 8-pitch squares
-  const SH = new Map<number, number[]>(), sk = (i: number, j: number) => i * 100003 + j;
-  for (let s = 0; s < n; s++) { const q = sk(Math.floor(SX[s] / 8), Math.floor(SY[s] / 8)); let l = SH.get(q); if (!l) SH.set(q, (l = [])); l.push(s); }
-  const stNear = (x: number, y: number, r: number) => {
-    const out: number[] = [], i = Math.floor(x / 8), j = Math.floor(y / 8), m = Math.ceil(r / 8);
-    for (let a = i - m; a <= i + m; a++) for (let b = j - m; b <= j + m; b++) for (const s of SH.get(sk(a, b)) ?? []) if (Math.hypot(SX[s] - x, SY[s] - y) < r) out.push(s);
-    return out;
-  };
-  const nearestSt = (x: number, y: number, r: number) => { let best = r; for (const s of stNear(x, y, r)) best = Math.min(best, Math.hypot(SX[s] - x, SY[s] - y)); return best; };
-  const wetAt = (x: number, y: number) => { const i = Math.floor((x - G.x0) / cell), j = Math.floor((y - G.y0) / cell); return i < 0 || j < 0 || i >= W || j >= H || G.D[j * W + i] === 0 || G.D[j * W + i] === G.OUT; };
-  const PR = Math.max(1.5, 0.5 + cell);
-  const out: RiverBands = { cmds: new Map(), ends: new Map(), fits: [], arcs: 0, crossings }, raw: { fit: Float64Array; w: number }[] = [];
-  real.arcs.forEach((A, ai) => {
-    if (!crossed.has(A.river) || A.pts.length < 4) return;
-    out.arcs++;
-    // its middle carried (RX, RY: where the grid has the river) and moved onto the crossings (X, Y)
-    const X: number[] = [], Y: number[] = [], RX: number[] = [], RY: number[] = [];
-    for (let q = 0; q + 3 < A.pts.length; q += 2) {
-      const l = Math.hypot(A.pts[q + 2] - A.pts[q], A.pts[q + 3] - A.pts[q + 1]), m = Math.max(1, Math.ceil(l / DENSE_M));
-      for (let t = q ? 1 : 0; t <= m; t++) {
-        const x = A.pts[q] + ((A.pts[q + 2] - A.pts[q]) * t) / m, y = A.pts[q + 1] + ((A.pts[q + 3] - A.pts[q + 1]) * t) / m;
-        const [px, py] = map.at(x, y), [cx, cy] = corrAt(A.river, x, y);
-        X.push(px + cx), Y.push(py + cy), RX.push(px), RY.push(py);
-      }
-    }
-    // where the river is wider than the band the grid already holds it at its width (the ground carried), so the band is
-    // the least width; pushed off the stations nearer than half its width and a pill, narrower where they leave too
-    // little room
-    let wr = o.riverMin;
-    for (let tries = 0; tries < 8; tries++) {
-      const R = wr / 2 + PR;
-      let worst = Infinity;
-      for (let pass = 0; pass < 6; pass++) for (let q = 0; q < X.length; q++) for (const s of stNear(X[q], Y[q], R)) {
-        const dx = X[q] - SX[s], dy = Y[q] - SY[s], d = Math.hypot(dx, dy);
-        const ux = d > 1e-6 ? dx / d : 1, uy = d > 1e-6 ? dy / d : 0;
-        (X[q] = SX[s] + ux * R), (Y[q] = SY[s] + uy * R);
-      }
-      for (let q = 0; q < X.length; q++) for (const s of stNear(X[q], Y[q], R)) worst = Math.min(worst, Math.hypot(X[q] - SX[s], Y[q] - SY[s]));
-      if (worst >= R - 0.3 || wr <= o.minW) break;
-      wr = Math.max(o.minW, wr - 0.5);
-    }
-    const hw = wr / 2, R = hw + PR - 0.3;
-    // covered: the grid's water is there at least as wide as the band (every cell within 0.45 of its width)
-    const rc = 0.45 * wr;
-    const covered = (x: number, y: number) => {
-      for (let b = -rc; b <= rc + 1e-9; b += Math.min(rc, 0.5 * cell) || 1) for (let a = -rc; a <= rc + 1e-9; a += Math.min(rc, 0.5 * cell) || 1) if (a * a + b * b <= rc * rc && !wetAt(x + a, y + b)) return false;
-      return true;
-    };
-    // pieces: where not covered (a point of overlap each end, so the band meets the water), split at stations
-    const pieces: number[][] = [];
-    let cur: number[] = [];
-    const flush = () => { if (cur.length > 1) pieces.push(cur); cur = []; };
-    for (let q = 0; q < X.length; q++) {
-      if (stNear(X[q], Y[q], R).length) { flush(); continue; }
-      if (!covered(X[q], Y[q])) { if (!cur.length && q > 0 && !stNear(X[q - 1], Y[q - 1], R).length) cur.push(q - 1); cur.push(q); }
-      else if (cur.length) (cur.push(q), flush());
-    }
-    flush();
-    for (let pi = 0; pi < pieces.length && pi < 400; pi++) {
-      const pc = pieces[pi], XX = pc.map((q) => X[q]), YY = pc.map((q) => Y[q]);
-      if (lengthOf(XX.flatMap((x, q) => [x, YY[q]])) < 2) continue;
-      // straying up to tolMax, less near a station but at least BAND_TOL (a band the fit takes over a station is split
-      // round it below)
-      const tol = XX.map((x, q) => Math.max(BAND_TOL, Math.min(o.tolMax, nearestSt(x, YY[q], o.tolMax + R + 1) - R)));
-      const fit = fitOcti(XX, YY, tol);
-      // a fitted band still over a station splits the piece round it
-      const hit = new Set<number>();
-      for (let q = 0; q + 3 < fit.length; q += 2) {
-        const l = Math.hypot(fit[q + 2] - fit[q], fit[q + 3] - fit[q + 1]), m = Math.max(1, Math.ceil(l / 4));
-        for (let t = 0; t <= m; t++) for (const s of stNear(fit[q] + ((fit[q + 2] - fit[q]) * t) / m, fit[q + 1] + ((fit[q + 3] - fit[q + 1]) * t) / m, hw + 4)) if (segD(SX[s], SY[s], fit[q], fit[q + 1], fit[q + 2], fit[q + 3]) < hw + 0.3) hit.add(s);
-      }
-      if (hit.size) {
-        let part: number[] = [];
-        for (const q of pc) {
-          if ([...hit].some((s) => Math.hypot(X[q] - SX[s], Y[q] - SY[s]) < R + 1.5)) { if (part.length > 1) pieces.push(part); part = []; continue; }
-          part.push(q);
-        }
-        if (part.length > 1 && part.length < pc.length) pieces.push(part);
-        continue;
-      }
-      // a stub (shorter than twice its width) that crosses none of its arc's hops is not drawn
-      if (lengthOf(fit) < 2 * wr && !A.cross.some((c) => { const hp = hopPoly.get(Math.min(g.ea[c.e], g.eb[c.e]) * n + Math.max(g.ea[c.e], g.eb[c.e])); return !!hp && crosses(fit, hp.pts); })) continue;
-      out.fits.push({ fit, w: wr, arc: ai });
-      raw.push({ fit: Float64Array.from(pc.flatMap((q) => [RX[q], RY[q]])), w: wr });
-      const cmd = out.cmds.get(wr) ?? out.cmds.set(wr, []).get(wr)!, fk = Float64Array.from(fit, (v) => v * k);
-      rounded(fk, false, BEND_R * k, cmd);
-      // round ends: stubs a hundredth of a pitch long
-      const e = out.ends.get(wr) ?? out.ends.set(wr, []).get(wr)!, m = fk.length;
-      for (const [px, py, qx, qy] of [[fk[0], fk[1], fk[2], fk[3]], [fk[m - 2], fk[m - 1], fk[m - 4], fk[m - 3]]]) {
-        const l = Math.hypot(qx - px, qy - py) || 1;
-        e.push(0, px, py, 1, px + ((qx - px) / l) * 0.01 * k, py + ((qy - py) / l) * 0.01 * k);
-      }
-    }
-  });
-  // the grid's water within a band and a cell and a half of it, or of the river's own middle carried, where narrower
-  // than the band (no disc as wide reaches it), goes to land
-  if (out.fits.length) {
-    const M = classMask(G, true), dIn = chamfer(M, W, H, false, 60000), fresh = new Uint8Array(W * H);
-    const r3 = Math.floor((3 * o.riverMin) / 2 / cell), core = new Uint8Array(W * H);
-    for (let c = 0; c < W * H; c++) core[c] = +(M[c] === 1 && dIn[c] > r3);
-    const dCore = chamfer(core, W, H, true, 60000);
-    for (const { fit, w } of [...out.fits, ...raw]) {
-      const r = w / 2 + 1.5 * cell;
-      for (let q = 0; q + 3 < fit.length; q += 2) {
-        const ax = fit[q], ay = fit[q + 1], bx = fit[q + 2], by = fit[q + 3];
-        const ci0 = Math.max(0, Math.floor((Math.min(ax, bx) - r - G.x0) / cell)), ci1 = Math.min(W - 1, Math.floor((Math.max(ax, bx) + r - G.x0) / cell));
-        const cj0 = Math.max(0, Math.floor((Math.min(ay, by) - r - G.y0) / cell)), cj1 = Math.min(H - 1, Math.floor((Math.max(ay, by) + r - G.y0) / cell));
-        for (let j = cj0; j <= cj1; j++) for (let i = ci0; i <= ci1; i++) {
-          const c = j * W + i;
-          if (G.D[c] !== 0 || dCore[c] <= r3) continue;
-          if (segD(G.x0 + (i + 0.5) * cell, G.y0 + (j + 0.5) * cell, ax, ay, bx, by) > r) continue;
-          (G.D[c] = G.NOZ), (fresh[c] = 1);
-        }
-      }
-    }
-    fillZones(G, fresh);
-  }
-  return out;
-}
-
 /** a band drawn outside its own piece keeps this far (chamfer units, 3 a cell) from another piece of its kind */
 const GUARD = 5;
-/** a river's course sampled this often on the ground, and how far round a crossing it moves with it, metres */
-const DENSE_M = 60, CORR_M = 3000;
-/** a band's corners rounded with this radius, pitches (the flag-off rivers', water.ts RADIUS) */
-const BEND_R = 2.5;
-/** a band's middle may always stray this far, pitches */
-const BAND_TOL = 1.5;

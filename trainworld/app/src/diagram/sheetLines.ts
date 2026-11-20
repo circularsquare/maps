@@ -15,7 +15,8 @@ import { massAt, massCoasts, sheetFinest, sheetWarp, type Sheet, type SheetRaste
 import { fitOcti, rounded, segD, stationZones, type DiagramBorders, type ZoneShape } from "./borders";
 import { chamfer, type RealWater } from "./waterReal";
 import type { DiagramWater } from "./water";
-import { riverBands, smoothEdges, thinPass, THIN, type CarryMap, type MapGrid, type RiverBands, type ThinOptions, type ThinStats } from "./sheetThin";
+import { smoothEdges, thinPass, THIN, type CarryMap, type MapGrid, type ThinOptions, type ThinStats } from "./sheetThin";
+import { routeRivers, type RiverRoutes, type RoutedRiver } from "./riverRoute";
 
 export interface SheetLinesOptions {
   /** the sheet's dial (sheet.ts SHEET.dial): sets the pitch, metres of a median target */
@@ -69,7 +70,7 @@ export interface SheetLines {
   k: number;
   layout: DiagramLayout;
   carry: Carry;
-  info: { seaPairs: number; carryRounds: number[]; carryIters: number[]; offLand: number; ms: Record<string, number> };
+  info: { seaPairs: number; carryRounds: number[]; carryIters: number[]; offLand: number; ms: Record<string, number>; riverKeyed?: number };
 }
 
 /** the carried map: per node of the sheet's finest lattice ((gw by gh) from (x0, y0), h metres a cell) its drawn place,
@@ -98,8 +99,9 @@ const MG_STALE = 20, CUT_WIDTH = 0.5;
 
 const quantile = (v: ArrayLike<number>, f: number) => { const s = Float64Array.from(v).sort(); return s.length ? s[Math.min(s.length - 1, Math.floor(f * s.length))] : 0; };
 
-/** Lays graph `g` out on `sheet` and carries the map with its stations; `progress` (0 to 1) for a loading bar. */
-export function sheetLines(g: DiagramGraph, sheet: Sheet, o: SheetLinesOptions = SHEET_LINES, progress?: (share: number) => void): SheetLines {
+/** Lays graph `g` out on `sheet` and carries the map with its stations; `progress` (0 to 1) for a loading bar; `keep`
+ * the stations whose hops are straightened one by one (`sheetLayout`). */
+export function sheetLines(g: DiagramGraph, sheet: Sheet, o: SheetLinesOptions = SHEET_LINES, progress?: (share: number) => void, keep?: ArrayLike<number>): SheetLines {
   const t0 = performance.now(), ms: Record<string, number> = {};
   let tl = t0;
   const tick = (k: string) => { const t = performance.now(); ms[k] = Math.round(t - tl); tl = t; };
@@ -156,7 +158,7 @@ export function sheetLines(g: DiagramGraph, sheet: Sheet, o: SheetLinesOptions =
   const last: LastPlaces = new Map();
   for (let i = 0; i < n; i++) last.set(g.key[i], [WX[i] * K, WY[i] * K, WX[i] * K, WY[i] * K]);
   // the layout about 0.6 of the time, the carry the rest
-  const layout = layoutDiagram(g2, { ...dialled(0), puDiv: medH, sheet: { pairs: Float64Array.from(sp), wGeo: o.wGeo } }, last, progress && ((s) => progress(0.6 * s)));
+  const layout = layoutDiagram(g2, { ...dialled(0), puDiv: medH, sheet: { pairs: Float64Array.from(sp), wGeo: o.wGeo, keep } }, last, progress && ((s) => progress(0.6 * s)));
   tick("layout");
 
   // ---- the carry
@@ -252,6 +254,33 @@ export function sheetLines(g: DiagramGraph, sheet: Sheet, o: SheetLinesOptions =
   return { graph: g2, k: K, layout, carry, info: { seaPairs: sp.length / 5, carryRounds: bads, carryIters: its, offLand, ms } };
 }
 
+/** T-3358: the lines on the sheet and their map, with the narrow rivers routed after the lines (`withWater` and `real`).
+ * Where a routed river leaves stations on the wrong bank, the lines are laid out again with those stations and their
+ * neighbours on the lines ending pieces, so each hop there is straightened on its own (Anita, 2026-11-20, "yeah i like
+ * E"), and the map made from that layout; with the water off the lines are laid out once. */
+export function sheetLayout(g: DiagramGraph, sheet: Sheet, shapes: ZoneShape[], withWater: boolean, real: RealWater | null, o: SheetLinesOptions = SHEET_LINES, progress?: (share: number) => void, detail = false): { lines: SheetLines; map: SheetMap } {
+  const twice = withWater && !!real;
+  let lines = sheetLines(g, sheet, o, progress && ((s) => progress((twice ? 0.75 : 1) * s)));
+  if (!twice) return { lines, map: sheetMap(lines, g, shapes, withWater, o, detail, real) };
+  let map = sheetMap(lines, g, shapes, true, o, detail, real, THIN, true);
+  if (map.riverWrong.length) {
+    const wrong = new Set(map.riverWrong), keep = new Set(wrong);
+    for (let e = 0; e < g.ea.length; e++) {
+      if (wrong.has(g.ea[e])) keep.add(g.eb[e]);
+      if (wrong.has(g.eb[e])) keep.add(g.ea[e]);
+    }
+    const first = lines, wrong1 = map.riverWrong.length, probe = map.info.msRivers;
+    lines = sheetLines(g, sheet, o, progress && ((s) => progress(0.75 + 0.25 * s)), Int32Array.from(keep));
+    lines.info.riverKeyed = keep.size;
+    lines.info.ms = { ...lines.info.ms, firstLayout: first.info.ms.layout, firstCarry: first.info.ms.carry, firstTotal: first.info.ms.total, probe };
+    map = sheetMap(lines, g, shapes, true, o, detail, real);
+    // a second layout that leaves more stations on a wrong bank than the first is dropped
+    if (map.riverWrong.length > wrong1) (lines = first), (lines.info.riverKeyed = 0), (map = sheetMap(lines, g, shapes, true, o, detail, real));
+  }
+  progress?.(1);
+  return { lines, map };
+}
+
 /** the zones' outlines as spans along the raster's rows (each row's middle): per row its spans [a, b) of x, and zone */
 interface ZoneSpans { at: Int32Array; a: Float64Array; b: Float64Array; z: Int32Array }
 function zoneSpans(R: SheetRaster, shapes: ZoneShape[]): ZoneSpans {
@@ -280,7 +309,24 @@ function zoneSpans(R: SheetRaster, shapes: ZoneShape[]): ZoneSpans {
 /** the sheet's water and zone borders: the ground carried through the carried map onto a grid over the drawing, each
  * station's pill on its own land and zone, cleaned, and the coasts and borders fitted at 0, 45 and 90 degrees (round 3
  * of T-2577). The sea only with `withWater`. */
-export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[], withWater: boolean, o: SheetLinesOptions = SHEET_LINES, detail = false, real: RealWater | null = null, th: ThinOptions = THIN): { water: DiagramWater | null; borders: DiagramBorders; info: Record<string, number>; grid?: { d: Uint8Array | Uint16Array; w: number; h: number; x0: number; y0: number; cell: number }; borderFits?: Float64Array[]; riverFits?: RiverBands["fits"]; zoneShares?: [string, number][] } {
+export interface SheetMap {
+  water: DiagramWater | null;
+  borders: DiagramBorders;
+  info: Record<string, number>;
+  /** the stations some routed river leaves on the wrong bank (T-3358) */
+  riverWrong: number[];
+  /** checks: the drawn grid, the borders and bands as fitted, each routed river, each zone's share of borders drawn */
+  grid?: { d: Uint8Array | Uint16Array; w: number; h: number; x0: number; y0: number; cell: number };
+  borderFits?: Float64Array[];
+  riverFits?: RiverRoutes["fits"];
+  riverRoutes?: RoutedRiver[];
+  riverSkipped?: RiverRoutes["skipped"];
+  zoneShares?: [string, number][];
+}
+
+/** the sheet's water and zone borders (see above); `probe`: stop once the rivers are routed if one leaves a station on
+ * the wrong bank, returning only that (`sheetLayout`) */
+export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[], withWater: boolean, o: SheetLinesOptions = SHEET_LINES, detail = false, real: RealWater | null = null, th: ThinOptions = THIN, probe = false): SheetMap {
   const t0 = performance.now();
   const C = lines.carry, R = C.raster, K = lines.k, n = g.key.length, SX = C.sx, SY = C.sy, { gw, gh, h, x0, y0, rx: RXn, ry: RYn } = C;
   // labels: WATER, a zone (its index plus 1), NOZ land in no zone, OUT off the carried map
@@ -505,11 +551,12 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
       } else if (o0 !== 0 && w >= 6) D[c] = 0;
     }
   }
-  // narrow rivers a hop crosses as bands (with the water), the grid's own water under them taken out; thin water and
-  // thin land drawn again as bands; nibs and notches smoothed (sheetThin.ts)
+  // narrow rivers a hop crosses routed as bands (with the water; riverRoute.ts), the grid's own water under them taken
+  // out; thin water and thin land drawn again as bands; nibs and notches smoothed (sheetThin.ts)
   const G: MapGrid = { D, w: GW, h: GH, cell: hd, x0: qx0, y0: qy0, OUT, NOZ, pill, band: new Uint8Array(NC) };
   const thinStats: ThinStats = { pieces: 0, bands: 0, skipped: 0, ms: 0 };
-  const rivers = real && withWater ? riverBands(G, lines.graph, lines.layout, K, real, carryMap(C), th) : null;
+  const rivers = real && withWater ? routeRivers(G, g, lines.graph, lines.layout, K, real, carryMap(C)) : null;
+  if (probe && rivers?.wrong.length) return { water: null, borders: { cmds: new Float64Array(0), zones: [], zoneOf: new Int32Array(0) }, info: { msRivers: Math.round(rivers.ms) }, riverWrong: rivers.wrong, riverRoutes: rivers.routed };
   // on a coarse grid (a country's) a band is at least a cell and a half wide, and thin is four cells
   const thG: ThinOptions = { ...th, thinW: Math.max(th.thinW, 4 * hd), minW: Math.max(th.minW, 1.5 * hd), tolMax: Math.max(th.tolMax, 2 * hd) };
   // water under 40 square pitches and land with no station under 30 dropped, before the bands and after
@@ -760,7 +807,7 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
   let wrongZone = 0;
   for (let s = 0; s < n; s++) { const c = cellOf(SX[s], SY[s]); if (c >= 0 && isZ(ownLab[s]) && D[c] !== ownLab[s]) wrongZone++; }
   const t4 = performance.now();
-  const stats = { arcs: rivers?.arcs ?? 0, crossings: rivers?.crossings ?? 0, leftOut: 0, turned: 0, sections: 0, widened: 0, noRoute: 0, falseCross: 0, rivers: rivers?.fits.length ?? 0, dropped: 0, uncrossed: 0, mouths: 0, dry: 0, open: 0, channels: 0, ms: Math.round(t3 - t0) };
+  const stats = { arcs: rivers?.arcs ?? 0, crossings: rivers?.crossings ?? 0, leftOut: 0, turned: 0, sections: 0, widened: 0, noRoute: 0, falseCross: 0, rivers: rivers?.routed.length ?? 0, dropped: 0, uncrossed: 0, mouths: 0, dry: 0, open: 0, channels: 0, ms: Math.round(t3 - t0) };
   // the rivers' bands per width, in layout units
   const widths = rivers ? [...rivers.cmds.keys()].sort((a, b) => a - b) : [];
   const water: DiagramWater | null = withWater
@@ -769,8 +816,11 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
   return {
     water,
     borders: { cmds: Float64Array.from(borderCmd), zones, zoneOf },
+    riverWrong: rivers?.wrong ?? [],
     riverFits: detail ? rivers?.fits : undefined,
-    info: { cell: +hd.toFixed(2), cells: NC, cutKm2: Math.round(cutKm2), offLand: offLand.length, bent, zoneFixed, wrongZone, wrongSide, bends, wholeZones, rings: seaRings.length, riverBands: rivers?.fits.length ?? 0, thinPieces: thinStats.pieces, thinBands: thinStats.bands, thinSkipped: thinStats.skipped, msThin: Math.round(thinStats.ms), msGrid: Math.round(t1 - t0), msClean: Math.round(t2 - t1), msCoast: Math.round(t3 - t2), msBorders: Math.round(t4 - t3) },
+    riverRoutes: detail ? rivers?.routed : undefined,
+    riverSkipped: detail ? rivers?.skipped : undefined,
+    info: { cell: +hd.toFixed(2), cells: NC, cutKm2: Math.round(cutKm2), offLand: offLand.length, bent, zoneFixed, wrongZone, wrongSide, bends, wholeZones, rings: seaRings.length, riverBands: rivers?.routed.length ?? 0, riverWrong: rivers?.wrong.length ?? 0, msRivers: Math.round(rivers?.ms ?? 0), thinPieces: thinStats.pieces, thinBands: thinStats.bands, thinSkipped: thinStats.skipped, msThin: Math.round(thinStats.ms), msGrid: Math.round(t1 - t0), msClean: Math.round(t2 - t1), msCoast: Math.round(t3 - t2), msBorders: Math.round(t4 - t3) },
     grid: detail ? { d: D, w: GW, h: GH, x0: qx0, y0: qy0, cell: hd } : undefined,
     borderFits: detail ? borderFits : undefined,
     zoneShares: detail ? zoneShares : undefined,

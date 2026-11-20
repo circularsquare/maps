@@ -19,7 +19,7 @@ import { placeCityNames, type CityNames, type ZoneLabel } from "../diagram/cityN
 import { groundSea, realWater, type GroundSea, type RealWater, type WaterMask } from "../diagram/waterReal";
 import type { DiagramWater } from "../diagram/water";
 import { rubberSheet, sheetWarp, type Sheet } from "../diagram/sheet";
-import { carryMap, riverCellM, setCarrySolver, SHEET_LINES, sheetLines, sheetMap, type CarrySolverMaker, type SheetLines } from "../diagram/sheetLines";
+import { carryMap, riverCellM, setCarrySolver, SHEET_LINES, sheetLayout, sheetMap, type CarrySolverMaker, type SheetLines } from "../diagram/sheetLines";
 import { wasmCarrySolver } from "../diagram/carryWasm";
 import { thinLines, type ThinDrawn, type ThinIn } from "../diagram/thin";
 
@@ -138,27 +138,28 @@ async function onSheet(m: Extract<ToDiagram, { kind: "graph" }>, at: { packs: st
   const sheet = rubberSheet(m.graph, { masks: got, frame, sea });
   const t3 = performance.now();
   progress(0.1);
-  const lines = sheetLines(m.graph, sheet, SHEET_LINES, (s) => progress(0.1 + 0.7 * s)), g = lines.graph, layout = lines.layout, K = lines.k, warp = sheetWarp(sheet);
-  const t4 = performance.now();
-  const d = drawing(g, layout);
-  const names = placeNames(g, layout, d, m.names.text, m.names.width, m.names.width2, m.names.fontPx);
-  const t5 = performance.now();
   // the narrow rivers on the ground, with the water on (kept while the stations and tracks are the same)
   let rivers: RealWater | null = null;
   const cellM = riverCellM(m.graph);
   if (m.water && cellM) {
     rivers = kept(sheetRivers, key, () => realWater(m.graph, got, frame, sea, cellM));
   }
-  const t5r = performance.now();
-  progress(0.9);
+  const t3r = performance.now();
+  // the lines, the rivers routed after them (laid out again round stations a river finds on the wrong bank) and the map
+  const { lines, map } = sheetLayout(m.graph, sheet, shapesOf(frame), !!m.water, rivers, SHEET_LINES, (s) => progress(0.1 + 0.8 * s));
+  const g = lines.graph, layout = lines.layout, K = lines.k, warp = sheetWarp(sheet);
+  const t4 = performance.now();
+  const d = drawing(g, layout);
+  const names = placeNames(g, layout, d, m.names.text, m.names.width, m.names.width2, m.names.fontPx);
+  const t5 = performance.now();
+  progress(0.95);
   const on: OnSheet = { lines, real: m.graph, water: !!m.water, rivers, toSheet: (x, y) => { const [a, b] = warp(x, y); return [a * K, b * K]; } };
-  const map = sheetMap(lines, m.graph, shapesOf(frame), on.water, SHEET_LINES, false, rivers);
   if (map.water) d.water = map.water;
   if (outlines.size) (d.borders = map.borders), (names.cities = cities(g, layout, map.borders, m.names.fontPx, frame, on));
   const t6 = performance.now();
   shown.set(m.seq, { seq: m.seq, graph: g, layout, d, fontPx: m.names.fontPx, frame, sheet: on });
   const { raster: _, ...posted } = sheet;
-  (self as unknown as Worker).postMessage({ kind: "sheet", seq: m.seq, sheet: posted, ms: { masks: t1 - t0, ground: t2 - t1, sheet: t3 - t2, lines: t4 - t3, rivers: t5r - t5, map: t6 - t5r }, lines: { ...lines.info, map: map.info } } satisfies FromDiagram);
+  (self as unknown as Worker).postMessage({ kind: "sheet", seq: m.seq, sheet: posted, ms: { masks: t1 - t0, ground: t2 - t1, sheet: t3 - t2, lines: t4 - t3r, rivers: t3r - t3, map: t6 - t5 }, lines: { ...lines.info, map: map.info } } satisfies FromDiagram);
   (self as unknown as Worker).postMessage({ kind: "layout", seq: m.seq, graph: m.graph, layout, drawing: d, names, ms: { drawing: t5 - t4, names: 0, borders: t6 - t5, cities: 0 } } satisfies FromDiagram);
 }
 

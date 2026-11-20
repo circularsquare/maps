@@ -11,7 +11,7 @@ import { readFileSync } from 'node:fs';
 import { openSave, waterOf, masksOf, SAVES, app as A } from './diagram-saves.mjs';
 import { loadApp } from './lib.mjs';
 
-const L = await loadApp(`export { rubberSheet, sheetZoneBox } from '@app/src/diagram/sheet.ts'; export { sheetLines, sheetMap, riverCellM } from '@app/src/diagram/sheetLines.ts';
+const L = await loadApp(`export { rubberSheet, sheetZoneBox } from '@app/src/diagram/sheet.ts'; export { sheetLayout, riverCellM } from '@app/src/diagram/sheetLines.ts';
 export { realWater } from '@app/src/diagram/waterReal.ts'; export { inRings } from '@app/src/diagram/borders.ts';`);
 const TW = new URL('../', import.meta.url);
 const REG = JSON.parse(readFileSync(new URL('app/src/game/registry.json', TW)));
@@ -67,9 +67,9 @@ const flat = (cmd) => {
 };
 /** the map with the water on; of points along its grid's border (a cell in), the share in the drawn sea */
 function edgeWater(g, frame, box) {
-  const masks = masksFor(box), sea = A.groundSea(g, masks, frame), sheet = L.rubberSheet(g, { masks, frame, sea }), lines = L.sheetLines(g, sheet);
+  const masks = masksFor(box), sea = A.groundSea(g, masks, frame), sheet = L.rubberSheet(g, { masks, frame, sea });
   const cell = L.riverCellM(g), real = cell ? L.realWater(g, masks, frame, sea, cell) : null;
-  const M = L.sheetMap(lines, g, shapesNear(box, frame), true, undefined, true, real), G = M.grid, K = lines.k, rings = flat(M.water.sea);
+  const { lines, map: M } = L.sheetLayout(g, sheet, shapesNear(box, frame), true, real, undefined, undefined, true), G = M.grid, K = lines.k, rings = flat(M.water.sea);
   let wet = 0, all = 0;
   const at = (i, j) => { all++; if (L.inRings(rings, (G.x0 + (i + 0.5) * G.cell) * K, (G.y0 + (j + 0.5) * G.cell) * K)) wet++; };
   const step = Math.max(1, Math.floor(Math.max(G.w, G.h) / 400));

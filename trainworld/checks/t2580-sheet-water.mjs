@@ -12,7 +12,7 @@ import { readFileSync } from 'node:fs';
 import { openSave, waterOf, masksOf, app as A } from './diagram-saves.mjs';
 import { loadApp } from './lib.mjs';
 
-const L = await loadApp(`export { rubberSheet, massAt, sheetZoneBox } from '@app/src/diagram/sheet.ts'; export { sheetLines, sheetMap, riverCellM, SHEET_LINES, carryMap, cutLand } from '@app/src/diagram/sheetLines.ts';
+const L = await loadApp(`export { rubberSheet, massAt, sheetZoneBox } from '@app/src/diagram/sheet.ts'; export { sheetLines, sheetMap, sheetLayout, riverCellM, SHEET_LINES, carryMap, cutLand } from '@app/src/diagram/sheetLines.ts';
 export { realWater } from '@app/src/diagram/waterReal.ts'; export { inRings, stationZones } from '@app/src/diagram/borders.ts'; export { toMerc01 } from '@app/src/map/geo.ts';`);
 const TW = new URL('../', import.meta.url);
 const which = (process.argv[2] ?? 'nyc,jpn').split(',');
@@ -187,14 +187,15 @@ for (const city of which) {
   const sea = A.groundSea(g, masks, frame);
   const t0 = performance.now();
   const sheet = L.rubberSheet(g, { masks, frame, sea });
-  const lines = L.sheetLines(g, sheet);
   const t1 = performance.now();
   const cell = L.riverCellM(g), real = cell ? L.realWater(g, masks, frame, sea, cell) : null;
   const t2 = performance.now();
-  const M = L.sheetMap(lines, g, shapesNear(box, frame), true, L.SHEET_LINES, true, real);
+  // the lines and the map as the worker makes them (T-3358: laid out again round stations a routed river finds on the
+  // wrong bank)
+  const { lines, map: M } = L.sheetLayout(g, sheet, shapesNear(box, frame), true, real, L.SHEET_LINES, undefined, true);
   const t3 = performance.now();
   const n = g.key.length, lay = lines.layout, K = lines.k, W = M.water;
-  console.log(`     ${city}: ${n} stations; sheet and lines ${Math.round(t1 - t0)} ms, rivers on the ground ${Math.round(t2 - t1)} ms, map ${Math.round(t3 - t2)} ms; ${JSON.stringify(M.info)}`);
+  console.log(`     ${city}: ${n} stations; sheet ${Math.round(t1 - t0)} ms, rivers on the ground ${Math.round(t2 - t1)} ms, lines and map ${Math.round(t3 - t2)} ms (${lines.info.riverKeyed ?? 0} stations laid out again for the rivers); ${JSON.stringify(M.info)}`);
   // edges
   const coast = offOcti(W.sea, K), riv = W.rivers.map((c) => offOcti(c, K));
   const off = [...coast.at, ...riv.flatMap((r) => r.at)];
@@ -237,8 +238,8 @@ for (const city of which) {
     const own = new Map();
     for (const A of real.arcs) for (const c of A.cross) (own.get(A.river) ?? own.set(A.river, new Set()).get(A.river)).add(hk(c.e));
     let expected = 0, drawn = 0, wrong = 0;
-    for (const ai of new Set(M.riverFits.map((f) => f.arc))) {
-      const fs = M.riverFits.filter((f) => f.arc === ai);
+    for (const ai of new Set(M.riverFits.flatMap((f) => f.arcs))) {
+      const fs = M.riverFits.filter((f) => f.arcs.includes(ai));
       for (const c of real.arcs[ai].cross) { const pts = hopPoly.get(hk(c.e)); expected++; if (pts && (fs.some((f) => crosses(f.fit, pts)) || wetHop(pts))) drawn++; }
     }
     for (const { arc, fit } of M.riverFits) for (const [k, pts] of hopPoly) if (!own.get(real.arcs[arc].river)?.has(k) && crosses(fit, pts)) wrong++;
@@ -248,8 +249,8 @@ for (const city of which) {
       const [mx, my] = L.toMerc01(-73.9303, 40.8285), hx = (mx - frame[0]) * frame[2], hy = -(my - frame[1]) * frame[2];
       const near = new Set(real.arcs.map((A, ai) => [A, ai]).filter(([A]) => { for (let q = 0; q + 3 < A.pts.length; q += 2) if (segDist(hx, hy, A.pts[q], A.pts[q + 1], A.pts[q + 2], A.pts[q + 3]) < 300) return true; return false; }).map(([, ai]) => ai));
       let len = 0;
-      for (const f of M.riverFits) if (near.has(f.arc)) for (let q = 0; q + 3 < f.fit.length; q += 2) len += Math.hypot(f.fit[q + 2] - f.fit[q], f.fit[q + 3] - f.fit[q + 1]);
-      say(len >= 30, 'nyc: the Harlem River drawn', `${Math.round(len)} pitches of band, at least ${Math.min(...(M.riverFits.filter((f) => near.has(f.arc)).map((f) => f.w)), Infinity)} pitches wide`);
+      for (const f of M.riverFits) if (f.arcs.some((a) => near.has(a))) for (let q = 0; q + 3 < f.fit.length; q += 2) len += Math.hypot(f.fit[q + 2] - f.fit[q], f.fit[q + 3] - f.fit[q + 1]);
+      say(len >= 30, 'nyc: the Harlem River drawn', `${Math.round(len)} pitches of band, at least ${Math.min(...(M.riverFits.filter((f) => f.arcs.some((a) => near.has(a))).map((f) => f.w)), Infinity)} pitches wide`);
     }
   }
 }
