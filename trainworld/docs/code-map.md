@@ -98,7 +98,8 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   account's hour on the main thread: riders packed for the clock worker, platform crowds, T-164; the
   crowded stretches the map marks, T-2236, check `checks/t2236-crowding.mjs`),
   `complexLive.ts` (a complex's platform crowds and trains now, T-246), `purposes.ts` (the trip
-  purposes as shown, T-192), `trip.ts` (the trip explorer's state).
+  purposes as shown, T-192), `trip.ts` (the trip explorer's state), `transitModes.ts` (the mode split bars' transit
+  part by kind of line, T-3695).
 - Places and frames: `coords.ts` (world metres to lng/lat), `rings.ts` (ring box, point-in-ring and near-ring tests for the real-network snap and its router), `frame.ts` (the world frames, and the earth's radius and metres per degree) and `registry.json` (the
   one city registry, read by `cities.ts`, T-125; since T-776 the bundled index
   only), `market-rows.json` (each zone's world market row, fetched by `workers/demandClient.ts` beside

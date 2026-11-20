@@ -35,7 +35,7 @@ export function AllCitiesView() {
       <ul class="rows">
         <li>
           <span class="grow">{tr("cityDetails.trainShare")}</span>
-          <span class="val" data-tip={splitTip(t.where, split, t.modes?.rides ?? null, "")}>{split ? pct1(split.train / 100) : "–"}</span>
+          <span class="val" data-tip={splitTip(t.where, split, t.modes?.rides ?? null, "", t.transit)}>{split ? pct1(split.train / 100) : "–"}</span>
         </li>
         <li>
           <span class="grow">{tr("cityDetails.cities")}</span>

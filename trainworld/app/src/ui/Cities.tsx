@@ -23,7 +23,8 @@ import type { DayLedger, MoneyState } from "../workers/protocol";
 import type { JSX } from "preact";
 import { goalWhen } from "./GoalTicks";
 import { locateAllCities, playerMovedCamera } from "./locate";
-import { Icon, SortHead } from "./widgets";
+import { Icon, SortHead, TransitSegs } from "./widgets";
+import { citiesTransit, zoneTransit } from "../game/transitModes";
 
 /** Move the camera to a region's registry centre and zoom, at once; what search does for a city. */
 export function goToCity(city: City) {
@@ -125,6 +126,7 @@ export function allCitiesTotals() {
   const where = tSpaced(t("cities.whereAll", { dayed: shownDay.value !== AVERAGE_DAY, day: shownDayOn.value }));
   return {
     cities: built.size, stations, modes, where,
+    transit: modes ? citiesTransit(built.keys(), views) : null, // T-3695
     money: counted ? { d: sum, yesterday } : null,
     pointsPast,
     pointsTip: !pointsShown.value ? pointsPending() : t("cities.pointsPastAll", { points: exact(pointsPast) }),
@@ -147,9 +149,9 @@ function TotalRow({ on }: { on: boolean }) {
     <li class={"total" + (on ? " on" : "")} onClick={() => (selection.value = { kind: "world" })}
       onDblClick={() => { locateAllCities(); selection.value = { kind: "world" }; }}>
       <span class="grow" data-tip={allCitiesTip(tot)}>{allCitiesName()}</span>
-      <span class="city-bar" data-tip={splitTip(tot.where, split, tot.modes?.rides ?? null, "")}>
+      <span class="city-bar" data-tip={splitTip(tot.where, split, tot.modes?.rides ?? null, "", tot.transit)}>
         <span class="bar">
-          <i class="seg seg-train" style={{ width: s.train + "%" }} />
+          <TransitSegs train={s.train} shares={tot.transit} />
           <i class="seg seg-walk" style={{ width: s.walk + "%" }} />
           <i class="seg seg-drive" style={{ width: s.drive + "%" }} />
           <i class="seg seg-none" style={{ width: (s.none ?? 0) + "%" }} />
@@ -204,16 +206,16 @@ export function CitiesList({ empty = null }: { empty?: JSX.Element | null }) {
         {rows.map((r) => {
           const v = r.view, where = whereIn(r.name);
           const rides = v ? ridesOf(v) : null;
-          const s = v?.split ?? { train: 0, walk: 0, drive: 0 };
+          const s = v?.split ?? { train: 0, walk: 0, drive: 0 }, shares = v ? zoneTransit(v, r.id) : null;
           const f = r.money;
           return (
             <li class={(picked ?? here) === r.id ? "on" : ""} onClick={() => (selection.value = { kind: "city", city: r.id })}
               onDblClick={() => { goToCity(cityById(r.id)); selection.value = { kind: "city", city: r.id }; }}>
               <span class="grow" data-tip={t("cities.rowTip", { name: r.name, stations: r.stations })}>{r.name}</span>
               {m?.stars?.[r.id] !== undefined && <Star city={cityById(r.id)} at={m.stars[r.id]} />}
-              <span class="city-bar" data-tip={splitTip(where, v?.split ?? null, rides, "")}>
+              <span class="city-bar" data-tip={splitTip(where, v?.split ?? null, rides, "", shares)}>
                 <span class="bar">
-                  <i class="seg seg-train" style={{ width: s.train + "%" }} />
+                  <TransitSegs train={s.train} shares={shares} />
                   <i class="seg seg-walk" style={{ width: s.walk + "%" }} />
                   <i class="seg seg-drive" style={{ width: s.drive + "%" }} />
                   <i class="seg seg-none" style={{ width: (s.none ?? 0) + "%" }} />

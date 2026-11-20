@@ -8,6 +8,7 @@ import { Fragment } from "preact";
 import { capitalise, count, distance, distUnit, exact, speed } from "../../game/format";
 import { modeColours } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
+import { transitParts, tripTransit } from "../../game/transitModes";
 import { purposeName, purposeWords, type PurposeFilter } from "../../game/purposes";
 import { WALK_KMH } from "../../game/walks";
 import { baseFareOf, cityMinPerUsd, countedPeople, countsTrain, openRoute, pairCost, routeCrowding, roomVehicle, routeLabel, routeTerms, routeTotals, routeVehicle, stationName, tripOpenedFrom, tripPeriod, tripView, wholePeople, type TripMix, type TripPeriod, type TripRoute } from "../../game/trip";
@@ -118,10 +119,14 @@ function ModeBar({ t, mix, of }: { t: TripPeriod; mix: TripMix | null; of: strin
   // walking and driving between two land parts are 0: their rows go, By car and By walking say why
   const shown = (m: Mode, v: number) => (t.apart && (m === "walk" || m === "drive") ? v > 0 : m !== "walk" || v > 0 || t.walkMin < WALK_ROW_MIN);
   const modeOf = (m: Mode, share: string) => tr("tripText.modeOf", { mode: modeName(m), share, of });
+  // T-3695: with the setting on, the train part by the kinds of line its routes ride, by leg length
+  const shares = tripTransit(t.routes);
+  const segs = parts.flatMap(([m, v, c]): { name: string; share: number; cls?: string; colour?: string; tip: string }[] => (m === "train" && shares
+    ? transitParts(v, shares).map((p) => ({ name: p.name, share: p.n, colour: p.colour, tip: tr("tripText.modeOf", { mode: p.name, share: pctShare(p.n), of }) }))
+    : [{ name: modeName(m), share: v, cls: c, tip: modeOf(m, pctShare(v)) + extra(m) + stands(m) }]));
   return (
     <div class="trip-modes">
-      <SegBar kind="trip-bar" label={tSeries(parts.map(([m, v]) => tr("tripText.modeShare", { mode: modeName(m), share: pctShare(v) })))}
-        parts={parts.map(([m, v, c]) => ({ share: v, cls: c, tip: modeOf(m, pctShare(v)) + extra(m) + stands(m) }))} />
+      <SegBar kind="trip-bar" label={tSeries(segs.map((p) => tr("tripText.modeShare", { mode: p.name, share: pctShare(p.share) })))} parts={segs} />
       <ul class="rows">
         {parts.map((x, i) => [x, i] as const).filter(([[m, v]]) => shown(m, v)).map(([[m, v], i]) => (
           <li data-tip={modeOf(m, n > 0 ? pctShare(v) : pct1(v)) + extra(m) + modelTip(i) + note + stands(m)}>

@@ -5,7 +5,8 @@
 // Cities tab opens it too, the city view (T-1438), with CityDetails.tsx's rows around these.
 
 import { cityById, type CityId } from "../../game/cities";
-import { cityDemandViews, intercityDemand, INTERCITY_PLACES } from "../../game/demand";
+import { cityDemandViews, demandView, intercityDemand, INTERCITY_PLACES } from "../../game/demand";
+import { transitParts, zoneTransit, type TransitShares } from "../../game/transitModes";
 import { placeFigures } from "../../game/corridorFigures";
 import { count, exact } from "../../game/format";
 import { zoneLoads } from "../../game/loading";
@@ -26,14 +27,17 @@ import { HomeButton } from "./HomeButton";
 import { TripGraph } from "./TripGraph";
 
 /** `note`: a second line for the part's hover */
-type Part = { name: string; n: number; cls: string; note?: string };
+type Part = { name: string; n: number; cls?: string; colour?: string; note?: string };
+/** T-3695: the transit part, or with `shares` one part per kind of line */
+const transitPart = (n: number, shares: TransitShares | null): Part[] =>
+  shares ? transitParts(n, shares).map((p) => ({ name: p.name, n: p.n, colour: p.colour })) : [{ name: t("cityInspector.train"), n, cls: "seg-train" }];
 /** A figure with its mode bar: train blue, walking green, car red, No route grey, as the map's bubbles.
  * `kind`: whether the trips are within the city or to and from other places. */
 function TripsBar({ label, tip, kind, city, parts, goals }: { label: string; tip?: string; kind: "within" | "inter"; city: string; parts: Part[]; goals?: City }) {
   const all = parts.reduce((s, p) => s + p.n, 0);
   const phrase = shownDayPhrase.value;
   const bar = <SegBar kind="split-bar" label={tSeries(parts.map((p) => `${p.name} ${pctOf(p.n, all)}`))}
-    parts={parts.map((p) => ({ share: p.n / all, cls: p.cls, tip: t("cityInspector.partTip", { name: p.name, count: exact(p.n), kind, city, phrase, share: pctOf(p.n, all) }) + (p.note ? `\n${p.note}` : "") }))} />;
+    parts={parts.map((p) => ({ share: p.n / all, cls: p.cls, colour: p.colour, tip: t("cityInspector.partTip", { name: p.name, count: exact(p.n), kind, city, phrase, share: pctOf(p.n, all) }) + (p.note ? `\n${p.note}` : "") }))} />;
   return (
     <li class={"zone-trips" + (goals ? " with-goals" : "")}>
       <div class="line">
@@ -107,7 +111,7 @@ export function CityInspector({ id }: { id: string }) {
                 kind="within"
                 city={shownName}
                 parts={[
-                  { name: t("cityInspector.train"), n: lm.train, cls: "seg-train" },
+                  ...transitPart(lm.train, zoneTransit(view, city.id)),
                   { name: t("cityInspector.walk"), n: lm.walk, cls: "seg-walk" },
                   { name: t("cityInspector.car"), n: lm.drive, cls: "seg-drive" },
                   ...(lm.none > 0 ? [{ name: t("cityInspector.noRoute"), n: lm.none, cls: "seg-none", note: t("inspector.noRoadEnds") }] : []),
@@ -129,7 +133,7 @@ export function CityInspector({ id }: { id: string }) {
                 kind="inter"
                 city={shownName}
                 parts={[
-                  { name: t("cityInspector.train"), n: interRail, cls: "seg-train" },
+                  ...transitPart(interRail, zoneTransit(demandView.value, city.id, true)),
                   ...(interWalk > 0 ? [{ name: t("cityInspector.walk"), n: interWalk, cls: "seg-walk" }] : []),
                   { name: t("cityInspector.car"), n: Math.max(0, interAll - interRail - interWalk - interAir), cls: "seg-drive" },
                   ...(interAir > 0 ? [{ name: t("cityInspector.plane"), n: interAir, cls: "seg-other" }] : []),

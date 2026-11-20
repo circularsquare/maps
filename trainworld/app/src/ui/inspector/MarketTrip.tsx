@@ -23,6 +23,7 @@ import { linesById, stationNames, world } from "../../game/world";
 import { lowerWord, t as tr, tRich, tSeries } from "../../i18n";
 import { shownPeriod } from "../../map/tripView";
 import { SegBar } from "../widgets";
+import { transitParts, tripTransit } from "../../game/transitModes";
 import { legRows, PeriodRows, routeRow, StationLink } from "./RouteParts";
 import { equation, minNum1, minRound, minText, modeName, num1, pct1, pctShare, rideTip, roundTo, termLabel, usd, type ModeId, type Term } from "./tripText";
 
@@ -425,6 +426,10 @@ export function MarketTrip({ m }: { m: MarketShown }) {
   });
   const commuters = m.near ? tr("marketTrip.bothWays") : m.end === "work" ? tr("marketTrip.whoWork", { far }) : tr("marketTrip.whoHome", { far });
   const of = tr("marketTrip.of", { counted: all >= 0.5, amount: count(all), day });
+  // T-3695: with the setting on, the train part by the kinds of line its routes ride, by leg length
+  const kinds = tripTransit(t.routes);
+  const segs = shares.flatMap(([n, v, c]) => (n === "train" && kinds ? transitParts(v, kinds).map((p) => ({ name: p.name, share: p.n, colour: p.colour })) : [{ name: modeName(n), share: v, colour: c }]))
+    .map((p) => ({ ...p, tip: tr("tripText.modeOf", { mode: p.name, share: pctShare(p.share), of }) }));
   const main = t.routes[0];
   const tm = main ? stationTimes(main) : null;
   // T-1277: the market prices the curve as set; a trip pays it times its starting country's scale
@@ -463,8 +468,7 @@ export function MarketTrip({ m }: { m: MarketShown }) {
       )}
       {shares.length > 0 && (
         <div class="trip-modes">
-          <SegBar kind="trip-bar" label={tSeries(shares.map(([n, v]) => tr("tripText.modeShare", { mode: modeName(n), share: pctShare(v) })))}
-            parts={shares.map(([n, v, c]) => ({ share: v, colour: c, tip: tr("tripText.modeOf", { mode: modeName(n), share: pctShare(v), of }) }))} />
+          <SegBar kind="trip-bar" label={tSeries(segs.map((p) => tr("tripText.modeShare", { mode: p.name, share: pctShare(p.share) })))} parts={segs} />
           <ul class="rows">
             {shares.filter(([n, v]) => n !== "plane" || v > 0).map(([n, v, c, e]) => (
               <li data-tip={`${tr("tripText.modeOf", { mode: modeName(n), share: pctShare(v), of })}\n${tr("tripText.modelLine", { share: pct1(e) })}`}>

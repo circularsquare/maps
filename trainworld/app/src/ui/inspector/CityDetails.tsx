@@ -13,6 +13,7 @@ import { stationZone } from "../../game/listScope";
 import { moneyState } from "../../game/money";
 import { GOAL_SHARES, goalsReached, pointsShown, pointsText, STAR_SHARE } from "../../game/points";
 import { splitTable } from "../../game/splitTip";
+import { zoneTransit } from "../../game/transitModes";
 import { lengthsOf } from "../../game/zoneLengths";
 import { stationsToday, today, useToday } from "../../game/today";
 import { selection, shownDay, shownDayOn, shownDayPhrase } from "../../game/ui";
@@ -56,7 +57,7 @@ export function CityFigures({ city, built }: { city: City; built: boolean }) {
     <ul class="rows">
       <li>
         <span class="grow">{tr("cityDetails.trainShare")}</span>
-        <span class="val" data-tip={splitTable(tr("cityDetails.where", { city: city.name, day }), v?.split ?? null, rides, lengthsOf(city.id), "")}>{v ? pct1(v.split.train / 100) : "–"}</span>
+        <span class="val" data-tip={splitTable(tr("cityDetails.where", { city: city.name, day }), v?.split ?? null, rides, lengthsOf(city.id), "", zoneTransit(v, city.id))}>{v ? pct1(v.split.train / 100) : "–"}</span>
       </li>
       {built && (
         <>

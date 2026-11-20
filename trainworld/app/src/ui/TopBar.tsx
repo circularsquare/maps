@@ -5,8 +5,9 @@
 import type { ComponentChildren } from "preact";
 import { clock, DEMAND_CAP, REAL4_SPEED, REAL_SPEED, SLIDER_STOPS, SPEEDS } from "../game/clock";
 import { activeCity, cityById, viewedZone } from "../game/cities";
-import { demandAskTurn, demandView, modeRides, modeSplit, viewRecomputing, viewUpdating } from "../game/demand";
-import { RIDES_PER_PERSON, smallPct, WORLD_PEOPLE, WORLD_RIDES, worldTotals, worldView } from "../game/worldTotals";
+import { cityDemandViews, demandAskTurn, demandView, modeRides, modeSplit, viewRecomputing, viewUpdating } from "../game/demand";
+import { builtCities, RIDES_PER_PERSON, smallPct, WORLD_PEOPLE, WORLD_RIDES, worldTotals, worldView } from "../game/worldTotals";
+import { citiesTransit, zoneTransit, type TransitShares } from "../game/transitModes";
 import { clockTime, dayOf, exact, money, moneyCash, usingUsd, withFullSymbol } from "../game/format";
 import { AVERAGE_DAY, awayNear, dateName, dateOf, dateRange, MONTH_LONG, rushRun, weekdayOf, whenAway, yearOf } from "../game/days";
 import { PERIODS, periodAt } from "../game/periods";
@@ -24,7 +25,7 @@ import { tPlace } from "../i18n/places";
 import { world } from "../game/world";
 import { liveMoney, moneyState } from "../game/money";
 import { pointsShort, pointsShown } from "../game/points";
-import { Icon } from "./widgets";
+import { Icon, TransitSegs } from "./widgets";
 import { perfOff } from "../perfFlags";
 import { manageSaveSlot, saveSlotsState } from "../workers/clockClient";
 import { START_CASH } from "../workers/saveFile";
@@ -294,7 +295,7 @@ function Speed() {
 
 /** The world's bar hover: the train trips/day in the cities (T-1440), the share of the world's
  * fixed trips a day and how that is reached (T-1301), then the cities' own split. */
-function worldShareTip(tot: ReturnType<typeof worldTotals>, day: string, note: string): string {
+function worldShareTip(tot: ReturnType<typeof worldTotals>, day: string, note: string, shares: TransitShares | null): string {
   const big = (n: number) => tNumber(n, { notation: "compact", compactDisplay: "long" });
   const world = t("topBar.worldTrips", { rides: big(WORLD_RIDES), people: big(WORLD_PEOPLE), each: tNumber(RIDES_PER_PERSON) });
   if (!tot.split || !tot.rides) return t("topBar.trainShare", { world, note });
@@ -302,7 +303,7 @@ function worldShareTip(tot: ReturnType<typeof worldTotals>, day: string, note: s
   return [
     t("topBar.tripsInCities", { count: exact(tot.rides.train), cities, note }),
     t("topBar.trainsCarry", { share: smallPct(tot.split.train), world }),
-    splitTip(joinWhere(t("topBar.inCitiesWithStations", { cities }), day), tot.citySplit, tot.rides, ""),
+    splitTip(joinWhere(t("topBar.inCitiesWithStations", { cities }), day), tot.citySplit, tot.rides, "", shares),
   ].join("\n");
 }
 
@@ -349,6 +350,9 @@ export function TopBar() {
   // T-1851: one note for every case where the trips are being recomputed
   const note = demandView.value && (viewRecomputing.value || demandView.value.version === CACHE_VERSION) ? tSpaced(t("topBar.recomputing")) : "";
   const worldTip = total ? t("topBar.worldTip", { cities: total.cities, stations: total.stations }) : undefined;
+  // T-3695: the transit share by kind of line, with the setting on
+  const views = cityDemandViews.value;
+  const shares = !known ? null : total ? citiesTransit(builtCities().keys(), views) : city ? zoneTransit(views.get(city.id), city.id) : null;
   return (
     // T-3635: a page translator leaves the bar alone (numbers, a clock and a place name, all shown in the
     // game's language already); text it replaces would stop updating
@@ -356,11 +360,11 @@ export function TopBar() {
       {/* T-1108: the name takes what it needs up to a cap, on two lines at most, the whole name on hover */}
       {far ? <CityName id={null} name={t("topBar.world")} tip={worldTip} /> : <CityName id={city?.id ?? null} name={cityName} />}
       <div class="split">
-        <div data-tip={total ? worldShareTip(total, dayPhrase, note) : splitTable(where, known, rides, city ? lengthsOf(city.id) : null, note)} class={"split-row" + (viewUpdating.value ? " updating" : "")}
+        <div data-tip={total ? worldShareTip(total, dayPhrase, note, shares) : splitTable(where, known, rides, city ? lengthsOf(city.id) : null, note, shares)} class={"split-row" + (viewUpdating.value ? " updating" : "")}
           onPointerEnter={() => setOver(true)} onPointerLeave={() => setOver(false)}>
           <span class="bar-box">
             <span class="bar">
-              <i class="seg seg-train" style={{ width: s.train + "%" }} />
+              <TransitSegs train={s.train} shares={shares} />
               <i class="seg seg-walk" style={{ width: s.walk + "%" }} />
               <i class="seg seg-drive" style={{ width: s.drive + "%" }} />
               <i class="seg seg-none" style={{ width: (s.none ?? 0) + "%" }} />

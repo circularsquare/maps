@@ -12,6 +12,7 @@ import { LINE_SHAPES, type LineShape, type PickShape } from "../game/lineShape";
 import { LEVELS, type Level, type LineInput } from "../game/types";
 import { selection, uiScale, type ListSort } from "../game/ui";
 import { knock } from "../game/world";
+import { transitParts, type TransitShares } from "../game/transitModes";
 import type { Signal } from "@preact/signals";
 import { t, type MessageKey } from "../i18n";
 import { mobileDevice } from "../workers/deviceMemory";
@@ -417,6 +418,12 @@ export function SegBar({ parts, kind, label }: { parts: { share: number; cls?: s
       ))}
     </div>
   );
+}
+
+/** T-3695: a mode split bar's transit part, `train` % wide: one segment, or with `shares` one per kind of line. */
+export function TransitSegs({ train, shares }: { train: number; shares: TransitShares | null }) {
+  if (!shares) return <i class="seg seg-train" style={{ width: train + "%" }} />;
+  return <>{transitParts(train, shares).map((p) => <i key={p.mode} class="seg" style={{ width: p.n + "%", background: p.colour }} />)}</>;
 }
 
 /** The elevation buttons in the level colours, `value` on; `tip` words each hover; `levels`, only those. */

@@ -5,13 +5,16 @@
 
 import type { DemandView } from "../game/demand";
 import { MODE_COLOURS, modeColours } from "../game/palette";
+import { transitParts, type TransitShares } from "../game/transitModes";
 import { t, tNumber } from "../i18n";
 
-/** `width`: the bar's share of the tag's width (T-2271: a bubble's bar by its count, `logShare`). */
-export function modeBar(train: number, walk: number, drive: number, none = 0, width = 1): string {
+/** `width`: the bar's share of the tag's width (T-2271: a bubble's bar by its count, `logShare`); `shares`: the
+ * transit part by kind of line (T-3695). */
+export function modeBar(train: number, walk: number, drive: number, none = 0, width = 1, shares: TransitShares | null = null): string {
   const part = (v: number, colour: string) => (v > 0 ? `<i style="flex-grow:${v};background:${colour}"></i>` : "");
   const c = modeColours();
-  const inner = part(train, c.train) + part(walk, c.walk) + part(drive, c.drive) + part(none, c.none);
+  const transit = shares ? transitParts(train, shares).map((p) => part(p.n, p.colour)).join("") : part(train, c.train);
+  const inner = transit + part(walk, c.walk) + part(drive, c.drive) + part(none, c.none);
   return inner ? `<div class="mode-bar"${width < 1 ? ` style="width:${(100 * width).toFixed(1)}%"` : ""}>${inner}</div>` : "";
 }
 

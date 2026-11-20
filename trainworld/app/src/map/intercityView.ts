@@ -45,6 +45,7 @@ import type { CommutersOneWay, Selection } from "../game/types";
 import { DISC, RES_AREA_M2 } from "../workers/commutersProtocol";
 import { anchorVersion } from "./anchorVersion";
 import { localModes, modeBar, purposeLines } from "./modeBar";
+import { zoneTransit } from "../game/transitModes";
 import { addFinder, discAt, pointerAt } from "./demandHover";
 import { BUBBLE_BASE, bubbleLevel, LINE, splitEdge, type DemandOverlay } from "./demandOverlay";
 import { labelFont, type LabelFont } from "./labelLayout";
@@ -346,11 +347,12 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
         const localAll = v ? v.tripsPerDay : c.localTrips ?? 0;
         const localLine = tr("intercityView.within", { count: count(localAll), when: day, name: tPlace(c.id, c.name) });
         const lm = localModes(v);
-        const localBar = lm ? modeBar(lm.train, lm.walk, lm.drive, lm.none) : "";
+        const localBar = lm ? modeBar(lm.train, lm.walk, lm.drive, lm.none, 1, zoneTransit(v, c.id)) : "";
         const inter = !own || isOwn ? total(c.place) : t;
         const interLine = tr("intercityView.interCity", { count: count(inter.all), when: day, name: tPlace(c.id, c.name) });
         const iw = !own || isOwn ? interWalk(c.place) : 0;
-        const interBar = modeBar(inter.rail, iw, Math.max(0, inter.all - inter.rail - iw));
+        // T-3695: a pair of zones has no split of its own by kind of line, so its bar keeps one transit part
+        const interBar = modeBar(inter.rail, iw, Math.max(0, inter.all - inter.rail - iw), 0, 1, !own || isOwn ? zoneTransit(demandView.peek(), c.id, true) : null);
         // T-3074: before any market result the inter-city figure is unknown, not 0: leave its row out
         // T-3658: a 0 just means it is not calculated yet: leave the row out then too
         const known = pairsIn && Math.round(inter.all) > 0;

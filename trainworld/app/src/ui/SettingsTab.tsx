@@ -110,6 +110,12 @@ export function SettingsTab() {
           </label>
         </div>
       )}
+      {/* T-3695: the mode split bars' transit part by kind of line; the bubbles keep their three colours */}
+      <div class="checks">
+        <Check checked={d.transitModes} onChange={(v) => setDisplay("transitModes", v)}>
+          {t("settingsTab.transitModes")}
+        </Check>
+      </div>
       <div class="h">{t("settingsTab.stationCircles")}</div>
       <Slider label={t("settingsTab.circleSize")} min={0.5} max={2} step={0.05} value={d.stationCircleSize} percent set={(v) => setDisplay("stationCircleSize", v)} />
       <div class="h">{t("settingsTab.show")}</div>
