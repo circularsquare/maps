@@ -140,7 +140,7 @@ Things that look silly, doubled, oversized or tangled. None of these were change
 5. **Docs longer than the code they describe.** `docs/` is about 280,000 words. The code map alone is long, with sentences full of task numbers, which makes it slow to scan for "where does X live".
 6. **Ten scripts for real networks.** Building a city's real network for sandbox starts takes about ten Python scripts (`realnet.py`, `realcorridors.py`, `reallevels.py`, `realshared.py`, `realauto.py`, `realnet_n02.py` and more), roughly an eighth of the pipeline for one feature.
 7. **One very long pipeline file.** `world_plan.py` is about 3,400 lines in one file, the biggest Python file.
-8. **Test files bigger than the code.** The track model's main test file (`sim/src/track/wasm/tests.rs`, 3,900 lines) is the biggest Rust file; the intercity tests are almost 3,000.
+8. **Test files bigger than the code.** The track model's main test file was split by area into `sim/src/track/wasm/tests/*.rs` (T-3873); the intercity tests are almost 3,000.
 9. **Accounts named after another project.** Trainworld sign-in goes through the server's `/noritetsu/` routes, since the accounts are noritetsu's (`app/src/game/account.ts`). It works, but anyone reading the server sees "noritetsu" for every trainworld login.
 
 ## Keeping this page right
