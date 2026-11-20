@@ -10,6 +10,7 @@ const mod=await loadApp(`
  export * from '@app/src/map/stationGeometry.ts';
  export { networkFromState } from '@app/src/map/network.ts';
  export { NetworkRenderer } from '@app/src/map/renderer.ts';
+ export { syncGroups } from '@app/src/map/rendererDraw.ts';
  export { buildLayers, widthFor } from '@app/src/map/demandLayers.ts';
  export { stationScale } from '@app/src/map/stationCircles.ts';
  export { topSeg } from '@app/src/map/pick.ts';`);
@@ -174,7 +175,7 @@ renderer.selectedStation=-1;
  r2.net={...net,stations:F([0,0,0,0,100,0]),stationAxis:F([50,0,50,0]),stationShape:F([0,0,0,0,0,0,0,0]),stationCount:2,stationIds:['a','b'],stationLinkIdx:new Int32Array([0,1]),stationLinks:F([0,0,0,100])};
  r2.stationStyle={boxes:false,radius:stationRadii(13),linePx:4,ringPx:2,boxLinePx:6.6,boxRingPx:2};
  // T-313: zoomed out every station is its own dot, a group's dots joined by a connector
- r2.syncGroups(r2.net,{members:[['a','b']]});
+ mod.syncGroups(r2,r2.net,{members:[['a','b']]});
  const d0=r2.drawnShapeOf(0,id),d1=r2.drawnShapeOf(1,id);
  assert.ok(d0.dot>0&&d1.dot>0&&d1.dot<20,'a dot each, not one covering both');near(d0.y,0);near(d1.y,100,'each at its own platform');
  assert.equal(r2.connPairs.length,2,'one connector in the group');assert.equal(r2.connEnds.length,4,'the link inside the group adds none');
@@ -190,7 +191,7 @@ renderer.selectedStation=-1;
  // the player's link between two groups: one connector between the linked stations' dots
  const r3=new NetworkRenderer();
  r3.net={...r2.net};r3.stationStyle={...r2.stationStyle,boxes:false};
- r3.syncGroups(r3.net,{members:[['a'],['b']]});
+ mod.syncGroups(r3,r3.net,{members:[['a'],['b']]});
  assert.equal(r3.connPairs.length,2,'the link\'s connector');near(r3.connEnds[1],0,'connector from one dot');near(r3.connEnds[3],100,'to the other');
  r3.selectedStation=0;r3.selectedAlso=new Set([1]);assert.equal(r3.selectedShapes(id).length,3,'two dots and their connector share one outline');
  r3.selectedAlso=new Set();assert.equal(r3.selectedShapes(id).length,1,'no connector when only one end is selected');
