@@ -285,9 +285,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3460 [P3] {L:cleanup} Code written twice
   - Context: From the code tour: the schematic's sheet maths in Rust (diagram.rs) and again in JavaScript (sheetLines.ts, kept as a fallback); the real-rail route finder in the game (realRoute.worker.ts) and copied in the pipeline (realroute.py); car street speeds twice in Rust.
   - Goal: One copy of each, or a written reason to keep both.
-- T-3726 [P3] {L:cleanup} {after:cores free up} Are code comments worth keeping, A/B test (taking, 2026-11-19, agent abpair1)
-  - Context: You said yes, after the release (2026-11-18). You, 2026-11-18: "deciding whether or not code comments rae actually helpful ... what procedure do you think we might be able to try to get a rough sense of whether this would be really harmful? ... just a rough measured anecdotal sense." Proposal: replay 2-3 tasks landed today from their parent commits, one tree with comments and one with them stripped by script, same blind brief, scored on the real fix's tests first, then wrong causes, tokens and time; one task run twice per arm to see the noise.
-  - Goal: A rough answer: no visible difference, comments help, or comments hurt; any mass strip only when no trees are open.
 - T-2843 [P3] {L:cleanup} State machine B for demand health
   - Context: The code review report is done; state machines A (T-2848) and C (who may write the save slot, T-3734 stage 2) are built. B, demand health, is left.
   - Other: See notes/T-2843.md.

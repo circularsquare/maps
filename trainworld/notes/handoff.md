@@ -13,8 +13,9 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 1. Running: guianas (T-3762, writes data/packs; report not yet in), editfirst (Opus, T-3803 option 1, tree editfirst,
    6207; checker before landing), riverroute (Opus, T-3358 prototype, scratchpad only; sheet A/B/C with Hong Kong),
    schemcity (Opus, T-3825 + T-3826, tree schemcity, 6209), ttrelated (Opus, T-3818, tree ttrelated, 6211).
-   Comments A/B (T-3726): pair 1 arms ab-1-c / ab-1-s (Sonnet, a592513c82e673c22 / ac4fb532666d58ca0); then score per
-   maps-6b's commentab scoring.md (runstats, audit, score-t3704.py), then pair 3 (ab-3-c/s), then notes/T-3726.md.
+   Comments A/B (T-3726): pair 1 scored (both PASS; notes/T-3726.md). Pair 3 arms ab-3-c / ab-3-s running (Sonnet,
+   ae15dff0c4bcf95c3 / a6289c97e4290d405); score per maps-6b's commentab scoring.md (score-t3722.mjs with a fresh
+   Vite from each tree on 6175/6176, runstats --audit), then a noise rerun (fresh trees per setup.md), then report.
    T-3395: after 04:00 UTC 11-20 run `tools/ops/save_health.py`; the two rev-1 games of ue83342ed78f8fc4c still
    corrupt = old damage, close after a clean 11-21; intact = the scan's check lagged (notes/T-3395.md).
 2. T-3790: pipeline fix landed e9a6f91b; ship mos (--force), ber, hon (--force) from
