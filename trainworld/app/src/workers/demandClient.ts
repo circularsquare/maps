@@ -3263,7 +3263,8 @@ class DemandClient {
     this.periodsOf.forEach((periods, i) => this.workers[i].postMessage({ kind: "periods", periods, ...(i < n ? this.marketsMsg(i) : {}), ...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}) } satisfies ToDemand));
     this.endQueries();
     this.freshParts = true;
-    memoryResolve.value = true;
+    // T-3868: only a game already solved is solved again; a load's cut (`capAhead` on every big save) frees nothing
+    if (!this.hold && !gameLoadArmed() && !this.cacheShown() && demandView.peek()?.final) memoryResolve.value = true;
   }
 
   /** T-1205: the page's memory outside the workers' WASM, where the browser can say (a cross-origin
@@ -3916,6 +3917,7 @@ class DemandClient {
     // the first network after a whole-game load is the one the clock waits for (T-149)
     const gameLoad = takeGameLoadHold();
     if (gameLoad) this.hold = {};
+    if (gameLoad) memoryResolve.value = false; // (T-3868: a whole game's load is no solve again)
     if (gameLoad && this.ahead) this.ahead.arrived = true;
     if (gameLoad) this.cacheSolve = null;
     // T-1539: the network the loaded save works out, for the cache written for it; and the one a
