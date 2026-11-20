@@ -365,8 +365,8 @@ def cmd_check(r, a):
             problems.append(f"board-live.json: agent '{name}' ({ag.get('task')}) has no task marked taking")
     if os.path.exists(r.handoff):
         n = len(read(r.handoff)[0].split("\n"))
-        if n > 80:
-            problems.append(f"notes/handoff.md is {n} lines (keep it under 80)")
+        if n > 60:
+            problems.append(f"notes/handoff.md is {n} lines (keep it under 60)")
     for p in problems:
         print(p)
     print(f"{len(problems)} problem(s), {len(seen)} open tasks")

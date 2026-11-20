@@ -40,10 +40,10 @@ it is set with `python cores.py cap <n>`, never written into a doc.
 Projects run by an orchestrator (trainworld, isochrone) keep its live state in `<project>/notes/handoff.md`, so a new
 orchestrator can start at any moment: `/takeover <project>` starts one, `/handoff` keeps the file current and covers
 winding down (`.claude/skills/`). Hooks (`.claude/hooks/orchestrator.py`) give each session its id, note when context
-passes 500k (orchestrators then start their own successor), and stop a taken-over session starting new agents (an `in-flight:` description gets through).
+passes 500k (orchestrators then start their own successor: the `handoff` skill has the steps), and stop a taken-over session starting new agents (an `in-flight:` description gets through).
 
 ## Compact instructions
 
 If a session compacts, keep: task ids, agent names and ids still running, PIDs, log paths and restart commands, what
 is uncommitted and whose, and Anita's latest asks in her words. An orchestrator re-reads its `notes/handoff.md`
-after compacting.
+and its project's `docs/orchestrator.md` after compacting.

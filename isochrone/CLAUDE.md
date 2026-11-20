@@ -102,7 +102,7 @@ Briefs carry only the task; these hold for every agent.
 `node isochrone/checks/smoke.mjs` from the maps root. Then commit (Anita, 2026-10-26): the
 orchestrator commits `isochrone/` work as it goes, explicit paths only (never `-a` or `git add .`),
 one plain sentence, staged diff checked right before committing since agents edit shared files.
-Subagents never commit. **Pushing needs Anita's word.**
+Subagents never commit. Push a couple of times a session without asking (her global CLAUDE.md, "Git commits and pushes").
 
 ## Build and run
 

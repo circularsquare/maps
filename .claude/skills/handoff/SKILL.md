@@ -15,12 +15,23 @@ In a project with a state command (trainworld: `venv\Scripts\python.exe trainwor
 edit the file when the plan or her words change, not when an agent launches or lands: the command already shows
 that. In a project without one, a small edit to the relevant line whenever something changes that a successor would
 need: an agent launched or landed, a long run started or finished, a commit, a publish, a new standing ask from
-Anita, a change of plan. One or two lines each time; rewrite a section only when it has drifted. Also run this skill when the stop hook says context is past ~500k (then start the successor: docs/orchestrator.md "Your own cycling"), and when Anita asks. From about 450k
-start no new agents: list what you would start under "Next" and the new orchestrator starts them.
+Anita, a change of plan. One or two lines each time; rewrite a section only when it has drifted. Also run this skill when Anita asks.
+
+## Cycling at about 500k tokens
+
+These steps live here; other files point to them.
+
+- From about 450k start no new agents: list what you would start under "Next" and the new orchestrator starts
+  them.
+- At about 500k (the stop hook says so), don't wait for her: finish anything mid-landing, bring this file
+  current, and start the successor with the project's command (trainworld's is in docs/orchestrator.md, "Your
+  own cycling").
+- Once the new orchestrator messages you, wind down as "After another session takes over" below says.
+- Overnight, while she sleeps, keep going past 500k instead of handing over.
 
 ## Shape
 
-**With a state command (trainworld):** under about 40 lines, holding only what no command can print: the plan, her
+**With a state command (trainworld):** under 60 lines (`tasks.py check` warns past that), holding only what no command can print: the plan, her
 words and judgement. Live state (trees, agents, uncommitted paths, builds, asks, runs, core claims) comes from the
 command; don't copy it in. Open asks are never written here: `trainworld/tools/asks.py add|answer|list` is their
 only editor, and an ask she answers is `asks.py answer <id> --note "..."` in the same turn.
@@ -34,7 +45,8 @@ only editor, and an ask she answers is `asks.py answer <id> --note "..."` in the
     1. In order, with task ids and rough durations; what to start, what to hold and why.
 
     ## Her words
-    Standing asks that still hold, in her words where short; calls she has made this week.
+    Standing asks that still hold, in her words where short; calls she has made this week. Drop an
+    answered item once its task, DECISIONS line or a rule file holds it.
 
     ## Only a person knows
     Why something is held, which uncommitted file is left on purpose and whose, what a tree is for when its
@@ -90,7 +102,7 @@ commits, landings, publishing and 8800 until you are done, so land things proper
 - When nothing of yours is left in flight, delete the `Previous:` line, update `Updated:`,
   `SendMessage` the new orchestrator (the name on its Orchestrator line) that you are done and what
   you landed. Your one message to Anita is a single line: "talk to <new name> now". After it you write nothing
-  more to her and never ask her anything (she was getting the same news from two tabs, 2026-11-17).
+  more to her and never ask her anything (she was getting the same news from two tabs).
 - If an agent will run for hours more, don't wait for it: make sure its "In flight" line says how to
   check its result without you, delete your `Previous:` line, tell the new orchestrator it is
   theirs to adopt, send Anita the one line, and stop.

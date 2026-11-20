@@ -1,6 +1,8 @@
 # trainworld — notes for agents
 
-Read this, then `SPEC.md`. Grep `TASKS.md` for your task id rather than reading it. Everything else on demand:
+Read this, then in `SPEC.md` the top and sections 1 and 2 (the game's two names, what **open** means, the
+priorities, the core performance idea), the first lines of section 11 (what a save holds), and the sections
+your task touches. Grep `TASKS.md` for your task id rather than reading it. Everything else on demand:
 for how a mechanic works, the wiki first (`wiki/index.md`, then `wiki/read/<page>.md`, which has the figures filled
 in and ends with the doc section and code that own the rule), then the docs. Where code lives: `docs/code-map.md`.
 The orchestrator also reads `docs/orchestrator.md`.
@@ -14,46 +16,49 @@ The orchestrator also reads `docs/orchestrator.md`.
   to open.
 - **Estimates in hours of real agent time**, checked against similar past tasks (T-3137 C1, guessed at days, took
   about 45 minutes). Never "agent-days". Don't call something impossible by a time: our guesses run pessimistic, and
-  work often lands sooner. No deadlines unless she gives one; aim for the next release and see (Anita, 2026-11-17).
+  work often lands sooner. No deadlines unless she gives one; aim for the next release and see.
 - **Ask when the answer is needed next**, not ahead. Test items only once the change is on 8800.
 
 ## What waits for her word
 
 Publishing the game and the website push; every server deploy (never overnight); adding a complicating factor to
 demand; a choice that changes what the game is; a change to what players can build or how fast or far things go,
-even when a player asked or a rail fact backs it (a request alone is no reason: 350 km/h high speed, Anita
-2026-11-12); anything the spec marks **open**; a big task's design before it is built. Everything else you decide, record in DECISIONS.md if someone might revisit it, and tell her after: rail
+even when a player asked or a rail fact backs it (a request alone is no reason, as with 350 km/h high speed); anything the spec marks **open**; a big task's design before it is built. Everything else you decide, record in DECISIONS.md if someone might revisit it, and tell her after: rail
 facts, sensible defaults, visible calls, zone and region names. A slip gets a fix, not a new standing process.
 
 ## Player text
 
 - **Voice**: the "User-facing text" section of her global CLAUDE.md, the wiki included. "Trips" for what people want
   to take (demand); "rides" and "riders" only for what happens on the player's system.
-- **Speed and waiting** (Anita, 2026-11-17), in game text and changelog alike, one phrase per wait: opening a game or
+- **Speed and waiting**, in game text and changelog alike, one phrase per wait: opening a game or
   city "loads"; the map catching up to an edit "shows up" ("deleting a station shows up faster"); the numbers
   updating after a change are "calculating trips" ("trips are calculated 10x faster"), never "settle", "demand" or
   "rides" for that wait; memory "uses N MB less memory".
 - **Review**: list every in-game string you add or change, old -> new, exactly as shown. Landing doesn't wait; she
   answers "text acknowledged" or names lines. Propose wording; never ask her to write it. Changelog items are not
-  asked about: she reviews them separately on the board (Anita, 2026-11-19).
-- **Changelog** (when in doubt, no item; Anita 2026-11-18: "we need to be less willing to put stuff on the
-  changelog"): a change a player would notice (a new control, a changed number, a fixed bug they'd have met) gets
-  one item before you report: `venv\Scripts\python.exe trainworld/tools/changelog.py add "<one plain line, lowercase;
-  past tense for the change, present for how things are now: "added ...", "fixed ...", but "the game uses 500 MB
-  less" (Anita, 2026-11-17)>" --area <area> [--fix] --task T-#### --by <you>` (area: track, demand, scheduling, fares, schematic for
-  the map and schematic, community for accounts and sharing, performance; other if none fits; a bug fix takes its area
-  plus `--fix`, and `bug` only when no area fits); list it with your strings. If the thing you changed is new in, or
-  already listed in, the unpublished changelog (`changelog.py list`), reword that item (`changelog.py reword <id>
-  "<line>"`) instead of adding one. Internals, tools and docs get none, and nor does a change too minor or too fiddly to describe
-  for a player (Anita, 2026-11-17: undo after a load's cap lowering), nor one that only changes a tooltip, an
-  alert's wording or diagnostic text, since that text is the whole change and players can read it (Anita, 2026-11-18). Anita rewords
-  or hides items on the board's Changelog view.
+  asked about when you land: she reviews them separately on the board. (A publish still waits for her OK on new
+  player text: the `publish` skill.)
+- **Changelog**: a change a player would notice (a new control, a changed number, a fixed bug they'd have met)
+  gets one item before you report. When in doubt, no item: she wants us "less willing to put stuff on the
+  changelog". The command:
+  `venv\Scripts\python.exe trainworld/tools/changelog.py add "<line>" --area <area> [--fix] --task T-#### --by <you>`
+  - **The line**: one plain line, lowercase. Past tense for the change ("added ...", "fixed ..."), present for
+    how things are now ("the game uses 500 MB less memory").
+  - **Area**: track, demand, scheduling, fares, schematic (the map and schematic), community (accounts and
+    sharing), performance; other if none fits. A bug fix takes its area plus `--fix`; `bug` only when no area
+    fits.
+  - **Already there**: if the unpublished changelog (`changelog.py list`) already has an item for the thing
+    you changed, including the one that added it, reword that item (`changelog.py reword <id> "<line>"`)
+    instead of adding one.
+  - **No item for**: internals, tools and docs; a change too minor or too fiddly to describe for a player (undo
+    after a load's cap lowering); a change that is only a tooltip, an alert's wording or diagnostic text, since
+    that text is the whole change and players can read it.
+  - List the item with your strings. Anita rewords or hides items on the board's Changelog view.
 - **Not reviewed**: the wiki, zone/region/realm names, docs, commit messages, text copied word for word from her
-  own message (Anita, 2026-11-11), and text reused word for word from a string already in the game (Anita,
-  2026-11-18); still list it in the report, marked as reused.
-- "Manually", never "by hand" (Anita, 2026-11-18: "by hand is a bit weird").
-- American wording: "turn around", never the British "turn round" or "round" for "around" (Anita, 2026-11-12: "its a
-  pet peeve of mine").
+  own message, and text reused word for word from a string already in the game; still list it in the report, marked as reused.
+- "Manually", never "by hand" ("by hand is a bit weird").
+- American wording: "turn around", never the British "turn round" or "round" for "around" (a pet peeve
+  of hers).
 - Watch for an object or colour as the subject ("grey fills"), dropped words ("from street zooms"), and hovers that
   say what the player can see. A gesture with no visible control gets its instruction in a tag ("Click to close the
   loop"); ordinary controls get none.
@@ -87,22 +92,29 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
 - **DECISIONS.md and ARCHIVE.md are grepped, never read whole** (the `-to-2026-10-19` files too). A DECISIONS line is
   for a choice someone might revisit: date, one or two sentences, task id. An ARCHIVE entry: id, title, date,
   outcome, notes link.
-- **Tasks**: a head line `- T-012 [P2] {L:slug} Title` (2-10 words, no full stop, no colon), then indented
-  one-line fields in this order: `  - Need from Anita:` (exactly when the head has `{waits:Anita}`: one sentence she can
-  act on, with the recommended answer if there is one), `  - Context:` (where things stand and why), `  - Goal:` (what
-  done is, with the deciding number; left out when the title already says it, and never "these items are done"),
-  `  - Other:` (optional; the notes link last). Very short, written to her; leave out what you're unsure of (Anita
-  2026-11-16). When a task's main work is done but it stays open for what's left, rewrite the title, Context and Goal
-  to be the part that's left, so the board shows what is still open (Anita, 2026-11-18). Examples: notes/T-3394.md. P1 now, P2 this milestone, P3 later, P4 lowest (set by her on the board);
-  Someday tasks are P4 and don't count as open. Use only the ids your brief gives you. Mark a task taken
-  before starting and archive it when done with `venv\Scripts\python.exe trainworld/tools/tasks.py start <ids> --agent <name>`
-  / `done <id> --outcome "..."` (agents may use both; `check` lists malformed lines); update a task by rewriting its fields, never by
-  appending to the head line.
-  Every open task carries `{L:<slug>}` from `LINES.md` right after its priority, plus `{waits:Anita}` or
-  `{after:<task id or phrase>}` when it waits; a new task joins an existing line or adds one; set a line's `done:`
-  when its last task closes.
-- **Done** means it runs, the spec matches, any decision is recorded, and the line has moved to the top of
-  ARCHIVE.md. Then grep TASKS.md for the id, close a parent whose last stage this was, and
+- **Tasks**: written to her and very short; leave out what you're unsure of. Examples: notes/T-3394.md.
+  - **Head line**: `- T-012 [P2] {L:slug} Title`. The title is 2-10 words, no full stop, no colon. Every open
+    task carries `{L:<slug>}` from `LINES.md` right after its priority, plus `{waits:Anita}` or
+    `{after:<task id or phrase>}` when it waits.
+  - **Fields**: indented, one line each, in this order.
+    - `  - Need from Anita:` exactly when the head has `{waits:Anita}`: one sentence she can act on, with the
+      recommended answer if there is one.
+    - `  - Context:` where things stand and why.
+    - `  - Goal:` what done is, with the deciding number. Left out when the title already says it, and never
+      "these items are done".
+    - `  - Other:` optional; the notes link last.
+  - **Priorities**: P1 now, P2 this milestone, P3 later, P4 lowest (set by her on the board). Someday tasks are
+    P4 and don't count as open.
+  - **Ids and lines**: use only the ids your brief gives you. A new task joins an existing line or adds one; set
+    a line's `done:` when its last task closes.
+  - **Commands** (agents may use both): mark a task taken before starting with
+    `venv\Scripts\python.exe trainworld/tools/tasks.py start <ids> --agent <name>` and archive it when done with
+    `done <id> --outcome "..."`. `tasks.py check` lists malformed lines.
+  - **Updating**: rewrite a task's fields, never append to the head line. When a task's main work is done but it
+    stays open for what's left, rewrite the title, Context and Goal to be the part that's left, so the board
+    shows what is still open.
+- **Done** means it runs, the spec matches, any decision is recorded, and the task has moved to the top of
+  ARCHIVE.md (`tasks.py done` does this). Then grep TASKS.md for the id, close a parent whose last stage this was, and
   name any other open task your work also did. New work found on the way is a new task.
 - **Shared files**: re-read right before editing, small edits, never rewrite TASKS, DECISIONS or ARCHIVE wholesale.
   In a tree, TASKS.md, DECISIONS.md, ARCHIVE.md and LINES.md are never edited (a hook refuses): edit the main tree's,
@@ -129,8 +141,8 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
   as shown. Build fixtures by the player's path where it matters; a new read goes in `checks/lib/reads.mjs`.
 - **The real save** is `T-007-real-nyc.save`. `?new=1` never writes a slot.
 - **Typecheck** with `npm run check --prefix app`; `python trainworld/tools/agent_cargo.py wasm` when Rust changed.
-  No full builds, no commits (a brief that touches shonei-server may say to commit there; pushing and deploying stay
-  the orchestrator's).
+  No full builds, no commits: landing your work is the orchestrator's commit (a brief that touches shonei-server
+  may say to commit there; pushing and deploying stay the orchestrator's).
 - **Rust**: keep the crate compiling between edits. After a sim/ change run `python trainworld/tools/agent_cargo.py
   test` (both suites on the fast `agent` profile: no LTO, incremental, about 70 s warm against 180 s for `cargo test
   --release`; it claims its cores in the ledger and releases them). Build your tree's WASM with `agent_cargo.py
@@ -143,11 +155,13 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
 - **Shell**: scripts in a file in your scratchpad. Pin processes from PowerShell or a `.cmd`, never
   `cmd /c start ... /b` through Git Bash (it pops dialogs on her screen). Nothing may open a window on her screen: a
   process you start from code gets `windowsHide: true` (Node) or `creationflags=subprocess.CREATE_NO_WINDOW`
-  (Python), since a background process has no console and each child without it flashes a terminal (2026-11-18).
+  (Python), since a background process has no console and each child without it flashes a terminal.
 - **Screenshots** go in `../artifacts/trainworld/`. For UI work, judge your own screenshots before reporting.
-- **Advisor** (when your session has one): call it for a call nobody has made, when stuck (the same failure twice or
-  about 30 minutes without progress) or before giving up, and before claiming a cause; about once a task. Not for
-  routine steps, wording or small UI. Say in your report whether you called it and what changed.
+- **Advisor** (when your session has one): call it for a call nobody has made (design, a source choice, a demand
+  factor, a performance lie) before proposing or acting; when stuck (the same failure twice, or about 30 minutes
+  without progress) and before giving up; and before claiming a cause. About once a task, a soft limit. Not for
+  routine steps, wording, small UI, or a choice already going to Anita. Say in your report whether you called it
+  and what changed.
 - **A refused permission check**: make the step safer and retry; don't wait for Anita.
 - **Stop at a clean point** if the work outgrows one context: finish the stage, file the rest, hand back.
 - **Waiting**: no `sleep`, no polling loops of your own: `node trainworld/checks/wait.mjs <file> <pattern>
@@ -156,7 +170,7 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
   times out; never end your turn while something you need is running (a watch on a background process does not hold
   the turn open). Work that needs no result from you may run in the background, with at most one light check every
   4-5 minutes. Final checks (smoke) write a log; wait on it with `wait.mjs` and read its result before you report.
-- **Testing, kept lean** (Anita, 2026-11-17: "a bit too test heavy"): run the checks near your change, not every
+- **Testing, kept lean** (she found the work "a bit too test heavy"): run the checks near your change, not every
   check. Smoke only when your brief asks or the change touches sim, saves, demand or money; the orchestrator runs one
   smoke per landed batch. Add a standing check only for a bug that really happened and could quietly come back;
   otherwise prove the change with a scratch script and leave it in your scratch folder. Before writing a scratch
@@ -173,8 +187,7 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
   Once met, stop. Performance tasks get a looser one.
 - **General sources**: global datasets or a method any census can feed; a one-city source only if very easy.
   Local demand factors (by country, region or city kind) are allowed again where a worldwide rule misses a real gap
-  and published figures show it; a place that already looks right (the US intercity) keeps the worldwide rule
-  (Anita, 2026-11-11). Look
+  and published figures show it; a place that already looks right (the US intercity) keeps the worldwide rule. Look
   outward for how other games and map makers solve it; write what you find in notes or research/.
 - **Performance**: quantify impact, do the big ones first. An approximation is welcome when a player couldn't tell;
   say what the lie is in DECISIONS.md.

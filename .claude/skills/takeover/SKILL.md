@@ -62,8 +62,8 @@ wrong for the situation, do the sensible thing and say why in your first message
 While orchestrating, keep `notes/handoff.md` current as you go (see the `handoff` skill), so that
 the next takeover never has to wait for you.
 
-**Keep the work moving** (Anita, 2026-11-03: "there are times when we have lots of stuff to
-potentially work on but we're only doing a bit at a time, or stopping"). Each time an agent reports,
+**Keep the work moving.** There are times when there is a lot to work on and only a bit gets done at a time,
+or work stops. Each time an agent reports,
 and at least every couple of hours, look over what is not done (tasks, her open asks, follow-ups
 agents filed) and start whatever can go ahead, up to the core cap and the files agents can own
 without colliding. Hold back only for a stated reason: a run that must not be disturbed, a decision
