@@ -10,9 +10,10 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 0. Live v0.4.4. Cap 14. 8800 = master = 7637e0e0 (~11:15, pushed, smoke passed). Landed tonight by maps-60
    [6ba449]: T-3809, T-3834, T-3832, T-3828, T-3358 rivers E, T-3835 loops, T-1738 (Bhamo left), T-3833 + T-3824,
    T-3763 Iraq and Iran, T-3842 Burmese labels, T-3803 option 1 (after editdiag's fix). Filed T-3837-T-3844.
-   Asked in chat, unanswered: T-3835 text ack (T-3809's strings change with T-3845; 400 km per leg unanswered).
-1. Running, mine (relaunched 13:20 after the restart): gapfill (Opus, T-3764, main tree: 338 PK+BD rows gated,
-   resumed toward the join; messages me at join start/end; its uncommitted pipeline, checks, game json and notes
+   Asked in chat, unanswered: 400 km per leg (T-3809's strings change with T-3845).
+1. Running, mine (relaunched 13:20 after the restart): gapfill (Opus, T-3764, main tree: JOIN of 338 PK+BD rows
+   started ~13:20, ~1 h, pid 9092, log artifacts/trainworld/t3764-join.log; no data/packs writes or plain 8800
+   rebuild until it ends; its uncommitted pipeline, checks, game json and notes
    files are its own), riverfix (Opus, T-3839, her river report + 2 board screenshots, Vite 6152), ferryorder
    (Sonnet, T-3845, 6153), ttquiet (Sonnet, T-3846, 6154), islands1 (Opus, T-2216 stage 1 rule A, 6155; risky:
    fresh Sonnet checker before landing). One tree each.
@@ -28,6 +29,10 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 ## Her words
 - 11-20 ~12:45 UTC, morning: new countries "look pretty cool"; rivers still break (T-3839, her words there); ferry
   order port, waypoints, port (T-3845); quieter related lines (T-3846); islands "3x, A", stage 2 yes.
+- 11-20 ~13:40 UTC: T-3835 text ack. TODO.md review: file everything in "for anita" and "other player
+  suggestions" not done or filed ("basically want all of this eventually"; agent todoreview, ids T-3850-T-3899,
+  table in notes/todo-review-2026-11-20.md). New players default to legacy time buttons (T-3847, agent
+  legacytime). Asked which Ready (low) tasks to raise to high: my picks went to her in chat.
 - 11-20 ~05:20 UTC, to bed: "lets try to keep going through the night, continuing to run stuff if resources free
   up". Picked rivers E (+ min-straighten, round caps; coastline T-3833 after); OK'd both global CLAUDE.md wordings.
 - 11-20 ~04:20 UTC: rivers: likes B's look, wants C's correctness: "C but just do like microstraightening ... and we
