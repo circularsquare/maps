@@ -215,6 +215,8 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-2872 [P3] {L:small-fixes} {after:Anita asks} Timeline of what was built
   - Context: A player asked for playback of what was built. The build days are recorded already (T-2871), with no UI.
   - Goal: Build it only when you ask.
+- T-3866 [P4] {L:small-fixes} What stationsworld is
+  - Context: Your TODO.md, 11-20, from player suggestions: "stationsworld ??" Not understood; find out what is meant (a mod, a game, a feature) and report to you.
 - T-3457 [P3] {L:checks} Slim the standing checks
   - Context: The code tour (notes/code-tour.md) counts 283 of 320 checks named after the task that made them, 42 more in checks/old, 45,700 lines, more than the pipeline. You 11-16: Claude leans a bit too much toward writing checks.
   - Goal: Checks that no longer guard anything are deleted, the rest named by what they check; smoke and the standing set still pass.
@@ -343,12 +345,16 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: 2026-11-19: Steamworks account made, fee paid, tax form in (Valve's checks take up to about 45 days); you're taking screenshots into artifacts/trainworld/steam/screenshots; then agents make the store images from the landing page's "trains world!" logo. You, 2026-11-18: a free downloadable version on Steam, no paid DLC, a Ko-fi link if allowed; disclose AI code and translations regardless; "idrc about art style ... a low effort way to get another thing that might have a chance to get algo boosted". Checklist done (research/steam-page.md). Valve bans links in the description since 2024-09; the store page's website link field is allowed. No standalone build yet.
   - Goal: A live Coming soon page, then the downloadable build at least 2 weeks later.
   - Other: research/steam-page.md
+- T-3853 [P3] {L:steam} Offline version with chosen cities
+  - Context: Your TODO.md, 11-20: "when we build standalone, allow offline version, choose which cities you wanna have downloaded i guess (say how much storage each one will take up)". Also from the suggestions: "make downloadable (doesnt have to be offline, but just not on web, i guess)", which T-3729's standalone build covers. Design for you first.
 - T-3695 [P3] {L:map-look} Travel by mode overview
   - Context: Your old TODO: "see overall travel by train / high speed / bus / tram / etc (in city / world view?) or also toggle in top? a trip that takes multiple can just be evenly split between their transit legs". You, 2026-11-18: "yes should do".
   - Goal: A design to you first (where it shows, city and world), then a view of rides split by mode, a multi-mode trip shared evenly across its legs.
 - T-3696 [P4] {L:money} Lines' money and ridership changes as a list
   - Context: Your old TODO: "someone requested notifications for like money going up/down and ridership going up/down as a list... i guess as like a list of all individual lines separately. i guess we can add this as a setting". Per-line money history exists (T-2787). You, 2026-11-18: "idk exactly what ridership change list means, but can file to think about it".
   - Goal: Worked out what players want from it (the Discord ask), then a proposal to you.
+- T-3863 [P4] {L:money} Advertising income
+  - Context: Your TODO.md, 11-20, from player suggestions: "advertisement/loans". Loans are built (T-2022); this is advertisement. Design for you first.
 - T-3674 [P3] {L:feedback} Feedback reports say where a load stuck
   - Context: From T-3630: a report sent from the menu after a crash doesn't say how far the last load got.
   - Goal: The game keeps a last-load record across a reload (game, stage, percent, finished or not, failure text) and a report includes it.
@@ -365,6 +371,8 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Your weekend notes (2026-11-16): double track as a pair of singles, any number of parallel tracks and platforms (Grand Central, Spanish solution, AABB, ABBA, AA above BB), island platforms that shift the tracks, a definition of a station, per-track stop picking with numbered circles; simple stop assignment kept for simple two-track lines.
   - Goal: An agreed design that covers those cases and can grow, then a staged plan, with the track model split into parts an agent can read whole (you 11-16, after the code tour: it is too big to read fully today).
   - Other: Your notes verbatim: notes/T-3444.md; sizes in notes/code-tour.md
+- T-3859 [P4] {L:track-kinds} Custom drawn platforms
+  - Context: Your TODO.md, 11-20, from player suggestions: "custom drawable platforms like station boxes? for tapered platforms might be cool". Design for you first; may fold into T-3444.
 - T-3435 [P4] {L:buses} Long-distance ferries lose money
   - Context: You, 2026-11-16: make current ferries faster rather than adding a fast kind. First pass done: every ferry cruises at 45 km/h instead of 32, costs and seats unchanged; Hong Kong-Macau riders 2,553 to 5,908, Helsinki-Tallinn 18,217 to 19,011, city routes barely move. Long routes still lose money at the default service.
   - Goal: Long-distance ferries pay at the default service (fares, service or more speed for long routes), with T-2216 first for routes like Seattle-Victoria.
@@ -489,6 +497,14 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
   - Context: Your 2026-11-10: "do we have a framework for destination -> destination trips?" Airports already do this; everyday trips are home-based only. A demand change, design first.
   - Goal: A design for destination to destination trips, for you to approve.
   - Other: Notes: none yet
+- T-3854 [P3] {L:demand-ideas} Only-intercity game mode
+  - Context: Your TODO.md, 11-20: "add a "only intercity" mode where each city kinda already has feeder?" Design for you first, since it changes what the game is.
+- T-3855 [P3] {L:demand-ideas} Better errand modelling
+  - Context: Your TODO.md, 11-20: "better errand modelling, rather than assigning people to an errands nearby?" Design for you first, since it changes a demand rule.
+- T-3857 [P4] {L:demand-ideas} Sandbox demand scaling and border damping controls
+  - Context: Your TODO.md, 11-20, from player suggestions: "sandbox demand scaling, sandbox border damping controls". Design for you first.
+- T-3861 [P4] {L:demand-ideas} Service suspended in severe weather
+  - Context: Your TODO.md, 11-20, from player suggestions: "mechanics like “service suspended during random severe weather”? in outback or snowy places lol". Design for you first.
 - T-3077 [P2] {L:world-rebuild} {after:next data batch} Inter-city trips on the world map hover
   - Context: Your 2026-11-10 note: "we should like precompute and save this so that it displays normally". The hover has no figure before a solve.
   - Goal: Each city's inter-city trips are precomputed into registry.json (interTrips) by pipeline/zones.py.
@@ -676,7 +692,7 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: A train can lose minutes behind slower ones, but it shows only in the line panel, never on the map or trouble list. You 2026-11-16: this goes in the detailed crowding panel when it is built.
   - Goal: The loss shows in the detailed crowding panel.
 - T-3456 [P3] {L:map-look} Detailed crowding panel
-  - Context: You 2026-11-16: clicking a crowding bubble opens a panel showing in detail how crowded the line is per segment. T-2198 (where faster trains lose time) goes in it too.
+  - Context: You 2026-11-16: clicking a crowding bubble opens a panel showing in detail how crowded the line is per segment. T-2198 (where faster trains lose time) goes in it too. Your TODO.md, 11-20: "more detailed load panel that opens when u click on a crowding bubble / show weekends and such, have intervals and stations be hoverable to show which intervals are crowded".
   - Other: notes/T-2198.md
 - T-2199 [P3] {L:trains-drawn} Trains drawn late at a full merge
   - Context: At 100% in the T-2185 merge test, 9-15 trains were drawn up to 5-10 min late, all on one line. At 92% the worst was 2 min.
@@ -703,9 +719,6 @@ Passing tracks (T-2228, archived; built as T-2231 to T-2233; notes/T-2228.md):
   - Context: Design done 11-20 (notes/T-2216.md, 4 stages, about 7-10 h). You, 11-20: "yeah we can do 3x, A" (everyone rides up to 3x an imagined drive, nobody from 4x), and yes to stage 2 (island zones inside a mainland pack: "people will find that fun"). Market zone pairs on two landmasses are "fixed, never solved" today (1.49M longer trips, 662,000 commutes a day), and the commutes are quietly counted as car; once solved they show "No route" until a ferry or line joins them. Stage 0 (wrong landmasses) is T-3838.
   - Goal: They solve with rail as the only ground mode, with a point past which trips don't go by transit at all, so fares can't be raised without limit (your pad, 2026-11-18: "we should probably have a certain point at which transit is just not taken even if its the only option"); closes T-1396.
   - Other: Own worktree (intercity). notes/T-2216.md
-- T-3847 [P2] {L:small-fixes} New players start on the legacy time buttons (taking, 2026-11-20, agent legacytime)
-  - Context: You, 11-20: "for the new time controls... lets actually maybe make it so that the default for new players is the legacy time? i tink its more intuitive for a new plyer." T-3765 added the setting (Settings > Map, off by default, remembered per browser).
-  - Goal: A browser that has never played gets the legacy buttons; anyone who already chose keeps their choice.
 - T-3845 [P2] {L:buses} Ferry route drawn port, waypoints, then port (taking, 2026-11-20, agent ferryorder)
   - Context: You, 11-20: "the issue some people were having is that they cant even place two points. cuz the pathfinding fails cuz its too complicated / long. so i think the way it should work is like, instead of putting port A then port B then shift click to put waypoint between A and B, we should put port A then shift click to put waypoint then click to put port B. and in the tooltip we should say place port or if we're hovering over water 'shift click to place waypoint'."
   - Other: notes/T-3809.md
@@ -740,9 +753,13 @@ Anita's TODO.md short term, filed 2026-10-27 (night).
   - Other: notes/T-1760.md
 - T-1444 [P3] {L:real-networks} Real network as a rival game mode
   - Context: You want a mode where a city's real network runs as a rival to win riders from. After T-1305.
+- T-3862 [P4] {L:real-networks} Make a custom fake city
+  - Context: Your TODO.md, 11-20, from player suggestions: "make custom fake city". Design for you first.
 Anita's playtest of buses along roads, 2026-10-26 (night), Shenzhen, Bus 13.
 - T-1447 [P3] {L:track-drawing} Copy and paste blueprints between saves
   - Context: You said yes.
+- T-3860 [P4] {L:track-drawing} Building demolition cost
+  - Context: Your TODO.md, 11-20, from player suggestions: "building demolition cost". Design for you first.
 Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3398 [P3] {L:translations} Italian, Polish and Arabic
   - Context: You asked 2026-11-16 to replace the list: Indonesian first, then Italian, Polish, Arabic (interface mirrors), maybe Malay, Dutch, Thai. It replaces T-2851. Indonesian was added 2026-11-17 (no native read yet; "halte" for bus stops and "Pendapatan tarif" for fare income are open wording calls).
@@ -751,12 +768,22 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3413 [P3] {L:community} Save lineage, original author and copies
   - Context: Your TODO 2026-11-15: on metrodreamin people "steal" maps. You want saves to record the original author and who copied it.
   - Goal: A design for you first; then a save traces back to its original.
+- T-3850 [P3] {L:community} Friend requests and messages
+  - Context: Your TODO.md, 11-20: "community: friend request and message people?" Design for you first.
+- T-3851 [P3] {L:community} Light view of another player's map
+  - Context: Your TODO.md, 11-20: "view only for someone elses map (dont load demand, should keep it lightweight, only see where the tracks and statiosnn are i guess, and maybe some general high level stats that are saved like per city trip count? idk) with option to full load from a view only". View (T-3257) plays the whole network today.
+- T-3852 [P3] {L:community} Leaderboard map view
+  - Context: Your TODO.md, 11-20: "leaderboard map view". Design for you first.
+- T-3864 [P4] {L:community} Multiplayer hosting and compute
+  - Context: Your TODO.md, 11-20: "for multiplayer, fredericrohrer said he'd sponsor compute / someone suggested private server hosted by people / someone suggested web socketsss". Design for you first.
 - T-3417 [P3] {L:map-look} Pixel-art city map style
   - Context: Your TODO 2026-11-15: a pixel-art style like the city maps going around Twitter. An idea.
   - Goal: A mock for you first.
 - T-3418 [P3] {L:map-look} Isochrone map mode
   - Context: Your TODO 2026-11-15: a map mode showing travel time from a point to everywhere.
   - Goal: Design first, then the mode.
+- T-3858 [P4] {L:map-look} Station logo or paint
+  - Context: Your TODO.md, 11-20, from player suggestions: "station logo?? paint it?" Design for you first.
 
 ## Track and trains
 - T-3691 [P3] {L:track-kinds} {waits:Anita} Track levels -5 to +5
@@ -769,6 +796,8 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3694 [P3] {L:stops} One panel for station improvements
   - Context: Your old TODO: "make line improvements into a general interface for quick adding or removing station improvements at each station". You, 2026-11-18: "yes we should do one interface for station improvement".
   - Goal: A design to you first, then one place to add or remove improvements at each station of a line.
+- T-3865 [P4] {L:stops} Limited express
+  - Context: Your TODO.md, 11-20, from player suggestions: "what is limited express ? people occasionally request it. in japanese sense. i think we already support it?" Find out whether a skip-stop pattern with a fare multiple already covers it, and say so in the help or wiki; otherwise design for you first.
 - T-3335 [P3] {L:quad-track} {after:T-3444} Line panel on both quad pairs
   - Context: Several parts of a line's panel still show only its own pair: timetable, held trains, delays, riders, boardings.
   - Goal: Each part folds in the twin line, as `foldTwins` does.
@@ -800,6 +829,8 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Players say buses are weak and metros and trams too strong. The bus's weak spot is its boarding cost; street tram acts like light rail.
   - Goal: A design for BRT or busways and slower street trams, for you first.
   - Other: Folds in T-1467, a bus lane upgrade. 1-2 days for busways.
+- T-3856 [P3] {L:buses} BRT upgrade and bus boarding to 3 minutes
+  - Context: Your TODO.md, 11-20: "people keep requesting brt. im wondering if the way we curerntlly have buses is approximately brt speeds or non brt speeds. if non brt perhaps we can juts offer a paid upgrade to make them faster / more brt like." Sub-points: "drop boarding penalty to 3 minutes overall (with or without brt)"; "slow down bus speed slightly to compensate, in a way that we expect wont make it significantly worse for like ~95% of peoples cases"; "add brt upgrade with lower stop time, slightly faster, allow upgrade to articulated" (cost "non neglible ratio" to tram construction); "non BRT buses should probably still have a niche, we should test to see if they are ever better (more profitable)"; "reconsider bus construction cost? i feel like non BRT bus construction cost should be like almost free relative to other modes". Boarding went 6 to 4 in T-3522. Design for you first; goes with T-3378.
 - T-3377 [P3] {L:open-source} Mod support beyond forks
   - Context: Level 1 (data open to any site) is done. Levels 2-4 are data-file mods, a JavaScript mod API, then city packs.
   - Goal: A design for you first that works for modders writing code by hand and with a coding assistant alike (you, 2026-11-18; player-facing text never says it is aimed at vibe-coders): a small stable mod API (hooks for prices, speeds, buttons, reading the network), a how-to page with two or three tiny example mods, notes in the open-source repo an assistant can read too, and loading a mod from a file or link; a loaded mod marks the save modded (T-3707).
