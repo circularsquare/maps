@@ -235,7 +235,8 @@ fn short_everyday_trips_walk_what_rail_leaves() {
     for c in 0..2 {
         let total = modes[c]+modes[3+c]+modes[6+c];
         let pw = a.no_rail(0, c, 2, 400.0-city.x[c]);
-        assert!(pw>0.9, "{pw}");
+        // (most of a 300-400 m trip walks, with no head start too: T-3888)
+        assert!(pw>0.8, "{pw}");
         assert!(modes[c]>0.1*total, "rail takes some of them");
         assert!((modes[3+c]-(total-modes[c])*pw).abs()<1e-4*total, "cell {c}: walk {} rail {} total {total} pw {pw}", modes[3+c], modes[c]);
         assert!(modes[6+c]>=0.0);
@@ -959,6 +960,8 @@ fn ferry_fans_change_to_and_from_the_ferry() {
     let (h, b) = fixture_of(8000.0, 1000.0);
     let solve = |ferry: &[u8]| {
         let mut a = EverydayApi::new(&h, &b).unwrap();
+        // (a ferry pays no train's way in and out, as the app says before the network, T-3888)
+        a.set_stairs(&[0, 1, 0], &[]);
         // a train to a port 1.5 km out, a ferry 5 km on (20 minutes), a train on from its other port
         let line = |t: f32| [t, 0.0, t, 0.0, t, 0.0, 0.0, t, 0.0, t, 0.0, t];
         let times: Vec<f32> = [line(120.0), line(1200.0), line(120.0)].concat();
@@ -978,7 +981,8 @@ fn ferry_fans_change_to_and_from_the_ferry() {
         // the ferry's route nodes are 4..8; errands have fans too (T-3892)
         assert!(f[4] + f[6] >= a[4] + a[6], "period {q}: errands on the ferry");
         let ferry = |v: &[f32]| v[3 * nr + 4] + v[3 * nr + 6];
-        rode |= ferry(&f) > ferry(&a) * 1.05;
+        // (4.6% here: the walk tier, a tenth, rides on ordinary costs, T-3888)
+        rode |= ferry(&f) > ferry(&a) * 1.04;
         legs |= f[3 * nr] > a[3 * nr] && f[3 * nr + 8] > a[3 * nr + 8];
         for a in [&plain, &fans] {
             let entries: f32 = a.entries(q).iter().sum();

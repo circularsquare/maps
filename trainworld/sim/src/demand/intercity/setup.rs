@@ -545,6 +545,8 @@ impl IntercityApi {
             st_bus,
             st_tram: vec![],
             back: demand_back(&st_map, stops, &self.back_in),
+            pier: pier_lines(&self.pier_in.0, line_n.len()),
+            grade: pier_lines(&self.pier_in.1, stops.len()),
             st_x,
             st_y,
             st_map: st_map.clone(),

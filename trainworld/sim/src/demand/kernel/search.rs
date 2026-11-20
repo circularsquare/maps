@@ -26,6 +26,12 @@ pub struct Graph {
     /// Perceived minutes added to boarding on a bus line (T-1576): `BUS_BOARD_MIN` on every route
     /// node of a line with a bus-only stop, 0 elsewhere. Part of `rn_left`, but not real minutes.
     pub rn_bus: Vec<f32>,
+    /// T-3888: perceived minutes a trip pays where its first boarding is at route node r
+    /// (`Params::train_in_min` on a train or tram whose platform there is below or above ground,
+    /// else 0), and where its last ride leaves at r (`train_out_min`); both empty where nothing pays. In the station pair's cost after the
+    /// search (`trip_ends`), so route choice between lines does not see them.
+    pub rn_in: Vec<f32>,
+    pub rn_out: Vec<f32>,
     /// Each route node's platform less its station's position, metres (`Network::stop_x`): a change
     /// of trains walks from the platform it arrives at to the one it leaves from (T-717).
     pub rn_dx: Vec<f32>,
@@ -231,6 +237,8 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
     // route nodes where a circle's train rides on round to the first stop (T-798): nobody boards
     // there, since the first stop's own route node has the same trains
     let mut rn_wrap: Vec<bool> = vec![];
+    // T-3888: each route node's stop (an index into `line_stops`), for its stairs
+    let mut rn_stop: Vec<u32> = vec![];
     for l in 0..net.n_lines() {
         let (a, b) = (net.line_off[l] as usize, net.line_off[l + 1] as usize);
         let wrap = net.line_wrap.get(l).copied().unwrap_or(false);
@@ -267,6 +275,7 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
                 rn_ride.push(ride);
                 rn_next.push(if i + 1 < len { (base + i + 1) as u32 } else if wrap { base as u32 } else { NONE });
                 rn_wrap.push(wrap && i + 1 == len);
+                rn_stop.push(k as u32);
             }
         }
     }
@@ -360,7 +369,18 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
     let rn_span: Vec<f32> = (0..nr).map(|r| { let f = phi(r); if f > 0.0 && f < 1.0 { -f.ln() / p.beta } else { 0.0 } }).collect();
     let bus_line: Vec<bool> = (0..net.n_lines()).map(|l| net.bus_line(l)).collect();
     let rn_bus: Vec<f32> = rn_line.iter().map(|&l| if bus_line[l as usize] { BUS_BOARD_MIN } else { 0.0 }).collect();
+    // T-3888: the stairs, at a train's or tram's stop below or above ground; only where any stop pays
+    let stairs: Vec<bool> = (0..net.n_lines()).map(|l| net.stairs_line(l)).collect();
+    let pays: Vec<bool> = (0..nr).map(|r| stairs[rn_line[r] as usize] && !net.at_grade(rn_stop[r] as usize)).collect();
+    let (rn_in, rn_out) = if (p.train_in_min > 0.0 || p.train_out_min > 0.0) && pays.iter().any(|&t| t) {
+        let by = |m: f32| pays.iter().map(|&t| if t { m } else { 0.0 }).collect::<Vec<f32>>();
+        (by(p.train_in_min), by(p.train_out_min))
+    } else {
+        (vec![], vec![])
+    };
     Graph {
+        rn_in,
+        rn_out,
         rn_left: rn_span.iter().zip(&rn_bus).map(|(a, b)| a + b).collect(),
         rn_span,
         rn_bus,
@@ -823,6 +843,60 @@ pub(super) fn trip_base_mul_in<I: Id>(g: &Graph, st: Strategy, dst: usize, next:
     }
 }
 
+/// T-3888: each station's way in and out towards `dst` under strategy `st`, into `out` (by station):
+/// `Graph::rn_in` of its first boarding and `rn_out` of its last ride, each the mean over the
+/// departures the strategy accepts by frequency as the riders split (`trip_km`). `last`: scratch,
+/// per node the last ride's `rn_out` from it on. Needs `g.rn_in`.
+pub fn trip_ends(g: &Graph, st: Strategy, dst: usize, out: &mut Vec<f32>, last: &mut Vec<f32>, dep: &mut Vec<(u32, f32)>) {
+    match (st.next, st.order) {
+        (NodeIds::Short(next), NodeIds::Short(order)) => trip_ends_in(g, st, dst, next, order, out, last, dep),
+        (NodeIds::Long(next), NodeIds::Long(order)) => trip_ends_in(g, st, dst, next, order, out, last, dep),
+        _ => unreachable!("a destination's ids in two widths"),
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+pub(super) fn trip_ends_in<I: Id>(g: &Graph, st: Strategy, dst: usize, next: &[I], order: &[I], out: &mut Vec<f32>, last: &mut Vec<f32>, dep: &mut Vec<(u32, f32)>) {
+    let (s, n) = (g.n_st, g.n);
+    let end = n + st.change.len();
+    last.clear();
+    last.resize(end, 0.0);
+    out.clear();
+    out.resize(s, 0.0);
+    let on_train = |v: usize| (s..n).contains(&next[v].ix());
+    for &id in order {
+        let id = id.ix();
+        if id == dst {
+            continue;
+        }
+        if id < s || id >= n {
+            departures(g, st.board, st.change, id, dep);
+            let (mut f, mut w, mut wi) = (0f32, 0f32, 0f32);
+            for &(e, a) in dep.iter() {
+                let r = g.adj_to[e as usize] as usize - s;
+                // a boarding rides a stop first (T-1055)
+                let k = if on_train(s + r) { last[s + r] } else { last[g.rn_next[r] as usize] };
+                f += a;
+                w += a * k;
+                wi += a * g.rn_in[r];
+            }
+            if f > 0.0 {
+                last[id] = w / f;
+                if id < s {
+                    out[id] = wi / f + w / f;
+                }
+            }
+        } else {
+            let nx = next[id].ix();
+            if nx >= end {
+                continue;
+            }
+            // off the train at `dst`, or walking there after it: this is the last ride
+            last[id] = if on_train(id) { last[nx] } else if nx == dst { g.rn_out[id - s] } else { last[nx] };
+        }
+    }
+}
+
 /// T-3578: what the base multiplier adds to a trip's fare at its start station: the base times the
 /// multiplier less 1, perceived minutes (negative below 1).
 #[inline]
@@ -1025,6 +1099,9 @@ pub struct DestSearch<'a> {
     pub(super) km: Vec<f32>,
     pub(super) kmw: Vec<f32>,
     pub(super) mb: Vec<f32>,
+    /// T-3888: `trip_ends`' result and scratch
+    pub(super) ends: Vec<f32>,
+    pub(super) ends_last: Vec<f32>,
     pub(super) dep: Vec<(u32, f32)>,
     pub(super) col: Vec<f32>,
     pub(super) ent: Vec<f32>,
@@ -1044,6 +1121,8 @@ impl<'a> DestSearch<'a> {
             km: vec![],
             kmw: vec![],
             mb: vec![],
+            ends: vec![],
+            ends_last: vec![],
             dep: vec![],
             col: vec![],
             ent: vec![],
@@ -1146,6 +1225,11 @@ impl<'a> DestSearch<'a> {
             if based {
                 trip_base_mul(q.g, d.view(), dst, &mut self.mb, &mut self.dep);
             }
+            // T-3888: a train's way in and out
+            let ends = !q.g.rn_in.is_empty();
+            if ends {
+                trip_ends(q.g, d.view(), dst, &mut self.ends, &mut self.ends_last, &mut self.dep);
+            }
             q.entry_costs(dst);
             // each station's route cost, and its cost as an inter-city trip's start where lower
             let (col, ent) = (&mut self.col, &mut self.ent);
@@ -1161,6 +1245,7 @@ impl<'a> DestSearch<'a> {
                 let x = if zoned { self.zw.extra_less_free(src, q.g.xfer_fare) } else if bent { curve.extra(self.km[src]) * if weighed { fare_mul_of(self.km[src], self.kmw[src]) } else { 1.0 } } else { 0.0 };
                 let change = q.p.change_at(q.g.change_f(src));
                 let b = if based { base_extra(q.g, self.mb[src]) } else { 0.0 };
+                let b = if ends { b + self.ends[src] } else { b };
                 col.push(q.dist[src] - change + x + b);
                 ent.push(if q.entry[src] < q.dist[src] - 1e-4 { q.entry[src] - change + x + b } else { f32::INFINITY });
             }
@@ -2117,11 +2202,13 @@ pub(super) struct SkimKey {
     pub(super) base_min: f32,
     pub(super) st_walk_to: Vec<u32>,
     pub(super) st_walk_min: Vec<f32>,
+    pub(super) rn_in: Vec<f32>,
+    pub(super) rn_out: Vec<f32>,
 }
 
 impl SkimKey {
     pub(super) fn of(g: &Graph, p: &Params) -> SkimKey {
-        SkimKey { n_st: g.n_st, n: g.n, adj_off: g.adj_off.clone(), adj_to: g.adj_to.clone(), adj_cost: g.adj_cost.clone(), rn_tph: g.rn_tph.clone(), rn_left: g.rn_left.clone(), rn_dx: g.rn_dx.clone(), rn_dy: g.rn_dy.clone(), transfer_min: p.change_min(), xfer_fare: g.xfer_fare, st_wait: g.st_wait.clone(), st_bld: g.st_bld.clone(), fare_curve: g.fare_curve.clone(), rn_km: g.rn_km.clone(), rn_kmw: g.rn_kmw.clone(), rn_base_mul: g.rn_base_mul.clone(), base_min: g.base_min, st_walk_to: g.st_walk_to.clone(), st_walk_min: g.st_walk_min.clone() }
+        SkimKey { n_st: g.n_st, n: g.n, adj_off: g.adj_off.clone(), adj_to: g.adj_to.clone(), adj_cost: g.adj_cost.clone(), rn_tph: g.rn_tph.clone(), rn_left: g.rn_left.clone(), rn_dx: g.rn_dx.clone(), rn_dy: g.rn_dy.clone(), transfer_min: p.change_min(), xfer_fare: g.xfer_fare, st_wait: g.st_wait.clone(), st_bld: g.st_bld.clone(), fare_curve: g.fare_curve.clone(), rn_km: g.rn_km.clone(), rn_kmw: g.rn_kmw.clone(), rn_base_mul: g.rn_base_mul.clone(), base_min: g.base_min, st_walk_to: g.st_walk_to.clone(), st_walk_min: g.st_walk_min.clone(), rn_in: g.rn_in.clone(), rn_out: g.rn_out.clone() }
     }
     pub(super) fn same(&self, g: &Graph, p: &Params) -> bool {
         self.n_st == g.n_st
@@ -2144,6 +2231,8 @@ impl SkimKey {
             && self.adj_cost == g.adj_cost
             && self.rn_tph == g.rn_tph
             && self.rn_left == g.rn_left
+            && self.rn_in == g.rn_in
+            && self.rn_out == g.rn_out
     }
 }
 

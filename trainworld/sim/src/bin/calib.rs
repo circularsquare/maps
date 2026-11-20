@@ -15,6 +15,8 @@
 //! `--areas`: one value per pack cell, the home area (u8, 255 none; or a .u16 file, 65535 none).
 //! `--no-cap`: the loads as the rounds leave them, not held to the trains' room (T-1070).
 //! `--attractions`: the attractions purpose (T-263) from the world file; without it, none.
+//! `--levels`: each station's level (T-3888, a JSON list in the network's order; 0 at grade): only
+//! stops below or above ground pay the stairs; without it, every stop does.
 //!
 //! Output: per demand station the day's entries (first boardings from the street) by layer and
 //! in 6-10; per line the day's boardings and changes between two trains of the same line; per
@@ -106,6 +108,16 @@ fn main() {
     let real = RealNet::from_json(&net);
     let hop_km = real.hop_km();
     let RealNet { st_xy, line_n, stops, times, tph, cars } = real;
+    // T-3888: `--levels`: a JSON list of each network station's level (0 at grade), for the stairs
+    if let Some(p) = get("--levels") {
+        let lv: Vec<i64> = serde_json::from_str(&std::fs::read_to_string(&p).unwrap()).unwrap();
+        assert_eq!(lv.len(), st_xy.len() / 2, "--levels: one per station");
+        let grade: Vec<u8> = stops.iter().map(|&s| (lv[s as usize] == 0) as u8).collect();
+        api.set_stairs(&[], &grade);
+        if let Some(e) = ev.as_mut() {
+            e.set_stairs(&[], &grade);
+        }
+    }
     let t1 = now_ms();
     api.set_network(&st_xy, &line_n, &stops, &times, &tph, &cars).unwrap();
     if let Some(e) = ev.as_mut() {

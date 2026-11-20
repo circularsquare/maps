@@ -6,6 +6,8 @@
 
 A boarding costs half the gap between trains, times the station's wait weight, plus the change cost when it is a change.
 
+**Stairs.** At a station below or above ground, getting down to your first train costs 2 minutes and getting up from your last one 2, trams included. A platform at street level costs nothing, and so do buses and ferries. A change pays its own bother instead.
+
 **Changing trains** costs 2 minutes for the bother, plus the walk from one platform to the other, plus the wait for the next train. Inside a [station building](station-buildings.md) the bother is 50% of that. The walk counts extra, as in [perceived minutes](perceived-minutes.md).
 
 Stations within 300 m of each other are close enough to change on foot. A passage you build works over a longer distance, along a straight line at 2 m/s. A trip can also start or end with that walk, with no bother and no transfer fare, so the way home is the way out reversed.
@@ -17,4 +19,4 @@ A line that bends back close to itself can be changed onto across the bend. Peop
 If the train that arrives is full, the wait gets longer: see [full trains](full-trains.md).
 
 Exact rule: `docs/demand-kernel.md` "Access and station-to-station times". A longer trip between cities is planned, so its first wait is shorter, at most 30 minutes, and it has no extra for long gaps. Commutes and outings between cities wait as local trips do.
-In the code: **main** `sim/src/demand/kernel/search.rs` `board_cost`, also `planned_board_cost`, `change_f`, `walk_ban` `sim/src/demand/kernel/subzones.rs` `wait_factor` `sim/src/track/upgrades.rs` `WAITING_ROOM_WAIT`, `PASSAGE_MPS`
+In the code: **main** `sim/src/demand/kernel/search.rs` `board_cost`, also `planned_board_cost`, `change_f`, `trip_ends`, `walk_ban` `sim/src/demand/kernel/subzones.rs` `wait_factor` `sim/src/track/upgrades.rs` `WAITING_ROOM_WAIT`, `PASSAGE_MPS`

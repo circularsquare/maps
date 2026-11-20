@@ -2481,6 +2481,7 @@
   "trip.walkBetween": "walk between stations",
   "trip.changes": "changes",
   "trip.change": "change",
+  "trip.stairs": "stairs",
   "trip.fare": "fare",
   "trip.transferFare": "transfer fare",
   "tripGraph.all": "All",

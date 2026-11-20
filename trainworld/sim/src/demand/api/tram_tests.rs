@@ -83,6 +83,9 @@ fn a_tram_carries_more_than_the_bus_it_replaces() {
         if tram {
             api.set_tram_lines(&[0, 0, 1]);
         }
+        // (T-3888: its stops on the street, at grade, as a bus's; the metro's below)
+        let grade: Vec<u8> = (0..stops.len()).map(|k| (k >= stops.len() - 8) as u8).collect();
+        api.set_stairs(&[], &grade);
         api.set_network(&xy, &counts, &stops, &times, &tph, &c).unwrap();
         assert!(api.solve(0));
         // the third line's route nodes are the last 16

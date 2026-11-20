@@ -132,6 +132,9 @@ Singapore to Batam, Tenerife to Gran Canaria).
 - Ride: 1 a minute, stretched once the train is 70% full: at 100% (160 a car) a minute counts 3,
   at 120% 5.4, at 150% (240 a car, as packed as a train gets) 10.8. Below 70% nobody minds the
   crowd.
+- Stairs: 2 minutes getting down to the first train at a station below or above ground, and 2
+  getting up from the last one, for a train or a tram (Anita, 2026-11-20). Nothing at a platform at
+  street level, on a bus or ferry, or at a change (which has its own 2 below).
 - Changing trains: a fixed 2 minutes, plus the walk from the platform you arrive at to the one you
   leave from (centre to centre, at an easy walking pace, each minute counted 1.39), plus the wait
   for the next train. Platforms 80 m apart add 2 minutes; across one platform, nothing. Between
@@ -256,15 +259,20 @@ Singapore to Batam, Tenerife to Gran Canaria).
 
 - 13 real minutes a km, every minute counted 1.5. So 1 km costs 19.5 minutes, 2 km 39, 3 km 58.5.
   Walks over 10 km are not offered.
-- Against the car, a walk gets a 10 minute head start: the car side leaves out getting to the car
-  and walking from the space, and this stands for them. It is one number for commutes and everyday
-  trips and for every country.
+- No head start: a walk, the train and the car meet on their minutes alone (Anita took the 10
+  minute head start away, 2026-11-20). The same for commutes and everyday trips and in every
+  country.
 - Worked through: a 10 minute walk (0.77 km) against a 1 km drive in a dense district. The walk
   counts 15. The drive is 3.6 minutes at 16.5 km/h, counted 1.33, so 4.8, plus 7 to park, plus 6
-  for the $2.00, plus 0.4 for the $0.13 a km: 18.2. The walk is 10 ahead, so the difference is
-  18.2 - 15 + 10 = 13 minutes, and 13 minutes is 79%. About 4 in 5 people walk, and 1 in 5 drive.
-  At 0.5 km about 84% walk, at 1 km 74%, at 2 km 44%, at 3 km 18%. (With no train, free parking.)
-  A train that is good for the trip takes its share from both.
+  for the $2.00, plus 0.4 for the $0.13 a km: 18.2. The difference is 18.2 - 15 = 3.2 minutes, and
+  3.2 minutes is 58%: a bit more than half walk. At 0.5 km about 67% walk, at 1 km 52%, at 2 km
+  23%, at 3 km 8%. (With no train, free parking.) A train that is good for the trip takes its share
+  from both.
+- A tenth of people won't walk the whole way past 800 m (the median walk; about 1 in 20 can't walk
+  far, the rest won't). On those trips they choose only between the train or bus and the car, and
+  the "no train slower than walking" rule doesn't apply to them, so a bus that is slower than
+  walking still gets a few of them: in a dense district with a bus every 10 minutes, about 1 in 15
+  trips of 1 km goes by bus, where nobody did before.
 - A commute's distance for walking is between actual homes and jobs (six of each per 2 km zone),
   not between zone centres, so a 1 km commute across a zone line walks like a 1 km one.
 

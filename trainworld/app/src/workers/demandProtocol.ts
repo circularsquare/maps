@@ -5,7 +5,7 @@ import type { FareArea } from "../game/fareCurve";
 import { PERIODS } from "../game/periods";
 
 /** `DemandApi.trip`'s answer layout (sim/src/demand/trip.rs `HEAD`, `PAIR_LEN`, `LEG_LEN`). */
-export const TRIP_LAYOUT = { HEAD: 48, PAIR_LEN: 20, LEG_LEN: 15 } as const;
+export const TRIP_LAYOUT = { HEAD: 48, PAIR_LEN: 20, LEG_LEN: 16 } as const;
 /** `IntercityApi::market_trip`'s answer: `MT_HEAD` and `MT_PAIR_LEN` in market_trip.rs. */
 export const MARKET_TRIP_LAYOUT = { HEAD: 25, PAIR_LEN: 7 } as const;
 // Messages between the main thread and the demand workers (T-026, T-021; notes/T-026.md).
@@ -88,6 +88,10 @@ export interface DemandNetwork {
   ferry?: Uint8Array;
   /** T-2926 (`DemandApi.set_tram_lines`): 1 for each tram line, 0 for the rest; absent with none */
   tram?: Uint8Array;
+  /** T-3888 (`set_stairs`): 1 for each ferry line, whose trips pay no stairs; absent with none */
+  pierLines?: Uint8Array;
+  /** T-3888 (`set_stairs`): per stop (as `stops`), 1 where its platform is at grade and pays no stairs */
+  gradeStops?: Uint8Array;
 }
 
 /** T-377: a zone's part of the world market (`data/packs/<id>.market.json`). */

@@ -322,7 +322,8 @@ export function reachView(n: DemandNetwork, c: Cluster, reach: Uint8Array): PopV
     cars[i] = n.cars[l];
     o += p;
   });
-  const net: DemandNetwork = { frame: n.frame, stXY, complex, ...upsOf(n, stations, stLocal), lineN, stops, ...backOf(back, stops), times, tph, cars, fare: n.fare, hopKm, ...fareWOf(n, nodeGlobal), ...fzLinesOf(n, nodeGlobal, hopKm), span: spanOf(n, nodeGlobal), ...catchesOf(n, spans.flatMap(([l, a, b]) => Array.from({ length: b - a + 1 }, (_, k) => lineOff[l] + a + k))), ...ferryOf(n, spans.map(([l]) => l)) };
+  const at = spans.flatMap(([l, a, b]) => Array.from({ length: b - a + 1 }, (_, k) => lineOff[l] + a + k)), ls = spans.map(([l]) => l);
+  const net: DemandNetwork = { frame: n.frame, stXY, complex, ...upsOf(n, stations, stLocal), lineN, stops, ...backOf(back, stops), times, tph, cars, fare: n.fare, hopKm, ...fareWOf(n, nodeGlobal), ...fzLinesOf(n, nodeGlobal, hopKm), span: spanOf(n, nodeGlobal), ...catchesOf(n, at), ...ferryOf(n, ls), ...stairsOf(n, ls, at) };
   return { net, stLocal, nodeGlobal, pads: Uint32Array.from(pads) };
 }
 
@@ -377,6 +378,15 @@ function ferryOf(n: DemandNetwork, lines: number[]): { ferry?: Uint8Array } {
   return { ferry: Uint8Array.from(lines, (l) => n.ferry![l]) };
 }
 
+/** T-3888: the whole network's stairs flags for `lines` and the stops `at` (whole-network stop indices, in the
+ * view's stop order), each only where any is set (`set_stairs` reads none as every stop paying) */
+function stairsOf(n: DemandNetwork, lines: number[], at: number[]): { pierLines?: Uint8Array; gradeStops?: Uint8Array } {
+  const out: { pierLines?: Uint8Array; gradeStops?: Uint8Array } = {};
+  if (n.pierLines && lines.some((l) => n.pierLines![l])) out.pierLines = Uint8Array.from(lines, (l) => n.pierLines![l]);
+  if (n.gradeStops && at.some((k) => n.gradeStops![k])) out.gradeStops = Uint8Array.from(at, (k) => n.gradeStops![k]);
+  return out;
+}
+
 /** T-3758: the whole network's distance-fare lines and passed stations for the route nodes `nodeGlobal` names
  * (`hopKm` theirs: a route node with no hop here passes nothing), where any. */
 function fzLinesOf(n: DemandNetwork, nodeGlobal: Uint32Array, hopKm: Float32Array): { fzDist?: Uint8Array; fzPassOff?: Uint32Array; fzPass?: Uint32Array } {
@@ -428,10 +438,11 @@ function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], ma
     o += m;
   });
   const span = spanOf(n, nodeGlobal);
-  const net: DemandNetwork = { frame: n.frame, stXY, complex, ...upsOf(n, stations, stLocal), lineN, stops, ...backOf(back, stops), times, tph, cars, fare: n.fare, hopKm, ...fareWOf(n, nodeGlobal), ...fzLinesOf(n, nodeGlobal, hopKm), span, ...catchesOf(n, lines.flatMap((l) => Array.from({ length: n.lineN[l] }, (_, k) => lineOff[l] + k))), ...ferryOf(n, lines) };
+  const at = lines.flatMap((l) => Array.from({ length: n.lineN[l] }, (_, k) => lineOff[l] + k));
+  const net: DemandNetwork = { frame: n.frame, stXY, complex, ...upsOf(n, stations, stLocal), lineN, stops, ...backOf(back, stops), times, tph, cars, fare: n.fare, hopKm, ...fareWOf(n, nodeGlobal), ...fzLinesOf(n, nodeGlobal, hopKm), span, ...catchesOf(n, at), ...ferryOf(n, lines), ...stairsOf(n, lines, at) };
   const head = `${cities.join(",")}|${market}|${marketKey}|${rounds}|${n.fare.base}|${n.fare.perKm}|${frameKey}${curveKnots(n.fare).join(",")}|${JSON.stringify(n.fare.scales ?? {})}${n.fare.byCity ? `|c${JSON.stringify(n.fare.cityScales ?? {})}` : ""}${transferFare(n.fare) ? `|x${transferFare(n.fare)}` : ""}${net.fz && n.fare.zones?.length ? `|z${JSON.stringify(n.fare.zones.map((a) => [a.id, chargedPrices(n.fare, a)]))}` : ""}`;
   // station upgrades and passages (T-1281) only where there are any, so other networks keep their signatures
-  const ups = [...(net.ups ? [net.ups] : []), ...(net.passages ? [net.passages] : []), ...(net.catchN ? [net.catchN, net.catchXY!] : []), ...(net.fareW ? [net.fareW] : []), ...(net.baseW ? [net.baseW] : []), ...(net.ferry ? [net.ferry] : []), ...(net.back ? [net.back] : []), ...(net.fz ? [net.fz] : []), ...(net.fzDist ? [net.fzDist] : []), ...(net.fzPass ? [net.fzPassOff!, net.fzPass] : [])];
+  const ups = [...(net.ups ? [net.ups] : []), ...(net.passages ? [net.passages] : []), ...(net.catchN ? [net.catchN, net.catchXY!] : []), ...(net.fareW ? [net.fareW] : []), ...(net.baseW ? [net.baseW] : []), ...(net.ferry ? [net.ferry] : []), ...(net.pierLines ? [net.pierLines] : []), ...(net.gradeStops ? [net.gradeStops] : []), ...(net.back ? [net.back] : []), ...(net.fz ? [net.fz] : []), ...(net.fzDist ? [net.fzDist] : []), ...(net.fzPass ? [net.fzPassOff!, net.fzPass] : [])];
   const sig = hashOf([head, stXY, complex, ...ups, lineN, stops, times, tph, cars, hopKm, span]);
   const shape = hashOf([head, stXY, complex, ...ups, lineN, stops, cars, hopKm]);
   // T-3542: each period's own run times and trains an hour

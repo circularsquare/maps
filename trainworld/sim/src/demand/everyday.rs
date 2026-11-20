@@ -1524,13 +1524,16 @@ impl EverydayApi {
                     }
                     let (a0, b0) = (a.start, b.start);
                     let keep = |ka: usize, kb: usize| kept_rows[ka - a0] >> (kb - b0) & 1 != 0;
-                    if sum < 1e-30 {
+                    // T-3888: the walk tier rides where the rule keeps no pair too
+                    let t = if apart || all_sum < 1e-30 { 0.0 } else { p.tier_at(cw) };
+                    let kept = sum >= 1e-30;
+                    if !kept && t == 0.0 {
                         continue;
                     }
                     // T-2196: the fans' sum, where a ferry is the fans' cheaper way between any
                     // of the pair's station pairs; elsewhere they choose as everyone does
                     let fan_share = FAN_SHARES[pair.kind() as usize];
-                    let mut fan = fans.filter(|fc| fan_share > 0.0 && a.clone().any(|ka| fc.row[sz.acc_st[ka] as usize]) && b.clone().any(|kb| fc.col[sz.acc_st[kb] as usize]));
+                    let mut fan = fans.filter(|fc| kept && fan_share > 0.0 && a.clone().any(|ka| fc.row[sz.acc_st[ka] as usize]) && b.clone().any(|kb| fc.col[sz.acc_st[kb] as usize]));
                     let mut sum_f = sum;
                     if let Some(fc) = fan {
                         // each station pair's exp of the fans' cost where it is theirs, for the
@@ -1564,7 +1567,8 @@ impl EverydayApi {
                     // T-3624: the purpose's weight on the car, before anything reads it
                     let cm = car_mul(pair.kind() as usize);
                     let (road, paid) = (road * cm, paid * cm);
-                    let rail = ma + mb + p.fare_min - fast_ln(sum) / th + off;
+                    let rail = if kept { ma + mb + p.fare_min - fast_ln(sum) / th + off } else { f32::INFINITY };
+                    let rail_all = if t > 0.0 { ma + mb + p.fare_min - fast_ln(all_sum) / th + off } else { rail };
                     let bt = p.mode_beta(road);
                     let uw = bt * (road - cw) + p.asc_walk();
                     let choice = |rail: f32| {
@@ -1572,10 +1576,12 @@ impl EverydayApi {
                             return (p.bound_share(rail, road, paid, free), p.bound_share(rail + FARE_D_MIN, road, paid, free));
                         }
                         let util = bt * (road - rail) + p.asc_rail;
-                        let pr = p.car_choice(util, uw, bt, paid, free, rail, road);
-                        let prd = p.car_choice(util - bt * FARE_D_MIN, uw, bt, paid, free, rail + FARE_D_MIN, road);
+                        let pr = p.tier_choice(t, kept, util, uw, bt, paid, free, rail, rail_all, road);
+                        let prd = p.tier_choice(t, kept, util - bt * FARE_D_MIN, uw, bt, paid, free, rail + FARE_D_MIN, rail_all + FARE_D_MIN, road);
                         (pr, prd)
                     };
+                    // T-3888: the walk tier's part of the rail share, loaded on every pair
+                    let pr_t = if t > 0.0 { t * p.ratio_mix(rail_all, road, paid, free) } else { 0.0 };
                     let (pr0, prd0) = choice(rail);
                     // the fans' rail share beside everyone else's
                     let fan_pr = fan.map(|_| choice(ma + mb + p.fare_min - fast_ln(sum_f) / th + off));
@@ -1600,8 +1606,22 @@ impl EverydayApi {
                         unr_lost[pair.kind() as usize] += (pair.trips * share * pr) as f64;
                     }
                     od_used = true;
+                    if pr_t > 0.0 {
+                        let trips = pair.trips * share * pr_t / all_sum;
+                        let mut c = pair_c.iter();
+                        for ka in a.clone() {
+                            let ia = sz.acc_st[ka] as usize;
+                            cols.rows[ia] = true;
+                            for kb in b.clone() {
+                                od[ia * s + sz.acc_st[kb] as usize] += trips * *c.next().unwrap();
+                            }
+                        }
+                    }
+                    if !kept {
+                        continue;
+                    }
                     let (Some(fc), Some((pf, _))) = (fan, fan_pr) else {
-                        let trips = pair.trips * share * pr / sum;
+                        let trips = pair.trips * share * (pr - pr_t) / sum;
                         for ka in a.clone() {
                             cols.rows[sz.acc_st[ka] as usize] = true;
                             for kb in b.clone() {
@@ -1617,8 +1637,8 @@ impl EverydayApi {
                     };
                     // everyone else's trips by the ordinary costs; the fans' by theirs, those
                     // riding a ferry as the rides to and from its ports, the ride itself apart
-                    let trips = pair.trips * share * (1.0 - fan_share) * pr0 / sum;
-                    let trips_f = pair.trips * share * fan_share * pf / sum_f;
+                    let trips = pair.trips * share * (1.0 - fan_share) * (pr0 - pr_t) / sum;
+                    let trips_f = pair.trips * share * fan_share * (pf - pr_t) / sum_f;
                     let np = fc.np();
                     let mut e = fan_e.iter();
                     for ka in a.clone() {
@@ -2081,6 +2101,10 @@ impl EverydayApi {
     /// `DemandApi::set_back_stops` (T-3348).
     pub fn set_back_stops(&mut self, back: &[u32]) {
         self.engine.set_back_stops(back);
+    }
+    /// `DemandApi::set_stairs` (T-3888).
+    pub fn set_stairs(&mut self, ferry_lines: &[u8], grade_stops: &[u8]) {
+        self.engine.set_stairs(ferry_lines, grade_stops);
     }
     pub fn set_network(
         &mut self,

@@ -67,6 +67,13 @@ pub struct Params {
     /// A fixed cost per change of train, perceived minutes (Anita, T-717): a change costs this, its
     /// wait and the walk between the two platforms.
     pub transfer_min: f32,
+    /// Anita, 2026-11-20 (T-3888): perceived minutes a trip pays where its first boarding is at a
+    /// platform below or above ground (`train_in_min`) and where its last ride leaves at one
+    /// (`train_out_min`): the stairs down to the platform and up again, a train's or a tram's. Never
+    /// at a change; buses, ferries and platforms at grade pay neither (`Graph::rn_in`). In the
+    /// station pair's cost (`DestSearch::run_by`), not in its real minutes (`Skims::walk`).
+    pub train_in_min: f32,
+    pub train_out_min: f32,
     /// The player's transfer fare (T-1801), perceived minutes, paid on each boarding after a
     /// trip's first; 0 unless set.
     pub xfer_fare: f32,
@@ -173,6 +180,12 @@ pub struct Params {
     /// Walks over `WALK_REACH_KM` are not offered.
     pub walk_trip_w: f32,
     pub walk_bonus_min: f32,
+    /// Anita, 2026-11-20 (T-3888, option A): a share `walk_tier` of every trip whose walk the whole
+    /// way costs more than `walk_tier_m` straight metres' (`walk_cost`, so round water counts)
+    /// never walks it: they choose between the network and the car alone (`ratio_share`), and the
+    /// walking rule refuses none of their station pairs (`Params::tier_at`, `tier_choice`).
+    pub walk_tier: f32,
+    pub walk_tier_m: f32,
     /// Commutes walk between cells, not zone centres (T-587): each zone's homes and its jobs are
     /// this many cells, at even steps of their weight, and a zone pair within `WALK_FINE_R`
     /// squares walks at the logsum (scale `beta`) of its cell pairs' walk costs
@@ -310,6 +323,9 @@ impl Default for Params {
             // T-371, T-372: 1.5 rather than the usual 2.0 (notes/T-371.md, T-372.md)
             w_walk: 1.5,
             transfer_min: 2.0,
+            // T-3888: Anita's 2 + 2 (2026-11-20)
+            train_in_min: 2.0,
+            train_out_min: 2.0,
             xfer_fare: 0.0,
             fare_min: 6.0,
             fare_w: super::api::FARE_MIN_PER_USD,
@@ -371,7 +387,12 @@ impl Default for Params {
             // T-558: the cost as Anita approved it; the constants hold New York's and London's
             // walking as it was (notes/T-558.md; commutes refitted for the cells' walks, T-587)
             walk_trip_w: 1.5,
-            walk_bonus_min: 10.0,
+            // T-3888: Anita removed the head start (2026-11-20; 10 before, T-636)
+            walk_bonus_min: 0.0,
+            // T-3888: game numbers, the median walk (NHTS) and about twice the share who can't
+            // walk far (notes/T-3888.md)
+            walk_tier: 0.1,
+            walk_tier_m: 800.0,
             walk_samples: 6,
             xfer_walk_m: 300.0,
             walk_rule: 1.0,
@@ -434,6 +455,8 @@ impl Params {
             // before `set_fares`, which reads it
             "fare_w" => self.fare_w = v,
             "transfer_min" => self.transfer_min = v,
+            "train_in_min" => self.train_in_min = v,
+            "train_out_min" => self.train_out_min = v,
             "crowd_alpha" => self.crowd_alpha = v,
             "xfer_walk_m" => self.xfer_walk_m = v,
             "walk_rule" => self.walk_rule = v,
@@ -441,6 +464,8 @@ impl Params {
             // the gravity holds the walk's costs: `DemandApi::refresh_walk` after these
             "walk_trip_w" => self.walk_trip_w = v,
             "walk_bonus_min" => self.walk_bonus_min = v,
+            "walk_tier" => self.walk_tier = v,
+            "walk_tier_m" => self.walk_tier_m = v,
             "walk_samples" => self.walk_samples = v as usize,
             "damp_min" => self.damp_min = v,
             "ratio_fade_lo" => self.ratio_fade_lo = v,
@@ -738,6 +763,41 @@ impl Params {
         let s1 = (1.0 - w1) * self.ratio_share(rail, road + paid);
         s0 + (1.0 - free) * (s1 - s0)
     }
+    /// T-3888: the walk cost past which a trip's `walk_tier` never walk it whole.
+    #[inline]
+    pub fn tier_cost(&self) -> f32 {
+        self.walk_cost().at(self.walk_tier_m * 0.001)
+    }
+    /// T-3888: the share of a trip's people who never walk it whole, its walk costing `cw` (0 where
+    /// no walk is offered).
+    #[inline]
+    pub fn tier_at(&self, cw: f32) -> f32 {
+        if cw < NO_WALK && cw > self.tier_cost() { self.walk_tier } else { 0.0 }
+    }
+    /// Rail's share of rail + car alone (`ratio_share`), drivers parking free and those paying
+    /// `paid` more mixed as in `car_choice`.
+    #[inline]
+    pub fn ratio_mix(&self, rail: f32, road: f32, paid: f32, free: f32) -> f32 {
+        let s0 = self.ratio_share(rail, road);
+        if paid < 1e-30 {
+            return s0;
+        }
+        let s1 = self.ratio_share(rail, road + paid);
+        s0 + (1.0 - free) * (s1 - s0)
+    }
+    /// T-3888: rail's share of all trips with the walk tier `t` (`tier_at`): `car_choice` for the
+    /// rest (rail at `rail` on the station pairs the walking rule keeps; `kept` false where it keeps
+    /// none) and `ratio_mix` for the tier (rail at `rail_all` on every pair). The same expressions as
+    /// `mode_choice`'s lanes.
+    #[inline]
+    #[allow(clippy::too_many_arguments)]
+    pub fn tier_choice(&self, t: f32, kept: bool, util: f32, uw: f32, beta: f32, paid: f32, free: f32, rail: f32, rail_all: f32, road: f32) -> f32 {
+        let main = if kept { self.car_choice(util, uw, beta, paid, free, rail, road) } else { 0.0 };
+        if t <= 0.0 {
+            return main;
+        }
+        (1.0 - t) * main + t * self.ratio_mix(rail_all, road, paid, free)
+    }
     /// Real minutes as the straight metres walking the whole way covers in them, the unit of the
     /// walking rule (`walk_rule`, `Skims::walk`).
     #[inline]
@@ -767,9 +827,14 @@ impl Params {
     }
     /// With no rail: walking's share against the car costing `road` perceived minutes (a driver
     /// who parks free; `paid` more for a space, `free` parking free), the walk `cw` (0 past
-    /// `WALK_REACH_KM`).
+    /// `WALK_REACH_KM`), less the walk tier (`tier_at`).
     #[inline]
     pub fn walk_no_rail(&self, road: f32, paid: f32, free: f32, cw: f32) -> f32 {
+        (1.0 - self.tier_at(cw)) * self.walk_no_rail_all(road, paid, free, cw)
+    }
+    /// `walk_no_rail` as if everyone walked (T-3888: before the walk tier).
+    #[inline]
+    pub fn walk_no_rail_all(&self, road: f32, paid: f32, free: f32, cw: f32) -> f32 {
         if cw >= NO_WALK {
             return 0.0;
         }

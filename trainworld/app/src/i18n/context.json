@@ -2478,6 +2478,7 @@
   "trip.walkBetween": "A cost term in the trip breakdown: walking from one station to another to change.",
   "trip.changes": "A cost term in the trip breakdown: the number of times the rider changes trains.",
   "trip.change": "A cost term in the trip breakdown: the effort of changing trains once.",
+  "trip.stairs": "A cost term in the trip breakdown: the minutes of getting down to a train's platform at the start and up from it at the end (not counted for buses, trams or ferries).",
   "trip.fare": "A cost term in the trip breakdown: the ticket price.",
   "trip.transferFare": "A cost term in the trip breakdown: the extra fare for changing.",
   "tripGraph.all": "Row label in the hover of the trip length graph: the sum over all modes.",

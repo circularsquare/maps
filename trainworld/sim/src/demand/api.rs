@@ -380,6 +380,15 @@ pub(crate) struct Service {
     /// `Network::back_stops` (`set_back_stops`, T-3348), demand stations; empty where every
     /// reverse stop is the listed stop's.
     pub(crate) back: Vec<u32>,
+    /// `Network::line_pier` and `Network::stop_grade` (`set_stairs`, T-3888).
+    pub(crate) pier: Vec<bool>,
+    pub(crate) grade: Vec<bool>,
+}
+
+/// T-3888: one flag per item (line or stop) from `set_stairs`' input, or none where it has another
+/// length or no item is flagged.
+pub(crate) fn pier_lines(flags: &[u8], n: usize) -> Vec<bool> {
+    if flags.len() == n && flags.iter().any(|&f| f != 0) { flags.iter().map(|&f| f != 0).collect() } else { vec![] }
 }
 
 /// `span` if it is one per period and route node of `stops` stops, else empty (T-842).
@@ -410,6 +419,8 @@ impl Service {
             && self.st_bus == o.st_bus
             && self.st_tram == o.st_tram
             && self.back == o.back
+            && self.pier == o.pier
+            && self.grade == o.grade
     }
     /// T-124: the periods (bit q) whose inputs are the same in `o`: the same layout, and the run
     /// times and trains an hour of the period. A period reads no other period's.
@@ -643,6 +654,8 @@ pub struct DemandApi {
     tram_in: Vec<u8>,
     /// The reverse runs' stops of the next `set_network` (`set_back_stops`, T-3348).
     back_in: Vec<u32>,
+    /// The ferry lines and the stops at grade of the next `set_network` (`set_stairs`, T-3888).
+    pier_in: (Vec<u8>, Vec<u8>),
     /// T-124: the periods (bit q) whose inputs the last `set_network` and `set_fares` left as they
     /// were, so their results were kept; and whether the layout was, so access was kept.
     pub(crate) same: u32,
@@ -681,7 +694,7 @@ impl DemandApi {
         if let Some(s) = &self.sz {
             mem::subzones(s, r, at);
         }
-        r.add(format!("{at}stations (want, od_st, od_at), fares, inputs"), vb(&self.want) + vb(&self.od_st) + vb(&self.od_at) + vb(&self.fare_km) + vb(&self.fare_mul) + vb(&self.base_mul) + vb(&self.fare_curve) + vb(&self.complex_in) + vb(&self.ups_in) + vb(&self.passages_in) + vb(&self.span_in) + vb(&self.bus_in.0) + vb(&self.bus_in.1) + vb(&self.tram_in) + vb(&self.back_in));
+        r.add(format!("{at}stations (want, od_st, od_at), fares, inputs"), vb(&self.want) + vb(&self.od_st) + vb(&self.od_at) + vb(&self.fare_km) + vb(&self.fare_mul) + vb(&self.base_mul) + vb(&self.fare_curve) + vb(&self.complex_in) + vb(&self.ups_in) + vb(&self.passages_in) + vb(&self.span_in) + vb(&self.bus_in.0) + vb(&self.bus_in.1) + vb(&self.tram_in) + vb(&self.back_in) + vb(&self.pier_in.0) + vb(&self.pier_in.1));
         let (mut net, mut g, mut avg, mut od, mut sub, mut rest) = (0, 0, 0, 0, 0, 0);
         for p in self.per.iter().flatten() {
             net += mem::network(&p.net);
@@ -786,6 +799,8 @@ impl DemandApi {
             st_bus: svc.st_bus.clone(),
             st_tram: svc.st_tram.clone(),
             back_stops: svc.back.clone(),
+            line_pier: svc.pier.clone(),
+            stop_grade: svc.grade.clone(),
         };
         for l in 0..nl {
             let (a, b) = (svc.line_off[l] as usize, svc.line_off[l + 1] as usize);
@@ -1141,6 +1156,7 @@ impl DemandApi {
             bus_in: (vec![], vec![]),
             tram_in: vec![],
             back_in: vec![],
+            pier_in: (vec![], vec![]),
             same: 0,
             layout_same: false,
             reusable: false,
@@ -1252,7 +1268,7 @@ impl DemandApi {
         let (home_k, work_k) = zone_trip_factors(&city, &z, &gr, gravity_from_pack);
         // read only above; z and gr hold what the solves need of it (T-1611)
         city.gravity = None;
-        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone: ns.walk_home, walk_work_zone: ns.walk_work, unr_all, unr_home: ns.unr_home, unr_work: ns.unr_work, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], fare_mul: vec![], base_mul: vec![], fare_zones: FareZones::default(), fare_curve: vec![], open_ms: now_ms() - t0, complex_in: vec![], ups_in: vec![], passages_in: vec![], span_in: vec![], bus_in: (vec![], vec![]), tram_in: vec![], back_in: vec![], same: 0, layout_same: false, reusable: false, lod: Lod::of(lod::FINE)?, part: (0, 1), len_base: std::cell::OnceCell::new() })
+        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone: ns.walk_home, walk_work_zone: ns.walk_work, unr_all, unr_home: ns.unr_home, unr_work: ns.unr_work, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], fare_mul: vec![], base_mul: vec![], fare_zones: FareZones::default(), fare_curve: vec![], open_ms: now_ms() - t0, complex_in: vec![], ups_in: vec![], passages_in: vec![], span_in: vec![], bus_in: (vec![], vec![]), tram_in: vec![], back_in: vec![], pier_in: (vec![], vec![]), same: 0, layout_same: false, reusable: false, lod: Lod::of(lod::FINE)?, part: (0, 1), len_base: std::cell::OnceCell::new() })
     }
 
     /// `new` at a level of detail (T-1222, `lod::FINE` or `lod::COARSE`): the commute chunks
@@ -1314,6 +1330,14 @@ impl DemandApi {
         self.tram_in = flags.to_vec();
     }
 
+    /// What pays the stairs in the networks `set_network` is given from now on (T-3888,
+    /// `Params::train_in_min`): per line, 1 for a ferry, which never does; per stop (parallel to
+    /// `stops`), 1 where its platform is at grade, which doesn't. Either empty or of another length:
+    /// none. A bus never pays.
+    pub fn set_stairs(&mut self, ferry_lines: &[u8], grade_stops: &[u8]) {
+        self.pier_in = (ferry_lines.to_vec(), grade_stops.to_vec());
+    }
+
     /// The reverse runs' stops of the networks `set_network` is given from now on (T-3348): per
     /// stop (parallel to `stops`), the station the line's reverse run stops at, the stop's own
     /// where it is the same. Empty or another length: every reverse stop is the listed stop.
@@ -1372,6 +1396,8 @@ impl DemandApi {
             st_bus,
             st_tram,
             back: demand_back(&st_map, stops, &self.back_in),
+            pier: pier_lines(&self.pier_in.0, nl),
+            grade: pier_lines(&self.pier_in.1, nstops),
             st_x,
             st_y,
             st_map: st_map.clone(),

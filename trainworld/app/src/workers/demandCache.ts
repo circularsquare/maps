@@ -90,7 +90,7 @@ function withoutEras(track: Uint8Array): Uint8Array {
 interface Svc {
   frame: unknown;
   fare: unknown;
-  stations: { id: string; x: number; y: number; complex?: number; upgrades?: number; fare?: number }[];
+  stations: { id: string; x: number; y: number; level?: number; complex?: number; upgrades?: number; fare?: number }[];
   lines: { id: string; stops: string[]; tph: unknown; hopS: unknown; hopKm?: unknown; fast?: boolean; ferry?: boolean; tram?: boolean; fareDist?: boolean; passFares?: unknown; dwellS: unknown; wrapS?: number; cars: number; span?: unknown }[];
   passages?: [string, string][];
 }
@@ -115,8 +115,9 @@ export function canonical(svc: Svc): { text: string; stationIds: string[]; lineI
   const stations = svc.stations.map((s) => {
     let c: number | null = null;
     if (s.complex !== undefined) { if (!cx.has(s.complex)) cx.set(s.complex, cx.size); c = cx.get(s.complex)!; }
-    // T-3740: a fare zone only where there is one, so other networks keep their keys
-    return s.fare ? [s.x, s.y, c, s.upgrades ?? 0, s.fare] : s.upgrades ? [s.x, s.y, c, s.upgrades] : [s.x, s.y, c];
+    // T-3740: a fare zone only where there is one, so other networks keep their keys; T-3888: a level (the stairs) alike
+    if (s.level) return [s.x, s.y, c, s.upgrades ?? 0, s.fare ?? 0, s.level];
+    return s.fare ?[s.x, s.y, c, s.upgrades ?? 0, s.fare] : s.upgrades ? [s.x, s.y, c, s.upgrades] : [s.x, s.y, c];
   });
   // a circle's stand (T-798) and a service span (T-842) only where there is one, so other
   // networks keep their keys

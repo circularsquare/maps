@@ -195,6 +195,8 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk_tab:
 /// the whole's in every part).
 pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk_tab: &[u16], walk_max: &[u16], s: usize, p: &Params, nr: &NoRail, (k, n): (u32, u32)) -> ModeOut {
     let share = p.period_share as f64;
+    // T-3888: the walk past which the walk tier never walks (`Params::tier_at`)
+    let tier_c = p.tier_cost();
     // T-1059: Anita's walking rule, with the strategies' real minutes between stations (`Skims::walk`)
     let rule = p.walk_rule > 0.0 && walk_tab.len() == s * s && walk_max.len() == s;
     // per access entry its way to the station, and that and the most its station takes on
@@ -632,6 +634,8 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                 // below, or where most are refused (`whole`), the kept ones to load alone.
                 let (mut slow, mut whole) = (0u32, 0u32);
                 let mut bad_at = [(0u32, 0u32); 8];
+                // T-3888: every pair's sum, the walk tier's (the rule refuses them none)
+                let ssum_all = ssum;
                 // (no walk to compare with between two land parts, T-2214)
                 let near = if rule {
                     d.lt_mask((F8::splat(mw) + F8::new(std::array::from_fn(|l| eg_far[q[l]]))).min(F8::splat(WALK_REACH_KM * 1000.0 + 1.0))) & ((1u32 << (n_cand - 8 * ci).min(8)) - 1) & !cross
@@ -780,7 +784,17 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                     }
                 }
                 // no rail route (or only the same station at both ends) where under 1e-30
-                let ok = ((1u32 << (n_cand - 8 * ci).min(8)) - 1) & !ssum.lt_mask(F8::splat(1e-30));
+                let live = (1u32 << (n_cand - 8 * ci).min(8)) - 1;
+                let kept = live & !ssum.lt_mask(F8::splat(1e-30));
+                // T-3888: the lanes whose walk tier rides (`Params::tier_at`; none between land
+                // parts, which have no walk), a lane the rule refuses whole among them
+                let tier = if p.walk_tier > 0.0 {
+                    let cw = F8::new(std::array::from_fn(|l| visit[(c[l][1] & 0x7fff_ffff) as usize][1]));
+                    live & cw.lt_mask(F8::splat(NO_WALK)) & F8::splat(tier_c).lt_mask(cw) & !cross & !ssum_all.lt_mask(F8::splat(1e-30))
+                } else {
+                    0
+                };
+                let ok = kept | tier;
                 if ok == 0 {
                     continue;
                 }
@@ -816,16 +830,17 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                 let (hi, kf) = (F8::splat(p.ratio_fade_hi), F8::splat(1.0 / (p.ratio_fade_hi - p.ratio_fade_lo)));
                 let paying = paid8.lt_mask(F8::splat(1e-30)) != 0xff;
                 let free8 = if paying { F8::transpose(std::array::from_fn(|l| dd[q[l]][2]))[0] } else { zero };
+                let ratio_at = |rail_c: F8, car: F8| {
+                    let qr = rail_c / car;
+                    let s = one / (one + qr * qr * qr);
+                    let fr = ((hi - qr) * kf).max(zero).min(one);
+                    let fc = ((hi - one / qr) * kf).max(zero).min(one);
+                    one - (one - s * fr) * fc
+                };
                 let share = |rail: F8| {
                     let util = bt * (road - rail) + F8::splat(p.asc_rail);
                     let rail_c = rail.max(F8::splat(0.01));
-                    let ratio = |car: F8| {
-                        let qr = rail_c / car;
-                        let s = one / (one + qr * qr * qr);
-                        let fr = ((hi - qr) * kf).max(zero).min(one);
-                        let fc = ((hi - one / qr) * kf).max(zero).min(one);
-                        one - (one - s * fr) * fc
-                    };
+                    let ratio = |car: F8| ratio_at(rail_c, car);
                     let e = (uw - util).exp();
                     let w0 = e / (one + util.neg().exp() + e);
                     let s0 = (one - w0) * ratio(road);
@@ -853,12 +868,42 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                     let s = share(rail);
                     if cross != 0 { pick(cross, s, bound(rail)) } else { s }
                 };
-                let x = tu8 * dv8 * chosen(rail);
                 // T-1300: and at a fare `FARE_D_MIN` dearer, for the riders' fare sensitivity
                 let rd8 = rail + F8::splat(FARE_D_MIN);
-                let xd = (tu8 * dv8 * chosen(rd8) - x).to_array();
+                // the rail trips, those of everyone but a walk tier (all of them where none rides),
+                // and their rate on the station pairs kept, then the rate spread on every pair
+                let (x, xd, xm, g) = if tier == 0 {
+                    let x = tu8 * dv8 * chosen(rail);
+                    (x, (tu8 * dv8 * chosen(rd8) - x).to_array(), x.to_array(), x / ssum)
+                } else {
+                    // T-3888: `Params::tier_choice`: the rest on the pairs kept (none where the
+                    // rule keeps none), the tier between the network and the car on every pair
+                    let t8 = pick(tier, zero, F8::splat(p.walk_tier));
+                    let rail_all = if slow & tier != 0 { mo8 + m8 + F8::splat(p.fare_min) - ssum_all.ln() / th8 + off8 } else { rail };
+                    let mix = |rail: F8| {
+                        let rail_c = rail.max(F8::splat(0.01));
+                        let s0 = ratio_at(rail_c, road);
+                        if !paying {
+                            s0
+                        } else {
+                            let s1 = ratio_at(rail_c, road + paid8);
+                            s0 + (one - free8) * (s1 - s0)
+                        }
+                    };
+                    let main = |rail: F8| pick(!kept & 0xff, chosen(rail), zero);
+                    let tc = |rail: F8, all: F8| {
+                        let m = main(rail);
+                        pick(tier, m, (one - t8) * m + t8 * mix(all))
+                    };
+                    let x = tu8 * dv8 * tc(rail, rail_all);
+                    let xd = (tu8 * dv8 * tc(rd8, rail_all + F8::splat(FARE_D_MIN)) - x).to_array();
+                    let x_m = tu8 * dv8 * pick(tier, main(rail), (one - t8) * main(rail));
+                    let x_t = x - x_m;
+                    let gm = pick(!kept & 0xff, x_m / ssum, zero);
+                    let gt = pick(tier, zero, x_t / ssum_all);
+                    (x, xd, x_m.to_array(), pick(whole, gm + gt, gt))
+                };
                 let dk = (d * F8::splat(0.001)).to_array();
-                let g = x / ssum;
                 // trips by egress station y, and y x the row: what reaches each egress entry
                 let mut ya = [[0f32; 8]; KE];
                 let mut yw = [F8::splat(0.0); 8];
@@ -899,7 +944,8 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                     lost_q[q[l]] += wl[l];
                     len_z[lz][0] += xa[l] as f64;
                     len_z[lz][1] += wl[l] as f64;
-                    if whole >> l & 1 == 0 {
+                    // (a lane loading its kept pairs alone still spreads its walk tier, T-3888)
+                    if whole >> l & 1 == 0 || tier >> l & 1 != 0 {
                         // pads add 0 to their own dummies: the block's one count predicts well
                         for k in 0..kn {
                             ab_y[ix[k][l] as usize] += ya[k][l];
@@ -913,8 +959,11 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                     if slow >> l & 1 != 0 {
                         // T-1059: the lane's loads went onto every station pair at the kept pairs'
                         // rate and the refused ones come off again (the station matrix is cleared
-                        // of what rounding leaves below 0 at the end), or its kept pairs go on alone
-                        let gl = xa[l] / ssum_a[l];
+                        // of what rounding leaves below 0 at the end), or its kept pairs go on alone;
+                        // a walk tier's are on every pair (T-3888)
+                        // (none where the rule keeps a pair or two so light their sum rounds to 0, a
+                        // lane only its walk tier rides)
+                        let gl = if xm[l] != 0.0 { xm[l] / ssum_a[l] } else { 0.0 };
                         let sign = if whole >> l & 1 != 0 { 1.0 } else { -1.0 };
                         let (lo, hi) = bad_at[l];
                         for &(a, t, c, k, kk) in &lane_bad[lo as usize..hi as usize] {

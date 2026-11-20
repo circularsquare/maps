@@ -76,6 +76,12 @@ pub struct Network {
     /// line's two directions stop at different platforms (one-way track): the platform on the
     /// return run's own track. Empty: every reverse stop at the listed stop's station.
     pub back_stops: Vec<u32>,
+    /// T-3888: per line, whether it is a ferry, whose trips pay no stairs (`Params::train_in_min`).
+    /// Empty: none is.
+    pub line_pier: Vec<bool>,
+    /// T-3888: per stop (parallel to `line_stops`), whether its platform is at grade, so the stairs
+    /// are not paid there (both runs take the listed stop's). Empty: none is.
+    pub stop_grade: Vec<bool>,
 }
 
 /// A bus stop's stretch of route (T-1464): its demand station and the stretch as points in the
@@ -119,6 +125,17 @@ impl Network {
     pub fn bus_line(&self, l: usize) -> bool {
         self.line_crush.get(l).is_some_and(|&c| c == BUS_CARS * super::api::CRUSH_PER_CAR)
             || self.line_stops[self.line_off[l] as usize..self.line_off[l + 1] as usize].iter().any(|&st| self.bus_only(st as usize))
+    }
+    /// T-3888: whether line `l`'s trips can pay the stairs: a train or a tram, not a bus or a ferry
+    /// (`line_pier`).
+    #[inline]
+    pub fn stairs_line(&self, l: usize) -> bool {
+        !self.line_pier.get(l).copied().unwrap_or(false) && !self.bus_line(l)
+    }
+    /// T-3888: whether stop `k` (an index into `line_stops`) is at grade (`stop_grade`).
+    #[inline]
+    pub fn at_grade(&self, k: usize) -> bool {
+        self.stop_grade.get(k).copied().unwrap_or(false)
     }
 }
 
@@ -231,6 +248,8 @@ pub fn synth_network() -> Network {
         st_bus: vec![],
         st_tram: vec![],
         back_stops: vec![],
+        line_pier: vec![],
+        stop_grade: vec![],
     };
     for &(name, kind, pts) in LINES {
         let mut stops: Vec<u32> = vec![];

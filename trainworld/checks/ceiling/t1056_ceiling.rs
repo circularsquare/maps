@@ -39,7 +39,8 @@ const SCENS: [(&str, Scen); 4] = [
 ];
 const NS: usize = SCENS.len();
 
-fn rail_cost(s: &Scen, p: &Params, d_m: f32, car_mean: f32) -> f32 {
+/// The made-up train's perceived minutes; with `rule`, 1e6 where the walking rule refuses it.
+fn rail_cost(s: &Scen, p: &Params, d_m: f32, car_mean: f32, rule: bool) -> f32 {
     if s.ratio > 0.0 {
         return s.ratio * car_mean;
     }
@@ -48,11 +49,14 @@ fn rail_cost(s: &Scen, p: &Params, d_m: f32, car_mean: f32) -> f32 {
     }
     let km = d_m / 1000.0;
     // T-2265: no train taking longer than walking there, in real minutes (`Params::walk_rule`)
-    if s.rule && p.walk_rule_at(d_m) && 2.0 * s.walk_min + s.wait_min + km / s.kmh * 60.0 > p.walk_min(d_m) {
+    if rule && s.rule && p.walk_rule_at(d_m) && 2.0 * s.walk_min + s.wait_min + km / s.kmh * 60.0 > p.walk_min(d_m) {
         return 1e6;
     }
     let walk = s.walk_min.min(p.walk_easy_min) * p.w_walk + (s.walk_min - p.walk_easy_min).max(0.0) * p.w_walk_far;
-    km / s.kmh * 60.0 + 2.0 * walk + s.wait_min + (s.base_usd + s.km_usd * km) * FARE_MIN_PER_USD
+    // (T-3888: the made-up train's platforms are at grade, so it pays no stairs; T3888_DEEP=1 puts
+    // them below ground)
+    let stairs = if std::env::var("T3888_DEEP").is_ok() { p.train_in_min + p.train_out_min } else { 0.0 };
+    km / s.kmh * 60.0 + 2.0 * walk + s.wait_min + (s.base_usd + s.km_usd * km) * FARE_MIN_PER_USD + stairs
 }
 
 /// [rail, walk, car]
@@ -61,15 +65,17 @@ fn shares(p: &Params, sc: &Scen, d_m: f32, cw: f32, drive: f32, park: (f32, f32,
     // T-3624: the purpose's weight on the car (T3624_OFF=1: none, today's)
     let (road, paid) = ((p.car_drive(drive, rk) + fixed + home) * cm, paid * cm);
     let car_mean = road + (1.0 - free) * paid;
-    let rail = rail_cost(sc, p, d_m, car_mean);
+    let rail = rail_cost(sc, p, d_m, car_mean, true);
     let bt = p.mode_beta(road);
     let util = bt * (road - rail) + p.asc_rail;
     let uw = bt * (road - cw) + p.asc_walk();
-    let r = p.car_choice(util, uw, bt, paid, free, rail, road) as f64;
+    // T-3888: the walk tier, let off the walking rule (`Params::tier_choice`)
+    let t = p.tier_at(cw);
+    let r = p.tier_choice(t, true, util, uw, bt, paid, free, rail, rail_cost(sc, p, d_m, car_mean, false), road) as f64;
     let e = fast_exp(uw - util);
     let w0 = e / (1.0 + fast_exp(-util) + e);
     let w1 = e / (1.0 + fast_exp(-(util + bt * paid)) + e);
-    let w = if paid < 1e-30 { w0 } else { w0 + (1.0 - free) * (w1 - w0) } as f64;
+    let w = (1.0 - t as f64) * if paid < 1e-30 { w0 } else { w0 + (1.0 - free) * (w1 - w0) } as f64;
     [r, w, 1.0 - r - w]
 }
 

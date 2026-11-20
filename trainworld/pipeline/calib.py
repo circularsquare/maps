@@ -1,7 +1,7 @@
 """T-509: calibration targets, runs and the objective, per city.
 
     python pipeline/calib.py targets nyc                 # -> data/work/calib/nyc/targets.json
-    python pipeline/calib.py run nyc [--tag t] [--set k=v,..] [--params p.json] [--rounds 3] [--pack p.json]
+    python pipeline/calib.py run nyc [--tag t] [--set k=v,..] [--params p.json] [--rounds 3] [--pack p.json] [--levels l.json]
     python pipeline/calib.py score <run.json> [--city nyc] [--top 15]
 
 `run` runs the `calib` bin (sim/src/bin/calib.rs; built with `cargo build --release --features
@@ -251,7 +251,7 @@ def cmd_run():
         cmd += ["--pack", opt(args, "--pack") or tg["pack"]]
     if tg.get("areas_file"):
         cmd += ["--areas", tg["areas_file"]]
-    for k in ("--set", "--params", "--fares"):
+    for k in ("--set", "--params", "--fares", "--levels"):
         if k in args:
             cmd += [k, opt(args, k)]
     if "--no-fares" in args:

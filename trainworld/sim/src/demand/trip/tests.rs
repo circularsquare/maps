@@ -188,7 +188,8 @@ fn pair_choice_reproduces_mode_choice() {
                         continue;
                     }
                     let pc = pair_choice(&api, sz, p, &sk, u, v);
-                    if pc.why != RAIL_OFFERED {
+                    // (T-3888: a walk tier rides where the rule keeps no pair too)
+                    if pc.why != RAIL_OFFERED && pc.r == 0.0 {
                         continue;
                     }
                     let dv = (gr.col[j] * sz.jobs[v] as f64 / z.jobs[j]) as f32;
@@ -230,14 +231,18 @@ fn pair_choice_reproduces_mode_choice() {
 
 /// T-2265: a trip whose every station pair takes longer than walking there in real minutes (no
 /// fare, crowding or weights) has no train; one whose every pair is quicker keeps its whole share,
-/// as with the rule off, however close to walking it is.
+/// as with the rule off, however close to walking it is. T-3888: but past `walk_tier_m` its walk
+/// tier, let off the rule, rides at their share of rail against the car.
 #[test]
 fn a_train_slower_than_walking_gets_no_riders_and_a_quicker_one_all() {
     let (mut api, _) = small();
     api.solve(0);
     let st = api.period(0).unwrap();
     let (p, g) = (&st.p, &st.g);
+    assert!(p.walk_tier > 0.0);
     let off = Params { walk_rule: 0.0, ..p.clone() };
+    let no_tier = Params { walk_tier: 0.0, ..p.clone() };
+    let mut tiered = 0;
     let sz = api.sz.as_ref().unwrap();
     let s = g.n_st;
     let sk = kernel::skims(g, p);
@@ -265,7 +270,23 @@ fn a_train_slower_than_walking_gets_no_riders_and_a_quicker_one_all() {
             }
             let now = pair_choice(&api, sz, p, &sk, u, v);
             if t.iter().all(|&x| x > direct) {
-                assert_eq!((now.why, now.r), (WALK_FURTHER, 0.0), "{u} {v}: every pair slower than walking");
+                let plain = pair_choice(&api, sz, &no_tier, &sk, u, v);
+                assert_eq!((plain.why, plain.r), (WALK_FURTHER, 0.0), "{u} {v}: every pair slower than walking");
+                assert_eq!(now.why, WALK_FURTHER);
+                let cw = walk_cost(&api, i, j);
+                if p.tier_at(cw) > 0.0 {
+                    // the tier's share: rail against the car alone, at the cost of every pair
+                    let (_, paid, free) = p.park_parts(&api.z, j);
+                    let road = was.road - (1.0 - free) * paid;
+                    let want = p.walk_tier * p.ratio_mix(was.rail, road, paid, free);
+                    assert!(want > 0.0 && (now.r - want).abs() < 1e-6 * want.max(1.0), "{u} {v}: the walk tier rides, {} against {want}", now.r);
+                    // on every station pair, adding up to the whole
+                    let sum: f32 = now.pairs.iter().map(|e| e.2).sum();
+                    assert!((sum - 1.0).abs() < 1e-4 && now.pairs.iter().filter(|e| e.2 > 0.0).count() == was.pairs.iter().filter(|e| e.2 > 0.0).count(), "{u} {v}: pairs {sum}");
+                    tiered += 1;
+                } else {
+                    assert_eq!(now.r, 0.0, "{u} {v}: a walk under {} m keeps the rule for everyone", p.walk_tier_m);
+                }
                 slow += 1;
             } else if t.iter().all(|&x| x <= direct) {
                 assert_eq!(now.r, was.r, "{u} {v}: every pair quicker than walking keeps its share");
@@ -275,8 +296,8 @@ fn a_train_slower_than_walking_gets_no_riders_and_a_quicker_one_all() {
             }
         }
     }
-    println!("slower {slow}, quicker {quick} ({close} within a fifth of walking)");
-    assert!(slow > 0 && quick > 0 && close > 0, "slower {slow}, quicker {quick}, close {close}");
+    println!("slower {slow} ({tiered} with the walk tier riding), quicker {quick} ({close} within a fifth of walking)");
+    assert!(slow > 0 && quick > 0 && close > 0 && tiered > 0, "slower {slow}, tiered {tiered}, quicker {quick}, close {close}");
 }
 
 /// The query: a trip along one line rides it with no change; one between the two lines changes
@@ -320,7 +341,8 @@ fn trip_answers() {
     let pair = &v[HEAD + main.0 * PAIR_LEN..HEAD + (main.0 + 1) * PAIR_LEN];
     let st = api.period(0).unwrap();
     let (strategy, l) = (pair[8], &main.2[0]);
-    let own = l[6] + l[7] + l[9];
+    // (T-3888: with the train's way in and out)
+    let own = l[6] + l[7] + l[9] + l[15];
     println!("along A: walk {w:.3} rail {r:.3} drive {dr:.3}; route {:.3}, strategy {strategy:.3} vs own {own:.3}", main.1);
     if (main.1 - pair[9]).abs() < 1e-6 {
         assert!((strategy - own).abs() < 1e-3, "strategy {strategy} vs the route's own {own}");

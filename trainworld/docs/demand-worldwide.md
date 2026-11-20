@@ -639,15 +639,23 @@ notes/T-420.md has the tables.
   Paris) nearly every cell is in reach and nothing moves; where stations are far apart a far
   subzone's riders gather on its cells nearer the station, more than in New York (notes/T-1920.md).
 - **Walking the whole way** (T-558, T-636, docs/demand-mode.md 4.3 "Walking"). A mode in the choice
-  beside rail and the car (or other), at 1.5 perceived minutes a minute at every length, with a
-  bonus of 10 perceived minutes against the car (`walk_bonus_min`) for what a short drive costs beyond
-  its road time, one value for commutes and everyday trips and for every country. A commute walks
-  between six home and six job cells of its zones, not their 2 km centres (T-587), so its walk
-  shares by distance follow the everyday layer's. Why it may not
-  carry over: walking tolerance differs by climate, culture, street design and safety, and the
-  bonus also stands for how much a short drive costs beyond its road time, which differs with car
-  ownership and parking. Check: a country's travel survey walk shares by distance (NHTS,
-  England's NTS, France's EMP, Japan's person-trip surveys) and its census walk-to-work share.
+  beside rail and the car (or other), at 1.5 perceived minutes a minute at every length, with no
+  head start (`walk_bonus_min` 0 since T-3888; 10 before), one rule for commutes and everyday trips
+  and for every country. A tenth of every trip's people (`walk_tier`) never walk it whole past 800 m
+  (`walk_tier_m`) and are let off the walking rule (T-3888): about 5% of people can't walk far
+  (US ACS 6.7% with serious difficulty, fewer trips), the rest stands for those who won't. A commute
+  walks between six home and six job cells of its zones, not their 2 km centres (T-587), so its walk
+  shares by distance follow the everyday layer's. Why it may not carry over: walking tolerance
+  differs by climate, culture, street design and safety, and the share who can't walk far with age
+  (people 65+ are 29% of Japan, 3% of Nigeria). Check: a country's travel survey walk shares by
+  distance (NHTS, England's NTS, France's EMP, Japan's person-trip surveys) and its census
+  walk-to-work share.
+- **The stairs** (T-3888). A trip pays 2 perceived minutes at its first boarding and 2 at its last
+  alighting where that platform is below or above ground, on a train or a tram; nothing at grade,
+  on a bus or ferry, or at a change. One number for every place. Why it may not carry over: the
+  depth of stations (Moscow's or Kyiv's deep stations take minutes of escalator, a street-level
+  light rail none), lifts and escalators. Check: station access times from a travel survey or an
+  operator's published entrance-to-platform times.
 
 - **Trams** (T-2926). A tram line is a rail line: it boards with no penalty (a bus pays 4 perceived
   minutes), each tram section counts as three quarters of a rail car in seats, rated and crush loads,

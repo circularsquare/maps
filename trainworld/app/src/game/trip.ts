@@ -53,6 +53,8 @@ export interface TripLeg {
   changePerceived: number;
   /** the part of `waitMin` (and of `waitPerceived`) spent waiting for a train with room (T-188) */
   fullWaitMin: number;
+  /** T-3888: a train's way in (the route's first ride) and out (its last), perceived minutes */
+  endsPerceived: number;
   /** T-3784: a ride whose change onto it is inside a fare zone run, so pays no transfer fare */
   freeChange?: boolean;
   /** T-3823: a market route's first ride, its wait cut to the planned one (`plannedFirstWait`): the half headway it was */
@@ -268,10 +270,10 @@ function readRoutes(v: Float64Array, o: number, nr: number, at: RouteNodes): Tri
           if (rn === l[2]) break;
         }
         const wrapN = l[1] > l[2] ? at[l[1]]?.n ?? 0 : 0;
-        legs.push({ kind: "ride", line: at[l[1]]?.line ?? "", from: st(l[1]), to: st(l[2]), stations, k0: at[l[1]]?.k ?? -1, k1: at[l[2]]?.k ?? -1, ...(wrapN ? { wrapN } : {}), stops: l[10], min: l[5], perceived: l[6], farePerceived: l[7], waitMin: l[8], waitPerceived: l[9], changePerceived: l[11], fullWaitMin: l[12], ...(l[14] === 1 ? { freeChange: true } : {}) });
+        legs.push({ kind: "ride", line: at[l[1]]?.line ?? "", from: st(l[1]), to: st(l[2]), stations, k0: at[l[1]]?.k ?? -1, k1: at[l[2]]?.k ?? -1, ...(wrapN ? { wrapN } : {}), stops: l[10], min: l[5], perceived: l[6], farePerceived: l[7], waitMin: l[8], waitPerceived: l[9], changePerceived: l[11], fullWaitMin: l[12], endsPerceived: l[15], ...(l[14] === 1 ? { freeChange: true } : {}) });
       } else {
         const from = st(l[1]), to = st(l[2]);
-        legs.push({ kind: "walk", line: "", from, to, stations: [from, to], k0: -1, k1: -1, stops: 0, min: l[5], perceived: l[6], farePerceived: 0, waitMin: 0, waitPerceived: 0, changePerceived: 0, fullWaitMin: 0 });
+        legs.push({ kind: "walk", line: "", from, to, stations: [from, to], k0: -1, k1: -1, stops: 0, min: l[5], perceived: l[6], farePerceived: 0, waitMin: 0, waitPerceived: 0, changePerceived: 0, fullWaitMin: 0, endsPerceived: 0 });
       }
     }
     routes.push({ share, pair, legs, ...(baseMul !== 1 ? { baseMul } : {}) });
@@ -547,11 +549,13 @@ export function routeTerms(t: RouteCosts, r: TripRoute): CostTerm[] {
     const walkPerc = pair.egressPerceived + (pair.accessRide ? 0 : pair.accessPerceived);
     if (tot.walkMin > 0) out.push({ id: "walk", label: tr("trip.walk"), real: tot.walkMin, weight: walkPerc / tot.walkMin, perceived: walkPerc, unit: "min" });
   }
-  let waitP = 0, xferP = 0, changeP = 0;
+  let waitP = 0, xferP = 0, changeP = 0, endsP = 0;
   for (const l of r.legs) {
-    if (l.kind === "ride") { waitP += l.waitPerceived; changeP += l.changePerceived; }
+    if (l.kind === "ride") { waitP += l.waitPerceived; changeP += l.changePerceived; endsP += l.endsPerceived; }
     else xferP += l.perceived;
   }
+  // T-3888: the stairs in and out of a train's station
+  if (endsP > 0) out.push({ id: "stairs", label: tr("trip.stairs"), real: 0, weight: 1, perceived: endsP, unit: "min" }); // i18n-ignore
   const { crowding, fullWait } = routeCrowding(r);
   const wait = tot.wait - fullWait;
   out.push({ id: "wait", label: tr("trip.wait"), real: wait, weight: wait > 0 ? (waitP - fullWait) / wait : 1, perceived: waitP - fullWait, unit: "min" });

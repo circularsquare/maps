@@ -627,7 +627,8 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   Shinkansen run on high-speed track, and `n02_trim.json` holds the cuts and omissions game runs
   asked for (T-1625, notes/T-1625.md; `realsave` reads `trains` and `hsr` from the network JSON, in both its builds, and gives high-speed trains to every line with over half its length on high-speed track, the game's own rule for a new line, T-3272). `calib.py
   targets <city>` writes the city's targets (`data/work/calib/<city>/`), `calib.py run <city>
-  [--set k=v,..] [--params p.json] [--tag t]` runs the sim's `calib` bin (a weekday, commutes and
+  [--set k=v,..] [--params p.json] [--tag t] [--levels l.json]` (T-3888: each station's level, 0 at
+  grade, for the stairs) runs the sim's `calib` bin (a weekday, commutes and
   everyday, 3 crowding rounds, about 22 s for New York) and scores it (station entries, operator
   totals, rail share by home area); `calib.py score <run.json>` rescores. notes/T-509.md.
 - `realside.py <in.save> <out.save> left|right` (T-3297): a real network's game file set to a running side, the

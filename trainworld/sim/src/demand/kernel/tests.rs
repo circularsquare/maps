@@ -19,7 +19,7 @@ fn common_test_net(lines: &[&[u32]], tph: &[f32], ride: &[f32]) -> Network {
         hop_min: vec![], hop_back: vec![], line_speed_kmh: vec![0.0; lines.len()],
         line_headway_min: tph.iter().map(|t| [if *t > 0.0 { 60.0 / t } else { f32::INFINITY }; network::PERIODS]).collect(),
         line_seats: vec![100.0; lines.len()], line_rated: vec![], line_crush: vec![200.0; lines.len()],
-        st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![], span: vec![], st_ups: vec![], st_passage: vec![], catches: vec![], st_bus: vec![], st_tram: vec![], back_stops: vec![],
+        st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![], span: vec![], st_ups: vec![], st_passage: vec![], catches: vec![], st_bus: vec![], st_tram: vec![], back_stops: vec![], line_pier: vec![], stop_grade: vec![],
     };
     for (l, stops) in lines.iter().enumerate() {
         net.line_stops.extend_from_slice(stops);
@@ -30,7 +30,52 @@ fn common_test_net(lines: &[&[u32]], tph: &[f32], ride: &[f32]) -> Network {
 }
 
 fn common_test_params() -> Params {
-    Params { xfer_walk_m: 0.0, ..Params::default() }
+    // (without a train's way in and out, which `a_train_trip_pays_its_way_in_and_out` tests)
+    Params { xfer_walk_m: 0.0, train_in_min: 0.0, train_out_min: 0.0, ..Params::default() }
+}
+
+/// T-3888: a trip pays `train_in_min` where its first boarding is a train or tram below or above
+/// ground and `train_out_min` where its last ride leaves one there, never at a change; a bus, a
+/// ferry and a platform at grade pay neither; the real minutes of the walking rule are untouched;
+/// the trip explorer's legs carry them and still add up.
+#[test]
+fn a_train_trip_pays_its_way_in_and_out() {
+    let plain = common_test_params();
+    let p = Params { train_in_min: 2.0, train_out_min: 3.0, ..plain.clone() };
+    // line A 0-1, B 1-2, 12 tph and 2 minutes each
+    let mut net = common_test_net(&[&[0, 1], &[1, 2]], &[12.0, 12.0], &[2.0, 2.0]);
+    let s = net.n_stations();
+    let base = skims(&build_graph(&net, &plain), &plain);
+    let g = build_graph(&net, &p);
+    let sk = skims(&g, &p);
+    let at = |sk: &Skims, a: usize, b: usize| sk.r[a * s + b];
+    assert!((at(&sk, 0, 1) - at(&base, 0, 1) - 5.0).abs() < 1e-4, "one ride: in and out");
+    assert!((at(&sk, 0, 2) - at(&base, 0, 2) - 5.0).abs() < 1e-4, "a change pays neither: {} {}", at(&sk, 0, 2), at(&base, 0, 2));
+    assert_eq!(sk.walk, base.walk, "the walking rule's real minutes");
+    let legs = &super::super::trip::routes(&g, &sk, &p, 0, 2, 0.005)[0].1;
+    assert_eq!((legs[0].ends, legs[legs.len() - 1].ends), (2.0, 3.0));
+    let total: f32 = legs.iter().map(|l| l.perc + l.wait_perc + l.change + l.ends).sum();
+    assert!((total - at(&sk, 0, 2)).abs() < 1e-4, "the legs add up to the strategy: {total}");
+    // B a bus: the trip onto it from A pays the way in only, B alone neither
+    net.line_crush[1] = crate::demand::network::BUS_CARS * super::super::api::CRUSH_PER_CAR;
+    let (b0, b1) = (skims(&build_graph(&net, &plain), &plain), skims(&build_graph(&net, &p), &p));
+    assert!((at(&b1, 0, 2) - at(&b0, 0, 2) - 2.0).abs() < 1e-4 && (at(&b1, 1, 2) - at(&b0, 1, 2)).abs() < 1e-4);
+    assert!((at(&b1, 2, 0) - at(&b0, 2, 0) - 3.0).abs() < 1e-4, "from the bus onto the train: the way out only");
+    // A a ferry, B a train again
+    net.line_crush[1] = net.line_crush[0];
+    net.line_pier = vec![true, false];
+    let (t0, t1) = (skims(&build_graph(&net, &plain), &plain), skims(&build_graph(&net, &p), &p));
+    assert!((at(&t1, 0, 1) - at(&t0, 0, 1)).abs() < 1e-4 && (at(&t1, 0, 2) - at(&t0, 0, 2) - 3.0).abs() < 1e-4);
+    // A a train again, its platform at station 0 at grade (stops: A 0, 1; B 1, 2): the way in from 0
+    // is free, the way out at 1 is paid, and the trip from 2 pays its way in on B
+    net.line_pier = vec![];
+    net.stop_grade = vec![true, false, false, false];
+    let (g0, g1) = (skims(&build_graph(&net, &plain), &plain), skims(&build_graph(&net, &p), &p));
+    assert!((at(&g1, 0, 1) - at(&g0, 0, 1) - 3.0).abs() < 1e-4 && (at(&g1, 1, 0) - at(&g0, 1, 0) - 2.0).abs() < 1e-4 && (at(&g1, 2, 1) - at(&g0, 2, 1) - 5.0).abs() < 1e-4);
+    // nothing to pay: no per-node table at all
+    assert!(build_graph(&net, &plain).rn_in.is_empty());
+    net.stop_grade = vec![true; 4];
+    assert!(build_graph(&net, &p).rn_in.is_empty());
 }
 
 /// T-1576: every route node of a line with a bus-only stop carries the bus boarding cost, in the
@@ -506,7 +551,7 @@ fn a_circle_rides_the_short_way_through_its_first_stop() {
             line_name: vec![String::new()], line_off: vec![0, 7], line_stops: stops.to_vec(),
             hop_min: ride, hop_back: back, line_speed_kmh: vec![0.0],
             line_headway_min: vec![[5.0; network::PERIODS]], line_seats: vec![100.0], line_rated: vec![], line_crush: vec![200.0],
-            st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![wrap], span: vec![], st_ups: vec![], st_passage: vec![], catches: vec![], st_bus: vec![], st_tram: vec![], back_stops: vec![],
+            st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![wrap], span: vec![], st_ups: vec![], st_passage: vec![], catches: vec![], st_bus: vec![], st_tram: vec![], back_stops: vec![], line_pier: vec![], stop_grade: vec![],
         }
     };
     let g = build_graph(&ring(true), &p);
@@ -559,7 +604,7 @@ fn a_passed_stop_boards_and_alights_nobody() {
         line_name: vec![String::new()], line_off: vec![0, 3], line_stops: vec![0, 1, 2],
         hop_min: vec![2.0, 2.0, 0.0], hop_back: vec![0.0, 1.5, 1.5], line_speed_kmh: vec![0.0],
         line_headway_min: vec![[5.0; network::PERIODS]], line_seats: vec![100.0], line_rated: vec![], line_crush: vec![200.0],
-        st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![false], span: vec![], st_ups: vec![], st_passage: vec![], catches: vec![], st_bus: vec![], st_tram: vec![], back_stops: vec![],
+        st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![false], span: vec![], st_ups: vec![], st_passage: vec![], catches: vec![], st_bus: vec![], st_tram: vec![], back_stops: vec![], line_pier: vec![], stop_grade: vec![],
     };
     // route nodes: run 0 = 0..3 (stations 0, 1, 2), run 1 = 3..6 (2, 1, 0)
     net.span = (0..network::PERIODS).flat_map(|_| (0..6).map(|r| if r == 4 { -1.0 } else { 1.0 })).collect();
@@ -773,7 +818,7 @@ fn home_parking_and_the_ratio_curve() {
 /// walk costs `walk_trip_w` a minute at every length.
 #[test]
 fn walk_constant_is_in_minutes_and_the_walk_cost_is_flat() {
-    let mut p = Params::default();
+    let mut p = Params { walk_bonus_min: 10.0, ..Params::default() };
     assert!((p.asc_walk() - 10.0 * p.beta).abs() < 1e-6);
     p.set_extra("beta", 0.05).unwrap();
     assert!((p.asc_walk() - 0.5).abs() < 1e-6);
@@ -990,7 +1035,7 @@ fn a_lollipop_line_changes_onto_itself_at_its_junction() {
             line_name: vec![String::new()], line_off: vec![0, n as u32], line_stops: stops,
             hop_min: (0..n).map(|k| if k + 1 < n { 2.0 } else { 0.0 }).collect(), hop_back: vec![], line_speed_kmh: vec![0.0],
             line_headway_min: vec![[5.0; network::PERIODS]], line_seats: vec![100.0], line_rated: vec![], line_crush: vec![200.0],
-            st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![false], span: vec![], st_ups: vec![], st_passage: vec![], catches: vec![], st_bus: vec![], st_tram: vec![], back_stops: vec![],
+            st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![false], span: vec![], st_ups: vec![], st_passage: vec![], catches: vec![], st_bus: vec![], st_tram: vec![], back_stops: vec![], line_pier: vec![], stop_grade: vec![],
         }
     };
     let g = build_graph(&lolly(true), &p);
@@ -1046,7 +1091,7 @@ fn bent_line(gap: f32) -> Network {
         line_name: vec![String::new()], line_off: vec![0, 7], line_stops: (0..7).collect(),
         hop_min: vec![3.0, 6.0, 6.0, 6.0, 6.0, 3.0, 0.0], hop_back: vec![], line_speed_kmh: vec![0.0],
         line_headway_min: vec![[5.0; network::PERIODS]], line_seats: vec![100.0], line_rated: vec![], line_crush: vec![200.0],
-        st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![false], span: vec![], st_ups: vec![], st_passage: vec![], catches: vec![], st_bus: vec![], st_tram: vec![], back_stops: vec![],
+        st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![false], span: vec![], st_ups: vec![], st_passage: vec![], catches: vec![], st_bus: vec![], st_tram: vec![], back_stops: vec![], line_pier: vec![], stop_grade: vec![],
     }
 }
 
@@ -1333,7 +1378,7 @@ fn a_change_costs_fixed_minutes_and_the_walk_between_platforms() {
     assert_eq!(legs.iter().map(|l| l.kind).collect::<Vec<_>>(), vec![1, 2, 1]);
     assert!((legs[1].perc - walk).abs() < 1e-5 && legs[1].st_from == 1 && legs[1].st_to == 1);
     assert_eq!((legs[0].change, legs[2].change), (0.0, 2.0));
-    let total: f32 = legs.iter().map(|l| l.perc + l.wait_perc + l.change).sum();
+    let total: f32 = legs.iter().map(|l| l.perc + l.wait_perc + l.change + l.ends).sum();
     assert!((total - sk.r[2]).abs() < 1e-4, "the legs add up to the strategy: {total}");
 }
 
@@ -1371,7 +1416,7 @@ fn a_change_in_a_station_building_counts_less() {
     assert_eq!(legs.iter().map(|l| l.kind).collect::<Vec<_>>(), vec![1, 2, 1]);
     assert!((legs[2].change - 1.0).abs() < 1e-6 && legs[0].change == 0.0);
     assert!((legs[1].perc - walk).abs() < 1e-5);
-    let total: f32 = legs.iter().map(|l| l.perc + l.wait_perc + l.change).sum();
+    let total: f32 = legs.iter().map(|l| l.perc + l.wait_perc + l.change + l.ends).sum();
     assert!((total - sk.r[2]).abs() < 1e-4, "the legs add up to the strategy: {total}");
     // a transfer fare is paid whole
     let pf = Params { xfer_fare: 3.0, ..p };
@@ -2010,7 +2055,7 @@ fn leaf_stations_leave_every_strategy_as_it_was() {
             line_name: vec![String::new()], line_off: vec![0, 7], line_stops: vec![0, 1, 2, 3, 4, 5, 0],
             hop_min: (0..7).map(|k| if k < 6 { 2.0 } else if wrap { 0.5 } else { 0.0 }).collect(), hop_back: vec![], line_speed_kmh: vec![0.0],
             line_headway_min: vec![[5.0; network::PERIODS]], line_seats: vec![100.0], line_rated: vec![], line_crush: vec![200.0],
-            st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![wrap], span: vec![], st_ups: vec![], st_passage: vec![], catches: vec![], st_bus: vec![], st_tram: vec![], back_stops: vec![],
+            st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![wrap], span: vec![], st_ups: vec![], st_passage: vec![], catches: vec![], st_bus: vec![], st_tram: vec![], back_stops: vec![], line_pier: vec![], stop_grade: vec![],
         }
     };
     let nets = [network::synth_network(), ring(true), ring(false), common_test_net(&[&[0, 1, 2, 3], &[0, 1, 2]], &[6.0, 12.0], &[2.0, 3.0])];

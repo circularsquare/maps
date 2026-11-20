@@ -386,8 +386,9 @@ impl Gravity {
 
     /// `wf_*` (T-587): each near zone pair's commuters as the pairs of its zones' points
     /// (`walk_points`), each walking `cell_walk_m` times the zones' walk factor round water. The
-    /// pair's share walking with no rail is its cell pairs' mean (`Params::walk_no_rail`); its cost for the choice with rail is the one walk whose share
-    /// against a driver parking free is that mean.
+    /// pair's share walking with no rail is its cell pairs' mean (`Params::walk_no_rail_all`), less
+    /// the walk tier at the one walk below (T-3888); its cost for the choice with rail is the one walk
+    /// whose share against a driver parking free is that mean.
     pub fn set_walk_fine(&mut self, city: &City, z: &Zones, p: &Params, nr: &NoRail) {
         let ns = p.walk_samples;
         if ns == 0 || !self.walk_set || city.len() != z.cell_zone.len() {
@@ -432,7 +433,7 @@ impl Gravity {
                     if x.is_nan() {
                         continue;
                     }
-                    sw += p.walk_no_rail(road, paid, free, x);
+                    sw += p.walk_no_rail_all(road, paid, free, x);
                     if x < NO_WALK {
                         m0 += 1.0 / (1.0 + fast_exp(-(bt * (road - x) + p.asc_walk())));
                     }
@@ -443,7 +444,8 @@ impl Gravity {
                 } else {
                     NO_WALK
                 };
-                row.push((ju as u32, cw, sw * w2));
+                // T-3888: the walk tier by the pair's one walk, as the choice with rail takes it
+                row.push((ju as u32, cw, (1.0 - p.tier_at(cw)) * (sw * w2)));
             });
             row.sort_unstable_by_key(|x| x.0);
             self.wf_j.extend(row.iter().map(|x| x.0));

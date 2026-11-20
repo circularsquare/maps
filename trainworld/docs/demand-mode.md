@@ -14,8 +14,9 @@ Per OD pair and period, rail, driving and walking the whole way (below) compete 
 there is no car ownership in demand (Anita, 2026-10-21, T-854), and "car" in every view stands for
 the car and every other way of getting about (bus, taxi, bike).
 
-- rail = walk to a station + wait (half the headway, capped) + ride + walks between platforms +
-  walk from station + fare / value of time (a change costs a fixed 2 perceived minutes, its wait
+- rail = walk to a station + the stairs at a platform below or above ground (below) + wait (half the
+  headway, capped) + ride + walks between platforms + walk from station + fare / value of time (a
+  change costs a fixed 2 perceived minutes, its wait
   and the walk between the two platforms' centres: T-717; onto the line just left only where it
   passes the station again towards other stops, as at a lollipop's junction, T-1268, or after a
   walk to another of its stops, away from where the rider rode, as across the bend of a line
@@ -88,12 +89,31 @@ without multiplying fare (T-067).
 walking at `beta`, damped on the car's minutes (above), drivers parking free and those paying for a
 space choosing apart; rail and the car split the rest by the ratio curve (T-918). The walk's real minutes are its distance at 6 km/h along a path 1.3 times the straight
 line (13 minutes a straight km); every minute weighs 1.5 (`walk_trip_w`, one rate), so 500 m costs
-10 perceived minutes, 1 km 19.5, 2 km 39 and 3 km 58.5. Against the car a walk gets a
-bonus of **10 perceived minutes** (`walk_bonus_min`; the logit's `asc_walk` is that times `beta`, so
-1.0 at 0.10, and it follows `beta`): what a short drive costs beyond its road time, which the car
-side does not otherwise carry (getting to the car, the walk from the space). One constant for
-commutes and everyday trips alike, and for every country (T-636). Walks over 10 km straight
-line are not offered (`WALK_REACH_KM`, a computational bound).
+10 perceived minutes, 1 km 19.5, 2 km 39 and 3 km 58.5. **No head start** (Anita, 2026-11-20,
+T-3888; 10 perceived minutes before): walking, rail and the car meet on their minutes alone
+(`walk_bonus_min` 0, the logit's `asc_walk`). One rule for commutes and everyday trips alike, and
+for every country. Walks over 10 km straight line are not offered (`WALK_REACH_KM`, a
+computational bound).
+
+**People who won't walk far** (Anita, T-3888, option A of notes/T-3888.md): a tenth of every trip's
+people (`walk_tier` 0.1) never walk it the whole way once its walk costs more than 800 straight
+metres' (`walk_tier_m`, by the walk's cost, so a detour round water counts). They choose between
+the network and the car alone (the ratio curve), and the walking rule refuses none of their
+station pairs, so a trip it refuses whole still has their riders, on every pair
+(`Params::tier_choice`); walking with no rail is 0.9 of the logit's there (`walk_no_rail`). A
+commute zone pair between cells takes the tier by its one walk cost (`set_walk_fine`). The
+regional layer's outings across a zone line take it from their packs' walk shares, so only once
+those are rebuilt.
+
+**The stairs** (Anita, 2026-11-20, T-3888): a trip pays 2 perceived minutes where its first boarding
+is at a platform below or above ground (`train_in_min`) and 2 where its last ride leaves at one
+(`train_out_min`), on a train or a tram; never at a change (which keeps its fixed 2), never on a
+bus or ferry, never at a platform at grade (level 0). A platform is its stop's own station: a
+station with platforms at several levels pays at the one boarded or left. The minutes are each
+station pair's expected over the departures its strategy takes by frequency
+(`search::trip_ends`), added after the route search as the fare curve is, so the choice among a
+station's lines does not see them; they are not in the walking rule's real minutes. The trip
+explorer shows them as "stairs".
 
 Commutes walk between cells (T-587, `Gravity::set_walk_fine`): each zone's homes and its jobs are
 six cells (`walk_samples`), those where the zone's cumulative weight in pack order crosses 1/12,
