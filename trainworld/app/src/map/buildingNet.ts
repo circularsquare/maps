@@ -100,7 +100,10 @@ export function buildingsDrawn(
       return;
     }
     const tracks: { id: number; pts: number[] }[] = [];
-    for (const { id, p, ...e } of boxes) {
+    // (no `...rest` here: it made a copy of every edge's box for every building, most of a build's time with hundreds
+    // of buildings, T-3659)
+    for (const e of boxes) {
+      const { id, p } = e;
       if (e.x1 < x0 - pad || e.x0 > x1 + pad || e.y1 < y0 - pad || e.y0 > y1 + pad) continue;
       // the pieces of it near the floor, each segment on its own
       for (let j = 0; j + 5 < p.length; j += 3) {

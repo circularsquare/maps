@@ -6,6 +6,7 @@
 // nearest spot along one of the complex's platforms that overlaps no box, track, waiting room, other
 // lot or the label, shrinking if none does, and the least bad spot if nothing fits.
 
+import { ShapeGrid } from "./shapeGrid";
 import { PLATFORM_POINTS, ST_FLIP, ST_ONE, ST_ONE_NEG, ST_PARK, ST_ROOM } from "./stationGeometry";
 
 /** A lot's numbers in `NetworkBuffers.lots`: centre x, y (local); half its length along it as a
@@ -69,7 +70,8 @@ export interface FacilityCache {
   perM: number;
   /** the facility complexes' stations' positions and platforms the near cells were made from */
   nearOf: number[];
-  near: Set<number>;
+  /** the near cells in tiles of 32 x 32, each 32 row masks (bit cx & 31 of row cy & 31), by `cellKey` of the tile */
+  near: Map<number, Int32Array>;
   /** each segment's x0, y0, x1, y1, owner (an edge id, or -1 - a station's id), by id; `free`: ids to reuse */
   seg: number[];
   free: number[];
@@ -93,7 +95,7 @@ interface Placed {
   lot: { rect: Rect; bays: number; flags: number; park0: number; parks: number } | null;
 }
 
-export const newFacilityCache = (): FacilityCache => ({ perM: NaN, nearOf: [], near: new Set(), seg: [], free: [], grid: new Map(), edges: new Map(), stations: new Map(), outlines: [], complexes: new Map() });
+export const newFacilityCache = (): FacilityCache => ({ perM: NaN, nearOf: [], near: new Map(), seg: [], free: [], grid: new Map(), edges: new Map(), stations: new Map(), outlines: [], complexes: new Map() });
 
 const sameNums = (a: readonly number[], b: readonly number[]) => a.length === b.length && a.every((v, i) => Object.is(v, b[i]));
 const cellKey = (cx: number, cy: number) => cx * 1_000_003 + cy;
@@ -138,18 +140,30 @@ export function placeFacilities(
   for (const members of groups.values()) for (const i of members) nearOf.push(stations[i * 3], stations[i * 3 + 1], st[i].platform);
   let allDirty = false;
   if (!Object.is(cache.perM, perM) || !sameNums(cache.nearOf, nearOf)) {
-    const near = new Set<number>();
+    // (T-3659: a square is marked a word per row, however many platforms share its cells)
+    const near = new Map<number, Int32Array>();
     for (const members of groups.values()) for (const i of members) {
       const cx = Math.floor(stations[i * 3] / cell), cy = Math.floor(stations[i * 3 + 1] / cell);
       const r = Math.ceil(((st[i].platform / 2 + LOT_MAX_M / 2 + LOT_GAPS_M[LOT_GAPS_M.length - 1] + MAX_BAYS * BAY_M) * perM) / cell) + 1;
-      for (let dx = -r; dx <= r; dx++) for (let dy = -r; dy <= r; dy++) near.add(cellKey(cx + dx, cy + dy));
+      for (let tx = Math.floor((cx - r) / 32); tx <= Math.floor((cx + r) / 32); tx++) {
+        const lo = Math.max(0, cx - r - tx * 32), hi = Math.min(31, cx + r - tx * 32);
+        const mask = (-1 << lo) & (0xffffffff >>> (31 - hi));
+        for (let ty = Math.floor((cy - r) / 32); ty <= Math.floor((cy + r) / 32); ty++) {
+          let tile = near.get(cellKey(tx, ty));
+          if (!tile) near.set(cellKey(tx, ty), (tile = new Int32Array(32)));
+          for (let y = Math.max(0, cy - r - ty * 32); y <= Math.min(31, cy + r - ty * 32); y++) tile[y] |= mask;
+        }
+      }
     }
     Object.assign(cache, { perM, nearOf, near, seg: [], free: [], grid: new Map(), edges: new Map(), stations: new Map() });
     cache.complexes.clear();
     allDirty = true;
   }
   const { seg, grid, near } = cache;
-  const isNear = (x: number, y: number) => near.has(cellKey(Math.floor(x / cell), Math.floor(y / cell)));
+  const isNear = (x: number, y: number) => {
+    const cx = Math.floor(x / cell), cy = Math.floor(y / cell), tile = near.get(cellKey(Math.floor(cx / 32), Math.floor(cy / 32)));
+    return tile !== undefined && (tile[cy & 31] & (1 << (cx & 31))) !== 0;
+  };
   // a straight run of track can be one long segment: tried a cell apart along it
   const passesNear = (x0: number, y0: number, x1: number, y1: number) => {
     const n = Math.ceil(Math.hypot(x1 - x0, y1 - y0) / cell);
@@ -222,7 +236,18 @@ export function placeFacilities(
 
   const index = new Map<number, number>();
   for (let i = 0; i < st.length; i++) index.set(st[i].id, i);
-  const lots: number[] = [], lotRects: Rect[] = [], rooms: Rect[] = [];
+  const lots: number[] = [], lotRects = new ShapeGrid<Rect>(256 * perM), rooms = new ShapeGrid<Rect>(256 * perM);
+  // the station buildings by their boxes, and the first one holding a station of each complex
+  const buildings = new ShapeGrid<LotOutline>(256 * perM), homeOf = new Map<number, LotOutline>();
+  for (const o of outlines) {
+    for (const i of o.members) if (!homeOf.has(keyOf(i))) homeOf.set(keyOf(i), o);
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (let k = 0; k + 1 < o.corners.length; k += 2) {
+      x0 = Math.min(x0, o.corners[k]); x1 = Math.max(x1, o.corners[k]);
+      y0 = Math.min(y0, o.corners[k + 1]); y1 = Math.max(y1, o.corners[k + 1]);
+    }
+    buildings.add(o, x0, y0, x1, y1);
+  }
   /** rooms and lots placed or taken away since the last build: a complex after one is placed again if its tries come near */
   const moved: Rect[] = [];
   const order = [...groups.values()].sort((a, b) => st[a[0]].id - st[b[0]].id);
@@ -232,7 +257,7 @@ export function placeFacilities(
     const kept = new Set(keys);
     for (const [k, p] of cache.complexes) if (!kept.has(k)) pushRects(moved, p);
   }
-  const ctx: PlaceCtx = { st, stations, stationLine, stationShape, waysAt, outlines, perM, cell, seg, grid, lotRects, rooms };
+  const ctx: PlaceCtx = { st, stations, stationLine, stationShape, waysAt, buildings, perM, cell, seg, grid, lotRects, rooms, seen: new Uint32Array(seg.length / 5), stamp: 0, found: [] };
   order.forEach((members, n) => {
     const inputs: number[] = [];
     for (const i of members) {
@@ -247,17 +272,17 @@ export function placeFacilities(
       for (const i of members) if (flag(i) & ST_ROOM) stations[i * 3 + 2] -= ST_ROOM;
       if (p.room) {
         setRoom(stations, index.get(p.room.id)!, p.room.side);
-        rooms.push(p.room.rect);
+        addRect(rooms, p.room.rect, perM);
       }
     } else {
-      p = placeOne(ctx, members, inputs);
+      p = placeOne(ctx, members, inputs, homeOf.get(keyOf(members[0])));
       if (was && !samePlaced(was, p)) pushRects(moved, was);
       if (!was || !samePlaced(was, p)) pushRects(moved, p);
     }
     placedNow.set(keys[n], p);
     if (p.lot) {
       const { rect: r, bays, flags, park0, parks } = p.lot;
-      lotRects.push(r);
+      addRect(lotRects, r, perM);
       lots.push(r.x, r.y, r.ux * r.hl * perM, r.uy * r.hl * perM, r.hl, r.hd, bays, flags, index.get(park0)!, parks);
     }
   });
@@ -271,14 +296,25 @@ interface PlaceCtx {
   stationLine: Float32Array;
   stationShape: Float32Array;
   waysAt: Map<number, number[]>;
-  outlines: readonly LotOutline[];
+  buildings: ShapeGrid<LotOutline>;
   perM: number;
   cell: number;
   seg: number[];
   grid: Map<number, number[]>;
   /** the lots and rooms placed so far this build */
-  lotRects: Rect[];
-  rooms: Rect[];
+  lotRects: ShapeGrid<Rect>;
+  rooms: ShapeGrid<Rect>;
+  /** by segment id, the last query that took it (`stamp`); `found`, that query's segments */
+  seen: Uint32Array;
+  stamp: number;
+  found: number[];
+}
+
+/** A room or lot into its grid, by its centre and the furthest its corners reach (local); one with no way (a
+ * zero vector) in every query. */
+function addRect(grid: ShapeGrid<Rect>, r: Rect, perM: number) {
+  const reach = r.ux || r.uy ? (r.hl + r.hd) * perM : Infinity;
+  grid.add(r, r.x - reach, r.y - reach, r.x + reach, r.y + reach);
 }
 
 /** Station `i` draws its complex's waiting room, on `side`. */
@@ -317,8 +353,8 @@ function rectNearBox(r: Rect, b: number[], perM: number): boolean {
 
 /** One complex's waiting room and car park, against the grid and the rooms and lots placed before it; its stations'
  * flags are set for the room as `placeFacilities` says. */
-function placeOne(ctx: PlaceCtx, members: number[], inputs: number[]): Placed {
-  const { st, stations, stationLine, stationShape, waysAt, outlines, perM, cell, seg, grid, lotRects, rooms } = ctx;
+function placeOne(ctx: PlaceCtx, members: number[], inputs: number[], home: LotOutline | undefined): Placed {
+  const { st, stations, stationLine, stationShape, waysAt, buildings, perM, cell, seg, grid, lotRects, rooms } = ctx;
   const flag = (i: number) => Math.round(stations[i * 3 + 2]);
   const frame = (i: number) => platformFrame(i, stations, stationLine);
   const cells = [Infinity, Infinity, -Infinity, -Infinity], env = [Infinity, Infinity, -Infinity, -Infinity];
@@ -328,15 +364,17 @@ function placeOne(ctx: PlaceCtx, members: number[], inputs: number[]): Placed {
   const cover = (x: number, y: number, ext: number) => {
     env[0] = Math.min(env[0], x - ext); env[1] = Math.min(env[1], y - ext); env[2] = Math.max(env[2], x + ext); env[3] = Math.max(env[3], y + ext);
   };
-  const segsNear = (r: Rect, pad: number) => {
-    const ext = Math.hypot(r.hl, r.hd) * perM + pad;
-    const out = new Set<number>();
-    const cx0 = Math.floor((r.x - ext) / cell), cx1 = Math.floor((r.x + ext) / cell), cy0 = Math.floor((r.y - ext) / cell), cy1 = Math.floor((r.y + ext) / cell);
-    read(cx0, cy0, cx1, cy1);
+  // the segments in a box of cells, each once (a stamp per segment, since one long segment is in many cells)
+  const segsIn = (cx0: number, cy0: number, cx1: number, cy1: number) => {
+    const { seen, found } = ctx;
+    found.length = 0;
+    const stamp = ++ctx.stamp;
     for (let cx = cx0; cx <= cx1; cx++)
-      for (let cy = cy0; cy <= cy1; cy++)
-        for (const k of grid.get(cellKey(cx, cy)) ?? []) out.add(k);
-    return out;
+      for (let cy = cy0; cy <= cy1; cy++) {
+        const list = grid.get(cellKey(cx, cy));
+        if (list) for (const k of list) if (seen[k] !== stamp) { seen[k] = stamp; found.push(k); }
+      }
+    return found;
   };
   const room = members.filter((i) => flag(i) & ST_ROOM), park = members.filter((i) => flag(i) & ST_PARK);
   // the name label's patch: below or right of the complex's middle, by its first station's way
@@ -374,7 +412,7 @@ function placeOne(ctx: PlaceCtx, members: number[], inputs: number[]): Placed {
             if (owner < 0 && d < ROOM_NEAR_M) worst = 2;
             else if (owner >= 0 && d < ROOM_TRACK_M) worst = Math.max(worst, 1);
           }
-          if (lotRects.some((r) => inRect(r, px, py, perM, 0))) worst = 2;
+          if (lotRects.near(px, py, 0).some((r) => inRect(r, px, py, perM, 0))) worst = 2;
           if (inRect(label, px, py, perM, 0)) worst = Math.max(worst, 1);
           bad += worst;
         }
@@ -386,7 +424,7 @@ function placeOne(ctx: PlaceCtx, members: number[], inputs: number[]): Placed {
     const f = frame(b.i);
     out.room = { id: st[b.i].id, side: b.side, rect: { x: f.mx + f.nx * b.side * 24 * perM, y: f.my + f.ny * b.side * 24 * perM, ux: f.dx, uy: f.dy, hl: 30, hd: 12 } };
     // (its own car park keeps clear of it too)
-    rooms.push(out.room.rect);
+    addRect(rooms, out.room.rect, perM);
   }
 
   // the car park: a lot of its own beside the complex
@@ -398,22 +436,28 @@ function placeOne(ctx: PlaceCtx, members: number[], inputs: number[]): Placed {
   if (full * 0.6 >= LOT_SHORT_M) sizes.push([Math.max(LOT_SHORT_M, full * 0.6), 1]);
   // along every platform of the complex, those with park and ride first, longest first
   const along = [...members].sort((a, b) => Number(!!(flag(b) & ST_PARK)) - Number(!!(flag(a) & ST_PARK)) || st[b].platform - st[a].platform);
-  const badness = (r: Rect) => {
-    let bad = 0;
+  // A try's badness, cut short once it reaches `limit` (the best so far: a try only wins with less, so the cut one
+  // loses either way). What it would read is recorded first, so a kept complex depends on all of it.
+  const badness = (r: Rect, limit: number) => {
     cover(r.x, r.y, (r.hl + r.hd) * perM);
-    for (const k of segsNear(r, CLEAR_BOX_M * perM)) {
+    const ext = Math.hypot(r.hl, r.hd) * perM + CLEAR_BOX_M * perM;
+    const cx0 = Math.floor((r.x - ext) / cell), cx1 = Math.floor((r.x + ext) / cell), cy0 = Math.floor((r.y - ext) / cell), cy1 = Math.floor((r.y + ext) / cell);
+    read(cx0, cy0, cx1, cy1);
+    let bad = rectsMeet(r, label, perM, 0) ? 1 : 0;
+    // (the rooms' and lots' grid holds each at its centre and reach, so this finds every one rectsMeet could meet)
+    const reach = (r.hl + r.hd + 2 * CLEAR_LOT_M) * perM;
+    for (const o of rooms.near(r.x, r.y, reach)) if (rectsMeet(r, o, perM, CLEAR_LOT_M)) bad += 2;
+    for (const o of lotRects.near(r.x, r.y, reach)) if (rectsMeet(r, o, perM, CLEAR_LOT_M)) bad += 2;
+    if (bad >= limit) return bad;
+    for (const k of segsIn(cx0, cy0, cx1, cy1)) {
       const owner = seg[k * 5 + 4], box = owner < 0;
-      if (segHitsRect(seg[k * 5], seg[k * 5 + 1], seg[k * 5 + 2], seg[k * 5 + 3], r, perM, box ? CLEAR_BOX_M : CLEAR_TRACK_M)) bad += box ? 3 : 2;
+      if (segHitsRect(seg[k * 5], seg[k * 5 + 1], seg[k * 5 + 2], seg[k * 5 + 3], r, perM, box ? CLEAR_BOX_M : CLEAR_TRACK_M) && (bad += box ? 3 : 2) >= limit) return bad;
     }
-    for (const o of rooms) if (rectsMeet(r, o, perM, CLEAR_LOT_M)) bad += 2;
-    for (const o of lotRects) if (rectsMeet(r, o, perM, CLEAR_LOT_M)) bad += 2;
-    if (rectsMeet(r, label, perM, 0)) bad += 1;
-    for (const o of outlines) if (outlineMeets(o.corners, r, perM, CLEAR_LOT_M)) bad += 3;
+    for (const o of buildings.near(r.x, r.y, reach)) if (outlineMeets(o.corners, r, perM, CLEAR_LOT_M)) bad += 3;
     return bad;
   };
   let pick: { r: Rect; bays: number; bad: number } | null = null;
   // a complex in a station building: along the outside of its edges first, longest edge first
-  const home = outlines.find((o) => o.members.some((i) => members.includes(i)));
   if (home) {
     const c = home.corners, n = c.length / 2;
     const edges = Array.from({ length: n }, (_, k) => k).sort((a, b) => edgeLen(c, b) - edgeLen(c, a));
@@ -430,7 +474,7 @@ function placeOne(ctx: PlaceCtx, members: number[], inputs: number[]): Placed {
         for (const a of [0, -0.3, 0.3]) {
           const t = a * el;
           const r: Rect = { x: mx + ux * t - uy * sg * off, y: my + uy * t + ux * sg * off, ux, uy, hl, hd };
-          const bad = badness(r);
+          const bad = badness(r, pick?.bad ?? Infinity);
           if (!pick || bad < pick.bad) pick = { r, bays: nb, bad };
           if (bad === 0) break edge;
         }
@@ -446,7 +490,7 @@ function placeOne(ctx: PlaceCtx, members: number[], inputs: number[]): Placed {
       for (const sg of sides) for (const a of [0, -0.25, 0.25, -0.5, 0.5]) {
         const off = gap + hd, t = a * st[i].platform;
         const r: Rect = { x: f.mx + (f.dx * t + f.nx * sg * off) * perM, y: f.my + (f.dy * t + f.ny * sg * off) * perM, ux: f.dx, uy: f.dy, hl, hd };
-        const bad = badness(r);
+        const bad = badness(r, pick?.bad ?? Infinity);
         if (!pick || bad < pick.bad) pick = { r, bays: nb, bad };
         if (bad === 0) break search;
       }
@@ -470,14 +514,18 @@ export function segHitsRect(x0: number, y0: number, x1: number, y1: number, r: R
   const tv = (x: number, y: number) => (-(x - r.x) * r.uy + (y - r.y) * r.ux) / perM;
   const u0 = tu(x0, y0), v0 = tv(x0, y0), du = tu(x1, y1) - u0, dv = tv(x1, y1) - v0;
   const hu = r.hl + pad, hv = r.hd + pad;
+  // the part of the segment (0-1) inside each pair of the rectangle's sides, without an array a call (T-3659)
   let lo = 0, hi = 1;
-  for (const [p, q] of [[-du, u0 + hu], [du, hu - u0], [-dv, v0 + hv], [dv, hv - v0]]) {
-    if (Math.abs(p) < 1e-12) { if (q < 0) return false; continue; }
-    const t = q / p;
-    if (p < 0) lo = Math.max(lo, t); else hi = Math.min(hi, t);
+  if (Math.abs(du) < 1e-12) {
+    if (u0 + hu < 0 || hu - u0 < 0) return false;
+  } else {
+    const a = (-hu - u0) / du, b = (hu - u0) / du;
+    lo = Math.max(lo, Math.min(a, b)); hi = Math.min(hi, Math.max(a, b));
     if (lo > hi) return false;
   }
-  return true;
+  if (Math.abs(dv) < 1e-12) return v0 + hv >= 0 && hv - v0 >= 0;
+  const a = (-hv - v0) / dv, b = (hv - v0) / dv;
+  return Math.max(lo, Math.min(a, b)) <= Math.min(hi, Math.max(a, b));
 }
 
 function edgeLen(c: ArrayLike<number>, k: number) {

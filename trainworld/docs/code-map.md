@@ -203,7 +203,7 @@ city's name in Japanese or Chinese from `place-names.json`, written by `tools/pl
 - Stations: `stationGeometry.ts` (platform shapes along the track for drawing, picking and the
   ghost, T-189, T-254; the waiting room annex, `stationAnnexes`, T-1416), `stationSide.ts` (the side a station on
   single track draws its one platform on, T-3540), `facilityPlace.ts`
-  (where each complex's one waiting room and car park go, in the clock worker, T-1528; kept per complex between builds, T-3803),
+  (where each complex's one waiting room and car park go, in the clock worker, T-1528; kept per complex between builds, T-3803; rooms, lots and buildings looked up through `shapeGrid.ts`, T-3659),
   `parkingLots.ts` (the car parks drawn as lots under the network, their hit test, T-1528), `stationNames.ts` (a station's name suggestions: cross street,
   neighbourhood, city or town, T-534), `stationLabels.ts` (names
   keep their elements across edits unless their text changes, T-496; the labels and the shadow
