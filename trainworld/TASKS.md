@@ -103,6 +103,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: A cold run takes 4.4-5.1 min at 4 jobs, against the 3 min aimed for; most of it is zone_water's 368 windows.
   - Goal: A cold run is near 3 min.
   - Other: See notes/T-1992.md.
+- T-3868 [P1] {L:loading} Big save stuck calculating trips after memory restarts (taking, 2026-11-20, agent bigload)
+  - Context: You, 11-20, playtesting your large North America save, building in Mexico City: "the calculating trips bar has almost filled like three times and then looks like it restarts. it says 'calculating trips after freeing memory'. the bar also fills visually to like 90% and then stalls like indefinitely / at least 5 minutes. and if i zoom out it seems to lose all progress ... ive been waiting for mexico city to load for like 15 minutes." Likely kin: T-2757, T-3373, T-3781.
+  - Goal: On that save, Mexico City's trips are calculated once without restarting in a loop, the bar never sits stalled, and zooming out keeps the progress made.
 - T-3781 [P1] {L:loading} {after:a report with the new diagnosis} Demand data not loading within 10 minutes
   - Context: Two anonymous reports on v0.4.2 (feedback 1795092485-688b2e15, 1795083347-52a31102), plus a third, "crashes every time it opens" (1795097335-fa20c413), all Japanese, 11-19 (board group g115). Their saves load normally on master. A stuck load now restarts once, and the report names the stuck worker and period (tree demandload).
   - Goal: The cause found from the next report's diagnosis, or closed if no report comes.
