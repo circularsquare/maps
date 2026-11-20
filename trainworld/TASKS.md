@@ -118,7 +118,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Myanmar (59 of 60 rows), Laos (11) and Timor-Leste (4) shipped 2026-11-20. Bhamo (0.44M) is parked: its busiest square sits on a GHSL pile-up of 23,697 people in one village square in Mansi, not on a town.
   - Goal: Bhamo built with its people spread off that square (or held), then gated and joined.
   - Other: notes/T-1738.md section 16
-- T-3763 [P2] {L:new-countries} Iraq and Iran
+- T-3763 [P2] {L:new-countries} Iraq and Iran (taking, 2026-11-20, agent iraniraq)
   - Context: You, 2026-11-19: players asked for Iraq and Iran; next with Laos and Myanmar.
   - Goal: Iraq and Iran built, shipped and joined per docs/adding-a-country.md.
 - T-3764 [P3] {L:new-countries} Fill the gaps, Pakistan, Bangladesh and Central Asia
@@ -133,7 +133,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Goal: Try shedding the arm that makes the wrap before halving; replan Canada after.
   - Other: notes/T-1239.md section 1
 - T-1376 [P3] {L:region-redraws} Madeleine Islands zone fails the park check
-  - Context: Les Iles-de-la-Madeleine (12,000 people) parks in its build: under 85% of its park draw lands on a cell. Solola, Guatemala (scd, 0.56M, 6 of 31 parks off every cell by Lake Atitlan) parks the same way and is dead space beside Chimaltenango.
+  - Context: The park check now fails a build only when 2.0 or more of the park draw is off the cells (T-1738, 11-20), so both may build now: retry lel and scd. Les Iles-de-la-Madeleine (12,000 people) parks in its build: under 85% of its park draw lands on a cell. Solola, Guatemala (scd, 0.56M, 6 of 31 parks off every cell by Lake Atitlan) parks the same way and is dead space beside Chimaltenango.
   - Goal: Both zones built with their parks on cells (or the check let through for parks on water's edge), or Madeleine left as dead space; Solola, at 0.56M, should not stay dark.
   - Other: notes/T-1239.md
 - T-2300 [P3] {L:region-redraws} Taiwan's Taitung zone spans the mountains
@@ -807,6 +807,9 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Ports, industrial estates and airports with no residents stay dark (Tuas and Jurong were fixed by hand 11-13). Half done: units keep outlines with 0.2 km2 of built surface.
   - Goal: A free unit under the floor sharing half its land border with one metro joins it, after a worldwide count.
   - Other: notes/T-3287.md
+- T-3842 [P2] {L:loading} Map error panning near Loikaw and Meiktila (taking, 2026-11-20, agent maperr)
+  - Context: Found by T-1738: a MapLibre worker error ("Cannot use 'in' operator to search for 'imageName' in undefined") fires panning to Loikaw in a game opened on Taunggyi, and in Meiktila and pgx games; likely a basemap label, not proven. Players there will see it; mki and pgx pass their browser check only with it let through.
+  - Other: notes/T-1738.md section 16
 - T-3841 [P3] {L:cleanup} Agent report inbox takes in non-reports
   - Context: `tools/reports.py`'s hook files "final-text" entries that aren't agent reports: an agent's compaction summary (r-f11676a4, editfirst, 11-20) and lines that read as your chat replies in the orchestrator's tab (r-a5f08c93 "yes purge it, leave resend on free"). Each wakes the orchestrator for nothing.
   - Goal: Only a subagent's final report is filed.
