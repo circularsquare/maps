@@ -229,6 +229,10 @@ effect(() => {
   else if (!on && ticking) { clearInterval(ticking); ticking = 0; }
 });
 
+/** T-3884: zoomed out, no zone in view, while a whole solve of several zones runs: the tag says so (T-1851 ties it to
+ * the zone in view otherwise, and a solve nobody sees looked like lost work) */
+const wholeSolveUnseen = computed(() => !viewedZone.value && demandUpdating.value && demandScope.value > 1 && !demandHeld.value);
+
 export function StatusTag() {
   // T-149, T-172: a city loading (at startup, after a pan, or construction reaching it) says how
   // far it has got
@@ -251,6 +255,7 @@ export function StatusTag() {
     : load ? t("statusTag.loadingData")
     : terrain ? terrain
     : mapWait ? mapWait
+    : wholeSolveUnseen.value ? t("statusTag.recomputingCities", { count: count(demandSolving.value?.size ?? demandScope.value) })
     : !demandView.value ? (demandIdle.value ? null : t("statusTag.loadingDataDots")) // T-318: nothing to load over dead space
     // T-1493: the zone in view has figures but its bubbles are still on their way
     : bubblesWaiting.value ? t("statusTag.loadingDataDots")
@@ -277,6 +282,7 @@ export function StatusTag() {
   const onMap = !onTerrain && busy === mapWait;
   const base = onMap ? "" : onTerrain ? (terrainFailed ? t("statusTag.terrainFailTip") : "")
     : (loadFailure.value ? loadFailText(loadFailure.value) : undefined) ?? (zoneFailure ? zoneFailure : load && !loadingCardShown() ? t("statusTag.loadingTip", { cities: cityNames(load.cities), pct: Math.floor(load.fraction * 100), step: load.step })
+    : wholeSolveUnseen.value ? (demandWork.value && shownLeft() !== null ? afterChangeLeft() : "")
     : !demandView.value ? busy
     : bubblesWaiting.value ? ""
     : clickWait.value ? waitTip(clickWait.value)
@@ -297,6 +303,7 @@ export function StatusTag() {
     if (onMap) kind = "map";
     else if (onTerrain) { kind = "terrain"; const left = groundNet.value.pending + shadeDownloads.value; share = terrainPeak > 1 ? 1 - left / terrainPeak : null; }
     else if (load) { kind = "load"; share = load.fraction; }
+    else if (wholeSolveUnseen.value) share = roundShare();
     else if (!demandView.value) kind = "data";
     else if (bubblesWaiting.value) { kind = "bubbles"; share = zoneLoads.value.get(activeCity.value) ?? null; }
     else if (clickWait.value) { kind = "click"; share = zoneLoads.value.get(clickWait.value) ?? roundShare(); }
