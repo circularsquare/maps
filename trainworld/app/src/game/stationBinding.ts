@@ -5,7 +5,7 @@
 import { computed } from "@preact/signals";
 import { display, setDisplay } from "./ui";
 
-export const bindNewStations = computed(() => display.value.bindNew !== false);
+export const bindNewStations = computed(() => display.value.bindNew);
 
 /** The player's change. */
 export function setBindNew(on: boolean) {

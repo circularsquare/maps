@@ -3,6 +3,7 @@
 
 import type { ComponentChildren } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
+import { signal } from "@preact/signals";
 import { budgetGB, budgetKind, gbText, liveGB } from "../game/memoryEstimate";
 import { CURRENCIES, CURRENCY, isCurrency } from "../game/currency";
 import { exact } from "../game/format";
@@ -297,19 +298,35 @@ function Slider({ label, min, max, step, value, tip, percent: pct, set }: { labe
   );
 }
 
-/** T-3759, T-3794: new stations named after their complex or not; changing it asks about the existing
- * stations too (one undo). No, Escape and a click outside all leave them as they are. */
+/** T-3814: the box as the player just clicked it, shown while its question is the one up (anything that clears
+ * the question puts the box back) */
+const bindAsked = signal<{ q: unknown; on: boolean } | null>(null);
+const bindShown = () => { const b = bindAsked.value; return b && ask.value === b.q ? b.on : bindNewStations.value; };
+
+/** T-3759, T-3794, T-3814: new stations named after their complex or not. With any station placed it asks first,
+ * both ways (Anita, 2026-11-19): Cancel (Escape, a click outside) keeps the setting; new stations only changes the
+ * setting; Rename all stations changes it and binds or unbinds every station (one undo; none when every station is
+ * already so). With none placed it just changes. */
 function bindNew(on: boolean) {
-  setBindNew(on);
   const stations = world.peek()?.save.stations.filter((s) => !s.port) ?? [];
-  if (on) {
-    if (!stations.some((s) => s.unbound)) return;
-    ask.value = { text: t("settingsTab.bindAllQuestion"), yes: t("settingsTab.bindAll"), no: t("settingsTab.bindNewOnly"), run: () => void edit({ op: "bindAll" }) };
-    return;
-  }
-  const bound = stations.filter((s) => !s.unbound);
-  if (!bound.length) return;
-  ask.value = { text: t("settingsTab.unbindAllQuestion"), yes: t("settingsTab.unbindAll"), no: t("settingsTab.bindNewOnly"), run: () => void edit({ op: "unbindAll", nodes: bound.map((s) => s.num), names: bound.map((s) => s.name) }) };
+  if (!stations.length) { setBindNew(on); return; }
+  const change = stations.filter((s) => (on ? s.unbound : !s.unbound));
+  const close = () => { bindAsked.value = null; };
+  const q = {
+    plain: true,
+    text: t(on ? "settingsTab.bindAllQuestion" : "settingsTab.unbindAllQuestion"),
+    no: t("toolNotes.cancel"),
+    stay: close,
+    alt: { label: t("settingsTab.bindNewOnly"), run: () => { close(); setBindNew(on); } },
+    yes: t("settingsTab.bindAll"),
+    run: () => {
+      close();
+      setBindNew(on);
+      if (change.length) void edit(on ? { op: "bindAll" } : { op: "unbindAll", nodes: change.map((s) => s.num), names: change.map((s) => s.name) });
+    },
+  };
+  bindAsked.value = { q, on };
+  ask.value = q;
 }
 
 /** T-728: the game's mode; a normal game can be made a sandbox once, after a confirmation, never back. */
@@ -319,7 +336,7 @@ function GameMode() {
   // the player's own, in every game and before one is loaded
   const playerChecks = (
     <div class="checks">
-      <Check checked={bindNewStations.value} onChange={bindNew}>
+      <Check checked={bindShown()} onChange={bindNew}>
         {t("settingsTab.bindNew")}
       </Check>
       <Check checked={display.value.busOneWay} onChange={(v) => setDisplay("busOneWay", v)}>

@@ -897,10 +897,14 @@ order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the rider
   in a complex of several, has a toggle beside its name (link icon, hover "Use the complex's name",
   lit while bound): unbinding shows its stored name again, binding shows the complex's; each is one
   undo. New stations start bound while Settings, Game "Name new stations after their complex" is ticked
-  (on by default; the player's own, remembered in the browser and used in every game,
-  `DisplaySettings.bindNew`); a change applies to stations placed from then on. Ticking it while some stations are unbound asks "Name existing stations after their
-  complex too?" ("Rename all stations" binds every station, one undo; "Only new stations" or Escape
-  leaves them). The map labels every distinct name a complex's stations show. A line group's name
+  (the player's own, remembered in the browser and used in every game, `DisplaySettings.bindNew`; off for
+  a new player, a browser with no settings stored, and on for one with settings stored from before it was
+  chosen, the old default) [T-3814]; a change applies to stations placed from then on. Changing it in a
+  game with any station asks first, both ways, in a dialog with no "Confirm?" heading ("Make new stations
+  named after their complex, or also rename all existing stations after their complex?" ticking, "Make new
+  stations named independently, ..." unticking): Cancel, Escape or a click outside leaves the setting; "Apply to new stations only" changes
+  only the setting; "Rename all stations" changes it and binds or unbinds every station (each keeping the
+  name it shows), one undo, which leaves the setting as chosen. The map labels every distinct name a complex's stations show. A line group's name
   typed in its title stays even when it equals its first line's name.
 
 ## The complex map

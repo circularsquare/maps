@@ -36,6 +36,8 @@ const shot = async (page, name, center, zoom) => {
 try {
   const page = await chrome.ctx.newPage();
   collectErrors(page, errors);
+  // stations bound to their complex's name, an existing player's setting (a new player's is off, T-3814)
+  await page.addInitScript(() => { try { localStorage.setItem('trainworld-ui', JSON.stringify({ display: { bindNew: true } })); } catch {} });
   await page.goto(`${url}?debug=1&new=1&demandWorkers=1`);
   await page.waitForFunction(() => window.tw?.world?.value && window.tw?.client, undefined, { timeout: 180000 });
 

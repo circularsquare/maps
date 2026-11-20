@@ -670,6 +670,8 @@ body.resizing, body.resizing * { user-select: none; }
 .btn.danger { color: var(--bad); }
 .confirmation { width: min(380px, calc(100vw - 40px)); box-sizing: border-box; padding: 20px;
   border: 1px solid var(--rule); background: var(--bg); color: var(--text); font: inherit; }
+/* T-3814: room for three buttons on one row */
+.confirmation.three { width: min(460px, calc(100vw - 40px)); }
 .confirmation::backdrop { background: rgb(0 0 0 / 28%); }
 .confirmation h2 { font-size: 18px; margin: 0 0 12px; }
 .confirmation p { margin: 0 0 18px; }

@@ -29,6 +29,7 @@ import { styleUp } from "./styleReady";
 import { fitSparse } from "./gl";
 import type { Overlay } from "./overlay";
 import { addFinder } from "./demandHover";
+import { pick } from "./pick";
 import { hiddenOnGlobe } from "./live";
 import { language } from "../i18n";
 import { nativeLang, readable } from "../i18n/nativeNames";
@@ -40,6 +41,9 @@ export const NAME_M = 150;
 /** further out, a city's stations are a dust of dots */
 const MIN_ZOOM = 10;
 const HOVER_PX = 6;
+/** the tools a dot's name shows with (T-3802): looking around (no build tool, or the Build tab's Select), and
+ * laying track along the real lines; the others hover and draw things of their own */
+const DOT_TOOLS = new Set(["select", "blueprint", "track"]);
 /** the grid the lookups use, degrees */
 const CELL = 0.01;
 export const REAL_STATIONS_LAYER = "tw-realst";
@@ -360,6 +364,8 @@ export function startRealStations(map: maplibregl.Map, overlay: Overlay) {
   // the hover: the name only; above the bubbles (10), under the airports (11)
   nameUnder = (lng, lat) => {
     if (!on || map.getZoom() < MIN_ZOOM || hiddenOnGlobe(lng, lat)) return null;
+    // the dots are under the player's network: their name only with these tools, and never over the network
+    if (!placing && !DOT_TOOLS.has(tool.peek())) return null;
     const at = map.project([lng, lat]);
     const edge = map.unproject([at.x + HOVER_PX, at.y]);
     const m = Math.abs(edge.lng - lng) * M_PER_DEG * Math.cos((lat * Math.PI) / 180);
@@ -368,6 +374,7 @@ export function startRealStations(map: maplibregl.Map, overlay: Overlay) {
       if (!r || !mark(r, n.i)) continue;
       const s = map.project([n.st.lng[n.i], n.st.lat[n.i]]);
       if (Math.hypot(s.x - at.x, s.y - at.y) > HOVER_PX) continue;
+      if (!placing && pick(overlay, at.x, at.y, display.peek().trains)) return null;
       return n.st.name[n.i] ?? (n.st.local[n.i] || null);
     }
     return null;
@@ -375,7 +382,7 @@ export function startRealStations(map: maplibregl.Map, overlay: Overlay) {
   addFinder(10.5, (p) => {
     const name = nameUnder(p.lng, p.lat);
     return name ? [escape(name)] : null;
-  });
+  }, true);
   if (location.search.includes("debug=1"))
     (window as any).twRealStations = (lng?: number, lat?: number, m = NAME_M) => ({
       loaded: [...ready.keys()], drawn: [...drawn].map(([cc, r]) => ({ cc, n: r.st.lng.length, kinds: !!r.kinds })), on,

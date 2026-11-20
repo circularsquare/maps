@@ -128,7 +128,7 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
       if (picked !== undefined) return picked;
       // Longer-trip discs describe the current selection. They are drawn over the network, so a
       // click on them retains that selection and is consumed.
-      return hoverAt(map, px, py) ? selection.peek() ?? undefined : undefined;
+      return hoverAt(map, px, py, false, true) ? selection.peek() ?? undefined : undefined;
     },
     hover: (px, py) => hoverAt(map, px, py),
     overlay: view,

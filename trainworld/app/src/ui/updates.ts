@@ -58,7 +58,9 @@ export const UPDATES: Update[] = [
     at: "2026-11-19T22:52:58Z",
     line: "updates.v044Line",
     changes: [
-      ["updates.v044Change1", "track", "fix"],
+      ["updates.v044Change1", "track"],
+      ["updates.v044Change2", "track", "fix"],
+      ["updates.v044Change3", "community"],
     ],
   },
   {

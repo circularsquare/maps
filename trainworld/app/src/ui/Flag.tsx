@@ -7,6 +7,7 @@ import { boardSetting, renameOn, setDisplayName } from "../game/account";
 import { flagCountry, flagGroups, flagName, flagUrl, flagsOn, homeCountry, isFlag, setFlag } from "../game/flags";
 import { normalise } from "../game/search";
 import { t } from "../i18n";
+import { Icon } from "./widgets";
 import "./flag.css";
 
 /** The flag's picture, its name in the hover; nothing for no flag or a code this page does not know. `small` beside
@@ -63,7 +64,7 @@ export function FlagSetting() {
         {current ? <img class="flag" src={flagUrl(current)} alt="" decoding="async" /> : <span class="flag flag-none" />}
       </button>}
       {b.name && !editing && <span class="acct-flag-name">{b.name}</span>}
-      {rename && !editing && <button type="button" class="btn text acct-rename" onClick={() => { setName(b.name); setMsg(""); setEditing(true); }}>{t("accountPanel.changeName")}</button>}
+      {rename && !editing && <button type="button" class="save-pen" data-tip={t("accountPanel.changeName")} aria-label={t("accountPanel.changeName")} onClick={() => { setName(b.name); setMsg(""); setEditing(true); }}><Icon.pencil /></button>}
       {editing && <form class="acct-row acct-rename-form" onSubmit={(e) => { e.preventDefault(); save(); }}>
         <input maxLength={24} placeholder={t("leaderboard.name")} aria-label={t("leaderboard.name")} value={name} disabled={busy} autoFocus
           onInput={(e) => setName((e.target as HTMLInputElement).value)} />

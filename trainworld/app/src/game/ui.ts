@@ -180,7 +180,8 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   zoomButtons: true,
   legacyTime: false,
   busOneWay: false,
-  bindNew: true,
+  // T-3814: a new player names stations independently (an existing one keeps on, below)
+  bindNew: false,
   chartOtherLines: true,
   intercityTrips: !mobileDevice(),
   modeShapes: { ...MODE_SHAPES },
@@ -241,6 +242,9 @@ if ((saved.v ?? 1) < 12) delete migratedDisplay.lineBands;
 if ((saved.v ?? 1) < 14 && migratedDisplay.currency === "USD") delete migratedDisplay.currency;
 // Terrain shading became the default (Anita, 2026-11-17); the old default (off) was stored, so it is dropped once
 if ((saved.v ?? 1) < 15) delete migratedDisplay.hillshade;
+// T-3814: binding new stations went off by default; a player with anything stored and no choice of their own had it
+// on (the default from T-3759 until then), so they keep it
+if (Object.keys(saved).length && migratedDisplay.bindNew === undefined) migratedDisplay.bindNew = true;
 // T-3630: the phones-only toggle became a setting on every device; every computer had the old off stored, so only a
 // phone's choice carries over
 if (migratedDisplay.intercityTrips === undefined && mobileDevice() && _mobileIntercity !== undefined) migratedDisplay.intercityTrips = _mobileIntercity;
@@ -301,7 +305,7 @@ export function closeNetworkView() {
 /** A question waiting in a centered modal (T-096/T-113: removing something
  * constructed): `run` on the yes button, `stay` (if any) on the no button or Esc. `lines`: a row each
  * under the text, after the line's bullet (T-859: what a removal does to lines). */
-export const ask = signal<{ text: string; yes: string; no: string; run: () => void; stay?: () => void; lines?: { line: number; text: string }[] } | null>(null);
+export const ask = signal<{ text: string; yes: string; no: string; run: () => void; stay?: () => void; alt?: { label: string; run: () => void }; plain?: boolean; lines?: { line: number; text: string }[] } | null>(null);
 /** The selected line whose stops the map tool is editing. */
 export const lineDraft = signal<{ line: number | null; stops: number[] }>({ line: null, stops: [] });
 /** Stop editing is on (T-233): the line tool with a line to edit. The map then hides the demand

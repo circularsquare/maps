@@ -22,11 +22,12 @@ export interface Pointer {
 export const MIN_PICK_PX = 8;
 /** A finder gets the pointer and answers the tag's lines, or null. */
 export type Finder = (p: Pointer) => string[] | null;
-const finders: { order: number; f: Finder }[] = [];
+const finders: { order: number; f: Finder; tagOnly: boolean }[] = [];
 
-/** Higher `order` is drawn higher and asked first. */
-export function addFinder(order: number, f: Finder) {
-  finders.push({ order, f });
+/** Higher `order` is drawn higher and asked first. `tagOnly`: a click there is not the finder's (marks
+ * drawn under the network, the real stations' dots, T-3802). */
+export function addFinder(order: number, f: Finder, tagOnly = false) {
+  finders.push({ order, f, tagOnly });
   finders.sort((a, b) => b.order - a.order);
 }
 
@@ -82,14 +83,16 @@ export function pointerAt(map: MlMap, px: number, py: number): Pointer {
 /** Points where something drawn above the discs is (the selected station, T-189): no disc there. */
 export const hoverAbove: { at: ((px: number, py: number) => boolean) | null } = { at: null };
 
-/** `under`: the bubble even beneath what is drawn above the discs (the resting hover's list, T-732). */
-export function hoverAt(map: MlMap, px: number, py: number, under = false): string[] | null {
+/** `under`: the bubble even beneath what is drawn above the discs (the resting hover's list, T-732).
+ * `click`: asked for a click, so `tagOnly` finders are passed over. */
+export function hoverAt(map: MlMap, px: number, py: number, under = false, click = false): string[] | null {
   answered = null;
   if (!finders.length || (!under && hoverAbove.at?.(px, py))) return null;
   const p = pointerAt(map, px, py);
   asking = true;
   try {
-    for (const { f } of finders) {
+    for (const { f, tagOnly } of finders) {
+      if (click && tagOnly) continue;
       found = null;
       const t = f(p);
       if (t) {

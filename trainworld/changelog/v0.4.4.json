@@ -1,19 +1,52 @@
 {
   "release": "v0.4.4",
-  "line": "update v0.4.4: station rings stay put",
+  "line": "update v0.4.4: station rings stay put, display names can change",
   "items": [
+    {
+      "id": "ringfix-2",
+      "text": "real world stations show their names on hover, and tram stops show as smaller rings while placing stations",
+      "edited": "added tram stops to real world reference network, and stations show names on hover",
+      "hidden": false,
+      "task": "T-3802",
+      "by": "maps-c2",
+      "at": "2026-11-20T00:05:00Z",
+      "rev": 1,
+      "area": "track"
+    },
+    {
+      "id": "namedefault-1",
+      "text": "new players' stations are named independently of their complex; existing players keep their setting",
+      "edited": null,
+      "hidden": true,
+      "task": "T-3814",
+      "by": "namedefault",
+      "at": "2026-11-20T00:50:00Z",
+      "rev": 1,
+      "area": "track"
+    },
     {
       "id": "ringfix-1",
       "text": "fixed real world station rings drifting off their stations while zooming on large screens; they now show names on hover and include tram stops",
-      "edited": "fixed real world station rings drifting off their stations on some screens; they now show names on hover and include tram stops, drawn smaller",
+      "edited": "fixed real world station rings drifting off their stations on some screens",
       "hidden": false,
       "task": "T-3802",
       "by": "ringfix",
       "at": "2026-11-19T22:35:09Z",
-      "rev": 2,
+      "rev": 3,
       "area": "track",
       "fix": true,
-      "changed": "2026-11-19T22:35:14Z"
+      "changed": "2026-11-20T00:05:00Z"
+    },
+    {
+      "id": "dispname-1",
+      "text": "added changing your display name in account settings, up to twice a day",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3807",
+      "by": "dispname",
+      "at": "2026-11-20T00:05:00Z",
+      "rev": 1,
+      "area": "community"
     }
   ],
   "published": "2026-11-19T22:52:58Z"
