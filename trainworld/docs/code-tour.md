@@ -132,9 +132,9 @@ Things that look silly, doubled, oversized or tangled. None of these were change
 
 1. **Two giant files at the centre.** `demandClient.ts` (5,400 lines) and `clock.worker.ts` (4,600) are the two biggest files in the project. The clock worker file does the network, previews, money and save pictures in one place, and many app files talk to it. The demand pool's 5,400 lines run on the main thread, not in a worker.
 2. **The same job written twice, kept in step by hand or by a test.**
-   - The schematic's carry solve is in Rust (`sim/src/diagram.rs`) and also in JavaScript (`app/src/diagram/sheetLines.ts`), meant to give the same result to the last bit; the JavaScript one is kept as the fallback.
-   - The real-rail route finder is in the game (`workers/realRoute.worker.ts`) and copied into the pipeline (`pipeline/realroute.py`), which says it follows the same rules.
-   - Car speeds on local streets are written down twice in Rust (`track/streets.rs` for buses, demand's `Params` for the model), with a test to keep them equal.
+   - The schematic's carry solve is in Rust (`sim/src/diagram.rs`) and also in JavaScript (`app/src/diagram/sheetLines.ts`), meant to give the same result to the last bit; the JavaScript one is kept as the fallback. It stays because three Node checks run it directly (t2580-sheet-water, t3358-river-banks, t3364-off-sheet-water).
+   - The real-rail route finder is in the game (`workers/realRoute.worker.ts`) and copied into the pipeline (`pipeline/realroute.py`), which says it follows the same rules. The copy stays because it is Python, rail only, and runs offline in the pipeline.
+   - Car speeds on streets used to be written twice in Rust; they are now one copy (`track/streets.rs`), which demand's `Params` defaults read.
 3. **A pipeline step whose output nothing reads.** `pipeline/nocar.py` adds each cell's households without a car to every pack, but demand no longer reads it (a comment in `demand/api.rs` says so), and `docs/world-run.md` still lists the step.
 4. **Checks named after tasks.** Most of the standing checks are named after the task that made them (`t3137-lanes-parity.mjs`, and so on), with more in `checks/old`. At about 52,000 lines they are bigger than the pipeline, and it is hard to tell which ones still guard something.
 5. **Docs longer than the code they describe.** `docs/` is about 280,000 words. The code map alone is long, with sentences full of task numbers, which makes it slow to scan for "where does X live".

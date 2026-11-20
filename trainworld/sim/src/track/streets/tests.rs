@@ -24,7 +24,6 @@ fn the_car_speed_is_demands() {
         assert!((car_street_kmh(d as f64) - want).abs() < 1e-3, "{d}: {} {want}", car_street_kmh(d as f64));
     }
     assert_eq!(CELL_KM2 as f32, crate::demand::kernel::CELL_KM2);
-    assert_eq!((CAR_FAR_KMH as f32, CAR_OPEN_KMH as f32), (p.road_far_kmh, p.road_open_kmh));
     assert_eq!((CAR_LOCAL_M as f32, CAR_END_M as f32), (p.road_local_km * 1000.0, p.road_end_km * 1000.0));
 }
 

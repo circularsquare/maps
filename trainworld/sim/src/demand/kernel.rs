@@ -21,7 +21,7 @@
 use super::lanes::{F4, F8};
 use super::network::Network;
 use super::pack::{City, PackGravity};
-use crate::track::upgrades;
+use crate::track::{streets, upgrades};
 use std::collections::HashMap;
 
 /// Stations kept per cell and per subzone.
@@ -325,11 +325,12 @@ impl Default for Params {
             road_local_km: 2.0,
             road_end_km: 8.0,
             // T-938: T-090's fitted speeds and T-370's 100 km/h, each 10% quicker (Anita)
-            road_open_kmh: 110.0,
-            road_city_kmh: 16.5,
-            road_town_kmh: 44.0,
-            road_dens50: 5000.0,
-            road_far_kmh: 88.0,
+            // (the one copy is in track/streets.rs, which buses use too)
+            road_open_kmh: streets::CAR_OPEN_KMH as f32,
+            road_city_kmh: streets::CAR_CITY_KMH as f32,
+            road_town_kmh: streets::CAR_TOWN_KMH as f32,
+            road_dens50: streets::CAR_DENS50 as f32,
+            road_far_kmh: streets::CAR_FAR_KMH as f32,
             w_drive: 1.33,
             park_min: 7.0,
             // T-380: within about half of real prices from Croydon to Midtown (notes/T-380.md)
