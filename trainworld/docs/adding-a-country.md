@@ -246,11 +246,12 @@ Read the batch report and `world_run.py status`. For each parked row:
 | `mean_commute_km` on a zone over 20,000 km² | relax |
 | `pop_vs_plan` on a row with a census hook | relax with the census figure |
 | `browser` failing only "no page errors", every row checked in the same few minutes | the app changed under the gate's Vite (a landing, a WASM rebuild): rerun, no relax |
+| `browser` failing only "no page errors" on the rerun too, on a few rows | open a gated neighbour with `play.mjs`, listen to the console (the args, not the text) and pan to the row: an error that fires there whatever the pack (round Loikaw, MapLibre's worker: "Cannot use 'in' operator to search for 'imageName' in undefined", T-1738) is relaxed naming it, with a task for the error |
 | `browser` failing "page.waitForFunction: Timeout" on a rerun too | the row's centre lies in another zone (a border town: Dajabon by Ouanaminthe; a metro's edge: Pucarani's densest pixel on El Alto's), so the zone never becomes the active city: move the origin to the zone's own town (status planned, rebuilt) |
 | `university_rate` near 0 in a country with no tertiary figure (section 1) | relax, naming the missing figure |
 | `browser` (few riders, a purpose missing) | open `world_run/<batch>/gate/<id>-line.png`. The line leaves the town or crosses a border: move the origin (section 3 item 1), never relax. Otherwise relax with what the picture shows |
 | `register failed ... invalid commute between zones` | `<tc>\stale.py --cmd <kit>\fix.cmd`, start the .cmd as in 5 and wait, then `stale.py` again: 0 |
-| a build step error | an old cache (ZeroDivisionError in `osm_signal_line`): delete it. "Failed to open dataset": memory, rerun with fewer jobs. Else a code fault: leave parked, file a task |
+| a build step error | an old cache (ZeroDivisionError in `osm_signal_line`): delete it. "Failed to open dataset": memory, rerun with fewer jobs. "park location coverage below 85%" now means 2.0 or more of park draw off the cells (T-1738): look at the build log's omitted places. Else a code fault: leave parked, file a task |
 | anything else | leave parked, file a task with the reason |
 
 Relax with `<tc>\setbuilt.py <ids> <check> "<reason>"` (it sets the rows built; `--dry` first shows

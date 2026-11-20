@@ -31074,6 +31074,374 @@
       {
         "name": "BES",
         "regionName": "BES region"
+      },
+      {
+        "name": "Champhone",
+        "regionName": "Champhone region"
+      },
+      {
+        "name": "Xaythany",
+        "regionName": "Xaythany region"
+      },
+      {
+        "name": "Xay",
+        "regionName": "Xay region"
+      },
+      {
+        "name": "Luangprabang",
+        "regionName": "Luangprabang region"
+      },
+      {
+        "name": "Saravane",
+        "regionName": "Saravane region"
+      },
+      {
+        "name": "Thakhek",
+        "regionName": "Thakhek region"
+      },
+      {
+        "name": "Parklai",
+        "regionName": "Parklai region"
+      },
+      {
+        "name": "Phonthong",
+        "regionName": "Phonthong region"
+      },
+      {
+        "name": "Khong",
+        "regionName": "Khong region"
+      },
+      {
+        "name": "Pek",
+        "regionName": "Pek region"
+      },
+      {
+        "name": "Yangon",
+        "regionName": "Yangon region"
+      },
+      {
+        "name": "Tangyan",
+        "regionName": "Tangyan region"
+      },
+      {
+        "name": "Myaungmya",
+        "regionName": "Myaungmya region"
+      },
+      {
+        "name": "Dom Aleixo",
+        "regionName": "Dom Aleixo region"
+      },
+      {
+        "name": "Suai",
+        "regionName": "Suai region"
+      },
+      {
+        "name": "Pante Macassar",
+        "regionName": "Pante Macassar region"
+      },
+      {
+        "name": "Viengxay",
+        "regionName": "Viengxay region"
+      },
+      {
+        "name": "Pante Macassar",
+        "regionName": "Pante Macassar region"
+      },
+      {
+        "name": "Mandalay",
+        "regionName": "Mandalay region"
+      },
+      {
+        "name": "Meiktila",
+        "regionName": "Meiktila region"
+      },
+      {
+        "name": "Letpadan",
+        "regionName": "Letpadan region"
+      },
+      {
+        "name": "Taunggyi",
+        "regionName": "Taunggyi region"
+      },
+      {
+        "name": "Lashio",
+        "regionName": "Lashio region"
+      },
+      {
+        "name": "Kyainseikgyi",
+        "regionName": "Kyainseikgyi region"
+      },
+      {
+        "name": "Monywa",
+        "regionName": "Monywa region"
+      },
+      {
+        "name": "Hpa-An",
+        "regionName": "Hpa-An region"
+      },
+      {
+        "name": "Magway",
+        "regionName": "Magway region"
+      },
+      {
+        "name": "Myaungmya",
+        "regionName": "Myaungmya region"
+      },
+      {
+        "name": "Baucau",
+        "regionName": "Baucau region"
+      },
+      {
+        "name": "Pakokku",
+        "regionName": "Pakokku region"
+      },
+      {
+        "name": "Mrauk-U",
+        "regionName": "Mrauk-U region"
+      },
+      {
+        "name": "Bago",
+        "regionName": "Bago region"
+      },
+      {
+        "name": "Myitkyina",
+        "regionName": "Myitkyina region"
+      },
+      {
+        "name": "Kutkai",
+        "regionName": "Kutkai region"
+      },
+      {
+        "name": "Hinthada",
+        "regionName": "Hinthada region"
+      },
+      {
+        "name": "Taungdwingyi",
+        "regionName": "Taungdwingyi region"
+      },
+      {
+        "name": "Kyonpyaw",
+        "regionName": "Kyonpyaw region"
+      },
+      {
+        "name": "Katha",
+        "regionName": "Katha region"
+      },
+      {
+        "name": "Taungoo",
+        "regionName": "Taungoo region"
+      },
+      {
+        "name": "Myingyan",
+        "regionName": "Myingyan region"
+      },
+      {
+        "name": "Kengtung",
+        "regionName": "Kengtung region"
+      },
+      {
+        "name": "Pyinmana",
+        "regionName": "Pyinmana region"
+      },
+      {
+        "name": "Maubin",
+        "regionName": "Maubin region"
+      },
+      {
+        "name": "Madaya",
+        "regionName": "Madaya region"
+      },
+      {
+        "name": "Pathein",
+        "regionName": "Pathein region"
+      },
+      {
+        "name": "Pyay",
+        "regionName": "Pyay region"
+      },
+      {
+        "name": "Tabayin",
+        "regionName": "Tabayin region"
+      },
+      {
+        "name": "Phyu",
+        "regionName": "Phyu region"
+      },
+      {
+        "name": "Pinlaung",
+        "regionName": "Pinlaung region"
+      },
+      {
+        "name": "Kyaukse",
+        "regionName": "Kyaukse region"
+      },
+      {
+        "name": "Shwebo",
+        "regionName": "Shwebo region"
+      },
+      {
+        "name": "Kanbalu",
+        "regionName": "Kanbalu region"
+      },
+      {
+        "name": "Mawlamyinegyun",
+        "regionName": "Mawlamyinegyun region"
+      },
+      {
+        "name": "Kale",
+        "regionName": "Kale region"
+      },
+      {
+        "name": "Labutta",
+        "regionName": "Labutta region"
+      },
+      {
+        "name": "Twantay",
+        "regionName": "Twantay region"
+      },
+      {
+        "name": "Thaton",
+        "regionName": "Thaton region"
+      },
+      {
+        "name": "Myeik",
+        "regionName": "Myeik region"
+      },
+      {
+        "name": "Daik-U",
+        "regionName": "Daik-U region"
+      },
+      {
+        "name": "Dawei",
+        "regionName": "Dawei region"
+      },
+      {
+        "name": "Homalin",
+        "regionName": "Homalin region"
+      },
+      {
+        "name": "Kyaukpadaung",
+        "regionName": "Kyaukpadaung region"
+      },
+      {
+        "name": "Salin",
+        "regionName": "Salin region"
+      },
+      {
+        "name": "Kyaukpyu",
+        "regionName": "Kyaukpyu region"
+      },
+      {
+        "name": "Hpakant",
+        "regionName": "Hpakant region"
+      },
+      {
+        "name": "Kyauktan",
+        "regionName": "Kyauktan region"
+      },
+      {
+        "name": "Bhamo",
+        "regionName": "Bhamo region"
+      },
+      {
+        "name": "Lawksawk",
+        "regionName": "Lawksawk region"
+      },
+      {
+        "name": "Taikkyi",
+        "regionName": "Taikkyi region"
+      },
+      {
+        "name": "Pyapon",
+        "regionName": "Pyapon region"
+      },
+      {
+        "name": "Hlegu",
+        "regionName": "Hlegu region"
+      },
+      {
+        "name": "Hmawbi",
+        "regionName": "Hmawbi region"
+      },
+      {
+        "name": "Kayan",
+        "regionName": "Kayan region"
+      },
+      {
+        "name": "Paung",
+        "regionName": "Paung region"
+      },
+      {
+        "name": "Kyaiklat",
+        "regionName": "Kyaiklat region"
+      },
+      {
+        "name": "Kawthoung",
+        "regionName": "Kawthoung region"
+      },
+      {
+        "name": "Chaungzon",
+        "regionName": "Chaungzon region"
+      },
+      {
+        "name": "Meiktila",
+        "regionName": "Meiktila region"
+      },
+      {
+        "name": "Maubin",
+        "regionName": "Maubin region"
+      },
+      {
+        "name": "Pinlaung",
+        "regionName": "Pinlaung region"
+      },
+      {
+        "name": "Mawlamyinegyun",
+        "regionName": "Mawlamyinegyun region"
+      },
+      {
+        "name": "Labutta",
+        "regionName": "Labutta region"
+      },
+      {
+        "name": "Daik-U",
+        "regionName": "Daik-U region"
+      },
+      {
+        "name": "Kyaukpyu",
+        "regionName": "Kyaukpyu region"
+      },
+      {
+        "name": "Taikkyi",
+        "regionName": "Taikkyi region"
+      },
+      {
+        "name": "Hlegu",
+        "regionName": "Hlegu region"
+      },
+      {
+        "name": "Hmawbi",
+        "regionName": "Hmawbi region"
+      },
+      {
+        "name": "Kayan",
+        "regionName": "Kayan region"
+      },
+      {
+        "name": "Kyaiklat",
+        "regionName": "Kyaiklat region"
+      },
+      {
+        "name": "Kawthoung",
+        "regionName": "Kawthoung region"
+      },
+      {
+        "name": "Meiktila",
+        "regionName": "Meiktila region"
+      },
+      {
+        "name": "Pinlaung",
+        "regionName": "Pinlaung region"
       }
     ],
     "rule": {
@@ -140661,6 +141029,1928 @@
       "country": "NL",
       "localTrips": 48940.0,
       "realm": "caribbean"
+    },
+    {
+      "id": "cmh",
+      "name": "Champhone",
+      "kind": "zone",
+      "origin": {
+        "lon": 104.755,
+        "lat": 16.558
+      },
+      "center": [
+        104.755,
+        16.558
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        104.727,
+        15.858,
+        106.674,
+        17.142
+      ],
+      "place": 7764,
+      "country": "LA",
+      "localTrips": 2908093.0,
+      "realm": "laos"
+    },
+    {
+      "id": "xay",
+      "name": "Xaythany",
+      "kind": "zone",
+      "origin": {
+        "lon": 102.61,
+        "lat": 17.967
+      },
+      "center": [
+        102.61,
+        17.967
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        101.992,
+        17.785,
+        104.458,
+        18.977
+      ],
+      "place": 7765,
+      "country": "LA",
+      "localTrips": 3543461.0,
+      "realm": "laos"
+    },
+    {
+      "id": "xyx",
+      "name": "Xay",
+      "kind": "zone",
+      "origin": {
+        "lon": 101.9927,
+        "lat": 20.6873
+      },
+      "center": [
+        101.9927,
+        20.6873
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        100.065,
+        19.48,
+        102.378,
+        21.583
+      ],
+      "place": 7766,
+      "country": "LA",
+      "localTrips": 1775510.0,
+      "realm": "laos"
+    },
+    {
+      "id": "lug",
+      "name": "Luangprabang",
+      "kind": "zone",
+      "origin": {
+        "lon": 102.1425,
+        "lat": 19.8834
+      },
+      "center": [
+        102.1425,
+        19.8834
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        100.641,
+        18.501,
+        102.936,
+        21.039
+      ],
+      "place": 7767,
+      "country": "LA",
+      "localTrips": 1617387.0,
+      "realm": "laos"
+    },
+    {
+      "id": "svn",
+      "name": "Saravane",
+      "kind": "zone",
+      "origin": {
+        "lon": 106.4068,
+        "lat": 15.7132
+      },
+      "center": [
+        106.4068,
+        15.7132
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        105.341,
+        15.111,
+        107.113,
+        16.2
+      ],
+      "place": 7768,
+      "country": "LA",
+      "localTrips": 1357212.0,
+      "realm": "laos"
+    },
+    {
+      "id": "tkh",
+      "name": "Thakhek",
+      "kind": "zone",
+      "origin": {
+        "lon": 104.8166,
+        "lat": 17.3982
+      },
+      "center": [
+        104.8166,
+        17.3982
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        104.251,
+        16.883,
+        105.8,
+        18.472
+      ],
+      "place": 7769,
+      "country": "LA",
+      "localTrips": 1161328.0,
+      "realm": "laos"
+    },
+    {
+      "id": "prk",
+      "name": "Parklai",
+      "kind": "zone",
+      "origin": {
+        "lon": 101.3264,
+        "lat": 18.2801
+      },
+      "center": [
+        101.3264,
+        18.2801
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        101.095,
+        17.585,
+        102.918,
+        19.235
+      ],
+      "place": 7770,
+      "country": "LA",
+      "localTrips": 1476046.0,
+      "realm": "laos"
+    },
+    {
+      "id": "pht",
+      "name": "Phonthong",
+      "kind": "zone",
+      "origin": {
+        "lon": 105.8,
+        "lat": 15.12
+      },
+      "center": [
+        105.8,
+        15.12
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        105.447,
+        14.74,
+        106.847,
+        15.489
+      ],
+      "place": 7771,
+      "country": "LA",
+      "localTrips": 1193488.0,
+      "realm": "laos"
+    },
+    {
+      "id": "kgx",
+      "name": "Khong",
+      "kind": "zone",
+      "origin": {
+        "lon": 105.9007,
+        "lat": 14.0498
+      },
+      "center": [
+        105.9007,
+        14.0498
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        105.452,
+        13.891,
+        107.472,
+        15.274
+      ],
+      "place": 7772,
+      "country": "LA",
+      "localTrips": 1182709.0,
+      "realm": "laos"
+    },
+    {
+      "id": "pkx",
+      "name": "Pek",
+      "kind": "zone",
+      "origin": {
+        "lon": 103.2145,
+        "lat": 19.453
+      },
+      "center": [
+        103.2145,
+        19.453
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        102.948,
+        19.027,
+        104.203,
+        20.059
+      ],
+      "place": 7773,
+      "country": "LA",
+      "localTrips": 598278.0,
+      "realm": "laos"
+    },
+    {
+      "id": "yan",
+      "name": "Yangon",
+      "origin": {
+        "lon": 96.1693,
+        "lat": 16.7893
+      },
+      "center": [
+        96.1693,
+        16.7893
+      ],
+      "zoom": 11.2,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        95.757,
+        16.573,
+        96.454,
+        17.263
+      ],
+      "place": 7774,
+      "country": "MM",
+      "localTrips": 17359604.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "tgy",
+      "name": "Tangyan",
+      "kind": "zone",
+      "origin": {
+        "lon": 98.3928,
+        "lat": 22.4918
+      },
+      "center": [
+        98.3928,
+        22.4918
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        97.113,
+        20.42,
+        99.586,
+        23.208
+      ],
+      "place": 7775,
+      "country": "MM",
+      "localTrips": 3451318.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "dol",
+      "name": "Dom Aleixo",
+      "kind": "zone",
+      "origin": {
+        "lon": 125.5631,
+        "lat": -8.565
+      },
+      "center": [
+        125.5631,
+        -8.565
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        124.913,
+        -9.344,
+        125.88,
+        -8.108
+      ],
+      "place": 7777,
+      "country": "TL",
+      "localTrips": 2105856.0,
+      "realm": "timor-leste"
+    },
+    {
+      "id": "sdq",
+      "name": "Suai",
+      "kind": "zone",
+      "origin": {
+        "lon": 125.2495,
+        "lat": -9.3125
+      },
+      "center": [
+        125.2495,
+        -9.3125
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        125.132,
+        -9.391,
+        126.116,
+        -8.456
+      ],
+      "place": 7778,
+      "country": "TL",
+      "localTrips": 549923.0,
+      "realm": "timor-leste"
+    },
+    {
+      "id": "veg",
+      "name": "Viengxay",
+      "kind": "zone",
+      "origin": {
+        "lon": 104.2234,
+        "lat": 20.4053
+      },
+      "center": [
+        104.2234,
+        20.4053
+      ],
+      "zoom": 10.5,
+      "utcOffset": 7,
+      "market": -1,
+      "box": [
+        103.638,
+        20.122,
+        104.725,
+        20.995
+      ],
+      "place": 7780,
+      "country": "LA",
+      "localTrips": 278967.0,
+      "realm": "laos"
+    },
+    {
+      "id": "ptm",
+      "name": "Pante Macassar",
+      "kind": "zone",
+      "origin": {
+        "lon": 124.3512,
+        "lat": -9.2068
+      },
+      "center": [
+        124.3512,
+        -9.2068
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        124.051,
+        -9.522,
+        124.502,
+        -9.148
+      ],
+      "place": 7781,
+      "country": "TL",
+      "localTrips": 199002.0,
+      "realm": "timor-leste"
+    },
+    {
+      "id": "may",
+      "name": "Mandalay",
+      "origin": {
+        "lon": 96.0812,
+        "lat": 21.9837
+      },
+      "center": [
+        96.0812,
+        21.9837
+      ],
+      "zoom": 11.2,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        95.601,
+        21.754,
+        96.386,
+        22.269
+      ],
+      "place": 7782,
+      "country": "MM",
+      "localTrips": 6101428.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "lep",
+      "name": "Letpadan",
+      "kind": "zone",
+      "origin": {
+        "lon": 95.7512,
+        "lat": 17.7854
+      },
+      "center": [
+        95.7512,
+        17.7854
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        95.239,
+        17.445,
+        96.22,
+        18.872
+      ],
+      "place": 7784,
+      "country": "MM",
+      "localTrips": 3666807.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "tgg",
+      "name": "Taunggyi",
+      "kind": "zone",
+      "origin": {
+        "lon": 97.0311,
+        "lat": 20.7869
+      },
+      "center": [
+        97.0311,
+        20.7869
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        96.42,
+        19.872,
+        97.493,
+        21.481
+      ],
+      "place": 7785,
+      "country": "MM",
+      "localTrips": 3396023.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "lsh",
+      "name": "Lashio",
+      "kind": "zone",
+      "origin": {
+        "lon": 97.75,
+        "lat": 22.9338
+      },
+      "center": [
+        97.75,
+        22.9338
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        96.131,
+        21.918,
+        98.578,
+        23.451
+      ],
+      "place": 7786,
+      "country": "MM",
+      "localTrips": 3155438.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "kyn",
+      "name": "Kyainseikgyi",
+      "kind": "zone",
+      "origin": {
+        "lon": 97.63,
+        "lat": 16.48
+      },
+      "center": [
+        97.63,
+        16.48
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        97.524,
+        14.862,
+        98.63,
+        16.675
+      ],
+      "place": 7787,
+      "country": "MM",
+      "localTrips": 3535979.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "myw",
+      "name": "Monywa",
+      "kind": "zone",
+      "origin": {
+        "lon": 95.14,
+        "lat": 22.1085
+      },
+      "center": [
+        95.14,
+        22.1085
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        94.388,
+        21.557,
+        95.705,
+        22.337
+      ],
+      "place": 7788,
+      "country": "MM",
+      "localTrips": 3028057.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "hpa",
+      "name": "Hpa-An",
+      "kind": "zone",
+      "origin": {
+        "lon": 97.6357,
+        "lat": 16.888
+      },
+      "center": [
+        97.6357,
+        16.888
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        97.34,
+        16.021,
+        98.951,
+        17.865
+      ],
+      "place": 7789,
+      "country": "MM",
+      "localTrips": 3049098.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "mgw",
+      "name": "Magway",
+      "kind": "zone",
+      "origin": {
+        "lon": 94.9348,
+        "lat": 20.1484
+      },
+      "center": [
+        94.9348,
+        20.1484
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        94.185,
+        19.513,
+        95.776,
+        20.791
+      ],
+      "place": 7790,
+      "country": "MM",
+      "localTrips": 2973697.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "mym",
+      "name": "Myaungmya",
+      "kind": "zone",
+      "origin": {
+        "lon": 94.9247,
+        "lat": 16.6084
+      },
+      "center": [
+        94.9247,
+        16.6084
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        94.672,
+        16.252,
+        95.502,
+        16.988
+      ],
+      "place": 7791,
+      "country": "MM",
+      "localTrips": 2028301.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "bcg",
+      "name": "Baucau",
+      "kind": "zone",
+      "origin": {
+        "lon": 126.4508,
+        "lat": -8.4837
+      },
+      "center": [
+        126.4508,
+        -8.4837
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        126.092,
+        -9.009,
+        127.251,
+        -8.303
+      ],
+      "place": 7792,
+      "country": "TL",
+      "localTrips": 718654.0,
+      "realm": "timor-leste"
+    },
+    {
+      "id": "pko",
+      "name": "Pakokku",
+      "kind": "zone",
+      "origin": {
+        "lon": 95.0842,
+        "lat": 21.3349
+      },
+      "center": [
+        95.0842,
+        21.3349
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        93.961,
+        20.8,
+        95.362,
+        22.791
+      ],
+      "place": 7793,
+      "country": "MM",
+      "localTrips": 2810821.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "muk",
+      "name": "Mrauk-U",
+      "kind": "zone",
+      "origin": {
+        "lon": 92.898,
+        "lat": 20.145
+      },
+      "center": [
+        92.898,
+        20.145
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        92.153,
+        19.658,
+        93.886,
+        21.498
+      ],
+      "place": 7794,
+      "country": "MM",
+      "localTrips": 3136491.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "bcf",
+      "name": "Bago",
+      "kind": "zone",
+      "origin": {
+        "lon": 96.4938,
+        "lat": 17.3241
+      },
+      "center": [
+        96.4938,
+        17.3241
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        96.017,
+        16.841,
+        96.922,
+        18.026
+      ],
+      "place": 7795,
+      "country": "MM",
+      "localTrips": 2751899.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "myt",
+      "name": "Myitkyina",
+      "kind": "zone",
+      "origin": {
+        "lon": 97.3811,
+        "lat": 25.388
+      },
+      "center": [
+        97.3811,
+        25.388
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        95.786,
+        24.461,
+        98.209,
+        26.206
+      ],
+      "place": 7796,
+      "country": "MM",
+      "localTrips": 2589802.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "kka",
+      "name": "Kutkai",
+      "kind": "zone",
+      "origin": {
+        "lon": 97.9361,
+        "lat": 23.46
+      },
+      "center": [
+        97.9361,
+        23.46
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        96.934,
+        22.934,
+        98.965,
+        24.174
+      ],
+      "place": 7797,
+      "country": "MM",
+      "localTrips": 2385356.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "hnt",
+      "name": "Hinthada",
+      "kind": "zone",
+      "origin": {
+        "lon": 95.4582,
+        "lat": 17.6453
+      },
+      "center": [
+        95.4582,
+        17.6453
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        94.76,
+        17.385,
+        95.608,
+        18.529
+      ],
+      "place": 7798,
+      "country": "MM",
+      "localTrips": 2568006.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "tnw",
+      "name": "Taungdwingyi",
+      "kind": "zone",
+      "origin": {
+        "lon": 95.5457,
+        "lat": 20.0076
+      },
+      "center": [
+        95.5457,
+        20.0076
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        94.324,
+        18.813,
+        95.879,
+        20.367
+      ],
+      "place": 7799,
+      "country": "MM",
+      "localTrips": 2518800.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "kyo",
+      "name": "Kyonpyaw",
+      "kind": "zone",
+      "origin": {
+        "lon": 95.1947,
+        "lat": 17.3077
+      },
+      "center": [
+        95.1947,
+        17.3077
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        94.713,
+        16.872,
+        95.756,
+        17.645
+      ],
+      "place": 7800,
+      "country": "MM",
+      "localTrips": 2442067.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "kak",
+      "name": "Katha",
+      "kind": "zone",
+      "origin": {
+        "lon": 96.3406,
+        "lat": 24.1796
+      },
+      "center": [
+        96.3406,
+        24.1796
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        94.994,
+        23.461,
+        96.686,
+        24.979
+      ],
+      "place": 7801,
+      "country": "MM",
+      "localTrips": 2390448.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "tgo",
+      "name": "Taungoo",
+      "kind": "zone",
+      "origin": {
+        "lon": 96.4376,
+        "lat": 18.9405
+      },
+      "center": [
+        96.4376,
+        18.9405
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        95.775,
+        18.537,
+        97.456,
+        19.528
+      ],
+      "place": 7802,
+      "country": "MM",
+      "localTrips": 2466436.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "myg",
+      "name": "Myingyan",
+      "kind": "zone",
+      "origin": {
+        "lon": 95.3952,
+        "lat": 21.4596
+      },
+      "center": [
+        95.3952,
+        21.4596
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        95.084,
+        20.991,
+        96.058,
+        21.948
+      ],
+      "place": 7803,
+      "country": "MM",
+      "localTrips": 2327953.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "kgu",
+      "name": "Kengtung",
+      "kind": "zone",
+      "origin": {
+        "lon": 99.6122,
+        "lat": 21.2934
+      },
+      "center": [
+        99.6122,
+        21.2934
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        98.892,
+        20.069,
+        101.19,
+        22.183
+      ],
+      "place": 7804,
+      "country": "MM",
+      "localTrips": 2274916.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "pym",
+      "name": "Pyinmana",
+      "kind": "zone",
+      "origin": {
+        "lon": 96.2103,
+        "lat": 19.7343
+      },
+      "center": [
+        96.2103,
+        19.7343
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        95.693,
+        19.398,
+        96.695,
+        20.077
+      ],
+      "place": 7805,
+      "country": "MM",
+      "localTrips": 2364543.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "mbs",
+      "name": "Madaya",
+      "kind": "zone",
+      "origin": {
+        "lon": 96.1132,
+        "lat": 22.2085
+      },
+      "center": [
+        96.1132,
+        22.2085
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        95.88,
+        21.989,
+        96.736,
+        23.702
+      ],
+      "place": 7807,
+      "country": "MM",
+      "localTrips": 1872569.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "pbg",
+      "name": "Pathein",
+      "kind": "zone",
+      "origin": {
+        "lon": 94.7292,
+        "lat": 16.7729
+      },
+      "center": [
+        94.7292,
+        16.7729
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        94.343,
+        16.567,
+        95.072,
+        17.494
+      ],
+      "place": 7808,
+      "country": "MM",
+      "localTrips": 1899503.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "pyy",
+      "name": "Pyay",
+      "kind": "zone",
+      "origin": {
+        "lon": 95.2196,
+        "lat": 18.8249
+      },
+      "center": [
+        95.2196,
+        18.8249
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        94.666,
+        18.338,
+        95.887,
+        19.21
+      ],
+      "place": 7809,
+      "country": "MM",
+      "localTrips": 1765929.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "tby",
+      "name": "Tabayin",
+      "kind": "zone",
+      "origin": {
+        "lon": 95.2265,
+        "lat": 22.6585
+      },
+      "center": [
+        95.2265,
+        22.6585
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        94.175,
+        22.098,
+        95.58,
+        23.35
+      ],
+      "place": 7810,
+      "country": "MM",
+      "localTrips": 1598431.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "pyu",
+      "name": "Phyu",
+      "kind": "zone",
+      "origin": {
+        "lon": 96.4425,
+        "lat": 18.4863
+      },
+      "center": [
+        96.4425,
+        18.4863
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        95.817,
+        17.875,
+        97.16,
+        18.834
+      ],
+      "place": 7811,
+      "country": "MM",
+      "localTrips": 1721663.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "kyu",
+      "name": "Kyaukse",
+      "kind": "zone",
+      "origin": {
+        "lon": 96.1345,
+        "lat": 21.6093
+      },
+      "center": [
+        96.1345,
+        21.6093
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        95.916,
+        21.116,
+        96.916,
+        22.39
+      ],
+      "place": 7813,
+      "country": "MM",
+      "localTrips": 2207095.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "shw",
+      "name": "Shwebo",
+      "kind": "zone",
+      "origin": {
+        "lon": 95.6903,
+        "lat": 22.5668
+      },
+      "center": [
+        95.6903,
+        22.5668
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        95.226,
+        22.067,
+        96.03,
+        22.923
+      ],
+      "place": 7814,
+      "country": "MM",
+      "localTrips": 2001417.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "kau",
+      "name": "Kanbalu",
+      "kind": "zone",
+      "origin": {
+        "lon": 95.5157,
+        "lat": 23.201
+      },
+      "center": [
+        95.5157,
+        23.201
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        94.839,
+        22.823,
+        96.015,
+        23.89
+      ],
+      "place": 7815,
+      "country": "MM",
+      "localTrips": 1516335.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "kbb",
+      "name": "Kale",
+      "kind": "zone",
+      "origin": {
+        "lon": 94.0194,
+        "lat": 23.1927
+      },
+      "center": [
+        94.0194,
+        23.1927
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        93.319,
+        22.564,
+        94.97,
+        23.675
+      ],
+      "place": 7817,
+      "country": "MM",
+      "localTrips": 1540304.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "twa",
+      "name": "Twantay",
+      "kind": "zone",
+      "origin": {
+        "lon": 95.931,
+        "lat": 16.7153
+      },
+      "center": [
+        95.931,
+        16.7153
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        95.804,
+        16.303,
+        96.347,
+        16.937
+      ],
+      "place": 7819,
+      "country": "MM",
+      "localTrips": 1158156.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "ttx",
+      "name": "Thaton",
+      "kind": "zone",
+      "origin": {
+        "lon": 97.3668,
+        "lat": 16.9127
+      },
+      "center": [
+        97.3668,
+        16.9127
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        96.85,
+        16.733,
+        97.558,
+        17.736
+      ],
+      "place": 7820,
+      "country": "MM",
+      "localTrips": 1507883.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "mye",
+      "name": "Myeik",
+      "kind": "zone",
+      "origin": {
+        "lon": 98.604,
+        "lat": 12.44
+      },
+      "center": [
+        98.604,
+        12.44
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        97.415,
+        11.408,
+        98.953,
+        13.544
+      ],
+      "place": 7821,
+      "country": "MM",
+      "localTrips": 1572661.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "dwe",
+      "name": "Dawei",
+      "kind": "zone",
+      "origin": {
+        "lon": 98.1907,
+        "lat": 14.0743
+      },
+      "center": [
+        98.1907,
+        14.0743
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        97.747,
+        13.257,
+        99.229,
+        15.122
+      ],
+      "place": 7823,
+      "country": "MM",
+      "localTrips": 1411058.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "hom",
+      "name": "Homalin",
+      "kind": "zone",
+      "origin": {
+        "lon": 94.9092,
+        "lat": 24.8672
+      },
+      "center": [
+        94.9092,
+        24.8672
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        94.097,
+        23.627,
+        96.1,
+        25.556
+      ],
+      "place": 7824,
+      "country": "MM",
+      "localTrips": 1350514.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "kyk",
+      "name": "Kyaukpadaung",
+      "kind": "zone",
+      "origin": {
+        "lon": 95.1262,
+        "lat": 20.8366
+      },
+      "center": [
+        95.1262,
+        20.8366
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        94.81,
+        20.524,
+        95.565,
+        21.332
+      ],
+      "place": 7825,
+      "country": "MM",
+      "localTrips": 1226550.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "sdn",
+      "name": "Salin",
+      "kind": "zone",
+      "origin": {
+        "lon": 94.824,
+        "lat": 20.892
+      },
+      "center": [
+        94.824,
+        20.892
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        94.226,
+        20.396,
+        95.062,
+        21.285
+      ],
+      "place": 7826,
+      "country": "MM",
+      "localTrips": 1287634.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "hpk",
+      "name": "Hpakant",
+      "kind": "zone",
+      "origin": {
+        "lon": 96.3569,
+        "lat": 25.6571
+      },
+      "center": [
+        96.3569,
+        25.6571
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        95.937,
+        25.228,
+        96.94,
+        26.155
+      ],
+      "place": 7828,
+      "country": "MM",
+      "localTrips": 1077781.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "kyt",
+      "name": "Kyauktan",
+      "kind": "zone",
+      "origin": {
+        "lon": 96.3255,
+        "lat": 16.6331
+      },
+      "center": [
+        96.3255,
+        16.6331
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        96.223,
+        16.458,
+        96.783,
+        16.89
+      ],
+      "place": 7829,
+      "country": "MM",
+      "localTrips": 916250.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "law",
+      "name": "Lawksawk",
+      "kind": "zone",
+      "origin": {
+        "lon": 96.8643,
+        "lat": 21.2518
+      },
+      "center": [
+        96.8643,
+        21.2518
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        96.184,
+        20.692,
+        97.321,
+        22.289
+      ],
+      "place": 7831,
+      "country": "MM",
+      "localTrips": 937313.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "pyp",
+      "name": "Pyapon",
+      "kind": "zone",
+      "origin": {
+        "lon": 95.6772,
+        "lat": 16.2879
+      },
+      "center": [
+        95.6772,
+        16.2879
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        95.249,
+        15.688,
+        96.1,
+        16.501
+      ],
+      "place": 7833,
+      "country": "MM",
+      "localTrips": 1317503.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "pbi",
+      "name": "Paung",
+      "kind": "zone",
+      "origin": {
+        "lon": 97.4575,
+        "lat": 16.6166
+      },
+      "center": [
+        97.4575,
+        16.6166
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        97.213,
+        16.474,
+        97.643,
+        16.835
+      ],
+      "place": 7837,
+      "country": "MM",
+      "localTrips": 461442.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "cuz",
+      "name": "Chaungzon",
+      "kind": "zone",
+      "origin": {
+        "lon": 97.5777,
+        "lat": 16.444
+      },
+      "center": [
+        97.5777,
+        16.444
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        97.414,
+        16.104,
+        97.645,
+        16.54
+      ],
+      "place": 7840,
+      "country": "MM",
+      "localTrips": 242362.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "mbx",
+      "name": "Maubin",
+      "kind": "zone",
+      "origin": {
+        "lon": 95.6492,
+        "lat": 16.7317
+      },
+      "center": [
+        95.6492,
+        16.7317
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        95.182,
+        16.482,
+        95.906,
+        17.248
+      ],
+      "place": 7842,
+      "country": "MM",
+      "localTrips": 2031383.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "mwl",
+      "name": "Mawlamyinegyun",
+      "kind": "zone",
+      "origin": {
+        "lon": 95.2644,
+        "lat": 16.3783
+      },
+      "center": [
+        95.2644,
+        16.3783
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        95.02,
+        15.754,
+        95.658,
+        16.608
+      ],
+      "place": 7844,
+      "country": "MM",
+      "localTrips": 1609396.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "lbt",
+      "name": "Labutta",
+      "kind": "zone",
+      "origin": {
+        "lon": 94.7556,
+        "lat": 16.1483
+      },
+      "center": [
+        94.7556,
+        16.1483
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        94.172,
+        15.725,
+        95.135,
+        16.753
+      ],
+      "place": 7845,
+      "country": "MM",
+      "localTrips": 1567185.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "dik",
+      "name": "Daik-U",
+      "kind": "zone",
+      "origin": {
+        "lon": 96.6692,
+        "lat": 17.7936
+      },
+      "center": [
+        96.6692,
+        17.7936
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        96.301,
+        17.465,
+        97.244,
+        18.247
+      ],
+      "place": 7846,
+      "country": "MM",
+      "localTrips": 1403345.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "kyy",
+      "name": "Kyaukpyu",
+      "kind": "zone",
+      "origin": {
+        "lon": 93.5521,
+        "lat": 19.4282
+      },
+      "center": [
+        93.5521,
+        19.4282
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        93.449,
+        17.927,
+        94.922,
+        19.589
+      ],
+      "place": 7847,
+      "country": "MM",
+      "localTrips": 1430708.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "tkk",
+      "name": "Taikkyi",
+      "kind": "zone",
+      "origin": {
+        "lon": 95.9675,
+        "lat": 17.3159
+      },
+      "center": [
+        95.9675,
+        17.3159
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        95.598,
+        17.152,
+        96.147,
+        17.816
+      ],
+      "place": 7848,
+      "country": "MM",
+      "localTrips": 840635.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "hlg",
+      "name": "Hlegu",
+      "kind": "zone",
+      "origin": {
+        "lon": 96.2272,
+        "lat": 17.1019
+      },
+      "center": [
+        96.2272,
+        17.1019
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        96.009,
+        16.923,
+        96.427,
+        17.66
+      ],
+      "place": 7849,
+      "country": "MM",
+      "localTrips": 741771.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "hmw",
+      "name": "Hmawbi",
+      "kind": "zone",
+      "origin": {
+        "lon": 96.0425,
+        "lat": 17.1019
+      },
+      "center": [
+        96.0425,
+        17.1019
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        95.883,
+        16.962,
+        96.19,
+        17.297
+      ],
+      "place": 7850,
+      "country": "MM",
+      "localTrips": 673818.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "kbc",
+      "name": "Kayan",
+      "kind": "zone",
+      "origin": {
+        "lon": 96.5644,
+        "lat": 16.9044
+      },
+      "center": [
+        96.5644,
+        16.9044
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        96.357,
+        16.785,
+        96.815,
+        17.015
+      ],
+      "place": 7851,
+      "country": "MM",
+      "localTrips": 463576.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "kyl",
+      "name": "Kyaiklat",
+      "kind": "zone",
+      "origin": {
+        "lon": 95.7245,
+        "lat": 16.444
+      },
+      "center": [
+        95.7245,
+        16.444
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        95.365,
+        16.359,
+        95.857,
+        16.669
+      ],
+      "place": 7852,
+      "country": "MM",
+      "localTrips": 453766.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "kwt",
+      "name": "Kawthoung",
+      "kind": "zone",
+      "origin": {
+        "lon": 98.5504,
+        "lat": 9.9793
+      },
+      "center": [
+        98.5504,
+        9.9793
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        97.658,
+        9.736,
+        98.942,
+        10.949
+      ],
+      "place": 7853,
+      "country": "MM",
+      "localTrips": 365501.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "mki",
+      "name": "Meiktila",
+      "kind": "zone",
+      "origin": {
+        "lon": 95.8637,
+        "lat": 20.8864
+      },
+      "center": [
+        95.8637,
+        20.8864
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        95.443,
+        19.995,
+        96.596,
+        21.428
+      ],
+      "place": 7854,
+      "country": "MM",
+      "localTrips": 4019937.0,
+      "realm": "myanmar"
+    },
+    {
+      "id": "pgx",
+      "name": "Pinlaung",
+      "kind": "zone",
+      "origin": {
+        "lon": 97.209,
+        "lat": 19.674
+      },
+      "center": [
+        97.209,
+        19.674
+      ],
+      "zoom": 10.5,
+      "utcOffset": 6,
+      "market": -1,
+      "box": [
+        96.343,
+        19.182,
+        97.549,
+        20.549
+      ],
+      "place": 7855,
+      "country": "MM",
+      "localTrips": 1500016.0,
+      "realm": "myanmar"
     }
   ]
 }

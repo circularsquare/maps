@@ -114,10 +114,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-3620: ase (La Gonave, Haiti) is parked at top_zone_jobs_share 0.43 (one zone holds too many of its jobs).
   - Goal: Merged into a neighbouring Haitian zone and shipped, or left out with the reason in DECISIONS.md.
   - Other: notes/T-3620.md
-- T-1738 [P2] {L:new-countries} Myanmar, Laos and Timor-Leste (taking, 2026-11-19, agent seasia)
-  - Context: Eight countries shipped 2026-10-28 to 11-03 (516 rows). Myanmar has thin OSM; Laos and Timor-Leste have no plan rows or unit source yet. You, 2026-11-19: players asked for Laos and Myanmar; they're next after Guyana, Suriname and French Guiana.
-  - Goal: Myanmar, Laos and Timor-Leste are built and shipped.
-  - Other: notes/T-1738.md section 5
+- T-1738 [P2] {L:new-countries} Bhamo, Myanmar's last zone
+  - Context: Myanmar (59 of 60 rows), Laos (11) and Timor-Leste (4) shipped 2026-11-20. Bhamo (0.44M) is parked: its busiest square sits on a GHSL pile-up of 23,697 people in one village square in Mansi, not on a town.
+  - Goal: Bhamo built with its people spread off that square (or held), then gated and joined.
+  - Other: notes/T-1738.md section 16
 - T-3763 [P2] {L:new-countries} Iraq and Iran
   - Context: You, 2026-11-19: players asked for Iraq and Iran; next with Laos and Myanmar.
   - Goal: Iraq and Iran built, shipped and joined per docs/adding-a-country.md.

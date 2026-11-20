@@ -65,6 +65,7 @@ NODE_HA = 0.25          # a park mapped as a point only
 NEAR_M = 2000.0         # residents within this distance of the place's edge
 DENSITY_HALF = 2000.0   # ... per km² of that ring's land, at which the population term is one half
 SNAP_M = 500.0
+OMIT_DRAW_MIN = 2.0     # off-cell draw below about four 1 ha parks at DENSITY_HALF is a thin zone's, not a lookup fault
 TILE_DEG = 0.5          # Overpass request tile, degrees
 
 
@@ -293,8 +294,9 @@ def main(city="nyc", dry=False):
     # One park off every cell (an islet) is a quirk, not a lookup fault (T-897: Yongjia, 17 parks).
     # An omitted place with draw has residents 0.5-2 km off, so a thinly peopled zone loses more:
     # Kauai's coast parks 11% of its draw (T-1018), hence 85%. A few parks all off the cells are a thin zone too, not a
-    # fault: Trapeang Prasat's and Seram Bagian Barat's 2 of 2 (T-2039).
-    if total > 0 and draw.sum() / total < 0.85 and len(omitted) > 3:
+    # fault: Trapeang Prasat's and Seram Bagian Barat's 2 of 2 (T-2039), and so is a little draw off the cells in all:
+    # Baucau's 19 places off the cells, mostly beaches by villages, hold 1.07 of its 2.67 (T-1738).
+    if total > 0 and draw.sum() / total < 0.85 and len(omitted) > 3 and total - draw.sum() >= OMIT_DRAW_MIN:
         raise ValueError("park location coverage below 85%")
     stem = os.path.join(b.PACKS, city)
     with open(stem + ".json") as f:

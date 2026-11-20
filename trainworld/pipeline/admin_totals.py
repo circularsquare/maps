@@ -178,6 +178,22 @@ CONFIGS = {
         "national_total": (5_522_294, 0.0001),  # West Bank 3,395,260 (mid-2025) and the Gaza Strip 2,127,034 (end-2025)
         "mode": "factor",
     },
+    # T-1738: GHS-POP holds 0.46-0.60 of Vientiane Capital's districts (Xaythany 120,912 against 202,171 in 2015)
+    "LA": {
+        "source": "Lao Statistics Bureau 2024 projections by district (2015 census base), COD-PS LAO on HDX, on COD-AB LAO "
+                  "districts (HDX, CC BY-IGO)",
+        "polygons": {"file": "LA/lao_admin_boundaries.shp.zip",
+                     "url": "https://data.humdata.org/dataset/9eb6aff1-9e3f-43d3-99a6-f415fe4b4dff/resource/"
+                            "ba8747ac-d97a-43fc-874a-2c07a88316c2/download/lao_admin_boundaries.shp.zip",
+                     "layer": "lao_admin2", "code": "adm2_pcode", "name": "adm2_name"},
+        "totals": {"file": "LA/lao_admpop_adm2_2024.csv",
+                   "url": "https://data.humdata.org/dataset/f9ec8c86-e300-443b-bd04-a6c9923c29ef/resource/"
+                          "87e60232-7af8-43c3-bc47-685f2a770ab1/download/lao_admpop_adm2_2024.csv",
+                   "code": "ADM2_PCODE", "pop": "T_TL"},
+        "parent": None,
+        "national_total": (7_631_798, 0.0001),  # the file's adm0 row (lao_admpop_adm0_2024.csv)
+        "mode": "factor",
+    },
 }
 
 

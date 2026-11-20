@@ -1673,6 +1673,26 @@
    "file": "data/raw/world_field/ne_10m_admin_0_countries.zip",
    "level": "ADM0",
    "count": 1
+  },
+  "LAO": {
+   "kind": "geoBoundaries",
+   "level": "ADM2",
+   "urls": {
+    "ADM2": "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/LAO/ADM2/geoBoundaries-LAO-ADM2_simplified.geojson"
+   },
+   "release": "gbOpen, built Dec 12, 2023",
+   "licence": "Creative Commons Attribution 3.0 Intergovernmental Organisations (CC BY 3.0 IGO)",
+   "count": 148
+  },
+  "TLS": {
+   "kind": "geoBoundaries",
+   "level": "ADM2",
+   "urls": {
+    "ADM2": "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/TLS/ADM2/geoBoundaries-TLS-ADM2_simplified.geojson"
+   },
+   "release": "gbOpen, built Dec 12, 2023",
+   "licence": "Creative Commons Attribution 3.0 Intergovernmental Organisations (CC BY 3.0 IGO)",
+   "count": 65
   }
  },
  "metros": [
@@ -13845,7 +13865,7 @@
    "order": 148,
    "id": "yan",
    "name": "Yangon",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MMR"
@@ -13917,6 +13937,26 @@
     "satellites": [
      4967
     ]
+   },
+   "run": {
+    "run_batch": "20261119-234304",
+    "steps": {
+     "build": 31.2,
+     "stations": 1.1,
+     "places": 3.6,
+     "routes": 41.5,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 1.2
+    },
+    "built": "2026-11-19T23:55:34",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-11-20T00:08:01",
+    "shipped": "2026-11-20T01:50:19"
    }
   },
   {
@@ -27151,7 +27191,7 @@
    "order": 316,
    "id": "may",
    "name": "Mandalay",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "MMR"
@@ -27194,6 +27234,26 @@
     "fua": [
      1872
     ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 13.3,
+     "stations": 0.9,
+     "places": 2.3,
+     "routes": 33.9,
+     "merge": 1.1,
+     "nocar": 2.0,
+     "everyday": 1.4
+    },
+    "built": "2026-11-20T00:15:21",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.00048828125"
+     ]
+    },
+    "gated": "2026-11-20T00:50:47",
+    "shipped": "2026-11-20T01:50:19"
    }
   },
   {
@@ -375881,6 +375941,5379 @@
     "top_zone_jobs_share": "T-3762: a one-town zone or island, its top square in the town's centre (Saint-Laurent-du-Maroni, Philipsburg, Kralendijk, Oranjestad of Sint Eustatius, Road Town, Gustavia)",
     "mean_commute_km": "T-3762: an island of 23-100 km2 (Sint Maarten, Sint Eustatius and Saba, Montserrat, Saint-Barthelemy): every commute is short"
    }
+  },
+  {
+   "order": 5788,
+   "id": "tgy",
+   "name": "Tangyan",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 1489058,
+   "origin": [
+    98.3928,
+    22.4918
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B50744585948465",
+     "66882298B63575401111424",
+     "66882298B22679639113229",
+     "66882298B25674046281618",
+     "66882298B20724664356365",
+     "66882298B13788123332655",
+     "66882298B60976321477453",
+     "66882298B20930484280331",
+     "66882298B47048273457297",
+     "66882298B53601763553196",
+     "66882298B65836239124186",
+     "66882298B50680078133072",
+     "66882298B13463527006273"
+    ]
+   },
+   "bbox": [
+    97.133,
+    20.439,
+    99.566,
+    23.188
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Tangyan",
+     "Loilen",
+     "Pangsang",
+     "Nansang",
+     "Narphan",
+     "Kyethi",
+     "Pangwaun",
+     "Mongkaing",
+     "Mongmao",
+     "Monghsu",
+     "Mongyai",
+     "Kunhing",
+     "Laihka"
+    ]
+   },
+   "run": {
+    "run_batch": "20261119-234304",
+    "steps": {
+     "build": 53.2,
+     "stations": 1.4,
+     "places": 3.4,
+     "routes": 59.4,
+     "merge": 2.7,
+     "nocar": 2.3,
+     "everyday": 1.4
+    },
+    "built": "2026-11-19T23:56:18",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6382.04931640625"
+     ]
+    },
+    "gated": "2026-11-20T00:08:01",
+    "shipped": "2026-11-20T01:50:20"
+   }
+  },
+  {
+   "order": 5789,
+   "id": "mki",
+   "name": "Meiktila",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 1456287,
+   "origin": [
+    95.8637,
+    20.8864
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B38184122909227",
+     "66882298B729678951605",
+     "66882298B33372045303001",
+     "66882298B87672278705364",
+     "66882298B34747828510750",
+     "66882298B52470244382010",
+     "66882298B93292463567228"
+    ]
+   },
+   "bbox": [
+    95.462,
+    20.014,
+    96.576,
+    21.409
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Meiktila",
+     "Pyawbwe",
+     "Yamethin",
+     "Wundwin",
+     "Thazi",
+     "Mahlaing",
+     "Tatkon"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 16.1,
+     "stations": 0.8,
+     "places": 2.9,
+     "routes": 51.2,
+     "merge": 0.9,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-11-20T00:15:41",
+    "gate": {
+     "warn": [
+      "browser None"
+     ]
+    },
+    "parked": "2026-11-20T00:55:35",
+    "gated": "2026-11-20T01:03:12",
+    "shipped": "2026-11-20T01:50:20"
+   },
+   "gate_relax": {
+    "browser": "T-1738: every check passed but 'no page errors': MapLibre 6.13.0's line breaking throws (Cannot use 'in' operator to search for 'imageName' in undefined) on the basemap's long Burmese-script labels round Loikaw and Meiktila, whatever the pack; reproduced panning a game opened on tgg"
+   }
+  },
+  {
+   "order": 5790,
+   "id": "lep",
+   "name": "Letpadan",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 1420000,
+   "origin": [
+    95.7512,
+    17.7854
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B68213150011457",
+     "66882298B80796384628851",
+     "66882298B27453772484333",
+     "66882298B45008250934541",
+     "66882298B32624553805926",
+     "66882298B32904454419610",
+     "66882298B41950876090021",
+     "66882298B54717675050990",
+     "66882298B81567459772817",
+     "66882298B2808199193765"
+    ]
+   },
+   "bbox": [
+    95.258,
+    17.464,
+    96.2,
+    18.853
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Letpadan",
+     "Nattalin",
+     "Thayarwady",
+     "Paungde",
+     "Thegon",
+     "Minhla",
+     "Okpho",
+     "Monyo",
+     "Gyobingauk",
+     "Zigon"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 24.5,
+     "stations": 1.2,
+     "places": 2.8,
+     "routes": 31.6,
+     "merge": 0.9,
+     "nocar": 1.6,
+     "everyday": 1.0
+    },
+    "built": "2026-11-20T00:15:31",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-20T00:50:48",
+    "shipped": "2026-11-20T01:50:21"
+   }
+  },
+  {
+   "order": 5791,
+   "id": "tgg",
+   "name": "Taunggyi",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 1408338,
+   "origin": [
+    97.0311,
+    20.7869
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B68274771791887",
+     "66882298B85260109740996",
+     "66882298B28683607927808",
+     "66882298B10322761457197",
+     "66882298B45428910921286"
+    ]
+   },
+   "bbox": [
+    96.439,
+    19.891,
+    97.473,
+    21.462
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Taunggyi",
+     "Nyaungshwe",
+     "Kalaw",
+     "Hsihseng",
+     "Hopong"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 14.2,
+     "stations": 0.9,
+     "places": 2.0,
+     "routes": 35.9,
+     "merge": 1.6,
+     "nocar": 2.4,
+     "everyday": 1.4
+    },
+    "built": "2026-11-20T00:16:23",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-20T00:50:49",
+    "shipped": "2026-11-20T01:50:21"
+   }
+  },
+  {
+   "order": 5792,
+   "id": "lsh",
+   "name": "Lashio",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 1314425,
+   "origin": [
+    97.75,
+    22.9338
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B1027402144026",
+     "66882298B75795222477878",
+     "66882298B71305619424637",
+     "66882298B42824629263373",
+     "66882298B52558825926265",
+     "66882298B47645408331678",
+     "66882298B7276097362414"
+    ]
+   },
+   "bbox": [
+    96.151,
+    21.937,
+    98.558,
+    23.433
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Lashio",
+     "Hsipaw",
+     "Kyaukme",
+     "Nawnghkio",
+     "Namhsan",
+     "Mongmit",
+     "Namtu"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 20.1,
+     "stations": 0.8,
+     "places": 2.0,
+     "routes": 46.6,
+     "merge": 1.3,
+     "nocar": 2.0,
+     "everyday": 1.2
+    },
+    "built": "2026-11-20T00:16:47",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 5081.04296875"
+     ]
+    },
+    "gated": "2026-11-20T00:50:49",
+    "shipped": "2026-11-20T01:50:22"
+   }
+  },
+  {
+   "order": 5793,
+   "id": "kyn",
+   "name": "Kyainseikgyi",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 1286411,
+   "origin": [
+    97.63,
+    16.48
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B94192188096874",
+     "66882298B45439994111599",
+     "66882298B73191723482857",
+     "66882298B55371715094402",
+     "66882298B22649797942784",
+     "66882298B48286505509820"
+    ]
+   },
+   "bbox": [
+    97.557,
+    14.878,
+    98.61,
+    16.607
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Kyainseikgyi",
+     "Mawlamyine",
+     "Ye",
+     "Kyaikmaraw",
+     "Mudon",
+     "Thanbyuzayat"
+    ],
+    "origin_was": [
+     98.3794,
+     15.303
+    ],
+    "origin_by_hand": "T-1738: the row's main town (the planner's origin was a smaller town or a GHSL spike)"
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 17.2,
+     "stations": 1.1,
+     "places": 2.8,
+     "routes": 28.9,
+     "merge": 1.0,
+     "nocar": 1.7,
+     "everyday": 1.1
+    },
+    "built": "2026-11-20T00:16:36",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1499479563088225"
+     ]
+    },
+    "gated": "2026-11-20T00:50:50",
+    "shipped": "2026-11-20T01:50:23"
+   }
+  },
+  {
+   "order": 5794,
+   "id": "myw",
+   "name": "Monywa",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 1200163,
+   "origin": [
+    95.14,
+    22.1085
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B51229112661020",
+     "66882298B42378230623418",
+     "66882298B92692699810884",
+     "66882298B46713308129486",
+     "66882298B67204722216921",
+     "66882298B46112702196623",
+     "66882298B1974610332329"
+    ]
+   },
+   "bbox": [
+    94.408,
+    21.576,
+    95.687,
+    22.319
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Monywa",
+     "Pale",
+     "Yinmarbin",
+     "Salingyi",
+     "Chaung-U",
+     "Myaung",
+     "Myinmu"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 13.5,
+     "stations": 0.9,
+     "places": 2.2,
+     "routes": 20.4,
+     "merge": 0.9,
+     "nocar": 1.7,
+     "everyday": 1.0
+    },
+    "built": "2026-11-20T00:17:06",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-20T00:50:51",
+    "shipped": "2026-11-20T01:50:23"
+   }
+  },
+  {
+   "order": 5795,
+   "id": "hpa",
+   "name": "Hpa-An",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 1187910,
+   "origin": [
+    97.6357,
+    16.888
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B20948488348117",
+     "66882298B33854457780857",
+     "66882298B4365732465197",
+     "66882298B59879554977018"
+    ]
+   },
+   "bbox": [
+    97.359,
+    16.04,
+    98.92,
+    17.845
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Hpa-An",
+     "Hlaingbwe",
+     "Kawkareik",
+     "Myawaddy"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 27.5,
+     "stations": 1.0,
+     "places": 3.0,
+     "routes": 32.3,
+     "merge": 1.9,
+     "nocar": 2.8,
+     "everyday": 1.9
+    },
+    "built": "2026-11-20T00:17:49",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6135.509765625"
+     ]
+    },
+    "gated": "2026-11-20T00:50:51",
+    "shipped": "2026-11-20T01:50:24"
+   }
+  },
+  {
+   "order": 5796,
+   "id": "mgw",
+   "name": "Magway",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 1127693,
+   "origin": [
+    94.9348,
+    20.1484
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B44996389006069",
+     "66882298B63151602536718",
+     "66882298B12852619244145",
+     "66882298B46692097237572",
+     "66882298B3522007750184",
+     "66882298B88454685144664",
+     "66882298B33786035960838"
+    ]
+   },
+   "bbox": [
+    94.205,
+    19.532,
+    95.756,
+    20.772
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Magway",
+     "Natmauk",
+     "Minbu",
+     "Pwintbyu",
+     "Minhla",
+     "Yenangyaung",
+     "Ngape"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 18.2,
+     "stations": 1.2,
+     "places": 2.9,
+     "routes": 32.9,
+     "merge": 1.6,
+     "nocar": 3.1,
+     "everyday": 1.9
+    },
+    "built": "2026-11-20T00:17:52",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-20T00:50:52",
+    "shipped": "2026-11-20T01:50:24"
+   }
+  },
+  {
+   "order": 5797,
+   "id": "pko",
+   "name": "Pakokku",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 1102164,
+   "origin": [
+    95.0842,
+    21.3349
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B29008966103222",
+     "66882298B68211952808704",
+     "66882298B14430328327961",
+     "66882298B20485481324229",
+     "66882298B89773471312366",
+     "66882298B1730260664317",
+     "66882298B47404455758769"
+    ]
+   },
+   "bbox": [
+    93.981,
+    20.818,
+    95.342,
+    22.771
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Pakokku",
+     "Myaing",
+     "Yesagyo",
+     "Pauk",
+     "Gangaw",
+     "Saw",
+     "Tilin"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 25.1,
+     "stations": 1.5,
+     "places": 3.2,
+     "routes": 43.8,
+     "merge": 3.7,
+     "nocar": 2.8,
+     "everyday": 3.0
+    },
+    "built": "2026-11-20T00:18:32",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-20T00:50:53",
+    "shipped": "2026-11-20T01:50:25"
+   }
+  },
+  {
+   "order": 5798,
+   "id": "muk",
+   "name": "Mrauk-U",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 1087784,
+   "origin": [
+    92.898,
+    20.145
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B47520460749969",
+     "66882298B79927633810292",
+     "66882298B24588945269730",
+     "66882298B64895356281796",
+     "66882298B72213195308331",
+     "66882298B80264177521474",
+     "66882298B19696970616392",
+     "66882298B77467059166323",
+     "66882298B96066491873241",
+     "66882298B98818104227605"
+    ]
+   },
+   "bbox": [
+    92.173,
+    19.647,
+    93.866,
+    21.48
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mrauk-U",
+     "Kyauktaw",
+     "Minbya",
+     "Sittwe",
+     "Pauktaw",
+     "Myebon",
+     "Ponnagyun",
+     "Rathedaung",
+     "Buthidaung",
+     "Maungdaw"
+    ],
+    "origin_was": [
+     93.19,
+     20.5877
+    ],
+    "origin_by_hand": "T-1738: the row's main town (the planner's origin was a smaller town or a GHSL spike)"
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 107.9,
+     "stations": 1.8,
+     "places": 39.2,
+     "routes": 23.3,
+     "merge": 1.1,
+     "nocar": 1.7,
+     "everyday": 1.2
+    },
+    "built": "2026-11-20T00:20:49",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1002120470377311",
+      "top_school_cell_pupils 6289.6962890625",
+      "drive_factor_median 2.5139997230375233",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-20T00:50:54",
+    "shipped": "2026-11-20T01:50:25"
+   }
+  },
+  {
+   "order": 5799,
+   "id": "bcf",
+   "name": "Bago",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 1078749,
+   "origin": [
+    96.4938,
+    17.3241
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B68180713951642",
+     "66882298B24871755522741",
+     "66882298B46667405999710",
+     "66882298B23940339796351"
+    ]
+   },
+   "bbox": [
+    96.036,
+    16.822,
+    96.982,
+    18.008
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Bago",
+     "Kawa",
+     "Waw",
+     "Thanatpin"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 30.4,
+     "stations": 1.6,
+     "places": 5.4,
+     "routes": 32.3,
+     "merge": 1.8,
+     "nocar": 2.3,
+     "everyday": 1.1
+    },
+    "built": "2026-11-20T00:19:10",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6480.53515625"
+     ]
+    },
+    "gated": "2026-11-20T00:50:55",
+    "shipped": "2026-11-20T01:50:26"
+   }
+  },
+  {
+   "order": 5800,
+   "id": "myt",
+   "name": "Myitkyina",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 1059849,
+   "origin": [
+    97.3811,
+    25.388
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B4579999731353",
+     "66882298B83360582582831",
+     "66882298B71588041682285",
+     "66882298B42133100015884"
+    ]
+   },
+   "bbox": [
+    95.806,
+    24.48,
+    98.188,
+    26.188
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Myitkyina",
+     "Mohnyin",
+     "Mogaung",
+     "Waingmaw"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 17.6,
+     "stations": 0.9,
+     "places": 2.1,
+     "routes": 15.2,
+     "merge": 0.8,
+     "nocar": 1.3,
+     "everyday": 1.0
+    },
+    "built": "2026-11-20T00:25:21",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.15585086259048142",
+      "top_school_cell_pupils 6096.16455078125"
+     ]
+    },
+    "gated": "2026-11-20T00:50:56",
+    "shipped": "2026-11-20T01:50:27"
+   }
+  },
+  {
+   "order": 5801,
+   "id": "kka",
+   "name": "Kutkai",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 1018607,
+   "origin": [
+    97.9361,
+    23.46
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B95137376687287",
+     "66882298B45954578024958",
+     "66882298B40242085426704",
+     "66882298B13890402968202",
+     "66882298B72712470803341",
+     "66882298B78020195364631",
+     "66882298B9190211902717",
+     "66882298B88955609799525",
+     "66882298B1444745531952"
+    ]
+   },
+   "bbox": [
+    96.956,
+    22.954,
+    98.944,
+    24.155
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Kutkai",
+     "Muse",
+     "Namhkan",
+     "Laukkaing",
+     "Hopang",
+     "Hseni",
+     "Konkyan",
+     "Kunlong",
+     "Manton"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 18.8,
+     "stations": 0.9,
+     "places": 2.4,
+     "routes": 19.3,
+     "merge": 0.8,
+     "nocar": 1.2,
+     "everyday": 0.8
+    },
+    "built": "2026-11-20T00:25:27",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_school_cell_pupils 6023.1513671875",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-20T00:50:56",
+    "shipped": "2026-11-20T01:50:27"
+   }
+  },
+  {
+   "order": 5802,
+   "id": "hnt",
+   "name": "Hinthada",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 982644,
+   "origin": [
+    95.4582,
+    17.6453
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B23149240101937",
+     "66882298B96340989204830",
+     "66882298B10075532329949",
+     "66882298B92034765934079",
+     "66882298B70728451341667"
+    ]
+   },
+   "bbox": [
+    94.779,
+    17.403,
+    95.588,
+    18.511
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Hinthada",
+     "Myanaung",
+     "Ingapu",
+     "Lemyethna",
+     "Kyangin"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 14.4,
+     "stations": 1.1,
+     "places": 2.2,
+     "routes": 20.5,
+     "merge": 1.1,
+     "nocar": 1.8,
+     "everyday": 1.2
+    },
+    "built": "2026-11-20T00:21:33",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6582.19384765625"
+     ]
+    },
+    "gated": "2026-11-20T00:50:57",
+    "shipped": "2026-11-20T01:50:28"
+   }
+  },
+  {
+   "order": 5803,
+   "id": "tnw",
+   "name": "Taungdwingyi",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 965352,
+   "origin": [
+    95.5457,
+    20.0076
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B16268991431448",
+     "66882298B579870403900",
+     "66882298B81825229811290",
+     "66882298B63513669154243",
+     "66882298B95710101882630",
+     "66882298B80439635441464",
+     "66882298B34352035689963"
+    ]
+   },
+   "bbox": [
+    94.344,
+    18.832,
+    95.859,
+    20.349
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Taungdwingyi",
+     "Aunglan",
+     "Myothit",
+     "Sinbaungwe",
+     "Thayet",
+     "Kamma",
+     "Mindon"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 20.3,
+     "stations": 1.1,
+     "places": 2.5,
+     "routes": 25.2,
+     "merge": 1.0,
+     "nocar": 1.5,
+     "everyday": 1.2
+    },
+    "built": "2026-11-20T00:22:28",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_school_cell_pupils 6000.0",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-20T00:50:57",
+    "shipped": "2026-11-20T01:50:28"
+   }
+  },
+  {
+   "order": 5804,
+   "id": "kyo",
+   "name": "Kyonpyaw",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 955125,
+   "origin": [
+    95.1947,
+    17.3077
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B59134367047252",
+     "66882298B3445717579771",
+     "66882298B45599344473693",
+     "66882298B98169404583454",
+     "66882298B87314551665108"
+    ]
+   },
+   "bbox": [
+    94.732,
+    16.89,
+    95.736,
+    17.627
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Kyonpyaw",
+     "Yegyi",
+     "Danubyu",
+     "Zalun",
+     "Kyaunggon"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 14.1,
+     "stations": 1.0,
+     "places": 2.8,
+     "routes": 18.7,
+     "merge": 0.9,
+     "nocar": 1.6,
+     "everyday": 1.2
+    },
+    "built": "2026-11-20T00:23:11",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_school_cell_pupils 6055.990234375",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-20T00:50:58",
+    "shipped": "2026-11-20T01:50:29"
+   }
+  },
+  {
+   "order": 5805,
+   "id": "kak",
+   "name": "Katha",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 946986,
+   "origin": [
+    96.3406,
+    24.1796
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B6815323696646",
+     "66882298B81755465021971",
+     "66882298B98641573621791",
+     "66882298B13248015894559",
+     "66882298B49369591286610",
+     "66882298B97049458692158",
+     "66882298B23467171997155"
+    ]
+   },
+   "bbox": [
+    95.015,
+    23.479,
+    96.666,
+    24.96
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Katha",
+     "Kawlin",
+     "Tigyaing",
+     "Indaw",
+     "Banmauk",
+     "Pinlebu",
+     "Wuntho"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 13.9,
+     "stations": 1.0,
+     "places": 1.8,
+     "routes": 14.6,
+     "merge": 1.0,
+     "nocar": 1.5,
+     "everyday": 1.0
+    },
+    "built": "2026-11-20T00:23:55",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-20T00:50:59",
+    "shipped": "2026-11-20T01:50:29"
+   }
+  },
+  {
+   "order": 5806,
+   "id": "tgo",
+   "name": "Taungoo",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 944364,
+   "origin": [
+    96.4376,
+    18.9405
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B10452599963502",
+     "66882298B25229900655360",
+     "66882298B33418919919508",
+     "66882298B37364266207848",
+     "66882298B59821374859075",
+     "66882298B62910908422931"
+    ]
+   },
+   "bbox": [
+    95.795,
+    18.555,
+    97.436,
+    19.509
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Taungoo",
+     "Yedashe",
+     "Oktwin",
+     "Htantabin",
+     "Thandaunggyi",
+     "Hpasawng"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 15.5,
+     "stations": 0.9,
+     "places": 1.7,
+     "routes": 17.3,
+     "merge": 0.9,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-11-20T00:24:41",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-20T00:51:00",
+    "shipped": "2026-11-20T01:50:30"
+   }
+  },
+  {
+   "order": 5807,
+   "id": "myg",
+   "name": "Myingyan",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 939152,
+   "origin": [
+    95.3952,
+    21.4596
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B67377062020558",
+     "66882298B5713349170013",
+     "66882298B35239552440228",
+     "66882298B27042252036531",
+     "66882298B91349186479025"
+    ]
+   },
+   "bbox": [
+    95.104,
+    21.009,
+    96.038,
+    21.93
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Myingyan",
+     "Taungtha",
+     "Natogyi",
+     "Tada-U",
+     "Ngazun"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 20.7,
+     "stations": 0.9,
+     "places": 2.6,
+     "routes": 27.4,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-11-20T00:25:38",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-20T00:51:00",
+    "shipped": "2026-11-20T01:50:30"
+   }
+  },
+  {
+   "order": 5808,
+   "id": "kgu",
+   "name": "Kengtung",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 930905,
+   "origin": [
+    99.6122,
+    21.2934
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B45721516561493",
+     "66882298B21195914889348",
+     "66882298B1975009216242",
+     "66882298B84564180686688",
+     "66882298B28068937388118",
+     "66882298B64902452012974",
+     "66882298B66538175578783"
+    ]
+   },
+   "bbox": [
+    98.912,
+    20.086,
+    101.17,
+    22.163
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Kengtung",
+     "Tachileik",
+     "Mongyang",
+     "Monghsat",
+     "Mongyawng",
+     "Mongkhet",
+     "Mongla"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 22.0,
+     "stations": 0.9,
+     "places": 2.1,
+     "routes": 18.5,
+     "merge": 0.9,
+     "nocar": 1.6,
+     "everyday": 1.2
+    },
+    "built": "2026-11-20T00:26:10",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.13007873161050934",
+      "top_school_cell_pupils 6044.07763671875"
+     ]
+    },
+    "gated": "2026-11-20T00:51:01",
+    "shipped": "2026-11-20T01:50:31"
+   }
+  },
+  {
+   "order": 5809,
+   "id": "pym",
+   "name": "Pyinmana",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 917323,
+   "origin": [
+    96.2103,
+    19.7343
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B93334938803568",
+     "66882298B8516616183629",
+     "66882298B66298940741731",
+     "66882298B94447219480250",
+     "66882298B18463297130945",
+     "66882298B67796566444231",
+     "66882298B45416158552835"
+    ]
+   },
+   "bbox": [
+    95.713,
+    19.417,
+    96.675,
+    20.058
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Pyinmana",
+     "Za Bu Thi Ri",
+     "Det Khi Na Thi Ri",
+     "Lewe",
+     "Poke Ba Thi Ri",
+     "Zay Yar Thi Ri",
+     "Oke Ta Ra Thi Ri"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 14.5,
+     "stations": 0.8,
+     "places": 1.7,
+     "routes": 18.5,
+     "merge": 1.0,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-11-20T00:26:07",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6137.9765625"
+     ]
+    },
+    "gated": "2026-11-20T00:51:01",
+    "shipped": "2026-11-20T01:50:32"
+   }
+  },
+  {
+   "order": 5810,
+   "id": "kyu",
+   "name": "Kyaukse",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 845866,
+   "origin": [
+    96.1345,
+    21.6093
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B57980523152080",
+     "66882298B65561284391558",
+     "66882298B2837304742341",
+     "66882298B88549330826018"
+    ]
+   },
+   "bbox": [
+    95.936,
+    21.134,
+    96.896,
+    22.372
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Kyaukse",
+     "Pyinoolwin",
+     "Myittha",
+     "Sintgaing"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 17.2,
+     "stations": 1.0,
+     "places": 2.6,
+     "routes": 27.3,
+     "merge": 0.6,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-11-20T00:31:51",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-11-20T00:51:05",
+    "shipped": "2026-11-20T01:50:32"
+   }
+  },
+  {
+   "order": 5811,
+   "id": "shw",
+   "name": "Shwebo",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 840380,
+   "origin": [
+    95.6903,
+    22.5668
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B66182128230817",
+     "66882298B52908667237933",
+     "66882298B33356488916188",
+     "66882298B45625121552952"
+    ]
+   },
+   "bbox": [
+    95.247,
+    22.086,
+    96.01,
+    22.905
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Shwebo",
+     "Wetlet",
+     "Ayadaw",
+     "Khin-U"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 11.7,
+     "stations": 0.9,
+     "places": 1.6,
+     "routes": 16.9,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-11-20T00:31:35",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6069.24072265625",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-20T00:51:06",
+    "shipped": "2026-11-20T01:50:33"
+   }
+  },
+  {
+   "order": 5812,
+   "id": "mbx",
+   "name": "Maubin",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 803209,
+   "origin": [
+    95.6492,
+    16.7317
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B9381677048276",
+     "66882298B27822047264791",
+     "66882298B87618867269026"
+    ]
+   },
+   "bbox": [
+    95.202,
+    16.501,
+    95.887,
+    17.229
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Maubin",
+     "Pantanaw",
+     "Nyaungdon"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 12.8,
+     "stations": 1.0,
+     "places": 2.2,
+     "routes": 20.0,
+     "merge": 1.0,
+     "nocar": 1.7,
+     "everyday": 1.1
+    },
+    "built": "2026-11-20T00:26:52",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_cell_jobs_vs_size 681.0063799296255",
+      "top_zone_jobs_share 0.17217673981838472",
+      "top_school_cell_pupils 5397.208984375",
+      "drive_factor_median 2.117000016612675",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-11-20T00:35:53",
+    "gated": "2026-11-20T00:56:57",
+    "shipped": "2026-11-20T01:50:33"
+   },
+   "gate_relax": {
+    "top_cell_jobs_vs_size": "T-1738: 681, the top cell in Maubin's town centre (UCDB 177,137), its one town"
+   }
+  },
+  {
+   "order": 5813,
+   "id": "mym",
+   "name": "Myaungmya",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 790588,
+   "origin": [
+    94.9247,
+    16.6084
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B35313795132071",
+     "66882298B93394455443594",
+     "66882298B97791680692613"
+    ]
+   },
+   "bbox": [
+    94.692,
+    16.271,
+    95.483,
+    16.969
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Myaungmya",
+     "Wakema",
+     "Einme"
+    ]
+   },
+   "run": {
+    "run_batch": "20261119-234304",
+    "steps": {
+     "build": 17.3,
+     "stations": 1.4,
+     "places": 3.8,
+     "routes": 22.3,
+     "merge": 1.0,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-11-19T23:56:25",
+    "gate": {
+     "warn": [
+      "top_cell_jobs_vs_size 631.3862433923284",
+      "top_zone_jobs_share 0.13722518896861",
+      "top_school_cell_pupils 5194.998046875",
+      "drive_factor_median 2.676138774894477",
+      "road_snap_median_m 487.4",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-11-20T00:06:57",
+    "gated": "2026-11-20T00:50:53",
+    "shipped": "2026-11-20T01:50:34"
+   },
+   "gate_relax": {
+    "top_cell_jobs_vs_size": "T-1738: 631 (limit 600), 11,352 jobs (3.5%) in Myaungmya's town centre cell, the zone's one town (as puc, T-2038)"
+   }
+  },
+  {
+   "order": 5814,
+   "id": "mbs",
+   "name": "Madaya",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 747557,
+   "origin": [
+    96.1132,
+    22.2085
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B5998860788816",
+     "66882298B33434666759386",
+     "66882298B85652760826241",
+     "66882298B88009489570675"
+    ]
+   },
+   "bbox": [
+    95.9,
+    22.008,
+    96.716,
+    23.684
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Madaya",
+     "Mogoke",
+     "Thabeikkyin",
+     "Singu"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 17.1,
+     "stations": 1.0,
+     "places": 2.1,
+     "routes": 24.5,
+     "merge": 1.2,
+     "nocar": 2.1,
+     "everyday": 1.4
+    },
+    "built": "2026-11-20T00:27:43",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.1396434672425894",
+      "top_school_cell_pupils 6000.0",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-20T00:51:02",
+    "shipped": "2026-11-20T01:50:34"
+   }
+  },
+  {
+   "order": 5815,
+   "id": "pbg",
+   "name": "Pathein",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 707012,
+   "origin": [
+    94.7292,
+    16.7729
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B98470543554215",
+     "66882298B5626975055677",
+     "66882298B78974611272668"
+    ]
+   },
+   "bbox": [
+    94.362,
+    16.585,
+    95.052,
+    17.476
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Pathein",
+     "Kangyidaunt",
+     "Thabaung"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 17.4,
+     "stations": 1.2,
+     "places": 4.4,
+     "routes": 38.5,
+     "merge": 3.2,
+     "nocar": 2.2,
+     "everyday": 1.3
+    },
+    "built": "2026-11-20T00:28:54",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.12140677728872401",
+      "top_school_cell_pupils 6553.365234375",
+      "drive_factor_median 2.0518667734879767",
+      "road_snap_median_m 318.1"
+     ]
+    },
+    "gated": "2026-11-20T00:51:03",
+    "shipped": "2026-11-20T01:50:35"
+   }
+  },
+  {
+   "order": 5816,
+   "id": "pyy",
+   "name": "Pyay",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 687404,
+   "origin": [
+    95.2196,
+    18.8249
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B77779383139193",
+     "66882298B85055122841413",
+     "66882298B25642914164479",
+     "66882298B95143347867260"
+    ]
+   },
+   "bbox": [
+    94.686,
+    18.357,
+    95.867,
+    19.191
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Pyay",
+     "Padaung",
+     "Paukkhaung",
+     "Shwedaung"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 13.1,
+     "stations": 0.8,
+     "places": 2.2,
+     "routes": 16.1,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-11-20T00:29:32",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.14328994628101546",
+      "top_school_cell_pupils 6139.28955078125"
+     ]
+    },
+    "gated": "2026-11-20T00:51:04",
+    "shipped": "2026-11-20T01:50:36"
+   }
+  },
+  {
+   "order": 5817,
+   "id": "tby",
+   "name": "Tabayin",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 680762,
+   "origin": [
+    95.2265,
+    22.6585
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B68369636205049",
+     "66882298B7751003283272",
+     "66882298B89854409890576",
+     "66882298B93498834060199",
+     "66882298B30025626459135"
+    ]
+   },
+   "bbox": [
+    94.196,
+    22.117,
+    95.56,
+    23.332
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Tabayin",
+     "Kani",
+     "Budalin",
+     "Ye-U",
+     "Mingin"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 11.4,
+     "stations": 0.9,
+     "places": 2.1,
+     "routes": 15.4,
+     "merge": 0.9,
+     "nocar": 1.3,
+     "everyday": 1.0
+    },
+    "built": "2026-11-20T00:30:07",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-20T00:51:04",
+    "shipped": "2026-11-20T01:50:36"
+   }
+  },
+  {
+   "order": 5818,
+   "id": "pyu",
+   "name": "Phyu",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 658405,
+   "origin": [
+    96.4425,
+    18.4863
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B60221129231929",
+     "66882298B473250225009",
+     "66882298B61714621013950"
+    ]
+   },
+   "bbox": [
+    95.837,
+    17.894,
+    97.141,
+    18.815
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Phyu",
+     "Kyauktaga",
+     "Kyaukkyi"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 16.2,
+     "stations": 0.7,
+     "places": 1.7,
+     "routes": 12.1,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 0.8
+    },
+    "built": "2026-11-20T00:30:42",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-20T00:51:05",
+    "shipped": "2026-11-20T01:50:37"
+   }
+  },
+  {
+   "order": 5819,
+   "id": "pgx",
+   "name": "Pinlaung",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 621524,
+   "origin": [
+    97.209,
+    19.674
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B6539259335056",
+     "66882298B50366352071932",
+     "66882298B46108424305923",
+     "66882298B21887991240008"
+    ]
+   },
+   "bbox": [
+    96.364,
+    19.2,
+    97.529,
+    20.531
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Pinlaung",
+     "Loikaw",
+     "Pekon",
+     "Demoso"
+    ],
+    "origin_was": [
+     96.7824,
+     20.1235
+    ],
+    "origin_by_hand": "T-1738: the row's main town (the planner's origin was a smaller town or a GHSL spike)"
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 10.1,
+     "stations": 1.4,
+     "places": 2.7,
+     "routes": 19.8,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-11-20T00:31:22",
+    "gate": {
+     "warn": [
+      "browser None",
+      "top_zone_jobs_share 0.10345307494032856",
+      "top_school_cell_pupils 6008.443359375"
+     ]
+    },
+    "parked": "2026-11-20T00:55:36",
+    "gated": "2026-11-20T01:03:12",
+    "shipped": "2026-11-20T01:50:37"
+   },
+   "gate_relax": {
+    "browser": "T-1738: every check passed but 'no page errors': MapLibre 6.13.0's line breaking throws (Cannot use 'in' operator to search for 'imageName' in undefined) on the basemap's long Burmese-script labels round Loikaw and Meiktila, whatever the pack; reproduced panning a game opened on tgg"
+   }
+  },
+  {
+   "order": 5820,
+   "id": "kau",
+   "name": "Kanbalu",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 619144,
+   "origin": [
+    95.5157,
+    23.201
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B13690628237692",
+     "66882298B16855386553806",
+     "66882298B96119842077960"
+    ]
+   },
+   "bbox": [
+    94.86,
+    22.842,
+    95.995,
+    23.871
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Kanbalu",
+     "Taze",
+     "Kyunhla"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 9.6,
+     "stations": 0.9,
+     "places": 2.1,
+     "routes": 12.4,
+     "merge": 0.8,
+     "nocar": 1.2,
+     "everyday": 0.8
+    },
+    "built": "2026-11-20T00:31:52",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-20T00:51:07",
+    "shipped": "2026-11-20T01:50:38"
+   }
+  },
+  {
+   "order": 5821,
+   "id": "mwl",
+   "name": "Mawlamyinegyun",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 610074,
+   "origin": [
+    95.2644,
+    16.3783
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B45976501481961",
+     "66882298B48553142968450"
+    ]
+   },
+   "bbox": [
+    95.039,
+    15.772,
+    95.639,
+    16.59
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mawlamyinegyun",
+     "Bogale"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 13.5,
+     "stations": 0.9,
+     "places": 2.0,
+     "routes": 11.9,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-11-20T00:37:34",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_cell_jobs_vs_size 640.341018844013",
+      "top_zone_jobs_share 0.1078638439159554",
+      "top_school_cell_pupils 6000.0",
+      "drive_factor_median 3.545307861223541",
+      "road_snap_median_m 478.7",
+      "fleet_range 4"
+     ]
+    },
+    "parked": "2026-11-20T00:40:49",
+    "gated": "2026-11-20T00:56:58",
+    "shipped": "2026-11-20T01:50:38"
+   },
+   "gate_relax": {
+    "top_cell_jobs_vs_size": "T-1738: 640, the top cell in Bogale's town centre (UCDB 165,081)",
+    "drive_factor_median": "T-1738: 3.55, Ayeyarwady delta islands, roads wind round the river channels"
+   }
+  },
+  {
+   "order": 5822,
+   "id": "kbb",
+   "name": "Kale",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 599038,
+   "origin": [
+    94.0194,
+    23.1927
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B91243771606208",
+     "66882298B6984635080223",
+     "66882298B70906277786439",
+     "66882298B80362939759062"
+    ]
+   },
+   "bbox": [
+    93.34,
+    22.583,
+    94.95,
+    23.656
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Kale",
+     "Tedim",
+     "Kalewa",
+     "Falam"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 9.1,
+     "stations": 0.8,
+     "places": 1.6,
+     "routes": 10.3,
+     "merge": 0.8,
+     "nocar": 1.2,
+     "everyday": 0.8
+    },
+    "built": "2026-11-20T00:37:26",
+    "gate": {
+     "warn": [
+      "drive_factor_median 2.289022796332201",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-20T00:51:07",
+    "shipped": "2026-11-20T01:50:39"
+   }
+  },
+  {
+   "order": 5823,
+   "id": "lbt",
+   "name": "Labutta",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 591257,
+   "origin": [
+    94.7556,
+    16.1483
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B46433982831447",
+     "66882298B21473836197235"
+    ]
+   },
+   "bbox": [
+    94.191,
+    15.708,
+    95.115,
+    16.734
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Labutta",
+     "Ngapudaw"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 15.1,
+     "stations": 0.9,
+     "places": 4.2,
+     "routes": 15.4,
+     "merge": 0.9,
+     "nocar": 1.3,
+     "everyday": 0.8
+    },
+    "built": "2026-11-20T00:32:32",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "drive_factor_median 3.893758941798335",
+      "road_snap_median_m 1920.2",
+      "fleet_range 4"
+     ]
+    },
+    "parked": "2026-11-20T00:40:51",
+    "gated": "2026-11-20T00:56:58",
+    "shipped": "2026-11-20T01:50:39"
+   },
+   "gate_relax": {
+    "drive_factor_median": "T-1738: 3.89, Ayeyarwady delta at the sea, roads wind round the river channels"
+   }
+  },
+  {
+   "order": 5824,
+   "id": "twa",
+   "name": "Twantay",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 590374,
+   "origin": [
+    95.931,
+    16.7153
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B60215820889063",
+     "66882298B28699089666182",
+     "66882298B74112724053029"
+    ]
+   },
+   "bbox": [
+    95.824,
+    16.309,
+    96.328,
+    16.919
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Twantay",
+     "Kungyangon",
+     "Kawhmu"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 13.5,
+     "stations": 6.5,
+     "places": 2.7,
+     "routes": 17.0,
+     "merge": 0.8,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-11-20T00:33:16",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.1734957394058874",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-20T00:51:08",
+    "shipped": "2026-11-20T01:50:40"
+   }
+  },
+  {
+   "order": 5825,
+   "id": "ttx",
+   "name": "Thaton",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 554599,
+   "origin": [
+    97.3668,
+    16.9127
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B50654546091874",
+     "66882298B30035671122346",
+     "66882298B52510382995497"
+    ]
+   },
+   "bbox": [
+    96.868,
+    16.751,
+    97.538,
+    17.718
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Thaton",
+     "Kyaikto",
+     "Bilin"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 11.7,
+     "stations": 0.9,
+     "places": 1.8,
+     "routes": 12.2,
+     "merge": 1.0,
+     "nocar": 1.7,
+     "everyday": 1.1
+    },
+    "built": "2026-11-20T00:33:49",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-20T00:51:09",
+    "shipped": "2026-11-20T01:50:41"
+   }
+  },
+  {
+   "order": 5826,
+   "id": "mye",
+   "name": "Myeik",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 548211,
+   "origin": [
+    98.604,
+    12.44
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B36911639137507",
+     "66882298B62167174305830",
+     "66882298B40667774005147"
+    ]
+   },
+   "bbox": [
+    97.434,
+    11.427,
+    98.933,
+    13.529
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Myeik",
+     "Kyunsu",
+     "Palaw"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 105.8,
+     "stations": 0.8,
+     "places": 2.0,
+     "routes": 12.4,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 1.2
+    },
+    "built": "2026-11-20T00:36:04",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.17942381414800196"
+     ]
+    },
+    "gated": "2026-11-20T00:51:09",
+    "shipped": "2026-11-20T01:50:41"
+   }
+  },
+  {
+   "order": 5827,
+   "id": "dik",
+   "name": "Daik-U",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 541967,
+   "origin": [
+    96.6692,
+    17.7936
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B63538367621884",
+     "66882298B32757043222788",
+     "66882298B30932007959210"
+    ]
+   },
+   "bbox": [
+    96.32,
+    17.481,
+    97.224,
+    18.229
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Daik-U",
+     "Nyaunglebin",
+     "Shwegyin"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 11.0,
+     "stations": 0.8,
+     "places": 1.7,
+     "routes": 9.9,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-11-20T00:36:42",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_cell_jobs_vs_size 614.7819227385311",
+      "top_zone_jobs_share 0.20478615154533938",
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-11-20T00:40:55",
+    "gated": "2026-11-20T00:56:59",
+    "shipped": "2026-11-20T01:50:42"
+   },
+   "gate_relax": {
+    "top_cell_jobs_vs_size": "T-1738: 615, the top cell in Nyaunglebin's town centre (UCDB 88,831)",
+    "top_zone_jobs_share": "T-1738: 0.20, the top zone in Nyaunglebin's centre, a 0.54M zone of small towns"
+   }
+  },
+  {
+   "order": 5828,
+   "id": "dwe",
+   "name": "Dawei",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 541550,
+   "origin": [
+    98.1907,
+    14.0743
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B9277012619903",
+     "66882298B48301856519721",
+     "66882298B80414211212402",
+     "66882298B32460181384532"
+    ]
+   },
+   "bbox": [
+    97.763,
+    13.273,
+    99.209,
+    15.105
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Dawei",
+     "Yebyu",
+     "Launglon",
+     "Thayetchaung"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 67.2,
+     "stations": 0.8,
+     "places": 1.4,
+     "routes": 11.1,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-11-20T00:38:11",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.12564799039523264"
+     ]
+    },
+    "gated": "2026-11-20T00:51:10",
+    "shipped": "2026-11-20T01:50:42"
+   }
+  },
+  {
+   "order": 5829,
+   "id": "hom",
+   "name": "Homalin",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 526975,
+   "origin": [
+    94.9092,
+    24.8672
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B69745000044463",
+     "66882298B17369012055555",
+     "66882298B72647689440603"
+    ]
+   },
+   "bbox": [
+    94.128,
+    23.645,
+    96.079,
+    25.537
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Homalin",
+     "Paungbyin",
+     "Tamu"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 15.7,
+     "stations": 0.7,
+     "places": 1.4,
+     "routes": 15.6,
+     "merge": 0.8,
+     "nocar": 1.3,
+     "everyday": 0.8
+    },
+    "built": "2026-11-20T00:38:05",
+    "gate": {
+     "warn": [
+      "drive_factor_median 2.218596968679145",
+      "road_snap_median_m 440.9",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-20T00:51:11",
+    "shipped": "2026-11-20T01:50:43"
+   }
+  },
+  {
+   "order": 5830,
+   "id": "kyk",
+   "name": "Kyaukpadaung",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 504697,
+   "origin": [
+    95.1262,
+    20.8366
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B79117526054683",
+     "66882298B82577145530379"
+    ]
+   },
+   "bbox": [
+    94.83,
+    20.543,
+    95.545,
+    21.314
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Kyaukpadaung",
+     "Nyaung-U"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 9.5,
+     "stations": 0.7,
+     "places": 1.5,
+     "routes": 13.2,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-11-20T00:38:03",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.11770953167625661",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-20T00:51:11",
+    "shipped": "2026-11-20T01:50:44"
+   }
+  },
+  {
+   "order": 5831,
+   "id": "sdn",
+   "name": "Salin",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 499794,
+   "origin": [
+    94.824,
+    20.892
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B45635597597474",
+     "66882298B89467340661520",
+     "66882298B26737603972291"
+    ]
+   },
+   "bbox": [
+    94.246,
+    20.415,
+    95.042,
+    21.267
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Salin",
+     "Chauk",
+     "Seikphyu"
+    ],
+    "origin_was": [
+     94.6522,
+     20.5795
+    ],
+    "origin_by_hand": "T-1738: the row's main town (the planner's origin was a smaller town or a GHSL spike)"
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 11.2,
+     "stations": 0.9,
+     "places": 1.9,
+     "routes": 12.9,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-11-20T00:42:42",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-20T00:51:12",
+    "shipped": "2026-11-20T01:50:44"
+   }
+  },
+  {
+   "order": 5832,
+   "id": "pyp",
+   "name": "Pyapon",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 499387,
+   "origin": [
+    95.6772,
+    16.2879
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B62212267926712",
+     "66882298B62732217443925"
+    ]
+   },
+   "bbox": [
+    95.198,
+    15.67,
+    96.081,
+    16.481
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Pyapon",
+     "Dedaye"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 13.4,
+     "stations": 1.0,
+     "places": 3.0,
+     "routes": 11.3,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 0.8
+    },
+    "built": "2026-11-20T00:42:44",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.12411034101199189",
+      "top_school_cell_pupils 6111.62646484375",
+      "drive_factor_median 2.8045693562372267",
+      "road_snap_median_m 541.3",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-20T00:51:15",
+    "shipped": "2026-11-20T01:50:45"
+   }
+  },
+  {
+   "order": 5833,
+   "id": "kyy",
+   "name": "Kyaukpyu",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 496087,
+   "origin": [
+    93.5521,
+    19.4282
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B17691670471295",
+     "66882298B50609184171545",
+     "66882298B19990050947650",
+     "66882298B25907056324587",
+     "66882298B12562394642113"
+    ]
+   },
+   "bbox": [
+    93.468,
+    17.946,
+    94.902,
+    19.639
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Kyaukpyu",
+     "Toungup",
+     "Thandwe",
+     "Ramree",
+     "Munaung"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 51.4,
+     "stations": 1.1,
+     "places": 8.6,
+     "routes": 10.6,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.7
+    },
+    "built": "2026-11-20T00:39:27",
+    "gate": {
+     "warn": [
+      "top_cell_jobs_vs_size 655.8197836821753",
+      "top_school_cell_pupils 6538.845703125"
+     ]
+    },
+    "parked": "2026-11-20T00:45:47",
+    "gated": "2026-11-20T00:56:59",
+    "shipped": "2026-11-20T01:50:45"
+   },
+   "gate_relax": {
+    "top_cell_jobs_vs_size": "T-1738: 656, the top cell in Thandwe town (a pixel of 16,627, its ring 4,323: a town, not a spike)"
+   }
+  },
+  {
+   "order": 5834,
+   "id": "hpk",
+   "name": "Hpakant",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 449141,
+   "origin": [
+    96.3569,
+    25.6571
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B73343718613746"
+    ]
+   },
+   "bbox": [
+    95.958,
+    25.246,
+    96.919,
+    26.137
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Hpakant"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 11.2,
+     "stations": 1.0,
+     "places": 1.4,
+     "routes": 6.7,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-11-20T00:39:51",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.1243978656560283",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-20T00:51:13",
+    "shipped": "2026-11-20T01:50:46"
+   }
+  },
+  {
+   "order": 5835,
+   "id": "kyt",
+   "name": "Kyauktan",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 444744,
+   "origin": [
+    96.3255,
+    16.6331
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B563703845722",
+     "66882298B40918846263989"
+    ]
+   },
+   "bbox": [
+    96.243,
+    16.477,
+    96.79,
+    16.872
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Kyauktan",
+     "Thongwa"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 6.5,
+     "stations": 0.8,
+     "places": 1.3,
+     "routes": 10.0,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.8
+    },
+    "built": "2026-11-20T00:40:14",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.12632352935031804",
+      "top_school_cell_pupils 6722.68994140625",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-20T00:51:13",
+    "shipped": "2026-11-20T01:50:46"
+   }
+  },
+  {
+   "order": 5836,
+   "id": "bmo",
+   "name": "Bhamo",
+   "kind": "zone",
+   "status": "parked",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 443589,
+   "origin": [
+    97.2317,
+    24.255
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B3684723287244",
+     "66882298B3817966441751",
+     "66882298B59325512969250",
+     "66882298B58400642266296"
+    ]
+   },
+   "bbox": [
+    96.549,
+    23.633,
+    97.724,
+    24.905
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Bhamo",
+     "Shwegu",
+     "Momauk",
+     "Mansi"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 15.4,
+     "stations": 0.7,
+     "places": 1.7,
+     "routes": 10.8,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-11-20T00:40:53",
+    "reason": "gate: top_cell_jobs_vs_size 611.2729961292506 7,721 jobs, 4.84%, at [97.5949, 23.8294]",
+    "gate": {
+     "fail": [
+      "top_cell_jobs_vs_size 611.2729961292506 7,721 jobs, 4.84%, at [97.5949, 23.8294]"
+     ],
+     "warn": []
+    },
+    "parked": "2026-11-20T00:45:49"
+   }
+  },
+  {
+   "order": 5837,
+   "id": "law",
+   "name": "Lawksawk",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 425238,
+   "origin": [
+    96.8643,
+    21.2518
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B68963712992998",
+     "66882298B98753356299809",
+     "66882298B54041300055844"
+    ]
+   },
+   "bbox": [
+    96.204,
+    20.711,
+    97.301,
+    22.268
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Lawksawk",
+     "Pindaya",
+     "Ywangan"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 12.5,
+     "stations": 0.9,
+     "places": 2.1,
+     "routes": 18.2,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 1.0
+    },
+    "built": "2026-11-20T00:41:45",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_school_cell_pupils 6000.11279296875",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-20T00:51:14",
+    "shipped": "2026-11-20T01:50:47"
+   }
+  },
+  {
+   "order": 5838,
+   "id": "tkk",
+   "name": "Taikkyi",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 376926,
+   "origin": [
+    95.9675,
+    17.3159
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B61286545202529"
+    ]
+   },
+   "bbox": [
+    95.618,
+    17.171,
+    96.128,
+    17.797
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Taikkyi"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 11.1,
+     "stations": 0.9,
+     "places": 1.7,
+     "routes": 8.8,
+     "merge": 0.6,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-11-20T00:42:18",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.20892763489311472",
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-11-20T00:45:50",
+    "gated": "2026-11-20T00:57:00",
+    "shipped": "2026-11-20T01:50:48"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-1738: 0.21, a one-town zone (Taikkyi), the top zone in its centre"
+   }
+  },
+  {
+   "order": 5839,
+   "id": "hlg",
+   "name": "Hlegu",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 370725,
+   "origin": [
+    96.2272,
+    17.1019
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B65350512294428"
+    ]
+   },
+   "bbox": [
+    96.028,
+    16.942,
+    96.404,
+    17.641
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Hlegu"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 12.0,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 14.3,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.7
+    },
+    "built": "2026-11-20T00:42:51",
+    "gate": {
+     "warn": [
+      "top_cell_jobs_vs_size 669.0179233161318",
+      "top_zone_jobs_share 0.14145844301403823",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-11-20T00:49:32",
+    "gated": "2026-11-20T00:57:01",
+    "shipped": "2026-11-20T01:50:48"
+   },
+   "gate_relax": {
+    "top_cell_jobs_vs_size": "T-1738: 669, the top cell in Hlegu's town centre (UCDB 125,912), a one-town zone"
+   }
+  },
+  {
+   "order": 5840,
+   "id": "hmw",
+   "name": "Hmawbi",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 335629,
+   "origin": [
+    96.0425,
+    17.1019
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B63293959945836"
+    ]
+   },
+   "bbox": [
+    95.904,
+    16.983,
+    96.171,
+    17.279
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Hmawbi"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 6.5,
+     "stations": 0.7,
+     "places": 1.4,
+     "routes": 9.5,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.8
+    },
+    "built": "2026-11-20T00:43:04",
+    "gate": {
+     "warn": [
+      "top_cell_jobs_vs_size 709.3879974599829",
+      "top_zone_jobs_share 0.1511460117579438",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-11-20T00:49:32",
+    "gated": "2026-11-20T00:57:01",
+    "shipped": "2026-11-20T01:50:49"
+   },
+   "gate_relax": {
+    "top_cell_jobs_vs_size": "T-1738: 709, the top cell in Myaungtagar's centre (UCDB 74,078), the zone's biggest town"
+   }
+  },
+  {
+   "order": 5841,
+   "id": "kbc",
+   "name": "Kayan",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 213096,
+   "origin": [
+    96.5644,
+    16.9044
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B46397740219200"
+    ]
+   },
+   "bbox": [
+    96.377,
+    16.755,
+    96.837,
+    16.999
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Kayan"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 5.9,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 7.8,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-11-20T00:45:06",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.5087254356078728",
+      "road_snap_median_m 354.3",
+      "fleet_range 5"
+     ]
+    },
+    "parked": "2026-11-20T00:49:33",
+    "gated": "2026-11-20T00:57:02",
+    "shipped": "2026-11-20T01:50:49"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-1738: 0.51, a one-township zone of 0.21M with one town (Kayan, UCDB 132,841), the top zone in its centre"
+   }
+  },
+  {
+   "order": 5842,
+   "id": "pbi",
+   "name": "Paung",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 191388,
+   "origin": [
+    97.4575,
+    16.6166
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B46374660355499"
+    ]
+   },
+   "bbox": [
+    97.221,
+    16.498,
+    97.62,
+    16.817
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Paung"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 8.1,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 6.9,
+     "merge": 0.8,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-11-20T00:44:45",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.10085554040503025",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-20T00:51:15",
+    "shipped": "2026-11-20T01:50:50"
+   }
+  },
+  {
+   "order": 5843,
+   "id": "kyl",
+   "name": "Kyaiklat",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 188979,
+   "origin": [
+    95.7245,
+    16.444
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B63844124977533"
+    ]
+   },
+   "bbox": [
+    95.384,
+    16.377,
+    95.837,
+    16.65
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Kyaiklat"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 6.4,
+     "stations": 0.8,
+     "places": 1.6,
+     "routes": 6.9,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-11-20T00:43:23",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_cell_jobs_vs_size 946.0388295270155",
+      "top_zone_jobs_share 0.33294297127922334",
+      "drive_factor_median 2.8045693562372267",
+      "road_snap_median_m 337.1",
+      "fleet_range 5"
+     ]
+    },
+    "parked": "2026-11-20T00:49:34",
+    "gated": "2026-11-20T00:57:03",
+    "shipped": "2026-11-20T01:50:51"
+   },
+   "gate_relax": {
+    "top_cell_jobs_vs_size": "T-1738: 946, the top cell in Kyaiklat's town centre (UCDB 123,249), a one-township zone of 0.19M",
+    "top_zone_jobs_share": "T-1738: 0.33, a one-town zone (Kyaiklat), the top zone in its centre"
+   }
+  },
+  {
+   "order": 5844,
+   "id": "kwt",
+   "name": "Kawthoung",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 139055,
+   "origin": [
+    98.5504,
+    9.9793
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B86598910616989"
+    ]
+   },
+   "bbox": [
+    97.679,
+    9.672,
+    98.924,
+    10.93
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Kawthoung"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 25.7,
+     "stations": 0.8,
+     "places": 1.6,
+     "routes": 7.5,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-11-20T00:44:03",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.3053581112588216",
+      "fleet_range 3"
+     ]
+    },
+    "parked": "2026-11-20T00:49:35",
+    "gated": "2026-11-20T00:57:03",
+    "shipped": "2026-11-20T01:50:51"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-1738: 0.31, a one-town zone of 0.14M (Kawthaung), the top zone in its centre"
+   }
+  },
+  {
+   "order": 5845,
+   "id": "cuz",
+   "name": "Chaungzon",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MMR"
+   ],
+   "iso2": "MM",
+   "people": 108690,
+   "origin": [
+    97.5777,
+    16.444
+   ],
+   "tz": "Asia/Yangon",
+   "utc_offset": 6,
+   "extracts": [
+    "asia/myanmar"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MMR": [
+     "66882298B57686651613256"
+    ]
+   },
+   "bbox": [
+    97.436,
+    16.197,
+    97.611,
+    16.511
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Chaungzon"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-000833",
+    "steps": {
+     "build": 6.4,
+     "stations": 0.7,
+     "places": 1.3,
+     "routes": 6.5,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-11-20T00:44:22",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.13814392498347658",
+      "fleet_range 5"
+     ]
+    },
+    "gated": "2026-11-20T00:51:16",
+    "shipped": "2026-11-20T01:50:52"
+   }
+  },
+  {
+   "order": 5846,
+   "id": "cmh",
+   "name": "Champhone",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "LAO"
+   ],
+   "iso2": "LA",
+   "people": 1054449,
+   "origin": [
+    104.755,
+    16.558
+   ],
+   "tz": "Asia/Vientiane",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/laos"
+   ],
+   "archetype": "C",
+   "module": "admin_totals",
+   "units": {
+    "LAO": [
+     "54806243B27710680023105",
+     "54806243B84595841762541",
+     "54806243B62661811968919",
+     "54806243B4433821192490",
+     "54806243B48815004999342",
+     "54806243B76472997498531",
+     "54806243B37030800305867",
+     "54806243B87203647312357",
+     "54806243B75063146976266",
+     "54806243B80767168472934",
+     "54806243B41596268770013",
+     "54806243B5714719739337",
+     "54806243B24177068581900",
+     "54806243B77256668678203"
+    ]
+   },
+   "bbox": [
+    104.733,
+    15.876,
+    106.672,
+    17.113
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Champhone",
+     "Kaysone Phomvihane",
+     "Outhoomphone",
+     "Songkhone",
+     "Xonbuly",
+     "Xaybuly",
+     "Atsaphone",
+     "Phine",
+     "Sepone",
+     "Xayphoothong",
+     "Atsaphangthong",
+     "Thapangthong",
+     "Phalanxay",
+     "Vilabuly"
+    ],
+    "origin_was": [
+     105.1951,
+     16.444
+    ],
+    "origin_by_hand": "T-1738: the row's main town (the planner's origin was a smaller town or a GHSL spike)"
+   },
+   "run": {
+    "run_batch": "20261119-234301",
+    "steps": {
+     "build": 253.9,
+     "stations": 1.2,
+     "places": 2.6,
+     "routes": 38.5,
+     "merge": 2.1,
+     "nocar": 2.3,
+     "everyday": 1.1
+    },
+    "built": "2026-11-19T23:53:52",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6117.27490234375",
+      "road_snap_median_m 502.7",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-20T00:14:17",
+    "shipped": "2026-11-20T01:50:53"
+   }
+  },
+  {
+   "order": 5847,
+   "id": "xay",
+   "name": "Xaythany",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "LAO"
+   ],
+   "iso2": "LA",
+   "people": 872099,
+   "origin": [
+    102.61,
+    17.967
+   ],
+   "tz": "Asia/Vientiane",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/laos"
+   ],
+   "archetype": "C",
+   "module": "admin_totals",
+   "units": {
+    "LAO": [
+     "54806243B16467343540184",
+     "54806243B89658590845208",
+     "54806243B62960887748037",
+     "54806243B38161899142036",
+     "54806243B78730192124512",
+     "54806243B76096525034044",
+     "54806243B37917799339304",
+     "54806243B78936618260326",
+     "54806243B2404656271674",
+     "54806243B63933200485588",
+     "54806243B69886470699230",
+     "54806243B39354451969384",
+     "54806243B973390148812"
+    ]
+   },
+   "bbox": [
+    102.012,
+    17.805,
+    104.451,
+    18.893
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Xaythany",
+     "Naxaithong",
+     "Hadxaifong",
+     "Bolikhanh",
+     "Pakkading",
+     "Xaysetha",
+     "Pakxane",
+     "Sikhottabong",
+     "Sangthong",
+     "Sisattanak",
+     "Chanthabuly",
+     "Thaphabath",
+     "Mayparkngum"
+    ],
+    "origin_was": [
+     102.6375,
+     18.0327
+    ],
+    "origin_by_hand": "T-1738: the row's main town (the planner's origin was a smaller town or a GHSL spike)"
+   },
+   "run": {
+    "run_batch": "20261119-234301",
+    "steps": {
+     "build": 255.0,
+     "stations": 1.1,
+     "places": 2.4,
+     "routes": 33.4,
+     "merge": 1.0,
+     "nocar": 2.2,
+     "everyday": 1.0
+    },
+    "built": "2026-11-19T23:53:45",
+    "gate": {
+     "warn": [
+      "pop_vs_plan 1.4183329551229424",
+      "pop_vs_ghsl_other 1.4083317254029006",
+      "top_zone_jobs_share 0.12869062461429895",
+      "top_school_cell_pupils 6000.00048828125"
+     ]
+    },
+    "gated": "2026-11-20T00:14:17",
+    "shipped": "2026-11-20T01:50:53"
+   }
+  },
+  {
+   "order": 5848,
+   "id": "xyx",
+   "name": "Xay",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "LAO"
+   ],
+   "iso2": "LA",
+   "people": 807305,
+   "origin": [
+    101.9927,
+    20.6873
+   ],
+   "tz": "Asia/Vientiane",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/laos"
+   ],
+   "archetype": "C",
+   "module": "admin_totals",
+   "units": {
+    "LAO": [
+     "54806243B51334446972135",
+     "54806243B15680017307326",
+     "54806243B92190499984155",
+     "54806243B37756606625280",
+     "54806243B51169476275365",
+     "54806243B47221121067222",
+     "54806243B14770946613819",
+     "54806243B57426312908571",
+     "54806243B26720131925701",
+     "54806243B50081562386900",
+     "54806243B58985543260774",
+     "54806243B15398508442736",
+     "54806243B3164582254678",
+     "54806243B9832797211716"
+    ]
+   },
+   "bbox": [
+    100.084,
+    19.499,
+    102.42,
+    21.564
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Xay",
+     "Hoon",
+     "Huoixai",
+     "Namtha",
+     "Pha Oudom",
+     "Beng",
+     "Namor",
+     "Sing",
+     "Tonpheung",
+     "Pakbeng",
+     "Nalae",
+     "Paktha",
+     "Khop",
+     "La"
+    ]
+   },
+   "run": {
+    "run_batch": "20261119-234301",
+    "steps": {
+     "build": 254.7,
+     "stations": 1.3,
+     "places": 2.3,
+     "routes": 32.6,
+     "merge": 1.3,
+     "nocar": 2.3,
+     "everyday": 1.0
+    },
+    "built": "2026-11-19T23:53:44",
+    "gate": {
+     "warn": [
+      "pop_vs_plan 0.8464951100522906",
+      "top_zone_jobs_share 0.11011008364917793",
+      "top_school_cell_pupils 6067.9921875",
+      "drive_factor_median 2.3616841797309096",
+      "road_snap_median_m 1823.6",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-20T00:14:18",
+    "shipped": "2026-11-20T01:50:54"
+   }
+  },
+  {
+   "order": 5849,
+   "id": "lug",
+   "name": "Luangprabang",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "LAO"
+   ],
+   "iso2": "LA",
+   "people": 655132,
+   "origin": [
+    102.1425,
+    19.8834
+   ],
+   "tz": "Asia/Vientiane",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/laos"
+   ],
+   "archetype": "C",
+   "module": "admin_totals",
+   "units": {
+    "LAO": [
+     "54806243B7800047317547",
+     "54806243B33263536107657",
+     "54806243B57265531802207",
+     "54806243B59484994865641",
+     "54806243B25944960154772",
+     "54806243B52412809783440",
+     "54806243B61496088664088",
+     "54806243B51917372677648",
+     "54806243B77151952253527",
+     "54806243B68130854025017",
+     "54806243B64130062108645",
+     "54806243B6650440767024",
+     "54806243B87801553975082"
+    ]
+   },
+   "bbox": [
+    100.607,
+    18.521,
+    102.916,
+    21.012
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Luangprabang",
+     "Xayabury",
+     "Nambak",
+     "Phiang",
+     "Xieng Ngeun",
+     "Ngoi",
+     "Xienghone",
+     "Chomphet",
+     "Nan",
+     "Hongsa",
+     "Park Ou",
+     "Ngeun",
+     "Xaysathan"
+    ]
+   },
+   "run": {
+    "run_batch": "20261119-234301",
+    "steps": {
+     "build": 37.2,
+     "stations": 1.4,
+     "places": 2.8,
+     "routes": 29.6,
+     "merge": 1.4,
+     "nocar": 2.7,
+     "everyday": 1.0
+    },
+    "built": "2026-11-19T23:55:31",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0",
+      "drive_factor_median 2.4366520830322917",
+      "road_snap_median_m 1555.7",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-20T00:14:19",
+    "shipped": "2026-11-20T01:50:54"
+   }
+  },
+  {
+   "order": 5850,
+   "id": "svn",
+   "name": "Saravane",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "LAO"
+   ],
+   "iso2": "LA",
+   "people": 588023,
+   "origin": [
+    106.4068,
+    15.7132
+   ],
+   "tz": "Asia/Vientiane",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/laos"
+   ],
+   "archetype": "C",
+   "module": "admin_totals",
+   "units": {
+    "LAO": [
+     "54806243B98474683656009",
+     "54806243B99533755262624",
+     "54806243B74103700383879",
+     "54806243B33951699195054",
+     "54806243B20325716676417",
+     "54806243B822466577686",
+     "54806243B71027577228634",
+     "54806243B58304199894051"
+    ]
+   },
+   "bbox": [
+    105.361,
+    15.131,
+    107.022,
+    16.183
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Saravane",
+     "Lao Ngarm",
+     "Khongxedone",
+     "Lakhonepheng",
+     "Thateng",
+     "Vapy",
+     "Lamarm",
+     "Toomlarn"
+    ]
+   },
+   "run": {
+    "run_batch": "20261119-234301",
+    "steps": {
+     "build": 15.7,
+     "stations": 0.9,
+     "places": 1.8,
+     "routes": 16.4,
+     "merge": 1.1,
+     "nocar": 2.5,
+     "everyday": 1.1
+    },
+    "built": "2026-11-19T23:54:27",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "pop_vs_plan 0.8480541644633457",
+      "road_snap_median_m 434.9",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-20T00:14:19",
+    "shipped": "2026-11-20T01:50:55"
+   }
+  },
+  {
+   "order": 5851,
+   "id": "tkh",
+   "name": "Thakhek",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "LAO"
+   ],
+   "iso2": "LA",
+   "people": 548815,
+   "origin": [
+    104.8166,
+    17.3982
+   ],
+   "tz": "Asia/Vientiane",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/laos"
+   ],
+   "archetype": "C",
+   "module": "admin_totals",
+   "units": {
+    "LAO": [
+     "54806243B53814291483739",
+     "54806243B83345748269493",
+     "54806243B38020110154971",
+     "54806243B28884115571756",
+     "54806243B31598332414602",
+     "54806243B45246983413139",
+     "54806243B47827681100424",
+     "54806243B39902865855878",
+     "54806243B26229872021267"
+    ]
+   },
+   "bbox": [
+    104.271,
+    16.902,
+    105.781,
+    18.464
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Thakhek",
+     "Khamkeuth",
+     "Hinboon",
+     "Nongbok",
+     "Mahaxay",
+     "Nhommalath",
+     "Xebangfay",
+     "Xaybuathong",
+     "Khounkham"
+    ]
+   },
+   "run": {
+    "run_batch": "20261119-234301",
+    "steps": {
+     "build": 20.6,
+     "stations": 1.0,
+     "places": 2.2,
+     "routes": 17.1,
+     "merge": 1.0,
+     "nocar": 2.2,
+     "everyday": 0.9
+    },
+    "built": "2026-11-19T23:54:39",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "pop_vs_plan 0.8120937798110864",
+      "top_school_cell_pupils 6009.4482421875",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-20T00:14:20",
+    "shipped": "2026-11-20T01:50:56"
+   }
+  },
+  {
+   "order": 5852,
+   "id": "prk",
+   "name": "Parklai",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "LAO"
+   ],
+   "iso2": "LA",
+   "people": 527188,
+   "origin": [
+    101.3264,
+    18.2801
+   ],
+   "tz": "Asia/Vientiane",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/laos"
+   ],
+   "archetype": "C",
+   "module": "admin_totals",
+   "units": {
+    "LAO": [
+     "54806243B45153092091690",
+     "54806243B58411592743301",
+     "54806243B19850954629179",
+     "54806243B551923777603",
+     "54806243B29120113935386",
+     "54806243B7670424419028",
+     "54806243B76912612814401",
+     "54806243B19210763437500",
+     "54806243B70207385851148",
+     "54806243B32132961433294",
+     "54806243B75308999712701"
+    ]
+   },
+   "bbox": [
+    101.115,
+    17.605,
+    102.899,
+    19.216
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Parklai",
+     "Phonhong",
+     "Thoulakhom",
+     "Vangvieng",
+     "Kenethao",
+     "Feuang",
+     "Xanakharm",
+     "Meun",
+     "Hinherb",
+     "Viengkham",
+     "Keo Oudom"
+    ]
+   },
+   "run": {
+    "run_batch": "20261119-234301",
+    "steps": {
+     "build": 41.2,
+     "stations": 1.2,
+     "places": 2.4,
+     "routes": 25.0,
+     "merge": 1.1,
+     "nocar": 2.6,
+     "everyday": 1.3
+    },
+    "built": "2026-11-19T23:55:44",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.11863091575058382",
+      "top_school_cell_pupils 5448.49609375",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-20T00:14:20",
+    "shipped": "2026-11-20T01:50:56"
+   }
+  },
+  {
+   "order": 5853,
+   "id": "pht",
+   "name": "Phonthong",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "LAO"
+   ],
+   "iso2": "LA",
+   "people": 525467,
+   "origin": [
+    105.8,
+    15.12
+   ],
+   "tz": "Asia/Vientiane",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/laos"
+   ],
+   "archetype": "C",
+   "module": "admin_totals",
+   "units": {
+    "LAO": [
+     "54806243B67434402908614",
+     "54806243B60589909949594",
+     "54806243B99884801714166",
+     "54806243B13253322740036",
+     "54806243B89644559951637"
+    ]
+   },
+   "bbox": [
+    105.467,
+    14.76,
+    106.828,
+    15.482
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Phonthong",
+     "Pakse",
+     "Paksxong",
+     "Sanasomboon",
+     "Bachiangchaleunsook"
+    ],
+    "origin_was": [
+     105.6618,
+     15.098
+    ],
+    "origin_by_hand": "T-1738: the row's main town (the planner's origin was a smaller town or a GHSL spike)"
+   },
+   "run": {
+    "run_batch": "20261119-234301",
+    "steps": {
+     "build": 14.0,
+     "stations": 1.2,
+     "places": 2.9,
+     "routes": 15.7,
+     "merge": 1.2,
+     "nocar": 2.7,
+     "everyday": 1.3
+    },
+    "built": "2026-11-19T23:55:20",
+    "gate": {
+     "warn": [
+      "pop_vs_plan 0.8136580958960509",
+      "top_zone_jobs_share 0.13264831116948314",
+      "top_school_cell_pupils 6074.48291015625",
+      "road_snap_median_m 433.8",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-20T00:14:21",
+    "shipped": "2026-11-20T01:50:57"
+   }
+  },
+  {
+   "order": 5854,
+   "id": "kgx",
+   "name": "Khong",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "LAO"
+   ],
+   "iso2": "LA",
+   "people": 522461,
+   "origin": [
+    105.9007,
+    14.0498
+   ],
+   "tz": "Asia/Vientiane",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/laos"
+   ],
+   "archetype": "C",
+   "module": "admin_totals",
+   "units": {
+    "LAO": [
+     "54806243B24917082255411",
+     "54806243B29706107619641",
+     "54806243B81764189920693",
+     "54806243B32788033784925",
+     "54806243B43927962205569",
+     "54806243B21104398525557",
+     "54806243B4321376255205"
+    ]
+   },
+   "bbox": [
+    105.416,
+    13.91,
+    107.453,
+    15.255
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Khong",
+     "Champasack",
+     "Sukhuma",
+     "Pathoomphone",
+     "Samakkhixay",
+     "Sanamxay",
+     "Xaysetha"
+    ]
+   },
+   "run": {
+    "run_batch": "20261119-234301",
+    "steps": {
+     "build": 22.6,
+     "stations": 1.3,
+     "places": 2.8,
+     "routes": 20.8,
+     "merge": 1.3,
+     "nocar": 3.8,
+     "everyday": 1.6
+    },
+    "built": "2026-11-19T23:56:17",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "pop_vs_plan 0.8211511357477244",
+      "top_school_cell_pupils 6007.8623046875",
+      "road_snap_median_m 442.5",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-20T00:14:22",
+    "shipped": "2026-11-20T01:50:57"
+   }
+  },
+  {
+   "order": 5855,
+   "id": "pkx",
+   "name": "Pek",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "LAO"
+   ],
+   "iso2": "LA",
+   "people": 263638,
+   "origin": [
+    103.2145,
+    19.453
+   ],
+   "tz": "Asia/Vientiane",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/laos"
+   ],
+   "archetype": "C",
+   "module": "admin_totals",
+   "units": {
+    "LAO": [
+     "54806243B64426060368946",
+     "54806243B15908522447592",
+     "54806243B9713261683611",
+     "54806243B13600000049447"
+    ]
+   },
+   "bbox": [
+    102.968,
+    19.049,
+    104.264,
+    20.041
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Pek",
+     "Kham",
+     "Nonghed",
+     "Khoune"
+    ]
+   },
+   "run": {
+    "run_batch": "20261119-234301",
+    "steps": {
+     "build": 13.1,
+     "stations": 1.4,
+     "places": 3.2,
+     "routes": 13.7,
+     "merge": 1.3,
+     "nocar": 4.1,
+     "everyday": 1.3
+    },
+    "built": "2026-11-19T23:56:11",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "pop_vs_plan 0.8288972723288315",
+      "top_zone_jobs_share 0.1697834936319436",
+      "drive_factor_median 2.218596968679145",
+      "road_snap_median_m 699.5",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-20T00:14:22",
+    "shipped": "2026-11-20T01:50:58"
+   }
+  },
+  {
+   "order": 5856,
+   "id": "veg",
+   "name": "Viengxay",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "LAO"
+   ],
+   "iso2": "LA",
+   "people": 106104,
+   "origin": [
+    104.2234,
+    20.4053
+   ],
+   "tz": "Asia/Vientiane",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/laos"
+   ],
+   "archetype": "C",
+   "module": "admin_totals",
+   "units": {
+    "LAO": [
+     "54806243B54136616884271",
+     "54806243B77566454903685",
+     "54806243B20736296010663",
+     "54806243B48324758526346"
+    ]
+   },
+   "bbox": [
+    103.658,
+    20.139,
+    104.705,
+    20.977
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Viengxay",
+     "Add",
+     "Sopbao",
+     "Xiengkhor"
+    ]
+   },
+   "run": {
+    "run_batch": "20261119-234301",
+    "steps": {
+     "build": 13.9,
+     "stations": 1.5,
+     "places": 2.4,
+     "routes": 10.8,
+     "merge": 1.2,
+     "nocar": 2.8,
+     "everyday": 1.2
+    },
+    "built": "2026-11-19T23:56:20",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.11421536820916282",
+      "drive_factor_median 2.218596968679145",
+      "road_snap_median_m 1260.4",
+      "fleet_range 4"
+     ]
+    },
+    "gated": "2026-11-20T00:14:23",
+    "shipped": "2026-11-20T01:50:59"
+   }
+  },
+  {
+   "order": 5857,
+   "id": "sdo",
+   "name": "Samuoi",
+   "kind": "zone",
+   "status": "held",
+   "region": "world",
+   "countries": [
+    "LAO"
+   ],
+   "iso2": "LA",
+   "people": 20842,
+   "origin": [
+    106.8855,
+    16.2961
+   ],
+   "tz": "Asia/Vientiane",
+   "utc_offset": 7,
+   "extracts": [
+    "asia/laos"
+   ],
+   "archetype": "C",
+   "module": "admin_totals",
+   "units": {
+    "LAO": [
+     "54806243B94049695907039"
+    ]
+   },
+   "bbox": [
+    106.729,
+    16.167,
+    107.07,
+    16.534
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Samuoi"
+    ]
+   },
+   "hold_reason": "T-1738: 20,842 people in one mountain district behind dead space; too small for a zone of its own"
+  },
+  {
+   "order": 5858,
+   "id": "dol",
+   "name": "Dom Aleixo",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "TLS"
+   ],
+   "iso2": "TL",
+   "people": 800733,
+   "origin": [
+    125.5631,
+    -8.565
+   ],
+   "tz": "Asia/Dili",
+   "utc_offset": 9,
+   "extracts": [
+    "asia/east-timor"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "TLS": [
+     "22284137B34351426942246",
+     "22284137B23086342577141",
+     "22284137B75963303915609",
+     "22284137B62574363374050",
+     "22284137B14876648157947",
+     "22284137B9751791093782",
+     "22284137B67837040381832",
+     "22284137B41604792993839",
+     "22284137B77878310699205",
+     "22284137B50300896823957",
+     "22284137B12808122576881",
+     "22284137B70669575760565",
+     "22284137B3640160656935",
+     "22284137B63057021325797",
+     "22284137B74211319076421",
+     "22284137B49797009799058",
+     "22284137B11289182458696",
+     "22284137B39370724774054",
+     "22284137B18374352558819",
+     "22284137B47334481051",
+     "22284137B83063719556593",
+     "22284137B6793847155334",
+     "22284137B16004980931012",
+     "22284137B96492698120269",
+     "22284137B11881161065747",
+     "22284137B33809863123080"
+    ]
+   },
+   "bbox": [
+    124.919,
+    -9.324,
+    125.861,
+    -8.127
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Dom Aleixo",
+     "Cristo Rei",
+     "Nain Feto",
+     "Hatolia",
+     "Ermera",
+     "Aileu Vila",
+     "Maliana",
+     "Vera Cruz",
+     "Bazartete",
+     "Liquiçá",
+     "Bobonaro",
+     "Maubara",
+     "Atsabe",
+     "Balibo",
+     "Remexio",
+     "Railaco",
+     "Atauro",
+     "Atabae",
+     "Laulara",
+     "Cailaco",
+     "Liquidoe",
+     "Metinaro",
+     "Lolotoe",
+     "Forohem",
+     "Fatumean",
+     "Fatululic"
+    ]
+   },
+   "run": {
+    "run_batch": "20261119-234301",
+    "steps": {
+     "build": 15.4,
+     "stations": 0.9,
+     "places": 3.8,
+     "routes": 11.5,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-11-19T23:56:56",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0",
+      "drive_factor_median 2.3616841797309096",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-20T00:14:23",
+    "shipped": "2026-11-20T01:50:59"
+   }
+  },
+  {
+   "order": 5859,
+   "id": "bcg",
+   "name": "Baucau",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "TLS"
+   ],
+   "iso2": "TL",
+   "people": 253544,
+   "origin": [
+    126.4508,
+    -8.4837
+   ],
+   "tz": "Asia/Dili",
+   "utc_offset": 9,
+   "extracts": [
+    "asia/east-timor"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "TLS": [
+     "22284137B73846644477643",
+     "22284137B26175223982630",
+     "22284137B80785204174249",
+     "22284137B41938791268987",
+     "22284137B85640858688348",
+     "22284137B78761758678939",
+     "22284137B53868942540237",
+     "22284137B62238566078682",
+     "22284137B78833871172178",
+     "22284137B19870753775512",
+     "22284137B52677210689185",
+     "22284137B48176451746687",
+     "22284137B19934279863207",
+     "22284137B78720484995027"
+    ]
+   },
+   "bbox": [
+    126.102,
+    -9.02,
+    127.141,
+    -8.309
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Baucau",
+     "Lospalos",
+     "Viqueque",
+     "Uato-Lari",
+     "Quelicai",
+     "Ossu",
+     "Venilale",
+     "Laga",
+     "Lautém",
+     "Vemasse",
+     "Uatucarbau",
+     "Baguia",
+     "Iliomar",
+     "Luro"
+    ]
+   },
+   "run": {
+    "run_batch": "20261120-001913",
+    "steps": {
+     "build": 15.6,
+     "stations": 1.3,
+     "places": 2.8,
+     "routes": 14.7,
+     "merge": 2.2,
+     "nocar": 3.1,
+     "everyday": 1.7
+    },
+    "built": "2026-11-20T00:20:31",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10104090576592352",
+      "drive_factor_median 2.2535347872132085",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-20T00:22:53",
+    "shipped": "2026-11-20T01:51:00"
+   }
+  },
+  {
+   "order": 5860,
+   "id": "sdq",
+   "name": "Suai",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "TLS"
+   ],
+   "iso2": "TL",
+   "people": 215116,
+   "origin": [
+    125.2495,
+    -9.3125
+   ],
+   "tz": "Asia/Dili",
+   "utc_offset": 9,
+   "extracts": [
+    "asia/east-timor"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "TLS": [
+     "22284137B60263836524270",
+     "22284137B41872156490215",
+     "22284137B23883045309989",
+     "22284137B40449592168850",
+     "22284137B67278963884363",
+     "22284137B50587397066696",
+     "22284137B59851217666313",
+     "22284137B47375840688188",
+     "22284137B50442427378542",
+     "22284137B3809405900530",
+     "22284137B24782951850467",
+     "22284137B60481947224566",
+     "22284137B61331736580364",
+     "22284137B69618697341021"
+    ]
+   },
+   "bbox": [
+    125.151,
+    -9.375,
+    126.097,
+    -8.474
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Suai",
+     "Same",
+     "Letefoho",
+     "Maubisse",
+     "Ainaro",
+     "Laclubar",
+     "Manatuto",
+     "Zumalai",
+     "Hatu-Builico",
+     "Hatu-Udo",
+     "Laclo",
+     "Turiscai",
+     "Maukatar",
+     "Soibada"
+    ]
+   },
+   "run": {
+    "run_batch": "20261119-234301",
+    "steps": {
+     "build": 27.8,
+     "stations": 1.9,
+     "places": 3.0,
+     "routes": 10.7,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 0.9
+    },
+    "built": "2026-11-19T23:58:02",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 5606.640625",
+      "drive_factor_median 2.184200810815618",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-20T00:14:24",
+    "shipped": "2026-11-20T01:51:00"
+   }
+  },
+  {
+   "order": 5861,
+   "id": "ptm",
+   "name": "Pante Macassar",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "TLS"
+   ],
+   "iso2": "TL",
+   "people": 70530,
+   "origin": [
+    124.3512,
+    -9.2068
+   ],
+   "tz": "Asia/Dili",
+   "utc_offset": 9,
+   "extracts": [
+    "asia/east-timor"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "TLS": [
+     "22284137B41915999739632",
+     "22284137B96760248350473",
+     "22284137B5780280326887",
+     "22284137B78589082369873"
+    ]
+   },
+   "bbox": [
+    124.03,
+    -9.503,
+    124.483,
+    -9.167
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Pante Macassar",
+     "Nitibe",
+     "Oesilo",
+     "Passabe"
+    ]
+   },
+   "run": {
+    "run_batch": "20261119-234301",
+    "steps": {
+     "build": 6.8,
+     "stations": 1.0,
+     "places": 1.6,
+     "routes": 3.9,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-11-19T23:57:14",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.22174989680305904",
+      "fleet_range 3"
+     ]
+    },
+    "parked": "2026-11-20T00:11:02",
+    "gated": "2026-11-20T00:19:05",
+    "shipped": "2026-11-20T01:51:01"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-1738: 0.22 on a zone of 0.07M (Oecusse), the top cell in Pante Macassar's centre, its one town"
+   }
   }
  ],
  "dropped": [
@@ -429794,6 +435227,949 @@
    "merges": [
     "BLM (10,012) stays as it is: an island with no zone within reach",
     "BLM: 10,012 people, under 50,000 but with no land neighbour in its region but dead space, kept (T-1999)"
+   ]
+  },
+  "MMR": {
+   "built": "2026-11-19",
+   "task": "T-788",
+   "rule": "free units at or over 20 people a km2 (or holding 400,000), grouped in their region until each zone holds 500,000 (or 100,000 over 100,000 km2): under 100,000 into the zone it travels with most, then a neighbour keeping both within 1,500,000 that is a travel partner (50% of its biggest partner's travel), else one making a compact zone (75% of its convex hull, or within 0.05 of the bigger part's) unless both hold an urban centre of 100,000 (T-1191), partners first, each by nearest people centre, whose union wraps no zone, metro or pack (T-1140, T-1087); under 400,000 another region's passing neighbour when its own region has none; nothing passing, it stays; islands the most populous zone within 150 km (10 km from 100,000); then each zone still wrapping one cut across it and its halves regrouped; travel by gravity on GHSL people (20 km cells, within 200 km); unbuilt metros first take touching units under 100,000 whose biggest partner they are, when the grown metro wraps nothing new (T-1191)",
+   "kept": [],
+   "dead": [
+    {
+     "unit": "66882298B44324373263157",
+     "name": "Matupi",
+     "people": 57638,
+     "per_km2": 9.7
+    },
+    {
+     "unit": "66882298B89367867823284",
+     "name": "Hakha",
+     "people": 54234,
+     "per_km2": 12.6
+    },
+    {
+     "unit": "66882298B34348354141761",
+     "name": "Tonzang",
+     "people": 36469,
+     "per_km2": 10.4
+    },
+    {
+     "unit": "66882298B10368150445219",
+     "name": "Paletwa",
+     "people": 108655,
+     "per_km2": 13.4
+    },
+    {
+     "unit": "66882298B63813007351538",
+     "name": "Kanpetlet",
+     "people": 24073,
+     "per_km2": 9.6
+    },
+    {
+     "unit": "66882298B29817786092146",
+     "name": "Thantlang",
+     "people": 56943,
+     "per_km2": 16.4
+    },
+    {
+     "unit": "66882298B86048721832096",
+     "name": "Mindat",
+     "people": 47593,
+     "per_km2": 14.5
+    },
+    {
+     "unit": "66882298B89556704578744",
+     "name": "Nanyun",
+     "people": 56697,
+     "per_km2": 8.5
+    },
+    {
+     "unit": "66882298B12098743166013",
+     "name": "Mawlaik",
+     "people": 56234,
+     "per_km2": 15.9
+    },
+    {
+     "unit": "66882298B49231582531962",
+     "name": "Hkamti",
+     "people": 51947,
+     "per_km2": 6.3
+    },
+    {
+     "unit": "66882298B29413471910170",
+     "name": "Lahe",
+     "people": 55646,
+     "per_km2": 14.1
+    },
+    {
+     "unit": "66882298B35396935405838",
+     "name": "Lay Shi",
+     "people": 18308,
+     "per_km2": 6.6
+    },
+    {
+     "unit": "66882298B59193658756261",
+     "name": "Tanai",
+     "people": 81622,
+     "per_km2": 6.6
+    },
+    {
+     "unit": "66882298B15199869857953",
+     "name": "Nawngmun",
+     "people": 9243,
+     "per_km2": 1.1
+    },
+    {
+     "unit": "66882298B33332446672250",
+     "name": "Injangyang",
+     "people": 2561,
+     "per_km2": 0.5
+    },
+    {
+     "unit": "66882298B75810518265381",
+     "name": "Sumprabum",
+     "people": 3493,
+     "per_km2": 0.7
+    },
+    {
+     "unit": "66882298B21056101662842",
+     "name": "Khaunglanhpu",
+     "people": 15825,
+     "per_km2": 3.0
+    },
+    {
+     "unit": "66882298B63943979787937",
+     "name": "Chipwi",
+     "people": 27084,
+     "per_km2": 7.9
+    },
+    {
+     "unit": "66882298B17749520756313",
+     "name": "Puta-O",
+     "people": 84397,
+     "per_km2": 13.7
+    },
+    {
+     "unit": "66882298B34211436690128",
+     "name": "Tsawlaw",
+     "people": 8864,
+     "per_km2": 2.7
+    },
+    {
+     "unit": "66882298B45809862699230",
+     "name": "Machanbaw",
+     "people": 10766,
+     "per_km2": 3.3
+    },
+    {
+     "unit": "66882298B13513293373289",
+     "name": "Hpruso",
+     "people": 32458,
+     "per_km2": 19.6
+    },
+    {
+     "unit": "66882298B60703847395270",
+     "name": "Bawlake",
+     "people": 13023,
+     "per_km2": 6.6
+    },
+    {
+     "unit": "66882298B41652633840241",
+     "name": "Mese",
+     "people": 7095,
+     "per_km2": 3.9
+    },
+    {
+     "unit": "66882298B91132834391640",
+     "name": "Shadaw",
+     "people": 7593,
+     "per_km2": 3.5
+    },
+    {
+     "unit": "66882298B27866808767172",
+     "name": "Hpapun",
+     "people": 34790,
+     "per_km2": 5.1
+    },
+    {
+     "unit": "66882298B31423892279604",
+     "name": "Sidoktaya",
+     "people": 44740,
+     "per_km2": 15.8
+    },
+    {
+     "unit": "66882298B67553323255828",
+     "name": "Gwa",
+     "people": 43886,
+     "per_km2": 19.3
+    },
+    {
+     "unit": "66882298B95740508814243",
+     "name": "Ann",
+     "people": 107991,
+     "per_km2": 17.2
+    },
+    {
+     "unit": "66882298B82483484204646",
+     "name": "Bokpyin",
+     "people": 68546,
+     "per_km2": 11.7
+    },
+    {
+     "unit": "66882298B30308301468052",
+     "name": "Tanintharyi",
+     "people": 111814,
+     "per_km2": 9.8
+    },
+    {
+     "unit": "66882298B2901571448543",
+     "name": "Mabein",
+     "people": 60350,
+     "per_km2": 11.9
+    },
+    {
+     "unit": "66882298B6726893280031",
+     "name": "Mongnai",
+     "people": 52714,
+     "per_km2": 16.3
+    },
+    {
+     "unit": "66882298B40849713300247",
+     "name": "Mawkmai",
+     "people": 44154,
+     "per_km2": 18.0
+    },
+    {
+     "unit": "66882298B34816344861267",
+     "name": "Mongton",
+     "people": 60503,
+     "per_km2": 11.6
+    },
+    {
+     "unit": "66882298B93086807686764",
+     "name": "Mongpan",
+     "people": 33833,
+     "per_km2": 12.4
+    },
+    {
+     "unit": "66882298B63446190048766",
+     "name": "Matman",
+     "people": 759,
+     "per_km2": 0.3
+    },
+    {
+     "unit": "66882298B28152158505759",
+     "name": "Monghpyak",
+     "people": 39753,
+     "per_km2": 19.3
+    },
+    {
+     "unit": "66882298B25077153637290",
+     "name": "Mongping",
+     "people": 87732,
+     "per_km2": 14.5
+    },
+    {
+     "unit": "66882298B65618262001870",
+     "name": "Langkho",
+     "people": 56788,
+     "per_km2": 10.9
+    },
+    {
+     "unit": "66882298B36196103316909",
+     "name": "Cocokyun",
+     "people": 2346,
+     "alone": true
+    }
+   ],
+   "merges": [
+    "Cocokyun (2,346) stays as it is: an island with no zone within reach",
+    "Oke Ta Ra Thi Ri (18,456) joins Za Bu Thi Ri (biggest partner, shared border 12 km)",
+    "Zay Yar Thi Ri (27,176) joins Pyinmana (biggest partner, shared border 33 km)",
+    "Hpasawng (28,948) joins Thandaunggyi (biggest partner, shared border 34 km, another region)",
+    "Poke Ba Thi Ri (34,993) joins Pyinmana (biggest partner, shared border 57 km)",
+    "Maungdaw (37,658) joins Buthidaung (biggest partner, shared border 122 km)",
+    "Tilin (46,693) joins Pauk (biggest partner, shared border 42 km)",
+    "Munaung (47,446) joins Kyaukpyu (island, 18 km)",
+    "Ngape (50,384) joins Minbu (biggest partner, shared border 42 km)",
+    "Manton (50,542) joins Namhkan (biggest partner that wraps nothing, shared border 58 km)",
+    "Tatkon (51,841) joins Yamethin (biggest partner, shared border 121 km)",
+    "Mongla (51,970) joins Kengtung (biggest partner, shared border 45 km)",
+    "Mindon (56,668) joins Thayet (biggest partner, shared border 60 km)",
+    "Falam (56,686) joins Tedim (biggest partner, shared border 89 km)",
+    "Mongkhet (57,661) joins Mongyang (biggest partner, shared border 92 km)",
+    "Mansi (59,178) joins Bhamo (biggest partner, shared border 87 km)",
+    "Kalewa (61,842) joins Kale (biggest partner, shared border 79 km)",
+    "Laihka (64,865) joins Loilen (biggest partner, shared border 50 km)",
+    "Namtu (65,247) joins Lashio (biggest partner, shared border 86 km)",
+    "Saw (65,779) joins Pauk (biggest partner, shared border 81 km)",
+    "Kunlong (67,971) joins Hopang (biggest partner, shared border 62 km)",
+    "Momauk (71,156) joins Bhamo (biggest partner, shared border 145 km)",
+    "Kunhing (71,172) joins Nansang (biggest partner, shared border 57 km)",
+    "Zigon (72,512) joins Nattalin (biggest partner, shared border 43 km)",
+    "Kamma (73,106) joins Aunglan (biggest partner, shared border 34 km)",
+    "Lewe (73,630) joins Det Khi Na Thi Ri (biggest partner that wraps nothing, shared border 31 km)",
+    "Mongyai (76,390) joins Tangyan (biggest partner, shared border 121 km)",
+    "Konkyan (77,399) joins Kutkai (biggest partner, shared border 41 km)",
+    "Ramree (78,284) joins Kyaukpyu (biggest partner, shared border 33 km)",
+    "Wuntho (79,937) joins Kawlin (biggest partner, shared border 64 km)",
+    "Hseni (81,254) joins Kutkai (biggest partner, shared border 97 km)",
+    "Mongmit (82,208) joins Namhsan (biggest partner that wraps nothing, shared border 51 km)",
+    "Buthidaung (85,499) joins Rathedaung (biggest partner that wraps nothing, shared border 85 km)",
+    "Demoso (89,997) joins Loikaw (biggest partner, shared border 80 km)",
+    "Monghsu (91,788) joins Kyethi (biggest partner, shared border 93 km)",
+    "Mongmao (92,127) joins Pangwaun (biggest partner that wraps nothing, shared border 55 km)",
+    "Mongkaing (96,409) joins Kyethi (biggest partner, shared border 85 km)",
+    "Kyangin (96,558) joins Myanaung (biggest partner, shared border 63 km)",
+    "Seikphyu (98,191) joins Chauk (biggest partner, shared border 16 km)",
+    "Thandwe (101,410) joins Toungup (nearest centre, partner 1.00)",
+    "Ywangan (103,897) joins Pindaya (nearest centre, partner 0.83)",
+    "Lemyethna (104,507) joins Hinthada (nearest centre, partner 1.00)",
+    "Ponnagyun (106,751) joins Sittwe (nearest centre that wraps nothing, partner 0.90)",
+    "Laukkaing (106,887) joins Hopang (nearest centre, partner 1.00)",
+    "Mongyawng (107,453) joins Kengtung (nearest centre, partner 1.00)",
+    "Chaungzon (108,690) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Myebon (110,423) joins Pauktaw (nearest centre, partner 1.00)",
+    "Narphan (110,651) joins Pangsang (nearest centre, partner 1.00)",
+    "Thayetchaung (111,108) joins Launglon (nearest centre, partner 1.00)",
+    "Shwegyin (112,389) joins Nyaunglebin (nearest centre, partner 1.00)",
+    "Sinbaungwe (112,945) joins Taungdwingyi (nearest centre, partner 1.00)",
+    "Mingin (113,599) joins Kani (nearest centre, partner 0.61)",
+    "Myinmu (113,646) joins Chaung-U (nearest centre, compact 0.82)",
+    "Kyaukkyi (113,948) joins Phyu (nearest centre, partner 1.00)",
+    "Kyunhla (116,320) joins Kanbalu (nearest centre, partner 1.00)",
+    "Myaung (116,965) joins Chaung-U (nearest centre, partner 0.63)",
+    "Tamu (119,780) joins Paungbyin (nearest centre, partner 1.00)",
+    "Pinlebu (122,628) joins Kawlin (nearest centre, partner 1.00)",
+    "Banmauk (123,385) joins Indaw (nearest centre, partner 1.00)",
+    "Ngazun (125,560) joins Tada-U (nearest centre, compact 0.85)",
+    "Palaw (125,832) joins Myeik (nearest centre, partner 1.00)",
+    "Yenangyaung (126,057) joins Pwintbyu (nearest centre, partner 1.00)",
+    "Gyobingauk (126,386) joins Okpho (nearest centre, partner 0.71)",
+    "Gangaw (127,215) joins Pauk (nearest centre, compact 0.74)",
+    "Shwegu (128,670) joins Bhamo (nearest centre, partner 1.00)",
+    "Ye-U (130,140) joins Tabayin (nearest centre, partner 0.81)",
+    "Htantabin (130,774) joins Oktwin (nearest centre, partner 1.00)",
+    "Monyo (131,617) joins Okpho (nearest centre, partner 0.60)",
+    "Minbya (132,077) joins Mrauk-U (nearest centre, partner 1.00)",
+    "Shwedaung (132,349) joins Padaung (nearest centre, partner 0.69)",
+    "Paukkhaung (133,358) joins Pyay (nearest centre, partner 1.00)",
+    "Minhla (133,846) joins Letpadan (nearest centre, partner 0.62)",
+    "Thandaunggyi (133,993) joins Taungoo (every join wraps; left to the ring cut, another region)",
+    "Salingyi (134,185) joins Monywa (nearest centre, partner 1.00)",
+    "Pekon (134,457) joins Pinlaung (nearest centre, compact 0.76)",
+    "Monghsat (134,699) joins Tachileik (nearest centre, partner 1.00)",
+    "Minhla (135,346) joins Magway (nearest centre, partner 1.00)",
+    "Kawhmu (135,778) joins Kungyangon (nearest centre, compact 0.86)",
+    "Budalin (136,017) joins Tabayin (nearest centre, partner 0.74)",
+    "Yebyu (136,721) joins Launglon (nearest centre that wraps nothing, partner 0.95)",
+    "Kawthoung (139,055) stays as it is: no zone beside it",
+    "Thegon (139,527) joins Paungde (nearest centre, partner 1.00)",
+    "Mahlaing (141,055) joins Wundwin (nearest centre, partner 0.93)",
+    "Sintgaing (143,571) joins Kyaukse (nearest centre, compact 0.60)",
+    "Tigyaing (144,867) joins Katha (nearest centre, partner 1.00)",
+    "Myothit (147,159) joins Taungdwingyi (nearest centre, partner 1.00)",
+    "Hopong (150,391) joins Taunggyi (nearest centre, partner 1.00)",
+    "Kyauktaw (150,533) joins Mrauk-U (nearest centre, partner 1.00)",
+    "Yinmarbin (151,688) joins Monywa (nearest centre, partner 1.00)",
+    "Thanatpin (152,230) joins Bago (nearest centre, partner 0.92)",
+    "Thayet (154,376) joins Aunglan (nearest centre, partner 1.00)",
+    "Thanbyuzayat (154,377) joins Mudon (nearest centre, partner 1.00)",
+    "Tedim (155,187) joins Kale (nearest centre, partner 1.00, another region)",
+    "Kyunsu (155,490) joins Myeik (nearest centre, partner 1.00)",
+    "Singu (157,721) joins Madaya (nearest centre, partner 0.55)",
+    "Pale (159,580) joins Monywa (nearest centre, partner 1.00)",
+    "Thabaung (159,619) joins Kangyidaunt (nearest centre, partner 0.67)",
+    "Thayarwady (161,102) joins Letpadan (nearest centre, partner 1.00)",
+    "Dawei (161,987) joins Launglon (nearest centre, partner 1.00)",
+    "Thabeikkyin (162,198) joins Mogoke (nearest centre, partner 0.55)",
+    "Khin-U (162,977) joins Shwebo (nearest centre, partner 0.78)",
+    "Kyaunggon (165,449) joins Kyonpyaw (nearest centre, partner 1.00)",
+    "Bilin (165,506) joins Kyaikto (nearest centre, partner 0.65)",
+    "Waingmaw (166,836) joins Myitkyina (nearest centre, partner 1.00)",
+    "Muse (169,300) joins Namhkan (nearest centre, partner 1.00)",
+    "Zalun (169,747) joins Danubyu (nearest centre, partner 0.57)",
+    "Ayadaw (173,345) joins Wetlet (nearest centre, partner 0.55)",
+    "Kyaikmaraw (176,432) joins Mawlamyine (nearest centre, partner 1.00)",
+    "Namhsan (176,434) joins Kyaukme (nearest centre, partner 0.53)",
+    "Natogyi (178,799) joins Myingyan (nearest centre, partner 0.67)",
+    "Rathedaung (179,010) joins Sittwe (nearest centre that wraps nothing, partner 0.82)",
+    "Taze (179,205) joins Kanbalu (nearest centre, partner 1.00)",
+    "Mogaung (180,107) joins Myitkyina (nearest centre, partner 1.00)",
+    "Det Khi Na Thi Ri (182,034) joins Za Bu Thi Ri (nearest centre, partner 0.82)",
+    "Dedaye (188,487) joins Pyapon (nearest centre, compact 0.63)",
+    "Kyaiklat (188,979) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Pangwaun (189,023) joins Pangsang (nearest centre, partner 1.00)",
+    "Paung (191,388) joins Mawlamyine (every join wraps; left to the ring cut)",
+    "Einme (191,423) joins Myaungmya (nearest centre, partner 1.00)",
+    "Waw (192,500) joins Bago (nearest centre, partner 1.00)",
+    "Nawnghkio (195,585) joins Kyaukme (nearest centre, compact 0.73)",
+    "Yegyi (195,684) joins Kyonpyaw (nearest centre, partner 1.00)",
+    "Mongyang (197,446) joins Kengtung (nearest centre, partner 1.00)",
+    "Hsihseng (197,573) joins Taunggyi (nearest centre, partner 1.00)",
+    "Natmauk (200,157) joins Pwintbyu (nearest centre, partner 0.63)",
+    "Myawaddy (201,545) joins Kawkareik (nearest centre, partner 1.00)",
+    "Myittha (201,803) joins Kyaukse (nearest centre, partner 1.00)",
+    "Thazi (204,457) joins Pyawbwe (nearest centre that wraps nothing, partner 0.61)",
+    "Yesagyo (205,291) joins Pakokku (nearest centre, partner 0.54)",
+    "Pindaya (209,295) joins Lawksawk (nearest centre, partner 0.56)",
+    "Kawa (209,352) joins Bago (nearest centre, compact 0.72)",
+    "Kayan (213,096) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Thongwa (215,029) joins Kyauktan (nearest centre, compact 0.91)",
+    "Daik-U (215,233) joins Nyaunglebin (nearest centre, partner 1.00)",
+    "Myaing (216,246) joins Pakokku (nearest centre, partner 0.85)",
+    "Taungtha (218,116) joins Myingyan (nearest centre, partner 1.00)",
+    "Ingapu (218,181) joins Hinthada (nearest centre, partner 1.00)",
+    "Thaton (220,800) joins Kyaikto (nearest centre, partner 0.52)",
+    "Nansang (221,379) joins Loilen (nearest centre, partner 1.00)",
+    "Nyaungdon (222,574) joins Pantanaw (nearest centre, compact 0.78)",
+    "Salin (225,251) joins Chauk (nearest centre, partner 1.00)",
+    "Pauktaw (225,943) joins Mrauk-U (nearest centre, partner 0.64)",
+    "Yedashe (227,374) joins Taungoo (nearest centre, partner 1.00)",
+    "Hsipaw (228,350) joins Kyaukme (nearest centre, partner 1.00)",
+    "Minbu (231,345) joins Magway (nearest centre, partner 1.00)",
+    "Ye (233,163) joins Mudon (nearest centre, partner 0.54)",
+    "Toungup (233,786) joins Kyaukpyu (nearest centre, partner 1.00)",
+    "Loikaw (235,457) joins Pinlaung (nearest centre, partner 1.00, another region)",
+    "Nyaung-U (241,355) joins Kyaukpadaung (nearest centre, compact 0.82)",
+    "Kalaw (243,412) joins Taunggyi (every join wraps; left to the ring cut)",
+    "Paungbyin (244,315) joins Homalin (nearest centre, partner 1.00)",
+    "Nyaungshwe (245,782) joins Taunggyi (nearest centre, partner 1.00)",
+    "Pyinoolwin (248,043) joins Kyaukse (nearest centre, compact 0.62)",
+    "Indaw (254,555) joins Kawlin (nearest centre, partner 0.77)",
+    "Hopang (257,184) joins Kutkai (nearest centre, partner 1.00)",
+    "Nattalin (259,222) joins Paungde (nearest centre, partner 1.00)",
+    "Kani (261,199) joins Tabayin (nearest centre, partner 1.00)",
+    "Tada-U (266,456) joins Myingyan (nearest centre, compact 0.82)",
+    "Kyauktaga (267,755) joins Phyu (nearest centre, partner 1.00)",
+    "Hlaingbwe (268,576) joins Hpa-An (nearest centre, partner 1.00)",
+    "Kungyangon (282,110) joins Twantay (nearest centre, compact 0.81)",
+    "Kyainseikgyi (282,517) joins Mudon (nearest centre, none of its region passing, partner 1.00, another region)",
+    "Mohnyin (284,189) joins Myitkyina (nearest centre, partner 1.00)",
+    "Kyethi (286,727) joins Tangyan (nearest centre, partner 0.77)",
+    "Padaung (287,585) joins Pyay (nearest centre, partner 1.00)",
+    "Ngapudaw (291,014) joins Labutta (nearest centre, partner 0.99)",
+    "Bogale (292,792) joins Mawlamyinegyun (nearest centre, partner 1.00)",
+    "Wakema (294,794) joins Myaungmya (nearest centre, partner 1.00)",
+    "Oktwin (304,995) joins Taungoo (nearest centre, partner 1.00)",
+    "Meiktila (308,571) joins Pyawbwe (nearest centre, partner 1.00)",
+    "Yamethin (308,631) joins Pyawbwe (nearest centre, partner 1.00)",
+    "Maubin (310,854) joins Pantanaw (nearest centre, compact 0.78)",
+    "Myanaung (316,457) joins Hinthada (nearest centre, partner 0.53)",
+    "Mogoke (330,051) joins Madaya (nearest centre, partner 0.73)",
+    "Katha (330,501) joins Kawlin (nearest centre, partner 1.00)",
+    "Hmawbi (335,629) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Kangyidaunt (336,153) joins Pathein (nearest centre, partner 1.00)",
+    "Chaung-U (347,712) joins Monywa (nearest centre, partner 1.00)",
+    "Tachileik (348,616) joins Kengtung (nearest centre, partner 0.54)",
+    "Danubyu (354,924) joins Kyonpyaw (nearest centre, partner 0.98)",
+    "Hlegu (370,725) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Namhkan (373,930) joins Kutkai (nearest centre, partner 0.68)",
+    "Wundwin (374,643) joins Pyawbwe (nearest centre, partner 1.00)",
+    "Taikkyi (376,926) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Wetlet (384,960) joins Shwebo (nearest centre, partner 0.85)",
+    "Okpho (391,366) joins Paungde (nearest centre, partner 0.81)",
+    "Pauk (402,954) joins Pakokku (nearest centre, partner 1.00)",
+    "Sittwe (413,988) joins Mrauk-U (nearest centre, partner 1.00)",
+    "Lawksawk (425,238) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Bhamo (443,589) stays as it is: no neighbour within the cap",
+    "Za Bu Thi Ri (444,291) joins Pyinmana (nearest centre, partner 1.00)",
+    "Kyauktan (444,744) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Loilen (446,152) joins Tangyan (nearest centre, compact 0.77)",
+    "Hpakant (449,141) stays as it is: no neighbour within the cap",
+    "Kawkareik (449,641) joins Hpa-An (nearest centre, partner 0.64)",
+    "Aunglan (452,124) joins Taungdwingyi (nearest centre, partner 0.50)",
+    "Pangsang (453,488) joins Tangyan (nearest centre, partner 1.00)",
+    "Pwintbyu (482,840) joins Magway (nearest centre, partner 1.00)",
+    "Letpadan (483,913) joins Paungde (nearest centre, partner 0.63)",
+    "Lashio (489,760) joins Kyaukme (nearest centre, partner 1.00)",
+    "Kyaukpyu (496,087) stays as it is: no zone beside it",
+    "Pyapon (499,387) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Chauk (499,794) stays as it is: no neighbour within the cap",
+    "ring cut 1: Mawlamyine wraps Chaungzon, cut into Kyaikmaraw (2 units) and Paung (1)",
+    "Paung (191,388) stays as it is: every join would wrap",
+    "Kyaikmaraw (440,224) joins Mudon (nearest centre, partner 0.58)"
+   ]
+  },
+  "LAO": {
+   "built": "2026-11-19",
+   "task": "T-1738",
+   "rule": "free units at or over 20 people a km2 (or holding 400,000), grouped in their region until each zone holds 500,000 (or 100,000 over 100,000 km2): under 100,000 into the zone it travels with most, then a neighbour keeping both within 1,500,000 that is a travel partner (50% of its biggest partner's travel), else one making a compact zone (75% of its convex hull, or within 0.05 of the bigger part's) unless both hold an urban centre of 100,000 (T-1191), partners first, each by nearest people centre, whose union wraps no zone, metro or pack (T-1140, T-1087); under 400,000 another region's passing neighbour when its own region has none; nothing passing, it stays; islands the most populous zone within 150 km (10 km from 100,000); then each zone still wrapping one cut across it and its halves regrouped; travel by gravity on GHSL people (20 km cells, within 200 km)",
+   "kept": [],
+   "dead": [
+    {
+     "unit": "54806243B51451438930517",
+     "name": "Botene",
+     "people": 21785,
+     "per_km2": 16.9
+    },
+    {
+     "unit": "54806243B9837596905038",
+     "name": "Thongmyxay",
+     "people": 12385,
+     "per_km2": 12.0
+    },
+    {
+     "unit": "54806243B34270486399712",
+     "name": "Phouvong",
+     "people": 17314,
+     "per_km2": 5.1
+    },
+    {
+     "unit": "54806243B69269956902772",
+     "name": "Sanxay",
+     "people": 28728,
+     "per_km2": 10.1
+    },
+    {
+     "unit": "54806243B45963768052626",
+     "name": "Meung",
+     "people": 17303,
+     "per_km2": 10.8
+    },
+    {
+     "unit": "54806243B87134843513913",
+     "name": "Viengthong",
+     "people": 43824,
+     "per_km2": 10.9
+    },
+    {
+     "unit": "54806243B24736520064001",
+     "name": "Xaychamphone",
+     "people": 16882,
+     "per_km2": 7.9
+    },
+    {
+     "unit": "54806243B88761903664020",
+     "name": "Moonlapamok",
+     "people": 38125,
+     "per_km2": 15.7
+    },
+    {
+     "unit": "54806243B99881482516607",
+     "name": "Hiem",
+     "people": 13245,
+     "per_km2": 9.4
+    },
+    {
+     "unit": "54806243B56031864903402",
+     "name": "Huameuang",
+     "people": 28745,
+     "per_km2": 11.8
+    },
+    {
+     "unit": "54806243B93999085545465",
+     "name": "Kuan",
+     "people": 24117,
+     "per_km2": 16.4
+    },
+    {
+     "unit": "54806243B30579322269888",
+     "name": "Xamneua",
+     "people": 60320,
+     "per_km2": 19.0
+    },
+    {
+     "unit": "54806243B53408209397741",
+     "name": "Xamtay",
+     "people": 37375,
+     "per_km2": 15.0
+    },
+    {
+     "unit": "54806243B87375658661080",
+     "name": "Xon",
+     "people": 15409,
+     "per_km2": 7.4
+    },
+    {
+     "unit": "54806243B82377713639337",
+     "name": "Bualapha",
+     "people": 39855,
+     "per_km2": 12.1
+    },
+    {
+     "unit": "54806243B86213796006306",
+     "name": "Nakay",
+     "people": 32943,
+     "per_km2": 7.4
+    },
+    {
+     "unit": "54806243B81400796532262",
+     "name": "Long",
+     "people": 47421,
+     "per_km2": 18.6
+    },
+    {
+     "unit": "54806243B46667129508347",
+     "name": "Viengphoukha",
+     "people": 31746,
+     "per_km2": 17.3
+    },
+    {
+     "unit": "54806243B94581920301315",
+     "name": "Pak Xeng",
+     "people": 30186,
+     "per_km2": 18.2
+    },
+    {
+     "unit": "54806243B14812805317737",
+     "name": "Phonthong",
+     "people": 23264,
+     "per_km2": 11.1
+    },
+    {
+     "unit": "54806243B12835501655609",
+     "name": "Phonxay",
+     "people": 40118,
+     "per_km2": 15.4
+    },
+    {
+     "unit": "54806243B44028844681141",
+     "name": "Phoukhoune",
+     "people": 27151,
+     "per_km2": 16.2
+    },
+    {
+     "unit": "54806243B97421577673591",
+     "name": "Viengkham",
+     "people": 38269,
+     "per_km2": 18.7
+    },
+    {
+     "unit": "54806243B37529885966132",
+     "name": "Nga",
+     "people": 37300,
+     "per_km2": 18.9
+    },
+    {
+     "unit": "54806243B32733384276808",
+     "name": "Boon Neua",
+     "people": 25646,
+     "per_km2": 19.5
+    },
+    {
+     "unit": "54806243B85580123027929",
+     "name": "Boontay",
+     "people": 26125,
+     "per_km2": 18.2
+    },
+    {
+     "unit": "54806243B94701864875759",
+     "name": "Khua",
+     "people": 32191,
+     "per_km2": 19.0
+    },
+    {
+     "unit": "54806243B58703699561211",
+     "name": "May",
+     "people": 29029,
+     "per_km2": 10.3
+    },
+    {
+     "unit": "54806243B80696563132814",
+     "name": "Nhot Ou",
+     "people": 35072,
+     "per_km2": 10.9
+    },
+    {
+     "unit": "54806243B21239526980805",
+     "name": "Phongsaly",
+     "people": 30292,
+     "per_km2": 10.6
+    },
+    {
+     "unit": "54806243B8043974283076",
+     "name": "Samphanh",
+     "people": 31323,
+     "per_km2": 11.9
+    },
+    {
+     "unit": "54806243B63439547813391",
+     "name": "Ta Oi",
+     "people": 34954,
+     "per_km2": 13.8
+    },
+    {
+     "unit": "54806243B35182777115371",
+     "name": "Nong",
+     "people": 29523,
+     "per_km2": 15.9
+    },
+    {
+     "unit": "54806243B33776683357165",
+     "name": "Kasy",
+     "people": 33016,
+     "per_km2": 13.4
+    },
+    {
+     "unit": "54806243B62258390491570",
+     "name": "Mad",
+     "people": 24623,
+     "per_km2": 15.7
+    },
+    {
+     "unit": "54806243B81229078685154",
+     "name": "Anouvong",
+     "people": 29522,
+     "per_km2": 14.2
+    },
+    {
+     "unit": "54806243B40513758321567",
+     "name": "Home",
+     "people": 11944,
+     "per_km2": 9.3
+    },
+    {
+     "unit": "54806243B40000805936315",
+     "name": "Longcheng",
+     "people": 10468,
+     "per_km2": 5.4
+    },
+    {
+     "unit": "54806243B36605497856689",
+     "name": "Longsane",
+     "people": 23817,
+     "per_km2": 17.0
+    },
+    {
+     "unit": "54806243B97647332692488",
+     "name": "Thathom",
+     "people": 17091,
+     "per_km2": 13.4
+    },
+    {
+     "unit": "54806243B33031915083472",
+     "name": "Dakcheung",
+     "people": 30574,
+     "per_km2": 11.5
+    },
+    {
+     "unit": "54806243B53165803906009",
+     "name": "Kaleum",
+     "people": 21549,
+     "per_km2": 6.4
+    },
+    {
+     "unit": "54806243B65715905336268",
+     "name": "Mork",
+     "people": 15507,
+     "per_km2": 7.5
+    },
+    {
+     "unit": "54806243B24491870004001",
+     "name": "Phaxay",
+     "people": 12654,
+     "per_km2": 12.9
+    },
+    {
+     "unit": "54806243B98354561881715",
+     "name": "Phookood",
+     "people": 35956,
+     "per_km2": 14.4
+    }
+   ],
+   "merges": [
+    "Xiengkhor (16,278) joins Add (biggest partner, shared border 36 km)",
+    "Xaysathan (19,401) joins Xayabury (biggest partner, shared border 57 km)",
+    "Samuoi (20,842) stays as it is: no zone beside it",
+    "Ngeun (21,633) joins Hongsa (biggest partner, shared border 34 km)",
+    "Keo Oudom (23,079) joins Viengkham (biggest partner that wraps nothing, shared border 21 km)",
+    "Sopbao (24,430) joins Viengxay (biggest partner, shared border 37 km)",
+    "La (25,573) joins Xay (biggest partner, shared border 88 km)",
+    "Khop (25,883) joins Paktha (biggest partner, shared border 84 km)",
+    "Mayparkngum (29,190) joins Xaythany (biggest partner, shared border 42 km)",
+    "Khounkham (29,552) joins Hinboon (biggest partner, shared border 85 km)",
+    "Park Ou (31,078) joins Nambak (biggest partner that wraps nothing, shared border 26 km)",
+    "Xaybuathong (33,171) joins Mahaxay (biggest partner, shared border 45 km)",
+    "Nan (35,753) joins Xieng Ngeun (biggest partner that wraps nothing, shared border 36 km)",
+    "Nalae (35,962) joins Namtha (biggest partner, shared border 24 km)",
+    "Thaphabath (37,071) joins Pakxane (biggest partner, shared border 19 km)",
+    "Toomlarn (37,095) joins Saravane (biggest partner, shared border 27 km)",
+    "Hinherb (37,567) joins Phonhong (biggest partner, shared border 38 km)",
+    "Meun (38,002) joins Xanakharm (biggest partner, shared border 61 km)",
+    "Chomphet (39,490) joins Luangprabang (biggest partner, shared border 60 km)",
+    "Xienghone (39,707) joins Hongsa (biggest partner, shared border 55 km)",
+    "Ngoi (39,772) joins Nambak (biggest partner, shared border 101 km)",
+    "Chanthabuly (40,181) joins Xaysetha (biggest partner, shared border 7 km)",
+    "Xebangfay (40,921) joins Thakhek (biggest partner that wraps nothing, shared border 44 km)",
+    "Sisattanak (42,210) joins Xaysetha (biggest partner, shared border 15 km)",
+    "Vilabuly (42,368) joins Atsaphone (biggest partner, shared border 14 km)",
+    "Pakbeng (42,784) joins Hoon (biggest partner, shared border 65 km)",
+    "Sangthong (42,791) joins Naxaithong (biggest partner, shared border 45 km)",
+    "Feuang (43,777) joins Phonhong (biggest partner, shared border 65 km)",
+    "Khoune (43,802) joins Pek (biggest partner, shared border 43 km)",
+    "Phalanxay (44,041) joins Xonbuly (biggest partner that wraps nothing, shared border 35 km)",
+    "Nhommalath (44,577) joins Mahaxay (biggest partner that wraps nothing, shared border 78 km)",
+    "Kenethao (44,965) joins Parklai (biggest partner, shared border 44 km)",
+    "Add (45,227) joins Viengxay (biggest partner, shared border 38 km)",
+    "Thapangthong (45,771) joins Xonbuly (biggest partner, shared border 40 km)",
+    "Xaysetha (46,050) joins Samakkhixay (biggest partner, shared border 77 km)",
+    "Atsaphangthong (46,283) joins Champhone (biggest partner, shared border 34 km)",
+    "Viengkham (47,447) joins Phonhong (biggest partner, shared border 62 km)",
+    "Sanamxay (48,883) joins Samakkhixay (biggest partner, shared border 15 km)",
+    "Lamarm (49,655) joins Thateng (biggest partner, shared border 38 km)",
+    "Tonpheung (51,222) joins Huoixai (biggest partner, shared border 40 km)",
+    "Paktha (52,434) joins Pha Oudom (biggest partner, shared border 40 km)",
+    "Nonghed (52,503) joins Kham (biggest partner, shared border 61 km)",
+    "Sing (52,720) joins Namtha (biggest partner, shared border 27 km)",
+    "Xayphoothong (53,456) joins Champhone (biggest partner, shared border 28 km)",
+    "Namor (53,462) joins Xay (biggest partner, shared border 89 km)",
+    "Vapy (53,839) joins Khongxedone (biggest partner, shared border 23 km)",
+    "Beng (54,842) joins Hoon (biggest partner, shared border 61 km)",
+    "Nongbok (58,281) joins Thakhek (biggest partner, shared border 33 km)",
+    "Vangvieng (59,590) joins Phonhong (biggest partner, shared border 92 km)",
+    "Sepone (59,626) joins Phine (biggest partner, shared border 45 km)",
+    "Lakhonepheng (60,102) joins Khongxedone (biggest partner, shared border 59 km)",
+    "Thoulakhom (61,966) joins Phonhong (biggest partner, shared border 59 km)",
+    "Sikhottabong (63,402) joins Xaysetha (biggest partner, shared border 16 km)",
+    "Phiang (70,445) joins Xayabury (biggest partner, shared border 116 km)",
+    "Xaybuly (75,076) joins Outhoomphone (biggest partner, shared border 37 km)",
+    "Pathoomphone (76,594) joins Champasack (biggest partner, shared border 51 km)",
+    "Xieng Ngeun (78,007) joins Luangprabang (biggest partner, shared border 73 km)",
+    "Sukhuma (79,305) joins Champasack (biggest partner, shared border 106 km)",
+    "Pakkading (79,318) joins Pakxane (biggest partner, shared border 30 km)",
+    "Bolikhanh (79,839) joins Pakxane (biggest partner, shared border 128 km)",
+    "Xanakharm (81,177) joins Phonhong (biggest partner, shared border 25 km)",
+    "Bachiangchaleunsook (82,417) joins Pakse (biggest partner, shared border 27 km)",
+    "Sanasomboon (92,685) joins Pakse (biggest partner, shared border 49 km)",
+    "Hongsa (95,810) joins Xayabury (biggest partner, shared border 72 km)",
+    "Hinboon (95,991) joins Thakhek (biggest partner, shared border 23 km)",
+    "Hadxaifong (97,601) joins Xaysetha (biggest partner, shared border 27 km)",
+    "Songkhone (100,254) joins Xonbuly (nearest centre, partner 0.75)",
+    "Lao Ngarm (100,375) joins Saravane (nearest centre, partner 0.81)",
+    "Paksxong (101,871) joins Pakse (nearest centre, partner 1.00)",
+    "Viengxay (106,104) stays as it is: no zone beside it",
+    "Khamkeuth (107,428) joins Thakhek (nearest centre, none of its region passing, partner 1.00, another region)",
+    "Pha Oudom (107,470) joins Huoixai (nearest centre, partner 0.68)",
+    "Thateng (108,306) joins Saravane (nearest centre, partner 1.00, another region)",
+    "Atsaphone (113,964) joins Outhoomphone (nearest centre, partner 0.82)",
+    "Kaysone Phomvihane (118,170) joins Champhone (nearest centre, partner 0.73)",
+    "Kham (119,489) joins Pek (nearest centre, partner 1.00)",
+    "Parklai (123,155) joins Phonhong (every join wraps; left to the ring cut, another region)",
+    "Phonthong (128,342) joins Pakse (nearest centre, partner 1.00)",
+    "Mahaxay (128,833) joins Thakhek (nearest centre, partner 1.00)",
+    "Phine (131,101) joins Xonbuly (nearest centre, partner 1.00)",
+    "Khong (134,741) joins Champasack (nearest centre, compact 0.68)",
+    "Xaythany (138,015) joins Xaysetha (nearest centre, partner 1.00)",
+    "Naxaithong (145,721) joins Xaysetha (nearest centre, partner 1.00)",
+    "Samakkhixay (149,485) joins Champasack (nearest centre, partner 0.58, another region)",
+    "Nambak (155,520) joins Luangprabang (nearest centre, partner 0.68)",
+    "Namtha (162,495) joins Xay (nearest centre, partner 0.95, another region)",
+    "Khongxedone (198,092) joins Saravane (nearest centre, partner 0.90)",
+    "Hoon (200,253) joins Xay (nearest centre, partner 1.00)",
+    "Huoixai (249,525) joins Xay (nearest centre, partner 1.00, another region)",
+    "Pek (263,638) stays as it is: no zone beside it",
+    "Pakxane (267,463) joins Xaysetha (nearest centre, partner 1.00, another region)",
+    "Xayabury (272,247) joins Luangprabang (nearest centre, partner 0.97, another region)",
+    "Outhoomphone (298,022) joins Champhone (nearest centre, partner 1.00)",
+    "Xonbuly (398,777) joins Champhone (nearest centre, partner 1.00)",
+    "Samuoi: 20,842 people, under 50,000 but with no land neighbour in its region but dead space, kept (T-1999)"
+   ]
+  },
+  "TLS": {
+   "built": "2026-11-19",
+   "task": "T-788",
+   "rule": "free units at or over 20 people a km2 (or holding 400,000), grouped in their region until each zone holds 500,000 (or 100,000 over 100,000 km2): under 100,000 into the zone it travels with most, then a neighbour keeping both within 1,500,000 that is a travel partner (50% of its biggest partner's travel), else one making a compact zone (75% of its convex hull, or within 0.05 of the bigger part's) unless both hold an urban centre of 100,000 (T-1191), partners first, each by nearest people centre, whose union wraps no zone, metro or pack (T-1140, T-1087); under 400,000 another region's passing neighbour when its own region has none; nothing passing, it stays; islands the most populous zone within 150 km (10 km from 100,000); then each zone still wrapping one cut across it and its halves regrouped; travel by gravity on GHSL people (20 km cells, within 200 km)",
+   "kept": [],
+   "dead": [
+    {
+     "unit": "22284137B2107732035789",
+     "name": "Tutuala",
+     "people": 3888,
+     "per_km2": 11.1
+    },
+    {
+     "unit": "22284137B73743119127991",
+     "name": "Barique/Natarbora",
+     "people": 5636,
+     "per_km2": 14.2
+    },
+    {
+     "unit": "22284137B53372282779403",
+     "name": "Laleia",
+     "people": 3441,
+     "per_km2": 15.2
+    },
+    {
+     "unit": "22284137B36199594403094",
+     "name": "Alas",
+     "people": 7528,
+     "per_km2": 18.5
+    },
+    {
+     "unit": "22284137B51170089916625",
+     "name": "Fatuberliu",
+     "people": 7370,
+     "per_km2": 19.5
+    },
+    {
+     "unit": "22284137B55605414153919",
+     "name": "Lacluta",
+     "people": 6583,
+     "per_km2": 15.8
+    }
+   ],
+   "merges": [
+    "Fatululic (2,109) joins Maukatar (biggest partner, shared border 11 km)",
+    "Fatumean (3,639) joins Forohem (biggest partner, shared border 15 km)",
+    "Soibada (3,673) joins Laclubar (biggest partner, shared border 34 km)",
+    "Luro (4,864) joins Lospalos (biggest partner, shared border 3 km)",
+    "Iliomar (7,358) joins Lospalos (biggest partner, shared border 35 km)",
+    "Lolotoe (7,431) joins Bobonaro (biggest partner, shared border 18 km)",
+    "Turiscai (7,975) joins Same (biggest partner, shared border 7 km)",
+    "Forohem (8,098) joins Maukatar (biggest partner, shared border 24 km)",
+    "Passabe (8,302) joins Oesilo (biggest partner, shared border 4 km)",
+    "Laclo (8,567) joins Manatuto (biggest partner, shared border 28 km)",
+    "Metinaro (8,616) joins Cristo Rei (biggest partner, shared border 10 km)",
+    "Baguia (8,747) joins Quelicai (biggest partner, shared border 22 km)",
+    "Liquidoe (9,257) joins Aileu Vila (biggest partner, shared border 15 km)",
+    "Uatucarbau (9,396) joins Uato-Lari (biggest partner, shared border 13 km)",
+    "Vemasse (9,684) joins Baucau (biggest partner, shared border 27 km)",
+    "Hatu-Udo (10,042) joins Ainaro (biggest partner, shared border 21 km)",
+    "Cailaco (10,842) joins Maliana (biggest partner, shared border 25 km)",
+    "Laulara (11,263) joins Aileu Vila (biggest partner, shared border 15 km)",
+    "Nitibe (11,504) joins Oesilo (biggest partner that wraps nothing, shared border 25 km)",
+    "Atabae (11,680) joins Maliana (biggest partner, shared border 27 km)",
+    "Hatu-Builico (12,120) joins Maubisse (biggest partner, shared border 16 km)",
+    "Atauro (12,935) joins Dom Aleixo (island, 28 km)",
+    "Railaco (12,956) joins Ermera (biggest partner, shared border 12 km)",
+    "Lautém (13,595) joins Lospalos (biggest partner, shared border 68 km)",
+    "Zumalai (14,054) joins Ainaro (biggest partner, shared border 37 km)",
+    "Laga (14,234) joins Baucau (biggest partner, shared border 9 km)",
+    "Remexio (14,262) joins Aileu Vila (biggest partner, shared border 44 km)",
+    "Venilale (16,366) joins Baucau (biggest partner, shared border 33 km)",
+    "Balibo (16,372) joins Maliana (biggest partner, shared border 35 km)",
+    "Maukatar (16,512) joins Suai (biggest partner, shared border 47 km, another region)",
+    "Ossu (16,898) joins Viqueque (biggest partner, shared border 40 km)",
+    "Laclubar (19,988) joins Manatuto (biggest partner, shared border 49 km)",
+    "Atsabe (20,852) joins Letefoho (biggest partner, shared border 18 km)",
+    "Maubara (22,744) joins Liquiçá (biggest partner, shared border 23 km)",
+    "Quelicai (26,389) joins Baucau (biggest partner, shared border 50 km)",
+    "Uato-Lari (27,674) joins Viqueque (biggest partner, shared border 35 km)",
+    "Bazartete (27,788) joins Liquiçá (biggest partner, shared border 18 km)",
+    "Vera Cruz (28,519) joins Dom Aleixo (biggest partner, shared border 14 km)",
+    "Oesilo (29,698) joins Pante Macassar (biggest partner, shared border 59 km)",
+    "Maubisse (32,498) joins Ainaro (biggest partner, shared border 20 km)",
+    "Bobonaro (32,647) joins Maliana (biggest partner, shared border 46 km)",
+    "Same (35,817) joins Ainaro (biggest partner, shared border 79 km, another region)",
+    "Hatolia (42,866) joins Ermera (biggest partner, shared border 19 km)",
+    "Manatuto (44,837) joins Ainaro (biggest partner that wraps nothing, shared border 19 km, another region)",
+    "Letefoho (44,890) joins Ermera (biggest partner, shared border 34 km)",
+    "Nain Feto (45,311) joins Dom Aleixo (biggest partner, shared border 11 km)",
+    "Suai (47,104) joins Ainaro (biggest partner, shared border 49 km)",
+    "Lospalos (57,434) joins Baucau (biggest partner, shared border 54 km, another region)",
+    "Pante Macassar (70,530) stays as it is: an island with no zone within reach",
+    "Aileu Vila (72,400) joins Dom Aleixo (biggest partner, shared border 15 km, another region)",
+    "Viqueque (72,646) joins Baucau (biggest partner, shared border 159 km, another region)",
+    "Liquiçá (75,749) joins Dom Aleixo (biggest partner, shared border 21 km, another region)",
+    "Maliana (103,296) joins Ermera (nearest centre, partner 1.00, another region)",
+    "Cristo Rei (125,680) joins Dom Aleixo (nearest centre, partner 1.00)",
+    "Ainaro (201,285) joins Ermera (every join wraps; left to the ring cut, another region)",
+    "Baucau (253,544) stays as it is: no zone beside it",
+    "Ermera (445,968) stays as it is: no zone beside it",
+    "ring cut 1: Ermera wraps Dom Aleixo, cut into Atabae (13 units) and Maukatar (14)",
+    "Maukatar (215,116) stays as it is: every join would wrap",
+    "Atabae (230,852) joins Dom Aleixo (nearest centre, partner 1.00, another region)"
    ]
   }
  }

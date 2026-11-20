@@ -170,6 +170,9 @@ ZONE_RULES = {"CHN": {"floor": 1_000_000, "cap": 2_500_000, "min_density": 0.0, 
               "PHL": {"floor": 500_000, "cap": 1_500_000, "contiguous": True, "module": "admin_totals", "task": "T-1738"},
               # the default rule; the north-west's people scaled to the 2019 census by district (T-2000)
               "KHM": {"module": "admin_totals", "task": "T-2000"},
+              # the default rule; people scaled to the LSB's 2024 projections by district (GHS-POP about half of
+              # Vientiane's; T-1738)
+              "LAO": {"module": "admin_totals", "task": "T-1738"},
               # Turkey's ilce with a density floor of 10 a km2: at the default 20, 232 of 973 were dead space and the
               # interior's provincial towns (Erzincan, Cankiri, Kirsehir, Sivas) were zones of 0.1-0.5M in a hole (T-2294);
               # people scaled to the 2022 register by ilce with the Syrians under temporary protection (T-2079);
@@ -402,7 +405,7 @@ ARCHETYPE = {"GBR": ("A", "england"), "FRA": ("A", "france"), "DEU": ("A", "germ
              "CHN": ("C", "china"), "KOR": ("C", "korea"), "IND": ("C", "india"),
              "NGA": ("D", "nigeria"), "USA": ("A", "usa"), "PRI": ("C", "usa"), "AUS": ("C", "australia"),
              "IDN": ("C", "admin_totals"), "PHL": ("C", "admin_totals"), "KHM": ("C", "admin_totals"),
-             "NZL": ("C", "admin_totals"),
+             "LAO": ("C", "admin_totals"), "NZL": ("C", "admin_totals"),
              "TUR": ("C", "admin_totals"), "MEX": ("C", "mexico"), "COL": ("C", "admin_totals"),
              "EGY": ("C", "admin_totals"), "ISR": ("C", "admin_totals"), "PSE": ("C", "admin_totals")}
 NE_FIX = {"KOS": "XKX", "SOL": "SOM", "CYN": "CYP", "SAH": "ESH"}
