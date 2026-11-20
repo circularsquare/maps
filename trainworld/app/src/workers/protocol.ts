@@ -886,11 +886,15 @@ export interface ClockState {
   anchor?: { lng: number; lat: number; version: number };
 }
 
+/** T-3844: what a paid edit paid for, so its money lands in that region when the world shows no change
+ * (a stop click's new trains: the line; an upgrade on a built station: the station; a rebuilt piece: the edge) */
+export type PaidFor = { line?: number; nodes?: number[]; edges?: number[] };
+
 export type FromClock =
   | { kind: "ready"; initMs: number; frame: FrameSpec }
   /** an edit's answer; `issues` are the track model's problem kinds (`TrackApi.issue_kinds`);
    * `ms`: the worker's time on the edit by step (T-229, for `?debug=1`); `node` after addBuilding: the building's id */
-  | { kind: "edited"; seq: number; ok: boolean; issues: string[]; charge: number; line?: number; node?: number; skipped?: number; ms?: Record<string, number>; early?: boolean; held?: Float32Array[] }
+  | { kind: "edited"; seq: number; ok: boolean; issues: string[]; charge: number; line?: number; node?: number; paid?: PaidFor; skipped?: number; ms?: Record<string, number>; early?: boolean; held?: Float32Array[] }
   | {
       kind: "preview";
       seq: number;

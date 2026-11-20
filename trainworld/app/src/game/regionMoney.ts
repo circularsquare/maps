@@ -22,7 +22,7 @@ import { TRACK_SPECS, TRAM_STOP_UPKEEP } from "./trackKinds";
 import { lineFares } from "./fareInEffect";
 import { stopsById, world } from "./world";
 import type { WorldView } from "./types";
-import type { MoneyState } from "../workers/protocol";
+import type { MoneyState, PaidFor } from "../workers/protocol";
 import { newDay, newHour, type DayLedger, type HourLedger } from "../workers/saveFile";
 
 /** [region, share] pairs adding up to 1 ("" outside every zone). */
@@ -193,7 +193,8 @@ export const upkeepShares = computed<Shares>(() => {
 
 /** How the last paid edit's charge divides: construction by the cost of the track it built in each
  * region (a station alone by its own region), new trains by `line`'s route km, else as construction. */
-export function chargeShares(before: WorldView | null, after: WorldView, line?: number): { build: Shares; trains: Shares } {
+export function chargeShares(before: WorldView | null, after: WorldView, line?: number, paid?: PaidFor): { build: Shares; trains: Shares } {
+  line ??= paid?.line;
   const was = new Map(before?.edges.map((e) => [e.id, e.built]) ?? []);
   const cost = new Map<string, number>();
   for (const e of after.edges) {
@@ -220,6 +221,19 @@ export function chargeShares(before: WorldView | null, after: WorldView, line?: 
       let x = 0, y = 0;
       for (let i = 0; i < n; i++) x += b.corners[2 * i] / n, y += b.corners[2 * i + 1] / n;
       add(cost, placeAt(...packToLngLat(x, y)) ?? "", 1);
+    }
+  }
+  // T-3844: an upgrade or a changed piece builds nothing new: the edit's answer names the stations and pieces
+  if (!cost.size && paid) {
+    const num = new Map(after.save.stations.map((s) => [s.num, s]));
+    for (const n of paid.nodes ?? []) {
+      const s = num.get(n), p = after.nodes.get(n);
+      const z = s ? stationZone(s) : p ? placeAt(p.lng, p.lat) : undefined;
+      if (z !== undefined) add(cost, z ?? "", 1);
+    }
+    for (const id of paid.edges ?? []) {
+      const e = after.edges.find((x) => x.id === id), a = e && after.nodes.get(e.a), b = e && after.nodes.get(e.b);
+      if (a && b) add(cost, placeAt((a.lng + b.lng) / 2, (a.lat + b.lat) / 2) ?? "", 1);
     }
   }
   const build = norm(cost);

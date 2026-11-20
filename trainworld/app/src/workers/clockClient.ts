@@ -30,7 +30,7 @@ import { accountVersion, packArrivals, packRiders } from "../game/boarding";
 import { ask, designSpeed, guideFinished, lineDraft, marketOff, selection, tool } from "../game/ui";
 import { afterStopEdits, flipSites, rightHand, say, setEditSink, stopsQueued, world, worldIsRows } from "../game/world";
 import type { LineInput, LineStats, RowFigs, StationInput, TrackEdge, TrackNode, WorldView } from "../game/types";
-import type { ClockLine, ClockState, EditOp, FromClock, MoneyPatch, MoneyState, NetworkSnapshot, PiInput, RouteAsk, StationAt, ToClock } from "./protocol";
+import type { ClockLine, ClockState, EditOp, FromClock, MoneyPatch, MoneyState, NetworkSnapshot, PaidFor, PiInput, RouteAsk, StationAt, ToClock } from "./protocol";
 import { applyPatch } from "./valuePatch";
 import { anchorVersion } from "../map/anchorVersion";
 import { mergeNet, type NetworkBuffers } from "../map/network";
@@ -1135,7 +1135,7 @@ export class ClockClient {
   }
 
   /** T-1407: a paying edit answered ahead of its state, whose money's split is read off that state */
-  private earlyShares: { seq: number; line?: number } | null = null;
+  private earlyShares: { seq: number; line?: number; paid?: PaidFor } | null = null;
 
   private takeState(msg: Extract<FromClock, { kind: "state" }>) {
     const st = msg.state, sb = this.stateBusy;
@@ -1162,7 +1162,7 @@ export class ClockClient {
     world.value = toWorld(msg.state);
     const es = this.earlyShares;
     this.earlyShares = null;
-    if (es && world.value) this.post({ kind: "chargeShares", seq: es.seq, ...chargeShares(this.worldBefore, world.value, es.line) });
+    if (es && world.value) this.post({ kind: "chargeShares", seq: es.seq, ...chargeShares(this.worldBefore, world.value, es.line, es.paid) });
     // T-2766: rows alone leave the renderer's network as it is until the full state
     if (!msg.state.rows) this.onState(msg.state);
     if (moved) {
@@ -1398,8 +1398,8 @@ export class ClockClient {
         if (this.editLog.length > 40) this.editLog.shift();
         // T-531: the world before and after this edit's state say where its money went
         // (an early answer's world comes with its state, T-1407)
-        if (msg.ok && msg.charge > 0 && msg.early) this.earlyShares = { seq: msg.seq, line: msg.line };
-        else if (msg.ok && msg.charge > 0 && world.value) this.post({ kind: "chargeShares", seq: msg.seq, ...chargeShares(this.worldBefore, world.value, msg.line) });
+        if (msg.ok && msg.charge > 0 && msg.early) this.earlyShares = { seq: msg.seq, line: msg.line, paid: msg.paid };
+        else if (msg.ok && msg.charge > 0 && world.value) this.post({ kind: "chargeShares", seq: msg.seq, ...chargeShares(this.worldBefore, world.value, msg.line, msg.paid) });
         f?.({ ok: msg.ok, issues: msg.issues, charge: msg.charge, line: msg.line, node: msg.node, skipped: msg.skipped, early: msg.early, held: msg.held });
         break;
       }

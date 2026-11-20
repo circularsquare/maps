@@ -52,7 +52,7 @@ import { StateRows, upgradesOf, type RowEnv } from "./stateRows";
 import { PlatformLines } from "./platformLines";
 import { lineProfile } from "./lineProfile";
 import { RoadFeed } from "./roadFeed";
-import type { ClockBus, ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FerryPortIn, FerryRow, FromClock, MoneyPatch, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteAsk, RouteEnd, StationAt, ToClock } from "./protocol";
+import type { ClockBus, ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FerryPortIn, FerryRow, FromClock, MoneyPatch, MoneyState, NetworkSnapshot, PaidFor, PiInput, RegionNow, RouteAsk, RouteEnd, StationAt, ToClock } from "./protocol";
 import { applyPatch, diffValue } from "./valuePatch";
 import { stampAll } from "./cloud";
 import { isMemoryFailure, loadFailKey } from "../game/loadText";
@@ -4289,6 +4289,26 @@ function applyInner(op: EditOp): Applied {
   }
 }
 
+/** T-3844: what an edit paid for, named in its answer: the line a line edit set (its trains), the stations and
+ * pieces a station or piece edit changed. `chargeShares` places the charge by it when the world shows no new
+ * track or station. Not named: undo and redo (they pay only for trains, of whichever line the undone edit set),
+ * and the edits that set every line at once (`setPeriods`, `setHours` and `weekendShareAll` without a line). */
+function paidFor(op: EditOp): PaidFor | undefined {
+  const o = op as Record<string, unknown>, paid: PaidFor = {};
+  if (typeof o.line === "number" && op.op !== "copyLine") paid.line = o.line;
+  const nodes: number[] = [], edges: number[] = [];
+  switch (op.op) {
+    case "stationUpgrade": case "moveNodes": nodes.push(...op.nodes); break;
+    case "flying": case "stationTracks": case "stationWay": case "reverseStation": case "stationProps": case "moveNode": nodes.push(op.node); break;
+    case "edgeLevel": case "doubleUp": case "edgePis": edges.push(op.edge); break;
+    case "edgesLevel": case "edgesKind": case "edgesTracks": edges.push(...op.edges); break;
+    case "rebuild": edges.push(...op.edges); nodes.push(...op.stations); break;
+  }
+  if (nodes.length) paid.nodes = nodes;
+  if (edges.length) paid.edges = edges;
+  return paid.line !== undefined || nodes.length || edges.length ? paid : undefined;
+}
+
 /** `apply`'s answer for an insertStop with nowhere to go (the track model's own codes are >= 0) */
 const INSERT_REFUSED = -1;
 /** the same for a dropStop or endLineAt the line cannot take (T-1791) */
@@ -4871,7 +4891,7 @@ async function handleMessage(msg: ToClock) {
     // an op of two edits (T-1899) says what both charged
     const charge = r === 0 ? charged ?? api.last_charge() : 0;
     const op = msg.op, seq = msg.seq;
-    const answer = (early?: boolean, held?: Float32Array[]) => send({ kind: "edited", seq, ok: r === 0, issues: r === 0 ? why ?? [] : r === INSERT_REFUSED ? ["InsertStop"] : r === DROP_REFUSED ? ["DropStop"] : r === ORDER_REFUSED && fault ? [`StopOrder:${fault.join(":")}`] : issues(), charge, line, node, skipped, ms: { apply: tB - tA, ...timing, total: performance.now() - tA }, early, held }); // i18n-ignore
+    const answer = (early?: boolean, held?: Float32Array[]) => send({ kind: "edited", seq, ok: r === 0, issues: r === 0 ? why ?? [] : r === INSERT_REFUSED ? ["InsertStop"] : r === DROP_REFUSED ? ["DropStop"] : r === ORDER_REFUSED && fault ? [`StopOrder:${fault.join(":")}`] : issues(), charge, line, node, paid: paidFor(op), skipped, ms: { apply: tB - tA, ...timing, total: performance.now() - tA }, early, held }); // i18n-ignore
     if (r !== 0) return answer();
     saves.dirty = saves.edited = true; saves.editAt = Date.now();
     if (line !== undefined) { newLineShape(op, line); newLineFare(op, line); }
