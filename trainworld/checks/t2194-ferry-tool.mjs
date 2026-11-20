@@ -109,7 +109,8 @@ try {
   const labels = await page.evaluate(() => (window.tw.labels?.labels ?? []).map((l) => `${l.el.textContent}${l.hidden ? ' (hidden)' : ''}`));
   check(ports.every((p) => labels.some((t) => t.startsWith(p.name))), 'the ports\' names are labels on the map', labels.join(', '));
 
-  // ---- boats move on it: the renderer's own positions two game minutes apart (the clock paused at 8:30)
+  // ---- boats move on it: the renderer's own positions two game minutes apart (the clock paused at 8:30, else up to
+  // 18 minutes on: an out-and-back line's two boats stand their turnarounds at the same moment, T-3809)
   await page.evaluate(() => {
     const tw = window.tw;
     tw.clock.setRunning(false);
@@ -118,7 +119,9 @@ try {
   });
   await page.waitForFunction(() => window.tw.renderer.tripCount > 0, undefined, { timeout: 60000 });
   const moved = await page.evaluate(() => {
-    const tw = window.tw, r = tw.renderer, t = tw.clock.now(), a = r.net?.anchor ?? tw.anchor();
+    const tw = window.tw, r = tw.renderer, a = r.net?.anchor ?? tw.anchor();
+    for (const off of [0, 360, 720, 1080]) {
+    const t = tw.clock.now() + off;
     const p0 = r.probe(t), p1 = r.probe(t + 120);
     // the boat to click: under way and away from the ports, since a station wins over a vehicle at the same spot (T-1414)
     const ports = tw.world.value.save.stations.filter((s) => s.port);
@@ -131,7 +134,11 @@ try {
       if (m > 100) moving++;
       if (ports.every((s) => Math.hypot((s.lng - x0) * 84000, (s.lat - y0) * 111000) > 250)) first ??= { lng: x0, lat: y0, m };
     }
-    return { live, moving, first };
+    if (moving > 0 || off === 1080) {
+      tw.clock.set(t);
+      return { live, moving, first };
+    }
+    }
   });
   check(moved.live > 0 && moved.moving > 0, 'boats move along the route', `${moved.moving}/${moved.live} boats moved over 100 m in two game minutes`);
   if (moved.first) {

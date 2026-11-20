@@ -777,9 +777,9 @@ function piece(r: Raster, cells: number[], a: LonLat, b: LonLat): Piece {
   }
   xs.push(f.x(b[0]));
   ys.push(f.y(b[1]));
-  // the ends join the search's first and last cells straight; the rest is simplified
-  const inner = simplify(r, xs.slice(1, -1), ys.slice(1, -1)).map((k) => k + 1);
-  const keep = [0, ...inner, xs.length - 1];
+  // simplified ends and all (T-3809): a first or last cell a metre off its end made a kink no bend fits, and the boat
+  // all but stopped there, at every joint and waypoint; an end too near land for a straight keeps its cell
+  const keep = simplify(r, xs, ys);
   const ll: number[] = [];
   for (let q = 0; q < keep.length; q++) {
     const k = keep[q];

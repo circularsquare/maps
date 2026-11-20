@@ -302,8 +302,9 @@ with a landing on the shore and a berth in the water. The route is free, found i
 basemap's water between two ports (T-2192): at least 5 m off land, keeping 400 m off where that costs
 under 1.3 times the shortest, with bends up to 300 m and a speed each point by its room and bend. Boats
 (one kind, two train cars: 320 riders, 480 at crush) run at most 45 km/h as room allows (T-2450) and accelerate
-at 0.15 m/s²; US$10M a port, US$8M a boat and US$40 a boat-km to run. The player places ports only with
-the Ferry tool (beside Bus, key O; T-2194); the line draws dashed, boats as pointed hulls, with a panel
+at 0.15 m/s²; US$10M a port, US$8M a boat and US$40 a boat-km to run. The player places ports with
+the Ferry tool (beside Bus, key O; T-2194), and with a shift click free waypoints on water the route passes
+through without stopping (T-3809); the line draws dashed, boats as pointed hulls, with a panel
 like a bus line's whose port list takes a port out by its dot or moves one by dragging (T-2275), and a
 Ferry fare row in the Money tab. A new line runs a boat every 20, 30 and 60 minutes at high, medium and low demand (T-2273, T-3400), or the ferry default once one is set (T-3703). In demand (T-2195) a ferry line is a line like
 any other, its ports stations, with no boarding cost; its rides pay the curve's part above the base

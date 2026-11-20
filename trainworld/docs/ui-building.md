@@ -387,6 +387,7 @@ tag over a point states what these do there. Loops are described under each tool
 |---|---|---|---|
 | Left click, empty ground | Add a point at the active end | Hint only | Add a stop on the route |
 | Left click, a station not in the line | Ferry: add that port | Add a stop | none |
+| Shift click, water | Ferry: add a waypoint (below) | none | none |
 | Left click, a middle or the first point or stop | Delete it | Remove it | Remove it |
 | Left click, the last point | Save the route (the tag says so) | Remove it | none |
 | Left click, a lone point | Nothing | Remove it | none |
@@ -540,8 +541,8 @@ lighter; at most 16 of each.
 
 [T-2194; `map/ferryDraw.ts`; design notes/T-2177.md 3.2] The Build tab's Ferry button (beside Bus,
 each half the row, key O) or O from any tab starts
-the ferry tool for a new line. The player places **ports only**; between two consecutive ports the
-route is found over the basemap's water (track-and-service.md 6.8), never drawn by hand.
+the ferry tool for a new line. The player places ports, and waypoints where the route must pass; between
+them the route is found over the basemap's water (track-and-service.md 6.8), never drawn by hand.
 
 - **A click** within the reach of the shore, on land or on the water, puts a new port on the nearest shore
   (T-2468). The reach is 40 screen pixels of ground at the pointer's zoom, at least 200 m and at most 1500 m
@@ -582,6 +583,18 @@ route is found over the basemap's water (track-and-service.md 6.8), never drawn 
   port of it stops it looping back ("Right click to stop looping back"). The touch Loop button works here as in the
   bus tool. In the panel's port list a loop keeps its order (no dragging); taking out its first or last port
   opens it, and one of a ring of three leaves a line of two.
+- **Waypoints** (T-3809): a shift click on water puts a point the route passes through without stopping, so a
+  player steers it through an archipelago, round a peninsula the search's box misses, or splits a leg over the 400
+  km limit. It goes on the leg, and between the waypoints already there, where it adds the least straight distance
+  (so a click beyond the active end's leg still lands in it; there is no waypoint after the last port). A shift
+  click on land, or with fewer than two ports, is refused ("Place waypoints on water.", "Place two ports before
+  adding a waypoint."). With Shift held the tag says "Add waypoint", or the refusal, and dashed ghost lines join the
+  pointer to the two points it would go between. Each waypoint is a dot in the line's colour, as a bus route's
+  points: a click takes it out, a drag moves it (dropped on land it goes back), a right click does nothing. Until
+  the line has one, the tag's last row says "Shift click to add a waypoint". Waypoints are free, saved as the
+  route's kind 2 points and read back by Edit route; a line that loops back passes its way out's waypoints again
+  on the way home. The panel's port list keeps a leg's waypoints while its two ports stay side by side. No touch
+  gesture adds one; a tap on one takes it out.
 - **Finishing** as the bus tool: a click on the active end, a double click, Enter, or Make line (Save
   route) in the tool's bar; fewer than two ports is refused, and so is a leg with no route ("No water
   path found between A and B."). New ports are added with the line as blueprint ports. Escape drops a

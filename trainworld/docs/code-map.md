@@ -220,7 +220,7 @@ city's name in Japanese or Chinese from `place-names.json`, written by `tools/pl
   for long legs with fine ends, the line's rounding and speeds, `runSeconds`; pure, shared with the check),
   `ferryWater.ts` (`FerryWater`, the tool's client: `port`, `probe`, `line`), run in
   `workers/ferryWater.worker.ts` (fetches and keeps the tiles, each leg's search and rasters).
-- Ferry lines (T-2194): `ferryDraw.ts` (the ferry tool: ports placed or shared, the route from `FerryWater`,
+- Ferry lines (T-2194): `ferryDraw.ts` (the ferry tool: ports placed or shared, waypoints on shift click, T-3809, the route from `FerryWater`,
   the price tag, refusals, `ferryDraft`; `setPorts`, the panel's port list edits, T-2275); a ferry line's app row is a bus row with `ferry` set
   (`ClockBus.ferry`, the clock worker's `ferryRow`), so `busLayer.ts` draws it dashed and `BusInspector.tsx`
   is its panel (`FerryPorts`, its port list); boats are `BOAT_CAR` in `network.ts` and the train shader's hull; check `checks/t2194-ferry-tool.mjs`.

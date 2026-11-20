@@ -104,6 +104,7 @@ function sections(): [string, [string, string][]][] {
   ]],
   [t("help.buildingHead"), [
     [t("help.shiftClick"), t("help.placeTrack")],
+    [t("help.shiftClick"), t("help.addFerryWay")],
     [t("help.doubleClickEnter"), t("help.stopDrawing")],
     [t("help.backspaceRight"), t("help.undoPiece")],
     [t("help.dblTrack"), t("help.addPoint")],

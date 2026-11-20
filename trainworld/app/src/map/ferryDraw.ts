@@ -17,6 +17,12 @@
 // opens it there (the leg leaving the port goes), on any port of a line that loops back it stops looping, and on the
 // active end or a lone port it takes that port out. A finger held on a port does a right click's work (T-3149).
 //
+// Waypoints (T-3809): a shift click on water puts a point the route must pass through, with no stop, on the leg
+// where it adds the least straight distance, so a player steers a route through an archipelago or splits a leg too
+// long to search. They are kind 2 points of the route the sim keeps (`KIND_WAYPOINT`), read back by `begin`. A
+// click on one takes it out and a drag moves it (the bus tool's handles); a line that loops back runs its way out's
+// waypoints backward on the way home (`runWays`).
+//
 // The tool owns no map layer: the route and ports are an SVG over the map in screen pixels, like the bus
 // tool's.
 
@@ -33,8 +39,9 @@ import { edit, say, world } from "../game/world";
 import { metresBetween } from "../game/walks";
 import { keyIsTheirs } from "../ui/keys";
 import { FERRY_KEY } from "../ui/toolKeys";
-import { FerryWater, type LineRoute, type PortSnap } from "../ferry/ferryWater";
+import { FerryWater, KIND_PORT, KIND_WAYPOINT, type LinePoint, type LineRoute, type PortSnap } from "../ferry/ferryWater";
 import { portReachM } from "../ferry/route";
+import { setGrabbing } from "./nodeDrag";
 import type { FerryPortIn } from "../workers/protocol";
 import type { Overlay } from "./overlay";
 import { newStationName } from "./stationNames";
@@ -56,12 +63,15 @@ interface DraftPort {
 }
 
 /** What a click where the pointer is would do. */
-type Under = { kind: "handle"; i: number } | { kind: "port"; node: number; name: string; landing: Pt; berth: Pt }
+type Under = { kind: "handle"; i: number } | { kind: "way"; k: number; j: number } | { kind: "port"; node: number; name: string; landing: Pt; berth: Pt }
   | { kind: "shore"; landing: Pt; berth: Pt } | { kind: "water" } | { kind: "far" } | { kind: "unknown" };
 
 /** a click this near (px) to a port's circle is on it; a port within `PORT_NEAR_M` of the click too */
 const HANDLE_PX = 10;
 const TOUCH_HANDLE_PX = 18;
+/** a press this near (px) to a waypoint is on it; it becomes a drag once the pointer has moved `DRAG_PX` */
+const WAY_PX = 8;
+const DRAG_PX = 3;
 /** a finger held still on a port this long (ms) does a right click's work there, as on the bus tool (T-1517) */
 const LONG_PRESS_MS = 500;
 const TOUCH_SLOP_PX = 8;
@@ -87,9 +97,36 @@ function routeArray(r: LineRoute): number[] {
   return route;
 }
 
+/** T-3809: each leg's waypoints from a saved route: the kind 2 points between each two kind 1 points. */
+function savedWays(ll: number[], kinds: number[]): Pt[][] {
+  const ways: Pt[][] = [];
+  let cur: Pt[] | null = null;
+  for (let i = 0; i < kinds.length; i++) {
+    if (kinds[i] === KIND_PORT) {
+      if (cur) ways.push(cur);
+      cur = [];
+    } else if (kinds[i] === KIND_WAYPOINT && cur) cur.push({ lng: ll[2 * i], lat: ll[2 * i + 1] });
+  }
+  return ways;
+}
+
+const metres = (a: Pt, b: Pt) => metresBetween(a.lng, a.lat, b.lng, b.lat);
+
 export class FerryDraw {
   readonly water: FerryWater;
   private ports: DraftPort[] = [];
+  /** T-3809: the waypoints of each leg, `ways[k]` between `ports[k]` and `ports[k + 1]` in order; one fewer than the ports */
+  private ways: Pt[][] = [];
+  /** Shift is held: a click puts a waypoint; `wayProbe` whether the water worker says the pointer is on water */
+  private shift = false;
+  private wayProbe: { at: Pt; water: boolean } | null = null;
+  private wayProbing = false;
+  /** a press on a waypoint, and the drag it became (its place before) */
+  private wayPress: { k: number; j: number; x: number; y: number } | null = null;
+  private drag: { k: number; j: number; was: Pt } | null = null;
+  private dragEnded = false;
+  /** the water checks still asked (`waterCheck`) */
+  private checking: Promise<void> | null = null;
   /** new ports go before the first (true) or after the last */
   private head = false;
   /** the route through `ports`' berths, and the berths it was found for */
@@ -130,8 +167,17 @@ export class FerryDraw {
       if (touchInput.peek()) return;
       const i = this.handleAt(e.point.x, e.point.y);
       if (i >= 0) this.rightClick(i);
-      else this.back();
+      // a right click on a waypoint does nothing (it is not the end, and loops are the ports')
+      else if (!this.wayAt(e.point.x, e.point.y)) this.back();
     });
+    // capture: before MapLibre's own handlers, so a press on a waypoint does not pan the map
+    map.getContainer().addEventListener("mousedown", (e) => this.onDown(e), true);
+    addEventListener("mousemove", (e) => this.onDrag(e));
+    addEventListener("mouseup", () => this.onUp());
+    // Shift pressed or let go under a still pointer changes what a click would do
+    addEventListener("keydown", (e) => e.key === "Shift" && this.setShift(true));
+    addEventListener("keyup", (e) => e.key === "Shift" && this.setShift(false));
+    addEventListener("blur", () => this.setShift(false));
     map.getContainer().addEventListener("pointerdown", (e) => this.onTouchDown(e), true);
     addEventListener("pointermove", (e) => this.onTouchMove(e));
     addEventListener("pointerup", (e) => this.onTouchEnd(e));
@@ -149,15 +195,17 @@ export class FerryDraw {
     return tool.peek() === "ferry";
   }
 
-  /** the pointer is on a placed port */
+  /** the pointer is on a placed port or a waypoint, or drags one */
   get onHandle() {
-    return this.active && this.under.kind === "handle";
+    return this.active && (this.under.kind === "handle" || this.under.kind === "way" || this.drag !== null);
   }
 
   /** Start the tool: a new line (`line` null) or line number `line`'s ports and route to redraw. The
    * caller has left the tool before. */
   begin(line: number | null, colour?: string) {
     this.ports = [];
+    this.ways = [];
+    this.endDrag();
     this.route = null;
     this.routeKey = "";
     const st = line === null ? undefined : world.peek()?.lineStats[String(line)]?.bus;
@@ -174,12 +222,17 @@ export class FerryDraw {
       }
       // the saved route stands until a port changes (routes are never searched again on their own)
       this.route = { ok: true, ll: st.routeLL, kinds: st.kinds, speeds: st.ferry.speeds, m: st.roadM, legs: [] };
+      this.ways = savedWays(st.routeLL, st.kinds);
+      while (this.ways.length < this.ports.length - 1) this.ways.push([]);
       // T-3118: a line that loops back is drawn with its way out once, its last port the one the loop comes back to
       const last = this.ports.length - 1, ps = this.ports;
       if (last >= 4 && ps[0].node === ps[last].node) {
         let k = 0;
         while (2 * (k + 1) < last && ps[k + 1].node === ps[last - k - 1].node) k++;
-        if (k >= 1 && last - 2 * k >= 3) this.ports = ps.slice(0, last - k).concat([ps[k]]);
+        if (k >= 1 && last - 2 * k >= 3) {
+          this.ports = ps.slice(0, last - k).concat([ps[k]]);
+          this.ways = this.ways.slice(0, last - k);
+        }
       }
       this.routeKey = this.berthKey();
     }
@@ -198,6 +251,8 @@ export class FerryDraw {
   /** the tool was left */
   clear() {
     this.ports = [];
+    this.ways = [];
+    this.endDrag();
     this.route = null;
     this.routeKey = "";
     this.at = null;
@@ -207,7 +262,7 @@ export class FerryDraw {
   }
 
   private berthKey() {
-    return this.runPorts().map((p) => `${p.berth.lng},${p.berth.lat}`).join("|");
+    return this.runPoints().map((p) => `${p.kind}:${p.at[0]},${p.at[1]}`).join("|");
   }
 
   /** T-3118: the ports the boats call at in order: a line that loops back runs its way out again backward. */
@@ -216,9 +271,29 @@ export class FerryDraw {
     return k < 0 ? this.ports : this.ports.concat(this.ports.slice(0, k).reverse());
   }
 
+  /** T-3809: each leg's waypoints as the boats run them, `runPorts`' legs: a line that loops back passes its way
+   * out's waypoints again backward. */
+  private runWays(): Pt[][] {
+    const k = this.joinAt();
+    return k < 0 ? this.ways : this.ways.concat(this.ways.slice(0, k).reverse().map((w) => [...w].reverse()));
+  }
+
+  /** The points the route passes in order: each port's berth, and the waypoints between. */
+  private runPoints(): LinePoint[] {
+    const run = this.runPorts(), ways = this.runWays(), out: LinePoint[] = [];
+    run.forEach((p, i) => {
+      out.push({ at: [p.berth.lng, p.berth.lat], kind: KIND_PORT });
+      if (i + 1 < run.length) for (const w of ways[i] ?? []) out.push({ at: [w.lng, w.lat], kind: KIND_WAYPOINT });
+    });
+    return out;
+  }
+
   /** The ports changed (`edited`: by the player): the route is searched again. */
   private changed(edited = false) {
     if (edited) this.dirty = true;
+    // one list of waypoints a leg, whatever an edit did
+    this.ways.length = Math.min(this.ways.length, Math.max(0, this.ports.length - 1));
+    while (this.ways.length < this.ports.length - 1) this.ways.push([]);
     if (this.ports.length < 2) this.head = false;
     const d = ferryDraft.peek();
     const points = this.ports.length - (this.looped() ? 1 : 0);
@@ -235,12 +310,12 @@ export class FerryDraw {
       this.routeKey = key;
       return;
     }
-    const pts = this.runPorts().map((p) => ({ at: [p.berth.lng, p.berth.lat] as [number, number], kind: 1 as const }));
-    const run = this.water.line(pts, "draft").then((r) => {
+    const run = this.water.line(this.runPoints(), "draft").then((r) => {
+      // cleared even when dropped (a drag's older ask), so `finish` never waits on it for ever
+      if (this.routing === run) this.routing = null;
       if (!r || key !== this.berthKey()) return;
       this.route = r.route;
       this.routeKey = key;
-      if (this.routing === run) this.routing = null;
       if (this.active) this.place();
     });
     this.routing = run;
@@ -284,6 +359,34 @@ export class FerryDraw {
     return hit;
   }
 
+  /** T-3809: the waypoint under a screen point, the nearest, or null. */
+  private wayAt(px: number, py: number, reach = WAY_PX): { k: number; j: number } | null {
+    let best = reach * reach, hit: { k: number; j: number } | null = null;
+    this.ways.forEach((w, k) =>
+      w.forEach((p, j) => {
+        const s = this.map.project([p.lng, p.lat]);
+        const d = (s.x - px) ** 2 + (s.y - py) ** 2;
+        if (d < best) [best, hit] = [d, { k, j }];
+      }),
+    );
+    return hit;
+  }
+
+  /** T-3809: where a waypoint at `w` would go: the leg `k` and its place `j` among that leg's waypoints where it
+   * adds the least straight distance between the points either side, and those two points; null with fewer
+   * than two ports. */
+  private wayPlace(w: Pt): { k: number; j: number; a: Pt; b: Pt } | null {
+    let best = Infinity, out: { k: number; j: number; a: Pt; b: Pt } | null = null;
+    for (let k = 0; k + 1 < this.ports.length; k++) {
+      const seq = [this.ports[k].berth, ...this.ways[k], this.ports[k + 1].berth];
+      for (let j = 0; j + 1 < seq.length; j++) {
+        const d = metres(seq[j], w) + metres(w, seq[j + 1]) - metres(seq[j], seq[j + 1]);
+        if (d < best) [best, out] = [d, { k, j, a: seq[j], b: seq[j + 1] }];
+      }
+    }
+    return out;
+  }
+
   /** The network's port nearest a point within reach, or null. */
   private portAt(px: number, py: number, at: Pt, reach = HANDLE_PX): Extract<Under, { kind: "port" }> | null {
     const w = world.peek();
@@ -319,6 +422,8 @@ export class FerryDraw {
   private underAt(px: number, py: number, at: Pt, touch = false): Under {
     const i = this.handleAt(px, py, touch ? TOUCH_HANDLE_PX : HANDLE_PX);
     if (i >= 0) return { kind: "handle", i };
+    const w = this.wayAt(px, py, touch ? TOUCH_HANDLE_PX : WAY_PX);
+    if (w) return { kind: "way", ...w };
     const port = this.portAt(px, py, at, touch ? TOUCH_HANDLE_PX : HANDLE_PX);
     if (port) return port;
     // the last answer stands while a newer one is asked, so the tag stays up and only its text changes (T-2273)
@@ -354,7 +459,7 @@ export class FerryDraw {
       if (snap) this.probed = { at, reach, snap };
       if (!this.active) return;
       const k = this.under.kind;
-      if (snap && k !== "handle" && k !== "port") {
+      if (snap && k !== "handle" && k !== "way" && k !== "port") {
         this.under = this.underOf(snap);
         this.place();
       }
@@ -362,38 +467,188 @@ export class FerryDraw {
     });
   }
 
+  /** T-3809: while Shift is held, ask whether the pointer is on water, where a waypoint may go; the newest
+   * position wins. */
+  private probeWay() {
+    if (this.wayProbing || !this.at || !this.shift) return;
+    const at = this.at;
+    if (this.wayProbe && same(this.wayProbe.at, at)) return;
+    this.wayProbing = true;
+    void this.water.probe([at.lng, at.lat]).then((p) => {
+      this.wayProbing = false;
+      if (p) this.wayProbe = { at, water: p.water };
+      if (!this.active) return;
+      this.place();
+      if (this.at && !same(this.at, at)) this.probeWay();
+    });
+  }
+
+  /** whether the pointer is on water as last asked (true, false), null while unknown */
+  private wayWater(): boolean | null {
+    return this.wayProbe ? this.wayProbe.water : null;
+  }
+
+  private setShift(on: boolean) {
+    if (on === this.shift) return;
+    this.shift = on;
+    if (!this.active) return;
+    this.probeWay();
+    this.place();
+  }
+
+  /** a click now would put a waypoint: Shift held, not on a port or waypoint of the line */
+  private waying(): boolean {
+    const k = this.under.kind;
+    return this.shift && !touchInput.peek() && k !== "handle" && k !== "way" && !this.drag;
+  }
+
   // ---------------------------------------------------------------- events
 
   move(e: MapMouseEvent) {
     this.at = { lng: e.lngLat.lng, lat: e.lngLat.lat };
     this.pt = { x: e.point.x, y: e.point.y };
+    this.shift = !!e.originalEvent?.shiftKey;
     this.under = this.underAt(e.point.x, e.point.y, this.at);
     if (!this.probeIs(this.at)) this.probe();
-    const cur = this.under.kind === "handle" || this.under.kind === "port" ? "pointer" : "crosshair";
+    this.probeWay();
+    const cur = this.under.kind === "handle" || this.under.kind === "way" || this.under.kind === "port" ? "pointer" : "crosshair";
     if (this.map.getCanvas().style.cursor !== cur) this.map.getCanvas().style.cursor = cur;
     this.place();
   }
 
   click(e: MapMouseEvent) {
-    if (this.busy) return;
+    if (this.busy || this.dragEnded) return;
     const x = e.point.x, y = e.point.y, h = this.handleAt(x, y, HANDLE_PX);
+    const way = h < 0 && this.wayAt(x, y) !== null;
     const finishes = (i: number) => this.ports.length >= 2 && (this.isSeam(i) || (!this.looped() && i === this.endIndex()));
+    const at = { lng: e.lngLat.lng, lat: e.lngLat.lat };
     if (e.originalEvent.detail >= 2) {
-      // a double click acts on empty ground (T-3149); where its first click took a port out, the second does nothing
+      // a double click acts on empty ground (T-3149); where its first click took a port or waypoint out or put a
+      // waypoint, the second does nothing
       const skip = this.firstEdited;
       this.firstEdited = false;
-      if (skip) return;
+      if (skip || way) return;
       if (this.ports.length >= 2 && (h < 0 || finishes(h))) void this.finish();
       return;
     }
-    this.firstEdited = h >= 0 && this.ports.length >= 2 && !finishes(h);
-    void this.press(e.point.x, e.point.y, { lng: e.lngLat.lng, lat: e.lngLat.lat });
+    // T-3809: Shift on anything but the line's own ports and waypoints puts a waypoint
+    if (e.originalEvent.shiftKey && h < 0 && !way) {
+      this.firstEdited = true;
+      return void this.addWay(at);
+    }
+    this.firstEdited = way || (h >= 0 && this.ports.length >= 2 && !finishes(h));
+    void this.press(e.point.x, e.point.y, at);
+  }
+
+  /** T-3809: a waypoint at `at`, on water, on the leg where it adds the least (`wayPlace`). */
+  private addWay(at: Pt) {
+    if (this.ports.length < 2) return void say(t("ferryDraw.sayWayPorts"), true);
+    // the answer Shift's hover already has, else asked: the worker answers after the route searches before it, so
+    // the tool goes on meanwhile
+    const known = this.wayProbe && same(this.wayProbe.at, at) ? this.wayProbe.water : null;
+    this.waterCheck((known !== null ? Promise.resolve({ water: known }) : this.water.probe([at.lng, at.lat])).then((p) => {
+      if (!this.active || this.ports.length < 2) return;
+      if (!p) return void say(t("ferryDraw.notLoaded"), true);
+      if (!p.water) return void say(t("ferryDraw.sayWayWater"), true);
+      const w = this.wayPlace(at);
+      if (!w) return;
+      playBuild("snap");
+      this.ways[w.k].splice(w.j, 0, at);
+      this.reunder();
+      this.changed(true);
+    }));
+  }
+
+  /** A water check under way (a shift click's, a dropped waypoint's): `finish` waits for every one. */
+  private waterCheck(job: Promise<void>) {
+    const run: Promise<void> = Promise.all([this.checking, job.catch(() => {})]).then(() => {
+      if (this.checking === run) this.checking = null;
+    });
+    this.checking = run;
+  }
+
+  private removeWay(k: number, j: number) {
+    if (this.busy || !this.ways[k]?.[j]) return;
+    playBuild("pop");
+    this.ways[k].splice(j, 1);
+    this.reunder();
+    this.changed(true);
+  }
+
+  // ---------------------------------------------------------------- dragging a waypoint (the bus tool's handles)
+
+  private onDown(e: MouseEvent) {
+    if (!this.active || this.busy || e.button !== 0 || e.target !== this.map.getCanvas() || touchInput.peek()) return;
+    if (e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return;
+    const r = this.map.getContainer().getBoundingClientRect();
+    const px = e.clientX - r.left, py = e.clientY - r.top;
+    if (this.handleAt(px, py) >= 0) return;
+    const w = this.wayAt(px, py);
+    if (!w) return;
+    // a press without a drag still reaches MapLibre as a click
+    this.map.dragPan.disable();
+    this.wayPress = { ...w, x: px, y: py };
+  }
+
+  private onDrag(e: MouseEvent) {
+    const p = this.wayPress;
+    if (!p) return;
+    const r = this.map.getContainer().getBoundingClientRect();
+    const px = e.clientX - r.left, py = e.clientY - r.top;
+    if (!this.drag) {
+      if (Math.hypot(px - p.x, py - p.y) < DRAG_PX) return;
+      const was = this.ways[p.k]?.[p.j];
+      if (!was) return this.endDrag();
+      this.drag = { k: p.k, j: p.j, was };
+      setGrabbing(true);
+    }
+    const ll = this.map.unproject([px, py]);
+    this.at = { lng: ll.lng, lat: ll.lat };
+    this.ways[p.k][p.j] = this.at;
+    this.changed(true);
+  }
+
+  private onUp() {
+    const d = this.drag;
+    this.endDrag();
+    if (!d) return;
+    // MapLibre may still call a press that came back to its start a click
+    this.dragEnded = true;
+    setTimeout(() => (this.dragEnded = false));
+    this.waterCheck(this.checkDrop(d));
+  }
+
+  /** A waypoint dropped off the water goes back where it was. The water worker answers after the route searches
+   * before it, so the tool goes on meanwhile; `finish` waits for it. */
+  private async checkDrop(d: { k: number; j: number; was: Pt }) {
+    const at = this.ways[d.k]?.[d.j];
+    if (!at) return;
+    const p = await this.water.probe([at.lng, at.lat]);
+    if (!this.active) return;
+    if (p?.water) return void playBuild("snap");
+    // where it is now: other waypoints may have come or gone meanwhile
+    for (const w of this.ways) {
+      const j = w.indexOf(at);
+      if (j < 0) continue;
+      w[j] = d.was;
+      this.reunder();
+      this.changed();
+      say(t(p ? "ferryDraw.sayWayWater" : "ferryDraw.notLoaded"), true);
+    }
+  }
+
+  private endDrag() {
+    if (this.drag) setGrabbing(false);
+    if (this.wayPress || this.drag) this.map.dragPan.enable();
+    this.wayPress = null;
+    this.drag = null;
   }
 
   /** A click or a tap at a screen point. */
   private async press(px: number, py: number, at: Pt, touch = false) {
     const u = this.underAt(px, py, at, touch);
     if (u.kind === "handle") return this.handleClick(u.i);
+    if (u.kind === "way") return this.removeWay(u.k, u.j);
     if (this.looped()) return void say(t("ferryDraw.loopClosed"), true);
     if (u.kind === "port") {
       if (this.ports.some((p) => p.node === u.node)) return;
@@ -467,8 +722,9 @@ export class FerryDraw {
    * ends there, its active end. */
   private openAt(i: number) {
     if (this.busy || !this.closed()) return;
-    const m = this.ports.length - 1, c = this.ports.slice(0, m);
+    const m = this.ports.length - 1, c = this.ports.slice(0, m), w = this.ways;
     this.ports = Array.from({ length: m }, (_, j) => c[((i % m) + 1 + j) % m]);
+    this.ways = Array.from({ length: m - 1 }, (_, j) => w[((i % m) + 1 + j) % m] ?? []);
     this.head = false;
     playBuild("pop");
     this.reunder();
@@ -480,11 +736,13 @@ export class FerryDraw {
     if (this.busy) return;
     if (this.head) {
       this.ports.reverse();
+      this.ways = this.ways.reverse().map((w) => w.reverse());
       i = this.ports.length - 1 - i;
       this.head = false;
     }
     playBuild("station");
     this.ports.push(this.ports[i]);
+    this.ways.push([]);
     this.reunder();
     this.changed(true);
     void this.finish();
@@ -494,6 +752,7 @@ export class FerryDraw {
   private closeLoop() {
     playBuild("station");
     this.ports.push(this.ports[0]);
+    this.ways.push([]);
     this.reunder();
     this.changed(true);
     void this.finish();
@@ -501,6 +760,10 @@ export class FerryDraw {
 
   private add(p: DraftPort) {
     playBuild("station"); // T-2940: a port placed sounds as a station placed does
+    if (this.ports.length) {
+      if (this.head) this.ways.unshift([]);
+      else this.ways.push([]);
+    }
     if (this.head) this.ports.unshift(p);
     else this.ports.push(p);
     this.reunder();
@@ -512,11 +775,15 @@ export class FerryDraw {
     playBuild("pop");
     // where a loop closes its port is there twice: taking it out opens the loop; a ring of three, or a loop of three
     // past where a line loops back, is no loop without one
-    const wasClosed = this.closed(), wasLooped = this.looped();
-    if (this.isSeam(i)) this.ports.pop();
+    // T-3809: a port partway along goes with its two legs' waypoints kept, in order, on the leg that joins them
+    const wasClosed = this.closed(), wasLooped = this.looped(), n = this.ports.length;
+    if (this.isSeam(i)) (this.ports.pop(), this.ways.pop());
     else {
       this.ports.splice(i, 1);
-      if ((wasClosed && this.ports.length <= 3) || (wasLooped && !this.looped())) this.ports.pop();
+      if (i === 0) this.ways.shift();
+      else if (i === n - 1) this.ways.pop();
+      else this.ways.splice(i - 1, 2, [...this.ways[i - 1], ...this.ways[i]]);
+      if ((wasClosed && this.ports.length <= 3) || (wasLooped && !this.looped())) (this.ports.pop(), this.ways.pop());
     }
     this.reunder();
     this.changed(true);
@@ -541,6 +808,7 @@ export class FerryDraw {
       else if (this.line !== null || this.ports.length === 0) this.host.exit();
       else {
         this.ports = [];
+        this.ways = [];
         this.changed();
       }
       return true;
@@ -640,8 +908,10 @@ export class FerryDraw {
   private refusedLeg(): string | null {
     const r = this.route;
     if (!r || this.routeKey !== this.berthKey()) return null;
-    const k = r.legs.findIndex((l) => l.reason);
-    if (k < 0) return null;
+    const q = r.legs.findIndex((l) => l.reason);
+    if (q < 0) return null;
+    // the route's legs run between waypoints too: the ports either side of leg q
+    const k = this.runPoints().slice(0, q + 1).filter((p) => p.kind === KIND_PORT).length - 1;
     const run = this.runPorts(), a = run[k]?.name, b = run[k + 1]?.name;
     return a && b ? t("ferryDraw.pathBetween", { a, b }) : t("ferryDraw.sayPath");
   }
@@ -657,7 +927,7 @@ export class FerryDraw {
     }
     this.busy = true;
     try {
-      while (this.routing) await this.routing;
+      while (this.checking || this.routing) await (this.checking ?? this.routing);
       await Promise.all(this.ports.map((p) => p.naming));
       const run = this.runPorts();
       if (tool.peek() !== "ferry") return;
@@ -714,9 +984,20 @@ export class FerryDraw {
       say(t("ferryDraw.needTwoPorts"), true);
       return false;
     }
-    const got = await this.water.line(ports.map((p) => ({ at: p.berth, kind: 1 as const })));
+    // T-3809: a leg whose two ports stay side by side keeps its waypoints (backward if the order turned)
+    const saved = savedWays(st.routeLL, st.kinds), pts: LinePoint[] = [];
+    order.forEach((i, j) => {
+      const p = st.ferry!.ports[i], n = order[j + 1];
+      if (!p) return;
+      pts.push({ at: p.berth, kind: KIND_PORT });
+      if (n === undefined || !st.ferry!.ports[n]) return;
+      const ways = n === i + 1 ? saved[i] : n === i - 1 ? [...(saved[n] ?? [])].reverse() : [];
+      for (const w of ways ?? []) pts.push({ at: [w.lng, w.lat], kind: KIND_WAYPOINT });
+    });
+    const got = await this.water.line(pts);
     if (!got) return false;
-    const r = got.route, k = r.legs.findIndex((x) => x.reason);
+    const r = got.route, q = r.legs.findIndex((x) => x.reason);
+    const k = q < 0 ? -1 : pts.slice(0, q + 1).filter((p) => p.kind === KIND_PORT).length - 1;
     if (k >= 0 || !r.ok) {
       const names = new Map((world.peek()?.save.stations ?? []).map((s) => [s.num, s.name]));
       const a = names.get(ports[k]?.node ?? -1), b = names.get(ports[k + 1]?.node ?? -1);
@@ -757,19 +1038,27 @@ export class FerryDraw {
       for (const leg of r.legs) stroke(path(r.ll, leg.from, leg.to), leg.reason ? "var(--bad, #d33)" : col, !leg.reason);
     } else if (r) stroke(path(r.ll, 0, (r.ll.length >> 1) - 1), col, true);
     else if (this.ports.length >= 2) {
-      // searching: straight and grey, as a bus leg waits for its roads
-      const ll = this.ports.flatMap((p) => [p.berth.lng, p.berth.lat]);
-      parts.push(`<path d="${path(ll, 0, this.ports.length - 1)}" fill="none" style="stroke:var(--muted, #999);stroke-width:2.5px;stroke-dasharray:4 4"/>`);
+      // searching: straight and grey through the waypoints, as a bus leg waits for its roads
+      const ll = this.runPoints().flatMap((p) => p.at);
+      parts.push(`<path d="${path(ll, 0, (ll.length >> 1) - 1)}" fill="none" style="stroke:var(--muted, #999);stroke-width:2.5px;stroke-dasharray:4 4"/>`);
     }
     // the leg the next click would add, straight
     const end = this.ports[this.endIndex()];
     const u = this.under;
-    if (end && this.at && !touchInput.peek() && (u.kind === "shore" || u.kind === "port")) {
+    const waying = this.waying();
+    // T-3809: with Shift, where a waypoint would go: a dot at the pointer joined to the points either side
+    const wp = waying && this.at && this.wayWater() !== false ? this.wayPlace(this.at) : null;
+    if (wp && this.at) {
+      const a = xy(wp.a), b = xy(wp.b), c = xy(this.at);
+      parts.push(`<path d="M${a.x.toFixed(1)} ${a.y.toFixed(1)}L${c.x.toFixed(1)} ${c.y.toFixed(1)}L${b.x.toFixed(1)} ${b.y.toFixed(1)}" fill="none" style="stroke:var(--ferry-ghost);stroke-width:2px;stroke-opacity:.85;stroke-dasharray:4 4"/>`);
+      parts.push(`<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="4.5" style="fill:var(--ferry-ghost);stroke:var(--map-land);stroke-width:2px"/>`);
+    }
+    if (!waying && end && this.at && !touchInput.peek() && (u.kind === "shore" || u.kind === "port")) {
       const a = xy(end.berth), b = xy(u.berth);
       parts.push(`<path d="M${a.x.toFixed(1)} ${a.y.toFixed(1)}L${b.x.toFixed(1)} ${b.y.toFixed(1)}" fill="none" style="stroke:var(--ferry-ghost);stroke-width:2px;stroke-opacity:.85;stroke-dasharray:4 4"/>`);
     }
     // where a click would put a new port (T-2468), its landing and berth as a port's, in the ghost colour
-    if (this.at && !touchInput.peek() && u.kind === "shore") {
+    if (!waying && this.at && !touchInput.peek() && u.kind === "shore") {
       const a = xy(u.landing), b = xy(u.berth);
       parts.push(`<path d="M${a.x.toFixed(1)} ${a.y.toFixed(1)}L${b.x.toFixed(1)} ${b.y.toFixed(1)}" style="stroke:var(--ferry-ghost);stroke-width:2.5px"/>`);
       parts.push(`<circle cx="${a.x.toFixed(1)}" cy="${a.y.toFixed(1)}" r="5.5" style="fill:var(--map-land);stroke:var(--ferry-ghost);stroke-width:2.5px"/>`);
@@ -792,6 +1081,14 @@ export class FerryDraw {
       if (i === ei) parts.push(`<circle class="ferry-end" ${at} r="${big ? 8 : 7}" style="fill:${fill};stroke:${col};stroke-width:3px"/>`);
       else parts.push(`<circle class="ferry-port" ${at} r="${big ? 7 : 5.5}" style="fill:${fill};stroke:${col};stroke-width:2.5px"/>`);
     });
+    // T-3809: each waypoint a dot in the line's colour, as the bus tool's points; the one under the pointer larger
+    const hot = this.drag ?? (u.kind === "way" ? u : null);
+    this.ways.forEach((w, k) =>
+      w.forEach((p, j) => {
+        const s = xy(p), big = hot !== null && hot.k === k && hot.j === j;
+        parts.push(`<circle class="ferry-way" cx="${s.x.toFixed(1)}" cy="${s.y.toFixed(1)}" r="${big ? 6 : 4.5}" style="fill:${col};stroke:var(--map-land);stroke-width:2px"/>`);
+      }),
+    );
     this.svg.style.display = "";
     this.svg.setAttribute("width", String(this.overlay.cssW));
     this.svg.setAttribute("height", String(this.overlay.cssH));
@@ -808,7 +1105,18 @@ export class FerryDraw {
     }
     const u = this.under, rows: HTMLElement[] = [];
     let bad = false;
-    if (u.kind === "handle") {
+    const waying = this.waying();
+    if (this.drag) {
+      // a waypoint dragged: the route's length only
+    } else if (waying) {
+      // T-3809: what a shift click would do here
+      const water = this.wayWater();
+      if (this.ports.length < 2) (rows.push(row(t("ferryDraw.tagWayPorts"), true)), (bad = true));
+      else if (water === false) (rows.push(row(t("ferryDraw.tagWayWater"), true)), (bad = true));
+      else if (water) rows.push(row(t("ferryDraw.addWay")));
+    } else if (u.kind === "way") {
+      rows.push(row(t("ferryDraw.clickDelete")), row(t("ferryDraw.dragMove")));
+    } else if (u.kind === "handle") {
       const finishes = this.ports.length >= 2 && (this.isSeam(u.i) || (!this.looped() && u.i === this.endIndex()));
       if (this.ports.length >= 2) rows.push(row(finishes ? t(this.line === null ? "ferryDraw.clickMake" : "ferryDraw.clickSave") : t("ferryDraw.clickDelete")));
       const right = { open: "ferryDraw.rightOpen", stop: "ferryDraw.rightStopLooping", delete: "ferryDraw.rightDelete", close: "ferryDraw.rightClose", loopBack: "ferryDraw.rightLoopBack" } as const;
@@ -818,13 +1126,15 @@ export class FerryDraw {
     else if (u.kind === "shore") rows.push(row(t("ferryDraw.placePort")));
     else if (u.kind === "water") (rows.push(row(onWater(), true)), (bad = true));
     else if (u.kind === "far") (rows.push(row(farFromWater(), true)), (bad = true));
-    if (this.ports.length >= 2 && u.kind !== "handle") {
+    if (this.ports.length >= 2 && ((u.kind !== "handle" && u.kind !== "way") || this.drag)) {
       if (r && r.legs.some((l) => l.reason)) (rows.push(row(noWaterPath(), true)), (bad = true));
       else if (r) {
         const p = this.price();
         rows.push(row(`${distance(r.m)}, ${moneyShort(p.cost * 1e6)}${this.built ? " more" : ""}`));
         rows.push(row(t("ferryDraw.ports", { count: this.ports.length - (this.looped() ? 1 : 0) })));
       }
+      // T-3809: the gesture has no button, so its tag says it, until the line has a waypoint
+      if (!waying && !this.drag && this.ways.every((w) => !w.length)) rows.push(row(t("ferryDraw.shiftWay")));
     }
     if (!rows.length) {
       tag.style.display = "none";

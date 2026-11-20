@@ -251,7 +251,12 @@ try {
   const fc = [(WHITEHALL[0] + ST_GEORGE[0] + RED_HOOK[0]) / 3, (WHITEHALL[1] + ST_GEORGE[1] + RED_HOOK[1]) / 3];
   // the boats reach the renderer a moment after the clock is moved
   let ft2 = [];
-  for (let k = 0; k < 10 && ft2.filter((x) => Math.abs(x) > 0.02).length < 2; k++) { await page.waitForTimeout(1500); ft2 = await turns(fc, 6, 300); }
+  // a boat's trip must span the 25 minutes sampled: the clock moves on 10 minutes a try where none does (T-3809)
+  for (let k = 0; k < 10 && ft2.filter((x) => Math.abs(x) > 0.02).length < 2; k++) {
+    await page.waitForTimeout(1500);
+    ft2 = await turns(fc, 6, 300);
+    if (!ft2.length && k % 2 === 1) await page.evaluate(() => { window.tw.clock.set(window.tw.clock.now() + 600); window.tw.overlay.invalidate(); });
+  }
   console.log('boat turns', ft2.map((x) => x.toFixed(2)).join(' '), 'trips', await page.evaluate(() => window.tw.renderer.tripCount));
   const live = ft2.filter((x) => Math.abs(x) > 0.02);
   check(live.length >= 1 && (live.some((x) => x > 0) !== live.some((x) => x < 0)), 'boats go round the harbour, all one way', ft2.map((x) => x.toFixed(2)).join(' '));

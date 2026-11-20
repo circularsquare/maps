@@ -2355,9 +2355,14 @@ searches water.
   the coarse raster has no sailable cell near an end, or no path, the ends are searched wider and coarser
   (3 km at 5 m, then 9 km at 12.5 m) and the plan tried again (T-3186). Legs over 400 km are refused
   (`too-long`); waters that do not meet, `no-water-path`. The tool says "No water path found" for any refusal.
+  A water path that leaves the second box (two coves either side of a peninsula, the way round over twice their
+  distance: Ma Liu Shui to Sai Kung, Odda to Rosendal) is `no-water-path` too; the player's waypoints (T-3809,
+  ui-building.md "Drawing a ferry line") split a line into legs searched one by one, which covers both.
 - **Shape**: the cells are simplified (Douglas-Peucker at 25 m, or a quarter of the room, never off sailable
-  water), then every corner but a port's gets the widest arc that fits its two sides and stays sailable, at
-  most 300 m. Where pieces of a leg meet, two corners either side take the turn so the route passes straight.
+  water), with the piece's two ends (T-3809: a first or last cell a metre off its end made a kink no bend fit,
+  and the boat all but stopped there), then every corner but a port's gets the widest arc that fits its two sides
+  and stays sailable, at most 300 m. Where pieces of a leg meet, and at a waypoint, two corners either side take
+  the turn so the route passes straight.
 - **Speeds**, one a point: 45 km/h 200 m or more from land (T-2450, T-3435), 10 km/h at 20 m or less, straight between, at
   most √(0.3 m/s² x radius) on a bend; points every 25 m or so where the speed changes. Acceleration (0.15
   m/s²) and stops are the sim's.
