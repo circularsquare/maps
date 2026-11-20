@@ -24,11 +24,9 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 ## Her words
 - 11-20 ~12:45 UTC, morning: new countries "look pretty cool"; rivers still break (T-3839, her words there); ferry
   order port, waypoints, port (T-3845); quieter related lines (T-3846); islands "3x, A", stage 2 yes.
-- 11-20 ~13:40 UTC: T-3835 text ack. TODO.md review: file everything in "for anita" and "other player
-  suggestions" not done or filed ("basically want all of this eventually"; agent todoreview, ids T-3850-T-3899,
-  table in notes/todo-review-2026-11-20.md). New players default to legacy time buttons (T-3847, agent
-  legacytime). ~13:50: raised T-3662, 3655, 3646, 3735, 3353, 3513, 2486, 3829 to P2 ("lets raise those yeah");
-  ferries "be able to run longer" (400 km per leg stays). TODO review done: T-3850-T-3866 filed.
+- 11-20 ~13:40 UTC: T-3835 text ack. TODO.md "for anita" and player suggestions all filed ("basically want all of
+  this eventually"; T-3850-T-3866, notes/todo-review-2026-11-20.md). Legacy time buttons for new players (T-3847).
+  Raised 8 to P2 ("lets raise those yeah"); ferries "be able to run longer" (400 km per leg stays).
 - 11-20 ~14:00 UTC: "i'd still rather not work too muhc on track stuff. i think i'd like to start thinking about
   full track rework in next few days": no minor track work (T-3662, T-3353 wait on the rework design; T-2920
   stays P4). Ferry text ack (T-3845). Board: waited-on task in its own preview section (T-3867, boardwait).
