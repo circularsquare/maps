@@ -98,20 +98,25 @@ pub fn retime(net: &Network, svc: &mut Service) {
         return;
     }
     svc.timing_key = key;
+    // T-3896: the variants are in the line's phase tables, which the page reads again only for the
+    // lines noted as changed: any line timed otherwise than before is noted, edited or not
+    let before: Vec<Vec<Vec<Variant>>> = svc.lines.iter().map(|ls| ls.runs.iter().flat_map(|r| r.vars.iter().cloned()).collect()).collect();
     clear(svc);
-    if svc.timing_key.is_empty() {
+    if !svc.timing_key.is_empty() {
+        let lats: Vec<Option<Lattice>> = (0..svc.lines.len()).map(|l| svc.lattice(net, l).map(|x| weekday(&x))).collect();
+        let mut built = Built { old: std::mem::take(&mut svc.timing_memo), new: HashMap::new() };
+        let passing = passing_waits(net, svc, &lats, &mut built);
+        install(svc, passing, &lats);
+        // (before the following: a faster line timed behind a slower one reads its trains as they run)
+        floor(net, svc);
+        let follow = following(net, svc, &lats, &mut built);
+        install(svc, follow, &lats);
+        svc.timing_memo = built.new;
+    } else {
         svc.timing_memo.clear();
-        return;
     }
-    let lats: Vec<Option<Lattice>> = (0..svc.lines.len()).map(|l| svc.lattice(net, l).map(|x| weekday(&x))).collect();
-    let mut built = Built { old: std::mem::take(&mut svc.timing_memo), new: HashMap::new() };
-    let passing = passing_waits(net, svc, &lats, &mut built);
-    install(svc, passing, &lats);
-    // (before the following: a faster line timed behind a slower one reads its trains as they run)
-    floor(net, svc);
-    let follow = following(net, svc, &lats, &mut built);
-    install(svc, follow, &lats);
-    svc.timing_memo = built.new;
+    let moved: Vec<u32> = (0..svc.lines.len()).filter(|&l| before.get(l).is_some_and(|b| svc.lines[l].runs.iter().flat_map(|r| r.vars.iter()).ne(b.iter()))).map(|l| l as u32).collect();
+    svc.note_changed(&moved);
 }
 
 /// Every run's variants and patterns dropped, and every line untimed.

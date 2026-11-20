@@ -8,7 +8,8 @@
 // each time, so one model read twice is not the same twice); one is read with rows kept from the steps
 // before, the other whole with a new `StateRows()`, and after each edit, applied or refused, the two must
 // be equal field for field.
-//   node trainworld/checks/t1382-rows.mjs [seeds] [steps] [nyc|japan]      (from the maps root; 4 seeds of 30 steps, about 30 s; 60 of 60 for a long run)
+//   node trainworld/checks/t1382-rows.mjs [seeds] [steps] [nyc|japan|tokyo] (from the maps root; 4 seeds of 30 steps, about 30 s; 60 of 60 for a long run;
+//     tokyo: lines timed train by train, T-3896, 12 seeds of 10 steps)
 //   node trainworld/checks/t1382-rows.mjs --self-test                      the check must fail with the
 //     model's list of changed lines held back, and --self-test-names with its list of changed names
 //     (they prove the check can tell); --self-test-phases holds the same list back and compares only the
@@ -18,6 +19,7 @@
 // the model's whole `phases()` byte for byte, and be the same array object as last time when no line's
 // tables changed.
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { gunzipSync } from 'node:zlib';
 import init, { TrackApi } from '../app/src/wasm/track/sim.js';
 import { loadApp, REAL_SAVE, ARTIFACTS } from './lib.mjs';
@@ -28,7 +30,8 @@ await init({ module_or_path: readFileSync(new URL('../app/src/wasm/track/sim_bg.
 const SELF = process.argv.includes('--self-test') ? 'lines' : process.argv.includes('--self-test-names') ? 'names' : process.argv.includes('--self-test-phases') ? 'phases' : process.argv.includes('--self-test-trials') ? 'trials' : null;
 const args = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const SEEDS = Number(args[0] ?? 4), STEPS = Number(args[1] ?? 30), SETUP = args[2] ?? 'nyc';
-const SAVE = SETUP === 'japan' ? ARTIFACTS + 't737-japan-trains.save' : REAL_SAVE;
+// T-3896: Tokyo's has lines timed train by train (T-3346), which New York's has none of
+const SAVE = SETUP === 'japan' ? ARTIFACTS + 't737-japan-trains.save' : SETUP === 'tokyo' ? fileURLToPath(new URL('fixtures/t3302-tokyo-day77.save', import.meta.url)) : REAL_SAVE;
 const raw = gunzipSync(readFileSync(SAVE));
 const saveBytes = raw.subarray(8 + raw.readUInt32LE(4));
 

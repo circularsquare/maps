@@ -349,3 +349,27 @@ fn a_moved_morning_hour_is_timed_too() {
     eprintln!("5-7: {good} passes, {} bad", bad.len());
     assert!(bad.is_empty(), "{} bad passes, first {:?}", bad.len(), &bad[..bad.len().min(4)]);
 }
+
+/// T-3896: the variants are in a line's phase tables, which the page reads again only for the lines
+/// noted as changed (`Service::take_changed`, T-1540), so `retime` notes every line it times
+/// otherwise, whatever the edit touched (a station renamed on Tokyo's network timed a line far from
+/// it again). Unnoted, the page laid the tables out at their old lengths and read the lines after
+/// them from the wrong place: the Speed view's fastest train at 856 km/h.
+#[test]
+fn a_line_timed_otherwise_is_noted_changed() {
+    let (mut w, n, local, _) = shinkansen();
+    set_passing(&mut w, &n[1..6], true);
+    let timed = w.svc.lines[local as usize].runs[0].vars[0].len();
+    assert!(timed > 1);
+    // the local's variants as if worked out otherwise before: the next retime puts them back
+    w.svc.lines[local as usize].runs[0].vars[0].pop();
+    w.svc.timing_key.clear();
+    w.svc.take_changed();
+    w.retime();
+    assert_eq!(w.svc.lines[local as usize].runs[0].vars[0].len(), timed);
+    assert_eq!(w.svc.take_changed(), vec![local]);
+    // timed the same: nothing noted
+    w.svc.timing_key.clear();
+    w.retime();
+    assert!(w.svc.take_changed().is_empty());
+}

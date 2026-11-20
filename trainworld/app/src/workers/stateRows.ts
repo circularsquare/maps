@@ -520,8 +520,10 @@ export class StateRows {
   /** Every line's phase tables laid end to end, as `TrackApi.phases` answers, read after `lines`
    * (the trials that price a planned line or the construct-all quote, asked between states, note the
    * lines they recompute as changed: they are read here, and again by the next `lines`). The same
-   * array as last time while no line's tables changed; never to be transferred or changed. */
-  phases(a: TrackApi): Float32Array {
+   * array as last time while no line's tables changed; never to be transferred or changed.
+   * `meta` (`profile_meta`, read with them): T-3896, tables laid out to another length than it counts
+   * are read whole, since every line's after the first wrong one would be read from the wrong place. */
+  phases(a: TrackApi, meta?: Float32Array): Float32Array {
     const ids = new Set(this.phasePending);
     this.phasePending.clear();
     const moved = a.peek_changed_lines();
@@ -533,7 +535,14 @@ export class StateRows {
       for (const id of ids) this.readPhases(a, id);
       for (const id of this.phaseTables.keys()) if (!this.phaseSeen.has(id)) this.dropPhases(id);
     }
-    return this.phaseStale || !this.phaseAll ? this.layOutPhases() : this.phaseAll;
+    const out = this.phaseStale || !this.phaseAll ? this.layOutPhases() : this.phaseAll;
+    if (!meta) return out;
+    let n = 0;
+    for (let k = 1; k < meta.length; k += 4) n += meta[k];
+    if (n * 4 === out.length) return out;
+    console.error(`T-3896: the phase tables laid out by line are ${out.length / 4} phases against the ${n} counted: read whole`);
+    this.splitPhases(a);
+    return this.phaseAll!;
   }
 
   /** A line's phase tables, kept if they are the same. */

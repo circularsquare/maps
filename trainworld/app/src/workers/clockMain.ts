@@ -280,7 +280,7 @@ function buildState(): ClockState {
   const [totalCost, builtCost] = a.costs();
   const blueprintCost = Math.max(totalCost - builtCost, 0);
   const tq5 = performance.now(); timing.sSums = tq5 - tq4a; timing.sCosts = tq5 - tq4;
-  const phases = stateRows.phases(a);
+  const phases = stateRows.phases(a, meta);
   timing.sPhases = performance.now() - tq5; timing.nPhaseLines = stateRows.phaseReads;
   if (patchMode === "check" && !sameBytes(phases, a.phases())) console.error("T-1540 check: the phase tables read per line differ from a whole read");
   return {
