@@ -402,8 +402,8 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: You, 11-19: "yes only fix in real network build so players are unchanged. sure can keep moscow unless people ask". Built 11-20 (e9a6f91b, moscowfix): junctions over 8 ends split, turn-backs given a dead end, a keep list holds Moscow to 105 of v0.4.2's 106 lines with nothing unserved; Berlin's tram 93 and Hong Kong's 751, 761P, 751P run whole. Saves wait in artifacts/trainworld/t3790/moscowfix until guianas stops writing data/packs.
   - Goal: mos (--force: one tram stop name), ber and hon (--force: three street names, same places) shipped for the next update; Saint Petersburg kept at its 123 lines with a keep list (it would grow to 151).
   - Other: notes/T-3790.md
-- T-3803 [P2] {L:edit-speed} Next edit waits behind the last edit's full state (taking, 2026-11-19, agent fullstate)
-  - Context: On a 2,647-station save the full state after an edit takes 0.55-1.5 s and the next edit waits behind it. Renames fixed 11-19 (e9cba56e: next-edit wait median 387 to 0 ms). Left: stops, track, stations. Plan: a cheaper full state first (cache placeFacilities per complex, trim rowsDelta, money record out of the state; 2-3 h, perhaps 30-40%), then the follow-up in pieces with a waiting edit first (4-6 h).
+- T-3803 [P2] {L:edit-speed} Next edit waits behind the last edit's full state
+  - Context: Renames fixed 11-19 (e9cba56e). The cheaper full state landed 11-20 (70845536, about 35% off): the next edit's wait on the 2,647-station save went from 580 to 333 ms median (844 ms p90), 81% of it still the previous edit's full state with no single hot spot left. Left: option 1, a waiting edit runs before the last edit's full state, in pieces (4-6 h).
   - Goal: An edit made right after another shows up within about 0.3 s on that save.
   - Other: notes/T-3803.md
 - T-3804 [P3] {L:edit-speed} Other worker work that holds edits up
