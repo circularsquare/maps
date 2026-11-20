@@ -147,6 +147,11 @@ export class NodeDrag {
   private onMove(e: MouseEvent) {
     const p = this.press;
     if (!p) return;
+    // the button was let go outside the window: no mouseup came, so the press ends here
+    if (!(e.buttons & 1)) {
+      void this.onUp();
+      return;
+    }
     const r = this.map.getContainer().getBoundingClientRect();
     const px = e.clientX - r.left, py = e.clientY - r.top;
     if (!this.drag) {

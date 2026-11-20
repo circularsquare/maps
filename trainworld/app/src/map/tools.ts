@@ -1185,6 +1185,10 @@ export class Tools {
     this.placing = true;
     const a = await edit({ op: "undo" }, true).finally(() => (this.placing = false));
     if (!a.ok) return this.reset();
+    // the undone segment's held state and early node are gone with it
+    if (this.held.length) this.client.placedNow();
+    this.held = [];
+    this.earlyNode = -1;
     this.start = prev;
     this.real.begin(prev.ring);
     this.street.begin([prev.lng, prev.lat]);

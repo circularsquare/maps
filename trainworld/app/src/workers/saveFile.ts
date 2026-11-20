@@ -811,6 +811,7 @@ export async function deleteSlot(key: string): Promise<void> {
   await req(s.delete(key));
   await req(s.delete(SYNC_PREFIX + key));
   await req(s.delete(AHEAD_PREFIX + key));
+  await req(s.delete(OLD_FRAME_PREFIX + key));
   // and its demand cache (T-328), backups (T-744) and copies kept aside as unreadable (T-743, T-3395)
   for (const k of await req(s.getAllKeys())) if (typeof k === "string" && (k.startsWith(`${DEMAND_PREFIX}${key}:`) || k.startsWith(`${BACKUP_PREFIX}${key}:`) || (k.startsWith(UNREADABLE_PREFIX) && k.endsWith(":" + key)))) s.delete(k);
   await done;
@@ -820,11 +821,20 @@ export async function deleteSlot(key: string): Promise<void> {
 // T-1827 kept deleted slots 30 days under `deleted:<ms>-<id>` (backups `backup:deleted:...`); Anita
 // removed it the same day (a deleted game should be gone for good). Anything it left is swept at start.
 const DELETED_PREFIX = "deleted:", DELETED_BACKUP = "backup:deleted:";
+/** `old-frame-<slot>`: the slot's save as it was before a load converted it (one per slot, replaced by the next
+ * conversion); it goes with its slot (`deleteSlot`, and `sweepDeleted` for any left behind) */
+export const OLD_FRAME_PREFIX = "old-frame-";
 export async function sweepDeleted(): Promise<void> {
   try {
     const s = await store("readwrite");
     const done = committed(s.transaction);
-    for (const k of await req(s.getAllKeys())) if (typeof k === "string" && (k.startsWith(DELETED_PREFIX) || k.startsWith(DELETED_BACKUP))) s.delete(k);
+    const keys = (await req(s.getAllKeys())).filter((k): k is string => typeof k === "string");
+    const slots = new Set(keys);
+    for (const k of keys) {
+      if (k.startsWith(DELETED_PREFIX) || k.startsWith(DELETED_BACKUP)) s.delete(k);
+      // the old-format copy of a slot that is no longer there (kept one per slot, deleted with it)
+      else if (k.startsWith(OLD_FRAME_PREFIX) && !slots.has(k.slice(OLD_FRAME_PREFIX.length))) s.delete(k);
+    }
     await done;
   } catch { /* storage unavailable */ }
 }
