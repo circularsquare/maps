@@ -830,8 +830,9 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3824 [P2] {L:schematic-rivers} {after:T-3358 prototype} Schematic ferries drawn after the water
   - Context: You, 11-20: "now that we're drawing ferries, it might be nice to draw ferries after drawing water so that their ports actually line up cloesr to the coastline".
   - Goal: In the schematic, ferry ports sit on the drawn coast and ferry routes run over drawn water.
-- T-3358 [P2] {L:schematic-rivers} Schematic river continuity (taking, 2026-11-19, agent riverroute)
-  - Context: Paused by you 2026-11-12: you want the river itself straightened like the lines; prototype 2 (no straightening near rivers) cut London's wrong-bank pairs from 97 to 27 but left the river raw. You raised it again 11-16 ("disconnected rivers") and 11-20. Now (11-20): a prototype routing each river after the layout as one even-width 0/45/90 path, stations held on their ground bank, lines crossed freely; a sheet of three versions for you to pick from.
+- T-3358 [P2] {L:schematic-rivers} {waits:Anita} Schematic river continuity
+  - Need from Anita: A, B or C on the rivers sheet (artifacts/trainworld/review/rivers-sheet.png)? Recommended: B, with lines left unstraightened only where B has no way through.
+  - Context: You want the river itself straightened like the lines (11-12), and named "disconnected rivers" (11-16). Prototype 3 (11-20, riverroute): each river routed after the layout as one even-width 0/45/90 path, stations held on their ground bank, lines crossed freely. On today's layout London's Thames goes from 6 pieces and 115 wrong pairs to 1 piece and 26 (all round North Greenwich and the Isle of Dogs); Harlem, Newtown Creek and Tuen Mun 0. Today London has 3 of 12 rivers in pieces, New York 5 of 112. About 6-9 h to land.
   - Goal: Rivers read as one straightened course each, even width, with stations on their own bank.
   - Other: You raised it again 2026-11-16 on the board: the pressing schematic issues are local, "disconnected rivers" and "cities getting squished too much". notes/T-3358.md
 - T-3354 [P3] {L:single-track} One-track platform jumps sides when dragged north-south
