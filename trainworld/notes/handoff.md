@@ -7,24 +7,19 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`. This f
 Diary: notes/handoff-log.md. Her local time is UTC-5.
 
 ## Next
-0. Live v0.4.4. Cap 14. 8800 = master = 7637e0e0 (~11:15, pushed). Landed
-   tonight by maps-60 [6ba449]: T-3809 ferry waypoints, T-3834, T-3832, T-3828, T-3358 rivers E (her look call),
-   T-3835 loops (loopchk passed), T-1738 Myanmar/Laos/Timor-Leste (Bhamo left), T-3833 + T-3824 coast and ferries
-   (07:30). Filed T-3837-T-3842. Review: review/rivers-e-london.png, review/coast-round-hk.png. Asked in chat,
-   unanswered: T-3809 text ack, 400 km per leg, T-3835 text ack. Ask a-2026-11-20-1: T-2216 island design.
-1. ~10:50: T-3763 Iraq (38) and Iran (84) shipped and committed (3990153a; its smoke 29/29 on main incl. T-3842);
-   T-3842 Burmese labels landed, mki/pgx relax dropped; T-3843 filed. ~11:15: T-3803 option 1 landed after
-   editdiag (its fix for a charge-split race; counts and money match HEAD); T-3844 filed; 8800 = 7637e0e0, smoke
-   passed on it.
-   Running, mine: gapfill (Opus, T-3764: the missing-country list, then Pakistan and Bangladesh; main tree). Runs
+0. Live v0.4.4. Cap 14. 8800 = master = 7637e0e0 (~11:15, pushed, smoke passed). Landed tonight by maps-60
+   [6ba449]: T-3809, T-3834, T-3832, T-3828, T-3358 rivers E, T-3835 loops, T-1738 (Bhamo left), T-3833 + T-3824,
+   T-3763 Iraq and Iran, T-3842 Burmese labels, T-3803 option 1 (after editdiag's fix). Filed T-3837-T-3844.
+   Review: review/rivers-e-london.png, review/coast-round-hk.png. Asked in chat, unanswered: T-3809 text ack, 400 km
+   per leg, T-3835 text ack. Ask a-2026-11-20-1: T-2216 island design.
+1. Running, mine: gapfill (Opus, T-3764: the missing-country list, then Pakistan and Bangladesh; main tree). Runs
    started ~11:25 (PK 196 rows port 6395, BD 142 rows port 6396, --no-join; gates serve a frozen app copy), gating
    ~2-3 h, then it messages before the join (no data/packs writes during it). Its uncommitted files so far: pipeline
    world_plan.py, admin_totals.py, borders.json (IN|PK 0), checks/country_preflight.py, checks/state_gaps.py, game
    zone-names.json and realms.json, notes/T-3764.md.
-  
 2. T-3395: 11-20 scan (pass 1, not done) found 0 new damage. Run `tools/ops/save_health.py` after the 11-21
    04:00 UTC scan; clean = close it (the two rev-1 games of ue83342ed78f8fc4c are old 11-19 damage).
-3. Up next: T-3804 after editfirst; T-2216 stages once she picks; T-3838, T-1376 retry, T-3764 (Pakistan, Bangladesh, Central Asia; Iran's plan_people rule touches its tiles);
+3. Up next: T-3804; T-2216 stages once she picks; after gapfill: T-3838, T-1376 retry, T-3843, rest of T-3764;
    T-1738 Bhamo; T-3836 (design for her).
 4. Next update: unpublished changelog c001-c015 plus tonight's; untranslated: T-3822's and T-3823's hover strings,
    diagramView.addCity; use the publish skill (review agent, sort, playtest list, translations, new zones image).
