@@ -26,6 +26,8 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 6. T-3781 waits for the next report's diagnosis. Steam (T-3729): her screenshots in artifacts/trainworld/steam.
 
 ## Her words
+- 11-20 ~05:20 UTC, to bed: "lets try to keep going through the night, continuing to run stuff if resources free
+  up". Picked rivers E (+ min-straighten, round caps; coastline T-3833 after); OK'd both global CLAUDE.md wordings.
 - 11-20 ~04:20 UTC: rivers: likes B's look, wants C's correctness: "C but just do like microstraightening ... and we
   could also round corners"; wants a zoomed-out Hong Kong Island frame. CLAUDE.md review: all changes yes; board
   changelog review is NOT the publish text OK; "next up" bullets occasionally and always after shipping an update.
