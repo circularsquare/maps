@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3832 [P3] {L:small-fixes} Lines gear part-ticked box shows a minus (2026-11-20): one shared .check input.some minus rule for the Lines gear and the schematic cities list. notes/T-3832.md.
 - T-3834 [P2] {L:small-fixes} A copied line leaves most periods empty (2026-11-20): copy_line zeroes every period row and the worker applies the new-line default headways and weekend share, as for a new line. notes/T-3834.md.
 - T-3809 [P3] {L:buses} Ferry waypoints without a port (2026-11-20): shift click on water adds a ferry waypoint, each leg routed on its own (fixes legs whose sea path leaves the two ports' box, and legs over 400 km); router no longer slows boats at piece joints. notes/T-3809.md.
 - T-3762 [P2] {L:new-countries} Guyana, Suriname, French Guiana and the rest of the Caribbean (2026-11-19): 19 zones shipped (Guyana, Suriname, French Guiana, Guadeloupe, Martinique, the Virgin Islands, Saint Kitts and Nevis, Sint Maarten and Saint-Martin, the Caribbean Netherlands, Montserrat, Anguilla, Turks and Caicos, Saint-Barthelemy); smoke and two city loads passed (carwrap). notes/T-3762.md.

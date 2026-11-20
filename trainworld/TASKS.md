@@ -808,8 +808,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Goal: A station on a loop never shows or counts as a turn, unless trains really turn there.
 - T-3836 [P3] {L:real-networks} Real network names in the player's language
   - Context: In-game feedback 11-20 (1795147183-e2778951, Japanese): on a real network, station and line names should follow the game's language. OSM often has name:ja and name:en. A design call for you: which languages, and what when a name has none. Reach: players on real networks in another language.
-- T-3832 [P3] {L:small-fixes} Lines gear part-ticked box shows a minus
-  - Context: The schematic's cities list (T-3826) marks a part-ticked region with a minus; the Lines tab gear's part-filled box has none. Same look in both.
 - T-3828 [P3] {L:timetables} Pinch zoom for the timetable on touch
   - Context: T-3817 zooms the timetable with the scroll wheel; a phone only gets the opening view. Reach: phone players opening timetables.
 - T-3824 [P2] {L:schematic-rivers} {after:T-3358 prototype} Schematic ferries drawn after the water
