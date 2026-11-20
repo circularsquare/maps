@@ -383,8 +383,8 @@ Full design, numbers and sources: `notes/T-008.md`.
   upkeep of ground rail, a quarter of what hills add (T-3004) and half what water adds (T-2928). It may run at ground level over water (T-3106, "Water, bridges and ramps"). With Tram picked, Snap to
   streets (on by default, remembered; Ctrl flips it while held, and in the
   tram tool with the switch on, Ctrl pauses the snap and the segment is free, T-3608) lays it, the streets a tram may follow tinted green over the map while it is on
-  (T-2998; the bus tool's teal hint, without motorways): a first click within 100 m of a street lands on it; the route to
-  the pointer follows the basemap's streets (no motorways), shortest with 200 m added for each turn over 30
+  (T-2998; the bus tool's teal hint, motorways included since T-3831): a first click within 100 m of a street lands on it; the route to
+  the pointer follows the basemap's streets and motorways, their bridges and tunnels too (T-3831), shortest with 200 m added for each turn over 30
   degrees, a turn back of 135 to 165 degrees costing 200 m rising to 400 m (T-3035) and none over 165 (nor any over 135
   at a chained start), never turning back within 60 m of street (no U-turn across a divided road's median), from and to the 12 nearest streets by each end; carrying on from the street route placed last, it
   leaves its start as a junction turn from the way that route came, so never back along it (T-2997). The street graph
@@ -2236,7 +2236,7 @@ and between two clicks the route follows the basemap's roads, motorways and thei
 included (T-2469), a one-way street only the way it runs when Settings > "Buses obey one-way streets" is ticked, off by default (T-3480; ui-building.md "Drawing a bus line"); the app refuses a point they do not reach (T-2451, T-2467). Any road in the basemap data
 counts (T-3172): streets of every class, service ways of every kind, tracks, bus guideways and pedestrian
 streets. Footways, cycleways, steps, bridleways, platforms, raceways, piers, rail and ferries do not. Street
-trams use the same roads without motorways. It shares lines' ids, schedules (buses or a headway per
+trams use the same roads, motorways too (T-3831). It shares lines' ids, schedules (buses or a headway per
 demand level), trips, the boarding account and the fare curve; a bus is one 12 m vehicle.
 
 - **The route** is points, each with two bits: a corner (the player clicked it) and a road stretch

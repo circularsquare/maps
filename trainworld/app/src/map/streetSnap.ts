@@ -171,7 +171,7 @@ export class StreetSnap {
 
   /** Where a first click at (lng, lat) goes: onto the street within reach, or where it is. */
   landing(lng: number, lat: number): [number, number] {
-    const p = this.on ? this.roads.street({ lng, lat }, this.rail) : null;
+    const p = this.on ? this.roads.street({ lng, lat }, true) : null;
     return p ? [p.lng, p.lat] : [lng, lat];
   }
 
@@ -209,7 +209,7 @@ export class StreetSnap {
   move(px: number, py: number, lng: number, lat: number, onTrack: boolean, now = false) {
     if (!this.on) return;
     if (!this.from) {
-      const p = this.roads.street({ lng, lat }, this.rail);
+      const p = this.roads.street({ lng, lat }, true);
       this.ringAt = p ? [p.lng, p.lat] : null;
       return;
     }
@@ -349,7 +349,7 @@ export class StreetSnap {
     }
     const c = this.came;
     const turnM = this.rail ? railTurnM(this.railOpts().design) : TURN_M;
-    const leg = this.roads.tramLeg({ lng: f[0], lat: f[1] }, { lng: s.lng, lat: s.lat }, turnM, (TURN_DEG * Math.PI) / 180, (BACK_DEG * Math.PI) / 180, BACK_M, c && { lng: c[0], lat: c[1] }, (HARD_DEG * Math.PI) / 180, this.rail);
+    const leg = this.roads.tramLeg({ lng: f[0], lat: f[1] }, { lng: s.lng, lat: s.lat }, turnM, (TURN_DEG * Math.PI) / 180, (BACK_DEG * Math.PI) / 180, BACK_M, c && { lng: c[0], lat: c[1] }, (HARD_DEG * Math.PI) / 180, true);
     // tiles still landing: asked again when they have (`landed`)
     if (!leg.ready) {
       setTimeout(() => this.redraw(), SLOW_MS + 20);

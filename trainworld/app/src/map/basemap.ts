@@ -615,7 +615,7 @@ const ROAD_HINTS = {
   // T-3014: both a quarter wider and from a zoom further out (the road tiles carry the minor streets from 12, so
   // at 11 the hint is the major ones)
   bus: { id: "bus_roads_hint", filter: () => busRoadFilter(), colour: ["#1a9e94", "#3fd0c4"], opacity: [0.55, 0.38], minzoom: 11, width: 1.25 },
-  tram: { id: "tram_roads_hint", filter: () => busRoadFilter(false), colour: ["#3f9a1c", "#86d65a"], opacity: [0.55, 0.38], minzoom: 11, width: 1.25 },
+  tram: { id: "tram_roads_hint", filter: () => busRoadFilter(), colour: ["#3f9a1c", "#86d65a"], opacity: [0.55, 0.38], minzoom: 11, width: 1.25 },
   // T-3129: the main roads rail track snaps to
   rail: { id: "rail_roads_hint", filter: () => railRoadFilter(), colour: ["#c2661a", "#f0a050"], opacity: [0.6, 0.45], minzoom: 9, width: 1.5 },
 } as const;
