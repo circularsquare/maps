@@ -795,6 +795,13 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your pad, 2026-11-17: with many pull requests, applying them is clunky, and contributors can't see what we're already working on. You chose 2026-11-17: "lets work on making the public repo the real one. we can do it some time after 0.4 publish." About 1-2 days: private notes and tooling split out, every commit public.
   - Goal: The public repo is where trainworld is developed; pull requests merge there directly, and nothing private lands in it. The design goes to you before it is built.
   - Other: notes/T-2913.md
+- T-3829 [P3] {L:buses} Show fast and slow roads when drawing a bus route
+  - Context: Your pad, 11-20, for the bus rework: "we should highlight fast speed roads and low speed roads differently". Open-source issue #27 asks the same ("No way to tell which roads are trunk when drawing a bus route").
+- T-3830 [P3] {L:buses} Bus stations a player can build
+  - Context: Your pad, 11-20, for the bus rework: "bus stations, constructible, that look kinda like train and tram stations so a more permanent looking thing can be erected, and like its connections feel more concrete / it feels like part of a complex (slight waiting/boarding bonus or something maybe)".
+  - Goal: A design for you first: look, cost, joining a complex, and whether a boarding bonus comes with it.
+- T-3831 [P3] {L:buses} Trams and buses on highways
+  - Context: Your pad, 11-20, for the bus rework: "we should probably let trams go on highways, also buses".
 - T-3378 [P2] {L:buses} Bus and tram balance, BRT
   - Context: Players say buses are weak and metros and trams too strong. The bus's weak spot is its boarding cost; street tram acts like light rail.
   - Goal: A design for BRT or busways and slower street trams, for you first.
