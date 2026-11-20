@@ -821,6 +821,9 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Ports, industrial estates and airports with no residents stay dark (Tuas and Jurong were fixed by hand 11-13). Half done: units keep outlines with 0.2 km2 of built surface.
   - Goal: A free unit under the floor sharing half its land border with one metro joins it, after a worldwide count.
   - Other: notes/T-3287.md
+- T-3824 [P2] {L:schematic-rivers} {after:T-3358 prototype} Schematic ferries drawn after the water
+  - Context: You, 11-20: "now that we're drawing ferries, it might be nice to draw ferries after drawing water so that their ports actually line up cloesr to the coastline".
+  - Goal: In the schematic, ferry ports sit on the drawn coast and ferry routes run over drawn water.
 - T-3358 [P2] {L:schematic-rivers} Schematic river continuity (taking, 2026-11-19, agent riverroute)
   - Context: Paused by you 2026-11-12: you want the river itself straightened like the lines; prototype 2 (no straightening near rivers) cut London's wrong-bank pairs from 97 to 27 but left the river raw. You raised it again 11-16 ("disconnected rivers") and 11-20. Now (11-20): a prototype routing each river after the layout as one even-width 0/45/90 path, stations held on their ground bank, lines crossed freely; a sheet of three versions for you to pick from.
   - Goal: Rivers read as one straightened course each, even width, with stations on their own bank.
