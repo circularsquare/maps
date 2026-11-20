@@ -140,7 +140,7 @@ fn tram_between_rail() -> (TrackApi, [u32; 3]) {
     (a, st)
 }
 
-/// T-3889: a tram line runs from a tram stop onto rail track to a rail station, at its 80 km/h
+/// T-3889: a tram line runs from a tram stop onto rail track to a rail station, at its 75 km/h
 /// there, with tram cars from the tram fleet; a train line between the two rail stations, which only
 /// tram track joins, is refused, saying why, until it stops at the tram stop (a tram line then).
 #[test]
@@ -155,7 +155,7 @@ fn a_tram_line_runs_onto_rail_track_and_a_train_line_keeps_off_tram_track() {
     let l = &a.w.svc.lines[tram as usize];
     assert!(l.running);
     let top = l.runs[0].limits.iter().map(|x| x[1]).fold(0.0, f64::max);
-    assert!((top - 80.0 / 3.6).abs() < 1e-9, "top {} km/h", top * 3.6);
+    assert!((top - 75.0 / 3.6).abs() < 1e-9, "top {} km/h", top * 3.6);
     assert!(a.trams_needed() > 0 && a.cars_needed() == 0);
 
     let train = a.new_line_id();

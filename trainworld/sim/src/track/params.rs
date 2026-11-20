@@ -77,7 +77,7 @@ pub const RAMP_PER_LEVEL: f64 = LEVEL_H / MAX_GRADE;
 /// for about 65 km/h at 200 m (DECISIONS.md).
 pub const RAMP_KMH_PER_M: f64 = 0.8;
 /// T-3027: the shortest ramp per level where there is no room for a longer one, m: 5% on rail
-/// (128 km/h), 8% on tram track (80).
+/// (128 km/h), 8% on tram track (80, over its 75 cap).
 pub const RAMP_FLOOR: f64 = 160.0;
 pub const TRAM_RAMP_FLOOR: f64 = 100.0;
 
@@ -257,7 +257,7 @@ pub const TRACK_KINDS: usize = 4;
 pub const TRAM_MIN_RADIUS: f64 = 18.0;
 
 /// Off-street tram track's cap, km/h, and a tram's top speed on any track (T-3889).
-pub const TRAM_V_CAP_KMH: f64 = 80.0;
+pub const TRAM_V_CAP_KMH: f64 = 75.0;
 
 /// T-3004: the share of the terrain surcharge tram track pays, street and off-street (Anita, 2026-11-10).
 pub const TRAM_TERRAIN: f64 = 0.25;
@@ -691,7 +691,7 @@ mod kind_tests {
         assert_eq!(s.level_mult, [1.6, 1.2, 0.6, 0.1, 0.6, 1.1, 1.6]);
         assert_eq!(t.level_mult, [1.6, 1.2, 0.6, 0.5, 0.6, 1.1, 1.6]);
         assert_eq!((s.upkeep, t.upkeep), (0.6, 1.0));
-        assert_eq!((s.v_cap_kmh, t.v_cap_kmh), (60.0, 80.0));
+        assert_eq!((s.v_cap_kmh, t.v_cap_kmh), (60.0, 75.0));
         assert!(!s.road_crossings && !t.road_crossings);
         assert!(s.family == 1 && t.family == 1);
     }

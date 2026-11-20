@@ -69,14 +69,14 @@ fn a_short_ramp_is_steeper_and_slower_down_to_the_floor() {
     let e = ends(&a, 0.0, 170.0, 0, 1);
     assert_eq!(a.add_route(&e, &[], 2, false), 0, "{}", a.issue_kinds());
     assert!((built(&a).0 - 136.0).abs() < 1e-6, "{}", built(&a).0);
-    // tram track: 100 m a level, 80 km/h
+    // tram track: 100 m a level, 80 km/h by the ramp rule, held to the 75 cap
     let mut a = api();
     a.set_route_kind(3);
     let e = ends(&a, 0.0, 600.0, 0, 1);
     assert_eq!(a.add_route(&e, &[], 2, false), 0, "{}", a.issue_kinds());
     let (slow, ramps) = built(&a);
     assert_eq!(ramps, vec![100]);
-    assert!((slow - 80.0).abs() < 1e-6);
+    assert!((slow - 75.0).abs() < 1e-6);
 }
 
 #[test]

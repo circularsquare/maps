@@ -71,7 +71,7 @@ impl Network {
         if self.edge_crossover[e as usize] { V_CROSSOVER } else { self.edge_kind[e as usize].v_cap() }
     }
     /// A line's trains' top speed, m/s: high-speed trains or ordinary ones (T-817), trams at the tram
-    /// track's 80 km/h wherever they run (T-3889).
+    /// track's 75 km/h wherever they run (T-3889).
     pub fn line_top(&self, l: u32) -> f64 {
         if self.line_fast[l as usize] { V_HSR } else if self.line_tram(l) { TrackKind::Tram.v_cap() } else { V_TOP }
     }
