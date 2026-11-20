@@ -812,17 +812,12 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Goal: A station on a loop never shows or counts as a turn, unless trains really turn there.
 - T-3836 [P3] {L:real-networks} Real network names in the player's language
   - Context: In-game feedback 11-20 (1795147183-e2778951, Japanese): on a real network, station and line names should follow the game's language. OSM often has name:ja and name:en. A design call for you: which languages, and what when a name has none. Reach: players on real networks in another language.
-- T-3824 [P2] {L:schematic-rivers} {after:T-3358 prototype} Schematic ferries drawn after the water
+- T-3824 [P2] {L:schematic-rivers} Schematic ferries drawn after the water
   - Context: You, 11-20: "now that we're drawing ferries, it might be nice to draw ferries after drawing water so that their ports actually line up cloesr to the coastline".
   - Goal: In the schematic, ferry ports sit on the drawn coast and ferry routes run over drawn water.
-- T-3833 [P2] {L:schematic-rivers} {after:T-3358} Schematic coastline with no sharp corners
+- T-3833 [P2] {L:schematic-rivers} Schematic coastline with no sharp corners
   - Context: You, 11-20: spots along the coastline have sharp corners, "sometimes it looks like where a round water has taken a bite out of land and left a tapering corner ... it would be cool if we got the entire coastline, the entire surface between land and water, to not have any perfect corners".
   - Goal: Every land and water edge in the schematic has rounded corners, tapering slivers included.
-- T-3358 [P2] {L:schematic-rivers} Schematic river continuity (taking, 2026-11-19, agent riverbuild)
-  - Context, 11-20: you picked E ("yeah i like E"): today's lines, straightened hop by hop only round the stations the routed river finds on the wrong bank; plus a light straightening of the river even where space is tight, so it never zigzags (Hong Kong's Tuen Mun was "a little ugly"), and round caps on river ends.
-  - Context: You want the river itself straightened like the lines (11-12), and named "disconnected rivers" (11-16). Prototype 3 (11-20, riverroute): each river routed after the layout as one even-width 0/45/90 path, stations held on their ground bank, lines crossed freely. On today's layout London's Thames goes from 6 pieces and 115 wrong pairs to 1 piece and 26 (all round North Greenwich and the Isle of Dogs); Harlem, Newtown Creek and Tuen Mun 0. Today London has 3 of 12 rivers in pieces, New York 5 of 112. About 6-9 h to land.
-  - Goal: Rivers read as one straightened course each, even width, with stations on their own bank.
-  - Other: You raised it again 2026-11-16 on the board: the pressing schematic issues are local, "disconnected rivers" and "cities getting squished too much". notes/T-3358.md
 - T-3354 [P3] {L:single-track} One-track platform jumps sides when dragged north-south
   - Context: Not reproduced 2026-11-16 (bug-a): a station node's heading stays put when dragged, so the fixed axis never flips in the sim. Needs the exact drag that shows it.
   - Other: About 1 h. notes/T-3332.md.

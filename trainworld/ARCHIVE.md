@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3358 [P2] {L:schematic-rivers} Schematic river continuity (2026-11-20): option E built: each crossed river routed after the layout as one 0/45/90 band, light straightening that never moves a station across, a second layout pass for stations left on the wrong bank; 0 wrong pairs in central London, Harlem and Tuen Mun. notes/T-3358.md.
 - T-3828 [P3] {L:timetables} Pinch zoom for the timetable on touch (2026-11-20): pinch zoom about the fingers' midpoint through the wheel's zoom step; touch-action keeps the page from zooming; one finger still scrolls. notes/T-3828.md.
 - T-3832 [P3] {L:small-fixes} Lines gear part-ticked box shows a minus (2026-11-20): one shared .check input.some minus rule for the Lines gear and the schematic cities list. notes/T-3832.md.
 - T-3834 [P2] {L:small-fixes} A copied line leaves most periods empty (2026-11-20): copy_line zeroes every period row and the worker applies the new-line default headways and weekend share, as for a new line. notes/T-3834.md.
