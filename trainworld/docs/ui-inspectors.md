@@ -1102,8 +1102,10 @@ title is "Trip" with no line under it naming the ends: the map marks them [T-125
   to and from the stations, muted, since the market knows no single walk), Fare, Time (station to
   station), then [T-1902] "Trips possible by train" (the share of the trips on pairs with a
   station in reach at both ends; no hover), Effective time (the pairs' felt cost, averaged over the
-  pairs the train serves and their riders' income groups; no hover, since an average over pairs has
-  no one equation), then "Car on the same trips" (or "Plane", or "Car or plane" where the plane has
+  pairs the train serves by all their trips, not their riders, and over their income groups; its
+  hover is the main route's own equation [T-3404], ending at that route's sum, then "The sum is this
+  route's own. The effective time is averaged over the 6 km areas at the two ends, by their trips."
+  [T-3822]), then "Car on the same trips" (or "Plane", or "Car or plane" where the plane has
   0.5% of the trips or more: the other ways as the choice weighs them together, the reference minus
   ln(rest) over the scale, over the same pairs and riders; hover "Effective time by car on trips
   possible by train."), so the train's share reads as its share of the trips possible by train
@@ -1193,11 +1195,15 @@ title is "Trip" with no line under it naming the ends: the map marks them [T-125
   after the fare, "transfer fare $1.00 × 3", where the route changes and one is set [T-1801], two
   changes or more as "changes 2 × 2" [T-717]; a drive to the station is its parts [T-915],
   "Starting the drive 15 + drive 9.2 × 2.66 + parking at the station 7 + parking at home 3 + car
-  $2.85 × 3", or "drop-off 10" where that is cheaper than parking; the
-  last term is what the model's pooled figure, over every station and route people use, is below
-  this route's sum, so the equation always adds to the row, and one plain line under the equation
-  says choice of routes is the time saved by having several ways to go; the terms are the worker's
-  perceived minutes, `routeTerms` in `game/trip.ts`), then one sentence with the share of the
+  $2.85 × 3", or "drop-off 10" where that is cheaper than parking; then two terms take the
+  route's sum to the row, so the equation always adds up [T-3822]: **first train to come** (bus,
+  tram, boat or ride by the route's vehicles), its station pair's cost less the route's sum, plus
+  or minus, since the pair's strategy is the expected cost over whichever useful departure comes
+  first; and **choice of routes**, the model's logsum over every station pair people use less that
+  pair's cost, never a plus. Each shows from 0.05 min, with one plain line under the equation
+  ("People board the first train to come, so some ride other routes from the same stations.",
+  "Choice of routes is the time saved by having several ways to go."); the terms are the worker's
+  perceived minutes, `routeTerms` and `pairCost` in `game/trip.ts`), then one sentence with the share of the
   trip's train users on the route and the same trains from other platforms or walks added ("65% of
   train users between these places take this exact route."), with up to four
   "Other routes" and their shares, then a "Smaller routes" row with what is left [T-709]; the

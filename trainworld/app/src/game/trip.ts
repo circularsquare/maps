@@ -470,15 +470,25 @@ export function routeCrowding(r: TripRoute) {
 
 /** What the rides that waited for room run, for the words of that wait: their vehicle where it is one kind,
  * "ride" where the row sums rides of different kinds. */
-export function roomVehicle(r: TripRoute): Vehicle | "ride" {
+export const roomVehicle = (r: TripRoute): Vehicle | "ride" => ridesVehicle(r.legs.filter((l) => l.kind === "ride" && l.fullWaitMin >= 0.05));
+
+/** What a route's rides run: their vehicle where it is one kind, else "ride". */
+export const routeVehicle = (r: TripRoute): Vehicle | "ride" => ridesVehicle(r.legs.filter((l) => l.kind === "ride"));
+
+function ridesVehicle(rides: TripLeg[]): Vehicle | "ride" {
   const kinds = new Set<Vehicle>();
-  for (const l of r.legs) {
-    if (l.kind !== "ride" || l.fullWaitMin < 0.05) continue;
+  for (const l of rides) {
     const st = world.peek()?.lineStats[l.line];
     kinds.add(st ? vehicleOf(st) : "train");
   }
   return kinds.size === 1 ? [...kinds][0] : kinds.size === 0 ? "train" : "ride";
 }
+
+/** T-3822: a station pair's cost as the model counts it, perceived minutes: the walks (or the drive) at both ends,
+ * the strategy between the stations and the base fare. The strategy is the expected cost over whichever useful
+ * departure comes first, so it can be above or below any one route's own sum. */
+export const pairCost = (t: Pick<TripPeriod, "baseFarePerceived">, p: TripPair): number =>
+  p.accessPerceived + p.egressPerceived + p.strategy + t.baseFarePerceived;
 
 /** One term of a route's perceived total: what it is, its real amount (minutes, dollars for the
  * fare, or a count of changes) with the weight it counts at, and its perceived minutes. */

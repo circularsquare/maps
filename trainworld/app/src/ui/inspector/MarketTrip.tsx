@@ -62,8 +62,9 @@ function carEquation(c: CarCost): string {
 }
 
 /** The train's effective time as an equation (T-3404): the main route's terms in the order of the rows, with
- * the walks as the felt minutes the market knows them by, and the model's figure, which pools every route
- * the riders use, as the last term. */
+ * the walks as the felt minutes the market knows them by, adding up to the route's own sum. T-3822: the
+ * model's figure is the mean over every trip between the two ends, by trips, not riders, on zone pairs that
+ * each pool their own stations and routes, so no term takes the route to it; a line says what it is. */
 function trainEquation(t: MarketPeriod, r: TripRoute, sc: number, w: number): string {
   const felt = { ...t, pairs: t.pairs.map((p) => ({ ...p, accessMin: p.accessPerceived, egressMin: p.egressPerceived })) };
   const terms: Term[] = routeTerms(felt, r).filter((x) => x.perceived !== 0 || x.unit === "usd").map((x) => {
@@ -78,10 +79,7 @@ function trainEquation(t: MarketPeriod, r: TripRoute, sc: number, w: number): st
       ...(x.unit === "usd" ? { usd: true } : {}),
     };
   });
-  const rest = t.railPerceived - terms.reduce((s, x) => s + x.perceived, 0);
-  // i18n-ignore: term id
-  if (Math.abs(rest) >= 0.05) terms.push({ label: termLabel("choice of routes"), real: "", weight: 1, perceived: rest });
-  return equation(terms, t.railPerceived) + (Math.abs(rest) >= 0.05 ? "\n" + tr("tripInspector.choiceOfRoutes") : "");
+  return `${equation(terms)}\n${tr("marketTrip.routeOwn")}`;
 }
 
 /** By car: the drive, its running costs, parking, any crossing, and the effective time. `parts`

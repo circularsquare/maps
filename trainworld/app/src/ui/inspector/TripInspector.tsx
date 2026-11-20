@@ -10,7 +10,7 @@ import { modeColours } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
 import { purposeName, purposeWords, type PurposeFilter } from "../../game/purposes";
 import { WALK_KMH } from "../../game/walks";
-import { baseFareOf, cityMinPerUsd, countedPeople, countsTrain, openRoute, routeCrowding, roomVehicle, routeLabel, routeTerms, routeTotals, stationName, tripOpenedFrom, tripPeriod, tripView, wholePeople, type TripMix, type TripPeriod, type TripRoute } from "../../game/trip";
+import { baseFareOf, cityMinPerUsd, countedPeople, countsTrain, openRoute, pairCost, routeCrowding, roomVehicle, routeLabel, routeTerms, routeTotals, routeVehicle, stationName, tripOpenedFrom, tripPeriod, tripView, wholePeople, type TripMix, type TripPeriod, type TripRoute } from "../../game/trip";
 import { purposeFilter, selection, shownDayPhrase } from "../../game/ui";
 import { linesById, stationNames, world } from "../../game/world";
 import { lowerWord, t as tr, tRich, tSeries } from "../../i18n";
@@ -41,8 +41,10 @@ function NoRail({ t }: { t: TripPeriod }) {
 const trips = (n: number, f: PurposeFilter) => tripsAmount(count(n), n, f);
 
 /** The effective time hover (T-699), the train's: the terms are the route's (the worker's perceived
- * minutes); the model's figure pools every station and route people use, so it is lower than the
- * main route's sum by a last term. `pooled` false: the route's own sum alone (T-870). */
+ * minutes), then two that take it to the model's figure (T-3822): its station pair's cost less its own
+ * sum, since riders board whichever useful departure comes first (either sign), and the choice of
+ * routes, the logsum over every station pair people use less that pair's cost (never a plus).
+ * `pooled` false: the route's own sum alone (T-870). */
 function trainEquation(t: TripPeriod, r: TripRoute, pooled = true): string {
   const terms: Term[] = routeTerms(t, r).filter((x) => x.perceived !== 0 || x.unit === "usd").map((x) => ({
     label: termLabel(x.id, x.vehicle),
@@ -52,10 +54,23 @@ function trainEquation(t: TripPeriod, r: TripRoute, pooled = true): string {
     ...(x.unit === "usd" ? { usd: true } : {}),
   }));
   if (!pooled) return equation(terms);
-  const rest = t.railPerceived - terms.reduce((s, x) => s + x.perceived, 0);
-  // i18n-ignore: term id
-  if (Math.abs(rest) >= 0.05) terms.push({ label: termLabel("choice of routes"), real: "", weight: 1, perceived: rest });
-  return equation(terms, t.railPerceived) + (Math.abs(rest) >= 0.05 ? "\n" + tr("tripInspector.choiceOfRoutes") : "");
+  const pair = t.pairs[r.pair];
+  const own = terms.reduce((s, x) => s + x.perceived, 0);
+  const first = pair ? pairCost(t, pair) - own : 0;
+  const choice = t.railPerceived - own - first;
+  const vehicle = routeVehicle(r);
+  const lines: string[] = [];
+  if (Math.abs(first) >= 0.05) {
+    // i18n-ignore: term id
+    terms.push({ label: termLabel("first to come", vehicle), real: "", weight: 1, perceived: first });
+    lines.push(tr("tripInspector.firstToCome", { vehicle }));
+  }
+  if (Math.abs(choice) >= 0.05) {
+    // i18n-ignore: term id
+    terms.push({ label: termLabel("choice of routes"), real: "", weight: 1, perceived: choice });
+    lines.push(tr("tripInspector.choiceOfRoutes"));
+  }
+  return [equation(terms, t.railPerceived), ...lines].join("\n");
 }
 
 /** The real minutes of a route as an equation: "Walk 8 + wait 3 + ride 6 = 17 min". */

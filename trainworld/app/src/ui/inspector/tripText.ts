@@ -80,6 +80,7 @@ const TERM_KEYS: Record<string, MessageKey> = {
   change: "tripText.termChange",
   fare: "tripText.termFare",
   "transfer fare": "tripText.termTransferFare",
+  "first to come": "tripText.termFirstToCome",
   "choice of routes": "tripText.termChoiceOfRoutes",
   parking: "tripText.termParking",
   ownership: "tripText.termOwnership",
