@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3870 [P2] {L:small-fixes} Lines gear columns above cities, tighter city rows (2026-11-20): popover order Show, Columns, Cities; Cities heading gap 4 to 6 px, city rows 6 to 4 px.
 - T-3867 [P2] {L:board} Board card says which task it waits on (2026-11-20): a waiting task's card has a Waiting on section: each task id linked with its title (or done), phrases as written.
 - T-3845 [P2] {L:buses} Ferry route drawn port, waypoints, then port (2026-11-20): after a port, shift click on water appends a waypoint and routes that leg; the next port routes only from the last point; Edit route keeps the least-distance insert; Ma Liu Shui to Sai Kung builds as A, two waypoints, B. notes/T-3845.md.
 - T-3847 [P2] {L:small-fixes} New players start on the legacy time buttons (2026-11-20): no stored choice and no trainworld-ui or save-slot key in the browser = legacy buttons; otherwise the stored choice or the new bar. notes/T-3847.md.

@@ -849,8 +849,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Ports, industrial estates and airports with no residents stay dark (Tuas and Jurong were fixed by hand 11-13). Half done: units keep outlines with 0.2 km2 of built surface.
   - Goal: A free unit under the floor sharing half its land border with one metro joins it, after a worldwide count.
   - Other: notes/T-3287.md
-- T-3870 [P2] {L:small-fixes} Lines gear columns above cities, tighter city rows (taking, 2026-11-20, agent gearlayout)
-  - Context: You, 11-20: "in the lines view gear where we can set which cities to show we should put the columns above the list of cities. also for cities, the gap between 'Cities' and the first city is smaller than the gap between each city. lets lower the gap between each city and raise the gap between 'Cities' and the first city, flipping their sizes."
 - T-3841 [P3] {L:cleanup} Agent report inbox takes in non-reports
   - Context: `tools/reports.py`'s hook files "final-text" entries that aren't agent reports: an agent's compaction summary (r-f11676a4, editfirst, 11-20) and lines that read as your chat replies in the orchestrator's tab (r-a5f08c93 "yes purge it, leave resend on free"). Each wakes the orchestrator for nothing.
   - Goal: Only a subagent's final report is filed.
