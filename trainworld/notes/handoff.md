@@ -7,16 +7,13 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`. This f
 Diary: notes/handoff-log.md. Her local time is UTC-5.
 
 ## Next
-0. Live v0.4.4. Cap 14. 8800 = master = 7637e0e0 (~11:15, pushed, smoke passed). Landed tonight by maps-60
-   [6ba449]: T-3809, T-3834, T-3832, T-3828, T-3358 rivers E, T-3835 loops, T-1738 (Bhamo left), T-3833 + T-3824,
-   T-3763 Iraq and Iran, T-3842 Burmese labels, T-3803 option 1 (after editdiag's fix). Filed T-3837-T-3844.
-   Asked in chat, unanswered: 400 km per leg (T-3809's strings change with T-3845).
-1. Running, mine (relaunched 13:20 after the restart): gapfill (Opus, T-3764, main tree: JOIN of 338 PK+BD rows
-   started ~13:20, ~1 h, pid 9092, log artifacts/trainworld/t3764-join.log; no data/packs writes or plain 8800
-   rebuild until it ends; its uncommitted pipeline, checks, game json and notes
-   files are its own), riverfix (Opus, T-3839, her river report + 2 board screenshots, Vite 6152), ferryorder
-   (Sonnet, T-3845, 6153), ttquiet (Sonnet, T-3846, 6154), islands1 (Opus, T-2216 stage 1 rule A, 6155; risky:
-   fresh Sonnet checker before landing). One tree each.
+0. Live v0.4.4. Cap 14. 8800 = 7637e0e0 (smoke passed). Since: T-3846 landed (b9874d89, not on 8800). Open in
+   chat: 400 km per leg (T-3809's strings change with T-3845).
+1. Running, mine: gapfill (Opus, T-3764, main tree: JOIN of 338 PK+BD rows from ~13:20, pid 9092, log
+   artifacts/trainworld/t3764-join.log; no data/packs writes or plain 8800 rebuild until it ends; its uncommitted
+   pipeline, checks, game json, notes files are its own), riverfix (Opus, T-3839, 6152), ferryorder (Sonnet, T-3845,
+   6153), islands1 (Opus, T-2216 stage 1, 6155; fresh Sonnet checker before landing), legacytime (Sonnet, T-3847,
+   6156), todoreview (Sonnet, main tree TASKS.md only). One tree each.
 2. T-3395: 11-20 scan (pass 1, not done) found 0 new damage. Run `tools/ops/save_health.py` after the 11-21
    04:00 UTC scan; clean = close it (the two rev-1 games of ue83342ed78f8fc4c are old 11-19 damage).
 3. Up next: T-3804; T-2216 stages 2-3 after stage 1 (stage 0 is T-3838); after gapfill: T-3838, T-1376 retry, T-3843, rest of T-3764;
