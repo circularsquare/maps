@@ -807,6 +807,9 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Ports, industrial estates and airports with no residents stay dark (Tuas and Jurong were fixed by hand 11-13). Half done: units keep outlines with 0.2 km2 of built surface.
   - Goal: A free unit under the floor sharing half its land border with one metro joins it, after a worldwide count.
   - Other: notes/T-3287.md
+- T-3841 [P3] {L:cleanup} Agent report inbox takes in non-reports
+  - Context: `tools/reports.py`'s hook files "final-text" entries that aren't agent reports: an agent's compaction summary (r-f11676a4, editfirst, 11-20) and lines that read as your chat replies in the orchestrator's tab (r-a5f08c93 "yes purge it, leave resend on free"). Each wakes the orchestrator for nothing.
+  - Goal: Only a subagent's final report is filed.
 - T-3840 [P3] {L:line-rates} Loop stop list three laps long after a leg station click
   - Context: Found by T-3835: clicking a station on one leg of a one-way pair into a both-ways circle makes the line's stop list three laps long (before T-3835 the return run ran nine laps). Reach: few, loops over one-way pairs.
   - Other: notes/T-3835.md
