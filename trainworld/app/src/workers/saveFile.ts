@@ -136,7 +136,7 @@ export interface SaveHeader {
   shapes?: Record<string, LineShape>;
   /** T-3420: the ids of the lines the player hid on the map; absent for none (older saves too) */
   hidden?: string[];
-  /** T-3409: the zones the schematic is of; absent for the whole network (older saves too) */
+  /** T-3409: the zones the schematic is of; absent for the whole network (older saves too); `[NO_CITIES]` for none (T-3886) */
   schematic?: string[];
   /** T-728: absent in older saves, read as "normal" */
   mode?: GameMode;
@@ -1121,3 +1121,6 @@ export async function leaseSlot(key: string, steal = false): Promise<SlotLease |
     }).catch((err) => { if (granted) lose(); else reject(err); });
   });
 }
+
+/** T-3886: the schematic's saved choice when every city is unticked; an empty choice is the whole network */
+export const NO_CITIES = "none";

@@ -61,6 +61,7 @@ import { THIN_BOX_PAD } from "./busGraph";
 import { busRuns } from "./cut";
 import { stationsById, stopsById } from "../game/world";
 import { diagramCities, diagramCitiesLoads } from "../game/diagramCities";
+import { NO_CITIES } from "../workers/saveFile";
 import { stationZone } from "../game/listScope";
 import { zonesLoaded } from "../game/zones";
 
@@ -703,7 +704,11 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
       if (!covered && waitingFor.some((p) => p.graph.key.some((k) => q.keys.has(k)))) list.push(q);
       else if (!keepSigs.has(sig)) parts.delete(sig);
     }
-    if (!list.length) return;
+    if (!list.length) {
+      // T-3886: no city chosen sends no graph at all: an empty sheet
+      if (!plan.length) (drawnParts = []), (drawnAt = []), (shown = null), (hot = -1), (ghostHot = null), (diagramReady.value = false), (choice = null), (fitChoice = false), (diagramProgress.value = null), draw();
+      return;
+    }
     // the view stays on the region it is on: that region is placed as it is laid out, the others round it
     let anchor = 0;
     const was = shown;
@@ -1201,7 +1206,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     const g = drag && !drag.far ? drag.ghost : null;
     if (g && ghostAt(...local(e))?.zone === g.zone) {
       const now = diagramCities.peek();
-      if (!now.includes(g.zone)) diagramCities.value = [...now, g.zone].sort();
+      if (!now.includes(g.zone)) diagramCities.value = [...now.filter((c) => c !== NO_CITIES), g.zone].sort();
     } else if (drag && !drag.far) click(...local(e));
     drag = null;
     hover(...local(e));

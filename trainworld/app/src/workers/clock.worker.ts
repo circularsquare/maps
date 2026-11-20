@@ -47,7 +47,7 @@ import { buildingMembers, buildingsFrom, withBuildingLinks } from "../game/build
 import { IN_BUILDING, UPGRADE, UPGRADE_BITS } from "../game/upgrades";
 import { saveNetKey } from "./demandCache";
 import { fetchRange } from "./rangeFetch";
-import { newDay, newHour, addEntry, currentZones, decodeSave, encodeSave, encodeSaveParts, refuseSaveBuffers, isThisWorld, isRetiredTrackFormat, trackFrameKind, readStored, failReads, StorageReadError, SAVE_FORMAT, START_CASH, NEW_LINE_CARS, START_CLOCK, writeStored, listSlots, leaseSlot, ORIGINAL_SLOT, SAVE_DAMAGED, isDamagedError, unreadableKey, setNetworkCheck, markDamaged, rescueGood, BACKUP_STEPS, headerUnread, newGameName, slotName, backupSlot, takePending, sweepDeleted, WHOLE_PANEL, type GameMode, type NewGameSpec, type SlotSummary, type DayLedger, type HourLedger, type SaveHeader, type NewHeadways, cleanNewHeadways, type GuideSave, type Achieved } from "./saveFile";
+import { newDay, newHour, addEntry, currentZones, decodeSave, encodeSave, encodeSaveParts, refuseSaveBuffers, isThisWorld, isRetiredTrackFormat, trackFrameKind, readStored, failReads, StorageReadError, SAVE_FORMAT, START_CASH, NEW_LINE_CARS, START_CLOCK, writeStored, listSlots, leaseSlot, ORIGINAL_SLOT, SAVE_DAMAGED, NO_CITIES, isDamagedError, unreadableKey, setNetworkCheck, markDamaged, rescueGood, BACKUP_STEPS, headerUnread, newGameName, slotName, backupSlot, takePending, sweepDeleted, WHOLE_PANEL, type GameMode, type NewGameSpec, type SlotSummary, type DayLedger, type HourLedger, type SaveHeader, type NewHeadways, cleanNewHeadways, type GuideSave, type Achieved } from "./saveFile";
 import { StateRows, upgradesOf, type RowEnv } from "./stateRows";
 import { PlatformLines } from "./platformLines";
 import { lineProfile } from "./lineProfile";
@@ -2696,7 +2696,7 @@ async function openSave(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   lineNotes = new Map(Object.entries(h.notes ?? {}));
   lineShapes = shapesFrom(h.shapes);
   hiddenLines = new Set(Array.isArray(h.hidden) ? h.hidden.filter((x) => typeof x === "string") : []);
-  diagramCities = Array.isArray(h.schematic) ? h.schematic.filter((x) => typeof x === "string" && isCity(x)) : [];
+  diagramCities = Array.isArray(h.schematic) ? h.schematic.filter((x) => typeof x === "string" && (x === NO_CITIES || isCity(x))) : [];
   diagramInside = { stations: new Set(), stops: new Set() };
   newLineCars = h.newCars ?? NEW_LINE_CARS;
   newLineWeekendShare = typeof h.newWeekendShare === "number" && Number.isFinite(h.newWeekendShare) ? h.newWeekendShare : null;
@@ -3003,11 +3003,12 @@ function postDiagram() {
   const t0 = performance.now(), keep: typeof diagramPts = new Map(), ends = new Map(diagramIn.edges.map((e) => [e.id, e]));
   // T-3409: chosen cities: their lines cut to the runs inside them, and the graphs built from those runs and their track
   // alone; none chosen, or none of their stations on a line, the whole network
-  const c = diagramCities.length ? cutLines(diagramIn.lines, ends, diagramIn.pts, complexOfNodes(), diagramInside.stations, diagramInside.stops) : null;
-  const graphs = diagramGraphs(c ? { ...diagramIn, lines: c.lines, pts: c.pts } : diagramIn, c ? c.complexOf : complexOfNodes(), ends, keep);
+  const none = diagramCities.includes(NO_CITIES);
+  const c = diagramCities.length && !none ? cutLines(diagramIn.lines, ends, diagramIn.pts, complexOfNodes(), diagramInside.stations, diagramInside.stops) : null;
+  const graphs = none ? [] : diagramGraphs(c ? { ...diagramIn, lines: c.lines, pts: c.pts } : diagramIn, c ? c.complexOf : complexOfNodes(), ends, keep);
   const whole = c && diagramWhole ? diagramGraphs(diagramIn, complexOfNodes(), ends, keep) : undefined;
   diagramPts = keep;
-  send({ kind: "diagramGraph", graphs, ms: performance.now() - t0, ...(c ? { cut: true } : {}), ...(whole ? { whole } : {}) }, [...graphs, ...(whole ?? [])].flatMap((g) => [g.key.buffer, g.x.buffer, g.y.buffer, g.ea.buffer, g.eb.buffer, g.first.buffer, g.on.buffer]));
+  send({ kind: "diagramGraph", graphs, ms: performance.now() - t0, ...(c || none ? { cut: true } : {}), ...(whole ? { whole } : {}) }, [...graphs, ...(whole ?? [])].flatMap((g) => [g.key.buffer, g.x.buffer, g.y.buffer, g.ea.buffer, g.eb.buffer, g.first.buffer, g.on.buffer]));
 }
 /** the graphs of the network `diagramIn`, stations by `cx` (T-3409: a cut network's has those outside made no station) */
 function diagramGraphs(diagramIn: DiagramIn, cx: Uint32Array, ends: Map<number, ClockEdge>, keep: typeof diagramPts): DiagramGraph[] {
@@ -5188,7 +5189,7 @@ async function handleMessage(msg: ToClock) {
     diagramWhole = !!msg.whole;
     if (diagramOn && api) postDiagram();
   } else if (msg.kind === "diagramCut") {
-    const cities = msg.cities.filter((c) => isCity(c));
+    const cities = msg.cities.filter((c) => c === NO_CITIES || isCity(c));
     if (cities.join() !== diagramCities.join()) (diagramCities = cities), (saves.dirty = saves.edited = true), (saves.editAt = Date.now());
     diagramInside = { stations: new Set(msg.stations), stops: new Set(msg.stops) };
     if (diagramOn && api) postDiagram();

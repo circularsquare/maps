@@ -9,6 +9,7 @@ import { LoadBar } from "./LoadingScreen";
 import { Check, Icon } from "./widgets";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { diagramCities } from "../game/diagramCities";
+import { NO_CITIES } from "../workers/saveFile";
 import { busStopsById } from "../game/world";
 import { stationZone } from "../game/listScope";
 import { zonesLoaded } from "../game/zones";
@@ -48,7 +49,7 @@ function ModeButtons() {
 
 /** T-3409: the zones with a built station or a stop, by name; a zone chosen before stays listed so it can be unticked */
 function listedCities(): string[] {
-  const w = world.value, out = new Set<string>(diagramCities.value);
+  const w = world.value, out = new Set<string>(diagramCities.value.filter((c) => c !== NO_CITIES));
   void zonesLoaded.value;
   if (w) {
     for (const s of w.save.stations) { if (!s.built) continue; const z = stationZone(s); if (z && isCity(z)) out.add(z); }
@@ -74,7 +75,6 @@ function byRealm(cities: string[]): { realms: { id: string; name: string; cities
  * region with a box (ticked when all its cities are, half lit when some are) and its cities under it when opened */
 function CityChoice() {
   const [open, setOpen] = useState(false);
-  const [none, setNone] = useState(false);
   /** the regions opened; a list of one region opens on it */
   const [opened, setOpened] = useState<ReadonlySet<string>>(new Set());
   const box = useRef<HTMLDivElement>(null);
@@ -89,14 +89,12 @@ function CityChoice() {
   }, [open]);
   const cities = listedCities(), saved = diagramCities.value;
   if (cities.length < 2 && !saved.length) return null;
-  // an empty saved choice is the whole network, shown as every city ticked; `none` is the list with nothing ticked, which
-  // still draws the whole network
-  const chosen = none ? [] : saved.length ? saved : cities;
+  // an empty saved choice is the whole network, shown as every city ticked; [NO_CITIES] is nothing ticked and nothing drawn
+  const chosen = saved.includes(NO_CITIES) ? [] : saved.length ? saved : cities;
   const set = (next: string[]) => {
     const u = [...new Set(next)].sort();
-    setNone(!u.length);
     // every city ticked is the whole network's layout, saved as the empty choice
-    diagramCities.value = u.length === cities.length ? [] : u.length ? u : [];
+    diagramCities.value = u.length === cities.length ? [] : u.length ? u : [NO_CITIES];
   };
   const allN = cities.filter((c) => chosen.includes(c)).length;
   const { realms, bare } = byRealm(cities);
