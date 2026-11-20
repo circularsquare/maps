@@ -850,7 +850,8 @@ lines is plain track for capacity: a branch no train uses yet does not cut the s
   platform, the move from its last path entry into its first a junction move, sections joined across
   it); the hold there to the headway is not counted. A balloon's first stop turns as any
   line's end. The loop itself is plain track, so a balloon has no turnback limit (about 34 an hour
-  at 80 km/h).
+  at 80 km/h). A loop that one-way track takes round only one way runs one way (6.3 "One way by its
+  track", T-3835), so no station on it turns trains.
 - junction move, with the moves it crosses; flat crossing, all moves: 120 s (45 s for a tram's own
   passes, and a tram's crossing of a train route loads only that tram's resource, above)
 
@@ -1265,7 +1266,16 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   take another mode. A train line starts both ways, a new bus or ferry line one way (`set_bus_line`,
   `set_ferry_line`); the flag stays on an open line, which ignores it, so it carries over opening and
   closing. The direction is the one drawn: no reverse state (redrawing reverses it); arrows on the map
-  show it (T-2991, ui-map.md "Bus lines"). **Which way a stop is served** (T-3122, `TrackApi::line_stop_ways`,
+  show it (T-2991, ui-map.md "Bus lines"). **One way by its track** (T-3835, `Network::runs_once`): a rail
+  loop set both ways runs one way all the same when its return run cannot go round the other way as run 0
+  goes round: the way back `back_run_of` finds turns back more often than run 0's path, or passes the first
+  stop more often (round twice), as one-way track in the way makes it. Before, such a run 1 turned back at
+  a station partway (a turn limiting the whole line, 15 an hour without a terminal) or went round again.
+  Derived on every build, never stored: the setting stays both ways, so the line runs both ways again once
+  the track lets it (and `back_lines` keeps such a line, since track built anywhere may give it a way back).
+  The line panel's Both ways is greyed out, its hover "Part of this loop's track runs one way"
+  (`TrackApi::line_one_way_by_track`). A loop whose return run has track of its own (one leg of a split
+  double each way) still runs both ways. **Which way a stop is served** (T-3122, `TrackApi::line_stop_ways`,
   `LineStats.oneWayAt`): a rail line run one way serves a station it stops at one way when its run passes
   the station only heading one way (the side of the station node its trains leave by; the heading is
   `node_heading`, the track's tangent there, radians counter-clockwise from east in the world frame);

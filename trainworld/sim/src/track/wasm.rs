@@ -2302,6 +2302,9 @@ mod stop_pass_tests;
 mod stop_order_tests;
 #[cfg(test)]
 mod oneway_tests;
+/// T-3835: a loop its track takes round only one way runs one way.
+#[cfg(test)]
+mod loop_way_tests;
 #[cfg(test)]
 mod limits_tests;
 /// T-3103, T-3092: flat-junction badges and real flyovers.

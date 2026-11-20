@@ -98,6 +98,7 @@ interface LineRead {
   tram: boolean;
   loopKind: number;
   oneWay: boolean;
+  oneWayByTrack: boolean;
   limit: number;
   fareDist: boolean;
   weekend: number[];
@@ -454,7 +455,7 @@ export class StateRows {
       read.push({
         i, id, ok, running, bus, prev, fresh,
         heavy: fresh ? this.heavy(a, id, ok) : prev!.heavy,
-        auto: a.line_auto(id), fast: a.line_fast(id), tram: a.line_tram(id), loopKind: a.line_loop(id), oneWay: a.line_one_way(id), limit: a.line_limit(id), fareDist: a.line_fare_dist(id), weekend: weekendOf(a, id), restTph: [...a.line_tph_rest(id)], shift: a.line_shift(id), upkeep: upkeepOf.get(id) ?? 0,
+        auto: a.line_auto(id), fast: a.line_fast(id), tram: a.line_tram(id), loopKind: a.line_loop(id), oneWay: a.line_one_way(id), oneWayByTrack: a.line_one_way_by_track(id), limit: a.line_limit(id), fareDist: a.line_fare_dist(id), weekend: weekendOf(a, id), restTph: [...a.line_tph_rest(id)], shift: a.line_shift(id), upkeep: upkeepOf.get(id) ?? 0,
         ...periodsOf(a, id),
         busRow: bus ? env.busRow(a, id, nodes ?? []) : undefined,
         pairs: bus ? 0 : a.line_pairs(id), twinOf: bus ? -1 : a.line_twin_of(id),
@@ -462,10 +463,10 @@ export class StateRows {
     }
     const out: ClockLine[] = [];
     for (const r of read) {
-      const { i, id, ok, running, prev, fresh, heavy, auto, fast, tram, loopKind, oneWay, limit, fareDist, weekend, restTph, shift, upkeep, pairs, twinOf, tphP, periods, periodsOwn, hours, hoursOwn, rows } = r;
+      const { i, id, ok, running, prev, fresh, heavy, auto, fast, tram, loopKind, oneWay, oneWayByTrack, limit, fareDist, weekend, restTph, shift, upkeep, pairs, twinOf, tphP, periods, periodsOwn, hours, hoursOwn, rows } = r;
       // the numbers behind the cheap fields: when all are as kept (and the heavy parts are), the row is the kept one
       const raw = li.slice(i, i + 22);
-      const extra = [upkeep, fast ? 1 : 0, tram ? 1 : 0, loopKind, oneWay ? 1 : 0, limit, fareDist ? 1 : 0, shift, pairs, twinOf, ...auto, weekend.length, ...weekend, ...restTph,
+      const extra = [upkeep, fast ? 1 : 0, tram ? 1 : 0, loopKind, oneWay ? 1 : 0, oneWayByTrack ? 1 : 0, limit, fareDist ? 1 : 0, shift, pairs, twinOf, ...auto, weekend.length, ...weekend, ...restTph,
         ...tphP, periods, periodsOwn, ...hours, hoursOwn ? 1 : 0, ...(rows ? [rows.figs.length, ...rows.figs, rows.set.length, ...rows.set, rows.auto?.length ?? -1, ...(rows.auto ?? []), rows.weekend.length, ...rows.weekend] : [])];
       if (!fresh && prev && sameNumbers(raw, prev.raw) && sameNumbers(extra, prev.extra)) {
         out.push(prev.row);
@@ -493,6 +494,7 @@ export class StateRows {
         hand: heavy.hand,
         loopKind,
         oneWay,
+        oneWayByTrack,
         limit,
         ...(fareDist ? { fareDist: true as const } : {}),
         ...(weekend.length ? { weekend } : {}),

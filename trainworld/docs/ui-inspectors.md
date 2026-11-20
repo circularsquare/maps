@@ -552,7 +552,8 @@ The round trip split into running, dwell, turning and waiting,
   second is left out when every station is an end station, and a button is disabled once none is
   missing, its hover saying so ("The end stations already have parking") [T-2692]. A refusal
   shakes the button and the notice says why. A **loop** [T-798] has a Direction row first, a segmented
-  One way (hover "The way the route was drawn") or Both ways [T-2981], then its lap (one way around, both ways the longer way's)
+  One way (hover "The way the route was drawn") or Both ways [T-2981], Both ways greyed out with the hover "Part of this
+  loop's track runs one way" while one-way track lets it around only one way [T-3835], then its lap (one way around, both ways the longer way's)
   in place of the round trip, split the same way, with no turning row for a circle and "Turning at
   the end" for a balloon; its average speed is once round over the lap (a balloon's less its
   turning); run both ways, its trains steppers move by 2 and the count's hover says how many run each way; the

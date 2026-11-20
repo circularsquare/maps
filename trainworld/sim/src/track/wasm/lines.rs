@@ -509,6 +509,10 @@ impl TrackApi {
     pub fn line_one_way(&self, line: u32) -> bool {
         self.w.svc.lines.get(line as usize).is_some_and(|l| l.ok && l.one_way)
     }
+    /// T-3835: a loop set both ways that runs one way, as its track takes it round only one way.
+    pub fn line_one_way_by_track(&self, line: u32) -> bool {
+        self.line_one_way(line) && !self.w.net.line_one_way.get(line as usize).copied().unwrap_or(false)
+    }
     /// T-2981: run a line's loop one way or both ways. Kept on an open line for when it closes.
     pub fn set_line_one_way(&mut self, id: u32, on: bool) -> u32 {
         let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };

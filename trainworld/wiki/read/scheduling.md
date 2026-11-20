@@ -8,7 +8,7 @@ You tell a line how many trains to run, and the game works out the timetable.
 
 If the round trip leaves time over, the extra trains wait at the ends, half at each. If the line asks for more trains than its track can carry, the extras wait at the ends too and the panel warns ([line capacity](line-capacity.md)). Congestion lengthens the round trip, so the same count gives wider gaps.
 
-**A loop** runs an even number of trains, half each way.
+**A loop** runs an even number of trains, half each way. A loop set to one way runs them all around the way it was drawn, and so does one where one-way track lets trains around only one way.
 
 **Weekends.** Weekends and public holidays run their own trains: a percent of the weekday ones, 10% to 200%, or counts you set by hand in the line's schedule window. A new line runs the same trains every day. At a percent, counts round up and a headway rounds down to a whole minute, and changing the weekday trains moves the weekend ones with them. Counts set by hand stay put. One button sets every line to the same percent. Bus and ferry lines have weekends too, in buses and boats. A line owns enough trains for its busier kind of day. Long holiday travel days run the weekday trains. Weekend riders stay the same whatever runs, so fewer trains are more crowded.
 

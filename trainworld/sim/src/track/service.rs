@@ -907,7 +907,7 @@ fn build_on(net: &Network, l: u32, stops: &[u32], path: &[u32], running: bool) -
     ls.stops = stops.to_vec();
     if ls.stops.len() < 2 { return ls; }
     ls.kind = net.loop_kind(stops, path);
-    ls.one_way = ls.is_loop() && net.line_one_way[l as usize];
+    ls.one_way = net.runs_once(l, stops, path);
     // T-3348: the platforms each run stops at
     let ways = net.way_stops(stops, path, net.line_ones(l)).unwrap_or_default();
     let min_plat = stops.iter().chain(&ways.0).chain(&ways.1).map(|&s| net.node_platform[s as usize]).min().unwrap_or(0) as f64;

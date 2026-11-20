@@ -3575,7 +3575,6 @@ impl Network {
         let nodes: Vec<u32> = std::iter::once(self.path_nodes(path[0]).0).chain(path.iter().map(|&p| self.path_nodes(p).1)).collect();
         let ones = self.line_ones(l);
         let (pos, _) = self.match_run(&nodes, stops, &self.stop_reversals(path), ones, path)?;
-        let one_way = self.line_one_way.get(i).copied().unwrap_or(false);
         let mut best: Option<(Stretch, f64, usize)> = None;
         for a in 0..stops.len() {
             if !built_stop(stops[a]) {
@@ -3591,7 +3590,7 @@ impl Network {
                 len += path[end..next].iter().map(|&p| self.edge_len[path_edge(p) as usize]).sum::<f64>();
                 end = next;
                 let (ss, sp) = (&stops[a..=b], &path[pos[a]..end]);
-                let once = one_way && self.loop_kind(ss, sp) != LoopKind::None;
+                let once = self.runs_once(l, ss, sp);
                 if !once && !self.back_run_of(ss, sp, ones).is_some_and(|(_, back)| back.iter().all(|&p| built_edge(path_edge(p)))) {
                     continue;
                 }
@@ -3636,9 +3635,36 @@ impl Network {
         self.lane_of(p).is_some()
     }
 
-    /// A rail line whose trains run its path once round, one way: a loop set to run one way (T-2981).
+    /// A rail line whose trains run its path once round, one way: a loop set to run one way (T-2981),
+    /// or one whose track takes it round only one way (`runs_once`).
     pub fn line_runs_once(&self, l: u32) -> bool {
-        self.line_one_way.get(l as usize).copied().unwrap_or(false) && self.line_loop(l) != LoopKind::None
+        self.runs_once(l, self.line_stops(l), self.line_path(l))
+    }
+
+    /// Whether line `l` run over `stops` and `path` (its plan or the stretch it runs) is a loop that
+    /// runs once round, one way: set so (T-2981), or set both ways where its return run cannot go
+    /// round the other way as run 0 goes round (T-3835): one-way track sends it round again, or back
+    /// at a station partway, which no player means by a loop.
+    pub fn runs_once(&self, l: u32, stops: &[u32], path: &[u32]) -> bool {
+        self.loop_kind(stops, path) != LoopKind::None && (self.line_one_way.get(l as usize).copied().unwrap_or(false) || !self.back_laps(stops, path, self.line_ones(l)))
+    }
+
+    /// T-3835: a loop's return run goes round once as run 0 does: its path run backward runs, or the
+    /// way back `back_run_of` finds turns back no more often than run 0's path and passes the first
+    /// stop no more often (no second lap).
+    pub fn back_laps(&self, stops: &[u32], path: &[u32], ones: &[(u32, u8)]) -> bool {
+        if path.iter().all(|&p| self.dir_ok(p ^ 1)) {
+            return true;
+        }
+        let Some((_, back)) = self.back_run_of(stops, path, ones) else { return false };
+        let first = stops[0];
+        let passes = |p: &[u32]| p.iter().filter(|&&e| self.path_nodes(e).1 == first).count();
+        self.path_reversals(&back).len() <= self.path_reversals(path).len() && passes(&back) <= passes(path)
+    }
+
+    /// A loop set to run one way (T-2981), over `stops` and `path`, whatever its track allows.
+    fn set_once(&self, l: u32, stops: &[u32], path: &[u32]) -> bool {
+        self.line_one_way.get(l as usize).copied().unwrap_or(false) && self.loop_kind(stops, path) != LoopKind::None
     }
 
     /// The path of a line's return run (T-3094): its path run backward, or where that runs against a
@@ -3667,7 +3693,8 @@ impl Network {
                     && self.line_bus.get(l as usize).map_or(true, |b| b.is_none())
                     && self.line_ferry.get(l as usize).map_or(true, |f| f.is_none())
                     && (self.line_path(l).iter().any(|&p| !self.dir_ok(p ^ 1)) || beside(l))
-                    && !(self.line_runs_once(l) && self.stretch_runs_once(l))
+                    // (a loop run one way by its track stays: track built anywhere may give it a way back, T-3835)
+                    && !(self.set_once(l, self.line_stops(l), self.line_path(l)) && self.stretch_set_once(l))
             })
             .collect()
     }
@@ -3676,10 +3703,16 @@ impl Network {
     /// both ways.
     pub fn stretch_runs_once(&self, l: u32) -> bool {
         match self.line_stretch(l) {
-            Some(s) => {
-                self.line_one_way.get(l as usize).copied().unwrap_or(false) && self.loop_kind(s.stops(self.line_stops(l)), s.path(self.line_path(l))) != LoopKind::None
-            }
+            Some(s) => self.runs_once(l, s.stops(self.line_stops(l)), s.path(self.line_path(l))),
             None => self.line_runs_once(l),
+        }
+    }
+
+    /// `stretch_runs_once` by the line's setting alone.
+    fn stretch_set_once(&self, l: u32) -> bool {
+        match self.line_stretch(l) {
+            Some(s) => self.set_once(l, s.stops(self.line_stops(l)), s.path(self.line_path(l))),
+            None => self.set_once(l, self.line_stops(l), self.line_path(l)),
         }
     }
 

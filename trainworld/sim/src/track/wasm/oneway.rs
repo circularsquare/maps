@@ -122,7 +122,8 @@ impl TrackApi {
         for (k, (l, stops, path, once, ones)) in lines.into_iter().enumerate() {
             let fwd_ok = path.iter().all(|&p| net.dir_ok(p));
             let new = if fwd_ok { Some(path.clone()) } else { net.route_hops(&stops, &ones).ok() };
-            let new = new.filter(|np| once || net.back_path_of(&stops, np, &ones).is_some());
+            // (a loop the edit leaves no way back round runs one way, T-3835)
+            let new = new.filter(|np| once || net.runs_once(l, &stops, np) || net.back_path_of(&stops, np, &ones).is_some());
             if new.is_none() && broken[k] {
                 continue;
             }

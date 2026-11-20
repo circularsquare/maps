@@ -210,6 +210,9 @@ export function RoundTrip({ num, st, lev, stops, spots: { spots: busy, behindSpo
             <Segmented<boolean>
               options={[[true, <span data-tip={tr("lineInspector.oneWayTip")}>{tr("lineInspector.oneWay")}</span>], [false, tr("lineInspector.bothWays")]]}
               value={st.oneWay}
+              // T-3835: one-way track takes this loop round one way only
+              disabled={(v) => !v && !!st.oneWayByTrack}
+              tips={(v) => (!v && st.oneWayByTrack ? tr("lineInspector.oneWayTrack") : undefined)}
               onChange={(oneWay) => { if (oneWay !== st.oneWay) void edit({ op: "lineOneWay", line: num, oneWay }); }}
             />
           </li>

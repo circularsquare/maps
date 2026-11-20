@@ -255,6 +255,8 @@ export interface LineStats {
   loop: "circle" | "balloon" | null;
   /** T-2981: a loop that runs one way, round in the direction it was drawn, with all its trains */
   oneWay: boolean;
+  /** T-3835: set both ways, it runs one way, as one-way track takes it round only one way */
+  oneWayByTrack?: true;
   /** T-2987: the player's speed limit for the line's trains, km/h; 0 for none */
   limit: number;
   /** T-3758: its rides pay the distance fare where the game has fare zones; absent: zone fares */

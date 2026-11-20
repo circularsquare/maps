@@ -676,6 +676,8 @@ export interface ClockLine {
   loopKind: number;
   /** T-2981: a loop that runs one way (`TrackApi::line_one_way`) */
   oneWay: boolean;
+  /** T-3835: set both ways, it runs one way as one-way track takes it round (`TrackApi::line_one_way_by_track`) */
+  oneWayByTrack: boolean;
   /** T-2987: the line's speed limit, km/h; 0 for none (`TrackApi::line_limit`) */
   limit: number;
   /** T-3758: its rides pay the distance fare where the game has fare zones (`TrackApi::line_fare_dist`); absent:
