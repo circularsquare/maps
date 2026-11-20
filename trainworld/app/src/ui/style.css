@@ -435,7 +435,8 @@ body.resizing, body.resizing * { user-select: none; }
   padding: 10px 12px; background: var(--bg); border: 1px solid var(--rule); display: flex; flex-direction: column; gap: 14px; }
 .lines-gear-pop .h { margin: 0 0 4px; }
 .lines-gear-pop .h .check { font-weight: 700; }
-.lines-gear-pop .gear-cities { max-height: 186px; overflow-y: auto; }
+.lines-gear-pop .gear-cities { max-height: 186px; overflow-y: auto; gap: 4px; }
+.lines-gear-pop .gear-sec:has(.gear-cities) .h { margin-bottom: 6px; }
 .lines-box .rows > li.hidden-line > :is(.chip, .group-pill, .line-name) { opacity: 0.4; }
 .lines-box .vis-check { appearance: none; width: calc(12 * var(--px)); height: calc(12 * var(--px)); margin: 0; flex: none; cursor: pointer;
   border: 1px solid var(--rule); background: var(--bg); }

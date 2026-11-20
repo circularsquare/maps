@@ -52,6 +52,12 @@ export function LinesGear({ modes, cities, leftOut }: { modes: number[]; cities:
               </div>
             </div>
           )}
+          <div class="gear-sec">
+            <div class="h">{t("linesTab.gearColumns")}</div>
+            <div class="checks">
+              {LINE_COLS.map((c) => check(!offCols.has(c), colName(c), () => setOff("cols", [c], !offCols.has(c)), false, c))}
+            </div>
+          </div>
           {cities.length >= 2 && (
             <div class="gear-sec">
               <div class="h">{check(cityOff === 0, t("linesTab.gearCities"), () => setOff("cities", cities.map(([id]) => id), cityOff === 0), cityOff > 0 && cityOff < cities.length)}</div>
@@ -60,12 +66,6 @@ export function LinesGear({ modes, cities, leftOut }: { modes: number[]; cities:
               </div>
             </div>
           )}
-          <div class="gear-sec">
-            <div class="h">{t("linesTab.gearColumns")}</div>
-            <div class="checks">
-              {LINE_COLS.map((c) => check(!offCols.has(c), colName(c), () => setOff("cols", [c], !offCols.has(c)), false, c))}
-            </div>
-          </div>
         </div>
       )}
     </span>
