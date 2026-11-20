@@ -17,9 +17,10 @@
 // opens it there (the leg leaving the port goes), on any port of a line that loops back it stops looping, and on the
 // active end or a lone port it takes that port out. A finger held on a port does a right click's work (T-3149).
 //
-// Waypoints (T-3809): a shift click on water puts a point the route must pass through, with no stop, on the leg
-// where it adds the least straight distance, so a player steers a route through an archipelago or splits a leg too
-// long to search. They are kind 2 points of the route the sim keeps (`KIND_WAYPOINT`), read back by `begin`. A
+// Waypoints (T-3809, T-3845): a shift click on water puts a point the route must pass through, with no stop: after
+// the last point while a new route is drawn (`tail`, taken by the next port as its leg's, so each leg is searched as
+// it is placed), else on the leg where it adds the least straight distance. A player steers a route through an
+// archipelago or splits a leg too long to search. They are kind 2 points of the route the sim keeps (`KIND_WAYPOINT`), read back by `begin`. A
 // click on one takes it out and a drag moves it (the bus tool's handles); a line that loops back runs its way out's
 // waypoints backward on the way home (`runWays`).
 //
@@ -117,6 +118,8 @@ export class FerryDraw {
   private ports: DraftPort[] = [];
   /** T-3809: the waypoints of each leg, `ways[k]` between `ports[k]` and `ports[k + 1]` in order; one fewer than the ports */
   private ways: Pt[][] = [];
+  /** the waypoints placed after the last port while a new route is drawn, before its next port takes them as its leg's */
+  private tail: Pt[] = [];
   /** Shift is held: a click puts a waypoint; `wayProbe` whether the water worker says the pointer is on water */
   private shift = false;
   private wayProbe: { at: Pt; water: boolean } | null = null;
@@ -205,6 +208,7 @@ export class FerryDraw {
   begin(line: number | null, colour?: string) {
     this.ports = [];
     this.ways = [];
+    this.tail = [];
     this.endDrag();
     this.route = null;
     this.routeKey = "";
@@ -252,6 +256,7 @@ export class FerryDraw {
   clear() {
     this.ports = [];
     this.ways = [];
+    this.tail = [];
     this.endDrag();
     this.route = null;
     this.routeKey = "";
@@ -285,6 +290,7 @@ export class FerryDraw {
       out.push({ at: [p.berth.lng, p.berth.lat], kind: KIND_PORT });
       if (i + 1 < run.length) for (const w of ways[i] ?? []) out.push({ at: [w.lng, w.lat], kind: KIND_WAYPOINT });
     });
+    for (const w of this.tail) out.push({ at: [w.lng, w.lat], kind: KIND_WAYPOINT });
     return out;
   }
 
@@ -305,7 +311,7 @@ export class FerryDraw {
   private reroute() {
     const key = this.berthKey();
     if (key === this.routeKey) return;
-    if (this.ports.length < 2) {
+    if (this.runPoints().length < 2) {
       this.route = null;
       this.routeKey = key;
       return;
@@ -362,7 +368,7 @@ export class FerryDraw {
   /** T-3809: the waypoint under a screen point, the nearest, or null. */
   private wayAt(px: number, py: number, reach = WAY_PX): { k: number; j: number } | null {
     let best = reach * reach, hit: { k: number; j: number } | null = null;
-    this.ways.forEach((w, k) =>
+    this.allWays().forEach((w, k) =>
       w.forEach((p, j) => {
         const s = this.map.project([p.lng, p.lat]);
         const d = (s.x - px) ** 2 + (s.y - py) ** 2;
@@ -372,11 +378,28 @@ export class FerryDraw {
     return hit;
   }
 
+  /** every leg's waypoints, then the tail after the last port (leg `ways.length`) */
+  private allWays(): Pt[][] {
+    return [...this.ways, this.tail];
+  }
+
+  private legWays(k: number): Pt[] {
+    return k < this.ways.length ? this.ways[k] : this.tail;
+  }
+
+  /** A new route being drawn, or one with a port short of two ends: a waypoint goes after the last point and
+   * only that leg is searched (T-3845). An existing route's waypoint goes where it adds the least distance. */
+  private appending(): boolean {
+    return this.line === null || this.ports.length < 2;
+  }
+
   /** T-3809: where a waypoint at `w` would go: the leg `k` and its place `j` among that leg's waypoints where it
-   * adds the least straight distance between the points either side, and those two points; null with fewer
-   * than two ports. */
-  private wayPlace(w: Pt): { k: number; j: number; a: Pt; b: Pt } | null {
-    let best = Infinity, out: { k: number; j: number; a: Pt; b: Pt } | null = null;
+   * adds the least straight distance between the points either side, and those two points (`b` null after the
+   * last point, T-3845); null with no port. */
+  private wayPlace(w: Pt): { k: number; j: number; a: Pt; b: Pt | null } | null {
+    if (!this.ports.length) return null;
+    if (this.appending()) return { k: this.ways.length, j: this.tail.length, a: this.tail[this.tail.length - 1] ?? this.ports[this.ports.length - 1].berth, b: null };
+    let best = Infinity, out: { k: number; j: number; a: Pt; b: Pt | null } | null = null;
     for (let k = 0; k + 1 < this.ports.length; k++) {
       const seq = [this.ports[k].berth, ...this.ways[k], this.ports[k + 1].berth];
       for (let j = 0; j + 1 < seq.length; j++) {
@@ -542,18 +565,19 @@ export class FerryDraw {
 
   /** T-3809: a waypoint at `at`, on water, on the leg where it adds the least (`wayPlace`). */
   private addWay(at: Pt) {
-    if (this.ports.length < 2) return void say(t("ferryDraw.sayWayPorts"), true);
+    if (!this.ports.length) return void say(t("ferryDraw.sayWayPorts"), true);
+    if (this.looped()) return void say(t("ferryDraw.loopClosed"), true);
     // the answer Shift's hover already has, else asked: the worker answers after the route searches before it, so
     // the tool goes on meanwhile
     const known = this.wayProbe && same(this.wayProbe.at, at) ? this.wayProbe.water : null;
     this.waterCheck((known !== null ? Promise.resolve({ water: known }) : this.water.probe([at.lng, at.lat])).then((p) => {
-      if (!this.active || this.ports.length < 2) return;
+      if (!this.active || !this.ports.length) return;
       if (!p) return void say(t("ferryDraw.notLoaded"), true);
       if (!p.water) return void say(t("ferryDraw.sayWayWater"), true);
       const w = this.wayPlace(at);
       if (!w) return;
       playBuild("snap");
-      this.ways[w.k].splice(w.j, 0, at);
+      this.legWays(w.k).splice(w.j, 0, at);
       this.reunder();
       this.changed(true);
     }));
@@ -568,9 +592,9 @@ export class FerryDraw {
   }
 
   private removeWay(k: number, j: number) {
-    if (this.busy || !this.ways[k]?.[j]) return;
+    if (this.busy || !this.allWays()[k]?.[j]) return;
     playBuild("pop");
-    this.ways[k].splice(j, 1);
+    this.legWays(k).splice(j, 1);
     this.reunder();
     this.changed(true);
   }
@@ -597,14 +621,14 @@ export class FerryDraw {
     const px = e.clientX - r.left, py = e.clientY - r.top;
     if (!this.drag) {
       if (Math.hypot(px - p.x, py - p.y) < DRAG_PX) return;
-      const was = this.ways[p.k]?.[p.j];
+      const was = this.allWays()[p.k]?.[p.j];
       if (!was) return this.endDrag();
       this.drag = { k: p.k, j: p.j, was };
       setGrabbing(true);
     }
     const ll = this.map.unproject([px, py]);
     this.at = { lng: ll.lng, lat: ll.lat };
-    this.ways[p.k][p.j] = this.at;
+    this.legWays(p.k)[p.j] = this.at;
     this.changed(true);
   }
 
@@ -621,13 +645,13 @@ export class FerryDraw {
   /** A waypoint dropped off the water goes back where it was. The water worker answers after the route searches
    * before it, so the tool goes on meanwhile; `finish` waits for it. */
   private async checkDrop(d: { k: number; j: number; was: Pt }) {
-    const at = this.ways[d.k]?.[d.j];
+    const at = this.allWays()[d.k]?.[d.j];
     if (!at) return;
     const p = await this.water.probe([at.lng, at.lat]);
     if (!this.active) return;
     if (p?.water) return void playBuild("snap");
     // where it is now: other waypoints may have come or gone meanwhile
-    for (const w of this.ways) {
+    for (const w of this.allWays()) {
       const j = w.indexOf(at);
       if (j < 0) continue;
       w[j] = d.was;
@@ -762,8 +786,9 @@ export class FerryDraw {
     playBuild("station"); // T-2940: a port placed sounds as a station placed does
     if (this.ports.length) {
       if (this.head) this.ways.unshift([]);
-      else this.ways.push([]);
+      else this.ways.push(this.tail);
     }
+    this.tail = [];
     if (this.head) this.ports.unshift(p);
     else this.ports.push(p);
     this.reunder();
@@ -777,11 +802,16 @@ export class FerryDraw {
     // past where a line loops back, is no loop without one
     // T-3809: a port partway along goes with its two legs' waypoints kept, in order, on the leg that joins them
     const wasClosed = this.closed(), wasLooped = this.looped(), n = this.ports.length;
+    this.tail = [];
     if (this.isSeam(i)) (this.ports.pop(), this.ways.pop());
     else {
       this.ports.splice(i, 1);
       if (i === 0) this.ways.shift();
-      else if (i === n - 1) this.ways.pop();
+      // T-3845: taking back the last port of a new route leaves its leg's waypoints pending, so back steps undo in order
+      else if (i === n - 1) {
+        const gone = this.ways.pop() ?? [];
+        if (this.appending()) this.tail = gone;
+      }
       else this.ways.splice(i - 1, 2, [...this.ways[i - 1], ...this.ways[i]]);
       if ((wasClosed && this.ports.length <= 3) || (wasLooped && !this.looped())) (this.ports.pop(), this.ways.pop());
     }
@@ -798,6 +828,12 @@ export class FerryDraw {
   private back() {
     if (this.busy) return;
     if (this.ports.length === 0) return this.host.exit();
+    if (this.tail.length) {
+      playBuild("pop");
+      this.tail.pop();
+      this.reunder();
+      return this.changed(true);
+    }
     this.remove(this.endIndex());
   }
 
@@ -809,6 +845,7 @@ export class FerryDraw {
       else {
         this.ports = [];
         this.ways = [];
+        this.tail = [];
         this.changed();
       }
       return true;
@@ -924,6 +961,11 @@ export class FerryDraw {
     if (this.ports.length < 2) {
       say(t("ferryDraw.twoPorts"), true);
       return;
+    }
+    // waypoints after the last port lead nowhere: they are dropped
+    if (this.tail.length) {
+      this.tail = [];
+      this.changed(true);
     }
     this.busy = true;
     try {
@@ -1049,12 +1091,13 @@ export class FerryDraw {
     // T-3809: with Shift, where a waypoint would go: a dot at the pointer joined to the points either side
     const wp = waying && this.at && this.wayWater() !== false ? this.wayPlace(this.at) : null;
     if (wp && this.at) {
-      const a = xy(wp.a), b = xy(wp.b), c = xy(this.at);
-      parts.push(`<path d="M${a.x.toFixed(1)} ${a.y.toFixed(1)}L${c.x.toFixed(1)} ${c.y.toFixed(1)}L${b.x.toFixed(1)} ${b.y.toFixed(1)}" fill="none" style="stroke:var(--ferry-ghost);stroke-width:2px;stroke-opacity:.85;stroke-dasharray:4 4"/>`);
+      const a = xy(wp.a), c = xy(this.at);
+      const b = wp.b ? xy(wp.b) : null;
+      parts.push(`<path d="M${a.x.toFixed(1)} ${a.y.toFixed(1)}L${c.x.toFixed(1)} ${c.y.toFixed(1)}${b ? `L${b.x.toFixed(1)} ${b.y.toFixed(1)}` : ""}" fill="none" style="stroke:var(--ferry-ghost);stroke-width:2px;stroke-opacity:.85;stroke-dasharray:4 4"/>`);
       parts.push(`<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="4.5" style="fill:var(--ferry-ghost);stroke:var(--map-land);stroke-width:2px"/>`);
     }
     if (!waying && end && this.at && !touchInput.peek() && (u.kind === "shore" || u.kind === "port")) {
-      const a = xy(end.berth), b = xy(u.berth);
+      const a = xy(this.tail[this.tail.length - 1] ?? end.berth), b = xy(u.berth);
       parts.push(`<path d="M${a.x.toFixed(1)} ${a.y.toFixed(1)}L${b.x.toFixed(1)} ${b.y.toFixed(1)}" fill="none" style="stroke:var(--ferry-ghost);stroke-width:2px;stroke-opacity:.85;stroke-dasharray:4 4"/>`);
     }
     // where a click would put a new port (T-2468), its landing and berth as a port's, in the ghost colour
@@ -1083,7 +1126,7 @@ export class FerryDraw {
     });
     // T-3809: each waypoint a dot in the line's colour, as the bus tool's points; the one under the pointer larger
     const hot = this.drag ?? (u.kind === "way" ? u : null);
-    this.ways.forEach((w, k) =>
+    this.allWays().forEach((w, k) =>
       w.forEach((p, j) => {
         const s = xy(p), big = hot !== null && hot.k === k && hot.j === j;
         parts.push(`<circle class="ferry-way" cx="${s.x.toFixed(1)}" cy="${s.y.toFixed(1)}" r="${big ? 6 : 4.5}" style="fill:${col};stroke:var(--map-land);stroke-width:2px"/>`);
@@ -1111,7 +1154,7 @@ export class FerryDraw {
     } else if (waying) {
       // T-3809: what a shift click would do here
       const water = this.wayWater();
-      if (this.ports.length < 2) (rows.push(row(t("ferryDraw.tagWayPorts"), true)), (bad = true));
+      if (!this.ports.length) (rows.push(row(t("ferryDraw.tagWayPorts"), true)), (bad = true));
       else if (water === false) (rows.push(row(t("ferryDraw.tagWayWater"), true)), (bad = true));
       else if (water) rows.push(row(t("ferryDraw.addWay")));
     } else if (u.kind === "way") {
@@ -1124,17 +1167,17 @@ export class FerryDraw {
       if (a) rows.push(row(t(right[a])));
     } else if (u.kind === "port") rows.push(row(this.ports.some((p) => p.node === u.node) ? u.name : t("ferryDraw.stopAt", { name: u.name })));
     else if (u.kind === "shore") rows.push(row(t("ferryDraw.placePort")));
+    // T-3845: over water with a port placed, the click that would work is a shift click's
+    else if (u.kind === "water" && this.ports.length) rows.push(row(t("ferryDraw.shiftWay")));
     else if (u.kind === "water") (rows.push(row(onWater(), true)), (bad = true));
     else if (u.kind === "far") (rows.push(row(farFromWater(), true)), (bad = true));
-    if (this.ports.length >= 2 && ((u.kind !== "handle" && u.kind !== "way") || this.drag)) {
+    if ((this.ports.length >= 2 || this.tail.length > 0) &&((u.kind !== "handle" && u.kind !== "way") || this.drag)) {
       if (r && r.legs.some((l) => l.reason)) (rows.push(row(noWaterPath(), true)), (bad = true));
       else if (r) {
         const p = this.price();
         rows.push(row(`${distance(r.m)}, ${moneyShort(p.cost * 1e6)}${this.built ? " more" : ""}`));
         rows.push(row(t("ferryDraw.ports", { count: this.ports.length - (this.looped() ? 1 : 0) })));
       }
-      // T-3809: the gesture has no button, so its tag says it, until the line has a waypoint
-      if (!waying && !this.drag && this.ways.every((w) => !w.length)) rows.push(row(t("ferryDraw.shiftWay")));
     }
     if (!rows.length) {
       tag.style.display = "none";
