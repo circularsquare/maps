@@ -107,6 +107,16 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: One player hit it twice on v0.4.2 (feedback 1795092485-688b2e15, 1795083347-52a31102); the only such reports in 7 days. Their saves load normally on master. A stuck load now restarts once, and the report names the stuck worker and period (tree demandload).
   - Goal: The cause found from the next report's diagnosis, or closed if no report comes.
   - Other: notes/T-3781.md
+- T-3817 [P2] {L:timetables} Zoomable line timetable that merges the Marey chart (taking, 2026-11-19, agent ttzoom)
+  - Context: Your pad, 11-20: "i'd like the timetable/marey diagram to be zoomable"; draw only the time columns that fit, but every bullet on top with a thin rim, shown ones in front, hovering a back bullet brings its column forward; scroll zooms instead of panning; the separate Marey button goes.
+  - Goal: That timetable, built as you described; your full words in the notes.
+  - Other: notes/T-3817.md
+- T-3818 [P2] {L:timetables} {after:T-3817} Related lines in the same timetable
+  - Context: Your pad, 11-20: related lines shown the same way, bullets about 2px lower, times at about 60% opacity (less when deprioritized), never ahead of the line being looked at.
+  - Other: notes/T-3817.md
+- T-3819 [P2] {L:timetables} Hide other lines icon beside the direction switch (taking, 2026-11-19, agent ttzoom)
+  - Context: Your pad, 11-20: the icon "is a bit tiny and out of the way, kinda looks like its floating in the middle of nowhere. lets move it directly to the right of "to [terminal a] | to [terminal b]" and make it a bit bigger."
+  - Other: notes/T-3817.md
 - T-3780 [P2] {L:timetables} {after:T-3346 stage 2 landing} Station and complex timetables
   - Context: Your pad, 2026-11-19: players ask for per-station timetables, "could be cool and not so hard". Per station and per complex, every line in its line colour; for a complex, pick the direction most platforms roughly align with and show trains as that way or the opposite ("eastbound"), "people should mostly use the station timetables anyways"; line numbers show the bullet and line name on hover; opened by a timetable icon button on the station or complex view, like the line's schedule button. Waits for the timetables port so it reads the new departure times.
   - Goal: A timetable icon on the station and complex views opens departures by line in line colours, a complex's split into two directions, with bullet and line name on hover.
@@ -388,15 +398,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: You, 11-19: "yes only fix in real network build so players are unchanged. sure can keep moscow unless people ask". Built 11-20 (e9a6f91b, moscowfix): junctions over 8 ends split, turn-backs given a dead end, a keep list holds Moscow to 105 of v0.4.2's 106 lines with nothing unserved; Berlin's tram 93 and Hong Kong's 751, 761P, 751P run whole. Saves wait in artifacts/trainworld/t3790/moscowfix until guianas stops writing data/packs.
   - Goal: mos (--force: one tram stop name), ber and hon (--force: three street names, same places) shipped for the next update; Saint Petersburg kept at its 123 lines with a keep list (it would grow to 151).
   - Other: notes/T-3790.md
-- T-3799 [P2] {L:small-fixes} Choose which Lines tab columns show (taking, 2026-11-19, agent linesgear)
-  - Context: Your pad, 2026-11-19: "perhaps have the column headers that are shown be customizable so that we dont have too many columns". You, 11-19: the choice lives behind "a little gear on the top right", with T-3816's filters.
-  - Goal: The gear lets a player choose which columns show; today's columns show by default. Built with T-3816.
-- T-3815 [P3] {L:accounts-server} Install the game as a phone app
-  - Context: You, 11-19: "make a progressive web app so that it can be installed as an "app" on phone? ... if it's super easy to do and maintain though, would be worth helping out a few users who want this." A manifest and icons let a phone add it to the home screen and open it full screen; offline caching is the part that needs upkeep (it can serve a stale version).
-  - Goal: The game can be added to a phone's home screen and opens full screen with its own icon, without offline caching.
-- T-3816 [P2] {L:small-fixes} Filter the Lines tab by mode and city (taking, 2026-11-19, agent linesgear)
-  - Context: You, 11-19: "*filter* lines view by mode, city, etc." and "we can access both with a little gear on the top right ... i guess just be an extra filter on top" of the this city / whole world switch. Built with T-3799.
-  - Goal: A gear at the Lines tab's top right holds the filters (modes, cities) and the column choice (T-3799); the filters apply on top of the this city / whole world switch.
 - T-3803 [P2] {L:edit-speed} Next edit waits behind the last edit's full state (taking, 2026-11-19, agent fullstate)
   - Context: On a 2,647-station save the full state after an edit takes 0.55-1.5 s and the next edit waits behind it. Renames fixed 11-19 (e9cba56e: next-edit wait median 387 to 0 ms). Left: stops, track, stations. Plan: a cheaper full state first (cache placeFacilities per complex, trim rowsDelta, money record out of the state; 2-3 h, perhaps 30-40%), then the follow-up in pieces with a waiting edit first (4-6 h).
   - Goal: An edit made right after another shows up within about 0.3 s on that save.
@@ -412,7 +413,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3809 [P3] {L:buses} Ferry waypoints without a port
   - Context: You, 11-19: "ferry waypoint placeability (maybe with shift click or something, if thats not used) so that people can path their ferries without placing a port. sometimes we are unable to path through some archipelagos. or its too long or smth."
   - Goal: A player can place a waypoint a ferry route passes through without a port (shift click if free), so routes get through archipelagos.
-- T-3812 [P2] {L:schematic} {after:T-3409} Schematic zoom out cap and drawing indicator
+- T-3812 [P2] {L:schematic} Schematic zoom out cap and drawing indicator (taking, 2026-11-19, agent schemzoom)
   - Context: You, 11-19: opening the schematic over one Aegean line in a save with many North American lines, "the aegean loaded really fast but then there was nothing else going on so it was a bit confusing. 1. i think lets cap the amount you can zoom out so that the total visible stuff takes up at least like 1% ish of the screen 2. if the map is not fully drawn lets still show the indicator on the top that says its drawing". After T-3409, which changes the same top row.
   - Goal: Zooming out stops when the drawn network covers about 1% of the screen; the drawing indicator shows until every region is drawn.
 - T-3325 [P3] {L:real-networks} {after:real-network rebuild batch} Rebuild Sendai so Senzan Line stops at Toshogu
@@ -769,10 +770,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: You asked 2026-11-16 to replace the list: Indonesian first, then Italian, Polish, Arabic (interface mirrors), maybe Malay, Dutch, Thai. It replaces T-2851. Indonesian was added 2026-11-17 (no native read yet; "halte" for bus stops and "Pendapatan tarif" for fare income are open wording calls).
   - Goal: Italian, Polish, Arabic added in order.
   - Other: Non-Latin scripts need a font and place-name check. research/localization.md
-- T-3409 [P2] {L:schematic} Schematic of one city or chosen cities (taking, 2026-11-19, agent citysheet)
-  - Context: Your TODO 2026-11-15. You picked B, 11-19: "they should be redrawn so that they can get full precision as if they were the only things in the world. we shouldnt just take the world map and hide the stuff outside." Answered 11-19 (cityschem): a line over 500 km away and unconnected changes nothing; a line within 500 km or one that connects puts both on one sheet and redraws the city (up to 40% in drawn distances). A far region is drawn after the city in view and doesn't make it wait, except for an edit made while it is still drawing.
-  - Goal: A city checklist on the schematic; the chosen cities (zones) get a fresh layout of their own, lines cut at the last station inside with a stub, the choice saved per game; about 3-4 h.
-  - Other: notes/T-3409.md
 - T-3413 [P3] {L:community} Save lineage, original author and copies
   - Context: Your TODO 2026-11-15: on metrodreamin people "steal" maps. You want saves to record the original author and who copied it.
   - Goal: A design for you first; then a save traces back to its original.

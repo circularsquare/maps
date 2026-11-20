@@ -1,6 +1,10 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3799 [P2] {L:small-fixes} Choose which Lines tab columns show (2026-11-19): Gear popover with Types, Cities and Columns; groups list if any line passes, figures stay whole-group; dot and hover count when lines are filtered off; settings in localStorage. notes/T-3816.md.
+- T-3816 [P2] {L:small-fixes} Filter the Lines tab by mode and city (2026-11-19): Gear popover with Types, Cities and Columns; groups list if any line passes, figures stay whole-group; dot and hover count when lines are filtered off; settings in localStorage. notes/T-3816.md.
+- T-3409 [P2] {L:schematic} Schematic of one city or chosen cities (2026-11-19): Option B built: chosen cities laid out alone, cut lines with a 3-pitch stub, choice saved per game, All cities reuses the kept layout; checker sheetchk passed saves, edits, edges, share and switching back. notes/T-3409.md.
+- T-3815 [P3] {L:accounts-server} Install the game as a phone app (2026-11-19): manifest.webmanifest + 192/512/maskable icons, standalone; headless Chrome installability errors empty; no offline caching (kept for Steam). notes/T-3815.md.
 - T-3814 [P1] {L:station-placement} New games name stations independently, clearer confirm (2026-11-19): Published in v0.4.4: new players' stations named independently (per-browser default off), both-way questions in her words, no Confirm? heading. notes/T-3814.md.
 - T-3802 [P1] {L:real-networks} Real world station rings drift while zooming (2026-11-19): Published in v0.4.4 (website c5c6edf, data 2026-11-19, verify PASS): rings stay put on big screens, names on hover for rings and dots, tram rings. notes/T-3802.md.
 - T-3813 [P2] {L:fares} X icons in the fares panel, bigger rings icon (2026-11-19): Cross icon on the fare curve point and fare area rows; rings icon 12 to 15 px, bar height unchanged. notes/T-3813.md.

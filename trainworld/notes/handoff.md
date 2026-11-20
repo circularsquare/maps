@@ -1,23 +1,26 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 953236ac-bf0a-4ac1-9b7d-bcd87f6165e0, name maps-c2, since 2026-11-19 21:24 UTC
-Updated: 2026-11-20 01:10 UTC
+Updated: 2026-11-20 01:50 UTC (maps-c2 past 500k, starting its successor; agents fullstate, schemzoom, ttzoom
+run in maps-c2's tab and report to the inbox; guianas runs in maps-e8's tab)
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status` (T-3667). This file is plan and her words.
 Diary: notes/handoff-log.md. Her local time is UTC-5.
 
 ## Next
-0. Live v0.4.4 (published ~01:00 UTC 11-20: website c5c6edf, data 2026-11-19 reused, verify --page PASS; hotfix
-   branch hotfix-v0.4.4, landed onto master cea0f112; no open-source export, it copies master). shonei-server
-   deployed + pushed fdaa596. Cap 14. 8800 being rebuilt at master cea0f112.
-1. Running: citysheet (Opus, T-3409 option B, 6184), fullstate (Opus, T-3803 option 3, 6193), linesgear (Opus,
-   T-3816 + T-3799, 6195), guianas (adopted from maps-e8, T-3762, writes data/packs; reports via the inbox).
+0. Live v0.4.4 (published ~01:00 UTC 11-20, silent centering redeploy ~01:30). shonei-server deployed + pushed
+   fdaa596. Cap 14. 8800 = master e2cabcf0 (Lines gear, Type column, chosen-cities schematic, PWA files).
+1. Running: fullstate (Opus, T-3803 option 3: cheaper full state, tree fullstate, 6193), schemzoom (Sonnet, T-3812,
+   tree schemzoom, 6199), ttzoom (Opus, T-3817 + T-3819 zoomable timetable, tree ttzoom, 6200; may stop before
+   removing the Marey button and ask), guianas (adopted from maps-e8, T-3762, writes data/packs; 19 rows shipped,
+   no lock held at 01:35; report not yet in). Checkers: fullstate yes (edit path); schemzoom, ttzoom UI only.
+   Open asks in chat: Lines gear wrap (keep top right, or move to the column headings?), gear strings to check.
 2. T-3790: pipeline fix landed e9a6f91b; ship mos (--force), ber, hon (--force) from
    artifacts/trainworld/t3790/moscowfix once guianas stops writing data/packs; keep sai at 123 with
    `realauto.py keep sai trainworld\data\packs\real\sai.save "..."` first (my call, same rule as Moscow).
-3. Up next: T-3815 PWA (manifest + icons, no offline); T-3812 after citysheet lands; T-3354, T-1738, T-3763 after
-   guianas; T-3803 option 1 after fullstate; T-3804, T-3805.
-4. Next full update (master): unpublished changelog c001-c007; before publishing: changelog review agent, sort,
+3. Up next: T-1738, T-3763 after guianas; T-3818 after T-3817; T-3803 option 1 after fullstate; T-3354, T-3804,
+   T-3805, T-3809 (ferry waypoints). Landed this session: T-3409 fe621ffa, T-3815 127ac0aa, T-3816 + T-3799 e2cabcf0.
+4. Next full update (master): unpublished changelog c001-c011; untranslated: linesTab.colType and others; before publishing: changelog review agent, sort,
    playtest list, translations of new keys (advancedFares.byCountry to drop).
 5. Silent hotfix 11-20 ~01:30: website 2a040d9 (0f9f1f7d on hotfix-v0.4.4; master d426a3d5). Leftover:
    .tw-trees\gearfix (held, probably by this session's shell; `agent-tree.mjs remove gearfix` later), .tw-trees\ringfix folder (worktree unregistered, held; never delete by hand), stale Vite pid 33736 on
