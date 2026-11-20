@@ -368,10 +368,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: Your notes verbatim: notes/T-3444.md; sizes in notes/code-tour.md. Requirements folded in 11-20: a station placed on track that leaves its shape alone redraws no neighbours (T-2767, 0.2-0.9 s today); the drawn network rebuilds only near a change (T-2701); the Penn Station to Emeryville snapped preview (3 s, T-763) as a check case. notes/review-edit-speed-2026-11-20.md
 - T-3859 [P4] {L:track-kinds} Custom drawn platforms
   - Context: Your TODO.md, 11-20, from player suggestions: "custom drawable platforms like station boxes? for tapered platforms might be cool". Design for you first; may fold into T-3444.
-- T-3435 [P4] {L:buses} Long-distance ferries lose money
-  - Context: You, 2026-11-16: make current ferries faster rather than adding a fast kind. First pass done: every ferry cruises at 45 km/h instead of 32, costs and seats unchanged; Hong Kong-Macau riders 2,553 to 5,908, Helsinki-Tallinn 18,217 to 19,011, city routes barely move. Long routes still lose money at the default service.
-  - Goal: Long-distance ferries pay at the default service (fares, service or more speed for long routes), with T-2216 first for routes like Seattle-Victoria.
-  - Other: Folded in T-437. notes/T-3435.md
 - T-3434 [P3] {L:region-redraws} Sabang Island missing from the Banda Aceh zone
   - Context: Player report 2026-11-16. Reach: few.
 - T-3804 [P4] {L:edit-speed} Other worker work that holds edits up
@@ -798,6 +794,10 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3837 [P3] {L:buses} Ferry routes found without a waypoint, and waypoints on touch
   - Context: T-3809 added shift click waypoints. A leg is still searched only in a box around its two ports, so a sea path that leaves it (Ma Liu Shui to Sai Kung) needs a waypoint; a wider third search would find it alone. Phones have no shift click.
   - Other: notes/T-3809.md
+- T-3892 [P2] {L:buses} Ferry rework: boat sizes, stronger fans, long routes
+  - Context: You, 11-20: "might be nice to get that out at same time as buses ... i think long distance ferries should probably get more traffic. i think we have room to potentially make ferry fan system way stronger / more common ... also provide for small and large ferries (current size can be medium?)". Today: one boat (320 seats, 45 km/h since T-3435's first pass); fans are a tenth of visits and attraction trips inside a zone, an hour aboard felt as 6 minutes, none on inter-city trips; island pairs solve since T-2216 stage 1. Folds in T-3435.
+  - Goal: A design for you first: small, medium and large boats with seats, speed, prices and loading; fans' share, weight and reach (inter-city leisure trips); what long routes like Hong Kong - Macau and Seattle - Victoria then carry and earn at the default service, measured in the game; then built.
+  - Other: notes/T-3435.md
 - T-3889 [P2] {L:trams} Tram track joins rail and high-speed track (taking, 2026-11-20, agent tramrail)
   - Context: You, 11-20: "people keep requesting connecting tram track to normal track (and high speed). theres apparently a bunch of real world setups that are like this. would this be hard to do? if not i think its fine to just allow. tram trains can keep the low speed limit of course." Then: "trams can go on train track but trains cannot path onto tram track." Today tram and train track can only cross ("Tram track and train track can't join").
   - Goal: Tram track joins regular and high-speed track at a junction; a tram line runs onto them at the tram's 80 km/h; train lines stay off tram track.
