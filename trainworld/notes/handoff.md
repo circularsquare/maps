@@ -20,8 +20,7 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    T-1738 Bhamo; T-3836 (design for her).
 4. Next update: unpublished changelog c001-c015 plus tonight's; untranslated: T-3822's and T-3823's hover strings,
    diagramView.addCity; use the publish skill (review agent, sort, playtest list, translations, new zones image).
-5. Leftover: stale Vite pid 33736 on 6181 (leave), trees ttchk2base, touchrule, timekeys.
-6. T-3781 waits for the next report's diagnosis. Steam (T-3729): her screenshots in artifacts/trainworld/steam.
+5. Leftover trees ttchk2base, touchrule, timekeys. T-3781 waits for the next report's diagnosis. Steam (T-3729): her screenshots in artifacts/trainworld/steam.
 
 ## Her words
 - 11-20 ~12:45 UTC, morning: new countries "look pretty cool"; rivers still break (T-3839, her words there); ferry
