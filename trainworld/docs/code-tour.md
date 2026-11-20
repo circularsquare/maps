@@ -61,7 +61,7 @@ About 123,000 lines across about 460 files. Built by Vite into the page; the Rus
 
 **Workers** (`workers/`, about 42 files, 23,500 lines). The glue between the page and the Rust code:
 
-- **Clock worker** (`clock.worker.ts`, 4,600 lines, with the track model inside): owns the network, applies edits, answers the track tool's previews, keeps the money and the clock, and builds the save and its picture. Its save slot is `slots.ts` (700 lines): which slot the game is in and whether it may write there, autosave, the saves panel's actions, and the account's copy for cloud saves.
+- **Clock worker** (`clock.worker.ts`, 1,300 lines, and its parts `clock*.ts` beside it, with the track model inside): owns the network, applies edits, answers the track tool's previews, keeps the money and the clock, and builds the save and its picture. Its save slot is `slots.ts` (700 lines): which slot the game is in and whether it may write there, autosave, the saves panel's actions, and the account's copy for cloud saves.
 - **Demand pool** (`demandClient.ts`, 5,400 lines, which runs on the main thread, and `demand.worker.ts`, 2,800, inside each worker): decides how many workers a device gets (`poolSize`: usually 1 to 3, up to 5 if the player turns on more cores), which zone packs each opens, splits the network into parts that share no rider, and collects the answers.
 - **Smaller workers**: the real-rail route finder for the track tool (`realRoute.worker.ts`), the schematic's layout (`diagram.worker.ts`), ferry water, demand sums, map shading, gzip for saves.
 - **Saves** (`saveFile.ts`, 1,000 lines): the save format and the browser's own storage (IndexedDB): save slots, backups, and the last demand result kept beside each save.
@@ -130,7 +130,7 @@ Lines are lines in files git tracks, blank lines and comments included. The Rust
 
 Things that look silly, doubled, oversized or tangled. None of these were changed.
 
-1. **Two giant files at the centre.** `demandClient.ts` (5,400 lines) and `clock.worker.ts` (4,600) are the two biggest files in the project. The clock worker file does the network, previews, money and save pictures in one place, and many app files talk to it. The demand pool's 5,400 lines run on the main thread, not in a worker.
+1. **Two giant files at the centre.** `demandClient.ts` (5,400 lines) and `clockClient.ts` are among the biggest files in the project; the clock worker (T-2374) is split into `clock.worker.ts` and the `clock*.ts` parts beside it, and many app files talk to it. The demand pool's 5,400 lines run on the main thread, not in a worker.
 2. **The same job written twice, kept in step by hand or by a test.**
    - The schematic's carry solve is in Rust (`sim/src/diagram.rs`) and also in JavaScript (`app/src/diagram/sheetLines.ts`), meant to give the same result to the last bit; the JavaScript one is kept as the fallback. It stays because three Node checks run it directly (t2580-sheet-water, t3358-river-banks, t3364-off-sheet-water).
    - The real-rail route finder is in the game (`workers/realRoute.worker.ts`) and copied into the pipeline (`pipeline/realroute.py`), which says it follows the same rules. The copy stays because it is Python, rail only, and runs offline in the pipeline.

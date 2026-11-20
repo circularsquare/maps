@@ -322,8 +322,7 @@ the screen when demand cannot load, T-149, T-172, T-180); `StartMenu.tsx` (the s
 
 `realRoute.worker.ts` (the real-network router: graphs joined at borders, A* with the turn limit
 and families, then the fit in steps on a track model of its own, dropped for a newer request, T-727d, T-754; the outlines of the regions with a graph sent to the page, T-913); `protocol.ts` (edit ops, `RouteAsk` for a route edit and its preview, clock messages, the network snapshot for demand), `clock.worker.ts` (owns
-the network: `TrackApi`, notes/T-025.md; money too; an edit's follow-up (state, trips, boarding hour, answer) waits behind the previews asked meanwhile, `later`, T-1407, an early track segment's until the pointer rests, `holdOn`, T-2404; `slotSummary`, a save's picture
-with a panel per city, T-894), `slots.ts` (the save slot of the game in hand, T-3734: `writeBlock`, whether and why the
+the network: `TrackApi`, notes/T-025.md; the message handler, setup, saves' glue and `slotSummary`, a save's picture with a panel per city, T-894. Split in T-2374 (notes/T-2374.md): `clockState.ts` (the shared state, read as imported bindings and written through `put` functions), `clockPanic.ts` (Rust panics, T-1007), `clockFares.ts`, `clockGround.ts` (water, terrain, streets and roads fetched on demand), `clockFollowUp.ts` (an edit's follow-up waits behind the previews asked meanwhile, `later`, T-1407, `holdOn`, T-2404), `clockMain.ts` (`buildState`, `sendState`), `clockMoney.ts`, `clockPost.ts` (the diagram's graph, posting only what changed), `clockDemand.ts` (boarding, the hour's trips, the demand snapshot), `clockEdits.ts` (`apply`)), `slots.ts` (the save slot of the game in hand, T-3734: `writeBlock`, whether and why the
 slot may not be written now; `publishSlots`, autosave, the save by hand, the saves panel's actions, the slot's lease
 against other tabs, the cloud queue; its state is the one object `saves`, which the clock worker also reads and
 writes, and it reaches the game through the `SlotHost` the worker binds; `letGoSlot` for a start or open that failed,
@@ -499,7 +498,7 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   `zone_terrain.Fine` reads a test run's tars before the intermediate's with `TW_FINE_OVER=<dir>`.
 - `world_terrain.py` (T-2901): the world's terrain classes, one gzip file per degree block with data
   (`build <fine> <out> [--jobs n]`, into `data/terrain-world-v2/` since T-3372; the old `data/terrain-world/` is v1, still on R2 for releases made before it) and `index.bin` (which blocks have a file), read by
-  the game (`game/terrainBlocks.ts`, the terrain section of `workers/clock.worker.ts`) and published by `tools/deploy.py --terrain-world`.
+  the game (`game/terrainBlocks.ts`, the terrain section of `workers/clockGround.ts`) and published by `tools/deploy.py --terrain-world`.
 - `zone_terrain.py` (T-1270, T-1854): the terrain classes from that intermediate (thresholds, filter and
   cap in its docstring) and the `.terrain` encoding, which `world_terrain.py` uses; there are no per-zone
   files since T-2901. `mix [dir]` the class shares over the blocks, `probe lon lat km`. Its `Dem` reads GEDTM30 at 240 m (`data/raw/gedtm30/`) for `market_drives.py slope`, whose

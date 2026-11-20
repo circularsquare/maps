@@ -916,7 +916,7 @@ order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the rider
   one names it alone (alone in its complex, its stored name too, so a complex it forms later is called
   that). The complex view's title, and a Stations tab row of a complex, show and rename the complex's
   name, which unbound stations keep out of (the worker resolves every rename: `renameStation`,
-  `renameComplex` in `workers/clock.worker.ts`). A station opened on its own from its complex's list,
+  `renameComplex` in `workers/clockDemand.ts`). A station opened on its own from its complex's list,
   in a complex of several, has a toggle beside its name (link icon, hover "Use the complex's name",
   lit while bound): unbinding shows its stored name again, binding shows the complex's; each is one
   undo. New stations start bound while Settings, Game "Name new stations after their complex" is ticked
