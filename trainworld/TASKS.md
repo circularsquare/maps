@@ -221,9 +221,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3893 [P3] {L:checks} t671-ghost-hover fails near track ends (taking, 2026-11-20, agent checkfix)
   - Context: Found by toolsplit (T-2374), 11-20: "near track ends" fails 21 of 84 on master and on the split alike; cause not looked at.
   - Goal: The cause found; the ghost fixed or the check brought up to date, and it passes.
-- T-3877 [P3] {L:checks} t2365's graph bins check fails since T-3509 (taking, 2026-11-20, agent checkfix)
-  - Context: Found by modesplit (T-3695): t2365 "graph bins add up to the zone's split" fails on both saves; the gap equals the within-place market trips T-3509 added, with no figure moved by T-3695.
-  - Goal: Confirmed on master, then the check counts those trips (or the graph does), and it passes.
 - T-3457 [P3] {L:checks} Slim the standing checks
   - Context: The code tour (notes/code-tour.md) counts 283 of 320 checks named after the task that made them, 42 more in checks/old, 45,700 lines, more than the pipeline. You 11-16: Claude leans a bit too much toward writing checks.
   - Goal: Checks that no longer guard anything are deleted, the rest named by what they check; smoke and the standing set still pass.
@@ -398,7 +395,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3654 [P3] {L:map-look} Draw on the map for planning
   - Context: Your pad, 2026-11-18, from Discord, "not high prio": "some people want draw on map tool for planning stuff. could add it in a discreet way, hideable".
   - Goal: A design to you first (what can be drawn, whether it saves and shares, where the hide control sits), then a first version.
-- T-3655 [P2] {L:line-rates} A line on full track keeps its old rate after a new count (taking, 2026-11-20, agent fullrate)
+- T-3894 [P3] {L:line-rates} A line with no trains still caps the lines it crosses
+  - Context: Found by fullrate (T-3646), 11-20: on Tokyo a crossing of lines [150, 42, 42] at 100% stays capped by a line with no trains. Not looked at further.
+  - Goal: A line with no trains in a period holds no share of a crossing or shared track in it, or the reason it should.
+- T-3655 [P2] {L:line-rates} A line on full track keeps its old rate after a new count
   - Context: A line held on full track keeps its rate when given a new count or headway until a line beside it moves (London's busiest line keeps 8 trains at medium as its headway goes 540 -> 360 s). Cause traced (fullrate, 2026-11-20): the line is held in every settle of the edit, then trimmed back. Two re-share fixes tried: counts went the right way (83-137 ms an edit) but headways went the wrong way and took 0.8-3.8 s, as lines beside it came off held and the ordinary steps swung for 80 rounds. An untried next step is in the notes.
   - Goal: A new count or headway on full track takes its share at the edit, within about 50 ms an edit on London's shared save.
   - Other: notes/T-3655.md, notes/T-3482.md "Follow-ups"
@@ -810,7 +810,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: You, 11-20: "part of the reason why buses are useless is because everyone is willing to walk? ... maybe juts 2 "walk tiers"..? or stretch out the walk/non-walk curves". Design done (options A-D). Your call 11-20: "i think 10 minutes is a bit aggressive yeah. could we try dropping that to 5 minutes, and also adding option A? ... i'd rather keep the rail balance roughly in the ame spot, i feel like rail is pretty good /easy already." Then: "lets try fully getting rid of the 10 minute bonus ... to partly compensate we can add a slight, maybe 2 minute penalty for boarding a train, to represent the time it takes to like walk down the stairs".
   - Goal: Option A built (1 in 10 people don't walk the whole way past 800 m and are let off the walking rule), walking's head start gone, and 2 perceived minutes entering a trip's first train station plus 2 leaving its last (you, 11-20: "4=2+2 minutes"; trains only, not trams, buses or ferries); measured on New York and London (rail trips a day, walking against the census, bus riders on 1-2 km trips) and the ceiling run; rail trips a day within about 5% of today, else the options go to you before landing.
   - Other: notes/T-3888.md; sources research/walk-tiers.md
-- T-3856 [P2] {L:buses} Plain buses with no boarding cost
+- T-3856 [P2] {L:buses} Plain buses with no boarding cost (taking, 2026-11-20, agent plainbus)
   - Context: Your TODO.md and 11-20 calls: "remove boarding cost altogether, i think its kinda the opposite of what we want, since i kinda want buses to be more viable for short trips"; then bus speed from 90% of the car's to 85% or 80% ("i'd rather keep plain buses at 90%, unless we drop the boarding cost"); construction "basically 0 cost"; "the default bus fare ratio a bit lower, like 0.8x"; the same bus vehicle ("we dont necessarily need the vehicle type to be different").
   - Goal: Bus boarding cost removed, speed 85% (80% if the frontier chart shows buses winning too much), construction near zero, default bus fare 0.8x; the frontier chart before and after; plain buses most profitable on short, thin trips.
   - Other: Boarding went 6 to 4 in T-3522. Measure with T-3887. From T-3888: under about 1.3 km no bus is offered at all ("no train slower than walking" counts the walks and the wait), boarding cost or not. notes/T-3888.md
