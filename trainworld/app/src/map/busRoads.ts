@@ -31,6 +31,12 @@ export const busRoadFilter = (motorways = true): unknown[] => [
   ["all", ["==", ["get", "class"], "path"], ["==", ["get", "subclass"], PEDESTRIAN]],
 ];
 
+/** T-3829: the roads a bus runs at highway speed (`RoadGraph.fastEdge`: trunk roads and motorways, their ramps
+ * too, which the tiles class as the road itself), as a MapLibre expression; every other road takes its speed from
+ * the place, not its class. */
+export const FAST_ROAD_CLASSES = ["trunk", "motorway"];
+export const fastRoadExpr = (): unknown[] => ["in", ["get", "class"], ["literal", FAST_ROAD_CLASSES]];
+
 /** `railRoad` as a MapLibre filter, for the hint over the roads rail may follow. */
 export const railRoadFilter = (): unknown[] => ["in", ["get", "class"], ["literal", [...RAIL_CLASSES, "motorway"]]];
 

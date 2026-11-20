@@ -2302,7 +2302,7 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   for a new bus line). At each street stop (the drawn ones, `plan.street`) the bus stands 20 s
   (`bus::STREET_DWELL_S`, T-1798) inside the hop's time, so the run times do not see the stands. No
   accelerating drawn, no capacity, no holds.
-- **Trunk roads**: the route tool marks each stretch of route that lies on an OpenMapTiles `trunk` road
+- **Trunk roads**: the route tool marks each stretch of route that lies on an OpenMapTiles `trunk` or `motorway` road (`RoadGraph.fastEdge`)
   (`K_TRUNK` in the point's kind, saved with it); a route from before T-2904 has no marks until it is redrawn.
 - **Riders**: a third of a train car (T-2919; Anita, 2026-11-09): 53 at the rated load, 80 at crush,
   15 seats, so crowding is counted and shown as a train's (`BUS_CRUSH`, demand's `BUS_CARS`); the
