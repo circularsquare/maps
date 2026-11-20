@@ -15,7 +15,9 @@ import { lineCountry } from "./holidays";
 import { stationCity, type Income } from "./money";
 import { stopsById } from "./world";
 import { PERIODS } from "./periods";
-import type { WorldView } from "./types";
+import { trainKind } from "./format";
+import { lineRunFactor, lineShares, upkeepShares } from "./regionMoney";
+import type { LineInput, LineStats, WorldView } from "./types";
 import type { MoneyState } from "../workers/protocol";
 
 const PERIOD_HOURS = PERIODS.map((p) => p.to - p.from);
@@ -45,6 +47,46 @@ export function runningADay(m: MoneyState): number {
 export function dayProfit(inc: Income, m: MoneyState): number {
   const fares = inc.perHour.reduce((a, v, p) => a + v * PERIOD_HOURS[p], 0) * 1e6;
   return fares - runningADay(m) - (m.upkeep.track + m.upkeep.stations + m.upkeep.buses) * 1e6;
+}
+
+/** A running line's running cost over a whole day at its trains now, US$ (as `runningToday`, game/today.ts). */
+export function lineRunningADay(l: LineInput, st: LineStats, m: MoneyState): number {
+  const k = trainKind(m, st.fast, st.tram);
+  const perKm = st.bus?.ferry ? m.runCostBoatKm : st.bus ? m.runCostBusKm : k.runCostTrainKm + st.cars * k.runCostCarKm;
+  let run = 0;
+  PERIODS.forEach((_, i) => { run += l.tphP[i] * 2 * st.km * perKm * m.economy * PERIOD_HOURS[i]; });
+  return run * lineRunFactor(l.num); // T-2669
+}
+
+/** T-3885: `dayProfit` by region (a zone id; "" outside every zone), US$, split as the region ledgers are
+ * (regionMoney.ts): each running line's fares by its fare shares, its running cost by its route km (scaled so the regions
+ * add up to the clock's running cost), and the upkeep by where the track and stations are. Adds up to `dayProfit`. */
+export function dayProfitByRegion(w: WorldView, inc: Income, m: MoneyState): Map<string, number> {
+  const out = new Map<string, number>(), run = new Map<string, number>();
+  const add = (map: Map<string, number>, k: string, v: number) => map.set(k, (map.get(k) ?? 0) + v);
+  const shares = lineShares.peek();
+  let runAll = 0;
+  for (const l of w.save.lines) {
+    const st = w.lineStats[l.id];
+    if (!st || st.status !== "running") continue;
+    const sh = shares.get(l.num);
+    const f = (inc.lines.get(l.id)?.perHour ?? []).reduce((a, v, p) => a + v * PERIOD_HOURS[p], 0) * 1e6;
+    for (const [z, s] of sh?.fare.length ? sh.fare : [["", 1] as [string, number]]) add(out, z, f * s);
+    const r = lineRunningADay(l, st, m);
+    runAll += r;
+    for (const [z, s] of sh?.run.length ? sh.run : [["", 1] as [string, number]]) add(run, z, r * s);
+  }
+  // running cost scaled to the clock's
+  const total = dayProfit(inc, m), upkeep = (m.upkeep.track + m.upkeep.stations + m.upkeep.buses) * 1e6;
+  const scale = runAll > 0 ? runningADay(m) / runAll : 0;
+  for (const [z, r] of run) add(out, z, -r * scale);
+  const up = upkeepShares.peek();
+  for (const [z, s] of up.length ? up : [["", 1] as [string, number]]) add(out, z, -upkeep * s);
+  // what the splits leave over (a running cost with no running line, rounding) is outside every zone
+  let sum = 0;
+  for (const v of out.values()) sum += v;
+  add(out, "", total - sum);
+  return out;
 }
 
 /** The base from the settled demand `dv` and its income `inc`; fares are left out (sensitivity 0) where

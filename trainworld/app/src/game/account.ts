@@ -18,8 +18,8 @@
 // file gives the clock worker the account (`cloudContext`) on every change.
 
 import { effect, signal } from "@preact/signals";
-import { incomeByDay, moneyState } from "./money";
-import { dayProfit } from "./profitEstimate";
+import { incomeByDay, moneyState, moneyWorld } from "./money";
+import { dayProfit, dayProfitByRegion } from "./profitEstimate";
 import { pointsBeforeCover, pointsPerDay, scoreSettled } from "./points";
 import { startPlaytime } from "./playtime";
 import { startGameTime } from "./gameTime";
@@ -424,7 +424,7 @@ const MAX_PROFIT = 1e14;
 
 /** The game's figures now: the forecast weekday's points (T-3465) in all, its best cities, and (T-3879) the weekday's
  * profit, US$ (`dayProfit`: fares minus running costs and upkeep), from the same whole final. */
-function figures(): { day: number; points: number; cities: Record<string, number>; profit?: number } | null {
+function figures(): { day: number; points: number; cities: Record<string, number>; profit?: number; profitCities?: Record<string, number> } | null {
   const m = moneyState.peek();
   const hour = m?.hours.at(-1)?.hour;
   const how = scoreSettled.peek();
@@ -438,8 +438,14 @@ function figures(): { day: number; points: number; cities: Record<string, number
   if (points <= 0 && how !== "idle" && !pointsBeforeCover.peek()) return null;
   const cities: Record<string, number> = {};
   for (const [id, v] of per.slice(0, MAX_CITIES)) cities[id] = cap(v);
-  const inc = incomeByDay.peek()[0], profit = inc ? Math.round(dayProfit(inc, m)) : NaN;
-  return { day: Math.floor(hour / 24), points, cities, ...(Number.isFinite(profit) ? { profit: Math.max(-MAX_PROFIT, Math.min(MAX_PROFIT, profit)) } : {}) };
+  const inc = incomeByDay.peek()[0], w = moneyWorld.peek(), profit = inc ? Math.round(dayProfit(inc, m)) : NaN;
+  if (!Number.isFinite(profit)) return { day: Math.floor(hour / 24), points, cities };
+  const clamp = (v: number) => Math.max(-MAX_PROFIT, Math.min(MAX_PROFIT, Math.round(v)));
+  // T-3885: the profit of each city the points name, so the profit boards take a game in the same cities as the points ones
+  const byRegion = inc && w ? dayProfitByRegion(w, inc, m) : new Map<string, number>();
+  const profitCities: Record<string, number> = {};
+  for (const id of Object.keys(cities)) { const v = byRegion.get(id); if (v !== undefined && Number.isFinite(v)) profitCities[id] = clamp(v); }
+  return { day: Math.floor(hour / 24), points, cities, profit: clamp(profit), profitCities };
 }
 
 /** A game whose figures never rank: a sandbox, (T-3115) a copy of a shared network, or (T-3707) a modded game, which
@@ -482,7 +488,7 @@ export async function sendScores(now = false): Promise<void> {
     const f = figures();
     if (!f || (scoresRefused.peek() && Date.now() - refusedAt < REFUSED_WAIT_MS)) return;
     // (the server's profit flag too: a server that dropped `profit` is sent to again once it keeps it)
-    const sig = JSON.stringify([f.points, f.cities, f.profit ?? null, accountConfig.peek()?.trainworldProfit === true]);
+    const sig = JSON.stringify([f.points, f.cities, f.profit ?? null, f.profitCities ?? null, accountConfig.peek()?.trainworldProfit === true]);
     const before = e.acct === acct ? e.sent : undefined;
     if (sig === before || (!before && f.points <= 0)) return;
     if (!now && before && Date.now() - (e.at ?? 0) < SEND_GAP_MS) return;

@@ -1,6 +1,6 @@
 // T-973: the leaderboards, a centred modal opened by the trophy at the top of the Cities tab, beside
-// the achievements (`LeaderboardButton`, T-2179). Points (Anita, 2026-10-23), or with the Points / Profit switch (T-3879) one
-// world board of weekday profit, which has no picker: the world board, then one per city, this
+// the achievements (`LeaderboardButton`, T-2179). Points (Anita, 2026-10-23), or with the Points / Profit switch (T-3879,
+// T-3885) weekday profit, on the same places: the world board, then one per city, this
 // game's cities first and then the others that have rows. T-3116 country boards (`country_<cc>`, a game's city points summed over the country) sit in the same picker, found by the country's name. The top 50, the player's own row under
 // them when lower, and at the bottom Sign in to be listed, a name with Join, or Leave the
 // leaderboards. Each person once per board, with their best normal game there at its current figures (T-3248; shonei-server's trainworld.go).
@@ -26,10 +26,13 @@ export const WORLD = "points";
 export const COUNTRY = "country_";
 /** T-3132: Community's region places, `region_<realm id>` (the server's key too) */
 export const REGION = "region_";
-/** T-3879: the world board of weekday profit (fares minus running costs and upkeep), beside the points boards */
+/** T-3879, T-3885: the weekday profit boards, one beside each points board: `profit`, `profit_<city>`, `profit_country_<cc>` */
 export const PROFIT = "profit";
-/** The points board last shown, to go back to from Profit */
-let pointsKey = WORLD;
+const isProfit = (key: string) => key === PROFIT || key.startsWith(PROFIT + "_");
+/** a place's profit board, from its points key (the world, a city or a country) */
+const profitOf = (place: string) => place === WORLD ? PROFIT : place.startsWith(COUNTRY) ? `${PROFIT}_${place}` : PROFIT + place.slice(WORLD.length);
+/** a board's place, as its points key */
+const placeOf = (key: string) => !isProfit(key) ? key : key === PROFIT ? WORLD : key.startsWith(`${PROFIT}_${COUNTRY}`) ? key.slice(PROFIT.length + 1) : WORLD + key.slice(PROFIT.length);
 const cityName = (id: string) => CITIES.find((c) => c.id === id)?.name ?? id;
 const collate = new Intl.Collator(undefined, { sensitivity: "base" }).compare;
 
@@ -37,8 +40,8 @@ function Row({ r, board, mine }: { r: BoardRow; board: string; mine: boolean }) 
   return <li class={mine ? "me" : ""}>
     <span class="lb-rank num">{r.rank}</span>
     <span class="lb-name"><Named name={r.name} flag={r.flag} /></span>
-    {board === PROFIT
-      ? <span class="lb-value num" data-tip={t("leaderboard.profitTip", { money: moneyExact(r.value) }) + "\n" + t("leaderboard.profitRule")}>{money(r.value)}</span>
+    {isProfit(board)
+      ? <span class="lb-value num" data-tip={t("leaderboard.profitTip", { money: moneyExact(r.value) })}>{money(r.value)}</span>
       : <span class="lb-value num" data-tip={t("leaderboard.valueTip", { points: exact(r.value), world: board === WORLD, city: board === WORLD ? "" : board.startsWith(COUNTRY) ? countryLabel(board.slice(COUNTRY.length)) : cityName(board.slice(WORLD.length + 1)) }) + "\n" + t("leaderboard.pointsRule", { trip: POINTS_PER_TRIP, km: POINTS_PER_KM })}>{t("leaderboard.value", { points: pointsShort(r.value) })}</span>}
   </li>;
 }
@@ -131,20 +134,22 @@ function Boards() {
   // T-3879: Profit only on a server that has its board
   const profitOn = accountConfig.value?.trainworldProfit === true;
   const key = st.key, d = st.data && st.data.board === key ? st.data : null;
-  if (key !== PROFIT) pointsKey = key;
+  const profit = isProfit(key), place = placeOf(key);
+  // the places with rows on either kind of board, as points keys
+  const listed = Object.keys(st.list).map(placeOf);
   // this game's cities, its most points first; then every other city with a board
   const mine = [...pointsScore.value].filter(([id, v]) => id && v > 0).sort((a, b) => b[1] - a[1]).map(([id]) => id);
-  const others = Object.keys(st.list).filter((k) => k.startsWith(WORLD + "_")).map((k) => k.slice(WORLD.length + 1))
+  const others = [...new Set(listed.filter((k) => k.startsWith(WORLD + "_")).map((k) => k.slice(WORLD.length + 1)))]
     .filter((id) => !mine.includes(id)).sort((a, b) => collate(cityName(a), cityName(b)));
-  const lands = [...new Set([...mine.map((id) => zoneCountry(id)?.toLowerCase() ?? ""), ...Object.keys(st.list).filter((k) => k.startsWith(COUNTRY)).map((k) => k.slice(COUNTRY.length))].filter(Boolean))];
+  const lands = [...new Set([...mine.map((id) => zoneCountry(id)?.toLowerCase() ?? ""), ...listed.filter((k) => k.startsWith(COUNTRY)).map((k) => k.slice(COUNTRY.length))].filter(Boolean))];
   const meIn = d?.me && d.rows.some((r) => r.rank === d.me!.rank && r.name === d.me!.name);
   return <>
     <Join top />
     {profitOn && <div class="lb-kind">
-      <Segmented<boolean> options={[[false, t("leaderboard.boardPoints")], [true, t("leaderboard.boardProfit")]]} value={key === PROFIT}
-        onChange={(profit) => void fetchBoards(profit ? PROFIT : pointsKey)} />
+      <Segmented<boolean> options={[[false, t("leaderboard.boardPoints")], [true, t("leaderboard.boardProfit")]]} value={profit}
+        onChange={(v) => void fetchBoards(v ? profitOf(place) : place)} />
     </div>}
-    {key !== PROFIT && <CityPick boardKey={key} mine={mine} all={new Set([...mine, ...others])} countries={lands} />}
+    <CityPick boardKey={place} mine={mine} all={new Set([...mine, ...others])} countries={lands} onPick={profit ? (k) => void fetchBoards(profitOf(k)) : undefined} />
     {!d ? <p class="small muted">{st.error || t("leaderboard.loading")}</p>
       : <ol class="lb-rows">
         {d.rows.length === 0 && <li class="muted">{t("leaderboard.nobody")}</li>}

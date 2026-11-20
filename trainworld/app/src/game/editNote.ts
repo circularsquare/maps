@@ -18,12 +18,10 @@ import { effect, signal } from "@preact/signals";
 import { demandByDay, demandHeld, demandUpdating, editsSettling, finalWorld, networkWorld, refiningZone, roughZones, type DayDemand, type DemandView } from "./demand";
 import { DAY_KINDS, DEMAND_DAY_PHRASE } from "./days";
 import { editStamp, lastEdit } from "./editCap";
-import { trainKind } from "./format";
-import { lineRunFactor } from "./regionMoney";
 import { loadProgress } from "./loading";
 import { incomeByDay, moneyState, type Income } from "./money";
 import { PERIODS } from "./periods";
-import { dayProfit, estimateBase, estimateChange, type EstimateBase, type ProfitEstimate } from "./profitEstimate";
+import { dayProfit, estimateBase, lineRunningADay, estimateChange, type EstimateBase, type ProfitEstimate } from "./profitEstimate";
 import type { WorldView } from "./types";
 import { shownDay, shownDayPhrase } from "./ui";
 import { world } from "./world";
@@ -135,13 +133,7 @@ function figuresOf(w: WorldView, d: DayDemand | null, kind: number, inc: Income,
     let fares = 0, run = 0;
     const lm = inc.lines.get(l.id);
     if (lm) lm.perHour.forEach((v, p) => { fares += v * PERIOD_HOURS[p] * 1e6; });
-    if (st.status === "running") {
-      // as `runningToday` (game/today.ts), over the whole day of this kind
-      const k = trainKind(m, st.fast, st.tram);
-      const perKm = st.bus?.ferry ? m.runCostBoatKm : st.bus ? m.runCostBusKm : k.runCostTrainKm + st.cars * k.runCostCarKm;
-      PERIODS.forEach((_, i) => { run += l.tphP[i] * 2 * st.km * perKm * m.economy * PERIOD_HOURS[i]; });
-      run *= lineRunFactor(l.num); // T-2669
-    }
+    if (st.status === "running") run = lineRunningADay(l, st, m);
     lines.set(l.id, { riders: r, money: fares - run - st.upkeep });
   }
   const coarse = new Map<string, boolean>(), rough = roughZones.peek();

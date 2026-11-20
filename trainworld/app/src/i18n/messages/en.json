@@ -1173,7 +1173,6 @@
   "leaderboard.boardPoints": "Points",
   "leaderboard.boardProfit": "Profit",
   "leaderboard.profitTip": "{money} profit per weekday",
-  "leaderboard.profitRule": "Fares minus running costs and upkeep",
   "leaderboard.sandbox": "Sandbox games are not listed",
   "leaderboard.modded": "Modded games are not listed",
   "leaderboard.unpublished": "Scores from this version are not listed. Reload the page for the newest.",
