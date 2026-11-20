@@ -1328,7 +1328,7 @@
   "linesTab.sortNear": "Sort by distance from the center of the screen, by the nearest stop",
   "linesTab.gear": "Filter lines and choose columns",
   "linesTab.leftOut": "{count, plural, one {# line not listed} other {# lines not listed}}",
-  "linesTab.gearTypes": "Types",
+  "linesTab.gearTypes": "Show",
   "linesTab.gearCities": "Cities",
   "linesTab.gearColumns": "Columns",
   "lineTitle.edit": "Edit name, color, or symbol",

@@ -1325,7 +1325,7 @@
   "linesTab.sortNear": "Hover of the Near column heading in the Lines tab.",
   "linesTab.gear": "Hover and label of the gear button at the top right of the Lines tab; it opens a small popover to filter the list by line type and city and to choose the columns.",
   "linesTab.leftOut": "Second line of the gear button's hover while the filters keep lines off the Lines tab list; count is how many lines in the whole game, e.g. 3.",
-  "linesTab.gearTypes": "Heading in the Lines tab gear popover over the line type buttons (train, high speed, tram, bus, ferry). Short.",
+  "linesTab.gearTypes": "Heading in the Lines tab gear popover over the line type buttons (train, high speed, tram, bus, ferry) the player ticks to show those lines: the verb show, an imperative, as a one-word heading (not a show or performance). Short.",
   "linesTab.gearCities": "Heading in the Lines tab gear popover over the list of cities to list lines from; it is also the label of a checkbox that ticks or unticks every city. Short.",
   "linesTab.gearColumns": "Heading in the Lines tab gear popover over the checkboxes choosing which list columns show (City, Riders, Money, Fleet, Type). Short.",
   "lineTitle.edit": "Hover and screen-reader label of the line badge button in a line view title; it opens the editor.",
