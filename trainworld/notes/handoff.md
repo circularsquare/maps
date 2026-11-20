@@ -13,30 +13,32 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    338 rows shipped; running after-join checks + smoke on the main tree: hold landings until its report, then
    commit its files), rampspeed (T-3027: checker before landing). Mine: hourturn (T-3804 st 1), modesplit (T-3695),
    reportsfix (T-3841), streetspeeds (T-3460).
-2. Landing queue after gapfill: bigload (T-3868, no checker; then a fresh agent for its option B); riverfix (T-3839,
-   no checker; her "good to ship"; c018 reword in its notes); islands1 (T-2216 st 1 PASSED; land WITHOUT --task,
-   rewrite T-2216 to stages 2-3); savefail (T-3869, text acked; rebase after bigload, then a checker); one smoke,
-   8800 rebuild, ping her, push. After gapfill's
+2. Landed: gapfill 29e6629a, bigload, riverfix, islands1 3ae030c8, streetspeeds 19734a5f (T-3876 = bigload's B).
+   Smoke 29/29; 8800 = 19734a5f (16:15 UTC), pinged her; master pushed. Then landed rampspeed 443eee65 (rampchk
+   PASS; hover reworded to "limits"; text ack + old-ramps call asked) and modesplit c355449f (T-3695; text ack +
+   colour-blind check asked), citylist b6624b25 (T-3878), savefail eca470fb (T-3869, savechk PASS). Smoke batch 2
+   running (Vite 6177, scratch smoke-batch2.txt), then 8800 rebuild, ping, push. Running: hourturn, netsplit (T-3873), loadleft (T-3876). After gapfill's
    commit, tell hourturn, modesplit, streetspeeds to recopy the main tree's app/src/game/*.json (PK/BD changed them).
 3. T-3395: 11-20 scan (pass 1, not done) found 0 new damage. Run `tools/ops/save_health.py` after the 11-21
    04:00 UTC scan; clean = close it (the two rev-1 games of ue83342ed78f8fc4c are old 11-19 damage).
 4. Up next is the board queue (`tasks.py upnext list`). Her order 11-20 15:20: cleanup and edit speed first (both
    reviews applied: notes/review-{edit-speed,cleanup}-2026-11-20.md; cleanup pieces table there), then the track
-   rework design (T-3444). T-3873 net.rs split: her yes 16:30, starts when rampspeed lands. Zone fixes now P4.
-5. Next update: unpublished changelog c001-c015 plus tonight's; untranslated: T-3822's and T-3823's hover strings,
+   rework design (T-3444). Zone fixes now P4.
+5. Next update (this evening): shonei-server 2754ba1 (T-3880, save check level 31) must deploy first, her yes.
+   Unpublished: unpublished changelog c001-c015 plus tonight's; untranslated: T-3822's and T-3823's hover strings,
    diagramView.addCity; use the publish skill (review agent, sort, playtest list, translations, new zones image).
 6. Leftover trees ttchk2base, touchrule, timekeys. Steam (T-3729): her shots in artifacts/trainworld/steam.
 
 ## Her words
 - 11-20 15:20 UTC: "cleaning up some of the minor seeming tasks in code/docs cleanup, and edit speed ... not sure
   how many of them still make sense / would be valuable to do. and after that ... full track rework."
-- 11-20 ~16:00 UTC: T-3869 text ack ("The browser ran out of memory saving this game...").
-- 11-20 ~15:50 UTC: transit split by mode in every mode bar, toggle default off (T-3695, P2, agent modesplit).
-- 11-20 13:29-14:55 UTC, several times: "ping me when it's all on 8800", also when the Mexico City fix (T-3868)
-  and the save fix (T-3869) are on it. Ping her at the next 8800 rebuild, naming what is on it.
-- 11-20 ~13:40 UTC: TODO.md "for anita" and player suggestions all filed (T-3850-T-3866); 400 km per ferry leg stays.
+- 11-20 ~16:30 UTC: text ack T-3695 and T-3027 ("a ramp limits trains to {speed} here"); c025 reworded to her
+  words; colour blind fine; new countries ok; schematic "looks really fantastic". Filed+started T-3878 (city list
+  button, All cities parent), T-3879 (profit board, pad), T-3880 (server save check for LRA1: deploy before the
+  update needs her yes). Panama archipelago folded into T-3872.
+- 11-20 ~16:00 UTC: T-3869 text ack. 13:29-14:55: "ping me when it's all on 8800" (save fix still to come).
 - 11-20 ~14:00 UTC: "i'd still rather not work too muhc on track stuff": no minor track work (T-3662, T-3353 wait on
-  the rework design; T-2920 stays P4).
+  the rework design; T-2920 stays P4). 400 km per ferry leg stays.
 - 11-20 ~14:45 UTC: slopes "kinda separate from track redesign ... so we can do this soon": 200 m per level = 160,
   400 m = 320, floors trains 5% / trams 8% (T-3027); real terrain as cost later (T-3871, P4).
 - 11-20 early: board changelog review is NOT the publish text OK; Resend stays free; intercity time "keep it as is".

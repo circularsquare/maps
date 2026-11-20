@@ -103,12 +103,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: A cold run takes 4.4-5.1 min at 4 jobs, against the 3 min aimed for; most of it is zone_water's 368 windows.
   - Goal: A cold run is near 3 min.
   - Other: See notes/T-1992.md.
-- T-3869 [P1] {L:memory} Big game can't be saved or downloaded when memory runs out (taking, 2026-11-20, agent savefail)
-  - Context: A player (via your pad, 11-20, screenshot artifacts/trainworld/board/20261120-090033-75f3.png): an India game (Kolkata, Delhi and 228 more, 149 lines, 3,794 stations, 4.7 GB shown, day 1564) says "The browser could not save this game. Download it as a file to keep your changes." Download fails with the same message; Copy says "Array buffer allocation failed". The cloud copy was 18 minutes old. Reach: anyone with a game this big.
-  - Goal: A game that has run out of memory can still be saved and downloaded (memory freed first, the save built without one huge buffer), and the player is never left with no way to keep their changes.
-- T-3868 [P1] {L:loading} Big save stuck calculating trips after memory restarts (taking, 2026-11-20, agent bigload)
-  - Context: You, 11-20, playtesting your large North America save, building in Mexico City: "the calculating trips bar has almost filled like three times and then looks like it restarts. it says 'calculating trips after freeing memory'. the bar also fills visually to like 90% and then stalls like indefinitely / at least 5 minutes. and if i zoom out it seems to lose all progress ... ive been waiting for mexico city to load for like 15 minutes." Likely kin: T-2757, T-3373, T-3781. Her save: artifacts/trainworld/saves/na-day-491.save. On the bar: "the 90% thing has been an issue since the beginning of development, we just arent really able to predict how long stuff will take i think. would be nice if we could calibrate it a bit better."
-  - Goal: On that save, Mexico City's trips are calculated once without restarting in a loop, the bar never sits stalled, and zooming out keeps the progress made.
 - T-3781 [P1] {L:loading} {after:a report with the new diagnosis} Demand data not loading within 10 minutes
   - Context: Two anonymous reports on v0.4.2 (feedback 1795092485-688b2e15, 1795083347-52a31102), plus a third, "crashes every time it opens" (1795097335-fa20c413), all Japanese, 11-19 (board group g115). Their saves load normally on master. A stuck load now restarts once, and the report names the stuck worker and period (tree demandload).
   - Goal: The cause found from the next report's diagnosis, or closed if no report comes.
@@ -124,7 +118,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Myanmar (59 of 60 rows), Laos (11) and Timor-Leste (4) shipped 2026-11-20. Bhamo (0.44M) is parked: its busiest square sits on a GHSL pile-up of 23,697 people in one village square in Mansi, not on a town.
   - Goal: Bhamo built with its people spread off that square (or held), then gated and joined.
   - Other: notes/T-1738.md section 16
-- T-3764 [P3] {L:new-countries} Fill the gaps, Central Asia, Afghanistan and the Caucasus (taking, 2026-11-20, agent gapfill)
+- T-3764 [P3] {L:new-countries} Fill the gaps, Central Asia, Afghanistan and the Caucasus
   - Context: You, 2026-11-19: "after that i guess we fill in the gaps (pakistan/bangladesh, central asia, etc)". Pakistan and Bangladesh were the first batch. The list of what is still missing, in batches, is in the notes: Central Asia with Mongolia (77M), Afghanistan (38M), the Caucasus (17M), the Levant and Yemen (63M), Nepal, Bhutan and Sri Lanka (52M), Africa beside built countries, then Papua New Guinea and the Pacific.
   - Goal: Each batch built and joined, next Central Asia.
   - Other: notes/T-3764.md
@@ -223,6 +217,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: Build it only when you ask.
 - T-3866 [P4] {L:small-fixes} What stationsworld is
   - Context: Your TODO.md, 11-20, from player suggestions: "stationsworld ??" Not understood; find out what is meant (a mod, a game, a feature) and report to you.
+- T-3877 [P3] {L:checks} t2365's graph bins check fails since T-3509
+  - Context: Found by modesplit (T-3695): t2365 "graph bins add up to the zone's split" fails on both saves; the gap equals the within-place market trips T-3509 added, with no figure moved by T-3695.
+  - Goal: Confirmed on master, then the check counts those trips (or the graph does), and it passes.
 - T-3457 [P3] {L:checks} Slim the standing checks
   - Context: The code tour (notes/code-tour.md) counts 283 of 320 checks named after the task that made them, 42 more in checks/old, 45,700 lines, more than the pipeline. You 11-16: Claude leans a bit too much toward writing checks.
   - Goal: Checks that no longer guard anything are deleted, the rest named by what they check; smoke and the standing set still pass.
@@ -278,17 +275,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Your 11-16 ask after the code tour. A sample of 80 comment blocks found about 1 in 8 restating the code and 1 in 30 telling history; most give a reason or a unit. Task ids in comments stay as pointers to the notes.
   - Goal: Each file split by T-2374 or T-3873 gets one pass after its move: comments that restate the code or tell history go, no code change.
   - Other: notes/review-cleanup-2026-11-20.md
-- T-3460 [P3] {L:cleanup} Street speeds written once (taking, 2026-11-20, agent streetspeeds)
-  - Context: From the code tour. Car street speeds are written in streets.rs and in demand's Params, kept equal by a test. The other two pairs stay: the diagram's JavaScript carry solver is what three Node checks run, and the pipeline's real-rail router is a Python, rail-only copy of the game's.
-  - Goal: Demand's street speed defaults read streets.rs, the test that kept them equal is gone, and code-tour's "Odd things" says why the other two pairs stay.
 - T-2843 [P3] {L:cleanup} Leftover fixes from the 11-09 code review
   - Context: Two wrong states are still reachable: a graphics notice lifts the 4x cap and settles lines while demand runs, and a failure leaves the "freed memory" hover line. Four small bugs from the same review have no task: Backspace or undo mid-run leaves stale held state, a drag outlives a lost mouse button, a failed file from the start menu opens the oldest game, old-frame save copies are never deleted.
   - Goal: Graphics loss is its own signal apart from demand stopping, and each of the four is fixed with a scratch proof.
   - Other: notes/T-2843.md machine B and findings 3, 5, 7, 8, 9; notes/review-cleanup-2026-11-20.md
-- T-3873 [P3] {L:cleanup} {after:rampspeed lands} Split the track model into readable parts
-  - Context: T-3444's Goal asks for the track model split into parts an agent can read whole. net.rs is 4,086 lines (about two reads), wasm/tests.rs 4,017. Seams by method group, 180-520 lines each, are in the review notes; the stations part (the one the rework rewrites) stays one file.
-  - Goal: Moves only: net.rs into net/ by method group, wasm/tests.rs into area test files, every part under 1,500 lines; tests and smoke pass. You, 11-20: "yes can do the split if you think its a good idea" (before the design talk).
-  - Other: notes/review-cleanup-2026-11-20.md "Missed by the line" 1
 - T-3874 [P3] {L:cleanup} {after:bigload and savefail land} Remove perfOff switches for decided changes
   - Context: 49 `?perfOff` switches after T-2370, 68 now. Eleven added since switch a decided change back off and no check passes them (heldLocal, realZoom, keepFigures, settledHold, strays, allSums, cacheFocus, refineAside, regional, localKeep, localSkip). Measurement switches and the ones a check passes stay.
   - Goal: Those eleven and their dead branches are gone (mostly in demandClient.ts), before its split.
@@ -362,9 +352,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: research/steam-page.md
 - T-3853 [P3] {L:steam} Offline version with chosen cities
   - Context: Your TODO.md, 11-20: "when we build standalone, allow offline version, choose which cities you wanna have downloaded i guess (say how much storage each one will take up)". Also from the suggestions: "make downloadable (doesnt have to be offline, but just not on web, i guess)", which T-3729's standalone build covers. Design for you first.
-- T-3695 [P2] {L:map-look} Transit split by mode in the mode bars (taking, 2026-11-20, agent modesplit)
-  - Context: You, 2026-11-20: "i want to break down travel mode in more detail. like currently we just show RGB car walk transit. would like to break down transit into train/bus/ferry/tram/hsr. thhis should juts be in the RGB bar on top and in teh cities views, like anywhere we show a RGB split really. but not in the actual demand bubbles which are colored RGB. the colors per mode can be various shades of bluegreen to bluepurple. maybe like ferry is teal, tram is light blue, train is blue, hsr is dark blue, bus is blueish purple. trips that take multiple modes can be split proportionally by length or just propotionally by leg count if thats easier." Earlier (old TODO, 11-18 "yes should do"): "see overall travel by train / high speed / bus / tram / etc".
-  - Goal: A setting, off by default ("oh also this breakdown should be toggleable. default off."), makes every car / walk / transit bar (the top bar, the cities views, anywhere else it shows) split transit into ferry, tram, train, high speed and bus in her colours; the demand bubbles stay three colours; a multi-mode trip is shared by leg length or leg count.
 - T-3696 [P4] {L:money} Lines' money and ridership changes as a list
   - Context: Your old TODO: "someone requested notifications for like money going up/down and ridership going up/down as a list... i guess as like a list of all individual lines separately. i guess we can add this as a setting". Per-line money history exists (T-2787). You, 2026-11-18: "idk exactly what ridership change list means, but can file to think about it".
   - Goal: Worked out what players want from it (the Discord ask), then a proposal to you.
@@ -392,10 +379,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: You, 2026-11-16: make current ferries faster rather than adding a fast kind. First pass done: every ferry cruises at 45 km/h instead of 32, costs and seats unchanged; Hong Kong-Macau riders 2,553 to 5,908, Helsinki-Tallinn 18,217 to 19,011, city routes barely move. Long routes still lose money at the default service.
   - Goal: Long-distance ferries pay at the default service (fares, service or more speed for long routes), with T-2216 first for routes like Seattle-Victoria.
   - Other: Folded in T-437. notes/T-3435.md
-- T-3431 [P3] {L:buses} {after:T-2216} Seattle to Victoria ferry gets no riders and shows no route
-  - Context: Seattle and Victoria are on two landmasses with no car or plane link, so the market never offers their trips to any network: 0 riders and no route. T-3400 did not cause it.
-  - Goal: The ferry carries trips once T-2216 solves island pairs; check this line then.
-  - Other: notes/T-3431.md
 - T-3434 [P3] {L:region-redraws} Sabang Island missing from the Banda Aceh zone
   - Context: Player report 2026-11-16. Reach: few.
 - T-3844 [P3] {L:money} Some paid edits charge no region
@@ -529,10 +512,6 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
   - Context: A `?roadgaps=1` overlay would ring unjoined street ends, so a gap you see can be checked against the street graph.
   - Goal: The overlay exists, and short alley links join streets.
   - Other: About half a day. notes/T-3034.md.
-- T-3027 [P2] {L:track-speed} Ramp length sets ramp speed (taking, 2026-11-20, agent rampspeed)
-  - Context: You, 11-20: "maybe we allow tighter slopes, but they just limit speed more ... depending on what target max speed we set and how much room we have, we let slopes get steeper or shallower"; then "ok yeah i agree 200m should eb anchored to 160. and 400m for 320 makes sense", and "this is kinda separate from track redesign ... so we can do this soon maybe". Today: 4% max, 200 m per 8 m level, grades don't change speed, high-speed ramps capped at 160 by a bug.
-  - Goal: A ramp's speed scales with its length per level (200 m = 160 km/h, 400 m = 320); ramps are sized to the speed being drawn when there's room, and shorter, steeper, slower ones are allowed where there isn't; no existing line gets slower. Floors (you, 11-20, "we can do those limits"): trains 5% (160 m per level, 128 km/h), trams 8% (100 m, 80 km/h).
-  - Other: Real terrain as cost is T-3871.
 - T-3642 [P3] {L:community} Long-played networks near the share limits
   - Context: From T-3640: a shared save's header keeps every region's ledger, one entry per game day (Swattik's 173 regions add about 20 KB a day), so at his pace he passes the server's 2 MB shared-save cap in about 400 more game days and gets "too big". His drawing took 166 s (Japan 184 s) against the 5-minute share wait, so a slower machine sees "The diagram could not be drawn". checks/safari-save-browser.mjs treats forShare's new "big" answer as success.
   - Goal: A network played for years still shares: the shared copy thins or packs the per-day ledgers (no server change), the save's own per-day ledgers fold or pack once they pass some age (folded in T-2148), and the drawing finishes well inside the wait.
@@ -569,6 +548,10 @@ Anita's notes 2026-11-05 morning (verbatim in notes/todo-2026-11-05a.md; briefs 
   - Goal: A cheaper way to the same choices, and fewer wrong-side pairs.
   - Other: notes/T-2520.md
 Anita's notes 2026-11-04 late (verbatim in notes/todo-2026-11-04j.md):
+- T-3876 [P2] {L:loading} Time left for whole calculations at load (taking, 2026-11-20, agent loadleft)
+  - Context: From T-3868 (your North America save): the calculating trips bar now follows the time left for edits, but a load's whole calculation drops its work messages, so its bar still crawls from 75% to 84% at the end and the hover has no time left there. About 1-2 h.
+  - Goal: A load's whole calculation reports a time left like an edit's, and the bar moves evenly to the end.
+  - Other: notes/T-3868.md option B
 - T-2486 [P2] {L:loading} Compress .bin files to cut download size
   - Context: .bin files are 76% of R2 (2.2 of 2.9 GB), and the first line pulls 14.4 MB of worldwide data.
   - Goal: .bin is compressed for whole-file reads, Range reads still work, and market files load by region.
@@ -730,10 +713,10 @@ Passing tracks (T-2228, archived; built as T-2231 to T-2233; notes/T-2228.md):
   - Context: Overtake plans are pairwise, so a local's waits for several faster lines are added up.
   - Goal: Measured on a three-line test, then changed only if it matters.
   - Other: notes/T-2228.md section 8
-- T-2216 [P3] {L:islands} Ground-only solve for island pairs (taking, 2026-11-20, agent islands1)
+- T-2216 [P3] {L:islands} Island pairs, stages 2 and 3
   - Context: Design done 11-20 (notes/T-2216.md, 4 stages, about 7-10 h). You, 11-20: "yeah we can do 3x, A" (everyone rides up to 3x an imagined drive, nobody from 4x), and yes to stage 2 (island zones inside a mainland pack: "people will find that fun"). Market zone pairs on two landmasses are "fixed, never solved" today (1.49M longer trips, 662,000 commutes a day), and the commutes are quietly counted as car; once solved they show "No route" until a ferry or line joins them. Stage 0 (wrong landmasses) is T-3838.
-  - Goal: They solve with rail as the only ground mode, with a point past which trips don't go by transit at all, so fares can't be raised without limit (your pad, 2026-11-18: "we should probably have a certain point at which transit is just not taken even if its the only option"); closes T-1396.
-  - Other: Own worktree (intercity). notes/T-2216.md
+  - Goal: Stage 1 landed 11-20 (island pairs with no road or flight solve with rail as the only ground mode; Vancouver - Saanich ferry about 12,980 a day, Seattle - Saanich about 1,540, real about 1,650). Left: stage 2, island zones inside a mainland pack get their own landmass; stage 3, the city panel reads the new no-way-but-rail figure (until then those trips still count as car) and the explorer's cut-off sentence. Closes T-1396.
+  - Other: Own worktree (intercity). notes/T-2216.md "Stage 1 (islands1)"
 - T-3843 [P4] {L:region-redraws} Isfahan's north strip in no zone
   - Context: Found by T-3763: a 141 km2 strip on Isfahan's north edge (51.624, 32.739), between the outlines of bcs and isf, holds about 70,000-137,000 people and is in no pack. Also Duhok governorate comes out at 1.45 of Iraq's 2024 census.
   - Other: notes/T-3763.md
@@ -784,6 +767,9 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your TODO.md, 11-20: "community: friend request and message people?" Design for you first.
 - T-3851 [P3] {L:community} Light view of another player's map
   - Context: Your TODO.md, 11-20: "view only for someone elses map (dont load demand, should keep it lightweight, only see where the tracks and statiosnn are i guess, and maybe some general high level stats that are saved like per city trip count? idk) with option to full load from a view only". View (T-3257) plays the whole network today.
+- T-3879 [P2] {L:community} Daily profit leaderboard (taking, 2026-11-20, agent profitboard)
+  - Context: Your pad, 11-20: "lets add a parallel leaderboard setting that just shows daily profit on a weekday, i guess. seems easy enough to implement and provides another perspective".
+  - Goal: The leaderboard panel can switch to a board ranked by weekday daily profit, beside today's; the server deploy waits for your word.
 - T-3852 [P3] {L:community} Leaderboard map view
   - Context: Your TODO.md, 11-20: "leaderboard map view". Design for you first.
 - T-3864 [P4] {L:community} Multiplayer hosting and compute
@@ -860,11 +846,9 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Other: notes/T-3835.md
 - T-3836 [P3] {L:real-networks} Real network names in the player's language
   - Context: In-game feedback 11-20 (1795147183-e2778951, Japanese): on a real network, station and line names should follow the game's language. OSM often has name:ja and name:en. A design call for you: which languages, and what when a name has none. Reach: players on real networks in another language.
-- T-3839 [P2] {L:schematic-rivers} Schematic rivers still break and bridge (taking, 2026-11-20, agent riverfix)
-  - Context: You, 11-20 on 8800: "still seeing some disjoint rivers occasionally. usually at the end of what is considered a river. like near newark where the passaic and hackensack confluence. the hudson river also appears to have a landbridge across it near peekskill/beacon also. sands point is also connected to the bronx ... also if the whole world is selected the rivers still look super disconnected, so idk if we solved anything substantially here." Also from T-3358's build: London's drawn estuary breaks between Tilbury and Gravesend (cause not found); Osaka's width step lands on a bend; stations still on the wrong bank after the second layout (Osaka 4 pairs, Taipei 1); side creeks no line crosses aren't drawn (New York's went from 223 pieces to 20 bands); London layout about 5-6 s slower.
-  - Other: notes/T-3358.md
 - T-3872 [P3] {L:schematic-rivers} Schematic water makes islands that aren't real
-  - Context: You, 11-20 after T-3839's fix: "rivers big improvement. still not perfect (there are some islands that are not islands irl) but i think its good to ship this." Also left by T-3839: a river the layout squeezes under one cell still breaks; Osaka's wrong-bank stations (routing, 7).
+  - Context: You, 11-20 after T-3839's fix: "rivers big improvement. still not perfect (there are some islands that are not islands irl) but i think its good to ship this." Then, on your North America save: "a line running through panama / central america to colombia. that does look quite weird actually, with panama appearing as a tiny archipelago of many disconnected islands, the line mostly running through water ... not super high prio but should file" (your screenshot: artifacts/trainworld/board/20261120-112548-a8e1.png, David to Panama City drawn over open water). Also left by T-3839: a river the layout squeezes under one cell still breaks; Osaka's wrong-bank stations (routing, 7).
+  - Goal: Thin land (Panama's isthmus first) stays joined land on a country map, and a line over land never runs mostly through water.
   - Other: notes/T-3839.md
 - T-3354 [P3] {L:single-track} One-track platform jumps sides when dragged north-south
   - Context: Not reproduced 2026-11-16 (bug-a): a station node's heading stays put when dragged, so the fixed axis never flips in the sim. Needs the exact drag that shows it.

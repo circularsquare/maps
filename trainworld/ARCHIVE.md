@@ -1,6 +1,16 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3873 [P3] {L:cleanup} Split the track model into readable parts (2026-11-20): net.rs 946 lines + 8 files 195-617; tests 12 area files; lib 693 and demand 897 passed before and after; tools/split_track.py re-runs it. notes/T-3873.md.
+- T-3869 [P1] {L:memory} Big game can't be saved or downloaded when memory runs out (2026-11-20): save in parts, Download streams; retry then worker replacement (autosave at most once in 10 min); savechk PASS all 5; freed-memory line now shows after a save replacement. notes/T-3869.md.
+- T-3878 [P2] {L:schematic} Schematic city list buttons and All cities (2026-11-20): button pink while open; All cities parent with minus; all ticked = whole-network layout; old saves open all ticked. notes/T-3878.md.
+- T-3880 [P1] {L:accounts-server} Server save check reads level 31 ramps (2026-11-20): shonei-server 2754ba1: level 31 and LRA1 read, four tests; a real 15-ramp save checks intact; deploy waits for her yes with the update.
+- T-3695 [P2] {L:map-look} Transit split by mode in the mode bars (2026-11-20): Show transit by mode setting; leg-count split from boardings by line kind, explorers by ride length; bubbles stay three colours. notes/T-3695.md.
+- T-3027 [P2] {L:track-speed} Ramp length sets ramp speed (2026-11-20): rule built; old ramps keep no limit; rampchk PASS on all five cases. notes/T-3027.md.
+- T-3460 [P3] {L:cleanup} Street speeds written once (2026-11-20): Params defaults read streets::CAR_*; equality assert removed; code-tour says why the other two pairs stay. notes/T-3460.md.
+- T-3431 [P3] {L:buses} Seattle to Victoria ferry gets no riders and shows no route (2026-11-20): closed without code: T-2216 stage 1: with the Seattle - Victoria ferry built, Seattle - Saanich carries about 1,544 a day (real Clipper + Coho about 1,650); with no network the explorer says No transit route found. notes/T-2216.md.
+- T-3839 [P2] {L:schematic-rivers} Schematic rivers still break and bridge (2026-11-20): masks' own pixels on country maps, same-land-mass water gaps, split water rejoined; her 11-20: good to ship; false islands left as T-3872. notes/T-3839.md.
+- T-3868 [P1] {L:loading} Big save stuck calculating trips after memory restarts (2026-11-20): bar follows time left, never goes back, carries through held edits and zoom-out; freed-memory line only after a real cut; options A-D in notes. notes/T-3868.md.
 - T-3841 [P3] {L:checks} Agent report inbox takes in non-reports (2026-11-20): final-text filed only with a .meta.json and not a compaction summary; proof in notes. notes/T-3841.md.
 - T-2383 [P3] {L:cleanup} Sim refactors (2026-11-20): closed without code: Low value (review 11-20): one walk is test-pinned; split a long function when a task finds it in its way. notes/review-cleanup-2026-11-20.md.
 - T-2382 [P3] {L:cleanup} Pipeline and pack_gate small items (2026-11-20): closed without code: Low value (review 11-20): the two dead functions and proof.sh ride along with the next pipeline task in those files. notes/review-cleanup-2026-11-20.md.
