@@ -285,6 +285,8 @@ export function StatusTag() {
     : behindDays.value >= 1 && busy === t("statusTag.behind", { count: behindDays.value }) && demandUpdating.value ? afterChangeLeft()
     // T-3599: the zone in view's trips recomputed after an edit
     : viewRecomputing.value && busy === recomputing() && demandUpdating.value && demandBehindFrom.value !== null ? afterChangeLeft("view")
+    // T-3876: a load's whole solve, timed by its workers' units as an edit's is
+    : viewRecomputing.value && busy === recomputing() && demandUpdating.value && demandWork.value && shownLeft() !== null ? afterChangeLeft()
     : "");
   const tip = [base, !onTerrain && clock.capped.value ? t("statusTag.capped", { cap: DEMAND_CAP }) : ""].filter(Boolean).join("\n") || undefined;
   const failed = onTerrain ? terrainFailed : !!loadFailure.value || !!zoneFailure;

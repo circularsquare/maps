@@ -83,7 +83,7 @@ import { addressLimited, deviceGB, heapStep, memBudget, mobileDevice, smallDevic
 import { outsideWasmBytes } from "./liveMemory";
 import { isMemoryFailure } from "../game/loadText";
 import { makeFrame } from "../game/frame";
-import { noteEditSolve } from "../game/editLeft";
+import { editLeft, editPrior, noteEditSolve } from "../game/editLeft";
 import { choosing, demandIdle, endCardFull, gameLoadArmed, gameLoadSeq, viewFiguresIn, gameWait, loadComplete, loadFailed, loadProgress, lastStep, markAlive, markStep, memoryResolve, onLoadStop, onLoadStuck, setDownloadProbe, solveLeft, startup, takeGameLoadHold, zoneFailures, zoneLoads, zoneSteps, type ZoneStep } from "../game/loading";
 import { type BarPlace, CACHE_SHOW_MS, GAME_MS, GUESS_SHARES, keepPlace, LATER_GUESS, lastWait, loadPace, nextLeft, rememberPace, rememberWait, sameSize, type Pace, sharesOf, shownShare, solveStage, STAGE_TEXT, stagedFraction, stageInHand, STEP_CAP, timeShare, type StageMs, zoneShare } from "../game/loadBar";
 import { linesSettled } from "../game/lineFigures";
@@ -509,6 +509,14 @@ const OPEN_MS_PER_MB = { city: 220, market: 20 };
 const PACE_SOLVE_MS = 10000;
 /** a solve's setup in its workers (set_network, before its first period), the longest of those reported */
 const setupOf = (s: Solve) => s.setupMs.reduce((m, x) => Math.max(m, x ?? 0), 0);
+/** T-3876: a solve's time left by its workers' units (`editLeft`, as the status tag's hover has it), or null while
+ * a worker has not said, or can't tell yet; the load model's estimate stands in then */
+function unitsLeft(s: Solve, n: number, now: number, part: "all" | "view" = "all"): number | null {
+  const w = s.work;
+  if (!w || n < 1) return null;
+  for (let k = 0; k < n; k++) if (!w[k]) return null;
+  return editLeft(w.slice(0, n), now, editPrior, part);
+}
 /** T-1195: and each city pack 450 ms besides its size (China's 169 packs took three times what their
  * MB alone gave, New York's 5 and the world save's 21 matched it) */
 const OPEN_CITY_MS = 450;
@@ -2241,7 +2249,8 @@ class DemandClient {
       ? solveStage(s.sentAt, s.roundAt, s.published, s.byRound[s.published + 1]?.filter(Boolean).length ?? 0, s.roundFirstAt, ROUNDS, solveEstimate(stopCount(s.svc), "all"), loadPace().later, now, PERIODS.length, solveWaves, setupOf(s))
       : null;
     const was = solveLeft.peek();
-    const left = st && s?.barrier && !s.rough ? { version: s.version, leftMs: nextLeft(was?.version === s.version ? was.leftMs : null, st.left, was ? now - was.at : 0), at: now } : null;
+    const byUnits = st && s ? unitsLeft(s, this.computeN, now) : null;
+    const left = st && s?.barrier && !s.rough ? { version: s.version, leftMs: nextLeft(was?.version === s.version ? was.leftMs : null, byUnits ?? st.left, was ? now - was.at : 0), at: now } : null;
     // (an estimate that only counts down is not worth a render: the bars and the note count down between)
     const ends = (a: { leftMs: number | null; at: number }, b: { leftMs: number | null; at: number }) => (a.leftMs === null) === (b.leftMs === null) && Math.abs((a.at + (a.leftMs ?? 0)) - (b.at + (b.leftMs ?? 0))) < 1000;
     if (!left || !was || left.version !== was.version || !ends(left, was)) solveLeft.value = left;
@@ -2465,6 +2474,16 @@ class DemandClient {
       solveMs = st.ms;
       solve = st.share;
       solveLeft = st.left;
+      // T-3876: by the workers' units where they can tell, as an edit's solve is (the round model creeps toward
+      // 83% and all four rounds land in the last seconds on one worker); the zone in view's cluster solved ahead
+      // ends at its own units
+      const byUnits = unitsLeft(s, this.computeN, now, a ? "view" : "all");
+      if (byUnits !== null) {
+        const el = Math.max(1, now - s.sentAt);
+        solveLeft = byUnits;
+        solve = el / (el + byUnits);
+        solveMs = el + byUnits;
+      }
       job.solveRounds = { first: st.first, rest: st.rest, measured: published >= 1 };
     }
     // T-1195: each stage's share of the bar is its expected time: the slot's last load's, else, before
@@ -3822,7 +3841,7 @@ class DemandClient {
       return;
     }
     if (msg.kind === "work") {
-      if (i >= this.computeN || s.barrier) return;
+      if (i >= this.computeN) return;
       const w = (s.work ??= []);
       w[i] = { stage: msg.stage, busy: msg.busy, done: msg.done, of: msg.of, unitMs: msg.unitMs, at: performance.now(), left: msg.left, blind: msg.blind, cur: msg.cur, curSize: msg.curSize, sizeMs: msg.sizeMs, ran: msg.ran, ranExp: msg.ranExp, ranN: msg.ranN, viewLeft: msg.viewLeft, viewBlind: msg.viewBlind, curView: msg.curView, leftQ: msg.leftQ, ranQ: msg.ranQ, expQ: msg.expQ, nQ: msg.nQ, curQ: msg.curQ };
       if (!msg.busy && msg.done[0] + msg.done[1] > 0) s.lastUnitAt = w[i].at;

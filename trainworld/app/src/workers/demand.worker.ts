@@ -2116,7 +2116,9 @@ async function run() {
       sendMessage({ kind: "plan", version: job.version, solving: dirty.map((c) => (localOf.has(c) ? freshCities(c) : c.cities)), kept: jobClusters.filter((c) => !dirty.includes(c)).flatMap((c) => c.cities), ...(ahead ? { ahead: dirty[0].cities } : {}), local: editOf.size });
       // T-2729: an edit's solve's units, as the loops below make them; a cluster's kept periods come
       // off as it is set up
-      work = job.barrier ? null : new Work(job.version);
+      // T-3876: a barrier solve (a load's) is timed too: its units are a cluster's round of a period, and
+      // the zone in view's figures come with the ahead group, else with the last round of the whole solve
+      work = new Work(job.version);
       // T-3599: each unit's expected ms, worked out as planned (the whole solve's passes replace the
       // priors as it goes): a local solve's period, or a round of a period of a cluster solved whole
       const exps = new Map<JobCluster, Map<string, number | null>>();
@@ -2151,7 +2153,14 @@ async function run() {
       const firstEdit = firstAt >= 0 ? editOf.get(early[firstAt]) : undefined;
       const viewLocal = !!firstEdit && citiesOf(early[firstAt], firstEdit.fresh).includes(job.first!);
       const inView = (c: JobCluster, stage: 0 | 1) => firstAt >= 0 && (stage === 0 ? !viewLocal || early.indexOf(c) <= firstAt : !viewLocal && early.indexOf(c) <= firstAt);
-      if (work) {
+      const groupView = (g: number) => !ahead || g === 0;
+      // (a load's rounds on the real North America save took 50, 46, 46 and 43 s: a flat decay, not the edits' 0.75)
+      const sizeB = (c: JobCluster, r: number) => c.pops.length * 0.9 ** r;
+      if (work && job.barrier) {
+        groups.forEach((late, g) => { for (const c of late) for (const q of units) for (let r = 0; r <= job.rounds; r++) work!.plan(1, 1, roundExp(c, q, r), groupView(g), q, sizeB(c, r)); });
+        work.send(false);
+      }
+      if (work && !job.barrier) {
         for (const c of early) {
           const e = editOf.get(c), fresh = localOf.get(c), v0 = inView(c, 0), v1 = inView(c, 1);
           if (e) { const k = keptOf(c); for (const q of mine) if (!(k & (1 << q))) work.plan(0, 1, localExp(c, e.fresh, q), v0, -1, e.fresh.length); }
@@ -2775,6 +2784,7 @@ async function run() {
         stageRound = -1;
         roundsHeld.fill(-1);
         for (const c of late) setUp(c);
+        if (work) for (const c of late) for (const q of units) if (c.reuse & (1 << q) || !sideOf(c, q)) for (let r = 0; r <= job.rounds; r++) { const x = roundExp(c, q, r); work.plan(1, -1, x === null ? null : -x, groupView(g), q, sizeB(c, r)); }
         for (let round = 0; round <= job.rounds && !stale; round++) {
           // T-327: a worker ahead holds its last round until every worker has finished it
           while (round > 0 && units.length && !pending && !goAllows(job.version, g, round)) {
@@ -2806,8 +2816,10 @@ async function run() {
             const est = round === 0 && !!only && !job.exact0 && from !== undefined && from !== q;
             for (const c of late) {
               if (c.reuse & (1 << q) || !sideOf(c, q)) continue;
-              if (est && estimate(c, from, q, new Set())) { estimated = true; continue; }
+              if (est && estimate(c, from, q, new Set())) { estimated = true; work?.begin(1, roundExp(c, q, round), groupView(g), q, sizeB(c, round)); work?.end(false); continue; }
+              work?.begin(1, roundExp(c, q, round), groupView(g), q, sizeB(c, round));
               if (!(await step(c, round, q))) { stale = true; break; }
+              work?.end();
             }
             release_skims();
             if (stale) break;

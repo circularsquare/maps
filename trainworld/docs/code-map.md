@@ -157,8 +157,8 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   (the track model's refusals in plain words), `editNote.ts` (what the last edits did to train trips and profit a day, shown under the view rows at the map's upper left once demand settles, T-2125, T-2237; drawn by ui/EditNote.tsx; `checks/t2125-edit-note.mjs`, `checks/t2682-editnote.mjs` for edits in a new game still loading or shown coarse), `profitEstimate.ts` (the network's profit change a day from a trains, headway or cars edit before demand solves it: exact running cost, fares by the wait term, the edit note's estimating state, T-2626; `checks/t2626-profit-estimate.mjs`), `openingDay.ts` (the lines on their opening day: the Lines tab's riders count-up and a "bung", not saved, T-1434; `checks/old/t1434-opening.mjs`), `openedZones.ts` (the zones the game has started in, reached or crossed with track, kept for the save, T-729, T-801), `trackZones.ts` (the zones built and blueprint track crosses, by coarse outline, from each network state, T-1047), `loading.ts` (what is loading, the startup gate and
   the clock hold, T-149, T-172; whether the start menu is up, T-677), `loadBar.ts` (the loading bar's
   stages, their shares and texts, each slot's remembered stage times and this browser's pace, T-1195;
-  the time left's count and text, T-1479), `editLeft.ts` (an edit's solve's time left for the status tag's hover,
-  from the workers' `work` and the last edit's pace, tail and gap, T-3599; `checks/t3599-time-left.mjs` against the
+  the time left's count and text, T-1479), `editLeft.ts` (an edit's or a load's solve's time left for the status tag's hover
+  and the loading card's bar, from the workers' `work` and the last edit's pace, tail and gap, T-3599, T-3876; `checks/t3599-time-left.mjs` against the
   real wait, `checks/t3599-replay.mjs` a recorded wait replayed with no browser),
   `memoryCheck.ts` (a save's memory estimate and the refusal when it will not fit, T-1197),
   `saveSafety.ts` (persistent storage, T-1214), `busy.ts` (the busy tag's
