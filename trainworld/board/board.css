@@ -10,8 +10,7 @@
   --s-progress: #3d7dca;
   --s-upnext: #1f9399;
   --s-you: #d9822b;
-  --s-high: #2f9a55;
-  --s-low: #9ccbaa;
+  --s-ready: #2f9a55;
   --s-after: #9a85c4;
   --s-done: #a3a3a3;
   /* priority, one colour each wherever it shows: red, orange, yellow, green. --pN-ink is text on it */
@@ -36,8 +35,7 @@
     --s-progress: #5a9be6;
     --s-upnext: #3bb0b5;
     --s-you: #e6994a;
-    --s-high: #46b56d;
-    --s-low: #4f7f5e;
+    --s-ready: #46b56d;
     --s-after: #8f7cbf;
     --s-done: #6b6b6b;
     --p1: #ff3030; --p1-ink: #1a0000;
@@ -136,7 +134,7 @@ a.task:hover, button.link:hover { text-decoration: underline; }
 #grid-wrap { overflow-x: auto; }
 #grid {
   display: grid;
-  grid-template-columns: 120px repeat(7, minmax(150px, 1fr));
+  grid-template-columns: 120px repeat(6, minmax(150px, 1fr));
   min-width: 1200px;
 }
 .colhead {
@@ -189,6 +187,7 @@ a.task:hover, button.link:hover { text-decoration: underline; }
 .card.open { outline: 2px solid var(--accent); outline-offset: -1px; }
 .card .row { display: flex; align-items: baseline; gap: 8px; }
 .card .name { flex: 1; min-width: 0; font-size: 13px; font-weight: 700; overflow-wrap: anywhere; }
+.card .bestpri { font-size: 11px; color: var(--muted); }
 .card .count { font-size: 12px; color: var(--muted); white-space: nowrap; }
 /* a line card's bars: one segment per open task, status above (1 px), then a 1 px gap, priority under it (2 px) */
 .bar {
@@ -440,7 +439,7 @@ select.small {
   margin-bottom: 10px;
   overflow-wrap: anywhere;
 }
-.pad-item.done { border-left-color: var(--s-high); }
+.pad-item.done { border-left-color: var(--s-ready); }
 .pad-item .when { font-size: 12px; color: var(--muted); }
 .pad-item .wait { font-size: 13px; color: var(--muted); }
 .pad-item .note { font-size: 13px; font-weight: 700; }

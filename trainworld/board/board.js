@@ -160,10 +160,30 @@ async function rebuild() {
   btn.disabled = false;
 }
 
+// an older data.json still says high/low: both are the one Ready pool now
+function legacyStatus(d) {
+  const fix = (k) => (k === 'high' || k === 'low' ? 'ready' : k);
+  const seen = new Set();
+  d.columns = (d.columns || []).filter((c) => { c.key = fix(c.key); if (c.key === 'ready') c.name = 'Ready'; if (seen.has(c.key)) return false; seen.add(c.key); return true; });
+  for (const t of Object.values(d.tasks || {})) t.status = fix(t.status);
+  for (const l of d.lines || []) {
+    l.status = fix(l.status);
+    if (l.counts && (l.counts.high || l.counts.low)) { l.counts.ready = (l.counts.ready || 0) + (l.counts.high || 0) + (l.counts.low || 0); delete l.counts.high; delete l.counts.low; }
+  }
+}
+
+/** the best priority (1..4) of a line's open ready tasks; 9 when none has one */
+function bestReadyPri(line) {
+  let best = 9;
+  for (const id of line.tasks) { const t = DATA.tasks[id]; if (counted(t) && t.status === 'ready') best = Math.min(best, PRI_RANK[t.pri] || 9); }
+  return best;
+}
+
 async function load(failed) {
   try {
     const r = await fetch(`data.json?t=${Date.now()}`, { cache: 'no-store' });
     DATA = await r.json();
+    legacyStatus(DATA);
   } catch (e) {
     setBuilt('No board data yet', true);
     return;
@@ -279,7 +299,7 @@ function buildView() {
       for (const id of l.tasks) counts[DATA.tasks[id].status] += 1;
       l.counts = counts;
       l.open = l.tasks.length;
-      l.status = ['progress', 'you', 'high', 'low', 'after'].find((k) => counts[k]) || (l.done_recent ? 'done' : null);
+      l.status = ['progress', 'you', 'ready', 'after'].find((k) => counts[k]) || (l.done_recent ? 'done' : null);
     }
   }
   VIEW = order.map((s) => bySlug.get(s));
@@ -562,10 +582,9 @@ function renderGrid() {
         grid.append(cell);
         continue;
       }
-      for (const line of VIEW) {
-        if (line.area !== area.slug || line.status !== col.key || !shown.has(line.slug)) continue;
-        cell.append(card(line, shown.get(line.slug)));
-      }
+      const here = VIEW.filter((line) => line.area === area.slug && line.status === col.key && shown.has(line.slug));
+      if (col.key === 'ready') here.sort((a, b) => bestReadyPri(a) - bestReadyPri(b));   // stable: ties keep her order
+      for (const line of here) cell.append(card(line, shown.get(line.slug)));
       grid.append(cell);
     }
   }
@@ -674,7 +693,9 @@ function card(line, hits) {
   return el('button', {
     class: 'card' + (isOpen ? ' open' : ''), type: 'button', 'data-slug': line.slug,
     style: colour(line.status), onclick: () => openPanel(isOpen ? null : { kind: 'line', slug: line.slug }),
-  }, el('div', { class: 'row' }, el('div', { class: 'name' }, line.name), el('div', { class: 'count' }, count)),
+  }, el('div', { class: 'row' }, el('div', { class: 'name' }, line.name),
+    line.status === 'ready' && bestReadyPri(line) < 9 ? el('div', { class: 'bestpri' }, `P${bestReadyPri(line)}`) : null,
+    el('div', { class: 'count' }, count)),
   line.open ? bar : null,
   q ? el('div', { class: 'queued' }, `${q} queued`) : null);
 }

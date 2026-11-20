@@ -36,12 +36,11 @@ COLUMNS = [
     ("progress", "In progress"),
     ("upnext", "Up next"),         # the queue in board-live.json; no line takes it as its column
     ("you", "Waiting on you"),
-    ("high", "Ready (high)"),
-    ("low", "Ready (low)"),
+    ("ready", "Ready"),            # one pool; lines sort inside a cell by their best task's priority (board.js)
     ("after", "Waiting on another task"),
     ("done", "Done this week"),
 ]
-LINE_ORDER = ["progress", "you", "high", "low", "after"]
+LINE_ORDER = ["progress", "you", "ready", "after"]
 UPDATES = {"track-stations": "Track and stations update", "scheduling-fares": "Scheduling and fares update"}
 UNSORTED = "not-sorted"
 DONE_DAYS = 7
@@ -174,9 +173,7 @@ def task_status(t, busy):
         return "you"
     if t["after"]:
         return "after"
-    if t["pri"] in ("P1", "P2") and not t["someday"]:
-        return "high"
-    return "low"
+    return "ready"
 
 
 def cores():
@@ -286,7 +283,7 @@ def main():
         seen.add(t["id"])
         t["status"] = task_status(t, busy)
         # a P4 task nobody is on and nobody waits on is parked: it is left out of the open counts
-        t["p4"] = t["pri"] == "P4" and t["status"] in ("low", "after")
+        t["p4"] = t["pri"] == "P4" and t["status"] in ("ready", "after")
         t["agent"] = busy.get(t["id"])
         slug = t["lines"][0] if t["lines"] else None
         if len(t["lines"]) > 1:

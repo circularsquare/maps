@@ -16,7 +16,8 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 2. hourturn done (T-3804 st1, report r-ade4440a); checker hourturnchk running (mine); on pass land, fold its
    follow-ups (rename leaves 12-57 accounts stale; sendMoney 15-100 ms/hour) into T-3804 Context. trainrate done (r-326ad1fa), checker trainratechk running (mine). Running:
    frontier (T-3887 research then chart, 3-4 h; maps-b4's). Mine: tramrail (T-3889, tree), busstop (T-3890 bus
-   stop panel + connectors, tree, Opus), binzip (T-2486 .bin compression, measure then build, no uploads).
+   stop panel + connectors, tree, Opus), binzip done (T-2486, packed .bin ~45% smaller, deploy.py stages them; r-? report in
+   inbox): checker binzipchk running; land only AFTER the evening publish (keeps tonight's publish light; C: 50 GB free).
    T-3804 st1 landed fe72ec68 (task stays open, stage 2 next). T-3550 st1 landed cfcc4e7a (c035; task rewritten to
    what's left). T-3890 landed 73843d96 (c036; strings sent to her 20:00 UTC). fullrate (T-3655+T-3646, Opus, tree;
    checker before landing). clocksplit + drawsplit (T-2374 clock worker and
@@ -29,6 +30,8 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 4. T-3395: run `tools/ops/save_health.py` after the 11-21 04:00 UTC scan; clean = close it.
 
 ## Her words
+- 11-20 ~20:10 UTC: likes the bus stop look. Edit speed paused (T-3550, T-3804 to P4) "until people complain
+  again"; board: merge Ready (high) and Ready (low) into one pool sorted by priority.
 - 11-20 ~19:45 UTC: out ~5 h (back ~00:45 UTC), remote control here only, can't playtest; after a handoff the old
   tab relays her messages. Evening update maybe tomorrow, "dont worry about it". "if you find idle resources /
   compute ... please pick up additional tasks ... mostly self contained and can be done without too much input."

@@ -193,7 +193,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-2136's checker (by reading the code): a request for one place's rows lost in a demand worker restart times out after 20 s and is asked again only with the next result, so that zone's panel can wait that long.
   - Goal: A request lost in a restart is asked again once the worker is back; probed with a forced restart.
   - Other: notes/T-2136.md
-- T-3550 [P3] {L:edit-speed} Shared-track edits still over 0.5 s on the windrush save
+- T-3550 [P4] {L:edit-speed} Shared-track edits still over 0.5 s on the windrush save
   - Context: Stage 1 landed 11-20: the crawl speeds are solved by a secant, so London's typical train-count edit went 0.95 to 0.23 s natively, but 22 of 143 lines still pass 0.5 s at every level, windrush edits take 1.2-2.3 s in the browser, and a follow-up gap of 0.4-1.9 s outside the timed parts (once 5 s) is in both builds, cause not measured. Folds in T-1794 and T-1936.
   - Goal: London and windrush train-count and headway edits under 0.5 s in the browser, the gap explained or gone; figures within the pacing's own noise (T-3388's tolerance).
   - Other: notes/T-3388.md, notes/T-1779.md "T-1787", notes/T-1936.md, notes/review-edit-speed-2026-11-20.md
@@ -374,7 +374,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: Folded in T-437. notes/T-3435.md
 - T-3434 [P3] {L:region-redraws} Sabang Island missing from the Banda Aceh zone
   - Context: Player report 2026-11-16. Reach: few.
-- T-3804 [P3] {L:edit-speed} Other worker work that holds edits up
+- T-3804 [P4] {L:edit-speed} Other worker work that holds edits up
   - Context: The hour turn is done (stage 1, T-3804 notes: the most an edit waited for it went from 0.24-0.54 s to 0.19-0.25 s on the 2,647-station save, a few runs of 32 edits). Left from T-3801's audit: one today answer, now most of what an edit waits behind at a turn (70-250 ms, 0.5-0.8 s under load: `Boarding::past_day` tallies every line's whole day on each ask; running sums per departure would avoid splitting it; folds in T-1842), the snapshot timer and a boarding step (three lines, up to 0.35 s); also from stage 1, a rename leaves 12-57 lines' boarding accounts out of date, and `sendMoney` takes 15-100 ms each game hour. Not measured: undo of a rename, unbind all, the junction panel.
   - Goal: Each is under 0.2 s or yields to edits, per docs/architecture.md "Edits never queue behind polling". In stages, the today answer next.
   - Other: notes/T-3801.md, notes/review-edit-speed-2026-11-20.md, notes/T-3804.md

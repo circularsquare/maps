@@ -52,7 +52,7 @@ def snapshot(tasks_text, lines_text, fallback=None):
             a = "ops"                         # the board puts a task with no line in Not sorted, in the ops row
         if a:
             own[t["id"]] = a
-        if (t["pri"] == "P4" or t["someday"]) and st in ("low", "after"):   # Someday was P3 before 2026-11-16
+        if (t["pri"] == "P4" or t["someday"]) and st in ("ready", "after"):   # Someday was P3 before 2026-11-16
             continue
         a = a or (fallback or {}).get(t["id"]) or "none"
         area[a] = area.get(a, 0) + 1
