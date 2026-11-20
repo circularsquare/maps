@@ -118,9 +118,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Myanmar (59 of 60 rows), Laos (11) and Timor-Leste (4) shipped 2026-11-20. Bhamo (0.44M) is parked: its busiest square sits on a GHSL pile-up of 23,697 people in one village square in Mansi, not on a town.
   - Goal: Bhamo built with its people spread off that square (or held), then gated and joined.
   - Other: notes/T-1738.md section 16
-- T-3764 [P3] {L:new-countries} Fill the gaps, Pakistan, Bangladesh and Central Asia (taking, 2026-11-20, agent gapfill)
-  - Context: You, 2026-11-19: "after that i guess we fill in the gaps (pakistan/bangladesh, central asia, etc)". After T-1738 and T-3763.
-  - Goal: The countries still missing between built regions listed, then built in batches.
+- T-3764 [P3] {L:new-countries} Fill the gaps, Central Asia, Afghanistan and the Caucasus (taking, 2026-11-20, agent gapfill)
+  - Context: You, 2026-11-19: "after that i guess we fill in the gaps (pakistan/bangladesh, central asia, etc)". Pakistan and Bangladesh were the first batch. The list of what is still missing, in batches, is in the notes: Central Asia with Mongolia (77M), Afghanistan (38M), the Caucasus (17M), the Levant and Yemen (63M), Nepal, Bhutan and Sri Lanka (52M), Africa beside built countries, then Papua New Guinea and the Pacific.
+  - Goal: Each batch built and joined, next Central Asia.
+  - Other: notes/T-3764.md
 - T-1765 [P3] {L:region-redraws} Origins on the densest pixel, far from town
   - Context: Zones whose origin was set on the densest pixel over 25 km outside their unit. Canada, Greece, Poland and China's city zones were fixed on 2026-10-29.
   - Goal: China's other 61 county-town zones (Guyang 235 km off) are rebuilt.
@@ -698,11 +699,15 @@ Passing tracks (T-2228, archived; built as T-2231 to T-2233; notes/T-2228.md):
   - Context: Overtake plans are pairwise, so a local's waits for several faster lines are added up.
   - Goal: Measured on a three-line test, then changed only if it matters.
   - Other: notes/T-2228.md section 8
-- T-2216 [P3] {L:islands} {waits:Anita} Ground-only solve for island pairs
-  - Need from Anita: pick how transit is cut off between islands (A, the local island rule: all ride up to 3x an imagined drive, none from 4x; B, the same as a smooth curve at 3.5x; C, a tighter 2-3x) and say yes or no to stage 2 (island zones inside a mainland pack, Sado - Tokyo); A recommended.
-  - Context: Design done 11-20 (notes/T-2216.md, 4 stages, about 7-10 h). Market zone pairs on two landmasses are "fixed, never solved" today (1.49M longer trips, 662,000 commutes a day), and the commutes are quietly counted as car; once solved they show "No route" until a ferry or line joins them. Stage 0 (wrong landmasses) is T-3838.
+- T-2216 [P3] {L:islands} Ground-only solve for island pairs (taking, 2026-11-20, agent islands1)
+  - Context: Design done 11-20 (notes/T-2216.md, 4 stages, about 7-10 h). You, 11-20: "yeah we can do 3x, A" (everyone rides up to 3x an imagined drive, nobody from 4x), and yes to stage 2 (island zones inside a mainland pack: "people will find that fun"). Market zone pairs on two landmasses are "fixed, never solved" today (1.49M longer trips, 662,000 commutes a day), and the commutes are quietly counted as car; once solved they show "No route" until a ferry or line joins them. Stage 0 (wrong landmasses) is T-3838.
   - Goal: They solve with rail as the only ground mode, with a point past which trips don't go by transit at all, so fares can't be raised without limit (your pad, 2026-11-18: "we should probably have a certain point at which transit is just not taken even if its the only option"); closes T-1396.
   - Other: Own worktree (intercity). notes/T-2216.md
+- T-3845 [P2] {L:buses} Ferry route drawn port, waypoints, then port (taking, 2026-11-20, agent ferryorder)
+  - Context: You, 11-20: "the issue some people were having is that they cant even place two points. cuz the pathfinding fails cuz its too complicated / long. so i think the way it should work is like, instead of putting port A then port B then shift click to put waypoint between A and B, we should put port A then shift click to put waypoint then click to put port B. and in the tooltip we should say place port or if we're hovering over water 'shift click to place waypoint'."
+  - Other: notes/T-3809.md
+- T-3846 [P2] {L:timetables} Timetable related lines quieter and fewer (taking, 2026-11-20, agent ttquiet)
+  - Context: You, 11-20: "i think the related lines are a bit too prominent. lets make their bullets also half opacity, and their timetable text half opacity down from 60% or whatever we used. also lets only include related lines if (it has at least 3 stops in common, and the number of stops in common is at least 40% of either line's number of total stops) or the related line interlines like on the same track at any point."
 - T-3843 [P3] {L:region-redraws} Isfahan's north strip in no zone
   - Context: Found by T-3763: a 141 km2 strip on Isfahan's north edge (51.624, 32.739), between the outlines of bcs and isf, holds about 70,000-137,000 people and is in no pack. Also Duhok governorate comes out at 1.45 of Iraq's 2024 census.
   - Other: notes/T-3763.md
@@ -814,8 +819,8 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Other: notes/T-3835.md
 - T-3836 [P3] {L:real-networks} Real network names in the player's language
   - Context: In-game feedback 11-20 (1795147183-e2778951, Japanese): on a real network, station and line names should follow the game's language. OSM often has name:ja and name:en. A design call for you: which languages, and what when a name has none. Reach: players on real networks in another language.
-- T-3839 [P3] {L:schematic-rivers} Schematic river leftovers after option E
-  - Context: From T-3358's build: London's drawn estuary breaks between Tilbury and Gravesend (cause not found); Osaka's width step lands on a bend; stations still on the wrong bank after the second layout (Osaka 4 pairs, Taipei 1); side creeks no line crosses aren't drawn (New York's went from 223 pieces to 20 bands); London layout about 5-6 s slower.
+- T-3839 [P2] {L:schematic-rivers} Schematic rivers still break and bridge (taking, 2026-11-20, agent riverfix)
+  - Context: You, 11-20 on 8800: "still seeing some disjoint rivers occasionally. usually at the end of what is considered a river. like near newark where the passaic and hackensack confluence. the hudson river also appears to have a landbridge across it near peekskill/beacon also. sands point is also connected to the bronx ... also if the whole world is selected the rivers still look super disconnected, so idk if we solved anything substantially here." Also from T-3358's build: London's drawn estuary breaks between Tilbury and Gravesend (cause not found); Osaka's width step lands on a bend; stations still on the wrong bank after the second layout (Osaka 4 pairs, Taipei 1); side creeks no line crosses aren't drawn (New York's went from 223 pieces to 20 bands); London layout about 5-6 s slower.
   - Other: notes/T-3358.md
 - T-3354 [P3] {L:single-track} One-track platform jumps sides when dragged north-south
   - Context: Not reproduced 2026-11-16 (bug-a): a station node's heading stays put when dragged, so the fixed axis never flips in the sim. Needs the exact drag that shows it.

@@ -1,9 +1,1 @@
-[
-  {
-    "id": "a-2026-11-20-1",
-    "title": "Island pairs: cut-off and stage 2",
-    "text": "T-2216 design (notes/T-2216.md): trips between two landmasses with no road or flight (Seattle - Victoria, Tenerife - Gran Canaria) get solved, so a ferry or line between them carries riders. Which cut-off? A (recommended): the existing local island rule, everyone rides up to 3x the cost of an imagined drive across a bridge that isn't there, nobody from 4x (Vancouver - Victoria keeps every rider up to about a 48 dollar fare, none past 114). B: the same as a smooth curve at 3.5x. C: a tighter 2-3x, closer to real ferry shares but an island-only rule. And yes or no to stage 2: island zones inside a mainland pack (Sado - Tokyo, mostly Indonesia and the Philippines, 16.3M people) whose trips go from car to No route until a ferry joins them. Note for all of it: today these trips quietly count as car; once solved they show No route until something joins them.",
-    "since": "2026-11-20",
-    "by": "maps-60-6ba449"
-  }
-]
+[]
