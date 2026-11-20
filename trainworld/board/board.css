@@ -478,6 +478,11 @@ select.small {
 .field-row.need .lab { color: var(--s-you); --icon-on: var(--card); }
 .field-row.need .val { font-weight: 600; }
 
+/* waiting on (T-3867) */
+.task-row .waiting { margin-top: 6px; font-size: 13px; }
+.task-row .wait-lab { font-size: 12px; font-weight: 700; color: var(--muted); }
+.task-row .wait-item { margin-left: 0; }
+
 /* resizable table columns */
 .notes th { position: relative; }
 .col-grip { position: absolute; top: 0; right: -3px; bottom: 0; width: 7px; cursor: col-resize; z-index: 1; }

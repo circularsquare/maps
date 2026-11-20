@@ -943,6 +943,7 @@ function taskRow(t, key, q) {
   return el('div', { class: 'task-row' + (q && taskHits(t, q) ? ' hit' : '') + (flash ? ' flash' : ''), style: colour(key) + pc, 'data-task': t.id },
     el('div', { class: 'top' }, el('b', { class: 'tid' }, t.id), priBadge(t.pri), el('span', { class: t.fields ? 'title' : 'text' }, rich(t.text))),
     taskBody(t),
+    waitingOn(t),
     small,
     INBOX.ok ? confirmRow(`${k}:pri`) : null,
     INBOX.ok ? confirmRow(`${k}:line`) : null,
@@ -959,6 +960,27 @@ function taskBody(t) {
   const rows = FIELD_LABELS.filter(([k]) => t.fields[k]).map(([k, label]) =>
     el('div', { class: `field-row ${k}` }, el('span', { class: 'lab', title: label, 'aria-label': label }, icon(k)), el('span', { class: 'val' }, rich(t.fields[k]))));
   return rows.length ? el('div', { class: 'fields' }, rows) : null;
+}
+
+/** T-3867: a task that waits on another task or a phrase gets its own short section saying what */
+function waitingOn(t) {
+  if (!t.after || !t.after.length) return null;
+  const items = [];
+  for (const w of t.after) {
+    const ids = /^\s*T-\d+(\s*(,|and|&)?\s*T-\d+)*\s*$/.test(w) ? w.match(/T-\d+/g) : null;
+    if (!ids) { items.push(el('div', { class: 'wait-item' }, rich(w))); continue; }
+    for (const id of ids) {
+      let title = '', done = false;
+      if (DATA.tasks[id]) title = DATA.tasks[id].text.replace(/\s*\(taking[^)]*\)\s*$/, '');
+      else if (knownTask(id)) {
+        done = true;
+        if (ARCHIVE) title = ((ARCHIVE[id] || {}).text || '').replace(/\{(L|waits|after):[^}]*\}\s*/g, '');
+        else loadArchive();
+      }
+      items.push(el('div', { class: 'wait-item' }, taskLink(id), title ? ' ' : '', title ? rich(title) : '', done ? el('span', { class: 'meta' }, ' (done)') : ''));
+    }
+  }
+  return el('div', { class: 'waiting' }, el('div', { class: 'wait-lab' }, 'Waiting on'), items);
 }
 
 function queuePanel() {
