@@ -307,7 +307,7 @@ wide so a longer date moves nothing [T-1868].
   slower and faster buttons with the speed between them as text [T-3653]: one step along the slider's 20 stops (`SLIDER_STOPS` in `game/clock.ts`,
   real to 100x, spaced for the eye; "real" is 1 game second per second, 1/60 of 1x, and "4real" is four times that), each button off at its end; the
   comma key slows and the period key speeds up by one step (`clock.stepSpeed`, `main.ts`; listed in Help; held, they keep stepping every 90 ms at most [T-3717]). **Click the speed** for the slider [T-1664, T-3717];
-  the speed stays until changed (not saved with the game). Replaced the 1x, 4x, 16x buttons; Settings > Map "Use legacy time speed controls" (off by default, remembered in the browser, T-3765) brings them back: pause, 1x, 4x and a third button showing the speed as text (a click runs it, a double click opens the slider), with the comma and period keys still stepping.
+  the speed stays until changed (not saved with the game). Replaced the 1x, 4x, 16x buttons; Settings > Map "Use legacy time speed controls" (remembered in the browser, T-3765; on for a browser with no stored settings and no saved game, off for one that has played before without choosing, T-3847) brings them back: pause, 1x, 4x and a third button showing the speed as text (a click runs it, a double click opens the slider), with the comma and period keys still stepping.
   **While the player's edits are not yet in the figures** the clock runs no faster than 4x [T-1665,
   `demandCapped` in `game/lineFigures.ts`]: after an edit, until every line it changed has its riders
   again (each reads "calculating..." meanwhile: its cluster's local result, or the

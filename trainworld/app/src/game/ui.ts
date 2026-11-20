@@ -212,6 +212,10 @@ function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partia
   }
 }
 const saved = load();
+/** T-3847: whether a game was saved here before (the remembered slot, workers/clockClient.ts) */
+function playedBefore(): boolean {
+  try { return !!localStorage.getItem("anitabuilder-save-slot"); } catch { return false; }
+}
 const oldDisplay = saved.display as (Partial<DisplaySettings> & { mobileIntercity?: boolean; lineLoad?: boolean; intercity?: boolean; stationRiders?: boolean; unbuiltColour?: string; trainLoadBasis?: string; complexView?: boolean; font?: unknown; trainLoad?: boolean; platformCrowds?: string }) | undefined;
 // `lineLoad` (the old width checkbox) and `intercity` (hide the longer-trip bubbles) are no longer settings (T-222), nor `stationRiders`
 // (the demand circles, T-482), nor `unbuiltColour` (T-1120), nor `trainLoadBasis` (T-164), nor
@@ -245,6 +249,9 @@ if ((saved.v ?? 1) < 15) delete migratedDisplay.hillshade;
 // T-3814: binding new stations went off by default; a player with anything stored and no choice of their own had it
 // on (the default from T-3759 until then), so they keep it
 if (Object.keys(saved).length && migratedDisplay.bindNew === undefined) migratedDisplay.bindNew = true;
+// T-3847: a browser with no sign of an earlier visit (no stored settings, no remembered save slot) starts on the
+// legacy time buttons; one that has played keeps the new bar until the player picks
+if (migratedDisplay.legacyTime === undefined && !Object.keys(saved).length && !playedBefore()) migratedDisplay.legacyTime = true;
 // T-3630: the phones-only toggle became a setting on every device; every computer had the old off stored, so only a
 // phone's choice carries over
 if (migratedDisplay.intercityTrips === undefined && mobileDevice() && _mobileIntercity !== undefined) migratedDisplay.intercityTrips = _mobileIntercity;
