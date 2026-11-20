@@ -7,7 +7,7 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`. This f
 Diary: notes/handoff-log.md. Her local time is UTC-5.
 
 ## Next
-0. Live v0.4.4. Cap 14. 8800 = 78c7f12f (rebuild 20:55 UTC; smoke passed). Master pushed through 78c7f12f.
+0. Live v0.4.4. Cap 14. 8800 = 27995e5e (has T-3889 tram joins; smoke passed). Master pushed through 78c7f12f.
 1. Evening update, maybe tomorrow (her call, needs her playtest). Publish skill (sort, highlights, playtest list,
    translations incl. T-3822/3823 hovers + addCity + today's strings, zones image for PK/BD, smoke8800). Server
    first, her yes: shonei-server 2754ba1, fd294e7, 43360be, 39e1bd2 (not pushed; T-3735 landed so 39e1bd2's test

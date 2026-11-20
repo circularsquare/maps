@@ -218,6 +218,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: Build it only when you ask.
 - T-3866 [P4] {L:small-fixes} What stationsworld is
   - Context: Your TODO.md, 11-20, from player suggestions: "stationsworld ??" Not understood; find out what is meant (a mod, a game, a feature) and report to you.
+- T-3893 [P3] {L:checks} t671-ghost-hover fails near track ends
+  - Context: Found by toolsplit (T-2374), 11-20: "near track ends" fails 21 of 84 on master and on the split alike; cause not looked at.
+  - Goal: The cause found; the ghost fixed or the check brought up to date, and it passes.
 - T-3877 [P3] {L:checks} t2365's graph bins check fails since T-3509
   - Context: Found by modesplit (T-3695): t2365 "graph bins add up to the zone's split" fails on both saves; the gap equals the within-place market trips T-3509 added, with no figure moved by T-3695.
   - Goal: Confirmed on master, then the check counts those trips (or the graph does), and it passes.
@@ -908,9 +911,9 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Three Boston lines tried and reverted: rail takes no walkers in the fixture whichever pair is served. Needs a Rust-side look at the pair share (e_frac) before choosing stops.
   - Goal: The check covers a line serving two stations at both ends of a walkable cross-pack pair.
   - Other: See notes/T-2527.md.
-- T-2374 [P3] {L:cleanup} Split the three biggest app files left
-  - Context: The clock worker (5,298 to 1,295 lines plus ten files) and the renderer (2,507 to 1,155 plus three) were split 11-20. Left: demandClient.ts about 5,500 lines, demand.worker.ts about 2,900, tools.ts about 2,400; none fits one read. tools.ts is what the track rework changes; it waits on tramrail (T-3889), the demand files on binzip (T-2486).
-  - Goal: Moves only, one agent per file: demandClient under 3,000, the other two under 1,500, every new part under 1,500, no function over 400 lines (the clock worker's handleMessage is 453); typecheck and smoke pass.
+- T-2374 [P3] {L:cleanup} {after:T-2486} Split the two demand files left
+  - Context: Split 11-20: the clock worker (5,298 to 1,295 lines plus ten files), the renderer (2,507 to 1,155 plus three) and tools.ts (2,406 to 1,359 plus five). Left: demandClient.ts about 5,500 lines and demand.worker.ts about 2,900; they wait on binzip (T-2486), which edits demandClient.
+  - Goal: Moves only, one agent per file: demandClient under 3,000, demand.worker under 1,500, every new part under 1,500, no function over 400 lines (the clock worker's handleMessage is 453); typecheck and smoke pass.
   - Other: Pieces and seams in notes/review-cleanup-2026-11-20.md; demandClient and demand.worker from notes/T-2360.md stage 7.
 - T-2375 [P4] {L:cleanup} Move debug probes out of main.ts
   - Context: The tsconfig part is done (T-3443). Left: about 125 lines of ?debug probes in main.ts, URL parameters read in 28 files, ten unused CSS classes.
