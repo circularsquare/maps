@@ -435,7 +435,6 @@ body.resizing, body.resizing * { user-select: none; }
 .lines-gear-pop .h { margin: 0 0 4px; }
 .lines-gear-pop .h .check { font-weight: 700; }
 .lines-gear-pop .gear-cities { max-height: 186px; overflow-y: auto; }
-.lines-gear-pop .check input.some { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 40%, var(--tint)); }
 .lines-box .rows > li.hidden-line > :is(.chip, .group-pill, .line-name) { opacity: 0.4; }
 .lines-box .vis-check { appearance: none; width: calc(12 * var(--px)); height: calc(12 * var(--px)); margin: 0; flex: none; cursor: pointer;
   border: 1px solid var(--rule); background: var(--bg); }
@@ -606,6 +605,9 @@ body.resizing, body.resizing * { user-select: none; }
                border: 1px solid var(--rule); background: var(--bg); display: grid; place-items: center; }
 .check input:checked { border-color: var(--accent); background: var(--tint); }
 .check input:checked::after { content: ""; width: calc(6 * var(--px)); height: calc(6 * var(--px)); background: var(--accent); }
+/* T-3826, T-3832: a part-ticked group box, a minus; the schematic's cities list and the Lines gear share it */
+.check input.some { border-color: var(--accent); background: var(--tint); }
+.check input.some::after { content: ""; width: calc(8 * var(--px)); height: calc(2 * var(--px)); background: var(--accent); }
 
 .chip {
   display: inline-grid; place-items: center; flex: none;
@@ -1139,8 +1141,6 @@ rect.now { fill-opacity: .45; }
 .diagram-cities-list .chevron svg { width: 12px; height: 12px; }
 .diagram-cities-list .chevron.open svg { transform: rotate(90deg); }
 .diagram-cities-list li.in-realm { padding-left: 46px; }
-.diagram-cities-list .check input.some { border-color: var(--accent); background: var(--tint); }
-.diagram-cities-list .check input.some::after { content: ""; width: calc(8 * var(--px)); height: calc(2 * var(--px)); background: var(--accent); }
 /* T-3825: the thin divider between the mode buttons and the cities button, shorter than the buttons */
 .diagram-rule { flex: none; width: 1px; height: 16px; margin: 0 2px; background: var(--rule); }
 .demand-busy { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
