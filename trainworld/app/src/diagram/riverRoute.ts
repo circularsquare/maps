@@ -643,6 +643,10 @@ export function routeRivers(G: MapGrid, g: DiagramGraph, lg: DiagramGraph, layou
     for (let c = 0; c < NC; c++) if (G.D[c] === 0 && ((erase[c] && dCore[c] > r3) || (thin[c] && dCoreT[c] > r3t))) (G.D[c] = G.NOZ), (fresh[c] = 1);
     fillZones(G, fresh);
   }
+  // what the rejoining of the water (sheetThin.ts `rejoinWater`) takes as joined by a band, and leaves as land
+  const R = (G.routed ??= new Uint8Array(NC));
+  for (let c = 0; c < NC; c++) if (bandAt[c]) R[c] = 1;
+  for (let c = 0; c < NC; c++) if (erase[c] && !bandAt[c]) R[c] = 2;
   out.wrong = [...wrongSet].sort((a, b) => a - b);
   out.ms = performance.now() - t0;
   return out;

@@ -9,7 +9,11 @@ import { chamfer } from "./waterReal";
 
 /** the drawn grid: per cell its label (0 water, OUT off the carried map, NOZ land in no zone, else a zone), `cell`
  * pitches a side from (x0, y0); `pill` cells are a station's own land, `band` cells drawn as a band */
-export interface MapGrid { D: Uint8Array | Uint16Array; w: number; h: number; cell: number; x0: number; y0: number; OUT: number; NOZ: number; pill: Uint8Array; band: Uint8Array }
+export interface MapGrid {
+  D: Uint8Array | Uint16Array; w: number; h: number; cell: number; x0: number; y0: number; OUT: number; NOZ: number; pill: Uint8Array; band: Uint8Array;
+  /** cells under a routed river's band (1), and the grid's own water its routing took out (2) (riverRoute.ts) */
+  routed?: Uint8Array;
+}
 
 export interface ThinOptions {
   /** water or land narrower than this, pitches, is drawn as a band */
@@ -24,7 +28,7 @@ export interface ThinOptions {
 
 export const THIN: ThinOptions = { thinW: 8, tolMax: 6, minW: 1.5, tolCell: 0.85 };
 
-export interface ThinStats { pieces: number; bands: number; skipped: number; ms: number }
+export interface ThinStats { pieces: number; bands: number; skipped: number; ms: number; kept?: number }
 
 /** water (or land) as a mask of the grid */
 const classMask = (G: MapGrid, water: boolean) => {
@@ -52,6 +56,8 @@ export function thinPass(G: MapGrid, water: boolean, o: ThinOptions, stats: Thin
   const comp = new Int32Array(N).fill(-1);
   const bands: { segs: number[]; w: number; label: number; me: number; ox: number; oy: number; ow: number; oh: number; dOther: Uint16Array }[] = [];
   const cleared: number[] = [];
+  // each piece drawn again: its cells, and the cells of its kind it touches (T-3839)
+  const redrawn: { cells: number[]; vals: number[]; touch: number[]; i0: number; j0: number; i1: number; j1: number }[] = [];
   const stack: number[] = [];
   let id = 0;
   for (let s0 = 0; s0 < N; s0++) {
@@ -147,6 +153,12 @@ export function thinPass(G: MapGrid, water: boolean, o: ThinOptions, stats: Thin
     }
     if (!drawn && chains.length) { stats.skipped++; continue; }
     stats.bands += drawn;
+    const touch: number[] = [];
+    for (const c of cells) {
+      const i = c % W, j = (c - i) / W;
+      for (const [a, b] of SIDES) { const ii = i + a, jj = j + b; if (ii >= 0 && jj >= 0 && ii < W && jj < H && M[jj * W + ii] === 1 && comp[jj * W + ii] !== me) touch.push(jj * W + ii); }
+    }
+    if (touch.length > 1) redrawn.push({ cells, vals: cells.map((c) => G.D[c]), touch, i0, j0, i1, j1 });
     for (const c of cells) {
       if (!can(c)) continue;
       const x = G.x0 + ((c % W) + 0.5) * cell, y = G.y0 + (Math.floor(c / W) + 0.5) * cell;
@@ -183,6 +195,37 @@ export function thinPass(G: MapGrid, water: boolean, o: ThinOptions, stats: Thin
         G.band[c] = 1;
       }
     }
+  }
+  // a piece whose band leaves what it joined apart (a strait's band falling short of the water at one end, T-3839:
+  // Newark Bay cut off from the Passaic and the Hackensack, the East River at Roosevelt Island) is kept as it was
+  const was = (c: number) => M[c] === 1, now = (c: number) => (G.D[c] === 0 || G.D[c] === G.OUT) === water;
+  const lab0 = new Int32Array(N).fill(-1), lab1 = new Int32Array(N).fill(-1);
+  let mark = 0;
+  /** the cells of the kind (`is`) joined by sides to `c0` within the box, labelled `mark` */
+  const fill = (lab: Int32Array, is: (c: number) => boolean, c0: number, i0: number, j0: number, i1: number, j1: number) => {
+    stack.length = 0;
+    stack.push(c0), (lab[c0] = mark);
+    while (stack.length) {
+      const c = stack.pop()!, i = c % W, j = (c - i) / W;
+      for (const [a, b] of SIDES) { const ii = i + a, jj = j + b, u = jj * W + ii; if (ii >= i0 && jj >= j0 && ii <= i1 && jj <= j1 && lab[u] !== mark && is(u)) (lab[u] = mark), stack.push(u); }
+    }
+  };
+  for (const p of redrawn) {
+    const pad = Math.ceil(o.thinW / cell) + 2, i0 = Math.max(0, p.i0 - pad), j0 = Math.max(0, p.j0 - pad), i1 = Math.min(W - 1, p.i1 + pad), j1 = Math.min(H - 1, p.j1 + pad);
+    // the touched cells by what joined them before, then whether each group is still joined
+    const first = mark + 1;
+    let split = false;
+    for (const c0 of p.touch) if (lab0[c0] < first) { mark++; fill(lab0, was, c0, i0, j0, i1, j1); }
+    for (let g = first, last = mark; g <= last && !split; g++) {
+      const at = p.touch.filter((c) => lab0[c] === g && now(c));
+      if (at.length < 2) continue;
+      const m1 = ++mark;
+      fill(lab1, now, at[0], i0, j0, i1, j1);
+      split = at.some((c) => lab1[c] !== m1);
+    }
+    if (!split) continue;
+    p.cells.forEach((c, k) => { if (can(c)) (G.D[c] = p.vals[k]), (fresh[c] = 0); });
+    stats.kept = (stats.kept ?? 0) + 1;
   }
   // land given back by the water's bands takes the zone beside it
   if (water) fillZones(G, fresh);
@@ -321,3 +364,155 @@ export interface CarryMap { at(x: number, y: number): [number, number] }
 
 /** a band drawn outside its own piece keeps this far (chamfer units, 3 a cell) from another piece of its kind */
 const GUARD = 5;
+const SIDES = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+
+/** a rejoining's way: water carried there costs a step a cell, other land LAND_STEP (round a pill); it looks within
+ * REJOIN_PAD pitches of the gap */
+const LAND_STEP = 6, REJOIN_PAD = 12;
+
+/**
+ * T-3839: water as carried onto the grid (`wet0`) that the pills and the cleaning took out where it joined two pieces of
+ * water (a pill's land across a narrow river, the majority, a thin piece's band falling short) is a gap: where the water
+ * round a gap, within REJOIN_PAD of it, is in two pieces or more of at least `minCells`, they are joined again by the
+ * cheapest way by sides through the gap (land round a pill dearer, never a pill or what a routed river took out), carved
+ * `rad` pitches round. A routed river's band counts as water. Returns the ways carved.
+ */
+export function rejoinWater(G: MapGrid, wet0: Uint8Array, minCells: number, rad: number): number {
+  const { w: W, h: H, D, OUT } = G, N = W * H, R = G.routed;
+  // per cell: 1 water now, 2 a gap (water as carried, taken out), 0 other
+  const kind = new Uint8Array(N);
+  for (let c = 0; c < N; c++) kind[c] = D[c] === 0 || D[c] === OUT || (R && R[c] === 1) ? 1 : wet0[c] === 1 && !(R && R[c] === 2) ? 2 : 0;
+  const wet = (c: number) => kind[c] === 1, gapAt = (c: number) => kind[c] === 2;
+  /** c's neighbour by side k (0 left, 1 right, 2 up, 3 down), -1 off the grid */
+  const side = (c: number, k: number) => { const i = c % W; return k === 0 ? (i > 0 ? c - 1 : -1) : k === 1 ? (i < W - 1 ? c + 1 : -1) : k === 2 ? c - W : c + W < N ? c + W : -1; };
+  // whether the water now at a cell is a piece of at least minCells by sides: found once per piece, stopping at minCells
+  let big: Uint8Array | null = null, seen: Int32Array | null = null;
+  const st: number[] = [], st2: number[] = [];
+  let walks = 1;
+  const bigAt = (c0: number) => {
+    const B: Uint8Array = (big ??= new Uint8Array(N)), S: Int32Array = (seen ??= new Int32Array(N));
+    if (B[c0]) return B[c0] === 1;
+    const id = walks++, got: number[] = [c0];
+    (S[c0] = id), st2.push(c0);
+    while (st2.length && got.length < minCells) {
+      const c = st2.pop()!;
+      for (let e = 0; e < 4; e++) { const u = side(c, e); if (u >= 0 && S[u] !== id && kind[u] === 1) (S[u] = id), st2.push(u), got.push(u); }
+    }
+    const v = got.length >= minCells ? 1 : 2;
+    for (const c of got) B[c] = v;
+    st2.length = 0;
+    return v === 1;
+  };
+  const pad = Math.ceil(REJOIN_PAD / G.cell) + 1, r = Math.max(0, Math.ceil(rad / G.cell - 0.5));
+  // ids and marks count from 1 (0 none); the way's costs and steps made the first time one is looked for
+  const gap = new Int32Array(N), onTouch = new Int32Array(N), loc = new Int32Array(N);
+  let cost: Float64Array | null = null, from: Int32Array | null = null;
+  const hc: number[] = [], hk: number[] = [], touched: number[] = [];
+  const push = (c: number, k: number) => {
+    let i = hc.length;
+    hc.push(c), hk.push(k);
+    while (i > 0) { const p = (i - 1) >> 1; if (hk[p] <= k) break; (hc[i] = hc[p]), (hk[i] = hk[p]), (i = p); }
+    (hc[i] = c), (hk[i] = k);
+  };
+  const pop = () => {
+    const c = hc[0], lc = hc.pop()!, lk = hk.pop()!;
+    if (hc.length) {
+      let i = 0;
+      for (;;) { let m = 2 * i + 1; if (m >= hc.length) break; if (m + 1 < hc.length && hk[m + 1] < hk[m]) m++; if (hk[m] >= lk) break; (hc[i] = hc[m]), (hk[i] = hk[m]), (i = m); }
+      (hc[i] = lc), (hk[i] = lk);
+    }
+    return c;
+  };
+  let carved = 0, gaps = 1, mark = 0;
+  for (let s0 = 0; s0 < N; s0++) {
+    if (!gapAt(s0) || gap[s0]) continue;
+    // the gap: cells by sides or corners, and the water now touching it by sides
+    const g = gaps++, cells: number[] = [], touch: number[] = [];
+    let i0 = W, j0 = H, i1 = -1, j1 = -1;
+    (gap[s0] = g), st.push(s0);
+    while (st.length) {
+      const c = st.pop()!, i = c % W, j = (c - i) / W;
+      cells.push(c);
+      (i0 = Math.min(i0, i)), (i1 = Math.max(i1, i)), (j0 = Math.min(j0, j)), (j1 = Math.max(j1, j));
+      for (let b = -1; b <= 1; b++) for (let a = -1; a <= 1; a++) {
+        const ii = i + a, jj = j + b, u = jj * W + ii;
+        if (ii < 0 || jj < 0 || ii >= W || jj >= H) continue;
+        if (gapAt(u)) { if (!gap[u]) (gap[u] = g), st.push(u); }
+        else if (!(a && b) && wet(u) && bigAt(u)) touch.push(u);
+      }
+    }
+    if (touch.length < 2) continue;
+    let nt = 0;
+    for (const c of touch) if (onTouch[c] !== g + 1) (onTouch[c] = g + 1), (touch[nt++] = c);
+    touch.length = nt;
+    if (nt < 2) continue;
+    const bi0 = Math.max(0, i0 - pad), bj0 = Math.max(0, j0 - pad), bi1 = Math.min(W - 1, i1 + pad), bj1 = Math.min(H - 1, j1 + pad);
+    const inBox = (u: number) => { const i = u % W, j = (u - i) / W; return i >= bi0 && i <= bi1 && j >= bj0 && j <= bj1; };
+    // the water round it as pieces within the box, breadth first from each touching cell, stopping once every touching
+    // cell is found (most gaps are a nib of a coast, its touching cells joined a few cells away)
+    const first = mark + 1;
+    let left = touch.length;
+    for (const c of touch) {
+      if (loc[c] >= first) continue;
+      const m = ++mark;
+      (loc[c] = m), left--;
+      st.length = 0;
+      st.push(c);
+      for (let q = 0; q < st.length && left > 0; q++) {
+        const v = st[q];
+        for (let e = 0; e < 4; e++) {
+          const u = side(v, e);
+          if (u < 0 || loc[u] >= first || kind[u] !== 1 || !inBox(u)) continue;
+          (loc[u] = m), st.push(u);
+          if (onTouch[u] === g + 1) left--;
+        }
+      }
+      st.length = 0;
+      if (m === first && left === 0) break;
+    }
+    if (mark === first) continue;
+    // join them: from the first piece's touching cells to the nearest cell of another, then on from both
+    const joinedTo = new Map<number, number>();
+    const K: Float64Array = (cost ??= new Float64Array(N).fill(Infinity)), F: Int32Array = (from ??= new Int32Array(N).fill(-1));
+    const rootOf = (m: number): number => { let v = m; while (joinedTo.has(v)) v = joinedTo.get(v)!; return v; };
+    for (let guard = 0; guard < mark - first; guard++) {
+      const base = rootOf(loc[touch[0]]);
+      if (touch.every((c) => rootOf(loc[c]) === base)) break;
+      (hc.length = 0), (hk.length = 0);
+      for (const c of touch) if (rootOf(loc[c]) === base) { K[c] = 0; touched.push(c); push(c, 0); }
+      let hit = -1;
+      while (hc.length) {
+        const k0 = hk[0], c = pop();
+        if (k0 > K[c]) continue;
+        if (loc[c] >= first && rootOf(loc[c]) !== base) { hit = c; break; }
+        for (let e = 0; e < 4; e++) {
+          const u = side(c, e);
+          if (u < 0 || !inBox(u) || G.pill[u] || (R && R[u] === 2)) continue;
+          const own = loc[u] >= first && rootOf(loc[u]) === base;
+          const k = K[c] + (own ? 0 : gap[u] === g || (loc[u] >= first) ? 1 : LAND_STEP);
+          if (k >= K[u]) continue;
+          (K[u] = k), (F[u] = c), touched.push(u), push(u, k);
+        }
+      }
+      if (hit < 0) {
+        for (const c of touched) (K[c] = Infinity), (F[c] = -1);
+        touched.length = 0;
+        break;
+      }
+      for (let v = F[hit]; v >= 0 && !(loc[v] >= first && rootOf(loc[v]) === base); v = F[v]) {
+        const i = v % W, j = (v - i) / W;
+        for (let b = -r; b <= r; b++) for (let a = -r; a <= r; a++) {
+          const ii = i + a, jj = j + b, u = jj * W + ii;
+          if (ii < 0 || jj < 0 || ii >= W || jj >= H || ((a || b) && (a * a + b * b) * G.cell * G.cell > rad * rad + 1e-9)) continue;
+          if (G.pill[u] || (R && R[u] === 2) || D[u] === 0 || D[u] === OUT) continue;
+          (D[u] = 0), (kind[u] = 1);
+        }
+      }
+      for (const c of touched) (K[c] = Infinity), (F[c] = -1);
+      touched.length = 0;
+      joinedTo.set(rootOf(loc[hit]), base);
+      carved++;
+    }
+  }
+  return carved;
+}

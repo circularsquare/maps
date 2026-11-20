@@ -231,8 +231,9 @@ worker finds the sea on the ground (the coarse and far grids and the land masses
   one ending free within 1 km of the sea ends at it. Where a river meets the sea, its end takes the body nearest. A
   hop crosses a river where its track crosses the centre line an odd number of times; one hop crossing two arcs within
   600 m of each other (where rivers meet) crosses the wider only.
-- **Which rivers are drawn, and how**: the rubber sheet's Narrow rivers, below (T-3358): each river course some hop
-  crosses, routed after the layout as one band.
+- **Which rivers are drawn, and how**: on a city map the rubber sheet's Narrow rivers, below (T-3358): each river course
+  some hop crosses, routed after the layout as one band. On a map 600 km across or more, rivers are the map's own water,
+  read from the masks where the drawing shows the ground larger than its raster (The map, below; T-3839).
 - **The sea everywhere** (T-2540): past the coarse grid, a far grid (1 km a cell, coarser for a big network, at most
   1.5 million cells; 100 km past the coarse grid) holds the masks' water at least three of its cells wide; a place no
   mask covers takes the nearest known cell's (so open sea far from the stations is sea, and land between them land).
@@ -576,11 +577,14 @@ the sheet (a tenth), the lines and the carry (seven tenths) and the map.
   rebuild from the stations' sheet places, on the graph with those places (a pitch the sheet's pitch): each hop's target
   its length on the sheet (the dial at 0), no A and no blocks' stage, B holding each station to its sheet place at 2 (a
   rebuild's 0.05), and the separation keeping near the sheet's places. None of the layout's own water terms; instead
-  **water-gap pairs**: each station with its 6 nearest stations within 40 pitches on the sheet that are on another land
-  mass (the sheet's raster: its real place's, or the nearest land within 1 km) with water on the straight way between
-  them on the ground keeps at least 0.8 of their sheet gap along the sheet's direction between them, in B (weight 3) and
-  as a term of the separation. So rivers and straits between land masses stay open (the East River at the Brooklyn
-  Bridge). About 86% of New York's hops and 88% of all Japan's are drawn as one straight run. With the water on, a city map whose
+  **water-gap pairs**: each station (on land: its real place's, or the nearest land within 1 km) with its 6 nearest
+  stations within 40 pitches on the sheet with water on the straight way between them on the ground keeps at least 0.8
+  of their sheet gap along the sheet's direction between them, in B (weight 3) and as a term of the separation. So
+  rivers and straits stay open (the East River at the Brooklyn Bridge). Two stations on one land mass (the sheet's
+  raster) count where that water runs 100 m or more in one run and the sheet draws it 4 pitches wide or more (read from
+  the masks every 25 m on a map 600 km across or more, from the raster on a city map; T-3839): the masks' bridges join
+  a river's banks into one land mass, and a country's raster parts land only at the sea and wide straits, so the Thames
+  past Tilbury and the Hudson were squeezed shut. About 86% of New York's hops and 88% of all Japan's are drawn as one straight run. With the water on, a city map whose
   routed rivers (Narrow rivers, below) leave stations on the wrong bank is laid out once more, those stations and their
   neighbours on the lines ending the lines' pieces, so each hop there is straightened on its own (T-3358, Anita
   2026-11-20: "yeah i like E"); a second layout leaving more stations on a wrong bank than the first is dropped.
@@ -595,7 +599,11 @@ the sheet (a tenth), the lines and the carry (seven tenths) and the map.
   module that does not load) solves in JavaScript.
 - **The map**: a grid over the drawing (at most 4 million cells on a city map, 12 million on a country's) takes, cell by
   cell through the carried map's triangles, the ground under it: water, or the zone the land is in (the zones' outlines
-  the page sends). **Past the carried map's edge** (and where it reaches past the sheet's raster) nothing is known, so
+  the page sends). On a map 600 km across or more, where a cell covers less ground than a raster cell (a city drawn
+  large), the masks' own pixel under it decides water or land, and a land cell covering more than 75 m within two cells of
+  water reads four more pixels round its middle, water if any is; so a river or strait narrower than the raster's cell,
+  and one about a cell wide, is drawn (T-3839: on the whole North America save the raster's cell is 2.7 km, and the
+  Hudson came out as scattered blobs). **Past the carried map's edge** (and where it reaches past the sheet's raster) nothing is known, so
   with the water on each cell takes the nearest cell on the map (by chamfer distance), water only from a piece of water
   of at least 3,000 square pitches (the sea, a bay, a big lake), each edge cell taking the majority of the edge within
   12 pitches; then land so placed narrower than 5% of the grid's longer side, beside water so placed, is water. So a
@@ -605,9 +613,15 @@ the sheet (a tenth), the lines and the carry (seven tenths) and the map.
   another country's coast where its masks stop (Korea and China round all Japan), which would show as land ending in
   straight lines; land the masks hold whole stays, of any size and with or without a station (Pennsylvania past the
   Delaware, Sado, Kunashir, Governors Island). Each station's pill and 1.5 pitches around it (at least half a pitch more than a cell) are land of its
-  own zone; a station still off its own land has its land carried to it a pill wide, from at most 8 pitches. Cleaned (a
-  3 by 3 majority; water under 40 square pitches and land with no station under 30 dropped, before the bands below and
-  again after them).
+  own zone; a station still off its own land has its land carried to it a pill wide, from at most 8 pitches. Cleaned (water
+  meeting water only at a corner joined by a side; a 3 by 3 majority, which keeps a water cell joining water round it;
+  water under 40 square pitches and land with no station under 30 dropped, before the bands below and again after them).
+  **The water stays joined** (T-3839, `sheetThin.ts` `rejoinWater`): water as carried that the pills and the cleaning
+  took out where it joined two pieces of water (a pill's land across a narrow river, a thin piece's band falling short)
+  is joined again where the water within 12 pitches round the gap is in two pieces of 40 square pitches or more: the
+  cheapest way by sides through the gap (land round a pill 6 times dearer, never a pill or the water a routed river took
+  out), carved a pitch round. So a river reads as one water to its mouth (Newark Bay with the Passaic and the
+  Hackensack, the Harlem River into the East River).
 - **Narrow rivers** (with the water button on, on a city map; a map 600 km across or more draws only water wide enough
   to show as area; `riverRoute.ts`, T-3358, notes/T-3358.md): the river finder's arcs (Water above, a 25 m cell) joined
   into **courses**, the widest way at each junction. Each course some hop crosses is drawn after the layout as **one
@@ -654,7 +668,8 @@ the sheet (a tenth), the lines and the carry (seven tenths) and the map.
   a band: its median width (at least 1.5 pitches, or a cell and a half), its middle fitted with runs at 0, 45 and 90
   degrees, straying up to 0.4 of the way to the next piece of its kind (at most 6 pitches, at least 0.85 of a cell), and
   on water clear of the pills. A band is never drawn within 1.7 cells of another piece of its kind outside its own
-  piece, so **no strait closes, no island joins another and no isthmus is cut**. Where a band meets the water or land it
+  piece, so **no strait closes, no island joins another and no isthmus is cut**; a piece whose bands leave the water
+  (or land) it joined in two pieces within its box and 8 pitches and two cells round is kept as it was (T-3839). Where a band meets the water or land it
   leaves from, the piece is kept as it was. A piece with a station on it, one at the map's edge and one under 3 pitches
   every way stay as they are. Two shores fitted apart could only follow a thin piece's own wiggles (Anita, 2026-11-06:
   "these peninsulas are very wiggly"); a band's edges are straight.

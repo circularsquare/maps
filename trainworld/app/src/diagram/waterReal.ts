@@ -150,6 +150,50 @@ function maskCover(masks: WaterMask[], f: MercFrame) {
   };
 }
 
+/** the masks' own pixel at a place in graph metres: 1 water, 0 land, -1 where no mask covers it (T-3839: a country
+ * map's drawing reads its narrow water here where it draws the ground larger than its raster) */
+export function maskPixel(masks: WaterMask[], f: MercFrame): (x: number, y: number) => number {
+  const [fx, fy, k] = f, B = 50_000, LAT_STEP = 50;
+  const gy = (lat: number) => -((1 - Math.log(Math.tan(Math.PI / 4 + (lat * RAD) / 2)) / Math.PI) / 2 - fy) * k;
+  // per mask: its box in graph metres, its column at graph x (A + B x) and its row at a latitude (rA + rB lat)
+  const mk = masks.map((m) => {
+    const s = EARTH_R * RAD * Math.cos(m.lat * RAD), ry = EARTH_R * RAD;
+    const lon0 = m.lon + m.x0 / s, lon1 = m.lon + (m.x0 + m.w * m.cell) / s;
+    return { m, cA: (s * (360 * fx - 180 - m.lon) - m.x0) / m.cell, cB: (s * 360) / (k * m.cell), rA: (-ry * m.lat - m.y0) / m.cell, rB: ry / m.cell,
+      x0: ((lon0 + 180) / 360 - fx) * k, x1: ((lon1 + 180) / 360 - fx) * k, y0: gy(m.lat + m.y0 / ry), y1: gy(m.lat + (m.y0 + m.h * m.cell) / ry) };
+  });
+  if (!mk.length) return () => -1;
+  // the masks by 50 km square, and the latitude at graph y by a table every LAT_STEP metres
+  let bx0 = Infinity, by0 = Infinity, bx1 = -Infinity, by1 = -Infinity;
+  for (const q of mk) (bx0 = Math.min(bx0, q.x0)), (by0 = Math.min(by0, q.y0)), (bx1 = Math.max(bx1, q.x1)), (by1 = Math.max(by1, q.y1));
+  const i0 = Math.floor(bx0 / B), j0 = Math.floor(by0 / B), BW = Math.floor(bx1 / B) - i0 + 1, BH = Math.floor(by1 / B) - j0 + 1;
+  const at: number[][] = Array.from({ length: BW * BH }, () => []);
+  mk.forEach((q, i) => { for (let a = Math.floor(q.x0 / B); a <= Math.floor(q.x1 / B); a++) for (let b = Math.floor(q.y0 / B); b <= Math.floor(q.y1 / B); b++) at[(b - j0) * BW + a - i0].push(i); });
+  const NL = Math.ceil((by1 - by0) / LAT_STEP) + 2, lat = new Float64Array(NL);
+  for (let t = 0; t < NL; t++) lat[t] = (2 * Math.atan(Math.exp(Math.PI * (1 - 2 * (fy - (by0 + t * LAT_STEP) / k)))) - Math.PI / 2) / RAD;
+  /** the pixel of mask q at (x, at latitude la): 1, 0, or -1 off it */
+  const pix = (q: number, x: number, la: number) => {
+    const M = mk[q], m = M.m, r = Math.floor(M.rA + M.rB * la), c = M.cA + M.cB * x;
+    if (r < 0 || r >= m.h || c < 0 || c >= m.w) return -1;
+    let lo = m.rows[r] / 2, hi = m.rows[r + 1] / 2 - 1;
+    const runs = m.runs;
+    while (lo <= hi) { const p = (lo + hi) >> 1; if (runs[p * 2 + 1] <= c) lo = p + 1; else if (runs[p * 2] > c) hi = p - 1; else return 1; }
+    return 0;
+  };
+  // overlapping masks agree but for a pixel's edge here and there, so the first that covers a place answers, the one
+  // that answered last asked first
+  let last = 0;
+  return (x: number, y: number) => {
+    const ty = (y - by0) / LAT_STEP, t0 = Math.min(NL - 2, Math.max(0, Math.floor(ty))), la = lat[t0] + (lat[t0 + 1] - lat[t0]) * (ty - t0);
+    let v = pix(last, x, la);
+    if (v >= 0) return v;
+    const a = Math.floor(x / B) - i0, b = Math.floor(y / B) - j0;
+    if (a < 0 || b < 0 || a >= BW || b >= BH) return -1;
+    for (const q of at[b * BW + a]) if (q !== last && (v = pix(q, x, la)) >= 0) return (last = q), v;
+    return -1;
+  };
+}
+
 /** chamfer distances (3 a side step, 4 a diagonal) from cells where `src` is 0 (or 1 with `from1`), w by h */
 export function chamfer(src: Uint8Array, w: number, h: number, from1: boolean, cap: number): Uint16Array {
   const d = new Uint16Array(w * h);

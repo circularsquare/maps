@@ -15,7 +15,7 @@
 // fetch.
 
 import type { DiagramGraph } from "./graph";
-import type { GroundSea, WaterMask } from "./waterReal";
+import { maskPixel, type GroundSea, type WaterMask } from "./waterReal";
 
 export interface SheetOptions {
   /** the distortion dial, as the layout's (T-2556) */
@@ -161,7 +161,12 @@ export interface Sheet {
 /** the ground's raster, `rr` metres a cell from (x0, y0), `w` by `h`: per row (rowStart) its land runs [runA, runB) of
  * cells, each run's land mass (`mass`: the same number for runs joined side by side); per row (covStart) the spans
  * [covA, covB) a mask covers (elsewhere the ground's sea, a guess past the masks, decided water) */
-export interface SheetRaster { x0: number; y0: number; rr: number; w: number; h: number; rowStart: Int32Array; runA: Int32Array; runB: Int32Array; mass: Int32Array; covStart: Int32Array; covA: Int32Array; covB: Int32Array }
+export interface SheetRaster {
+  x0: number; y0: number; rr: number; w: number; h: number; rowStart: Int32Array; runA: Int32Array; runB: Int32Array; mass: Int32Array; covStart: Int32Array; covA: Int32Array; covB: Int32Array;
+  /** on a map 600 km across or more, the masks' own pixel at a place (`maskPixel`), for the drawing where it draws the
+   * ground larger than the raster (T-3839) */
+  fine?: (x: number, y: number) => number;
+}
 
 /** per land mass (`mass` numbers, which are run numbers), its coast in raster cell sides, and how much of that coast is cut: a masked land
  * cell beside an unmasked water cell, the mask's edge with the ground's guessed sea past it (T-2591) */
@@ -1611,7 +1616,7 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
   return {
     x: SXa, y: SYa,
     mesh: { h, x0: bx0, y0: by0, gx: GX, nx: NCX, ny: NCY, key: P.L.key, qx: P.QX, qy: P.QY, cell, land },
-    raster: { x0: bx0, y0: by0, rr, w: RW, h: RH, rowStart: rowStart.slice(), runA: runA.slice(0, nR), runB: runB.slice(0, nR), mass: par.slice(0, nR), covStart, covA: covA.slice(0, nCov), covB: covB.slice(0, nCov) },
+    raster: { x0: bx0, y0: by0, rr, w: RW, h: RH, rowStart: rowStart.slice(), runA: runA.slice(0, nR), runB: runB.slice(0, nR), mass: par.slice(0, nR), covStart, covA: covA.slice(0, nCov), covB: covB.slice(0, nCov), ...(city ? {} : { fine: maskPixel(ground.masks, ground.frame) }) },
     info: {
       stations: n, leaves: nLeaf, vertices: P.nV, free: P.nF, rounds, stages, folds, nearFold, islands: islands.length,
       turnedDeg: +((turned * 180) / Math.PI).toFixed(2), cellKm: +(h / 1000).toFixed(3), rasterM: Math.round(rr), floorPerKm: +(sFloor * 1000).toFixed(2),

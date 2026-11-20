@@ -16,7 +16,7 @@ import { filleted, fitOcti, rounded, segD, stationZones, type DiagramBorders, ty
 import { bandFillets, cleanRing } from "./coastRound";
 import { chamfer, type RealWater } from "./waterReal";
 import type { DiagramWater } from "./water";
-import { smoothEdges, thinPass, THIN, type CarryMap, type MapGrid, type ThinOptions, type ThinStats } from "./sheetThin";
+import { rejoinWater, smoothEdges, thinPass, THIN, type CarryMap, type MapGrid, type ThinOptions, type ThinStats } from "./sheetThin";
 import { routeRivers, type RiverRoutes, type RoutedRiver } from "./riverRoute";
 
 export interface SheetLinesOptions {
@@ -97,6 +97,11 @@ function cityMap(g: DiagramGraph): boolean {
 /** a land mass with no station is drawn as water when the masks' edge cuts it for at least CUT_WIDTH of its width
  * (the square root of its area): only part of it is known (T-2591) */
 const MG_STALE = 20, CUT_WIDTH = 0.5;
+/** a drawn cell covering under this share of a raster cell's side reads the masks' own pixels, five where it covers more than FINE_SUB_M metres (T-3839) */
+const FINE_SHARE = 1, FINE_SUB_M = 75;
+/** a water-gap pair's water, read every FINE_STEP_M on a country's map (else every raster cell), in one run at least
+ * FINE_GAP_M and FINE_GAP_P pitches at the sheet's scale between the two (T-3839) */
+const FINE_STEP_M = 25, FINE_GAP_M = 100, FINE_GAP_P = 4;
 
 const quantile = (v: ArrayLike<number>, f: number) => { const s = Float64Array.from(v).sort(); return s.length ? s[Math.min(s.length - 1, Math.floor(f * s.length))] : 0; };
 
@@ -137,9 +142,25 @@ export function sheetLines(g: DiagramGraph, sheet: Sheet, o: SheetLinesOptions =
   {
     const H = new Map<number, number[]>(), key = (x: number, y: number) => Math.floor(x / o.seaR) * 100003 + Math.floor(y / o.seaR);
     for (let i = 0; i < n; i++) { const k = key(WX[i], WY[i]); let l = H.get(k); if (!l) H.set(k, (l = [])); l.push(i); }
-    const wet = (a: number, b: number) => {
-      const l = Math.hypot(PX[b] - PX[a], PY[b] - PY[a]), m = Math.ceil(l / R.rr);
-      for (let t = 1; t < m; t++) if (!massAt(R, PX[a] + ((PX[b] - PX[a]) * t) / m, PY[a] + ((PY[b] - PY[a]) * t) / m)) return true;
+    // T-3839: a pair of one land mass too: the masks' bridges join a river's banks into one (the Thames), and a
+    // country's raster parts land only at the sea and wide straits (Manhattan, New Jersey and the Bronx one land mass).
+    // The water on the straight way read from the masks (a country's) or the raster (a city's)
+    const fineAt = R.fine ?? ((x: number, y: number) => (massAt(R, x, y) ? 0 : 1)), step = R.fine ? FINE_STEP_M : R.rr;
+    const wet = (a: number, b: number, d: number) => {
+      const l = Math.hypot(PX[b] - PX[a], PY[b] - PY[a]);
+      // two land masses: any water between them
+      if (ownMass[a] !== ownMass[b]) {
+        const m = Math.ceil(l / R.rr);
+        for (let t = 1; t < m; t++) if (!massAt(R, PX[a] + ((PX[b] - PX[a]) * t) / m, PY[a] + ((PY[b] - PY[a]) * t) / m)) return true;
+        return false;
+      }
+      // one: water the sheet draws FINE_GAP_P wide or more between them
+      const m = Math.ceil(l / step), need = Math.max(FINE_GAP_M, (FINE_GAP_P * l) / d);
+      let run = 0;
+      for (let t = 1; t < m; t++) {
+        if (fineAt(PX[a] + ((PX[b] - PX[a]) * t) / m, PY[a] + ((PY[b] - PY[a]) * t) / m) === 1) { if ((run += l / m) >= need) return true; }
+        else run = 0;
+      }
       return false;
     };
     const cand: [number, number][] = [];
@@ -147,12 +168,12 @@ export function sheetLines(g: DiagramGraph, sheet: Sheet, o: SheetLinesOptions =
       if (!ownMass[a]) continue;
       cand.length = 0;
       for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) for (const b of H.get(key(WX[a] + i * o.seaR, WY[a] + j * o.seaR)) ?? []) {
-        if (b <= a || !ownMass[b] || ownMass[b] === ownMass[a]) continue;
+        if (b <= a || !ownMass[b]) continue;
         const d = Math.hypot(WX[b] - WX[a], WY[b] - WY[a]);
         if (d < o.seaR && d > 1e-6) cand.push([d, b]);
       }
       cand.sort((p, q) => p[0] - q[0] || p[1] - q[1]);
-      for (const [d, b] of cand.slice(0, 6)) if (wet(a, b)) sp.push(a, b, (WX[b] - WX[a]) / d, (WY[b] - WY[a]) / d, o.seaKeep * d * K);
+      for (const [d, b] of cand.slice(0, 6)) if (wet(a, b, d)) sp.push(a, b, (WX[b] - WX[a]) / d, (WY[b] - WY[a]) / d, o.seaKeep * d * K);
     }
   }
   tick("prep");
@@ -337,15 +358,19 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
   // of the masks (Korea and China's coast round all Japan) would show as land ending in the masks' straight edges. Land
   // the masks hold whole stays, stations or not (Pennsylvania past the Delaware, Sado, Governors Island)
   const { cut: dropped, km2: cutKm2 } = cutLand(C);
+  /** the zone at a place on land (its index plus 1), NOZ in none */
+  const zoneLab = (x: number, y: number) => {
+    const j = Math.floor((y - R.y0) / R.rr);
+    if (j < 0 || j >= R.h) return NOZ;
+    for (let k = zs.at[j]; k < zs.at[j + 1]; k++) if (x >= zs.a[k] && x < zs.b[k]) return zs.z[k] + 1;
+    return NOZ;
+  };
   const labAt = (x: number, y: number) => {
     // off the raster nothing is known: taken as off the map (T-3364), not as water
     if (x < R.x0 || y < R.y0 || x >= R.x0 + R.w * R.rr || y >= R.y0 + R.h * R.rr) return OUT;
     const m = massAt(R, x, y);
     if (!m || dropped[m - 1]) return 0;
-    const j = Math.floor((y - R.y0) / R.rr);
-    if (j < 0 || j >= R.h) return NOZ;
-    for (let k = zs.at[j]; k < zs.at[j + 1]; k++) if (x >= zs.a[k] && x < zs.b[k]) return zs.z[k] + 1;
-    return NOZ;
+    return zoneLab(x, y);
   };
   const zoneAll = stationZones(g, shapes), ownLab = new Int32Array(n);
   for (let s = 0; s < n; s++) ownLab[s] = zoneAll[s] >= 0 ? zoneAll[s] + 1 : NOZ;
@@ -356,7 +381,7 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
   for (let v = 0; v < RXn.length; v++) (qx0 = Math.min(qx0, RXn[v])), (qx1 = Math.max(qx1, RXn[v])), (qy0 = Math.min(qy0, RYn[v])), (qy1 = Math.max(qy1, RYn[v]));
   const hd = Math.max(1, Math.sqrt(((qx1 - qx0) * (qy1 - qy0)) / (cityMap(g) ? o.cellsCity : o.cellsCountry)));
   const GW = Math.ceil((qx1 - qx0) / hd), GH = Math.ceil((qy1 - qy0) / hd), NC = GW * GH;
-  const D = wide ? new Uint16Array(NC).fill(OUT) : new Uint8Array(NC).fill(OUT), DM = new Int32Array(NC).fill(-1);
+  const D = wide ? new Uint16Array(NC).fill(OUT) : new Uint8Array(NC).fill(OUT), DM = new Int32Array(NC).fill(-1), fineAt = withWater ? R.fine : undefined;
   // the real distance to built track (T-2639): the hops' tracks marked on a ground grid over the carried lattice,
   // chamfer distances (within 8% of straight-line), and each drawn cell within trackKm of a track or not
   const tc = Math.max(250, Math.sqrt(((gw - 1) * h * (gh - 1) * h) / 4e6)), TW = Math.ceil(((gw - 1) * h) / tc) + 1, TH = Math.ceil(((gh - 1) * h) / tc) + 1;
@@ -373,26 +398,59 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
   }
   const dT = chamfer(onT, TW, TH, true, Math.min(65535, tLim + 1));
   const nearAt = (x: number, y: number) => { const ti = Math.floor((x - x0) / tc), tj = Math.floor((y - y0) / tc); return ti >= 0 && tj >= 0 && ti < TW && tj < TH && dT[tj * TW + ti] <= tLim ? 1 : 0; };
-  for (let j = 0; j + 1 < gh; j++) for (let i = 0; i + 1 < gw; i++) {
-    const a = j * gw + i;
-    for (let t = 0; t < 2; t++) {
-      const p = a, q = t ? a + gw + 1 : a + 1, r = t ? a + gw : a + gw + 1;
-      const x1 = RXn[p], y1 = RYn[p], x2 = RXn[q], y2 = RYn[q], x3 = RXn[r], y3 = RYn[r];
-      const det = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3);
-      if (Math.abs(det) < 1e-12) continue;
-      const c0 = Math.max(0, Math.floor((Math.min(x1, x2, x3) - qx0) / hd)), c1 = Math.min(GW - 1, Math.ceil((Math.max(x1, x2, x3) - qx0) / hd));
-      const r0 = Math.max(0, Math.floor((Math.min(y1, y2, y3) - qy0) / hd)), r1 = Math.min(GH - 1, Math.ceil((Math.max(y1, y2, y3) - qy0) / hd));
-      const pxr = x0 + (p % gw) * h, pyr = y0 + Math.floor(p / gw) * h, qxr = x0 + (q % gw) * h, qyr = y0 + Math.floor(q / gw) * h, sxr = x0 + (r % gw) * h, syr = y0 + Math.floor(r / gw) * h;
-      for (let gj = r0; gj <= r1; gj++) for (let gi = c0; gi <= c1; gi++) {
-        const X = qx0 + (gi + 0.5) * hd, Y = qy0 + (gj + 0.5) * hd;
-        const l1 = ((y2 - y3) * (X - x3) + (x3 - x2) * (Y - y3)) / det, l2 = ((y3 - y1) * (X - x3) + (x1 - x3) * (Y - y3)) / det, l3 = 1 - l1 - l2;
-        if (l1 < -1e-9 || l2 < -1e-9 || l3 < -1e-9) continue;
-        const ux = l1 * pxr + l2 * qxr + l3 * sxr, uy = l1 * pyr + l2 * qyr + l3 * syr, c = gj * GW + gi;
-        D[c] = labAt(ux, uy);
-        DM[c] = massAt(R, ux, uy);
-        nearT[c] = nearAt(ux, uy);
+  // T-3839: where a drawn cell covers less ground than a raster cell (a city on a country's map), the masks' own pixel
+  // says water or land, so a river or strait narrower than the raster's cell is drawn; a land cell covering more than
+  // FINE_SUB_M near water reads four more pixels round its middle, water if any is (so a river about a cell wide on the
+  // ground is not drawn as dashes)
+  /** each drawn cell in the carried map's triangles, with its place on the ground, whether it reads the masks (and
+   * four more pixels), and the ground's step a quarter cell along x and y */
+  const sweep = (fn: (c: number, ux: number, uy: number, fine: boolean, sub: boolean, gxX: number, gxY: number, gyX: number, gyY: number) => void, only?: Uint8Array) => {
+    for (let j = 0; j + 1 < gh; j++) for (let i = 0; i + 1 < gw; i++) {
+      const a = j * gw + i;
+      for (let t = 0; t < 2; t++) {
+        const p = a, q = t ? a + gw + 1 : a + 1, r = t ? a + gw : a + gw + 1;
+        const x1 = RXn[p], y1 = RYn[p], x2 = RXn[q], y2 = RYn[q], x3 = RXn[r], y3 = RYn[r];
+        const det = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3);
+        if (Math.abs(det) < 1e-12) continue;
+        const c0 = Math.max(0, Math.floor((Math.min(x1, x2, x3) - qx0) / hd)), c1 = Math.min(GW - 1, Math.ceil((Math.max(x1, x2, x3) - qx0) / hd));
+        const r0 = Math.max(0, Math.floor((Math.min(y1, y2, y3) - qy0) / hd)), r1 = Math.min(GH - 1, Math.ceil((Math.max(y1, y2, y3) - qy0) / hd));
+        const pxr = x0 + (p % gw) * h, pyr = y0 + Math.floor(p / gw) * h, qxr = x0 + (q % gw) * h, qyr = y0 + Math.floor(q / gw) * h, sxr = x0 + (r % gw) * h, syr = y0 + Math.floor(r / gw) * h;
+        const foot = fineAt ? hd * Math.sqrt(Math.abs((qxr - pxr) * (syr - pyr) - (sxr - pxr) * (qyr - pyr)) / Math.abs(det)) : Infinity;
+        const fine = foot < FINE_SHARE * R.rr, sub = fine && foot > FINE_SUB_M;
+        if (only && !sub) continue;
+        const q4 = hd / 4, l1x = (y2 - y3) / det, l2x = (y3 - y1) / det, l1y = (x3 - x2) / det, l2y = (x1 - x3) / det;
+        const gxX = q4 * (l1x * pxr + l2x * qxr - (l1x + l2x) * sxr), gxY = q4 * (l1y * pxr + l2y * qxr - (l1y + l2y) * sxr);
+        const gyX = q4 * (l1x * pyr + l2x * qyr - (l1x + l2x) * syr), gyY = q4 * (l1y * pyr + l2y * qyr - (l1y + l2y) * syr);
+        for (let gj = r0; gj <= r1; gj++) for (let gi = c0; gi <= c1; gi++) {
+          const c = gj * GW + gi;
+          if (only && !only[c]) continue;
+          const X = qx0 + (gi + 0.5) * hd, Y = qy0 + (gj + 0.5) * hd;
+          const l1 = ((y2 - y3) * (X - x3) + (x3 - x2) * (Y - y3)) / det, l2 = ((y3 - y1) * (X - x3) + (x1 - x3) * (Y - y3)) / det, l3 = 1 - l1 - l2;
+          if (l1 < -1e-9 || l2 < -1e-9 || l3 < -1e-9) continue;
+          fn(c, l1 * pxr + l2 * qxr + l3 * sxr, l1 * pyr + l2 * qyr + l3 * syr, fine, sub, gxX, gxY, gyX, gyY);
+        }
       }
     }
+  };
+  const subLand = fineAt ? new Uint8Array(NC) : null;
+  sweep((c, ux, uy, fine, sub) => {
+    D[c] = labAt(ux, uy);
+    DM[c] = massAt(R, ux, uy);
+    if (fine && D[c] !== OUT && !(DM[c] && dropped[DM[c] - 1])) {
+      const w = fineAt!(ux, uy);
+      if (w === 1) D[c] = 0;
+      else if (w === 0) { if (D[c] === 0) D[c] = zoneLab(ux, uy); if (sub) subLand![c] = 1; }
+    }
+    nearT[c] = nearAt(ux, uy);
+  });
+  if (subLand) {
+    // the land cells within two cells of water read again
+    const near2 = new Uint8Array(NC), rowM = new Uint8Array(NC);
+    for (let j = 0; j < GH; j++) for (let i = 0; i < GW; i++) { let m = 0; for (let a = Math.max(0, i - 2); a <= Math.min(GW - 1, i + 2) && !m; a++) if (D[j * GW + a] === 0) m = 1; rowM[j * GW + i] = m; }
+    for (let j = 0; j < GH; j++) for (let i = 0; i < GW; i++) { const c = j * GW + i; if (!subLand[c]) continue; let m = 0; for (let b = Math.max(0, j - 2); b <= Math.min(GH - 1, j + 2) && !m; b++) if (rowM[b * GW + i]) m = 1; near2[c] = m; }
+    sweep((c, ux, uy, _f, _s, gxX, gxY, gyX, gyY) => {
+      for (let k = 0; k < 4; k++) { const sx = k & 1 ? 1 : -1, sy = k & 2 ? 1 : -1; if (fineAt!(ux + sx * gxX + sy * gxY, uy + sx * gyX + sy * gyY) === 1) { D[c] = 0; return; } }
+    }, near2);
   }
   // past the carried map's edge (T-3364): a cell takes the nearest cell on it, water only from a piece of water of at
   // least seaOutArea square pitches (the sea, a bay, a big lake), so a network far from the sea is not drawn ringed by
@@ -478,6 +536,9 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
     for (let c = 0; c < NC; c++) if (D[c] === OUT) D[c] = wetO[c] ? 0 : NOZ;
   }
   const t1 = performance.now();
+  // the water as carried, before the pills and the cleaning: what is one water here stays one (T-3839)
+  let wet0: Uint8Array | null = null;
+  if (withWater) { wet0 = new Uint8Array(NC); for (let c = 0; c < NC; c++) if (D[c] === 0) wet0[c] = 1; }
   const cellOf = (x: number, y: number) => { const i = Math.floor((x - qx0) / hd), j = Math.floor((y - qy0) / hd); return i < 0 || j < 0 || i >= GW || j >= GH ? -1 : j * GW + i; };
   // stations whose drawn place is not on their own land in the carried map, and how far that land is
   const offLand: { s: number; dist: number }[] = [];
@@ -528,9 +589,20 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
     }
     bent++;
   }
-  // cleaned: a 3 by 3 majority
+  // T-3839: water meeting water only at a corner (a river a cell wide on a diagonal, as a narrow river carried onto a
+  // coarse grid comes out) is joined by a side, so what goes by sides (the cleaning, the drop of small water, the coast)
+  // keeps it one water
+  if (withWater) {
+    const wetC = (v: number) => v === 0 || v === OUT, dryC = (c: number) => !pill[c] && D[c] !== 0 && D[c] !== OUT;
+    for (let j = 0; j + 1 < GH; j++) for (let i = 0; i + 1 < GW; i++) {
+      const a = j * GW + i, b = a + 1, c = a + GW, d = c + 1;
+      if (wetC(D[a]) && wetC(D[d]) && !wetC(D[b]) && !wetC(D[c])) { if (dryC(b)) D[b] = 0; else if (dryC(c)) D[c] = 0; }
+      else if (wetC(D[b]) && wetC(D[c]) && !wetC(D[a]) && !wetC(D[d])) { if (dryC(a)) D[a] = 0; else if (dryC(d)) D[d] = 0; }
+    }
+  }
+  // cleaned: a 3 by 3 majority; water joining water round it (a river a cell wide) is kept (T-3839)
   {
-    const old = D.slice();
+    const old = D.slice(), RING = [-GW - 1, -GW, -GW + 1, 1, GW + 1, GW, GW - 1, -1];
     // the labels round a cell in the order first met, with their counts (the first of the most wins)
     const lab = new Int32Array(9), cnt = new Int32Array(9);
     for (let j = 1; j + 1 < GH; j++) for (let i = 1; i + 1 < GW; i++) {
@@ -539,6 +611,9 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
       let w = 0;
       for (let b = -GW; b <= GW; b += GW) for (let a = -1; a <= 1; a++) if (old[c + b + a] === 0) w++;
       if (o0 === 0 && w <= 3) {
+        let runs = 0;
+        for (let q = 0; q < 8; q++) if ((old[c + RING[q]] === 0) !== (old[c + RING[(q + 1) % 8]] === 0)) runs++;
+        if (runs >= 4) continue;
         let m = 0;
         for (let b = -GW; b <= GW; b += GW) for (let a = -1; a <= 1; a++) {
           const v = old[c + b + a];
@@ -628,6 +703,8 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
     }
     for (let s = 0; s < n; s++) { const c = cellOf(SX[s], SY[s]); if (c >= 0 && isZ(ownLab[s])) (D[c] = ownLab[s]), (pill[c] = 1); }
   }
+  // water the pills and the cleaning left in pieces joined again (T-3839)
+  const tRj = performance.now(), rejoined = wet0 ? rejoinWater(G, wet0, Math.ceil(40 / (hd * hd)), 1) : 0, msRejoin = Math.round(performance.now() - tRj);
   const t2 = performance.now();
 
   // ---- the zones a line passes through: a station's, or one a hop's track crosses (T-2609)
@@ -830,7 +907,7 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
     riverFits: detail ? rivers?.fits : undefined,
     riverRoutes: detail ? rivers?.routed : undefined,
     riverSkipped: detail ? rivers?.skipped : undefined,
-    info: { cell: +hd.toFixed(2), cells: NC, cutKm2: Math.round(cutKm2), offLand: offLand.length, bent, zoneFixed, wrongZone, wrongSide, bends, wholeZones, rings: seaRings.length, riverBands: rivers?.routed.length ?? 0, riverWrong: rivers?.wrong.length ?? 0, fillets, filletsTight, msFillets: Math.round(msFillets), msRivers: Math.round(rivers?.ms ?? 0), thinPieces: thinStats.pieces, thinBands: thinStats.bands, thinSkipped: thinStats.skipped, msThin: Math.round(thinStats.ms), msGrid: Math.round(t1 - t0), msClean: Math.round(t2 - t1), msCoast: Math.round(t3 - t2), msBorders: Math.round(t4 - t3) },
+    info: { cell: +hd.toFixed(2), cells: NC, rejoined, msRejoin, thinKept: thinStats.kept ?? 0, cutKm2: Math.round(cutKm2), offLand: offLand.length, bent, zoneFixed, wrongZone, wrongSide, bends, wholeZones, rings: seaRings.length, riverBands: rivers?.routed.length ?? 0, riverWrong: rivers?.wrong.length ?? 0, fillets, filletsTight, msFillets: Math.round(msFillets), msRivers: Math.round(rivers?.ms ?? 0), thinPieces: thinStats.pieces, thinBands: thinStats.bands, thinSkipped: thinStats.skipped, msThin: Math.round(thinStats.ms), msGrid: Math.round(t1 - t0), msClean: Math.round(t2 - t1), msCoast: Math.round(t3 - t2), msBorders: Math.round(t4 - t3) },
     grid: detail ? { d: D, w: GW, h: GH, x0: qx0, y0: qy0, cell: hd } : undefined,
     borderFits: detail ? borderFits : undefined,
     zoneShares: detail ? zoneShares : undefined,
