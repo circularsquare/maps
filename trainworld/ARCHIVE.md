@@ -1,6 +1,9 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3735 [P2] {L:timetables} Weekend departures use the weekday round trip (2026-11-20): weekend departures placed from the weekend service; weekdays unchanged to the bit; checker passed (unequal weekend headways can still bunch, as weekdays do) notes/T-3735.md.
+- T-3883 [P1] {L:track-speed} Long high-speed ramps still run at 160 (2026-11-20): arcs turning under 3e-4 rad carry no speed limit; checker passed on 7 saves, only high-speed lines change, all faster. notes/T-3883.md.
+- T-3831 [P2] {L:buses} Trams on highways (2026-11-20): street tram snap and hint follow motorways like bus routes; 60 km/h cap and costs unchanged. notes/T-3831.md.
 - T-3829 [P2] {L:buses} Show fast and slow roads when drawing a bus route (2026-11-20): look A (her pick): fast roads blue, blue one-way arrows; dark blue brightened to #a6bcff. notes/T-3829.md.
 - T-3874 [P3] {L:cleanup} Remove perfOff switches for decided changes (2026-11-20): 11 removed, bays/fareHold and measurement switches kept; 9 files, -61/+35; smoke 29/29, t2773 and t2793 pass. notes/T-3874.md.
 - T-3884 [P2] {L:loading} Calculating trips tag when zoomed out (2026-11-20): wholeSolveUnseen case in StatusTag; real save: 'Calculating trips in 4 cities', About 4 min left. notes/T-3884.md.

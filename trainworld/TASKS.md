@@ -375,7 +375,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3434 [P3] {L:region-redraws} Sabang Island missing from the Banda Aceh zone
   - Context: Player report 2026-11-16. Reach: few.
 - T-3804 [P3] {L:edit-speed} Other worker work that holds edits up (taking, 2026-11-20, agent hourturn)
-  - Context: The hour turn is done (stage 1, T-3804 notes: what an edit waits for it at most went 0.24-0.54 s to 0.19-0.25 s on the 2,647-station save). Left from T-3801's audit: one today answer, now most of what an edit waits behind at a turn (70-250 ms, 0.5-0.8 s under load: `Boarding::past_day` tallies every line's whole day on each ask; running sums per departure would avoid splitting it; folds in T-1842), the snapshot timer and a boarding step (three lines, up to 0.35 s). Not measured: undo of a rename, unbind all, the junction panel.
+  - Context: The hour turn is done (stage 1, T-3804 notes: the most an edit waited for it went from 0.24-0.54 s to 0.19-0.25 s on the 2,647-station save, a few runs of 32 edits). Left from T-3801's audit: one today answer, now most of what an edit waits behind at a turn (70-250 ms, 0.5-0.8 s under load: `Boarding::past_day` tallies every line's whole day on each ask; running sums per departure would avoid splitting it; folds in T-1842), the snapshot timer and a boarding step (three lines, up to 0.35 s). Not measured: undo of a rename, unbind all, the junction panel.
   - Goal: Each is under 0.2 s or yields to edits, per docs/architecture.md "Edits never queue behind polling". In stages, the today answer next.
   - Other: notes/T-3801.md, notes/review-edit-speed-2026-11-20.md, notes/T-3804.md
 - T-3325 [P3] {L:real-networks} {after:real-network rebuild batch} Rebuild Sendai so Senzan Line stops at Toshogu
@@ -393,9 +393,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: `stop_every_pass` adds a stop to line 150 on each load, costing one extra derive and settle.
   - Goal: realsave saves after `stop_every_pass`, so London loads without the fix-up.
   - Other: Reshipping London moves its settled rates. notes/T-3234.md.
-- T-3735 [P2] {L:timetables} Weekend departures use the weekday round trip (taking, 2026-11-20, agent weekenddep)
-  - Context: From T-3584: weekend lines at a merge are now paced from their weekend headways, but weekend departures still take the weekday round trip, spare-time split and phases, because placing departures reads the weekday service (notes/T-3521.md "Lies").
-  - Other: notes/T-3584.md
 - T-3646 [P2] {L:timetables} Undo leaves other lines' trains cut
   - Context: Found checking T-3482: adding a line on full track cuts the lines sharing it (Tokyo's line 42 from 23.12 to 15.00 trains an hour at the peak), and undoing the new line leaves them at 15.00, on master too; a later edit then shares the track out from there, so an undo and redo can end at different rates from the first build.
   - Other: notes/T-3482.md
@@ -687,10 +684,6 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: Your 2026-11-03: "ok we can do named crossings. perhaps have them hidden". A hand-made list of 20-30 straits and tunnels. Comes after T-2150.
   - Goal: Each is marked when a running line uses it, hidden until then.
   - Other: research/late-game-spending.md B
-- T-3883 [P1] {L:track-speed} Long high-speed ramps still run at 160 (taking, 2026-11-20, agent rampbug)
-  - Context: You on 8800 (89d6ca0d), 11-20, after T-3027: "when drawing the track, the longer the ramp gets for a hsr, the higher the displayed "max speed" goes. but in terms of looking at how fast the trains actually travel over the ramps, and the speed map mode, it still says 160 on a ramp even if its long. so actually i think the issue is amybe that pre-existing bug where ramps were getting capped to 160 on ramps over water." Ships tonight with T-3027 unless fixed.
-  - Goal: A long high-speed ramp, over land or water, shows and runs at the speed its length allows in the preview, the speed map mode and the trains; the cause found.
-  - Other: notes/T-3027.md, notes/T-3027-check.md
 - T-2201 [P3] {L:track-speed} Maglev track kind
   - Context: Your note 2026-11-03: "we could do maglev lol. can make it super expensive". A third track kind at 500 km/h, to compete with planes.
   - Goal: A maglev track kind, design first.
@@ -805,15 +798,15 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3837 [P3] {L:buses} Ferry routes found without a waypoint, and waypoints on touch
   - Context: T-3809 added shift click waypoints. A leg is still searched only in a box around its two ports, so a sea path that leaves it (Ma Liu Shui to Sai Kung) needs a waypoint; a wider third search would find it alone. Phones have no shift click.
   - Other: notes/T-3809.md
+- T-3889 [P2] {L:trams} Tram track joins rail and high-speed track (taking, 2026-11-20, agent tramrail)
+  - Context: You, 11-20: "people keep requesting connecting tram track to normal track (and high speed). theres apparently a bunch of real world setups that are like this. would this be hard to do? if not i think its fine to just allow. tram trains can keep the low speed limit of course." Then: "trams can go on train track but trains cannot path onto tram track." Today tram and train track can only cross ("Tram track and train track can't join").
+  - Goal: Tram track joins regular and high-speed track at a junction; a tram line runs onto them at the tram's 80 km/h; train lines stay off tram track.
 - T-3887 [P2] {L:buses} Mode frontier chart (taking, 2026-11-20, agent frontier)
-  - Context: You, 11-20: "to more formalize what we're talking about with modes of transport we could make a graph of some sort. so that we could draw like a frontier. the y axis is just profit per demand i guess? ... construction cost (not that important) - trip distance? like buses should be good for short hops i guess? - stop spacing? ... if we have some sort of graph like this it would be very helpful to keep ourselves organized but also to communicate to players what they should do. cuz currently its kinda opaque."
+  - Context: You, 11-20: "to more formalize what we're talking about with modes of transport we could make a graph of some sort. so that we could draw like a frontier. the y axis is just profit per demand i guess? ... construction cost (not that important) - trip distance? like buses should be good for short hops i guess? - stop spacing? ... if we have some sort of graph like this it would be very helpful to keep ourselves organized but also to communicate to players what they should do. cuz currently its kinda opaque." Then: "for handling the bus / mode comparison graph, we should probably do research into what actual transport research has come up with on this topic" (research/mode-frontier.md).
   - Goal: A chart of profit per trip for each mode (bus, street tram, tram, metro, rail, high speed; BRT once built) against trip distance and corridor demand, measured on test corridors in the game, kept as a rerunnable tool; first run on today's rules, then after T-3856 and T-3378; later a version for players.
-- T-3888 [P2] {L:route-choice} Walk tiers, people who won't walk far
+- T-3888 [P2] {L:route-choice} Walk tiers, people who won't walk far (taking, 2026-11-20, agent walktiers)
   - Context: You, 11-20: "part of the reason why buses are useless is because everyone is willing to walk? like in real life some people really dont wanna walk, like old or handicapped people. similar to "wealth tiers" im wondering if we could possibly do multiple (maybe juts 2) "walk tiers"..? or stretch out the walk/non-walk curves so that some poeple are always just going to want to prefer to take a transit over walking?"
   - Goal: A design for you first: two walk tiers or a stretched walk curve, the share and figures from real sources, the solve cost (income groups cost about 2.4x the local solve, T-1431), and the frontier chart before and after.
-- T-3831 [P2] {L:buses} Trams on highways (taking, 2026-11-20, agent tramhwy)
-  - Context: Your pad, 11-20: "we should probably let trams go on highways, also buses"; buses already may (T-2469). You, 11-20: "i feel like trams on highways shuold also be allowed. i dont see why not. lets make that change."
-  - Goal: Street tram track follows motorways and trunk roads like a bus route does.
 - T-3856 [P2] {L:buses} Plain buses with no boarding cost
   - Context: Your TODO.md and 11-20 calls: "remove boarding cost altogether, i think its kinda the opposite of what we want, since i kinda want buses to be more viable for short trips"; then bus speed from 90% of the car's to 85% or 80% ("i'd rather keep plain buses at 90%, unless we drop the boarding cost"); construction "basically 0 cost"; "the default bus fare ratio a bit lower, like 0.8x"; the same bus vehicle ("we dont necessarily need the vehicle type to be different").
   - Goal: Bus boarding cost removed, speed 85% (80% if the frontier chart shows buses winning too much), construction near zero, default bus fare 0.8x; the frontier chart before and after; plain buses most profitable on short, thin trips.

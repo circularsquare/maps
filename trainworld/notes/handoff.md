@@ -1,13 +1,13 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session f4ff94a8-c06c-4457-a593-caeb3269d7c2, name maps-b4 [173f33], since 2026-11-20 15:01 UTC
-Updated: 2026-11-20 18:52 UTC (maps-b4 past 500k, starting its successor)
+Orchestrator: session 1a8ad997-acf4-4a89-963d-166c67fedf88, name maps-65 [fd56e0], since 2026-11-20 18:52 UTC
+Updated: 2026-11-20 18:56 UTC
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`. This file is plan and her words.
 Diary: notes/handoff-log.md. Her local time is UTC-5.
 
 ## Next
-0. Live v0.4.4. Cap 14. 8800 = 89d6ca0d. Master pushed through ac137c93; ~15 landings since, push soon.
+0. Live v0.4.4. Cap 14. 8800 = 89d6ca0d (14 behind). Master pushed through aaac102d.
 1. Evening update (her: "wait until this evening"). Before it: land T-3735 (tree weekenddep) if weekendchk passes
    and T-3883 (tree rampbug) if rampbugchk passes (both checkers report via inbox; finish with --task). If
    rampbug fails, ramps (T-3027, c025) wait: hide c025 or hold. Then smoke on master, 8800 rebuild, ping her, publish
@@ -16,17 +16,20 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    pushed; 39e1bd2's follow-the-game test needs T-3735 landed; if T-3735 doesn't ship, revert 39e1bd2 or ship it
    anyway: level 32 accepted is harmless). After publish: post PR 24 reply (notes/T-3659.md, her OK), open-source sync.
 2. Running agents (their reports reach the inbox; follow-ups to fresh agents on their tree): hourturn (T-3804 st1,
-   ~1 h left, edits clock.worker.ts; checker before landing), trainrate (T-3550; checker before landing), tramhwy
-   (T-3831), frontier (T-3887 chart, 3-4 h), weekendchk, rampbugchk.
-3. Then: T-3856 plain buses (after frontier's first chart; rerun it after), T-3888 walk tiers design (her call),
+   ~1 h left, edits clock.worker.ts; checker before landing), trainrate (T-3550; checker before landing),
+   frontier (T-3887 research then chart, 3-4 h), weekendchk, rampbugchk (maps-b4's); walktiers (mine, T-3888
+   design, notes only). T-3831 landed 2bf49311 (c031).
+3. T-3889 tram joins rail (her go 11-20 ~19:10 UTC): start Opus agent in a tree once rampbug + weekenddep landed.
+   Then: T-3856 plain buses (after frontier's first chart; rerun it after), T-3888 design to her when walktiers reports,
    T-3378 BRT design to her; held T-3655, T-3646 until trainrate lands; T-2374 clock worker split after hourturn.
    Board queue: `tasks.py upnext list`. Track rework design (T-3444) after cleanup + edit speed, her order.
 4. T-3395: run `tools/ops/save_health.py` after the 11-21 04:00 UTC scan; clean = close it.
-5. Leftover trees ttchk2base, touchrule, timekeys.
 
 ## Her words
 - 11-20 15:20 UTC: "cleaning up some of the minor seeming tasks in code/docs cleanup, and edit speed ... not sure
   how many of them still make sense / would be valuable to do. and after that ... full track rework."
+- 11-20 ~19:00 UTC: "for handling the bus / mode comparison graph, we should probably do research into what actual
+  transport research has come up with on this topic" (T-3887; frontier agent told).
 - 11-20 ~19:10 UTC buses: frontier chart first (T-3887, frontier), walk tiers design (T-3888), plain bus no boarding
   cost/85%/near-free/0.8x fare (T-3856, after the chart), BRT hybrid line upgrade + stations (T-3378), trams on
   highways now (T-3831, tramhwy). Her words in those tasks.
