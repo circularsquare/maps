@@ -1,6 +1,16 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3829 [P2] {L:buses} Show fast and slow roads when drawing a bus route (2026-11-20): look A (her pick): fast roads blue, blue one-way arrows; dark blue brightened to #a6bcff. notes/T-3829.md.
+- T-3874 [P3] {L:cleanup} Remove perfOff switches for decided changes (2026-11-20): 11 removed, bays/fareHold and measurement switches kept; 9 files, -61/+35; smoke 29/29, t2773 and t2793 pass. notes/T-3874.md.
+- T-3884 [P2] {L:loading} Calculating trips tag when zoomed out (2026-11-20): wholeSolveUnseen case in StatusTag; real save: 'Calculating trips in 4 cities', About 4 min left. notes/T-3884.md.
+- T-3886 [P3] {L:schematic} Unticking every city shows nothing (2026-11-20): schematic ['none'] = nothing ticked; empty/absent = whole network; round trips pass. notes/T-3886.md.
+- T-3885 [P2] {L:community} Profit leaderboard by city and country (2026-11-20): city profit split like the money panel's city figures, sums to world; country = its cities; shonei-server 43360be (deploy with fd294e7) notes/T-3885.md.
+- T-3881 [P2] {L:loading} Load card stuck at 91-98% after a cached load (2026-11-20): write guard on job.solveRounds; storage key v2; seeded bad record: cold load bar even 52-96% instead of 88-98% for minutes. notes/T-3881.md.
+- T-3445 [P3] {L:track-speed} Ramp length sets the speed limit (2026-11-20): closed without code: Done by T-3027 (2026-11-20): ramp length sets ramp speed, 200 m per level = 160, 400 m = 320.
+- T-3844 [P3] {L:money} Some paid edits charge no region (2026-11-20): paid field on edit answers; chargeShares uses it when the world shows no change; regionchk PASS on all five; left: undo that buys trains, game-wide edits, not-yet-running lines. notes/T-3844.md.
+- T-3879 [P2] {L:community} Daily profit leaderboard (2026-11-20): client sends weekday profit with the score; shonei-server fd294e7 (not deployed); Points/Profit switch behind the server flag; one world board, losses not listed. notes/T-3879.md.
+- T-3876 [P2] {L:loading} Time left for whole calculations at load (2026-11-20): barrier solves send work; cached load bar 33-97% even, no 75-84% crawl; hover time left within ~1 min. notes/T-3876.md.
 - T-3873 [P3] {L:cleanup} Split the track model into readable parts (2026-11-20): net.rs 946 lines + 8 files 195-617; tests 12 area files; lib 693 and demand 897 passed before and after; tools/split_track.py re-runs it. notes/T-3873.md.
 - T-3869 [P1] {L:memory} Big game can't be saved or downloaded when memory runs out (2026-11-20): save in parts, Download streams; retry then worker replacement (autosave at most once in 10 min); savechk PASS all 5; freed-memory line now shows after a save replacement. notes/T-3869.md.
 - T-3878 [P2] {L:schematic} Schematic city list buttons and All cities (2026-11-20): button pink while open; All cities parent with minus; all ticked = whole-network layout; old saves open all ticked. notes/T-3878.md.

@@ -158,9 +158,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Found checking T-3647: on a kerbside pair of one-way legs, switching one piece of a leg to both ways is accepted (no refusal) but breaks the lines using that leg (A1, A3, A4 in the test scene); master does the same. Switching every piece of the leg together works.
   - Goal: The switch either takes the whole leg with it or is refused with a message naming the line it would break.
   - Other: notes/T-3647.md
-- T-3659 [P3] {L:solve-speed} {after:the next performance round} Contributors' speed-up pull requests
-  - Context: You, 2026-11-18: "there are some new PRs from caelum418 that have to do with speedups that we should look at the next time we look at this area of performance. they might help." Left on the public repo: caelum418's 24 (facility and building layout after edits, overlaps T-3803 option 3; claims edit reply 7.1 s to 1.3 s on a 5,843-station save) and 23 (intercity assignment, 3% of a whole calculation, 25% of its intercity part); neither applies to master, both need a port by hand. CinnamonVII's 18 and 19 were closed by their author (no gain), 20 is in via 12.
-  - Goal: Each one measured on our saves, then ported with credit, or closed with a reply you've seen.
+- T-3659 [P3] {L:solve-speed} Contributors' speed-up pull requests
+  - Context: You, 2026-11-18: "there are some new PRs from caelum418 that have to do with speedups that we should look at the next time we look at this area of performance. they might help." PR 24 ported 11-20 (7f02678e, credited; layout about twice as fast on our saves); its reply is drafted in notes/T-3659.md, to post after the next sync once you've seen it. Left: caelum418's 23 (intercity assignment, 3% of a whole calculation, 25% of its intercity part), needs a port by hand. CinnamonVII's 18 and 19 were closed by their author (no gain), 20 is in via 12.
+  - Goal: PR 23 measured on our saves, then ported with credit or closed with a reply you've seen; PR 24's reply posted.
+  - Other: notes/T-3659.md
 
 ## Demand
 - T-3632 [P2] {L:route-choice} Fix the causes behind No route
@@ -192,7 +193,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-2136's checker (by reading the code): a request for one place's rows lost in a demand worker restart times out after 20 s and is asked again only with the next result, so that zone's panel can wait that long.
   - Goal: A request lost in a restart is asked again once the worker is back; probed with a forced restart.
   - Other: notes/T-2136.md
-- T-3550 [P3] {L:edit-speed} Train-count and headway edits on shared track are slow
+- T-3550 [P3] {L:edit-speed} Train-count and headway edits on shared track are slow (taking, 2026-11-20, agent trainrate)
   - Context: London train-count edits inside its 130-line merge group take 0.5-1.3 s natively (up to 3.3 s on a 3-train line), 1.4-3.7 s in the browser (T-3388); New York's busiest shared line took 150-400 ms (T-1794, before T-1863). Each settle round works out 100-190 profiles at about 1 ms, mostly the crawl-speed bisection in `run_with`. Folds in T-1794 and T-1936.
   - Goal: London train-count edits under 0.5 s natively; figures within the pacing's own noise (T-3388's tolerance). Measure master first with `t3388_probe`.
   - Other: notes/T-3388.md, notes/T-1779.md "T-1787", notes/T-1936.md, notes/review-edit-speed-2026-11-20.md
@@ -279,10 +280,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Two wrong states are still reachable: a graphics notice lifts the 4x cap and settles lines while demand runs, and a failure leaves the "freed memory" hover line. Four small bugs from the same review have no task: Backspace or undo mid-run leaves stale held state, a drag outlives a lost mouse button, a failed file from the start menu opens the oldest game, old-frame save copies are never deleted.
   - Goal: Graphics loss is its own signal apart from demand stopping, and each of the four is fixed with a scratch proof.
   - Other: notes/T-2843.md machine B and findings 3, 5, 7, 8, 9; notes/review-cleanup-2026-11-20.md
-- T-3874 [P3] {L:cleanup} {after:bigload and savefail land} Remove perfOff switches for decided changes
-  - Context: 49 `?perfOff` switches after T-2370, 68 now. Eleven added since switch a decided change back off and no check passes them (heldLocal, realZoom, keepFigures, settledHold, strays, allSums, cacheFocus, refineAside, regional, localKeep, localSkip). Measurement switches and the ones a check passes stay.
-  - Goal: Those eleven and their dead branches are gone (mostly in demandClient.ts), before its split.
-  - Other: notes/review-cleanup-2026-11-20.md "Missed by the line" 3
 - T-3875 [P3] {L:cleanup} {after:T-2374 and T-3873} Cut code-map.md to one line per file
   - Context: docs/code-map.md is 707 lines and about 100 KB with 700 task ids, over the Read tool's cap, so no agent can read it whole though CLAUDE.md sends every agent there.
   - Goal: One line per file saying what it holds, task ids dropped, about a third of today's size.
@@ -364,10 +361,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3675 [P3] {L:feedback} Feedback button on the graphics error screens
   - Context: From T-3630: the no-WebGL2 and graphics-lost screens have no button at all (T-3307's call), so a player stuck there can't report it.
   - Other: notes/T-3630.md "Follow-ups"
-- T-3445 [P3] {L:track-speed} {after:a terrain rework decision} Ramp length sets the speed limit
-  - Context: You, 2026-11-16: "do want ramps with speed limit eventually. plan is that current ramp length should keep max speed of 160, longer ramps should allow higher max speeds, shorter ramps should restrain to lower max speeds. cuz people complain about wanting mroe ramps. but hold off on introducing it now, also hold off on changing any ramp max speed behavior at all actually. we will wait on thinking about a more general terrain rework that encompasses the idea of taking into account real terrain / real elevation."
-  - Goal: Held until you decide on a terrain rework; then ramps cap speed by length (today's 200 m a level keeps 160 km/h).
-  - Other: Today ramps have no speed limit (T-3421, notes/T-3421.md).
 - T-3444 [P2] {L:track-kinds} {waits:Anita} Track, platform and station model rework
   - Need from Anita: A design discussion when you are ready; nothing is built before it.
   - Context: Your weekend notes (2026-11-16): double track as a pair of singles, any number of parallel tracks and platforms (Grand Central, Spanish solution, AABB, ABBA, AA above BB), island platforms that shift the tracks, a definition of a station, per-track stop picking with numbered circles; simple stop assignment kept for simple two-track lines.
@@ -381,14 +374,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: Folded in T-437. notes/T-3435.md
 - T-3434 [P3] {L:region-redraws} Sabang Island missing from the Banda Aceh zone
   - Context: Player report 2026-11-16. Reach: few.
-- T-3844 [P3] {L:money} Some paid edits charge no region
-  - Context: A stop click that buys trains and a station upgrade (a waiting room) charge the unassigned region, since nothing on the map changed for `chargeShares` to place them by (found by T-3803). Shows as a wrong split in the money panel's regions.
-  - Goal: Each paid edit's answer names its line or station, and both cases charge that region.
-  - Other: notes/T-3803.md
 - T-3804 [P3] {L:edit-speed} Other worker work that holds edits up (taking, 2026-11-20, agent hourturn)
-  - Context: From T-3801's audit: the hour turn (0.14-1.1 s every game hour, which is every 3.75 s at speed 2: the worker is busy with it up to about 30% of the time on the 2,647-station save), one today answer (70-250 ms, 0.5-0.8 s under load: `Boarding::past_day` tallies every line's whole day on each ask; running sums per departure would avoid splitting it; folds in T-1842), the snapshot timer and next-hour boarding step (0.2-0.5 s). Not measured: undo of a rename, unbind all, the junction panel.
-  - Goal: Each is under 0.2 s or yields to edits, per docs/architecture.md "Edits never queue behind polling". In stages, the hour turn first.
-  - Other: notes/T-3801.md, notes/review-edit-speed-2026-11-20.md
+  - Context: The hour turn is done (stage 1, T-3804 notes: what an edit waits for it at most went 0.24-0.54 s to 0.19-0.25 s on the 2,647-station save). Left from T-3801's audit: one today answer, now most of what an edit waits behind at a turn (70-250 ms, 0.5-0.8 s under load: `Boarding::past_day` tallies every line's whole day on each ask; running sums per departure would avoid splitting it; folds in T-1842), the snapshot timer and a boarding step (three lines, up to 0.35 s). Not measured: undo of a rename, unbind all, the junction panel.
+  - Goal: Each is under 0.2 s or yields to edits, per docs/architecture.md "Edits never queue behind polling". In stages, the today answer next.
+  - Other: notes/T-3801.md, notes/review-edit-speed-2026-11-20.md, notes/T-3804.md
 - T-3325 [P3] {L:real-networks} {after:real-network rebuild batch} Rebuild Sendai so Senzan Line stops at Toshogu
   - Context: You parked this 2026-11-12 since few players open Sendai. The fix is in realnet.py build_lines.
   - Other: Commands in notes/T-3318.md.
@@ -404,7 +393,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: `stop_every_pass` adds a stop to line 150 on each load, costing one extra derive and settle.
   - Goal: realsave saves after `stop_every_pass`, so London loads without the fix-up.
   - Other: Reshipping London moves its settled rates. notes/T-3234.md.
-- T-3735 [P2] {L:timetables} Weekend departures use the weekday round trip
+- T-3735 [P2] {L:timetables} Weekend departures use the weekday round trip (taking, 2026-11-20, agent weekenddep)
   - Context: From T-3584: weekend lines at a merge are now paced from their weekend headways, but weekend departures still take the weekday round trip, spare-time split and phases, because placing departures reads the weekday service (notes/T-3521.md "Lies").
   - Other: notes/T-3584.md
 - T-3646 [P2] {L:timetables} Undo leaves other lines' trains cut
@@ -548,10 +537,9 @@ Anita's notes 2026-11-05 morning (verbatim in notes/todo-2026-11-05a.md; briefs 
   - Goal: A cheaper way to the same choices, and fewer wrong-side pairs.
   - Other: notes/T-2520.md
 Anita's notes 2026-11-04 late (verbatim in notes/todo-2026-11-04j.md):
-- T-3876 [P2] {L:loading} Time left for whole calculations at load (taking, 2026-11-20, agent loadleft)
-  - Context: From T-3868 (your North America save): the calculating trips bar now follows the time left for edits, but a load's whole calculation drops its work messages, so its bar still crawls from 75% to 84% at the end and the hover has no time left there. About 1-2 h.
-  - Goal: A load's whole calculation reports a time left like an edit's, and the bar moves evenly to the end.
-  - Other: notes/T-3868.md option B
+- T-3882 [P3] {L:loading} No bar or time left while calculating trips here
+  - Context: Found by T-3876: "Calculating trips here..." (the zone in view's quick pass, 40-60 s on your North America save) shows a bar at 0 and no hover; and the first 90 s of a cold calculation have no time left yet.
+  - Other: notes/T-3876.md
 - T-2486 [P2] {L:loading} Compress .bin files to cut download size
   - Context: .bin files are 76% of R2 (2.2 of 2.9 GB), and the first line pulls 14.4 MB of worldwide data.
   - Goal: .bin is compressed for whole-file reads, Range reads still work, and market files load by region.
@@ -699,6 +687,10 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: Your 2026-11-03: "ok we can do named crossings. perhaps have them hidden". A hand-made list of 20-30 straits and tunnels. Comes after T-2150.
   - Goal: Each is marked when a running line uses it, hidden until then.
   - Other: research/late-game-spending.md B
+- T-3883 [P1] {L:track-speed} Long high-speed ramps still run at 160 (taking, 2026-11-20, agent rampbug)
+  - Context: You on 8800 (89d6ca0d), 11-20, after T-3027: "when drawing the track, the longer the ramp gets for a hsr, the higher the displayed "max speed" goes. but in terms of looking at how fast the trains actually travel over the ramps, and the speed map mode, it still says 160 on a ramp even if its long. so actually i think the issue is amybe that pre-existing bug where ramps were getting capped to 160 on ramps over water." Ships tonight with T-3027 unless fixed.
+  - Goal: A long high-speed ramp, over land or water, shows and runs at the speed its length allows in the preview, the speed map mode and the trains; the cause found.
+  - Other: notes/T-3027.md, notes/T-3027-check.md
 - T-2201 [P3] {L:track-speed} Maglev track kind
   - Context: Your note 2026-11-03: "we could do maglev lol. can make it super expensive". A third track kind at 500 km/h, to compete with planes.
   - Goal: A maglev track kind, design first.
@@ -767,9 +759,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your TODO.md, 11-20: "community: friend request and message people?" Design for you first.
 - T-3851 [P3] {L:community} Light view of another player's map
   - Context: Your TODO.md, 11-20: "view only for someone elses map (dont load demand, should keep it lightweight, only see where the tracks and statiosnn are i guess, and maybe some general high level stats that are saved like per city trip count? idk) with option to full load from a view only". View (T-3257) plays the whole network today.
-- T-3879 [P2] {L:community} Daily profit leaderboard (taking, 2026-11-20, agent profitboard)
-  - Context: Your pad, 11-20: "lets add a parallel leaderboard setting that just shows daily profit on a weekday, i guess. seems easy enough to implement and provides another perspective".
-  - Goal: The leaderboard panel can switch to a board ranked by weekday daily profit, beside today's; the server deploy waits for your word.
 - T-3852 [P3] {L:community} Leaderboard map view
   - Context: Your TODO.md, 11-20: "leaderboard map view". Design for you first.
 - T-3864 [P4] {L:community} Multiplayer hosting and compute
@@ -816,19 +805,23 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3837 [P3] {L:buses} Ferry routes found without a waypoint, and waypoints on touch
   - Context: T-3809 added shift click waypoints. A leg is still searched only in a box around its two ports, so a sea path that leaves it (Ma Liu Shui to Sai Kung) needs a waypoint; a wider third search would find it alone. Phones have no shift click.
   - Other: notes/T-3809.md
-- T-3829 [P2] {L:buses} Show fast and slow roads when drawing a bus route
-  - Context: Your pad, 11-20, for the bus rework: "we should highlight fast speed roads and low speed roads differently". Open-source issue #27 asks the same ("No way to tell which roads are trunk when drawing a bus route").
-- T-3830 [P3] {L:buses} Bus stations a player can build
-  - Context: Your pad, 11-20, for the bus rework: "bus stations, constructible, that look kinda like train and tram stations so a more permanent looking thing can be erected, and like its connections feel more concrete / it feels like part of a complex (slight waiting/boarding bonus or something maybe)".
-  - Goal: A design for you first: look, cost, joining a complex, and whether a boarding bonus comes with it.
-- T-3831 [P3] {L:buses} Trams and buses on highways
-  - Context: Your pad, 11-20, for the bus rework: "we should probably let trams go on highways, also buses".
-- T-3378 [P2] {L:buses} Bus and tram balance, BRT
-  - Context: Players say buses are weak and metros and trams too strong. The bus's weak spot is its boarding cost; street tram acts like light rail.
-  - Goal: A design for BRT or busways and slower street trams, for you first.
-  - Other: Folds in T-1467, a bus lane upgrade. 1-2 days for busways.
-- T-3856 [P3] {L:buses} BRT upgrade and bus boarding to 3 minutes
-  - Context: Your TODO.md, 11-20: "people keep requesting brt. im wondering if the way we curerntlly have buses is approximately brt speeds or non brt speeds. if non brt perhaps we can juts offer a paid upgrade to make them faster / more brt like." Sub-points: "drop boarding penalty to 3 minutes overall (with or without brt)"; "slow down bus speed slightly to compensate, in a way that we expect wont make it significantly worse for like ~95% of peoples cases"; "add brt upgrade with lower stop time, slightly faster, allow upgrade to articulated" (cost "non neglible ratio" to tram construction); "non BRT buses should probably still have a niche, we should test to see if they are ever better (more profitable)"; "reconsider bus construction cost? i feel like non BRT bus construction cost should be like almost free relative to other modes". Boarding went 6 to 4 in T-3522. Design for you first; goes with T-3378.
+- T-3887 [P2] {L:buses} Mode frontier chart (taking, 2026-11-20, agent frontier)
+  - Context: You, 11-20: "to more formalize what we're talking about with modes of transport we could make a graph of some sort. so that we could draw like a frontier. the y axis is just profit per demand i guess? ... construction cost (not that important) - trip distance? like buses should be good for short hops i guess? - stop spacing? ... if we have some sort of graph like this it would be very helpful to keep ourselves organized but also to communicate to players what they should do. cuz currently its kinda opaque."
+  - Goal: A chart of profit per trip for each mode (bus, street tram, tram, metro, rail, high speed; BRT once built) against trip distance and corridor demand, measured on test corridors in the game, kept as a rerunnable tool; first run on today's rules, then after T-3856 and T-3378; later a version for players.
+- T-3888 [P2] {L:route-choice} Walk tiers, people who won't walk far
+  - Context: You, 11-20: "part of the reason why buses are useless is because everyone is willing to walk? like in real life some people really dont wanna walk, like old or handicapped people. similar to "wealth tiers" im wondering if we could possibly do multiple (maybe juts 2) "walk tiers"..? or stretch out the walk/non-walk curves so that some poeple are always just going to want to prefer to take a transit over walking?"
+  - Goal: A design for you first: two walk tiers or a stretched walk curve, the share and figures from real sources, the solve cost (income groups cost about 2.4x the local solve, T-1431), and the frontier chart before and after.
+- T-3831 [P2] {L:buses} Trams on highways (taking, 2026-11-20, agent tramhwy)
+  - Context: Your pad, 11-20: "we should probably let trams go on highways, also buses"; buses already may (T-2469). You, 11-20: "i feel like trams on highways shuold also be allowed. i dont see why not. lets make that change."
+  - Goal: Street tram track follows motorways and trunk roads like a bus route does.
+- T-3856 [P2] {L:buses} Plain buses with no boarding cost
+  - Context: Your TODO.md and 11-20 calls: "remove boarding cost altogether, i think its kinda the opposite of what we want, since i kinda want buses to be more viable for short trips"; then bus speed from 90% of the car's to 85% or 80% ("i'd rather keep plain buses at 90%, unless we drop the boarding cost"); construction "basically 0 cost"; "the default bus fare ratio a bit lower, like 0.8x"; the same bus vehicle ("we dont necessarily need the vehicle type to be different").
+  - Goal: Bus boarding cost removed, speed 85% (80% if the frontier chart shows buses winning too much), construction near zero, default bus fare 0.8x; the frontier chart before and after; plain buses most profitable on short, thin trips.
+  - Other: Boarding went 6 to 4 in T-3522. Measure with T-3887.
+- T-3378 [P2] {L:buses} {after:T-3856} BRT upgrade shared by lines on a road
+  - Context: You, 11-20: "lots of people really like buses and want them to be more competitive with other modes ... plain buses still have a niche, brt is more competitive with trams and other modes, and its all like at least a little realistic"; "i do kinda want Brt to be an upgrade on a whole line, but also for lines sharing a road to share pay and throughput. so a hybrid"; "do also want BRt stations yeah". Sketch from 11-20: own lane (at least 35-40 km/h, up to the road's speed), shorter stops (about 18 s), BRT stations, build about US$4-5M a road-km against street tram's 7.5M; the same bus.
+  - Goal: A short staged design for you (numbers checked on the frontier chart), then built: upgrading a line makes its road stretches busway; another line on the same stretch shares it without paying again and shares its throughput; BRT stations.
+  - Other: Folds in T-1467 and T-3830 (bus stations a player can build: your pad, "bus stations, constructible, that look kinda like train and tram stations ... slight waiting/boarding bonus").
 - T-3377 [P3] {L:open-source} Mod support beyond forks
   - Context: Level 1 (data open to any site) is done. Levels 2-4 are data-file mods, a JavaScript mod API, then city packs.
   - Goal: A design for you first that works for modders writing code by hand and with a coding assistant alike (you, 2026-11-18; player-facing text never says it is aimed at vibe-coders): a small stable mod API (hooks for prices, speeds, buttons, reading the network), a how-to page with two or three tiny example mods, notes in the open-source repo an assistant can read too, and loading a mod from a file or link; a loaded mod marks the save modded (T-3707).
