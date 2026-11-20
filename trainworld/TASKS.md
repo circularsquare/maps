@@ -118,9 +118,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Myanmar (59 of 60 rows), Laos (11) and Timor-Leste (4) shipped 2026-11-20. Bhamo (0.44M) is parked: its busiest square sits on a GHSL pile-up of 23,697 people in one village square in Mansi, not on a town.
   - Goal: Bhamo built with its people spread off that square (or held), then gated and joined.
   - Other: notes/T-1738.md section 16
-- T-3763 [P2] {L:new-countries} Iraq and Iran (taking, 2026-11-20, agent iraniraq)
-  - Context: You, 2026-11-19: players asked for Iraq and Iran; next with Laos and Myanmar.
-  - Goal: Iraq and Iran built, shipped and joined per docs/adding-a-country.md.
 - T-3764 [P3] {L:new-countries} Fill the gaps, Pakistan, Bangladesh and Central Asia
   - Context: You, 2026-11-19: "after that i guess we fill in the gaps (pakistan/bangladesh, central asia, etc)". After T-1738 and T-3763.
   - Goal: The countries still missing between built regions listed, then built in batches.

@@ -173,6 +173,16 @@ ZONE_RULES = {"CHN": {"floor": 1_000_000, "cap": 2_500_000, "min_density": 0.0, 
               # the default rule; people scaled to the LSB's 2024 projections by district (GHS-POP about half of
               # Vientiane's; T-1738)
               "LAO": {"module": "admin_totals", "task": "T-1738"},
+              # Iran's people spread by the 2016 census by county, in the plan (`plan_people`, Pop.plan_people) and the
+              # builds: GHS-POP gave counties split off a city the city's whole count (Sarvestan 1.74M against 38,114;
+              # T-3763); bakhsh by county (`group_level`); no `plan_units`: the plan state lost 199 of geoBoundaries'
+              # 2,772 units (Bandar Abbas, 0.66M), and its metro rows' ids are the same file's shapeIDs
+              "IRN": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True, "reach": (150.0, 100_000),
+                      "reach_from_people": True, "join_km": 150.0, "fua_whole": 500_000, "group_level": 1,
+                      "module": "admin_totals", "plan_people": "IR", "task": "T-3763"},
+              "IRQ": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True, "reach": (150.0, 100_000),
+                      "reach_from_people": True, "join_km": 150.0, "fua_whole": 500_000, "plan_units": True,
+                      "task": "T-3763"},
               # Turkey's ilce with a density floor of 10 a km2: at the default 20, 232 of 973 were dead space and the
               # interior's provincial towns (Erzincan, Cankiri, Kirsehir, Sivas) were zones of 0.1-0.5M in a hole (T-2294);
               # people scaled to the 2022 register by ilce with the Syrians under temporary protection (T-2079);
@@ -347,6 +357,8 @@ ZONE_ALONE_MIN = 50_000
 # a country's own figure, where it needs one: Montserrat (about 4,000 people) and Saba with Sint Eustatius (about 5,000),
 # so a player can go island to island down the Lesser Antilles (T-3762)
 ALONE_MIN = {"MSR": 1_000, "BES": 1_000}
+# the lon/lat box of each `plan_people` config's units: a 1 km tile touching it takes the config's factors (T-3763)
+PLAN_PEOPLE_BOX = {"IR": (44.0, 25.0, 63.4, 39.8)}
 # T-1999: an island or exclave with no land neighbour in its region can merge with nothing, so it stays a zone down to
 # this (Vieques with Culebra 10,600, Nantucket, Aland, Ceuta, Gorazde shipped); islets below it stay dead space (T-897)
 CUT_OFF_MIN = 10_000
@@ -405,7 +417,7 @@ ARCHETYPE = {"GBR": ("A", "england"), "FRA": ("A", "france"), "DEU": ("A", "germ
              "CHN": ("C", "china"), "KOR": ("C", "korea"), "IND": ("C", "india"),
              "NGA": ("D", "nigeria"), "USA": ("A", "usa"), "PRI": ("C", "usa"), "AUS": ("C", "australia"),
              "IDN": ("C", "admin_totals"), "PHL": ("C", "admin_totals"), "KHM": ("C", "admin_totals"),
-             "LAO": ("C", "admin_totals"), "NZL": ("C", "admin_totals"),
+             "LAO": ("C", "admin_totals"), "NZL": ("C", "admin_totals"), "IRN": ("C", "admin_totals"),
              "TUR": ("C", "admin_totals"), "MEX": ("C", "mexico"), "COL": ("C", "admin_totals"),
              "EGY": ("C", "admin_totals"), "ISR": ("C", "admin_totals"), "PSE": ("C", "admin_totals")}
 NE_FIX = {"KOS": "XKX", "SOL": "SOM", "CYN": "CYP", "SAH": "ESH"}
@@ -498,13 +510,42 @@ class Pop:
         seg = np.asarray(self.pg.decode(fh.read(self.pg.databytecounts[i]), i)[0])
         a = seg.reshape(seg.shape[-3], seg.shape[-2]).astype(np.float32)
         a[a < 0] = 0  # nodata -200
+        self.plan_people(ty, tx, a)
         self.cache[key] = a
         if len(self.cache) > 600:
             self.cache.popitem(last=False)
         return a
 
+    def plan_people(self, ty, tx, a):
+        """A `plan_people` country's pixels scaled in place by their unit's census share over GHSL's (T-3763: Iran,
+        where GHS-POP gave counties split off a city the city's whole count), the country's GHSL total kept."""
+        if getattr(self, "fixes", None) is None:
+            self.fixes = {r["plan_people"]: None for r in ZONE_RULES.values() if r.get("plan_people")}
+            self.fix_box = {k: PLAN_PEOPLE_BOX[k] for k in self.fixes}
+        if not self.fixes:
+            return
+        x0, y1 = self.X0 + tx * self.tw * self.PIX, self.Y0 - ty * self.th * self.PIX
+        box = shapely.box(x0, y1 - self.th * self.PIX, x0 + self.tw * self.PIX, y1)
+        todo = []
+        for k, fx in self.fixes.items():
+            if not box.intersects(to_moll(shapely.box(*self.fix_box[k]))):
+                continue
+            if fx is None:  # the factors read unscaled tiles: none of them kept
+                self.fixes[k] = []
+                fx = plan_factors(self, k)
+                self.cache.clear()
+                self.fixes[k] = fx
+            todo += fx
+        cx = cy = None
+        for g, f in todo:
+            if f == 1.0 or not g.intersects(box):
+                continue
+            if cx is None:
+                cx, cy = np.meshgrid(x0 + (np.arange(a.shape[1]) + 0.5) * self.PIX, y1 - (np.arange(a.shape[0]) + 0.5) * self.PIX)
+            a[contains_xy(g, cx, cy)] *= f
+
     def pixels(self, bounds):
-        """Centres (x, y) and people of the populated pixels in a Mollweide box."""
+        """Centres (x, y) and people of the populated pixels in a Mollweide box (`plan_people` applied)."""
         xmin, ymin, xmax, ymax = bounds
         c0 = max(int(math.floor((xmin - self.X0) / self.PIX)), 0)
         c1 = min(int(math.ceil((xmax - self.X0) / self.PIX)), self.W)
@@ -531,6 +572,24 @@ class Pop:
         shapely.prepare(geom)
         m = contains_xy(geom, x, y)
         return x[m], y[m], p[m]
+
+
+def plan_factors(pop, iso2):
+    """[(Mollweide unit polygon, factor)] for an `admin_totals` config: each unit's census share of the country
+    times GHSL's people over all its units, over GHSL's people in the unit (the 1 km grid's, unscaled), so the
+    plan zones on the census's spread and GHSL's total; a unit GHSL leaves empty keeps factor 1."""
+    import admin_totals
+    u = admin_totals.units(iso2)
+    geoms = [polygonal(to_moll(g)) for g in u.geometry]
+    for g in geoms:
+        shapely.prepare(g)
+    ghsl = np.array([float(pop.inside(g)[2].sum()) for g in geoms])
+    census = u.census.to_numpy(float)
+    want = census / census.sum() * ghsl.sum()
+    f = np.where(ghsl > 0, want / np.where(ghsl > 0, ghsl, 1.0), 1.0)
+    log(f"  {iso2} plan people (T-3763): {len(geoms)} units, GHSL {ghsl.sum():,.0f}; factors {np.percentile(f, 10):.2f}-"
+        f"{np.percentile(f, 90):.2f} (10-90%), {int((f < 0.5).sum())} under 0.5")
+    return list(zip(geoms, f.tolist()))
 
 
 # ---------------------------------------------------------------- sources

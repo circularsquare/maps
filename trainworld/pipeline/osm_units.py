@@ -620,7 +620,11 @@ def enclaves(row, sources, holes):
         others = {u for r in plan if r.get("id") != row["id"] for u in (r.get("units") or {}).get(iso, [])} - mine
         for uid, _, g in gb_source(iso, sources):
             if uid in others and g.intersects(hm):
-                out.append(wp.polygonal(wp.to_ll(make_valid(g).intersection(hm))))
+                try:
+                    piece = make_valid(g).intersection(hm)
+                except shapely.errors.GEOSException:  # non-noded edges (T-3763: Sanandaj); polygons snapped to 1 m
+                    piece = wp.polygonal(make_valid(g)).intersection(wp.polygonal(hm), grid_size=1.0)
+                out.append(wp.polygonal(wp.to_ll(piece)))
     got = union_all(out) if out else shapely.Polygon()
     if not got.is_empty:
         print(f"  {row['id']}: {km2(got, (row['bbox'][1] + row['bbox'][3]) / 2):,.0f} km2 of other rows' units "

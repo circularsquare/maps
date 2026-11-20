@@ -523,6 +523,12 @@ NATIONAL_TERTIARY = {
     "DM": (1_500 / 66_510, 2023, "Dominica State College, about 1,500 students (the college's own page, 2023), over the "
            "World Bank's 2023 population, 66,510; excludes the UWI Open Campus and offshore medical schools (T-3755)",
            "https://dsc.edu.dm/about/"),
+    # the World Bank has no tertiary enrolment for Iraq (T-3763)
+    "IQ": (1_333_610 / (46_118_793 - 2_517_534 - 2_401_724 - 1_599_871), 2024, "COSIT Annual Statistical Abstract 2024, "
+           "table 29/9: 1,333,610 students in universities, the Technical Education Commission and private colleges in "
+           "2023/24, the federal ministry's (the Kurdistan Region's universities are not in the table), over the 2024 "
+           "census outside Erbil, Sulaymaniyah and Duhok, 39,599,664; the Kurdistan Region taken at the same rate (T-3763)",
+           "https://cosit.gov.iq/documents/AAS2024/09.pdf"),
 }
 
 

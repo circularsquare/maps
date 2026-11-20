@@ -194,6 +194,27 @@ CONFIGS = {
         "national_total": (7_631_798, 0.0001),  # the file's adm0 row (lao_admpop_adm0_2024.csv)
         "mode": "factor",
     },
+    # T-3763: GHS-POP gives counties split off a city the city's whole count (Sarvestan 1.74M against 38,114, beside
+    # Shiraz), wrong by province too (Fars 1.87), so shares of GHSL's national total (2016 to 2020's growth GHSL's), as
+    # the plan's people (world_plan.plan_factors)
+    "IR": {
+        "source": "Statistical Centre of Iran, 2016 census by county, COD-PS IRN on HDX, on COD-AB IRN counties (HDX, "
+                  "CC BY-IGO)",
+        "polygons": {"file": "IR/irn_admin_boundaries.shp.zip",
+                     "url": "https://data.humdata.org/dataset/247b4026-79ff-4b16-95b9-0f366792d2cc/resource/"
+                            "3652644d-b572-4736-8d66-834c1cbc6bc7/download/irn_admin_boundaries.shp.zip",
+                     "mirror": "religiondots/data/raw/ir/irn_admin_boundaries.shp.zip",
+                     "layer": "irn_admin2", "code": "adm2_pcode", "name": "adm2_name"},
+        "totals": {"file": "IR/irn_admpop_adm2_2016_v2.csv",
+                   "url": "https://data.humdata.org/dataset/07f4ec78-42c7-4606-ae62-4f1bff918c45/resource/"
+                          "81700d7b-fbea-49ab-9972-c867231cb3c0/download/irn_admpop_adm2_2016_v2.csv",
+                   "mirror": "religiondots/data/raw/ir/irn_admpop_adm2_2016_v2.csv",
+                   "code": "ADM2_PCODE", "pop": "T_TL"},
+        "parent": None,
+        "national_total": (79_926_270, 0.0001),  # the 2016 census
+        "mode": "shares",
+        "hold": r"^(IR)\d+$",
+    },
 }
 
 

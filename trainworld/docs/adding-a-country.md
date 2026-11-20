@@ -52,9 +52,12 @@ Take the first that holds; never take a source from memory.
    people before and after. A count older than about 2015 takes mode "shares" (GHSL's people per state
    or province, spread by the census shares). A config may cover part of a country (`only`, a code regex: Cambodia's
    north-west) or a file with no parent rows (`parent` None, `national_total` the published figure and how near the
-   units must come: New Zealand's SA2s). Configs: ID, PH, KH, NZ, IN, TR, CO, EG. Switch a country on with `"module": "admin_totals"`
+   units must come: New Zealand's SA2s). Configs: ID, PH, KH, NZ, IN, TR, CO, EG, LA, IR. Switch a country on with `"module": "admin_totals"`
    in its `ZONE_RULES` row and ARCHETYPE C; a built row takes it only when rebuilt (status planned, which clears its
-   signal cache), and its `pop_vs_plan` is relaxed with the census figure.
+   signal cache), and its `pop_vs_plan` is relaxed with the census figure. Where GHSL is so wrong that the plan itself
+   zones on phantoms (Iran: counties split off a city given the city's whole count, a 1.17M "metro" on one), add
+   `"plan_people": "<ISO2>"` to the rule too: the planner's pixels take the same spread (`world_plan.Pop.plan_people`;
+   pair it with mode shares and the whole country as `hold`, as IR, so plan and packs agree; T-3763).
 4. Everything else (jobs by small area, commute flows, travel surveys, schools): not in the first pass.
 
 National figures, every archetype: call `tier0.worldbank(<ISO2>)` and `tier0.tertiary_share(<ISO2>)` for each country
@@ -102,6 +105,9 @@ Rule keys a new country may need (T-2294, T-2295):
 - **No `plan_units` for a country with no metro row** (Oman, Lesotho, Eswatini): it has no units in the plan state,
   so its zones read geoBoundaries afresh anyway, and with `plan_units` every build fails "plan units not in
   geoBoundaries" (T-2697).
+- **`plan_units` left off** where the plan state lost many units and the metro rows' unit ids are the same geoBoundaries
+  file's shapeIDs (Iran: 199 of 2,772 lost, Bandar Abbas among them, T-3763): the zones read the file afresh and the
+  metro rows keep their units.
 - **Units the plan state lost**: `checks/state_gaps.py <ISO3>` lists geoBoundaries units no row names and the zones
   did not leave dead, with their people outside every pack (before T-2695 a coastal unit whose point lay outside the
   simplified first-level coast was dropped: Buenos Aires's comunas, Guaruja, Zhoushan's islands). Run it on the dry plan
@@ -245,6 +251,8 @@ Read the batch report and `world_run.py status`. For each parked row:
 | `top_zone_jobs_share` up to 0.3 on a zone under 0.2M, or up to about 0.35 on a one-town zone or metro of any size (its top cell in the town's centre, not on a GHSL blob: Indonesia, North Africa) | relax |
 | `mean_commute_km` on a zone over 20,000 km² | relax |
 | `pop_vs_plan` on a row with a census hook | relax with the census figure |
+| `pop_vs_plan` low on a zone beside a metro, the zone's origin inside the metro's outline | OSM's district relation gave part of the geoBoundaries unit to the metro: measure where its people went (the unit against both outlines, 100 m GHSL); if in the metro's pack, relax, and move the origin into the zone's own outline (Iraq's Tel Keppe, T-3763) |
+| `jobs_per_resident` under 0.25 on every row of a country | the World Bank's employment figure is low (Palestine 0.208, Iraq 0.225): relax all, naming it |
 | `browser` failing only "no page errors", every row checked in the same few minutes | the app changed under the gate's Vite (a landing, a WASM rebuild): rerun, no relax |
 | `browser` failing only "no page errors" on the rerun too, on a few rows | open a gated neighbour with `play.mjs`, listen to the console (the args, not the text) and pan to the row: an error that fires there whatever the pack (round Loikaw, MapLibre's worker: "Cannot use 'in' operator to search for 'imageName' in undefined", T-1738) is relaxed naming it, with a task for the error |
 | `browser` failing "page.waitForFunction: Timeout" on a rerun too | the row's centre lies in another zone (a border town: Dajabon by Ouanaminthe; a metro's edge: Pucarani's densest pixel on El Alto's), so the zone never becomes the active city: move the origin to the zone's own town (status planned, rebuilt) |

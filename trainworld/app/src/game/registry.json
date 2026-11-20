@@ -31442,6 +31442,686 @@
       {
         "name": "Pinlaung",
         "regionName": "Pinlaung region"
+      },
+      {
+        "name": "Baghdad",
+        "regionName": "Baghdad region"
+      },
+      {
+        "name": "Mosul",
+        "regionName": "Mosul region"
+      },
+      {
+        "name": "Basra",
+        "regionName": "Basra region"
+      },
+      {
+        "name": "Erbil",
+        "regionName": "Erbil region"
+      },
+      {
+        "name": "Al Hillah",
+        "regionName": "Al Hillah region"
+      },
+      {
+        "name": "Al-Najaf",
+        "regionName": "Al-Najaf region"
+      },
+      {
+        "name": "Kirkuk",
+        "regionName": "Kirkuk region"
+      },
+      {
+        "name": "Karbala",
+        "regionName": "Karbala region"
+      },
+      {
+        "name": "Duhok",
+        "regionName": "Duhok region"
+      },
+      {
+        "name": "Al-Diwaniya",
+        "regionName": "Al-Diwaniya region"
+      },
+      {
+        "name": "Al-Kut",
+        "regionName": "Al-Kut region"
+      },
+      {
+        "name": "Al-Kahla",
+        "regionName": "Al-Kahla region"
+      },
+      {
+        "name": "Al-Sulaymaniyah",
+        "regionName": "Al-Sulaymaniyah region"
+      },
+      {
+        "name": "Al-Ramadi",
+        "regionName": "Al-Ramadi region"
+      },
+      {
+        "name": "Zakho",
+        "regionName": "Zakho region"
+      },
+      {
+        "name": "Al-Samawa",
+        "regionName": "Al-Samawa region"
+      },
+      {
+        "name": "Telafar",
+        "regionName": "Telafar region"
+      },
+      {
+        "name": "Al-Nasiriya",
+        "regionName": "Al-Nasiriya region"
+      },
+      {
+        "name": "Al-Khalis",
+        "regionName": "Al-Khalis region"
+      },
+      {
+        "name": "Al-Hashimiya",
+        "regionName": "Al-Hashimiya region"
+      },
+      {
+        "name": "Al-Falluja",
+        "regionName": "Al-Falluja region"
+      },
+      {
+        "name": "Al-Zubair",
+        "regionName": "Al-Zubair region"
+      },
+      {
+        "name": "Al-Shatra",
+        "regionName": "Al-Shatra region"
+      },
+      {
+        "name": "Al-Qurna",
+        "regionName": "Al-Qurna region"
+      },
+      {
+        "name": "Suq Al-Shoyokh",
+        "regionName": "Suq Al-Shoyokh region"
+      },
+      {
+        "name": "Al-Rifai",
+        "regionName": "Al-Rifai region"
+      },
+      {
+        "name": "Al-Hawiga",
+        "regionName": "Al-Hawiga region"
+      },
+      {
+        "name": "Tilkaef",
+        "regionName": "Tilkaef region"
+      },
+      {
+        "name": "Chamchamal",
+        "regionName": "Chamchamal region"
+      },
+      {
+        "name": "Balad",
+        "regionName": "Balad region"
+      },
+      {
+        "name": "Aqra",
+        "regionName": "Aqra region"
+      },
+      {
+        "name": "Al-Shirqat",
+        "regionName": "Al-Shirqat region"
+      },
+      {
+        "name": "Tooz Khurmato",
+        "regionName": "Tooz Khurmato region"
+      },
+      {
+        "name": "Al-Manathera",
+        "regionName": "Al-Manathera region"
+      },
+      {
+        "name": "Al-Kaim",
+        "regionName": "Al-Kaim region"
+      },
+      {
+        "name": "Halabcha",
+        "regionName": "Halabcha region"
+      },
+      {
+        "name": "Al-Amadiya",
+        "regionName": "Al-Amadiya region"
+      },
+      {
+        "name": "Al-Hamdaniya",
+        "regionName": "Al-Hamdaniya region"
+      },
+      {
+        "name": "Mashhad",
+        "regionName": "Mashhad region"
+      },
+      {
+        "name": "Ahwaz",
+        "regionName": "Ahwaz region"
+      },
+      {
+        "name": "Isfahan",
+        "regionName": "Isfahan region"
+      },
+      {
+        "name": "Tabriz",
+        "regionName": "Tabriz region"
+      },
+      {
+        "name": "Qom",
+        "regionName": "Qom region"
+      },
+      {
+        "name": "Yazd",
+        "regionName": "Yazd region"
+      },
+      {
+        "name": "Shushtar",
+        "regionName": "Shushtar region"
+      },
+      {
+        "name": "Zanjan",
+        "regionName": "Zanjan region"
+      },
+      {
+        "name": "Gharchak",
+        "regionName": "Gharchak region"
+      },
+      {
+        "name": "Neyshabur",
+        "regionName": "Neyshabur region"
+      },
+      {
+        "name": "Tehran",
+        "regionName": "Tehran region"
+      },
+      {
+        "name": "Arak",
+        "regionName": "Arak region"
+      },
+      {
+        "name": "Bojnurd",
+        "regionName": "Bojnurd region"
+      },
+      {
+        "name": "Kashmar",
+        "regionName": "Kashmar region"
+      },
+      {
+        "name": "Zahedan",
+        "regionName": "Zahedan region"
+      },
+      {
+        "name": "Najafabad",
+        "regionName": "Najafabad region"
+      },
+      {
+        "name": "Rafsanjan",
+        "regionName": "Rafsanjan region"
+      },
+      {
+        "name": "Sib and Suran",
+        "regionName": "Sib and Suran region"
+      },
+      {
+        "name": "Khash",
+        "regionName": "Khash region"
+      },
+      {
+        "name": "Sabzevar",
+        "regionName": "Sabzevar region"
+      },
+      {
+        "name": "Marand",
+        "regionName": "Marand region"
+      },
+      {
+        "name": "Isfahan County",
+        "regionName": "Isfahan County region"
+      },
+      {
+        "name": "Birjand",
+        "regionName": "Birjand region"
+      },
+      {
+        "name": "Mamasani",
+        "regionName": "Mamasani region"
+      },
+      {
+        "name": "Zabol",
+        "regionName": "Zabol region"
+      },
+      {
+        "name": "Saqqez",
+        "regionName": "Saqqez region"
+      },
+      {
+        "name": "Javanrud",
+        "regionName": "Javanrud region"
+      },
+      {
+        "name": "Garmi",
+        "regionName": "Garmi region"
+      },
+      {
+        "name": "Ghaenat",
+        "regionName": "Ghaenat region"
+      },
+      {
+        "name": "Shush",
+        "regionName": "Shush region"
+      },
+      {
+        "name": "Semnan",
+        "regionName": "Semnan region"
+      },
+      {
+        "name": "Shahin Shahr and Meymeh",
+        "regionName": "Shahin Shahr and Meymeh region"
+      },
+      {
+        "name": "Kahlkhal",
+        "regionName": "Kahlkhal region"
+      },
+      {
+        "name": "Kavar",
+        "regionName": "Kavar region"
+      },
+      {
+        "name": "Tabas",
+        "regionName": "Tabas region"
+      },
+      {
+        "name": "Shiraz",
+        "regionName": "Shiraz region"
+      },
+      {
+        "name": "Kermanshah",
+        "regionName": "Kermanshah region"
+      },
+      {
+        "name": "Urumia",
+        "regionName": "Urumia region"
+      },
+      {
+        "name": "Qazvin",
+        "regionName": "Qazvin region"
+      },
+      {
+        "name": "Hamedan",
+        "regionName": "Hamedan region"
+      },
+      {
+        "name": "Rasht",
+        "regionName": "Rasht region"
+      },
+      {
+        "name": "Rudbar-e-Jonub",
+        "regionName": "Rudbar-e-Jonub region"
+      },
+      {
+        "name": "Sardasht",
+        "regionName": "Sardasht region"
+      },
+      {
+        "name": "Babol",
+        "regionName": "Babol region"
+      },
+      {
+        "name": "Kuhdasht",
+        "regionName": "Kuhdasht region"
+      },
+      {
+        "name": "Gorgan",
+        "regionName": "Gorgan region"
+      },
+      {
+        "name": "Kohkiluyeh",
+        "regionName": "Kohkiluyeh region"
+      },
+      {
+        "name": "Torbat-e-jam",
+        "regionName": "Torbat-e-jam region"
+      },
+      {
+        "name": "Sari",
+        "regionName": "Sari region"
+      },
+      {
+        "name": "Sharekurd",
+        "regionName": "Sharekurd region"
+      },
+      {
+        "name": "Larestan",
+        "regionName": "Larestan region"
+      },
+      {
+        "name": "Shadegan",
+        "regionName": "Shadegan region"
+      },
+      {
+        "name": "Falaverjan",
+        "regionName": "Falaverjan region"
+      },
+      {
+        "name": "Khoy",
+        "regionName": "Khoy region"
+      },
+      {
+        "name": "Kerman",
+        "regionName": "Kerman region"
+      },
+      {
+        "name": "Borujerd",
+        "regionName": "Borujerd region"
+      },
+      {
+        "name": "Ardebil",
+        "regionName": "Ardebil region"
+      },
+      {
+        "name": "Marvdasht",
+        "regionName": "Marvdasht region"
+      },
+      {
+        "name": "Darab",
+        "regionName": "Darab region"
+      },
+      {
+        "name": "Bandar Abbas",
+        "regionName": "Bandar Abbas region"
+      },
+      {
+        "name": "Chabahar",
+        "regionName": "Chabahar region"
+      },
+      {
+        "name": "Amol",
+        "regionName": "Amol region"
+      },
+      {
+        "name": "Lahijan",
+        "regionName": "Lahijan region"
+      },
+      {
+        "name": "Minudasht",
+        "regionName": "Minudasht region"
+      },
+      {
+        "name": "Kalaleh",
+        "regionName": "Kalaleh region"
+      },
+      {
+        "name": "Sowme'eh Sara",
+        "regionName": "Sowme'eh Sara region"
+      },
+      {
+        "name": "Ilam",
+        "regionName": "Ilam region"
+      },
+      {
+        "name": "Tonekabon",
+        "regionName": "Tonekabon region"
+      },
+      {
+        "name": "?????? ??????",
+        "regionName": "?????? ?????? region"
+      },
+      {
+        "name": "Damavand",
+        "regionName": "Damavand region"
+      },
+      {
+        "name": "Mianeh",
+        "regionName": "Mianeh region"
+      },
+      {
+        "name": "Kashan",
+        "regionName": "Kashan region"
+      },
+      {
+        "name": "Sirjan",
+        "regionName": "Sirjan region"
+      },
+      {
+        "name": "Bushehr",
+        "regionName": "Bushehr region"
+      },
+      {
+        "name": "Dashti",
+        "regionName": "Dashti region"
+      },
+      {
+        "name": "Jahrom",
+        "regionName": "Jahrom region"
+      },
+      {
+        "name": "Izeh",
+        "regionName": "Izeh region"
+      },
+      {
+        "name": "Aligudarz",
+        "regionName": "Aligudarz region"
+      },
+      {
+        "name": "Qeshm",
+        "regionName": "Qeshm region"
+      },
+      {
+        "name": "Barkhar",
+        "regionName": "Barkhar region"
+      },
+      {
+        "name": "Saveh",
+        "regionName": "Saveh region"
+      },
+      {
+        "name": "Nazarabad",
+        "regionName": "Nazarabad region"
+      },
+      {
+        "name": "Takab",
+        "regionName": "Takab region"
+      },
+      {
+        "name": "Baghdad",
+        "regionName": "Baghdad region"
+      },
+      {
+        "name": "Mosul",
+        "regionName": "Mosul region"
+      },
+      {
+        "name": "Basra",
+        "regionName": "Basra region"
+      },
+      {
+        "name": "Erbil",
+        "regionName": "Erbil region"
+      },
+      {
+        "name": "Al Hillah",
+        "regionName": "Al Hillah region"
+      },
+      {
+        "name": "Al-Najaf",
+        "regionName": "Al-Najaf region"
+      },
+      {
+        "name": "Kirkuk",
+        "regionName": "Kirkuk region"
+      },
+      {
+        "name": "Karbala",
+        "regionName": "Karbala region"
+      },
+      {
+        "name": "Duhok",
+        "regionName": "Duhok region"
+      },
+      {
+        "name": "Al-Diwaniya",
+        "regionName": "Al-Diwaniya region"
+      },
+      {
+        "name": "Al-Kut",
+        "regionName": "Al-Kut region"
+      },
+      {
+        "name": "Al-Kahla",
+        "regionName": "Al-Kahla region"
+      },
+      {
+        "name": "Al-Sulaymaniyah",
+        "regionName": "Al-Sulaymaniyah region"
+      },
+      {
+        "name": "Balad",
+        "regionName": "Balad region"
+      },
+      {
+        "name": "Aqra",
+        "regionName": "Aqra region"
+      },
+      {
+        "name": "Al-Ramadi",
+        "regionName": "Al-Ramadi region"
+      },
+      {
+        "name": "Zakho",
+        "regionName": "Zakho region"
+      },
+      {
+        "name": "Al-Samawa",
+        "regionName": "Al-Samawa region"
+      },
+      {
+        "name": "Telafar",
+        "regionName": "Telafar region"
+      },
+      {
+        "name": "Al-Nasiriya",
+        "regionName": "Al-Nasiriya region"
+      },
+      {
+        "name": "Al-Khalis",
+        "regionName": "Al-Khalis region"
+      },
+      {
+        "name": "Al-Hashimiya",
+        "regionName": "Al-Hashimiya region"
+      },
+      {
+        "name": "Al-Falluja",
+        "regionName": "Al-Falluja region"
+      },
+      {
+        "name": "Al-Zubair",
+        "regionName": "Al-Zubair region"
+      },
+      {
+        "name": "Al-Shatra",
+        "regionName": "Al-Shatra region"
+      },
+      {
+        "name": "Al-Qurna",
+        "regionName": "Al-Qurna region"
+      },
+      {
+        "name": "Suq Al-Shoyokh",
+        "regionName": "Suq Al-Shoyokh region"
+      },
+      {
+        "name": "Al-Rifai",
+        "regionName": "Al-Rifai region"
+      },
+      {
+        "name": "Al-Hawiga",
+        "regionName": "Al-Hawiga region"
+      },
+      {
+        "name": "Tilkaef",
+        "regionName": "Tilkaef region"
+      },
+      {
+        "name": "Chamchamal",
+        "regionName": "Chamchamal region"
+      },
+      {
+        "name": "Al-Shirqat",
+        "regionName": "Al-Shirqat region"
+      },
+      {
+        "name": "Tooz Khurmato",
+        "regionName": "Tooz Khurmato region"
+      },
+      {
+        "name": "Al-Manathera",
+        "regionName": "Al-Manathera region"
+      },
+      {
+        "name": "Al-Kaim",
+        "regionName": "Al-Kaim region"
+      },
+      {
+        "name": "Halabcha",
+        "regionName": "Halabcha region"
+      },
+      {
+        "name": "Al-Amadiya",
+        "regionName": "Al-Amadiya region"
+      },
+      {
+        "name": "Mashhad",
+        "regionName": "Mashhad region"
+      },
+      {
+        "name": "Yazd",
+        "regionName": "Yazd region"
+      },
+      {
+        "name": "Saqqez",
+        "regionName": "Saqqez region"
+      },
+      {
+        "name": "Kahlkhal",
+        "regionName": "Kahlkhal region"
+      },
+      {
+        "name": "Kavar",
+        "regionName": "Kavar region"
+      },
+      {
+        "name": "Rudbar-e-Jonub",
+        "regionName": "Rudbar-e-Jonub region"
+      },
+      {
+        "name": "Larestan",
+        "regionName": "Larestan region"
+      },
+      {
+        "name": "Barkhar",
+        "regionName": "Barkhar region"
+      },
+      {
+        "name": "Al-Hamdaniya",
+        "regionName": "Al-Hamdaniya region"
+      },
+      {
+        "name": "Marivan",
+        "regionName": "Marivan region"
+      },
+      {
+        "name": "Tilkaef",
+        "regionName": "Tilkaef region"
+      },
+      {
+        "name": "Al-Manathera",
+        "regionName": "Al-Manathera region"
       }
     ],
     "rule": {
@@ -142951,6 +143631,3164 @@
       "country": "MM",
       "localTrips": 1500016.0,
       "realm": "myanmar"
+    },
+    {
+      "id": "ahw",
+      "name": "Ahwaz",
+      "origin": {
+        "lon": 48.67,
+        "lat": 31.32
+      },
+      "center": [
+        48.67,
+        31.32
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        48.011,
+        30.616,
+        49.733,
+        31.79
+      ],
+      "place": 7895,
+      "country": "IR",
+      "localTrips": 4619210.0,
+      "realm": "iran"
+    },
+    {
+      "id": "isf",
+      "name": "Isfahan",
+      "origin": {
+        "lon": 51.6877,
+        "lat": 32.711
+      },
+      "center": [
+        51.6877,
+        32.711
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        51.392,
+        32.475,
+        52.001,
+        32.791
+      ],
+      "place": 7896,
+      "country": "IR",
+      "localTrips": 5828570.0,
+      "realm": "iran"
+    },
+    {
+      "id": "tab",
+      "name": "Tabriz",
+      "origin": {
+        "lon": 46.3613,
+        "lat": 38.0607
+      },
+      "center": [
+        46.3613,
+        38.0607
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        45.287,
+        37.521,
+        47.398,
+        38.81
+      ],
+      "place": 7897,
+      "country": "IR",
+      "localTrips": 6008025.0,
+      "realm": "iran"
+    },
+    {
+      "id": "qom",
+      "name": "Qom",
+      "kind": "zone",
+      "origin": {
+        "lon": 50.8677,
+        "lat": 34.6276
+      },
+      "center": [
+        50.8677,
+        34.6276
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        50.064,
+        34.14,
+        51.987,
+        35.237
+      ],
+      "place": 7898,
+      "country": "IR",
+      "localTrips": 3673641.0,
+      "realm": "iran"
+    },
+    {
+      "id": "ssh",
+      "name": "Shushtar",
+      "kind": "zone",
+      "origin": {
+        "lon": 48.4,
+        "lat": 32.383
+      },
+      "center": [
+        48.4,
+        32.383
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        47.878,
+        31.589,
+        49.896,
+        33.016
+      ],
+      "place": 7900,
+      "country": "IR",
+      "localTrips": 2985858.0,
+      "realm": "iran"
+    },
+    {
+      "id": "znj",
+      "name": "Zanjan",
+      "kind": "zone",
+      "origin": {
+        "lon": 48.4842,
+        "lat": 36.6753
+      },
+      "center": [
+        48.4842,
+        36.6753
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        47.157,
+        35.454,
+        49.457,
+        37.268
+      ],
+      "place": 7901,
+      "country": "IR",
+      "localTrips": 2907925.0,
+      "realm": "iran"
+    },
+    {
+      "id": "ghc",
+      "name": "Gharchak",
+      "kind": "zone",
+      "origin": {
+        "lon": 51.5689,
+        "lat": 35.4391
+      },
+      "center": [
+        51.5689,
+        35.4391
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        51.424,
+        34.847,
+        52.063,
+        35.664
+      ],
+      "place": 7902,
+      "country": "IR",
+      "localTrips": 2627232.0,
+      "realm": "iran"
+    },
+    {
+      "id": "neb",
+      "name": "Neyshabur",
+      "kind": "zone",
+      "origin": {
+        "lon": 58.795,
+        "lat": 36.213
+      },
+      "center": [
+        58.795,
+        36.213
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        58.15,
+        35.559,
+        59.455,
+        37.724
+      ],
+      "place": 7903,
+      "country": "IR",
+      "localTrips": 2431649.0,
+      "realm": "iran"
+    },
+    {
+      "id": "teh",
+      "name": "Tehran",
+      "origin": {
+        "lon": 51.39,
+        "lat": 35.7
+      },
+      "center": [
+        51.39,
+        35.7
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        49.52,
+        35.075,
+        51.926,
+        36.611
+      ],
+      "place": 7904,
+      "country": "IR",
+      "localTrips": 41659524.0,
+      "realm": "iran"
+    },
+    {
+      "id": "ark",
+      "name": "Arak",
+      "kind": "zone",
+      "origin": {
+        "lon": 49.6884,
+        "lat": 34.0883
+      },
+      "center": [
+        49.6884,
+        34.0883
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        48.927,
+        33.365,
+        51.078,
+        34.98
+      ],
+      "place": 7905,
+      "country": "IR",
+      "localTrips": 2905154.0,
+      "realm": "iran"
+    },
+    {
+      "id": "bon",
+      "name": "Bojnurd",
+      "kind": "zone",
+      "origin": {
+        "lon": 57.3283,
+        "lat": 37.4771
+      },
+      "center": [
+        57.3283,
+        37.4771
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        55.846,
+        36.549,
+        58.442,
+        38.304
+      ],
+      "place": 7906,
+      "country": "IR",
+      "localTrips": 2350597.0,
+      "realm": "iran"
+    },
+    {
+      "id": "ksx",
+      "name": "Kashmar",
+      "kind": "zone",
+      "origin": {
+        "lon": 59.219,
+        "lat": 35.274
+      },
+      "center": [
+        59.219,
+        35.274
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        56.199,
+        34.501,
+        60.59,
+        36.038
+      ],
+      "place": 7907,
+      "country": "IR",
+      "localTrips": 2134296.0,
+      "realm": "iran"
+    },
+    {
+      "id": "zad",
+      "name": "Zahedan",
+      "kind": "zone",
+      "origin": {
+        "lon": 60.8627,
+        "lat": 29.4934
+      },
+      "center": [
+        60.8627,
+        29.4934
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        59.404,
+        28.313,
+        62.078,
+        30.781
+      ],
+      "place": 7908,
+      "country": "IR",
+      "localTrips": 2053971.0,
+      "realm": "iran"
+    },
+    {
+      "id": "nja",
+      "name": "Najafabad",
+      "kind": "zone",
+      "origin": {
+        "lon": 51.3631,
+        "lat": 32.6419
+      },
+      "center": [
+        51.3631,
+        32.6419
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        49.619,
+        32.478,
+        51.515,
+        33.673
+      ],
+      "place": 7909,
+      "country": "IR",
+      "localTrips": 1711283.0,
+      "realm": "iran"
+    },
+    {
+      "id": "rfs",
+      "name": "Rafsanjan",
+      "kind": "zone",
+      "origin": {
+        "lon": 55.994,
+        "lat": 30.406
+      },
+      "center": [
+        55.994,
+        30.406
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        54.349,
+        29.378,
+        57.779,
+        31.976
+      ],
+      "place": 7910,
+      "country": "IR",
+      "localTrips": 1826570.0,
+      "realm": "iran"
+    },
+    {
+      "id": "ssu",
+      "name": "Sib and Suran",
+      "kind": "zone",
+      "origin": {
+        "lon": 62.0015,
+        "lat": 27.2854
+      },
+      "center": [
+        62.0015,
+        27.2854
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        60.599,
+        25.791,
+        63.354,
+        28.184
+      ],
+      "place": 7911,
+      "country": "IR",
+      "localTrips": 1437969.0,
+      "realm": "iran"
+    },
+    {
+      "id": "kbg",
+      "name": "Khash",
+      "kind": "zone",
+      "origin": {
+        "lon": 60.684,
+        "lat": 27.203
+      },
+      "center": [
+        60.684,
+        27.203
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        58.81,
+        26.74,
+        62.816,
+        28.885
+      ],
+      "place": 7912,
+      "country": "IR",
+      "localTrips": 1389873.0,
+      "realm": "iran"
+    },
+    {
+      "id": "szv",
+      "name": "Sabzevar",
+      "kind": "zone",
+      "origin": {
+        "lon": 57.6769,
+        "lat": 36.2185
+      },
+      "center": [
+        57.6769,
+        36.2185
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        56.576,
+        35.425,
+        58.398,
+        36.911
+      ],
+      "place": 7913,
+      "country": "IR",
+      "localTrips": 1251100.0,
+      "realm": "iran"
+    },
+    {
+      "id": "mbu",
+      "name": "Marand",
+      "kind": "zone",
+      "origin": {
+        "lon": 45.7784,
+        "lat": 38.433
+      },
+      "center": [
+        45.7784,
+        38.433
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        45.07,
+        37.982,
+        46.548,
+        39.012
+      ],
+      "place": 7914,
+      "country": "IR",
+      "localTrips": 1293692.0,
+      "realm": "iran"
+    },
+    {
+      "id": "isc",
+      "name": "Isfahan County",
+      "kind": "zone",
+      "origin": {
+        "lon": 51.7814,
+        "lat": 32.4779
+      },
+      "center": [
+        51.7814,
+        32.4779
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        51.603,
+        31.47,
+        53.226,
+        33.044
+      ],
+      "place": 7915,
+      "country": "IR",
+      "localTrips": 987449.0,
+      "realm": "iran"
+    },
+    {
+      "id": "bjn",
+      "name": "Birjand",
+      "kind": "zone",
+      "origin": {
+        "lon": 59.2146,
+        "lat": 32.8665
+      },
+      "center": [
+        59.2146,
+        32.8665
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        57.898,
+        30.504,
+        60.905,
+        33.535
+      ],
+      "place": 7916,
+      "country": "IR",
+      "localTrips": 1175981.0,
+      "realm": "iran"
+    },
+    {
+      "id": "mma",
+      "name": "Mamasani",
+      "kind": "zone",
+      "origin": {
+        "lon": 51.655,
+        "lat": 29.619
+      },
+      "center": [
+        51.655,
+        29.619
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        50.582,
+        29.072,
+        52.164,
+        30.692
+      ],
+      "place": 7917,
+      "country": "IR",
+      "localTrips": 1175012.0,
+      "realm": "iran"
+    },
+    {
+      "id": "zbo",
+      "name": "Zabol",
+      "kind": "zone",
+      "origin": {
+        "lon": 61.5138,
+        "lat": 31.0327
+      },
+      "center": [
+        61.5138,
+        31.0327
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        59.903,
+        30.077,
+        61.861,
+        31.505
+      ],
+      "place": 7918,
+      "country": "IR",
+      "localTrips": 1088460.0,
+      "realm": "iran"
+    },
+    {
+      "id": "jav",
+      "name": "Javanrud",
+      "kind": "zone",
+      "origin": {
+        "lon": 46.4923,
+        "lat": 34.8019
+      },
+      "center": [
+        46.4923,
+        34.8019
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        45.391,
+        33.67,
+        46.696,
+        35.189
+      ],
+      "place": 7920,
+      "country": "IR",
+      "localTrips": 962733.0,
+      "realm": "iran"
+    },
+    {
+      "id": "grm",
+      "name": "Garmi",
+      "kind": "zone",
+      "origin": {
+        "lon": 47.067,
+        "lat": 38.477
+      },
+      "center": [
+        47.067,
+        38.477
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        46.431,
+        38.163,
+        48.392,
+        39.728
+      ],
+      "place": 7921,
+      "country": "IR",
+      "localTrips": 1884719.0,
+      "realm": "iran"
+    },
+    {
+      "id": "ghe",
+      "name": "Ghaenat",
+      "kind": "zone",
+      "origin": {
+        "lon": 59.1866,
+        "lat": 33.7237
+      },
+      "center": [
+        59.1866,
+        33.7237
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        57.53,
+        32.837,
+        60.968,
+        34.955
+      ],
+      "place": 7922,
+      "country": "IR",
+      "localTrips": 934276.0,
+      "realm": "iran"
+    },
+    {
+      "id": "sdz",
+      "name": "Shush",
+      "kind": "zone",
+      "origin": {
+        "lon": 48.2528,
+        "lat": 32.202
+      },
+      "center": [
+        48.2528,
+        32.202
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        47.638,
+        30.457,
+        48.684,
+        32.532
+      ],
+      "place": 7923,
+      "country": "IR",
+      "localTrips": 916461.0,
+      "realm": "iran"
+    },
+    {
+      "id": "sej",
+      "name": "Semnan",
+      "kind": "zone",
+      "origin": {
+        "lon": 53.3944,
+        "lat": 35.579
+      },
+      "center": [
+        53.3944,
+        35.579
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        51.811,
+        34.22,
+        54.22,
+        36.179
+      ],
+      "place": 7924,
+      "country": "IR",
+      "localTrips": 988319.0,
+      "realm": "iran"
+    },
+    {
+      "id": "ssn",
+      "name": "Shahin Shahr and Meymeh",
+      "kind": "zone",
+      "origin": {
+        "lon": 51.555,
+        "lat": 32.8665
+      },
+      "center": [
+        51.555,
+        32.8665
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        50.565,
+        32.719,
+        51.744,
+        33.768
+      ],
+      "place": 7925,
+      "country": "IR",
+      "localTrips": 601405.0,
+      "realm": "iran"
+    },
+    {
+      "id": "tbs",
+      "name": "Tabas",
+      "kind": "zone",
+      "origin": {
+        "lon": 56.9295,
+        "lat": 33.5936
+      },
+      "center": [
+        56.9295,
+        33.5936
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        55.382,
+        31.674,
+        58.257,
+        35.145
+      ],
+      "place": 7928,
+      "country": "IR",
+      "localTrips": 264888.0,
+      "realm": "iran"
+    },
+    {
+      "id": "sfb",
+      "name": "Shiraz",
+      "kind": "zone",
+      "origin": {
+        "lon": 52.54,
+        "lat": 29.61
+      },
+      "center": [
+        52.54,
+        29.61
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        51.73,
+        29.174,
+        53.611,
+        30.609
+      ],
+      "place": 7929,
+      "country": "IR",
+      "localTrips": 5712121.0,
+      "realm": "iran"
+    },
+    {
+      "id": "kbh",
+      "name": "Kermanshah",
+      "kind": "zone",
+      "origin": {
+        "lon": 47.0611,
+        "lat": 34.3056
+      },
+      "center": [
+        47.0611,
+        34.3056
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        46.295,
+        33.715,
+        48.127,
+        35.091
+      ],
+      "place": 7930,
+      "country": "IR",
+      "localTrips": 4434650.0,
+      "realm": "iran"
+    },
+    {
+      "id": "urx",
+      "name": "Urumia",
+      "kind": "zone",
+      "origin": {
+        "lon": 45.0658,
+        "lat": 37.5478
+      },
+      "center": [
+        45.0658,
+        37.5478
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        44.369,
+        36.862,
+        46.375,
+        38.209
+      ],
+      "place": 7931,
+      "country": "IR",
+      "localTrips": 3637379.0,
+      "realm": "iran"
+    },
+    {
+      "id": "qav",
+      "name": "Qazvin",
+      "kind": "zone",
+      "origin": {
+        "lon": 50.0136,
+        "lat": 36.2975
+      },
+      "center": [
+        50.0136,
+        36.2975
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        48.702,
+        35.372,
+        50.905,
+        36.834
+      ],
+      "place": 7932,
+      "country": "IR",
+      "localTrips": 3483137.0,
+      "realm": "iran"
+    },
+    {
+      "id": "hmd",
+      "name": "Hamedan",
+      "kind": "zone",
+      "origin": {
+        "lon": 48.5154,
+        "lat": 34.7844
+      },
+      "center": [
+        48.5154,
+        34.7844
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        47.775,
+        34.318,
+        49.495,
+        35.715
+      ],
+      "place": 7933,
+      "country": "IR",
+      "localTrips": 3472125.0,
+      "realm": "iran"
+    },
+    {
+      "id": "rsx",
+      "name": "Rasht",
+      "kind": "zone",
+      "origin": {
+        "lon": 49.5962,
+        "lat": 37.3006
+      },
+      "center": [
+        49.5962,
+        37.3006
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        48.838,
+        36.532,
+        50.182,
+        37.484
+      ],
+      "place": 7934,
+      "country": "IR",
+      "localTrips": 3445716.0,
+      "realm": "iran"
+    },
+    {
+      "id": "sfd",
+      "name": "Sardasht",
+      "kind": "zone",
+      "origin": {
+        "lon": 46.21,
+        "lat": 36.521
+      },
+      "center": [
+        46.21,
+        36.521
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        44.814,
+        35.949,
+        46.939,
+        37.348
+      ],
+      "place": 7936,
+      "country": "IR",
+      "localTrips": 3178993.0,
+      "realm": "iran"
+    },
+    {
+      "id": "bcq",
+      "name": "Babol",
+      "kind": "zone",
+      "origin": {
+        "lon": 52.6803,
+        "lat": 36.561
+      },
+      "center": [
+        52.6803,
+        36.561
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        52.377,
+        35.8,
+        53.271,
+        36.741
+      ],
+      "place": 7937,
+      "country": "IR",
+      "localTrips": 2940678.0,
+      "realm": "iran"
+    },
+    {
+      "id": "kdh",
+      "name": "Kuhdasht",
+      "kind": "zone",
+      "origin": {
+        "lon": 48.356,
+        "lat": 33.487
+      },
+      "center": [
+        48.356,
+        33.487
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        46.815,
+        32.635,
+        49.021,
+        34.397
+      ],
+      "place": 7938,
+      "country": "IR",
+      "localTrips": 2890553.0,
+      "realm": "iran"
+    },
+    {
+      "id": "gal",
+      "name": "Gorgan",
+      "kind": "zone",
+      "origin": {
+        "lon": 54.4429,
+        "lat": 36.8249
+      },
+      "center": [
+        54.4429,
+        36.8249
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        53.719,
+        36.486,
+        55.151,
+        37.473
+      ],
+      "place": 7939,
+      "country": "IR",
+      "localTrips": 2915440.0,
+      "realm": "iran"
+    },
+    {
+      "id": "kkl",
+      "name": "Kohkiluyeh",
+      "kind": "zone",
+      "origin": {
+        "lon": 51.588,
+        "lat": 30.668
+      },
+      "center": [
+        51.588,
+        30.668
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        49.305,
+        29.807,
+        51.91,
+        31.476
+      ],
+      "place": 7940,
+      "country": "IR",
+      "localTrips": 2886969.0,
+      "realm": "iran"
+    },
+    {
+      "id": "toj",
+      "name": "Torbat-e-jam",
+      "kind": "zone",
+      "origin": {
+        "lon": 60.6222,
+        "lat": 35.2468
+      },
+      "center": [
+        60.6222,
+        35.2468
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        59.336,
+        33.864,
+        61.306,
+        36.666
+      ],
+      "place": 7941,
+      "country": "IR",
+      "localTrips": 1802255.0,
+      "realm": "iran"
+    },
+    {
+      "id": "sff",
+      "name": "Sari",
+      "kind": "zone",
+      "origin": {
+        "lon": 53.0689,
+        "lat": 36.561
+      },
+      "center": [
+        53.0689,
+        36.561
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        52.531,
+        35.971,
+        54.196,
+        36.912
+      ],
+      "place": 7942,
+      "country": "IR",
+      "localTrips": 2695509.0,
+      "realm": "iran"
+    },
+    {
+      "id": "sfg",
+      "name": "Sharekurd",
+      "kind": "zone",
+      "origin": {
+        "lon": 50.86,
+        "lat": 32.326
+      },
+      "center": [
+        50.86,
+        32.326
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        49.478,
+        31.131,
+        51.456,
+        32.809
+      ],
+      "place": 7943,
+      "country": "IR",
+      "localTrips": 2591847.0,
+      "realm": "iran"
+    },
+    {
+      "id": "sfh",
+      "name": "Shadegan",
+      "kind": "zone",
+      "origin": {
+        "lon": 48.29,
+        "lat": 30.347
+      },
+      "center": [
+        48.29,
+        30.347
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        48.004,
+        29.911,
+        49.562,
+        31.01
+      ],
+      "place": 7945,
+      "country": "IR",
+      "localTrips": 2553229.0,
+      "realm": "iran"
+    },
+    {
+      "id": "faj",
+      "name": "Falaverjan",
+      "kind": "zone",
+      "origin": {
+        "lon": 51.4525,
+        "lat": 32.5815
+      },
+      "center": [
+        51.4525,
+        32.5815
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        50.945,
+        30.691,
+        52.232,
+        32.637
+      ],
+      "place": 7946,
+      "country": "IR",
+      "localTrips": 2160995.0,
+      "realm": "iran"
+    },
+    {
+      "id": "kbj",
+      "name": "Khoy",
+      "kind": "zone",
+      "origin": {
+        "lon": 44.9409,
+        "lat": 38.5483
+      },
+      "center": [
+        44.9409,
+        38.5483
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        44.008,
+        37.826,
+        45.481,
+        39.801
+      ],
+      "place": 7947,
+      "country": "IR",
+      "localTrips": 2308545.0,
+      "realm": "iran"
+    },
+    {
+      "id": "kbk",
+      "name": "Kerman",
+      "kind": "zone",
+      "origin": {
+        "lon": 57.0345,
+        "lat": 30.2876
+      },
+      "center": [
+        57.0345,
+        30.2876
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        55.996,
+        29.254,
+        59.505,
+        31.763
+      ],
+      "place": 7948,
+      "country": "IR",
+      "localTrips": 2325107.0,
+      "realm": "iran"
+    },
+    {
+      "id": "boe",
+      "name": "Borujerd",
+      "kind": "zone",
+      "origin": {
+        "lon": 48.7565,
+        "lat": 33.8972
+      },
+      "center": [
+        48.7565,
+        33.8972
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        47.864,
+        33.588,
+        49.198,
+        34.694
+      ],
+      "place": 7949,
+      "country": "IR",
+      "localTrips": 2185409.0,
+      "realm": "iran"
+    },
+    {
+      "id": "arl",
+      "name": "Ardebil",
+      "kind": "zone",
+      "origin": {
+        "lon": 48.2749,
+        "lat": 38.2379
+      },
+      "center": [
+        48.2749,
+        38.2379
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        47.856,
+        37.918,
+        48.933,
+        38.664
+      ],
+      "place": 7950,
+      "country": "IR",
+      "localTrips": 2192974.0,
+      "realm": "iran"
+    },
+    {
+      "id": "mvs",
+      "name": "Marvdasht",
+      "kind": "zone",
+      "origin": {
+        "lon": 52.8113,
+        "lat": 29.8774
+      },
+      "center": [
+        52.8113,
+        29.8774
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        51.776,
+        29.633,
+        54.139,
+        31.688
+      ],
+      "place": 7951,
+      "country": "IR",
+      "localTrips": 1859332.0,
+      "realm": "iran"
+    },
+    {
+      "id": "dbx",
+      "name": "Darab",
+      "kind": "zone",
+      "origin": {
+        "lon": 54.5399,
+        "lat": 28.7526
+      },
+      "center": [
+        54.5399,
+        28.7526
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        53.32,
+        27.936,
+        55.477,
+        29.913
+      ],
+      "place": 7952,
+      "country": "IR",
+      "localTrips": 1810426.0,
+      "realm": "iran"
+    },
+    {
+      "id": "bnb",
+      "name": "Bandar Abbas",
+      "kind": "zone",
+      "origin": {
+        "lon": 56.3425,
+        "lat": 27.2093
+      },
+      "center": [
+        56.3425,
+        27.2093
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        53.573,
+        25.837,
+        56.544,
+        27.302
+      ],
+      "place": 7953,
+      "country": "IR",
+      "localTrips": 1837802.0,
+      "realm": "iran"
+    },
+    {
+      "id": "cbp",
+      "name": "Chabahar",
+      "kind": "zone",
+      "origin": {
+        "lon": 60.6438,
+        "lat": 25.2955
+      },
+      "center": [
+        60.6438,
+        25.2955
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        58.777,
+        25.041,
+        61.872,
+        27.095
+      ],
+      "place": 7954,
+      "country": "IR",
+      "localTrips": 1697378.0,
+      "realm": "iran"
+    },
+    {
+      "id": "aol",
+      "name": "Amol",
+      "kind": "zone",
+      "origin": {
+        "lon": 52.3537,
+        "lat": 36.4644
+      },
+      "center": [
+        52.3537,
+        36.4644
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        51.31,
+        35.743,
+        52.556,
+        36.705
+      ],
+      "place": 7955,
+      "country": "IR",
+      "localTrips": 1702365.0,
+      "realm": "iran"
+    },
+    {
+      "id": "lhj",
+      "name": "Lahijan",
+      "kind": "zone",
+      "origin": {
+        "lon": 50.0045,
+        "lat": 37.2036
+      },
+      "center": [
+        50.0045,
+        37.2036
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        49.746,
+        36.618,
+        50.612,
+        37.491
+      ],
+      "place": 7956,
+      "country": "IR",
+      "localTrips": 1669241.0,
+      "realm": "iran"
+    },
+    {
+      "id": "mbw",
+      "name": "Minudasht",
+      "kind": "zone",
+      "origin": {
+        "lon": 55.3716,
+        "lat": 37.2301
+      },
+      "center": [
+        55.3716,
+        37.2301
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        53.68,
+        34.216,
+        57.076,
+        37.345
+      ],
+      "place": 7957,
+      "country": "IR",
+      "localTrips": 1599433.0,
+      "realm": "iran"
+    },
+    {
+      "id": "kbl",
+      "name": "Kalaleh",
+      "kind": "zone",
+      "origin": {
+        "lon": 55.167,
+        "lat": 37.25
+      },
+      "center": [
+        55.167,
+        37.25
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        54.514,
+        37.045,
+        56.393,
+        38.144
+      ],
+      "place": 7958,
+      "country": "IR",
+      "localTrips": 1575078.0,
+      "realm": "iran"
+    },
+    {
+      "id": "swh",
+      "name": "Sowme'eh Sara",
+      "kind": "zone",
+      "origin": {
+        "lon": 49.3202,
+        "lat": 37.3006
+      },
+      "center": [
+        49.3202,
+        37.3006
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        48.538,
+        37.236,
+        49.714,
+        38.186
+      ],
+      "place": 7959,
+      "country": "IR",
+      "localTrips": 1515541.0,
+      "realm": "iran"
+    },
+    {
+      "id": "ilx",
+      "name": "Ilam",
+      "kind": "zone",
+      "origin": {
+        "lon": 46.4286,
+        "lat": 33.6369
+      },
+      "center": [
+        46.4286,
+        33.6369
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        45.671,
+        32.03,
+        48.058,
+        34.056
+      ],
+      "place": 7960,
+      "country": "IR",
+      "localTrips": 1570110.0,
+      "realm": "iran"
+    },
+    {
+      "id": "tnb",
+      "name": "Tonekabon",
+      "kind": "zone",
+      "origin": {
+        "lon": 50.8765,
+        "lat": 36.8161
+      },
+      "center": [
+        50.8765,
+        36.8161
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        50.312,
+        36.135,
+        51.965,
+        36.987
+      ],
+      "place": 7961,
+      "country": "IR",
+      "localTrips": 1519088.0,
+      "realm": "iran"
+    },
+    {
+      "id": "xba",
+      "name": "?????? ??????",
+      "kind": "zone",
+      "origin": {
+        "lon": 57.0881,
+        "lat": 27.1247
+      },
+      "center": [
+        57.0881,
+        27.1247
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        56.764,
+        25.384,
+        59.257,
+        27.982
+      ],
+      "place": 7962,
+      "country": "IR",
+      "localTrips": 1416353.0,
+      "realm": "iran"
+    },
+    {
+      "id": "dmv",
+      "name": "Damavand",
+      "kind": "zone",
+      "origin": {
+        "lon": 51.9043,
+        "lat": 35.7365
+      },
+      "center": [
+        51.9043,
+        35.7365
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        51.661,
+        35.319,
+        53.18,
+        35.957
+      ],
+      "place": 7963,
+      "country": "IR",
+      "localTrips": 856152.0,
+      "realm": "iran"
+    },
+    {
+      "id": "mbv",
+      "name": "Mianeh",
+      "kind": "zone",
+      "origin": {
+        "lon": 46.25,
+        "lat": 37.39
+      },
+      "center": [
+        46.25,
+        37.39
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        45.619,
+        36.727,
+        48.369,
+        38.271
+      ],
+      "place": 7964,
+      "country": "IR",
+      "localTrips": 2433749.0,
+      "realm": "iran"
+    },
+    {
+      "id": "kbm",
+      "name": "Kashan",
+      "kind": "zone",
+      "origin": {
+        "lon": 51.4322,
+        "lat": 33.984
+      },
+      "center": [
+        51.4322,
+        33.984
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        50.906,
+        33.235,
+        52.466,
+        34.529
+      ],
+      "place": 7965,
+      "country": "IR",
+      "localTrips": 1438438.0,
+      "realm": "iran"
+    },
+    {
+      "id": "sfj",
+      "name": "Sirjan",
+      "kind": "zone",
+      "origin": {
+        "lon": 55.6725,
+        "lat": 29.4508
+      },
+      "center": [
+        55.6725,
+        29.4508
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        54.961,
+        28.112,
+        57.293,
+        29.997
+      ],
+      "place": 7966,
+      "country": "IR",
+      "localTrips": 1328265.0,
+      "realm": "iran"
+    },
+    {
+      "id": "bcr",
+      "name": "Bushehr",
+      "kind": "zone",
+      "origin": {
+        "lon": 50.8457,
+        "lat": 28.9568
+      },
+      "center": [
+        50.8457,
+        28.9568
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        49.486,
+        28.25,
+        51.311,
+        30.414
+      ],
+      "place": 7967,
+      "country": "IR",
+      "localTrips": 1240645.0,
+      "realm": "iran"
+    },
+    {
+      "id": "dsi",
+      "name": "Dashti",
+      "kind": "zone",
+      "origin": {
+        "lon": 51.215,
+        "lat": 29.268
+      },
+      "center": [
+        51.215,
+        29.268
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        50.736,
+        27.647,
+        52.563,
+        29.802
+      ],
+      "place": 7968,
+      "country": "IR",
+      "localTrips": 1265473.0,
+      "realm": "iran"
+    },
+    {
+      "id": "jhm",
+      "name": "Jahrom",
+      "kind": "zone",
+      "origin": {
+        "lon": 53.5876,
+        "lat": 28.5146
+      },
+      "center": [
+        53.5876,
+        28.5146
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        51.772,
+        27.997,
+        54.043,
+        29.278
+      ],
+      "place": 7969,
+      "country": "IR",
+      "localTrips": 1274614.0,
+      "realm": "iran"
+    },
+    {
+      "id": "izh",
+      "name": "Izeh",
+      "kind": "zone",
+      "origin": {
+        "lon": 49.8535,
+        "lat": 31.8317
+      },
+      "center": [
+        49.8535,
+        31.8317
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        49.246,
+        30.945,
+        50.463,
+        32.364
+      ],
+      "place": 7970,
+      "country": "IR",
+      "localTrips": 1149256.0,
+      "realm": "iran"
+    },
+    {
+      "id": "aiu",
+      "name": "Aligudarz",
+      "kind": "zone",
+      "origin": {
+        "lon": 49.6871,
+        "lat": 33.4029
+      },
+      "center": [
+        49.6871,
+        33.4029
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        48.768,
+        32.698,
+        50.042,
+        33.768
+      ],
+      "place": 7971,
+      "country": "IR",
+      "localTrips": 1069091.0,
+      "realm": "iran"
+    },
+    {
+      "id": "qes",
+      "name": "Qeshm",
+      "kind": "zone",
+      "origin": {
+        "lon": 56.2741,
+        "lat": 26.9556
+      },
+      "center": [
+        56.2741,
+        26.9556
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        54.874,
+        26.61,
+        57.048,
+        28.809
+      ],
+      "place": 7972,
+      "country": "IR",
+      "localTrips": 881501.0,
+      "realm": "iran"
+    },
+    {
+      "id": "svx",
+      "name": "Saveh",
+      "kind": "zone",
+      "origin": {
+        "lon": 50.3707,
+        "lat": 35.0373
+      },
+      "center": [
+        50.3707,
+        35.0373
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        49.237,
+        34.505,
+        50.78,
+        35.421
+      ],
+      "place": 7974,
+      "country": "IR",
+      "localTrips": 843904.0,
+      "realm": "iran"
+    },
+    {
+      "id": "nza",
+      "name": "Nazarabad",
+      "kind": "zone",
+      "origin": {
+        "lon": 50.6138,
+        "lat": 35.9467
+      },
+      "center": [
+        50.6138,
+        35.9467
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        50.309,
+        35.744,
+        51.108,
+        36.13
+      ],
+      "place": 7975,
+      "country": "IR",
+      "localTrips": 748259.0,
+      "realm": "iran"
+    },
+    {
+      "id": "tkx",
+      "name": "Takab",
+      "kind": "zone",
+      "origin": {
+        "lon": 47.1104,
+        "lat": 36.4029
+      },
+      "center": [
+        47.1104,
+        36.4029
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        46.224,
+        36.232,
+        47.548,
+        36.949
+      ],
+      "place": 7976,
+      "country": "IR",
+      "localTrips": 458497.0,
+      "realm": "iran"
+    },
+    {
+      "id": "bag",
+      "name": "Baghdad",
+      "origin": {
+        "lon": 44.41,
+        "lat": 33.325
+      },
+      "center": [
+        44.41,
+        33.325
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        43.822,
+        32.818,
+        46.03,
+        34.124
+      ],
+      "place": 7977,
+      "country": "IQ",
+      "localTrips": 24674945.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "mou",
+      "name": "Mosul",
+      "origin": {
+        "lon": 43.1276,
+        "lat": 36.3414
+      },
+      "center": [
+        43.1276,
+        36.3414
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        41.671,
+        34.879,
+        43.565,
+        36.591
+      ],
+      "place": 7978,
+      "country": "IQ",
+      "localTrips": 7036670.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "bas",
+      "name": "Basra",
+      "origin": {
+        "lon": 47.814,
+        "lat": 30.5101
+      },
+      "center": [
+        47.814,
+        30.5101
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        47.322,
+        29.809,
+        48.645,
+        31.02
+      ],
+      "place": 7979,
+      "country": "IQ",
+      "localTrips": 5869508.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "erb",
+      "name": "Erbil",
+      "origin": {
+        "lon": 44.0533,
+        "lat": 36.1834
+      },
+      "center": [
+        44.0533,
+        36.1834
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        43.298,
+        35.423,
+        44.348,
+        36.449
+      ],
+      "place": 7980,
+      "country": "IQ",
+      "localTrips": 5045249.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "alh",
+      "name": "Al Hillah",
+      "origin": {
+        "lon": 44.2413,
+        "lat": 32.547
+      },
+      "center": [
+        44.2413,
+        32.547
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        44.015,
+        32.107,
+        44.647,
+        32.673
+      ],
+      "place": 7981,
+      "country": "IQ",
+      "localTrips": 4360309.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "aln",
+      "name": "Al-Najaf",
+      "origin": {
+        "lon": 44.3173,
+        "lat": 31.9952
+      },
+      "center": [
+        44.3173,
+        31.9952
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        41.877,
+        29.83,
+        44.79,
+        32.353
+      ],
+      "place": 7982,
+      "country": "IQ",
+      "localTrips": 3888990.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "kir",
+      "name": "Kirkuk",
+      "origin": {
+        "lon": 44.4309,
+        "lat": 35.4391
+      },
+      "center": [
+        44.4309,
+        35.4391
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        43.728,
+        34.667,
+        44.822,
+        35.928
+      ],
+      "place": 7983,
+      "country": "IQ",
+      "localTrips": 3452570.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "kal",
+      "name": "Karbala",
+      "origin": {
+        "lon": 44.0295,
+        "lat": 32.616
+      },
+      "center": [
+        44.0295,
+        32.616
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        43.17,
+        32.142,
+        44.289,
+        32.866
+      ],
+      "place": 7984,
+      "country": "IQ",
+      "localTrips": 2999631.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "duo",
+      "name": "Duhok",
+      "origin": {
+        "lon": 42.98,
+        "lat": 36.865
+      },
+      "center": [
+        42.98,
+        36.865
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        42.355,
+        36.686,
+        43.314,
+        37.138
+      ],
+      "place": 7985,
+      "country": "IQ",
+      "localTrips": 3500517.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "alw",
+      "name": "Al-Diwaniya",
+      "kind": "zone",
+      "origin": {
+        "lon": 44.9224,
+        "lat": 31.9866
+      },
+      "center": [
+        44.9224,
+        31.9866
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        44.36,
+        31.276,
+        45.82,
+        32.437
+      ],
+      "place": 7986,
+      "country": "IQ",
+      "localTrips": 4642245.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "akx",
+      "name": "Al-Kut",
+      "kind": "zone",
+      "origin": {
+        "lon": 45.8109,
+        "lat": 32.5297
+      },
+      "center": [
+        45.8109,
+        32.5297
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        44.51,
+        31.956,
+        46.587,
+        33.508
+      ],
+      "place": 7987,
+      "country": "IQ",
+      "localTrips": 3818687.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "akl",
+      "name": "Al-Kahla",
+      "kind": "zone",
+      "origin": {
+        "lon": 47.1326,
+        "lat": 31.8489
+      },
+      "center": [
+        47.1326,
+        31.8489
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        46.3,
+        31.105,
+        47.888,
+        32.886
+      ],
+      "place": 7988,
+      "country": "IQ",
+      "localTrips": 3351261.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "aly",
+      "name": "Al-Sulaymaniyah",
+      "kind": "zone",
+      "origin": {
+        "lon": 45.3866,
+        "lat": 35.579
+      },
+      "center": [
+        45.3866,
+        35.579
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        44.616,
+        35.016,
+        45.918,
+        36.203
+      ],
+      "place": 7989,
+      "country": "IQ",
+      "localTrips": 3331578.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "bcj",
+      "name": "Balad",
+      "kind": "zone",
+      "origin": {
+        "lon": 43.88,
+        "lat": 34.196
+      },
+      "center": [
+        43.88,
+        34.196
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        42.402,
+        33.628,
+        44.555,
+        35.386
+      ],
+      "place": 7990,
+      "country": "IQ",
+      "localTrips": 2756416.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "aqr",
+      "name": "Aqra",
+      "kind": "zone",
+      "origin": {
+        "lon": 43.8691,
+        "lat": 36.7281
+      },
+      "center": [
+        43.8691,
+        36.7281
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        43.103,
+        35.807,
+        45.405,
+        37.341
+      ],
+      "place": 7991,
+      "country": "IQ",
+      "localTrips": 2628390.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "ard",
+      "name": "Al-Ramadi",
+      "kind": "zone",
+      "origin": {
+        "lon": 43.3093,
+        "lat": 33.4203
+      },
+      "center": [
+        43.3093,
+        33.4203
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        41.075,
+        32.613,
+        43.837,
+        35.175
+      ],
+      "place": 7992,
+      "country": "IQ",
+      "localTrips": 2519284.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "zak",
+      "name": "Zakho",
+      "kind": "zone",
+      "origin": {
+        "lon": 42.6972,
+        "lat": 37.1419
+      },
+      "center": [
+        42.6972,
+        37.1419
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        42.325,
+        36.996,
+        43.206,
+        37.399
+      ],
+      "place": 7993,
+      "country": "IQ",
+      "localTrips": 2230309.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "asm",
+      "name": "Al-Samawa",
+      "kind": "zone",
+      "origin": {
+        "lon": 45.2686,
+        "lat": 31.3074
+      },
+      "center": [
+        45.2686,
+        31.3074
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        43.791,
+        29.04,
+        46.77,
+        31.773
+      ],
+      "place": 7994,
+      "country": "IQ",
+      "localTrips": 2456021.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "tlf",
+      "name": "Telafar",
+      "kind": "zone",
+      "origin": {
+        "lon": 42.4549,
+        "lat": 36.3765
+      },
+      "center": [
+        42.4549,
+        36.3765
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        41.186,
+        35.017,
+        42.919,
+        37.079
+      ],
+      "place": 7995,
+      "country": "IQ",
+      "localTrips": 2394839.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "aas",
+      "name": "Al-Nasiriya",
+      "kind": "zone",
+      "origin": {
+        "lon": 46.2404,
+        "lat": 31.067
+      },
+      "center": [
+        46.2404,
+        31.067
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        45.612,
+        30.781,
+        46.876,
+        31.601
+      ],
+      "place": 7996,
+      "country": "IQ",
+      "localTrips": 2525923.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "aki",
+      "name": "Al-Khalis",
+      "kind": "zone",
+      "origin": {
+        "lon": 44.5202,
+        "lat": 33.8538
+      },
+      "center": [
+        44.5202,
+        33.8538
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        44.266,
+        33.557,
+        45.82,
+        35.187
+      ],
+      "place": 7997,
+      "country": "IQ",
+      "localTrips": 2130706.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "ahs",
+      "name": "Al-Hashimiya",
+      "kind": "zone",
+      "origin": {
+        "lon": 44.6854,
+        "lat": 32.2968
+      },
+      "center": [
+        44.6854,
+        32.2968
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        43.95,
+        32.08,
+        45.178,
+        33.105
+      ],
+      "place": 7998,
+      "country": "IQ",
+      "localTrips": 1685970.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "afl",
+      "name": "Al-Falluja",
+      "kind": "zone",
+      "origin": {
+        "lon": 43.7702,
+        "lat": 33.3596
+      },
+      "center": [
+        43.7702,
+        33.3596
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        43.324,
+        32.758,
+        44.182,
+        33.739
+      ],
+      "place": 7999,
+      "country": "IQ",
+      "localTrips": 1853717.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "azu",
+      "name": "Al-Zubair",
+      "kind": "zone",
+      "origin": {
+        "lon": 47.7119,
+        "lat": 30.3902
+      },
+      "center": [
+        47.7119,
+        30.3902
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        46.51,
+        29.101,
+        47.992,
+        30.764
+      ],
+      "place": 8000,
+      "country": "IQ",
+      "localTrips": 1232388.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "aht",
+      "name": "Al-Shatra",
+      "kind": "zone",
+      "origin": {
+        "lon": 46.169,
+        "lat": 31.4104
+      },
+      "center": [
+        46.169,
+        31.4104
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        45.906,
+        31.188,
+        46.6,
+        31.709
+      ],
+      "place": 8001,
+      "country": "IQ",
+      "localTrips": 1275143.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "aqn",
+      "name": "Al-Qurna",
+      "kind": "zone",
+      "origin": {
+        "lon": 47.4325,
+        "lat": 31.0156
+      },
+      "center": [
+        47.4325,
+        31.0156
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        47.079,
+        30.573,
+        47.709,
+        31.307
+      ],
+      "place": 8002,
+      "country": "IQ",
+      "localTrips": 1251217.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "sqa",
+      "name": "Suq Al-Shoyokh",
+      "kind": "zone",
+      "origin": {
+        "lon": 46.4714,
+        "lat": 30.887
+      },
+      "center": [
+        46.4714,
+        30.887
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        46.148,
+        30.513,
+        47.161,
+        31.162
+      ],
+      "place": 8003,
+      "country": "IQ",
+      "localTrips": 1211294.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "arf",
+      "name": "Al-Rifai",
+      "kind": "zone",
+      "origin": {
+        "lon": 46.0755,
+        "lat": 31.8575
+      },
+      "center": [
+        46.0755,
+        31.8575
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        45.684,
+        31.33,
+        46.477,
+        32.022
+      ],
+      "place": 8004,
+      "country": "IQ",
+      "localTrips": 1131838.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "ahi",
+      "name": "Al-Hawiga",
+      "kind": "zone",
+      "origin": {
+        "lon": 43.7806,
+        "lat": 35.3255
+      },
+      "center": [
+        43.7806,
+        35.3255
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        43.329,
+        34.957,
+        44.446,
+        35.875
+      ],
+      "place": 8005,
+      "country": "IQ",
+      "localTrips": 836585.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "cmm",
+      "name": "Chamchamal",
+      "kind": "zone",
+      "origin": {
+        "lon": 44.8269,
+        "lat": 35.5353
+      },
+      "center": [
+        44.8269,
+        35.5353
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        44.562,
+        34.939,
+        45.459,
+        35.915
+      ],
+      "place": 8007,
+      "country": "IQ",
+      "localTrips": 808561.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "asi",
+      "name": "Al-Shirqat",
+      "kind": "zone",
+      "origin": {
+        "lon": 43.2337,
+        "lat": 35.5178
+      },
+      "center": [
+        43.2337,
+        35.5178
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        42.829,
+        35.216,
+        43.521,
+        35.717
+      ],
+      "place": 8008,
+      "country": "IQ",
+      "localTrips": 634965.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "toz",
+      "name": "Tooz Khurmato",
+      "kind": "zone",
+      "origin": {
+        "lon": 44.6305,
+        "lat": 34.8978
+      },
+      "center": [
+        44.6305,
+        34.8978
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        44.294,
+        34.498,
+        44.968,
+        35.169
+      ],
+      "place": 8009,
+      "country": "IQ",
+      "localTrips": 630979.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "akm",
+      "name": "Al-Kaim",
+      "kind": "zone",
+      "origin": {
+        "lon": 40.988,
+        "lat": 34.3926
+      },
+      "center": [
+        40.988,
+        34.3926
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        39.787,
+        33.734,
+        41.65,
+        35.079
+      ],
+      "place": 8011,
+      "country": "IQ",
+      "localTrips": 468389.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "hlb",
+      "name": "Halabcha",
+      "kind": "zone",
+      "origin": {
+        "lon": 45.9921,
+        "lat": 35.177
+      },
+      "center": [
+        45.9921,
+        35.177
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        45.661,
+        34.875,
+        46.37,
+        35.877
+      ],
+      "place": 8012,
+      "country": "IQ",
+      "localTrips": 477797.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "aam",
+      "name": "Al-Amadiya",
+      "kind": "zone",
+      "origin": {
+        "lon": 43.793,
+        "lat": 37.0274
+      },
+      "center": [
+        43.793,
+        37.0274
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        43.044,
+        36.801,
+        44.124,
+        37.378
+      ],
+      "place": 8013,
+      "country": "IQ",
+      "localTrips": 341200.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "mas",
+      "name": "Mashhad",
+      "origin": {
+        "lon": 59.6,
+        "lat": 36.295
+      },
+      "center": [
+        59.6,
+        36.295
+      ],
+      "zoom": 11.2,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        59.044,
+        35.687,
+        60.614,
+        37.334
+      ],
+      "place": 8014,
+      "country": "IR",
+      "localTrips": 9973592.0,
+      "realm": "iran"
+    },
+    {
+      "id": "yzd",
+      "name": "Yazd",
+      "kind": "zone",
+      "origin": {
+        "lon": 54.3208,
+        "lat": 31.8833
+      },
+      "center": [
+        54.3208,
+        31.8833
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        52.779,
+        29.582,
+        56.677,
+        33.401
+      ],
+      "place": 8015,
+      "country": "IR",
+      "localTrips": 3224764.0,
+      "realm": "iran"
+    },
+    {
+      "id": "sqq",
+      "name": "Saqqez",
+      "kind": "zone",
+      "origin": {
+        "lon": 46.2641,
+        "lat": 36.2449
+      },
+      "center": [
+        46.2641,
+        36.2449
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        45.535,
+        35.763,
+        46.914,
+        36.478
+      ],
+      "place": 8016,
+      "country": "IR",
+      "localTrips": 1060818.0,
+      "realm": "iran"
+    },
+    {
+      "id": "kkh",
+      "name": "Kahlkhal",
+      "kind": "zone",
+      "origin": {
+        "lon": 48.5288,
+        "lat": 37.6184
+      },
+      "center": [
+        48.5288,
+        37.6184
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        47.781,
+        37.086,
+        48.945,
+        38.283
+      ],
+      "place": 8017,
+      "country": "IR",
+      "localTrips": 370578.0,
+      "realm": "iran"
+    },
+    {
+      "id": "kva",
+      "name": "Kavar",
+      "kind": "zone",
+      "origin": {
+        "lon": 52.6907,
+        "lat": 29.2037
+      },
+      "center": [
+        52.6907,
+        29.2037
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        52.428,
+        28.996,
+        53.492,
+        29.469
+      ],
+      "place": 8018,
+      "country": "IR",
+      "localTrips": 322094.0,
+      "realm": "iran"
+    },
+    {
+      "id": "rur",
+      "name": "Rudbar-e-Jonub",
+      "kind": "zone",
+      "origin": {
+        "lon": 57.74,
+        "lat": 28.678
+      },
+      "center": [
+        57.74,
+        28.678
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        56.869,
+        26.427,
+        59.592,
+        29.648
+      ],
+      "place": 8019,
+      "country": "IR",
+      "localTrips": 3372529.0,
+      "realm": "iran"
+    },
+    {
+      "id": "lrs",
+      "name": "Larestan",
+      "kind": "zone",
+      "origin": {
+        "lon": 54.33,
+        "lat": 27.67
+      },
+      "center": [
+        54.33,
+        27.67
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        51.658,
+        26.477,
+        55.754,
+        28.376
+      ],
+      "place": 8020,
+      "country": "IR",
+      "localTrips": 2437484.0,
+      "realm": "iran"
+    },
+    {
+      "id": "bcs",
+      "name": "Barkhar",
+      "kind": "zone",
+      "origin": {
+        "lon": 51.646,
+        "lat": 32.7801
+      },
+      "center": [
+        51.646,
+        32.7801
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        51.463,
+        32.504,
+        54.793,
+        34.446
+      ],
+      "place": 8021,
+      "country": "IR",
+      "localTrips": 480253.0,
+      "realm": "iran"
+    },
+    {
+      "id": "ahd",
+      "name": "Al-Hamdaniya",
+      "kind": "zone",
+      "origin": {
+        "lon": 43.38,
+        "lat": 36.27
+      },
+      "center": [
+        43.38,
+        36.27
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        43.242,
+        35.946,
+        43.753,
+        36.41
+      ],
+      "place": 8022,
+      "country": "IQ",
+      "localTrips": 223875.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "mvn",
+      "name": "Marivan",
+      "kind": "zone",
+      "origin": {
+        "lon": 47.0,
+        "lat": 35.315
+      },
+      "center": [
+        47.0,
+        35.315
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        45.949,
+        34.718,
+        48.313,
+        36.458
+      ],
+      "place": 8023,
+      "country": "IR",
+      "localTrips": 3340030.0,
+      "realm": "iran"
+    },
+    {
+      "id": "tke",
+      "name": "Tilkaef",
+      "kind": "zone",
+      "origin": {
+        "lon": 43.12,
+        "lat": 36.49
+      },
+      "center": [
+        43.12,
+        36.49
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        42.722,
+        36.373,
+        43.298,
+        36.788
+      ],
+      "place": 8024,
+      "country": "IQ",
+      "localTrips": 274244.0,
+      "realm": "iraq"
+    },
+    {
+      "id": "amh",
+      "name": "Al-Manathera",
+      "kind": "zone",
+      "origin": {
+        "lon": 44.492,
+        "lat": 31.804
+      },
+      "center": [
+        44.492,
+        31.804
+      ],
+      "zoom": 10.5,
+      "utcOffset": 3,
+      "market": -1,
+      "box": [
+        44.333,
+        31.578,
+        44.598,
+        31.919
+      ],
+      "place": 8025,
+      "country": "IQ",
+      "localTrips": 308929.0,
+      "realm": "iraq"
     }
   ]
 }
