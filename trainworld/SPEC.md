@@ -401,8 +401,9 @@ or uploaded here [T-1826]; closing the page asks first only while a change canno
 on reload when the network, packs and build match [T-328].
 Keeping old saves loading is a nicety: only Anita has saves. An optional account, noritetsu's on
 `shonei-server` (one sign-in for both pages), lists a signed-in player's normal games by points on
-a world leaderboard and one per city and country, each person once per board. A game counts at its
-current figures, the forecast weekday's points, never its best ever, so a demand change never leaves an unreachable score up;
+a world leaderboard and one per city and country, and by weekday profit (fares minus running costs and upkeep) on one
+world board [T-3879], each person once per board. A game counts at its
+current figures, the forecast weekday's points and profit, never its best ever, so a demand change never leaves an unreachable score up;
 they are sent only once trips are calculated for the network as it is, never a load's or an edit's early figures, and
 on each board a person's row is their best game there; a game that was ever a sandbox, or is modded (a mod ran, or
 another site or the public repo's build played it), is never listed, and the server keeps figures only from the

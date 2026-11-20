@@ -1310,7 +1310,7 @@ then removed from the address bar; other URL parameters are untouched [T-310, T-
   Don't add asks "Are you sure? Games kept only in this browser are lost if its storage is
   cleared." with Keep them here only and Add them ("Keep it here only", "Add it" for one). Added
   games go up at once; kept ones are never asked about again and carry the crossed cloud.
-- **Scores**: while signed in, each normal game in a browser slot sends its points (the forecast weekday's, the All cities row's figure, T-3465) and its best 64 cities' points, when they change and at
+- **Scores**: while signed in, each normal game in a browser slot sends its points (the forecast weekday's, the All cities row's figure, T-3465), its best 64 cities' points and (T-3879) its weekday profit in US$ (`dayProfit`: the weekday's fares minus running costs and upkeep, the edit note's profit figure; no new trains, construction or loan), when they change and at
   most every 2 wall minutes (at once on the first send and when the page is hidden), joined or not.
   A `?new=1` page or one whose slot is open elsewhere sends nothing. Each slot has a random game id
   in localStorage (`trainworld.score-games.v1`), or the id of its game on the account when it has
@@ -1328,7 +1328,10 @@ then removed from the address bar; other URL parameters are untouched [T-310, T-
 - **Only the published game's scores** (T-3707): each normal send carries the build's stamp (`build`,
   `__TW_BUILD__`). The server keeps them only from anita.garden with a stamp on the site's `builds.json`, which
   `tools/deploy.py` writes at each publish; a refusal (426 `unpublished`) stops this page's sends for 10 minutes.
-- **Leaderboards**: the trophy opens a centred modal: a picker (World, then up to two countries in
+- **Leaderboards**: the trophy opens a centred modal. Against a server whose config says `trainworldProfit`, a
+  Points / Profit switch sits at the top (T-3879): Profit is one world board of weekday profit (the shown currency,
+  short; the exact figure and "Fares minus running costs and upkeep" in the hover), with no picker, and only games in
+  profit have a row; Points goes back to the points board last shown. On Points: a picker (World, then up to two countries in
   this game, then its cities by points; typing searches cities and countries, a country by its name in
   the player's language or in English), the top 50 (rank, name, points short, the
   exact figure in the hover; the person's flag after the name, 16 x 12 px, its name in the hover; a long name is cut, the flag never), the player's own row under them when lower, "Nobody here yet." on an

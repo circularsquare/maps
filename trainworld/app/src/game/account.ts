@@ -8,7 +8,7 @@
 // forgets it), so a dev page or a check makes no request that could fail. Everything waits for
 // `/noritetsu/config` to say `trainworld`: an older server, or none, keeps every icon hidden.
 //
-// While signed in, each normal game's points (the forecast weekday's, the Cities tab's) are sent at
+// While signed in, each normal game's points (the forecast weekday's, the Cities tab's) and its weekday profit (T-3879) are sent at
 // most every two wall minutes when they change and only from a whole final solve (T-3639), joined or
 // not, so a board is current the moment its player joins. A game owns a random id per browser slot
 // (`GAMES_KEY`), or its account game's id (T-988); a sandbox sends only the fact, once, which the server keeps for good. A slot deleted here
@@ -18,7 +18,8 @@
 // file gives the clock worker the account (`cloudContext`) on every change.
 
 import { effect, signal } from "@preact/signals";
-import { moneyState } from "./money";
+import { incomeByDay, moneyState } from "./money";
+import { dayProfit } from "./profitEstimate";
 import { pointsBeforeCover, pointsPerDay, scoreSettled } from "./points";
 import { startPlaytime } from "./playtime";
 import { startGameTime } from "./gameTime";
@@ -37,7 +38,7 @@ export interface AccountView {
   pendingEmail: string;
 }
 interface Session { token: string; account: AccountView }
-export interface AccountConfig { googleClientId: string; dev: boolean; password: boolean; signIn: boolean; trainworld?: boolean; trainworldGames?: boolean; trainworldFeedback?: boolean; trainworldFeedbackThreads?: boolean; /** T-3326: how many screenshots a new feedback takes; absent or 0 on a server that drops them */ trainworldFeedbackImages?: number; trainworldPing?: boolean; trainworldAchievements?: boolean; trainworldCommunity?: boolean; trainworldCommunityPreview?: boolean; trainworldCommunitySearch?: boolean; trainworldCommunityPages?: boolean; /** T-3652: the list takes view=newest */ trainworldCommunityNewest?: boolean; trainworldFlags?: boolean; /** T-3807: PUT /trainworld/name */ trainworldRename?: boolean; /** T-3279: the flag list version the server accepts (game/flags.json `set`) */ trainworldFlagSet?: number }
+export interface AccountConfig { googleClientId: string; dev: boolean; password: boolean; signIn: boolean; trainworld?: boolean; trainworldGames?: boolean; trainworldFeedback?: boolean; trainworldFeedbackThreads?: boolean; /** T-3326: how many screenshots a new feedback takes; absent or 0 on a server that drops them */ trainworldFeedbackImages?: number; trainworldPing?: boolean; trainworldAchievements?: boolean; trainworldCommunity?: boolean; trainworldCommunityPreview?: boolean; trainworldCommunitySearch?: boolean; trainworldCommunityPages?: boolean; /** T-3652: the list takes view=newest */ trainworldCommunityNewest?: boolean; trainworldFlags?: boolean; /** T-3807: PUT /trainworld/name */ trainworldRename?: boolean; /** T-3879: the `profit` board */ trainworldProfit?: boolean; /** T-3279: the flag list version the server accepts (game/flags.json `set`) */ trainworldFlagSet?: number }
 export interface BoardSetting { on: boolean; name: string; /** set when a moderator hid the display name; absent on a server that does not say */ nameHidden?: boolean; /** T-3269: the flag beside the name, game/flags.ts */ flag?: string }
 export interface BoardRow { rank: number; name: string; value: number; flag?: string }
 export interface Board { board: string; count: number; rows: BoardRow[]; me?: BoardRow }
@@ -325,9 +326,12 @@ export async function setDisplayName(name: string) {
 
 export const boards = signal<{ list: Record<string, number>; data: Board | null; key: string; at: number; error: string }>({ list: {}, data: null, key: "points", at: 0, error: "" });
 let fetching = false;
+/** a board asked for while another was fetching (T-3879: Profit clicked as the panel opens), fetched next */
+let wanted: string | null = null;
 export async function fetchBoards(key = boards.peek().key) {
-  if (fetching) return;
+  if (fetching) { wanted = key; return; }
   fetching = true;
+  wanted = null;
   boards.value = { ...boards.peek(), key };
   try {
     const [list, data] = await Promise.all([
@@ -339,6 +343,7 @@ export async function fetchBoards(key = boards.peek().key) {
     boards.value = { ...boards.peek(), at: Date.now(), error: (e as Error).message };
   } finally {
     fetching = false;
+    if (wanted !== null && wanted !== key) void fetchBoards(wanted);
   }
 }
 
@@ -414,8 +419,12 @@ export async function gameForShare(): Promise<string | null> {
   return e.id;
 }
 
-/** The game's figures now: the forecast weekday's points (T-3465) in all, and its best cities. */
-function figures(): { day: number; points: number; cities: Record<string, number> } | null {
+/** T-3879: the most profit a day, either way, that a game sends (shonei-server's twMaxProfit), US$ */
+const MAX_PROFIT = 1e14;
+
+/** The game's figures now: the forecast weekday's points (T-3465) in all, its best cities, and (T-3879) the weekday's
+ * profit, US$ (`dayProfit`: fares minus running costs and upkeep), from the same whole final. */
+function figures(): { day: number; points: number; cities: Record<string, number>; profit?: number } | null {
   const m = moneyState.peek();
   const hour = m?.hours.at(-1)?.hour;
   const how = scoreSettled.peek();
@@ -429,7 +438,8 @@ function figures(): { day: number; points: number; cities: Record<string, number
   if (points <= 0 && how !== "idle" && !pointsBeforeCover.peek()) return null;
   const cities: Record<string, number> = {};
   for (const [id, v] of per.slice(0, MAX_CITIES)) cities[id] = cap(v);
-  return { day: Math.floor(hour / 24), points, cities };
+  const inc = incomeByDay.peek()[0], profit = inc ? Math.round(dayProfit(inc, m)) : NaN;
+  return { day: Math.floor(hour / 24), points, cities, ...(Number.isFinite(profit) ? { profit: Math.max(-MAX_PROFIT, Math.min(MAX_PROFIT, profit)) } : {}) };
 }
 
 /** A game whose figures never rank: a sandbox, (T-3115) a copy of a shared network, or (T-3707) a modded game, which
@@ -471,7 +481,8 @@ export async function sendScores(now = false): Promise<void> {
   } else {
     const f = figures();
     if (!f || (scoresRefused.peek() && Date.now() - refusedAt < REFUSED_WAIT_MS)) return;
-    const sig = JSON.stringify([f.points, f.cities]);
+    // (the server's profit flag too: a server that dropped `profit` is sent to again once it keeps it)
+    const sig = JSON.stringify([f.points, f.cities, f.profit ?? null, accountConfig.peek()?.trainworldProfit === true]);
     const before = e.acct === acct ? e.sent : undefined;
     if (sig === before || (!before && f.points <= 0)) return;
     if (!now && before && Date.now() - (e.at ?? 0) < SEND_GAP_MS) return;

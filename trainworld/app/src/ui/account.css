@@ -37,6 +37,7 @@
 .start-box:has(.acct-start) h1 { padding-right: 32px; }
 /* the leaderboards */
 .lb-find { margin-bottom: 8px; }
+.lb-kind { margin-bottom: 8px; }
 .lb-hits { margin-top: 2px; }
 .lb-rows { list-style: none; margin: 0; padding: 0; }
 /* T-1237: no rules between rows; the gap before the player's own row is space */

@@ -39,6 +39,14 @@ export function runningADay(m: MoneyState): number {
   return run * 1e6;
 }
 
+/** The network's profit a day, US$: one kind of day's fare income (`inc`) minus the running cost and the upkeep, leaving
+ * out new trains, construction and the loan (as Cities' `net`). The edit note's profit and, on the weekday's income, the
+ * profit leaderboard's figure (T-3879). */
+export function dayProfit(inc: Income, m: MoneyState): number {
+  const fares = inc.perHour.reduce((a, v, p) => a + v * PERIOD_HOURS[p], 0) * 1e6;
+  return fares - runningADay(m) - (m.upkeep.track + m.upkeep.stations + m.upkeep.buses) * 1e6;
+}
+
 /** The base from the settled demand `dv` and its income `inc`; fares are left out (sensitivity 0) where
  * demand carries no fare sensitivity. */
 export function estimateBase(w: WorldView, dv: DemandView, inc: Income, m: MoneyState): EstimateBase {

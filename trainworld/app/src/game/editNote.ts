@@ -23,7 +23,7 @@ import { lineRunFactor } from "./regionMoney";
 import { loadProgress } from "./loading";
 import { incomeByDay, moneyState, type Income } from "./money";
 import { PERIODS } from "./periods";
-import { estimateBase, estimateChange, runningADay, type EstimateBase, type ProfitEstimate } from "./profitEstimate";
+import { dayProfit, estimateBase, estimateChange, type EstimateBase, type ProfitEstimate } from "./profitEstimate";
 import type { WorldView } from "./types";
 import { shownDay, shownDayPhrase } from "./ui";
 import { world } from "./world";
@@ -144,13 +144,9 @@ function figuresOf(w: WorldView, d: DayDemand | null, kind: number, inc: Income,
     }
     lines.set(l.id, { riders: r, money: fares - run - st.upkeep });
   }
-  let fares = 0;
-  inc.perHour.forEach((v, p) => { fares += v * PERIOD_HOURS[p]; });
-  const run = runningADay(m) / 1e6;
-  const upkeep = m.upkeep.track + m.upkeep.stations + m.upkeep.buses;
   const coarse = new Map<string, boolean>(), rough = roughZones.peek();
   if (d) for (const [id, v] of d.cities) if ((v.railTripsPerDay ?? 0) > 0) coarse.set(id, rough.has(id));
-  return { est: dv && inc ? estimateBase(w, dv, inc, m) : null, trips: d ? railTrips(d) : 0, money: (fares - run - upkeep) * 1e6, lines, day: kind, version: dv?.version ?? -1, coarse };
+  return { est: dv && inc ? estimateBase(w, dv, inc, m) : null, trips: d ? railTrips(d) : 0, money: dayProfit(inc, m), lines, day: kind, version: dv?.version ?? -1, coarse };
 }
 
 /** Start watching for edits. Call once. */
