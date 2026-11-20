@@ -47,7 +47,8 @@ export function stageInHand(done: StageMs): Stage {
 
 /** T-884, T-1195: how long each stage of a game's last load took in this browser, by slot (the last
  * 12), with the network's stops: each stage's time while it was the one in hand */
-const LAST_WAIT = "anitabuilder-load-wait";
+// (T-3881: "-v2", the records of before it may hold a demand stage of seconds, which gave a cold load's solve a sliver of the bar)
+const LAST_WAIT = "anitabuilder-load-wait-v2";
 export interface WaitRecord { ms: number; stops: number; stages?: StageMs }
 export function lastWait(key: string): WaitRecord | null {
   try {

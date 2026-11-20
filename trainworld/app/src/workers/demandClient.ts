@@ -2389,7 +2389,10 @@ class DemandClient {
       // T-884: a game load's card goes with this; its wait is remembered for the game's next load (a new
       // game's under "new", for the next new game), T-1195: each stage's time while it was in hand
       const w = gameWait(), end = performance.now();
-      if (job.wait === w.seq && s) {
+      // T-3881: only a load that ran a solve of its own says how long one takes. One that ended with a cached result's
+      // card, or with zones that needed none, has a demand stage of seconds, and the next load of the game (a cold
+      // one) would give its solve that small a share of the bar and sit at the end of it for minutes.
+      if (job.wait === w.seq && s && job.solveRounds) {
         const net = job.netAt ?? job.since, data = Math.max(net, job.dataAt ?? end);
         rememberWait(w.key, { ms: Math.round(end - job.since), stops: stopCount(s.svc), stages: { game: Math.round(net - job.since), data: Math.round(data - net), demand: Math.round(end - data) } });
         const pace = job.pace ?? loadPace();
