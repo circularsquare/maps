@@ -12,9 +12,9 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    T-3835 loops (loopchk passed), T-1738 Myanmar/Laos/Timor-Leste (Bhamo left), T-3833 + T-3824 coast and ferries
    (07:30). Filed T-3837-T-3842. Review: review/rivers-e-london.png, review/coast-round-hk.png. Asked in chat,
    unanswered: T-3809 text ack, 400 km per leg, T-3835 text ack. Ask a-2026-11-20-1: T-2216 island design.
-1. HOLD app/ landings from ~07:40: iraniraq (Opus, T-3763, main tree, gates on 6393/6394) messages me when its last
-   gate and the join are done. Then: maperr's T-3842 (tree maperr, basemap.ts, DECISIONS in) lands ALONE with its own
-   smoke; drop the `browser` relax on mki and pgx in pipeline/world_plan.json after iraniraq's run.
+1. iraniraq (Opus, T-3763, main tree): gates done 09:20 (Iraq 38, Iran 84 rows); its JOIN owns data/packs and game
+   json until it says it ended: no 8800 rebuild (or only snapbuild-frozen), no smoke on main. T-3842 landed 09:22
+   (4642ad1e): after the join, 8800 rebuild + its own smoke; drop the `browser` relax on mki and pgx (world_plan.json).
    T-3803: editchk inconclusive (flaky t2766 on new code only); editdiag (Opus, editfirst tree, Vites 6150/6151,
    temp tree editbase) explains with ABBA counts, refusal, money split; its report says land / window+DECISIONS / fix.
 2. T-3395: 11-20 scan (pass 1, not done) found 0 new damage. Run `tools/ops/save_health.py` after the 11-21
