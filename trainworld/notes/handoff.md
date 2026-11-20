@@ -24,7 +24,8 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 
 ## Her words
 - 11-20 ~22:10 UTC: "lets freeze the set of proposed changes here for now, and test with these"; chart remake
-  after: no separate street tram, half the trip lengths, 2 more stop spacings at the high end, add HSR.
+  after: no separate street tram, half the trip lengths, 2 more stop spacings at the high end, add HSR; ~22:20:
+  a made-up uniform city run as a model, not Chicago in the sim.
 - 11-20 ~22:00 UTC: T-3888 option 4 (bonus 0 + A + 2+2 at stations below/above ground, trams too); ferry design OK
   + running cost -25%; T-2216 stage 2 go; bus reach 300 -> 600 "i do kinda want it" (if buses overshoot, make
   them slower); trams to 75.
