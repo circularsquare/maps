@@ -13,9 +13,12 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    passed on it, master pushed 06:25. T-3835 loops landed after loopchk passed (2c797d10, not on 8800 yet;
    text ack asked); T-3840 filed; smoke's missing rideTipPlanned context note added. Running, mine: coastround (Opus, T-3833 then T-3824, tree coastround, Vite 6145). Asked in chat: T-3809 text ack, 400 km per leg. Ask a-2026-11-20-1: T-2216
    island design (A/B/C, stage 2). Resources 11-20 05:25: all flags known.
-1. Running (old maps-60 [23a293]'s agents, adopted; reports via the inbox): editfirst (Opus, T-3803 option 1; a
-   fresh Sonnet checker before landing: edit path and money, the player's 15-20 stop-click burst), seasia
-   (Opus, T-1738 overnight; writes data/packs and game json; T-1738.md section 16 has PIDs and restart lines).
+1. Running (old maps-60 [23a293]'s agents, adopted; reports via the inbox): editfirst (Opus, T-3803 option 1, compacted 06:43, near done; a
+   fresh Sonnet checker before landing: edit path and money, the player's 15-20 stop-click burst),.
+   07:15: seasia done, T-1738 committed (eef718c9; Bhamo left), 8800 = 2ad4cfbd (loops + new countries; seasia's
+   smoke 29/29 on that state). Running, mine: iraniraq (Opus, T-3763, main tree; messages me before/after gates and
+   join: hold app/ landings then), maperr (Opus, T-3842 Myanmar map error, tree maperr, Vite 6148; needed before the
+   publish that ships Myanmar). Filed T-3841, T-3842; T-1376 retry noted.
 2. T-3395: 11-20 scan (pass 1, not done) found 0 new damage. Run `tools/ops/save_health.py` after the 11-21
    04:00 UTC scan; clean = close it (the two rev-1 games of ue83342ed78f8fc4c are old 11-19 damage).
 3. Up next: T-3763 (Iraq, Iran) once seasia reaches its join; T-3804 after editfirst; T-2216 stages once she picks; T-3838 after seasia; T-3836 (design for her).
