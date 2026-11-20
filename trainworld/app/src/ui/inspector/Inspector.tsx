@@ -28,7 +28,7 @@ export function Inspector() {
   if (!s) body = null; // nothing selected: the area stays, empty
   else if (s.kind === "line") body = <LineInspector key={s.line} id={s.line} />;
   else if (s.kind === "group") body = <GroupInspector key={s.group} group={s.group} />;
-  else if (s.kind === "busStop") body = <BusStopInspector key={s.lines.join()} lines={s.lines} stop={s.stop} />;
+  else if (s.kind === "busStop") body = <BusStopInspector stop={s.stop} at={s.at} />;
   else if (s.kind === "station") body = <StationInspector id={s.station} />;
   else if (s.kind === "train") body = <TrainInspector line={s.line} profile={s.profile} dep={s.dep} />;
   else if (s.kind === "track") body = <TrackInspector edge={s.edge} />;

@@ -494,13 +494,10 @@ export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, 
   if (ti >= 0) return { kind: "track", edge: n.track.edge[ti] };
   // a bus line has no strokes in the buffers (map/busLayer.ts); drawn under the track, so picked after it
   if (ov.renderer.busesShown) {
-    // T-2949: a stop that several bus lines share shows them together
-    const shared = ov.renderer.buses.linesStoppingAt(ov, px, py);
-    if (shared.lines.length > 1) {
-      const w = world.peek();
-      const ids = shared.lines.flatMap((num) => w?.save.lines.find((l) => l.num === num)?.id ?? []);
-      if (ids.length > 1) return { kind: "busStop", lines: ids, stop: String(shared.stop) };
-    }
+    // T-3890: a stop selects its own panel, a train station's stop the station (a street stop, which
+    // demand does not see, its line)
+    const stop = busStopHit(ov, px, py);
+    if (stop) return stop;
     const bus = ov.renderer.buses.lineAt(ov, px, py);
     if (bus >= 0) return { kind: "line", line: String(bus) };
   }
@@ -513,4 +510,16 @@ export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, 
   const member = floor && buildingMembersById.peek().get(floor.id)?.[0];
   if (member) return { kind: "station", station: member };
   return null;
+}
+
+/** T-3890: the bus stop drawn under the pointer (CSS px) as a selection: its panel, or its train
+ * station's for a station's stop; null on a street stop or where no stop is. */
+export function busStopHit(ov: Overlay, px: number, py: number): Selection {
+  const hit = ov.renderer.buses.stopAt(ov, px, py), w = world.peek();
+  if (!hit || hit.id === undefined || hit.id < 0 || !w) return null;
+  const l = w.save.lines.find((x) => x.num === hit.line);
+  const s = l && w.lineStats[l.id]?.bus?.stops.find((x) => x.id === hit.id);
+  if (!s) return null;
+  if (s.station >= 0) return w.save.stations.some((x) => x.id === String(s.station)) ? { kind: "station", station: String(s.station) } : null;
+  return { kind: "busStop", stop: String(s.id), at: [s.lng, s.lat] };
 }

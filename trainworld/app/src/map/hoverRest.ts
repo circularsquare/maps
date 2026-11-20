@@ -12,6 +12,7 @@ import type { Map as MlMap } from "maplibre-gl";
 import type { Selection, WorldView } from "../game/types";
 import { ask, display, selection, tool } from "../game/ui";
 import { world } from "../game/world";
+import { busPlaceOf } from "../game/busLinks";
 import { hoverHeld } from "../ui/blurHold";
 import { complexOf } from "../game/complexView";
 import { hoverAt, hoverDisc } from "./demandHover";
@@ -94,8 +95,11 @@ export function startRestList(map: MlMap, ov: Overlay, bubbleSelect: (x: number,
     if (s && !(hit?.kind === "station" && hit.station === s.id)) {
       out.push({ row: row(s.name, Object.assign(document.createElement("span"), { className: "rest-stn" })), select: () => ({ kind: "station", station: s.id }), hot: { stations: complexOf(s.id) } });
     }
+    // T-3890: a bus stop's tag names its place's bus lines already
+    const named = hit?.kind === "busStop" ? new Set(busPlaceOf(w, Number(hit.stop))?.stops.flatMap((s) => [String(s.line), s.lineId]) ?? []) : null;
     for (const id of linesAt(ov, px, py, selection.peek(), MAX_LINES)) {
       if (hit?.kind === "line" && hit.line === id && !marked) continue;
+      if (named?.has(id)) continue;
       const l = w.save.lines.find((x) => x.id === id) ?? w.save.lines.find((x) => String(x.num) === id);
       if (!l) continue;
       out.push({ row: row(l.name, lineBullet(l, true)), select: () => ({ kind: "line", line: id }), hot: { line: l.num } });

@@ -2278,7 +2278,8 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   Two stops of different bus lines within demand's 100 m station merge of each other (a station's stop
   from the station's place) are one demand station, so riders change there with no walk, whoever placed
   them (T-2992; further apart, up to 300 m, they change on foot as between any stations, `xfer_walk_m`);
-  the map draws such a pair the transfer's dashed line, and Manual editing snaps to the other line's stop.
+  the map draws such a pair, and a pair a walk apart, a connector (ui-map.md "Bus lines", T-3890), and
+  Manual editing snaps to the other line's stop.
 - **A line's own stop spacing** (T-2885; `BusRoute::spacing`, m; 0, the default, is the placing above).
   Set from 400 m to 100 km in the bus panel, where 400 m, the least, is the placing above (`spacing_from`
   stores it as 0, T-2947: the placing has a stop about every 400 m, so the panel reads it as that distance).

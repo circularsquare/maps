@@ -1,5 +1,5 @@
-// What is lit as hovered (T-730, T-741): the demand bubble, line, bare track edge and station
-// complex under the pointer, or, while the pointer is on an entry of the resting hover's list
+// What is lit as hovered (T-730, T-741): the demand bubble, line, bare track edge, station
+// complex and bus stop's place (T-3890) under the pointer, or, while the pointer is on an entry of the resting hover's list
 // (T-732), that entry's thing instead; and, while a bus route is drawn, the stations and bus lines it
 // will connect with (T-2993). The renderers read it as uniforms; a change only redraws.
 
@@ -20,6 +20,8 @@ export interface Hot {
   disc: DiscHit | null;
   /** T-2993: bus lines lit by the bus tool (numbers), the route drawn will change with them */
   buses: number[];
+  /** T-3890: bus stops lit (ids): the stops of the place under the pointer */
+  stops: number[];
 }
 
 /** T-936: CSS px added to every drawn bubble radius while a bubble is selected (the overlay's
@@ -27,7 +29,7 @@ export interface Hot {
 export const bubblePad = { px: 0 };
 export const SELECTED_PAD_PX = 0.5;
 
-const NONE: Hot = { line: -1, edge: -1, stations: [], disc: null, buses: [] };
+const NONE: Hot = { line: -1, edge: -1, stations: [], disc: null, buses: [], stops: [] };
 
 let pointerNet: Hot = NONE;
 let pointerDisc: DiscHit | null = null;
@@ -48,7 +50,8 @@ export function hot(): Hot {
 const same = (a: Hot, b: Hot) =>
   a.line === b.line && a.edge === b.edge && a.disc?.discs === b.disc?.discs && a.disc?.i === b.disc?.i
   && a.stations.length === b.stations.length && a.stations.every((s, k) => s === b.stations[k])
-  && a.buses.length === b.buses.length && a.buses.every((s, k) => s === b.buses[k]);
+  && a.buses.length === b.buses.length && a.buses.every((s, k) => s === b.buses[k])
+  && a.stops.length === b.stops.length && a.stops.every((s, k) => s === b.stops[k]);
 
 function update() {
   let next = list ?? { ...pointerNet, disc: pointerDisc };

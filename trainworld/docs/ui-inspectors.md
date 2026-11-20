@@ -712,6 +712,23 @@ Remove port. The Money tab shows boats owned, needed and spare once there are an
 fare row under High speed once a ferry line exists (a stepper by 0.05, 1.00x by default, a button back
 to 1.00x once set, saved with the game; a change solves demand again, T-2195). The Build tab's quote
 has rows for ports, new boats and the ferry route (free).
+
+**A bus stop's panel** (T-2949, T-3890; `ui/inspector/BusStopInspector.tsx`) opens on a click on any stop
+demand sees (an end, a station's, a crossing's or one between; a street stop selects its line), made of the
+station panel's parts. A train station's stop opens the station's panel instead. Its scope is the stop's
+place: the stops of other bus lines and the train stations within demand's 100 m merge, chained
+(`busPlaces` in `game/busLinks.ts`, as the kernel's `merge_stations`; never two stops of one line). Its title
+is the stop's name (the nearest station within 1 km, "Bus stop near X", else "Bus stop") with Show on the map; under it, grey, "2 lines stop
+here" when more than one line stops at the place, and "At X", a button opening the train station there, when
+one is. Blueprint while its line is planned. Lines: every bus and train line stopping at the place, each with
+its boardings there today, a click selecting the line; then the station panel's boardings today with the
+purpose split and its riders waiting now. Change on foot: the places and train stations within demand's 300 m
+change walk (`xfer_walk_m`) with a line this place has not, nearest first, at most 8, each its name, its
+lines' badges and the straight distance ("150 m"); a click opens it. Last, "Build a station here" picks the
+Station tool, opens the Build tab and moves the map to the stop; a station still goes only on track. The
+stop's place is lit on the map while selected (below), and the selection follows the stop when an edit
+places the stops again (the stop nearest where it was, within 60 m, the same id winning a tie, or the
+station's panel once it is a station's stop).
 ## Trains
 
 - **The train inspector's "On board"** [T-083, T-164, T-230]: this train's own riders on the stretch

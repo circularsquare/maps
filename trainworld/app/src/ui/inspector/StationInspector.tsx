@@ -178,7 +178,7 @@ function ComplexStations({ id, members, lines, byId, now }: { id: string; member
 
 /** A station's or complex's boardings in the past 24 hours (T-446), with the purpose
  * shares; `at`: the stops of each line counted. Its own component, re-rendered as counts move. */
-function BoardingsToday({ lines, at }: { lines: LineInput[]; at: (l: LineInput) => number[] }) {
+export function BoardingsToday({ lines, at }: { lines: LineInput[]; at: (l: LineInput) => number[] }) {
   const t = today.value;
   const known = lines.some((l) => t.has(l.id));
   const total = lines.reduce((a, l) => a + at(l).reduce((b, k) => b + (t.get(l.id)?.stops[k] ?? 0), 0), 0);
@@ -426,7 +426,7 @@ function StationDetails({ s, lines, props }: {
 
 /** Riders on the platforms now (T-164): per line and direction, from the boarding account, with
  * how many a full train left behind this hour and the longest wait for a train. */
-function Waiting({ node, lines }: { node: number; lines: LineInput[] }) {
+export function Waiting({ node, lines }: { node: number; lines: LineInput[] }) {
   void clock.minute.value; // re-render each game minute: the crowds change
   // and the moment a train leaves one of its platforms with whoever fitted (T-238)
   const [, bump] = useState(0);

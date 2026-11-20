@@ -24,6 +24,7 @@ import { live } from "./live";
 import { F_FADED, levelAtStart, type NetworkBuffers } from "./network";
 import { circleTip, stationTip, trainTip, upgradeTip, type TipLine } from "./networkTips";
 import { busLineTip, busStopTip } from "./busLayer";
+import { busPlaceOf } from "../game/busLinks";
 import type { Overlay } from "./overlay";
 import { pick, SLOP_PX, topSeg } from "./pick";
 import { hiddenRealmTip } from "./realmOverlay";
@@ -191,13 +192,15 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12, out?: {
   }
   // bus lines: a stop's tag, else the line's (map/busLayer.ts); the stops are drawn over the line
   const buses = ov.renderer.buses;
-  if (w && buses.any && (!hit || (hit.kind === "line" && buses.has(Number(hit.line))))) {
+  if (w && buses.any && (!hit || hit.kind === "busStop" || (hit.kind === "line" && buses.has(Number(hit.line))))) {
     const stop = buses.stopAt(ov, px, py);
     if (stop) {
-      if (out) out.hot = { line: stop.line };
+      // T-3890: a stop demand sees lights its place's stops; a street stop its line
+      const place = stop.id !== undefined && stop.id >= 0 ? busPlaceOf(w, stop.id) : null;
+      if (out) out.hot = place ? { stops: place.stops.map((s) => s.id) } : { line: stop.line };
       return busStopTip(w, stop.line, stop.end, stop.id, ov);
     }
-    if (hit) {
+    if (hit?.kind === "line") {
       const num = Number(hit.line);
       if (out) out.hot = { line: num };
       return busLineTip(w, num, busRows(ov, w, num, px, py, d.trackColour));

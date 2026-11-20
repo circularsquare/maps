@@ -1,7 +1,7 @@
 // T-2992: bus-to-bus transfers at a short distance. On a new game in New York, two bus lines crossing square
 // in Brooklyn, then the north-south one switched to Manual with one stop placed by hand at a few distances from
 // the crossing: each time the stops near the crossing, whether demand counts them one place (the transfers at
-// each), and the dashed transfer lines drawn. From the maps root, on a Vite of your own:
+// each), and the connectors drawn between them (T-3890). From the maps root, on a Vite of your own:
 //   node trainworld/checks/t2992-bus-transfers.mjs [dev url]
 // About 6 minutes (a demand solve per placing).
 import { ARTIFACTS, collectErrors, demandFinal, launchChrome } from './lib.mjs';
@@ -32,7 +32,7 @@ const near = (a, b) => page.evaluate(([a, b, C]) => {
     out[name] = bus.stops.map((s) => ({ id: s.id, kind: s.kind, d: Math.round(m([s.lng, s.lat], C)), xfer: Math.round(v.stations.get(String(s.id))?.transfers ?? -1), board: Math.round(v.stations.get(String(s.id))?.boardings ?? -1) })).filter((s) => s.d <= 300);
     out[name + 'riders'] = Math.round(v.lines.get(l.id)?.ridersPerDay ?? 0);
   }
-  out.drawn = tw.renderer.buses.transfers;
+  out.drawn = tw.renderer.buses.links;
   return out;
 }, [a, b, C]);
 const out = { when: new Date().toISOString(), runs: [] };
@@ -75,7 +75,7 @@ try {
   }
   for (const x of out.runs.slice(1)) {
     const b = x.B.find((s) => s.kind === 2), m = b ? b.d : -1;
-    check(m >= 0 && (m <= 100) === (x.drawn === 1), `a hand stop ${m} m from A's crossing stop: ${m <= 100 ? 'a transfer line' : 'none'}`, `drawn ${x.drawn}`);
+    check(m >= 0 && (m <= 100) === (x.drawn === 1), `a hand stop ${m} m from A's crossing stop: ${m <= 100 ? 'a connector' : 'no connector at one place'}`, `drawn ${x.drawn}`);
   }
   check(out.runs[0].drawn === 0, 'two Auto stops on one spot draw no line', `drawn ${out.runs[0].drawn}`);
 

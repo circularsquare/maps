@@ -386,8 +386,9 @@ export type Selection =
   | { kind: "line"; line: LineId }
   /** a line group's view (T-1791): its group number */
   | { kind: "group"; group: number }
-  /** T-2949: a stop that two or more bus lines share: their ids, and the id of one of its stops (its name) */
-  | { kind: "busStop"; lines: LineId[]; stop: string }
+  /** T-2949, T-3890: a bus stop that is no train station's: its id and where it is drawn (stops are placed
+   * again on every edit, so the panel finds it again by place) */
+  | { kind: "busStop"; stop: string; at: [number, number] }
   | { kind: "station"; station: StationId }
   | { kind: "track"; edge: EdgeId }
   | { kind: "junction"; node: NodeId }

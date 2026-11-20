@@ -183,6 +183,8 @@ export interface DrawOptions {
   hotStations?: number[];
   /** T-2993: bus lines lit as hovered (numbers), the bus tool's route will change with them */
   hotBuses?: number[];
+  /** T-3890: bus stops lit (ids), the hovered and the selected stop's places */
+  hotStops?: number[];
   /** T-1248: lines, track and trains drawn this many times their width; absent: 1 */
   lineScale?: number;
   /** T-1567: every train one pill, white with a rim of its line's colour (the start menu's logo) */
@@ -1743,7 +1745,7 @@ export class NetworkRenderer {
     if (!view) this.busesShown = buses;
     const stationsOff = opt.showStations === false;
     this.stationsOff = stationsOff;
-    const redraw = !cache || cache.stale(vp[0], vp[1], [zoom, dpr, ...lc.m, ...lc.globe, ...lc.plane, ...lc.at, k, opt.byLevel ? 1 : 0, opt.bySpeed ? 1 : 0, opt.byProfit ? 1 : 0, opt.selLine, (opt.selLines ?? []).reduce((h, v) => (h * 31 + v + 1) | 0, 7), opt.selEdge, opt.hotLine ?? -1, opt.hotEdge ?? -1, (opt.hotBuses ?? []).reduce((h, v) => (h * 31 + v + 1) | 0, 7), this.hide[0], this.hide[1], opt.dimOthers ?? 1, opt.flatMarks !== false ? 1 : 0, opt.rampMarks !== false ? 1 : 0, buses ? this.buses.version : -1, through ? 1 : 0, this.uploads, this.strokeCull ? 1 : 0, this.strokeLod ? 1 : 0, this.strokeGather ? 1 : 0, this.lineBands ? 1 : 0, stationsOff ? 1 : 0, vis.v], shadeColours());
+    const redraw = !cache || cache.stale(vp[0], vp[1], [zoom, dpr, ...lc.m, ...lc.globe, ...lc.plane, ...lc.at, k, opt.byLevel ? 1 : 0, opt.bySpeed ? 1 : 0, opt.byProfit ? 1 : 0, opt.selLine, (opt.selLines ?? []).reduce((h, v) => (h * 31 + v + 1) | 0, 7), opt.selEdge, opt.hotLine ?? -1, opt.hotEdge ?? -1, (opt.hotBuses ?? []).reduce((h, v) => (h * 31 + v + 1) | 0, 7), (opt.hotStops ?? []).reduce((h, v) => (h * 31 + v + 1) | 0, 7),this.hide[0], this.hide[1], opt.dimOthers ?? 1, opt.flatMarks !== false ? 1 : 0, opt.rampMarks !== false ? 1 : 0, buses ? this.buses.version : -1, through ? 1 : 0, this.uploads, this.strokeCull ? 1 : 0, this.strokeLod ? 1 : 0, this.strokeGather ? 1 : 0, this.lineBands ? 1 : 0, stationsOff ? 1 : 0, vis.v], shadeColours());
     this.quiet = true;
     if (cache && redraw) cache.begin(0);
     // the complexes' car parks under everything else (T-1528)
@@ -1752,7 +1754,7 @@ export class NetworkRenderer {
     // bus lines have no strokes: their own pass, under the track (T-1464, busLayer.ts)
     if (redraw && buses) {
       const sh = shadeColours();
-      this.buses.draw(lc, a, vp, zoom, dpr, { wLine, casing, wSel, rail: BP_RAIL_RGB, railShare: BP_RAIL_SHARE, sel: opt.selLine, hot: opt.hotLine ?? -1, lit: opt.hotBuses ?? [], dim: opt.dimOthers ?? 1, shades: sh, fill: rgbf(sh.casing), casingRgb: rgbf(sh.casing),
+      this.buses.draw(lc, a, vp, zoom, dpr, { wLine, casing, wSel, rail: BP_RAIL_RGB, railShare: BP_RAIL_SHARE, sel: opt.selLine, hot: opt.hotLine ?? -1, lit: opt.hotBuses ?? [], litStops: opt.hotStops ?? [], stationInk: rgbf(sh.stationInk),dim: opt.dimOthers ?? 1, shades: sh, fill: rgbf(sh.casing), casingRgb: rgbf(sh.casing),
         paint: opt.byLevel ? "level" : opt.bySpeed ? "speed" : opt.byProfit ? "profit" : null, phases: n.phases, meta: n.meta, trackRgb: TRACK_RGB });
     }
     gl.useProgram(this.strokeProg);

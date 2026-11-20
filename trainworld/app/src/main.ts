@@ -66,6 +66,7 @@ import { touchInput, watchInput } from "./map/touch";
 import { TouchBar } from "./ui/TouchBar";
 import { StopMarkers } from "./map/stopMarkers";
 import { BusStopMarkers } from "./map/busStops";
+import { busPlaceOf } from "./game/busLinks";
 import { EdgeEditor } from "./map/edgeEdit";
 import { BlueprintBox } from "./map/blueprintBox";
 import { FareZoneTool } from "./map/fareZoneTool";
@@ -291,6 +292,8 @@ const overlay = new Overlay(map, renderer, () => {
     hotEdge: hot().edge,
     hotStations: n ? hot().stations.map((id) => stationIndexOf(n, id)) : [],
     hotBuses: hot().buses,
+    // T-3890: the hovered stop's place, and the selected stop's
+    hotStops: [...hot().stops, ...(sel?.kind === "busStop" && world.peek() ? busPlaceOf(world.peek()!, Number(sel.stop))?.stops.map((s) => s.id) ?? [] : [])],
     lineScale: d.lineWidth, // T-1248
   };
 });
@@ -436,7 +439,7 @@ const buildAbove = (x: number, y: number) => isBuildTool(tool.peek()) && (tools.
 // T-1515 (Anita): with the select tool a line, bus line, station or train within its own reach is
 // picked over a demand bubble drawn above it, for clicks and hovers alike; a bubble keeps its wider
 // reach (MIN_PICK_PX, bubblePad) only where none of those is near
-const NET_FIRST = new Set(["line", "station", "train"]);
+const NET_FIRST = new Set(["line", "station", "train", "busStop"]);
 let netFirstAt = { x: NaN, y: NaN, t: 0, hit: false };
 const netFirst = (x: number, y: number) => {
   if (tool.peek() !== "select" || linking.peek() !== null) return false;
