@@ -803,6 +803,9 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Ports, industrial estates and airports with no residents stay dark (Tuas and Jurong were fixed by hand 11-13). Half done: units keep outlines with 0.2 km2 of built surface.
   - Goal: A free unit under the floor sharing half its land border with one metro joins it, after a worldwide count.
   - Other: notes/T-3287.md
+- T-3834 [P2] {L:small-fixes} A copied line leaves most periods empty (taking, 2026-11-20, agent copyline)
+  - Context: Your pad, 11-20: "if i copy a line, and am using 4 demand intervals, it uses the default for midday but leaves the other ones empty (lets just have it use the default for all of them)".
+  - Goal: A copied line gets the default service in every period the game is using.
 - T-3832 [P3] {L:small-fixes} Lines gear part-ticked box shows a minus
   - Context: The schematic's cities list (T-3826) marks a part-ticked region with a minus; the Lines tab gear's part-filled box has none. Same look in both.
 - T-3828 [P3] {L:timetables} Pinch zoom for the timetable on touch
