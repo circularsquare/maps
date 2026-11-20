@@ -29,12 +29,10 @@
 //   fans     demand has no ferry fans
 //   alone    stations no line stops at are in demand's network
 //   firm     an edit's solve is not run to its end when a newer network arrives
-//   heldLocal  an edit made during a quick local solve waits for that solve's whole final (before T-3616)
 //   rough    no rough solve of the zone in view while the packs open
 //   selected the zone the city view shows waits its turn in the queues, and its figures wait for its cluster's final
 //   viewRound  the zone in view gets no figures from each round of a cluster solved ahead
 //   lengths0 the city view's trip lengths are asked of the shown round, not of round 0 ahead of it
-//   regional the bubbles count the zone's local trips alone, none with other places (T-3503)
 //
 // Loading and memory:
 //   close    packs no longer needed never close
@@ -47,13 +45,7 @@
 //   focus    no focus pool: the zone in view is solved in the main pool with the rest of a load
 //   focusAhead  the zone in view's cluster goes first even when the focus pool solves it, so the city view's zone waits
 //   focusEnd the focus pool's workers stay until the load's final
-//   cacheFocus  a loaded game showing its cached demand result ends the focus pool, so the zone in view's questions wait for the re-solve
 //   focusAux the focus pool has an aux worker of its own
-//   refineAside  the zone in view going fine while a whole solve runs waits for that solve's final and the local refine after
-//   keepFigures a rough solve's and a just-opened zone's estimates replace every line's final figures (T-2793)
-//   settledHold a pending line shows and is paid its half-done answer's riders and fares, not its last settled ones (T-2773)
-//   strays   a zone opened in every worker before a loading game's reach was known stays for the load's solve (T-2579)
-//   allSums  each round of a load's solve pushes every zone's bubble sums, not only the zones on screen (T-2596)
 //   `?focusWorkers=n` sets the focus pool's solving workers (default FOCUS_WORKERS).
 //
 // Drawing (each also a field on the renderer, to switch live):
@@ -65,6 +57,7 @@
 //   follow   every train on its own timetable, through the trains ahead (`renderer.follow`)
 //   crossWait  trains drawn through each other at flat crossings and crossing junction moves (`renderer.guard.crossings`)
 //   bays     every train stands at the end of its arrival track, one place a line end (before T-2980; `renderer.bays`)
+//   fareHold a line's figures from a result that did not solve the regional market replace its shown ones whatever the fares (T-3303)
 //   singleWait  trains of opposite directions drawn through each other on single track (T-3202; `renderer.guard.singles`)
 //   muteThin with a line picked, the other lines see-through at 55%, not thin and faded
 //   bandGap  lines side by side touching, not a pixel apart
@@ -76,7 +69,6 @@
 //
 // The zoomed-out map (T-2748):
 //   overviewCache  every zoom step makes the overview's points, their hover text and their spacing again
-//   realZoom   the real network's lines from zoom 4, as before T-2748
 //
 // The network diagram:
 //   carryWasm  the carry on the rubber sheet solved in JavaScript, not WASM (the same drawing, slower; T-2589)
@@ -85,6 +77,6 @@
 const q = new URLSearchParams(location.search);
 const off = new Set((q.get("perfOff") ?? "").split(",").filter(Boolean));
 
-export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "clusters" | "periods" | "split" | "reach" | "chunks" | "farChunks" | "close" | "marks" | "fans" | "zoneZoom" | "moving" | "cap" | "grow" | "rough" | "cacheAhead" | "cacheCard" | "estimate" | "splitAhead" | "strokeCache" | "strokeCull" | "strokeLod" | "strokeGather" | "bands" | "follow" | "crossWait" | "singleWait" | "bays" | "stillThrottle" | "share" | "noise" | "localKeep" | "localSkip" | "firm" | "heldLocal" | "alone" | "allSums" | "focus" | "muteThin" | "bandsSmooth" | "bandsOrder" | "bandsPlace" | "bandsHold" | "bandsAlign" | "bandGap" | "roads" | "selected" | "viewRound" | "lengths0" | "regional" | "focusAhead" | "focusEnd" | "refineAside" | "focusAux" | "cacheFocus" | "strays" | "keepFigures" | "settledHold" | "carryWasm" | "overviewCache" | "realZoom" | "fareHold" | "msaa") => off.has(part);
+export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "clusters" | "periods" | "split" | "reach" | "chunks" | "farChunks" | "close" | "marks" | "fans" | "zoneZoom" | "moving" | "cap" | "grow" | "rough" | "cacheAhead" | "cacheCard" | "estimate" | "splitAhead" | "strokeCache" | "strokeCull" | "strokeLod" | "strokeGather" | "bands" | "follow" | "crossWait" | "singleWait" | "bays" | "stillThrottle" | "share" | "noise" | "firm" | "alone" | "focus" | "muteThin" | "bandsSmooth" | "bandsOrder" | "bandsPlace" | "bandsHold" | "bandsAlign" | "bandGap" | "roads" | "selected" | "viewRound" | "lengths0" | "focusAhead" | "focusEnd" | "focusAux" | "carryWasm" | "overviewCache" | "fareHold" | "msaa") => off.has(part);
 /** how lines side by side are worked out (map/lineBands.ts `setBandMode`) */
 export const bandTry = (): string => (perfOff("bandsSmooth") ? "" : (perfOff("bandsOrder") ? "smooth" : "smooth,order") + (perfOff("bandsPlace") ? "" : ",fit,snap") + (perfOff("bandsHold") ? "" : ",hold") + (perfOff("bandsAlign") ? "" : ",align"));

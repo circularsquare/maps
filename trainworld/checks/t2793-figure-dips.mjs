@@ -1,7 +1,7 @@
 // T-2793: between an edit and its final, does any line's shown riders, fares or booked money fall on a temporary answer?
 //   TW_CORES=3 node trainworld/checks/t2793-figure-dips.mjs <save> [url] [edits]     (from the maps root)
-// TW_TAG names the output files; TW_WORKERS sets the demand workers (3 by default, a 16-thread desktop); TW_PERFOFF=keepFigures
-// runs the old behaviour for a before/after comparison of the demand route.
+// TW_TAG names the output files; TW_WORKERS sets the demand workers (3 by default, a 16-thread desktop); TW_PERFOFF names ?perfOff switches
+// (none switches the demand route of T-2793 back off now).
 // edits: comma list of headwayFast, headwayLong, trains, dropStop, headwayCity, twoEdits, zone, openZone, burst, burstView (default the first seven and openZone).
 // Every 250 ms, and on each demand publish, each running line's figures: riders as the Lines tab shows them, fares a
 // day, the riders a day in the demand view, and the fare income posted to the clock. Prints per edit the lines that fell

@@ -141,8 +141,6 @@ export type ToDemand =
   | { kind: "init"; packs: { id: CityId; header: string; bin: ArrayBuffer }[]; intercity?: MarketPack[]; rows?: MarketRows; periods: number[]; aux?: boolean;
       /** T-173: open a small synthetic everyday layer first (`everyday_warm_up`), before `ready` */
       warmEveryday?: boolean;
-      /** T-2596: every zone's bubble sums pushed each round, not only the zones on screen (`?perfOff=allSums`) */
-      allSums?: boolean;
       /** T-2802: the least the WASM memory grows by, bytes (`heapStep` in deviceMemory.ts) */
       heapStep?: number;
       /** T-325, the aux worker: each solving worker's periods, in worker order, so a zone it holds
@@ -206,12 +204,6 @@ export type ToDemand =
       freshParts?: boolean;
       /** T-1862 `?perfOff=noise`: a cluster keeps its result only on exactly the network it solved */
       exactKeep?: boolean;
-      /** T-3512 `?perfOff=localKeep`: an edit's local solve solves every period of the touched
-       * populations, the unchanged ones too, and the whole solve after it solves them again */
-      localAll?: boolean;
-      /** T-3512 `?perfOff=localSkip`: an edit's touched populations are solved locally first however
-       * much of the cluster's work they are */
-      alwaysLocal?: boolean;
       /** T-3512, dev `?localShare=a,b`: solving worker i's own `LOCAL_SHARE_MAX`, so two workers can be
        * made to disagree (one solving locally, one going straight to the whole solve) */
       localShare?: number[];

@@ -1016,7 +1016,7 @@ class DemandClient {
     };
     w.onmessageerror = () => { const j = at(); if (j >= 0) this.fail(`worker ${j}: a message could not be read`); }; // i18n-ignore
     // T-325: the aux worker is told every solving worker's periods, for the zones it holds bare
-    const msg: ToDemand = { kind: "init", packs: [], periods: this.periodsOf[i], ...(i < n ? this.marketsMsg(i) : {}), aux: i === n, warmEveryday, ...(perfOff("allSums") ? { allSums: true } : {}), ...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}), heapStep: heapStep() };
+    const msg: ToDemand = { kind: "init", packs: [], periods: this.periodsOf[i], ...(i < n ? this.marketsMsg(i) : {}), aux: i === n, warmEveryday, ...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}), heapStep: heapStep() };
     w.postMessage(msg);
     // T-3781, dev server only: `?debugStall=i` has worker i's first solve wait forever (a replacement does not)
     if (import.meta.env.DEV && Number(new URLSearchParams(location.search).get("debugStall") ?? -1) === i && !this.stallSent) {
@@ -2107,7 +2107,7 @@ class DemandClient {
    */
   private unknownReach = new Set<CityId>();
   private closeStrays() {
-    if (!this.hold || !this.unknownReach.size || perfOff("strays")) return;
+    if (!this.hold || !this.unknownReach.size) return;
     const reached = this.knownReach();
     if (!reached) return;
     for (const id of this.unknownReach) if (reached.has(id) || !this.fetching.has(id)) this.unknownReach.delete(id);
@@ -2130,13 +2130,13 @@ class DemandClient {
     if (!s || s.barrier !== false || s.rough || s.published >= ROUNDS || perfOff("firm")) return false;
     if (s.localShownAt === undefined || s.wholeSent) return true;
     if (s.heldFrom === undefined || s.heldFrom > s.localShownAt) return false;
-    return perfOff("heldLocal") || s.localShownAt - (s.chainFrom ?? s.sentAt) > LOCAL_CHAIN_MS;
+    return s.localShownAt - (s.chainFrom ?? s.sentAt) > LOCAL_CHAIN_MS;
   }
 
   /** T-3616: a network held now will likely go at `s`'s local result (`firm`): its local stage runs, sent at most
    * `HOLD_QUIET_MS` ago, and within the chain's `LOCAL_CHAIN_MS` */
   private quickHold(s: Solve): boolean {
-    if (perfOff("heldLocal") || s.wholeSent || s.localShownAt !== undefined) return false;
+    if (s.wholeSent || s.localShownAt !== undefined) return false;
     // (no worker solves locally: it is solved whole at once; the plans come within a second or so)
     const plans = Array.from({ length: this.computeN }, (_, k) => s.localPlans?.[k]);
     if (plans.every((v) => v === 0)) return false;
@@ -2165,7 +2165,7 @@ class DemandClient {
     this.pushed.clear();
     const now = performance.now();
     // T-2793: its figures are this zone's riders alone: over a final result they are for the zone's own view, no line's
-    const onFinal = !!demandView.peek()?.final && !perfOff("keepFigures");
+    const onFinal = !!demandView.peek()?.final;
     this.cur = { version, svc, layout, results: PERIODS.map(() => null), byRound: Array.from({ length: ROUNDS + 1 }, () => PERIODS.map(() => null)), published: -1, arrivedAt: now, sentAt: now, periodMs: [], setupMs: [], memBytes: [], cities: [id], markets: [], coarse: this.coarseOf([id]), showEstimates: !shown && !onFinal, newZones: !shown && onFinal, rough: true };
     this.log.push(this.cur);
     if (this.log.length > 50) this.log.shift();
@@ -2650,8 +2650,7 @@ class DemandClient {
     this.cachedAhead = stored.ahead?.save ?? null;
     if (this.cur?.svc === svc) this.cur.showEstimates = false;
     // T-2045: every zone has its final figures; T-2533: the focus pool stays for the zone in view's questions
-    if (perfOff("cacheFocus")) this.endFocus();
-    else this.hideFocus();
+    this.hideFocus();
     // T-1533: a rough solve under way gives way, so the packs it holds back open at once (a rough
     // solve of no zone, without the barrier, ends the worker's at its next look)
     if (this.cur?.rough) {
@@ -3383,7 +3382,7 @@ class DemandClient {
    */
   private refineAside() {
     const id = activeCity.peek(), s = this.cur, svc = this.latest();
-    if (perfOff("refineAside") || this.lod !== "auto" || this.failed || this.hold || gameLoadArmed() || (this.fpool?.alive && !this.frefine)) return;
+    if (this.lod !== "auto" || this.failed || this.hold || gameLoadArmed() || (this.fpool?.alive && !this.frefine)) return;
     if (!s || !svc || !this.firm() || !this.solveNeed(svc)?.has(id)) return;
     // the zone gone fine, which the solve in hand covers coarse; or an edit of the zone held behind that solve
     const relevel = this.levelPosted.has(id) && this.levelFor(id) === LOD_FINE && s.cities.includes(id) && this.coarseIn(s, id);
@@ -3429,7 +3428,7 @@ class DemandClient {
   /** A game is loading: start the focus pool (its WASM starts while the save's network is worked out). */
   private startFocus() {
     // (none on a small device: its workers would be a second copy of the zone in the tab's memory, T-2122)
-    if (this.fpool || perfOff("focus") || smallDevice() || addressLimited() || this.failed || (this.cacheShown() && perfOff("cacheFocus"))) return;
+    if (this.fpool || perfOff("focus") || smallDevice() || addressLimited() || this.failed) return;
     // (at most FOCUS_WORKERS solving workers: each worker is memory of its own, T-2045's follow-up)
     const n = Math.max(1, Math.min(this.computeN, Number(new URLSearchParams(location.search).get("focusWorkers")) || FOCUS_WORKERS));
     this.fpool = new FocusPool(n, Array.from({ length: n }, (_, i) => periodsOfWorker(i, n)), {
@@ -3459,7 +3458,7 @@ class DemandClient {
    * the workers' solve with no round of it; `fsent` is woken when a focus solve is sent or the pool ends */
   private focusComing(): boolean {
     const id = activeCity.peek(), svc = this.latest(), s = this.cur;
-    if (!this.fpool?.alive || !this.cacheShown() || perfOff("cacheFocus") || this.focusAsked(id) || !svc || !this.solveNeed(svc)?.has(id)) return false;
+    if (!this.fpool?.alive || !this.cacheShown() || this.focusAsked(id) || !svc || !this.solveNeed(svc)?.has(id)) return false;
     const a = s?.ahead?.cities.includes(id) ? s.clusterRes?.get(s.ahead.key)?.published ?? -1 : -1;
     return !(s && s.svc === svc && Math.max(s.published, a) >= 0);
   }
@@ -3597,7 +3596,7 @@ class DemandClient {
       s.published = r;
       // (T-2533: with a cached result shown its round 0 answers the zone's questions; the rounds after would only take
       // the cores from the main pool's solve)
-      if (r < ROUNDS && !(this.cacheShown() && !perfOff("cacheFocus"))) this.fpool?.go(s.version, r + 1);
+      if (r < ROUNDS && !this.cacheShown()) this.fpool?.go(s.version, r + 1);
       this.publishFocus(s, r);
       if (r > 0) s.byRound[r - 1] = [];
     }
@@ -3612,7 +3611,7 @@ class DemandClient {
     this.inOrder(async () => {
       const w = this.cur;
       // T-2533: with a cached result shown its rounds answer questions only (`focusAsked`)
-      if (this.cacheShown() && !perfOff("cacheFocus")) {
+      if (this.cacheShown()) {
         const l = this.flog.find((x) => x.version === s.version);
         if (l) l.roundAt[round] = performance.now();
         return void this.retireFocus();
@@ -3651,9 +3650,8 @@ class DemandClient {
       if (w && w.svc === s.svc && w.version > s.version && (this.cityVersion.get(id) === w.version || w.published >= ROUNDS)) return void this.endFocus();
       // (T-2793: only lines the shown figures have none for: on any other, its stops changed or not, its riders from
       // this zone alone would read far below the shown ones)
-      const dv = demandView.peek(), base = perfOff("keepFigures") ? this.log.find((x) => x.version === dv?.version) : undefined;
-      const had = new Map((base?.layout ?? []).map((l) => [l.id, l.stops.join()]));
-      const lines = (s.onlyLines ? Array.from(s.onlyLines, (l) => s.layout[l]).filter(Boolean) : s.layout).filter((l) => (perfOff("keepFigures") ? base?.svc !== s.svc && had.get(l.id) !== l.stops.join() : !dv?.lines.has(l.id)));
+      const dv = demandView.peek();
+      const lines = (s.onlyLines ? Array.from(s.onlyLines, (l) => s.layout[l]).filter(Boolean) : s.layout).filter((l) => !dv?.lines.has(l.id));
       const days = await this.daysOf(s, lines, round, false, res, true);
       if (this.frefine !== id) return;
       const ests = lines.length ? days : days.map((d) => (d.view ? { ...d, view: { ...d.view, lines: new Map(), stations: new Map(), purposes: new Map() } } : d));
@@ -3697,22 +3695,21 @@ class DemandClient {
    * were solved on (`lineLoadsFor` carries them). Stations likewise when `aside` (a zone refined aside, T-2605); the
    * load's focus zones keep their stations' figures. */
   private withZone(days: DayDemand[], ests: DayDemand[], zones: CityId[], market: boolean, ids: Set<string>, aside = false): DayDemand[] {
-    const keep = perfOff("keepFigures");
     return days.map((d, k) => {
       if (!d.view) return d;
       const est = ests[k];
       const lines = new Map(d.view.lines), stations = new Map(d.view.stations);
       for (const id of lines.keys()) if (!ids.has(id)) lines.delete(id);
-      for (const [id, l] of est.view!.lines) if (keep || !lines.has(id)) lines.set(id, l);
-      for (const [id, v] of est.view!.stations) if (keep || !aside || !stations.has(id)) stations.set(id, v);
+      for (const [id, l] of est.view!.lines) if (!lines.has(id)) lines.set(id, l);
+      for (const [id, v] of est.view!.stations) if (!aside || !stations.has(id)) stations.set(id, v);
       let purposes = d.view.purposes;
       if (est.view!.purposes) {
         purposes = new Map(purposes);
         for (const [key, p] of est.view!.purposes) {
           const old = purposes.get(key);
           const pl = new Map(old?.lines), ps = new Map(old?.stations);
-          for (const [id, l] of p.lines) if (keep || !pl.has(id)) pl.set(id, l);
-          for (const [id, v] of p.stations) if (keep || !aside || !ps.has(id)) ps.set(id, v);
+          for (const [id, l] of p.lines) if (!pl.has(id)) pl.set(id, l);
+          for (const [id, v] of p.stations) if (!aside || !ps.has(id)) ps.set(id, v);
           purposes.set(key, { lines: pl, stations: ps });
         }
       }
@@ -4133,7 +4130,7 @@ class DemandClient {
     // (`newZones`) takes the rounds' figures for itself alone, and every line keeps its final figures.
     const shown = cityDemandViews.peek();
     const unshown = cities.some((id) => !shown.has(id));
-    const showEstimates = !demandView.peek()?.final || (!!this.hold && !this.cacheShown()) || (unshown && perfOff("keepFigures"));
+    const showEstimates = !demandView.peek()?.final || (!!this.hold && !this.cacheShown());
     const newZones = !showEstimates && unshown;
     // (T-2560: a cached result's network solved again after its card went, as under the card)
     const barrier = showEstimates || newZones || !!this.hold || svc === this.cacheSolve;
@@ -4160,7 +4157,7 @@ class DemandClient {
     // cluster goes ahead of it
     const focused = barrier && next.length > 0 && !perfOff("focusAhead") && this.focusSolves(svc, activeCity.peek());
     if (focused) this.cur.focused = true;
-    const msg: ToDemand = { kind: "solve", version, net, ids, rounds: ROUNDS, barrier, first: activeCity.peek(), ...(next.length ? { next } : {}), ...(focused ? { focused } : {}), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("farChunks") ? { nearChunks: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), ...(perfOff("estimate") ? { exact0: true } : {}), ...(this.freshParts ? { freshParts: true } : {}), ...(perfOff("noise") ? { exactKeep: true } : {}), ...(perfOff("localKeep") ? { localAll: true } : {}), ...(perfOff("localSkip") ? { alwaysLocal: true } : {}), ...(LOCAL_SHARE ? { localShare: LOCAL_SHARE } : {}) };
+    const msg: ToDemand = { kind: "solve", version, net, ids, rounds: ROUNDS, barrier, first: activeCity.peek(), ...(next.length ? { next } : {}), ...(focused ? { focused } : {}), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("farChunks") ? { nearChunks: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), ...(perfOff("estimate") ? { exact0: true } : {}), ...(this.freshParts ? { freshParts: true } : {}), ...(perfOff("noise") ? { exactKeep: true } : {}), ...(LOCAL_SHARE ? { localShare: LOCAL_SHARE } : {}) };
     this.freshParts = false;
     this.postSolve(msg);
     if (barrier) this.askTurn();
@@ -4452,7 +4449,7 @@ class DemandClient {
    * terminals by the Airport purpose's legs. */
   private async withRegional(modes: Float32Array, city: CityId, version: number, other: CityId | undefined, t: Target, everydayToo: boolean): Promise<void> {
     await this.regionalInto(modes, city, version, other, t, everydayToo ? REG_ALL : REG_COMMUTES);
-    if (!everydayToo || AIRPORT_KIND < 0 || perfOff("regional")) return;
+    if (!everydayToo || AIRPORT_KIND < 0) return;
     const [air, cells] = await Promise.all([this.purposeModes("airport", other), this.cityCells(other)]);
     if (!air || !cells) return;
     const w = concat([air.homeRail, air.homeWalk, air.homeDrive, air.workRail, air.workWalk, air.workDrive, air.homeNone, air.workNone]);
@@ -4487,7 +4484,6 @@ class DemandClient {
    * rest (car and plane) driving.
    */
   private async regionalInto(modes: Float32Array, city: CityId, version: number, other: CityId | undefined, t: Target | undefined, kinds: number): Promise<void> {
-    if (perfOff("regional")) return;
     const n = modes.length / 8;
     let z = await this.zoneSq(city, version, other);
     if (z && z.sq.length !== n) {
@@ -5293,8 +5289,8 @@ class DemandClient {
       // (T-2793: a rough solve's figures are one zone's riders, only for a line that has no figures yet; a cluster's round
       // has only its own lines' (T-1533), so a line outside would read none; any other line with its shown figures carried
       // onto its new stops keeps them until the final)
-      const inRes = cluster && !perfOff("keepFigures") ? new Set(Array.from(cluster, (k) => s.layout[k]?.id)) : null;
-      const fresh = s.layout.filter((l) => had.get(l.id) !== l.stops.join(",") && (!inRes || inRes.has(l.id)) && (perfOff("keepFigures") || !shown.lines.has(l.id) || (!s.rough && !lineLoadsFor(shown, l.id, "all", l.stops))));
+      const inRes = cluster ? new Set(Array.from(cluster, (k) => s.layout[k]?.id)) : null;
+      const fresh = s.layout.filter((l) => had.get(l.id) !== l.stops.join(",") && (!inRes || inRes.has(l.id)) && (!shown.lines.has(l.id) || (!s.rough && !lineLoadsFor(shown, l.id, "all", l.stops))));
       if (!fresh.length) return;
       s.earlyAt = performance.now();
       s.earlyLines = fresh.map((l) => l.id);

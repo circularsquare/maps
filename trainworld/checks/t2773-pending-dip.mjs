@@ -9,7 +9,7 @@
 // The clock runs a while, then stops for the edits, so the riders counted over the past 24 hours move only with the
 // answers; TW_CLOCK=run keeps it running at 4 game minutes a second (those counts then drift several percent as a
 // weekend comes into the window). TW_MARGIN: the dip allowed (default 5%, 10% with the clock running).
-// TW_PERFOFF=settledHold runs without the hold, keepFigures with the demand route before T-2793 (the before).
+// TW_PERFOFF names ?perfOff switches still in perfFlags.ts.
 // TW_TAG names the output files (artifacts/trainworld/riderdip/<tag>-<edit>.json).
 // Every 250 ms each running line's riders and fares a day as shown, and the fare income posted to the clock for it.
 // Fails (exit 1) when a line falls more than the margin below the smaller of its figure before the edit and after the

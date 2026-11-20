@@ -30,13 +30,12 @@ import { firstSymbolId } from "./basemap";
 import { styleUp } from "./styleReady";
 import { ringBox } from "../game/rings";
 import { regionsJson } from "./regionsJson";
-import { perfOff } from "../perfFlags";
 import { REAL_STATIONS_LAYER } from "./realStations";
 
 const OSM_ATTRIBUTION = '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a> (ODbL)';
 /** below this the view spans too many regions and the lines are too small to follow; at 4 a view of
  * Europe drew 41 regions' tiles, most of each frame's cost on the zoomed-out map (T-2748) */
-const MIN_ZOOM = perfOff("realZoom") ? 4 : 6;
+const MIN_ZOOM = 6;
 /** the zoom the line widths' stops count from */
 const WIDTH_ZOOM = 4;
 /** regions added in one pass, nearest the middle of the view first */

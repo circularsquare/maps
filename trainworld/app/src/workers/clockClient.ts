@@ -34,7 +34,7 @@ import type { ClockLine, ClockState, EditOp, FromClock, MoneyPatch, MoneyState, 
 import { applyPatch } from "./valuePatch";
 import { anchorVersion } from "../map/anchorVersion";
 import { mergeNet, type NetworkBuffers } from "../map/network";
-import { bandTry, perfOff } from "../perfFlags";
+import { bandTry } from "../perfFlags";
 import { anchor, anchorWanted, EARTH_C, HOME_ANCHOR, makeAnchor, setAnchor, type Anchor } from "../map/geo";
 import { loadFailText } from "../game/loadText";
 import { noteOpenFailure, openedFine } from "../game/openFailures";
@@ -814,7 +814,7 @@ export class ClockClient {
       for (const id of [...settledIncome.keys()]) if (!live.has(id)) settledIncome.delete(id);
       for (const id of live) {
         const was = settledIncome.get(id);
-        if (!pend.has(id) || !was || perfOff("settledHold")) { settledIncome.set(id, days.map((i) => ({ perHour: i.lines.get(id)?.perHour ?? [], rides: i.lines.get(id)?.rides ?? [] }))); continue; }
+        if (!pend.has(id) || !was) { settledIncome.set(id, days.map((i) => ({ perHour: i.lines.get(id)?.perHour ?? [], rides: i.lines.get(id)?.rides ?? [] }))); continue; }
         days.forEach((i, d) => {
           const cur = i.lines.get(id), old = was[d];
           if (!cur || !old) return;

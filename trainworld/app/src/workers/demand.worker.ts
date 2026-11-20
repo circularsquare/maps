@@ -915,9 +915,6 @@ function closeDeferred() {
 const openQueue: { msg: Extract<ToDemand, { kind: "open" }>; epoch: number }[] = [];
 let closeEpoch = 0;
 
-/** T-2596: `?perfOff=allSums` */
-let allSums = false;
-
 function openQueued(epoch: number): Promise<void> {
   // a macrotask, so the opens already posted are delivered and join this one; T-1533: not while a
   // rough solve of the zone in view runs
@@ -988,7 +985,6 @@ onmessage = (e: MessageEvent<ToDemand>) => {
         if (msg.heapStep) set_heap_step(msg.heapStep);
         const t1 = performance.now();
         aux = !!msg.aux;
-        allSums = !!msg.allSums;
         mine = msg.periods;
         mkt = msg.markets ?? mine;
         shareMarkets = !!msg.share;
@@ -1917,7 +1913,7 @@ async function run() {
       if (firsts.length) dirty.sort((a, b) => rank(a) - rank(b));
       // T-3512: this worker's periods every population of c holds from c's last whole solve on these
       // inputs (setUp's test): a local solve keeps them as they are, so the whole solve after it keeps them too
-      const keptOf = (c: JobCluster) => (job.fresh || job.localAll ? 0 : mine.reduce((m, q) => (c.pops.every((p) => p.solved_mask() & (1 << q) && heldQ.get(p)?.[q] === c.psig[q]) ? m | (1 << q) : m), 0));
+      const keptOf = (c: JobCluster) => (job.fresh ? 0 : mine.reduce((m, q) => (c.pops.every((p) => p.solved_mask() & (1 << q) && heldQ.get(p)?.[q] === c.psig[q]) ? m | (1 << q) : m), 0));
       // T-3512: the share of c's changed periods' passes that `fresh` took in c's last whole solve here (-1: not known)
       const freshShare = (c: JobCluster, fresh: Population[]) => {
         const kept = keptOf(c);
@@ -1984,8 +1980,8 @@ async function run() {
           // (something must stay frozen: the market part, or a city; on all of Japan the cities are a fifth of a solve)
           if (!fresh.length || (!c.part && fresh.length === c.pops.length)) continue;
           const share = freshShare(c, fresh), shareMax = job.localShare?.[job.part?.[0] ?? 0] ?? LOCAL_SHARE_MAX;
-          if (import.meta.env.DEV) console.info(`T3512 v${job.version} periods ${mine.join(",")} kept ${keptOf(c).toString(2)}: ${fresh.length} of ${c.pops.length} populations touched, ${Math.round(100 * share)}% of the cluster's passes${share >= shareMax && !job.alwaysLocal ? ", solved whole at once" : ""}`); // i18n-ignore
-          if (!job.alwaysLocal && share >= shareMax) continue;
+          if (import.meta.env.DEV) console.info(`T3512 v${job.version} periods ${mine.join(",")} kept ${keptOf(c).toString(2)}: ${fresh.length} of ${c.pops.length} populations touched, ${Math.round(100 * share)}% of the cluster's passes${share >= shareMax ? ", solved whole at once" : ""}`); // i18n-ignore
+          if (share >= shareMax) continue;
           const kept = c.part ?? c.pops.find((p) => !fresh.includes(p))!;
           editOf.set(c, { fresh, market, sig: held.get(kept) });
         }
@@ -2830,7 +2826,7 @@ async function run() {
               // the time it publishes the round, and the bubbles need no query to a worker that is
               // busy with the next round
               // T-2596: before the last round only the zones on screen (82 zones' took a worker 4 s a round)
-              const kept = round < job.rounds && !allSums ? sumsFor.filter(([id]) => viewZones.has(id)) : sumsFor;
+              const kept = round < job.rounds ? sumsFor.filter(([id]) => viewZones.has(id)) : sumsFor;
               for (const [id, a] of kept) keepSums(job.version, [round], id, a);
             }
             const { msg, transfer } = figures(q, round, performance.now() - t0, alone ? [alone] : jobClusters, sharing && shared(q) ? { at: mine.includes(q) ? [0, 2] : [1, 2], noMarket: mine.includes(q), side: mine.includes(q) ? "cities" : "market" } : undefined);
