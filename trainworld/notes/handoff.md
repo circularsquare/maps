@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 79e26413-4648-481b-ba5a-8ddcd716a0f0, name maps-60 [6ba449], since 2026-11-20 05:20 UTC
-Updated: 2026-11-20 05:58 UTC (both sessions are named maps-60: message by ref)
+Updated: 2026-11-20 08:35 UTC (both sessions are named maps-60: message by ref)
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`. This file is plan and her words.
 Diary: notes/handoff-log.md. Her local time is UTC-5.
@@ -10,18 +10,14 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 0. Live v0.4.4. Cap 14. 8800 = master = b3f3a057 (07:34, pushed; last smoke 29/29 by seasia at 2ad4cfbd). Landed
    tonight by maps-60 [6ba449]: T-3809 ferry waypoints, T-3834, T-3832, T-3828, T-3358 rivers E (her look call),
    T-3835 loops (loopchk passed), T-1738 Myanmar/Laos/Timor-Leste (Bhamo left), T-3833 + T-3824 coast and ferries
-   (07:30). Filed T-3837-T-3842. Review copies: review/rivers-e-london.png,
-   review/coast-round-hk.png. editchk (Sonnet checker on T-3803 editfirst tree) running.
-   Asked in chat, unanswered: T-3809 text ack, 400 km per leg, T-3835 text ack. Ask a-2026-11-20-1: T-2216 island
-   design (A/B/C, stage 2). Resources 11-20 05:25: all flags known.
-   HOLD app/ landings (editfirst, maperr) from ~07:40: iraniraq's gates (Iraq 6393, Iran 6394) until it says done.
-   maperr T-3842 done in its tree (basemap.ts; DECISIONS line already in): land ALONE after the hold, own smoke,
-   then drop the `browser` relax on mki and pgx in pipeline/world_plan.json once iraniraq's run is done.
+   (07:30). Filed T-3837-T-3842. Review: review/rivers-e-london.png, review/coast-round-hk.png. Asked in chat,
+   unanswered: T-3809 text ack, 400 km per leg, T-3835 text ack. Ask a-2026-11-20-1: T-2216 island design.
+1. HOLD app/ landings from ~07:40: iraniraq (Opus, T-3763, main tree, gates on 6393/6394) messages me when its last
+   gate and the join are done. Then: maperr's T-3842 (tree maperr, basemap.ts, DECISIONS in) lands ALONE with its own
+   smoke; drop the `browser` relax on mki and pgx in pipeline/world_plan.json after iraniraq's run.
    T-3803: editchk inconclusive (flaky t2766 on new code only); editdiag (Opus, editfirst tree, Vites 6150/6151,
    temp tree editbase) explains with ABBA counts, refusal, money split; its report says land / window+DECISIONS / fix.
-1. Running, mine: iraniraq (Opus, T-3763, main
-   tree; messages me before/after gates and join: hold app/ landings then), maperr (Opus, T-3842 Myanmar map error,
-   tree maperr, Vite 6148; needed before the publish that ships Myanmar).2. T-3395: 11-20 scan (pass 1, not done) found 0 new damage. Run `tools/ops/save_health.py` after the 11-21
+2. T-3395: 11-20 scan (pass 1, not done) found 0 new damage. Run `tools/ops/save_health.py` after the 11-21
    04:00 UTC scan; clean = close it (the two rev-1 games of ue83342ed78f8fc4c are old 11-19 damage).
 3. Up next: T-3804 after editfirst; T-2216 stages once she picks; T-3838 and T-1376 retry after iraniraq's run;
    T-1738 Bhamo; T-3836 (design for her).
