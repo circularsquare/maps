@@ -31,7 +31,10 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 6. T-3781 open for the next report's diagnosis. Steam (T-3729): her screenshots in artifacts/trainworld/steam.
 
 ## Her words
-- 11-20 ~02:20 UTC: "could we lower core cap to 10 for a few hours?" (done; back to 14 only when she says).
+- 11-20 ~03:10 UTC: cap back to 14. Rivers again: "where exactly did we leave this off, and what might we try now
+  ... maybe lets consult fable" (riverroute prototype, T-3358). T-3822 text ack; intercity effective time "keep it
+  as is"; packing backups: "if you think its pretty riskless lets file it ... til we get cloesr to the limit" (T-3821).
+- 11-20 ~02:20 UTC: "could we lower core cap to 10 for a few hours?" (done; back to 14 at 03:10).
 - 11-20 ~01:55: "yes can purge r2" (11-13 version purged), "no sta for resend" (stay on the free plan). Games store
   at 80% "a little concerning": compression or a cheaper store? (T-3821, agent gamestore measuring).
 - 11-20 ~01:15: start page gear and Settings "- 90% +" not centered: "do want to get this out as a silent hotfix"

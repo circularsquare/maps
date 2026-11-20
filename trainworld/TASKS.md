@@ -821,9 +821,9 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Ports, industrial estates and airports with no residents stay dark (Tuas and Jurong were fixed by hand 11-13). Half done: units keep outlines with 0.2 km2 of built surface.
   - Goal: A free unit under the floor sharing half its land border with one metro joins it, after a worldwide count.
   - Other: notes/T-3287.md
-- T-3358 [P2] {L:schematic-rivers} Schematic river continuity
-  - Context: Paused by you 2026-11-12: you do not like the river look but want it straightened. Prototype 2 (no straightening near rivers) cut wrong-bank pairs in London from 97 to 27.
-  - Goal: Rivers read as one course each with stations on their own bank. Next (6-8 h): land prototype 2.
+- T-3358 [P2] {L:schematic-rivers} Schematic river continuity (taking, 2026-11-19, agent riverroute)
+  - Context: Paused by you 2026-11-12: you want the river itself straightened like the lines; prototype 2 (no straightening near rivers) cut London's wrong-bank pairs from 97 to 27 but left the river raw. You raised it again 11-16 ("disconnected rivers") and 11-20. Now (11-20): a prototype routing each river after the layout as one even-width 0/45/90 path, stations held on their ground bank, lines crossed freely; a sheet of three versions for you to pick from.
+  - Goal: Rivers read as one straightened course each, even width, with stations on their own bank.
   - Other: You raised it again 2026-11-16 on the board: the pressing schematic issues are local, "disconnected rivers" and "cities getting squished too much". notes/T-3358.md
 - T-3354 [P3] {L:single-track} One-track platform jumps sides when dragged north-south
   - Context: Not reproduced 2026-11-16 (bug-a): a station node's heading stays put when dragged, so the fixed axis never flips in the sim. Needs the exact drag that shows it.
@@ -854,7 +854,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: You approved the plan 2026-11-16: "3264 yes this soudns good". Draw tracks apart first, then one hold plan per hour. Stage 0 (the t3264-overlaps check) done. You declined the narrowed trains of stage 1 and postponed the rest until after v0.4.0 (2026-11-17); your hunch is a local and an express on the same track.
   - Goal: Trains on different tracks are drawn apart, and t1965-follow passes at 1+1 and 4+2.
   - Other: notes/T-3264.md; about 13-19 h
-- T-3079 [P2] {L:stops} Exact stop ordering back
+- T-3079 [P3] {L:stops} Exact stop ordering back
   - Context: You changed your mind again 2026-11-16: exact spacing for people who want full control, with waypoints. Exact edits were hidden behind ?exact, then dropped.
   - Goal: Exact stop ordering is an option beside normal stop editing, styled like your stop-picking notes in T-3444 (numbered circles per track).
   - Other: Folded in T-3384 (Waypoints on lines) and T-3410 (pass through or turn at a one-way station: you 11-16, "better solved with waypoints, so we dont have to add an additional thing to the UI"). Renamed from "spacing" on your board note 11-16. UI notes: notes/T-3444.md
