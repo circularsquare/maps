@@ -385,9 +385,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3801's audit: the hour turn (0.14-1.1 s every game hour), one today answer (70-250 ms, 0.5-0.8 s under load; splitting it is a design call), the snapshot timer and next-hour boarding step (0.2-0.5 s). Not measured: undo of a rename, unbind all, the junction panel.
   - Goal: Each is under 0.2 s or yields to edits, per docs/architecture.md "Edits never queue behind polling".
   - Other: notes/T-3801.md
-- T-3809 [P3] {L:buses} Ferry waypoints without a port (taking, 2026-11-19, agent ferrywp)
-  - Context: You, 11-19: "ferry waypoint placeability (maybe with shift click or something, if thats not used) so that people can path their ferries without placing a port. sometimes we are unable to path through some archipelagos. or its too long or smth."
-  - Goal: A player can place a waypoint a ferry route passes through without a port (shift click if free), so routes get through archipelagos.
 - T-3325 [P3] {L:real-networks} {after:real-network rebuild batch} Rebuild Sendai so Senzan Line stops at Toshogu
   - Context: You parked this 2026-11-12 since few players open Sendai. The fix is in realnet.py build_lines.
   - Other: Commands in notes/T-3318.md.
@@ -780,6 +777,9 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your pad, 2026-11-17: with many pull requests, applying them is clunky, and contributors can't see what we're already working on. You chose 2026-11-17: "lets work on making the public repo the real one. we can do it some time after 0.4 publish." About 1-2 days: private notes and tooling split out, every commit public.
   - Goal: The public repo is where trainworld is developed; pull requests merge there directly, and nothing private lands in it. The design goes to you before it is built.
   - Other: notes/T-2913.md
+- T-3837 [P3] {L:buses} Ferry routes found without a waypoint, and waypoints on touch
+  - Context: T-3809 added shift click waypoints. A leg is still searched only in a box around its two ports, so a sea path that leaves it (Ma Liu Shui to Sai Kung) needs a waypoint; a wider third search would find it alone. Phones have no shift click.
+  - Other: notes/T-3809.md
 - T-3829 [P3] {L:buses} Show fast and slow roads when drawing a bus route
   - Context: Your pad, 11-20, for the bus rework: "we should highlight fast speed roads and low speed roads differently". Open-source issue #27 asks the same ("No way to tell which roads are trunk when drawing a bus route").
 - T-3830 [P3] {L:buses} Bus stations a player can build

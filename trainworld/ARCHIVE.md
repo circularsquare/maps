@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3809 [P3] {L:buses} Ferry waypoints without a port (2026-11-20): shift click on water adds a ferry waypoint, each leg routed on its own (fixes legs whose sea path leaves the two ports' box, and legs over 400 km); router no longer slows boats at piece joints. notes/T-3809.md.
 - T-3762 [P2] {L:new-countries} Guyana, Suriname, French Guiana and the rest of the Caribbean (2026-11-19): 19 zones shipped (Guyana, Suriname, French Guiana, Guadeloupe, Martinique, the Virgin Islands, Saint Kitts and Nevis, Sint Maarten and Saint-Martin, the Caribbean Netherlands, Montserrat, Anguilla, Turks and Caicos, Saint-Barthelemy); smoke and two city loads passed (carwrap). notes/T-3762.md.
 - T-3827 [P3] {L:checks} Weekend timetable checks gone stale (2026-11-19): All three were stale, no game bug: t3603 stepper label, t3521 stepper column after T-3542's Hours column, t3557 profile index via tw.profiles.profileRow. notes/T-3827.md.
 - T-3823 [P3] {L:route-choice} Intercity hover shows the full first wait (2026-11-19): plannedFirstWait in game/trip.ts: min(half headway, 5 + headway/6, 30) on a market route's first ride; Newark Penn 33.6 -> 16.2 min, matching the worker. notes/T-3823.md.
