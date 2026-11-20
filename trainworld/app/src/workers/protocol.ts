@@ -18,6 +18,7 @@ import type { NetworkBuffers } from "../map/network";
 import type { CloudContext } from "./cloud";
 import type { DiagramGraph } from "../diagram/graph";
 import type { PackedOutlines } from "../map/coarseOutlines";
+import type { ValuePatch } from "./valuePatch";
 
 export type { DayLedger, HourLedger };
 
@@ -793,6 +794,13 @@ export interface RowsDelta<T> {
   rows: T[];
 }
 
+/** T-3803: the money record (the last one posted is `base`) as its changes (workers/valuePatch.ts), null when none */
+export interface MoneyPatch {
+  base: number;
+  serial: number;
+  patch: ValuePatch | null;
+}
+
 export interface ClockState {
   version: number;
   /** busy resources per demand period (T-3542: five, `PERIODS`; periods served by one slot share one array) */
@@ -840,7 +848,13 @@ export interface ClockState {
   singles?: Float64Array;
   /** T-3297: the running side, false where trains keep left (`TrackApi.right_hand`); absent: right */
   rightHand?: boolean;
-  money: MoneyState;
+  /** absent as posted when `moneyPatch` carries it: the client puts it back before anything reads the state */
+  money?: MoneyState;
+  /** T-3803: the money record's serial (`money` posted whole), or its changes from the last one posted */
+  moneySerial?: number;
+  moneyPatch?: MoneyPatch;
+  /** `?patch=check`: the money record whole, for the client to compare its rebuilt one with */
+  checkMoney?: MoneyState;
   /** the renderer's buffers, built in the worker from the rest (T-063); the arrays are shared with
    * `render` */
   net?: NetworkBuffers;
@@ -929,7 +943,7 @@ export type FromClock =
   /** T-3409: `cut`: the graphs are of the chosen cities alone; `whole`: the whole network's, when asked for */
   | { kind: "diagramGraph"; graphs: DiagramGraph[]; ms: number; cut?: boolean; whole?: DiagramGraph[] }
   /** money changed without a network change (an hour settled, fares set) */
-  | { kind: "money"; money: MoneyState }
+  | { kind: "money"; money?: MoneyState; moneySerial?: number; moneyPatch?: MoneyPatch; checkMoney?: MoneyState }
   /** T-284: the cash and today's ledger as fares land and running costs drain, several times a wall
    * second while the clock runs; the rest of MoneyState comes with "money" when an hour turns */
   | { kind: "cash"; cash: number; today: MoneyState["ledger"][number]; hour: HourLedger; regions: RegionNow }

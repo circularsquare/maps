@@ -30,7 +30,8 @@ import { accountVersion, packArrivals, packRiders } from "../game/boarding";
 import { ask, designSpeed, guideFinished, lineDraft, marketOff, selection, tool } from "../game/ui";
 import { afterStopEdits, flipSites, rightHand, say, setEditSink, stopsQueued, world, worldIsRows } from "../game/world";
 import type { LineInput, LineStats, RowFigs, StationInput, TrackEdge, TrackNode, WorldView } from "../game/types";
-import type { ClockLine, ClockState, EditOp, FromClock, NetworkSnapshot, PiInput, RouteAsk, StationAt, ToClock } from "./protocol";
+import type { ClockLine, ClockState, EditOp, FromClock, MoneyPatch, MoneyState, NetworkSnapshot, PiInput, RouteAsk, StationAt, ToClock } from "./protocol";
+import { applyPatch } from "./valuePatch";
 import { anchorVersion } from "../map/anchorVersion";
 import { mergeNet, type NetworkBuffers } from "../map/network";
 import { bandTry, perfOff } from "../perfFlags";
@@ -999,6 +1000,27 @@ export class ClockClient {
   private lastNet: NetworkBuffers | null = null;
   private lastService: { phases: Float32Array; meta: Float32Array } | null = null;
 
+  /** T-3803: the last money record posted (as a state's or a "money" message's), and its serial */
+  private money: { serial: number; m: MoneyState } | null = null;
+
+  /** The money record back in `money` from the last one and a patch (T-3803); false when the patch was made
+   * against a record this page does not hold (the worker is then asked for a whole state). */
+  private takeMoney(x: { money?: MoneyState; moneySerial?: number; moneyPatch?: MoneyPatch; checkMoney?: MoneyState }): boolean {
+    const p = x.moneyPatch;
+    if (p) {
+      if (this.money?.serial !== p.base) return false;
+      // (a new record each time, as when it came whole)
+      x.money = p.patch ? applyPatch(this.money.m, p.patch) : { ...this.money.m };
+      this.money = { serial: p.serial, m: x.money };
+      delete x.moneyPatch;
+    } else if (x.money) this.money = { serial: x.moneySerial ?? NaN, m: x.money };
+    if (x.checkMoney) {
+      if (JSON.stringify(x.money) !== JSON.stringify(x.checkMoney)) console.error("T-3803 check: the money record rebuilt from changes differs from the whole one");
+      delete x.checkMoney;
+    }
+    return !!x.money;
+  }
+
   /** A state's edges, nodes and lines back in full from the last ones and its `delta` (T-1029);
    * false when they cannot be (the worker is then asked for a whole state). */
   private takeRows(st: ClockState): boolean {
@@ -1124,7 +1146,7 @@ export class ClockClient {
     const moved = a !== anchor();
     if (moved) setAnchor(a);
     if (msg.state.net) msg.state.net.anchor = a;
-    setMoneyState(msg.state.money);
+    setMoneyState(msg.state.money!);
     this.worldBefore = world.value;
     worldIsRows.value = !!msg.state.rows;
     if (msg.state.rightHand !== undefined) rightHand.value = msg.state.rightHand;
@@ -1186,7 +1208,7 @@ export class ClockClient {
       case "state": {
         const st = msg.state;
         // T-1029: a state that cannot be made whole is dropped, and the worker posts the next whole
-        if (!this.takeRows(st) || !this.takeNet(st)) {
+        if (!this.takeMoney(st) || !this.takeRows(st) || !this.takeNet(st)) {
           console.error("T-1029: a state could not be taken as changes to the last; asking for it whole");
           this.lastNet = null;
           this.post({ kind: "wholeState" });
@@ -1200,7 +1222,12 @@ export class ClockClient {
         break;
       }
       case "money":
-        setMoneyState(msg.money);
+        if (!this.takeMoney(msg)) {
+          console.error("T-3803: a money record could not be taken as changes to the last; asking for a whole state");
+          this.post({ kind: "wholeState" });
+          break;
+        }
+        setMoneyState(msg.money!);
         break;
       case "diagramGraph":
         this.onDiagram(msg.graphs, !!msg.cut, msg.whole);

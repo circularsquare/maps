@@ -13,7 +13,7 @@ import type { ClockEdge, ClockState } from "../workers/protocol";
 import { anchor, kAtY, toLocal, type Anchor } from "./geo";
 import { M_BAD, M_CONVERGE, M_CROSSING, M_DIVERGE, M_JUNCTION, M_REPEAT, MARK_STRIDE, rampMarks } from "./markData";
 import { repeatedEdge } from "../game/repeatTrack";
-import { placeFacilities } from "./facilityPlace";
+import { newFacilityCache, placeFacilities, type FacilityCache } from "./facilityPlace";
 import { buildingsDrawn, type BuildingDraw } from "./buildingNet";
 import { BAND_M_RANGE, BAND_RANGE, BAND_STRIDE, bandKnots, KNOT, lineBands, profileAt, type BandProfile } from "./lineBands";
 import { BOX_TOUCH_M, DEMAND_MERGE_M, offsetsReach, polylineGap } from "../game/complexes";
@@ -1402,11 +1402,13 @@ export interface NetCache {
   samples: Map<number, LineSamples>;
   /** each complex's drawn passages, by its first member's id (`complexPassages`) */
   passages: Map<number, PassageEntry>;
+  /** T-3803: the waiting rooms' and car parks' placement, per complex */
+  facilities: FacilityCache;
   serial: number;
   last: { serial: number; track: EdgeEntry[]; lines: LineEntry[]; trackCount: number; lineCount: number; pts: Map<number, Float32Array> } | null;
 }
 
-export const newNetCache = (): NetCache => ({ edges: new Map(), lines: new Map(), stations: new Map(), speeds: new Map(), samples: new Map(), passages: new Map(), serial: 0, last: null });
+export const newNetCache = (): NetCache => ({ edges: new Map(), lines: new Map(), stations: new Map(), speeds: new Map(), samples: new Map(), passages: new Map(), facilities: newFacilityCache(), serial: 0, last: null });
 
 /**
  * T-1170: the cache's pieces moved to a new draw anchor, so the next build reuses them rather than
@@ -1910,7 +1912,8 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
   const outlines = buildingsDrawn(s.buildings, s.buildingLL, st, stations, stationLine, edgePts, false);
   for (let i = 0; i < st.length; i++) if (outlines.memberOf[i] >= 0) stations[i * 3 + 2] += ST_BUILDING;
   // T-1528: one waiting room and one car park per complex
-  const lots = placeFacilities(st, stations, stationLine, stationShape, edgePts, waysAt, s.complexOf, outlines.draw);
+  // (T-3803: kept per complex between the clock worker's builds)
+  const lots = placeFacilities(st, stations, stationLine, stationShape, edgePts, waysAt, s.complexOf, outlines.draw, cache.facilities);
   // their insides, which leave room for the waiting rooms just placed
   const bld = outlines.draw.length ? buildingsDrawn(s.buildings, s.buildingLL, st, stations, stationLine, edgePts) : outlines;
   // the player's links as bridges between the two platforms' nearest points (T-217)

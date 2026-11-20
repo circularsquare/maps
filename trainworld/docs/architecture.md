@@ -131,6 +131,12 @@ Web first, so it can be shared as a link.
   stops by station and visit and resolving them against the list the one before left [T-3732]. A state carries only the edges,
   nodes and lines that differ from the last one posted, with the ids in order when they changed
   (`delta`, T-1029); the client rebuilds the full lists from its last ones before anything reads it.
+  The money record goes with each state and "money" message the same way, as its changes from the last one posted
+  (`moneyPatch`, `workers/valuePatch.ts`: key by key, entry by entry; a patch made against a record the page does not
+  hold asks for a whole state), since whole it was about 2 MB on the biggest saves, nearly all of it the regions'
+  ledgers [T-3803]. The waiting rooms and car parks are placed again only for the complexes whose stations, the
+  segments in the grid cells their search read, the station buildings, or a room or lot placed before them near their
+  tries changed (`map/facilityPlace.ts` `FacilityCache`, in the network cache) [T-3803].
   The worker itself reads from the track model only the rows an edit changed: it keeps the last
   rows, the track model lists the lines whose service or net was touched and the stations whose name
   was set since the last read, and a station's name is kept by node (`stateRows.ts`, T-1382). The

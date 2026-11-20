@@ -202,7 +202,7 @@ city's name in Japanese or Chinese from `place-names.json`, written by `tools/pl
 - Stations: `stationGeometry.ts` (platform shapes along the track for drawing, picking and the
   ghost, T-189, T-254; the waiting room annex, `stationAnnexes`, T-1416), `stationSide.ts` (the side a station on
   single track draws its one platform on, T-3540), `facilityPlace.ts`
-  (where each complex's one waiting room and car park go, in the clock worker, T-1528),
+  (where each complex's one waiting room and car park go, in the clock worker, T-1528; kept per complex between builds, T-3803),
   `parkingLots.ts` (the car parks drawn as lots under the network, their hit test, T-1528), `stationNames.ts` (a station's name suggestions: cross street,
   neighbourhood, city or town, T-534), `stationLabels.ts` (names
   keep their elements across edits unless their text changes, T-496; the labels and the shadow
@@ -324,7 +324,8 @@ with a panel per city, T-894), `slots.ts` (the save slot of the game in hand, T-
 slot may not be written now; `publishSlots`, autosave, the save by hand, the saves panel's actions, the slot's lease
 against other tabs, the cloud queue; its state is the one object `saves`, which the clock worker also reads and
 writes, and it reaches the game through the `SlotHost` the worker binds; `letGoSlot` for a start or open that failed,
-whose record is game/openFailures.ts, T-3773), `stateRows.ts` (`StateRows`: the state's edge, node and line rows
+whose record is game/openFailures.ts, T-3773), `valuePatch.ts` (a value posted as its changes from the last one: the
+money record, T-3803), `stateRows.ts` (`StateRows`: the state's edge, node and line rows
 kept between edits and read from the track model again only where `take_changed_lines` and
 `take_name_changes` say they changed; station names kept by node, phase tables per line; T-1382, T-1540), `platformLines.ts` (each
 station's drawn platform line in world units, on its node row, for the complexes; T-1859), `saveFile.ts` (the save format

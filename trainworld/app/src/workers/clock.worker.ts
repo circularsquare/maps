@@ -52,7 +52,8 @@ import { StateRows, upgradesOf, type RowEnv } from "./stateRows";
 import { PlatformLines } from "./platformLines";
 import { lineProfile } from "./lineProfile";
 import { RoadFeed } from "./roadFeed";
-import type { ClockBus, ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FerryPortIn, FerryRow, FromClock, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteAsk, RouteEnd, StationAt, ToClock } from "./protocol";
+import type { ClockBus, ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FerryPortIn, FerryRow, FromClock, MoneyPatch, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteAsk, RouteEnd, StationAt, ToClock } from "./protocol";
+import { applyPatch, diffValue } from "./valuePatch";
 import { stampAll } from "./cloud";
 import { isMemoryFailure, loadFailKey } from "../game/loadText";
 import { autosave, bindSlots, CLOUD_RETRY_MS, cloudFlush, cloudKick, cloudUp, heldFrom, heldNew, hold, intoNewSlot, intoView, leave, letGoSlot, manageSlot, noteUnsaved, pendingGame, publishSlots, saveConverted, saves } from "./slots";
@@ -2015,7 +2016,7 @@ function sendMoney() {
   const m = moneyState();
   sentCash = m.cash;
   sentFares = m.ledger[m.ledger.length - 1]?.fares ?? NaN;
-  send({ kind: "money", money: m });
+  send({ kind: "money", ...moneyPost(m) });
 }
 
 /** T-284: the cash and today's ledger, if either moved since last sent. */
@@ -2879,6 +2880,23 @@ function postWhole() {
   posted.arrays.clear();
   posted.edges.clear(); posted.nodes.clear(); posted.lines.clear();
   posted.edgeIds = []; posted.nodeIds = []; posted.lineIds = [];
+  moneyHeld = null;
+}
+
+/** T-3803: the money record as last posted (a copy of its own, so nothing the worker changes in place reaches it) and
+ * its serial. The record goes with every state and "money" message as its changes from that one: whole, it was about
+ * 2 MB on a 2,647-station save (the regions' ledgers), 35-65 ms of structured clone a post there. */
+let moneyHeld: MoneyState | null = null;
+let moneySerial = 0;
+function moneyPost(m: MoneyState): { money: MoneyState; moneySerial: number; checkMoney?: undefined } | { money: undefined; moneyPatch: MoneyPatch; checkMoney?: MoneyState } {
+  if (!moneyHeld || patchMode === "0") {
+    moneyHeld = structuredClone(m);
+    return { money: m, moneySerial: ++moneySerial };
+  }
+  const patch = diffValue(moneyHeld, m);
+  if (patch) moneyHeld = applyPatch(moneyHeld, structuredClone(patch));
+  const base = moneySerial;
+  return { money: undefined, moneyPatch: { base, serial: ++moneySerial, patch }, ...(patchMode === "check" ? { checkMoney: m } : {}) };
 }
 
 const bytesOf = (v: ArrayBufferView) => new Uint8Array(v.buffer, v.byteOffset, v.byteLength);
@@ -3046,12 +3064,20 @@ function rowsDelta<T extends { id: number }>(rows: T[], by: Map<number, T>, ids:
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i];
     if (sameIds && ids[i] !== r.id) sameIds = false;
-    if (!sameValue(by.get(r.id), r)) changed.push(r);
+    // T-3803: the rows keep an unchanged row's object (stateRows.ts), so most pass with one lookup; `by` is written only
+    // where a row changed, not cleared and refilled
+    const was = by.get(r.id);
+    if (was === r) continue;
+    if (!sameValue(was, r)) changed.push(r);
+    by.set(r.id, r);
   }
-  const out = { ids: sameIds ? null : rows.map((r) => r.id), rows: changed };
-  by.clear();
-  for (const r of rows) by.set(r.id, r);
-  return out;
+  // `by` holds every row now, and only those gone besides: there are some exactly when it holds more
+  if (by.size > rows.length) {
+    const now = new Set<number>();
+    for (const r of rows) now.add(r.id);
+    for (const id of by.keys()) if (!now.has(id)) by.delete(id);
+  }
+  return { ids: sameIds ? null : rows.map((r) => r.id), rows: changed };
 }
 
 /** Post a state, its edges, nodes and lines as only those that changed since the last state posted
@@ -3063,7 +3089,7 @@ function postState(s: ClockState, transfer: Transferable[]) {
     rowsDelta(s.nodes, posted.nodes, posted.nodeIds);
     rowsDelta(s.lines, posted.lines, posted.lineIds);
     posted.edgeIds = s.edges.map((e) => e.id); posted.nodeIds = s.nodes.map((n) => n.id); posted.lineIds = s.lines.map((l) => l.id);
-    send({ kind: "state", state: s }, transfer);
+    send({ kind: "state", state: { ...s, ...moneyPost(s.money!) } }, transfer);
     return;
   }
   const de = rowsDelta(s.edges, posted.edges, posted.edgeIds), dn = rowsDelta(s.nodes, posted.nodes, posted.nodeIds), dl = rowsDelta(s.lines, posted.lines, posted.lineIds);
@@ -3071,7 +3097,7 @@ function postState(s: ClockState, transfer: Transferable[]) {
   if (dn.ids) posted.nodeIds = dn.ids;
   if (dl.ids) posted.lineIds = dl.ids;
   const full = patchMode === "check" ? { edges: s.edges, nodes: s.nodes, lines: s.lines } : undefined;
-  send({ kind: "state", state: { ...s, edges: [], nodes: [], lines: [], delta: { edges: de, nodes: dn, lines: dl }, ...(full ? { checkRows: full } : {}) } }, transfer);
+  send({ kind: "state", state: { ...s, ...moneyPost(s.money!), edges: [], nodes: [], lines: [], delta: { edges: de, nodes: dn, lines: dl }, ...(full ? { checkRows: full } : {}) } }, transfer);
 }
 
 /** Lines of the boarding account worked out per step: a few ms on New York's real network, so an
