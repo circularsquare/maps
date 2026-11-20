@@ -57,4 +57,3 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
   notes/board-live.json; maps .claude/settings.json. Not mine: notes/T-2380.md, notes/T-3382.md.
 - A yes she gives in another session's tab doesn't pass the permission check here: ask again in this tab.
 - Never delete a tree folder by hand (its app/node_modules junction deletes the main tree's).
-- A stale .git/index.lock with no git.exe running can be removed (one appeared 11-20 04:12 UTC).
