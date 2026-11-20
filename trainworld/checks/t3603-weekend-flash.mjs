@@ -54,7 +54,7 @@ try {
   const press = async (name, nth = 0) => { await g.page.evaluate((x) => { window.__label = x; }, name + '#' + nth); await g.act.click(name, { within: 'dialog.sched-panel', nth }); await g.page.waitForTimeout(1500); };
   const lvl = [0, 1, 2];
   for (const more of [true, true, true, false, false, false, false, false]) for (const nth of lvl) await press(`${more ? 'More' : 'Less'} Headway on weekends`, nth);
-  for (const more of [false, false, true, true, true]) await press(`${more ? 'More' : 'Less'} Weekend share of weekday trains`);
+  for (const more of [false, false, true, true, true]) await press(`${more ? 'More' : 'Less'} Weekend service as a share of weekdays`);
   for (const more of [true, false, false, true]) for (const nth of lvl) await press(`${more ? 'More' : 'Less'} headway`, nth);
   for (const more of [true, false]) await press(`${more ? 'More' : 'Less'} Headway on weekends`, 0);
   const res = await g.page.evaluate(() => { cancelAnimationFrame(window.__raf); return { seen: [...window.__seen], frames: window.__frames, log: window.__log }; });

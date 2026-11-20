@@ -108,7 +108,7 @@ try {
     if (await r.evaluate((e) => e.classList.contains('sched-day') && e.textContent.includes('Weekends'))) { seen = true; continue; }
     if (seen && !weekendRow) weekendRow = r;
   }
-  await (await weekendRow.$('td:nth-child(2) .stepper button:first-child')).click();
+  await (await weekendRow.$('.stepper button:first-child')).click();
   await settle((id) => window.tw.world.value.lineStats[id]?.weekend?.[1] === 1, pick.id).catch(() => {});
   const hand = await S(({ tw }, id) => tw.world.value.lineStats[id].weekend, pick.id);
   check(hand?.[1] === 1 && hand[0] === 70, `a weekend count by hand: ${JSON.stringify(hand)}`);

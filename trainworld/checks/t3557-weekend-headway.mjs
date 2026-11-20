@@ -52,12 +52,12 @@ try {
   const t0 = day.d * 86400 - day.shift, t1 = t0 + 86400;
 
   // the median gap between consecutive departures of the line at level `lev` on the Saturday, minutes
-  const gap = (lev) => S(async ({ cc }, a) => {
+  const gap = (lev) => S(async ({ cc, tw }, a) => {
     const trips = await cc.queryClock({ what: 'lineTrips', line: a.num, t0: a.t0, t1: a.t1 });
     const by = new Map();
     for (let i = 0; i + 3 < trips.length; i += 4) {
       const k = trips[i];
-      if (k % 3 !== a.lev) continue;
+      if (tw.profiles.profileRow(k) !== a.lev) continue; // a trip's profile names its slot; the row is the slot's (T-3542)
       if (!by.has(k)) by.set(k, []);
       by.get(k).push(trips[i + 1]);
     }
