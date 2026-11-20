@@ -11,7 +11,7 @@ import { createLine } from "../game/lineActions";
 import { boatsText, busesText, count, money } from "../game/format";
 import { DEMAND_INDEX, type Demand, type LineInput, type LineStats } from "../game/types";
 import { lineSort, selection, uiScale } from "../game/ui";
-import { listedLines, edit, renameLine, stationsById } from "../game/world";
+import { busStopsById, listedLines, edit, renameLine, stationsById } from "../game/world";
 import { closedGroups, groupName, groupTree, lineGroups, toggleGroup } from "../game/lineGroups";
 import { byHand, handOrder, setHandOrder } from "../game/handOrder";
 import { GroupPill } from "./GroupPill";
@@ -33,6 +33,9 @@ import { byNear, natural, Near, ScopeToggle } from "./listParts";
 import { pendingLabel, type PendingKind } from "../game/lineFigures";
 import { hiddenLines, setLinesHidden, showAllLines, visToggles } from "../game/lineVisibility";
 import { vehicleOf } from "../game/vehicle";
+import { stationCity } from "../game/money";
+import { linesView, type LineCol } from "../game/linesView";
+import { LinesGear, TYPE_ICONS, typeName } from "./LinesGear";
 
 /** the word for a line that is not running; nothing for a running one */
 const statusText = (s: string) => (s === "planned" ? t("linesTab.planned") : s === "broken" ? t("linesTab.broken") : "");
@@ -43,8 +46,6 @@ const lineTypeRank = (st: LineStats | undefined) => {
   return v === "train" ? (st.fast ? 1 : 0) : v === "tram" ? 2 : v === "bus" ? 3 : 4;
 };
 /** T-3808: a row's type, its icon with its name in the hover */
-const TYPE_ICONS = [Icon.train, Icon.highSpeed, Icon.tram, Icon.bus, Icon.ferry];
-const typeName = (rank: number) => [t("settingsTab.shapeTrain"), t("toolBar.highSpeed"), t("toolBar.tram"), t("buildTab.bus"), t("buildTab.ferry")][rank];
 function TypeCell({ rank }: { rank: number }) {
   const I = TYPE_ICONS[rank];
   return <span class="val w-kind muted" data-tip={typeName(rank)}><I /></span>;
@@ -115,7 +116,7 @@ function TrainsNow({ line, n, period, at, bus, ferry, tram, v, lev, stops, flip,
 }
 
 /** T-1791: a group's riders, money and trains, each line's added up; hovers list them by line. */
-function GroupFigures({ ls, w, trains, period }: { ls: LineInput[]; w: WorldView; trains: (id: string) => number; period: string }) {
+function GroupFigures({ ls, w, trains, period, col }: { ls: LineInput[]; w: WorldView; trains: (id: string) => number; period: string; col: (c: LineCol) => boolean }) {
   const tod = today.value;
   const run = ls.filter((l) => w.lineStats[l.id]?.status === "running");
   if (!run.length) {
@@ -134,10 +135,10 @@ function GroupFigures({ ls, w, trains, period }: { ls: LineInput[]; w: WorldView
   const n = run.reduce((k, l) => k + trains(l.id), 0);
   return (
     <>
-      {pending ? <PendingRiders k={pending} text={any ? count(riders) : ""} />
+      {!col("riders") ? null : pending ? <PendingRiders k={pending} text={any ? count(riders) : ""} />
         : <span class="val w-riders" data-tip={any ? t("linesTab.groupRidersTip", { count: count(riders), lines: by((l) => count(tod.get(l.id)?.riders ?? 0)) }) : undefined}>{any ? count(riders) : ""}</span>}
-      {anyProfit ? <span class="val w-linemoney" data-tip={t("linesTab.groupProfitTip", { money: money(net), lines: run.filter((l) => profitKnown(l)).map((l) => `${l.name}: ${money(lineNet(tod.get(l.id), l, w.lineStats[l.id]))}`).join("\n") })}><Money dollars={net} /></span> : <span class="val w-linemoney" />}
-      <span class="val w-trains" data-tip={t("linesTab.groupTrainsTip", { period, count: n, lines: by((l) => String(trains(l.id))) })}>{n}</span>
+      {!col("money") ? null : anyProfit ? <span class="val w-linemoney" data-tip={t("linesTab.groupProfitTip", { money: money(net), lines: run.filter((l) => profitKnown(l)).map((l) => `${l.name}: ${money(lineNet(tod.get(l.id), l, w.lineStats[l.id]))}`).join("\n") })}><Money dollars={net} /></span> : <span class="val w-linemoney" />}
+      {col("trains") && <span class="val w-trains" data-tip={t("linesTab.groupTrainsTip", { period, count: n, lines: by((l) => String(trains(l.id))) })}>{n}</span>}
     </>
   );
 }
@@ -184,6 +185,9 @@ export function LinesTab() {
   const kindOf = (l: LineInput) => kindIn(lineCountry(l.stops), Math.floor(lineSeconds(w!.lineStats[l.id]) / 86400));
   const byKind = DAY_KINDS.map((k) => crowdLines.filter((l) => kindOf(l) === k).map((l) => l.num));
   const kindCrowd = byKind.map((nums, k) => useClockQuery(nums.length ? { what: "linesPeriods", lines: nums, day: k } : null, [w?.version, acct, nums.join(",")], (d) => d));
+  // T-3799: a sort on a column the gear turned off goes to Name (the rows sort by name meanwhile, below)
+  const sortOff = (linesView.value.cols as readonly string[]).includes(lineSort.value.key);
+  useEffect(() => { if (sortOff) lineSort.value = { key: "name", dir: 1 }; }, [sortOff]);
   if (!w) return null;
   // T-1926: each line's numbers come after their count, in `nums`' order
   const split = (d: Float64Array | null, nums: number[]) => {
@@ -208,23 +212,52 @@ export function LinesTab() {
   const trains = (id: string) => (w.lineStats[id]?.status === "running" ? trainsNowAt(id, levOf(id)) : 0);
   // T-1813: while the player's hand order holds, no sort
   const hand = handOrder.value.lines;
-  const key = hand.length ? null : lineSort.value.key, dir = lineSort.value.dir;
+  // T-3799: the columns the gear turned off
+  const view = linesView.value;
+  const offCols = new Set<string>(view.cols);
+  const col = (c: LineCol) => !offCols.has(c);
+  const key = hand.length ? null : sortOff ? "name" : lineSort.value.key, dir = sortOff ? 1 : lineSort.value.dir;
+  const isSel = (id: string) => (sel?.kind === "line" || sel?.kind === "train") && sel.line === id;
   // T-332: only the viewed place unless the world is chosen
-  const sc = scopedLists(w.save.stations, listedLines(w), (k, id) => (k === "line" && (sel?.kind === "line" || sel?.kind === "train") && sel.line === id), key === "near");
+  const sc = scopedLists(w.save.stations, listedLines(w), (k, id) => k === "line" && isSel(id), key === "near");
+  // T-3816: the gear's filters, on top of the scope. The choices are the whole game's, so they hold still as the
+  // view moves; a turned-off choice the game does not offer now (another game's city) counts for nothing.
+  const listed = listedLines(w);
+  const stAt = stationsById(w), busAt = busStopsById(w);
+  const cityIds = new Map<string, Set<string>>();
+  for (const l of listed) {
+    const cs = new Set<string>();
+    for (const id of l.stops) { const s = stAt.get(id) ?? busAt.get(id), c = s && stationCity(s); if (c) cs.add(c); }
+    cityIds.set(l.id, cs);
+  }
+  const rankOf = (l: LineInput) => lineTypeRank(w.lineStats[l.id]);
+  const modeChoices: number[] = [...new Set(listed.filter((l) => l.stops.length).map(rankOf))].sort((a, b) => a - b);
+  const cityChoices = [...new Set([...cityIds.values()].flatMap((cs) => [...cs]))].map((id): [string, string] => [id, tPlace(id, cityById(id).name)]).sort((a, b) => natural(a[1], b[1]));
+  const offModes = new Set(modeChoices.length >= 2 ? view.modes.filter((m) => modeChoices.includes(m)) : []);
+  const offCities = new Set(cityChoices.length >= 2 ? view.cities.filter((c) => cityChoices.some(([id]) => id === c)) : []);
+  /** a line the filters let through: one with no stops yet always, and one in no city whatever cities are chosen */
+  const passes = (l: LineInput) => {
+    if (!l.stops.length) return true;
+    if (offModes.has(rankOf(l))) return false;
+    const cs = cityIds.get(l.id)!;
+    return !offCities.size || !cs.size || [...cs].some((c) => !offCities.has(c));
+  };
+  const leftOut = offModes.size || offCities.size ? listed.filter((l) => !passes(l)).length : 0;
+  /** the selected line stays listed, as the scope keeps it */
+  const shows = (l: LineInput) => passes(l) || isSel(l.id);
   // T-670: on the whole world, a city column once lines start in two or more cities (a line's city is where its first stop is)
   const cityOf = new Map<string, string>();
-  if (sc.zone === null) {
-    const at = stationsById(w);
+  if (sc.zone === null && col("city")) {
     for (const l of sc.lines) {
-      const s = at.get(l.stops[0]), z = s ? stationZone(s) : null;
+      const s = stAt.get(l.stops[0]), z = s ? stationZone(s) : null;
       cityOf.set(l.id, z ? tPlace(z, cityById(z).name) : "");
     }
   }
-  const showCity = new Set([...cityOf.values()].filter(Boolean)).size >= 2;
+  const showCity = new Set(sc.lines.filter(shows).map((l) => cityOf.get(l.id)).filter(Boolean)).size >= 2;
   // T-1791: a group is one row, sorted by its lines' figures added up; it shows, with all its
   // lines, when any of them is in the viewed place. T-3423: a group's members are lines and groups,
-  // to any depth; `ls` is every line in it.
-  const listed = listedLines(w);
+  // to any depth; `ls` is every line in it. T-3816: a group shows if any line in it passes the gear's filters, and
+  // inside it only those that pass; its figures are still every line's.
   const groups = lineGroups(listed), tree = groupTree(listed);
   const parentOf = (g: number) => { const p = tree.get(g)?.parent ?? 0; return tree.has(p) ? p : 0; };
   /** the group a line sits straight in, 0 for none */
@@ -265,7 +298,9 @@ export function LinesTab() {
     return out;
   };
   const sorted = sortItems(allItems);
-  const items = sorted.filter((it) => it.ls.some((l) => shownIds.has(l.id)));
+  const items = sorted.filter((it) => it.ls.some((l) => shownIds.has(l.id) && shows(l)));
+  /** a group's members as listed: the lines and groups with a line the filters let through */
+  const kidsShown = (it: Item) => it.kids.filter((k) => k.ls.some(shows));
   /** an item's lines in the order shown */
   const linesIn = (it: Item): string[] => (it.g ? it.kids.flatMap(linesIn) : [it.ls[0].id]);
   /** every line in the order shown, the hidden ones included */
@@ -288,7 +323,7 @@ export function LinesTab() {
   type Row = { key: string; it: Item; line?: LineInput; home: number; depth: number };
   const rowsOf = (it: Item, home: number, depth: number): Row[] => it.g === 0
     ? [{ key: "l:" + it.ls[0].id, it, line: it.ls[0], home, depth }]
-    : [{ key: "g:" + it.g, it, home, depth }, ...(!closed.has(it.g) ? it.kids.flatMap((k) => rowsOf(k, it.g, depth + 1)) : [])];
+    : [{ key: "g:" + it.g, it, home, depth }, ...(!closed.has(it.g) ? kidsShown(it).flatMap((k) => rowsOf(k, it.g, depth + 1)) : [])];
   const rowList: Row[] = items.flatMap((it) => rowsOf(it, 0, 0));
   /** What a drop does: `with` the line or group dropped onto, or `at` the gap (a row index) */
   type Drop = { with: Row } | { at: number };
@@ -416,12 +451,12 @@ export function LinesTab() {
           <span class="val muted">{statusText(st.status)}</span>
         ) : (
           <>
-            <RidersToday l={l} />
-            <MoneyToday l={l} st={st} />
-            <TrainsNow line={l.id} n={trainsNowAt(l.id, levOf(l.id))} period={periodOf(l)} at={periodAt(lineSeconds(st))} bus={!!st.bus} ferry={!!st.bus?.ferry} tram={!!st.tram} v={crowdOf(l)} lev={demandAt(lineSeconds(st))} stops={l.stops.length} flip={lineReversed(l, w, !!st.loop)} ends={endNames(l)} />
+            {col("riders") && <RidersToday l={l} />}
+            {col("money") && <MoneyToday l={l} st={st} />}
+            {col("trains") && <TrainsNow line={l.id} n={trainsNowAt(l.id, levOf(l.id))} period={periodOf(l)} at={periodAt(lineSeconds(st))} bus={!!st.bus} ferry={!!st.bus?.ferry} tram={!!st.tram} v={crowdOf(l)} lev={demandAt(lineSeconds(st))} stops={l.stops.length} flip={lineReversed(l, w, !!st.loop)} ends={endNames(l)} />}
           </>
         )}
-        <TypeCell rank={lineTypeRank(st)} />
+        {col("kind") && <TypeCell rank={lineTypeRank(st)} />}
         {key === "near" && <Near m={sc.lineDist.get(l.id)} />}
       </li>
     );
@@ -445,11 +480,11 @@ export function LinesTab() {
             <span class="grow line-name" onDblClick={(e) => { e.stopPropagation(); setRenaming(it.g); }}>{it.name}</span>
           )}
           {showCity && <span class="val muted w-city">{cityOf.get(it.ls[0].id)}</span>}
-          <GroupFigures ls={it.ls} w={w} trains={trains} period={periodOf(it.ls[0])} />
-          <TypeCell rank={typeOf(it.ls)} />
+          <GroupFigures ls={it.ls} w={w} trains={trains} period={periodOf(it.ls[0])} col={col} />
+          {col("kind") && <TypeCell rank={typeOf(it.ls)} />}
           {key === "near" && <Near m={near(it.ls)} />}
         </li>
-        {isOpen && it.kids.map((k) => (k.g ? groupRows(k, depth + 1) : lineRow(k.ls[0], depth + 1)))}
+        {isOpen && kidsShown(it).map((k) => (k.g ? groupRows(k, depth + 1) : lineRow(k.ls[0], depth + 1)))}
       </>
     );
   };
@@ -471,6 +506,7 @@ export function LinesTab() {
           <button class={"btn icon" + (eyes ? " on" : "")} data-tip={eyes ? t("linesTab.showAllLines") : t("linesTab.hideLines")} aria-label={eyes ? t("linesTab.showAllLines") : t("linesTab.hideLines")} aria-pressed={eyes}
             onClick={() => { if (visToggles.peek()) showAllLines(); visToggles.value = !visToggles.peek(); }}><Icon.eye /></button>
           <ScopeToggle />
+          <LinesGear modes={modeChoices} cities={cityChoices} leftOut={leftOut} />
         </span>
       </div>
       {items.length === 0 && <p class="muted">{listedLines(w).length === 0 ? t("linesTab.none") : t("linesTab.noneHere")}</p>}
@@ -478,10 +514,12 @@ export function LinesTab() {
       {listedLines(w).length > 0 && <SortHead sort={lineSort} hand={hand.length ? () => setHandOrder("lines", []) : undefined} cols={[
         { key: "name", label: t("linesTab.colName"), tip: t("linesTab.sortName"), first: 1 },
         ...(showCity ? [{ key: "city" as const, label: t("linesTab.colCity"), tip: t("linesTab.sortCity"), first: 1 as const, cls: "w-city", left: true }] : []),
-        { key: "riders", label: t("linesTab.colRiders"), tip: t("linesTab.sortRiders"), first: -1, cls: "w-riders" },
-        { key: "money", label: t("linesTab.colMoney"), tip: t("linesTab.sortMoney"), first: -1, cls: "w-linemoney" },
-        { key: "trains", label: t("linesTab.colTrains"), tip: t("linesTab.sortTrains"), first: -1, cls: "w-trains" },
-        { key: "kind", label: t("linesTab.colType"), tip: t("linesTab.sortType"), first: 1, cls: "w-kind", left: true },
+        ...([
+          { key: "riders", label: t("linesTab.colRiders"), tip: t("linesTab.sortRiders"), first: -1, cls: "w-riders" },
+          { key: "money", label: t("linesTab.colMoney"), tip: t("linesTab.sortMoney"), first: -1, cls: "w-linemoney" },
+          { key: "trains", label: t("linesTab.colTrains"), tip: t("linesTab.sortTrains"), first: -1, cls: "w-trains" },
+          { key: "kind", label: t("linesTab.colType"), tip: t("linesTab.sortType"), first: 1, cls: "w-kind", left: true },
+        ] as const).filter((c) => col(c.key)),
         { key: "near", label: t("linesTab.colNear"), tip: t("linesTab.sortNear"), first: 1, ...(key === "near" ? { cls: "w-near" } : { cls: "near-off", beside: true }) },
       ]} />}
       <ul class={"rows pick" + (drag?.on ? " dragging" : "")}>

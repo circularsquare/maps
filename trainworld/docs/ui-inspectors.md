@@ -181,6 +181,18 @@ purpose filter the purpose drawn is ringed in the bar.
   City column follows Name (the first stop's city, named as the Cities list names it, `stationZone`;
   hover "The first stop is in Toronto"). It sorts like the others and takes room from the Riders and
   Trains columns.
+- **The gear** [T-3816, T-3799; `ui/LinesGear.tsx`, `game/linesView.ts`]: last in the row with the eye and the
+  scope toggle, a gear opens a popover (closed by a click outside or Esc) with the line types to list (a pressed
+  button per type the game's lines have), the cities to list (a box per city a line stops in, a city being the
+  zone a stop is in, `stationCity`, as fares by city; the heading's box ticks or unticks them all) and the columns
+  to show (City, Riders, Money, Fleet, Type; Name always, Near while sorted on). A section with fewer than two
+  choices is left out, and a choice turned off that the game does not offer counts for nothing. The filters
+  apply on top of the scope: a line is listed when both let it through; it passes the cities when any stop is in
+  a ticked city or no stop is in any city. A line with no stops and the selected line always pass. A group is
+  listed when any line in it passes, and open shows only those, but its figures, bullet, Type and hover stay
+  every line's. While the filters keep any line in the game off the list, the gear has a dot and its hover says
+  how many ("3 lines not listed"). A sort on a column turned off goes to Name. Kept per browser (localStorage
+  `trainworld-lines-view`, what is turned off), never in the save.
 - **Line groups and dragging** [T-1791, T-1813, `game/lineGroups.ts`, `game/handOrder.ts`; the model in [track-and-service.md](track-and-service.md) 6.3]:
   a row is dragged with the mouse or a pen once the pointer has moved 6 px (touch scrolls the list
   as before). **Groups nest** to any depth [T-3423]: a group's members are lines and groups, and a

@@ -436,6 +436,19 @@ body.resizing, body.resizing * { user-select: none; }
 /* T-3420: the lines hidden on the map, their bullet and name faded; in hide mode a box per row, the Settings
    checkbox at a smaller size, ticked while the row's lines are drawn (a group's half lit while some are) */
 .list-vis { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+/* T-3816: the gear at the Lines tab's top right and its popover, under the action row at its right edge; a dot on the
+   gear while its filters keep lines off the list */
+.line-list-actions { position: relative; }
+.list-vis { flex-wrap: wrap; justify-content: flex-end; }
+.list-vis > * { flex: none; }
+.lines-gear .btn.filtered::after { content: ""; position: absolute; top: -4px; right: -4px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--bg); }
+.lines-gear .btn.filtered { position: relative; }
+.lines-gear-pop { position: absolute; right: 0; top: calc(100% + 4px); z-index: 30; width: max-content; max-width: 100%; box-sizing: border-box;
+  padding: 10px 12px; background: var(--bg); border: 1px solid var(--rule); display: flex; flex-direction: column; gap: 14px; }
+.lines-gear-pop .h { margin: 0 0 4px; }
+.lines-gear-pop .h .check { font-weight: 700; }
+.lines-gear-pop .gear-cities { max-height: 186px; overflow-y: auto; }
+.lines-gear-pop .check input.some { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 40%, var(--tint)); }
 .lines-box .rows > li.hidden-line > :is(.chip, .group-pill, .line-name) { opacity: 0.4; }
 .lines-box .vis-check { appearance: none; width: calc(12 * var(--px)); height: calc(12 * var(--px)); margin: 0; flex: none; cursor: pointer;
   border: 1px solid var(--rule); background: var(--bg); }
