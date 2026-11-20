@@ -376659,9 +376659,6 @@
     "parked": "2026-11-20T00:55:35",
     "gated": "2026-11-20T01:03:12",
     "shipped": "2026-11-20T01:50:20"
-   },
-   "gate_relax": {
-    "browser": "T-1738: every check passed but 'no page errors': MapLibre 6.13.0's line breaking throws (Cannot use 'in' operator to search for 'imageName' in undefined) on the basemap's long Burmese-script labels round Loikaw and Meiktila, whatever the pack; reproduced panning a game opened on tgg"
    }
   },
   {
@@ -378805,9 +378802,6 @@
     "parked": "2026-11-20T00:55:36",
     "gated": "2026-11-20T01:03:12",
     "shipped": "2026-11-20T01:50:37"
-   },
-   "gate_relax": {
-    "browser": "T-1738: every check passed but 'no page errors': MapLibre 6.13.0's line breaking throws (Cannot use 'in' operator to search for 'imageName' in undefined) on the basemap's long Burmese-script labels round Loikaw and Meiktila, whatever the pack; reproduced panning a game opened on tgg"
    }
   },
   {

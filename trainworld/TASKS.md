@@ -704,6 +704,9 @@ Passing tracks (T-2228, archived; built as T-2231 to T-2233; notes/T-2228.md):
   - Context: Design done 11-20 (notes/T-2216.md, 4 stages, about 7-10 h). Market zone pairs on two landmasses are "fixed, never solved" today (1.49M longer trips, 662,000 commutes a day), and the commutes are quietly counted as car; once solved they show "No route" until a ferry or line joins them. Stage 0 (wrong landmasses) is T-3838.
   - Goal: They solve with rail as the only ground mode, with a point past which trips don't go by transit at all, so fares can't be raised without limit (your pad, 2026-11-18: "we should probably have a certain point at which transit is just not taken even if its the only option"); closes T-1396.
   - Other: Own worktree (intercity). notes/T-2216.md
+- T-3843 [P3] {L:region-redraws} Isfahan's north strip in no zone
+  - Context: Found by T-3763: a 141 km2 strip on Isfahan's north edge (51.624, 32.739), between the outlines of bcs and isf, holds about 70,000-137,000 people and is in no pack. Also Duhok governorate comes out at 1.45 of Iraq's 2024 census.
+  - Other: notes/T-3763.md
 - T-3838 [P3] {L:islands} {after:seasia's world run} Places on the wrong landmass
   - Context: Found in the T-2216 design: 13 rows whose landmass differs from their pack's main land. Reggio Calabria sits on Sicily's, so Cosenza - Reggio (10,000 trips each way) has no car today; the Isle of Wight is joined to Great Britain; Naval (Biliran) isn't joined to Leyte. A pipeline and market-rows.json fix, about 1-2 h.
   - Other: notes/T-2216.md
