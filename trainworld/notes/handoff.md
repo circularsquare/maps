@@ -10,14 +10,13 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 0. Live v0.4.4. Cap 14. 8800 = 7637e0e0 (smoke passed). Since: T-3846, T-3847, T-3845 landed (not on 8800).
 1. Running, mine: gapfill (Opus, T-3764, main tree: JOIN of 338 PK+BD rows from ~13:20, pid 9092, log
    artifacts/trainworld/t3764-join.log; no data/packs writes or plain 8800 rebuild until it ends; its uncommitted
-   pipeline, checks, game json, notes files are its own), riverfix (Opus, T-3839, 6152),
-   islands1 done (T-2216 stage 1 in tree islands1; islandchk Sonnet checker running, 6159; then a smoke with free
-   cores before landing; rewrite T-2216 to stages 2-3), bigload (Opus, T-3868, 6157, her NA save), savefail (Opus,
-   T-3869, 6158), One tree each.
+   files are its own), riverfix (Opus, T-3839, 6152), bigload (Opus, T-3868, 6157, her NA save), savefail (Opus,
+   T-3869, 6158). islands1 done in its tree: islandchk checker on it (6159), then a smoke with free cores, land,
+   rewrite T-2216 to stages 2-3.
 2. T-3395: 11-20 scan (pass 1, not done) found 0 new damage. Run `tools/ops/save_health.py` after the 11-21
    04:00 UTC scan; clean = close it (the two rev-1 games of ue83342ed78f8fc4c are old 11-19 damage).
-3. Up next: T-3804; T-2216 stages 2-3 after stage 1 (stage 0 is T-3838); after gapfill: T-3838, T-1376 retry, T-3843, rest of T-3764;
-   T-1738 Bhamo; T-3836 (design for her).
+3. Up next: P2 raised 11-20 (T-3655, 3646, 3735, 3513, 2486, 3829); T-2216 stages 2-3; after gapfill: T-3838,
+   T-1376 retry, T-3843, rest of T-3764, T-1738 Bhamo. No minor track work (her 11-20).
 4. Next update: unpublished changelog c001-c015 plus tonight's; untranslated: T-3822's and T-3823's hover strings,
    diagramView.addCity; use the publish skill (review agent, sort, playtest list, translations, new zones image).
 5. Leftover trees ttchk2base, touchrule, timekeys. T-3781 waits for the next report's diagnosis. Steam (T-3729): her screenshots in artifacts/trainworld/steam.
