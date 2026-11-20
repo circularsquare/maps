@@ -557,17 +557,17 @@ let hillshadeOn = false;
 /** T-2883: in bus placing mode, the roads a bus may drive are tinted faintly over the basemap's own
  * roads, and a one-way street gets arrows pointing the way traffic runs; T-2998: with Tram in the track
  * tool and the street snap on, the streets a tram may follow, in green. Colour light, dark, opacity light, dark. */
-const ONEWAY_ARROW = "bus-oneway-arrow";
+const ONEWAY_ARROW = "bus-oneway-arrow", ONEWAY_ARROW_FAST = "bus-oneway-arrow-fast";
 const ONEWAY_LAYER = "bus_roads_oneway";
 /** A chevron pointing right, the direction `symbol-placement: line` treats as forward along the road. */
-function onewayArrow(dark: boolean): { width: number; height: number; data: Uint8ClampedArray } {
+function onewayArrow(colour: string): { width: number; height: number; data: Uint8ClampedArray } {
   const s = 32;
-  if (!canvasReadsTrue()) return { width: s, height: s, data: chevronPixels(s, dark ? [0x3f, 0xd0, 0xc4] : [0x1a, 0x9e, 0x94]) };
+  if (!canvasReadsTrue()) return { width: s, height: s, data: chevronPixels(s, [1, 3, 5].map((i) => parseInt(colour.slice(i, i + 2), 16))) };
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = s;
   const g = canvas.getContext("2d", { willReadFrequently: true })!;
   g.clearRect(0, 0, s, s);
-  g.strokeStyle = dark ? "#3fd0c4" : "#1a9e94";
+  g.strokeStyle = colour;
   g.lineWidth = 3.5;
   g.lineCap = "butt";
   g.lineJoin = "miter";
@@ -603,10 +603,13 @@ function chevronPixels(s: number, [r, g, b]: number[]): Uint8ClampedArray {
     }
   return px;
 }
+/** the arrows in the hint's colours: its teal, and on a fast road its blue */
 function ensureOnewayArrow(map: maplibregl.Map, dark: boolean) {
-  const image = onewayArrow(dark);
-  if (map.hasImage(ONEWAY_ARROW)) map.updateImage(ONEWAY_ARROW, image);
-  else map.addImage(ONEWAY_ARROW, image);
+  for (const [id, colour] of [[ONEWAY_ARROW, ROAD_HINTS.bus.colour[+dark]], [ONEWAY_ARROW_FAST, BUS_FAST_COLOUR[+dark]]]) {
+    const image = onewayArrow(colour);
+    if (map.hasImage(id)) map.updateImage(id, image);
+    else map.addImage(id, image);
+  }
 }
 const ROAD_HINTS = {
   // T-3014: both a quarter wider and from a zoom further out (the road tiles carry the minor streets from 12, so
@@ -634,52 +637,26 @@ export function setRailRoadHint(map: maplibregl.Map, on: boolean) {
 function repaintRoadHints(map: maplibregl.Map) {
   for (const k of Object.keys(hintOn) as RoadHint[]) if (hintOn[k]) setRoadHint(map, k, true);
 }
-/** T-3829, temporary until Anita picks: the bus hint's look by letter, `?busroads=0|a|b|c` (0 the look before:
- * one colour for every road), and `twBusRoadLook(letter)` in the page. Fast roads (`fastRoadExpr`) are a: blue;
- * b: wider and stronger, the rest fainter; c: hollow. */
-type BusLook = "0" | "a" | "b" | "c";
-const BUS_LOOKS: readonly BusLook[] = ["0", "a", "b", "c"];
-const BUS_LOOK_PICK: BusLook = "b";
-let busLook: BusLook = ((q) => (BUS_LOOKS.includes(q as BusLook) ? (q as BusLook) : BUS_LOOK_PICK))(
-  typeof location === "undefined" ? null : new URLSearchParams(location.search).get("busroads"),
-);
-let busLookMap: maplibregl.Map | null = null;
-if (typeof window !== "undefined") (window as any).twBusRoadLook = (l: BusLook) => {
-  if (!BUS_LOOKS.includes(l)) return busLook;
-  busLook = l;
-  if (busLookMap && hintOn.bus) setRoadHint(busLookMap, "bus", true);
-  return busLook;
-};
-const BUS_CASING = "bus_roads_hint_casing";
+/** T-3829 (Anita picked it from three): the bus hint draws the roads a bus runs fastest on (`fastRoadExpr`) in
+ * blue, a little wider, the other roads in its teal. */
+const BUS_FAST_COLOUR = ["#3a4fb0", "#a6bcff"], BUS_FAST_OPACITY = [0.85, 0.9], BUS_FAST_WIDTH = 1.2;
 /** the hint's width at each zoom, `mul` times (a number or a per-road expression) */
 const hintWidth = (w: number, mul: unknown = 1) =>
   zoomWidth(11, 0.4 * w, 12, 0.5 * w, 14, w, 16, 2.5 * w, 20, 10 * w).map((s, i) => (i >= 4 && i % 2 === 0 && mul !== 1 ? ["*", s, mul] : s));
 const byFast = (fast: unknown, slow: unknown) => ["case", fastRoadExpr(), fast, slow];
-/** the hint's paint, with `mul` its width per road over the plain hint's (the one-way arrows follow it), and for a
- * cased look the casing's */
-function hintPaint(kind: RoadHint, dark: 0 | 1): { colour: unknown; opacity: unknown; width: unknown; mul: unknown; casing?: { colour: string; opacity: number; width: unknown } } {
-  const h = ROAD_HINTS[kind], plain = { colour: h.colour[dark], opacity: h.opacity[dark], width: hintWidth(h.width), mul: 1 };
-  if (kind !== "bus" || busLook === "0") return plain;
-  if (busLook === "a") {
-    const mul = byFast(1.2, 1);
-    return { colour: byFast(["#3a4fb0", "#95a8f5"][dark], plain.colour), opacity: byFast([0.85, 0.75][dark], plain.opacity), width: hintWidth(h.width, mul), mul };
-  }
-  if (busLook === "b") {
-    const mul = byFast(2, 0.8);
-    return { colour: h.colour[dark], opacity: byFast([0.85, 0.7][dark], [0.38, 0.26][dark]), width: hintWidth(h.width, mul), mul };
-  }
-  // c: a fast road hollow, two thin lines of the hint's colour with the land between
-  const land = SHADES[shadeAs[0]].land;
-  return { colour: byFast(land, plain.colour), opacity: byFast(1, plain.opacity), width: hintWidth(h.width, byFast(1.8, 1)), mul: 1, casing: { colour: plain.colour, opacity: [0.85, 0.75][dark], width: hintWidth(h.width, 3.8) } };
+/** the hint's paint, with `mul` its width per road over the plain hint's (the one-way arrows follow it) */
+function hintPaint(kind: RoadHint, dark: 0 | 1): { colour: unknown; opacity: unknown; width: unknown; mul: unknown } {
+  const h = ROAD_HINTS[kind];
+  if (kind !== "bus") return { colour: h.colour[dark], opacity: h.opacity[dark], width: hintWidth(h.width), mul: 1 };
+  const mul = byFast(BUS_FAST_WIDTH, 1);
+  return { colour: byFast(BUS_FAST_COLOUR[dark], h.colour[dark]), opacity: byFast(BUS_FAST_OPACITY[dark], h.opacity[dark]), width: hintWidth(h.width, mul), mul };
 }
 function setRoadHint(map: maplibregl.Map, kind: RoadHint, on: boolean) {
   hintOn[kind] = on;
-  if (kind === "bus") busLookMap = map;
   if (!styleUp(map)) return;
   const h = ROAD_HINTS[kind], dark = shadeAs[0] === "dark" ? 1 : 0;
   if (!on) {
     if (map.getLayer(h.id)) map.removeLayer(h.id);
-    if (kind === "bus" && map.getLayer(BUS_CASING)) map.removeLayer(BUS_CASING);
     if (kind === "bus" && map.getLayer(ONEWAY_LAYER)) map.removeLayer(ONEWAY_LAYER);
     return;
   }
@@ -687,21 +664,6 @@ function setRoadHint(map: maplibregl.Map, kind: RoadHint, on: boolean) {
   if (!style || !map.getLayer("highway_minor") || !map.getSource(VECTOR_SOURCE)) return;
   const p = hintPaint(kind, dark);
   const before = style.layers.find((l) => l.type === "symbol")?.id;
-  if (kind === "bus") {
-    if (!p.casing) {
-      if (map.getLayer(BUS_CASING)) map.removeLayer(BUS_CASING);
-    } else if (map.getLayer(BUS_CASING)) {
-      map.setPaintProperty(BUS_CASING, "line-color", p.casing.colour);
-      map.setPaintProperty(BUS_CASING, "line-opacity", p.casing.opacity);
-    } else {
-      map.addLayer({
-        id: BUS_CASING, type: "line", source: VECTOR_SOURCE, "source-layer": "transportation", minzoom: h.minzoom,
-        filter: ["all", h.filter(), fastRoadExpr()] as unknown as maplibregl.FilterSpecification,
-        layout: { "line-cap": "round", "line-join": "round" },
-        paint: { "line-color": p.casing.colour, "line-opacity": p.casing.opacity, "line-width": p.casing.width as maplibregl.ExpressionSpecification },
-      }, map.getLayer(h.id) ? h.id : before);
-    }
-  }
   if (map.getLayer(h.id)) {
     map.setPaintProperty(h.id, "line-color", p.colour as maplibregl.ExpressionSpecification);
     map.setPaintProperty(h.id, "line-opacity", p.opacity as maplibregl.ExpressionSpecification);
@@ -739,7 +701,7 @@ function setBusOnewayArrows(map: maplibregl.Map, dark: boolean, before: string |
     layout: {
       "symbol-placement": "line",
       "symbol-spacing": 90,
-      "icon-image": ONEWAY_ARROW,
+      "icon-image": byFast(ONEWAY_ARROW_FAST, ONEWAY_ARROW) as maplibregl.ExpressionSpecification,
       "icon-size": size,
       "icon-rotate": ["case", ["==", ["to-number", ["get", "oneway"]], -1], 180, 0] as maplibregl.ExpressionSpecification,
       "icon-rotation-alignment": "map",
