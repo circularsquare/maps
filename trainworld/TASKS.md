@@ -104,7 +104,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Goal: A cold run is near 3 min.
   - Other: See notes/T-1992.md.
 - T-3781 [P1] {L:loading} {after:a report with the new diagnosis} Demand data not loading within 10 minutes
-  - Context: One player hit it twice on v0.4.2 (feedback 1795092485-688b2e15, 1795083347-52a31102); the only such reports in 7 days. Their saves load normally on master. A stuck load now restarts once, and the report names the stuck worker and period (tree demandload).
+  - Context: Two anonymous reports on v0.4.2 (feedback 1795092485-688b2e15, 1795083347-52a31102), plus a third, "crashes every time it opens" (1795097335-fa20c413), all Japanese, 11-19 (board group g115). Their saves load normally on master. A stuck load now restarts once, and the report names the stuck worker and period (tree demandload).
   - Goal: The cause found from the next report's diagnosis, or closed if no report comes.
   - Other: notes/T-3781.md
 - T-3817 [P2] {L:timetables} Zoomable line timetable that merges the Marey chart (taking, 2026-11-19, agent ttzoom)
@@ -406,16 +406,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3801's audit: the hour turn (0.14-1.1 s every game hour), one today answer (70-250 ms, 0.5-0.8 s under load; splitting it is a design call), the snapshot timer and next-hour boarding step (0.2-0.5 s). Not measured: undo of a rename, unbind all, the junction panel.
   - Goal: Each is under 0.2 s or yields to edits, per docs/architecture.md "Edits never queue behind polling".
   - Other: notes/T-3801.md
-- T-3805 [P3] {L:map-look} Trip routes and gap flash drift on big screens
-  - Context: Found by T-3802: the trip view's route drawing and the gap flash scale by the map's pixel ratio, so on a map over 4096 device px wide (5K screens, some Macs on 4K monitors) or after moving the window to another screen they sit off their places, like the station rings did. Reach: few.
-  - Goal: Both scale by their canvas's real size, as the rings now do.
-  - Other: notes/T-3802.md
 - T-3809 [P3] {L:buses} Ferry waypoints without a port
   - Context: You, 11-19: "ferry waypoint placeability (maybe with shift click or something, if thats not used) so that people can path their ferries without placing a port. sometimes we are unable to path through some archipelagos. or its too long or smth."
   - Goal: A player can place a waypoint a ferry route passes through without a port (shift click if free), so routes get through archipelagos.
-- T-3812 [P2] {L:schematic} Schematic zoom out cap and drawing indicator (taking, 2026-11-19, agent schemzoom)
-  - Context: You, 11-19: opening the schematic over one Aegean line in a save with many North American lines, "the aegean loaded really fast but then there was nothing else going on so it was a bit confusing. 1. i think lets cap the amount you can zoom out so that the total visible stuff takes up at least like 1% ish of the screen 2. if the map is not fully drawn lets still show the indicator on the top that says its drawing". After T-3409, which changes the same top row.
-  - Goal: Zooming out stops when the drawn network covers about 1% of the screen; the drawing indicator shows until every region is drawn.
 - T-3325 [P3] {L:real-networks} {after:real-network rebuild batch} Rebuild Sendai so Senzan Line stops at Toshogu
   - Context: You parked this 2026-11-12 since few players open Sendai. The fix is in realnet.py build_lines.
   - Other: Commands in notes/T-3318.md.
@@ -897,8 +890,12 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: From T-3446: once diagram-game.mjs's syntax error was fixed, checks that test the old unsheeted diagram layout ran again for the first time since T-2590, and fail: t2289 on jpn (at HEAD too), t2407's movement and distance lines, t2162's time limits on nyc and tyo (tyo misses one interchange name).
   - Goal: Each retired to checks/old/ if it only tests the old layout, or rewritten to the sheet layout and passing.
   - Other: notes/T-3446.md
-- T-3395 [P1] {L:accounts-server} Close once the save scan runs clean
-  - Context: Requested by you 2026-11-15: damaged saves caught on upload and in a daily scan, their bytes kept, the last intact version pinned with a way to restore it. Stages 1 (upload checks) and 3 (the scan) deployed 2026-11-18 13:30 UTC on your yes; stage 2 (the game, 7cd2f5ac) shipped in v0.4.0 (checked in the live bundle, T-3772).
+- T-3821 [P2] {L:accounts-server} Games store growth on the server (taking, 2026-11-19, agent gamestore)
+  - Context: 11-20 resource check: 5.0 of 16 GB, +643 MB a day, 80% in about 12 days; box disk 9.4 of 37 GB. You, 11-20: "do we think theres potential for additional like compression / efficiency there? or is there a better cheap way to store?"
+  - Goal: Measured options (smaller saves, cheaper backups, other storage) with GB saved and cost each, for you to pick.
+  - Other: notes/T-3243.md "Games"
+- T-3395 [P1] {L:accounts-server} {after:the 11-20 and 11-21 scan reports} Close once the save scan runs clean
+  - Context: Requested by you 2026-11-15: damaged saves caught on upload and in a daily scan, their bytes kept, the last intact version pinned with a way to restore it. All three stages are live (server 2026-11-18 13:30 UTC, game v0.4.0). The 11-19 pass found two damaged games on one account, each a first save never saved again; most likely older than the upload check, or the scan's check lagging newer save levels (scanchk, 11-20). Still damaged on 11-20 means old damage: close; intact means check lag.
   - Goal: The scan has run a day clean.
   - Other: Requested by you 2026-11-15. notes/T-3395.md
 - T-2573 [P3] {L:checks} Worker check misses the walker rule

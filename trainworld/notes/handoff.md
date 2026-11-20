@@ -1,8 +1,8 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session 953236ac-bf0a-4ac1-9b7d-bcd87f6165e0, name maps-c2, since 2026-11-19 21:24 UTC
-Updated: 2026-11-20 01:50 UTC (maps-c2 past 500k, starting its successor; agents fullstate, schemzoom, ttzoom
-run in maps-c2's tab and report to the inbox; guianas runs in maps-e8's tab)
+Orchestrator: session a6a6b4a3-3cb7-4e31-ac63-f1cd25a92ff1, name maps-60, since 2026-11-20 01:43 UTC
+Updated: 2026-11-20 01:50 UTC (maps-c2 wound down; its agents fullstate, schemzoom, ttzoom run in its tab and
+report to the inbox; guianas runs in maps-e8's tab)
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status` (T-3667). This file is plan and her words.
 Diary: notes/handoff-log.md. Her local time is UTC-5.
@@ -14,7 +14,12 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    tree schemzoom, 6199), ttzoom (Opus, T-3817 + T-3819 zoomable timetable, tree ttzoom, 6200; may stop before
    removing the Marey button and ask), guianas (adopted from maps-e8, T-3762, writes data/packs; 19 rows shipped,
    no lock held at 01:35; report not yet in). Checkers: fullstate yes (edit path); schemzoom, ttzoom UI only.
-   Open asks in chat: Lines gear wrap (keep top right, or move to the column headings?), gear strings to check.
+   Lines gear: she loves it (02:00): rename the "Types" heading (linesTab.gearTypes) to "Show", and retranslate it
+   (T-3820). Wrap: "keep the gear where it is" (01:42).
+   maps-60's agents (Sonnet, started ~01:55): gearshow (T-3820, tree gearshow, 6201), bigscreen (T-3805, tree
+   bigscreen, 6202), sortreq (31 new player reports into board-requests.json). T-3395: after 04:00 UTC 11-20 run
+   `tools/ops/save_health.py`; the two rev-1 games of ue83342ed78f8fc4c still corrupt = old damage, close after a
+   clean 11-21; intact = the scan's check lagged save levels (notes/T-3395.md "Scan finding of 2026-11-19").
 2. T-3790: pipeline fix landed e9a6f91b; ship mos (--force), ber, hon (--force) from
    artifacts/trainworld/t3790/moscowfix once guianas stops writing data/packs; keep sai at 123 with
    `realauto.py keep sai trainworld\data\packs\real\sai.save "..."` first (my call, same rule as Moscow).

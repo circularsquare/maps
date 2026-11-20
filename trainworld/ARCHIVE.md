@@ -1,6 +1,9 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3805 [P3] {L:map-look} Trip routes and gap flash drift on big screens (2026-11-19): tripView and gapFlash use canvas.width / overlay.cssW like the station rings; probe at pixel ratio 6 puts them in place. notes/T-3805.md.
+- T-3820 [P2] {L:small-fixes} Lines gear heading Types renamed Show (2026-11-19): linesTab.gearTypes Types -> Show (her words) in 13 languages; linesTab.colType and linesTab.sortType translated. notes/T-3820.md.
+- T-3812 [P2] {L:schematic} Schematic zoom out cap and drawing indicator (2026-11-19): Zoom-out cap at 1/10 of the view's matching side on the drawn box; drawing indicator until every region is drawn; changelog c012. notes/T-3812.md.
 - T-3799 [P2] {L:small-fixes} Choose which Lines tab columns show (2026-11-19): Gear popover with Types, Cities and Columns; groups list if any line passes, figures stay whole-group; dot and hover count when lines are filtered off; settings in localStorage. notes/T-3816.md.
 - T-3816 [P2] {L:small-fixes} Filter the Lines tab by mode and city (2026-11-19): Gear popover with Types, Cities and Columns; groups list if any line passes, figures stay whole-group; dot and hover count when lines are filtered off; settings in localStorage. notes/T-3816.md.
 - T-3409 [P2] {L:schematic} Schematic of one city or chosen cities (2026-11-19): Option B built: chosen cities laid out alone, cut lines with a 3-pitch stub, choice saved per game, All cities reuses the kept layout; checker sheetchk passed saves, edits, edges, share and switching back. notes/T-3409.md.
