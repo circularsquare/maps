@@ -273,10 +273,13 @@ function Frame({ label, title, mode, narrow = false, children }: { label: string
   const dialog = useRef<HTMLDialogElement>(null);
   useModalDialog(dialog, true);
   const close = () => (scheduleShown.value = null);
+  // a click outside closes it, but not a drag of the timetable let go outside (its click lands on the dialog too)
+  const pressedOutside = useRef(false);
   return (
     <dialog class={"saves-panel sched-panel" + (narrow ? " narrow" : "")} ref={dialog} aria-label={label}
       onCancel={(e) => { e.preventDefault(); close(); }}
-      onClick={(e) => { if (e.target === e.currentTarget) close(); }}
+      onPointerDown={(e) => { pressedOutside.current = e.target === e.currentTarget; }}
+      onClick={(e) => { if (e.target === e.currentTarget && pressedOutside.current) close(); }}
       onKeyDown={(e) => { e.stopPropagation(); if (e.key === "Escape") { e.preventDefault(); close(); } }}>
       <div class="saves-inner">
         <div class="saves-head sp-title">

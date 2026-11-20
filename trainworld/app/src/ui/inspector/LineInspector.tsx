@@ -40,7 +40,6 @@ import { useClockQuery } from "../useClockQuery";
 import type { Vehicle } from "../../game/vehicle";
 import { drawnReversed } from "../../game/northUp";
 import { partwayReversals, turnedLine, type TurnRow } from "../../game/turnedLine";
-import { MareyButton } from "./MareyChart";
 import { ScheduleButton } from "./SchedulePanel";
 import { LineProfile } from "./LineProfile";
 import { LineTopSpeed } from "./LineTopSpeed";
@@ -638,12 +637,10 @@ function stretchTip(s: { reached: number; limit: number; why: number } | undefin
   return tr("lineInspector.reach", { speed: speed(s.reached), vehicle }) + "\n" + why + (s.reached < s.limit - 1 ? "\n" + tr("lineInspector.tooClose") : "");
 }
 
-/** The chart and schedule panel buttons beside the Schedule heading (T-3543: the copy and paste buttons are gone;
- * a default for new lines is set in the schedule panel). A bus or ferry line has the schedule panel's alone (T-3703). */
+/** The schedule panel button beside the Schedule heading (T-3543: a default for new lines is set in the schedule panel). */
 export function ScheduleButtons({ l, st }: { l: LineInput; st: LineStats }) {
   return (
     <span class="sched-copy">
-      <MareyButton st={st} />
       <ScheduleButton l={l} st={st} />
     </span>
   );

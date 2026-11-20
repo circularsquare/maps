@@ -1405,11 +1405,11 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
 
 ## Schedule panel
 
-[T-3346 stage 1, T-3469, T-3475, T-3521; `ui/inspector/SchedulePanel.tsx`, `TrainTable.tsx`, sim `TrackApi.station_departures`; notes/T-3346.md, notes/T-3521.md]
+[T-3346 stage 1, T-3469, T-3475, T-3521, T-3817; `ui/inspector/SchedulePanel.tsx`, `TrainTable.tsx`, sim `TrackApi.station_departures`; notes/T-3346.md, notes/T-3521.md, notes/T-3817.md]
 
 - **A line's**: opened from the bigger icon by a running line's schedule heading (a station timetable,
   hover "Detailed schedule"); a centred modal in the saved games panel's frame, up to 1320 px wide; closed by its
-  close button, Esc or a click outside it (the dock's timetable chart, open under it, keeps going). Heading: the
+  close button, Esc or a click outside it. Heading: the
   line's bullet and name, "schedule" in grey, then the mode choice, drawn only once Detailed and
   Exact are built (stages 3 and 6; Simple alone shows no choice). A player who never opens it sees nothing else new.
 - **Left**: the line panel's schedule table, its steppers, dots and hovers, under a "Set by" Trains / Headway
@@ -1452,19 +1452,30 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   hidden twin's trains too. Times come from the sim, each trip's own (`station_departures`: its `draw` plus its
   profile's `dep` at the stop), the trips the chart and map draw.
 - **Timetable** (T-3469), as a printed one: one direction at a time ("to Gum" / "to Ash", the way the chart reads
-  top to bottom first; the other lines toggle at the end of that row), stations down the side, one column per train
-  under its line's bullet (a bullet too wide for a column becomes its letters down a strip of the line's colour),
-  times in 10 px type as "742" / "1008" in the line's colour (`legibleOn`), the departure at each stop and the
-  arrival at the last, "|" where a group's train runs through a station; a rule every 5 rows, time marks along the
-  top, a past train faded, the time now an accent line. It covers the hour before this one and the day after,
-  scrolled sideways, now a quarter of the way in. Each column stands at its train's first time on the chart's time
-  scale: the most compact scale at which 95% of columns are pushed no more than their own width from their time
-  (trains leaving seconds apart push one regardless).
+  top to bottom first), with the other lines toggle right after that switch, as tall as it (T-3819); stations down
+  the side, one column per train under its line's bullet (a bullet too wide for a column becomes its letters down a
+  strip of the line's colour), times in 10 px type as "742" / "1008" in the line's colour (`legibleOn`), the
+  departure at each stop and the arrival at the last, "|" where a group's train runs through a station; a rule every
+  5 rows, time marks along the top, a past train faded, the time now an accent line. It covers the hour before this
+  one and the day after, opening with now a quarter of the way in. Each column stands at its train's first time.
+- **Zoom** (T-3817): the wheel over the table or chart zooms both about the pointer (1.25 times a notch, coalesced to
+  one step a frame), from the whole day across to a quarter hour; over the station names it scrolls the rows. A
+  sideways wheel or Shift-wheel, a drag (mouse) or a swipe (touch) moves the view. It opens at the coarsest zoom
+  level that draws at least 95% of the day's columns (no closer than an hour across) and keeps the
+  player's zoom while the panel shows the same line. **Columns that fit**: only the columns that fit side by side
+  at the zoom are drawn; the rest are left out. The choice is made over the whole day in zoom levels (columns at
+  least 10 s x 1.41^n apart, n the finest level whose gap is a column's width): each level keeps the coarser one's
+  columns and adds, left to right, each that clears them, so scrolling never changes the set and zooming in only
+  adds columns. **Bullets**: every train's bullet is drawn, overlapping where they must, each with a 1 px rim in the
+  panel's background (light in light mode, dark in dark) so a pile reads as many; the drawn columns' bullets lie in
+  front. Hovering a bullet (the nearest within 9 px, so one under others is reached too) or a column lights that
+  train over a veil: its bullet in front and its column, covering the drawn columns it lands on, whether or not it
+  is drawn at the zoom; its path on the chart too.
 - **Chart**: the timetable chart ([ui-inspectors.md](ui-inspectors.md) "The timetable chart") under the timetable,
-  its stops 240 px tall, scaled by distance, its time axis the table's: the table's scroll moves it, the wheel over
-  it scrolls both, and it does not zoom. It draws the table's direction in front and the other direction dimmed
-  behind, every line of a group alike (another line's way by most of the track it shares). Hovering a train, its
-  column or its path, lights it in both and fades the rest (a veil over the table, the chart's trains at 35%).
+  its stops 240 px tall, scaled by distance, on the table's time axis: it zooms and scrolls with it. It draws the
+  table's direction in front and the other direction dimmed behind, every line of a group alike (another line's way
+  by most of the track it shares). Hovering a train, its column or its path, lights it in both and fades the rest (a
+  veil over the table, the chart's trains at 35%).
 - **A group's**: from the group view's chart icon, for a group with two or more running rail lines. Heading the
   group's pill and name, then "schedule"; the body is the timetable and chart at the panel's width, the longest line
   (by length) down the side, each other line's trains in the table at the stations it shares with it (a line

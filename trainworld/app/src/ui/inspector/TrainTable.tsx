@@ -4,9 +4,11 @@
 // over its train's departure on the time scale of the chart below, which scrolls with the table, so a
 // column sits right above where its train's path starts. The times are the profiles the chart draws
 // (as the departures board's check reads them). notes/T-3346.md "Stage 1 as built".
+// T-3817: the wheel zooms the table and chart together; only the columns that fit at the zoom are drawn,
+// every train's bullet is, the drawn ones in front. notes/T-3817.md.
 
 import { signal, type Signal } from "@preact/signals";
-import type { ComponentChildren } from "preact";
+import type { ComponentChildren, VNode } from "preact";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
 import { clock } from "../../game/clock";
 import { drawnReversed } from "../../game/northUp";
@@ -27,10 +29,17 @@ const DAY = 86400, HOUR = 3600;
 const COL = 27, ROW = 13, MARK_H = 14;
 /** a strip head's letters at most, and the height of each, px */
 const STRIP_MAX = 4, STRIP_CH = 11;
-/** the furthest a column may stand from its train's time, px: so far, its edge still meets it */
-const PUSH = COL;
-/** the time a column's width stands for, s, kept between these */
-const GAP_MIN = 20, GAP_MAX = 1800;
+/** the share of the day's columns the opening zoom draws, at least */
+const OPEN_SHARE = 0.95;
+/** the zoom's limits: the span across the plot, s */
+const SPAN_MIN = 900, SPAN_MAX = DAY;
+/** the wheel: the zoom a notch (100 px of wheel) */
+const NOTCH = 1.25;
+/** the zoom levels' gaps, s: a level draws columns at least this far apart in time; each level keeps
+ * the coarser one's columns and fills the gaps between them, so zooming in only adds columns */
+const GAPS = Array.from({ length: 30 }, (_, j) => 10 * Math.SQRT2 ** j);
+/** how near a bullet's centre the pointer must be to hover it, px */
+const BULLET_HIT = 9;
 /** a cell's value for a train that runs through the station without stopping */
 const PASS = -1;
 /** the time marks' steps, minutes */
@@ -40,7 +49,7 @@ const markText = (h0: number, s: number) => `${(h0 + Math.floor(s / HOUR)) % 24}
 
 const DEBUG = typeof location !== "undefined" && new URLSearchParams(location.search).has("debug");
 
-/** The run of profile `p`. Stage 2 (T-3346) makes this `profileRun`. */
+/** The run of profile `p`. */
 const runOf = (p: number) => profileRun(p);
 
 /** Seconds into a trip at which profile `p` leaves each of its stops at offsets `offs`: as it
@@ -66,9 +75,9 @@ function stopTimes(net: NetworkBuffers, p: number, offs: number[]): Float64Array
 }
 
 /** A line whose trains get columns: its bullet's line (a T-3333 twin shows its parent's), each of
- * its stops' row on the axis line (run 0 order, -1 off it), and whether its run 0 goes the axis's
- * run 1 way. */
-interface Src { line: LineInput; bullet: LineInput; st: LineStats; rowOf: number[]; flipped: boolean }
+ * its stops' row on the axis line (run 0 order, -1 off it), whether its run 0 goes the axis's
+ * run 1 way, and its rank (0: the axis line and its group's; T-3818's related lines would take 1). */
+interface Src { line: LineInput; bullet: LineInput; st: LineStats; rowOf: number[]; flipped: boolean; rank: number }
 
 /** The columns' lines: the axis line, then each other line by the stations it shares with the
  * axis (two at least, which set its direction), each with its hidden quad twin. */
@@ -81,10 +90,10 @@ function sourcesOf(axis: LineInput, others: readonly LineInput[]): Src[] {
   const add = (l: LineInput, rowOf: number[], flipped: boolean) => {
     const st = w.lineStats[l.id];
     if (!st || st.bus) return;
-    out.push({ line: l, bullet: l, st, rowOf, flipped });
+    out.push({ line: l, bullet: l, st, rowOf, flipped, rank: 0 });
     const twin = st.twin ? byId.get(st.twin) : undefined;
     const tst = twin ? w.lineStats[twin.id] : undefined;
-    if (twin && tst && twin.stops.length === l.stops.length) out.push({ line: twin, bullet: l, st: tst, rowOf, flipped });
+    if (twin && tst && twin.stops.length === l.stops.length) out.push({ line: twin, bullet: l, st: tst, rowOf, flipped, rank: 0 });
   };
   add(axis, axis.stops.map((_, i) => i), false);
   for (const o of others) {
@@ -100,8 +109,12 @@ function sourcesOf(axis: LineInput, others: readonly LineInput[]): Src[] {
 const trainKey = (line: number, p: number, dep: number) => `${line}@${p}@${dep}`;
 
 /** One train's column: its bullet, its time at the first row it has, its cells by row shown (NaN
- * blank, PASS run through). */
-interface Col { bullet: LineInput; t: number; cells: Float64Array; key: string }
+ * blank, PASS run through), and its source's rank. */
+interface Col { bullet: LineInput; t: number; cells: Float64Array; key: string; rank: number }
+
+/** The trips the table and the chart ask for: from two hours before the day, for trains that set off
+ * then and reach the axis after it starts. One question for both, so the clock worker answers it once. */
+const windowOf = (day0: number) => ({ t0: day0 - 2 * HOUR, t1: day0 + DAY });
 
 /** The day's trains of `srcs` from `day0`, as columns per direction (0 the axis's run 0 way, rows
  * in that order), each sorted by time. */
@@ -112,8 +125,8 @@ function useColumns(srcs: Src[], rows: number, day0: number): [Col[], Col[]] | n
   const [answer, setAnswer] = useState<{ key: string; day0: number; trips: (Float64Array | null)[] } | null>(null);
   useEffect(() => {
     let on = true;
-    // from two hours before, for trains that set off then and reach the axis after the day starts
-    void Promise.all(srcs.map((s) => queryClock({ what: "lineTrips", line: s.line.num, t0: day0 - 2 * HOUR, t1: day0 + DAY }))).then((trips) => {
+    const win = windowOf(day0);
+    void Promise.all(srcs.map((s) => queryClock({ what: "lineTrips", line: s.line.num, t0: win.t0, t1: win.t1 }))).then((trips) => {
       if (on && trips.every((d) => d)) setAnswer({ key, day0, trips });
     });
     return () => { on = false; };
@@ -147,7 +160,7 @@ function useColumns(srcs: Src[], rows: number, day0: number): [Col[], Col[]] | n
         for (let r = lo + 1; r < hi; r++) if (!Number.isFinite(cells[r])) cells[r] = PASS;
         const t0 = cells[lo];
         if (t0 < day0 || t0 >= day0 + DAY) continue;
-        out[dir].push({ bullet: src.bullet, t: t0, cells, key: trainKey(src.line.num, p, dep) });
+        out[dir].push({ bullet: src.bullet, t: t0, cells, key: trainKey(src.line.num, p, dep), rank: src.rank });
       }
     });
     for (const cs of out) cs.sort((a, b) => a.t - b.t);
@@ -155,47 +168,60 @@ function useColumns(srcs: Src[], rows: number, day0: number): [Col[], Col[]] | n
   }, [answer, net, rows]);
 }
 
-/** How far columns are pushed from their times at `scale`, px: the 95th percentile, since trains
- * leaving within seconds of each other push one a column whatever the scale. */
-function drift(cols: Col[], scale: number): number {
-  let last = -Infinity;
-  const push = cols.map((c) => {
-    const x = c.t * scale;
-    last = Math.max(x, last + COL);
-    return last - x;
-  });
-  return push.sort((a, b) => a - b)[Math.floor(push.length * 0.95)] ?? 0;
-}
-
-/** px per game second: the most compact scale at which columns are pushed no more than their width
- * from their times (but a few), so the busiest hours pack tight and each column still stands over
- * its train. */
-function scaleOf(cols: Col[]): number {
-  let lo = GAP_MIN, hi = GAP_MAX;
-  if (drift(cols, COL / hi) <= PUSH) return COL / hi;
-  for (let i = 0; i < 24; i++) {
-    const g = Math.sqrt(lo * hi);
-    if (drift(cols, COL / g) <= PUSH) lo = g;
-    else hi = g;
-  }
-  return COL / lo;
-}
-
-/** Each column's centre, px from the day's start: at its time, pushed right where it would overlap
- * the one before. */
-function placed(cols: Col[], scale: number, day0: number): Float64Array {
-  const xs = new Float64Array(cols.length);
-  let last = -Infinity;
-  cols.forEach((c, i) => { last = xs[i] = Math.max((c.t - day0) * scale, last + COL); });
-  return xs;
-}
-
-/** First index with xs[i] >= x. */
-function lowerBound(xs: Float64Array, x: number): number {
-  let a = 0, b = xs.length;
-  while (a < b) { const m = (a + b) >> 1; if (xs[m] < x) a = m + 1; else b = m; }
+/** First index with `ts[i] >= x`, for times sorted. */
+function lowerBound(ts: ArrayLike<number>, x: number): number {
+  let a = 0, b = ts.length;
+  while (a < b) { const m = (a + b) >> 1; if (ts[m] < x) a = m + 1; else b = m; }
   return a;
 }
+
+/** Whether time `t` is at least `g` from every time in `ts` (sorted). */
+function clears(ts: number[], t: number, g: number): boolean {
+  const i = lowerBound(ts, t);
+  return (i >= ts.length || ts[i] - t >= g) && (i === 0 || t - ts[i - 1] >= g);
+}
+
+/** The columns drawn at each zoom level (`GAPS`), 1 where drawn: every level keeps the coarser level's
+ * columns and adds, left to right, each that is a level's gap from all it has. Rank by rank: a rank
+ * fills only the gaps the ranks before it leave at that level, and its coarser columns that crowd
+ * them go, so a lower rank never takes a column's place. */
+function pickLevels(cols: Col[]): Uint8Array[] {
+  const n = cols.length;
+  const out = GAPS.map(() => new Uint8Array(n));
+  const ranks = [...new Set(cols.map((c) => c.rank))].sort((a, b) => a - b);
+  for (const r of ranks) {
+    for (let j = GAPS.length - 1; j >= 0; j--) {
+      const m = out[j], up = out[j + 1], g = GAPS[j];
+      const before: number[] = [];
+      for (let i = 0; i < n; i++) if (m[i]) before.push(cols[i].t);
+      if (up) for (let i = 0; i < n; i++) if (up[i] && cols[i].rank === r && clears(before, cols[i].t, g)) m[i] = 1;
+      const fixed: number[] = [];
+      for (let i = 0; i < n; i++) if (m[i]) fixed.push(cols[i].t);
+      let p = 0, last = -Infinity;
+      for (let i = 0; i < n; i++) {
+        const tt = cols[i].t;
+        while (p < fixed.length && fixed[p] <= tt) last = Math.max(last, fixed[p++]);
+        if (m[i] || cols[i].rank !== r) continue;
+        if (tt - last >= g && (p >= fixed.length || fixed[p] - tt >= g)) { m[i] = 1; last = tt; }
+      }
+    }
+  }
+  return out;
+}
+
+/** The opening zoom, px per game second: the coarsest level that draws nearly every column, just past the
+ * scale at which its columns stand a column's width apart. */
+function openingScale(levels: Uint8Array[], n: number): number {
+  for (let j = GAPS.length - 1; j >= 0; j--) {
+    let k = 0;
+    for (const v of levels[j]) k += v;
+    if (k >= OPEN_SHARE * n) return (COL / GAPS[j]) * 1.001;
+  }
+  return (COL / GAPS[0]) * 1.001;
+}
+
+/** The zoom level for `scale`: the finest whose columns stand a column's width apart. */
+const levelOf = (scale: number) => Math.min(GAPS.length - 1, Math.max(0, GAPS.findIndex((g) => g * scale >= COL)));
 
 /** The width of `ref`'s element's content box, px, kept as it changes. */
 function useClientWidth(ref: { current: HTMLElement | null }): number {
@@ -215,35 +241,47 @@ function useClientWidth(ref: { current: HTMLElement | null }): number {
 const fits = (l: LineInput) => [...l.letter].reduce((s, ch) => s + ((ch.codePointAt(0) ?? 0) >= 0x2e80 ? 12 : 7), 8) <= COL - 2;
 
 /** A column's head: the line's bullet, or where that is too wide its letters down a strip of its
- * colour, as printed timetables head a train with its service's name. */
+ * colour, as printed timetables head a train with its service's name. A thin rim in the page's
+ * colour, so bullets over each other read as many. */
 function Bullet({ l }: { l: LineInput }) {
-  if (fits(l)) return <Chip line={l} size="sm" plain />;
+  if (fits(l)) return <Chip line={l} size="sm" plain rim />;
   return <span class="tt-strip" style={{ "--c": l.colour, "--ct": inkOn(l.colour) }}>{[...l.letter].slice(0, STRIP_MAX).map((ch) => <span>{ch}</span>)}</span>;
 }
 
-/** A train's column of times, its centre `x` px from the day's start. */
-function Column({ c, x, cls, shift, dark }: { c: Col; x: number; cls: string; shift: number; dark: boolean }) {
-  return (
-    <div class={"tt-col" + cls} data-k={c.key} style={{ left: GUTTER + x - COL / 2 + "px", width: COL + "px", "--ink": legibleOn(c.bullet.colour, dark) }}>
-      {Array.from(c.cells, (v) => <span class={v === PASS ? "pass" : undefined}>{v === PASS ? "|" : Number.isFinite(v) ? printed(v, shift) : ""}</span>)}
-    </div>
-  );
+/** A train's times down its column, made once and kept as the column moves with the zoom. */
+function Cells({ c, shift }: { c: Col; shift: number }) {
+  return <>{Array.from(c.cells, (v) => <span class={v === PASS ? "pass" : undefined}>{v === PASS ? "|" : Number.isFinite(v) ? printed(v, shift) : ""}</span>)}</>;
 }
 
-/** The hovered train, over a veil that fades the rest: its bullet (`part` "head") or its times. One
+/** A train's column of times, its centre `x` px from the table's left; `cells` its `Cells`. */
+function Column({ c, x, cls, cells, dark }: { c: Col; x: number; cls: string; cells: ComponentChildren; dark: boolean }) {
+  return <div class={"tt-col" + cls} data-k={c.key} style={{ left: x - COL / 2 + "px", width: COL + "px", "--ink": legibleOn(c.bullet.colour, dark) }}>{cells}</div>;
+}
+
+/** The hovered train, over a veil that fades the rest: its bullet (`part` "head"), or its times with
+ * covers over the drawn columns it lands on (a train not drawn at this zoom shows the same way). One
  * element's change per hover, whatever the number of columns. */
-function Lit({ part, hot, at, cols, xs, shift, dark, now }: {
-  part: "head" | "body"; hot: Signal<string | null>; at: Map<string, number>; cols: Col[]; xs: Float64Array; shift: number; dark: boolean; now: number;
+function Lit({ part, hot, at, cols, drawn, scale, x0, shift, dark, now }: {
+  part: "head" | "body"; hot: Signal<string | null>; at: Map<string, number>; cols: Col[]; drawn: Uint8Array; scale: number; x0: number; shift: number; dark: boolean; now: number;
 }) {
   const i = hot.value === null ? undefined : at.get(hot.value);
   if (i === undefined) return null;
-  const c = cols[i];
+  const c = cols[i], x = x0 + c.t * scale;
+  if (part === "head") {
+    return (
+      <>
+        <div class="tt-veil" />
+        <span class="tt-bullet on" style={{ left: x - COL / 2 + "px", width: COL + "px", top: MARK_H + "px" }}><Bullet l={c.bullet} /></span>
+      </>
+    );
+  }
+  const covers: number[] = [];
+  for (const d of [-1, 1]) for (let j = i + d; j >= 0 && j < cols.length && Math.abs(cols[j].t - c.t) * scale < COL; j += d) if (drawn[j]) covers.push(j);
   return (
     <>
+      {covers.map((j) => <span class="tt-cover" style={{ left: x0 + cols[j].t * scale - COL / 2 - 1 + "px", width: COL + 2 + "px" }} />)}
       <div class="tt-veil" />
-      {part === "head"
-        ? <span class="tt-bullet on" style={{ left: GUTTER + xs[i] - COL / 2 + "px", width: COL + "px", top: MARK_H + "px" }}><Bullet l={c.bullet} /></span>
-        : <Column c={c} x={xs[i]} cls={" on" + (c.t < now ? " past" : "")} shift={shift} dark={dark} />}
+      <Column c={c} x={x} cls={" on" + (c.t < now ? " past" : "")} cells={<Cells c={c} shift={shift} />} dark={dark} />
     </>
   );
 }
@@ -258,6 +296,9 @@ function printed(t: number, shift: number): string {
 function Chart({ hot, ...rest }: { hot: Signal<string | null> } & Omit<Parameters<typeof MareyBody>[0], "hot" | "onHot">) {
   return <MareyBody {...rest} hot={hot.value} onHot={(k) => { hot.value = k; }} />;
 }
+
+/** The element's CSS zoom (the panels are zoomed by the UI scale): pointer offsets are divided by it. */
+const zoomOf = (el: HTMLElement) => (el as HTMLElement & { currentCSSZoom?: number }).currentCSSZoom ?? 1;
 
 /** The timetable of `axis` (its stops as rows) with `others`' trains where they run on its
  * stations, and the chart of `axis` under it. `tools` sit at the end of its direction choice. */
@@ -280,23 +321,39 @@ export function TrainTable({ axis, st, others = [], links, group, plotH, tools }
   const [pick, setPick] = useState<number | null>(null);
   const dir = pick ?? down;
   const cols = both?.[dir] ?? [];
-  const scale = useMemo(() => scaleOf(cols), [cols]);
-  const xs = useMemo(() => placed(cols, scale, day0), [cols, scale, day0]);
+  const times = useMemo(() => Float64Array.from(cols, (c) => c.t), [cols]);
+  const levels = useMemo(() => pickLevels(cols), [cols]);
+  const opening = useMemo(() => openingScale(levels, cols.length), [levels]);
+
+  const scroller = useRef<HTMLDivElement>(null);
+  const vw = useClientWidth(scroller);
+  const plotW = Math.max(0, vw - GUTTER);
+  // the zoom the player chose, kept while the line is the same; the opening zoom until then
+  const [chosen, setChosen] = useState<{ for: string; scale: number } | null>(null);
+  const lineKey = `${axis.num}:${otherKey}`;
+  const lo = plotW > 0 ? plotW / SPAN_MAX : 0, hi = plotW > 0 ? plotW / SPAN_MIN : Infinity;
+  // opening no closer than an hour across: trains leaving seconds apart (a quad twin's) never all fit
+  const scale = Math.min(hi, Math.max(lo, chosen?.for === lineKey ? chosen.scale : (plotW > 0 ? Math.min(opening, plotW / HOUR) : opening)));
+  const level = levelOf(scale);
+  const drawn = levels[level] ?? new Uint8Array(0);
   // the train under the pointer, here or on the chart: read only by the parts that draw it, so a
   // hover redraws neither the table nor the chart's trains
   const hot = useMemo(() => signal<string | null>(null), []);
   const colAt = useMemo(() => new Map(cols.map((c, i) => [c.key, i])), [cols]);
+  const drag = useRef<{ id: number; x: number; y: number; sl: number; st: number; moved: boolean } | null>(null);
   const onOver = (e: PointerEvent) => {
-    const k = (e.target as Element).closest?.("[data-k]")?.getAttribute("data-k") ?? null;
-    if (hot.value !== k) hot.value = k;
+    if (drag.current?.moved) return;
+    const k = (e.target as Element).closest?.(".tt-body [data-k]")?.getAttribute("data-k") ?? null;
+    if (k !== null || !(e.target as Element).closest?.(".tt-head")) { if (hot.value !== k) hot.value = k; }
   };
   const onOut = () => { hot.value = null; };
-  if (DEBUG) (window as unknown as { __tt?: unknown }).__tt = { cols: cols.length, hourPx: scale * HOUR, drift: drift(cols, scale), h0: ((Math.round((day0 + shift) / HOUR) % 24) + 24) % 24 };
-  const width = Math.max(DAY * scale, cols.length ? xs[xs.length - 1] + COL : 0) + COL;
+  const width = DAY * scale + COL;
+  /** The table's scroll that puts time `t` at the view's left edge at scale `s`, px. */
+  const xFor = (t: number, s: number) => Math.max(0, Math.min(GUTTER + DAY * s + COL - vw, (t - day0) * s));
 
-  const scroller = useRef<HTMLDivElement>(null);
-  const vw = useClientWidth(scroller);
   const [left, setLeft] = useState(0);
+  // the scroll last set here, so the table's scroll is set without being read back
+  const setX = useRef(-1);
   const frame = useRef(0);
   // the time at the view's left edge, kept as the table's start or scale moves under it
   const leftT = useRef(0);
@@ -304,10 +361,13 @@ export function TrainTable({ axis, st, others = [], links, group, plotH, tools }
     cancelAnimationFrame(frame.current);
     frame.current = requestAnimationFrame(() => {
       const x = scroller.current?.scrollLeft ?? 0;
-      leftT.current = day0 + x / scale;
+      leftT.current = day0 + x / scaleRef.current;
+      setX.current = x;
       setLeft(x);
     });
   };
+  const scaleRef = useRef(scale);
+  scaleRef.current = scale;
   // a new line or direction: the time now a quarter of the way in
   const placedFor = useRef("");
   useLayoutEffect(() => {
@@ -315,66 +375,162 @@ export function TrainTable({ axis, st, others = [], links, group, plotH, tools }
     if (!el || !both || !vw) return;
     if (placedFor.current !== k) {
       placedFor.current = k;
-      leftT.current = now - (0.25 * (vw - GUTTER)) / scale;
+      leftT.current = now - (0.25 * plotW) / scale;
     }
-    const x = Math.max(0, (leftT.current - day0) * scale);
-    if (Math.abs(el.scrollLeft - x) > 1) el.scrollLeft = x;
-    setLeft(el.scrollLeft);
+    const x = xFor(leftT.current, scale);
+    if (Math.abs(setX.current - x) > 0.5) { el.scrollLeft = x; setX.current = x; }
+    if (Math.abs(left - x) > 0.5) setLeft(x);
+    // a zoom step's work on the page, from the wheel's frame to the table laid out (with ?debug)
+    if (DEBUG && zoomT.current) { void el.offsetWidth; ((window as unknown as { __zoomMs?: number[] }).__zoomMs ??= []).push(performance.now() - zoomT.current); zoomT.current = 0; }
   }, [both, dir, vw, scale, day0]);
+
+  // the wheel zooms about the pointer, one step a frame however many events come
+  const wheel = useRef<{ f: number; cx: number; raf: number } | null>(null);
+  const zoomT = useRef(0);
+  const zoomAt = (f: number, cx: number) => {
+    const el = scroller.current;
+    if (!el) return;
+    const s0 = scaleRef.current, s1 = Math.min(hi, Math.max(lo, s0 * f));
+    if (s1 === s0) return;
+    if (DEBUG) zoomT.current = performance.now();
+    const tAt = day0 + (setX.current + cx - GUTTER) / s0;
+    leftT.current = tAt - (cx - GUTTER) / s1;
+    // the scale and the scroll it brings in one render, so a zoom frame lays the page out once
+    setChosen({ for: lineKey, scale: s1 });
+    setLeft(xFor(leftT.current, s1));
+  };
+  const onWheel = (e: WheelEvent) => {
+    const el = scroller.current;
+    if (!el) return;
+    const z = zoomOf(el), r = el.getBoundingClientRect(), cx = (e.clientX - r.left) / z;
+    const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? el.clientWidth : 1;
+    const dx = e.deltaX * unit, dy = e.deltaY * unit;
+    // over the station names the wheel scrolls the rows, as it does any list
+    if (e.currentTarget === el && cx < GUTTER && !e.shiftKey) return;
+    e.preventDefault();
+    if (e.shiftKey || Math.abs(dx) > Math.abs(dy)) { el.scrollLeft += e.shiftKey ? dx || dy : dx; return; }
+    if (!dy) return;
+    const p = wheel.current ?? (wheel.current = { f: 1, cx, raf: 0 });
+    p.f *= NOTCH ** (-dy / 100);
+    p.cx = cx;
+    if (!p.raf) p.raf = requestAnimationFrame(() => { const q = wheel.current!; wheel.current = null; zoomAt(q.f, Math.max(GUTTER, q.cx)); });
+  };
+  useEffect(() => () => { if (wheel.current) cancelAnimationFrame(wheel.current.raf); }, []);
+  // a press and drag moves the table and chart, sideways and down its rows (touch scrolls natively)
+  const onDown = (e: PointerEvent) => {
+    const el = scroller.current;
+    if (!el || e.button !== 0 || e.pointerType === "touch") return;
+    // a press on the table's own scrollbars scrolls natively
+    if (e.target === el && (e.offsetX >= el.clientWidth || e.offsetY >= el.clientHeight)) return;
+    drag.current = { id: e.pointerId, x: e.clientX, y: e.clientY, sl: el.scrollLeft, st: el.scrollTop, moved: false };
+  };
+  const onMove = (e: PointerEvent) => {
+    const d = drag.current, el = scroller.current;
+    if (!d || !el || d.id !== e.pointerId) return;
+    // released where this element did not hear it
+    if (!(e.buttons & 1)) { drag.current = null; el.classList.remove("dragging"); return; }
+    const z = zoomOf(el), dx = (e.clientX - d.x) / z, dy = (e.clientY - d.y) / z;
+    if (!d.moved && Math.hypot(dx, dy) < 4) return;
+    if (!d.moved) {
+      d.moved = true;
+      (e.currentTarget as Element).setPointerCapture(e.pointerId);
+      el.classList.add("dragging");
+      hot.value = null;
+    }
+    el.scrollLeft = d.sl - dx;
+    el.scrollTop = d.st - dy;
+  };
+  const onUp = (e: PointerEvent) => {
+    const d = drag.current;
+    if (!d || d.id !== e.pointerId) return;
+    drag.current = null;
+    scroller.current?.classList.remove("dragging");
+  };
+  const grab = { onPointerDown: onDown, onPointerMove: onMove, onPointerUp: onUp, onPointerCancel: onUp, onWheel };
+  // the bullet nearest the pointer in the head row, so one under others is reached too
+  const onHeadMove = (e: PointerEvent) => {
+    const el = scroller.current;
+    if (!el || drag.current?.moved) return;
+    const z = zoomOf(el), r = el.getBoundingClientRect();
+    const cx = (e.clientX - r.left) / z, cy = (e.clientY - r.top) / z;
+    let k: string | null = null;
+    if (cx >= GUTTER && cy >= MARK_H && cols.length) {
+      const tt = day0 + (el.scrollLeft + cx - GUTTER) / scale;
+      const i = lowerBound(times, tt);
+      const j = i > 0 && (i >= cols.length || tt - times[i - 1] < times[i] - tt) ? i - 1 : i;
+      if (Math.abs(times[j] - tt) * scale <= BULLET_HIT) k = cols[j].key;
+    }
+    if (hot.value !== k) hot.value = k;
+  };
+
+  // only the columns near the view are drawn, and of them only the zoom level's
+  const a = lowerBound(times, day0 + (left - plotW / 2 - COL) / scale), b = lowerBound(times, day0 + (left + 1.5 * plotW + COL) / scale);
+  const shown: number[] = [];
+  for (let i = a; i < b; i++) if (drawn[i]) shown.push(i);
+  // a column's times and a line's bullet are made once and kept, so a zoom or a scroll moves their
+  // boxes and renders none of what is in them
+  const cellsMade = useMemo(() => new Map<string, VNode>(), [cols, shift]);
+  const cellsOf = (c: Col) => {
+    let v = cellsMade.get(c.key);
+    if (!v) cellsMade.set(c.key, (v = <Cells c={c} shift={shift} />));
+    return v;
+  };
+  const bulletsMade = useMemo(() => new Map<number, VNode>(), [cols]);
+  const bulletOf = (l: LineInput) => {
+    let v = bulletsMade.get(l.num);
+    if (!v) bulletsMade.set(l.num, (v = <Bullet l={l} />));
+    return v;
+  };
+  // px from the table's left of game second 0
+  const x0 = GUTTER - day0 * scale;
+  const bullet = (c: Col, cls: string) => <span key={c.key} class={"tt-bullet" + cls} style={{ left: x0 + c.t * scale - COL / 2 + "px", width: COL + "px", top: MARK_H + "px" }}>{bulletOf(c.bullet)}</span>;
+  const backs: VNode[] = [];
+  for (let i = a; i < b; i++) backs.push(bullet(cols[i], " back"));
+  if (DEBUG) (window as unknown as { __tt?: unknown }).__tt = { cols: cols.length, hourPx: scale * HOUR, level, drawn: drawn.reduce((s, v) => s + v, 0), shown: shown.length, h0: ((Math.round((day0 + shift) / HOUR) % 24) + 24) % 24 };
 
   const rowNames = Array.from({ length: n }, (_, i) => names.get(axis.stops[dir === 0 ? i : n - 1 - i]) ?? "");
   const label = (d: number) => st.loop
     ? t("schedulePanel.via", { station: names.get(axis.stops[d === 0 ? 1 : n - 2]) ?? "" })
     : t("schedulePanel.to", { station: names.get(axis.stops[d === 0 ? n - 1 : 0]) ?? "" });
-  // only the columns near the view are drawn
-  const plotW = Math.max(0, vw - GUTTER);
-  const a = lowerBound(xs, left - plotW - COL), b = lowerBound(xs, left + 2 * plotW + COL);
-  const shown = cols.slice(a, b);
   // time marks from the day's start, as far apart as a label needs
   const h0 = (((Math.round((day0 + shift) / HOUR)) % 24) + 24) % 24;
   const step = (MARK_MIN.find((m) => m * 60 * scale >= 52) ?? 240) * 60;
   const marks: number[] = [];
   for (let s = Math.ceil(Math.max(0, left / scale - step) / step) * step; s <= DAY && s * scale < left + plotW + 60; s += step) marks.push(s);
-  const onWheel = (e: WheelEvent) => {
-    const el = scroller.current, d = e.deltaX || e.deltaY;
-    if (!el || !d) return;
-    e.preventDefault();
-    el.scrollLeft += d;
-  };
   const rowsH = n * ROW;
   const tallest = Math.max(1, ...srcs.map((s) => (fits(s.bullet) ? 1 : Math.min(STRIP_MAX, [...s.bullet.letter].length))));
   const HEAD = MARK_H + (tallest > 1 ? tallest * STRIP_CH + 6 : 20);
+  const win = useMemo(() => windowOf(day0), [day0]);
   return (
     <div class="tt">
       <div class="sp-tabs">
         <Segmented<number> options={[[down, label(down)], [1 - down, label(1 - down)]]} value={dir} onChange={setPick} />
         {tools}
       </div>
-      <div class="tt-scroll" ref={scroller} onScroll={onScroll} style={{ marginRight: PAD_R + "px", maxHeight: `min(${rowsH + HEAD + 14}px, 44vh)` }}>
+      <div class="tt-scroll" ref={scroller} onScroll={onScroll} {...grab} style={{ marginRight: PAD_R + "px", maxHeight: `min(${rowsH + HEAD + 14}px, 44vh)` }}>
         <div class="tt-inner" style={{ width: GUTTER + width + "px", height: HEAD + rowsH + "px" }} onPointerOver={onOver} onPointerLeave={onOut}>
-          <div class="tt-head" style={{ height: HEAD + "px" }}>
+          <div class="tt-head" style={{ height: HEAD + "px" }} onPointerMove={onHeadMove}>
             <div class="tt-corner" style={{ width: GUTTER + "px" }} />
             {marks.map((s) => (
               <span class={"tt-hour" + (s % HOUR ? "" : " full")} style={{ left: GUTTER + s * scale + "px" }}>{markText(h0, s)}</span>
             ))}
-            {shown.map((c, i) => (
-              <span class="tt-bullet" data-k={c.key} style={{ left: GUTTER + xs[a + i] - COL / 2 + "px", width: COL + "px", top: MARK_H + "px" }}><Bullet l={c.bullet} /></span>
-            ))}
-            <Lit part="head" hot={hot} at={colAt} cols={cols} xs={xs} shift={shift} dark={dark} now={now} />
+            {backs}
+            {shown.map((i) => bullet(cols[i], ""))}
+            <Lit part="head" hot={hot} at={colAt} cols={cols} drawn={drawn} scale={scale} x0={x0} shift={shift} dark={dark} now={now} />
           </div>
           <div class="tt-body" style={{ height: rowsH + "px", "--row": ROW + "px" }}>
             <div class="tt-names" style={{ width: GUTTER + "px" }}>{rowNames.map((s) => <span>{s}</span>)}</div>
             <span class="tt-now" style={{ left: GUTTER + (now - day0) * scale + "px" }} />
             {marks.map((s) => <span class={"tt-hour-rule" + (s % HOUR ? "" : " full")} style={{ left: GUTTER + s * scale + "px" }} />)}
-            {shown.map((c, i) => <Column c={c} x={xs[a + i]} cls={c.t < now ? " past" : ""} shift={shift} dark={dark} />)}
-            <Lit part="body" hot={hot} at={colAt} cols={cols} xs={xs} shift={shift} dark={dark} now={now} />
+            {shown.map((i) => <Column key={cols[i].key} c={cols[i]} x={x0 + cols[i].t * scale} cls={cols[i].t < now ? " past" : ""} cells={cellsOf(cols[i])} dark={dark} />)}
+            <Lit part="body" hot={hot} at={colAt} cols={cols} drawn={drawn} scale={scale} x0={x0} shift={shift} dark={dark} now={now} />
           </div>
         </div>
       </div>
-      <div class="tt-chart" onWheel={onWheel}>
+      <div class="tt-chart" {...grab}>
         {vw > 0 && scale > 0 && (
           <Chart hot={hot} key={axis.num} l={axis} st={st} links={links} width={vw + PAD_R} plotH={plotH} group={group} dir={dir}
-            view={{ t0: day0 + left / scale, span: plotW / scale }} />
+            win={win} view={{ t0: day0 + left / scale, k: scale }} />
         )}
       </div>
     </div>

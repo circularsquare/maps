@@ -1,6 +1,6 @@
 // T-3543: one schedule button, and default headways. A new game in New York with a line built through the
-// harness (lib/play.mjs): the line panel has no copy or paste schedule button and one schedule button, a size
-// bigger than the chart button beside it. In the schedule window the line's headways are set (the Headway switch),
+// harness (lib/play.mjs): the line panel has no copy or paste schedule button and one schedule button, alone
+// beside the heading (T-3817: the timetable chart is in the schedule window). In the schedule window the line's headways are set (the Headway switch),
 // "Set as default" makes them the default (the window shows them), a second line drawn after starts with those
 // headways. The game is exported and opened again: the default holds (the save's header carries it) and a line
 // drawn then starts with it. "Use default" gives a line the default (one undo each way; off with no default or a match). Shots: the line
@@ -47,7 +47,7 @@ try {
   check(!labels.some((x) => /Copy the schedule|Paste the schedule/.test(x ?? '')), 'no copy or paste schedule button', labels.join(' | '));
   check(!(await page.getByRole('button', { name: /Paste a schedule|Paste the schedule|Copy the schedule/ }).count()), 'none of them anywhere on the page');
   const sched = buttons.find((b) => b.label === 'Detailed schedule'), other = buttons.find((b) => b.label !== 'Detailed schedule');
-  check(!!sched && !!other && sched.w > other.w && sched.w - other.w < 4 && other.w >= 18, 'the schedule button is a little bigger than the chart button (Anita, 2026-11-17)', JSON.stringify(buttons));
+  check(!!sched && !other && sched.w >= 18, 'the schedule button alone beside the heading (T-3817)', JSON.stringify(buttons));
   await g.shot('t3543_line_panel_full.png', { element: '#inspector' });
   await page.evaluate(() => document.querySelector('#inspector .h .sched-copy')?.scrollIntoView({ block: 'center' }));
   const head = await page.evaluate(() => { const r = document.querySelector('#inspector .h .sched-copy').parentElement.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; });

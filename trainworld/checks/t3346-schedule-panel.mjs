@@ -166,7 +166,8 @@ try {
 
   // 5. T-3469: the timetable, a column per train, over the chart, each column over its train
   await page.waitForSelector('.sched-panel .tt-col', { timeout: 30000 });
-  await page.waitForSelector('.sched-panel .marey-chart use.run', { timeout: 30000 });
+  // T-3817: the chart's trains are on a canvas; with ?debug it counts what it drew
+  await page.waitForFunction(() => window.__mareyRuns?.own > 0, undefined, { timeout: 30000 });
   await page.waitForTimeout(800);
   const al = await page.evaluate(alignment);
   check(Math.abs(al.edge) < 1.5, `the table's times start where the chart's do: ${al.edge.toFixed(1)} px apart`);
@@ -212,11 +213,12 @@ try {
     await S(({ tw }, group) => { tw.selection.value = { kind: 'group', group }; }, g.group);
     await page.waitForSelector('button[data-tip="Timetable chart"]', { timeout: 30000 });
     await page.click('button[data-tip="Timetable chart"]');
-    await page.waitForSelector('dialog.sched-panel[open] .marey-chart use.run', { timeout: 30000 });
+    await page.waitForSelector('dialog.sched-panel[open] .marey-chart canvas', { timeout: 30000 });
+    await page.waitForFunction(() => window.__mareyRuns?.own > 0 && window.__mareyRuns?.group > 0, undefined, { timeout: 30000 }).catch(() => {});
     await page.waitForTimeout(1500);
     const ga = await page.evaluate(alignment);
     check(ga.cols >= 2 && ga.worst <= ga.allowed && Math.abs(ga.edge) < 1.5, `the group's table: ${ga.cols} columns over their trains, 90% within ${ga.worst.toFixed(2)} min`);
-    const runs = await page.$$eval('.sched-panel .marey-layer use.run', (xs) => ({ own: xs.filter((x) => !x.style.getPropertyValue('--run')).length, group: xs.filter((x) => x.style.getPropertyValue('--run') && !x.classList.contains('other')).length }));
+    const runs = await page.evaluate(() => window.__mareyRuns ?? { own: 0, group: 0 });
     check(runs.own > 0 && runs.group > 0, `the group chart draws the axis line's trains (${runs.own}) and the other line's at full strength (${runs.group})`);
     const gw = await page.$eval('.sched-panel .marey-chart', (e) => [e.getBoundingClientRect().width, e.closest('.saves-inner').getBoundingClientRect().width]);
     check(gw[0] > gw[1] - 70, `the group chart is the panel wide: ${Math.round(gw[0])} of ${Math.round(gw[1])} px`);

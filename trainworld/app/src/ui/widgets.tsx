@@ -178,7 +178,8 @@ export const Icon = {
 /** A line's bullet (T-521). Everywhere it is drawn a hover names the line and a click selects it,
  * except `plain` (the selected line's own panel, a search row that is the line). `pick` replaces
  * the selecting. `gone`: hidden but keeping its space (a station row's bullets past its "+", T-530). */
-export function Chip({ line, size = "", plain, pick, gone, tip }: { line: LineInput; size?: "" | "sm" | "lg"; plain?: boolean; pick?: (l: LineInput) => void; gone?: boolean; tip?: string }) {
+/** `rim`: a thin rim in the page's colour around the bullet, so bullets drawn over each other read as many (T-3817). */
+export function Chip({ line, size = "", plain, pick, gone, tip, rim }: { line: LineInput; size?: "" | "sm" | "lg"; plain?: boolean; pick?: (l: LineInput) => void; gone?: boolean; tip?: string; rim?: boolean }) {
   const click = plain ? undefined : (e: MouseEvent) => {
     e.stopPropagation();
     if (pick) pick(line);
@@ -190,10 +191,11 @@ export function Chip({ line, size = "", plain, pick, gone, tip }: { line: LineIn
   const b0 = bulletTextSoon(line.letter, size, zoom.value), b = b0 && bulletDraw(b0, shape);
   const idle = isIdleLine(line.id);
   return (
-    <span ref={zoom.ref} class={"chip " + size + (plain ? "" : " link") + (shape === "square" ? " square" : "") + (shape === "outline" ? " ring" : "") + (idle ? " idle" : "")} style={{ "--c": line.colour, "--ct": inkOn(line.colour), visibility: gone ? "hidden" : undefined }}
+    <span ref={zoom.ref} class={"chip " + size + (plain ? "" : " link") + (shape === "square" ? " square" : "") + (shape === "outline" ? " ring" : "") + (idle ? " idle" : "") + (rim ? " rimmed" : "")} style={{ "--c": line.colour, "--ct": inkOn(line.colour), visibility: gone ? "hidden" : undefined }}
       data-tip={plain ? undefined : (tip ?? line.name) + (idle ? "\n" + IDLE_TIP : "")} onClick={click}>
       {b ? (
         <svg style={{ width: b.w + "px", height: b.h + "px" }}>
+          {rim && <BulletRim b={b} />}
           <BulletOutline b={b} />
           <text x={b.x} y={b.y}>{line.letter}</text>
         </svg>
@@ -228,6 +230,11 @@ export function ShapePicker({ value, onChange, colour, tips }: { value: LineShap
 const BulletOutline = ({ b }: { b: BulletDraw }) =>
   b.path ? <path d={b.path.d} stroke-width={b.path.stroke} /> : b.rect!.ring !== undefined ? <rect class="ring" x={b.rect!.x} y={b.rect!.y} width={b.rect!.w} height={b.rect!.h} rx={b.rect!.r} stroke-width={b.rect!.ring} />
   : <rect y={b.rect!.y} width={b.rect!.w} height={b.rect!.h} rx={b.rect!.r} />;
+
+/** T-3817: the same outline a pixel wider all round, filled and stroked in the page's colour, under the bullet. */
+const BulletRim = ({ b }: { b: BulletDraw }) =>
+  b.path ? <path class="bullet-rim" d={b.path.d} stroke-width={b.path.stroke + 2} /> : b.rect!.ring !== undefined ? <rect class="bullet-rim" x={b.rect!.x} y={b.rect!.y} width={b.rect!.w} height={b.rect!.h} rx={b.rect!.r} stroke-width={b.rect!.ring + 2} />
+  : <rect class="bullet-rim" y={b.rect!.y} width={b.rect!.w} height={b.rect!.h} rx={b.rect!.r} stroke-width={2} />;
 
 /** The CSS zoom an element is drawn at (the panels are zoomed by the UI scale, T-247): the UI scale
  * until it is in the page, then what the browser reports, so a bullet's baseline lands on a whole

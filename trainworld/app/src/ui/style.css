@@ -213,39 +213,19 @@ svg .stroke2 { stroke-width: 2; }
 .help-q.open svg { transform: rotate(90deg); }
 .help-a { margin: 0 0 6px 16px; }
 .help-ctl { color: var(--accent); }
-/* T-2603: the timetable chart (MareyChart.tsx), over the map beside the dock's foot */
-.marey { position: absolute; bottom: 10px; left: calc(100% + 10px); z-index: 20; padding: 6px 10px 4px; background: var(--bg);
-  border: 1px solid var(--rule); box-shadow: 0 2px 8px rgb(0 0 0 / 18%); max-width: calc(100vw - var(--dock-w) - 24px); overflow-x: auto; }
-.marey-head { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
-.marey-name { flex: 1; min-width: 0; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-/* T-2665: the trains are one layer in .marey-scroll, moved by a transform as the clock runs */
+/* T-2603: the timetable chart (MareyChart.tsx) under the schedule panel's timetable; T-3817: its trains on a canvas,
+   redrawn as the table zooms and scrolls; the rules, labels and now line in SVG over and under it */
 .marey-chart { position: relative; }
 .marey-chart svg { position: absolute; left: 0; top: 0; overflow: visible; stroke-width: 1; }
 .marey-plot { position: absolute; top: 0; overflow: hidden; }
-.marey-scroll { position: absolute; left: 0; top: 0; will-change: transform; }
-.marey-lit, .marey-over { pointer-events: none; }
+.marey-plot canvas { position: absolute; left: 0; top: 0; }
+.marey-ticks, .marey-over { pointer-events: none; }
 .marey-chart text { fill: var(--muted); stroke: none; font-size: 11px; font-variant-numeric: tabular-nums; }
 .marey-chart .marey-stop { text-anchor: end; fill: var(--text); font-size: 12px; }
 .marey-chart .marey-time { text-anchor: middle; }
 .marey-grid { stroke: var(--rule); }
 .marey-tick { stroke: var(--shade); stroke-width: 1; }
-.marey-chart .run, .marey-stand { --run-ink: var(--run); stroke: var(--run-ink); }
-/* a dark line colour is lifted toward white on the dark panel, so navy and black lines stay visible */
-:root[data-shade="dark"] .marey-chart .run, :root[data-shade="dark"] .marey-stand { --run-ink: color-mix(in srgb, var(--run) 65%, #fff); }
-.marey-chart .run { fill: none; stroke-width: 1.6; pointer-events: none; }
-.marey-chart .run.on { stroke-width: 3.2; }
-.marey-chart .run-hit { fill: none; stroke: transparent; stroke-width: 9; pointer-events: stroke; }
-.marey-stand { stroke-width: 1; stroke-dasharray: 2 2; pointer-events: none; }
-/* T-2660: other lines' trains, quieter than the line's own; flat junctions and crossings as dashed rules */
-.marey-chart .run.other { stroke-width: 1; stroke-opacity: 0.55; }
-.marey-chart .run.other.on { stroke-width: 2.4; stroke-opacity: 1; }
-/* T-3475: under a timetable, the way it doesn't show dimmed behind, and the rest faded while a train is hovered */
-.marey-chart .run.back { stroke-width: 1.2; stroke-opacity: 0.3; }
-.marey-chart .run.other.back { stroke-width: 1; stroke-opacity: 0.2; }
-.marey-layer { will-change: opacity; }
-.marey-chart.hot .marey-layer { opacity: 0.35; }
-.marey-pass { --run-ink: var(--run); fill: var(--run-ink); stroke: var(--bg); stroke-width: 1; }
-:root[data-shade="dark"] .marey-pass { --run-ink: color-mix(in srgb, var(--run) 65%, #fff); }
+/* T-2660: flat junctions and crossings as dashed rules (the trains are drawn on a canvas, MareyChart.tsx) */
 .marey-flat { stroke: var(--text); stroke-opacity: 0.4; stroke-dasharray: 4 3; }
 .marey-flat-mark .hit { fill: transparent; stroke: none; }
 .marey-flat-mark rect { fill: #fff; stroke: var(--net-ink); stroke-width: 1.5; }
@@ -275,8 +255,10 @@ svg .stroke2 { stroke-width: 2; }
 .sp-periods .btn.text.mini { height: 26px; padding: 0 7px; }
 .sp-right, .sp-group { flex: 1; min-width: 0; }
 .sp-tabs { display: flex; align-items: center; gap: 8px; margin: 6px 0 10px; }
-.sp-tabs .sp-others { margin-left: auto; color: var(--muted); }
-.sp-tabs .sp-others.on { background: var(--tint); color: var(--text); }
+/* T-3819: the other lines toggle right after the direction switch, its height */
+.sp-tabs .btn.icon.mini.sp-others { width: 28px; min-width: 28px; height: 28px; color: var(--muted); }
+.sp-tabs .btn.mini.sp-others svg { width: 17px; height: 17px; }
+.sp-tabs .btn.icon.mini.sp-others.on { background: var(--tint); color: var(--text); }
 .sp-tools { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; min-width: 0; }
 .sp-tools select { max-width: 100%; min-width: 0; text-overflow: ellipsis; }
 /* the departures board, under the schedule: hour rows, each direction's minutes in its own column */
@@ -297,14 +279,14 @@ svg .stroke2 { stroke-width: 2; }
   .sp-right { width: 100%; }
 }
 /* T-3469: the timetable (TrainTable.tsx), as a printed one: a column per train, small type */
-.tt-scroll { overflow: auto; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); font-size: 10px; line-height: 1; font-variant-numeric: tabular-nums; }
+.tt-scroll { overflow: auto; cursor: grab; user-select: none; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); font-size: 10px; line-height: 1; font-variant-numeric: tabular-nums; }
 .tt-inner { position: relative; }
 .tt-head { position: sticky; top: 0; z-index: 3; background: var(--bg); border-bottom: 1px solid var(--rule); }
 .tt-corner { position: sticky; left: 0; z-index: 2; height: 100%; background: var(--bg); }
 .tt-hour { position: absolute; top: 2px; padding-left: 3px; color: var(--muted); border-left: 1px solid var(--shade); line-height: 10px; white-space: nowrap; }
 .tt-hour.full { color: var(--text); font-weight: 700; border-left-color: var(--rule); }
-.tt-bullet { position: absolute; display: flex; justify-content: center; }
-.tt-strip { display: block; width: 15px; padding: 2px 0; border-radius: 3px; background: var(--c); color: var(--ct); font-size: 10px; font-weight: 700; line-height: 11px; text-align: center; }
+.tt-bullet { position: absolute; display: flex; justify-content: center; pointer-events: none; }
+.tt-strip { display: block; width: 15px; padding: 2px 0; border-radius: 3px; background: var(--c); color: var(--ct); font-size: 10px; font-weight: 700; line-height: 11px; text-align: center; box-shadow: 0 0 0 1px var(--bg); }
 .tt-strip span { display: block; }
 .tt-body { position: relative; background-image: repeating-linear-gradient(to bottom, transparent 0 calc(5 * var(--row) - 1px), var(--rule) calc(5 * var(--row) - 1px) calc(5 * var(--row))); }
 .tt-names { position: sticky; left: 0; z-index: 2; background: var(--bg); background-image: inherit; }
@@ -319,7 +301,10 @@ svg .stroke2 { stroke-width: 2; }
 .tt-veil { position: absolute; inset: 0; z-index: 1; background: var(--bg); opacity: 0.65; pointer-events: none; }
 .tt-col.on, .tt-bullet.on { z-index: 1; pointer-events: none; }
 .tt-col.on { background: var(--shade); opacity: 1; }
-.tt-chart { margin-top: 6px; }
+.tt-chart { margin-top: 6px; cursor: grab; user-select: none; }
+.tt-scroll.dragging, .tt-scroll.dragging *, .tt-chart:active { cursor: grabbing; }
+/* T-3817: over a drawn column the hovered one lands on, the table's own background */
+.tt-cover { position: absolute; top: 0; bottom: 0; z-index: 1; background-color: var(--bg); background-image: inherit; pointer-events: none; }
 .help-panel dl { display: grid; grid-template-columns: 170px 1fr; gap: 3px 12px; margin: 0; }
 .help-panel dt { color: var(--muted); }
 .help-panel dd { margin: 0; }
@@ -644,6 +629,9 @@ body.resizing, body.resizing * { user-select: none; }
 /* T-3436: the outline bullet is a ring in the line's colour with its letter in it */
 .chip > svg rect.ring, .shape-icon rect.ring { fill: none; stroke: var(--c, currentColor); }
 .chip.ring > svg text { fill: var(--c); }
+/* T-3817: a rim in the page's colour under a bullet drawn among others */
+.chip > svg rect.bullet-rim, .chip > svg path.bullet-rim { fill: var(--bg); stroke: var(--bg); }
+.chip.rimmed:not(:has(> svg)) { box-shadow: 0 0 0 1px var(--bg); }
 /* T-1792: a line with no trains at its level now */
 .chip.idle { opacity: 0.7; filter: grayscale(0.3); }
 .chip.link { cursor: pointer; }
@@ -1003,7 +991,6 @@ rect.now { fill-opacity: .45; }
 .sched-copy .btn.icon.mini.sched-open { width: 26px; min-width: 26px; height: 26px; }
 .sched-copy .btn.mini.sched-open svg { width: 19.5px; height: 19.5px; }
 /* the chart icon fills 13 of its 16 units where the timetable's fills 11: drawn smaller so the two look one size */
-.sched-copy .btn.mini.marey-open svg { width: 15px; height: 15px; }
 .sched-copy .btn:hover:not(:disabled) { color: var(--text); }
 .stops .grow { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .stops .t { margin-left: 8px; }
@@ -1848,8 +1835,6 @@ button.save-add:hover { color: var(--text); }
   #tool-notes { width: auto; max-width: none; }
   .help-panel { left: 0; width: 100%; max-height: calc(100% - 48px); border-left: 0; border-right: 0; }
   .help-q { min-height: calc(32px / var(--ui, 1)); }
-  /* T-2603: the timetable chart just above the dock, scrolling sideways when wider than the screen */
-  .marey { left: 0; right: 0; bottom: calc(100% + 1px); max-width: none; border-left: 0; border-right: 0; }
   /* T-1259, T-1852, T-1885: under the tab row the tab area takes the dock's whole height, the inspector
      always beside it (40% and 60% until the divider is dragged); a tab wider than its share scrolls */
   #dock { display: grid; grid-template-columns: minmax(0, var(--pane-w, 40%)) 0 minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr); }
@@ -2199,7 +2184,7 @@ button.save-add:hover { color: var(--text); }
 .stn-label, .pi-label, .tool-tag, .intercity-label { font-size: calc(12px * var(--ui, 1)); }
 
 /* T-1491: F2 hides the interface for screenshots (ui/hideUi.ts); the map, network, bubbles, labels and hover tags stay */
-html.ui-hidden :is(.marey, #dock, #topbar, #tools, #tool-notes, #debug, .save-notice, .map-top-left, .map-search, .blueprint-bar, .blueprint-levels, .tool-bar, .tool-bar-pop, .mode-aura, .trouble, .map-zoom, .guide, .keep-dot, .help-panel, .touch-bar-host, .loading-card-wrap, .map-sky, #map .maplibregl-control-container) { display: none !important; }
+html.ui-hidden :is(#dock, #topbar, #tools, #tool-notes, #debug, .save-notice, .map-top-left, .map-search, .blueprint-bar, .blueprint-levels, .tool-bar, .tool-bar-pop, .mode-aura, .trouble, .map-zoom, .guide, .keep-dot, .help-panel, .touch-bar-host, .loading-card-wrap, .map-sky, #map .maplibregl-control-container) { display: none !important; }
 /* T-1548: the reminder at the top centre while the mouse moves (ui/hideUi.ts); no transition */
 .ui-hint { display: none; position: fixed; left: 50%; top: 12px; transform: translateX(-50%); z-index: 1000; pointer-events: none;
   font-size: 12px; color: var(--map-ink); background: color-mix(in srgb, var(--map-land) 88%, transparent);

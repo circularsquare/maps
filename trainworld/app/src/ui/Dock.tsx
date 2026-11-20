@@ -21,7 +21,6 @@ import { SavesPanel, savesOpen } from "./SavesPanel";
 import { SettingsTab } from "./SettingsTab";
 import { NewReplyDot, replyTip } from "./FeedbackPanel";
 import { HelpPanel } from "./HelpPanel";
-import { MareyPanel } from "./inspector/MareyChart";
 import { SchedulePanel } from "./inspector/SchedulePanel";
 import { AdvancedFares } from "./AdvancedFares";
 import { startAccountUi } from "./AccountPanel";
@@ -155,7 +154,6 @@ export function Dock() {
       </nav>
       <SavesPanel />
       <HelpPanel />
-      <MareyPanel />
       <SchedulePanel />
       <AdvancedFares />
       <section class={"pane" + (cur === "build" ? " build-pane" : "")} ref={paneRef}

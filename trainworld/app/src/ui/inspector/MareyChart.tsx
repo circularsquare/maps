@@ -1,54 +1,33 @@
 // T-2603: a line's timetable chart (a Marey chart): time across, the line's stops down by their
 // distance along it, each train's trip a line. The trips are the clock worker's (`TrackApi.line_trips`,
-// the departures the map draws) over a window around now; each trip's curve is its run profile from
-// the network buffers (`profileS`), so it bends where the train speeds up, slows and stands. Opened
-// from the line panel's schedule heading; it follows the selected line. docs/ui-inspectors.md.
+// the departures the map draws); each trip's curve is its run profile from the network buffers
+// (`profileS`), so it bends where the train speeds up, slows and stands. Drawn under the schedule
+// panel's timetable (TrainTable.tsx), on its time axis. docs/ui-inspectors.md.
 // T-2660: other lines' trains on the stretches they share, and the flat junctions and crossings where
-// other routes' trains cross its path (mareyShare.ts). T-2665: the span follows how busy the line is,
-// and the wheel zooms it.
+// other routes' trains cross its path (mareyShare.ts). T-3817: the trains are drawn on a canvas, each
+// profile's path made once per answer in game seconds across and placed by the table's zoom and
+// scroll, so a zoom frame is one redraw of the trains in view (an SVG of a day's trips took about 35-50 ms a zoom frame).
 
-import { signal } from "@preact/signals";
-import { useEffect, useLayoutEffect, useMemo, useState } from "preact/hooks";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
 import { clock } from "../../game/clock";
 import { clockTime } from "../../game/format";
 import { t as tr, tList } from "../../i18n";
 import { drawnReversed } from "../../game/northUp";
 import { nearestStation } from "../../game/places";
-import { display, selection, setDisplay } from "../../game/ui";
-import { linesById, linesByNum, stationNames, stationsById, world } from "../../game/world";
+import { display, shade as uiShade } from "../../game/ui";
+import { rgb } from "../../game/palette";
+import { linesByNum, stationNames, stationsById, world } from "../../game/world";
 import type { LineInput, LineStats } from "../../game/types";
 import { live } from "../../map/live";
 import type { NetworkBuffers } from "../../map/network";
 import { queryClock } from "../../workers/clockClient";
 import { useClockQuery } from "../useClockQuery";
-import { Chip, Icon } from "../widgets";
 import { clipPath, gradePasses, sharedStretches, type Pass, type Shared } from "./mareyShare";
 import { profileRun } from "../../map/profiles";
 
-/** Whether the chart is open; it shows the selected rail line, and closes when no line is selected. */
-export const mareyOpen = signal(false);
-
-const W_PX = 600, TOP = 8, AXIS = 22;
+const TOP = 8, AXIS = 22;
 export const GUTTER = 92, PAD_R = 18;
-/** the window's share before now */
-const BEFORE = 0.25;
-const HOUR = 3600, QUARTER = 900;
-/** a busy line's default span holds about this many departures each way */
-const DENSE_DEPARTURES = 12;
-/** the wheel's span: each notch times or over this, between a quarter hour and a day */
-const ZOOM_STEP = 1.25, MIN_SPAN = QUARTER, MAX_SPAN = 24 * HOUR;
 const DEBUG = typeof location !== "undefined" && new URLSearchParams(location.search).has("debug");
-
-/** The chart's span by default, s: two round trips, three of its longest headways, at least 2 hours;
- * on a busy line no more than 12 of its shortest headways or half a round trip (one trip end to end),
- * whichever is longer, at least half an hour; at most 8 hours; in whole quarter hours. */
-export function defaultSpan(l: LineInput, st: LineStats): number {
-  const tph = Object.values(l.tph).filter((v) => v > 0);
-  const rt = st.roundTripS || 0;
-  let s = Math.max(2 * rt, 3 * (tph.length ? HOUR / Math.min(...tph) : 0), 2 * HOUR);
-  if (tph.length) s = Math.min(s, Math.max(DENSE_DEPARTURES * (HOUR / Math.max(...tph)), 0.5 * rt, HOUR / 2));
-  return Math.ceil(Math.min(8 * HOUR, s) / QUARTER - 1e-6) * QUARTER;
-}
 
 /** Tick spacing in minutes: the smallest giving at most 8 ticks over the span. */
 const tickMinutes = (span: number) => [5, 10, 15, 30, 60, 120, 180, 240].find((m) => span / 60 / m <= 8) ?? 240;
@@ -71,14 +50,14 @@ function toRun0(stopS: [number[], number[]], r: number, s: number): number {
 
 /** A profile's curve as (trip seconds, offset) points: each phase's start, a few points inside a
  * phase that speeds up or slows, and the trip's end. */
-function profilePoints(n: NetworkBuffers, p: number): number[] {
+function profilePoints(n: NetworkBuffers, p: number, interior = true): number[] {
   const first = n.meta[p * 4], count = n.meta[p * 4 + 1], tripS = n.meta[p * 4 + 2];
   const out: number[] = [];
   for (let i = first; i < first + count; i++) {
     const t = n.phases[i * 4], s = n.phases[i * 4 + 1], v = n.phases[i * 4 + 2], a = n.phases[i * 4 + 3];
     const t1 = i + 1 < first + count ? n.phases[(i + 1) * 4] : tripS;
     out.push(t, s);
-    if (a !== 0 && t1 > t) {
+    if (interior && a !== 0 && t1 > t) {
       const stop = a < 0 ? v / -a : Infinity;
       for (const f of [0.25, 0.5, 0.75]) {
         const tt = Math.min((t1 - t) * f, stop);
@@ -126,75 +105,77 @@ function flatsFrom(d: Float64Array, stopS: number[]): Flat[] {
   return out;
 }
 
-interface Drawn { id: string; d: string }
-/** `own`: another line drawn at full strength, a line of the charted group (T-3346) */
-interface Run { key: string; href: string; x: number; colour?: string; own?: boolean; back?: boolean; tip: string }
+/** A train's trip: its profile's path (`path`, x in trip seconds, y px), its departure `x` s from the
+ * window's start and its length `len` s. `own`: another line drawn at full strength, a line of the
+ * charted group (T-3346); `back`: the way the table doesn't show. */
+interface Run { key: string; path: Path2D; coarse: Path2D; x: number; len: number; colour?: string; own?: boolean; back?: boolean; tip: string }
+
+/** Below this many px a second a run is drawn from its phases' starts alone: a speed change then spans a
+ * pixel or two, and a day of trips draws about a third of the points. */
+const COARSE_K = 0.05;
+/** Run `r`'s path at scale `k`. */
+const pathOf = (r: Run, k: number) => (k < COARSE_K ? r.coarse : r.path);
+/** a pass dot: `x` s from the window's start, `y` px */
 interface Mark { x: number; y: number; colour: string; tip: string }
 
-/** The scrolled part of the chart: the time ticks and every train, built once per answer and moved
- * as a whole by its parent, so a new minute redraws none of it. */
-function TripLayer({ width, height, ticks, defs, stands, others, passes, runs, onHover }: {
-  width: number; height: number; ticks: number[]; defs: Drawn[]; stands: number[][]; others: Run[]; passes: Mark[]; runs: Run[]; onHover: (k: string | null) => void;
-}) {
-  return (
-    <svg class="marey-layer" width={width} height={height}>
-      <defs>{defs.map((p) => <path id={p.id} d={p.d} />)}</defs>
-      {ticks.map((x) => <line class="marey-tick" x1={x} x2={x} y1={TOP} y2={height - AXIS} />)}
-      {stands.map((s) => <line class="marey-stand" x1={s[0]} x2={s[1]} y1={s[2]} y2={s[2]} />)}
-      {[false, true].map((front) => (
-        <>
-          {others.map((r) => !r.back === front && <use class={(r.own ? "run" : "run other") + (r.back ? " back" : "")} href={r.href} x={r.x} style={{ "--run": r.colour }} />)}
-          {others.map((r) => !r.back === front && <use class="run-hit" href={r.href} x={r.x} data-tip={r.tip} onPointerEnter={() => onHover(r.key)} onPointerLeave={() => onHover(null)} />)}
-          {front && passes.map((m) => <circle class="marey-pass" cx={m.x} cy={m.y} r={2.5} style={{ "--run": m.colour }} data-tip={m.tip} />)}
-          {runs.map((r) => !r.back === front && <use class={"run" + (r.back ? " back" : "")} href={r.href} x={r.x} />)}
-          {runs.map((r) => !r.back === front && <use class="run-hit" href={r.href} x={r.x} data-tip={r.tip} onPointerEnter={() => onHover(r.key)} onPointerLeave={() => onHover(null)} />)}
-        </>
-      ))}
-    </svg>
-  );
+/** A line colour as drawn on the chart: on the dark panel lifted toward white, so navy and black lines stay visible. */
+function inkOf(c: string, dark: boolean): string {
+  if (!dark || !/^#[0-9a-f]{6}$/i.test(c)) return c;
+  const [r, g, b] = rgb(c).map((v) => Math.round(v * 0.65 + 255 * 0.35));
+  return `rgb(${r},${g},${b})`;
 }
 
-/** The chart of line `l`, `width` px wide. T-3346: `plotH` sets the height of its stops' span
- * (else by its stop count), and `group`'s lines are drawn where they share its track whether or not
- * other lines are shown, at full strength. T-3469: `view` fixes the window (its left edge and span,
- * game s) for a timetable scrolled above it; the wheel then leaves it alone. T-3475: `dir` the run of
- * `l` the table shows, drawn in front, the other way dimmed behind; `hot` the train hovered (line@profile@departure),
- * lit over the rest faded, set by `onHot`. */
-export function MareyBody({ l, st, links, width = W_PX, plotH, group, view, dir, hot, onHot }: {
-  l: LineInput; st: LineStats; links: Links | null; width?: number; plotH?: number; group?: ReadonlySet<number>; view?: { t0: number; span: number };
-  dir?: number; hot?: string | null; onHot?: (k: string | null) => void;
+/** How a run is stroked: width px and opacity (style.css's old `.run` rules). */
+function strokeOf(r: Run, lit = false): [number, number] {
+  const full = !r.colour || r.own;
+  if (lit) return [full ? 3.2 : 2.4, 1];
+  if (r.back) return full ? [1.2, 0.3] : [1, 0.2];
+  return full ? [1.6, 1] : [1, 0.55];
+}
+
+/** Run `r` placed: its path moved to its departure and stretched to `k` px a second, `x0` the window's start in px. */
+const placedPath = (r: Run, k: number, x0: number) => {
+  const out = new Path2D();
+  out.addPath(pathOf(r, k), new DOMMatrix([k, 0, 0, 1, x0 + r.x * k, 0]));
+  return out;
+};
+
+/** The chart of line `l`, `width` px wide, under a timetable (T-3469). `win`: the trips asked for, game s
+ * (the table's day); `view`: the time at the plot's left edge, game s, and the scale, px a game second,
+ * both the table's. `plotH` sets the height of its stops' span (else by its stop count), and
+ * `group`'s lines are drawn where they share its track whether or not other lines are shown, at full
+ * strength (T-3346). T-3475: `dir` the run of `l` the table shows, drawn in front, the other way dimmed
+ * behind; `hot` the train hovered (line@profile@departure), lit over the rest faded, set by `onHot`. */
+export function MareyBody({ l, st, links, width, plotH, group, win, view, dir, hot, onHot }: {
+  l: LineInput; st: LineStats; links: Links | null; width: number; plotH?: number; group?: ReadonlySet<number>;
+  win: { t0: number; t1: number }; view: { t0: number; k: number }; dir?: number; hot: string | null; onHot: (k: string | null) => void;
 }) {
   const r0 = DEBUG ? performance.now() : 0;
   const w = world.value!;
   const net = live.overlay?.renderer.net ?? null;
-  const [zoom, setZoom] = useState(0);
   const PLOT_W = width - GUTTER - PAD_R;
-  const span = view?.span ?? Math.min(MAX_SPAN, Math.max(MIN_SPAN, defaultSpan(l, st) * ZOOM_STEP ** zoom));
-  const q = span / 4;
-  // fetched a quarter window either side of the window, again as now enters the next quarter
+  const { k } = view;
+  const span = PLOT_W / k;
   const now = clock.minute.value * 60;
-  const anchor = view ? view.t0 + BEFORE * span : now;
-  const slot = Math.floor(anchor / q);
-  const base = (slot - 1) * q;
-  const answer = useClockQuery({ what: "lineTrips", line: l.num, t0: base, t1: base + 6 * q }, [l.num, w.version, base, span],
-    (d) => ({ line: l.num, base, span, trips: tripsOf(d) }));
+  const base = win.t0;
+  const answer = useClockQuery({ what: "lineTrips", line: l.num, t0: win.t0, t1: win.t1 }, [l.num, w.version, win.t0, win.t1],
+    (d) => ({ line: l.num, base, trips: tripsOf(d) }));
   const showOthers = display.value.chartOtherLines;
   const otherKey = links ? [...new Set([...links.shared.keys(), ...links.passes.map((p) => p.o)])].filter((o) => showOthers || group?.has(o)).join(",") : "";
   const otherNums = useMemo(() => (otherKey ? otherKey.split(",").map(Number) : []), [otherKey]);
-  const [otherAnswer, setOtherAnswer] = useState<{ base: number; span: number; byLine: Map<number, Trip[]> } | null>(null);
+  const [otherAnswer, setOtherAnswer] = useState<{ base: number; byLine: Map<number, Trip[]> } | null>(null);
   useEffect(() => {
     if (!otherNums.length) { setOtherAnswer(null); return; }
     let on = true;
-    void Promise.all(otherNums.map((o) => queryClock({ what: "lineTrips", line: o, t0: base, t1: base + 6 * q }))).then((ds) => {
+    void Promise.all(otherNums.map((o) => queryClock({ what: "lineTrips", line: o, t0: win.t0, t1: win.t1 }))).then((ds) => {
       if (!on) return;
       const byLine = new Map<number, Trip[]>();
       ds.forEach((d, i) => { if (d) byLine.set(otherNums[i], tripsOf(d)); });
-      setOtherAnswer({ base, span, byLine });
+      setOtherAnswer({ base, byLine });
     });
     return () => { on = false; };
-  }, [otherNums, w.version, base, span]);
+  }, [otherNums, w.version, win.t0, win.t1]);
   const flats = useClockQuery({ what: "lineMarks", line: l.num }, [l.num, w.version], (d) => flatsFrom(d, st.stopS[0])) ?? [];
-  const [hover, setHover] = useState<string | null>(null);
 
   const names = stationNames(w), byId = stationsById(w);
   const n = l.stops.length;
@@ -205,58 +186,60 @@ export function MareyBody({ l, st, links, width = W_PX, plotH, group, view, dir,
     const f = d1 > d0 ? (d - d0) / (d1 - d0) : 0;
     return TOP + (flip ? 1 - f : f) * H;
   };
-  const k = PLOT_W / span;
   const shift = st.shift ?? 0;
   const local = (t: number) => clockTime(Math.floor((t + shift) / 60));
-  const id = `marey-${l.num}`;
 
-  // the line's own trips, built once per answer: each profile's path in pixels from its departure
+  // the line's own trips, built once per answer: each profile's path from its departure, x in trip seconds
   const drawn = useMemo(() => {
     const t0 = performance.now();
     if (!answer || answer.line !== l.num || !net) return null;
-    const paths = new Map<number, { d: string; pts: number[]; run: number }>();
+    const paths = new Map<number, { path: Path2D; coarse: Path2D; pts: number[]; run: number }>();
+    const pathFrom = (pts: number[], run: number) => {
+      let d = "";
+      for (let i = 0; i < pts.length; i += 2) d += `${i ? "L" : "M"}${pts[i].toFixed(1)} ${yOf(toRun0(st.stopS, run, pts[i + 1])).toFixed(1)}`;
+      return new Path2D(d);
+    };
     for (const t of answer.trips) {
       if (paths.has(t.p) || !net.meta[t.p * 4 + 1]) continue;
       const run = profileRun(t.p), pts = profilePoints(net, t.p);
-      let d = "";
-      for (let i = 0; i < pts.length; i += 2) d += `${i ? "L" : "M"}${(pts[i] * k).toFixed(1)} ${yOf(toRun0(st.stopS, run, pts[i + 1])).toFixed(1)}`;
-      paths.set(t.p, { d, pts, run });
+      paths.set(t.p, { path: pathFrom(pts, run), coarse: pathFrom(profilePoints(net, t.p, false), run), pts, run });
     }
     const stands: number[][] = [];
     const runs: Run[] = answer.trips.filter((t) => paths.has(t.p)).map((t) => {
       const pr = paths.get(t.p)!, tripS = net.meta[t.p * 4 + 2], stops = st.stopS[pr.run];
       const first = pr.run === 0 ? l.stops[0] : l.stops[n - 1], last = pr.run === 0 ? l.stops[n - 1] : l.stops[0];
       const arrive = t.dep + reachTau(pr.pts, stops[stops.length - 1] ?? 0);
-      if (t.end > t.dep + tripS + 1) stands.push([(t.dep + tripS - answer.base) * k, (t.end - answer.base) * k, yOf(toRun0(st.stopS, pr.run, pr.pts[pr.pts.length - 1] ?? 0))]);
+      if (t.end > t.dep + tripS + 1) stands.push([t.dep + tripS - answer.base, t.end - answer.base, yOf(toRun0(st.stopS, pr.run, pr.pts[pr.pts.length - 1] ?? 0))]);
       return {
-        key: `${l.num}@${t.p}@${t.dep}`, href: `#${id}-p${t.p}`, x: (t.dep - answer.base) * k, back: dir !== undefined && pr.run !== dir,
+        key: `${l.num}@${t.p}@${t.dep}`, path: pr.path, coarse: pr.coarse, x: t.dep - answer.base, len: tripS, back: dir !== undefined && pr.run !== dir,
         tip: tr("mareyChart.tip", { from: names.get(first) ?? "", leave: local(t.dep), to: names.get(last) ?? "", arrive: local(arrive) }),
       };
     });
-    (window as unknown as { __mareyMs?: number }).__mareyMs = performance.now() - t0;
-    return { defs: [...paths].map(([p, pr]) => ({ id: `${id}-p${p}`, d: pr.d })), stands, runs };
-  }, [answer, net, w.version, flip, H, k, dir]);
+    if (DEBUG) (window as unknown as { __mareyMs?: number }).__mareyMs = performance.now() - t0;
+    return { stands, runs };
+  }, [answer, net, w.version, flip, H, dir]);
 
   // the other lines' trains on the stretches they share, and their passes over at-grade conflicts
   const otherDrawn = useMemo(() => {
     if (!otherAnswer || !answer || otherAnswer.base !== answer.base || !net || !links) return null;
     const byNum = linesByNum(w);
-    const defs: Drawn[] = [], runs: Run[] = [], marks: Mark[] = [];
+    const runs: Run[] = [], marks: Mark[] = [];
     for (const [o, trips] of otherAnswer.byLine) {
       const ol = byNum.get(o), ost = ol && w.lineStats[ol.id];
       if (!ol || !ost || ost.bus) continue;
       const shared = links.shared.get(o) ?? [], passes = links.passes.filter((p) => p.o === o);
-      const pts = new Map<number, { pts: number[]; d: string; run: number; len: number }>();
+      const pts = new Map<number, { pts: number[]; path: Path2D | null; coarse: Path2D | null; run: number; len: number }>();
       for (const t of trips) {
         if (pts.has(t.p) || !net.meta[t.p * 4 + 1]) continue;
         const run = profileRun(t.p), len = net.meta[t.p * 4 + 3], raw = profilePoints(net, t.p);
-        let d = "";
-        if (shared.length) {
-          const s0 = run === 0 ? raw : raw.map((v, i) => (i % 2 ? len - v : v));
-          for (const sh of shared) d += clipPath(s0, sh.a, sh.b, (t) => t * k, (s) => yOf(sh.c + sh.sg * (s - sh.a)));
-        }
-        if (d) defs.push({ id: `${id}-o${t.p}`, d });
-        pts.set(t.p, { pts: raw, d, run, len });
+        const clipped = (ps: number[]) => {
+          let d = "";
+          const s0 = run === 0 ? ps : ps.map((v, i) => (i % 2 ? len - v : v));
+          for (const sh of shared) d += clipPath(s0, sh.a, sh.b, (t) => t, (s) => yOf(sh.c + sh.sg * (s - sh.a)));
+          return d ? new Path2D(d) : null;
+        };
+        const path = shared.length ? clipped(raw) : null;
+        pts.set(t.p, { pts: raw, path, coarse: path && clipped(profilePoints(net, t.p, false)), run, len });
       }
       const m = ol.stops.length;
       // the run of `l` that this line's run 0 goes the way of, by most of the track they share
@@ -264,12 +247,12 @@ export function MareyBody({ l, st, links, width = W_PX, plotH, group, view, dir,
       trips.forEach((t) => {
         const pr = pts.get(t.p);
         if (!pr) return;
-        if (pr.d) {
+        if (pr.path) {
           const stops = ost.stopS[pr.run];
           const first = pr.run === 0 ? ol.stops[0] : ol.stops[m - 1], last = pr.run === 0 ? ol.stops[m - 1] : ol.stops[0];
           const arrive = t.dep + reachTau(pr.pts, stops[stops.length - 1] ?? 0);
           runs.push({
-            key: `${o}@${t.p}@${t.dep}`, href: `#${id}-o${t.p}`, x: (t.dep - answer.base) * k, colour: ol.colour, own: group?.has(o), back: dir !== undefined && (pr.run ^ way) !== dir,
+            key: `${o}@${t.p}@${t.dep}`, path: pr.path, coarse: pr.coarse ?? pr.path, x: t.dep - answer.base, len: net.meta[t.p * 4 + 2], colour: ol.colour, own: group?.has(o), back: dir !== undefined && (pr.run ^ way) !== dir,
             tip: tr("mareyChart.otherTip", { line: ol.name, from: names.get(first) ?? "", leave: local(t.dep), to: names.get(last) ?? "", arrive: local(arrive) }),
           });
         }
@@ -279,36 +262,143 @@ export function MareyBody({ l, st, links, width = W_PX, plotH, group, view, dir,
           const s = pr.run === 0 ? ps.sO : pr.len - ps.sO;
           if (s < -1 || s > reach + 1) continue;
           const at = t.dep + reachTau(pr.pts, s);
-          marks.push({ x: (at - answer.base) * k, y: yOf(ps.sL), colour: ol.colour, tip: tr("mareyChart.passTip", { line: ol.name, time: local(at) }) });
+          marks.push({ x: at - answer.base, y: yOf(ps.sL), colour: ol.colour, tip: tr("mareyChart.passTip", { line: ol.name, time: local(at) }) });
         }
       });
     }
-    return { defs, runs, marks };
-  }, [otherAnswer, answer, net, links, w.version, flip, H, k, group, dir]);
+    return { runs, marks };
+  }, [otherAnswer, answer, net, links, w.version, flip, H, group, dir]);
 
-  // the time ticks over the fetched span, on the line's local clock
-  const fetchedBase = answer?.base ?? base;
-  const step = tickMinutes(span) * 60;
-  const ticks = useMemo(() => {
-    const out: number[] = [];
-    for (let t = Math.ceil((fetchedBase + shift) / step) * step - shift; t <= fetchedBase + 6 * q; t += step) out.push(t);
-    return out;
-  }, [fetchedBase, shift, step, q]);
   const height = TOP + H + AXIS;
-  const layer = useMemo(() => (
-    <TripLayer width={6 * q * k} height={height} ticks={ticks.map((t) => (t - fetchedBase) * k)} defs={[...(drawn?.defs ?? []), ...(otherDrawn?.defs ?? [])]}
-      stands={drawn?.stands ?? []} others={otherDrawn?.runs ?? []} passes={otherDrawn?.marks ?? []} runs={drawn?.runs ?? []} onHover={onHot ?? setHover} />
-  ), [drawn, otherDrawn, ticks, height]);
-  const on = onHot ? (hot ?? null) : hover;
-  const lit = on === null ? null : (drawn?.runs.find((r) => r.key === on) ?? otherDrawn?.runs.find((r) => r.key === on) ?? null);
-
-  const view0 = anchor - BEFORE * span;
-  const offset = -(view0 - fetchedBase) * k;
+  const dark = uiShade.value === "dark";
+  const canvas = useRef<HTMLCanvasElement>(null);
+  // read once per size and shade, not every frame: each read would work out the page's style again
+  const zoomFor = useRef({ w: 0, z: 1 });
+  const bg = useMemo(() => getComputedStyle(document.documentElement).getPropertyValue("--bg").trim() || "#fff", [dark]);
+  const lit = hot === null ? null : (drawn?.runs.find((r) => r.key === hot) ?? otherDrawn?.runs.find((r) => r.key === hot) ?? null);
+  const view0 = view.t0;
+  // px from the plot's left of the window's start
+  const x0 = -(view0 - base) * k;
+  // the runs in view, in the order drawn: stands under all, then the way not shown, then the way shown
+  const inView = (r: Run) => x0 + (r.x + r.len) * k >= -8 && x0 + r.x * k <= PLOT_W + 8;
+  const order = (): Run[] => {
+    const others = otherDrawn?.runs ?? [], runs = drawn?.runs ?? [];
+    return [...others.filter((r) => r.back), ...runs.filter((r) => r.back), ...others.filter((r) => !r.back), ...runs.filter((r) => !r.back)].filter(inView);
+  };
+  useLayoutEffect(() => {
+    const cv = canvas.current;
+    const ctx = cv?.getContext("2d");
+    if (!cv || !ctx) return;
+    const d0 = DEBUG ? performance.now() : 0;
+    if (zoomFor.current.w !== PLOT_W) zoomFor.current = { w: PLOT_W, z: ((cv as HTMLElement & { currentCSSZoom?: number }).currentCSSZoom ?? 1) * devicePixelRatio };
+    const z = zoomFor.current.z;
+    const cw = Math.round(PLOT_W * z), ch = Math.round(height * z);
+    if (cv.width !== cw || cv.height !== ch) { cv.width = cw; cv.height = ch; }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, cw, ch);
+    ctx.setTransform(z, 0, 0, z, 0, 0);
+    const fade = lit ? 0.35 : 1;
+    // runs of one look stroked together
+    const stroke = (rs: Run[]) => {
+      const batches = new Map<string, { path: Path2D; w: number; a: number; c: string }>();
+      for (const r of rs) {
+        const [wd, a] = strokeOf(r), c = inkOf(r.colour ?? l.colour, dark), key = `${c}|${wd}|${a}`;
+        let bt = batches.get(key);
+        if (!bt) batches.set(key, (bt = { path: new Path2D(), w: wd, a, c }));
+        bt.path.addPath(pathOf(r, k), new DOMMatrix([k, 0, 0, 1, x0 + r.x * k, 0]));
+      }
+      for (const bt of batches.values()) {
+        ctx.globalAlpha = bt.a * fade;
+        ctx.strokeStyle = bt.c;
+        ctx.lineWidth = bt.w;
+        ctx.stroke(bt.path);
+      }
+    };
+    ctx.lineJoin = "round";
+    // a train standing at its terminal for its next departure: dashed
+    ctx.globalAlpha = fade;
+    ctx.setLineDash([2, 2]);
+    ctx.strokeStyle = inkOf(l.colour, dark);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (const [a, b, y] of drawn?.stands ?? []) {
+      const xa = x0 + a * k, xb = x0 + b * k;
+      if (xb < 0 || xa > PLOT_W) continue;
+      ctx.moveTo(xa, y + 0.5);
+      ctx.lineTo(xb, y + 0.5);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+    const all = order(), front = all.filter((r) => !r.back), back = all.filter((r) => r.back);
+    stroke(back);
+    stroke(front.filter((r) => r.colour));
+    for (const m of otherDrawn?.marks ?? []) {
+      const x = x0 + m.x * k;
+      if (x < -4 || x > PLOT_W + 4) continue;
+      ctx.globalAlpha = fade;
+      ctx.beginPath();
+      ctx.arc(x, m.y, 2.5, 0, 2 * Math.PI);
+      ctx.fillStyle = inkOf(m.colour, dark);
+      ctx.fill();
+      ctx.strokeStyle = bg;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+    stroke(front.filter((r) => !r.colour));
+    if (lit) {
+      const [wd] = strokeOf(lit, true);
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = inkOf(lit.colour ?? l.colour, dark);
+      ctx.lineWidth = wd;
+      ctx.stroke(placedPath(lit, k, x0));
+    }
+    ctx.globalAlpha = 1;
+    if (DEBUG) ((window as unknown as { __mareyDraw?: number[] }).__mareyDraw ??= []).push(performance.now() - d0);
+    if (DEBUG) (window as unknown as { __mareyRuns?: unknown }).__mareyRuns = { own: all.filter((r) => !r.colour).length, group: all.filter((r) => r.colour && r.own).length, other: all.filter((r) => r.colour && !r.own).length };
+  });
+  // the train or pass dot under the pointer: the one drawn last there. The canvas always has a data-tip, so
+  // the tag (tip.ts) watches it from the first move and shows a change as it is made
+  const onMove = (e: PointerEvent) => {
+    const cv = canvas.current, ctx = cv?.getContext("2d");
+    if (!cv || !ctx || e.buttons) return;
+    const z = (cv as HTMLElement & { currentCSSZoom?: number }).currentCSSZoom ?? 1, r = cv.getBoundingClientRect();
+    const px = (e.clientX - r.left) / z, py = (e.clientY - r.top) / z;
+    let key: string | null = null, tip: string | null = null;
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.lineWidth = 9;
+    const all = order();
+    const hit = (rs: Run[]) => {
+      for (let i = rs.length - 1; i >= 0; i--) {
+        const run = rs[i], xa = x0 + run.x * k;
+        if (px >= xa - 5 && px <= xa + run.len * k + 5 && ctx.isPointInStroke(placedPath(run, k, x0), px, py)) return run;
+      }
+      return null;
+    };
+    // as drawn: this line's way shown on top, then the pass dots, then the rest
+    let run = hit(all.filter((r) => !r.back && !r.colour));
+    if (!run) tip = passAt(px, py);
+    if (!run && !tip) run = hit(all.filter((r) => r.back || r.colour));
+    if (run) { key = run.key; tip = run.tip; }
+    ctx.restore();
+    if (tip) cv.setAttribute("data-tip", tip);
+    else cv.setAttribute("data-tip", "");
+    if (key !== hot) onHot(key);
+  };
+  const passAt = (px: number, py: number): string | null => {
+    for (const m of otherDrawn?.marks ?? []) if (Math.hypot(x0 + m.x * k - px, m.y - py) <= 4.5) return m.tip;
+    return null;
+  };
+  const onLeave = () => { canvas.current?.setAttribute("data-tip", ""); if (hot !== null) onHot(null); };
   const nowAt = (now - view0) * k, nowX = Math.max(0, Math.min(PLOT_W, nowAt));
+  // the time ticks over the view, on the line's local clock
+  const step = tickMinutes(span) * 60;
+  const ticks: number[] = [];
+  for (let t = Math.ceil((view0 + shift) / step) * step - shift; t <= view0 + span; t += step) ticks.push(t);
   // labels down the side, each kept only where it clears the last one shown (the ends always)
-  const order = l.stops.map((_, i) => i).sort((a, b) => yOf(st.stopS[0][a] ?? 0) - yOf(st.stopS[0][b] ?? 0));
+  const byY = l.stops.map((_, i) => i).sort((a, b) => yOf(st.stopS[0][a] ?? 0) - yOf(st.stopS[0][b] ?? 0));
   const labels: { i: number; y: number }[] = [];
-  for (const i of order) {
+  for (const i of byY) {
     const y = yOf(st.stopS[0][i] ?? 0);
     const end = i === 0 || i === n - 1;
     if (labels.length && y - labels[labels.length - 1].y < 12) {
@@ -318,20 +408,13 @@ export function MareyBody({ l, st, links, width = W_PX, plotH, group, view, dir,
     labels.push({ i, y });
   }
   const fit = (s: string) => (s.length > 14 ? s.slice(0, 13) + "…" : s);
-  const onWheel = (e: WheelEvent) => {
-    if (view || !e.deltaY) return;
-    e.preventDefault();
-    const dir = e.deltaY > 0 ? 1 : -1;
-    if ((dir > 0 && span >= MAX_SPAN) || (dir < 0 && span <= MIN_SPAN)) return;
-    setZoom(zoom + dir);
-  };
   useLayoutEffect(() => {
     if (!DEBUG) return;
     const g = window as unknown as { __mareyRender?: number[] };
     (g.__mareyRender ??= []).push(performance.now() - r0);
   });
   return (
-    <div class={"marey-chart" + (lit && onHot ? " hot" : "")} style={{ width: width + "px", height: height + "px", "--run": l.colour }} onWheel={onWheel}>
+    <div class="marey-chart" style={{ width: width + "px", height: height + "px" }}>
       <svg class="marey-base" width={width} height={height}>
         {labels.map(({ i, y }) => (
           <text class="marey-stop" x={GUTTER - 8} y={y + 4}>{fit(names.get(l.stops[i]) ?? "")}</text>
@@ -349,16 +432,14 @@ export function MareyBody({ l, st, links, width = W_PX, plotH, group, view, dir,
         })}
       </svg>
       <div class="marey-plot" style={{ left: GUTTER + "px", width: PLOT_W + "px", height: height + "px" }}>
-        <div class="marey-scroll" style={{ transform: `translateX(${offset.toFixed(1)}px)` }}>
-          {layer}
-          <svg class="marey-lit" width={6 * q * k} height={height}>
-            {lit && <use class={"run on" + (lit.colour && !lit.own ? " other" : "")} href={lit.href} x={lit.x} style={lit.colour ? { "--run": lit.colour } : undefined} />}
-          </svg>
-        </div>
+        <svg class="marey-ticks" width={PLOT_W} height={height}>
+          {ticks.map((t) => <line class="marey-tick" x1={(t - view0) * k} x2={(t - view0) * k} y1={TOP} y2={height - AXIS} />)}
+        </svg>
+        <canvas class="marey-layer" ref={canvas} data-tip="" style={{ width: PLOT_W + "px", height: height + "px" }} onPointerMove={onMove} onPointerLeave={onLeave} />
         <svg class="marey-over" width={PLOT_W} height={height}>
           <rect class="marey-past" x={0} y={TOP - 2} width={nowX} height={H + 4} />
           {ticks.map((t) => {
-            const x = (t - fetchedBase) * k + offset;
+            const x = (t - view0) * k;
             return x > 16 && x < PLOT_W - 16 && <text class="marey-time" x={x} y={TOP + H + 15}>{local(t)}</text>;
           })}
           {nowAt === nowX && <line class="marey-now" x1={nowX} x2={nowX} y1={TOP - 4} y2={TOP + H + 4} />}
@@ -380,55 +461,4 @@ export function useChartLinks(l: LineInput | undefined, st: LineStats | undefine
     if (!net || !l || n < 2) return null;
     return { shared: sharedStretches(net, l.num, d0, d1), passes: gradePasses(net, l.num, d0, d1) };
   }, [net, l?.num, w?.version, d0, d1]);
-}
-
-/** The chart's panel beside the dock, for the selected rail line while `mareyOpen`. */
-export function MareyPanel() {
-  const open = mareyOpen.value;
-  const sel = selection.value;
-  const w = world.value;
-  const l = open && w && sel?.kind === "line" ? linesById(w).get(sel.line) : undefined;
-  const st = l && w ? w.lineStats[l.id] : undefined;
-  const links = useChartLinks(l, st);
-  // no rail line selected: closed, so it does not come back by itself on the next line
-  useEffect(() => { if (open && w && (!sel || sel.kind !== "line" || w.lineStats[sel.line]?.bus)) mareyOpen.value = false; }, [open, sel, w]);
-  useEffect(() => {
-    if (!open) return;
-    // before main.ts's Escape, which would clear the selection too; a centred panel over it takes its own
-    const key = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || e.defaultPrevented || document.querySelector("dialog[open]")) return;
-      mareyOpen.value = false;
-      e.preventDefault();
-      e.stopImmediatePropagation();
-    };
-    window.addEventListener("keydown", key, true);
-    return () => window.removeEventListener("keydown", key, true);
-  }, [open]);
-  if (!l || !st || st.bus || l.stops.length < 2) return null;
-  const others = display.value.chartOtherLines;
-  const any = !!links && (links.shared.size > 0 || links.passes.length > 0);
-  return (
-    <div class="marey" role="dialog" aria-label={tr("mareyChart.label", { line: l.name })}>
-      <div class="marey-head">
-        <Chip line={l} plain />
-        <span class="marey-name">{l.name}</span>
-        {any && (
-          <button type="button" class={"btn icon mini marey-others" + (others ? " on" : "")} aria-pressed={others} data-tip={tr(others ? "mareyChart.hideOthers" : "mareyChart.showOthers")}
-            aria-label={tr(others ? "mareyChart.hideOthers" : "mareyChart.showOthers")} onClick={() => setDisplay("chartOtherLines", !others)}><Icon.related /></button>
-        )}
-        <button type="button" class="btn icon mini marey-close" data-tip={tr("mareyChart.close")} aria-label={tr("mareyChart.closeLabel")} onClick={() => (mareyOpen.value = false)}><Icon.cross /></button>
-      </div>
-      <MareyBody key={l.num} l={l} st={st} links={links} />
-    </div>
-  );
-}
-
-/** The schedule heading's button that opens and closes the chart. */
-export function MareyButton({ st }: { st: LineStats }) {
-  if (st.status !== "running" || st.bus) return null;
-  const open = mareyOpen.value;
-  return (
-    <button class={"btn icon mini marey-open" + (open ? " on" : "")} aria-label={tr(open ? "mareyChart.hide" : "mareyChart.show")} aria-pressed={open}
-      data-tip={tr(open ? "mareyChart.hide" : "mareyChart.show")} onClick={() => (mareyOpen.value = !open)}><Icon.marey /></button>
-  );
 }

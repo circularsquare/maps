@@ -320,9 +320,8 @@ purpose filter the purpose drawn is ringed in the bar.
 - **Sections**, in order: Schedule (trains for each demand level, with the resulting headway;
   [track-and-service.md](track-and-service.md) 6.3; columns Demand, Trains and Headway, every
   cell one line, the Demand column cut with an ellipsis when short of room [T-692]; beside the
-  heading small muted icon buttons [T-3543]: on a running rail line the **timetable chart** (below, hover "Show timetable chart" /
-  "Hide timetable chart", pressed while open) and, a size bigger (24 px), the **schedule panel** (hover "Detailed
-  schedule", [ui-panels.md](ui-panels.md#schedule-panel), T-3346); each level's count or headway is set on its own, a new line's included (T-2123 took
+  heading a muted icon button (26 px) [T-3543]: the **schedule panel** (hover "Detailed
+  schedule", [ui-panels.md](ui-panels.md#schedule-panel), T-3346), which holds the timetable and its chart (below); each level's count or headway is set on its own, a new line's included (T-2123 took
   back T-2092's fill of every level; the tutorial asks for trains at each level instead); a Trains / Headway switch in the heading
   chooses what the player sets [T-625]: with Trains a click on the count types it (Enter or leaving applies, Escape cancels, a loop's rounded up to even) [T-3152]. A count is raised to at most one train (a loop's two) more than the whole trains the line's track lets run at that level (the round trip over its shortest headway, `limits`; a loop's even, one at least; `trainCap`) and 1000, so one train is held and the held messages, the issue and the red headway show: a plus or a typed number at or past that is refused with the shake and the refusal knock, a typed number above it sets the cap and shakes, and the plus's hover says what limits the line. Lowering is free. When a game loads, a count past the cap is lowered to it (`game/capLoad.ts`); a cap that falls later, from a track edit, leaves the count, red with the held-out alert, until it is lowered [T-3165]; with Headway the headway column holds a stepper (steps to
   the whole minute above or below, so 5.37 min goes to 6 or 5 and 5 min to 6 or 4; none, or 1 to 240
@@ -493,27 +492,20 @@ The stops (above Schedule while being edited [T-670]),
 
 #### The timetable chart
 
-[T-2603, T-2660, T-2665, `ui/inspector/MareyChart.tsx`, `ui/inspector/mareyShare.ts`, notes/T-2603.md,
-notes/T-2660.md] A Marey chart of the selected rail line, in a panel over the map at the dock's foot (on
-a phone, just above the dock): the line's chip and name, the other lines toggle (below), a close button
-(hover "Close"), and the chart. Time runs across, 600 px wide, on the line's own local clock (ticks
-every 5, 10, 15, 30, 60, 120, 180 or 240 minutes, the first giving at most 8); the stops run down by
+[T-2603, T-2660, T-3817, `ui/inspector/MareyChart.tsx`, `ui/inspector/mareyShare.ts`, notes/T-2603.md,
+notes/T-2660.md, notes/T-3817.md] A Marey chart of a rail line, drawn only in the schedule panel under its
+timetable, on the timetable's time axis: its zoom and scroll are the table's
+([ui-panels.md](ui-panels.md#schedule-panel)). Time runs across on the line's own local clock (ticks every
+5, 10, 15, 30, 60, 120, 180 or 240 minutes, the first giving at most 8 across the view); the stops run down by
 their distance along the line (run 0's offsets, run 1's mapped through the stops both share), north up
-as the stops list (the top-down rule, `drawnReversed`, not T-2661's left-to-right one), 20 px a stop
-between 120 and 340 px, a grey rule at each stop and its name at the left where it clears the name
-above by 12 px (the ends always). The span is by default 2 round trips or 3 of the longest headway, at
-least 2 hours; on a busy line no more than 12 of its shortest headways or half a round trip (one trip
-end to end), whichever is longer, and at least half an hour; at most 8 hours; in whole quarter hours [T-2665].
-The mouse wheel over the chart zooms it out (down) or in (up), 1.25 times a notch, from a quarter hour
-to 24 hours, kept until another line is shown. A quarter of the span is before now; it moves with the
-clock, the past under a half veil and now a line in the accent colour; not scrollable.
+as the stops list (the top-down rule, `drawnReversed`, not T-2661's left-to-right one), a grey rule at
+each stop and its name at the left where it clears the name above by 12 px (the ends always). The past
+is under a half veil and now is a line in the accent colour.
 Each trip the map draws (`TrackApi.line_trips`, the same departures, ends and hand-overs as
-`trips`; the timetable, without the display guard's lag) is a line in the line's colour, both
-directions alike, curved as its run profile goes (speeding up, slowing, standing at stops), then a
-dashed line at the terminal while its train stands for its next departure. Hover on a trip thickens it
-and names its ends: "Leaves Ash 08:12", "Reaches Gum 08:28". It follows the selected line; it closes
-with its button, the close button, Esc (unless a centred panel is open over it, which takes the Esc), or when no
-rail line is selected. The schedule panel draws the same chart at its own width ([ui-panels.md](ui-panels.md#schedule-panel)).
+`trips`; the timetable, without the display guard's lag) is a line in the line's colour, curved as its
+run profile goes (speeding up, slowing, standing at stops), then a dashed line at the terminal while its
+train stands for its next departure. Hover on a trip thickens it and names its ends: "Leaves Ash 08:12",
+"Reaches Gum 08:28".
 
 **Other lines** [T-2660]: every other rail line that runs over the line's track has its trains drawn
 on the stretches they share, mapped onto this line's distance through the track both use (direction
@@ -532,10 +524,11 @@ to draw) hides the other lines' trains and dots but not the rules; on at first, 
 device with the display settings (`chartOtherLines`). Their trips are asked for the same window as
 the line's, one `lineTrips` query a line.
 
-The trips are asked for a quarter span either side and again as now enters the next quarter, the span
-changes or the network changes. The time ticks and every train are one SVG layer built once per
-answer and moved by a CSS transform as the clock runs, so a new minute redraws only the time labels,
-the veil and the now line; each profile's curve is one SVG path reused by every trip on it.
+The trips are the table's: one `lineTrips` question a line over the table's day (from two hours before
+it), asked again only as the hour turns or the network changes, never as the view zooms or scrolls
+(T-3817). The trains are drawn on a canvas, each profile's curve made once per answer and placed and
+stretched to the view on each redraw, only the trips in view; the ticks, labels, veil and now line are
+SVG over and under it.
 
 #### The round trip
 
