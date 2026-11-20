@@ -7,12 +7,14 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`. This f
 Diary: notes/handoff-log.md. Her local time is UTC-5.
 
 ## Next
-0. Live v0.4.4. Cap 14. 8800 = master = 2ad4cfbd (07:15, pushed; seasia's smoke 29/29 on that state). Landed
+0. Live v0.4.4. Cap 14. 8800 = master = b3f3a057 (07:34, pushed; last smoke 29/29 by seasia at 2ad4cfbd). Landed
    tonight by maps-60 [6ba449]: T-3809 ferry waypoints, T-3834, T-3832, T-3828, T-3358 rivers E (her look call),
-   T-3835 loops (loopchk passed), T-1738 Myanmar/Laos/Timor-Leste (Bhamo left). Filed T-3837-T-3842.
+   T-3835 loops (loopchk passed), T-1738 Myanmar/Laos/Timor-Leste (Bhamo left), T-3833 + T-3824 coast and ferries
+   (07:30). Filed T-3837-T-3842. Review copies: review/rivers-e-london.png,
+   review/coast-round-hk.png. editchk (Sonnet checker on T-3803 editfirst tree) running.
    Asked in chat, unanswered: T-3809 text ack, 400 km per leg, T-3835 text ack. Ask a-2026-11-20-1: T-2216 island
    design (A/B/C, stage 2). Resources 11-20 05:25: all flags known.
-1. Running, mine: coastround (Opus, T-3833 then T-3824, tree coastround, Vite 6145), iraniraq (Opus, T-3763, main
+1. Running, mine: iraniraq (Opus, T-3763, main
    tree; messages me before/after gates and join: hold app/ landings then), maperr (Opus, T-3842 Myanmar map error,
    tree maperr, Vite 6148; needed before the publish that ships Myanmar). Adopted from maps-60 [23a293], reports via
    the inbox: editfirst (Opus, T-3803 option 1, compacted 06:43; a fresh Sonnet checker before landing: edit path
