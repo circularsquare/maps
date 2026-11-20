@@ -1,27 +1,28 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session a6a6b4a3-3cb7-4e31-ac63-f1cd25a92ff1, name maps-60, since 2026-11-20 01:43 UTC
-Updated: 2026-11-20 04:35 UTC (all running agents are maps-60's; guianas' session ended, carwrap finishes its work)
+Updated: 2026-11-20 05:20 UTC (maps-60 past 500k, starting its successor; its agents report to the inbox)
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`. This file is plan and her words.
 Diary: notes/handoff-log.md. Her local time is UTC-5.
 
 ## Next
-0. Live v0.4.4. Cap 14. 8800 = master b60cbea7 era (check status); master pushed. Landed today: T-3812, T-3820,
-   T-3805, T-3822, T-3803 option 3, T-3817, T-3819, T-3818, T-3825, T-3826; T-3790 shipped (mos, ber, hon; sai kept).
-1. Running: editfirst (Opus, T-3803 option 1, tree editfirst; checker before landing; also the player's stop-click
-   burst), riverroute (Opus, T-3358 prototype 4 "micro-straightening" sheet + Hong Kong Island frame, scratchpad
-   only), mdreview (Fable, applying her CLAUDE.md picks; then a reviewer agent on its rewords, rewords.md in its
-   scratchpad), weekchk (Sonnet, T-3827), firstwait (Sonnet, T-3823), ferrywp (Opus, T-3809, smoke at end),
-   carwrap (Sonnet, T-3762 checks; then commit its file list), seasia (Opus, T-1738 overnight; message it
-   "T-3762 committed" before it touches game json or data/packs).
-2. T-3395: after 04:00 UTC run `tools/ops/save_health.py`; the two rev-1 games of ue83342ed78f8fc4c still corrupt =
-   old damage, close after a clean 11-21; intact = the scan's check lagged (notes/T-3395.md).
-3. Up next: T-3763 (Iraq, Iran) after seasia's join; T-3804 after editfirst; T-3824 and the river build after her
-   pick; T-3632 islands; T-3828, T-3829-T-3832 (P3).
-4. Next update: unpublished changelog c001-c015; untranslated: T-3822's hover strings, diagramView.addCity; before
-   publishing: changelog review agent, sort, playtest list, translations, new zones image (Caribbean, SE Asia).
-   After publishing: a few bullets of what next, and start it.
+0. Live v0.4.4. Cap 14. Master pushed at handover; 8800 rebuilding to it at 05:20 (check `handoff.py status`).
+   Landed 11-20 by maps-60: T-3812, T-3820, T-3805, T-3822, T-3823, T-3827, T-3803 option 3, T-3817, T-3819,
+   T-3818, T-3825, T-3826; T-3762 Caribbean committed and closed; T-3790 shipped (mos, ber, hon; sai kept);
+   CLAUDE.md review applied (b8e0c41b; transituniversalis and shonei CLAUDE.md edited, left for their sessions).
+1. Running (maps-60's agents, reports arrive through the inbox): editfirst (Opus, T-3803 option 1, tree editfirst;
+   a fresh Sonnet checker before landing: edit path and money; includes the player's 15-20 stop-click burst),
+   ferrywp (Opus, T-3809, tree ferrywp, smoke at end), riverbuild (Opus, T-3358 option E build, tree riverbuild:
+   UI, look at its shots, no checker), copyline (Sonnet, T-3834), looptag (Opus, T-3835; checker if sim rates
+   changed), seasia (Opus, T-1738 Myanmar, Laos, Timor-Leste overnight; writes data/packs and game json; notes
+   T-1738.md section 16 has its PIDs and restart lines).
+2. T-3395: run `tools/ops/save_health.py` (the 04:00 UTC scan should be in); the two rev-1 games of
+   ue83342ed78f8fc4c still corrupt = old damage, close after a clean 11-21; intact = the scan's check lagged.
+3. Up next: T-3763 (Iraq, Iran) once seasia reaches its join; T-3833 coastline corners and T-3824 ferries after
+   T-3358 lands; T-3804 after editfirst; T-3632 islands; P3s T-3828-T-3832, T-3836 (design for her).
+4. Next update: unpublished changelog c001-c015 plus tonight's; untranslated: T-3822's and T-3823's hover strings,
+   diagramView.addCity; use the publish skill (review agent, sort, playtest list, translations, new zones image).
 5. Leftover: stale Vite pid 33736 on 6181 (leave), trees ttchk2base, touchrule, timekeys.
 6. T-3781 waits for the next report's diagnosis. Steam (T-3729): her screenshots in artifacts/trainworld/steam.
 
