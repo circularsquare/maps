@@ -192,6 +192,10 @@ impl TrackApi {
         if d.auto.is_some() {
             d.auto = Some([0; 3]);
         }
+        // T-3834: the midday and afternoon rows of a line of four or five rows start empty too
+        d.x.tph = [0.0; 2];
+        d.x.trains = [0; 2];
+        d.x.auto = [0; 2];
         // T-1791: the copy joins its source's group, a new one with the source if it had none
         let mut ops = vec![];
         if d.group == 0 {

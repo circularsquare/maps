@@ -3878,8 +3878,21 @@ function applyInner(op: EditOp): Applied {
       // T-2791: a lettered name ("Line 1d") gives the symbol too ("1d") when that is free, so bullet and name agree
       const tail = /\d+[A-Za-z]$/.exec(name)?.[0];
       const symbol = tail && !op.name?.trim() && tail.length <= 5 && !symbols.has(tail.toLowerCase()) ? tail : cloneSymbol(a.line_symbol(op.line) || letterOf(from), symbols);
-      if (r === 0) a.set_line_badge(id, name, colour, symbol);
-      return { r, line: id };
+      if (r !== 0) return { r, line: id };
+      a.set_line_badge(id, name, colour, symbol);
+      // T-3834: a copy starts on the new-line default of its kind in every period the line uses, as a new line does
+      let charge = 0, trainCharge = 0;
+      const kind = a.is_ferry(op.line) ? "ferry" : a.is_bus(op.line) ? "bus" : a.node_kind(a.line_stops(op.line)[0] ?? 0) >= 2 ? "tram" : a.line_fast(op.line) ? "fast" : "rail";
+      const rows = a.line_period_count(id), wanted = headwaysFor(kind, newLineHeadway, rows);
+      if (wanted && (rows === 3 ? a.set_auto_headway(id, wanted[0], wanted[1], wanted[2]) : a.set_line_row_headways(id, Uint32Array.from(wanted))) === 0) {
+        charge += a.last_charge();
+        trainCharge += a.last_train_charge();
+      }
+      if (newLineWeekendShare !== null && newLineWeekendShare !== 100 && a.set_line_weekend_share(id, newLineWeekendShare) === 0) {
+        charge += a.last_charge();
+        trainCharge += a.last_train_charge();
+      }
+      return { r, line: id, charge, trainCharge };
     }
     case "setStops": {
       const set = () => a.set_stops(op.line, new Uint32Array(op.stops));

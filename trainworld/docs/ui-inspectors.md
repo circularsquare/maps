@@ -303,7 +303,7 @@ purpose filter the purpose drawn is ringed in the bar.
   another (T-3423). There is no Leave group button: a line leaves by dragging it out in the Lines
   tab (T-3810). The row
   starts 6 px below the title, which covers that much of whatever follows it.
-- **Actions** at the top, under the title and the planned or broken notice: Edit stops (hover; while stops are being edited it reads "Stop editing" and shows pressed, the button as wide in both states so the row never wraps differently, T-2525, T-2601), Copy line (duplicates route and settings with no trains, T-1161;
+- **Actions** at the top, under the title and the planned or broken notice: Edit stops (hover; while stops are being edited it reads "Stop editing" and shows pressed, the button as wide in both states so the row never wraps differently, T-2525, T-2601), Copy line (duplicates route and settings with the service of a new line of its kind in every period, none where no default is set, T-1161, T-3834;
   the copy joins its source's group, making one of the
   two when the source had none, T-1791, and the copy's own panel opens with its stops being edited, T-1894; its name and symbol are the next
   letter after a trailing number ("Line 1" and symbol 1 give "Line 1a" and 1a, then 1b), else
