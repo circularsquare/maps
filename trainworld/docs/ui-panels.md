@@ -1471,13 +1471,14 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   front. Hovering a bullet (the nearest within 9 px, so one under others is reached too) or a column lights that
   train over a veil: its bullet in front and its column, covering the drawn columns it lands on, whether or not it
   is drawn at the zoom; its path on the chart too.
-- **Related lines** (T-3818): while the other lines toggle is on (it shows whenever the line has any), the trains of
+- **Related lines** (T-3818, T-3846): while the other lines toggle is on (it shows whenever the line has any), the trains of
   each line the line panel's related lines draw beside it (`lineRelated`, kind beside; not its own quad twin, nor a
-  group's own lines) get columns too, at the rows where both stop (a station's complex counts), "|" only within a
+  group's own lines) that runs on the line's track at any point, or shares at least 3 stops with it (a complex counted
+  once) that are at least 40% of either line's stops, get columns too, at the rows where both stop (a station's complex counts), "|" only within a
   stretch it runs beside. They never take a column from the line's own trains: at each zoom level they fill only
   the gaps the line's own columns leave, and the opening zoom counts the line's own columns alone. Their bullets sit
   2 px lower and behind the line's own (related behind, own behind, related drawn, own drawn; related bullets behind
-  kept one per 3 px); their times at 60%, 30% once gone, 60% when lit. Hovering a bullet
+  kept one per 3 px); their bullets and times at 50%, 25% once gone, 50% when lit. Hovering a bullet
   of another line names the line where its letters don't already. On the chart they are drawn as other lines, stop
   to stop where they have no shared track.
 - **Chart**: the timetable chart ([ui-inspectors.md](ui-inspectors.md) "The timetable chart") under the timetable,

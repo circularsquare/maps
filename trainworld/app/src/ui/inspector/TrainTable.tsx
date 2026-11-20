@@ -14,7 +14,7 @@ import { clock } from "../../game/clock";
 import { stopKey } from "../../game/complexView";
 import { drawnReversed } from "../../game/northUp";
 import { inkOn, legibleOn } from "../../game/palette";
-import { decodeRelated } from "../../game/relatedLines";
+import { decodeRelated, type RelatedGroup } from "../../game/relatedLines";
 import { display, shade as uiShade } from "../../game/ui";
 import type { LineInput, LineStats } from "../../game/types";
 import { linesById, linesByNum, stationNames, stationsById, world } from "../../game/world";
@@ -91,10 +91,31 @@ function stopTimes(net: NetworkBuffers, p: number, offs: number[]): Float64Array
  * without it. */
 interface Src { line: LineInput; bullet: LineInput; st: LineStats; rowOf: number[]; flipped: boolean; rank: number; fill?: Uint8Array }
 
-/** A line related to the table's line (T-3818): a line the line panel's related lines draw beside it
- * (`lineRelated`, kind beside), its stops' rows on the table's line where both stop, the rows it runs
+/** A line related to the table's line (T-3818, T-3846): a line the line panel's related lines draw beside it
+ * (`lineRelated`, kind beside) that passes `isRelated`, its stops' rows on the table's line where both stop, the rows it runs
  * beside it, and for the chart its stretches from stop to stop. */
 export interface Related { line: LineInput; rowOf: number[]; fill: Uint8Array; stretches: Shared[] }
+
+/** What each line of `groups` has in common with the selected line: the complexes where both stop (a complex
+ * counted once) and whether it runs on the same track anywhere. */
+export function relatedCommon(groups: readonly RelatedGroup[]): Map<number, { stops: Set<number>; track: boolean }> {
+  const out = new Map<number, { stops: Set<number>; track: boolean }>();
+  for (const g of groups) {
+    let c = out.get(g.line);
+    if (!c) out.set(g.line, (c = { stops: new Set(), track: false }));
+    if (g.shared) c.track = true;
+    for (const m of g.meetings) if (m.stopL >= 0 && m.stopO >= 0) c.stops.add(m.complex);
+  }
+  return out;
+}
+
+/** The timetable's rule for a related line (T-3846, Anita 2026-11-20): it runs on the line's track at any point,
+ * or shares at least 3 stops with it and those are at least 40% of either line's `nL`, `nO` stops. */
+export function isRelated(c: { stops: Set<number>; track: boolean } | undefined, nL: number, nO: number): boolean {
+  if (!c) return false;
+  const k = c.stops.size;
+  return c.track || (k >= 3 && (k >= 0.4 * nL || k >= 0.4 * nO));
+}
 
 /** The lines related to `l` (not its own twin or `skip`'s), and `links` with their stretches added
  * where the chart has no shared track for them, so the chart draws them as it draws other lines. */
@@ -108,11 +129,13 @@ export function useRelated(l: LineInput, st: LineStats, links: Links | null, ski
     const twin = st.twin ? byId.get(st.twin)?.num : undefined;
     const n = l.stops.length, L0 = st.stopS[0] ?? [];
     const by = new Map<number, Related>();
+    const common = relatedCommon(groups.groups);
     for (const g of groups.groups) {
       if (g.kind !== "beside" || g.line === twin || skip?.has(g.line)) continue;
       const o = byNum.get(g.line), ost = o && w.lineStats[o.id];
       // running rail lines only: a planned or stopped line has no timetable
       if (!o || !ost || ost.bus || o.twinOf || ost.status !== "running") continue;
+      if (!isRelated(common.get(g.line), n, o.stops.length)) continue;
       let r = by.get(g.line);
       if (!r) by.set(g.line, (r = { line: o, rowOf: o.stops.map(() => -1), fill: new Uint8Array(n), stretches: [] }));
       const both = g.meetings.filter((m) => m.stopL >= 0 && m.stopO >= 0 && m.stopL < n && m.stopO < o.stops.length);
@@ -352,7 +375,7 @@ function Lit({ part, hot, at, cols, drawn, scale, x0, shift, dark, now }: {
     return (
       <>
         <div class="tt-veil" />
-        <span class="tt-bullet on" style={{ left: x - COL / 2 + "px", width: COL + "px", top: MARK_H + (c.rank ? REL_DROP : 0) + "px" }}><Bullet l={c.bullet} /></span>
+        <span class={"tt-bullet on" + (c.rank ? " rel" : "")} style={{ left: x - COL / 2 + "px", width: COL + "px", top: MARK_H + (c.rank ? REL_DROP : 0) + "px" }}><Bullet l={c.bullet} /></span>
       </>
     );
   }
@@ -599,7 +622,7 @@ export function TrainTable({ axis, st, others = [], related = [], links, group, 
   };
   // px from the table's left of game second 0
   const x0 = GUTTER - day0 * scale;
-  const bullet = (c: Col, cls: string) => <span key={c.key} class={"tt-bullet" + cls} style={{ left: x0 + c.t * scale - COL / 2 + "px", width: COL + "px", top: MARK_H + (c.rank ? REL_DROP : 0) + "px" }}>{bulletOf(c.bullet)}</span>;
+  const bullet = (c: Col, cls: string) => <span key={c.key} class={"tt-bullet" + cls + (c.rank ? " rel" : "")} style={{ left: x0 + c.t * scale - COL / 2 + "px", width: COL + "px", top: MARK_H + (c.rank ? REL_DROP : 0) + "px" }}>{bulletOf(c.bullet)}</span>;
   // back to front: related lines' bullets behind the line's own, the drawn columns' in front of both
   const backs: VNode[] = [], fronts: VNode[] = [];
   for (const rank of [1, 0]) {

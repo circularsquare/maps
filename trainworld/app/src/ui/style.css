@@ -297,8 +297,9 @@ svg .stroke2 { stroke-width: 2; }
 .tt-col span { display: block; height: var(--row); line-height: var(--row); text-align: center; }
 .tt-col .pass { color: var(--muted); }
 .tt-col.past { opacity: 0.5; }
-/* T-3818: a related line's times at 60%, lit or not, on top of the past fade (so 30% once gone) */
-.tt-col.rel span { opacity: 0.6; }
+/* T-3818, T-3846: a related line's times and bullets at 50%, lit or not, on top of the past fade (so 25% once gone) */
+.tt-col.rel span { opacity: 0.5; }
+.tt-bullet.rel { opacity: 0.5; }
 .tt-now { position: absolute; top: 0; bottom: 0; border-left: 1px solid var(--accent); }
 .tt-veil { position: absolute; inset: 0; z-index: 1; background: var(--bg); opacity: 0.65; pointer-events: none; }
 .tt-col.on, .tt-bullet.on { z-index: 1; pointer-events: none; }
