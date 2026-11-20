@@ -279,7 +279,10 @@ export type ToClock =
   /** T-1029: the client could not take a state as changes to the last: post the next whole */
   | { kind: "wholeState" }
   /** T-2159: the network diagram is shown (its graph follows every network state) or hidden */
-  | { kind: "diagram"; on: boolean }
+  | { kind: "diagram"; on: boolean; whole?: boolean }
+  /** T-3409: the schematic's chosen cities (zone ids, none for the whole network, kept in the save) and the station nodes
+   * and bus and ferry stops in them; `whole` on "diagram": while cities are chosen, the whole network's graphs too (a share) */
+  | { kind: "diagramCut"; cities: string[]; stations: number[]; stops: number[] }
   /** T-1196: the page reloads into another game: save the one in hand, keep `pending` (the game the
    * reloaded page opens, when not a slot) and let go of the slot; answered with "left" */
   | { kind: "leave"; pending?: PendingLoad }
@@ -923,7 +926,8 @@ export type FromClock =
   | { kind: "snapshot"; snapshot: NetworkSnapshot }
   /** T-2159: the network diagram's graph, after a network state while the diagram is shown */
   /** one graph per region of the network (T-3448), each in a frame of its own */
-  | { kind: "diagramGraph"; graphs: DiagramGraph[]; ms: number }
+  /** T-3409: `cut`: the graphs are of the chosen cities alone; `whole`: the whole network's, when asked for */
+  | { kind: "diagramGraph"; graphs: DiagramGraph[]; ms: number; cut?: boolean; whole?: DiagramGraph[] }
   /** money changed without a network change (an hour settled, fares set) */
   | { kind: "money"; money: MoneyState }
   /** T-284: the cash and today's ledger as fares land and running costs drain, several times a wall
@@ -969,6 +973,8 @@ export type FromClock =
   | { kind: "newHeadway"; seconds: import("./saveFile").NewHeadways }
   /** T-3420: the game's hidden lines (`SaveHeader.hidden`), sent with "opened" and after a new line takes a hidden one's id */
   | { kind: "hiddenLines"; lines: string[] }
+  /** T-3409: the game's schematic cities, on a load */
+  | { kind: "diagramCities"; cities: string[] }
   /** T-2395: the home of the game in hand (`SaveHeader.home`), sent with "opened" */
   | { kind: "home"; home: string | null }
   /** the save file, for the player to keep */

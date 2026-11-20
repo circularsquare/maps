@@ -136,6 +136,8 @@ export interface SaveHeader {
   shapes?: Record<string, LineShape>;
   /** T-3420: the ids of the lines the player hid on the map; absent for none (older saves too) */
   hidden?: string[];
+  /** T-3409: the zones the schematic is of; absent for the whole network (older saves too) */
+  schematic?: string[];
   /** T-728: absent in older saves, read as "normal" */
   mode?: GameMode;
   /** T-728: the zone the game started in; absent for a start on the world map and in older saves */
@@ -189,7 +191,7 @@ export interface GuideSave { done: number; hidden?: true; closed?: true; card?: 
 /** T-1826: every header field this build reads, so a field added to `SaveHeader` must be listed. */
 const HEADER_FIELDS: Record<keyof SaveHeader, true> = {
   game: true, format: true, city: true, region: true, cities: true, clock: true, cash: true, loan: true, loanPay: true, loanDays: true, fleet: true, fleetFast: true,
-  fleetBus: true, fleetFerry: true, fleetTram: true, fares: true, ledger: true, hours: true, regions: true, lineDays: true, stars: true, goals: true, notes: true, shapes: true, hidden: true, mode: true, start: true,
+  fleetBus: true, fleetFerry: true, fleetTram: true, fares: true, ledger: true, hours: true, regions: true, lineDays: true, stars: true, goals: true, notes: true, shapes: true, hidden: true, schematic: true, mode: true, start: true,
   dayShift: true, opened: true, demandFine: true, demandBuilt: true, newCars: true, newHeadway: true, newWeekendShare: true, level: true, guide: true, achievements: true, home: true, copy: true, modded: true,
 };
 /** T-3115: the header fields, for checking a stranger's save (game/sharedSave.ts) */

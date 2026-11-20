@@ -57,7 +57,11 @@ import { hiddenLines, hideBuses } from "../game/lineVisibility";
 import { hidden } from "../map/visibility";
 import type { ThinIn } from "./thin";
 import { THIN_BOX_PAD } from "./busGraph";
+import { busRuns } from "./cut";
 import { stationsById, stopsById } from "../game/world";
+import { diagramCities, diagramCitiesLoads } from "../game/diagramCities";
+import { stationZone } from "../game/listScope";
+import { zonesLoaded } from "../game/zones";
 
 /** station names are this many CSS px, as the map's, times the interface scale */
 const NAME_PX = 12;
@@ -332,7 +336,10 @@ function offOf(s: Shown, modes: Record<DiagramMode, boolean>, hid: ReadonlySet<n
 /** T-3360: the bus and ferry lines each laid-out region draws thin, in its graph's metres: a line goes with the region
  * holding most of its stations, else most of its stops within the region's box; a bus or ferry line the graph lays out
  * itself (a network with no rail near it) is not one */
-function thinInputs(parts: readonly LaidOut[]): ThinIn[][] {
+/** T-3409: the station nodes and bus stops (ids apart: a bus stop's can be a station's) in the chosen cities */
+type Inside = { stations: ReadonlySet<number>; stops: ReadonlySet<number> };
+
+function thinInputs(parts: readonly LaidOut[], inside: Inside | null): ThinIn[][] {
   const w = world.peek(), out: ThinIn[][] = parts.map(() => []);
   if (!w || !parts.length) return out;
   const inGraph = new Set<number>();
@@ -348,39 +355,44 @@ function thinInputs(parts: readonly LaidOut[]): ThinIn[][] {
     return m;
   });
   for (const l of w.save.lines) {
-    const st = w.lineStats[l.id], b = st?.bus;
-    if (!b || st.status === "broken" || inGraph.has(l.num) || b.stops.length < 2) continue;
-    let best = -1, score = 0;
-    parts.forEach((p, pi) => {
-      let at = 0, inBox = 0;
-      const [x0, y0, x1, y1] = p.box;
-      for (const s of b.stops) {
-        if (s.station >= 0 && nodeOf[pi].has(String(s.station))) at++;
-        if (s.lng >= x0 - THIN_BOX_PAD && s.lng <= x1 + THIN_BOX_PAD && s.lat >= y0 - THIN_BOX_PAD && s.lat <= y1 + THIN_BOX_PAD) inBox++;
-      }
-      const sc = at * 1e4 + inBox;
-      if (sc > score) (score = sc), (best = pi);
-    });
-    if (best < 0) continue;
-    const [fx, fy, k] = parts[best].frame;
-    const xy = (lng: number, lat: number): [number, number] => { const [mx, my] = toMerc01(lng, lat); return [(mx - fx) * k, -(my - fy) * k]; };
-    const route = new Float64Array(b.routeLL.length);
-    for (let i = 0; i + 1 < b.routeLL.length; i += 2) [route[i], route[i + 1]] = xy(b.routeLL[i], b.routeLL[i + 1]);
-    const stops = new Float64Array(b.stops.length * 2), node = new Int32Array(b.stops.length);
-    b.stops.forEach((s, i) => {
-      [stops[2 * i], stops[2 * i + 1]] = xy(s.lng, s.lat);
-      node[i] = s.station >= 0 ? nodeOf[best].get(String(s.station)) ?? -1 : -1;
-      // a port beside a station drawn here meets its pill (the Staten Island Ferry at South Ferry and St. George)
-      if (node[i] < 0 && b.ferry) {
-        const g = parts[best].graph;
-        let bd = PORT_STATION_M ** 2;
-        for (let q = 0; q < g.key.length; q++) {
-          const dd = (g.x[q] - stops[2 * i]) ** 2 + (g.y[q] - stops[2 * i + 1]) ** 2;
-          if (dd < bd) (bd = dd), (node[i] = q);
+    const st = w.lineStats[l.id], b0 = st?.bus;
+    if (!b0 || st.status === "broken" || inGraph.has(l.num) || b0.stops.length < 2) continue;
+    // T-3409: with cities chosen, each run of its stops inside them, cut there with a stub
+    const runs = inside ? busRuns(b0, (s) => (s.station >= 0 ? inside.stations.has(s.station) : inside.stops.has(s.id))) : "all";
+    for (const r of runs === "all" ? [{ stops: b0.stops, routeLL: b0.routeLL }] : runs) {
+      const b = { ...b0, stops: r.stops, routeLL: r.routeLL }, stub = { ...("cutA" in r && r.cutA ? { stubA: r.cutA } : {}), ...("cutB" in r && r.cutB ? { stubB: r.cutB } : {}) };
+      let best = -1, score = 0;
+      parts.forEach((p, pi) => {
+        let at = 0, inBox = 0;
+        const [x0, y0, x1, y1] = p.box;
+        for (const s of b.stops) {
+          if (s.station >= 0 && nodeOf[pi].has(String(s.station))) at++;
+          if (s.lng >= x0 - THIN_BOX_PAD && s.lng <= x1 + THIN_BOX_PAD && s.lat >= y0 - THIN_BOX_PAD && s.lat <= y1 + THIN_BOX_PAD) inBox++;
         }
-      }
-    });
-    out[best].push({ id: l.num, colour: l.colour.toLowerCase(), ferry: !!b.ferry, route, stops, node });
+        const sc = at * 1e4 + inBox;
+        if (sc > score) (score = sc), (best = pi);
+      });
+      if (best < 0) continue;
+      const [fx, fy, k] = parts[best].frame;
+      const xy = (lng: number, lat: number): [number, number] => { const [mx, my] = toMerc01(lng, lat); return [(mx - fx) * k, -(my - fy) * k]; };
+      const route = new Float64Array(b.routeLL.length);
+      for (let i = 0; i + 1 < b.routeLL.length; i += 2) [route[i], route[i + 1]] = xy(b.routeLL[i], b.routeLL[i + 1]);
+      const stops = new Float64Array(b.stops.length * 2), node = new Int32Array(b.stops.length);
+      b.stops.forEach((s, i) => {
+        [stops[2 * i], stops[2 * i + 1]] = xy(s.lng, s.lat);
+        node[i] = s.station >= 0 ? nodeOf[best].get(String(s.station)) ?? -1 : -1;
+        // a port beside a station drawn here meets its pill (the Staten Island Ferry at South Ferry and St. George)
+        if (node[i] < 0 && b.ferry) {
+          const g = parts[best].graph;
+          let bd = PORT_STATION_M ** 2;
+          for (let q = 0; q < g.key.length; q++) {
+            const dd = (g.x[q] - stops[2 * i]) ** 2 + (g.y[q] - stops[2 * i + 1]) ** 2;
+            if (dd < bd) (bd = dd), (node[i] = q);
+          }
+        }
+      });
+      out[best].push({ id: l.num, colour: l.colour.toLowerCase(), ferry: !!b.ferry, route, stops, node, ...stub });
+    }
   }
   return out;
 }
@@ -395,7 +407,7 @@ function thinSig(ins: readonly ThinIn[]): string {
   for (const l of ins) {
     add(l.id), add(l.ferry ? 1 : 0);
     for (let i = 0; i < l.colour.length; i++) add(l.colour.charCodeAt(i));
-    for (const a of [l.route, l.stops, l.node]) { add(a.length); for (let i = 0; i < a.length; i++) add(a[i]); }
+    for (const a of [l.route, l.stops, l.node, l.stubA ?? [], l.stubB ?? []]) { add(a.length); for (let i = 0; i < a.length; i++) add(a[i]); }
   }
   return `${ins.length}:${h >>> 0}`;
 }
@@ -417,7 +429,8 @@ function lineTag(l: LineInput, s: Shown, drawn: number, at: number): TipLine[] {
   if (!dv) return [name];
   // the stretch: the stops the line has made up to the last node passed, less one
   const gl = s.graph.lines[s.d.lineOf[drawn]], c = s.d.chainAt[drawn][at] ?? 0;
-  let k = -1;
+  // T-3409: a run of a line cut to the chosen cities counts from its first stop's place in the line
+  let k = -1 + (gl.from ?? 0);
   for (let j = 0; j <= c && j < gl.stop.length; j++) k += gl.stop[j];
   k = Math.max(0, Math.min(l.stops.length - 2, k));
   const purpose = purposeFilter.peek();
@@ -462,26 +475,54 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
   const parts = new Map<string, LaidOut>();
   /** per layout asked for, its region's sig and whether its water was asked for */
   const sigOfSeq = new Map<number, { sig: string; water: boolean; frame: ZoneFrame; box: [number, number, number, number] }>();
-  const send = (graphs: DiagramGraph[]) => {
-    lastGraphs = graphs;
-    const c = live.map?.getCenter(), water = diagramWater.peek();
-    plan = [];
+  /** T-3409: whether what is shown is of chosen cities alone; the sigs of the whole network's regions, whose layouts are
+   * kept while cities are chosen (so going back to the whole network lays nothing out when it has not changed); and the
+   * whole network's regions a share waits for while cities are chosen */
+  let cutNow = false, keepSigs = new Set<string>(), wholePlan: Planned[] | null = null;
+  /** the stations and stops in the chosen cities, as last told to the clock worker (the buses drawn thin are cut by them) */
+  let inside: Inside | null = null;
+  const planOf = (graphs: DiagramGraph[]): Planned[] => {
+    const c = live.map?.getCenter(), out: Planned[] = [];
     for (const g of c ? cameraOrder(graphs, c.lng, c.lat) : graphs) {
       const zf = zoneFrame(g);
       // a region with no station in the save has nothing to draw
       if (!zf) continue;
       const names = namesOf(g);
-      plan.push({ sig: regionSig(g, names.text, names.width, ""), graph: g, names, frame: zf.frame, box: zf.box });
+      out.push({ sig: regionSig(g, names.text, names.width, ""), graph: g, names, frame: zf.frame, box: zf.box });
     }
+    return out;
+  };
+  /** the whole network's regions a share waits for, laid out after what is shown */
+  const queueWhole = () => {
+    if (!wholePlan || !forShare.length) return;
+    for (const p of wholePlan) if (!parts.has(p.sig) && !queue.some((q) => q.sig === p.sig)) queue.push(p);
+  };
+  const send = (graphs: DiagramGraph[], cut = cutNow) => {
+    lastGraphs = graphs;
+    cutNow = cut;
+    const water = diagramWater.peek();
+    plan = planOf(graphs);
+    if (!cut) keepSigs = new Set(plan.map((p) => p.sig));
     queue = plan.filter((p) => { const had = parts.get(p.sig); return !had || (water && !had.water); });
+    queueWhole();
     lastBoxes = plan.map((p) => p.box);
     if (!queue.length) compose();
     pump();
   };
+  /** a share's answer once what it waits for is laid out: what is shown, or with cities chosen the whole network */
+  const shareReady = () => {
+    if (!forShare.length) return;
+    if (!cutNow) return giveShare(shown);
+    if (!wholePlan || wholePlan.some((p) => !parts.has(p.sig))) return;
+    const list = wholePlan.map((p) => parts.get(p.sig)!);
+    if (!list.length) return giveShare(null);
+    const m = mergeParts(list, placeParts(list, 0));
+    giveShare(indexShown(m.graph, m.d, m.names, m.x, m.y, list, m.partOf, m.base));
+  };
   const pump = () => {
     if (busy) return;
     const next = queue.shift();
-    if (!next) return void giveShare(shown);
+    if (!next) return void shareReady();
     busy = true;
     // the rubber sheet (T-2568, T-2580), from the water masks of the zones its box meets (T-2591)
     const sheet = { packs: DATA_BASE, zones: zonesTouching(...sheetZoneBox(next.box)).map((c) => c.id), ...(perfOff("carryWasm") ? { carryJs: true } : {}) };
@@ -503,7 +544,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
       if (inPlan.has(sig)) continue;
       const covered = list.some((p) => p.graph.key.some((k) => q.keys.has(k)));
       if (!covered && waitingFor.some((p) => p.graph.key.some((k) => q.keys.has(k)))) list.push(q);
-      else parts.delete(sig);
+      else if (!keepSigs.has(sig)) parts.delete(sig);
     }
     if (!list.length) return;
     // the view stays on the region it is on: that region is placed as it is laid out, the others round it
@@ -536,7 +577,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
   let thinAsks = 0;
   const askThin = (list: LaidOut[]) => {
     if (!worker) return;
-    const ins = thinInputs(list);
+    const ins = thinInputs(list, cutNow ? inside : null);
     list.forEach((p, i) => {
       const sig = thinSig(ins[i]);
       if (sig === p.thinSig) return;
@@ -608,18 +649,50 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     forShare = [];
     clearTimeout(shareTimer);
     diagramShareProgress.value = null;
-    if (!diagramShown.peek()) client.post({ kind: "diagram", on: false });
+    wholePlan = null;
+    // the whole network's graphs no longer wanted
+    client.post({ kind: "diagram", on: diagramShown.peek() });
     for (const f of waiters) f(s);
   };
   sharer = () => new Promise((done) => {
     const reply = (s: Shown | null) => done(s && { d: s.d, names: s.names });
-    if (diagramShown.peek() && shown && !busy && !queue.length) return reply(shown);
+    if (diagramShown.peek() && shown && !busy && !queue.length && !cutNow) return reply(shown);
     forShare.push(reply);
     if (forShare.length > 1) return;
     shareTimer = window.setTimeout(() => giveShare(null), SHARE_WAIT_MS);
-    if (!diagramShown.peek()) client.post({ kind: "diagram", on: true });
+    // T-3409: a share is of the whole network, whatever cities the diagram shows
+    syncCut();
+    client.post({ kind: "diagram", on: true, whole: true });
   });
-  client.onDiagram = (gs) => {
+  // T-3409: the clock worker is told which stations and stops the chosen cities have, again as they change
+  let cutPosted = "", loadsSeen = -1;
+  const syncCut = () => {
+    const cities = diagramCities.peek(), w = world.peek(), stations: number[] = [], stops: number[] = [];
+    if (cities.length && w) {
+      const want = new Set(cities), seen = new Set<number>();
+      for (const s of w.save.stations) { const z = stationZone(s); if (z && want.has(z)) stations.push(Number(s.id)); }
+      // a bus stop's id can be a station's too: placed under an id of its own
+      for (const st of Object.values(w.lineStats)) for (const p of st.bus?.stops ?? []) {
+        if (p.station >= 0 || seen.has(p.id)) continue;
+        seen.add(p.id);
+        const z = stationZone({ id: `bus ${p.id}`, lng: p.lng, lat: p.lat });
+        if (z && want.has(z)) stops.push(p.id);
+      }
+    }
+    const key = `${cities.join()}|${stations.join()}|${stops.join()}`;
+    if (key === cutPosted) return;
+    cutPosted = key;
+    inside = cities.length ? { stations: new Set(stations), stops: new Set(stops) } : null;
+    client.post({ kind: "diagramCut", cities: [...cities], stations, stops });
+  };
+  effect(() => {
+    const loads = diagramCitiesLoads.value;
+    void diagramCities.value, world.value, zonesLoaded.value;
+    // a load's clock worker has no stations for the choice yet
+    if (loads !== loadsSeen) (loadsSeen = loads), (cutPosted = "");
+    if (diagramShown.peek()) syncCut();
+  });
+  client.onDiagram = (gs, cut, whole) => {
     if (!diagramShown.peek() && !forShare.length) return;
     // for checks (t2261-graph-anchor.mjs): the graphs as the clock worker posts them, counted
     const w = window as unknown as { twGraphs?: { n: number; graphs: DiagramGraph[] } };
@@ -668,7 +741,15 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
         pump();
       };
     }
-    send(gs);
+    if (whole && forShare.length) {
+      wholePlan = planOf(whole);
+      keepSigs = new Set(wholePlan.map((p) => p.sig));
+    }
+    if (diagramShown.peek() || !cut) return send(gs, cut);
+    // a share with the diagram down and cities chosen: the whole network alone
+    cutNow = true;
+    queueWhole();
+    pump();
   };
   /** the node of the station with this name, the one most lines stop at; -1 for none */
   const nodeNamed = (name: string): number => {
@@ -811,6 +892,8 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
       if (!clock.running.peek()) clock.setRunning(true);
     }
     canvas.style.display = on ? "block" : "none";
+    // T-3409: the chosen cities' stations before the graph is asked for
+    if (on) syncCut();
     client.post({ kind: "diagram", on });
     if (on) {
       // last in the map's box, over the marks added since at the same z-index (attractions, zones loading)

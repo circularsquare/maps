@@ -4,7 +4,7 @@
 // their stops (a station's stops one node per complex), each line its stops in order.
 
 import { kAtY, toLocal, type Anchor } from "../map/geo";
-import { simplifyLine, type DiagramGraph, type DiagramLine } from "./graph";
+import { cutOf, simplifyLine, type DiagramGraph, type DiagramLine } from "./graph";
 
 /** a bus or ferry stop within this many degrees of a rail region's stations' box goes with that region (thin.ts) */
 export const THIN_BOX_PAD = 0.05;
@@ -14,6 +14,10 @@ export interface BusLineIn {
   id: number;
   colour: string;
   bus?: { routeLL: number[]; stops: { id: number; lng: number; lat: number; station: number }[]; ferry?: unknown };
+  /** T-3409: a run cut to the chosen cities (cut.ts) */
+  from?: number;
+  cutA?: [number, number];
+  cutB?: [number, number];
 }
 
 const NO_COMPLEX = 0xffffffff;
@@ -74,7 +78,7 @@ export function busGraph(lines: readonly BusLineIn[], complexOf: Uint32Array, at
   order.forEach((g, i) => (renum[g] = i));
   const key = new Int32Array(n), x = new Float64Array(n), y = new Float64Array(n);
   order.forEach((g, i) => ((key[i] = keys[g]), (x[i] = (px[g] - mx) / k), (y[i] = -(py[g] - my) / k)));
-  const dl: DiagramLine[] = outs.map(({ l, chain }) => ({ id: l.id, colour: l.colour.toLowerCase(), ...(l.bus!.ferry ? { ferry: true } : { bus: true }), chain: Int32Array.from(chain, (g) => renum[g]), stop: new Uint8Array(chain.length).fill(1) }));
+  const dl: DiagramLine[] = outs.map(({ l, chain }) => ({ id: l.id, colour: l.colour.toLowerCase(), ...(l.bus!.ferry ? { ferry: true } : { bus: true }), chain: Int32Array.from(chain, (g) => renum[g]), stop: new Uint8Array(chain.length).fill(1), ...cutOf(l) }));
   // edges, each line its own stroke; each edge's route as the first line on it runs it
   const em = new Map<number, number[]>(), hops = new Map<number, number[]>();
   dl.forEach((l, li) => {

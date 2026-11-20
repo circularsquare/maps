@@ -17,7 +17,7 @@ Its icon is a map folded in three panels (T-2615). Hover: "Show network diagram 
 nothing else is left for it to undo: a question, a drag and the selection come first (`main.ts`, T-2416).
 The diagram is a 2D canvas over the map; the dock and top bar stay, and the map's upper left gives way to
 the diagram's own row (`DiagramTopLeft`): a cross back to the map (hover "Show map (M)", T-2416), the
-mode buttons (below), the water button, the line width slider (hover "Line width", T-2888), the
+mode buttons (below), the cities button ("Chosen cities" below), the water button, the line width slider (hover "Line width", T-2888), the
 save button once a drawing is up, the busy tag, and during the first layout
 the demand status's tag: "Calculating diagram" and a thin loading bar (hover: its
 percent) fed by the layout worker's progress (T-2235; A to 0.2 of the layout, B to 0.7, the routing
@@ -119,6 +119,34 @@ kind, and a kind hidden in another game then counts for nothing), each pressed w
 is left out the same way (T-3785). Both act at paint time: the line is not drawn, nor the pills and names of stations
 whose every line stopping there is left out, and it cannot be picked; the layout keeps the room it had, so a toggle is
 instant.
+
+## Chosen cities
+
+`diagram/cut.ts`, `ui/DiagramButton.tsx` `CityChoice` (T-3409; Anita, 2026-11-19: "they should be redrawn so that they can
+get full precision as if they were the only things in the world. we shouldnt just take the world map and hide the stuff
+outside"). A button on the top row (the cities icon, hover "Choose cities", pressed while cities are chosen; shown when the
+game has stations or stops in two zones or more, or a choice) opens a list under it: "All cities" first (the whole
+network, the default), then each zone with a built station or a stop, by name, each with a tick box. A city is the zone a
+station is in (`stationZone`, as the Cities tab and fares by city). The choice is the game's, kept in the save's header
+(`schematic`, zone ids; absent for the whole network, so older saves open on it); Esc or a click outside closes the list.
+
+- **Laid out alone.** The page tells the clock worker which stations and bus and ferry stops are in the chosen cities
+  (again when the network or the zones' outlines change); the clock worker cuts each line to its runs of two stops or
+  more inside them (`cutLines`), makes every station outside no station (so nothing passed or beside outside is drawn),
+  and builds the graphs from those runs and their own track alone: framed on that track, split into regions as ever.
+  So a city is drawn bit for bit as a network of only those lines would be (notes/T-3409.md). A run with one stop inside is left out; a line
+  whose stops cannot be found along its path is drawn only when all its stops are inside. If no run has two stops, the
+  whole network is drawn.
+- **Stubs.** Where a run's line goes on, it is drawn 3 pitches past its last station there (`stubEnd` in draw.ts),
+  straight on unless the line goes back the way it came (more than 100 degrees off), then the nearest of the eight ways
+  within a right angle. The stub is added before the pills, so that station's pill is one the line passes through; a
+  cut line beside an axis costs 1.05 times as much at that station, so the pill goes across it rather than along it when the two
+  tie. Buses and ferries drawn thin are cut the same way (`busRuns`), their stubs after the fit.
+- **The whole network kept.** While cities are chosen, the whole network's layout stays in hand, so going back to it
+  lays nothing out when the network has not changed. Clicks, hovers and the riders on a stretch count a run's stops from
+  its place in its line.
+- **The picture** follows the choice. **Share network** always sends the whole network: with cities chosen it asks the
+  clock worker for the whole network's graphs too and uses the layout kept, else lays it out (not shown).
 
 ## Zone borders
 

@@ -6,7 +6,14 @@ import { world } from "../game/world";
 import { BusyTag } from "./BusyTag";
 import { ShareButton } from "./Community";
 import { LoadBar } from "./LoadingScreen";
-import { Icon } from "./widgets";
+import { Check, Icon } from "./widgets";
+import { useEffect, useRef, useState } from "preact/hooks";
+import { diagramCities } from "../game/diagramCities";
+import { busStopsById } from "../game/world";
+import { stationZone } from "../game/listScope";
+import { zonesLoaded } from "../game/zones";
+import { cityById, isCity } from "../game/cities";
+import { tPlace } from "../i18n/places";
 
 /** T-2160: the network diagram in place of the map, and back (no key while it is a work in progress, T-2608). */
 export function DiagramButton() {
@@ -38,6 +45,44 @@ function ModeButtons() {
       onClick={() => (diagramModes.value = { ...on, [mode]: !on[mode] })}><I /></button>)}</>;
 }
 
+/** T-3409: the zones with a built station or a stop, by name; a zone chosen before stays listed so it can be unticked */
+function listedCities(): string[] {
+  const w = world.value, out = new Set<string>(diagramCities.value);
+  void zonesLoaded.value;
+  if (w) {
+    for (const s of w.save.stations) { if (!s.built) continue; const z = stationZone(s); if (z && isCity(z)) out.add(z); }
+    for (const s of busStopsById(w).values()) { const z = stationZone(s); if (z && isCity(z)) out.add(z); }
+  }
+  const name = (z: string) => (isCity(z) ? tPlace(z, cityById(z).name) : z);
+  return [...out].sort((a, b) => name(a).localeCompare(name(b)));
+}
+
+/** T-3409: the cities the diagram is of: a list under its button, every city first (the whole network) */
+function CityChoice() {
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const away = (e: PointerEvent) => { if (!box.current?.contains(e.target as Node)) setOpen(false); };
+    // Esc closes the list alone, not the diagram
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") (e.stopPropagation(), setOpen(false)); };
+    document.addEventListener("pointerdown", away, true);
+    document.addEventListener("keydown", esc, true);
+    return () => { document.removeEventListener("pointerdown", away, true); document.removeEventListener("keydown", esc, true); };
+  }, [open]);
+  const cities = listedCities(), chosen = diagramCities.value;
+  if (cities.length < 2 && !chosen.length) return null;
+  const set = (next: string[]) => (diagramCities.value = [...next].sort());
+  return <div class="diagram-cities" ref={box}>
+    <button type="button" class={"btn icon" + (chosen.length ? " on" : "")} data-tip={t("diagramButton.chooseCities")} aria-label={t("diagramButton.chooseCities")} aria-expanded={open}
+      onClick={() => setOpen(!open)}><Icon.cities /></button>
+    {open && <ul class="diagram-cities-list">
+      <li><Check checked={!chosen.length} onChange={() => set([])}>{t("cities.all")}</Check></li>
+      {cities.map((c) => <li key={c}><Check checked={chosen.includes(c)} onChange={(on) => set(on ? [...chosen, c] : chosen.filter((x) => x !== c))}>{isCity(c) ? tPlace(c, cityById(c).name) : c}</Check></li>)}
+    </ul>}
+  </div>;
+}
+
 /** T-2161, T-2163: the map's upper left while the diagram is up: the way back to the map (T-2416), the
  * save button, the first layout's loading bar (T-2235, as the demand status's) and the busy tag. */
 export function DiagramTopLeft() {
@@ -46,6 +91,7 @@ export function DiagramTopLeft() {
     <div class="map-top-row">
       <button type="button" class="btn icon diagram-exit" data-tip={t("diagramButton.showMap")} aria-label={t("diagramButton.showMap")} onClick={() => (diagramShown.value = false)}><Icon.cross /></button>
       <ModeButtons />
+      <CityChoice />
       <button type="button" class={"btn icon diagram-water" + (diagramWater.value ? " on" : "")} data-tip={t("diagramButton.showWater")} aria-label={t("diagramButton.showWater")} aria-pressed={diagramWater.value} onClick={() => (diagramWater.value = !diagramWater.value)}><Icon.waves /></button>
       <label class="slider diagram-width" data-tip={t("diagramButton.lineWidth")}>
         <input type="range" min={WIDTH_MIN} max={WIDTH_MAX} step={0.01} value={diagramWidth.value} aria-label={t("diagramButton.lineWidth")}

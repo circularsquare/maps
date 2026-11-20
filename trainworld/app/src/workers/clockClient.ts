@@ -15,6 +15,7 @@ import { setLineShapeSink, takeLineShapes } from "../game/lineShapeState";
 import { setNewHeadwaySink, takeNewHeadway } from "../game/newHeadway";
 import { bindNewStations } from "../game/stationBinding";
 import { setHiddenLinesSink, takeHiddenLines } from "../game/lineVisibility";
+import { takeDiagramCities } from "../game/diagramCities";
 import { hiddenZones, setGameStart } from "../game/realms";
 import { home } from "../game/home";
 import { fitView, holdForGameLoad, loadCannotFinish, markAlive } from "../game/loading";
@@ -653,7 +654,8 @@ export class ClockClient {
   /** the renderer's hooks, set by main.ts */
   onState: (s: ClockState) => void = () => {};
   /** T-2159: the network diagram's graph, while the diagram is shown (diagram/view.ts) */
-  onDiagram: (graphs: DiagramGraph[]) => void = () => {};
+  /** T-3409: `cut`: the graphs are of the chosen cities alone; `whole`: the whole network's too, when a share asked */
+  onDiagram: (graphs: DiagramGraph[], cut: boolean, whole?: DiagramGraph[]) => void = () => {};
   /** `board`: the boarding account's hour (T-164, game/boarding.ts), once demand has riders */
   onTrips: (epoch: number, version: number, trips: Float32Array, board?: Float32Array, ends?: Float32Array, nexts?: Float32Array, bays?: Float32Array) => void = () => {};
   /** the boarding account's last hours: ms in the worker for the hour, lines worked out again
@@ -1201,7 +1203,7 @@ export class ClockClient {
         setMoneyState(msg.money);
         break;
       case "diagramGraph":
-        this.onDiagram(msg.graphs);
+        this.onDiagram(msg.graphs, !!msg.cut, msg.whole);
         break;
       case "cash": // T-284: fares landing, running costs draining
         liveMoney.value = { cash: msg.cash, today: msg.today, hour: msg.hour, regions: msg.regions };
@@ -1222,6 +1224,9 @@ export class ClockClient {
         break;
       case "hiddenLines":
         takeHiddenLines(msg.lines);
+        break;
+      case "diagramCities":
+        takeDiagramCities(msg.cities);
         break;
       case "stationsAhead":
         stationsAheadSink?.(msg.frame, msg.xy, msg.fine, msg.built, msg.home);

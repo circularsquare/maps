@@ -7,7 +7,7 @@ import { fitOcti, rounded } from "./borders";
 import { simplifyLine } from "./graph";
 import type { CarryMap } from "./sheetThin";
 import type { DiagramLayout } from "./layout";
-import type { Drawing } from "./draw";
+import { STUB, stubEnd, type Drawing, type V } from "./draw";
 
 /** a bus or ferry line as the page sends it, in its region's graph metres */
 export interface ThinIn {
@@ -19,6 +19,9 @@ export interface ThinIn {
   /** its stops in run order, x, y pairs, and per stop the graph node of the station it stops at (-1 for none) */
   stops: Float64Array;
   node: Int32Array;
+  /** T-3409: cut at the chosen cities' edge, the way it goes on there (east, north), drawn as a stub (draw.ts `stubEnd`) */
+  stubA?: [number, number];
+  stubB?: [number, number];
 }
 
 /** a bus or ferry line drawn, layout units */
@@ -145,6 +148,12 @@ export function thinLines(ins: readonly ThinIn[], map: CarryMap, K: number, layo
       for (let q = fit.length ? 2 : 0; q < f.length; q++) fit.push(f[q]);
     }
     if (fit.length < 4) continue;
+    if (L.stubA || L.stubB) {
+      const V: V[] = [];
+      for (let q = 0; q + 1 < fit.length; q += 2) V.push([fit[q], fit[q + 1], 0, 0, -1]);
+      if (L.stubA) { const s = stubEnd(V, 0, L.stubA, STUB * pitch); fit.unshift(s[0], s[1]); }
+      if (L.stubB) { const s = stubEnd(V, 1, L.stubB, STUB * pitch); fit.push(s[0], s[1]); }
+    }
     const ribbon = Float64Array.from(fit), cmd: number[] = [];
     rounded(ribbon, false, CORNER * pitch, cmd);
     // the stops not at a station drawn here: on the fitted line, nearest their carried place

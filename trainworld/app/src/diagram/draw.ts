@@ -43,6 +43,9 @@ const ALONG_SLACK = 1.25;
 /** a station's axis may pass this many pitches to the side of its place, tried in steps of 1 / AXIS_STEPS
  * pitches, at this cost (pill length) a pitch, where no axis through its place crosses all its lines */
 const AXIS_SHIFT = 2, AXIS_STEPS = 2, SHIFT_COST = 1;
+/** T-3409: a cut line (one with a stub) beside an axis costs a little more than a pill as long, so at its last station the
+ * pill goes across it where an axis along it would tie (parallel lines ending there with it) */
+const BESIDE_CUT = 1.05;
 /** a passage between pills of one station is this share of a pill wide */
 const PASSAGE = 0.45;
 /** `apart`'s passes, each moving a piece at most once (T-2405) */
@@ -166,7 +169,36 @@ export function pillSize(d: Drawing, k: number): [number, number] {
   return d.small[k] ? [SMALL_R * d.stroke, SMALL_OUTLINE * d.stroke] : [PILL_R * d.stroke, PILL_OUTLINE * d.stroke];
 }
 
-type V = [number, number, number, number, number]; // x, y, offset left of travel, bundle half width, node (-1 none)
+export type V = [number, number, number, number, number]; // x, y, offset left of travel, bundle half width, node (-1 none)
+
+/** T-3409: a cut line's stub, pitches past its last drawn point */
+export const STUB = 3;
+/** a stub goes straight on (a turn right at the pill reads as a hook) unless the line goes on back the way it came, more
+ * than this far off straight (radians); then the nearest of the eight ways, turning at most a right angle */
+const STUB_STRAIGHT = (100 * Math.PI) / 180;
+/** the point a stub at end `end` of V (0 its start, 1 its end) reaches, `way` the way the line goes on (east, north) */
+export function stubEnd(V: V[], end: 0 | 1, way: [number, number], len: number): V {
+  const at = end ? V.length - 1 : 0, v = V[at];
+  let ux = 0, uy = 0;
+  // the way the line arrives at the end
+  for (let step = end ? -1 : 1, i = at + step; i >= 0 && i < V.length; i += step) {
+    const o = V[i], l = hyp(v[0] - o[0], v[1] - o[1]);
+    if (l > 1e-9) { (ux = (v[0] - o[0]) / l), (uy = (v[1] - o[1]) / l); break; }
+  }
+  let [dx, dy] = way;
+  const cos = ux * dx + uy * dy;
+  if (!(ux || uy) || cos < Math.cos(STUB_STRAIGHT)) {
+    let best = -2, bx = dx, by = dy;
+    for (const [ex, ey] of DIRS8) {
+      // no turn back on itself
+      if ((ux || uy) && ux * ex + uy * ey < -1e-9) continue;
+      const c = ex * dx + ey * dy;
+      if (c > best) (best = c), (bx = ex), (by = ey);
+    }
+    (dx = bx), (dy = by);
+  } else (dx = ux), (dy = uy);
+  return [v[0] + dx * len, v[1] + dy * len, v[2], v[3], -1];
+}
 
 /** Pieces leaving a node the same way (where the layout could turn none of them without folding a line)
  * would be drawn over each other: drawn as one bundle there instead (T-2405). Of each such group the piece
@@ -356,6 +388,12 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
       V.push(...run);
       i = j;
     }
+    // T-3409: a line cut at the chosen cities' edge goes on past its last station there as a stub, so that station's pill
+    // is drawn as one the line passes through
+    if ((ln.stubA || ln.stubB) && V.length >= 2) {
+      if (ln.stubA) V.unshift(stubEnd(V, 0, ln.stubA, STUB * pitch));
+      if (ln.stubB) V.push(stubEnd(V, 1, ln.stubB, STUB * pitch));
+    }
     Vs.push([ln, V]);
   }
   // Each station's pill lies along an axis through its place, of the four octilinear ones the one
@@ -388,6 +426,11 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
     const t = ((cx - o[0]) * ax[1] - (cy - o[1]) * ax[0]) / cr;
     return t > 0.3 && Math.abs(t - 1) * hyp(dx, dy) < 3 * pitch ? [o[0] + dx * t, o[1] + dy * t] : null;
   };
+  /** T-3409: a cut line's stop at the station its stub leaves from */
+  const cutHere = (o: Occ): boolean => {
+    const [ln, V] = Vs[o.li];
+    return (!!ln.stubA && o.i0 === 1) || (!!ln.stubB && o.i1 === V.length - 2);
+  };
   const AX: [number, number][] = [0, 1, 2, 3].map((q) => [DIRS8[q][0], DIRS8[q][1]]);
   const axisOf = new Map<number, [number, number]>();
   /** per station, the point its axis passes through */
@@ -415,7 +458,7 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
               continue;
             }
             p = s.near;
-            beside += across;
+            beside += cutHere(o) ? across * BESIDE_CUT : across;
           }
           const t = (p[0] - cx) * ax[0] + (p[1] - cy) * ax[1];
           (t0 = Math.min(t0, t)), (t1 = Math.max(t1, t));
@@ -439,6 +482,14 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
     const r: Ribbon = { pts: [], vi: [] };
     ribs[li] = { r, cmds: filleted(Vs[li][1], R0, r, RS) };
   }
+  for (const [k, occ] of occAt) {
+    const ax = axisOf.get(k)!, [cx, cy] = originOf.get(k)!, list: [number, number][] = [];
+    for (const o of occ) {
+      const s = stopOn(ribs[o.li].r, o.i0 - 1, o.i1 + 1, cx, cy, ax, pitch);
+      list.push(s.cross ?? s.near);
+    }
+    stopsAt.set(k, list);
+  }
   const ribbons: Float64Array[] = [], lineOf: number[] = [], chainAt: Int32Array[] = [];
   ribs.forEach(({ r, cmds }, li) => {
     if (!cmds) return;
@@ -450,14 +501,6 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
     r.vi.forEach((v, j) => (at[j] = c = V[v][4] >= 0 ? V[v][4] : c));
     chainAt.push(at);
   });
-  for (const [k, occ] of occAt) {
-    const ax = axisOf.get(k)!, [cx, cy] = originOf.get(k)!, list: [number, number][] = [];
-    for (const o of occ) {
-      const s = stopOn(ribs[o.li].r, o.i0 - 1, o.i1 + 1, cx, cy, ax, pitch);
-      list.push(s.cross ?? s.near);
-    }
-    stopsAt.set(k, list);
-  }
   const pills: Drawing["pills"] = [], passages: Drawing["passages"] = [], pillOf: number[] = [], passageOf: number[] = [], hooks: number[] = [];
   for (const [k, raw] of stopsAt) {
     const firstPassage = passages.length;

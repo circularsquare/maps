@@ -1127,6 +1127,10 @@ rect.now { fill-opacity: .45; }
   font-size: 12px; font-weight: 400; line-height: 14px; color: var(--muted); }
 .map-top-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
 .slider.diagram-width { margin: 0; width: 84px; }
+/* T-3409: the diagram's cities, a list under their button */
+.diagram-cities { position: relative; display: flex; }
+.diagram-cities-list { position: absolute; left: 0; top: 100%; z-index: 5; min-width: 180px; max-height: 60vh; overflow-y: auto; list-style: none; margin: 4px 0 0; padding: 4px 0; border: 1px solid var(--rule); background: var(--bg); font-size: 12px; }
+.diagram-cities-list li { display: flex; align-items: center; min-height: 24px; padding: 0 8px; white-space: nowrap; }
 .demand-busy { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .status-tag .load-bar.thin { height: 4px; margin-right: 0; }
 /* T-3479: terrain that failed to load, clicked to try again */

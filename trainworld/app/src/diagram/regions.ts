@@ -143,6 +143,10 @@ export function regionSig(g: DiagramGraph, names: string[], widths: ArrayLike<nu
   if (g.hop) all(g.hop);
   for (const l of g.lines) {
     add(l.id), all(l.chain), all(l.stop), add(l.fast ? 1 : 0), add(l.tram ? 1 : 0), add(l.oneWay ? 1 : 0);
+    // T-3409: a cut run's place in its line and its stubs
+    if (l.from !== undefined) add(l.from);
+    if (l.stubA) all(l.stubA);
+    if (l.stubB) all(l.stubB);
     for (let i = 0; i < l.colour.length; i++) add(l.colour.charCodeAt(i));
   }
   for (const s of names) for (let i = 0; i < s.length; i++) add(s.charCodeAt(i));

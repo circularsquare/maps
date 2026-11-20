@@ -693,6 +693,7 @@
   "diagramButton.showTrams": "Hover and screen-reader label of the toggle that shows or hides tram lines on the network diagram.",
   "diagramButton.showBuses": "Hover and screen-reader label of the toggle that shows or hides bus lines on the network diagram.",
   "diagramButton.showFerries": "Hover and screen-reader label of the toggle that shows or hides ferry lines on the network diagram.",
+  "diagramButton.chooseCities": "Hover and screen-reader label of the button on the network diagram that opens a list of the cities with stations, each with a tick box; the diagram is drawn for the ticked cities alone (the first row, cities.all, draws every city).",
   "diagramButton.lineWidth": "Hover and screen-reader label of the slider that makes the lines and station marks on the network diagram wider.",
   "diagramButton.savePicture": "Hover and screen-reader label of the button that saves the network diagram as an image.",
   "diagramButton.calculating": "Status text beside the loading bar while the network diagram is being laid out.",

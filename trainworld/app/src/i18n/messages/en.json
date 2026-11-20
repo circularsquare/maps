@@ -696,6 +696,7 @@
   "diagramButton.showTrams": "Show trams",
   "diagramButton.showBuses": "Show buses",
   "diagramButton.showFerries": "Show ferries",
+  "diagramButton.chooseCities": "Choose cities",
   "diagramButton.lineWidth": "Line width",
   "diagramButton.savePicture": "Save picture",
   "diagramButton.calculating": "Drawing diagram",

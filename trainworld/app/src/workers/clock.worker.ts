@@ -34,9 +34,10 @@ import { assignBays, BAY_LOOKBACK_S, profileTimes, terminalEnds } from "../map/t
 import { setBandCheck, setBandMode } from "../map/lineBands";
 import { besideSamples } from "../map/corridors";
 import { packCross } from "../map/markData";
-import { bandEdges, diagramGraph } from "../diagram/graph";
+import { bandEdges, diagramGraph, type DiagramGraph } from "../diagram/graph";
 import { nodeLngLat, regionGroups } from "../diagram/regions";
 import { busGraph, stopsIn } from "../diagram/busGraph";
+import { cutLines } from "../diagram/cut";
 import { StrokeSender, strokesOfPieces, type StrokeKind, type StrokeMode } from "../map/strokePost";
 import { readOutlinesForPlaces, type PackedOutlines } from "../map/coarseOutlines";
 import { canvasReadsTrue } from "../map/canvasRead";
@@ -381,6 +382,10 @@ let lineNotes = new Map<string, [number, string]>();
 let lineShapes = new Map<string, LineShape>();
 /** T-3420: the lines the player hid on the map, by line id (game/lineVisibility.ts) */
 let hiddenLines = new Set<string>();
+/** T-3409: the zones the schematic is of (none: the whole network), and the station nodes and bus stops the page says are
+ * in them (diagram/cut.ts) */
+let diagramCities: string[] = [];
+let diagramInside = { stations: new Set<number>(), stops: new Set<number>() };
 /** T-1094: the train length last set on any line (0 for the most the platforms fit), a new line's start */
 let newLineCars = NEW_LINE_CARS;
 /** T-3543: the headways (seconds at each level) a new line starts with, set from the timetables window; null: the game's counts */
@@ -2281,7 +2286,7 @@ function shapeHour(epoch: number, b: Float32Array) {
 // ---------------------------------------------------------------- saves (T-029)
 
 function header(): SaveHeader {
-  return { game: "anitabuilder", format: SAVE_FORMAT, level: TrackApi.save_level(), city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), ...loanToSave(loan), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), ...(api!.fleet_ferry() ? { fleetFerry: api!.fleet_ferry() } : {}), ...(api!.fleet_tram() ? { fleetTram: api!.fleet_tram() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), ...(lineDays.size ? { lineDays: savedLineDays(true) } : {}), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), ...savedShapes(), ...savedHidden(), mode, start: startZone, ...(dayPinned ? { dayShift } : {}), opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), ...(demandBuilt?.length ? { demandBuilt } : {}), newCars: newLineCars, ...(Object.keys(newLineHeadway).length ? { newHeadway: newLineHeadway } : {}), ...(newLineWeekendShare !== null ? { newWeekendShare: newLineWeekendShare } : {}), ...(guide ? { guide } : {}), ...(achievements ? { achievements: Object.fromEntries(achievements) } : {}), ...(home ? { home } : {}), ...(copyOf ? { copy: copyOf } : {}), ...(modded ? { modded } : {}) };
+  return { game: "anitabuilder", format: SAVE_FORMAT, level: TrackApi.save_level(), city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), ...loanToSave(loan), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), ...(api!.fleet_ferry() ? { fleetFerry: api!.fleet_ferry() } : {}), ...(api!.fleet_tram() ? { fleetTram: api!.fleet_tram() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), ...(lineDays.size ? { lineDays: savedLineDays(true) } : {}), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), ...savedShapes(), ...savedHidden(), ...(diagramCities.length ? { schematic: [...diagramCities] } : {}), mode, start: startZone, ...(dayPinned ? { dayShift } : {}), opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), ...(demandBuilt?.length ? { demandBuilt } : {}), newCars: newLineCars, ...(Object.keys(newLineHeadway).length ? { newHeadway: newLineHeadway } : {}), ...(newLineWeekendShare !== null ? { newWeekendShare: newLineWeekendShare } : {}), ...(guide ? { guide } : {}), ...(achievements ? { achievements: Object.fromEntries(achievements) } : {}), ...(home ? { home } : {}), ...(copyOf ? { copy: copyOf } : {}), ...(modded ? { modded } : {}) };
 }
 
 /** The game as file bytes. The network and header are taken at once, before anything awaits. */
@@ -2495,6 +2500,8 @@ async function openSave(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   lineNotes = new Map(Object.entries(h.notes ?? {}));
   lineShapes = shapesFrom(h.shapes);
   hiddenLines = new Set(Array.isArray(h.hidden) ? h.hidden.filter((x) => typeof x === "string") : []);
+  diagramCities = Array.isArray(h.schematic) ? h.schematic.filter((x) => typeof x === "string" && isCity(x)) : [];
+  diagramInside = { stations: new Set(), stops: new Set() };
   newLineCars = h.newCars ?? NEW_LINE_CARS;
   newLineWeekendShare = typeof h.newWeekendShare === "number" && Number.isFinite(h.newWeekendShare) ? h.newWeekendShare : null;
   newLineHeadway = cleanNewHeadways(h.newHeadway);
@@ -2574,6 +2581,8 @@ async function newGame(spec?: NewGameSpec) {
   lineNotes = new Map();
   lineShapes = new Map();
   hiddenLines = new Set();
+  diagramCities = [];
+  diagramInside = { stations: new Set(), stops: new Set() };
   newLineCars = NEW_LINE_CARS;
   newLineHeadway = {};
   newLineWeekendShare = null;
@@ -2606,6 +2615,7 @@ function restart(t: number, from: "autosave" | "file" | "new", reason?: "rebuilt
   send({ kind: "listOrder", lines: [...api!.list_order(0)], stations: [...api!.list_order(1)] });
   send({ kind: "lineShapes", shapes: Object.fromEntries(lineShapes) });
   send({ kind: "hiddenLines", lines: [...hiddenLines] });
+  send({ kind: "diagramCities", cities: diagramCities });
   send({ kind: "newHeadway", seconds: newLineHeadway });
   send({ kind: "loaded", from, clock: t, frame: frameSpec(), converted: convertedOnLoad || undefined, game, slot: saves.loadingInto ?? saves.activeSlot, reason });
   // T-3734: a game started in the active slot itself is that slot's now, and the page hears so
@@ -2717,7 +2727,10 @@ function sendState(service = false, effectiveAt?: number, trips = true, ghostFir
 
 /** whether the page shows the diagram, and the last network's lines, edges and polylines */
 let diagramOn = false;
-let diagramIn: { lines: ClockLine[]; edges: ClockEdge[]; pts: ReadonlyMap<number, Float32Array> } | null = null;
+/** T-3409: while cities are chosen, post the whole network's graphs too (a share sends the whole network) */
+let diagramWhole = false;
+type DiagramIn = { lines: ClockLine[]; edges: ClockEdge[]; pts: ReadonlyMap<number, Float32Array> };
+let diagramIn: DiagramIn | null = null;
 /** T-2261: the graph's points are float32 local units, so they are made from the kept float64 mercator points, from an
  * origin of the network's own (its box's middle on a 1 degree grid), never the draw anchor: the same network gives the
  * same graph whatever the camera has done. Each edge's converted points are kept while its mercator ones and the origin
@@ -2762,11 +2775,21 @@ function diagramFrame(pts: ReadonlyMap<number, Float32Array>, keep: Map<number, 
  * rest gets the graph it gets alone (float32 points thousands of km from the origin move stations and passes). */
 function postDiagram() {
   if (!diagramIn) return;
-  const t0 = performance.now();
-  const { lines, edges } = diagramIn, ends = new Map(edges.map((e) => [e.id, e])), keep: typeof diagramPts = new Map();
+  const t0 = performance.now(), keep: typeof diagramPts = new Map(), ends = new Map(diagramIn.edges.map((e) => [e.id, e]));
+  // T-3409: chosen cities: their lines cut to the runs inside them, and the graphs built from those runs and their track
+  // alone; none chosen, or none of their stations on a line, the whole network
+  const c = diagramCities.length ? cutLines(diagramIn.lines, ends, diagramIn.pts, complexOfNodes(), diagramInside.stations, diagramInside.stops) : null;
+  const graphs = diagramGraphs(c ? { ...diagramIn, lines: c.lines, pts: c.pts } : diagramIn, c ? c.complexOf : complexOfNodes(), ends, keep);
+  const whole = c && diagramWhole ? diagramGraphs(diagramIn, complexOfNodes(), ends, keep) : undefined;
+  diagramPts = keep;
+  send({ kind: "diagramGraph", graphs, ms: performance.now() - t0, ...(c ? { cut: true } : {}), ...(whole ? { whole } : {}) }, [...graphs, ...(whole ?? [])].flatMap((g) => [g.key.buffer, g.x.buffer, g.y.buffer, g.ea.buffer, g.eb.buffer, g.first.buffer, g.on.buffer]));
+}
+/** the graphs of the network `diagramIn`, stations by `cx` (T-3409: a cut network's has those outside made no station) */
+function diagramGraphs(diagramIn: DiagramIn, cx: Uint32Array, ends: Map<number, ClockEdge>, keep: typeof diagramPts): DiagramGraph[] {
+  const { lines, edges } = diagramIn;
   const build = (ls: ClockLine[], pts0: ReadonlyMap<number, Float32Array>) => {
     const { pts, at } = diagramFrame(pts0, keep);
-    return diagramGraph(ls, edges, pts, complexOfNodes(), besideSamples(bandEdges(ls), pts, ends), at);
+    return diagramGraph(ls, edges, pts, cx, besideSamples(bandEdges(ls), pts, ends), at);
   };
   const whole = build(lines, diagramIn.pts), groups = regionGroups(whole);
   let graphs = [whole];
@@ -2783,11 +2806,11 @@ function postDiagram() {
       }
       return b;
     });
-    const lineRegion = new Map<number, number>();
-    for (const l of whole.lines) if (l.chain.length) lineRegion.set(l.id, regionOf[l.chain[0]]);
+    const lineRegion = new Map<number | string, number>();
+    for (const l of whole.lines) if (l.chain.length) lineRegion.set(runKey(l), regionOf[l.chain[0]]);
     const ls: ClockLine[][] = groups.map(() => []), pts = groups.map(() => new Map<number, Float32Array>());
     for (const l of lines) {
-      const r = lineRegion.get(l.id);
+      const r = lineRegion.get(runKey(l));
       if (r === undefined) continue;
       ls[r].push(l);
       for (const p of l.path) {
@@ -2818,18 +2841,19 @@ function postDiagram() {
         for (const l of ls) for (const p of l.bus!.stops) (w = Math.min(w, p.lng)), (e = Math.max(e, p.lng)), (s = Math.min(s, p.lat)), (n = Math.max(n, p.lat));
         return makeAnchor(Math.round((w + e) / 2), Math.round((s + n) / 2), 0);
       };
-      const all = busGraph(lone, complexOfNodes(), frameOf(lone)), byId = new Map(lone.map((l) => [l.id, l]));
+      const all = busGraph(lone, cx, frameOf(lone)), byId = new Map(lone.map((l) => [runKey(l), l]));
       const bg = regionGroups(all);
       for (const nodes of bg.length > 1 ? bg : [null]) {
         if (!nodes) { graphs.push(all); break; }
-        const inIt = new Set(nodes), ls = all.lines.filter((l) => l.chain.length && inIt.has(l.chain[0])).map((l) => byId.get(l.id)!);
-        graphs.push(busGraph(ls, complexOfNodes(), frameOf(ls)));
+        const inIt = new Set(nodes), ls = all.lines.filter((l) => l.chain.length && inIt.has(l.chain[0])).map((l) => byId.get(runKey(l))!);
+        graphs.push(busGraph(ls, cx, frameOf(ls)));
       }
     }
   }
-  diagramPts = keep;
-  send({ kind: "diagramGraph", graphs, ms: performance.now() - t0 }, graphs.flatMap((g) => [g.key.buffer, g.x.buffer, g.y.buffer, g.ea.buffer, g.eb.buffer, g.first.buffer, g.on.buffer]));
+  return graphs;
 }
+/** T-3409: a line's key among the graph's lines, the runs of a cut line told apart by their first stop */
+const runKey = (l: { id: number; from?: number }): number | string => (l.from === undefined ? l.id : `${l.id}/${l.from}`);
 
 // ---------------------------------------------------------------- posting only what changed (T-1029)
 
@@ -4838,6 +4862,12 @@ async function handleMessage(msg: ToClock) {
     if (api) sendState();
   } else if (msg.kind === "diagram") {
     diagramOn = msg.on;
+    diagramWhole = !!msg.whole;
+    if (diagramOn && api) postDiagram();
+  } else if (msg.kind === "diagramCut") {
+    const cities = msg.cities.filter((c) => isCity(c));
+    if (cities.join() !== diagramCities.join()) (diagramCities = cities), (saves.dirty = saves.edited = true), (saves.editAt = Date.now());
+    diagramInside = { stations: new Set(msg.stations), stops: new Set(msg.stops) };
     if (diagramOn && api) postDiagram();
   } else if (msg.kind === "anchor") {
     // the view travelled far (T-307): every drawn position again, relative to the new anchor

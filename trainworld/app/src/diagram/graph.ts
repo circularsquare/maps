@@ -32,7 +32,7 @@ function below(c: Float64Array, v: number): number {
   return lo;
 }
 
-export interface GraphLine { id: number; ok: boolean; bus?: unknown; path: number[]; stops: number[]; colour: string; fast?: boolean; tram?: boolean; oneWay?: boolean; loopKind?: number }
+export interface GraphLine { id: number; ok: boolean; bus?: unknown; path: number[]; stops: number[]; colour: string; fast?: boolean; tram?: boolean; oneWay?: boolean; loopKind?: number; from?: number; cutA?: [number, number]; cutB?: [number, number] }
 export interface GraphEdge { id: number; a: number; b: number }
 
 export interface DiagramGraph {
@@ -81,6 +81,16 @@ export interface DiagramLine {
   chain: Int32Array;
   /** per chain entry, 1 where the line stops */
   stop: Uint8Array;
+  /** T-3409: a run of a line cut to the chosen cities (cut.ts): where its first stop is in the line's stops, and at an end
+   * where the line goes on, the way it goes (east, north), drawn as a stub */
+  from?: number;
+  stubA?: [number, number];
+  stubB?: [number, number];
+}
+
+/** T-3409: a cut run's fields as its drawn line carries them; none for a whole line */
+export function cutOf(l: { from?: number; cutA?: [number, number]; cutB?: [number, number] }): Pick<DiagramLine, "from" | "stubA" | "stubB"> {
+  return { ...(l.from !== undefined ? { from: l.from } : {}), ...(l.cutA ? { stubA: l.cutA } : {}), ...(l.cutB ? { stubB: l.cutB } : {}) };
 }
 
 /** The rail lines' edges in the order `lineBands` hands them to `besideSamples`, so a call with
@@ -211,7 +221,7 @@ export function diagramGraph(lines: readonly GraphLine[], edges: readonly GraphE
   const rail = lines.filter((l) => l.ok && !l.bus && l.path.length >= 1 && l.stops.length >= 2);
   /** per line: its chain, and per chain entry the range of its path the hops either side run on: the hop
    * from entry i to i + 1 runs on path[lo[i]] to path[hi[i + 1]] */
-  type Out = { id: number; colour: string; fast: boolean; tram: boolean; oneWay: boolean; path: number[]; chain: number[]; stop: number[]; lo: number[]; hi: number[]; at: number[] };
+  type Out = { id: number; colour: string; fast: boolean; tram: boolean; oneWay: boolean; path: number[]; chain: number[]; stop: number[]; lo: number[]; hi: number[]; at: number[]; cut: Pick<DiagramLine, "from" | "stubA" | "stubB"> };
   const out: Out[] = [];
   /** met: arc, node, lo, hi */
   const met: number[] = [];
@@ -255,7 +265,7 @@ export function diagramGraph(lines: readonly GraphLine[], edges: readonly GraphE
     let i0 = stop.indexOf(1), i1 = stop.lastIndexOf(1);
     if (i0 < 0) continue;
     const cut = <T>(v: T[]) => v.slice(i0, i1 + 1);
-    out.push({ id: l.id, colour: l.colour.toLowerCase(), fast: !!l.fast, tram: !!l.tram, oneWay: !!l.oneWay && l.loopKind === 1, path: l.path, chain: cut(chain), stop: cut(stop), lo: cut(lo), hi: cut(hi), at: cut(at) });
+    out.push({ id: l.id, colour: l.colour.toLowerCase(), fast: !!l.fast, tram: !!l.tram, oneWay: !!l.oneWay && l.loopKind === 1, path: l.path, chain: cut(chain), stop: cut(stop), lo: cut(lo), hi: cut(hi), at: cut(at), cut: cutOf(l) });
   }
 
   // nodes on some kept chain only, numbered again in order of their keys
@@ -282,7 +292,7 @@ export function diagramGraph(lines: readonly GraphLine[], edges: readonly GraphE
     // local y points south
     y[i] = -(py[i] - my) / k;
   });
-  const dl: DiagramLine[] = out.map((l) => ({ id: l.id, colour: l.colour, ...(l.fast ? { fast: true } : {}), ...(l.tram ? { tram: true } : {}), ...(l.oneWay ? { oneWay: true } : {}), chain: Int32Array.from(l.chain, (g) => renum.get(g)!), stop: Uint8Array.from(l.stop) }));
+  const dl: DiagramLine[] = out.map((l) => ({ id: l.id, colour: l.colour, ...(l.fast ? { fast: true } : {}), ...(l.tram ? { tram: true } : {}), ...(l.oneWay ? { oneWay: true } : {}), chain: Int32Array.from(l.chain, (g) => renum.get(g)!), stop: Uint8Array.from(l.stop), ...l.cut }));
   const em = new Map<number, number[]>();
   /** per edge, per line on it, the track edges its hops there run on */
   const runs = new Map<number, Map<number, Set<number>>>();

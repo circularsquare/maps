@@ -56,7 +56,7 @@ const FIELDS: Record<keyof SaveHeader, (v: unknown) => boolean> = {
   lineDays: opt(rec(arr(num))),
   stars: opt(rec(num)), goals: opt(rec(rec(num))),
   notes: opt(rec((n) => Array.isArray(n) && n.length === 2 && num(n[0]) && str(n[1]))),
-  shapes: opt(rec(isLineShape)), hidden: opt(arr(str)),
+  shapes: opt(rec(isLineShape)), hidden: opt(arr(str)), schematic: opt(arr(str)),
   mode: opt((m) => m === "normal" || m === "sandbox"), start: opt(str), dayShift: opt((v) => typeof v === "number" && Number.isFinite(v)), opened: opt(arr(str)),
   demandFine: opt(arr(str)), demandBuilt: opt(arr(arr(str))), newCars: opt(num), newWeekendShare: opt(num), newHeadway: opt((v) => plain(v) && Object.keys(v).every((k) => (NEW_HEADWAY_KINDS as readonly string[]).includes(k)) && Object.values(v).every((h) => Array.isArray(h) && (h.length === 3 || h.length === 5) && h.every(num))), level: opt(num),
   guide: opt(plain), achievements: opt(rec((a) => plain(a) && num(a.at) && opt(str)(a.of) && opt(num)(a.v) && opt(arr(str))(a.in))),
