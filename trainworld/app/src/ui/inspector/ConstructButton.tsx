@@ -10,7 +10,9 @@ export function ConstructButton({ num, build, kind }: { num: number; build: () =
     : q.trains > 0 ? t("constructButton.tipBoth", { kind, build: money(q.build), trains: money(q.trains) })
     : t("constructButton.tipBuild", { kind, build: money(q.build) });
   return (
-    <button class="btn text" data-tip={tip} onClick={build}>
+    // data-line-edit: a press here is not "a click away" from the title editor, which would close it, shift the
+    // panel and eat the click; the press keeps focus in the name box (T-3891)
+    <button class="btn text" data-line-edit data-tip={tip} onMouseDown={(e) => e.preventDefault()} onClick={build}>
       {q ? t("constructButton.priced", { price: money(q.build + q.trains) }) : t("constructButton.plain")}
     </button>
   );
