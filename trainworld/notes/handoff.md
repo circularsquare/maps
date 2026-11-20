@@ -7,7 +7,7 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`. This f
 Diary: notes/handoff-log.md. Her local time is UTC-5.
 
 ## Next
-0. Live v0.4.4. Cap 14. 8800 = 7637e0e0 (smoke passed). Since: T-3846, T-3847, T-3845 landed (not on 8800; T-3845 text ack asked).
+0. Live v0.4.4. Cap 14. 8800 = 7637e0e0 (smoke passed). Since: T-3846, T-3847, T-3845 landed (not on 8800).
 1. Running, mine: gapfill (Opus, T-3764, main tree: JOIN of 338 PK+BD rows from ~13:20, pid 9092, log
    artifacts/trainworld/t3764-join.log; no data/packs writes or plain 8800 rebuild until it ends; its uncommitted
    pipeline, checks, game json, notes files are its own), riverfix (Opus, T-3839, 6152),
@@ -28,6 +28,9 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
   table in notes/todo-review-2026-11-20.md). New players default to legacy time buttons (T-3847, agent
   legacytime). ~13:50: raised T-3662, 3655, 3646, 3735, 3353, 3513, 2486, 3829 to P2 ("lets raise those yeah");
   ferries "be able to run longer" (400 km per leg stays). TODO review done: T-3850-T-3866 filed.
+- 11-20 ~14:00 UTC: "i'd still rather not work too muhc on track stuff. i think i'd like to start thinking about
+  full track rework in next few days": no minor track work (T-3662, T-3353 wait on the rework design; T-2920
+  stays P4). Ferry text ack (T-3845). Board: waited-on task in its own preview section (T-3867, boardwait).
 - 11-20 ~05:20 UTC, to bed: "lets try to keep going through the night, continuing to run stuff if resources free
   up". Picked rivers E (+ min-straighten, round caps; coastline T-3833 after); OK'd both global CLAUDE.md wordings.
 - 11-20 ~04:20 UTC: rivers: likes B's look, wants C's correctness: "C but just do like microstraightening ... and we
