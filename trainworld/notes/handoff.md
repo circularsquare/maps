@@ -3,8 +3,7 @@
 Orchestrator: session 1a8ad997-acf4-4a89-963d-166c67fedf88, name maps-65 [fd56e0], since 2026-11-20 18:52 UTC
 Updated: 2026-11-20 22:25 UTC (maps-65 past 500k, starting its successor)
 
-Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`. This file is plan and her words.
-Diary: notes/handoff-log.md. Her local time is UTC-5. She is out until ~00:45 UTC with Remote Control on maps-65's
+Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5. She is out until ~00:45 UTC with Remote Control on maps-65's
 tab only: maps-65 relays her messages to you (and yours to her) until she is back at a tab with you.
 
 ## Next
