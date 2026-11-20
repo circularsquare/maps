@@ -122,7 +122,7 @@ fn summary_is_the_table(a: &IntercityApi) -> f64 {
     let s = a.table_summary(np as u32);
     assert_eq!(s[0] as usize, rows.len());
     let step = |x: f32| if x.is_nan() { f64::NAN } else { ((x as f64).clamp(0., 1.) * 65534.).round() / 65534. };
-    let mut want = vec![0f64; 5 * np];
+    let mut want = vec![0f64; 6 * np];
     for j in 0..rows.len() {
         let (x, y) = (rp[2 * j] as usize, rp[2 * j + 1] as usize);
         if x == y {
@@ -131,10 +131,15 @@ fn summary_is_the_table(a: &IntercityApi) -> f64 {
             want[3 * np + 2 * x + 1] = rc.get(j).copied().unwrap_or(0.);
             continue;
         }
+        let c = rc.get(j).copied().unwrap_or(0.);
         for p in [x, y] {
             want[3 * p] += rt[j];
-            want[3 * p + 1] += rc.get(j).copied().unwrap_or(0.);
+            want[3 * p + 1] += c;
             want[3 * p + 2] += rt[j] * step(rm[2 * j]);
+            // T-2216: no car: the commutes, and with no plane the longer trips, have no way but rail
+            if rm[2 * j + 1] == 0. {
+                want[5 * np + p] += if rm[2 * j] > 0. { c } else { rt[j] + c };
+            }
         }
     }
     assert_eq!(s[2..].iter().map(|x| x.to_bits()).collect::<Vec<_>>(), want.iter().map(|x| x.to_bits()).collect::<Vec<_>>());
@@ -288,7 +293,7 @@ fn markets_beside_split_by_network_and_pairs_need_track() {
         assert!(b.iter().any(|v| *v > 0.) == (m == 2));
     }
 }
-fn solve_all(a: &mut IntercityApi) {
+pub(super) fn solve_all(a: &mut IntercityApi) {
     for q in 0..PERIODS {
         assert!(a.solve(q));
     }
@@ -645,7 +650,7 @@ fn zpack(place: usize, (lon0, lat0): (f64, f64), country: &str, inc: f64, road: 
 }
 /// Four places: 0 and 1 near each other (100 km) in one country, 2 far (about 800 km) in
 /// another, 3 near 0 but across the sea (another landmass).
-fn world_packs() -> Vec<String> {
+pub(super) fn world_packs() -> Vec<String> {
     vec![
         zpack(0, (0., 50.), "AA", 1.0, 0, &[(0., 0., 300000., 200000.), (10., 0., 100000., 30000.), (40., 5., 50000., 10000.)]),
         zpack(1, (1.4, 50.), "AA", 1.0, 0, &[(0., 0., 200000., 90000.), (8., 3., 40000., 20000.)]),
@@ -653,11 +658,11 @@ fn world_packs() -> Vec<String> {
         zpack(3, (0., 49.), "AA", 1.0, 7, &[(0., 0., 80000., 30000.)]),
     ]
 }
-fn composition(packs: &[String], rows: Option<&str>) -> String {
+pub(super) fn composition(packs: &[String], rows: Option<&str>) -> String {
     let rows = rows.map_or(String::new(), |r| format!(r#","rows":{r}"#));
     format!(r#"{{"world":{{"frame":{{"kind":"equirect","lon":0,"lat":50}},"rule":{RULE},"places":5{rows}}},"zones":[{}]}}"#, packs.join(","))
 }
-fn rows_json(packs: &[String]) -> String {
+pub(super) fn rows_json(packs: &[String]) -> String {
     serde_json::to_string(&world_rows(&composition(packs, None)).unwrap()).unwrap()
 }
 #[test]
@@ -796,7 +801,7 @@ fn world_lines(a: &mut IntercityApi, with_far: bool, across_sea: bool) {
     a.set_fares(2., 0.1, &vec![20.; k]).unwrap();
 }
 #[test]
-fn world_market_serves_zones_in_every_frame_and_no_car_keeps_trips_fixed() {
+fn world_market_serves_zones_in_every_frame_and_across_the_sea() {
     let packs = world_packs();
     let rows = rows_json(&packs);
     let mut a = IntercityApi::new(&composition(&packs, Some(&rows))).unwrap();
@@ -805,18 +810,19 @@ fn world_market_serves_zones_in_every_frame_and_no_car_keeps_trips_fixed() {
     let m = a.m.clone();
     let served_places: std::collections::BTreeSet<usize> = a.served.iter().map(|&z| m.zones[z].place).collect();
     assert_eq!(served_places.into_iter().collect::<Vec<_>>(), vec![0, 1, 2, 3], "each frame's zones are reached");
-    // pairs: 0-1 joined by track; 2 apart (no track); 3 joined by track but across the sea (no car)
+    // pairs: 0-1 joined by track; 2 apart (no track); 3 joined by track across the sea (no car,
+    // T-2216: rail its only way)
     for p in &a.pairs {
         let (i, j) = (m.zones[p.a as usize].place, m.zones[p.b as usize].place);
         assert!(i != 2 && j != 2, "no track to place 2");
-        assert!((i == 3) == (j == 3), "no pair across the sea: {i}-{j}");
     }
     assert!(a.pairs.iter().any(|p| m.zones[p.a as usize].place == 0 && m.zones[p.b as usize].place == 1));
+    assert!(a.pairs.iter().any(|p| m.zones[p.a as usize].place == 3 && m.zones[p.b as usize].place == 0));
     let rail: f64 = (0..PERIODS).map(|q| a.summary(q)[2]).sum();
     assert!(rail > 0.);
-    // a selection in place 3: all its trips to place 0 are shown, none by rail
+    // a selection in place 3: all its trips to place 0 are shown, some by rail
     let sel = a.selection_flows(3, &[0., 0.], &[1.]);
-    assert!(sel[1] > 0. && sel[2] == 0., "{:?}", &sel[..9]);
+    assert!(sel[1] > 0. && sel[2] > 0., "{:?}", &sel[..9]);
     // the far place: all of place 0's trips there, none by rail; its zones in the zone block
     let s0 = a.selection_flows(0, &[0., 0.], &[1.]);
     assert!(s0[1 + 8 * 2] > 0. && s0[2 + 8 * 2] == 0.);

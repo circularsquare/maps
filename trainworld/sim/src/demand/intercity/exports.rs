@@ -603,12 +603,14 @@ impl IntercityApi {
     /// and another place below `limit` (game/demand.ts `CorridorBook`): the longer trips, the commute
     /// legs, and the longer trips times the share flying in steps of 1 / 65534 (game/corridorShares.ts
     /// `shareCode`), each added in row order as the page did; then (T-3509) two numbers per place
-    /// below `limit` from its own row (between its own zones): the longer trips and the commute legs.
+    /// below `limit` from its own row (between its own zones): the longer trips and the commute legs;
+    /// then (T-2216) one per place below `limit`: the trips with no way but rail, before any rides
+    /// (the longer trips on rows with no car and no plane, the commute legs on rows with no car).
     /// Nothing the size of the table is made.
     pub fn table_summary(&self, limit: u32) -> Vec<f64> {
         let (m, cw, lim) = (&self.m, &*self.m.cw, limit as usize);
         let directs = Directs::of(&m.places);
-        let mut out = vec![0f64; 2 + 5 * lim];
+        let mut out = vec![0f64; 2 + 6 * lim];
         let (mut h, mut n) = (0x811c9dc5u32, 0usize);
         let mut word = |w: u32| h = (h ^ w).wrapping_mul(0x01000193);
         for (i, a, b, t) in self.table_rows() {
@@ -637,6 +639,12 @@ impl IntercityApi {
                 s[0] += t;
                 s[1] += c;
                 s[2] += f;
+            }
+            if car == 0. {
+                let none = if air > 0. { c } else { t + c };
+                for p in [a, b] {
+                    out[2 + 5 * lim + p] += none;
+                }
             }
         }
         out[0] = n as f64;

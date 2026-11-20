@@ -107,10 +107,14 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
   loads are their purposes'; a weekend scales their counts by errands' factor and their loads by
   each purpose's.
 - **What is solved**: pairs are built only between 6 km zones some station serves, whose stations
-  share a track component, with a car or a plane to compete with: on one landmass (T-375's, fixed
-  links joined), or far places that both have airports. Every other pair's trips are fixed: counted
-  in the totals, shown, never in the solve. The market's day and its corridors (place pairs) come
-  from the rows, the same in every part of it.
+  share a track component. Rail competes with the car on one landmass (T-375's, fixed links joined)
+  and with the plane between far places that both have airports. A pair with neither (two
+  landmasses, near or with an end that has no airport) has rail as its only way [T-2216]: each
+  income group's rail share is `Params::bound_share` against the car the pair would have over a
+  bridge that is not there (all up to 3 times its cost, none from 4, linear between), the rest no
+  way. Commutes and outings between two landmasses the same against their own car, with no walkers.
+  The trip explorer gives code 8 where that cut-off leaves rail at 0. The market's day and its
+  corridors (place pairs) come from the rows, the same in every part of it.
 - **Zone pairs in chunks** [T-780]: a zone's trips with the zones of each place that come after it
   in the market's zone order are dealt in chunks of about 1 trip a day each way (`MARKET_CHUNK`),
   by systematic sampling over that place's zones by their trips from a start fixed by the two
@@ -228,8 +232,8 @@ choose rail or car as local commutes do, on the ratio curve of their costs (dema
 T-918; no walking between zones), the drive weighted 1.33 plus the work end's parking; their loads are the work purpose's [T-158]. Inter-city trips' period
 shares are 20/35/25/15/5%; their weekend factor 1.58.
 
-Not modelled yet: coach, a car between landmasses (a ferry where the market has no car at all,
-T-1396), induced travel, traffic on routed drives.
+Not modelled yet: coach, a car carried by ferry between landmasses (car ferries count as no road,
+T-1396), islands inside a place's own area (T-2216 stage 2), induced travel, traffic on routed drives.
 
 ## 5.2 Where a long-distance trip starts and ends
 

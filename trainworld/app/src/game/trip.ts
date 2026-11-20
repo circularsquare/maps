@@ -281,9 +281,10 @@ function readRoutes(v: Float64Array, o: number, nr: number, at: RouteNodes): Tri
 
 /** Why the market's rail is not offered between two zones (T-866), as `IntercityApi.market_trip`
  * says; T-3632: "noPart" and "unanswered" are the worker's stand-ins, with no market part on its
- * network or none that solved the period. An unanswered period reads as not answered. */
-export type MarketNoRail = "" | "farClosed" | "noRail" | "unmatched" | "noTrain" | "noAlt" | "noPart" | "unanswered";
-const MARKET_WHY: MarketNoRail[] = ["", "farClosed", "noRail", "unmatched", "noTrain", "noAlt", "noPart", "unanswered"];
+ * network or none that solved the period. An unanswered period reads as not answered. T-2216: "cutOff",
+ * no road or flight joins the two places and transit costs 4 times a drive or more. */
+export type MarketNoRail = "" | "farClosed" | "noRail" | "unmatched" | "noTrain" | "noAlt" | "noPart" | "unanswered" | "cutOff";
+const MARKET_WHY: MarketNoRail[] = ["", "farClosed", "noRail", "unmatched", "noTrain", "noAlt", "noPart", "unanswered", "cutOff"];
 
 /**
  * T-866: the longer trips between a selection and a far place (or one of its 6 km zones) in one

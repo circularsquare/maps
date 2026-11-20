@@ -1553,7 +1553,8 @@ function corridorBook(p: IntercityApi): Book {
   const np = REGISTRY.market.places.length;
   const s = p.table_summary(np);
   // (T-3509: the own rows' longer trips rounded to 32 bits, as the rows and the page's old table hold them)
-  const own = s.slice(2 + 3 * np);
+  // (T-2216: each place's trips with no way but rail come after, for the city view's No route)
+  const own = s.slice(2 + 3 * np, 2 + 5 * np);
   for (let i = 0; i < own.length; i += 2) own[i] = Math.fround(own[i]);
   madeBook = { id, key: `${s[0]}:${(s[1] >>> 0).toString(36)}`, n: s[0], totals: s.slice(2, 2 + 3 * np), own };
   railMemo.clear();

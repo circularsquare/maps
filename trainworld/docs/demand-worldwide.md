@@ -482,7 +482,9 @@ notes/T-420.md has the tables.
   mask and OSM roads, the same for every country) there is no car and no walk; the player's network
   is the only way, its share held only by the ratio curve's 3-4x fade against a car on a bridge
   that is not there, and the rest no way serves. No constant. Car ferries count as no road, one
-  rule everywhere (Anita, 2026-11-03). Why it may not carry over: where road ferries are part of
+  rule everywhere (Anita, 2026-11-03). The regional market takes the same rule between places on
+  two landmasses with no flight (T-2216, Anita's call 2026-11-20; Vancouver - Victoria, Singapore - Batam):
+  longer trips, commutes and outings, each against its own car's cost on that bridge. Why it may not carry over: where road ferries are part of
   the road network (Sweden's vägfärjor, Norway's riksvei ferries, the Philippines' RoRo routes,
   Indonesia's ASDP crossings) an island keeps a real car the model takes away, and a player's
   boat there fills with drivers who in fact cross by car; OSM ways a car can use but the public
@@ -1174,8 +1176,11 @@ notes/T-420.md has the tables.
   need booking days ahead, or run once a day, a 30 minute cap undersells the cost of a sparse
   timetable; where trains are late often, arriving early costs more. Check: rail's share on
   corridors served every 2 hours or less often against published shares.
-- **No car between landmasses** (T-377, T-375's fixed links). Far pairs on two landmasses fly
-  (T-378); near ones (under 250 km) keep their trips fixed; a ferry is no link.
+- **No car between landmasses** (T-377, T-375's fixed links). Far pairs on two landmasses whose
+  ends both have airports fly (T-378); every other pair on two landmasses has the player's network
+  as its only way, held by the islands' rule (above: all ride up to 3 times a drive over a bridge
+  that is not there, none from 4), the rest no way serves; their commutes and outings across have
+  no car and no walkers either (T-2216). A ferry is no link.
 - **Air door to door** (T-378, docs/regional.md 5.1). Between far places (250 km and more) that both
   have airports: drives to the airports, 135 minutes there for both ends together (90 before departure and 45 after landing, Monmousseau et al. 2021; T-1564, Anita 2026-10-27), 25 minutes
   until the flight (its frequency unmodelled: rail's planned first wait at a flight every 2 hours,

@@ -28,8 +28,12 @@ const NO_RAIL: f64 = 2.;
 const NOT_MATCHED: f64 = 3.;
 /// T-3632: lines join the two ends' stations, but none runs a train between them this period
 const NO_TRAIN: f64 = 4.;
-/// T-3632: no road or flight joins the two places, so their pairs are never solved (`has_alt`)
+/// T-3632: no road or flight joins the two places, so their pairs are never solved (only with
+/// T-2216's rule off in a test)
 const NO_ALT: f64 = 5.;
+/// T-2216: no road or flight joins the two places, and transit costs too much against the drive
+/// over a bridge that is not there (`Params::bound_share` 0) for anyone to take it
+const CUT_OFF: f64 = 8.;
 
 /// Under this share of its pair's riders a route is not walked when no pair gave one at the usual
 /// bars (T-3724).
@@ -151,7 +155,9 @@ impl IntercityApi {
     /// routes not listed; why rail is not offered (0 offered, 1 the far place is not open here, 2
     /// no zone pair rail can serve, 3 no square matched a site, 4 the ends' stations are on one
     /// network but no path joins them this period, 5 no car or plane joins the two places, so the
-    /// pairs are never solved; the app's worker adds 6 and 7, `trip.ts`); the share of the trips on pairs
+    /// pairs are never solved (only in a test with T-2216's rule off); the app's worker adds 6 and 7,
+    /// `trip.ts`; 8 no car or plane joins them and transit costs over 4 times the drive over a
+    /// bridge that is not there, T-2216); the share of the trips on pairs
     /// rail can serve; the reference mode's perceived minutes (the car's, or the plane's where no
     /// car goes), trip weighted; zone pairs counted; then (T-1229) the everyday outings across a
     /// zone line between the two ends, as the pairs choose them: legs a day, rail legs and walking
@@ -293,7 +299,7 @@ impl IntercityApi {
         let mut oc = 0f64;
         // T-3632: why no rail, for the answer with none: some pair with no car or plane, some
         // pair joined by lines with no path this period
-        let (mut no_alt, mut no_train) = (false, false);
+        let (mut no_alt, mut no_train, mut cut_off) = (false, false, false);
         for &z in &near {
             for &b in &fars {
                 if z == b {
@@ -302,7 +308,7 @@ impl IntercityApi {
                 let (a, bb) = if dir == 0 { (z, b) } else { (b, z) };
                 let (za, zb) = (&m.zones[a], &m.zones[bb]);
                 let trips = m.eachway(za, zb);
-                if !m.pr(za.place, zb.place).has_alt() {
+                if !m.pr(za.place, zb.place).solved() {
                     no_alt = true;
                 }
                 if trips < m.rule.min_trips {
@@ -342,8 +348,14 @@ impl IntercityApi {
                         let (rail_c, sum) = (mix.at(self.fare_d(a, f), p.soften(th0, alt.car)), mix.sum);
                         if sum > 0. {
                             let bt = p.mode_beta(alt.car);
-                            let v = ((-bt * (rail_c - alt.drive)).clamp(-80., 80.) as f64).exp();
-                            frac = v / (alt.rest as f64 + v);
+                            if r.bounded() {
+                                // T-2216: as the pass
+                                frac = p.bound_share(rail_c, alt.car, 0., 1.) as f64;
+                                cut_off |= frac <= 0.;
+                            } else {
+                                let v = ((-bt * (rail_c - alt.drive)).clamp(-80., 80.) as f64).exp();
+                                frac = v / (alt.rest as f64 + v);
+                            }
                             offered = true;
                             rc += tg * rail_c as f64;
                             rc_w += tg;
@@ -476,7 +488,7 @@ impl IntercityApi {
         }
         h[18] = n;
         if rail_all <= 0. {
-            h[14] = if no_alt { NO_ALT } else if no_train { NO_TRAIN } else { NO_RAIL };
+            h[14] = if no_alt { NO_ALT } else if cut_off { CUT_OFF } else if no_train { NO_TRAIN } else { NO_RAIL };
             h[13] = 1.;
             return h;
         }

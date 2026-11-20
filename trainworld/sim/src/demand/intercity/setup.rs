@@ -142,10 +142,10 @@ impl IntercityApi {
         let at = |z: usize| self.served_at.get(z).copied().unwrap_or(u32::MAX);
         let (i, k) = (at(a), at(b));
         let (za, zb) = (&m.zones[a], &m.zones[b]);
-        a != b && i != u32::MAX && k != u32::MAX && m.pr(za.place, zb.place).has_alt() && m.eachway(za, zb) >= m.rule.min_trips && self.served_comp[i as usize].iter().any(|c| self.served_comp[k as usize].binary_search(c).is_ok())
+        a != b && i != u32::MAX && k != u32::MAX && m.pr(za.place, zb.place).solved() && m.eachway(za, zb) >= m.rule.min_trips && self.served_comp[i as usize].iter().any(|c| self.served_comp[k as usize].binary_search(c).is_ok())
     }
-    /// The pairs between the `served` zones (ascending) joined by track, with a car or a plane to
-    /// compete with, in the whole market's order (T-174, T-409, T-377). `comp` is `served_comp`.
+    /// The pairs between the `served` zones (ascending) joined by track, in the whole market's order
+    /// (T-174, T-409, T-377). `comp` is `served_comp`.
     pub(super) fn set_served(&mut self, served: Vec<usize>, comp: Vec<Vec<u32>>) {
         let m = self.m.clone();
         // T-1735: with a window, only the pairs with an end in it
@@ -198,7 +198,7 @@ impl IntercityApi {
             let car = drive_min(km) * rt * pc.w_drive + zw.park + pc.car_own_min() + km * ROAD_DETOUR * rk * pc.car_own_km_min() + r.cross.at(FARE_MIN_PER_USD);
             let corridor = m.open_corridor(zh.place, zw.place);
             let band = pc.band_of_d2(km * km * 1e6) as u8;
-            self.cpairs.push(CPair { c: c as u32, car, corridor, ride: km >= pc.ride_min_km, band });
+            self.cpairs.push(CPair { c: c as u32, car, corridor, ride: km >= pc.ride_min_km, band, apart: islands() && !r.car });
         }
         self.cpairs.shrink_to_fit();
         // T-1175: the everyday pairs, as the commutes
@@ -218,7 +218,7 @@ impl IntercityApi {
             let (rt, rk) = m.zone_ratios(&r, zh, za);
             let car = drive_min(km) * rt * pc.w_drive + za.park + pc.car_own_min() + km * ROAD_DETOUR * rk * pc.car_own_km_min() + r.cross.at(FARE_MIN_PER_USD);
             let w = ep.walk.min(0.999);
-            self.epairs.push(EPairOn { e: e as u32, car, walk_e: w / (1. - w), ride: km >= pc.ride_min_km, band: pc.band_of_d2(km * km * 1e6) as u8 });
+            self.epairs.push(EPairOn { e: e as u32, car, walk_e: w / (1. - w), ride: km >= pc.ride_min_km, band: pc.band_of_d2(km * km * 1e6) as u8, apart: islands() && !r.car });
         }
         self.epairs.shrink_to_fit();
         self.served_at = at;

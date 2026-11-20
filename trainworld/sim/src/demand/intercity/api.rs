@@ -362,8 +362,8 @@ pub(super) fn find_from<T: Copy + Ord>(row: &[T], c: T, cur: &mut u32) -> usize 
 /// Which pairs of the `served` zones (ascending) are solved, a bit each for (i, k > i) in that
 /// order, and their trips a day each way, counted before `set_served` makes their table so it is
 /// made once at its size (T-761: grown by doubling it peaked at twice that, 500 MB on Japan).
-/// A pair needs a car or a plane to compete with (T-377, T-378: else its trips stay fixed), track
-/// joining its zones, and `MIN_TRIPS`.
+/// A pair needs track joining its zones and `MIN_TRIPS` (T-2216: with no car and no plane too,
+/// rail then its only way).
 ///
 /// With `chunk` (T-780) each zone's pairs with the zones of one place after it are dealt that
 /// place's trips in chunks of about `chunk`: systematic sampling over the place's zones in their
@@ -396,7 +396,7 @@ pub(super) fn solved_pairs(m: &Market, served: &[usize], joined: &impl Fn(usize,
             let za = &m.zones[a];
             for (k, &b) in served.iter().enumerate().skip(i + 1) {
                 let zb = &m.zones[b];
-                if !m.pr(za.place, zb.place).has_alt() || !joined(i, k) {
+                if !m.pr(za.place, zb.place).solved() || !joined(i, k) {
                     continue;
                 }
                 let trips = m.eachway_with(za, zb, m.curves(za, zb));
@@ -423,7 +423,7 @@ pub(super) fn solved_pairs(m: &Market, served: &[usize], joined: &impl Fn(usize,
             // one place's zones after a: a run of the zones' order
             let place = m.zones[b].place;
             run.clear();
-            if !some[place] || !m.pr(za.place, place).has_alt() {
+            if !some[place] || !m.pr(za.place, place).solved() {
                 while b < m.zones.len() && m.zones[b].place == place {
                     b += 1;
                 }

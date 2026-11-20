@@ -707,10 +707,30 @@ struct Alt {
     air: f32,
     car: f32,
 }
+thread_local! {
+    /// T-2216: tests turn the island rule off on their own thread, to compare the solve without it
+    /// (pairs with no car and no plane then never solved, commutes across water on the ratio curve).
+    pub(super) static ISLANDS_OFF: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
+/// T-2216: whether pairs on two landmasses with no plane are solved by `bound_share` (always, but
+/// in a test that turned it off).
+#[inline]
+fn islands() -> bool {
+    !(cfg!(test) && ISLANDS_OFF.with(|c| c.get()))
+}
 impl PairRule {
-    /// A pair the solve may build: a car or a plane to compete with.
+    /// A car or a plane to compete with.
     fn has_alt(&self) -> bool {
         self.car || self.fl.is_some()
+    }
+    /// T-2216: no car and no plane: rail is the only way, its share `Params::bound_share` against
+    /// a drive over a bridge that is not there (`alt`'s car), the rest no way at all.
+    fn bounded(&self) -> bool {
+        !self.has_alt()
+    }
+    /// A pair the solve may build: any, with a car, a plane or neither (T-2216).
+    fn solved(&self) -> bool {
+        islands() || self.has_alt()
     }
     /// A longer trip's car over a zone pair of this place pair, `d` km apart, to parking `park`.
     fn car_cost(&self, d: f32, park: f32) -> Cost {
@@ -1009,6 +1029,8 @@ struct CPair {
     ride: bool,
     /// the station choice's band by the zones' distance (`Params::band`, T-718)
     band: u8,
+    /// T-2216: its places on two landmasses: no car, rail by `Params::bound_share`
+    apart: bool,
 }
 /// T-1175: everyday outings between two zones across a zone line: home zone, activity zone (global
 /// id), purpose (`everyday` kind), outings a day, and their share walking with no rail.
@@ -1035,6 +1057,8 @@ struct EPairOn {
     walk_e: f32,
     ride: bool,
     band: u8,
+    /// T-2216: as `CPair::apart` (and no walkers: `everyday`'s walk share is 0 there)
+    apart: bool,
 }
 /// T-276: the commutes between zones are the local layer's commuters, so they choose as it does.
 fn commute_params() -> Params {
@@ -1066,3 +1090,5 @@ pub use api::*;
 mod tests;
 #[cfg(test)]
 mod t2652;
+#[cfg(test)]
+mod t2216;

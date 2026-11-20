@@ -466,18 +466,25 @@ impl IntercityApi {
                         rail_mix_cols(bc.get_or_insert_with(|| cols(b, true)), p.fare_min, a, b, p.beta, th, fx.as_ref(), d, &mut terms, &mut fares)
                     };
                     let sum = mix.sum;
+                    // T-2216: with no car and no plane, rail against the drive over a bridge that is not there
+                    let bounded = rule.bounded();
                     for &(share, f) in gs {
                         let trips = pair.trips * SHARES[q] as f64 * share as f64;
                         let alt = if gs.len() == 1 { alt_m } else { rule.alt(pair.car, split, from.w() * f, &m.mp) };
                         let rail_c = mix.at(self.fare_d(za, f), p.soften(th0, alt.car));
                         let bt = p.mode_beta(alt.car);
-                        let v_rail = if sum > 0. { ((-bt * (rail_c - alt.drive)).clamp(-80., 80.) as f64).exp() } else { 0. };
-                        let fraction = v_rail / (alt.rest as f64 + v_rail);
+                        let share_at = |rail_c: f32| {
+                            if bounded {
+                                return p.bound_share(rail_c, alt.car, 0., 1.) as f64;
+                            }
+                            let v = ((-bt * (rail_c - alt.drive)).clamp(-80., 80.) as f64).exp();
+                            v / (alt.rest as f64 + v)
+                        };
+                        let fraction = if sum > 0. { share_at(rail_c) } else { 0. };
                         let r = trips * fraction;
                         r_all += r;
                         if sum > 0. {
-                            let v = ((-bt * (rail_c + step(za, f) - alt.drive)).clamp(-80., 80.) as f64).exp();
-                            add(&mut rail_d, trips * (v / (alt.rest as f64 + v) - fraction), r, zkm(za, zb));
+                            add(&mut rail_d, trips * (share_at(rail_c + step(za, f)) - fraction), r, zkm(za, zb));
                         }
                     }
                     if sum > 0. && r_all > 0. {
@@ -552,10 +559,13 @@ impl IntercityApi {
                     if sum <= 0. {
                         continue;
                     }
-                    // T-918: rail against the car on the cost ratio, as the local commutes
-                    let frac = pc.ratio_share(rail_c, cp.car) as f64;
+                    // T-918: rail against the car on the cost ratio, as the local commutes; T-2216:
+                    // between two landmasses against the drive over a bridge that is not there, as
+                    // the local layer between land parts
+                    let share_at = |rail_c: f32| (if cp.apart { pc.bound_share(rail_c, cp.car, 0., 1.) } else { pc.ratio_share(rail_c, cp.car) }) as f64;
+                    let frac = share_at(rail_c);
                     c_frac[ci] = frac as f32;
-                    add(&mut rail_d, (out + ret) * (pc.ratio_share(rail_c + step(h, 1.), cp.car) as f64 - frac), (out + ret) * frac, zkm(h, w));
+                    add(&mut rail_d, (out + ret) * (share_at(rail_c + step(h, 1.)) - frac), (out + ret) * frac, zkm(h, w));
                     let (ro, rr_) = (out * frac, ret * frac);
                     c_rail += ro + rr_;
                     c_cor[cp.corridor] += ro + rr_;
@@ -617,13 +627,18 @@ impl IntercityApi {
                     // T-3624: the purpose's weight on the car in the choice (the band's softening
                     // above reads the plain car, a measure of the trip's length)
                     let car = ep.car * car_mul(k);
-                    let util = (pe.mode_beta(car) * (car - rail_c) + pe.asc_rail).clamp(-80., 80.) as f64;
-                    let w0 = ep.walk_e as f64 / (util.exp() + 1. + ep.walk_e as f64);
-                    let frac = (1. - w0) * pe.ratio_share(rail_c, car) as f64;
+                    // T-2216: between two landmasses no walkers, and rail against the drive over a
+                    // bridge that is not there, as the local layer between land parts
+                    let share_at = |rail_c: f32| {
+                        if ep.apart {
+                            return pe.bound_share(rail_c, car, 0., 1.) as f64;
+                        }
+                        let util = (pe.mode_beta(car) * (car - rail_c) + pe.asc_rail).clamp(-80., 80.) as f64;
+                        (1. - ep.walk_e as f64 / (util.exp() + 1. + ep.walk_e as f64)) * pe.ratio_share(rail_c, car) as f64
+                    };
+                    let frac = share_at(rail_c);
                     e_frac[ei] = frac as f32;
-                    let rd = rail_c + step(h, 1.);
-                    let ud = (pe.mode_beta(car) * (car - rd) + pe.asc_rail).clamp(-80., 80.) as f64;
-                    add(&mut rail_d, (out + ret) * ((1. - ep.walk_e as f64 / (ud.exp() + 1. + ep.walk_e as f64)) * pe.ratio_share(rd, car) as f64 - frac), (out + ret) * frac, zkm(h, az));
+                    add(&mut rail_d, (out + ret) * (share_at(rail_c + step(h, 1.)) - frac), (out + ret) * frac, zkm(h, az));
                     let (ro, rr_) = (out * frac, ret * frac);
                     e_rail += ro + rr_;
                     e_walk_lost += (ro + rr_) * pair.walk as f64;

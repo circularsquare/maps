@@ -566,7 +566,9 @@ pub(super) fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Co
             }
         }
     }
-    m.everyday = by_kind.into_iter().map(|((h, a, kind), (n, w))| EPair { h, a, kind, trips: n as f32, walk: (w / n.max(1e-12)) as f32 }).collect();
+    // T-2216: no one walks between two landmasses
+    let apart = |h: u32, a: u32| islands() && m.places[m.zones[h as usize].place].road != m.places[m.gid_place[a as usize] as usize].road;
+    m.everyday = by_kind.into_iter().map(|((h, a, kind), (n, w))| EPair { h, a, kind, trips: n as f32, walk: if apart(h, a) { 0. } else { (w / n.max(1e-12)) as f32 } }).collect();
     let csr = |key: &dyn Fn(&(u32, u32, f32)) -> Option<u32>, n: usize, list: &[(u32, u32, f32)]| {
         let mut off = vec![0u32; n + 1];
         for c in list {

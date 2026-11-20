@@ -107,7 +107,9 @@ There is no built-in liking for the train. Rail and the car are compared on time
 Islands no road reaches (Sado, Salamis, Hong Kong's outlying islands, Liberty Island) have no car and no walk off
 them: the player's ferry or train is the only way. It takes every such trip unless it costs over 3
 times a drive over a bridge that isn't there, and none past 4 times. The rest are "no route":
-counted in the totals, by no mode. Car ferries don't count as roads.
+counted in the totals, by no mode. Car ferries don't count as roads. The same goes for longer trips
+and commutes between places on two landmasses with no flight between them (Vancouver to Victoria,
+Singapore to Batam, Tenerife to Gran Canaria).
 
 ### By train
 
