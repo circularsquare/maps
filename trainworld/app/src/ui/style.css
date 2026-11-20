@@ -1545,7 +1545,8 @@ button.save-add:hover { color: var(--text); }
 /* drawing tool markers on the map */
 .tool-marks { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; }
 .tool-marks > div { position: absolute; left: 0; top: 0; white-space: nowrap; }
-.pi-mark { width: 9px; height: 9px; margin: -5px 0 0 -5px; background: #fff; border: 2px solid var(--net-ink); z-index: 1; }
+/* an even size, so the square's centre sits on the whole pixel it is placed at (an odd one ends half a pixel short) */
+.pi-mark { width: 10px; height: 10px; margin: -5px 0 0 -5px; background: #fff; border: 2px solid var(--net-ink); z-index: 1; }
 /* T-1485: a hollow ring in the accent, the snap ring's colour, so a loose end never reads as a station */
 .end-mark { width: 10px; height: 10px; margin: -5px 0 0 -5px; border: 2px solid var(--accent); border-radius: 50%; z-index: 1; }
 /* T-1811: the track tool's square at a blueprint loose end, in the ring's colour */
@@ -1592,7 +1593,7 @@ button.save-add:hover { color: var(--text); }
 /* T-2977: a curve's corner is a hollow diamond, so it never reads as a node's square; the element is the hit area,
    the pseudo-element the diamond (the element's own transform places it) */
 /* T-3897: the square under the pointer, the point a press drags: larger, with a ring of the land's colour round it */
-.pi-mark.hot { width: 11px; height: 11px; margin: -6.5px 0 0 -6.5px; background: var(--tint); box-shadow: 0 0 0 2px var(--map-land); }
+.pi-mark.hot { width: 12px; height: 12px; margin: -6px 0 0 -6px; background: var(--tint); box-shadow: 0 0 0 2px var(--map-land); }
 .pi-mark.drag { width: 14px; height: 14px; margin: -7px 0 0 -7px; background: none; border: 0; pointer-events: auto; cursor: grab; }
 .pi-mark.drag::before { content: ""; position: absolute; inset: 3px; border: 2px solid var(--net-ink); transform: rotate(45deg); }
 /* T-474: while a point is dragged, wherever the pointer goes */
