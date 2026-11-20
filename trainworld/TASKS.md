@@ -169,10 +169,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Goal: Each one measured on our saves, then ported with credit, or closed with a reply you've seen.
 
 ## Demand
-- T-3823 [P3] {L:route-choice} Intercity hover shows the full first wait (taking, 2026-11-19, agent firstwait)
-  - Context: Found by T-3822: the intercity market counts the first wait as planned (T-1430), but the hover's legs show it in full (Newark Penn 33.6 min by the legs, 16.2 planned). It only takes minutes off, so the shown sum runs high. Reach: anyone reading an intercity hover.
-  - Goal: The intercity route rows and equation show the planned first wait.
-  - Other: notes/T-3822.md
 - T-3632 [P2] {L:route-choice} Fix the causes behind No route
   - Context: You, 2026-11-18: "i think showing "no trip found" is a separate type of bug that we shuold probably address individually. it is a fairly common complaint i think". The reports are gathered (3 direct: New York - Philadelphia and Milan - Bologna, not reproduced on today's code, and Seattle - Victoria, islands; 18 cousins: a route found but not taken, areas with no trips, odd routes, cities not loading), and the panel's By transit line now says which cause applies (7d14a945). Left: the causes themselves, islands first (T-2216).
   - Goal: The common causes of No route fixed or filed one by one.
