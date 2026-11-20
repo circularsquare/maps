@@ -441,6 +441,8 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
   - Context: You asked for level of detail later, low priority. The real network now starts at zoom 6 because picking lagged at zoom 4.
   - Goal: Show it again from zoom 4 or further out using simplified, merged far-zoom geometry.
   - Other: Folded in T-2750 (Real network as fewer sources). Ties in with T-2750, one merged source. notes/T-2748.md
+- T-3871 [P4] {L:terrain} Real terrain as a building cost
+  - Context: You, 11-20: tying speed to real elevation is too disruptive; "i think cost not speed is probably the way to go, but we can think about it later". New track over steep ground would cost more (cuttings, embankments); only new construction pays it; the cross section could show the ground's grade.
 - T-2754 [P3] {L:terrain} Water depth for the cross section
   - Context: Your note 2026-11-07: "i thought our terrain had water depth. lets try to bring that back in eventually but its not high prio". The cross section draws a fixed 4 m band.
   - Other: Sources to try: GEBCO, HydroLAKES.
@@ -521,9 +523,10 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
   - Context: A `?roadgaps=1` overlay would ring unjoined street ends, so a gap you see can be checked against the street graph.
   - Goal: The overlay exists, and short alley links join streets.
   - Other: About half a day. notes/T-3034.md.
-- T-3027 [P3] {L:track-speed} Slopes slow trains
-  - Context: You asked 2026-11-10 how slopes could slow trains without annoying people; a player suggested using the cross section. You, 11-20: "maybe we allow tighter slopes, but they just limit speed more ... depending on what target max speed we set and how much room we have, we let slopes get steeper or shallower"; tying it to real elevation "would be extremely hard and disruptive to existing players". Today: 4% max, 200 m per 8 m level, grades don't change speed, high-speed ramps capped at 160 (a bug that keeps old lines from slowing). Options went to you in chat 11-20; likely part of the track rework design.
-  - Goal: A design for slope slowing, then built if you agree.
+- T-3027 [P2] {L:track-speed} Ramp length sets ramp speed (taking, 2026-11-20, agent rampspeed)
+  - Context: You, 11-20: "maybe we allow tighter slopes, but they just limit speed more ... depending on what target max speed we set and how much room we have, we let slopes get steeper or shallower"; then "ok yeah i agree 200m should eb anchored to 160. and 400m for 320 makes sense", and "this is kinda separate from track redesign ... so we can do this soon maybe". Today: 4% max, 200 m per 8 m level, grades don't change speed, high-speed ramps capped at 160 by a bug.
+  - Goal: A ramp's speed scales with its length per level (200 m = 160 km/h, 400 m = 320); ramps are sized to the speed being drawn when there's room, and shorter, steeper, slower ones are allowed where there isn't; no existing line gets slower.
+  - Other: Real terrain as cost is T-3871.
 - T-3642 [P3] {L:community} Long-played networks near the share limits
   - Context: From T-3640: a shared save's header keeps every region's ledger, one entry per game day (Swattik's 173 regions add about 20 KB a day), so at his pace he passes the server's 2 MB shared-save cap in about 400 more game days and gets "too big". His drawing took 166 s (Japan 184 s) against the 5-minute share wait, so a slower machine sees "The diagram could not be drawn". checks/safari-save-browser.mjs treats forShare's new "big" answer as success.
   - Goal: A network played for years still shares: the shared copy thins or packs the per-day ledgers (no server change), the save's own per-day ledgers fold or pack once they pass some age (folded in T-2148), and the drawing finishes well inside the wait.
@@ -846,6 +849,8 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Ports, industrial estates and airports with no residents stay dark (Tuas and Jurong were fixed by hand 11-13). Half done: units keep outlines with 0.2 km2 of built surface.
   - Goal: A free unit under the floor sharing half its land border with one metro joins it, after a worldwide count.
   - Other: notes/T-3287.md
+- T-3870 [P2] {L:small-fixes} Lines gear columns above cities, tighter city rows (taking, 2026-11-20, agent gearlayout)
+  - Context: You, 11-20: "in the lines view gear where we can set which cities to show we should put the columns above the list of cities. also for cities, the gap between 'Cities' and the first city is smaller than the gap between each city. lets lower the gap between each city and raise the gap between 'Cities' and the first city, flipping their sizes."
 - T-3841 [P3] {L:cleanup} Agent report inbox takes in non-reports
   - Context: `tools/reports.py`'s hook files "final-text" entries that aren't agent reports: an agent's compaction summary (r-f11676a4, editfirst, 11-20) and lines that read as your chat replies in the orchestrator's tab (r-a5f08c93 "yes purge it, leave resend on free"). Each wakes the orchestrator for nothing.
   - Goal: Only a subagent's final report is filed.
