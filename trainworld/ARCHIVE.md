@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3845 [P2] {L:buses} Ferry route drawn port, waypoints, then port (2026-11-20): after a port, shift click on water appends a waypoint and routes that leg; the next port routes only from the last point; Edit route keeps the least-distance insert; Ma Liu Shui to Sai Kung builds as A, two waypoints, B. notes/T-3845.md.
 - T-3847 [P2] {L:small-fixes} New players start on the legacy time buttons (2026-11-20): no stored choice and no trainworld-ui or save-slot key in the browser = legacy buttons; otherwise the stored choice or the new bar. notes/T-3847.md.
 - T-3846 [P2] {L:timetables} Timetable related lines quieter and fewer (2026-11-20): related = shares a track edge, or 3+ common stops (a complex once) that are 40% of either line; bullets and times 50%, past 25%; on the real save the 2 now shows the 3 and 5. notes/T-3846.md.
 - T-3803 [P2] {L:edit-speed} Next edit waits behind the last edit's full state (2026-11-20): option 1: follow-up state in ~0.1 s pieces, a main-path edit goes ahead between them (next edit's wait 612/1,270 to 158/712 ms on the 2,647-station save); editdiag found and fixed a charge-split race with out-of-queue states; network counts and money match HEAD. notes/T-3803.md.
