@@ -209,7 +209,9 @@ Full design, numbers and sources: `notes/T-008.md`.
   25 m: 19 km/h, 50 m: 27, 100 m: 38, 300 m: 65, 1,000 m: 119, 1,800 m: 160, 7,183 m: 320. **Minimum radius
   25 m** on rail (`MIN_RADIUS`, T-3082; the Chicago Loop's corners are about 27 m) and **50 m** on high-speed
   track (`HSR_MIN_RADIUS`; a real line takes nothing near 25 m); a route snapped to a real line keeps its curves
-  at 100 m or wider (`TRACE_MIN_RADIUS`).
+  at 100 m or wider (`TRACE_MIN_RADIUS`). A curve turning less than **0.017°** (`MIN_TURN`, T-3883) limits
+  nothing: it is a vertex a tool laid on a straight (a ramp's end at a bridge or a crossing), a hair off it on the
+  millimetre grid.
   Each piece of track runs at the **lowest of its curve speed, its track's cap and the line's
   trains' top speed** (T-817): track caps at **160 km/h**, high-speed track at **320**, a crossover
   at 50; ordinary trains top out at 160, high-speed trains at 320 (6.3). **A ramp is a limit too**

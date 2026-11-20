@@ -112,6 +112,65 @@ fn old_track_keeps_its_ramps_and_their_speed_through_a_save() {
     assert!(!c.save().windows(4).any(|w| w == b"LRA1"));
 }
 
+/// T-3883: the ends of a bridge's ramps and of a ramp over track lie on the millimetre grid, a hair off
+/// the straight; that is no curve, so a 400 m ramp on a slanted route keeps 320 for the track and the
+/// trains (each end had held them at 160 for a train's length).
+#[test]
+fn ramp_ends_laid_by_bridges_and_crossings_hold_no_train() {
+    let ang: f64 = 0.27;
+    let at = |a: &TrackApi, d: f64| {
+        let (bx, by) = base(a);
+        (bx + d * ang.cos(), by + d * ang.sin())
+    };
+    let route = |a: &TrackApi, d0: f64, d1: f64| {
+        let (p, q) = (at(a, d0), at(a, d1));
+        [0.0, 0.0, p.0, p.1, 0.0, 0.0, 0.0, q.0, q.1, 0.0]
+    };
+    // over water: a bridge
+    let mut a = api();
+    let bx = base(&a).0;
+    a.w.net.set_water_mask(Box::new(move |x: f64, _y: f64| x > bx + 3000.0 && x < bx + 3200.0));
+    a.w.reload();
+    a.set_design_speed(320.0);
+    a.set_route_hsr(true);
+    let e = route(&a, 0.0, 8000.0);
+    assert_eq!(a.add_route(&e, &[], 2, true), 0, "{}", a.issue_kinds());
+    assert_eq!(geom::ramp_spans(a.w.net.edge_vert(alive(&a)[0])).count(), 2);
+    assert!((built(&a).0 - 320.0).abs() < 1e-6, "bridge: {}", built(&a).0);
+    // its line's trains are held by nothing under 320 between the stations
+    a.set_cash(1e6);
+    let mut st = [0; 2];
+    for (i, d) in [1000.0, 7000.0].into_iter().enumerate() {
+        let (x, y) = at(&a, d);
+        let on = alive(&a).into_iter().min_by(|&p, &q| a.w.net.project(p, x, y).1.total_cmp(&a.w.net.project(q, x, y).1)).unwrap();
+        assert_eq!(a.add_station(2, on, x, y, 200, format!("S{i}")), 0, "{}", a.issue_kinds());
+        let n = &a.w.net;
+        st[i] = (0..n.node_count() as u32).filter(|&k| n.node_ok(k) && n.node_platform[k as usize] > 0).min_by(|&p, &q| {
+            let d = |k: u32| (n.node_x[k as usize] - x).hypot(n.node_y[k as usize] - y);
+            d(p).total_cmp(&d(q))
+        }).unwrap();
+    }
+    assert_eq!(a.construct_all(), 0, "{}", a.issue_kinds());
+    let line = a.new_line_id();
+    assert_eq!(a.set_line_with_trains(line, &st, 2, 1, 0, 30.0, 180.0, 0, 0, "Test".into()), 0, "{}", a.issue_kinds());
+    assert_eq!(a.set_line_fast(line, true), 0, "{}", a.issue_kinds());
+    let lims = &a.w.svc.lines[line as usize].runs[0].limits;
+    assert!(lims.iter().all(|l| l[1] * 3.6 > 319.0), "{lims:?}");
+    // over track: a ramp up and down across it
+    let mut a = api();
+    let (c, s) = (at(&a, 3000.0), (ang.sin(), ang.cos()));
+    let cross = [0.0, 0.0, c.0 - 1500.0 * s.0, c.1 + 1500.0 * s.1, 0.0, 0.0, 0.0, c.0 + 1500.0 * s.0, c.1 - 1500.0 * s.1, 0.0];
+    assert_eq!(a.add_route(&cross, &[], 2, false), 0, "{}", a.issue_kinds());
+    a.set_design_speed(320.0);
+    a.set_route_hsr(true);
+    a.set_route_ramp(true);
+    assert_eq!(a.add_route(&route(&a, 0.0, 6000.0), &[], 2, true), 0, "{}", a.issue_kinds());
+    let hsr: Vec<u32> = alive(&a).into_iter().filter(|&e| a.w.net.edge_kind[e as usize].is_hsr()).collect();
+    assert_eq!(hsr.iter().map(|&e| geom::ramp_spans(a.w.net.edge_vert(e)).count()).sum::<usize>(), 2);
+    let slow = hsr.iter().flat_map(|&e| a.w.net.edge_limits(e, a.w.net.v_cap(e))).map(|l| l.v * 3.6).fold(f64::INFINITY, f64::min);
+    assert!((slow - 320.0).abs() < 1e-6, "over track: {slow}");
+}
+
 #[test]
 fn a_split_keeps_the_ramp_where_it_was() {
     let mut a = api();

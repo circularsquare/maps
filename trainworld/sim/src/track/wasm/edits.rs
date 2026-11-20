@@ -481,7 +481,7 @@ impl TrackApi {
         for (i, p) in d.pis.iter().enumerate() {
             let rad = f.radius.get(i + 1).copied().unwrap_or(0.0);
             let (mx, my) = if rad > 0.0 && !f.pieces.is_empty() { let (x, y, _) = geom::pos_at(&f.pieces, f.vert_s[i + 1]); (x, y) } else { (p.x, p.y) };
-            out.extend([p.x, p.y, p.radius, p.level as f64, rad, if rad > 0.0 { (A_LAT * rad).sqrt().min(top) * 3.6 } else { top * 3.6 }, mx, my]);
+            out.extend([p.x, p.y, p.radius, p.level as f64, rad, vertex_kmh(&f, i + 1, top), mx, my]);
         }
         out
     }

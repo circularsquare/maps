@@ -981,8 +981,16 @@ fn vertex_rows(f: &geom::Fit, verts: &[Pi], out: &mut Vec<f64>, cap: f64) {
     for (i, v) in verts.iter().enumerate() {
         let rad = f.radius.get(i).copied().unwrap_or(0.0);
         let (x, y) = if rad > 0.0 && !f.pieces.is_empty() { let (x, y, _) = geom::pos_at(&f.pieces, f.vert_s[i]); (x, y) } else { (v.x, v.y) };
-        out.extend([x, y, rad, if rad > 0.0 { (A_LAT * rad).sqrt().min(cap) * 3.6 } else { cap * 3.6 }]);
+        out.extend([x, y, rad, vertex_kmh(f, i, cap)]);
     }
+}
+
+/// The speed limit of vertex `i`'s curve in fit `f`, km/h, up to `cap` (m/s): the cap where it has none
+/// or (T-3883) one too slight to limit speed (`MIN_TURN`), as trains run it.
+fn vertex_kmh(f: &geom::Fit, i: usize, cap: f64) -> f64 {
+    let rad = f.radius.get(i).copied().unwrap_or(0.0);
+    let slight = f.pieces.iter().zip(&f.piece_at_vertex).any(|(p, &at)| at as usize == i && p.k != 0.0 && p.turn() < MIN_TURN);
+    if rad > 0.0 && !slight { (A_LAT * rad).sqrt().min(cap) * 3.6 } else { cap * 3.6 }
 }
 
 /// Hops already searched while trying stops (T-237): `(from, to, side arrived on at from, 2 for

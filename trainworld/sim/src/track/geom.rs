@@ -138,10 +138,15 @@ impl Piece {
             self.radius() / self.g
         }
     }
+    /// How far an arc turns the track, rad (0 on a straight).
+    pub fn turn(&self) -> f64 {
+        (self.k * self.plen).abs()
+    }
     /// The curve's own speed limit, uncapped (infinite on a straight); trains take the lowest of
-    /// it, the track's cap and their top speed (T-817).
+    /// it, the track's cap and their top speed (T-817). T-3883: an arc turning less than
+    /// `MIN_TURN` is a straight's vertex off the millimetre grid, and holds no train.
     pub fn v_curve(&self) -> f64 {
-        if self.k == 0.0 {
+        if self.k == 0.0 || self.turn() < MIN_TURN {
             f64::INFINITY
         } else {
             (A_LAT * self.ground_radius()).sqrt()

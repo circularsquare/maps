@@ -38,6 +38,11 @@ pub fn design_radius(kmh: f64) -> f64 {
 /// Positions and radii are quantised to this (1 mm) when the player places them, so derived
 /// geometry is a deterministic f64 function of the save.
 pub const QUANT: f64 = 0.001;
+/// T-3883: the least turn an arc must make to limit speed, rad (0.017 degrees). A vertex a tool lays on a
+/// straight (a bridge's or a crossing's ramp end) is put on the millimetre grid, so its legs meet at
+/// up to about 1e-4 rad and it gets the automatic radius's 160 km/h arc a few millimetres long. In
+/// real saves 3e-4 and 1e-3 free the same pieces (notes/T-3883.md).
+pub const MIN_TURN: f64 = 3e-4;
 /// Every edge end at a node must leave along the node's heading or its reverse, within this (rad).
 pub const HEADING_TOL: f64 = 0.003;
 /// Slack when checking that two tangent lengths fit on one leg, m.
