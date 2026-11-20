@@ -384,10 +384,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-3431.md
 - T-3434 [P3] {L:region-redraws} Sabang Island missing from the Banda Aceh zone
   - Context: Player report 2026-11-16. Reach: few.
-- T-3790 [P4] {L:real-networks} Real network rebuilds drop lines (taking, 2026-11-19, agent moscowfix)
-  - Context: You, 11-19: "yes only fix in real network build so players are unchanged. sure can keep moscow unless people ask (which they haven't)", i.e. Moscow stays near its 106 lines. Both limits bind player track too (limitcheck 11-19: a 9th track shows "Too many tracks meet here."; a player line turns back at the nearest dead end instead). Moscow's losses are all from the 8-end limit; 194 nodes are over it, the biggest has 51 ends. v0.4.3 keeps v0.4.2's Moscow, Saint Petersburg and Berlin saves (DECISIONS 11-19). The sim isn't the cause: a junction given a 9th track end refuses an edge, or a line turns back at a node it doesn't stop at, and realauto build leaves those lines out; small upstream changes decide which (today's graph and T-3782's extract: Moscow 110 to 90; T-3318's pattern order: Berlin tram 93). Since 664cffd5 ship refuses a city that loses a route or station, and each build starts with a fresh drop list.
-  - Goal: Moscow rebuilt with nothing lost (8 routes and 25 stations short now, Kazansky station among them) by a fix in the real-network build only (big junctions split, turn-backs given a stub), its lines kept to those v0.4.2 ships; Berlin tram 93's Bisamkiez pattern back. Saint Petersburg and Berlin were reshipped 11-19 on the lines graph (7b5ea227), not yet published.
-  - Other: plan in notes/T-3790.md
+- T-3790 [P4] {L:real-networks} Ship the rebuilt Moscow, Berlin and Hong Kong
+  - Context: You, 11-19: "yes only fix in real network build so players are unchanged. sure can keep moscow unless people ask". Built 11-20 (e9a6f91b, moscowfix): junctions over 8 ends split, turn-backs given a dead end, a keep list holds Moscow to 105 of v0.4.2's 106 lines with nothing unserved; Berlin's tram 93 and Hong Kong's 751, 761P, 751P run whole. Saves wait in artifacts/trainworld/t3790/moscowfix until guianas stops writing data/packs.
+  - Goal: mos (--force: one tram stop name), ber and hon (--force: three street names, same places) shipped for the next update; Saint Petersburg kept at its 123 lines with a keep list (it would grow to 151).
+  - Other: notes/T-3790.md
 - T-3799 [P2] {L:small-fixes} Choose which Lines tab columns show (taking, 2026-11-19, agent linesgear)
   - Context: Your pad, 2026-11-19: "perhaps have the column headers that are shown be customizable so that we dont have too many columns". You, 11-19: the choice lives behind "a little gear on the top right", with T-3816's filters.
   - Goal: The gear lets a player choose which columns show; today's columns show by default. Built with T-3816.

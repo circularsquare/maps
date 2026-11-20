@@ -1,112 +1,59 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 953236ac-bf0a-4ac1-9b7d-bcd87f6165e0, name maps-c2, since 2026-11-19 21:24 UTC
-Updated: 2026-11-19 21:30 UTC (maps-e8 wound down, all committed at 7fb47f75; its agents linesort, schembus,
-pollaudit, guianas still run in its tab and report to the inbox; maps-c2 started limitcheck, cityfares, periodword)
+Updated: 2026-11-20 01:10 UTC
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status` (T-3667). This file is plan and her words.
 Diary: notes/handoff-log.md. Her local time is UTC-5.
 
 ## Next
-0. Live v0.4.3 (published 21:05; server deployed, Rus restored). Cap 14. Old R2 versions can be purged later
-   (r2_purge.py). Sai and ber reshipped into data/packs/real for the next update (7b5ea227).
-1. Running: linesort (Opus, T-3798 + T-3423, 6170), schembus (Opus, T-3360 [+T-3785], 6171), pollaudit (Opus,
-   T-3801, 6172), guianas (Opus, T-3762, 6173, writes data/packs) - all in maps-e8's tab, reports via the inbox;
-   cityfares (Opus, T-3766, tree, 6175; checker before landing). Landed: T-3800 d39db027; T-3798 + T-3423
-   2997f81b (save level 30, LGN1; linechk passed). shonei-server 4ba1627 (savecheck level 30) committed, not pushed
-   or deployed: that deploy must go out before the next game publish. Rebuild 8800 once after
-   this round's landings (board's master hash stale till then).
-1b. HOTFIX v0.4.4 (her ~21:35 via maps-e8, which relays her by remote control ~2 h): ringfix (Opus, T-3802, tree
-   from d39db027, i.e. v0.4.3 + de/ca, NOT master's level 30; 6178). 23:20 8800 = 43d9cc9b (hotfix-v0.4.4 branch),
-   smoke8800 light+dark PASSED, test list + publish ask sent via maps-e8. ringfix DONE (cause: ring canvas scaled by
-   map.getPixelRatio, wrong past 4096 device px); in the tree: changelog published to v0.4.4 (tree's own next.json,
-   line "update v0.4.4: station rings stay put"), l10n044 translating. Then: commit on tw/ringfix (+ branch
-   hotfix-v0.4.4 to keep the hash), snap8800 <that hash>, smoke8800, test list to her via maps-e8, on her yes
-   deploy.py --skip-data --version 2026-11-19 (data unchanged), website push, verify; then finish ringfix onto master
-   and snap8800 master. Master's own next.json (c001-c005) stays unpublished. T-3766 landed 87c811bf (cityfchk passed; next
-   translation pass drops advancedFares.byCountry). zonez3 (Opus, T-3740 Z3, tree from 87c811bf, 6180) running.
-   T-3360 + T-3785 landed 9f6125e0 (option A; sheet sent, asks: A/B/C, buses over rail?). T-3409: she picked B (fresh layout of
-   chosen cities "as if they were the only things in the world"); citysheet (Opus, tree, 6184) building; lands after
-   bareframe (Sonnet, T-3806, 6183, postDiagram frame). editwait (Opus, T-3803, 6182) running.
-2. Next to start: T-3740 Z3 after cityfares lands (same fare panels); T-1738 / T-3763 after guianas; T-3790 step 4
-   once she answers a-2026-11-19-20 (limitcheck's answer in notes/T-3790.md); T-3780 timetables, T-3799 design to
-   her, T-3726 commentab pairs 1 and 3.
-3. T-3781 stays open for the next report's diagnosis; T-3786 / T-3789 close once Rus has the game; T-3775 closes
-   once save_health.py reads the live route after the deploy.
-4. Steam (T-3729): fee paid, tax form in; her screenshots go in artifacts/trainworld/steam/screenshots.
-5. Later: T-3744 per-stop fare, T-3754, T-3747, busverify's train 4.14 min gap read (a short probe).
-
-## Round 2 (23:50): 8800 = master 57b41bda (smoke8800 passed), master pushed a8deef27. Running: linehelp (T-3810,
-  6189), farecity (T-3811, 6190), citysheet (T-3409), editwait (T-3803), ringfix (dot hover, hotfix tree), dispname
-  (hidden names across renames, shonei-server only; db12e1d there). T-3812 waits for citysheet. v0.4.4 = tw/ringfix
-  (43d9cc9b rings, 9440c73d dot hover, 7bf95e07 display name; uncommitted there: v044 Change1-3 + line, l10n044b
-  translating). Then: commit, move branch hotfix-v0.4.4 to it, snap8800, smoke8800, ask server deploy (shonei-server
-  4ba1627, db12e1d, fdaa596) + publish together. NB finishing dispname squashed the tree's whole branch onto master
-  (1fab7f4a: rings part 1, display name, a one-item v0.4.4 entry); landing ringfix later should skip what's there.
-  T-3811 landed 582fbc9e; T-3807 archived (server not deployed).
-
-## v0.4.4 PUBLISHED ~01:00 UTC 11-20 (website c5c6edf, data 2026-11-19 reused, verify --page all PASS; no
-  open-source export: it copies master). Landed onto master cea0f112; T-3802, T-3814 archived. Leftover folder
-  .tw-trees\ringfix (worktree unregistered, folder held; NEVER delete by hand: node_modules junction) for later.
-## v0.4.4 history (hotfix-v0.4.4 = tw/ringfix tree)
-- Commits: 43d9cc9b rings, 9440c73d dot hover, 7bf95e07 display name, bec2e148 changelog + l10n, 69cce887 pencil,
-  68c17fe9 T-3814 naming default (cherry-picked from tw/namedefault; tree removed). Uncommitted in ringfix: v044Change4
-  (namedefault agent translating). Then commit, branch -f hotfix-v0.4.4, snap8800, smoke8800, test list, publish ask
-  (deploy.py --skip-data --version 2026-11-19; server already deployed). After publish: finish ringfix onto master
-  (master has 1fab7f4a's older copies of rings + display name; expect overlap in updates.ts / en.json / v0.4.4.json),
-  then close T-3802 and T-3814. Server deployed 00:04 UTC.
+0. Live v0.4.4 (published ~01:00 UTC 11-20: website c5c6edf, data 2026-11-19 reused, verify --page PASS; hotfix
+   branch hotfix-v0.4.4, landed onto master cea0f112; no open-source export, it copies master). shonei-server
+   deployed + pushed fdaa596. Cap 14. 8800 being rebuilt at master cea0f112.
+1. Running: citysheet (Opus, T-3409 option B, 6184), fullstate (Opus, T-3803 option 3, 6193), linesgear (Opus,
+   T-3816 + T-3799, 6195), guianas (adopted from maps-e8, T-3762, writes data/packs; reports via the inbox).
+2. T-3790: pipeline fix landed e9a6f91b; ship mos (--force), ber, hon (--force) from
+   artifacts/trainworld/t3790/moscowfix once guianas stops writing data/packs; keep sai at 123 with
+   `realauto.py keep sai trainworld\data\packs\real\sai.save "..."` first (my call, same rule as Moscow).
+3. Up next: T-3815 PWA (manifest + icons, no offline); T-3812 after citysheet lands; T-3354, T-1738, T-3763 after
+   guianas; T-3803 option 1 after fullstate; T-3804, T-3805.
+4. Next full update (master): unpublished changelog c001-c007; before publishing: changelog review agent, sort,
+   playtest list, translations of new keys (advancedFares.byCountry to drop).
+5. Leftover: .tw-trees\ringfix folder (worktree unregistered, held; never delete by hand), stale Vite pid 33736 on
+   6181 (from 11-18; stopping it was refused, leave), trees ab-1-*, ab-3-*, ttchk2base, touchrule, timekeys.
+6. T-3781 open for the next report's diagnosis. Steam (T-3729): her screenshots in artifacts/trainworld/steam.
 
 ## Her words
-- 11-20 ~00:40: real-network fixes and additions P4, Japan's P3, "if people request we can bump up" (LINES.md
-  real-networks). T-3790 now P4; moscowfix left to finish its stage. Up next: T-3816 + T-3799 (gear top right, filters
-  on top of this city / whole world), T-3815 PWA (manifest, no offline).
-- 11-20 ~00:05 UTC: "ok, can deploy server now" -> shonei-server deployed (service active) and pushed fdaa596 (save
-  check level 30, display name change + limit, hidden names). "irl stations look good" (v0.4.4 rings/hover tested).
-  8800 = bec2e148 (hotfix). namedefault (T-3814, tree from hotfix-v0.4.4) running; then rebuild 8800, publish ask.
+- 11-20 ~00:55: v0.4.4 changelog in her words ("added tram stops to real world reference network, and stations show
+  names on hover"; naming default item dropped). "yes okay to publish 4.4". Naming: questions both ways, no
+  "Confirm?". Change name as a pencil icon. Real-network fixes and additions P4, Japan P3, reference map a bit
+  higher, one-city changes low (LINES.md). Up next: Lines tab gear "top right", filters on top of this city / whole
+  world; PWA "if super easy to do and maintain".
 - 11-20 ~00:10: panel refresh throttle OK "as long as it doesnt creep like way higher than 4s"; Z3 inheritance OK;
-  Moscow: fix only in the real-network build, keep Moscow near 106 lines (moscowfix, T-3790 step 4, builds to
-  scratch, I ship); fares panel x icons not trash cans, rings icon 25% bigger (faresx, T-3813).
-- 11-19 ~23:45: text acknowledged (Z3, display name, schematic hovers); schematic buses "look great" (A, under);
-  fares by city: a city with no multiple "should not use the country multiple" (as built); hidden names stay hidden.
-- 11-19 ~23:30: hotfix "not super urgent ... lets wait and get a few other requested things out with it": dot hover
-  for station names outside the station tool (ringfix, resumed), display name change in account settings, "throttle
-  twice a day" (T-3807, dispname, tree from hotfix-v0.4.4 + shonei-server; needs a server deploy). Lines Type: "i
-  dont want that to be the default ... have type as a column and can sort by it" (T-3808 typecol). Filed T-3809
-  ferry waypoints (shift click). T-3409 B: "as if they were the only things in the world".
-- 11-19 ~20:20: the rename stuck behind polling is a shape to remember for future features; check for current
-  parallel failures, "no rush" (T-3801).
-- 11-19 ~19:30: "changelog looks good (i think lets not change it at all)"; start line hers: "update v0.4.3: separate
-  rush periods, advanced fares, caribbean!". Before every final check, sort the changelog (docs/orchestrator.md).
-- 11-19 playtest: fare zones one area per station with a confirm, unique names, checkbox Enable; station rings only
-  while placing; renames faster; name setting asks both ways, click-off is No; schedule rows and her hover text.
-- 11-19 v0.4.3 scope ("yea no rush"); "player complaints take precedent over other new features", "only applies
-  to like actual bugs". Imperfect real networks ship ("people can just fix them themselves"). Fares by city:
-  country or city multiples, never both.
-- 11-19 saves: deleted games kept 7 days; restore Rus "under new game id", "do the R2"; privacy page in her words.
-- 11-19 fares: transfers inside fare zones free; fare settings per game. Failed-open notice "{name} could not be
-  opened.". Zones: lines choose zone or distance fares (T-3758). Station names: a bind setting, default on.
-- 11-19: before every publish, a full playtest list (docs/orchestrator.md). Scratch of finished sessions 2+ days
-  old is deleted without asking (memory). Money history: keep the global record forever; per-line a month.
-- 11-18: close easy high-priority wins, small over design-heavy; "prio should take into account easiness as well
-  as impact". "we need to be less willing to put stuff on the changelog". "manually", never "by hand".
+  Moscow: only in the real-network build, keep near 106 lines; fares panel x icons, rings icon 25% bigger.
+- 11-19 ~23:45: hidden names stay hidden across renames; schematic buses "look great" (A, under); fares by city never
+  uses the country multiple; text acknowledged for Z3, display name and schematic hovers.
+- 11-19 ~23:30: T-3409 B, chosen cities laid out "as if they were the only things in the world"; Type a column,
+  not the default sort; ferry waypoints filed (T-3809); help entry for grouping and no Leave group (done).
+- 11-19: "player complaints take precedent over other new features" (actual bugs). Before every publish, a full
+  playtest list. Fares by city: country or city multiples, never both.
+- 11-18: close easy high-priority wins, small over design-heavy. "less willing to put stuff on the changelog".
+  "manually", never "by hand".
 - Share previews: free Worker, "please be careful" with the Cloudflare account. Mod support (T-3377): never say
   publicly it's aimed at vibe-coders. caelum418's speed PRs (T-3659): next time we look at performance.
 - When she plays games: keep 4 cores free (cap 12) and no uploads until she says she's done.
 - Standing: lean testing, smoke per batch; long jobs in the background, answer her first; every publish, deploy and
-  push needs her yes to that action, none overnight; advisor trial (log calls in handoff-log).
+  push needs her yes to that action in this tab, none overnight; advisor trial (log calls in handoff-log).
 
 ## Waiting on her (asks.py list has the open ones)
-- a-2026-11-19-20: Moscow limits, build-only fix and keep Moscow near 106 lines? (T-3790). She tells Rus herself.
-- a-1 (T-3746 text), a-13 (read today's 2 damaged saves over ssh; or wait for the deploy), a-14 (drop the load
-  card once the city in view is ready), a-15 (server deploy: part of the one release ask).
-- She sends the T-3635 player reply herself (draft in notes/T-3635.md).
+- a-1 (T-3746 text), a-14 (drop the load card once the city in view is ready). She sends the T-3635 player reply
+  herself (draft in notes/T-3635.md).
 
 ## Only a person knows
 - Uncommitted on purpose: TODO.md (hers), notes/T-3397.md, jordan-save-investigation-2026-11-15.md,
   tools/ops/archive_bad_saves.py, changelog/roadmap.json, changelog/next.json, notes/asks-log.jsonl,
-  notes/board-live.json; maps .claude/settings.json. Not mine, left alone: notes/T-2380.md, notes/T-3382.md.
+  notes/board-live.json; maps .claude/settings.json. Not mine: notes/T-2380.md, notes/T-3382.md; guianas' game json.
 - A yes she gives in another session's tab doesn't pass the permission check here: ask again in this tab.
-- Leftover trees: ab-1-*, ab-3-* (commentab), ttchk2base (a checker's scratch; remove), empty locked
-  touchrule and timekeys.
-- Never delete a tree folder by hand (its app/node_modules junction deletes the main tree's). It happened again
-  11-19 (~18:20 UTC: .bin and 15 packages gone; `npm install` inside trainworld/app put them back).
+- Never delete a tree folder by hand (its app/node_modules junction deletes the main tree's).
+- A tree made from a non-master commit and landed with `finish` squashes its whole branch onto master (dispname,
+  1fab7f4a): land hotfix work from the one hotfix tree only.
