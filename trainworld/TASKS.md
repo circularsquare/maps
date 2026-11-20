@@ -218,10 +218,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: Build it only when you ask.
 - T-3866 [P4] {L:small-fixes} What stationsworld is
   - Context: Your TODO.md, 11-20, from player suggestions: "stationsworld ??" Not understood; find out what is meant (a mod, a game, a feature) and report to you.
-- T-3893 [P3] {L:checks} t671-ghost-hover fails near track ends
+- T-3893 [P3] {L:checks} t671-ghost-hover fails near track ends (taking, 2026-11-20, agent checkfix)
   - Context: Found by toolsplit (T-2374), 11-20: "near track ends" fails 21 of 84 on master and on the split alike; cause not looked at.
   - Goal: The cause found; the ghost fixed or the check brought up to date, and it passes.
-- T-3877 [P3] {L:checks} t2365's graph bins check fails since T-3509
+- T-3877 [P3] {L:checks} t2365's graph bins check fails since T-3509 (taking, 2026-11-20, agent checkfix)
   - Context: Found by modesplit (T-3695): t2365 "graph bins add up to the zone's split" fails on both saves; the gap equals the within-place market trips T-3509 added, with no figure moved by T-3695.
   - Goal: Confirmed on master, then the check counts those trips (or the graph does), and it passes.
 - T-3457 [P3] {L:checks} Slim the standing checks
@@ -399,9 +399,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Your pad, 2026-11-18, from Discord, "not high prio": "some people want draw on map tool for planning stuff. could add it in a discreet way, hideable".
   - Goal: A design to you first (what can be drawn, whether it saves and shares, where the hide control sits), then a first version.
 - T-3655 [P2] {L:line-rates} A line on full track keeps its old rate after a new count (taking, 2026-11-20, agent fullrate)
-  - Context: Found by T-3482's agent and again by T-3645's checker: a line held on full track keeps its rate when given a new count or headway until a line beside it moves (London's busiest line keeps 8 trains at medium as its headway goes 540 -> 360 s; a local raised from 3 to 40 beside a 40-train express still draws 1 train for 3 hours). Master and the fixes alike. Stepping it cost London's shared save about 300 ms an edit in one try.
+  - Context: A line held on full track keeps its rate when given a new count or headway until a line beside it moves (London's busiest line keeps 8 trains at medium as its headway goes 540 -> 360 s). Cause traced (fullrate, 2026-11-20): the line is held in every settle of the edit, then trimmed back. Two re-share fixes tried: counts went the right way (83-137 ms an edit) but headways went the wrong way and took 0.8-3.8 s, as lines beside it came off held and the ordinary steps swung for 80 rounds. An untried next step is in the notes.
   - Goal: A new count or headway on full track takes its share at the edit, within about 50 ms an edit on London's shared save.
-  - Other: notes/T-3482.md "Follow-ups"
+  - Other: notes/T-3655.md, notes/T-3482.md "Follow-ups"
 - T-3231 [P3] {L:trains-drawn} {after:T-3264} Two lines drawn over each other at a terminal
   - Context: A fix exists as notes/T-3231-fix.patch (trainGuard holdForPlaces): t1965-follow drops from 40-47 frames to 0-4, t2980 unchanged, but t2018-trail then halts the express 16-28 times and t3264's follow layout gains 4 overlap events, all from the express running later than the guard can draw (T-3271). Parked until T-3271, then re-measured.
   - Goal: t1965-follow passes without breaking t2980. Part of T-3264.
@@ -797,10 +797,11 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3837 [P3] {L:buses} Ferry routes found without a waypoint, and waypoints on touch
   - Context: T-3809 added shift click waypoints. A leg is still searched only in a box around its two ports, so a sea path that leaves it (Ma Liu Shui to Sai Kung) needs a waypoint; a wider third search would find it alone. Phones have no shift click.
   - Other: notes/T-3809.md
-- T-3892 [P2] {L:buses} Ferry rework: boat sizes, stronger fans, long routes (taking, 2026-11-20, agent ferrydesign)
-  - Context: You, 11-20: "might be nice to get that out at same time as buses ... i think long distance ferries should probably get more traffic. i think we have room to potentially make ferry fan system way stronger / more common ... also provide for small and large ferries (current size can be medium?)". Today: one boat (320 seats, 45 km/h since T-3435's first pass); fans are a tenth of visits and attraction trips inside a zone, an hour aboard felt as 6 minutes, none on inter-city trips; island pairs solve since T-2216 stage 1. Folds in T-3435.
-  - Goal: Small, medium and large boats (your go 11-20: "yeah lets do ferry types"), each with its own Ferry multiplier in advanced fares, defaults set sensibly; fans slightly stronger and on every purpose, half as much for work, medical and airport trips; long routes not over-buffed (your Okinawa line measured after the islands fix first). Design numbers to you, then built.
-  - Other: notes/T-3435.md
+- T-3892 [P2] {L:buses} {waits:Anita} Ferry rework with boat sizes, stronger fans and long routes
+  - Need from Anita: OK the design in notes/T-3892.md: Small (160 riders, 65 km/h, US$15M, US$40 a boat-km, fares 1.5x), Medium as today, Large (1,280, 45 km/h, US$50M, US$100 a boat-km, 1.0x), new ferry lines over 40 km hourly, and fans at 15% of every purpose (7.5% for commutes, medical, airport) inside a zone only; my pick is to leave inter-city fans out for now.
+  - Context: You, 11-20: "might be nice to get that out at same time as buses ... i think long distance ferries should probably get more traffic. i think we have room to potentially make ferry fan system way stronger / more common ... also provide for small and large ferries (current size can be medium?)". Designed 11-20 (ferrydesign): since the islands fix the long island routes carry near-real riders (Vancouver - Nanaimo 17,800 a weekday) but lose money at a boat every 20 minutes; at one an hour they earn US$2.5-3.4M a day, a Large boat every 2 hours US$7-9M. Your Okinawa line: 1,370 to 1,398 riders, unchanged, since its islands are zones of the Okinawa and Kagoshima places (T-2216 step 2). Folds in T-3435.
+  - Goal: Small, medium and large boats (your go 11-20: "yeah lets do ferry types"), each with its own Ferry multiplier in advanced fares, defaults set sensibly; fans slightly stronger and on every purpose, half as much for work, medical and airport trips; long routes not over-buffed. Built in three stages: types and fares (about 5-7 hours), local fans (1-2), inter-city fans only if you want them (3-5).
+  - Other: notes/T-3435.md, notes/T-3892.md
 - T-3887 [P2] {L:buses} Mode frontier chart (taking, 2026-11-20, agent frontier)
   - Context: You, 11-20: "to more formalize what we're talking about with modes of transport we could make a graph of some sort. so that we could draw like a frontier. the y axis is just profit per demand i guess? ... construction cost (not that important) - trip distance? like buses should be good for short hops i guess? - stop spacing? ... if we have some sort of graph like this it would be very helpful to keep ourselves organized but also to communicate to players what they should do. cuz currently its kinda opaque." Then: "for handling the bus / mode comparison graph, we should probably do research into what actual transport research has come up with on this topic" (research/mode-frontier.md).
   - Goal: A chart of each mode (bus, street tram, tram, metro, rail, high speed; BRT once built) over trip length and stop spacing, showing which mode takes the biggest share there (you, 11-20: "x axis trip length z axis stop spacing ... y axis is share of people that would take each mode at that point, so whatever color is on top is what the dominant mode is there"), with profit per trip as a second view, measured on test corridors in the game, kept as a rerunnable tool; first run on today's rules, then after T-3856 and T-3378; later a version for players.
