@@ -16,8 +16,11 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    T-3842 Burmese labels landed, mki/pgx relax dropped; T-3843 filed. ~11:15: T-3803 option 1 landed after
    editdiag (its fix for a charge-split race; counts and money match HEAD); T-3844 filed; 8800 = 7637e0e0, smoke
    passed on it.
-   Running, mine: gapfill (Opus, T-3764: the missing-country list, then Pakistan and Bangladesh; main tree; messages
-   me before/after gates and join: hold app/ landings and data/packs writes then).
+   Running, mine: gapfill (Opus, T-3764: the missing-country list, then Pakistan and Bangladesh; main tree). Runs
+   started ~11:25 (PK 196 rows port 6395, BD 142 rows port 6396, --no-join; gates serve a frozen app copy), gating
+   ~2-3 h, then it messages before the join (no data/packs writes during it). Its uncommitted files so far: pipeline
+   world_plan.py, admin_totals.py, borders.json (IN|PK 0), checks/country_preflight.py, checks/state_gaps.py, game
+   zone-names.json and realms.json, notes/T-3764.md.
   
 2. T-3395: 11-20 scan (pass 1, not done) found 0 new damage. Run `tools/ops/save_health.py` after the 11-21
    04:00 UTC scan; clean = close it (the two rev-1 games of ue83342ed78f8fc4c are old 11-19 damage).
