@@ -1,1 +1,16 @@
-[]
+[
+  {
+    "id": "a-2026-11-20-2",
+    "title": "Big save: 2 workers, zoomed-out tag",
+    "text": "T-3868 (your NA save stuck calculating): the fix for the bar starting over is built. Two calls for you: (A) give saves this size 2 demand workers instead of 1, so whole calculations take about 60% as long (an edit's whole stage about 125 s instead of 205 s, estimated) for about 1.6 GB more memory; (D) show 'Calculating trips in N cities...' when zoomed out with no zone in view, which bends the rule that the tag is about the zone in view. I'd say yes to D, and A only if your machine has the memory to spare. I'm doing B (a real time left for loads) anyway, and not C (dropping a running calculation when you edit).",
+    "since": "2026-11-20",
+    "by": "maps-b4"
+  },
+  {
+    "id": "a-2026-11-20-4",
+    "title": "Two speed tasks into the track rework",
+    "text": "I folded T-2767 (a station on built track redraws its neighbours, 0.2-0.9 s) and T-2701 (rebuild only near the drawn track) into the track rework (T-3444) as design requirements, since the rework replaces the code both would change. Say if you'd rather keep them as separate tasks.",
+    "since": "2026-11-20",
+    "by": "maps-b4"
+  }
+]

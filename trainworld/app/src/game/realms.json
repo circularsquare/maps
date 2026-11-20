@@ -74,6 +74,8 @@
     { "id": "saudi-arabia", "name": "Saudi Arabia", "countries": ["SA"] },
     { "id": "iraq", "name": "Iraq", "countries": ["IQ"] },
     { "id": "iran", "name": "Iran", "countries": ["IR"] },
+    { "id": "pakistan", "name": "Pakistan", "countries": ["PK"] },
+    { "id": "bangladesh", "name": "Bangladesh", "countries": ["BD"] },
     { "id": "gulf", "name": "Gulf states", "countries": ["AE", "QA", "BH", "KW", "OM"] },
     { "id": "in-north", "name": "North India", "units": { "IN": [
       "Jammu and Kashmir", "Ladakh", "Himachal Pradesh", "Punjab", "Chandigarh", "Haryana", "Delhi", "Rajasthan"] } },

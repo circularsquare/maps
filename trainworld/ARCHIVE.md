@@ -1,6 +1,17 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3841 [P3] {L:checks} Agent report inbox takes in non-reports (2026-11-20): final-text filed only with a .meta.json and not a compaction summary; proof in notes. notes/T-3841.md.
+- T-2383 [P3] {L:cleanup} Sim refactors (2026-11-20): closed without code: Low value (review 11-20): one walk is test-pinned; split a long function when a task finds it in its way. notes/review-cleanup-2026-11-20.md.
+- T-2382 [P3] {L:cleanup} Pipeline and pack_gate small items (2026-11-20): closed without code: Low value (review 11-20): the two dead functions and proof.sh ride along with the next pipeline task in those files. notes/review-cleanup-2026-11-20.md.
+- T-763 [P4] {L:edit-speed} Penn Station to Emeryville preview takes 3 s (2026-11-20): closed without code: Folded into T-3444 as a preview check case. notes/review-edit-speed-2026-11-20.md.
+- T-2701 [P3] {L:edit-speed} Rebuild only near the drawn track (2026-11-20): closed without code: Folded into T-3444 as a design requirement. notes/review-edit-speed-2026-11-20.md.
+- T-2767 [P3] {L:edit-speed} Station on built track takes 2-4 s (2026-11-20): closed without code: Folded into T-3444 as a design requirement. notes/review-edit-speed-2026-11-20.md.
+- T-1842 [P3] {L:edit-speed} past_day costs 40 ms on New York (2026-11-20): closed without code: Folded into T-3804 (its today answer) notes/review-edit-speed-2026-11-20.md.
+- T-1936 [P4] {L:edit-speed} Run profiles with many holds are slow (2026-11-20): closed without code: Folded into T-3550; its text predates T-2018's holds. notes/review-edit-speed-2026-11-20.md.
+- T-1794 [P3] {L:edit-speed} Headway edit on busy New York line (2026-11-20): closed without code: Folded into T-3550 (same crawl bisection lever) notes/review-edit-speed-2026-11-20.md.
+- T-758 [P4] {L:edit-speed} Track derive takes 4.9 s on Japan (2026-11-20): closed without code: T-1039 limited mask re-derives to a box and T-3234 made a load derive once; the rework replaces the derive (review 11-20) notes/review-edit-speed-2026-11-20.md.
+- T-1040 [P4] {L:edit-speed} Long piece ghost takes 100-300 ms (2026-11-20): closed without code: Previews skip services since T-1779 and rollback no longer prices the network since T-2700; the ghost path is part of the track rework (review 11-20) notes/review-edit-speed-2026-11-20.md.
 - T-3870 [P2] {L:small-fixes} Lines gear columns above cities, tighter city rows (2026-11-20): popover order Show, Columns, Cities; Cities heading gap 4 to 6 px, city rows 6 to 4 px.
 - T-3867 [P2] {L:board} Board card says which task it waits on (2026-11-20): a waiting task's card has a Waiting on section: each task id linked with its title (or done), phrases as written.
 - T-3845 [P2] {L:buses} Ferry route drawn port, waypoints, then port (2026-11-20): after a port, shift click on water appends a waypoint and routes that leg; the next port routes only from the last point; Edit route keeps the least-distance insert; Ma Liu Shui to Sai Kung builds as A, two waypoints, B. notes/T-3845.md.

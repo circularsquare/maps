@@ -215,6 +215,22 @@ CONFIGS = {
         "mode": "shares",
         "hold": r"^(IR)\d+$",
     },
+    # T-3764: GHS-POP holds 0.41-0.59 of every Balochistan district's 2023 count (Quetta 1.11M against 2.27M; the
+    # province 8.24M against 14.56M), the rest of Pakistan 0.82-1.06 of it by province, so Balochistan only. The census
+    # districts as religiondots drew them (COD-AB PAK districts, Lehri's tehsils returned to Sibi and Kachhi;
+    # religiondots/sources/pk_2023_geo.py) carry PBS's Table 9 totals in the same layer
+    "PK": {
+        "source": "Pakistan Bureau of Statistics, 2023 census Table 9 by district, on COD-AB PAK districts (HDX, CC BY-IGO) "
+                  "redrawn to the census's districts",
+        "polygons": {"file": "PK/pk_districts.gpkg", "mirror": "religiondots/data/geo/pk2023/pk_districts.gpkg",
+                     "layer": "districts", "code": "unit", "name": "geo_name"},
+        "totals": {"file": "PK/pk_districts.gpkg", "mirror": "religiondots/data/geo/pk2023/pk_districts.gpkg",
+                   "layer": "districts", "code": "unit", "pop": "census_pop"},
+        "parent": None,
+        "only": r"PK23-balochistan/.+",
+        "national_total": (14_562_011, 0.0001),  # Table 9's Balochistan row (the headline 14,894,402 is another tabulation)
+        "mode": "factor",
+    },
 }
 
 

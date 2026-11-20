@@ -337,7 +337,7 @@ def main(argv):
             if b[0] > box[2] or b[2] < box[0] or b[1] > box[3] or b[3] < box[1]:
                 continue
             g = shapely.union_all([shapely.make_valid(h) for h in gs])
-            if m(g).intersects(allm):
+            if shapely.make_valid(m(g)).intersects(allm):  # projecting can make a valid outline invalid (T-3764)
                 near.setdefault(others[pid], []).append((pid, g))
     for c, ps in sorted(near.items()):
         notes.append(f"NOTE borders: {c} built within {BORDER_KM:g} km: {len(ps)} packs ({' '.join(sorted(p for p, _ in ps)[:20])}"

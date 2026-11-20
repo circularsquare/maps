@@ -120,7 +120,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-3620: ase (La Gonave, Haiti) is parked at top_zone_jobs_share 0.43 (one zone holds too many of its jobs).
   - Goal: Merged into a neighbouring Haitian zone and shipped, or left out with the reason in DECISIONS.md.
   - Other: notes/T-3620.md
-- T-1738 [P2] {L:new-countries} Bhamo, Myanmar's last zone
+- T-1738 [P4] {L:new-countries} Bhamo, Myanmar's last zone
   - Context: Myanmar (59 of 60 rows), Laos (11) and Timor-Leste (4) shipped 2026-11-20. Bhamo (0.44M) is parked: its busiest square sits on a GHSL pile-up of 23,697 people in one village square in Mansi, not on a town.
   - Goal: Bhamo built with its people spread off that square (or held), then gated and joined.
   - Other: notes/T-1738.md section 16
@@ -136,7 +136,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: A thin arm (Whistler and Pemberton) wraps the Vancouver ring and makes the ring cut split Abbotsford and Chilliwack-Mission instead.
   - Goal: Try shedding the arm that makes the wrap before halving; replan Canada after.
   - Other: notes/T-1239.md section 1
-- T-1376 [P3] {L:region-redraws} Madeleine Islands zone fails the park check
+- T-1376 [P4] {L:region-redraws} Madeleine Islands zone fails the park check
   - Context: The park check now fails a build only when 2.0 or more of the park draw is off the cells (T-1738, 11-20), so both may build now: retry lel and scd. Les Iles-de-la-Madeleine (12,000 people) parks in its build: under 85% of its park draw lands on a cell. Solola, Guatemala (scd, 0.56M, 6 of 31 parks off every cell by Lake Atitlan) parks the same way and is dead space beside Chimaltenango.
   - Goal: Both zones built with their parks on cells (or the check let through for parks on water's edge), or Madeleine left as dead space; Solola, at 0.56M, should not stay dark.
   - Other: notes/T-1239.md
@@ -165,7 +165,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Goal: The switch either takes the whole leg with it or is refused with a message naming the line it would break.
   - Other: notes/T-3647.md
 - T-3659 [P3] {L:solve-speed} {after:the next performance round} Contributors' speed-up pull requests
-  - Context: You, 2026-11-18: "there are some new PRs from caelum418 that have to do with speedups that we should look at the next time we look at this area of performance. they might help." Open on the public repo: caelum418's 24 (station facility and building layout after edits) and 23 (less repeated work in intercity passenger assignment); also CinnamonVII's 18 and 19 (demand CPU speed-ups, bit-exact, SIMD), filed nowhere yet.
+  - Context: You, 2026-11-18: "there are some new PRs from caelum418 that have to do with speedups that we should look at the next time we look at this area of performance. they might help." Left on the public repo: caelum418's 24 (facility and building layout after edits, overlaps T-3803 option 3; claims edit reply 7.1 s to 1.3 s on a 5,843-station save) and 23 (intercity assignment, 3% of a whole calculation, 25% of its intercity part); neither applies to master, both need a port by hand. CinnamonVII's 18 and 19 were closed by their author (no gain), 20 is in via 12.
   - Goal: Each one measured on our saves, then ported with credit, or closed with a reply you've seen.
 
 ## Demand
@@ -198,20 +198,20 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-2136's checker (by reading the code): a request for one place's rows lost in a demand worker restart times out after 20 s and is asked again only with the next result, so that zone's panel can wait that long.
   - Goal: A request lost in a restart is asked again once the worker is back; probed with a forced restart.
   - Other: notes/T-2136.md
-- T-3550 [P3] {L:edit-speed} London train-count edits still take 1-4 s
-  - Context: After T-3388, track and station edits on London settle in 0.02-0.3 s, but a train-count edit on a line at its big merge still takes 0.5-1.3 s natively (up to 3.3 s for every level on a 3-train line) and 1.4-3.7 s in the browser: each settle round works out 100-190 line profiles again at about 1 ms each.
-  - Goal: Train-count edits on London under 0.5 s natively, settled figures unchanged.
-  - Other: notes/T-3388.md
+- T-3550 [P3] {L:edit-speed} Train-count and headway edits on shared track are slow
+  - Context: London train-count edits inside its 130-line merge group take 0.5-1.3 s natively (up to 3.3 s on a 3-train line), 1.4-3.7 s in the browser (T-3388); New York's busiest shared line took 150-400 ms (T-1794, before T-1863). Each settle round works out 100-190 profiles at about 1 ms, mostly the crawl-speed bisection in `run_with`. Folds in T-1794 and T-1936.
+  - Goal: London train-count edits under 0.5 s natively; figures within the pacing's own noise (T-3388's tolerance). Measure master first with `t3388_probe`.
+  - Other: notes/T-3388.md, notes/T-1779.md "T-1787", notes/T-1936.md, notes/review-edit-speed-2026-11-20.md
 - T-2761 [P3] {L:track-drawing} Highlight crossings between stationed and unstationed track
   - Context: Your note 2026-11-07: "its probably an accident, but might not be an accident". Waits until after the post.
 - T-2879 [P3] {L:solve-speed} Show two crowding rounds, then three
   - Context: Your words 2026-11-09: you like three rounds and do not want to move to just two.
   - Goal: Two rounds appear as an early result, then refine to three without losing much overall time.
   - Other: notes/T-2830.md
-- T-2858 [P3] {L:edit-speed} Edit speed on other machines and browsers
-  - Context: T-2830 left parts unmeasured: slow connections, laptops, Firefox, Safari, and North America's cached reload.
-  - Goal: Those cases are measured and any slow one is filed.
-  - Other: Scripts are in ../artifacts/trainworld/t2830/scripts/.
+- T-2858 [P4] {L:solve-speed} Trip calculation in Firefox and on a laptop
+  - Context: T-2830 timed trip calculation in Chrome on one desktop only. Firefox and WebKit run here through Playwright; a laptop is the 2-worker pool with the CPU slowed. No player has reported Firefox as slower.
+  - Goal: NYC and Tokyo cold load and three edits timed in each; anything over 1.5x Chrome is filed.
+  - Other: Scripts are in ../artifacts/trainworld/t2830/scripts/. notes/T-2830.md "Not measured"
 - T-2868 [P3] {L:memory} Memory cap for 32-bit browsers
   - Context: In 32-bit Firefox the demand module's memory moves when it grows; a declared maximum reached 1,008 MB against 688 MB without.
   - Goal: The demand module declares a maximum on 32-bit browsers, so bigger games fit.
@@ -274,23 +274,32 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3484: across Hong Kong-Shenzhen the game sends 3x too many Hong Kong residents to work in Shenzhen, and Macau-Zhuhai and Malaysia-Singapore are backwards the same way; real commutes mostly go toward the richer side. You, 2026-11-16: "ehhh oky we can do border factor depending on direction, if it fits. low prio."
   - Goal: Commutes across these three borders go mostly the real way, with each total within 25% of today's; dropped if no simple rule fits.
   - Other: Also worth a look then: what rail carries across Hong Kong-Shenzhen in a running game (about 4 cores, 30-45 min). notes/T-3484.md
-- T-3458 [P3] {L:cleanup} Fewer code comments
-  - Context: You 11-16 after the code tour: we might have more comments than needed. CLAUDE.md allows comments only for a why the code doesn't show.
-  - Goal: Comments that restate the code or tell history are removed, area by area, with no code change.
-- T-3460 [P3] {L:cleanup} Code written twice
-  - Context: From the code tour: the schematic's sheet maths in Rust (diagram.rs) and again in JavaScript (sheetLines.ts, kept as a fallback); the real-rail route finder in the game (realRoute.worker.ts) and copied in the pipeline (realroute.py); car street speeds twice in Rust.
-  - Goal: One copy of each, or a written reason to keep both.
-- T-2843 [P3] {L:cleanup} State machine B for demand health
-  - Context: The code review report is done; state machines A (T-2848) and C (who may write the save slot, T-3734 stage 2) are built. B, demand health, is left.
-  - Other: See notes/T-2843.md.
+- T-3458 [P3] {L:cleanup} {after:T-2374} Trim comments in files just split
+  - Context: Your 11-16 ask after the code tour. A sample of 80 comment blocks found about 1 in 8 restating the code and 1 in 30 telling history; most give a reason or a unit. Task ids in comments stay as pointers to the notes.
+  - Goal: Each file split by T-2374 or T-3873 gets one pass after its move: comments that restate the code or tell history go, no code change.
+  - Other: notes/review-cleanup-2026-11-20.md
+- T-3460 [P3] {L:cleanup} Street speeds written once (taking, 2026-11-20, agent streetspeeds)
+  - Context: From the code tour. Car street speeds are written in streets.rs and in demand's Params, kept equal by a test. The other two pairs stay: the diagram's JavaScript carry solver is what three Node checks run, and the pipeline's real-rail router is a Python, rail-only copy of the game's.
+  - Goal: Demand's street speed defaults read streets.rs, the test that kept them equal is gone, and code-tour's "Odd things" says why the other two pairs stay.
+- T-2843 [P3] {L:cleanup} Leftover fixes from the 11-09 code review
+  - Context: Two wrong states are still reachable: a graphics notice lifts the 4x cap and settles lines while demand runs, and a failure leaves the "freed memory" hover line. Four small bugs from the same review have no task: Backspace or undo mid-run leaves stale held state, a drag outlives a lost mouse button, a failed file from the start menu opens the oldest game, old-frame save copies are never deleted.
+  - Goal: Graphics loss is its own signal apart from demand stopping, and each of the four is fixed with a scratch proof.
+  - Other: notes/T-2843.md machine B and findings 3, 5, 7, 8, 9; notes/review-cleanup-2026-11-20.md
+- T-3873 [P3] {L:cleanup} {after:rampspeed lands} Split the track model into readable parts
+  - Context: T-3444's Goal asks for the track model split into parts an agent can read whole. net.rs is 4,086 lines (about two reads), wasm/tests.rs 4,017. Seams by method group, 180-520 lines each, are in the review notes; the stations part (the one the rework rewrites) stays one file.
+  - Goal: Moves only: net.rs into net/ by method group, wasm/tests.rs into area test files, every part under 1,500 lines; tests and smoke pass. You, 11-20: "yes can do the split if you think its a good idea" (before the design talk).
+  - Other: notes/review-cleanup-2026-11-20.md "Missed by the line" 1
+- T-3874 [P3] {L:cleanup} {after:bigload and savefail land} Remove perfOff switches for decided changes
+  - Context: 49 `?perfOff` switches after T-2370, 68 now. Eleven added since switch a decided change back off and no check passes them (heldLocal, realZoom, keepFigures, settledHold, strays, allSums, cacheFocus, refineAside, regional, localKeep, localSkip). Measurement switches and the ones a check passes stay.
+  - Goal: Those eleven and their dead branches are gone (mostly in demandClient.ts), before its split.
+  - Other: notes/review-cleanup-2026-11-20.md "Missed by the line" 3
+- T-3875 [P3] {L:cleanup} {after:T-2374 and T-3873} Cut code-map.md to one line per file
+  - Context: docs/code-map.md is 707 lines and about 100 KB with 700 task ids, over the Read tool's cap, so no agent can read it whole though CLAUDE.md sends every agent there.
+  - Goal: One line per file saying what it holds, task ids dropped, about a third of today's size.
 - T-3160 [P2] {L:memory} Phone memory left over from T-2802
   - Context: An emulated phone uses about 600 MB at the first line, peaking at 825; MapLibre's worker, Blink buffers, ArrayBuffers and WebGL hold most of the rest. T-3472 (desktop Chrome): 1.0 GB at the start menu, 1.6 GB in a one-city game. You, 2026-11-16: "lots of people are unable to really play properly cuz tehy dont have enoguh ram. especially on phones. if we can get that working itll increase reach."
   - Goal: Phone memory comes down by trimming the biggest pieces, measured before and after at the start menu and in a one-city game.
   - Other: notes/T-2802.md, "What is left".
-- T-2767 [P3] {L:edit-speed} Station on built track takes 2-4 s
-  - Context: Placing a station on built track takes 0.2-0.9 s in the worker, almost all in the line bands (the neighbour search and 8-15 lines worked out again); the strokes are 15-150 ms.
-  - Goal: Keep the bands of lines and neighbours that a split leaves unchanged.
-  - Other: notes/T-2768.md has the breakdown.
 - T-2762 [P3] {L:solve-speed} Faster longer-trips answer for a bubble
   - Context: On North America a bubble answer still takes about 300 ms per worker (NYC 60 ms) after T-2747.
   - Goal: Bring the North America answer close to NYC.
@@ -329,9 +338,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: After zones or a market close, a worker's heap still holds them until its next solve (all-China: 2,041 MB at rest).
   - Goal: A worker frees closed zones promptly so the restart need not wait for a solve.
   - Other: notes/T-1367.md
-- T-1211 [P3] {L:edit-speed} Page DOM makes layouts slow
-  - Context: The page has 2,200 elements; a forced layout takes 22-37 ms, and the Lines, saves and Stations panels open in 0.4-0.7 s.
-  - Goal: Those panels open fast, with far fewer elements forcing layouts.
+- T-1211 [P4] {L:edit-speed} Page DOM makes layouts slow
+  - Context: The page has 2,200 elements; a forced layout takes 22-37 ms, and the Lines, saves and Stations panels open in 0.4-0.7 s. All figures are from 2026-10-24 at 4-6x CPU slowdown; T-1505 took the forced layout out of station name placement since.
+  - Goal: Measure once at normal CPU on the 2,647-station save (about 20 minutes): under 200 ms closes it, over keeps it with the new figures.
   - Other: notes/T-1200.md and notes/T-1211.md.
 - T-921 [P3] {L:solve-speed} Deal tiny commute pairs in chunks
   - Context: Commute pairs under 1 person a day can be dealt in chunks; New York solve 34.3 to 29.6 s.
@@ -353,9 +362,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: research/steam-page.md
 - T-3853 [P3] {L:steam} Offline version with chosen cities
   - Context: Your TODO.md, 11-20: "when we build standalone, allow offline version, choose which cities you wanna have downloaded i guess (say how much storage each one will take up)". Also from the suggestions: "make downloadable (doesnt have to be offline, but just not on web, i guess)", which T-3729's standalone build covers. Design for you first.
-- T-3695 [P3] {L:map-look} Travel by mode overview
-  - Context: Your old TODO: "see overall travel by train / high speed / bus / tram / etc (in city / world view?) or also toggle in top? a trip that takes multiple can just be evenly split between their transit legs". You, 2026-11-18: "yes should do".
-  - Goal: A design to you first (where it shows, city and world), then a view of rides split by mode, a multi-mode trip shared evenly across its legs.
+- T-3695 [P2] {L:map-look} Transit split by mode in the mode bars (taking, 2026-11-20, agent modesplit)
+  - Context: You, 2026-11-20: "i want to break down travel mode in more detail. like currently we just show RGB car walk transit. would like to break down transit into train/bus/ferry/tram/hsr. thhis should juts be in the RGB bar on top and in teh cities views, like anywhere we show a RGB split really. but not in the actual demand bubbles which are colored RGB. the colors per mode can be various shades of bluegreen to bluepurple. maybe like ferry is teal, tram is light blue, train is blue, hsr is dark blue, bus is blueish purple. trips that take multiple modes can be split proportionally by length or just propotionally by leg count if thats easier." Earlier (old TODO, 11-18 "yes should do"): "see overall travel by train / high speed / bus / tram / etc".
+  - Goal: A setting, off by default ("oh also this breakdown should be toggleable. default off."), makes every car / walk / transit bar (the top bar, the cities views, anywhere else it shows) split transit into ferry, tram, train, high speed and bus in her colours; the demand bubbles stay three colours; a multi-mode trip is shared by leg length or leg count.
 - T-3696 [P4] {L:money} Lines' money and ridership changes as a list
   - Context: Your old TODO: "someone requested notifications for like money going up/down and ridership going up/down as a list... i guess as like a list of all individual lines separately. i guess we can add this as a setting". Per-line money history exists (T-2787). You, 2026-11-18: "idk exactly what ridership change list means, but can file to think about it".
   - Goal: Worked out what players want from it (the Discord ask), then a proposal to you.
@@ -376,7 +385,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Need from Anita: A design discussion when you are ready; nothing is built before it.
   - Context: Your weekend notes (2026-11-16): double track as a pair of singles, any number of parallel tracks and platforms (Grand Central, Spanish solution, AABB, ABBA, AA above BB), island platforms that shift the tracks, a definition of a station, per-track stop picking with numbered circles; simple stop assignment kept for simple two-track lines.
   - Goal: An agreed design that covers those cases and can grow, then a staged plan, with the track model split into parts an agent can read whole (you 11-16, after the code tour: it is too big to read fully today).
-  - Other: Your notes verbatim: notes/T-3444.md; sizes in notes/code-tour.md
+  - Other: Your notes verbatim: notes/T-3444.md; sizes in notes/code-tour.md. Requirements folded in 11-20: a station placed on track that leaves its shape alone redraws no neighbours (T-2767, 0.2-0.9 s today); the drawn network rebuilds only near a change (T-2701); the Penn Station to Emeryville snapped preview (3 s, T-763) as a check case. notes/review-edit-speed-2026-11-20.md
 - T-3859 [P4] {L:track-kinds} Custom drawn platforms
   - Context: Your TODO.md, 11-20, from player suggestions: "custom drawable platforms like station boxes? for tapered platforms might be cool". Design for you first; may fold into T-3444.
 - T-3435 [P4] {L:buses} Long-distance ferries lose money
@@ -389,13 +398,14 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-3431.md
 - T-3434 [P3] {L:region-redraws} Sabang Island missing from the Banda Aceh zone
   - Context: Player report 2026-11-16. Reach: few.
-- T-3844 [P3] {L:edit-speed} A paid stop click's train charge goes to no region
-  - Context: Found by T-3803's diagnosis: a stop click that buys trains charges them to the unassigned region instead of the line's region, on the old code and the new. Shows as a wrong region split in the money panel.
+- T-3844 [P3] {L:money} Some paid edits charge no region
+  - Context: A stop click that buys trains and a station upgrade (a waiting room) charge the unassigned region, since nothing on the map changed for `chargeShares` to place them by (found by T-3803). Shows as a wrong split in the money panel's regions.
+  - Goal: Each paid edit's answer names its line or station, and both cases charge that region.
   - Other: notes/T-3803.md
-- T-3804 [P3] {L:edit-speed} Other worker work that holds edits up
-  - Context: From T-3801's audit: the hour turn (0.14-1.1 s every game hour), one today answer (70-250 ms, 0.5-0.8 s under load; splitting it is a design call), the snapshot timer and next-hour boarding step (0.2-0.5 s). Not measured: undo of a rename, unbind all, the junction panel.
-  - Goal: Each is under 0.2 s or yields to edits, per docs/architecture.md "Edits never queue behind polling".
-  - Other: notes/T-3801.md
+- T-3804 [P3] {L:edit-speed} Other worker work that holds edits up (taking, 2026-11-20, agent hourturn)
+  - Context: From T-3801's audit: the hour turn (0.14-1.1 s every game hour, which is every 3.75 s at speed 2: the worker is busy with it up to about 30% of the time on the 2,647-station save), one today answer (70-250 ms, 0.5-0.8 s under load: `Boarding::past_day` tallies every line's whole day on each ask; running sums per departure would avoid splitting it; folds in T-1842), the snapshot timer and next-hour boarding step (0.2-0.5 s). Not measured: undo of a rename, unbind all, the junction panel.
+  - Goal: Each is under 0.2 s or yields to edits, per docs/architecture.md "Edits never queue behind polling". In stages, the hour turn first.
+  - Other: notes/T-3801.md, notes/review-edit-speed-2026-11-20.md
 - T-3325 [P3] {L:real-networks} {after:real-network rebuild batch} Rebuild Sendai so Senzan Line stops at Toshogu
   - Context: You parked this 2026-11-12 since few players open Sendai. The fix is in realnet.py build_lines.
   - Other: Commands in notes/T-3318.md.
@@ -446,10 +456,6 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
 - T-2754 [P3] {L:terrain} Water depth for the cross section
   - Context: Your note 2026-11-07: "i thought our terrain had water depth. lets try to bring that back in eventually but its not high prio". The cross section draws a fixed 4 m band.
   - Other: Sources to try: GEBCO, HydroLAKES.
-- T-2701 [P3] {L:edit-speed} Rebuild only near the drawn track
-  - Context: After a run, the follow-up rebuild is still whole-network (North America 0.4-1.1 s). Your idea: only rebuild near the track being drawn.
-  - Goal: The drawn network, state rows, strokes and grids update only near the change.
-  - Other: notes/T-2404.md has the table of what can be local.
 - T-2726 [P3] {L:region-redraws} {after:each country's rebuild} Small units still in no zone
   - Context: Fernando de Noronha, Con Dao, Lakshadweep, Misu-dong and Chukotka (35k, crosses the 180th meridian) are in no row.
   - Goal: Each is folded in at its country's next rebuild.
@@ -728,7 +734,7 @@ Passing tracks (T-2228, archived; built as T-2231 to T-2233; notes/T-2228.md):
   - Context: Design done 11-20 (notes/T-2216.md, 4 stages, about 7-10 h). You, 11-20: "yeah we can do 3x, A" (everyone rides up to 3x an imagined drive, nobody from 4x), and yes to stage 2 (island zones inside a mainland pack: "people will find that fun"). Market zone pairs on two landmasses are "fixed, never solved" today (1.49M longer trips, 662,000 commutes a day), and the commutes are quietly counted as car; once solved they show "No route" until a ferry or line joins them. Stage 0 (wrong landmasses) is T-3838.
   - Goal: They solve with rail as the only ground mode, with a point past which trips don't go by transit at all, so fares can't be raised without limit (your pad, 2026-11-18: "we should probably have a certain point at which transit is just not taken even if its the only option"); closes T-1396.
   - Other: Own worktree (intercity). notes/T-2216.md
-- T-3843 [P3] {L:region-redraws} Isfahan's north strip in no zone
+- T-3843 [P4] {L:region-redraws} Isfahan's north strip in no zone
   - Context: Found by T-3763: a 141 km2 strip on Isfahan's north edge (51.624, 32.739), between the outlines of bcs and isf, holds about 70,000-137,000 people and is in no pack. Also Duhok governorate comes out at 1.45 of Iraq's 2024 census.
   - Other: notes/T-3763.md
 - T-3838 [P3] {L:islands} {after:seasia's world run} Places on the wrong landmass
@@ -849,9 +855,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Ports, industrial estates and airports with no residents stay dark (Tuas and Jurong were fixed by hand 11-13). Half done: units keep outlines with 0.2 km2 of built surface.
   - Goal: A free unit under the floor sharing half its land border with one metro joins it, after a worldwide count.
   - Other: notes/T-3287.md
-- T-3841 [P3] {L:cleanup} Agent report inbox takes in non-reports
-  - Context: `tools/reports.py`'s hook files "final-text" entries that aren't agent reports: an agent's compaction summary (r-f11676a4, editfirst, 11-20) and lines that read as your chat replies in the orchestrator's tab (r-a5f08c93 "yes purge it, leave resend on free"). Each wakes the orchestrator for nothing.
-  - Goal: Only a subagent's final report is filed.
 - T-3840 [P3] {L:line-rates} Loop stop list three laps long after a leg station click
   - Context: Found by T-3835: clicking a station on one leg of a one-way pair into a both-ways circle makes the line's stop list three laps long (before T-3835 the return run ran nine laps). Reach: few, loops over one-way pairs.
   - Other: notes/T-3835.md
@@ -860,6 +863,9 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3839 [P2] {L:schematic-rivers} Schematic rivers still break and bridge (taking, 2026-11-20, agent riverfix)
   - Context: You, 11-20 on 8800: "still seeing some disjoint rivers occasionally. usually at the end of what is considered a river. like near newark where the passaic and hackensack confluence. the hudson river also appears to have a landbridge across it near peekskill/beacon also. sands point is also connected to the bronx ... also if the whole world is selected the rivers still look super disconnected, so idk if we solved anything substantially here." Also from T-3358's build: London's drawn estuary breaks between Tilbury and Gravesend (cause not found); Osaka's width step lands on a bend; stations still on the wrong bank after the second layout (Osaka 4 pairs, Taipei 1); side creeks no line crosses aren't drawn (New York's went from 223 pieces to 20 bands); London layout about 5-6 s slower.
   - Other: notes/T-3358.md
+- T-3872 [P3] {L:schematic-rivers} Schematic water makes islands that aren't real
+  - Context: You, 11-20 after T-3839's fix: "rivers big improvement. still not perfect (there are some islands that are not islands irl) but i think its good to ship this." Also left by T-3839: a river the layout squeezes under one cell still breaks; Osaka's wrong-bank stations (routing, 7).
+  - Other: notes/T-3839.md
 - T-3354 [P3] {L:single-track} One-track platform jumps sides when dragged north-south
   - Context: Not reproduced 2026-11-16 (bug-a): a station node's heading stays put when dragged, so the fixed axis never flips in the sim. Needs the exact drag that shows it.
   - Other: About 1 h. notes/T-3332.md.
@@ -903,14 +909,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Two Japan saves have flat crossings (44 and 60) to mark as separated, as T-2064 did for New York.
   - Goal: Both saves marked and the T-2093 figures rerun on jpn7.
   - Other: Notes: notes/T-2064.md
-- T-1794 [P3] {L:edit-speed} Headway edit on busy New York line
-  - Context: A headway edit on New York's busiest shared-track line still takes 150-400 ms, and Paris placements 237 ms at p95.
-  - Goal: Those edits take under 100 ms.
-  - Other: Options in notes/T-1779.md "T-1787", notes/T-1794.md.
-- T-1842 [P3] {L:edit-speed} past_day costs 40 ms on New York
-  - Context: `TrackApi.past_day` takes about 40 ms on shared New York, on every account change and 4 times a second.
-  - Goal: Each line's tally is kept, and only changed lines are redone.
-  - Other: notes/T-1815.md
 - T-1793 [P3] {L:map-look} Platform crowd overstates riders
   - Context: Where transfer pulses (T-554) are large, the drawn platform crowd is too big: Jamaica at 08:34 shows about 1,958 while the train leaves with 1,501.
   - Other: Found in T-1785. artifacts/trainworld/t1785/
@@ -941,12 +939,14 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Three Boston lines tried and reverted: rail takes no walkers in the fixture whichever pair is served. Needs a Rust-side look at the pair share (e_frac) before choosing stops.
   - Goal: The check covers a line serving two stations at both ends of a walkable cross-pack pair.
   - Other: See notes/T-2527.md.
-- T-2374 [P3] {L:cleanup} Split four large app files
-  - Context: demandClient.ts, clock.worker.ts, demand.worker.ts and renderer.ts are due for splits, one agent per file, after T-2371 and T-2372.
-- T-2375 [P4] {L:cleanup} Clean up main.ts and CSS
-  - Context: This is the last app cleanup (A9); leftovers from T-2369 are in the notes.
-  - Goal: Debug probes become one URL-parameter module, unused CSS goes, and tsconfig turns on `noUnused*`.
-  - Other: See notes/T-2375.md.
+- T-2374 [P3] {L:cleanup} Split the five biggest app files
+  - Context: demandClient.ts 5,555 lines, clock.worker.ts 5,113, demand.worker.ts 2,870, renderer.ts 2,507 (`draw` 657), tools.ts 2,416; all grew 14-35% since the 11-04 survey and none fits one read. The clock worker is the most edited code file (235 commits since 10-21). The clock worker, the track tools and the renderer are what the track rework changes, so those go first.
+  - Goal: Moves only, one agent per file: every new part under 1,500 lines, the clock worker under 2,000, demandClient under 3,000, the other three under 1,500, no function over 400 lines; typecheck and smoke pass.
+  - Other: Pieces and seams in notes/review-cleanup-2026-11-20.md; demandClient and demand.worker from notes/T-2360.md stage 7.
+- T-2375 [P4] {L:cleanup} Move debug probes out of main.ts
+  - Context: The tsconfig part is done (T-3443). Left: about 125 lines of ?debug probes in main.ts, URL parameters read in 28 files, ten unused CSS classes.
+  - Goal: The probes in their own module loaded only under ?debug, one module reads the URL parameters, the unused CSS gone.
+  - Other: notes/T-2375.md, notes/T-2360.md stage 9.
 - T-3447 [P2] {L:wiki} Player wiki on the website
   - Context: You, 2026-11-16 on the board: link it from anita.garden/projects/trainsworld right below the section links: "there is also an ai-written [wiki](link) that is updated more often than this anita-written guide below." Updated every big update, only about the live version, as readable as possible, no translation for now (browser translate; maybe a cheap translation feature later), Google Analytics on it to see which languages readers use.
   - Goal: The wiki is published for the live version with analytics and linked from the trainsworld page; the website push waits for your word.
@@ -954,14 +954,10 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your ask: a wiki so agents read less. 26 pages are built and figures come from code through JSON markers; the trams landed and every marker still matches.
   - Goal: The Money tab ledger detail and the line panel stop times written, then the retired docs removed.
   - Other: See notes/T-2854.md.
-- T-2382 [P3] {L:cleanup} Pipeline and pack_gate small items
-  - Context: Cleanup E6, small items from T-1114 (pipeline F19-20, I). Best done between joins.
-- T-2383 [P3] {L:cleanup} Sim refactors
-  - Context: Cleanup E9, after T-2381: T-1114 sim H 20, 21, 23, plus `pass_window` and `realcorridors.build`.
 - T-1183 [P3] {L:cleanup} Remove the fixed-rate line path
-  - Context: After T-1146, the engine's fixed-rate path (capacity.rs, `LineData.trains`, `Op::Schedule`, wasm `set_line`/`set_schedule`) can go; about 30 sim tests pin it.
-  - Goal: The path is gone and the tests use train counts.
-  - Other: See notes/T-1183.md.
+  - Context: Every line in a game has train counts since T-1146, but the engine still keeps lines set by trains per hour (`LineData.trains` as an Option, capacity's continuous rounding, `Op::Schedule`, crate-only `set_line` and `set_schedule`), because 69 test call sites in 13 files use it.
+  - Goal: The path is gone and those tests use train counts with the same assertions; after T-3873, before the track rework's build stages.
+  - Other: notes/T-1183.md
 
 ## Waits on a rebuild
 - T-3270 [P3] {L:airports} {after:next world rebuild} Eurostat airport passengers for Europe
@@ -1248,10 +1244,6 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
   - Context: Opening a city pack is the floor of a big load, 7 s a worker for Japan.
   - Goal: Pack opening takes much less than 7 s a worker on Japan.
   - Other: notes/someday.md
-- T-1040 [P4] {L:edit-speed} Long piece ghost takes 100-300 ms
-  - Context: A long piece's ghost is a full trial edit, 100-300 ms.
-  - Goal: A long piece's ghost previews faster.
-  - Other: notes/someday.md
 - T-1031 [P4] {L:edit-speed} First ghost of a run takes 0.5-0.7 s
   - Context: The first ghost of each run takes 0.5-0.7 s.
   - Goal: The first ghost appears as fast as later ones.
@@ -1275,10 +1267,6 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
 - T-777 [P4] {L:solve-speed} Market rows per country
   - Context: Someday: load market rows per country instead of the whole file.
   - Goal: Market rows load per country.
-  - Other: notes/someday.md
-- T-758 [P4] {L:edit-speed} Track derive takes 4.9 s on Japan
-  - Context: The track derive with water masks takes 4.9 s for Japan.
-  - Goal: The derive takes much less than 4.9 s.
   - Other: notes/someday.md
 - T-281 [P4] {L:loading} Big saves search every station's walk
   - Context: Opening a big save searches every station's walk round water.
@@ -1359,10 +1347,6 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
   - Context: Construct and level act on one piece, not a run between junctions.
   - Goal: They act on the whole run.
   - Other: notes/someday.md
-- T-1936 [P4] {L:edit-speed} Run profiles with many holds are slow
-  - Context: `profile::run_with` works a hop out again for each hold, costing the shared New York save about 10% on edits.
-  - Goal: One pass over a hop's holds, so waits sit at every station slower trains stop at.
-  - Other: notes/T-1936.md
 - T-1937 [P4] {L:passing-tracks} Departure spacing ignores flat crossings
   - Context: Other-route users at a flat crossing carry no place on their run, so lines meeting only there are not spread.
   - Goal: They get their crossing offset and count in spacing::place.
@@ -1377,10 +1361,6 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
 - T-755 [P4] {L:track-drawing} No ramp room at Lake Hamana
   - Context: The traced Tokaido Shinkansen has no room for ramps there.
   - Goal: The trace builds at Lake Hamana.
-  - Other: notes/someday.md
-- T-763 [P4] {L:edit-speed} Penn Station to Emeryville preview takes 3 s
-  - Context: Penn Station-Emeryville takes 3-3.6 s from rest to preview.
-  - Goal: That route previews in well under 3 s.
   - Other: notes/someday.md
 - T-914 [P4] {L:track-drawing} Snapped route Schiphol to Amsterdam Centraal refused
   - Context: The snapped route is refused over water.

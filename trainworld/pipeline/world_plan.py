@@ -183,6 +183,16 @@ ZONE_RULES = {"CHN": {"floor": 1_000_000, "cap": 2_500_000, "min_density": 0.0, 
               "IRQ": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True, "reach": (150.0, 100_000),
                       "reach_from_people": True, "join_km": 150.0, "fua_whole": 500_000, "plan_units": True,
                       "task": "T-3763"},
+              # Pakistan on Iran's desert rule: at the default 20 a km2 Balochistan's and Gilgit-Baltistan's towns were
+              # dead space (Kharan, Pasni, Ormara, Dalbandin, Aliabad); Balochistan's people scaled to the 2023 census by
+              # district (GHS-POP holds about half of each, `admin_totals` PK) (T-3764)
+              "PAK": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True, "reach": (150.0, 100_000),
+                      "reach_from_people": True, "join_km": 150.0, "fua_whole": 500_000, "plan_units": True,
+                      "module": "admin_totals", "task": "T-3764"},
+              # Bangladesh's unions (geoBoundaries ADM4) by their upazila, as Korea's: union by union the zones were named
+              # "Paurashava" (a town's municipality) and after villages; no `plan_units`, as Iran: the plan state lost 213 of
+              # the file's 5,160 unions (2.27M people, Noakhali's and Cox's Bazar's coasts) (T-3764)
+              "BGD": {"floor": 500_000, "cap": 1_500_000, "contiguous": True, "group_level": 2, "task": "T-3764"},
               # Turkey's ilce with a density floor of 10 a km2: at the default 20, 232 of 973 were dead space and the
               # interior's provincial towns (Erzincan, Cankiri, Kirsehir, Sivas) were zones of 0.1-0.5M in a hole (T-2294);
               # people scaled to the 2022 register by ilce with the Syrians under temporary protection (T-2079);
@@ -419,7 +429,8 @@ ARCHETYPE = {"GBR": ("A", "england"), "FRA": ("A", "france"), "DEU": ("A", "germ
              "IDN": ("C", "admin_totals"), "PHL": ("C", "admin_totals"), "KHM": ("C", "admin_totals"),
              "LAO": ("C", "admin_totals"), "NZL": ("C", "admin_totals"), "IRN": ("C", "admin_totals"),
              "TUR": ("C", "admin_totals"), "MEX": ("C", "mexico"), "COL": ("C", "admin_totals"),
-             "EGY": ("C", "admin_totals"), "ISR": ("C", "admin_totals"), "PSE": ("C", "admin_totals")}
+             "EGY": ("C", "admin_totals"), "ISR": ("C", "admin_totals"), "PSE": ("C", "admin_totals"),
+             "PAK": ("C", "admin_totals")}
 NE_FIX = {"KOS": "XKX", "SOL": "SOM", "CYN": "CYP", "SAH": "ESH"}
 # T-3762: territories geoBoundaries lists apart that Natural Earth's countries file folds into another (France's
 # Guadeloupe, Martinique and French Guiana, the Netherlands' Bonaire, Saba and Sint Eustatius): (that country, own alpha-2).

@@ -4,7 +4,8 @@ that lie outside every pack's outline. Before T-2695 `world_plan.country_units` 
 point lay outside the simplified first-level coast (Buenos Aires's comunas, Avellaneda, Ushuaia; Brazil's Guaruja,
 T-2702), and no row could take it. A unit listed here with 10,000+ people outside packs is a hole in the map. Reads only.
 
-    python checks/state_gaps.py ISO3[,ISO3...] [--min N]      (from trainworld/, ..\\venv's Python; N default 1000)
+    python checks/state_gaps.py ISO3[,ISO3...] [--min N] [--plan F]   (from trainworld/, ..\\venv's Python; N default
+                                                                      1000; F a dry plan, default the live one)
 """
 import json
 import os
@@ -22,7 +23,7 @@ if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help"):
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 MIN = float(sys.argv[sys.argv.index("--min") + 1]) if "--min" in sys.argv else 1000.0
 TW = Path(__file__).resolve().parents[1]
-plan = json.loads(wp.OUT.read_text(encoding="utf-8"))
+plan = json.loads(Path(sys.argv[sys.argv.index("--plan") + 1] if "--plan" in sys.argv else wp.OUT).read_text(encoding="utf-8"))
 reg = json.loads((TW / "app/src/game/registry.json").read_text(encoding="utf-8"))
 paths = [str(TW / "data/packs" / f"{c['id']}.boundary.geojson") for c in reg["cities"]]
 paths = [p for p in paths if os.path.exists(p)]
