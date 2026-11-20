@@ -821,6 +821,10 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Ports, industrial estates and airports with no residents stay dark (Tuas and Jurong were fixed by hand 11-13). Half done: units keep outlines with 0.2 km2 of built surface.
   - Goal: A free unit under the floor sharing half its land border with one metro joins it, after a worldwide count.
   - Other: notes/T-3287.md
+- T-3825 [P2] {L:schematic} Schematic pan limit and city selector fixes (taking, 2026-11-19, agent schemcity)
+  - Context: You, 11-20, trying the cities list for the first time: the drawing was off screen so it looked broken. Panning must not take the whole drawing off screen; the zoom-out cap goes from a tenth to a half lengthwise; a small divider with gaps between the ferry toggle and the cities button; the "Drawing diagram" bar shows while cities are added or removed.
+- T-3826 [P2] {L:schematic} Add a neighbouring city from the schematic (taking, 2026-11-19, agent schemcity)
+  - Context: You, 11-20: the alphabetical cities list is long; like picking a start city on the map, with a few cities chosen, hovering a neighbouring region shows a small ghost circle and a click adds that city ("i can select new york in the drop down, then just mouse over philly and add it"). Also a region choice above the cities list ("select like US East or whatever").
 - T-3824 [P2] {L:schematic-rivers} {after:T-3358 prototype} Schematic ferries drawn after the water
   - Context: You, 11-20: "now that we're drawing ferries, it might be nice to draw ferries after drawing water so that their ports actually line up cloesr to the coastline".
   - Goal: In the schematic, ferry ports sit on the drawn coast and ferry routes run over drawn water.
