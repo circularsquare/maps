@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 79e26413-4648-481b-ba5a-8ddcd716a0f0, name maps-60 [6ba449], since 2026-11-20 05:20 UTC
-Updated: 2026-11-20 08:35 UTC (both sessions are named maps-60: message by ref)
+Updated: 2026-11-20 13:20 UTC (her computer restarted ~13:00: every process died; 8800 serve restarted)
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`. This file is plan and her words.
 Diary: notes/handoff-log.md. Her local time is UTC-5.
@@ -10,16 +10,15 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 0. Live v0.4.4. Cap 14. 8800 = master = 7637e0e0 (~11:15, pushed, smoke passed). Landed tonight by maps-60
    [6ba449]: T-3809, T-3834, T-3832, T-3828, T-3358 rivers E, T-3835 loops, T-1738 (Bhamo left), T-3833 + T-3824,
    T-3763 Iraq and Iran, T-3842 Burmese labels, T-3803 option 1 (after editdiag's fix). Filed T-3837-T-3844.
-   Review: review/rivers-e-london.png, review/coast-round-hk.png. Asked in chat, unanswered: T-3809 text ack, 400 km
-   per leg, T-3835 text ack. Ask a-2026-11-20-1: T-2216 island design.
-1. Running, mine: gapfill (Opus, T-3764: the missing-country list, then Pakistan and Bangladesh; main tree). Runs
-   started ~11:25 (PK 196 rows port 6395, BD 142 rows port 6396, --no-join; gates serve a frozen app copy), gating
-   ~2-3 h, then it messages before the join (no data/packs writes during it). Its uncommitted files so far: pipeline
-   world_plan.py, admin_totals.py, borders.json (IN|PK 0), checks/country_preflight.py, checks/state_gaps.py, game
-   zone-names.json and realms.json, notes/T-3764.md.
+   Asked in chat, unanswered: T-3835 text ack (T-3809's strings change with T-3845; 400 km per leg unanswered).
+1. Running, mine (relaunched 13:20 after the restart): gapfill (Opus, T-3764, main tree: 338 PK+BD rows gated,
+   resumed toward the join; messages me at join start/end; its uncommitted pipeline, checks, game json and notes
+   files are its own), riverfix (Opus, T-3839, her river report + 2 board screenshots, Vite 6152), ferryorder
+   (Sonnet, T-3845, 6153), ttquiet (Sonnet, T-3846, 6154), islands1 (Opus, T-2216 stage 1 rule A, 6155; risky:
+   fresh Sonnet checker before landing). One tree each.
 2. T-3395: 11-20 scan (pass 1, not done) found 0 new damage. Run `tools/ops/save_health.py` after the 11-21
    04:00 UTC scan; clean = close it (the two rev-1 games of ue83342ed78f8fc4c are old 11-19 damage).
-3. Up next: T-3804; T-2216 stages once she picks; after gapfill: T-3838, T-1376 retry, T-3843, rest of T-3764;
+3. Up next: T-3804; T-2216 stages 2-3 after stage 1 (stage 0 is T-3838); after gapfill: T-3838, T-1376 retry, T-3843, rest of T-3764;
    T-1738 Bhamo; T-3836 (design for her).
 4. Next update: unpublished changelog c001-c015 plus tonight's; untranslated: T-3822's and T-3823's hover strings,
    diagramView.addCity; use the publish skill (review agent, sort, playtest list, translations, new zones image).
@@ -27,6 +26,8 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 6. T-3781 waits for the next report's diagnosis. Steam (T-3729): her screenshots in artifacts/trainworld/steam.
 
 ## Her words
+- 11-20 ~12:45 UTC, morning: new countries "look pretty cool"; rivers still break (T-3839, her words there); ferry
+  order port, waypoints, port (T-3845); quieter related lines (T-3846); islands "3x, A", stage 2 yes.
 - 11-20 ~05:20 UTC, to bed: "lets try to keep going through the night, continuing to run stuff if resources free
   up". Picked rivers E (+ min-straighten, round caps; coastline T-3833 after); OK'd both global CLAUDE.md wordings.
 - 11-20 ~04:20 UTC: rivers: likes B's look, wants C's correctness: "C but just do like microstraightening ... and we
