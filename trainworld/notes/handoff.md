@@ -7,10 +7,10 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`. This f
 Diary: notes/handoff-log.md. Her local time is UTC-5.
 
 ## Next
-0. Live v0.4.4. Cap 14. 8800 = 7637e0e0 (smoke passed). Since: T-3846, T-3847 landed (not on 8800).
+0. Live v0.4.4. Cap 14. 8800 = 7637e0e0 (smoke passed). Since: T-3846, T-3847, T-3845 landed (not on 8800; T-3845 text ack asked).
 1. Running, mine: gapfill (Opus, T-3764, main tree: JOIN of 338 PK+BD rows from ~13:20, pid 9092, log
    artifacts/trainworld/t3764-join.log; no data/packs writes or plain 8800 rebuild until it ends; its uncommitted
-   pipeline, checks, game json, notes files are its own), riverfix (Opus, T-3839, 6152), ferryorder (Sonnet, T-3845,
+   pipeline, checks, game json, notes files are its own), riverfix (Opus, T-3839, 6152),
    6153), islands1 (Opus, T-2216 stage 1, 6155; fresh Sonnet checker before landing), One tree each.
 2. T-3395: 11-20 scan (pass 1, not done) found 0 new damage. Run `tools/ops/save_health.py` after the 11-21
    04:00 UTC scan; clean = close it (the two rev-1 games of ue83342ed78f8fc4c are old 11-19 damage).
