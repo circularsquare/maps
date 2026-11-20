@@ -807,9 +807,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Ports, industrial estates and airports with no residents stay dark (Tuas and Jurong were fixed by hand 11-13). Half done: units keep outlines with 0.2 km2 of built surface.
   - Goal: A free unit under the floor sharing half its land border with one metro joins it, after a worldwide count.
   - Other: notes/T-3287.md
-- T-3842 [P2] {L:loading} Map error panning near Loikaw and Meiktila (taking, 2026-11-20, agent maperr)
-  - Context: Found by T-1738: a MapLibre worker error ("Cannot use 'in' operator to search for 'imageName' in undefined") fires panning to Loikaw in a game opened on Taunggyi, and in Meiktila and pgx games; likely a basemap label, not proven. Players there will see it; mki and pgx pass their browser check only with it let through.
-  - Other: notes/T-1738.md section 16
 - T-3841 [P3] {L:cleanup} Agent report inbox takes in non-reports
   - Context: `tools/reports.py`'s hook files "final-text" entries that aren't agent reports: an agent's compaction summary (r-f11676a4, editfirst, 11-20) and lines that read as your chat replies in the orchestrator's tab (r-a5f08c93 "yes purge it, leave resend on free"). Each wakes the orchestrator for nothing.
   - Goal: Only a subagent's final report is filed.
