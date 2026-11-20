@@ -30906,6 +30906,174 @@
       {
         "name": "Pucarani",
         "regionName": "Pucarani region"
+      },
+      {
+        "name": "Saint George Basseterre",
+        "regionName": "Saint George Basseterre region"
+      },
+      {
+        "name": "SXM",
+        "regionName": "SXM region"
+      },
+      {
+        "name": "MAF",
+        "regionName": "MAF region"
+      },
+      {
+        "name": "BES",
+        "regionName": "BES region"
+      },
+      {
+        "name": "BES",
+        "regionName": "BES region"
+      },
+      {
+        "name": "MSR",
+        "regionName": "MSR region"
+      },
+      {
+        "name": "AIA",
+        "regionName": "AIA region"
+      },
+      {
+        "name": "VGB",
+        "regionName": "VGB region"
+      },
+      {
+        "name": "TCA",
+        "regionName": "TCA region"
+      },
+      {
+        "name": "BLM",
+        "regionName": "BLM region"
+      },
+      {
+        "name": "IV-1 Moblissa",
+        "regionName": "IV-1 Moblissa region"
+      },
+      {
+        "name": "IX-1 Rupununi West",
+        "regionName": "IX-1 Rupununi West region"
+      },
+      {
+        "name": "Saramacca Polder",
+        "regionName": "Saramacca Polder region"
+      },
+      {
+        "name": "Cayenne",
+        "regionName": "Cayenne region"
+      },
+      {
+        "name": "Saint-Laurent-du-Maroni",
+        "regionName": "Saint-Laurent-du-Maroni region"
+      },
+      {
+        "name": "Les Abymes",
+        "regionName": "Les Abymes region"
+      },
+      {
+        "name": "Fort-de-France",
+        "regionName": "Fort-de-France region"
+      },
+      {
+        "name": "Charlotte Amalie",
+        "regionName": "Charlotte Amalie region"
+      },
+      {
+        "name": "Sion Farm",
+        "regionName": "Sion Farm region"
+      },
+      {
+        "name": "IX-1 Rupununi West",
+        "regionName": "IX-1 Rupununi West region"
+      },
+      {
+        "name": "Saint-Laurent-du-Maroni",
+        "regionName": "Saint-Laurent-du-Maroni region"
+      },
+      {
+        "name": "Charlotte Amalie",
+        "regionName": "Charlotte Amalie region"
+      },
+      {
+        "name": "Sion Farm",
+        "regionName": "Sion Farm region"
+      },
+      {
+        "name": "SXM",
+        "regionName": "SXM region"
+      },
+      {
+        "name": "MAF",
+        "regionName": "MAF region"
+      },
+      {
+        "name": "BES",
+        "regionName": "BES region"
+      },
+      {
+        "name": "BES",
+        "regionName": "BES region"
+      },
+      {
+        "name": "MSR",
+        "regionName": "MSR region"
+      },
+      {
+        "name": "VGB",
+        "regionName": "VGB region"
+      },
+      {
+        "name": "BLM",
+        "regionName": "BLM region"
+      },
+      {
+        "name": "Saramacca Polder",
+        "regionName": "Saramacca Polder region"
+      },
+      {
+        "name": "Cayenne",
+        "regionName": "Cayenne region"
+      },
+      {
+        "name": "Saint-Laurent-du-Maroni",
+        "regionName": "Saint-Laurent-du-Maroni region"
+      },
+      {
+        "name": "Les Abymes",
+        "regionName": "Les Abymes region"
+      },
+      {
+        "name": "Fort-de-France",
+        "regionName": "Fort-de-France region"
+      },
+      {
+        "name": "Saint George Basseterre",
+        "regionName": "Saint George Basseterre region"
+      },
+      {
+        "name": "SXM",
+        "regionName": "SXM region"
+      },
+      {
+        "name": "MAF",
+        "regionName": "MAF region"
+      },
+      {
+        "name": "BES",
+        "regionName": "BES region"
+      },
+      {
+        "name": "BES",
+        "regionName": "BES region"
+      },
+      {
+        "name": "AIA",
+        "regionName": "AIA region"
+      },
+      {
+        "name": "BES",
+        "regionName": "BES region"
       }
     ],
     "rule": {
@@ -139999,6 +140167,500 @@
       "country": "BO",
       "localTrips": 361565.0,
       "realm": "bolivia"
+    },
+    {
+      "id": "tcx",
+      "name": "TCA",
+      "kind": "zone",
+      "origin": {
+        "lon": -72.2687,
+        "lat": 21.7922
+      },
+      "center": [
+        -72.2687,
+        21.7922
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -72.376,
+        21.283,
+        -71.106,
+        21.981
+      ],
+      "place": 7730,
+      "country": "TC",
+      "localTrips": 120081.0,
+      "realm": "caribbean"
+    },
+    {
+      "id": "ivm",
+      "name": "IV-1 Moblissa",
+      "kind": "zone",
+      "origin": {
+        "lon": -58.1597,
+        "lat": 6.8119
+      },
+      "center": [
+        -58.1597,
+        6.8119
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -61.402,
+        4.586,
+        -57.119,
+        8.426
+      ],
+      "place": 7732,
+      "country": "GY",
+      "localTrips": 1945363.0,
+      "realm": "guianas"
+    },
+    {
+      "id": "ixr",
+      "name": "IX-1 Rupununi West",
+      "kind": "zone",
+      "origin": {
+        "lon": -59.796,
+        "lat": 3.3774
+      },
+      "center": [
+        -59.796,
+        3.3774
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -60.012,
+        1.798,
+        -58.718,
+        4.54
+      ],
+      "place": 7741,
+      "country": "GY",
+      "localTrips": 68561.0,
+      "realm": "guianas"
+    },
+    {
+      "id": "clm",
+      "name": "Charlotte Amalie",
+      "kind": "zone",
+      "origin": {
+        "lon": -64.9528,
+        "lat": 18.3378
+      },
+      "center": [
+        -64.9528,
+        18.3378
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -65.061,
+        18.279,
+        -64.678,
+        18.4
+      ],
+      "place": 7743,
+      "country": "VI",
+      "localTrips": 147356.0,
+      "realm": "caribbean"
+    },
+    {
+      "id": "sfa",
+      "name": "Sion Farm",
+      "kind": "zone",
+      "origin": {
+        "lon": -64.703,
+        "lat": 17.7466
+      },
+      "center": [
+        -64.703,
+        17.7466
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -64.923,
+        17.656,
+        -64.545,
+        17.802
+      ],
+      "place": 7744,
+      "country": "VI",
+      "localTrips": 133628.0,
+      "realm": "caribbean"
+    },
+    {
+      "id": "mbr",
+      "name": "MSR",
+      "kind": "zone",
+      "origin": {
+        "lon": -62.1824,
+        "lat": 16.7975
+      },
+      "center": [
+        -62.1824,
+        16.7975
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -62.261,
+        16.656,
+        -62.125,
+        16.843
+      ],
+      "place": 7749,
+      "country": "MS",
+      "localTrips": 13373.0,
+      "realm": "caribbean"
+    },
+    {
+      "id": "vgb",
+      "name": "VGB",
+      "kind": "zone",
+      "origin": {
+        "lon": -64.6235,
+        "lat": 18.4286
+      },
+      "center": [
+        -64.6235,
+        18.4286
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -64.801,
+        18.288,
+        -64.251,
+        18.768
+      ],
+      "place": 7750,
+      "country": "VG",
+      "localTrips": 80082.0,
+      "realm": "caribbean"
+    },
+    {
+      "id": "bce",
+      "name": "BLM",
+      "kind": "zone",
+      "origin": {
+        "lon": -62.8502,
+        "lat": 17.8964
+      },
+      "center": [
+        -62.8502,
+        17.8964
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -62.894,
+        17.86,
+        -62.77,
+        17.948
+      ],
+      "place": 7751,
+      "country": "BL",
+      "localTrips": 26883.0,
+      "realm": "caribbean"
+    },
+    {
+      "id": "spd",
+      "name": "Saramacca Polder",
+      "kind": "zone",
+      "origin": {
+        "lon": -55.16,
+        "lat": 5.83
+      },
+      "center": [
+        -55.16,
+        5.83
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -57.354,
+        3.98,
+        -53.956,
+        6.029
+      ],
+      "place": 7752,
+      "country": "SR",
+      "localTrips": 1531910.0,
+      "realm": "guianas"
+    },
+    {
+      "id": "cye",
+      "name": "Cayenne",
+      "kind": "zone",
+      "origin": {
+        "lon": -52.3287,
+        "lat": 4.9399
+      },
+      "center": [
+        -52.3287,
+        4.9399
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -53.556,
+        2.149,
+        -51.616,
+        5.593
+      ],
+      "place": 7753,
+      "country": "FR",
+      "localTrips": 488980.0,
+      "realm": "guianas"
+    },
+    {
+      "id": "sud",
+      "name": "Saint-Laurent-du-Maroni",
+      "kind": "zone",
+      "origin": {
+        "lon": -54.0283,
+        "lat": 5.4983
+      },
+      "center": [
+        -54.0283,
+        5.4983
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -54.621,
+        2.092,
+        -53.04,
+        5.796
+      ],
+      "place": 7754,
+      "country": "FR",
+      "localTrips": 282240.0,
+      "realm": "guianas"
+    },
+    {
+      "id": "lem",
+      "name": "Les Abymes",
+      "kind": "zone",
+      "origin": {
+        "lon": -61.529,
+        "lat": 16.2386
+      },
+      "center": [
+        -61.529,
+        16.2386
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -61.829,
+        15.813,
+        -60.982,
+        16.533
+      ],
+      "place": 7755,
+      "country": "FR",
+      "localTrips": 1100003.0,
+      "realm": "caribbean"
+    },
+    {
+      "id": "fod",
+      "name": "Fort-de-France",
+      "kind": "zone",
+      "origin": {
+        "lon": -61.0883,
+        "lat": 14.6064
+      },
+      "center": [
+        -61.0883,
+        14.6064
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -61.248,
+        14.37,
+        -60.79,
+        14.897
+      ],
+      "place": 7756,
+      "country": "FR",
+      "localTrips": 981446.0,
+      "realm": "caribbean"
+    },
+    {
+      "id": "sgt",
+      "name": "Saint George Basseterre",
+      "kind": "zone",
+      "origin": {
+        "lon": -62.7273,
+        "lat": 17.2994
+      },
+      "center": [
+        -62.7273,
+        17.2994
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -62.884,
+        17.076,
+        -62.52,
+        17.437
+      ],
+      "place": 7757,
+      "country": "KN",
+      "localTrips": 133319.0,
+      "realm": "caribbean"
+    },
+    {
+      "id": "sxm",
+      "name": "SXM",
+      "kind": "zone",
+      "origin": {
+        "lon": -63.0465,
+        "lat": 18.0255
+      },
+      "center": [
+        -63.0465,
+        18.0255
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -63.139,
+        17.987,
+        -63.0,
+        18.079
+      ],
+      "place": 7758,
+      "country": "SX",
+      "localTrips": 63772.0,
+      "realm": "caribbean"
+    },
+    {
+      "id": "mfx",
+      "name": "MAF",
+      "kind": "zone",
+      "origin": {
+        "lon": -63.0782,
+        "lat": 18.0656
+      },
+      "center": [
+        -63.0782,
+        18.0656
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -63.173,
+        18.017,
+        -62.951,
+        18.144
+      ],
+      "place": 7759,
+      "country": "MF",
+      "localTrips": 110619.0,
+      "realm": "caribbean"
+    },
+    {
+      "id": "bcd",
+      "name": "BES",
+      "kind": "zone",
+      "origin": {
+        "lon": -62.9815,
+        "lat": 17.4806
+      },
+      "center": [
+        -62.9815,
+        17.4806
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -63.278,
+        17.446,
+        -62.927,
+        17.669
+      ],
+      "place": 7761,
+      "country": "NL",
+      "localTrips": 22041.0,
+      "realm": "caribbean"
+    },
+    {
+      "id": "aia",
+      "name": "AIA",
+      "kind": "zone",
+      "origin": {
+        "lon": -63.0496,
+        "lat": 18.2141
+      },
+      "center": [
+        -63.0496,
+        18.2141
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -63.282,
+        18.141,
+        -62.907,
+        18.315
+      ],
+      "place": 7762,
+      "country": "AI",
+      "localTrips": 42961.0,
+      "realm": "caribbean"
+    },
+    {
+      "id": "bcb",
+      "name": "BES",
+      "kind": "zone",
+      "origin": {
+        "lon": -68.2624,
+        "lat": 12.1462
+      },
+      "center": [
+        -68.2624,
+        12.1462
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -68.44,
+        12.006,
+        -68.176,
+        12.331
+      ],
+      "place": 7763,
+      "country": "NL",
+      "localTrips": 48940.0,
+      "realm": "caribbean"
     }
   ]
 }

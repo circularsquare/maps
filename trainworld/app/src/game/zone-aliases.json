@@ -3585,5 +3585,10 @@
 "sdc": ["Bridgetown"],
 "sdf": ["Kingstown"],
 "sdk": ["St. John's"],
-"dja": ["Santa Cruz de Mao", "San Fernando de Monte Cristi", "San Ignacio de Sabaneta", "Esperanza", "Villa Vásquez"]
+"dja": ["Santa Cruz de Mao", "San Fernando de Monte Cristi", "San Ignacio de Sabaneta", "Esperanza", "Villa Vásquez"],
+"ivm": ["Georgetown", "City of Georgetown", "Linden"],
+"spd": ["Paramaribo"],
+"cye": ["Matoury", "Remire-Montjoly", "Kourou"],
+"lem": ["Baie-Mahault", "Bima", "Le Gosier", "Sainte-Anne", "Sainte-Anne-en-Guadeloupe", "Petit-Bourg", "Le Moule", "Portland"],
+"mfx": ["Marigot", "Saint-Martin", "Collectivité de Saint-Martin"]
 }

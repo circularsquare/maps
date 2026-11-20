@@ -129,7 +129,8 @@ sharing the most units, marked "carried by a replan from <id>" (T-1307). Relaxat
 own figures (pop_vs_plan, top_zone_jobs_share, the browser's test line, a named station on land) are
 not carried; the gate decides them afresh.
 A European country's units outside Europe (France's
-overseas départements) are not zoned. A zone row has `kind` "zone", is named after its most populous unit (before
+overseas départements) are not zoned as that country's; territories geoBoundaries lists apart (Guadeloupe, Martinique,
+French Guiana, the Caribbean Netherlands) are zoned as countries of their own (`world_plan.NE_INSIDE`, T-3762). A zone row has `kind` "zone", is named after its most populous unit (before
 any "/"), and has its origin at the densest square km of the unit it is named after (T-1762; Korea's grouped zones: of the zone).
 Three rules after the merge, in every country (T-1984):
 - **A city is not cut**: where zones each holding a fifth of the people of a GHS-FUA's main urban
@@ -244,8 +245,8 @@ named for their cities rather than GHSL's Tijuana and San Jose (`METRO_NAMES`); 
 other metros keeps them. Zones (`zones --countries US,PR`) follow China's rules at a **0.5M** floor
 (cap 1.5M) within their state. In Alaska only the road and rail belt is zoned (Anchorage,
 Matanuska-Susitna, Kenai Peninsula, Fairbanks North Star, Denali, Southeast Fairbanks, Chugach,
-Copper River; `zoned_only`), the rest dead space; Guam, the Northern Marianas, American Samoa and
-the US Virgin Islands are not zoned. Every US and Puerto Rico row, zones included, takes the `usa`
+Copper River; `zoned_only`), the rest dead space; Guam, the Northern Marianas and American Samoa are not
+zoned. The US Virgin Islands are zoned as a country of their own on geoBoundaries (T-3762), with no module. Every US and Puerto Rico row, zones included, takes the `usa`
 module (archetype A; Puerto Rico C, population only). US rows solve their joint commutes by Census
 division, Delaware, Maryland and DC with the Northeast (`SOLVE_REGIONS`); Puerto Rico is its own
 country. A zone named after a county name another zone has carries its state ("Jefferson County, KY").
@@ -540,7 +541,9 @@ notes/T-975.md]: zones are grouped into country-sized realms, a hand list in
 `app/src/game/realms.json` (each an id, a name and its countries, or for a country split between
 realms its first-level units: China in seven, Russia in two, the US in four by Census region with
 Delaware, Maryland and DC in the south, and Puerto Rico a realm of its own; Indonesia in five by island
-group and Malaysia in two, with Borneo one realm across Brunei, Sabah, Sarawak and Kalimantan, T-1738). Players see only a realm's
+group and Malaysia in two, with Borneo one realm across Brunei, Sabah, Sarawak and Kalimantan, T-1738; France and the
+Netherlands split by lon/lat box, their Caribbean parts in the Caribbean realm and French Guiana in Guianas with Guyana
+and Suriname, T-3762). Players see only a realm's
 name; the code word is "realm" because "region" already means a zone in the code.
 `pipeline/realms.py` (run by the join) writes each registry row's `realm` (its country's; in a split
 country the realm whose land holds its centre) and `packs/realms.geojson`, each realm's land

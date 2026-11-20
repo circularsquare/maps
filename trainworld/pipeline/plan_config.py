@@ -37,6 +37,7 @@ def vulnerable_share(iso2):
     employment, World Bank SL.EMP.VULN.ZS, the latest year; cached per country."""
     import netget
     import tier0
+    iso2 = tier0.WB_STANDIN.get(iso2, iso2)
     path = netget.cached_json(WB_VULN.format(iso2=iso2), tier0.raw(f"worldbank_{iso2}_SL.EMP.VULN.ZS.json"), timeout=60)
     with open(path) as f:
         rows = [x for x in (json.load(f)[1] or []) if x["value"] is not None]

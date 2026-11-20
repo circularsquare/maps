@@ -239,12 +239,15 @@ def national(country):
     if survey and survey[1] >= 2010:
         return 1.0 - survey[0], f"{country}: {survey[0]:.1%} of households possess a private car (DHS {survey[2]}), made people at 0.693"
     gdp, income, _ = worldbank()
-    if country in gdp:
-        (g, gy), (a, b) = gdp[country], FALLBACK
+    import tier0
+    wb = tier0.WB_STANDIN.get(country, country)  # T-3762: a place the World Bank does not list
+    if wb in gdp:
+        (g, gy), (a, b) = gdp[wb], FALLBACK
         h0 = 1.0 / (1.0 + np.exp(a + b * np.log(g)))
         return h0, (f"{country}: no register or survey; households with a car from GDP per head ({g:,.0f} PPP $, World Bank "
-                    f"{gy}) by logit = {a} + {b} ln(GDP), fitted on the countries with a figure; made people at 0.693")
-    group = income.get(country)
+                    f"{gy}{f', {wb} standing in' if wb != country else ''}) by logit = {a} + {b} ln(GDP), fitted on the "
+                    "countries with a figure; made people at 0.693")
+    group = income.get(wb)
     if group in INCOME_H0:
         return INCOME_H0[group], f"{country}: no register, survey or GDP; the median of {group} countries with a figure, made people at 0.693"
     return WORLD_H0, f"{country}: no register, survey, GDP or income group; the median of every country with a figure, made people at 0.693"

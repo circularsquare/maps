@@ -40,6 +40,9 @@ import wfh
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RAW = os.path.join(ROOT, "data", "raw")
 WORK = os.path.join(ROOT, "data", "work")
+# T-3762: a pack's country where its plan row's alpha-2 is a territory Natural Earth folds into another (world_plan.NE_INSIDE):
+# the world field, the market step and the registry give it that country, so the joint solve's border pairs must too
+PACK_COUNTRY = {"GP": "FR", "MQ": "FR", "GF": "FR", "BQ": "NL"}
 PACKS = os.path.join(ROOT, "data", "packs")
 UA = {"User-Agent": "trainworld-pipeline/0.1 (rail game data build; python-requests)"}
 R_EARTH = 6371008.8
@@ -961,7 +964,7 @@ def write_cells(city, cfg, cells, totals, sources, mask=None, mask_info=None, co
     if regions is not None:
         header["regions"] = regions
     if cfg.get("iso2"):  # a tier 0 pack's country, for the joint commute gravity's border factors
-        header["country"] = cfg["iso2"]
+        header["country"] = PACK_COUNTRY.get(cfg["iso2"], cfg["iso2"])
     stem = os.path.join(WORK, f"{city}.cells")
     packio.write(stem, header, buf)
     return stem + ".json"

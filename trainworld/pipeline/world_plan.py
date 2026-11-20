@@ -281,7 +281,17 @@ ZONE_RULES = {"CHN": {"floor": 1_000_000, "cap": 2_500_000, "min_density": 0.0, 
               # islands with no metro row, so no units in the plan state (no `plan_units`, as Oman); Jamaica's and Saint
               # Lucia's finest units are communities, grouped by parish and quarter (T-3620)
               **{iso: {"contiguous": True, "task": "T-3620", **({"group_level": 0} if iso in ("JAM", "LCA") else {})}
-                 for iso in ("JAM", "TTO", "BHS", "BRB", "LCA", "CUW", "GRD", "VCT", "ABW", "ATG", "DMA", "CYM")}}
+                 for iso in ("JAM", "TTO", "BHS", "BRB", "LCA", "CUW", "GRD", "VCT", "ABW", "ATG", "DMA", "CYM")},
+              # the Guianas on Venezuela's rule, with no metro row (no `plan_units`): coast towns round an empty
+              # interior; Suriname's reach from each unit's centre (from its people, Sipaliwini district, 130,000 km2
+              # of forest villages, was in Paramaribo's zone) (T-3762)
+              **{iso: {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True, "reach": (150.0, 100_000),
+                       "reach_from_people": iso != "SUR", "join_km": 150.0, "fua_whole": 500_000, "task": "T-3762"}
+                 for iso in ("GUY", "SUR", "GUF")},
+              # the rest of the Caribbean's islands, as T-3620's; Montserrat with no density floor (the volcano's
+              # exclusion zone is half the island) (T-3762)
+              **{iso: {"contiguous": True, "task": "T-3762", **({"min_density": 0.0} if iso == "MSR" else {})}
+                 for iso in ("GLP", "MTQ", "VIR", "KNA", "SXM", "MAF", "BES", "MSR", "AIA", "VGB", "TCA", "BLM")}}
 # T-3287 (Anita, 2026-11-12): blocs come out whole. In these countries a unit the density test leaves dead is a zone
 # anyway when it sits between built land (`gap_fill.pick`: the line between two towns of 50,000 within 300 km runs
 # 15 km over it, it holds such a town and touches built land, or built land holds 75% of its land border); a pick
@@ -331,7 +341,9 @@ ARCHIPELAGO_KM = 50.0  # with `contiguous`, island zones this near join as one a
 # a zone holding fewer people once grouped is dead space, in every country (T-1984): such zones parked on their own
 # figures (Vietnam's Muong Nhe, 40,000, and Con Dao, 6,800, T-1744; Whyalla, 24,000 between dead LGAs, T-1857)
 ZONE_ALONE_MIN = 50_000
-ALONE_MIN = {}  # a country's own figure, where it needs one
+# a country's own figure, where it needs one: Montserrat (about 4,000 people) and Saba with Sint Eustatius (about 5,000),
+# so a player can go island to island down the Lesser Antilles (T-3762)
+ALONE_MIN = {"MSR": 1_000, "BES": 1_000}
 # T-1999: an island or exclave with no land neighbour in its region can merge with nothing, so it stays a zone down to
 # this (Vieques with Culebra 10,600, Nantucket, Aland, Ceuta, Gorazde shipped); islets below it stay dead space (T-897)
 CUT_OFF_MIN = 10_000
@@ -394,6 +406,13 @@ ARCHETYPE = {"GBR": ("A", "england"), "FRA": ("A", "france"), "DEU": ("A", "germ
              "TUR": ("C", "admin_totals"), "MEX": ("C", "mexico"), "COL": ("C", "admin_totals"),
              "EGY": ("C", "admin_totals"), "ISR": ("C", "admin_totals"), "PSE": ("C", "admin_totals")}
 NE_FIX = {"KOS": "XKX", "SOL": "SOM", "CYN": "CYP", "SAH": "ESH"}
+# T-3762: territories geoBoundaries lists apart that Natural Earth's countries file folds into another (France's
+# Guadeloupe, Martinique and French Guiana, the Netherlands' Bonaire, Saba and Sint Eustatius): (that country, own alpha-2).
+# They are zoned as their own countries; their land in Natural Earth is the other country's
+NE_INSIDE = {"GLP": ("FRA", "GP"), "MTQ": ("FRA", "MQ"), "GUF": ("FRA", "GF"), "BES": ("NLD", "BQ")}
+# T-3762: such a territory with no geoBoundaries units below ADM0 (geoBoundaries' BES ADM0 is Bonaire alone): that
+# country's Natural Earth land inside the box, lon/lat
+NE_PART = {"BES": (-69.0, 11.5, -62.5, 18.0)}
 
 FWD = Transformer.from_crs("EPSG:4326", "ESRI:54009", always_xy=True)
 INV = Transformer.from_crs("ESRI:54009", "EPSG:4326", always_xy=True)
@@ -525,6 +544,24 @@ def countries():
         code = iso if iso != "-99" else adm
         out.append((NE_FIX.get(adm, NE_FIX.get(code, code)), polygonal(to_moll(g))))
     return out
+
+
+def territory_whole(iso):
+    """A country's Natural Earth land (Mollweide); NE_PART's territory, its piece of the country holding it."""
+    if iso in NE_PART:
+        box = to_moll(shapely.box(*NE_PART[iso]).segmentize(0.1))
+        return polygonal(union_all([g for i, g in countries() if i == NE_INSIDE[iso][0]]).intersection(box))
+    return union_all([g for i, g in countries() if i == iso])
+
+
+def territory_units(iso, whole=None):
+    """[(unit id, name, Mollweide geometry)] of a territory taken whole (no geoBoundaries units): one unit, or in a
+    GB_SPLIT_FAR country one for each cluster of its parts (T-3762: Bonaire, and Saba with Sint Eustatius)."""
+    whole = territory_whole(iso) if whole is None else whole
+    if whole.is_empty:
+        return []
+    parts = far_parts(whole) if iso in GB_SPLIT_FAR else [whole]
+    return [(f"{iso}-ADM0" if k == 0 else f"{iso}-ADM0~{k}", iso, p) for k, p in enumerate(parts)]
 
 
 _NE = []
@@ -796,7 +833,8 @@ GB_CACHE = "t897e"  # bump when gb_units' rules change: the cache beside each fi
 # T-2001: Portugal's ADM3 (115 of 2,905 features, same-named freguesias: Feteira on two Azores islands and the
 # mainland), Sierra Leone's ADM3 (Koya's 18,500 people 152 km away, Maforki) are dissolved too; Indonesia's ADM2
 # is islands (29 of 30) and stays whole
-GB_SPLIT_FAR = {"MYS", "PRT", "SLE"}
+# BES: a territory taken whole (`territory_units`), Bonaire 800 km from Saba and Sint Eustatius (T-3762)
+GB_SPLIT_FAR = {"MYS", "PRT", "SLE", "BES"}
 FAR_PART_KM = 50.0
 # units a country's file draws round its others, split among them (T-2965): Egypt's 14 "Zemam Out" (outside the
 # farmland register, each governorate's desert) hold 4.7M of GHSL's valley-edge villages, just past the kism and
@@ -1032,8 +1070,8 @@ def country_units(iso, meta, nuts, pop, need, whole=None):
             levels = {a: gb_units(meta, iso, a) for a in adms}
             chosen = None
         elif whole is not None and not whole.is_empty:  # no geoBoundaries (Hong Kong, Macau): the territory whole
-            raw = [(f"{iso}-ADM0", iso, whole)]
-            parents = [[]]
+            raw = territory_units(iso, whole)
+            parents = [[] for _ in raw]
             levels = {"ADM0": raw}
             chosen = "ADM0"
             src = {"kind": "Natural Earth admin 0", "file": "data/raw/world_field/ne_10m_admin_0_countries.zip"}
@@ -1589,6 +1627,7 @@ def iso2s():
         key = NE_FIX.get(adm, NE_FIX.get(code, code))
         if a2 != "-99" or key not in out:  # Northern Cyprus (-99) is folded into CYP
             out[key] = a2
+    out.update({k: v[1] for k, v in NE_INSIDE.items()})
     return out
 
 
@@ -2868,7 +2907,7 @@ def plan_zones(isos3, out_path=None, replan=False):
         # fill_gaps would hand to Canada's shore units)
         if not units or (iso in ZONE_RULES and not ZONE_RULES[iso].get("plan_units")):
             europe, meta = europe_isos()
-            whole = union_all([g for i, g in countries() if i == iso])
+            whole = territory_whole(iso)
             units, got = country_units(iso, meta, load_nuts(europe | {iso}), pop, shapely.Polygon(), whole)
             if not units:
                 raise SystemExit(f"{iso}: no units at NUTS-3 or in geoBoundaries")

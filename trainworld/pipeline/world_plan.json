@@ -1553,6 +1553,126 @@
    "file": "data/raw/world_field/ne_10m_admin_0_countries.zip",
    "level": "ADM0",
    "count": 1
+  },
+  "GUY": {
+   "kind": "geoBoundaries",
+   "level": "ADM2",
+   "urls": {
+    "ADM2": "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/GUY/ADM2/geoBoundaries-GUY-ADM2_simplified.geojson"
+   },
+   "release": "gbOpen, built Dec 12, 2023",
+   "licence": "Creative Commons Attribution 3.0 Intergovernmental Organisations (CC BY 3.0 IGO)",
+   "count": 27
+  },
+  "SUR": {
+   "kind": "geoBoundaries",
+   "level": "ADM2",
+   "urls": {
+    "ADM1": "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/SUR/ADM1/geoBoundaries-SUR-ADM1_simplified.geojson",
+    "ADM2": "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/SUR/ADM2/geoBoundaries-SUR-ADM2_simplified.geojson"
+   },
+   "release": "gbOpen, built Dec 12, 2023",
+   "licence": "Public Domain",
+   "coarser_where_missing": 1,
+   "count": 54
+  },
+  "GUF": {
+   "kind": "geoBoundaries",
+   "level": "ADM3",
+   "urls": {
+    "ADM3": "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/GUF/ADM3/geoBoundaries-GUF-ADM3_simplified.geojson"
+   },
+   "release": "gbOpen, built Dec 12, 2023",
+   "licence": "Etalab Open License 2.0",
+   "count": 2
+  },
+  "GLP": {
+   "kind": "geoBoundaries",
+   "level": "ADM4",
+   "urls": {
+    "ADM4": "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/GLP/ADM4/geoBoundaries-GLP-ADM4_simplified.geojson"
+   },
+   "release": "gbOpen, built Dec 12, 2023",
+   "licence": "Etalab Open License 2.0",
+   "count": 32
+  },
+  "MTQ": {
+   "kind": "geoBoundaries",
+   "level": "ADM3",
+   "urls": {
+    "ADM3": "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/MTQ/ADM3/geoBoundaries-MTQ-ADM3_simplified.geojson"
+   },
+   "release": "gbOpen, built Dec 12, 2023",
+   "licence": "Etalab Open License 2.0",
+   "count": 4
+  },
+  "VIR": {
+   "kind": "geoBoundaries",
+   "level": "ADM3",
+   "urls": {
+    "ADM3": "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/VIR/ADM3/geoBoundaries-VIR-ADM3_simplified.geojson"
+   },
+   "release": "gbOpen, built Dec 12, 2023",
+   "licence": "Public Domain",
+   "count": 20
+  },
+  "KNA": {
+   "kind": "geoBoundaries",
+   "level": "ADM1",
+   "urls": {
+    "ADM1": "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/KNA/ADM1/geoBoundaries-KNA-ADM1_simplified.geojson"
+   },
+   "release": "gbOpen, built Dec 12, 2023",
+   "licence": "Creative Commons Attribution-ShareAlike 2.0",
+   "count": 14
+  },
+  "SXM": {
+   "kind": "Natural Earth admin 0",
+   "file": "data/raw/world_field/ne_10m_admin_0_countries.zip",
+   "level": "ADM0",
+   "count": 1
+  },
+  "MAF": {
+   "kind": "Natural Earth admin 0",
+   "file": "data/raw/world_field/ne_10m_admin_0_countries.zip",
+   "level": "ADM0",
+   "count": 1
+  },
+  "BES": {
+   "kind": "Natural Earth admin 0",
+   "file": "data/raw/world_field/ne_10m_admin_0_countries.zip",
+   "level": "ADM0",
+   "count": 2
+  },
+  "MSR": {
+   "kind": "Natural Earth admin 0",
+   "file": "data/raw/world_field/ne_10m_admin_0_countries.zip",
+   "level": "ADM0",
+   "count": 1
+  },
+  "AIA": {
+   "kind": "Natural Earth admin 0",
+   "file": "data/raw/world_field/ne_10m_admin_0_countries.zip",
+   "level": "ADM0",
+   "count": 1
+  },
+  "VGB": {
+   "kind": "Natural Earth admin 0",
+   "file": "data/raw/world_field/ne_10m_admin_0_countries.zip",
+   "level": "ADM0",
+   "count": 1
+  },
+  "TCA": {
+   "kind": "Natural Earth admin 0",
+   "file": "data/raw/world_field/ne_10m_admin_0_countries.zip",
+   "level": "ADM0",
+   "count": 1
+  },
+  "BLM": {
+   "kind": "Natural Earth admin 0",
+   "file": "data/raw/world_field/ne_10m_admin_0_countries.zip",
+   "level": "ADM0",
+   "count": 1
   }
  },
  "metros": [
@@ -374223,6 +374343,1544 @@
     "gated": "2026-11-19T01:38:54",
     "shipped": "2026-11-19T02:51:00"
    }
+  },
+  {
+   "order": 5769,
+   "id": "ivm",
+   "name": "IV-1 Moblissa",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "GUY"
+   ],
+   "iso2": "GY",
+   "people": 729587,
+   "origin": [
+    -58.1597,
+    6.8119
+   ],
+   "tz": "America/Guyana",
+   "utc_offset": -4,
+   "extracts": [
+    "south-america/guyana"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GUY": [
+     "73187651B62691017600789",
+     "73187651B37275521975426",
+     "73187651B35939089598366",
+     "73187651B73006016371738",
+     "73187651B69188247216871",
+     "73187651B32807906119363",
+     "73187651B18433747523923",
+     "73187651B95579298937311",
+     "73187651B61605631045653",
+     "73187651B65372022493743",
+     "73187651B47242148474539",
+     "73187651B89852633315",
+     "73187651B37503921444880",
+     "73187651B25125705574502",
+     "73187651B8767068866486",
+     "73187651B56094109517329",
+     "73187651B40141145905740",
+     "73187651B51062108887281",
+     "73187651B403858167670",
+     "73187651B6333666971836"
+    ]
+   },
+   "bbox": [
+    -61.397,
+    4.605,
+    -57.137,
+    8.411
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "IV-1 Moblissa/La Reconnai",
+     "III-3 Lower West Demerara",
+     "IV-2 Buxton/Mahaica",
+     "V-2 Mahaicony/Berbice",
+     "III-2 Bonasika/Boerasirie",
+     "II-2 Somerset And Berks",
+     "VI-2  East Canje/E.C.Berb",
+     "X-1 Right Bank Essequibo",
+     "VII-2 Mazaruni/L.B.E.Rive",
+     "VI-3 Black Bush Polder",
+     "VI-1 East Berbice/W.Canje",
+     "II-1 Moruka/Pomeroon",
+     "V-1  Mahaica/Mahaicony",
+     "I-2  Waini",
+     "X-2 Torani/Bulletwood",
+     "VI-4 Lower Corentyne Rive",
+     "VI-6 Upper Canje/Corentyn",
+     "Essequibo I./L.B.E.River",
+     "III-1 Essequibo Islands",
+     "VI-5 Left Bank Upper Canj"
+    ]
+   },
+   "run": {
+    "run_batch": "20261119-165853",
+    "steps": {
+     "build": 298.2,
+     "stations": 1.1,
+     "places": 2.8,
+     "routes": 31.1,
+     "merge": 1.4,
+     "nocar": 2.5,
+     "everyday": 1.1
+    },
+    "built": "2026-11-19T17:09:21",
+    "gate": {
+     "warn": [
+      "area_km2 99980.61037736779",
+      "drive_factor_median 2.218596968679145",
+      "road_snap_median_m 532.1",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-19T17:44:45",
+    "shipped": "2026-11-19T18:53:24"
+   }
+  },
+  {
+   "order": 5770,
+   "id": "ixr",
+   "name": "IX-1 Rupununi West",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "GUY"
+   ],
+   "iso2": "GY",
+   "people": 33699,
+   "origin": [
+    -59.796,
+    3.3774
+   ],
+   "tz": "America/Guyana",
+   "utc_offset": -4,
+   "extracts": [
+    "south-america/guyana"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GUY": [
+     "73187651B14852666038275"
+    ]
+   },
+   "bbox": [
+    -59.993,
+    1.816,
+    -58.737,
+    4.522
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "IX-1 Rupununi West"
+    ]
+   },
+   "run": {
+    "run_batch": "20261119-165853",
+    "steps": {
+     "build": 293.1,
+     "stations": 0.9,
+     "places": 2.2,
+     "routes": 18.6,
+     "merge": 0.8,
+     "nocar": 2.3,
+     "everyday": 0.9
+    },
+    "built": "2026-11-19T17:09:02",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.48627233636963174",
+      "road_snap_median_m 446.5",
+      "fleet_range 5"
+     ]
+    },
+    "parked": "2026-11-19T17:22:19",
+    "gated": "2026-11-19T17:57:55",
+    "shipped": "2026-11-19T18:53:25"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-3762: past the table's 0.35, kept on purpose: a small island's or savanna town's one centre holds its jobs (Marigot 0.37, Brades and Little Bay on Montserrat 0.43, Lethem 0.49), top square in the town, not a GHSL blob"
+   }
+  },
+  {
+   "order": 5771,
+   "id": "spd",
+   "name": "Saramacca Polder",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "SUR"
+   ],
+   "iso2": "SR",
+   "people": 599566,
+   "origin": [
+    -55.16,
+    5.83
+   ],
+   "tz": "America/Paramaribo",
+   "utc_offset": -3,
+   "extracts": [
+    "south-america/guyana",
+    "south-america/suriname"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "SUR": [
+     "93971198B62899333828464",
+     "93971198B89671256308393",
+     "93971198B56648857464016",
+     "93971198B84478829429785",
+     "93971198B92210653043495",
+     "93971198B59726276873513",
+     "93971198B37830600094273",
+     "93971198B6923625999642",
+     "93971198B40683261750790",
+     "93971198B87571320518547",
+     "93971198B51186528794975",
+     "93971198B97783973915980",
+     "93971198B39717830243745",
+     "93971198B64591647456497",
+     "93971198B5728059707518",
+     "93971198B94445050916405",
+     "93971198B20856406880104",
+     "93971198B9703952996753",
+     "93971198B80225832499652",
+     "93971198B55832706288336",
+     "93971198B90069721487789",
+     "93971198B35927993757014",
+     "93971198B3219809848629",
+     "93971198B31918784658993",
+     "93971198B63054852933738",
+     "93971198B54086577669133",
+     "93971198B33771230340661",
+     "93971198B65668744282627",
+     "93971198B8075185621590",
+     "93971198B51080798731868",
+     "93971198B41549192400182",
+     "93971198B67299458321601",
+     "93971198B42981087538347",
+     "93971198B23386052659438",
+     "93971198B88217520842745",
+     "93971198B74436417809264",
+     "93971198B6398497569253",
+     "93971198B36157323571507",
+     "93971198B34414051922750",
+     "93971198B48960256202941",
+     "93971198B39924248316405",
+     "93971198B42151889919298",
+     "93971198B22310393483030",
+     "93971198B76485498216743",
+     "93971198B1585930264110",
+     "93971198B59024113358190",
+     "93971198B48007723073023",
+     "93971198B85277795494184",
+     "93971198B26814124309823",
+     "93971198B71150220201851",
+     "93971198B32357559574331",
+     "93971198B69078943336327",
+     "93971198B30813945070392"
+    ]
+   },
+   "bbox": [
+    -57.383,
+    3.962,
+    -53.985,
+    6.012
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Saramacca Polder",
+     "Rainville",
+     "Blauwgrond",
+     "Houttuin",
+     "Meerzorg",
+     "Centrum",
+     "Livornio",
+     "Koewarasan",
+     "Beekhuizen",
+     "De Nieuwe Grond",
+     "Lelydorp",
+     "Kwatta",
+     "Nieuw Amsterdam",
+     "Oostelijke Polders",
+     "Welgelegen",
+     "Oost",
+     "Moengo",
+     "Tamanredjo",
+     "Westelijke Polders",
+     "Weg Naar See",
+     "Noord",
+     "Zuid",
+     "Almaar",
+     "Carolina",
+     "Domburg",
+     "Flora",
+     "Pontibuiten",
+     "Munder",
+     "Albina",
+     "Margaretha",
+     "Jarikaba",
+     "Centrum",
+     "Bakkie",
+     "Groot Henar",
+     "Klaaskreek",
+     "Groningen",
+     "Wayamboweg",
+     "Sarakreet",
+     "Wageningen",
+     "Tijgerkreek",
+     "Kampong Baroe",
+     "BrownSweg",
+     "Nieuw Nickerie",
+     "Bigi Poika",
+     "Marshallkreek",
+     "Moengotapoe",
+     "Galibi",
+     "Calcutta",
+     "Wanhatti",
+     "Patamacca",
+     "Kwakoegron",
+     "Totness",
+     "Johanna Maria"
+    ],
+    "origin_was": [
+     -55.2069,
+     5.7986
+    ],
+    "origin_by_hand": "T-3762: the town the zone is named after"
+   },
+   "run": {
+    "run_batch": "20261119-165853",
+    "steps": {
+     "build": 62.9,
+     "stations": 0.8,
+     "places": 3.2,
+     "routes": 21.9,
+     "merge": 0.9,
+     "nocar": 1.8,
+     "everyday": 0.9
+    },
+    "built": "2026-11-19T17:10:52",
+    "gated": "2026-11-19T19:11:10",
+    "parked": "2026-11-19T18:06:41",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-11-19T19:48:59"
+   }
+  },
+  {
+   "order": 5772,
+   "id": "cye",
+   "name": "Cayenne",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "GUF"
+   ],
+   "iso2": "GF",
+   "people": 191679,
+   "origin": [
+    -52.3287,
+    4.9399
+   ],
+   "tz": "America/Cayenne",
+   "utc_offset": -3,
+   "extracts": [
+    "europe/france/guyane"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GUF": [
+     "71601473B39200222445697"
+    ]
+   },
+   "bbox": [
+    -53.538,
+    2.167,
+    -51.619,
+    5.562
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Cayenne"
+    ]
+   },
+   "run": {
+    "run_batch": "20261119-165853",
+    "steps": {
+     "build": 70.8,
+     "stations": 0.7,
+     "places": 1.8,
+     "routes": 11.3,
+     "merge": 0.7,
+     "nocar": 1.7,
+     "everyday": 0.8
+    },
+    "built": "2026-11-19T17:25:22",
+    "gated": "2026-11-19T19:11:10",
+    "parked": "2026-11-19T18:08:02",
+    "gate": {
+     "warn": [
+      "area_km2 42812.697987709784"
+     ]
+    },
+    "shipped": "2026-11-19T19:49:00"
+   }
+  },
+  {
+   "order": 5773,
+   "id": "sud",
+   "name": "Saint-Laurent-du-Maroni",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "GUF"
+   ],
+   "iso2": "GF",
+   "people": 127461,
+   "origin": [
+    -54.0283,
+    5.4983
+   ],
+   "tz": "America/Cayenne",
+   "utc_offset": -3,
+   "extracts": [
+    "europe/france/guyane"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GUF": [
+     "71601473B82342286862181"
+    ]
+   },
+   "bbox": [
+    -54.602,
+    2.111,
+    -53.053,
+    5.749
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Saint-Laurent-du-Maroni"
+    ],
+    "origin_was": [
+     -54.0322,
+     3.6444
+    ],
+    "origin_by_hand": "T-3762: the town the zone is named after"
+   },
+   "run": {
+    "run_batch": "20261119-165853",
+    "steps": {
+     "build": 35.1,
+     "stations": 1.0,
+     "places": 2.0,
+     "routes": 11.9,
+     "merge": 0.8,
+     "nocar": 2.2,
+     "everyday": 1.1
+    },
+    "built": "2026-11-19T17:24:22",
+    "parked": "2026-11-19T18:08:03",
+    "gated": "2026-11-19T19:11:11",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "area_km2 41280.5084074311",
+      "top_zone_jobs_share 0.22173561706305234",
+      "fleet_range 2"
+     ]
+    },
+    "shipped": "2026-11-19T19:49:01"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-3762: a one-town zone or island, its top square in the town's centre (Saint-Laurent-du-Maroni, Philipsburg, Kralendijk, Oranjestad of Sint Eustatius, Road Town, Gustavia)"
+   }
+  },
+  {
+   "order": 5774,
+   "id": "lem",
+   "name": "Les Abymes",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "GLP"
+   ],
+   "iso2": "GP",
+   "people": 375944,
+   "origin": [
+    -61.529,
+    16.2386
+   ],
+   "tz": "America/Guadeloupe",
+   "utc_offset": -4,
+   "extracts": [
+    "europe/france/guadeloupe"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GLP": [
+     "45945325B26637480893996",
+     "45945325B2435126936404",
+     "45945325B5491972235379",
+     "45945325B98680665696965",
+     "45945325B31316766535712",
+     "45945325B50163994481477",
+     "45945325B59001493068327",
+     "45945325B16192482241672",
+     "45945325B75460093077193",
+     "45945325B90407724900616",
+     "45945325B48306038355391",
+     "45945325B61969548015242",
+     "45945325B74892526941016",
+     "45945325B21329267014479",
+     "45945325B36877944825297",
+     "45945325B18257045293934",
+     "45945325B62754833680716",
+     "45945325B5127686022806",
+     "45945325B35876077277289",
+     "45945325B47736909954361",
+     "45945325B74832359483149",
+     "45945325B32399599693317",
+     "45945325B69195685482641",
+     "45945325B10716673202821",
+     "45945325B98295489226532",
+     "45945325B12596848928259",
+     "45945325B74016608888498",
+     "45945325B44853816631636",
+     "45945325B91298320499237",
+     "45945325B8612440900081",
+     "45945325B30328780688309",
+     "45945325B4110611838190"
+    ]
+   },
+   "bbox": [
+    -61.81,
+    15.832,
+    -61.002,
+    16.514
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Les Abymes",
+     "Baie-Mahault",
+     "Le Gosier",
+     "Petit-Bourg",
+     "Sainte-Anne",
+     "Sainte-Rose",
+     "Le Moule",
+     "Lamentin",
+     "Morne-à-l'Eau",
+     "Capesterre-Belle-Eau",
+     "Saint-François",
+     "Goyave",
+     "Petit-Canal",
+     "Bouillante",
+     "Basse-Terre",
+     "Saint-Claude",
+     "Pointe-Noire",
+     "Gourbeyre",
+     "Trois-Rivières",
+     "Grand-Bourg",
+     "Port-Louis",
+     "Vieux-Habitants",
+     "Anse-Bertrand",
+     "Deshaies",
+     "Pointe-à-Pitre",
+     "Baillif",
+     "Capesterre-de-Marie-Galante",
+     "Saint-Louis",
+     "Terre-de-Haut",
+     "La Désirade",
+     "Vieux-Fort",
+     "Terre-de-Bas"
+    ]
+   },
+   "run": {
+    "run_batch": "20261119-165853",
+    "steps": {
+     "build": 43.9,
+     "stations": 0.8,
+     "places": 1.7,
+     "routes": 7.5,
+     "merge": 0.6,
+     "nocar": 1.7,
+     "everyday": 0.9
+    },
+    "built": "2026-11-19T17:37:25",
+    "gated": "2026-11-19T19:11:12",
+    "parked": "2026-11-19T18:10:34",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10053504649627569"
+     ]
+    },
+    "shipped": "2026-11-19T19:49:01"
+   }
+  },
+  {
+   "order": 5775,
+   "id": "fod",
+   "name": "Fort-de-France",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MTQ"
+   ],
+   "iso2": "MQ",
+   "people": 336035,
+   "origin": [
+    -61.0883,
+    14.6064
+   ],
+   "tz": "America/Martinique",
+   "utc_offset": -4,
+   "extracts": [
+    "europe/france/martinique"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MTQ": [
+     "50071667B18462568123841",
+     "50071667B97398373358365",
+     "50071667B7921414954170",
+     "50071667B12928358099053"
+    ]
+   },
+   "bbox": [
+    -61.229,
+    14.389,
+    -60.81,
+    14.879
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Fort-de-France",
+     "Le Marin",
+     "La Trinité",
+     "Saint-Pierre"
+    ]
+   },
+   "run": {
+    "run_batch": "20261119-165853",
+    "steps": {
+     "build": 27.9,
+     "stations": 0.8,
+     "places": 1.5,
+     "routes": 6.7,
+     "merge": 0.6,
+     "nocar": 1.6,
+     "everyday": 0.7
+    },
+    "built": "2026-11-19T17:39:45",
+    "gated": "2026-11-19T19:11:12",
+    "parked": "2026-11-19T18:12:00",
+    "gate": {
+     "warn": []
+    },
+    "shipped": "2026-11-19T19:49:02"
+   }
+  },
+  {
+   "order": 5776,
+   "id": "clm",
+   "name": "Charlotte Amalie",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VIR"
+   ],
+   "iso2": "VI",
+   "people": 47488,
+   "origin": [
+    -64.9528,
+    18.3378
+   ],
+   "tz": "America/St_Thomas",
+   "utc_offset": -4,
+   "extracts": [
+    "north-america/us/us-virgin-islands"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VIR": [
+     "14107722B76650624566102",
+     "14107722B24288160029538",
+     "14107722B29975845079470",
+     "14107722B9156851144334",
+     "14107722B32705273814462",
+     "14107722B26143784528084",
+     "14107722B91101269147428",
+     "14107722B12871426157568",
+     "14107722B91344262939858"
+    ]
+   },
+   "bbox": [
+    -65.085,
+    18.274,
+    -64.686,
+    18.416
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Charlotte Amalie",
+     "Northside",
+     "East End",
+     "Tutu",
+     "Southside",
+     "Cruz Bay",
+     "West End",
+     "Coral Bay",
+     "Water Island"
+    ]
+   },
+   "run": {
+    "run_batch": "20261119-165853",
+    "steps": {
+     "build": 10.5,
+     "stations": 1.0,
+     "places": 2.2,
+     "routes": 3.3,
+     "merge": 0.6,
+     "nocar": 1.8,
+     "everyday": 0.9
+    },
+    "built": "2026-11-19T17:41:52",
+    "gate": {
+     "warn": [
+      "university_rate 0.1129",
+      "top_zone_jobs_share 0.15276602311335488",
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-11-19T17:43:30",
+    "gated": "2026-11-19T17:57:56",
+    "shipped": "2026-11-19T18:53:26"
+   },
+   "gate_relax": {
+    "university_rate": "T-3762: no national tertiary figure (Caribbean Netherlands, US Virgin Islands), campuses unscaled (Saba University School of Medicine, University of the Virgin Islands)"
+   }
+  },
+  {
+   "order": 5777,
+   "id": "sfa",
+   "name": "Sion Farm",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VIR"
+   ],
+   "iso2": "VI",
+   "people": 45441,
+   "origin": [
+    -64.703,
+    17.7466
+   ],
+   "tz": "America/St_Thomas",
+   "utc_offset": -4,
+   "extracts": [
+    "north-america/us/us-virgin-islands"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VIR": [
+     "14107722B29624786914200",
+     "14107722B28780315816844",
+     "14107722B42287109537478",
+     "14107722B85576057808906",
+     "14107722B90781227780181",
+     "14107722B43744720873682",
+     "14107722B15861276143824",
+     "14107722B79998694319746",
+     "14107722B33559227839929"
+    ]
+   },
+   "bbox": [
+    -64.904,
+    17.675,
+    -64.559,
+    17.793
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Sion Farm",
+     "Southcentral",
+     "Southwest",
+     "Northcentral",
+     "Northwest",
+     "Anna's Hope Village",
+     "Frederiksted",
+     "Christiansted",
+     "East End"
+    ],
+    "origin_was": [
+     -64.7538,
+     17.7359
+    ],
+    "origin_by_hand": "T-3762: the town the zone is named after"
+   },
+   "run": {
+    "run_batch": "20261119-165853",
+    "steps": {
+     "build": 8.2,
+     "stations": 0.9,
+     "places": 1.5,
+     "routes": 4.0,
+     "merge": 0.7,
+     "nocar": 1.7,
+     "everyday": 0.8
+    },
+    "built": "2026-11-19T17:41:48",
+    "gate": {
+     "warn": [
+      "university_rate 0.08267",
+      "top_zone_jobs_share 0.17846222139641066",
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-11-19T17:43:31",
+    "gated": "2026-11-19T17:57:57",
+    "shipped": "2026-11-19T18:53:27"
+   },
+   "gate_relax": {
+    "university_rate": "T-3762: no national tertiary figure (Caribbean Netherlands, US Virgin Islands), campuses unscaled (Saba University School of Medicine, University of the Virgin Islands)"
+   }
+  },
+  {
+   "order": 5778,
+   "id": "sgt",
+   "name": "Saint George Basseterre",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "KNA"
+   ],
+   "iso2": "KN",
+   "people": 43417,
+   "origin": [
+    -62.7273,
+    17.2994
+   ],
+   "tz": "America/St_Kitts",
+   "utc_offset": -4,
+   "extracts": [
+    "central-america"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "KNA": [
+     "52472329B55778484611891",
+     "52472329B65639645183115",
+     "52472329B22687598135129",
+     "52472329B95288510107666",
+     "52472329B19766585583682",
+     "52472329B33043462803625",
+     "52472329B57902249562742",
+     "52472329B33869241417022",
+     "52472329B72200716330993",
+     "52472329B68765441097226",
+     "52472329B16958301240037",
+     "52472329B96254136738283",
+     "52472329B35296791475509",
+     "52472329B86967002358759"
+    ]
+   },
+   "bbox": [
+    -62.864,
+    17.094,
+    -62.537,
+    17.418
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Saint George Basseterre",
+     "Saint John Capisterre",
+     "Saint George Gingerland",
+     "Saint Peter Basseterre",
+     "Saint John Figtree",
+     "Saint Mary Cayon",
+     "Christ Church Nichola Town",
+     "Saint Paul Charlestown",
+     "Saint Thomas Middle Island",
+     "Saint Thomas Lowland",
+     "Saint James Windward",
+     "Saint Anne Sandy Point",
+     "Saint Paul Capisterre",
+     "Trinity Palmetto Point"
+    ]
+   },
+   "run": {
+    "run_batch": "20261119-170021",
+    "steps": {
+     "build": 77.4,
+     "stations": 1.2,
+     "places": 1.9,
+     "routes": 8.4,
+     "merge": 0.9,
+     "nocar": 2.0,
+     "everyday": 0.9
+    },
+    "built": "2026-11-19T17:09:04",
+    "gated": "2026-11-19T19:11:13",
+    "parked": "2026-11-19T18:15:02",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.16203498595208143",
+      "fleet_range 1"
+     ]
+    },
+    "shipped": "2026-11-19T19:49:03"
+   }
+  },
+  {
+   "order": 5779,
+   "id": "sxm",
+   "name": "SXM",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "SXM"
+   ],
+   "iso2": "SX",
+   "people": 27266,
+   "origin": [
+    -63.0465,
+    18.0255
+   ],
+   "tz": "America/Lower_Princes",
+   "utc_offset": -4,
+   "extracts": [
+    "central-america"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "SXM": [
+     "SXM-ADM0"
+    ]
+   },
+   "bbox": [
+    -63.119,
+    18.019,
+    -63.018,
+    18.062
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "SXM"
+    ],
+    "origin_was": [
+     -63.0643,
+     18.0491
+    ],
+    "origin_by_hand": "T-3762: the town the zone is named after"
+   },
+   "run": {
+    "run_batch": "20261119-170021",
+    "steps": {
+     "build": 69.9,
+     "stations": 0.9,
+     "places": 1.8,
+     "routes": 14.3,
+     "merge": 0.8,
+     "nocar": 2.4,
+     "everyday": 1.0
+    },
+    "built": "2026-11-19T17:09:01",
+    "parked": "2026-11-19T18:17:33",
+    "gated": "2026-11-19T19:11:14",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.2528783262129235",
+      "mean_commute_km 2.4718621179722295",
+      "fleet_range 2"
+     ]
+    },
+    "shipped": "2026-11-19T19:49:03"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-3762: a one-town zone or island, its top square in the town's centre (Saint-Laurent-du-Maroni, Philipsburg, Kralendijk, Oranjestad of Sint Eustatius, Road Town, Gustavia)",
+    "mean_commute_km": "T-3762: an island of 23-100 km2 (Sint Maarten, Sint Eustatius and Saba, Montserrat, Saint-Barthelemy): every commute is short"
+   }
+  },
+  {
+   "order": 5780,
+   "id": "mfx",
+   "name": "MAF",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MAF"
+   ],
+   "iso2": "MF",
+   "people": 41150,
+   "origin": [
+    -63.0782,
+    18.0656
+   ],
+   "tz": "America/Marigot",
+   "utc_offset": -4,
+   "extracts": [
+    "central-america"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MAF": [
+     "MAF-ADM0"
+    ]
+   },
+   "bbox": [
+    -63.147,
+    18.033,
+    -63.011,
+    18.122
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "MAF"
+    ]
+   },
+   "run": {
+    "run_batch": "20261119-170021",
+    "steps": {
+     "build": 71.8,
+     "stations": 1.0,
+     "places": 1.7,
+     "routes": 13.2,
+     "merge": 0.8,
+     "nocar": 2.4,
+     "everyday": 1.0
+    },
+    "built": "2026-11-19T17:09:01",
+    "parked": "2026-11-19T18:18:56",
+    "gated": "2026-11-19T19:11:14",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.3657817251294712",
+      "fleet_range 3"
+     ]
+    },
+    "shipped": "2026-11-19T19:49:04"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-3762: past the table's 0.35, kept on purpose: a small island's or savanna town's one centre holds its jobs (Marigot 0.37, Brades and Little Bay on Montserrat 0.43, Lethem 0.49), top square in the town, not a GHSL blob"
+   }
+  },
+  {
+   "order": 5781,
+   "id": "bcb",
+   "name": "BES",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "BES"
+   ],
+   "iso2": "BQ",
+   "people": 17207,
+   "origin": [
+    -68.2624,
+    12.1462
+   ],
+   "tz": "America/Kralendijk",
+   "utc_offset": -4,
+   "extracts": [
+    "central-america"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "BES": [
+     "BES-ADM0"
+    ]
+   },
+   "bbox": [
+    -68.417,
+    12.022,
+    -68.19,
+    12.31
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "BES"
+    ]
+   },
+   "run": {
+    "run_batch": "20261119-170021",
+    "steps": {
+     "build": 14.8,
+     "stations": 1.1,
+     "places": 2.0,
+     "routes": 9.4,
+     "merge": 0.7,
+     "nocar": 1.8,
+     "everyday": 1.0
+    },
+    "built": "2026-11-19T17:09:35",
+    "parked": "2026-11-19T19:25:32",
+    "gated": "2026-11-19T19:54:11",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.29017230904575436",
+      "fleet_range 4"
+     ]
+    },
+    "shipped": "2026-11-19T20:21:16"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-3762: a one-town zone or island, its top square in the town's centre (Saint-Laurent-du-Maroni, Philipsburg, Kralendijk, Oranjestad of Sint Eustatius, Road Town, Gustavia)"
+   }
+  },
+  {
+   "order": 5782,
+   "id": "bcd",
+   "name": "BES",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "BES"
+   ],
+   "iso2": "BQ",
+   "people": 5390,
+   "origin": [
+    -62.9815,
+    17.4806
+   ],
+   "tz": "America/Kralendijk",
+   "utc_offset": -4,
+   "extracts": [
+    "central-america"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "BES": [
+     "BES-ADM0~1"
+    ]
+   },
+   "bbox": [
+    -63.251,
+    17.465,
+    -62.945,
+    17.647
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "BES"
+    ]
+   },
+   "run": {
+    "run_batch": "20261119-170021",
+    "steps": {
+     "build": 13.6,
+     "stations": 1.1,
+     "places": 1.8,
+     "routes": 9.3,
+     "merge": 0.7,
+     "nocar": 1.8,
+     "everyday": 0.9
+    },
+    "built": "2026-11-19T17:09:33",
+    "parked": "2026-11-19T18:20:12",
+    "gated": "2026-11-19T19:11:16",
+    "gate": {
+     "warn": [
+      "university_rate 0.37074",
+      "pop_vs_plan 1.2655836595453889",
+      "top_zone_jobs_share 0.2629622357032643",
+      "mean_commute_km 2.036128389299831",
+      "fleet_range 7"
+     ]
+    },
+    "shipped": "2026-11-19T19:49:05"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-3762: a one-town zone or island, its top square in the town's centre (Saint-Laurent-du-Maroni, Philipsburg, Kralendijk, Oranjestad of Sint Eustatius, Road Town, Gustavia)",
+    "mean_commute_km": "T-3762: an island of 23-100 km2 (Sint Maarten, Sint Eustatius and Saba, Montserrat, Saint-Barthelemy): every commute is short",
+    "university_rate": "T-3762: no national tertiary figure (Caribbean Netherlands, US Virgin Islands), campuses unscaled (Saba University School of Medicine, University of the Virgin Islands)"
+   }
+  },
+  {
+   "order": 5783,
+   "id": "mbr",
+   "name": "MSR",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "MSR"
+   ],
+   "iso2": "MS",
+   "people": 3958,
+   "origin": [
+    -62.1824,
+    16.7975
+   ],
+   "tz": "America/Montserrat",
+   "utc_offset": -4,
+   "extracts": [
+    "central-america"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "MSR": [
+     "MSR-ADM0"
+    ]
+   },
+   "bbox": [
+    -62.23,
+    16.675,
+    -62.141,
+    16.819
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "MSR"
+    ]
+   },
+   "run": {
+    "run_batch": "20261119-170021",
+    "steps": {
+     "build": 12.7,
+     "stations": 1.1,
+     "places": 1.9,
+     "routes": 9.1,
+     "merge": 0.7,
+     "nocar": 1.9,
+     "everyday": 0.8
+    },
+    "built": "2026-11-19T17:09:36",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.4280836372162397",
+      "mean_commute_km 2.3901141969602513",
+      "fleet_range 4"
+     ]
+    },
+    "parked": "2026-11-19T17:20:19",
+    "gated": "2026-11-19T17:58:00",
+    "shipped": "2026-11-19T18:53:28"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-3762: past the table's 0.35, kept on purpose: a small island's or savanna town's one centre holds its jobs (Marigot 0.37, Brades and Little Bay on Montserrat 0.43, Lethem 0.49), top square in the town, not a GHSL blob",
+    "mean_commute_km": "T-3762: an island of 23-100 km2 (Sint Maarten, Sint Eustatius and Saba, Montserrat, Saint-Barthelemy): every commute is short"
+   }
+  },
+  {
+   "order": 5784,
+   "id": "aia",
+   "name": "AIA",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AIA"
+   ],
+   "iso2": "AI",
+   "people": 11897,
+   "origin": [
+    -63.0496,
+    18.2141
+   ],
+   "tz": "America/Anguilla",
+   "utc_offset": -4,
+   "extracts": [
+    "central-america"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AIA": [
+     "AIA-ADM0"
+    ]
+   },
+   "bbox": [
+    -63.429,
+    18.169,
+    -62.926,
+    18.601
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "AIA"
+    ]
+   },
+   "run": {
+    "run_batch": "20261119-170021",
+    "steps": {
+     "build": 16.4,
+     "stations": 0.9,
+     "places": 1.5,
+     "routes": 9.1,
+     "merge": 0.8,
+     "nocar": 3.4,
+     "everyday": 0.9
+    },
+    "built": "2026-11-19T17:10:08",
+    "gated": "2026-11-19T19:11:17",
+    "parked": "2026-11-19T18:16:19",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "pop_vs_plan 1.2455139757850144",
+      "top_zone_jobs_share 0.1456176725913849",
+      "fleet_range 6"
+     ]
+    },
+    "shipped": "2026-11-19T19:49:06"
+   }
+  },
+  {
+   "order": 5785,
+   "id": "vgb",
+   "name": "VGB",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "VGB"
+   ],
+   "iso2": "VG",
+   "people": 27317,
+   "origin": [
+    -64.6235,
+    18.4286
+   ],
+   "tz": "America/Tortola",
+   "utc_offset": -4,
+   "extracts": [
+    "central-america"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "VGB": [
+     "VGB-ADM0"
+    ]
+   },
+   "bbox": [
+    -64.774,
+    18.335,
+    -64.271,
+    18.746
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "VGB"
+    ]
+   },
+   "run": {
+    "run_batch": "20261119-170021",
+    "steps": {
+     "build": 16.7,
+     "stations": 0.8,
+     "places": 1.6,
+     "routes": 10.0,
+     "merge": 1.8,
+     "nocar": 2.0,
+     "everyday": 1.0
+    },
+    "built": "2026-11-19T17:10:11",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.3229673089658001",
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-11-19T17:20:20",
+    "gated": "2026-11-19T17:58:01",
+    "shipped": "2026-11-19T18:53:28"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-3762: a one-town zone or island, its top square in the town's centre (Saint-Laurent-du-Maroni, Philipsburg, Kralendijk, Oranjestad of Sint Eustatius, Road Town, Gustavia)"
+   }
+  },
+  {
+   "order": 5786,
+   "id": "tcx",
+   "name": "TCA",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "TCA"
+   ],
+   "iso2": "TC",
+   "people": 39754,
+   "origin": [
+    -72.2687,
+    21.7922
+   ],
+   "tz": "America/Grand_Turk",
+   "utc_offset": -5,
+   "extracts": [
+    "central-america"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "TCA": [
+     "TCA-ADM0"
+    ]
+   },
+   "bbox": [
+    -72.481,
+    21.29,
+    -71.129,
+    21.959
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "TCA"
+    ]
+   },
+   "run": {
+    "run_batch": "20261119-170021",
+    "steps": {
+     "build": 17.0,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 10.5,
+     "merge": 0.9,
+     "nocar": 1.9,
+     "everyday": 0.8
+    },
+    "built": "2026-11-19T17:10:13",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.11077831223260254",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-19T17:21:34",
+    "shipped": "2026-11-19T18:53:29"
+   }
+  },
+  {
+   "order": 5787,
+   "id": "bce",
+   "name": "BLM",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "BLM"
+   ],
+   "iso2": "BL",
+   "people": 10012,
+   "origin": [
+    -62.8502,
+    17.8964
+   ],
+   "tz": "America/St_Barthelemy",
+   "utc_offset": -4,
+   "extracts": [
+    "central-america"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "BLM": [
+     "BLM-ADM0"
+    ]
+   },
+   "bbox": [
+    -62.867,
+    17.882,
+    -62.792,
+    17.929
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "BLM"
+    ],
+    "origin_was": [
+     -62.8602,
+     17.9172
+    ],
+    "origin_by_hand": "T-3762: the town the zone is named after"
+   },
+   "run": {
+    "run_batch": "20261119-170021",
+    "steps": {
+     "build": 11.9,
+     "stations": 0.8,
+     "places": 1.4,
+     "routes": 7.0,
+     "merge": 0.5,
+     "nocar": 2.0,
+     "everyday": 0.8
+    },
+    "built": "2026-11-19T17:10:34",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.2532175410372205",
+      "mean_commute_km 2.452214056268027",
+      "fleet_range 4"
+     ]
+    },
+    "parked": "2026-11-19T17:20:22",
+    "gated": "2026-11-19T17:58:02",
+    "shipped": "2026-11-19T18:53:30"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-3762: a one-town zone or island, its top square in the town's centre (Saint-Laurent-du-Maroni, Philipsburg, Kralendijk, Oranjestad of Sint Eustatius, Road Town, Gustavia)",
+    "mean_commute_km": "T-3762: an island of 23-100 km2 (Sint Maarten, Sint Eustatius and Saba, Montserrat, Saint-Barthelemy): every commute is short"
+   }
   }
  ],
  "dropped": [
@@ -427782,6 +429440,360 @@
    "dead": [],
    "merges": [
     "CYM (67,141) stays as it is: an island with no zone within reach"
+   ]
+  },
+  "GUY": {
+   "built": "2026-11-19",
+   "task": "T-3762",
+   "rule": "free units at or over 0 people a km2 (or holding 400,000) with 100,000 people within 150 km of their centre (T-1191), grouped in their region until each zone holds 500,000 (or 100,000 over 100,000 km2): under 100,000 into the zone it travels with most, then a neighbour keeping both within 1,500,000 that is a travel partner (50% of its biggest partner's travel), else one making a compact zone (75% of its convex hull, or within 0.05 of the bigger part's) unless both hold an urban centre of 100,000 (T-1191), never between people centres over 150 km apart, partners first, each by nearest people centre, whose union wraps no zone, metro or pack (T-1140, T-1087); under 400,000 another region's passing neighbour when its own region has none; nothing passing, it stays; islands the most populous zone within 150 km (10 km from 100,000); then each zone still wrapping one cut across it and its halves regrouped; travel by gravity on GHSL people (20 km cells, within 200 km)",
+   "kept": [],
+   "dead": [
+    {
+     "unit": "73187651B60550575754674",
+     "name": "I-1  Barima",
+     "people": 21215,
+     "within_reach": 87654
+    },
+    {
+     "unit": "73187651B99697298922199",
+     "name": "VII-1  Cuyuni",
+     "people": 4984,
+     "within_reach": 73223
+    },
+    {
+     "unit": "73187651B19999842805850",
+     "name": "VIII-2 Lower Potaro/Ladsm",
+     "people": 6022,
+     "within_reach": 90764
+    },
+    {
+     "unit": "73187651B95779409673376",
+     "name": "VIII-1 Ireng/Upper Potaro",
+     "people": 5742,
+     "within_reach": 62993
+    },
+    {
+     "unit": "73187651B68809145182680",
+     "name": "IX-2 Rewa(Illiwa)/U.E",
+     "people": 3399,
+     "within_reach": 46690
+    },
+    {
+     "unit": "73187651B49855956252830",
+     "name": "VI-7 Upper Corentyne",
+     "people": 978,
+     "within_reach": 1645
+    }
+   ],
+   "merges": [
+    "VI-5 Left Bank Upper Canj (14) joins VI-4 Lower Corentyne Rive (biggest partner that wraps nothing, shared border 45 km)",
+    "III-1 Essequibo Islands (837) joins Essequibo I./L.B.E.River (biggest partner, shared border 16 km)",
+    "Essequibo I./L.B.E.River (7,323) joins III-2 Bonasika/Boerasirie (biggest partner, shared border 5 km)",
+    "VI-6 Upper Canje/Corentyn (8,008) joins VI-4 Lower Corentyne Rive (biggest partner, shared border 187 km)",
+    "X-2 Torani/Bulletwood (8,143) joins X-1 Right Bank Essequibo (biggest partner, shared border 215 km)",
+    "I-2  Waini (9,868) joins II-1 Moruka/Pomeroon (biggest partner, shared border 106 km, another region)",
+    "V-1  Mahaica/Mahaicony (11,273) joins V-2 Mahaicony/Berbice (biggest partner, shared border 87 km)",
+    "VI-4 Lower Corentyne Rive (16,064) joins VI-3 Black Bush Polder (biggest partner, shared border 34 km)",
+    "VI-1 East Berbice/W.Canje (20,850) joins VI-2  East Canje/E.C.Berb (biggest partner, shared border 46 km)",
+    "VII-2 Mazaruni/L.B.E.Rive (22,093) joins III-2 Bonasika/Boerasirie (biggest partner, shared border 1 km, another region)",
+    "II-1 Moruka/Pomeroon (23,905) joins II-2 Somerset And Berks (biggest partner, shared border 90 km)",
+    "IX-1 Rupununi West (33,699) stays as it is: no zone beside it",
+    "VI-3 Black Bush Polder (38,047) joins VI-2  East Canje/E.C.Berb (biggest partner, shared border 92 km)",
+    "X-1 Right Bank Essequibo (42,401) joins V-2 Mahaicony/Berbice (biggest partner that wraps nothing, shared border 73 km, another region)",
+    "II-2 Somerset And Berks (61,905) joins III-2 Bonasika/Boerasirie (biggest partner, shared border 65 km, another region)",
+    "IV-2 Buxton/Mahaica (67,883) joins IV-1 Moblissa/La Reconnai (biggest partner, shared border 111 km)",
+    "III-3 Lower West Demerara (77,015) joins III-2 Bonasika/Boerasirie (biggest partner, shared border 81 km)",
+    "VI-2  East Canje/E.C.Berb (96,542) joins V-2 Mahaicony/Berbice (biggest partner, shared border 255 km, another region)",
+    "V-2 Mahaicony/Berbice (205,154) joins IV-1 Moblissa/La Reconnai (nearest centre, partner 1.00, another region)",
+    "III-2 Bonasika/Boerasirie (221,006) joins IV-1 Moblissa/La Reconnai (nearest centre, partner 1.00, another region)",
+    "IX-1 Rupununi West: cut in pieces by a pack, which only a regroup of its zone mends (T-3012)",
+    "IX-1 Rupununi West: 33,699 people, under 50,000 but with no land neighbour in its region but dead space, kept (T-1999)"
+   ]
+  },
+  "SUR": {
+   "built": "2026-11-19",
+   "task": "T-3762",
+   "rule": "free units at or over 0 people a km2 (or holding 400,000) with 100,000 people within 150 km of their centre (T-1191), grouped in their region until each zone holds 500,000 (or 100,000 over 100,000 km2): under 100,000 into the zone it travels with most, then a neighbour keeping both within 1,500,000 that is a travel partner (50% of its biggest partner's travel), else one making a compact zone (75% of its convex hull, or within 0.05 of the bigger part's) unless both hold an urban centre of 100,000 (T-1191), never between people centres over 150 km apart, partners first, each by nearest people centre, whose union wraps no zone, metro or pack (T-1140, T-1087); under 400,000 another region's passing neighbour when its own region has none; nothing passing, it stays; islands the most populous zone within 150 km (10 km from 100,000); then each zone still wrapping one cut across it and its halves regrouped; travel by gravity on GHSL people (20 km cells, within 200 km)",
+   "kept": [],
+   "dead": [
+    {
+     "unit": "93550828B83086528091097",
+     "name": "Sipaliwini",
+     "people": 38941,
+     "within_reach": 23285
+    }
+   ],
+   "merges": [
+    "Johanna Maria (150) joins Totness (biggest partner, shared border 70 km)",
+    "Kwakoegron (392) joins Klaaskreek (biggest partner, shared border 16 km)",
+    "Totness (424) joins Welgelegen (biggest partner, shared border 65 km)",
+    "Patamacca (496) joins Moengo (biggest partner, shared border 36 km)",
+    "Wanhatti (527) joins Moengotapoe (biggest partner that wraps nothing, shared border 11 km)",
+    "Calcutta (599) joins Tijgerkreek (biggest partner, shared border 33 km)",
+    "Galibi (620) joins Albina (biggest partner that wraps nothing, shared border 30 km)",
+    "Marshallkreek (666) joins Klaaskreek (biggest partner, shared border 47 km)",
+    "Bigi Poika (816) joins Zuid (biggest partner, shared border 39 km)",
+    "Moengotapoe (1,181) joins Moengo (biggest partner, shared border 100 km)",
+    "Nieuw Nickerie (1,226) joins Oostelijke Polders (biggest partner, shared border 15 km)",
+    "BrownSweg (1,229) joins Centrum (biggest partner, shared border 22 km)",
+    "Kampong Baroe (1,849) joins Jarikaba (biggest partner, shared border 21 km)",
+    "Wageningen (2,357) joins Oostelijke Polders (biggest partner, shared border 7 km)",
+    "Sarakreet (2,450) joins Centrum (biggest partner, shared border 85 km)",
+    "Wayamboweg (2,672) joins Kwatta (biggest partner, shared border 19 km)",
+    "Groningen (2,763) joins Kwatta (biggest partner, shared border 13 km)",
+    "Tijgerkreek (2,810) joins Kwatta (biggest partner, shared border 66 km)",
+    "Groot Henar (3,043) joins Oostelijke Polders (biggest partner, shared border 135 km)",
+    "Bakkie (3,098) joins Almaar (biggest partner, shared border 13 km)",
+    "Klaaskreek (3,886) joins Centrum (biggest partner, shared border 98 km)",
+    "Margaretha (4,629) joins Almaar (biggest partner, shared border 30 km)",
+    "Munder (5,294) joins Rainville (biggest partner, shared border 9 km)",
+    "Albina (5,564) joins Moengo (biggest partner, shared border 121 km)",
+    "Pontibuiten (5,882) joins Houttuin (biggest partner that wraps nothing, shared border 2 km)",
+    "Flora (5,959) joins Saramacca Polder (biggest partner, shared border 7 km)",
+    "Jarikaba (6,231) joins Kwatta (biggest partner, shared border 97 km)",
+    "Domburg (6,427) joins Houttuin (biggest partner, shared border 17 km)",
+    "Carolina (6,584) joins Oost (biggest partner, shared border 21 km)",
+    "Noord (8,567) joins Oost (biggest partner, shared border 10 km)",
+    "Weg Naar See (8,588) joins Saramacca Polder (biggest partner, shared border 6 km)",
+    "Zuid (9,005) joins Oost (biggest partner, shared border 68 km)",
+    "Westelijke Polders (9,273) joins Oostelijke Polders (biggest partner, shared border 101 km)",
+    "Tamanredjo (10,739) joins Meerzorg (biggest partner, shared border 44 km)",
+    "Centrum (11,791) joins Oost (biggest partner, shared border 167 km, another region)",
+    "Almaar (14,887) joins Meerzorg (biggest partner, shared border 65 km)",
+    "Welgelegen (15,415) joins Oostelijke Polders (biggest partner, shared border 128 km, another region)",
+    "Nieuw Amsterdam (16,602) joins Blauwgrond (biggest partner, shared border 7 km)",
+    "Moengo (18,654) joins Meerzorg (biggest partner, shared border 88 km, another region)",
+    "Lelydorp (22,435) joins De Nieuwe Grond (biggest partner that wraps nothing, shared border 10 km)",
+    "Beekhuizen (25,387) joins Centrum (biggest partner, shared border 6 km)",
+    "Koewarasan (30,463) joins Saramacca Polder (biggest partner, shared border 14 km)",
+    "Livornio (31,477) joins Centrum (biggest partner, shared border 5 km)",
+    "Kwatta (33,527) joins Saramacca Polder (biggest partner, shared border 53 km, another region)",
+    "De Nieuwe Grond (46,925) joins Saramacca Polder (biggest partner, shared border 37 km)",
+    "Houttuin (47,108) joins Saramacca Polder (biggest partner, shared border 39 km)",
+    "Oostelijke Polders (47,438) joins Saramacca Polder (biggest partner, shared border 44 km, another region)",
+    "Oost (50,798) joins Saramacca Polder (biggest partner, shared border 189 km, another region)",
+    "Rainville (51,438) joins Centrum (biggest partner, shared border 9 km)",
+    "Blauwgrond (57,804) joins Centrum (biggest partner, shared border 15 km)",
+    "Meerzorg (78,411) joins Centrum (biggest partner, shared border 56 km, another region)",
+    "Centrum (278,637) joins Saramacca Polder (nearest centre, partner 1.00, another region)"
+   ]
+  },
+  "GUF": {
+   "built": "2026-11-19",
+   "task": "T-3762",
+   "rule": "free units at or over 0 people a km2 (or holding 400,000) with 100,000 people within 150 km of their centre (T-1191), grouped in their region until each zone holds 500,000 (or 100,000 over 100,000 km2): under 100,000 into the zone it travels with most, then a neighbour keeping both within 1,500,000 that is a travel partner (50% of its biggest partner's travel), else one making a compact zone (75% of its convex hull, or within 0.05 of the bigger part's) unless both hold an urban centre of 100,000 (T-1191), never between people centres over 150 km apart, partners first, each by nearest people centre, whose union wraps no zone, metro or pack (T-1140, T-1087); under 400,000 another region's passing neighbour when its own region has none; nothing passing, it stays; islands the most populous zone within 150 km (10 km from 100,000); then each zone still wrapping one cut across it and its halves regrouped; travel by gravity on GHSL people (20 km cells, within 200 km)",
+   "kept": [],
+   "dead": [],
+   "merges": [
+    "Saint-Laurent-du-Maroni (127,461) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Cayenne (191,679) stays as it is: no neighbour is a partner or makes a compact zone"
+   ]
+  },
+  "GLP": {
+   "built": "2026-11-19",
+   "task": "T-3762",
+   "rule": "free units at or over 20 people a km2 (or holding 400,000), grouped in their region until each zone holds 500,000 (or 100,000 over 100,000 km2): under 100,000 into the zone it travels with most, then a neighbour keeping both within 1,500,000 that is a travel partner (50% of its biggest partner's travel), else one making a compact zone (75% of its convex hull, or within 0.05 of the bigger part's) unless both hold an urban centre of 100,000 (T-1191), partners first, each by nearest people centre, whose union wraps no zone, metro or pack (T-1140, T-1087); under 400,000 another region's passing neighbour when its own region has none; nothing passing, it stays; islands the most populous zone within 150 km (10 km from 100,000); then each zone still wrapping one cut across it and its halves regrouped; travel by gravity on GHSL people (20 km cells, within 200 km)",
+   "kept": [],
+   "dead": [],
+   "merges": [
+    "Terre-de-Bas (405) joins Terre-de-Haut (biggest partner, shared border 0 km)",
+    "Vieux-Fort (1,082) joins Gourbeyre (biggest partner, shared border 5 km)",
+    "La Désirade (1,273) joins Saint-François (across water, 9 km)",
+    "Terre-de-Haut (1,983) stays as it is: an island with no zone within reach",
+    "Saint-Louis (2,455) joins Grand-Bourg (biggest partner, shared border 8 km)",
+    "Capesterre-de-Marie-Galante (2,824) joins Grand-Bourg (biggest partner, shared border 19 km)",
+    "Baillif (3,665) joins Basse-Terre (biggest partner, shared border 3 km)",
+    "Pointe-à-Pitre (3,829) joins Les Abymes (biggest partner, shared border 9 km)",
+    "Deshaies (4,307) joins Sainte-Rose (biggest partner, shared border 12 km)",
+    "Anse-Bertrand (4,345) joins Port-Louis (biggest partner, shared border 17 km)",
+    "Vieux-Habitants (4,437) joins Basse-Terre (biggest partner, shared border 12 km)",
+    "Trois-Rivières (5,611) joins Gourbeyre (biggest partner, shared border 17 km)",
+    "Pointe-Noire (6,687) joins Sainte-Rose (biggest partner, shared border 15 km)",
+    "Saint-Claude (6,711) joins Basse-Terre (biggest partner, shared border 21 km)",
+    "Bouillante (7,235) joins Basse-Terre (biggest partner, shared border 9 km)",
+    "Petit-Canal (7,905) joins Morne-à-l'Eau (biggest partner, shared border 11 km)",
+    "Port-Louis (9,119) joins Morne-à-l'Eau (biggest partner, shared border 27 km)",
+    "Goyave (9,133) joins Petit-Bourg (biggest partner, shared border 14 km)",
+    "Grand-Bourg (10,084) joins Terre-de-Haut (archipelago, 24 km)",
+    "Gourbeyre (13,352) joins Basse-Terre (biggest partner, shared border 21 km)",
+    "Saint-François (16,872) joins Sainte-Anne (biggest partner, shared border 8 km)",
+    "Capesterre-Belle-Eau (16,935) joins Basse-Terre (biggest partner, shared border 29 km)",
+    "Lamentin (17,798) joins Baie-Mahault (biggest partner, shared border 12 km)",
+    "Le Moule (21,002) joins Sainte-Anne (biggest partner, shared border 28 km)",
+    "Le Gosier (28,882) joins Les Abymes (biggest partner, shared border 14 km)",
+    "Sainte-Rose (32,748) joins Baie-Mahault (biggest partner, shared border 31 km)",
+    "Petit-Bourg (33,467) joins Baie-Mahault (biggest partner, shared border 24 km)",
+    "Morne-à-l'Eau (34,042) joins Les Abymes (biggest partner, shared border 12 km)",
+    "Basse-Terre (59,431) joins Baie-Mahault (biggest partner, shared border 39 km)",
+    "Sainte-Anne (59,914) joins Les Abymes (biggest partner, shared border 45 km)",
+    "Baie-Mahault (176,621) joins Les Abymes (nearest centre, partner 1.00)",
+    "Les Abymes (363,876) joins Terre-de-Haut (archipelago, 10 km)"
+   ]
+  },
+  "MTQ": {
+   "built": "2026-11-19",
+   "task": "T-3762",
+   "rule": "free units at or over 20 people a km2 (or holding 400,000), grouped in their region until each zone holds 500,000 (or 100,000 over 100,000 km2): under 100,000 into the zone it travels with most, then a neighbour keeping both within 1,500,000 that is a travel partner (50% of its biggest partner's travel), else one making a compact zone (75% of its convex hull, or within 0.05 of the bigger part's) unless both hold an urban centre of 100,000 (T-1191), partners first, each by nearest people centre, whose union wraps no zone, metro or pack (T-1140, T-1087); under 400,000 another region's passing neighbour when its own region has none; nothing passing, it stays; islands the most populous zone within 150 km (10 km from 100,000); then each zone still wrapping one cut across it and its halves regrouped; travel by gravity on GHSL people (20 km cells, within 200 km)",
+   "kept": [],
+   "dead": [],
+   "merges": [
+    "Saint-Pierre (20,749) joins Fort-de-France (biggest partner, shared border 18 km)",
+    "La Trinité (67,193) joins Fort-de-France (biggest partner, shared border 49 km)",
+    "Le Marin (114,311) joins Fort-de-France (nearest centre, partner 1.00)",
+    "Fort-de-France (336,035) stays as it is: an island with no zone within reach"
+   ]
+  },
+  "VIR": {
+   "built": "2026-11-19",
+   "task": "T-3762",
+   "rule": "free units at or over 20 people a km2 (or holding 400,000), grouped in their region until each zone holds 500,000 (or 100,000 over 100,000 km2): under 100,000 into the zone it travels with most, then a neighbour keeping both within 1,500,000 that is a travel partner (50% of its biggest partner's travel), else one making a compact zone (75% of its convex hull, or within 0.05 of the bigger part's) unless both hold an urban centre of 100,000 (T-1191), partners first, each by nearest people centre, whose union wraps no zone, metro or pack (T-1140, T-1087); under 400,000 another region's passing neighbour when its own region has none; nothing passing, it stays; islands the most populous zone within 150 km (10 km from 100,000); then each zone still wrapping one cut across it and its halves regrouped; travel by gravity on GHSL people (20 km cells, within 200 km)",
+   "kept": [],
+   "dead": [
+    {
+     "unit": "14107722B57080281041215",
+     "name": "Central",
+     "people": 650,
+     "per_km2": 19.3
+    },
+    {
+     "unit": "14107722B55601588722947",
+     "name": "East End",
+     "people": 23,
+     "per_km2": 9.5
+    }
+   ],
+   "merges": [
+    "Water Island (112) joins Charlotte Amalie (biggest partner, shared border 4 km)",
+    "Coral Bay (537) joins Cruz Bay (across water, 3 km)",
+    "East End (2,006) joins Christiansted (biggest partner that wraps nothing, shared border 2 km)",
+    "West End (2,109) joins Charlotte Amalie (biggest partner, shared border 1 km)",
+    "Frederiksted (2,244) joins Southwest (biggest partner, shared border 5 km)",
+    "Cruz Bay (2,851) joins East End (across water, 3 km)",
+    "Southside (3,835) joins Charlotte Amalie (biggest partner, shared border 5 km)",
+    "Anna's Hope Village (3,993) joins Sion Farm (biggest partner, shared border 5 km)",
+    "Christiansted (4,186) joins Sion Farm (biggest partner, shared border 16 km)",
+    "Northwest (4,492) joins Southwest (biggest partner, shared border 11 km)",
+    "Northcentral (4,551) joins Sion Farm (biggest partner, shared border 9 km)",
+    "Tutu (7,195) joins East End (biggest partner that wraps nothing, shared border 6 km)",
+    "Southcentral (8,512) joins Southwest (biggest partner that wraps nothing, shared border 9 km)",
+    "Northside (9,566) joins Charlotte Amalie (biggest partner, shared border 20 km)",
+    "East End (17,950) joins Charlotte Amalie (biggest partner, shared border 17 km)",
+    "Southwest (22,304) joins Sion Farm (biggest partner, shared border 41 km)",
+    "Sion Farm (45,441) stays as it is: an island with no zone within reach",
+    "Charlotte Amalie (47,488) stays as it is: no zone beside it",
+    "Charlotte Amalie: 47,488 people, under 50,000 but with no land neighbour in its region but dead space, kept (T-1999)",
+    "Sion Farm: 45,441 people, under 50,000 but with no land neighbour in its region but dead space, kept (T-1999)"
+   ]
+  },
+  "KNA": {
+   "built": "2026-11-19",
+   "task": "T-3762",
+   "rule": "free units at or over 20 people a km2 (or holding 400,000), grouped in their region until each zone holds 500,000 (or 100,000 over 100,000 km2): under 100,000 into the zone it travels with most, then a neighbour keeping both within 1,500,000 that is a travel partner (50% of its biggest partner's travel), else one making a compact zone (75% of its convex hull, or within 0.05 of the bigger part's) unless both hold an urban centre of 100,000 (T-1191), partners first, each by nearest people centre, whose union wraps no zone, metro or pack (T-1140, T-1087); under 400,000 another region's passing neighbour when its own region has none; nothing passing, it stays; islands the most populous zone within 150 km (10 km from 100,000); then each zone still wrapping one cut across it and its halves regrouped; travel by gravity on GHSL people (20 km cells, within 200 km)",
+   "kept": [],
+   "dead": [],
+   "merges": [
+    "Trinity Palmetto Point (1,360) joins Saint George Basseterre (biggest partner, shared border 7 km)",
+    "Saint Paul Capisterre (1,436) joins Saint John Capisterre (biggest partner, shared border 8 km)",
+    "Saint Anne Sandy Point (1,908) joins Saint John Capisterre (biggest partner, shared border 12 km)",
+    "Saint James Windward (2,105) joins Saint George Gingerland (biggest partner, shared border 19 km)",
+    "Saint Thomas Lowland (2,267) joins Saint George Gingerland (biggest partner, shared border 10 km)",
+    "Saint Thomas Middle Island (2,284) joins Saint George Basseterre (biggest partner, shared border 6 km)",
+    "Saint Paul Charlestown (2,313) joins Saint John Figtree (biggest partner that wraps nothing, shared border 8 km)",
+    "Christ Church Nichola Town (2,579) joins Saint John Capisterre (biggest partner that wraps nothing, shared border 8 km)",
+    "Saint Mary Cayon (2,782) joins Saint John Capisterre (biggest partner that wraps nothing, shared border 8 km)",
+    "Saint Peter Basseterre (3,339) joins Saint George Basseterre (biggest partner, shared border 20 km)",
+    "Saint John Figtree (5,190) joins Saint George Gingerland (biggest partner, shared border 31 km)",
+    "Saint John Capisterre (12,384) joins Saint George Basseterre (biggest partner, shared border 37 km)",
+    "Saint George Gingerland (13,009) joins Saint George Basseterre (across water, 3 km)",
+    "Saint George Basseterre (43,417) stays as it is: an island with no zone within reach",
+    "Saint George Basseterre: 43,417 people, under 50,000 but with no land neighbour in its region but dead space, kept (T-1999)"
+   ]
+  },
+  "SXM": {
+   "built": "2026-11-19",
+   "task": "T-3762",
+   "rule": "free units at or over 20 people a km2 (or holding 400,000), grouped in their region until each zone holds 500,000 (or 100,000 over 100,000 km2): under 100,000 into the zone it travels with most, then a neighbour keeping both within 1,500,000 that is a travel partner (50% of its biggest partner's travel), else one making a compact zone (75% of its convex hull, or within 0.05 of the bigger part's) unless both hold an urban centre of 100,000 (T-1191), partners first, each by nearest people centre, whose union wraps no zone, metro or pack (T-1140, T-1087); under 400,000 another region's passing neighbour when its own region has none; nothing passing, it stays; islands the most populous zone within 150 km (10 km from 100,000); then each zone still wrapping one cut across it and its halves regrouped; travel by gravity on GHSL people (20 km cells, within 200 km)",
+   "kept": [],
+   "dead": [],
+   "merges": [
+    "SXM (27,266) stays as it is: an island with no zone within reach",
+    "SXM: 27,266 people, under 50,000 but with no land neighbour in its region but dead space, kept (T-1999)"
+   ]
+  },
+  "MAF": {
+   "built": "2026-11-19",
+   "task": "T-3762",
+   "rule": "free units at or over 20 people a km2 (or holding 400,000), grouped in their region until each zone holds 500,000 (or 100,000 over 100,000 km2): under 100,000 into the zone it travels with most, then a neighbour keeping both within 1,500,000 that is a travel partner (50% of its biggest partner's travel), else one making a compact zone (75% of its convex hull, or within 0.05 of the bigger part's) unless both hold an urban centre of 100,000 (T-1191), partners first, each by nearest people centre, whose union wraps no zone, metro or pack (T-1140, T-1087); under 400,000 another region's passing neighbour when its own region has none; nothing passing, it stays; islands the most populous zone within 150 km (10 km from 100,000); then each zone still wrapping one cut across it and its halves regrouped; travel by gravity on GHSL people (20 km cells, within 200 km)",
+   "kept": [],
+   "dead": [],
+   "merges": [
+    "MAF (41,150) stays as it is: an island with no zone within reach",
+    "MAF: 41,150 people, under 50,000 but with no land neighbour in its region but dead space, kept (T-1999)"
+   ]
+  },
+  "BES": {
+   "built": "2026-11-19",
+   "task": "T-3762",
+   "rule": "free units at or over 20 people a km2 (or holding 400,000), grouped in their region until each zone holds 500,000 (or 100,000 over 100,000 km2): under 100,000 into the zone it travels with most, then a neighbour keeping both within 1,500,000 that is a travel partner (50% of its biggest partner's travel), else one making a compact zone (75% of its convex hull, or within 0.05 of the bigger part's) unless both hold an urban centre of 100,000 (T-1191), partners first, each by nearest people centre, whose union wraps no zone, metro or pack (T-1140, T-1087); under 400,000 another region's passing neighbour when its own region has none; nothing passing, it stays; islands the most populous zone within 150 km (10 km from 100,000); then each zone still wrapping one cut across it and its halves regrouped; travel by gravity on GHSL people (20 km cells, within 200 km)",
+   "kept": [],
+   "dead": [],
+   "merges": [
+    "BES (5,390) stays as it is: an island with no zone within reach",
+    "BES (17,207) stays as it is: an island with no zone within reach"
+   ]
+  },
+  "MSR": {
+   "built": "2026-11-19",
+   "task": "T-3762",
+   "rule": "free units at or over 0 people a km2 (or holding 400,000), grouped in their region until each zone holds 500,000 (or 100,000 over 100,000 km2): under 100,000 into the zone it travels with most, then a neighbour keeping both within 1,500,000 that is a travel partner (50% of its biggest partner's travel), else one making a compact zone (75% of its convex hull, or within 0.05 of the bigger part's) unless both hold an urban centre of 100,000 (T-1191), partners first, each by nearest people centre, whose union wraps no zone, metro or pack (T-1140, T-1087); under 400,000 another region's passing neighbour when its own region has none; nothing passing, it stays; islands the most populous zone within 150 km (10 km from 100,000); then each zone still wrapping one cut across it and its halves regrouped; travel by gravity on GHSL people (20 km cells, within 200 km)",
+   "kept": [],
+   "dead": [],
+   "merges": [
+    "MSR (3,958) stays as it is: an island with no zone within reach"
+   ]
+  },
+  "AIA": {
+   "built": "2026-11-19",
+   "task": "T-3762",
+   "rule": "free units at or over 20 people a km2 (or holding 400,000), grouped in their region until each zone holds 500,000 (or 100,000 over 100,000 km2): under 100,000 into the zone it travels with most, then a neighbour keeping both within 1,500,000 that is a travel partner (50% of its biggest partner's travel), else one making a compact zone (75% of its convex hull, or within 0.05 of the bigger part's) unless both hold an urban centre of 100,000 (T-1191), partners first, each by nearest people centre, whose union wraps no zone, metro or pack (T-1140, T-1087); under 400,000 another region's passing neighbour when its own region has none; nothing passing, it stays; islands the most populous zone within 150 km (10 km from 100,000); then each zone still wrapping one cut across it and its halves regrouped; travel by gravity on GHSL people (20 km cells, within 200 km)",
+   "kept": [],
+   "dead": [],
+   "merges": [
+    "AIA (11,897) stays as it is: an island with no zone within reach",
+    "AIA: 11,897 people, under 50,000 but with no land neighbour in its region but dead space, kept (T-1999)"
+   ]
+  },
+  "VGB": {
+   "built": "2026-11-19",
+   "task": "T-3762",
+   "rule": "free units at or over 20 people a km2 (or holding 400,000), grouped in their region until each zone holds 500,000 (or 100,000 over 100,000 km2): under 100,000 into the zone it travels with most, then a neighbour keeping both within 1,500,000 that is a travel partner (50% of its biggest partner's travel), else one making a compact zone (75% of its convex hull, or within 0.05 of the bigger part's) unless both hold an urban centre of 100,000 (T-1191), partners first, each by nearest people centre, whose union wraps no zone, metro or pack (T-1140, T-1087); under 400,000 another region's passing neighbour when its own region has none; nothing passing, it stays; islands the most populous zone within 150 km (10 km from 100,000); then each zone still wrapping one cut across it and its halves regrouped; travel by gravity on GHSL people (20 km cells, within 200 km)",
+   "kept": [],
+   "dead": [],
+   "merges": [
+    "VGB (27,317) stays as it is: an island with no zone within reach",
+    "VGB: 27,317 people, under 50,000 but with no land neighbour in its region but dead space, kept (T-1999)"
+   ]
+  },
+  "TCA": {
+   "built": "2026-11-19",
+   "task": "T-3762",
+   "rule": "free units at or over 20 people a km2 (or holding 400,000), grouped in their region until each zone holds 500,000 (or 100,000 over 100,000 km2): under 100,000 into the zone it travels with most, then a neighbour keeping both within 1,500,000 that is a travel partner (50% of its biggest partner's travel), else one making a compact zone (75% of its convex hull, or within 0.05 of the bigger part's) unless both hold an urban centre of 100,000 (T-1191), partners first, each by nearest people centre, whose union wraps no zone, metro or pack (T-1140, T-1087); under 400,000 another region's passing neighbour when its own region has none; nothing passing, it stays; islands the most populous zone within 150 km (10 km from 100,000); then each zone still wrapping one cut across it and its halves regrouped; travel by gravity on GHSL people (20 km cells, within 200 km)",
+   "kept": [],
+   "dead": [],
+   "merges": [
+    "TCA (39,754) stays as it is: an island with no zone within reach",
+    "TCA: 39,754 people, under 50,000 but with no land neighbour in its region but dead space, kept (T-1999)"
+   ]
+  },
+  "BLM": {
+   "built": "2026-11-19",
+   "task": "T-3762",
+   "rule": "free units at or over 20 people a km2 (or holding 400,000), grouped in their region until each zone holds 500,000 (or 100,000 over 100,000 km2): under 100,000 into the zone it travels with most, then a neighbour keeping both within 1,500,000 that is a travel partner (50% of its biggest partner's travel), else one making a compact zone (75% of its convex hull, or within 0.05 of the bigger part's) unless both hold an urban centre of 100,000 (T-1191), partners first, each by nearest people centre, whose union wraps no zone, metro or pack (T-1140, T-1087); under 400,000 another region's passing neighbour when its own region has none; nothing passing, it stays; islands the most populous zone within 150 km (10 km from 100,000); then each zone still wrapping one cut across it and its halves regrouped; travel by gravity on GHSL people (20 km cells, within 200 km)",
+   "kept": [],
+   "dead": [],
+   "merges": [
+    "BLM (10,012) stays as it is: an island with no zone within reach",
+    "BLM: 10,012 people, under 50,000 but with no land neighbour in its region but dead space, kept (T-1999)"
    ]
   }
  }

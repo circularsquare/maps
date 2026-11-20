@@ -1,8 +1,8 @@
 {
   "realms": [
     { "id": "uk-ie", "name": "UK and Ireland", "countries": ["GB", "IE", "IM", "JE", "GG"] },
-    { "id": "france", "name": "France", "countries": ["FR", "MC", "AD"] },
-    { "id": "benelux", "name": "Benelux", "countries": ["BE", "NL", "LU"] },
+    { "id": "france", "name": "France", "countries": ["MC", "AD"], "units": { "FR": "*" } },
+    { "id": "benelux", "name": "Benelux", "countries": ["BE", "LU"], "units": { "NL": "*" } },
     { "id": "germany", "name": "Germany", "countries": ["DE"] },
     { "id": "ch-at", "name": "Switzerland and Austria", "countries": ["CH", "AT", "LI"] },
     { "id": "italy", "name": "Italy", "countries": ["IT", "MT", "SM", "VA"] },
@@ -88,7 +88,10 @@
     { "id": "venezuela", "name": "Venezuela", "countries": ["VE"] },
     { "id": "cuba", "name": "Cuba", "countries": ["CU"] },
     { "id": "hispaniola", "name": "Hispaniola", "countries": ["DO", "HT"] },
-    { "id": "caribbean", "name": "Caribbean", "countries": ["JM", "TT", "BS", "BB", "LC", "CW", "GD", "VC", "AW", "AG", "DM", "KY"] },
+    { "id": "caribbean", "name": "Caribbean", "countries": ["JM", "TT", "BS", "BB", "LC", "CW", "GD", "VC", "AW", "AG", "DM", "KY",
+      "VI", "VG", "AI", "SX", "MF", "BL", "KN", "MS", "TC"],
+      "units": { "FR": ["Guadeloupe", "Martinique"], "NL": ["Caribbean Netherlands"] } },
+    { "id": "guianas", "name": "Guianas", "countries": ["GY", "SR"], "units": { "FR": ["Guyane"] } },
     { "id": "bolivia", "name": "Bolivia", "countries": ["BO"] },
     { "id": "paraguay", "name": "Paraguay", "countries": ["PY"] }
   ]

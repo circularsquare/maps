@@ -120,7 +120,7 @@ def plan_units(row, sources):
             have = [(f["properties"]["ITL325CD"], f["properties"]["ITL325NM"], wp.to_moll(shape(f["geometry"])))
                     for f in gj["features"]]
         else:  # the territory whole (Hong Kong, Macau)
-            have = [(f"{iso}-ADM0", iso, g) for i, g in wp.countries() if i == iso]
+            have = wp.territory_units(iso)
         got = [(uid, name, wp.polygonal(wp.to_ll(g)), src["kind"]) for uid, name, g in have if uid in want]
         missing = want - {u[0] for u in got}
         if missing:
@@ -531,6 +531,7 @@ def foreign_land(own, bounds):
         df = pyogrio.read_dataframe(f"zip://{wp.NE}!ne_10m_admin_0_countries.shp", columns=["ISO_A3_EH", "ADM0_A3"])
         _NE_COUNTRIES.extend((wp.NE_FIX.get(adm, wp.NE_FIX.get(code, code)), make_valid(g)) for code, adm, g in
                              zip(df["ISO_A3_EH"], df["ADM0_A3"], df.geometry))
+    own = set(own) | {wp.NE_INSIDE[c][0] for c in own if c in wp.NE_INSIDE}  # Guadeloupe's land is France's there (T-3762)
     box = shapely.box(*bounds)
     parts = [shapely.clip_by_rect(g, *bounds) for cc, g in _NE_COUNTRIES if cc not in own and g.intersects(box)]
     return union_all(parts) if parts else shapely.Polygon()
