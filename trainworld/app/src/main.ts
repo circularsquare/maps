@@ -627,6 +627,13 @@ if (!SYNTH && !perfOff("hover")) // ?perfOff=hover: T-045 measurement only
       return;
     }
     if (tool.peek() === "blueprint" || tool.peek() === "fares") return;
+    if (tool.peek() === "track") {
+      tools.move(e);
+      // T-3897: a blueprint point drags with the track tool too
+      const c = nodeDrag.hit(e.point.x, e.point.y)?.movable ? "grab" : "crosshair";
+      if (map.getCanvas().style.cursor !== c) map.getCanvas().style.cursor = c;
+      return;
+    }
     if (tool.peek() !== "select") return tools.move(e);
     // a blueprint point drags even over a demand bubble (T-474), so its grab cursor comes first
     const cur = linking.peek() !== null ? (pick(overlay, e.point.x, e.point.y, false)?.kind === "station" ? "pointer" : "crosshair") : nodeDrag.hit(e.point.x, e.point.y)?.movable ? "grab" : demandHover?.(e.point.x, e.point.y) ? "pointer" : pick(overlay, e.point.x, e.point.y, display.peek().trains) ? "pointer" : "";

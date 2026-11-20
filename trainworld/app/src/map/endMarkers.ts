@@ -21,6 +21,7 @@ import { marksLayer, onScreen, placeAt } from "./screenPlace";
 
 type Kind = "loose" | "drag" | "track";
 type Cls = "end-mark" | "pi-mark" | "pi-mark loose";
+const HOT = " hot";
 
 /** below this zoom the markers would only crowd the map */
 const MIN_ZOOM = MARKS_ZOOM;
@@ -63,7 +64,7 @@ export class EndMarkers {
       } else if (this.pointer) this.pointer = null;
       else return;
       const k = this.wanted();
-      if (k === "loose" || k === "track") this.place();
+      if (k) this.place();
     }, { passive: true });
     map.on("resize", () => (this.rect = null));
     addEventListener("resize", () => (this.rect = null));
@@ -177,6 +178,9 @@ export class EndMarkers {
       this.refresh(kind);
       const w = this.overlay.cssW, h = this.overlay.cssH;
       const near = kind !== "drag" && !NO_HOVER ? this.pointer : undefined;
+      // T-3897: the square under the pointer lights up, the one a press would drag
+      const hs = kind !== "loose" ? this.handles() : [];
+      const hot = NO_HOVER ? null : this.hotAt(kind, hs);
       for (const p of this.pts) {
         const ring = p.cls === "end-mark";
         if (ring && near === null) continue;
@@ -186,16 +190,30 @@ export class EndMarkers {
         if (!ring && this.badged(p.lx, p.ly)) continue;
         if (p.stub && !this.visible(p.stub)) continue;
         if (k >= MAX_MARKS) break;
-        this.mark(k++, p.cls, x, y);
+        this.mark(k++, ring || p !== hot ? p.cls : ((p.cls + HOT) as Cls), x, y);
       }
       if (kind !== "loose")
-        for (const p of this.handles()) {
+        for (const p of hs) {
           if (!onScreen(p.x, p.y, w, h, 8)) continue;
           if (k >= MAX_MARKS) break;
-          this.mark(k++, p.cls, p.x, p.y);
+          this.mark(k++, p === hot ? ((p.cls + HOT) as Cls) : p.cls, p.x, p.y);
         }
     }
     for (let i = k; i < this.marks.length; i++) this.marks[i].style.display = "none";
+  }
+
+  /** The square nearest the pointer within `NODE_HIT_PX`, as the node drag finds it. */
+  private hotAt(kind: Kind, hs: { x: number; y: number }[]): object | null {
+    const q = this.pointer;
+    if (!q || kind === "loose") return null;
+    let best = NODE_HIT_PX * NODE_HIT_PX, hot: object | null = null;
+    for (const p of [...this.pts, ...hs]) {
+      if ("cls" in p && p.cls === "end-mark") continue;
+      const [x, y] = "lx" in p ? this.overlay.toScreen(p.lx, p.ly) : [p.x, p.y];
+      const d = (x - q[0]) ** 2 + (y - q[1]) ** 2;
+      if (d < best) [best, hot] = [d, p];
+    }
+    return hot;
   }
 
   private mark(k: number, cls: Cls, x: number, y: number) {

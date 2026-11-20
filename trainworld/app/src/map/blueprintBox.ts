@@ -80,6 +80,8 @@ export class BlueprintBox {
    * why it cannot be moved while dragging */
   private marks: HTMLDivElement;
   private squares: HTMLDivElement[] = [];
+  /** T-3897: the pick's node under the pointer, which lights up (the one a press would drag) */
+  private hot: number | null = null;
   private labels: CurveLabelPool;
   private tag: HTMLDivElement;
 
@@ -139,7 +141,9 @@ export class BlueprintBox {
       const [x, y] = this.overlay.toScreen(...(m ? toLocal(...packToLngLat(n.x + m.dx, n.y + m.dy)) : toLocal(n.lng, n.lat)));
       if (!onScreen(x, y, cw, ch, 8)) continue;
       if (k >= MAX_SQUARES) break;
-      placeAt(this.square(k++), x, y);
+      const sq = this.square(k++);
+      sq.classList.toggle("hot", id === this.hot && !m);
+      placeAt(sq, x, y);
     }
     for (let i = k; i < this.squares.length; i++) this.squares[i].style.display = "none";
     const pv = m?.preview;
@@ -195,6 +199,21 @@ export class BlueprintBox {
     }
     const under = this.under(x, y).edges[0];
     return under !== undefined && bpPicked.peek().edges.includes(under) ? nodes : null;
+  }
+
+  /** The pick's movable node within `NODE_HIT_PX` of (x, y) px, the nearest. */
+  private nodeAt(x: number, y: number): number | null {
+    const w = world.peek();
+    if (!w || this.map.getZoom() < MARKS_ZOOM) return null;
+    let best = NODE_HIT_PX * NODE_HIT_PX, hit: number | null = null;
+    for (const id of this.movable()) {
+      const n = w.nodes.get(id);
+      if (!n) continue;
+      const [sx, sy] = this.overlay.toScreen(...toLocal(n.lng, n.lat));
+      const d = (sx - x) ** 2 + (sy - y) ** 2;
+      if (d < best) [best, hit] = [d, id];
+    }
+    return hit;
   }
 
   /** Esc while dragging the pick: it goes back, nothing changes. */
@@ -343,9 +362,15 @@ export class BlueprintBox {
     const d = this.drag;
     if (!d) {
       // the grab cursor over what a press would drag (T-474)
-      if (tool.peek() === "blueprint" && e.buttons === 0 && e.target === this.map.getCanvas()) {
+      const over = tool.peek() === "blueprint" && e.buttons === 0 && e.target === this.map.getCanvas();
+      if (over) {
         const c = this.grabAt(...this.point(e)) ? "grab" : "crosshair";
         if (this.map.getCanvas().style.cursor !== c) this.map.getCanvas().style.cursor = c;
+      }
+      const hot = over ? this.nodeAt(...this.point(e)) : null;
+      if (hot !== this.hot) {
+        this.hot = hot;
+        this.place();
       }
       return;
     }
