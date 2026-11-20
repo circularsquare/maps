@@ -1278,8 +1278,12 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
 function picture(s: Shown, t: { bg: string; ink: string; pill: string; selected: string; text: string; place: string; font: string; edge?: string; border?: string }, mask: (d: Drawing) => Drawing): { canvas: HTMLCanvasElement; pitchPx: number } | null {
   const d = mask(widened(s.d, diagramWidth.peek())), levels = s.names.levels;
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-  for (const r of d.ribbons) for (let j = 0; j + 1 < r.length; j += 2) (x0 = Math.min(x0, r[j])), (x1 = Math.max(x1, r[j])), (y0 = Math.min(y0, r[j + 1])), (y1 = Math.max(y1, r[j + 1]));
-  if (!(x1 > x0) || !(y1 > y0)) return null;
+  // only what is drawn: lines and stations the mode buttons or hidden lines leave out do not widen the frame
+  const grow = (r: Float64Array) => { for (let j = 0; j + 1 < r.length; j += 2) (x0 = Math.min(x0, r[j])), (x1 = Math.max(x1, r[j])), (y0 = Math.min(y0, r[j + 1])), (y1 = Math.max(y1, r[j + 1])); };
+  d.ribbons.forEach((r, i) => { if (!d.off?.[i]) grow(r); });
+  d.thin?.forEach((l, i) => { if (!d.offThin?.[i]) grow(l.ribbon); });
+  // one straight line is as flat as it is long: the margin below gives it a frame
+  if (!(x1 >= x0) || !(y1 >= y0)) return null;
   // a pill reaches a pitch past a line's end
   const pad = 2 * d.pitch;
   (x0 -= pad), (y0 -= pad), (x1 += pad), (y1 += pad);
@@ -1291,6 +1295,7 @@ function picture(s: Shown, t: { bg: string; ink: string; pill: string; selected:
     const at = levels[li] / d.pitch, b = [x0, y0, x1, y1];
     // the names stick out past the lines
     for (let i = 0; i < s.names.at[li].node.length; i++) {
+      if (d.offNode?.[s.names.at[li].node[i]]) continue;
       const n = placedBox(s.names, li, i, at);
       (b[0] = Math.min(b[0], n[0])), (b[1] = Math.min(b[1], n[1])), (b[2] = Math.max(b[2], n[2])), (b[3] = Math.max(b[3], n[3]));
     }
