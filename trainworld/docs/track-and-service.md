@@ -1019,7 +1019,7 @@ resource's `s`, 1m47s on track at 80 km/h. A count level held this way counts as
 an edit elsewhere leaves it to the bit, except past full on single track only that line runs over:
 only its own rate can do that (a lone train's, which keeps no margin, when a second comes), so it is
 cut to the stretch (T-3526). Nor is a line the edit changed at a level where it ran no trains before
-(a new line, one an undo brings back, one given trains there): no fill has given it a share, so it
+(a new line, one given trains there): no fill has given it a share, so it
 steps with the lines already filling the track until its rate moves less than 0.01 trains an hour
 a round, on weekdays and weekends alike, and takes its share at the edit rather than 0 until some later
 edit nearby (T-3482).
@@ -1033,7 +1033,15 @@ so its rates and run times stay the same to the bit (T-415). On an edit, a line 
 trains of its fleet is left as it is while the rest of its level steps (T-1787: on shared track
 each line moved re-times its neighbours), and only the lines the edit changed and those that share
 track with them, directly or through others, are stepped at all: the rest keep their rates and run
-times to the bit (T-1863). A bus or ferry line shares no track, so it is stepped exactly when its own
+times to the bit (T-1863). Sharing counts as it was before the edit too, so removing a line (one with no
+trains among them) steps the lines it shared track with (T-3646). An undo or redo is not settled: it puts
+back every rate, train count, pacing and departure the edit moved, to the bit, and the services those lines
+run, so it lands where the edit started (or ended) rather than wherever a settle from the edited state would
+go. The load's cap lowering, an edit off the history that can come after the first edits, keeps its place
+in it: an undo under it takes it back exactly, undoes, and makes it again (an undo takes back the player's
+edit, not the game's, T-3528), except where the undone edit set that same line's trains; the redo takes it
+back and makes it again after the edit. So undoing back to the load gives the loaded game with the cap
+lowering (T-3646). A bus or ferry line shares no track, so it is stepped exactly when its own
 counts or headways change (T-3704). The step's 1% probe reads each round trip's rise
 from the capacity solve alone, as the change in the line's hold delays, so the run profiles are
 worked out once a round instead of twice. A save carries the settled rates to the bit, so a load

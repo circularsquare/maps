@@ -46,11 +46,16 @@ impl TrackApi {
 
     /// T-3528: an edit on neither undo nor redo (`apply_unrecorded`).
     pub(super) fn run_unrecorded(&mut self, op: Op) -> u32 {
+        self.run_off_history(op, false)
+    }
+
+    /// `run_unrecorded`; `with_edit`: taken back with the player's edit before it (`apply_off_history`).
+    pub(super) fn run_off_history(&mut self, op: Op, with_edit: bool) -> u32 {
         let fleet = self.fleet;
         let at = self.edit_start();
         let before = self.w.svc.before_edit(&self.w.net, at);
         let cash = self.spendable();
-        let r = self.w.apply_unrecorded(op, cash, &|w| trains_to_buy(w, fleet));
+        let r = self.w.apply_off_history(op, cash, &|w| trains_to_buy(w, fleet), with_edit);
         self.settle(r, &before)
     }
 

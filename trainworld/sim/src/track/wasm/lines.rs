@@ -677,7 +677,9 @@ impl TrackApi {
         let [high, medium, low] = if pairs_split(&self.w.net, id) { counts.map(|x| x.div_ceil(2)) } else { counts };
         let op = if d.auto.is_some() { Op::AutoTrains { id, auto: None, trains: Some([high, medium, low]) } } else { Op::TrainCounts { id, trains: Some([high, medium, low]), tph: d.tph } };
         let op = self.high_rows(id, op, |x| x.trains = [high; 2]);
-        if recorded { self.run(op) } else { self.run_unrecorded(op) }
+        // T-3646: an edit before it that is undone takes it back, and makes it again unless it set
+        // this line (`TrackWorld::step`)
+        if recorded { self.run(op) } else { self.run_off_history(op, true) }
     }
     /// T-3542: an edit of three rows (high, medium, low) on a line of four or five rows sets all
     /// its high periods' rows (`set`: midday's and afternoon's from high's) with it.
