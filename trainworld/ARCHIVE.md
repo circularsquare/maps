@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3818 [P2] {L:timetables} Related lines in the same timetable (2026-11-19): Related = lines drawn beside the line (lineRelated beside, running); rank 1 columns, bullets 2 px lower, times 60% (30% past); toggle shows whenever there are related lines; drag-to-pan already worked. notes/T-3817.md.
 - T-3726 [P3] {L:cleanup} Are code comments worth keeping, A/B test (2026-11-19): Three pairs, comments vs stripped: same cause and same pass/fail in every pair; stripped took the same or more steps (+0%, +43%, +24% tool calls). Comments stay (Anita: mostly fine); noise rerun dropped. notes/T-3726.md.
 - T-3819 [P2] {L:timetables} Hide other lines icon beside the direction switch (2026-11-19): Wheel zoom about the pointer, columns picked per zoom level over the day, back bullets hoverable, chart on a canvas; Marey dock panel removed; toggle moved and its pressed tint shows; backdrop drag no longer closes the panel. notes/T-3817.md.
 - T-3817 [P2] {L:timetables} Zoomable line timetable that merges the Marey chart (2026-11-19): Wheel zoom about the pointer, columns picked per zoom level over the day, back bullets hoverable, chart on a canvas; Marey dock panel removed; toggle moved and its pressed tint shows; backdrop drag no longer closes the panel. notes/T-3817.md.

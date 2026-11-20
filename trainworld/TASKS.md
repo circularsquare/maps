@@ -107,9 +107,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Two anonymous reports on v0.4.2 (feedback 1795092485-688b2e15, 1795083347-52a31102), plus a third, "crashes every time it opens" (1795097335-fa20c413), all Japanese, 11-19 (board group g115). Their saves load normally on master. A stuck load now restarts once, and the report names the stuck worker and period (tree demandload).
   - Goal: The cause found from the next report's diagnosis, or closed if no report comes.
   - Other: notes/T-3781.md
-- T-3818 [P2] {L:timetables} {after:T-3817} Related lines in the same timetable (taking, 2026-11-19, agent ttrelated)
-  - Context: Your pad, 11-20: related lines shown the same way, bullets about 2px lower, times at about 60% opacity (less when deprioritized), never ahead of the line being looked at.
-  - Other: notes/T-3817.md
 - T-3780 [P2] {L:timetables} {after:T-3346 stage 2 landing} Station and complex timetables
   - Context: Your pad, 2026-11-19: players ask for per-station timetables, "could be cool and not so hard". Per station and per complex, every line in its line colour; for a complex, pick the direction most platforms roughly align with and show trains as that way or the opposite ("eastbound"), "people should mostly use the station timetables anyways"; line numbers show the bullet and line name on hover; opened by a timetable icon button on the station or complex view, like the line's schedule button. Waits for the timetables port so it reads the new departure times.
   - Goal: A timetable icon on the station and complex views opens departures by line in line colours, a complex's split into two directions, with bullet and line name on hover.
