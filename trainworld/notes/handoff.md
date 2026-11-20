@@ -7,13 +7,11 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`. This f
 Diary: notes/handoff-log.md. Her local time is UTC-5.
 
 ## Next
-0. Live v0.4.4. Cap 14. 8800 = 7637e0e0 (smoke passed). Since: T-3846 landed (b9874d89, not on 8800). Open in
-   chat: 400 km per leg (T-3809's strings change with T-3845).
+0. Live v0.4.4. Cap 14. 8800 = 7637e0e0 (smoke passed). Since: T-3846, T-3847 landed (not on 8800).
 1. Running, mine: gapfill (Opus, T-3764, main tree: JOIN of 338 PK+BD rows from ~13:20, pid 9092, log
    artifacts/trainworld/t3764-join.log; no data/packs writes or plain 8800 rebuild until it ends; its uncommitted
    pipeline, checks, game json, notes files are its own), riverfix (Opus, T-3839, 6152), ferryorder (Sonnet, T-3845,
-   6153), islands1 (Opus, T-2216 stage 1, 6155; fresh Sonnet checker before landing), legacytime (Sonnet, T-3847,
-   6156), todoreview (Sonnet, main tree TASKS.md only). One tree each.
+   6153), islands1 (Opus, T-2216 stage 1, 6155; fresh Sonnet checker before landing), One tree each.
 2. T-3395: 11-20 scan (pass 1, not done) found 0 new damage. Run `tools/ops/save_health.py` after the 11-21
    04:00 UTC scan; clean = close it (the two rev-1 games of ue83342ed78f8fc4c are old 11-19 damage).
 3. Up next: T-3804; T-2216 stages 2-3 after stage 1 (stage 0 is T-3838); after gapfill: T-3838, T-1376 retry, T-3843, rest of T-3764;
@@ -28,7 +26,8 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 - 11-20 ~13:40 UTC: T-3835 text ack. TODO.md review: file everything in "for anita" and "other player
   suggestions" not done or filed ("basically want all of this eventually"; agent todoreview, ids T-3850-T-3899,
   table in notes/todo-review-2026-11-20.md). New players default to legacy time buttons (T-3847, agent
-  legacytime). Asked which Ready (low) tasks to raise to high: my picks went to her in chat.
+  legacytime). ~13:50: raised T-3662, 3655, 3646, 3735, 3353, 3513, 2486, 3829 to P2 ("lets raise those yeah");
+  ferries "be able to run longer" (400 km per leg stays). TODO review done: T-3850-T-3866 filed.
 - 11-20 ~05:20 UTC, to bed: "lets try to keep going through the night, continuing to run stuff if resources free
   up". Picked rivers E (+ min-straighten, round caps; coastline T-3833 after); OK'd both global CLAUDE.md wordings.
 - 11-20 ~04:20 UTC: rivers: likes B's look, wants C's correctness: "C but just do like microstraightening ... and we

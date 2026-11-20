@@ -154,7 +154,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Found by T-3623: Purwokerto's registry centre sits on Banjarnegara and Kozhikode's on Manjeri; an OSM area with no node inside it still sits at its box centre (New Cairo City).
   - Goal: Each zone's centre is on its named town; areas without a node get a centre inside them.
   - Other: notes/T-3623.md
-- T-3662 [P3] {L:single-track} Switching one kerbside piece breaks lines quietly
+- T-3662 [P2] {L:single-track} Switching one kerbside piece breaks lines quietly
   - Context: Found checking T-3647: on a kerbside pair of one-way legs, switching one piece of a leg to both ways is accepted (no refusal) but breaks the lines using that leg (A1, A3, A4 in the test scene); master does the same. Switching every piece of the leg together works.
   - Goal: The switch either takes the whole leg with it or is refused with a message naming the line it would break.
   - Other: notes/T-3647.md
@@ -250,7 +250,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3455's scan: Tokyo's pack leaves out 7,404 people of reclaimed coast in 18 pieces, the biggest at Haneda (6.45 km2); Japan's zones are built by hand builders that have no reclaimed-land step.
   - Goal: Japan's hand builders take in reclaimed coast the way plan rows do, and Tokyo is rebuilt with Haneda inside.
   - Other: notes/T-3455.md
-- T-3513 [P3] {L:solve-speed} Train edits at high demand still take most of a minute
+- T-3513 [P2] {L:solve-speed} Train edits at high demand still take most of a minute
   - Context: From T-3512: on the NYC save low and medium train edits now settle in 6-20 s, but high demand's three periods (two on one of two workers) take about 47 s and an every-level edit about 57 s; that is the crowding rounds themselves, four passes a period of 4-6 s each.
   - Goal: A high-demand edit on the NYC save under 20 s, or the measured reason it cannot be without changing how demand converges.
   - Other: notes/T-3512.md
@@ -405,16 +405,16 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: `stop_every_pass` adds a stop to line 150 on each load, costing one extra derive and settle.
   - Goal: realsave saves after `stop_every_pass`, so London loads without the fix-up.
   - Other: Reshipping London moves its settled rates. notes/T-3234.md.
-- T-3735 [P3] {L:timetables} Weekend departures use the weekday round trip
+- T-3735 [P2] {L:timetables} Weekend departures use the weekday round trip
   - Context: From T-3584: weekend lines at a merge are now paced from their weekend headways, but weekend departures still take the weekday round trip, spare-time split and phases, because placing departures reads the weekday service (notes/T-3521.md "Lies").
   - Other: notes/T-3584.md
-- T-3646 [P3] {L:timetables} Undo leaves other lines' trains cut
+- T-3646 [P2] {L:timetables} Undo leaves other lines' trains cut
   - Context: Found checking T-3482: adding a line on full track cuts the lines sharing it (Tokyo's line 42 from 23.12 to 15.00 trains an hour at the peak), and undoing the new line leaves them at 15.00, on master too; a later edit then shares the track out from there, so an undo and redo can end at different rates from the first build.
   - Other: notes/T-3482.md
 - T-3654 [P3] {L:map-look} Draw on the map for planning
   - Context: Your pad, 2026-11-18, from Discord, "not high prio": "some people want draw on map tool for planning stuff. could add it in a discreet way, hideable".
   - Goal: A design to you first (what can be drawn, whether it saves and shares, where the hide control sits), then a first version.
-- T-3655 [P3] {L:line-rates} A line on full track keeps its old rate after a new count
+- T-3655 [P2] {L:line-rates} A line on full track keeps its old rate after a new count
   - Context: Found by T-3482's agent and again by T-3645's checker: a line held on full track keeps its rate when given a new count or headway until a line beside it moves (London's busiest line keeps 8 trains at medium as its headway goes 540 -> 360 s; a local raised from 3 to 40 beside a 40-train express still draws 1 train for 3 hours). Master and the fixes alike. Stepping it cost London's shared save about 300 ms an edit in one try.
   - Goal: A new count or headway on full track takes its share at the edit, within about 50 ms an edit on London's shared save.
   - Other: notes/T-3482.md "Follow-ups"
@@ -554,7 +554,7 @@ Anita's notes 2026-11-05 morning (verbatim in notes/todo-2026-11-05a.md; briefs 
   - Goal: A cheaper way to the same choices, and fewer wrong-side pairs.
   - Other: notes/T-2520.md
 Anita's notes 2026-11-04 late (verbatim in notes/todo-2026-11-04j.md):
-- T-2486 [P3] {L:loading} Compress .bin files to cut download size
+- T-2486 [P2] {L:loading} Compress .bin files to cut download size
   - Context: .bin files are 76% of R2 (2.2 of 2.9 GB), and the first line pulls 14.4 MB of worldwide data.
   - Goal: .bin is compressed for whole-file reads, Range reads still work, and market files load by region.
   - Other: notes/T-2472.md, section 6.
@@ -818,7 +818,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3837 [P3] {L:buses} Ferry routes found without a waypoint, and waypoints on touch
   - Context: T-3809 added shift click waypoints. A leg is still searched only in a box around its two ports, so a sea path that leaves it (Ma Liu Shui to Sai Kung) needs a waypoint; a wider third search would find it alone. Phones have no shift click.
   - Other: notes/T-3809.md
-- T-3829 [P3] {L:buses} Show fast and slow roads when drawing a bus route
+- T-3829 [P2] {L:buses} Show fast and slow roads when drawing a bus route
   - Context: Your pad, 11-20, for the bus rework: "we should highlight fast speed roads and low speed roads differently". Open-source issue #27 asks the same ("No way to tell which roads are trunk when drawing a bus route").
 - T-3830 [P3] {L:buses} Bus stations a player can build
   - Context: Your pad, 11-20, for the bus rework: "bus stations, constructible, that look kinda like train and tram stations so a more permanent looking thing can be erected, and like its connections feel more concrete / it feels like part of a complex (slight waiting/boarding bonus or something maybe)".
@@ -857,7 +857,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3354 [P3] {L:single-track} One-track platform jumps sides when dragged north-south
   - Context: Not reproduced 2026-11-16 (bug-a): a station node's heading stays put when dragged, so the fixed axis never flips in the sim. Needs the exact drag that shows it.
   - Other: About 1 h. notes/T-3332.md.
-- T-3353 [P3] {L:single-track} Second single from a double's end refused
+- T-3353 [P2] {L:single-track} Second single from a double's end refused
   - Context: When the first single came in at an angle, a second single to a close target gets RadiusTooSmall.
   - Goal: A route leaves a node anywhere in the cone between the ends' headings.
   - Other: A design call, 4-6 h. notes/T-3344.md.
