@@ -237,21 +237,23 @@ export function assignBays(cur: Float32Array, epoch: number, prev: Float32Array 
   const out = new Float32Array(n * BAY_STRIDE).fill(-1);
   for (let i = 0; i < n; i++) out[i * BAY_STRIDE + 1] = out[i * BAY_STRIDE + 3] = 0;
   if (!ends.size) return out;
-  const key = (profile: number, draw: number) => `${profile}|${Math.round(draw * 100)}`;
+  // (keyed by number, a map per profile and per line and run: a string per trip took 50-250 ms an hour's turn on a
+  // 2,647-station game, T-3804)
+  const at2 = <K>(m: Map<K, Map<number, Trip>>, k: K) => { let v = m.get(k); if (!v) m.set(k, (v = new Map())); return v; };
   const trips: Trip[] = [];
-  const byKey = new Map<string, Trip>();
+  const byKey = new Map<number, Map<number, Trip>>();
   const add = (raw: Float32Array, e: number, own: boolean) => {
     for (let k = 0; k < raw.length / 4; k++) {
       const profile = raw[k * 4], line = profileLine(profile);
       if (!ends.has(line)) continue;
       const t: Trip = { profile, draw: raw[k * 4 + 1] + e, end: raw[k * 4 + 2] + e, next: raw[k * 4 + 3] + e, i: own ? k : -1 };
-      const kk = key(profile, t.draw);
-      const was = byKey.get(kk);
+      const m = at2(byKey, profile), d = Math.round(t.draw * 100);
+      const was = m.get(d);
       if (was) {
         if (own) was.i = k;
         continue;
       }
-      byKey.set(kk, t);
+      m.set(d, t);
       trips.push(t);
     }
   };
@@ -260,10 +262,9 @@ export function assignBays(cur: Float32Array, epoch: number, prev: Float32Array 
   // per group, by arrival: each train takes the place that frees first, its own track on a tie
   const endOf = (t: Trip) => ends.get(profileLine(t.profile))![profileRun(t.profile)];
   // a trip by line, run and departure (its next trip can be of another level)
-  const runKey = (line: number, run: number, draw: number) => `${line}|${run}|${Math.round(draw * 100)}`;
-  const byRun = new Map<string, Trip>();
-  for (const t of trips) byRun.set(runKey(profileLine(t.profile), profileRun(t.profile), t.draw), t);
-  const nextOf = (t: Trip) => (Number.isFinite(t.next) ? byRun.get(runKey(profileLine(t.profile), 1 - profileRun(t.profile), t.next)) : undefined);
+  const byRun = new Map<number, Map<number, Trip>>();
+  for (const t of trips) at2(byRun, profileLine(t.profile) * 2 + profileRun(t.profile)).set(Math.round(t.draw * 100), t);
+  const nextOf = (t: Trip) => (Number.isFinite(t.next) ? byRun.get(profileLine(t.profile) * 2 + 1 - profileRun(t.profile))?.get(Math.round(t.next * 100)) : undefined);
   const arrivals = trips.map((t) => ({ t, at: t.draw + (times(t.profile)?.arrive ?? 0) })).sort((a, b) => a.at - b.at || a.t.profile - b.t.profile);
   const free = new Map<number, [number, number]>();
   const endCode = new Map<Trip, number>();

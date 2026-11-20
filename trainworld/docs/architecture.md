@@ -273,8 +273,10 @@ Web first, so it can be shared as a link.
   repeats take at most a third of the worker. A question the page has never had answered (a panel just opened) goes
   at once. The target for anything new that the worker answers again and again, or runs on its own clock, is under
   about 0.2 s on the biggest saves (the 2,647-station save in notes/T-3801.md), or split so edits can come between
-  its parts. Known to miss it there: one `today` answer, the hour's trips and boarding hour (one WASM call each), and
-  for any message but an edit the rest of an edit's full state (edits come between its pieces, T-3803).
+  its parts. The hour turning sends only what is new, the next hour's slice, its trips and its boarding hour a task
+  each, and never works out the boarding account there: an account out of date goes on in its steps (T-3804). Known to
+  miss it there: one `today` answer, one boarding step of three big lines (up to 0.3 s), and for any message but an
+  edit the rest of an edit's full state (edits come between its pieces, T-3803).
 - **The demand pool** [T-149, T-173, `workers/demandClient.ts`][T-381]: 3 solving workers on 12 or more
   logical threads, 2 on 6 to 11, 1 on fewer; then a phone or tablet (by its user agent), or a device
   of 4 GB or less, gets 1 (T-2794 adds the same check's lean ways: pixel ratio at most 2, coarse outlines held only near the view; notes/T-2794.md; T-2802: the WASM memories grow 8 MB at a time, not 32, notes/T-2802.md; a phone or tablet by user agent, not a 4 GB desktop, also has no demand cache; no device opens market packs (trips between zones) while "Calculate intercity trips" is off, which is its default on a phone or tablet only, T-2833, T-2838, T-3630; a device reporting 4 GB or less gets a note at the bottom of the map, T-2839, `ui/DeviceNote.tsx`) (`workers/deviceMemory.ts` `smallDevice`, T-2122: a phone's tab holds far

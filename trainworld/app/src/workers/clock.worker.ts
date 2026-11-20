@@ -3366,60 +3366,120 @@ function stepBoarding() {
 }
 
 let nextHourTimer = 0;
+/** T-3804: the hours whose whole slice (trips, and the boarding hour once there are riders) went out since the trips
+ * were last sent anew. Only what sends the trips anew changes a slice (an edit's state with trips, new riders or
+ * transfers, a calendar change, the boarding account's last step); a state without trips changes no train's run
+ * (T-1780), so its version does not count. */
+const sentHours = new Set<number>();
+/** the next hour's slice after this one's (T-1810), its trips a task later and its boarding hour the task after
+ * (T-3804: 50-200 ms together on a 2,647-station game), unless the trips are sent anew first or the account is still
+ * being worked out (its last step sends both hours); begun again if an edit or a state came between the two */
+function nextHourLater() {
+  clearTimeout(nextHourTimer);
+  const e = epoch, h = e + 3600;
+  const due = () => !!api && e === epoch && !sentHours.has(h) && !accountStale();
+  nextHourTimer = setTimeout(() => {
+    if (!due() || !tripsPrelude()) return;
+    const at = [version, trackVersion], s = sliceTrips(h, rawTrips(), bayTimes());
+    nextHourTimer = setTimeout(() => {
+      if (version !== at[0] || trackVersion !== at[1]) return nextHourLater();
+      if (due()) sendSlice(s);
+    }, 0) as unknown as number;
+  }, 0) as unknown as number;
+}
+/** T-3804: a new hour. Its slice went out at the last turn (as the next hour) or since, and is sent again only if it
+ * did not; the next hour's goes a task later. A boarding account that is not up to date (new riders still being worked
+ * through, a line's old pattern from before an edit just forgotten, a calendar change) is never worked out here, which
+ * took up to 3 s on a 2,647-station game: its steps go on, edits between them, and the last one sends both hours. */
+function turnHour() {
+  if (!api || !Number.isFinite(epoch)) return;
+  for (const e of sentHours) if (e < epoch) sentHours.delete(e);
+  api.set_now(gameNow());
+  const changed = syncHolidays(), sent = sentHours.has(epoch);
+  // (an hour never sent, as after a jump of the clock: its trains now, their loads once the steps end)
+  if (accountStale()) { if (!sent) sendTrips(false, [epoch], false); }
+  else if (changed || !sent) sendTrips(true);
+  else nextHourLater();
+}
+/** T-3804: the boarding account is not up to date with the service and the riders; its steps are then set going
+ * (their last one sends both hours anew), unless a stop click's follow-up is held: trips sent now would be of the
+ * clicks' model ahead of their state (T-1407), and that follow-up steps the account itself before its trips */
+function accountStale(): boolean {
+  if (!api?.has_riders() || !api.boarding_step(0)) return false;
+  if (!followUp?.held?.stops) {
+    clearTimeout(boardingTimer);
+    boardingTimer = setTimeout(stepBoarding, 0) as unknown as number;
+  }
+  return true;
+}
 /** The drawn trips and boarding slices of this hour and the next. `split` (T-1810): the next hour
  * a task later, so a preview asked meanwhile waits for one hour's slice only (~20 ms on shared New
- * York); dropped if the trips are sent again or riders come before it. */
-function sendTrips(split = false, hours?: number[]) {
+ * York); dropped if the trips are sent again or riders come before it. `withBoard` false: no boarding hour, even with
+ * riders (T-3804: the account is not up to date). */
+function sendTrips(split = false, hours?: number[], withBoard = true) {
+  if (!tripsPrelude()) return;
+  if (!hours) sentHours.clear();
+  if (split && !hours) nextHourLater();
+  const rawAt = rawTrips(), times = bayTimes();
+  for (const e of hours ?? (split ? [epoch] : [epoch, epoch + 3600])) sendSlice(sliceTrips(e, rawAt, times), withBoard);
+}
+/** what comes before any hour's slice; false if there is none to send */
+function tripsPrelude(): boolean {
   // T-1407: never trips of the model ahead of the state they are drawn on; T-2404: a held
   // follow-up's blueprint changes no line's run, so its trips are the same
   if (followUp && !followUp.held) runFollowUp();
   clearTimeout(nextHourTimer);
-  if (!api || !Number.isFinite(epoch)) return;
+  if (!api || !Number.isFinite(epoch)) return false;
   todayGen++;
   api.set_now(gameNow());
   syncHolidays();
   timing.trips = 0;
   timing.board = 0;
-  if (split && !hours) {
-    const e = epoch;
-    nextHourTimer = setTimeout(() => {
-      if (api && e === epoch && !api.boarding_step(0)) sendTrips(false, [e + 3600]);
-    }, 0) as unknown as number;
-  }
-  // T-2980: the trips of the hour before each one too, for where trains stand at the ends
+  return true;
+}
+/** `TrackApi.trips` by hour, each asked once (T-2980: the hour before each one's too, for where trains stand at the
+ * ends) */
+function rawTrips(): (e: number) => Float32Array {
   const raws = new Map<number, Float32Array>();
-  const rawAt = (e: number) => {
+  return (e) => {
     let r = raws.get(e);
     if (!r) raws.set(e, (r = api!.trips(e)));
     return r;
   };
-  const times = termEnds.size ? profileTimes(api.profile_meta(), termEnds.keys(), (l) => api!.line_phases(l)) : null;
-  for (const e of hours ?? (split ? [epoch] : [epoch, epoch + 3600])) {
-    // per trip: profile, departure, end and the departure its train takes next, relative to the
-    // epoch; the end (T-206) and the next (T-245) go apart
-    const tT = performance.now();
-    const raw = rawAt(e), n = raw.length / 4;
-    const bays = assignBays(raw, e, times ? rawAt(e - BAY_LOOKBACK_S) : null, termEnds, (p) => times?.get(p));
-    timing.trips += performance.now() - tT;
-    const trips = new Float32Array(n * 2), ends = new Float32Array(n), nexts = new Float32Array(n);
-    for (let i = 0; i < n; i++) {
-      trips[i * 2] = raw[i * 4];
-      trips[i * 2 + 1] = raw[i * 4 + 1];
-      ends[i] = raw[i * 4 + 2];
-      nexts[i] = raw[i * 4 + 3];
-    }
-    // The boarding account's hour (T-164), once demand's riders are here: each trip's loads and
-    // the platforms' crowds. The account is worked out again only for lines whose service or
-    // riders changed.
-    if (api.has_riders()) {
-      const t0 = performance.now();
-      const board = api.boarding_hour(e);
-      shapeHour(e, board); // T-284: when this hour's fares land, read before the slice is sent
-      timing.board += performance.now() - t0;
-      send({ kind: "trips", version, epoch: e, trips, ends, nexts, bays, board, boardMs: performance.now() - t0, redone: api.boarding_redone(), prepMs: prep.ms, prepMax: prep.max }, [trips.buffer, ends.buffer, nexts.buffer, bays.buffer, board.buffer]);
-      prep = { ms: 0, max: 0 };
-    } else send({ kind: "trips", version, epoch: e, trips, ends, nexts, bays }, [trips.buffer, ends.buffer, nexts.buffer, bays.buffer]);
+}
+function bayTimes() {
+  return termEnds.size ? profileTimes(api!.profile_meta(), termEnds.keys(), (l) => api!.line_phases(l)) : null;
+}
+/** an hour's drawn trips: per trip, profile, departure, end and the departure its train takes next, relative to the
+ * epoch (the end, T-206, and the next, T-245, go apart), and their places at the ends (T-2980) */
+interface TripSlice { e: number; trips: Float32Array; ends: Float32Array; nexts: Float32Array; bays: Float32Array }
+function sliceTrips(e: number, rawAt: (e: number) => Float32Array, times: ReturnType<typeof bayTimes>): TripSlice {
+  const tT = performance.now();
+  const raw = rawAt(e), n = raw.length / 4;
+  const bays = assignBays(raw, e, times ? rawAt(e - BAY_LOOKBACK_S) : null, termEnds, (p) => times?.get(p));
+  timing.trips += performance.now() - tT;
+  const trips = new Float32Array(n * 2), ends = new Float32Array(n), nexts = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    trips[i * 2] = raw[i * 4];
+    trips[i * 2 + 1] = raw[i * 4 + 1];
+    ends[i] = raw[i * 4 + 2];
+    nexts[i] = raw[i * 4 + 3];
   }
+  return { e, trips, ends, nexts, bays };
+}
+/** An hour's slice to the page, with the boarding account's hour (T-164) once demand's riders are here: each trip's
+ * loads and the platforms' crowds. The account is worked out again only for lines whose service or riders changed. */
+function sendSlice(s: TripSlice, withBoard = true) {
+  const a = api!, { e, trips, ends, nexts, bays } = s, riders = a.has_riders();
+  if (withBoard && riders) {
+    const t0 = performance.now();
+    const board = a.boarding_hour(e);
+    shapeHour(e, board); // T-284: when this hour's fares land, read before the slice is sent
+    timing.board += performance.now() - t0;
+    send({ kind: "trips", version, epoch: e, trips, ends, nexts, bays, board, boardMs: performance.now() - t0, redone: a.boarding_redone(), prepMs: prep.ms, prepMax: prep.max }, [trips.buffer, ends.buffer, nexts.buffer, bays.buffer, board.buffer]);
+    prep = { ms: 0, max: 0 };
+  } else send({ kind: "trips", version, epoch: e, trips, ends, nexts, bays }, [trips.buffer, ends.buffer, nexts.buffer, bays.buffer]);
+  if (withBoard || !riders) sentHours.add(e);
 }
 
 /** An edit's charge (US$M, `trains` of it for trains) into the money record of the hour and day. */
@@ -4373,7 +4433,7 @@ async function parkedOn<T>(p: Promise<T>): Promise<T> {
 function tripsNow(e: number) {
   if (!api || modelDown || e === epoch) return;
   epoch = e;
-  try { sendTrips(); } catch (err) {
+  try { turnHour(); } catch (err) {
     if (isPanic(err)) panicLater(err, "the hour's trips"); // i18n-ignore
     else send({ kind: "error", message: String(err) });
   }
@@ -5178,7 +5238,7 @@ async function handleMessage(msg: ToClock) {
   } else if (msg.kind === "epoch") {
     if (msg.epoch !== epoch) {
       epoch = msg.epoch;
-      sendTrips();
+      turnHour();
     }
   } else if (msg.kind === "wholeState") {
     // the client could not take a state as changes to the last (T-1029)
