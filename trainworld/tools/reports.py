@@ -11,7 +11,7 @@ orchestrator is current reads it, not only the session that started the agent. R
 The hook (registered in .claude/settings.json) fires when any subagent of any maps session stops. It keeps only
 top-level agents of a session that orchestrates trainworld: one registered by `watch.py --session`, or named on
 notes/handoff.md's Orchestrator or Previous line. The reports are the agent's successful SubagentHandback
-messages and SendMessages to "main"; an agent that has no SubagentHandback tool reports by its last text. It always
+messages and SendMessages to "main"; a spawned agent (one with a .meta.json) without a SubagentHandback tool reports by its last text, unless that is a compaction summary. It always
 exits 0 and prints nothing, so it can never hold an agent back.
 
 Files: notes/agent-reports/<id>.json unread, read/<id>.json once marked; one file per report, written by temp file
@@ -263,6 +263,11 @@ def record(box, session, agent_id, meta, es, kind, ts, text):
             "task": task, "description": desc, "model": meta.get("model"), "kind": kind, "text": text}
 
 
+def is_compaction_summary(text):
+    """The summary a compaction writes starts with an <analysis> or <summary> block (r-f11676a4)."""
+    return re.match(r"\s*<(analysis|summary)>", text) is not None
+
+
 def from_stop(box, data):
     """Records for one SubagentStop: what the agent's latest turn delivered."""
     sid = data.get("session_id") or ""
@@ -283,8 +288,8 @@ def from_stop(box, data):
         if mentions_handback(path):
             return []
         text = (data.get("last_assistant_message") or "").strip()
-        if not text:
-            return []
+        if not text or not meta or is_compaction_summary(text):
+            return []        # no .meta.json: not a spawned agent (an orchestrator's own tab), nothing to report
         sent = [("final-text", None, text, None)]
     return [record(box, sid, agent_id, meta, es, k, ts, t) for k, ts, t, _ in sent]
 
