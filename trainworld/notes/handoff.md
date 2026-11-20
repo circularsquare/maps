@@ -14,6 +14,9 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    review/coast-round-hk.png. editchk (Sonnet checker on T-3803 editfirst tree) running.
    Asked in chat, unanswered: T-3809 text ack, 400 km per leg, T-3835 text ack. Ask a-2026-11-20-1: T-2216 island
    design (A/B/C, stage 2). Resources 11-20 05:25: all flags known.
+   HOLD app/ landings (editfirst, maperr) from ~07:40: iraniraq's gates (Iraq 6393, Iran 6394) until it says done.
+   maperr T-3842 done in its tree (basemap.ts; DECISIONS line already in): land after the hold, then drop the
+   `browser` relax on mki and pgx in pipeline/world_plan.json once iraniraq's run is done.
 1. Running, mine: iraniraq (Opus, T-3763, main
    tree; messages me before/after gates and join: hold app/ landings then), maperr (Opus, T-3842 Myanmar map error,
    tree maperr, Vite 6148; needed before the publish that ships Myanmar). Adopted from maps-60 [23a293], reports via
