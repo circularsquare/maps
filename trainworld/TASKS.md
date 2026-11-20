@@ -522,7 +522,7 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
   - Goal: The overlay exists, and short alley links join streets.
   - Other: About half a day. notes/T-3034.md.
 - T-3027 [P3] {L:track-speed} Slopes slow trains
-  - Context: You asked 2026-11-10 how slopes could slow trains without annoying people; a player suggested using the cross section.
+  - Context: You asked 2026-11-10 how slopes could slow trains without annoying people; a player suggested using the cross section. You, 11-20: "maybe we allow tighter slopes, but they just limit speed more ... depending on what target max speed we set and how much room we have, we let slopes get steeper or shallower"; tying it to real elevation "would be extremely hard and disruptive to existing players". Today: 4% max, 200 m per 8 m level, grades don't change speed, high-speed ramps capped at 160 (a bug that keeps old lines from slowing). Options went to you in chat 11-20; likely part of the track rework design.
   - Goal: A design for slope slowing, then built if you agree.
 - T-3642 [P3] {L:community} Long-played networks near the share limits
   - Context: From T-3640: a shared save's header keeps every region's ledger, one entry per game day (Swattik's 173 regions add about 20 KB a day), so at his pace he passes the server's 2 MB shared-save cap in about 400 more game days and gets "too big". His drawing took 166 s (Japan 184 s) against the 5-minute share wait, so a slower machine sees "The diagram could not be drawn". checks/safari-save-browser.mjs treats forShare's new "big" answer as success.
