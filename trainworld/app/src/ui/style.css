@@ -576,6 +576,7 @@ body.resizing, body.resizing * { user-select: none; }
 .memory-warn { margin: 6px 0 0; }
 .slider:has(> .group) { flex-wrap: wrap; }
 .slider span { min-width: 3.6em; }
+.slider .stepper span { min-width: 0; }
 .slider .slider-pct { flex: none; width: 4ch; min-width: 0; text-align: right; font-variant-numeric: tabular-nums; }
 .slider input { flex: 1; min-width: 0; appearance: none; height: calc(15 * var(--px)); background: transparent; margin: 0; }
 .slider input::-webkit-slider-runnable-track { height: calc(3 * var(--px)); background: var(--rule); }
@@ -1279,7 +1280,7 @@ button.status-tag:hover { background: var(--shade); color: var(--text); }
 .start-link { font: inherit; color: inherit; background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; }
 .start-link:hover, .start-link:focus-visible { color: var(--text); }
 .start-foot .purpose-filter select { font-size: 12px; }
-.start-foot .start-gear { margin-left: -10px; }
+.start-foot .start-gear { margin-left: -10px; justify-content: center; }
 .start-gear.on { border-color: var(--accent); color: var(--accent); }
 /* the gear's settings, a small panel over the line */
 .start-settings { position: absolute; left: 0; bottom: 100%; margin-bottom: 4px; width: max-content; max-width: calc(100vw - 24px); box-sizing: border-box;
