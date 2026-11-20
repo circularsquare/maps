@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3828 [P3] {L:timetables} Pinch zoom for the timetable on touch (2026-11-20): pinch zoom about the fingers' midpoint through the wheel's zoom step; touch-action keeps the page from zooming; one finger still scrolls. notes/T-3828.md.
 - T-3832 [P3] {L:small-fixes} Lines gear part-ticked box shows a minus (2026-11-20): one shared .check input.some minus rule for the Lines gear and the schematic cities list. notes/T-3832.md.
 - T-3834 [P2] {L:small-fixes} A copied line leaves most periods empty (2026-11-20): copy_line zeroes every period row and the worker applies the new-line default headways and weekend share, as for a new line. notes/T-3834.md.
 - T-3809 [P3] {L:buses} Ferry waypoints without a port (2026-11-20): shift click on water adds a ferry waypoint, each leg routed on its own (fixes legs whose sea path leaves the two ports' box, and legs over 400 km); router no longer slows boats at piece joints. notes/T-3809.md.

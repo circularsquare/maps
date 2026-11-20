@@ -702,7 +702,7 @@ Passing tracks (T-2228, archived; built as T-2231 to T-2233; notes/T-2228.md):
   - Context: Overtake plans are pairwise, so a local's waits for several faster lines are added up.
   - Goal: Measured on a three-line test, then changed only if it matters.
   - Other: notes/T-2228.md section 8
-- T-2216 [P3] {L:islands} Ground-only solve for island pairs
+- T-2216 [P3] {L:islands} Ground-only solve for island pairs (taking, 2026-11-20, agent islanddesign)
   - Context: Market zone pairs on two landmasses are "fixed, never solved" today (1.45M longer trips, 631,000 commutes a day).
   - Goal: They solve with rail as the only ground mode, with a point past which trips don't go by transit at all, so fares can't be raised without limit (your pad, 2026-11-18: "we should probably have a certain point at which transit is just not taken even if its the only option"); closes T-1396.
   - Other: Own worktree (intercity). notes/T-2216.md
@@ -808,8 +808,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Goal: A station on a loop never shows or counts as a turn, unless trains really turn there.
 - T-3836 [P3] {L:real-networks} Real network names in the player's language
   - Context: In-game feedback 11-20 (1795147183-e2778951, Japanese): on a real network, station and line names should follow the game's language. OSM often has name:ja and name:en. A design call for you: which languages, and what when a name has none. Reach: players on real networks in another language.
-- T-3828 [P3] {L:timetables} Pinch zoom for the timetable on touch
-  - Context: T-3817 zooms the timetable with the scroll wheel; a phone only gets the opening view. Reach: phone players opening timetables.
 - T-3824 [P2] {L:schematic-rivers} {after:T-3358 prototype} Schematic ferries drawn after the water
   - Context: You, 11-20: "now that we're drawing ferries, it might be nice to draw ferries after drawing water so that their ports actually line up cloesr to the coastline".
   - Goal: In the schematic, ferry ports sit on the drawn coast and ferry routes run over drawn water.
