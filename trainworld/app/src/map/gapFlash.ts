@@ -25,7 +25,7 @@ export class GapFlash {
   private raf = 0;
   private timer = 0;
 
-  constructor(private map: MlMap, overlay: Overlay) {
+  constructor(private map: MlMap, private overlay: Overlay) {
     this.canvas = document.createElement("canvas");
     this.canvas.className = "overlay gap";
     // over the network, under the stop markers (style.css .stop-marks, z 3)
@@ -85,9 +85,10 @@ export class GapFlash {
   }
 
   private draw() {
-    const ctx = this.ctx, dpr = this.map.getPixelRatio();
+    const ctx = this.ctx;
     fitSparse(this.canvas, this.map, !!this.ends);
     if (!this.ends) return;
+    const dpr = this.canvas.width / Math.max(1, this.overlay.cssW);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     const t = performance.now() - this.start;

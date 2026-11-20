@@ -109,9 +109,10 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
   }
 
   function draw() {
-    const dpr = map.getPixelRatio();
     fitSparse(canvas, map, !!marks);
     if (!marks) return;
+    // device px per CSS px as the canvas really is (see realStations.ts draw)
+    const dpr = canvas.width / Math.max(1, overlay.cssW);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
