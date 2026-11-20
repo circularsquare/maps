@@ -794,7 +794,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3837 [P3] {L:buses} Ferry routes found without a waypoint, and waypoints on touch
   - Context: T-3809 added shift click waypoints. A leg is still searched only in a box around its two ports, so a sea path that leaves it (Ma Liu Shui to Sai Kung) needs a waypoint; a wider third search would find it alone. Phones have no shift click.
   - Other: notes/T-3809.md
-- T-3892 [P2] {L:buses} Ferry rework: boat sizes, stronger fans, long routes
+- T-3892 [P2] {L:buses} Ferry rework: boat sizes, stronger fans, long routes (taking, 2026-11-20, agent ferrydesign)
   - Context: You, 11-20: "might be nice to get that out at same time as buses ... i think long distance ferries should probably get more traffic. i think we have room to potentially make ferry fan system way stronger / more common ... also provide for small and large ferries (current size can be medium?)". Today: one boat (320 seats, 45 km/h since T-3435's first pass); fans are a tenth of visits and attraction trips inside a zone, an hour aboard felt as 6 minutes, none on inter-city trips; island pairs solve since T-2216 stage 1. Folds in T-3435.
   - Goal: A design for you first: small, medium and large boats with seats, speed, prices and loading; fans' share, weight and reach (inter-city leisure trips); what long routes like Hong Kong - Macau and Seattle - Victoria then carry and earn at the default service, measured in the game; then built.
   - Other: notes/T-3435.md
@@ -910,9 +910,9 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Three Boston lines tried and reverted: rail takes no walkers in the fixture whichever pair is served. Needs a Rust-side look at the pair share (e_frac) before choosing stops.
   - Goal: The check covers a line serving two stations at both ends of a walkable cross-pack pair.
   - Other: See notes/T-2527.md.
-- T-2374 [P3] {L:cleanup} Split the five biggest app files (taking, 2026-11-20, agent clocksplit)
-  - Context: demandClient.ts 5,555 lines, clock.worker.ts 5,113, demand.worker.ts 2,870, renderer.ts 2,507 (`draw` 657), tools.ts 2,416; all grew 14-35% since the 11-04 survey and none fits one read. The clock worker is the most edited code file (235 commits since 10-21). The clock worker, the track tools and the renderer are what the track rework changes, so those go first.
-  - Goal: Moves only, one agent per file: every new part under 1,500 lines, the clock worker under 2,000, demandClient under 3,000, the other three under 1,500, no function over 400 lines; typecheck and smoke pass.
+- T-2374 [P3] {L:cleanup} Split the three biggest app files left
+  - Context: The clock worker (5,298 to 1,295 lines plus ten files) and the renderer (2,507 to 1,155 plus three) were split 11-20. Left: demandClient.ts about 5,500 lines, demand.worker.ts about 2,900, tools.ts about 2,400; none fits one read. tools.ts is what the track rework changes; it waits on tramrail (T-3889), the demand files on binzip (T-2486).
+  - Goal: Moves only, one agent per file: demandClient under 3,000, the other two under 1,500, every new part under 1,500, no function over 400 lines (the clock worker's handleMessage is 453); typecheck and smoke pass.
   - Other: Pieces and seams in notes/review-cleanup-2026-11-20.md; demandClient and demand.worker from notes/T-2360.md stage 7.
 - T-2375 [P4] {L:cleanup} Move debug probes out of main.ts
   - Context: The tsconfig part is done (T-3443). Left: about 125 lines of ?debug probes in main.ts, URL parameters read in 28 files, ten unused CSS classes.
