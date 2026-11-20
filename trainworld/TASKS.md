@@ -154,7 +154,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Found by T-3623: Purwokerto's registry centre sits on Banjarnegara and Kozhikode's on Manjeri; an OSM area with no node inside it still sits at its box centre (New Cairo City).
   - Goal: Each zone's centre is on its named town; areas without a node get a centre inside them.
   - Other: notes/T-3623.md
-- T-3662 [P2] {L:single-track} Switching one kerbside piece breaks lines quietly
+- T-3662 [P3] {L:single-track} {after:the track rework design} Switching one kerbside piece breaks lines quietly
   - Context: Found checking T-3647: on a kerbside pair of one-way legs, switching one piece of a leg to both ways is accepted (no refusal) but breaks the lines using that leg (A1, A3, A4 in the test scene); master does the same. Switching every piece of the leg together works.
   - Goal: The switch either takes the whole leg with it or is refused with a message naming the line it would break.
   - Other: notes/T-3647.md
@@ -840,6 +840,9 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Ports, industrial estates and airports with no residents stay dark (Tuas and Jurong were fixed by hand 11-13). Half done: units keep outlines with 0.2 km2 of built surface.
   - Goal: A free unit under the floor sharing half its land border with one metro joins it, after a worldwide count.
   - Other: notes/T-3287.md
+- T-3867 [P2] {L:board} Board card says which task it waits on (taking, 2026-11-20, agent boardwait)
+  - Context: You, 11-20: "in twboard if sometask is 'waiting on another task' lets add a new separate section in the preview thats just what task it's waiting on. hard to tell in most cases."
+  - Goal: A waiting task's preview has its own section naming the task (id and title) or the thing it waits on.
 - T-3841 [P3] {L:cleanup} Agent report inbox takes in non-reports
   - Context: `tools/reports.py`'s hook files "final-text" entries that aren't agent reports: an agent's compaction summary (r-f11676a4, editfirst, 11-20) and lines that read as your chat replies in the orchestrator's tab (r-a5f08c93 "yes purge it, leave resend on free"). Each wakes the orchestrator for nothing.
   - Goal: Only a subagent's final report is filed.
@@ -854,7 +857,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3354 [P3] {L:single-track} One-track platform jumps sides when dragged north-south
   - Context: Not reproduced 2026-11-16 (bug-a): a station node's heading stays put when dragged, so the fixed axis never flips in the sim. Needs the exact drag that shows it.
   - Other: About 1 h. notes/T-3332.md.
-- T-3353 [P2] {L:single-track} Second single from a double's end refused
+- T-3353 [P3] {L:single-track} {after:the track rework design} Second single from a double's end refused
   - Context: When the first single came in at an angle, a second single to a close target gets RadiusTooSmall.
   - Goal: A route leaves a node anywhere in the cone between the ends' headings.
   - Other: A design call, 4-6 h. notes/T-3344.md.
