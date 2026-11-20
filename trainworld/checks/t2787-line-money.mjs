@@ -2,7 +2,7 @@
 //   node trainworld/checks/t2787-line-money.mjs [url] [--shots]
 // On the real New York save (T-007), run at speed for a few game days:
 // 1. The clock worker keeps whole days per line (moneyState.lineDays), three numbers a day: day, fares, running.
-// 2. A running rail line's panel draws "Fares minus running costs" with a bar per whole day (not the day now),
+// 2. A running rail line's panel draws "Revenue and expenses" with a bar per whole day (not the day now),
 //    and a bar's hover gives the date, Fares, Running trains and Net.
 // 3. The money state carries lineDays (the save header writes the same numbers).
 // --shots: the panel, in artifacts/trainworld/linemoney/. Uses the Vite on the url (dev-nowatch.mjs).
@@ -57,9 +57,9 @@ try {
   const info = await page.evaluate(() => {
     const g = document.querySelector('svg.line-money');
     g.scrollIntoView({ block: 'center' });
-    return { bars: g.querySelectorAll('rect.hist-fares, rect.hist-costs').length, heading: g.previousElementSibling?.textContent, ends: [...g.nextElementSibling.querySelectorAll('span')].map((s) => s.textContent) };
+    return { bars: g.querySelectorAll('rect.hist-fares, rect.hist-costs').length, heading: g.previousElementSibling?.firstElementChild?.textContent, ends: [...g.nextElementSibling.querySelectorAll('span')].map((s) => s.textContent) };
   });
-  check(info.bars >= 3 && info.bars <= 7 && info.heading === 'Fares minus running costs', 'the panel draws whole-day bars', JSON.stringify(info));
+  check(info.bars >= 3 && info.bars <= 7 && info.heading === 'Revenue and expenses', 'the panel draws whole-day bars', JSON.stringify(info));
   const box = await page.evaluate(() => document.querySelectorAll('svg.line-money rect.hist-col')[1].getBoundingClientRect().toJSON());
   await page.mouse.move(box.left + 2, box.top + box.height / 2);
   await page.mouse.move(box.left + box.width / 2, box.top + box.height / 2);

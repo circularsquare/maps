@@ -94,9 +94,21 @@ Web first, so it can be shared as a link.
   profiles; a state built at another draw anchor, or one with no trips to wait for (`noTrips`), is
   taken at once. **Previews go before an edit's follow-up** [T-1407]: after applying an edit the
   worker answers the track previews and station checks asked meanwhile, then builds and posts its
-  state, trips and boarding hour and answers it (`later` in the clock worker; any other message, or
-  trips sent from a timer, runs the follow-up first, so nothing else sees the model ahead of its
-  state). The track tool's blueprint segment that changes no line for demand asks `early`: it is
+  state, trips and boarding hour and answers it (`later` in the clock worker). A full state is built
+  a piece a task outside the message queue, about 0.1 s each on the biggest saves (`stateSteps`,
+  `networkSteps`: the rows, the network in a few pieces, then its post with the trips, never split),
+  previews answered between them; any other message, trips sent from a timer, or a full state sent
+  when fetched ground or streets reprice the blueprint, runs what is left first (for that state, begun
+  again on the new model; a held one stays held), so nothing else sees the model ahead of its state and
+  an edit's answer comes with the first world holding it (the page splits a paid edit's charge by it). **An edit goes ahead** [T-3803]: one of
+  the main path that changes no service, coming before or between the pieces of a follow-up that
+  builds the network (`goesAhead`, `standAside`). An edit in that follow-up still waiting for a world
+  holding it (its answer, or the page's split of an early answer's money) gets the rows built so far,
+  or new ones, as a rows state and then its answer; the rest of the follow-up joins the new edit's
+  (one state for both, not held), or goes on its own when the new edit makes none. An edit 5 s or more after a
+  follow-up's first edit neither joins it nor goes ahead, so its state still comes at least that often. The network cache
+  is written only at the end of a build, so one dropped part way leaves it as the last finished build
+  did. The track tool's blueprint segment that changes no line for demand asks `early`: it is
   answered before its state, the tool asks the next ghost from the answer's node, and the ghost
   just placed is drawn as the stand-in for the new blueprint until the next network is set
   (`Renderer.keepPreviewAsPlaced`). **Its state waits for the pointer to rest** [T-2404]: the
@@ -261,7 +273,8 @@ Web first, so it can be shared as a link.
   repeats take at most a third of the worker. A question the page has never had answered (a panel just opened) goes
   at once. The target for anything new that the worker answers again and again, or runs on its own clock, is under
   about 0.2 s on the biggest saves (the 2,647-station save in notes/T-3801.md), or split so edits can come between
-  its parts. Known to miss it there: one `today` answer, the hour's trips and an edit's held full state.
+  its parts. Known to miss it there: one `today` answer, the hour's trips and boarding hour (one WASM call each), and
+  for any message but an edit the rest of an edit's full state (edits come between its pieces, T-3803).
 - **The demand pool** [T-149, T-173, `workers/demandClient.ts`][T-381]: 3 solving workers on 12 or more
   logical threads, 2 on 6 to 11, 1 on fewer; then a phone or tablet (by its user agent), or a device
   of 4 GB or less, gets 1 (T-2794 adds the same check's lean ways: pixel ratio at most 2, coarse outlines held only near the view; notes/T-2794.md; T-2802: the WASM memories grow 8 MB at a time, not 32, notes/T-2802.md; a phone or tablet by user agent, not a 4 GB desktop, also has no demand cache; no device opens market packs (trips between zones) while "Calculate intercity trips" is off, which is its default on a phone or tablet only, T-2833, T-2838, T-3630; a device reporting 4 GB or less gets a note at the bottom of the map, T-2839, `ui/DeviceNote.tsx`) (`workers/deviceMemory.ts` `smallDevice`, T-2122: a phone's tab holds far

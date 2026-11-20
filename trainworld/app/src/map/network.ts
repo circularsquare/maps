@@ -1536,6 +1536,17 @@ export function strokeRuns<P extends object>(parts: P[], count: (p: P) => number
  * the same either way. `deferStrokes` (the clock worker's): `track` and `lines` hold only their
  * counts, and `strokePieces` the pieces to make them from (map/strokePost.ts). */
 export function networkFromState(s: ClockState, cache: NetCache = newNetCache(), deferStrokes = false): NetworkBuffers {
+  const g = networkSteps(s, cache, deferStrokes);
+  for (;;) {
+    const r = g.next();
+    if (r.done) return r.value;
+  }
+}
+
+/** `networkFromState` in pieces (T-3803): the clock worker runs one a task, so an edit can come between them. The
+ * cache is written only in the last piece, so one dropped at a yield leaves it as the last finished build left it
+ * (the waiting rooms' placement and the passages, kept against their own last inputs, are in the last piece too). */
+export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), deferStrokes = false): Generator<void, NetworkBuffers, void> {
   const r = s.render;
   const edgePts = new Map<number, Float32Array>();
   const builtEdge = new Map<number, boolean>();
@@ -1563,6 +1574,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
   // T-3171: also where double track is the only double at a junction of single track (a double branching off single)
   const taperAt = (node: number) => singleAt.has(node) && (endCount.get(node) === 2 || doublesAt.get(node) === 1) && !joinedAt.has(node) && !splits.stations.has(node) && !splits.full.has(node);
   const shifts = legShifts(s.edges, r.edgeParts!);
+  yield;
   /** per edge id: the points and lanes its track and lines are drawn with */
   const drawn = new Map<number, LanePoints>();
   /** T-3212: single-track edges drawn splitting at a station (`F_SPLIT`) */
@@ -1613,6 +1625,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     trackOrder.push(e.id);
     for (const v of c.ramps) marks.push(v);
   }
+  yield;
   const maxLine = s.lines.reduce((m, l) => Math.max(m, l.id), -1);
   const lineColours = new Uint8Array(Math.max(1, maxLine + 1) * 4);
   const lineCars = new Float32Array(r.lineTable.length / 4).fill(8);
@@ -1796,8 +1809,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     const slot = backSlotOf(r.lineTable, r.meta, l.id);
     if (slot >= 0 && l.back?.length) runSamples(slot, l.back, c.backStroke ?? [], true);
   }
-  cache.lines = linesSeen;
-  cache.samples = samplesSeen;
+  yield;
   // the fastest train over each built segment (T-1271), from each line's speeds, kept per line
   const speedsSeen: NetCache["speeds"] = new Map();
   const trainOf = new Map<number, Float32Array>();
@@ -1817,7 +1829,6 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
       for (let j = 0; j < v.length; j++) if (v[j] > t[j]) t[j] = v[j];
     });
   }
-  cache.speeds = speedsSeen;
   const trackParts: EdgeEntry[] = [];
   let trackCount = 0;
   for (const id of trackOrder) {
@@ -1827,7 +1838,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     trackParts.push(c);
     trackCount += c.strokes.count;
   }
-  cache.edges = edgesSeen;
+  yield;
   const served = new Map<number, number>();
   for (const l of s.lines) for (const st of new Set([...l.stops, ...(l.backStops ?? [])])) served.set(st, (served.get(st) ?? 0) + 1);
   // whether a line runs through each node, so a station's box covers it (one line width since T-190)
@@ -1907,7 +1918,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     stationLine.set(c.line, i * 2 * PLATFORM_POINTS);
     stations.set([p[0], p[1], ((served.get(n.id) ?? 0) > 1 ? 1 : 0) | (n.stationBuilt ? 0 : 2) | (lined.has(n.id) ? 4 : 0) | (n.stationOff ? 8 : 0) | ((pe?.tracks === 2 && !oneSide) || split ? 16 : 0) | (side ? ST_ONE | (side < 0 ? ST_ONE_NEG : 0) : 0) | (single ? ST_SINGLE | ST_ONE_MID : 0) | (n.kind ? ST_TRAM : 0) | (hasUpgrade(n.upgrades, UPGRADE.waitingRoom) ? ST_ROOM : 0) | (hasUpgrade(n.upgrades, UPGRADE.parkRide) ? ST_PARK : 0) | (hasUpgrade(n.upgrades, UPGRADE.terminal) ? ST_TERMINAL | (ids.length === 1 ? ST_BUFFER : 0) : 0) | (passingAt.has(n.id) ? ST_PASSING : 0)], i * 3);
   });
-  cache.stations = stationsSeen;
+  yield;
   // T-2219: the station buildings' members as drawn (their boxes join the floor), which car parks stay out of
   const outlines = buildingsDrawn(s.buildings, s.buildingLL, st, stations, stationLine, edgePts, false);
   for (let i = 0; i < st.length; i++) if (outlines.memberOf[i] >= 0) stations[i * 3 + 2] += ST_BUILDING;
@@ -2024,6 +2035,11 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
       d += len;
     }
   }
+  cache.edges = edgesSeen;
+  cache.lines = linesSeen;
+  cache.samples = samplesSeen;
+  cache.speeds = speedsSeen;
+  cache.stations = stationsSeen;
   const serial = ++cache.serial, last = cache.last;
   const patch: NetPatch | undefined = last ? {
     base: last.serial,
