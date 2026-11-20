@@ -28,6 +28,14 @@ impl TrackApi {
     /// An undoable edit. It pays for any trains it makes the running lines need (T-028), and is
     /// refused if the cash is short.
     pub(super) fn run(&mut self, op: Op) -> u32 {
+        // T-3889: a stop edit may make a line a tram line or a train line
+        let op = match op {
+            Op::Line { id, data: Some(mut d) } => {
+                self.w.net.fit_kind(id, &mut d);
+                Op::Line { id, data: Some(d) }
+            }
+            op => op,
+        };
         let fleet = self.fleet;
         let at = self.edit_start();
         let before = self.w.svc.before_edit(&self.w.net, at);

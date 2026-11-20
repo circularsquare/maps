@@ -487,13 +487,13 @@ pub enum Issue {
     NodeHeading { node: u32, edge: u32 },
     /// A station's two ends leave on one side (its track does not run through).
     NodeOneSided { node: u32 },
-    /// Track of two families (rail and tram) meets at a node: they only cross, flat.
-    TrackFamily { node: u32 },
     NodeLevel { node: u32 },
     /// Removing a node that still has edges or a station.
     NodeInUse { node: u32 },
     /// A station on a node that has one already.
     StationPorts { node: u32 },
+    /// T-3889: a station where tram track meets rail.
+    StationFamily { node: u32 },
     /// A station on a node where more than two pieces of track meet.
     StationJunction { node: u32 },
     PlatformLength { node: u32 },
@@ -512,6 +512,8 @@ pub enum Issue {
     StationInUse { node: u32, line: u32 },
     LineStops { line: u32 },
     LinePath { line: u32 },
+    /// T-3889: a line with no tram stop (a train line) would run on tram track.
+    TramTrack { line: u32 },
     /// A line's return run has no track to come back on: one-way track runs against it (T-3094).
     NoWayBack { line: u32 },
     /// One-way single track (T-3094) that a line cannot go round: it has no other way between its stations.

@@ -256,6 +256,9 @@ pub const TRACK_KINDS: usize = 4;
 /// (Citadis and Skoda 18, Combino 15); old street networks go down to 11-13 (notes/T-2921.md).
 pub const TRAM_MIN_RADIUS: f64 = 18.0;
 
+/// Off-street tram track's cap, km/h, and a tram's top speed on any track (T-3889).
+pub const TRAM_V_CAP_KMH: f64 = 80.0;
+
 /// T-3004: the share of the terrain surcharge tram track pays, street and off-street (Anita, 2026-11-10).
 pub const TRAM_TERRAIN: f64 = 0.25;
 
@@ -372,7 +375,7 @@ pub static TRACK_SPECS: [TrackSpec; TRACK_KINDS] = [
     },
     TrackSpec {
         family: 1,
-        v_cap_kmh: 80.0,
+        v_cap_kmh: TRAM_V_CAP_KMH,
         min_radius: TRAM_MIN_RADIUS,
         level_mult: [1.6, 1.2, 0.6, 0.5, 0.6, 1.1, 1.6],
         terrain_mult: TRAM_TERRAIN,
@@ -729,13 +732,14 @@ mod kind_tests {
         net
     }
 
+    /// T-3889: tram track meets regular and high-speed track at a node; the node is rail's.
     #[test]
-    fn rail_and_tram_track_may_not_meet_at_a_node() {
-        use super::super::net::Issue;
-        let mixed = line_net([TrackKind::Regular, TrackKind::Tram]);
-        assert!(mixed.validate(&[], &[1], &[]).iter().any(|i| matches!(i, Issue::TrackFamily { node: 1 })));
-        for pair in [[TrackKind::Regular, TrackKind::HighSpeed], [TrackKind::StreetTram, TrackKind::Tram]] {
-            assert!(!line_net(pair).validate(&[], &[1], &[]).iter().any(|i| matches!(i, Issue::TrackFamily { .. })), "{pair:?}");
+    fn rail_and_tram_track_meet_at_a_node() {
+        for pair in [[TrackKind::Regular, TrackKind::Tram], [TrackKind::StreetTram, TrackKind::HighSpeed], [TrackKind::Regular, TrackKind::HighSpeed], [TrackKind::StreetTram, TrackKind::Tram]] {
+            let net = line_net(pair);
+            assert!(net.validate(&[0, 1], &[0, 1, 2], &[]).is_empty(), "{pair:?}");
+            let rail = pair.iter().find(|k| k.spec().family == 0).copied().unwrap_or(pair[0]);
+            assert_eq!(net.node_kind(1), rail, "{pair:?}");
         }
     }
 }

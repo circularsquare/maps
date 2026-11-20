@@ -235,7 +235,7 @@ function applyInner(op: EditOp): Applied {
       const id = a.new_line_id();
       const { trains: [h, m, l], dwellS, turnaroundS } = NEW_LINE.train;
       // T-2926: a line on tram track starts with the tram's dwell and turnaround and 2 cars
-      const tram = op.stops.length > 0 && a.node_kind(op.stops[0]) >= 2;
+      const tram = a.stops_tram(new Uint32Array(op.stops)); // T-3889: any tram stop
       const [tramDwell, tramTurn] = tram ? TrackApi.kind_defaults(3) : [dwellS, turnaroundS];
       const r = a.set_line_with_trains(id, new Uint32Array(op.stops), h, m, l, tramDwell, tramTurn, tram ? TRAM_NEW_CARS : newLineCars, colourInt(op.colour), op.name || a.next_line_name());
       if (r !== 0) return { r, line: id };
@@ -288,7 +288,7 @@ function applyInner(op: EditOp): Applied {
       a.set_line_badge(id, name, colour, symbol);
       // T-3834: a copy starts on the new-line default of its kind in every period the line uses, as a new line does
       let charge = 0, trainCharge = 0;
-      const kind = a.is_ferry(op.line) ? "ferry" : a.is_bus(op.line) ? "bus" : a.node_kind(a.line_stops(op.line)[0] ?? 0) >= 2 ? "tram" : a.line_fast(op.line) ? "fast" : "rail";
+      const kind = a.is_ferry(op.line) ? "ferry" : a.is_bus(op.line) ? "bus" : a.line_tram(op.line) ? "tram" : a.line_fast(op.line) ? "fast" : "rail";
       const rows = a.line_period_count(id), wanted = headwaysFor(kind, newLineHeadway, rows);
       if (wanted && (rows === 3 ? a.set_auto_headway(id, wanted[0], wanted[1], wanted[2]) : a.set_line_row_headways(id, Uint32Array.from(wanted))) === 0) {
         charge += a.last_charge();

@@ -213,6 +213,11 @@ impl Network {
     /// way its track runs) is routed through as any stop. None when no stop is a one-way station, or
     /// that still leaves one neither way stops at: then the route goes through every stop.
     pub fn route_legs(&self, stops: &[u32], ones: &[(u32, u8)]) -> Option<Vec<u32>> {
+        self.route_legs_t(stops, ones, self.stops_tram(stops))
+    }
+
+    /// `route_legs` for a tram line or a train line (`tram`, T-3889).
+    pub fn route_legs_t(&self, stops: &[u32], ones: &[(u32, u8)], tram: bool) -> Option<Vec<u32>> {
         let mut legs = self.legs(stops, ones);
         let nodes = |p: &[u32]| -> Vec<u32> { std::iter::once(self.path_nodes(p[0]).0).chain(p.iter().map(|&q| self.path_nodes(q).1)).collect() };
         let n = stops.len();
@@ -220,18 +225,18 @@ impl Network {
         let on = |p: &[u32], s: u32| self.path_serves(p, s, ones);
         while legs.contains(&true) {
             let through: Vec<u32> = (0..n).filter(|&j| !legs[j]).map(|j| stops[j]).collect();
-            let mut base = self.route_hops_plain(&through).ok().filter(|p| !p.is_empty())?;
+            let mut base = self.route_hops_plain_t(&through, tram).ok().filter(|p| !p.is_empty())?;
             let back: Vec<u32> = through.iter().rev().copied().collect();
-            let mut back = self.route_hops_plain(&back).ok().filter(|p| !p.is_empty())?;
+            let mut back = self.route_hops_plain_t(&back, tram).ok().filter(|p| !p.is_empty())?;
             // the ones served once that neither run passes yet, which a run then takes where it can
             let off: Vec<bool> = (0..n).map(|j| legs[j] && !on(&base, stops[j]) && !on(&back, stops[j])).collect();
             if off.contains(&true) {
-                base = self.leg_run(stops, &legs, &off, ones)?;
+                base = self.leg_run(stops, &legs, &off, ones, tram)?;
                 let roff: Vec<bool> = off.iter().rev().copied().collect();
                 let rlegs: Vec<bool> = legs.iter().rev().copied().collect();
                 let still: Vec<bool> = (0..n).map(|j| roff[j] && !on(&base, stops[n - 1 - j])).collect();
                 if still.contains(&true) {
-                    back = self.leg_run(&rs, &rlegs, &still, ones)?;
+                    back = self.leg_run(&rs, &rlegs, &still, ones, tram)?;
                 }
             }
             let (_, fwd) = self.match_run(&nodes(&base), stops, &self.stop_reversals(&base), ones, &base)?;
@@ -255,10 +260,10 @@ impl Network {
     /// back more often. The quickest route through the rest alone may pass none of them where faster
     /// track runs beside the legs (passing tracks between two side platforms), and then neither run
     /// would stop there.
-    fn leg_run(&self, stops: &[u32], legs: &[bool], want: &[bool], ones: &[(u32, u8)]) -> Option<Vec<u32>> {
+    fn leg_run(&self, stops: &[u32], legs: &[bool], want: &[bool], ones: &[(u32, u8)], tram: bool) -> Option<Vec<u32>> {
         let mut keep: Vec<bool> = legs.iter().map(|&l| !l).collect();
         let kept = |keep: &[bool]| -> Vec<u32> { stops.iter().zip(keep).filter(|x| *x.1).map(|x| *x.0).collect() };
-        let mut path = self.route_hops_plain(&kept(&keep)).ok().filter(|p| !p.is_empty())?;
+        let mut path = self.route_hops_plain_t(&kept(&keep), tram).ok().filter(|p| !p.is_empty())?;
         let turns = self.path_reversals(&path).len();
         for j in 0..stops.len() {
             if !want[j] || self.path_serves(&path, stops[j], ones) {
@@ -266,7 +271,7 @@ impl Network {
             }
             keep[j] = true;
             // a one-way stop the player set only where the run arrives by its side (T-3711)
-            match self.route_hops_plain(&kept(&keep)).ok().filter(|p| !p.is_empty() && self.path_reversals(p).len() <= turns && self.path_serves(p, stops[j], ones)) {
+            match self.route_hops_plain_t(&kept(&keep), tram).ok().filter(|p| !p.is_empty() && self.path_reversals(p).len() <= turns && self.path_serves(p, stops[j], ones)) {
                 Some(p) => path = p,
                 None => keep[j] = false,
             }
@@ -282,8 +287,8 @@ impl Network {
     /// T-3651: `stops` (a run's stops in its order) with each of `extra` (one-way stations, none of
     /// them on the route through `stops`) put in where that run takes it without turning back more
     /// often, at the place its route costs least; those it cannot take are left out. The stops and
-    /// their route, or None where `stops` have none.
-    pub fn take_legs(&self, stops: &[u32], extra: &[u32]) -> Option<(Vec<u32>, Vec<u32>)> {
+    /// their route, or None where `stops` have none. `tram`: a tram line's (T-3889).
+    pub fn take_legs(&self, stops: &[u32], extra: &[u32], tram: bool) -> Option<(Vec<u32>, Vec<u32>)> {
         // `route_hops_plain` hop by hop (stops here are never a loop's), each hop's path and the side
         // it arrives on, so a slot reroutes only its own two hops and, where it arrives otherwise,
         // the hops after it
@@ -291,7 +296,7 @@ impl Network {
             let mut side = side;
             let mut out = vec![];
             for w in stops[from..].windows(2) {
-                let h = self.find_path_side(w[0], w[1], side, None)?;
+                let h = self.find_path_side(w[0], w[1], side, None, tram)?;
                 side = Some(h.1);
                 out.push(h);
             }
@@ -313,8 +318,8 @@ impl Network {
             let mut best: Option<(f64, usize, Vec<(Vec<u32>, u8)>)> = None;
             for slot in 1..stops.len() {
                 let side = if slot >= 2 { Some(hops[slot - 2].1) } else { None };
-                let Some(a) = self.find_path_side(stops[slot - 1], s, side, None) else { continue };
-                let Some(b) = self.find_path_side(s, stops[slot], Some(a.1), None) else { continue };
+                let Some(a) = self.find_path_side(stops[slot - 1], s, side, None, tram) else { continue };
+                let Some(b) = self.find_path_side(s, stops[slot], Some(a.1), None, tram) else { continue };
                 let mut t: Vec<(Vec<u32>, u8)> = hops[..slot - 1].to_vec();
                 let same = b.1 == hops[slot - 1].1;
                 let side = b.1;
@@ -415,11 +420,13 @@ impl Network {
                 return Some((own, back));
             }
         }
-        if let Ok(p) = self.route_hops(&own, ones) {
+        // T-3889: a tram line's, or a stretch of one on tram track
+        let tram = self.stops_tram(stops) || self.path_tram(path);
+        if let Ok(p) = self.route_hops_t(&own, ones, tram) {
             return Some((own, p));
         }
         if own != rs {
-            if let Ok(p) = self.route_hops(&rs, ones) {
+            if let Ok(p) = self.route_hops_t(&rs, ones, tram) {
                 return Some((rs, p));
             }
         }

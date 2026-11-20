@@ -362,7 +362,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   two pieces join under a platform only when both are high speed or both are not (`unjoin_near`).
   Blueprint track, single or double, switches between regular, high speed and tram, shape and level kept, with the Select
   tool's bar (T-1898, T-3108, `TrackApi::set_edges_kind`, the planner rebuilding built track uses): rail and tram
-  change as whole joined stretches with their stations and lines; crossovers, constructed track
+  change with their stations and lines; crossovers, constructed track
   and pieces the track model refuses stay as they are. It doubles up into high-speed quad like any double (T-3166). Its cap is 320 km/h, which only a line's high-speed
   trains use; ordinary trains run on it at 160. The track inspector shows the limit.
 - **Tram track** (T-2921, T-2926; design notes/T-2921.md): a third kind of track, `TrackKind::Tram` (the table
@@ -373,12 +373,24 @@ Full design, numbers and sources: `notes/T-008.md`.
   Tram type (`TrackApi::set_route_kind(3)`, also the Build tab's Tram button) lays it at ground level; the ramp
   switch and target speed do not apply. Snapped to the real network (its own switch, T-3069; ui-building.md
   "Snapping to the real network") it follows real tram and light rail and is laid as this off-street kind, curves
-  fitted to the rail at 10 m (25 m where that fails) down to the 18 m radius. Tram track and train track never meet at a node
-  (`TrackFamily`: "Tram track and train track can't join. They can cross."), so while one is picked the other's
-  track and stations are not snap targets; they cross flat and hold each other in capacity at the train's 120 s.
+  fitted to the rail at 10 m (25 m where that fails) down to the 18 m radius. Tram track (both kinds) joins regular
+  and high-speed track at nodes as rail joins rail (T-3889, Anita 2026-11-20): plain joints, junctions and switches,
+  a junction priced as any (`junction_cost` takes no kind), every track a snap target whichever kind is picked. A
+  node where they meet is rail's (`Network::node_kind`): a junction there holds rail's 120 s. No station stands where
+  they meet (`StationFamily`: "A station can't be where tram track and train track meet."), so a station is a tram
+  stop (`Network::tram_stop`) or a rail station by its track, and drawing or deleting track never changes that. They
+  also cross flat (T-3032 below).
   A stop is a station with a 20 to 80 m platform (default 40, remembered apart from rail's), at a flat US$2M
-  at ground and US$50 a day upkeep, and takes only the Waiting room and Passage upgrades. A line whose first stop is on
-  tram track is a tram line: it starts with a 15 s dwell, 120 s turnaround and 2 cars of 20 m (1 to 4), and uses
+  at ground and US$50 a day upkeep, and takes only the Waiting room and Passage upgrades. A line with a tram stop
+  among its stops is a tram line (`line_tram`, T-3889); it may stop at rail stations and run on regular and
+  high-speed track, its trams capped at 80 km/h wherever they run (`line_top`; slower track and limits still apply),
+  and shares that track's capacity as a train does. A line with no tram stop is a train line, routed over rail
+  track only (`find_path_side`'s `tram`; a line's whole stops decide, `HopMemo::tram` carrying it to routes of part of
+  them), and a stop edit that would need tram track is refused (`TramTrack`: "Trains can't run on tram track."), as is an edit that would leave a train line on tram track. A stop
+  edit that adds a line's first tram stop or takes its last changes its kind (`Network::fit_kind`, not on undo):
+  high-speed trains go, over 4 cars become 2, and the dwell and turnaround follow where they were the old kind's
+  defaults. A tram line
+  starts with a 15 s dwell, 120 s turnaround and 2 cars of 20 m (1 to 4), and uses
   the tram fleet (`fleet_tram`, "Tram cars owned" in the Money tab, `fleetTram` in the save header), US$2M a car, running costs as
   a train's. Demand counts a tram car as 0.75 of a car, with no boarding cost (docs/demand-worldwide.md).
 - **Street tram track** (T-2927, `TrackKind::StreetTram`): tram track on streets, 0.1x at ground, 60 km/h cap, 0.6x the
@@ -1692,17 +1704,16 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   runs on to another station that moves, or back into the pick, moves whole; a short piece to a loose end moves
   whole with its end; a station at a dead end just moves. A station whose ramp has no room (a junction or a
   station that stays too close, constructed track beyond a blueprint pick) stays, and the picked piece ramps to it
-  inside itself as before or is refused, saying there is no room to change level. Not across a change of family.
+  inside itself as before or is refused, saying there is no room to change level.
   The whole pick is tried at once; a refusal blames the pieces its problems name (a ramp with no room, a crossing,
   for a problem on the track beyond, the picked piece at that station), which stay as they were while the rest
   changes whole, ramping only to them (T-3087).
-  Rail and tram never join, so a change of family takes whole stretches: a piece that would meet the other
-  family (track outside the pick, a crossover, single track, a refused piece) stays, and so does everything
-  joined to it that would then meet it; the quote names the pieces refused for their own sake apart, and only
-  those are drawn red. Stations on track that changes family get a platform their new kind allows (cut to a tram
-  stop's 80 m, or out to a rail station's 60 m), and lines on it become tram or train lines (`line_tram` reads
-  the first stop), losing high-speed trains and taking the new kind's dwell and turnaround where they had the old
-  kind's defaults. It is one final edit (undo is cleared) that pays the full price of the changed edges, of the
+  Rail and tram may join (T-3889), so a change of family takes any part of a stretch. It is tried whole, with its
+  stations and lines; a piece refused (a curve too tight for trains, track under a train line, which would then run
+  on tram track) stays and the rest is tried again, never one group or piece alone. Stations on track that changes
+  family get a platform their new kind allows (a tram stop's 20 to 80 m, a rail station's 60 m and up; a piece that
+  would leave a station where the two meet is refused), and lines on it become tram or train lines by their stops, losing high-speed trains and
+  taking the new kind's dwell and turnaround where they had the old kind's defaults. It is one final edit (undo is cleared) that pays the full price of the changed edges, of the
   stations whose level or type changed and of every station whose track changed family, and of the track beyond
   the pick as far as it changes (its track and road crossings over that stretch), as if built new at the new
   settings, with nothing back for the old (`TrackWorld::apply_priced` sets the charge), plus the trains the lines

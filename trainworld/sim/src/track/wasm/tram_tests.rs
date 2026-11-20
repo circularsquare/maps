@@ -90,21 +90,130 @@ fn tram_stops_are_short_and_flat_priced() {
 }
 
 #[test]
-fn rail_and_tram_track_do_not_join_but_cross_flat() {
+fn rail_and_tram_track_join_and_cross_flat() {
     let mut a = api();
     a.set_route_kind(3);
     let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(2000.0, 0.0).iter()).copied().collect();
     assert_eq!(a.add_route(&ends, &[], 2, false), 0);
     let tram_end = a.route_end();
     a.set_route_kind(0);
-    // rail from the tram's end node is refused
+    // T-3889: rail from the tram's end node joins it there
     let from_end = vec![1.0, tram_end as f64, 0.0, 0.0, 0.0, 0.0, 0.0, 3000.0, 0.0, 0.0];
-    assert_ne!(a.add_route(&from_end, &[], 2, false), 0);
-    assert!(a.issue_kinds().contains("TrackFamily"), "{}", a.issue_kinds());
+    assert_eq!(a.add_route(&from_end, &[], 2, false), 0, "{}", a.issues());
+    let kinds: Vec<TrackKind> = a.w.net.node_ports[tram_end as usize].ends().iter().map(|&c| a.w.net.edge_kind[(c >> 1) as usize]).collect();
+    assert!(kinds.contains(&TrackKind::Tram) && kinds.contains(&TrackKind::Regular), "{kinds:?}");
+    assert_eq!(a.w.net.node_kind(tram_end), TrackKind::Regular);
+    // no station where they meet: its kind would hang on which track came last
+    assert_ne!(a.add_station(1, tram_end, 2000.0, 0.0, 80, "Joint".into()), 0);
+    assert!(a.issue_kinds().contains("StationFamily"), "{}", a.issue_kinds());
     // rail across it crosses flat
     assert_eq!(route(&mut a, (1000.0, -1000.0), (1000.0, 1000.0), 2), 0, "{}", a.issues());
     assert!(a.w.net.crossings.iter().any(|c| matches!(c.kind, CrossKind::Flat(_))));
     assert!(!a.issue_kinds().contains("Crossing"));
+}
+
+fn station_at(a: &TrackApi, x: f64, y: f64) -> u32 {
+    let net = &a.w.net;
+    (0..net.node_count() as u32).find(|&n| net.node_ok(n) && net.node_platform[n as usize] > 0 && (net.node_x[n as usize] - x).abs() < 30.0 && (net.node_y[n as usize] - y).abs() < 30.0).unwrap()
+}
+
+/// T-3889: regular track from 0 to 5 km east with a rail station at 4 km, tram track drawn on from
+/// its west end to -2 km with a tram stop at -1 km, and regular track on again to -4 km with a rail
+/// station at -3 km: (west rail station, tram stop, east rail station).
+fn tram_between_rail() -> (TrackApi, [u32; 3]) {
+    let mut a = api();
+    a.set_cash(1e6);
+    assert_eq!(route(&mut a, (0.0, 0.0), (5000.0, 0.0), 2), 0, "{}", a.issues());
+    let start = (0..a.w.net.node_count() as u32).find(|&n| a.w.net.node_ok(n) && a.w.net.node_x[n as usize] == 0.0).unwrap();
+    a.set_route_kind(3);
+    let ends = [1.0, start as f64, 0.0, 0.0, 0.0, 0.0, 0.0, -2000.0, 0.0, 0.0];
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+    let west = a.route_end();
+    a.set_route_kind(0);
+    let ends = [1.0, west as f64, 0.0, 0.0, 0.0, 0.0, 0.0, -4000.0, 0.0, 0.0];
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+    for (x, platform, name) in [(-3000.0, 200u16, "West"), (-1000.0, 40, "Stop"), (4000.0, 200, "East")] {
+        assert_eq!(a.add_station(2, edge_at(&a, x, 0.0), x, 0.0, platform, name.into()), 0, "{name}: {}", a.issues());
+    }
+    let st = [station_at(&a, -3000.0, 0.0), station_at(&a, -1000.0, 0.0), station_at(&a, 4000.0, 0.0)];
+    assert!(!a.w.net.tram_stop(st[0]) && a.w.net.tram_stop(st[1]) && !a.w.net.tram_stop(st[2]));
+    (a, st)
+}
+
+/// T-3889: a tram line runs from a tram stop onto rail track to a rail station, at its 80 km/h
+/// there, with tram cars from the tram fleet; a train line between the two rail stations, which only
+/// tram track joins, is refused, saying why, until it stops at the tram stop (a tram line then).
+#[test]
+fn a_tram_line_runs_onto_rail_track_and_a_train_line_keeps_off_tram_track() {
+    let (mut a, st) = tram_between_rail();
+    let tram = a.new_line_id();
+    assert_eq!(a.set_line_with_trains(tram, &st[1..], 6, 3, 1, 15.0, 120.0, 2, 0xff0000, "Tram-train".into()), 0, "{}", a.issues());
+    assert!(a.line_tram(tram));
+    let net = &a.w.net;
+    assert!(net.line_path(tram).iter().any(|&p| net.edge_kind[(p >> 1) as usize] == TrackKind::Regular), "it runs on the rail");
+    assert_eq!(a.construct_all(), 0, "{}", a.issues());
+    let l = &a.w.svc.lines[tram as usize];
+    assert!(l.running);
+    let top = l.runs[0].limits.iter().map(|x| x[1]).fold(0.0, f64::max);
+    assert!((top - 80.0 / 3.6).abs() < 1e-9, "top {} km/h", top * 3.6);
+    assert!(a.trams_needed() > 0 && a.cars_needed() == 0);
+
+    let train = a.new_line_id();
+    assert_ne!(a.set_line_with_trains(train, &[st[0], st[2]], 2, 1, 0, 30.0, 180.0, 0, 0, "Train".into()), 0);
+    assert!(a.issue_kinds().contains("TramTrack"), "{}", a.issue_kinds());
+    // a one-stop line, then the far station clicked: refused the same way
+    assert_eq!(a.set_line_with_trains(train, &st[..1], 2, 1, 0, 30.0, 180.0, 0, 0, "Train".into()), 0, "{}", a.issues());
+    assert_ne!(a.add_stop(train, st[2]), 0);
+    assert!(a.issue_kinds().contains("TramTrack"), "{}", a.issue_kinds());
+    // the tram stop clicked: a tram line, with the tram's dwell and turnaround, that then takes the far station
+    assert_eq!(a.add_stop(train, st[1]), 0, "{}", a.issues());
+    assert!(a.line_tram(train));
+    assert_eq!((a.w.net.line_dwell[train as usize], a.w.net.line_turn[train as usize]), (15.0, 120.0));
+    assert_eq!(a.add_stop(train, st[2]), 0, "{}", a.issues());
+    assert_eq!(a.line_stops(train), st);
+    // and back: without its tram stop it would run trains over tram track
+    assert_ne!(a.drop_stop(train, 1), 0);
+    assert!(a.issue_kinds().contains("TramTrack"), "{}", a.issue_kinds());
+    // a high-speed tram line is refused
+    let mut d = a.w.net.line_data(train).unwrap();
+    d.fast = true;
+    assert!(a.w.net.set_line(train, Some(d)).is_err());
+
+    // the joined network and its lines load the same
+    let bytes = a.save();
+    let mut b = api();
+    assert!(b.load(&bytes));
+    assert_eq!(b.save(), bytes);
+    for l in [tram, train] {
+        assert_eq!((b.line_tram(l), b.line_stops(l)), (a.line_tram(l), a.line_stops(l)));
+        assert_eq!(b.w.net.line_path(l), a.w.net.line_path(l));
+    }
+}
+
+/// T-3889: tram track branching off regular and high-speed track makes a junction, priced as rail's,
+/// and one undo takes it out.
+#[test]
+fn tram_track_branches_off_regular_and_high_speed_track() {
+    for hsr in [false, true] {
+        let mut a = api();
+        a.set_route_hsr(hsr);
+        assert_eq!(route(&mut a, (0.0, 0.0), (4000.0, 0.0), 2), 0, "{}", a.issues());
+        let main = edge_at(&a, 2000.0, 0.0);
+        assert_eq!(a.w.net.edge_kind[main as usize], if hsr { TrackKind::HighSpeed } else { TrackKind::Regular });
+        let before = (live(&a).len(), a.blueprint_cost());
+        a.set_route_kind(3);
+        let ends = [2.0, main as f64, 2000.0, 0.0, 0.0, 0.0, 0.0, 2600.0, 600.0, 0.0];
+        assert_eq!(a.add_route(&ends, &[], 2, false), 0, "hsr {hsr}: {}", a.issues());
+        let net = &a.w.net;
+        let junction = (0..net.node_count() as u32).find(|&n| net.node_ok(n) && net.node_ports[n as usize].n == 3).expect("a junction");
+        let kinds: Vec<TrackKind> = net.node_ports[junction as usize].ends().iter().map(|&c| net.edge_kind[(c >> 1) as usize]).collect();
+        assert!(kinds.contains(&TrackKind::Tram), "{kinds:?}");
+        assert_ne!(net.node_kind(junction), TrackKind::Tram);
+        let rows = a.blueprint_piece_costs();
+        assert!(rows.chunks(5).any(|r| r[0] == 2.0 && r[1] == junction as f64 && r[3] > 0.0), "the junction is priced");
+        a.undo();
+        assert_eq!((live(&a).len(), a.blueprint_cost()), before);
+    }
 }
 
 #[test]

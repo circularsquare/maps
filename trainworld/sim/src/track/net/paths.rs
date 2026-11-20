@@ -187,13 +187,16 @@ impl Network {
     /// the other side, or turns back there at `REVERSAL_SEARCH_S` extra; on the way it may turn
     /// back at a track end at the same cost, a station there or not (T-797, T-3595: never at a
     /// through station it passes or a junction). Returns the path and the side it arrives on at `to`.
+    /// Tram track only for a hop to or from a tram stop (T-3889).
     pub fn find_path(&self, from: u32, to: u32, arrived: Option<u8>) -> Option<(Vec<u32>, u8)> {
-        self.find_path_side(from, to, arrived, None)
+        self.find_path_side(from, to, arrived, None, self.tram_stop(from) || self.tram_stop(to))
     }
 
     /// `find_path` arriving at `to` on the side `want` when given (T-798: a loop's closing hop
-    /// arrives so the train carries on round).
-    pub fn find_path_side(&self, from: u32, to: u32, arrived: Option<u8>, want: Option<u8>) -> Option<(Vec<u32>, u8)> {
+    /// arrives so the train carries on round). `tram`: the hop is a tram line's, which may run on
+    /// any track; else it keeps off tram track (T-3889).
+    pub fn find_path_side(&self, from: u32, to: u32, arrived: Option<u8>, want: Option<u8>, tram: bool) -> Option<(Vec<u32>, u8)> {
+        let barred = |e: u32| !tram && self.edge_tram(e);
         let ne = self.edge_count();
         let mut dist = vec![f64::INFINITY; 2 * ne];
         let mut prev = vec![u32::MAX; 2 * ne];
@@ -203,7 +206,7 @@ impl Network {
             let turn = if arrived == Some(p.side[k]) { REVERSAL_SEARCH_S } else { 0.0 };
             let (e, which) = (c >> 1, c & 1);
             let st = e << 1 | which; // leaving from end a = direction 0
-            if !self.dir_ok(st) {
+            if !self.dir_ok(st) || barred(e) {
                 continue;
             }
             dist[st as usize] = self.edge_time[e as usize] + turn;
@@ -234,6 +237,9 @@ impl Network {
             for k in ends_in(on) {
                 let nst = p.end[k];
                 let e = nst >> 1;
+                if barred(e) {
+                    continue;
+                }
                 let nd = d + self.edge_time[e as usize] + if back == Some(k) { REVERSAL_SEARCH_S } else { 0.0 };
                 if nd < dist[nst as usize] {
                     dist[nst as usize] = nd;
@@ -255,21 +261,31 @@ impl Network {
     /// from stop k to stop k + 1). Past a one-way station on the way back's track (T-3565,
     /// `route_legs`), and a one-way stop the player set (`ones`, T-3711) the other way.
     pub fn route_hops(&self, stops: &[u32], ones: &[(u32, u8)]) -> Result<Vec<u32>, usize> {
-        if let Some(p) = self.route_legs(stops, ones) {
+        self.route_hops_t(stops, ones, self.stops_tram(stops))
+    }
+
+    /// `route_hops` for a tram line's stops or a train line's (`tram`, T-3889: the whole line's, which
+    /// `stops` may be only part of).
+    pub fn route_hops_t(&self, stops: &[u32], ones: &[(u32, u8)], tram: bool) -> Result<Vec<u32>, usize> {
+        if let Some(p) = self.route_legs_t(stops, ones, tram) {
             return Ok(p);
         }
-        self.route_hops_plain(stops)
+        self.route_hops_plain_t(stops, tram)
     }
 
     /// `route_hops` through every stop.
     pub fn route_hops_plain(&self, stops: &[u32]) -> Result<Vec<u32>, usize> {
+        self.route_hops_plain_t(stops, self.stops_tram(stops))
+    }
+
+    pub fn route_hops_plain_t(&self, stops: &[u32], tram: bool) -> Result<Vec<u32>, usize> {
         let mut path: Vec<u32> = vec![];
         let mut side = None;
         let closes = stops.len() >= 3 && stops[0] == stops[stops.len() - 1];
         for (k, w) in stops.windows(2).enumerate() {
             let want = if closes && k + 2 == stops.len() { self.carry_on_side(&path) } else { None };
-            let carry = want.and_then(|_| self.find_path_side(w[0], w[1], side, want));
-            let plain = self.find_path_side(w[0], w[1], side, None);
+            let carry = want.and_then(|_| self.find_path_side(w[0], w[1], side, want, tram));
+            let plain = self.find_path_side(w[0], w[1], side, None, tram);
             let (p, s) = match (carry, plain) {
                 (Some(c), Some(p)) => if self.carry_worth(&c.0, &p.0) { c } else { p },
                 (c, p) => c.or(p).ok_or(k)?,
@@ -282,6 +298,11 @@ impl Network {
 
     /// Whether any track joins two nodes, whatever way a train would have to turn on it (T-2895).
     pub fn joined(&self, a: u32, b: u32) -> bool {
+        self.joined_by(a, b, true)
+    }
+
+    /// `joined`, over rail track only unless `tram` (T-3889).
+    pub fn joined_by(&self, a: u32, b: u32, tram: bool) -> bool {
         let mut seen = vec![false; self.node_count()];
         let mut queue = vec![a];
         seen[a as usize] = true;
@@ -290,6 +311,9 @@ impl Network {
                 return true;
             }
             for &c in self.node_ports[n as usize].ends() {
+                if !tram && self.edge_tram(c >> 1) {
+                    continue;
+                }
                 let m = self.path_nodes(c).1;
                 if !seen[m as usize] {
                     seen[m as usize] = true;
@@ -320,7 +344,9 @@ impl Network {
     /// into the path's node list where it rejoins. `back`: headed back toward the path's start (the
     /// train leaves node k over `path[k - 1]` the other way, k >= 1, the latest k where several
     /// fit); else carrying on along `path[k]` (a balloon's first pass, k <= `limit`, the earliest).
-    pub fn loop_back(&self, path: &[u32], back: bool, limit: usize, budget: f64) -> Option<(Vec<u32>, usize)> {
+    /// Over tram track only for a tram line (`tram`, T-3889).
+    pub fn loop_back(&self, path: &[u32], back: bool, limit: usize, budget: f64, tram: bool) -> Option<(Vec<u32>, usize)> {
+        let barred = |c: u32| !tram && self.edge_tram(c >> 1);
         let &last = path.last()?;
         let mut nodes = vec![self.path_nodes(path[0]).0];
         nodes.extend(path.iter().map(|&p| self.path_nodes(p).1));
@@ -346,6 +372,9 @@ impl Network {
         let p = &self.node_ports[node as usize];
         for i in ends_in(on) {
             let c = p.end[i];
+            if barred(c) {
+                continue;
+            }
             dist[c as usize] = self.edge_time[(c >> 1) as usize];
             heap.push(Key(dist[c as usize], c));
         }
@@ -374,6 +403,9 @@ impl Network {
             }
             for i in ends_in(on) {
                 let c = p.end[i];
+                if barred(c) {
+                    continue;
+                }
                 let nd = d + self.edge_time[(c >> 1) as usize];
                 if nd < dist[c as usize] {
                     dist[c as usize] = nd;

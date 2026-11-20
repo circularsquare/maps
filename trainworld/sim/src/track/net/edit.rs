@@ -7,9 +7,29 @@ impl Network {
     pub fn node_hsr(&self, n: u32) -> bool {
         self.node_ports[n as usize].ends().iter().any(|&c| self.edge_kind[(c >> 1) as usize].is_hsr())
     }
-    /// The kind of track at a node: its first edge end's (the family rule keeps them alike).
+    /// The kind of track at a node: its first rail edge end's where rail meets tram (T-3889: a
+    /// station there is a rail station, a junction there has rail's conflict time), else its first
+    /// edge end's.
     pub fn node_kind(&self, n: u32) -> TrackKind {
-        self.node_ports[n as usize].ends().first().map_or(TrackKind::Regular, |&c| self.edge_kind[(c >> 1) as usize])
+        let ends = self.node_ports[n as usize].ends();
+        let kind = |c: &u32| self.edge_kind[(c >> 1) as usize];
+        ends.iter().map(kind).find(|k| k.spec().family == 0).or_else(|| ends.first().map(kind)).unwrap_or(TrackKind::Regular)
+    }
+    /// T-3889: a station on tram track only: a tram stop.
+    pub fn tram_stop(&self, n: u32) -> bool {
+        self.node_ok(n) && self.node_platform[n as usize] > 0 && self.node_berth[n as usize].is_none() && self.node_kind(n).spec().family == 1
+    }
+    /// T-3889: stops with a tram stop among them: a tram line's, which may run on any track; a
+    /// train line's run on rail track only.
+    pub fn stops_tram(&self, stops: &[u32]) -> bool {
+        stops.iter().any(|&n| self.tram_stop(n))
+    }
+    /// Whether a path runs on tram track anywhere.
+    pub fn path_tram(&self, path: &[u32]) -> bool {
+        path.iter().any(|&p| self.edge_tram(path_edge(p)))
+    }
+    pub fn edge_tram(&self, e: u32) -> bool {
+        self.edge_kind[e as usize].spec().family == 1
     }
     pub fn edge_section_s(&self, e: u32) -> f64 {
         self.edge_kind[e as usize].spec().section_s
@@ -23,9 +43,10 @@ impl Network {
     pub fn node_margin_s(&self, n: u32) -> f64 {
         self.node_kind(n).spec().platform_margin_s
     }
-    /// Whether a line runs on tram track: the kind of its first stop's track.
+    /// Whether a line runs trams: any of its stops is a tram stop (T-3889; a line without one runs
+    /// on rail track only, so its route never uses tram track).
     pub fn line_tram(&self, l: u32) -> bool {
-        self.line_stops(l).first().is_some_and(|&n| self.node_ok(n) && self.node_kind(n).spec().family == 1)
+        self.stops_tram(self.line_stops(l))
     }
     /// The edge is high-speed track.
     pub fn edge_hsr(&self, e: u32) -> bool {
@@ -49,9 +70,10 @@ impl Network {
     pub fn v_kind_cap(&self, e: u32) -> f64 {
         if self.edge_crossover[e as usize] { V_CROSSOVER } else { self.edge_kind[e as usize].v_cap() }
     }
-    /// A line's trains' top speed, m/s: high-speed trains or ordinary ones (T-817).
+    /// A line's trains' top speed, m/s: high-speed trains or ordinary ones (T-817), trams at the tram
+    /// track's 80 km/h wherever they run (T-3889).
     pub fn line_top(&self, l: u32) -> f64 {
-        if self.line_fast[l as usize] { V_HSR } else { V_TOP }
+        if self.line_fast[l as usize] { V_HSR } else if self.line_tram(l) { TrackKind::Tram.v_cap() } else { V_TOP }
     }
     /// A line's trains' top speed under the player's limit for the line (T-2987), m/s.
     pub fn line_run_top(&self, l: u32) -> f64 {
@@ -227,6 +249,27 @@ impl Network {
         Some((s, p))
     }
 
+    /// T-3889: `d`, the new data of line `id`, made fit its kind where a stop edit adds the line's first
+    /// tram stop or takes its last (a tram line or a train line now): high-speed trains go, over 4
+    /// cars become 2 (the app's TRAM_MAX_CARS, TRAM_NEW_CARS), and the dwell and turnaround follow where
+    /// they were the old kind's defaults. Not on undo, which puts the old data back as it was.
+    pub fn fit_kind(&self, id: u32, d: &mut LineData) {
+        let Some(o) = self.line_data(id).filter(|o| o.bus.is_none() && o.ferry.is_none() && d.bus.is_none() && d.ferry.is_none()) else { return };
+        let (was, now) = (self.stops_tram(&o.stops), self.stops_tram(&d.stops));
+        if was == now {
+            return;
+        }
+        let kind = |t: bool| if t { TrackKind::Tram } else { TrackKind::Regular }.spec();
+        let (from, to) = (kind(was), kind(now));
+        d.fast &= !now;
+        if now && d.cars > 4 {
+            d.cars = 2;
+        }
+        if (d.dwell_s, d.turnaround_s) == (from.dwell_s, from.turnaround_s) {
+            (d.dwell_s, d.turnaround_s) = (to.dwell_s, to.turnaround_s);
+        }
+    }
+
     pub fn set_line(&mut self, id: u32, data: Option<LineData>) -> Result<Option<LineData>, Issue> {
         let old = self.line_data(id);
         match data {
@@ -237,7 +280,7 @@ impl Network {
                 if d.tph.iter().chain(&d.x.tph).any(|t| !t.is_finite() || *t < 0.0) || d.dwell_s < 0.0 || d.turnaround_s < 0.0 || (d.rows != 0 && !(ROWS_MIN..=ROWS_MAX).contains(&(d.rows as usize))) {
                     return Err(Issue::LineSchedule { line: id });
                 }
-                if d.fast && d.stops.first().is_some_and(|&n| self.node_ok(n) && self.node_kind(n).spec().family != 0) {
+                if d.fast && self.stops_tram(&d.stops) {
                     return Err(Issue::LineSchedule { line: id });
                 }
                 self.claim_line(id);

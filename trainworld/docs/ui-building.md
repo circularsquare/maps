@@ -847,10 +847,10 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   track is on solid), **Regular**, **High speed** and **Tram** while the pick holds blueprint double track
   [T-1898, T-3108; `kindPicked`, `TrackApi::set_edges_kind`] (the kind all of it is solid, none when
   mixed; High speed's hover gives its 1.5x price): every picked double piece to that kind in one
-  undoable edit, free, by the rules of Rebuild below: rail and tram change as whole joined stretches (they never
-  join), stations are cut to a tram stop or back and lines become tram or train lines with the new kind's dwell and
-  turnaround. Single track, crossovers and pieces the track model refuses (a stretch joined to track outside the
-  pick, a curve too tight for trains) stay as they are and are counted in the message as for
+  undoable edit, free, by the rules of Rebuild below: stations all on tram track are cut to a tram stop or back
+  and lines become tram or train lines by their stops, with the new kind's dwell and turnaround (T-3889: rail and
+  tram join, so any part of a stretch changes). Single track, crossovers and pieces the track model refuses (a curve
+  too tight for trains, track under a train line) stay as they are and are counted in the message as for
   elevation ("3 of 5 pieces set to high-speed track. 2 could not change."). A level or kind picked here
   (its key too) becomes the track tool's as well, as if picked in the track bar (High speed with its top design
   speed, Regular with the speed before it), so the next track placed is laid the same way [T-2474]; a level
@@ -923,17 +923,16 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   stations keep their ids, so every line keeps its stops and path, stations keep their names and upgrades, and
   nothing is deleted. The level is set as for blueprint (corners, and every node all of whose track is picked; a
   node with unpicked track keeps its level and the piece ramps to it), and the track type for double track only;
-  rail made tram takes its stations (cut to 80 m tram stops) and lines (now tram lines) with it, and tram made
+  rail made tram takes its stations (cut to 80 m tram stops where all their track is tram) and lines (tram lines once they stop at a tram stop) with it, and tram made
   rail the other way. Every station on the picked track takes the new level, picked or not, and one at an end of
   the pick ramps on the track beyond it, outside the pick (T-3241, the rule in
   [track-and-service.md](track-and-service.md) "Rebuilding constructed track"): that stretch is drawn in the
   pick's band as far as it changes, and counted in the hover's length, the question and the price. A piece the
   track model refuses (no room to ramp to unpicked track or beyond a station, a crossing, a curve too tight for
-  trains, tram track meeting rail) is **refused**: the quote names it, the map outlines it in red over the pick's band,
+  trains, track under a train line that would then run on tram track, one side of a station only) is **refused**: the quote names it, the map outlines it in red over the pick's band,
   and the hover and the question count it ("3 of 12 pieces can't change"); it stays as it was, and the rest
-  ramps to it (T-3087). Pieces that stay only because they cannot change family alone are counted but not drawn
-  red. When nothing can change, Rebuild asks nothing and says why (the track model's refusal, such as "Tram track
-  and train track can't join. They can cross."). The price is the full price of the changed track, and of the
+  ramps to it (T-3087). When nothing can change, Rebuild asks nothing and says why (the track model's refusal, such
+  as "Trains can't run on tram track."). The price is the full price of the changed track, and of the
   stations whose level or type changed (picked or not), built new at the new settings, with nothing back for what was there
   (Anita, 2026-11-10: "full new price, that feels more fair"); trains the longer round trips need are bought as
   for any edit. The hover shows the length and what it becomes, then the price; the question

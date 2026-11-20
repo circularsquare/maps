@@ -28,6 +28,8 @@ pub(super) fn flatten(net: &Network, skel: &[u32], legs: &[u32], memo: &mut HopM
     if skel.windows(2).any(|w| w[0] == w[1]) {
         return None;
     }
+    // T-3889: a tram line's whole stops route as one even where a part tried holds no tram stop
+    memo.tram |= net.stops_tram(skel) || net.stops_tram(legs);
     let rs: Vec<u32> = skel.iter().rev().copied().collect();
     let (a, left) = match place(net, skel, legs, memo, ones) {
         Some((a, left)) => (Some(a), left),
@@ -77,13 +79,13 @@ fn place(net: &Network, skel: &[u32], legs: &[u32], memo: &mut HopMemo, ones: &[
                 let n = s.len();
                 (0..n).filter(|&j| j == 0 || j + 1 == n || net.one_stop_side(ones, s[j]).is_none() || net.path_serves(p, s[j], ones)).map(|j| s[j]).collect()
             };
-            if let Some((_, p)) = net.take_legs(&own(skel, &fwd), &off) {
+            if let Some((_, p)) = net.take_legs(&own(skel, &fwd), &off, memo.tram) {
                 fwd = p;
             }
             let fnodes = nodes_of(net, &fwd);
             let rest: Vec<u32> = off.into_iter().filter(|s| !fnodes.contains(s)).collect();
             if !rest.is_empty() {
-                if let Some((_, p)) = net.take_legs(&own(&rs, &back), &rest) {
+                if let Some((_, p)) = net.take_legs(&own(&rs, &back), &rest, memo.tram) {
                     back = p;
                 }
             }
@@ -126,6 +128,7 @@ fn place(net: &Network, skel: &[u32], legs: &[u32], memo: &mut HopMemo, ones: &[
 /// none, or where `flatten` gives nothing.
 pub(super) fn ordered(net: &Network, stops: &[u32], memo: &mut HopMemo, ones: &[(u32, u8)]) -> Option<(Vec<u32>, Vec<u32>)> {
     let (skel, legs) = split(net, stops)?;
+    memo.tram |= net.stops_tram(stops);
     let skel = route_memo(net, &skel, memo, ones).and_then(|p| straighten(net, &skel, &p, ones)).map_or(skel, |s| s.0);
     flatten(net, &skel, &legs, memo, ones)
 }
@@ -134,9 +137,18 @@ pub(super) fn ordered(net: &Network, stops: &[u32], memo: &mut HopMemo, ones: &[
 /// joins the set, any other goes into the skeleton where `best_slot` puts it; then `flatten`.
 /// None when the line would have no one-way station, for `best_slot` over all the stops.
 pub(super) fn insert(net: &Network, old: &[u32], station: u32, memo: &mut HopMemo, ones: &[(u32, u8)]) -> Option<(Vec<u32>, Vec<u32>)> {
+    // T-3889: a memo shared by every station tried (`stop_tiers`) keeps the line's own kind after
+    let was = memo.tram;
+    let out = insert_in(net, old, station, memo, ones);
+    memo.tram = was;
+    out
+}
+
+fn insert_in(net: &Network, old: &[u32], station: u32, memo: &mut HopMemo, ones: &[(u32, u8)]) -> Option<(Vec<u32>, Vec<u32>)> {
     if old.contains(&station) || closed(old) || !old.iter().chain(std::iter::once(&station)).any(|&s| net.leg_heading(s).is_some()) {
         return None;
     }
+    memo.tram |= net.stops_tram(old) || net.tram_stop(station);
     let (mut legs, skel): (Vec<u32>, Vec<u32>) = old.iter().partition(|&&s| net.leg_stop(s));
     let skel = if net.leg_stop(station) {
         legs.push(station);
@@ -154,6 +166,7 @@ pub(super) fn insert(net: &Network, old: &[u32], station: u32, memo: &mut HopMem
 /// clicks would, then `flatten`. None for a line with none.
 pub(super) fn sorted(net: &Network, stops: &[u32], memo: &mut HopMemo, ones: &[(u32, u8)]) -> Option<(Vec<u32>, Vec<u32>)> {
     let (skel, legs) = split(net, stops)?;
+    memo.tram |= net.stops_tram(stops);
     let mut s: Vec<u32> = vec![];
     for &x in &skel {
         s = best_slot(net, &s, x, memo, ones)?.0;
@@ -166,12 +179,11 @@ pub(super) fn sorted(net: &Network, stops: &[u32], memo: &mut HopMemo, ones: &[(
 /// looping the pair. Whether any changed.
 pub(super) fn straighten_legs(net: &mut Network) -> bool {
     let mut changed = false;
-    let mut memo = HopMemo::new();
     for l in 0..net.line_count() as u32 {
         if !net.line_ok(l) || net.line_bus[l as usize].is_some() || net.line_ferry[l as usize].is_some() || net.line_hand[l as usize] {
             continue;
         }
-        let Some((stops, path)) = ordered(net, net.line_stops(l), &mut memo, net.line_ones(l)) else { continue };
+        let Some((stops, path)) = ordered(net, net.line_stops(l), &mut HopMemo::new(), net.line_ones(l)) else { continue };
         if stops == net.line_stops(l) && path == net.line_path(l) {
             continue;
         }

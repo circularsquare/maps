@@ -68,7 +68,8 @@ const TEXT: Record<string, () => string> = {
   NoWayBack: () => t("issues.noWayBack"),
   OneTrackStop: () => t("issues.oneTrackStop"),
   OneTrackHere: () => t("issues.oneTrackHere"),
-  TrackFamily: () => t("issues.trackFamily"),
+  TramTrack: () => t("issues.tramTrack"), // T-3889
+  StationFamily: () => t("issues.stationFamily"),
   NothingToConstruct: () => t("issues.nothingToConstruct"),
   TerrainMissing: () => t("issues.terrainMissing"),
   RoadsMissing: () => t("issues.roadsMissing"),

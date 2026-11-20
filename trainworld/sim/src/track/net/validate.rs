@@ -155,10 +155,14 @@ impl Network {
                 out.push(Issue::NodeHeading { node: n, edge: e });
             }
         }
-        let mut fam = p.ends().iter().map(|&c| self.edge_kind[(c >> 1) as usize].spec().family);
-        if let Some(f0) = fam.next() {
-            if fam.any(|f| f != f0) {
-                out.push(Issue::TrackFamily { node: n });
+        // T-3889: tram track joins rail, but not at a station, whose kind (tram stop or rail station) is
+        // its track's: drawing on from one, or deleting one kind beside it, would change a line's kind
+        if self.node_platform[i] > 0 && self.node_berth[i].is_none() {
+            let mut fam = p.ends().iter().map(|&c| self.edge_tram(c >> 1));
+            if let Some(f0) = fam.next() {
+                if fam.any(|f| f != f0) {
+                    out.push(Issue::StationFamily { node: n });
+                }
             }
         }
         // Two ends leaving the same way with nothing behind is a harmless fork (e.g. a junction
@@ -202,6 +206,9 @@ impl Network {
             if !self.edge_ok(path_edge(p)) || !self.dir_ok(p) {
                 return Err(Issue::LinePath { line: l });
             }
+        }
+        if self.path_tram(path) && !self.stops_tram(stops) {
+            return Err(Issue::TramTrack { line: l });
         }
         let mut nodes = Vec::with_capacity(path.len() + 1);
         nodes.push(self.path_nodes(path[0]).0);

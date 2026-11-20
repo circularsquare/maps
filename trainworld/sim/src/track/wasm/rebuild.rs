@@ -8,8 +8,8 @@ pub(super) struct Plan {
     pub take: Vec<Op>,
     /// Every picked edge left as it is.
     pub refused: Vec<u32>,
-    /// Of those, the ones refused for their own sake (T-3088): the rest only join one of these, or
-    /// track outside the pick, and cannot change family alone.
+    /// Of those, the ones refused for their own sake (T-3088; since rail and tram may join, T-3889, every
+    /// refused piece is).
     pub root: Vec<u32>,
     pub issues: Vec<Issue>,
     /// T-3241: track outside the pick that changes, taking the ramps of the stations at the pick's
@@ -225,19 +225,16 @@ fn whole_at(net: &Network, e: u32, l: i8) -> Option<EdgeData> {
     Some(d)
 }
 
-/// Where the level of `cand` changes to `l` (not across families), the stations at its ends and the
+/// Where the level of `cand` changes to `l`, the stations at its ends and the
 /// track beyond them that takes their ramps (T-3241). A station whose track is all picked, or that ends
 /// the track, just moves. Else the track beyond it ramps back to its own level as soon past the platform
 /// as it can, on the next piece or, where that is too short, on through plain joints (`BEYOND_PIECES`),
 /// those pieces and joints moving whole. Track running on to another station that moves, or back into the
 /// pick, moves whole; a loose end with no room for the ramp moves with it. A station with no room for its
 /// ramp (a junction or another station too close, constructed track in a blueprint pick) stays.
-fn beyond(net: &Network, cand: &[u32], level: Option<i8>, built_ok: bool, families: bool) -> Beyond {
+fn beyond(net: &Network, cand: &[u32], level: Option<i8>, built_ok: bool) -> Beyond {
     let mut out = Beyond::default();
     let Some(l) = level else { return out };
-    if families {
-        return out;
-    }
     let picked = |e: u32| cand.binary_search(&e).is_ok();
     let mut ends: Vec<u32> = cand
         .iter()
@@ -439,6 +436,13 @@ fn family_after(net: &Network, cand: &[u32], w: Want, e: u32) -> u8 {
     }
 }
 
+/// Whether node `n` is all tram track once `cand` have changed (where rail meets tram it is rail, as
+/// `Network::node_kind` has it).
+fn tram_after(net: &Network, cand: &[u32], w: Want, n: u32) -> bool {
+    let ends = net.node_ports[n as usize].ends();
+    !ends.is_empty() && ends.iter().all(|&c| family_after(net, cand, w, c >> 1) == 1)
+}
+
 /// Whether node `n` moves to the new level with `cand`: all its track is among them, and a constructed
 /// station on it is in the pick; or it moves with track beyond the pick (T-3241).
 fn movable(net: &Network, cand: &[u32], w: Want, n: u32) -> bool {
@@ -482,37 +486,15 @@ fn edge_op(net: &Network, w: Want, e: u32) -> Option<Op> {
 }
 
 /// Drop from `cand` the pieces that cannot change with the rest as it stands: a piece with no corners
-/// whose ends cannot both move (it has no level of its own to ramp from), and a piece whose new family
-/// would meet the other family at a node. Dropped pieces go to `refused`, and to `root` unless all
-/// they meet is a piece refused already. `clash_at`: the first node where the families meet.
-fn prune(net: &Network, cand: &mut Vec<u32>, w: Want, refused: &mut Vec<u32>, root: &mut Vec<u32>, clash_at: &mut Option<u32>) {
-    let families = w.kind.is_some_and(|k| cand.iter().any(|&e| net.edge_kind[e as usize].spec().family != k.spec().family));
+/// whose ends cannot both move (it has no level of its own to ramp from). Dropped pieces go to
+/// `refused` and `root`.
+fn prune(net: &Network, cand: &mut Vec<u32>, w: Want, refused: &mut Vec<u32>, root: &mut Vec<u32>) {
     loop {
         let was = cand.clone();
         let mut gone: Vec<(u32, bool)> = vec![];
         for &e in &was {
             if w.level.is_some() && cornerless(net, e) && !(movable(net, &was, w, net.edge_a[e as usize]) && movable(net, &was, w, net.edge_b[e as usize])) {
                 gone.push((e, true));
-                continue;
-            }
-            if !families {
-                continue;
-            }
-            let f = family_after(net, &was, w, e);
-            let mut own = false;
-            let mut clash = false;
-            for n in [net.edge_a[e as usize], net.edge_b[e as usize]] {
-                for &c in net.node_ports[n as usize].ends() {
-                    let o = c >> 1;
-                    if family_after(net, &was, w, o) != f {
-                        clash = true;
-                        clash_at.get_or_insert(n);
-                        own |= refused.binary_search(&o).is_err();
-                    }
-                }
-            }
-            if clash {
-                gone.push((e, own));
             }
         }
         if gone.is_empty() {
@@ -579,11 +561,11 @@ fn culprits(net: &Network, cand: &[u32], issues: &[Issue], flats: &[(u32, u32)],
             Issue::NoSuchNode { node }
             | Issue::TooManyPorts { node }
             | Issue::NodeOneSided { node }
-            | Issue::TrackFamily { node }
             | Issue::NodeLevel { node }
             | Issue::NodeInUse { node }
             | Issue::StationPorts { node }
             | Issue::StationJunction { node }
+            | Issue::StationFamily { node }
             | Issue::PlatformLength { node }
             | Issue::PlatformTooLong { node }
             | Issue::PlatformStation { node }
@@ -596,6 +578,8 @@ fn culprits(net: &Network, cand: &[u32], issues: &[Issue], flats: &[(u32, u32)],
             | Issue::BranchNoRoom { node }
             | Issue::NotAtPort { node }
             | Issue::PortBerth { node } => at_node(node, &mut out),
+            // T-3889: a train line the change would put on tram track: the picked pieces it runs on
+            Issue::TramTrack { line } => out.extend(net.line_path(line).iter().map(|&p| p >> 1).filter(|&e| picked(e))),
             _ => {}
         }
     }
@@ -636,15 +620,17 @@ fn one_track_ops(net: &Network, cand: &[u32], w: Want, ops: &mut Vec<Op>) {
 }
 
 /// What changes with a piece's family (T-3088): each station on track that changes family gets a
-/// platform its new kind allows (cut to a tram stop's longest, or out to a rail station's shortest),
-/// and each line on it loses high-speed trains (rail only) and takes the new kind's dwell and
-/// turnaround where it had the old kind's.
+/// platform its kind then allows (a tram stop's when all its track is tram, else a rail station's:
+/// cut to a tram stop's longest, or out to a rail station's shortest), and each line that becomes a
+/// tram line or a train line (by its stops, T-3889) loses high-speed trains (to tram) and takes the
+/// new kind's dwell and turnaround where it had the old kind's. Every line on track that changes
+/// family is in the ops, so the edit checks it (a train line never runs on tram track).
 fn family_ops(net: &Network, cand: &[u32], w: Want) -> Vec<Op> {
     let Some(to) = w.kind else { return vec![] };
-    let spec = to.spec();
-    let moved = |e: u32| cand.binary_search(&e).is_ok() && net.edge_data(e).is_some_and(|d| kind_ok(&d, w)) && net.edge_kind[e as usize].spec().family != spec.family;
+    let moved = |e: u32| cand.binary_search(&e).is_ok() && net.edge_data(e).is_some_and(|d| kind_ok(&d, w)) && net.edge_kind[e as usize].spec().family != to.spec().family;
     let mut ops = vec![];
     let mut seen = vec![];
+    let kind_after = |n: u32| if tram_after(net, cand, w, n) { TrackKind::Tram } else { TrackKind::Regular };
     for &e in cand {
         if !moved(e) {
             continue;
@@ -654,6 +640,7 @@ fn family_ops(net: &Network, cand: &[u32], w: Want) -> Vec<Op> {
                 continue;
             }
             seen.push(n);
+            let spec = kind_after(n).spec();
             if let Some(mut s) = net.station_data(n) {
                 let p = s.platform.clamp(spec.platform.0, spec.platform.1);
                 if p != s.platform {
@@ -663,24 +650,23 @@ fn family_ops(net: &Network, cand: &[u32], w: Want) -> Vec<Op> {
             }
         }
     }
+    // `Network::tram_stop` once the pieces have changed
+    let stop_after = |n: u32| net.node_ok(n) && net.node_platform[n as usize] > 0 && net.node_berth[n as usize].is_none() && tram_after(net, cand, w, n);
     for l in 0..net.line_count() as u32 {
         if !net.line_ok(l) || net.line_bus[l as usize].is_some() || net.line_ferry[l as usize].is_some() || !net.line_path(l).iter().any(|&p| moved(p >> 1)) {
             continue;
         }
         let Some(mut d) = net.line_data(l) else { continue };
-        let from = d.stops.first().map_or(TrackKind::Regular, |&n| net.node_kind(n)).spec();
-        let mut changed = false;
-        if d.fast && spec.family != 0 {
+        let was = net.line_tram(l);
+        let tram = d.stops.iter().any(|&n| stop_after(n));
+        let (from, now) = (if was { TrackKind::Tram } else { TrackKind::Regular }.spec(), if tram { TrackKind::Tram } else { TrackKind::Regular }.spec());
+        if tram {
             d.fast = false;
-            changed = true;
         }
-        if d.dwell_s == from.dwell_s && d.turnaround_s == from.turnaround_s && (d.dwell_s, d.turnaround_s) != (spec.dwell_s, spec.turnaround_s) {
-            (d.dwell_s, d.turnaround_s) = (spec.dwell_s, spec.turnaround_s);
-            changed = true;
+        if d.dwell_s == from.dwell_s && d.turnaround_s == from.turnaround_s {
+            (d.dwell_s, d.turnaround_s) = (now.dwell_s, now.turnaround_s);
         }
-        if changed {
-            ops.push(Op::Line { id: l, data: Some(d) });
-        }
+        ops.push(Op::Line { id: l, data: Some(d) });
     }
     ops
 }
@@ -785,7 +771,6 @@ impl TrackApi {
         });
         let mut refused: Vec<u32> = want.iter().copied().filter(|e| cand.binary_search(e).is_err()).collect();
         let mut root = refused.clone();
-        let families = kind.is_some_and(|k| cand.iter().any(|&e| net.edge_kind[e as usize].spec().family != k.spec().family));
         let flat_key = |c: &crate::track::net::Crossing| (c.e1.min(c.e2), c.e1.max(c.e2), c.x.round() as i64, c.y.round() as i64);
         let flat = |net: &Network| -> Vec<(u32, u32, i64, i64)> {
             let mut v: Vec<_> = net.crossings.iter().filter(|c| matches!(c.kind, CrossKind::Flat(_))).map(flat_key).collect();
@@ -803,11 +788,13 @@ impl TrackApi {
                 Err(e) => Err((e, vec![])),
             }
         };
+        // T-3889: rail and tram may join, so a change of family no longer takes whole stretches; it
+        // still goes in one trial with its stations and lines
+        let families = kind.is_some_and(|k| cand.iter().any(|&e| net.edge_kind[e as usize].spec().family != k.spec().family));
         let mut last_issues = vec![];
         let mut take = vec![];
         // pieces refused by the track model, to try alone with their ends kept
         let mut todo: Vec<u32> = vec![];
-        let mut clash_at = None;
         // T-3241: the stations moving with the pick and the track beyond them, worked out again each round
         let mut bey = Beyond::default();
         let mut both: Vec<u32> = stations.clone();
@@ -816,7 +803,7 @@ impl TrackApi {
         let mut why: Vec<(u32, Vec<Issue>)> = vec![];
         for round in 0.. {
             loop {
-                bey = beyond(&self.w.net, &cand, level, built_ok, families);
+                bey = beyond(&self.w.net, &cand, level, built_ok);
                 for x in &bey.no_room {
                     if !no_room.contains(x) {
                         no_room.push(*x);
@@ -827,7 +814,7 @@ impl TrackApi {
                 both.dedup();
                 let n0 = cand.len();
                 let wb = Want { level, kind, tracks, stations: &both, ext: &bey.nodes, cuts: &cuts, stay: &stay };
-                prune(&self.w.net, &mut cand, wb, &mut refused, &mut root, &mut clash_at);
+                prune(&self.w.net, &mut cand, wb, &mut refused, &mut root);
                 if cand.len() == n0 {
                     break;
                 }
@@ -872,7 +859,8 @@ impl TrackApi {
                 }
                 continue;
             }
-            // nothing to blame: the groups one by one, as far as they fit
+            // nothing to blame: the groups one by one, as far as they fit; a change of family only
+            // whole, with its stations and lines (`family_ops`)
             if families {
                 todo.clear();
                 refused.extend(&cand);
@@ -894,8 +882,7 @@ impl TrackApi {
             }
             break;
         }
-        // alone with the ends kept, twice, since a ramp may fit only once its neighbour has changed;
-        // not across families, where a piece cannot change without its neighbours
+        // alone with the ends kept, twice, since a ramp may fit only once its neighbour has changed
         let net = &self.w.net;
         let solo: Vec<(u32, Op)> = todo
             .iter()
@@ -937,11 +924,6 @@ impl TrackApi {
         refused.dedup();
         root.sort_unstable();
         root.dedup();
-        if last_issues.is_empty() {
-            if let Some(node) = clash_at {
-                last_issues = vec![Issue::TrackFamily { node }];
-            }
-        }
         let moved_node = |n: u32| take.iter().any(|op| matches!(op, Op::Node { id, data: Some(_) } if *id == n));
         // a station that stayed for want of room for its ramp beyond says so, rather than that its
         // platform would be on the ramp the picked piece then needs

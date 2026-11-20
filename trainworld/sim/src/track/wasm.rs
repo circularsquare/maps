@@ -994,8 +994,28 @@ fn vertex_kmh(f: &geom::Fit, i: usize, cap: f64) -> f64 {
 }
 
 /// Hops already searched while trying stops (T-237): `(from, to, side arrived on at from, 2 for
-/// none)` to `Network::find_path`'s answer. Valid for one state of the network.
-type HopMemo = std::collections::HashMap<(u32, u32, u8, u8), Option<(Vec<u32>, u8)>>;
+/// none, tram)` to `Network::find_path_side`'s answer. Valid for one state of the network. `tram`:
+/// the stops tried are a tram line's even where they hold no tram stop themselves (part of the
+/// line's stops, T-3889).
+#[derive(Default)]
+pub(super) struct HopMemo {
+    hops: std::collections::HashMap<(u32, u32, u8, u8, bool), Option<(Vec<u32>, u8)>>,
+    tram: bool,
+}
+
+impl HopMemo {
+    pub(super) fn new() -> Self {
+        Self::default()
+    }
+    /// For a tram line's stops (`tram`) or a train line's.
+    pub(super) fn of(tram: bool) -> Self {
+        Self { tram, ..Self::default() }
+    }
+    /// Whether `stops` route as a tram line's.
+    fn tram_for(&self, net: &Network, stops: &[u32]) -> bool {
+        self.tram || net.stops_tram(stops)
+    }
+}
 
 /// `Network::route`, with each hop's search kept in `memo`: the same answer, but trying a stop in
 /// every slot searches each hop once. A loop's closing hop takes the side that carries on round
@@ -1004,7 +1024,8 @@ fn route_memo(net: &Network, stops: &[u32], memo: &mut HopMemo, ones: &[(u32, u8
     if stops.iter().any(|&s| !net.node_ok(s) || net.node_platform[s as usize] == 0) {
         return None;
     }
-    if let Some(p) = net.route_legs(stops, ones) {
+    let tram = memo.tram_for(net, stops);
+    if let Some(p) = net.route_legs_t(stops, ones, tram) {
         return Some(p);
     }
     let mut path = vec![];
@@ -1012,11 +1033,11 @@ fn route_memo(net: &Network, stops: &[u32], memo: &mut HopMemo, ones: &[(u32, u8
     let closes = stops.len() >= 3 && stops[0] == stops[stops.len() - 1];
     for (k, w) in stops.windows(2).enumerate() {
         let want = if closes && k + 2 == stops.len() { net.carry_on_side(&path) } else { None };
-        let found = |memo: &mut HopMemo, x: Option<u8>| memo.entry((w[0], w[1], side.unwrap_or(2), x.unwrap_or(2))).or_insert_with(|| net.find_path_side(w[0], w[1], side, x)).is_some();
-        let key = |x: Option<u8>| (w[0], w[1], side.unwrap_or(2), x.unwrap_or(2));
-        let x = if want.is_some() && found(memo, want) && (!found(memo, None) || net.carry_worth(&memo[&key(want)].as_ref().unwrap().0, &memo[&key(None)].as_ref().unwrap().0)) { want } else { None };
+        let key = |x: Option<u8>| (w[0], w[1], side.unwrap_or(2), x.unwrap_or(2), tram);
+        let found = |memo: &mut HopMemo, x: Option<u8>| memo.hops.entry(key(x)).or_insert_with(|| net.find_path_side(w[0], w[1], side, x, tram)).is_some();
+        let x = if want.is_some() && found(memo, want) && (!found(memo, None) || net.carry_worth(&memo.hops[&key(want)].as_ref().unwrap().0, &memo.hops[&key(None)].as_ref().unwrap().0)) { want } else { None };
         found(memo, x);
-        let (p, s) = memo[&(w[0], w[1], side.unwrap_or(2), x.unwrap_or(2))].as_ref()?;
+        let (p, s) = memo.hops[&key(x)].as_ref()?;
         path.extend_from_slice(p);
         side = Some(*s);
     }
@@ -1088,7 +1109,7 @@ fn turn_last(net: &Network, line: u32, stops: &[u32], path: &[u32], memo: &mut H
     }
     let old = round_guess(net, line, stops, path);
     let nodes = nodes_of(net, path);
-    let (_, k) = net.loop_back(path, true, nodes.len(), old + turn_allowance(old))?;
+    let (_, k) = net.loop_back(path, true, nodes.len(), old + turn_allowance(old), net.line_tram(line))?;
     let at = net.match_run(&nodes, stops, &net.stop_reversals(path), net.line_ones(line), path)?.0;
     let branch = (0..n).rev().find(|&i| at[i] <= k)?;
     let mut new = stops.to_vec();
@@ -1103,7 +1124,7 @@ fn turn_first(net: &Network, line: u32, stops: &[u32], path: &[u32], memo: &mut 
     let nodes = nodes_of(net, path);
     let at = net.match_run(&nodes, stops, &net.stop_reversals(path), &[], path)?.0;
     let old = round_guess(net, line, stops, path);
-    let (_, k) = net.loop_back(path, false, at[open_prefix(stops)], old + turn_allowance(old))?;
+    let (_, k) = net.loop_back(path, false, at[open_prefix(stops)], old + turn_allowance(old), net.line_tram(line))?;
     let mut new: Vec<u32> = (1..n).filter(|&i| at[i] > k).map(|i| stops[i]).collect();
     let &first = new.first()?;
     new.push(first);
@@ -1133,7 +1154,8 @@ fn route_plain_close(net: &Network, stops: &[u32], memo: &mut HopMemo) -> Option
     let mut path = route_memo(net, &stops[..n - 1], memo, &[])?;
     let &last = path.last()?;
     let side = net.port_side(last >> 1, 1 - (last & 1));
-    let hop = memo.entry((stops[n - 2], stops[n - 1], side.unwrap_or(2), 2)).or_insert_with(|| net.find_path_side(stops[n - 2], stops[n - 1], side, None));
+    let tram = memo.tram_for(net, stops);
+    let hop = memo.hops.entry((stops[n - 2], stops[n - 1], side.unwrap_or(2), 2, tram)).or_insert_with(|| net.find_path_side(stops[n - 2], stops[n - 1], side, None, tram));
     path.extend_from_slice(&hop.as_ref()?.0);
     Some(path)
 }
@@ -1141,6 +1163,7 @@ fn route_plain_close(net: &Network, stops: &[u32], memo: &mut HopMemo) -> Option
 /// The turns a line's ends can take (T-3021): either end of an open line, or the first stop's end
 /// of a balloon. Bus and ferry lines take none.
 fn turns(net: &Network, line: u32, memo: &mut HopMemo) -> Vec<Turn> {
+    memo.tram |= net.line_tram(line);
     if !net.line_ok(line) || net.line_bus.get(line as usize).is_some_and(|b| b.is_some()) || net.line_ferry.get(line as usize).is_some_and(|f| f.is_some()) {
         return vec![];
     }
@@ -1173,6 +1196,7 @@ fn open_prefix(stops: &[u32]) -> usize {
 /// The stop of a balloon whose marker turns it back into the open line it was turned from, when
 /// turning that line gives this balloon again (T-3021).
 fn unturn_branch(net: &Network, line: u32, memo: &mut HopMemo) -> Option<u32> {
+    memo.tram |= net.line_tram(line);
     let stops = net.line_stops(line);
     if !closed(stops) || net.line_loop(line) != LoopKind::Balloon {
         return None;
@@ -1342,7 +1366,7 @@ fn straighten(net: &Network, stops: &[u32], path: &[u32], ones: &[(u32, u8)]) ->
     if turns == 0 || stops.len() < 3 || closed(stops) {
         return None;
     }
-    let mut memo = HopMemo::new();
+    let mut memo = HopMemo::of(net.stops_tram(stops) || net.path_tram(path));
     let mut best: (Vec<u32>, Vec<u32>) = (vec![], vec![]);
     for &s in stops {
         best = best_slot(net, &best.0, s, &mut memo, ones)?;

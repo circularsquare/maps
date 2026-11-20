@@ -6,6 +6,8 @@ A train goes as fast as the slowest thing in front of it. That is its own top sp
 
 **Two kinds of train.** An ordinary train tops out at {{sim/src/track/params.rs:V_TOP*3.6|0}} km/h. A high-speed train reaches {{sim/src/track/params.rs:V_HSR*3.6|0}} km/h, and only on track built for it. On other track it goes as fast as an ordinary one. You pick the kind per line.
 
+**Trams.** A line that stops at a tram stop runs trams. Trams run on tram track and on regular and high-speed track too, never faster than {{sim/src/track/params.rs:TRAM_V_CAP_KMH|0}} km/h. A line with no tram stop runs trains, and trains can't run on tram track.
+
 **Speeding up and stopping.** Trains speed up in three bands. They pull hardest at low speed and ease off as they go faster, like a real electric train. Only a high-speed train reaches the last band. Braking is gentler than pulling away: {{sim/src/track/params.rs:BRAKE}} m/s². A train waits at each stop for about {{sim/src/track/params.rs:DEFAULT_DWELL_S|0}} seconds.
 
 **Speed limit.** You can also cap a line at a speed of your own, anywhere below its train's top speed. Its trains then go no faster than that anywhere on the route, and the round trip grows to match. A piece of track can have a limit of its own too, as low as {{sim/src/track/params.rs:EDGE_LIMIT_MIN}} km/h, set for free in the bar at the top of the map when you click it, or on a whole stretch at once. Every train slows down for it there. Where a line limit and a track limit meet, the lower one wins.

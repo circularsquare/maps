@@ -40,6 +40,8 @@ export type StopTier =
   | "reroute"
   /** no track joins it to the line */
   | "cut"
+  /** a train line reaches it only over tram track (T-3889) */
+  | "tram"
   /** adding it makes the line's trains reverse at a station where they did not (T-797) */
   | "reverse"
   /** the first stop, where a right click closes the line into a loop (T-798) */
@@ -80,12 +82,12 @@ export function sizeAt(zoom: number): number {
 
 /**
  * The tiers as the clock worker works them out (`TrackApi::stop_tiers`, T-237): per station node
- * its tier, 0 on, 1 route, 2 reroute, 3 cut, 4 reverse, 5 close, 6 open, 7 turn, 8 unturn, and for 4
+ * its tier, 0 on, 1 route, 2 reroute, 3 cut, 4 reverse, 5 close, 6 open, 7 turn, 8 unturn, 9 tram, and for 4
  * the station trains would reverse at (T-797), from the same search a click makes, so a station past
  * an end that the line can carry on to is on route.
  */
 function tiersFrom(d: Float64Array, w: WorldView, revAt: Map<string, string>): Map<string, StopTier> {
-  const names: StopTier[] = ["on", "route", "reroute", "cut", "reverse", "close", "open", "turn", "unturn"];
+  const names: StopTier[] = ["on", "route", "reroute", "cut", "reverse", "close", "open", "turn", "unturn", "tram"];
   const byNum = new Map(w.save.stations.map((s) => [s.num, s.id]));
   const out = new Map<string, StopTier>();
   revAt.clear();
@@ -152,7 +154,7 @@ interface Mark {
 }
 
 /** In the order a click prefers when markers overlap: the stops, then the ones that can be added. */
-const RANK: Record<StopTier, number> = { on: 3, close: 3, open: 3, turn: 3, unturn: 3, route: 2, reroute: 1, reverse: 1, cut: 0 };
+const RANK: Record<StopTier, number> = { on: 3, close: 3, open: 3, turn: 3, unturn: 3, route: 2, reroute: 1, reverse: 1, cut: 0, tram: 0 };
 
 export class StopMarkers {
   private box: HTMLDivElement;
@@ -371,7 +373,7 @@ export class StopMarkers {
       }
       // a stop that closes, opens or turns a loop is drawn as the stop it is
       const stop = tier === "on" || tier === "close" || tier === "open" || tier === "turn" || tier === "unturn";
-      const cls = "stop-mark " + (stop ? "on" : tier) + (lit.has(id) ? " hot" : "");
+      const cls = "stop-mark " + (stop ? "on" : tier === "tram" ? "cut" : tier) + (lit.has(id) ? " hot" : "");
       if (m.cls !== cls) {
         m.cls = cls;
         m.el.className = cls;
@@ -456,6 +458,7 @@ export class StopMarkers {
         const at = this.revAt.get(id);
         return [name, at === "" ? t("stopMarkers.reverseEnd", { tram: this.tram }) : this.names.get(at ?? "") ? t("stopMarkers.reverseAt", { name: this.names.get(at ?? ""), tram: this.tram }) : t("stopMarkers.reverseSome", { tram: this.tram }), ...shiftAdd];
       }
+      case "tram": return [name, t("issues.tramTrack")];
       default: return [name, t("stopMarkers.noTrack")];
     }
   }
@@ -493,6 +496,13 @@ export class StopMarkers {
     if (loopTap.peek()) {
       loopTap.value = false;
       return this.loopAt(id, px, py);
+    }
+    if (this.tierOf(id) === "tram") {
+      this.hideTag();
+      this.reasonFor = id;
+      this.showTag([t("issues.tramTrack")], px, py, true);
+      this.reasonTimer = window.setTimeout(() => this.hideTag(), REASON_MS);
+      return;
     }
     if (this.tierOf(id) === "cut") {
       const name = this.names.get(id) ?? t("stopMarkers.thatStation");

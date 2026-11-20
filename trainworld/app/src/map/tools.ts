@@ -435,7 +435,7 @@ export class Tools {
   }
 
   /** What is under the pointer for building: a node, a point on track, or open ground. */
-  private snap(px: number, py: number, lngLat: { lng: number; lat: number }, nodes = true, anyFamily = false): Snap {
+  private snap(px: number, py: number, lngLat: { lng: number; lat: number }, nodes = true): Snap {
     const w = world.peek();
     const n = this.overlay.renderer.net;
     const [fx, fy] = toLocal(lngLat.lng, lngLat.lat);
@@ -454,16 +454,12 @@ export class Tools {
     // T-1870: a station goes on the track at the pointer, never pulled to a node within the radius
     // (zoomed out that was a long stretch of track); `roomSnap` moves it where the platform needs room
     nodes &&= !station;
-    // T-2926: tram track and train track never join, so while drawing, only the picked family's are snap targets
-    // T-3153: only the track tool filters by family; delete and the rest see all track
-    const fam = station || anyFamily || tool.peek() !== "track" ? null : tramTrack.peek();
-    const tramOf = fam === null ? null : this.tramEdgeSet(w);
+    // T-3889: tram track joins train track, so every track is a snap target whichever is picked
     const nearNodes = at && nodes ? nodesNear(w, at[0], at[1], TRACK_NODE_PX * at[2]) : null;
     const nearEdges = at ? edgesNear(n, at[0], at[1], laneReach * at[2]) : null;
     for (const node of nodes ? nearNodes ?? w.nodes.values() : []) {
       if (node.bus || node.port) continue; // a bus stop or a port (T-2194) is no track to build on (T-1464)
       if (hidden.levels && levelHidden(node.level)) continue; // T-3560
-      if (fam !== null && (node.kind ?? 0) >= 2 !== fam) continue;
       const [lx, ly] = toLocal(node.lng, node.lat);
       const [x, y] = this.screen(lx, ly);
       const d = (x - px) ** 2 + (y - py) ** 2;
@@ -498,7 +494,6 @@ export class Tools {
     // each edge's nearest point within reach, px squared
     const near: { d: number; hit: Snap }[] = [];
     for (const { edge, pts, ks } of nearEdges ?? [...n.edgePts].map(([edge, pts]) => ({ edge, pts, ks: null }))) {
-      if (tramOf && tramOf.has(edge) !== fam) continue;
       if (offEdges?.has(edge)) continue;
       const er = doubleIds?.has(edge) ? laneReach : edgePx;
       let eb = er * er, eh: Snap | null = null;
@@ -2354,8 +2349,6 @@ export class Tools {
       if (rt.text) kids.push(rt.text);
       if (kids.length) this.showTag(kids, rt.bad, ...at!);
       else this.tag.style.display = "none";
-    } else if (t === "track" && h?.kind === "free" && !hb && this.familyClash()) {
-      this.showTag(tr(tramTrack.peek() ? "tools.noTramToTrain" : "tools.noTrainToTram"), true, ...this.screen(h.lx, h.ly));
     } else if (t === "track" && this.start && h && !this.snapped && this.tooFar(h)) {
       this.showTag(tooFarText(), true, ...at!);
     } else if (t === "track" && this.start && h && (pv || this.waiting())) {
@@ -2371,13 +2364,6 @@ export class Tools {
       if (lines.length) this.showTag(lines, false, ...at!);
       else this.tag.style.display = "none";
     } else this.tag.style.display = "none";
-  }
-
-  /** T-3561: the pointer is over track of the other family (tram or train) that the family filter in `snap` skipped, with no snap of the picked family. */
-  private familyClash(): boolean {
-    const p = this.pointer;
-    if (!p || this.real.ringAt || this.street.ringAt) return false;
-    return this.snap(p.px, p.py, { lng: p.lng, lat: p.lat }, true, true).kind !== "free";
   }
 
   /** The cursor tag with `content`, red when `bad`, by the screen point (x, y). */

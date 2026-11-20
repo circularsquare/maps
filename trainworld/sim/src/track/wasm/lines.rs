@@ -19,7 +19,7 @@ impl TrackApi {
     #[allow(clippy::too_many_arguments)]
     pub fn set_line_with_trains(&mut self, id: u32, stops: &[u32], high: u32, medium: u32, low: u32, dwell_s: f32, turnaround_s: f32, cars: u8, colour: u32, name: String) -> u32 {
         let Some((stops, path)) = edited_stops(&self.w.net, stops, false, &[]) else {
-            return self.refuse(Issue::LinePath { line: id });
+            return self.no_route(id, stops);
         };
         let mut d = LineData { rows: 0, x: Default::default(), symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, stops, path, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), outer: vec![], day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![], fare_dist: false };
         // T-3542: a line of four or five rows runs its high count at midday and in the afternoon too
@@ -29,7 +29,7 @@ impl TrackApi {
     /// Change a line's stops, keeping everything else; the path is found again.
     pub fn set_stops(&mut self, id: u32, stops: &[u32]) -> u32 {
         let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
-        let Some((stops, path)) = edited_stops(&self.w.net, stops, d.hand, &d.ones) else { return self.refuse(Issue::LinePath { line: id }) };
+        let Some((stops, path)) = edited_stops(&self.w.net, stops, d.hand, &d.ones) else { return self.no_route(id, stops) };
         d.stops = stops;
         d.path = path;
         if !settle_ones(&self.w.net, &mut d) {
@@ -44,7 +44,7 @@ impl TrackApi {
         if d.bus.is_some() || d.ferry.is_some() {
             return self.refuse(Issue::LinePath { line: id });
         }
-        let Some((stops, path)) = edited_stops(&self.w.net, stops, true, &d.ones) else { return self.refuse(Issue::LinePath { line: id }) };
+        let Some((stops, path)) = edited_stops(&self.w.net, stops, true, &d.ones) else { return self.no_route(id, stops) };
         d.stops = stops;
         d.path = path;
         d.hand = true;
@@ -67,7 +67,8 @@ impl TrackApi {
                     once.push(s);
                 }
             }
-            let mut memo = HopMemo::new();
+            // T-3889: the stops go in one at a time, so a tram line's first few may hold no tram stop
+            let mut memo = HopMemo::of(net.stops_tram(&d.stops));
             // T-3565: one-way stations go where the track puts them, whatever the cost
             if let Some((stops, path)) = super::legs::sorted(net, &once, &mut memo, &d.ones) {
                 (d.stops, d.path) = (stops, path);
@@ -91,6 +92,11 @@ impl TrackApi {
         }
         self.run(Op::Line { id, data: Some(d) })
     }
+    /// T-3889: whether a line with these stops runs trams (a tram stop among them), so a new line
+    /// starts with the tram's defaults.
+    pub fn stops_tram(&self, stops: &[u32]) -> bool {
+        self.w.net.stops_tram(stops)
+    }
     /// T-2895: whether the line keeps a stop order the player set.
     pub fn line_hand(&self, id: u32) -> bool {
         self.w.net.line_ok(id) && self.w.net.line_hand[id as usize]
@@ -107,6 +113,8 @@ impl TrackApi {
         }
         match net.route_hops(&stops, &[]) {
             Ok(_) => vec![],
+            // T-3889: a train line kept off tram track: `order_stops` says so
+            Err(k) if !net.stops_tram(&stops) && !net.joined_by(stops[k], stops[k + 1], false) && net.joined(stops[k], stops[k + 1]) => vec![],
             Err(k) => vec![if net.joined(stops[k], stops[k + 1]) { 1.0 } else { 0.0 }, stops[k] as f64, stops[k + 1] as f64],
         }
     }
@@ -335,6 +343,9 @@ impl TrackApi {
     pub fn add_stop(&mut self, id: u32, station: u32) -> u32 {
         let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
         let Some((stops, _)) = best_insert(&self.w.net, id, station, &mut HopMemo::new()) else {
+            if self.train_kept_off(&d.stops, station) {
+                return self.refuse(Issue::TramTrack { line: id });
+            }
             self.issues.clear();
             self.money_short = None;
             return 2;
@@ -369,6 +380,9 @@ impl TrackApi {
             }
         } else {
             let Some((stops, _)) = best_insert(net, id, station, &mut HopMemo::new()) else {
+                if self.train_kept_off(&d.stops, station) {
+                    return self.refuse(Issue::TramTrack { line: id });
+                }
                 self.issues.clear();
                 self.money_short = None;
                 return 2;
@@ -424,8 +438,8 @@ impl TrackApi {
     /// first or last stop, where a click closes the line into a circle (T-3203), 6 a loop's first stop, where a click
     /// opens it (T-798), 7 the stop before a loop at an end of the line, where a click turns the
     /// line round it (`turn_end`), 8 that stop on a line so turned, where a click opens it again
-    /// (`open_loop`, T-3021). Worked out with `insert_stop`'s own search, so the markers say what a
-    /// click does. Empty if the line is not there.
+    /// (`open_loop`, T-3021), 9 a train line reaches it only over tram track (T-3889). Worked out with
+    /// `insert_stop`'s own search, so the markers say what a click does. Empty if the line is not there.
     pub fn stop_tiers(&self, line: u32) -> Vec<f64> {
         let net = &self.w.net;
         if !net.line_ok(line) {
@@ -459,6 +473,7 @@ impl TrackApi {
                 (3.0, -1.0)
             } else {
                 match best_insert(net, line, n, &mut memo) {
+                    None if self.train_kept_off(stops, n) => (9.0, -1.0),
                     None => (3.0, -1.0),
                     Some((_, path)) => match turn_nodes(net, &path).into_iter().find(|t| !old_turns.contains(t)) {
                         Some(t) => (4.0, t as f64),
@@ -1046,6 +1061,24 @@ impl TrackApi {
         v.join("\n")
     }
 
+}
+
+impl TrackApi {
+    /// T-3889: the refusal for `stops` that have no route as line `id`'s: `TramTrack` where they are
+    /// a train line's (no tram stop) and only tram track joins one of them to the first, else
+    /// `LinePath`.
+    fn no_route(&mut self, id: u32, stops: &[u32]) -> u32 {
+        let net = &self.w.net;
+        let kept_off = !net.stops_tram(stops) && stops.first().is_some_and(|&a| stops[1..].iter().any(|&b| net.node_ok(a) && net.node_ok(b) && !net.joined_by(a, b, false) && net.joined(a, b)));
+        self.refuse(if kept_off { Issue::TramTrack { line: id } } else { Issue::LinePath { line: id } })
+    }
+
+    /// T-3889: `station` would join a train line with `stops` (neither has a tram stop) only over
+    /// tram track.
+    fn train_kept_off(&self, stops: &[u32], station: u32) -> bool {
+        let net = &self.w.net;
+        !net.stops_tram(stops) && !net.tram_stop(station) && stops.first().is_some_and(|&a| net.node_ok(a) && net.node_ok(station) && !net.joined_by(a, station, false) && net.joined(a, station))
+    }
 }
 
 /// A stop repeated straight after itself counts once (T-1242): a loop's middle stop taken out

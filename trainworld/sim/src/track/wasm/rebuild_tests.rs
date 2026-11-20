@@ -591,24 +591,70 @@ fn a_rail_run_rebuilds_as_tram_and_back() {
     assert!(st.iter().all(|&n| a.w.net.node_platform[n as usize] == 80));
 }
 
-/// Part of a run cannot become tram track: it would join the rail left beside it. The piece that
-/// meets that rail is refused for its own sake, as a tram-train join; the one beyond it only with it.
-#[test]
-fn part_of_a_run_cannot_change_family() {
-    let (mut a, st, _) = run();
-    let edges = live(&a);
-    let part: Vec<u32> = edges.iter().copied().filter(|&e| a.w.net.edge_a[e as usize] == st[0] || a.w.net.edge_b[e as usize] == st[0]).collect();
-    assert_eq!(part.len(), 2);
-    let meets = *part.iter().find(|&&e| [a.w.net.edge_a[e as usize], a.w.net.edge_b[e as usize]].iter().all(|&n| a.w.net.node_ports[n as usize].n == 2)).unwrap();
-    let q = a.rebuild_quote(&part, &st[..1], 99, 3, 0);
-    assert_eq!((q[1], q[3], q[4], q[5]), (0.0, 2.0, 1.0, meets as f64), "{q:?}: the piece that meets the rail is the red one");
-    assert!(a.issue_kinds().contains("TrackFamily"), "{}", a.issue_kinds());
-    assert_eq!(a.rebuild_pieces(&part, &st[..1], 99, 3, 0), 1);
-    assert!(edges.iter().all(|&e| a.w.net.edge_kind[e as usize] == TrackKind::Regular));
+/// T-3889: `run` drawn in three strokes, so plain joints at 2 and 6 km: pieces 0-1, 1-2 (S0 at 1 km),
+/// 2-6, 6-7, 7-8 (S1 at 7 km).
+fn run_with_joints() -> (TrackApi, [u32; 2], u32) {
+    let mut a = api();
+    a.set_cash(1e6);
+    assert_eq!(a.add_route(&[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2000.0, 0.0, 0.0], &[], 2, false), 0, "{}", a.issues());
+    for x in [6000.0, 8000.0] {
+        let end = a.route_end();
+        assert_eq!(a.add_route(&[1.0, end as f64, 0.0, 0.0, 0.0, 0.0, 0.0, x, 0.0, 0.0], &[], 2, false), 0, "{}", a.issues());
+    }
+    let mut st = [0; 2];
+    for (i, x) in [1000.0, 7000.0].into_iter().enumerate() {
+        let edge = (0..a.w.net.edge_count() as u32)
+            .find(|&e| {
+                let n = &a.w.net;
+                n.edge_ok(e) && n.node_x[n.edge_a[e as usize] as usize] < x && n.node_x[n.edge_b[e as usize] as usize] > x
+            })
+            .unwrap();
+        assert_eq!(a.add_station(2, edge, x, 0.0, 200, format!("S{i}")), 0, "{}", a.issues());
+        st[i] = (0..a.w.net.node_count() as u32).find(|&n| a.w.net.node_platform[n as usize] > 0 && a.w.net.node_x[n as usize] == x).unwrap();
+    }
+    let line = a.new_line_id();
+    assert_eq!(a.set_line_with_trains(line, &st, 2, 1, 0, 30.0, 180.0, 0, 0, "Test".into()), 0, "{}", a.issues());
+    assert_eq!(a.construct_all(), 0, "{}", a.issues());
+    (a, st, line)
 }
 
-/// Tram track with a curve too tight for trains, rebuilt as rail: the curve is refused for its own
-/// sake, the straight beside it only because it cannot become rail alone, and nothing changes.
+/// T-3889: part of a run becomes tram track, joining the rail beside it at a plain joint. The station
+/// all on tram track is a tram stop, cut to 80 m, and the line, with a tram stop now, a tram line running
+/// onto the rail. The middle piece alone would put the train line (no tram stop) on tram track, and a
+/// piece ending at a station would leave it where tram meets rail: both refused, saying so.
+#[test]
+fn part_of_a_run_becomes_tram_track_joined_to_the_rail() {
+    let (mut a, st, line) = run_with_joints();
+    let edges = live(&a);
+    assert_eq!(edges.len(), 5);
+    let x = |a: &TrackApi, e: u32| (a.w.net.node_x[a.w.net.edge_a[e as usize] as usize] + a.w.net.node_x[a.w.net.edge_b[e as usize] as usize]) / 2.0;
+    let piece = |a: &TrackApi, at: f64| *edges.iter().find(|&&e| (x(a, e) - at).abs() < 1.0).unwrap();
+    let middle = piece(&a, 4000.0);
+    let q = a.rebuild_quote(&[middle], &[], 99, 3, 0);
+    assert_eq!((q[1], q[3]), (0.0, 1.0), "{q:?}");
+    assert!(a.issue_kinds().contains("TramTrack"), "{}", a.issue_kinds());
+    assert_eq!(a.rebuild_pieces(&[middle], &[], 99, 3, 0), 1);
+    let at_station = piece(&a, 6500.0);
+    a.rebuild_quote(&[at_station], &[], 99, 3, 0);
+    assert!(a.issue_kinds().contains("StationFamily"), "{}", a.issue_kinds());
+    assert!(edges.iter().all(|&e| a.w.net.edge_kind[e as usize] == TrackKind::Regular));
+
+    let part = vec![piece(&a, 500.0), piece(&a, 1500.0)];
+    let q = a.rebuild_quote(&part, &st[..1], 99, 3, 0);
+    assert_eq!((q[1], q[3]), (2.0, 0.0), "{q:?} {}", a.issue_kinds());
+    assert_eq!(a.rebuild_pieces(&part, &st[..1], 99, 3, 0), 0, "{}", a.issue_kinds());
+    assert!(edges.iter().all(|&e| (a.w.net.edge_kind[e as usize] == TrackKind::Tram) == part.contains(&e)));
+    assert!(a.w.net.tram_stop(st[0]) && !a.w.net.tram_stop(st[1]));
+    assert_eq!((a.w.net.node_platform[st[0] as usize], a.w.net.node_platform[st[1] as usize]), (80, 200));
+    assert!(a.line_tram(line));
+    let l = line as usize;
+    assert_eq!((a.w.net.line_dwell[l], a.w.net.line_turn[l]), (15.0, 120.0));
+    assert!(a.w.svc.lines[l].running && !a.w.net.line_broken[l]);
+    assert!(a.trams_needed() > 0 && a.cars_needed() == 0);
+}
+
+/// Tram track with a curve too tight for trains, rebuilt as rail: the curve is refused and stays tram
+/// track; the straight beside it becomes rail, joined to it (T-3889).
 #[test]
 fn a_tram_curve_too_tight_for_trains_stays_tram() {
     let mut a = api();
@@ -622,10 +668,10 @@ fn a_tram_curve_too_tight_for_trains_stays_tram() {
     assert_eq!(edges.len(), 2);
     let curve = *edges.iter().find(|&&e| !a.w.net.edge_data(e).unwrap().pis.is_empty()).unwrap();
     let q = a.rebuild_quote(&edges, &[], 99, 1, 0);
-    assert_eq!((q[1], q[3], q[4], q[5]), (0.0, 2.0, 1.0, curve as f64), "{q:?} {}", a.issue_kinds());
+    assert_eq!((q[1], q[3], q[4], q[5]), (1.0, 1.0, 1.0, curve as f64), "{q:?} {}", a.issue_kinds());
     assert!(a.issue_kinds().contains("RadiusTooSmall"), "{}", a.issue_kinds());
-    assert_eq!(a.rebuild_pieces(&edges, &[], 99, 1, 0), 1);
-    assert!(edges.iter().all(|&e| a.w.net.edge_kind[e as usize] == TrackKind::Tram));
+    assert_eq!(a.rebuild_pieces(&edges, &[], 99, 1, 0), 0, "{}", a.issue_kinds());
+    assert!(edges.iter().all(|&e| a.w.net.edge_kind[e as usize] == if e == curve { TrackKind::Tram } else { TrackKind::Regular }));
 }
 
 /// T-3108: blueprint track changes between regular, high speed and tram by the rebuild rules, free and
@@ -653,10 +699,11 @@ fn blueprint_switches_between_regular_high_speed_and_tram() {
     let kinds = |a: &TrackApi, k: TrackKind| edges.iter().all(|&e| a.w.net.edge_kind[e as usize] == k);
     let cash = a.cash();
 
-    // part of the run alone would meet the rail beside it: nothing changes
+    // T-3889: part of the run would leave a station where tram meets rail: nothing changes
     let part: Vec<u32> = edges.iter().copied().filter(|&e| a.w.net.edge_a[e as usize] == st[0] || a.w.net.edge_b[e as usize] == st[0]).collect();
     assert_eq!(a.set_edges_kind(&part, 3), 1);
     assert_eq!(a.last_skipped(), 2);
+    assert!(a.issue_kinds().contains("StationFamily"), "{}", a.issue_kinds());
     assert!(kinds(&a, TrackKind::Regular));
 
     // rail to tram: stations cut to 80 m, the line a tram line with the tram dwell, nothing paid
@@ -676,8 +723,10 @@ fn blueprint_switches_between_regular_high_speed_and_tram() {
     assert_eq!(a.set_edges_kind(&edges, 3), 0, "{}", a.issue_kinds());
     assert!(kinds(&a, TrackKind::Tram) && a.line_tram(line));
 
-    // a mixed pick (one piece high speed, the rest tram) goes to regular in one go, and one undo reverts it
-    assert_eq!(a.set_edges_kind(&edges[..1], 2), 1, "a lone piece cannot leave its family");
+    // a lone piece ending at a station cannot leave its family (T-3889: no station where tram meets
+    // rail); the whole run goes to regular in one go, and one undo reverts it
+    assert_eq!(a.set_edges_kind(&edges[..1], 2), 1);
+    assert!(a.issue_kinds().contains("StationFamily"), "{}", a.issue_kinds());
     assert_eq!(a.set_edges_kind(&edges, 1), 0, "{}", a.issue_kinds());
     assert!(kinds(&a, TrackKind::Regular) && !a.line_tram(line));
     a.undo();
