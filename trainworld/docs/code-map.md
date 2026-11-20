@@ -374,6 +374,11 @@ data/packs mid-batch.
 The page's link preview (`og:` and `twitter:` tags in `app/index.html`, absolute URLs on anita.garden/trainsworld/)
 names `app/public/preview.png`, 1200x630, which the build copies beside index.html and `deploy.py` publishes with the
 rest of dist (T-2543). Redo the picture when the look changes; X and Bluesky cache cards.
+The game installs as a phone app (T-3815): `app/public/manifest.webmanifest` (relative `start_url` and `scope`, standalone,
+the pink theme's background) and `icon-192.png`, `icon-512.png`, `icon-maskable-512.png` (the favicon glyph on that background),
+linked from `app/index.html` with the iOS tags; `deploy.py` copies them with the rest of dist. There is no service worker and no
+offline caching, on purpose: it can pin an old build after an update, and offline play is for the Steam release. Chrome
+offers Install without one (checked with `Page.getInstallabilityErrors`, Chrome 157).
 
 ## checks/: standing checks
 
