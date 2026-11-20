@@ -261,6 +261,17 @@ function strokeDraws(rnd: NetworkRenderer, c: Ctx2) {
   return { stroke, trackStrokes };
 }
 
+/** T-3899: the track level view's ramp ends: the drawn width (device px) of built and blueprint, single and
+ * double bare track as the stroke shader works it out (its width, grown to the pair's outer edges once double
+ * track opens), and the line's thickness, 1/8 of the built double width, at least a pixel. */
+function rampEndSizes(c: Ctx3) {
+  const { wLine, lanes, G, bpMid, bpRail, dpr } = c;
+  const kS = SINGLE_WIDTH + (1 - SINGLE_WIDTH) * lanes.grow, kD = DOUBLE_WIDTH + (1 - DOUBLE_WIDTH) * lanes.grow;
+  const pair = G * (1 + lanes.share);
+  const dBuilt = Math.max(wLine * kD, pair);
+  return { w: [wLine * kS, bpMid * kS + 2 * bpRail, dBuilt, Math.max(bpMid * kD + 2 * bpRail, pair)] as const, thick: Math.max(dpr, dBuilt / 8) };
+}
+
 function strokesPass(rnd: NetworkRenderer, c: Ctx3) {
   const { zoom, dpr, opt, gl, lc, vp, wLine, wTrack, pass, through, trackCap, cache, redraw, u, mute, lanes, bandOn, shades, bpMid, bpRail, G, modes, stroke, trackStrokes } = c;
   if (redraw) {
@@ -316,7 +327,7 @@ function strokesPass(rnd: NetworkRenderer, c: Ctx3) {
     gl.uniform1i(u.u_lane_mode, 0);
   }
   gl.uniform1i(u.u_ghost, 0);
-  rnd.marks.draw(lc, vp, zoom, dpr, rnd.levelColours, opt.flatMarks !== false, opt.rampMarks !== false);
+  rnd.marks.draw(lc, vp, zoom, dpr, rnd.levelColours, opt.flatMarks !== false, opt.rampMarks !== false, opt.byLevel ? rampEndSizes(c) : null);
   // T-2991: one-way loops' chevrons on the Line view's strokes (the Traffic view's bands move apart)
   if (!opt.byLevel && !opt.bySpeed && !opt.byProfit && !rnd.trafficWidths)
     rnd.oneWay.draw(lc, vp, zoom, dpr, { wLine, band: bandOn, mPx: pxPerUnitAt(zoom) * kAtY(0) * dpr, sel: mute ? opt.selLine : -1 });

@@ -11,7 +11,7 @@ import { hasUpgrade, UPGRADE } from "../game/upgrades";
 import type { PreviewAnswer } from "../workers/clockClient";
 import type { ClockEdge, ClockState } from "../workers/protocol";
 import { anchor, kAtY, toLocal, type Anchor } from "./geo";
-import { M_BAD, M_CONVERGE, M_CROSSING, M_DIVERGE, M_JUNCTION, M_REPEAT, MARK_STRIDE, rampMarks } from "./markData";
+import { M_BAD, M_CONVERGE, M_CROSSING, M_DIVERGE, M_JUNCTION, M_RAMPEND, M_REPEAT, MARK_STRIDE, rampMarks } from "./markData";
 import { repeatedEdge } from "../game/repeatTrack";
 import { newFacilityCache, placeFacilities, type FacilityCache } from "./facilityPlace";
 import { buildingsDrawn, type BuildingDraw } from "./buildingNet";
@@ -1604,7 +1604,7 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
       const b = new StrokeBuilder(false, MIN_SEG_M), from: number[] = [];
       b.add(lp.lpts, TRACK, e.id, flags, false, 0, undefined, lp.lane, undefined, undefined, from);
       const ramps: number[] = [];
-      rampMarks(own, e.built ? 0 : 1, ramps);
+      rampMarks(own, e.built ? 0 : 1, ramps, e.kind ? 0 : e.tracks === 2 ? 2 : 1);
       const strokes = b.build();
       // each stroke segment's segment of the edge's given points, for its speed
       const srcL = from.length === lp.lpts.length / 3 - 1 ? lp.src : from.map((k) => (lp.src ? lp.src[k] : k));
@@ -2001,6 +2001,7 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
     const pad = 50 * kAtY(box[1]);
     for (let k = 0; k < marks.length; k += MARK_STRIDE) {
       const x = marks[k], y = marks[k + 1];
+      if (marks[k + 2] === M_RAMPEND) continue;
       if (x >= box[0] - pad && x <= box[2] + pad && y >= box[1] - pad && y <= box[3] + pad) clear.push([x, y]);
     }
     const runs: OneWayEdge[] = [];

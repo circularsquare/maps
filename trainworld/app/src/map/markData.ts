@@ -20,6 +20,10 @@ export const M_CONVERGE = 5;
 export const M_DIVERGE = 6;
 /** T-3562: a line's run goes over this piece twice in the same direction */
 export const M_REPEAT = 7;
+/** T-3899: where a ramp starts or ends, a line across the track drawn only in the track level view. `angle` is
+ * along the track, `level` the (fractional) level the track is at there, and tier is 0 built, 1 blueprint, plus 2
+ * on double track (so it picks the track's drawn width). */
+export const M_RAMPEND = 8;
 
 /** T-3062: a flat crossing's modes ride in its level slot as a tenth per tram track: level + 0.1 for a
  * tram over rail track (the tram yields), + 0.2 for two tram tracks. Whole levels still round to
@@ -39,7 +43,7 @@ const GROUND_M = 0.1;
  * where the height keeps rising or keeps falling, up to the level it reaches. The mark sits at the
  * middle of the stretch and points along the track toward the end that is farther from the ground;
  * its level is that end's. A stretch that crosses the ground (-1 to +2) gets one mark for each side. */
-export function rampMarks(pts: ArrayLike<number>, tier: number, out: number[]) {
+export function rampMarks(pts: ArrayLike<number>, tier: number, out: number[], tracks = 0) {
   const n = pts.length / 3;
   const dz = (k: number) => pts[k * 3 + 5] - pts[k * 3 + 2];
   let k = 0;
@@ -48,6 +52,11 @@ export function rampMarks(pts: ArrayLike<number>, tier: number, out: number[]) {
     const rising = dz(k) > 0;
     let end = k + 1;
     while (end + 1 < n && (rising ? dz(end) > SLOPE_M : dz(end) < -SLOPE_M)) end++;
+    if (tracks) {
+      const tr = tier + (tracks === 2 ? 2 : 0);
+      rampEnd(pts, k, k + 1, tr, out);
+      rampEnd(pts, end, end - 1, tr, out);
+    }
     const run: number[] = [];
     for (let j = k; j <= end; j++) run.push(pts[j * 3], pts[j * 3 + 1], pts[j * 3 + 2]);
     // split at the ground, so each side is a ramp to its own level
@@ -69,6 +78,16 @@ export function rampMarks(pts: ArrayLike<number>, tier: number, out: number[]) {
     }
     k = end;
   }
+}
+
+/** A ramp end at point `j`, along the track toward point `to`; left out where the height is not a whole
+ * level, which is an edge boundary partway up a ramp rather than the ramp's end. */
+function rampEnd(pts: ArrayLike<number>, j: number, to: number, tier: number, out: number[]) {
+  const lv = pts[j * 3 + 2] / LEVEL_M;
+  if (Math.abs(lv - Math.round(lv)) > 0.02) return;
+  const dx = pts[to * 3] - pts[j * 3], dy = pts[to * 3 + 1] - pts[j * 3 + 1];
+  if (dx === 0 && dy === 0) return;
+  out.push(pts[j * 3], pts[j * 3 + 1], M_RAMPEND, Math.atan2(dy, dx), tier, Math.max(-3, Math.min(3, lv)));
 }
 
 /** The mark of one ramp stretch that stays on one side of the ground. */

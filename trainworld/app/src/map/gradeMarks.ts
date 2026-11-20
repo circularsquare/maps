@@ -6,6 +6,9 @@
 //     like the ridership circles (T-1772).
 //   - one-way track no train can use (T-3164), two arrows pointing at each other or apart in a
 //     round badge, in the bad-crossing red, at the node where the ways meet.
+//   - T-3899: in the track level view, a thin line across the track where each ramp starts and ends, in the
+//     level colour the track has there, a little darker so it shows on the track. Its length is 9/8 of the
+//     track's drawn width and its thickness 1/8 of a double track's.
 //   - a ramp (a trapezoid, T-3189) for every change of level along track, at the middle of the ramp,
 //     pointing along the track toward the level farther from the ground, in that level's
 //     Elevation colour (T-1871).
@@ -19,7 +22,7 @@ import { shadeColours } from "../game/shades";
 import { display } from "../game/ui";
 import { compileOptional, interp, PROJECT_GLSL, PROJECT_UNIFORMS, setCamera, uniforms, type LocalCamera } from "./gl";
 import type { Overlay } from "./overlay";
-import { crossTrams, M_BAD, M_CONVERGE, M_CROSSING, M_DIVERGE, M_JUNCTION, M_PORTAL, M_RAMP, M_REPEAT, MARK_STRIDE } from "./markData";
+import { crossTrams, M_BAD, M_CONVERGE, M_CROSSING, M_DIVERGE, M_JUNCTION, M_PORTAL, M_RAMP, M_RAMPEND, M_REPEAT, MARK_STRIDE } from "./markData";
 import { quietBadgeRadius } from "./stationGeometry";
 import type { TipLine } from "./networkTips";
 import { elevationFact } from "./trackTagRows";
@@ -36,6 +39,8 @@ const RAMP_R: [number, number][] = [[11, 3.5], [13, 5], [15, 7]];
 const LOUD_ZOOM = 9, QUIET_ZOOM = 11, RAMP_ZOOM = 11;
 /** How opaque a built mark is. */
 const QUIET_ALPHA = 0.85;
+/** T-3899: a ramp end's colour is its level's, this much towards the mark ink, and this opaque. */
+const RAMPEND_DARK = 0.3, RAMPEND_ALPHA = 0.9;
 /** A preview's crossing or junction this close (local units) to one already marked is not drawn. */
 const SAME_PLACE = 6;
 
@@ -49,6 +54,9 @@ precision highp float;
 ${PROJECT_GLSL}
 uniform vec2 u_viewport;
 uniform vec3 u_r;            // radius in device px: loud badge, quiet badge, ramp mark
+uniform vec4 u_rw;           // T-3899: the track's drawn width (device px) for a ramp end: built single, blueprint single, built double, blueprint double
+uniform float u_thick;       // a ramp end's thickness, device px
+uniform float u_ends;        // 1: ramp ends are drawn (the track level view)
 uniform float u_ramps;       // 0: no marks on ramps and portals
 uniform float u_flat;        // 0: no marks on flat crossings and junctions
 uniform int u_level_hide;    // T-3420: the levels switched off (drawn faint, T-3560), a bit each from level -3
@@ -62,17 +70,18 @@ flat out float v_fade;
 void main() {
   int shape = int(a_mark.z + 0.5);
   bool ramp = shape == ${M_RAMP} || shape == ${M_PORTAL};
-  float r = ramp ? u_r.z : (a_style.x > 0.5 ? u_r.x : u_r.y);
+  bool rend = shape == ${M_RAMPEND};
+  float r = rend ? (u_ends > 0.5 && u_ramps > 0.5 ? u_rw[int(a_style.x + 0.5)] : 0.0) : ramp ? u_r.z : (a_style.x > 0.5 ? u_r.x : u_r.y);
   if (u_ramps < 0.5 && ramp) r = 0.0;
   if (u_flat < 0.5 && (shape == ${M_CROSSING} || shape == ${M_JUNCTION})) r = 0.0;
   v_fade = ((u_level_hide >> (clamp(int(round(a_style.y)), -3, 3) + 3)) & 1) != 0 ? ${LEVEL_FADE.toFixed(2)} : 1.0;
   if (r <= 0.0) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
-  float rq = ramp ? 1.8 * r + 3.0 : r + 3.0;
+  float rq = rend ? length(vec2(0.5625 * r, 0.5 * u_thick)) + 2.0 : ramp ? 1.8 * r + 3.0 : r + 3.0;
   vec2 corner = vec2(float(gl_VertexID & 1), float(gl_VertexID >> 1)) * 2.0 - 1.0;
   vec4 c = project(a_mark.xy);
   v_m = a_mark;
   // T-2031: the ramp's direction as drawn on screen (y down), so it follows a turned map
-  if (ramp) {
+  if (ramp || rend) {
     vec4 c2 = project(a_mark.xy + 10.0 * vec2(cos(a_mark.w), sin(a_mark.w)));
     vec2 d = (c2.xy / c2.w - c.xy / c.w) * vec2(u_viewport.x, -u_viewport.y);
     v_m.w = atan(d.y, d.x);
@@ -94,6 +103,7 @@ uniform vec3 u_bad;
 uniform float u_dpr;
 uniform float u_quiet;
 uniform vec3 u_level_colours[7];
+uniform float u_thick;       // a ramp end's thickness, device px
 in vec2 v_p;
 flat in vec4 v_m;
 flat in vec2 v_s;
@@ -124,6 +134,20 @@ void mark() {
   bool blueprint = v_s.x > 0.5;
   float r = v_r;
   vec3 ink = blueprint ? u_bp : u_ink;
+  if (shape == ${M_RAMPEND}) {
+    // across the track: a rectangle 9/8 of its width long, in the track's own colour at this height
+    vec2 dir = vec2(cos(v_m.w), sin(v_m.w));
+    vec2 q = vec2(dot(v_p, dir), dot(v_p, vec2(-dir.y, dir.x)));
+    vec2 e = abs(q) - vec2(0.5 * u_thick, 0.5625 * r);
+    float d = length(max(e, 0.0)) + min(max(e.x, e.y), 0.0);
+    float lh = clamp(3.0 - v_s.y, 0.0, 6.0);
+    int lo = int(floor(lh));
+    vec3 lc = mix(u_level_colours[lo], u_level_colours[min(lo + 1, 6)], lh - float(lo));
+    float a = cov(d) * ${RAMPEND_ALPHA.toFixed(2)};
+    vec3 col = mix(lc, u_ink, ${RAMPEND_DARK.toFixed(2)});
+    o = vec4(col * a, a);
+    return;
+  }
   if (shape == ${M_RAMP} || shape == ${M_PORTAL}) {
     // along the track: u along the ramp toward its far level, v across it
     vec2 dir = vec2(cos(v_m.w), sin(v_m.w));
@@ -207,7 +231,7 @@ export class GradeMarks {
     // again after a lost context (T-953): the old buffers are gone, the renderer uploads anew
     this.built = this.drawing = null;
     this.prog = compileOptional(gl, VS, FS, "grade marks");
-    if (this.prog) this.u = uniforms(gl, this.prog, [...PROJECT_UNIFORMS, "u_viewport", "u_r", "u_ink", "u_bp", "u_fill", "u_bad", "u_dpr", "u_quiet", "u_level_colours", "u_flat", "u_ramps", "u_level_hide"]);
+    if (this.prog) this.u = uniforms(gl, this.prog, [...PROJECT_UNIFORMS, "u_viewport", "u_r", "u_ink", "u_bp", "u_fill", "u_bad", "u_dpr", "u_quiet", "u_level_colours", "u_flat", "u_ramps", "u_level_hide", "u_rw", "u_ends", "u_thick"]);
   }
 
   private upload(old: Instances | null, data: Float32Array | undefined): Instances | null {
@@ -257,7 +281,7 @@ export class GradeMarks {
     this.drawing = this.upload(this.drawing, keep);
   }
 
-  draw(lc: LocalCamera, vp: readonly [number, number], zoom: number, dpr: number, levelColours: Float32Array, flat = true, ramps = true) {
+  draw(lc: LocalCamera, vp: readonly [number, number], zoom: number, dpr: number, levelColours: Float32Array, flat = true, ramps = true, ends: { w: readonly [number, number, number, number]; thick: number } | null = null) {
     if ((!this.built && !this.drawing) || NO_MARKS) return;
     const [loud, quiet, ramp] = markRadii(zoom);
     if (!loud && !quiet && !ramp) return;
@@ -276,6 +300,9 @@ export class GradeMarks {
     gl.uniform1f(u.u_flat, flat ? 1 : 0);
     gl.uniform1f(u.u_ramps, ramps ? 1 : 0);
     gl.uniform1i(u.u_level_hide, hidden.levels);
+    gl.uniform1f(u.u_ends, ends && ramp > 0 ? 1 : 0);
+    if (ends) gl.uniform4f(u.u_rw, ends.w[0], ends.w[1], ends.w[2], ends.w[3]);
+    gl.uniform1f(u.u_thick, ends ? ends.thick : 0);
     for (const s of [this.built, this.drawing]) {
       if (!s) continue;
       gl.bindVertexArray(s.vao);
@@ -295,7 +322,7 @@ export function markAt(ov: Overlay, marks: Float32Array, px: number, py: number,
   for (let i = 0; i < marks.length; i += MARK_STRIDE) {
     const shape = marks[i + 2], isRamp = shape === M_RAMP || shape === M_PORTAL;
     if (!flat && (shape === M_CROSSING || shape === M_JUNCTION)) continue;
-    if (!ramps && isRamp) continue;
+    if (!ramps && isRamp || shape === M_RAMPEND) continue;
     if (levelHidden(marks[i + 5])) continue;
     const r = isRamp ? ramp : marks[i + 4] > 0.5 ? loud : quiet;
     if (r <= 0) continue;
