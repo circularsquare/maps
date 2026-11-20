@@ -483,6 +483,13 @@ export function TrainTable({ axis, st, others = [], related = [], links, group, 
     setChosen({ for: lineKey, scale: s1 });
     setLeft(xFor(leftT.current, s1));
   };
+  // wheel and pinch both come here: factors multiply, one zoom a frame
+  const zoomStep = (f: number, cx: number) => {
+    const p = wheel.current ?? (wheel.current = { f: 1, cx, raf: 0 });
+    p.f *= f;
+    p.cx = cx;
+    if (!p.raf) p.raf = requestAnimationFrame(() => { const q = wheel.current!; wheel.current = null; zoomAt(q.f, Math.max(GUTTER, q.cx)); });
+  };
   const onWheel = (e: WheelEvent) => {
     const el = scroller.current;
     if (!el) return;
@@ -494,10 +501,7 @@ export function TrainTable({ axis, st, others = [], related = [], links, group, 
     e.preventDefault();
     if (e.shiftKey || Math.abs(dx) > Math.abs(dy)) { el.scrollLeft += e.shiftKey ? dx || dy : dx; return; }
     if (!dy) return;
-    const p = wheel.current ?? (wheel.current = { f: 1, cx, raf: 0 });
-    p.f *= NOTCH ** (-dy / 100);
-    p.cx = cx;
-    if (!p.raf) p.raf = requestAnimationFrame(() => { const q = wheel.current!; wheel.current = null; zoomAt(q.f, Math.max(GUTTER, q.cx)); });
+    zoomStep(NOTCH ** (-dy / 100), cx);
   };
   useEffect(() => () => { if (wheel.current) cancelAnimationFrame(wheel.current.raf); }, []);
   // a press and drag moves the table and chart, sideways and down its rows (touch scrolls natively)
@@ -530,7 +534,24 @@ export function TrainTable({ axis, st, others = [], related = [], links, group, 
     drag.current = null;
     scroller.current?.classList.remove("dragging");
   };
-  const grab = { onPointerDown: onDown, onPointerMove: onMove, onPointerUp: onUp, onPointerCancel: onUp, onWheel };
+  // two fingers zoom about their midpoint by the change in their distance, through the wheel's step; one
+  // finger scrolls natively (the CSS touch-action keeps the page itself from zooming)
+  const pinch = useRef(0);
+  const span = (e: TouchEvent) => Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+  const onTouchStart = (e: TouchEvent) => { pinch.current = e.touches.length === 2 ? span(e) : 0; };
+  const onTouchMove = (e: TouchEvent) => {
+    const el = scroller.current;
+    if (!el || e.touches.length !== 2) return;
+    if (e.cancelable) e.preventDefault();
+    const d = span(e), prev = pinch.current;
+    pinch.current = d;
+    if (!prev || !d) return;
+    const z = zoomOf(el), r = el.getBoundingClientRect();
+    const cx = ((e.touches[0].clientX + e.touches[1].clientX) / 2 - r.left) / z;
+    zoomStep(d / prev, cx);
+  };
+  const onTouchEnd = (e: TouchEvent) => { pinch.current = e.touches.length === 2 ? span(e) : 0; };
+  const grab = { onPointerDown: onDown, onPointerMove: onMove, onPointerUp: onUp, onPointerCancel: onUp, onWheel, onTouchStart, onTouchMove, onTouchEnd, onTouchCancel: onTouchEnd };
   // the bullet nearest the pointer in the head row, so one under others is reached too
   const onHeadMove = (e: PointerEvent) => {
     const el = scroller.current;

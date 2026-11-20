@@ -279,7 +279,7 @@ svg .stroke2 { stroke-width: 2; }
   .sp-right { width: 100%; }
 }
 /* T-3469: the timetable (TrainTable.tsx), as a printed one: a column per train, small type */
-.tt-scroll { overflow: auto; cursor: grab; user-select: none; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); font-size: 10px; line-height: 1; font-variant-numeric: tabular-nums; }
+.tt-scroll { overflow: auto; cursor: grab; user-select: none; touch-action: pan-x pan-y; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); font-size: 10px; line-height: 1; font-variant-numeric: tabular-nums; }
 .tt-inner { position: relative; }
 .tt-head { position: sticky; top: 0; z-index: 3; background: var(--bg); border-bottom: 1px solid var(--rule); }
 .tt-corner { position: sticky; left: 0; z-index: 2; height: 100%; background: var(--bg); }
@@ -303,7 +303,7 @@ svg .stroke2 { stroke-width: 2; }
 .tt-veil { position: absolute; inset: 0; z-index: 1; background: var(--bg); opacity: 0.65; pointer-events: none; }
 .tt-col.on, .tt-bullet.on { z-index: 1; pointer-events: none; }
 .tt-col.on { background: var(--shade); opacity: 1; }
-.tt-chart { margin-top: 6px; cursor: grab; user-select: none; }
+.tt-chart { margin-top: 6px; cursor: grab; user-select: none; touch-action: pan-x pan-y; }
 .tt-scroll.dragging, .tt-scroll.dragging *, .tt-chart:active { cursor: grabbing; }
 /* T-3817: over a drawn column the hovered one lands on, the table's own background */
 .tt-cover { position: absolute; top: 0; bottom: 0; z-index: 1; background-color: var(--bg); background-image: inherit; pointer-events: none; }
