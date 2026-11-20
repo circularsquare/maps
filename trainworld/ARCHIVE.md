@@ -1,6 +1,12 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3814 [P1] {L:station-placement} New games name stations independently, clearer confirm (2026-11-19): Published in v0.4.4: new players' stations named independently (per-browser default off), both-way questions in her words, no Confirm? heading. notes/T-3814.md.
+- T-3802 [P1] {L:real-networks} Real world station rings drift while zooming (2026-11-19): Published in v0.4.4 (website c5c6edf, data 2026-11-19, verify PASS): rings stay put on big screens, names on hover for rings and dots, tram rings. notes/T-3802.md.
+- T-3813 [P2] {L:fares} X icons in the fares panel, bigger rings icon (2026-11-19): Cross icon on the fare curve point and fare area rows; rings icon 12 to 15 px, bar height unchanged. notes/T-3813.md.
+- T-3810 [P2] {L:small-fixes} Help entry for grouping lines, no Leave group button (2026-11-19): help.qGroup/aGroup in her words, 12 languages; Leave group removed from the line panel and group view, key dropped; drags out of nested groups checked by pointer first. notes/T-3810.md.
+- T-3807 [P1] {L:accounts-server} Change display name in account settings (2026-11-19): Change name in the account panel, shown once the server reports trainworldRename; server limits every rename path to two per 24 h; hidden names stay hidden per account. Also on hotfix-v0.4.4 (7bf95e07). Server not yet deployed. notes/T-3807.md.
+- T-3811 [P2] {L:fares} City names in advanced fares open and center the city (2026-11-19): City names use the place-link style; click selects the city, double click also runs goToCity; country rows unchanged. notes/T-3811.md.
 - T-3740 [P2] {L:fares} Zone fares, stage Z3 (2026-11-19): Z3 built: rings helper (0.5-30 km, one undo), new stations and bus stops inherit the nearest zone within 2 km, removed areas tidied on undo/redo and load; checker z3chk passed money parity, undo, bus stops, edges and recalculation. notes/T-3740.md.
 - T-3808 [P2] {L:small-fixes} Type as a sortable Lines tab column (2026-11-19): Type column after Fleet, always shown, sortable; default sort unchanged (Riders); panel width thresholds raised 46 px; c002 reworded. notes/T-3808.md.
 - T-3806 [P3] {L:schematic} Track with no line shifts the schematic (2026-11-19): postDiagram's per-region framing runs for a lone region too; real save layout hashes identical with and without bare track in Chicago. notes/T-3806.md.

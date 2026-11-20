@@ -36,7 +36,38 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 4. Steam (T-3729): fee paid, tax form in; her screenshots go in artifacts/trainworld/steam/screenshots.
 5. Later: T-3744 per-stop fare, T-3754, T-3747, busverify's train 4.14 min gap read (a short probe).
 
+## Round 2 (23:50): 8800 = master 57b41bda (smoke8800 passed), master pushed a8deef27. Running: linehelp (T-3810,
+  6189), farecity (T-3811, 6190), citysheet (T-3409), editwait (T-3803), ringfix (dot hover, hotfix tree), dispname
+  (hidden names across renames, shonei-server only; db12e1d there). T-3812 waits for citysheet. v0.4.4 = tw/ringfix
+  (43d9cc9b rings, 9440c73d dot hover, 7bf95e07 display name; uncommitted there: v044 Change1-3 + line, l10n044b
+  translating). Then: commit, move branch hotfix-v0.4.4 to it, snap8800, smoke8800, ask server deploy (shonei-server
+  4ba1627, db12e1d, fdaa596) + publish together. NB finishing dispname squashed the tree's whole branch onto master
+  (1fab7f4a: rings part 1, display name, a one-item v0.4.4 entry); landing ringfix later should skip what's there.
+  T-3811 landed 582fbc9e; T-3807 archived (server not deployed).
+
+## v0.4.4 PUBLISHED ~01:00 UTC 11-20 (website c5c6edf, data 2026-11-19 reused, verify --page all PASS; no
+  open-source export: it copies master). Landed onto master cea0f112; T-3802, T-3814 archived. Leftover folder
+  .tw-trees\ringfix (worktree unregistered, folder held; NEVER delete by hand: node_modules junction) for later.
+## v0.4.4 history (hotfix-v0.4.4 = tw/ringfix tree)
+- Commits: 43d9cc9b rings, 9440c73d dot hover, 7bf95e07 display name, bec2e148 changelog + l10n, 69cce887 pencil,
+  68c17fe9 T-3814 naming default (cherry-picked from tw/namedefault; tree removed). Uncommitted in ringfix: v044Change4
+  (namedefault agent translating). Then commit, branch -f hotfix-v0.4.4, snap8800, smoke8800, test list, publish ask
+  (deploy.py --skip-data --version 2026-11-19; server already deployed). After publish: finish ringfix onto master
+  (master has 1fab7f4a's older copies of rings + display name; expect overlap in updates.ts / en.json / v0.4.4.json),
+  then close T-3802 and T-3814. Server deployed 00:04 UTC.
+
 ## Her words
+- 11-20 ~00:40: real-network fixes and additions P4, Japan's P3, "if people request we can bump up" (LINES.md
+  real-networks). T-3790 now P4; moscowfix left to finish its stage. Up next: T-3816 + T-3799 (gear top right, filters
+  on top of this city / whole world), T-3815 PWA (manifest, no offline).
+- 11-20 ~00:05 UTC: "ok, can deploy server now" -> shonei-server deployed (service active) and pushed fdaa596 (save
+  check level 30, display name change + limit, hidden names). "irl stations look good" (v0.4.4 rings/hover tested).
+  8800 = bec2e148 (hotfix). namedefault (T-3814, tree from hotfix-v0.4.4) running; then rebuild 8800, publish ask.
+- 11-20 ~00:10: panel refresh throttle OK "as long as it doesnt creep like way higher than 4s"; Z3 inheritance OK;
+  Moscow: fix only in the real-network build, keep Moscow near 106 lines (moscowfix, T-3790 step 4, builds to
+  scratch, I ship); fares panel x icons not trash cans, rings icon 25% bigger (faresx, T-3813).
+- 11-19 ~23:45: text acknowledged (Z3, display name, schematic hovers); schematic buses "look great" (A, under);
+  fares by city: a city with no multiple "should not use the country multiple" (as built); hidden names stay hidden.
 - 11-19 ~23:30: hotfix "not super urgent ... lets wait and get a few other requested things out with it": dot hover
   for station names outside the station tool (ringfix, resumed), display name change in account settings, "throttle
   twice a day" (T-3807, dispname, tree from hotfix-v0.4.4 + shonei-server; needs a server deploy). Lines Type: "i

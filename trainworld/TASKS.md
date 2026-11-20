@@ -384,18 +384,23 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-3431.md
 - T-3434 [P3] {L:region-redraws} Sabang Island missing from the Banda Aceh zone
   - Context: Player report 2026-11-16. Reach: few.
-- T-3790 [P1] {L:real-networks} {waits:Anita} Real network rebuilds drop lines
-  - Need from Anita: Fix the 8-end and turn-back limits inside the real-network build only (players unchanged), keeping Moscow near v0.4.2's 106 lines rather than all 358? Recommended: yes to both.
-  - Context: Both limits bind player track too (limitcheck 11-19: a 9th track shows "Too many tracks meet here."; a player line turns back at the nearest dead end instead). Moscow's losses are all from the 8-end limit; 194 nodes are over it, the biggest has 51 ends. v0.4.3 keeps v0.4.2's Moscow, Saint Petersburg and Berlin saves (DECISIONS 11-19). The sim isn't the cause: a junction given a 9th track end refuses an edge, or a line turns back at a node it doesn't stop at, and realauto build leaves those lines out; small upstream changes decide which (today's graph and T-3782's extract: Moscow 110 to 90; T-3318's pattern order: Berlin tram 93). Since 664cffd5 ship refuses a city that loses a route or station, and each build starts with a fresh drop list.
-  - Goal: Moscow reshipped with nothing lost (8 routes and 25 stations short now, Kazansky station among them), getting past the 8-end junction limit; Berlin tram 93's Bisamkiez pattern back. Saint Petersburg and Berlin were reshipped 11-19 on the lines graph (7b5ea227), not yet published.
+- T-3790 [P4] {L:real-networks} Real network rebuilds drop lines (taking, 2026-11-19, agent moscowfix)
+  - Context: You, 11-19: "yes only fix in real network build so players are unchanged. sure can keep moscow unless people ask (which they haven't)", i.e. Moscow stays near its 106 lines. Both limits bind player track too (limitcheck 11-19: a 9th track shows "Too many tracks meet here."; a player line turns back at the nearest dead end instead). Moscow's losses are all from the 8-end limit; 194 nodes are over it, the biggest has 51 ends. v0.4.3 keeps v0.4.2's Moscow, Saint Petersburg and Berlin saves (DECISIONS 11-19). The sim isn't the cause: a junction given a 9th track end refuses an edge, or a line turns back at a node it doesn't stop at, and realauto build leaves those lines out; small upstream changes decide which (today's graph and T-3782's extract: Moscow 110 to 90; T-3318's pattern order: Berlin tram 93). Since 664cffd5 ship refuses a city that loses a route or station, and each build starts with a fresh drop list.
+  - Goal: Moscow rebuilt with nothing lost (8 routes and 25 stations short now, Kazansky station among them) by a fix in the real-network build only (big junctions split, turn-backs given a stub), its lines kept to those v0.4.2 ships; Berlin tram 93's Bisamkiez pattern back. Saint Petersburg and Berlin were reshipped 11-19 on the lines graph (7b5ea227), not yet published.
   - Other: plan in notes/T-3790.md
-- T-3799 [P2] {L:small-fixes} Choose which Lines tab columns show
-  - Context: Your pad, 2026-11-19: "perhaps have the column headers that are shown be customizable so that we dont have too many columns".
-  - Goal: A short design for you first (where the choice lives, which columns show by default), then built.
-- T-3803 [P2] {L:edit-speed} Next edit waits behind the last edit's full state (taking, 2026-11-19, agent editwait)
-  - Context: Found by T-3801's audit on a 2,647-station save: after an edit the worker builds the full state for 0.6-2.7 s, and an edit made meanwhile waits behind it; most of what's left at 1 s between edits.
+- T-3799 [P2] {L:small-fixes} Choose which Lines tab columns show (taking, 2026-11-19, agent linesgear)
+  - Context: Your pad, 2026-11-19: "perhaps have the column headers that are shown be customizable so that we dont have too many columns". You, 11-19: the choice lives behind "a little gear on the top right", with T-3816's filters.
+  - Goal: The gear lets a player choose which columns show; today's columns show by default. Built with T-3816.
+- T-3815 [P3] {L:accounts-server} Install the game as a phone app
+  - Context: You, 11-19: "make a progressive web app so that it can be installed as an "app" on phone? ... if it's super easy to do and maintain though, would be worth helping out a few users who want this." A manifest and icons let a phone add it to the home screen and open it full screen; offline caching is the part that needs upkeep (it can serve a stale version).
+  - Goal: The game can be added to a phone's home screen and opens full screen with its own icon, without offline caching.
+- T-3816 [P2] {L:small-fixes} Filter the Lines tab by mode and city (taking, 2026-11-19, agent linesgear)
+  - Context: You, 11-19: "*filter* lines view by mode, city, etc." and "we can access both with a little gear on the top right ... i guess just be an extra filter on top" of the this city / whole world switch. Built with T-3799.
+  - Goal: A gear at the Lines tab's top right holds the filters (modes, cities) and the column choice (T-3799); the filters apply on top of the this city / whole world switch.
+- T-3803 [P2] {L:edit-speed} Next edit waits behind the last edit's full state (taking, 2026-11-19, agent fullstate)
+  - Context: On a 2,647-station save the full state after an edit takes 0.55-1.5 s and the next edit waits behind it. Renames fixed 11-19 (e9cba56e: next-edit wait median 387 to 0 ms). Left: stops, track, stations. Plan: a cheaper full state first (cache placeFacilities per complex, trim rowsDelta, money record out of the state; 2-3 h, perhaps 30-40%), then the follow-up in pieces with a waiting edit first (4-6 h).
   - Goal: An edit made right after another shows up within about 0.3 s on that save.
-  - Other: notes/T-3801.md
+  - Other: notes/T-3803.md
 - T-3804 [P3] {L:edit-speed} Other worker work that holds edits up
   - Context: From T-3801's audit: the hour turn (0.14-1.1 s every game hour), one today answer (70-250 ms, 0.5-0.8 s under load; splitting it is a design call), the snapshot timer and next-hour boarding step (0.2-0.5 s). Not measured: undo of a rename, unbind all, the junction panel.
   - Goal: Each is under 0.2 s or yields to edits, per docs/architecture.md "Edits never queue behind polling".
@@ -404,27 +409,24 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Found by T-3802: the trip view's route drawing and the gap flash scale by the map's pixel ratio, so on a map over 4096 device px wide (5K screens, some Macs on 4K monitors) or after moving the window to another screen they sit off their places, like the station rings did. Reach: few.
   - Goal: Both scale by their canvas's real size, as the rings now do.
   - Other: notes/T-3802.md
-- T-3802 [P1] {L:real-networks} Real world station rings drift while zooming (taking, 2026-11-19, agent ringfix)
-  - Context: You, relaying a player, 11-19: "bugs out when zooming and is like completely offset from the actual tracks (no fixed position). Also i would like it to keep showing the station name on hover like with the normal dot. And also show it for tram lines which it currently doesnt, maybe have the dot a little smaller or smth to differentiate from train... would be nice to prepare this for a potential hotfix". T-3760's ring canvas, shown only while placing stations since T-3792.
-  - Goal: Rings stay on their stations at every zoom and while zooming, hover shows the station name, tram stops show as smaller rings; ready as hotfix v0.4.4 on a tree from d39db027 (before save level 30). Rings fixed (43d9cc9b, on 8800); left: you, 11-19, "have hover for station name even if its backgrounded / non-ring", i.e. the faint dots outside the station tool too.
-- T-3807 [P1] {L:accounts-server} Change display name in account settings (taking, 2026-11-19, agent dispname)
-  - Context: You, 11-19: "some people get confused by this and put what they want the map to be called rather than what they want their display name to be, and then they cant change it and they're sad. lets make it changeable in account settings? maybe throttle twice a day or something". For hotfix v0.4.4; needs a server deploy.
-  - Goal: Account settings can change the display name, at most twice a day, enforced by the server.
 - T-3809 [P3] {L:buses} Ferry waypoints without a port
   - Context: You, 11-19: "ferry waypoint placeability (maybe with shift click or something, if thats not used) so that people can path their ferries without placing a port. sometimes we are unable to path through some archipelagos. or its too long or smth."
   - Goal: A player can place a waypoint a ferry route passes through without a port (shift click if free), so routes get through archipelagos.
+- T-3812 [P2] {L:schematic} {after:T-3409} Schematic zoom out cap and drawing indicator
+  - Context: You, 11-19: opening the schematic over one Aegean line in a save with many North American lines, "the aegean loaded really fast but then there was nothing else going on so it was a bit confusing. 1. i think lets cap the amount you can zoom out so that the total visible stuff takes up at least like 1% ish of the screen 2. if the map is not fully drawn lets still show the indicator on the top that says its drawing". After T-3409, which changes the same top row.
+  - Goal: Zooming out stops when the drawn network covers about 1% of the screen; the drawing indicator shows until every region is drawn.
 - T-3325 [P3] {L:real-networks} {after:real-network rebuild batch} Rebuild Sendai so Senzan Line stops at Toshogu
   - Context: You parked this 2026-11-12 since few players open Sendai. The fix is in realnet.py build_lines.
   - Other: Commands in notes/T-3318.md.
-- T-3255 [P3] {L:real-networks} Real network follow-ups from the Moscow and Saint Petersburg runs
+- T-3255 [P4] {L:real-networks} Real network follow-ups from the Moscow and Saint Petersburg runs
   - Context: Moscow keeps 106 of 361 lines and Saint Petersburg loses 28; frequencies default where OSM has no interval; some pinyin and tram colours are wrong.
   - Goal: Terminal layout keeps the suburban lines, with the smaller gaps fixed or filed.
   - Other: notes/T-3225.md section 6.
-- T-3256 [P3] {L:real-networks} Big real networks load slowly
+- T-3256 [P4] {L:real-networks} Big real networks load slowly
   - Context: Berlin takes 165 s, Osaka 145 s and Moscow 124 s to playable, against London at 104 s. Most of it is demand's first solve.
   - Goal: Big real networks load closer to London's time.
   - Other: notes/T-3225.md.
-- T-3236 [P3] {L:real-networks} London's real save is fixed up on every load
+- T-3236 [P4] {L:real-networks} London's real save is fixed up on every load
   - Context: `stop_every_pass` adds a stop to line 150 on each load, costing one extra derive and settle.
   - Goal: realsave saves after `stop_every_pass`, so London loads without the fix-up.
   - Other: Reshipping London moves its settled rates. notes/T-3234.md.
@@ -851,7 +853,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Choose which pair a line stops on at a quad station, and quad paired by direction. Stage 1 (per-direction stops, demand per run included) landed 2026-11-16; the stop list and edit-stops markers for the return station are stage 4. Paused by you 2026-11-16 until the track rework design (T-3444) is discussed.
   - Goal: Quad stations with per-direction stops, in five stages.
   - Other: 27-39 h. notes/T-3348.md.
-- T-3320 [P3] {L:real-networks} Berlin RE5 dropped off the graph
+- T-3320 [P4] {L:real-networks} Berlin RE5 dropped off the graph
   - Context: After T-3285, hop 3 of 8 routes 7.1 km off the relation's shape, so RE5 falls to a straight line.
   - Other: notes/T-3265.md.
 - T-3264 [P3] {L:trains-drawn} One fix for trains drawn through each other
