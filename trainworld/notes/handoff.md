@@ -38,8 +38,7 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
   changelog review is NOT the publish text OK; "next up" bullets occasionally and always after shipping an update.
   Countries overnight ("do we have new countries prepared for overnight run? lets maybe start work on that now").
 - 11-20 ~03:10: T-3822 text ack; intercity effective time "keep it as is"; packing backups filed for later (T-3821).
-- 11-20 ~01:55: R2 11-13 purged; Resend stays free.
-- 11-20 ~00:55: real-network fixes and additions P4, Japan P3, one-city changes low (LINES.md).
+- 11-20 ~01:55: R2 11-13 purged; Resend stays free. ~00:55: real-network fixes and additions P4, Japan P3, one-city changes low (LINES.md).
 - 11-19: "player complaints take precedent over other new features" (actual bugs). Before every publish, a full
   playtest list. Fares by city: country or city multiples, never both.
 - 11-18: close easy high-priority wins, small over design-heavy. "less willing to put stuff on the changelog".
@@ -50,7 +49,7 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
   push to the website needs her yes in this tab, none overnight; advisor trial (log calls in handoff-log).
 
 ## Waiting on her (asks.py list has the open ones)
-- a-25 rivers pick (now superseded by prototype 4's sheet). She sends the T-3635 player reply herself.
+- She sends the T-3635 player reply herself.
 
 ## Only a person knows
 - Uncommitted on purpose: TODO.md (hers), notes/T-3397.md, jordan-save-investigation-2026-11-15.md,
