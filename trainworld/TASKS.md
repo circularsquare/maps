@@ -374,9 +374,8 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-3431.md
 - T-3434 [P3] {L:region-redraws} Sabang Island missing from the Banda Aceh zone
   - Context: Player report 2026-11-16. Reach: few.
-- T-3803 [P2] {L:edit-speed} Next edit waits behind the last edit's full state (taking, 2026-11-19, agent editfirst)
-  - Context: Renames fixed 11-19 (e9cba56e). The cheaper full state landed 11-20 (70845536, about 35% off): the next edit's wait on the 2,647-station save went from 580 to 333 ms median (844 ms p90), 81% of it still the previous edit's full state with no single hot spot left. Left: option 1, a waiting edit runs before the last edit's full state, in pieces (4-6 h). Player on X, 11-20 (v0.4.4, Japan save their browser counts at 6 GB): stop editing on a long line gets slower until the "figures stopped" notice; your pad, 11-20.
-  - Goal: An edit made right after another shows up within about 0.3 s on that save.
+- T-3844 [P3] {L:edit-speed} A paid stop click's train charge goes to no region
+  - Context: Found by T-3803's diagnosis: a stop click that buys trains charges them to the unassigned region instead of the line's region, on the old code and the new. Shows as a wrong region split in the money panel.
   - Other: notes/T-3803.md
 - T-3804 [P3] {L:edit-speed} Other worker work that holds edits up
   - Context: From T-3801's audit: the hour turn (0.14-1.1 s every game hour), one today answer (70-250 ms, 0.5-0.8 s under load; splitting it is a design call), the snapshot timer and next-hour boarding step (0.2-0.5 s). Not measured: undo of a rename, unbind all, the junction panel.

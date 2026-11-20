@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3803 [P2] {L:edit-speed} Next edit waits behind the last edit's full state (2026-11-20): option 1: follow-up state in ~0.1 s pieces, a main-path edit goes ahead between them (next edit's wait 612/1,270 to 158/712 ms on the 2,647-station save); editdiag found and fixed a charge-split race with out-of-queue states; network counts and money match HEAD. notes/T-3803.md.
 - T-3763 [P2] {L:new-countries} Iraq and Iran (2026-11-20): Iraq (38 rows) and Iran (84 rows) built and joined, all shipped; Iran's people spread by the 2016 census by county in plan and packs (new plan_people rule); one hole left open on Isfahan's north edge.
 - T-3842 [P2] {L:loading} Map error panning near Loikaw and Meiktila (2026-11-20): MapLibre 6.13-6.19 re-splits wrapped lines and misses 31 spacing marks; point labels in Myanmar script show the Latin name alone; Loikaw 8 errors to 0, mki and pgx browser checks pass without their relax. notes/T-3842.md.
 - T-3824 [P2] {L:schematic-rivers} Schematic ferries drawn after the water (2026-11-20): coast cleaned of features under 3 pitches and filleted up to 3 pitches; 1.5-pitch fillets where bands meet the sea; ferries routed over a grid of the drawn water, non-station ports moved to the drawn coast. notes/T-3833.md.
