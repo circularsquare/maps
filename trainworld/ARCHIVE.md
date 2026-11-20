@@ -1,6 +1,11 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3897 [P2] {L:track-drawing} Blueprint nodes show they can be moved on hover (2026-11-20): hot mark (larger, accent fill, land-colour ring) and grab cursor on movable blueprint nodes; built nodes unchanged.
+- T-3895 [P2] {L:trams} Trams top out at 75 km/h (2026-11-20): TRAM_V_CAP_KMH and the tram track cap 80 -> 75; curve radii and ramp floors unchanged.
+- T-3893 [P3] {L:checks} t671-ghost-hover fails near track ends (2026-11-20): the ghost's join guess now compares ramp, limit and kind as the worker does (edge_ramps passed to the page); near track ends 0 of 84 corrections. notes/T-3893.md.
+- T-3877 [P3] {L:checks} t2365's graph bins check fails since T-3509 (2026-11-20): the check was out of date: it took the zone's split from the views that fold in T-3509's within-place trips, the graph's bins are local only; t2365 now reads the local view and passes on both saves. notes/T-3877.md.
+- T-3889 [P2] {L:trams} Tram track joins rail and high-speed track (2026-11-20): joins, line kind by any tram stop, 80 km/h tram cap, train lines refused on tram track, StationFamily rule; checker passed old saves, routing, kind flips and undo. notes/T-3889.md.
 - T-3435 [P4] {L:buses} Long-distance ferries lose money (2026-11-20): closed without code: folded into T-3892 (ferry rework)
 - T-3890 [P2] {L:buses} Bus stop panel and stop connectors (2026-11-20): bus stop panel from the station panel's parts, places merged within 100 m, walk changes to 300 m, connectors drawn like a complex's; Build a station here opens the Station tool. notes/T-3890.md.
 - T-3891 [P2] {L:buses} Construct button works while naming a new bus line (2026-11-20): Construct button counts as part of the title editor, so its press no longer closes naming first; all line types. notes/T-3891.md.

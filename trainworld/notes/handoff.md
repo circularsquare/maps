@@ -1,14 +1,18 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 1a8ad997-acf4-4a89-963d-166c67fedf88, name maps-65 [fd56e0], since 2026-11-20 18:52 UTC
-Updated: 2026-11-20 21:55 UTC
+Updated: 2026-11-20 22:25 UTC (maps-65 past 500k, starting its successor)
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`. This file is plan and her words.
-Diary: notes/handoff-log.md. Her local time is UTC-5.
+Diary: notes/handoff-log.md. Her local time is UTC-5. She is out until ~00:45 UTC with Remote Control on maps-65's
+tab only: maps-65 relays her messages to you (and yours to her) until she is back at a tab with you.
 
 ## Next
-0. Live v0.4.4. Cap 14. 8800 = 27995e5e. Master pushed through 78c7f12f. Landed since 8800: toolsplit, frontier
-   st1, checkfix (T-3893, T-3877): smoke + 8800 with the next batch.
+0. Live v0.4.4. Cap 14. 8800 = fd40edf2. Master pushed through 78c7f12f (push soon). T-3897 (nodehover) landed
+   7f085d6b after 8800: smoke + 8800 with the next batch. Running agents (maps-65's, reports via the inbox; a
+   follow-up goes to a fresh agent on the tree): plainbus, walkab, ferrytypes, islands2, fast856 (T-3896 P1, the
+   856 km/h fastest train from Discord), fullrate (resumed 22:05 to fix the checker's one miss: first undo after
+   the demand final; land after its report, no new checker needed unless the fix is large).
 1. Evening update, maybe tomorrow (her call, needs her playtest). Publish skill (sort, highlights, playtest list,
    translations incl. T-3822/3823 hovers + addCity + today's strings, zones image for PK/BD, smoke8800). Server
    first, her yes: shonei-server 2754ba1, fd294e7, 43360be, 39e1bd2 (not pushed). If ferrytypes bumps the save
@@ -16,8 +20,8 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    sync, then land binzip (T-2486, tree ready, checker's fixes in).
 2. Frozen set (her 22:10 UTC), all mine, trees, checker before landing: plainbus T-3856 + reach 600 (compute cost
    >15% = numbers to her); walkab T-3888 option 4; ferrytypes T-3892; tram75 T-3895 (Sonnet, no checker);
-   islands2 T-2216 st2. Then one frontier chart remake (T-3887, her layout in the task). fullrate T-3646 done,
-   checker fullratechk running; T-3655 open (cause traced, notes).
+   islands2 T-2216 st2. Then one frontier chart remake (T-3887, her layout and the uniform made-up city in the
+   task). T-3655 open (cause traced, notes).
 3. Later: T-3378 BRT design to her; T-1183 (after fullrate); demandClient/demand.worker splits (T-2374) and
    T-2843 demand health after binzip; T-3894. Cleanup plan: notes/review-cleanup-2026-11-20.md.
 4. T-3395: run `tools/ops/save_health.py` after the 11-21 04:00 UTC scan; clean = close it.
