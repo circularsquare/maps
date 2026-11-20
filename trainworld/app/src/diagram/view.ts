@@ -19,7 +19,8 @@ import type { MultiPolygon } from "geojson";
 import { coarseOutlines } from "../map/coarseOutlines";
 import { zonesTouching } from "../game/cities";
 import { sheetZoneBox } from "./sheet";
-import { cameraOrder, mergeParts, placeParts, regionSig, type Part, type Placed } from "./regions";
+import { cameraOrder, KM_PER_DEG, mergeParts, placeParts, REGION_JOIN_KM, regionSig, type Part, type Placed } from "./regions";
+import { cityById, isCity } from "../game/cities";
 import { placesOfZone } from "../game/placeList";
 import { EARTH_C, makeAnchor, toMerc01 } from "../map/geo";
 import { placeNameInk } from "../map/basemap";
@@ -412,6 +413,102 @@ function thinSig(ins: readonly ThinIn[]): string {
   return `${ins.length}:${h >>> 0}`;
 }
 
+/** T-3826: a city that a click beside the drawing adds to the chosen ones, at its spot in the drawing's units */
+type Ghost = { zone: string; x: number; y: number; /** for checks: how far past the box the fit alone would put it, in box sides */ raw?: number };
+/** a ghost sits this far past the drawn box: this share of the box's larger side, plus GHOST_PITCHES pitches */
+const GHOST_OUT = 0.06, GHOST_PITCHES = 3;
+/** the ghost's circle (CSS px across, the realm buttons' size) and how near the pointer must come to it */
+const GHOST_PX = 16, GHOST_HIT_PX = 40;
+
+/** T-3826: the cities with the player's stations or stops that are not chosen and have one within REGION_JOIN_KM of a
+ * station drawn, each placed beside the drawing the way it lies from the drawn station nearest it: the ground offset turned
+ * as the layout turns the region round it (a similarity fitted over its nodes), carried to just past the drawn box (the
+ * layout stretches dense cores many times over, so the real distance would put a neighbour out of reach) */
+function ghostsOf(s: Shown, chosen: readonly string[]): Ghost[] {
+  const w = world.peek();
+  if (!w || !chosen.length) return [];
+  const want = new Set(chosen), byZone = new Map<string, { lng: number; lat: number }[]>();
+  const add = (z: string | null, p: { lng: number; lat: number }) => { if (z && isCity(z) && !want.has(z)) byZone.set(z, [...(byZone.get(z) ?? []), p]); };
+  for (const st of w.save.stations) if (st.built) add(stationZone(st), st);
+  for (const st of Object.values(w.lineStats)) for (const p of st.bus?.stops ?? []) if (p.station < 0) add(stationZone({ id: `bus ${p.id}`, lng: p.lng, lat: p.lat }), p);
+  if (!byZone.size) return [];
+  const all = stopsById(w), nodes: { k: number; lng: number; lat: number }[] = [];
+  s.graph.key.forEach((key, k) => { const st = all.get(String(key)); if (st) nodes.push({ k, lng: st.lng, lat: st.lat }); });
+  if (!nodes.length) return [];
+  const b = s.d.box, side = Math.max(b[2] - b[0], b[3] - b[1]), out = GHOST_OUT * side + GHOST_PITCHES * s.d.pitch;
+  const fits = new Map<number, ReturnType<typeof similarity>>();
+  const ghosts: Ghost[] = [];
+  for (const [zone, pts] of byZone) {
+    // the drawn station nearest any of the city's, by ground
+    let best = -1, bd = Infinity;
+    for (const p of pts) {
+      const cos = Math.cos((p.lat * Math.PI) / 180);
+      for (const n of nodes) {
+        const d = ((n.lng - p.lng) * cos) ** 2 + (n.lat - p.lat) ** 2;
+        if (d < bd) (bd = d), (best = n.k);
+      }
+    }
+    if (best < 0 || Math.sqrt(bd) * KM_PER_DEG > REGION_JOIN_KM) continue;
+    const part = s.partOf[best], g = s.parts[part].graph;
+    let fit = fits.get(part);
+    if (!fit) fits.set(part, (fit = similarity(s, part)));
+    // the city's middle in the region's ground units, as nearestNode measures
+    const lng = pts.reduce((a, p) => a + p.lng, 0) / pts.length, lat = pts.reduce((a, p) => a + p.lat, 0) / pts.length;
+    const [lx, ly] = toLocal(lng, lat, makeAnchor(g.origin[0], g.origin[1], 0));
+    const i = best - s.base[part], ux = (lx - g.mid[0]) / g.k - g.x[i], uy = -(ly - g.mid[1]) / g.k - g.y[i];
+    const vy0 = fit.flip ? -uy : uy, dx = fit.c * ux - fit.s * vy0, dy = fit.s * ux + fit.c * vy0, len = Math.hypot(dx, dy);
+    if (!(len > 0)) continue;
+    // along that way from the drawn station, out to the box grown by `out`, or as far as the fit puts it if that is nearer
+    const ax = s.x[best], ay = s.y[best], ex = dx / len, ey = dy / len;
+    const toEdge = (lo: number, hi: number, a: number, e: number) => (e > 0 ? (hi - a) / e : e < 0 ? (lo - a) / e : Infinity);
+    const edge = Math.min(toEdge(b[0] - out, b[2] + out, ax, ex), toEdge(b[1] - out, b[3] + out, ay, ey));
+    let t = Math.min(edge, Math.max(fit.scale * len, out));
+    // clear of every drawn station by `out`, stepping on past the drawing where it is not
+    for (let step = 0; step < 200; step++) {
+      const x = ax + ex * t, y = ay + ey * t;
+      let near = false;
+      for (let k = 0; k < s.x.length && !near; k++) near = (s.x[k] - x) ** 2 + (s.y[k] - y) ** 2 < out * out;
+      if (!near) break;
+      t += out / 2;
+    }
+    ghosts.push({ zone, x: ax + ex * t, y: ay + ey * t, raw: (fit.scale * len - (edge - out)) / side });
+  }
+  // two ghosts that would overlap: the later moved aside, across its way out
+  for (let i = 1; i < ghosts.length; i++) {
+    for (let j = 0; j < i; j++) {
+      const a = ghosts[i], o = ghosts[j], d = Math.hypot(a.x - o.x, a.y - o.y);
+      if (d >= out) continue;
+      const nx = d > 0 ? (a.x - o.x) / d : 1, ny = d > 0 ? (a.y - o.y) / d : 0;
+      (a.x = o.x + nx * out), (a.y = o.y + ny * out);
+    }
+  }
+  return ghosts;
+}
+
+/** the turn, scale and mirroring that best take a region's ground places (its graph's x, y) to its drawn ones */
+function similarity(s: Shown, part: number): { c: number; s: number; scale: number; flip: boolean } {
+  const g = s.parts[part].graph, base = s.base[part], n = g.key.length;
+  let gx = 0, gy = 0, vx = 0, vy = 0;
+  for (let i = 0; i < n; i++) (gx += g.x[i] / n), (gy += g.y[i] / n), (vx += s.x[base + i] / n), (vy += s.y[base + i] / n);
+  const fit = (flip: boolean) => {
+    let re = 0, im = 0, uu = 0;
+    for (let i = 0; i < n; i++) {
+      const ux = g.x[i] - gx, uy = (flip ? -1 : 1) * (g.y[i] - gy), px = s.x[base + i] - vx, py = s.y[base + i] - vy;
+      // conj(u) * v
+      (re += ux * px + uy * py), (im += ux * py - uy * px), (uu += ux * ux + uy * uy);
+    }
+    const ar = uu ? re / uu : 1, ai = uu ? im / uu : 0, m = Math.hypot(ar, ai) || 1;
+    let err = 0;
+    for (let i = 0; i < n; i++) {
+      const ux = g.x[i] - gx, uy = (flip ? -1 : 1) * (g.y[i] - gy);
+      err += (ar * ux - ai * uy - (s.x[base + i] - vx)) ** 2 + (ai * ux + ar * uy - (s.y[base + i] - vy)) ** 2;
+    }
+    return { c: ar / m, s: ai / m, scale: m, flip, err };
+  };
+  const a = fit(false), b = fit(true);
+  return a.err <= b.err ? a : b;
+}
+
 /** the nodes a selection's lines stop at, or its station */
 function selectedNodes(s: Shown, on: { lines: number[]; node: number }): number[] {
   return on.node >= 0 ? [on.node] : [...new Set(on.lines.flatMap((i) => s.stops[i]))];
@@ -462,6 +559,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
   const hideTag = () => {
     if (tagShown) (tag.style.display = "none"), (tagShown = false);
     if (hot >= 0) (hot = -1), draw();
+    if (ghostHot) (ghostHot = null), draw();
   };
   let lastGraphs: DiagramGraph[] | null = null;
   // T-3448: the network by region (regions.ts), each laid out on its own sheet, the region round the camera first and then
@@ -500,6 +598,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
   const send = (graphs: DiagramGraph[], cut = cutNow) => {
     lastGraphs = graphs;
     cutNow = cut;
+    if (choice === "asked") (choice = "laying"), (fitChoice = true);
     const water = diagramWater.peek();
     plan = planOf(graphs);
     if (!cut) keepSigs = new Set(plan.map((p) => p.sig));
@@ -525,12 +624,18 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
    * edit's re-layout shows none); its bar is the regions done plus the one being laid out */
   const drawingShare = () => {
     if (!diagramShown.peek()) return;
-    const left = plan.filter((p) => !parts.has(p.sig) && !drawnParts.some((q) => p.graph.key.some((k) => q.keys.has(k)))).length;
+    // T-3825: after the cities change, every region of the new plan counts until it is laid out, though the old drawing covers it
+    if (choice === "asked") return void (diagramProgress.value = 0);
+    const left = plan.filter((p) => !parts.has(p.sig) && (choice === "laying" || !drawnParts.some((q) => p.graph.key.some((k) => q.keys.has(k))))).length;
+    if (!left && choice === "laying") choice = null;
     diagramProgress.value = left ? Math.min(1, (plan.length - left + layoutShare) / plan.length) : null;
   };
-  /** T-3812: no zooming out past where the larger side of what is drawn is 1/10 of the view's matching side (the
-   * network then covers about 1% of the view, more for a long thin one); the camera can still fit the whole drawing */
-  const MIN_SHARE = 0.1;
+  /** T-3825: the cities chosen changed: "asked" until the clock worker's graphs for them come, then "laying" until every
+   * region of them is drawn; the camera fits the new drawing meanwhile unless the player moves it */
+  let choice: "asked" | "laying" | null = null, fitChoice = false;
+  /** T-3812, T-3825: no zooming out past where the larger side of what is drawn is half the view's matching side; the
+   * camera can still fit the whole drawing */
+  const MIN_SHARE = 0.5;
   const minScale = (): number => {
     const b = shown?.d.box, r = canvas.getBoundingClientRect();
     if (!b || !r.width || !r.height) return 0;
@@ -538,6 +643,38 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
   };
   const clampScale = () => {
     if (scale) scale = Math.max(scale, minScale());
+  };
+  /** T-3825: the view's middle stays on the drawn box, and the station nearest it at least KEEP_IN_PX inside the view, so
+   * some of the drawing is always in view at any zoom (all of it at the zoom-out cap) */
+  const KEEP_IN_PX = 40;
+  const clampView = () => {
+    const s = shown, b = s?.d.box;
+    if (!s || !b || !scale) return;
+    (cx = Math.min(Math.max(cx, b[0]), b[2])), (cy = Math.min(Math.max(cy, b[1]), b[3]));
+    const k = nearestOf(s.x, s.y, cx, cy, s.graph.key.keys());
+    if (k < 0) return;
+    const hx = Math.max(0, canvas.clientWidth / 2 - KEEP_IN_PX) / scale, hy = Math.max(0, canvas.clientHeight / 2 - KEEP_IN_PX) / scale;
+    (cx = Math.min(Math.max(cx, s.x[k] - hx), s.x[k] + hx)), (cy = Math.min(Math.max(cy, s.y[k] - hy), s.y[k] + hy));
+  };
+  /** T-3825: the whole drawing in view, at most at the pitch the diagram opens at */
+  const fitView = () => {
+    const s = shown, r = canvas.getBoundingClientRect();
+    if (!s || !r.width || !r.height) return;
+    // T-3826: the cities a click beside the drawing adds are in view too
+    const b = [...s.d.box];
+    for (const g of ghostsNow()) (b[0] = Math.min(b[0], g.x)), (b[1] = Math.min(b[1], g.y)), (b[2] = Math.max(b[2], g.x)), (b[3] = Math.max(b[3], g.y));
+    const fit = 0.9 * Math.min(r.width / Math.max(b[2] - b[0], 1e-6), r.height / Math.max(b[3] - b[1], 1e-6));
+    scale = Math.min(fit, Math.max(START_PITCH_PX / s.d.pitch, minScale()));
+    (cx = (b[0] + b[2]) / 2), (cy = (b[1] + b[3]) / 2);
+  };
+  /** T-3826: the cities a click beside the drawing adds, worked out once per drawing and choice; the one under the pointer */
+  let ghostKey: [Shown, readonly string[]] | null = null, ghostList: Ghost[] = [], ghostHot: Ghost | null = null;
+  const ghostsNow = (): Ghost[] => {
+    const s = shown, chosen = diagramCities.peek();
+    // none while an older drawing stands in for the choice's (its stations are not the chosen cities')
+    if (!s || !cutNow || !chosen.length || !drawnParts.every((p) => plan.some((q) => q.sig === p.sig))) return [];
+    if (!ghostKey || ghostKey[0] !== s || ghostKey[1] !== chosen) (ghostKey = [s, chosen]), (ghostList = ghostsOf(s, chosen));
+    return ghostList;
   };
   const pump = () => {
     if (busy) return;
@@ -585,11 +722,14 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     drawnAt = at;
     shown = indexShown(m.graph, m.d, m.names, m.x, m.y, list, m.partOf, m.base);
     focusKey = null;
-    hot = -1;
+    (hot = -1), (ghostHot = null);
     diagramReady.value = true;
     if (!placed) place();
     else clampScale();
+    // T-3825: the new choice's drawing fitted as it comes, not the older drawing standing in for it
+    if (fitChoice && list.every((p) => inPlan.has(p.sig))) fitView();
     drawingShare();
+    if (!choice) fitChoice = false;
     draw();
     askThin(list);
   };
@@ -702,6 +842,8 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     }
     const key = `${cities.join()}|${stations.join()}|${stops.join()}`;
     if (key === cutPosted) return;
+    // T-3825: a change of cities (not a load's or an edit's new stations) shows the indicator until it is drawn
+    if (cutPosted && cutPosted.split("|")[0] !== cities.join() && diagramShown.peek() && shown) (choice = "asked"), drawingShare();
     cutPosted = key;
     inside = cities.length ? { stations: new Set(stations), stops: new Set(stops) } : null;
     client.post({ kind: "diagramCut", cities: [...cities], stations, stops });
@@ -761,7 +903,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
         compose();
         const s = shown;
         // for checks and `?debug=1`: the last layout's figures and how to frame a station
-        if (s) (window as unknown as { twDiagram: unknown }).twDiagram = { layouts: e.data.seq, regions: drawnParts.length, ms: { ...layout.ms, ...e.data.ms }, complexes: s.graph.key.length, pieces: layout.pieces.length, names: s.names.at.map((l, i) => [s.names.levels[i], l.node.length]), cities: () => { const c = shown?.names.cities; return c ? [...c.order].map((b) => c.text[b]) : null; }, look: (fx: number, fy: number, pitchPx: number) => { const b = shown!.d.box; (cx = b[0] + (b[2] - b[0]) * fx), (cy = b[1] + (b[3] - b[1]) * fy), (scale = pitchPx / shown!.d.pitch), draw(); }, centreOn: (name: string, pitchPx: number) => { const i = nodeNamed(name); if (i < 0) return false; (cx = shown!.x[i]), (cy = shown!.y[i]), (scale = pitchPx / shown!.d.pitch), draw(); return true; }, centre: (lng: number, lat: number, pitchPx: number) => { const i = nearestNode(shown!, lng, lat); (cx = shown!.x[i]), (cy = shown!.y[i]), (scale = pitchPx / shown!.d.pitch), draw(); }, borders: (on?: boolean) => { const b = shown?.d.borders; if (on === false && b) (b.cmds = new Float64Array(0)), (b.path = undefined), draw(); return b ? b.cmds.length : -1; }, bench: (k: number) => { const t = performance.now(); for (let j = 0; j < k; j++) paintNow(); return (performance.now() - t) / k; }, where: (name: string) => whereOf(nodeNamed(name)), linePoint, middle: () => { const s = shown!; const i = nearestOf(s.x, s.y, cx, cy, s.graph.key.keys()); return s.names.text[i]; }, pitchPx: () => scale * shown!.d.pitch, box: () => [...shown!.d.box], pitch: () => shown!.d.pitch };
+        if (s) (window as unknown as { twDiagram: unknown }).twDiagram = { layouts: e.data.seq, regions: drawnParts.length, ms: { ...layout.ms, ...e.data.ms }, complexes: s.graph.key.length, pieces: layout.pieces.length, names: s.names.at.map((l, i) => [s.names.levels[i], l.node.length]), cities: () => { const c = shown?.names.cities; return c ? [...c.order].map((b) => c.text[b]) : null; }, look: (fx: number, fy: number, pitchPx: number) => { const b = shown!.d.box; (cx = b[0] + (b[2] - b[0]) * fx), (cy = b[1] + (b[3] - b[1]) * fy), (scale = pitchPx / shown!.d.pitch), draw(); }, centreOn: (name: string, pitchPx: number) => { const i = nodeNamed(name); if (i < 0) return false; (cx = shown!.x[i]), (cy = shown!.y[i]), (scale = pitchPx / shown!.d.pitch), draw(); return true; }, centre: (lng: number, lat: number, pitchPx: number) => { const i = nearestNode(shown!, lng, lat); (cx = shown!.x[i]), (cy = shown!.y[i]), (scale = pitchPx / shown!.d.pitch), draw(); }, borders: (on?: boolean) => { const b = shown?.d.borders; if (on === false && b) (b.cmds = new Float64Array(0)), (b.path = undefined), draw(); return b ? b.cmds.length : -1; }, bench: (k: number) => { const t = performance.now(); for (let j = 0; j < k; j++) paintNow(); return (performance.now() - t) / k; }, where: (name: string) => whereOf(nodeNamed(name)), linePoint, middle: () => { const s = shown!; const i = nearestOf(s.x, s.y, cx, cy, s.graph.key.keys()); return s.names.text[i]; }, pitchPx: () => scale * shown!.d.pitch, box: () => [...shown!.d.box], pitch: () => shown!.d.pitch, ghosts: () => { const r = canvas.getBoundingClientRect(); return ghostsNow().map((g) => ({ zone: g.zone, raw: g.raw, at: [r.left + r.width / 2 + (g.x - cx) * scale, r.top + r.height / 2 - (g.y - cy) * scale] })); } };
         wantTowns(names.cities?.want);
         pump();
       };
@@ -824,6 +966,9 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     const best = c ? nearestNode(s, c.lng, c.lat, among) : among?.[0] ?? 0;
     cx = s.x[best] ?? 0;
     cy = s.y[best] ?? 0;
+    // T-3825: a drawing that fits in the view (a small network, at least half the view at the zoom-out limit) is centred whole
+    const b = s.d.box;
+    if ((b[2] - b[0]) * scale <= canvas.clientWidth && (b[3] - b[1]) * scale <= canvas.clientHeight) (cx = (b[0] + b[2]) / 2), (cy = (b[1] + b[3]) / 2);
     moved = false;
   };
   /** the map centred on the selection's node nearest the diagram's middle, or the complex nearest it */
@@ -854,6 +999,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
   // pans and zooms draw once a frame
   let frame = 0;
   const draw = () => {
+    clampView();
     if (!frame) frame = requestAnimationFrame(paintNow);
   };
   const paintNow = () => {
@@ -876,6 +1022,22 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     // the map's station names: its ink with a halo of the background
     const st = f?.stations;
     paintNames(ctx, shown.names, d, canvas.width, canvas.height, cx, cy, scale * dpr, dpr, { ink: t.text, halo: t.bg, font: t.font, faded: st ? (k) => !st.has(k) : undefined, fadeAlpha: FADE_ALPHA });
+    // T-3826: the city under the pointer that a click adds, the map's realm button (16 px, white with a grey rim; dark: grey
+    // with a near-black rim), a little see-through; on the view only, never the picture
+    const g = ghostHot;
+    if (g) {
+      const dark = lightness(t.bg) < 0.5;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.globalAlpha = 0.85;
+      ctx.beginPath();
+      ctx.arc(w / 2 + (g.x - cx) * scale, h / 2 - (g.y - cy) * scale, GHOST_PX / 2 - 0.5, 0, 2 * Math.PI);
+      ctx.fillStyle = dark ? "#8a857f" : "#ffffff";
+      ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = dark ? "#141517" : "#8c8c8c";
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
   };
   new ResizeObserver(() => draw()).observe(canvas);
   effect(() => {
@@ -929,6 +1091,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
       draw();
     } else {
       diagramProgress.value = null;
+      (choice = null), (fitChoice = false);
       hideTag();
       back();
     }
@@ -951,16 +1114,30 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     const named = nameAt(s.names, masked(s.d), ox, oy, cx, cy, scale);
     return named >= 0 ? { station: named } : hit;
   };
+  /** the ghost nearest a point (CSS px in the canvas) within GHOST_HIT_PX, null for none */
+  const ghostAt = (px: number, py: number): Ghost | null => {
+    if (!scale) return null;
+    let best: Ghost | null = null, bd = GHOST_HIT_PX ** 2;
+    for (const g of ghostsNow()) {
+      const d = (canvas.clientWidth / 2 + (g.x - cx) * scale - px) ** 2 + (canvas.clientHeight / 2 - (g.y - cy) * scale - py) ** 2;
+      if (d < bd) (bd = d), (best = g);
+    }
+    return best;
+  };
   /** the station a node stands for: its key, the lowest member's id on the lines */
   const stationOf = (k: number) => String(shown!.graph.key[k]);
   const hover = (px: number, py: number) => {
     const s = shown, w = world.peek();
     const hit = hitAt(px, py);
-    canvas.style.cursor = hit ? "pointer" : "grab";
+    // T-3826: beside the drawing, a city a click adds; what is drawn comes first
+    const ghost = hit ? null : ghostAt(px, py);
+    canvas.style.cursor = hit || ghost ? "pointer" : "grab";
     const newHot = hit && "line" in hit ? hit.line : -1;
     if (newHot !== hot) (hot = newHot), draw();
+    if (ghost !== ghostHot) (ghostHot = ghost), draw();
     let lines: TipLine[] | null = null;
-    if (s && w && hit && "station" in hit) {
+    if (ghost) lines = [t("diagramView.addCity", { name: tPlace(ghost.zone, cityById(ghost.zone).name) })];
+    else if (s && w && hit && "station" in hit) {
       const id = stationOf(hit.station), c = complexes.peek().of.get(id), ov = live.overlay;
       const ids = c === undefined ? [id] : complexes.peek().members[c];
       lines = ov ? complexTip(ov, w, ids, s.names.text[hit.station]) : [s.names.text[hit.station]];
@@ -994,14 +1171,15 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
       : "thin" in hit ? { kind: "line", line: String(s.d.thin![hit.thin].id) }
       : { kind: "line", line: String(s.graph.lines[s.d.lineOf[hit.line]].id) };
   };
-  let drag: { x: number; y: number; x0: number; y0: number; far: boolean } | null = null;
+  let drag: { x: number; y: number; x0: number; y0: number; far: boolean; ghost: Ghost | null } | null = null;
   const local = (e: MouseEvent): [number, number] => {
     const r = canvas.getBoundingClientRect();
     return [e.clientX - r.left, e.clientY - r.top];
   };
   canvas.addEventListener("pointerdown", (e) => {
     if (e.button !== 0) return;
-    drag = { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, far: false };
+    // T-3826: a city is added only by a click on a ghost already showing (a tap shows none first, so adds nothing unseen)
+    drag = { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, far: false, ghost: ghostHot };
     canvas.setPointerCapture(e.pointerId);
     hideTag();
   });
@@ -1016,11 +1194,15 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     cx -= (e.clientX - drag.x) / scale;
     cy += (e.clientY - drag.y) / scale;
     drag = { ...drag, x: e.clientX, y: e.clientY };
-    moved = true;
+    (moved = true), (fitChoice = false);
     draw();
   });
   canvas.addEventListener("pointerup", (e) => {
-    if (drag && !drag.far) click(...local(e));
+    const g = drag && !drag.far ? drag.ghost : null;
+    if (g && ghostAt(...local(e))?.zone === g.zone) {
+      const now = diagramCities.peek();
+      if (!now.includes(g.zone)) diagramCities.value = [...now, g.zone].sort();
+    } else if (drag && !drag.far) click(...local(e));
     drag = null;
     hover(...local(e));
   });
@@ -1040,7 +1222,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     cx += px / scale - px / to;
     cy -= py / scale - py / to;
     scale = to;
-    moved = true;
+    (moved = true), (fitChoice = false);
     draw();
   }, { passive: false });
   window.addEventListener("keydown", (e) => {

@@ -2920,6 +2920,7 @@
   "diagramView.savingPicture": "Saving picture",
   "diagramView.pictureFile": "{name} diagram",
   "diagramView.unnamed": "Network",
+  "diagramView.addCity": "Click to add {name}",
   "tools.fromLast": "{distance} from {name}",
   "community.title": "Community",
   "community.heading": "Community trains worlds",

@@ -1133,6 +1133,16 @@ rect.now { fill-opacity: .45; }
 .diagram-cities { position: relative; display: flex; }
 .diagram-cities-list { position: absolute; left: 0; top: 100%; z-index: 5; min-width: 180px; max-height: 60vh; overflow-y: auto; list-style: none; margin: 4px 0 0; padding: 4px 0; border: 1px solid var(--rule); background: var(--bg); font-size: 12px; }
 .diagram-cities-list li { display: flex; align-items: center; min-height: 24px; padding: 0 8px; white-space: nowrap; }
+/* T-3826: a region's row (chevron, box, name) and its cities indented under its box */
+.diagram-cities-list li.realm { gap: 2px; padding-left: 2px; }
+.diagram-cities-list .chevron { flex: none; }
+.diagram-cities-list .chevron svg { width: 12px; height: 12px; }
+.diagram-cities-list .chevron.open svg { transform: rotate(90deg); }
+.diagram-cities-list li.in-realm { padding-left: 46px; }
+.diagram-cities-list .check input.some { border-color: var(--accent); background: var(--tint); }
+.diagram-cities-list .check input.some::after { content: ""; width: calc(8 * var(--px)); height: calc(2 * var(--px)); background: var(--accent); }
+/* T-3825: the thin divider between the mode buttons and the cities button, shorter than the buttons */
+.diagram-rule { flex: none; width: 1px; height: 16px; margin: 0 2px; background: var(--rule); }
 .demand-busy { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .status-tag .load-bar.thin { height: 4px; margin-right: 0; }
 /* T-3479: terrain that failed to load, clicked to try again */

@@ -18,7 +18,8 @@ export const REGION_MAX_KM = 1200;
 /** drawn regions keep at least this many pitches between their boxes (the sea drawn round each included) */
 export const REGION_GAP_PITCHES = 24;
 
-const KM_PER_DEG = 111.195, RAD = Math.PI / 180;
+export const KM_PER_DEG = 111.195;
+const RAD = Math.PI / 180;
 
 /** each node's lng, lat */
 export function nodeLngLat(g: DiagramGraph): { lng: Float64Array; lat: Float64Array } {

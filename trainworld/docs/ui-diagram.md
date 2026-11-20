@@ -24,9 +24,12 @@ percent) fed by the layout worker's progress (T-2235; A to 0.2 of the layout, B 
 the rest; the layout 0.85 of the whole, the names the last 0.15; a post each percent).
 Drag pans, the wheel zooms about the pointer, drawn once a frame. The tag and bar stay up until every region is
 drawn (T-3812): the bar is the regions done plus the one being laid out; a region an older drawing still covers (an
-edit's re-layout) does not count. The wheel stops zooming out where the larger of the drawn network's two sides is
-1/10 of the view's matching side (`MIN_SHARE` in `diagram/view.ts`, about 1% of the view for a square network); it
-follows what is drawn now, and the camera can still fit the whole drawing.
+edit's re-layout) does not count, except after the chosen cities change, when the bar shows from the click until every
+region of the new choice is drawn (T-3825). The wheel stops zooming out where the larger of the drawn network's two
+sides is half the view's matching side (`MIN_SHARE` in `diagram/view.ts`; Anita, 2026-11-20); it follows what is drawn
+now, and the camera can still fit the whole drawing. The view's middle never leaves the drawn box, and the station
+nearest it stays at least 40 px inside the view, so panning cannot take the whole drawing off screen at any zoom (at the
+zoom-out limit all of it stays in view; T-3825). A drawing that fits in the view when the diagram opens is centred whole.
 
 - **The camera** (T-2163): each time it opens it is centred on the selection (a station's complex; for
   a line or group, of its stops the one nearest the map's centre), else on the complex nearest the
@@ -129,10 +132,24 @@ instant.
 `diagram/cut.ts`, `ui/DiagramButton.tsx` `CityChoice` (T-3409; Anita, 2026-11-19: "they should be redrawn so that they can
 get full precision as if they were the only things in the world. we shouldnt just take the world map and hide the stuff
 outside"). A button on the top row (the cities icon, hover "Choose cities", pressed while cities are chosen; shown when the
-game has stations or stops in two zones or more, or a choice) opens a list under it: "All cities" first (the whole
-network, the default), then each zone with a built station or a stop, by name, each with a tick box. A city is the zone a
-station is in (`stationZone`, as the Cities tab and fares by city). The choice is the game's, kept in the save's header
-(`schematic`, zone ids; absent for the whole network, so older saves open on it); Esc or a click outside closes the list.
+game has stations or stops in two zones or more, or a choice; a thin divider before it when the mode buttons show, T-3825)
+opens a list under it: "All cities" first (the whole network, the default), then the regions (the realms the map shows
+and hides as one, `game/realms.ts`, by name; Anita, 2026-11-20), each with a chevron and a tick box: ticked when all its
+listed cities are chosen, a minus when some are, ticking it chooses them all and unticking clears them. Opened, a region
+lists its cities, each zone with a built station or a stop, by name, each with a tick box; a list of one region opens on
+it. Cities in no realm follow the regions, bare. A city is the zone a station is in (`stationZone`, as the Cities tab and
+fares by city). The choice is the game's, kept in the save's header (`schematic`, zone ids; absent for the whole network,
+so older saves open on it); Esc or a click outside closes the list. When the choice changes the camera fits the new
+drawing as it comes (with the spots below), unless the player pans or zooms meanwhile.
+
+- **Adding a neighbour** (T-3826; Anita, 2026-11-20: "i can select new york in the drop down, then just mouse over philly
+  and add it"). With cities chosen, each other city with a built station or stop within `REGION_JOIN_KM` (500 km) of a
+  drawn station has a spot beside the drawing: from the drawn station nearest it, the way the city lies on the ground
+  turned as the layout turns that region (a turn, scale and mirroring fitted over its stations), as far as the fit puts
+  it but no further than just past the drawn box (6% of its larger side plus 3 pitches), and clear of every drawn station
+  by that much. The pointer within 40 px of a spot, over nothing drawn, shows the realm buttons' circle there (16 px) and
+  the tag "Click to add Philadelphia"; a click adds the city. A tap with nothing shown first adds nothing. The spots are
+  never in the picture.
 
 - **Laid out alone.** The page tells the clock worker which stations and bus and ferry stops are in the chosen cities
   (again when the network or the zones' outlines change); the clock worker cuts each line to its runs of two stops or

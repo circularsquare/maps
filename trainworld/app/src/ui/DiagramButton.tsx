@@ -14,6 +14,7 @@ import { stationZone } from "../game/listScope";
 import { zonesLoaded } from "../game/zones";
 import { cityById, isCity } from "../game/cities";
 import { tPlace } from "../i18n/places";
+import { realmName, zoneRealm } from "../game/realms";
 
 /** T-2160: the network diagram in place of the map, and back (no key while it is a work in progress, T-2608). */
 export function DiagramButton() {
@@ -53,13 +54,28 @@ function listedCities(): string[] {
     for (const s of w.save.stations) { if (!s.built) continue; const z = stationZone(s); if (z && isCity(z)) out.add(z); }
     for (const s of busStopsById(w).values()) { const z = stationZone(s); if (z && isCity(z)) out.add(z); }
   }
-  const name = (z: string) => (isCity(z) ? tPlace(z, cityById(z).name) : z);
-  return [...out].sort((a, b) => name(a).localeCompare(name(b)));
+  return [...out].sort((a, b) => cityName(a).localeCompare(cityName(b)));
+}
+const cityName = (z: string) => (isCity(z) ? tPlace(z, cityById(z).name) : z);
+
+/** T-3826: the listed cities by realm (the map's regions), each alphabetical; cities in no realm after them, bare */
+function byRealm(cities: string[]): { realms: { id: string; name: string; cities: string[] }[]; bare: string[] } {
+  const groups = new Map<string, string[]>(), bare: string[] = [];
+  for (const c of cities) {
+    const r = isCity(c) ? zoneRealm(c) : null;
+    if (r) groups.set(r, [...(groups.get(r) ?? []), c]);
+    else bare.push(c);
+  }
+  const realms = [...groups].map(([id, cs]) => ({ id, name: realmName(id), cities: cs })).sort((a, b) => a.name.localeCompare(b.name));
+  return { realms, bare };
 }
 
-/** T-3409: the cities the diagram is of: a list under its button, every city first (the whole network) */
+/** T-3409, T-3826: the cities the diagram is of: a list under its button, every city first (the whole network), then each
+ * region with a box (ticked when all its cities are, half lit when some are) and its cities under it when opened */
 function CityChoice() {
   const [open, setOpen] = useState(false);
+  /** the regions opened; a list of one region opens on it */
+  const [opened, setOpened] = useState<ReadonlySet<string>>(new Set());
   const box = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
@@ -72,15 +88,40 @@ function CityChoice() {
   }, [open]);
   const cities = listedCities(), chosen = diagramCities.value;
   if (cities.length < 2 && !chosen.length) return null;
-  const set = (next: string[]) => (diagramCities.value = [...next].sort());
+  const set = (next: string[]) => (diagramCities.value = [...new Set(next)].sort());
+  const { realms, bare } = byRealm(cities);
+  const city = (c: string, inRealm: boolean) => <li key={c} class={inRealm ? "in-realm" : undefined}>
+    <Check checked={chosen.includes(c)} onChange={(on) => set(on ? [...chosen, c] : chosen.filter((x) => x !== c))}>{cityName(c)}</Check>
+  </li>;
   return <div class="diagram-cities" ref={box}>
     <button type="button" class={"btn icon" + (chosen.length ? " on" : "")} data-tip={t("diagramButton.chooseCities")} aria-label={t("diagramButton.chooseCities")} aria-expanded={open}
       onClick={() => setOpen(!open)}><Icon.cities /></button>
     {open && <ul class="diagram-cities-list">
       <li><Check checked={!chosen.length} onChange={() => set([])}>{t("cities.all")}</Check></li>
-      {cities.map((c) => <li key={c}><Check checked={chosen.includes(c)} onChange={(on) => set(on ? [...chosen, c] : chosen.filter((x) => x !== c))}>{isCity(c) ? tPlace(c, cityById(c).name) : c}</Check></li>)}
+      {realms.flatMap((r) => {
+        // `opened` holds the regions flipped from how they start: open when the list has one region, else closed
+        const n = r.cities.filter((c) => chosen.includes(c)).length, isOpen = opened.has(r.id) !== (realms.length === 1);
+        const flip = () => { const next = new Set(opened); if (next.has(r.id)) next.delete(r.id); else next.add(r.id); setOpened(next); };
+        return [
+          <li key={"realm " + r.id} class="realm">
+            <button type="button" class={"btn icon mini chevron" + (isOpen ? " open" : "")} aria-label={r.name} aria-expanded={isOpen} onClick={flip}><Icon.chevron /></button>
+            <label class="check">
+              <input type="checkbox" class={n > 0 && n < r.cities.length ? "some" : undefined} checked={n === r.cities.length}
+                onChange={() => set(n === r.cities.length ? chosen.filter((c) => !r.cities.includes(c)) : [...chosen, ...r.cities])} />
+              <span>{r.name}</span>
+            </label>
+          </li>,
+          ...(isOpen ? r.cities.map((c) => city(c, true)) : []),
+        ];
+      })}
+      {bare.map((c) => city(c, false))}
     </ul>}
   </div>;
+}
+
+/** whether the top row has the mode buttons and the cities button, with the divider between them (T-3825) */
+function hasModesAndCities(): boolean {
+  return lineKinds(world.value).size >= 2 && (listedCities().length >= 2 || diagramCities.value.length > 0);
 }
 
 /** T-2161, T-2163: the map's upper left while the diagram is up: the way back to the map (T-2416), the
@@ -91,6 +132,7 @@ export function DiagramTopLeft() {
     <div class="map-top-row">
       <button type="button" class="btn icon diagram-exit" data-tip={t("diagramButton.showMap")} aria-label={t("diagramButton.showMap")} onClick={() => (diagramShown.value = false)}><Icon.cross /></button>
       <ModeButtons />
+      {hasModesAndCities() && <i class="diagram-rule" aria-hidden="true" />}
       <CityChoice />
       <button type="button" class={"btn icon diagram-water" + (diagramWater.value ? " on" : "")} data-tip={t("diagramButton.showWater")} aria-label={t("diagramButton.showWater")} aria-pressed={diagramWater.value} onClick={() => (diagramWater.value = !diagramWater.value)}><Icon.waves /></button>
       <label class="slider diagram-width" data-tip={t("diagramButton.lineWidth")}>
