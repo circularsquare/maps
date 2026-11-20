@@ -107,15 +107,8 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Two anonymous reports on v0.4.2 (feedback 1795092485-688b2e15, 1795083347-52a31102), plus a third, "crashes every time it opens" (1795097335-fa20c413), all Japanese, 11-19 (board group g115). Their saves load normally on master. A stuck load now restarts once, and the report names the stuck worker and period (tree demandload).
   - Goal: The cause found from the next report's diagnosis, or closed if no report comes.
   - Other: notes/T-3781.md
-- T-3817 [P2] {L:timetables} Zoomable line timetable that merges the Marey chart (taking, 2026-11-19, agent ttzoom)
-  - Context: Your pad, 11-20: "i'd like the timetable/marey diagram to be zoomable"; draw only the time columns that fit, but every bullet on top with a thin rim, shown ones in front, hovering a back bullet brings its column forward; scroll zooms instead of panning; the separate Marey button goes.
-  - Goal: That timetable, built as you described; your full words in the notes.
-  - Other: notes/T-3817.md
-- T-3818 [P2] {L:timetables} {after:T-3817} Related lines in the same timetable
+- T-3818 [P2] {L:timetables} {after:T-3817} Related lines in the same timetable (taking, 2026-11-19, agent ttrelated)
   - Context: Your pad, 11-20: related lines shown the same way, bullets about 2px lower, times at about 60% opacity (less when deprioritized), never ahead of the line being looked at.
-  - Other: notes/T-3817.md
-- T-3819 [P2] {L:timetables} Hide other lines icon beside the direction switch (taking, 2026-11-19, agent ttzoom)
-  - Context: Your pad, 11-20: the icon "is a bit tiny and out of the way, kinda looks like its floating in the middle of nowhere. lets move it directly to the right of "to [terminal a] | to [terminal b]" and make it a bit bigger."
   - Other: notes/T-3817.md
 - T-3780 [P2] {L:timetables} {after:T-3346 stage 2 landing} Station and complex timetables
   - Context: Your pad, 2026-11-19: players ask for per-station timetables, "could be cool and not so hard". Per station and per complex, every line in its line colour; for a complex, pick the direction most platforms roughly align with and show trains as that way or the opposite ("eastbound"), "people should mostly use the station timetables anyways"; line numbers show the bullet and line name on hover; opened by a timetable icon button on the station or complex view, like the line's schedule button. Waits for the timetables port so it reads the new departure times.
@@ -292,7 +285,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3460 [P3] {L:cleanup} Code written twice
   - Context: From the code tour: the schematic's sheet maths in Rust (diagram.rs) and again in JavaScript (sheetLines.ts, kept as a fallback); the real-rail route finder in the game (realRoute.worker.ts) and copied in the pipeline (realroute.py); car street speeds twice in Rust.
   - Goal: One copy of each, or a written reason to keep both.
-- T-3726 [P3] {L:cleanup} {after:cores free up} Are code comments worth keeping, A/B test
+- T-3726 [P3] {L:cleanup} {after:cores free up} Are code comments worth keeping, A/B test (taking, 2026-11-19, agent abpair1)
   - Context: You said yes, after the release (2026-11-18). You, 2026-11-18: "deciding whether or not code comments rae actually helpful ... what procedure do you think we might be able to try to get a rough sense of whether this would be really harmful? ... just a rough measured anecdotal sense." Proposal: replay 2-3 tasks landed today from their parent commits, one tree with comments and one with them stripped by script, same blind brief, scored on the real fix's tests first, then wrong causes, tokens and time; one task run twice per arm to see the noise.
   - Goal: A rough answer: no visible difference, comments help, or comments hurt; any mass strip only when no trees are open.
 - T-2843 [P3] {L:cleanup} State machine B for demand health
@@ -821,10 +814,15 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Ports, industrial estates and airports with no residents stay dark (Tuas and Jurong were fixed by hand 11-13). Half done: units keep outlines with 0.2 km2 of built surface.
   - Goal: A free unit under the floor sharing half its land border with one metro joins it, after a worldwide count.
   - Other: notes/T-3287.md
+- T-3827 [P3] {L:checks} Weekend timetable checks gone stale
+  - Context: t3521-weekends, t3557-weekend-headway and t3603-weekend-flash fail on master 6c8dc0ef (found by ttzoom 11-20, confirmed on master): a weekend share button not found, Medium and Low weekend headways read as NaN, a null click; most likely the panel changed under them (five periods, T-3542).
+  - Goal: The three checks pass on master, or each failure is a real bug filed.
+- T-3828 [P3] {L:timetables} Pinch zoom for the timetable on touch
+  - Context: T-3817 zooms the timetable with the scroll wheel; a phone only gets the opening view. Reach: phone players opening timetables.
 - T-3825 [P2] {L:schematic} Schematic pan limit and city selector fixes (taking, 2026-11-19, agent schemcity)
   - Context: You, 11-20, trying the cities list for the first time: the drawing was off screen so it looked broken. Panning must not take the whole drawing off screen; the zoom-out cap goes from a tenth to a half lengthwise; a small divider with gaps between the ferry toggle and the cities button; the "Drawing diagram" bar shows while cities are added or removed.
 - T-3826 [P2] {L:schematic} Add a neighbouring city from the schematic (taking, 2026-11-19, agent schemcity)
-  - Context: You, 11-20: the alphabetical cities list is long; like picking a start city on the map, with a few cities chosen, hovering a neighbouring region shows a small ghost circle and a click adds that city ("i can select new york in the drop down, then just mouse over philly and add it"). Also a region choice above the cities list ("select like US East or whatever").
+  - Context: You, 11-20: the alphabetical cities list is long; like picking a start city on the map, with a few cities chosen, hovering a neighbouring region shows a small ghost circle and a click adds that city ("i can select new york in the drop down, then just mouse over philly and add it"). The cities list becomes a region selector: top-level regions alphabetical, each expanding to its cities alphabetical, a region's box showing a minus when only some of its cities are ticked.
 - T-3824 [P2] {L:schematic-rivers} {after:T-3358 prototype} Schematic ferries drawn after the water
   - Context: You, 11-20: "now that we're drawing ferries, it might be nice to draw ferries after drawing water so that their ports actually line up cloesr to the coastline".
   - Goal: In the schematic, ferry ports sit on the drawn coast and ferry routes run over drawn water.

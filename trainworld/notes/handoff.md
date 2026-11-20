@@ -14,6 +14,10 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 1. Running: ttzoom (Opus, T-3817 + T-3819, tree ttzoom, 6200; may stop before removing the Marey button and ask;
    UI only, no checker), guianas (T-3762, writes data/packs; report not yet in), editfirst (Opus, T-3803 option 1,
    tree editfirst, 6207; checker before landing: edit path and money).
+   Also: riverroute (Opus, T-3358 prototype, scratchpad only; sheet A/B/C incl. Hong Kong), schemcity (Opus,
+   T-3825 + T-3826, tree schemcity, 6209), comments A/B (T-3726) pair 1 arms ab-1-c / ab-1-s running (Sonnet,
+   ids a592513c82e673c22 / ac4fb532666d58ca0); then score per maps-6b's commentab scoring.md (runstats, audit,
+   score-t3704.py), then pair 3 (ab-3-c/s), then notes/T-3726.md.
    Waiting on her: T-3821 games store (pack or drop backups, + cap 24 GB; asks a-...-23), intercity effective time by
    trips or riders (a-...-24), T-3822 strings. T-3395: after 04:00 UTC 11-20 run `tools/ops/save_health.py`; the
    two rev-1 games of ue83342ed78f8fc4c still corrupt = old damage, close after a clean 11-21; intact = the scan's
