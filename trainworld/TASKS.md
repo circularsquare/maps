@@ -810,8 +810,11 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3824 [P2] {L:schematic-rivers} {after:T-3358 prototype} Schematic ferries drawn after the water
   - Context: You, 11-20: "now that we're drawing ferries, it might be nice to draw ferries after drawing water so that their ports actually line up cloesr to the coastline".
   - Goal: In the schematic, ferry ports sit on the drawn coast and ferry routes run over drawn water.
-- T-3358 [P2] {L:schematic-rivers} {waits:Anita} Schematic river continuity
-  - Need from Anita: B, C, D or E on the rivers sheet (artifacts/trainworld/review/rivers-sheet.png, sheet 2)? Recommended: E, today's lines with hop-by-hop straightening only round the stations B gets wrong.
+- T-3833 [P2] {L:schematic-rivers} {after:T-3358} Schematic coastline with no sharp corners
+  - Context: You, 11-20: spots along the coastline have sharp corners, "sometimes it looks like where a round water has taken a bite out of land and left a tapering corner ... it would be cool if we got the entire coastline, the entire surface between land and water, to not have any perfect corners".
+  - Goal: Every land and water edge in the schematic has rounded corners, tapering slivers included.
+- T-3358 [P2] {L:schematic-rivers} Schematic river continuity (taking, 2026-11-19, agent riverbuild)
+  - Context, 11-20: you picked E ("yeah i like E"): today's lines, straightened hop by hop only round the stations the routed river finds on the wrong bank; plus a light straightening of the river even where space is tight, so it never zigzags (Hong Kong's Tuen Mun was "a little ugly"), and round caps on river ends.
   - Context: You want the river itself straightened like the lines (11-12), and named "disconnected rivers" (11-16). Prototype 3 (11-20, riverroute): each river routed after the layout as one even-width 0/45/90 path, stations held on their ground bank, lines crossed freely. On today's layout London's Thames goes from 6 pieces and 115 wrong pairs to 1 piece and 26 (all round North Greenwich and the Isle of Dogs); Harlem, Newtown Creek and Tuen Mun 0. Today London has 3 of 12 rivers in pieces, New York 5 of 112. About 6-9 h to land.
   - Goal: Rivers read as one straightened course each, even width, with stations on their own bank.
   - Other: You raised it again 2026-11-16 on the board: the pressing schematic issues are local, "disconnected rivers" and "cities getting squished too much". notes/T-3358.md
