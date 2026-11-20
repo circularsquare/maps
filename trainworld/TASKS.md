@@ -807,9 +807,9 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Ports, industrial estates and airports with no residents stay dark (Tuas and Jurong were fixed by hand 11-13). Half done: units keep outlines with 0.2 km2 of built surface.
   - Goal: A free unit under the floor sharing half its land border with one metro joins it, after a worldwide count.
   - Other: notes/T-3287.md
-- T-3835 [P2] {L:line-rates} Loop line station says it turns trains (taking, 2026-11-20, agent looptag)
-  - Context: Player on Discord, 11-20 (via your pad): a tram station on a continuous loop (McKinney & Harwood, Dallas) shows "turning at 80% of capacity, 12/15 trams per hour"; "is this a technical limitation". Reach: some (loop lines).
-  - Goal: A station on a loop never shows or counts as a turn, unless trains really turn there.
+- T-3840 [P3] {L:line-rates} Loop stop list three laps long after a leg station click
+  - Context: Found by T-3835: clicking a station on one leg of a one-way pair into a both-ways circle makes the line's stop list three laps long (before T-3835 the return run ran nine laps). Reach: few, loops over one-way pairs.
+  - Other: notes/T-3835.md
 - T-3836 [P3] {L:real-networks} Real network names in the player's language
   - Context: In-game feedback 11-20 (1795147183-e2778951, Japanese): on a real network, station and line names should follow the game's language. OSM often has name:ja and name:en. A design call for you: which languages, and what when a name has none. Reach: players on real networks in another language.
 - T-3824 [P2] {L:schematic-rivers} Schematic ferries drawn after the water (taking, 2026-11-20, agent coastround)
