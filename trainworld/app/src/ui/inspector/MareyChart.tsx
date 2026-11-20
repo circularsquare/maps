@@ -235,7 +235,7 @@ export function MareyBody({ l, st, links, width, plotH, group, win, view, dir, h
         const clipped = (ps: number[]) => {
           let d = "";
           const s0 = run === 0 ? ps : ps.map((v, i) => (i % 2 ? len - v : v));
-          for (const sh of shared) d += clipPath(s0, sh.a, sh.b, (t) => t, (s) => yOf(sh.c + sh.sg * (s - sh.a)));
+          for (const sh of shared) d += clipPath(s0, sh.a, sh.b, (t) => t, (s) => yOf(sh.c + (sh.m ?? sh.sg) * (s - sh.a)));
           return d ? new Path2D(d) : null;
         };
         const path = shared.length ? clipped(raw) : null;

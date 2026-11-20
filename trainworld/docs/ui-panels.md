@@ -1471,6 +1471,15 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   front. Hovering a bullet (the nearest within 9 px, so one under others is reached too) or a column lights that
   train over a veil: its bullet in front and its column, covering the drawn columns it lands on, whether or not it
   is drawn at the zoom; its path on the chart too.
+- **Related lines** (T-3818): while the other lines toggle is on (it shows whenever the line has any), the trains of
+  each line the line panel's related lines draw beside it (`lineRelated`, kind beside; not its own quad twin, nor a
+  group's own lines) get columns too, at the rows where both stop (a station's complex counts), "|" only within a
+  stretch it runs beside. They never take a column from the line's own trains: at each zoom level they fill only
+  the gaps the line's own columns leave, and the opening zoom counts the line's own columns alone. Their bullets sit
+  2 px lower and behind the line's own (related behind, own behind, related drawn, own drawn; related bullets behind
+  kept one per 3 px); their times at 60%, 30% once gone, 60% when lit. Hovering a bullet
+  of another line names the line where its letters don't already. On the chart they are drawn as other lines, stop
+  to stop where they have no shared track.
 - **Chart**: the timetable chart ([ui-inspectors.md](ui-inspectors.md) "The timetable chart") under the timetable,
   its stops 240 px tall, scaled by distance, on the table's time axis: it zooms and scrolls with it. It draws the
   table's direction in front and the other direction dimmed behind, every line of a group alike (another line's way
@@ -1478,8 +1487,8 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   veil over the table, the chart's trains at 35%).
 - **A group's**: from the group view's chart icon, for a group with two or more running rail lines. Heading the
   group's pill and name, then "schedule"; the body is the timetable and chart at the panel's width, the longest line
-  (by length) down the side, each other line's trains in the table at the stations it shares with it (a line
-  sharing fewer than two is left out of the table), and in the chart drawn at full strength in their colours where
+  (by length) down the side, each other line's trains in the table at the stations it shares with it, a station's
+  complex counting as the station (a line sharing fewer than two is left out of the table), and in the chart drawn at full strength in their colours where
   they share its track (T-2660's mapping); the other lines toggle adds lines outside the group as the line chart does.
 
 ## Start menu

@@ -8,8 +8,9 @@ import type { NetworkBuffers } from "../../map/network";
 /** as the train guard's: a move's key from its arriving and leaving path entries */
 const MOVE_KEY = 2 ** 26;
 
-/** A stretch another line shares: its run 0 offsets `a` to `b` are the chart line's `c + sg * (s - a)`. */
-export interface Shared { a: number; b: number; c: number; sg: 1 | -1 }
+/** A stretch another line shares: its run 0 offsets `a` to `b` are the chart line's `c + sg * (s - a)`;
+ * a related line on its own track beside it (T-3818) maps by `m` in place of `sg`, from stop to stop. */
+export interface Shared { a: number; b: number; c: number; sg: 1 | -1; m?: number }
 /** Trains of line `o` passing an at-grade conflict on the chart line's path: `sO` along `o`'s run 0,
  * `sL` along the chart line's; `run` the run that makes the conflicting move, -1 both. */
 export interface Pass { o: number; run: number; sO: number; sL: number }

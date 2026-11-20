@@ -11,18 +11,22 @@ import { signal, type Signal } from "@preact/signals";
 import type { ComponentChildren, VNode } from "preact";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
 import { clock } from "../../game/clock";
+import { stopKey } from "../../game/complexView";
 import { drawnReversed } from "../../game/northUp";
 import { inkOn, legibleOn } from "../../game/palette";
-import { shade as uiShade } from "../../game/ui";
+import { decodeRelated } from "../../game/relatedLines";
+import { display, shade as uiShade } from "../../game/ui";
 import type { LineInput, LineStats } from "../../game/types";
-import { linesById, stationNames, stationsById, world } from "../../game/world";
+import { linesById, linesByNum, stationNames, stationsById, world } from "../../game/world";
 import { t } from "../../i18n";
 import { profileRun } from "../../map/profiles";
 import { live } from "../../map/live";
 import type { NetworkBuffers } from "../../map/network";
 import { queryClock } from "../../workers/clockClient";
+import { useClockQuery } from "../useClockQuery";
 import { Chip, Segmented } from "../widgets";
 import { GUTTER, MareyBody, PAD_R, type Links } from "./MareyChart";
+import type { Shared } from "./mareyShare";
 
 const DAY = 86400, HOUR = 3600;
 /** a column's width, a row's height and the head's height, px */
@@ -40,6 +44,12 @@ const NOTCH = 1.25;
 const GAPS = Array.from({ length: 30 }, (_, j) => 10 * Math.SQRT2 ** j);
 /** how near a bullet's centre the pointer must be to hover it, px */
 const BULLET_HIT = 9;
+/** how much lower a related line's bullet sits, px (Anita, 2026-11-20 pad: "like 2px lower") */
+const REL_DROP = 2;
+/** related bullets behind closer than this to one another are drawn as one, px (a whole day's pile) */
+const REL_THIN = 3;
+/** a column's class for its rank and time: a related line's times are fainter (style.css `.tt-col.rel`) */
+const colClass = (c: Col, now: number) => (c.rank ? " rel" : "") + (c.t < now ? " past" : "");
 /** a cell's value for a train that runs through the station without stopping */
 const PASS = -1;
 /** the time marks' steps, minutes */
@@ -76,32 +86,89 @@ function stopTimes(net: NetworkBuffers, p: number, offs: number[]): Float64Array
 
 /** A line whose trains get columns: its bullet's line (a T-3333 twin shows its parent's), each of
  * its stops' row on the axis line (run 0 order, -1 off it), whether its run 0 goes the axis's
- * run 1 way, and its rank (0: the axis line and its group's; T-3818's related lines would take 1). */
-interface Src { line: LineInput; bullet: LineInput; st: LineStats; rowOf: number[]; flipped: boolean; rank: number }
+ * run 1 way, and its rank (0: the axis line and its group's; 1: a related line, T-3818). `fill`: the
+ * axis rows (run 0 order) its trains may run through, where it runs beside the axis; every row
+ * without it. */
+interface Src { line: LineInput; bullet: LineInput; st: LineStats; rowOf: number[]; flipped: boolean; rank: number; fill?: Uint8Array }
+
+/** A line related to the table's line (T-3818): a line the line panel's related lines draw beside it
+ * (`lineRelated`, kind beside), its stops' rows on the table's line where both stop, the rows it runs
+ * beside it, and for the chart its stretches from stop to stop. */
+export interface Related { line: LineInput; rowOf: number[]; fill: Uint8Array; stretches: Shared[] }
+
+/** The lines related to `l` (not its own twin or `skip`'s), and `links` with their stretches added
+ * where the chart has no shared track for them, so the chart draws them as it draws other lines. */
+export function useRelated(l: LineInput, st: LineStats, links: Links | null, skip?: ReadonlySet<number>): { links: Links | null; related: Related[] } {
+  const w = world.value!;
+  const groups = useClockQuery({ what: "lineRelated", line: l.num }, [l.num, w.version], (d) => ({ line: l.num, groups: decodeRelated(d) }));
+  const skipKey = skip ? [...skip].join(",") : "";
+  return useMemo(() => {
+    if (!groups || groups.line !== l.num) return { links, related: [] };
+    const byNum = linesByNum(w), byId = linesById(w);
+    const twin = st.twin ? byId.get(st.twin)?.num : undefined;
+    const n = l.stops.length, L0 = st.stopS[0] ?? [];
+    const by = new Map<number, Related>();
+    for (const g of groups.groups) {
+      if (g.kind !== "beside" || g.line === twin || skip?.has(g.line)) continue;
+      const o = byNum.get(g.line), ost = o && w.lineStats[o.id];
+      // running rail lines only: a planned or stopped line has no timetable
+      if (!o || !ost || ost.bus || o.twinOf || ost.status !== "running") continue;
+      let r = by.get(g.line);
+      if (!r) by.set(g.line, (r = { line: o, rowOf: o.stops.map(() => -1), fill: new Uint8Array(n), stretches: [] }));
+      const both = g.meetings.filter((m) => m.stopL >= 0 && m.stopO >= 0 && m.stopL < n && m.stopO < o.stops.length);
+      if (!both.length) continue;
+      for (const m of both) if (r.rowOf[m.stopO] < 0) r.rowOf[m.stopO] = m.stopL;
+      const ls = both.map((m) => m.stopL);
+      for (let i = Math.min(...ls); i <= Math.max(...ls); i++) r.fill[i] = 1;
+      // from stop to stop where both stop, the other line's run 0 offsets onto this line's
+      const O0 = ost.stopS[0] ?? [];
+      const pts = both.map((m) => [O0[m.stopO], L0[m.stopL]]).filter(([a, b]) => Number.isFinite(a) && Number.isFinite(b)).sort((x, y) => x[0] - y[0]);
+      for (let i = 0; i + 1 < pts.length; i++) {
+        const [a, c] = pts[i], [b, e] = pts[i + 1];
+        if (b - a < 1) continue;
+        const m = (e - c) / (b - a);
+        r.stretches.push({ a, b, c, m, sg: m < 0 ? -1 : 1 });
+      }
+    }
+    const related = [...by.values()].filter((r) => new Set(r.rowOf.filter((x) => x >= 0)).size >= 2);
+    if (!links) return { links, related };
+    const shared = new Map(links.shared);
+    for (const r of related) {
+      if (shared.has(r.line.num) || !r.stretches.length) continue;
+      shared.set(r.line.num, r.stretches);
+      const tw = w.lineStats[r.line.id]?.twin, tl = tw ? byId.get(tw) : undefined;
+      if (tl && tl.stops.length === r.line.stops.length && !shared.has(tl.num)) shared.set(tl.num, r.stretches);
+    }
+    return { links: { shared, passes: links.passes }, related };
+  }, [groups, links, w.version, skipKey]);
+}
 
 /** The columns' lines: the axis line, then each other line by the stations it shares with the
- * axis (two at least, which set its direction), each with its hidden quad twin. */
-function sourcesOf(axis: LineInput, others: readonly LineInput[]): Src[] {
+ * axis (two at least, which set its direction; a station's complex counts as the station), each
+ * with its hidden quad twin, then the related lines. */
+function sourcesOf(axis: LineInput, others: readonly LineInput[], related: readonly Related[]): Src[] {
   const w = world.value!;
   const byId = linesById(w);
   const index = new Map<string, number>();
-  axis.stops.forEach((s, i) => { if (!index.has(s)) index.set(s, i); });
+  axis.stops.forEach((s, i) => { const k = stopKey(s); if (!index.has(k)) index.set(k, i); });
   const out: Src[] = [];
-  const add = (l: LineInput, rowOf: number[], flipped: boolean) => {
+  const add = (l: LineInput, rowOf: number[], flipped: boolean, rank: number, fill?: Uint8Array) => {
     const st = w.lineStats[l.id];
     if (!st || st.bus) return;
-    out.push({ line: l, bullet: l, st, rowOf, flipped, rank: 0 });
+    out.push({ line: l, bullet: l, st, rowOf, flipped, rank, fill });
     const twin = st.twin ? byId.get(st.twin) : undefined;
     const tst = twin ? w.lineStats[twin.id] : undefined;
-    if (twin && tst && twin.stops.length === l.stops.length) out.push({ line: twin, bullet: l, st: tst, rowOf, flipped, rank: 0 });
+    if (twin && tst && twin.stops.length === l.stops.length) out.push({ line: twin, bullet: l, st: tst, rowOf, flipped, rank, fill });
   };
-  add(axis, axis.stops.map((_, i) => i), false);
+  const flippedOf = (rowOf: number[]) => { const on = rowOf.filter((r) => r >= 0); return on[on.length - 1] < on[0]; };
+  add(axis, axis.stops.map((_, i) => i), false, 0);
   for (const o of others) {
-    const rowOf = o.stops.map((s) => index.get(s) ?? -1);
-    const on = rowOf.filter((r) => r >= 0);
-    if (new Set(on).size < 2) continue;
-    add(o, rowOf, on[on.length - 1] < on[0]);
+    const rowOf = o.stops.map((s) => index.get(stopKey(s)) ?? -1);
+    if (new Set(rowOf.filter((r) => r >= 0)).size < 2) continue;
+    add(o, rowOf, flippedOf(rowOf), 0);
   }
+  const have = new Set(out.map((s) => s.line.num));
+  for (const r of related) if (!have.has(r.line.num)) add(r.line, r.rowOf, flippedOf(r.rowOf), 1, r.fill);
   return out;
 }
 
@@ -122,20 +189,31 @@ function useColumns(srcs: Src[], rows: number, day0: number): [Col[], Col[]] | n
   const w = world.value!;
   const net = live.overlay?.renderer.net ?? null;
   const key = srcs.map((s) => s.line.num).join(",");
-  const [answer, setAnswer] = useState<{ key: string; day0: number; trips: (Float64Array | null)[] } | null>(null);
+  // each line's trips kept by line, so lines added (the related ones, by the toggle) are asked for
+  // alone and the table stays up meanwhile
+  const [answer, setAnswer] = useState<{ day0: number; version: number; trips: Map<number, Float64Array> } | null>(null);
   useEffect(() => {
     let on = true;
-    const win = windowOf(day0);
-    void Promise.all(srcs.map((s) => queryClock({ what: "lineTrips", line: s.line.num, t0: win.t0, t1: win.t1 }))).then((trips) => {
-      if (on && trips.every((d) => d)) setAnswer({ key, day0, trips });
+    const win = windowOf(day0), version = w.version;
+    const have = answer && answer.day0 === day0 && answer.version === version ? answer.trips : null;
+    const need = srcs.filter((s) => !have?.has(s.line.num));
+    if (!need.length) return;
+    void Promise.all(need.map((s) => queryClock({ what: "lineTrips", line: s.line.num, t0: win.t0, t1: win.t1 }))).then((trips) => {
+      // the line's own must all answer; a related line that doesn't is left out
+      if (!on || trips.some((d, i) => !d && need[i].rank === 0)) return;
+      setAnswer((was) => {
+        const m = new Map(was && was.day0 === day0 && was.version === version ? was.trips : []);
+        trips.forEach((d, i) => m.set(need[i].line.num, d ?? new Float64Array(0)));
+        return { day0, version, trips: m };
+      });
     });
     return () => { on = false; };
   }, [key, w.version, day0]);
   return useMemo(() => {
-    if (!answer || answer.key !== key || !net) return null;
+    if (!answer || !net || srcs.some((s) => s.rank === 0 && !answer.trips.has(s.line.num))) return null;
     const out: [Col[], Col[]] = [[], []];
-    srcs.forEach((src, si) => {
-      const d = answer.trips[si];
+    srcs.forEach((src) => {
+      const d = answer.trips.get(src.line.num);
       if (!d) return;
       const n = src.line.stops.length;
       const times = new Map<number, Float64Array>();
@@ -157,7 +235,8 @@ function useColumns(srcs: Src[], rows: number, day0: number): [Col[], Col[]] | n
           lo = Math.min(lo, row); hi = Math.max(hi, row);
         }
         if (hi < 0) continue;
-        for (let r = lo + 1; r < hi; r++) if (!Number.isFinite(cells[r])) cells[r] = PASS;
+        const fill = src.fill;
+        for (let r = lo + 1; r < hi; r++) if (!Number.isFinite(cells[r]) && (!fill || fill[dir === 0 ? r : rows - 1 - r])) cells[r] = PASS;
         const t0 = cells[lo];
         if (t0 < day0 || t0 >= day0 + DAY) continue;
         out[dir].push({ bullet: src.bullet, t: t0, cells, key: trainKey(src.line.num, p, dep), rank: src.rank });
@@ -165,7 +244,7 @@ function useColumns(srcs: Src[], rows: number, day0: number): [Col[], Col[]] | n
     });
     for (const cs of out) cs.sort((a, b) => a.t - b.t);
     return out;
-  }, [answer, net, rows]);
+  }, [answer, net, rows, srcs]);
 }
 
 /** First index with `ts[i] >= x`, for times sorted. */
@@ -209,12 +288,14 @@ function pickLevels(cols: Col[]): Uint8Array[] {
   return out;
 }
 
-/** The opening zoom, px per game second: the coarsest level that draws nearly every column, just past the
- * scale at which its columns stand a column's width apart. */
-function openingScale(levels: Uint8Array[], n: number): number {
+/** The opening zoom, px per game second: the coarsest level that draws nearly every column of the line's
+ * own (rank 0; related lines never change it), just past the scale at which its columns stand a column's
+ * width apart. */
+function openingScale(levels: Uint8Array[], cols: Col[]): number {
+  const n = cols.reduce((s, c) => s + (c.rank === 0 ? 1 : 0), 0);
   for (let j = GAPS.length - 1; j >= 0; j--) {
     let k = 0;
-    for (const v of levels[j]) k += v;
+    levels[j].forEach((v, i) => { if (v && cols[i].rank === 0) k++; });
     if (k >= OPEN_SHARE * n) return (COL / GAPS[j]) * 1.001;
   }
   return (COL / GAPS[0]) * 1.001;
@@ -271,7 +352,7 @@ function Lit({ part, hot, at, cols, drawn, scale, x0, shift, dark, now }: {
     return (
       <>
         <div class="tt-veil" />
-        <span class="tt-bullet on" style={{ left: x - COL / 2 + "px", width: COL + "px", top: MARK_H + "px" }}><Bullet l={c.bullet} /></span>
+        <span class="tt-bullet on" style={{ left: x - COL / 2 + "px", width: COL + "px", top: MARK_H + (c.rank ? REL_DROP : 0) + "px" }}><Bullet l={c.bullet} /></span>
       </>
     );
   }
@@ -281,7 +362,7 @@ function Lit({ part, hot, at, cols, drawn, scale, x0, shift, dark, now }: {
     <>
       {covers.map((j) => <span class="tt-cover" style={{ left: x0 + cols[j].t * scale - COL / 2 - 1 + "px", width: COL + 2 + "px" }} />)}
       <div class="tt-veil" />
-      <Column c={c} x={x} cls={" on" + (c.t < now ? " past" : "")} cells={<Cells c={c} shift={shift} />} dark={dark} />
+      <Column c={c} x={x} cls={" on" + colClass(c, now)} cells={<Cells c={c} shift={shift} />} dark={dark} />
     </>
   );
 }
@@ -301,9 +382,10 @@ function Chart({ hot, ...rest }: { hot: Signal<string | null> } & Omit<Parameter
 const zoomOf = (el: HTMLElement) => (el as HTMLElement & { currentCSSZoom?: number }).currentCSSZoom ?? 1;
 
 /** The timetable of `axis` (its stops as rows) with `others`' trains where they run on its
- * stations, and the chart of `axis` under it. `tools` sit at the end of its direction choice. */
-export function TrainTable({ axis, st, others = [], links, group, plotH, tools }: {
-  axis: LineInput; st: LineStats; others?: readonly LineInput[]; links: Links | null; group?: ReadonlySet<number>; plotH: number; tools?: ComponentChildren;
+ * stations, `related`'s behind them while other lines are shown (T-3818), and the chart of `axis`
+ * under it. `tools` sit at the end of its direction choice. */
+export function TrainTable({ axis, st, others = [], related = [], links, group, plotH, tools }: {
+  axis: LineInput; st: LineStats; others?: readonly LineInput[]; related?: readonly Related[]; links: Links | null; group?: ReadonlySet<number>; plotH: number; tools?: ComponentChildren;
 }) {
   const w = world.value!;
   const names = stationNames(w), byId = stationsById(w);
@@ -314,7 +396,9 @@ export function TrainTable({ axis, st, others = [], links, group, plotH, tools }
   // from the hour before this one, a day on: what is coming, with the last hour for context
   const day0 = Math.floor((now + shift) / HOUR) * HOUR - shift - HOUR;
   const otherKey = others.map((o) => o.num).join(",");
-  const srcs = useMemo(() => sourcesOf(axis, others), [axis.num, otherKey, w.version]);
+  const rel = display.value.chartOtherLines ? related : [];
+  const relKey = rel.map((r) => r.line.num).join(",");
+  const srcs = useMemo(() => sourcesOf(axis, others, rel), [axis.num, otherKey, relKey, w.version]);
   const both = useColumns(srcs, n, day0);
   // the chart's top-to-bottom way first, so the rows read in its order
   const down = drawnReversed(byId.get(axis.stops[0]), byId.get(axis.stops[n - 1]), !!st.loop) ? 1 : 0;
@@ -323,7 +407,7 @@ export function TrainTable({ axis, st, others = [], links, group, plotH, tools }
   const cols = both?.[dir] ?? [];
   const times = useMemo(() => Float64Array.from(cols, (c) => c.t), [cols]);
   const levels = useMemo(() => pickLevels(cols), [cols]);
-  const opening = useMemo(() => openingScale(levels, cols.length), [levels]);
+  const opening = useMemo(() => openingScale(levels, cols), [levels]);
 
   const scroller = useRef<HTMLDivElement>(null);
   const vw = useClientWidth(scroller);
@@ -453,13 +537,24 @@ export function TrainTable({ axis, st, others = [], links, group, plotH, tools }
     if (!el || drag.current?.moved) return;
     const z = zoomOf(el), r = el.getBoundingClientRect();
     const cx = (e.clientX - r.left) / z, cy = (e.clientY - r.top) / z;
-    let k: string | null = null;
+    let k: string | null = null, tip = "";
     if (cx >= GUTTER && cy >= MARK_H && cols.length) {
       const tt = day0 + (el.scrollLeft + cx - GUTTER) / scale;
-      const i = lowerBound(times, tt);
-      const j = i > 0 && (i >= cols.length || tt - times[i - 1] < times[i] - tt) ? i - 1 : i;
-      if (Math.abs(times[j] - tt) * scale <= BULLET_HIT) k = cols[j].key;
+      // the nearest centre, a related line's counted REL_DROP px further, so the line's own win a tie
+      let best = Infinity, j = -1;
+      for (let i = lowerBound(times, tt - BULLET_HIT / scale); i < cols.length && (times[i] - tt) * scale <= BULLET_HIT; i++) {
+        const d = Math.abs(times[i] - tt) * scale + (cols[i].rank ? REL_DROP : 0);
+        if (d < best) { best = d; j = i; }
+      }
+      if (j >= 0) {
+        k = cols[j].key;
+        // another line's bullet names its line where the bullet's letters don't already
+        const b = cols[j].bullet;
+        if (b.num !== axis.num && b.name !== b.letter) tip = b.name;
+      }
     }
+    const head = e.currentTarget as HTMLElement;
+    if ((head.getAttribute("data-tip") ?? "") !== tip) head.setAttribute("data-tip", tip);
     if (hot.value !== k) hot.value = k;
   };
 
@@ -483,10 +578,22 @@ export function TrainTable({ axis, st, others = [], links, group, plotH, tools }
   };
   // px from the table's left of game second 0
   const x0 = GUTTER - day0 * scale;
-  const bullet = (c: Col, cls: string) => <span key={c.key} class={"tt-bullet" + cls} style={{ left: x0 + c.t * scale - COL / 2 + "px", width: COL + "px", top: MARK_H + "px" }}>{bulletOf(c.bullet)}</span>;
-  const backs: VNode[] = [];
-  for (let i = a; i < b; i++) backs.push(bullet(cols[i], " back"));
-  if (DEBUG) (window as unknown as { __tt?: unknown }).__tt = { cols: cols.length, hourPx: scale * HOUR, level, drawn: drawn.reduce((s, v) => s + v, 0), shown: shown.length, h0: ((Math.round((day0 + shift) / HOUR) % 24) + 24) % 24 };
+  const bullet = (c: Col, cls: string) => <span key={c.key} class={"tt-bullet" + cls} style={{ left: x0 + c.t * scale - COL / 2 + "px", width: COL + "px", top: MARK_H + (c.rank ? REL_DROP : 0) + "px" }}>{bulletOf(c.bullet)}</span>;
+  // back to front: related lines' bullets behind the line's own, the drawn columns' in front of both
+  const backs: VNode[] = [], fronts: VNode[] = [];
+  for (const rank of [1, 0]) {
+    // related bullets behind: one per REL_THIN px of the day (by the day's px, so a pan never changes which)
+    let last = -Infinity;
+    for (let i = a; i < b; i++) {
+      if ((cols[i].rank ? 1 : 0) !== rank) continue;
+      const bin = Math.floor((cols[i].t * scale) / REL_THIN);
+      if (rank && bin === last) continue;
+      last = bin;
+      backs.push(bullet(cols[i], " back"));
+    }
+    for (const i of shown) if ((cols[i].rank ? 1 : 0) === rank) fronts.push(bullet(cols[i], ""));
+  }
+  if (DEBUG) (window as unknown as { __tt?: unknown }).__tt = { cols: cols.length, rel: cols.reduce((s, c) => s + (c.rank ? 1 : 0), 0), relDrawn: shown.reduce((s, i) => s + (cols[i].rank ? 1 : 0), 0), hourPx: scale * HOUR, level, drawn: drawn.reduce((s, v) => s + v, 0), shown: shown.length, h0: ((Math.round((day0 + shift) / HOUR) % 24) + 24) % 24 };
 
   const rowNames = Array.from({ length: n }, (_, i) => names.get(axis.stops[dir === 0 ? i : n - 1 - i]) ?? "");
   const label = (d: number) => st.loop
@@ -499,7 +606,7 @@ export function TrainTable({ axis, st, others = [], links, group, plotH, tools }
   for (let s = Math.ceil(Math.max(0, left / scale - step) / step) * step; s <= DAY && s * scale < left + plotW + 60; s += step) marks.push(s);
   const rowsH = n * ROW;
   const tallest = Math.max(1, ...srcs.map((s) => (fits(s.bullet) ? 1 : Math.min(STRIP_MAX, [...s.bullet.letter].length))));
-  const HEAD = MARK_H + (tallest > 1 ? tallest * STRIP_CH + 6 : 20);
+  const HEAD = MARK_H + (tallest > 1 ? tallest * STRIP_CH + 6 : 20) + (srcs.some((s) => s.rank) ? REL_DROP : 0);
   const win = useMemo(() => windowOf(day0), [day0]);
   return (
     <div class="tt">
@@ -509,20 +616,20 @@ export function TrainTable({ axis, st, others = [], links, group, plotH, tools }
       </div>
       <div class="tt-scroll" ref={scroller} onScroll={onScroll} {...grab} style={{ marginRight: PAD_R + "px", maxHeight: `min(${rowsH + HEAD + 14}px, 44vh)` }}>
         <div class="tt-inner" style={{ width: GUTTER + width + "px", height: HEAD + rowsH + "px" }} onPointerOver={onOver} onPointerLeave={onOut}>
-          <div class="tt-head" style={{ height: HEAD + "px" }} onPointerMove={onHeadMove}>
+          <div class="tt-head" style={{ height: HEAD + "px" }} data-tip="" onPointerMove={onHeadMove}>
             <div class="tt-corner" style={{ width: GUTTER + "px" }} />
             {marks.map((s) => (
               <span class={"tt-hour" + (s % HOUR ? "" : " full")} style={{ left: GUTTER + s * scale + "px" }}>{markText(h0, s)}</span>
             ))}
             {backs}
-            {shown.map((i) => bullet(cols[i], ""))}
+            {fronts}
             <Lit part="head" hot={hot} at={colAt} cols={cols} drawn={drawn} scale={scale} x0={x0} shift={shift} dark={dark} now={now} />
           </div>
           <div class="tt-body" style={{ height: rowsH + "px", "--row": ROW + "px" }}>
             <div class="tt-names" style={{ width: GUTTER + "px" }}>{rowNames.map((s) => <span>{s}</span>)}</div>
             <span class="tt-now" style={{ left: GUTTER + (now - day0) * scale + "px" }} />
             {marks.map((s) => <span class={"tt-hour-rule" + (s % HOUR ? "" : " full")} style={{ left: GUTTER + s * scale + "px" }} />)}
-            {shown.map((i) => <Column key={cols[i].key} c={cols[i]} x={x0 + cols[i].t * scale} cls={cols[i].t < now ? " past" : ""} cells={cellsOf(cols[i])} dark={dark} />)}
+            {shown.map((i) => <Column key={cols[i].key} c={cols[i]} x={x0 + cols[i].t * scale} cls={colClass(cols[i], now)} cells={cellsOf(cols[i])} dark={dark} />)}
             <Lit part="body" hot={hot} at={colAt} cols={cols} drawn={drawn} scale={scale} x0={x0} shift={shift} dark={dark} now={now} />
           </div>
         </div>

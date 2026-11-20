@@ -22,7 +22,7 @@ import { useClockQuery, useLatestAnswer } from "../useClockQuery";
 import { Chip, Icon, Segmented } from "../widgets";
 import { limitsFrom } from "./LineInspector";
 import { useChartLinks } from "./MareyChart";
-import { TrainTable } from "./TrainTable";
+import { TrainTable, useRelated } from "./TrainTable";
 import { NO_LIMITS, Schedule, useLinePeriods, vehicleOf, vehiclesText } from "./schedule";
 
 /** What the panel shows: a line's schedule, or a group's chart; null closed. */
@@ -223,8 +223,8 @@ function LineBody({ l, st }: { l: LineInput; st: LineStats }) {
   const limits = useClockQuery({ what: "lineHeld", line: l.num, rows: true }, [l.num, w.version, rv], (d) => limitsFrom(d, rv)) ?? NO_LIMITS;
   if (limits !== NO_LIMITS) noteHeadwayLimits(l.id, limits.map((x) => x?.s ?? 0));
   const { periods } = useLinePeriods(l.id, l);
-  const links = useChartLinks(l, st);
-  const any = !!links && (links.shared.size > 0 || links.passes.length > 0);
+  const { links, related } = useRelated(l, st, useChartLinks(l, st));
+  const any = related.length > 0 || (!!links && (links.shared.size > 0 || links.passes.length > 0));
   return (
     <div class="sp-body">
       <div class="sp-left">
@@ -232,7 +232,7 @@ function LineBody({ l, st }: { l: LineInput; st: LineStats }) {
         <Board key={l.num} l={l} st={st} />
       </div>
       <div class="sp-right">
-        <TrainTable axis={l} st={st} links={links} plotH={PLOT_H} tools={<OthersToggle any={any} />} />
+        <TrainTable axis={l} st={st} related={related} links={links} plotH={PLOT_H} tools={<OthersToggle any={any} />} />
       </div>
     </div>
   );
@@ -252,14 +252,14 @@ function BusBody({ l, st }: { l: LineInput; st: LineStats }) {
 }
 
 function GroupBody({ axis, st, others }: { axis: LineInput; st: LineStats; others: LineInput[] }) {
-  const links = useChartLinks(axis, st);
   // kept while the group's lines are the same: the chart redraws its trains when it changes
   const key = others.map((o) => o.num).join(",");
   const group = useMemo<ReadonlySet<number>>(() => new Set(others.map((o) => o.num)), [key]);
+  const { links, related } = useRelated(axis, st, useChartLinks(axis, st), group);
   const any = !!links && [...links.shared.keys(), ...links.passes.map((p) => p.o)].some((o) => !group.has(o));
   return (
     <div class="sp-group">
-      <TrainTable axis={axis} st={st} others={others} links={links} group={group} plotH={PLOT_H} tools={<OthersToggle any={any} />} />
+      <TrainTable axis={axis} st={st} others={others} related={related} links={links} group={group} plotH={PLOT_H} tools={<OthersToggle any={any} />} />
     </div>
   );
 }
