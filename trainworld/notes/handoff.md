@@ -10,11 +10,11 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 0. Live v0.4.4. Cap 14. 8800 = 6aa611ce. Landed since by maps-60 [6ba449], no smoke or push yet (one smoke, 8800
    rebuild, push after this batch): T-3809 ferry waypoints, T-3834 copied line periods (no checker: narrow, probed),
    T-3832, T-3828, T-3358 rivers E (06:12; her look call on 8800). Filed T-3837, T-3838, T-3839. 8800 = d99839a6, smoke
-   passed on it, master pushed 06:25. looptag (T-3835) done in its tree: loopchk (Sonnet checker) running on it; then
-   land and add smoke's missing context.json note for tripText.rideTipPlanned (T-3823). Running, mine: coastround (Opus, T-3833 then T-3824, tree coastround, Vite 6145). Asked in chat: T-3809 text ack, 400 km per leg. Ask a-2026-11-20-1: T-2216
+   passed on it, master pushed 06:25. T-3835 loops landed after loopchk passed (2c797d10, not on 8800 yet;
+   text ack asked); T-3840 filed; smoke's missing rideTipPlanned context note added. Running, mine: coastround (Opus, T-3833 then T-3824, tree coastround, Vite 6145). Asked in chat: T-3809 text ack, 400 km per leg. Ask a-2026-11-20-1: T-2216
    island design (A/B/C, stage 2). Resources 11-20 05:25: all flags known.
 1. Running (old maps-60 [23a293]'s agents, adopted; reports via the inbox): editfirst (Opus, T-3803 option 1; a
-   fresh Sonnet checker before landing: edit path and money, the player's 15-20 stop-click burst), looptag (Opus, T-3835; checker if sim rates changed), seasia
+   fresh Sonnet checker before landing: edit path and money, the player's 15-20 stop-click burst), seasia
    (Opus, T-1738 overnight; writes data/packs and game json; T-1738.md section 16 has PIDs and restart lines).
 2. T-3395: 11-20 scan (pass 1, not done) found 0 new damage. Run `tools/ops/save_health.py` after the 11-21
    04:00 UTC scan; clean = close it (the two rev-1 games of ue83342ed78f8fc4c are old 11-19 damage).
