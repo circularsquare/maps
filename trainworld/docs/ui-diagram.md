@@ -22,7 +22,11 @@ save button once a drawing is up, the busy tag, and during the first layout
 the demand status's tag: "Calculating diagram" and a thin loading bar (hover: its
 percent) fed by the layout worker's progress (T-2235; A to 0.2 of the layout, B to 0.7, the routing
 the rest; the layout 0.85 of the whole, the names the last 0.15; a post each percent).
-Drag pans, the wheel zooms about the pointer, drawn once a frame.
+Drag pans, the wheel zooms about the pointer, drawn once a frame. The tag and bar stay up until every region is
+drawn (T-3812): the bar is the regions done plus the one being laid out; a region an older drawing still covers (an
+edit's re-layout) does not count. The wheel stops zooming out where the larger of the drawn network's two sides is
+1/10 of the view's matching side (`MIN_SHARE` in `diagram/view.ts`, about 1% of the view for a square network); it
+follows what is drawn now, and the camera can still fit the whole drawing.
 
 - **The camera** (T-2163): each time it opens it is centred on the selection (a station's complex; for
   a line or group, of its stops the one nearest the map's centre), else on the complex nearest the

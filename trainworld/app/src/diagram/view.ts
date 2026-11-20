@@ -519,6 +519,26 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     const m = mergeParts(list, placeParts(list, 0));
     giveShare(indexShown(m.graph, m.d, m.names, m.x, m.y, list, m.partOf, m.base));
   };
+  /** T-3812: the share of the last layout's progress, for the indicator while regions are still to come */
+  let layoutShare = 0;
+  /** the indicator: up until every region of the plan is drawn (or covered by an older drawing of its stations, so an
+   * edit's re-layout shows none); its bar is the regions done plus the one being laid out */
+  const drawingShare = () => {
+    if (!diagramShown.peek()) return;
+    const left = plan.filter((p) => !parts.has(p.sig) && !drawnParts.some((q) => p.graph.key.some((k) => q.keys.has(k)))).length;
+    diagramProgress.value = left ? Math.min(1, (plan.length - left + layoutShare) / plan.length) : null;
+  };
+  /** T-3812: no zooming out past where the larger side of what is drawn is 1/10 of the view's matching side (the
+   * network then covers about 1% of the view, more for a long thin one); the camera can still fit the whole drawing */
+  const MIN_SHARE = 0.1;
+  const minScale = (): number => {
+    const b = shown?.d.box, r = canvas.getBoundingClientRect();
+    if (!b || !r.width || !r.height) return 0;
+    return Math.min((MIN_SHARE * r.width) / Math.max(b[2] - b[0], 1e-6), (MIN_SHARE * r.height) / Math.max(b[3] - b[1], 1e-6));
+  };
+  const clampScale = () => {
+    if (scale) scale = Math.max(scale, minScale());
+  };
   const pump = () => {
     if (busy) return;
     const next = queue.shift();
@@ -566,9 +586,10 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     shown = indexShown(m.graph, m.d, m.names, m.x, m.y, list, m.partOf, m.base);
     focusKey = null;
     hot = -1;
-    diagramProgress.value = null;
     diagramReady.value = true;
     if (!placed) place();
+    else clampScale();
+    drawingShare();
     draw();
     askThin(list);
   };
@@ -702,7 +723,10 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
       worker.addEventListener("error", (e) => { if (!e.message) noteStaleBuild(); giveShare(null); }); // no message: its script did not load
       worker.onmessage = (e: MessageEvent<FromDiagram>) => {
         if (e.data.kind === "progress") {
-          if (!shown && diagramShown.peek()) diagramProgress.value = e.data.share;
+          if (diagramShown.peek()) {
+            if (!shown) diagramProgress.value = e.data.share;
+            else (layoutShare = e.data.share), drawingShare();
+          }
           if (forShare.length) diagramShareProgress.value = e.data.share;
           return;
         }
@@ -730,6 +754,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
           return;
         }
         busy = false;
+        layoutShare = 0;
         const { graph, layout, drawing: d, names } = e.data, asked = sigOfSeq.get(e.data.seq);
         sigOfSeq.delete(e.data.seq);
         if (asked) parts.set(asked.sig, { graph, x: layout.x, y: layout.y, d, names, seq: e.data.seq, sig: asked.sig, keys: new Set(graph.key), water: asked.water, frame: asked.frame, box: asked.box });
@@ -791,6 +816,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     if (!s) return;
     if (!placed) scale = START_PITCH_PX / s.d.pitch;
     placed = true;
+    clampScale();
     const c = live.map?.getCenter();
     const on = selectedOn(s, selection.peek());
     // a bus or ferry line drawn thin has no nodes: the complex nearest the map's centre
@@ -899,7 +925,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
       // last in the map's box, over the marks added since at the same z-index (attractions, zones loading)
       mapEl.appendChild(canvas);
       if (!shown) diagramProgress.value = 0;
-      else place();
+      else (place(), drawingShare());
       draw();
     } else {
       diagramProgress.value = null;
@@ -1008,11 +1034,12 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     if (!scale) return;
     hideTag();
     const r = canvas.getBoundingClientRect(), px = e.clientX - r.left - r.width / 2, py = e.clientY - r.top - r.height / 2;
-    const f = Math.exp(-e.deltaY * (e.deltaMode === 1 ? 0.05 : 0.0015));
+    // never below the cap, but a view already past it (the drawing shrank) is not pushed back by a zoom out
+    const to = Math.max(scale * Math.exp(-e.deltaY * (e.deltaMode === 1 ? 0.05 : 0.0015)), Math.min(scale, minScale()));
     // the point under the pointer stays there
-    cx += px / scale - px / (scale * f);
-    cy -= py / scale - py / (scale * f);
-    scale *= f;
+    cx += px / scale - px / to;
+    cy -= py / scale - py / to;
+    scale = to;
     moved = true;
     draw();
   }, { passive: false });
