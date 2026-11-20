@@ -202,7 +202,7 @@ export const CRUSH_PER_CAR = 240;
 /** T-2919: a bus holds a third of a car's riders, 53 at the rated load and 80 at crush (`BUS_CRUSH`
  * in sim/src/track/params.rs), so its crowding reads as a train's. */
 export const BUS_CARS = 1 / 3;
-/** T-2195: a boat holds two train cars' riders (`BOAT_CRUSH` in sim/src/track/params.rs). */
+/** T-2195: a Medium boat holds two train cars' riders (T-3892: each size its own, game/boats.ts `BOATS`). */
 export const BOAT_CARS = 2;
 /** A car's length, m. */
 export const CAR_M = 20;

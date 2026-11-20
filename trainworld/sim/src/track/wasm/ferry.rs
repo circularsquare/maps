@@ -74,9 +74,10 @@ impl TrackApi {
     /// a constructed line stays constructed and its new ports are constructed with it, paid now.
     pub fn set_ferry_route(&mut self, id: u32, ports: &[u32], points: &[f64]) -> u32 {
         let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
-        let Some(built) = d.ferry.as_ref().map(|r| r.built) else { return self.refuse(Issue::LinePath { line: id }) };
+        let Some((built, boat)) = d.ferry.as_ref().map(|r| (r.built, r.boat)) else { return self.refuse(Issue::LinePath { line: id }) };
         let mut r = route_from(points);
         r.built = built;
+        r.boat = boat;
         if let Err(i) = ferry::check(&self.w.net, id, ports, &r) {
             return self.refuse(i);
         }
@@ -92,6 +93,20 @@ impl TrackApi {
         }
         ops.push(Op::Line { id, data: Some(d) });
         self.run_charged(Op::Batch(ops))
+    }
+    /// T-3892: a ferry line's boat (`ferry::Boat`: 0 Small, 1 Medium, 2 Large), with the dwell and
+    /// turnaround that boat starts with, as one edit (undone as one). Boats it needs beyond the spare
+    /// ones of that size are bought; its old boats stay as spares.
+    pub fn set_ferry_boat(&mut self, id: u32, boat: u8) -> u32 {
+        let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
+        let (Some(r), Some(b)) = (d.ferry.as_mut(), ferry::Boat::from_code(boat as u64)) else { return self.refuse(Issue::LineSchedule { line: id }) };
+        r.boat = b;
+        (d.dwell_s, d.turnaround_s) = b.dwell_turn();
+        self.run(Op::Line { id, data: Some(d) })
+    }
+    /// T-3892: a ferry line's boat (`ferry::Boat` code); 1 (Medium) for any other line.
+    pub fn ferry_boat(&self, line: u32) -> u8 {
+        self.w.net.line_ferry.get(line as usize).and_then(|f| f.as_ref()).filter(|_| self.w.net.line_ok(line)).map_or(ferry::Boat::Medium, |r| r.boat).code()
     }
     /// Whether a line is a ferry line.
     pub fn is_ferry(&self, line: u32) -> bool {
@@ -116,7 +131,9 @@ impl TrackApi {
     /// each port between (s), US$M for its ports not yet constructed, 1 if it makes a line].
     pub fn ferry_quote(&self, line: u32, ports: &[u32], points: &[f64], dwell_s: f64) -> Vec<f64> {
         let net = &self.w.net;
-        let r = route_from(points);
+        let mut r = route_from(points);
+        // T-3892: the line's own boat, else a new line's
+        r.boat = ferry::Boat::from_code(self.ferry_boat(line) as u64).unwrap_or_default();
         let ok = ferry::check(net, line, ports, &r).is_ok();
         let cum = ferry::ground_cum(net, &r.points);
         let len = cum.last().copied().unwrap_or(0.0);

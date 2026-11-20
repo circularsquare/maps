@@ -692,7 +692,9 @@ the Build tab's quote has rows for bus routes and new buses.
 **A ferry line's panel** (T-2194) is the same panel in boats: Edit route opens the ferry tool on its
 ports (ui-building.md, "Drawing a ferry line"); Delete line removes it at once (its ports stay, its
 boats go to the depot, and it is undoable); while planned, Construct's hover gives the ports and the
-boats. Schedule in boats. The ports list, headed Ports, is a rail line's stops strip (T-2275): a
+boats. Schedule in boats. Above the average speed, a Boat row picks the boat size, Small, Medium or Large (T-3892,
+track-and-service.md 6.9), each option's hover its riders and top speed and, on a running line, what switching buys
+(the train type's rule). The ports list, headed Ports, is a rail line's stops strip (T-2275): a
 port's dot, its name and the time from the port on top (north or west end on top), the bullets met and its
 boardings today (T-2919); in the Traffic view each stretch as wide as its
 riders against the line's busiest, its hover "A to B" and the riders a day, as a rail line's (T-2274).
@@ -708,9 +710,10 @@ and Riders left at platform (a port keeps a waiting crowd, T-2919); then the rou
 named "boat", its On board against two cars (88 seats, 320 at the rated load, 480 at crush), "Typical
 boat this hour" (a bus's "Typical bus this hour"). A port's panel is a station's: "Port" under its
 name, no platform length and one upgrade, the Waiting room (T-3419; waits for a boat count 0.8, as at a station), its upkeep a port's (US$10k a game day), Construct port and
-Remove port. The Money tab shows boats owned, needed and spare once there are any, and a **Ferry**
-fare row under High speed once a ferry line exists (a stepper by 0.05, 1.00x by default, a button back
-to 1.00x once set, saved with the game; a change solves demand again, T-2195). The Build tab's quote
+Remove port. The Money tab shows boats owned, needed and spare once there are any (T-3892: a set of rows per boat size,
+named by size, "Small boats owned", unless Medium is the only one), and a ferry fare row per boat size in use under High
+speed, **Small ferry**, **Ferry** (Medium) and **Large ferry** (a stepper by 0.05, 1.50x, 1.00x and 1.00x by default, a button
+back to the default once set, saved with the game; a change solves demand again, T-2195). The Build tab's quote
 has rows for ports, new boats and the ferry route (free).
 
 **A bus stop's panel** (T-2949, T-3890; `ui/inspector/BusStopInspector.tsx`) opens on a click on any stop

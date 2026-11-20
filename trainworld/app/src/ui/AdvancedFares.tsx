@@ -7,7 +7,7 @@
 
 import { signal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
-import { busFare, fareAt, ferryFare, HSR_FARE, hsrFare, isCustomCurve, MAX_NODES, NODE_KM, scaleNodes, transferFare, type FareArea, type FareNode, type Fares } from "../game/fareCurve";
+import { busFare, fareAt, HSR_FARE, hsrFare, isCustomCurve, MAX_NODES, NODE_KM, scaleNodes, transferFare, type FareArea, type FareNode, type Fares } from "../game/fareCurve";
 import { chargedPrices, MAX_ZONES } from "../game/fareZones";
 import { newArea, removeArea, renameArea, setAreaOff, setZonePrice, startPainting, topZone } from "../game/fareZonePaint";
 import { roundTo } from "../game/currency";
@@ -24,7 +24,7 @@ import { t, tCountry, tNumber, tRich } from "../i18n";
 import type { StationInput } from "../game/types";
 import { useModalDialog } from "./Modal";
 import { advancedFares, fareAdding, FareButtons, FareGraph, FareNodeRows } from "./FareGraph";
-import { BusFareRow, chargedAt, fareCity, FareEffect, fareRef, FerryFareRow, HsrFareRow, placeMultiple, placeName, stepMultiple, TransferFareRow } from "./MoneyTab";
+import { BusFareRow, chargedAt, fareCity, FareEffect, fareRef, FerryFareRows, HsrFareRow, placeMultiple, placeName, stepMultiple, TransferFareRow } from "./MoneyTab";
 import { Check, Icon, Segmented, Stepper } from "./widgets";
 
 /** The panel's own drag preview: its country's scale may differ from the dock's graph's. */
@@ -171,7 +171,7 @@ function Panel({ start }: { start: string }) {
     const st = w.lineStats[l.id];
     return k === "fast" ? !!st?.fast : k === "ferry" ? !!st?.bus?.ferry : !!st?.bus && !st.bus.ferry;
   });
-  const hsr = lineKind("fast") ? hsrFare(f) : null, bus = lineKind("bus") ? busFare(f) : null, ferry = lineKind("ferry") ? ferryFare(f) : null;
+  const hsr = lineKind("fast") ? hsrFare(f) : null, bus = lineKind("bus") ? busFare(f) : null, ferry = lineKind("ferry");
   const full = shown.length >= MAX_NODES;
   const simple = () => {
     const km = (k: number) => tNumber(Math.round((k / kpu) * 10) / 10);
@@ -225,7 +225,8 @@ function Panel({ start }: { start: string }) {
             </li>
             {hsr !== null && <HsrFareRow mul={hsr} own={hsr !== HSR_FARE} />}
             {bus !== null && <BusFareRow mul={bus} />}
-            {ferry !== null && <FerryFareRow mul={ferry} />}
+            {/* T-3892: a row per boat size once any ferry line exists */}
+            {ferry && <FerryFareRows fares={f} sizes={[0, 1, 2]} />}
             <TransferFareRow fare={transferFare(f)} base={f.nodes[0]?.[1] ?? f.base} scale={scale} />
           </>} />
         <FareEffect preview={panelPreview.value} scale={scale} />

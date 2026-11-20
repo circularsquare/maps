@@ -273,16 +273,20 @@ fn cars_needed(w: &TrackWorld) -> [u32; FLEETS] {
     out
 }
 
-/// The fleets: ordinary cars, high-speed cars, buses, boats, trams.
-const FLEETS: usize = 5;
+/// The fleets: ordinary cars, high-speed cars, buses, Medium boats, trams, Small boats, Large boats
+/// (T-3892, `ferry::Boat::fleet`).
+const FLEETS: usize = 7;
+/// The boat fleets, Small, Medium and Large.
+const BOAT_FLEETS: [usize; 3] = [5, 3, 6];
 
-/// Which fleet a line's trains come from: 0 ordinary cars, 1 high-speed cars, 2 buses, 3 boats, 4 trams.
+/// Which fleet a line's trains come from: 0 ordinary cars, 1 high-speed cars, 2 buses, 3 Medium boats,
+/// 4 trams, 5 Small boats, 6 Large boats.
 fn fleet_kind(n: &Network, l: usize) -> usize {
-    if n.line_bus[l].is_some() { 2 } else if n.line_ferry[l].is_some() { 3 } else if n.line_tram(l as u32) { 4 } else { n.line_fast[l] as usize }
+    if n.line_bus[l].is_some() { 2 } else if let Some(r) = n.line_ferry[l].as_ref() { r.boat.fleet() } else if n.line_tram(l as u32) { 4 } else { n.line_fast[l] as usize }
 }
 
 /// Price of a car of each kind (a bus or a boat counting as one), US$M.
-const CAR_PRICES: [f64; FLEETS] = [CAR_PRICE, HS_CAR_PRICE, BUS_PRICE, BOAT_PRICE, TRAM_CAR_PRICE];
+const CAR_PRICES: [f64; FLEETS] = [CAR_PRICE, HS_CAR_PRICE, BUS_PRICE, BOAT_PRICE, TRAM_CAR_PRICE, SMALL_BOAT_PRICE, LARGE_BOAT_PRICE];
 
 /// A constructed edge's upkeep a game day, US$M; None for blueprint, and for crossovers, which cost
 /// nothing on top of their track (T-867).

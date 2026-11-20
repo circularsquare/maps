@@ -52,7 +52,7 @@ export interface DemandNetwork {
   tph: Float32Array;
   /** cars per train, per line */
   cars: Float32Array;
-  fare: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number>; byCity?: boolean; cityScales?: Record<string, number>; hsr?: number; ferry?: number; bus?: number; transfer?: number; lines?: Record<string, number>; zones?: FareArea[] };
+  fare: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number>; byCity?: boolean; cityScales?: Record<string, number>; hsr?: number; ferry?: number; ferrySmall?: number; ferryLarge?: number; bus?: number; transfer?: number; lines?: Record<string, number>; zones?: FareArea[] };
   /** T-3740 (`DemandApi.set_fare_zones`): each station's fare zone code (game/fareZones.ts, the fare area's id), 0
    * for none; absent where none has one */
   fz?: Uint32Array;

@@ -324,6 +324,8 @@ export function pricesOf(p: ArrayLike<number>) {
     upkeepTrackKm: p[7], upkeepStation: p[8], upkeepSingle: p[9], upkeepHsr: p[10], busPrice: p[11], runCostBusKm: p[12], upkeepBusKm: p[13],
     busRouteKm: p[14], upkeepViaductKm: p[15], upkeepCutKm: p[16], upkeepBoredKm: p[17], boatPrice: p[18], runCostBoatKm: p[19], upkeepPort: p[20], portPrice: p[21],
     upkeepStationUnder: p[22], upkeepOnePlatform: p[23],
+    // T-3892: Small and Large boats' price and running cost a boat-km
+    smallBoatPrice: p[24], runCostSmallBoatKm: p[25], largeBoatPrice: p[26], runCostLargeBoatKm: p[27],
   };
 }
 export let prices = pricesOf([2.5, 2, 100, 9]);

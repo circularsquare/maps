@@ -16,6 +16,7 @@ import { stationCity, type Income } from "./money";
 import { stopsById } from "./world";
 import { PERIODS } from "./periods";
 import { trainKind } from "./format";
+import { boatOf, boatRunKm } from "./boats";
 import { lineRunFactor, lineShares, upkeepShares } from "./regionMoney";
 import type { LineInput, LineStats, WorldView } from "./types";
 import type { MoneyState } from "../workers/protocol";
@@ -52,7 +53,7 @@ export function dayProfit(inc: Income, m: MoneyState): number {
 /** A running line's running cost over a whole day at its trains now, US$ (as `runningToday`, game/today.ts). */
 export function lineRunningADay(l: LineInput, st: LineStats, m: MoneyState): number {
   const k = trainKind(m, st.fast, st.tram);
-  const perKm = st.bus?.ferry ? m.runCostBoatKm : st.bus ? m.runCostBusKm : k.runCostTrainKm + st.cars * k.runCostCarKm;
+  const perKm = st.bus?.ferry ? boatRunKm(m, boatOf(st.bus)) : st.bus ? m.runCostBusKm : k.runCostTrainKm + st.cars * k.runCostCarKm;
   let run = 0;
   PERIODS.forEach((_, i) => { run += l.tphP[i] * 2 * st.km * perKm * m.economy * PERIOD_HOURS[i]; });
   return run * lineRunFactor(l.num); // T-2669

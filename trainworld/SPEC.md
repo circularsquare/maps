@@ -301,16 +301,18 @@ A route that ends where it starts is a loop (T-2899), and so is a ferry line who
 Ferry lines (T-2193, design notes/T-2177.md) run on water between ports, stations of their own kind
 with a landing on the shore and a berth in the water. The route is free, found in the app over the
 basemap's water between two ports (T-2192): at least 5 m off land, keeping 400 m off where that costs
-under 1.3 times the shortest, with bends up to 300 m and a speed each point by its room and bend. Boats
-(one kind, two train cars: 320 riders, 480 at crush) run at most 45 km/h as room allows (T-2450) and accelerate
-at 0.15 m/s²; US$10M a port, US$8M a boat and US$40 a boat-km to run. The player places ports with
+under 1.3 times the shortest, with bends up to 300 m and a speed each point by its room and bend. A line's boats
+are one of three sizes, picked on its panel (T-3892, docs/track-and-service.md 6.8): Small (160 riders, 65 km/h,
+US$15M, US$30 a boat-km), Medium (320, 45 km/h, US$8M, US$30) or Large (1,280, 45 km/h, US$50M, US$75, 5 minutes
+at each port); they run as fast as room allows (T-2450) and accelerate at 0.15 m/s²; US$10M a port. The player places ports with
 the Ferry tool (beside Bus, key O; T-2194), and with a shift click free waypoints on water the route passes
 through without stopping (T-3809); the line draws dashed, boats as pointed hulls, with a panel
 like a bus line's whose port list takes a port out by its dot or moves one by dragging (T-2275), and a
-Ferry fare row in the Money tab. A new line runs a boat every 20, 30 and 60 minutes at high, medium and low demand (T-2273, T-3400), or the ferry default once one is set (T-3703). In demand (T-2195) a ferry line is a line like
-any other, its ports stations, with no boarding cost; its rides pay the curve's part above the base
-times the Ferry multiple, and trips by ferry are the network's. A tenth of visits and attractions
-trips are ferry fans, for whom each minute aboard a ferry counts 0.1 (T-2196, docs/demand-mode.md).
+ferry fare row per boat size in the Money tab (defaults Small 1.50, Medium 1.00, Large 1.00). A new line runs a boat every 20, 30 and 60 minutes at high, medium and low demand (T-2273, T-3400), over 40 km a boat an hour by day and none at night (T-3892), or the ferry default once one is set (T-3703). In demand (T-2195) a ferry line is a line like
+any other, its ports stations, with no boarding cost and its boat's riders; its rides pay the curve's part above the base
+times its boat size's ferry multiple, and trips by ferry are the network's. 15% of every everyday purpose's trips
+(7.5% of airport and medical ones; commutes not yet) are ferry fans, for whom each minute aboard a ferry counts 0.1
+(T-2196, T-3892, docs/demand-mode.md).
 
 Detail: [docs/track-and-service.md](docs/track-and-service.md) (6.1 track and stations, 6.2
 capacity, 6.3 trains and schedules, 6.4 costs and money, 6.5 edits, 6.6 the boarding account, 6.7

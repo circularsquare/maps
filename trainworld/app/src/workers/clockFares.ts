@@ -4,7 +4,7 @@ import { TrackApi } from "../wasm/track/sim"; // the track model only (T-051)
 import { CITIES, cityById, cityWithin, HOME_CITY, isCity } from "../game/cities";
 import { startNodes } from "../game/fareDefault";
 import { areaOfCode, zonesOf } from "../game/fareZones";
-import { capTransfer, faresOf, simpleNodes, START_FARE, START_NODES, tidyHsr, tidyLineFare, tidyTransfer, type Fares } from "../game/fareCurve";
+import { capTransfer, faresOf, FERRY_FARE_KEYS, simpleNodes, START_FARE, START_NODES, tidyHsr, tidyLineFare, tidyTransfer, type Fares } from "../game/fareCurve";
 import { EVERY, FARE_BASELINE, FARE_E, incomeScale, keepOwn, OLD_FARE_E, oldCurveFactor, oldIncomeScale, scaleFromOld, START, startFromOld, tidyOwn } from "../game/income";
 import { type NewGameSpec, type SaveHeader } from "./saveFile";
 import type { EditOp } from "./protocol";
@@ -38,7 +38,8 @@ export function loadFares(f: SaveHeader["fares"] | undefined): Fares {
   for (const c of Object.keys(scales)) if (c !== START && c !== EVERY) scales[c] = ref.ref ? keepOwn(scales[c]) : tidyOwn(c, scales[c], scales);
   // T-1626: a save from before has none and charges the default
   const hsr = typeof f.hsr === "number" && Number.isFinite(f.hsr) ? { hsr: tidyHsr(f.hsr) } : {};
-  const ferry = typeof f.ferry === "number" && Number.isFinite(f.ferry) ? { ferry: tidyHsr(f.ferry) } : {};
+  // T-3892: an older save's one ferry multiple is Medium's; Small and Large start at their defaults
+  const ferry = Object.fromEntries(FERRY_FARE_KEYS.flatMap((k) => (typeof f[k] === "number" && Number.isFinite(f[k]) ? [[k, tidyHsr(f[k]!)]] : [])));
   const bus = typeof f.bus === "number" && Number.isFinite(f.bus) ? { bus: tidyHsr(f.bus) } : {};
   // T-1801: a save from before has none: changes are free
   const transfer = tidyTransfer(f.transfer ?? 0);

@@ -111,6 +111,8 @@ pub struct LineSvc {
     pub bus: Option<super::bus::Plan>,
     /// A ferry line (T-2193): run like a bus line (`bus` holds its ports as stops), every stop a port.
     pub ferry: bool,
+    /// T-3892: a ferry line's boat (Medium for any other line).
+    pub boat: super::ferry::Boat,
     /// T-3346 stage 2: the pattern the runs' variants were worked out for (`timing::retime`, as
     /// `Lattice::timing_key`); a trip takes one only while the line still runs it.
     pub timed: Option<Lattice>,
@@ -130,7 +132,7 @@ impl LineSvc {
     }
     /// Riders a train, bus or boat takes at crush.
     pub fn crush(&self) -> f64 {
-        if self.ferry { BOAT_CRUSH } else if self.is_bus() { BUS_CRUSH } else { super::boarding::CRUSH_PER_CAR * self.cars.max(1) as f64 }
+        if self.ferry { super::boarding::CRUSH_PER_CAR * self.boat.cars() as f64 } else if self.is_bus() { BUS_CRUSH } else { super::boarding::CRUSH_PER_CAR * self.cars.max(1) as f64 }
     }
     /// Riders a train, bus or boat takes at its rated load (100%, T-2186): two thirds of its crush
     /// for all three (T-2919).
@@ -1023,12 +1025,13 @@ fn build_ferry(net: &Network, l: u32, r: &super::ferry::FerryRoute) -> LineSvc {
     }
     ls.runs = [make(fwd_s, &fwd), make(rev_s, &rev)];
     ls.cars = 1;
-    ls.train_len = ferry::BOAT_LEN_M;
+    ls.train_len = r.boat.len_m();
     ls.ok = true;
     ls.running = net.line_constructed(l);
     ls.shift = net.line_shift(l);
     ls.bus = Some(plan);
     ls.ferry = true;
+    ls.boat = r.boat;
     ls
 }
 

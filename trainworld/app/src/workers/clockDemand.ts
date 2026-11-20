@@ -4,6 +4,7 @@ import { TrackApi } from "../wasm/track/sim"; // the track model only (T-051)
 import { mercK } from "../game/frame";
 import { PERIODS } from "../game/periods";
 import { headwaysFor, headwaysIn } from "../game/newLine";
+import { BOATS, MEDIUM, type Boat } from "../game/boats";
 import { NEIGHBOUR_FARE_M } from "../game/fareZones";
 import { assignBays, BAY_LOOKBACK_S, profileTimes } from "../map/terminalBays";
 import { buildComplexes, type Complexes } from "../game/complexes";
@@ -305,6 +306,8 @@ export function buildSnapshot(): NetworkSnapshot {
     if (li[i + 3] !== 1) continue; // running lines only
     const id = li[i];
     const ferry = a.is_ferry(id);
+    // T-3892: a boat holds its size's cars' riders, and its fares take its size's multiple
+    const boat = (ferry ? a.ferry_boat(id) : MEDIUM) as Boat;
     const bus = a.is_bus(id) ? busSnapshot(a, id, stations) : null;
     const hopS: number[][][] = [], dwellS: number[][][] = [];
     const span = a.line_span(id), back = a.line_back_stops(id);
@@ -323,11 +326,12 @@ export function buildSnapshot(): NetworkSnapshot {
       hopKm: [0, 1].map((run) => { const s = a.line_stop_s(id, run); return Array.from({ length: s.length - 1 }, (_, k) => (s[k + 1] - s[k]) / 1000); }),
       ...(!bus && !ferry && a.line_fast(id) ? { fast: true } : {}),
       ...(ferry ? { ferry: true } : {}),
+      ...(boat !== MEDIUM ? { boat: boat as 0 | 2 } : {}),
       ...(!bus && !ferry && a.line_tram(id) ? { tram: true } : {}),
       // T-3758: what fare zones read, only while the fares have areas
       ...(fares.zones && a.line_fare_dist(id) ? { fareDist: true } : {}),
       ...(fares.zones && !bus && !ferry ? passFaresOf(a, id) : {}),
-      turnaroundS: li[i + 20], cars: bus ? BUS_DEMAND_CARS : ferry ? BOAT_DEMAND_CARS : li[i + 21],
+      turnaroundS: li[i + 20], cars: bus ? BUS_DEMAND_CARS : ferry ? BOATS[boat].cars : li[i + 21],
       ...(bus ? { catches: bus } : {}),
       // T-798: a circle's riders ride on round through its first stop, standing the dwell there
       ...(a.line_loop(id) === 1 ? { wrapS: Math.max(1, li[i + 19]) } : {}),
@@ -457,7 +461,7 @@ function ferryRow(a: TrackApi, id: number): ClockBus {
     const berth: [number, number] = [routeLL[2 * i], routeLL[2 * i + 1]];
     ports.push({ node, landing: s && s.id === node ? [s.lng, s.lat] : berth, berth });
   });
-  return { built: r[0] === 1, route, kinds, roadM: a.ferry_m(id), stops, street: [], spacing: 0, hand: false, reach: [], routeLL, streetLL: [], ferry: { speeds, ports } };
+  return { built: r[0] === 1, route, kinds, roadM: a.ferry_m(id), stops, street: [], spacing: 0, hand: false, reach: [], routeLL, streetLL: [], ferry: { speeds, ports, boat: a.ferry_boat(id) as Boat } };
 }
 
 /** T-2194: a ferry line's ports as the network's nodes, new ones added first as blueprint ports; null
@@ -484,10 +488,10 @@ type Made = { r: number; line: number; charge?: number; trainCharge?: number };
 /** T-3767: a new line (`r` its edit's answer) in a game of four or five rows with a default of its kind
  * (`kind`) whose midday or afternoon differs from its high (the sim starts them at high's): every row's
  * headway, as a second edit. */
-export function newLineRows(a: TrackApi, r: number, line: number, kind: keyof NewHeadways): Made {
+export function newLineRows(a: TrackApi, r: number, line: number, kind: keyof NewHeadways, km = 0): Made {
   if (r !== 0) return { r, line };
-  const n = a.line_period_count(line), h = n > 3 ? headwaysFor(kind, newLineHeadway, n) : null;
-  const three = headwaysFor(kind, newLineHeadway);
+  const n = a.line_period_count(line), h = n > 3 ? headwaysFor(kind, newLineHeadway, n, km) : null;
+  const three = headwaysFor(kind, newLineHeadway, 3, km);
   if (!h || !three || headwaysIn(three, n).every((s, i) => s === h[i])) return { r, line };
   const charge = a.last_charge(), trainCharge = a.last_train_charge();
   if (a.set_line_row_headways(line, Uint32Array.from(h)) !== 0) return { r, line, charge, trainCharge };
@@ -530,8 +534,6 @@ export function busQuoteLL(a: TrackApi, line: number, route: number[]): Float64A
 /** T-2919: a bus as demand's cars: a third of a car, 53 at the rated load and 80 at crush (`BUS_CARS`
  * in sim/src/demand/network.rs, which knows a bus line by this figure). */
 const BUS_DEMAND_CARS = 1 / 3;
-/** T-2195: a boat as demand's cars, two train cars (`BOAT_CRUSH`, sim/src/track/params.rs). */
-const BOAT_DEMAND_CARS = 2;
 
 /** T-1464: a running bus line's stops that are no station, added to the snapshot's stations once
  * (two lines' stops at one crossing are two stations, merged by demand), and each stop's stretch of

@@ -284,16 +284,18 @@ and takes 80 at the most (a train car: 112, 160 and 240).
 
 A ferry line (since T-2195) is a line like any other: people walk to its ports as to stations, wait
 half its headway, ride at the boats' own speed, change to and from trains as anywhere, and pay the
-same fare curve, its part above the base times the Ferry multiple (1.00 unless the player sets it).
-There is no extra boarding cost as for a bus. A boat holds two cars' riders, 480 at the most. Where
+same fare curve, its part above the base times its boat size's ferry multiple (Small 1.50, Medium and Large
+1.00 unless the player sets them). There is no extra boarding cost as for a bus. A boat holds its size's riders:
+Small one car's (240 at the most), Medium two (480), Large eight (1,920); a Small boat runs at 65 km/h, the others 45. Where
 the ferry is the quickest way across (Staten Island to Manhattan) it wins on these rules alone, and
 its trips count as rail.
 
-Ferry fans (since T-2196): a tenth of the people making a visit or going to an attraction find
-ferries fun, so for them an hour aboard a ferry feels like 6 minutes. Everything else (the walk, the
-wait, the fare, changes, crowding) counts as for anyone, and they still pick between the network and
-the car as anyone does. Commutes, errands, school and the rest have no fans. Fans make no new trips:
-they only move leisure trips that already go between the places a ferry links.
+Ferry fans (since T-2196, wider since T-3892): 15% of the people on any everyday trip (errands, visits,
+school, university, attractions), and half as many on airport and medical trips, find ferries fun, so for
+them an hour aboard a ferry feels like 6 minutes. Everything else (the walk, the wait, the fare, changes,
+crowding) counts as for anyone, and they still pick between the network and the car as anyone does.
+Commutes have no fans yet, and nor do trips between zones. Fans make no new trips: they only move trips
+that already go between the places a ferry links.
 
 ## Anita's two tests
 

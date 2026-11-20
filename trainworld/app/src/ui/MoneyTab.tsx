@@ -6,7 +6,8 @@ import { borrow, repay, setFareBus, setFareCityScale, setFareFerry, setFareHsr, 
 import { LOAN_AMOUNTS, LOAN_RATE, LOAN_TERM, loanAllowed, loanBalance, loanPayment, loanProfit, type Loan } from "../game/loan";
 import { liveMoney, moneyState, stationCity, stationCountry } from "../game/money";
 import { cityById, HOME_CITY, isCity, viewedZone, zoneCountry } from "../game/cities";
-import { BUS_FARE, busFare, FERRY_FARE, ferryFare, HSR_FARE, hsrFare, isCustomCurve, scaleNodes, tidyHsr, tidyTransfer, transferFare, type FareNode, type Fares } from "../game/fareCurve";
+import { BUS_FARE, busFare, FERRY_FARES, ferryFare, HSR_FARE, hsrFare, isCustomCurve, scaleNodes, tidyHsr, tidyTransfer, transferFare, type FareNode, type Fares } from "../game/fareCurve";
+import { boatOf, boatRunKm, boatStock, MEDIUM, type Boat } from "../game/boats";
 import { shownEstimate } from "../game/fareEstimate";
 import { faresIn, roundedDefault } from "../game/fareDefault";
 import { tPlace } from "../i18n/places";
@@ -206,20 +207,67 @@ export function BusFareRow({ mul }: { mul: number }) {
   );
 }
 
-/** T-2194: the fare multiplier on ferry lines, as the high-speed one (notes/T-2177.md 3.7). */
-export function FerryFareRow({ mul }: { mul: number }) {
-  const set = (v: number) => void setFareFerry(tidyHsr(v));
+/** T-2194: the fare multiplier on ferry lines, as the high-speed one (notes/T-2177.md 3.7); T-3892: one per boat
+ * size, each with its own default. */
+export function FerryFareRow({ mul, boat = MEDIUM }: { mul: number; boat?: Boat }) {
+  const set = (v: number) => void setFareFerry(tidyHsr(v), boat);
   const text = (v: number) => `${fix2(v)}x`;
+  const usual = FERRY_FARES[boat];
+  const [label, fare, tip] = boat === 0 ? [t("moneyTab.ferrySmall"), t("moneyTab.ferrySmallFare"), t("moneyTab.ferrySmallTip")]
+    : boat === 2 ? [t("moneyTab.ferryLarge"), t("moneyTab.ferryLargeFare"), t("moneyTab.ferryLargeTip")]
+    : [t("moneyTab.ferry"), t("moneyTab.ferryFare"), t("moneyTab.ferryTip")];
   return (
     <li>
-      <span class="fr-what" data-tip={t("moneyTab.ferryTip")}>{t("moneyTab.ferry")}</span>
-      <Stepper value={text(mul)} wide label={t("moneyTab.ferryFare")} onStep={(d) => set(Math.round(mul * 100) / 100 + d * 0.05)}
-        type={{ text: mul.toFixed(2), set, tip: t("moneyTab.ferryTip") }} />
-      {mul !== FERRY_FARE
-        ? <button class="btn icon" aria-label={t("moneyTab.backToUsual")} data-tip={t("moneyTab.backTo", { value: text(FERRY_FARE) })} onClick={() => set(FERRY_FARE)}><Icon.undo /></button>
+      <span class="fr-what" data-tip={tip}>{label}</span>
+      <Stepper value={text(mul)} wide label={fare} onStep={(d) => set(Math.round(mul * 100) / 100 + d * 0.05)}
+        type={{ text: mul.toFixed(2), set, tip }} />
+      {mul !== usual
+        ? <button class="btn icon" aria-label={t("moneyTab.backToUsual")} data-tip={t("moneyTab.backTo", { value: text(usual) })} onClick={() => set(usual)}><Icon.undo /></button>
         : <span />}
     </li>
   );
+}
+/** T-3892: the boat sizes with boats owned or needed, Small to Large. */
+const boatSizesHeld = (m: MoneyState): Boat[] => ([0, 1, 2] as const).filter((b) => { const k = boatStock(m, b); return k.owned > 0 || k.needed > 0; });
+const SIZE_NAMES = ["small", "medium", "large"] as const;
+
+/** T-2193: the fleet rows of the boats, as the buses'; T-3892: one set per boat size held, named by size unless
+ * Medium is the only one. */
+function BoatRows({ m }: { m: MoneyState }) {
+  const sizes = boatSizesHeld(m), plain = sizes.length === 1 && sizes[0] === MEDIUM;
+  return (
+    <>
+      {sizes.map((b) => {
+        const k = boatStock(m, b), rule = boatRunRule({ runCostBoatKm: boatRunKm(m, b) }), size = SIZE_NAMES[b];
+        return (
+          <>
+            <Row label={<span data-tip={t("moneyTab.boatTip", { price: money(k.price * 1e6), rule, port: money(m.portPrice * 1e6) })}>{plain ? t("moneyTab.boatsOwned") : t("moneyTab.sizedBoatsOwned", { size })}</span>}>
+              <span data-tip={t("moneyTab.boatsBought", { boats: boatsText(k.owned), price: money(k.price * 1e6), total: money(k.owned * k.price * 1e6) })}>{k.owned}</span>
+            </Row>
+            <Row label={plain ? t("moneyTab.boatsNeeded") : t("moneyTab.sizedBoatsNeeded", { size })}>
+              {k.needed}
+            </Row>
+            <Row label={plain ? t("moneyTab.boatsSpare") : t("moneyTab.sizedBoatsSpare", { size })}>
+              {Math.max(0, k.owned - k.needed)}
+            </Row>
+          </>
+        );
+      })}
+    </>
+  );
+}
+/** T-3892: the Running trains row's hover lines for the boats, one per size held (unnamed while Medium is the only one). */
+function boatsCostLines(m: MoneyState): string {
+  const sizes = boatSizesHeld(m), plain = sizes.length === 1 && sizes[0] === MEDIUM;
+  return sizes.map((b) => {
+    const rule = boatRunRule({ runCostBoatKm: boatRunKm(m, b) });
+    return "\n" + (plain ? t("moneyTab.boatsCost", { rule }) : t("moneyTab.sizedBoatsCost", { size: SIZE_NAMES[b], rule }));
+  }).join("");
+}
+
+/** T-3892: the ferry fare rows of the boat sizes in `sizes`, Small to Large. */
+export function FerryFareRows({ fares, sizes }: { fares: Fares; sizes: readonly Boat[] }) {
+  return <>{sizes.map((b) => <FerryFareRow key={b} boat={b} mul={ferryFare(fares, b)} />)}</>;
 }
 
 /** T-1801: the transfer fare as charged where the panel looks (times its scale): a stepper by
@@ -278,7 +326,7 @@ export function MoneyTab() {
   // T-1626: shown once a line runs high-speed trains
   const hsr = w.save.lines.some((l) => w.lineStats[l.id]?.fast) ? hsrFare(m.fares) : null;
   // T-2194: shown once a ferry line exists
-  const ferry = w.save.lines.some((l) => w.lineStats[l.id]?.bus?.ferry) ? ferryFare(m.fares) : null;
+  const ferry = ([0, 1, 2] as const).filter((b) => w.save.lines.some((l) => { const bus = w.lineStats[l.id]?.bus; return !!bus?.ferry && boatOf(bus) === b; }));
   // T-3028: shown once a bus line exists
   const busLine = w.save.lines.some((l) => { const b = w.lineStats[l.id]?.bus; return !!b && !b.ferry; }) ? busFare(m.fares) : null;
   return (
@@ -301,7 +349,7 @@ export function MoneyTab() {
           <TodayCell zone={zone} v={(d) => d.fares} />
         </tr>
         <tr>
-          <td data-tip={runCostLine(m) + (runScale(country) !== 1 ? "\n" + runCostHere(tCountry(country), runScale(country)) : "") + (m.fleetBus > 0 || m.busesNeeded > 0 ? "\n" + t("moneyTab.busesCost", { rule: busRunRule(m) }) : "") + (m.fleetFerry > 0 || m.boatsNeeded > 0 ? "\n" + t("moneyTab.boatsCost", { rule: boatRunRule(m) }) : "")}>{t("moneyTab.runningTrains")}</td>
+          <td data-tip={runCostLine(m) + (runScale(country) !== 1 ? "\n" + runCostHere(tCountry(country), runScale(country)) : "") + (m.fleetBus > 0 || m.busesNeeded > 0 ? "\n" + t("moneyTab.busesCost", { rule: busRunRule(m) }) : "") + boatsCostLines(m)}>{t("moneyTab.runningTrains")}</td>
           {cell(prev, (d) => -d.running)}
           <TodayCell zone={zone} v={(d) => -d.running} />
         </tr>
@@ -343,7 +391,7 @@ export function MoneyTab() {
         last={<>
           {hsr !== null && <HsrFareRow mul={hsr} own={hsr !== HSR_FARE} />}
           {busLine !== null && <BusFareRow mul={busLine} />}
-          {ferry !== null && <FerryFareRow mul={ferry} />}
+          <FerryFareRows fares={m.fares} sizes={ferry} />
           <TransferFareRow fare={transferFare(m.fares)} base={m.fares.nodes[0]?.[1] ?? m.fares.base} scale={scale} />
           <FareScaleRow f={m.fares} place={place} />
         </>} />
@@ -393,19 +441,7 @@ export function MoneyTab() {
             </Row>
           </>
         )}
-        {(m.fleetFerry > 0 || m.boatsNeeded > 0) && (
-          <>
-            <Row label={<span data-tip={t("moneyTab.boatTip", { price: money(m.boatPrice * 1e6), rule: boatRunRule(m), port: money(m.portPrice * 1e6) })}>{t("moneyTab.boatsOwned")}</span>}>
-              <span data-tip={t("moneyTab.boatsBought", { boats: boatsText(m.fleetFerry), price: money(m.boatPrice * 1e6), total: money(m.fleetFerry * m.boatPrice * 1e6) })}>{m.fleetFerry}</span>
-            </Row>
-            <Row label={t("moneyTab.boatsNeeded")}>
-              {m.boatsNeeded}
-            </Row>
-            <Row label={t("moneyTab.boatsSpare")}>
-              {Math.max(0, m.fleetFerry - m.boatsNeeded)}
-            </Row>
-          </>
-        )}
+        <BoatRows m={m} />
       </ul>
       <ul class="rows">
         <Row label={t("moneyTab.built")}><Money dollars={w.money.builtValue} /></Row>

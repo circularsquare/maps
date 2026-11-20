@@ -33,10 +33,10 @@ const MAX_PANICS_PER_MINUTE = 3;
 const MAX_PANICS = 8;
 
 /** the network, cash and fleet after the last load or edit */
-type Kept = { net: Uint8Array; cash: number; fleet: number; fleetFast: number; fleetBus: number; fleetFerry: number; fleetTram: number };
+type Kept = { net: Uint8Array; cash: number; fleet: number; fleetFast: number; fleetBus: number; fleetFerry: number; fleetFerrySmall: number; fleetFerryLarge: number; fleetTram: number };
 export let kept: Kept | null = null;
 function modelNow(a: TrackApi): Kept {
-  return { net: a.save(), cash: a.cash(), fleet: a.fleet(), fleetFast: a.fleet_fast(), fleetBus: a.fleet_bus(), fleetFerry: a.fleet_ferry(), fleetTram: a.fleet_tram() };
+  return { net: a.save(), cash: a.cash(), fleet: a.fleet(), fleetFast: a.fleet_fast(), fleetBus: a.fleet_bus(), fleetFerry: a.fleet_ferry(), fleetFerrySmall: a.fleet_ferry_small(), fleetFerryLarge: a.fleet_ferry_large(), fleetTram: a.fleet_tram() };
 }
 export function keep() {
   try {
@@ -134,6 +134,8 @@ async function rebuildModel(fromKept: boolean) {
   api!.set_fleet_fast(k.fleetFast);
   api!.set_fleet_bus(k.fleetBus);
   api!.set_fleet_ferry(k.fleetFerry);
+  api!.set_fleet_ferry_small(k.fleetFerrySmall);
+  api!.set_fleet_ferry_large(k.fleetFerryLarge);
   api!.set_fleet_tram(k.fleetTram);
   api!.set_cash(k.cash);
   setMode(mode);

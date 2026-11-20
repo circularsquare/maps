@@ -66,7 +66,7 @@ fn a_ferry_line_runs_its_boats_at_its_speeds_and_pays_ports_and_boats() {
     assert!(ls.running && ls.ferry && ls.crush() == BOAT_CRUSH);
     assert!((cash - a.cash() - (2.0 * PORT_COST + boats as f64 * BOAT_PRICE)).abs() < 1e-6, "{}", cash - a.cash());
     assert_eq!((a.fleet_ferry(), a.boats_needed(), a.fleet(), a.fleet_bus()), (boats, boats, 0, 0));
-    // running: $40 a boat-km at the economy scale
+    // running: a Medium boat's rate a boat-km at the economy scale
     let hour = a.w.net.line_tph[l as usize][0] as f64 * 2.0 * 8.0 * RUN_COST_BOAT_KM * ECONOMY / 1e6;
     assert!((a.running_cost(0) - hour).abs() < 1e-12, "{} {hour}", a.running_cost(0));
     // upkeep: $10k a port a game day, no station among them
@@ -228,6 +228,82 @@ fn riders_wait_at_ports() {
     // a boat takes two cars' riders, rated at two thirds of its crush as a train car is (T-2919)
     assert_eq!(a.w.svc.lines[l as usize].crush(), 480.0);
     assert_eq!(a.w.svc.lines[l as usize].rated(), 320.0);
+}
+
+/// T-3892: a line's boat sets its riders, speed, price, running cost and time in port; each size is a
+/// fleet of its own, the old boats stay as spares, and undo puts it all back.
+#[test]
+fn boat_sizes_carry_buy_run_and_undo() {
+    use crate::track::ferry::Boat;
+    let mut a = api();
+    let (p, q) = (port(&mut a, 0.0, "A"), port(&mut a, 20000.0, "B"));
+    let l = ferry_line(&mut a, &[p, q], &straight(&[0.0, 20000.0], &[0, 1], 45.0));
+    assert_eq!(a.construct_line(l), 0, "{}", a.issues());
+    assert_eq!(a.ferry_boat(l), Boat::Medium.code());
+    let ls = &a.w.svc.lines[l as usize];
+    assert_eq!((ls.crush(), ls.rated()), (480.0, 320.0));
+    let (medium, run_m) = (a.boats_needed(), a.stop_times(l, 0, 0)[1]);
+    assert_eq!(a.fleet_ferry(), medium);
+    // Large: 1,280 riders, five minutes in port and twenty at the ends, bought at US$50M each
+    let cash = a.cash();
+    assert_eq!(a.set_ferry_boat(l, Boat::Large.code()), 0, "{}", a.issues());
+    let ls = &a.w.svc.lines[l as usize];
+    assert_eq!((ls.crush(), ls.rated(), ls.cars), (1920.0, 1280.0, 1));
+    assert_eq!((a.w.net.line_dwell[l as usize], a.w.net.line_turn[l as usize]), (300.0, 1200.0));
+    let large = a.boats_needed_large();
+    assert!(large > 0 && a.boats_needed() == 0 && a.fleet_ferry() == medium && a.fleet_ferry_large() == large);
+    assert!((cash - a.cash() - large as f64 * LARGE_BOAT_PRICE).abs() < 1e-6, "{}", cash - a.cash());
+    let hour = a.w.net.line_tph[l as usize][0] as f64 * 2.0 * 20.0 * LARGE_RUN_COST_BOAT_KM * ECONOMY / 1e6;
+    assert!((a.running_cost(0) - hour).abs() < 1e-12, "{} {hour}", a.running_cost(0));
+    assert_eq!(a.stop_times(l, 0, 0)[1], run_m, "Large runs at Medium's speed");
+    // undone: Medium again with its old dwell, the Large boats kept as spares
+    assert_eq!(a.undo(), 0, "{}", a.issues());
+    assert_eq!((a.ferry_boat(l), a.w.net.line_dwell[l as usize], a.w.net.line_turn[l as usize]), (Boat::Medium.code(), 60.0, 300.0));
+    assert_eq!(a.boats_needed_large(), 0);
+    // Small: 160 riders, 65 km/h in open water, so the run is shorter, at US$15M a boat
+    let cash = a.cash();
+    assert_eq!(a.set_ferry_boat(l, Boat::Small.code()), 0, "{}", a.issues());
+    let ls = &a.w.svc.lines[l as usize];
+    assert_eq!((ls.crush(), ls.rated()), (240.0, 160.0));
+    let run_s = a.stop_times(l, 0, 0)[1];
+    let v = crate::track::ferry::SMALL_TOP;
+    assert!((run_s - (20000.0 / v + v / BOAT_A)).abs() < 0.5, "{run_s} against {run_m}");
+    let small = a.boats_needed_small();
+    assert!(small > 0 && (cash - a.cash() - small as f64 * SMALL_BOAT_PRICE).abs() < 1e-6);
+    // the drawing tool quotes the line's own boat
+    let quote = a.ferry_quote(l, &[p, q], &straight(&[0.0, 20000.0], &[0, 1], 45.0), 60.0);
+    assert!((quote[1] - run_s).abs() < 1e-6, "{quote:?}");
+    // a boat code past Large is refused
+    assert_ne!(a.set_ferry_boat(l, 3), 0);
+    // redrawing the route keeps the boat
+    assert_eq!(a.set_ferry_route(l, &[p, q], &straight(&[0.0, 10000.0, 20000.0], &[0, 2], 45.0)), 0, "{}", a.issues());
+    assert_eq!(a.ferry_boat(l), Boat::Small.code());
+}
+
+/// T-3892: the boats save in `LFB1`; a save without it (an older one) loads every ferry as Medium, and
+/// a game with only Medium boats writes none.
+#[test]
+fn boat_sizes_save_and_older_saves_load_as_medium() {
+    use crate::track::ferry::Boat;
+    let mut a = api();
+    let (p, q, s) = (port(&mut a, 0.0, "A"), port(&mut a, 8000.0, "B"), port(&mut a, -8000.0, "C"));
+    let l = ferry_line(&mut a, &[p, q], &straight(&[0.0, 8000.0], &[0, 1], 45.0));
+    let m = ferry_line(&mut a, &[s, p], &straight(&[-8000.0, 0.0], &[0, 1], 45.0));
+    let plain = a.save();
+    assert!(!plain.windows(4).any(|w| w == b"LFB1"));
+    assert_eq!(a.set_ferry_boat(l, Boat::Large.code()), 0, "{}", a.issues());
+    let saved = a.save();
+    let at = saved.windows(4).position(|w| w == b"LFB1").expect("LFB1 written");
+    assert_eq!(TrackApi::save_unread(&saved), 0);
+    let mut b = api();
+    assert!(b.load(&saved));
+    assert_eq!((b.ferry_boat(l), b.ferry_boat(m)), (Boat::Large.code(), Boat::Medium.code()));
+    assert_eq!(b.w.svc.lines[l as usize].crush(), 1920.0);
+    assert_eq!(b.save(), saved, "a save with boat sizes round trips to the bit");
+    // the same save as an older build wrote it, with no LFB1: every boat Medium
+    let mut c = api();
+    assert!(c.load(&saved[..at]));
+    assert_eq!((c.ferry_boat(l), c.ferry_boat(m)), (Boat::Medium.code(), Boat::Medium.code()));
 }
 
 /// T-3767: a ferry line sets five rows as a rail line does; a midday edit moves the midday's rate at once.

@@ -135,18 +135,18 @@ exist: riding 1.0, the walk to and from stations 1.5 (below), walking between pl
 transfer 1.39, waiting for a train 1.0 (half the headway, plain minutes: Anita, T-585), congested
 driving 1.33 (2.66 on a ride to a station, below), plus parking (below).
 
-**Ferry fans** (Anita, 2026-11-03, T-2196; design notes/T-2177.md 3.6; `FAN_SHARE`, `FAN_RIDE_W`,
-`FanCosts` in `sim/src/demand/everyday.rs`). A tenth of every visits (social) and attractions trip,
-weekend and holiday days alike, finds ferries fun: each minute aboard a ferry counts 0.1 of a
-minute for them. Their walks, waits, changes, fares and crowding count as anyone's, and they choose
-as everyone does (rail against the car and walking above), so a fan still drives where the port is
-far or the boats rare. No other purpose has fans (Anita: "no for errands"), and no trips are added:
-fans only move the leisure trips there are. Their station-to-station cost is the lower of the
+**Ferry fans** (Anita, 2026-11-03, T-2196; 2026-11-20, T-3892; design notes/T-2177.md 3.6 and notes/T-3892.md 3;
+`FAN_SHARES`, `FAN_RIDE_W`, `FanCosts` in `sim/src/demand/everyday.rs`). 15% of every everyday trip (errands,
+visits, school, university, attractions) and 7.5% of airport and medical trips, weekend and holiday days alike,
+find ferries fun: each minute aboard a ferry counts 0.1 of a minute for them. Their walks, waits, changes, fares and
+crowding count as anyone's, and they choose as everyone does (rail against the car and walking above), so a fan
+still drives where the port is far or the boats rare. No trips are added: fans only move the trips there are.
+Commutes have no fans yet (Anita asked for 7.5% of them; the commute solve has no fans' cost, T-3892 stage 2). Their station-to-station cost is the lower of the
 ordinary one and, over every ride on one ferry line from port p to port q, the ordinary way to p, the
 ride at the fans' weight and the ordinary way on from q (a change at each port, none where the trip
 starts or ends there); one ferry ride a trip, the cheaper way taken whole. A pair whose station pairs
 have no such cheaper way chooses as before to the bit; one that has gets the fans' rail share beside
-everyone else's (0.9 and 0.1 of its trips). Their rides to and from the ports are assigned as any
+everyone else's (0.85 and 0.15 of its trips, 0.925 and 0.075 for airport and medical). Their rides to and from the ports are assigned as any
 trip between those stations and the ferry ride on its line, the stations counting one entry and one
 exit a trip. The lies: the fans' walking rule (T-1059) is the ordinary station pair's; the fare
 curve's extra is each leg's, not the whole trip's; their changes at the ports are not counted as

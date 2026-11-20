@@ -2,7 +2,8 @@
 // names a line's vehicle takes the noun from here, so a tram is never called a train.
 
 import { t } from "../i18n";
-import { BOAT_CARS, BUS_CARS } from "./boarding";
+import { BUS_CARS } from "./boarding";
+import { BOATS, boatOf } from "./boats";
 import type { LineStats } from "./types";
 
 export type Vehicle = "train" | "tram" | "bus" | "boat";
@@ -15,7 +16,7 @@ export const onRails = (v: Vehicle): boolean => v === "train" || v === "tram";
 /** A vehicle's size in train cars, for its seats, rated load and crush (`capacity`). */
 export const vehicleCars = (st: LineStats): number => {
   const v = vehicleOf(st);
-  return v === "boat" ? BOAT_CARS : v === "bus" ? BUS_CARS : st.cars;
+  return v === "boat" ? BOATS[boatOf(st.bus)].cars : v === "bus" ? BUS_CARS : st.cars;
 };
 
 /** Other words a line's name may start with for its own mode, besides the player's language's noun. */

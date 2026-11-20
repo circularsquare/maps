@@ -7,6 +7,7 @@ import type { ComponentChildren } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { lineMoneyTip, Money } from "../MoneyText";
 import { count, duration, headway, money, speed, trainKind } from "../../game/format";
+import { boatFleet } from "../../game/boats";
 import { lowerWord, t, tList, tNumber, tSeries } from "../../i18n";
 import { pctWhole } from "./tripText";
 import { crowdColour } from "../../game/palette";
@@ -57,6 +58,8 @@ const buys = (unit: (n: number) => string, n: number, price: number, spare: numb
   return bought > 0 ? t("schedule.buys", { unit: unit(bought), price: money(bought * price * 1e6) }) : t("schedule.uses", { unit: unit(n) });
 };
 export const carsBought = (k: { carPrice: number; spare: number }, cars: number): string => buys(carsText, cars, k.carPrice, k.spare);
+/** T-3892: the same for `n` boats of a size. */
+export const boatsBought = (k: { price: number; spare: number }, n: number): string => buys((b) => vehiclesText("boat", b), n, k.price, k.spare);
 
 /** What a schedule change draws on: a train's cars of its kind (T-631), or buses or boats. */
 function stockOf(m: MoneyState, st: LineStats, v: Vehicle): { unit: (n: number) => string; per: number; price: number; spare: number } | null {
@@ -65,7 +68,7 @@ function stockOf(m: MoneyState, st: LineStats, v: Vehicle): { unit: (n: number) 
     const k = trainKind(m, st.fast, st.tram);
     return { unit: carsText, per: st.cars, price: k.carPrice, spare: k.spare };
   }
-  const [owned, needed, price] = v === "boat" ? [m.fleetFerry, m.boatsNeeded, m.boatPrice] : [m.fleetBus, m.busesNeeded, m.busPrice];
+  const [owned, needed, price] = v === "boat" ? boatFleet(m, st) : [m.fleetBus, m.busesNeeded, m.busPrice];
   return { unit: (n) => vehiclesText(v, n), per: 1, price, spare: Math.max(0, owned - needed) };
 }
 

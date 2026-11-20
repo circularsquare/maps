@@ -45,9 +45,66 @@ pub fn v_from_lfr2(v: f64) -> f64 {
     rescale(v, LFR2_TOP)
 }
 fn rescale(v: f64, old_top: f64) -> f64 {
-    if v <= V_CHANNEL { v } else { V_CHANNEL + (v - V_CHANNEL) * (BOAT_TOP - V_CHANNEL) / (old_top - V_CHANNEL) }
+    rescale_to(v, old_top, BOAT_TOP)
 }
-/// A boat's length, m (drawn only).
+fn rescale_to(v: f64, old_top: f64, top: f64) -> f64 {
+    if v <= V_CHANNEL { v } else { V_CHANNEL + (v - V_CHANNEL) * (top - V_CHANNEL) / (old_top - V_CHANNEL) }
+}
+/// A Small boat's top speed, m/s (T-3892): its route's speeds over `V_CHANNEL` are raised the same
+/// share of the way to it (`Boat::v`).
+pub const SMALL_TOP: f64 = 65.0 / 3.6;
+
+/// A ferry line's boat (T-3892, notes/T-3892.md 2): its riders, speed, price, running cost and time
+/// in port. A save writes `code` (`LFB1`); a line without one is Medium.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum Boat {
+    Small,
+    #[default]
+    Medium,
+    Large,
+}
+
+impl Boat {
+    pub const ALL: [Boat; 3] = [Boat::Small, Boat::Medium, Boat::Large];
+    pub fn code(self) -> u8 {
+        self as u8
+    }
+    pub fn from_code(c: u64) -> Option<Boat> {
+        Boat::ALL.get(c as usize).copied()
+    }
+    /// Its riders as train cars' (`boarding::CRUSH_PER_CAR`): 160, 320 and 1,280 at the rated load.
+    pub fn cars(self) -> u32 {
+        match self { Boat::Small => 1, Boat::Medium => 2, Boat::Large => 8 }
+    }
+    /// The fleet its boats come from (`wasm::FLEETS`): Medium's is the one older saves' boats are in.
+    pub fn fleet(self) -> usize {
+        match self { Boat::Small => 5, Boat::Medium => 3, Boat::Large => 6 }
+    }
+    /// Price of one, US$M.
+    pub fn price(self) -> f64 {
+        use super::params::*;
+        match self { Boat::Small => SMALL_BOAT_PRICE, Boat::Medium => BOAT_PRICE, Boat::Large => LARGE_BOAT_PRICE }
+    }
+    /// Running cost per boat-km, real US$.
+    pub fn run_km(self) -> f64 {
+        use super::params::*;
+        match self { Boat::Small => SMALL_RUN_COST_BOAT_KM, Boat::Medium => RUN_COST_BOAT_KM, Boat::Large => LARGE_RUN_COST_BOAT_KM }
+    }
+    /// A new line's dwell at the ports between its ends and its turnaround, s: what choosing it sets.
+    pub fn dwell_turn(self) -> (f32, f32) {
+        match self { Boat::Large => (300.0, 1200.0), _ => (60.0, 300.0) }
+    }
+    /// Length, m (drawn only).
+    pub fn len_m(self) -> f64 {
+        match self { Boat::Small => 25.0, Boat::Medium => BOAT_LEN_M, Boat::Large => 90.0 }
+    }
+    /// The most this boat does where its route allows `v` (m/s, searched for a 45 km/h boat).
+    pub fn v(self, v: f64) -> f64 {
+        if self == Boat::Small { rescale_to(v, BOAT_TOP, SMALL_TOP) } else { v }
+    }
+}
+
+/// A boat's length, m (drawn only): Medium's.
 pub const BOAT_LEN_M: f64 = 35.0;
 /// A port's platform length (`Network::node_platform`, which marks every station): a port has none,
 /// and no rule reads it.
@@ -69,6 +126,8 @@ pub struct FerryRoute {
     pub kinds: Vec<u8>,
     pub v: Vec<f32>,
     pub built: bool,
+    /// T-3892: the line's boat.
+    pub boat: Boat,
 }
 
 /// A speed as a route keeps it: m/s within `BOAT_MIN..=BOAT_TOP` on a mm/s grid; anything not a
@@ -89,7 +148,7 @@ impl FerryRoute {
         kinds.resize(points.len(), K_ROUTE);
         let mut v: Vec<f32> = v.into_iter().map(quant_v).collect();
         v.resize(points.len(), quant_v(BOAT_TOP));
-        FerryRoute { points, kinds, v, built }
+        FerryRoute { points, kinds, v, built, boat: Boat::Medium }
     }
     /// Indices of the `K_PORT` points.
     pub fn port_points(&self) -> Vec<usize> {
@@ -156,11 +215,12 @@ pub fn check(net: &Network, l: u32, ports: &[u32], r: &FerryRoute) -> Result<(),
 }
 
 /// The boat's speed limits along a route, run 0's way: `(from, to, m/s)` ground metres from the start,
-/// covering `[0, len]`: each stretch between two points at the lower of their speeds.
+/// covering `[0, len]`: each stretch between two points at the lower of their speeds, as the route's
+/// boat does them (`Boat::v`).
 pub fn limits(r: &FerryRoute, cum: &[f64]) -> Vec<(f64, f64, f64)> {
     let mut out: Vec<(f64, f64, f64)> = vec![];
     for i in 1..r.points.len().min(cum.len()) {
-        let (a, b, v) = (cum[i - 1], cum[i], r.v[i - 1].min(r.v[i]) as f64);
+        let (a, b, v) = (cum[i - 1], cum[i], r.boat.v(r.v[i - 1].min(r.v[i]) as f64));
         match out.last_mut() {
             Some(l) if l.2 == v => l.1 = b,
             _ if b > a => out.push((a, b, v)),

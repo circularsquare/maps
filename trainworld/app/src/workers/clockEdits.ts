@@ -6,7 +6,7 @@ import { headwaysFor, NEW_LINE } from "../game/newLine";
 import { zonesOf } from "../game/fareZones";
 import { letterOf } from "../game/lineLetter";
 import { cloneName, cloneSymbol } from "../game/cloneNames";
-import { capTransfer, faresOf, tidyHsr, tidyTransfer } from "../game/fareCurve";
+import { capTransfer, faresOf, FERRY_FARE_KEYS, MEDIUM, tidyHsr, tidyTransfer } from "../game/fareCurve";
 import { FARE_BASELINE, FARE_E, keepOwn } from "../game/income";
 import { type SaveHeader } from "./saveFile";
 import type { EditOp, PaidFor, PiInput, RouteAsk, RouteEnd, StationAt } from "./protocol";
@@ -224,13 +224,17 @@ function applyInner(op: EditOp): Applied {
       if (!ports) return { r: 1 };
       const id = a.new_line_id();
       const { dwellS, turnaroundS } = NEW_LINE.ferry;
-      const [h, m, l] = headwaysFor("ferry", newLineHeadway)!;
-      return newLineWeekends(a, newLineRows(a, a.set_ferry_line(id, ports, Float64Array.from(op.route), h, m, l, dwellS, turnaroundS, colourInt(op.colour), op.name || nextBusName(a, "Ferry ")), id, "ferry")); // i18n-ignore: a line's saved name
+      // T-3892: a long crossing starts at the long ferry's headways (its route's km, as the tool's quote has them)
+      const route = Float64Array.from(op.route), km = a.ferry_quote(0xffffffff, ports, route, 0)[0] / 1000;
+      const [h, m, l] = headwaysFor("ferry", newLineHeadway, 3, km)!;
+      return newLineWeekends(a, newLineRows(a, a.set_ferry_line(id, ports, route, h, m, l, dwellS, turnaroundS, colourInt(op.colour), op.name || nextBusName(a, "Ferry ")), id, "ferry", km)); // i18n-ignore: a line's saved name
     }
     case "ferryRoute": {
       const ports = addPorts(a, op.ports);
       return ports ? { r: a.set_ferry_route(op.line, ports, Float64Array.from(op.route)) } : { r: 1 };
     }
+    case "ferryBoat":
+      return { r: a.set_ferry_boat(op.line, op.boat) };
     case "addLine": {
       const id = a.new_line_id();
       const { trains: [h, m, l], dwellS, turnaroundS } = NEW_LINE.train;
@@ -397,7 +401,7 @@ function applyInner(op: EditOp): Applied {
     case "groupLook":
       return { r: a.set_line_group_look(op.group, op.symbol.trim(), op.colour === null ? -1 : colourInt(op.colour)) };
     case "fares":
-      putFares(capTransfer({ ...(op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares)), scales: fares.scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...(fares.hsr !== undefined ? { hsr: fares.hsr } : {}), ...(fares.ferry !== undefined ? { ferry: fares.ferry } : {}), ...(fares.bus !== undefined ? { bus: fares.bus } : {}), ...(fares.transfer !== undefined ? { transfer: fares.transfer } : {}), ...(fares.ref ? { ref: fares.ref } : {}), ...(fares.lines ? { lines: fares.lines } : {}), ...zonesOf(fares), ...cityFares(fares) }));
+      putFares(capTransfer({ ...(op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares)), scales: fares.scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...(fares.hsr !== undefined ? { hsr: fares.hsr } : {}), ...(fares.ferry !== undefined ? { ferry: fares.ferry } : {}), ...(fares.ferrySmall !== undefined ? { ferrySmall: fares.ferrySmall } : {}), ...(fares.ferryLarge !== undefined ? { ferryLarge: fares.ferryLarge } : {}), ...(fares.bus !== undefined ? { bus: fares.bus } : {}), ...(fares.transfer !== undefined ? { transfer: fares.transfer } : {}), ...(fares.ref ? { ref: fares.ref } : {}), ...(fares.lines ? { lines: fares.lines } : {}), ...zonesOf(fares), ...cityFares(fares) }));
       return { r: 0 };
     case "fareZones": {
       // T-3740: the fare areas as a whole; an id is never used twice
@@ -415,7 +419,7 @@ function applyInner(op: EditOp): Applied {
       return { r: 0 };
     case "fareFerry":
       if (!Number.isFinite(op.mul)) return { r: 1 };
-      putFares({ ...fares, ferry: tidyHsr(op.mul) });
+      putFares({ ...fares, [FERRY_FARE_KEYS[op.boat ?? MEDIUM] ?? "ferry"]: tidyHsr(op.mul) });
       return { r: 0 };
     case "fareBus":
       if (!Number.isFinite(op.mul)) return { r: 1 };

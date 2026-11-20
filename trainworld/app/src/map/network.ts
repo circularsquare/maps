@@ -7,6 +7,7 @@
 // each line is resampled every 50 m into `samples`; run 1's offset s is `length - s` on run 0.
 
 import { rgb } from "../game/palette";
+import { boatOf } from "../game/boats";
 import { hasUpgrade, UPGRADE } from "../game/upgrades";
 import type { PreviewAnswer } from "../workers/clockClient";
 import type { ClockEdge, ClockState } from "../workers/protocol";
@@ -27,9 +28,9 @@ import { META_PER_LINE, ROW_SLOT, profileLine, profileOf, profileRun } from "./p
 /** A bus line's `lineCars` (T-1464): one car of this share of a train car's 20 m (a bus is 12 m),
  * narrower than a train's (rendererShaders.ts); below 1, so it tells a bus from a train. */
 export const BUS_CAR = 0.6;
-/** T-2194: a ferry line's: below 0, a boat of this many train cars' 20 m (35 m, `ferry::BOAT_LEN_M`),
- * drawn as one pointed hull. */
-export const BOAT_CAR = -1.75;
+/** T-2194: a ferry line's: below 0, a boat of this many train cars' 20 m, drawn as one pointed hull; T-3892: per
+ * boat size, Small 25 m, Medium 35 m, Large 90 m (`ferry::Boat::len_m`). The shader tells the size by it. */
+export const BOAT_CAR = [-1.25, -1.75, -4.5] as const;
 
 /** Colour index of bare track (not a line). */
 export const TRACK = 0xffffff;
@@ -1629,7 +1630,7 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
   const maxLine = s.lines.reduce((m, l) => Math.max(m, l.id), -1);
   const lineColours = new Uint8Array(Math.max(1, maxLine + 1) * 4);
   const lineCars = new Float32Array(r.lineTable.length / 4).fill(8);
-  for (const l of s.lines) lineCars[l.id] = l.bus?.ferry ? BOAT_CAR : l.bus ? BUS_CAR : l.tram ? Math.max(1, l.cars) + TRAM_MARK : Math.max(1, l.cars);
+  for (const l of s.lines) lineCars[l.id] = l.bus?.ferry ? BOAT_CAR[boatOf(l.bus)] : l.bus ? BUS_CAR : l.tram ? Math.max(1, l.cars) + TRAM_MARK : Math.max(1, l.cars);
   const lineParts: LineEntry[] = [];
   let lineCount = 0;
   const linesSeen: NetCache["lines"] = new Map();

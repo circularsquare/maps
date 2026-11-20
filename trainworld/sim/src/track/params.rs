@@ -225,12 +225,18 @@ pub const BUS_CRUSH: f64 = 80.0;
 pub const PORT_COST: f64 = 10.0;
 /// Upkeep a day per constructed port, real US$ (US$10k a game day at `ECONOMY`, a fifth of a station's).
 pub const UPKEEP_PORT: f64 = 100.0;
-/// Price of one boat, US$M (a NYC Ferry 350-seat boat is US$7-9M); boats are a fleet of their own,
-/// spares shared between ferry lines.
+/// Price of one Medium boat, US$M (a NYC Ferry 350-seat boat is US$7-9M); each kind of boat
+/// (`ferry::Boat`, T-3892) is a fleet of its own, spares shared between ferry lines.
 pub const BOAT_PRICE: f64 = 8.0;
-/// Running cost per boat-km, real US$.
-pub const RUN_COST_BOAT_KM: f64 = 40.0;
-/// A boat's riders at crush: two train cars (T-2195; demand's `BOAT_DEMAND_CARS`), 320 at the rated load.
+/// A Small boat, US$M (a new 250-seat fast ferry is about US$17.5M) and a Large one (T-3892).
+pub const SMALL_BOAT_PRICE: f64 = 15.0;
+pub const LARGE_BOAT_PRICE: f64 = 50.0;
+/// Running cost per boat-km, real US$: Medium's, Small's and Large's (notes/T-3892.md 2: 40, 40 and
+/// 100, each cut by a quarter, Anita 2026-11-20, "for fun over realism").
+pub const RUN_COST_BOAT_KM: f64 = 30.0;
+pub const SMALL_RUN_COST_BOAT_KM: f64 = 30.0;
+pub const LARGE_RUN_COST_BOAT_KM: f64 = 75.0;
+/// A Medium boat's riders at crush: two train cars (T-2195), 320 at the rated load; `ferry::Boat::cars`.
 pub const BOAT_CRUSH: f64 = 2.0 * super::boarding::CRUSH_PER_CAR;
 
 pub fn level_mult(level: i8) -> f64 {

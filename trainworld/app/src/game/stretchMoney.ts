@@ -23,6 +23,7 @@ import { demandView, lineFiguresIn, type DemandView } from "./demand";
 import { faresOf, lineFareMul, type Fares } from "./fareCurve";
 import { lineFares } from "./fareInEffect";
 import { trainKind } from "./format";
+import { boatOf, boatRunKm } from "./boats";
 import { baseTrips, lineGeo, moneyState, moneyTerms, moneyWorld, scalesOf, type MoneyTerms } from "./money";
 import { trainsADay } from "./periods";
 import { edgeUpkeep, lineRunFactor, stationUpkeepOf } from "./regionMoney";
@@ -64,8 +65,8 @@ let memo: { shape: WorldView; t: MoneyTerms; dv: DemandView; run: string; out: S
 export const stretchMoney = computed<StretchMoney | null>(() => {
   const shape = moneyWorld.value, w = world.value, t = moneyTerms.value, dv = demandView.value, m = moneyState.peek();
   if (!shape || !w || !t || !dv || !m) return null;
-  let run = [m.runCostTrainKm, m.runCostCarKm, m.hsRunCostTrainKm, m.hsRunCostCarKm, m.runCostBusKm, m.runCostBoatKm, m.economy].join();
-  for (const l of w.save.lines) run += `|${l.tphP.join()},${w.lineStats[l.id]?.cars},${lineRunFactor(l.num)}`;
+  let run = [m.runCostTrainKm, m.runCostCarKm, m.hsRunCostTrainKm, m.hsRunCostCarKm, m.runCostBusKm, m.runCostBoatKm, m.runCostSmallBoatKm, m.runCostLargeBoatKm, m.economy].join();
+  for (const l of w.save.lines) run += `|${l.tphP.join()},${w.lineStats[l.id]?.cars},${boatOf(w.lineStats[l.id]?.bus)},${lineRunFactor(l.num)}`;
   for (const e of w.edges) if (e.built) run += `,${e.id}`;
   if (memo && memo.shape === shape && memo.t === t && memo.dv === dv && memo.run === run) return memo.out;
   const out = stretchMoneyOf(w, t, dv, shape);
@@ -114,7 +115,7 @@ export function stretchMoneyOf(w: WorldView, t: MoneyTerms, dv: DemandView, shap
       const wt = weight.get(l.id) ?? 0;
       figs = Array.from({ length: n - 1 }, (_, j) => ({ fares: 0, running: 0, upkeep: 0, km: Math.abs(s0[j + 1] - s0[j]) / 1000, bare: !(wt > 0), noFigures: !lineFiguresIn(dv, l.id, n) }));
       busFigs.set(l.id, figs);
-      const runDay = (st.bus.ferry ? m.runCostBoatKm : m.runCostBusKm) * E * wt * (st.oneWay ? 1 : 2) * st.km * lineRunFactor(l.num);
+      const runDay = (st.bus.ferry ? boatRunKm(m, boatOf(st.bus)) : m.runCostBusKm) * E * wt * (st.oneWay ? 1 : 2) * st.km * lineRunFactor(l.num);
       // the route's upkeep is its own line's (`line_upkeep`), there while vehicles run
       const route = st.bus.built && !st.bus.ferry && wt > 0 ? (st.bus.roadM / 1000) * (t.upkeepBusKm ?? 0) * E : 0;
       let km = 0;
@@ -165,7 +166,7 @@ export function stretchMoneyOf(w: WorldView, t: MoneyTerms, dv: DemandView, shap
     for (const v of pk) pkAll += v;
     if (!(pkAll > 0)) continue;
     const fx = dm.fareX?.reduce((a, b) => a + b, 0) ?? 0;
-    const mul = lineFareMul({ id: l.id, fast: st.fast, ferry: !!st.bus?.ferry, bus: !!st.bus && !st.bus.ferry }, lf);
+    const mul = lineFareMul({ id: l.id, fast: st.fast, ferry: !!st.bus?.ferry, boat: boatOf(st.bus), bus: !!st.bus && !st.bus.ferry }, lf);
     const base = E * f.base * (based.get(l.id) ?? 0);
     for (let s = 0; s < n - 1; s++) {
       const fareOf = (riders: number) => E * (mul * f.perKm * riders + fx * riders / pkAll) + base * riders / pkAll;

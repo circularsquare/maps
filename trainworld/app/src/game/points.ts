@@ -19,6 +19,7 @@ import { demandByDay, demandHeld, demandUpdating, finalWorld, networkWorld, type
 import { loadProgress } from "./loading";
 import { t } from "../i18n";
 import { compactOf, sig3 } from "./format";
+import { boatOf, boatRunKm } from "./boats";
 import { incomeByDay, lineGeo, moneyState, moneyWorld } from "./money";
 import { PERIODS } from "./periods";
 import { lineRunFactor } from "./regionMoney";
@@ -127,13 +128,13 @@ function dayPoints(w: WorldView, d: DayDemand): Map<number, Map<string, number[]
   return out;
 }
 
-type RunPrices = Pick<MoneyState, "runCostTrainKm" | "runCostCarKm" | "hsRunCostTrainKm" | "hsRunCostCarKm" | "runCostBusKm" | "runCostBoatKm" | "economy">;
+type RunPrices = Pick<MoneyState, "runCostTrainKm" | "runCostCarKm" | "hsRunCostTrainKm" | "hsRunCostCarKm" | "runCostBusKm" | "runCostBoatKm" | "runCostSmallBoatKm" | "runCostLargeBoatKm" | "economy">;
 let runKey = "", runSame: RunPrices | null = null;
 /** The running cost prices, the same object while they are the same (the money state changes every settle). */
 const runPrices = computed<RunPrices | null>(() => {
   const m = moneyState.value;
   if (!m) return (runKey = "", runSame = null);
-  const p: RunPrices = { runCostTrainKm: m.runCostTrainKm, runCostCarKm: m.runCostCarKm, hsRunCostTrainKm: m.hsRunCostTrainKm, hsRunCostCarKm: m.hsRunCostCarKm, runCostBusKm: m.runCostBusKm, runCostBoatKm: m.runCostBoatKm, economy: m.economy };
+  const p: RunPrices = { runCostTrainKm: m.runCostTrainKm, runCostCarKm: m.runCostCarKm, hsRunCostTrainKm: m.hsRunCostTrainKm, hsRunCostCarKm: m.hsRunCostCarKm, runCostBusKm: m.runCostBusKm, runCostBoatKm: m.runCostBoatKm, runCostSmallBoatKm: m.runCostSmallBoatKm, runCostLargeBoatKm: m.runCostLargeBoatKm, economy: m.economy };
   const key = JSON.stringify(p);
   if (key !== runKey || !runSame) { runKey = key; runSame = p; }
   return runSame;
@@ -156,7 +157,7 @@ export const lineCover = computed<Map<number, number>>(() => {
     const dm = dv?.lines.get(l.id);
     const tph = dm?.tph ?? l.tphP, cars = dm?.cars ?? st.cars;
     const [train, car] = st.fast ? [r.hsRunCostTrainKm, r.hsRunCostCarKm] : [r.runCostTrainKm, r.runCostCarKm];
-    const perKm = st.bus?.ferry ? r.runCostBoatKm : st.bus ? r.runCostBusKm : train + cars * car;
+    const perKm = st.bus?.ferry ? boatRunKm(r, boatOf(st.bus)) : st.bus ? r.runCostBusKm : train + cars * car;
     let run = 0;
     PERIODS.forEach((_, i) => { run += tph[i] * (st.oneWay ? 1 : 2) * st.km * perKm * r.economy * PERIOD_HOURS[i]; });
     run *= lineRunFactor(l.num); // T-2669

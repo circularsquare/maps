@@ -142,6 +142,8 @@ export type EditOp =
   | { op: "addFerryLine"; ports: FerryPortIn[]; route: number[]; name: string; colour: string }
   /** T-2194: a ferry line's ports and route drawn again (free; new ports on a constructed line are paid now) */
   | { op: "ferryRoute"; line: number; ports: FerryPortIn[]; route: number[] }
+  /** T-3892: a ferry line's boat size (0 Small, 1 Medium, 2 Large), with that size's dwell and turnaround */
+  | { op: "ferryBoat"; line: number; boat: 0 | 1 | 2 }
   | { op: "constructAll" }
   /** switch blueprint track and stations off or on (T-333): Construct and the quote skip what is off; one undoable edit */
   | { op: "blueprintOff"; edges: EdgeId[]; stations: NodeId[]; off: boolean }
@@ -226,8 +228,8 @@ export type EditOp =
   | { op: "fareRef"; country: string }
   /** T-1626: the fare multiplier on high-speed lines */
   | { op: "fareHsr"; mul: number }
-  /** T-2194: the fare multiplier on ferry lines */
-  | { op: "fareFerry"; mul: number }
+  /** T-2194: the fare multiplier on ferry lines; T-3892: of one boat size (game/fareCurve.ts `Boat`), Medium if none */
+  | { op: "fareFerry"; mul: number; boat?: 0 | 1 | 2 }
   | { op: "fareBus"; mul: number }
   /** T-3567: line `line`'s own fare multiplier, 0 to 3 (1: none); refused for a line that is gone */
   | { op: "fareLine"; line: number; mul: number }
@@ -486,6 +488,16 @@ export interface MoneyState {
    * port's upkeep a day (real US$) and its price US$M */
   fleetFerry: number;
   boatsNeeded: number;
+  /** T-3892: the above are Medium boats'; Small and Large boats owned and needed, their prices US$M and
+   * running costs a boat-km (real US$) */
+  fleetFerrySmall: number;
+  boatsNeededSmall: number;
+  fleetFerryLarge: number;
+  boatsNeededLarge: number;
+  smallBoatPrice: number;
+  runCostSmallBoatKm: number;
+  largeBoatPrice: number;
+  runCostLargeBoatKm: number;
   /** T-2926: tram cars (20 m sections) owned and needed, and a car's price US$M */
   fleetTram: number;
   tramsNeeded: number;
@@ -498,7 +510,7 @@ export interface MoneyState {
   economy: number;
   /** T-1661, T-2022: the loan out, null for none */
   loan: Loan | null;
-  fares: { base: number; perKm: number; nodes: [number, number][]; scales?: Record<string, number>; byCity?: boolean; cityScales?: Record<string, number>; baseline?: string; basis?: "usd"; income?: number; hsr?: number; ferry?: number; bus?: number; transfer?: number; lines?: Record<string, number>; zones?: FareArea[]; zoneNext?: number };
+  fares: { base: number; perKm: number; nodes: [number, number][]; scales?: Record<string, number>; byCity?: boolean; cityScales?: Record<string, number>; baseline?: string; basis?: "usd"; income?: number; hsr?: number; ferry?: number; ferrySmall?: number; ferryLarge?: number; bus?: number; transfer?: number; lines?: Record<string, number>; zones?: FareArea[]; zoneNext?: number };
   /** running cost per game hour in each demand period on weekdays (T-3542: five, `PERIODS`) */
   runningPerHour: number[];
   /** recent game days, oldest first; the last is today so far (as of the last whole hour; the
@@ -760,6 +772,8 @@ export interface FerryRow {
   speeds: number[];
   /** per port in route order: its node and its landing, longitude and latitude, then its berth's */
   ports: { node: number; landing: [number, number]; berth: [number, number] }[];
+  /** T-3892: its boat size (0 Small, 1 Medium, 2 Large) */
+  boat: 0 | 1 | 2;
 }
 
 /** T-2194: a ferry line's port as the tool sends it: a port the network has, or a new one (its landing
@@ -1122,6 +1136,8 @@ export interface SnapshotLine {
   passFares?: number[][][];
   /** T-2195: a ferry line, whose fares are times the ferry multiplier; its stops are ports */
   ferry?: boolean;
+  /** T-3892: a ferry line's boat size when other than Medium (1), whose multiplier its fares take */
+  boat?: 0 | 2;
   /** T-2926: a line on tram track (`DemandApi.set_tram_lines`) */
   tram?: boolean;
   /** dwell at each stop, s, per run and period, in the run's own stop order (0 at both ends) */
@@ -1131,7 +1147,8 @@ export interface SnapshotLine {
   /** a circle line (T-798): its last stop is its first and trains ride on round, standing this
    * long there, s; absent otherwise */
   wrapS?: number;
-  /** cars per train (20 m each); a bus line's 0.5, its 80 riders at crush; a ferry line's 2 */
+  /** cars per train (20 m each); a bus line's 0.5, its 80 riders at crush; a ferry line's its boat's (1, 2 or 8,
+   * sim `ferry::Boat::cars`) */
   cars: number;
   /** T-1464, a bus line: per stop, the stretch of route whose homes walk to the route and ride
    * from that stop, x, y flat in the snapshot's frame (empty at a station) */

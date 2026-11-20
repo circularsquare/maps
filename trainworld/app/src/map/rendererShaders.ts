@@ -1,7 +1,8 @@
 // The network renderer's shaders (map/renderer.ts): the strokes, stations and bridges, the selection's
 // outline, trains and the position probe, with the constants they and the renderer share.
 
-import { BOAT_CARS, BUS_CARS, CRUSH_PER_CAR, RATED_PER_CAR, SEATS_PER_CAR } from "../game/boarding";
+import { BUS_CARS, CRUSH_PER_CAR, RATED_PER_CAR, SEATS_PER_CAR } from "../game/boarding";
+import { BOATS } from "../game/boats";
 import { PROFIT_STOPS, rgb, SPEED_STOPS } from "../game/palette";
 import { PSI_PER_UNIT } from "./geo";
 import { BAND_M_RANGE, BAND_RANGE, BAND_SHARE } from "./lineBands";
@@ -1184,8 +1185,9 @@ void main() {
         aboard = mix(came, aboard, g_stand);
       }
     }
-    // a boat holds two cars' riders, a bus a third of a car's (T-2195, T-2919, game/boarding.ts capacity)
-    float held = boat ? ${BOAT_CARS.toFixed(1)} : bus ? ${BUS_CARS.toFixed(6)} : cars;
+    // a boat holds its size's cars' riders (T-3892: told by its length, map/network.ts BOAT_CAR), a bus a third of a
+    // car's (T-2195, T-2919, game/boarding.ts capacity)
+    float held = boat ? (rawCars > -1.5 ? ${BOATS[0].cars.toFixed(1)} : rawCars > -3.0 ? ${BOATS[1].cars.toFixed(1)} : ${BOATS[2].cars.toFixed(1)}) : bus ? ${BUS_CARS.toFixed(6)} : cars;
     float seats = ${SEATS_PER_CAR.toFixed(1)} * held, rated = ${RATED_PER_CAR.toFixed(1)} * held, crush = ${CRUSH_PER_CAR.toFixed(1)} * held;
     // T-2186: 1 at the rated load, then the second band to 2 at crush (game/boarding.ts gauge)
     v_fill = aboard <= seats ? 0.5 * aboard / seats : aboard <= rated ? 0.5 + 0.5 * (aboard - seats) / (rated - seats) : min(1.99, 1.0 + (aboard - rated) / (crush - rated));

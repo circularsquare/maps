@@ -75,13 +75,12 @@ pub const RETURN: [[f32; 5]; KIND_COUNT] = [
 ];
 const AIRPORT: usize = 4;
 pub const ATTRACTION: usize = 6;
-/// T-2196, the ferry fans (Anita, 2026-11-03; docs/demand-mode.md): this share of the visits
-/// (social) and attractions trips count each minute aboard a ferry at `FAN_RIDE_W` of a minute.
-pub const FAN_SHARE: f32 = 0.1;
+/// T-2196, the ferry fans (docs/demand-mode.md): this share of each purpose's trips (`KINDS`) count each
+/// minute aboard a ferry at `FAN_RIDE_W` of a minute. T-3892 (Anita, 2026-11-20: "slightly increase ...
+/// broaden them to all types, maybe half as much for work or medical or airport"): 15% of every purpose, half
+/// the share for airport and medical trips.
+pub const FAN_SHARES: [f32; KIND_COUNT] = [0.15, 0.15, 0.15, 0.15, 0.075, 0.075, 0.15];
 pub const FAN_RIDE_W: f32 = 0.1;
-fn fan_kind(kind: usize) -> bool {
-    kind == 1 || kind == ATTRACTION
-}
 /// The purposes with few samples a cell (T-142): airports and attractions are a handful of
 /// destinations and nobody looks at one cell's medical trips alone (`Sampling::max_few`). Each
 /// sample costs the same at opening and in `set_network`.
@@ -1530,7 +1529,8 @@ impl EverydayApi {
                     }
                     // T-2196: the fans' sum, where a ferry is the fans' cheaper way between any
                     // of the pair's station pairs; elsewhere they choose as everyone does
-                    let mut fan = fans.filter(|fc| fan_kind(pair.kind() as usize) && a.clone().any(|ka| fc.row[sz.acc_st[ka] as usize]) && b.clone().any(|kb| fc.col[sz.acc_st[kb] as usize]));
+                    let fan_share = FAN_SHARES[pair.kind() as usize];
+                    let mut fan = fans.filter(|fc| fan_share > 0.0 && a.clone().any(|ka| fc.row[sz.acc_st[ka] as usize]) && b.clone().any(|kb| fc.col[sz.acc_st[kb] as usize]));
                     let mut sum_f = sum;
                     if let Some(fc) = fan {
                         // each station pair's exp of the fans' cost where it is theirs, for the
@@ -1581,7 +1581,7 @@ impl EverydayApi {
                     let fan_pr = fan.map(|_| choice(ma + mb + p.fare_min - fast_ln(sum_f) / th + off));
                     let (pr, prd) = match fan_pr {
                         None => (pr0, prd0),
-                        Some((pf, pdf)) => ((1.0 - FAN_SHARE) * pr0 + FAN_SHARE * pf, (1.0 - FAN_SHARE) * prd0 + FAN_SHARE * pdf),
+                        Some((pf, pdf)) => ((1.0 - fan_share) * pr0 + fan_share * pf, (1.0 - fan_share) * prd0 + fan_share * pdf),
                     };
                     probability[i][direction] = pr;
                     let share = if direction == 0 {
@@ -1617,8 +1617,8 @@ impl EverydayApi {
                     };
                     // everyone else's trips by the ordinary costs; the fans' by theirs, those
                     // riding a ferry as the rides to and from its ports, the ride itself apart
-                    let trips = pair.trips * share * (1.0 - FAN_SHARE) * pr0 / sum;
-                    let trips_f = pair.trips * share * FAN_SHARE * pf / sum_f;
+                    let trips = pair.trips * share * (1.0 - fan_share) * pr0 / sum;
+                    let trips_f = pair.trips * share * fan_share * pf / sum_f;
                     let np = fc.np();
                     let mut e = fan_e.iter();
                     for ka in a.clone() {
@@ -2158,7 +2158,7 @@ impl EverydayApi {
         Ok(())
     }
     /// T-2196: which lines are ferries, a byte a line in `set_network`'s order (1 a ferry), after
-    /// it; empty with none. Their fans ride them (`FAN_SHARE`).
+    /// it; empty with none. Their fans ride them (`FAN_SHARES`).
     pub fn set_ferry(&mut self, lines: &[u8]) -> Result<(), String> {
         let nl = self.engine.svc.as_ref().map_or(0, |s| s.line_off.len() - 1);
         if !lines.is_empty() && lines.len() != nl {

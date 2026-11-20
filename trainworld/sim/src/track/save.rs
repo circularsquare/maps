@@ -88,6 +88,8 @@ use super::twin::Twin;
 /// bit per slot), then the lines whose differ from their weekdays' (count, then index and per slot of
 /// the mask its phase, split and pace as f32 bits); every other line's are its weekdays'. Without it a
 /// load places the weekends again.
+/// A trailing `LFB1` block (T-3892, level 33) gives the ferry lines whose boat is other than Medium:
+/// count, then line index and `ferry::Boat::code`; without it every ferry line's boats are Medium.
 const MAGIC: &[u8; 4] = b"TWT4";
 /// TWT5 (T-125) is TWT4 byte for byte except that the metres are in the Lambert conformal world
 /// frame (`frame.rs`). TWT4 and older are always the legacy equirectangular frame, and a network
@@ -100,12 +102,12 @@ const MAGIC_TWT6: &[u8; 4] = b"TWT6";
 
 /// T-1826: the trailing blocks this build reads, in the order they are written. A block it does not
 /// know stops the decoder, which then reports the bytes left over (`decode_read`).
-pub const BLOCKS: [&[u8; 4]; 36] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1", b"LPS1", b"LWE1", b"LOS1", b"LPD1", b"LHR1", b"LFZ1", b"LSN1", b"LFD1", b"LGN1", b"LRA1", b"LWP1"];
+pub const BLOCKS: [&[u8; 4]; 37] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1", b"LPS1", b"LWE1", b"LOS1", b"LPD1", b"LHR1", b"LFZ1", b"LSN1", b"LFD1", b"LGN1", b"LRA1", b"LWP1", b"LFB1"];
 /// T-1826: the save level this build writes into the game header (`level`) and reads up to. Raised
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over. Saves from before it have none, read as 0.
-pub const LEVEL: u32 = 32;
+pub const LEVEL: u32 = 33;
 /// T-3759: the last level from before stations could be unbound from their complex's name; a typed
 /// station there showed its own name, so loading one makes such a station unbound (the app's pass).
 pub const OLD_BOUND_NAMES: u32 = 26;
@@ -777,6 +779,17 @@ pub fn encode(net: &Network) -> Vec<u8> {
             for &k in &slots { for x in &a { w.u(x[k].to_bits() as u64); } }
         }
     }
+    // T-3892: after LWP1, only where some ferry line's boat is other than Medium: count, then line
+    // index and `ferry::Boat::code`
+    let boats: Vec<(usize, u8)> = lines.iter().enumerate().filter_map(|(i, &l)| net.line_ferry[l as usize].as_ref().filter(|r| r.boat != super::ferry::Boat::Medium).map(|r| (i, r.boat.code()))).collect();
+    if !boats.is_empty() {
+        w.0.extend_from_slice(b"LFB1");
+        w.u(boats.len() as u64);
+        for (i, b) in boats {
+            w.u(i as u64);
+            w.u(b as u64);
+        }
+    }
     w.0
 }
 
@@ -1405,6 +1418,15 @@ fn decode_read_at(bytes: &[u8], level: u32) -> Result<(Network, usize), String> 
             }
         }
     }
+    if r.0.get(r.1..r.1 + 4) == Some(b"LFB1") {
+        r.1 += 4;
+        for _ in 0..r.u()? {
+            let (i, b) = (r.u()? as usize, super::ferry::Boat::from_code(r.u()?));
+            if let (Some(Some(route)), Some(b)) = (net.line_ferry.get_mut(i).filter(|_| i < n_lines), b) {
+                route.boat = b;
+            }
+        }
+    }
     for l in manual {
         fold_manual(&mut net, l);
     }
@@ -1650,7 +1672,7 @@ mod tests {
         for tag in &written {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
-        assert_eq!((LEVEL, BLOCKS.len()), (32, 36), "a new block raises LEVEL: raise it, then update this pin");
+        assert_eq!((LEVEL, BLOCKS.len()), (33, 37), "a new block raises LEVEL: raise it, then update this pin");
     }
 
     /// T-2217: buildings come back as they were, in their order; a network without them encodes as

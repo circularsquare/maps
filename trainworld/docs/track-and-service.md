@@ -2455,16 +2455,34 @@ ports stations, a boat two cars). Code: `track/ferry.rs`, exports `wasm/ferry.rs
 - **Run**: between two points the boat runs at most the lower of their two speeds; it accelerates and
   brakes at 0.15 m/s² (`ferry::BOAT_A`, 83 s and 521 m to reach 45 km/h), stops at every port, stands
   the line's dwell at the ports between its ends and the turnaround at the ends. Out and back like a
-  bus line. No capacity holds. A boat is two train cars: 320 riders at the rated load, 480 at crush
-(`BOAT_CRUSH`; demand's 2 cars, T-2195).
+  bus line. No capacity holds.
+- **Boats** (T-3892, `ferry::Boat`): each ferry line has one boat size, chosen on its panel (the Boat row, where a
+  train line has its train type); a new line starts Medium.
+
+  | | Small | Medium | Large |
+  |---|---|---|---|
+  | Riders at 100% / crush (train cars' worth) | 160 / 240 (1) | 320 / 480 (2) | 1,280 / 1,920 (8) |
+  | Open water speed | 65 km/h | 45 km/h | 45 km/h |
+  | A boat | US$15M | US$8M | US$50M |
+  | Running a boat-km | US$30 | US$30 | US$75 |
+  | Dwell between the ends / turnaround | 60 s / 300 s | 60 s / 300 s | 300 s / 1,200 s |
+  | Drawn | 25 m | 35 m | 90 m |
+
+  The route keeps its speeds as searched for a 45 km/h boat; a Small boat does each point over 10 km/h at the same
+  share of the way from 10 to 65 km/h (`Boat::v`, as an old save's speeds are raised), its bends' limits rising
+  with it. Choosing a size is one undoable edit that also sets that size's dwell and turnaround; the boats it needs
+  beyond that size's spares are bought, and the old ones stay as spares. Demand takes a boat as its train cars
+  (the app's `BOATS`). Running costs are the design's (US$40, 40, 100) cut by a quarter (Anita, 2026-11-20, "for
+  fun over realism").
 - **Money**: a port US$10M, paid on Construct (a constructed line redrawn to a new port pays for it
-  then), upkeep US$100 a day (US$10k a game day); boats US$8M, a fleet of their own (the fourth,
-  `fleet_ferry`) with spares shared between ferry lines; running US$40 a boat-km (real, `ECONOMY`
-  times in the game). The route is free, and redrawing it is free; removing a ferry line leaves its
-  ports and is undoable. The Construct quote lists ports as kind 12, boats as kind 13 and the route's
-  metres (free) as kind 14. A new ferry line starts at a boat every 20, 30 and 60 minutes at high, medium
-  and low demand (T-2273, T-3400; the ferry default for new lines instead once set, T-3703), 60 s dwell, 300 s
-  turnaround (`NEW_LINE.ferry` in app/src/game/newLine.ts, which the app passes).
+  then), upkeep US$100 a day (US$10k a game day); boats as above, each size a fleet of its own (Medium the
+  fourth, `fleet_ferry`; Small and Large the sixth and seventh, `fleet_ferry_small`, `fleet_ferry_large`) with
+  spares shared between ferry lines; running cost real, `ECONOMY` times in the game. The route is free, and redrawing
+  it is free; removing a ferry line leaves its ports and is undoable. The Construct quote lists ports as kind 12,
+  boats of every size as kind 13 and the route's metres (free) as kind 14. A new ferry line starts at a boat every
+  20, 30 and 60 minutes at high, medium and low demand (T-2273, T-3400), or, over 40 km of route, a boat an hour at
+  high and medium demand and none at night (T-3892, `NEW_LINE.ferryLong`); the ferry default for new lines instead
+  once set (T-3703). 60 s dwell, 300 s turnaround (`NEW_LINE.ferry` in app/src/game/newLine.ts, which the app passes).
 - **Loops** (T-2899; `ferry::is_closed`): a line of four stops or more whose last port is its first is a loop,
   as for a bus line (6.7): a circle in the service, one way unless set both ways (T-2981). The route runs from the first
   port's berth round to it again, so its first and last `K_PORT` points are that berth. The port is named
@@ -2473,4 +2491,7 @@ ports stations, a boat two cars). Code: `track/ferry.rs`, exports `wasm/ferry.rs
   landings) and each ferry line's route (points, kinds, speeds) and whether it is constructed. A save
   without it has no ports or ferries and loads as before. An `LFR2` block (level 5, speeds searched at 32 km/h) and an `LFR1` block (level 3, at 25) are the same:
   each speed over 10 km/h loads at the same share of the way from 10 to 45 (`ferry::v_from_lfr2`,
-  `v_from_lfr1`; a bend's limit rises with it, T-2450, T-3435).
+  `v_from_lfr1`; a bend's limit rises with it, T-2450, T-3435). A trailing `LFB1` block (level 33, T-3892) lists
+  the ferry lines whose boats are other than Medium (line index, `Boat::code`: 0 Small, 2 Large); a save without it
+  loads every boat as Medium, and an older build reading one loads them as Medium. The game header's `fleetFerry` is
+  the Medium boats, `fleetFerrySmall` and `fleetFerryLarge` the others (absent when none).

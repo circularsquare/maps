@@ -23,6 +23,7 @@ import { awayNear, DAY_KINDS, kindMade, PLAIN_KIND, rushRun } from "./days";
 import { demandByDay, lineLoadsFor, type DemandView } from "./demand";
 import { cityById, isCity } from "./cities";
 import { faresFor, faresOf, lineFareMul, ownLineFare, type Fares } from "./fareCurve";
+import { boatFleet, boatOf } from "./boats";
 import { cityFareScales, cityScale } from "./fareDefault";
 import { lineFares } from "./fareInEffect";
 import { stationZone } from "./listScope";
@@ -60,7 +61,7 @@ export function trainShortfall(id: LineId, trains: readonly number[]): { need: n
 export function carShortfall(id: LineId, more: number): { need: number; have: number } | null {
   const m = moneyState.peek(), st = world.peek()?.lineStats[id];
   if (!m || !st || st.status !== "running" || m.mode === "sandbox" || !(more > 0)) return null;
-  const [owned, needed, price] = st.bus?.ferry ? [m.fleetFerry, m.boatsNeeded, m.boatPrice] : st.bus ? [m.fleetBus, m.busesNeeded, m.busPrice]
+  const [owned, needed, price] = st.bus?.ferry ? boatFleet(m, st) : st.bus ? [m.fleetBus, m.busesNeeded, m.busPrice]
     : st.tram ? [m.fleetTram, m.tramsNeeded, m.tramPrice] : st.fast ? [m.fleetFast, m.carsNeededFast, m.hsCarPrice] : [m.fleet, m.carsNeeded, m.carPrice];
   const need = Math.max(0, needed + more - owned) * price, have = liveMoney.peek().cash;
   return need > 1e-9 && need > have + 1e-6 ? { need, have } : null;
@@ -126,10 +127,11 @@ function sameShape(a: WorldView, b: WorldView): boolean {
   }
   return true;
 }
-/** T-1464: a bus line's stops in the same places, built or not, the same road length. */
+/** T-1464: a bus line's stops in the same places, built or not, the same road length; T-3892: a ferry line's boat
+ * size too (its fare multiple). */
 function sameBus(a: LineStats["bus"], b: LineStats["bus"]): boolean {
   if (!a || !b) return a === b;
-  if (a.built !== b.built || a.roadM !== b.roadM || a.stops.length !== b.stops.length) return false;
+  if (a.built !== b.built || a.roadM !== b.roadM || a.stops.length !== b.stops.length || a.ferry?.boat !== b.ferry?.boat) return false;
   return a.stops.every((s, i) => s.id === b.stops[i].id && s.lng === b.stops[i].lng && s.lat === b.stops[i].lat);
 }
 let shaped: WorldView | null = null;
@@ -206,7 +208,7 @@ function incomeFor(w: WorldView | null, m: MoneyTerms | null, dv: DemandView | n
       const based = baseOf.get(l.id) ?? 0;
       // T-1626, T-2195: a high-speed or ferry line's rides pay its multiplier on the rate, T-3567 times the line's own;
       // demand's extra has it already
-      const mul = lineFareMul({ id: l.id, fast: st.fast, ferry: !!st.bus?.ferry, bus: !!st.bus && !st.bus.ferry }, lf);
+      const mul = lineFareMul({ id: l.id, fast: st.fast, ferry: !!st.bus?.ferry, boat: boatOf(st.bus), bus: !!st.bus && !st.bus.ferry }, lf);
       pkm.forEach((pk, p) => {
         const share = total > 0 ? pk / total : 0;
         const r = (faresFor(fares, based * share, pkmPaid[p], mul) + (dm.fareX?.[p] ?? 0)) * x;

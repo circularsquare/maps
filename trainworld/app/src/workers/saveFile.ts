@@ -111,10 +111,13 @@ export interface SaveHeader {
   fleetBus?: number;
   /** T-2194: boats owned; absent for none */
   fleetFerry?: number;
+  /** T-3892: Small and Large boats owned (`fleetFerry` is Medium's); absent for none */
+  fleetFerrySmall?: number;
+  fleetFerryLarge?: number;
   /** T-2926: tram cars owned; absent for none */
   fleetTram?: number;
   /** fare curve (game/fareCurve.ts): its first stretch as a base and rate, and its nodes (none in a save from before T-883) */
-  fares: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number>; byCity?: boolean; cityScales?: Record<string, number>; baseline?: string; basis?: "usd"; income?: number; hsr?: number; ferry?: number; bus?: number; transfer?: number; ref?: string; lines?: Record<string, number>; zones?: { id: number; name: string; prices: number[]; off?: boolean }[]; zoneNext?: number };
+  fares: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number>; byCity?: boolean; cityScales?: Record<string, number>; baseline?: string; basis?: "usd"; income?: number; hsr?: number; ferry?: number; ferrySmall?: number; ferryLarge?: number; bus?: number; transfer?: number; ref?: string; lines?: Record<string, number>; zones?: { id: number; name: string; prices: number[]; off?: boolean }[]; zoneNext?: number };
   /** recent days, oldest first (today last) */
   ledger: DayLedger[];
   /** recent hours, oldest first (T-447; absent in older saves) */
@@ -191,7 +194,7 @@ export interface GuideSave { done: number; hidden?: true; closed?: true; card?: 
 /** T-1826: every header field this build reads, so a field added to `SaveHeader` must be listed. */
 const HEADER_FIELDS: Record<keyof SaveHeader, true> = {
   game: true, format: true, city: true, region: true, cities: true, clock: true, cash: true, loan: true, loanPay: true, loanDays: true, fleet: true, fleetFast: true,
-  fleetBus: true, fleetFerry: true, fleetTram: true, fares: true, ledger: true, hours: true, regions: true, lineDays: true, stars: true, goals: true, notes: true, shapes: true, hidden: true, schematic: true, mode: true, start: true,
+  fleetBus: true, fleetFerry: true, fleetFerrySmall: true, fleetFerryLarge: true, fleetTram: true, fares: true, ledger: true, hours: true, regions: true, lineDays: true, stars: true, goals: true, notes: true, shapes: true, hidden: true, schematic: true, mode: true, start: true,
   dayShift: true, opened: true, demandFine: true, demandBuilt: true, newCars: true, newHeadway: true, newWeekendShare: true, level: true, guide: true, achievements: true, home: true, copy: true, modded: true,
 };
 /** T-3115: the header fields, for checking a stranger's save (game/sharedSave.ts) */

@@ -58,7 +58,7 @@ addEventListener("unhandledrejection", (e) => {
 // ---------------------------------------------------------------- saves (T-029)
 
 function header(): SaveHeader {
-  return { game: "anitabuilder", format: SAVE_FORMAT, level: TrackApi.save_level(), city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), ...loanToSave(loan), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), ...(api!.fleet_ferry() ? { fleetFerry: api!.fleet_ferry() } : {}), ...(api!.fleet_tram() ? { fleetTram: api!.fleet_tram() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), ...(lineDays.size ? { lineDays: savedLineDays(true) } : {}), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), ...savedShapes(), ...savedHidden(), ...(diagramCities.length ? { schematic: [...diagramCities] } : {}), mode, start: startZone, ...(dayPinned ? { dayShift } : {}), opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), ...(demandBuilt?.length ? { demandBuilt } : {}), newCars: newLineCars, ...(Object.keys(newLineHeadway).length ? { newHeadway: newLineHeadway } : {}), ...(newLineWeekendShare !== null ? { newWeekendShare: newLineWeekendShare } : {}), ...(guide ? { guide } : {}), ...(achievements ? { achievements: Object.fromEntries(achievements) } : {}), ...(home ? { home } : {}), ...(copyOf ? { copy: copyOf } : {}), ...(modded ? { modded } : {}) };
+  return { game: "anitabuilder", format: SAVE_FORMAT, level: TrackApi.save_level(), city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), ...loanToSave(loan), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), ...(api!.fleet_ferry() ? { fleetFerry: api!.fleet_ferry() } : {}), ...(api!.fleet_ferry_small() ? { fleetFerrySmall: api!.fleet_ferry_small() } : {}), ...(api!.fleet_ferry_large() ? { fleetFerryLarge: api!.fleet_ferry_large() } : {}), ...(api!.fleet_tram() ? { fleetTram: api!.fleet_tram() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), ...(lineDays.size ? { lineDays: savedLineDays(true) } : {}), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), ...savedShapes(), ...savedHidden(), ...(diagramCities.length ? { schematic: [...diagramCities] } : {}), mode, start: startZone, ...(dayPinned ? { dayShift } : {}), opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), ...(demandBuilt?.length ? { demandBuilt } : {}), newCars: newLineCars, ...(Object.keys(newLineHeadway).length ? { newHeadway: newLineHeadway } : {}), ...(newLineWeekendShare !== null ? { newWeekendShare: newLineWeekendShare } : {}), ...(guide ? { guide } : {}), ...(achievements ? { achievements: Object.fromEntries(achievements) } : {}), ...(home ? { home } : {}), ...(copyOf ? { copy: copyOf } : {}), ...(modded ? { modded } : {}) };
 }
 
 /** The game as file bytes. The network and header are taken at once, before anything awaits. */
@@ -327,6 +327,8 @@ async function openSave(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   api!.set_fleet_fast(h.fleetFast ?? 0);
   api!.set_fleet_bus(h.fleetBus ?? 0);
   api!.set_fleet_ferry(h.fleetFerry ?? 0);
+  api!.set_fleet_ferry_small(h.fleetFerrySmall ?? 0);
+  api!.set_fleet_ferry_large(h.fleetFerryLarge ?? 0);
   api!.set_fleet_tram(h.fleetTram ?? 0);
   putFares(fresh ? startFares(fresh) : loadFares(h.fares));
   goneLineFares.clear();
@@ -990,8 +992,8 @@ async function handleMessage(msg: ToClock) {
     // an early answer's money split waits for the next state the page takes
     let answered = early || stops || renamed, shares = early && charge > 0;
     const rest = () => {
-      // T-3758: a line's fare mode changes no train's run, yet demand reads it
-      if (demand.length || op.op === "undo" || op.op === "redo" || op.op === "lineFareDist" || stationsKey() !== snapStations) scheduleSnapshot();
+      // T-3758: a line's fare mode changes no train's run, yet demand reads it; T-3892: nor need a boat size (its riders, fares)
+      if (demand.length || op.op === "undo" || op.op === "redo" || op.op === "lineFareDist" || op.op === "ferryBoat" || stationsKey() !== snapStations) scheduleSnapshot();
       if (!answered) { answered = true; answer(); }
       keep();
       // Paid for something: keep it (T-029, autosave on construct).

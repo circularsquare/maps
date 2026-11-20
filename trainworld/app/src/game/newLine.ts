@@ -15,7 +15,12 @@ export const NEW_LINE = {
   bus: { headwayS: [480, 900, 1800] as Levels, dwellS: 30, turnaroundS: 120 },
   /** A boat every 20, 30 and 60 minutes (T-2273; the low-demand boat is T-3400). */
   ferry: { headwayS: [1200, 1800, 3600] as Levels, dwellS: 60, turnaroundS: 300 },
+  /** T-3892: a ferry line over `LONG_FERRY_KM`, a boat an hour by day and none at night: at every 20 minutes a long
+   * crossing runs more boats than it fills (notes/T-3892.md 1). */
+  ferryLong: { headwayS: [3600, 3600, 0] as Levels },
 };
+/** T-3892: the route km past which a new ferry line starts at `NEW_LINE.ferryLong`'s headways. */
+export const LONG_FERRY_KM = 40;
 
 /** T-3767: a default's headways one per period, morning to night (game/periods.ts `PERIODS`): five kept as they
  * are; three (high, medium and low) with high's in the morning, at midday and in the afternoon, as a switch up to
@@ -39,9 +44,10 @@ export function headwaysOfRows(rows: readonly number[], n: number): number[] {
 }
 
 /** The headways a new line of `kind` and `n` rows (3, 4 or 5; T-3767) starts with, in the day's order: the
- * player's default for it (T-3543, T-3703), else a bus's or ferry's own above; null for a rail kind with none set
- * (it starts on counts). */
-export function headwaysFor(kind: keyof NewHeadways, set: NewHeadways, n = 3): number[] | null {
-  const h = set[kind] ?? (kind === "bus" || kind === "ferry" ? NEW_LINE[kind].headwayS : null);
+ * player's default for it (T-3543, T-3703), else a bus's or ferry's own above (a ferry line of `km` route km over
+ * `LONG_FERRY_KM` the long one's, T-3892); null for a rail kind with none set (it starts on counts). */
+export function headwaysFor(kind: keyof NewHeadways, set: NewHeadways, n = 3, km = 0): number[] | null {
+  const own = kind === "ferry" && km > LONG_FERRY_KM ? NEW_LINE.ferryLong.headwayS : kind === "bus" || kind === "ferry" ? NEW_LINE[kind].headwayS : null;
+  const h = set[kind] ?? own;
   return h ? headwaysIn(h, n) : null;
 }

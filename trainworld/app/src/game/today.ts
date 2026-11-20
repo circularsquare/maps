@@ -18,6 +18,7 @@ import { linesPending, type PendingKind } from "./lineFigures";
 import { moneyState } from "./money";
 import { lineRunFactor } from "./regionMoney";
 import { clockTime, trainKind } from "./format";
+import { boatOf, boatRunKm } from "./boats";
 import { hourSpan, PERIODS, periodAt } from "./periods";
 import { crowdColour, rgb } from "./palette";
 import { tipEnds, tipStrip } from "../ui/tip";
@@ -197,7 +198,7 @@ export function runningToday(l: LineInput, st: LineStats): number {
   for (let h = Math.floor(t0); h < t; h++) {
     const p = periodAt(h * 3600);
     // T-1464: a bus line's buses cost a bus-km each
-    const perKm = st.bus?.ferry ? m.runCostBoatKm : st.bus ? m.runCostBusKm : k.runCostTrainKm + cars * k.runCostCarKm;
+    const perKm = st.bus?.ferry ? boatRunKm(m, boatOf(st.bus)) : st.bus ? m.runCostBusKm : k.runCostTrainKm + cars * k.runCostCarKm;
     cost += tph[p] * (st.oneWay ? 1 : 2) * st.km * perKm * m.economy *(Math.min(h + 1, t) - Math.max(h, t0));
   }
   // T-2669: at its countries' prices, as the clock worker drains it

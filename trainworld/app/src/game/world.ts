@@ -898,9 +898,9 @@ export function setFareRef(country: string) {
 export function setFareHsr(mul: number) {
   return edit({ op: "fareHsr", mul });
 }
-/** T-2194: the fare multiplier on ferry lines. */
-export function setFareFerry(mul: number) {
-  return edit({ op: "fareFerry", mul });
+/** T-2194: the fare multiplier on ferry lines; T-3892: on those of one boat size (Medium unless given). */
+export function setFareFerry(mul: number, boat: 0 | 1 | 2 = 1) {
+  return edit({ op: "fareFerry", mul, ...(boat !== 1 ? { boat } : {}) });
 }
 /** T-3028: the fare multiplier on bus lines. */
 export function setFareBus(mul: number) {
