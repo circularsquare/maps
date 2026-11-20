@@ -709,8 +709,6 @@ Passing tracks (T-2228, archived; built as T-2231 to T-2233; notes/T-2228.md):
 - T-3845 [P2] {L:buses} Ferry route drawn port, waypoints, then port (taking, 2026-11-20, agent ferryorder)
   - Context: You, 11-20: "the issue some people were having is that they cant even place two points. cuz the pathfinding fails cuz its too complicated / long. so i think the way it should work is like, instead of putting port A then port B then shift click to put waypoint between A and B, we should put port A then shift click to put waypoint then click to put port B. and in the tooltip we should say place port or if we're hovering over water 'shift click to place waypoint'."
   - Other: notes/T-3809.md
-- T-3846 [P2] {L:timetables} Timetable related lines quieter and fewer (taking, 2026-11-20, agent ttquiet)
-  - Context: You, 11-20: "i think the related lines are a bit too prominent. lets make their bullets also half opacity, and their timetable text half opacity down from 60% or whatever we used. also lets only include related lines if (it has at least 3 stops in common, and the number of stops in common is at least 40% of either line's number of total stops) or the related line interlines like on the same track at any point."
 - T-3843 [P3] {L:region-redraws} Isfahan's north strip in no zone
   - Context: Found by T-3763: a 141 km2 strip on Isfahan's north edge (51.624, 32.739), between the outlines of bcs and isf, holds about 70,000-137,000 people and is in no pack. Also Duhok governorate comes out at 1.45 of Iraq's 2024 census.
   - Other: notes/T-3763.md
