@@ -55,6 +55,8 @@ export interface TripLeg {
   fullWaitMin: number;
   /** T-3784: a ride whose change onto it is inside a fare zone run, so pays no transfer fare */
   freeChange?: boolean;
+  /** T-3823: a market route's first ride, its wait cut to the planned one (`plannedFirstWait`): the half headway it was */
+  plannedFrom?: number;
 }
 
 /** A sequence of boardings the train riders take, and its share of them. */
@@ -471,6 +473,24 @@ export function routeCrowding(r: TripRoute) {
 /** What the rides that waited for room run, for the words of that wait: their vehicle where it is one kind,
  * "ride" where the row sums rides of different kinds. */
 export const roomVehicle = (r: TripRoute): Vehicle | "ride" => ridesVehicle(r.legs.filter((l) => l.kind === "ride" && l.fullWaitMin >= 0.05));
+
+/** T-3823: a market route as the market costs it: the first boarding waits the planned time (T-1430, the sim's
+ * `planned_board_cost`: the least of half the headway, 5 min plus a sixth of it, and 30 min), the legs carrying
+ * the half headway. The half headway is the leg's wait less the wait for room; the perceived wait is cut in
+ * the same ratio. The inter-city market only: a local trip waits the half headway. */
+const PLANNED_EARLY_MIN = 5, PLANNED_WAIT_CAP_MIN = 30;
+export function plannedFirstWait(r: TripRoute): TripRoute {
+  const i = r.legs.findIndex((l) => l.kind === "ride");
+  const l = r.legs[i];
+  const half = l ? l.waitMin - l.fullWaitMin : 0;
+  if (!l || half <= 0) return r;
+  const planned = Math.min(half, PLANNED_EARLY_MIN + half / 3, PLANNED_WAIT_CAP_MIN);
+  if (half - planned < 0.05) return r;
+  const plain = l.waitPerceived - l.fullWaitMin;
+  const legs = r.legs.slice();
+  legs[i] = { ...l, waitMin: l.waitMin - (half - planned), waitPerceived: l.waitPerceived - plain * (1 - planned / half), plannedFrom: half };
+  return { ...r, legs };
+}
 
 /** What a route's rides run: their vehicle where it is one kind, else "ride". */
 export const routeVehicle = (r: TripRoute): Vehicle | "ride" => ridesVehicle(r.legs.filter((l) => l.kind === "ride"));

@@ -150,5 +150,5 @@ export const BUS_BOARD_FELT_MIN = 4;
 export function rideTip(l: TripLeg, st: { bus?: { ferry?: unknown }; tram?: boolean } | undefined, full = 0, late = 0): string {
   const bus = !st ? false : st.bus ? (st.bus.ferry ? "boat" : true) : st.tram ? "tram" : false;
   const v = { bus, wait: minFix1(l.waitMin - full), full: full >= 0.05, fullMin: minFix1(full), ride: minFix1(l.min), stops: l.stops };
-  return t("tripText.rideTip", v) + (late >= 0.05 ? t("tripText.rideTipLate", { bus, min: minFix1(late) }) : "");
+  return t(l.plannedFrom ? "tripText.rideTipPlanned" : "tripText.rideTip", v) + (late >= 0.05 ? t("tripText.rideTipLate", { bus, min: minFix1(late) }) : "");
 }

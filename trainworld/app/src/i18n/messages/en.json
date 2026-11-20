@@ -2550,6 +2550,7 @@
   "tripText.otherRoutes": "Other routes",
   "tripText.parking": "Parking",
   "tripText.rideTip": "Wait {wait} (half the time between the useful {bus, select, true {buses} boat {boats} tram {trams} other {trains}}){full, select, true { and {fullMin} more for a {bus, select, true {bus} boat {boat} tram {tram} other {train}} with room} other {}}, then {ride} on the {bus, select, true {bus} boat {boat} tram {tram} other {train}} over {stops, plural, one {# stop} other {# stops}}",
+  "tripText.rideTipPlanned": "Wait {wait} (people time their arrival){full, select, true { and {fullMin} more for a {bus, select, true {bus} boat {boat} tram {tram} other {train}} with room} other {}}, then {ride} on the {bus, select, true {bus} boat {boat} tram {tram} other {train}} over {stops, plural, one {# stop} other {# stops}}",
   "tripText.rideTipLate": ". Some trips start when no {bus, select, true {bus} boat {boat} tram {tram} other {train}} is due for hours, so the wait counts as {min} more",
   "tripText.smallerRoutes": "Smaller routes",
   "tripText.termAirportDrives": "airport drives",

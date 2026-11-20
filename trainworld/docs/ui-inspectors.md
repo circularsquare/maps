@@ -1098,7 +1098,9 @@ title is "Trip" with no line under it naming the ends: the map marks them [T-125
   pairs the train serves by all their trips, not their riders, and over their income groups; its
   hover is the main route's own equation [T-3404], ending at that route's sum, then "The sum is this
   route's own. The effective time is averaged over the 6 km areas at the two ends, by their trips."
-  [T-3822]), then "Car on the same trips" (or "Plane", or "Car or plane" where the plane has
+  [T-3822]; the routes' first ride waits the planned time the market costs it at [T-3823, T-1430:
+  the least of half the headway, 5 minutes plus a sixth of it, and 30; `plannedFirstWait` in `game/trip.ts`],
+  in the rows, the equation, Time and the other routes' hovers), then "Car on the same trips" (or "Plane", or "Car or plane" where the plane has
   0.5% of the trips or more: the other ways as the choice weighs them together, the reference minus
   ln(rest) over the scale, over the same pairs and riders; hover "Effective time by car on trips
   possible by train."), so the train's share reads as its share of the trips possible by train

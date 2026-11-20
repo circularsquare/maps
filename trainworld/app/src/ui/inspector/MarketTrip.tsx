@@ -17,7 +17,7 @@ import { modeColours } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
 import { intercityDemand, intercityPlaceName } from "../../game/demand";
 import { pairFigures as pairOf, type PairTrips } from "../../game/corridorFigures";
-import { baseFareOf, peopleOf, routeTerms, tripPeriod, wholePeople, type MarketEnd, type MarketPeriod, type MarketShown, type TripRoute } from "../../game/trip";
+import { baseFareOf, peopleOf, plannedFirstWait, routeTerms, tripPeriod, wholePeople, type MarketEnd, type MarketPeriod, type MarketShown, type TripRoute } from "../../game/trip";
 import { shownDayPhrase } from "../../game/ui";
 import { linesById, stationNames, world } from "../../game/world";
 import { lowerWord, t as tr, tRich, tSeries } from "../../i18n";
@@ -364,7 +364,9 @@ function noRailText(why: MarketPeriod["why"]): string {
 
 export function MarketTrip({ m }: { m: MarketShown }) {
   const q = shownPeriod.value;
-  const t = m.periods[q];
+  const t0 = m.periods[q];
+  // T-3823: the routes' first wait as the market costs it
+  const t = t0 && { ...t0, routes: t0.routes.map(plannedFirstWait) };
   const day = shownDayPhrase.value;
   const period = PERIODS[q].name;
   // T-1148: between two places both ways, as the city view's corridors count them; from a selection
