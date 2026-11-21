@@ -554,7 +554,7 @@ export function routeTerms(t: RouteCosts, r: TripRoute): CostTerm[] {
     if (l.kind === "ride") { waitP += l.waitPerceived; changeP += l.changePerceived; endsP += l.endsPerceived; }
     else xferP += l.perceived;
   }
-  // T-3888: the stairs in and out of a train's station
+  // T-3888, T-3910: the boarding cost at each end of a train or tram trip
   if (endsP > 0) out.push({ id: "stairs", label: tr("trip.stairs"), real: 0, weight: 1, perceived: endsP, unit: "min" }); // i18n-ignore
   const { crowding, fullWait } = routeCrowding(r);
   const wait = tot.wait - fullWait;

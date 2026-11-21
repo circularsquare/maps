@@ -24,7 +24,7 @@ pub struct Graph {
     /// logit's own form for an option open to that share. 0 with service all period.
     pub rn_span: Vec<f32>,
     /// T-3888: perceived minutes a trip pays where its first boarding is at route node r
-    /// (`Params::train_in_min` on a train or tram whose platform there is below or above ground,
+    /// (`Params::train_in_min` on a train or tram, at grade too unless `STAIRS_AT_GRADE` is off,
     /// else 0), and where its last ride leaves at r (`train_out_min`); both empty where nothing pays. In the station pair's cost after the
     /// search (`trip_ends`), so route choice between lines does not see them.
     pub rn_in: Vec<f32>,
@@ -364,9 +364,9 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
         if h > 0.0 && h.is_finite() && phi(r) > 0.0 { 60.0 / h } else { 0.0 }
     }).collect();
     let rn_span: Vec<f32> = (0..nr).map(|r| { let f = phi(r); if f > 0.0 && f < 1.0 { -f.ln() / p.beta } else { 0.0 } }).collect();
-    // T-3888: the stairs, at a train's or tram's stop below or above ground; only where any stop pays
+    // T-3888, T-3910: the boarding cost at a train's or tram's stop (`pays_ends`); only where any stop pays
     let stairs: Vec<bool> = (0..net.n_lines()).map(|l| net.stairs_line(l)).collect();
-    let pays: Vec<bool> = (0..nr).map(|r| stairs[rn_line[r] as usize] && !net.at_grade(rn_stop[r] as usize)).collect();
+    let pays: Vec<bool> = (0..nr).map(|r| stairs[rn_line[r] as usize] && net.pays_ends(rn_stop[r] as usize)).collect();
     let (rn_in, rn_out) = if (p.train_in_min > 0.0 || p.train_out_min > 0.0) && pays.iter().any(|&t| t) {
         let by = |m: f32| pays.iter().map(|&t| if t { m } else { 0.0 }).collect::<Vec<f32>>();
         (by(p.train_in_min), by(p.train_out_min))

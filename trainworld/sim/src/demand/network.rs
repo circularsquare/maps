@@ -137,7 +137,17 @@ impl Network {
     pub fn at_grade(&self, k: usize) -> bool {
         self.stop_grade.get(k).copied().unwrap_or(false)
     }
+    /// T-3910: whether a train or tram trip pays its end costs at stop `k`: every stop while
+    /// `STAIRS_AT_GRADE`, else only those below or above ground.
+    #[inline]
+    pub fn pays_ends(&self, k: usize) -> bool {
+        STAIRS_AT_GRADE || !self.at_grade(k)
+    }
 }
+
+/// T-3910: a train or tram trip pays the boarding cost at a stop at grade too. Set false to exempt
+/// stops at grade again (the T-3888 level rule).
+pub const STAIRS_AT_GRADE: bool = true;
 
 #[derive(Clone, Copy)]
 enum Kind {

@@ -6,7 +6,7 @@
 
 A boarding costs half the gap between trains, times the station's wait weight, plus the change cost when it is a change.
 
-**Stairs.** At a station below or above ground, getting down to your first train costs 2 minutes and getting up from your last one 2, trams included. A platform at street level costs nothing, and so do buses and ferries. A change pays its own bother instead.
+**Boarding.** Getting on your first train or tram costs 2 minutes and getting off your last one 2, at any station. Buses and ferries cost nothing. A change pays its own bother instead.
 
 **Changing trains** costs 2 minutes for the bother, plus the walk from one platform to the other, plus the wait for the next train. Inside a [station building](station-buildings.md) the bother is 50% of that. The walk counts extra, as in [perceived minutes](perceived-minutes.md).
 

@@ -34,9 +34,9 @@ fn common_test_params() -> Params {
     Params { xfer_walk_m: 0.0, train_in_min: 0.0, train_out_min: 0.0, ..Params::default() }
 }
 
-/// T-3888: a trip pays `train_in_min` where its first boarding is a train or tram below or above
-/// ground and `train_out_min` where its last ride leaves one there, never at a change; a bus, a
-/// ferry and a platform at grade pay neither; the real minutes of the walking rule are untouched;
+/// T-3888, T-3910: a trip pays `train_in_min` where its first boarding is a train or tram (at any
+/// level while `STAIRS_AT_GRADE`) and `train_out_min` where its last ride leaves one, never at a
+/// change; a bus and a ferry pay neither; the real minutes of the walking rule are untouched;
 /// the trip explorer's legs carry them and still add up.
 #[test]
 fn a_train_trip_pays_its_way_in_and_out() {
@@ -71,11 +71,17 @@ fn a_train_trip_pays_its_way_in_and_out() {
     net.line_pier = vec![];
     net.stop_grade = vec![true, false, false, false];
     let (g0, g1) = (skims(&build_graph(&net, &plain), &plain), skims(&build_graph(&net, &p), &p));
-    assert!((at(&g1, 0, 1) - at(&g0, 0, 1) - 3.0).abs() < 1e-4 && (at(&g1, 1, 0) - at(&g0, 1, 0) - 2.0).abs() < 1e-4 && (at(&g1, 2, 1) - at(&g0, 2, 1) - 5.0).abs() < 1e-4);
+    let d = |a: usize, b: usize| at(&g1, a, b) - at(&g0, a, b);
+    if network::STAIRS_AT_GRADE {
+        // T-3910: the level makes no difference, every stop pays
+        assert!((d(0, 1) - 5.0).abs() < 1e-4 && (d(1, 0) - 5.0).abs() < 1e-4 && (d(2, 1) - 5.0).abs() < 1e-4);
+    } else {
+        assert!((d(0, 1) - 3.0).abs() < 1e-4 && (d(1, 0) - 2.0).abs() < 1e-4 && (d(2, 1) - 5.0).abs() < 1e-4);
+    }
     // nothing to pay: no per-node table at all
     assert!(build_graph(&net, &plain).rn_in.is_empty());
     net.stop_grade = vec![true; 4];
-    assert!(build_graph(&net, &p).rn_in.is_empty());
+    assert_eq!(build_graph(&net, &p).rn_in.is_empty(), !network::STAIRS_AT_GRADE);
 }
 
 /// T-3856: boarding a bus costs no more than boarding a train, in the cost of boarding and in each

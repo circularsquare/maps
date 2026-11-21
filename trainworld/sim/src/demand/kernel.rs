@@ -67,10 +67,10 @@ pub struct Params {
     /// A fixed cost per change of train, perceived minutes (Anita, T-717): a change costs this, its
     /// wait and the walk between the two platforms.
     pub transfer_min: f32,
-    /// Anita, 2026-11-20 (T-3888): perceived minutes a trip pays where its first boarding is at a
-    /// platform below or above ground (`train_in_min`) and where its last ride leaves at one
-    /// (`train_out_min`): the stairs down to the platform and up again, a train's or a tram's. Never
-    /// at a change; buses, ferries and platforms at grade pay neither (`Graph::rn_in`). In the
+    /// Anita, 2026-11-20 (T-3888, T-3910): perceived minutes a trip pays where its first boarding
+    /// (`train_in_min`) and where its last ride leaves (`train_out_min`): a general boarding cost on a
+    /// train or tram at any level (`network::STAIRS_AT_GRADE`). Never
+    /// at a change; buses and ferries pay neither (`Graph::rn_in`). In the
     /// station pair's cost (`DestSearch::run_by`), not in its real minutes (`Skims::walk`).
     pub train_in_min: f32,
     pub train_out_min: f32,

@@ -134,9 +134,8 @@ only reach stations on it.
 - Ride: 1 a minute, stretched once the train is 70% full: at 100% (160 a car) a minute counts 3,
   at 120% 5.4, at 150% (240 a car, as packed as a train gets) 10.8. Below 70% nobody minds the
   crowd.
-- Stairs: 2 minutes getting down to the first train at a station below or above ground, and 2
-  getting up from the last one, for a train or a tram (Anita, 2026-11-20). Nothing at a platform at
-  street level, on a bus or ferry, or at a change (which has its own 2 below).
+- Boarding: 2 minutes at the first train or tram of a trip, and 2 at the last one, at any station
+  (Anita, 2026-11-20). Nothing on a bus or ferry, or at a change (which has its own 2 below).
 - Changing trains: a fixed 2 minutes, plus the walk from the platform you arrive at to the one you
   leave from (centre to centre, at an easy walking pace, each minute counted 1.39), plus the wait
   for the next train. Platforms 80 m apart add 2 minutes; across one platform, nothing. Between

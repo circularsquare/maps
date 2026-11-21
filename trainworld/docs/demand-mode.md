@@ -14,7 +14,7 @@ Per OD pair and period, rail, driving and walking the whole way (below) compete 
 there is no car ownership in demand (Anita, 2026-10-21, T-854), and "car" in every view stands for
 the car and every other way of getting about (bus, taxi, bike).
 
-- rail = walk to a station + the stairs at a platform below or above ground (below) + wait (half the
+- rail = walk to a station + the boarding cost (below) + wait (half the
   headway, capped) + ride + walks between platforms + walk from station + fare / value of time (a
   change costs a fixed 2 perceived minutes, its wait
   and the walk between the two platforms' centres: T-717; onto the line just left only where it
@@ -105,15 +105,15 @@ commute zone pair between cells takes the tier by its one walk cost (`set_walk_f
 regional layer's outings across a zone line take it from their packs' walk shares, so only once
 those are rebuilt.
 
-**The stairs** (Anita, 2026-11-20, T-3888): a trip pays 2 perceived minutes where its first boarding
-is at a platform below or above ground (`train_in_min`) and 2 where its last ride leaves at one
-(`train_out_min`), on a train or a tram; never at a change (which keeps its fixed 2), never on a
-bus or ferry, never at a platform at grade (level 0). A platform is its stop's own station: a
-station with platforms at several levels pays at the one boarded or left. The minutes are each
+**The boarding cost** (Anita, 2026-11-20, T-3888; every level 2026-11-20, T-3910): a trip pays 2
+perceived minutes at its first boarding (`train_in_min`) and 2 where its last ride leaves
+(`train_out_min`), on a train or a tram, whatever the station's level; never at a change (which keeps
+its fixed 2), never on a bus or ferry. `network::STAIRS_AT_GRADE = false` exempts platforms at
+grade again (the level plumbing stays). The minutes are each
 station pair's expected over the departures its strategy takes by frequency
 (`search::trip_ends`), added after the route search as the fare curve is, so the choice among a
 station's lines does not see them; they are not in the walking rule's real minutes. The trip
-explorer shows them as "stairs".
+explorer shows them as "boarding".
 
 Commutes walk between cells (T-587, `Gravity::set_walk_fine`): each zone's homes and its jobs are
 six cells (`walk_samples`), those where the zone's cumulative weight in pack order crosses 1/12,

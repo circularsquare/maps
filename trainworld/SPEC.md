@@ -135,8 +135,8 @@ institutions** (prisons, nursing homes and the like, T-234).
 - **Mode choice** recomputes after service or fare changes: station access, destination-specific
   common-line strategies (a wait is half the combined headway, in plain minutes [T-585]; a change
   of trains costs a fixed 2 perceived minutes, its wait and the walk between the two platforms'
-  centres [T-717]; a trip's first and last platform below or above ground, a train's or tram's, 2
-  each for the stairs [T-3888]), fare-sensitive choice between rail and driving, and up to three crowding
+  centres [T-717]; a train's or tram's first boarding and last alighting, 2
+  each, at any level [T-3888, T-3910]), fare-sensitive choice between rail and driving, and up to three crowding
   rounds that price crowded trains and riders left behind by full ones [T-188]; a period stops
   once a round moves its loads under 1% [T-434]. Riders choose among station pairs by how much
   slower an option is relative to the trip's length: the scale is 20 over the trip's rough length

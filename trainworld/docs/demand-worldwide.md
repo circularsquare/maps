@@ -657,11 +657,10 @@ notes/T-420.md has the tables.
   (people 65+ are 29% of Japan, 3% of Nigeria). Check: a country's travel survey walk shares by
   distance (NHTS, England's NTS, France's EMP, Japan's person-trip surveys) and its census
   walk-to-work share.
-- **The stairs** (T-3888). A trip pays 2 perceived minutes at its first boarding and 2 at its last
-  alighting where that platform is below or above ground, on a train or a tram; nothing at grade,
-  on a bus or ferry, or at a change. One number for every place. Why it may not carry over: the
-  depth of stations (Moscow's or Kyiv's deep stations take minutes of escalator, a street-level
-  light rail none), lifts and escalators. Check: station access times from a travel survey or an
+- **The boarding cost** (T-3888, T-3910). A trip pays 2 perceived minutes at its first boarding and 2 at
+  its last alighting, on a train or a tram at any level; nothing on a bus or ferry, or at a change.
+  One number for every place. Why it may not carry over: the depth of stations (Moscow's or Kyiv's
+  deep stations take minutes of escalator, a street-level light rail none), lifts and escalators. Check: station access times from a travel survey or an
   operator's published entrance-to-platform times.
 
 - **Trams** (T-2926). A tram line is a rail line: it boards with no penalty (as every line since T-3856), each tram section counts as three quarters of a rail car in seats, rated and crush loads,
