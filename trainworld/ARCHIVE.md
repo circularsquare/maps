@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3929 [P2] {L:passing-tracks} Expresses drawn through locals on count and headway lines (2026-11-21): timing::lead_in + spacing by overtake cost; 180 km line 10/10 24 -> 0 bad passes, 30/10 16 -> 0, count lines mostly 0 (12/9 keeps 2 from the 8-version cap); three parked T-1183 tests moved to headway lines; moved morning hour test left on rate lines (new task); at 30/10 one local held at G up to 217 s (was 30) notes/T-3929.md.
 - T-3925 [P1] {L:solve-speed} A newer edit replaces a half-done calculation (2026-11-21): demandClient restart (RESTART_SHARE 0.4, run-of-edits bound), bar restarts; NA two edits 217-226 s vs 418-440; figures bit-identical; own check passed 5/5; perfOff=restart keeps the old hold; the restarted edit's zone shows later (needs T-2624 stage 2) notes/T-3925.md.
 - T-3913 [P3] {L:buses} Bus road hint shades in-town streets apart (2026-11-21): town_outline polygons from the street grid, GeoJSON fill under the hint; look A (town teal) landed, B and C on the sheet; streets themselves not recoloured (basemap tiles merge roads; own road source ~3-4 h) notes/T-3913.md.
 - T-3908 [P3] {L:buses} Buses speed up and slow down at stops (2026-11-21): bus.rs ramp() in run_profile; times unchanged by construction; Speed view shows a short dark ramp at each stop (city speeds sit in one band of the scale) notes/T-3908.md.

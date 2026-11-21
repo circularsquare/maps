@@ -280,10 +280,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3875 [P3] {L:cleanup} {after:T-2374 and T-3873} Cut code-map.md to one line per file
   - Context: docs/code-map.md is 707 lines and about 100 KB with 700 task ids, over the Read tool's cap, so no agent can read it whole though CLAUDE.md sends every agent there.
   - Goal: One line per file saying what it holds, task ids dropped, about a third of today's size.
-- T-3160 [P2] {L:memory} Phone memory left over from T-2802 (taking, 2026-11-21, agent phonemem)
-  - Context: An emulated phone uses about 600 MB at the first line, peaking at 825; MapLibre's worker, Blink buffers, ArrayBuffers and WebGL hold most of the rest. T-3472 (desktop Chrome): 1.0 GB at the start menu, 1.6 GB in a one-city game. You, 2026-11-16: "lots of people are unable to really play properly cuz tehy dont have enoguh ram. especially on phones. if we can get that working itll increase reach."
-  - Goal: Phone memory comes down by trimming the biggest pieces, measured before and after at the start menu and in a one-city game.
-  - Other: notes/T-2802.md, "What is left".
+- T-3160 [P2] {L:memory} Phone memory on real-network starts (taking, 2026-11-21, agent phonemem)
+  - Context: The Tokyo real-network start on an emulated iPhone (production build) peaked at 1.6 GB in the tab, now 1.4 since the loading card's train stopped leaving garbage in Chrome; that cut is Chrome's only. What Safari holds too: the solving worker's WASM 343 MB (322 in use at its peak, cause not yet named), the clock worker 260, the page about 200. You, 2026-11-16: "lots of people are unable to really play properly cuz tehy dont have enoguh ram. especially on phones. if we can get that working itll increase reach."
+  - Goal: The solving worker's peak on that start comes down by its biggest named piece (`demand_mem` solving in the game's order first), rail trips unchanged, measured on a production build.
+  - Other: notes/T-3160.md, stage 3.
 - T-2762 [P3] {L:solve-speed} Faster longer-trips answer for a bubble
   - Context: On North America a bubble answer still takes about 300 ms per worker (NYC 60 ms) after T-2747.
   - Goal: Bring the North America answer close to NYC.
@@ -790,9 +790,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3837 [P3] {L:buses} Ferry routes found without a waypoint, and waypoints on touch
   - Context: T-3809 added shift click waypoints. A leg is still searched only in a box around its two ports, so a sea path that leaves it (Ma Liu Shui to Sai Kung) needs a waypoint; a wider third search would find it alone. Phones have no shift click.
   - Other: notes/T-3809.md
-- T-3929 [P2] {L:passing-tracks} Expresses drawn through locals on count and headway lines (taking, 2026-11-21, agent returnrun)
-  - Context: Found by fixedrate2 (T-1183), 11-21: on T-2228's 180 km line at 10/10, count and headway lines get 24 bad passes in 4 h against 0 on rate lines. Cause proved: `Service::lattice` `off_at` (service.rs ~1352) starts a count line's return run at trip_len + split x spare, where a rate line starts at 0; forcing 0 gives 0 bad. All on run 0; T-3346's open "both directions can't both have the best". `t2233-passing-map` can't see it (it checks drawn trains, which the guard holds back). Every player's lines are count lines.
-  - Goal: Count and headway lines on the T-2228 line give 0 bad passes, with the return run's timing no worse for the other direction; T-1183's four parked timing tests pass on counted lines.
 - T-3924 [P3] {L:buses} {waits:Anita} Auto bus stops count for demand only every 2 km
   - Need from Anita: Keep Auto bus lines as they are (recommended; a player can step to 600 m or place stops), or count every Auto street stop for demand (riders change on every Auto line in every save)?
   - Context: Found by busstop400 (T-3920), 11-21: on Auto the panel reads "400 m" and "10 stops", but demand sees about one stop every 2 km. A 3.7 km NYC line: Auto 2,814 riders a day, stops placed 400 m apart 3,580, 450 m 3,533. Stops a player places count at any spacing.
@@ -910,8 +907,11 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your ask: a wiki so agents read less. 26 pages are built and figures come from code through JSON markers; the trams landed and every marker still matches.
   - Goal: The Money tab ledger detail and the line panel stop times written, then the retired docs removed.
   - Other: See notes/T-2854.md.
-- T-1183 [P3] {L:cleanup} {after:T-3929} Remove the fixed-rate line path
-  - Context: Stages 1-2 landed 11-21: tests build counted or headway lines, `Op::Schedule`, the test `set_line`/`set_schedule` and tiny_reversal are gone (all test-only). The half rate in `seven_express` was expected (two lines turning at dead ends with no terminal share 15 an hour). Left: six tests still on rate lines (four timing tests via `shinkansen_rates`, `switching_to_headways_on_overfull_track`, `a_frequency_line_is_given_trains_on_load`), which keep `trains: None`, `continuous`, bench.rs and bin/realsave.rs alive; the timing ones fail on counted lines because of T-3929. Old rate-only saves become whole trains at load (orchestrator's call).
+- T-3931 [P3] {L:passing-tracks} A moved morning hour sized on the night's waits
+  - Context: Found by returnrun (T-3929), 11-21: the moved 5-6 hour is a piece of the night slot and is sized on the night's averaged waits, so on counted lines its locals, timed against the morning's expresses, miss their departures and get floored (`a_moved_morning_hour_is_timed_too` fails on counted lines). Also left from T-3929: at 10/30, 8 locals in 3 h still leave service (round trip sized on averaged waits); count 12/9 keeps 2 bad passes from the 8-version cap (0 with 60); at 30/10 the guard holds one local at G up to 217 s (was 30; T-3231's one-place end).
+  - Goal: A slot piece is sized on its own row's waits, the moved-hour test passes on counted lines, and no local at 10/30 leaves service.
+- T-1183 [P3] {L:cleanup} {after:T-3931} Remove the fixed-rate line path
+  - Context: Stages 1-2 landed 11-21: tests build counted or headway lines, `Op::Schedule`, the test `set_line`/`set_schedule` and tiny_reversal are gone (all test-only). T-3929 moved three parked timing tests to headway lines. Left on rate lines: `a_moved_morning_hour_is_timed_too` (T-3931), `switching_to_headways_on_overfull_track`, `a_frequency_line_is_given_trains_on_load`, which keep `trains: None`, `continuous`, bench.rs and bin/realsave.rs alive. Old rate-only saves become whole trains at load (orchestrator's call).
   - Goal: The path is gone and those tests use train counts with the same assertions; after T-3873, before the track rework's build stages.
   - Other: notes/T-1183.md
 
