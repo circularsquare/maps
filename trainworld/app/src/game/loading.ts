@@ -103,8 +103,11 @@ export const gameWait = () => wait;
  * the last game's "last" */
 export const waitKey = (choice: { slot?: string; newGame?: boolean; pending?: boolean }) => choice.slot ?? (choice.newGame ? "new" : choice.pending ? "pending" : "last");
 /** The start menu's pick (main.ts): the startup wait begins. */
-export function startGameWait(key: string) {
-  setLoadFlag(true);
+export function startGameWait(key: string, choice?: { slot?: string; newGame?: boolean; pending?: boolean; game?: { real?: unknown; start?: string } }) {
+  // T-3927: the kind for a died-load report (the slot's name stays out of it)
+  const kind = !choice ? "unknown" : choice.game?.real ? "real network" : choice.newGame ? "new game" : choice.pending ? "file, backup or shared game" : "saved slot";
+  setLoadFlag(true, kind);
+  if (choice?.game?.start) noteLoad("picked", { city: choice.game.start });
   wait ={ seq: wait.seq, since: performance.now(), key };
   gameReady.value = false;
   viewFigures.value = false;
@@ -226,12 +229,53 @@ if (typeof document !== "undefined") {
  * when a game starts loading and cleared when the load ends (or fails, or the page is left on purpose);
  * found still set at the next start, the last load died, and main.ts says so. */
 const LOAD_FLAG = "tw-load-started";
-function setLoadFlag(on: boolean) {
-  try { if (on) sessionStorage.setItem(LOAD_FLAG, "1"); else sessionStorage.removeItem(LOAD_FLAG); } catch { /* storage unavailable */ }
+/** T-3927: what the flag also holds, so a report after a died load says which game it was: the kind, the zones, the
+ * save's station and line counts, the last step reached and when (ms since the pick). No slot name or account. */
+interface LoadMark { kind: string; zones?: string; city?: string; stations?: number; lines?: number; step: string; ms: number }
+let mark: (LoadMark & { t0: number }) | null = null;
+function setLoadFlag(on: boolean, kind = "unknown") {
+  if (on) mark = { kind, step: "picked", ms: 0, t0: Date.now() };
+  else mark = null;
+  try { if (on) sessionStorage.setItem(LOAD_FLAG, JSON.stringify(mark)); else sessionStorage.removeItem(LOAD_FLAG); } catch { /* storage unavailable */ }
 }
+/** T-3927: a step of the load in hand (a name), and what is known of the game; no-op when no load is in hand or nothing
+ * changed. Zones, a city and counts are kept once known. */
+export function noteLoad(step: string, known: { zones?: string[]; city?: string; stations?: number; lines?: number } = {}) {
+  if (!mark) return;
+  const m = mark;
+  const zones = known.zones?.length ? known.zones.slice(0, 12).join(",") : undefined;
+  if (step === m.step && (!zones || zones === m.zones) && known.city === undefined && known.stations === m.stations && known.lines === m.lines) return;
+  m.step = step;
+  if (zones) m.zones = zones;
+  if (known.city !== undefined) m.city = known.city;
+  if (known.stations !== undefined) m.stations = known.stations;
+  if (known.lines !== undefined) m.lines = known.lines;
+  m.ms = Date.now() - m.t0;
+  try { const { t0: _t0, ...out } = m; void _t0; sessionStorage.setItem(LOAD_FLAG, JSON.stringify(out)); } catch { /* storage unavailable */ }
+}
+/** T-3927: the unfinished load found at this start, as a line for the report; empty when none or an old flag. */
+export let diedLoadReport = "";
 /** Whether the last load in this tab never ended; the flag is cleared. */
 export function lastLoadDied(): boolean {
-  try { const died = !!sessionStorage.getItem(LOAD_FLAG); sessionStorage.removeItem(LOAD_FLAG); return died; } catch { return false; }
+  try {
+    const raw = sessionStorage.getItem(LOAD_FLAG);
+    sessionStorage.removeItem(LOAD_FLAG);
+    if (!raw) return false;
+    try {
+      const m = JSON.parse(raw) as Partial<LoadMark> | null;
+      if (m && typeof m === "object") {
+        const secs = (n?: number) => Math.round((n ?? 0) / 1000);
+        diedLoadReport = [
+          String(m.kind ?? "unknown").slice(0, 40),
+          m.zones ? "zones " + String(m.zones).slice(0, 200) : "",
+          m.city ? "start city " + String(m.city).slice(0, 40) : "",
+          m.stations !== undefined ? `${m.stations} stations, ${m.lines ?? "?"} lines` : "counts not known yet",
+          `last step: ${String(m.step ?? "?").slice(0, 80)}, ${secs(m.ms)} s after the pick`,
+        ].filter(Boolean).join("; ");
+      }
+    } catch { /* an older flag ("1") has no fields */ }
+    return true;
+  } catch { return false; }
 }
 if (typeof addEventListener === "function") addEventListener("pagehide", () => setLoadFlag(false));
 effect(() => { if (gameReady.value || demandIdle.value) setLoadFlag(false); });

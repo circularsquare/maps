@@ -185,7 +185,7 @@ const startDemandPool = (newGame: boolean) => {
   startDemand(HOME_CITY, newGame);
 };
 if (urlChoice) {
-  startGameWait(waitKey(urlChoice));
+  startGameWait(waitKey(urlChoice), urlChoice);
   startDemandPool(!!urlChoice.newGame);
 }
 
@@ -823,7 +823,7 @@ if (!urlChoice && !lastDied) showStartMenu((choice) => {
   enterGame(); // T-2477: a pan before the pick does not count
   if (choice.game) viewStart(choice.game.start, choice.game.mode);
   else if (!choice.newGame) client.fitNextGame(); // T-895: a saved game opens on its network
-  startGameWait(waitKey(choice));
+  startGameWait(waitKey(choice), choice);
   startDemandPool(!!choice.newGame && !choice.game?.real);
   pauseNewGame(choice.newGame);
   guideNewGame(!!choice.newGame);

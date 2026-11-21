@@ -18,7 +18,7 @@ import { setHiddenLinesSink, takeHiddenLines } from "../game/lineVisibility";
 import { takeDiagramCities } from "../game/diagramCities";
 import { hiddenZones, setGameStart } from "../game/realms";
 import { home } from "../game/home";
-import { fitView, holdForGameLoad, loadCannotFinish, markAlive } from "../game/loading";
+import { fitView, holdForGameLoad, loadCannotFinish, markAlive, noteLoad } from "../game/loading";
 import { incomeByDay, lastSaved, liveMoney, moneyState, moneyTerms, moneyWorld, setMoneyState } from "../game/money";
 import { zonesLoaded } from "../game/zones";
 import { chargeShares, lineShares, upkeepShares } from "../game/regionMoney";
@@ -726,6 +726,7 @@ export class ClockClient {
   start(choice: GameChoice) {
     if (this.worker) return;
     this.spawnWorker();
+    noteLoad("clock worker started");
     const q = new URLSearchParams(location.search);
     const fresh = !!choice.fresh;
     // T-320: a check or stress page never writes over a saved game
@@ -1161,6 +1162,7 @@ export class ClockClient {
     worldIsRows.value = !!msg.state.rows;
     if (msg.state.rightHand !== undefined) rightHand.value = msg.state.rightHand;
     world.value = toWorld(msg.state);
+    if (world.value && !msg.state.rows) noteLoad("network in the page", { stations: world.value.save.stations.length, lines: world.value.save.lines.length });
     const es = this.earlyShares;
     this.earlyShares = null;
     if (es && world.value) this.post({ kind: "chargeShares", seq: es.seq, ...chargeShares(this.worldBefore, world.value, es.line, es.paid) });
@@ -1295,6 +1297,7 @@ export class ClockClient {
         setWorldFrame(msg.frame);
         this.post({ kind: "bindNew", on: bindNewStations.peek() });
         this.lastLoad = { from: msg.from, converted: !!msg.converted };
+        noteLoad(msg.error ? "clock worker: game did not open" : `game open in clock worker (${msg.from})`);
         this.fitState = this.fitNext && msg.from !== "new" && !msg.error;
         this.fitNext = false;
         if (msg.error) {

@@ -16,7 +16,7 @@ import {
   replyFeedback, sendFeedback, session, startAccount, type FeedbackRow, type FeedbackThread,
 } from "../game/account";
 import { acceptedType, dropImage, imageField, ImageTooBig, MAX_IMAGES, prepareImage, type FeedbackImage } from "../game/feedbackImages";
-import { loadFailure } from "../game/loading";
+import { diedLoadReport, loadFailure } from "../game/loading";
 import { stateReport } from "../game/diagnostics";
 import { saveStateReport } from "../game/saveState";
 import { saveSlotsState } from "../workers/clockClient";
@@ -61,6 +61,8 @@ async function reportContext(): Promise<Record<string, string>> {
   };
   const failure = loadFailure.peek();
   if (failure) ctx.lastFailure = failure.slice(0, 1000);
+  // T-3927: which game was loading when the last load in this tab died
+  if (diedLoadReport) ctx.diedLoad = diedLoadReport;
   // T-3313: where the clock worker and the demand pool stood, and the money's currency (another device can
   // start on another one)
   ctx.state = stateReport();
