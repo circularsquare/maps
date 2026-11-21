@@ -793,9 +793,9 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3919 [P2] {L:trams} Longer trips treat trams as trains (taking, 2026-11-21, agent tramlong)
   - Context: Found by tramerr (T-3909) reading code, 11-21, not measured: `IntercityApi` has no `set_tram_lines` and intercity/setup.rs gives no tram lines and unscaled cars, so longer trips crowd a tram as a full train. Same kind of bug as T-3909.
   - Goal: Confirmed on a save with a tram and longer trips, then longer trips see trams as commutes do, with a check.
-- T-3920 [P2] {L:buses} Bus stops placed 400 m apart count as one every 2 km (taking, 2026-11-21, agent busstop400)
-  - Context: Found by busdesign (T-3378), 11-21: in the frontier model a bus line with stops 400 m apart gets 31 demand stops on 60 km (the automatic rule, one about every 2 km), while 401 m gets 151 and 18% more riders. Not tried with stops placed by a player.
-  - Goal: Confirmed in the game with stops placed 400 m apart; if so, placed stops count as stops whatever their spacing.
+- T-3924 [P3] {L:buses} {waits:Anita} Auto bus stops count for demand only every 2 km
+  - Need from Anita: Keep Auto bus lines as they are (recommended; a player can step to 600 m or place stops), or count every Auto street stop for demand (riders change on every Auto line in every save)?
+  - Context: Found by busstop400 (T-3920), 11-21: on Auto the panel reads "400 m" and "10 stops", but demand sees about one stop every 2 km. A 3.7 km NYC line: Auto 2,814 riders a day, stops placed 400 m apart 3,580, 450 m 3,533. Stops a player places count at any spacing.
 - T-3923 [P3] {L:checks} Trips assigned to an unsearched station vanish silently
   - Context: Found by homeload (T-3916), 11-21: `assign_inner` drops flow to a station the strategy search never reached, its `debug_assert` is off in release, and entries and exits are counted before that check, so the one-entry-one-exit assertions can't catch a loss like T-3916's.
   - Goal: Such a loss is counted where a check (and diagnostics) can see it, and a Rust test fails if any trips are dropped this way on our fixtures.
@@ -919,7 +919,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your ask: a wiki so agents read less. 26 pages are built and figures come from code through JSON markers; the trams landed and every marker still matches.
   - Goal: The Money tab ledger detail and the line panel stop times written, then the retired docs removed.
   - Other: See notes/T-2854.md.
-- T-1183 [P3] {L:cleanup} Remove the fixed-rate line path
+- T-1183 [P3] {L:cleanup} Remove the fixed-rate line path (taking, 2026-11-21, agent fixedrate2)
   - Context: Every line in a game has train counts since T-1146, but the engine still keeps lines set by trains per hour (`LineData.trains` as an Option, capacity's continuous rounding, `Op::Schedule`, crate-only `set_line` and `set_schedule`). Stage 1 landed 11-21 (4fb32508): test helpers `counted_line`/`set_rate`, capacity tests converted. Left: about 20 tests in boarding, overtake, spacing, timing and tests.rs need rewritten expectations (not mechanical). Saves still read flag-0 rate-only lines: keep old saves loading by turning them into whole trains at load (orchestrator's call, 11-21), so the Option can go. Drop `tiny_reversal_does_not_couple...` (0.001 trains an hour can't be written as counts). Unexplained: counted lines on shared double track settle to about half the asked rate (`seven_express`, counts [27, 20] give 10.25 and 4.7 an hour); look at it first, it may be a real bug. Opus next time.
   - Goal: The path is gone and those tests use train counts with the same assertions; after T-3873, before the track rework's build stages.
   - Other: notes/T-1183.md
