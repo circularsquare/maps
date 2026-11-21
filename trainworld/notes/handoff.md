@@ -16,10 +16,11 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
    T-3632, egyptunits T-3660, autostops T-3924, busway T-3378 st.1-2, tweaks (Sonnet: upkeep 0.2%, tram brake 0.9,
    tint sheet with green city; no open task, not on the board), iphonesaves T-3781 (no tree; ssh may be refused:
    then ask her here).
-2. Queued for the next free slots: T-3373 B stage 1 (measure and simulate, 2-3 h, notes/T-3373-B-plan.md; raise A's
+2. Queued for the next free slots: T-3934 first (her ask: bus reach 600 m vs 1 km vs none, on bus-heavy community
+   saves; measure only); T-3373 B stage 1 (measure and simulate, 2-3 h, notes/T-3373-B-plan.md; raise A's
    limit to ~2 GB in it); T-3933 (load out of memory retries with fewer workers; wait for iphonesaves' findings);
    T-3932 (cores slider with memory and speed; after B's stage 1 so estimates match); T-1183 after T-3931; T-3378
-   st.3 once she answers who stops at BRT stations, st.4 after st.1-2.
+   st.3 (BRT stations for BRT lines only, her OK ~13:00) and st.4 after st.1-2.
 3. T-3395: save_health.py after the next scan; clean = close it (no 11-21 report at 04:30 UTC; 11-20 found 0).
 ## Her words
 - 11-21 ~12:50 UTC (board answers + chat): Auto stops "i would rather coutn every auto stop for demand ... seems
