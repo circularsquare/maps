@@ -10,6 +10,7 @@ import { listSlots, writeSlot, SlotTakenError, renameSlot, leaseSlot, ORIGINAL_S
 import type { FromClock, ToClock } from "./protocol";
 import { claim, editedHere, editedThere, fetchGame, GAP_MS, lastListFailure, listGames, newGameId, onTokenGone, removeSlot, sendDeletes, settle as settleCloud, splitOff, tieNew, tiedTo, upload, writeFetched, type CloudContext } from "./cloud";
 import { editOf, syncedEditOf } from "./versions";
+import { modelDown } from "./clockPanic";
 
 /** What this module needs of the clock worker: the game in hand, its model and its message queue. */
 export interface SlotHost {
@@ -206,10 +207,12 @@ async function flushBeforeSwitch() {
   // T-1826, T-2843 finding 4: a slot this page may not write is left as it was; only a change the player made here
   // would be lost (the clock's own settling is not one)
   if (NOT_MINE.has(writeBlock(true))) {
-    if (saves.edited) throw new Error("Make a copy of this game before leaving it, or download it as a file and reload this page.");
+    if (saves.edited) throw new Error("clockWorker.copyBeforeLeaving" satisfies MessageKey);
     return;
   }
-  if (!await autosave()) throw new Error("This game could not be saved. Download it as a file before leaving it.");
+  // the stopped model cannot be saved; the last autosave is what stays
+  if (modelDown) return;
+  if (!await autosave()) throw new Error("clockWorker.couldNotSaveLeaving" satisfies MessageKey);
 }
 
 /** T-743: New game, Open a file and a backup's restore each put the game in a slot of its own,

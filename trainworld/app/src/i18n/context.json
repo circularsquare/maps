@@ -548,6 +548,8 @@
   "clockWorker.noMemoryToSave": "Error shown when a save, a copy of the game or a download as a file failed because the browser ran out of memory, after the game had already freed what it could and tried again.",
   "clockWorker.saveDamaged": "Error shown when a saved game or save file is damaged (cut short or unreadable) and cannot be opened; also a line on that game's card.",
   "clockWorker.couldNotSave": "Error shown when saving by hand failed and no reason is known.",
+  "clockWorker.copyBeforeLeaving": "Error shown when the player goes to the menu or another game while this tab may not write the game's save slot (another tab owns it) and they made changes here. Nothing is lost yet: they can copy or download it.",
+  "clockWorker.couldNotSaveLeaving": "Error shown when the player goes to the menu or another game and the game's autosave failed, so leaving is stopped.",
   "clockWorker.savedInOtherTab": "Error shown when a manual save is refused because another browser tab with the same game saved it a moment before. Saving again from this tab overwrites the slot (the other tab's version is kept as a separate save).",
   "closestStations.noWalk": "Value of a Closest stations row when the station cannot be reached on foot (water in the way).",
   "closestStations.onFoot": "Hover on the walking time of a Closest stations row. length: the walking distance, \"350 m\" or \"0.2 mi\".",

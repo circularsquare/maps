@@ -1240,6 +1240,9 @@ export class ClockClient {
         if (msg.down) clockWorkerStatus.value = "track model down after a panic"; // i18n-ignore
         say(workerText(msg.notice), true);
         break;
+      case "refused":
+        say(workerText(msg.notice), true);
+        break;
       case "failed":
         console.error("clock worker:", msg.error);
         this.failed(msg.error, msg.storage);

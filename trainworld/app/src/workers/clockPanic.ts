@@ -26,7 +26,7 @@ import { api, messages, mode, putApi, putHolidaysSent, putMessages, putRowsSent,
 
 export const EDIT_UNDONE: MessageKey = "issues.internal";
 export const MODEL_RESTORED: MessageKey = "clockWorker.modelRestored";
-const MODEL_DOWN: MessageKey = "clockWorker.modelDown";
+export const MODEL_DOWN: MessageKey = "clockWorker.modelDown";
 export const SAVE_PANIC: MessageKey = "clockWorker.savePanic";
 /** more panics than this in a minute, or in all, and the model is left down: it is failing for a reason a rebuild does not cure */
 const MAX_PANICS_PER_MINUTE = 3;

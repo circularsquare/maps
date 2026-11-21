@@ -1088,6 +1088,8 @@ export type FromClock =
   /** T-1007: the track model panicked and was rebuilt from the game's last edit (or, `down`, could
    * not be: the player is asked to reload). `detail` is for the console, `notice` for the player. */
   | { kind: "recovered"; detail: string; notice: string; down?: boolean }
+  /** an edit, save or download asked of a track model that is down: the player is told again */
+  | { kind: "refused"; notice: string }
   /** T-950: the worker's start (its WASM, the first game) threw; no game will come. `storage` (T-2703):
    * the saved game could not be read, and was left as it is */
   | { kind: "failed"; error: string; storage?: boolean }
