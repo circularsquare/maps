@@ -278,21 +278,24 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
     }
     let n = s + rn_station.len();
     let nr = rn_line.len();
-    let phi = |r: usize| if net.span.len() == super::super::network::PERIODS * nr { net.span[p.period * nr + r] } else { 1.0 };
-    // T-3332: a stop its trains pass on the other track (`phi` negative): they ride on through it, and
-    // nobody boards, alights or changes there
-    let pass = |r: usize| phi(r) < 0.0;
+    // the share, whether riders board, whether they get off (`network::stop_span`): T-3332, a stop
+    // its trains pass on the other track, nobody boarding, alighting or changing there; T-4013, a
+    // stop the player keeps to boarding only or getting off only
+    let at = |r: usize| super::super::network::stop_span(if net.span.len() == super::super::network::PERIODS * nr { net.span[p.period * nr + r] } else { 1.0 });
+    let phi = |r: usize| at(r).0;
+    let boards = |r: usize| at(r).1;
+    let alights = |r: usize| at(r).2;
     let mut edges: Vec<(u32, u32, f32, u32)> = vec![];
     for (r, &st) in rn_station.iter().enumerate() {
         let node = (s + r) as u32;
         let l = rn_line[r] as usize;
         if rn_next[r] != NONE {
-            if !rn_wrap[r] && !pass(r) {
+            if !rn_wrap[r] && boards(r) {
                 edges.push((st, node, board_cost(net.line_headway_min[l][p.period], st_wait[st as usize], change_f_of(&st_bld, st as usize), p), NONE));
             }
             edges.push((node, rn_next[r], rn_ride[r], node));
         }
-        if !pass(r) {
+        if alights(r) {
             edges.push((node, st, 0.0, NONE));
         }
     }
@@ -336,7 +339,8 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
         st_walk_off.push(st_walk_to.len() as u32);
     }
     for (r, &st) in rn_station.iter().enumerate() {
-        if pass(r) {
+        // a walk on from a stop is getting off there
+        if !alights(r) {
             continue;
         }
         let (x, y) = (net.st_x[st as usize] + rn_dx[r], net.st_y[st as usize] + rn_dy[r]);
@@ -361,7 +365,7 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
     // a share that rounds to 0 is no service at that stop (T-842)
     let rn_tph = rn_line.iter().enumerate().map(|(r, &l)| {
         let h = net.line_headway_min[l as usize][p.period];
-        if h > 0.0 && h.is_finite() && phi(r) > 0.0 { 60.0 / h } else { 0.0 }
+        if h > 0.0 && h.is_finite() && phi(r) > 0.0 && boards(r) { 60.0 / h } else { 0.0 }
     }).collect();
     let rn_span: Vec<f32> = (0..nr).map(|r| { let f = phi(r); if f > 0.0 && f < 1.0 { -f.ln() / p.beta } else { 0.0 } }).collect();
     // T-3888, T-3910: the boarding cost at a train's or tram's stop (`pays_ends`); only where any stop pays

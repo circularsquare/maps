@@ -245,6 +245,38 @@ pub fn stop_mask(deps: &[f64]) -> Mask {
     mask
 }
 
+/// Demand's marks in a `line_span` beside a share in 0..1: a stop the run passes on the other track,
+/// where nobody boards or gets off (T-3332); one where riders only get off (T-4013); and one where
+/// they only board, stored as this plus the share (T-4013).
+pub const SPAN_PASS: f32 = -1.0;
+pub const SPAN_NO_BOARD: f32 = -2.0;
+pub const SPAN_NO_ALIGHT: f32 = 2.0;
+
+/// A `line_span` value read: the share of riders with a train due within their tolerance, whether
+/// riders may board there, and whether they may get off.
+#[inline]
+pub fn stop_span(v: f32) -> (f32, bool, bool) {
+    if v <= -1.5 {
+        (0.0, false, true)
+    } else if v < 0.0 {
+        (0.0, false, false)
+    } else if v >= 1.5 {
+        (v - SPAN_NO_ALIGHT, true, false)
+    } else {
+        (v, true, true)
+    }
+}
+
+/// A `line_span` value with its share held to 0..1 and its marks kept.
+pub fn span_clamped(v: f32) -> f32 {
+    match stop_span(v) {
+        (_, false, true) => SPAN_NO_BOARD,
+        (_, false, false) => SPAN_PASS,
+        (phi, true, false) => SPAN_NO_ALIGHT + phi.clamp(0.0, 1.0),
+        (phi, true, true) => phi.clamp(0.0, 1.0),
+    }
+}
+
 /// `phi` per period for one stop (`stop_mask`), rounded to hundredths so a share that does not
 /// move compares equal to the bit.
 pub fn stop_phi(deps: &[f64]) -> [f32; PERIODS] {
@@ -265,15 +297,25 @@ pub fn stop_deps(ls: &LineSvc, lat: &Lattice, r: usize) -> Vec<Vec<f64>> {
 }
 
 /// A line's `phi`, `[(period * 2 + run) * n + stop]` with each run's stops in its travel order (the
-/// boarding account's layout), from its steady pattern `lat`; -1 at a stop the run passes on the other
-/// track (T-3332), where demand boards and alights nobody.
+/// boarding account's layout), from its steady pattern `lat`, with demand's marks
+/// (`demand::network::stop_span`): `SPAN_PASS` at a stop the run passes on the other track (T-3332),
+/// where demand boards and alights nobody; at a stop of `LineSvc::only` (T-4013) `SPAN_NO_BOARD`, or
+/// `SPAN_NO_ALIGHT` plus the share.
 pub fn line_span(ls: &LineSvc, lat: &Lattice) -> Vec<f32> {
+    use crate::track::net::{ALIGHT_ONLY, BOARD_ONLY};
     let n = ls.stops.len();
     let mut out = vec![0.0f32; PERIODS * 2 * n];
     for r in 0..2 {
         for (k, deps) in stop_deps(ls, lat, r).iter().enumerate() {
+            // run 1 lists its stops in its travel order, the line's backwards
+            let only = ls.only.get(if r == 0 { k } else { n - 1 - k }).copied().unwrap_or(0);
             for (q, phi) in stop_phi(deps).into_iter().enumerate() {
-                out[(q * 2 + r) * n + k] = if ls.runs[r].passes(k) { -1.0 } else { phi };
+                out[(q * 2 + r) * n + k] = match only {
+                    _ if ls.runs[r].passes(k) => SPAN_PASS,
+                    ALIGHT_ONLY => SPAN_NO_BOARD,
+                    BOARD_ONLY => SPAN_NO_ALIGHT + phi,
+                    _ => phi,
+                };
             }
         }
     }
@@ -299,6 +341,10 @@ pub fn span_key(ls: &LineSvc, lat: &Lattice) -> u64 {
     add(lat.lead.to_bits());
     // T-3542: moved hours (nothing at the default hours, so their keys stay as they were)
     for v in lat.hours.words() { add(v); }
+    // T-4013: nothing for a line without, so its key stays as it was
+    for (k, &o) in ls.only.iter().enumerate().filter(|x| *x.1 != 0) {
+        add(k as u64 | (o as u64) << 32 | 1 << 41);
+    }
     for r in 0..2 {
         for (k, _) in ls.runs[r].pass.iter().enumerate().filter(|x| *x.1) {
             add(k as u64 | 1 << 40);
@@ -315,6 +361,18 @@ pub fn span_key(ls: &LineSvc, lat: &Lattice) -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// T-4013: demand's clamp (`span_for`) holds a share to 0..1 and keeps the marks beside it; before,
+    /// it clamped T-3332's pass to 0, so riders could get off at a stop their train passed.
+    #[test]
+    fn span_marks_survive_the_clamp() {
+        let read = |v: f32| stop_span(span_clamped(v));
+        assert_eq!(read(SPAN_PASS), (0.0, false, false));
+        assert_eq!(read(SPAN_NO_BOARD), (0.0, false, true));
+        let (phi, on, off) = read(SPAN_NO_ALIGHT + 0.4);
+        assert!((phi - 0.4).abs() < 1e-6 && on && !off);
+        assert_eq!((read(0.3), read(1.2), span_clamped(SPAN_NO_ALIGHT + 1.7)), ((0.3, true, true), (1.0, true, true), SPAN_NO_ALIGHT + 1.0));
+    }
 
     fn every(hw: f64, from: f64, to: f64) -> Vec<f64> {
         let mut v = vec![];

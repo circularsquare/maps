@@ -88,6 +88,10 @@ export const Icon = {
   kofi: () => <svg viewBox="0 0 24 24"><path class="solid" style="stroke:none" d="M23.881 8.948c-.773-4.085-4.859-4.593-4.859-4.593H.723c-.604 0-.679.798-.679.798s-.082 7.324-.022 11.822c.164 2.424 2.586 2.672 2.586 2.672s8.267-.023 11.966-.049c2.438-.426 2.683-2.566 2.658-3.734 4.352.24 7.422-2.831 6.649-6.916zm-11.062 3.511c-1.246 1.453-4.011 3.976-4.011 3.976s-.121.119-.31.023c-.076-.057-.108-.09-.108-.09-.443-.441-3.368-3.049-4.034-3.954-.709-.965-1.041-2.7-.091-3.71.951-1.01 3.005-1.086 4.363.407 0 0 1.565-1.782 3.468-.963 1.904.82 1.832 3.011.723 4.311zm6.173.478c-.928.116-1.682.028-1.682.028V7.284h1.77s1.971.551 1.971 2.638c0 1.913-.985 2.667-2.059 3.015z" /><path style="fill:#ff5e5b;stroke:none" d="M12.819 12.459c-1.246 1.453-4.011 3.976-4.011 3.976s-.121.119-.31.023c-.076-.057-.108-.09-.108-.09-.443-.441-3.368-3.049-4.034-3.954-.709-.965-1.041-2.7-.091-3.71.951-1.01 3.005-1.086 4.363.407 0 0 1.565-1.782 3.468-.963 1.904.82 1.832 3.011.723 4.311z" /></svg>,
   // trains reverse at this stop
   uturn: () => <svg viewBox="0 0 16 16"><path d="M5 13.5V7a3.25 3.25 0 0 1 6.5 0v4.5M8.8 9.2l2.7 2.8 2.7-2.8" /></svg>,
+  // T-4013: riders at a stop, the train's side on the right: on and off, on only, off only
+  boardBoth: () => <svg viewBox="0 0 16 16"><rect x="11" y="2.5" width="3.5" height="11" rx="1" /><path d="M1.5 8H9M4 5.5L1.5 8 4 10.5M6.5 5.5L9 8l-2.5 2.5" /></svg>,
+  boardOnly: () => <svg viewBox="0 0 16 16"><rect x="11" y="2.5" width="3.5" height="11" rx="1" /><path d="M1.5 8H9M6.5 5.5L9 8l-2.5 2.5" /></svg>,
+  alightOnly: () => <svg viewBox="0 0 16 16"><rect x="11" y="2.5" width="3.5" height="11" rx="1" /><path d="M9 8H1.5M4 5.5L1.5 8 4 10.5" /></svg>,
   // the line panel's related lines (T-1168), as its diagram looks (T-1860, Anita's sketch): two lines side by side, a station pill across both, the right one curving away at the bottom
   allStops: () => <svg viewBox="0 0 16 16"><path d="M8 1.5v13M5 3.5h6M5 6.5h6M5 9.5h6M5 12.5h6" /></svg>,
   related: () => <svg viewBox="0 0 16 16"><path d="M6 1.5v13M10 1.5v8c0 1.8 1 3 3 5" /><rect x="3.5" y="4.5" width="9" height="3.5" rx="1.75" /></svg>,

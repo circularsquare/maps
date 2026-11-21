@@ -1491,10 +1491,12 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   one, so each row is the line's timetable as it stands now; the hour now is tinted and scrolled to the top. Only a
   run's leaving times count (a run's last stop is no departure), and a line on both pairs of quad track shows its
   hidden twin's trains too. Times come from the sim, each trip's own (`station_departures`: its `draw` plus its
-  profile's `dep` at the stop), the trips the chart and map draw.
+  profile's `dep` at the stop), the trips the chart and map draw. A station the line keeps to boarding only or
+  getting off only (T-4013) has that named after the picker, muted with its icon ("Boarding only"); its departures
+  stay, since trains still leave it.
 - **Timetable** (T-3469), as a printed one: one direction at a time ("to Gum" / "to Ash", the way the chart reads
   top to bottom first), with the other lines toggle right after that switch, as tall as it (T-3819); stations down
-  the side, one column per train under its line's bullet (a bullet too wide for a column becomes its letters down a
+  the side (a boarding-only or getting-off-only stop with the line panel's icon after its name, hover naming it, T-4013), one column per train under its line's bullet (a bullet too wide for a column becomes its letters down a
   strip of the line's colour), times in 10 px type as "742" / "1008" in the line's colour (`legibleOn`), the
   departure at each stop and the arrival at the last, "|" where a group's train runs through a station; a rule every
   5 rows, time marks along the top, a past train faded, the time now an accent line. It covers the hour before this

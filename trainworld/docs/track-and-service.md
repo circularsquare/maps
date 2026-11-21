@@ -1238,6 +1238,17 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   again, it is served both ways. Taken out, it loses the setting. Saved in `LOS1`. The case: legs that split and
   join again with one leg two-way (a bypass joined to the far track, notes/T-3672.md), where a line listing both
   side platforms otherwise stops at the two-way one both ways and zigzags.
+- **Boarding-only and getting-off-only stops** (T-4013, a player's request; `LineData::only`, `TrackApi::set_stop_only`,
+  notes/T-4013.md): a stop of a rail line (train or tram) can be kept to boarding only (riders get on, never off) or
+  getting off only (off, never on), on both runs; trains still stop and stand the dwell there. Kept per station of
+  the line's stops (every visit of a station alike), one undoable edit, free; a stop edit keeps it on the stations
+  still stops, a stop taken out loses it, a copy keeps it, and a hidden twin (T-3333) carries it to its stop beside
+  each. Demand reads it through the service span (`LineSvc::only`, `span::line_span`; docs/demand-kernel.md step 4),
+  and a change wakes demand as a stop edit does; the boarding account follows demand's boardings and alightings. So
+  a boarding-only end means the run arriving there carries nobody to it. The real "pick up only on the way out"
+  case is per direction and is not built. The line panel's stop list sets it (ui-inspectors.md). Saved in `LBO1`
+  (count, then per line its index, its count and per stop its place in the stops and its kind, 1 or 2), save
+  level 38; old saves load with none.
 
 #### Line groups
 

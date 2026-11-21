@@ -165,6 +165,8 @@ export type EditOp =
   /** T-3711, a shift-click in the line tool: the station made a stop served one way only (added where insertStop
    * puts it if it is no stop yet), or such a stop served both ways again; refused as insertStop */
   | { op: "oneWayStop"; line: number; station: NodeId; autoFast?: boolean }
+  /** T-4013: riders at the line's stop `station` only board (kind 1), only get off (2), or both (0) */
+  | { op: "stopOnly"; line: number; station: NodeId; kind: 0 | 1 | 2 }
   /** T-1791, the group view's stop edits, all keeping the line's path: stop `index` out (an end's removal cuts the path back), the line ended at stop `index` (the stops past it toward the nearer end go), a station the line passes made a stop; refused with "LinePath" */
   | { op: "dropStop"; line: number; index: number }
   | { op: "endLineAt"; line: number; index: number }
@@ -711,6 +713,8 @@ export interface ClockLine {
   ways: number[];
   /** T-3711: the stops the player made one way with a shift-click (`TrackApi::line_one_stops`) */
   oneStops: number[];
+  /** T-4013: `[station, kind]` pairs, kind 1 boarding only, 2 getting off only (`TrackApi::line_stop_only`); absent for none */
+  stopOnly?: number[];
   /** T-2895: the player set its stop order by hand (`TrackApi::line_hand`) */
   hand: boolean;
   /** a loop (`TrackApi::line_loop`, T-798): 0 none, 1 a circle, 2 a balloon */

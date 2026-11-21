@@ -398,6 +398,8 @@ function applyInner(op: EditOp): Applied {
       return { r: a.set_line_limit(op.line, op.kmh) };
     case "lineFareDist":
       return { r: a.set_line_fare_dist(op.line, op.dist) };
+    case "stopOnly":
+      return { r: a.set_stop_only(op.line, op.station, op.kind) };
     case "lineGroup":
       return { r: a.set_line_group(new Uint32Array(op.lines), op.group === "new" ? a.new_line_group() : op.group) };
     case "groupMembers":

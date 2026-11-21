@@ -118,6 +118,9 @@ pub struct LineSvc {
     /// T-3346 stage 2: the pattern the runs' variants were worked out for (`timing::retime`, as
     /// `Lattice::timing_key`); a trip takes one only while the line still runs it.
     pub timed: Option<Lattice>,
+    /// T-4013: per stop (parallel to `stops`), `LineData::only`'s kind there (0 both ways on and
+    /// off); empty for a line with none. Demand reads it through `span::line_span`.
+    pub only: Vec<u8>,
 }
 
 impl Run {
@@ -946,6 +949,9 @@ fn build_on(net: &Network, l: u32, stops: &[u32], path: &[u32], running: bool) -
     let mut ls = LineSvc::default();
     ls.stops = stops.to_vec();
     if ls.stops.len() < 2 { return ls; }
+    if !net.line_only(l).is_empty() {
+        ls.only = stops.iter().map(|&s| net.stop_only(l, s)).collect();
+    }
     ls.kind = net.loop_kind(stops, path);
     ls.one_way = net.runs_once(l, stops, path);
     // T-3348: the platforms each run stops at
@@ -1151,9 +1157,10 @@ impl Service {
         for &l in rebuilt {
             let (old_ok, old_run) = (self.lines[l as usize].ok, self.lines[l as usize].running);
             let old_stops = std::mem::take(&mut self.lines[l as usize].stops);
+            let old_only = std::mem::take(&mut self.lines[l as usize].only);
             self.lines[l as usize] = build_line(net, l);
             let now = &self.lines[l as usize];
-            if now.ok != old_ok || now.running != old_run || now.stops != old_stops {
+            if now.ok != old_ok || now.running != old_run || now.stops != old_stops || now.only != old_only {
                 demand.push(l);
             }
         }

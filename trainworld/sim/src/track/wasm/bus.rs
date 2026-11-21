@@ -26,7 +26,7 @@ impl TrackApi {
         }
         let mut data = LineData {
             name, symbol: String::new(), colour, stops: vec![], path: vec![], tph: [0.0; 3], trains: Some([0; 3]), auto: Some([high, medium, low]),
-            dwell_s, turnaround_s, cars: 1, fast: false, bus: Some(BusRoute::new(pts, kinds, false)), ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), outer: vec![], day: 0, hand: false, one_way: true, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![], rows: 0, x: Default::default(), fare_dist: false,
+            dwell_s, turnaround_s, cars: 1, fast: false, bus: Some(BusRoute::new(pts, kinds, false)), ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), outer: vec![], day: 0, hand: false, one_way: true, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![], only: vec![], rows: 0, x: Default::default(), fare_dist: false,
         };
         // T-3767: in a game of four or five rows its high headway runs at midday and in the afternoon too
         data.x = crate::track::net::Extra::of_high(&data);

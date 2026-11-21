@@ -205,6 +205,11 @@ pub fn one_for_travel(th: f64) -> u8 {
 /// built before recording began (an older save), else the game day + 2 (`Network::today`).
 pub const DAY_UNKNOWN: u32 = 1;
 
+/// T-4013: a stop where riders only board (`LineData::only`): nobody gets off there.
+pub const BOARD_ONLY: u8 = 1;
+/// T-4013: a stop where riders only get off: nobody boards there.
+pub const ALIGHT_ONLY: u8 = 2;
+
 /// The earlier of two build days, a day still unset (0) losing to any other.
 pub fn earliest_day(a: u32, b: u32) -> u32 {
     match (a, b) {
@@ -294,6 +299,10 @@ pub struct LineData {
     /// fixed (set on a line with no route). Served once a round trip, as a one-way station is
     /// (`Network::legs`). Only stations among `stops`; saved in `LOS1`.
     pub ones: Vec<(u32, u8)>,
+    /// T-4013: the stops where riders may only board (`BOARD_ONLY`) or only get off
+    /// (`ALIGHT_ONLY`), on both runs; trains stop and dwell there as anywhere. Station and kind, only
+    /// stations among `stops` (every visit of a station alike); a rail line's alone. Saved in `LBO1`.
+    pub only: Vec<(u32, u8)>,
     /// T-2981: a loop runs one way, round in the direction its stops or route were drawn (run 0
     /// alone); otherwise both ways. Kept on an open line, which ignores it, so it carries over a
     /// close. A new bus or ferry line starts one way, a train line both ways.
@@ -701,6 +710,8 @@ pub struct Network {
     pub line_hand: Vec<bool>,
     /// T-3711: per line, its one-way stops the player set (`LineData::ones`).
     pub line_ones: Vec<Vec<(u32, u8)>>,
+    /// T-4013: per line, its boarding-only and getting-off-only stops (`LineData::only`).
+    pub line_only: Vec<Vec<(u32, u8)>>,
     pub line_one_way: Vec<bool>,
     pub line_limit: Vec<u16>,
     /// T-3758: `LineData::fare_dist`.

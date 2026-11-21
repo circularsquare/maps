@@ -31,6 +31,7 @@ import { live } from "../../map/live";
 import { setListHot } from "../../map/hovered";
 import { Alert, Check, Chip, Icon, Row, Segmented, shakeEl, Stepper, SwapLabel } from "../widgets";
 import { PurposeSplit } from "./PurposeSplit";
+import { ONLY_NEXT, ONLY_TIP, OnlyIcon } from "./stopOnly";
 import { RelatedStops, useTightTimes } from "./RelatedStops";
 import { ROUND_MAX, TALL_MAX } from "../../game/relatedLayout";
 import { BusInspector } from "./BusInspector";
@@ -933,6 +934,7 @@ function RailLineInspector({ id }: { id: string }) {
       }
     }
     const dot = dotClick(i, row);
+    const only = st.stopOnly?.[s];
     return (
       <li class={(xfer ? "xfer" : "") + (tall ? " tall" : "") + (drag?.from === i ? " dragged" : "") + (!row && loopEnds && (i === 0 || i === nStops - 1) ? " pinned" : "") + (st.oneWayAt?.[s] !== undefined ? " oneway" : "") + dropClass(i)} data-r={drawn ? true : undefined}
         data-stop={i} data-station={s} onPointerDown={(e) => rowDown(e, i)} onMouseEnter={() => setListHot({ stations: complexOf(s) })} onMouseLeave={() => setListHot(null)}>
@@ -951,6 +953,7 @@ function RailLineInspector({ id }: { id: string }) {
               <Icon.uturn />
             </span>
           )}
+          {only && !editingStops && <span class="stop-only" data-tip={tr(ONLY_TIP[only])}><OnlyIcon kind={only} /></span>}
         </span>
         <StopTransfers l={l} i={i} drawn={drawn} extra={bullets} tall={tall} noSelf={!!row} />
         <StopToday line={l.id} i={row ? row.occ : i} />
@@ -958,6 +961,12 @@ function RailLineInspector({ id }: { id: string }) {
         {editingStops && !partly && row?.turn && (
           <button class="btn icon mini" data-tip={tr("lineInspector.openLoop")} aria-label={tr("lineInspector.openLoop")} onClick={() => void stopEdit({ op: "openLoop", line: l.num })}>
             <Icon.uturn />
+          </button>
+        )}
+        {editingStops && (
+          <button class={"btn icon mini stop-only" + (only ? " on" : "")} data-tip={tr(ONLY_NEXT[only ?? 0])} aria-label={tr(ONLY_NEXT[only ?? 0])}
+            onClick={() => void stopEdit({ op: "stopOnly", line: l.num, station: Number(s), kind: ((only ?? 0) + 1) % 3 as 0 | 1 | 2 })}>
+            <OnlyIcon kind={only ?? 0} />
           </button>
         )}
         {editingStops && !partly && (

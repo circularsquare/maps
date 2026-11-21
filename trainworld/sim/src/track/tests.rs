@@ -1314,7 +1314,7 @@ pub(super) fn new_line(w: &mut TrackWorld, stops: &[u32], trains: [u32; 3]) -> u
 /// Line `id`'s data along `stops`, at the game's starting rate.
 pub(super) fn line_data(w: &TrackWorld, stops: &[u32], id: u32, trains: Option<[u32; 3]>) -> LineData {
     let path = w.net.route(stops, &[]).expect("no route");
-    LineData { rows: 0, x: Default::default(), symbol: String::new(), trains, auto: None, name: format!("L{id}"), colour: 0, stops: stops.to_vec(), path, tph: [6.0, 3.0, 1.0], dwell_s: 30.0, turnaround_s: 180.0, cars: 0, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), outer: vec![], day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![], fare_dist: false }
+    LineData { rows: 0, x: Default::default(), symbol: String::new(), trains, auto: None, name: format!("L{id}"), colour: 0, stops: stops.to_vec(), path, tph: [6.0, 3.0, 1.0], dwell_s: 30.0, turnaround_s: 180.0, cars: 0, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), outer: vec![], day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![], only: vec![], fare_dist: false }
 }
 
 #[test]

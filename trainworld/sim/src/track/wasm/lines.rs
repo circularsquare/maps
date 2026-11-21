@@ -1,7 +1,7 @@
 //! Lines (stops, look, cars, trains, loops) and undo.
 
 use super::*;
-use crate::track::net::Extra;
+use crate::track::net::{Extra, ALIGHT_ONLY};
 
 /// T-2987: the lowest speed limit a rail line can be given, km/h.
 const LINE_LIMIT_MIN: u32 = 40;
@@ -21,7 +21,7 @@ impl TrackApi {
         let Some((stops, path)) = edited_stops(&self.w.net, stops, false, &[]) else {
             return self.no_route(id, stops);
         };
-        let mut d = LineData { rows: 0, x: Default::default(), symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, stops, path, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), outer: vec![], day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![], fare_dist: false };
+        let mut d = LineData { rows: 0, x: Default::default(), symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, stops, path, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), outer: vec![], day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![], only: vec![], fare_dist: false };
         // T-3542: a line of four or five rows runs its high count at midday and in the afternoon too
         d.x = Extra::of_high(&d);
         self.run(Op::Line { id, data: Some(d) })
@@ -414,6 +414,30 @@ impl TrackApi {
     /// T-3711: the stations of a line's one-way stops the player set.
     pub fn line_one_stops(&self, id: u32) -> Vec<u32> {
         self.w.net.line_ones(id).iter().map(|x| x.0).collect()
+    }
+    /// T-4013: let riders at a rail line's stop `station` only board (`kind` 1, `BOARD_ONLY`), only get
+    /// off (2, `ALIGHT_ONLY`) or both (0), one undoable edit, free; 1 when it is so already (no edit).
+    /// Refused for a bus or ferry line, a station no stop of the line, or another kind.
+    pub fn set_stop_only(&mut self, id: u32, station: u32, kind: u8) -> u32 {
+        let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
+        if d.bus.is_some() || d.ferry.is_some() || !d.stops.contains(&station) || kind > ALIGHT_ONLY {
+            return self.refuse(Issue::LinePath { line: id });
+        }
+        if self.w.net.stop_only(id, station) == kind {
+            self.money_short = None;
+            self.issues.clear();
+            return 1;
+        }
+        d.only.retain(|x| x.0 != station);
+        if kind != 0 {
+            d.only.push((station, kind));
+        }
+        self.run(Op::Line { id, data: Some(d) })
+    }
+    /// T-4013: a line's boarding-only and getting-off-only stops, `[station, kind]` pairs (kind
+    /// `BOARD_ONLY` 1 or `ALIGHT_ONLY` 2).
+    pub fn line_stop_only(&self, id: u32) -> Vec<u32> {
+        self.w.net.line_only(id).iter().flat_map(|&(s, k)| [s, k as u32]).collect()
     }
 
     /// The stations a line passes without stopping (T-646): `[gap, node]` pairs in path order, gap

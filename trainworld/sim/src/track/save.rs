@@ -5,7 +5,7 @@
 
 use super::frame::FrameKind;
 use super::geom::Pi;
-use super::net::{EdgeData, GroupLook, LineData, OuterGroup, Network, NodeData, StationData, Weekend, DAY_UNKNOWN};
+use super::net::{EdgeData, GroupLook, LineData, OuterGroup, Network, NodeData, StationData, Weekend, ALIGHT_ONLY, BOARD_ONLY, DAY_UNKNOWN};
 use super::params::*;
 use super::twin::Twin;
 
@@ -99,6 +99,9 @@ use super::twin::Twin;
 /// Level 37 (T-3378) adds no block: an edge's kind 4 in its flag bits 8-10 is a busway. An older build does not
 /// compare levels and ignores that kind field, so it loads the busway as ordinary rail track and the bus lines lose
 /// their busway timing (T-4014 is for older builds to refuse such a save).
+/// A trailing `LBO1` block (T-4013, level 38) gives the lines with boarding-only or getting-off-only stops
+/// (`LineData::only`): count, then per line its index, its count and per stop its place in the line's stops and
+/// its kind (1 boarding only, 2 getting off only); without it every stop lets riders on and off.
 const MAGIC: &[u8; 4] = b"TWT4";
 /// TWT5 (T-125) is TWT4 byte for byte except that the metres are in the Lambert conformal world
 /// frame (`frame.rs`). TWT4 and older are always the legacy equirectangular frame, and a network
@@ -111,12 +114,12 @@ const MAGIC_TWT6: &[u8; 4] = b"TWT6";
 
 /// T-1826: the trailing blocks this build reads, in the order they are written. A block it does not
 /// know stops the decoder, which then reports the bytes left over (`decode_read`).
-pub const BLOCKS: [&[u8; 4]; 40] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1", b"LPS1", b"LWE1", b"LOS1", b"LPD1", b"LHR1", b"LFZ1", b"LSN1", b"LFD1", b"LGN1", b"LRA1", b"LWP1", b"LFB1", b"LBR1", b"LBT1", b"LBQ1"];
+pub const BLOCKS: [&[u8; 4]; 41] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1", b"LPS1", b"LWE1", b"LOS1", b"LPD1", b"LHR1", b"LFZ1", b"LSN1", b"LFD1", b"LGN1", b"LRA1", b"LWP1", b"LFB1", b"LBR1", b"LBT1", b"LBQ1", b"LBO1"];
 /// T-1826: the save level this build writes into the game header (`level`) and reads up to. Raised
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over. Saves from before it have none, read as 0.
-pub const LEVEL: u32 = 37;
+pub const LEVEL: u32 = 38;
 /// T-3759: the last level from before stations could be unbound from their complex's name; a typed
 /// station there showed its own name, so loading one makes such a station unbound (the app's pass).
 pub const OLD_BOUND_NAMES: u32 = 26;
@@ -824,6 +827,25 @@ pub fn encode(net: &Network) -> Vec<u8> {
         w.u(bp.len() as u64);
         for i in bp { w.u(i as u64); }
     }
+    // T-4013: after LBQ1, only where some line has boarding-only or getting-off-only stops: count, then
+    // per line its index, its count and per stop its place in the line's stops and its kind
+    let only: Vec<(usize, Vec<(usize, u8)>)> = lines.iter().enumerate().filter_map(|(i, &l)| {
+        let st = net.line_stops(l);
+        let v: Vec<(usize, u8)> = net.line_only(l).iter().filter_map(|&(s, k)| st.iter().position(|&x| x == s).map(|j| (j, k))).collect();
+        (!v.is_empty()).then_some((i, v))
+    }).collect();
+    if !only.is_empty() {
+        w.0.extend_from_slice(b"LBO1");
+        w.u(only.len() as u64);
+        for (i, v) in only {
+            w.u(i as u64);
+            w.u(v.len() as u64);
+            for (j, k) in v {
+                w.u(j as u64);
+                w.u(k as u64);
+            }
+        }
+    }
     w.0
 }
 
@@ -1044,7 +1066,7 @@ fn decode_read_at(bytes: &[u8], level: u32) -> Result<(Network, usize), String> 
             let e = if (e as usize) < n_edges { e } else { *dead_edge.get_or_insert_with(|| net.alloc_edge()) };
             path.push(e << 1 | (v & 1) as u32);
         }
-        net.set_line(id, Some(LineData { rows: 0, x: Default::default(), symbol: String::new(), trains, auto: None, name, colour, stops, path, tph, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), outer: vec![], day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![], fare_dist: false })).map_err(|e| format!("{e:?}"))?;
+        net.set_line(id, Some(LineData { rows: 0, x: Default::default(), symbol: String::new(), trains, auto: None, name, colour, stops, path, tph, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), outer: vec![], day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![], only: vec![], fare_dist: false })).map_err(|e| format!("{e:?}"))?;
     }
     net.next_line_number = n_lines as u32 + 1;
     if r.0.get(r.1..r.1 + 4) == Some(b"LUI1") {
@@ -1501,6 +1523,23 @@ fn decode_read_at(bytes: &[u8], level: u32) -> Result<(Network, usize), String> 
             }
         }
     }
+    if r.0.get(r.1..r.1 + 4) == Some(b"LBO1") {
+        r.1 += 4;
+        for _ in 0..r.u()? {
+            let i = r.u()? as usize;
+            for _ in 0..r.u()? {
+                let (j, k) = (r.u()? as usize, r.u()?);
+                if i >= n_lines || net.line_bus[i].is_some() || net.line_ferry[i].is_some() || (k != BOARD_ONLY as u64 && k != ALIGHT_ONLY as u64) {
+                    continue;
+                }
+                if let Some(&s) = net.line_stops(i as u32).get(j) {
+                    if !net.line_only[i].iter().any(|x| x.0 == s) {
+                        net.line_only[i].push((s, k as u8));
+                    }
+                }
+            }
+        }
+    }
     for l in manual {
         fold_manual(&mut net, l);
     }
@@ -1621,7 +1660,7 @@ mod tests {
         let e = net.alloc_edge();
         net.set_edge(e, Some(EdgeData { a: 0, b: 1, tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0, join: [0; 2], limit: 0, ramp: 0 })).unwrap();
         let l = net.alloc_line();
-        net.set_line(l, Some(LineData { rows: 0, x: Default::default(), symbol: String::new(), trains: Some([2, 2, 1]), auto: None, name: "A".into(), colour: 0xff0000, stops: vec![0, 1], path: vec![0], tph: [0.0; 3], dwell_s: 30.0, turnaround_s: 120.0, cars: 4, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), outer: vec![], day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![], fare_dist: false })).unwrap();
+        net.set_line(l, Some(LineData { rows: 0, x: Default::default(), symbol: String::new(), trains: Some([2, 2, 1]), auto: None, name: "A".into(), colour: 0xff0000, stops: vec![0, 1], path: vec![0], tph: [0.0; 3], dwell_s: 30.0, turnaround_s: 120.0, cars: 4, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), outer: vec![], day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![], only: vec![], fare_dist: false })).unwrap();
         encode(&net)
     }
 
@@ -1759,7 +1798,7 @@ mod tests {
         for tag in &written {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
-        assert_eq!((LEVEL, BLOCKS.len()), (37, 40), "a new block raises LEVEL: raise it, then update this pin");
+        assert_eq!((LEVEL, BLOCKS.len()), (38, 41), "a new block raises LEVEL: raise it, then update this pin");
     }
 
     /// T-2217: buildings come back as they were, in their order; a network without them encodes as
@@ -1855,5 +1894,79 @@ mod tests {
         let (back, unread) = decode_read(&both).unwrap();
         assert_eq!(unread, 0);
         assert!(back.line_data(l).unwrap().fare_dist && back.node_own[1] == "Own");
+    }
+
+    /// T-4013: a line's boarding-only and getting-off-only stops come back so after a network with
+    /// none ends as it did; setting them wakes demand and marks the line's span on both runs (riders
+    /// on and not off at the first stop, off and not on at the last), and undo takes them away again.
+    #[test]
+    fn boarding_only_stops_round_trip_and_undo() {
+        use crate::track::span::{line_span, stop_span};
+        use crate::track::world::{Op, TrackWorld};
+        let mut w = TrackWorld::new(decode(&sample()).unwrap());
+        let bytes = encode(&w.net);
+        assert!(!bytes.windows(4).any(|x| x == b"LBO1"), "none: no block");
+        let l = (0..w.net.line_count() as u32).find(|&l| w.net.line_ok(l)).unwrap();
+        let d = w.net.line_data(l).unwrap();
+        let (a, b) = (d.stops[0], d.stops[1]);
+        let r = w.apply(Op::Line { id: l, data: Some(LineData { only: vec![(a, BOARD_ONLY), (b, ALIGHT_ONLY), (a + b + 7, BOARD_ONLY)], ..d }) }).unwrap();
+        assert!(r.dirty.service.demand.contains(&l), "demand is told");
+        assert_eq!(w.net.line_only(l), &[(a, BOARD_ONLY), (b, ALIGHT_ONLY)], "a station no stop of the line is dropped");
+        let ls = &w.svc.lines[l as usize];
+        assert_eq!(ls.only, vec![BOARD_ONLY, ALIGHT_ONLY]);
+        let span = line_span(ls, &w.svc.lattice(&w.net, l as usize).unwrap());
+        // run 0 lists stop a then b, run 1 b then a
+        for q in 0..PERIOD_HOURS.len() {
+            let at = |run: usize, k: usize| stop_span(span[(q * 2 + run) * 2 + k]);
+            assert!([at(0, 0), at(1, 1)].iter().all(|x| x.1 && !x.2), "a: on, not off ({q})");
+            assert!([at(0, 1), at(1, 0)].iter().all(|x| !x.1 && x.2), "b: off, not on ({q})");
+        }
+        let with = encode(&w.net);
+        assert_eq!(&with[..bytes.len()], &bytes[..]);
+        assert_eq!(&with[bytes.len()..bytes.len() + 4], b"LBO1");
+        let (back, unread) = decode_read(&with).unwrap();
+        assert_eq!(unread, 0);
+        assert_eq!(back.line_only(l), w.net.line_only(l));
+        assert_eq!(encode(&back), with);
+        let r = w.undo().unwrap().unwrap();
+        assert!(r.dirty.service.demand.contains(&l), "demand is told of the undo");
+        assert!(w.net.line_only(l).is_empty() && w.svc.lines[l as usize].only.is_empty());
+        assert_eq!(encode(&w.net), bytes);
+    }
+
+    /// T-4013 (level 38): saves written at levels 36 and 37 (ending in `LBT1`, as master's BRT and busway
+    /// builds write them, with no `LBO1`) and old ones still load whole, with no stop kept to boarding or
+    /// getting off; a level 38 save with both blocks reads them in order at any level.
+    #[test]
+    fn saves_from_before_the_boarding_only_block_load() {
+        use crate::track::world::{Op, TrackWorld};
+        let old = sample();
+        for level in [0, 20, 35, 36, 37, LEVEL] {
+            let (net, unread) = decode_read_at(&old, level).unwrap();
+            assert_eq!(unread, 0, "level {level}");
+            assert!((0..net.line_count() as u32).all(|l| net.line_only(l).is_empty()), "level {level}");
+        }
+        let mut w = TrackWorld::new(decode(&old).unwrap());
+        let st = (0..w.net.node_count() as u32).find(|&n| w.net.is_station(n)).unwrap();
+        let d = super::super::net::StationData { road: Some(0.5), ..w.net.station_data(st).unwrap() };
+        w.net.set_station(st, Some(d)).unwrap();
+        let brt = encode(&w.net);
+        assert!(brt.windows(4).any(|x| x == b"LBT1") && !brt.windows(4).any(|x| x == b"LBO1"));
+        for level in [35, 36, 37, LEVEL] {
+            let (net, unread) = decode_read_at(&brt, level).unwrap();
+            assert_eq!(unread, 0, "level {level}");
+            assert_eq!(net.station_data(st).unwrap().road, Some(0.5f32 as f64));
+            assert_eq!(encode(&net), brt);
+        }
+        let l = (0..w.net.line_count() as u32).find(|&l| w.net.line_ok(l)).unwrap();
+        let d = w.net.line_data(l).unwrap();
+        let a = d.stops[0];
+        w.apply(Op::Line { id: l, data: Some(LineData { only: vec![(a, BOARD_ONLY)], ..d }) }).unwrap();
+        let both = encode(&w.net);
+        assert_eq!(&both[..brt.len()], &brt[..], "LBO1 follows LBT1");
+        let (net, unread) = decode_read(&both).unwrap();
+        assert_eq!(unread, 0);
+        assert_eq!(net.line_only(l), &[(a, BOARD_ONLY)]);
+        assert_eq!(net.station_data(st).unwrap().road, Some(0.5f32 as f64));
     }
 }

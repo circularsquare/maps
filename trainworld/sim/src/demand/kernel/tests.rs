@@ -621,6 +621,59 @@ fn a_passed_stop_boards_and_alights_nobody() {
     assert_eq!(loads.rn_alight[5], 30.0);
 }
 
+/// T-4013: a line 0-1-2 with stop 1 kept to boarding only (`span` `SPAN_NO_ALIGHT` plus the share) or
+/// getting off only (`SPAN_NO_BOARD`) on both runs, and station 3 200 m from 1 on no line, a walk away.
+fn only_net(at_1: f32) -> Network {
+    let mut net = Network {
+        st_x: vec![0.0, 3000.0, 6000.0, 3200.0], st_y: vec![0.0; 4],
+        line_name: vec![String::new()], line_off: vec![0, 3], line_stops: vec![0, 1, 2],
+        hop_min: vec![2.0, 2.0, 0.0], hop_back: vec![0.0, 2.0, 2.0], line_speed_kmh: vec![0.0],
+        line_headway_min: vec![[5.0; network::PERIODS]], line_seats: vec![100.0], line_rated: vec![], line_crush: vec![200.0],
+        st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![false], span: vec![], st_ups: vec![], st_passage: vec![], catches: vec![], st_bus: vec![], st_tram: vec![], back_stops: vec![], line_pier: vec![], stop_grade: vec![],
+    };
+    // route nodes: run 0 = 0..3 (stations 0, 1, 2), run 1 = 3..6 (2, 1, 0); stop 1 is 1 and 4
+    net.span = (0..network::PERIODS).flat_map(|_| (0..6).map(move |r| if r == 1 || r == 4 { at_1 } else { 1.0 })).collect();
+    net
+}
+
+/// T-4013: at a boarding-only stop nobody gets off, by train or by walking on: trips to it, or to a
+/// station a walk from it, have no ride on the line, while trips from it ride both ways.
+#[test]
+fn a_boarding_only_stop_lets_nobody_off() {
+    let p = common_test_params();
+    let net = only_net(crate::track::span::SPAN_NO_ALIGHT + 1.0);
+    let g = build_graph(&net, &p);
+    let s = g.n_st;
+    let sk = skims(&g, &p);
+    let none = |a: usize, b: usize| !(sk.r[a * s + b] < 1e3);
+    assert!(none(0, 1) && none(2, 1) && none(0, 3) && none(2, 3), "nothing gets off at 1: {:?}", sk.r);
+    assert!((sk.r[s + 2] - (2.5 + 2.0)).abs() < 1e-4 && (sk.r[s] - (2.5 + 2.0)).abs() < 1e-4, "1 to 2 and 1 to 0 ride");
+    let mut od = vec![0.0; s * s];
+    (od[1], od[2 * s + 1], od[3], od[s + 2], od[s]) = (10.0, 15.0, 5.0, 20.0, 30.0);
+    let loads = assign(&g, &sk, &od);
+    assert_eq!((loads.rn_alight[1], loads.rn_alight[4]), (0.0, 0.0), "nobody alights at 1");
+    assert_eq!((loads.rn_board[1], loads.rn_board[4]), (20.0, 30.0), "riders board at 1 both ways");
+}
+
+/// T-4013: at a getting-off-only stop nobody boards: trips from it have no ride on the line, while
+/// trips to it ride both ways.
+#[test]
+fn a_getting_off_only_stop_boards_nobody() {
+    let p = common_test_params();
+    let net = only_net(crate::track::span::SPAN_NO_BOARD);
+    let g = build_graph(&net, &p);
+    let s = g.n_st;
+    let sk = skims(&g, &p);
+    assert!(!(sk.r[s + 2] < 1e3) && !(sk.r[s] < 1e3) && !(sk.r[3 * s + 2] < 1e3), "nothing boards at 1: {:?}", sk.r);
+    assert!((sk.r[1] - (2.5 + 2.0)).abs() < 1e-4 && (sk.r[2 * s + 1] - (2.5 + 2.0)).abs() < 1e-4, "0 to 1 and 2 to 1 ride");
+    let mut od = vec![0.0; s * s];
+    (od[1], od[2 * s + 1], od[s + 2], od[s], od[2]) = (10.0, 15.0, 20.0, 30.0, 7.0);
+    let loads = assign(&g, &sk, &od);
+    assert_eq!((loads.rn_board[1], loads.rn_board[4]), (0.0, 0.0), "nobody boards at 1");
+    assert_eq!((loads.rn_alight[1], loads.rn_alight[4]), (10.0, 15.0), "riders get off at 1 both ways");
+    assert!((loads.seg[1] - 7.0).abs() < 1e-3, "0 to 2 rides through 1: {:?}", loads.seg);
+}
+
 #[test]
 fn everyday_rates_by_name() {
     let mut p = Params::default();

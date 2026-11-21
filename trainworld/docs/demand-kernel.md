@@ -133,9 +133,15 @@ levels:
    too). Boarding a route node with `phi` below 1 costs -ln(`phi`) / 0.10 perceived minutes more
    (`Graph::rn_span`, added with the wait for full trains: 0.9 adds 1.1, 0.5 adds 6.9, 0.1 adds 23,
    0.01 adds 46), the logit's own form for an option open to that share of riders; a stop whose
-   `phi` rounds to 0 has no departures in the search. A `phi` of -1 marks a stop the run passes on
+   `phi` rounds to 0 has no departures in the search. The same numbers carry marks beside the share
+   (`track::span::stop_span`, kept through demand's clamp to 0..1): -1 marks a stop the run passes on
    the other track from a one-track station's platform (T-3332): no boarding, alighting or walking
-   change there, the ride carrying on through it. A period whose `phi` changed is solved again
+   change there, the ride carrying on through it. A stop the player keeps to getting off only
+   (T-4013, `LineData::only`) is -2: no boarding edge and no departures (`rn_tph` 0), alighting and
+   walking on as usual. One kept to boarding only is 2 plus its share: boarding as usual, no
+   alighting edge and no walk on from its route node, so nobody gets off there by train or on foot.
+   Both hold on both runs, at the listed stop's place in each run (run 1's stops in its travel
+   order), whichever platform the run stops at; trains stop and dwell there as anywhere. A period whose `phi` changed is solved again
    like one whose trains an hour did (T-124), and the cache key (T-328) includes it. The wait
    inside service stays half the period's headway.
    **Boarding a bus** costs what boarding a train does (T-3856; from T-1576 to then a bus boarding cost 6, later 4,

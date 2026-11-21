@@ -12,6 +12,8 @@ A boarding costs half the gap between trains, times the station's wait weight, p
 
 Stations within {{sim/src/demand/kernel.rs:Params.xfer_walk_m|0}} m of each other are close enough to change on foot. A passage you build works over a longer distance, along a straight line at {{sim/src/track/upgrades.rs:PASSAGE_MPS|0}} m/s. A trip can also start or end with that walk, with no bother and no transfer fare, so the way home is the way out reversed.
 
+**Boarding only and getting off only.** A stop of a line can be kept to one or the other. At a boarding-only stop people get on and never off, so nobody rides the line to it, in either direction, and nobody changes off the line there. At a getting-off-only stop it's the other way around. Trains still stop and wait the usual time. Other lines at the same station aren't affected.
+
 People don't get off a line to catch the same line back the way they came. On a full line they wait at their own station.
 
 A line that bends back close to itself can be changed onto across the bend. People get off, walk over to its other stop and ride on from there when that beats riding around. A passage between the two stops lets them do it from further apart. They never walk to another of its stops to ride back towards where they got off.
@@ -19,4 +21,4 @@ A line that bends back close to itself can be changed onto across the bend. Peop
 If the train that arrives is full, the wait gets longer: see [[full-trains]].
 
 Exact rule: `docs/demand-kernel.md` "Access and station-to-station times". A longer trip between cities is planned, so its first wait is shorter, at most {{sim/src/demand/kernel/search.rs:PLANNED_WAIT_CAP_MIN|0}} minutes, and it has no extra for long gaps. Commutes and outings between cities wait as local trips do.
-In the code: **main** `sim/src/demand/kernel/search.rs` `board_cost`, also `planned_board_cost`, `change_f`, `trip_ends`, `walk_ban` `sim/src/demand/kernel/subzones.rs` `wait_factor` `sim/src/track/upgrades.rs` `WAITING_ROOM_WAIT`, `PASSAGE_MPS`
+In the code: **main** `sim/src/demand/kernel/search.rs` `board_cost`, `build_graph`, also `planned_board_cost`, `change_f`, `trip_ends`, `walk_ban` `sim/src/demand/kernel/subzones.rs` `wait_factor` `sim/src/track/upgrades.rs` `WAITING_ROOM_WAIT`, `PASSAGE_MPS` `sim/src/track/span.rs` `line_span`, `stop_span`

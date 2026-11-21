@@ -302,6 +302,10 @@ svg .stroke2 { stroke-width: 2; }
 .tt-body { position: relative; background-image: repeating-linear-gradient(to bottom, transparent 0 calc(5 * var(--row) - 1px), var(--rule) calc(5 * var(--row) - 1px) calc(5 * var(--row))); }
 .tt-names { position: sticky; left: 0; z-index: 2; background: var(--bg); background-image: inherit; }
 .tt-names span { display: block; height: var(--row); line-height: var(--row); padding-right: 8px; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* T-4013: a stop riders only board or only get off at, after its name; on the departures board, beside the picker */
+.tt-names span.stop-only, .sp-only { display: inline-flex; align-items: center; gap: 4px; vertical-align: -2px; height: auto; line-height: 1; padding: 0 0 0 4px; overflow: visible; color: var(--muted); }
+.tt-names span.stop-only svg, .sp-only svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.sp-only { flex: none; padding: 0; font-size: 12px; }
 .tt-hour-rule { position: absolute; top: 0; bottom: 0; border-left: 1px solid var(--shade); }
 .tt-hour-rule.full { border-left-color: var(--rule); }
 .tt-col { position: absolute; top: 0; color: color-mix(in srgb, var(--ink) 78%, var(--text)); border-left: 1px solid var(--shade); }
@@ -1024,6 +1028,11 @@ rect.now { fill-opacity: .45; }
 .stops .rev-stop { display: inline-flex; vertical-align: -3px; margin-left: 6px; width: 16px; height: 16px; border-radius: 50%;
                    background: #f2b705; color: #1a1a1a; }
 .stops .rev-stop svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+/* T-4013: a stop riders only board or only get off at; while stops are edited, its switch (dim while both) */
+.stops .stop-only:not(.btn) { display: inline-flex; vertical-align: -3px; margin-left: 6px; width: 16px; height: 16px; color: var(--muted); }
+.stops .stop-only:not(.btn) svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.stops .btn.stop-only:not(.on) { opacity: 0.45; }
+.stops .btn.stop-only:not(.on):hover { opacity: 1; }
 .stops .stop-more { flex: none; width: 10px; font-size: 12px; text-align: center; color: var(--muted); }
 .stops .n { width: 40px; text-align: right; }
 /* flat junctions and crossings on the route (T-629): between the dot above and the next one */

@@ -428,9 +428,10 @@ pub(crate) fn pier_lines(flags: &[u8], n: usize) -> Vec<bool> {
     if flags.len() == n && flags.iter().any(|&f| f != 0) { flags.iter().map(|&f| f != 0).collect() } else { vec![] }
 }
 
-/// `span` if it is one per period and route node of `stops` stops, else empty (T-842).
+/// `span` if it is one per period and route node of `stops` stops, else empty (T-842); its shares
+/// held to 0..1, its marks kept (`network::span_clamped`).
 pub(crate) fn span_for(span: &[f32], stops: usize) -> Vec<f32> {
-    if span.len() == PERIODS * 2 * stops && span.iter().any(|&v| v != 1.0) { span.iter().map(|v| v.clamp(0.0, 1.0)).collect() } else { vec![] }
+    if span.len() == PERIODS * 2 * stops && span.iter().any(|&v| v != 1.0) { span.iter().map(|&v| super::network::span_clamped(v)).collect() } else { vec![] }
 }
 
 /// Equal to the bit (T-124: a kept period must be exactly what a fresh solve would give).

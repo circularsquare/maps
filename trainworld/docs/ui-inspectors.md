@@ -439,7 +439,13 @@ The stops (above Schedule while being edited [T-670]),
   leaves the selection alone (every line's list, T-3089); a click on a stop's dot (a 20 px target, ringed red on hover) takes it out keeping the path
   and Shift-click between the ends ends the line there, as in the group view (hover "Click to remove
   the stop at 225 St", "Shift-click to end the line here"; none on a stop the line needs: a line of
-  two, a loop's ends, where trains turn back), beside the remove button [T-1894]; **flat junctions and
+  two, a loop's ends, where trains turn back), beside the remove button [T-1894]; **boarding only and getting off
+  only** (T-4013, `ui/inspector/stopOnly.tsx`): while stops are edited every row has a small switch before the
+  remove button, its icon the stop's setting (the train's side with an arrow in and out, in, or out; dim while
+  both), a click going both -> boarding only -> getting off only -> both (hovers "Make boarding only", "Make
+  getting off only", "Allow boarding and getting off"); otherwise a stop with a setting carries the icon after its
+  name and time, muted, hover "Boarding only" or "Getting off only". The schedule panel's timetable marks the
+  station's row the same way, and the departures board names it beside the station picker; **flat junctions and
   flat crossings on the route** [T-629, `TrackApi.line_marks`] as small marks on the diagram's bar between the
   two stops they lie between, spread evenly in the gap (the diagram is not to scale): a white diamond for a
   junction with no flyover and no station, a cross for a flat crossing, each with a hover naming it and

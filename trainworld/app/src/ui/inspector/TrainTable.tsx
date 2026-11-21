@@ -27,6 +27,7 @@ import { useClockQuery } from "../useClockQuery";
 import { Chip, Segmented } from "../widgets";
 import { GUTTER, MareyBody, PAD_R, type Links } from "./MareyChart";
 import type { Shared } from "./mareyShare";
+import { ONLY_TIP, OnlyIcon } from "./stopOnly";
 
 const DAY = 86400, HOUR = 3600;
 /** a column's width, a row's height and the head's height, px */
@@ -639,7 +640,12 @@ export function TrainTable({ axis, st, others = [], related = [], links, group, 
   }
   if (DEBUG) (window as unknown as { __tt?: unknown }).__tt = { cols: cols.length, rel: cols.reduce((s, c) => s + (c.rank ? 1 : 0), 0), relDrawn: shown.reduce((s, i) => s + (cols[i].rank ? 1 : 0), 0), hourPx: scale * HOUR, level, drawn: drawn.reduce((s, v) => s + v, 0), shown: shown.length, h0: ((Math.round((day0 + shift) / HOUR) % 24) + 24) % 24 };
 
-  const rowNames = Array.from({ length: n }, (_, i) => names.get(axis.stops[dir === 0 ? i : n - 1 - i]) ?? "");
+  const rowIds = Array.from({ length: n }, (_, i) => axis.stops[dir === 0 ? i : n - 1 - i]);
+  // T-4013: a stop the line's riders only board or only get off at carries its mark
+  const rowNames = rowIds.map((id) => {
+    const only = st.stopOnly?.[id];
+    return <>{names.get(id) ?? ""}{only && <span class="stop-only" data-tip={t(ONLY_TIP[only])}><OnlyIcon kind={only} /></span>}</>;
+  });
   const label = (d: number) => st.loop
     ? t("schedulePanel.via", { station: names.get(axis.stops[d === 0 ? 1 : n - 2]) ?? "" })
     : t("schedulePanel.to", { station: names.get(axis.stops[d === 0 ? n - 1 : 0]) ?? "" });

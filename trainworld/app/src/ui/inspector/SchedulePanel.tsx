@@ -24,6 +24,7 @@ import { limitsFrom } from "./LineInspector";
 import { useChartLinks } from "./MareyChart";
 import { TrainTable, useRelated } from "./TrainTable";
 import { NO_LIMITS, Schedule, useLinePeriods, vehicleOf, vehiclesText } from "./schedule";
+import { ONLY_TIP, OnlyIcon } from "./stopOnly";
 
 /** What the panel shows: a line's schedule, or a group's chart; null closed. */
 export type ScheduleShown = { kind: "line"; line: string } | { kind: "group"; group: number };
@@ -90,6 +91,8 @@ function Board({ l, st }: { l: LineInput; st: LineStats }) {
   const stops = [...new Set(l.stops)];
   const [station, setStation] = useState(stops[0]);
   const at = stops.includes(station) ? station : stops[0];
+  // T-4013: trains still leave a getting-off-only stop, so its departures stay, under its mark
+  const only = st.stopOnly?.[at];
   const shift = st.shift ?? 0;
   const now = clock.minute.value * 60;
   const t0 = Math.floor((now + shift) / HOUR) * HOUR - shift;
@@ -121,6 +124,7 @@ function Board({ l, st }: { l: LineInput; st: LineStats }) {
         <select aria-label={t("schedulePanel.station")} value={at} onChange={(e) => setStation(e.currentTarget.value)}>
           {stops.map((s) => <option value={s}>{names.get(s) ?? ""}</option>)}
         </select>
+        {only && <span class="muted sp-only"><OnlyIcon kind={only} />{t(ONLY_TIP[only])}</span>}
       </div>
       <div class="sp-board" ref={body} style={{ "--runs": Math.max(1, runs.length) }}>
         {shown && !rows.length && <p class="muted">{t("schedulePanel.noDepartures")}</p>}

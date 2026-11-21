@@ -102,6 +102,7 @@ impl Network {
             line_day: vec![],
             line_hand: vec![],
             line_ones: vec![],
+            line_only: vec![],
             line_one_way: vec![],
             line_limit: vec![],
             line_fare_dist: vec![],
@@ -438,6 +439,7 @@ impl Network {
         self.line_day.push(0);
         self.line_hand.push(false);
         self.line_ones.push(vec![]);
+        self.line_only.push(vec![]);
         self.line_one_way.push(false);
         self.line_limit.push(0);
         self.line_fare_dist.push(false);
@@ -516,6 +518,7 @@ impl Network {
                 day: self.line_day[i],
                 hand: self.line_hand[i],
                 ones: self.line_ones[i].clone(),
+                only: self.line_only[i].clone(),
                 one_way: self.line_one_way[i],
                 limit: self.line_limit[i],
                 twin: self.line_twin[i],
@@ -778,6 +781,14 @@ impl Network {
     /// T-3711: a line's one-way stops the player set (`LineData::ones`).
     pub fn line_ones(&self, l: u32) -> &[(u32, u8)] {
         self.line_ones.get(l as usize).map_or(&[], |v| &v[..])
+    }
+    /// T-4013: a line's boarding-only and getting-off-only stops (`LineData::only`).
+    pub fn line_only(&self, l: u32) -> &[(u32, u8)] {
+        self.line_only.get(l as usize).map_or(&[], |v| &v[..])
+    }
+    /// T-4013: what riders may do at station `s` on line `l`: `BOARD_ONLY`, `ALIGHT_ONLY`, or 0 both.
+    pub fn stop_only(&self, l: u32, s: u32) -> u8 {
+        self.line_only(l).iter().find(|x| x.0 == s).map_or(0, |x| x.1)
     }
     pub fn lines_on_edge(&self, e: u32) -> &[u32] {
         let i = e as usize;

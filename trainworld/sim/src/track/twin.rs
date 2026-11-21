@@ -300,6 +300,11 @@ pub fn double(d: &mut LineData) {
 /// twin as it stands) where the settle owns a figure: a headway line's counts, every rate.
 pub fn twin_data(parent: u32, p: &LineData, stops: Vec<u32>, path: Vec<u32>, was: Option<&LineData>) -> LineData {
     let mut d = p.clone();
+    // T-4013: the twin's stop beside each of the line's lets riders on and off as the line's does
+    if stops.len() == p.stops.len() {
+        d.only = p.only.iter().flat_map(|&(s, k)| p.stops.iter().zip(&stops).filter(move |x| *x.0 == s).map(move |x| (*x.1, k))).collect();
+        d.only.dedup();
+    }
     d.stops = stops;
     d.path = path;
     d.group = 0;

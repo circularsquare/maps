@@ -145,6 +145,9 @@ impl Network {
     }
 }
 
+/// `Network::span`'s marks (T-3332, T-4013), written by the clock worker's `track::span::line_span`.
+pub use crate::track::span::{span_clamped, stop_span};
+
 /// T-3910: a train or tram trip pays the boarding cost at a stop at grade too. Set false to exempt
 /// stops at grade again (the T-3888 level rule).
 pub const STAIRS_AT_GRADE: bool = true;

@@ -316,6 +316,7 @@ impl Network {
                 self.line_fast[i] = d.fast;
                 self.line_hand[i] = d.hand && d.bus.is_none() && d.ferry.is_none();
                 self.line_ones[i] = if d.bus.is_some() || d.ferry.is_some() { vec![] } else { d.ones.iter().copied().filter(|x| d.stops.contains(&x.0)).collect() };
+                self.line_only[i] = if d.bus.is_some() || d.ferry.is_some() { vec![] } else { d.only.iter().copied().filter(|x| matches!(x.1, BOARD_ONLY | ALIGHT_ONLY) && d.stops.contains(&x.0)).collect() };
                 self.line_one_way[i] = d.one_way;
                 self.line_limit[i] = d.limit;
                 self.line_fare_dist[i] = d.fare_dist;
@@ -339,6 +340,7 @@ impl Network {
                 self.line_day[i] = 0;
                 self.line_hand[i] = false;
                 self.line_ones[i].clear();
+                self.line_only[i].clear();
                 self.line_one_way[i] = false;
                 self.line_limit[i] = 0;
                 self.line_fare_dist[i] = false;

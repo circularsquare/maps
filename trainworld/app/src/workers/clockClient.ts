@@ -29,7 +29,7 @@ import { linesPending } from "../game/lineFigures";
 import { accountVersion, packArrivals, packRiders } from "../game/boarding";
 import { ask, designSpeed, guideFinished, lineDraft, marketOff, selection, tool } from "../game/ui";
 import { afterStopEdits, flipSites, rightHand, say, setEditSink, stopsQueued, world, worldIsRows } from "../game/world";
-import type { LineInput, LineStats, RowFigs, StationInput, TrackEdge, TrackNode, WorldView } from "../game/types";
+import type { LineInput, LineStats, RowFigs, StationInput, StopOnly, TrackEdge, TrackNode, WorldView } from "../game/types";
 import type { ClockLine, ClockState, EditOp, FromClock, MoneyPatch, MoneyState, NetworkSnapshot, PaidFor, PiInput, RouteAsk, StationAt, ToClock } from "./protocol";
 import { applyPatch } from "./valuePatch";
 import { anchorVersion } from "../map/anchorVersion";
@@ -356,6 +356,7 @@ function toWorld(s: ClockState): WorldView {
       oneWayAt: Object.fromEntries(Array.from({ length: l.ways.length >> 1 }, (_, k) => [String(l.ways[2 * k]), l.ways[2 * k + 1]])),
       ...(l.backStops?.length ? { backStops: l.backStops.map(String) } : {}),
       ...(l.oneStops?.length ? { oneStops: l.oneStops.map(String) } : {}),
+      ...(l.stopOnly?.length ? { stopOnly: Object.fromEntries(Array.from({ length: l.stopOnly.length >> 1 }, (_, k) => [String(l.stopOnly![2 * k]), l.stopOnly![2 * k + 1] as StopOnly])) } : {}),
       hand: l.hand,
       loop: l.loopKind === 1 ? "circle" : l.loopKind === 2 ? "balloon" : null, // i18n-ignore
       oneWay: l.oneWay,

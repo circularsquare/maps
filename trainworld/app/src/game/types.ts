@@ -203,6 +203,10 @@ export type LineStatus =
   /** its path lost track, or a stop went */
   | "broken";
 
+/** T-4013: what riders may do at a stop, beside both: board only, or get off only (sim `BOARD_ONLY`, `ALIGHT_ONLY`) */
+export const BOARD_ONLY = 1, ALIGHT_ONLY = 2;
+export type StopOnly = typeof BOARD_ONLY | typeof ALIGHT_ONLY;
+
 export interface LineStats {
   status: LineStatus;
   km: number;
@@ -256,6 +260,9 @@ export interface LineStats {
   backStops?: string[];
   /** T-3711: the stops the player made one way with a shift-click; absent for none */
   oneStops?: string[];
+  /** T-4013: the stops where riders only board (1) or only get off (2), by station id (`TrackApi::line_stop_only`);
+   * absent for none */
+  stopOnly?: Record<string, StopOnly>;
   /** T-2895: the player set its stop order by hand (`TrackApi::line_hand`) */
   hand: boolean;
   /** a loop (T-798): its last stop is its first; a circle carries on round there, a balloon turns
