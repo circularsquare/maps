@@ -13,12 +13,16 @@ A colour too dark or too light to show on either map is moved to the nearest one
 import json
 import os
 import re
+import sys
 from collections import Counter
 
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-NORI = os.path.join(os.path.dirname(os.path.dirname(HERE)), "noritetsu", "dist", "data")
+sys.path.insert(0, HERE)
+from realauto import shared_path  # noqa: E402
+
+NORI = shared_path("noritetsu", "dist", "data")
 
 # noritetsu line ids, per route code of the trip files
 LON_TFL = {  # route code -> noritetsu gb line id (name)

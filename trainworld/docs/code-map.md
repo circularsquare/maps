@@ -647,7 +647,11 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   from the lines it picks only, and writes a report per city
   (`auto_<id>.json`: stations, lines running, names in Latin letters, km off the graph, holds);
   `ship` ships the listed cities that passed and writes `app/src/game/realNetworks.json`. `realnet.py`
-  makes each listed city a `CITIES` entry (`auto_city`). Rules in its docstring; notes/T-3225.md.
+  makes each listed city a `CITIES` entry (`auto_city`). Rules in its docstring; notes/T-3225.md. A city whose
+  entry says `tracks` also gets the lines OSM maps only as track (`realtracks.py`, T-3935: N02 in Japan, else
+  noritetsu's `infra.pkl` relations; a station path where no passenger route runs, as route relations in the
+  extract); `tracklines [ids]` lists what it would add for any city, writing only `tracklines.json`. In a worktree
+  the noritetsu and N02 data are the main tree's (`shared_path`).
   Browser check: `checks/t3225-real-load.mjs` (every city from the new game sheet to playable).
 - `realgraph.py <cc ...> [--check] [--out DIR] [--nori DIR] [--lines DIR] [--lines-only]` (T-727b; freight from the extract's ways and abandoned rail from the region's `_extra.pmtiles`, kinds 8 and 9, T-3495; run with the system Python, which has pmtiles and mapbox_vector_tile): the real network the layer draws as a routing
   graph per noritetsu region, plus short undrawn track that fills its gaps (T-816), from noritetsu's

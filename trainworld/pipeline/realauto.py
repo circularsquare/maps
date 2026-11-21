@@ -64,7 +64,18 @@ from concurrent.futures import ThreadPoolExecutor
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 MAPS = os.path.dirname(ROOT)
-NORI_PROC = os.path.join(MAPS, "noritetsu", "data", "proc")
+
+
+def shared_path(*parts):
+    """A path under the maps root; in a worktree (<maps>/.tw-trees/<name>), which has no untracked data, the main
+    tree's when the tree has none (noritetsu's extract and model, N02: all read only)."""
+    p = os.path.join(MAPS, *parts)
+    if not os.path.exists(p) and os.path.basename(os.path.dirname(MAPS)) == ".tw-trees":
+        return os.path.join(os.path.dirname(os.path.dirname(MAPS)), *parts)
+    return p
+
+
+NORI_PROC = shared_path("noritetsu", "data", "proc")
 LIST = os.path.join(HERE, "realauto.json")
 KEEP_DIR = os.path.join(HERE, "realauto_keep")
 OUT = os.path.abspath(os.environ.get("REALNET_OUT", os.path.join(ROOT, "data", "work", "realnet")))
@@ -328,13 +339,27 @@ def cut(pack, rels, stops, ways, xy_of):
     for r, (lon, lat) in nodes.items():
         tg = stops[r][0] if r in stops else {}
         el.append({"type": "node", "id": r, "lon": lon, "lat": lat, "tags": {"name": pick_name(tg, cc)}})
+    # T-3935: lines OSM maps only as track, added where the city's entry says `tracks` (realtracks.py)
+    import realtracks
+    found, refused = realtracks.lines(cc, rels, stops, ways, xy_of, (w, s, e, n), in_pack, set(nodes))
+    if any(c["id"] == pack and c.get("tracks") for c in listed()):
+        t_el, t_shapes, t_nodes = realtracks.elements(found, cc)
+        el += t_el
+        shapes.update(t_shapes)
+        for r, ((lon, lat), nm) in t_nodes.items():
+            if r not in nodes:
+                el.append({"type": "node", "id": r, "lon": lon, "lat": lat, "tags": {"name": nm}})
+    track_lines = [{x: L[x] for x in ("line", "name", "route", "from", "to", "stops", "km", "covered", "source", "id")} | {"names": L["names"]} for L in found]
     kinds = Counter(rels[r][0].get("route") for r in keep)
     # realnet's osm adapter takes these as its `lines` (a regex on "name | name:en | ref | r<id>")
     lines = [[r"\| r(" + "|".join(str(r) for r in heavy) + r")$",
               {"train_m": realnet.OSM_TRAIN_M["commuter"], "kmh": realnet.OSM_KMH["commuter"]}]] if heavy else []
     return {"elements": el, "shapes": shapes, "lines": lines,
             "realauto": {"kept": len(keep), "kinds": dict(kinds), "heavy_light_rail": len(heavy), "reordered": len(reordered), "stops_added": sum(added.values()), "dropped": dict(why),
-                         "dropped_routes": {k: sorted(v) for k, v in gone.items()}}}
+                         "dropped_routes": {k: sorted(v) for k, v in gone.items()},
+                         "track_lines": track_lines, "track_added": len(track_lines) if any(c["id"] == pack and c.get("tracks") for c in listed()) else 0,
+                         "track_refused": Counter(x["why"] for x in refused), "track_refused_lines": refused,
+                         "track_partly_covered": [x for x in refused if x["why"] == "routes run on it" and x["covered"] < 0.9]}}
 
 
 ORDER_RATIO = 1.1
@@ -575,6 +600,40 @@ def cmd_extract(ids):
             json.dump(d, open(path + ".part", "w", encoding="utf-8"), ensure_ascii=False)
             os.replace(path + ".part", path)
             print(f"{p}: {d['realauto']['kept']} route relations {d['realauto']['kinds']}, dropped {d['realauto']['dropped']} -> {path}", flush=True)
+
+
+def cmd_tracklines(ids):
+    """T-3935's dry run: the lines realtracks finds for each city, added or not (its `tracks`), printed and written
+    to $REALNET_OUT/tracklines.json. Writes nothing else."""
+    reg = registry()
+    by_cc = defaultdict(list)
+    for i in ids:
+        try:
+            by_cc[region_of(i, reg)].append(i)
+        except SystemExit as e:
+            print(e)
+    os.makedirs(OUT, exist_ok=True)
+    out = {}
+    for cc, ps in by_cc.items():
+        rels, stops, ways = load_region(cc)
+        lookup = {}
+
+        def xy_of(nid):
+            import numpy as np
+            if "c" not in lookup:
+                lookup["c"] = coords(cc)
+            a, x, y = lookup["c"]
+            j = int(np.searchsorted(a, nid))
+            return (float(x[j]), float(y[j])) if j < len(a) and a[j] == nid else None
+        for p in ps:
+            d = cut(p, rels, stops, ways, xy_of)["realauto"]
+            out[p] = {k: d[k] for k in ("track_lines", "track_added", "track_refused", "track_partly_covered", "track_refused_lines")}
+            print(f"{p}: {len(d['track_lines'])} lines from track ({d['track_added']} added), refused {dict(d['track_refused'])}", flush=True)
+            for L in d["track_lines"]:
+                print(f"   + {L['name']} [{L['route']}, {L['source']}] {L['names'][0]} - {L['names'][-1]}, {L['stops']} stops, {L['km']} km, covered {L['covered']}", flush=True)
+            for L in d["track_partly_covered"]:
+                print(f"   ? {L['line']} {L['from']} - {L['to']}, {L['stops']} stops, {L['km']} km, covered {L['covered']}", flush=True)
+            json.dump(out, open(os.path.join(OUT, "tracklines.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 
 
 def py(*args):
@@ -870,6 +929,8 @@ if __name__ == "__main__":
     ids = a[1:] or [c["id"] for c in listed()]
     if cmd == "extract":
         cmd_extract(ids)
+    elif cmd == "tracklines":
+        cmd_tracklines(ids)
     elif cmd == "build":
         cmd_build(ids, jobs)
     elif cmd == "report":

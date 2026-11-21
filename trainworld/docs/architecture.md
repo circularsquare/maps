@@ -608,7 +608,8 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
 - **Real networks** [T-731]: `packs/real/<id>.save` for New York, London, Paris, Tokyo, Seoul,
   Toronto and Sendai, made by hand from timetables, and [T-3225] the cities in `pipeline/realauto.json`
   (the 30 biggest metros by annual riders that have a pack), made with no hand work from noritetsu's OSM
-  extract: route relations cut to the pack, intercity, high-speed and heritage trains left out, stations
+  extract: route relations cut to the pack, intercity, high-speed and heritage trains left out (Kansai and Nagoya
+  also get the lines OSM maps only as track, from N02 [T-3935, `pipeline/realtracks.py`]), stations
   by name within 400 m, trains an hour from OSM's `interval` else a default by kind of line (a suburban
   train with no line of its own every half hour; a light-rail route on main-line track with 5 or more
   stops at least 1 km apart, as OSM maps Berlin's S-Bahn, runs commuter trains at commuter speed on its

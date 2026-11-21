@@ -1,5 +1,5 @@
 {
-  "what": "T-3225: the real networks built with no hand work from noritetsu's OSM extract (pipeline/realauto.py). Cities picked by annual metro ridership, the biggest 30 with a city pack that are not hand-made, from Wikipedia's List of metro systems (fetched 2026-11-11; the figure for each city is the sum of its metro systems in that table, millions a year, the table's own year). Tehran (820M) was skipped: Iran has no city packs. 'ship': false keeps a built city off the new game sheet; 'left': true builds its network keeping left (realsave --left, T-3297: its metro runs on the left).",
+  "what": "T-3225: the real networks built with no hand work from noritetsu's OSM extract (pipeline/realauto.py). Cities picked by annual metro ridership, the biggest 30 with a city pack that are not hand-made, from Wikipedia's List of metro systems (fetched 2026-11-11; the figure for each city is the sum of its metro systems in that table, millions a year, the table's own year). Tehran (820M) was skipped: Iran has no city packs. 'ship': false keeps a built city off the new game sheet; 'left': true builds its network keeping left (realsave --left, T-3297: its metro runs on the left). 'tracks': true adds the lines OSM maps only as track (pipeline/realtracks.py, T-3935); `realauto.py tracklines` lists what it would add for any city.",
   "cities": [
     {"id": "sha", "name": "Shanghai", "riders_m": 3774, "ship": true},
     {"id": "bei", "name": "Beijing", "riders_m": 3621, "ship": true},
@@ -19,7 +19,7 @@
     {"id": "mex", "name": "Mexico City", "riders_m": 1172, "ship": true},
     {"id": "nan", "name": "Nanjing", "riders_m": 1094, "ship": true},
     {"id": "chs", "name": "Changsha", "riders_m": 1032, "ship": true},
-    {"id": "osa", "name": "Osaka", "riders_m": 935, "ship": true, "left": true},
+    {"id": "osa", "name": "Osaka", "riders_m": 935, "ship": true, "left": true, "tracks": true},
     {"id": "tai", "name": "Taipei", "riders_m": 767, "ship": true},
     {"id": "mad", "name": "Madrid", "riders_m": 715, "ship": true, "left": true},
     {"id": "suz", "name": "Suzhou", "riders_m": 700, "ship": true},
@@ -31,7 +31,7 @@
     {"id": "san", "name": "Santiago", "riders_m": 640, "ship": true},
     {"id": "ber", "name": "Berlin", "riders_m": 554, "ship": true},
     {"id": "qin", "name": "Qingdao", "riders_m": 531, "ship": true},
-    {"id": "ngo", "name": "Nagoya", "ship": true, "left": true},
+    {"id": "ngo", "name": "Nagoya", "ship": true, "left": true, "tracks": true},
     {"id": "fuk", "name": "Fukuoka", "ship": true, "left": true},
     {"id": "spk", "name": "Sapporo", "ship": true, "left": true},
     {"id": "hij", "name": "Hiroshima", "ship": true, "left": true}
