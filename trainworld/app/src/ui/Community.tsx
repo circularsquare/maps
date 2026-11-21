@@ -340,7 +340,7 @@ function Browse() {
   if (picked) return <Detail key={picked.id} row={picked} onBack={() => setPicked(null)} onChange={change} />;
   if (linked || linkWait) return <p class="small muted">{t("leaderboard.loading")}</p>;
   const list = rows ?? [], total = paged ? count : list.length, pages = Math.max(1, Math.ceil(total / PAGE)), shown = paged ? list : list.slice(page * PAGE, (page + 1) * PAGE);
-  const views: [ShareView, string][] = [["random", t("community.random")], ...(communityNewestOn() ? [["newest", t("community.newest")] as [ShareView, string]] : []), ["top", t("community.biggest")], ["liked", t("community.mostLiked")], ["bookmarked", t("community.bookmarked")]];
+  const views: [ShareView, string][] = [["random", t("community.random")], ...(communityNewestOn() ? [["newest", t("community.newest")] as [ShareView, string]] : []), ["top", t("community.biggest")], ["liked", t("community.mostLiked")], ...(bookmarks.value.length || view === "bookmarked" ? [["bookmarked", t("community.bookmarked")] as [ShareView, string]] : [])];
   return <>
     <div class="cm-bar">
       <div class="cm-views" role="tablist">
