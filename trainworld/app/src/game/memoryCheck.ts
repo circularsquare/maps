@@ -9,7 +9,7 @@
 import { t } from "../i18n";
 import { cityById, isCity } from "./cities";
 import { decodeSave, readStored, type SaveHeader } from "../workers/saveFile";
-import { workersFor } from "../workers/demandClient";
+import { poolBytes, workersFor } from "../workers/demandClient";
 import { deviceGB } from "../workers/deviceMemory";
 import { COARSE_SHARE, GB_PER_MTRIPS } from "../workers/demandLod";
 
@@ -39,7 +39,7 @@ export function memoryNeed(zones: readonly string[]): MemoryNeed {
   const wasmGB = WASM_BASE_GB + GB_PER_MTRIPS * (most + COARSE_SHARE * (trips - most)) / 1e6;
   const workerGB = WORKER_BASE_GB + wasmGB;
   const workers = workersFor(workerGB * 2 ** 30);
-  return { zones: zones.length, wasmGB, workerGB, workers, totalGB: PAGE_GB + PAGE_GB_PER_ZONE * zones.length + workers * workerGB };
+  return { zones: zones.length, wasmGB, workerGB, workers, totalGB: PAGE_GB + PAGE_GB_PER_ZONE * zones.length + poolBytes(workerGB * 2 ** 30, workers) / 2 ** 30 };
 }
 
 const gb = (n: number) => (n < 10 ? n.toFixed(1) : n.toFixed(0));

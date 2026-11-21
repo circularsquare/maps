@@ -239,8 +239,21 @@ export function poolSize(): number {
 export function workersFor(perWorker: number): number {
   const n = poolSize();
   if (!shareCapped()) return n;
-  return Math.max(1, Math.min(n, Math.floor((SOLVING_SHARE * memBudget()) / Math.max(1, perWorker))));
+  return poolIn(perWorker, n, solvingShare() * memBudget());
 }
+/** the most solving workers, 1 to `max`, whose WASM and JS together (`poolBytes`) fit `room` */
+function poolIn(perWorker: number, max: number, room: number): number {
+  let n = 1;
+  while (n < max && poolBytes(perWorker, n + 1) <= room) n++;
+  return n;
+}
+/** what `n` solving workers take together when one alone takes `perWorker` (WASM and JS): each holds everything, or
+ * under `?split=1` (T-3373 B) each zone and the market have one holder, so a further worker adds only SPLIT_EXTRA */
+export function poolBytes(perWorker: number, n: number): number {
+  return SPLIT === "plan" ? perWorker + (n - 1) * SPLIT_EXTRA : n * perWorker;
+}
+/** `SOLVING_SHARE`, or SPLIT_SHARE under `?split=1` */
+const solvingShare = () => (SPLIT === "plan" ? SPLIT_SHARE : SOLVING_SHARE);
 
 const shareCapped = () => workersAsked() === null && !display.peek().moreCores;
 
@@ -454,6 +467,8 @@ interface Solve {
   filled?: Set<CityId>;
   /** T-1533: a rough solve of the zone in view alone, sent while a whole solve waits for packs; never final */
   rough?: boolean;
+  /** T-3373 B: the solving worker whose `plan` names what is solved (a rough solve's holder under `?split=1`), else 0 */
+  lead?: number;
   /** T-326: the last worker's clusters kept and solved */
   clusters?: [number, number];
   /** T-124: per solving worker, its periods kept and solved in the clusters it solved */
@@ -569,6 +584,11 @@ const MEM_WORKER = 0.15 * 2 ** 30; // (T-3472: 110-150 MB a solving worker on al
  * every open zone and the market, so a big save runs fewer: on a reported 8 GB, New York 2, all of China 1.
  * Not with "Use more cores" on (`shareCapped`): the player chose speed */
 const SOLVING_SHARE = 0.175;
+/** T-3373 B (`?split=1`): the solving workers' share once each zone and the market have one holder (Anita, 11-21: the
+ * limit rises with B; 2 GB on a reported 8 GB), and what a further solving worker then adds: its WASM floor and room
+ * grown ahead (all-China: 33 MB more WASM at 2 workers than at 1, notes/T-3373-B-plan.md stage 4), and its JS (`MEM_WORKER`) */
+const SPLIT_SHARE = 0.25;
+const SPLIT_EXTRA = 0.2 * 2 ** 30;
 /** T-1366: the pool grows back (`growTo`) only to a count whose workers fit GROW_ROOM of `capPool`'s limits, and
  * no sooner than GROW_GAP_MS after its last change (doubled by each cut after a growth), so zones opening and
  * closing near the line never start and stop workers in turn */
@@ -2240,8 +2260,8 @@ class DemandClient {
   private roughSoon(svc: Service, need: Set<CityId> | null) {
     const id = activeCity.peek();
     // (T-2045: during a game load the focus pool solves the zone in view, to its last round)
-    // (T-3373 B: no rough solve under `?split=1`: one on the zone in view's holder is stage 4's)
-    if (this.fpool?.alive || perfOff("rough") || this.holding || !need?.has(id) || !this.viewedSet().has(id) || this.ready !== this.workers.length || !this.opened.has(id)) return;
+    // (T-3373 B: under `?split=1` the zone in view's holder solves it alone; `postSolve`)
+    if (this.fpool?.alive || perfOff("rough") || !need?.has(id) || !this.viewedSet().has(id) || this.ready !== this.workers.length || !this.opened.has(id)) return;
     if (this.rough?.svc === svc && this.rough.id === id) return;
     // a zone with figures is solved rough only for lines new since them, which take its free-flow
     // round's figures as a whole solve's would (T-324); its other figures stay
@@ -3299,7 +3319,7 @@ class DemandClient {
   private growPer = 0;
   /** what the solving workers may take together: `SOLVING_SHARE` of the budget, or all of it with the share off */
   private solvingRoom(): number {
-    return shareCapped() ? SOLVING_SHARE * memBudget() : memBudget();
+    return shareCapped() ? solvingShare() * memBudget() : memBudget();
   }
 
   /** T-1366: the solving workers the pool may have now, `computeN` or more, up to its size at the start
@@ -3316,7 +3336,7 @@ class DemandClient {
     this.growPer = per;
     const js = this.pageOther === null ? MEM_WORKER : 0, other = this.pageOther ?? this.otherGuess();
     const aux = (held(n0) ?? 0) + js, budget = memBudget();
-    const share = shareCapped() ? SOLVING_SHARE * budget : Infinity;
+    const share = shareCapped() ? solvingShare() * budget : Infinity;
     let n = n0;
     while (n < max && other + (n + 1) * (per + js) + aux <= GROW_ROOM * budget && (n + 1) * (per + MEM_WORKER) <= GROW_ROOM * share) n++;
     return n;
@@ -3353,15 +3373,18 @@ class DemandClient {
    * figure changes. T-1366: `memCheck` grows it back (`growTo`). */
   private capPool() {
     if (this.computeN <= 1 || this.respawn.size || perfOff("cap") || workersAsked() !== null) return;
-    let per = 0;
-    for (let i = 0; i < this.computeN; i++) per = Math.max(per, this.needOf(i) ?? 0);
+    let per = 0, sum = 0;
+    for (let i = 0; i < this.computeN; i++) { per = Math.max(per, this.needOf(i) ?? 0); sum += this.needOf(i) ?? 0; }
     if (!per) return;
     // (a measured page counts each worker's JS heap in `pageOther`)
     const js = this.pageOther === null ? MEM_WORKER : 0, other = this.pageOther ?? this.otherGuess();
     const aux = (this.needOf(this.computeN) ?? 0) + js, budget = memBudget();
     let n = this.computeN;
-    const share = shareCapped() ? SOLVING_SHARE * budget : Infinity;
-    while (n > 1 && (other + n * (per + js) + aux > budget || n * (per + MEM_WORKER) > share)) n--;
+    const share = shareCapped() ? solvingShare() * budget : Infinity;
+    // (T-3373 B, `?split=1`: a cut moves the stopped workers' units to the rest, which then hold what all held: a
+    // worker less saves only its JS heap)
+    const pool = (k: number, perJs: number) => (this.holding ? sum + k * perJs : k * (per + perJs));
+    while (n > 1 && (other + pool(n, js) + aux > budget || pool(n, MEM_WORKER) > share)) n--;
     // i18n-ignore
     if (n < this.computeN) { this.shrink(n, `about ${mb(per + js)} MB a solving worker, ${mb(aux)} MB the aux worker, ${mb(other)} MB the rest of the page, against ${mb(budget)} MB`); noteLoadWorkers(n); }
   }
@@ -3371,7 +3394,7 @@ class DemandClient {
    * the rest of the page guessed as `capPool` does (a 7,000-station save otherwise loaded on 5 workers, 13 GB). */
   private capAhead(perWorker: number) {
     if (this.computeN <= 1 || this.respawn.size || perfOff("cap") || workersAsked() !== null || this.solving()) return;
-    const byBudget = () => Math.max(1, Math.floor((memBudget() - outsideWasmBytes(perWorker, 0)) / perWorker));
+    const byBudget = () => poolIn(perWorker, this.computeN, memBudget() - outsideWasmBytes(perWorker, 0));
     const n = Math.min(this.computeN, shareCapped() ? workersFor(perWorker) : byBudget());
     if (n < this.computeN) { this.shrink(n, `about ${mb(perWorker)} MB a solving worker by the save's zones`); noteLoadWorkers(n); } // i18n-ignore (T-3933: a planned cut is what the load runs)
   }
@@ -3963,7 +3986,7 @@ class DemandClient {
       return;
     }
     if (msg.kind === "plan") {
-      if (i === 0) {
+      if (i === (s.lead ?? 0)) {
         demandSolving.value = new Set(msg.solving.flat());
         if (msg.ahead) s.ahead = { cities: msg.ahead, key: msg.ahead.join(",") };
         // (T-2459: the focus pool's final of the zone in view may already hold the clock's release)
@@ -4298,7 +4321,13 @@ class DemandClient {
     const n = this.computeN;
     // T-3373 B: under `?split=1` each solving worker its holding plan (no T-1543 parts: every solve is whole)
     const plan = this.holding && this.splitPlan(msg.version);
-    if (plan) return this.workers.forEach((w, i) => w.postMessage(i < n ? { ...msg, split: { ...plan, me: i } } : msg));
+    if (plan) {
+      // (a rough solve: its zone's holder alone solves it, and says what it solves; the other solving workers leave
+      // what they were solving and wait, never ready for it, until the whole solve supersedes it)
+      const s = msg.only && this.log.find((x) => x.version === msg.version);
+      if (s) s.lead = plan.active[0];
+      return this.workers.forEach((w, i) => w.postMessage(i < n ? { ...msg, split: { ...plan, me: i } } : msg));
+    }
     this.workers.forEach((w, i) => w.postMessage(n > 1 && i < n ? { ...msg, part: [i, n] } : msg));
   }
   /** T-3373 B: the solve's holding plan: its zones (the solve's, in the registry's order) with their boxes and holders */
