@@ -225,6 +225,10 @@ impl DestAssign {
             zw: ZoneWork::default(),
         }
     }
+    /// The riders the last `take` took.
+    pub fn taken(&self) -> f64 {
+        self.taken
+    }
     /// Take destination `dst`'s column of the OD, `col(src)` riders from each station; false
     /// when nobody rides there (there is nothing to walk).
     #[inline(always)]

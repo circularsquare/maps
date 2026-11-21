@@ -330,6 +330,7 @@ impl IntercityApi {
         let mut mtook = vec![false; mev.len()];
         let mut mecol = vec![0f32; if windowed && !kinds.is_empty() { s } else { 0 }];
         let mut xfer = vec![0.0; ix.len];
+        let mut dropped = 0f64;
         let zero = vec![0f32; s];
         let mut ecol = vec![0f32; if kinds.is_empty() { 0 } else { s }];
 
@@ -741,7 +742,13 @@ impl IntercityApi {
                         stats[4] += 1;
                         match src.strategy(dst) {
                             Some(h) => h,
-                            None => continue,
+                            None => {
+                                // T-3928: `all` holds the commutes' and outings' trips too, `mall` the turned-round legs'
+                                let lost = if a { all.taken() } else { 0. } + mall.as_ref().map_or(0., |l| l.taken());
+                                dropped += lost;
+                                note_dropped(dst, lost);
+                                continue;
+                            }
                         }
                     }
                 };
@@ -809,6 +816,7 @@ impl IntercityApi {
             w.set(v);
         });
         let e_loads = ev.into_iter().zip(e_used).map(|(a, u)| a.filter(|_| u).map(|a| a.l)).collect();
+        all.l.dropped += dropped;
         Pass { loads: all.l, c_loads: com.l, r_loads: lean.map(|l| l.l), rail, c_rail, c_frac, cor, c_cor, pair_rail, st, xfer, e_loads, e_rail, e_walk_lost, e_frac, rail_d }
     }
 }

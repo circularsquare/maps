@@ -434,6 +434,7 @@ impl IntercityApi {
         msa_w(&mut st.avg.exit, &l.exit, wf);
         msa_w(&mut st.avg.rn_fare_x, &l.rn_fare_x, wf);
         msa_w(&mut st.avg.rn_base_x, &l.rn_base_x, wf);
+        st.avg.dropped += (l.dropped - st.avg.dropped) * w;
         st.rail += (rail - st.rail) * w;
         st.rail_d.toward(rail_d, w);
         st.corridors.toward(&cor, w);
@@ -772,6 +773,11 @@ impl IntercityApi {
             scale_triples(&mut out[at..], load_factor(day as usize, LONGER, q));
         }
         out
+    }
+    /// T-3928: longer trips, commutes and outings in period `q` that went to a station with no strategy and so
+    /// were walked nowhere (0 when none; they are still in the entries). 0 if `q` has no solve.
+    pub fn dropped(&self, q: usize) -> f64 {
+        self.per(q).map_or(0.0, |s| s.avg.dropped)
     }
     pub fn entries(&self, q: usize) -> Vec<f32> {
         self.per(q).map_or(vec![], |s| s.avg.entry.clone())

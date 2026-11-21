@@ -485,7 +485,8 @@ fn trip_real_network() {
                 continue;
             }
             let pc = pair_choice(&a, sz, &st.p, &sk, u, w);
-            if pc.why != RAIL_OFFERED {
+            // (T-3888: the walk tier rides where the rule refuses every station pair, so `why` is not the test)
+            if pc.r <= 0.0 {
                 continue;
             }
             let dv = (gr.col[jz] * sz.jobs[w] as f64 / z.jobs[jz]) as f32;

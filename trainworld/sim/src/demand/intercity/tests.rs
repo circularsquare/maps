@@ -50,6 +50,42 @@ fn network(api: &mut IntercityApi, freq: f32, slow: f32) {
     api.set_network(&xy, &n, &stops, &times, &[12., 12., 12., freq, freq, freq, 12., 12., 12.], &[4., 4., 4.]).unwrap();
     api.set_fares(0., 0., &[1., 0., 0., 1., 59., 59., 0., 0., 59., 59., 1., 0., 0., 1.]).unwrap();
 }
+/// T-3928: no trip of the market is skipped on the small fixture, in any period. (Every intercity test also fails on a
+/// skip: `kernel::note_dropped` panics in a test build unless the test sets `KNOWN_DROPS`.)
+#[test]
+fn no_intercity_trips_are_skipped() {
+    let mut a = api();
+    network(&mut a, 6., 1.);
+    for q in 0..PERIODS {
+        assert!(a.solve(q));
+        assert_eq!(a.dropped(q), 0.0, "period {q}");
+        assert!(a.entries(q).iter().sum::<f32>() > 0.0, "period {q} has no trips to lose");
+    }
+}
+/// T-3928: trips whose route costs are known but whose destination has no strategy are counted in `dropped`, and
+/// the log names the stations and adds up to it. (A search that reached no station gives the trips no route, so the
+/// pass never takes them: the case is made by lending the unsearched table the full table's route costs.)
+#[test]
+fn intercity_trips_towards_an_unsearched_station_are_counted() {
+    let mut a = api();
+    network(&mut a, 6., 1.);
+    assert!(a.solve(1));
+    let per = a.per(1).unwrap();
+    let (g, p, ix) = (&per.g, &per.p, &per.xi);
+    let full = skims_for(g, p, &a.want);
+    let all = a.want.len();
+    assert!(all > 1);
+    let mut part = skims_for(g, p, &(0..all).map(|i| i == 0).collect::<Vec<_>>());
+    part.r = full.r.clone();
+    KNOWN_DROPS.with(|k| k.set(true));
+    DROP_LOG.with(|l| l.borrow_mut().clear());
+    let pass = a.pass_on(g, p, 1, &part, ix);
+    let logged: f64 = DROP_LOG.with(|l| l.borrow().iter().map(|e| e.1).sum());
+    assert!(pass.loads.dropped > 0.0, "nothing counted");
+    assert!((pass.loads.dropped - logged).abs() <= 1e-3 * logged, "counted {}, logged {logged}", pass.loads.dropped);
+    assert!(DROP_LOG.with(|l| l.borrow().iter().all(|e| e.0 != 0)), "station 0 was searched");
+    assert_eq!(a.pass_on(g, p, 1, &full, ix).loads.dropped, 0.0);
+}
 #[test]
 fn intercity_market_is_symmetric_and_conserved() {
     let a = api();
