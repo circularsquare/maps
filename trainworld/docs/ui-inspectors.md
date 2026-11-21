@@ -685,12 +685,12 @@ has lanes on, paid for once), on a constructed BRT line "Busiest lane" (its full
 per hour", red at 60 with a hover), and the average speed. No track limits (T-2919), but a BRT line's lanes limit it as
 track does (T-3378): its headways red past its share, and under the rows a full lane's alert ("BRT lane near X is full")
 with the buses held out of service a row. Stops: the ends and the
-train stations met, the street stops between folded into one row each, in the line panel's order (north or
+train stations met, the stops between folded into one row each ("8 street stops"), in the line panel's order (north or
 west end on top) with its stop times (the time from the stop on top after each name, "12m30s").
 The counts block, headingless as the line panel's: riders by purpose, Changing to trains (riders a day changing between this bus and any rail
 line at the stations it meets; hidden while the riders are worked out again, as the purposes), the one-figure profit,
 average load (against 53 a bus, its rated load) and Buses leaving full; no riders left at
-platform, since a street stop keeps no crowd. Under the stops the line panel's round trip block: running,
+platform, since a stop that is no station keeps no crowd. Under the stops the line panel's round trip block: running,
 dwell at stops (the line's dwell at each train station between the ends and 20 s at each other stop, both ways)
 and turning at the ends. No train kind, length, stop editor or related lines. The Money tab shows buses owned, needed and spare once there are any;
 the Build tab's quote has rows for bus routes and new buses.
@@ -708,7 +708,7 @@ With three ports or more, a click on a port's dot takes it out of the line (hove
 the stop at X"; the port stays) and dragging a port's row moves it, a line between rows marking where;
 the route is searched again through the ports and saved as one undoable edit, refused with "No water
 path found between A and B." where a leg finds no water. Not while the ferry tool has the line. A
-bus line's stops follow its route (its stations met and street stops), so its list has no editing:
+bus line's stops follow its route (its stations met and the stops between), so its list has no editing:
 the route is edited on the map. Its counts block is the bus line's
 (T-2195): riders, Changing to trains (between this boat and any rail line at its ports' complexes),
 profit, average load (against 320 a boat at the rated load, so up to 150% at crush's 480), Boats leaving full
@@ -723,7 +723,7 @@ back to the default once set, saved with the game; a change solves demand again,
 has rows for ports, new boats and the ferry route (free).
 
 **A bus stop's panel** (T-2949, T-3890; `ui/inspector/BusStopInspector.tsx`) opens on a click on any stop
-demand sees (an end, a station's, a crossing's or one between; a street stop selects its line), made of the
+(an end, a station's, a crossing's or one between: every stop is one demand sees, T-3924), made of the
 station panel's parts. A train station's stop opens the station's panel instead. Its scope is the stop's
 place: the stops of other bus lines and the train stations within demand's 100 m merge, chained
 (`busPlaces` in `game/busLinks.ts`, as the kernel's `merge_stations`; never two stops of one line). Its title

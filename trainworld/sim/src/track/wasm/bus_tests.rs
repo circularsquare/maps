@@ -51,16 +51,16 @@ fn a_feeder_bus_stops_at_the_station_it_reaches_and_runs_at_its_speed() {
     // T-2982: the stop is on the route, the point nearest the station, not on the station's centre
     let (sx, sy) = (s.last().unwrap()[1], s.last().unwrap()[2]);
     assert!((sx - 5000.0).abs() < 1e-6 && (sy - 100.0).abs() < 1e-6, "{sx} {sy}");
-    // 7.2 km of road: ends, and stops at about every 2 km on the 400 m grid
+    // 7.2 km of road: ends, and a stop demand sees at every point of the 400 m grid (T-3924)
     let road = 6000.0 * ROAD_FACTOR;
     assert!((a.lines_info()[22 + 9] - road).abs() < 1.0, "{:?}", a.lines_info());
     let mid: Vec<&Vec<f64>> = s.iter().filter(|c| c[4] == KIND_MIDDLE as f64).collect();
-    assert_eq!(mid.len(), 3, "{s:?}");
+    assert_eq!(mid.len(), (road / 400.0).round() as usize - 1, "{s:?}");
     for c in &mid {
         let k = c[3] / (road / (road / 400.0).round());
         assert!((k - k.round()).abs() < 1e-6, "a middle stop on the street grid: {c:?}");
     }
-    assert_eq!(a.bus_street(b).len() / 2, (road / 400.0).round() as usize - 1 - 3);
+    assert!(a.bus_street(b).is_empty());
     // covers: every ground metre of the route belongs to one stop that is not a station
     let covers: Vec<[f64; 2]> = s.iter().filter(|c| c[6].is_finite()).map(|c| [c[6], c[7]]).collect();
     assert_eq!(covers.len(), s.len() - 1);
@@ -121,12 +121,16 @@ fn stops_follow_stations_built_near_the_route_and_crossings() {
     let s = stops(&a, b);
     let at: Vec<f64> = s.iter().filter(|c| c[4] == KIND_STATION as f64).map(|c| c[5]).collect();
     assert_eq!(at, st.iter().map(|&n| n as f64).collect::<Vec<_>>(), "{s:?}");
-    // the dwell stands only at stations
+    // the line's dwell at stations, a short stand at the other stops
     let t = a.stop_times(b, 0, 0);
     let d = a.stop_departures(b, 0, 0);
     for (k, c) in s.iter().enumerate().skip(1).take(s.len() - 2) {
-        let want = if c[4] == KIND_STATION as f64 { 30.0 } else { 0.0 };
-        assert!((d[k] - t[k] - want).abs() < 1e-9);
+        let stand = d[k] - t[k];
+        if c[4] == KIND_STATION as f64 {
+            assert!((stand - 30.0).abs() < 1e-9);
+        } else {
+            assert!(stand > 0.0 && stand <= bus::STREET_DWELL_S + 1e-9, "{stand}");
+        }
     }
     // a second bus crossing the first: both stop where they cross, at the same point
     let c = a.new_line_id();

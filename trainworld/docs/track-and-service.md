@@ -2306,10 +2306,11 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   the route. Stops, crossings and each stop's stretch of route (`cover`) are in road metres.
 - **Stops place themselves** (`bus::plan`), never saved: every train station within 200 m of the
   route (two within 100 m of each other along it: the nearer to the route), both ends (an end within
-  200 m of a station is that station), a stop where it crosses another bus route, and about one
-  every 2 km of road between (`k = ceil(gap / 2 km) - 1`, at least one between two stations 800 m
-  or more apart), each on the grid of street stops every 400 m, which are drawn only. A constructed
-  route stops at constructed stations and crosses constructed routes; a planned one previews all.
+  200 m of a station is that station), a stop where it crosses another bus route, and a stop about
+  every 400 m of road between (each gap between those cut evenly, `STREET_STOP_M`; a route over 400 km
+  long spaces them its length / 1,000, so its stop ids fit). Demand sees every one (T-3924). Each stop's `cover` runs half way to the stops
+  either side. A constructed route stops at constructed stations and crosses constructed routes; a
+  planned one previews all.
 - **Crossings** (T-2952) are decided alike from both lines, so two crossing lines always have one place
   to change at. Where one station is a stop of both within 200 m of the crossing along each, they change
   there and neither stops at the crossing. Otherwise both stop at the crossing, except a line with a stop
@@ -2333,7 +2334,7 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   From 600 m up the stops then run from end to end about that far apart
   along the road: each lands on the station nearest its place within half the spacing, else a crossing,
   else the place itself, and no two come closer than half the spacing, so a line passes the stations
-  it does not stop at. There are no street stops: every stop is one demand sees. Its stretch of route
+  it does not stop at. Its stretch of route
   (`cover`) reaches at most 400 m each way, so homes between far apart stops have no bus (kept
   stops at most 800 m apart leave no gap). The bus stands 20 s at each plain stop inside the hop's time
   (`bus::spaced_profile`). The Save keeps it (`LBP1`); a redraw keeps it. Free, on a constructed line
@@ -2344,7 +2345,7 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   (a constructed route: constructed stations only); no two come closer than 50 m. It stops at nothing else, crossings and
   other stations included. A loop (T-3123) keeps at least one stop between: with none placed its stop at half its
   length (below) stands, the first stop placed makes that one a placed stop too, and the last placed one cannot be
-  taken out. An edit that leaves the stops as they were (compared stop by stop) is no edit. In all other ways it is a line with its own spacing: no street stops, 400 m of
+  taken out. An edit that leaves the stops as they were (compared stop by stop) is no edit. In all other ways it is a line with its own spacing: 400 m of
   `cover` each way, `bus::spaced_profile`. A redraw keeps the stops within 200 m of the new route, moved onto
   it. Leaving to a spacing keeps the stops in `BusRoute::hand_kept` for the session (not saved); choosing hand again gives them back (T-2939). The Save keeps them (`LBH1`).
 - **Run** (T-2904, `streets.rs`, `bus::Pace`): a hop between two stops takes the car's time over its road
@@ -2363,9 +2364,9 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   its whole road as local streets, with one stop cost every 400 m: a line spaced at 400 m runs the same.
   The street speeds come from the packs (below); a route in a zone with none runs as open country. The
   line's dwell stands at train stations on top of the hop's time, the line's turnaround at the ends (120 s
-  for a new bus line). At each street stop (the drawn ones, `plan.street`) the bus stands 20 s
-  (`bus::STREET_DWELL_S`, T-1798) inside the hop's time, so the run times do not see the stands. No
-  accelerating drawn, no capacity, no holds.
+  for a new bus line). At each stop that is no station the bus stands 20 s (`bus::STREET_DWELL_S`, T-1798;
+  on automatic stops at most 40% of the hop) inside the hop's time, so the run times do not see the stands.
+  No accelerating drawn, no capacity, no holds.
 - **Trunk roads**: the route tool marks each stretch of route that lies on an OpenMapTiles `trunk` or `motorway` road (`RoadGraph.fastEdge`)
   (`K_TRUNK` in the point's kind, saved with it); a route from before T-2904 has no marks until it is redrawn.
 - **Riders**: a third of a train car (T-2919; Anita, 2026-11-09): 53 at the rated load, 80 at crush,

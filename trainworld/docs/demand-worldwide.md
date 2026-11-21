@@ -1091,7 +1091,9 @@ notes/T-420.md has the tables.
   extra minutes weigh less. Check: night and late-evening rail shares on a real network with
   service ending early (a commuter line without evening trains) against the model's.
 - **Bus corridors** (T-1464, Anita's yes to the design, 2026-10-26; docs/demand-kernel.md step 2).
-  A home within 600 m of a bus route walks its distance to the route plus 100 m and rides at the bus's run time (T-2904: a hop takes the
+  A home within 600 m of a bus route walks its distance to the route plus 100 m to the nearest of its stops, every stop
+  the line draws (T-3924, Anita: "if people are seeing bus stops the bus stops have to be real"; Auto's about every 400 m),
+  and rides at the bus's run time (T-2904: a hop takes the
   car's time at 85% of its speed, never under 30 km/h for a bus lane, plus 28 s for the stop; about 19 km/h at
   400 m stops in a dense centre, 22 in open country), on the network's fare curve, bus kilometres included. Boarding a
   bus costs what boarding a train does, the wait alone (Anita, T-3856: buses should be viable for short trips; a

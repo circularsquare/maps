@@ -38,19 +38,22 @@ fn a_route_that_loops_back_stops_both_ways_on_its_way_out() {
 #[test]
 fn plan_on_an_empty_network() {
     let net = Network::new(-73.985, 40.758, true);
-    // 1 km: two ends, no middle stop, street stops every 400 m between
+    // 1 km drawn, 1.2 km of road: two ends and a stop every 400 m between, each one demand sees (T-3924)
     let p = plan(&net, 0, &[[0.0, 0.0], [1000.0, 0.0]], &[], false);
-    assert_eq!(p.stops.len(), 2);
-    assert_eq!((p.stops[0].kind, p.stops[1].kind), (KIND_END, KIND_END));
-    assert_eq!(p.street.len(), 2);
-    assert_eq!(p.stops[0].cover, Some([0.0, 600.0]));
-    assert_eq!(p.stops[1].cover, Some([600.0, 1200.0]));
-    // 10 km of drawn route, 12 km of road: five middles
+    assert_eq!(p.stops.iter().map(|s| (s.kind, s.s.round() as i64)).collect::<Vec<_>>(), vec![(KIND_END, 0), (KIND_MIDDLE, 400), (KIND_MIDDLE, 800), (KIND_END, 1200)]);
+    assert!(p.street.is_empty());
+    assert_eq!(p.stops[0].cover, Some([0.0, 200.0]));
+    assert_eq!(p.stops[1].cover, Some([200.0, 600.0]));
+    assert_eq!(p.stops[3].cover, Some([1000.0, 1200.0]));
+    // 10 km of drawn route, 12 km of road: 29 middles
     let p = plan(&net, 3, &[[0.0, 0.0], [5000.0, 0.0], [5000.0, 5000.0]], &[], false);
-    assert_eq!(p.stops.iter().filter(|s| s.kind == KIND_MIDDLE).count(), 5);
+    assert_eq!(p.stops.iter().filter(|s| s.kind == KIND_MIDDLE).count(), 29);
     assert!(p.stops.iter().enumerate().all(|(k, s)| s.id == stop_id(3, k)));
     assert!((p.len - 12_000.0).abs() < 1e-6);
     assert_eq!(plan(&net, 0, &[[0.0, 0.0], [50.0, 0.0]], &[], false), Plan::default());
+    // 1,000 km of road: the grid widens so the stop ids still fit
+    let p = plan(&net, 1, &[[0.0, 0.0], [1_000_000.0 / ROAD_FACTOR, 0.0]], &[], false);
+    assert!(p.stops.len() <= SPACED_MAX_STOPS as usize + 1 && p.stops.len() > 900, "{}", p.stops.len());
 }
 
 #[test]
@@ -147,11 +150,12 @@ fn spacing_rises_smoothly_and_400_m_matches_automatic_stops() {
             assert!(v > last, "{m}: {v} after {last}");
             last = v;
         }
-        // five 400 m hops, as a line spaced at 400 m runs them, and one automatic 2 km hop with its street stops
+        // five 400 m hops, as a line spaced at 400 m and an automatic line run them, each standing at its stops
         let stops: Vec<f64> = (0..6).map(|i| i as f64 * 400.0).collect();
         let spaced = spaced_profile(&stops, &[0.0; 6], &pace);
-        let auto = profile(&[0.0, 2000.0], &[0.0, 0.0], &[400.0, 800.0, 1200.0, 1600.0], &pace);
+        let auto = profile(&stops, &[0.0; 6], &[], &pace);
         assert!((spaced.duration - auto.duration).abs() < 1e-6, "{} {}", spaced.duration, auto.duration);
+        assert!((spaced.dwell - auto.dwell).abs() < 1e-6 && auto.dwell > 0.0, "{} {}", spaced.dwell, auto.dwell);
         assert!((pace.auto_time(0.0, 400.0) - pace.hop_time(0.0, 400.0)).abs() < 1e-9);
     }
 }
@@ -239,8 +243,9 @@ fn a_hop_takes_the_time_of_the_streets_it_crosses() {
     assert!((t(&pace.reversed(), 0.0, 1000.0) - all).abs() < 1e-9);
     assert!((t(&pace.reversed(), 0.0, 500.0) - 500.0 / fast).abs() < 1e-9);
     // the profile speeds up from each stop and brakes into the next, in the hop's time
+    // (standing at the stop between inside the first hop's time)
     let p = profile(&[0.0, 500.0, 1000.0], &[0.0, 0.0, 0.0], &[], &pace);
-    assert!((p.arr[1] - pace.auto_time(0.0, 500.0)).abs() < 1e-9 && (p.arr[2] - pace.auto_time(0.0, 1000.0)).abs() < 1e-9);
+    assert!((p.dep[1] - pace.auto_time(0.0, 500.0)).abs() < 1e-9 && p.arr[1] < p.dep[1] && (p.arr[2] - pace.auto_time(0.0, 1000.0)).abs() < 1e-9);
     assert_eq!((p.phases[0].v, p.phases[0].a), (0.0, BUS_ACCEL));
     let (hop, mid) = (p.arr[1], 0.5 * p.arr[1]);
     let (s, v) = state_at(&p.phases, mid);

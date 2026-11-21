@@ -6,13 +6,12 @@
 //! demand's car model with the streets it crosses (`Pace`, `streets.rs`), at the bus's share of the
 //! car's speed, plus `streets::BUS_STOP_S` for the stop (T-2904). Automatic stops count that cost
 //! every `STREET_STOP_M` of road. The bus stands the line's dwell at the train stations it meets
-//! and `STREET_DWELL_S` at each street stop (drawn only, within the hop's time).
+//! and `STREET_DWELL_S` at each other stop (within the hop's time).
 //!
-//! Demand sees a few stops of each route (`plan`): the train stations it passes within
-//! `STATION_REACH_M`, its ends, a stop where it crosses another bus route, and one every
-//! `DEMAND_STOP_M` or so between, each on the grid of street stops every `STREET_STOP_M`, which are
-//! otherwise only drawn. Every point of the route belongs to its nearest stop that is not a station
-//! (the stop's `cover`), so a home near the route walks to the route and rides from there.
+//! The automatic stops (`plan`): the train stations a route passes within `STATION_REACH_M`, its
+//! ends, a stop where it crosses another bus route, and street stops every `STREET_STOP_M` or so
+//! between; demand sees every one (T-3924). Every point of the route belongs to its nearest stop that is
+//! not a station (the stop's `cover`), so a home near the route walks to the route and rides from there.
 
 pub mod lanes;
 
@@ -36,8 +35,6 @@ pub const K_TRUNK: u8 = 4;
 pub const STATION_REACH_M: f64 = 200.0;
 /// Street stops along the road, m.
 pub const STREET_STOP_M: f64 = 400.0;
-/// About one demand stop this far along the road, m.
-pub const DEMAND_STOP_M: f64 = 2000.0;
 /// Seconds a bus stands at a street stop, taken out of the hop's running time (T-1798).
 pub const STREET_DWELL_S: f64 = 20.0;
 /// Two stations closer than this along the road: the bus stops at the one nearer the route.
@@ -46,8 +43,6 @@ const STATION_GAP_M: f64 = 100.0;
 /// is its stop there (T-2952): half demand's `station_merge_m`, so two lines' stops at one crossing are
 /// always within its merge of each other.
 const CROSS_NEAR_M: f64 = 50.0;
-/// Two stations this far apart along the road get a stop between them even under `DEMAND_STOP_M`.
-const STATION_PAIR_GAP_M: f64 = 800.0;
 /// A stop on a line with its own spacing (`BusRoute::spacing`) serves this far of the route each
 /// way, m: what stops further apart than twice this leave between them has no bus (T-2885).
 const SPACED_COVER_M: f64 = 400.0;
@@ -599,8 +594,7 @@ pub fn plan_by(net: &Network, l: u32, pts: &[[f64; 2]], kinds: &[u8], built_only
         }
     }
     fixed.sort_by(|a, b| a.0.total_cmp(&b.0));
-    // the street grid and the middles, gap by gap
-    let mut street = vec![];
+    // the middles, gap by gap
     let mut middles: Vec<f64> = vec![];
     let spaced = rule != StopRule::Auto;
     match rule {
@@ -608,6 +602,9 @@ pub fn plan_by(net: &Network, l: u32, pts: &[[f64; 2]], kinds: &[u8], built_only
         StopRule::Hand(points) => fixed = hand_stops(&poly, net, &kept, fixed[0], fixed[fixed.len() - 1], points),
         StopRule::Auto => {}
     }
+    // T-3924: on Auto every stop of the street grid is one demand sees, as stops placed that far apart are; a long
+    // route's grid widens to keep its stops under SPACED_MAX_STOPS (stop ids hold 1,024 a line)
+    let grid = STREET_STOP_M.max(len / SPACED_MAX_STOPS);
     let auto_gaps: &[(f64, u8, Option<u32>)] = if spaced { &[] } else { &fixed };
     for w in auto_gaps.windows(2) {
         let (s0, s1) = (w[0].0, w[1].0);
@@ -615,28 +612,9 @@ pub fn plan_by(net: &Network, l: u32, pts: &[[f64; 2]], kinds: &[u8], built_only
         if g <= 0.0 {
             continue;
         }
-        let n = ((g / STREET_STOP_M).round() as usize).max(1);
+        let n = ((g / grid).round() as usize).max(1);
         let step = g / n as f64;
-        let mut k = ((g / DEMAND_STOP_M - 1e-9).ceil() as usize).saturating_sub(1);
-        if k == 0 && g >= STATION_PAIR_GAP_M && w[0].1 == KIND_STATION && w[1].1 == KIND_STATION {
-            k = 1;
-        }
-        let mut picked: Vec<usize> = vec![];
-        if n >= 2 {
-            for j in 1..=k {
-                let ideal = j as f64 * g / (k + 1) as f64;
-                let i = ((ideal / step).round() as usize).clamp(1, n - 1);
-                if !picked.contains(&i) {
-                    picked.push(i);
-                    middles.push(s0 + i as f64 * step);
-                }
-            }
-        }
-        for i in 1..n {
-            if !picked.contains(&i) {
-                street.push(s0 + i as f64 * step);
-            }
-        }
+        middles.extend((1..n).map(|i| s0 + i as f64 * step));
     }
     let mut all: Vec<(f64, u8, Option<u32>)> = fixed;
     all.extend(middles.into_iter().map(|s| (s, KIND_MIDDLE, None)));
@@ -667,7 +645,7 @@ pub fn plan_by(net: &Network, l: u32, pts: &[[f64; 2]], kinds: &[u8], built_only
         let b = if j + 1 == open.len() { len } else { 0.5 * (g + stops[open[j + 1]].s) };
         stops[k].cover = Some(if spaced { [a.max(g - SPACED_COVER_M), b.min(g + SPACED_COVER_M)] } else { [a, b] });
     }
-    Plan { stops, street, len, cum: poly.road.clone(), reach: kept.iter().map(|k| k.1).collect() }
+    Plan { stops, street: vec![], len, cum: poly.road.clone(), reach: kept.iter().map(|k| k.1).collect() }
 }
 
 /// T-3907: a route's road metres in town for BRT (`Pace::town_m`).
@@ -815,9 +793,10 @@ fn main_bus_kmh_at(car: f64, trunk: bool, lane: f64) -> f64 {
 }
 
 /// A bus's trip on automatic stops at road offsets `stop_s` (ascending), standing `dwell[i]` at each
-/// stop between the ends: speeding up after each stop and braking before the next (`ramp`), to the hop's time. It also
-/// stands `STREET_DWELL_S` at each street stop of `street` (ascending) inside a hop, which is drawn
-/// only: the hop's time stays what `pace` gives, the bus running faster between the stands.
+/// stop between the ends, and `STREET_DWELL_S` inside the hop at each with no dwell of its own: speeding up after
+/// each stop and braking before the next (`ramp`), to the hop's time. It also stands `STREET_DWELL_S` at each
+/// point of `street` (ascending) inside a hop: the hop's time stays what `pace` gives, the bus running faster
+/// between the stands.
 pub fn profile(stop_s: &[f64], dwell: &[f64], street: &[f64], pace: &Pace) -> Profile {
     run_profile(stop_s, dwell, street, pace, false)
 }
@@ -864,8 +843,9 @@ fn run_profile(stop_s: &[f64], dwell: &[f64], street: &[f64], pace: &Pace, space
         let mut run = if spaced { pace.hop_time(stop_s[i], stop_s[i + 1]) } else { pace.auto_time(stop_s[i], stop_s[i + 1]) };
         let d = (stop_s[i + 1] - stop_s[i]).max(0.0);
         let mut own_stand = 0.0;
-        if spaced && i + 1 < n - 1 && dwell.get(i + 1).copied().unwrap_or(0.0) <= 0.0 {
-            own_stand = STREET_DWELL_S.min(BUS_STOP_S);
+        if i + 1 < n - 1 && dwell.get(i + 1).copied().unwrap_or(0.0) <= 0.0 {
+            // an automatic hop's time is pro rata to its length (`Pace::auto_time`): a short one keeps most of it moving
+            own_stand = STREET_DWELL_S.min(BUS_STOP_S).min(if spaced { run } else { 0.4 * run });
             run -= own_stand;
         }
         let lo = street.partition_point(|&s| s <= stop_s[i]);

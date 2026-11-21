@@ -4,7 +4,7 @@
 //! five periods with crowding rounds, as `demand.worker.ts` does.
 //!
 //!   cargo run --release --features demand --bin demand_mem -- [--zones nyc,nhv,hfd,lck]
-//!       [--market nyc,phl,pvd,nhv,spf,wor,hfd,lhg,lck] [--rounds 2] [--parts] [--net nyc]
+//!       [--market nyc,phl,pvd,nhv,spf,wor,hfd,lhg,lck] [--rounds 2] [--parts] [--net nyc] [--snapshot FILE]
 //!
 //! `--net tyo` reads `data/work/realnet/tyo_real_track.json` in Tokyo's frame (an empty `--market ""` is a phone's
 //! solve, which has no market).
@@ -117,14 +117,37 @@ fn main() {
 
     // the network, in each pack's frame and (the market) in longitude and latitude
     let net = get("--net").unwrap_or("nyc".into());
-    let (real, _) = RealNet::load(&format!("{root}/data/work/realnet/{net}_real_track.json"));
+    // T-3924: `--snapshot FILE`, a game's network as its demand workers got it, bus stops' stretches included
+    // (`st_ll`, `line_n`, `stops`, `times`, `tph`, `cars`, `catch_n`, `catch_ll`; longitude and latitude)
+    let (real, ll, catch_n, catch_ll) = match get("--snapshot") {
+        Some(path) => {
+            let j: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+            let f64s = |k: &str| j[k].as_array().unwrap().iter().map(|v| v.as_f64().unwrap()).collect::<Vec<f64>>();
+            let f32s = |k: &str| f64s(k).into_iter().map(|v| v as f32).collect::<Vec<f32>>();
+            let u32s = |k: &str| f64s(k).into_iter().map(|v| v as u32).collect::<Vec<u32>>();
+            let ll = f64s("st_ll");
+            let home = Frame::equirect(origin(&net).0, origin(&net).1);
+            let st_xy = ll.chunks(2).flat_map(|p| { let (x, y) = home.from_lonlat(p[0], p[1]); [x as f32, y as f32] }).collect();
+            (RealNet { st_xy, line_n: u32s("line_n"), stops: u32s("stops"), times: f32s("times"), tph: f32s("tph"), cars: f32s("cars") }, ll, u32s("catch_n"), f64s("catch_ll"))
+        }
+        None => {
+            let (real, _) = RealNet::load(&format!("{root}/data/work/realnet/{net}_real_track.json"));
+            let home = Frame::equirect(origin(&net).0, origin(&net).1);
+            let ll: Vec<f64> = real.st_xy.chunks(2).flat_map(|p| { let (lon, lat) = home.to_lonlat(p[0] as f64, p[1] as f64); [lon, lat] }).collect();
+            (real, ll, vec![], vec![])
+        }
+    };
     let hop_km = real.hop_km();
-    let home = Frame::equirect(origin(&net).0, origin(&net).1);
-    let ll: Vec<f64> = real.st_xy.chunks(2).flat_map(|p| { let (lon, lat) = home.to_lonlat(p[0] as f64, p[1] as f64); [lon, lat] }).collect();
+    println!("network: {} stations, {} lines, {} stops, {} bus stretch points", ll.len() / 2, real.line_n.len(), real.stops.len(), catch_ll.len() / 2);
     st.mark("network read");
     for (id, a, e) in pops.iter_mut() {
         let f = Frame::equirect(origin(id).0, origin(id).1);
         let xy: Vec<f32> = ll.chunks(2).flat_map(|p| { let (x, y) = f.from_lonlat(p[0], p[1]); [x as f32, y as f32] }).collect();
+        let cxy: Vec<f32> = catch_ll.chunks(2).flat_map(|p| { let (x, y) = f.from_lonlat(p[0], p[1]); [x as f32, y as f32] }).collect();
+        a.set_bus(&catch_n, &cxy);
+        if let Some(e) = e {
+            e.set_bus(&catch_n, &cxy);
+        }
         a.set_chunked(true);
         a.set_network(&xy, &real.line_n, &real.stops, &real.times, &real.tph, &real.cars).unwrap();
         a.set_fares(1.5, 0.1, &hop_km).unwrap();
@@ -136,7 +159,8 @@ fn main() {
         }
     }
     if let Some(a) = ic.as_mut() {
-        a.set_network_ll(&ll, &real.line_n, &real.stops, &real.times, &real.tph, &real.cars).unwrap();
+        a.set_bus_ll(&catch_n, &catch_ll);
+        a.set_network_ll(&ll,&real.line_n, &real.stops, &real.times, &real.tph, &real.cars).unwrap();
         a.set_fares(1.5, 0.1, &hop_km).unwrap();
         st.mark("market: set_network_ll");
     }

@@ -444,7 +444,7 @@ parallel road 4 to 40 m across before the path follows a road, the hop counted a
 route turns there instead of running to the next junction and back (T-1512; `across` in `roadGraph.ts`). The roads come from
 the basemap's own tile server at zoom 14, whatever the map's zoom. While drawing,
 the route shows in the line's colour with the stops the sim would place (ends as small rounded
-squares, a ring round each train station it meets, small rings between and the street stops), and
+squares, a ring round each train station it meets, small rings for the stops between), and
 the tag by the pointer gives the road length and the price. What those stops will connect with is lit
 as hovered things are (T-2993, `game/busLinks.ts` `routeMeets`): each train station it stops at, with a
 built line's dashed transfer line from the stop to it, and each other bus line it will change with, one
