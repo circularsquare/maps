@@ -16,7 +16,8 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
 2. TRACK (her top priority): stage 1 landed; tw/track synced to 924b642c. T-3949 stage 2a built (tree bundles);
    bundlesrebase (Sonnet) moving it onto tw/track with LBN1 at level 39; then `agent-tree.mjs finish bundles "..."
    --into tw/track --task T-3949` (DECISIONS line already in). Then 2b T-3950 (notes/T-3444-design/10-build-plan.md).
-3. BRT: all landed. bmtab (Sonnet): Bookmarked tab hidden until something is bookmarked (her ask); land, no checker.
+3. BRT: all landed. Bookmarked tab hidden until something is bookmarked landed 8b65274c; 8800 rebuild waits for
+   the next landings (one rebuild for the lot).
 4. Running: splitb5 T-3373 B stage 5 (Opus; s4 landed de9e8154), phonemem T-3160 s4, airfar T-3502 (Opus),
    fullspeed T-3655 (Opus), bundlesrebase, bmtab. Under the usage stance none of these gets a successor.
 5. Deferred by her until home: server deploy (a-..-20), wiki push (a-..-18). Waiting: T-2264 help panels (she'll

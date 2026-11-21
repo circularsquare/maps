@@ -283,10 +283,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3875 [P3] {L:cleanup} {after:T-2374 and T-3873} Cut code-map.md to one line per file
   - Context: docs/code-map.md is 707 lines and about 100 KB with 700 task ids, over the Read tool's cap, so no agent can read it whole though CLAUDE.md sends every agent there.
   - Goal: One line per file saying what it holds, task ids dropped, about a third of today's size.
-- T-3160 [P2] {L:memory} Phone memory on real-network starts (taking, 2026-11-21, agent phonemem)
-  - Context: The Tokyo real-network start on an emulated iPhone (production build) peaked at 1.6 GB in the tab, now 1.4 since the loading card's train stopped leaving garbage in Chrome; that cut is Chrome's only. What Safari holds too: the solving worker's WASM, 283 MB since the everyday trips' exp tables went (343 before; 278 in use at its peak, 322 before), the clock worker 260, the page about 200. You, 2026-11-16: "lots of people are unable to really play properly cuz tehy dont have enoguh ram. especially on phones. if we can get that working itll increase reach."
-  - Goal: The solving worker's peak comes down again by its next piece, the commutes' exp tables (32 MB in every zone's pass), rail trips unchanged, measured on a production build.
-  - Other: notes/T-3160.md, stage 4.
+- T-3160 [P2] {L:memory} Phone memory on real-network starts
+  - Context: The Tokyo real-network start on an emulated iPhone (production build) peaked at 1.6 GB in the tab, now 1.4 since the loading card's train stopped leaving garbage in Chrome; that cut is Chrome's only. What Safari holds too: the solving worker's WASM, 280 MB since the everyday and commutes' exp tables went (343 before; 271 in use at its peak, 322 before; the commutes' cut gave 4-7 MB in the game, 25 on the native tool), the clock worker 260, the page about 200. You, 2026-11-16: "lots of people are unable to really play properly cuz tehy dont have enoguh ram. especially on phones. if we can get that working itll increase reach."
+  - Goal: The solving worker's peak comes down again by the place the game reaches it (not traced: the native tool peaks in tyo's everyday pass, the game lower), or the five periods' held results (157 MB in WASM), rail trips unchanged, measured on a production build.
+  - Other: Stage 4's exp rows (exact, about 7 MB in the game, maybe 6% slower) not landed, kept as notes/T-3160-exprows.patch. notes/T-3160.md, stage 5.
 - T-2762 [P3] {L:solve-speed} Faster longer-trips answer for a bubble
   - Context: On North America a bubble answer still takes about 300 ms per worker (NYC 60 ms) after T-2747.
   - Goal: Bring the North America answer close to NYC.
