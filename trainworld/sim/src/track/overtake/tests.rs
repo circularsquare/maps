@@ -12,19 +12,6 @@ use super::*;
 /// G. High demand runs both every 10 minutes, medium locals every 30 and expresses every 10.
 /// Both lines are set by headway, so they run these rates exactly.
 pub(crate) fn shinkansen() -> (TrackWorld, Vec<u32>, u32, u32) {
-    shinkansen_with(false)
-}
-
-/// `shinkansen` with lines at a fixed rate and no trains (the path T-1183 removes), for the one
-/// timing test that fails when started on headway lines (`a_moved_morning_hour_is_timed_too`): the
-/// moved hour 5-6 is a piece of the night's slot, whose round trip and return departures are sized
-/// on the night's averaged waits, so its locals, timed against the morning's expresses, would miss
-/// their next departures and are put back on the slot's timetable (notes/T-3929.md).
-pub(crate) fn shinkansen_rates() -> (TrackWorld, Vec<u32>, u32, u32) {
-    shinkansen_with(true)
-}
-
-fn shinkansen_with(rates: bool) -> (TrackWorld, Vec<u32>, u32, u32) {
     let mut w = world();
     let n: Vec<u32> = (0..7).map(|k| node(&mut w, k as f64 * 30_000.0, 0.0, 0)).collect();
     for k in 0..6 {
@@ -40,18 +27,9 @@ fn shinkansen_with(rates: bool) -> (TrackWorld, Vec<u32>, u32, u32) {
         d.fast = true;
         w.apply(Op::Line { id: l, data: Some(d) }).unwrap();
     };
-    let mk = |w: &mut TrackWorld, stops: &[u32], tph: [f32; 3]| if rates {
-        let id = w.net.alloc_line();
-        let mut d = crate::track::tests::line_data(w, stops, id, None);
-        d.tph = tph;
-        w.apply(Op::Line { id, data: Some(d) }).unwrap();
-        id
-    } else {
-        headway_line(w, stops, tph)
-    };
-    let local = mk(&mut w, &n, [6.0, 2.0, 0.0]);
+    let local = headway_line(&mut w, &n, [6.0, 2.0, 0.0]);
     fast(&mut w, local);
-    let express = mk(&mut w, &[n[0], n[3], n[6]], [6.0, 6.0, 0.0]);
+    let express = headway_line(&mut w, &[n[0], n[3], n[6]], [6.0, 6.0, 0.0]);
     fast(&mut w, express);
     (w, n, local, express)
 }

@@ -381,6 +381,36 @@ impl Hours {
         }
         out
     }
+    /// T-3931: the piece whose period's slot piece `i` runs the timetable of (its waits, round
+    /// trip, spare time and phase): in a slot its hours share between rows (`own_on`), the nearest
+    /// piece of its own row, through the day, that has a slot to itself, so a moved hour of the
+    /// morning runs as the morning does; itself where its row has none.
+    pub fn row_piece(&self, i: usize) -> usize {
+        let n = self.n as usize;
+        if !self.own_on[i] || n == 0 {
+            return i;
+        }
+        let k = self.pieces[i].k;
+        // (the day's last piece runs on into its first: the night crosses midnight)
+        let find = |step: usize| {
+            let mut j = i;
+            for d in 1..n {
+                j = (j + step) % n;
+                if self.pieces[j].k != k {
+                    return None;
+                }
+                if !self.own_on[j] {
+                    return Some((d, j));
+                }
+            }
+            None
+        };
+        match (find(1), find(n - 1)) {
+            (Some(a), Some(b)) => if b.0 < a.0 { b.1 } else { a.1 },
+            (Some(a), None) | (None, Some(a)) => a.1,
+            (None, None) => i,
+        }
+    }
 }
 
 /// One stretch of a day's departures (`day_stretches`): local hours, level (`Lattice::levels_on`),
@@ -545,7 +575,7 @@ fn day_stretches(lat: &Lattice, day: i64) -> Vec<Stretch> {
     let mut out: Vec<(Stretch, u8)> = Vec::with_capacity(h.n as usize);
     for i in 0..h.n as usize {
         let p = h.pieces[i];
-        let lev = levels[p.q as usize];
+        let lev = levels[h.pieces[h.row_piece(i)].q as usize];
         let (tph, off, phase) = if h.own_on[i] { h.own[i][row] } else { lat.slot(lev) };
         match out.last_mut() {
             Some((x, k)) if *k == p.k && x.lev == lev && x.tph.to_bits() == tph.to_bits() && x.off.to_bits() == off.to_bits() && x.phase.to_bits() == phase.to_bits() => x.h1 = p.b as f64,
@@ -1386,15 +1416,19 @@ impl Service {
             let (auto, ps) = (net.auto_of(l), net.period_slot());
             let mut h = Hours { n: m.n_pieces as u8, pieces: m.pieces, ..Hours::NONE };
             for (i, pc) in m.pieces[..m.n_pieces].iter().enumerate() {
+                h.own_on[i] = m.mixed[ps[pc.q as usize]];
+            }
+            for (i, pc) in m.pieces[..m.n_pieces].iter().enumerate() {
+                if !h.own_on[i] { continue; }
                 let s = ps[pc.q as usize];
-                if !m.mixed[s] { continue; }
-                h.own_on[i] = true;
+                // T-3931: laid out on the slot whose timetable it runs (`Hours::row_piece`)
+                let sr = ps[m.pieces[h.row_piece(i)].q as usize];
                 let k = pc.k as usize;
                 let (a, ar) = (auto.map(|a| a[k]), auto_r.map(|a| a[k]));
                 let tk = net.place_tph(l, s, k, tph[s], ls.round_trip[s]);
-                h.own[i][WEEKDAYS] = (tk, off_at(s, tk, &split, &|lev, t| self.spare_with(net, l, lev, t, a)), phase_in(&p, s, tk));
+                h.own[i][WEEKDAYS] = (tk, off_at(sr, tk, &split, &|lev, t| self.spare_with(net, l, lev, t, a)), phase_in(&p, sr, tk));
                 let tk = net.place_tph(l, s, k, rest[s], ls.round_trip[s]);
-                h.own[i][WEEKEND] = (tk, off_at(s, tk, &split_r, &|lev, t| self.spare_paced(net, l, lev, t, ar, pace_r[lev])), phase_in(&p_r, s, tk));
+                h.own[i][WEEKEND] = (tk, off_at(sr, tk, &split_r, &|lev, t| self.spare_paced(net, l, lev, t, ar, pace_r[lev])), phase_in(&p_r, sr, tk));
             }
             h
         };

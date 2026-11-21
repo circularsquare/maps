@@ -1369,7 +1369,9 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   never move: a row reaching into another period is **averaged into that period's slot**
   (`Network::mixed`, `Mix`): the slot runs the time-weighted rate of its rows (the settle counts each
   row's trains for its share of the slot's hours), each row's piece of it leaves at the row's own
-  rate there (the slot's shared out by what each row's trains run, `place_tph`), departures break
+  rate there (the slot's shared out by what each row's trains run, `place_tph`) and runs the
+  timetable of its row's own slot where the row has one (`Hours::row_piece`, T-3931: its waits,
+  round trip, spare time and phase, so the morning from 5 runs 5-6 as the morning does), departures break
   at the line's hours and at the period bounds (`service::Hours`, `day_stretches`), and demand reads
   the rate of the mean headway the period's riders meet, riders arriving by the period's shape and
   those in a piece with no trains left to the span (`Service::demand_tph`). A row's borrowed hours

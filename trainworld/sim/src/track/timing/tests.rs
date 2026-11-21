@@ -1,4 +1,4 @@
-use super::super::overtake::tests::{set_passing, shinkansen, shinkansen_rates};
+use super::super::overtake::tests::{set_passing, shinkansen};
 use super::super::overtake::PASS_CLEAR_S;
 use super::super::profile;
 use super::super::service::Trip;
@@ -376,22 +376,48 @@ fn headway_locals_make_their_next_departure() {
 }
 
 /// T-3542's moved hours meet stage 2: with the morning from 5 the hour 5-6 is a piece of the night's
-/// slot run at the morning's own rate; its locals are timed train by train like the morning's.
+/// slot run at the morning's own rate. It runs the morning's timetable (T-3931: on the night's, its
+/// round trip and return departures were sized on the night's averaged waits, so its locals, timed
+/// against the morning's expresses, missed their next departures and went back to the slot's
+/// timetable), so its locals are timed train by train like the morning's and every local in the
+/// night and the moved hour makes its next departure. Headway and count lines, with trains at night.
 #[test]
 fn a_moved_morning_hour_is_timed_too() {
-    let (mut w, n, local, express) = shinkansen_rates();
+    for counts in [false, true] {
+        moved_morning_hour(counts);
+    }
+}
+
+fn moved_morning_hour(counts: bool) {
+    let (mut w, n, local, express) = shinkansen();
+    for (id, medium) in [(local, 1800), (express, 600)] {
+        let k = w.net.line_trains[id as usize].unwrap();
+        let op = if counts {
+            Op::AutoTrains { id, auto: None, trains: Some(if id == local { [12, 4, 2] } else { [9, 9, 2] }) }
+        } else {
+            Op::AutoTrains { id, auto: Some([600, medium, 3600]), trains: Some([k[0], k[1], k[0]]) }
+        };
+        w.apply(op).unwrap();
+    }
     set_passing(&mut w, &n[1..6], true);
     let op = w.rows_ops(None, 5).unwrap();
     w.apply(op).unwrap();
     w.apply(Op::Hours { line: None, cuts: [5, 10, 16, 20, 24] }).unwrap();
+    let lead = w.svc.lattice(&w.net, local as usize).unwrap().lead;
     let t0 = 86400.0 + 5.0 * 3600.0;
-    let trips = w.svc.line_trips(&w.net, local as usize, t0, t0 + 3600.0);
-    let early: Vec<(u8, u8)> = trips.iter().filter(|t| t.dep >= t0 + 600.0).map(|t| (t.level, t.var)).collect();
-    eprintln!("5-6 locals (slot, variant): {early:?}");
-    assert!(early.iter().any(|x| x.1 > 0), "locals in the moved hour timed train by train");
-    let (bad, good) = bad_passes(&w, local, express, &n, &n[1..6], t0, t0 + 2.0 * 3600.0, false);
-    eprintln!("5-7: {good} passes, {} bad", bad.len());
-    assert!(bad.is_empty(), "{} bad passes, first {:?}", bad.len(), &bad[..bad.len().min(4)]);
+    let trips = w.svc.line_trips(&w.net, local as usize, t0 - 6.0 * 3600.0, t0 + 3.0 * 3600.0);
+    let piece: Vec<(u8, u8)> = trips.iter().filter(|t| t.dep >= t0 - lead && t.dep < t0 + 3600.0 - lead).map(|t| (t.level, t.var)).collect();
+    eprintln!("counts {counts}: rates {:?} / {:?}; 5-6 locals (slot, variant): {piece:?}", w.net.line_tph[local as usize], w.net.line_tph[express as usize]);
+    assert!(!piece.is_empty() && piece.iter().all(|x| x.0 == 0 && x.1 > 0), "counts {counts}: locals in the moved hour run the morning's slot, timed train by train");
+    // (count lines' locals leave service in the morning itself too: their round trip is sized on
+    // the averaged waits, notes/T-3929.md "Left")
+    let lost: Vec<f64> = trips.iter().filter(|t| t.next.is_none() && t.dep >= t0 - 4.0 * 3600.0 && t.dep < t0 + 2.0 * 3600.0).map(|t| ((t.dep - 86400.0) / 36.0).round() / 100.0).collect();
+    eprintln!("counts {counts}: locals 1-7 leaving service at (h) {lost:?}");
+    assert!(counts || lost.is_empty(), "locals 1-7 leaving service: {lost:?}");
+    let (bad, good) = bad_passes(&w, local, express, &n, &n[1..6], t0 - 4.0 * 3600.0, t0 + 2.0 * 3600.0, false);
+    eprintln!("counts {counts}: 1-7: {good} passes, {} bad", bad.len());
+    assert!(good >= 8, "counts {counts}: the expresses pass the locals");
+    assert!(bad.is_empty(), "counts {counts}: {} bad passes, first {:?}", bad.len(), &bad[..bad.len().min(4)]);
 }
 
 /// T-3896: the variants are in a line's phase tables, which the page reads again only for the lines
