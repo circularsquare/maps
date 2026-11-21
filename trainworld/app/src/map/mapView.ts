@@ -42,10 +42,8 @@ export function createMap(container: HTMLElement): maplibregl.Map {
     // T-924: GISCO's terms want the EuroGeographics notice on the map itself (European zone units)
     attributionControl: {
       compact: true,
-      customAttribution: [
-        '<a href="https://openfreemap.org">OpenFreeMap</a> <a href="https://www.openmaptiles.org/">© OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        "© EuroGeographics for the administrative boundaries", // i18n-ignore: attribution, as the data owner words it
-      ],
+      // the OpenFreeMap style's own source already carries the OpenFreeMap / OpenMapTiles / OSM credit
+      customAttribution: "© EuroGeographics for the administrative boundaries", // i18n-ignore: attribution, as the data owner words it
     },
     dragRotate: false,
     pitchWithRotate: false,
@@ -53,6 +51,8 @@ export function createMap(container: HTMLElement): maplibregl.Map {
     // T-2794: a DPR 3 phone holds nearly twice the canvas memory of DPR 2 in every context
     ...(cappedPixelRatio() !== null ? { pixelRatio: cappedPixelRatio()! } : {}),
   });
+  // T-3998: compact mode opens the credits when the control is added; fold them before the first frame
+  container.querySelector(".maplibregl-ctrl-attrib")?.classList.remove("maplibregl-compact-show");
   // T-1907, T-2031: only a mouse drag turns the map (followRotation); fingers and keys neither turn
   // nor tilt it
   map.touchZoomRotate.disableRotation();
@@ -65,9 +65,6 @@ export function createMap(container: HTMLElement): maplibregl.Map {
   watchGraphics(map.getCanvas()); // T-2794
   wheelGapsByEventTime(map);
   loadBasemap(map);
-  map.on("load", () => {
-    document.querySelector(".maplibregl-ctrl-attrib")?.classList.remove("maplibregl-compact-show");
-  });
   followProjection(map);
   map.on("moveend", () => { const c = map.getCenter(); rememberView(c.lng, c.lat, map.getZoom()); });
   return map;

@@ -1805,6 +1805,9 @@ button.save-add:hover { color: var(--text); }
 :root[data-shade="dark"] .maplibregl-ctrl-attrib a { color: var(--muted); }
 :root[data-shade="dark"] .maplibregl-ctrl-attrib-button { filter: invert(1); }
 .maplibregl-ctrl-bottom-right .maplibregl-ctrl { margin: 0 10px 10px 0 !important; }
+/* T-3998: the credits start folded and open on hover as well as on a click */
+.maplibregl-ctrl-attrib.maplibregl-compact:hover { padding: 2px 28px 2px 8px; }
+.maplibregl-ctrl-attrib.maplibregl-compact:hover .maplibregl-ctrl-attrib-inner { display: block; }
 /* T-2571: with the trouble button in the corner the attribution sits just left of it, on its baseline */
 #map:has(.trouble) .maplibregl-ctrl-bottom-right .maplibregl-ctrl { margin-right: calc(18px + var(--trouble-px, 56px)) !important; }
 
