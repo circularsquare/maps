@@ -1,32 +1,20 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session ca3a5e8b-220b-4b3d-a5e9-87f500e687dc, name maps-98 [60f1c2], since 2026-11-21 12:25 UTC
-Updated: 2026-11-21 12:55 UTC (12 agents running; all 8 asks answered)
+Updated: 2026-11-21 15:40 UTC (10 agents running)
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5. She is home, at this tab.
 
 ## Next
-0. LIVE v0.4.5 (published 11-21 ~04:15 UTC). Cap 14 by day (overnight = machine max, docs/orchestrator.md). 8800 =
-   4141e6bc (T-2624 landed, periodschk PASS, master smoke PASS). Since v0.4.5 on master: fares panel, binzip (packs at
-   the next publish: walk her through it first), T-3904/3908/3909/3913/3916/3918/3919/3921/3922/3923/3925/3927/3928/
-   3929, T-1183 st.1-2, T-3160 st.3, T-2624. Next update: translate moneyTab.brtFare/brtFareTip + T-3922 hovers + any
-   new, nearer publish; changelog c001-c014 (c007, c012, c013 hidden).
-1. Running: phonemem2 T-3160, autostops T-3924, busway T-3378 st.1-2 (own trees), iphonesaves T-3781 (no tree; ssh
-   may be refused: then ask her here), trackdesign T-3444 (design lead with research subagents, no builds; writes
-   notes/T-3444-design/ + review/track-rework-design.md). Landed since 8800 (4141e6bc), UNCHECKED BATCH: cachekey
-   44316713, movedhour 4f8b9e0d, tweaks e778ce68, egyptunits c2ec5711 (pipeline), islands3 a2062187 (CACHE_FORMAT 13).
-   Batch checker + smoke + 8800 rebuild wait for her OK on compute. T-3655 parked again (option 1 decided).
-2. Batch 9 on master (unchecked, not on 8800): phonemem2 49a4142e, autostops 94832b99, dropindent d80eaa39; islandfix
-   (T-2216 ferry case, batchchk8 item 4) to come. Smoke at 14:50 failed only on page.goto timeouts with every core
-   claimed: rerun with the batch-9 check once islandfix lands. HER 11-21 ~14:05 UTC: the 13:20 "no more compute" was a moment, not a standing hold ("that doesnt mean we should
-   not be using compute now"); keep 4-12 agents. Count every Auto stop (T-3924, autostops finishing). PR 24 reply
-   posted 14:10. Batch 8 (cachekey, movedhour, tweaks, islands3, busway) checking: batchchk8 + smoke + 8800 at
-   7e04ea1f. Running too: ownwaits T-3931, fullrate4 T-3655, splitb1 T-3373 B st.1, brtstations T-3378 st.3,
-   clockmem T-3939, keihan T-3935. Next when a slot frees: T-3934 (after autostops lands) (her ask: bus reach 600 m vs 1 km vs none, on bus-heavy community
-   saves; measure only); T-3373 B stage 1 (measure and simulate, 2-3 h, notes/T-3373-B-plan.md; raise A's
-   limit to ~2 GB in it); T-3933 (load out of memory retries with fewer workers; wait for iphonesaves' findings);
-   T-3932 (cores slider with memory and speed; after B's stage 1 so estimates match); T-1183 after T-3931; T-3378
-   st.3 (BRT stations for BRT lines only, her OK ~13:00) and st.4 after st.1-2.
+0. LIVE v0.4.5 (11-21 ~04:15 UTC). Cap 14 by day; reserve_cores.ps1 -Loop 30 runs in my session (cores 0-1 hers).
+   8800 = 7e04ea1f (batch 8 checked; islands3 ferry case FAIL -> islandfix). Next update: translations nearer publish.
+1. Batch 9 on master, not on 8800: phonemem2 49a4142e, autostops 94832b99, dropindent d80eaa39, splitb1 2382b9b8;
+   landing: brtstations (save level 35), editfail T-3945 (capacity panic fix) next. Smoke passed 15:20 at d80eaa39.
+   After islandfix: batch-9 checker + smoke + 8800 rebuild.
+2. Running: ownwaits T-3931, fullrate4 T-3655 (+T-3941), clockmem T-3939, keihan T-3935, viewonly T-3851,
+   brtblueprint T-3944, islandfix (T-2216 fix), busreach T-3934, splitb2 (T-3373 B stage 2, same agent as splitb1).
+   Next: T-3948 track stage 1 after ownwaits+fullrate4 land; T-3378 st.4 after T-3944; T-3986 (model-down messages);
+   T-3933/T-3932 later; T-3937 needs a quiet machine. HER 11-21 ~14:05: compute is fine, keep 4-12 agents.
 3. T-3395: save_health.py after the next scan; clean = close it (no 11-21 report at 04:30 UTC; 11-20 found 0).
 ## Her words
 - 11-21 ~12:50 UTC (board answers + chat): Auto stops "i would rather coutn every auto stop for demand ... seems
