@@ -8,7 +8,7 @@
 //   every change of the shown view (version:round:final, version 0 = the cache) and a signature of
 //   every figure in the first final view shown and in the fresh solve's final. PASS when the
 //   fresh final's signature is the same on every run and the cached view's equals it.
-// stale: tampers with the stored cache (its build, a pack's digest), reloads, and checks that the
+// stale: tampers with the stored cache (its demand code key, a pack's digest), reloads, and checks that the
 //   cache is not shown; then a changed network (one line's trains) must not show it either.
 // edit (T-2560): a reload showing the cache, one line's trains +1 the moment the clock runs (its network
 //   still being solved again), that edit's final; then a reload missing the cache (perfOff=nocache)
@@ -252,7 +252,7 @@ try {
             const g = st.get(key);
             g.onsuccess = () => {
               const v = g.result;
-              if (field === 'build') v.build = 'x' + v.build;
+              if (field === 'demand') v.demand = 'x' + v.demand;
               else v.packs[Object.keys(v.packs)[0]] = 'x';
               st.put(v, key).onsuccess = () => { n++; };
             };
@@ -261,7 +261,7 @@ try {
       };
       o.onerror = () => rej(o.error);
     }), field);
-    for (const field of ['build', 'pack']) {
+    for (const field of ['demand', 'pack']) {
       let r = await reload(); // writes a good cache again if the last run left none
       if (!summary(r).cached) r = await reload();
       const n = await tamper(field);

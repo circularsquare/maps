@@ -1,6 +1,7 @@
-import { copyFileSync, createReadStream, existsSync, linkSync, mkdirSync, readdirSync, readFileSync, statSync, unlinkSync } from "node:fs";
+import { copyFileSync, createReadStream, existsSync, linkSync, mkdirSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { execSync } from "node:child_process";
-import { dirname, join, resolve } from "node:path";
+import { createHash } from "node:crypto";
+import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, type Plugin } from "vite";
 
@@ -171,14 +172,97 @@ function buildStamp(): Plugin {
   };
 }
 
+/** T-3926: the demand cache's key in a build (`__TW_DEMAND__`, workers/demandCache.ts): a SHA-256 of the source of
+ * every module the demand side runs and of every file those modules load by URL (the demand WASM, workers, data),
+ * so a release that changes none of them keeps every cached result and one that changes any of them keeps none.
+ * The modules come from the bundler's own graph: from `DEMAND_ROOTS`, every import, static or dynamic, and every
+ * `new URL(..., import.meta.url)` (a worker's whole graph, from its own build). The key is written over a placeholder
+ * once the chunk holding it renders, when every worker's graph is known. The dev server keeps a key per start.
+ * Left out, by name only (anything not named is in): `DEMAND_SKIP`, the translations, and the clock worker with the
+ * track WASM, whose output reaches a solve only as the network, whose demand-read form the key holds already
+ * (`canonical`). */
+const DEMAND_ROOTS = ["src/workers/demandClient.ts"].map((f) => resolve(here, f).replace(/\\/g, "/"));
+const DEMAND_SKIP = ["src/i18n/messages/", "src/workers/clock.worker.ts"].map((f) => resolve(here, f).replace(/\\/g, "/") + (f.endsWith("/") ? "/" : ""));
+const skipped = (f: string) => DEMAND_SKIP.some((s) => (s.endsWith("/") ? f.startsWith(s) : f === s));
+const DEMAND_SLOT = "tw-demand-key-" + "0".repeat(50);
+const URL_REF = /new URL\(\s*["'`]([^"'`]+)["'`]\s*,\s*import\.meta\.url\s*\)/g;
+/** each worker build's entry -> every module in that build */
+const workerGraphs = new Map<string, string[]>();
+const fileOf = (id: string) => id.split("?")[0].replace(/\\/g, "/");
+
+function demandWorkerGraph(): Plugin {
+  return {
+    name: "tw-demand-key-worker",
+    apply: "build",
+    buildEnd() {
+      const ids = [...this.getModuleIds()];
+      for (const id of ids) if (this.getModuleInfo(id)?.isEntry) workerGraphs.set(fileOf(id), ids);
+    },
+  };
+}
+
+function demandKey(): Plugin {
+  return {
+    name: "tw-demand-key",
+    config: (_c, { command }) => ({ define: { __TW_DEMAND__: JSON.stringify(command === "build" ? DEMAND_SLOT : "dev-" + BUILD) } }),
+    renderChunk(code) {
+      if (!code.includes(DEMAND_SLOT)) return null;
+      const files = new Set<string>();
+      const queue = [...DEMAND_ROOTS];
+      const take = (id: string) => {
+        if (id.startsWith("\0")) return;
+        const f = fileOf(id);
+        if (!files.has(f) && !skipped(f)) { files.add(f); queue.push(id); }
+      };
+      // a graph that may be missing part of the demand code gets the build stamp: a cold load, never a stale one
+      let short = DEMAND_ROOTS.some((r) => !this.getModuleInfo(r)) ? "a root is not in the graph" : "";
+      for (const r of DEMAND_ROOTS) files.add(r);
+      while (queue.length) {
+        const id = queue.pop()!;
+        const info = this.getModuleInfo(id);
+        for (const d of [...(info?.importedIds ?? []), ...(info?.dynamicallyImportedIds ?? [])]) take(d);
+        const f = fileOf(id);
+        if (!/\.(ts|tsx|js|mjs)$/.test(f) || !existsSync(f)) continue;
+        for (const m of readFileSync(f, "utf8").matchAll(URL_REF)) {
+          const ref = resolve(dirname(f), m[1]).replace(/\\/g, "/");
+          if (skipped(ref)) continue;
+          const graph = workerGraphs.get(ref);
+          if (graph) for (const w of graph) take(w);
+          else if (/\.(ts|tsx|js|mjs)$/.test(ref)) short ||= `no worker build's graph for ${m[1]} (${f})`;
+          else if (!files.has(ref)) {
+            if (!existsSync(ref)) short ||= `${f} loads ${m[1]}, which is not there`;
+            else { files.add(ref); queue.push(ref); }
+          }
+        }
+      }
+      for (const need of ["src/workers/demand.worker.ts", "src/wasm/demand/sim_bg.wasm"])
+        if (!files.has(resolve(here, need).replace(/\\/g, "/"))) short ||= `${need} is not in the graph`;
+      if (short) {
+        this.warn(`demand cache key: ${short}; this build's key is its build stamp`);
+        return { code: code.split(DEMAND_SLOT).join(("build-" + BUILD).padEnd(DEMAND_SLOT.length, "-")), map: null };
+      }
+      const parts = [...files].map((f) => {
+        // the same file in another checkout: its path from app/ (or from node_modules/), text without CRs
+        const name = f.includes("/node_modules/") ? f.slice(f.lastIndexOf("/node_modules/") + 1) : relative(here, f).replace(/\\/g, "/");
+        const bytes = readFileSync(f);
+        const body = /\.(wasm|bin|png|jpg|webp)$/.test(f) ? bytes : Buffer.from(bytes.toString("utf8").replace(/\r\n/g, "\n"));
+        return name + " " + createHash("sha256").update(body).digest("hex");
+      }).sort();
+      if (process.env.TW_DEMAND_KEY_FILES) writeFileSync(process.env.TW_DEMAND_KEY_FILES, parts.join("\n") + "\n");
+      const key = createHash("sha256").update(parts.join("\n")).digest("hex");
+      return { code: code.split(DEMAND_SLOT).join(key), map: null };
+    },
+  };
+}
+
 export default defineConfig({
   // Served under /trainworld/ by maps/serve.py, so every URL in the build must be relative.
   base: "./",
-  worker: { format: "es" },
+  worker: { format: "es", plugins: () => [demandWorkerGraph()] },
   define: { __TW_BUILD__: JSON.stringify(BUILD), __TW_VERSION__: JSON.stringify(VERSION), __TW_UNOFFICIAL__: JSON.stringify(UNOFFICIAL) },
   build: { outDir: "dist", target: "es2022" },
   // T-682: the real-network layer reads noritetsu's tiles beside the game (map/realNetwork.ts); 8800 serves them
   // at /noritetsu/ and sends no CORS headers, so the dev server passes the path through
   server: { proxy: { "/noritetsu": "http://localhost:8800" } },
-  plugins: [packs(), buildStamp()],
+  plugins: [packs(), buildStamp(), demandKey()],
 });

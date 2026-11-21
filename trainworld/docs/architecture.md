@@ -745,8 +745,16 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   zone's split, the market's trips, and the viewed zone's bubbles of every purpose for the day shown
   when they were on show, T-1904), not worker state; lines and stations by their place in the network, since a load
   renumbers ids. Its key is a SHA-256 of the network demand reads, of every pack the solve covered
-  (the packs open as it was sent, one closed while it ran included, T-2579) and of the market, the app build, the worker count and the perfOff flags; the zones must be the
-  ones the new solve covers. A load's network is worked out from the save alone (it waits for the
+  (the packs open as it was sent, one closed while it ran included, T-2579) and of the market, the demand code's
+  version, the worker count and the perfOff flags; the zones must be the
+  ones the new solve covers. The demand code's version (T-3926, `vite.config.ts` `demandKey`) is a SHA-256, made
+  at build time, of the source of every module in the bundler's graph from `demandClient.ts` (static and dynamic
+  imports, and every file loaded by `new URL`: the demand, sums and cache-write workers' whole graphs, the demand
+  WASM, market-rows.json), so every build of the same demand code has the same one and a release that changes none
+  of it keeps every cached result. Left out by name only: the translations, and the clock worker with the track
+  WASM, whose output reaches a solve only as the network, which the key holds in the form demand reads (every
+  field of the service a solve reads, the way back's stations, boat size, busway and bus catchment included). The
+  dev server's version is new at each start. A load's network is worked out from the save alone (it waits for the
   bus routes' street speeds, [track-and-service.md](track-and-service.md) 6.7, T-2499; the clock worker sends no state
   or snapshot between a load's start and the loaded game's, T-3686), so a reload
   of an unchanged game finds the result its last final wrote. When a whole game loads and the key matches, the result shows at once
@@ -769,8 +777,9 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   **Ahead of the network** (T-1539): a result whose network is the one a load worked out from its
   save also holds that network snapshot and the key of the save's network inputs (a SHA-256 of the
   save's track bytes, which a save numbers densely, without their eras tail (the trains changing over
-  after an edit, drawn only and pruned as the clock runs, T-2588), and the header fields the snapshot
-  reads: `saveNetKey`), with a small pointer `ahead:<slot>` to it. The clock worker sends that key as a
+  after an edit, drawn only and pruned as the clock runs, T-2588), the header fields the snapshot
+  reads, and the app build, since the clock worker that works the snapshot out is not in the demand code's
+  version (T-3926; after a release the result shows once the network is in): `saveNetKey`), with a small pointer `ahead:<slot>` to it. The clock worker sends that key as a
   load starts (`netAhead`), before it works the network out (17-42 s on the China save), and the
   page shows the result through the same key checks, on the stored network; the network that
   arrives is compared with it: the same one takes its place with no second look, a different one

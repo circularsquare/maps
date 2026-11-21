@@ -8,8 +8,9 @@
 // snapshot, not their ids, since a load renumbers ids; the key is made the same way.
 //
 // The key: a SHA-256 of the network demand reads (the canonical form below), the SHA-256 of every
-// pack the solve covered and the market's, the app build, the worker count (sums are added in
-// worker order) and the perfOff flags. Any difference means no cache, never a wrong one.
+// pack the solve covered and the market's, the demand code's version (DEMAND_KEY, T-3926), the worker
+// count (sums are added in worker order) and the perfOff flags. Any difference means no cache, never a
+// wrong one.
 
 import type { CityId } from "../game/cities";
 import type { CorridorRows, DayDemand, DemandView, IntercityDemand, LineDemand, PurposeDemand, StationDemand } from "../game/demand";
@@ -20,7 +21,11 @@ import type { NetworkSnapshot } from "./protocol";
 
 declare const __TW_BUILD__: string | undefined;
 /** The app build: set by vite.config.ts at each build and each dev-server start. */
-export const BUILD = typeof __TW_BUILD__ === "string" ? __TW_BUILD__ : "unknown";
+const BUILD = typeof __TW_BUILD__ === "string" ? __TW_BUILD__ : "unknown";
+declare const __TW_DEMAND__: string | undefined;
+/** T-3926: the demand code's version, set by vite.config.ts: in a build a hash of every source and data file the
+ * demand side runs (the same in every build of the same demand code), on the dev server new at each start. */
+export const DEMAND_KEY = typeof __TW_DEMAND__ === "string" ? __TW_DEMAND__ : "unknown";
 export const CACHE_FORMAT = 12; // raise when the cached result's layout changes
 /** The view version a cached result is shown under: no solve has it, so the workers answer no
  * question about it (a click waits for the fresh solve). */
@@ -29,7 +34,8 @@ export const CACHE_VERSION = 0;
 /** What the cache key is made of, besides the network's hash (its storage key). */
 export interface CacheKey {
   format: number;
-  build: string;
+  /** DEMAND_KEY */
+  demand: string;
   workers: number;
   flags: string;
   /** zone id (and "market") -> SHA-256 of the pack's bytes; the zones are exactly the solve's */
@@ -60,13 +66,14 @@ export interface StoredDemand extends CacheKey { at: number; round: number; days
  * clock worker's key of the save's network inputs (`saveNetKey`), `snapshot` the network it sent */
 export interface CacheAhead { save: string; snapshot: NetworkSnapshot }
 
-/** T-1539: a key of what a save's network snapshot is made from: its track bytes (ids dense) and the
- * header fields the snapshot reads. Equal keys give the same snapshot under the same build (the
- * stored result's key carries the build). */
+/** T-1539: a key of what a save's network snapshot is made from: its track bytes (ids dense), the
+ * header fields the snapshot reads, and the app build (T-3926: the clock worker that works the snapshot
+ * out is not in DEMAND_KEY, so another build's stored snapshot may not be this build's). Equal keys give
+ * the same snapshot. */
 export async function saveNetKey(track: Uint8Array, h: { city?: string; fares?: unknown; fleet?: number; fleetFast?: number; fleetBus?: number; mode?: string }): Promise<string> {
   // T-2679: the reference country changes no fare, so no key
   const { ref: _, ...fares } = (h.fares ?? {}) as { ref?: unknown };
-  const head = new TextEncoder().encode(JSON.stringify([h.city ?? "", h.fares ? fares : null, h.fleet ?? 0, h.fleetFast ?? 0, h.fleetBus ?? 0, h.mode ?? "normal"]));
+  const head = new TextEncoder().encode(JSON.stringify([h.city ?? "", h.fares ? fares : null, h.fleet ?? 0, h.fleetFast ?? 0, h.fleetBus ?? 0, h.mode ?? "normal", BUILD]));
   const net = withoutEras(track);
   const all = new Uint8Array(net.length + head.length);
   all.set(net);
@@ -91,7 +98,7 @@ interface Svc {
   frame: unknown;
   fare: unknown;
   stations: { id: string; x: number; y: number; level?: number; complex?: number; upgrades?: number; fare?: number }[];
-  lines: { id: string; stops: string[]; tph: unknown; hopS: unknown; hopKm?: unknown; fast?: boolean; ferry?: boolean; tram?: boolean; fareDist?: boolean; passFares?: unknown; dwellS: unknown; wrapS?: number; cars: number; span?: unknown }[];
+  lines: { id: string; stops: string[]; back?: string[]; tph: unknown; hopS: unknown; hopKm?: unknown; fast?: boolean; ferry?: boolean; boat?: number; brt?: boolean; catches?: unknown; tram?: boolean; fareDist?: boolean; passFares?: unknown; dwellS: unknown; wrapS?: number; cars: number; span?: unknown }[];
   passages?: [string, string][];
 }
 
@@ -120,8 +127,9 @@ export function canonical(svc: Svc): { text: string; stationIds: string[]; lineI
     return s.fare ?[s.x, s.y, c, s.upgrades ?? 0, s.fare] : s.upgrades ? [s.x, s.y, c, s.upgrades] : [s.x, s.y, c];
   });
   // a circle's stand (T-798) and a service span (T-842) only where there is one, so other
-  // networks keep their keys
-  const lines = svc.lines.map((l) => ({ stops: l.stops.map((s) => place.get(s) ?? -1), tph: asRows(l.tph), hopS: runsAsRows(l.hopS), hopKm: l.hopKm ?? null, ...(l.fast ? { fast: true } : {}), ...(l.ferry ? { ferry: true } : {}), ...(l.tram ? { tram: true } : {}), ...(l.fareDist ? { fareDist: true } : {}), ...(l.passFares ? { passFares: l.passFares } : {}), dwellS: runsAsRows(l.dwellS), ...(l.wrapS ? { wrapS: l.wrapS } : {}), cars: l.cars, ...(l.span ? { span: l.span } : {}) }));
+  // networks keep their keys; T-3926: the way back's stations, the boat size, a busway and a bus's
+  // catchment alike (the solve reads them, and the key no longer carries the clock worker's code)
+  const lines = svc.lines.map((l) => ({ stops: l.stops.map((s) => place.get(s) ?? -1), ...(l.back ? { back: l.back.map((s) => place.get(s) ?? -1) } : {}), tph: asRows(l.tph), hopS: runsAsRows(l.hopS), hopKm: l.hopKm ?? null, ...(l.fast ? { fast: true } : {}), ...(l.ferry ? { ferry: true } : {}), ...(l.boat !== undefined ? { boat: l.boat } : {}), ...(l.brt ? { brt: true } : {}), ...(l.catches ? { catches: l.catches } : {}), ...(l.tram ? { tram: true } : {}), ...(l.fareDist ? { fareDist: true } : {}), ...(l.passFares ? { passFares: l.passFares } : {}), dwellS: runsAsRows(l.dwellS), ...(l.wrapS ? { wrapS: l.wrapS } : {}), cars: l.cars, ...(l.span ? { span: l.span } : {}) }));
   // passages (T-1281) only where there are any
   const passages = svc.passages?.length ? { passages: svc.passages.map(([a, b]) => [place.get(a) ?? -1, place.get(b) ?? -1]) } : {};
   return { text: JSON.stringify({ frame: svc.frame, fare: svc.fare, stations, lines, ...passages }), stationIds: svc.stations.map((s) => s.id), lineIds: svc.lines.map((l) => l.id) };
@@ -140,7 +148,7 @@ export const cacheAvailable = (): boolean => typeof crypto !== "undefined" && !!
 
 export function sameKey(a: CacheKey, b: CacheKey): string | null {
   if (a.format !== b.format) return "format";
-  if (a.build !== b.build) return "build";
+  if (a.demand !== b.demand) return "demand";
   if (a.workers !== b.workers) return "workers";
   if (a.flags !== b.flags) return "flags";
   const ka = Object.keys(a.packs).sort(), kb = Object.keys(b.packs).sort();

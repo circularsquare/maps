@@ -117,7 +117,7 @@ import { takesMarketless } from "../game/fareInEffect";
 import { localStep } from "./demandSteps";
 import { saveSlotsState } from "./clockClient";
 import { readDemandAhead, readDemandCache, writeDemandCache } from "./saveFile";
-import { BUILD, CACHE_FORMAT, CACHE_VERSION, cacheAvailable, canonical, fromStored, sameKey, sha256, storedSize, toStored, type CacheKey, type StoredDemand } from "./demandCache";
+import { DEMAND_KEY, CACHE_FORMAT, CACHE_VERSION, cacheAvailable, canonical, fromStored, sameKey, sha256, storedSize, toStored, type CacheKey, type StoredDemand } from "./demandCache";
 import { patientFetch } from "./patientFetch";
 import { binGzOf, isGzip, unpackBin } from "./packZip";
 
@@ -2615,7 +2615,7 @@ class DemandClient {
     return { ...this.keyBase(), packs: Object.fromEntries(ids.map((id, i) => [id, c.has(id) ? `${hashes[i]}:coarse` : hashes[i]])) };
   }
   private keyBase(): Omit<CacheKey, "packs"> {
-    return { format: CACHE_FORMAT, build: BUILD, workers: this.poolN, flags: new URLSearchParams(location.search).get("perfOff") ?? "" };
+    return { format: CACHE_FORMAT, demand: DEMAND_KEY, workers: this.poolN, flags: new URLSearchParams(location.search).get("perfOff") ?? "" };
   }
 
   /** T-2574: a game load's cached result is expected (`log` found it, its packs still to check): the card's bar
