@@ -16,9 +16,11 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
    notes/T-3444-design/ + review/track-rework-design.md). Landed since 8800 (4141e6bc), UNCHECKED BATCH: cachekey
    44316713, movedhour 4f8b9e0d, tweaks e778ce68, egyptunits c2ec5711 (pipeline), islands3 a2062187 (CACHE_FORMAT 13).
    Batch checker + smoke + 8800 rebuild wait for her OK on compute. T-3655 parked again (option 1 decided).
-2. HER 11-21 ~13:20 UTC: machine laggy, "lets not start any more compute tasks" (until she says). cachekey T-3926
-   landed 44316713 (c015 hidden: 0 of the last 5 releases would have kept the cache). She wants the track rework
-   (T-3444) this weekend: offered a design-draft agent (reading only). Queued when she allows: T-3934 first (her ask: bus reach 600 m vs 1 km vs none, on bus-heavy community
+2. HER 11-21 ~14:05 UTC: the 13:20 "no more compute" was a moment, not a standing hold ("that doesnt mean we should
+   not be using compute now"); keep 4-12 agents. Count every Auto stop (T-3924, autostops finishing). PR 24 reply
+   posted 14:10. Batch 8 (cachekey, movedhour, tweaks, islands3, busway) checking: batchchk8 + smoke + 8800 at
+   7e04ea1f. Running too: ownwaits T-3931, fullrate4 T-3655, splitb1 T-3373 B st.1, brtstations T-3378 st.3,
+   clockmem T-3939, keihan T-3935. Next when a slot frees: T-3934 (after autostops lands) (her ask: bus reach 600 m vs 1 km vs none, on bus-heavy community
    saves; measure only); T-3373 B stage 1 (measure and simulate, 2-3 h, notes/T-3373-B-plan.md; raise A's
    limit to ~2 GB in it); T-3933 (load out of memory retries with fewer workers; wait for iphonesaves' findings);
    T-3932 (cores slider with memory and speed; after B's stage 1 so estimates match); T-1183 after T-3931; T-3378
