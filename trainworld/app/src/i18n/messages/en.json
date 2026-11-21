@@ -360,7 +360,6 @@
   "busStopInspector.lines": "{count, plural, one {# line stops here} other {# lines stop here}}",
   "busStopInspector.atStation": "At {name}",
   "busStopInspector.onFoot": "Change on foot",
-  "busStopInspector.buildStation": "Build a station here",
   "capacityKinds.trackName": "Track",
   "capacityKinds.trackShort": "track",
   "capacityKinds.trackTitle": "Track",

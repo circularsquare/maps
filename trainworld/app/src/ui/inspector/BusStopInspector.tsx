@@ -1,20 +1,19 @@
 // T-2949, T-3890: a bus stop's panel, made like a station's: its name, the lines stopping at its place
 // (the stops and train stations demand counts as one place, game/busLinks.ts `busPlaces`) with their
-// boardings today, the riders waiting, the places a short walk away with other lines, and the Station
-// tool to build a station there. A train station's stop opens the station's panel instead (map/pick.ts).
+// boardings today, the riders waiting and the places a short walk away with other lines. A train
+// station's stop opens the station's panel instead (map/pick.ts).
 
 import { effect } from "@preact/signals";
 import { t } from "../../i18n";
 import { busPlaces, groundM, type BusPlace, type BusPlaces } from "../../game/busLinks";
 import { count, length } from "../../game/format";
 import type { LineInput, WorldView } from "../../game/types";
-import { selection, tab } from "../../game/ui";
+import { selection } from "../../game/ui";
 import { today, useToday } from "../../game/today";
 import { linesById, stationNames, stationsById, world } from "../../game/world";
 import { live } from "../../map/live";
 import { locateStation } from "../locate";
-import { pickTool } from "../toolKeys";
-import { Actions, Built, Chip, Icon } from "../widgets";
+import { Built, Chip, Icon } from "../widgets";
 import { BoardingsToday, Waiting } from "./StationInspector";
 
 /** A stop placed again by an edit is found again this near where it was, ground m. */
@@ -85,12 +84,6 @@ export function BusStopInspector({ stop, at }: { stop: string; at: [number, numb
   const known = lines.some((l) => day.has(l.id));
   const stations = stationsById(w);
   const name = stationNames(w).get(stop) ?? t("world.busStop");
-  const build = () => {
-    pickTool("station");
-    tab.value = "build";
-    locateStation(at[0], at[1]);
-    live.overlay?.invalidate();
-  };
   const walks = pl.walks.slice(0, WALKS_SHOWN);
   return (
     <>
@@ -150,9 +143,6 @@ export function BusStopInspector({ stop, at }: { stop: string; at: [number, numb
           </ul>
         </>
       )}
-      <Actions>
-        <button class="btn text" onClick={build}>{t("busStopInspector.buildStation")}</button>
-      </Actions>
     </>
   );
 }
