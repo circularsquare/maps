@@ -168,6 +168,13 @@ headless Chrome, about 3 minutes; `$env:TW_CORES='4'` for a light run on your ow
    question. Git warnings and build logs go to a log file it names. It stops at the first failure, says what state
    things are in and lists the steps left to do by hand. `--dry-run` first when unsure. `land <name> "<sentence>"`
    and `remove <name>` still work alone.
+   The track rework (T-3444) lands on tw/track: add `--into tw/track` to `finish` or `land` (default master). The tree
+   is rebased onto tw/track and squashed into one commit there, fast-forwarded in tw/track's own worktree
+   `maps/.tw-trees/_track` (made on first use; the main tree is never touched, the WASM rebuild runs in it, and it must
+   have no uncommitted edits); changelog items wait in `trainworld/changelog/next-track.json` on tw/track for the
+   release merge. After a batch that touches track, station, line or save files: `node trainworld/checks/agent-tree.mjs
+   sync-track [--dry-run]` merges master into tw/track (same conflict rule; another conflict stops with the merge open
+   in `_track`).
 
 ## Publishing and servers (each only on her word, never overnight)
 

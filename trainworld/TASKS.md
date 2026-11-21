@@ -219,10 +219,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Measured, route choice per group: the express carries 46.8% of riders' km on shared New York stretches today and 46.8% with 2 or 3 time-value groups; trips on pairs going all one way 37.0% and 36.8%; the passing map unchanged. Express and local charge the same, so valuing time more weighs wait and ride alike. Groups cost +38-42% calculating trips natively and +67 MB, about 2x in the browser. A soft rule, worked out from today's costs, gives 48% express on direct pairs and almost no all-one-way pairs, with no extra search.
   - Goal: Her call on the two; a soft-rule prototype would be measured with crowding on New York and the passing map before anything lands.
   - Other: notes/T-4008.md
-- T-4013 [P3] {L:stops} Boarding-only and alighting-only stops (taking, 2026-11-21, agent boardonly)
-  - Context: A player request, via you 11-21: "being able to set stations to only allow boarding or only allow disembarking. seems easy to do."
-  - Goal: A stop on a line can be set to boarding only or getting off only, and trips and the timetable respect it.
-- T-4014 [P1] {L:track-rework} {after:T-3948 landing} Old builds refuse and never overwrite a newer save
+- T-4014 [P1] {L:track-rework} {after:T-3948 landing} Old builds refuse and never overwrite a newer save (taking, 2026-11-21, agent newerlevel)
   - Context: From T-3948, 11-21: the save guard refuses a track-rework (TWT7) save on load, but nobody has checked whether an old build that pulled a TWT7 account copy mid-game can later upload its own game over it. And from buswaychk 11-21: a level-37 save (busways) opens on a level-36 build with no message, its busways read as rail track, and saving there writes them back as rail. So any build must refuse a save from a newer level, not only a newer magic.
   - Goal: A build refuses to open a save whose level is above its own ("saved on a newer game version"), leaving the slot untouched, and can't overwrite a newer account save; both in a release before tw/track's first merge back and before busways ship.
 - T-4015 [P3] {L:track-drawing} Long track previews hit the search budget
@@ -388,7 +385,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Design agreed 11-21 (notes/T-3444-design/, her answers in answers-2026-11-21.md; three small calls still open in review/track-rework-design.md). Built in 38 stages, T-3948 to T-3985, in four releases, on a long-lived branch tw/track merged into master at each release. Stage 1 (T-3948) is done on master; next is stage 2a (T-3949) on tw/track once the branch is cut. Your weekend notes (2026-11-16) are the heart of it.
   - Goal: Closes with the last of its stages.
   - Other: Your notes verbatim: notes/T-3444.md; sizes in notes/code-tour.md. Requirements folded in 11-20: a station placed on track that leaves its shape alone redraws no neighbours (T-2767, 0.2-0.9 s today); the drawn network rebuilds only near a change (T-2701); the Penn Station to Emeryville snapped preview (3 s, T-763) as a check case. notes/review-edit-speed-2026-11-20.md
-- T-3949 [P2] {L:track-rework} {after:tw/track branch cut} Bundles as saved records
+- T-3949 [P2] {L:track-rework} {after:tw/track branch cut} Bundles as saved records (taking, 2026-11-21, agent bundles)
   - Context: Quad is two doubles found again by geometry in six places with six distances. A bundle id and slot on today's edges, saved, set by drawing and doubling up, found once on old saves by today's twin rule.
   - Goal: The geometry pairing rules (`twin_at`, `quad_beside`, `quadPairs.ts`, `Alongside`) are gone and the real save's figures are unchanged.
   - Other: Files: save.rs (LBN1), wasm.rs quad, wasm/draw.rs, wasm/crossings.rs, twin.rs, quadPairs.ts. 3-4 h. stage 2a

@@ -12,11 +12,15 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
 1. Master 28531e0f, unchecked since batch 10: oneway T-4000 (own check PASS), pausebp, placeindex, brtdash,
    hovers, kinds2, brtwait, helppanels. 8800 = 182e8e8e (lacks helppanels). batchchk11 after busways lands (add:
    a stop on a station joined to nothing does nothing and says nothing).
-2. TRACK (her top priority): trackprep T-3948 done in tree; guardchk checking the save guard; land, cut tw/track
-   from master, start stage 2a T-3949 on a tree from tw/track. T-4014 must ship before the first merge back.
+2. TRACK (her top priority): stage 1 T-3948 landed b10862a0 (guardchk PASS). tw/track cut at ac49304b. Running:
+   bundles T-3949 stage 2a (Opus, tree from tw/track); landinto T-4016 (Sonnet: agent-tree `--into tw/track`,
+   `sync-track`); newerlevel T-4014 (Opus, P1: refuse saves from a newer level; never upload over newer).
 3. BRT (her other priority): busways T-3378 stage 4 in tree (level 37); buswaychk: 4 PASS, saves FAIL (a level-37
    save opens silently as rail on master: general fix is T-4014, now P1-ish, start after trackprep lands);
-   buswayfix (Sonnet) rebasing onto master + Blueprint total fix; then land. Open her call: any bus 60 km/h on busways (built) or BRT only.
+   buswayfix (Sonnet) rebasing onto master + Blueprint total fix; then land.
+   boardonly T-4013 done in tree (archived): ALSO takes level 37 (LBO1). After busways lands: rebase it to 38, then
+   its own save checker (it also fixes a demand clamp: riders no longer get off at one-track stops a train passes
+   on the other track; may shift riders a little), then land. Server must learn 37 and 38 before publish. Open her call: any bus 60 km/h on busways (built) or BRT only.
 4. Running: guardchk, buswaychk, boardonly T-4013 (Opus), splitb3 T-3373 B stage 3 (Opus). oomretry T-3933 landed
    6fcccc9a. Held: T-3932 (splitb3's worker pool). Up next on the board: draw from it when below 4.
 5. Open asks: T-3742 nudge design (a-..-16), T-4008 soft rule (a-..-17); T-2264 help wording; busway speed.
