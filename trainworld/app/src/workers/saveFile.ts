@@ -25,6 +25,9 @@ import type { LineShape } from "../game/lineShape";
 
 export const SAVE_MAGIC = "TWG1";
 export const SAVE_FORMAT = 1;
+/** T-4014: this build's save level, sim/src/track/save.rs `LEVEL` (a Rust test there pins this line to it), here so
+ * both threads can refuse a newer save without the track model. */
+export const SAVE_LEVEL = 38;
 /** SPEC 8: a new game starts on day 1 at 07:00 (game seconds). */
 export const START_CLOCK = 86400 + 7 * 3600;
 /** SPEC 6.4: US$10B to start (T-2271), in US$M; a sandbox's money since the start is the cash minus this (T-728). */
@@ -204,9 +207,9 @@ export const SAVE_HEADER_FIELDS: ReadonlySet<string> = new Set(Object.keys(HEADE
  * level, or (in a save with a level, so from a build that lists its fields) a field it does not know.
  * Saves from before levels can carry retired fields (`points`, T-694) and are judged by their
  * network bytes alone. */
-export function headerUnread(h: SaveHeader, level: number): boolean {
+export function headerUnread(h: SaveHeader, level = SAVE_LEVEL): boolean {
   if (h.level === undefined) return false;
-  return h.level > level || Object.keys(h).some((k) => !(k in HEADER_FIELDS));
+  return !(h.level <= level) || Object.keys(h).some((k) => !(k in HEADER_FIELDS));
 }
 
 /** T-728: a sandbox is the normal game with nothing refused for money and the cash not shown. */
@@ -397,8 +400,7 @@ export const SAVE_UNCHECKED = "The save could not be read"; // i18n-ignore: inte
 /** T-3395: whether an error is `SAVE_UNCHECKED`'s. */
 export const isUncheckedError = (err: unknown): boolean => errorText(err).includes(SAVE_UNCHECKED);
 const NOT_SAVE = "This file is not a trainsworld save.";
-/** T-3948: the message key a save from a newer build throws when it cannot open here at all (a newer header format,
- * a newer network format); one a newer build wrote only in part opens and plays (T-1826). */
+/** T-3948, T-4014: the message key a save from a newer build throws (`isNewerSave`): it does not open here. */
 export const SAVE_NEWER = "clockWorker.newer";
 /** T-3948: whether an error is `SAVE_NEWER`'s. */
 export const isNewerError = (err: unknown): boolean => errorText(err).includes(SAVE_NEWER);
@@ -425,8 +427,17 @@ export async function decodeSave(file: Uint8Array): Promise<{ header: SaveHeader
     throw new Error(err instanceof SyntaxError ? SAVE_DAMAGED : `${SAVE_UNCHECKED}: ${errorText(err)}`);
   }
   if (!header || typeof header !== "object" || header.game !== "anitabuilder" || typeof header.format !== "number") throw new Error(NOT_SAVE);
-  if (header.format > SAVE_FORMAT) throw new Error(SAVE_NEWER);
-  return { header, track: raw.slice(8 + n) };
+  const track = raw.slice(8 + n);
+  if (isNewerSave(header, track)) throw new Error(SAVE_NEWER);
+  return { header, track };
+}
+
+/** T-3948, T-4014: whether a newer build wrote this save, so this one cannot read all of it: a newer header format, a
+ * level above this build's or a header field it does not know (`headerUnread`), or a newer network magic. Every read of
+ * a save passes here (`decodeSave`); the clock worker also refuses network bytes its track model finds left over
+ * (`TrackApi.save_unread`). Such a save never opens here, so nothing this build writes can drop what it holds. */
+export function isNewerSave(h: SaveHeader, track: Uint8Array): boolean {
+  return h.format > SAVE_FORMAT || headerUnread(h) || isNewerTrackFormat(track);
 }
 
 /** T-3395: what a strict read of a save finds: "intact" (it unpacks to its end with its checksum, its
@@ -434,10 +445,11 @@ export async function decodeSave(file: Uint8Array): Promise<{ header: SaveHeader
  * save, or one from a newer or retired version: kept as it is, never called damaged), or "unchecked"
  * (the check itself failed: the codec worker did not load, memory ran out; nothing is marked, try later). */
 export type SaveCheck = "intact" | "damaged" | "other" | "unchecked";
-let networkCheck: ((track: Uint8Array) => boolean) | null = null;
-/** T-3395: the clock worker's network decode (`TrackApi`). The main thread has no track model, so its check
- * is the gzip and the header, which is what a cut-short save fails. */
-export function setNetworkCheck(f: (track: Uint8Array) => boolean) { networkCheck = f; }
+type NetworkCheck = (track: Uint8Array) => "intact" | "damaged" | "other";
+let networkCheck: NetworkCheck | null = null;
+/** T-3395: the clock worker's network decode (`TrackApi`; T-4014: "other" for bytes it does not read). The main
+ * thread has no track model, so its check is the gzip and the header, which is what a cut-short save fails. */
+export function setNetworkCheck(f: NetworkCheck) { networkCheck = f; }
 export async function checkSave(bytes: Uint8Array): Promise<SaveCheck> {
   let track: Uint8Array;
   try {
@@ -447,10 +459,9 @@ export async function checkSave(bytes: Uint8Array): Promise<SaveCheck> {
     const why = errorText(err);
     return why === NOT_SAVE || why === SAVE_NEWER ? "other" : "unchecked";
   }
-  if (isNewerTrackFormat(track)) return "other";
   if (!networkCheck || isRetiredTrackFormat(track)) return "intact";
   try {
-    return networkCheck(track) ? "intact" : "damaged";
+    return networkCheck(track);
   } catch {
     return "unchecked"; // a trap in the decode (memory) says nothing about the bytes
   }

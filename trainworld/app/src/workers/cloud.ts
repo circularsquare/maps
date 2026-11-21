@@ -7,7 +7,7 @@
 // start menu before the worker starts, and downloads or deletes the account's other games.
 
 import { t } from "../i18n";
-import { backupBeforeReplace, changeCloudDeletes, checkSave, checkSlot, deleteSlot, markDamaged, rescueGood, leaseSlot, listSlots, readCloudDeletes, readStored, readSync, stampOrigins, writeSlot, writeSync, type GameMode, type SaveCheck, type SaveSlot, type StoredSave, type SyncRecord, type ThumbPanel } from "./saveFile";
+import { backupBeforeReplace, changeCloudDeletes, checkSave, checkSlot, deleteSlot, markDamaged, rescueGood, leaseSlot, listSlots, readCloudDeletes, readStored, readSync, SAVE_LEVEL, stampOrigins, writeSlot, writeSync, type GameMode, type SaveCheck, type SaveSlot, type StoredSave, type SyncRecord, type ThumbPanel } from "./saveFile";
 import { accountEditOf, assignOrigins, editOf, syncedEditOf, withoutForkTime } from "./versions";
 import { patientFetch, CLOUD_STALL_MS } from "./patientFetch";
 
@@ -23,6 +23,9 @@ export interface GameFacts {
   panels?: ThumbPanel[]; shade?: "light" | "dark";
   /** T-2037: the game's origin and its latest player change (versions.ts); the server stores facts unread */
   origin?: string; edit?: number;
+  /** T-4014: the save level of the build that sent it (`SAVE_LEVEL`), so an older build knows not to write over it
+   * even from a server that does not say (`AccountGame.level`) */
+  level?: number;
 }
 /** One of a game's account backups (newest first in `backups`): no picture or facts, only its bytes. */
 export interface AccountBackup { rev: number; savedAt: number; bytes: number; writer: string; /** T-3395 */ check?: string }
@@ -32,6 +35,8 @@ export interface AccountGame {
   /** T-3395 (a server with `trainworldSaveCheck`): the server's check of the current rev, absent for a rev
    * stored before it; and the newest rev that passed, kept whatever the backups do, absent when none has */
   check?: string; pinned?: AccountBackup;
+  /** T-4014 (a server that records it): the save level of the build that sent the current rev */
+  level?: number;
 }
 export interface AccountList { games: AccountGame[]; tombstones: { id: string; at: number }[]; used: number; limit: number; maxGames: number; /** T-3230: seconds the account has played; absent until the server says */ played?: number }
 
@@ -48,6 +53,8 @@ export const WHY_UNREACHABLE = "The server could not be reached"; // i18n-ignore
 export const WHY_FULL = "Your account is full. Delete a game to make room."; // i18n-ignore: stored with the slot; shown through whyText
 export const WHY_TOO_BIG = "This game is too big to keep on your account."; // i18n-ignore: stored with the slot; shown through whyText
 export const WHY_DAMAGED = "This copy is damaged, so your account kept the last good one"; // i18n-ignore: stored with the slot; shown through whyText
+/** T-4014: the account's copy was saved by a newer build, so this one does not write over it */
+export const WHY_NEWER = "The account has this game from a newer version"; // i18n-ignore: stored with the slot; shown through whyText
 
 /** A stored upload failure (one of the WHY_ texts above, or any other) as the page shows it. */
 export function whyText(why: string): string {
@@ -57,6 +64,7 @@ export function whyText(why: string): string {
     case WHY_FULL: return t("cloud.full");
     case WHY_TOO_BIG: return t("cloud.tooBig");
     case WHY_DAMAGED: return t("cloud.damaged");
+    case WHY_NEWER: return t("clockWorker.newer");
     default: return why;
   }
 }
@@ -117,6 +125,7 @@ export async function listGames(ctx: CloudContext): Promise<AccountList | null> 
   const a = await call(ctx, "GET", "trainworld/games");
   if (a.status === 200 && a.json) {
     const list = a.json as AccountList, owed = new Set(await owedDeletes(ctx));
+    for (const g of list.games) seeLevel(g.id, Math.max(g.level ?? 0, g.facts?.level ?? 0));
     return owed.size ? { ...list, games: list.games.filter((g) => !owed.has(g.id)) } : list;
   }
   listFailure = failure(a.status);
@@ -260,8 +269,17 @@ export const factsOf = (s: StoredSave): GameFacts => ({
 });
 
 /** "ok"; "elsewhere": another device has the game open; "failed": not sent (the record says why);
- * "skip": nothing to send (the slot went, or is not tied). */
-export type Upload = "ok" | "elsewhere" | "failed" | "skip";
+ * "newer": not sent, as the account's copy is a newer build's (T-4014; not tried again here); "skip": nothing to send
+ * (the slot went, or is not tied). */
+export type Upload = "ok" | "elsewhere" | "failed" | "newer" | "skip";
+
+/** T-4014: the account games whose copy a newer build saved (a level above `SAVE_LEVEL`), by id, as the last list or
+ * upload found them; this page's memory only, so the newer build a reload brings starts without them. Every upload
+ * checks it, and the server refuses such a write too (shonei-server `storeGameLocked`, "newer"). */
+const newerThere = new Set<string>();
+function seeLevel(id: string, level: number) {
+  if (level > SAVE_LEVEL) newerThere.add(id); else newerThere.delete(id);
+}
 
 /** T-3395: each slot's copy as last checked here (its `at` and size), so a copy is unpacked once */
 const checked = new Map<string, { at: number; size: number; check: SaveCheck }>();
@@ -289,6 +307,11 @@ export async function upload(ctx: CloudContext, key: string, force = false): Pro
       await writeSync(key, { ...rec, error: WHY_TOO_BIG });
       return "failed";
     }
+    // T-4014: whatever the conflict rules say (a save by hand, a fork's base), never over a newer build's copy
+    if (newerThere.has(rec.id)) {
+      if (rec.error !== WHY_NEWER) await writeSync(key, { ...rec, error: WHY_NEWER });
+      return "newer";
+    }
     // T-3395: checked here before anything is sent, whatever the server (one from before its check stores
     // what it is given): a damaged copy is marked and never sent; one that could not be checked waits
     const check = await checkCopy(key, stored);
@@ -301,7 +324,7 @@ export async function upload(ctx: CloudContext, key: string, force = false): Pro
     }
     const fd = new FormData();
     // i18n-ignore: a stored name or a developer diagnostic
-    fd.append("meta", JSON.stringify({ name: clip(stored.name || "Saved game"), facts: factsOf(stored), baseRev: rec.rev, device: ctx.device, force }));
+    fd.append("meta", JSON.stringify({ name: clip(stored.name || "Saved game"), facts: { ...factsOf(stored), level: SAVE_LEVEL }, baseRev: rec.rev, device: ctx.device, force, level: SAVE_LEVEL }));
     fd.append("save", new Blob([stored.bytes as BlobPart], { type: "application/octet-stream" }), "game.save");
     const pic = pictureOf(stored.thumb);
     if (pic) fd.append("picture", pic, "game.png");
@@ -320,8 +343,14 @@ export async function upload(ctx: CloudContext, key: string, force = false): Pro
       await checkSlot(key);
       return "failed";
     }
+    if (a.status === 409 && code === "newer") {
+      newerThere.add(rec.id);
+      await writeSync(key, { ...now, error: WHY_NEWER });
+      return "newer";
+    }
     if (a.status === 409 && code === "elsewhere") return "elsewhere";
-    if (a.status === 409 && code === "moved" && typeof a.json?.rev === "number") { await writeSync(key, { ...now, rev: a.json.rev }); continue; }
+    // sent again on the account's rev, unless (T-4014) a newer build saved that rev
+    if (a.status === 409 && code === "moved" && typeof a.json?.rev === "number") { await writeSync(key, { ...now, rev: a.json.rev }); await listGames(ctx); continue; }
     if (a.status === 410) { await writeSync(key, { ...now, id: newGameId(), rev: 0, syncedAt: 0 }); continue; }
     await writeSync(key, { ...now, error: failure(a.status) });
     return "failed";

@@ -1209,11 +1209,10 @@ This is separate from the refusal [T-1197], which judges a save by its zones and
   start menu, whose grey line says "Cut short could not be opened." once (a file, a
   backup or a viewed network: the reason alone), and the card's red line gives the reason until the game opens:
   "This save is damaged.", "This save could not be opened (<panic>).", or the device's out-of-memory line.
-- **A game saved by a newer version** [T-1826; architecture.md "Saves from a newer build"]: the
-  top bar and the callout say "This game was saved by a newer version. Reload the page to
-  update."; Save refuses with the same words (its hover too). Download's hover is "Download as a
-  file, as the newer version saved it" (the file as loaded); Make a copy's is "Make a copy to play
-  on here. The copy leaves out what only the newer version can read."
+- **A game saved by a newer version** [T-3948, T-4014; architecture.md "Saves from a newer build"]: it does not
+  open; the card's red line (and the start menu's line) is "This game was saved on a newer game version. Reload the
+  page to update." The same line is the card's red line and the account mark's hover when the account holds the game
+  from a newer version, so this build does not upload over it.
 - **Leave page?** [T-1826]: closing or reloading the page asks first (the browser's own question)
   only while a change the player made could not be saved: autosave off in this tab for any reason
   above, or a failed write.

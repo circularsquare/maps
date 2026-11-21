@@ -24,7 +24,7 @@ import { readOutlinesForPlaces } from "../map/coarseOutlines";
 import { canvasReadsTrue } from "../map/canvasRead";
 import { UPGRADE, UPGRADE_BITS } from "../game/upgrades";
 import { saveNetKey } from "./demandCache";
-import { currentZones, decodeSave, encodeSave, encodeSaveParts, refuseSaveBuffers, isThisWorld, isRetiredTrackFormat, isNewerTrackFormat, isNewerError, SAVE_NEWER, trackFrameKind, readStored, failReads, StorageReadError, SAVE_FORMAT, START_CASH, NEW_LINE_CARS, START_CLOCK, writeStored, listSlots, leaseSlot, ORIGINAL_SLOT, SAVE_DAMAGED, NO_CITIES, isDamagedError, unreadableKey, setNetworkCheck, markDamaged, rescueGood, BACKUP_STEPS, headerUnread, newGameName, slotName, backupSlot, takePending, sweepDeleted, WHOLE_PANEL, type NewGameSpec, type SlotSummary, type SaveHeader, cleanNewHeadways } from "./saveFile";
+import { currentZones, decodeSave, encodeSave, encodeSaveParts, refuseSaveBuffers, isThisWorld, isRetiredTrackFormat, isNewerError, SAVE_LEVEL, SAVE_NEWER, trackFrameKind, readStored, failReads, StorageReadError, SAVE_FORMAT, START_CASH, NEW_LINE_CARS, START_CLOCK, writeStored, listSlots, leaseSlot, ORIGINAL_SLOT, SAVE_DAMAGED, NO_CITIES, isDamagedError, unreadableKey, setNetworkCheck, markDamaged, rescueGood, BACKUP_STEPS, newGameName, slotName, backupSlot, takePending, sweepDeleted, WHOLE_PANEL, type NewGameSpec, type SlotSummary, type SaveHeader, cleanNewHeadways } from "./saveFile";
 import { lineProfile } from "./lineProfile";
 import type { EditOp, RouteAsk, ToClock } from "./protocol";
 import { stampAll } from "./cloud";
@@ -302,10 +302,9 @@ async function openSave(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
     : decoded.header);
   if (!isThisWorld(h)) throw new Error("This save is for another world.");
   if (isRetiredTrackFormat(track)) throw new Error("This save is from an older version of the game and no longer opens.");
-  // T-3948: before anything reads the network, which this build would take for a damaged one
-  if (isNewerTrackFormat(track)) throw new Error(SAVE_NEWER);
-  // T-1826: before any conversion, which would write only what this build read
-  const unread = !fresh && (headerUnread(decoded.header, TrackApi.save_level()) || TrackApi.save_unread(track) > 0);
+  // T-4014: a newer build's blocks or flag bits (`decodeSave` has refused its level, header and magic already); before
+  // any conversion or write, which would keep only what this build read
+  if (TrackApi.save_unread(track) > 0) throw new Error(SAVE_NEWER);
   let net = track, converted = false;
   if (trackFrameKind(track) !== NEW_GAME_FRAME.kind) {
     const c = TrackApi.convert_save_frame(track, frameKindNumber(NEW_GAME_FRAME.kind));
@@ -362,11 +361,9 @@ async function openSave(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   setMode(h.mode === "sandbox" ? "sandbox" : "normal");
   putLoan(mode === "sandbox" ? null : loanFromSave(h));
   putOpened(h.opened);
-  saves.newer = unread;
-  saves.newerFile = unread ? bytes : null;
   putConvertedOnLoad(converted);
   restart(h.clock, from);
-  return converted && !unread;
+  return converted;
 }
 
 /** A new game's clock (T-728): the first time from day 1 07:00 on the game clock at which it is
@@ -405,8 +402,6 @@ async function newGame(spec?: NewGameSpec) {
   }
   setNewGame(spec);
   putLoan(null);
-  saves.newer = false;
-  saves.newerFile = null;
   api!.load(emptyTrack!);
   api!.set_right_hand(spec?.rightHand ?? true);
   api!.set_cash(START_CASH);
@@ -537,8 +532,13 @@ async function processMessage(msg: ToClock) {
       const t0 = performance.now();
       putFreezeMemory((await initWasm(() => init(), "clock worker")).memory); // i18n-ignore
       if (msg.heapStep) set_heap_step(msg.heapStep);
-      // T-3395: the save check here also decodes the network (TWT4-6; anything else is left to the load)
-      setNetworkCheck((track) => !/^TWT[456]$/.test(new TextDecoder().decode(track.subarray(0, 4))) || TrackApi.save_stations(track).length >= 3);
+      // T-4014: a track model built from other sources than this page (a stale WASM build) would write saves the page
+      // refuses as newer, or label newer bytes as its own
+      if (TrackApi.save_level() !== SAVE_LEVEL) console.error(`T-4014: the track model's save level ${TrackApi.save_level()} is not the page's ${SAVE_LEVEL}; rebuild the WASM`); // i18n-ignore: console text
+      // T-3395: the save check here also decodes the network (TWT4-6; anything else is left to the load); T-4014: bytes
+      // its decoder leaves over are a newer build's, as the load finds them
+      setNetworkCheck((track) => !/^TWT[456]$/.test(new TextDecoder().decode(track.subarray(0, 4))) ? "intact"
+        : TrackApi.save_stations(track).length < 3 ? "damaged" : TrackApi.save_unread(track) > 0 ? "other" : "intact");
       const model = newModel();
       loadHolidays();
       putEmptyTrack(model.save());
@@ -634,7 +634,6 @@ async function processMessage(msg: ToClock) {
       if (stored) {
         try {
           if (await loadGame(stored.bytes, "autosave") && saves.activeLease) await saveConverted(saves.activeSlot, stored);
-          if (saves.newer) await publishSlots();
           return;
         } catch (err) {
           // T-2820: first, so a panic's stopped model is out of the way of everything below
@@ -650,7 +649,7 @@ async function processMessage(msg: ToClock) {
           // menu, holding no slot meanwhile
           letGoSlot();
           send({ kind: "openFailed", from: "slot", slot: key, name: slotName(key, stored), ...openFailReason(err, panicked, damaged ? SAVE_DAMAGED : loadFailKey(String(err))) });
-          if (panicked === null) console.error("last game did not load:", err);
+          if (panicked === null && !isNewerError(err)) console.error("last game did not load:", err);
           return;
         }
       }
@@ -768,11 +767,7 @@ async function whole(msg: Extract<ToClock, { kind: "import" | "export" | "newGam
   if (msg.kind === "export") {
     const day = Math.floor(gameNow() / 86400), share = msg.share ? { share: true as const } : {};
     try {
-      // T-1826: a newer game downloads as the newer build saved it, with everything this one cannot read
-      if (saves.newer && saves.newerFile) {
-        const bytes = saves.newerFile.slice();
-        send({ kind: "exported", bytes, day, ...share }, [bytes.buffer]);
-      } else if (msg.share) {
+      if (msg.share) {
         const bytes = await roomFor(saveBytes, true);
         send({ kind: "exported", bytes, day, ...share }, [bytes.buffer]);
       } else {

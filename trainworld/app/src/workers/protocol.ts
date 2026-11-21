@@ -1087,12 +1087,11 @@ export type FromClock =
   | { kind: "savedByHand"; at?: number; error?: string }
   /** T-1826: the player changed the game while nothing can write it (the page asks before closing) */
   | { kind: "unsaved"; on: boolean }
-  /** `backups`: the active slot's (T-744), newest first; `newer`: a newer build saved the game in
-   * hand, which is not written here (T-1826) */
+  /** `backups`: the active slot's (T-744), newest first */
   /** `viewing` (T-3257): the game in hand is a network viewed from Community, in no slot: its card, `key` "" */
   /** `game` (T-3734): the game `active` holds, as `loaded`'s `game`; during a load into another slot still the game
    * being left */
-  | { kind: "saveSlots"; slots: SaveSlot[]; active: string; game: number; writable: boolean; at: number; reason?: string; error?: string; backups: SlotBackup[]; newer?: boolean; viewing?: SaveSlot }
+  | { kind: "saveSlots"; slots: SaveSlot[]; active: string; game: number; writable: boolean; at: number; reason?: string; error?: string; backups: SlotBackup[]; viewing?: SaveSlot }
   | { kind: "error"; message: string }
   /** T-988: the server refused the session's token (the main thread signs out) */
   | { kind: "accountGone" }

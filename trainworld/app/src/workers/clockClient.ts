@@ -1394,7 +1394,7 @@ export class ClockClient {
         break;
       case "saveSlots": {
         const before = saveSlotsState.value;
-        saveSlotsState.value = { slots: msg.slots, active: msg.active, game: msg.game, writable: msg.writable, at: msg.at, reason: workerText(msg.reason), error: workerText(msg.error), backups: msg.backups, newer: msg.newer, viewing: msg.viewing };
+        saveSlotsState.value = { slots: msg.slots, active: msg.active, game: msg.game, writable: msg.writable, at: msg.at, reason: workerText(msg.reason), error: workerText(msg.error), backups: msg.backups, viewing: msg.viewing };
         lastSaved.value = msg.at;
         // T-3933: the slot a load that dies is opened again from: the one the game went into, once it is written
         if (this.loadedInto && msg.active === this.loadedInto && msg.slots.some((s) => s.key === msg.active && !s.unreadable)) noteLoadSlot(msg.active);

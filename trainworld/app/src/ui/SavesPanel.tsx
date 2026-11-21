@@ -21,7 +21,7 @@ import { accountConfig, accountOpen, accountState, cloudContext, session } from 
 import { accountList, accountOnly, addToAccount, cardOf, damagedAccount, deleteVersions, downloadAccountGame, downloadFailure, elsewhereAt, refreshAccountGames, restoreAccountBackup, restorePinned } from "../game/accountGames";
 import { estimateGB, gbText, overBudget } from "../game/memoryEstimate";
 import { useMemoryGuard } from "./MemoryWarn";
-import { tiedTo, whyText, WHY_DAMAGED, type CloudContext } from "../workers/cloud";
+import { tiedTo, whyText, WHY_DAMAGED, WHY_NEWER, type CloudContext } from "../workers/cloud";
 import { groupHeads, groupVersions, isLastGood, type GameGroup, type Version } from "../workers/versions";
 import { Icon } from "./widgets";
 import { startAtPicked } from "./locate";
@@ -112,7 +112,7 @@ export function SlotFacts({ slot, now, autosaved, mark, unsaved }: { slot: SaveS
     {!!slot.stations && <div class={"small num " + (overBudget(slot.stations) ? "memory-bad" : "muted")} data-tip={t("savesPanel.memoryTip", { gb: gbText(estimateGB(slot.stations)) })}>{t("savesPanel.memory", { gb: gbText(estimateGB(slot.stations)) })}</div>}
     {/* T-3395: the account refused this copy as damaged, or it failed to load as damaged; T-3773: or why it last
         failed to open here */}
-    {slot.cloud?.error === WHY_DAMAGED ? <div class="small bad save-damaged">{whyText(WHY_DAMAGED)}</div>
+    {slot.cloud?.error === WHY_DAMAGED || slot.cloud?.error === WHY_NEWER ? <div class="small bad save-damaged">{whyText(slot.cloud.error)}</div>
       : slot.damaged ? <div class="small bad save-damaged">{t("clockWorker.saveDamaged")}</div>
       : failed ? <div class="small bad save-damaged save-open-failed">{failed}</div> : null}
   </>;
@@ -148,7 +148,7 @@ function CloudMark({ slot, panel }: { slot: SaveSlot; panel?: boolean }) {
 function AccountMark({ slot, now }: { slot: SaveSlot; now: number }) {
   const ctx = useGamesOn(), c = slot.cloud;
   if (!ctx || !tiedTo(c, ctx) || c.gaveWay) return null;
-  const tip = c.error === WHY_DAMAGED ? whyText(c.error) : c.error ? t("savesPanel.notSyncedWhy", { why: c.error.replace(/([^.])$/, "$1.") }) : t("savesPanel.notSynced");
+  const tip = c.error === WHY_DAMAGED || c.error === WHY_NEWER ? whyText(c.error) : c.error ? t("savesPanel.notSyncedWhy", { why: c.error.replace(/([^.])$/, "$1.") }) : t("savesPanel.notSynced");
   if (c.error || !c.okAt) return <span class="save-cloud save-account warn" data-tip={tip}><Icon.cloudOff /></span>;
   return <span class="save-cloud save-account" data-tip={t("savesPanel.syncedAt", { time: atTime(c.okAt, now) })}><Icon.cloud /></span>;
 }
@@ -193,16 +193,15 @@ const openTip = () => t("savesPanel.openTip");
 /** A saved game's buttons, the foot of its card at the right (in line with its other versions). */
 function SlotActions({ slot, playing, writable, copying, onCopy, onDelete }: { slot: SaveSlot; playing: boolean; writable: boolean; copying: boolean; onCopy: () => void; onDelete: () => void }) {
   const [msg, setMsg] = useState("");
-  const newer = saveSlotsState.value.newer;
   const guard = useMemoryGuard(slot.stations);
-  const saveTip = writable ? t("savesPanel.saveTip") : newer ? t("savesPanel.saveNewer") : /another device/.test(saveSlotsState.value.reason ?? "") ? t("savesPanel.saveOtherDevice") : t("savesPanel.saveOtherTab");
+  const saveTip = writable ? t("savesPanel.saveTip") : /another device/.test(saveSlotsState.value.reason ?? "") ? t("savesPanel.saveOtherDevice") : t("savesPanel.saveOtherTab");
   return (<>
     <div class="save-actions">
       {msg && <span class="small bad">{msg}</span>}
       {playing ? <>
         <ShareButton />
         <button class="btn icon save-copy" data-tip={t("savesPanel.copyTip")} aria-label={t("savesPanel.copy")} disabled={copying} onClick={onCopy}><Icon.copy /></button>
-        <button class="btn icon save-download" data-tip={newer ? t("savesPanel.downloadNewer") : t("savesPanel.download")} aria-label={t("savesPanel.download")} onClick={exportGame}><Icon.download /></button>
+        <button class="btn icon save-download" data-tip={t("savesPanel.download")} aria-label={t("savesPanel.download")} onClick={exportGame}><Icon.download /></button>
         <button class="btn icon save-delete" data-tip={t("savesPanel.delete")} aria-label={t("savesPanel.delete")} onClick={onDelete}><Icon.bin /></button>
         <button class="btn text save-now" data-tip={saveTip} onClick={() => manageSaveSlot("save")}>{t("savesPanel.save")}</button>
       </> : <>

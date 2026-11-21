@@ -172,8 +172,13 @@ is best effort. The real NYC save stays the developer parity save (part 8, R10).
 
 ## What plays read-only
 
-- **In a new build**: as today, a save above the build's level, with an unknown block, or with flag bits or reserved
-  fields it does not know (T-1826). A converted old save is not read-only: it plays and saves as TWT7.
+Nothing, since T-4014 (2026-11-21): a save above the build's level, with an unknown block or header field, or with flag
+bits or reserved fields it does not know, is refused at open with "This game was saved on a newer game version. Reload
+the page to update.", its slot left as it is (docs/architecture.md "Saves from a newer build"), and an older build
+cannot upload over a newer account copy. tw/track's levels must stay above master's for this to hold. The read-only
+mode below was T-1826's.
+
+- **In a new build**: a converted old save plays and saves as TWT7.
 - **In an old build**: today a TWT7 save would fail outright. `trackFrameKind` (workers/saveFile.ts) treats any
   magic other than TWT6/TWT5 as the equirectangular frame, the conversion returns nothing and the decoder says "not
   a trainworld track save". It cannot play read-only, since it cannot decode. **Stage 1 fix on master (0.5-1 h):** a

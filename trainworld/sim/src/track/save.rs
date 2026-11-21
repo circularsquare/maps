@@ -96,9 +96,8 @@ use super::twin::Twin;
 /// node index and road heading as f32 bits; without it no station is.
 /// A trailing `LBQ1` block (T-3944, level 36) gives the constructed bus lines whose BRT lanes are in the blueprint
 /// (`BusRoute::brt_bp`): count, then line indexes; without it none is, and `LBR1`'s lines have theirs built.
-/// Level 37 (T-3378) adds no block: an edge's kind 4 in its flag bits 8-10 is a busway. An older build does not
-/// compare levels and ignores that kind field, so it loads the busway as ordinary rail track and the bus lines lose
-/// their busway timing (T-4014 is for older builds to refuse such a save).
+/// Level 37 (T-3378) adds no block: an edge's kind 4 in its flag bits 8-10 is a busway. An older build refuses the
+/// save by its level (T-4014; builds before that played it without writing it, T-1826).
 /// A trailing `LBO1` block (T-4013, level 38) gives the lines with boarding-only or getting-off-only stops
 /// (`LineData::only`): count, then per line its index, its count and per stop its place in the line's stops and
 /// its kind (1 boarding only, 2 getting off only); without it every stop lets riders on and off.
@@ -118,7 +117,8 @@ pub const BLOCKS: [&[u8; 4]; 41] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1",
 /// T-1826: the save level this build writes into the game header (`level`) and reads up to. Raised
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
-/// save even when it has nothing left over. Saves from before it have none, read as 0.
+/// save even when it has nothing left over, and refuses to open it (T-4014). Saves from before it have none, read
+/// as 0. The app keeps a copy (`SAVE_LEVEL`, app/src/workers/saveFile.ts; `the_app_knows_this_level`).
 pub const LEVEL: u32 = 38;
 /// T-3759: the last level from before stations could be unbound from their complex's name; a typed
 /// station there showed its own name, so loading one makes such a station unbound (the app's pass).
@@ -1799,6 +1799,13 @@ mod tests {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
         assert_eq!((LEVEL, BLOCKS.len()), (38, 41), "a new block raises LEVEL: raise it, then update this pin");
+    }
+
+    /// T-4014: the app refuses a save above its level without the track model, from its own copy of LEVEL.
+    #[test]
+    fn the_app_knows_this_level() {
+        let ts = include_str!("../../../app/src/workers/saveFile.ts");
+        assert!(ts.contains(&format!("export const SAVE_LEVEL = {LEVEL};")), "raise SAVE_LEVEL in app/src/workers/saveFile.ts to {LEVEL}");
     }
 
     /// T-2217: buildings come back as they were, in their order; a network without them encodes as

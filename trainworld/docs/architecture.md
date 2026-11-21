@@ -535,26 +535,34 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   (`LEVEL` in `sim/src/track/save.rs`, `TrackApi.save_level`; absent before T-1826, read as 0).
   It goes up by one with every new trailing block (listed in `save.rs` `BLOCKS`; a Rust test pins
   the level and the block count, so a block added without raising it fails), every new field inside
-  a header field (a fares setting, a ledger figure) and every new meaning of existing bytes. A new
-  top-level header field needs no raise: `headerUnread` (workers/saveFile.ts) treats a field missing
-  from `HEADER_FIELDS` as unread in any save with a level. A load counts a game as unread in part
-  when its level is above this build's, its header has an unknown field, or `TrackApi.save_unread`
-  finds network bytes left after the last block it knows (an unknown block stops the decoder, so
-  known blocks after it are unread too) or node or edge flag bits it does not know. Such a game
-  plays, but nothing writes its slot (autosave, Save, the frame conversion) or reaches the account
-  (no claim, no upload), so the device playing it in the newer build keeps it; the top bar and the
-  saves panel say "This game was saved by a newer version. Reload the page to update." A newer file
-  opened with Open a file (or a backup restored) is written to its new slot as it was loaded.
-  Download gives the file as loaded, with everything; Make a copy gives a slot of this build's
-  with the game as played here, without the parts it could not read, and autosaves from then on.
-  Saves without a level are judged by their network bytes alone (they can carry retired header
-  fields such as `points`), so every older save opens as before.
-  A save this build cannot decode at all does not play [T-3948]: a newer header `format`, or a
-  network magic past TWT6 (`TWT7` on, the track rework's; `isNewerTrackFormat` in
-  workers/saveFile.ts, `save::is_newer_magic` in the sim), checked before anything reads the
-  network. Its open fails with "This game was saved on a newer game version. Reload the page to
-  update." (`clockWorker.newer`), back to the start menu; its slot stays as it is, with no aside
-  copy and no damaged mark, and the save check calls it "other", so no good copy is rescued over it.
+  a header field (a fares setting, a ledger figure) and every new meaning of existing bytes. The app
+  keeps a copy, `SAVE_LEVEL` in workers/saveFile.ts (a Rust test pins it to `LEVEL`), so both
+  threads judge a save without the track model. A new top-level header field needs no raise:
+  `headerUnread` treats a field missing from `HEADER_FIELDS` as unread in any save with a level.
+  **A save from a newer build never opens** [T-3948, T-4014]: a newer header `format`, a level above
+  this build's, an unknown header field (in a save with a level), a network magic past TWT6 (`TWT7`
+  on, the track rework's; `isNewerTrackFormat`, `save::is_newer_magic` in the sim), all in
+  `isNewerSave`, which `decodeSave` applies to every read of a save (slot, file, backup, account
+  copy, the file picker's check; a Community share is refused as "version" by `sharedSave.ts` on
+  the same level and magic); and in the clock worker, before any conversion, network bytes
+  `TrackApi.save_unread` finds left over (an unknown block stops the decoder) or node or edge flag
+  bits it does not know. Its open fails with "This game was saved on a newer game version. Reload
+  the page to update." (`clockWorker.newer`), back to the start menu (an account copy pulled in
+  play: the game in hand is let go the same way, its slot unchanged). The slot stays byte for byte,
+  with no aside copy and no damaged mark, and the save check calls it "other", so no good copy is
+  rescued over it and nothing uploads it. So nothing this build writes can drop what a newer one
+  saved (busways read as rail, T-4014). Saves without a level are judged by their network bytes
+  alone (they can carry retired header fields such as `points`), so every older save opens as
+  before.
+- **Never over a newer account copy** [T-4014]: every upload sends this build's level (the PUT's
+  meta `level`, and the facts' `level`, which any build lists back). The server refuses a PUT from
+  a build whose level (else its save's header level) is below that of the build that sent the
+  current rev, whatever `force` says (409 `newer`; shonei-server docs/trainworld-api.md), and the
+  page refuses it first when the list has shown such a level (`newerThere` in workers/cloud.ts,
+  checked in `upload`, the one function that sends a save). The slot keeps the game and its card
+  and the account mark say "This game was saved on a newer game version. Reload the page to
+  update."; nothing is tried again until the page reloads. A fork (a new account game) still goes
+  up.
 - **Removed zones** [T-1053]: a save opens if its header names the registry's world (or none, as
   legacy New York files do); the zones it names need not all exist. The header's `cities` lists
   every zone registered when it was written, so a replan that merges or re-splits zones would

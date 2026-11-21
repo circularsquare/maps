@@ -1,14 +1,11 @@
 // T-1826: save safety. (1) A slot's backups reach back in four tiers (`planBackups` over two weeks of
 // simulated play, then live with `?backupMs=50`, which scales 10 min to 50 ms), and a slot replaced
-// from the account keeps its old version as a `pull` backup. (2) A save from a newer build (an extra
-// block after the known ones, or a higher `level`) opens with autosave off and the notice, its slot
-// left byte for byte through an edit and a minute and more of waiting, and Download gives the file as
-// loaded; a save without a level opens as before; Make a copy plays on in a slot of this build's.
-// (3) Closing the page asks first only while a change cannot be saved.
+// from the account keeps its old version as a `pull` backup. (2) T-4014: a save from a newer build (the
+// level one above this build's, an extra block after the known ones, an unknown header field) does not
+// open: the import answers the newer line, the game in hand plays on in its slot and no slot is added;
+// a save without a level opens as before. (3) Closing a normal tab does not ask.
 //   node trainworld/checks/t1826-saves.mjs [url]     (from the maps root; default localhost:6189)
 // Prints PASS or FAIL lines and exits 1 on a failure. About three minutes.
-import { createHash } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
 import { launchChrome, collectErrors, importSave, acrossLine, ANGLE } from './lib.mjs';
 
 const BASE = process.argv[2] ?? 'http://localhost:6189/';
@@ -16,7 +13,6 @@ const NEWER = 'This game was saved on a newer game version. Reload the page to u
 
 let failed = false;
 const report = (name, ok, detail) => { failed ||= !ok; console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}  ${detail}`); };
-const sha = (bytes) => createHash('sha256').update(Buffer.from(bytes)).digest('hex');
 const pause = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const { ctx, close } = await launchChrome({ prefix: 'tw-t1826-', size: [1300, 900], args: ANGLE, acceptDownloads: true });
@@ -32,7 +28,7 @@ try {
   };
   const state = (page) => page.evaluate(async () => {
     const s = (await import('/src/workers/clockClient.ts')).saveSlotsState.value;
-    return { active: s.active, writable: s.writable, newer: !!s.newer, reason: s.reason ?? '' };
+    return { active: s.active, writable: s.writable, reason: s.reason ?? '', slots: s.slots.length };
   });
   const hashOf = (page, key) => page.evaluate(async (key) => {
     const r = await (await import('/src/workers/saveFile.ts')).readStored(key);
@@ -47,24 +43,28 @@ try {
     await page.evaluate((base) => window.tw.client.post({ kind: 'edit', seq: 990000 + Math.round(base * 100), op: { op: 'fares', base, perKm: 0.1 } }), base);
     await page.waitForTimeout(1500);
   };
-  /** the active slot's save rewritten: `block` adds an unknown block after the network, `level` a
-   * higher level, `old` drops the level as saves before T-1826 had none */
+  /** the active slot's save rewritten: `block` adds an unknown block after the network, `level` the
+   * level one above this build's, `field` a header field this build does not know, `old` drops the level
+   * as saves before T-1826 had none */
   const craft = (page, key, kind) => page.evaluate(async ([key, kind]) => {
     const sf = await import('/src/workers/saveFile.ts');
     const { header, track } = await sf.decodeSave((await sf.readStored(key)).bytes);
     let t = track;
     if (kind === 'block') { t = new Uint8Array(track.length + 8); t.set(track); t.set([90, 90, 90, 49, 3, 1, 2, 3], track.length); }
     const h = { ...header };
-    if (kind === 'level') h.level = 99;
+    if (kind === 'level') h.level = sf.SAVE_LEVEL + 1;
+    if (kind === 'field') h.futureField = 1;
     if (kind === 'old') delete h.level;
     return Array.from(await sf.encodeSave(h, t));
   }, [key, kind]);
+  /** a file posted as Open a file does; the page's answer (the clock worker's `loaded` message) */
   const importInto = async (page, bytes) => {
     const was = (await state(page)).active;
+    await page.evaluate(() => { window.__t1826 = window.tw.client.lastLoad; });
     await importSave(page, Uint8Array.from(bytes));
-    await page.waitForFunction(async (was) => (await import('/src/workers/clockClient.ts')).saveSlotsState.value.active !== was, was, { timeout: 120000, polling: 300 });
-    await page.waitForTimeout(2500);
-    return state(page);
+    await page.waitForFunction(async (was) => (await import('/src/workers/clockClient.ts')).saveSlotsState.value.active !== was || (window.tw.client.lastLoad !== window.__t1826 && window.tw.client.lastLoad?.from === 'file'), was, { timeout: 120000, polling: 300 });
+    await page.waitForTimeout(1000);
+    return { ...await state(page), said: await page.evaluate((t) => document.body.innerText.includes(t), NEWER) };
   };
   /** close the page as a person would; the beforeunload dialog's type if one came */
   const closeAsked = async (page) => {
@@ -138,39 +138,27 @@ try {
   const c1 = await closeAsked(a);
   report('closing a normal tab does not ask', !askA && c1.type === null && c1.closed, `(asking ${askA}, dialog ${c1.type}, closed ${c1.closed})`);
 
-  // ---- 2. newer saves
+  // ---- 2. newer saves (T-4014): refused, the game in hand kept in its slot, nothing written
   const b = await open();
-  const base = (await state(b)).active;
-  const old = await importInto(b, await craft(b, base, 'old'));
-  report('a save without a level opens as before', !old.newer && old.writable, `(${JSON.stringify(old)})`);
-  const lev = await importInto(b, await craft(b, base, 'level'));
-  report('a higher level opens with autosave off', lev.newer && !lev.writable && lev.reason === NEWER, `(${JSON.stringify(lev)})`);
-  const file = await craft(b, base, 'block');
-  const nb = await importInto(b, file);
-  const kept = await hashOf(b, nb.active);
-  const notice = await b.locator('.save-notice span').first().textContent().catch(() => '');
-  report('an extra block opens with autosave off and the notice', nb.newer && !nb.writable && notice === NEWER && kept === sha(file),
-    `(${JSON.stringify(nb)}; top bar "${notice}"; slot as the file ${kept === sha(file)})`);
-  await fares(b, 3.4);
-  const askB = await asking(b);
-  await b.waitForTimeout(65000);
-  const after = await hashOf(b, nb.active), nbk = await backups(b, nb.active);
-  report('a minute after an edit the newer slot is as it was', after === sha(file) && nbk.length === 0 && askB, `(same bytes ${after === sha(file)}, backups ${nbk.length}, asking ${askB})`);
-  const [dl] = await Promise.all([b.waitForEvent('download'), b.evaluate(async () => (await import('/src/workers/clockClient.ts')).exportGame())]);
-  const got = await readFile(await dl.path());
-  report('Download gives the newer file as loaded', sha(got) === sha(file), `(${got.length} bytes, file ${file.length})`);
-  // ---- 3b. a change nothing can write: the page asks
-  const c2 = await closeAsked(b);
-  report('closing with an unsaved change asks', c2.type === 'beforeunload', `(dialog ${c2.type}, closed ${c2.closed})`);
-
-  // ---- 2b. Make a copy plays on in this build's slot; the newer slot is still as it was
-  const c = await open();
-  const reopened = await state(c);
-  await c.evaluate(async () => (await import('/src/workers/clockClient.ts')).manageSaveSlot('create', undefined, 'Copy check'));
-  await c.waitForTimeout(3000);
-  const copy = await state(c);
-  report('Make a copy autosaves in a slot of its own', reopened.newer && reopened.active === nb.active && !copy.newer && copy.writable && copy.active !== nb.active && await hashOf(c, nb.active) === sha(file),
-    `(reopened ${JSON.stringify(reopened)}; copy ${JSON.stringify(copy)})`);
+  const old = await importInto(b, await craft(b, (await state(b)).active, 'old'));
+  report('a save without a level opens as before', !old.said && old.writable, `(${JSON.stringify(old)})`);
+  const base = old.active;
+  // the game in hand still autosaves; what matters is that its slot holds this build's game, not the newer file
+  const own = (key) => b.evaluate(async (key) => {
+    const sf = await import('/src/workers/saveFile.ts');
+    const { header } = await sf.decodeSave((await sf.readStored(key)).bytes);
+    return header.level === sf.SAVE_LEVEL && !('futureField' in header);
+  }, key);
+  for (const kind of ['level', 'block', 'field']) {
+    const file = await craft(b, base, kind);
+    const r = await importInto(b, file);
+    const ownGame = await own(base), notFile = await hashOf(b, base) !== await b.evaluate(async (bytes) => [...new Uint8Array(await crypto.subtle.digest('SHA-256', Uint8Array.from(bytes)))].map((x) => x.toString(16).padStart(2, '0')).join(''), file);
+    report(`a newer save (${kind}) does not open`, r.said && r.active === base && r.slots === old.slots && r.writable && ownGame && notFile,
+      `(${JSON.stringify(r)}; slot still this build's ${ownGame}, not the file ${notFile})`);
+  }
+  // the save check calls such a save "other" (never damaged, never a good copy)
+  const checks = await b.evaluate(async (bytes) => (await import('/src/workers/saveFile.ts')).checkSave(Uint8Array.from(bytes)), await craft(b, base, 'level'));
+  report('the save check calls a newer level "other"', checks === 'other', `(${checks})`);
 
   report('no page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 } finally {
