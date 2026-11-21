@@ -20,6 +20,10 @@ BROKEN = {
     't2407-blocks.mjs': 'fails its movement and distance lines; old unsheeted layout (T-3697)',
     't2162-diagram-names.mjs': 'fails its time limits on nyc and tyo, tyo misses one interchange name (T-3697)',
 }
+# retired checks (moved to checks/old/): name -> why, written at the end of INDEX.md
+RETIRED = {
+    't3137-lanes-parity.mjs (+ t3137-parity-digest.json)': 'T-3904: compared the lanes model with a frozen pre-lanes baseline (master a5d6a81a, 2026-11-11) to prove the refactor changed nothing. 13 sections now differ (capacity rows have 5 lanes where the baseline has 3, guard pairs, junction inspectors, lines figures), from later sim work on purpose, so it can only be rebaselined into a snapshot that fails on every sim change. Its job was the stage gate; t3137-single-join, t3137-way-switch and t3297-mirror keep guarding the behaviour. The lanes_parity bin stays (t3297-mirror uses it)',
+}
 # helpers a check imports, or data a check reads: not checks themselves
 HELPERS = {'t2407-draw.py', 't1177-data.mjs', 't1966-layout.mjs', 'lib.mjs', 'static-serve.mjs', 'token_usage.py'}
 FIRST_LINE = {}  # file -> text, for files with no header comment
@@ -120,5 +124,5 @@ BROKEN means it fails or cannot finish as it stands. `old/` holds {n_old} retire
 Generated {datetime.now():%Y-%m-%d}; {len(rows)} files; {sum(1 for f in files if f in in_smoke)} in smoke.
 
 """
-open(os.path.join(CH, 'INDEX.md'), 'w', encoding='utf-8', newline='\n').write(head + '\n'.join(rows) + '\n')
+open(os.path.join(CH, 'INDEX.md'), 'w', encoding='utf-8', newline='\n').write(head + '\n'.join(rows) + '\n' + ('\nRetired (in old/):\n' + '\n'.join(f'- {k}: {v}' for k, v in RETIRED.items()) + '\n' if RETIRED else ''))
 print(len(rows), 'files,', sum(runs.values()), 'runs counted ->', os.path.join(CH, 'INDEX.md'))

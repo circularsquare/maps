@@ -19,7 +19,7 @@ tests natively.
   exports are split by area into `wasm/money.rs`, `edits.rs`, `draw.rs` (routes beside track: `beside.rs`; real flyovers at the junctions a route makes: `flyover.rs`, T-3092), `crossings.rs`, `links.rs` (`rebuild.rs`: the level, track-type and track-count planner and rebuilding built track in place, rail to tram and back, single to double and back, T-3059, T-3087, T-3088, T-3296, T-3321),
   `lines.rs` (the gap a stop cannot cross: `gap.rs`, T-1896), `snapshot.rs`, `service.rs` and `upgrades.rs`, the shared helpers staying in `wasm.rs`). In the default build.
   `cargo run --release --bin track_bench` times edits on a synthetic 2,000 km network;
-  `--bin lanes_parity -- <track bytes | game | game-left | mirror-right | mirror-left> <out>` fingerprints what the lanes and move tables decide (paths, routes, badges, junction inspectors, the train guard's pairs, capacity, the lines' figures), run and compared with a baseline by `checks/t3137-lanes-parity.mjs` (T-3137); `mirror-left` is `mirror-right` (the small game without quad) laid mirrored and keeping left, compared by `checks/t3297-mirror.mjs` (T-3297);
+  `--bin lanes_parity -- <track bytes | game | game-left | mirror-right | mirror-left> <out>` fingerprints what the lanes and move tables decide (paths, routes, badges, junction inspectors, the train guard's pairs, capacity, the lines' figures), once compared with a baseline by `checks/old/t3137-lanes-parity.mjs` (retired, T-3904); `mirror-left` is `mirror-right` (the small game without quad) laid mirrored and keeping left, compared by `checks/t3297-mirror.mjs` (T-3297);
   `--bin edit_bench -- <track bytes>` times headway and count edits on a real save's network (T-1283; `TW_DUMP=<file>` writes `lines_info` at load, after the edits and after a save and reload, T-1787; `TW_LINES=<file>` a table of each line's rates, round trips, delays and trains at load, to compare two builds, T-1924);
   `--bin branch_bench -- <track bytes>` times the drawing tool's previews of branches off it (and with `TW_ADD=1` placing them, T-1779);
   `--bin boarding_bench -- <track bytes>` times the boarding account's steps on made-up riders (T-2699; `TW_DUMP=<file>` writes every line's account readouts, to compare two builds).
@@ -399,7 +399,7 @@ Scripts for the orchestrator's builds are here too: `snapbuild.cmd <hash>` and `
 
 - Playwright checks: a `page.evaluate` that moves the map must return nothing (`() => void window.tw.map.jumpTo(...)`): MapLibre's `jumpTo` returns the map, and Playwright serialising it is 1-2 s of main thread that reads as lag (T-1052).
 - `lib.mjs` is the shared plumbing (Playwright, headless Chrome); `lib/play.mjs` plays the game by pointer (how-to at its top) and `lib/reads.mjs` reads panels. `play.mjs` keeps one game open per Vite port for probes (`start`, `do`, `sim`, `edits`, `reload`, `stop`); `wait.mjs` waits for a line in a log.
-- `t3137-lanes-parity.mjs [--write]` fingerprints what the lanes and move tables decide against a baseline (`t3137-parity-digest.json`; text in `artifacts/trainworld/t3137-parity/`); rerun it after any change to lanes, moves, routing or junction capacity, and write a new baseline when a change meant to alter them is reviewed. `t3297-mirror.mjs` does the same for a left-hand game against its mirror (about 4 minutes).
+- `t3297-mirror.mjs` compares a left-hand game with its mirror (rerun it after any change to lanes, moves, routing or junction capacity) (about 4 minutes).
 
 ## pipeline/: city packs (Python)
 
