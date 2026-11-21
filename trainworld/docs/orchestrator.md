@@ -117,7 +117,9 @@ master as its own commit once its builder's tests and one in-game run pass, then
 before the next 8800 rebuild: a fresh Sonnet agent given each change's Goal and the batch's diff, not the builders'
 reports, that tries to break the changes in the running game, how they interact included; one round, pass or fail
 with evidence per change. A failure is fixed on master by a fix agent, or that one commit is reverted if the fix is
-big; 8800 and publishing wait until the batch passes. Two kinds still get their own checker before landing: anything
+big; publishing waits until the batch passes. 8800 does not wait (her call 11-21: rebuild it right after the batch
+lands, so she plays while the checker runs); when the batch raises the save level, tell her a save made there may not
+load if that change is reverted. Two kinds still get their own checker before landing: anything
 that could stop an existing save loading or lose data, and sim-core changes other agents build on (undo, the solve,
 edits). Labels, text, docs, CSS and small UI skip checking (the agent's own screenshot plus your look is enough).
 Concise checkers: the brief names the 3-5 riskiest cases per change, reuses existing checks and fixtures before

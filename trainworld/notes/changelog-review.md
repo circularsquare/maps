@@ -32,3 +32,36 @@ Reworded:
 
 Areas: all items have one.
 Proposed highlights: c021, c011, c015, c020, c005, c013
+
+## 2026-11-20, before next publish
+
+Ids restarted again; this is a new numbering. Reviewed: all shown items c001-c027 (c001, c002, c003, c007, c009, c010, c014, c016, c018, c025 are Anita's edits, kept without judging; c005 and c006 were already hidden).
+
+Hidden:
+- c023: calculating trips bar restarting during a long calculation (minor progress bar glitch)
+- c015: panning the schematic so far that nothing showed (rare)
+- c013: trip routes and gap flash off place on very large screens (rare)
+- c012: schematic drawing indicator going away early (minor)
+
+Kept (judged): c027, c026, c024, c022, c021, c020, c019, c017, c011, c008, c004.
+
+Reworded: none.
+
+## 2026-11-20, second pass (c028-c058)
+
+Reviewed: shown items c028-c058 not covered above (Anita's "(edited)" items kept, no merging needed; c053, c047, c046, c035, c031 were already hidden).
+
+Hidden:
+- c054: bus tool shows each stretch's speed (tooltip-like detail)
+- c045: default timetable for new long ferry lines (fiddly)
+- c043: undo not restoring other lines' trains (rare edge)
+- c038: station ghost turning red briefly (minor)
+- c029: trains bought by adding a stop not counted in a region in the money panel (minor)
+- c056: train lines accepting ferry ports as stops (obscure)
+
+Reworded (reword marks them edited):
+- c058: "added a BRT upgrade for bus lines: bus lanes so its buses run at least 35 km/h, paid for only where the route is in town" -> "added a BRT upgrade for bus lines: bus lanes make its buses run at least 35 km/h, paid for only where the route is in town"
+- c057: "... on trunk roads and motorways at most 1.4x their street speed" -> "... on trunk roads and motorways in town at most 1.4x their street speed"
+
+Sorted by area (track, demand, scheduling, fares, schematic, community, other), features before fixes, hidden last.
+Highlights: c037 (tram joins rail), c051 (plain buses), c014 (timetable zoom), c010 (schematic cities list), c022 (new countries), c048 (small and large ferries), c058 (BRT).

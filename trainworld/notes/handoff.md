@@ -1,30 +1,37 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session 42f60d91-99e9-4080-b7fd-474719494b56, name maps-23 [c7b80c], since 2026-11-20 22:27 UTC
-Updated: 2026-11-20 23:10 UTC
+Orchestrator: session 4feb4373-1fa9-4b66-9592-396d40896c0a, name maps-a3 [ede33a], since 2026-11-21 03:24 UTC
+Updated: 2026-11-21 04:20 UTC (v0.4.5 published)
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5. She is home, at this tab.
 
 ## Next
-0. Live v0.4.4. Cap 10 (her 11-20 ~23:55 UTC, "til i say"; was 14). 8800 = 5b081c76; master a3fd2234 (T-3900) unpushed. Adopted from maps-65 (reports via
-   inbox): plainbus, islands2, fast856 (T-3896 P1). walkab: walkfix fixed (cluster views dropped stairs flags),
-   walkabchk round 2 running, then land + checks_index.py; then T-3903 (P1, trams dropped the same way). fullrate:
-   fullratechk2 running; land T-3646 on pass, drop T-3655's taking mark. ferrytypes: ferrychk running; save level
-   33 needs shonei-server savecheck before publish; commute fans next (T-3892 rest). Large ferry profit OK (her).
-   T-3901 waits plainbus. codehealth T-3902 survey running (she said let it finish).
-1. Evening update, maybe tomorrow (her call, needs her playtest). Publish skill (sort, highlights, playtest list,
-   translations incl. T-3822/3823 hovers + addCity + today's strings, zones image for PK/BD, smoke8800). Server
-   first, her yes: shonei-server 2754ba1, fd294e7, 43360be, 39e1bd2, c0cc982 (save level 33, LFB1; not pushed). After publish: PR 24 reply (notes/T-3659.md, her OK), open-source
-   sync, then land binzip (T-2486, tree ready, checker's fixes in).
-2. Frozen set (her 22:10 UTC), all mine, trees, checker before landing: plainbus T-3856 + reach 600 (compute cost
-   >15% = numbers to her); walkab T-3888 option 4; ferrytypes T-3892; tram75 T-3895 (Sonnet, no checker);
-   islands2 T-2216 st2. Then one frontier chart remake (T-3887, her layout and the uniform made-up city in the
-   task). T-3655 open (cause traced, notes).
-3. Later: T-3378 BRT design to her; T-1183 (after fullrate); demandClient/demand.worker splits (T-2374) and
-   T-2843 demand health after binzip; T-3894. Cleanup plan: notes/review-cleanup-2026-11-20.md.
-4. T-3395: run `tools/ops/save_health.py` after the 11-21 04:00 UTC scan; clean = close it.
+0. LIVE v0.4.5 (published 11-21 ~04:15 UTC: R2 2026-11-20, website 655e0b3, verify --page PASS; server 22c4a16
+   deployed + pushed; open-source synced 50f7b15 + pushed; maps master pushed 936a6a55). Upload pause over (she
+   pre-approved the deploy and publish). Cap 10. Batches 1-4 PASSED (notes/batch-2026-11-21.md).
+   After the release: farecols landed e496074b (T-3915; changelog c001; 2 strings need translating next release:
+   moneyTab.brtFare, moneyTab.brtFareTip); batchchk5 checking it; 8800 rebuilding at e496074b.
+1. PR 24 reply: drafted in scratchpad/pr24-reply.md (her OK'd text, last line now "It's in the update that went
+   out today (v0.4.5), and in this repo as of 50f7b15"); posting was refused by the permission classifier: ask her
+   to post it or allow it. Then close the PR with a link. Next: land binzip (T-2486; three unread reports, its
+   check failed narrowly then fixed), frontier results (T-3887, three unread reports, still "taking").
+2. OVERNIGHT 11-21 (she went to bed ~05:00 UTC). Her 11-21 ~04:50: "finish BRT / busways ... allow building busways
+   off road for high expense, sorta like trams off road"; "lag complaints are picking up. lots of people have 2000
+   station saves ... memory / demand solve speed tasks"; "code cleanup would also be good"; "making full use of our
+   resources overnight". Running: tramerr (T-3909, tree tramerr), chkfix (T-3904, tree chkfix), binzipchk2,
+   busdesign (T-3378 design only -> review/brt-design.md for her; design waits for her before build), lagsurvey
+   (T-3917, ranks big-save costs). Queue as cores free: T-1183 cleanup (Sonnet), T-3373 B (memory, she chose B
+   11-16; plan + stage 1), whatever lagsurvey ranks top, T-3916, T-3655; land binzip if PASS (no publish). No publish/deploy/website
+   overnight. 8800 = e496074b (fares panel). Then small next: T-3909 (errands may treat trams as trains), T-3916, T-3908, T-3913, T-3904, T-3655. Later: T-3378
+   BRT corridors; T-1183; T-2374 demand splits and T-2843 after binzip; T-3894.
+4. T-3395: run `tools/ops/save_health.py` after the next scan; clean = close it. At 04:30 UTC 11-21 there was no
+   11-21 report yet (the server restarted 03:59 for the deploy, which may have moved the scan); 11-20's pass found 0.
 
 ## Her words
+- 11-21 ~02:20 UTC, playtesting plain buses on 8800 (Houston): "buses feel really easy ... mostly profitable ... 10%
+  of people taking the bus ... 90% driving. which feels pretty realistic"; wants the 25 km/h floor; likes the tags.
+  Bus speeds set 11-21: plain floor 25, BRT +10, fast roads 1.4x street; BRT charged in town only; open-country
+  main roads keep 75 (OK'd). ~02:45 UTC: "all text ack"; boarding 2+2 at every station (T-3910, her call).
 - 11-20 ~22:10 UTC: "lets freeze the set of proposed changes here for now, and test with these"; chart remake
   after: no separate street tram, half the trip lengths, 2 more stop spacings at the high end, add HSR; ~22:20:
   a made-up uniform city run as a model, not Chicago in the sim.
@@ -33,21 +40,18 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
   them slower); trams to 75.
 - 11-20 ~21:00 UTC: ferry types, a fare multiplier per type; fans slightly up, all purposes, half for
   work/medical/airport. T-3889 string "Trains can't run on tram track." (landed).
-- 11-20 ~20:10 UTC: likes the bus stop look. Edit speed paused (T-3550, T-3804 P4) "until people complain again".
 - 11-20 ~19:45 UTC: out ~5 h (back ~00:45 UTC), remote control here only, can't playtest; after a handoff the old
   tab relays her messages. "if you find idle resources / compute ... please pick up additional tasks ... mostly
   self contained and can be done without too much input."
-- 11-20 ~19:15 UTC: "trams can go on train track but trains cannot path onto tram track" (T-3889, landed).
-- 11-20 15:20 UTC: cleanup tasks, then "full track rework" (T-3444 design talk).
-- 11-20 ~17:45 UTC: PR 24 reply (notes/T-3659.md) "looks good": post it after the open-source sync.
-- 11-20 ~14:00 UTC: no minor track work (T-3662, T-3353 wait on the rework design). 400 km per ferry leg stays.
+- 11-20: cleanup, then "full track rework" (T-3444 talk); no minor track work till then; 400 km ferry legs stay;
+  PR 24 reply (notes/T-3659.md) "looks good": post it after the open-source sync.
 - 11-19: "player complaints take precedent over other new features"; full playtest list before every publish.
 - When she plays games: no uploads until she says she's done; she may ask for a lower core cap.
 - Standing: lean testing, smoke per batch; long jobs in the background, answer her first; every publish, deploy and
   push to the website needs her yes in this tab, none overnight; advisor trial (log calls in handoff-log).
 
 ## Waiting on her (asks.py list has the open ones)
-- She sends the T-3635 player reply herself. Text acks: T-3890's four strings, T-3889's station-rule line.
+- She sends the T-3635 player reply herself.
 
 ## Only a person knows
 - Uncommitted on purpose: TODO.md (hers), notes/T-3397.md, jordan-save-investigation-2026-11-15.md,

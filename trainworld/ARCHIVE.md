@@ -1,6 +1,19 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2486 [P2] {L:loading} Compress .bin files to cut download size (2026-11-20): packzip at publish (0.52 of raw on 62 zones, market-drives 17 to 10 MB); fetchRange inflates per member; guards for mismatched header and bin; deploy --resume refuses, --verify checks; two checks passed. notes/T-2486.md.
+- T-3915 [P2] {L:fares} Advanced fares in two columns, rows only for what exists (2026-11-20): Fares.brt (default 1.00) for BRT rides; rows only for what exists in Advanced fares and the Money tab; two columns with a ferry at 480 px+; shared fare key list; no save change. notes/T-3915.md.
+- T-3906 [P1] {L:buses} Plain bus speed floor at 20 or 25 km/h (2026-11-20): measured only: plain floor 25 km/h is reasonable and leaves room for BRT at 35; floor 25 shipped in T-3907. notes/T-3906.md.
+- T-3892 [P2] {L:buses} Ferry fans on commutes (2026-11-20): commute fans in mode choice and assignment (kernel/fans.rs); no-ferry solve bit-identical; asianita ferries +1%; solve time unchanged. notes/T-3892.md.
+- T-3914 [P2] {L:map-look} Ramp-end lines for tram track (2026-11-20): tram and HSR widths in rampEndSizes; tram edges no longer skipped.
+- T-3907 [P1] {L:buses} Preliminary BRT as a speed upgrade per bus line (2026-11-20): BRT checkbox, floor 25+10, trunk cap 1.4x in town, /km and street-tram upkeep in town only, save level 34 LBR1; in-town hint colour split to T-3913. notes/T-3907.md.
+- T-3912 [P2] {L:buses} Extend a ferry route from its other end (2026-11-20): PortStop refusal in TrackWorld::check (edits only; old saves load as they were); ferry tool head flip on shift click. notes/T-3912.md.
+- T-3911 [P2] {L:buses} Train line stop editing accepts ferry ports (2026-11-20): PortStop refusal in TrackWorld::check (edits only; old saves load as they were); ferry tool head flip on shift click. notes/T-3912.md.
+- T-3910 [P1] {L:route-choice} Boarding cost at every train and tram station (2026-11-20): STAIRS_AT_GRADE switch; every train/tram end pays 2; NYC shipped save rail -1.56%; explorer term renamed boarding. notes/T-3910.md.
+- T-3901 [P2] {L:buses} Bus speeds shown while placing a waypoint (2026-11-20): Pace::speed_runs feeds the preview; track tool's tag reused in the road hint's colours. notes/T-3901.md.
+- T-3856 [P2] {L:buses} Plain buses with no boarding cost (2026-11-20): boarding cost gone, 85%, reach 600 (no measurable compute cost), .1M/km, fare 0.8x; buses win short thin trips; merged with T-3888 by busmerge. notes/T-3856.md.
+- T-3903 [P1] {L:trams} Demand treats trams as trains in every game (2026-11-20): tram flag sliced into cluster and reach views via SLICED table; NetInputs::check errors on wrong lengths; t3903-view-fields check. notes/T-3903.md.
+- T-3905 [P2] {L:schematic} Station names cut at a slash in the schematic (2026-11-20): pickName no longer cut at '/'; splitName wraps at a slash. notes/T-3905.md.
 - T-3896 [P1] {L:track-speed} Fastest train reads 856 km/h on a 160 km/h stretch (2026-11-20): retime now notes changed lines; guard rereads all tables on a length mismatch; Rust test + t1382 tokyo. notes/T-3896.md.
 - T-3888 [P2] {L:route-choice} Walk tiers, people who won't walk far (2026-11-20): option 4 built; cluster views now carry the stairs flags (walkfix); checker PASS round 2; NYC shipped save rail +4.4%. notes/T-3888.md.
 - T-3646 [P2] {L:timetables} Undo leaves other lines' trains cut (2026-11-20): history entries keep before/after line state; exact restore without a settle; cap lowering stays through undo; checkers PASS (2 rounds) notes/T-3646.md.

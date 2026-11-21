@@ -1,0 +1,63 @@
+diff --git a/trainworld/sim/src/track/bus.rs b/trainworld/sim/src/track/bus.rs
+index 0abe861d..17247de0 100644
+--- a/trainworld/sim/src/track/bus.rs
++++ b/trainworld/sim/src/track/bus.rs
+@@ -742,12 +742,17 @@ impl Pace {
+ }
+ 
+ fn street_bus_kmh(car: f64, trunk: bool) -> f64 {
+-    bus_kmh(if trunk { car.max(CAR_TRUNK_KMH) } else { car })
++    if trunk { trunk_bus_kmh(car) } else { bus_kmh(car) }
++}
++
++/// T-3906 measurement: a trunk road's bus speed, at most 1.5x the plain bus's street speed at that place.
++fn trunk_bus_kmh(street_car: f64) -> f64 {
++    bus_kmh(CAR_TRUNK_KMH).min(1.5 * bus_kmh(street_car))
+ }
+ 
+ fn main_bus_kmh(car: f64, trunk: bool) -> f64 {
+     let main = car_main_kmh(car);
+-    bus_kmh(if trunk { main.max(CAR_TRUNK_KMH) } else { main })
++    if trunk { trunk_bus_kmh(car) } else { bus_kmh(main) }
+ }
+ 
+ /// A bus's trip on automatic stops at road offsets `stop_s` (ascending), standing `dwell[i]` at each
+diff --git a/trainworld/sim/src/track/streets.rs b/trainworld/sim/src/track/streets.rs
+index 719104d7..2627abdc 100644
+--- a/trainworld/sim/src/track/streets.rs
++++ b/trainworld/sim/src/track/streets.rs
+@@ -34,7 +34,7 @@ pub const BUS_SHARE: f64 = 0.85;
+ /// Seconds each stop costs a bus: 20 standing, 8 speeding up and slowing down.
+ pub const BUS_STOP_S: f64 = 28.0;
+ /// The least a bus's moving speed falls to, km/h: its own lane, so the car's traffic does not hold it.
+-pub const BUS_LANE_KMH: f64 = 30.0;
++pub const BUS_LANE_KMH: f64 = 35.0;
+ /// The car on a trunk road, whatever the density and however short the bus's hop, km/h.
+ pub const CAR_TRUNK_KMH: f64 = CAR_FAR_KMH;
+ 
+diff --git a/trainworld/tools/frontier.js b/trainworld/tools/frontier.js
+index 55134795..6e011b9f 100644
+--- a/trainworld/tools/frontier.js
++++ b/trainworld/tools/frontier.js
+@@ -35,7 +35,7 @@ const FRONTIER = {
+         const route = [];
+         spec.path.forEach(([lng, lat], k) => {
+           const p = tw.lngLatToPack(lng, lat);
+-          const kind = (k === 0 || k === spec.path.length - 1 ? 1 : 0) | (k > 0 ? 2 : 0);
++          const kind = (k === 0 || k === spec.path.length - 1 ? 1 : 0) | (k > 0 ? 2 : 0) | (k > 0 && spec.trunk ? 4 : 0);
+           route.push(p.x, p.y, kind);
+         });
+         const a = await step('bus line', { op: 'addBusLine', route, name: spec.name, colour: '#c0392b' });
+diff --git a/trainworld/tools/frontier.py b/trainworld/tools/frontier.py
+index c5bf16f4..21dbf3cf 100644
+--- a/trainworld/tools/frontier.py
++++ b/trainworld/tools/frontier.py
+@@ -151,6 +151,8 @@ def play(*args, timeout=200):
+ 
+ def page_call(port, call, arg):
+     os.makedirs(SCRATCH, exist_ok=True)
++    if os.environ.get("TW_TRUNK") and call == "build":
++        arg = {**arg, "trunk": True}
+     f = os.path.join(SCRATCH, f"call-{port}.js")
+     with open(PAGE_LIB, encoding="utf-8") as src, open(f, "w", encoding="utf-8") as out:
+         out.write(src.read() + f"\nreturn await FRONTIER.{call}({json.dumps(arg)});\n")
