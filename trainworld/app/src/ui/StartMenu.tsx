@@ -57,6 +57,8 @@ export function choiceFromUrl(): GameChoice | null {
   if (slot || load || next) {
     const u = new URL(location.href);
     for (const k of CHOICE_PARAMS) u.searchParams.delete(k);
+    // T-4002: a viewed network's pause is for its opening only (main.ts read it already)
+    if (load) u.searchParams.delete("paused");
     history.replaceState(history.state, "", u.href);
   }
   if (slot) return { slot };

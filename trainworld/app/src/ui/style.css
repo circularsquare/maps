@@ -1646,6 +1646,7 @@ button.save-add:hover { color: var(--text); }
 .touch-handle::after { content: ""; position: absolute; left: 15px; top: 15px; width: 10px; height: 10px; border-radius: 50%;
   background: #fff; border: 2px solid var(--net-ink); }
 .stn-label.plan { opacity: 0.6; }
+html.no-blueprints .stn-label.plan { display: none; }
 .track-modes .group { display: grid; grid-template-columns: 1fr 1fr; }
 .track-modes .btn { white-space: normal; height: auto; min-height: 40px; line-height: 1.35; padding: 4px 6px; }
 .cap-marks { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }

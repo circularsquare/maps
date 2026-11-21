@@ -12,10 +12,10 @@ import { ask, display, setDisplay, shade, SHADE_NAMES, theme, THEMES, UI_SCALES,
 import { moneyState } from "../game/money";
 import type { BubbleScheme } from "../game/palette";
 import { DETAIL_RANGE } from "../map/demandOverlay";
-import { makeSandbox, saveGuide } from "../workers/clockClient";
+import { makeSandbox, saveGuide, saveSlotsState } from "../workers/clockClient";
 import { mobileDevice } from "../workers/deviceMemory";
 import { Check, Icon, LevelToggles, Segmented, ShapePicker, Stepper } from "./widgets";
-import { hiddenLevels, hideBuses, showAllLevels, toggleLevel } from "../game/lineVisibility";
+import { hiddenLevels, hideBlueprints, hideBlueprintsView, hideBuses, showAllLevels, toggleLevel } from "../game/lineVisibility";
 import { SHAPE_MODES } from "../game/lineShape";
 import type { Vehicle } from "../game/vehicle";
 import { Credits } from "./Credits";
@@ -164,6 +164,10 @@ export function SettingsTab() {
       <div class="checks">
         <Check checked={!hideBuses.value} onChange={(v) => (hideBuses.value = !v)}>
           {t("settingsTab.busesFerries")}
+        </Check>
+        <Check checked={!(saveSlotsState.value.viewing ? hideBlueprintsView : hideBlueprints).value}
+          onChange={(v) => ((saveSlotsState.peek().viewing ? hideBlueprintsView : hideBlueprints).value = !v)}>
+          {t("settingsTab.blueprints")}
         </Check>
       </div>
       <GameMode />

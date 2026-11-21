@@ -4,7 +4,7 @@
 // history, as the hand order is); hidden levels, buses and ferries last while the page is open, so a reload never opens
 // on a map missing a level. map/visibility.ts is what the renderer and the picks read.
 
-import { signal } from "@preact/signals";
+import { effect, signal } from "@preact/signals";
 import type { Level } from "./types";
 
 /** Line ids not drawn. */
@@ -13,6 +13,13 @@ export const hiddenLines = signal<ReadonlySet<string>>(new Set());
 export const hiddenLevels = signal<ReadonlySet<Level>>(new Set());
 /** Bus and ferry lines not drawn (Settings' Show), while the page is open as the levels are. */
 export const hideBuses = signal(false);
+/** Blueprints not drawn (Settings' Show blueprints), remembered in this browser. */
+const BLUEPRINTS_KEY = "tw.hideBlueprints";
+export const hideBlueprints = signal<boolean>((() => { try { return localStorage.getItem(BLUEPRINTS_KEY) === "1"; } catch { return false; } })());
+effect(() => { const on = hideBlueprints.value; try { localStorage.setItem(BLUEPRINTS_KEY, on ? "1" : "0"); } catch { /* kept for this page only */ } });
+/** T-4002: the same for a viewed community network, which opens with blueprints hidden whatever `hideBlueprints` says; the
+ * player's own setting is left as it was for their own games. */
+export const hideBlueprintsView = signal(true);
 /** Hide mode: the Lines tab shows each row's box. Leaving it shows every line again, so lines stay hidden only while it is on. */
 export const visToggles = signal(false);
 

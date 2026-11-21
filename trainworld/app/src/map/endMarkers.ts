@@ -14,6 +14,7 @@ import { world } from "../game/world";
 import { effect } from "@preact/signals";
 import { anchor, toLocal } from "./geo";
 import { live } from "./live";
+import { hidden, onBlueprintsHidden } from "./visibility";
 import { M_JUNCTION, MARK_STRIDE } from "./markData";
 import { MARKS_ZOOM, NODE_HIT_PX, stationEnds } from "./dragHandles";
 import type { Overlay } from "./overlay";
@@ -50,6 +51,7 @@ export class EndMarkers {
   /** the map's box on the page, read again after a resize */
   private rect: DOMRect | null = null;
   private anchorV = -1;
+  private hiddenV = -1;
 
   constructor(private map: MlMap, private overlay: Overlay) {
     this.box = marksLayer(map);
@@ -72,6 +74,7 @@ export class EndMarkers {
       this.pointer = null;
       this.place();
     });
+    onBlueprintsHidden(() => this.place());
     effect(() => {
       tool.value;
       world.value;
@@ -94,11 +97,12 @@ export class EndMarkers {
     const w = world.peek(), net = this.overlay.renderer.net;
     const v = w?.version ?? -1, av = anchor().version;
     // the points are in local units, so they go stale when the draw anchor moves
-    if (kind === this.kind && v === this.version && net === this.net && av === this.anchorV) return;
+    if (kind === this.kind && v === this.version && net === this.net && av === this.anchorV && hidden.v === this.hiddenV) return;
     this.kind = kind;
     this.version = v;
     this.net = net;
     this.anchorV = av;
+    this.hiddenV = hidden.v;
     this.pts = [];
     if (!w) return;
     // only where the network draws the track: a mark is never left on its own (T-1485)
@@ -110,11 +114,12 @@ export class EndMarkers {
     }
     for (const n of w.nodes.values()) {
       if (n.platform > 0 || n.bus || !drawnAt.has(n.id)) continue;
-      const square = kind !== "loose" && n.builtPorts === 0;
+      // Settings' Show blueprints off: no square on a blueprint-only point, no ring at a blueprint end
+      const square = kind !== "loose" && n.builtPorts === 0 && !hidden.blueprints;
       let loose = kind !== "drag" && n.ports === 1;
       // T-1534: not the end of a blueprint that is switched off, which is drawn grey and faint
       const e = loose ? edgeAt.get(n.id) : undefined;
-      if (loose && (!e || (!e.built && e.off))) loose = false;
+      if (loose && (!e || (!e.built && (e.off || hidden.blueprints)))) loose = false;
       if (!square && !loose) continue;
       const [lx, ly] = toLocal(n.lng, n.lat);
       if (square) this.pts.push({ lx, ly, cls: loose ? "pi-mark loose" : "pi-mark" });
@@ -146,7 +151,7 @@ export class EndMarkers {
       const [x, y] = this.overlay.toScreen(p.lx, p.ly);
       if ((x - px) ** 2 + (y - py) ** 2 < NODE_HIT_PX * NODE_HIT_PX) return true;
     }
-    return this.handles().some((h) => (h.x - px) ** 2 + (h.y - py) ** 2 < NODE_HIT_PX * NODE_HIT_PX);
+    return !hidden.blueprints && this.handles().some((h) => (h.x - px) ** 2 + (h.y - py) ** 2 < NODE_HIT_PX * NODE_HIT_PX);
   }
 
   private shown(): boolean {
@@ -179,7 +184,7 @@ export class EndMarkers {
       const w = this.overlay.cssW, h = this.overlay.cssH;
       const near = kind !== "drag" && !NO_HOVER ? this.pointer : undefined;
       // T-3897: the square under the pointer lights up, the one a press would drag
-      const hs = kind !== "loose" ? this.handles() : [];
+      const hs = kind !== "loose" && !hidden.blueprints ? this.handles() : [];
       const hot = NO_HOVER ? null : this.hotAt(kind, hs);
       for (const p of this.pts) {
         const ring = p.cls === "end-mark";

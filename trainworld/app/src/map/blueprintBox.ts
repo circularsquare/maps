@@ -34,6 +34,7 @@ import { packToLngLat } from "../game/coords";
 import type { PreviewAnswer } from "../workers/clockClient";
 import { MARKS_ZOOM, NODE_HIT_PX } from "./dragHandles";
 import { marksLayer, onScreen, placeAt } from "./screenPlace";
+import { hidden, onBlueprintsHidden } from "./visibility";
 import { curveLabels, CurveLabelPool } from "./trackTagRows";
 
 /** A click, not a drag: the pointer moved less than this (px). */
@@ -115,6 +116,7 @@ export class BlueprintBox {
       if (tool.value !== "blueprint") this.cancel();
     });
     host.addEventListener("pointercancel", (e) => this.endTouch(e));
+    onBlueprintsHidden(() => this.place());
     // the highlight follows the pick and the world (a new network has new buffers)
     effect(() => {
       bpPicked.value;
@@ -171,6 +173,7 @@ export class BlueprintBox {
    * constructed (of `dragNodes`: those a box held, or the ends of picked track and picked stations). */
   private movable(): number[] {
     const w = world.peek(), p = bpPicked.peek();
+    if (hidden.blueprints) return [];
     if (!w || (!p.edges.length && !p.stations.length)) return [];
     const was = this.movableOf;
     if (was.pick === p && was.version === w.version) return was.nodes;

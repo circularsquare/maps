@@ -473,7 +473,8 @@ uniform vec2 u_radius;   // dot radius, ordinary and transfer (px)
 uniform float u_line;    // a line's width (px): a station covers the lines through it
 uniform float u_ring;    // its dark rim (px)
 uniform float u_boxes;   // 1: platforms along the track; 0: dots (zoomed out)
-uniform vec2 u_fixed;    // a box's half width (T-204, T-239): px at BOX_WIDTH_ZOOM, and local
+uniform highp int u_no_bp; // 1: blueprint stations are not drawn (Settings' Show blueprints)
+uniform vec2 u_fixed;   // a box's half width (T-204, T-239): px at BOX_WIDTH_ZOOM, and local
                          // units per px there; the width on the ground, and the least on screen (T-553)
 uniform float u_pass_half; // a box with passing tracks is at least this wide either side, px (T-2233)
 uniform highp int u_pass; // stations: 0 every one but the selected, 1 the selected only
@@ -540,7 +541,7 @@ void main() {
   bool noCrowd = !boxes || (flags & 2) != 0 || max(a_crowd.x, a_crowd.y) <= 0.0 || lvFade < 1.0;
   bool noAnnex = u_room > 0 && (!boxes || (flags & ${ST_ROOM}) == 0);
   bool inBld = (flags & ${ST_BUILDING}) != 0;
-  if ((u_pass == 1) != sel || (u_layer == 2 && noCrowd) || noAnnex || (u_bld == 1 && inBld) || (u_bld == 2 && !inBld)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  if ((u_no_bp == 1 && (flags & 2) != 0) || (u_pass == 1) != sel || (u_layer == 2 && noCrowd) || noAnnex || (u_bld == 1 && inBld) || (u_bld == 2 && !inBld)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   // zoomed out a dot's pie is its platforms' crowd (T-228, T-553): the fullest side's share, and
   // whether it is full
   if (!boxes) v_crowd = vec4(a_dcrowd, 0.0, 0.0);
@@ -670,6 +671,7 @@ uniform vec2 u_viewport;
 uniform float u_ring;
 uniform float u_bridge;  // the white's half width, local units
 uniform highp int u_pass;
+uniform highp int u_no_bp; // 1: links to a blueprint station are not drawn
 in vec4 a_ends;          // its two ends, local units
 in vec2 a_bflag;         // drawn selected (both stations are), faded (either is a blueprint)
 out vec2 v_p;
@@ -698,7 +700,7 @@ void main() {
   vec4 cx = project(a_ends.xy + vec2(u_bridge, 0.0));
   vec2 s0 = c0.xy / c0.w * half_vp, s1 = c1.xy / c1.w * half_vp;
   float len = length(s1 - s0);
-  if ((u_pass == 1) != (a_bflag.x > 0.5) || len < 1e-3) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  if ((u_pass == 1) != (a_bflag.x > 0.5) || len < 1e-3 || (u_no_bp == 1 && a_bflag.y > 0.5)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   vec2 u = (s1 - s0) / len, n = vec2(-u.y, u.x);
   float hw = length(cx.xy / cx.w * half_vp - s0) + u_ring, hl = 0.5 * len;
   v_size = vec3(hl, hw, 0.0);

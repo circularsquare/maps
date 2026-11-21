@@ -437,7 +437,8 @@ export async function openView(bytes: Uint8Array, name: string, trips = true, as
   }
   if (ask && !await leaveViewed()) return null;
   const pending: PendingLoad = { kind: "import", bytes, name, from: saveSlotsState.peek().active, view: true };
-  const params: Record<string, string> = trips ? { load: "file" } : { load: "file", trips: "off" };
+  // T-4002: a viewed network opens paused
+  const params: Record<string, string> = trips ? { load: "file", paused: "1" } : { load: "file", trips: "off", paused: "1" };
   if (current?.running) { switchNow(params, pending); return ""; }
   if (!await writePending(pending)) return t("clockClient.noStorage");
   location.replace(pageWith(params));
@@ -463,7 +464,8 @@ export async function calculateTrips(): Promise<string> {
  * true to go on. True at once for any other game. */
 export function leaveViewed(): Promise<boolean> {
   const v = saveSlotsState.peek().viewing;
-  if (!v || !current?.running) return Promise.resolve(true);
+  // a network not edited since it opened loses nothing
+  if (!v || !current?.running || !world.peek()?.canUndo) return Promise.resolve(true);
   return new Promise((done) => {
     ask.value = { text: t("clockClient.leaveView", { name: v.name }), yes: t("clockClient.leaveViewYes"), no: t("clockClient.leaveViewNo"), run: () => done(true), stay: () => done(false) };
   });

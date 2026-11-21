@@ -27,6 +27,7 @@ import type { Overlay } from "./overlay";
 import { trackAt } from "./pick";
 import { marksLayer, placeAt } from "./screenPlace";
 import { touchInput } from "./touch";
+import { hidden, onBlueprintsHidden } from "./visibility";
 import { curveLabelled, curveLabels, CurveLabelPool, rampLabels, type CurveLabel } from "./trackTagRows";
 
 /** A PI of a stretch, pack metres. */
@@ -75,6 +76,7 @@ export class EdgeEditor {
 
   constructor(private map: MlMap, private overlay: Overlay, private client: ClockClient) {
     this.box = marksLayer(map);
+    onBlueprintsHidden(() => this.place());
     this.labels = new CurveLabelPool(this.box);
     this.tag =document.createElement("div");
     this.tag.className = "tool-tag";
@@ -202,7 +204,7 @@ export class EdgeEditor {
   /** Squares and curve labels to the camera. */
   place() {
     // hidden while a node of the stretch is being dragged (map/nodeDrag.ts): they would be stale
-    const on = !this.loading && this.edge >= 0 && this.target() === this.edge && !live.nodeDrag?.dragging;
+    const on = !this.loading && this.edge >= 0 && this.target() === this.edge && !live.nodeDrag?.dragging && !(hidden.blueprints && world.peek()?.edges.find((x) => x.id === this.edge)?.built === false);
     const pis = on ? this.shape.pis : [];
     for (let i = 0; i < pis.length; i++) {
       const [x, y] = this.overlay.toScreen(...this.local(pis[i]));

@@ -247,7 +247,7 @@ function strokeDraws(rnd: NetworkRenderer, c: Ctx2) {
   // Colour by height: the track itself, at line width, and no line strokes over it. Blueprint
   // track and the lines planned on it go over built track and its lines (T-695).
   const trackStrokes = (cap = 0) => {
-    for (const part of rnd.hasBlueprint ? [1, 2] : [0]) {
+    for (const part of rnd.hasBlueprint ? (vis.blueprints ? [1] : [1, 2]) : [0]) {
       gl.uniform1i(u.u_bp_part, part);
       // through a station's box blueprint track is drawn whole (rails and middle) over a blueprint box
       const c = part === 2 ? 0 : cap;
@@ -391,6 +391,7 @@ function stationsPass(rnd: NetworkRenderer, c: Ctx3) {
     gl.uniform1f(su.u_line, wLine);
     gl.uniform3f(su.u_lanes, lanes.gap * dpr, lanes.t, lanes.narrow);
     gl.uniform1f(su.u_boxes, boxes ? 1 : 0);
+    gl.uniform1i(su.u_no_bp, vis.blueprints ? 1 : 0);
     const hotSt = (opt.hotStations ?? []).filter((i) => i >= 0 && i < n.stationCount);
     rnd.hotList.fill(-1);
     hotSt.slice(0, HOT_STATIONS).forEach((i, k) => (rnd.hotList[k] = i));
@@ -710,6 +711,7 @@ export function useBridges(rnd: NetworkRenderer, lc: LocalCamera, vp: readonly [
   gl.uniform3fv(bu.u_bad, BAD_RGB);
   gl.uniform3fv(bu.u_crowd_rgb, CROWD_RGB);
   gl.uniform1f(bu.u_mask, 0);
+  gl.uniform1i(bu.u_no_bp, vis.blueprints ? 1 : 0);
 }
 
 /** Local units of anchor `a` to CSS px on the canvas (y down) through the draw's camera; NaN

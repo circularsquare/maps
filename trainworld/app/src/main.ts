@@ -29,8 +29,8 @@ import { hideUiKey } from "./ui/hideUi";
 import { helpKey } from "./ui/HelpPanel";
 import { followCapsLock, keyIsTheirs, releaseSelectsAfterMousePick } from "./ui/keys";
 import { stopsById, world } from "./game/world";
-import { hiddenLevels, hiddenLines, hideBuses, levelBits } from "./game/lineVisibility";
-import { setHidden } from "./map/visibility";
+import { hiddenLevels, hiddenLines, hideBlueprints, hideBlueprintsView, hideBuses, levelBits } from "./game/lineVisibility";
+import { setBlueprintsHidden, setHidden } from "./map/visibility";
 import "./game/capLoad";
 import { removeThing, setTrackHider } from "./game/remove";
 import { redo, undo } from "./game/fareUndo";
@@ -118,7 +118,7 @@ import { choiceFromUrl, showStartMenu, START_LOGO, worldCover } from "./ui/Start
 import { viewStart } from "./ui/locate";
 import { enterGame, fitAhead, startOpenFit } from "./ui/locate";
 import { realmsAhead } from "./game/realms";
-import { ClockClient, clockWorkerStatus, manageSaveSlot, onNetAhead, onNetworkSnapshot, onSaveRoom, onStationsAhead, retryGround } from "./workers/clockClient";
+import { ClockClient, clockWorkerStatus, manageSaveSlot, onNetAhead, onNetworkSnapshot, onSaveRoom, onStationsAhead, retryGround, saveSlotsState } from "./workers/clockClient";
 import { demandStuckSince, netAhead, retryPackDownloads, saveRoom, startDemand, stationsAhead, submitNetwork } from "./workers/demandClient";
 import { startDemandViews, viewStats } from "./map/demandViews";
 import { startTripView } from "./map/tripView";
@@ -462,10 +462,14 @@ effect(() => {
 const demandOnTop = (x: number, y: number, add: boolean) => (onMark(x, y) || netFirst(x, y) ? undefined : demandClick?.(x, y, add));
 
 // T-3420: the lines and levels the player hid; a hidden line's twin with it (T-3333)
+/** Settings' Show blueprints, as it stands in the game in hand: a viewed community network has its own (T-4002) */
+const blueprintsOff = computed(() => (saveSlotsState.value.viewing ? hideBlueprintsView : hideBlueprints).value);
 const hiddenNums = computed(() => {
   const ids = hiddenLines.value, w = world.value, out = new Set<number>();
   for (const id of ids) out.add(Number(id));
   if (hideBuses.value && w) for (const l of w.save.lines) if (w.lineStats[l.id]?.bus) out.add(l.num);
+  // a planned bus line is a blueprint too; hidden as a bus line is, so the picks pass over it
+  if (blueprintsOff.value && w) for (const l of w.save.lines) { const st = w.lineStats[l.id]; if (st?.bus && st.status === "planned") out.add(l.num); }
   if (w && ids.size) for (const [twin, of] of w.twins) if (ids.has(of)) out.add(Number(twin));
   return out;
 });
@@ -474,6 +478,12 @@ effect(() => {
   const stations = new Map((w?.save.stations ?? []).map((s) => [s.id, s.level]));
   const changed = setHidden(hiddenNums.value, levelBits(hiddenLevels.value), (id) => stations.get(id), (id) => w?.nodes.get(id)?.level);
   if (changed) overlay.invalidate();
+});
+// Settings' Show blueprints: every blueprint piece is not drawn or picked (map/visibility.ts)
+effect(() => {
+  const off = blueprintsOff.value;
+  document.documentElement.classList.toggle("no-blueprints", off);
+  if (setBlueprintsHidden(off)) overlay.invalidate();
 });
 // Bus lines are drawn from the world's routes (T-1464, map/busLayer.ts)
 effect(() => {

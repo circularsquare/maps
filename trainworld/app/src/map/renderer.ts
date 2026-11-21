@@ -491,9 +491,9 @@ export class NetworkRenderer {
     // (Firefox with fingerprinting resistance says 2048 for both, under many a window's canvas)
     this.cacheMax = Math.min(gl.getParameter(gl.MAX_RENDERBUFFER_SIZE) ?? 0, gl.getParameter(gl.MAX_TEXTURE_SIZE) ?? 0);
     this.strokeU = uniforms(gl, this.strokeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_n", "u_sel_set", "u_sel_edge", "u_hot", "u_hide", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_pass_off","u_dim", "u_by_level", "u_by_speed", "u_by_profit", "u_profit", "u_profit_n", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_out", "u_full_dash", "u_full_rgb", "u_full_inside", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr", "u_wire", "u_band", "u_band_traffic", "u_band_gap", "u_band_m", "u_mute", "u_level_hide"]);
-    this.stationU = uniforms(gl, this.stationProg, [...PROJECT_UNIFORMS, "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass_half", "u_pass_in", "u_pass", "u_layer", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n", "u_room", "u_bld", "u_one", "u_one_mid"]);
+    this.stationU = uniforms(gl, this.stationProg, [...PROJECT_UNIFORMS, "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass_half", "u_pass_in", "u_pass", "u_layer", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n", "u_room", "u_bld", "u_one", "u_one_mid", "u_no_bp"]);
     this.bridgeProg = compile(gl, BRIDGE_VS, STATION_FS);
-    this.bridgeU = uniforms(gl, this.bridgeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_ink", "u_bad", "u_crowd_rgb", "u_mask", "u_hot_st", "u_hot_n"]);
+    this.bridgeU = uniforms(gl, this.bridgeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_ink", "u_bad", "u_crowd_rgb", "u_mask", "u_hot_st", "u_hot_n", "u_no_bp"]);
     // T-3192: the stations' u_stline, which a bridge never reads, on the stations' unit rather than one an integer texture may hold
     gl.useProgram(this.bridgeProg);
     gl.uniform1i(gl.getUniformLocation(this.bridgeProg, "u_stline"), 11);
@@ -877,14 +877,16 @@ export class NetworkRenderer {
       const l = vis.stationLevel(n.stationIds[i]);
       if (l !== undefined && levelHidden(l)) this.stationHid[i] = 1;
     }
+    if (vis.blueprints) for (let i = 0; i < n.stationCount; i++) if ((n.stations[i * 3 + 2] & 2) !== 0) this.stationHid[i] = 1;
     this.selDrawnKey = "";
     this.sampleLv = vis.levels ? this.sampleLevels(n) : null;
     if (this.sampleLv) this.putTexture("slevel", this.sampleLv, "r32f", TEX_W);
     else if (this.tex.slevel) { for (const r of this.texRes.slevel ?? []) r.del(); this.texRes.slevel = []; this.tex.slevel = null; }
     const L = n.lines, T = n.track;
-    if (vis.lines.size || vis.levels) {
-      pickSkip.set(L.seg, (i) => vis.lines.has(L.colour[i]) || codeHidden(L.level[i]));
-      if (vis.levels) pickSkip.set(T.seg, (i) => codeHidden(T.level[i]));
+    if (vis.lines.size || vis.levels || vis.blueprints) {
+      const bp = vis.blueprints;
+      pickSkip.set(L.seg, (i) => vis.lines.has(L.colour[i]) || codeHidden(L.level[i]) || (bp && (L.flags[i] & F_BLUEPRINT) !== 0));
+      if (vis.levels || bp) pickSkip.set(T.seg, (i) => codeHidden(T.level[i]) || (bp && (T.flags[i] & F_BLUEPRINT) !== 0));
       else pickSkip.delete(T.seg);
     } else {
       pickSkip.delete(L.seg);

@@ -12,8 +12,23 @@ export const hidden = {
   levels: 0,
   stationLevel: (_id: string): Level | undefined => undefined,
   nodeLevel: (_id: number): Level | undefined => undefined,
+  /** Settings' Show blueprints is off: every blueprint piece (track, lines, stations, BRT lanes) is not drawn or picked */
+  blueprints: false,
   v: 0,
 };
+
+const blueprintHooks = new Set<() => void>();
+/** `f` runs when blueprints are hidden or shown (the DOM marks, which no signal moves). */
+export const onBlueprintsHidden = (f: () => void) => void blueprintHooks.add(f);
+
+/** Hide or show every blueprint (view only); true when it changed. */
+export function setBlueprintsHidden(on: boolean) {
+  if (on === hidden.blueprints) return false;
+  hidden.blueprints = on;
+  hidden.v++;
+  for (const f of blueprintHooks) f();
+  return true;
+}
 
 export function setHidden(lines: Set<number>, levels: number, stationLevel: (id: string) => Level | undefined, nodeLevel: (id: number) => Level | undefined) {
   const same = levels === hidden.levels && lines.size === hidden.lines.size && [...lines].every((l) => hidden.lines.has(l));

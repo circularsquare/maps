@@ -38,6 +38,7 @@ import { compile, PROJECT_GLSL, PROJECT_UNIFORMS, setCamera, uniforms, type Loca
 import type { Overlay } from "./overlay";
 import { SPEED_LEVEL, speedAt } from "./network";
 import { topSeg } from "./pick";
+import { hidden } from "./visibility";
 import { headingAtPlane } from "./halfDot";
 import { rightHand } from "../game/world";
 import { factRow, headingChevron, lineBullet } from "./trackTagRows";
@@ -224,6 +225,7 @@ uniform vec2 u_link;         // T-3890: a connector's white width and rim, devic
 uniform vec3 u_link_ink;
 uniform int u_lit_links[${LIT_LINKS}];
 uniform int u_lit_links_n;
+uniform int u_no_bp;         // 1: blueprint pieces are not drawn (Settings' Show blueprints)
 uniform int u_lane_kind;     // T-3944: pass 5 draws the blueprint's new lanes (0), the constructed ones (1) or the blueprint's free ones (2)
 uniform vec3 u_lane_rgb;     // the constructed lanes' border
 uniform float u_lane_edge;   // the new lanes' band's edge in the rail's colour, device px
@@ -248,7 +250,7 @@ void main() {
   bool link = (flags & ${FLAG_LINK}) != 0;
   bool lane = (flags & ${FLAG_LANE}) != 0;
   if ((u_only >= 0 && id != u_only) || (u_only == -2 && (!sel || xfer)) || (u_pass == 2 && (flags & ${FLAG_FERRY | FLAG_SPUR | FLAG_TRANSFER | FLAG_MUTE | FLAG_LINK}) != 0)
-      || (xfer && (u_pass != 1 || u_xfer < 0.5)) || (link != (u_pass == 3 || u_pass == 4)) || (lane != (u_pass == 5)) || (lane && u_lane_kind != (!bp ? 1 : (flags & ${FLAG_LANE_FREE}) != 0 ? 2 : 0))) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+      || (xfer && (u_pass != 1 || u_xfer < 0.5)) || (link != (u_pass == 3 || u_pass == 4)) || (u_no_bp == 1 && bp) || (lane != (u_pass == 5)) || (lane && u_lane_kind != (!bp ? 1 : (flags & ${FLAG_LANE_FREE}) != 0 ? 2 : 0))) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   bool hotLink = false;
   if (link) for (int k = 0; k < ${LIT_LINKS}; k++) if (k < u_lit_links_n && u_lit_links[k] == int(a_info.z + 0.5)) hotLink = true;
   bool paint = u_pass == 1 && !bp && !xfer && !mute;
@@ -336,6 +338,7 @@ uniform float u_rings;       // 0: the ends only
 uniform float u_keep;        // T-3297: 1 where buses keep right, -1 left
 uniform int u_lit_stops[${LIT_STOPS}]; // T-3890: the stops lit (their places in the stops' buffer), u_lit_stops_n of them
 uniform int u_lit_stops_n;
+uniform int u_no_bp;         // 1: blueprint stops are not drawn
 uniform int u_base;          // the first stop this pass draws, in that buffer
 in vec4 a_stop;              // x, y, 1 a ring + 2 a blueprint's, the colour packed
 in vec2 a_way;               // the local direction a one-way stop's buses go, else 0
@@ -347,6 +350,7 @@ flat out float v_r;
 void main() {
   int code = int(a_stop.z + 0.5);
   bool ring = (code & 1) != 0, bp = (code & 2) != 0;
+  if (u_no_bp == 1 && bp) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   if (ring && u_rings < 0.5) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   float r = ring ? u_r.x : u_r.y;
   vec2 corner = vec2(float(gl_VertexID & 1) * 2.0 - 1.0, gl_VertexID < 2 ? -1.0 : 1.0);
@@ -405,6 +409,7 @@ uniform float u_clear;       // device px from a stop's middle an arrow's back k
 uniform int u_sel;
 uniform int u_hot;
 uniform float u_dim;
+uniform int u_no_bp;         // 1: blueprint arrows are not drawn
 in vec4 a_arrow;             // x, y, direction
 in vec4 a_arrow2;            // colour packed, line, its place in its line's arrows, metres to its nearest stop
 in float a_bp;
@@ -413,7 +418,7 @@ flat out vec3 v_color;
 flat out float v_alpha;
 void main() {
   float w = u_size.y, l = 0.8 * w, t = 2.0 * u_size.x;   // a chevron stroked as thick as the route
-  if (mod(a_arrow2.z, u_every) > 0.5 || a_arrow2.w * u_m_px < u_clear + 0.5 * l) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  if ((u_no_bp == 1 && a_bp > 0.5) || mod(a_arrow2.z, u_every) > 0.5 || a_arrow2.w * u_m_px < u_clear + 0.5 * l) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   vec4 c0 = project(a_arrow.xy);
   vec4 c1 = project(a_arrow.xy + a_arrow.zw);
   vec2 half_vp = u_viewport * 0.5;
@@ -531,10 +536,10 @@ export class BusLayer {
     this.gl = gl;
     this.segProg = compile(gl, SEG_VS, SEG_FS);
     this.stopProg = compile(gl, STOP_VS, STOP_FS);
-    this.su = uniforms(gl, this.segProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_add", "u_extra", "u_pass", "u_sel", "u_hot", "u_lit", "u_lit_n", "u_only", "u_dim", "u_alpha", "u_casing_rgb", "u_rail_rgb", "u_rail", "u_px_per_unit", "u_track_rgb", "u_xfer", "u_xfer_w", "u_xfer_rgb", "u_xfer_alpha", "u_link", "u_link_ink", "u_lit_links", "u_lit_links_n", "u_lane_kind", "u_lane_rgb", "u_lane_period", "u_lane_in", "u_lane_edge"]);
-    this.pu = uniforms(gl, this.stopProg, [...PROJECT_UNIFORMS, "u_viewport", "u_r", "u_rail_rgb", "u_rings", "u_fill", "u_rim", "u_keep", "u_lit_stops", "u_lit_stops_n", "u_base"]);
+    this.su = uniforms(gl, this.segProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_add", "u_extra", "u_pass", "u_sel", "u_hot", "u_lit", "u_lit_n", "u_only", "u_dim", "u_alpha", "u_casing_rgb", "u_rail_rgb", "u_rail", "u_px_per_unit", "u_track_rgb", "u_xfer", "u_xfer_w", "u_xfer_rgb", "u_xfer_alpha", "u_link", "u_link_ink", "u_lit_links", "u_lit_links_n", "u_lane_kind", "u_lane_rgb", "u_lane_period", "u_lane_in", "u_lane_edge", "u_no_bp"]);
+    this.pu = uniforms(gl, this.stopProg, [...PROJECT_UNIFORMS, "u_viewport", "u_r", "u_rail_rgb", "u_rings", "u_fill", "u_rim", "u_keep", "u_lit_stops", "u_lit_stops_n", "u_base", "u_no_bp"]);
     this.arrowProg = compile(gl, ARROW_VS, ARROW_FS);
-    this.au = uniforms(gl, this.arrowProg, [...PROJECT_UNIFORMS, "u_viewport", "u_size", "u_every", "u_m_px", "u_clear", "u_sel", "u_hot", "u_dim", "u_casing_rgb"]);
+    this.au = uniforms(gl, this.arrowProg, [...PROJECT_UNIFORMS, "u_viewport", "u_size", "u_every", "u_m_px", "u_clear", "u_sel", "u_hot", "u_dim", "u_casing_rgb", "u_no_bp"]);
     this.arrowVao = gl.createVertexArray();
     this.segVao = gl.createVertexArray();
     this.stopVao = gl.createVertexArray();
@@ -830,6 +835,7 @@ export class BusLayer {
     const bus = s.wLine * WIDTH_SHARE * (s.paint === "level" ? LEVEL_WIDTH_SHARE : 1);
     const u = this.su;
     gl.useProgram(this.segProg);
+    gl.uniform1i(this.su.u_no_bp, hidden.blueprints ? 1 : 0);
     setCamera(gl, u, lc);
     gl.uniform2f(u.u_viewport, vp[0], vp[1]);
     gl.uniform1i(u.u_sel, s.sel);
@@ -917,6 +923,7 @@ export class BusLayer {
     if (this.arrows && zoom >= ARROW_ZOOM && !s.paint) {
       const a = this.au, mPx = pxPerUnitAt(zoom) * kAtY(0, b.a) * dpr;
       gl.useProgram(this.arrowProg);
+      gl.uniform1i(this.au.u_no_bp, hidden.blueprints ? 1 : 0);
       setCamera(gl, a, lc);
       gl.uniform2f(a.u_viewport, vp[0], vp[1]);
       gl.uniform3f(a.u_size, 0.5 * bus, 0.5 * bus + Math.max(ARROW_BARB_PX * dpr, ARROW_BARB_SHARE * bus), s.casing * CASING_SHARE);
@@ -1005,6 +1012,7 @@ export class BusLayer {
     if (!count) return;
     const gl = this.gl!, p = this.pu;
     gl.useProgram(this.stopProg);
+    gl.uniform1i(this.pu.u_no_bp, hidden.blueprints ? 1 : 0);
     setCamera(gl, p, lc);
     this.litList32.fill(-1);
     this.litList32.set(this.litAt);
