@@ -2772,7 +2772,7 @@ class DemandClient {
       const c = d.intercity?.corridors;
       if (c) {
         let t = books.get(c.book);
-        if (!t) books.set(c.book, (t = { key: c.book.key, n: c.book.n, totals: own(c.book.totals), own: own(c.book.own) }));
+        if (!t) books.set(c.book, (t = { key: c.book.key, n: c.book.n, totals: own(c.book.totals), own: own(c.book.own), apart: own(c.book.apart) }));
         const copy: Corridors = { book: t, longerScale: c.longerScale, commuteScale: c.commuteScale, railAt: own(c.railAt), longerRail: own(c.longerRail), commuteRail: own(c.commuteRail), railFrom: own(c.railFrom), railTo: own(c.railTo), railAir: own(c.railAir) };
         days.push({ ...d, intercity: { ...d.intercity!, corridors: copy } });
       } else days.push(d);

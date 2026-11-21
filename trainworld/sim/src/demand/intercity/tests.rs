@@ -172,10 +172,6 @@ fn summary_is_the_table(a: &IntercityApi) -> f64 {
             want[3 * p] += rt[j];
             want[3 * p + 1] += c;
             want[3 * p + 2] += rt[j] * step(rm[2 * j]);
-            // T-2216: no car: the commutes, and with no plane the longer trips, have no way but rail
-            if rm[2 * j + 1] == 0. {
-                want[5 * np + p] += if rm[2 * j] > 0. { c } else { rt[j] + c };
-            }
         }
     }
     assert_eq!(s[2..].iter().map(|x| x.to_bits()).collect::<Vec<_>>(), want.iter().map(|x| x.to_bits()).collect::<Vec<_>>());
@@ -1166,11 +1162,11 @@ fn zone_legs_add_up_to_a_whole_place_selection() {
     // only the outings: place 0's homes and place 1's activities each count them once
     let q = 1;
     let v = a.everyday_place_legs(q);
-    let by: HashMap<usize, Vec<f64>> = v.chunks_exact(5).map(|c| (c[0] as usize, c[1..].to_vec())).collect();
+    let by: HashMap<usize, Vec<f64>> = v.chunks_exact(7).map(|c| (c[0] as usize, c[1..].to_vec())).collect();
     let s = a.part_summary(q);
     let total: f64 = by.values().map(|c| c[0]).sum();
     assert!((total - 2. * s[4]).abs() <= 1e-6 * s[4], "{total} {}", s[4]);
-    assert!(by.values().all(|c| c[1] <= c[0] && c[2] <= c[3] + 1e-9));
+    assert!(by.values().all(|c| c[1] <= c[0] && c[2] <= c[3] + 1e-9 && c[4] <= c[0] + 1e-9 && c[5] <= c[4] + 1e-9));
 }
 #[test]
 fn places_not_open_answer_by_place() {

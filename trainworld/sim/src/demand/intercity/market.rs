@@ -25,7 +25,97 @@ impl Market {
             (r.car, r.flown(p, q, &self.mp), r.flown(q, p, &self.mp))
         };
         let air = 0.5 * (x + y);
-        [air, if car { 1. - air } else { 0. }]
+        if !car {
+            return [air, 0.];
+        }
+        // T-2216 stage 3: the share of the trips between zones on two lands has no car: it flies where
+        // the places have a plane, and otherwise has no way but rail
+        let f = if a == b { 0. } else { self.apart().cross.get(&(self.corridor(a, b) as u32)).copied().unwrap_or(0.) };
+        if f > 0. {
+            let rest = 1. - air;
+            return [if air > 0. { air + rest * f } else { 0. }, rest * (1. - f)];
+        }
+        [air, 1. - air]
+    }
+    /// T-2216 stage 3: where zones on two lands (`zone_land`) take the car away from places that have
+    /// one: each corridor's share of its longer trips, and each place's share of its own row. The zones
+    /// off their place's landmass are counted by their share of the place's departures and attraction
+    /// (`zone_place_eachway`), so a place that is not open is counted as well; a pair with an off-land
+    /// zone at each end is counted from both, held at 1.
+    pub(super) fn apart(&self) -> &Apart {
+        self.apart.get_or_init(|| {
+            let mut out = Apart::default();
+            if !zone_lands_on() {
+                return out;
+            }
+            let np = self.places.len();
+            let mut cross: HashMap<u32, f64> = HashMap::new();
+            for (p, lo, hi) in self.place_spans() {
+                let off: Vec<usize> = (lo..hi).filter(|&z| self.zone_land(&self.zones[z]) != self.places[p].road).collect();
+                if off.is_empty() {
+                    continue;
+                }
+                let pl = &self.places[p];
+                // (the zones' sums: a pair's trips are linear in them)
+                let (g, t, a, ta) = off.iter().fold((0., 0., 0., 0.), |s, &z| (s.0 + self.zones[z].g, s.1 + self.zones[z].t, s.2 + self.zones[z].a, s.3 + self.zones[z].ta));
+                let share = 0.5 * (if pl.g > 0. { g / pl.g } else { 0. } + if pl.a > 0. { a / pl.a } else { 0. });
+                for q in 0..np {
+                    if q == p || !self.places[q].has || self.places[q].road != pl.road {
+                        continue;
+                    }
+                    let (r, back, w) = (self.pr(p, q), self.pr(q, p), &self.places[q]);
+                    let x = if r.near { self.place_eachway(p, q) * share } else { 0.5 * (self.directed_by(r.b, r.rel, r.pull, r.pull_near, g, t, w.a, w.ta, r.km) + self.directed_by(back.b, back.rel, back.pull, back.pull_near, w.g, w.t, a, ta, r.km)) };
+                    if x > 0. {
+                        *cross.entry(self.corridor(p, q) as u32).or_default() += x;
+                    }
+                }
+                // its own row: the zone pairs on two lands, over the row's
+                let mut own = 0.;
+                for &z in &off {
+                    let zl = self.zone_land(&self.zones[z]);
+                    for b in lo..hi {
+                        if b == z || (off.binary_search(&b).is_ok() && b < z) || self.zone_land(&self.zones[b]) == zl {
+                            continue;
+                        }
+                        let t = self.eachway(&self.zones[z], &self.zones[b]);
+                        if t >= self.rule.min_trips {
+                            own += t;
+                        }
+                    }
+                }
+                if let Some(&row) = self.near.get(&(p as u32, p as u32)) {
+                    if row > 0. && own > 0. {
+                        out.own.insert(p as u32, (own / row).min(1.) as f32);
+                    }
+                }
+            }
+            for (c, x) in cross {
+                let (a, b) = self.corridor_ends(c as usize);
+                let whole = self.place_eachway(a, b);
+                if whole > 0. {
+                    out.cross.insert(c, (x / whole).min(1.) as f32);
+                }
+            }
+            out
+        })
+    }
+    /// T-2216: whether an outing from home zone `h` (here) to activity zone `a` (global) is between two
+    /// landmasses, or two zones' lands (an activity zone not open here on its place's): no car, no walking.
+    pub(super) fn everyday_apart(&self, h: u32, a: u32) -> bool {
+        let zh = &self.zones[h as usize];
+        let ca = self.comp_of_gid[a as usize];
+        let off_land = ca != u32::MAX && zone_lands_on() && self.zone_land(zh) != self.zone_land(&self.zones[ca as usize]);
+        islands() && (off_land || self.places[zh.place].road != self.places[self.gid_place[a as usize] as usize].road)
+    }
+    /// The two places of corridor `c` (`corridor`'s numbering).
+    fn corridor_ends(&self, c: usize) -> (usize, usize) {
+        let np = self.places.len();
+        let (mut lo, mut hi) = (0, np);
+        while hi - lo > 1 {
+            let mid = (lo + hi) / 2;
+            if tri(np, mid, mid) <= c { lo = mid } else { hi = mid }
+        }
+        (lo, lo + c - tri(np, lo, lo))
     }
     /// T-1373: the lean of trips from place `i` to place `j` on a going-out day: positive from the
     /// larger to the smaller (`Place::lean_size`), the opposite of `j` to `i`'s; their trips are

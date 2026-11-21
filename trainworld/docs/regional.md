@@ -119,7 +119,15 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
   part, else an island of its own), so the pair loses the car, keeps its places' plane, and with
   none takes the bound. A zone's sites walk and ride only to stations on its land, a station's land
   being its nearest site's own part's (the local layer's rule, demand-mode.md 4.3).
-  The trip explorer gives code 8 where that cut-off leaves rail at 0. The market's day and its
+  The trip explorer gives code 8 where that cut-off leaves rail at 0 (`marketTrip.cutOff`). The city
+  inspector's inter-city bar shows these trips as "No route", not car [T-2216 stage 3]: per corridor
+  `corridor_mode`'s car share is 0 between landmasses and the share of its trips between zones on two
+  lands (`Market::apart`, island zones counted by their share of the place's departures and attraction,
+  an unopened place's too) is taken out of the car, becoming the plane's where the places have one;
+  what rail takes leaves the rest (`corridorAt`), the commute legs of a corridor with no car at all
+  included; a place's own row likewise by `Market::apart().own` (the book's `apart`); outings between
+  two lands come from `everyday_place_legs`. The far-zoomed bubbles take the place's own row's share
+  (through the zone's Trips within) but not the shares of its trips with other places. The market's day and its
   corridors (place pairs) come from the rows, the same in every part of it.
 - **Zone pairs in chunks** [T-780]: a zone's trips with the zones of each place that come after it
   in the market's zone order are dealt in chunks of about 1 trip a day each way (`MARKET_CHUNK`),
@@ -239,7 +247,7 @@ T-918; no walking between zones), the drive weighted 1.33 plus the work end's pa
 shares are 20/35/25/15/5%; their weekend factor 1.58.
 
 Not modelled yet: coach, a car carried by ferry between landmasses (car ferries count as no road,
-T-1396), flights within a place (Naha - Ishigaki is Okinawa's own: boat only), induced travel, traffic
+T-2216), flights within a place (Naha - Ishigaki is Okinawa's own: boat only), induced travel, traffic
 on routed drives.
 
 ## 5.2 Where a long-distance trip starts and ends

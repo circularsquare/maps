@@ -27,7 +27,7 @@ const ends = (from: number, to: number): [number, number] =>
 export interface MarketPairs { c: Corridors; totals: Float64Array; walk: Float64Array; rows: Map<number, Float64Array> }
 export function marketPairs(c: Corridors, everyday: number[] = []): MarketPairs {
   const b = c.book.totals, totals = new Float64Array(Z * 3), walk = new Float64Array(Z);
-  for (let i = 0; i + 3 < everyday.length; i += 4) {
+  for (let i = 0; i + 4 < everyday.length; i += 5) {
     const z = zoneOf(everyday[i]);
     if (z < 0) continue;
     totals[3 * z] += everyday[i + 1];
@@ -65,7 +65,7 @@ export const zoneRow = (c: Corridors, place: number): Float64Array | null => zon
 /** `marketPairs`, for checks (`waitFor` takes it as it is). */
 export const marketTotals = (c: Corridors, everyday?: number[]): MarketPairs => marketPairs(c, everyday);
 
-export interface PlaceTrips { all: number; rail: number; air: number }
+export interface PlaceTrips { all: number; rail: number; air: number; none: number }
 /** The city view's To other places: `place`'s trips with each other place, both ways, biggest first. */
 export function placeFigures(c: Corridors, place: number): [number, PlaceTrips][] | null {
   const r = rowsOf(c, place);
@@ -73,16 +73,17 @@ export function placeFigures(c: Corridors, place: number): [number, PlaceTrips][
   const byPlace = new Map<number, PlaceTrips>();
   eachCorridor(c, r, (from, to) => from !== to && (from === place || to === place), (from, to, v) => {
     const other = from === place ? to : from;
-    const p = byPlace.get(other) ?? { all: 0, rail: 0, air: 0 };
+    const p = byPlace.get(other) ?? { all: 0, rail: 0, air: 0, none: 0 };
     p.all += v.trips;
     p.rail += v.rail;
     p.air += v.air;
+    p.none += v.none;
     byPlace.set(other, p);
   });
   return [...byPlace].filter(([, p]) => p.all > 0).sort((a, b) => b[1].all - a[1].all);
 }
 
-export interface PairTrips { trips: number; rail: number; air: number; car: number }
+export interface PairTrips { trips: number; rail: number; air: number; car: number; none: number }
 /** Two places' longer trips a day both ways as the solve split them (the corridor's, commutes
  * between the zones left out); null with none, undefined while the rows are asked. */
 export function pairFigures(c: Corridors, a: number, b: number): PairTrips | null | undefined {
@@ -92,7 +93,7 @@ export function pairFigures(c: Corridors, a: number, b: number): PairTrips | nul
   let out: PairTrips | null = null;
   eachCorridor(c, r, (x, y) => (x === a && y === b) || (x === b && y === a), (_, __, f) => {
     const trips = f.trips - f.commutes, rail = f.rail - f.commuteRail;
-    if (trips > 0) out = { trips, rail, air: f.air, car: Math.max(0, f.car - (f.commutes - f.commuteRail)) };
+    if (trips > 0) out = { trips, rail, air: f.air, car: Math.max(0, f.car - (f.commutes - f.commuteRail - f.commuteNone)), none: f.none - f.commuteNone };
   });
   return out;
 }

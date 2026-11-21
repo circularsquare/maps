@@ -842,12 +842,13 @@ impl IntercityApi {
     /// T-3503: the everyday outings across a zone line with another place, by place, in period `q`
     /// (a weekday): for each place with any, its index, then the legs with an end there (both ends
     /// counted, all modes, the same in every part of the market), this network's rail legs, the
-    /// walking legs (the walkers this network's rail takes out) and the walking legs with no rail.
+    /// walking legs (the walkers this network's rail takes out), the walking legs with no rail and (T-2216) the
+    /// legs between two landmasses or two zones' lands (no car, no walking) and this network's rail legs of them.
     /// Empty before the period is solved.
     pub fn everyday_place_legs(&self, q: usize) -> Vec<f64> {
         let Some(s) = self.per(q) else { return vec![] };
         let m = &self.m;
-        let mut by = vec![[0f64; 4]; m.places.len()];
+        let mut by = vec![[0f64; 6]; m.places.len()];
         let ends = |pair: &EPair| (m.zones[pair.h as usize].place, m.gid_place[pair.a as usize] as usize);
         for pair in &m.everyday {
             let (h, a) = ends(pair);
@@ -856,10 +857,14 @@ impl IntercityApi {
             }
             let k = pair.kind as usize;
             let legs = pair.trips as f64 * (OUTWARD[k][q] + RETURN[k][q]) as f64;
+            let apart = m.everyday_apart(pair.h, pair.a);
             for p in [h, a] {
                 by[p][0] += legs;
                 by[p][2] += legs * pair.walk as f64;
                 by[p][3] += legs * pair.walk as f64;
+                if apart {
+                    by[p][4] += legs;
+                }
             }
         }
         for (ei, ep) in self.epairs.iter().enumerate() {
@@ -870,14 +875,18 @@ impl IntercityApi {
             }
             let k = pair.kind as usize;
             let rail = pair.trips as f64 * (OUTWARD[k][q] + RETURN[k][q]) as f64 * s.e_frac.get(ei).copied().unwrap_or(0.) as f64;
+            let apart = m.everyday_apart(pair.h, pair.a);
             for p in [h, a] {
                 by[p][1] += rail;
                 by[p][2] -= rail * pair.walk as f64;
+                if apart {
+                    by[p][5] += rail;
+                }
             }
         }
         let mut out = vec![];
         for (p, v) in by.iter().enumerate().filter(|(_, v)| v[0] > 0.) {
-            out.extend([p as f64, v[0], v[1], v[2].max(0.), v[3]]);
+            out.extend([p as f64, v[0], v[1], v[2].max(0.), v[3], v[4], v[5]]);
         }
         out
     }

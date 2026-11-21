@@ -476,6 +476,7 @@ pub(super) fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Co
     site_land.sort_unstable();
     site_land.shrink_to_fit();
     let mut m = Market {
+        apart: Default::default(),
         site_land,
         land_codes,
         grouped,
@@ -587,13 +588,7 @@ pub(super) fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Co
     }
     // T-2216: no one walks between two landmasses, or between two zones' lands (an activity zone
     // not open here on its place's)
-    let apart = |h: u32, a: u32| {
-        let zh = &m.zones[h as usize];
-        let ca = m.comp_of_gid[a as usize];
-        let off_land = ca != u32::MAX && zone_lands_on() && m.zone_land(zh) != m.zone_land(&m.zones[ca as usize]);
-        islands() && (off_land || m.places[zh.place].road != m.places[m.gid_place[a as usize] as usize].road)
-    };
-    m.everyday = by_kind.into_iter().map(|((h, a, kind), (n, w))| EPair { h, a, kind, trips: n as f32, walk: if apart(h, a) { 0. } else { (w / n.max(1e-12)) as f32 } }).collect();
+    m.everyday = by_kind.into_iter().map(|((h, a, kind), (n, w))| EPair { h, a, kind, trips: n as f32, walk: if m.everyday_apart(h, a) { 0. } else { (w / n.max(1e-12)) as f32 } }).collect();
     let csr = |key: &dyn Fn(&(u32, u32, f32)) -> Option<u32>, n: usize, list: &[(u32, u32, f32)]| {
         let mut off = vec![0u32; n + 1];
         for c in list {

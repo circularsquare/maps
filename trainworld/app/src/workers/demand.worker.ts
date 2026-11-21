@@ -1562,7 +1562,7 @@ function marketStationFlows(at: Version, c: JobCluster | undefined, m: Intercity
  * so the book is made once for them all. T-2485: only the worker holding period 0's market sends it,
  * any worker once the page asks again (`corridorsAgain`).
  */
-interface Book { id: number; key: string; n: number; totals: Float64Array; own: Float64Array }
+interface Book { id: number; key: string; n: number; totals: Float64Array; own: Float64Array; apart: Float64Array }
 let madeBook: Book | null = null;
 const sentTables = new Set<string>();
 /** the page asked for the books again (`corridorsAgain`): the next result with a market sends its own */
@@ -1574,10 +1574,10 @@ function corridorBook(p: IntercityApi): Book {
   const np = REGISTRY.market.places.length;
   const s = p.table_summary(np);
   // (T-3509: the own rows' longer trips rounded to 32 bits, as the rows and the page's old table hold them)
-  // (T-2216: each place's trips with no way but rail come after, for the city view's No route)
+  // (T-2216: each place's share of its own row between zones on two lands comes after, for the city view's No route)
   const own = s.slice(2 + 3 * np, 2 + 5 * np);
   for (let i = 0; i < own.length; i += 2) own[i] = Math.fround(own[i]);
-  madeBook = { id, key: `${s[0]}:${(s[1] >>> 0).toString(36)}`, n: s[0], totals: s.slice(2, 2 + 3 * np), own };
+  madeBook = { id, key: `${s[0]}:${(s[1] >>> 0).toString(36)}`, n: s[0], totals: s.slice(2, 2 + 3 * np), own, apart: s.slice(2 + 5 * np, 2 + 6 * np) };
   railMemo.clear();
   return madeBook;
 }
@@ -1630,7 +1630,7 @@ function marketCorridors(parts: IntercityApi[], q: number) {
   rows.forEach((c, k) => { const [r, cm] = rail.get(c)!, [a, b, air] = railMemo.get(c)!; out.set([c, r, cm, a, b, air], 6 * k); });
   let book: CorridorBook | undefined;
   if (!sentTables.has(made.key) && sendsTable(q)) {
-    book = { key: made.key, n: made.n, totals: made.totals.slice(), own: made.own.slice() };
+    book = { key: made.key, n: made.n, totals: made.totals.slice(), own: made.own.slice(), apart: made.apart.slice() };
     sentTables.add(made.key);
     tableAsked = false;
   }
@@ -1680,20 +1680,21 @@ function marketFigures(parts: IntercityApi[], q: number) {
   };
 }
 /** T-3503: the everyday outings across a zone line by place in period q over the market's parts,
- * four numbers a place with any (place, legs, rail legs, walking legs): the legs and the walking
+ * five numbers a place with any (place, legs, rail legs, walking legs, no-way legs): the legs and the walking
  * with no rail the same in every part, the rail each part's own and the walkers each part's rail takes. */
 function everydayPlaces(parts: IntercityApi[], q: number): number[] {
-  const by = new Map<number, [number, number, number, number]>();
+  // legs, rail, walking, walking with no rail, then (T-2216) the legs between two lands and each part's rail on them
+  const by = new Map<number, [number, number, number, number, number, number]>();
   for (const p of parts) {
     const v = p.everyday_place_legs(q);
-    for (let i = 0; i + 4 < v.length; i += 5) {
+    for (let i = 0; i + 6 < v.length; i += 7) {
       const e = by.get(v[i]);
-      if (!e) by.set(v[i], [v[i + 1], v[i + 2], v[i + 3], v[i + 4]]);
-      else { e[1] += v[i + 2]; e[2] -= v[i + 4] - v[i + 3]; }
+      if (!e) by.set(v[i], [v[i + 1], v[i + 2], v[i + 3], v[i + 4], v[i + 5], v[i + 6]]);
+      else { e[1] += v[i + 2]; e[2] -= v[i + 4] - v[i + 3]; e[5] += v[i + 6]; }
     }
   }
   const out: number[] = [];
-  for (const [p, [legs, rail, walk]] of by) out.push(p, legs, rail, Math.max(0, walk));
+  for (const [p, [legs, rail, walk, , apart, apartRail]] of by) out.push(p, legs, rail, Math.max(0, walk), Math.max(0, apart - apartRail));
   return out;
 }
 /** Where a trip answer's pair and route counts sit (`count`, the routes' next), and its pairs' two
@@ -2426,7 +2427,7 @@ async function run() {
           return [id, v];
         })) as Record<CityId, number[]>;
         const msg = { version: job.version, period: q, summary, fareSense, citySummary, cityParts, intercitySummary, intercityParts: market ? market.parts : [], corridorKey: market?.corridorKey, corridorBook: market?.corridorBook, corridorShares: market?.corridorShares, corridorRail: market?.corridorRail, elsewhere: market?.elsewhere, everydayPlaces: market?.everydayPlaces, seg, board, alight, arrive, loadOfCrush, fareX, baseX, xferIn, parts, ms, setupMs, memBytes: wasm_memory_bytes(), ...(part ? { part: part.at, fareRaw: ls as [number, number, number, number] } : {}), ...(come ? { come } : {}) };
-        const big = [...(come ? come.map((a) => a.buffer) : []), market?.corridorRail?.buffer, market?.corridorBook?.totals.buffer, market?.corridorBook?.own.buffer].filter((b): b is ArrayBuffer => !!b);
+        const big = [...(come ? come.map((a) => a.buffer) : []), market?.corridorRail?.buffer, market?.corridorBook?.totals.buffer, market?.corridorBook?.own.buffer, market?.corridorBook?.apart.buffer].filter((b): b is ArrayBuffer => !!b);
         return { msg, transfer: [seg.buffer, board.buffer, alight.buffer, arrive.buffer, loadOfCrush.buffer, fareX.buffer, baseX.buffer, xferIn.buffer, parts.seg.buffer, parts.board.buffer, parts.alight.buffer, ...(parts.lean ? [parts.lean.buffer] : []), ...big] };
       };
       // T-1543: a free-flow round shown before it is solved (a rough solve's, the zone in view's

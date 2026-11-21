@@ -21,12 +21,12 @@ import type { NetworkSnapshot } from "./protocol";
 
 declare const __TW_BUILD__: string | undefined;
 /** The app build: set by vite.config.ts at each build and each dev-server start. */
-const BUILD = typeof __TW_BUILD__ === "string" ? __TW_BUILD__ : "unknown";
+export const BUILD = typeof __TW_BUILD__ === "string" ? __TW_BUILD__ : "unknown";
 declare const __TW_DEMAND__: string | undefined;
 /** T-3926: the demand code's version, set by vite.config.ts: in a build a hash of every source and data file the
  * demand side runs (the same in every build of the same demand code), on the dev server new at each start. */
 export const DEMAND_KEY = typeof __TW_DEMAND__ === "string" ? __TW_DEMAND__ : "unknown";
-export const CACHE_FORMAT = 12; // raise when the cached result's layout changes
+export const CACHE_FORMAT = 13; // raise when the cached result's layout changes
 /** The view version a cached result is shown under: no solve has it, so the workers answer no
  * question about it (a click waits for the fresh solve). */
 export const CACHE_VERSION = 0;

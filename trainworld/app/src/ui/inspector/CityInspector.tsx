@@ -50,10 +50,11 @@ function TripsBar({ label, tip, kind, city, parts, goals }: { label: string; tip
   );
 }
 
-/** T-3503: a place's everyday outings across its zone lines (`IntercityDemand.everyday`): legs, rail, walking. */
-function everydayOf(e: number[] | undefined, place: number): [number, number, number] {
-  for (let i = 0; e && i + 3 < e.length; i += 4) if (e[i] === place) return [e[i + 1], e[i + 2], e[i + 3]];
-  return [0, 0, 0];
+/** T-3503: a place's everyday outings across its zone lines (`IntercityDemand.everyday`): legs, rail, walking, and
+ * (T-2216) those between two lands that no rail takes, which have no way. */
+function everydayOf(e: number[] | undefined, place: number): [number, number, number, number] {
+  for (let i = 0; e && i + 4 < e.length; i += 5) if (e[i] === place) return [e[i + 1], e[i + 2], e[i + 3], e[i + 4]];
+  return [0, 0, 0, 0];
 }
 
 export function CityInspector({ id }: { id: string }) {
@@ -71,6 +72,8 @@ export function CityInspector({ id }: { id: string }) {
   const interRail = places.reduce((s, [, p]) => s + p.rail, 0) + ev[1];
   const interWalk = ev[2];
   const interAir = places.reduce((s, [, p]) => s + p.air, 0);
+  // T-2216: trips with no road and no flight that no line carries (islands)
+  const interNone = places.reduce((s, [, p]) => s + p.none, 0) + ev[3];
   // T-378: both ways, as the corridors count them
   const elsewhere = 2 * (market?.elsewhere?.[city.place] ?? 0);
   // within the zone: the open zone's modelled split, or only a count for a zone not opened
@@ -135,8 +138,9 @@ export function CityInspector({ id }: { id: string }) {
                 parts={[
                   ...transitPart(interRail, zoneTransit(demandView.value, city.id, true)),
                   ...(interWalk > 0 ? [{ name: t("cityInspector.walk"), n: interWalk, cls: "seg-walk" }] : []),
-                  { name: t("cityInspector.car"), n: Math.max(0, interAll - interRail - interWalk - interAir), cls: "seg-drive" },
+                  { name: t("cityInspector.car"), n: Math.max(0, interAll - interRail - interWalk - interAir - interNone), cls: "seg-drive" },
                   ...(interAir > 0 ? [{ name: t("cityInspector.plane"), n: interAir, cls: "seg-other" }] : []),
+                  ...(interNone > 0 ? [{ name: t("cityInspector.noRoute"), n: interNone, cls: "seg-none", note: t("inspector.noRoadEnds") }] : []),
                 ]}
               />
             )}

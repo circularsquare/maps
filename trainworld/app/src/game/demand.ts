@@ -135,8 +135,9 @@ const carried = new WeakMap<Float32Array[], { now: string; out: Float32Array[] |
  * T-378: `air` and `car` the rest by plane and by car, `elsewhere` each place's longer trips with
  * places that have no zone, each way. */
 export interface IntercityDemand { version: number; round: number; tripsPerDay: number; railTripsPerDay: number; commuteTripsPerDay?: number; commuteRailPerDay?: number; corridors: Corridors; elsewhere?: number[];
-  /** T-3503: each place's everyday outings across a zone line with other places, four numbers a
-   * place with any (place, legs with an end there, rail legs, walking legs) */
+  /** T-3503: each place's everyday outings across a zone line with other places, five numbers a
+   * place with any (place, legs with an end there, rail legs, walking legs, and (T-2216) legs between two
+   * lands that no rail takes, which have no way) */
   everyday?: number[] }
 /**
  * The market's corridors with trips (T-789: millions of place pairs; 8.5M on the New York save in
@@ -152,6 +153,9 @@ export interface CorridorBook {
   /** T-3509: per market place, 2 numbers from its own row (between its own zones): its longer trips
    * (32-bit, as the rows hold them) and commute legs, before a kind of day's scales (`withinOf`) */
   own: Float64Array;
+  /** T-2216: per market place, the share of its own row's trips between zones on two lands (island zones),
+   * which have no car; 0 for most places */
+  apart: Float64Array;
 }
 /** Some of a market's table rows (`rowsOf`), corridor ascending: the corridor (`Corridors.railAt`'s
  * numbers), its two places, its longer trips and commute legs a day before a kind of day's scales,
@@ -170,20 +174,25 @@ export interface CorridorRows {
 export interface Corridors { book: CorridorBook; longerScale: number; commuteScale: number; railAt: Uint32Array; longerRail: Float64Array; commuteRail: Float64Array; railFrom: Uint32Array; railTo: Uint32Array; railAir: Uint16Array }
 
 export const NO_CORRIDORS: Corridors = {
-  book: { key: "", n: 0, totals: new Float64Array(0), own: new Float64Array(0) },
+  book: { key: "", n: 0, totals: new Float64Array(0), own: new Float64Array(0), apart: new Float64Array(0) },
   longerScale: 0, commuteScale: 0, railAt: new Uint32Array(0), longerRail: new Float64Array(0), commuteRail: new Float64Array(0), railFrom: new Uint32Array(0), railTo: new Uint32Array(0), railAir: new Uint16Array(0),
 };
 const NO_ROWS: CorridorRows = { key: "", n: 0, at: new Uint32Array(0), from: new Uint32Array(0), to: new Uint32Array(0), longer: new Float32Array(0), commute: new Float64Array(0), air: new Uint16Array(0), car: new Uint16Array(0) };
 
 /** One corridor's figures a day: all trips (longer and commute legs), by rail, by plane, by car,
- * and the commute legs alone. */
-export interface CorridorFigures { trips: number; rail: number; air: number; car: number; commutes: number; commuteRail: number }
+ * (T-2216) with no way, and the commute legs alone. */
+export interface CorridorFigures { trips: number; rail: number; air: number; car: number; none: number; commutes: number; commuteRail: number; commuteNone: number }
 
 /** Row `i` of `r`'s figures; `k` its place in `railAt` (-1 none; looked up when left out). */
 export function corridorAt(c: Corridors, r: CorridorRows, i: number, k = railIndex(c, r.at[i])): CorridorFigures {
   const tl = r.longer[i] * c.longerScale, cm = r.commute[i] * c.commuteScale;
   const lr = k >= 0 ? c.longerRail[k] : 0, cr = k >= 0 ? c.commuteRail[k] : 0, rest = tl - lr;
-  return { trips: tl + cm, rail: lr + cr, air: rest * shareOf(r.air[i]), car: rest * shareOf(r.car[i]) + cm - cr, commutes: cm, commuteRail: cr };
+  const air = shareOf(r.air[i]), car = shareOf(r.car[i]);
+  // T-2216: what is left of the longer trips after the plane and the car has no way but rail (two landmasses
+  // with no plane, or zones on two lands); commutes never fly, so with no car at all they have none either
+  const noneL = air + car <= 1 ? rest * (1 - air - car) : 0;
+  const noneC = r.car[i] === 0 && !(air > 0.999) ? cm - cr : 0;
+  return { trips: tl + cm, rail: lr + cr, air: rest * air, car: rest * car + cm - cr - noneC, none: noneL + noneC, commutes: cm, commuteRail: cr, commuteNone: noneC };
 }
 
 /** Corridor `j`'s place in `railAt`, -1 when it has no rail. */
@@ -305,7 +314,7 @@ const withinRail = new WeakMap<Corridors, Map<number, number>>();
 /** T-3509: the market's legs a day between two 6 km zones of place `place` (its longer trips 25 km and
  * more apart, and the long commutes that stay in it), and those by rail; null with no market result.
  * T-2136: from the book's own-row sums and the rail rows, no table rows asked. */
-export function withinOf(ic: IntercityDemand | null | undefined, place: number): { trips: number; rail: number } | null {
+export function withinOf(ic: IntercityDemand | null | undefined, place: number): { trips: number; rail: number; none: number } | null {
   const c = ic?.corridors;
   const own = c?.book.own;
   if (!c || !own || place < 0 || 2 * place + 1 >= own.length) return null;
@@ -319,7 +328,10 @@ export function withinOf(ic: IntercityDemand | null | undefined, place: number):
   }
   const k = rail.get(place);
   const r = k === undefined ? 0 : c.longerRail[k] + c.commuteRail[k];
-  return { trips, rail: Math.min(r, trips) };
+  // T-2216: the share between zones on two lands has no car, so what its rail leaves has no way (the rail
+  // is taken as spread over the row evenly)
+  const apart = c.book.apart?.[place] ?? 0; // (a book cached before this has none)
+  return { trips, rail: Math.min(r, trips), none: apart * Math.max(0, trips - r) };
 }
 
 /** T-3509 (Anita, 2026-11-18: "yes, all trips within should count"): zone `id`'s view on day `d` with
@@ -331,7 +343,7 @@ export function zoneView(d: DayDemand | undefined, id: CityId): DemandView | und
   const w = v && withinOf(d?.intercity, cityById(id)?.place ?? -1);
   if (!v || !w) return v;
   const trips = v.tripsPerDay + w.trips, rail = v.railTripsPerDay + w.rail;
-  const walk = (v.tripsPerDay * v.split.walk) / 100, none = (v.tripsPerDay * (v.split.none ?? 0)) / 100;
+  const walk = (v.tripsPerDay * v.split.walk) / 100, none = (v.tripsPerDay * (v.split.none ?? 0)) / 100 + w.none;
   return { ...v, tripsPerDay: trips, railTripsPerDay: rail, split: splitOf(trips, rail, walk, none) };
 }
 /** T-3509: day `d` has the market's result (its corridor book), so `zoneView` holds the trips between

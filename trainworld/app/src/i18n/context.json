@@ -1407,6 +1407,7 @@
   "mareyChart.showOthers": "Hover and screen-reader label of the timetable chart's toggle while other lines' trains are hidden.",
   "mareyChart.tip": "Hover on one train's path in the timetable chart. from, to: the end stations' names; leave, arrive: clock times, \"7:42 AM\".",
   "marketTrip.accessTip": "Hover of the first row of an inter-city train route (getting to the first station). min: 12 min.",
+  "marketTrip.cutOff": "Shown in the inter-city panel under the transit heading when no road or flight joins the two ends (an island, say) and the trip by transit would cost over 4 times a drive across a bridge that is not there, so none of those trips go by transit.",
   "marketTrip.airDollarWeight": "Last line of the plane's effective time hover. amount: what one US dollar is in the shown currency, e.g. \"$1\", \"¥150\" (T-2798); w: 1.5.",
   "marketTrip.pricePer": "A price per distance in a hover of the inter-city trip panel, in a currency other than US dollars (marketTrip.centsPer is the dollar's). amount: e.g. \"¥22\", \"£0.12\"; unit: km or mile.",
   "marketTrip.airFareTip": "Hover of the plane trip's fare row. fare: $50. rate: 12 cents per km.",

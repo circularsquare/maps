@@ -523,7 +523,8 @@ function dayResult(dayTable: ArrayLike<number>, r: DayResult, q: number, day: De
   // place's mix of purposes taken as the market's)
   const ratio = (k: number) => (ip && intercityParts && ip[k] > 0 ? intercityParts[k] / ip[k] : 1);
   const [el, er, ew] = [ratio(4), ratio(5), ratio(6)];
-  const everydayPlaces = r.everydayPlaces?.map((v, i) => (i % 4 === 1 ? v * el : i % 4 === 2 ? v * er : i % 4 === 3 ? v * ew : v));
+  // (T-2216: the legs between two lands, the 5th, go by the outings' factor as the legs do)
+  const everydayPlaces = r.everydayPlaces?.map((v, i) => (i % 5 === 1 || i % 5 === 4 ? v * el : i % 5 === 2 ? v * er : i % 5 === 3 ? v * ew : v));
   const summary = r.summary.slice();
   summary[1] = summary[2] = summary[3] = 0;
   for (const v of [...Object.values(citySummary), intercitySummary]) for (const k of [1, 2, 3]) summary[k] += v[k] ?? 0;
@@ -660,16 +661,16 @@ function dayViewsOf(input: DayInput, day: DemandDay, res: DayResult[]): DayViews
   // the regional layer between places: longer trips and (T-276) commutes between zones together
   let interTrips = 0, interRail = 0, commuteTrips = 0, commuteRail = 0;
   const elsewhere = Array.from({ length: input.places }, () => 0);
-  // T-3503: each place's everyday outings across a zone line: legs, rail legs, walking legs
-  const everydayAt = new Map<number, [number, number, number]>();
+  // T-3503: each place's everyday outings across a zone line: legs, rail legs, walking legs, (T-2216) legs with no way
+  const everydayAt = new Map<number, [number, number, number, number]>();
   for (const r of res) {
     interTrips += r.intercitySummary[1] ?? 0; interRail += r.intercitySummary[2] ?? 0;
     if (r.intercityParts && r.intercityParts.length >= 4) { commuteTrips += r.intercityParts[2]; commuteRail += r.intercityParts[3]; }
     r.elsewhere?.forEach((v, p) => { if (p < elsewhere.length) elsewhere[p] += v; });
     const e = r.everydayPlaces ?? [];
-    for (let i = 0; i + 3 < e.length; i += 4) {
-      const t = everydayAt.get(e[i]) ?? everydayAt.set(e[i], [0, 0, 0]).get(e[i])!;
-      t[0] += e[i + 1]; t[1] += e[i + 2]; t[2] += e[i + 3];
+    for (let i = 0; i + 4 < e.length; i += 5) {
+      const t = everydayAt.get(e[i]) ?? everydayAt.set(e[i], [0, 0, 0, 0]).get(e[i])!;
+      t[0] += e[i + 1]; t[1] += e[i + 2]; t[2] += e[i + 3]; t[3] += e[i + 4];
     }
   }
   const everyday = [...everydayAt].sort((x, y) => x[0] - y[0]).flatMap(([p, t]) => [p, ...t]);

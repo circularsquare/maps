@@ -1410,6 +1410,7 @@
   "mareyChart.showOthers": "Show other lines",
   "mareyChart.tip": "Leaves {from} {leave}\nReaches {to} {arrive}",
   "marketTrip.accessTip": "On foot or by car, effective time {min} on average over the homes at this end",
+  "marketTrip.cutOff": "No road or flight joins these two ends, and transit costs over 4 times what a drive across would, so nobody takes it.",
   "marketTrip.airDollarWeight": "Each {amount} of the fare counts as {w} minutes, on average over the people making these trips.",
   "marketTrip.airFareTip": "{fare} and {rate} flown",
   "marketTrip.airportDrives": "To and from airports",

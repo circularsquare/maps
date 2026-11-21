@@ -110,6 +110,12 @@ fn island_pairs_ride_by_the_bound_and_every_other_pair_as_before() {
     assert!(on.per(0).unwrap().e_walk < off.per(0).unwrap().e_walk);
     let e = on.m.everyday.iter().find(|e| on.m.gid_place[e.a as usize] == 3).unwrap();
     assert_eq!(e.walk, 0.);
+    // the panels' figures with no line: no car and no plane between places 0 and 3, no way for the
+    // trips and for every outing across (`everyday_place_legs`' 5th and 6th numbers: legs, rail on them)
+    assert_eq!(on.m.corridor_mode(&Directs::of(&on.m.places), 0, 3), [0., 0.]);
+    let legs = |a: &IntercityApi| (0..PERIODS).flat_map(|q| a.everyday_place_legs(q).chunks_exact(7).filter(|c| c[0] == 3.).map(|c| (c[1], c[5], c[6])).collect::<Vec<_>>()).collect::<Vec<_>>();
+    let none = legs(&on);
+    assert!(!none.is_empty() && none.iter().all(|&(all, apart, rail)| apart > 0. && apart <= all && rail == 0.), "{none:?}");
 
     // a fast line across: the pairs across ride, all of them at the stations; every pair with a car
     // or a plane, and every commute and outing on one landmass, as without the rule to the bit
@@ -152,6 +158,9 @@ fn island_pairs_ride_by_the_bound_and_every_other_pair_as_before() {
         // the commute and errands across: as the longer trips
         let ci = on.cpairs.iter().position(|c| c.apart).unwrap();
         let ei = on.epairs.iter().position(|e| e.apart).unwrap();
+        // (what rail takes of the outings across is counted: all of them where all ride)
+        let across = legs(&on);
+        assert!(across.iter().all(|&(_, apart, rail)| rail <= apart + 1e-9) && across.iter().any(|&(_, apart, rail)| (rail > 0.) == all_ride && apart > 0.), "sea {sea}: {across:?}");
         if all_ride {
             assert!(a.c_frac[ci] == 1. && a.e_frac[ei] > 0.99, "commute {}, errands {}", a.c_frac[ci], a.e_frac[ei]);
         } else {
@@ -289,6 +298,18 @@ fn zones_off_their_main_land_ride_by_the_bound() {
     assert_eq!(on.m.everyday[on.epairs[ei].e as usize].walk, 0.);
     assert!(off.m.everyday[off.epairs[ej].e as usize].walk > 0.29);
     assert!(a.c_frac[ci] == 1. && a.e_frac[ei] > 0.99, "commute {} errands {}", a.c_frac[ci], a.e_frac[ei]);
+    // the panels' figures: the island's share of place 0's trips with place 1 has no car (and no plane
+    // here, so no way but rail), and so has its share of the place's own row
+    let (d_on, d_off) = (Directs::of(&on.m.places), Directs::of(&off.m.places));
+    set_lands_off(true);
+    let m_off = off.m.corridor_mode(&d_off, 0, 1);
+    let off_empty = off.m.apart().own.is_empty() && off.m.apart().cross.is_empty();
+    set_lands_off(false);
+    let m_on = on.m.corridor_mode(&d_on, 0, 1);
+    assert!(m_off[1] > 0.99 && m_on[1] > 0. && m_on[1] < m_off[1] - 1e-6, "car share with place 1: off {m_off:?} on {m_on:?}");
+    assert!(m_on[0] == 0. && m_on[0] + m_on[1] < 1., "no plane: the rest has no way, {m_on:?}");
+    assert!(on.m.apart().own.get(&0).is_some_and(|&f| f > 0. && f <= 1.), "own row share {:?}", on.m.apart().own);
+    assert!(off_empty);
     // the trip explorer: from the island no car to place 1 or to its own place's first zone; from
     // that first zone the car as before
     let none = open(false, false);

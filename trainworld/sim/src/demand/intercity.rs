@@ -940,8 +940,19 @@ struct Group {
     kz: Zones,
     kplace: Vec<(usize, f32, f32)>,
 }
+/// T-2216 stage 3: how much of each corridor's longer trips (and of each place's own row) is between
+/// zones on two lands with no car between them, though the two places have one (`Market::apart`).
+#[derive(Default)]
+struct Apart {
+    /// by corridor, the share of the longer trips
+    cross: HashMap<u32, f32>,
+    /// by place, the share of its own row's trips between zones, as the book keeps it
+    own: HashMap<u32, f32>,
+}
 /// The market's own data, shared (`Rc`) by every market `beside` it (T-409).
 struct Market {
+    /// T-2216 stage 3: `apart`, worked out when first asked
+    apart: std::cell::OnceCell<Apart>,
     /// T-1431: some place's riders come in income groups (their fares then need `pair_km`)
     grouped: bool,
     rule: Rule,

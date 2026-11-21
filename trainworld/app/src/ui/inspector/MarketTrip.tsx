@@ -360,6 +360,7 @@ function trainShare(x: MarketPeriod, ways: number): number {
 function noRailText(why: MarketPeriod["why"]): string {
   if (why === "noTrain") return tr("marketTrip.noTrain");
   if (why === "noAlt") return tr("marketTrip.noAlt");
+  if (why === "cutOff") return tr("marketTrip.cutOff");
   return tr("marketTrip.noRail", { why: why === "farClosed" || why === "unmatched" ? why : "noRail" });
 }
 

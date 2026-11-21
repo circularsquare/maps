@@ -111,7 +111,7 @@ counted in the totals, by no mode. Car ferries don't count as roads. The same go
 and commutes between places on two landmasses with no flight between them (Vancouver to Victoria,
 Singapore to Batam, Tenerife to Gran Canaria), and between an island and the rest of its own place
 (Sado and Niigata, Okinawa's outer islands and Naha, Aegina and Athens). People on such an island
-only reach stations on it.
+only reach stations on it. The city panel counts these trips as "No route" until a line carries them.
 
 ### By train
 
