@@ -408,9 +408,6 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
 - T-3926 [P3] {L:loading} Cached trips survive a release that leaves demand alone
   - Context: From T-3917: the demand cache key carries the build stamp (`demandClient.ts` `keyBase`, `BUILD` = build time), so every release makes the next open of every save a cold load, 5.5-7.5 minutes on a 2,000-station save. Releases that change demand need it anyway.
   - Goal: The key is the demand code's own version (WASM and demand inputs), so a release that changes no demand rule keeps every cached result.
-- T-3927 [P3] {L:loading} A died-load report names the game being loaded
-  - Context: From T-3917: five iPhone "crashes right away / make it lighter" reports (11-19 to 11-20) carry T-2545's died-load text but not which game was loading, so the cause can't be placed; Tokyo and Kansai real-network starts peak at about 2 GB on an emulated iPhone.
-  - Goal: The report carries the game kind and city (new, slot, real network, which zone) and its last load step.
 - T-2624 [P1] {L:solve-speed} Lines in view wait on a whole solve (taking, 2026-11-21, agent viewplan)
   - Context: From T-3917 (11-21): on 2,000+ station saves an edit's line riders and totals change only at the final, 5-7.5 minutes later; the lag survey's first pick. Earlier: after a trains-only edit, the zone shows in about 3 s but shown lines wait 40-120 s on your North America save.
   - Goal: Shown lines update in seconds after an edit, with figures close to the final solve.
@@ -797,12 +794,12 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3837 [P3] {L:buses} Ferry routes found without a waypoint, and waypoints on touch
   - Context: T-3809 added shift click waypoints. A leg is still searched only in a box around its two ports, so a sea path that leaves it (Ma Liu Shui to Sai Kung) needs a waypoint; a wider third search would find it alone. Phones have no shift click.
   - Other: notes/T-3809.md
+- T-3928 [P3] {L:checks} Longer trips with no route are skipped uncounted
+  - Context: Found by droppedflow (T-3923), 11-21: intercity's `pass_window` (intercity/pass.rs) skips a destination with no strategy with a bare `continue`, so those trips never reach `assign_inner` and T-3923's dropped-trips count misses them. Also seen: the ignored test `trip_real_network` is 2.8e-3 off its 1e-4 tolerance (trip/tests.rs:497), not a drop.
+  - Goal: Longer trips skipped this way are counted like T-3923's drops, and a test fails if a fixture skips any; the tolerance test passes or its limit is justified.
 - T-3924 [P3] {L:buses} {waits:Anita} Auto bus stops count for demand only every 2 km
   - Need from Anita: Keep Auto bus lines as they are (recommended; a player can step to 600 m or place stops), or count every Auto street stop for demand (riders change on every Auto line in every save)?
   - Context: Found by busstop400 (T-3920), 11-21: on Auto the panel reads "400 m" and "10 stops", but demand sees about one stop every 2 km. A 3.7 km NYC line: Auto 2,814 riders a day, stops placed 400 m apart 3,580, 450 m 3,533. Stops a player places count at any spacing.
-- T-3923 [P3] {L:checks} Trips assigned to an unsearched station vanish silently
-  - Context: Found by homeload (T-3916), 11-21: `assign_inner` drops flow to a station the strategy search never reached, its `debug_assert` is off in release, and entries and exits are counted before that check, so the one-entry-one-exit assertions can't catch a loss like T-3916's.
-  - Goal: Such a loss is counted where a check (and diagnostics) can see it, and a Rust test fails if any trips are dropped this way on our fixtures.
 - T-3913 [P3] {L:buses} Bus road hint shades in-town streets apart
   - Context: You, 11-21: "could we color what is in town and out of town, with a slightly different color for streets in town and out of town?" Not built with BRT (T-3907): the hint is a map tile layer on the main thread and the street speeds live in the clock worker. brt's untested idea: a sim call returning the in-town zone squares as polygons, and the hint split in two layers by a `within` filter; a few hours.
   - Goal: In the bus tool, local streets where BRT would run faster than a plain bus show a slightly different shade from those out of town, light and dark.

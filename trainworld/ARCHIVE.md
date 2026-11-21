@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3923 [P3] {L:checks} Trips assigned to an unsearched station vanish silently (2026-11-21): Loads::dropped and the everyday lanes' count, DemandApi/EverydayApi::dropped; test builds log and panic on a drop unless KNOWN_DROPS; fixtures drop nothing; figures bit-identical. notes/T-3923.md.
+- T-3927 [P3] {L:loading} A died-load report names the game being loaded (2026-11-21): tw-load-started marker is JSON (noteLoad in game/loading.ts); reportContext adds diedLoad; no server change; proved on a killed new-game load. notes/T-3927.md.
 - T-3917 [P1] {L:memory} Where big saves get slow and run out of memory (2026-11-21): measured: edits on 2,000+ station saves take 5-7.5 min to calculate trips, cold loads 5.5-7.5 min and every release forces one (build-keyed cache), 4.2-6.5 GB desktop, phones 2 GB on real-network starts, 6-11 main-thread stalls a minute; next: T-2624, newer edit replaces a half-done calculation, T-3373 B. notes/T-3917.md.
 - T-3919 [P2] {L:trams} Longer trips treat trams as trains (2026-11-21): IntercityApi::set_tram_lines; market caps tram stops and scales cars; a cross-zone tram 30,122 -> 28,139 riders; NYC save unchanged; Rust test; worker guard covers every population. notes/T-3919.md.
 - T-3920 [P2] {L:buses} Bus stops placed 400 m apart count as one every 2 km (2026-11-21): not reproduced for placed stops: every stop placed by hand counts for demand at any spacing (400 m apart: 10 of 10 stops); the 400 m jump is Auto (T-2947), left as is, and whether Auto should count its street stops goes to Anita (notes/T-3920.md)
