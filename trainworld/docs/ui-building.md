@@ -144,12 +144,14 @@ the map's other controls', and the level buttons' numbers 15 px (also in the pho
   [track-and-service.md](track-and-service.md) 6.1]. Everything the player reads says level for the
   track's seven steps, never elevation ("Level", "Level +1", "Levels go from −3 to +3."; "ground
   level" is one of them) [T-2226, reversing T-526].
-- **The station bar**, one row: first what the tool places [T-3999], three icon buttons with their names as hovers,
-  **Train or tram station** (the default), **BRT station** and **Port**, remembered per browser (`build.stationKind`);
-  on a phone one button showing the picked kind, which opens the three above the bar. With Train or tram station picked,
-  **Station length** (the label left out on a phone) and its stepper, then the one or both tracks buttons (T-3332). Tram stops and the other stations each keep their own length (tram 2
-  cars to start, regular and high speed 10 cars, shared by those two); the bar shows the length of
-  the kind under the pointer, else of the track type picked [T-3015].
+- **The station bar**, one row: first what the tool places [T-3999], four icon buttons with their names as hovers,
+  **Train station** (the default), **Tram stop**, **BRT station** and **Port**, remembered per browser (`build.stationKind`);
+  on a phone one button showing the picked kind, which opens the four above the bar. With Train station or Tram stop picked,
+  **Station length** (the label left out on a phone) and its stepper, then the one or both tracks buttons (T-3332). Each
+  kind places only its own: a train station snaps to train track only (never tram track), a tram stop to tram track only,
+  and on open ground a train station brings regular or high-speed track (the track bar's high speed) and a tram stop tram
+  track, whatever type the track tool has picked [T-4010]. Tram stops and train stations each keep their own length (tram
+  2 cars to start, up to 4; train 10 cars to start, no cap of 4); the bar shows the length of the kind picked.
 - The level, the ramp switch, the track type, both target speeds, the Advanced row, the keep placing switch, the
   snap and beside switches and both platform lengths are remembered per browser (localStorage with the other panel settings,
   not in the save) [T-468]; keep placing is on by default [T-942]. A browser with nothing remembered

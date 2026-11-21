@@ -233,8 +233,9 @@ impl Lanes {
 }
 
 /// T-3378 stage 2: buses an hour one way a BRT lane takes (Anita, 11-21: "60 buses an hour per lane each way, lines
-/// on it cut to fit past that, as trains do on full track"). Past it each line on the lane runs fewer.
-pub const LANE_BUSES_H: f64 = 60.0;
+/// on it cut to fit past that, as trains do on full track"; raised to 100 the same day, T-4010: "kinda silly looking
+/// but i dont see why not"). Past it each line on the lane runs fewer.
+pub const LANE_BUSES_H: f64 = 100.0;
 
 /// One way of one stretch of lane: the lines whose buses run along it that way (ids, ascending), and the middle
 /// of one of its steps (frame) for where a panel names it.

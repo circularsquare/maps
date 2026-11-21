@@ -8,7 +8,7 @@ import { EARTH_R } from "../game/frame";
 import { lngLatToPack } from "../game/coords";
 import { describeIssues } from "../game/issues";
 import { length, moneyShort } from "../game/format";
-import { buildLevel, buildPlatform, buildTramPlatform, quadTrack, trackType } from "../game/ui";
+import { buildLevel, buildPlatform, buildTramPlatform, quadTrack, stationOnTram, trackType } from "../game/ui";
 import { edit, say, world } from "../game/world";
 import type { StationAt } from "../workers/protocol";
 import { strokesFromParts } from "./network";
@@ -67,7 +67,8 @@ function clearPreview(tk: Tools) {
   tk.overlay.invalidate();
 }
 
-const tram = () => trackType.peek() === "tram";
+// T-4010: the kind picked decides, not the track tool's type (a tram stop is its own kind)
+const tram = () => stationOnTram.peek();
 const platform = () => (tram() ? buildTramPlatform.peek() : buildPlatform.peek());
 
 /** The heading from the first end towards the pointer. */
@@ -84,7 +85,7 @@ function piece(h: Free, phi: number) {
   const plat = platform();
   const [lng0, lat0] = toLngLat(h.lx, h.ly);
   const cos = Math.cos((lat0 * Math.PI) / 180), deg = 180 / Math.PI;
-  const level = buildLevel.peek(), quad = quadTrack.peek() && !tram(), z = level * 8, tt = trackType.peek();
+  const level = buildLevel.peek(), quad = quadTrack.peek() && !tram(), z = level * 8, tt = tram() ? "tram" : trackType.peek() === "hsr" ? "hsr" : "regular";
   // ground metres east and north of the first end to lng, lat
   const at = (e: number, n: number): [number, number] => [lng0 + (e / (EARTH_R * cos)) * deg, lat0 + (n / EARTH_R) * deg];
   const ce = Math.cos(phi), sn = Math.sin(phi);

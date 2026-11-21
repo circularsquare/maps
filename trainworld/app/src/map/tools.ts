@@ -164,8 +164,7 @@ export class Tools {
     });
     effect(() => { buildPlatform.value; buildTramPlatform.value; stationKind.value; if (tool.value === "station") this.place(); });
     // T-3999: an open-ground station's first end goes with the tool or the kind
-    effect(() => { if (tool.value !== "station" || stationKind.value !== "rail") freeCancel(this); });
-    effect(() => { if (tool.value === "station") stationOnTram.value = tramTrack.value; }); // T-3015: also when the type changes with the station tool in hand
+    effect(() => { if (tool.value !== "station" || (stationKind.value !== "rail" && stationKind.value !== "tram")) freeCancel(this); });
     // the place lists name stations where the tiles have no streets (T-065); the view's zones' are
     // fetched when the station tool is picked, not at startup (T-400)
     // and the real stations of the view's region, which name a station on one (T-3571)
@@ -392,8 +391,11 @@ export class Tools {
     const offEdges = hidden.levels ? new Set(w.edges.filter((e) => levelHidden(e.levelMin) && levelHidden(e.levelMax)).map((e) => e.id)) : null;
     // each edge's nearest point within reach, px squared
     const near: { d: number; hit: Snap }[] = [];
+    const tramOnly = station ? stationOnTram.peek() : null, tramOf = station ? this.tramEdgeSet(w) : null;
     for (const { edge, pts, ks } of nearEdges ?? [...n.edgePts].map(([edge, pts]) => ({ edge, pts, ks: null }))) {
       if (offEdges?.has(edge)) continue;
+      // T-4010: a train station goes on train track only and a tram stop on tram track only
+      if (tramOnly !== null && tramOf!.has(edge) !== tramOnly) continue;
       const er = doubleIds?.has(edge) ? laneReach : edgePx;
       let eb = er * er, eh: Snap | null = null;
       for (let j = 0, k = ks ? ks[0] : 0; ks ? j < ks.length : k + 5 < pts.length; j++, k = ks ? ks[j] : k + 3) {
@@ -529,8 +531,8 @@ export class Tools {
   }
 
   /** the platform length a new station gets at a spot: tram stops have their own (T-2926) */
-  platFor(s: Snap | null | undefined): number {
-    return this.tramSpot(s) ? buildTramPlatform.peek() : buildPlatform.peek();
+  platFor(_s?: Snap | null): number {
+    return stationOnTram.peek() ? buildTramPlatform.peek() : buildPlatform.peek();
   }
 
   /** T-1685: with Snap beside on, open ground within BESIDE_PX of track: the nearest piece, and the
@@ -697,7 +699,7 @@ export class Tools {
       this.touchAt = ll;
       this.move(e);
     } else if (t === "station") {
-      if (stationKind.peek() !== "rail" || freeStarted() || this.snap(e.point.x, e.point.y, e.lngLat).kind === "free") {
+      if (stationKind.peek() === "bus" || stationKind.peek() === "port" || freeStarted() || this.snap(e.point.x, e.point.y, e.lngLat).kind === "free") {
         this.touchAt = null;
         this.move(e);
         void stationClick(this, e);
@@ -1339,7 +1341,6 @@ export class Tools {
   tangent: SVGSVGElement | null = null;
   /** Move the DOM markers to the camera (after each MapLibre frame and each change). */
   place() {
-    if (tool.peek() === "station" && stationKind.peek() === "rail" && this.hover && this.hover.kind !== "free") stationOnTram.value = this.tramSpot(this.stationSpot() as Spot | null);
     // on touch the pointer is a tap, a place on the map: its screen point follows the camera
     const p = this.pointer;
     if (p && touchInput.peek()) {

@@ -723,10 +723,10 @@ fn a_full_brt_lane_cuts_its_lines_buses() {
     let mut a = api();
     let (pop, jobs) = ([30_000.0f32, 30_000.0, 50.0], [20_000.0f32, 20_000.0, 5.0]);
     assert!(a.add_pack_streets(2000.0, -1000.0, -1000.0, 3, 1, &pop, &jobs, &[0, 1, 2], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758));
-    // a bus every 90 s each: 40 an hour each way, 80 on the shared road
+    // a bus every 50 s each: 72 an hour each way, 144 on the shared road
     let line = |a: &mut TrackApi, pts: &[f64]| {
         let l = a.new_line_id();
-        assert_eq!(a.set_bus_line(l, pts, 90, 90, 90, 30.0, 120.0, 0, "B".into()), 0, "{}", a.issues());
+        assert_eq!(a.set_bus_line(l, pts, 50, 50, 50, 30.0, 120.0, 0, "B".into()), 0, "{}", a.issues());
         assert_eq!(a.construct_line(l), 0, "{}", a.issues());
         l
     };
@@ -735,7 +735,7 @@ fn a_full_brt_lane_cuts_its_lines_buses() {
     let lev = a.w.net.period_slot()[0];
     let tph = |a: &TrackApi, l: u32| a.w.net.line_tph[l as usize][lev] as f64;
     let (p1, p2) = (tph(&a, l1), tph(&a, l2));
-    assert!(p1 > 38.0 && p2 > 38.0, "{p1} {p2}");
+    assert!(p1 > 70.0 && p2 > 70.0, "{p1} {p2}");
     // on plain lines nothing is cut, and the lane read is empty
     assert_eq!(a.bus_lane_load(l1)[0], 0.0);
     brt_on(&mut a, l1);
@@ -750,18 +750,18 @@ fn a_full_brt_lane_cuts_its_lines_buses() {
     // a headway the lane can't give shows as limited by it (`LANE_KIND`)
     let held = a.line_held(l1);
     let limits = &held[7 * ROWS..12 * ROWS];
-    assert!(limits.chunks_exact(5).any(|r| r[1] == crate::track::capacity::LANE_KIND as f64 && r[0] > 90.0), "{held:?}");
+    assert!(limits.chunks_exact(5).any(|r| r[1] == crate::track::capacity::LANE_KIND as f64 && r[0] > 60.0), "{held:?}");
     // a plain line on the same road neither counts nor is cut
     let l3 = line(&mut a, &[0.0, 5.0, 1.0, 2800.0, 5.0, 1.0]);
-    assert!(tph(&a, l3) > 38.0 && (tph(&a, l1) - b1).abs() < 0.5, "{} {}", tph(&a, l3), tph(&a, l1));
+    assert!(tph(&a, l3) > 70.0 && (tph(&a, l1) - b1).abs() < 0.5, "{} {}", tph(&a, l3), tph(&a, l1));
     // one off BRT: the other runs all its buses again
     assert_eq!(a.set_bus_brt(l2, false), 0, "{}", a.issues());
-    assert!(tph(&a, l1) > 38.0 && tph(&a, l2) > 38.0, "{} {}", tph(&a, l1), tph(&a, l2));
+    assert!(tph(&a, l1) > 70.0 && tph(&a, l2) > 70.0, "{} {}", tph(&a, l1), tph(&a, l2));
 }
 
 /// T-3378 stage 3: a BRT station beside the road, constructed for its flat price: only a BRT line stops there,
 /// standing no dwell, its stop costing `BRT_STATION_STOP_S`; a plain line passes it until it goes on BRT. It takes
-/// park and ride and no waiting room, pays a tram stop's upkeep, saves in `LBT1` and is removed with its node.
+/// the waiting room and no park and ride, pays a tram stop's upkeep, saves in `LBT1` and is removed with its node.
 #[test]
 fn a_brt_station_serves_brt_lines_only() {
     let mut a = api();
@@ -796,13 +796,13 @@ fn a_brt_station_serves_brt_lines_only() {
     assert_eq!(a.construct_all(), 0, "{}", a.issues());
     assert!(a.bus_brt(p) && at(&a, p).is_some());
     assert_eq!(a.set_bus_brt(p, false), 0, "{}", a.issues());
-    // park and ride, no waiting room
-    assert_ne!(a.set_station_upgrade(&[s], crate::track::upgrades::WAITING_ROOM, true), 0);
-    assert_eq!(a.set_station_upgrade(&[s], crate::track::upgrades::PARK_RIDE, true), 0, "{}", a.issues());
+    // T-4010: a waiting room, no park and ride
+    assert_ne!(a.set_station_upgrade(&[s], crate::track::upgrades::PARK_RIDE, true), 0);
+    assert_eq!(a.set_station_upgrade(&[s], crate::track::upgrades::WAITING_ROOM, true), 0, "{}", a.issues());
     // a tram stop's upkeep among the stations
     let up = a.upkeep();
     assert_eq!(up[4], 1.0, "{up:?}");
-    assert!((up[2] - UPKEEP_BRT_STATION * ECONOMY / 1e6 - crate::track::upgrades::upkeep(crate::track::upgrades::PARK_RIDE_COST)).abs() < 1e-9, "{up:?}");
+    assert!((up[2] - UPKEEP_BRT_STATION * ECONOMY / 1e6 - crate::track::upgrades::upkeep(crate::track::upgrades::WAITING_ROOM_COST)).abs() < 1e-9, "{up:?}");
     // saved and loaded
     let saved = a.save();
     assert!(saved.windows(4).any(|w| w == b"LBT1"));
@@ -857,7 +857,7 @@ fn a_full_brt_lane_cuts_weekend_buses_too() {
     assert!(a.add_pack_streets(2000.0, -1000.0, -1000.0, 3, 1, &pop, &jobs, &[0, 1, 2], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758));
     let line = |a: &mut TrackApi, pts: &[f64]| {
         let l = a.new_line_id();
-        assert_eq!(a.set_bus_line(l, pts, 90, 90, 90, 30.0, 120.0, 0, "B".into()), 0, "{}", a.issues());
+        assert_eq!(a.set_bus_line(l, pts, 50, 50, 50, 30.0, 120.0, 0, "B".into()), 0, "{}", a.issues());
         assert_eq!(a.construct_line(l), 0, "{}", a.issues());
         l
     };
@@ -866,7 +866,7 @@ fn a_full_brt_lane_cuts_weekend_buses_too() {
     let lev = a.w.net.period_slot()[0];
     let rest = |a: &TrackApi, l: u32| a.w.net.line_tph_rest[l as usize][lev] as f64;
     for l in [l1, l2] {
-        assert_eq!(a.set_line_weekend_headways(l, 30, 30, 30, 90, 90, 90), 0, "{}", a.issues());
+        assert_eq!(a.set_line_weekend_headways(l, 30, 30, 30, 50, 50, 50), 0, "{}", a.issues());
     }
     assert!(a.w.net.rest_solved && rest(&a, l1) + rest(&a, l2) > LANE_BUSES_H + 5.0, "{} {}", rest(&a, l1), rest(&a, l2));
     for l in [l1, l2] {

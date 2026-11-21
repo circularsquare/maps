@@ -64,8 +64,8 @@ export function StationUpgrades({ s, members }: { s: StationInput; members?: str
     <div class="upgrades" role="group" aria-label={t("stationUpgrades.group")}>
       {/* T-3332: a one-track station has no terminal and no passing tracks */}
       {/* T-3574: a tram stop takes the terminal and passing tracks as a rail station does; park and ride is rail's */}
-      {/* T-3378: a BRT station takes park and ride alone, its waits already counting as in a waiting room */}
-      {UPGRADE_TEXT.filter((u) => (s.brt ? u.bit === UPGRADE.parkRide : (!s.tram && !s.port) || u.bit === UPGRADE.waitingRoom || (s.tram && !s.port && (u.bit === UPGRADE.terminal || u.bit === UPGRADE.passing))) && (u.bit !== UPGRADE.passing || double || hasUpgrade(s.upgrades, u.bit))
+      {/* T-4010: a BRT station takes the waiting room and a passage; a park and ride from an older save shows so it can be removed */}
+      {UPGRADE_TEXT.filter((u) => (s.brt ? u.bit === UPGRADE.waitingRoom || (u.bit === UPGRADE.parkRide && hasUpgrade(s.upgrades, u.bit)) : (!s.tram && !s.port) || u.bit === UPGRADE.waitingRoom || (s.tram && !s.port && (u.bit === UPGRADE.terminal || u.bit === UPGRADE.passing))) && (u.bit !== UPGRADE.passing || double || hasUpgrade(s.upgrades, u.bit))
         && !(s.one && (u.bit === UPGRADE.terminal || u.bit === UPGRADE.passing) && !hasUpgrade(s.upgrades, u.bit))).map((u) => (
         <UpgradeButton s={s} u={u} price={prices?.[UPGRADE_BITS.indexOf(u.bit)] ?? 0} housed={housed} />
       ))}
@@ -143,8 +143,7 @@ function BuildingButton({ s }: { s: StationInput }) {
 function ComplexUpgrade({ u, members, price }: { u: UpgradeText; members: string[]; price: number }) {
   const w = world.value;
   const byId = w ? stationsById(w) : new Map<string, StationInput>();
-  // T-3378: a BRT station takes no waiting room, its waits counting as in one already
-  const st = members.map((id) => byId.get(id)).filter((x): x is StationInput => !!x && !(x.brt && u.bit === UPGRADE.waitingRoom));
+  const st = members.map((id) => byId.get(id)).filter((x): x is StationInput => !!x);
   const have = st.filter((x) => hasUpgrade(x.upgrades, u.bit)), missing = st.filter((x) => !hasUpgrade(x.upgrades, u.bit));
   const all = missing.length === 0, built = st.some((x) => x.built), name = st[0]?.name ?? "", allTram = st.length > 0 && st.every((x) => x.tram);
   const state = !all ? "" : have.some((x) => x.built) ? " on" : " planned";

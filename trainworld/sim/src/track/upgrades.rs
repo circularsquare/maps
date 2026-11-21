@@ -20,9 +20,8 @@ pub const ALL: u8 = TERMINAL | PARK_RIDE | WAITING_ROOM | PASSING;
 /// `BUILDING_CHANGE` of its fixed minutes (the walk whole), and a wait there counts as in a
 /// waiting room (T-2276).
 pub const IN_BUILDING: u8 = 16;
-/// A BRT station (T-3378): set in demand's snapshot alone (the clock worker), never bought or saved. A wait
-/// there counts as in a waiting room, and it takes a tram stop's slot among a cell's nearest stations
-/// (`access::TRAM_SLOTS`).
+/// A BRT station (T-3378): set in demand's snapshot alone (the clock worker), never bought or saved. It takes a tram stop's slot
+/// among a cell's nearest stations (`access::TRAM_SLOTS`).
 pub const BRT_STATION: u8 = 32;
 
 /// The terminal's price: this much double track at the station's level.

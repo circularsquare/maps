@@ -173,8 +173,8 @@ function TrackBar() {
   );
 }
 
-/** T-3999: what the station tool places, a train or tram station, a BRT station or a port. */
-const stationKinds = (): [StationKind, string, () => JSX.Element][] => [["rail", t("toolBar.kindRail"), Icon.train], ["bus", t("stationInspector.brtStation"), Icon.bus], ["port", t("stationInspector.port"), Icon.anchor]];
+/** T-3999, T-4010: what the station tool places, a train station, a tram stop, a BRT station or a port. */
+const stationKinds = (): [StationKind, string, () => JSX.Element][] => [["rail", t("toolBar.kindRail"), Icon.train], ["tram", t("toolBar.kindTram"), Icon.tram], ["bus", t("stationInspector.brtStation"), Icon.brt], ["port", t("stationInspector.port"), Icon.anchor]];
 
 function StationBar() {
   const tram = stationOnTram.value;
@@ -194,9 +194,9 @@ function StationBar() {
     <div class="tool-bar station-bar" role="group" aria-label={t("toolBar.station")} style={{ "--mode": CLICK_MODE_COLOURS.station }}>
       <div class="tb-row">
         {kinds((k) => (stationKind.value = k), " tb-wide")}
-        {/* on a phone the kind is one button that opens the three above the bar, as the track type */}
+        {/* on a phone the kind is one button that opens the four above the bar, as the track type */}
         <button class="btn icon tb-narrow" aria-label={kindLabel} aria-expanded={open} onClick={() => setOpen(!open)}><KindIcon /></button>
-        {kind === "rail" && <>
+        {(kind === "rail" || kind === "tram") && <>
           <span class="tb-wide">{t("toolBar.platformLength")}</span>
           <Stepper value={carsText(Math.round(len.value / CAR_M))} wide label={t("toolBar.platformLengthLabel")} onStep={(s) => {
             const to = tram ? Math.max(TRAM_PLATFORM.min, Math.min(TRAM_PLATFORM.max, len.value + s * TRAM_PLATFORM.step)) : stepPlatform(len.value, s);

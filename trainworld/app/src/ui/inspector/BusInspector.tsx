@@ -322,9 +322,6 @@ function BoatSize({ l, st, bus }: { l: LineInput; st: LineStats; bus: ClockBus }
   );
 }
 
-// T-3944: a road's two edges, its lane line dashed, a bus in one lane
-const BrtIcon = () => <svg viewBox="0 0 16 16"><path d="M2.5 1.5v13M13.5 1.5v13M8 2v2M8 7v2M8 12v2" /><path class="solid" d="M3.75 5h3v6h-3z" /></svg>;
-
 /** T-3907: a bus line on BRT or off it: bus lanes along the whole route, its buses at no less than the BRT floor.
  * T-3944: an upgrade as a station's are (StationUpgrades.tsx): outlined when off, dashed while its lanes are in the
  * blueprint, filled once built. A click puts it in the blueprint or takes it out, or takes built lanes away (nothing
@@ -359,7 +356,7 @@ function BrtRow({ l, bus }: { l: LineInput; bus: ClockBus }) {
   return (
     <li class="brt-up">
       <button class={"btn icon upgrade" + (!on ? "" : built ? " on" : " planned")} aria-label={t("busInspector.brt")} aria-pressed={on} data-tip={tip} onClick={() => set(!on)}>
-        <BrtIcon />
+        <Icon.brt />
       </button>
       <span class="grow" data-tip={tip}>{t("busInspector.brt")}</span>
       {pending && (

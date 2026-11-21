@@ -392,7 +392,7 @@ export function boxGhost(tk: Tools, lx: number, ly: number, ways: ArrayLike<numb
   const one=tk.oneSideAt(lx,ly,sh,double);
   // a station on single track is one bar on its outside, as network.ts draws it (T-3540)
   const side=one||outside?.(sh)||0, mid=!one&&side!==0;
-  const tram=tramLook||tk.tramSpot(tk.stationSpot());
+  const tram=tramLook||stationOnTram.peek();
   tk.lastBox={lx,ly,ways,perM,plat,side,tram,mid};
   const shape=ghostShape(tk, lx,ly,ways,perM,plat,side,tram,mid);
   tk.ghost ??= svgMark(tk, ["path"], false);

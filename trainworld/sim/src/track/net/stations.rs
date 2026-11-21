@@ -151,9 +151,9 @@ impl Network {
             return;
         }
         if let Some(h) = self.node_road[i] {
-            // T-3378: beside a road (the app's test; a road on a bridge stands over water); park and ride is
-            // the one upgrade it takes, a waiting room's wait being its own
-            if self.node_ports[i].n > 0 || self.node_upgrades[i] & !super::upgrades::PARK_RIDE != 0 || self.node_level[i] != 0 || !h.is_finite() {
+            // T-3378: beside a road (the app's test; a road on a bridge stands over water); T-4010: a waiting room is
+            // the one upgrade it is sold, and a park and ride from an older save still loads
+            if self.node_ports[i].n > 0 || self.node_upgrades[i] & !(super::upgrades::WAITING_ROOM | super::upgrades::PARK_RIDE) != 0 || self.node_level[i] != 0 || !h.is_finite() {
                 out.push(Issue::NotAtBrtStation { node: n });
             }
             return;

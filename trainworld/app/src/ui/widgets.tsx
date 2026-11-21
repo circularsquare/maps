@@ -98,6 +98,8 @@ export const Icon = {
   addPoint: () => <svg viewBox="0 0 16 16"><path d="M1.5 13.5l4.5-3M10 10.5l4.5 3M12 1.5v5M9.5 4h5" /><rect x="6" y="8.5" width="4" height="4" /></svg>,
   bus: () => <svg viewBox="0 0 16 16"><rect x="3" y="2.5" width="10" height="9" rx="2" /><path d="M3 7h10M5.5 11.5v2M10.5 11.5v2" /><circle class="solid" cx="5.5" cy="9.3" r=".7" /><circle class="solid" cx="10.5" cy="9.3" r=".7" /></svg>,
   // T-2194: a boat on waves
+  /** T-3944, T-4010: a road's two edges with its lane line dashed (BRT) */
+  brt: () => <svg viewBox="0 0 16 16"><path d="M2.5 1.5v13M13.5 1.5v13M8 2v2M8 7v2M8 12v2" /></svg>,
   tram: () => <svg viewBox="0 0 16 16"><rect x="3.5" y="4" width="9" height="7.5" rx="1.8" /><path d="M3.5 8h9M6 4V2.5h4V4M5 13.8l1.2-2.3M11 13.8l-1.2-2.3" /><circle class="solid" cx="5.8" cy="9.8" r=".7" /><circle class="solid" cx="10.2" cy="9.8" r=".7" /></svg>,
   ferry: () => <svg viewBox="0 0 16 16"><path d="M2.5 8.5h11l-1.8 3H4.3zM5 8.5V6h5.5l1 2.5M7 6V4" /><path d="M1.5 13.8c1.1-.7 2.1-.7 3.2 0s2.1.7 3.3 0 2.1-.7 3.2 0 2.1.7 3.3 0" /></svg>,
   // T-2565: three rows of waves, the diagram's water switch
@@ -134,7 +136,7 @@ export const Icon = {
   walk: () => <svg viewBox="0 0 16 16"><circle cx="9.5" cy="2.8" r="1.3" /><path d="M9.5 5.2l-1.8 3 2.3 2.3v3.7M7.7 8.2L5.3 9.4M9.6 6.4l2.4 1.8M7.7 8.2L6.2 14" /></svg>,
   ride: () => <svg viewBox="0 0 16 16"><path d="M1.8 11.2V8.4l1.6-3.4h9.2l1.6 3.4v2.8zM1.8 8.4h12.4" /><circle cx="4.8" cy="11.4" r="1.3" class="bg" /><circle cx="11.2" cy="11.4" r="1.3" class="bg" /></svg>,
   // an inter-region trip's modes (with `ride` for the car)
-  train: () => <svg viewBox="0 0 16 16"><rect x="3.8" y="1.8" width="8.4" height="9.7" rx="2" /><path d="M3.8 7h8.4M6 14.2l1-2.7M10 14.2l-1-2.7" /></svg>,
+  train: () => <svg viewBox="0 0 16 16"><rect x="3" y="2.5" width="10" height="8.5" rx="2" /><path d="M3 6.8h10M5.8 11l-1.9 2.9M10.2 11l1.9 2.9" /><circle class="solid" cx="5.6" cy="9" r=".7" /><circle class="solid" cx="10.4" cy="9" r=".7" /></svg>,
   // T-3798: a high-speed train's long nose, side on, over the rail
   highSpeed: () => <svg viewBox="0 0 16 16"><path d="M1.5 11.5h9.6c2 0 3.4-.7 3.4-1.7 0-1.4-3-3.9-6.8-4.3H1.5zM9 5.8l1.6 2.6h2.8M1.5 13.8h13" /></svg>,
   plane: () => <svg viewBox="0 0 16 16"><path d={PLANE_PATH} /></svg>,

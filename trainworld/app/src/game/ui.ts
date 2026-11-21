@@ -356,12 +356,12 @@ function savedLength(v: unknown, min: number, max: number, step: number, fallbac
 /** T-3332: new stations have their platform on one track (on double track the one nearer the pointer; on
  * single track a stop where trains cannot pass); remembered in the browser. */
 export const stationOneTrack = signal(saved.build?.oneTrack === true);
-/** T-3999: what the station tool places: a train or tram station (on track, or on open ground with its own
+/** T-3999: what the station tool places: a train station or a tram stop (on its own kind of track, or on open ground with its own
  * piece), a BRT station beside a road, or a port with no ferry line yet; remembered in the browser. */
-export type StationKind = "rail" | "bus" | "port";
-export const stationKind = signal<StationKind>(saved.build?.stationKind === "bus" || saved.build?.stationKind === "port" ? saved.build.stationKind : "rail");
-/** The station tool's pointer is on tram track, so the station bar steps tram stops' length (T-2926). */
-export const stationOnTram = signal(false);
+export type StationKind = "rail" | "tram" | "bus" | "port";
+export const stationKind = signal<StationKind>(saved.build?.stationKind === "tram" || saved.build?.stationKind === "bus" || saved.build?.stationKind === "port" ? saved.build.stationKind : "rail");
+/** The tram stop kind is picked, so the station bar steps tram stops' length (T-2926, T-4010). */
+export const stationOnTram = computed(() => stationKind.value === "tram");
 /** T-468: the track bar's settings below are remembered per browser with the rest of the
  * UI state; anything unreadable falls back to the defaults. */
 export const buildLevel = signal<Level>(saved.build?.tram === true ? 0 : LEVELS.includes(saved.build?.level as Level) ? (saved.build!.level as Level) : 1);
