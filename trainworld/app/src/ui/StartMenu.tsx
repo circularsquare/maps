@@ -64,7 +64,7 @@ export function choiceFromUrl(): GameChoice | null {
     const city = q.get("city");
     return { pending: true, newGame: !on("real"), game: { mode: q.get("mode") === "sandbox" ? "sandbox" : "normal", ...(isCity(city) ? { start: city! } : {}) } };
   }
-  if (load) return { pending: true };
+  if (load) return { pending: true, ...(q.get("trips") === "off" ? { noTrips: true } : {}) };
   if (next === "new") {
     const city = q.get("city");
     const at = (q.get("at") ?? "").split(",").map(Number);

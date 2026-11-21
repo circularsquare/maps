@@ -153,6 +153,20 @@ export function loadComplete() {
   if (startup.peek() === "loading") startup.value = "ready";
 }
 
+/** T-3851: the page opened its game without calculating trips (`?trips=off`, a Community view's light load): no
+ * demand pool starts, and the load is over once the network is in. Calculating trips reloads the page into the
+ * game with the pool (workers/clockClient.ts `calculateTrips`). Set once, at startup. */
+export const tripsOff = signal(false);
+export function startWithoutTrips() {
+  tripsOff.value = true;
+}
+/** T-3851: a full state of the game arrived with trips off: the clock runs and the game is ready */
+export function networkInWithoutTrips() {
+  if (!tripsOff.peek() || gameReady.peek()) return;
+  holdArmed = false;
+  loadComplete();
+}
+
 /** T-757: demand stopped after startup (a worker failed mid-game: out of memory, an error), as the
  * player is told it in the notice at the top centre (ui/DemandStopped.tsx); the figures shown stay. */
 export const demandStopped = signal<"memory" | "error" | "graphics" | null>(null);

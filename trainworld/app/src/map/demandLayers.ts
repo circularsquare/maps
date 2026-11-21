@@ -8,7 +8,7 @@
 
 import { gauge } from "../game/boarding";
 import { lineLoadsFor, type DemandView } from "../game/demand";
-import { loadFailure } from "../game/loading";
+import { loadFailure, tripsOff } from "../game/loading";
 import { PERIODS } from "../game/periods";
 import type { StopKey } from "../game/carryLoads";
 import type { PurposeFilter } from "../game/purposes";
@@ -164,7 +164,7 @@ export function buildLayers(net: NetworkBuffers, w: WorldView, dv: DemandView | 
   const fill = new Float32Array(nSamples * 2).fill(-1);
   const strokeOf = net.sampleStroke;
   const pending = new Set<number>();
-  if (!loadFailure.peek()) for (const l of w.save.lines) if (w.lineStats[l.id]?.status === "running" && l.stops.length >= 2 && !nums.get(l.num)?.g0) pending.add(l.num);
+  if (!loadFailure.peek() && !tripsOff.peek()) for (const l of w.save.lines) if (w.lineStats[l.id]?.status === "running" && l.stops.length >= 2 && !nums.get(l.num)?.g0) pending.add(l.num);
   let lastLine = -1;
   let v: ReturnType<typeof nums.get>;
   if (strokeOf && stretchOf)

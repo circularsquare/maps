@@ -398,6 +398,8 @@ export type ToClock =
   /** T-3707: this page is not the published game, or runs a mod (game/modded.ts): the game in hand and every game
    * loaded or started after are marked modded, for good. `why`: the page's reasons, all of them each time */
   | { kind: "modded"; why: string[] }
+  /** T-3851: this page opened its game without calculating trips: money is not settled while it runs */
+  | { kind: "moneyFrozen" }
   /** T-3297: every train, tram and bus to the other side (`TrackApi.flip_right_hand`), answered with "answer": the
    * sites, two numbers each (sim `FLIP_*`: 1 single track turned round, an edge; 2 a line moved, 3 a line left
    * broken; 4 a junction now crossing flat, 5 one-way track no train can use, a node) */

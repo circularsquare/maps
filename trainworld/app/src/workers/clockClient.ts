@@ -18,7 +18,7 @@ import { setHiddenLinesSink, takeHiddenLines } from "../game/lineVisibility";
 import { takeDiagramCities } from "../game/diagramCities";
 import { hiddenZones, setGameStart } from "../game/realms";
 import { home } from "../game/home";
-import { fitView, holdForGameLoad, loadCannotFinish, markAlive, noteLoad } from "../game/loading";
+import { fitView, holdForGameLoad, loadCannotFinish, markAlive, networkInWithoutTrips, noteLoad, tripsOff } from "../game/loading";
 import { incomeByDay, lastSaved, liveMoney, moneyState, moneyTerms, moneyWorld, setMoneyState } from "../game/money";
 import { zonesLoaded } from "../game/zones";
 import { chargeShares, lineShares, upkeepShares } from "../game/regionMoney";
@@ -426,16 +426,38 @@ export function exportForShare(): Promise<Uint8Array | null> {
 /** T-3257: view a shared network (bytes `game/sharedSave.ts` checked): the game in hand is saved and the page reloads
  * into the network, held in no slot until the player saves it as `name` (T-3115 opened it as a copy in a new slot);
  * from the start menu, with no game in hand, it waits in storage for the reloaded page. A reason to show when it
- * cannot go, "" once it goes, null when the player chose to stay on a viewed game. */
-export async function openView(bytes: Uint8Array, name: string): Promise<string | null> {
-  const why = await saveRefusal({ bytes });
-  if (why && !why.soft) return why.text;
-  if (!await leaveViewed()) return null;
+ * cannot go, "" once it goes, null when the player chose to stay on a viewed game.
+ * T-3851: `trips` false opens it without calculating trips (`?trips=off`), so no memory check: the demand workers
+ * are what a big game's memory goes to. `ask` false skips the question before leaving a viewed game (the same
+ * network calculated). */
+export async function openView(bytes: Uint8Array, name: string, trips = true, ask = true): Promise<string | null> {
+  if (trips) {
+    const why = await saveRefusal({ bytes });
+    if (why && !why.soft) return why.text;
+  }
+  if (ask && !await leaveViewed()) return null;
   const pending: PendingLoad = { kind: "import", bytes, name, from: saveSlotsState.peek().active, view: true };
-  if (current?.running) { switchNow({ load: "file" }, pending); return ""; }
+  const params: Record<string, string> = trips ? { load: "file" } : { load: "file", trips: "off" };
+  if (current?.running) { switchNow(params, pending); return ""; }
   if (!await writePending(pending)) return t("clockClient.noStorage");
-  location.replace(pageWith({ load: "file" }));
+  location.replace(pageWith(params));
   return "";
+}
+/** T-3851: the game in hand, opened without calculating trips, opened again with them: a viewed network goes with its
+ * edits, a saved game is saved and reopened. A reason to show when it cannot go, "" once it goes. */
+export async function calculateTrips(): Promise<string> {
+  const v = saveSlotsState.peek().viewing;
+  if (!v) {
+    const key = saveSlotsState.peek().active;
+    if (!key) return t("clockClient.noStorage");
+    const why = await saveRefusal({ key });
+    if (why && !why.soft) return why.text;
+    switchNow({ slot: key });
+    return "";
+  }
+  const bytes = await exportForShare();
+  if (!bytes) return t("clockClient.reopenFailed");
+  return await openView(bytes, v.name, true, false) ?? "";
 }
 /** T-3257: before a viewed network (never saved) gives way to another game or the start menu, the player is asked;
  * true to go on. True at once for any other game. */
@@ -503,7 +525,7 @@ export function retryGround() {
 }
 
 /** T-1196: the URL switches that say which game a page opens (ui/StartMenu.tsx `choiceFromUrl`) */
-export const CHOICE_PARAMS = ["new", "city", "mode", "synth", "demandTest", "continue", "slot", "load", "real", "next", "at"];
+export const CHOICE_PARAMS = ["new", "city", "mode", "synth", "demandTest", "continue", "slot", "load", "real", "next", "at", "trips"];
 /** This page's URL with `params` in place of its game switches; none: the start menu (`?paused=1`, a
  * check's paused clock, stays with a game and goes with the menu). */
 export function pageWith(params: Record<string, string>): string {
@@ -590,6 +612,8 @@ export interface GameChoice {
   game?: NewGameSpec;
   /** T-1196: the game is the one the saves panel left in storage before the page reloaded */
   pending?: boolean;
+  /** T-3851: `?trips=off`: the game opens without calculating trips (no demand pool) */
+  noTrips?: boolean;
 }
 
 /** One request in flight to the worker; a newer one replaces a waiting one. */
@@ -796,6 +820,7 @@ export class ClockClient {
     effect(() => this.post({ kind: "bindNew", on: bindNewStations.value }));
     current = this;
     if (moddedWhy.length) this.post({ kind: "modded", why: moddedWhy });
+    if (tripsOff.peek()) this.post({ kind: "moneyFrozen" }); // T-3851
     // The worker settles money from the clock (T-028, T-284): tell it each time the
     // clock is set, paused, resumed or sped up.
     const sendClock = () => this.post({ kind: "clock", t: clock.now(), rate: clock.ticking ? clock.rate() : 0, at: performance.timeOrigin + performance.now(), game: gameStamp.peek() });
@@ -1169,6 +1194,7 @@ export class ClockClient {
     if (es && world.value) this.post({ kind: "chargeShares", seq: es.seq, ...chargeShares(this.worldBefore, world.value, es.line, es.paid) });
     // T-2766: rows alone leave the renderer's network as it is until the full state
     if (!msg.state.rows) this.onState(msg.state);
+    if (!msg.state.rows && this.lastLoad) networkInWithoutTrips(); // T-3851: with trips off, the loaded network is the whole load
     if (moved) {
       anchorVersion.value = a.version; // the demand views rebuild at it (T-317)
       this.onAnchor(a);

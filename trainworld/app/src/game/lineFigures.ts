@@ -7,7 +7,7 @@ import { computed, effect, signal } from "@preact/signals";
 import { clock } from "./clock";
 import { editStamp, lineStopped, quietEdits, resetEdits, wideCovered, wideEdits } from "./editCap";
 import { demandBehindFrom, demandHeld, demandUpdating, finalWorld, networkWorld } from "./demand";
-import { demandStopped, loadProgress } from "./loading";
+import { demandStopped, loadProgress, tripsOff } from "./loading";
 import { openedZones } from "./openedZones";
 import { world } from "./world";
 import { t } from "../i18n";
@@ -50,7 +50,7 @@ const FORGET_EDITS_MS = 30000;
  * same wherever the view is. */
 export const demandCapped = computed(() => {
   // T-1790: demand that stopped will finish nothing, so it holds nothing back
-  if (demandStopped.value) return false;
+  if (demandStopped.value || tripsOff.value) return false;
   const pending = linesPending.value, updating = demandUpdating.value;
   // T-2409: a new line with no riders yet costs and earns nothing
   if (updating && [...pending.values()].includes("build")) return true;

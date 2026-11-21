@@ -1,7 +1,7 @@
 import { activeCity, cityById, viewedZone } from "../game/cities";
 import { cityDemandViews } from "../game/demand";
 import { zoomedOut } from "../map/intercityView";
-import { loadProgress } from "../game/loading";
+import { loadProgress, tripsOff } from "../game/loading";
 import { asFilter, FILTER_PURPOSES, purposeColour } from "../game/purposes";
 import { useState } from "preact/hooks";
 import { display, purposeFilter, setDisplay, type MapRow } from "../game/ui";
@@ -28,14 +28,16 @@ import { tPlace } from "../i18n/places";
 export function MapTopLeft() {
   // T-2161: the map's rows say nothing about the network diagram; its own take their place
   if (diagramShown.value) return <DiagramTopLeft />;
+  // T-3851: with trips off the demand rows would show nothing, so they go
+  const trips = !tripsOff.value;
   return <div class="map-top-left">
     <div class="map-top-row">
-      <DemandSelector />
+      {trips && <DemandSelector />}
       <StatusTag />
       <BusyTag />
     </div>
     <TrackDisplay />
-    <StationRidership />
+    {trips && <StationRidership />}
     <div class="map-find">
       <Search />
       <NorthButton />

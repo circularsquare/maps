@@ -13,7 +13,7 @@ import { serviceEditMs } from "./clockFollowUp";
 import { game } from "./clockMain";
 import { kept } from "./clockPanic";
 import { moneyPost } from "./clockPost";
-import { achievements, api, clk, copyOf, costHour, dayShift, fareHour, fares, goals, guide, heldCharges, holidayData, hourLedger, hourShape, incomePerHour, kindOfLine, ledger, LEDGER_DAYS, LEDGER_HOURS, ledgerDay, lineCountries, lineIncome, lineNotes, linePoints, lineRides, lineShares, loan, modded, mode, NP, partCost, partFare, partHour, prices, putHourLedger, putLedger, putLoan, putPartCost, putPartFare, putPartHour, putSettledT, rideHour, ridesPerHour, rowOfLine, runTail, send, settledT, stars, syncHolidays, TEN, upkeepRegions, wallNow } from "./clockState";
+import { achievements, api, clk, copyOf, costHour, dayShift, fareHour, fares, goals, guide, heldCharges, holidayData, hourLedger, hourShape, incomePerHour, kindOfLine, ledger, LEDGER_DAYS, LEDGER_HOURS, ledgerDay, lineCountries, lineIncome, lineNotes, linePoints, lineRides, lineShares, loan, modded, mode, moneyFrozen, NP, partCost, partFare, partHour, prices, putHourLedger, putLedger, putLoan, putPartCost, putPartFare, putPartHour, putSettledT, rideHour, ridesPerHour, rowOfLine, runTail, send, settledT, stars, syncHolidays, TEN, upkeepRegions, wallNow } from "./clockState";
 
 /** T-531: each region's ledgers, kept as the network's (a zone id; "" outside every zone or not yet
  * placed, so the regions add up to the network) */
@@ -385,6 +385,13 @@ export function settle(): boolean {
     putPartCost(0); putPartFare(partCost);
   }
   if (now <= settledT) return false;
+  // T-3851: with trips off the trains run empty, so nothing is settled: the clock moves past, cash and ledgers stay
+  if (moneyFrozen) {
+    const ended = Math.floor(now / 3600) > Math.floor(settledT / 3600);
+    putSettledT(now);
+    putPartHour(Math.floor(now / 3600)); putPartCost(0); putPartFare(0);
+    return ended;
+  }
   const groups = localGroups(), rl = regionLines(), up = upkeepPerHour();
   const upShares: [string, number][] = upkeepRegions.length ? upkeepRegions : [["", 1]];
   const pl = [...linePoints].map(([id, regs]) => ({ shift: api!.line_shift(id), kindOf: kindOfLine(id), regs }));

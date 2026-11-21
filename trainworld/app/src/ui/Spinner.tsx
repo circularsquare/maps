@@ -6,12 +6,12 @@
 import type { ComponentChildren } from "preact";
 import { computed } from "@preact/signals";
 import { demandView, viewFinal, viewUpdating } from "../game/demand";
-import { demandIdle, loadFailure } from "../game/loading";
+import { demandIdle, loadFailure, tripsOff } from "../game/loading";
 import { t } from "../i18n";
 
 /** The zone in view has no final figures yet or a solve is still changing them; never over a view
  * that has nothing to load, or after a failure. */
-export const demandPending = computed(() => !loadFailure.value && !demandIdle.value && (!demandView.value || !viewFinal.value || viewUpdating.value));
+export const demandPending = computed(() => !loadFailure.value && !demandIdle.value && !tripsOff.value && (!demandView.value || !viewFinal.value || viewUpdating.value));
 
 export function Spinner({ tip, class: cls }: { tip?: string; class?: string }) {
   return <i class={"spin" + (cls ? " " + cls : "")} data-tip={tip} role="progressbar" aria-label={t("spinner.loading")} />;

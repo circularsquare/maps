@@ -11,7 +11,7 @@ import { activeCity, cityById, viewedZone, type CityId } from "../game/cities";
 import { keepPlace, nextLeft, STAGE_TEXT, type BarPlace } from "../game/loadBar";
 import { editLeft, editPrior } from "../game/editLeft";
 import { loadFailText } from "../game/loadText";
-import { cityNames,demandIdle, demandStopped, loadFailure, loadLines, loadProgress, memoryResolve, oldestDownload, solveLeft, zoneFailures, zoneLoads, zoneSteps } from "../game/loading";
+import { cityNames,demandIdle, demandStopped, loadFailure, loadLines, loadProgress, memoryResolve, oldestDownload, solveLeft, tripsOff, zoneFailures, zoneLoads, zoneSteps } from "../game/loading";
 import { selection } from "../game/ui";
 import { tripView } from "../game/trip";
 import { LoadBar, loadingCardShown } from "./LoadingScreen";
@@ -50,7 +50,7 @@ const clickWait = computed<CityId | null>(() => {
     const v = tripView.value;
     return v?.trip || v?.market || v?.failed ? null : activeCity.value;
   }
-  if (sel?.kind === "city" && !demandIdle.value && (zoneLoads.value.has(sel.city) || !intercityDemand.value)) return sel.city;
+  if (sel?.kind === "city" && !demandIdle.value && !tripsOff.value && (zoneLoads.value.has(sel.city) || !intercityDemand.value)) return sel.city;
   return null;
 });
 
@@ -263,7 +263,7 @@ export function StatusTag() {
     : terrain ? terrain
     : mapWait ? mapWait
     : wholeSolveUnseen.value ? t("statusTag.recomputingCities", { count: count(demandSolving.value?.size ?? demandScope.value) })
-    : !demandView.value ? (demandIdle.value ? null : t("statusTag.loadingDataDots")) // T-318: nothing to load over dead space
+    : !demandView.value ? (demandIdle.value || tripsOff.value ? null : t("statusTag.loadingDataDots")) // T-318: nothing to load over dead space; T-3851: nor with trips off
     // T-1493: the zone in view has figures but its bubbles are still on their way
     : bubblesWaiting.value ? t("statusTag.loadingDataDots")
     // T-3427: edits made while paused, held for the game to run ("Recalculate trips while paused" off)

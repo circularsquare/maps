@@ -357,7 +357,7 @@ hidden; checks that visit zones in every realm), `?patch=check|shiftcheck|0` (pa
 `window.twSheet` (the diagram's last rubber sheet, T-2568), `?rawdem=1` (the hillshade as it comes), `?logo=0` (no start menu logo),
 `?quietMs=N` (how long the loading card may hear nothing before the failure screen), `?keepMs=N` (the hour after which the keep dot appears), `?track` / `?notrack` (plays and playtime
 pings on or off, `game/playtime.ts`), and the start menu's `?city=<zone id>` and `?mode=sandbox` (with `?new=1`), `?slot=<key>` and
-`?load=file|restore|new`; `?lang=<code>|pseudo` (a language, or every message in ⟦ ⟧, `i18n/index.ts`, T-2583); `?perfOff=...` (CPU A/B switches, `src/perfFlags.ts`, which lists them; notes/T-045.md).
+`?load=file|restore|new` (with `&trips=off` a viewed network opens with no demand pool, T-3851); `?lang=<code>|pseudo` (a language, or every message in ⟦ ⟧, `i18n/index.ts`, T-2583); `?perfOff=...` (CPU A/B switches, `src/perfFlags.ts`, which lists them; notes/T-045.md).
 
 ### Build
 

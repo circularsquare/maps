@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { CITIES, zoneCountry } from "../game/cities";
 import realmsJson from "../game/realms.json";
 import { accountOpen, boardSetting, loadBoardSetting, session, shareableSlot } from "../game/account";
-import { SEARCH_MAX, TITLE_MAX, communityOn, communityNewestOn, communityPagesOn, communitySearchOn, communityOpen, copyName, currentShare, fetchShare, fetchShares, linkedShare, loadDrawing, releaseDrawing, myShares, newSeed, openSharedView, refreshMyShares, reportShare, setLiked, shareAgain, shareAsk, shareTick, sharedWhen, viewedRow, viewedShare, sharesLeft, shareLink, sharePhase, shareGame, stopSharing, type ReportReason, type ShareRow, type ShareView } from "../game/community";
+import { SEARCH_MAX, TITLE_MAX, communityOn, communityNewestOn, communityPagesOn, communitySearchOn, communityOpen, copyName, currentShare, fetchShare, fetchShares, linkedShare, loadDrawing, releaseDrawing, myShares, newSeed, openSharedView, refreshMyShares, reportShare, setLiked, setViewTrips, shareAgain, shareAsk, shareTick, sharedWhen, viewedRow, viewedShare, sharesLeft, shareLink, sharePhase, shareGame, stopSharing, viewTrips, type ReportReason, type ShareRow, type ShareView } from "../game/community";
 import { saveSlotsState } from "../workers/clockClient";
 import { pointsScore, pointsShort } from "../game/points";
 import { shade, theme as colourTheme } from "../game/ui";
@@ -255,6 +255,11 @@ function Detail({ row, onBack, onChange }: { row: ShareRow; onBack: () => void; 
       </div>
       <div class="cm-detail-acts">
         {row.mine && <button type="button" class="btn text cm-share-again" onClick={() => setMsg(shareAgain(row))}><Icon.share />{t("community.again")}</button>}
+        {/* T-3851: off, View loads the network alone (no demand), in seconds; remembered */}
+        {row.copy && <label class="check cm-trips-tick">
+          <input type="checkbox" checked={viewTrips.value} disabled={opening} onChange={(e) => setViewTrips((e.target as HTMLInputElement).checked)} />
+          <span>{t("community.viewTrips")}</span>
+        </label>}
         {row.copy && <button type="button" class="btn text cm-open-copy" disabled={opening} onClick={() => void openView()}><Icon.copy />{opening ? t("leaderboard.loading") : t("community.openCopy")}</button>}
         <CopyLink id={row.id} />
         {!row.mine && (reported

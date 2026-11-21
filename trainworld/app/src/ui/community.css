@@ -36,6 +36,7 @@
 .cm-detail-who strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cm-detail-acts { display: flex; align-items: center; gap: 6px; flex: none; }
 .cm-like.on { color: var(--accent); }
+.cm-trips-tick { margin-right: 4px; white-space: nowrap; }
 .cm-reasons { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
 .cm-canvas-box { position: relative; border: 1px solid var(--rule); }
 .cm-canvas { display: block; width: 100%; height: min(70vh, 720px); cursor: grab; }

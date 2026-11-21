@@ -1370,8 +1370,8 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   when its game has points there, valued at their sum there. Twelve cards a page, each a shared schematic painted
   small with its title in bold and the player's name after it in grey, their flag after the name, smaller (12 x 9 px) to match it (a share from before titles shows the name alone, in bold, the flag after it at 16 x 12),
   its biggest city in the place, points, lines and stations (the game's own counts,
-  bus and ferry included, as the saves list shows them). A card opens the drawing to pan and zoom, with View
-  (when the sharer let others open a copy), Copy link, Report and the heart.
+  bus and ferry included, as the saves list shows them). A card opens the drawing to pan and zoom, with the
+  **Calculate trips** tick and View (both when the sharer let others open a copy), Copy link, Report and the heart.
 - **Search** (T-3224): a box at the right end of the tabs' row (on a phone, beside the place picker), placeholder
   "Search", shown only when `/noritetsu/config` says `trainworldCommunitySearch`. Sent as the list's `q` once typing
   pauses 350 ms; matches the title or the sharer's display name, any case, accents folded, in the chosen tab and
@@ -1408,6 +1408,20 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   save this build cannot open says "This copy doesn't open in this version of the game." (another world, a retired
   or newer format), a damaged one "This copy can't be opened."; a load that fails after that is reported as any
   loaded file's is, and the page falls back to the game it had.
+- **A light view** [T-3851]: with the Calculate trips tick off (the default; the tick is remembered in this
+  browser), View opens the network without its trips: the page reloads with `?trips=off`, no demand worker starts
+  and no city pack is opened (only the clock worker's water masks and terrain come, as in any load), and the load
+  ends once the network is in (notes/T-3851.md has the times).
+  There is no memory check, since the demand workers are what a big game's memory goes to. Track, stations, lines
+  and trains show and run (empty; money is frozen: no fares, running costs, upkeep or loan payments, so cash stays as
+  saved, and stays so in a game saved from there; edits cost as usual), the heart under the day and night picture
+  works, and the saved figures (the ledger, the Cities tab's profit) show as saved; riders, trips and points stay
+  empty, with no loading rings or "Calculating" (a train's riders say "Not available"), and the map's demand
+  bubble and station rows are hidden. The top bar says "Asia - kanocifer isn't saved.
+  Its trips aren't calculated." with Calculate trips and Save; saved from there, "This game's trips aren't
+  calculated." with Calculate trips. Calculate trips opens the same game again with its trips, the memory check
+  first: a viewed network goes along with any edits (still viewed, its heart kept), a saved game is saved and
+  reopened.
 - **The viewed game's card** (saves panel, above the others): its picture and facts as any card, "Not saved" where
   the others say when they were saved, the mark Viewing where the game being played says Playing, then only
   Download (hover "Download as a file") and Save (hover "Keep it in your saved games (Ctrl+S)"). The top bar says

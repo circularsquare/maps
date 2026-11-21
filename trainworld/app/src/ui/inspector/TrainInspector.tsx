@@ -2,7 +2,7 @@
 
 import { clock } from "../../game/clock";
 import { demandView, lineDemand } from "../../game/demand";
-import { loadFailure } from "../../game/loading";
+import { loadFailure, tripsOff } from "../../game/loading";
 import { PERIODS, periodAt } from "../../game/periods";
 import { distanceOf, exact } from "../../game/format";
 import { lowerWord, t } from "../../i18n";
@@ -85,7 +85,7 @@ function OnBoard({ line, run, s, stopS, cars, what, profile, dep }: { line: Line
       <ul class="rows">
         <Row label={t("trainInspector.riders")}>
           {/* the train is drawn striped while the riders are being worked out */}
-          <span class="muted">{t(loadFailure.value ? "trainInspector.unavailable" : "trainInspector.calculating")}</span>
+          <span class="muted">{t(loadFailure.value || tripsOff.value ? "trainInspector.unavailable" : "trainInspector.calculating")}</span>
         </Row>
       </ul>
     );

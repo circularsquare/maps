@@ -109,7 +109,7 @@ import { mountKeepDot } from "./ui/KeepDot";
 import { startTips } from "./ui/tip";
 import { startModded } from "./game/modded";
 import { setupDone, startLoadingGate } from "./ui/LoadingScreen";
-import { choosing, lastLoadDied, loadCannotFinish, loadGraphicsGone, loadNoSimd, loadNoWebgl2, onGraphicsGone, startGameWait, waitKey } from "./game/loading";
+import { choosing, lastLoadDied, loadCannotFinish, loadGraphicsGone, loadNoSimd, loadNoWebgl2, onGraphicsGone, startGameWait, startWithoutTrips, waitKey } from "./game/loading";
 import { webgl2State } from "./map/webgl2";
 import { hasWasmSimd } from "./map/wasmSimd";
 import { outOfMemoryText } from "./game/loadText";
@@ -187,7 +187,9 @@ const startDemandPool = (newGame: boolean) => {
 };
 if (urlChoice) {
   startGameWait(waitKey(urlChoice), urlChoice);
-  startDemandPool(!!urlChoice.newGame);
+  // T-3851: a network opened without calculating trips starts no demand pool at all
+  if (urlChoice.noTrips) startWithoutTrips();
+  else startDemandPool(!!urlChoice.newGame);
 }
 
 // ---- map and overlay ----

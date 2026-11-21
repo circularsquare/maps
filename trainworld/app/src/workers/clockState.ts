@@ -228,6 +228,9 @@ export let copyOf: string | undefined;
  * its own and the page's, never fewer; undefined for the published game's own */
 export let pageModded: string[] = [];
 export let modded: string[] | undefined;
+/** T-3851: the page runs without calculating trips (the "moneyFrozen" message): no fares, running costs, upkeep or loan
+ * payments are settled, so cash stays as saved while trains run */
+export let moneyFrozen = false;
 export function withModded(own: unknown): string[] | undefined {
   const all = [...new Set([...(Array.isArray(own) ? own.filter((x): x is string => typeof x === "string") : []), ...pageModded])].slice(0, 16);
   return all.length ? all : undefined;
@@ -408,6 +411,7 @@ export function putNewLineWeekendShare(v: typeof newLineWeekendShare) { newLineW
 export function putOpened(v: typeof opened) { opened = v; }
 export function putOutlinesRead(v: typeof outlinesRead) { outlinesRead = v; }
 export function putPageModded(v: typeof pageModded) { pageModded = v; }
+export function putMoneyFrozen(v: typeof moneyFrozen) { moneyFrozen = v; }
 export function putPartCost(v: typeof partCost) { partCost = v; }
 export function putPartFare(v: typeof partFare) { partFare = v; }
 export function putPartHour(v: typeof partHour) { partHour = v; }

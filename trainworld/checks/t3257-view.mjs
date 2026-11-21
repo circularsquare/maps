@@ -26,6 +26,7 @@ try {
     try {
       localStorage.setItem('trainworld-ui', JSON.stringify({ shade: 'light', v: 2 }));
       localStorage.setItem('trainworld.acct-api', 'local');
+      localStorage.setItem('tw.community.viewTrips', '1'); // T-3851: View with trips calculated, as before the tick
       localStorage.setItem('noritetsu.auth.v1', JSON.stringify({ token: 'tok', account: { id: 'acct1', logins: ['pw:anita'], email: '', pendingEmail: '' } }));
     } catch {}
   });
@@ -60,7 +61,7 @@ try {
     await page.waitForSelector('.cm-card', { timeout: 30000 });
     await page.locator('.cm-open').first().click();
     await page.waitForSelector('.cm-open-copy');
-    ok((await page.locator('.cm-open-copy').textContent()) === 'View', 'the button on an opened share says View');
+    ok((await page.locator('.cm-open-copy').textContent()) === 'View a copy', 'the button on an opened share says View a copy');
     await page.locator('.cm-open-copy').click();
   };
 

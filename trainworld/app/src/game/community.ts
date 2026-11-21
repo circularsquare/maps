@@ -10,7 +10,7 @@ import { effect, signal } from "@preact/signals";
 import { accountConfig, accountState, api, ApiError, fetchBytes, gameForShare, loadBoardSetting, playingGameId, renameRefused, session, slotOfGame } from "./account";
 import { diagramForShare } from "../diagram/view";
 import { decodeShared, packShared, type DecodedShare, type SharedDrawing } from "../diagram/shared";
-import { exportForShare, manageSaveSlot, openView, saveSlotsState } from "../workers/clockClient";
+import { calculateTrips, exportForShare, manageSaveSlot, openView, saveSlotsState } from "../workers/clockClient";
 import { copyFromShare, CopyRefused, forShare, MAX_SHARED_SAVE } from "./sharedSave";
 import { t, tDate } from "../i18n";
 import { accountList } from "./accountGames";
@@ -103,9 +103,28 @@ export async function fetchShare(id: string): Promise<ShareRow> {
   catch (e) { throw plain(e, "share"); }
 }
 
+/** T-3851: whether View calculates the network's trips (the tick beside it), remembered in this browser; off by
+ * default, so a network opens in seconds with no demand loaded */
+const VIEW_TRIPS_KEY = "tw.community.viewTrips";
+export const viewTrips = signal<boolean>((() => { try { return localStorage.getItem(VIEW_TRIPS_KEY) === "1"; } catch { return false; } })());
+export function setViewTrips(on: boolean) {
+  viewTrips.value = on;
+  try { localStorage.setItem(VIEW_TRIPS_KEY, on ? "1" : "0"); } catch { /* kept for this page only */ }
+}
+/** T-3851: the game in hand, opened without its trips, opened again with them; the share it came from rides the reload
+ * so its heart stays. A reason to show, "" once the reload is under way. */
+export async function calculateViewTrips(): Promise<string> {
+  const v = viewedShare.peek();
+  if (v && saveSlotsState.peek().viewing) { try { sessionStorage.setItem(VIEWED_KEY, v.id); } catch { /* the heart waits for the next view */ } }
+  const why = await calculateTrips();
+  if (why) { try { sessionStorage.removeItem(VIEWED_KEY); } catch { /* none */ } }
+  return why;
+}
+
 /** View a share's save as a game (T-3257): downloaded, checked (game/sharedSave.ts), then the page reloads into it,
- * kept nowhere until the player saves it, as `name`. Resolves with a reason to show, "" once the reload is under way,
- * null when the player chose to stay on the network they were viewing. */
+ * kept nowhere until the player saves it, as `name`, its trips calculated or not as `viewTrips` says (T-3851).
+ * Resolves with a reason to show, "" once the reload is under way, null when the player chose to stay on the network
+ * they were viewing. */
 export async function openSharedView(row: ShareRow, name: string): Promise<string | null> {
   let bytes: Uint8Array;
   try {
@@ -123,7 +142,7 @@ export async function openSharedView(row: ShareRow, name: string): Promise<strin
   viewedShare.value = { id: row.id, seen: false, name: "", slot: "" };
   try { sessionStorage.setItem(VIEWED_KEY, row.id); } catch { /* the button then waits for a game opened without a reload */ }
   const undo = () => { viewedShare.value = before; try { sessionStorage.removeItem(VIEWED_KEY); } catch { /* none */ } };
-  try { const why = await openView(bytes, name); if (why !== "") undo(); return why; }
+  try { const why = await openView(bytes, name, viewTrips.peek()); if (why !== "") undo(); return why; }
   catch { undo(); return t("community.errCopyBad"); }
 }
 
