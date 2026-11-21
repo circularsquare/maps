@@ -126,6 +126,11 @@ export class StreetSnap {
     this.railRoads = new BusRoads(map, () => this.landed(), railRoad);
   }
 
+  /** T-3378: the roads a bus may use, for placing a BRT station beside one */
+  get busRoads(): BusRoads {
+    return this.tramRoads;
+  }
+
   /** the roads the snap follows now */
   get roads(): BusRoads {
     return this.profile === "rail" ? this.railRoads : this.tramRoads;

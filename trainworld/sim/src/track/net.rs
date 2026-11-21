@@ -241,6 +241,9 @@ pub struct StationData {
     /// T-3759: the name it shows when it is not bound to its complex's name; empty while bound. `name`
     /// stays its part in the complex's name (the app's `nameSource`) either way.
     pub own: String,
+    /// T-3378: a BRT station: on no track, beside a road running on this heading (plane radians, the
+    /// platform's axis). Only BRT lines stop there (`bus::reach`). None for every other station.
+    pub road: Option<f64>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -568,6 +571,8 @@ pub enum Issue {
     NotAtPort { node: u32 },
     /// A port's berth missing, outside the world or too far from its landing (T-2193).
     PortBerth { node: u32 },
+    /// Track, a level, water or an upgrade other than Park and ride at a BRT station (T-3378).
+    NotAtBrtStation { node: u32 },
 }
 
 /// What the raw setters touched since the last `take_touch`.
@@ -629,6 +634,8 @@ pub struct Network {
     pub node_own: Vec<String>,
     /// A port's berth (`StationData::berth`, T-2193); None for every other node.
     pub node_berth: Vec<Option<[f64; 2]>>,
+    /// A BRT station's road heading (`StationData::road`, T-3378); None for every other node.
+    pub node_road: Vec<Option<f64>>,
     pub node_ports: Vec<Ports>,
     /// Derived with the ports: where each end's lanes lie and the moves through the node (T-3137).
     pub node_moves: Vec<Moves>,

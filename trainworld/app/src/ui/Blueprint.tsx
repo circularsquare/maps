@@ -40,8 +40,8 @@ const TRAM_ROW = 4;
 const STREET_TRAM_ROW = 5;
 /** the quote row of tram cars (sim `blueprint_cost_items`; 14 is a ferry route) */
 const TRAM_CARS = 15;
-/** T-3907: and of bus routes' BRT, road metres */
-const BRT = 16;
+/** T-3907: and of bus routes' BRT, road metres; T-3378: and of BRT stations, a count */
+const BRT = 16, BRT_STATIONS = 17;
 
 const NOUN = ["track", "station", "junction", "flyover", "flatCrossing", "car", "ground", "roadCrossing", "stationUpgrade", "passage", "route", "bus", "port", "boat", "ferryRoute", "tram car"];
 /** "3 stations", "2 new cars": a counted noun by its id, the plural chosen in the message */
@@ -55,6 +55,7 @@ function rowName(r: BlueprintItem) {
   if (r.kind === 11) return counted("newBus", r.quantity);
   // T-2193: ports, boats and a ferry route's metres (free)
   if (r.kind === 12) return counted("port", r.quantity);
+  if (r.kind === BRT_STATIONS) return t("blueprint.brtStations", { count: r.quantity });
   if (r.kind === 13) return counted("newBoat", r.quantity);
   if (r.kind === 14) return t("blueprint.ferryRoute", { distance: distance(r.quantity) });
   if (r.kind === TRAM_CARS) return t("blueprint.newTramCars", { count: r.quantity });
@@ -133,6 +134,9 @@ function rowTip(r: BlueprintItem) {
     const m = moneyState.peek();
     base = t("blueprint.baseCostDist", { price: mil(perDistance((r.kind === BRT ? m?.brtRouteKm : m?.busRouteKm) ?? 0)), unit: distUnit() });
     factors.push([t("blueprint.length"), withUnit(n / 1000 / perDistance(1)), 1]);
+  } else if (r.kind === BRT_STATIONS) {
+    base = t("blueprint.baseCostBrtStation", { price: money(r.cost / Math.max(1, n)) });
+    if (n !== 1) factors.push([t("blueprint.stationsFactor"), String(n), 1]);
   } else if (r.kind === 14) {
     base = t("blueprint.ferryFree");
   } else {

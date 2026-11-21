@@ -165,6 +165,8 @@ pub struct TrackApi {
     link_charge: f64,
     /// The node of the port the last `add_port` added (T-2193), `u32::MAX` if refused.
     last_port: u32,
+    /// T-3378: the node the last `add_brt_station` added, `u32::MAX` if it was refused.
+    last_brt_station: u32,
     /// T-2669: per line id, its running cost over the world price list (its countries' prices,
     /// `set_line_run_factors`); 1 for a line not listed. Never saved: the app sends it.
     run_factor: Vec<f64>,
@@ -323,6 +325,9 @@ fn bus_upkeep(n: &Network, l: u32, lanes: &[f64]) -> Option<f64> {
     })
 }
 fn station_upkeep(n: &Network, i: usize) -> f64 {
+    if n.node_road[i].is_some() {
+        return UPKEEP_BRT_STATION * ECONOMY / 1e6;
+    }
     let share = if n.one_platform(i as u32) { UPKEEP_ONE_PLATFORM_SHARE } else { 1.0 };
     n.node_kind(i as u32).spec().station_upkeep.unwrap_or_else(|| super::cost::station_upkeep(n.node_level[i]) * share) * ECONOMY / 1e6
 }
@@ -444,6 +449,7 @@ impl TrackApi {
             skipped: 0,
             link_charge: 0.0,
             last_port: u32::MAX,
+            last_brt_station: u32::MAX,
             run_factor: vec![],
             load_level: save::LEVEL,
             bind_new: true,
@@ -2243,7 +2249,7 @@ impl TrackApi {
         self.run(Op::Edge { id, data: Some(EdgeData { a, b, tracks, pis: pis_from(pis), built: false, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0, join: [0; 2], limit: 0, ramp: 0 }) })
     }
     pub fn set_station(&mut self, node: u32, platform: u16, name: String) -> u32 {
-        self.run(Op::Station { node, data: Some(StationData { platform, name, named: false, built: false, off: false, upgrades: 0, berth: None, day: 0, one: 0, fare: 0, own: String::new() }) })
+        self.run(Op::Station { node, data: Some(StationData { platform, name, named: false, built: false, off: false, upgrades: 0, berth: None, day: 0, one: 0, fare: 0, own: String::new(), road: None }) })
     }
     /// What constructing these would cost now, US$M (junctions and crossings they complete
     /// included).

@@ -354,7 +354,7 @@ export class Tools {
     const nearNodes = at && nodes ? nodesNear(w, at[0], at[1], TRACK_NODE_PX * at[2]) : null;
     const nearEdges = at ? edgesNear(n, at[0], at[1], laneReach * at[2]) : null;
     for (const node of nodes ? nearNodes ?? w.nodes.values() : []) {
-      if (node.bus || node.port) continue; // a bus stop or a port (T-2194) is no track to build on (T-1464)
+      if (node.bus || node.port || node.brtStation) continue; // a bus stop, a port (T-2194) or a BRT station (T-3378) is no track to build on (T-1464)
       if (hidden.levels && levelHidden(node.level)) continue; // T-3560
       const [lx, ly] = toLocal(node.lng, node.lat);
       const [x, y] = this.screen(lx, ly);

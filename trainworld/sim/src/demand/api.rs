@@ -1468,7 +1468,7 @@ impl DemandApi {
         let ups = demand_ups(&st_map, st_x.len(), &self.ups_in);
         let (catches, st_bus) = demand_catches(&st_map, st_x.len(), stops, &self.bus_in.0, &self.bus_in.1);
         let tram_line: Vec<bool> = if self.tram_in.len() == nl { self.tram_in.iter().map(|&f| f != 0).collect() } else { vec![] };
-        let st_tram = tram_stops(&st_map, st_x.len(), stops, &line_off, &tram_line);
+        let st_tram = tram_stops(&st_map, st_x.len(), stops, &line_off, &tram_line, &self.ups_in);
         let svc = Service {
             catches,
             st_bus,
@@ -2677,16 +2677,21 @@ pub(crate) fn demand_back(st_map: &[u32], stops: &[u32], back: &[u32]) -> Vec<u3
     if out.iter().zip(stops).all(|(&b, &s)| b == st_map[s as usize]) { vec![] } else { out }
 }
 
-/// Per merged station, whether only tram lines serve it (`Service::st_tram`); empty with no tram lines.
-pub(crate) fn tram_stops(st_map: &[u32], n: usize, stops: &[u32], line_off: &[u32], tram_line: &[bool]) -> Vec<bool> {
-    if !tram_line.iter().any(|&t| t) {
+/// Per merged station, whether only tram lines serve it (`Service::st_tram`); empty with no tram lines and no
+/// BRT station. T-3378: a stop at a BRT station (`upgrades::BRT_STATION` in `ups`, per snapshot station) counts
+/// as a tram line's, so a station of BRT stations alone takes a tram stop's slot.
+pub(crate) fn tram_stops(st_map: &[u32], n: usize, stops: &[u32], line_off: &[u32], tram_line: &[bool], ups: &[u8]) -> Vec<bool> {
+    let brt = |s: u32| ups.get(s as usize).is_some_and(|&u| u & crate::track::upgrades::BRT_STATION != 0);
+    let nl = line_off.len().saturating_sub(1);
+    if !tram_line.iter().any(|&t| t) && !stops.iter().any(|&s| brt(s)) {
         return vec![];
     }
     let (mut tram, mut other) = (vec![false; n], vec![false; n]);
-    for (l, &t) in tram_line.iter().enumerate() {
+    for l in 0..nl {
+        let t = tram_line.get(l).copied().unwrap_or(false);
         for &s in &stops[line_off[l] as usize..line_off[l + 1] as usize] {
             let m = st_map[s as usize] as usize;
-            if t { tram[m] = true } else { other[m] = true }
+            if t || brt(s) { tram[m] = true } else { other[m] = true }
         }
     }
     (0..n).map(|s| tram[s] && !other[s]).collect()

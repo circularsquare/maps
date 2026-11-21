@@ -10,7 +10,7 @@ import { assignBays, BAY_LOOKBACK_S, profileTimes } from "../map/terminalBays";
 import { buildComplexes, type Complexes } from "../game/complexes";
 import { ComplexBuilder } from "../game/complexBuilder";
 import { buildingMembers, buildingsFrom, withBuildingLinks } from "../game/buildings";
-import { IN_BUILDING } from "../game/upgrades";
+import { BRT_STATION, IN_BUILDING } from "../game/upgrades";
 import { type NewHeadways } from "./saveFile";
 import { upgradesOf } from "./stateRows";
 import type { ClockBus, ClockNode, EditOp, FerryPortIn, FerryRow, NetworkSnapshot } from "./protocol";
@@ -296,6 +296,12 @@ export function buildSnapshot(): NetworkSnapshot {
   if (blds.length) {
     const inside = new Set(buildingMembers(blds, geo, groundK).flat());
     for (const s of stations) if (inside.has(String(s.id))) s.upgrades = (s.upgrades ?? 0) | IN_BUILDING;
+  }
+  // T-3378: a wait at a BRT station counts as in a waiting room; this bit too is the snapshot's alone
+  const brt = a.brt_stations();
+  if (brt.length) {
+    const on = new Set(brt);
+    for (const s of stations) if (on.has(Number(s.id))) s.upgrades = (s.upgrades ?? 0) | BRT_STATION;
   }
   // T-1281: the links are passages, walked faster; between constructed stations only
   const built = new Set(geo.map((g) => g.id));

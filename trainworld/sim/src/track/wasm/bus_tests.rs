@@ -725,3 +725,56 @@ fn a_full_brt_lane_cuts_its_lines_buses() {
     assert_eq!(a.set_bus_brt(l2, false), 0, "{}", a.issues());
     assert!(tph(&a, l1) > 38.0 && tph(&a, l2) > 38.0, "{} {}", tph(&a, l1), tph(&a, l2));
 }
+
+/// T-3378 stage 3: a BRT station beside the road, constructed for its flat price: only a BRT line stops there,
+/// standing no dwell, its stop costing `BRT_STATION_STOP_S`; a plain line passes it until it goes on BRT. It takes
+/// park and ride and no waiting room, pays a tram stop's upkeep, saves in `LBT1` and is removed with its node.
+#[test]
+fn a_brt_station_serves_brt_lines_only() {
+    let mut a = api();
+    let line = |a: &mut TrackApi, y: f64| {
+        let l = a.new_line_id();
+        assert_eq!(a.set_bus_line(l, &[0.0, y, 1.0, 6000.0, y, 1.0], 480, 600, 1200, 30.0, 120.0, 0, "B".into()), 0, "{}", a.issues());
+        assert_eq!(a.construct_line(l), 0, "{}", a.issues());
+        l
+    };
+    let (p, b) = (line(&mut a, 0.0), line(&mut a, 5.0));
+    assert_eq!(a.set_bus_brt(b, true), 0, "{}", a.issues());
+    assert_eq!(a.add_brt_station(3000.0, 20.0, 0.0, "Mid".into()), 0, "{}", a.issues());
+    let s = a.last_brt_station();
+    assert!(a.is_brt_station(s) && a.brt_stations() == vec![s] && !a.is_port(s));
+    // a blueprint row of its own, kind 17, at US$2M
+    let rows = a.w.net.blueprint_cost_items();
+    let row = rows.chunks_exact(7).find(|r| r[0] == 17.0).expect("a BRT station row");
+    assert!(row[5] == 1.0 && row[6] == BRT_STATION_COST, "{row:?}");
+    let cash = a.cash();
+    assert_eq!(a.construct_all(), 0, "{}", a.issues());
+    assert!((cash - a.cash() - BRT_STATION_COST).abs() < 1e-9, "{}", cash - a.cash());
+    let at = |a: &TrackApi, l: u32| stops(a, l).iter().position(|c| c[5] == s as f64);
+    assert!(at(&a, p).is_none(), "a plain line passes it: {:?}", stops(&a, p));
+    let k = at(&a, b).expect("the BRT line stops there");
+    assert_eq!(stops(&a, b)[k][4], KIND_STATION as f64);
+    // no dwell of the line's 30 s: it stands its stop's 18 s
+    let (arr, dep) = (a.stop_times(b, 0, 0), a.stop_departures(b, 0, 0));
+    assert!((dep[k] - arr[k] - BRT_STATION_STOP_S).abs() < 1e-6, "{} {}", arr[k], dep[k]);
+    // the plain line on BRT stops there too
+    assert_eq!(a.set_bus_brt(p, true), 0, "{}", a.issues());
+    assert!(at(&a, p).is_some());
+    assert_eq!(a.set_bus_brt(p, false), 0, "{}", a.issues());
+    // park and ride, no waiting room
+    assert_ne!(a.set_station_upgrade(&[s], crate::track::upgrades::WAITING_ROOM, true), 0);
+    assert_eq!(a.set_station_upgrade(&[s], crate::track::upgrades::PARK_RIDE, true), 0, "{}", a.issues());
+    // a tram stop's upkeep among the stations
+    let up = a.upkeep();
+    assert_eq!(up[4], 1.0, "{up:?}");
+    assert!((up[2] - UPKEEP_BRT_STATION * ECONOMY / 1e6 - crate::track::upgrades::upkeep(crate::track::upgrades::PARK_RIDE_COST)).abs() < 1e-9, "{up:?}");
+    // saved and loaded
+    let saved = a.save();
+    assert!(saved.windows(4).any(|w| w == b"LBT1"));
+    assert!(a.load(&saved));
+    let s = a.brt_stations()[0];
+    assert!(a.w.net.node_road[s as usize] == Some(0.0) && at(&a, b).is_some() && at(&a, p).is_none());
+    // removed as any station a bus passes is (its node with it): the line stops there no more
+    assert_eq!(a.remove_station(s), 0, "{}", a.issues());
+    assert!(a.brt_stations().is_empty() && !a.w.net.node_ok(s) && at(&a, b).is_none());
+}

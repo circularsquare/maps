@@ -193,3 +193,21 @@ fn tram_solve_time() {
     let (a, b) = (time(false), time(true));
     println!("metro only {a:.3} s, with 20 tram stops {b:.3} s, ratio {:.2}, stops 34 -> 54 ({:.2})", b / a, 54.0 / 34.0);
 }
+
+/// T-3378: a BRT station (the snapshot's `upgrades::BRT_STATION`) takes a tram stop's slot, with no tram line in the
+/// game, and a wait there counts as in a waiting room.
+#[test]
+fn a_brt_station_takes_a_tram_stops_slot_and_a_waiting_rooms_wait() {
+    use crate::demand::kernel::wait_factor;
+    use crate::track::upgrades::{BRT_STATION, WAITING_ROOM_WAIT};
+    let (mut api, xy, counts, stops, times, tph, cars) = with_line(5, -300.0, 300.0, 150.0, 2.0);
+    let n = xy.len() / 2;
+    // the new line's five stops are BRT stations
+    api.set_upgrades(&(0..n).map(|s| if s >= n - 5 { BRT_STATION } else { 0 }).collect::<Vec<u8>>());
+    api.set_network(&xy, &counts, &stops, &times, &tph, &cars).unwrap();
+    let net = DemandApi::period_net(api.svc.as_ref().unwrap(), 0);
+    let brt: Vec<usize> = (0..net.st_x.len()).filter(|&s| net.tram_only(s)).collect();
+    assert_eq!(brt.len(), 5, "the five BRT stations take tram stops' slots");
+    assert!(brt.iter().all(|&s| wait_factor(&net, s) == WAITING_ROOM_WAIT));
+    assert!((0..net.st_x.len()).filter(|s| !brt.contains(s)).all(|s| wait_factor(&net, s) == 1.0));
+}

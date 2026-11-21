@@ -251,6 +251,36 @@ impl TrackApi {
         }
         out
     }
+
+    /// T-3378: add a blueprint BRT station at (x, y), on no track, its platform along a road running on `heading`
+    /// (plane radians; the app found the road). 0 when added; `last_brt_station` is then its node.
+    pub fn add_brt_station(&mut self, x: f64, y: f64, heading: f64, name: String) -> u32 {
+        let node = self.w.net.alloc_node();
+        let fare = self.neighbour_fare(x, y);
+        let st = StationData { platform: BRT_STATION_PLATFORM, name, named: false, built: false, off: false, upgrades: 0, berth: None, day: 0, one: 0, fare, own: String::new(), road: Some(heading as f32 as f64) };
+        let op = Op::Batch(vec![Op::Node { id: node, data: Some(NodeData { x: quant(x), y: quant(y), level: 0, flying: false }) }, Op::Station { node, data: Some(st) }]);
+        let r = self.run(op);
+        if r == 0 {
+            self.last_brt_station = node;
+        } else {
+            self.w.net.release_node(node);
+            self.last_brt_station = u32::MAX;
+        }
+        r
+    }
+    /// The node of the BRT station the last `add_brt_station` added (`u32::MAX` if it was refused).
+    pub fn last_brt_station(&self) -> u32 {
+        self.last_brt_station
+    }
+    /// T-3378: whether a node is a BRT station.
+    pub fn is_brt_station(&self, node: u32) -> bool {
+        self.w.net.is_brt_station(node)
+    }
+    /// T-3378: the live BRT stations.
+    pub fn brt_stations(&self) -> Vec<u32> {
+        let n = &self.w.net;
+        (0..n.node_count() as u32).filter(|&k| n.is_brt_station(k)).collect()
+    }
 }
 
 fn stops_flat(plan: &bus::Plan) -> Vec<f64> {

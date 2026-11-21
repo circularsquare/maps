@@ -150,12 +150,13 @@ function busKmByRegion(w: WorldView, line: string): Map<string, number> {
 }
 /** T-867: a constructed station's upkeep a game day, US$; T-2619: dearer below ground, as the
  * track model counts it (`cost::station_upkeep`). */
-/** a station's upkeep a day: a tram stop's is its own figure (T-2926), without what is bought on it */
-export const stationUpkeepOf = (m: Pick<MoneyState, "upkeepStation" | "upkeepStationUnder" | "upkeepOnePlatform" | "economy">, s: { level: number; tram?: boolean; onePlatform?: boolean }) =>
-  s.tram ? TRAM_STOP_UPKEEP * m.economy : stationUpkeep(m, s.level) * (s.onePlatform ? m.upkeepOnePlatform : 1);
+/** a station's upkeep a day: a tram stop's is its own figure (T-2926), and a BRT station's the same (T-3378, sim
+ * `UPKEEP_BRT_STATION`), without what is bought on it */
+export const stationUpkeepOf = (m: Pick<MoneyState, "upkeepStation" | "upkeepStationUnder" | "upkeepOnePlatform" | "economy">, s: { level: number; tram?: boolean; brt?: boolean; onePlatform?: boolean }) =>
+  s.tram || s.brt ? TRAM_STOP_UPKEEP * m.economy : stationUpkeep(m, s.level) * (s.onePlatform ? m.upkeepOnePlatform : 1);
 /** T-3922: a station's or port's whole upkeep a day, US$, what is bought on it included (as the track model's
  * `upkeep_shares` counts it) */
-export const nodeUpkeepOf = (m: Pick<MoneyState, "upkeepStation" | "upkeepStationUnder" | "upkeepOnePlatform" | "upkeepPort" | "economy">, s: { level: number; tram?: boolean; onePlatform?: boolean; port?: unknown; upgradeUpkeep?: number }) =>
+export const nodeUpkeepOf = (m: Pick<MoneyState, "upkeepStation" | "upkeepStationUnder" | "upkeepOnePlatform" | "upkeepPort" | "economy">, s: { level: number; tram?: boolean; brt?: boolean; onePlatform?: boolean; port?: unknown; upgradeUpkeep?: number }) =>
   (s.port ? (m.upkeepPort ?? 0) * m.economy : stationUpkeepOf(m, s)) + (s.upgradeUpkeep ?? 0);
 export const stationUpkeep = (m: Pick<MoneyState, "upkeepStation" | "upkeepStationUnder" | "economy">, level: number) =>
   (level < 0 ? m.upkeepStationUnder : m.upkeepStation) * m.economy;

@@ -46,6 +46,13 @@ impl Network {
                 if self.node_upgrades[n] != 0 {
                     add(8, level, 0, false, 0, 1.0, self.station_upgrades_price(n as u32, self.node_upgrades[n], false));
                 }
+            } else if self.node_platform[n] > 0 && !self.node_built[n] && !self.node_off[n] && self.node_road[n].is_some() {
+                // kind 17: BRT stations (T-3378), a flat price
+                add(17, 0, 0, false, 0, 1.0, BRT_STATION_COST);
+                let ups = self.node_upgrades[n];
+                if ups != 0 {
+                    add(8, level, 0, false, 0, ups.count_ones() as f64, self.station_upgrades_price(n as u32, ups, false));
+                }
             } else if self.node_platform[n] > 0 && !self.node_built[n] && !self.node_off[n] {
                 let (tracks, wet) = (self.station_tracks(n as u32), is_wet());
                 add(1, level, tracks, wet, 0, 1.0, cost::station_cost_k(self.node_kind(n as u32), level, self.node_platform[n], self.station_tracks(n as u32), wet));
@@ -124,7 +131,7 @@ impl Network {
             let is_wet = || self.node_is_wet(n);
             let level = self.node_level[n];
             if self.node_platform[n] > 0 && !self.node_built[n] {
-                let price = if self.node_berth[n].is_some() { PORT_COST + self.upgrades_cost(n) } else {
+                let price = if self.trackless(n as u32) { self.station_price(n, || false) + self.upgrades_cost(n) } else {
                     let wet = is_wet();
                     let ups = self.node_upgrades[n];
                     cost::station_cost_k(self.node_kind(n as u32), level, self.node_platform[n], self.station_tracks(n as u32), wet) + if ups != 0 { self.station_upgrades_price(n as u32, ups, wet) } else { 0.0 }

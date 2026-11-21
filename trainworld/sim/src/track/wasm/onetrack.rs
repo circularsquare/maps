@@ -13,7 +13,7 @@ impl TrackApi {
     /// pays the difference going to both tracks and gets nothing back going to one. A change a line
     /// stopping there cannot take is refused (`OneTrackStop` names it). One undoable edit.
     pub fn set_station_tracks(&mut self, node: u32, one: bool) -> u32 {
-        let Some(old) = self.w.net.station_data(node).filter(|d| d.berth.is_none()) else { return self.refuse(Issue::NoSuchNode { node }) };
+        let Some(old) = self.w.net.station_data(node).filter(|d| d.berth.is_none() && d.road.is_none()) else { return self.refuse(Issue::NoSuchNode { node }) };
         if (old.one != 0) == one {
             return 0;
         }
@@ -43,7 +43,7 @@ impl TrackApi {
     /// world frame), from both tracks or from the other track: one undoable edit, charged as
     /// `set_station_tracks` is. A line stopping there that cannot take it refuses the change.
     pub fn set_station_way(&mut self, node: u32, heading: f64) -> u32 {
-        let Some(old) = self.w.net.station_data(node).filter(|d| d.berth.is_none()) else { return self.refuse(Issue::NoSuchNode { node }) };
+        let Some(old) = self.w.net.station_data(node).filter(|d| d.berth.is_none() && d.road.is_none()) else { return self.refuse(Issue::NoSuchNode { node }) };
         if !self.one_fits(node) || self.w.net.node_tracks(node) != 2 {
             return self.refuse(Issue::OneTrackHere { node });
         }

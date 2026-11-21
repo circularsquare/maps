@@ -92,6 +92,8 @@ use super::twin::Twin;
 /// count, then line index and `ferry::Boat::code`; without it every ferry line's boats are Medium.
 /// A trailing `LBR1` block (T-3907, level 34) gives the bus lines on BRT (`BusRoute::brt`): count, then line
 /// indexes; without it no line is.
+/// A trailing `LBT1` block (T-3378, level 35) makes stations BRT stations (`StationData::road`): count, then
+/// node index and road heading as f32 bits; without it no station is.
 const MAGIC: &[u8; 4] = b"TWT4";
 /// TWT5 (T-125) is TWT4 byte for byte except that the metres are in the Lambert conformal world
 /// frame (`frame.rs`). TWT4 and older are always the legacy equirectangular frame, and a network
@@ -104,12 +106,12 @@ const MAGIC_TWT6: &[u8; 4] = b"TWT6";
 
 /// T-1826: the trailing blocks this build reads, in the order they are written. A block it does not
 /// know stops the decoder, which then reports the bytes left over (`decode_read`).
-pub const BLOCKS: [&[u8; 4]; 38] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1", b"LPS1", b"LWE1", b"LOS1", b"LPD1", b"LHR1", b"LFZ1", b"LSN1", b"LFD1", b"LGN1", b"LRA1", b"LWP1", b"LFB1", b"LBR1"];
+pub const BLOCKS: [&[u8; 4]; 39] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1", b"LPS1", b"LWE1", b"LOS1", b"LPD1", b"LHR1", b"LFZ1", b"LSN1", b"LFD1", b"LGN1", b"LRA1", b"LWP1", b"LFB1", b"LBR1", b"LBT1"];
 /// T-1826: the save level this build writes into the game header (`level`) and reads up to. Raised
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over. Saves from before it have none, read as 0.
-pub const LEVEL: u32 = 34;
+pub const LEVEL: u32 = 35;
 /// T-3759: the last level from before stations could be unbound from their complex's name; a typed
 /// station there showed its own name, so loading one makes such a station unbound (the app's pass).
 pub const OLD_BOUND_NAMES: u32 = 26;
@@ -799,6 +801,17 @@ pub fn encode(net: &Network) -> Vec<u8> {
         w.u(brt.len() as u64);
         for i in brt { w.u(i as u64); }
     }
+    // T-3378: after LBR1, only where there are BRT stations: count, then per station its node index and its
+    // road heading as f32 bits
+    let roads: Vec<(usize, f64)> = nodes.iter().enumerate().filter_map(|(i, &n)| net.node_road[n as usize].filter(|_| net.is_station(n)).map(|h| (i, h))).collect();
+    if !roads.is_empty() {
+        w.0.extend_from_slice(b"LBT1");
+        w.u(roads.len() as u64);
+        for (i, h) in roads {
+            w.u(i as u64);
+            w.u((h as f32).to_bits() as u64);
+        }
+    }
     w.0
 }
 
@@ -933,7 +946,7 @@ fn decode_read_at(bytes: &[u8], level: u32) -> Result<(Network, usize), String> 
         if flags & 2 != 0 {
             let platform = r.u()? as u16;
             let name = r.s()?;
-            net.set_station(id, Some(StationData { platform, name, named: flags >> 8 & 1 != 0, built: flags & 4 != 0, off: flags & 8 != 0, upgrades: (flags >> 4) as u8, berth: None, day: 0, one: (flags >> 9 & 3) as u8, fare: 0, own: String::new() })).map_err(|e| format!("{e:?}"))?;
+            net.set_station(id, Some(StationData { platform, name, named: flags >> 8 & 1 != 0, built: flags & 4 != 0, off: flags & 8 != 0, upgrades: (flags >> 4) as u8, berth: None, day: 0, one: (flags >> 9 & 3) as u8, fare: 0, own: String::new(), road: None })).map_err(|e| format!("{e:?}"))?;
         }
     }
     let n_edges = r.u()? as usize;
@@ -1443,6 +1456,17 @@ fn decode_read_at(bytes: &[u8], level: u32) -> Result<(Network, usize), String> 
             if let Some(Some(route)) = net.line_bus.get_mut(i).filter(|_| i < n_lines) { route.brt = true; }
         }
     }
+    if r.0.get(r.1..r.1 + 4) == Some(b"LBT1") {
+        r.1 += 4;
+        for _ in 0..r.u()? {
+            let i = r.u()? as usize;
+            let h = f32::from_bits(r.u()? as u32) as f64;
+            if i < net.node_count() && net.is_station(i as u32) && h.is_finite() {
+                let d = super::net::StationData { road: Some(h), ..net.station_data(i as u32).unwrap() };
+                net.set_station(i as u32, Some(d)).map_err(|e| format!("{e:?}"))?;
+            }
+        }
+    }
     for l in manual {
         fold_manual(&mut net, l);
     }
@@ -1558,7 +1582,7 @@ mod tests {
         for x in [0.0f64, 1000.0] {
             let n = net.alloc_node();
             net.set_node(n, Some(NodeData { x, y: 0.0, level: 0, flying: false })).unwrap();
-            net.set_station(n, Some(StationData { platform: 2, name: format!("S{x}"), named: false, built: true, off: false, upgrades: 0, berth: None, day: 0, one: 0, fare: 0, own: String::new() })).unwrap();
+            net.set_station(n, Some(StationData { platform: 2, name: format!("S{x}"), named: false, built: true, off: false, upgrades: 0, berth: None, day: 0, one: 0, fare: 0, own: String::new(), road: None })).unwrap();
         }
         let e = net.alloc_edge();
         net.set_edge(e, Some(EdgeData { a: 0, b: 1, tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0, join: [0; 2], limit: 0, ramp: 0 })).unwrap();
@@ -1701,7 +1725,7 @@ mod tests {
         for tag in &written {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
-        assert_eq!((LEVEL, BLOCKS.len()), (34, 38), "a new block raises LEVEL: raise it, then update this pin");
+        assert_eq!((LEVEL, BLOCKS.len()), (35, 39), "a new block raises LEVEL: raise it, then update this pin");
     }
 
     /// T-2217: buildings come back as they were, in their order; a network without them encodes as

@@ -292,7 +292,7 @@ function toWorld(s: ClockState): WorldView {
     .map((n) => {
       let v = stationViews.get(n);
       if (!v) stationViews.set(n, v = {
-        id: String(n.id), num: n.id, name: n.name, lng: n.lng, lat: n.lat, x: n.x, y: n.y, level: n.level as any, length: n.platform, built: n.stationBuilt, off: n.stationOff, upgrades: n.upgrades, heading: n.heading, ...(n.fare ? { fare: n.fare } : {}), ...(n.named ? { named: true as const } : {}), ...(n.own ? { unbound: true as const } : {}), ...(n.hub !== undefined ? { hub: n.hub } : {}), ...(n.line ? { line: n.line } : {}), ...(n.port ? { port: n.port } : {}), ...(n.kind && n.kind >= 2 ? { tram: true as const } : {}),
+        id: String(n.id), num: n.id, name: n.name, lng: n.lng, lat: n.lat, x: n.x, y: n.y, level: n.level as any, length: n.platform, built: n.stationBuilt, off: n.stationOff, upgrades: n.upgrades, heading: n.heading, ...(n.fare ? { fare: n.fare } : {}), ...(n.named ? { named: true as const } : {}), ...(n.own ? { unbound: true as const } : {}), ...(n.hub !== undefined ? { hub: n.hub } : {}), ...(n.line ? { line: n.line } : {}), ...(n.port ? { port: n.port } : {}), ...(n.brtStation ? { brt: true as const } : {}), ...(n.kind && n.kind >= 2 ? { tram: true as const } : {}),
         ...(n.one ? { one: n.one } : {}), ...(n.oneHeading !== undefined ? { oneHeading: n.oneHeading } : {}), ...(n.onePlatform ? { onePlatform: true as const } : {}),
         ...(n.upgradeUpkeep ? { upgradeUpkeep: n.upgradeUpkeep } : {}),
       });
@@ -379,7 +379,7 @@ function toWorld(s: ClockState): WorldView {
   let nodes = lastNodeMap;
   if (!sameObjects(s.nodes, lastNodeRows)) {
     nodes = new Map<number, TrackNode>(
-      s.nodes.map((n) => [n.id, { id: n.id, x: n.x, y: n.y, lng: n.lng, lat: n.lat, level: n.level as any, ports: n.ports, builtPorts: n.builtPorts, flying: n.flying, platform: n.platform, ...(n.bus ? { bus: true as const } : {}), ...(n.port ? { port: true as const } : {}), ...(n.kind ? { kind: n.kind } : {}) }]),
+      s.nodes.map((n) => [n.id, { id: n.id, x: n.x, y: n.y, lng: n.lng, lat: n.lat, level: n.level as any, ports: n.ports, builtPorts: n.builtPorts, flying: n.flying, platform: n.platform, ...(n.bus ? { bus: true as const } : {}), ...(n.port ? { port: true as const } : {}), ...(n.brtStation ? { brtStation: true as const } : {}), ...(n.kind ? { kind: n.kind } : {}) }]),
     );
     lastNodeRows = s.nodes;
     lastNodeMap = nodes;

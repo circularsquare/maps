@@ -64,12 +64,13 @@ export function StationUpgrades({ s, members }: { s: StationInput; members?: str
     <div class="upgrades" role="group" aria-label={t("stationUpgrades.group")}>
       {/* T-3332: a one-track station has no terminal and no passing tracks */}
       {/* T-3574: a tram stop takes the terminal and passing tracks as a rail station does; park and ride is rail's */}
-      {UPGRADE_TEXT.filter((u) => ((!s.tram && !s.port) || u.bit === UPGRADE.waitingRoom || (s.tram && !s.port && (u.bit === UPGRADE.terminal || u.bit === UPGRADE.passing))) && (u.bit !== UPGRADE.passing || double || hasUpgrade(s.upgrades, u.bit))
+      {/* T-3378: a BRT station takes park and ride alone, its waits already counting as in a waiting room */}
+      {UPGRADE_TEXT.filter((u) => (s.brt ? u.bit === UPGRADE.parkRide : (!s.tram && !s.port) || u.bit === UPGRADE.waitingRoom || (s.tram && !s.port && (u.bit === UPGRADE.terminal || u.bit === UPGRADE.passing))) && (u.bit !== UPGRADE.passing || double || hasUpgrade(s.upgrades, u.bit))
         && !(s.one && (u.bit === UPGRADE.terminal || u.bit === UPGRADE.passing) && !hasUpgrade(s.upgrades, u.bit))).map((u) => (
         <UpgradeButton s={s} u={u} price={prices?.[UPGRADE_BITS.indexOf(u.bit)] ?? 0} housed={housed} />
       ))}
       {!s.port && <PassageButton s={s} />}
-      {!s.tram && !s.port && <BuildingButton s={s} />}
+      {!s.tram && !s.port && !s.brt && <BuildingButton s={s} />}
     </div>
   );
 }
@@ -107,7 +108,7 @@ function UpgradeButton({ s, u, price, housed = false }: { s: StationInput; u: Up
 export function TerminalButton({ s }: { s: StationInput }) {
   const u = UPGRADE_TEXT.find((x) => x.bit === UPGRADE.terminal)!;
   const prices = useClockQuery({ what: "upgradeCost", node: s.num }, [s.num, s.level, s.built], (d) => Array.from(d));
-  if (s.port || (s.one && !hasUpgrade(s.upgrades, UPGRADE.terminal))) return null;
+  if (s.port || s.brt || (s.one && !hasUpgrade(s.upgrades, UPGRADE.terminal))) return null;
   return <UpgradeButton s={s} u={u} price={prices?.[UPGRADE_BITS.indexOf(u.bit)] ?? 0} />;
 }
 
@@ -142,7 +143,8 @@ function BuildingButton({ s }: { s: StationInput }) {
 function ComplexUpgrade({ u, members, price }: { u: UpgradeText; members: string[]; price: number }) {
   const w = world.value;
   const byId = w ? stationsById(w) : new Map<string, StationInput>();
-  const st = members.map((id) => byId.get(id)).filter((x): x is StationInput => !!x);
+  // T-3378: a BRT station takes no waiting room, its waits counting as in one already
+  const st = members.map((id) => byId.get(id)).filter((x): x is StationInput => !!x && !(x.brt && u.bit === UPGRADE.waitingRoom));
   const have = st.filter((x) => hasUpgrade(x.upgrades, u.bit)), missing = st.filter((x) => !hasUpgrade(x.upgrades, u.bit));
   const all = missing.length === 0, built = st.some((x) => x.built), name = st[0]?.name ?? "", allTram = st.length > 0 && st.every((x) => x.tram);
   const state = !all ? "" : have.some((x) => x.built) ? " on" : " planned";

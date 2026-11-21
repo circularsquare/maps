@@ -302,6 +302,18 @@ export class BusRoads {
     return { pts: ll, road: true, ready: true, m: path.m, turns: path.turns, states: path.states, ms };
   }
 
+  /** T-3378: the road a BRT station placed by `p` stands beside: the nearest road within `m` ground metres (a
+   * motorway counted further off, as for a click), as its nearest point and a point 10 m along it; null where there
+   * is none, undefined while the tiles load. */
+  kerb(p: Pt, m: number): { at: Pt; along: Pt } | null | undefined {
+    if (!this.look(p)) return undefined;
+    this.fresh();
+    const x = gxOf(p.lng), y = gyOf(p.lat), mpu = metresPerUnit(y), g = this.graph, s = g.snap(x, y, m / mpu);
+    if (!s) return null;
+    const ux = g.gx[g.eb[s.edge]] - g.gx[g.ea[s.edge]], uy = g.gy[g.eb[s.edge]] - g.gy[g.ea[s.edge]], k = 10 / mpu / (Math.hypot(ux, uy) || 1);
+    return { at: { lng: lngOf(s.x), lat: latOf(s.y) }, along: { lng: lngOf(s.x + ux * k), lat: latOf(s.y + uy * k) } };
+  }
+
   /** A road within `SNAP_M` of a point: true or false, null while the tiles load. */
   near(p: Pt): boolean | null {
     if (!this.look(p)) return null;

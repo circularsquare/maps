@@ -230,6 +230,14 @@ pub const BRT_COST_PER_KM: f64 = 5.0;
 /// T-3907: a BRT route's upkeep a day per road-km in place of `UPKEEP_BUS_KM`, real US$: street tram track's at
 /// ground (US$21k a game day at `ECONOMY`), as Anita asked, since bus lanes wear the road faster than rails wear.
 pub const UPKEEP_BRT_KM: f64 = UPKEEP_GROUND_KM * STREET_TRAM_UPKEEP;
+/// T-3378: a BRT station's price, US$M, and upkeep a day, real US$ (US$5k a game day): a tram stop's (Anita 11-21).
+pub const BRT_STATION_COST: f64 = 2.0;
+pub const UPKEEP_BRT_STATION: f64 = 50.0;
+/// T-3378: a BRT station's platform, m: room for three buses, a two-section tram stop's.
+pub const BRT_STATION_PLATFORM: u16 = 40;
+/// T-3378: what a BRT line's stop at a BRT station costs, s, in place of `streets::BUS_STOP_S` (level boarding,
+/// fares paid on the platform); it stands no dwell of its own there (Anita 11-21).
+pub const BRT_STATION_STOP_S: f64 = 18.0;
 /// Street tram track's upkeep over double track's (its `TrackSpec::upkeep`).
 pub const STREET_TRAM_UPKEEP: f64 = 0.6;
 /// A bus's riders at crush: a third of a train car (T-2919; demand's `BUS_CARS`), 53 at the rated load.

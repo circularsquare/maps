@@ -29,6 +29,10 @@ impl TrackApi {
             if on && d.berth.is_some() && bit != upgrades::WAITING_ROOM {
                 return self.refuse(Issue::NotAtPort { node });
             }
+            // T-3378: a BRT station takes park and ride and nothing else
+            if on && d.road.is_some() && bit != upgrades::PARK_RIDE {
+                return self.refuse(Issue::NotAtBrtStation { node });
+            }
             let ups = if on { d.upgrades | bit } else { d.upgrades & !bit };
             if ups != d.upgrades {
                 built |= d.built;

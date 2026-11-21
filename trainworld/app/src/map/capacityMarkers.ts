@@ -242,7 +242,7 @@ export function nearestJunction(w: WorldView, x: number, y: number): number | nu
 export function tramSpot(w: WorldView, x: number, y: number): boolean {
   let best = Infinity, tram = false;
   for (const n of w.nodes.values()) {
-    if (n.bus || n.port) continue;
+    if (n.bus || n.port || n.brtStation) continue;
     const [lx, ly] = toLocal(n.lng, n.lat);
     const d = (lx - x) ** 2 + (ly - y) ** 2;
     if (d < best) {

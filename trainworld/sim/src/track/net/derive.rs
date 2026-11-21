@@ -170,7 +170,8 @@ impl Network {
         let i = n as usize;
         let ports = self.node_ports[i];
         if ports.n == 0 {
-            self.node_heading[i] = 0.0;
+            // T-3378: a BRT station's platform lies along its road
+            self.node_heading[i] = self.node_road[i].unwrap_or(0.0);
             self.node_moves[i] = Moves::default();
             return;
         }

@@ -2387,8 +2387,8 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   `ECONOMY` times in the game). BRT is paid and upkept only over its road **in town** (`streets::brt_in_town`: where a plain
   bus moves under BRT's floor, the car's local streets under about 41 km/h; trunk roads there too; `bus::Pace::town_m`
   at the pace's 100 m steps, none where no street grid reaches); out of town a BRT route costs what a plain one does
-  (Anita, 11-21). In town it adds US$5M a road-km (`BRT_COST_PER_KM`; real BRT US$5-20M a km, the low end while there
-  are no corridors or BRT stations), its own Construct row on a planned line, paid at once when switched on for a
+  (Anita, 11-21). In town it adds US$5M a road-km (`BRT_COST_PER_KM`; real BRT US$5-20M a km, the low end, stations
+  priced apart), its own Construct row on a planned line, paid at once when switched on for a
   constructed one; off gives nothing back and an undo or redo moves no money; and its upkeep there is street tram
   track's, US$210 a road-km a day in place of the US$30 (`UPKEEP_BRT_KM`), in the line's and the network's upkeep.
   **Shared lanes** (T-3378, `bus/lanes.rs`): BRT lines on one road share its lanes. A 100 m step of one line shares
@@ -2410,7 +2410,21 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   a full lane only cuts buses. Plain bus lines on the road neither count nor are cut. An edit of any bus line settles
   every BRT line (`sharing_closure`). The bus panel shows the busiest way under the BRT box ("Busiest lane", n/60
   buses per hour, red once full), the full lane's alert with the buses held out, and the headways it limits.
-  Worked out again only when a BRT route, a loop's one way or the street grids change (`Network::brt_room`). A new bus line starts at a bus every 8, 15 and 30 minutes by level (Anita, 2026-11-09; the bus default for new lines instead once set, T-3703), 30 s dwell at
+  Worked out again only when a BRT route, a loop's one way or the street grids change (`Network::brt_room`).
+- **BRT stations** (T-3378 stage 3, Anita 11-21; `StationData::road`, `TrackApi::add_brt_station`): a station on no
+  track, placed with the Station tool by a click off track within 50 m of a road a bus may use (the app's road
+  tiles, `BusRoads::kerb`; the sim knows no roads): 10 m off the road's centre line on the click's side, its 40 m
+  platform (`BRT_STATION_PLATFORM`) along the road, drawn as a tram stop's box. US$2M and US$50 a day real (US$5k a
+  game day), a tram stop's (`BRT_STATION_COST`, `UPKEEP_BRT_STATION`), its own Construct row (kind 17); park and ride
+  is the one upgrade it takes, a passage joins it as any station, no building, no platform or track rows. Only a
+  line on BRT stops there (`bus::reach` leaves BRT stations out for a plain line, which passes them; a line switched
+  to BRT is planned again and stops there). At a BRT station a BRT line stands no dwell, and its stop costs 18 s
+  (`BRT_STATION_STOP_S`) in place of 28: the hop arriving there is 10 s shorter and the bus stands the 18 s inside it
+  (`bus::profile_cut`). People reach it as any station (walk, car, 6 nearest); in demand's snapshot it carries
+  `upgrades::BRT_STATION`, so a wait there counts 0.8 as in a waiting room (`wait_factor`), and a station of BRT
+  stations alone takes a tram stop's slot (`TRAM_SLOTS`, `tram_stops`). Removed as any station; a bus line never
+  holds it among its stops, so it can be removed while a line stops there, as a train station a bus passes can.
+- A new bus line starts at a bus every 8, 15 and 30 minutes by level (Anita, 2026-11-09; the bus default for new lines instead once set, T-3703), 30 s dwell at
   train stations and 120 s turnaround (`NEW_LINE` in app/src/game/newLine.ts, the one place for what a new
   line of each mode starts with). A copy is planned.
 - **Loops** (T-2899; `bus::is_closed`): a route of four points or more whose last point is its first is a loop.
@@ -2436,7 +2450,8 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   placed by hand and the stops; without them, stops place themselves. A trailing `LOW1` block (T-2981, save
   level 11) lists the lines whose loop runs the other way from their mode's default (a train line one way, a
   bus or ferry line both ways); a save without it loads every bus and ferry loop one way. A trailing `LBR1` block
-  (T-3907, save level 34) lists the bus lines on BRT; without it none is.
+  (T-3907, save level 34) lists the bus lines on BRT; without it none is. A trailing `LBT1` block (T-3378, save
+  level 35) lists the BRT stations and their road headings; without it none is.
 
 ### 6.8 Ferry routes
 

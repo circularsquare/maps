@@ -5,7 +5,7 @@ use super::*;
 impl Network {
     pub fn station_data(&self, n: u32) -> Option<StationData> {
         (self.node_ok(n) && self.node_platform[n as usize] > 0)
-            .then(|| StationData { platform: self.node_platform[n as usize], name: self.node_name[n as usize].clone(), named: self.node_named[n as usize], built: self.node_built[n as usize], off: self.node_off[n as usize], upgrades: self.node_upgrades[n as usize], berth: self.node_berth[n as usize], day: self.node_day[n as usize], one: self.node_one[n as usize], fare: self.node_fare[n as usize], own: self.node_own[n as usize].clone() })
+            .then(|| StationData { platform: self.node_platform[n as usize], name: self.node_name[n as usize].clone(), named: self.node_named[n as usize], built: self.node_built[n as usize], off: self.node_off[n as usize], upgrades: self.node_upgrades[n as usize], berth: self.node_berth[n as usize], day: self.node_day[n as usize], one: self.node_one[n as usize], fare: self.node_fare[n as usize], own: self.node_own[n as usize].clone(), road: self.node_road[n as usize] })
     }
     /// Tracks at a station (2 if any of its edges is double).
     pub fn node_tracks(&self, n: u32) -> u8 {
@@ -99,6 +99,7 @@ impl Network {
                 self.node_fare[i] = 0;
                 self.node_own[i].clear();
                 self.node_berth[i] = None;
+                self.node_road[i] = None;
             }
             Some(d) => {
                 self.node_day[i] = self.day_for(d.built, d.day, old.as_ref().map_or(0, |o| o.day));
@@ -112,6 +113,7 @@ impl Network {
                 self.node_fare[i] = d.fare;
                 self.node_own[i] = d.own;
                 self.node_berth[i] = d.berth;
+                self.node_road[i] = d.road;
             }
         }
         self.touch.stations.push(node);
@@ -145,6 +147,14 @@ impl Network {
             }
             if !super::ferry::berth_ok(self, [self.node_x[i], self.node_y[i]], b) {
                 out.push(Issue::PortBerth { node: n });
+            }
+            return;
+        }
+        if let Some(h) = self.node_road[i] {
+            // T-3378: beside a road (the app's test; a road on a bridge stands over water); park and ride is
+            // the one upgrade it takes, a waiting room's wait being its own
+            if self.node_ports[i].n > 0 || self.node_upgrades[i] & !super::upgrades::PARK_RIDE != 0 || self.node_level[i] != 0 || !h.is_finite() {
+                out.push(Issue::NotAtBrtStation { node: n });
             }
             return;
         }

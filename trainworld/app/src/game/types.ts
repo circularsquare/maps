@@ -62,6 +62,8 @@ export interface StationInput {
   line?: ArrayLike<number>;
   /** T-2194: a port, for ferries (no track or platform), and its berth, longitude and latitude */
   port?: [number, number];
+  /** T-3378: a BRT station beside a road (no track), where only BRT lines stop */
+  brt?: true;
   /** a tram stop: tram track's own 20-80 m platform (T-2926) */
   tram?: true;
   /** T-3332: a one-track station: 1 on double track (`oneHeading` its trains' way, rad, counter-clockwise from east), 2 on single track, where trains cannot pass */
@@ -166,6 +168,8 @@ export interface TrackNode {
   bus?: true;
   /** T-2194: a port: a station with no track, so no place to snap track to */
   port?: true;
+  /** T-3378: a BRT station: a station beside a road on no track, so no place to snap track to */
+  brtStation?: true;
   /** `TrackApi.node_kind` where it is a tram's (2 or 3, T-2926); absent for rail */
   kind?: number;
 }

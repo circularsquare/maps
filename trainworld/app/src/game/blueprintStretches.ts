@@ -65,7 +65,7 @@ export function blueprintParts(w: WorldView, pieces: ArrayLike<number>): BpPart[
     else if (kind === 3) crossings.push([a, b, c, on]);
     else if (kind === 4) passages.push([a, b, c, on]);
   }
-  const isStation = (n: number) => { const t = w.nodes.get(n); return !!t && t.platform > 0 && !t.bus && !t.port; };
+  const isStation = (n: number) => { const t = w.nodes.get(n); return !!t && t.platform > 0 && !t.bus && !t.port && !t.brtStation; };
   const bp = w.edges.filter((e) => !e.built);
   // every edge end at a node, crossovers apart, and the blueprint ones
   const allAt = new Map<number, TrackEdge[]>(), bpAt = new Map<number, TrackEdge[]>();

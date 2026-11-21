@@ -94,7 +94,7 @@ impl Network {
     /// of its family of track (rail or tram), the nearest whose node lies on a track running beside
     /// `n`'s (4 to 16 m off it and parallel there), or with `n` on a track beside its own.
     pub fn station_beside(&self, n: u32) -> Option<u32> {
-        if !self.node_ok(n) || self.node_platform[n as usize] == 0 || self.node_berth[n as usize].is_some() {
+        if !self.node_ok(n) || self.node_platform[n as usize] == 0 || self.trackless(n) {
             return None;
         }
         let i = n as usize;
@@ -102,7 +102,7 @@ impl Network {
         let mut best: Option<(u32, f64)> = None;
         for m in self.complex_of(n) {
             let j = m as usize;
-            if m == n || self.node_berth[j].is_some() || self.node_kind(m).spec().family != family {
+            if m == n || self.trackless(m) || self.node_kind(m).spec().family != family {
                 continue;
             }
             let d = (self.node_x[j] - self.node_x[i]).hypot(self.node_y[j] - self.node_y[i]);

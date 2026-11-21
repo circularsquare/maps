@@ -50,7 +50,7 @@ impl Network {
         let family = self.node_kind(s).spec().family;
         let dist = |m: u32| (self.node_x[m as usize] - self.node_x[i]).hypot(self.node_y[m as usize] - self.node_y[i]);
         let reach = WAY_WALK_M * self.k_at(self.node_y[i]);
-        let ok = |m: u32| m != s && self.is_station(m) && self.node_berth[m as usize].is_none() && self.node_kind(m).spec().family == family && self.leg_heading(m).is_none();
+        let ok = |m: u32| m != s && self.is_station(m) && !self.trackless(m) && self.node_kind(m).spec().family == family && self.leg_heading(m).is_none();
         let mut out: Vec<u32> = self.complex_of(s).into_iter().filter(|&m| ok(m)).collect();
         out.sort_by(|&a, &b| dist(a).total_cmp(&dist(b)));
         let mut walk: Vec<u32> = (0..self.node_count() as u32).filter(|&m| ok(m) && !out.contains(&m) && dist(m) <= reach).collect();
@@ -83,7 +83,7 @@ impl Network {
     /// T-3332, is none).
     pub fn leg_heading(&self, s: u32) -> Option<f64> {
         let i = s as usize;
-        if !self.node_ok(s) || !self.is_station(s) || self.node_berth[i].is_some() || self.one_side(s).is_some() {
+        if !self.node_ok(s) || !self.is_station(s) || self.trackless(s) || self.one_side(s).is_some() {
             return None;
         }
         let p = &self.node_ports[i];
@@ -114,7 +114,7 @@ impl Network {
     /// (two port sides), serving both ways (no one-way station, no platform on one track only).
     pub fn can_one_stop(&self, s: u32) -> bool {
         let i = s as usize;
-        self.node_ok(s) && self.is_station(s) && self.node_berth[i].is_none() && self.one_side(s).is_none() && self.node_ports[i].n == 2 && !self.leg_stop(s)
+        self.node_ok(s) && self.is_station(s) && !self.trackless(s) && self.one_side(s).is_none() && self.node_ports[i].n == 2 && !self.leg_stop(s)
     }
 
     /// The port side of the node a path's entry `p` arrives at, by which it arrives.

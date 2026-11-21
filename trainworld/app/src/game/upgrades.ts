@@ -9,6 +9,9 @@ export const UPGRADE_BITS: number[] = [UPGRADE.terminal, UPGRADE.parkRide, UPGRA
 /** Set on a station building's members in demand's snapshot only, never bought or saved (T-2220,
  * `upgrades::IN_BUILDING`): a change there counts 0.8. */
 export const IN_BUILDING = 16;
+/** Set on BRT stations in demand's snapshot only (T-3378, `upgrades::BRT_STATION`): a wait there counts as in a
+ * waiting room, and it takes a tram stop's slot among a home's nearest stations. */
+export const BRT_STATION = 32;
 
 export interface UpgradeText {
   bit: number;

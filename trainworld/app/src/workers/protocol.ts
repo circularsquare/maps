@@ -96,6 +96,8 @@ export type EditOp =
   | { op: "flying"; node: NodeId; flying: boolean }
   | { op: "stationUpgrade"; nodes: NodeId[]; bit: number; on: boolean }
   | { op: "addStation"; at: StationAt; platform: number; name: string }
+  /** T-3378: a blueprint BRT station at x, y (world metres) on no track, its platform along a road on `heading` (radians) */
+  | { op: "addBrtStation"; x: number; y: number; heading: number; name: string }
   /** a crossover on track `edge` near x, y and the track running beside it (T-338) */
   | { op: "crossover"; edge: EdgeId; x: number; y: number }
   /** an express pair beside double track `edge` and the run it is on, as blueprint (T-708) */
@@ -633,6 +635,8 @@ export interface ClockNode {
   bus?: true;
   /** T-2194: a port (a station for ferries, no track) and its berth, longitude and latitude */
   port?: [number, number];
+  /** T-3378: a BRT station: no track, beside a road along `heading`; only BRT lines stop there */
+  brtStation?: true;
 }
 
 export interface ClockLine {

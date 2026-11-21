@@ -21,7 +21,7 @@ fn a_route_that_loops_back_stops_both_ways_on_its_way_out() {
     let mut net = Network::new(-73.985, 40.758, true);
     let n = net.alloc_node();
     net.set_node(n, Some(NodeData { x: 500.0, y: 40.0, level: 0, flying: false })).unwrap();
-    net.set_station(n, Some(StationData { platform: 2, name: "S".into(), named: false, built: true, off: false, upgrades: 0, berth: None, day: 0, one: 0, fare: 0, own: String::new() })).unwrap();
+    net.set_station(n, Some(StationData { platform: 2, name: "S".into(), named: false, built: true, off: false, upgrades: 0, berth: None, day: 0, one: 0, fare: 0, own: String::new(), road: None })).unwrap();
     let pts = [[0.0, 0.0], [2000.0, 0.0], [3000.0, 0.0], [3000.0, 1000.0], [2000.0, 1000.0], [2000.0, 0.0], [0.0, 0.0]];
     assert_eq!(loop_back_at(&pts), Some(1));
     assert_eq!(loop_back_at(&[[0.0, 0.0], [2000.0, 0.0], [3000.0, 0.0], [3000.0, 1000.0], [0.0, 0.0]]), None, "a plain loop");
@@ -348,4 +348,19 @@ fn a_trunk_road_is_capped_at_its_share_over_the_street_speed_and_brt_keeps_its_f
     // and both ways
     assert!((moving(&flat(16.5, 30.0).brt(true).reversed()) - lane_kmh(true)).abs() < 1e-9);
     assert_eq!(Pace::default().brt(true).auto_time(0.0, 1000.0), Pace::default().auto_time(0.0, 1000.0));
+}
+
+/// T-3378: a stop that costs less (a BRT line at a BRT station) comes that much sooner, and with no dwell of its
+/// own the bus stands what the stop costs, on either rule.
+#[test]
+fn a_cheaper_stop_comes_sooner_and_stands_its_cost() {
+    let pace = Pace::default();
+    let (s, dw) = ([0.0, 2000.0, 4000.0], [0.0, 0.0, 0.0]);
+    for spaced in [false, true] {
+        let plain = profile_cut(&s, &dw, &[], &[], &pace, spaced);
+        let cut = profile_cut(&s, &dw, &[0.0, 10.0, 0.0], &[], &pace, spaced);
+        assert!((plain.arr[1] - cut.arr[1] - 10.0 - (cut.dep[1] - cut.arr[1]) + (plain.dep[1] - plain.arr[1])).abs() < 1e-9, "{spaced}");
+        assert!((cut.dep[1] - cut.arr[1] - 18.0).abs() < 1e-9, "{spaced} {:?}", cut);
+        assert!((plain.duration - cut.duration - 10.0).abs() < 1e-9, "{spaced}");
+    }
 }

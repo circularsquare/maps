@@ -61,6 +61,7 @@ impl Network {
             node_fare: vec![],
             node_own: vec![],
             node_berth: vec![],
+            node_road: vec![],
             node_ports: vec![],
             node_moves: vec![],
             node_heading: vec![],
@@ -328,6 +329,7 @@ impl Network {
         self.node_fare.push(0);
         self.node_own.push(String::new());
         self.node_berth.push(None);
+        self.node_road.push(None);
         self.node_ports.push(Ports::default());
         self.node_moves.push(Moves::default());
         self.node_heading.push(0.0);
@@ -500,6 +502,14 @@ impl Network {
     pub fn is_port(&self, n: u32) -> bool {
         self.is_station(n) && self.node_berth[n as usize].is_some()
     }
+    /// T-3378: a BRT station, beside a road on no track.
+    pub fn is_brt_station(&self, n: u32) -> bool {
+        self.is_station(n) && self.node_road[n as usize].is_some()
+    }
+    /// A station on no track, a port or a BRT station: none of the track's station rules apply to it.
+    pub fn trackless(&self, n: u32) -> bool {
+        self.node_berth[n as usize].is_some() || self.node_road[n as usize].is_some()
+    }
     /// A live ferry line (T-2193).
     pub fn is_ferry(&self, l: u32) -> bool {
         self.line_ok(l) && self.line_ferry[l as usize].is_some()
@@ -531,11 +541,13 @@ impl Network {
     pub fn station_build_price(&self, n: u32) -> f64 {
         self.station_price(n as usize, || self.node_is_wet(n as usize))
     }
-    /// A station's price, US$M: a port's flat price, any other by its level, platform, tracks and the
-    /// water under it (`wet`, asked only for those).
+    /// A station's price, US$M: a port's or a BRT station's flat price, any other by its level, platform, tracks
+    /// and the water under it (`wet`, asked only for those).
     pub(super) fn station_price(&self, n: usize, wet: impl FnOnce() -> bool) -> f64 {
         if self.node_berth[n].is_some() {
             PORT_COST
+        } else if self.node_road[n].is_some() {
+            BRT_STATION_COST
         } else {
             cost::station_cost_k(self.node_kind(n as u32), self.node_level[n], self.node_platform[n], self.station_tracks(n as u32), wet())
         }

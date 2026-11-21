@@ -984,14 +984,18 @@ fn build_bus(net: &Network, l: u32, r: &super::bus::BusRoute) -> LineSvc {
     let dwell = net.line_dwell[l as usize] as f64;
     let n = plan.stops.len();
     let fwd_s: Vec<f64> = plan.stops.iter().map(|s| s.s).collect();
-    let fwd_dw: Vec<f64> = plan.stops.iter().map(|s| if s.station.is_some() { dwell } else { 0.0 }).collect();
+    // T-3378: a BRT line at a BRT station stands no dwell and its stop costs `BRT_STATION_STOP_S`
+    let brt_at = |s: &super::bus::BusStop| r.brt && s.station.is_some_and(|n| net.is_brt_station(n));
+    let fwd_dw: Vec<f64> = plan.stops.iter().map(|s| if s.station.is_some() && !brt_at(s) { dwell } else { 0.0 }).collect();
+    let fwd_cut: Vec<f64> = plan.stops.iter().map(|s| if brt_at(s) { super::streets::BUS_STOP_S - BRT_STATION_STOP_S } else { 0.0 }).collect();
     let len = plan.len;
     let pace = super::bus::Pace::along(net, &r.points, &plan.cum, &r.kinds, len).brt(r.brt);
     let rev_s: Vec<f64> = fwd_s.iter().rev().map(|s| len - s).collect();
     let rev_dw: Vec<f64> = fwd_dw.iter().rev().copied().collect();
+    let rev_cut: Vec<f64> = fwd_cut.iter().rev().copied().collect();
     let rev_street: Vec<f64> = plan.street.iter().rev().map(|s| len - s).collect();
-    let make = |s: Vec<f64>, dw: &[f64], street: &[f64], pace: &super::bus::Pace| {
-        let p = if r.rule() != super::bus::StopRule::Auto { super::bus::spaced_profile(&s, dw, pace) } else { super::bus::profile(&s, dw, street, pace) };
+    let make = |s: Vec<f64>, dw: &[f64], cut: &[f64], street: &[f64], pace: &super::bus::Pace| {
+        let p = super::bus::profile_cut(&s, dw, cut, street, pace, r.rule() != super::bus::StopRule::Auto);
         let top = p.phases.iter().map(|x| x.v).fold(0.0, f64::max);
         Run {
             len,
@@ -1012,7 +1016,7 @@ fn build_bus(net: &Network, l: u32, r: &super::bus::BusRoute) -> LineSvc {
         ls.kind = LoopKind::Circle;
         ls.one_way = net.line_one_way[l as usize];
     }
-    ls.runs = [make(fwd_s, &fwd_dw, &plan.street, &pace), make(rev_s, &rev_dw, &rev_street, &pace.reversed())];
+    ls.runs = [make(fwd_s, &fwd_dw, &fwd_cut, &plan.street, &pace), make(rev_s, &rev_dw, &rev_cut, &rev_street, &pace.reversed())];
     ls.cars = 1;
     ls.train_len = super::bus::BUS_LEN_M;
     ls.ok = true;

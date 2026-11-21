@@ -18,6 +18,7 @@ import { complexNow, waitToward, type ComplexNow } from "../../game/complexLive"
 import { LINK_MAX_M } from "../../game/complexes";
 import { linking, linksAmong, unlink } from "../../game/links";
 import { selection, TRAM_PLATFORM } from "../../game/ui";
+import { TRAM_STOP_UPKEEP } from "../../game/trackKinds";
 import { vehicleOf } from "../../game/vehicle";
 import { edit, linesAt, say, stationNames, stationsById, world } from "../../game/world";
 import { live } from "../../map/live";
@@ -252,7 +253,7 @@ export function StationInspector({ id }: { id: string }) {
           complex's list goes back to it from here */}
       {!asComplex && (
         <div class="sub muted">
-          {s.port ? tr("stationInspector.port") : tr("stationInspector.sub", { level: levelLabel(s.level) })}
+          {s.port ? tr("stationInspector.port") : s.brt ? tr("stationInspector.brtStation") : tr("stationInspector.sub", { level: levelLabel(s.level) })}
           {members.length > 1 && (
             <>
               {" · "}
@@ -278,7 +279,7 @@ export function StationInspector({ id }: { id: string }) {
       )}
       <ClosestStations lng={s.lng} lat={s.lat} exclude={new Set(members)} own={s.name} />
       <StationLinks id={id} members={asComplex ? members : [id]} />
-      {!s.port && <StationBuilding id={id} members={members} />}
+      {!s.port && !s.brt && <StationBuilding id={id} members={members} />}
       {!asComplex && <Actions><button class="btn text danger" onClick={remove}>{tr(s.port ? "stationInspector.removePort" : "stationInspector.removeStation")}</button></Actions>}
     </>
   );
@@ -382,7 +383,7 @@ function StationDetails({ s, lines, props }: {
     <>
       <Built built={s.built} />
       <ul class="rows">
-        {!s.port && <li>
+        {!s.port && !s.brt && <li>
           <span class="grow">{tr("stationInspector.platforms")}</span>
           <Stepper value={carsText(Math.round(s.length / CAR_M))} wide label={tr("stationInspector.platformLength")} onStep={(d) => {
             const to = s.tram ? Math.max(TRAM_PLATFORM.min, Math.min(TRAM_PLATFORM.max, s.length + d * TRAM_PLATFORM.step)) : stepPlatform(s.length, d);
@@ -392,7 +393,7 @@ function StationDetails({ s, lines, props }: {
         </li>}
         {/* T-3332: on double track the platform on the left track, both or the right track; on single track
             a stop with or without a passing loop */}
-        {!s.port && <li>
+        {!s.port && !s.brt && <li>
           <span class="grow">{tr("stationInspector.platformTracks")}</span>
           {doubleHere
             ? <StationSides s={s} />
@@ -403,7 +404,9 @@ function StationDetails({ s, lines, props }: {
         {s.built && m && (
           <Row label={tr("trackInspector.upkeep")}>
             {/* T-3922: what is bought on it included, named in the hover */}
-            <span class="money-neg" data-tip={[s.port
+            <span class="money-neg" data-tip={[s.brt
+              ? tr("stationInspector.brtUpkeep", { price: money(TRAM_STOP_UPKEEP * m.economy) })
+              : s.port
               ? tr("stationInspector.portUpkeep", { price: money(m.upkeepPort * m.economy) })
               : tr("stationInspector.stationUpkeep", { under: money(m.upkeepStationUnder * m.economy), other: money(m.upkeepStation * m.economy) }),
               ...(s.upgradeUpkeep ? [tr("stationInspector.upgradesUpkeep", { amount: money(s.upgradeUpkeep) })] : [])].join("\n")}>

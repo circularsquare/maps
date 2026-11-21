@@ -15,7 +15,7 @@ import { curveLabels, legCurveLabels, placeCurveLabels, placementTag, rampLabels
 import { TRACK_SPECS } from "../game/trackKinds";
 import { logShare } from "./modeBar";
 import { notOnTrack, NEAR_BAR_LO, NEAR_BAR_HI, BESIDE_PX, type Snap, tooFarText, withName } from "./toolParts";
-import { tripsNear, lastPlacedName, el, svgMark, stationGhost, stationRings, checkGhost } from "./stationTool";
+import { tripsNear, lastPlacedName, el, svgMark, stationGhost, stationRings, checkGhost, brtSpot, boxGhost, BRT_STATION_PLATFORM } from "./stationTool";
 import type { Tools } from "./tools";
 
 export function curveCircle(tk: Tools, pv: PreviewAnswer | null) {
@@ -152,8 +152,16 @@ export function placeMarks(tk: Tools) {
   // T-3802: the real station ring under the pointer, named first in the tag (it holds the hover's back)
   const real = t === "station" && tk.pointer ? realStationUnder(tk.pointer.lng, tk.pointer.lat) : null;
   if (t === "station" && h?.kind === "free") {
-    // T-1820: open ground takes no station; no ghost, only the reason by the pointer
     tk.ring.style.display = "none";
+    // T-3378: beside a road, a BRT station's ghost along it
+    const [lng, lat] = toLngLat(h.lx, h.ly), b = brtSpot(tk, lng, lat);
+    if (b) {
+      boxGhost(tk, b.lx, b.ly, b.ways, b.perM, false, null, BRT_STATION_PLATFORM, false, null, true);
+      stationRings(tk, { ...h, lx: b.lx, ly: b.ly });
+      showTag(tk, helpLines(tk, { ...h, lx: b.lx, ly: b.ly }, tr("stationInspector.brtStation")), false, ...tk.screen(h.lx, h.ly));
+      return;
+    }
+    // T-1820: open ground takes no station; no ghost, only the reason by the pointer
     showTag(tk, ...withName(real, notOnTrack()), ...tk.screen(h.lx, h.ly));
     return;
   }

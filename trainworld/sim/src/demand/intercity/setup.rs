@@ -558,7 +558,7 @@ impl IntercityApi {
         let ups = demand_ups(&st_map, st_x.len(), &self.ups_in);
         let (catches, st_bus) = demand_catches(&st_map, st_x.len(), stops, &self.bus_in.0, &self.bus_in.1);
         let tram_line: Vec<bool> = if self.tram_in.len() == line_n.len() { self.tram_in.iter().map(|&f| f != 0).collect() } else { vec![] };
-        let st_tram = tram_stops(&st_map, st_x.len(), stops, &off, &tram_line);
+        let st_tram = tram_stops(&st_map, st_x.len(), stops, &off, &tram_line, &self.ups_in);
         let svc = Service {
             catches,
             st_bus,

@@ -52,11 +52,52 @@ export function shownNameAt(_tk: Tools, lng: number, lat: number): string | unde
   return best === undefined ? undefined : stationNames(w).get(best);
 }
 
+/** T-3378: a BRT station's platform, m (sim `params::BRT_STATION_PLATFORM`) */
+export const BRT_STATION_PLATFORM = 40;
+/** T-3378: a BRT station's centre is this many ground metres off its road's centre line, and a click this near a
+ * road a bus may use places one */
+const BRT_SIDE_M = 10;
+export const BRT_REACH_M = 50;
+
+/** T-3378: where a click at `lng, lat` off track places a BRT station: beside the nearest road a bus may use within
+ * `BRT_REACH_M`, on the click's side of it, its platform along the road (`heading` in the world frame); null where
+ * there is none, undefined while the roads load. */
+export function brtSpot(tk: Tools, lng: number, lat: number): { lx: number; ly: number; x: number; y: number; heading: number; ways: Float32Array[]; perM: number } | null | undefined {
+  const k = tk.street.busRoads.kerb({ lng, lat }, BRT_REACH_M);
+  if (!k) return k;
+  const [ax, ay] = toLocal(k.at.lng, k.at.lat), [bx, by] = toLocal(k.along.lng, k.along.lat), [cx, cy] = toLocal(lng, lat);
+  const l = Math.hypot(bx - ax, by - ay) || 1, ux = (bx - ax) / l, uy = (by - ay) / l;
+  const side = ux * (cy - ay) - uy * (cx - ax) < 0 ? -1 : 1, perM = 1 / Math.cos((lat * Math.PI) / 180);
+  const lx = ax - uy * side * BRT_SIDE_M * perM, ly = ay + ux * side * BRT_SIDE_M * perM;
+  const p = tk.pack(lx, ly), q = tk.pack(lx + ux * perM, ly + uy * perM), reach = 100 * perM;
+  // the platform's two ways out along the road, as a station's along its track
+  const ways = [Float32Array.of(lx, ly, 0, lx + ux * reach, ly + uy * reach, 0), Float32Array.of(lx, ly, 0, lx - ux * reach, ly - uy * reach, 0)];
+  return { lx, ly, x: p.x, y: p.y, heading: Math.atan2(q.y - p.y, q.x - p.x), ways, perM };
+}
+
 export async function stationClick(tk: Tools, e: MapMouseEvent) {
   const first = tk.snap(e.point.x, e.point.y, e.lngLat);
   if (first.kind === "free") {
-    // T-1820: stations go on track only
-    say(notOnTrack(), true);
+    // T-1820: stations go on track only; T-3378: or beside a road, a BRT station
+    let b = brtSpot(tk, e.lngLat.lng, e.lngLat.lat);
+    // a click before the roads there have loaded waits for them a few seconds
+    for (let i = 0; b === undefined && i < 50; i++) {
+      await new Promise((r) => setTimeout(r, 100));
+      b = brtSpot(tk, e.lngLat.lng, e.lngLat.lat);
+    }
+    if (!b) {
+      say(notOnTrack(), true);
+      return;
+    }
+    playBuild("station");
+    const key = nameKey(tk, e.point.x, e.point.y), ahead = tk.named?.key === key && tk.map.areTilesLoaded() ? tk.named.name : null;
+    tk.named = null;
+    const name = await (ahead ?? nameFor(tk, e.point.x, e.point.y));
+    const r = await edit({ op: "addBrtStation", x: b.x, y: b.y, heading: b.heading, name }, true, true);
+    if (r.ok) {
+      tk.lastPlaced = toLngLat(b.lx, b.ly);
+      say(tr("tools.blueprintStation", { name: shownNameAt(tk, tk.lastPlaced[0], tk.lastPlaced[1]) ?? name }));
+    } else if (r.issues.length) say(describeIssues(r.issues, undefined, undefined, true), true);
     return;
   }
   // T-671, T-695: the spot the ghost shows, else the first the track model takes of what is under the pointer
@@ -298,13 +339,13 @@ export function outsideSide(tk: Tools, h: Exclude<Snap,{kind:"free"}>, ends: Tra
 
 /** The platform box at (lx, ly) along `ways` (the track from the spot each way), and the twin's
  * on quad. */
-export function boxGhost(tk: Tools, lx: number, ly: number, ways: ArrayLike<number>[], perM: number, bad: boolean, twinAt: { x: number; y: number; ways: ArrayLike<number>[] } | null, plat = tk.platFor(tk.stationSpot()), double = false, outside: ((sh: PlatformShape) => number) | null = null) {
+export function boxGhost(tk: Tools, lx: number, ly: number, ways: ArrayLike<number>[], perM: number, bad: boolean, twinAt: { x: number; y: number; ways: ArrayLike<number>[] } | null, plat = tk.platFor(tk.stationSpot()), double = false, outside: ((sh: PlatformShape) => number) | null = null, tramLook = false) {
   const sh=platformShape(ways,0,plat/2*perM);
   // T-3332: a platform on one track of double track: its half of the box, on the pointer's side
   const one=tk.oneSideAt(lx,ly,sh,double);
   // a station on single track is one bar on its outside, as network.ts draws it (T-3540)
   const side=one||outside?.(sh)||0, mid=!one&&side!==0;
-  const tram=tk.tramSpot(tk.stationSpot());
+  const tram=tramLook||tk.tramSpot(tk.stationSpot());
   tk.lastBox={lx,ly,ways,perM,plat,side,tram,mid};
   const shape=ghostShape(tk, lx,ly,ways,perM,plat,side,tram,mid);
   tk.ghost ??= svgMark(tk, ["path"], false);

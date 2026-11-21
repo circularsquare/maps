@@ -1028,7 +1028,7 @@ impl TrackApi {
     #[allow(clippy::too_many_arguments)]
     pub(super) fn station_at(&mut self, kind: u32, id: u32, x: f64, y: f64, platform: u16, name: String, dry: bool) -> u32 {
         let own = self.new_own(&name);
-        let mut st = StationData { platform, name, named: false, built: false, off: false, upgrades: 0, berth: None, day: 0, one: 0, fare: 0, own };
+        let mut st = StationData { platform, name, named: false, built: false, off: false, upgrades: 0, berth: None, day: 0, one: 0, fare: 0, own, road: None };
         // On quad track only the pair clicked gets the station (T-1687); one level with it on the
         // pair beside lends its name, so the two read as one station.
         if kind == 1 {
@@ -1132,7 +1132,7 @@ impl TrackApi {
             return self.refuse(Issue::Geom { edge: u32::MAX, issue: GeomIssue::ZeroLeg(0) });
         };
         let own = self.new_own(&name);
-        let st = StationData { platform, name, named: false, built: false, off: false, upgrades: 0, berth: None, day: 0, one: 0, fare: 0, own };
+        let st = StationData { platform, name, named: false, built: false, off: false, upgrades: 0, berth: None, day: 0, one: 0, fare: 0, own, road: None };
         // on quad, the drawn pair's only (T-1687)
         let r = self.station_ops(Some(&route), &[(e, s)], &st, dry);
         if r != 0 || dry {
