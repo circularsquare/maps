@@ -2,7 +2,7 @@
 // A bus line has no track, so the network buffers hold no strokes for it; this layer draws its drawn
 // route from `lineStats[id].bus` instead, in the renderer's own pass (renderer.ts calls `draw` before
 // the track): half a rail line's width in the line's colour on the casing, a planned route as rail
-// blueprint is, the 600 m corridor of the selected line as a thin outline under everything, small
+// blueprint is, the 1 km corridor of the selected line as a thin outline under everything, small
 // rings for its street stops from zoom 13 and rounded squares for its ends. A stop at a train station
 // is drawn like any other, on the route where it passes nearest the station (T-2982), in a second pass
 // after the stations (`drawStationStops`), so it reads over the station's mark where they meet
@@ -55,7 +55,7 @@ const WIDTH_SHARE = 0.45;
 const BRT_WIDTH = 1.4;
 const CASING_SHARE = 0.6;
 /** Ground metres each side of the route that its riders walk from (demand's corridor, sim `BUS_REACH_M`). */
-export const CORRIDOR_M = 600;
+export const CORRIDOR_M = 1000;
 /** The selected line's corridor outline: opacity of the line's colour, and thickness in CSS px (T-1490). */
 const OUTLINE_ALPHA = 0.75;
 const OUTLINE_PX = 1;

@@ -283,7 +283,7 @@ The walk to and from the station. A train that is fast still has to be reached: 
 end is 39 perceived minutes before the train has moved, more than most short drives cost. Where
 parking is paid, rail wins easily (Hempstead to Midtown). The trip explorer shows any trip's real minutes and its effective time (the perceived minutes above) by train, car and walking, each with its sum in a hover.
 
-The player's answer is a bus (since T-1464). Anyone within 600 m of a bus route (300 m before T-3856) walks to it (their
+The player's answer is a bus (since T-1464). Anyone within 1 km of a bus route (600 m before T-3995, 300 m before T-3856) walks to it (their
 distance to the route plus 100 m), waits and rides to a station at 85% of what a car does on the road there, never under 25 km/h while moving (a bus lane; 35 on a line upgraded to BRT), losing 28 seconds at each stop: about 17 km/h with stops every 400 m in a dense centre like Manhattan. The change to the
 train is free: one fare for the whole trip on the same curve, the bus kilometres' part above the base at 0.8
 times unless the player sets another Bus multiple (on a BRT line 1.0 times, the BRT multiple). Boarding a bus costs only the wait, as boarding a train does
