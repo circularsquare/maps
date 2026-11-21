@@ -466,11 +466,11 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: Parity B except the reviewed differences part 5 lists.
   - Other: Files: capacity.rs, overtake.rs, terminalBays.ts, save.rs converter. 3-5 h. stage 7a
 - T-3972 [P3] {L:passing-tracks} {after:T-3971} Passing tracks as real track
-  - Context: The passing tracks button builds real tracks with the passing purpose; overtakes read the tracks; each line stops on one platform track (decision 19); the terminal stays an upgrade.
+  - Context: The passing tracks button builds real tracks; overtakes read the tracks (a train that doesn't stop takes the free track past a stopped one when it can); each line stops on one platform track (decision 19); the terminal stays an upgrade.
   - Goal: T-2231's line keeps its express and local times.
   - Other: Files: upgrades.rs, overtake.rs, network.ts passing drawing, the station panel. 4-6 h. stage 7b
 - T-3973 [P3] {L:track-rework} {after:T-3972} Track purpose
-  - Context: Each track or long selection can be Any line, Passing track or Only for chosen lines; routing, overtakes and capacity read it.
+  - Context: Each track or long selection can be Any line or Only for chosen lines; routing and capacity read it. No "Passing track" purpose (you, 11-21: "passing track doesnt really need to be specified ... non-stoppign trains can just avoid stopped trains if they have the option").
   - Goal: An express pair kept to expresses; a passing track used only for overtakes.
   - Other: Files: net/paths.rs, overtake.rs, TrackInspector.tsx. 4-6 h. stage 7c
 - T-3974 [P3] {L:track-rework} {after:T-3973} Crossovers drawn as single track
