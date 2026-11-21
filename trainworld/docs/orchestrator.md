@@ -59,9 +59,11 @@ incidents behind the rules here are in `notes/rule-history.md`.
   in the same turn, before replying to anything else. A file collision rules out only the tasks that share files with
   a running agent; name them, and start something else. Below 4 with startable work is a slip to fix at once, not
   a judgement call.
-- **Cores 0-1 are hers** (her ask, 11-21): at takeover run `powershell -NoProfile -ExecutionPolicy Bypass -File
-  trainworld/tools/ops/reserve_cores.ps1`. It pins this session's claude.exe and everything under it to the other
-  cores at below-normal priority; agents' processes inherit it, and checks/cores.mjs never pins Chrome there.
+- **Cores 0-1 are hers** (her ask, 11-21): at takeover start, in the background,
+  `powershell -NoProfile -ExecutionPolicy Bypass -File trainworld/tools/ops/reserve_cores.ps1 -Loop 30`. Every 30 s
+  it pins everything under this session's claude.exe to the other cores at below-normal priority, and keeps
+  claude.exe itself normal on all cores (it draws her terminal: pinned, typing lagged 4 s). checks/cores.mjs never
+  pins Chrome on cores 0-1.
 - **Overnight, the core cap goes to the machine's max** (her rule, 11-21: "we should have been running with max core
   cap cuz it was overnight"): when she goes to bed, `python cores.py cap <machine cores>` and fill it; set it back to
   her daytime number when she is up (ask if unsure).
