@@ -57,11 +57,16 @@ fn real_save_figures() {
 use super::super::bench::synth;
 use super::super::net::StationData;
 use super::super::service::Service;
+use super::super::tests::set_counts;
 use super::super::upgrades;
 use super::super::world::{Op, TrackWorld};
 
 fn turnback_fixture(single: bool, pass: bool) -> (TrackWorld, u32, u32, u32) {
-    use super::super::tests::{edge, line, node, station, world};
+    turnback_fixture_with(single, pass, super::super::tests::counted_line)
+}
+
+fn turnback_fixture_with(single: bool, pass: bool, line: fn(&mut TrackWorld, &[u32], [f32; 3]) -> u32) -> (TrackWorld, u32, u32, u32) {
+    use super::super::tests::{edge, node, station, world};
     let mut w = world();
     let a = node(&mut w, 0.0, 0.0, 0);
     let b = node(&mut w, 3000.0, 0.0, 0);
@@ -100,7 +105,8 @@ fn a_short_turn_at_a_through_station_holds_no_platform_and_crosses_nothing() {
     assert_eq!(occ, 180.0 + TERMINUS_MARGIN_S, "one platform to turn on without a terminal");
     assert_eq!(cap.users_of(r).len(), 1);
     assert_eq!(cap.users_of(r)[0].line, short, "turnaround counted once per train");
-    assert!((cap.rho[r][0] - 8.0 * occ / 3600.0).abs() < 1e-12);
+    let rate = w.net.line_tph[short as usize][HIGH] as f64;
+    assert!((cap.rho[r][0] - rate * occ / 3600.0).abs() < 1e-12);
     for run in 0..2 {
         assert_eq!(w.svc.lines[through as usize].runs[run].stop_holds[0][1], 0.0, "through direction {run} does not wait at the turn");
     }
@@ -108,12 +114,12 @@ fn a_short_turn_at_a_through_station_holds_no_platform_and_crosses_nothing() {
     assert_eq!(platforms.len(), 2);
     for &p in &platforms {
         assert_eq!(cap.wire_kind(p), 2, "stopping trains alone are a plain platform");
-        assert!((cap.rho[p][0] - 12.0 * (30.0 + PLATFORM_MARGIN_S) / 3600.0).abs() < 1e-12);
+        assert!((cap.rho[p][0] - w.net.line_tph[through as usize][HIGH] as f64 * (30.0 + PLATFORM_MARGIN_S) / 3600.0).abs() < 1e-12);
     }
     assert!((0..cap.res.len()).any(|r| cap.res[r].kind == ResKind::Section && cap.wire_kind(r) == 7), "the stretch both lines run over");
     assert!((0..cap.res.len()).any(|r| cap.res[r].kind == ResKind::Section && cap.wire_kind(r) == 0), "the stretch only one runs over");
     same_as_global(&w, "short turn start");
-    w.apply(Op::Schedule { id: short, tph: [0.0; 3] }).unwrap();
+    set_counts(&mut w, short, [0; 3]);
     same_as_global(&w, "short turn off");
     w.undo().unwrap().unwrap(); same_as_global(&w, "short turn undo");
     w.redo().unwrap().unwrap(); same_as_global(&w, "short turn redo");
@@ -129,7 +135,7 @@ fn single_track_platform_shares_stops_and_a_short_turn_has_its_own_pool() {
     let cap = &w.svc.cap;
     assert_eq!(cap.users_of(platform).len(), 2);
     assert!(cap.users_of(platform).iter().all(|u| u.line == through));
-    assert!((cap.rho[platform][0] - 24.0 * (30.0 + PLATFORM_MARGIN_S) / 3600.0).abs() < 1e-12);
+    assert!((cap.rho[platform][0] - 2.0 * w.net.line_tph[through as usize][HIGH] as f64 * (30.0 + PLATFORM_MARGIN_S) / 3600.0).abs() < 1e-12);
     let (r, occ) = turn_pool(&w, b);
     assert_eq!(occ, 180.0 + TERMINUS_MARGIN_S);
     assert_eq!(w.svc.cap.users_of(r)[0].line, short);
@@ -137,7 +143,7 @@ fn single_track_platform_shares_stops_and_a_short_turn_has_its_own_pool() {
     w.apply(Op::Line { id: short, data: None }).unwrap();
     same_as_global(&w, "single remove short turn");
     let platform = w.svc.cap.res.iter().position(|r| r.node == b && r.kind == ResKind::Platform).unwrap();
-    assert!((w.svc.cap.rho[platform][0] - 24.0 * (30.0 + PLATFORM_MARGIN_S) / 3600.0).abs() < 1e-12);
+    assert!((w.svc.cap.rho[platform][0] - 2.0 * w.net.line_tph[through as usize][HIGH] as f64 * (30.0 + PLATFORM_MARGIN_S) / 3600.0).abs() < 1e-12);
 }
 
 /// T-3112 (Anita, 2026-11-10): a two-way single-track stretch holds each train for its run time plus
@@ -155,7 +161,9 @@ fn two_km_of_two_way_single_track_takes_about_five_trains_an_hour_each_way() {
     w.apply(Op::Edge { id: e, data: Some(d) }).unwrap();
     station(&mut w, a, 200);
     station(&mut w, b, 200);
-    line(&mut w, &[a, b], [5.0, 0.0, 0.0]);
+    let only = line(&mut w, &[a, b], [5.0, 0.0, 0.0]);
+    // two trains, so the lone-train allowance does not apply
+    set_counts(&mut w, only, [2, 0, 0]);
     let cap = &w.svc.cap;
     let r = cap.res.iter().position(|r| r.kind == ResKind::SingleTrack).expect("a single-track stretch");
     let users = cap.users_of(r);
@@ -165,7 +173,7 @@ fn two_km_of_two_way_single_track_takes_about_five_trains_an_hour_each_way() {
     // 2 km at line speed with stops is roughly 2 minutes, so about 6 minutes held per train
     let each_way = 3600.0 / (2.0 * occ);
     assert!((4.0..=6.0).contains(&each_way), "occ {occ} s gives {each_way} an hour each way");
-    assert!((cap.rho[r][0] - 2.0 * 5.0 * occ / 3600.0).abs() < 1e-12);
+    assert!((cap.rho[r][0] - 2.0 * w.net.line_tph[only as usize][HIGH] as f64 * occ / 3600.0).abs() < 1e-12);
 }
 
 /// T-3201 (Anita, 2026-11-11): one train alone on single track no other line uses has no train to
@@ -337,7 +345,7 @@ fn short_turn_counts_settle_against_shared_platform_and_crossover_delays() {
 #[test]
 fn tiny_reversal_does_not_couple_independent_through_directions() {
     use super::super::tests::line;
-    let (mut w, b, through, short) = turnback_fixture(false, true);
+    let (mut w, b, through, short) = turnback_fixture_with(false, true, line);
     w.apply(Op::Schedule { id: through, tph: [10.0, 8.0, 4.0] }).unwrap();
     let stops = w.net.line_stops(through).to_vec();
     let second = line(&mut w, &stops, [10.0, 8.0, 4.0]);
@@ -479,6 +487,9 @@ fn random_op(w: &mut TrackWorld, rng: &mut Rng) -> Option<Op> {
 fn same_as_global(w: &TrackWorld, what: &str) {
     let mut g = Service::default();
     g.update_all(&w.net);
+    for l in 0..g.lines.len() {
+        if w.net.line_trains[l].is_some() { g.lines[l].trains = w.net.slot_trains(l); }
+    }
     let (a, b) = (w.svc.cap.canonical(), g.cap.canonical());
     assert_eq!(a.len(), b.len(), "{what}: resource count");
     for (x, y) in a.iter().zip(&b) {
@@ -582,7 +593,7 @@ fn a_terminal_at_a_through_station_doubles_its_turns() {
     let u = cap.users_of(r);
     assert_eq!(u.len(), 1);
     assert_eq!((u[0].line, occ), (short, (180.0 + TERMINUS_MARGIN_S) / 2.0));
-    assert!((cap.rho[r][HIGH] - 8.0 / 30.0).abs() < 1e-12, "30 an hour fill it");
+    assert!((cap.rho[r][HIGH] - w.net.line_tph[short as usize][HIGH] as f64 / 30.0).abs() < 1e-12, "30 an hour fill it");
     let platforms: Vec<usize> = (0..cap.res.len()).filter(|&r| cap.res[r].node == b && cap.res[r].kind == ResKind::Platform).collect();
     assert_eq!(platforms.len(), 2);
     for &p in &platforms {

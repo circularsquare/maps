@@ -50,6 +50,24 @@ pub fn line(w: &mut TrackWorld, stops: &[u32], tph: [f32; 3]) -> u32 {
     id
 }
 
+/// A line at about `tph` trains per hour a level, as whole trains (`set_rate`).
+pub fn counted_line(w: &mut TrackWorld, stops: &[u32], tph: [f32; 3]) -> u32 {
+    let id = new_line(w, stops, [0; 3]);
+    set_rate(w, id, tph);
+    id
+}
+
+/// Sets line `id` to whole trains that run about `tph` an hour a level: the rate times the line's
+/// round trip, rounded, at least one wherever the rate is above 0.
+pub fn set_rate(w: &mut TrackWorld, id: u32, tph: [f32; 3]) {
+    let trip = w.svc.lines[id as usize].round_trip;
+    let trains: [u32; 3] = std::array::from_fn(|row| {
+        let n = (tph[row] as f64 * trip[ROW_SLOT[row]] / 3600.0).round() as u32;
+        if tph[row] > 0.0 { n.max(1) } else { 0 }
+    });
+    set_counts(w, id, trains);
+}
+
 #[test]
 fn unused_blueprint_extension_preserves_running_service_but_planned_lines_preview_it() {
     for tracks in [1, 2] {
@@ -1156,7 +1174,7 @@ pub(super) fn corridor(n: usize) -> (TrackWorld, Vec<u32>) {
     (w, ns)
 }
 
-fn set_counts(w: &mut TrackWorld, id: u32, trains: [u32; 3]) {
+pub(super) fn set_counts(w: &mut TrackWorld, id: u32, trains: [u32; 3]) {
     let tph = slots_to_rows(w.net.line_tph[id as usize]);
     w.apply(Op::TrainCounts { id, trains: Some(trains), tph }).unwrap();
 }
