@@ -91,6 +91,7 @@ const TERM_KEYS: Record<string, MessageKey> = {
   "at the airports": "tripText.termAtAirports",
   "until the flight": "tripText.termUntilFlight",
   flight: "tripText.termFlight",
+  stairs: "trip.stairs",
 };
 export const termLabel = (id: string, vehicle: string = "train"): string => (TERM_KEYS[id] ? t(TERM_KEYS[id], { vehicle }) : id);
 
