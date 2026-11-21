@@ -39,6 +39,8 @@ export interface Fares {
   ferryLarge?: number;
   /** T-3028: the fare multiplier on bus lines; absent for `BUS_FARE` */
   bus?: number;
+  /** T-3915: the fare multiplier on BRT lines in place of the bus one; absent for `BRT_FARE` */
+  brt?: number;
   /** T-3567: each line's own fare multiplier, by line id, on top of the kind's above; only lines set off 1,
    * absent while none is. A quad-track twin carries its line's (the clock worker keeps it so). */
   lines?: Record<string, number>;
@@ -128,6 +130,25 @@ export function busFare(f: { bus?: number } | undefined): number {
   const v = f?.bus;
   return v !== undefined && Number.isFinite(v) && v >= 0 ? v : BUS_FARE;
 }
+/** T-3915: a BRT line's fares are the curve's part above the base times this instead of the bus one. */
+export const BRT_FARE = 1;
+/** The BRT multiplier of `f`, or the default. */
+export function brtFare(f: { brt?: number } | undefined): number {
+  const v = f?.brt;
+  return v !== undefined && Number.isFinite(v) && v >= 0 ? v : BRT_FARE;
+}
+/** The `Fares` fields holding a kind of line's multiplier, each 0 to `HSR_FARE_MAX` (`tidyHsr`); every copy of
+ * the fares field by field goes through this list, so a new kind is never dropped by one of them. */
+export const KIND_FARE_KEYS = ["hsr", ...FERRY_FARE_KEYS, "bus", "brt"] as const;
+/** The kinds' multipliers set in `f`, tidied; a key not set (or not a number) is left out. */
+export function kindFares(f: Partial<Record<(typeof KIND_FARE_KEYS)[number], unknown>>): Partial<Record<(typeof KIND_FARE_KEYS)[number], number>> {
+  const out: Partial<Record<(typeof KIND_FARE_KEYS)[number], number>> = {};
+  for (const k of KIND_FARE_KEYS) {
+    const v = f[k];
+    if (typeof v === "number" && Number.isFinite(v)) out[k] = tidyHsr(v);
+  }
+  return out;
+}
 /** T-3567: a line's own multiplier is 0 to this, in hundredths. */
 export const LINE_FARE_MAX = 3;
 /** A line's own multiplier the player typed or stepped to. */
@@ -140,9 +161,9 @@ export function ownLineFare(f: { lines?: Record<string, number> } | undefined, i
   return v !== undefined && Number.isFinite(v) && v >= 0 ? v : 1;
 }
 /** The multiplier a line's rides pay on the part of the fare above the base: a ferry's, a
- * bus's, a high-speed line's, else 1; times the line's own (T-3567). */
-export function lineFareMul(line: { id: string; fast?: boolean; ferry?: boolean; boat?: Boat; bus?: boolean }, f: { hsr?: number; ferry?: number; ferrySmall?: number; ferryLarge?: number; bus?: number; lines?: Record<string, number> } | undefined): number {
-  const kind = line.ferry ? ferryFare(f, line.boat) : line.bus ? busFare(f) : line.fast ? hsrFare(f) : 1;
+ * bus's (T-3915: a BRT line's own), a high-speed line's, else 1; times the line's own (T-3567). */
+export function lineFareMul(line: { id: string; fast?: boolean; ferry?: boolean; boat?: Boat; bus?: boolean; brt?: boolean }, f: { hsr?: number; ferry?: number; ferrySmall?: number; ferryLarge?: number; bus?: number; brt?: number; lines?: Record<string, number> } | undefined): number {
+  const kind = line.ferry ? ferryFare(f, line.boat) : line.bus ? (line.brt ? brtFare(f) : busFare(f)) : line.fast ? hsrFare(f) : 1;
   const own = ownLineFare(f, line.id);
   return own === 1 ? kind : kind * own;
 }

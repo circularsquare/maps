@@ -286,7 +286,7 @@ parking is paid, rail wins easily (Hempstead to Midtown). The trip explorer show
 The player's answer is a bus (since T-1464). Anyone within 600 m of a bus route (300 m before T-3856) walks to it (their
 distance to the route plus 100 m), waits and rides to a station at 85% of what a car does on the road there, never under 25 km/h while moving (a bus lane; 35 on a line upgraded to BRT), losing 28 seconds at each stop: about 17 km/h with stops every 400 m in a dense centre like Manhattan. The change to the
 train is free: one fare for the whole trip on the same curve, the bus kilometres' part above the base at 0.8
-times unless the player sets another Bus multiple. Boarding a bus costs only the wait, as boarding a train does
+times unless the player sets another Bus multiple (on a BRT line 1.0 times, the BRT multiple). Boarding a bus costs only the wait, as boarding a train does
 (since T-3856; before, every bus boarding added 4 perceived minutes). A home
 1.5 km from a station walks 29 perceived minutes to it, or about 18 by bus. Trips by bus alone count
 as rail. A bus is a third of a train car: riders mind its crowding from 45 aboard, it is at 100% with 53

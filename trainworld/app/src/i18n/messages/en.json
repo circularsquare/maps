@@ -1529,6 +1529,8 @@
   "moneyTab.busFare": "bus fare",
   "moneyTab.busFareRow": "Bus",
   "moneyTab.busFareTip": "Fare multiple for rides on buses.",
+  "moneyTab.brtFare": "brt fare",
+  "moneyTab.brtFareTip": "Fare multiple for rides on BRT lines.",
   "moneyTab.busTip": "A bus costs {price}. Running costs {rule}. A route costs {route} to construct.",
   "moneyTab.busesBought": "{buses} bought at {price} each, {total} in all",
   "moneyTab.busesCost": "Buses cost {rule}",

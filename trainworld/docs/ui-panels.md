@@ -880,8 +880,11 @@ come right up to a neighbour (0.1 km) so a drag can make a step; the rows as the
 bin ("Remove point"; the base fare has none), their amount boxes one width (64 px, seven characters such as "+$55.50"
 or "+¥1,500") with the figure centred [T-3749, T-3751]; "Add point" (pressed while armed; off at 12 points, hover "At
 most 12 points") and, for a curve of other than three points, "Use simple curve", which asks "Go back to three points
-at 0, 20 and 100 km? The other points are dropped." and keeps the fares at those distances; the high-speed, bus, ferry (all three boat sizes once a ferry line exists,
-T-3892) and transfer rows as the Money tab shows them; the estimate rows while a change is unsolved; the countries: the
+at 0, 20 and 100 km? The other points are dropped." and keeps the fares at those distances; a thin rule under "Add point"; then the high-speed, Bus, BRT and boat size rows
+as the Money tab shows them (each only while one of its lines exists, but Medium's "Ferry" with any ferry line, T-3915)
+and the transfer fare: where the panel is
+480 px wide or more and a ferry line exists, in two columns, high speed, Bus, BRT and the transfer fare on the left and
+the boat sizes on the right, else one column, the transfer fare last; the estimate rows while a change is unsolved; the countries: the
 reference country, then every country with a built station by name, each row its multiple (the reference a plain
 1.00x), its base fare as charged and the anchor and undo buttons, under one row of column heads, "Fares by
 [country | city]" (bold, over the names; the two words a switch, T-3766), "Multiple" and "Base fare" [T-3749]. With

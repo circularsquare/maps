@@ -992,8 +992,9 @@ async function handleMessage(msg: ToClock) {
     // an early answer's money split waits for the next state the page takes
     let answered = early || stops || renamed, shares = early && charge > 0;
     const rest = () => {
-      // T-3758: a line's fare mode changes no train's run, yet demand reads it; T-3892: nor need a boat size (its riders, fares)
-      if (demand.length || op.op === "undo" || op.op === "redo" || op.op === "lineFareDist" || op.op === "ferryBoat" || stationsKey() !== snapStations) scheduleSnapshot();
+      // T-3758: a line's fare mode changes no train's run, yet demand reads it; T-3892: nor need a boat size (its riders, fares);
+      // T-3915: nor BRT on a route with no road in town (its fares)
+      if (demand.length || op.op === "undo" || op.op === "redo" || op.op === "lineFareDist" || op.op === "ferryBoat" || op.op === "busBrt" || stationsKey() !== snapStations) scheduleSnapshot();
       if (!answered) { answered = true; answer(); }
       keep();
       // Paid for something: keep it (T-029, autosave on construct).

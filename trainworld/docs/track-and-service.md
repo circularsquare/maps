@@ -1956,7 +1956,11 @@ is over `FARE_MAX`, curve US$1,000 (T-3303: a typed 90 billion once went into ev
   high-speed multiplier (`Fares.hsr`, default `HSR_FARE` 1.25 [was 1.5 until T-3338], 0 to 5, saved in the header; a save
   without one charges the default, a save with one keeps it); the base stays once a trip; a ferry line likewise with the Ferry multiplier
   (`Fares.ferry`, default `FERRY_FARE` 1.00, `lineFareMul`, T-2195) and a bus line with the Bus multiplier
-  (`Fares.bus`, default `BUS_FARE` 0.80 [1.00 until T-3856; a save that set it keeps its own], 0 to 5 as the others, T-3028; the Money tab's row shows once a bus line exists).
+  (`Fares.bus`, default `BUS_FARE` 0.80 [1.00 until T-3856; a save that set it keeps its own], 0 to 5 as the others, T-3028),
+  a bus line on BRT with the BRT multiplier instead (`Fares.brt`, default `BRT_FARE` 1.00, T-3915). Each kind's row
+  (high speed, Bus, BRT, each boat size) shows in the Money tab and Advanced fares only while one of its lines exists
+  (`fareKindsInUse`; the Bus row for a bus line not on BRT; Advanced fares shows Medium's "Ferry" row with any ferry
+  line). The fields are copied by one list, `KIND_FARE_KEYS`.
   **A line's own multiple** [T-3567]: `Fares.lines` (line id to multiple, 0 to `LINE_FARE_MAX` 3 in hundredths,
   only lines set off 1, saved in the header; an older save has none), set in the line's panel, times the line's
   kind's multiple in `lineFareMul`, so it rides the same path everywhere, and it scales the base too [T-3578]: a

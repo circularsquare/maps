@@ -6,7 +6,7 @@ import { borrow, repay, setFareBus, setFareCityScale, setFareFerry, setFareHsr, 
 import { LOAN_AMOUNTS, LOAN_RATE, LOAN_TERM, loanAllowed, loanBalance, loanPayment, loanProfit, type Loan } from "../game/loan";
 import { liveMoney, moneyState, stationCity, stationCountry } from "../game/money";
 import { cityById, HOME_CITY, isCity, viewedZone, zoneCountry } from "../game/cities";
-import { BUS_FARE, busFare, FERRY_FARES, ferryFare, HSR_FARE, hsrFare, isCustomCurve, scaleNodes, tidyHsr, tidyTransfer, transferFare, type FareNode, type Fares } from "../game/fareCurve";
+import { BRT_FARE, brtFare, BUS_FARE, busFare, FERRY_FARES, ferryFare, HSR_FARE, hsrFare, isCustomCurve, scaleNodes, tidyHsr, tidyTransfer, transferFare, type FareNode, type Fares } from "../game/fareCurve";
 import { boatOf, boatRunKm, boatStock, MEDIUM, type Boat } from "../game/boats";
 import { shownEstimate } from "../game/fareEstimate";
 import { faresIn, roundedDefault } from "../game/fareDefault";
@@ -191,20 +191,37 @@ export function HsrFareRow({ mul, own }: { mul: number; own: boolean }) {
   );
 }
 
-/** T-3028: the fare multiplier on bus lines, as the ferry one. */
-export function BusFareRow({ mul }: { mul: number }) {
-  const set = (v: number) => void setFareBus(tidyHsr(v));
+/** T-3028: the fare multiplier on bus lines, as the ferry one; T-3915: on BRT lines with `brt`. */
+export function BusFareRow({ mul, brt = false }: { mul: number; brt?: boolean }) {
+  const set = (v: number) => void setFareBus(tidyHsr(v), brt);
   const text = (v: number) => `${fix2(v)}x`;
+  const usual = brt ? BRT_FARE : BUS_FARE;
+  const [label, fare, tip] = brt ? [t("busInspector.brt"), t("moneyTab.brtFare"), t("moneyTab.brtFareTip")]
+    : [t("moneyTab.busFareRow"), t("moneyTab.busFare"), t("moneyTab.busFareTip")];
   return (
     <li>
-      <span class="fr-what" data-tip={t("moneyTab.busFareTip")}>{t("moneyTab.busFareRow")}</span>
-      <Stepper value={text(mul)} wide label={t("moneyTab.busFare")} onStep={(d) => set(Math.round(mul * 100) / 100 + d * 0.05)}
-        type={{ text: mul.toFixed(2), set, tip: t("moneyTab.busFareTip") }} />
-      {mul !== BUS_FARE
-        ? <button class="btn icon" aria-label={t("moneyTab.backToUsual")} data-tip={t("moneyTab.backTo", { value: text(BUS_FARE) })} onClick={() => set(BUS_FARE)}><Icon.undo /></button>
+      <span class="fr-what" data-tip={tip}>{label}</span>
+      <Stepper value={text(mul)} wide label={fare} onStep={(d) => set(Math.round(mul * 100) / 100 + d * 0.05)}
+        type={{ text: mul.toFixed(2), set, tip }} />
+      {mul !== usual
+        ? <button class="btn icon" aria-label={t("moneyTab.backToUsual")} data-tip={t("moneyTab.backTo", { value: text(usual) })} onClick={() => set(usual)}><Icon.undo /></button>
         : <span />}
     </li>
   );
+}
+/** T-3915: which kinds of line run, for the fare rows: high speed, plain bus, BRT, and the boat sizes Small to
+ * Large; each kind's row shows only while one of its lines exists. */
+export function fareKindsInUse(w: NonNullable<typeof world.value>) {
+  let fast = false, bus = false, brt = false;
+  const boats = new Set<Boat>();
+  for (const l of w.save.lines) {
+    const st = w.lineStats[l.id];
+    if (!st) continue;
+    if (st.fast) fast = true;
+    if (st.bus?.ferry) boats.add(boatOf(st.bus));
+    else if (st.bus) (st.bus.brt ? (brt = true) : (bus = true));
+  }
+  return { fast, bus, brt, boats: ([0, 1, 2] as const).filter((b) => boats.has(b)) };
 }
 
 /** T-2194: the fare multiplier on ferry lines, as the high-speed one (notes/T-2177.md 3.7); T-3892: one per boat
@@ -323,12 +340,8 @@ export function MoneyTab() {
   const { scale, nodes: shown } = chargedAt(m.fares, place);
   const country = fareCountry();
   const f = farePreview.value ?? shown;
-  // T-1626: shown once a line runs high-speed trains
-  const hsr = w.save.lines.some((l) => w.lineStats[l.id]?.fast) ? hsrFare(m.fares) : null;
-  // T-2194: shown once a ferry line exists
-  const ferry = ([0, 1, 2] as const).filter((b) => w.save.lines.some((l) => { const bus = w.lineStats[l.id]?.bus; return !!bus?.ferry && boatOf(bus) === b; }));
-  // T-3028: shown once a bus line exists
-  const busLine = w.save.lines.some((l) => { const b = w.lineStats[l.id]?.bus; return !!b && !b.ferry; }) ? busFare(m.fares) : null;
+  // T-1626, T-2194, T-3028, T-3915: each kind's multiple shown once one of its lines exists
+  const kinds = fareKindsInUse(w);
   return (
     <>
       <ul class="rows">
@@ -389,9 +402,10 @@ export function MoneyTab() {
       <FareGraph nodes={shown} scale={scale} />
       <FareNodeRows nodes={f} scale={scale} custom={isCustomCurve(m.fares.nodes) ? t("moneyTab.fareCustom") : undefined}
         last={<>
-          {hsr !== null && <HsrFareRow mul={hsr} own={hsr !== HSR_FARE} />}
-          {busLine !== null && <BusFareRow mul={busLine} />}
-          <FerryFareRows fares={m.fares} sizes={ferry} />
+          {kinds.fast && <HsrFareRow mul={hsrFare(m.fares)} own={hsrFare(m.fares) !== HSR_FARE} />}
+          {kinds.bus && <BusFareRow mul={busFare(m.fares)} />}
+          {kinds.brt && <BusFareRow mul={brtFare(m.fares)} brt />}
+          <FerryFareRows fares={m.fares} sizes={kinds.boats} />
           <TransferFareRow fare={transferFare(m.fares)} base={m.fares.nodes[0]?.[1] ?? m.fares.base} scale={scale} />
           <FareScaleRow f={m.fares} place={place} />
         </>} />

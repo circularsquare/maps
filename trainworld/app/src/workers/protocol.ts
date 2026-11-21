@@ -232,7 +232,8 @@ export type EditOp =
   | { op: "fareHsr"; mul: number }
   /** T-2194: the fare multiplier on ferry lines; T-3892: of one boat size (game/fareCurve.ts `Boat`), Medium if none */
   | { op: "fareFerry"; mul: number; boat?: 0 | 1 | 2 }
-  | { op: "fareBus"; mul: number }
+  /** T-3028: the fare multiplier on bus lines; T-3915: on BRT lines with `brt` */
+  | { op: "fareBus"; mul: number; brt?: true }
   /** T-3567: line `line`'s own fare multiplier, 0 to 3 (1: none); refused for a line that is gone */
   | { op: "fareLine"; line: number; mul: number }
   | { op: "fareTransfer"; usd: number }
@@ -517,7 +518,7 @@ export interface MoneyState {
   economy: number;
   /** T-1661, T-2022: the loan out, null for none */
   loan: Loan | null;
-  fares: { base: number; perKm: number; nodes: [number, number][]; scales?: Record<string, number>; byCity?: boolean; cityScales?: Record<string, number>; baseline?: string; basis?: "usd"; income?: number; hsr?: number; ferry?: number; ferrySmall?: number; ferryLarge?: number; bus?: number; transfer?: number; lines?: Record<string, number>; zones?: FareArea[]; zoneNext?: number };
+  fares: { base: number; perKm: number; nodes: [number, number][]; scales?: Record<string, number>; byCity?: boolean; cityScales?: Record<string, number>; baseline?: string; basis?: "usd"; income?: number; hsr?: number; ferry?: number; ferrySmall?: number; ferryLarge?: number; bus?: number; brt?: number; transfer?: number; lines?: Record<string, number>; zones?: FareArea[]; zoneNext?: number };
   /** running cost per game hour in each demand period on weekdays (T-3542: five, `PERIODS`) */
   runningPerHour: number[];
   /** recent game days, oldest first; the last is today so far (as of the last whole hour; the
@@ -1150,6 +1151,8 @@ export interface SnapshotLine {
   ferry?: boolean;
   /** T-3892: a ferry line's boat size when other than Medium (1), whose multiplier its fares take */
   boat?: 0 | 2;
+  /** T-3915: a bus line on BRT, whose fares take the BRT multiplier in place of the bus one */
+  brt?: boolean;
   /** T-2926: a line on tram track (`DemandApi.set_tram_lines`) */
   tram?: boolean;
   /** dwell at each stop, s, per run and period, in the run's own stop order (0 at both ends) */

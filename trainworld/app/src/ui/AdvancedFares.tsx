@@ -7,7 +7,8 @@
 
 import { signal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
-import { busFare, fareAt, HSR_FARE, hsrFare, isCustomCurve, MAX_NODES, NODE_KM, scaleNodes, transferFare, type FareArea, type FareNode, type Fares } from "../game/fareCurve";
+import type { ComponentChildren } from "preact";
+import { brtFare, busFare, fareAt, HSR_FARE, hsrFare, isCustomCurve, MAX_NODES, NODE_KM, scaleNodes, transferFare, type FareArea, type FareNode, type Fares } from "../game/fareCurve";
 import { chargedPrices, MAX_ZONES } from "../game/fareZones";
 import { newArea, removeArea, renameArea, setAreaOff, setZonePrice, startPainting, topZone } from "../game/fareZonePaint";
 import { roundTo } from "../game/currency";
@@ -24,7 +25,7 @@ import { t, tCountry, tNumber, tRich } from "../i18n";
 import type { StationInput } from "../game/types";
 import { useModalDialog } from "./Modal";
 import { advancedFares, fareAdding, FareButtons, FareGraph, FareNodeRows } from "./FareGraph";
-import { BusFareRow, chargedAt, fareCity, FareEffect, fareRef, FerryFareRows, HsrFareRow, placeMultiple, placeName, stepMultiple, TransferFareRow } from "./MoneyTab";
+import { BusFareRow, chargedAt, fareCity, FareEffect, fareKindsInUse, fareRef, FerryFareRows, HsrFareRow, placeMultiple, placeName, stepMultiple, TransferFareRow } from "./MoneyTab";
 import { Check, Icon, Segmented, Stepper } from "./widgets";
 
 /** The panel's own drag preview: its country's scale may differ from the dock's graph's. */
@@ -142,6 +143,29 @@ function FareAreas({ f, scale }: { f: Fares; scale: number }) {
   );
 }
 
+/** T-3915: the kinds' multiples, each only while one of its lines exists, and the transfer fare: high speed, bus and
+ * BRT, then the transfer fare, on the left, the boat sizes on the right, where the panel has the room (`.af-cols`);
+ * one column, the transfer fare last, where it hasn't, or when there are no boats. */
+function KindFareRows({ f, transfer }: { f: Fares; transfer: ComponentChildren }) {
+  const w = world.value;
+  if (!w) return null;
+  const k = fareKindsInUse(w);
+  const left = <>
+    {k.fast && <HsrFareRow mul={hsrFare(f)} own={hsrFare(f) !== HSR_FARE} />}
+    {k.bus && <BusFareRow mul={busFare(f)} />}
+    {k.brt && <BusFareRow mul={brtFare(f)} brt />}
+  </>;
+  if (!k.boats.length) return <>{left}{transfer}</>;
+  // Medium's row ("Ferry") with any ferry line, as before T-3915; Small's and Large's with a line of theirs
+  const sizes = ([0, 1, 2] as const).filter((b) => b === 1 || k.boats.includes(b));
+  return (
+    <li class="af-cols">
+      <ul class="rows fare-rows">{left}{transfer}</ul>
+      <ul class="rows fare-rows"><FerryFareRows fares={f} sizes={sizes} /></ul>
+    </li>
+  );
+}
+
 function Panel({ start }: { start: string }) {
   const dialog = useRef<HTMLDialogElement>(null);
   useModalDialog(dialog, true);
@@ -167,11 +191,6 @@ function Panel({ start }: { start: string }) {
   const nodes = panelPreview.value ?? shown;
   const custom = isCustomCurve(f.nodes);
   const kpu = unitMetres() / 1000, unit = unitShort();
-  const lineKind = (k: "fast" | "bus" | "ferry") => w.save.lines.some((l) => {
-    const st = w.lineStats[l.id];
-    return k === "fast" ? !!st?.fast : k === "ferry" ? !!st?.bus?.ferry : !!st?.bus && !st.bus.ferry;
-  });
-  const hsr = lineKind("fast") ? hsrFare(f) : null, bus = lineKind("bus") ? busFare(f) : null, ferry = lineKind("ferry");
   const full = shown.length >= MAX_NODES;
   const simple = () => {
     const km = (k: number) => tNumber(Math.round((k / kpu) * 10) / 10);
@@ -214,20 +233,16 @@ function Panel({ start }: { start: string }) {
         <FareGraph nodes={shown} scale={scale} big preview={panelPreview} />
         <FareNodeRows nodes={nodes} scale={scale} remove
           last={<>
-            <li class="af-add">
+            {/* T-3915: a thin rule under it, over the multiples and the transfer fare */}
+            <li class="af-add af-rule">
               <span class="fr-what">
                 <button class={"btn text mini" + (fareAdding.value ? " on" : "")} aria-pressed={fareAdding.value} disabled={full}
                   data-tip={full ? t("advancedFares.full", { n: MAX_NODES }) : undefined}
                   onClick={() => (fareAdding.value = !fareAdding.peek())}><Icon.plus />{t("advancedFares.addPoint")}</button>
                 {custom && <button class="btn text mini" onClick={simple}>{t("advancedFares.simple")}</button>}
               </span>
-              <span /><span />
             </li>
-            {hsr !== null && <HsrFareRow mul={hsr} own={hsr !== HSR_FARE} />}
-            {bus !== null && <BusFareRow mul={bus} />}
-            {/* T-3892: a row per boat size once any ferry line exists */}
-            {ferry && <FerryFareRows fares={f} sizes={[0, 1, 2]} />}
-            <TransferFareRow fare={transferFare(f)} base={f.nodes[0]?.[1] ?? f.base} scale={scale} />
+            <KindFareRows f={f} transfer={<TransferFareRow fare={transferFare(f)} base={f.nodes[0]?.[1] ?? f.base} scale={scale} />} />
           </>} />
         <FareEffect preview={panelPreview.value} scale={scale} />
         <FareAreas f={f} scale={rate} />

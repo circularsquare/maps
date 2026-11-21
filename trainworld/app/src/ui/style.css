@@ -858,6 +858,18 @@ svg.trip-graph { display: block; width: 100%; height: auto; margin: 2px 0 4px; u
 .fare-rows .fr-what.fr-custom { grid-column: 1 / -1; }
 .fare-rows .af-add .btn { margin-right: 6px; }
 .fare-rows .af-add .btn svg { width: 12px; height: 12px; margin-right: 2px; vertical-align: -2px; }
+/* T-3915: a thin rule under "Add point", the rows under it the kinds' multiples and the transfer fare */
+.fare-rows .af-rule > .fr-what { grid-column: 1 / -1; align-self: stretch; padding-bottom: 4px; margin-bottom: 4px; border-bottom: 1px solid var(--rule); }
+/* T-3915: high speed, bus and BRT (and the transfer fare) on the left, the boats on the right, each its own grid
+   whose last column is the undo button's, so the two columns' steppers line up; one column, the outer grid's,
+   in a narrow panel */
+.fares-panel .saves-inner { container: fares / inline-size; }
+.rows.fare-rows > li.af-cols { display: grid; grid-column: 1 / -1; grid-template-columns: 1fr 1fr; column-gap: 28px; align-items: start; }
+.af-cols > .rows.fare-rows { grid-template-columns: minmax(0, 1fr) auto 24px; }
+@container fares (max-width: 479px) {
+  .rows.fare-rows > li.af-cols, .af-cols > .rows.fare-rows { display: contents; }
+  .af-cols > .rows.fare-rows:first-child > li:last-child > * { order: 1; }
+}
 /* T-3749: a step's row has only its bin, in the bins' place */
 .fare-rows .fr-unseen { visibility: hidden; }
 /* T-3751: the end of a stretch a step follows, plain text (the step's row has the box) */

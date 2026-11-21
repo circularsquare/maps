@@ -4,7 +4,7 @@ import { TrackApi } from "../wasm/track/sim"; // the track model only (T-051)
 import { CITIES, cityById, cityWithin, HOME_CITY, isCity } from "../game/cities";
 import { startNodes } from "../game/fareDefault";
 import { areaOfCode, zonesOf } from "../game/fareZones";
-import { capTransfer, faresOf, FERRY_FARE_KEYS, simpleNodes, START_FARE, START_NODES, tidyHsr, tidyLineFare, tidyTransfer, type Fares } from "../game/fareCurve";
+import { capTransfer, faresOf, kindFares, simpleNodes, START_FARE, START_NODES, tidyLineFare, tidyTransfer, type Fares } from "../game/fareCurve";
 import { EVERY, FARE_BASELINE, FARE_E, incomeScale, keepOwn, OLD_FARE_E, oldCurveFactor, oldIncomeScale, scaleFromOld, START, startFromOld, tidyOwn } from "../game/income";
 import { type NewGameSpec, type SaveHeader } from "./saveFile";
 import type { EditOp } from "./protocol";
@@ -36,11 +36,9 @@ export function loadFares(f: SaveHeader["fares"] | undefined): Fares {
   // T-2679: once there is a reference country, scales are kept as set (multiples of its fares)
   const ref = typeof f.ref === "string" && f.ref ? { ref: f.ref } : {};
   for (const c of Object.keys(scales)) if (c !== START && c !== EVERY) scales[c] = ref.ref ? keepOwn(scales[c]) : tidyOwn(c, scales[c], scales);
-  // T-1626: a save from before has none and charges the default
-  const hsr = typeof f.hsr === "number" && Number.isFinite(f.hsr) ? { hsr: tidyHsr(f.hsr) } : {};
-  // T-3892: an older save's one ferry multiple is Medium's; Small and Large start at their defaults
-  const ferry = Object.fromEntries(FERRY_FARE_KEYS.flatMap((k) => (typeof f[k] === "number" && Number.isFinite(f[k]) ? [[k, tidyHsr(f[k]!)]] : [])));
-  const bus = typeof f.bus === "number" && Number.isFinite(f.bus) ? { bus: tidyHsr(f.bus) } : {};
+  // T-1626: a save from before has none of the kinds' multiples and charges the defaults; T-3892: an older save's
+  // one ferry multiple is Medium's, Small and Large starting at their defaults; T-3915: BRT at its default
+  const kinds = kindFares(f);
   // T-1801: a save from before has none: changes are free
   const transfer = tidyTransfer(f.transfer ?? 0);
   // T-3567: lines' own multiples; a save from before has none, every line at 1
@@ -52,7 +50,7 @@ export function loadFares(f: SaveHeader["fares"] | undefined): Fares {
   const curve = faresOf(old && g.nodes ? { ...g, nodes: simpleNodes(g.nodes) } : g, START_FARES);
   const fare = old || !f.nodes ? faresOf({ nodes: curve.nodes }, START_FARES) : curve;
   // T-3740: fare areas; a save from before has none
-  return capTransfer({ ...fare, scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...hsr, ...ferry, ...bus, ...(transfer > 0 ? { transfer } : {}), ...ref, ...lines, ...zonesOf(f), ...cityFares(f) });
+  return capTransfer({ ...fare, scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...kinds, ...(transfer > 0 ? { transfer } : {}), ...ref, ...lines, ...zonesOf(f), ...cityFares(f) });
 }
 /** T-3766: `f` without the list of multiples it does not charge by: by country no city's, by city no country's own
  * (`faresIn` reads only the start and every-country keys then). */

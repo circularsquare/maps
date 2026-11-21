@@ -902,9 +902,9 @@ export function setFareHsr(mul: number) {
 export function setFareFerry(mul: number, boat: 0 | 1 | 2 = 1) {
   return edit({ op: "fareFerry", mul, ...(boat !== 1 ? { boat } : {}) });
 }
-/** T-3028: the fare multiplier on bus lines. */
-export function setFareBus(mul: number) {
-  return edit({ op: "fareBus", mul });
+/** T-3028: the fare multiplier on bus lines; T-3915: on BRT lines with `brt`. */
+export function setFareBus(mul: number, brt = false) {
+  return edit({ op: "fareBus", mul, ...(brt ? { brt: true as const } : {}) });
 }
 /** T-3567: line `line`'s own fare multiplier. */
 export function setLineFare(line: number, mul: number) {

@@ -6,7 +6,7 @@ import { headwaysFor, NEW_LINE } from "../game/newLine";
 import { zonesOf } from "../game/fareZones";
 import { letterOf } from "../game/lineLetter";
 import { cloneName, cloneSymbol } from "../game/cloneNames";
-import { capTransfer, faresOf, FERRY_FARE_KEYS, MEDIUM, tidyHsr, tidyTransfer } from "../game/fareCurve";
+import { capTransfer, faresOf, FERRY_FARE_KEYS, kindFares, MEDIUM, tidyHsr, tidyTransfer } from "../game/fareCurve";
 import { FARE_BASELINE, FARE_E, keepOwn } from "../game/income";
 import { type SaveHeader } from "./saveFile";
 import type { EditOp, PaidFor, PiInput, RouteAsk, RouteEnd, StationAt } from "./protocol";
@@ -403,7 +403,7 @@ function applyInner(op: EditOp): Applied {
     case "groupLook":
       return { r: a.set_line_group_look(op.group, op.symbol.trim(), op.colour === null ? -1 : colourInt(op.colour)) };
     case "fares":
-      putFares(capTransfer({ ...(op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares)), scales: fares.scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...(fares.hsr !== undefined ? { hsr: fares.hsr } : {}), ...(fares.ferry !== undefined ? { ferry: fares.ferry } : {}), ...(fares.ferrySmall !== undefined ? { ferrySmall: fares.ferrySmall } : {}), ...(fares.ferryLarge !== undefined ? { ferryLarge: fares.ferryLarge } : {}), ...(fares.bus !== undefined ? { bus: fares.bus } : {}), ...(fares.transfer !== undefined ? { transfer: fares.transfer } : {}), ...(fares.ref ? { ref: fares.ref } : {}), ...(fares.lines ? { lines: fares.lines } : {}), ...zonesOf(fares), ...cityFares(fares) }));
+      putFares(capTransfer({ ...(op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares)), scales: fares.scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...kindFares(fares), ...(fares.transfer !== undefined ? { transfer: fares.transfer } : {}), ...(fares.ref ? { ref: fares.ref } : {}), ...(fares.lines ? { lines: fares.lines } : {}), ...zonesOf(fares), ...cityFares(fares) }));
       return { r: 0 };
     case "fareZones": {
       // T-3740: the fare areas as a whole; an id is never used twice
@@ -425,7 +425,7 @@ function applyInner(op: EditOp): Applied {
       return { r: 0 };
     case "fareBus":
       if (!Number.isFinite(op.mul)) return { r: 1 };
-      putFares({ ...fares, bus: tidyHsr(op.mul) });
+      putFares({ ...fares, [op.brt ? "brt" : "bus"]: tidyHsr(op.mul) });
       return { r: 0 };
     case "fareTransfer": {
       if (!Number.isFinite(op.usd)) return { r: 1 };

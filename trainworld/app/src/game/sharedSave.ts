@@ -15,6 +15,7 @@
 // caught and the model replaced (clock.worker.ts `afterLoadPanic`), and the copy loads into a new slot, so nothing
 // of the viewer's is touched whatever happens.
 
+import { KIND_FARE_KEYS } from "./fareCurve";
 import { isLineShape } from "./lineShape";
 import { decompressGzip } from "../workers/gzip";
 import { encodeSave, isRetiredTrackFormat, isThisWorld, NEW_HEADWAY_KINDS, SAVE_FORMAT, SAVE_HEADER_FIELDS, SAVE_MAGIC, type SaveHeader } from "../workers/saveFile";
@@ -50,7 +51,7 @@ const FIELDS: Record<keyof SaveHeader, (v: unknown) => boolean> = {
   fleet: opt(num), fleetFast: opt(num), fleetBus: opt(num), fleetFerry: opt(num), fleetFerrySmall: opt(num), fleetFerryLarge: opt(num), fleetTram: opt(num),
   fares: (v) => plain(v) && num(v.base) && num(v.perKm) && opt(arr((p) => Array.isArray(p) && p.length === 2 && p.every(num)))(v.nodes)
     && opt(rec(num))(v.scales) && opt(rec(num))(v.cityScales) && opt((b) => typeof b === "boolean")(v.byCity) && opt(rec(num))(v.lines) && opt(str)(v.baseline) && opt(str)(v.ref) && opt((b) => b === "usd")(v.basis)
-    && ["income", "hsr", "ferry", "ferrySmall", "ferryLarge", "bus", "transfer"].every((k) => opt(num)(v[k])),
+    && ["income", ...KIND_FARE_KEYS, "transfer"].every((k) => opt(num)(v[k])),
   ledger: entries, hours: opt(entries),
   regions: opt(rec((r) => plain(r) && opt(entries)(r.ledger) && opt(entries)(r.hours))),
   lineDays: opt(rec(arr(num))),

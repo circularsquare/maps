@@ -723,7 +723,9 @@ notes/T-420.md has the tables.
   cap of bases a boarding times its own multiple, and never below 0 (T-3578): a line at 0 takes no base, and no
   line's fares go below 0. Which line's multiple set a trip's base is not traced; the pool's network-wide
   shares stand in, as for the base itself.
-  Ferry lines take the player's Ferry multiplier and bus lines the Bus multiplier (T-3028) the same way (defaults 1.00 and 0.80, T-2195, T-3856; "Ferries as lines" below).
+  Ferry lines take the player's Ferry multiplier (one per boat size, T-3892), bus lines the Bus multiplier (T-3028) and
+  BRT lines the BRT multiplier (T-3915) the same way (defaults 1.00, 0.80 and 1.00; Small boats 1.50; T-2195, T-3856;
+  "Ferries as lines" below).
   **Transfer fare** (T-1801): the player's, $0 by default, paid on each change of line except one
   inside a fare zone run (T-3784), times the
   country's scale and weighed at its `fare_w` like the curve; the regional market changes free. At

@@ -327,6 +327,8 @@ export function buildSnapshot(): NetworkSnapshot {
       ...(!bus && !ferry && a.line_fast(id) ? { fast: true } : {}),
       ...(ferry ? { ferry: true } : {}),
       ...(boat !== MEDIUM ? { boat: boat as 0 | 2 } : {}),
+      // T-3915: and a BRT line's the BRT multiple
+      ...(bus && a.bus_brt(id) ? { brt: true } : {}),
       ...(!bus && !ferry && a.line_tram(id) ? { tram: true } : {}),
       // T-3758: what fare zones read, only while the fares have areas
       ...(fares.zones && a.line_fare_dist(id) ? { fareDist: true } : {}),
