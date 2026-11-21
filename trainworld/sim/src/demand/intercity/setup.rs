@@ -552,6 +552,7 @@ impl IntercityApi {
         let Some((times, tph)) = per.filter(|_| st_xy.len() % 2 == 0 && stops.len() == *off.last().unwrap() as usize && cars.len() == line_n.len() && stops.iter().all(|&s| (s as usize) < st_xy.len() / 2)) else {
             return Err("intercity network arrays disagree".into());
         };
+        crate::demand::api::NetInputs { stations: st_xy.len() / 2, lines: line_n.len(), stops: stops.len(), complex: &self.complex_in, ups: &self.ups_in, bus_n: &self.bus_in.0, tram: &[], pier: &self.pier_in, back: &self.back_in, span: &self.span_in }.check()?;
         let (st_x, st_y, st_map) = merge_stations(st_xy, &off, stops, self.base.station_merge_m);
         let group = demand_groups(&st_map, st_x.len(), &self.complex_in);
         let ups = demand_ups(&st_map, st_x.len(), &self.ups_in);

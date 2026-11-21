@@ -385,6 +385,43 @@ pub(crate) struct Service {
     pub(crate) grade: Vec<bool>,
 }
 
+/// The per-station, per-line and per-stop inputs of a `set_network` (`set_complexes`, `set_upgrades`,
+/// `set_bus`, `set_tram_lines`, `set_stairs`, `set_back_stops`, `set_span`), each empty (none) or of the
+/// length its network wants; any other length is an error, since the page's copy of a field for a
+/// view that misses an item would otherwise be read as none (T-3903).
+pub(crate) struct NetInputs<'a> {
+    pub stations: usize,
+    pub lines: usize,
+    pub stops: usize,
+    pub complex: &'a [u32],
+    pub ups: &'a [u8],
+    pub bus_n: &'a [u32],
+    pub tram: &'a [u8],
+    pub pier: &'a (Vec<u8>, Vec<u8>),
+    pub back: &'a [u32],
+    pub span: &'a [f32],
+}
+
+impl NetInputs<'_> {
+    pub(crate) fn check(&self) -> Result<(), String> {
+        let bad: Vec<String> = [
+            ("complexes", self.complex.len(), self.stations, "station"),
+            ("upgrades", self.ups.len(), self.stations, "station"),
+            ("bus stretches", self.bus_n.len(), self.stops, "stop"),
+            ("tram lines", self.tram.len(), self.lines, "line"),
+            ("ferry lines", self.pier.0.len(), self.lines, "line"),
+            ("stops at grade", self.pier.1.len(), self.stops, "stop"),
+            ("back stops", self.back.len(), self.stops, "stop"),
+            ("span", self.span.len(), PERIODS * 2 * self.stops, "period and route node"),
+        ]
+        .iter()
+        .filter(|&&(_, got, want, _)| got != 0 && got != want)
+        .map(|&(what, got, want, per)| format!("{what}: {got} entries, one per {per} wants {want}"))
+        .collect();
+        if bad.is_empty() { Ok(()) } else { Err(format!("network inputs disagree ({})", bad.join("; "))) }
+    }
+}
+
 /// T-3888: one flag per item (line or stop) from `set_stairs`' input, or none where it has another
 /// length or no item is flagged.
 pub(crate) fn pier_lines(flags: &[u8], n: usize) -> Vec<bool> {
@@ -1385,6 +1422,7 @@ impl DemandApi {
         if stops.iter().any(|&s| s as usize >= ns) {
             return Err("a stop names a station that is not in the list".into());
         }
+        NetInputs { stations: ns, lines: nl, stops: nstops, complex: &self.complex_in, ups: &self.ups_in, bus_n: &self.bus_in.0, tram: &self.tram_in, pier: &self.pier_in, back: &self.back_in, span: &self.span_in }.check()?;
         let (st_x, st_y, st_map) = merge_stations(st_xy, &line_off, stops, self.base.station_merge_m);
         let group = demand_groups(&st_map, st_x.len(), &self.complex_in);
         let ups = demand_ups(&st_map, st_x.len(), &self.ups_in);

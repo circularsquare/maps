@@ -96,6 +96,22 @@ fn a_tram_carries_more_than_the_bus_it_replaces() {
     assert!(tram > bus, "tram {tram} against bus {bus}");
 }
 
+/// T-3903: a per-line or per-stop input of the wrong length is an error, not read as none (the page's copy of a
+/// field for a view once dropped the tram flags unseen); empty is none.
+#[test]
+fn a_per_line_input_of_the_wrong_length_is_an_error() {
+    let (mut api, xy, counts, stops, times, tph, cars) = with_line(5, -300.0, 300.0, 150.0, 2.0);
+    api.set_tram_lines(&[1, 0]);
+    let err = api.set_network(&xy, &counts, &stops, &times, &tph, &cars).unwrap_err();
+    assert!(err.contains("tram lines: 2 entries, one per line wants 3"), "{err}");
+    api.set_tram_lines(&[]);
+    api.set_stairs(&[], &[1, 0]);
+    let err = api.set_network(&xy, &counts, &stops, &times, &tph, &cars).unwrap_err();
+    assert!(err.contains("stops at grade"), "{err}");
+    api.set_stairs(&[], &[]);
+    api.set_network(&xy, &counts, &stops, &times, &tph, &cars).unwrap();
+}
+
 /// Solve time with and without a tram line of 20 stops on top of the 34 metro ones (printed, not
 /// asserted: timings are noisy). `cargo test --release --features demand --lib tram_solve_time -- --ignored --nocapture`.
 #[test]
