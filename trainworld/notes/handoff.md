@@ -1,32 +1,25 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 4feb4373-1fa9-4b66-9592-396d40896c0a, name maps-a3 [ede33a], since 2026-11-21 03:24 UTC
-Updated: 2026-11-21 04:20 UTC (v0.4.5 published)
+Updated: 2026-11-21 05:25 UTC (overnight queue running)
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5. She is home, at this tab.
 
 ## Next
-0. LIVE v0.4.5 (published 11-21 ~04:15 UTC: R2 2026-11-20, website 655e0b3, verify --page PASS; server 22c4a16
-   deployed + pushed; open-source synced 50f7b15 + pushed; maps master pushed 936a6a55). Upload pause over (she
-   pre-approved the deploy and publish). Cap 10. Batches 1-4 PASSED (notes/batch-2026-11-21.md).
-   After the release: farecols landed e496074b (T-3915; changelog c001; 2 strings need translating next release:
-   moneyTab.brtFare, moneyTab.brtFareTip); batchchk5 checking it; 8800 rebuilding at e496074b.
-1. PR 24 reply: drafted in scratchpad/pr24-reply.md (her OK'd text, last line now "It's in the update that went
-   out today (v0.4.5), and in this repo as of 50f7b15"); posting was refused by the permission classifier: ask her
-   to post it or allow it. Then close the PR with a link. Next: land binzip (T-2486; three unread reports, its
-   check failed narrowly then fixed), frontier results (T-3887, three unread reports, still "taking").
-2. OVERNIGHT 11-21 (she went to bed ~05:00 UTC). Her 11-21 ~04:50: "finish BRT / busways ... allow building busways
-   off road for high expense, sorta like trams off road"; "lag complaints are picking up. lots of people have 2000
-   station saves ... memory / demand solve speed tasks"; "code cleanup would also be good"; "making full use of our
-   resources overnight". Running: tramerr (T-3909, tree tramerr), chkfix (T-3904, tree chkfix), binzipchk2,
-   busdesign (T-3378 design only -> review/brt-design.md for her; design waits for her before build), lagsurvey
-   (T-3917, ranks big-save costs). Queue as cores free: T-1183 cleanup (Sonnet), T-3373 B (memory, she chose B
-   11-16; plan + stage 1), whatever lagsurvey ranks top, T-3916, T-3655; land binzip if PASS (no publish). No publish/deploy/website
-   overnight. 8800 = e496074b (fares panel). Then small next: T-3909 (errands may treat trams as trains), T-3916, T-3908, T-3913, T-3904, T-3655. Later: T-3378
-   BRT corridors; T-1183; T-2374 demand splits and T-2843 after binzip; T-3894.
-4. T-3395: run `tools/ops/save_health.py` after the next scan; clean = close it. At 04:30 UTC 11-21 there was no
-   11-21 report yet (the server restarted 03:59 for the deploy, which may have moved the scan); 11-20's pass found 0.
-
+0. LIVE v0.4.5 (published 11-21 ~04:15 UTC; server 22c4a16 deployed+pushed; open-source 50f7b15 pushed). Cap 10.
+   Batches 1-5 PASSED (notes/batch-2026-11-21.md). On master since v0.4.5, not on 8800 (8800 = e496074b, fares):
+   b34a6c4b binzip (packs at the next publish: walk her through it first), 6c508f23 checks, 87bad9b7 T-3909 trams in
+   everyday trips (DEMAND: needs a batch check, with homeload's T-3916), 4fb32508 T-1183 stage 1 (tests only).
+   Next update: translate moneyTab.brtFare/brtFareTip + new strings; changelog c001-c003 so far.
+1. Waiting on her: PR 24 reply (scratchpad/pr24-reply.md; posting refused by the permission check: she posts or
+   allows it, then close PR with a link); T-3378 BRT design answers (review/brt-design.md, five questions).
+2. OVERNIGHT 11-21 (she slept ~05:20 UTC). Her asks ~04:50-05:20: finish BRT/busways incl. off-road (T-3378);
+   big-save lag (T-3917); cleanup; "full use of our resources overnight"; trams lose >= a train's time per stop
+   (T-3921); upgradable bus stations (in T-3378); upkeep for station upgrades (T-3922). Running: lagsurvey (T-3917),
+   homeload (T-3916), tramstop (T-3921), upkeepup (T-3922). Queue: T-3918 (red Rust test, Sonnet), batch check of
+   T-3909+T-3916, T-3373 B or lagsurvey's top pick, T-3919, T-3920, T-3655, T-1183 stage 2 (Opus). No
+   publish/deploy overnight. Rebuild 8800 after the next batch lands.
+4. T-3395: save_health.py after the next scan; clean = close it (no 11-21 report at 04:30 UTC; 11-20 found 0).
 ## Her words
 - 11-21 ~02:20 UTC, playtesting plain buses on 8800 (Houston): "buses feel really easy ... mostly profitable ... 10%
   of people taking the bus ... 90% driving. which feels pretty realistic"; wants the 25 km/h floor; likes the tags.
