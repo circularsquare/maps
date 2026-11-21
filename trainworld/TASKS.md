@@ -280,7 +280,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3875 [P3] {L:cleanup} {after:T-2374 and T-3873} Cut code-map.md to one line per file
   - Context: docs/code-map.md is 707 lines and about 100 KB with 700 task ids, over the Read tool's cap, so no agent can read it whole though CLAUDE.md sends every agent there.
   - Goal: One line per file saying what it holds, task ids dropped, about a third of today's size.
-- T-3160 [P2] {L:memory} Phone memory on real-network starts (taking, 2026-11-21, agent phonemem)
+- T-3160 [P2] {L:memory} Phone memory on real-network starts
   - Context: The Tokyo real-network start on an emulated iPhone (production build) peaked at 1.6 GB in the tab, now 1.4 since the loading card's train stopped leaving garbage in Chrome; that cut is Chrome's only. What Safari holds too: the solving worker's WASM 343 MB (322 in use at its peak, cause not yet named), the clock worker 260, the page about 200. You, 2026-11-16: "lots of people are unable to really play properly cuz tehy dont have enoguh ram. especially on phones. if we can get that working itll increase reach."
   - Goal: The solving worker's peak on that start comes down by its biggest named piece (`demand_mem` solving in the game's order first), rail trips unchanged, measured on a production build.
   - Other: notes/T-3160.md, stage 3.
