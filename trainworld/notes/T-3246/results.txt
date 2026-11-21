@@ -1,0 +1,171 @@
+== b1_base
+3 --cells --exact
+commutes 16949267 trips, rail 3915626 (23.1%), walk 4.3%; everyday 51839670, rail 8414667 (16.2%), walk 23.5%; open 1.7 s, network 0.9 s, solve 73.6 s, all 76.2 s
+operators: lirr 911352, mnr 655754, njt 971472, njt_light 490018, path 697715, subway 11073338
+
+== b1_gm2
+3 --cells --exact --curve 0,1.5,20,3.5,1000,248.5 --set fare_w=4.4,t3246=2
+commutes 16949267 trips, rail 3617024 (21.3%), walk 4.4%; everyday 51839670, rail 7813139 (15.1%), walk 23.9%; open 2.2 s, network 1.0 s, solve 96.2 s, all 99.4 s
+operators: lirr 790982, mnr 572578, njt 843938, njt_light 463034, path 668403, subway 10260310
+t3246 stages: search 13.5 s, fare_col 2.3 s, station_exp 0.4 s, mode_choice 57.7 s, assign 3.5 s, ev_pairs 15.2 s, ev_assign 3.3 s; heap peak 178.2 MB
+
+== b1_goff
+3 --cells --exact --curve 0,1.5,20,3.5,1000,248.5 --set fare_w=4.4
+commutes 16949267 trips, rail 3614906 (21.3%), walk 4.4%; everyday 51839670, rail 7862265 (15.2%), walk 23.8%; open 2.2 s, network 0.9 s, solve 75.6 s, all 78.7 s
+operators: lirr 783491, mnr 569304, njt 834089, njt_light 460231, path 667644, subway 10320997
+t3246 stages: search 13.6 s, fare_col 0.0 s, station_exp 0.4 s, mode_choice 42.1 s, assign 3.5 s, ev_pairs 12.1 s, ev_assign 3.4 s; heap peak 172.5 MB
+
+== b1_off
+3 --cells --exact
+commutes 16949267 trips, rail 3915626 (23.1%), walk 4.3%; everyday 51839670, rail 8414667 (16.2%), walk 23.5%; open 1.6 s, network 0.8 s, solve 73.0 s, all 75.4 s
+operators: lirr 911352, mnr 655754, njt 971472, njt_light 490018, path 697715, subway 11073338
+t3246 stages: search 12.9 s, fare_col 0.0 s, station_exp 0.4 s, mode_choice 44.2 s, assign 1.2 s, ev_pairs 12.5 s, ev_assign 1.3 s; heap peak 172.2 MB
+
+== b2_gm1
+3 --cells --exact --curve 0,1.5,20,3.5,1000,248.5 --set fare_w=4.4,t3246=1
+commutes 16949267 trips, rail 3618899 (21.4%), walk 4.4%; everyday 51839670, rail 7813634 (15.1%), walk 23.9%; open 2.1 s, network 1.0 s, solve 78.2 s, all 81.3 s
+operators: lirr 791715, mnr 572891, njt 844487, njt_light 463097, path 668947, subway 10263495
+t3246 stages: search 10.9 s, fare_col 0.0 s, station_exp 0.3 s, mode_choice 49.4 s, assign 2.9 s, ev_pairs 11.6 s, ev_assign 2.8 s; heap peak 172.5 MB
+
+== b2_gm2
+3 --cells --exact --curve 0,1.5,20,3.5,1000,248.5 --set fare_w=4.4,t3246=2
+commutes 16949267 trips, rail 3617024 (21.3%), walk 4.4%; everyday 51839670, rail 7813139 (15.1%), walk 23.9%; open 2.1 s, network 1.0 s, solve 82.3 s, all 85.3 s
+operators: lirr 790982, mnr 572578, njt 843938, njt_light 463034, path 668403, subway 10260310
+t3246 stages: search 11.0 s, fare_col 2.0 s, station_exp 0.3 s, mode_choice 50.5 s, assign 2.9 s, ev_pairs 12.5 s, ev_assign 2.7 s; heap peak 178.2 MB
+
+== b2_gm2b
+3 --cells --exact --curve 0,1.5,20,3.5,1000,248.5 --set fare_w=4.4,t3246=2,t3246_lo=0.2,t3246_lo_f=1.98,t3246_hi=0.1,t3246_hi_f=0.66
+commutes 16949267 trips, rail 3688156 (21.8%), walk 4.4%; everyday 51839670, rail 7907660 (15.3%), walk 23.9%; open 2.1 s, network 1.0 s, solve 81.9 s, all 85.0 s
+operators: lirr 811225, mnr 584554, njt 867687, njt_light 471900, path 681300, subway 10395560
+t3246 stages: search 10.9 s, fare_col 2.0 s, station_exp 0.3 s, mode_choice 50.4 s, assign 2.8 s, ev_pairs 12.4 s, ev_assign 2.7 s; heap peak 178.2 MB
+
+== b2_goff
+3 --cells --exact --curve 0,1.5,20,3.5,1000,248.5 --set fare_w=4.4
+commutes 16949267 trips, rail 3614906 (21.3%), walk 4.4%; everyday 51839670, rail 7862265 (15.2%), walk 23.8%; open 2.1 s, network 1.0 s, solve 62.4 s, all 65.5 s
+operators: lirr 783491, mnr 569304, njt 834089, njt_light 460231, path 667644, subway 10320997
+t3246 stages: search 11.3 s, fare_col 0.0 s, station_exp 0.3 s, mode_choice 34.8 s, assign 2.9 s, ev_pairs 9.8 s, ev_assign 2.8 s; heap peak 172.5 MB
+
+== g_high
+3 --cells --exact --curve 0,1.5,20,3.5,1000,248.5 --set fare_w=4.4,t3246=1,t3246_lo=0,t3246_hi=1
+commutes 16949267 trips, rail 3165817 (18.7%), walk 4.5%; everyday 51839670, rail 7127451 (13.7%), walk 24.0%; open 2.0 s, network 0.9 s, solve 69.2 s, all 72.1 s
+operators: lirr 672855, mnr 500480, njt 706708, njt_light 399373, path 576591, subway 9308637
+t3246 stages: search 10.8 s, fare_col 0.0 s, station_exp 0.3 s, mode_choice 41.6 s, assign 2.8 s, ev_pairs 10.6 s, ev_assign 2.7 s; skims 33.3 MB at 865 stations, commute exp table 11.4 MB; heap peak 172.5 MB
+
+== g_low
+3 --cells --exact --curve 0,1.5,20,3.5,1000,248.5 --set fare_w=4.4,t3246=1,t3246_lo=1,t3246_hi=0
+commutes 16949267 trips, rail 4083660 (24.1%), walk 4.5%; everyday 51839670, rail 8342681 (16.1%), walk 24.0%; open 2.4 s, network 1.0 s, solve 85.1 s, all 88.5 s
+operators: lirr 937152, mnr 659454, njt 1032209, njt_light 519078, path 735289, subway 11056268
+t3246 stages: search 13.0 s, fare_col 0.0 s, station_exp 0.4 s, mode_choice 51.0 s, assign 3.4 s, ev_pairs 13.5 s, ev_assign 3.3 s; skims 33.3 MB at 865 stations, commute exp table 11.4 MB; heap peak 174.7 MB
+
+== n_m1
+3 --cells --exact --curve 0,1.5,20,3.5,1000,248.5 --set fare_w=4.4,t3246=1
+commutes 16949267 trips, rail 3618899 (21.4%), walk 4.4%; everyday 51839670, rail 7813634 (15.1%), walk 23.9%; open 1.7 s, network 0.8 s, solve 75.5 s, all 78.0 s
+operators: lirr 791715, mnr 572891, njt 844487, njt_light 463097, path 668947, subway 10263495
+t3246 stages: search 10.4 s, fare_col 0.0 s, station_exp 0.3 s, mode_choice 47.9 s, assign 2.8 s, ev_pairs 11.1 s, ev_assign 2.6 s; skims 33.3 MB at 865 stations, commute exp table 11.4 MB; heap peak 172.5 MB
+
+== n_m3
+3 --cells --exact --curve 0,1.5,20,3.5,1000,248.5 --set fare_w=4.4,t3246=3
+commutes 16949267 trips, rail 3618899 (21.4%), walk 4.4%; everyday 51839670, rail 7813634 (15.1%), walk 23.9%; open 1.9 s, network 0.8 s, solve 69.7 s, all 72.4 s
+operators: lirr 791715, mnr 572891, njt 844487, njt_light 463097, path 668947, subway 10263495
+t3246 stages: search 10.6 s, fare_col 0.0 s, station_exp 0.3 s, mode_choice 42.3 s, assign 2.8 s, ev_pairs 10.6 s, ev_assign 2.7 s; skims 33.3 MB at 865 stations, commute exp table 11.4 MB; heap peak 172.5 MB
+
+== n_m3c
+3 --cells --exact --curve 0,1.5,20,3.5,1000,248.5 --set fare_w=4.4,t3246=3
+commutes 16949267 trips, rail 3618899 (21.4%), walk 4.4%; everyday 51839670, rail 7813634 (15.1%), walk 23.9%; open 2.1 s, network 0.9 s, solve 72.2 s, all 75.2 s
+operators: lirr 791715, mnr 572891, njt 844487, njt_light 463097, path 668947, subway 10263495
+t3246 stages: search 10.9 s, fare_col 0.0 s, station_exp 0.3 s, mode_choice 44.0 s, assign 2.9 s, ev_pairs 11.0 s, ev_assign 2.7 s; skims 33.3 MB at 865 stations, commute exp table 11.4 MB; heap peak 172.5 MB
+
+== n_m3k
+3 --cells --exact --curve 0,1.5,20,3.5,1000,248.5 --set fare_w=4.4,t3246=3,t3246_km=5
+commutes 16949267 trips, rail 3626503 (21.4%), walk 4.4%; everyday 51839670, rail 7873668 (15.2%), walk 23.8%; open 2.0 s, network 0.7 s, solve 67.6 s, all 70.4 s
+operators: lirr 790721, mnr 572787, njt 843277, njt_light 463055, path 670216, subway 10332498
+t3246 stages: search 10.1 s, fare_col 0.0 s, station_exp 0.3 s, mode_choice 41.6 s, assign 2.8 s, ev_pairs 9.8 s, ev_assign 2.6 s; skims 33.3 MB at 865 stations, commute exp table 11.4 MB; heap peak 172.5 MB
+
+== n_m3two
+3 --cells --exact --curve 0,1.5,20,3.5,1000,248.5 --set fare_w=4.4,t3246=3,t3246_hi=0
+commutes 16949267 trips, rail 3707786 (21.9%), walk 4.4%; everyday 51839670, rail 7955885 (15.3%), walk 23.8%; open 2.4 s, network 0.9 s, solve 71.1 s, all 74.4 s
+operators: lirr 814059, mnr 586586, njt 870465, njt_light 472293, path 685234, subway 10464364
+t3246 stages: search 11.7 s, fare_col 0.0 s, station_exp 0.4 s, mode_choice 41.8 s, assign 3.1 s, ev_pairs 10.9 s, ev_assign 2.9 s; skims 33.3 MB at 865 stations, commute exp table 11.4 MB; heap peak 172.4 MB
+
+== n_off
+3 --cells --exact --curve 0,1.5,20,3.5,1000,248.5 --set fare_w=4.4
+commutes 16949267 trips, rail 3614906 (21.3%), walk 4.4%; everyday 51839670, rail 7862265 (15.2%), walk 23.8%; open 2.0 s, network 0.8 s, solve 56.4 s, all 59.2 s
+operators: lirr 783491, mnr 569304, njt 834089, njt_light 460231, path 667644, subway 10320997
+t3246 stages: search 10.3 s, fare_col 0.0 s, station_exp 0.3 s, mode_choice 31.5 s, assign 2.7 s, ev_pairs 8.7 s, ev_assign 2.5 s; skims 33.3 MB at 865 stations, commute exp table 11.4 MB; heap peak 172.5 MB
+
+== n_off2
+3 --cells --exact --curve 0,1.5,20,3.5,1000,248.5 --set fare_w=4.4
+commutes 16949267 trips, rail 3614906 (21.3%), walk 4.4%; everyday 51839670, rail 7862265 (15.2%), walk 23.8%; open 2.0 s, network 0.8 s, solve 61.7 s, all 64.6 s
+operators: lirr 783491, mnr 569304, njt 834089, njt_light 460231, path 667644, subway 10320997
+t3246 stages: search 11.4 s, fare_col 0.0 s, station_exp 0.3 s, mode_choice 34.0 s, assign 2.8 s, ev_pairs 10.0 s, ev_assign 2.8 s; skims 33.3 MB at 865 stations, commute exp table 11.4 MB; heap peak 172.5 MB
+
+== n_off3
+3 --cells --exact --curve 0,1.5,20,3.5,1000,248.5 --set fare_w=4.4
+commutes 16949267 trips, rail 3614906 (21.3%), walk 4.4%; everyday 51839670, rail 7862265 (15.2%), walk 23.8%; open 1.8 s, network 0.7 s, solve 62.9 s, all 65.5 s
+operators: lirr 783491, mnr 569304, njt 834089, njt_light 460231, path 667644, subway 10320997
+t3246 stages: search 11.0 s, fare_col 0.0 s, station_exp 0.3 s, mode_choice 35.5 s, assign 2.9 s, ev_pairs 9.9 s, ev_assign 2.8 s; skims 33.3 MB at 865 stations, commute exp table 11.4 MB; heap peak 172.5 MB
+
+== nyc_base
+calib.exe : commutes 16949267 trips, rail 3915626 (23.1%), walk 4.3%; everyday 51839670, rail 8414667 (16.2%), walk
+calib.exe : commutes 16949267 trips, rail 3915626 (23.1%), walk 4.3%; everyday 51839670, rail 8414667 (16.2%), walk
+operators: lirr 911352, mnr 655754, njt 971472, njt_light 490018, path 697715, subway 11073338
+
+== t_m1
+3 --cells --exact --fares 0.9,0.06 --curve 0,0.9,20,2.1,1000,149.1 --set fare_w=6.0,t3246_lo_f=1.62,t3246_hi_f=0.67,t3246=1
+commutes 26793625 trips, rail 6981324 (26.1%), walk 10.7%; everyday 43496311, rail 9480360 (21.8%), walk 26.1%; open 1.7 s, network 1.5 s, solve 128.8 s, all 132.0 s
+operators: chiba_monorail 98855, hokuso 108527, jr_central 5051, jr_east 8500468, keikyu 1061511, keio 1280156, keisei 668584, minatomirai 132869, odakyu 1150508, other 191532, rinkai 150123, saitama_rr 123530, seibu 1283089, shin_keisei 262143, sotetsu 395869, tama_monorail 130406, tobu 1630650, toei 2694454, tokyo_metro 4510457, tokyo_monorail 33492, tokyu 2262950, toyo 119500, tx 442479, yokohama 582970, yurikamome 60188
+t3246 stages: search 11.9 s, fare_col 0.0 s, station_exp 0.8 s, mode_choice 83.4 s, assign 4.7 s, ev_pairs 23.1 s, ev_assign 4.2 s; skims 69.7 MB at 1454 stations, commute exp table 32.3 MB; heap peak 332.9 MB
+
+== t_m2
+3 --cells --exact --fares 0.9,0.06 --curve 0,0.9,20,2.1,1000,149.1 --set fare_w=6.0,t3246_lo_f=1.62,t3246_hi_f=0.67,t3246=2
+commutes 26793625 trips, rail 6977957 (26.0%), walk 10.7%; everyday 43496311, rail 9476555 (21.8%), walk 26.1%; open 1.6 s, network 1.8 s, solve 129.6 s, all 133.0 s
+operators: chiba_monorail 98810, hokuso 108398, jr_central 5041, jr_east 8494021, keikyu 1060850, keio 1278871, keisei 668323, minatomirai 132827, odakyu 1149379, other 191423, rinkai 149902, saitama_rr 123393, seibu 1281787, shin_keisei 261911, sotetsu 395374, tama_monorail 130263, tobu 1629240, toei 2693284, tokyo_metro 4508971, tokyo_monorail 33400, tokyu 2261163, toyo 119423, tx 442185, yokohama 582465, yurikamome 60163
+t3246 stages: search 11.5 s, fare_col 2.2 s, station_exp 0.7 s, mode_choice 82.1 s, assign 4.4 s, ev_pairs 23.8 s, ev_assign 4.1 s; skims 77.8 MB at 1454 stations, commute exp table 32.3 MB; heap peak 349.0 MB
+
+== t_m3
+3 --cells --exact --fares 0.9,0.06 --curve 0,0.9,20,2.1,1000,149.1 --set fare_w=6.0,t3246_lo_f=1.62,t3246_hi_f=0.67,t3246=3
+commutes 26793625 trips, rail 6981324 (26.1%), walk 10.7%; everyday 43496311, rail 9480360 (21.8%), walk 26.1%; open 1.6 s, network 1.5 s, solve 112.0 s, all 115.1 s
+operators: chiba_monorail 98855, hokuso 108527, jr_central 5051, jr_east 8500468, keikyu 1061511, keio 1280156, keisei 668584, minatomirai 132869, odakyu 1150508, other 191532, rinkai 150123, saitama_rr 123530, seibu 1283089, shin_keisei 262143, sotetsu 395869, tama_monorail 130406, tobu 1630650, toei 2694454, tokyo_metro 4510457, tokyo_monorail 33492, tokyu 2262950, toyo 119500, tx 442479, yokohama 582970, yurikamome 60188
+t3246 stages: search 11.5 s, fare_col 0.0 s, station_exp 0.7 s, mode_choice 70.9 s, assign 4.2 s, ev_pairs 20.0 s, ev_assign 4.0 s; skims 69.7 MB at 1454 stations, commute exp table 32.3 MB; heap peak 332.9 MB
+
+== t_m3c
+3 --cells --exact --fares 0.9,0.06 --curve 0,0.9,20,2.1,1000,149.1 --set fare_w=6.0,t3246_lo_f=1.62,t3246_hi_f=0.67,t3246=3
+commutes 26793625 trips, rail 6981324 (26.1%), walk 10.7%; everyday 43496311, rail 9480360 (21.8%), walk 26.1%; open 1.5 s, network 1.4 s, solve 102.5 s, all 105.4 s
+operators: chiba_monorail 98855, hokuso 108527, jr_central 5051, jr_east 8500468, keikyu 1061511, keio 1280156, keisei 668584, minatomirai 132869, odakyu 1150508, other 191532, rinkai 150123, saitama_rr 123530, seibu 1283089, shin_keisei 262143, sotetsu 395869, tama_monorail 130406, tobu 1630650, toei 2694454, tokyo_metro 4510457, tokyo_monorail 33492, tokyu 2262950, toyo 119500, tx 442479, yokohama 582970, yurikamome 60188
+t3246 stages: search 10.5 s, fare_col 0.0 s, station_exp 0.7 s, mode_choice 64.7 s, assign 3.9 s, ev_pairs 18.3 s, ev_assign 3.8 s; skims 69.7 MB at 1454 stations, commute exp table 32.3 MB; heap peak 332.9 MB
+
+== t_m3two
+3 --cells --exact --fares 0.9,0.06 --curve 0,0.9,20,2.1,1000,149.1 --set fare_w=6.0,t3246_lo_f=1.62,t3246_hi_f=0.67,t3246=3,t3246_hi=0
+commutes 26793625 trips, rail 7144476 (26.7%), walk 10.6%; everyday 43496311, rail 9659230 (22.2%), walk 26.1%; open 1.5 s, network 1.3 s, solve 105.0 s, all 107.9 s
+operators: chiba_monorail 101420, hokuso 111308, jr_central 5201, jr_east 8685377, keikyu 1082394, keio 1307984, keisei 684117, minatomirai 135200, odakyu 1178303, other 196793, rinkai 153358, saitama_rr 126984, seibu 1313660, shin_keisei 268759, sotetsu 405683, tama_monorail 134147, tobu 1670632, toei 2740222, tokyo_metro 4586855, tokyo_monorail 34534, tokyu 2310618, toyo 122432, tx 451934, yokohama 596621, yurikamome 61347
+t3246 stages: search 11.7 s, fare_col 0.0 s, station_exp 0.7 s, mode_choice 64.2 s, assign 4.3 s, ev_pairs 19.3 s, ev_assign 4.0 s; skims 69.7 MB at 1454 stations, commute exp table 32.3 MB; heap peak 332.9 MB
+
+== t_off
+3 --cells --exact --fares 0.9,0.06 --curve 0,0.9,20,2.1,1000,149.1 --set fare_w=6.0,t3246_lo_f=1.62,t3246_hi_f=0.67
+commutes 26793625 trips, rail 6943398 (25.9%), walk 10.7%; everyday 43496311, rail 9459164 (21.7%), walk 26.1%; open 1.5 s, network 1.3 s, solve 102.0 s, all 104.8 s
+operators: chiba_monorail 97951, hokuso 107112, jr_central 4949, jr_east 8451120, keikyu 1058928, keio 1273928, keisei 664231, minatomirai 132994, odakyu 1140560, other 188681, rinkai 149303, saitama_rr 121981, seibu 1273814, shin_keisei 259567, sotetsu 392313, tama_monorail 128628, tobu 1617503, toei 2694906, tokyo_metro 4509120, tokyo_monorail 33031, tokyu 2256405, toyo 118223, tx 438992, yokohama 579368, yurikamome 60111
+t3246 stages: search 12.1 s, fare_col 0.0 s, station_exp 0.8 s, mode_choice 59.5 s, assign 4.6 s, ev_pairs 19.9 s, ev_assign 4.3 s; skims 69.7 MB at 1454 stations, commute exp table 32.3 MB; heap peak 332.9 MB
+
+== t_off1
+3 --cells --exact --fares 0.9,0.06 --curve 0,0.9,20,2.1,1000,149.1 --set fare_w=6.0,t3246_lo_f=1.62,t3246_hi_f=0.67
+commutes 26793625 trips, rail 6943398 (25.9%), walk 10.7%; everyday 43496311, rail 9459164 (21.7%), walk 26.1%; open 1.7 s, network 1.5 s, solve 87.9 s, all 91.2 s
+operators: chiba_monorail 97951, hokuso 107112, jr_central 4949, jr_east 8451120, keikyu 1058928, keio 1273928, keisei 664231, minatomirai 132994, odakyu 1140560, other 188681, rinkai 149303, saitama_rr 121981, seibu 1273814, shin_keisei 259567, sotetsu 392313, tama_monorail 128628, tobu 1617503, toei 2694906, tokyo_metro 4509120, tokyo_monorail 33031, tokyu 2256405, toyo 118223, tx 438992, yokohama 579368, yurikamome 60111
+t3246 stages: search 11.3 s, fare_col 0.0 s, station_exp 0.7 s, mode_choice 50.0 s, assign 4.1 s, ev_pairs 17.2 s, ev_assign 4.0 s; skims 69.7 MB at 1454 stations, commute exp table 32.3 MB; heap peak 332.9 MB
+
+== t_off3
+3 --cells --exact --fares 0.9,0.06 --curve 0,0.9,20,2.1,1000,149.1 --set fare_w=6.0,t3246_lo_f=1.62,t3246_hi_f=0.67
+commutes 26793625 trips, rail 6943398 (25.9%), walk 10.7%; everyday 43496311, rail 9459164 (21.7%), walk 26.1%; open 1.4 s, network 1.3 s, solve 94.7 s, all 97.3 s
+operators: chiba_monorail 97951, hokuso 107112, jr_central 4949, jr_east 8451120, keikyu 1058928, keio 1273928, keisei 664231, minatomirai 132994, odakyu 1140560, other 188681, rinkai 149303, saitama_rr 121981, seibu 1273814, shin_keisei 259567, sotetsu 392313, tama_monorail 128628, tobu 1617503, toei 2694906, tokyo_metro 4509120, tokyo_monorail 33031, tokyu 2256405, toyo 118223, tx 438992, yokohama 579368, yurikamome 60111
+t3246 stages: search 11.5 s, fare_col 0.0 s, station_exp 0.8 s, mode_choice 55.2 s, assign 4.5 s, ev_pairs 18.0 s, ev_assign 4.0 s; skims 69.7 MB at 1454 stations, commute exp table 32.3 MB; heap peak 332.9 MB
+
+== x2_m1
+3 --cells --exact --fares 3,0.2 --curve 0,3,20,7,1000,497 --set fare_w=4.4,t3246=1
+commutes 16949267 trips, rail 2983424 (17.6%), walk 4.9%; everyday 51839670, rail 6257813 (12.1%), walk 24.8%; open 1.8 s, network 0.8 s, solve 70.7 s, all 73.3 s
+operators: lirr 590935, mnr 422991, njt 634697, njt_light 381056, path 562931, subway 8335540
+t3246 stages: search 9.9 s, fare_col 0.0 s, station_exp 0.3 s, mode_choice 44.3 s, assign 2.6 s, ev_pairs 10.6 s, ev_assign 2.5 s; skims 33.4 MB at 865 stations, commute exp table 11.4 MB; heap peak 172.7 MB
+
+== x2_off
+3 --cells --exact --fares 3,0.2 --curve 0,3,20,7,1000,497 --set fare_w=4.4
+commutes 16949267 trips, rail 3000466 (17.7%), walk 4.8%; everyday 51839670, rail 6359976 (12.3%), walk 24.7%; open 2.0 s, network 0.8 s, solve 53.6 s, all 56.4 s
+operators: lirr 589123, mnr 423927, njt 631897, njt_light 382480, path 566364, subway 8454326
+t3246 stages: search 9.5 s, fare_col 0.0 s, station_exp 0.3 s, mode_choice 30.1 s, assign 2.5 s, ev_pairs 8.4 s, ev_assign 2.4 s; skims 33.4 MB at 865 stations, commute exp table 11.4 MB; heap peak 172.7 MB

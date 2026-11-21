@@ -91,7 +91,7 @@ try {
   ok(cards.every((c) => c.rankW <= 14 && Math.abs(c.rankLeft - c.factsLeft) <= 1), `the rank starts at the card's text edge (widths ${cards.map((c) => c.rankW).join(', ')})`);
   ok(cards[0].tagMargin === '0px' && Math.abs(cards[0].tagLeft - cards[0].factsLeft) <= 1, `the Sandbox tag sits at the row's left edge (margin ${cards[0].tagMargin}, ${cards[0].tagLeft} against ${cards[0].factsLeft})`);
   ok(cards[2].overflow === false, 'a long title and name stay inside the card');
-  ok((await page.locator('.cm-note-foot').textContent()) === "Sandbox games aren't counted", 'Biggest ends with the sandbox note');
+  ok((await page.locator('.cm-note-foot').textContent()) === "Sandbox games not shown", 'Biggest ends with the sandbox note');
   await page.getByRole('tab', { name: 'Random' }).click();
   await page.waitForSelector('.cm-card');
   await page.waitForTimeout(300);

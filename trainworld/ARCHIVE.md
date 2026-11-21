@@ -1,6 +1,9 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4004 [P2] {L:small-fixes} Search finds far towns without slowing the game (2026-11-21): search finds towns anywhere: a world name index from the zones' place lists (pipeline/place_index.py, 4,097 files, ~135 MB gzipped on R2, ~30 KB a shard per search; all 3.65M places found by name), and place matching moved to a worker, so at 100x on the real save no query put the trips past the 1 h pull lag. notes/T-4004.md.
+- T-4003 [P2] {L:map-look} Hide all blueprints toggle (2026-11-21): Settings > Show > Blueprints hides every blueprint (track, stations, planned lines, BRT lanes, marks, picks); view only, session only like Buses and ferries.
+- T-4002 [P2] {L:community} Community saves open paused (2026-11-21): community saves open paused with blueprints hidden (own switch while viewing); leaving an unedited viewed network no longer asks.
 - T-4007 [P1] {L:accounts-server} Server reads save levels 35 and 36 (2026-11-21): shonei-server f534646 deployed 11-21 17:56 UTC with 513353d (limits): save check knows levels 35-36.
 - T-3941 [P3] {L:buses} Weekend BRT lanes past 60 buses an hour (2026-11-21): settle_weekend runs fit_lanes; landed with T-3655 part 1; fullchk passed.
 - T-4006 [P2] {L:community} Raise the community browsing limit (2026-11-21): shonei-server 513353d: opening saves 30/h -> 300/h (burst 30), list 120/min, drawings 480/min, per IP; not deployed (her yes)

@@ -1,0 +1,513 @@
+diff --git a/trainworld/sim/src/bin/calib.rs b/trainworld/sim/src/bin/calib.rs
+index 29b40808..c4677d33 100644
+--- a/trainworld/sim/src/bin/calib.rs
++++ b/trainworld/sim/src/bin/calib.rs
+@@ -136,6 +136,14 @@ fn main() {
+             e.set_fares(base, km, &hop_km).unwrap();
+         }
+     }
++    // T-3246 PROTOTYPE: `--curve km,usd,km,usd,..`, the game's fare curve
++    if let Some(v) = get("--curve") {
++        let knots: Vec<f32> = v.split(',').map(|x| x.parse().unwrap()).collect();
++        api.set_fare_curve(&knots).unwrap();
++        if let Some(e) = ev.as_mut() {
++            e.set_fare_curve(&knots).unwrap();
++        }
++    }
+     let t_net = now_ms() - t1;
+ 
+     let areas: Option<(Vec<u32>, u32)> = get("--areas").map(|p| {
+@@ -296,6 +304,7 @@ fn main() {
+         t_open / 1e3, t_net / 1e3, t_solve / 1e3, t_all / 1e3
+     );
+     eprintln!("operators: {}", ops.iter().map(|(k, v)| format!("{k} {:.0}", v)).collect::<Vec<_>>().join(", "));
++    eprintln!("t3246 stages: {}; heap peak {:.1} MB", trainworld_sim::demand::t3246::report(), trainworld_sim::demand::alloc::mb(trainworld_sim::demand::alloc::peak()));
+     let mut set_out = Map::new();
+     for (k, v) in &set {
+         set_out.insert(k.clone(), json!(v));
+diff --git a/trainworld/sim/src/demand/api.rs b/trainworld/sim/src/demand/api.rs
+index aa4186a1..b97f6f75 100644
+--- a/trainworld/sim/src/demand/api.rs
++++ b/trainworld/sim/src/demand/api.rs
+@@ -869,10 +869,21 @@ impl DemandApi {
+         let sz = self.sz.as_ref().unwrap();
+         // the strategies are shared with the other populations on the same service (T-119)
+         let (mo, l, od_sub) = with_skims(g, p, &self.want, |sk| {
++            let t_e = now_ms();
+             let er = station_exp(sk, p);
++            super::t3246::add(2, now_ms() - t_e);
++            super::t3246::EXPB.fetch_max(4 * er.len() as u64, std::sync::atomic::Ordering::Relaxed);
+             // T-3892: the ferry fans' costs, only while any line is a ferry
+             let fans = if self.ferry.is_empty() { None } else { CommuteFans::new(g, p, sk, &self.ferry) };
++            // T-3246 PROTOTYPE: the groups' fares for mode choice
++            let curve_v = if p.t3246 > 0.0 { super::t3246::curve_of(&g.fare_curve, self.fare_per_km) } else { vec![] };
++            super::t3246::CURVE.with(|c| c.set((curve_v.as_ptr(), curve_v.len())));
++            super::t3246::FARE.with(|c| c.set((sk.fare.as_ptr(), sk.fare.len())));
++            let t_m = now_ms();
+             let mut mo = mode_choice_fans(&self.z, &self.gr, sz, &er, &sk.walk, &sk.walk_max, g.n_st, p, &self.nr, self.part, fans.as_ref());
++            super::t3246::add(3, now_ms() - t_m);
++            super::t3246::CURVE.with(|c| c.set((std::ptr::null(), 0)));
++            super::t3246::FARE.with(|c| c.set((std::ptr::null(), 0)));
+             drop(er);
+             // the trips home: the same station pairs reversed
+             let s = g.n_st;
+@@ -904,10 +915,12 @@ impl DemandApi {
+                 }
+             }
+             let rides = fans.as_ref().map(|cf| cf.both_ways(s, &rides, fw, fh, &mut od));
++            let t_a = now_ms();
+             let mut l = match xfer {
+                 Some((ix, x)) => assign_with_transfers(g, sk, &od, ix, x),
+                 None => assign(g, sk, &od),
+             };
++            super::t3246::add(4, now_ms() - t_a);
+             if let (Some(cf), Some(r)) = (fans.as_ref(), rides.as_ref()) {
+                 cf.add_rides(g, r, &mut l);
+             }
+diff --git a/trainworld/sim/src/demand/everyday.rs b/trainworld/sim/src/demand/everyday.rs
+index 3416ecb1..6b06e375 100644
+--- a/trainworld/sim/src/demand/everyday.rs
++++ b/trainworld/sim/src/demand/everyday.rs
+@@ -411,6 +411,10 @@ mod tests;
+ /// T-1222: the levels of detail against each other.
+ #[cfg(test)]
+ mod lod_tests;
++/// T-3246 PROTOTYPE: the ceilings with income groups (a scratch copy of checks/ceiling/t1056_ceiling.rs).
++#[cfg(test)]
++#[path = "../../../notes/T-3246/t3246_ceiling.rs"]
++mod t3246_ceiling;
+ 
+ /// 0..n in pieces of 16k, for loops over every destination sample (3.2M on New York): each piece
+ /// is one call of an out-of-line function, so the browser optimises it after the first few
+@@ -1299,6 +1303,13 @@ impl EverydayApi {
+             // T-2196: the ferry fans' costs, only while any line is a ferry
+             let fan_costs = if self.ferry.is_empty() { None } else { FanCosts::new(g, p, sk, &self.ferry) };
+             let fans = fan_costs.as_ref();
++            // T-3246 PROTOTYPE: income groups (`Params::t3246`)
++            let g_on = p.t3246 > 0.0;
++            let g_fared = g_on && (2.0..3.0).contains(&p.t3246) && sk.fare.len() == ss;
++            let g_groups = super::t3246::groups(&p);
++            let g_sense = p.t3246 < 3.0;
++            let g_curve = if g_on { super::t3246::curve_of(&g.fare_curve, self.engine.fare_per_km) } else { vec![] };
++            let t_pairs = super::clock::now_ms();
+             let mut fan_rides = vec![[0f32; 3]; fans.map_or(0, |fc| kinds * fc.np() * fc.np())];
+             let mut fan_e: Vec<f32> = vec![];
+             // per access entry of a pair's start, a bit per entry at its end the walking rule keeps
+@@ -1374,6 +1385,17 @@ impl EverydayApi {
+                             pair_c.push(c);
+                         }
+                     }
++                    // T-3246 PROTOTYPE: the station pairs' fares, weighted as the sum
++                    let mut fsum = 0.0f32;
++                    if g_fared {
++                        let mut cs = pair_c.iter();
++                        for ka in a.clone() {
++                            let row = &sk.fare[sz.acc_st[ka] as usize * s..][..s];
++                            for kb in b.clone() {
++                                fsum += *cs.next().unwrap() * row[sz.acc_st[kb] as usize];
++                            }
++                        }
++                    }
+                     kept_rows.clear();
+                     kept_rows.resize(a.len(), u32::MAX);
+                     debug_assert!(b.len() <= 32);
+@@ -1410,6 +1432,9 @@ impl EverydayApi {
+                             }
+                             if bad > WALK_SLIVER * all_sum {
+                                 sum = kept;
++                                if g_fared {
++                                    fsum *= kept / all_sum;
++                                }
+                             } else {
+                                 kept_rows.fill(u32::MAX);
+                             }
+@@ -1476,8 +1501,39 @@ impl EverydayApi {
+                         (pr, prd)
+                     };
+                     // T-3888: the walk tier's part of the rail share, loaded on every pair
+-                    let pr_t = if t > 0.0 { t * p.ratio_mix(rail_all, road, paid, free) } else { 0.0 };
+-                    let (pr0, prd0) = choice(rail);
++                    let mut pr_t = if t > 0.0 { t * p.ratio_mix(rail_all, road, paid, free) } else { 0.0 };
++                    let (mut pr0, mut prd0) = choice(rail);
++                    // T-3246 PROTOTYPE: the low and high income groups, every money term moved by
++                    // the group's factor over today's; the middle group is the share above
++                    if g_on && pair.distance >= p.t3246_km * 1000.0 {
++                        let fbar = if g_fared { if sum > 1e-30 { fsum / sum } else { 0.0 } } else { super::t3246::proxy(&g_curve, pair.distance) } + p.fare_min;
++                        let mc = (fixed - p.park_min + pair.distance * 0.001 * f * p.car_own_km_min() + sz.home_park[h]) * cm;
++                        let mid = 1.0 - g_groups[0].0 - g_groups[1].0;
++                        let (mut a0, mut a1, mut a2) = (mid * pr0, mid * prd0, mid * pr_t);
++                        for &(sh, dlt) in &g_groups {
++                            if sh <= 0.0 {
++                                continue;
++                            }
++                            let (road, paid) = (road + dlt * mc, paid * (1.0 + dlt));
++                            let (rail, rail_all) = (rail + dlt * fbar, rail_all + dlt * fbar);
++                            let (q0, q1) = if apart {
++                                (p.bound_share(rail, road, paid, free), p.bound_share(rail + FARE_D_MIN, road, paid, free))
++                            } else {
++                                let bt = p.mode_beta(road);
++                                let uw = bt * (road - cw) + p.asc_walk();
++                                let util = bt * (road - rail) + p.asc_rail;
++                                (p.tier_choice(t, kept, util, uw, bt, paid, free, rail, rail_all, road), if g_sense { p.tier_choice(t, kept, util - bt * FARE_D_MIN, uw, bt, paid, free, rail + FARE_D_MIN, rail_all + FARE_D_MIN, road) } else { 0.0 })
++                            };
++                            let qt = if t > 0.0 { t * p.ratio_mix(rail_all, road, paid, free) } else { 0.0 };
++                            a0 += sh * q0;
++                            a1 += sh * q1;
++                            a2 += sh * qt;
++                        }
++                        if !g_sense {
++                            a1 = a0 + (prd0 - pr0);
++                        }
++                        (pr0, prd0, pr_t) = (a0, a1, a2);
++                    }
+                     // the fans' rail share beside everyone else's
+                     let fan_pr = fan.map(|_| choice(ma + mb + p.fare_min - fast_ln(sum_f) / th + off));
+                     let (pr, prd) = match fan_pr {
+@@ -1578,7 +1634,10 @@ impl EverydayApi {
+                 cols.pack(&mut od, s, od_kind);
+             }
+             drop((od, accs, acc_rs));
++            super::t3246::add(5, super::clock::now_ms() - t_pairs);
++            let t_as = super::clock::now_ms();
+             let mut lanes = assign_lanes(g, sk, &cols, ix, &mut xfer);
++            super::t3246::add(6, super::clock::now_ms() - t_as);
+             #[cfg(test)]
+             if CHECK_LANES.with(|c| c.get()) {
+                 check_lanes(g, sk, &cols, ix, &lanes, &xfer);
+diff --git a/trainworld/sim/src/demand/intercity/tests.rs b/trainworld/sim/src/demand/intercity/tests.rs
+index 0547ec9a..b9565e93 100644
+--- a/trainworld/sim/src/demand/intercity/tests.rs
++++ b/trainworld/sim/src/demand/intercity/tests.rs
+@@ -584,7 +584,7 @@ fn rides_nest_with_walks() {
+ #[test]
+ fn another_station_never_makes_rail_dearer() {
+     let inf = f32::INFINITY;
+-    let sk = Skims { s: 3, n: 3, r: vec![0., inf, 30., inf, 0., 45., inf, inf, 0.], walk: vec![], walk_max: vec![], slot: vec![], next: vec![], board: vec![], order: vec![], change: vec![], entry: vec![], start: vec![] };
++    let sk = Skims { s: 3, n: 3, r: vec![0., inf, 30., inf, 0., 45., inf, inf, 0.], walk: vec![], walk_max: vec![], slot: vec![], next: vec![], board: vec![], order: vec![], change: vec![], entry: vec![], start: vec![], fare: vec![] };
+     let p = Params::default();
+     let theta = p.band_unsoftened(p.n_bands() - 1);
+     let list = |walks: &[(usize, f32)]| {
+@@ -1960,7 +1960,7 @@ pub(crate) fn real_world(root: &str, ids: Option<&[&str]>) -> String {
+ fn regional_station_pairs_take_the_local_scale() {
+     // stations 0 and 1 near the home, 2 at work: 0 -> 2 costs 30, 1 -> 2 costs 33
+     let inf = f32::INFINITY;
+-    let sk = Skims { s: 3, n: 3, r: vec![0., inf, 30., inf, 0., 33., inf, inf, 0.], walk: vec![], walk_max: vec![], slot: vec![], next: vec![], board: vec![], order: vec![], change: vec![], entry: vec![], start: vec![] };
++    let sk = Skims { s: 3, n: 3, r: vec![0., inf, 30., inf, 0., 33., inf, inf, 0.], walk: vec![], walk_max: vec![], slot: vec![], next: vec![], board: vec![], order: vec![], change: vec![], entry: vec![], start: vec![], fare: vec![] };
+     let p = Params::default();
+     // a pair whose car takes 60 perceived minutes, past 12 km: the band's scale, not softened
+     let th = p.soften(p.band_unsoftened(p.band_of_d2(20e3 * 20e3)), 60.);
+diff --git a/trainworld/sim/src/demand/kernel.rs b/trainworld/sim/src/demand/kernel.rs
+index eb14bcdf..bc1e397e 100644
+--- a/trainworld/sim/src/demand/kernel.rs
++++ b/trainworld/sim/src/demand/kernel.rs
+@@ -81,6 +81,14 @@ pub struct Params {
+     /// Perceived minutes a fare dollar costs the riders of this population (T-1277: by their
+     /// country's income, set by the app; the car's money stays at `api::FARE_MIN_PER_USD`).
+     pub fare_w: f32,
++    /// T-3246 PROTOTYPE: income groups in mode choice (0 off, 1 the fare from trip length, 2 each
++    /// pair's expected fare), the low and high groups' shares and money factors on today's.
++    pub t3246: f32,
++    pub t3246_lo: f32,
++    pub t3246_lo_f: f32,
++    pub t3246_hi: f32,
++    pub t3246_hi_f: f32,
++    pub t3246_km: f32,
+     /// Logit scale per perceived minute, and the rail propensity: the worldwide value plus
+     /// `country_asc_rail`, which `set_extra` keeps in step (setting `asc_rail` by name sets the
+     /// worldwide part).
+@@ -329,6 +337,12 @@ impl Default for Params {
+             xfer_fare: 0.0,
+             fare_min: 6.0,
+             fare_w: super::api::FARE_MIN_PER_USD,
++            t3246: 0.0,
++            t3246_lo: 0.2,
++            t3246_lo_f: 1.76,
++            t3246_hi: 0.2,
++            t3246_hi_f: 0.58,
++            t3246_km: 0.0,
+             // T-636: Anita's set (notes/T-636.md)
+             beta: 0.10,
+             asc_rail: super::api::ASC_RAIL,
+@@ -454,6 +468,12 @@ impl Params {
+             "xfer_fare" => self.xfer_fare = v,
+             // before `set_fares`, which reads it
+             "fare_w" => self.fare_w = v,
++            "t3246" => self.t3246 = v,
++            "t3246_lo" => self.t3246_lo = v,
++            "t3246_lo_f" => self.t3246_lo_f = v,
++            "t3246_hi" => self.t3246_hi = v,
++            "t3246_hi_f" => self.t3246_hi_f = v,
++            "t3246_km" => self.t3246_km = v,
+             "transfer_min" => self.transfer_min = v,
+             "train_in_min" => self.train_in_min = v,
+             "train_out_min" => self.train_out_min = v,
+diff --git a/trainworld/sim/src/demand/kernel/mode.rs b/trainworld/sim/src/demand/kernel/mode.rs
+index 8df3dcfe..56d2f179 100644
+--- a/trainworld/sim/src/demand/kernel/mode.rs
++++ b/trainworld/sim/src/demand/kernel/mode.rs
+@@ -437,6 +437,18 @@ fn mode_choice_with<const FANS: bool>(z: &Zones, gr: &Gravity, sz: &Subzones, er
+     let h = s + PADS;
+     let mut ab_row = vec![0f32; 2 * nb * h];
+     let mut ab_y = vec![0f32; 2 * nb * h];
++    // T-3246 PROTOTYPE: income groups (`Params::t3246`); with the expected-fare table, the
++    // origin's rows weighted by each station pair's fare, as `ab_row`
++    let grp = p.t3246 > 0.0;
++    let gs = super::super::t3246::groups(p);
++    let ftab = if (2.0..3.0).contains(&p.t3246) { super::super::t3246::fare_tab() } else { &[] };
++    let fared = grp && ftab.len() == s * s;
++    let gcurve = super::super::t3246::curve();
++    // (3: the tails' fare sensitivity left to the middle group's; groups only on trips over
++    // `t3246_km`, a block of eight at a time)
++    let sense = p.t3246 < 3.0;
++    let g_short = p.t3246_km * 1000.0;
++    let mut gf_row = vec![0f32; if fared { 2 * nb * h } else { 0 }];
+     // T-3892: the fans' rows and trips the same way, and per station whether one of the origin's
+     // walks (`fan_w`) or walks and rides (`fan_r`) reaches it cheaper by a ferry (`fan_gen`)
+     let fan_n = if fans.is_some() { 2 * nb * h } else { 0 };
+@@ -632,6 +644,28 @@ fn mode_choice_with<const FANS: bool>(z: &Zones, gr: &Gravity, sz: &Subzones, er
+                         }
+                     }
+                 }
++                if fared {
++                    let (a_row, b_row) = gf_row[at..at + 2 * h].split_at_mut(h);
++                    let (a_row, b_row) = (&mut a_row[..s], &mut b_row[..s]);
++                    a_row.fill(0.0);
++                    for k in walk.clone() {
++                        let (a, w) = (sz.acc_st[k] as usize, acc_e[b * na + k]);
++                        for ((av, &e), &f) in a_row.iter_mut().zip(&er_b[a * s..(a + 1) * s]).zip(&ftab[a * s..(a + 1) * s]) {
++                            *av += w * e * f;
++                        }
++                    }
++                    if rides {
++                        for (bv, &av) in b_row.iter_mut().zip(a_row.iter()) {
++                            *bv = c_ub * av;
++                        }
++                        for k in ride.clone() {
++                            let (a, w) = (sz.acc_st[k] as usize, acc_e[b * na + k]);
++                            for ((bv, &e), &f) in b_row.iter_mut().zip(&er_b[a * s..(a + 1) * s]).zip(&ftab[a * s..(a + 1) * s]) {
++                                *bv += w * e * f;
++                            }
++                        }
++                    }
++                }
+             }
+             // T-3892: the fans' rows: the two above with each station pair a fan takes a ferry on
+             // at the fans' exp, where any of the origin's stations has one
+@@ -705,6 +739,13 @@ fn mode_choice_with<const FANS: bool>(z: &Zones, gr: &Gravity, sz: &Subzones, er
+                     rv[k] = F8::gather(&ab_row, &ix[k]);
+                     ssum = ssum + rv[k] * ev[k];
+                 }
++                // T-3246 PROTOTYPE: the station pairs' fares, weighted as `ssum`
++                let mut fsum = F8::splat(0.0);
++                if fared {
++                    for k in 0..kn {
++                        fsum = fsum + F8::gather(&gf_row, &ix[k]) * ev[k];
++                    }
++                }
+                 // T-3892: the lanes with an egress station the origin reaches cheaper by a ferry,
+                 // and their fans' sums
+                 let mut fan_l = 0u32;
+@@ -906,6 +947,7 @@ fn mode_choice_with<const FANS: bool>(z: &Zones, gr: &Gravity, sz: &Subzones, er
+                     }
+                     if slow != 0 {
+                         ssum = ssum * F8::new(keep);
++                        fsum = fsum * F8::new(keep);
+                     }
+                     if slow & fan_l != 0 {
+                         // (never below everyone's: a fan's weight on a pair is at least theirs,
+@@ -1035,6 +1077,102 @@ fn mode_choice_with<const FANS: bool>(z: &Zones, gr: &Gravity, sz: &Subzones, er
+                     let gt = pick(tier, zero, x_t / ssum_all);
+                     (x, xd, x_m.to_array(), pick(whole, gm + gt, gt))
+                 };
++                // T-3246 PROTOTYPE: the low and high income groups: every money term moved by the
++                // group's factor over today's, the station pairs' shares the middle group's; the
++                // middle group is the share above
++                if grp && d.lt_mask(F8::splat(g_short)) != 0xff {
++                    let fbar = if fared {
++                        fsum / ssum.max(F8::splat(1e-30)) + F8::splat(p.fare_min)
++                    } else {
++                        let da = d.to_array();
++                        F8::new(std::array::from_fn(|l| super::super::t3246::proxy(gcurve, da[l]))) + F8::splat(p.fare_min)
++                    };
++                    let mc = park8 - F8::splat(p.park_min) + rd * F8::splat(p.car_own_km_min()) + hp8;
++                    let rail_all0 = if tier != 0 && slow & tier != 0 { mo8 + m8 + F8::splat(p.fare_min) - ssum_all.ln() / th8 + off8 } else { rail };
++                    let eval = |dlt: f32| -> (F8, [f32; 8], [f32; 8], F8) {
++                        let dl = F8::splat(dlt);
++                        let road = road + dl * mc;
++                        let paid8 = paid8 * (one + dl);
++                        let rail = rail + dl * fbar;
++                        let rail_all = rail_all0 + dl * fbar;
++                        let bt = F8::splat(p.beta) * (F8::splat(p.damp_min) / road).min(F8::splat(1.0)).sqrt();
++                        let uw = bt * (road - cw8) + F8::splat(p.asc_walk());
++                        let share = |rail: F8| {
++                            let util = bt * (road - rail) + F8::splat(p.asc_rail);
++                            let rail_c = rail.max(F8::splat(0.01));
++                            let ratio = |car: F8| ratio_at(rail_c, car);
++                            let e = (uw - util).exp();
++                            let w0 = e / (one + util.neg().exp() + e);
++                            let s0 = (one - w0) * ratio(road);
++                            if !paying {
++                                s0
++                            } else {
++                                let w1 = e / (one + (util + bt * paid8).neg().exp() + e);
++                                let s1 = (one - w1) * ratio(road + paid8);
++                                s0 + (one - free8) * (s1 - s0)
++                            }
++                        };
++                        let bound = |rail: F8| {
++                            let rail_c = rail.max(F8::splat(0.01));
++                            let f0 = ((hi - rail_c / road) * kf).max(zero).min(one);
++                            if !paying {
++                                f0
++                            } else {
++                                let f1 = ((hi - rail_c / (road + paid8)) * kf).max(zero).min(one);
++                                f0 + (one - free8) * (f1 - f0)
++                            }
++                        };
++                        let chosen = |rail: F8| {
++                            let s = share(rail);
++                            if cross != 0 { pick(cross, s, bound(rail)) } else { s }
++                        };
++                        let rd8 = rail + F8::splat(FARE_D_MIN);
++                        if tier == 0 {
++                            let x = tu8 * dv8 * chosen(rail);
++                            (x, if sense { (tu8 * dv8 * chosen(rd8) - x).to_array() } else { [0.0; 8] }, x.to_array(), x / ssum)
++                        } else {
++                            let t8 = pick(tier, zero, F8::splat(p.walk_tier));
++                            let mix = |rail: F8| {
++                                let rail_c = rail.max(F8::splat(0.01));
++                                let s0 = ratio_at(rail_c, road);
++                                if !paying {
++                                    s0
++                                } else {
++                                    let s1 = ratio_at(rail_c, road + paid8);
++                                    s0 + (one - free8) * (s1 - s0)
++                                }
++                            };
++                            let main = |rail: F8| pick(!kept & 0xff, chosen(rail), zero);
++                            let tc = |rail: F8, all: F8| {
++                                let m = main(rail);
++                                pick(tier, m, (one - t8) * m + t8 * mix(all))
++                            };
++                            let x = tu8 * dv8 * tc(rail, rail_all);
++                            let xd = if sense { (tu8 * dv8 * tc(rd8, rail_all + F8::splat(FARE_D_MIN)) - x).to_array() } else { [0.0; 8] };
++                            let x_m = tu8 * dv8 * pick(tier, main(rail), (one - t8) * main(rail));
++                            let x_t = x - x_m;
++                            let gm = pick(!kept & 0xff, x_m / ssum, zero);
++                            let gt = pick(tier, zero, x_t / ssum_all);
++                            (x, xd, x_m.to_array(), pick(whole, gm + gt, gt))
++                        }
++                    };
++                    let mid = F8::splat(1.0 - gs[0].0 - gs[1].0);
++                    let (mut x1, mut xd1, mut xm1, mut g1) = (x * mid, if sense { F8::new(xd) * mid } else { F8::new(xd) }, F8::new(xm) * mid, g * mid);
++                    for &(sh, dlt) in &gs {
++                        if sh <= 0.0 {
++                            continue;
++                        }
++                        let (xg, xdg, xmg, gg) = eval(dlt);
++                        let shv = F8::splat(sh);
++                        x1 = x1 + shv * xg;
++                        if sense {
++                            xd1 = xd1 + shv * F8::new(xdg);
++                        }
++                        xm1 = xm1 + shv * F8::new(xmg);
++                        g1 = g1 + shv * gg;
++                    }
++                    (x, xd, xm, g) = (x1, xd1.to_array(), xm1.to_array(), g1);
++                }
+                 // T-3892: the fans' rail share beside everyone else's (the walk tier's part as
+                 // everyone's), their main trips' rate on their pairs kept (`gfl`) and the rate
+                 // spread on all their pairs (`gf`); everyone else's main trips (`xm`, `g`) are the
+diff --git a/trainworld/sim/src/demand/kernel/search.rs b/trainworld/sim/src/demand/kernel/search.rs
+index 7d0b49ec..134d9f03 100644
+--- a/trainworld/sim/src/demand/kernel/search.rs
++++ b/trainworld/sim/src/demand/kernel/search.rs
+@@ -469,6 +469,9 @@ pub struct Skims {
+     pub entry: Vec<Box<[(u32, f32)]>>,
+     /// Per searched destination, its start walks (`DestStrategy::start`).
+     pub start: Vec<Box<[(u32, u32)]>>,
++    /// T-3246 PROTOTYPE: each station pair's expected distance fare (perceived minutes, the base
++    /// left out), S x S as `r`; empty unless `Params::t3246` is 2.
++    pub fare: Vec<f32>,
+ }
+ 
+ /// A station as reached off one of the lines its own strategy boards (T-575): a rider never changes
+@@ -548,7 +551,7 @@ pub(super) fn accepted(bits: &[u64], g: &Graph, r: usize) -> f32 {
+ 
+ impl Skims {
+     pub fn empty(g: &Graph) -> Skims {
+-        Skims { s: g.n_st, n: g.n, r: vec![f32::INFINITY; g.n_st * g.n_st], walk: vec![u16::MAX; g.n_st * g.n_st], walk_max: vec![0; g.n_st], slot: vec![NONE; g.n_st], next: vec![], board: vec![], order: vec![], change: vec![], entry: vec![], start: vec![] }
++        Skims { s: g.n_st, n: g.n, r: vec![f32::INFINITY; g.n_st * g.n_st], walk: vec![u16::MAX; g.n_st * g.n_st], walk_max: vec![0; g.n_st], slot: vec![NONE; g.n_st], next: vec![], board: vec![], order: vec![], change: vec![], entry: vec![], start: vec![], fare: vec![] }
+     }
+     /// `r` with the first boarding at the planned wait (T-1430), as the inter-city trips cost it.
+     pub fn entry_r(&self) -> std::borrow::Cow<'_, [f32]> {
+@@ -596,14 +599,38 @@ pub fn skims_extend(sk: &mut Skims, g: &Graph, p: &Params, want: &[bool]) {
+     if todo.is_empty() {
+         return;
+     }
++    let t_search = super::super::clock::now_ms();
++    let mut t_fare = 0.0;
+     let mut q = DestSearch::new(g, p);
+     let mut wm = vec![];
+     let mut dep = vec![];
++    // T-3246 PROTOTYPE: the expected distance fare per station pair
++    let fared = (2.0..3.0).contains(&p.t3246);
++    if fared && sk.fare.len() != g.n_st * g.n_st {
++        sk.fare = vec![0.0; g.n_st * g.n_st];
++    }
++    let (mut fcol, mut kcol) = (vec![], vec![]);
+     for &dst in &todo {
+         sk.slot[dst] = sk.next.len() as u32;
+         let d = q.run(dst, Some(&mut sk.r));
+         walk_column(g, p, d.view(), dst, &mut wm, &mut dep);
+         let s = g.n_st;
++        if fared {
++            let t0 = super::super::clock::now_ms();
++            trip_km_on(g, d.view(), dst, &g.rn_fare, &mut fcol, &mut dep);
++            let bent = g.fare_curve.km.len() >= 2;
++            if bent {
++                trip_km(g, d.view(), dst, &mut kcol, &mut dep);
++            }
++            for a in 0..s {
++                let x = if bent { g.fare_curve.extra(kcol[a]) } else { 0.0 };
++                sk.fare[a * s + dst] = fcol[a] + x;
++            }
++            for &(a, b) in d.start.iter() {
++                sk.fare[a as usize * s + dst] = sk.fare[b as usize * s + dst];
++            }
++            t_fare += super::super::clock::now_ms() - t0;
++        }
+         // the column by the station a trip starts from: a start walk's (T-3718) from where it boards
+         let mut from: std::borrow::Cow<[f32]> = std::borrow::Cow::Borrowed(&wm[..s]);
+         if !d.start.is_empty() {
+@@ -628,6 +655,17 @@ pub fn skims_extend(sk: &mut Skims, g: &Graph, p: &Params, want: &[bool]) {
+         sk.entry.push(d.entry);
+         sk.start.push(d.start);
+     }
++    super::super::t3246::add(0, super::super::clock::now_ms() - t_search - t_fare);
++    super::super::t3246::add(1, t_fare);
++    let ss = sk.s * sk.s;
++    let mut by = 4 * ss + 2 * ss + 4 * sk.fare.len() + 8 * sk.s;
++    for i in 0..sk.next.len() {
++        by += sk.next[i].bytes() + sk.order[i].bytes() + 8 * sk.board[i].len() + 4 * (sk.change[i].st.len() + sk.change[i].off.len()) + 8 * sk.change[i].bits.len() + 8 * sk.entry[i].len() + 8 * sk.start[i].len();
++    }
++    if by as u64 > super::super::t3246::SKB.load(std::sync::atomic::Ordering::Relaxed) {
++        super::super::t3246::SKB.store(by as u64, std::sync::atomic::Ordering::Relaxed);
++        super::super::t3246::SKS.store(sk.s as u64, std::sync::atomic::Ordering::Relaxed);
++    }
+ }
+ 
+ /// T-3718: a trip's walk from station `a` to station `b` before its first boarding, real minutes:
+diff --git a/trainworld/sim/src/demand/mod.rs b/trainworld/sim/src/demand/mod.rs
+index bb52206e..9b180629 100644
+--- a/trainworld/sim/src/demand/mod.rs
++++ b/trainworld/sim/src/demand/mod.rs
+@@ -42,6 +42,8 @@ pub mod pack;
+ /// T-275: routed walks (around water, over bridges) and drives (OSM roads) from the pack.
+ pub mod routes;
+ pub mod synth;
++/// T-3246 PROTOTYPE (not for landing).
++pub mod t3246;
+ /// T-195: the trip explorer's query (one trip's route, costs and mode chances).
+ pub mod trip;
+ #[cfg(test)]

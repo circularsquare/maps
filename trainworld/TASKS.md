@@ -214,17 +214,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-2867.md
 - T-2869 [P3] {L:region-redraws} Zone edges leave gaps at sea
   - Context: Port islands off Jakarta sit in no zone, so the border shows a gap. You said it is not a real issue but would be nice to fill.
-- T-4004 [P2] {L:small-fixes} {after:T-3997 landing} Search finds far towns without slowing the game (taking, 2026-11-21, agent placeindex)
-  - Context: T-3997 stopped the 100x crash by searching towns only within 200 km of the view (cities and zones anywhere). You, 11-21: "i'd rather have it eventually be able to show towns more than 200km away. i often use it to find places that are far away ... it can come in slowly. also this is the second time we've had to deal with search crashing so we should make sure that whatever solution we come up with is general."
-  - Goal: Any town in the world can be found by name, far results arriving after near ones, and search can never block the game: its work is bounded per frame or off the main thread, whatever the query.
 - T-4005 [P3] {L:community} Bookmark community saves
   - Context: Your scratch pad, 11-21: "maybe add bookmark feature to community saves to save cool ones".
   - Goal: A bookmark button on a community save, and a Bookmarked view in Community listing them; kept with the account when signed in, else in the browser.
-- T-4002 [P2] {L:community} Community saves open paused (taking, 2026-11-21, agent pausebp)
-  - Context: You, 11-21: "when opening a community save i think we should start it paused." Also: blueprints hidden by default there, your own setting kept for your games; and leaving a view-only save without the "won't be saved" confirm ("its kinda risk free to leave").
-- T-4003 [P2] {L:map-look} Hide all blueprints toggle (taking, 2026-11-21, agent pausebp)
-  - Context: You, 11-21: "we should probably add a toggle to hide all blueprints. along with the hide trams/hsr/etc."
-  - Goal: Beside the hide trams / high speed toggles, one more hides every blueprint (track, stations, lines, BRT lanes) on the map.
 - T-2872 [P3] {L:small-fixes} {after:Anita asks} Timeline of what was built
   - Context: A player asked for playback of what was built. The build days are recorded already (T-2871), with no UI.
   - Goal: Build it only when you ask.
@@ -381,7 +373,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Design agreed 11-21 (notes/T-3444-design/, her answers in answers-2026-11-21.md; three small calls still open in review/track-rework-design.md). Built in 38 stages, T-3948 to T-3985, in four releases, on a long-lived branch tw/track merged into master at each release. Your weekend notes (2026-11-16) are the heart of it.
   - Goal: Closes with the last of its stages.
   - Other: Your notes verbatim: notes/T-3444.md; sizes in notes/code-tour.md. Requirements folded in 11-20: a station placed on track that leaves its shape alone redraws no neighbours (T-2767, 0.2-0.9 s today); the drawn network rebuilds only near a change (T-2701); the Penn Station to Emeryville snapped preview (3 s, T-763) as a check case. notes/review-edit-speed-2026-11-20.md
-- T-3948 [P2] {L:track-rework} Track rework prep on master
+- T-3948 [P2] {L:track-rework} Track rework prep on master (taking, 2026-11-21, agent trackprep)
   - Context: Before the tw/track branch is cut: T-1183 out (the fixed-rate path its tests still use), a save guard so today's game reads a tw/track save as "saved by a newer version" (it must ship in a release before the first merge back), part 8's seven baseline timings on master, and the community Vienna save (share 3znpvqx7 rev 2) fetched read-only into notes/T-3444-design/saves/ (rate limited on 2026-11-21).
   - Goal: T-1183 done, the guard shipped, the seven timings written down, the three reference saves in saves/.
   - Other: Starts now. Files: save.rs decoder top, the 13 test files of T-1183. 4-6 h. notes/T-3444-design/10-build-plan.md stage 1
@@ -942,7 +934,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3932 [P2] {L:memory} A cores slider with its memory and speed
   - Context: You, 11-21, on whether big saves should run two workers: "if we dont have a way of telling how much memory a person actually has this question is meaningless and its on the player to decide. i thinkthe only actionable item here is to like maybe rework "use more cores" to have an actual slider where people can select how many cores and it estimates the resulting memory usage right below and the estimated speed gain or loss." Today Settings has a "Use more cores" switch; stage A (T-3373) caps workers by memory on big saves.
   - Goal: Settings has a slider for the number of solving workers, with the estimated memory and the estimated load and edit time for the open game shown below it, and the player's pick overrides stage A's memory cap.
-- T-3933 [P2] {L:memory} A load out of memory retries with fewer workers
+- T-3933 [P2] {L:memory} A load out of memory retries with fewer workers (taking, 2026-11-21, agent oomretry)
   - Context: You, 11-21: "if people are unable to lod the game at all because o fmemory issues it should probably autoset the memory cap lower and try again, if thats feasible". Three iPhone players (five reports) hit the out-of-memory screen 11-19 to 11-20 (T-3781). On phones the pool is already 1 solving worker plus the aux worker, so a retry there can drop only the aux worker (at most 65-97 MB): it saves some loads near the limit, not the biggest; it has more room on desktop.
   - Goal: A load whose worker runs out of memory restarts once with a lower cap (fewer workers), says so to the player, and keeps that cap for the next load; or the measured reason the page dies before it can.
 - T-3939 [P2] {L:memory} Clock worker memory on many-zone phone saves (taking, 2026-11-21, agent clockmem)
@@ -959,7 +951,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3837 [P3] {L:buses} Ferry routes found without a waypoint, and waypoints on touch
   - Context: T-3809 added shift click waypoints. A leg is still searched only in a box around its two ports, so a sea path that leaves it (Ma Liu Shui to Sai Kung) needs a waypoint; a wider third search would find it alone. Phones have no shift click.
   - Other: notes/T-3809.md
-- T-3996 [P2] {L:buses} {after:T-3944} Built BRT border dashes fixed on the ground
+- T-3996 [P2] {L:buses} {after:T-3944} Built BRT border dashes fixed on the ground (taking, 2026-11-21, agent brtdash)
   - Context: You, 11-21, on the built-lanes border: "inside casing is good. ideally the dashes are same length world-wise as we zoom out. and they handle turns okay."
   - Goal: The dashed border on built BRT lanes keeps the same dash length on the ground at every zoom, and stays even around bends.
 - T-3993 [P3] {L:buses} Group homes by bus line stretch
