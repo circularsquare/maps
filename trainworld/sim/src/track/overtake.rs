@@ -66,6 +66,46 @@ pub struct Outcome {
     pub behind: f64,
     /// How long after a slower train a faster one reaches the stretch's start (s, under its headway).
     pub offset: f64,
+    /// T-3929: what each of the `PHASES` relative phases tried costs (`Plan::best`'s waiting, loss
+    /// and time held an hour, s), from an offset of 0 in steps of a `PHASES`th of the faster
+    /// headway `hf`: departure spacing reads it to place a pair whose two directions can't both run
+    /// at the best (`spacing::place`). Empty where either line does not run.
+    pub costs: Vec<f64>,
+    /// Per relative phase tried, the longest any slower train waits and is held (s).
+    pub slow: Vec<f64>,
+    pub hf: f64,
+}
+
+impl Outcome {
+    /// `v`, one value per relative phase tried, at an offset of `x` (s), taken as a curve.
+    fn curve_at(&self, v: &[f64], x: f64) -> f64 {
+        let n = v.len();
+        let k = x.rem_euclid(self.hf) / self.hf * n as f64;
+        let (i, f) = (k.floor() as usize % n, k - k.floor());
+        v[i] * (1.0 - f) + v[(i + 1) % n] * f
+    }
+
+    /// How much worse than the best an offset of `x` (s) is, as a share of the worst there is
+    /// (0 to 1): 0 where nothing differs.
+    pub fn worse_at(&self, x: f64) -> f64 {
+        if self.costs.is_empty() || self.hf <= 0.0 {
+            return 0.0;
+        }
+        let (lo, hi) = self.costs.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), &c| (a.min(c), b.max(c)));
+        if hi - lo < 1e-9 {
+            return 0.0;
+        }
+        (self.curve_at(&self.costs, x) - lo) / (hi - lo)
+    }
+
+    /// How much longer the slower train that waits longest at an offset of `x` (s) waits and is
+    /// held than the mean at the best, which the round trip is sized on (s).
+    pub fn slow_over_at(&self, x: f64) -> f64 {
+        if self.slow.is_empty() || self.hf <= 0.0 {
+            return 0.0;
+        }
+        self.curve_at(&self.slow, x) - (self.waits.iter().sum::<f64>() + self.behind)
+    }
 }
 
 /// One faster run behind one slower run over a shared stretch with a passing station inside.
@@ -75,6 +115,8 @@ pub struct Plan {
     pub slow: (u32, u8),
     /// Each run's stand at the stretch's start (s): slower, faster.
     pub start: [f64; 2],
+    /// Where the stretch starts in each run (m): slower, faster.
+    pub at: [f64; 2],
     pub points: Vec<Point>,
     /// Per point: the next passing point, or the end.
     next: Vec<usize>,
@@ -123,7 +165,7 @@ pub fn plan(net: &Network, fast: (u32, u8), fr: &Run, slow: (u32, u8), sr: &Run,
     points.push(Point { slow: [reach_at(sr, sb) - s0; 2], fast: [reach_at(fr, fb) - f0; 2], passing: false, stop: -1, node: fr.nodes[i1 + 1], at: sb, fat: fb });
     let n = points.len();
     let next = (0..n).map(|p| (p + 1..n).find(|&q| points[q].passing).unwrap_or(n - 1)).collect();
-    Some(Plan { fast, slow, start: [leave_at(sr, sa) - s0, leave_at(fr, fa) - f0], points, next, spacing, memo: Mutex::new(vec![]) })
+    Some(Plan { fast, slow, start: [leave_at(sr, sa) - s0, leave_at(fr, fa) - f0], at: [sa, fa], points, next, spacing, memo: Mutex::new(vec![]) })
 }
 
 /// T-2245: the rate a line's overtakes are timetabled at: the headway the player set where the line
@@ -197,19 +239,24 @@ impl Plan {
     fn best(&self, tf: f64, ts: f64, cap: f64) -> Outcome {
         let n = self.points.len();
         if !(tf > 0.0 && ts > 0.0) {
-            return Outcome { loss: 0.0, waits: vec![0.0; n], behind: 0.0, offset: 0.0 };
+            return Outcome { loss: 0.0, waits: vec![0.0; n], behind: 0.0, offset: 0.0, costs: vec![], slow: vec![], hf: 0.0 };
         }
         let (hf, hs) = ((3600.0 / tf).min(cap), (3600.0 / ts).min(cap));
         let c = cycle(hs, hf);
         let mut best: Option<(f64, Outcome)> = None;
+        let (mut costs, mut slow) = (Vec::with_capacity(PHASES), Vec::with_capacity(PHASES));
         for k in 0..PHASES {
-            let (o, _) = self.sweep(hs, hf, hf * k as f64 / PHASES as f64, c);
-            let cost = o.loss * tf + (o.waits.iter().sum::<f64>() + o.behind) * ts;
+            let (o, each) = self.sweep(hs, hf, hf * k as f64 / PHASES as f64, c);
+            let held = o.waits.iter().sum::<f64>() + o.behind;
+            let cost = o.loss * tf + held * ts;
+            costs.push(cost);
+            // the slower train that waits longest, held as the mean is
+            slow.push(each.iter().map(|w| w.iter().sum::<f64>()).fold(0.0, f64::max) + o.behind);
             if best.as_ref().map_or(true, |b| cost < b.0 - 1e-9) {
                 best = Some((cost, o));
             }
         }
-        best.unwrap().1
+        Outcome { costs, slow, hf, ..best.unwrap().1 }
     }
 
     /// The best relative phase at these headways (s) and, per slower train of an hour or more of
@@ -301,7 +348,7 @@ impl Plan {
             }
         }
         waits.iter_mut().for_each(|w| *w /= ns.max(1.0));
-        (Outcome { loss: loss / nf.max(1.0), waits, behind: behind / ns.max(1.0), offset: x }, each)
+        (Outcome { loss: loss / nf.max(1.0), waits, behind: behind / ns.max(1.0), offset: x, costs: vec![], slow: vec![], hf }, each)
     }
 }
 

@@ -7,11 +7,15 @@
 //! first (T-2960). A headway line's reverse departures also move with where it stands its spare
 //! time, which is placed with the phase, so both directions can take even turns (T-2972).
 
+use std::sync::Arc;
+
 use super::capacity::ResKind;
 use super::net::Network;
+use super::overtake::Outcome;
 use super::params::SLOTS;
 use super::profile;
 use super::service::Service;
+use super::timing::TURN_MIN_S;
 
 /// Phases tried per headway.
 const STEPS: usize = 24;
@@ -44,19 +48,52 @@ struct Meet {
     clear: f64,
     /// this line's run there: run 1's departures move with where its spare time stands (T-2972)
     run: u8,
+    /// T-3929: a pair with passing stations (`behind` not 0): what each offset costs in their
+    /// overtake plan, read in place of the distance from the best one
+    plan: Option<Arc<Outcome>>,
+    /// with `plan`: how much longer than the mean at the best offset (which its round trip is sized
+    /// on) a slower train may wait and still make its next departure at the far end of its run
+    /// (s, as `timing::floor` reads it), without the share of this line's spare time stood there
+    /// when it is the slower one (that spare time: `spare`)
+    slack: f64,
+    spare: f64,
 }
+
+/// T-3929: what a phase where a slower train of a pair with passing stations could not make its
+/// next departure counts per train: more than a merge at its worst, since that train is drawn
+/// leaving service or, where the run's mean misses too, every one is put back on its slot's
+/// timetable (`timing::floor`) and leaves passing stations before its express.
+const MISSED: f64 = 2.0 * MERGE_FIRST;
 
 /// How crowded a phase leaves the line's meetings: per train, how far it is short of half the
 /// smaller headway (or of `clear`) from the nearest train of the other line there, squared, as a
 /// share, times the meeting's weight. For a following pair timetabled together, how far each
-/// following train is from its place after a leading one, as a share of the same half headway, squared.
-fn crowding(meets: &[Meet], h: f64, phase: f64, shift: f64) -> f64 {
+/// following train is from its place after a leading one, as a share of the same half headway,
+/// squared; with passing stations, what the place costs (`Meet::plan`). `share`: the share of its
+/// spare time this line stands at its last stop.
+fn crowding(meets: &[Meet], h: f64, phase: f64, shift: f64, share: f64) -> f64 {
     let n = ((3600.0 / h).ceil() as usize).clamp(1, MAX_TRAINS);
     let mut sum = 0.0;
     for m in meets {
         // run 1's departures `shift` later than the pattern's (T-2972)
         let phase = if m.run == 1 { phase + shift } else { phase };
         let g = 0.5 * h.min(m.hb);
+        // T-3929: a pair's two directions can't both run at the plan's best offset where their
+        // reverse departures are where the round trips leave them (count lines, `Service::lattice`):
+        // what each offset costs, as a share of the worst per train, picks between them, and an
+        // offset where the slower train that waits longest would miss its next departure counts
+        // `MISSED` more
+        if let Some(o) = &m.plan {
+            let (x, k, slack) = if m.behind > 0.0 {
+                (m.a + phase - m.b, n, m.slack)
+            } else {
+                let own = if m.run == 0 { share } else { 1.0 - share };
+                (m.b - m.a - phase, ((3600.0 / m.hb).ceil() as usize).clamp(1, MAX_TRAINS), m.slack + own * m.spare)
+            };
+            let missed = if o.slow_over_at(x) > slack { MISSED } else { 0.0 };
+            sum += k as f64 * (o.worse_at(x) + missed);
+            continue;
+        }
         if m.behind > 0.0 {
             for k in 0..n {
                 let x = (m.a + phase + k as f64 * h - m.b - m.behind).rem_euclid(m.hb);
@@ -192,7 +229,8 @@ fn place_pass(net: &Network, svc: &Service, lines: &[u32], phase: &mut Vec<[f32;
     }
     // T-2231, T-2419: following pairs timetabled together, by level: (faster line, its run), (slower
     // line, its run), how far behind it belongs (s)
-    let paired: [Vec<((u32, u8), (u32, u8), f64)>; SLOTS] = std::array::from_fn(|lev| {
+    #[allow(clippy::type_complexity)]
+    let paired: [Vec<((u32, u8), (u32, u8), f64, Option<(Arc<Outcome>, [f64; 2])>)>; SLOTS] = std::array::from_fn(|lev| {
         if !net.slot_worked(lev) {
             return vec![];
         }
@@ -200,9 +238,13 @@ fn place_pass(net: &Network, svc: &Service, lines: &[u32], phase: &mut Vec<[f32;
         v.retain(|x| want[x.0 .0 as usize] || want[x.1 .0 as usize]);
         v
     });
-    // this line's run `ur` against line `v`'s run `vr`: how far behind (+) or ahead (-) it belongs
+    // this line's run `ur` against line `v`'s run `vr`: how far behind (+) or ahead (-) it belongs,
+    // and with passing stations their plan
     let behind = |lev: usize, l: u32, ur: u8, v: u32, vr: u8| {
-        paired[lev].iter().find_map(|x| if (x.0, x.1) == ((l, ur), (v, vr)) { Some(x.2) } else if (x.0, x.1) == ((v, vr), (l, ur)) { Some(-x.2) } else { None }).unwrap_or(0.0)
+        paired[lev]
+            .iter()
+            .find_map(|x| if (x.0, x.1) == ((l, ur), (v, vr)) { Some((x.2, x.3.clone())) } else if (x.0, x.1) == ((v, vr), (l, ur)) { Some((-x.2, x.3.clone())) } else { None })
+            .unwrap_or((0.0, None))
     };
     let time = |l: u32, run: u8, lev: usize, at: f64| profile::time_at(&svc.lines[l as usize].runs[run as usize].prof[lev].phases, at.max(0.0));
     // each line's pattern, worked out once
@@ -264,18 +306,46 @@ fn place_pass(net: &Network, svc: &Service, lines: &[u32], phase: &mut Vec<[f32;
             if first.is_empty() {
                 continue;
             }
-            let meets: Vec<Meet> = first.iter().map(|x| Meet { a: x.2, b: x.3, hb: 3600.0 / net.line_tph[x.0 .0 as usize][lev] as f64, behind: behind(lev, l, x.0 .2, x.0 .0, x.0 .1), weight: x.4, clear: x.5, run: x.0 .2 }).collect();
+            let meets: Vec<Meet> = first
+                .iter()
+                .map(|x| {
+                    let (behind, plan) = behind(lev, l, x.0 .2, x.0 .0, x.0 .1);
+                    let ((v, vr, ur), (mut a, mut b)) = (x.0, (x.2, x.3));
+                    // with passing stations the plan's offset is where its stretch starts, as each
+                    // train reaches it
+                    let plan = plan.map(|(o, at)| {
+                        if let Some(Some(other)) = &lats[v as usize] {
+                            let reach = |line: u32, run: u8, s: f64| time(line, run, lev, s - 0.5);
+                            let (mine, theirs) = if behind > 0.0 { (at[1], at[0]) } else { (at[0], at[1]) };
+                            a = base(&lat, l, ur) + reach(l, ur, mine);
+                            b = base(other, v, vr) + phase[v as usize][lev] as f64 + reach(v, vr, theirs);
+                        }
+                        o
+                    });
+                    // the slower line's stand at the far end of its run here beyond what `timing::floor` asks
+                    let (slow, slow_run) = if behind > 0.0 { (x.0 .0, x.0 .1) } else { (l, x.0 .2) };
+                    let close = svc.lines[slow as usize].close_stand(net, slow);
+                    let spare = svc.spare(net, slow as usize, lev);
+                    let (slack, spare) = if behind > 0.0 {
+                        let s = split[slow as usize][lev] as f64;
+                        (close - TURN_MIN_S.min(close) + if slow_run == 0 { s } else { 1.0 - s } * spare, 0.0)
+                    } else {
+                        (close - TURN_MIN_S.min(close), spare)
+                    };
+                    Meet { a, b, hb: 3600.0 / net.line_tph[x.0 .0 as usize][lev] as f64, behind, weight: x.4, clear: x.5, run: x.0 .2, plan, slack, spare }
+                })
+                .collect();
             let cur = (p[lev] as f64).rem_euclid(h);
             // T-2972: with spare time, the share stood at the last stop is tried too: run 1 leaves
             // (share - its share now) x spare later
             let (spare, xs) = (svc.spare(net, l as usize, lev), x[lev] as f64);
             let shares: Vec<f64> = if spare >= 1.0 { (0..=SPLITS).map(|j| j as f64 / SPLITS as f64).collect() } else { vec![xs] };
-            let now = crowding(&meets, h, cur, 0.0);
+            let now = crowding(&meets, h, cur, 0.0, xs);
             let (mut best, mut at, mut share) = (now, cur, xs);
             for k in 0..if split_only { 1 } else { STEPS } {
                 let c = if split_only { cur } else { h * k as f64 / STEPS as f64 };
                 for &sh in &shares {
-                    let v = crowding(&meets, h, c, (sh - xs) * spare);
+                    let v = crowding(&meets, h, c, (sh - xs) * spare, sh);
                     if v < best - 1e-9 {
                         (best, at, share) = (v, c, sh);
                     }

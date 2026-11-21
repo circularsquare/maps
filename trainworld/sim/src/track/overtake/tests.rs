@@ -15,11 +15,11 @@ pub(crate) fn shinkansen() -> (TrackWorld, Vec<u32>, u32, u32) {
     shinkansen_with(false)
 }
 
-/// `shinkansen` with lines at a fixed rate and no trains (the path T-1183 removes), for the timing
-/// tests that fail when started on headway lines. At 10/10 the cause is that count and headway lines
-/// start their return runs where the forward trip's round trip leaves them (`Service::lattice`),
-/// which puts expresses through locals on run 0; the others' causes are not checked
-/// (notes/T-1183.md).
+/// `shinkansen` with lines at a fixed rate and no trains (the path T-1183 removes), for the one
+/// timing test that fails when started on headway lines (`a_moved_morning_hour_is_timed_too`): the
+/// moved hour 5-6 is a piece of the night's slot, whose round trip and return departures are sized
+/// on the night's averaged waits, so its locals, timed against the morning's expresses, would miss
+/// their next departures and are put back on the slot's timetable (notes/T-3929.md).
 pub(crate) fn shinkansen_rates() -> (TrackWorld, Vec<u32>, u32, u32) {
     shinkansen_with(true)
 }

@@ -986,13 +986,19 @@ hold at that stop (`stop_holds`; `ResKind::Wait`, wire kind 13, `Resource::node`
 faster run and passing point, with no utilisation, so no map dot, and it neither fills nor caps
 track), and the faster line's remaining loss is its following loss (kind 11) for that slower line;
 behind several slower lines the largest loss counts, as above. The departures placement (6.3) puts
-the faster line's trains at that offset behind the slower one's. These averages are the figures: round
+the faster line's trains where the offset costs least, read for both directions (T-3929: a count or
+headway line's return run leaves where its round trip leaves it, so the two directions of a pair can't
+both be at the best), and never, where another offset allows, where the slower train that waits
+longest would miss its next departure. These averages are the figures: round
 trips, trains needed and demand. **The drawn timetable is worked out train by train** (T-3346 stage 2,
 `track/timing.rs`): once an edit has settled and the departures are placed, each slower train's waits
 come from the faster trains as they really run (both lines' placed departures, each direction at the
 phase it gets, `overtake::train_waits`, which takes the two lines' departures as lists), by the same
 rule and caps, so a local waits for exactly the expresses that would catch it and leaves 60 s after
-the last of them. A run keeps at most 8 versions of its timetable per slot (`timing::MAX_VARS`; waits
+the last of them. Before the first passing point there is nowhere to step aside: a faster train that
+would get there less than 10 s after the slower one it caught on the way (`timing::LEAD_IN_CLEAR_S`) is
+timed behind it to there, standing at the stretch's start or running slower, no more than its stand at
+the far end allows (`timing::lead_in`, T-3929), and the slower train's waits read it as it runs. A run keeps at most 8 versions of its timetable per slot (`timing::MAX_VARS`; waits
 rounded up to whole 2 s, and past 8 the two versions that add the least waiting merge into one whose
 waits cover both), and each weekday departure names its version by its place in the day, its stretch
 and its number in it (`Run::pattern`, into `Trip::var`; the renderer, boarding, the chart, the board and
@@ -1499,8 +1505,12 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   about 1.4:1). A fleet set by count has no spare time and one phase serves both its runs. A pair
 timetabled together (6.2, "Behind slower trains", T-2419) is placed the other way: each of the
 faster line's trains as near as it can be to its place after one of the slower line's (the share of
-half the smaller headway it is off, squared): `s` before the next slower train, or for a pair that
-passes at passing stations (T-2231) its overtake plan's offset. Greedy on
+half the smaller headway it is off, squared): `s` before the next slower train. A pair that passes at
+passing stations (T-2231) is placed by what its overtake plan says each offset costs (T-3929), at
+the stretch's start in each direction, as a share of the worst offset per train, plus twice a
+merge's weight per train where the slower train that waits longest would wait more past the averaged
+waits than the stand at its run's far end allows beyond 60 s (it would miss its next departure).
+Greedy on
   edits: only the lines an edit changes directly are placed, in id order, against the others as they
   run, and a line keeps its phase unless another cuts that sum by more than 10%; so two lines on one
   track at one headway leave half a headway apart, and an edit elsewhere moves no one. Outside the undo

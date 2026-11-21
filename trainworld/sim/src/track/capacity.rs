@@ -1116,20 +1116,26 @@ impl Capacity {
     /// T-2231, T-2419: following pairs whose trains belong at a set place behind one another at a
     /// level (`spacing::place`): (faster line, run), (slower line, run), and how long after the
     /// slower one's trains the faster one's reach their shared track (s): just ahead of a slower
-    /// one (`follow_best`), or with passing stations their overtake plan's offset.
-    pub fn follow_targets(&self, net: &Network, lev: usize) -> Vec<((u32, u8), (u32, u8), f64)> {
+    /// one (`follow_best`), or with passing stations their overtake plan's offset, with the plan's
+    /// outcome (what every offset costs, T-3929) and where its stretch starts in each run (m:
+    /// slower, faster), where the offset is had.
+    #[allow(clippy::type_complexity)]
+    pub fn follow_targets(&self, net: &Network, lev: usize) -> Vec<((u32, u8), (u32, u8), f64, Option<(Arc<overtake::Outcome>, [f64; 2])>)> {
         let mut out = vec![];
         for r in (0..self.res.len()).filter(|&r| matches!(self.tag[r], Tag::Follow { .. })) {
             let us = self.users_of(r);
             let Some(f) = us.iter().find(|u| u.owner) else { continue };
             let mut plan = self.plans[r].iter();
             for u in us.iter().filter(|u| !u.owner) {
-                let at = match u.stop {
-                    FOLLOW_TIMED => timed(net, f.line, u, lev).1,
-                    FOLLOW_PASSING => plan.next().map_or(0.0, |p| p.outcome(net, lev).offset),
+                let (at, o) = match u.stop {
+                    FOLLOW_TIMED => (timed(net, f.line, u, lev).1, None),
+                    FOLLOW_PASSING => plan.next().map_or((0.0, None), |p| {
+                        let o = p.outcome(net, lev);
+                        (o.offset, Some((o, p.at)))
+                    }),
                     _ => continue,
                 };
-                out.push(((f.line, f.run), (u.line, u.run), at.max(PASS_OFFSET_MIN_S)));
+                out.push(((f.line, f.run), (u.line, u.run), at.max(PASS_OFFSET_MIN_S), o));
             }
         }
         out

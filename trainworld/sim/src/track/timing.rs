@@ -19,7 +19,7 @@
 
 use std::collections::{BTreeMap, HashMap};
 
-use super::capacity::FOLLOW_TIMED;
+use super::capacity::{FOLLOW_PASSING, FOLLOW_TIMED};
 use super::net::Network;
 use super::overtake::{self, Pass, PASS_CLEAR_S};
 use super::params::*;
@@ -34,6 +34,11 @@ pub const PROFILE_VARS: usize = MAX_VARS + 1;
 /// The least a train stands at its last stop when its own timetable ran longer than the slot's
 /// (s): it takes its next departure as the slot's train would where this allows.
 pub const TURN_MIN_S: f64 = 60.0;
+/// T-3929: the least a faster train that caught a slower one before the first passing station
+/// reaches it after the slower one (s): about a 400 m train's length at line speed, so the slower
+/// one is off the running line. (The plan's `PASS_CLEAR_S` there would hold every such train for
+/// the share of its averaged loss the slot spreads past that station.)
+const LEAD_IN_CLEAR_S: f64 = 10.0;
 /// Waits and losses are rounded up to whole steps of this (s) before variants are told apart.
 const STEP_S: f64 = 2.0;
 const DAY: f64 = 86400.0;
@@ -105,6 +110,9 @@ pub fn retime(net: &Network, svc: &mut Service) {
     if !svc.timing_key.is_empty() {
         let lats: Vec<Option<Lattice>> = (0..svc.lines.len()).map(|l| svc.lattice(net, l).map(|x| weekday(&x))).collect();
         let mut built = Built { old: std::mem::take(&mut svc.timing_memo), new: HashMap::new() };
+        // (before the waits: a slower train waits for the faster ones as they run)
+        let lead = lead_in(net, svc, &lats, &mut built);
+        install(svc, lead, &lats);
         let passing = passing_waits(net, svc, &lats, &mut built);
         install(svc, passing, &lats);
         // (before the following: a faster line timed behind a slower one reads its trains as they run)
@@ -373,8 +381,9 @@ fn passing_waits(net: &Network, svc: &Service, lats: &[Option<Lattice>], built: 
                 let s_to_q = reach(&b, q.at) - s_leave;
                 let fdeps = fast_deps.entry((f, fr as u8)).or_insert_with(|| around(flat, fr));
                 let passes = stations.entry(o.stop as usize).or_default();
-                for &(d, flev, hf, _) in fdeps.iter().filter(|x| x.0 >= lo - fl.runs[fr].prof[x.1 as usize].duration && x.0 < hi) {
-                    let fp = &fl.runs[fr].prof[flev as usize];
+                for &(d, flev, hf, place) in fdeps.iter().filter(|x| x.0 >= lo - fl.runs[fr].prof[x.1 as usize].duration && x.0 < hi) {
+                    // each faster train as it runs (`lead_in`)
+                    let fp = fl.prof_of(fr, flev as usize, fl.runs[fr].var_at(flev as usize, place));
                     let x = leave(fp, pt.fat);
                     let lead = PASS_CLEAR_S.max(reach(fp, q.fat) - x + plan.spacing - s_to_q);
                     passes.push(Pass { at: d + x, lead, run_f: reach(fp, nb.fat) - x, run_s, spacing: plan.spacing, most: hf.min(plan.headway_cap(net)) + lead });
@@ -403,6 +412,140 @@ fn passing_waits(net: &Network, svc: &Service, lats: &[Option<Lattice>], built: 
                 })
                 .collect();
             out.push(Timed { line: l, run: r as usize, lev, vars, pattern: pattern_of(&deps, &which) });
+        }
+    }
+    out
+}
+
+/// T-3929: a faster run behind the one slower run on a stretch with passing stations
+/// (`FOLLOW_PASSING`). The slower trains step aside only from the first passing station on, so a
+/// faster train reaching the stretch close behind a slower one catches it on the way there,
+/// whatever the two lines' phases (they drift wherever the rates are no simple ratio). Such a train
+/// is timed behind it to that station (`follow_one`), reaching it `LEAD_IN_CLEAR_S` after the
+/// slower one: a loss on top of the slot's timetable, no more than its stand at the far end allows.
+/// The rest run the slot's timetable. A run with none to time is left alone.
+fn lead_in(net: &Network, svc: &Service, lats: &[Option<Lattice>], built: &mut Built) -> Vec<Timed> {
+    let cap = &svc.cap;
+    let mut by: BTreeMap<(u32, u8), Vec<usize>> = BTreeMap::new();
+    for r in (0..cap.res.len()).filter(|&r| cap.is_follow(r)) {
+        if let Some(o) = cap.users_of(r).iter().find(|u| u.owner) {
+            by.entry((o.line, o.run)).or_default().push(r);
+        }
+    }
+    let mut out = vec![];
+    for (&(f, fr), rs) in &by {
+        let [rr] = rs[..] else { continue };
+        let us = cap.users_of(rr);
+        let o = *us.iter().find(|u| u.owner).unwrap();
+        let slow: Vec<_> = us.iter().filter(|u| !u.owner).collect();
+        let ([su], [plan]) = (&slow[..], cap.plans_of(rr)) else { continue };
+        if su.stop != FOLLOW_PASSING {
+            continue;
+        }
+        let (fl, sl) = (&svc.lines[f as usize], &svc.lines[su.line as usize]);
+        let (Some(flat), Some(slat)) = (lats[f as usize].as_ref(), lats[su.line as usize].as_ref()) else { continue };
+        if flat.rest_on != slat.rest_on {
+            continue;
+        }
+        let (frun, srun) = (&fl.runs[fr as usize], &sl.runs[su.run as usize]);
+        let Some(p1) = plan.points.iter().find(|p| p.passing).copied() else { continue };
+        // the offsets along the slower run where the faster run's are `x`: the same track
+        let (a, delta) = (o.at, p1.at - p1.fat);
+        let mut xs: Vec<f64> = vec![a];
+        xs.extend(frun.node_s.iter().copied().filter(|&x| x > a + 1.0 && x < p1.fat - 1.0));
+        xs.push(p1.fat);
+        let slow_deps = around(slat, su.run as usize);
+        for lev in net.slots() {
+            if flat.tph[lev] <= 0.0 || slat.tph[lev] <= 0.0 {
+                continue;
+            }
+            let deps = day_deps(flat, fr as usize, lev);
+            if deps.is_empty() {
+                continue;
+            }
+            // as `following`: a train losing more than its stand at the far end less `TURN_MIN_S`
+            // would miss its next departure
+            let close = fl.close_stand(net, f);
+            let split = net.line_split_of(f)[lev] as f64;
+            let at_end = close + if fr == 0 { split } else { 1.0 - split } * svc.spare(net, f as usize, lev);
+            let slack = (at_end - TURN_MIN_S.min(close)).max(0.0);
+            let room = slack - 2.0 * STEP_S;
+            if room <= 0.0 {
+                continue;
+            }
+            let e0 = &frun.prof[lev];
+            let (lo, hi) = window(&deps, e0.duration);
+            let e_at: Vec<f64> = xs.iter().map(|&x| reach(e0, x)).collect();
+            // the slower trains leaving each node, and at the passing station their arrival and
+            // `LEAD_IN_CLEAR_S` (in `follow_one`'s terms, less the spacing it adds); no spacing at
+            // the stretch's start, as in the plan (`Plan::sweep`), so its offsets time no one
+            let mut slow: Vec<(f64, Vec<f64>)> = slow_deps
+                .iter()
+                .filter(|x| x.0 >= lo - srun.prof[x.1 as usize].duration && x.0 < hi)
+                .map(|&(d, slev, _, _)| {
+                    let p = &srun.prof[slev as usize];
+                    let mut t: Vec<f64> = xs.iter().map(|&x| d + leave(p, x + delta)).collect();
+                    t[0] = f64::NEG_INFINITY;
+                    *t.last_mut().unwrap() = d + reach(p, p1.at) + LEAD_IN_CLEAR_S - plan.spacing;
+                    (d + reach(p, a + delta), t)
+                })
+                .collect();
+            slow.sort_by(|x, y| x.0.total_cmp(&y.0));
+            let each: Vec<(f64, f64, f64)> = deps
+                .iter()
+                .map(|&(d, _, _)| {
+                    let e: Vec<f64> = e_at.iter().map(|t| d + t).collect();
+                    let i = slow.partition_point(|s| s.0 <= e[0]);
+                    if i == 0 {
+                        return (0.0, a, 0.0);
+                    }
+                    let (st, x0, dl) = follow_one(&xs, &e, &slow[i - 1].1, plan.spacing);
+                    let over = st + dl - room;
+                    if over <= 0.0 {
+                        return (st, x0, dl);
+                    }
+                    let d2 = (dl - over).max(0.0);
+                    ((st - (over - (dl - d2))).max(0.0), x0, d2)
+                })
+                .collect();
+            if each.iter().all(|x| step(x.0) == 0 && step(x.2) == 0) {
+                continue;
+            }
+            let starts: Vec<f64> = {
+                let mut v: Vec<f64> = each.iter().map(|x| x.1).collect();
+                v.sort_by(f64::total_cmp);
+                v.dedup();
+                v
+            };
+            let keys: Vec<Vec<i64>> = each.iter().map(|&(st, x0, d)| vec![step(st), starts.iter().position(|&s| s == x0).unwrap() as i64, step(d)]).collect();
+            let (reps, which) = cluster_follow(&keys);
+            let vars = reps
+                .iter()
+                .map(|k| {
+                    let (mut stand, x0, mut d) = (k[0] as f64 * STEP_S, starts[k[1] as usize], k[2] as f64 * STEP_S);
+                    let mut tries = 0;
+                    loop {
+                        let mut h = frun.holds[lev].clone();
+                        if stand > 0.0 {
+                            h.push(Hold { s: a, delay: stand, span: 0.0 });
+                        }
+                        if d > 0.0 {
+                            h.push(Hold { s: x0, delay: d, span: (p1.fat - x0).max(0.0) });
+                        }
+                        h.sort_by(|x, y| x.s.total_cmp(&y.s).then(x.delay.total_cmp(&y.delay)));
+                        let prof = built.prof(net, f, fr as usize, frun, &frun.stop_holds[lev], &h);
+                        let over = prof.duration - e0.duration - slack + 1.0;
+                        tries += 1;
+                        if over <= 0.0 || tries > 4 || stand + d <= 0.0 {
+                            break Variant { stop_holds: frun.stop_holds[lev].clone(), holds: h, prof };
+                        }
+                        let d2 = (d - over).max(0.0);
+                        stand = (stand - (over - (d - d2))).max(0.0);
+                        d = d2;
+                    }
+                })
+                .collect();
+            out.push(Timed { line: f, run: fr as usize, lev, vars, pattern: pattern_of(&deps, &which) });
         }
     }
     out

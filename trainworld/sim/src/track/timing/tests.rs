@@ -2,15 +2,9 @@ use super::super::overtake::tests::{set_passing, shinkansen, shinkansen_rates};
 use super::super::overtake::PASS_CLEAR_S;
 use super::super::profile;
 use super::super::service::Trip;
+use super::super::tests::set_headway;
 use super::super::world::{Op, TrackWorld};
 use super::*;
-
-/// A fixed-rate line's trains an hour (`shinkansen_rates`).
-fn set_tph(w: &mut TrackWorld, id: u32, tph: [f32; 3]) {
-    let mut d = w.net.line_data(id).unwrap();
-    d.tph = tph;
-    w.apply(Op::Line { id, data: Some(d) }).unwrap();
-}
 
 /// The times a trip is at each of `nodes` (game time): reaching it, and leaving or passing it.
 fn at_nodes(w: &TrackWorld, t: &Trip, nodes: &[u32], mean: bool) -> Vec<(f64, f64)> {
@@ -69,9 +63,9 @@ fn bad_passes(w: &TrackWorld, local: u32, express: u32, stations: &[u32], passin
 #[test]
 fn every_local_waits_for_its_express() {
     for (hl, hx) in [(10.0f32, 10.0f32), (30.0, 10.0), (10.0, 30.0)] {
-        let (mut w, n, local, express) = shinkansen_rates();
+        let (mut w, n, local, express) = shinkansen();
         for (id, h) in [(local, hl), (express, hx)] {
-            set_tph(&mut w, id, [60.0 / h, 60.0 / h, 0.0]);
+            set_headway(&mut w, id, [60.0 / h, 60.0 / h, 0.0]);
         }
         set_passing(&mut w, &n[1..6], true);
         let t0 = 86400.0 + 8.0 * 3600.0;
@@ -92,6 +86,47 @@ fn every_local_waits_for_its_express() {
         // demand's stop times are the level's, as before
         let trips = w.svc.line_trips(&w.net, local as usize, t0, t0 + 3600.0);
         assert!(trips.iter().any(|t| t.var > 0));
+    }
+}
+
+/// T-3929: a count or headway line's return run leaves where its round trip leaves it
+/// (`Service::lattice`), so an express and its local can't both run at their overtake plan's best
+/// offset in both directions: on this line at 10/10 (headway lines) the express left A just behind
+/// a local and caught it before B, the first passing station, 24 times in 4 h. At any phase of the
+/// express no express now catches a local before the first passing station either way (`lead_in`);
+/// at the phase spacing gives it (by what each offset costs, `spacing`) there is no bad pass at
+/// all on headway lines. Plain count lines (12 and 9 trains) too, before the first passing station.
+#[test]
+fn counted_expresses_never_run_through_locals() {
+    for counts in [None, Some((12u32, 9u32))] {
+        let (mut w, n, local, express) = shinkansen();
+        for id in [local, express] {
+            match counts {
+                None => set_headway(&mut w, id, [6.0, 6.0, 0.0]),
+                Some((kl, kx)) => {
+                    let k = if id == local { kl } else { kx };
+                    w.apply(Op::AutoTrains { id, auto: None, trains: Some([k, k, 0]) }).unwrap();
+                }
+            }
+        }
+        set_passing(&mut w, &n[1..6], true);
+        let t0 = 86400.0 + 8.0 * 3600.0;
+        let early = |bad: &[String]| bad.iter().filter(|b| b.contains("before node 1")).cloned().collect::<Vec<_>>();
+        let (bad, good) = bad_passes(&w, local, express, &n, &n[1..6], t0, t0 + 4.0 * 3600.0, false);
+        eprintln!("{counts:?}: {good} passes at passing stations, {} bad", bad.len());
+        assert!(good >= 8, "{counts:?}: the expresses pass the locals");
+        if counts.is_none() {
+            assert!(bad.is_empty(), "{} bad passes, first {:?}", bad.len(), &bad[..bad.len().min(6)]);
+        }
+        assert!(early(&bad).is_empty(), "{counts:?}: {:?}", early(&bad));
+        let h = 3600.0 / w.net.line_tph[express as usize][0] as f64;
+        for k in 0..24 {
+            w.net.line_phase[express as usize][0] = (h * k as f64 / 24.0) as f32;
+            w.svc.timing_key.clear();
+            w.retime();
+            let (bad, _) = bad_passes(&w, local, express, &n, &n[1..6], t0, t0 + 4.0 * 3600.0, false);
+            assert!(early(&bad).is_empty(), "{counts:?}, express phase {}/24: {:?}", k, &early(&bad)[..early(&bad).len().min(4)]);
+        }
     }
 }
 
@@ -222,9 +257,9 @@ fn headway_lines_waits_at_the_real_phase() {
 /// afternoon's locals wait for their own expresses, not the morning's.
 #[test]
 fn both_rush_stretches_are_timed_on_their_own() {
-    let (mut w, n, local, express) = shinkansen_rates();
+    let (mut w, n, local, express) = shinkansen();
     for (id, h) in [(local, 30.0f32), (express, 10.0f32)] {
-        set_tph(&mut w, id, [60.0 / h, 60.0 / h, 0.0]);
+        set_headway(&mut w, id, [60.0 / h, 60.0 / h, 0.0]);
     }
     set_passing(&mut w, &n[1..6], true);
     let op = w.rows_ops(None, 4).unwrap();
@@ -315,7 +350,7 @@ fn variants_come_back_after_a_reload_in_place() {
 #[test]
 fn headway_locals_make_their_next_departure() {
     for (hl, hx) in [(600u32, 600u32), (1800, 600), (600, 1800)] {
-        let (mut w, n, local, express) = shinkansen_rates();
+        let (mut w, n, local, express) = shinkansen();
         for (id, h) in [(local, hl), (express, hx)] {
             let k = w.net.line_trains[id as usize].unwrap_or([6, 6, 0]);
             w.apply(Op::AutoTrains { id, auto: Some([h, h, 0]), trains: Some(k) }).unwrap();
