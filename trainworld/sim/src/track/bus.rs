@@ -813,7 +813,7 @@ fn main_bus_kmh_at(car: f64, trunk: bool, lane: f64) -> f64 {
 }
 
 /// A bus's trip on automatic stops at road offsets `stop_s` (ascending), standing `dwell[i]` at each
-/// stop between the ends: constant speed between stops (the hop's mean), no accelerating. It also
+/// stop between the ends: speeding up after each stop and braking before the next (`ramp`), to the hop's time. It also
 /// stands `STREET_DWELL_S` at each street stop of `street` (ascending) inside a hop, which is drawn
 /// only: the hop's time stays what `pace` gives, the bus running faster between the stands.
 pub fn profile(stop_s: &[f64], dwell: &[f64], street: &[f64], pace: &Pace) -> Profile {
@@ -824,6 +824,29 @@ pub fn profile(stop_s: &[f64], dwell: &[f64], street: &[f64], pace: &Pace) -> Pr
 /// stands `STREET_DWELL_S` inside it at each stop with no dwell of its own.
 pub fn spaced_profile(stop_s: &[f64], dwell: &[f64], pace: &Pace) -> Profile {
     run_profile(stop_s, dwell, &[], pace, true)
+}
+
+/// A city bus's speeding up and braking, m/s^2.
+const BUS_ACCEL: f64 = 1.1;
+
+/// Phases for a bus leaving a standstill at road offset `s0` at time `t` and standing again `d` metres on
+/// after `dur` seconds: speeding up at `BUS_ACCEL`, cruising, braking at the same rate. The speed is
+/// worked out so the stretch takes exactly `dur`; where `BUS_ACCEL` is too gentle for that (a short or
+/// fast stretch) it accelerates and brakes harder, with no cruise.
+fn ramp(out: &mut Vec<Phase>, t: f64, s0: f64, d: f64, dur: f64) {
+    if !(d > 0.0 && dur > 0.0) {
+        out.push(Phase { t, s: s0, v: 0.0, a: 0.0 });
+        return;
+    }
+    let a = BUS_ACCEL;
+    let disc = a * a * dur * dur - 4.0 * a * d;
+    let (a, v) = if disc >= 0.0 { (a, 0.5 * (a * dur - disc.sqrt())) } else { (4.0 * d / (dur * dur), 2.0 * d / dur) };
+    let r = 0.5 * v * v / a;
+    out.push(Phase { t, s: s0, v: 0.0, a });
+    if d - 2.0 * r > 1e-6 {
+        out.push(Phase { t: t + v / a, s: s0 + r, v, a: 0.0 });
+    }
+    out.push(Phase { t: t + dur - v / a, s: s0 + d - r, v, a: -a });
 }
 
 fn run_profile(stop_s: &[f64], dwell: &[f64], street: &[f64], pace: &Pace, spaced: bool) -> Profile {
@@ -850,11 +873,18 @@ fn run_profile(stop_s: &[f64], dwell: &[f64], street: &[f64], pace: &Pace, space
         let stand_at = if ss.is_empty() || run <= 0.0 { 0.0 } else { STREET_DWELL_S.min(0.4 * run / ss.len() as f64) };
         let moving = run - stand_at * ss.len() as f64;
         let v = if moving > 0.0 { d / moving } else { 0.0 };
-        p.phases.push(Phase { t, s: stop_s[i], v, a: 0.0 });
-        for (k, &s) in ss.iter().enumerate() {
-            let arrive = t + (s - stop_s[i]) / v + stand_at * k as f64;
-            p.phases.push(Phase { t: arrive, s, v: 0.0, a: 0.0 });
-            p.phases.push(Phase { t: arrive + stand_at, s, v, a: 0.0 });
+        // each stretch between two standstills takes what it did at the hop's mean speed, drawn as a ramp
+        let (mut from, mut at) = (stop_s[i], t);
+        if v > 0.0 {
+            for &s in ss {
+                let arrive = at + (s - from) / v;
+                ramp(&mut p.phases, at, from, s - from, arrive - at);
+                p.phases.push(Phase { t: arrive, s, v: 0.0, a: 0.0 });
+                (from, at) = (s, arrive + stand_at);
+            }
+            ramp(&mut p.phases, at, from, stop_s[i + 1] - from, t + run - at);
+        } else {
+            p.phases.push(Phase { t, s: stop_s[i], v: 0.0, a: 0.0 });
         }
         t += run;
         p.arr.push(t);

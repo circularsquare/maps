@@ -8,7 +8,7 @@ fn profile_runs_flat_and_stands_between() {
     assert_eq!(p.arr, vec![0.0, hop, hop + 30.0 + pace.auto_time(1000.0, 3000.0)]);
     assert_eq!(p.dep[1] - p.arr[1], 30.0);
     assert!((p.duration - p.arr[2]).abs() < 1e-9);
-    assert_eq!(state_at(&p.phases, hop / 2.0).0, 500.0);
+    assert!((state_at(&p.phases, hop / 2.0).0 - 500.0).abs() < 1e-6);
     assert_eq!(state_at(&p.phases, hop + 10.0), (1000.0, 0.0));
     assert_eq!(state_at(&p.phases, p.duration + 100.0), (3000.0, 0.0));
 }
@@ -238,10 +238,30 @@ fn a_hop_takes_the_time_of_the_streets_it_crosses() {
     // the same route from its other end
     assert!((t(&pace.reversed(), 0.0, 1000.0) - all).abs() < 1e-9);
     assert!((t(&pace.reversed(), 0.0, 500.0) - 500.0 / fast).abs() < 1e-9);
-    // the profile runs each hop at its mean
+    // the profile speeds up from each stop and brakes into the next, in the hop's time
     let p = profile(&[0.0, 500.0, 1000.0], &[0.0, 0.0, 0.0], &[], &pace);
     assert!((p.arr[1] - pace.auto_time(0.0, 500.0)).abs() < 1e-9 && (p.arr[2] - pace.auto_time(0.0, 1000.0)).abs() < 1e-9);
-    assert!((p.phases[0].v - 500.0 / pace.auto_time(0.0, 500.0)).abs() < 1e-9);
+    assert_eq!((p.phases[0].v, p.phases[0].a), (0.0, BUS_ACCEL));
+    let (hop, mid) = (p.arr[1], 0.5 * p.arr[1]);
+    let (s, v) = state_at(&p.phases, mid);
+    assert!((s - 250.0).abs() < 1e-6 && v > 500.0 / hop, "fastest in the middle: {v}");
+    assert!(state_at(&p.phases, 1.0).1 < 1.2);
+}
+
+/// T-3908: every stretch between standstills takes the time it took at constant speed, whatever its length,
+/// and the speed never needs more than `BUS_ACCEL` unless the stretch is too short to cruise.
+#[test]
+fn a_ramp_takes_exactly_the_stretch_time() {
+    for (d, dur) in [(400.0, 58.0), (2000.0, 200.0), (100.0, 14.0), (30.0, 3.0), (5000.0, 300.0)] {
+        let mut ph = vec![];
+        ramp(&mut ph, 10.0, 100.0, d, dur);
+        ph.push(crate::track::profile::Phase { t: 10.0 + dur, s: 100.0 + d, v: 0.0, a: 0.0 });
+        let (s, v) = crate::track::profile::state_at(&ph, 10.0 + dur - 1e-9);
+        assert!((s - (100.0 + d)).abs() < 1e-3 && v < 1e-3, "{d} m in {dur} s: {s} {v}");
+        let (s, _) = crate::track::profile::state_at(&ph, 10.0 + 0.5 * dur);
+        assert!((s - (100.0 + 0.5 * d)).abs() < 1e-6);
+        assert!(ph.iter().all(|p| p.a.abs() <= BUS_ACCEL + 1e-9) || d / dur > 0.2 * BUS_ACCEL * dur, "{d} {dur}");
+    }
 }
 
 #[test]
