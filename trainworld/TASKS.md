@@ -289,7 +289,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3875 [P3] {L:cleanup} {after:T-2374 and T-3873} Cut code-map.md to one line per file
   - Context: docs/code-map.md is 707 lines and about 100 KB with 700 task ids, over the Read tool's cap, so no agent can read it whole though CLAUDE.md sends every agent there.
   - Goal: One line per file saying what it holds, task ids dropped, about a third of today's size.
-- T-3160 [P2] {L:memory} Phone memory on real-network starts
+- T-3160 [P2] {L:memory} Phone memory on real-network starts (taking, 2026-11-21, agent phonemem)
   - Context: The Tokyo real-network start on an emulated iPhone (production build) peaked at 1.6 GB in the tab, now 1.4 since the loading card's train stopped leaving garbage in Chrome; that cut is Chrome's only. What Safari holds too: the solving worker's WASM, 283 MB since the everyday trips' exp tables went (343 before; 278 in use at its peak, 322 before), the clock worker 260, the page about 200. You, 2026-11-16: "lots of people are unable to really play properly cuz tehy dont have enoguh ram. especially on phones. if we can get that working itll increase reach."
   - Goal: The solving worker's peak comes down again by its next piece, the commutes' exp tables (32 MB in every zone's pass), rail trips unchanged, measured on a production build.
   - Other: notes/T-3160.md, stage 4.
@@ -931,7 +931,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Several parts of a line's panel still show only its own pair: timetable, held trains, delays, riders, boardings.
   - Goal: Each part folds in the twin line, as `foldTwins` does.
   - Other: About 2-3 h. notes/T-3333.md "As built".
-- T-3373 [P2] {L:memory} Split zones and the market between workers, stage B (taking, 2026-11-21, agent splitb3)
+- T-3373 [P2] {L:memory} Split zones and the market between workers, stage B (taking, 2026-11-21, agent splitb4)
   - Context (B): You, 11-21: "that 3373 stage B sounds good. we can pursue it. and yes we can raise memory limit, though as mentioned players should be able to set it" (T-3932, T-3933). Design: notes/T-3373-B-plan.md, 9 stages, 24-40 h. Stages 1-3 are built: under `?split=1` each zone and the market open on one worker, which trade line loads every round. Figures equal the unsplit ones with exact sums to the bit, on NYC and all-China. Solving memory: all-China 2.5 to 1.3 GB at 2 workers, NYC 0.67 to 0.40 GB. Next is stage 4: loads over ports, timed against 1 worker (the stop rule). Then questions, edits and pool rules (stages 5-7). Stage A's limit on 8 GB machines rises from 1.4 to about 2 GB.
   - Context: Each solving worker holds its own copy of the zones (250-550 MB a big city, 1.3 GB all-China); you saw 7.4 GB in Firefox after 43 minutes. You, 2026-11-16: do A (fewer, faster workers capped by memory on big saves) then B (split zones and the market between workers, T-1560, 25-40 h); queue C (one shared memory, threaded WASM, 60-100 h, Cloudflare header) only if it would help noticeably. A landed 2026-11-16 (b3d2ea95): NYC runs 2 workers (-0.5 GB, load about 15 s slower), all-China 1 (-2.9 GB, 30-50 s slower), figures identical.
   - Goal: B built, with memory and solve time measured before and after on NYC and all-China.
