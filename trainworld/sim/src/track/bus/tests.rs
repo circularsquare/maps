@@ -113,22 +113,25 @@ fn hop_kmh(p: &Pace, m: f64) -> f64 {
 }
 
 #[test]
-fn a_hop_is_the_cars_time_at_nine_tenths_plus_the_stop() {
-    use super::super::streets::car_street_kmh;
+fn a_hop_is_the_cars_time_at_its_share_plus_the_stop() {
+    use super::super::streets::{car_street_kmh, BUS_SHARE};
     let dense = flat(16.5, 30.0);
     let mid = flat(car_street_kmh(5000.0), 30.0);
     let open = Pace::default();
-    // the dense street's lane and mid density's are the same 30 km/h; open country its car's 39.6
+    // the dense street's lane and mid density's are the same 30 km/h; open country its car's 44 times the share
     for (m, want) in [(400.0, 18.95), (800.0, 23.23), (1000.0, 24.32), (2000.0, 26.87)] {
         assert!((hop_kmh(&dense, m) - want).abs() < 0.01, "{m}: {}", hop_kmh(&dense, m));
     }
     assert!((hop_kmh(&mid, 400.0) - 18.95).abs() < 0.01);
-    assert!((hop_kmh(&open, 400.0) - 22.37).abs() < 0.01, "{}", hop_kmh(&open, 400.0));
-    // 20 km of open country: 2 km of local at each end at 39.6, 8 km of main road each end at 79.2
-    let want = 20_000.0 / (4000.0 / 11.0 + 16_000.0 / 22.0 + 28.0) * 3.6;
-    assert!((hop_kmh(&open, 20_000.0) - want).abs() < 1e-6 && (want - 64.3).abs() < 0.1, "{want}");
-    // 40 km: 20 km of it open highway at 99
-    let want = 40_000.0 / (4000.0 / 11.0 + 16_000.0 / 22.0 + 20_000.0 / 27.5 + 28.0) * 3.6;
+    // m/s on open country's local streets, main roads and highway
+    let (local, main, open_hw) = (44.0 * BUS_SHARE / 3.6, 88.0 * BUS_SHARE / 3.6, 110.0 * BUS_SHARE / 3.6);
+    let want = 400.0 / (400.0 / local + 28.0) * 3.6;
+    assert!((hop_kmh(&open, 400.0) - want).abs() < 1e-6 && (want - 21.65).abs() < 0.01, "{} {want}", hop_kmh(&open, 400.0));
+    // 20 km of open country: 2 km of local at each end, 8 km of main road each end
+    let want = 20_000.0 / (4000.0 / local + 16_000.0 / main + 28.0) * 3.6;
+    assert!((hop_kmh(&open, 20_000.0) - want).abs() < 1e-6 && (want - 60.9).abs() < 0.1, "{want}");
+    // 40 km: 20 km of it open highway
+    let want = 40_000.0 / (4000.0 / local + 16_000.0 / main + 20_000.0 / open_hw + 28.0) * 3.6;
     assert!((hop_kmh(&open, 40_000.0) - want).abs() < 1e-6);
 }
 
@@ -154,8 +157,8 @@ fn spacing_rises_smoothly_and_400_m_matches_automatic_stops() {
 fn a_trunk_road_runs_at_highway_speed_even_on_a_short_hop() {
     let mut p = flat(16.5, 2.0);
     p.trunk = vec![true; p.car.len()];
-    // 400 m at 79.2 km/h and the stop
-    let want = 400.0 / (400.0 / 22.0 + 28.0) * 3.6;
+    // 400 m at the bus's share of 88 km/h and the stop
+    let want = 400.0 / (400.0 / (88.0 * super::super::streets::BUS_SHARE / 3.6) + 28.0) * 3.6;
     assert!((hop_kmh(&p, 400.0) - want).abs() < 1e-6, "{}", hop_kmh(&p, 400.0));
     assert!(hop_kmh(&p, 400.0) > hop_kmh(&flat(16.5, 2.0), 400.0) + 10.0);
     // automatic stops too
@@ -217,18 +220,21 @@ fn simplify_keeps_the_shape_within_the_tolerance() {
 
 #[test]
 fn a_hop_takes_the_time_of_the_streets_it_crosses() {
-    // 100 m steps: 90 km/h moving for the first 300 m, 36 for the next 200, then 90 again
+    // 100 m steps: the car at 100 km/h for the first 300 m, 40 for the next 200, then 100 again; the bus at its share
     let pace = Pace { step: 100.0, car: vec![100.0, 100.0, 100.0, 40.0, 40.0, 100.0, 100.0, 100.0, 100.0, 100.0], trunk: vec![] };
+    let (fast, slow) = (100.0 * super::super::streets::BUS_SHARE / 3.6, 40.0 * super::super::streets::BUS_SHARE / 3.6);
+    assert!(slow * 3.6 > 30.0, "the slow stretch is above the bus lane's floor");
     let t = |p: &Pace, a: f64, b: f64| p.seconds(a, b, street_bus_kmh);
-    assert!((t(&pace, 0.0, 1000.0) - (12.0 + 20.0 + 20.0)).abs() < 1e-9);
+    let all = 800.0 / fast + 200.0 / slow;
+    assert!((t(&pace, 0.0, 1000.0) - all).abs() < 1e-9);
     // inside one step, across two
-    assert!((t(&pace, 120.0, 180.0) - 2.4).abs() < 1e-9);
-    assert!((t(&pace, 250.0, 350.0) - (2.0 + 5.0)).abs() < 1e-9);
+    assert!((t(&pace, 120.0, 180.0) - 60.0 / fast).abs() < 1e-9);
+    assert!((t(&pace, 250.0, 350.0) - (50.0 / fast + 50.0 / slow)).abs() < 1e-9);
     // past the end counts at the last step
-    assert!((t(&pace, 900.0, 1100.0) - 8.0).abs() < 1e-9);
+    assert!((t(&pace, 900.0, 1100.0) - 200.0 / fast).abs() < 1e-9);
     // the same route from its other end
-    assert!((t(&pace.reversed(), 0.0, 1000.0) - 52.0).abs() < 1e-9);
-    assert!((t(&pace.reversed(), 0.0, 500.0) - 20.0).abs() < 1e-9);
+    assert!((t(&pace.reversed(), 0.0, 1000.0) - all).abs() < 1e-9);
+    assert!((t(&pace.reversed(), 0.0, 500.0) - 500.0 / fast).abs() < 1e-9);
     // the profile runs each hop at its mean
     let p = profile(&[0.0, 500.0, 1000.0], &[0.0, 0.0, 0.0], &[], &pace);
     assert!((p.arr[1] - pace.auto_time(0.0, 500.0)).abs() < 1e-9 && (p.arr[2] - pace.auto_time(0.0, 1000.0)).abs() < 1e-9);

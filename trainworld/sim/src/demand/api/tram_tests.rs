@@ -73,10 +73,11 @@ fn tram_sections_are_three_quarters_of_a_car() {
     assert_eq!((0..net.st_x.len()).filter(|&s| net.tram_only(s)).count(), 4, "the stop merged into the metro station is not tram-only");
 }
 
-/// A tram along a corridor beats the bus it replaces: same stops, same trains an hour, same hop times;
-/// the bus is a third of a car with the bus boarding cost, the tram two sections of three quarters.
+/// A tram along a corridor carries at least what the bus it replaces does: same stops, same trains an
+/// hour, same hop times; the bus is a third of a car, the tram two sections of three quarters. With no bus
+/// boarding cost (T-3856) the two board alike, so on this light corridor they carry the same, to rounding.
 #[test]
-fn a_tram_carries_more_than_the_bus_it_replaces() {
+fn a_tram_carries_at_least_the_bus_it_replaces() {
     let load = |tram: bool| {
         let cars = if tram { 2.0 } else { crate::demand::network::BUS_CARS };
         let (mut api, xy, counts, stops, times, tph, c) = with_line(8, -3500.0, 600.0, 1000.0, cars);
@@ -93,7 +94,7 @@ fn a_tram_carries_more_than_the_bus_it_replaces() {
         b[b.len() - 16..].iter().sum::<f32>()
     };
     let (bus, tram) = (load(false), load(true));
-    assert!(tram > bus, "tram {tram} against bus {bus}");
+    assert!(tram >= bus * 0.9999, "tram {tram} against bus {bus}");
 }
 
 /// T-3903: a per-line or per-stop input of the wrong length is an error, not read as none (the page's copy of a

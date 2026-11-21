@@ -78,37 +78,28 @@ fn a_train_trip_pays_its_way_in_and_out() {
     assert!(build_graph(&net, &p).rn_in.is_empty());
 }
 
-/// T-1576: every route node of a line with a bus-only stop carries the bus boarding cost, in the
-/// cost of boarding and in each crowding round's; a train line carries none.
+/// T-3856: boarding a bus costs no more than boarding a train, in the cost of boarding and in each
+/// crowding round's.
 #[test]
-fn a_bus_line_costs_minutes_to_board() {
+fn a_bus_line_boards_as_a_train_does() {
     let p = common_test_params();
     let mut net = common_test_net(&[&[0, 2], &[0, 1]], &[6.0, 6.0], &[2.0, 2.0]);
     net.st_bus = vec![false, true, false, false];
+    assert!(net.bus_line(1));
     let g = build_graph(&net, &p);
     let nr = g.rn_line.len();
-    for r in 0..nr {
-        let want = if g.rn_line[r] == 1 { BUS_BOARD_MIN } else { 0.0 };
-        assert_eq!((g.rn_bus[r], g.rn_left[r]), (want, want));
-    }
+    assert!(g.rn_left.iter().all(|&l| l == 0.0));
     let (_, left) = round_costs(&g, &net, &p, &vec![0.0; nr]).unwrap();
-    assert_eq!(left, g.rn_bus);
+    assert!(left.iter().all(|&l| l == 0.0));
 }
 
 /// T-1577: a bus between two train stations has no bus-only stop, and is a bus all the same: the
 /// snapshot's cars for a bus, whose crush load is a bus's, mark it.
 #[test]
 fn a_short_bus_between_two_train_stations_is_a_bus() {
-    let p = common_test_params();
     let mut net = common_test_net(&[&[0, 2], &[0, 1]], &[6.0, 6.0], &[2.0, 2.0]);
     net.line_crush[1] = network::BUS_CARS * crate::demand::api::CRUSH_PER_CAR;
     assert!(net.st_bus.is_empty() && net.bus_line(1) && !net.bus_line(0));
-    let g = build_graph(&net, &p);
-    let nr = g.rn_line.len();
-    for r in 0..nr {
-        let want = if g.rn_line[r] == 1 { BUS_BOARD_MIN } else { 0.0 };
-        assert_eq!((g.rn_bus[r], g.rn_left[r]), (want, want));
-    }
     // both its stations have the train line too; a bus alone would give them none
     assert_eq!(on_train(&net), vec![true, false, true, false]);
     net.line_crush[0] = network::BUS_CARS * crate::demand::api::CRUSH_PER_CAR;

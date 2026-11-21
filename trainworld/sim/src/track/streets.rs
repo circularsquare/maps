@@ -30,7 +30,7 @@ pub const CAR_END_M: f64 = 8000.0;
 pub const CELL_KM2: f64 = 0.1053;
 
 /// A bus's moving speed as a share of the car's.
-pub const BUS_SHARE: f64 = 0.9;
+pub const BUS_SHARE: f64 = 0.85;
 /// Seconds each stop costs a bus: 20 standing, 8 speeding up and slowing down.
 pub const BUS_STOP_S: f64 = 28.0;
 /// The least a bus's moving speed falls to, km/h: its own lane, so the car's traffic does not hold it.

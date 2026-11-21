@@ -284,18 +284,19 @@ The walk to and from the station. A train that is fast still has to be reached: 
 end is 39 perceived minutes before the train has moved, more than most short drives cost. Where
 parking is paid, rail wins easily (Hempstead to Midtown). The trip explorer shows any trip's real minutes and its effective time (the perceived minutes above) by train, car and walking, each with its sum in a hover.
 
-The player's answer is a bus (since T-1464). Anyone within 300 m of a bus route walks to it (their
-distance to the route plus 100 m), waits and rides to a station at 90% of what a car does on the road there, never under 30 km/h while moving (a bus lane), losing 28 seconds at each stop: about 19 km/h with stops every 400 m in a dense centre like Manhattan. The change to the
-train is free: one fare for the whole trip on the same curve. Every time someone boards a bus,
-including changing from a train to one, it costs them 4 perceived minutes on top of the wait. A home
-1.5 km from a station walks 29 perceived minutes to it, or about 22 by bus. Trips by bus alone count
+The player's answer is a bus (since T-1464). Anyone within 600 m of a bus route (300 m before T-3856) walks to it (their
+distance to the route plus 100 m), waits and rides to a station at 85% of what a car does on the road there, never under 30 km/h while moving (a bus lane), losing 28 seconds at each stop: about 19 km/h with stops every 400 m in a dense centre like Manhattan. The change to the
+train is free: one fare for the whole trip on the same curve, the bus kilometres' part above the base at 0.8
+times unless the player sets another Bus multiple. Boarding a bus costs only the wait, as boarding a train does
+(since T-3856; before, every bus boarding added 4 perceived minutes). A home
+1.5 km from a station walks 29 perceived minutes to it, or about 18 by bus. Trips by bus alone count
 as rail. A bus is a third of a train car: riders mind its crowding from 45 aboard, it is at 100% with 53
 and takes 80 at the most (a train car: 112, 160 and 240).
 
 A ferry line (since T-2195) is a line like any other: people walk to its ports as to stations, wait
 half its headway, ride at the boats' own speed, change to and from trains as anywhere, and pay the
 same fare curve, its part above the base times its boat size's ferry multiple (Small 1.50, Medium and Large
-1.00 unless the player sets them). There is no extra boarding cost as for a bus. A boat holds its size's riders:
+1.00 unless the player sets them). There is no extra boarding cost, as for any line. A boat holds its size's riders:
 Small one car's (240 at the most), Medium two (480), Large eight (1,920); a Small boat runs at 65 km/h, the others 45. Where
 the ferry is the quickest way across (Staten Island to Manhattan) it wins on these rules alone, and
 its trips count as rail.

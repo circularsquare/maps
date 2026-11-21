@@ -208,8 +208,9 @@ pub const ECONOMY: f64 = 100.0;
 
 // ---- buses (T-1464, notes/T-1445.md) ----
 
-/// Per road-km of bus route (stops, shelters, signs), US$M, paid on Construct.
-pub const BUS_ROUTE_COST_PER_KM: f64 = 1.0;
+/// Per road-km of bus route (stops, shelters, signs), US$M, paid on Construct: a token, so a bus
+/// route costs about nothing beside its buses (Anita, T-3856: "basically 0 cost").
+pub const BUS_ROUTE_COST_PER_KM: f64 = 0.1;
 /// Price of one bus, US$M; buses are a fleet of their own, spares shared between bus lines.
 pub const BUS_PRICE: f64 = 0.6;
 /// Running cost per bus-km, real US$: two-thirds of real cost, nearer rail's discount (T-1718).

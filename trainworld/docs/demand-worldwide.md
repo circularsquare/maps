@@ -664,8 +664,7 @@ notes/T-420.md has the tables.
   light rail none), lifts and escalators. Check: station access times from a travel survey or an
   operator's published entrance-to-platform times.
 
-- **Trams** (T-2926). A tram line is a rail line: it boards with no penalty (a bus pays 4 perceived
-  minutes), each tram section counts as three quarters of a rail car in seats, rated and crush loads,
+- **Trams** (T-2926). A tram line is a rail line: it boards with no penalty (as every line since T-3856), each tram section counts as three quarters of a rail car in seats, rated and crush loads,
   and a cell keeps at most 3 stops served only by tram lines among its 6 nearest stations, so a street of
   close stops does not crowd out the metro a short walk away. A stop a metro or rail line also serves is
   an ordinary station. All three are one number for every place. Why they may not carry over: where
@@ -725,7 +724,7 @@ notes/T-420.md has the tables.
   cap of bases a boarding times its own multiple, and never below 0 (T-3578): a line at 0 takes no base, and no
   line's fares go below 0. Which line's multiple set a trip's base is not traced; the pool's network-wide
   shares stand in, as for the base itself.
-  Ferry lines take the player's Ferry multiplier and bus lines the Bus multiplier (T-3028) the same way (default 1.00, T-2195; "Ferries as lines" below).
+  Ferry lines take the player's Ferry multiplier and bus lines the Bus multiplier (T-3028) the same way (defaults 1.00 and 0.80, T-2195, T-3856; "Ferries as lines" below).
   **Transfer fare** (T-1801): the player's, $0 by default, paid on each change of line except one
   inside a fare zone run (T-3784), times the
   country's scale and weighed at its `fare_w` like the curve; the regional market changes free. At
@@ -1090,25 +1089,26 @@ notes/T-420.md has the tables.
   extra minutes weigh less. Check: night and late-evening rail shares on a real network with
   service ending early (a commuter line without evening trains) against the model's.
 - **Bus corridors** (T-1464, Anita's yes to the design, 2026-10-26; docs/demand-kernel.md step 2).
-  A home within 300 m of a bus route walks its distance to the route plus 100 m and rides at the bus's run time (T-2904: a hop takes the
-  car's time at 90% of its speed, never under 30 km/h for a bus lane, plus 28 s for the stop; about 19 km/h at
-  400 m stops in a dense centre, 22 in open country), on the network's fare curve, bus kilometres included. Every boarding of a bus, a change
-  from a train or another bus onto it included, costs 4 perceived minutes on top of the wait
-  (T-1576; unreliability, crowding at the stop, a stop not worth the wait for a short hop). Judgement
-  figures, not fitted; the 300 m and a 6 minute boarding cost (4 since T-3522) were chosen so a drawn route's riders per route-km
-  land in the range of busy real routes (notes/T-1466.md). Why they may not carry over: bus speeds
+  A home within 600 m of a bus route walks its distance to the route plus 100 m and rides at the bus's run time (T-2904: a hop takes the
+  car's time at 85% of its speed, never under 30 km/h for a bus lane, plus 28 s for the stop; about 19 km/h at
+  400 m stops in a dense centre, 22 in open country), on the network's fare curve, bus kilometres included. Boarding a
+  bus costs what boarding a train does, the wait alone (Anita, T-3856: buses should be viable for short trips; a
+  boarding cost of 6 perceived minutes from T-1576, 4 from T-3522, was dropped). Judgement
+  figures, not fitted: 300 m and the boarding cost were first chosen so a drawn route's riders per route-km
+  land in the range of busy real routes (notes/T-1466.md); T-3856 (Anita) dropped the boarding cost and doubled the
+  reach to 600 m so buses win short, thin trips (notes/T-3856.md). Why they may not carry over: bus speeds
   run from about 10 km/h in dense Asian and African centres to 25-30 in North American suburbs, and
   the model gives every dense centre a bus lane's speed (Seoul's median lanes, Anita 2026-11-09), so
   buses where traffic holds them up in reality are faster here than real ones;
   where buses are informal or fares flat and separate (minibus taxis, many Latin American cities),
-  the one fare curve and the free change to rail overstate the feeder; a 300 m corridor is short
-  where blocks are huge or long where people walk further to a bus (low car ownership). Check: a
+  the one fare curve and the free change to rail overstate the feeder; a 600 m corridor is long
+  where people with cars will not walk that far to a bus, and short where blocks are huge. Check: a
   city's bus ridership per route-km against the model's on a similar drawn network.
 - **Ferries as lines** (T-2195, design notes/T-2177.md 3.6; docs/demand-kernel.md step 4). A ferry
   line is a line like any other: its ports are stations walked to as any station, the minutes aboard
   are the boats' run (45 km/h in open water, a Small boat 65, 10 in narrow channels, 0.15 m/s² at each
-  port), the wait half the headway, a change to or from it a change like any other, and no boarding cost (a
-  ferry is boarded from a waiting room, as a train is). A boat holds its size's train cars (T-3892: Small 1,
+  port), the wait half the headway, a change to or from it a change like any other, and no boarding cost, as
+  for any line. A boat holds its size's train cars (T-3892: Small 1,
   Medium 2, Large 8; 240, 480 and 1,920 at crush). Its kilometres pay the one fare curve, the part above the
   base times the player's ferry multiple for its boat size (Small 1.50, Medium and Large 1.00 by default), and
   its trips are the network's. One rule everywhere, no constant. Why it may not

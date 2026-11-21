@@ -392,7 +392,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   defaults. A tram line
   starts with a 15 s dwell, 120 s turnaround and 2 cars of 20 m (1 to 4), and uses
   the tram fleet (`fleet_tram`, "Tram cars owned" in the Money tab, `fleetTram` in the save header), US$2M a car, running costs as
-  a train's. Demand counts a tram car as 0.75 of a car, with no boarding cost (docs/demand-worldwide.md).
+  a train's. Demand counts a tram car as 0.75 of a car (docs/demand-worldwide.md).
 - **Street tram track** (T-2927, `TrackKind::StreetTram`): tram track on streets, 0.1x at ground, 60 km/h cap, 0.6x the
   upkeep of ground rail, a quarter of what hills add (T-3004) and half what water adds (T-2928). It may run at ground level over water (T-3106, "Water, bridges and ramps"). With Tram picked, Snap to
   streets (on by default, remembered; Ctrl flips it while held, and in the
@@ -1956,7 +1956,7 @@ is over `FARE_MAX`, curve US$1,000 (T-3303: a typed 90 billion once went into ev
   high-speed multiplier (`Fares.hsr`, default `HSR_FARE` 1.25 [was 1.5 until T-3338], 0 to 5, saved in the header; a save
   without one charges the default, a save with one keeps it); the base stays once a trip; a ferry line likewise with the Ferry multiplier
   (`Fares.ferry`, default `FERRY_FARE` 1.00, `lineFareMul`, T-2195) and a bus line with the Bus multiplier
-  (`Fares.bus`, default `BUS_FARE` 1.00, 0 to 5 as the others, T-3028; the Money tab's row shows once a bus line exists).
+  (`Fares.bus`, default `BUS_FARE` 0.80 [1.00 until T-3856; a save that set it keeps its own], 0 to 5 as the others, T-3028; the Money tab's row shows once a bus line exists).
   **A line's own multiple** [T-3567]: `Fares.lines` (line id to multiple, 0 to `LINE_FARE_MAX` 3 in hundredths,
   only lines set off 1, saved in the header; an older save has none), set in the line's panel, times the line's
   kind's multiple in `lineFareMul`, so it rides the same path everywhere, and it scales the base too [T-3578]: a
@@ -2321,7 +2321,7 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   it. Leaving to a spacing keeps the stops in `BusRoute::hand_kept` for the session (not saved); choosing hand again gives them back (T-2939). The Save keeps them (`LBH1`).
 - **Run** (T-2904, `streets.rs`, `bus::Pace`): a hop between two stops takes the car's time over its road
   at the bus's moving speed, plus 28 s for the stop (`BUS_STOP_S`: 20 standing, 8 speeding up and slowing
-  down). The moving speed is 90% of the car's (`BUS_SHARE`), never under 30 km/h (`BUS_LANE_KMH`, its own
+  down). The moving speed is 85% of the car's (`BUS_SHARE`, 90% until T-3856), never under 30 km/h (`BUS_LANE_KMH`, its own
   lane). The car's is demand's: over the hop, the first and last 2 km of road (at most half each) on local
   streets, the next 8 km each end (at most half the rest) on main roads, any middle on open highway at 110;
   local streets 44 km/h in open country falling to 16.5 where homes and jobs are dense, main roads 88
@@ -2349,7 +2349,7 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   Every Range fetch takes the bytes it asked for whether the answer is a 206, the whole file or a 200
   holding the range alone (`workers/rangeFetch.ts`; Chrome's cache gives the last while the pack
   downloads whole for demand).
-- **Money**: US$1M a road-km, paid on Construct with US$0.6M a bus, a fleet of its own with spares
+- **Money**: US$0.1M a road-km (`BUS_ROUTE_COST_PER_KM`, a token since T-3856, was US$1M), paid on Construct with US$0.6M a bus, a fleet of its own with spares
   shared between bus lines; running US$6 a bus-km and upkeep US$30 a road-km a day (real figures,
   `ECONOMY` times in the game). Removing or redrawing a constructed route is final and refunds
   nothing. A new bus line starts at a bus every 8, 15 and 30 minutes by level (Anita, 2026-11-09; the bus default for new lines instead once set, T-3703), 30 s dwell at

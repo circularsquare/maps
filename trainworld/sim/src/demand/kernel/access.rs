@@ -84,11 +84,8 @@ impl Access {
 
 /// Bucket size of the cell grid the access search scatters stations over.
 pub(super) const ACCESS_BUCKET_M: f32 = 1000.0;
-/// T-1464: a home this near a bus route (ground m) may walk to it and ride.
-pub const BUS_REACH_M: f32 = 300.0;
-/// T-1576, 6 to 4 in T-3522: perceived minutes added to every boarding of a bus line, a change onto
-/// it included (`Graph::rn_bus`): a bus is less dependable and less comfortable than a train.
-pub const BUS_BOARD_MIN: f32 = 4.0;
+/// T-1464: a home this near a bus route (ground m) may walk to it and ride; 300 until T-3856 (Anita).
+pub const BUS_REACH_M: f32 = 600.0;
 /// The walk along the route to the nearest street stop, on average (street stops every 400 m).
 pub const BUS_WALK_EXTRA_M: f32 = 100.0;
 /// The bus stops a cell keeps beside its K train stations.

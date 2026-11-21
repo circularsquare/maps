@@ -142,8 +142,8 @@ pub fn round_costs(g: &Graph, net: &Network, p: &Params, total: &[f32]) -> Optio
     loads.seg.copy_from_slice(&total[..nr]);
     let (fac, _) = crowd_factors(g, net, &loads, p);
     let mut left = if total.len() == 3 * nr && p.left_behind { left_behind(g, net, p, &total[nr..2 * nr], &total[2 * nr..]).0 } else { vec![0.0; nr] };
-    for ((l, s), b) in left.iter_mut().zip(&g.rn_span).zip(&g.rn_bus) {
-        *l += s + b;
+    for (l, s) in left.iter_mut().zip(&g.rn_span) {
+        *l += s;
     }
     Some((fac, left))
 }

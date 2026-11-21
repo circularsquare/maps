@@ -42,7 +42,7 @@ pub(crate) fn network(n: &Network) -> usize {
 }
 
 pub(crate) fn graph(g: &Graph) -> usize {
-    vb(&g.rn_station) + vb(&g.rn_line) + vb(&g.rn_ride) + vb(&g.rn_fare) + vb(&g.rn_tph) + vb(&g.rn_left) + vb(&g.rn_span) + vb(&g.rn_bus) + vb(&g.rn_in) + vb(&g.rn_out) + vb(&g.rn_dx) + vb(&g.rn_dy)
+    vb(&g.rn_station) + vb(&g.rn_line) + vb(&g.rn_ride) + vb(&g.rn_fare) + vb(&g.rn_tph) + vb(&g.rn_left) + vb(&g.rn_span) + vb(&g.rn_in) + vb(&g.rn_out) + vb(&g.rn_dx) + vb(&g.rn_dy)
         + vb(&g.st_spread) + vb(&g.st_wait) + vb(&g.st_bld) + vb(&g.rev_off) + vb(&g.rev_from) + vb(&g.rev_edge) + vb(&g.adj_off) + vb(&g.adj_to) + vb(&g.adj_cost) + vb(&g.adj_seg)
         + vb(&g.rn_next) + vb(&g.fare_curve.km) + vb(&g.fare_curve.min) + vb(&g.fare_curve.zones.st) + vb(&g.fare_curve.zones.off) + vb(&g.fare_curve.zones.min) + vb(&g.fare_curve.zones.dist) + vb(&g.fare_curve.zones.pass_off) + vb(&g.fare_curve.zones.pass) + vb(&g.rn_km) + vb(&g.rn_fare_mul) + vb(&g.rn_kmw) + vb(&g.rn_base_mul)
 }

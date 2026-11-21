@@ -120,8 +120,9 @@ export function ferryFare(f: { ferry?: number; ferrySmall?: number; ferryLarge?:
   return v !== undefined && Number.isFinite(v) && v >= 0 ? v : FERRY_FARES[boat] ?? 1;
 }
 /** T-3028: a bus line's fares are the curve's part above the base times this; 0 to `HSR_FARE_MAX`
- * as the others, so a long bus can be made as cheap as the player likes. */
-export const BUS_FARE = 1;
+ * as the others, so a long bus can be made as cheap as the player likes. 0.8 since T-3856 (Anita: "a bit
+ * lower"); a save that set the Bus row keeps its own. */
+export const BUS_FARE = 0.8;
 /** The bus multiplier of `f`, or the default. */
 export function busFare(f: { bus?: number } | undefined): number {
   const v = f?.bus;

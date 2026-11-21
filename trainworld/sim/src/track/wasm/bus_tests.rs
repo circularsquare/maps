@@ -72,9 +72,9 @@ fn a_feeder_bus_stops_at_the_station_it_reaches_and_runs_at_its_speed() {
     // run time: open-country road with a stop every 400 m, no dwell between (no station between)
     let t = a.stop_times(b, 0, 0);
     assert!((t.last().unwrap() - bus::Pace::default().auto_time(0.0, road)).abs() < 1e-6, "{t:?}");
-    // construct: the road at $1M a km and the buses at $0.6M
+    // construct: the road at `BUS_ROUTE_COST_PER_KM` and the buses at $0.6M
     let quote = a.line_build_cost(b);
-    assert!((quote - road / 1000.0).abs() < 1e-6, "{quote}");
+    assert!((quote - road / 1000.0 * BUS_ROUTE_COST_PER_KM).abs() < 1e-6, "{quote}");
     assert_eq!(a.construct_line(b), 0, "{}", a.issues());
     let ls = &a.w.svc.lines[b as usize];
     assert!(ls.running);
@@ -82,7 +82,7 @@ fn a_feeder_bus_stops_at_the_station_it_reaches_and_runs_at_its_speed() {
     assert!(ls.crush() == 80.0 && (ls.rated() - 160.0 / 3.0).abs() < 1e-9, "{} {}", ls.crush(), ls.rated());
     let buses = ls.trains[0];
     assert!(buses > 0 && a.fleet_bus() == buses && a.buses_needed() == buses);
-    assert!((cash - a.cash() - (road / 1000.0 + buses as f64 * BUS_PRICE)).abs() < 1e-6, "{} {}", cash - a.cash(), buses);
+    assert!((cash - a.cash() - (road / 1000.0 * BUS_ROUTE_COST_PER_KM + buses as f64 * BUS_PRICE)).abs() < 1e-6, "{} {}", cash - a.cash(), buses);
     // running cost: `RUN_COST_BUS_KM` a bus-km at the economy scale, on top of the rail line's
     let rail_only = {
         let mut r = api();
@@ -421,8 +421,8 @@ fn a_bus_in_dense_streets_runs_slower_and_needs_more_buses() {
     assert!(!a.add_pack_streets(2000.0, -1000.0, -1000.0, 3, 1, &pop, &jobs, &[0, 1], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758));
     assert!(a.add_pack_streets(2000.0, -1000.0, -1000.0, 3, 1, &pop, &jobs, &[0, 1, 2], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758));
     let slow = *a.stop_times(b, 0, 0).last().unwrap();
-    // the first 3 km of ground (3.6 km of road) in the 30 km/h lane, the rest at open country's 39.6, and 18 stops
-    let want = 3600.0 / (30.0 / 3.6) + 3600.0 / (39.6 / 3.6) + 18.0 * 28.0;
+    // the first 3 km of ground (3.6 km of road) in the 30 km/h lane, the rest at open country's bus speed, and 18 stops
+    let want = 3600.0 / (30.0 / 3.6) + 3600.0 / (crate::track::streets::bus_kmh(44.0) / 3.6) + 18.0 * 28.0;
     assert!(slow > flat && (slow - want).abs() < 0.04 * want, "{flat} {slow} {want}");
     assert!(a.w.svc.lines[b as usize].trains[0] >= buses);
     // the way back is as long

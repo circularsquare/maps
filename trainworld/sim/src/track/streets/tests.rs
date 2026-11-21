@@ -1,11 +1,11 @@
 use super::*;
 
 #[test]
-fn a_bus_runs_at_nine_tenths_of_the_car_or_its_lane() {
-    assert!((bus_kmh(car_street_kmh(0.0)) - 39.6).abs() < 1e-9);
+fn a_bus_runs_at_its_share_of_the_car_or_its_lane() {
+    assert!((bus_kmh(car_street_kmh(0.0)) - 44.0 * BUS_SHARE).abs() < 1e-9);
     assert_eq!(bus_kmh(car_street_kmh(1e9)), BUS_LANE_KMH);
     assert_eq!(bus_kmh(car_street_kmh(5000.0)), BUS_LANE_KMH);
-    assert!((bus_kmh(100.0) - 90.0).abs() < 1e-9);
+    assert!((bus_kmh(100.0) - 100.0 * BUS_SHARE).abs() < 1e-9);
 }
 
 #[test]

@@ -586,7 +586,7 @@ fn walk(at: &At, v: usize, came: Option<usize>, walked: bool, share: f32, legs: 
         let here = g.rn_station[r - s];
         // and the extra wait where full trains leave riders behind (T-188); riders with no train
         // due within their tolerance (T-842) weigh on the perceived wait only
-        let (left, span) = (g.rn_left[r0 - s], g.rn_span[r0 - s] + g.rn_bus[r0 - s]);
+        let (left, span) = (g.rn_left[r0 - s], g.rn_span[r0 - s]);
         let change = if came.is_some() { p.transfer_min * g.change_f(v) } else { 0.0 };
         legs.push(Leg { kind: 1, rn_from: (r0 - s) as u32, rn_to: (r - s) as u32, st_from: v as u32, st_to: here, min, perc, fare, km, wait_min: wait_min + left - span, wait_perc: g.st_wait[v] * wait_min + left, full_wait: left - span, stops, change, base_mul: 1.0, free: false, ends: 0.0 });
         pushed += 1;

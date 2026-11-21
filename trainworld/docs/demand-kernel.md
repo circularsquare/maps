@@ -99,7 +99,7 @@ levels:
    searched once per position, every station once per worker on opening; an edit searches only
    its new or moved stations (timings: notes/T-275.md). **Bus corridors** (T-1464): a bus stop
    that is no station is never walked to straight; each of them serves a stretch of its route (the
-   route's points nearer it than any other such stop of the line), and a cell within 300 m of a
+   route's points nearer it than any other such stop of the line), and a cell within 600 m (`BUS_REACH_M`; 300 until T-3856) of a
    stretch reaches that stop with a walk of its distance to the route plus 100 m (the mean walk
    along it to a street stop). A cell keeps its 6 stations and adds at most 2 such bus stops, the
    nearest, so a bus never hides a station.
@@ -138,16 +138,15 @@ levels:
    change there, the ride carrying on through it. A period whose `phi` changed is solved again
    like one whose trains an hour did (T-124), and the cache key (T-328) includes it. The wait
    inside service stays half the period's headway.
-   **Boarding a bus** (T-1576, Anita 2026-10-27; 6 until T-3522) costs 4 perceived minutes more at every route node
-   of a bus line (`Network::bus_line`: the snapshot's bus cars, or a bus-only stop; `BUS_BOARD_MIN`, `Graph::rn_bus`, carried in `rn_left` like
-   `rn_span`), at its first boarding and at a change from a train or another bus onto it; not
-   real minutes, so the trip explorer's real wait leaves it out.
+   **Boarding a bus** costs what boarding a train does (T-3856; from T-1576 to then a bus boarding cost 6, later 4,
+   perceived minutes). A bus line (`Network::bus_line`: the snapshot's bus cars, or a bus-only stop) differs only in its
+   crowding (`BUS_CROWD_START`).
    **Ferries** (T-2195, design notes/T-2177.md 3.6): a ferry line is a line like any other in the
    snapshot (`SnapshotLine.ferry`), its stops its ports, which are stations: walked to as any station
    (a landing the pack's walk grid calls water starts its walks from the nearest land pixels, as any
    station does, step 2), joined to stations near them in complexes, its hop times the boats' run
    with their acceleration. A boat is 2 cars (`BOAT_DEMAND_CARS`; 88 seats, 320 rated, 480 at crush,
-   the track sim's `BOAT_CRUSH`), so it is no bus line and pays no boarding cost. Its route nodes
+   the track sim's `BOAT_CRUSH`), so it is no bus line and is crowded as a train. Its route nodes
    charge the Ferry multiplier (`Fares.ferry`) as a high-speed line's charge theirs. The ferry fans
    (T-2196, [demand-mode.md](demand-mode.md) "Ferry fans") compose their costs from these tables
    through the ports, with no search of their own; the everyday layer is told which lines are

@@ -16,16 +16,13 @@ pub struct Graph {
     /// Departures an hour for each route node in this period.
     pub rn_tph: Vec<f32>,
     /// Average extra real minutes a rider boarding at this route node waits because full trains
-    /// leave riders on the platform (T-188, `left_behind`), plus `rn_span` and `rn_bus`. Added to the
+    /// leave riders on the platform (T-188, `left_behind`), plus `rn_span`. Added to the
     /// boarding's cost.
     pub rn_left: Vec<f32>,
     /// Perceived minutes added to boarding where only a share `phi` of the period's riders have a
     /// train due within their tolerance (T-842, `Network::span`): -ln(phi) / `Params::beta`, the
     /// logit's own form for an option open to that share. 0 with service all period.
     pub rn_span: Vec<f32>,
-    /// Perceived minutes added to boarding on a bus line (T-1576): `BUS_BOARD_MIN` on every route
-    /// node of a line with a bus-only stop, 0 elsewhere. Part of `rn_left`, but not real minutes.
-    pub rn_bus: Vec<f32>,
     /// T-3888: perceived minutes a trip pays where its first boarding is at route node r
     /// (`Params::train_in_min` on a train or tram whose platform there is below or above ground,
     /// else 0), and where its last ride leaves at r (`train_out_min`); both empty where nothing pays. In the station pair's cost after the
@@ -367,8 +364,6 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
         if h > 0.0 && h.is_finite() && phi(r) > 0.0 { 60.0 / h } else { 0.0 }
     }).collect();
     let rn_span: Vec<f32> = (0..nr).map(|r| { let f = phi(r); if f > 0.0 && f < 1.0 { -f.ln() / p.beta } else { 0.0 } }).collect();
-    let bus_line: Vec<bool> = (0..net.n_lines()).map(|l| net.bus_line(l)).collect();
-    let rn_bus: Vec<f32> = rn_line.iter().map(|&l| if bus_line[l as usize] { BUS_BOARD_MIN } else { 0.0 }).collect();
     // T-3888: the stairs, at a train's or tram's stop below or above ground; only where any stop pays
     let stairs: Vec<bool> = (0..net.n_lines()).map(|l| net.stairs_line(l)).collect();
     let pays: Vec<bool> = (0..nr).map(|r| stairs[rn_line[r] as usize] && !net.at_grade(rn_stop[r] as usize)).collect();
@@ -381,9 +376,8 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
     Graph {
         rn_in,
         rn_out,
-        rn_left: rn_span.iter().zip(&rn_bus).map(|(a, b)| a + b).collect(),
+        rn_left: rn_span.clone(),
         rn_span,
-        rn_bus,
         rn_dx,
         rn_dy,
         st_spread,
