@@ -104,8 +104,10 @@ const ARROW_BARB_PX = 4, ARROW_BARB_SHARE = 1.5;
  * to pay) only that edge, dashed */
 const FLAG_LANE = 64, FLAG_LANE_FREE = 128;
 /** the constructed lanes' border: its width, how far inside the colour's edge, its dash and gap, CSS px; drawn once
- * the line's colour is `LANE_MIN_PX` wide */
-const LANE_PX = 1, LANE_INSET_PX = 1, LANE_DASH_PX = 4, LANE_SPACE_PX = 3, LANE_MIN_PX = 5;
+ * the line's colour is `LANE_MIN_PX` wide; its dashes (and the blueprint's free edge's) are `LANE_PERIOD_M` long */
+const LANE_PX = 1, LANE_INSET_PX = 1, LANE_MIN_PX = 5;
+/** a dash and its gap in metres of ground at every zoom (the dash is `DASH_ON` of it: 24 m on, 16 m off) */
+const LANE_PERIOD_M = 40;
 /** the blueprint's band each side: this share of the line's width, at least `LANE_BP_PX` CSS px */
 const LANE_BP_SHARE = 0.8, LANE_BP_PX = 3;
 /** Bus arrows keep at least this gap, CSS px (Anita, 2026-11-18: seen from zoom 12, a chevron on every side of a small loop). */
@@ -898,7 +900,7 @@ export class BusLayer {
     // the selected line again over the rest, as the rail lines' (renderer.ts)
     if (this.byId.has(s.sel)) body(-2);
     // T-3944: the BRT lanes round their lines, in the line view and the Speed and Profit ones, from where the ends show
-    if (b.laneFirst < b.count && !this.traffic && s.paint !== "level" && zoom >= BUS_END_ZOOM) this.drawLanes(b, s, bus, dpr);
+    if (b.laneFirst < b.count && !this.traffic && s.paint !== "level" && zoom >= BUS_END_ZOOM) this.drawLanes(b, s, bus, dpr, zoom);
     const ringR = Math.max(MIN_RING_PX * dpr, bus * RING_SHARE), endR = Math.max(MIN_RING_PX * 1.25 * dpr, bus * END_SHARE);
     const rim = Math.max(1, 0.45 * bus);
     // T-3890: the connectors over the routes and under the stops, from where the stop rings show
@@ -958,14 +960,14 @@ export class BusLayer {
    * so a band is whole across the joints of its segments: the stencil gets 1 inside the band's outer edge and 0
    * inside its inner one, then the colour pass draws where it is 1, once. Each kind with its own band; without a
    * stencil a segment's band is cut out of its own middle only. */
-  private drawLanes(b: Built, s: BusStyle, bus: number, dpr: number) {
+  private drawLanes(b: Built, s: BusStyle, bus: number, dpr: number, zoom: number) {
     const gl = this.gl!, u = this.su;
     const stencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
     gl.uniform1i(u.u_pass, 5);
     gl.uniform1i(u.u_only, -1);
     gl.uniform1f(u.u_width, bus);
     gl.uniform3fv(u.u_lane_rgb, rgbf(s.shades.brtLane));
-    gl.uniform1f(u.u_lane_period, (LANE_DASH_PX + LANE_SPACE_PX) * dpr);
+    gl.uniform1f(u.u_lane_period, LANE_PERIOD_M * kAtY(0, b.a) * pxPerUnitAt(zoom) * dpr);
     const casing = s.casing * CASING_SHARE, rail = Math.max(dpr, s.railShare * bus), t = LANE_PX * dpr;
     const band = Math.max(LANE_BP_PX * dpr, LANE_BP_SHARE * bus);
     gl.uniform1f(u.u_lane_edge, rail);
