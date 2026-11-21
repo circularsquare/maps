@@ -42,8 +42,6 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
 - 11-20 ~22:10 UTC: "lets freeze the set of proposed changes here for now, and test with these"; chart remake
   after: no separate street tram, half the trip lengths, 2 more stop spacings at the high end, add HSR; a made-up
   uniform city run as a model, not Chicago in the sim.
-- 11-20 ~22:00 UTC: T-3888 option 4; ferry design OK + running cost -25%; bus reach 300 -> 600 "i do kinda want
-  it" (if buses overshoot, make them slower); trams to 75. ~21:00: ferry types, a fare multiplier per type.
 - 11-20: cleanup, then "full track rework" (T-3444 talk); no minor track work till then; 400 km ferry legs stay.
 - 11-19: "player complaints take precedent over other new features"; full playtest list before every publish.
 - When she plays games: no uploads until she says she's done; she may ask for a lower core cap.
