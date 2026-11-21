@@ -22,6 +22,8 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
    full-track edits; T-3939 left: B's ~140 MB unnamed; T-3395: save_health.py after the next scan.
 4. Open ask: a-2026-11-21-15 income groups (notes/T-3246.md; I said keep out).
 ## Her words
+- 11-21 ~19:20 UTC: BRT stations come with a waiting room, shown as bought (T-4012, brtwait running); tram icon's
+  top piece bigger; "text ack" (kinds2 strings); boarding-only / alighting-only stops filed (T-4013).
 - 11-21 ~18:45 UTC: main priorities now: keep the track rework moving, finish and polish BRT. She's out with remote
   control on this session; standby orchestrator tabs (notes/standby.txt, docs/orchestrator.md "Your own cycling").
 - 11-21 ~17:50 UTC: "text ack" for everything listed to then (viewonly, BRT stations, modeldown, brtblueprint,

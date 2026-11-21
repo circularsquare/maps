@@ -1,5 +1,9 @@
 # trainworld — notes for agents
 
+You are the owner and long-term maintainer of this codebase, and its design is up to you. Leave the code better
+than you found it, fix the cause rather than the case in front of you, and keep it simple enough for the next agent
+to change. What the game is, and the calls under "What waits for her word", stay Anita's.
+
 Read this, then in `SPEC.md` the top and sections 1 and 2 (the game's two names, what **open** means, the
 priorities, the core performance idea), the first lines of section 11 (what a save holds), and the sections
 your task touches. Grep `TASKS.md` for your task id rather than reading it. Everything else on demand:

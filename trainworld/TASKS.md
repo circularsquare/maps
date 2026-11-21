@@ -217,6 +217,12 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-4008 [P2] {L:wealth-split} Do income groups even out express and local (taking, 2026-11-21, agent timegroups)
   - Context: You, 11-21, on T-3246: "the problem this aims to solve is like people using express and local more evenly, where both are offered. cuz like theoreticallyrich people are more time senstiive. did we / could we test to see if income groups helps with that?" T-3246's options A and A2 split only train vs car; only C (each group its own route choice) touches express vs local, and its ~3x cost was added up, not run.
   - Goal: Measured on New York and the passing-track test map: the express/local split today, with two or three time-value groups choosing routes, and the cost in time and memory; with a recommendation.
+- T-4012 [P2] {L:buses} BRT stations come with a waiting room (taking, 2026-11-21, agent brtwait)
+  - Context: You, 11-21, after T-4010 made the waiting room a purchase at BRT stations: "its kinda weird to build a brt station and have it not have a waiting room ... make it so that BRt stations uatomatically ahve a waiting room, but like we show teh waiting room icon and have it look like its already pruchased". Also the tram icon's top piece "a tad bigger so that its easily distinguishable from the train".
+  - Goal: Every BRT station has its waiting room's 0.8 wait from the start, shown as bought in its upgrades (not removable), with passage the one thing to buy; the tram icon's top piece bigger.
+- T-4013 [P3] {L:stops} Boarding-only and alighting-only stops
+  - Context: A player request, via you 11-21: "being able to set stations to only allow boarding or only allow disembarking. seems easy to do."
+  - Goal: A stop on a line can be set to boarding only or getting off only, and trips and the timetable respect it.
 - T-4005 [P3] {L:community} Bookmark community saves
   - Context: Your scratch pad, 11-21: "maybe add bookmark feature to community saves to save cool ones".
   - Goal: A bookmark button on a community save, and a Bookmarked view in Community listing them; kept with the account when signed in, else in the browser.
