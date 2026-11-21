@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4012 [P2] {L:buses} BRT stations come with a waiting room (2026-11-21): BRT stations have a built-in waiting room (wait counts 0.8), shown bought in the upgrades; passage is the only buy; tram icon pantograph bigger.
 - T-4011 [P3] {L:map-look} A nicer train icon (2026-11-21): Train icon redrawn squarer and lower with splayed rails; before/after in artifacts/trainworld/kinds2/icons-before-after.png.
 - T-4010 [P2] {L:buses} Station kinds: train, tram, BRT, port; BRT tweaks (2026-11-21): Station tool split into Train station, Tram stop, BRT station, Port (each places only its own); BRT lane takes 100 buses an hour; BRT icon is a road with a lane, no bus; BRT stations sell waiting room and passage, no park and ride. Notes: T-3999.
 - T-4009 [P2] {L:small-fixes} Map hover stays up over the panels (2026-11-21): the map's hover tag and tool ghosts hide when the pointer is over a bar, button or panel inside the map (map/overChrome.ts turns it into the container's mouseleave)

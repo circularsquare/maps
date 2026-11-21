@@ -6,7 +6,7 @@ Updated: 2026-11-21 18:20 UTC
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5.
 
 ## Next
-0. LIVE v0.4.5. Cap 14 by day. Cores 0-1 are hers: `reserve_cores.ps1 -Loop 30` at takeover (docs/orchestrator.md).
+0. LIVE v0.4.5. Cap 10 (her ask 11-21 ~19:40 UTC, while she's at the machine; was 14). Cores 0-1 are hers: `reserve_cores.ps1 -Loop 30` at takeover (docs/orchestrator.md).
    No publish yet (her 11-21: "no rush ... nothing super urgent/gamebreaking"). Before the next one: a fresh freeze
    (placeindex's world index, 135 MB gz, 4,097 files on R2), translations (T-3986, T-3991, T-3999, T-4003 keys).
    Server deployed 17:56 UTC (community limits; save levels 35-36), so publishing level-36 saves is safe.
