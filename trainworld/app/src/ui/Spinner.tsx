@@ -19,20 +19,28 @@ export function Spinner({ tip, class: cls }: { tip?: string; class?: string }) {
 
 const INK = "#5b4a45", WHITE = "#fffdfb";
 
-/** A wheel at (x, y): it turns. */
-const Wheel = ({ x, y }: { x: number; y: number }) => <g transform={`translate(${x} ${y})`}>
-  <g class="bt-wheel">
+/** The drawing's frame, shared by every layer so they line up: x 0-100, y -5-64. */
+const VIEW = "0 -5 100 69";
+/** A layer of the drawing: an svg over the whole box. */
+const Layer = ({ children }: { children: ComponentChildren }) => <svg class="bt-l" viewBox={VIEW}>{children}</svg>;
+/** A layer that moves: its own box, so the browser moves it without painting the page again. */
+const Moving = ({ cls, origin, children }: { cls: string; origin?: [number, number]; children: ComponentChildren }) =>
+  <div class={"bt-l " + cls} style={origin ? { transformOrigin: `${origin[0]}% ${((origin[1] + 5) / 69) * 100}%` } : undefined}>
+    <Layer>{children}</Layer>
+  </div>;
+
+const WHEEL_Y = 51;
+/** A wheel at (x, WHEEL_Y): it turns about its centre. */
+const Wheel = ({ x }: { x: number }) => <Moving cls="bt-wheel" origin={[x, WHEEL_Y]}>
+  <g transform={`translate(${x} ${WHEEL_Y})`}>
     <circle r="4.6" fill={WHITE} stroke={INK} stroke-width="1.8" />
     <path d="M-2.6 0H2.6M0 -2.6V2.6" stroke={INK} stroke-width="1.4" stroke-linecap="round" />
   </g>
-</g>;
+</Moving>;
 
-/** A bogie centred on x: its frame and two wheels. */
-const Bogie = ({ x }: { x: number }) => <g>
-  <rect x={x - 12} y="46.5" width="24" height="4.5" rx="2.2" fill={INK} />
-  <Wheel x={x - 6.5} y={51} />
-  <Wheel x={x + 6.5} y={51} />
-</g>;
+const BOGIES = [24, 76];
+/** A bogie's frame centred on x (its wheels are layers of their own). */
+const BogieFrame = ({ x }: { x: number }) => <rect x={x - 12} y="46.5" width="24" height="4.5" rx="2.2" fill={INK} />;
 
 /** A door at x: a tall panel with a window in its upper half. */
 const Door = ({ x }: { x: number }) => <g>
@@ -58,32 +66,45 @@ const Window = ({ x, children }: { x: number; children?: ComponentChildren }) =>
   </g>;
 };
 
+/** The ears' turning point, the middle of their foot (Chrome's fill-box of the two ellipses). */
+const EARS_ORIGIN: [number, number] = [62.83, 31.68];
+
 /** A passenger car running right. The bunny looks out of the fourth window from behind its sill,
  * small and between the curtains, and only its ear tips show above the roof (seen edge on, the far
- * one a step behind); the track runs by under it. */
+ * one a step behind); the track runs by under it.
+ * T-3160: every moving part is a box of its own moved by a CSS transform, so the browser moves it
+ * without painting: an animation inside one svg repainted the whole page every frame, and in Chrome
+ * each repaint left garbage that piled up to about 250 MB through a long load. */
 export function BunnyTrain() {
-  return <svg class="bunny-train" viewBox="0 -5 100 69" aria-hidden="true">
-    <line x1="0" y1="56" x2="100" y2="56" class="bt-rail" stroke-width="2" />
-    <line x1="-12" y1="60" x2="112" y2="60" class="bt-ties" stroke-width="3" stroke-dasharray="4 8" />
-    <g class="bt-train">
-      <g class="bt-ears" stroke={INK} stroke-width="1.6">
-        <ellipse cx="61.5" cy="23.2" rx="2.3" ry="8" transform="rotate(-12 61.5 25)" fill="#e9e1dd" />
-        <ellipse cx="64.7" cy="22.8" rx="2.5" ry="8.5" transform="rotate(-12 64.7 25)" fill={WHITE} />
-      </g>
-      <rect x="9" y="18.5" width="82" height="6" rx="3" class="bt-roof" stroke={INK} stroke-width="1.8" />
-      <rect x="5" y="22.5" width="90" height="26" rx="4.5" class="bt-body" stroke={INK} stroke-width="2" />
-      <rect x="6" y="40" width="88" height="2.6" fill={WHITE} opacity=".55" />
-      {WINDOWS.map((x) => <Window key={x} x={x}>{x === BUNNY_WINDOW && <>
-        <circle cx="62" cy="34.4" r="2.4" fill={WHITE} stroke={INK} stroke-width=".9" />
-        <circle cx="62.9" cy="33.5" r=".55" fill={INK} />
-        <circle cx="64.2" cy="34.3" r=".5" fill="#e8909f" />
-        <rect x="58.7" y="35.4" width="6.6" height="1.3" fill={INK} />
-      </>}</Window>)}
-      <Door x={12} />
-      <Door x={79.5} />
-      <circle cx="93" cy="43" r="1.9" fill="#ffe39a" stroke={INK} stroke-width="1.2" />
-    </g>
-    <Bogie x={24} />
-    <Bogie x={76} />
-  </svg>;
+  return <div class="bunny-train" aria-hidden="true">
+    <Layer><line x1="0" y1="56" x2="100" y2="56" class="bt-rail" stroke-width="2" /></Layer>
+    {/* the ties run left one dash pattern (12) a cycle; drawn 12 longer and clipped to -12-112 */}
+    <div class="bt-l bt-clip">
+      <Moving cls="bt-ties"><line x1="-12" y1="60" x2="124" y2="60" class="bt-rail" stroke-width="3" stroke-dasharray="4 8" /></Moving>
+    </div>
+    <div class="bt-l bt-train">
+      <Moving cls="bt-ears" origin={EARS_ORIGIN}>
+        <g stroke={INK} stroke-width="1.6">
+          <ellipse cx="61.5" cy="23.2" rx="2.3" ry="8" transform="rotate(-12 61.5 25)" fill="#e9e1dd" />
+          <ellipse cx="64.7" cy="22.8" rx="2.5" ry="8.5" transform="rotate(-12 64.7 25)" fill={WHITE} />
+        </g>
+      </Moving>
+      <Layer>
+        <rect x="9" y="18.5" width="82" height="6" rx="3" class="bt-roof" stroke={INK} stroke-width="1.8" />
+        <rect x="5" y="22.5" width="90" height="26" rx="4.5" class="bt-body" stroke={INK} stroke-width="2" />
+        <rect x="6" y="40" width="88" height="2.6" fill={WHITE} opacity=".55" />
+        {WINDOWS.map((x) => <Window key={x} x={x}>{x === BUNNY_WINDOW && <>
+          <circle cx="62" cy="34.4" r="2.4" fill={WHITE} stroke={INK} stroke-width=".9" />
+          <circle cx="62.9" cy="33.5" r=".55" fill={INK} />
+          <circle cx="64.2" cy="34.3" r=".5" fill="#e8909f" />
+          <rect x="58.7" y="35.4" width="6.6" height="1.3" fill={INK} />
+        </>}</Window>)}
+        <Door x={12} />
+        <Door x={79.5} />
+        <circle cx="93" cy="43" r="1.9" fill="#ffe39a" stroke={INK} stroke-width="1.2" />
+      </Layer>
+    </div>
+    <Layer>{BOGIES.map((x) => <BogieFrame key={x} x={x} />)}</Layer>
+    {BOGIES.flatMap((x) => [x - 6.5, x + 6.5]).map((x) => <Wheel key={x} x={x} />)}
+  </div>;
 }

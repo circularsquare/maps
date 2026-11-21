@@ -4,9 +4,13 @@
 //! five periods with crowding rounds, as `demand.worker.ts` does.
 //!
 //!   cargo run --release --features demand --bin demand_mem -- [--zones nyc,nhv,hfd,lck]
-//!       [--market nyc,phl,pvd,nhv,spf,wor,hfd,lhg,lck] [--rounds 2] [--parts]
+//!       [--market nyc,phl,pvd,nhv,spf,wor,hfd,lhg,lck] [--rounds 2] [--parts] [--net nyc]
 //!
-//! `--parts` prints each population's structures (`mem_parts`) after the solve.
+//! `--net tyo` reads `data/work/realnet/tyo_real_track.json` in Tokyo's frame (an empty `--market ""` is a phone's
+//! solve, which has no market).
+//!
+//! `--parts` prints each population's structures (`mem_parts`) after the solve; `--stages` marks each population's
+//! solve and each crowding round inside a period.
 
 use serde_json::Value;
 use trainworld_sim::demand::alloc;
@@ -105,10 +109,11 @@ fn main() {
     }
 
     // the network, in each pack's frame and (the market) in longitude and latitude
-    let (real, _) = RealNet::load(&format!("{root}/data/work/realnet/nyc_real_track.json"));
+    let net = get("--net").unwrap_or("nyc".into());
+    let (real, _) = RealNet::load(&format!("{root}/data/work/realnet/{net}_real_track.json"));
     let hop_km = real.hop_km();
-    let nyc = Frame::equirect(origin("nyc").0, origin("nyc").1);
-    let ll: Vec<f64> = real.st_xy.chunks(2).flat_map(|p| { let (lon, lat) = nyc.to_lonlat(p[0] as f64, p[1] as f64); [lon, lat] }).collect();
+    let home = Frame::equirect(origin(&net).0, origin(&net).1);
+    let ll: Vec<f64> = real.st_xy.chunks(2).flat_map(|p| { let (lon, lat) = home.to_lonlat(p[0] as f64, p[1] as f64); [lon, lat] }).collect();
     st.mark("network read");
     for (id, a, e) in pops.iter_mut() {
         let f = Frame::equirect(origin(id).0, origin(id).1);
@@ -132,11 +137,14 @@ fn main() {
     // the periods: a free-flow solve, then the crowding rounds on every population's loads together
     let t_solve = now_ms();
     let mut peak_all = 0usize;
+    let stages = args.iter().any(|a| a == "--stages");
     for q in 0..PERIODS {
-        for (_, a, e) in pops.iter_mut() {
+        for (id, a, e) in pops.iter_mut() {
             a.solve(q);
+            if stages { peak_all = peak_all.max(alloc::peak()); st.mark(&format!("  period {q}: {id} commutes solved")); }
             if let Some(e) = e {
                 e.solve(q);
+                if stages { peak_all = peak_all.max(alloc::peak()); st.mark(&format!("  period {q}: {id} everyday solved")); }
             }
         }
         if let Some(a) = ic.as_mut() {
@@ -158,6 +166,7 @@ fn main() {
                 if let Some(e) = e { assert!(e.crowd_with_external(q, &total)); }
             }
             if let Some(a) = ic.as_mut() { assert!(a.crowd_with_external(q, &total)); }
+            if stages { peak_all = peak_all.max(alloc::peak()); st.mark(&format!("  period {q}: a crowding round")); }
         }
         peak_all = peak_all.max(alloc::peak());
         release_skims();

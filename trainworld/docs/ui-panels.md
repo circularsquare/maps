@@ -1610,8 +1610,8 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   clock starts.
   Loading is the one place with motion [T-647, T-677, T-2693, Anita; `ui/Spinner.tsx`]: on top of the card a
   drawn bunny rides a toy train in the theme's accent (104 px wide; wheels turn, the track's ties run
-  by, the train chugs, the ears bob; paused under reduced motion; the card alone has it, T-2693
-  follow-up); a pill drawn as the map draws a train (a rim in a darker shade of the theme's accent
+  by, the train chugs, the ears bob; each moving part a box of its own moved by a CSS transform, so its motion never
+  repaints the page, T-3160; paused under reduced motion; the card alone has it, T-2693 follow-up); a pill drawn as the map draws a train (a rim in a darker shade of the theme's accent
   around a fill of it) runs around a 13 px ring leading the status tag's text and the diagram tag (a CSS
   turn of 1.1 s, nothing per frame; paused under reduced motion); a small ring turning (`.spin`, 1.2 s a turn, 8 px, grey) in place
   of each line's crowding dot per demand level in the line panel until the line has figures

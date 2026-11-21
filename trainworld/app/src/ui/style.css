@@ -80,19 +80,25 @@ body {
 .status-tag .spin { width: 10px; height: 10px; vertical-align: 0; }
 /* T-677, T-1057: the bunny's train (ui/Spinner.tsx), the loading card's motion: wheels turn, the
    track runs by, the car chugs, the ear tips bob */
-.bunny-train { display: block; width: 104px; height: auto; margin: 0 auto 4px; overflow: visible; }
-.bt-rail, .bt-ties { stroke: var(--muted); }
+/* T-3160: layers over one box, each moving part a box of its own (moved without repainting) */
+.bunny-train { display: block; position: relative; width: 104px; aspect-ratio: 100 / 69; margin: 0 auto 4px; }
+.bt-l { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; }
+/* the ties' clip spans x -12 to 112 of the drawing's 100; the ties' own box sits back on the drawing's */
+.bt-clip { left: -12%; width: 124%; overflow: hidden; }
+.bt-ties { left: calc(1200% / 124); width: calc(10000% / 124); }
+.bt-rail { stroke: var(--muted); }
 .bt-body { fill: color-mix(in srgb, var(--accent) 72%, #fff); }
 .bt-roof { fill: color-mix(in srgb, var(--accent) 30%, #f4efec); }
 .bt-curtain { fill: color-mix(in srgb, var(--accent) 52%, #fffdfb); }
 @keyframes bt-turn { to { transform: rotate(360deg); } }
-@keyframes bt-run { to { stroke-dashoffset: 12; } }
-@keyframes bt-chug { to { transform: translateY(-1.2px); } }
+@keyframes bt-run { to { transform: translateX(-12%); } }
+/* 1.2 of the drawing's 69 high */
+@keyframes bt-chug { to { transform: translateY(-1.7391%); } }
 @keyframes bt-bob { to { transform: rotate(-6deg); } }
-.bt-wheel { transform-box: fill-box; transform-origin: center; animation: bt-turn .7s linear infinite !important; }
+.bt-wheel { animation: bt-turn .7s linear infinite !important; }
 .bt-ties { animation: bt-run .35s linear infinite !important; }
 .bt-train { animation: bt-chug .35s steps(2, jump-none) infinite alternate !important; }
-.bt-ears { transform-box: fill-box; transform-origin: 50% 100%; animation: bt-bob .7s ease-in-out infinite alternate !important; }
+.bt-ears { animation: bt-bob .7s ease-in-out infinite alternate !important; }
 @media (prefers-reduced-motion: reduce) { .bunny-train * { animation-play-state: paused !important; } }
 * { scrollbar-width: thin; scrollbar-color: var(--rule) transparent; }
 .muted { color: var(--muted); }
