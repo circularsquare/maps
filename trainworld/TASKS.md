@@ -794,12 +794,9 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3837 [P3] {L:buses} Ferry routes found without a waypoint, and waypoints on touch
   - Context: T-3809 added shift click waypoints. A leg is still searched only in a box around its two ports, so a sea path that leaves it (Ma Liu Shui to Sai Kung) needs a waypoint; a wider third search would find it alone. Phones have no shift click.
   - Other: notes/T-3809.md
-- T-3929 [P2] {L:passing-tracks} Expresses drawn through locals on count and headway lines
+- T-3929 [P2] {L:passing-tracks} Expresses drawn through locals on count and headway lines (taking, 2026-11-21, agent returnrun)
   - Context: Found by fixedrate2 (T-1183), 11-21: on T-2228's 180 km line at 10/10, count and headway lines get 24 bad passes in 4 h against 0 on rate lines. Cause proved: `Service::lattice` `off_at` (service.rs ~1352) starts a count line's return run at trip_len + split x spare, where a rate line starts at 0; forcing 0 gives 0 bad. All on run 0; T-3346's open "both directions can't both have the best". `t2233-passing-map` can't see it (it checks drawn trains, which the guard holds back). Every player's lines are count lines.
   - Goal: Count and headway lines on the T-2228 line give 0 bad passes, with the return run's timing no worse for the other direction; T-1183's four parked timing tests pass on counted lines.
-- T-3930 [P3] {L:small-fixes} Planned line shows the wrong train cost after a headway switch
-  - Context: Found by fixedrate2 (T-1183), 11-21: a planned line given 12 trains and then switched to a 300 s headway shows a train cost of 300 before it is built, while the quote and the charge are 75.
-  - Goal: The shown train cost matches the quote and the charge.
 - T-3928 [P3] {L:checks} Longer trips with no route are skipped uncounted (taking, 2026-11-21, agent skipcount)
   - Context: Found by droppedflow (T-3923), 11-21: intercity's `pass_window` (intercity/pass.rs) skips a destination with no strategy with a bare `continue`, so those trips never reach `assign_inner` and T-3923's dropped-trips count misses them. Also seen: the ignored test `trip_real_network` is 2.8e-3 off its 1e-4 tolerance (trip/tests.rs:497), not a drop.
   - Goal: Longer trips skipped this way are counted like T-3923's drops, and a test fails if a fixture skips any; the tolerance test passes or its limit is justified.

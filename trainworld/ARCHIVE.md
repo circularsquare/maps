@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3930 [P3] {L:small-fixes} Planned line shows the wrong train cost after a headway switch (2026-11-21): closed without code: not a game bug: the panel, quote and charge agree in the game (US$360M on a 1.7 km line); only the Rust test helper set_auto_headway keeps 12 trains on a count line. notes/T-3930.md.
 - T-3923 [P3] {L:checks} Trips assigned to an unsearched station vanish silently (2026-11-21): Loads::dropped and the everyday lanes' count, DemandApi/EverydayApi::dropped; test builds log and panic on a drop unless KNOWN_DROPS; fixtures drop nothing; figures bit-identical. notes/T-3923.md.
 - T-3927 [P3] {L:loading} A died-load report names the game being loaded (2026-11-21): tw-load-started marker is JSON (noteLoad in game/loading.ts); reportContext adds diedLoad; no server change; proved on a killed new-game load. notes/T-3927.md.
 - T-3917 [P1] {L:memory} Where big saves get slow and run out of memory (2026-11-21): measured: edits on 2,000+ station saves take 5-7.5 min to calculate trips, cold loads 5.5-7.5 min and every release forces one (build-keyed cache), 4.2-6.5 GB desktop, phones 2 GB on real-network starts, 6-11 main-thread stalls a minute; next: T-2624, newer edit replaces a half-done calculation, T-3373 B. notes/T-3917.md.
