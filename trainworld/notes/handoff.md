@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 4feb4373-1fa9-4b66-9592-396d40896c0a, name maps-a3 [ede33a], since 2026-11-21 03:24 UTC
-Updated: 2026-11-21 09:15 UTC (overnight queue running)
+Updated: 2026-11-21 09:50 UTC (past 500k; overnight, so carrying on per the handoff skill; cycle once she is up)
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5. She is home, at this tab.
 
@@ -50,4 +50,5 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
   notes/board-live.json; maps .claude/settings.json. Not mine: notes/T-2380.md, notes/T-3382.md.
 - DECISIONS.md holds binzip's T-2486 line uncommitted until binzip lands.
 - A yes she gives in another session's tab doesn't pass the permission check here: ask again in this tab.
+- Tree .tw-trees/fullrate is T-3655's PARKED work (uncommitted, blockers in its task): keep it, don't land as is.
 - Never delete a tree folder by hand (its app/node_modules junction deletes the main tree's).
