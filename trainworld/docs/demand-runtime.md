@@ -428,11 +428,21 @@ that, so edits coming faster than a slow local solve (all of Japan's, about 2 mi
 whole solve from starting. For the first 10 s of the local solve (`HOLD_QUIET_MS`) a network held
 behind it is taken to go at its local result: no zone is refined aside and the time left counts no
 second solve; after that both as for any hold. A worker replaced meanwhile still re-solves at
-once. So building steadily, a whole solve lands about every local solve plus whole solve (a line a
-minute on 2 workers: all of China every 60-90 s, all of Japan every 19-26 minutes), and an edit made during one
-shows its figures when it has landed and the local solve on top is done (the zone in view's sooner, from a
-worker aside: "The zone in view aside" below). A solve with the barrier (a load, a zone just opened)
-is still cut short by a newer network.
+once. **A newer edit stops a whole solve under 40% done** (T-3925, notes/T-3925.md, `?perfOff=restart`
+off): once an edit's whole solve has started (`whole` sent, or no worker has a local stage), a network that differs
+from its own (an edit; not a zone opened or at another level) is sent at once, cutting it short, while under 40% of
+it has run (time since sent against that plus the time left by its units, `unitsLeft`; while that can't be told, it
+waits) and the edits solved one after another without a final (`restartFrom`) began less than that solve's length
+ago. So building steadily a final still lands within about two solves of the first edit. Past 40% the held edit's
+local result on top of that final shows its lines sooner than a restarted solve would: the workers stop between
+population passes, as for any newer network, and the cut solve has already put the edited cluster on its network,
+so the restarted solve has no local stage and its lines and zones wait for its final (the zone in view gets no
+aside meanwhile). Its figures equal one solve of the newer network to the bit (`checks/t3925-restart-solve.mjs`).
+The status tag's bar starts from 0 with each restarted solve (`solveRestarted`). So building steadily, a whole solve lands about every local solve plus whole
+solve (a line a minute on 2 workers: all of China every 60-90 s, all of Japan every 19-26 minutes), and an edit made
+during one past that point shows its figures when it has landed and the local solve on top is done (the zone in
+view's sooner, from a worker aside: "The zone in view aside" below). A solve with the barrier (a load, a zone just
+opened) is still cut short by any newer network.
 With the barrier
 (startup, a zone just opened) the clusters to solve go in two groups when there are two or more and
 the first ranked zone's is one of them (T-402; the zone in view's, else the city view's, "The zone

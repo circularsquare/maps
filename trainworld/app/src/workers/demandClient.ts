@@ -41,6 +41,7 @@ import {
   demandStep,
   demandWork,
   editHeld,
+  solveRestarted,
   type WorkPart,
   demandScope,
   demandUpdating,
@@ -474,6 +475,10 @@ interface Solve {
    * was sent (its own `sentAt` if none); and whether a check at the end of `LOCAL_CHAIN_MS` is set */
   chainFrom?: number;
   chainTimer?: boolean;
+  /** T-3925: when the first of the edits' solves this one follows on from without a final between was sent (its own
+   * `sentAt` if none); and, on a solve a newer network stopped (`restarts`), how long it had run, ms */
+  restartFrom?: number;
+  cutAfter?: number;
   /** T-392: each cluster published ahead of the solve's final, by its cities: its results per
    * round and period as they come in, the last round in from every worker, and when its final
    * round was shown */
@@ -659,6 +664,12 @@ const LOCAL_CHAIN_MS = 60000;
  * the local result: no zone is solved aside (T-2605) and the time left counts no second solve (T-3599); a slow
  * local solve gets both after it, so all of Japan's aside starts at most this much later */
 const HOLD_QUIET_MS = 10000;
+/** T-3925: a newer network stops an edit's whole solve and starts again while under this share of it has run (by
+ * the time left, `unitsLeft`), and the edits solved one after another without a final began less than one such solve
+ * ago, so building steadily still lands a final within about two solves of the first edit (T-1734). Past about 40%
+ * the held edit's local result on top of the running final shows its lines sooner than a restarted whole solve,
+ * which has no local stage (on the NA save, notes/T-3925.md) */
+const RESTART_SHARE = 0.4;
 
 /** Pack a service for the workers; lines naming a station that is not in the list are left out. */
 function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"]; ids: { lines: string[]; stations: string[] } } {
@@ -2140,9 +2151,26 @@ class DemandClient {
   private firm(): boolean {
     const s = this.cur;
     if (!s || s.barrier !== false || s.rough || s.published >= ROUNDS || perfOff("firm")) return false;
-    if (s.localShownAt === undefined || s.wholeSent) return true;
+    if (this.wholeRuns(s)) return !this.restarts(s);
+    if (s.localShownAt === undefined) return true;
     if (s.heldFrom === undefined || s.heldFrom > s.localShownAt) return false;
     return s.localShownAt - (s.chainFrom ?? s.sentAt) > LOCAL_CHAIN_MS;
+  }
+
+  /** T-3925: `s`'s whole solve has started: `whole` went, or no worker has a local stage (it starts at once) */
+  private wholeRuns(s: Solve): boolean {
+    return !!s.wholeSent || Array.from({ length: this.computeN }, (_, k) => s.localPlans?.[k]).every((v) => v === 0);
+  }
+
+  /** T-3925: a newer network (an edit, not a zone opened or at another level) stops `s`'s whole solve now
+   * (`RESTART_SHARE`); while the time left can't be told it waits as before */
+  private restarts(s: Solve): boolean {
+    const w = this.waiting;
+    if (!w || w.svc === s.svc || perfOff("restart")) return false;
+    const now = performance.now(), left = unitsLeft(s, this.computeN, now);
+    if (left === null) return false;
+    const ran = now - s.sentAt, all = ran + left;
+    return ran < RESTART_SHARE * all && now - (s.restartFrom ?? s.sentAt) < all;
   }
 
   /** T-3616: a network held now will likely go at `s`'s local result (`firm`): its local stage runs, sent at most
@@ -4151,7 +4179,14 @@ class DemandClient {
     // T-3616: an edit's solve sent before the one in hand started its whole solve follows on from it
     const prev = this.cur;
     const chainFrom = !barrier && prev && prev.barrier === false && !prev.rough && !prev.wholeSent && prev.published < ROUNDS ? prev.chainFrom ?? prev.sentAt : undefined;
-    this.cur = { ...(chainFrom !== undefined ? { chainFrom } : {}), version, svc, layout, results: PERIODS.map(() => null), byRound: Array.from({length: ROUNDS + 1}, () => PERIODS.map(() => null)), published: -1, arrivedAt, sentAt: performance.now(), periodMs: [], setupMs: [], memBytes: [], cities, markets, coarse: this.coarseOf(cities), sent: { cities: [...cities], markets: [...markets] }, showEstimates, newZones, barrier };
+    // T-3925: and one sent before the one in hand's final, whose whole solve it stops (`restarts`)
+    const unfinished = !barrier && prev && prev.barrier === false && !prev.rough && prev.published < ROUNDS;
+    const restartFrom = unfinished ? prev.restartFrom ?? prev.chainFrom ?? prev.sentAt : undefined;
+    if (unfinished && this.wholeRuns(prev)) {
+      prev.cutAfter = Math.round(performance.now() - prev.sentAt);
+      solveRestarted.value++;
+    }
+    this.cur = { ...(chainFrom !== undefined ? { chainFrom } : {}), ...(restartFrom !== undefined ? { restartFrom } : {}), version, svc, layout, results: PERIODS.map(() => null), byRound: Array.from({length: ROUNDS + 1}, () => PERIODS.map(() => null)), published: -1, arrivedAt, sentAt: performance.now(), periodMs: [], setupMs: [], memBytes: [], cities, markets, coarse: this.coarseOf(cities), sent: { cities: [...cities], markets: [...markets] }, showEstimates, newZones, barrier };
     this.log.push(this.cur);
     if (this.log.length > 50) this.log.shift();
     if (this.cacheShown()) this.retireFocus(); // (T-2533)

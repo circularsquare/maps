@@ -223,7 +223,8 @@ wide so a longer date moves nothing [T-1868].
   the page's wait between the local and the whole solve and the last edit's stretch from its last unit
   to its figures, is the estimate; with a newer edit waiting for that solve's final (T-1734), as long again
   as the running solve's whole time (not for one made in the first 10 s of a local solve, which likely goes
-  at its local result, T-3616). It counts down and takes a new estimate as the loading card's time
+  at its local result, T-3616). A newer edit that stops the running whole solve (in its first 40%, T-3925)
+  starts the time left and the tag's bar again from the new solve. It counts down and takes a new estimate as the loading card's time
   left does (never climbing by degrees).
   **"Calculation 1 day behind"** ("Calculation 3 days behind") takes the tag's place when a whole game
   day or more has passed since the oldest edit no solve's final covers yet (`demandBehindFrom`) while

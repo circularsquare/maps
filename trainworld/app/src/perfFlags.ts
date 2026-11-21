@@ -29,6 +29,7 @@
 //   fans     demand has no ferry fans
 //   alone    stations no line stops at are in demand's network
 //   firm     an edit's solve is not run to its end when a newer network arrives
+//   restart  (T-3925) a newer edit never stops an edit's whole solve part way: it waits for its final (with firm on)
 //   rough    no rough solve of the zone in view while the packs open
 //   selected the zone the city view shows waits its turn in the queues, and its figures wait for its cluster's final
 //   viewRound  the zone in view gets no figures from each round of a cluster solved ahead
@@ -77,6 +78,6 @@
 const q = new URLSearchParams(location.search);
 const off = new Set((q.get("perfOff") ?? "").split(",").filter(Boolean));
 
-export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "clusters" | "periods" | "split" | "reach" | "chunks" | "farChunks" | "close" | "marks" | "fans" | "zoneZoom" | "moving" | "cap" | "grow" | "rough" | "cacheAhead" | "cacheCard" | "estimate" | "splitAhead" | "strokeCache" | "strokeCull" | "strokeLod" | "strokeGather" | "bands" | "follow" | "crossWait" | "singleWait" | "bays" | "stillThrottle" | "share" | "noise" | "firm" | "alone" | "focus" | "muteThin" | "bandsSmooth" | "bandsOrder" | "bandsPlace" | "bandsHold" | "bandsAlign" | "bandGap" | "roads" | "selected" | "viewRound" | "lengths0" | "focusAhead" | "focusEnd" | "focusAux" | "carryWasm" | "overviewCache" | "fareHold" | "msaa") => off.has(part);
+export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "clusters" | "periods" | "split" | "reach" | "chunks" | "farChunks" | "close" | "marks" | "fans" | "zoneZoom" | "moving" | "cap" | "grow" | "rough" | "cacheAhead" | "cacheCard" | "estimate" | "splitAhead" | "strokeCache" | "strokeCull" | "strokeLod" | "strokeGather" | "bands" | "follow" | "crossWait" | "singleWait" | "bays" | "stillThrottle" | "share" | "noise" | "firm" | "restart" | "alone" | "focus" | "muteThin" | "bandsSmooth" | "bandsOrder" | "bandsPlace" | "bandsHold" | "bandsAlign" | "bandGap" | "roads" | "selected" | "viewRound" | "lengths0" | "focusAhead" | "focusEnd" | "focusAux" | "carryWasm" | "overviewCache" | "fareHold" | "msaa") => off.has(part);
 /** how lines side by side are worked out (map/lineBands.ts `setBandMode`) */
 export const bandTry = (): string => (perfOff("bandsSmooth") ? "" : (perfOff("bandsOrder") ? "smooth" : "smooth,order") + (perfOff("bandsPlace") ? "" : ",fit,snap") + (perfOff("bandsHold") ? "" : ",hold") + (perfOff("bandsAlign") ? "" : ",align"));

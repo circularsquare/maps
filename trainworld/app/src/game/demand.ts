@@ -368,6 +368,8 @@ export const demandWork = signal<WorkPart[] | null>(null);
 /** T-3599: a newer network waits for the running edit's solve to end (T-1734), and that solve was sent at
  * `sentAt` (performance.now()); null otherwise */
 export const editHeld = signal<{ sentAt: number } | null>(null);
+/** T-3925: counts the edits' solves stopped part way by a newer network: the calculating bar starts again */
+export const solveRestarted = signal(0);
 /** before any unit has been measured, the time over which the unit in hand goes 63% of the way to 90%
  * of a unit, ms: it slows rather than stops, since a first unit can take 15 s (New York's real save) */
 const UNIT_MS = 4000;
