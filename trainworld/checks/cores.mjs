@@ -24,10 +24,13 @@ const alive = (pid) => { try { process.kill(pid, 0); return true; } catch (e) { 
 const readRegistry = () => { try { return JSON.parse(readFileSync(REGISTRY, 'utf8')); } catch { return {}; } };
 const writeRegistry = (r) => { try { mkdirSync(ARTIFACTS, { recursive: true }); writeFileSync(REGISTRY, JSON.stringify(r)); } catch { /* best effort */ } };
 
+// Cores 0-1 stay Anita's (tools/ops/reserve_cores.ps1 keeps sessions off them too).
+const RESERVED = 2;
+
 /** `n` core numbers from the top down, skipping those in `taken` (a bit mask) while enough remain */
 function pickCores(n, total, taken) {
   const free = [], used = [];
-  for (let c = total - 1; c >= 0; c--) (taken & (1 << c) ? used : free).push(c);
+  for (let c = total - 1; c >= RESERVED; c--) (taken & (1 << c) ? used : free).push(c);
   return [...free, ...used].slice(0, n).sort((a, b) => a - b);
 }
 
