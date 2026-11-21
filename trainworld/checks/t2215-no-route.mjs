@@ -8,13 +8,16 @@
 // 3. The city view's "Within" bar has a No route part.
 // 4. The trip explorer from the island to the shore across: a No route row, "No road between these two places"
 //    under By car and By walking, no car rows.
-// 5. A ferry from the island to the shore built (the Ferry tool's water router): the No route share falls and the
-//    explorer's train row has trips.
+// 5. A mainland line away from the island built first, so the market is open before the ferry as after it (with no
+//    line there is none, and the first line adds the place's own longer trips, island ones as No route: T-2216 stage 3);
+//    then a ferry from the island to the shore (the Ferry tool's water router): the No route share falls, the bubbles'
+//    legs keep their total (they hold the zone's legs with other places too, T-3503, so they no longer equal its
+//    trips) with fewer No route legs, and the explorer's train row has trips.
 // Screenshots, light and dark, without and with the ferry, in artifacts/trainworld/t2215/. Uses the Vite on the
-// url (dev-nowatch.mjs, port 6196 by default); 2 demand workers, claim 3 cores. About 5 minutes.
+// url (dev-nowatch.mjs, port 6196 by default); 2 demand workers, claim 3 cores. About 7 minutes.
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { ARTIFACTS, collectErrors, demandFinal, launchChrome } from './lib.mjs';
+import { ARTIFACTS, buildLine, collectErrors, demandFinal, launchChrome } from './lib.mjs';
 
 const OUT = join(ARTIFACTS, 't2215');
 await mkdir(OUT, { recursive: true });
@@ -26,10 +29,10 @@ const log = (s) => console.log(`${((Date.now() - t0) / 1000).toFixed(0).padStart
 
 /** Each island: its zone, a point on it (the bubbles' hover and the explorer's start), a point on the shore across
  * within 10 km (the explorer's end, so By walking shows), the ferry's two landings, the view shown and a point on the
- * island in it (the hover). */
+ * island in it (the hover), and a mainland line's stations far from the island (to open the market). */
 const ISLANDS = [
-  { name: 'Salamis', zone: 'ath', at: [23.4905, 37.9640], across: [23.5650, 37.9650], ferry: [[23.5268, 37.9589], [23.5600, 37.9628]], view: [23.5400, 37.9580], hover: [23.5220, 37.9600], zoom: 13.4 },
-  { name: 'Cheung Chau', zone: 'hon', at: [114.0275, 22.2085], across: [114.0005, 22.2655], ferry: [[114.0290, 22.2105], [113.9990, 22.2640]], view: [114.0135, 22.2365], hover: [114.0275, 22.2085], zoom: 12.7 },
+  { name: 'Salamis', zone: 'ath', at: [23.4905, 37.9640], across: [23.5650, 37.9650], ferry: [[23.5268, 37.9589], [23.5600, 37.9628]], view: [23.5400, 37.9580], hover: [23.5220, 37.9600], zoom: 13.4, mainland: [[23.7275, 37.9838], [23.7700, 38.0300], [23.8110, 38.0740]] },
+  { name: 'Cheung Chau', zone: 'hon', at: [114.0275, 22.2085], across: [114.0005, 22.2655], ferry: [[114.0290, 22.2105], [113.9990, 22.2640]], view: [114.0135, 22.2365], hover: [114.0275, 22.2085], zoom: 12.7, mainland: [[114.1694, 22.3193], [114.1720, 22.3500], [114.1880, 22.3800]] },
 ];
 
 /** game/format.ts `count`: 312000 -> "312k", 1.84e6 -> "1.84M" */
@@ -168,6 +171,11 @@ for (const isl of ISLANDS) {
 
     // 5. the ferry
     await page.evaluate(() => window.tw.client.post({ kind: 'sandbox' }));
+    const v0 = await page.evaluate(() => window.twDemand.view()?.version ?? 0);
+    const main = await buildLine(page, isl.mainland, { name: 'Mainland' });
+    check(!!main?.ok, `${isl.name}: a mainland line built (the market open)`, (main?.issues ?? []).join(', '));
+    await demandFinal(page, { timeout: 600000, polling: 1000, after: v0 });
+    const m = await zoneFigures(page, isl.zone);
     const before = await page.evaluate(() => window.twDemand.view()?.version ?? 0);
     const made = await addFerry(page, isl);
     check(!made.error, `${isl.name}: a ferry to the shore built`, made.error ?? `${made.km.toFixed(1)} km`);
@@ -175,8 +183,8 @@ for (const isl of ISLANDS) {
       await demandFinal(page, { timeout: 600000, polling: 1000, after: before });
       await page.evaluate(([c, z]) => { window.tw.selection.value = null; window.tw.map.jumpTo({ center: c, zoom: z }); }, [isl.view, isl.zoom]);
       const g = await zoneFigures(page, isl.zone);
-      check((g.split.none ?? 0) < (f.split.none ?? 0) && Math.abs(g.splitSum - 100) < 0.01, `${isl.name}: with the ferry the No route share falls, the split still adds up`, `${(f.split.none ?? 0).toFixed(3)}% -> ${(g.split.none ?? 0).toFixed(3)}%, ferry riders ${Math.round(await page.evaluate((id) => window.twDemand.view()?.lines.get(id)?.ridersPerDay ?? 0, made.line)).toLocaleString('en-US')} a weekday`);
-      if (g.home) check(Math.abs(legs(g.home) - g.trips) <= 1e-3 * g.trips, `${isl.name}: with the ferry the bubbles' legs still add up`, `${Math.round(legs(g.home)).toLocaleString('en-US')} of ${Math.round(g.trips).toLocaleString('en-US')}`);
+      check((g.split.none ?? 0) < (m.split.none ?? 0) && Math.abs(g.splitSum - 100) < 0.01, `${isl.name}: with the ferry the No route share falls, the split still adds up`, `${(m.split.none ?? 0).toFixed(3)}% -> ${(g.split.none ?? 0).toFixed(3)}% (${(f.split.none ?? 0).toFixed(3)}% with no line), ferry riders ${Math.round(await page.evaluate((id) => window.twDemand.view()?.lines.get(id)?.ridersPerDay ?? 0, made.line)).toLocaleString('en-US')} a weekday`);
+      if (g.home && m.home) check(Math.abs(legs(g.home) - legs(m.home)) <= 1e-3 * legs(m.home) && g.home[3] < m.home[3], `${isl.name}: with the ferry the bubbles' legs keep their total, fewer of them No route`, `${Math.round(legs(m.home)).toLocaleString('en-US')} -> ${Math.round(legs(g.home)).toLocaleString('en-US')}, no route ${Math.round(m.home[3]).toLocaleString('en-US')} -> ${Math.round(g.home[3]).toLocaleString('en-US')}`);
       await page.waitForTimeout(3000);
       tag = await hoverIsland(page, isl.hover);
       await shots(page, isl, tag, 'ferry');
