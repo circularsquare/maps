@@ -1013,6 +1013,65 @@ def gb_units(meta, iso, adm):
     return absorb(iso, out)
 
 
+def gb_file_units(iso, adm, pop=None, skip=(), url=None):
+    """[(shapeID, name, Mollweide geometry)] of a geoBoundaries file as fetched (from `url` when not on disk), on
+    the de facto lines and with GB_SPLIT_FAR's far parts apart, without gb_units' gap fill (over an hour on
+    Canada's ADM3, T-1239) or its cache; features whose shapeID is in `skip` left out unread (not in GB_SPLIT_FAR's
+    files)."""
+    path = fetch(f"{iso}_{adm}.geojson", url, "geoboundaries") if url else RAW / "geoboundaries" / f"{iso}_{adm}.geojson"
+    gj = json.loads(path.read_text(encoding="utf-8"))
+    if iso in GB_SPLIT_FAR and pop is None:
+        pop = Pop()
+    out = []
+    for f in gj["features"]:
+        if f["geometry"] is None or (iso not in GB_SPLIT_FAR and f["properties"].get("shapeID") in skip):
+            continue
+        g = polygonal(to_moll(shape(f["geometry"])))
+        if g.is_empty or g.bounds[2] - g.bounds[0] > 2.0e7:
+            continue
+        g = de_facto(iso, g)
+        if g is None or g.is_empty:
+            continue
+        uid = f["properties"].get("shapeID") or f"{iso}-{adm}-{len(out)}"
+        for k, piece in enumerate(far_parts(g, pop) if iso in GB_SPLIT_FAR else [g]):
+            out.append((uid if k == 0 else f"{uid}~{k}", f["properties"].get("shapeName") or "", piece))
+    return out
+
+
+def state_lost(st, iso, have, pop=None):
+    """[(unit id, name, Mollweide geometry)] of `iso`'s units at the plan state's level that state.pkl lacks
+    and country_units takes today: the state predates T-2695, which takes a unit of the chosen level that the
+    units taken leave half of (its representative point outside every simplified first-level unit: Buenos
+    Aires's comunas, Egypt's North Coast and Port Suez, T-3660). `have`: the state's units as (id, name,
+    geometry), before ABSORB, by id and position, never by name (Egypt's file has two North Coasts). A unit
+    mostly on another country's land and under a tenth on its own is left out, as de_facto's test (Venezuela's
+    Zona en Reclamacion, which Guyana holds)."""
+    src = st["sources"].get(iso)
+    if not src or src.get("kind") != "geoBoundaries":
+        return []
+    ids = {u[0] for u in have}
+    tree = STRtree([g for _, _, g in have]) if have else None
+    if not _NE:
+        de_facto(iso, shapely.Point(0, 0))
+    ne, netree = _NE
+    out = []
+    for uid, name, g in gb_file_units(iso, src["level"], pop, skip=ids, url=src.get("urls", {}).get(src["level"])):
+        if uid in ids:
+            continue
+        near = tree.query(g, predicate="intersects") if tree is not None else []
+        if len(near) and g.difference(union_all([have[i][2] for i in near])).area < 0.5 * g.area:
+            continue
+        on = [(ne[i][0], g.intersection(ne[i][1]).area) for i in netree.query(g, predicate="intersects")]
+        own = sum(a for c, a in on if c == iso)
+        if sum(a for c, a in on if c != iso) > 0.5 * g.area and own < 0.1 * g.area:
+            continue
+        out.append((uid, name, g))
+    if out:
+        log(f"  {iso}: {len(out)} units the plan state lacks taken from the file (T-2695, T-3660): "
+            f"{', '.join(n or u for u, n, _ in out[:8])}{' ...' if len(out) > 8 else ''}")
+    return out
+
+
 @__import__("functools").lru_cache(maxsize=4)
 def state_units(iso):
     """[(unit id, name, Mollweide geometry)] of the plan state's units of a country (state.pkl, on the
@@ -1032,7 +1091,9 @@ def state_units(iso):
             g = de_facto(iso, u.geom)
             if g is not None and not g.is_empty:
                 out.append((u.id, u.name, g))
-    out = absorb(iso, out) + [(u.id, u.name, u.geom) for u in taken_units(st, iso)]
+    # the lost units after ABSORB: another unit in its list moves its Voronoi ties (STRtree order), and so the
+    # shipped units' desert pieces (22 km2 between Kharga and Paris, T-3660)
+    out = absorb(iso, out) + state_lost(st, iso, out) + [(u.id, u.name, u.geom) for u in taken_units(st, iso)]
     return corridor_units(iso, out)[0]
 
 
@@ -2992,11 +3053,20 @@ def plan_zones(isos3, out_path=None, replan=False):
             units = [u for u in units if u.geom is not None and not u.geom.is_empty]
             if gone:
                 log(f"{iso}: {len(gone)} units held by another country on the ground, left out: {', '.join(gone)}")
+            lost = state_lost(st, iso, [(u.id, u.name, u.geom) for u in units], pop)  # the same as state_units
             if iso in ABSORB:  # the state predates ABSORB (T-2965)
                 geo = {uid: g for uid, _, g in absorb(iso, [(u.id, u.name, u.geom) for u in units])}
                 units = [u for u in units if u.id in geo]
                 for u in units:
                     u.geom = geo[u.id]
+            if lost:  # parents of the unit it shares the longest border with: its own point is in no first-level unit
+                tree = STRtree([u.geom for u in units])
+                for uid, name, g in lost:
+                    k = min(tree.query_nearest(g, all_matches=True),
+                            key=lambda k: -g.boundary.intersection(units[k].geom.buffer(100)).length)
+                    t = Unit(uid, name, iso, g, units[int(k)].parents)
+                    t.pop = float(pop.inside(g)[2].sum())
+                    units.append(t)
         corridor = set()
         if iso in CORRIDORS:  # T-3287: the units a route crosses, cut along its strip, as state_units does
             cut, corridor = corridor_units(iso, [(u.id, u.name, u.geom) for u in units])

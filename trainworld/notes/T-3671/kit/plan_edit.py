@@ -48,7 +48,15 @@ def load_units(iso):
     import __main__
     __main__.Unit = world_plan.Unit  # the pickle may name the class from a run as a script
     st = pickle.loads(open(STATE, "rb").read())
-    return {u.id: u for u in st["units"] if u.iso == iso}
+    by = {u.id: u for u in st["units"] if u.iso == iso}
+    # T-3660: the units the state lacks that world_plan.state_units takes from the file, with their GHSL people
+    pop = world_plan.Pop()
+    for uid, name, g in world_plan.state_lost(st, iso, [(u.id, u.name, world_plan.de_facto(iso, u.geom) or u.geom)
+                                                         for u in by.values()]):
+        u = world_plan.Unit(uid, name, iso, g, [])
+        u.pop = float(pop.inside(g)[2].sum())
+        by[uid] = u
+    return by
 
 
 def pieces(ids, by):

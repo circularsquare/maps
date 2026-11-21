@@ -1,0 +1,9 @@
+{
+ "task": "T-3660",
+ "iso": "EGY",
+ "moves": [
+  ["37247803B36627997079635", "North Coast", null, "mif"],
+  ["37247803B57319556498410", "Port Suez Police Department", null, "aai"]
+ ],
+ "why": "two geoBoundaries units the plan state lost (built before T-2695's rule for units whose point lies outside every simplified first-level unit), each to the row it shares the longest border with: North Coast (37247803B36627997079635, 11 km2, 19.8 km of border with Al-Hammam) to mif, Port Suez Police Department (5.6 km2, 15.3 km with Al-Ganayin) to aai"
+}

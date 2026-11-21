@@ -108,11 +108,14 @@ Rule keys a new country may need (T-2294, T-2295):
 - **`plan_units` left off** where the plan state lost many units and the metro rows' unit ids are the same geoBoundaries
   file's shapeIDs (Iran: 199 of 2,772 lost, Bandar Abbas among them, T-3763): the zones read the file afresh and the
   metro rows keep their units.
-- **Units the plan state lost**: `checks/state_gaps.py <ISO3>` lists geoBoundaries units no row names and the zones
-  did not leave dead, with their people outside every pack (before T-2695 a coastal unit whose point lay outside the
-  simplified first-level coast was dropped: Buenos Aires's comunas, Guaruja, Zhoushan's islands). Run it on the dry plan
-  and again after the join. Any found with 10,000+: add them to the state (`plan_units` countries) and to the row
-  holding their longest border within their first-level unit, under the plan lock, as notes/T-2702.md did.
+- **Units the plan state lost**: the state predates T-2695, so it lacks a unit whose point lay outside the simplified
+  first-level coast (Buenos Aires's comunas, Guaruja, Zhoushan's islands, Egypt's Port Suez). Its readers (`state_units`
+  for builds, `plan_zones` for zones) take those units from the file again (`world_plan.state_lost`, T-3660), so a
+  `plan_units` country needs no state patch; a unit mostly on another country's land stays out. A built zone
+  does not take them on its own: `checks/state_gaps.py <ISO3>` lists geoBoundaries units no row names and the zones
+  did not leave dead, with their people outside every pack. Run it on the dry plan and again after the join. Any found
+  with 10,000+ go to the row holding their longest border within their first-level unit, under the plan lock, as
+  notes/T-2702.md did; smaller ones join a row rebuilt anyway.
 
 **Units drawn around the others** (Egypt's 14 "Zemam Out", each governorate's desert: GHSL's valley-edge villages fell
 into them, making desert zones of village strips and rings round the valley zones): name them in `world_plan.ABSORB`,
