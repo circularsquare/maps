@@ -1,30 +1,28 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session d15915ac-6dd5-4586-bd98-843cbc616824, name maps-ac [1ef926], since 2026-11-21 15:53 UTC
-Updated: 2026-11-21 19:55 UTC
+Updated: 2026-11-21 20:45 UTC (cycling at 500k to standby maps-6a; she has remote control on the standby tabs)
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5.
 
 ## Next
 0. LIVE v0.4.5. Cap 14. Cores 0-1 hers (`reserve_cores.ps1 -Loop 30` at takeover). No publish yet ("no rush").
-   Before the next publish: fresh freeze (place index), translations (T-3986, T-3991, T-3999, T-4003, T-4010 keys),
-   server learns save level 37+ (busways; boardonly may add one), batchchk11. Standby tabs: notes/standby.txt.
-1. Master 28531e0f, unchecked since batch 10: oneway T-4000 (own check PASS), pausebp, placeindex, brtdash,
-   hovers, kinds2, brtwait, helppanels. 8800 = 182e8e8e (lacks helppanels). batchchk11 after busways lands (add:
-   a stop on a station joined to nothing does nothing and says nothing).
-2. TRACK (her top priority): stage 1 T-3948 landed b10862a0 (guardchk PASS). tw/track cut at ac49304b. Running:
-   bundles T-3949 stage 2a (Opus, tree from tw/track); landinto T-4016 (Sonnet: agent-tree `--into tw/track`,
-   `sync-track`); newerlevel T-4014 (Opus, P1: refuse saves from a newer level; never upload over newer).
-3. BRT (her other priority): busways T-3378 stage 4 in tree (level 37); buswaychk: 4 PASS, saves FAIL (a level-37
-   save opens silently as rail on master: general fix is T-4014, now P1-ish, start after trackprep lands);
-   buswayfix (Sonnet) rebasing onto master + Blueprint total fix; then land.
-   boardonly T-4013 done in tree (archived): ALSO takes level 37 (LBO1). After busways lands: rebase it to 38, then
-   its own save checker (it also fixes a demand clamp: riders no longer get off at one-track stops a train passes
-   on the other track; may shift riders a little), then land. Server must learn 37 and 38 before publish. Open her call: any bus 60 km/h on busways (built) or BRT only.
-4. Running: guardchk, buswaychk, boardonly T-4013 (Opus), splitb3 T-3373 B stage 3 (Opus). oomretry T-3933 landed
-   6fcccc9a. Held: T-3932 (splitb3's worker pool). Up next on the board: draw from it when below 4.
-5. Open asks: T-3742 nudge design (a-..-16), T-4008 soft rule (a-..-17); T-2264 help wording; busway speed.
-   Later: T-3937 quiet machine; T-3931 held for T-3231; T-3655 faster full-track edits; T-3939 B's 140 MB.
+   Before the next publish: fresh freeze (place index), translations (T-3986, T-3991, T-3999, T-4003, T-4010,
+   T-2264, T-3933, T-3378 s4, T-4013 keys), server learns levels 37-38 (deploy needs her yes), T-4014 shipped,
+   batchchk11 PASS. Standby tabs left: maps-5a, maps-17 (notes/standby.txt; maps-6a takes this handover).
+1. master 2b7ed10a = 8800 (save level 37). Batches 9-10 PASS. batchchk11 (Sonnet, maps-ac's) checking everything
+   since 6a642fb1 + smoke; its report comes as an agent report; fix or revert on FAIL.
+2. TRACK (her top priority): stage 1 landed. tw/track cut at ac49304b. bundles T-3949 stage 2a (Opus) running in a
+   tree from tw/track: land with `agent-tree.mjs finish bundles "..." --into tw/track --task T-3949` (T-4016's
+   tool; first use builds .tw-trees/_track, ~4 min WASM); `sync-track` after master batches touching track/saves.
+   Next stages per notes/T-3444-design/10-build-plan.md (2b...). T-4014 (newerlevel, Opus, P1) running on master.
+3. BRT (her other priority): all 4 stages landed (busways 6a1b640d). Open her call: busways 60 km/h for any bus
+   (built) or BRT only. boardonly T-4013 at level 38 in its tree; boardchk (Sonnet) checking; land on PASS.
+4. Running agents (reports arrive via the board): batchchk11, boardchk, bundles T-3949, newerlevel T-4014, splitb3
+   T-3373 B stage 3. Held: T-3932 (splitb3's pool). Up next on the board: draw from it when below 4.
+5. Open asks: T-3742 nudge design (a-..-16), T-4008 soft rule (a-..-17); T-2264 help wording; busway speed;
+   T-4013 per-direction follow-up (I'd file P3). Later: T-3937 quiet machine; T-3931 held for T-3231; T-3655
+   faster full-track edits; T-3939 B's 140 MB.
 ## Her words
 - 11-21 ~19:20 UTC: BRT stations come with a waiting room, shown as bought (T-4012, brtwait running); tram icon's
   top piece bigger; "text ack" (kinds2 strings); boarding-only / alighting-only stops filed (T-4013).
