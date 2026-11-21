@@ -972,6 +972,10 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3947 [P3] {L:schematic-layout} Schematic redraw that takes buses into account
   - Context: Your scratch pad, 11-21: "bus-heavy maps do kinda come out looking like spaghetti on the schematic map. cuz we dont actually redraw taking bus routes into account. people request an option to manually start a redraw taking buses into account."
   - Goal: A control that redraws the schematic with bus routes included in the layout, started manually.
+- T-3986 [P2] {L:small-fixes} Say so when the train model is down
+  - Context: From T-3945, 11-21: after four crashes in a minute the train model stays down; edits then show "That edit failed and was undone." or nothing, saves and downloads get no answer, and leaving fails with "This game could not be saved. Download it as a file before leaving it." (an untranslated literal, slots.ts:209 and :212).
+  - Goal: While the model is down, refused edits, saves and downloads show the existing "The train simulation stopped working. Reload the page to go on. Your last autosave is kept."; leaving skips the save so the menu opens; the two slots.ts literals get message keys.
+  - Other: notes/T-3945.md
 - T-3941 [P3] {L:buses} {after:T-3655} Weekend BRT lanes past 60 buses an hour
   - Context: From T-3378 stage 2, 11-21: `settle_weekend` doesn't run `fit_lanes`, so in a game where any line has its own weekend schedule, weekend lanes can go past 60. The fix sits in the same code as T-3655's unlanded work.
   - Goal: Weekend lanes cut to 60 an hour as weekdays are.
