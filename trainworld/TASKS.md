@@ -354,6 +354,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3990 [P2] {L:community} {after:T-3851} Discord and leaderboards links in Community
   - Context: You, 11-21: "we can also put the discord link in community, and the leaderboards link in community." The Discord invite is the one the feedback panel uses (discord.gg/RemhwVcZFw); the leaderboards are a panel of their own today.
   - Goal: The Community panel has a Discord link and a link that opens the leaderboards.
+- T-3991 [P2] {L:community} {after:T-3851} Report as a flag icon with a confirm
+  - Context: You, 11-21: "opening someones community save and seeing the word "report" is a bit of a killjoy. mybe lets hide it and just have a flag icon button. also instead of it expanding right away when you click on it and showing the three reasons, i think lets have it show a confirmation popup like Report this save? [reason] cancel submit".
+  - Goal: The Report button is a flag icon only; a click opens a popup "Report this save?" with the reason picker and Cancel / Submit.
 - T-3988 [P3] {L:steam} {after:the standalone build} Downloadable build on itch.io, $5 suggested
   - Context: You, 11-21: the standalone downloadable game with "a suggested donation of 5 dollars (but you can set it to 0)"; itch as the store, its "$0 or donate" pricing with $5 suggested, and the anita.garden page linking to it. Steam stays free (no optional donations there); keep any in-game donation link out of the Steam build unless Valve's rules allow it.
   - Goal: An itch.io page with the downloadable build at $0 or donate ($5 suggested), linked from anita.garden.
