@@ -80,6 +80,7 @@ import { ReversalMarks } from "./map/reversalMarks";
 import { lineSizeAt, startTrackHover } from "./map/trackHover";
 import { startTerrainTint } from "./map/terrainTint";
 import { startRestList } from "./map/hoverRest";
+import { startOverChrome } from "./map/overChrome";
 import { startStationLife } from "./map/stationLife";
 import { soundLog, startBuildSounds } from "./map/buildSound";
 import { openings, startOpeningDay } from "./game/openingDay";
@@ -534,6 +535,7 @@ effect(() => {
 });
 // Resting the pointer on track says what the track display shows there (T-157).
 startTrackHover(map, overlay);
+startOverChrome(map); // T-4009
 // T-732: resting the pointer lists what else is under it
 if (!SYNTH) startRestList(map, overlay, (x, y) => demandClick?.(x, y, false, true));
 // T-686: from the platforms' zoom, chimes, pops and faces as trains let riders off and on
