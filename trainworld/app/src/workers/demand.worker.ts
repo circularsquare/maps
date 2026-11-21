@@ -295,6 +295,30 @@ const NONE = 0xffffffff;
 /** T-1733: the network the last solve started on, to map route nodes from it to the next one's */
 type NetIds = { lines: string[]; stations: string[]; lineN: Uint32Array; stops: Uint32Array; tph: Float32Array; times: Float32Array };
 let lastNet: NetIds | null = null;
+/** T-2624: the network the solve before this one started on */
+let netBefore: NetIds | null = null;
+/**
+ * T-2624: the periods of `mine` in the order a local solve takes them: those whose trains an hour changed on one of
+ * `lines` (indices into `b`'s) since network `a`, then the rest, each in period order. An edit's trains can change
+ * nothing at a level (a line at its most trains an hour at high demand: Seoul's Line 1a, 48 to 49 trains) and
+ * those periods' figures then barely move, so they go last, and with the last message (`quiet`). Period order
+ * where every period or none changed, or a line is new or its stops changed (every period changed).
+ */
+function localOrder(lines: ArrayLike<number>, a: NetIds | null, b: NetIds | null): { periods: number[]; quiet: Set<number> } {
+  const none = { periods: mine, quiet: new Set<number>() };
+  if (!a || !b) return none;
+  const P = PERIODS.length, lineA = new Map(a.lines.map((id, l) => [id, l]));
+  const offs = (n: Uint32Array) => { const o = [0]; for (const v of n) o.push(o[o.length - 1] + v); return o; };
+  const oa = offs(a.lineN), ob = offs(b.lineN), moved = PERIODS.map(() => false);
+  for (let i = 0; i < lines.length; i++) {
+    const lb = lines[i], la = lineA.get(b.lines[lb]);
+    if (la === undefined || a.lineN[la] !== b.lineN[lb]) return none;
+    for (let k = 0; k < b.lineN[lb]; k++) if (a.stations[a.stops[oa[la] + k]] !== b.stations[b.stops[ob[lb] + k]]) return none;
+    for (let q = 0; q < P; q++) { const x = a.tph[P * la + q], y = b.tph[P * lb + q]; if (!(Math.abs(x - y) <= NOISE_TRAINS * Math.abs(x))) moved[q] = true; }
+  }
+  const first = mine.filter((q) => moved[q]), rest = mine.filter((q) => !moved[q]);
+  return first.length && rest.length ? { periods: [...first, ...rest], quiet: new Set(rest) } : none;
+}
 /** T-1735: per market part, the network (`lastNet`) it holds solved, untouched since */
 const marketNet = new Map<IntercityApi, NetIds>();
 /** T-1733: the view each city population holds every one of its periods solved on, untouched since
@@ -416,6 +440,7 @@ function editedStations(a: NonNullable<typeof lastNet>, b: NonNullable<typeof la
 function remapKept(next: NonNullable<typeof lastNet> | null) {
   const prev = lastNet;
   lastNet = next;
+  netBefore = prev;
   if (!prev || !next) { marketOn.clear(); sharedMkt.clear(); sharedTrail.clear(); capRatio.clear(); marketNet.clear(); return; }
   const same = prev.lines.join("\n") === next.lines.join("\n") && prev.stations.join("\n") === next.stations.join("\n")
     && prev.lineN.length === next.lineN.length && prev.lineN.every((v, k) => v === next.lineN[k]) && prev.stops.length === next.stops.length && prev.stops.every((v, k) => v === next.stops[k]);
@@ -2499,7 +2524,9 @@ async function run() {
       // crowding of the touched cities' last round; the result's market less `less(q)`, the window's
       // pairs' old loads, plus `sub`'s)
       // (`stage`: the T-2729 work stage its periods count in)
-      const localSolve = async (c: JobCluster, fresh: Population[], ratioSig = c.sig, shared?: (Float32Array | undefined)[], win?: { sub: IntercityApi; less: (q: number) => Float32Array | null }, stage: 0 | 1 = 1): Promise<boolean | null> => {
+      // (T-2624 `done`: called as each period solved ends, `last` for the last of them; `periods`: the periods'
+      // order, `mine` by default: periods share no rider, so the order changes no figure)
+      const localSolve = async (c: JobCluster, fresh: Population[], ratioSig = c.sig, shared?: (Float32Array | undefined)[], win?: { sub: IntercityApi; less: (q: number) => Float32Array | null }, stage: 0 | 1 = 1, done?: (q: number, last: boolean) => void, periods = mine): Promise<boolean | null> => {
         const N = jobNodes, isFresh = (a: Population) => fresh.includes(a), order = c.solveOrder.filter(isFresh);
         const trails = new Map(order.map((p) => [p, trail.get(p)]));
         setUpPops(c, win ? [...order, win.sub] : order, win && c.part ? { sub: win.sub, part: c.part } : undefined);
@@ -2512,7 +2539,8 @@ async function run() {
         }
         c.reuse = 0;
         ready.add(c);
-        for (const q of mine) {
+        const lastQ = periods.filter((q) => !(keep & (1 << q))).pop();
+        for (const q of periods) {
           if (keep & (1 << q)) continue;
           if (stage === 0 && wholeGo >= job.version) {
             work?.dropLocal();
@@ -2602,6 +2630,7 @@ async function run() {
           release_skims();
           periodsSolved++;
           work?.end();
+          done?.(q, q === lastQ);
         }
         return true;
       };
@@ -2637,25 +2666,29 @@ async function run() {
             return blocks[0];
           },
         } : undefined;
+        const touched = citiesOf(c, e.fresh), sent = new Set<number>();
+        const send = (q: number) => {
+          sent.add(q);
+          const less = lessOf.get(q);
+          const delta = sub && less ? marketBlocks(c, sub, q).map((v, i) => { const t = v.slice(), l = less[i]; if (l) for (let k = 0; k < t.length; k++) t[k] -= l[k]; return t; }) : undefined;
+          if (import.meta.env.DEV && delta) { let a = 0, b = 0; for (let k = jobNodes; k < 2 * jobNodes; k++) { a += less![0][k]; b += delta[0][k] + less![0][k]; } console.info(`T1735 v${job.version} period ${q}: the window's pairs board ${Math.round(b)} on the new network, ${Math.round(a)} on the old`); }
+          const { msg, transfer } = figures(q, job.rounds, 0, [c], undefined, sharedOf(c, q, shared), delta);
+          sendMessage({ kind: "result", ...msg, cluster: { cities: touched, market: false, lines: c.lines.slice(), local: true } }, transfer);
+        };
         try {
-          const ok = await localSolve(c, e.fresh, e.sig, shared, win, 0);
+          // T-2624: each period's result as it ends, but the last, which goes after the zones' bubbles below
+          const lo = job.oneSend ? null : localOrder(c.lines, netBefore, lastNet);
+          const ok = lo ? await localSolve(c, e.fresh, e.sig, shared, win, 0, (q, last) => { if (!last && !lo.quiet.has(q)) send(q); }, lo.periods) : await localSolve(c, e.fresh, e.sig, shared, win, 0);
           if (ok === null) {
             if (import.meta.env.DEV) console.info(`T3512 v${job.version} local solve stopped for the whole solve after ${Math.round(performance.now() - t0)} ms`); // i18n-ignore
             break;
           }
           if (!ok) { stale = true; break; }
           for (const p of e.fresh) cityOn.set(p, viewOf(c, p));
-          const touched = citiesOf(c, e.fresh);
           // T-2532: the touched zones' bubbles from this result, ahead of it, as a round's go ahead of
           // its last result; the whole solve's of the same round replace them
           for (const id of touched) keepSums(job.version, [job.rounds], id, cities.get(id)!, undefined, true);
-          for (const q of mine) {
-            const less = lessOf.get(q);
-            const delta = sub && less ? marketBlocks(c, sub, q).map((v, i) => { const t = v.slice(), l = less[i]; if (l) for (let k = 0; k < t.length; k++) t[k] -= l[k]; return t; }) : undefined;
-            if (import.meta.env.DEV && delta) { let a = 0, b = 0; for (let k = jobNodes; k < 2 * jobNodes; k++) { a += less![0][k]; b += delta[0][k] + less![0][k]; } console.info(`T1735 v${job.version} period ${q}: the window's pairs board ${Math.round(b)} on the new network, ${Math.round(a)} on the old`); }
-            const { msg, transfer } = figures(q, job.rounds, 0, [c], undefined, sharedOf(c, q, shared), delta);
-            sendMessage({ kind: "result", ...msg, cluster: { cities: touched, market: false, lines: c.lines.slice(), local: true } }, transfer);
-          }
+          for (const q of mine) if (!sent.has(q)) send(q);
           // i18n-ignore
           if (import.meta.env.DEV) console.info(`T1733 v${job.version} local solve of ${touched.length} zones (${touched.slice(0, 8).join(",")}) of ${c.cities.length} after an edit${sub ? `, the market's pairs of ${sub.window_zones().length} of its zones` : ""}: ${Math.round(performance.now() - t0)} ms`);
         } finally {
@@ -2701,14 +2734,62 @@ async function run() {
         // T-1533: the zone in view's cluster's free-flow figures at once, for the lines new since
         // the shown result (T-324), rather than at the cluster's last round
         // (T-1733: none after its local result)
-        const preview = job.rounds > 0 && c === early[0] && !!job.first && c.cities.includes(job.first) && !editOf.has(c);
+        const preview = job.rounds > 0 && c === early[0] && !!job.first && c.cities.includes(job.first) && !editOf.has(c) && !job.noPreview;
         const sendPreview = () => {
           for (const q of mine) {
             const { msg, transfer } = figures(q, 0, 0, [c]);
             sendMessage({ kind: "result", ...msg, cluster: { cities: c.cities, market: c.market, lines: c.lines.slice() } }, transfer);
           }
         };
-        for (let round = 0; round <= job.rounds && !stale; round++) {
+        // T-2624: the zone in view's cluster after an edit goes period after period, each period's final sent as it
+        // lands (periods share no rider, so its figures are the same as round after round); the preview as before
+        const ahead = mine.filter((q) => !(c.reuse & (1 << q)));
+        const byPeriod = !job.roundFirst && c === early[0] && job.rounds > 0 && ahead.length > 1;
+        const sentQ = new Set<number>();
+        if (byPeriod) {
+          const done = new Map<number, Set<Population>>();
+          let previewed = false, parted = false;
+          if (preview) {
+            const timed = !!work && previews(c);
+            if (timed) work!.begin(1, splitExp(c), inView(c, 1), -1, splitSize(c));
+            const r = await splitRound([c], c, [], done);
+            if (r === false) stale = true;
+            if (timed) work!.end(r !== null);
+            previewed = parted = !!r;
+          }
+          // (a period's own free flow, as `sendPreview` sends every period's after the round: the page takes it
+          // for a period whose parts did not all come)
+          const sendOwn = (qs: number[]) => {
+            for (const q of qs) {
+              const { msg, transfer } = figures(q, 0, 0, [c]);
+              sendMessage({ kind: "result", ...msg, cluster: { cities: c.cities, market: c.market, lines: c.lines.slice() } }, transfer);
+            }
+          };
+          for (let i = 0; i < ahead.length && !stale; i++) {
+            const q = ahead[i];
+            for (let round = 0; round <= job.rounds; round++) {
+              await yieldNow();
+              work?.begin(1, roundExp(c, q, round), inView(c, 1), q, roundSize(c, round));
+              if (pending || !(await step(c, round, q, round === 0 ? done.get(q) : undefined))) { stale = true; break; }
+              work?.end();
+              release_skims();
+              if (round > 0 || !preview) continue;
+              // T-1538: the other periods estimated from the first one's free flow, as round after round
+              if (i === 0 && !previewed && !job.exact0) {
+                const rest = ahead.slice(1);
+                if (rest.every((r) => { const d = new Set<Population>(); done.set(r, d); return estimate(c, q, r, d); })) { sendPreview(); previewed = true; continue; }
+              }
+              if (parted || !previewed) sendOwn(i === 0 ? [q, ...mine.filter((k) => !ahead.includes(k))] : [q]);
+            }
+            if (stale) break;
+            // (the last goes with the cluster's other figures below, or with the solve's)
+            if (i === ahead.length - 1) continue;
+            const { msg, transfer } = figures(q, job.rounds, 0, [c]);
+            sendMessage({ kind: "result", ...msg, cluster: { cities: c.cities, market: c.market, lines: c.lines.slice(), step: true } }, transfer);
+            sentQ.add(q);
+          }
+        }
+        for (let round = 0; round <= job.rounds && !stale && !byPeriod; round++) {
           let previewed = false, parted = false;
           const done = new Map<number, Set<Population>>();
           if (preview && round === 0) {
@@ -2742,6 +2823,7 @@ async function run() {
         // the last one's figures go with the solve's results, below
         if (c === early[early.length - 1]) break;
         for (const q of mine) {
+          if (sentQ.has(q)) continue;
           const { msg, transfer } = figures(q, job.rounds, 0, [c]);
           sendMessage({ kind: "result", ...msg, cluster: { cities: c.cities, market: c.market, lines: c.lines.slice() } }, transfer);
         }

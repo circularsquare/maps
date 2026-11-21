@@ -349,7 +349,11 @@ re-solves that level's periods (three at high, one at medium or low), a new stat
 `?perfOff=periods` re-solves every period of a cluster solved.
 
 After an edit (a solve without the round barrier) the clusters to solve go one after another, the
-zone in view's first (T-393), then the city view's zone's (T-2453), each to its last round; each but the last is sent as soon as it is
+zone in view's first (T-393), then the city view's zone's (T-2453), each to its last round. The zone in view's goes
+period after period, each through all its rounds (T-2624, `?perfOff=wholeSteps` off: round after round; periods
+share no rider, so the figures are the same), each period's final sent as it lands (`cluster.step`); where no local
+result of the solve was shown (none solved, or a solve restarted by T-3925) the page shows them as the local
+result's steps (below). Each cluster but the last is sent as soon as it is
 done, as one result per period with that cluster's figures alone (`result.cluster`), and the page
 puts its lines, their stations, its zones' views and, if the market is in it, the regional market's
 into the shown result at once. The network-wide totals wait for the solve's final: once every
@@ -388,7 +392,16 @@ read through its old route nodes, carried to the new network's by line and stati
 those zones' subzone sums (marked `local`, kept apart on the page until the whole solve's of the same
 round are all in, T-2532), so their bubbles follow the figures: the page
 puts its lines (not one shown at other fares, T-3303), their stations and those zones' views in (never the market's own figures) and
-clears the lines' pending label ("calculating...", ui-inspectors.md). A worker then waits for the page's `whole`, sent 8 s after the
+clears the lines' pending label ("calculating...", ui-inspectors.md). **Period by period** (T-2624, notes/T-2624.md,
+`?perfOff=steps` off): each period's result goes as its period is solved, the periods whose trains an hour changed
+on one of the cluster's lines first (an edit's trains can change nothing at a level, a line at its most trains an
+hour) and the others together with the last, else in period order, the morning peak first (the order changes no
+figure); the last goes after the zones' sums as above. While every solving worker solves locally and `whole` has not gone, the page shows each step before
+the last (`localStep`, workers/demandSteps.ts): the cluster's lines take the solved periods' figures; an unsolved
+period keeps the figures shown before the first step, except on a line the edit changed (its stops, trains or
+cars), where it gets the change of its level's solved periods in proportion; riders a day and boardings by stop are
+summed from the periods and the lines' stations move by their change. Zones, purposes, bubbles and the pending
+label wait for the last step, which is the local result above to the bit. A worker then waits for the page's `whole`, sent 8 s after the
 local results are shown, or at once when a worker solves nothing locally, so an edit following
 within that time is solved locally too; the whole solves follow as above and replace everything.
 **Stations on no line** (T-2410, `?perfOff=alone` off) are left out of the network demand solves
@@ -476,7 +489,9 @@ is shown, and over a final result in that zone's own view alone, no line's figur
 per line are that one zone's, so a long line would read near zero). A cached result shown beats it. During
 a game load the focus pool (below) does this instead, to the zone's last round. After
 an edit the zone in view's cluster sends its free-flow round as soon as it has it, which gives new
-lines their first figures (T-324) without waiting for its last round.
+lines their first figures (T-324) without waiting for its last round; only when a line is new or has other stops
+than the shown figures' solve gave it (T-2624, `noPreview`, `?perfOff=preview` off: else its parts are work for
+nothing, 8-9 s a worker on the New York save).
 **The city view's zone next** (T-2453, notes/T-2453.md, `?perfOff=selected` off). A zone selected in
 the city view, when it is not the zone in view, comes second in each of those queues: its pack
 downloads and opens right after the zone in view's (`firstZones`; a `first` message when it is

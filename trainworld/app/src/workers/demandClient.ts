@@ -114,6 +114,7 @@ import { dataUrl } from "../game/dataBase";
 import { fetchMarketDrives } from "../game/marketRule";
 import { lineFareMul, ownLineFare, type FareArea, type Fares } from "../game/fareCurve";
 import { takesMarketless } from "../game/fareInEffect";
+import { localStep } from "./demandSteps";
 import { saveSlotsState } from "./clockClient";
 import { readDemandAhead, readDemandCache, writeDemandCache } from "./saveFile";
 import { BUILD, CACHE_FORMAT, CACHE_VERSION, cacheAvailable, canonical, fromStored, sameKey, sha256, storedSize, toStored, type CacheKey, type StoredDemand } from "./demandCache";
@@ -399,6 +400,10 @@ function routeNodes(layout: Solve["layout"]): RouteNodes {
 /** `members`' indices in the solve's station list, those it has */
 const stationIndices = (solve: Solve, members: string[]) => members.map((m) => solve.svc.stations.findIndex((s) => s.id === m)).filter((i) => i >= 0);
 
+/** T-2624: a local result's steps shown before all its periods were in: the views shown before the first (each
+ * step starts from them), and when each step was asked and shown */
+interface Step { base: DayDemand[] | null; asked: number[]; shown: number[] }
+
 /** One solve's bookkeeping, and its timings (window.twDemand.log with ?debug=1). */
 interface Solve {
   version: number;
@@ -482,7 +487,7 @@ interface Solve {
   /** T-392: each cluster published ahead of the solve's final, by its cities: its results per
    * round and period as they come in, the last round in from every worker, and when its final
    * round was shown */
-  clusterRes?: Map<string, { byRound: (Result | null)[][]; published: number; at?: number; roundAt?: number[] }>;
+  clusterRes?: Map<string, { byRound: (Result | null)[][]; published: number; at?: number; roundAt?: number[]; steps?: Step }>;
   /** T-402: the cluster in view, stepped through its rounds alone ahead of the rest (a solve with
    * the barrier, `plan.ahead`): its cities and key in `clusterRes` */
   ahead?: { cities: CityId[]; key: string };
@@ -3946,7 +3951,11 @@ class DemandClient {
       // (T-1543: a worker's own result after the parts were shown changes nothing shown)
       if (!res || round <= e.published) return;
       res[msg.period] = msg;
-      if (!res.every(Boolean) || round <= e.published) return;
+      if (!res.every(Boolean)) {
+        if ((msg.cluster.local || msg.cluster.step) && round >= ROUNDS) this.publishStep(s, e, res, msg.cluster);
+        return;
+      }
+      if (round <= e.published) return;
       e.published = round;
       (e.roundAt ??= [])[round] = performance.now();
       if (round > 0) e.byRound[round - 1] = [];
@@ -4201,11 +4210,17 @@ class DemandClient {
     // about 0.7 s on the real save
     demandSolving.value = null;
     const next = this.firstZones().slice(1);
+    // T-2624: after an edit the free-flow preview only gives new lines and lines with other stops their first
+    // figures (`publishNewLines`); with every line as the shown figures' solve had it, its parts are work for nothing
+    // (8-9 s a worker on the New York save)
+    const base = this.log.find((x) => x.version === demandView.peek()?.version);
+    const had = base && new Map(base.layout.map((l) => [l.id, l.stops.join(",")]));
+    const noPreview = !barrier && !!had && !perfOff("preview") && layout.every((l) => had.get(l.id) === l.stops.join(","));
     // T-2459: the focus pool solves the zone in view to its last round, so the city view's zone's
     // cluster goes ahead of it
     const focused = barrier && next.length > 0 && !perfOff("focusAhead") && this.focusSolves(svc, activeCity.peek());
     if (focused) this.cur.focused = true;
-    const msg: ToDemand = { kind: "solve", version, net, ids, rounds: ROUNDS, barrier, first: activeCity.peek(), ...(next.length ? { next } : {}), ...(focused ? { focused } : {}), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("farChunks") ? { nearChunks: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), ...(perfOff("estimate") ? { exact0: true } : {}), ...(this.freshParts ? { freshParts: true } : {}), ...(perfOff("noise") ? { exactKeep: true } : {}), ...(LOCAL_SHARE ? { localShare: LOCAL_SHARE } : {}) };
+    const msg: ToDemand = { kind: "solve", version, net, ids, rounds: ROUNDS, barrier, first: activeCity.peek(), ...(next.length ? { next } : {}), ...(focused ? { focused } : {}), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("farChunks") ? { nearChunks: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), ...(perfOff("estimate") ? { exact0: true } : {}), ...(this.freshParts ? { freshParts: true } : {}), ...(perfOff("noise") ? { exactKeep: true } : {}), ...(perfOff("steps") ? { oneSend: true } : {}), ...(perfOff("wholeSteps") ? { roundFirst: true } : {}), ...(noPreview ? { noPreview } : {}),...(LOCAL_SHARE ? { localShare: LOCAL_SHARE } : {}) };
     this.freshParts = false;
     this.postSolve(msg);
     if (barrier) this.askTurn();
@@ -5448,6 +5463,58 @@ class DemandClient {
    * (`cityVersion`), whose workers hold it. T-402: `round` below the last comes from a cluster
    * solved ahead in a solve with the barrier.
    */
+  /**
+   * T-2624: a local result's periods so far, before the rest are in: its lines take the solved periods' figures
+   * (`localStep`), and nothing else changes. Only while every solving worker solves locally and `whole` has not
+   * gone (else the result may never be whole, and a half shown would stand through the whole solve); never marks
+   * a line's figures worked out, a zone's version or the local result shown, which the whole local result does.
+   * The same for an edit's whole solve of the zone in view's cluster (`step`) where no local result was shown,
+   * each period's final as it lands; the cluster's or the solve's final replaces them.
+   */
+  private publishStep(s: Solve, e: { published: number; steps?: Step }, res: (Result | null)[], c: { cities: CityId[]; lines: Uint32Array; market: boolean; local?: boolean }) {
+    if (s !== this.cur || s.barrier !== false || s.rough || e.published >= ROUNDS) return;
+    const local = !!c.local, n = this.computeN;
+    const off = () => (local ? s.wholeSent : s.localShownAt !== undefined);
+    if (local ? perfOff("steps") : perfOff("wholeSteps")) return;
+    if (off() || (local && !Array.from({ length: n }, (_, k) => s.localPlans?.[k]).every((v) => v !== undefined && v > 0))) return;
+    const got = res.find((r): r is Result => !!r);
+    if (!got) return;
+    const solved = res.map(Boolean), full = res.map((r) => r ?? got);
+    const st = (e.steps ??= { base: null, asked: [], shown: [] });
+    st.asked.push(performance.now());
+    const fresh = Array.from(c.lines, (l) => s.layout[l]).filter(Boolean);
+    this.inOrder(async () => {
+      const shown = demandByDay.peek()[0].view;
+      if (s !== this.cur || off() || e.published >= ROUNDS || !shown || shown.version === s.version) return;
+      const t0 = performance.now();
+      // (the unsolved periods' places hold a solved one's figures, which `localStep` never reads)
+      const ests = await this.daysOf(s, fresh, ROUNDS, false, full, true);
+      if (s !== this.cur || off() || e.published >= ROUNDS) return;
+      const t1 = performance.now();
+      const base = (st.base ??= demandByDay.peek());
+      const was = this.log.find((x) => x.version === base[0].view?.version)?.layout ?? [];
+      const layoutWas = new Map(was.map((l) => [l.id, l])), layoutNow = new Map(fresh.map((l) => [l.id, l]));
+      const levels = PERIODS.map((p) => p.demand), ids = fresh.map((l) => l.id);
+      // (the fares rule once: every kind of day's figures of a solve are at its fares; a whole solve's carry the market)
+      const held = new Set((local || !c.market ? ids : []).filter((id) => { const g = ests[0].view?.lines.get(id); return !!g && !takesMarketless(base[0].view?.lines.get(id), g); }));
+      const keep = (id: string) => !held.has(id);
+      // (kinds of day standing in for another share its views: merged once)
+      const made = new Map<DayDemand, [DayDemand, DayDemand, DayDemand]>();
+      const merged = demandByDay.peek().map((d, k) => {
+        const m = made.get(ests[k]);
+        if (m && m[0] === d && m[1] === base[k]) return m[2];
+        const out = localStep(d, base[k], ests[k], solved, levels, ids, layoutNow, layoutWas, keep);
+        made.set(ests[k], [d, base[k], out]);
+        return out;
+      });
+      const t2 = performance.now();
+      demandByDay.value = this.refineOver(merged, s);
+      st.shown.push(performance.now());
+      // i18n-ignore
+      if (import.meta.env.DEV) console.info(`T2624 v${s.version} step ${st.shown.length} of ${c.cities.slice(0, 4).join(",")}: periods ${solved.flatMap((v, q) => (v ? [q] : [])).join(",")}, views ${Math.round(t1 - t0)} ms, merged ${Math.round(t2 - t1)} ms, shown ${Math.round(performance.now() - t2)} ms`);
+    });
+  }
+
   private publishCluster(s: Solve, res: Result[], c: { cities: CityId[]; market: boolean; lines: Uint32Array; local?: boolean }, round: number) {
     if (s !== this.cur) return;
     const final = round >= ROUNDS;

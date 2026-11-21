@@ -208,6 +208,13 @@ export type ToDemand =
       freshParts?: boolean;
       /** T-1862 `?perfOff=noise`: a cluster keeps its result only on exactly the network it solved */
       exactKeep?: boolean;
+      /** T-2624 `?perfOff=steps`: a local result's periods sent together once all are solved, not each as it ends */
+      oneSend?: boolean;
+      /** T-2624 `?perfOff=wholeSteps`: an edit's whole solve of the zone in view's cluster round after round, not period after period */
+      roundFirst?: boolean;
+      /** T-2624: no free-flow preview after the edit (`?perfOff=preview` sends one): every line has the stops the shown
+       * figures were solved on, so the page would take nothing from it */
+      noPreview?: boolean;
       /** T-3512, dev `?localShare=a,b`: solving worker i's own `LOCAL_SHARE_MAX`, so two workers can be
        * made to disagree (one solving locally, one going straight to the whole solve) */
       localShare?: number[];
@@ -428,8 +435,9 @@ export type FromDemand =
        * cluster solved ahead (`plan.ahead`) sends one per round, the round in `summary[0]`.
        * T-1733 `local`: the cluster after an edit with only `cities` (the zones the edit touched)
        * solved, against the others' frozen loads, ahead of its whole solve; its lines' figures carry
-       * every population's riders, the market's as last solved */
-      cluster?: { cities: CityId[]; market: boolean; lines: Uint32Array; local?: boolean };
+       * every population's riders, the market's as last solved. T-2624 `step`: one period's final of an edit's
+       * whole solve of the cluster, sent as it lands, before the cluster's others */
+      cluster?: { cities: CityId[]; market: boolean; lines: Uint32Array; local?: boolean; step?: boolean };
       /** T-2045: in a solve of `only` zones, the lines it gives figures (indices into the network's) */
       onlyLines?: Uint32Array;
       /** T-1543: one worker's part k of n of the period's origins (`solve.part`): every figure is the

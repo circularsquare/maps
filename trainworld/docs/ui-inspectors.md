@@ -142,7 +142,8 @@ purpose filter the purpose drawn is ringed in the bar.
   purpose split hidden. The label stays
   until the riders that count the change land: its cluster's local result after the
   edit (T-1733, intercity lines too; their longer trips as last solved, or for an edit of 20 minutes'
-  run or more those in a window of zones around it re-solved, T-1735) or the whole final [T-1665,
+  run or more those in a window of zones around it re-solved, T-1735; its steps period by period before it,
+  T-2624, keep the label) or the whole final [T-1665,
   `game/lineFigures.ts`], and only a result solved for a network made after the change [T-2658]: each
   network demand is given carries the world version it was made at (`networkWorld`, and `finalWorld`
   for the whole final shown, in game/demand.ts), and the label stays while the result shown is older
