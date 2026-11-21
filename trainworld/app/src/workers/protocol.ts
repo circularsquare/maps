@@ -932,6 +932,9 @@ export interface ClockState {
   /** T-1071: the game time a train count or headway edit takes effect, a moment ahead of the
    * clock; the renderer draws this state and its trips from then, not before */
   effectiveAt?: number;
+  /** T-3655: its trips come first without loads and again with them once the boarding account is worked out; the
+   * renderer draws it once the loaded ones are here (at most STAGE_WAIT_MS late) */
+  loadsFollow?: boolean;
   /** T-1407: no trips follow it (blueprint track), so it is taken as it comes, not held for them */
   noTrips?: boolean;
   /** T-1407: the state of an edit answered ahead of it (`early`): taken after the next paint, so

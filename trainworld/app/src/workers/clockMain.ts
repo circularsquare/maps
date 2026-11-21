@@ -14,7 +14,7 @@ import { PlatformLines } from "./platformLines";
 import type { ClockNode, ClockState } from "./protocol";
 import { publishSlots, saves } from "./slots";
 import { META_PER_LINE, profileOf } from "../map/profiles";
-import { buildSnapshot, busRow, complexesOf, complexOfNodes, groundK, nodeComplexes, putXferSet, sendTrips, shownBuildings, snapTimer, StationGeo } from "./clockDemand";
+import { buildSnapshot, busRow, complexesOf, complexOfNodes, groundK, loadsLater, nodeComplexes, putXferSet, sendTrips, shownBuildings, snapTimer, StationGeo } from "./clockDemand";
 import { pinFareRef } from "./clockFares";
 import { moneyState } from "./clockMoney";
 import { keep } from "./clockPanic";
@@ -411,8 +411,9 @@ export function sendState(service = false, effectiveAt?: number, trips = true, g
 /** `sendState` in pieces of about 0.1 s on the biggest saves (T-3803): the rows, then the network's pieces
  * (`networkSteps`), then its post with the trips, the last never split (T-648: a state's trips follow it before
  * anything else). It yields only where an edit may come between (a first network posted, no anchor move pending);
- * `rowsBuilt` is told the rows, which go out as a rows state if one does. */
-export function* stateSteps(service = false, effectiveAt?: number, trips = true, ghostFirst = false, split = false, rowsBuilt?: (s: ClockState) => void): Generator<void, void, void> {
+ * `rowsBuilt` is told the rows, which go out as a rows state if one does. `boardAt`: a service edit's follow-up, begun
+ * then (`loadsLater`, T-3655). */
+export function* stateSteps(service = false, effectiveAt?: number, trips = true, ghostFirst = false, split = false, rowsBuilt?: (s: ClockState) => void, boardAt?: number): Generator<void, void, void> {
   if (midLoad) return; // (`restart` sends the loaded game's)
   freezeCheckpoint("build-state-start");
   const t0 = performance.now();
@@ -436,9 +437,11 @@ export function* stateSteps(service = false, effectiveAt?: number, trips = true,
     s.render.phases = r.phases.slice();
     posted.arrays.set("phases", r.phases);
     keepPosted("meta", r.meta);
+    const later = trips && loadsLater(boardAt);
+    if (later) s.loadsFollow = true;
     postState(s, [s.render.phases.buffer, r.meta.buffer, r.samples.buffer, r.lineTable.buffer]);
     timing.post = performance.now() - t1;
-    if (trips) sendTrips(split);
+    if (trips) sendTrips(split, undefined, !later);
     return;
   }
   // The renderer's buffers are built here too, so the main thread only uploads them (T-063).
@@ -482,11 +485,13 @@ export function* stateSteps(service = false, effectiveAt?: number, trips = true,
   for (const k of SAME_FIELDS) { const v = out[k]; if (v) bufs.add(v.buffer); }
   for (const v of out.edgePts.values()) bufs.add(v.buffer);
   if (out.patch) for (const v of [out.patch.track, out.patch.lines, out.patch.edgeIds]) bufs.add(v.buffer);
+  const later = trips && loadsLater(boardAt);
+  if (later) s.loadsFollow = true;
   postState(s, [...bufs] as Transferable[]);
   timing.post = performance.now() - t2;
   diagramIn = { lines: s.lines, edges: s.edges, pts: n.edgePts };
   if (diagramOn) postDiagram();
-  if (trips) sendTrips(split);
+  if (trips) sendTrips(split, undefined, !later);
 }
 
 export let diagramIn: DiagramIn | null = null;

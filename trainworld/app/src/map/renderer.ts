@@ -966,12 +966,13 @@ export class NetworkRenderer {
   /** T-1071: states from the worker not drawn yet, oldest first. Each waits for its own trips (the
    * worker sends them just after it), so a train's run profile and its departures change in the
    * same frame; a train count's also waits for the game time it takes effect, a moment ahead of
-   * the clock, by when its trips are here. */
-  staged: { version: number; at: number; since: number; apply: () => void; trips: TripArgs[] }[] = [];
+   * the clock, by when its trips are here. `loads` (T-3655): its first trips come without loads, so it waits for the
+   * ones with them, or goes in with a newer state due (the worker sends those under the newest version). */
+  staged: { version: number; at: number; since: number; apply: () => void; trips: TripArgs[]; loads: boolean }[] = [];
 
-  /** Draw a state (`apply` puts it in) from game time `at`, once its trips have come. */
-  stage(version: number, at: number, apply: () => void) {
-    this.staged.push({ version, at, since: performance.now(), apply, trips: [] });
+  /** Draw a state (`apply` puts it in) from game time `at`, once its trips have come (`loads`: with their loads). */
+  stage(version: number, at: number, apply: () => void, loads = false) {
+    this.staged.push({ version, at, since: performance.now(), apply, trips: [], loads });
   }
 
   /** Put in every staged state now: a state drawn at once comes after them. */
@@ -990,13 +991,16 @@ export class NetworkRenderer {
 
   /** Put in the staged states due at `time`, in order. */
   releaseStaged(time: number) {
-    while (this.staged.length) {
-      const s = this.staged[0];
+    const now = performance.now();
+    const due = (i: number): boolean => {
+      const s = this.staged[i];
+      if (time < s.at) return false;
       // trips that never come (the worker restarted) hold a state up no longer than this
-      const late = performance.now() - s.since > STAGE_WAIT_MS;
-      if (time < s.at || !(s.trips.length || late)) break;
-      this.putStaged(this.staged.shift()!);
-    }
+      if (now - s.since > STAGE_WAIT_MS) return true;
+      if (!s.loads) return s.trips.length > 0;
+      return s.trips.some((t) => t[3]) || (i + 1 < this.staged.length && due(i + 1));
+    };
+    while (this.staged.length && due(0)) this.putStaged(this.staged.shift()!);
   }
 
   /** Trips for the hour starting at `epoch` (from the worker); those of a staged state wait with it. */

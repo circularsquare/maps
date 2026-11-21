@@ -383,7 +383,7 @@ if (SYNTH) {
     };
     // T-1071: a train count is drawn from the moment it takes effect, with its own trips
     if (s.effectiveAt !== undefined) {
-      renderer.stage(s.version, s.effectiveAt, put);
+      renderer.stage(s.version, s.effectiveAt, put, !!s.loadsFollow);
       overlay.invalidate();
     } else {
       renderer.flushStaged();

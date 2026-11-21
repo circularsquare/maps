@@ -6,6 +6,7 @@ import { game, localOf, sendRows, sendState, shiftFrom, stateSteps } from "./clo
 import { isPanic, MODEL_RESTORED, recover } from "./clockPanic";
 import { diagramOn, postDiagram, posted } from "./clockPost";
 import { api, messages, packLngLat, putMessages, putTiming, send } from "./clockState";
+import { loadsOwed } from "./clockDemand";
 
 // T-1039: previews the main thread no longer wants (`previewStale`, sent outside the queue) are
 // answered `stale` without being worked out, or while they wait for masks
@@ -98,10 +99,10 @@ function joined(a: FollowUp, b: FollowUp): FollowUp {
 function* followSteps(f: FollowUp): Generator<void, void, void> {
   putTiming({});
   const a = f.ask, light = !a.net && !(a.name && shiftFrom);
-  yield* stateSteps(light, a.effectiveAt, a.trips, a.early, true, (s) => { f.rows = s; });
+  yield* stateSteps(light, a.effectiveAt, a.trips, a.early, true, (s) => { f.rows = s; }, a.service ? a.at : undefined);
   // the schematic reads its names off the world when a graph comes, so the same graph again
   if (light && a.name && diagramOn) postDiagram();
-  if (a.service) serviceEditMs = performance.now() - a.at;
+  if (a.service && !loadsOwed()) serviceEditMs = performance.now() - a.at;
   f.after();
 }
 /** a follow-up's steps a task each, then its state a piece a task (T-3803), outside the message queue: a message
@@ -258,6 +259,7 @@ export function dropFollowUp() {
   f?.fail();
 }
 
-/** Wall ms the last train count or headway edit took here, from applying it to its trips sent. */
+/** Wall ms the last train count or headway edit took here, from applying it to its trips sent with their loads. */
 export let serviceEditMs = 100;
+export function putServiceEditMs(v: typeof serviceEditMs) { serviceEditMs = v; }
 export function putPreviewStaleSeq(v: typeof previewStaleSeq) { previewStaleSeq = v; }

@@ -30,7 +30,7 @@ import type { EditOp, RouteAsk, ToClock } from "./protocol";
 import { stampAll } from "./cloud";
 import { isMemoryFailure, loadFailKey } from "../game/loadText";
 import { autosave, bindSlots, CLOUD_RETRY_MS, cloudFlush, cloudKick, cloudUp, heldFrom, heldNew, hold, intoNewSlot, intoView, leave, letGoSlot, manageSlot, NO_MEMORY_TO_SAVE, noteUnsaved, pendingGame, publishSlots, saveConverted, saves } from "./slots";
-import { BOARDING_STEP_LINES, bookCharge, buildSnapshot, busQuoteLL, complexOfNodes, nameOnly, putPreviewAt, putXferSet, sameFloats, scheduleSnapshot, sendTrips, snapStations, stationsKey, stepBoarding, turnHour, xferSet } from "./clockDemand";
+import { bookCharge, buildSnapshot, busQuoteLL, complexOfNodes, editSteps, nameOnly, putPreviewAt, putXferSet, sameFloats, scheduleSnapshot, sendTrips, snapStations, stationsKey, stepBoarding, turnHour, xferSet } from "./clockDemand";
 import { apply, buildingQuoteAnswer, designOf, doubleUpAnswer, DROP_REFUSED, freeEnds, INSERT_REFUSED, issues, newLineShape, ORDER_REFUSED, paidFor, pisArr, rebuildQuoteAnswer, routeArgs, savedHidden, savedShapes } from "./clockEdits";
 import { goneLineFares, loadFares, newLineFare, pinFareRef, startFares, tidyLineFares, tidyStationFares } from "./clockFares";
 import { EARLY_WAIT_MS, followTimer, followUp, goesAhead, guardedFollowUp, heldEdges, HOLD_MS, holdOn, isPreview, isServiceOp, jumpsAhead, later, passesHeld, previewStaleSeq, putPreviewStaleSeq, sendStale, stale, standAside, startNow, stepThenRun, Waiting } from "./clockFollowUp";
@@ -1010,8 +1010,9 @@ async function handleMessage(msg: ToClock) {
     const waiting: Waiting = { owes: () => !answered || shares, worldSent: () => { shares = false; if (!answered) { answered = true; answer(); } } };
     later({ net: !service && !renamed, name: renamed, service, effectiveAt, trips, early, at: tA }, rest, () => { if (!answered) { answered = true; failAnswer(msg); } }, waiting, early ? EARLY_WAIT_MS : 0,
     // the boarding account's lines the edit moved (~1.5 ms a line; a train count on New York's
-    // real save moves ~90 of them), a few a task, so a ghost asked meanwhile waits for one step
-    trips && api.has_riders() ? () => (putTodayGen(todayGen + 1), api!.boarding_step(BOARDING_STEP_LINES)) : undefined,
+    // real save moves ~90 of them), a few a task, so a ghost asked meanwhile waits for one step;
+    // a service edit's first step only before its state (T-3655)
+    trips && api.has_riders() ? editSteps(service) : undefined,
     hold || stops, stops);
   } else if (msg.kind === "clock") {
     putClk({ t: msg.t, rate: msg.rate, at: msg.at });

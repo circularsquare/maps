@@ -15,7 +15,7 @@ import { type NewHeadways } from "./saveFile";
 import { upgradesOf } from "./stateRows";
 import type { ClockBus, ClockNode, EditOp, FerryPortIn, FerryRow, NetworkSnapshot } from "./protocol";
 import { demandFares, tidyLineFares } from "./clockFares";
-import { followUp, REST_MS, runFollowUp } from "./clockFollowUp";
+import { followUp, putServiceEditMs, REST_MS, runFollowUp } from "./clockFollowUp";
 import { platformLineOf, stateRows, termEnds, version } from "./clockMain";
 import { dayEntry, gameNow, hourEntry, moneyNow, putTodayGen, regionEntries, shapeHour, todayGen } from "./clockMoney";
 import { patchMode } from "./clockPost";
@@ -32,7 +32,10 @@ export const BOARDING_STEP_LINES = 3;
 export let xferSet: Float32Array | null = null;
 export const sameFloats = (a: Float32Array, b: Float32Array | null) => b !== null && a.length === b.length && a.every((v, i) => Object.is(v, b[i]));
 let boardingTimer = 0;
-/** time spent stepping since the last hour sent, and its longest step (`?debug=1`) */
+/** T-3655: steps a task until this many ms of work: a timer between tasks waits at least 4 ms once nested (the
+ * browsers' clamp), as long as a 3-line step's work on London's real save */
+const STEP_SLICE_MS = 8;
+/** time spent stepping since the last hour sent, and its longest task of steps (`?debug=1`) */
 let prep = { ms: 0, max: 0 };
 /** T-2404: when the last track preview was asked; while they come, the boarding account's steps
  * wait (one step of a few lines took 0.25-0.75 s on all of Japan, and a ghost asked meanwhile waits
@@ -55,14 +58,46 @@ export function stepBoarding() {
   }
   putTodayGen(todayGen + 1);
   const t0 = performance.now();
-  const more = api.boarding_step(BOARDING_STEP_LINES);
+  let more: boolean;
+  do more = api.boarding_step(BOARDING_STEP_LINES);
+  while (more && performance.now() - t0 < STEP_SLICE_MS);
   const ms = performance.now() - t0;
   prep = { ms: prep.ms + ms, max: Math.max(prep.max, ms) };
   if (more) boardingTimer = setTimeout(stepBoarding, 0) as unknown as number;
   else {
     boardHeldAt = 0;
     sendTrips(true);
+    // the lead covers the loads too, so the staged count's trains are drawn with them (T-1071)
+    if (boardSince !== null) putServiceEditMs(performance.now() - boardSince);
+    boardSince = null;
   }
+}
+
+/** T-3655: a service edit's boarding steps before its state. Past them the state and answer go first with the trips
+ * without loads, and the steps go on after (`loadsLater`): an edit that moves many lines' service (a count on London's
+ * full track, about 25 lines a kind of day) waited 0.7-2.2 s behind them. One step finishes most edits elsewhere (a
+ * count on New York's real save), which keep their loads with their state. */
+const BOARD_STEPS_BEFORE_STATE = 1;
+/** when the service edit whose loads the steps now finish began, for its lead (`serviceEditMs`) */
+let boardSince: number | null = null;
+/** T-3655: whether the state of a service edit begun at `boardAt` goes before its trips' loads: the boarding account
+ * is still not up to date after the edit's steps (`editSteps`). Its steps then go on, and the last sends both hours
+ * with their loads; the page draws the staged state once they are here (`ClockState.loadsFollow`). */
+/** a service edit's loads are still being worked out (its lead is timed when they go) */
+export const loadsOwed = () => boardSince !== null;
+export function loadsLater(boardAt: number | undefined): boolean {
+  if (boardAt === undefined || !accountStale()) return false;
+  boardSince = boardAt;
+  return true;
+}
+/** an edit's boarding steps before its state (`later`'s `step`); `budget`: at most BOARD_STEPS_BEFORE_STATE */
+export function editSteps(budget: boolean): () => boolean {
+  let n = 0;
+  return () => {
+    if (budget && n++ >= BOARD_STEPS_BEFORE_STATE) return false;
+    putTodayGen(todayGen + 1);
+    return api!.boarding_step(BOARDING_STEP_LINES);
+  };
 }
 
 let nextHourTimer = 0;
