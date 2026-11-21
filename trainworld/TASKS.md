@@ -738,8 +738,15 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Goal: A design for you first; then a save traces back to its original.
 - T-3850 [P3] {L:community} Friend requests and messages
   - Context: Your TODO.md, 11-20: "community: friend request and message people?" Design for you first.
-- T-3851 [P3] {L:community} Light view of another player's map
-  - Context: Your TODO.md, 11-20: "view only for someone elses map (dont load demand, should keep it lightweight, only see where the tracks and statiosnn are i guess, and maybe some general high level stats that are saved like per city trip count? idk) with option to full load from a view only". View (T-3257) plays the whole network today.
+- T-3851 [P2] {L:community} Light view of another player's map
+  - Context: Your TODO.md, 11-20: "view only for someone elses map (dont load demand, should keep it lightweight, only see where the tracks and statiosnn are i guess, and maybe some general high level stats that are saved like per city trip count? idk) with option to full load from a view only". View (T-3257) plays the whole network today. You, 11-21 (raised to P2): "we should probably slightly prioritize the feature where we can open community saves as view only and not compute their trips, just look at their network. i guess when opening we show the saved toggle "compute trips?" and if its off we just look at the network which should be much faster to load and shouuld get people liking and interacting with each otthers saves more".
+  - Goal: Opening a community save offers a remembered "compute trips?" switch; with it off the network loads without calculating trips, much faster, and a full load is one click away.
+- T-3943 [P3] {L:map-look} Hide lines by mode
+  - Context: Player request via your scratch pad, 11-21: "hide lines of a certain type from map (i thin kwe can just expand the settings "ferries and buses" to include icons for each mode type, train, tram, bus, etc.. show all should show all of those too. for trains and trams, if mode is disabled *or* level is disabled we can hide the line."
+  - Goal: The map settings' "ferries and buses" row becomes one toggle per mode (train, tram, bus, ferry, ...), Show all covers them, and a train or tram line hides when its mode or its level is off.
+- T-3942 [P3] {L:region-redraws} {after:Norway's next rebuild} Norway zone borders
+  - Context: Your scratch pad, 11-21: "someone keeps complaining about norway zone borders, not super high prio can do with other zone redraws". The player (artifacts/trainworld/board/20261120-233223-7f4b.png): split the Bergen zone so Stavanger has its own, and the islands now in Oslo's zone belong with Ostfold.
+  - Goal: Stavanger its own zone and those islands in Ostfold's, with Norway's next zone rebuild.
 - T-3852 [P3] {L:community} Leaderboard map view
   - Context: Your TODO.md, 11-20: "leaderboard map view". Design for you first.
 - T-3864 [P4] {L:community} Multiplayer hosting and compute
