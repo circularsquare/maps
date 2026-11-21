@@ -191,6 +191,42 @@ mod tests {
         vec![x0, y0, x1, y0, x1, y1, x0, y1]
     }
 
+    /// T-3922: what is bought on stations pays 0.1% of its price a game day, in the network's upkeep and in the
+    /// shares of the lines stopping there: each station's own upgrades, half a passage at each end, a building
+    /// over its constructed members. The shares and the rest add up to the total.
+    #[test]
+    fn station_upgrades_passages_and_buildings_pay_upkeep_shared_by_the_lines_stopping_there() {
+        use crate::track::upgrades;
+        let (mut a, st) = net();
+        let id = a.new_line_id();
+        assert_eq!(a.set_line_with_trains(id, &[st[0], st[1]], 4, 2, 0, 30.0, 180.0, 0, 0, "Line".into()), 0, "{}", a.issue_kinds());
+        assert_eq!(a.construct_line(id), 0, "{}", a.issue_kinds());
+        let before = a.upkeep();
+        assert_eq!(before[9], 0.0);
+        for (n, bit) in [(st[0], upgrades::WAITING_ROOM), (st[0], upgrades::PARK_RIDE), (st[1], upgrades::TERMINAL)] {
+            assert_eq!(a.set_station_upgrade(&[n], bit, true), 0, "{}", a.issue_kinds());
+        }
+        let passage = a.passage_cost(st[0], st[3]);
+        assert_eq!(a.link_stations(st[0], st[3]), 0, "{}", a.issue_kinds());
+        assert_eq!(a.add_building(&rect(-100.0, -25.0, 100.0, 25.0), "Hall".into()), 0, "{}", a.issue_kinds());
+        let terminal = upgrades::price(upgrades::TERMINAL, 0, false, 200, crate::track::params::TrackKind::Regular);
+        let price = upgrades::WAITING_ROOM_COST + upgrades::PARK_RIDE_COST + terminal + passage + 20.0;
+        let up = a.upkeep();
+        assert!((up[9] - price / 1000.0).abs() < 1e-9, "{up:?} {price}");
+        assert!((up[2] - before[2] - price / 1000.0).abs() < 1e-9 && (up[0] - before[0] - price / 1000.0).abs() < 1e-9, "{up:?}");
+        // Central: its two, half the passage and the building; East its terminal; Low half the passage
+        let by = a.station_upgrade_upkeep();
+        let of = |n: u32| by.chunks_exact(2).find(|p| p[0] == n as f64).map_or(0.0, |p| p[1]);
+        assert!((of(st[0]) - (25.0 + passage / 2.0 + 20.0) / 1000.0).abs() < 1e-9, "{by:?}");
+        assert!((of(st[1]) - terminal / 1000.0).abs() < 1e-9 && (of(st[3]) - passage / 2000.0).abs() < 1e-9, "{by:?}");
+        let shares = a.line_upkeep(&[4.0, 6.0, 4.0, 4.0, 6.0]);
+        let sum: f64 = shares.chunks_exact(2).map(|p| p[1]).sum();
+        assert!((sum - up[0]).abs() < 1e-9, "{shares:?} {up:?}");
+        let line = shares.chunks_exact(2).find(|p| p[0] == id as f64).unwrap()[1];
+        let rest = shares.chunks_exact(2).find(|p| p[0] == -1.0).unwrap()[1];
+        assert!(rest >= of(st[3]) - 1e-12 && line >= of(st[0]) + of(st[1]) - 1e-12, "Low has no line: its half is the rest's");
+    }
+
     #[test]
     fn a_building_is_paid_by_its_floor_and_takes_in_every_platform_it_touches() {
         let (mut a, st) = net();

@@ -268,7 +268,7 @@ function upkeepPerHour(): number {
 }
 function upkeepNow(): MoneyState["upkeep"] {
   const u = api!.upkeep();
-  return { track: u[1], stations: u[2], km: u[3], count: u[4], buses: u[5] ?? 0, busKm: u[6] ?? 0, ports: u[7] ?? 0, portCount: u[8] ?? 0 };
+  return { track: u[1], stations: u[2], km: u[3], count: u[4], buses: u[5] ?? 0, busKm: u[6] ?? 0, ports: u[7] ?? 0, portCount: u[8] ?? 0, upgrades: u[9] ?? 0 };
 }
 
 export function moneyState(): MoneyState {

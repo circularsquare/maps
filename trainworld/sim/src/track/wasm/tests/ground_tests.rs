@@ -216,7 +216,7 @@ fn upkeep_of_a_ten_km_line_and_its_shares() {
     for (i, &n) in st.iter().enumerate() {
         assert_eq!(a.add_station(1, n, 0.0, 0.0, 120, format!("S{i}")), 0, "{}", a.issues());
     }
-    assert_eq!(a.upkeep(), vec![0.0; 9], "blueprint costs nothing");
+    assert_eq!(a.upkeep(), vec![0.0; 10], "blueprint costs nothing");
     let l1 = a.new_line_id();
     assert_eq!(a.set_line(l1, &st, 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0xd7263d, "L1".into()), 0, "{}", a.issues());
     assert_eq!(a.set_line_cars(l1, 6), 0, "{}", a.issues());

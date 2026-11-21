@@ -33,4 +33,9 @@ export const UPGRADE_TEXT: UpgradeText[] = [
 export const PASSAGE_BASE = 10, PASSAGE_PER_KM = 90;
 export const passagePrice = (m: number) => PASSAGE_BASE + PASSAGE_PER_KM * m / 1000;
 
-export const hasUpgrade = (bits: number | undefined, bit: number) => ((bits ?? 0) & bit) !== 0;
+/** T-3922: the upkeep a game day, US$, of what costs `priceM` US$M to buy on a station (`upgrades::upkeep`); 0
+ * before the money has come. */
+export const upgradeUpkeep = (priceM: number, m: { upkeepUpgradeShare: number } | null | undefined) =>
+  m ? priceM * 1e6 * (m.upkeepUpgradeShare ?? 0) : 0;
+
+export const hasUpgrade =(bits: number | undefined, bit: number) => ((bits ?? 0) & bit) !== 0;

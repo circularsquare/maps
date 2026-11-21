@@ -17,6 +17,8 @@ A piece of track pays the dearest thing it touches, so a ramp down into a tunnel
 
 A station costs $50k a day at ground level or above, and $200k underground. A station with a platform on one track only (a one way station, or a stop on single track without a passing loop) pays 60% of that. Junctions and flyovers cost nothing on top.
 
+What you buy on a station ([station upgrades](station-upgrades.md), passages and [station buildings](station-buildings.md)) costs 0.1% of its price a day: US$5k for a waiting room, US$20k for park and ride. It counts with the station, so the lines stopping there share it.
+
 A tunnel costs more to keep up as well as more to [build](levels-and-tunnels.md). Upkeep is the same in every country. The cost of running trains changes with the country.
 
 Your lines share the bill by how many trains they run on each stretch, so a line's profit already has its share taken out. [Terrain](terrain.md) and [water](water.md) don't change upkeep.

@@ -303,6 +303,48 @@ impl Network {
         self.station_upgrades_price(n as u32, ups, self.water_mask.is_water(self.node_x[n], self.node_y[n]))
     }
 
+    /// T-3922: what is bought on stations and pays upkeep, US$M: `[the constructed stations' own upgrades, the
+    /// constructed ports', the constructed passages, the buildings]` (`upgrades::UPKEEP_SHARE`).
+    pub fn upkept_upgrades_value(&self) -> [f64; 4] {
+        let (mut st, mut ports) = (0.0, 0.0);
+        for n in 0..self.node_count() {
+            if self.node_alive[n] && self.node_platform[n] > 0 && self.node_built[n] && self.node_upgrades[n] != 0 {
+                if self.node_berth[n].is_some() { ports += self.upgrades_cost(n) } else { st += self.upgrades_cost(n) }
+            }
+        }
+        [st, ports, self.passages_cost(true), super::building::value(self)]
+    }
+
+    /// T-3922: each node's upgrade upkeep a game day, US$M: its own upgrades (a blueprint station's too, for the
+    /// Build tab's figure), half of each constructed passage at it and an even share of each building over its
+    /// constructed members; then what falls to no constructed station (a building left empty).
+    pub fn upgrade_upkeep_by_node(&self) -> (Vec<f64>, f64) {
+        let mut v = vec![0.0; self.node_count()];
+        for (n, x) in v.iter_mut().enumerate() {
+            if self.node_alive[n] && self.node_platform[n] > 0 {
+                *x = self.upgrades_cost(n);
+            }
+        }
+        for ([a, b], price) in self.passages() {
+            if self.node_built[a as usize] && self.node_built[b as usize] {
+                v[a as usize] += price / 2.0;
+                v[b as usize] += price / 2.0;
+            }
+        }
+        let mut rest = 0.0;
+        for b in self.buildings.iter().flatten() {
+            let price = super::upgrades::building_price(super::building::area_m2(self, &b.corners));
+            let on: Vec<u32> = super::building::members(self, &b.corners).into_iter().filter(|&m| self.node_built[m as usize]).collect();
+            if on.is_empty() {
+                rest += price;
+            }
+            for &m in &on {
+                v[m as usize] += price / on.len() as f64;
+            }
+        }
+        (v.into_iter().map(super::upgrades::upkeep).collect(), super::upgrades::upkeep(rest))
+    }
+
     /// Edge ends at a node whose edge is constructed.
     pub fn built_ports(&self, n: u32) -> usize {
         self.node_ports[n as usize].ends().iter().filter(|&&c| self.edge_built[(c >> 1) as usize]).count()

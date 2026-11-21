@@ -6,7 +6,7 @@ import { queryClock } from "../workers/clockClient";
 import { inkOn, LEVEL_COLOURS } from "../game/palette";
 import type { Level, TrackEdge } from "../game/types";
 import { distUnit, distance, levelLabel, levelName, millions, money, moneyCash, perDistance, speed, unitShort, upkeepText } from "../game/format";
-import { edgeUpkeep, stationUpkeepOf } from "../game/regionMoney";
+import { edgeUpkeep, nodeUpkeepOf } from "../game/regionMoney";
 import { bpPicked, clearBpPicked, dropPicked, doubleUpPicked, doubleUpPieces, enableAll, limitPieces, oneWayPicked, oneWayPieces, reversePicked, kindPicked, levelPicked, offTotals, pickedState, removePicked, switchPicked, tracksPicked } from "../game/blueprintPick";
 import { canRebuild, type RebuildKind, rebuildKind, rebuildLevel, rebuildPicked, rebuildQuote, rebuildTip, rebuildTracks } from "../game/rebuild";
 import { busUpkeepDay, liveMoney, moneyState } from "../game/money";
@@ -156,7 +156,7 @@ export function BlueprintControls() {
   if (w && m && total > 0) {
     for (const e of w.edges) if (!e.built && !e.off) upkeep += edgeUpkeep({ ...e, built: true }, m);
     // T-2194: a port's upkeep is its own, a fifth of a station's
-    for (const s of w.save.stations) if (!s.built && !s.off) upkeep += s.port ? m.upkeepPort * m.economy : stationUpkeepOf(m, s);
+    for (const s of w.save.stations) if (!s.built && !s.off) upkeep += nodeUpkeepOf(m, s);
     for (const st of Object.values(w.lineStats)) if (st.bus && !st.bus.built && !st.bus.ferry) upkeep += busUpkeepDay(m, st.bus) * m.economy;
   }
   return (

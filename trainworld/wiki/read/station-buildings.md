@@ -12,7 +12,7 @@ The stations join into one complex, so people can change between any two of them
 
 Nothing changes for the walk from home to the platform: that's [walking to stations](walking-to-stations.md).
 
-**What it costs.** US$2,000 a square metre of floor, paid at once. No [upkeep](upkeep.md). Redrawing it pays only for floor it didn't have before. Giving floor up, or knocking the building down, refunds nothing.
+**What it costs.** US$2,000 a square metre of floor, paid at once. Its [upkeep](upkeep.md) is 0.1% of that a day, US$2 a square metre, shared between its built stations. Redrawing it pays only for floor it didn't have before. Giving floor up, or knocking the building down, refunds nothing.
 
 **The limits.** It takes 3 to 24 corners, no two more than 1 km apart, at least 1,000 square metres of floor, and at least one built station touching it. It can't overlap another building. Over water and track is fine. A station removed later leaves its building standing, empty.
 

@@ -106,6 +106,21 @@ fn a_ferry_line_runs_its_boats_at_its_speeds_and_pays_ports_and_boats() {
     assert!((c1 - a.cash() - PORT_COST - bought as f64 * BOAT_PRICE).abs() < 1e-6, "{} {bought}", c1 - a.cash());
 }
 
+/// T-3922: a constructed port's waiting room pays its 0.1% a day with the port, in its line's share.
+#[test]
+fn a_ports_waiting_room_pays_upkeep_with_the_port() {
+    let mut a = api();
+    let (p, q) = (port(&mut a, 0.0, "Whitehall"), port(&mut a, 8000.0, "St George"));
+    let l = ferry_line(&mut a, &[p, q], &straight(&[0.0, 8000.0], &[0, 1], 25.0));
+    assert_eq!(a.construct_line(l), 0, "{}", a.issues());
+    assert_eq!(a.set_station_upgrade(&[p], upgrades::WAITING_ROOM, true), 0, "{}", a.issues());
+    let room = upgrades::WAITING_ROOM_COST / 1000.0;
+    let up = a.upkeep();
+    assert!((up[7] - 0.02 - room).abs() < 1e-12 && (up[9] - room).abs() < 1e-12 && up[2] == 0.0 && (up[0] - 0.02 - room).abs() < 1e-12, "{up:?}");
+    let shares = a.line_upkeep(&[4.0, 6.0, 4.0, 4.0, 6.0]);
+    assert!(shares.len() == 4 && shares[0] == l as f64 && (shares[1] - up[0]).abs() < 1e-12, "{shares:?}");
+}
+
 #[test]
 fn a_port_is_a_station_off_the_track() {
     let mut a = api();

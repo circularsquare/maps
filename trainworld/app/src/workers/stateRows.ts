@@ -314,6 +314,9 @@ export class StateRows {
     // T-3740: the stations' fare zones (none in most games)
     const fz = a.station_fares(), fares = new Map<number, number>();
     for (let k = 0; k + 1 < fz.length; k += 2) fares.set(fz[k], fz[k + 1]);
+    // T-3922: the upkeep of what is bought on each station, US$ a game day
+    const uu = a.station_upgrade_upkeep(), upUpkeep = new Map<number, number>();
+    for (let k = 0; k + 1 < uu.length; k += 2) upUpkeep.set(uu[k], uu[k + 1] * 1e6);
     const out: ClockNode[] = [];
     const kept = this.nodeRows;
     const seen = new Set<number>();
@@ -330,15 +333,15 @@ export class StateRows {
       const kind = a.node_kind(id) >= 2 ? a.node_kind(id) : 0;
       const onePlatform = onePlatforms.has(id), one = ones.get(id) ?? 0, oneHeading = one === 1 ? a.station_one_heading(id) : undefined;
       const line = platform > 0 && !port ? env.platformLine?.(a, id, ni[i + 1], ni[i + 2], platform) : undefined;
-      const fare = fares.get(id) ?? 0;
+      const fare = fares.get(id) ?? 0, upgradeUpkeep = upUpkeep.get(id) ?? 0;
       let r = kept.get(id);
       if (!r || r.x !== ni[i + 1] || r.y !== ni[i + 2] || r.level !== ni[i + 3] || r.ports !== ni[i + 4] || r.builtPorts !== ni[i + 5] || r.flying !== flying || !!r.crosses !== crosses || (r.unusable ?? 0) !== unusable || r.platform !== platform
         || r.stationBuilt !== stationBuilt || r.stationOff !== stationOff || r.upgrades !== upgrades || r.name !== name || !!r.named !== named || (r.own ?? "") !== own || !Object.is(r.heading, ni[i + 9]) || r.line !== line || !!r.port !== port || (r.kind ?? 0) !== kind
-        || (r.one ?? 0) !== one || r.oneHeading !== oneHeading || !!r.onePlatform !== onePlatform || (r.fare ?? 0) !== fare) {
+        || (r.one ?? 0) !== one || r.oneHeading !== oneHeading || !!r.onePlatform !== onePlatform || (r.fare ?? 0) !== fare || (r.upgradeUpkeep ?? 0) !== upgradeUpkeep) {
         const [lng, lat] = env.lngLat(ni[i + 1], ni[i + 2]);
         const berth = port ? a.port_berth(id) : null;
         r = { id, x: ni[i + 1], y: ni[i + 2], lng, lat, level: ni[i + 3], ports: ni[i + 4], builtPorts: ni[i + 5], flying, ...(crosses ? { crosses: true as const } : {}), ...(unusable ? { unusable } : {}), platform, stationBuilt, stationOff, upgrades, ...(fare ? { fare } : {}), name, heading: ni[i + 9], ...(named ? { named: true as const } : {}), ...(own ? { own } : {}), ...(line ? { line } : {}), ...(kind ? { kind } : {}),
-          ...(one ? { one } : {}), ...(oneHeading !== undefined ? { oneHeading } : {}), ...(onePlatform ? { onePlatform: true as const } : {}),
+          ...(one ? { one } : {}), ...(oneHeading !== undefined ? { oneHeading } : {}), ...(onePlatform ? { onePlatform: true as const } : {}), ...(upgradeUpkeep ? { upgradeUpkeep } : {}),
           ...(berth && berth.length === 2 ? { port: env.lngLat(berth[0], berth[1]) } : {}) };
         kept.set(id, r);
       }

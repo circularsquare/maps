@@ -478,7 +478,10 @@ export interface MoneyState {
   upkeepHsr: number;
   /** T-867: the network's upkeep a game day, US$M (track and stations), the route-km and stations
    * behind it; T-1464: bus routes' upkeep, US$M, and their road-km */
-  upkeep: { track: number; stations: number; km: number; count: number; buses: number; busKm: number; ports: number; portCount: number };
+  upkeep: { track: number; stations: number; km: number; count: number; buses: number; busKm: number; ports: number; portCount: number; upgrades: number };
+  /** T-3922: upkeep a game day of what is bought on a station (upgrades, passages, buildings) over its price (0.001);
+   * in the stations' and ports' figures above, and `upgrades` alone */
+  upkeepUpgradeShare: number;
   /** T-1464: buses owned and needed; a bus's price US$M, its running cost a bus-km and a route's
    * upkeep a road-km a day (real US$), a route's price a road-km US$M */
   fleetBus: number;
@@ -609,6 +612,8 @@ export interface ClockNode {
   oneHeading?: number;
   /** one platform track (a one way station, or a stop on single track with no passing loop): pays `upkeepOnePlatform` of the station upkeep */
   onePlatform?: true;
+  /** T-3922: the upkeep a game day of its upgrades, its share of its passages and building, US$; only where some */
+  upgradeUpkeep?: number;
   /** the name it shows (T-3759, `StateRows.foldNames`): its own while unbound, else its complex's */
   name: string;
   /** the player typed the name (T-2683) */

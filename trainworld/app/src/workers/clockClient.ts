@@ -293,6 +293,7 @@ function toWorld(s: ClockState): WorldView {
       if (!v) stationViews.set(n, v = {
         id: String(n.id), num: n.id, name: n.name, lng: n.lng, lat: n.lat, x: n.x, y: n.y, level: n.level as any, length: n.platform, built: n.stationBuilt, off: n.stationOff, upgrades: n.upgrades, heading: n.heading, ...(n.fare ? { fare: n.fare } : {}), ...(n.named ? { named: true as const } : {}), ...(n.own ? { unbound: true as const } : {}), ...(n.hub !== undefined ? { hub: n.hub } : {}), ...(n.line ? { line: n.line } : {}), ...(n.port ? { port: n.port } : {}), ...(n.kind && n.kind >= 2 ? { tram: true as const } : {}),
         ...(n.one ? { one: n.one } : {}), ...(n.oneHeading !== undefined ? { oneHeading: n.oneHeading } : {}), ...(n.onePlatform ? { onePlatform: true as const } : {}),
+        ...(n.upgradeUpkeep ? { upgradeUpkeep: n.upgradeUpkeep } : {}),
       });
       return v;
     });

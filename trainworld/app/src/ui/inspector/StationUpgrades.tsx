@@ -14,9 +14,16 @@ import { t } from "../../i18n";
 import { live } from "../../map/live";
 import { cancelLink, linking, linksAmong, startLink } from "../../game/links";
 import type { StationInput } from "../../game/types";
-import { hasUpgrade, PASSAGE_BASE, PASSAGE_PER_KM, UPGRADE, UPGRADE_BITS, UPGRADE_TEXT, type UpgradeText } from "../../game/upgrades";
+import { hasUpgrade, PASSAGE_BASE, PASSAGE_PER_KM, UPGRADE, UPGRADE_BITS, UPGRADE_TEXT, upgradeUpkeep, type UpgradeText } from "../../game/upgrades";
+import { moneyState } from "../../game/money";
 import { edit, say, stationsById, world } from "../../game/world";
 import { useClockQuery } from "../useClockQuery";
+
+/** T-3922: the hover's price line and, once the money has come, its upkeep line under it. */
+function priceLines(price: number): string {
+  const m = moneyState.value, costs = t("stationUpgrades.costs", { price: money(price * 1e6) });
+  return m ? `${costs}\n${t("common.upkeepDay", { amount: money(upgradeUpkeep(price, m)) })}` : costs;
+}
 
 const ICONS: Record<number, () => preact.JSX.Element> = {
   // two sidings running on past a platform's end
@@ -88,7 +95,7 @@ function UpgradeButton({ s, u, price, housed = false }: { s: StationInput; u: Up
   );
   return (
     <button class={"btn icon upgrade" + state} aria-label={u.name} aria-pressed={on}
-      data-tip={`${u.name}\n${u.does(s.tram, !!s.port)}\n${t("stationUpgrades.costs", { price: money(price * 1e6) })}\n${act}`}
+      data-tip={`${u.name}\n${u.does(s.tram, !!s.port)}\n${priceLines(price)}\n${act}`}
       onClick={() => void toggle()}>
       <Ic />
     </button>
@@ -112,7 +119,7 @@ function BuildingButton({ s }: { s: StationInput }) {
   const d = buildingDraft.value;
   const drawing = tool.value === "building" && !!d && (b ? d.id === b.id : d.id === null);
   const state = drawing || b ? " on" : "";
-  const tip = t("stationUpgrades.buildingTip", { price: perArea(BUILDING_PER_M2 * 1e6), act: drawing ? "stop" : b ? "built" : "new" });
+  const tip = t("stationUpgrades.buildingTip", { price: perArea(BUILDING_PER_M2 * 1e6), upkeep: perArea(upgradeUpkeep(BUILDING_PER_M2, moneyState.value), true), act: drawing ? "stop" : b ? "built" : "new" });
   const click = () => {
     if (drawing) return live.tools?.exit();
     const w = world.peek();
@@ -157,7 +164,7 @@ function ComplexUpgrade({ u, members, price }: { u: UpgradeText; members: string
   };
   return (
     <button class={"btn icon upgrade" + state} aria-label={u.name} aria-pressed={all}
-      data-tip={`${u.name}\n${u.doesAll!(allTram)}\n${t("stationUpgrades.costs", { price: money(cost * 1e6) })}\n${act}`} onClick={() => void click()}>
+      data-tip={`${u.name}\n${u.doesAll!(allTram)}\n${priceLines(cost)}\n${act}`} onClick={() => void click()}>
       <Ic />
     </button>
   );
@@ -170,7 +177,10 @@ function PassageButton({ s }: { s: StationInput }) {
   const pairs = linksAmong([s.id]);
   const built = pairs.some(([a, b]) => byId.get(a)?.built && byId.get(b)?.built);
   const state = picking ? " on" : built ? " on" : pairs.length ? " planned" : "";
-  const tip = t("stationUpgrades.passageTip", { distance: roughDistance(LINK_MAX_M), range: millionsRange(PASSAGE_BASE, Math.round(PASSAGE_BASE + PASSAGE_PER_KM * LINK_MAX_M / 1000)), picking });
+  const most = Math.round(PASSAGE_BASE + PASSAGE_PER_KM * LINK_MAX_M / 1000), m = moneyState.value;
+  // T-3922: a range as `millionsRange` writes one
+  const upkeep = `${money(upgradeUpkeep(PASSAGE_BASE, m))}-${money(upgradeUpkeep(most, m))}`; // i18n-ignore
+  const tip = t("stationUpgrades.passageTip", { distance: roughDistance(LINK_MAX_M), range: millionsRange(PASSAGE_BASE, most), upkeep, picking });
   return (
     <button class={"btn icon upgrade" + state} aria-label={t("stationUpgrades.passage")} aria-pressed={picking} data-tip={tip}
       onClick={() => (picking ? cancelLink() : startLink(s.id))}>

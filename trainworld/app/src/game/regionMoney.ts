@@ -150,9 +150,13 @@ function busKmByRegion(w: WorldView, line: string): Map<string, number> {
 }
 /** T-867: a constructed station's upkeep a game day, US$; T-2619: dearer below ground, as the
  * track model counts it (`cost::station_upkeep`). */
-/** a station's upkeep a day: a tram stop's is its own figure (T-2926) */
+/** a station's upkeep a day: a tram stop's is its own figure (T-2926), without what is bought on it */
 export const stationUpkeepOf = (m: Pick<MoneyState, "upkeepStation" | "upkeepStationUnder" | "upkeepOnePlatform" | "economy">, s: { level: number; tram?: boolean; onePlatform?: boolean }) =>
   s.tram ? TRAM_STOP_UPKEEP * m.economy : stationUpkeep(m, s.level) * (s.onePlatform ? m.upkeepOnePlatform : 1);
+/** T-3922: a station's or port's whole upkeep a day, US$, what is bought on it included (as the track model's
+ * `upkeep_shares` counts it) */
+export const nodeUpkeepOf = (m: Pick<MoneyState, "upkeepStation" | "upkeepStationUnder" | "upkeepOnePlatform" | "upkeepPort" | "economy">, s: { level: number; tram?: boolean; onePlatform?: boolean; port?: unknown; upgradeUpkeep?: number }) =>
+  (s.port ? (m.upkeepPort ?? 0) * m.economy : stationUpkeepOf(m, s)) + (s.upgradeUpkeep ?? 0);
 export const stationUpkeep = (m: Pick<MoneyState, "upkeepStation" | "upkeepStationUnder" | "economy">, level: number) =>
   (level < 0 ? m.upkeepStationUnder : m.upkeepStation) * m.economy;
 
@@ -182,7 +186,7 @@ export const upkeepShares = computed<Shares>(() => {
     const a = u > 0 && w.nodes.get(e.a), b = u > 0 && w.nodes.get(e.b);
     if (a && b) add(out, midZone(e.id, (a.lng + b.lng) / 2, (a.lat + b.lat) / 2, zl), u);
   }
-  for (const s of w.save.stations) if (s.built) add(out, stationZone(s) ?? "", s.port ? (m.upkeepPort ?? 0) * m.economy : stationUpkeepOf(m, s));
+  for (const s of w.save.stations) if (s.built) add(out, stationZone(s) ?? "", nodeUpkeepOf(m, s));
   for (const l of w.save.lines) {
     if (!w.lineStats[l.id]?.bus?.built || w.lineStats[l.id]?.bus?.ferry) continue; // T-2194: a ferry route has no upkeep
     // T-3907: a BRT route's upkeep spread over its road as an average a km

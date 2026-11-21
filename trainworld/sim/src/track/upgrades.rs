@@ -1,6 +1,6 @@
 //! Station upgrades (T-1281, notes/T-1281.md): bits of a station's saved flags, their prices and
 //! the turning rules they change. Bought on a blueprint station with it, or paid at once on a
-//! constructed one; removing a constructed one refunds nothing.
+//! constructed one; removing a constructed one refunds nothing. Each pays `UPKEEP_SHARE` of its price a day.
 
 use super::params::{level_mult, TrackKind, BASE_COST_PER_KM, HSR_COST, MAX_LEVEL, MIN_LEVEL, WATER_COST};
 
@@ -46,8 +46,19 @@ pub fn passage_price(m: f64) -> f64 {
     PASSAGE_BASE + PASSAGE_PER_KM * m / 1000.0
 }
 
-/// A station building (T-2217, `building.rs`): US$2,000 a m² of floor, paid at once, no upkeep.
+/// A station building (T-2217, `building.rs`): US$2,000 a m² of floor, paid at once.
 pub const BUILDING_PER_M2: f64 = 0.002;
+
+/// T-3922 (Anita 2026-11-21, to stop free spamming): the upkeep a game day of everything bought on a station (the
+/// four upgrades, passages, buildings) over its price: a port's ratio (US$10k a game day on US$10M) and near
+/// ground track's (US$35k on US$37.5M a km). Prices stay real and upkeep is a game day's, so this is the game's
+/// ratio as the player sees it, not a real figure times `ECONOMY`.
+pub const UPKEEP_SHARE: f64 = 0.001;
+
+/// The upkeep a game day, US$M, of upgrades that cost `price` US$M.
+pub fn upkeep(price: f64) -> f64 {
+    price * UPKEEP_SHARE
+}
 
 /// A station building's price, US$M, for `m2` of floor.
 pub fn building_price(m2: f64) -> f64 {

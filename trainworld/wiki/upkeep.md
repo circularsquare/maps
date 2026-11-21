@@ -17,6 +17,8 @@ A piece of track pays the dearest thing it touches, so a ramp down into a tunnel
 
 A station costs ${{sim/src/track/params.rs:UPKEEP_STATION*ECONOMY/1000|0}}k a day at ground level or above, and ${{sim/src/track/params.rs:UPKEEP_STATION_UNDER*ECONOMY/1000|0}}k underground. A station with a platform on one track only (a one way station, or a stop on single track without a passing loop) pays {{sim/src/track/params.rs:UPKEEP_ONE_PLATFORM_SHARE*100|0}}% of that. Junctions and flyovers cost nothing on top.
 
+What you buy on a station ([[station-upgrades]], passages and [[station-buildings]]) costs {{sim/src/track/upgrades.rs:UPKEEP_SHARE*100}}% of its price a day: US${{sim/src/track/upgrades.rs:WAITING_ROOM_COST*UPKEEP_SHARE*1000|0}}k for a waiting room, US${{sim/src/track/upgrades.rs:PARK_RIDE_COST*UPKEEP_SHARE*1000|0}}k for park and ride. It counts with the station, so the lines stopping there share it.
+
 A tunnel costs more to keep up as well as more to [[levels-and-tunnels|build]]. Upkeep is the same in every country. The cost of running trains changes with the country.
 
 Your lines share the bill by how many trains they run on each stretch, so a line's profit already has its share taken out. [[terrain|Terrain]] and [[water]] don't change upkeep.

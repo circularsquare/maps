@@ -45,7 +45,7 @@ import { LineProfile } from "./LineProfile";
 import { LineTopSpeed } from "./LineTopSpeed";
 import { LineFare, LineMoney } from "./LineMoney";
 import type { EditOp } from "../../workers/protocol";
-import { hasUpgrade, UPGRADE } from "../../game/upgrades";
+import { hasUpgrade, UPGRADE, upgradeUpkeep } from "../../game/upgrades";
 import { AverageSpeed, carsBought, carsText, type Limit, rowLabel, NO_LIMITS, PastDay, Schedule, useLinePeriods, vehicleOf } from "./schedule";
 import { LineTitle, useLineTitle } from "./LineTitle";
 import { TRACK_SPECS } from "../../game/trackKinds";
@@ -524,11 +524,17 @@ function PassingTracks({ l, version, vehicle }: { l: LineInput; version: number;
     }
   };
   return (
-    <button ref={btn} class="btn text improve" data-tip={tr("lineInspector.passingTip", { names })} onClick={() => void go()} onAnimationEnd={() => btn.current?.classList.remove("shake")}>
+    <button ref={btn} class="btn text improve" data-tip={withUpkeep(tr("lineInspector.passingTip", { names }), at.reduce((a, x) => a + x.price, 0))} onClick={() => void go()} onAnimationEnd={() => btn.current?.classList.remove("shake")}>
       {tr("lineInspector.passingButton")}
       {price > 1e-9 && <small class="improve-price">{money(price * 1e6)}</small>}
     </button>
   );
+}
+
+/** T-3922: a buy button's hover and the upkeep of what it buys, `priceM` US$M of upgrades, on a line under it. */
+function withUpkeep(tip: string, priceM: number): string {
+  const m = moneyState.value;
+  return m && priceM > 0 ? `${tip}\n${tr("common.upkeepDay", { amount: money(upgradeUpkeep(priceM, m)) })}` : tip;
 }
 
 /** T-2692: parking lots (the station upgrade `parkRide`) at the line's end stations, or at every
@@ -566,7 +572,7 @@ function ParkingButtons({ l, version }: { l: LineInput; version: number }) {
   const one = (list: StationInput[], btn: { current: HTMLButtonElement | null }, label: string, done: string) => {
     const price = priceOf(list);
     return (
-      <button ref={btn} class="btn text improve" disabled={!list.length} data-tip={list.length ? tr("lineInspector.parkingTip", { names: show(list) }) : done}
+      <button ref={btn} class="btn text improve" disabled={!list.length} data-tip={list.length ? withUpkeep(tr("lineInspector.parkingTip", { names: show(list) }), list.reduce((a, s) => a + (costs?.[nums.indexOf(s.num)] ?? 0), 0)) : done}
         onClick={() => void go(list, btn)} onAnimationEnd={() => btn.current?.classList.remove("shake")}>
         {label}
         {price > 1e-9 && <small class="improve-price">{money(price * 1e6)}</small>}

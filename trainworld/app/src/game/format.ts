@@ -212,8 +212,10 @@ export function area(m2: number): string {
 }
 
 /** A price per area, US$ a m²: 2000 -> "$2,000 per m²" or "$186 per sq ft". */
-export function perArea(usdPerM2: number): string {
-  return us() ? t("format.perSqFt", { amount: moneyWhole(usdPerM2 / (FT_PER_M * FT_PER_M)) }) : t("format.perM2", { amount: moneyWhole(usdPerM2) });
+export function perArea(usdPerM2: number, small = false): string {
+  // T-3922: `small` for an amount a few dollars a m² or under (an upkeep), to the cent
+  const f = small ? smallMoney : moneyWhole;
+  return us() ? t("format.perSqFt", { amount: f(usdPerM2 / (FT_PER_M * FT_PER_M)) }) : t("format.perM2", { amount: f(usdPerM2) });
 }
 
 /** A distance from here: metres to the nearest 10, then kilometres; feet, then miles. */

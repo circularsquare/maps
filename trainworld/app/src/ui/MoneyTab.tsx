@@ -33,7 +33,9 @@ const ledgerNet = (d: DayLedger) => d.fares - d.running - (d.upkeep ?? 0) - (d.l
 
 /** T-867: the Upkeep row's hover: the rule and the network's track and stations behind it. */
 function upkeepTip(m: MoneyState): string {
-  return upkeepLines(m); // T-1838: Anita's three lines, nothing else
+  // T-1838: Anita's lines, nothing else; T-3922: and station upgrades' share of their price
+  const share = tNumber(m.upkeepUpgradeShare ?? 0, { style: "percent", maximumSignificantDigits: 2 });
+  return `${upkeepLines(m)}\n${t("moneyTab.upgradesUpkeep", { share })}`;
 }
 
 /** The New trains row's hover once the network has buses or boats (T-1464, T-2194). */

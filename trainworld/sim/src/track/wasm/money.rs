@@ -144,6 +144,8 @@ impl TrackApi {
             // T-3907: BRT's price per road-km US$M, its upkeep a day per road-km in place of a bus route's US$, and
             // its buses' least moving speed km/h
             BRT_COST_PER_KM, UPKEEP_BRT_KM, crate::track::streets::lane_kmh(true),
+            // T-3922: the upkeep a game day of what is bought on a station over its price
+            crate::track::upgrades::UPKEEP_SHARE,
         ]
     }
     /// Running cost of the running lines per hour at a demand level, US$M: trains an hour in each
@@ -186,7 +188,9 @@ impl TrackApi {
     }
     /// Upkeep a game day (T-867): [total US$M, track US$M, stations US$M, route-km of constructed
     /// track, constructed stations, bus routes US$M, road-km of constructed bus route (T-1464), ports
-    /// US$M, constructed ports (T-2193)]. Ports are not among the stations.
+    /// US$M, constructed ports (T-2193), upgrades US$M (T-3922)]. Ports are not among the stations. The
+    /// upgrades are in the stations' and ports' figures too: a port's own in the ports', the rest (passages and
+    /// buildings too) in the stations'.
     pub fn upkeep(&self) -> Vec<f64> {
         let n = &self.w.net;
         let (mut km, mut track) = (0.0, 0.0);
@@ -198,13 +202,16 @@ impl TrackApi {
         }
         let upkept: Vec<usize> = (0..n.node_alive.len()).filter(|&i| upkept_station(n, i)).collect();
         let count = upkept.len() as f64;
-        let stations: f64 = upkept.iter().map(|&i| station_upkeep(n, i)).sum();
+        // T-3922: everything bought on the stations
+        let [own, at_ports, passages, buildings] = n.upkept_upgrades_value().map(crate::track::upgrades::upkeep);
+        let ups = own + at_ports + passages + buildings;
+        let stations: f64 = upkept.iter().map(|&i| station_upkeep(n, i)).sum::<f64>() + own + passages + buildings;
         let bus_km: f64 = n.bus_lines().into_iter().filter_map(|l| bus_upkeep(n, l).map(|_| n.bus_road_m(l) / 1000.0)).sum();
         // T-3907: a BRT route at its own rate
         let buses: f64 = n.bus_lines().into_iter().filter_map(|l| bus_upkeep(n, l)).sum();
         let port_count = (0..n.node_alive.len()).filter(|&i| upkept_port(n, i)).count() as f64;
-        let ports = port_count * port_upkeep();
-        vec![track + stations + buses + ports, track, stations, km, count, buses, bus_km, ports, port_count]
+        let ports = port_count * port_upkeep() + at_ports;
+        vec![track + stations + buses + ports, track, stations, km, count, buses, bus_km, ports, port_count, ups]
     }
     /// Each running line's share of the upkeep a game day, US$M, as `[line, share]` pairs, then
     /// `[-1, rest]` for the track and stations no running line uses (T-867). Each edge's upkeep is
@@ -293,8 +300,11 @@ impl TrackApi {
                 e.1.push(l);
             }
         }
+        // T-3922: each station's upgrades go with it
+        let (ups, empty) = n.upgrade_upkeep_by_node();
+        rest += empty;
         for i in 0..n.node_alive.len() {
-            let u = if upkept_station(n, i) { station_upkeep(n, i) } else if upkept_port(n, i) { port_upkeep() } else { continue };
+            let u = ups[i] + if upkept_station(n, i) { station_upkeep(n, i) } else if upkept_port(n, i) { port_upkeep() } else { continue };
             match stopping.get(&(i as u32)) {
                 Some((total, lines)) => for &l in lines { share[l as usize] += u * weight(l) / total },
                 None => rest += u,

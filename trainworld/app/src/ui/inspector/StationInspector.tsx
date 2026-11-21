@@ -26,7 +26,7 @@ import { CAR_M, nextLeavingAt, platformsAt, stepPlatform } from "../../game/boar
 import { carsText } from "./schedule";
 import { today, useToday, type LineToday } from "../../game/today";
 import { moneyState } from "../../game/money";
-import { stationUpkeepOf } from "../../game/regionMoney";
+import { nodeUpkeepOf } from "../../game/regionMoney";
 import { Actions, Built, Chip, Icon, Row, Stepper } from "../widgets";
 import { nextSuggestion } from "../../map/stationNames";
 import { NameEdit } from "./NameEdit";
@@ -402,9 +402,13 @@ function StationDetails({ s, lines, props }: {
         <FareZoneRow members={[s]} />
         {s.built && m && (
           <Row label={tr("trackInspector.upkeep")}>
-            {s.port
-              ? <span class="money-neg" data-tip={tr("stationInspector.portUpkeep", { price: money(m.upkeepPort * m.economy) })}>{tr("inspector.perDay", { value: money(m.upkeepPort * m.economy) })}</span>
-              : <span class="money-neg" data-tip={tr("stationInspector.stationUpkeep", { under: money(m.upkeepStationUnder * m.economy), other: money(m.upkeepStation * m.economy) })}>{tr("inspector.perDay", { value: money(stationUpkeepOf(m, s)) })}</span>}
+            {/* T-3922: what is bought on it included, named in the hover */}
+            <span class="money-neg" data-tip={[s.port
+              ? tr("stationInspector.portUpkeep", { price: money(m.upkeepPort * m.economy) })
+              : tr("stationInspector.stationUpkeep", { under: money(m.upkeepStationUnder * m.economy), other: money(m.upkeepStation * m.economy) }),
+              ...(s.upgradeUpkeep ? [tr("stationInspector.upgradesUpkeep", { amount: money(s.upgradeUpkeep) })] : [])].join("\n")}>
+              {tr("inspector.perDay", { value: money(nodeUpkeepOf(m, s)) })}
+            </span>
           </Row>
         )}
       </ul>

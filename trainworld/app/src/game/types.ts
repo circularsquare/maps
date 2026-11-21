@@ -69,6 +69,8 @@ export interface StationInput {
   oneHeading?: number;
   /** one platform track: pays a share of the station upkeep (`MoneyState.upkeepOnePlatform`) */
   onePlatform?: true;
+  /** T-3922: the upkeep a game day of its upgrades and its share of its passages and building, US$ */
+  upgradeUpkeep?: number;
 }
 
 /** T-3423: a group around a line's own group: its number, name ("" for its oldest line's) and bullet

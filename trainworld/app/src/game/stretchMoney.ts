@@ -26,7 +26,7 @@ import { trainKind } from "./format";
 import { boatOf, boatRunKm } from "./boats";
 import { baseTrips, busUpkeepDay, lineGeo, moneyState, moneyTerms, moneyWorld, scalesOf, type MoneyTerms } from "./money";
 import { trainsADay } from "./periods";
-import { edgeUpkeep, lineRunFactor, stationUpkeepOf } from "./regionMoney";
+import { edgeUpkeep, lineRunFactor, nodeUpkeepOf } from "./regionMoney";
 import { stopsById, world } from "./world";
 import type { LineInput, WorldView } from "./types";
 
@@ -222,7 +222,7 @@ export function stretchMoneyOf(w: WorldView, t: MoneyTerms, dv: DemandView, shap
     if (!s.built) continue;
     const on = stopping.get(s.id);
     if (!on) continue;
-    const u = s.port ? (t.upkeepPort ?? 0) * E : stationUpkeepOf(t, s);
+    const u = nodeUpkeepOf(t, s);
     let total = 0;
     for (const { l } of on) total += weight.get(l.id)!;
     for (const { l, k } of on) {

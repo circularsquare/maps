@@ -12,7 +12,7 @@ The stations join into one complex, so people can change between any two of them
 
 Nothing changes for the walk from home to the platform: that's [[walking-to-stations]].
 
-**What it costs.** US${{sim/src/track/upgrades.rs:BUILDING_PER_M2*1000000|0}} a square metre of floor, paid at once. No [[upkeep]]. Redrawing it pays only for floor it didn't have before. Giving floor up, or knocking the building down, refunds nothing.
+**What it costs.** US${{sim/src/track/upgrades.rs:BUILDING_PER_M2*1000000|0}} a square metre of floor, paid at once. Its [[upkeep]] is {{sim/src/track/upgrades.rs:UPKEEP_SHARE*100}}% of that a day, US${{sim/src/track/upgrades.rs:BUILDING_PER_M2*1000000*UPKEEP_SHARE|0}} a square metre, shared between its built stations. Redrawing it pays only for floor it didn't have before. Giving floor up, or knocking the building down, refunds nothing.
 
 **The limits.** It takes {{sim/src/track/building.rs:MIN_CORNERS|0}} to {{sim/src/track/building.rs:MAX_CORNERS|0}} corners, no two more than {{sim/src/track/building.rs:REACH_M/1000|0}} km apart, at least {{sim/src/track/building.rs:MIN_M2|0}} square metres of floor, and at least one built station touching it. It can't overlap another building. Over water and track is fine. A station removed later leaves its building standing, empty.
 

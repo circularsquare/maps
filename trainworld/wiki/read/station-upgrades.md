@@ -1,6 +1,6 @@
 # Station upgrades
 
-A station has four things you can add, from the row of icons in its panel. You buy them with a blueprint station (they are built with it) or pay at once on a built one. They have no [upkeep](upkeep.md). Taking one away refunds nothing.
+A station has four things you can add, from the row of icons in its panel. You buy them with a blueprint station (they are built with it) or pay at once on a built one. Once built, each one's [upkeep](upkeep.md) is 0.1% of its price a day, so a waiting room is US$5k a day. Taking one away refunds nothing.
 
 **Terminal.** Trains turning here, at the end of a line or reversing partway, use both platforms. Without one they use a single platform, and the next train waits for the one there to leave. It costs 1 km of double track at the station's level, which is US$37.5M on the ground ([levels and tunnels](levels-and-tunnels.md)). See [line capacity](line-capacity.md) for what it does to trains an hour.
 
@@ -12,7 +12,7 @@ A station has four things you can add, from the row of icons in its panel. You b
 
 **Complexes.** Linked stations share park and ride and the waiting room. Building one in the complex view builds it at every station of the complex, at one price each. A station that joins later has none until you build it there.
 
-**Passage.** A walkway between two stations so riders can change between them on foot. It costs US$10M plus US$90M a km of the straight line between them, and can be at most 1,000 m long. Riders cross it at 2 m/s. A drawn [station building](station-buildings.md) does a similar job for a whole cluster.
+**Passage.** A walkway between two stations so riders can change between them on foot. It costs US$10M plus US$90M a km of the straight line between them, and can be at most 1,000 m long. Its upkeep is the same share of its price, half at each end. Riders cross it at 2 m/s. A drawn [station building](station-buildings.md) does a similar job for a whole cluster.
 
 Exact rule: `docs/track-and-service.md` "Station upgrades"; for what riders feel, `docs/demand-kernel.md` "Access and station-to-station times".
-In the code: **main** `sim/src/track/upgrades.rs` `price`, also `passage_price`, `pooled_turn_s`, `PARK_RIDE_MIN`, `WAITING_ROOM_WAIT`
+In the code: **main** `sim/src/track/upgrades.rs` `price`, also `passage_price`, `upkeep`, `pooled_turn_s`, `PARK_RIDE_MIN`, `WAITING_ROOM_WAIT`
