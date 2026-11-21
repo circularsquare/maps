@@ -34,10 +34,11 @@ version and never mixes with a browser's cached old files; the script refuses a 
 R2 unless --resume. Old versions can be deleted once the new page is live (COMMANDS in notes/T-924.md).
 
 Compression. R2 compresses nothing. JSON and GeoJSON are uploaded gzipped with
-`Content-Encoding: gzip` (179 MB of market packs alone). The .bin packs stay raw: the clock worker and
-the walk grid read them with Range requests, and a range into a gzip stream is not a range into the
-file (religiondots/tools/deploy.py). The .rgr graphs are gzip files the game inflates itself, so they
-stay as they are with no Content-Encoding, or the browser would inflate them first.
+`Content-Encoding: gzip` (179 MB of market packs alone). The .bin packs go up as one gzip member per array
+with the index in their header (T-2486, tools/packzip.py: about 0.54 of the size), with no Content-Encoding:
+the clock worker and the walk grid read them with Range requests, and a range into a stream the browser
+inflates is not a range into the file (religiondots/tools/deploy.py); the game maps a range onto the
+members and inflates them itself. The .rgr graphs are gzip files the game inflates itself too.
 
 `--s3-no-check-bucket` is required: without it rclone calls CreateBucket, which the token may not
 do, and the copy fails with a 403 that looks like a dead token.
@@ -52,7 +53,9 @@ import re
 import shutil
 import subprocess
 import sys
+import urllib.error
 import urllib.request
+import zlib
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -243,7 +246,7 @@ def summary(info):
         g = groups.setdefault(k, [0, 0, 0])
         g[0] += 1
         g[1] += s
-        g[2] += 0 if is_gz(r) else s
+        g[2] += 0 if is_gz(r) or ("/" not in r and r.endswith(".bin")) else s  # T-2486: top-level .bin go up packed
     print(f"R2 {REMOTE}/<version>/  ({PUBLIC}/<version>/)")
     for k, (n, s, raw) in sorted(groups.items(), key=lambda x: -x[1][1]):
         print(f"   {k:20s} {n:5d} files {s / MB:8.1f} MB  {'raw' if raw else 'gzipped'}")
@@ -272,9 +275,24 @@ def gzip_to(src, dst):
     os.replace(tmp, dst)
 
 
-def stage_gz(packs, version):
+def stage_bins(packs, version, jobs):
+    """T-2486: the packs' .bin as gzip members, their headers with the index, market-drives.bin gzipped
+    (tools/packzip.py), checked against the build's raw files before anything goes up."""
+    out = os.path.join(STAGE, version, "bin")
+    tool = os.path.join(HERE, "packzip.py")
+    for cmd in ("pack", "check"):
+        rc = subprocess.call([sys.executable, "-I", tool, cmd, packs, out, "--all", "--jobs", str(jobs)])
+        if rc:
+            sys.exit(f"packzip {cmd} failed: nothing uploaded")
+    return out
+
+
+def stage_gz(packs, version, headers=None):
+    """`headers`: a folder whose .json files replace the build's (the packed packs' headers)."""
     out = os.path.join(STAGE, version, "gz")
     jobs = [(r, p) for r, p in files_under(packs) if is_gz(r)]
+    if headers:
+        jobs = [(r, os.path.join(headers, r) if "/" not in r and os.path.exists(os.path.join(headers, r)) else p) for r, p in jobs]
     raw = comp = 0
     for i, (r, p) in enumerate(jobs):
         d = os.path.join(out, *r.split("/"))
@@ -419,6 +437,63 @@ def fetch(url, headers):
         return r.status, r.headers, r.read(2000)
 
 
+def fetch_all(url, headers):
+    """The whole body, a gzip Content-Encoding undone."""
+    req = urllib.request.Request(url, headers={"User-Agent": UA, **headers})
+    with urllib.request.urlopen(req, timeout=60) as r:
+        body = r.read()
+        return r.status, r.headers, gzip.decompress(body) if r.headers.get("Content-Encoding") == "gzip" else body
+
+
+def served_header(base, zid):
+    """A zone pack's header as served, parsed; None when it is not there (404)."""
+    try:
+        _, _, body = fetch_all(f"{base}{zid}.json", {"Accept-Encoding": "gzip", "Origin": "https://anita.garden"})
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return None
+        raise
+    return json.loads(body)
+
+
+def raw_headers_on_r2(version, zones):
+    """T-2486: why a resume into `version` would pair packed .bin with raw headers, or None. Headers go up last, so
+    one already there without `bin_gz` means the version holds a raw upload. `zones`: a few to look at."""
+    base = f"{PUBLIC}/{version}/"
+    for z in zones:
+        try:
+            h = served_header(base, z)
+        except Exception as e:  # noqa: BLE001
+            return f"its {z}.json could not be read ({e})"
+        if h is not None and "bin_gz" not in h:
+            return f"its {z}.json has no bin_gz (a raw upload)"
+    return None
+
+
+def range_through_members(base, zid="nyc", name="water_row"):
+    """T-2486: one array read by Range through its gzip members equals the same bytes of the whole file inflated."""
+    h = served_header(base, zid)
+    z = (h or {}).get("bin_gz")
+    if not z:
+        return False, f"{zid}.json has no bin_gz"
+    a = next(a for a in h["arrays"] if a["name"] == name)
+    s, e = a["offset"], a["offset"] + a["count"] * DTYPE[a["dtype"]]
+    parts = z["parts"]
+    ends = [p[0] for p in parts[1:]] + [z["size"]]
+    ks = [k for k, p in enumerate(parts) if p[0] < e and ends[k] > s]
+    z0, z1 = parts[ks[0]][1], parts[ks[-1]][1] + parts[ks[-1]][2]
+    c, _, buf = fetch_all(f"{base}{zid}.bin", {"Range": f"bytes={z0}-{z1 - 1}", "Origin": "https://anita.garden"})
+    if c != 206:
+        return False, f"Range answered {c}"
+    span = b"".join(zlib.decompress(buf[parts[k][1] - z0:parts[k][1] - z0 + parts[k][2]], 31) for k in ks)
+    got = span[s - parts[ks[0]][0]:e - parts[ks[0]][0]]
+    _, _, whole = fetch_all(f"{base}{zid}.bin", {"Origin": "https://anita.garden"})
+    raw = b"".join(zlib.decompress(whole[p[1]:p[1] + p[2]], 31) for p in parts)
+    if len(raw) != z["size"]:
+        return False, f"whole file inflates to {len(raw)}, not {z['size']}"
+    return got == raw[s:e] and len(got) == e - s, f"{name}, {e - s} bytes from {len(ks)} member(s), {z1 - z0} fetched"
+
+
 def verify(version, page):
     ok = True
     base = f"{PUBLIC}/{version}/"
@@ -428,6 +503,8 @@ def verify(version, page):
          lambda c, h: c == 200 and not h.get("Content-Encoding") and "immutable" in (h.get("Cache-Control") or "") and h.get("Access-Control-Allow-Origin")),
         ("a .bin answers a Range request raw", base + "nyc.bin", {"Range": "bytes=0-99", "Origin": "https://anita.garden"},
          lambda c, h: c == 206 and not h.get("Content-Encoding") and h.get("Access-Control-Allow-Origin")),
+        ("a .bin is packed (T-2486)", base + "nyc.bin", {"Range": "bytes=0-1", "Origin": "https://anita.garden"}, "gzip"),
+        ("the drives table is gzipped (T-2486)", base + "market-drives.bin", {"Range": "bytes=0-1", "Origin": "https://anita.garden"}, "gzip"),
         ("a pack header is gzipped and immutable", base + "nyc.json", {"Accept-Encoding": "gzip", "Origin": "https://anita.garden"},
          lambda c, h: h.get("Content-Encoding") == "gzip" and "immutable" in (h.get("Cache-Control") or "") and h.get("Access-Control-Allow-Origin")),
         ("the realgraph index is plain JSON", base + "realgraph/index.json", {"Origin": "https://anita.garden"},
@@ -438,12 +515,24 @@ def verify(version, page):
     for name, url, hd, test in checks:
         try:
             c, h, body = fetch(url, hd)
-            good = (f"/{version}/" in body.decode("utf-8", "ignore")) if test is None else bool(test(c, h))
+            good = (f"/{version}/" in body.decode("utf-8", "ignore")) if test is None else body[:2] == b"\x1f\x8b" if test == "gzip" else bool(test(c, h))
             print(f"   {'PASS' if good else 'FAIL'} {name}: {c}, encoding {h.get('Content-Encoding') or 'none'}, CORS {h.get('Access-Control-Allow-Origin') or 'none'}")
             ok &= good
         except Exception as e:  # noqa: BLE001
             print(f"   FAIL {name}: {url} {e}")
             ok = False
+    # T-2486: the header carries the member index, and a Range read through the members gives the file's bytes
+    try:
+        h = served_header(base, "nyc")
+        good = bool(h and h.get("bin_gz"))
+        print(f"   {'PASS' if good else 'FAIL'} nyc.json has the packed index (bin_gz)")
+        ok &= good
+        good, what = range_through_members(base)
+        print(f"   {'PASS' if good else 'FAIL'} a Range read through the gzip members inflates to the file's bytes: {what}")
+        ok &= good
+    except Exception as e:  # noqa: BLE001
+        print(f"   FAIL packed index or member Range read: {e}")
+        ok = False
     if page:
         # module workers and WASM need the right types from Pages
         try:
@@ -507,6 +596,7 @@ def main():
     ap.add_argument("--allow-dirty", action="store_true")
     ap.add_argument("--resume", action="store_true", help="upload into a version already on R2 (an interrupted upload)")
     ap.add_argument("--skip-data", action="store_true", help="only the website half (the data at --version is already up)")
+    ap.add_argument("--jobs", type=int, default=4, help="processes packing the .bin files (claim them in cores.py)")
     ap.add_argument("--verify", action="store_true")
     ap.add_argument("--page", action="store_true", help="with --verify: also check the pushed page")
     ap.add_argument("--stage", help="write the website half into this folder instead (local test), nothing uploaded")
@@ -556,6 +646,13 @@ def main():
             print(f"version {v} is already on R2: pick a new --version, or --resume an interrupted upload")
             if not a.dry_run:
                 sys.exit(1)
+        if v in have and a.resume and not a.skip_data:
+            built = sorted(f[:-4] for f in os.listdir(os.path.join(a.dist, "packs")) if f.endswith(".bin") and os.path.exists(os.path.join(a.dist, "packs", f[:-4] + ".json")))
+            why = raw_headers_on_r2(v, ["nyc"] + (built[::max(1, len(built) // 8)] if built else []))
+            if why:
+                print(f"version {v} cannot be resumed: {why}. Packed .bin would sit beside raw headers mid-upload; pick a new --version")
+                if not a.dry_run:
+                    sys.exit(1)
 
     terrain_on_r2 = r2_terrain_count()
     terrain_here = len(terrain_world_files(a.dist))
@@ -569,16 +666,26 @@ def main():
     dest = f"{REMOTE}/{v}"
     if not a.skip_data:
         print(f"\ndata -> {dest}")
-        # the raw half: .bin, .rgr, .save and the realgraph index (see is_gz); the terrain blocks have their own prefix
-        rc = run(RCLONE + ["copy", packs, dest, "--filter", "- terrain-world/**", "--filter", "+ realgraph/index.json", "--filter", "- *.json", "--filter", "- *.geojson"], a.dry_run)
+        # T-2486: the top-level .bin go up packed, with no Content-Encoding (the game inflates them itself)
+        if a.dry_run:
+            nb = sum(1 for r, _ in files_under(packs) if "/" not in r and r.endswith(".bin"))
+            print(f"   (would pack {nb} .bin files into {os.path.join(STAGE, v, 'bin')})")
+            packed = os.path.join(STAGE, v, "bin")
+        else:
+            packed = stage_bins(packs, v, a.jobs)
+        rc = run(RCLONE + ["copy", packed, dest, "--filter", "+ /*.bin", "--filter", "- *"], a.dry_run)
         if rc:
             sys.exit(f"rclone exited {rc}: a 403 naming CreateBucket is a missing --s3-no-check-bucket, SignatureDoesNotMatch a bad secret")
+        # the raw half: .rgr, .save, world.water and the realgraph index (see is_gz); the terrain blocks have their own prefix
+        rc = run(RCLONE + ["copy", packs, dest, "--filter", "- terrain-world/**", "--filter", "- /*.bin", "--filter", "+ realgraph/index.json", "--filter", "- *.json", "--filter", "- *.geojson"], a.dry_run)
+        if rc:
+            sys.exit(f"rclone exited {rc}")
         if a.dry_run:
             n = sum(1 for r, _ in files_under(packs) if is_gz(r))
-            print(f"   (would compress {n} JSON files into {os.path.join(STAGE, v, 'gz')})")
+            print(f"   (would compress {n} JSON files into {os.path.join(STAGE, v, 'gz')}, the packed packs' headers from {packed})")
             gz = os.path.join(STAGE, v, "gz")
         else:
-            gz = stage_gz(packs, v)
+            gz = stage_gz(packs, v, packed)
         rc = run(RCLONE + GZ + ["copy", gz, dest], a.dry_run)
         if rc:
             sys.exit(f"rclone exited {rc}")

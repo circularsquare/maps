@@ -14,6 +14,7 @@ import { AVERAGE_DAY, BACK_DAY, OUT_DAY } from "./days";
 import { PERIODS } from "./periods";
 import type { MarketEnd, MarketPeriod } from "./trip";
 import { patientFetch } from "../workers/patientFetch";
+import { gunzip, isGzip } from "../workers/packZip";
 
 /** A place's market row, the fields read here. */
 export interface MarketRow {
@@ -184,7 +185,9 @@ export function fetchMarketDrives(): Promise<Uint8Array | null> {
       const r = await patientFetch(dataUrl("market-drives.bin"));
       if (r.status === 404) return null;
       if (!r.ok) throw new Error(`market drives: ${r.status}`);
-      return new Uint8Array(await r.arrayBuffer());
+      // T-2486: published gzipped (a raw table starts "TWD1")
+      const b = new Uint8Array(await r.arrayBuffer());
+      return isGzip(b) ? await gunzip(b) : b;
     } catch (err) {
       if (attempt >= DRIVES_RETRY_MS.length) throw err;
       await new Promise((res) => setTimeout(res, DRIVES_RETRY_MS[attempt]));

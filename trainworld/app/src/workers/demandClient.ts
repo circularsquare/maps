@@ -117,6 +117,7 @@ import { saveSlotsState } from "./clockClient";
 import { readDemandAhead, readDemandCache, writeDemandCache } from "./saveFile";
 import { BUILD, CACHE_FORMAT, CACHE_VERSION, cacheAvailable, canonical, fromStored, sameKey, sha256, storedSize, toStored, type CacheKey, type StoredDemand } from "./demandCache";
 import { patientFetch } from "./patientFetch";
+import { binGzOf, isGzip, unpackBin } from "./packZip";
 
 /**
  * Crowding rounds after the free-flow estimate (T-022, notes/T-022.md). Each lands as its own
@@ -1683,7 +1684,13 @@ class DemandClient {
       const high = id === activeCity.peek();
       const [header, bin] = await Promise.all([this.download(`${id}.json`, high), this.download(`${id}.bin`, high)]);
       const again = await this.download(`${id}.json`, high);
-      if (sameBytes(header, again)) return [header, bin];
+      if (sameBytes(header, again)) {
+        // T-2486: a published pack's .bin is gzip members; the workers and the sim get the raw layout
+        const z = binGzOf(header);
+        // a packed .bin under a header without the index (from another upload) would never open: a failed load instead
+        if (!z && isGzip(bin)) throw new Error(`${id}.bin is packed but ${id}.json has no bin_gz`);
+        return [header, z ? await unpackBin(bin, z) : bin];
+      }
       if (attempt >= RETRY_MS.length) throw new Error(`${id}.json kept changing while it loaded`);
       await new Promise((r) => setTimeout(r, RETRY_MS[attempt]));
     }

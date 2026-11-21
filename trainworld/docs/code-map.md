@@ -371,7 +371,10 @@ Every fetch of a `packs/` file goes through `game/dataBase.ts` (`dataUrl`): `pac
 or the R2 prefix a published index.html names in its `tw-data` meta; the terrain blocks go through
 `TERRAIN_BASE`, `packs/terrain-world/` locally or the fixed prefix in its `tw-terrain` meta (T-2901). `tools/deploy.py` publishes a
 build: `packs/` (without the terrain blocks: `--terrain-world` uploads those once, from the build or a data folder with `--terrain-dir`, and a release is refused until they are complete) to R2 `trainworld/<version>/`, the rest of dist to the website repo (T-924,
-notes/T-924.md has the commands). During a batch, publish a build on the last freeze
+notes/T-924.md has the commands). The packs' `.bin` go up as one gzip member per array, the index in the header's
+`bin_gz` (`tools/packzip.py`, T-2486); `workers/packZip.ts` inflates a whole read in `demandClient`'s `downloadPack` and
+`workers/rangeFetch.ts` maps a Range read onto the members, so every Range reader goes through `fetchRange`. A header
+without `bin_gz` (data/packs, 8800) is read raw. `market-drives.bin` goes up gzipped whole. During a batch, publish a build on the last freeze
 (`pipeline/freeze.py build`, then `deploy.py --dist` that build; T-928), never one that copied
 data/packs mid-batch.
 The page's link preview (`og:` and `twitter:` tags in `app/index.html`, absolute URLs on anita.garden/trainsworld/)
