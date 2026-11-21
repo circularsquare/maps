@@ -104,7 +104,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Goal: A cold run is near 3 min.
   - Other: See notes/T-1992.md.
 - T-3781 [P1] {L:loading} {after:a report with the new diagnosis} Demand data not loading within 10 minutes (taking, 2026-11-21, agent iphonesaves)
-  - Context: Two anonymous reports on v0.4.2 (feedback 1795092485-688b2e15, 1795083347-52a31102), plus a third, "crashes every time it opens" (1795097335-fa20c413), all Japanese, 11-19 (board group g115). Their saves load normally on master. A stuck load now restarts once, and the report names the stuck worker and period (tree demandload).
+  - Context: Two anonymous reports on v0.4.2 (feedback 1795092485-688b2e15, 1795083347-52a31102), plus a third, "crashes every time it opens" (1795097335-fa20c413), all Japanese, 11-19 (board group g115). Their saves load normally on master. A stuck load now restarts once, and the report names the stuck worker and period (tree demandload). Also cities not loading on Safari and iPad (feedback 1794957009, 1794891212; found by T-3632).
   - Goal: The cause found from the next report's diagnosis, or closed if no report comes.
   - Other: notes/T-3781.md
 - T-3780 [P2] {L:timetables} {after:T-3346 stage 2 landing} Station and complex timetables
@@ -146,10 +146,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Parallel GDAL readers in `osm_features` each commit a 6 GB node index, so reads failed with 31 GB RAM free (Wisconsin, Nebraska).
   - Goal: Reads no longer fail "Failed to open dataset" on this machine with a join and browsers open.
   - Other: See notes/T-1080.md.
-- T-3660 [P2] {L:region-redraws} Two Egyptian units missing from the plan (taking, 2026-11-21, agent egyptunits)
-  - Context: Downtown Cairo (Qasr Al-Nile) joined Cairo's zone on 2026-11-18 (T-3671); Marsa Alam is dead space by the reach rule; one North Coast unit is Alexandria's. Two geoBoundaries units are not in the plan's unit state at all (365 units in the file, 363 in the state): a second North Coast (11 km2 at 29.28, 30.86, in no zone) and Port Suez Police Department (5.6 km2, a quarter inside Al-Arbiin).
-  - Goal: Find why world_plan's state lost the two, and give them a zone with Egypt's next rebuild if they hold people.
-  - Other: notes/T-3671.md, notes/T-3623.md
+- T-3660 [P3] {L:region-redraws} {after:Egypt's next batch} Two Egyptian units into mif and aai
+  - Context: The plan state lost units whose point lies outside every first-level unit (built before T-2695); fixed 11-21 (c2ec5711, `world_plan.state_lost`), 28 countries affected. Egypt's two (634 people) need a plan edit: North Coast to mif, Port Suez Police Department to aai (spec notes/T-3660/t3660-egy.json, `notes/T-3671/kit/plan_edit.py --go`), then rebuild aai and mif and join asy-eg (700 s solve). Lago de Atitlan (Guatemala, 31,196) and Canada's small units go with their countries' next batches.
+  - Goal: Both units inside the rebuilt outlines.
+  - Other: notes/T-3660.md, notes/T-3671.md
 - T-3661 [P3] {L:region-redraws} Zone centres on the wrong town
   - Context: Found by T-3623: Purwokerto's registry centre sits on Banjarnegara and Kozhikode's on Manjeri; an OSM area with no node inside it still sits at its box centre (New Cairo City).
   - Goal: Each zone's centre is on its named town; areas without a node get a centre inside them.
@@ -164,10 +164,13 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Other: notes/T-3659.md
 
 ## Demand
-- T-3632 [P2] {L:route-choice} Fix the causes behind No route (taking, 2026-11-21, agent noroute)
-  - Context: You, 2026-11-18: "i think showing "no trip found" is a separate type of bug that we shuold probably address individually. it is a fairly common complaint i think". The reports are gathered (3 direct: New York - Philadelphia and Milan - Bologna, not reproduced on today's code, and Seattle - Victoria, islands; 18 cousins: a route found but not taken, areas with no trips, odd routes, cities not loading), and the panel's By transit line now says which cause applies (7d14a945). Left: the causes themselves, islands first (T-2216).
-  - Goal: The common causes of No route fixed or filed one by one.
-  - Other: notes/T-3632.md
+- T-3935 [P3] {L:real-networks} Real networks miss lines OSM maps only as track
+  - Context: From T-3632, 11-21: real networks are built from OSM passenger routes, and some lines exist in OSM only as a track relation. Kansai has no Keihan Main Line (its Uji and Katano branches touch nothing; about 2% of sampled Osaka commutes get "No transit route", all near Hirakata or Katano); also missing: JR Wakayama and Kakogawa, Keihan Ishiyama-Sakamoto and Keishin (Kansai), JR Kansai Main Line, Yoro and Ise Railway (Nagoya). Players reported it (board g024). n02_trim.json sets the Keihan Main Line to null, so N02 drops it too.
+  - Goal: realauto.py takes a line from its track relation (or N02 in Japan) when no passenger route runs on named track; Kansai and Nagoya rebuilt with those lines.
+  - Other: notes/T-3632.md "Stage 3"
+- T-3936 [P3] {L:route-choice} Intercity effective time for the route shown
+  - Context: From T-3632, 11-21: the intercity panel's "Effective time" is the average over the whole place, not the route shown (Nagoya - Osaka: the route's own 136 min, the panel 237, the car 174), so a click beside a station reads as the train losing.
+  - Goal: The panel shows the shown route's own effective time beside the car's.
 - T-3246 [P2] {L:wealth-split} Income groups for local trips
   - Context: Your TODO 2026-11-15: "maybe actually we do add the wealth split ... we could also consider doing like 20/70/10 or something like that ... perhaps we can even display this to the player". Three groups cost about 2.4x the local solve when measured (T-1431).
   - Goal: A cheaper way to give local trips income groups, after an estimate.
@@ -251,10 +254,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3455's scan: Tokyo's pack leaves out 7,404 people of reclaimed coast in 18 pieces, the biggest at Haneda (6.45 km2); Japan's zones are built by hand builders that have no reclaimed-land step.
   - Goal: Japan's hand builders take in reclaimed coast the way plan rows do, and Tokyo is rebuilt with Haneda inside.
   - Other: notes/T-3455.md
-- T-3513 [P2] {L:solve-speed} Train edits at high demand still take most of a minute (taking, 2026-11-21, agent crowdfast)
-  - Context: From T-3512: on the NYC save low and medium train edits now settle in 6-20 s, but high demand's three periods (two on one of two workers) take about 47 s and an every-level edit about 57 s; that is the crowding rounds themselves, four passes a period of 4-6 s each.
-  - Goal: A high-demand edit on the NYC save under 20 s, or the measured reason it cannot be without changing how demand converges.
-  - Other: notes/T-3512.md
 - T-3493 [P3] {L:memory} Peaks from data the page throws away
   - Context: On a one-city desktop game the 232 MB was the market's corridor table held on the page, not churn; T-2136 drops the table from the page (in its tree, 2026-11-18). The all-China peaks of up to 1.2 GB between collections are not traced yet.
   - Other: notes/T-3472.md
@@ -288,6 +287,14 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: On North America a bubble answer still takes about 300 ms per worker (NYC 60 ms) after T-2747.
   - Goal: Bring the North America answer close to NYC.
   - Other: Plan: a rail-only pass per part and a cache of zone rows. notes/T-2747.md
+- T-3937 [P2] {L:solve-speed} High-demand edits a third slower since 11-17
+  - Context: From T-3513, 11-21: the same high-demand edit on the NYC save took 74/62 s and 82/79 s (edit/undo) against T-3512's 47-51 s on 11-17. Machine load and the data (rail trips 12.68M then, 13.25M now) are both candidates; not traced.
+  - Goal: The cause named on a quiet machine (bisect if needed), and fixed if it is a regression.
+  - Other: notes/T-3513.md
+- T-3938 [P3] {L:solve-speed} Warm-start crowding prototype behind a flag
+  - Context: From T-3513, 11-21: a high-demand NYC edit can't reach 20 s exactly (6-8 crowding passes a worker at 4-6 s each). Starting each population's crowding rounds from its last solve's loads would cut passes, but figures would then depend on edit history; time and drift unmeasured. Changing convergence is your call once measured.
+  - Goal: Behind a dev flag, measured against the cold solve on NYC and NA: time saved and how far figures drift.
+  - Other: notes/T-3513.md
 - T-2757 [P2] {L:solve-speed} Questions wait after a worker memory restart
   - Context: After a memory restart (T-1205) every question waits for the whole re-solve, minutes on a big game. Each worker holds only its share of the day's periods, so one restarted worker cannot be skipped and a one-at-a-time restart still re-solves its share while questions need all of them. Looked at 2026-11-16, needs a design call.
   - Goal: Questions answer within a second of a restart, from the result already shown, with nothing in the figures changing.
@@ -358,7 +365,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3675 [P3] {L:feedback} Feedback button on the graphics error screens
   - Context: From T-3630: the no-WebGL2 and graphics-lost screens have no button at all (T-3307's call), so a player stuck there can't report it.
   - Other: notes/T-3630.md "Follow-ups"
-- T-3444 [P2] {L:track-kinds} {waits:Anita} Track, platform and station model rework
+- T-3444 [P2] {L:track-kinds} {waits:Anita} Track, platform and station model rework (taking, 2026-11-21, agent trackdesign)
   - Need from Anita: A design discussion when you are ready; nothing is built before it.
   - Context: Your weekend notes (2026-11-16): double track as a pair of singles, any number of parallel tracks and platforms (Grand Central, Spanish solution, AABB, ABBA, AA above BB), island platforms that shift the tracks, a definition of a station, per-track stop picking with numbered circles; simple stop assignment kept for simple two-track lines.
   - Goal: An agreed design that covers those cases and can grow, then a staged plan, with the track model split into parts an agent can read whole (you 11-16, after the code tour: it is too big to read fully today).
@@ -392,8 +399,8 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3894 [P3] {L:line-rates} A line with no trains still caps the lines it crosses
   - Context: Found by fullrate (T-3646), 11-20: on Tokyo a crossing of lines [150, 42, 42] at 100% stays capped by a line with no trains. Not looked at further.
   - Goal: A line with no trains in a period holds no share of a crossing or shared track in it, or the reason it should.
-- T-3655 [P2] {L:line-rates} A line on full track keeps its old rate after a new count (taking, 2026-11-21, agent fullrate3)
-  - Context: PARKED 11-21 in tree .tw-trees/fullrate (uncommitted; notes/T-3655.md there, sections "Check" and "Faster passes"). The re-share fix (`world.rs` `reshare_full`) gives the right rates natively (13-23 ms a count edit) and passes its check, but two blockers: (1) loading now moves rates: after a load `capLoad.ts` lowerOverCap makes 25 unrecorded count edits, and under the re-share Victoria medium drops 14.39 -> 5.53 trains an hour in the browser with no player action (12.65 natively); (2) browser count edits 264-643 ms against master 177-302, mostly the boarding account redoing ~24 lines whose departures shift. Needs a look at whether the load caps should run before the re-share or skip it, then the boarding cost. Opus, fresh.
+- T-3655 [P2] {L:line-rates} A line on full track keeps its old rate after a new count
+  - Context: PARKED 11-21 in tree .tw-trees/fullrate (uncommitted; notes/T-3655.md there, "Load and the first edit" newest). The re-share fix (`world.rs` `reshare_full`) is right natively and, since fullrate3 (11-21), a load leaves every line's rate as saved (171 of 171 on London). Left: (1) the first edit after a load drops Victoria medium 14.39 -> 5.80, because the load caps no line below 44 (their `lineHeld` caps answer too late), so held lines beside it keep 21-26 idle trains; master has the same bug (a +1 on line 120 takes Victoria to 2.78). Decided (orchestrator, 11-21): option 1, cap every over-cap line alike at load (first edit 12.80, and master's 2.78 becomes 13.23). (2) Browser count edits 264-643 ms against master 177-302: a Victoria edit moves 25 lines' service, and boarding is redone for them. Opus, fresh, when compute allows.
   - Goal: A new count or headway on full track takes its share at the edit, within about 50 ms an edit on London's shared save.
   - Other: notes/T-3655.md, notes/T-3482.md "Follow-ups"
 - T-3231 [P3] {L:trains-drawn} {after:T-3264} Two lines drawn over each other at a terminal
@@ -683,10 +690,6 @@ Passing tracks (T-2228, archived; built as T-2231 to T-2233; notes/T-2228.md):
   - Context: Overtake plans are pairwise, so a local's waits for several faster lines are added up.
   - Goal: Measured on a three-line test, then changed only if it matters.
   - Other: notes/T-2228.md section 8
-- T-2216 [P2] {L:islands} Island pairs, stage 3 (taking, 2026-11-21, agent islands3)
-  - Context: Design done 11-20 (notes/T-2216.md, 4 stages, about 7-10 h). You, 11-20: "yeah we can do 3x, A" (everyone rides up to 3x an imagined drive, nobody from 4x), and yes to stage 2 (island zones inside a mainland pack: "people will find that fun"). Market zone pairs on two landmasses are "fixed, never solved" today (1.49M longer trips, 662,000 commutes a day), and the commutes are quietly counted as car; once solved they show "No route" until a ferry or line joins them. Stage 0 (wrong landmasses) is T-3838.
-  - Goal: Stage 1 landed 11-20 (island pairs with no road or flight solve with rail as the only ground mode; Vancouver - Saanich ferry about 12,980 a day, Seattle - Saanich about 1,540, real about 1,650). Stage 2 landed 11-21 (f2f74dc9): island zones inside a place have their own land and reach only stations on it (your Okinawa ferry 1,398 to 6,081 riders a weekday). Left: stage 3, the city panel reads the no-way-but-rail figure (until then those trips still count as car; island zones within a place aren't in that figure yet) and the explorer's cut-off sentence. Closes T-1396.
-  - Other: Own worktree (intercity). notes/T-2216.md "Stage 1 (islands1)", "Stage 2 (islands2)"
 - T-3843 [P4] {L:region-redraws} Isfahan's north strip in no zone
   - Context: Found by T-3763: a 141 km2 strip on Isfahan's north edge (51.624, 32.739), between the outlines of bcs and isf, holds about 70,000-137,000 people and is in no pack. Also Duhok governorate comes out at 1.45 of Iraq's 2024 census.
   - Other: notes/T-3763.md

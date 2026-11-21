@@ -41,7 +41,7 @@ def main():
     t0 = time.time()
     for name, cmd, tgt in (("track", TRACK, track_dir), ("demand", DEMAND, demand_dir)):
         log = tempfile.TemporaryFile(mode="w+", encoding="utf-8", errors="replace")
-        env = dict(os.environ, CARGO_TARGET_DIR=tgt, CARGO_BUILD_JOBS=jobs)
+        env = dict(os.environ, CARGO_TARGET_DIR=tgt, CARGO_BUILD_JOBS=jobs, BINARYEN_CORES=jobs)
         p = subprocess.Popen(cmd, env=env, stdout=log, stderr=subprocess.STDOUT, shell=(os.name == "nt"))
         runs.append((name, p, log))
     ok = True

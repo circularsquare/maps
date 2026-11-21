@@ -11,11 +11,11 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
    the next publish: walk her through it first), T-3904/3908/3909/3913/3916/3918/3919/3921/3922/3923/3925/3927/3928/
    3929, T-1183 st.1-2, T-3160 st.3, T-2624. Next update: translate moneyTab.brtFare/brtFareTip + T-3922 hovers + any
    new, nearer publish; changelog c001-c014 (c007, c012, c013 hidden).
-1. Running (each in its own tree unless noted; Opus unless noted): cachekey T-3926, movedhour T-3931, phonemem2
-   T-3160, fullrate3 T-3655 (tree fullrate, parked work), crowdfast T-3513, islands3 T-2216 st.3 (Sonnet), noroute
-   T-3632, egyptunits T-3660, autostops T-3924, busway T-3378 st.1-2, tweaks (Sonnet: upkeep 0.2%, tram brake 0.9,
-   tint sheet with green city; no open task, not on the board), iphonesaves T-3781 (no tree; ssh may be refused:
-   then ask her here).
+1. Running: phonemem2 T-3160, autostops T-3924, busway T-3378 st.1-2 (own trees), iphonesaves T-3781 (no tree; ssh
+   may be refused: then ask her here), trackdesign T-3444 (design lead with research subagents, no builds; writes
+   notes/T-3444-design/ + review/track-rework-design.md). Landed since 8800 (4141e6bc), UNCHECKED BATCH: cachekey
+   44316713, movedhour 4f8b9e0d, tweaks e778ce68, egyptunits c2ec5711 (pipeline), islands3 a2062187 (CACHE_FORMAT 13).
+   Batch checker + smoke + 8800 rebuild wait for her OK on compute. T-3655 parked again (option 1 decided).
 2. HER 11-21 ~13:20 UTC: machine laggy, "lets not start any more compute tasks" (until she says). cachekey T-3926
    landed 44316713 (c015 hidden: 0 of the last 5 releases would have kept the cache). She wants the track rework
    (T-3444) this weekend: offered a design-draft agent (reading only). Queued when she allows: T-3934 first (her ask: bus reach 600 m vs 1 km vs none, on bus-heavy community

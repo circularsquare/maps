@@ -38,7 +38,8 @@ def main():
         sys.exit(__doc__)
     name = "rust-" + os.path.basename(TREE)
     jobs = claim(name)
-    env = dict(os.environ, CARGO_BUILD_JOBS=str(jobs))
+    # wasm-pack's wasm-opt otherwise takes every core, outside the claim (7 cores seen 11-21).
+    env = dict(os.environ, CARGO_BUILD_JOBS=str(jobs), BINARYEN_CORES=str(jobs))
     cargo_bin = os.path.join(os.environ.get("USERPROFILE", ""), ".cargo", "bin")
     env["PATH"] = cargo_bin + os.pathsep + env.get("PATH", "")
     sh = os.name == "nt"
