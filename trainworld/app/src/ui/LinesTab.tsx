@@ -188,6 +188,28 @@ export function LinesTab() {
   // T-3799: a sort on a column the gear turned off goes to Name (the rows sort by name meanwhile, below)
   const sortOff = (linesView.value.cols as readonly string[]).includes(lineSort.value.key);
   useEffect(() => { if (sortOff) lineSort.value = { key: "name", dir: 1 }; }, [sortOff]);
+  // T-3994: Money goes when the columns actually shown leave no room for it. Measured from the header,
+  // so a column the gear turned off (or one a language makes wider) moves the point. 92 is the name's
+  // share plus the bullet and padding.
+  const boxRef = useRef<HTMLDivElement>(null);
+  const fitMoney = () => {
+    const box = boxRef.current;
+    if (!box) return;
+    delete box.dataset.nomoney;
+    const money = box.querySelector<HTMLElement>(".sort-head .w-linemoney");
+    if (!money) return;
+    let need = 92 + money.offsetWidth + 8;
+    for (const c of box.querySelectorAll<HTMLElement>(".sort-head > :is(.w-city, .w-riders, .w-trains, .w-kind, .w-near)")) need += c.offsetWidth ? c.offsetWidth + 8 : 0;
+    if (box.clientWidth < need) box.dataset.nomoney = "1";
+  };
+  useEffect(() => {
+    fitMoney();
+    const box = boxRef.current;
+    if (!box || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(fitMoney);
+    ro.observe(box);
+    return () => ro.disconnect();
+  });
   if (!w) return null;
   // T-1926: each line's numbers come after their count, in `nums`' order
   const split = (d: Float64Array | null, nums: number[]) => {
@@ -520,7 +542,7 @@ export function LinesTab() {
         </span>
       </div>
       {items.length === 0 && <p class="muted">{listedLines(w).length === 0 ? t("linesTab.none") : t("linesTab.noneHere")}</p>}
-      <div class={"lines-box" + (showCity ? " with-city" : "") + (key === "near" ? " near-on" : "") + (eyes ? " vis-on" : "")}>
+      <div ref={boxRef} class={"lines-box" + (showCity ? " with-city" : "") + (key === "near" ? " near-on" : "") + (eyes ? " vis-on" : "")}>
       {listedLines(w).length > 0 && <SortHead sort={lineSort} hand={hand.length ? () => setHandOrder("lines", []) : undefined} cols={[
         { key: "name", label: t("linesTab.colName"), tip: t("linesTab.sortName"), first: 1 },
         ...(showCity ? [{ key: "city" as const, label: t("linesTab.colCity"), tip: t("linesTab.sortCity"), first: 1 as const, cls: "w-city", left: true }] : []),
