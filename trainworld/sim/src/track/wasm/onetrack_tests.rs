@@ -361,14 +361,10 @@ fn trams_pass_and_turn_at_a_stop_as_trains_do() {
         assert_eq!(rs, ts, "single-track sections, Mid {side_y:?}");
         assert_eq!(shape(&rail), shape(&tram), "Mid {side_y:?}");
         let (hr, ht) = (holds(&rail), holds(&tram));
-        // T-3921: a tram brakes more gently, so each hold is longer by that for each stop it brakes for from the
-        // 60 km/h limit inside it
-        let gentler = 60.0 / 3.6 / 2.0 * (1.0 / TRAM_BRAKE - 1.0 / BRAKE);
-        let stops_braked = |p: f64, q: f64| {
-            let k = (q - p) / gentler;
-            ((k - k.round()).abs() < 1e-6).then_some(k.round() as i32)
-        };
-        assert!(hr.len() == ht.len() && hr.iter().zip(&ht).all(|(&p, &q)| matches!(stops_braked(p, q), Some(1 | 2))), "single-track holds, Mid {side_y:?}: {hr:?} against {ht:?}");
+        // T-3921: a tram brakes at the rate a train does (0.9 each), so every hold is the rail one; a tram rate
+        // below a train's would lengthen each by v/2 (1/TRAM_BRAKE - 1/BRAKE) for each stop braked for in it
+        assert!((TRAM_BRAKE - BRAKE).abs() < 1e-12, "this test assumes tram and train brake alike");
+        assert!(hr.len() == ht.len() && hr.iter().zip(&ht).all(|(&p, &q)| (p - q).abs() < 1e-6), "single-track holds, Mid {side_y:?}: {hr:?} against {ht:?}");
         counts.push(ts);
     }
     assert_eq!(counts, vec![2, 1], "a passing stop cuts the single track in two, one with no loop runs it on");

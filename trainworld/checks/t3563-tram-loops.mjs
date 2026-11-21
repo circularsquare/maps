@@ -6,8 +6,7 @@
 //  - tram loop: single-track stretches of 3 km, so a shorter limiting headway than tram noloop's one of 12 km, and
 //    more trams fit (they meet at the loops);
 //  - tram loop against rail loop, and tram noloop against rail noloop: the same cap and dwell (30 s, T-3921); the
-//    headways differ only by the tram's gentler braking (T-3921: about 1.2 s a stop from 60 km/h), so the tram's is
-//    at most 10 s longer with loops, 20 s without. The Rust test trams_pass_and_turn_at_a_stop_as_trains_do has the exact figure.
+//    headways are equal (T-3921: a tram brakes at a train's 0.9 m/s2 and stands 30 s; at 0.8 a tram's was 1.2 s a stop longer).
 // With BEFORE=1 it only prints (on the old code tram loop and tram noloop come out the same).
 // Screenshot artifacts/trainworld/t3563-tram-loop.png: the tram loop stop with the line selected.
 // From the maps root (or a tree root), on a Vite of your own:   node trainworld/checks/t3563-tram-loops.mjs [dev url]
@@ -97,10 +96,10 @@ try {
     check(tl.kind === 1 && tn.kind === 1 && rl.kind === 1 && rn.kind === 1, 'every line is limited by its single track', [tl, tn, rl, rn].map((x) => x.kind).join(', '));
     check(tl.head < tn.head - 60, 'tram loop: the trams meet at the loop, a shorter headway than with no loop', `${tl.head} s against ${tn.head} s`);
     check(tl.cap > tn.cap, 'tram loop: more trams fit than with no loop', `${tl.cap} against ${tn.cap}`);
-    // T-3921: a new tram line stands a train's 30 s; its gentler braking adds a little at each stop a stretch takes in
+    // T-3921: a new tram line stands a train's 30 s; braking is a train's, so the headways are equal
     check([tl, tn, rl, rn].every((x) => x.b.dwell === 30), 'new tram and train lines both stand 30 s', [tl, tn, rl, rn].map((x) => x.b.dwell).join(', '));
-    check(tl.cap === rl.cap && tl.head - rl.head >= 0 && tl.head - rl.head <= 10, 'tram loop runs as rail loop', `cap ${tl.cap} / ${rl.cap}, headway ${tl.head} s / ${rl.head} s`);
-    check(tn.cap === rn.cap && tn.head - rn.head >= 0 && tn.head - rn.head <= 20, 'tram noloop runs as rail noloop', `cap ${tn.cap} / ${rn.cap}, headway ${tn.head} s / ${rn.head} s`);
+    check(tl.cap === rl.cap && tl.head === rl.head, 'tram loop runs as rail loop', `cap ${tl.cap} / ${rl.cap}, headway ${tl.head} s / ${rl.head} s`);
+    check(tn.cap === rn.cap && tn.head === rn.head, 'tram noloop runs as rail noloop', `cap ${tn.cap} / ${rn.cap}, headway ${tn.head} s / ${rn.head} s`);
   }
   // the tram loop stop, its line selected
   await page.evaluate(([id, s]) => { const tw = window.tw; tw.selection.value = { kind: 'line', line: id }; if (s) tw.map.jumpTo({ center: [s.lng, s.lat], zoom: 15.5 }); }, [tl.b.id, tl.b.mid]);

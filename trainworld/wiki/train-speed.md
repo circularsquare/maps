@@ -6,7 +6,7 @@ A train goes as fast as the slowest thing in front of it. That is its own top sp
 
 **Two kinds of train.** An ordinary train tops out at {{sim/src/track/params.rs:V_TOP*3.6|0}} km/h. A high-speed train reaches {{sim/src/track/params.rs:V_HSR*3.6|0}} km/h, and only on track built for it. On other track it goes as fast as an ordinary one. You pick the kind per line.
 
-**Trams.** A line that stops at a tram stop runs trams. Trams run on tram track and on regular and high-speed track too, never faster than {{sim/src/track/params.rs:TRAM_V_CAP_KMH|0}} km/h. They brake more gently than trains, at {{sim/src/track/params.rs:TRAM_BRAKE}} m/s², and wait at a stop as long as a train does, so a tram loses a little more time at each stop than a train going as fast. A line with no tram stop runs trains, and trains can't run on tram track.
+**Trams.** A line that stops at a tram stop runs trams. Trams run on tram track and on regular and high-speed track too, never faster than {{sim/src/track/params.rs:TRAM_V_CAP_KMH|0}} km/h. They brake at {{sim/src/track/params.rs:TRAM_BRAKE}} m/s² and wait at a stop as long as a train does, so a tram loses as much time at each stop as a train going as fast. A line with no tram stop runs trains, and trains can't run on tram track.
 
 **Speeding up and stopping.** Trains speed up in three bands. They pull hardest at low speed and ease off as they go faster, like a real electric train. Only a high-speed train reaches the last band. Braking is gentler than pulling away: {{sim/src/track/params.rs:BRAKE}} m/s². A train waits at each stop for about {{sim/src/track/params.rs:DEFAULT_DWELL_S|0}} seconds.
 

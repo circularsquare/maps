@@ -106,10 +106,10 @@ pub const ACCEL_TOP: f64 = 0.3;
 pub const ACCEL_SWITCH_V: f64 = 60.0 / 3.6;
 pub const ACCEL_TOP_V: f64 = 200.0 / 3.6;
 pub const BRAKE: f64 = 0.9;
-/// T-3921 (Anita, 2026-11-21): a tram line's braking, gentler than a train's so a tram stopping
-/// loses a little more than a train at the same speed. A game choice: real trams brake harder in
-/// service (about 1.2-1.3 m/s²); this stands for a tram easing into a street stop.
-pub const TRAM_BRAKE: f64 = 0.8;
+/// T-3921 (Anita, 2026-11-21): a tram line's braking, 0.8 at first and raised to a train's 0.9 for
+/// consistency. Its own constant so it can differ again; with the dwell matched a tram stop now
+/// costs what a train's does at the same speed. Real trams brake harder in service (about 1.2-1.3 m/s²).
+pub const TRAM_BRAKE: f64 = 0.9;
 
 // ---- costs, US$M (SPEC 6.4) ----
 

@@ -479,7 +479,7 @@ export interface MoneyState {
   /** T-867: the network's upkeep a game day, US$M (track and stations), the route-km and stations
    * behind it; T-1464: bus routes' upkeep, US$M, and their road-km */
   upkeep: { track: number; stations: number; km: number; count: number; buses: number; busKm: number; ports: number; portCount: number; upgrades: number };
-  /** T-3922: upkeep a game day of what is bought on a station (upgrades, passages, buildings) over its price (0.001);
+  /** T-3922: upkeep a game day of what is bought on a station (upgrades, passages, buildings) over its price (0.002);
    * in the stations' and ports' figures above, and `upgrades` alone */
   upkeepUpgradeShare: number;
   /** T-1464: buses owned and needed; a bus's price US$M, its running cost a bus-km and a route's

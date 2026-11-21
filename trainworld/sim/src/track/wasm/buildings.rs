@@ -211,14 +211,15 @@ mod tests {
         assert_eq!(a.add_building(&rect(-100.0, -25.0, 100.0, 25.0), "Hall".into()), 0, "{}", a.issue_kinds());
         let terminal = upgrades::price(upgrades::TERMINAL, 0, false, 200, crate::track::params::TrackKind::Regular);
         let price = upgrades::WAITING_ROOM_COST + upgrades::PARK_RIDE_COST + terminal + passage + 20.0;
+        const SHARE: f64 = upgrades::UPKEEP_SHARE;
         let up = a.upkeep();
-        assert!((up[9] - price / 1000.0).abs() < 1e-9, "{up:?} {price}");
-        assert!((up[2] - before[2] - price / 1000.0).abs() < 1e-9 && (up[0] - before[0] - price / 1000.0).abs() < 1e-9, "{up:?}");
+        assert!((up[9] - price * SHARE).abs() < 1e-9, "{up:?} {price}");
+        assert!((up[2] - before[2] - price * SHARE).abs() < 1e-9 && (up[0] - before[0] - price * SHARE).abs() < 1e-9, "{up:?}");
         // Central: its two, half the passage and the building; East its terminal; Low half the passage
         let by = a.station_upgrade_upkeep();
         let of = |n: u32| by.chunks_exact(2).find(|p| p[0] == n as f64).map_or(0.0, |p| p[1]);
-        assert!((of(st[0]) - (25.0 + passage / 2.0 + 20.0) / 1000.0).abs() < 1e-9, "{by:?}");
-        assert!((of(st[1]) - terminal / 1000.0).abs() < 1e-9 && (of(st[3]) - passage / 2000.0).abs() < 1e-9, "{by:?}");
+        assert!((of(st[0]) - (25.0 + passage / 2.0 + 20.0) * SHARE).abs() < 1e-9, "{by:?}");
+        assert!((of(st[1]) - terminal * SHARE).abs() < 1e-9 && (of(st[3]) - passage * SHARE / 2.0).abs() < 1e-9, "{by:?}");
         let shares = a.line_upkeep(&[4.0, 6.0, 4.0, 4.0, 6.0]);
         let sum: f64 = shares.chunks_exact(2).map(|p| p[1]).sum();
         assert!((sum - up[0]).abs() < 1e-9, "{shares:?} {up:?}");

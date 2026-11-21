@@ -50,10 +50,10 @@ pub fn passage_price(m: f64) -> f64 {
 pub const BUILDING_PER_M2: f64 = 0.002;
 
 /// T-3922 (Anita 2026-11-21, to stop free spamming): the upkeep a game day of everything bought on a station (the
-/// four upgrades, passages, buildings) over its price: a port's ratio (US$10k a game day on US$10M) and near
-/// ground track's (US$35k on US$37.5M a km). Prices stay real and upkeep is a game day's, so this is the game's
+/// four upgrades, passages, buildings) over its price: 0.1% matched a port's ratio (US$10k a game day on US$10M)
+/// and ground track's (US$35k on US$37.5M a km); Anita raised it to 0.2%. Prices stay real and upkeep is a game day's, so this is the game's
 /// ratio as the player sees it, not a real figure times `ECONOMY`.
-pub const UPKEEP_SHARE: f64 = 0.001;
+pub const UPKEEP_SHARE: f64 = 0.002;
 
 /// The upkeep a game day, US$M, of upgrades that cost `price` US$M.
 pub fn upkeep(price: f64) -> f64 {

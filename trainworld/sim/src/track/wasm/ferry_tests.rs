@@ -114,7 +114,7 @@ fn a_ports_waiting_room_pays_upkeep_with_the_port() {
     let l = ferry_line(&mut a, &[p, q], &straight(&[0.0, 8000.0], &[0, 1], 25.0));
     assert_eq!(a.construct_line(l), 0, "{}", a.issues());
     assert_eq!(a.set_station_upgrade(&[p], upgrades::WAITING_ROOM, true), 0, "{}", a.issues());
-    let room = upgrades::WAITING_ROOM_COST / 1000.0;
+    let room = upgrades::WAITING_ROOM_COST * upgrades::UPKEEP_SHARE;
     let up = a.upkeep();
     assert!((up[7] - 0.02 - room).abs() < 1e-12 && (up[9] - room).abs() < 1e-12 && up[2] == 0.0 && (up[0] - 0.02 - room).abs() < 1e-12, "{up:?}");
     let shares = a.line_upkeep(&[4.0, 6.0, 4.0, 4.0, 6.0]);

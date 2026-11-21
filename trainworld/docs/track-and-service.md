@@ -391,9 +391,9 @@ Full design, numbers and sources: `notes/T-008.md`.
   high-speed trains go, over 4 cars become 2, and the dwell and turnaround follow where they were the old kind's
   defaults. A tram line
   starts with a train's 30 s dwell (T-3921; a saved tram line at the old 15 s and 120 s loads at 30 s, any other
-  value stays, `save::bump_tram_dwell`), 120 s turnaround and 2 cars of 20 m (1 to 4), brakes at 0.8 m/s²
-  against a train's 0.9 (`TRAM_BRAKE`, T-3921: a tram stopping loses a little more than a train at the same speed,
-  1-2 s a stop; real trams brake harder, about 1.2-1.3 m/s² in service), and uses
+  value stays, `save::bump_tram_dwell`), 120 s turnaround and 2 cars of 20 m (1 to 4), brakes at 0.9 m/s²
+  like a train (`TRAM_BRAKE`, T-3921: 0.8 first, raised for consistency; with the dwell matched a tram stop costs
+  what a train's does at the same speed; real trams brake harder, about 1.2-1.3 m/s² in service), and uses
   the tram fleet (`fleet_tram`, "Tram cars owned" in the Money tab, `fleetTram` in the save header), US$2M a car, running costs as
   a train's. Demand counts a tram car as 0.75 of a car (docs/demand-worldwide.md).
 - **Street tram track** (T-2927, `TrackKind::StreetTram`): tram track on streets, 0.1x at ground, 60 km/h cap, 0.6x the
@@ -711,7 +711,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   a building joins its members into one complex as a passage would, at the plain change pace, and
   a change inside it counts 1 of its fixed 2 minutes, the walk whole, and a wait there counts as
   in a waiting room (T-2220, T-2276, demand-kernel.md 4.4).
-  US$2,000 a m² of floor, paid at once, upkeep as a station upgrade's (0.1% of its price a day, shared evenly
+  US$2,000 a m² of floor, paid at once, upkeep as a station upgrade's (0.2% of its price a day, shared evenly
   between its constructed members; an empty one's counts for the network only), counted in the built value; a new outline pays
   for the floor the old one did not cover and refunds nothing for floor given up; removing it
   refunds nothing. Not in the undo history (`Network::buildings`, saved in a trailing `BLD1` block
@@ -734,8 +734,8 @@ Full design, numbers and sources: `notes/T-008.md`.
   final and refunds nothing. Saved as bits 4 to 7 of the station's node flags (old readers ignore
   them, and drop bit 7, passing tracks), on `StationData::upgrades`, so undo, renames and platform
   changes keep them. Upkeep (T-3922, Anita 2026-11-21): each constructed upgrade, passage and station building pays
-  `upgrades::UPKEEP_SHARE` (0.1%) of its price at today's prices a game day, a port's ratio and about ground
-  track's; a passage half at each end, a building evenly over its constructed members; counted with the station
+  `upgrades::UPKEEP_SHARE` (0.2%) of its price at today's prices a game day (twice a port's ratio and ground
+  track's); a passage half at each end, a building evenly over its constructed members; counted with the station
   (its Upkeep row, its lines' shares, its region; a port's waiting room with the port). The buy buttons' hovers give
   it under the price ("Upkeep $5k per day").
   - **Terminal** (turnback sidings): a train turning at the station (a line's end or a reversal
@@ -1834,7 +1834,7 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   the dearer step a level, 6.4 "Stations") and US$50k at grade or above (T-2619), either one times
   `UPKEEP_ONE_PLATFORM_SHARE` (0.6, Anita 2026-11-13) when its platform is on one track only: a one way
   station, or a stop on single track without a passing loop (`Network::one_platform`; the app reads the set
-  from `one_platform_stations`); what is bought on a station 0.1% of its price ("Station upgrades", T-3922; the
+  from `one_platform_stations`); what is bought on a station 0.2% of its price ("Station upgrades", T-3922; the
   app reads each station's from `station_upgrade_upkeep`); crossovers, junctions and flyovers
   nothing on top; blueprint nothing (`UPKEEP_GROUND_KM`, `UPKEEP_VIADUCT_KM`, `UPKEEP_CUT_KM`,
   `UPKEEP_BORED_KM`, `UPKEEP_STATION`, `UPKEEP_STATION_UNDER`, real US$350, 500, 1,000, 1,300, 500 and
