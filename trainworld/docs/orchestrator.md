@@ -54,6 +54,9 @@ incidents behind the rules here are in `notes/rule-history.md`.
   continues. Overnight, while she sleeps, agents and you keep going past that.
 - **Supervising**: check long runs (process and `world_run.py status`) at least every couple of hours; ask after any
   agent quiet for about 45 minutes. Keep the work moving (the `takeover` skill) within the ledger's core cap.
+- **Overnight, the core cap goes to the machine's max** (her rule, 11-21: "we should have been running with max core
+  cap cuz it was overnight"): when she goes to bed, `python cores.py cap <machine cores>` and fill it; set it back to
+  her daytime number when she is up (ask if unsure).
 - **What's next**: now and then, not in every report, end a message to her with a few bullets of what you would
   start next. Right after a publish, always: take a fresh look at everything open and start what can go ahead
   (the `publish` skill's last step). A publish is not a reason to go idle; there is usually a lot to do.

@@ -1,22 +1,23 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 4feb4373-1fa9-4b66-9592-396d40896c0a, name maps-a3 [ede33a], since 2026-11-21 03:24 UTC
-Updated: 2026-11-21 09:50 UTC (past 500k; overnight, so carrying on per the handoff skill; cycle once she is up)
+Updated: 2026-11-21 12:20 UTC (she is up; cycling to a successor)
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5. She is home, at this tab.
 
 ## Next
-0. LIVE v0.4.5 (published 11-21 ~04:15 UTC). Cap 10. Batches 1-6 PASSED + T-3925 own check PASSED. 8800 = 5e2d59a7
-   (pushed). Since v0.4.5 on master: fares panel, binzip (packs at the next publish: walk her through it first), T-3904,
-   T-3909, T-3916, T-3918, T-3919, T-3921 (load bump), T-3922, T-3923, T-3925, T-3927, T-3928, T-3908, T-3913, T-1183
-   st.1-2. Unchecked in a batch: T-3919, T-3908 (times unchanged by construction), T-3913 (UI). Next update: translate
-   moneyTab.brtFare/brtFareTip + T-3922 hovers (+ any new); changelog c001-c010.
+0. LIVE v0.4.5 (published 11-21 ~04:15 UTC). Cap 14 (her 11-21 ~12:15 UTC morning; overnight = machine max, now a
+   rule in docs/orchestrator.md). Batches 1-7 checked (notes/batch-2026-11-21.md); T-3925 own check passed. 8800 =
+   5e2d59a7. On master since 8800: T-3929 + its follow-up 9851cafb (timetable versions 16), T-3160 st.3 (bunny train).
+   Next 8800 rebuild after T-2624 lands. Since v0.4.5 on master: fares panel, binzip (packs at the next publish: walk
+   her through it first), T-3904/3908/3909/3913/3916/3918/3919/3921/3922/3923/3925/3927/3928/3929, T-1183 st.1-2.
+   Next update: translate moneyTab.brtFare/brtFareTip + T-3922 hovers (+ any new); changelog c001-c011 (c007, c012 hidden).
 1. Waiting on her (asks.py list, 7 open): PR 24 reply (scratchpad/pr24-reply.md; posting refused: she posts or allows);
    BRT design (review/brt-design.md); upkeep 0.1%; tram brake 0.8; Auto bus stops (T-3924); two workers; iPhone saves;
    town tint look (review/bus-town-tint.png).
-2. OVERNIGHT 11-21. Running: phonemem (T-3160), returnrun (T-3929), fullrate (T-3655), periods (T-2624 stage 1, then 2).
-   Then: T-3926 (cache key, after periods), T-1183 rest (after T-3929), T-3373 B if she wants memory/speed beyond.
-   No publish/deploy overnight.
+2. Running: periodschk (checker for T-2624 in tree periods; land it if PASS, merge its two changelog items into one).
+   Parked: T-3655 (tree fullrate, blockers in its task). Next: T-3926 (cache key), T-3931 rest, T-3160 next step
+   (--app-order in demand_mem), T-1183 after T-3931, T-3373 B if she wants more memory/speed.
 4. T-3395: save_health.py after the next scan; clean = close it (no 11-21 report at 04:30 UTC; 11-20 found 0).
 ## Her words
 - 11-21 ~02:20 UTC, playtesting plain buses on 8800 (Houston): "buses feel really easy ... mostly profitable ... 10%
