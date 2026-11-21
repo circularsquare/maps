@@ -1000,6 +1000,7 @@ mod mode;
 mod assign;
 mod stalls;
 mod fare_zones;
+mod fans;
 pub use gravity::*;
 pub use access::*;
 pub use subzones::*;
@@ -1008,6 +1009,7 @@ pub use mode::*;
 pub use assign::*;
 pub use stalls::*;
 pub use fare_zones::*;
+pub use fans::*;
 
 #[cfg(test)]
 mod tests;

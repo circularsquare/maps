@@ -1508,3 +1508,179 @@ fn reverse_stops_reach_the_graph() {
     assert!(api.solve(0));
     println!("rail trips, period 0: {rail:.1} with the platform beside, {:.1} without", api.summary(0)[2]);
 }
+
+fn bits(v: &[f32]) -> Vec<u32> {
+    v.iter().map(|x| x.to_bits()).collect()
+}
+
+/// T-3892: commute fans ride a ferry where it is their cheaper way: line b a ferry, its riders and
+/// the rail trips up, a trip still one entry; no flags, all 0, or a ferry no trip reaches solve as
+/// before to the bit, free flow and crowded.
+#[test]
+fn commute_fans_ride_where_a_ferry_is_their_way() {
+    let (api0, mut xy, mut n, mut stops, mut times, mut tph, mut cars) = small();
+    // a third line of two stations 60 km out, out of every trip's reach
+    let far = (xy.len() / 2) as u32;
+    xy.extend([60_000.0, 0.0, 62_000.0, 0.0]);
+    n.push(2);
+    stops.extend([far, far + 1]);
+    times.extend([240.0, 0.0, 240.0, 0.0, 240.0, 0.0, 0.0, 240.0, 0.0, 240.0, 0.0, 240.0]);
+    tph.extend([6.0, 6.0, 6.0]);
+    cars.push(8.0);
+    drop(api0);
+    let solve = |ferry: &[u8], crowd: bool| {
+        let (mut api, ..) = small();
+        api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+        api.set_ferry(ferry).unwrap();
+        for q in 0..PERIODS {
+            assert!(api.solve(q));
+            if crowd {
+                assert!(api.crowd(q));
+            }
+        }
+        api
+    };
+    assert!(solve(&[], false).set_ferry(&[1, 0]).is_err());
+    for crowd in [false, true] {
+        let plain = solve(&[], crowd);
+        for same in [solve(&[0, 0, 0], crowd), solve(&[0, 0, 1], crowd)] {
+            for q in 0..PERIODS {
+                assert_eq!(bits(&plain.seg(q)), bits(&same.seg(q)));
+                assert_eq!(bits(&plain.board(q)), bits(&same.board(q)));
+                let (x, y) = (plain.summary(q), same.summary(q));
+                assert_eq!((&x[..4], &x[5..]), (&y[..4], &y[5..]));
+            }
+        }
+        let fans = solve(&[0, 1, 0], crowd);
+        for q in 0..PERIODS {
+            let line_b = |a: &DemandApi| a.board(q)[34..68].iter().sum::<f32>();
+            if q < 4 {
+                assert!(line_b(&fans) > line_b(&plain), "period {q}: line b {} against {}", line_b(&fans), line_b(&plain));
+                assert!(fans.summary(q)[2] > plain.summary(q)[2]);
+            }
+            for (nm, a) in [("plain", &plain), ("fans", &fans)] {
+                let (entries, exits): (f32, f32) = (a.entries(q).iter().sum(), a.exits(q).iter().sum());
+                let rail = a.summary(q)[2] as f32;
+                assert!((entries - rail).abs() <= 1e-3 * rail.max(1.0) && (exits - rail).abs() <= 1e-3 * rail.max(1.0), "{nm} period {q}: entries {entries}, exits {exits}, rail trips {rail}");
+            }
+        }
+    }
+}
+
+/// T-3892: the commute's fans are the mix of two choices: everyone at the ordinary costs and
+/// everyone at the fans' (`er` with each station pair a ferry is a fan's way at the fans' exp), at
+/// `COMMUTE_FAN_SHARE`, with the walk tier and the walking rule off; with the rule on, close. (Every
+/// origin here has a station some fan reaches cheaper by the ferry: its rides reach every one.)
+#[test]
+fn commute_fans_are_the_mix_of_two_choices() {
+    let (mut api, xy, n, stops, times, tph, cars) = small();
+    api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+    api.set_ferry(&[0, 1]).unwrap();
+    assert!(api.solve(0));
+    let st = api.per[0].as_ref().unwrap();
+    let sz = api.sz.as_ref().unwrap();
+    let s = st.g.n_st;
+    for rule in [false, true] {
+        let mut p = st.p.clone();
+        p.walk_tier = 0.0;
+        if !rule {
+            p.walk_rule = 0.0;
+        }
+        let sk = kernel::skims(&st.g, &p);
+        let er = kernel::station_exp(&sk, &p);
+        let cf = kernel::CommuteFans::new(&st.g, &p, &sk, &[false, true]).unwrap();
+        let mut er_f = er.clone();
+        for b in 0..p.n_bands() {
+            let (th, off) = p.band(b);
+            for at in 0..s * s {
+                if cf.fc.via[at] != kernel::NO_FAN {
+                    er_f[b * s * s + at] = kernel::fast_exp(-th * (cf.fc.cost[at] - off));
+                }
+            }
+        }
+        let choice = |er: &[f32], fans: Option<&kernel::CommuteFans>| kernel::mode_choice_fans(&api.z, &api.gr, sz, er, &sk.walk, &sk.walk_max, s, &p, &api.nr, (0, 1), fans);
+        let (mo, m0, m1) = (choice(&er, Some(&cf)), choice(&er, None), choice(&er_f, None));
+        let f = cf.share as f64;
+        let mix = |a: f64, b: f64| (1.0 - f) * a + f * b;
+        let tol = if rule { 2e-3 } else { 1e-4 };
+        let close = |a: f64, b: f64| (a - b).abs() <= tol * a.abs().max(b.abs()).max(1.0);
+        assert!(m1.rail > m0.rail * 1.001, "the fans' costs take more rail trips: {} against {}", m1.rail, m0.rail);
+        assert!(close(mo.rail, mix(m0.rail, m1.rail)), "rule {rule}: rail {} against {}", mo.rail, mix(m0.rail, m1.rail));
+        assert!(close(mo.sense.d, mix(m0.sense.d, m1.sense.d)));
+        assert!(close(mo.rail_walk, mix(m0.rail_walk, m1.rail_walk)));
+        let sum = |v: &[f32]| v.iter().map(|&x| x as f64).sum::<f64>();
+        assert!(close(sum(&mo.od) + sum(&mo.od_fan), mo.rail), "the station pairs hold every rail trip");
+        assert!(close(sum(&mo.acc_home), mo.rail) && close(sum(&mo.acc_work), mo.rail));
+        assert!(sum(&mo.od_fan) > 0.0);
+        let mut fan_origins = 0;
+        for u in 0..sz.n {
+            let fan = (sz.acc_off[u] as usize..sz.acc_off[u + 1] as usize).any(|k| cf.fc.row[sz.acc_st[k] as usize]);
+            if fan {
+                fan_origins += 1;
+                assert!(close(mo.rail_by_sub[u] as f64, mix(m0.rail_by_sub[u] as f64, m1.rail_by_sub[u] as f64)), "subzone {u}");
+            } else {
+                assert_eq!(mo.rail_by_sub[u].to_bits(), m0.rail_by_sub[u].to_bits(), "subzone {u}, no fans");
+            }
+        }
+        assert!(fan_origins > 0);
+        if !rule {
+            // station pair by station pair (the fans' on a ferry in `od_fan`)
+            let (mut worst, mut top) = (0f64, 0f64);
+            for at in 0..s * s {
+                let want = mix(m0.od[at] as f64, m1.od[at] as f64);
+                worst = worst.max((mo.od[at] as f64 + mo.od_fan[at] as f64 - want).abs());
+                top = top.max(want);
+            }
+            assert!(worst <= 1e-4 * top, "station pairs off by {worst} of {top}");
+        }
+    }
+}
+
+/// T-3892: a fan's way back reaches only stations searched to (the assignment drops flow towards
+/// any other): a ferry from the centre to a port past every cell's walk with a train on from it,
+/// flagged a ferry. A fan may leave the ferry there; the commute's fans never do, and every rail trip
+/// is one entry and one exit.
+#[test]
+fn commute_fans_go_back_by_stations_searched_to() {
+    let (mut api, mut xy, mut n, mut stops, mut times, mut tph, mut cars) = small();
+    let port = (xy.len() / 2) as u32;
+    xy.extend([15_000.0, 0.0]);
+    let two = |t: f32| [t, 0.0, t, 0.0, t, 0.0, 0.0, t, 0.0, t, 0.0, t];
+    // a ferry from the centre (station 8) 20 minutes to a port 15 km out, a train on a minute to
+    // station 16 (as times, not as km)
+    n.extend([2, 2]);
+    stops.extend([8, port, port, 16]);
+    times.extend(two(1200.0));
+    times.extend(two(60.0));
+    tph.extend([30.0; 6]);
+    cars.extend([2.0, 8.0]);
+    api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+    let p = api.svc.as_ref().unwrap().st_map[port as usize] as usize;
+    assert!(!api.want[p], "the port is searched to by no strategy");
+    let flags = [false, false, true, false];
+    api.set_ferry(&[0, 0, 1, 0]).unwrap();
+    for q in 0..PERIODS {
+        assert!(api.solve(q));
+        let (entries, exits): (f32, f32) = (api.entries(q).iter().sum(), api.exits(q).iter().sum());
+        let rail = api.summary(q)[2] as f32;
+        assert!((entries - rail).abs() <= 1e-3 * rail && (exits - rail).abs() <= 1e-3 * rail, "period {q}: entries {entries}, exits {exits}, rail trips {rail}");
+    }
+    // on the skims the pass solves on: the fan ways leaving the ferry at an unsearched port and
+    // going on from it, all of them and the commute's
+    let st = api.per[0].as_ref().unwrap();
+    let s = st.g.n_st;
+    let (all, kept) = with_skims(&st.g, &st.p, &api.want, |sk| {
+        let on = |via: &[u16], ports: &[u32]| {
+            (0..s * s)
+                .filter(|&at| via[at] != kernel::NO_FAN && {
+                    let q = ports[via[at] as usize] as usize;
+                    at % s != q && sk.slot[q] == u32::MAX
+                })
+                .count()
+        };
+        let fc = kernel::FanCosts::new(&st.g, &st.p, sk, &flags).unwrap();
+        let cf = kernel::CommuteFans::new(&st.g, &st.p, sk, &flags);
+        (on(&fc.via, &fc.ports), cf.map_or(0, |c| on(&c.fc.via, &c.fc.ports)))
+    });
+    assert!(all > 0 && kept == 0, "fan ways on from the port: {all}, the commute's {kept}");
+}

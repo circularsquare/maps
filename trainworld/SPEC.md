@@ -312,7 +312,7 @@ like a bus line's whose port list takes a port out by its dot or moves one by dr
 ferry fare row per boat size in the Money tab (defaults Small 1.50, Medium 1.00, Large 1.00). A new line runs a boat every 20, 30 and 60 minutes at high, medium and low demand (T-2273, T-3400), over 40 km a boat an hour by day and none at night (T-3892), or the ferry default once one is set (T-3703). In demand (T-2195) a ferry line is a line like
 any other, its ports stations, with no boarding cost and its boat's riders; its rides pay the curve's part above the base
 times its boat size's ferry multiple, and trips by ferry are the network's. 15% of every everyday purpose's trips
-(7.5% of airport and medical ones; commutes not yet) are ferry fans, for whom each minute aboard a ferry counts 0.1
+(7.5% of airport and medical ones and of commutes) are ferry fans, for whom each minute aboard a ferry counts 0.1
 (T-2196, T-3892, docs/demand-mode.md).
 
 Detail: [docs/track-and-service.md](docs/track-and-service.md) (6.1 track and stations, 6.2

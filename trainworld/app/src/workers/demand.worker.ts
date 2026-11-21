@@ -2049,7 +2049,7 @@ async function run() {
               cxy[k] = w.x; cxy[k + 1] = w.y;
             }
             p.set_bus(m.catchN ?? new Uint32Array(0), cxy);
-            setupMs += p.set_network(xy, m.lineN, m.stops, m.times, m.tph, m.cars);            if (p instanceof EverydayApi) p.set_ferry(m.ferry ?? new Uint8Array(0)); // T-2196
+            setupMs += p.set_network(xy, m.lineN, m.stops, m.times, m.tph, m.cars);            p.set_ferry(m.ferry ?? new Uint8Array(0)); // T-2196, T-3892: the outings' fans and the commute's
           }
           p.set_fares(rounded ? rounded.base : m.fare.base * scale, rounded ? rounded.perKm : m.fare.perKm * scale, m.hopKm);
           p.set_fare_mul(m.fareW ?? new Float32Array(0));

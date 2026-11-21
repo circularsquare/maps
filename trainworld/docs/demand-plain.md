@@ -301,10 +301,10 @@ the ferry is the quickest way across (Staten Island to Manhattan) it wins on the
 its trips count as rail.
 
 Ferry fans (since T-2196, wider since T-3892): 15% of the people on any everyday trip (errands, visits,
-school, university, attractions), and half as many on airport and medical trips, find ferries fun, so for
-them an hour aboard a ferry feels like 6 minutes. Everything else (the walk, the wait, the fare, changes,
-crowding) counts as for anyone, and they still pick between the network and the car as anyone does.
-Commutes have no fans yet, and nor do trips between zones. Fans make no new trips: they only move trips
+school, university, attractions), and half as many on airport and medical trips and commutes, find ferries
+fun, so for them an hour aboard a ferry feels like 6 minutes. Everything else (the walk, the wait, the fare,
+changes, crowding) counts as for anyone, and they still pick between the network and the car as anyone does.
+Trips between zones have no fans. Fans make no new trips: they only move trips
 that already go between the places a ferry links.
 
 ## Anita's two tests

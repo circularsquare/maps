@@ -149,8 +149,8 @@ levels:
    the track sim's `BOAT_CRUSH`), so it is no bus line and is crowded as a train. Its route nodes
    charge the Ferry multiplier (`Fares.ferry`) as a high-speed line's charge theirs. The ferry fans
    (T-2196, [demand-mode.md](demand-mode.md) "Ferry fans") compose their costs from these tables
-   through the ports, with no search of their own; the everyday layer is told which lines are
-   ferries (`EverydayApi.set_ferry`, `DemandNetwork.ferry`).
+   through the ports, with no search of their own; the everyday layer and the commute are told
+   which lines are ferries (`EverydayApi.set_ferry`, `DemandApi.set_ferry`, `DemandNetwork.ferry`).
    A change of trains costs a fixed 2 perceived minutes (`transfer_min`, Anita, T-717), its wait
    and the walk between the two platforms' centres (below); the first boarding pays neither the
    fixed cost nor a platform walk. A line joins only if it improves expected trip cost;

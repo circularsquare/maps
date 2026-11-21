@@ -693,6 +693,8 @@ pub struct DemandApi {
     back_in: Vec<u32>,
     /// The ferry lines and the stops at grade of the next `set_network` (`set_stairs`, T-3888).
     pier_in: (Vec<u8>, Vec<u8>),
+    /// T-3892: which lines are ferries (`set_ferry`), by `set_network`'s line; empty with none.
+    ferry: Vec<bool>,
     /// T-124: the periods (bit q) whose inputs the last `set_network` and `set_fares` left as they
     /// were, so their results were kept; and whether the layout was, so access was kept.
     pub(crate) same: u32,
@@ -868,15 +870,32 @@ impl DemandApi {
         // the strategies are shared with the other populations on the same service (T-119)
         let (mo, l, od_sub) = with_skims(g, p, &self.want, |sk| {
             let er = station_exp(sk, p);
-            let mut mo = mode_choice_part(&self.z, &self.gr, sz, &er, &sk.walk, &sk.walk_max, g.n_st, p, &self.nr, self.part);
+            // T-3892: the ferry fans' costs, only while any line is a ferry
+            let fans = if self.ferry.is_empty() { None } else { CommuteFans::new(g, p, sk, &self.ferry) };
+            let mut mo = mode_choice_fans(&self.z, &self.gr, sz, &er, &sk.walk, &sk.walk_max, g.n_st, p, &self.nr, self.part, fans.as_ref());
             drop(er);
             // the trips home: the same station pairs reversed
             let s = g.n_st;
             let (w, h) = (TO_WORK[q], TO_HOME[q]);
             let fw = w / (w + h);
             let fh = h / (w + h);
-            let od_sub = self.compact_od(&mo.od, s);
             let mut od = std::mem::take(&mut mo.od);
+            // the fans on a ferry: their station pairs in the views, their rides to and from the
+            // ports in the assignment
+            let (od_sub, rides) = match fans.as_ref() {
+                None => (self.compact_od(&od, s), vec![]),
+                Some(cf) => {
+                    let mut both = od.clone();
+                    for (o, &f) in both.iter_mut().zip(&mo.od_fan) {
+                        *o += f;
+                    }
+                    let sub = self.compact_od(&both, s);
+                    drop(both);
+                    let rides = cf.route_all(s, &mo.od_fan, &mut od);
+                    (sub, rides)
+                }
+            };
+            mo.od_fan = vec![];
             for a in 0..s {
                 for t in a + 1..s {
                     let (x, y) = (od[a * s + t], od[t * s + a]);
@@ -884,10 +903,14 @@ impl DemandApi {
                     od[t * s + a] = fw * y + fh * x;
                 }
             }
-            let l = match xfer {
+            let rides = fans.as_ref().map(|cf| cf.both_ways(s, &rides, fw, fh, &mut od));
+            let mut l = match xfer {
                 Some((ix, x)) => assign_with_transfers(g, sk, &od, ix, x),
                 None => assign(g, sk, &od),
             };
+            if let (Some(cf), Some(r)) = (fans.as_ref(), rides.as_ref()) {
+                cf.add_rides(g, r, &mut l);
+            }
             (mo, l, od_sub)
         });
         let sub = SubOut {
@@ -1194,6 +1217,7 @@ impl DemandApi {
             tram_in: vec![],
             back_in: vec![],
             pier_in: (vec![], vec![]),
+            ferry: vec![],
             same: 0,
             layout_same: false,
             reusable: false,
@@ -1305,7 +1329,7 @@ impl DemandApi {
         let (home_k, work_k) = zone_trip_factors(&city, &z, &gr, gravity_from_pack);
         // read only above; z and gr hold what the solves need of it (T-1611)
         city.gravity = None;
-        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone: ns.walk_home, walk_work_zone: ns.walk_work, unr_all, unr_home: ns.unr_home, unr_work: ns.unr_work, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], fare_mul: vec![], base_mul: vec![], fare_zones: FareZones::default(), fare_curve: vec![], open_ms: now_ms() - t0, complex_in: vec![], ups_in: vec![], passages_in: vec![], span_in: vec![], bus_in: (vec![], vec![]), tram_in: vec![], back_in: vec![], pier_in: (vec![], vec![]), same: 0, layout_same: false, reusable: false, lod: Lod::of(lod::FINE)?, part: (0, 1), len_base: std::cell::OnceCell::new() })
+        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone: ns.walk_home, walk_work_zone: ns.walk_work, unr_all, unr_home: ns.unr_home, unr_work: ns.unr_work, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], fare_mul: vec![], base_mul: vec![], fare_zones: FareZones::default(), fare_curve: vec![], open_ms: now_ms() - t0, complex_in: vec![], ups_in: vec![], passages_in: vec![], span_in: vec![], bus_in: (vec![], vec![]), tram_in: vec![], back_in: vec![], pier_in: (vec![], vec![]), ferry: vec![], same: 0, layout_same: false, reusable: false, lod: Lod::of(lod::FINE)?, part: (0, 1), len_base: std::cell::OnceCell::new() })
     }
 
     /// `new` at a level of detail (T-1222, `lod::FINE` or `lod::COARSE`): the commute chunks
@@ -1373,6 +1397,22 @@ impl DemandApi {
     /// none. A bus never pays.
     pub fn set_stairs(&mut self, ferry_lines: &[u8], grade_stops: &[u8]) {
         self.pier_in = (ferry_lines.to_vec(), grade_stops.to_vec());
+    }
+
+    /// T-3892: which lines are ferries, a byte a line in `set_network`'s order (1 a ferry), after
+    /// it; empty with none. Their fans ride them (`COMMUTE_FAN_SHARE`), as the outings' do
+    /// (`EverydayApi::set_ferry`).
+    pub fn set_ferry(&mut self, lines: &[u8]) -> Result<(), String> {
+        let nl = self.svc.as_ref().map_or(0, |s| s.line_off.len() - 1);
+        if !lines.is_empty() && lines.len() != nl {
+            return Err(format!("{} ferry flags for {nl} lines", lines.len()));
+        }
+        let ferry: Vec<bool> = if lines.iter().any(|&v| v != 0) { lines.iter().map(|&v| v != 0).collect() } else { vec![] };
+        if ferry != self.ferry {
+            self.ferry = ferry;
+            self.per.iter_mut().for_each(|v| *v = None);
+        }
+        Ok(())
     }
 
     /// The reverse runs' stops of the networks `set_network` is given from now on (T-3348): per

@@ -1118,7 +1118,7 @@ notes/T-420.md has the tables.
   player's ferry. Check: a drawn harbour ferry's weekday riders against the real one's at a similar
   headway (Staten Island about 70,000 a weekday before 2020 at a boat every 15-30 minutes).
 - **Ferry fans** (T-2196, Anita 2026-11-03 and 2026-11-20, T-3892; docs/demand-mode.md "Ferry fans"). 15%
-  of every everyday purpose's trips, 7.5% of airport and medical trips (not yet commutes, nor trips between
+  of every everyday purpose's trips, 7.5% of airport and medical trips and of commutes (not trips between
   zones), count each minute aboard a ferry at 0.1; everything else in their choice is anyone's. A share per
   purpose, one weight, no country constant. Why it holds: harbour ferries carry visitors and day-trippers beside their
   commuters wherever they run (the Staten Island ferry's tourists, Sydney's Manly ferry, Istanbul's

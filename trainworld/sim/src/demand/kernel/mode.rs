@@ -89,6 +89,10 @@ impl FareSense {
 pub struct ModeOut {
     /// Rail trips by (access station, egress station), S x S, in the home -> work direction.
     pub od: Vec<f32>,
+    /// T-3892: the fans' rail trips by station pair where a ferry is their way (`FanCosts::via`),
+    /// S x S home -> work, kept out of `od` (`CommuteFans::route_all` puts them on the ports);
+    /// empty with no fans.
+    pub od_fan: Vec<f32>,
     pub rail: f64,
     /// T-1300: how `rail` moves with the fare.
     pub sense: FareSense,
@@ -193,7 +197,31 @@ pub fn mode_choice(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk_tab:
 /// `mode_choice` over part `k` of `n` of the origin zones, dealt round-robin (T-1543): every
 /// figure is a sum over origins, so the parts' figures add up to the whole's (`trips_total` is
 /// the whole's in every part).
-pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk_tab: &[u16], walk_max: &[u16], s: usize, p: &Params, nr: &NoRail, (k, n): (u32, u32)) -> ModeOut {
+pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk_tab: &[u16], walk_max: &[u16], s: usize, p: &Params, nr: &NoRail, part: (u32, u32)) -> ModeOut {
+    mode_choice_fans(z, gr, sz, er, walk_tab, walk_max, s, p, nr, part, None)
+}
+
+/// `mode_choice_part` with the ferry fans (T-3892, `CommuteFans`): `share` of every pair's trips
+/// cost rail as the fans' station pairs have it, a ferry's minutes at `FAN_RIDE_W` (each pair's
+/// exp from `FanCosts::cost` where `via` is set, `er` elsewhere), and their share beside
+/// everyone else's, as the outings' fans (everyday.rs). An origin some of whose stations reach a
+/// station cheaper by a ferry has a third pair of rows, its two with the fans' exps: a lane any
+/// of whose egress stations is one also sums those. The walk tier rides on everyone's costs;
+/// the walking rule refuses the fans the station pairs it refuses everyone (their weights at the
+/// fans' exps); the fans' trips on a ferry go to `od_fan`.
+#[allow(clippy::too_many_arguments)]
+pub fn mode_choice_fans(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk_tab: &[u16], walk_max: &[u16], s: usize, p: &Params, nr: &NoRail, part: (u32, u32), fans: Option<&CommuteFans>) -> ModeOut {
+    match fans {
+        Some(_) => mode_choice_with::<true>(z, gr, sz, er, walk_tab, walk_max, s, p, nr, part, fans),
+        None => mode_choice_with::<false>(z, gr, sz, er, walk_tab, walk_max, s, p, nr, part, None),
+    }
+}
+
+/// `mode_choice_fans`, compiled apart with fans and without, so the pair loop without them is
+/// the one before them (T-3892).
+#[allow(clippy::too_many_arguments)]
+fn mode_choice_with<const FANS: bool>(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk_tab: &[u16], walk_max: &[u16], s: usize, p: &Params, nr: &NoRail, (k, n): (u32, u32), fans: Option<&CommuteFans>) -> ModeOut {
+    let fans = if FANS { fans } else { None };
     let share = p.period_share as f64;
     // T-3888: the walk past which the walk tier never walks (`Params::tier_at`)
     let tier_c = p.tier_cost();
@@ -275,6 +303,7 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
     let parted = !sz.part.is_empty();
     let mut out = ModeOut {
         od: vec![0.0; s * s],
+        od_fan: if fans.is_some() { vec![0.0; s * s] } else { vec![] },
         rail: 0.0,
         sense: FareSense::default(),
         rail_band: [0.0; N_BANDS],
@@ -408,6 +437,19 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
     let h = s + PADS;
     let mut ab_row = vec![0f32; 2 * nb * h];
     let mut ab_y = vec![0f32; 2 * nb * h];
+    // T-3892: the fans' rows and trips the same way, and per station whether one of the origin's
+    // walks (`fan_w`) or walks and rides (`fan_r`) reaches it cheaper by a ferry (`fan_gen`)
+    let fan_n = if fans.is_some() { 2 * nb * h } else { 0 };
+    let (mut af_row, mut af_y) = (vec![0f32; fan_n], vec![0f32; fan_n]);
+    let (mut fan_w, mut fan_r) = (vec![0u32; if fans.is_some() { s } else { 0 }], vec![0u32; if fans.is_some() { s } else { 0 }]);
+    let mut fan_gen = 0u32;
+    // the fans' weight of each of `lane_bad`'s station pairs, and whether a ferry is their way
+    let mut lane_bad_f: Vec<(f32, bool)> = vec![];
+    // and a block's fans' row sums by egress step, their pairs kept by lane, their main trips' rates
+    // (`gf`, `gfl`) and their exps and row sums by lane: set only where the block has fans
+    let mut rvf = [F8::splat(0.0); KE];
+    let (mut keep_f, mut gf, mut gfl) = ([1f32; 8], [0f32; 8], [0f32; 8]);
+    let (mut evf, mut rvf_a) = ([[0f32; 8]; KE], [[0f32; 8]; KE]);
     // rail trips reaching each destination's egress entries, by its egress step
     let mut acc_q = vec![[[0f32; 4]; 2]; dd.len()];
     // the origin's pairs within the walk bound, in visiting order: destination, and the zone
@@ -591,6 +633,46 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                     }
                 }
             }
+            // T-3892: the fans' rows: the two above with each station pair a fan takes a ferry on
+            // at the fans' exp, where any of the origin's stations has one
+            let fan_o = FANS && fans.is_some_and(|cf| (walk.start..ride.end).any(|k| cf.fc.row[sz.acc_st[k] as usize]));
+            if let Some(cf) = fans.filter(|_| fan_o) {
+                fan_gen += 1;
+                for k in walk.start..ride.end {
+                    for &t in cf.of(sz.acc_st[k] as usize).0 {
+                        if k < walk.end {
+                            fan_w[t as usize] = fan_gen;
+                        }
+                        fan_r[t as usize] = fan_gen;
+                    }
+                }
+                for (b, &c_ub) in c_u.iter().enumerate() {
+                    if used >> b & 1 == 0 {
+                        continue;
+                    }
+                    let at = 2 * b * h;
+                    af_row[at..at + 2 * h].copy_from_slice(&ab_row[at..at + 2 * h]);
+                    af_y[at..at + 2 * h].fill(0.0);
+                    let (th, off) = bands[b];
+                    let er_b = &er[b * ss..(b + 1) * ss];
+                    for k in walk.start..ride.end {
+                        let (a, w) = (sz.acc_st[k] as usize, acc_e[b * na + k]);
+                        let (ts, cs) = cf.of(a);
+                        for (&t, &c) in ts.iter().zip(cs) {
+                            let t = t as usize;
+                            let d = w * (fast_exp(-th * (c - off)) - er_b[a * s + t]);
+                            if k < walk.end {
+                                af_row[at + t] += d;
+                                if rides {
+                                    af_row[at + h + t] += c_ub * d;
+                                }
+                            } else {
+                                af_row[at + h + t] += d;
+                            }
+                        }
+                    }
+                }
+            }
             // The pairs eight at a time, each lane the scalar expressions in their order
             // (`trip::pair_choice` gives the same bits one pair at a time), then each pair's rail
             // trips onto its egress stations, lane by lane in the pairs' order.
@@ -623,6 +705,25 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                     rv[k] = F8::gather(&ab_row, &ix[k]);
                     ssum = ssum + rv[k] * ev[k];
                 }
+                // T-3892: the lanes with an egress station the origin reaches cheaper by a ferry,
+                // and their fans' sums
+                let mut fan_l = 0u32;
+                let mut ssum_f = ssum;
+                if fan_o {
+                    for l in 0..(n_cand - 8 * ci).min(8) {
+                        let mk = if rr[l] != 0 { &fan_r } else { &fan_w };
+                        if eg_st[q[l]][..eg_n[q[l]] as usize].iter().any(|&t| mk[t as usize] == fan_gen) {
+                            fan_l |= 1 << l;
+                        }
+                    }
+                    if fan_l != 0 {
+                        ssum_f = F8::splat(0.0);
+                        for k in 0..kn {
+                            rvf[k] = F8::gather(&af_row, &ix[k]);
+                            ssum_f = ssum_f + rvf[k] * ev[k];
+                        }
+                    }
+                }
                 let [x8, y8, l08, l18] = F8::transpose(std::array::from_fn(|l| dd[q[l]][0]));
                 let (dx, dy) = (ux8 - x8, uy8 - y8);
                 let d = (dx * dx + dy * dy).sqrt();
@@ -644,7 +745,12 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                 };
                 if near != 0 {
                     lane_bad.clear();
+                    lane_bad_f.clear();
+                    if fan_l != 0 {
+                        keep_f = [1f32; 8];
+                    }
                     let (d_lane, s_lane) = (d.to_array(), ssum.to_array());
+                    let sf_lane = ssum_f.to_array();
                     let mut keep = [1f32; 8];
                     // T-2324: each egress step's row sums and weights by lane, for the slivers' bound
                     let (rv_a, ev_a): ([[f32; 8]; KE], [[f32; 8]; KE]) = (std::array::from_fn(|k| rv[k].to_array()), std::array::from_fn(|k| ev[k].to_array()));
@@ -753,6 +859,9 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                         let most = bad > 0.5 * s_lane[l];
                         let mut kept = 0f32;
                         let all_k = ((1u32 << ne) - 1) as u8;
+                        // T-3892: and the same pairs' weights at the fans' exps
+                        let fan = fan_l >> l & 1 != 0;
+                        let mut kept_f = 0f32;
                         for (j, k) in (walk.start..walk.start + nk).enumerate() {
                             let mut km = if most { !by_j[j] & all_k } else { by_j[j] };
                             if km == 0 {
@@ -767,6 +876,14 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                                 if cw > 0.0 {
                                     kept += cw;
                                     lane_bad.push((a, t, cw, k as u32, kk as u8));
+                                    if fan_o {
+                                        let at = a as usize * s + t as usize;
+                                        let cf = fans.unwrap();
+                                        let by = fan && cf.fc.via[at] != NO_FAN;
+                                        let cwf = if by { w * fast_exp(-bands[b].0 * (cf.fc.cost[at] - bands[b].1)) * eg_e[qd * nb + b][kk] } else { cw };
+                                        kept_f += cwf;
+                                        lane_bad_f.push((cwf, by));
+                                    }
                                 }
                             }
                         }
@@ -776,16 +893,31 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                         } else {
                             keep[l] = 1.0 - bad / s_lane[l];
                         }
+                        if fan && !most && kept_f > 0.5 * sf_lane[l] {
+                            // most of the fans' weight refused where everyone's is not: their
+                            // spread would cancel too far for f32 (as `most` above), so here the
+                            // fans choose as everyone does
+                            fan_l &= !(1 << l);
+                        } else if fan {
+                            keep_f[l] = if most { kept_f / sf_lane[l] } else { 1.0 - kept_f / sf_lane[l] };
+                        }
                         bad_at[l] = (lo, lane_bad.len() as u32);
                         slow |= 1 << l;
                     }
                     if slow != 0 {
                         ssum = ssum * F8::new(keep);
                     }
+                    if slow & fan_l != 0 {
+                        // (never below everyone's: a fan's weight on a pair is at least theirs,
+                        // which rounding can lose where the rule refuses most of the fans')
+                        ssum_f = (ssum_f * F8::new(keep_f)).max(ssum);
+                    }
                 }
                 // no rail route (or only the same station at both ends) where under 1e-30
                 let live = (1u32 << (n_cand - 8 * ci).min(8)) - 1;
                 let kept = live & !ssum.lt_mask(F8::splat(1e-30));
+                // (fans only where the rule keeps everyone a station pair, as the outings')
+                let fan_l = fan_l & kept;
                 // T-3888: the lanes whose walk tier rides (`Params::tier_at`; none between land
                 // parts, which have no walk), a lane the rule refuses whole among them
                 let tier = if p.walk_tier > 0.0 {
@@ -872,7 +1004,7 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                 let rd8 = rail + F8::splat(FARE_D_MIN);
                 // the rail trips, those of everyone but a walk tier (all of them where none rides),
                 // and their rate on the station pairs kept, then the rate spread on every pair
-                let (x, xd, xm, g) = if tier == 0 {
+                let (mut x, mut xd, mut xm, mut g) = if tier == 0 {
                     let x = tu8 * dv8 * chosen(rail);
                     (x, (tu8 * dv8 * chosen(rd8) - x).to_array(), x.to_array(), x / ssum)
                 } else {
@@ -903,6 +1035,51 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                     let gt = pick(tier, zero, x_t / ssum_all);
                     (x, xd, x_m.to_array(), pick(whole, gm + gt, gt))
                 };
+                // T-3892: the fans' rail share beside everyone else's (the walk tier's part as
+                // everyone's), their main trips' rate on their pairs kept (`gfl`) and the rate
+                // spread on all their pairs (`gf`); everyone else's main trips (`xm`, `g`) are the
+                // rest of the share
+                if fan_l != 0 {
+                    let fs = F8::splat(fans.unwrap().share);
+                    let nf = one - fs;
+                    let rail_f = mo8 + m8 + F8::splat(p.fare_min) - ssum_f.ln() / th8 + off8;
+                    let rdf = rail_f + F8::splat(FARE_D_MIN);
+                    let (xf, xdf, xmf) = if tier == 0 {
+                        let xf = tu8 * dv8 * chosen(rail_f);
+                        (xf, tu8 * dv8 * chosen(rdf) - xf, xf)
+                    } else {
+                        let t8 = pick(tier, zero, F8::splat(p.walk_tier));
+                        let rail_all = if slow & tier != 0 { mo8 + m8 + F8::splat(p.fare_min) - ssum_all.ln() / th8 + off8 } else { rail };
+                        let mix = |rail: F8| {
+                            let rail_c = rail.max(F8::splat(0.01));
+                            let s0 = ratio_at(rail_c, road);
+                            if !paying {
+                                s0
+                            } else {
+                                let s1 = ratio_at(rail_c, road + paid8);
+                                s0 + (one - free8) * (s1 - s0)
+                            }
+                        };
+                        let tc = |rail: F8, all: F8| {
+                            let m = chosen(rail);
+                            pick(tier, m, (one - t8) * m + t8 * mix(all))
+                        };
+                        let xf = tu8 * dv8 * tc(rail_f, rail_all);
+                        (xf, tu8 * dv8 * tc(rdf, rail_all + F8::splat(FARE_D_MIN)) - xf, tu8 * dv8 * pick(tier, chosen(rail_f), (one - t8) * chosen(rail_f)))
+                    };
+                    let xm0 = F8::new(xm);
+                    x = pick(fan_l, x, nf * x + fs * xf);
+                    xd = pick(fan_l, F8::new(xd), nf * F8::new(xd) + fs * xdf).to_array();
+                    xm = pick(fan_l, xm0, nf * xm0).to_array();
+                    g = pick(fan_l & !whole, g, g - fs * xm0 / ssum);
+                    let r = fs * xmf / ssum_f;
+                    gfl = pick(fan_l, zero, r).to_array();
+                    gf = pick(fan_l & !whole, zero, r).to_array();
+                    for k in 0..kn {
+                        evf[k] = ev[k].to_array();
+                        rvf_a[k] = rvf[k].to_array();
+                    }
+                }
                 let dk = (d * F8::splat(0.001)).to_array();
                 // trips by egress station y, and y x the row: what reaches each egress entry
                 let mut ya = [[0f32; 8]; KE];
@@ -956,6 +1133,14 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                             a[1] = (F4::new(a[1]) + yw_hi[l]).to_array();
                         }
                     }
+                    // T-3892: the fans' trips by egress station on their rows
+                    if fan_l >> l & 1 != 0 && gf[l] != 0.0 {
+                        for k in 0..kn {
+                            let y = gf[l] * evf[k][l];
+                            af_y[ix[k][l] as usize] += y;
+                            acc_q[q[l]][k / 4][k % 4] += y * rvf_a[k][l];
+                        }
+                    }
                     if slow >> l & 1 != 0 {
                         // T-1059: the lane's loads went onto every station pair at the kept pairs'
                         // rate and the refused ones come off again (the station matrix is cleared
@@ -972,6 +1157,21 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                             acc_q[q[l]][kk as usize / 4][kk as usize % 4] += f;
                             out.acc_home[k as usize] += f;
                             out.rail_band[acc_band[k as usize] as usize] += f as f64;
+                        }
+                        // T-3892: and the fans' the same way, at their weights
+                        if fan_l >> l & 1 != 0 && gfl[l] != 0.0 {
+                            for (&(a, t, _, k, kk), &(cf, by)) in lane_bad[lo as usize..hi as usize].iter().zip(&lane_bad_f[lo as usize..hi as usize]) {
+                                let f = sign * gfl[l] * cf;
+                                let at = a as usize * s + t as usize;
+                                if by {
+                                    out.od_fan[at] += f;
+                                } else {
+                                    out.od[at] += f;
+                                }
+                                acc_q[q[l]][kk as usize / 4][kk as usize % 4] += f;
+                                out.acc_home[k as usize] += f;
+                                out.rail_band[acc_band[k as usize] as usize] += f as f64;
+                            }
                         }
                     }
                 }
@@ -1003,6 +1203,13 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                     continue;
                 }
                 let at = 2 * b * h;
+                // T-3892: the fans' trips split with everyone's, then their station pairs on a
+                // ferry moved to `od_fan` at the fans' exps
+                if fan_o {
+                    for (y, &f) in ab_y[at..at + 2 * h].iter_mut().zip(&af_y[at..at + 2 * h]) {
+                        *y += f;
+                    }
+                }
                 let (y_row, yb_row) = (&ab_y[at..at + s], &ab_y[at + h..at + h + s]);
                 for k in walk.start..ride.end {
                     let (a, w) = (sz.acc_st[k] as usize, acc_e[b * na + k]);
@@ -1028,6 +1235,22 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
                             let f = yb * w * e;
                             *o += f;
                             tot += f;
+                        }
+                    }
+                    if let Some(cf) = fans.filter(|_| fan_o) {
+                        let (th, off) = bands[b];
+                        let (yf, ybf) = (&af_y[at..at + s], &af_y[at + h..at + h + s]);
+                        let (ts, cs) = cf.of(a);
+                        for (&t, &c) in ts.iter().zip(cs) {
+                            let t = t as usize;
+                            let y = if k >= walk.end { ybf[t] } else if rides { yf[t] + c_ub * ybf[t] } else { yf[t] };
+                            if y == 0.0 {
+                                continue;
+                            }
+                            let (o, f) = (y * w * er_a[t], y * w * fast_exp(-th * (c - off)));
+                            row[t] -= o;
+                            out.od_fan[a * s + t] += f;
+                            tot += f - o;
                         }
                     }
                     out.acc_home[k] += tot;
@@ -1066,9 +1289,10 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
             out.unr_lost_to_sub[v as usize] = unr_q[q];
         }
     }
-    if rule {
+    if rule || fans.is_some() {
         // T-1059: a refused station pair taken off its lane's loads can be left a rounding below 0
-        for x in out.od.iter_mut().chain(out.acc_home.iter_mut()).chain(out.acc_work.iter_mut()) {
+        // (and T-3892, a fan's pair moved to `od_fan`)
+        for x in out.od.iter_mut().chain(out.od_fan.iter_mut()).chain(out.acc_home.iter_mut()).chain(out.acc_work.iter_mut()) {
             *x = x.max(0.0);
         }
     }
