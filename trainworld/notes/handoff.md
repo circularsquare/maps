@@ -1,21 +1,20 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session 1a8ad997-acf4-4a89-963d-166c67fedf88, name maps-65 [fd56e0], since 2026-11-20 18:52 UTC
-Updated: 2026-11-20 22:25 UTC (maps-65 past 500k, starting its successor)
+Orchestrator: session 42f60d91-99e9-4080-b7fd-474719494b56, name maps-23 [c7b80c], since 2026-11-20 22:27 UTC
+Updated: 2026-11-20 23:10 UTC
 
-Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5. She is out until ~00:45 UTC with Remote Control on maps-65's
-tab only: maps-65 relays her messages to you (and yours to her) until she is back at a tab with you.
+Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5. She is home, at this tab.
 
 ## Next
-0. Live v0.4.4. Cap 14. 8800 = fd40edf2. Master pushed through 78c7f12f (push soon). T-3897 (nodehover) landed
-   7f085d6b after 8800: smoke + 8800 with the next batch. Running agents (maps-65's, reports via the inbox; a
-   follow-up goes to a fresh agent on the tree): plainbus, walkab, ferrytypes, islands2, fast856 (T-3896 P1, the
-   856 km/h fastest train from Discord), fullrate (resumed 22:05 to fix the checker's one miss: first undo after
-   the demand final; land after its report, no new checker needed unless the fix is large).
+0. Live v0.4.4. Cap 10 (her 11-20 ~23:55 UTC, "til i say"; was 14). 8800 = 5b081c76; master a3fd2234 (T-3900) unpushed. Adopted from maps-65 (reports via
+   inbox): plainbus, islands2, fast856 (T-3896 P1). walkab: walkfix fixed (cluster views dropped stairs flags),
+   walkabchk round 2 running, then land + checks_index.py; then T-3903 (P1, trams dropped the same way). fullrate:
+   fullratechk2 running; land T-3646 on pass, drop T-3655's taking mark. ferrytypes: ferrychk running; save level
+   33 needs shonei-server savecheck before publish; commute fans next (T-3892 rest). Large ferry profit OK (her).
+   T-3901 waits plainbus. codehealth T-3902 survey running (she said let it finish).
 1. Evening update, maybe tomorrow (her call, needs her playtest). Publish skill (sort, highlights, playtest list,
    translations incl. T-3822/3823 hovers + addCity + today's strings, zones image for PK/BD, smoke8800). Server
-   first, her yes: shonei-server 2754ba1, fd294e7, 43360be, 39e1bd2 (not pushed). If ferrytypes bumps the save
-   level, the server save check needs it too. After publish: PR 24 reply (notes/T-3659.md, her OK), open-source
+   first, her yes: shonei-server 2754ba1, fd294e7, 43360be, 39e1bd2, c0cc982 (save level 33, LFB1; not pushed). After publish: PR 24 reply (notes/T-3659.md, her OK), open-source
    sync, then land binzip (T-2486, tree ready, checker's fixes in).
 2. Frozen set (her 22:10 UTC), all mine, trees, checker before landing: plainbus T-3856 + reach 600 (compute cost
    >15% = numbers to her); walkab T-3888 option 4; ferrytypes T-3892; tram75 T-3895 (Sonnet, no checker);

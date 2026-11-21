@@ -1,6 +1,13 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3896 [P1] {L:track-speed} Fastest train reads 856 km/h on a 160 km/h stretch (2026-11-20): retime now notes changed lines; guard rereads all tables on a length mismatch; Rust test + t1382 tokyo. notes/T-3896.md.
+- T-3888 [P2] {L:route-choice} Walk tiers, people who won't walk far (2026-11-20): option 4 built; cluster views now carry the stairs flags (walkfix); checker PASS round 2; NYC shipped save rail +4.4%. notes/T-3888.md.
+- T-3646 [P2] {L:timetables} Undo leaves other lines' trains cut (2026-11-20): history entries keep before/after line state; exact restore without a settle; cap lowering stays through undo; checkers PASS (2 rounds) notes/T-3646.md.
+- T-3902 [P2] {L:cleanup} Is messy code slowing changes down (2026-11-20): small/medium changes not slower (0.4-0.6 h now); big ones ~2x, mostly checker rounds and more in-game testing; code's share 0-20%; no urgent cleanup; ranked pieces in notes. notes/T-3902.md.
+- T-3900 [P2] {L:schematic} Downloaded schematic image comes out tiny in a tall blank frame (2026-11-20): picture() framed on every line incl. hidden ones; now only what is drawn; zero-height line downloads too. notes/T-3900.md.
+- T-3899 [P3] {L:map-look} Ramp ends marked in the track level view (2026-11-20): ramp-end lines in the grade marks pass, level colour mixed 30% to ink, 9/8 track width long, 1/8 double width thick; built and blueprint. notes/T-3899.md.
+- T-3898 [P2] {L:track-drawing} Movable node highlight sits off its square (2026-11-20): square 10px and hot 12px with even margins; both centre on the placed pixel; pair in artifacts/trainworld/T-3898. notes/T-3898.md.
 - T-3897 [P2] {L:track-drawing} Blueprint nodes show they can be moved on hover (2026-11-20): hot mark (larger, accent fill, land-colour ring) and grab cursor on movable blueprint nodes; built nodes unchanged.
 - T-3895 [P2] {L:trams} Trams top out at 75 km/h (2026-11-20): TRAM_V_CAP_KMH and the tram track cap 80 -> 75; curve radii and ramp floors unchanged.
 - T-3893 [P3] {L:checks} t671-ghost-hover fails near track ends (2026-11-20): the ghost's join guess now compares ramp, limit and kind as the worker does (edge_ramps passed to the page); near track ends 0 of 84 corrections. notes/T-3893.md.

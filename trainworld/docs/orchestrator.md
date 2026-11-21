@@ -112,12 +112,17 @@ incidents behind the rules here are in `notes/rule-history.md`.
 
 ## Landing, commits, 8800
 
-Risky changes (sim, saves, demand numbers, money) get a checker before landing (T-3451): a fresh
-Sonnet agent given the task's Goal and the diff, not the first agent's report, that tries to break it in the running
-game; one round, pass or fail with evidence. Labels, text, docs, CSS and small UI skip it (the agent's own screenshot
-plus your look is enough). Concise checkers: the brief names the 3-5
-riskiest cases, reuses existing checks and fixtures before building new ones, and caps the round at about 45 minutes;
-the report lists what it skipped.
+Risky changes (sim, saves, demand numbers, money) are checked in batches (her call 11-20, T-3902): land each on
+master as its own commit once its builder's tests and one in-game run pass, then one checker per batch runs on master
+before the next 8800 rebuild: a fresh Sonnet agent given each change's Goal and the batch's diff, not the builders'
+reports, that tries to break the changes in the running game, how they interact included; one round, pass or fail
+with evidence per change. A failure is fixed on master by a fix agent, or that one commit is reverted if the fix is
+big; 8800 and publishing wait until the batch passes. Two kinds still get their own checker before landing: anything
+that could stop an existing save loading or lose data, and sim-core changes other agents build on (undo, the solve,
+edits). Labels, text, docs, CSS and small UI skip checking (the agent's own screenshot plus your look is enough).
+Concise checkers: the brief names the 3-5 riskiest cases per change, reuses existing checks and fixtures before
+building new ones, and caps the round at about 45 minutes plus 15 per change past three; the report lists what it
+skipped.
 
 `node trainworld/checks/smoke.mjs [url]` from the maps root runs Node checks, then a new game and the real save in
 headless Chrome, about 3 minutes; `$env:TW_CORES='4'` for a light run on your own Vite.

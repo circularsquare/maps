@@ -171,7 +171,8 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
   the turn open). Work that needs no result from you may run in the background, with at most one light check every
   4-5 minutes. Final checks (smoke) write a log; wait on it with `wait.mjs` and read its result before you report.
 - **Testing, kept lean** (she found the work "a bit too test heavy"): run the checks near your change, not every
-  check. Smoke only when your brief asks or the change touches sim, saves, demand or money; the orchestrator runs one
+  check. In the game, one run that shows the change working; breadth (edge cases, other cities, undo chains) is the
+  batch checker's, which tests risky changes together on master after landing. Smoke only when your brief asks or the change touches sim, saves, demand or money; the orchestrator runs one
   smoke per landed batch. Add a standing check only for a bug that really happened and could quietly come back;
   otherwise prove the change with a scratch script and leave it in your scratch folder. Before writing a scratch
   script, grep `checks/INDEX.md` (made by `tools/checks_index.py`) and reuse a check that already proves it.
