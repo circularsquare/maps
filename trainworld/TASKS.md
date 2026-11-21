@@ -401,9 +401,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: t1965-follow passes without breaking t2980. Part of T-3264.
   - Other: notes/T-3231.md
 Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese first, Spanish and German second; no human reviewer, Claude translates and reviews for meaning; plan in research/localization.md):
-- T-3926 [P3] {L:loading} Cached trips survive a release that leaves demand alone (taking, 2026-11-21, agent cachekey)
-  - Context: From T-3917: the demand cache key carries the build stamp (`demandClient.ts` `keyBase`, `BUILD` = build time), so every release makes the next open of every save a cold load, 5.5-7.5 minutes on a 2,000-station save. Releases that change demand need it anyway.
-  - Goal: The key is the demand code's own version (WASM and demand inputs), so a release that changes no demand rule keeps every cached result.
 - T-2667 [P2] {L:attractions} Attractions from OSM where Wikidata has none
   - Context: You said 2026-11-06: "though i think it snot super urgent, *adding* demand is not really a prolem post release". Wikidata leaves many places with no attraction.
   - Goal: Packs with no attraction fall under 20% (from 52%), and China, India, Brazil, the Philippines, Vietnam and Nigeria reach 1+ per million people.
@@ -912,9 +909,9 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your ask: a wiki so agents read less. 26 pages are built and figures come from code through JSON markers; the trams landed and every marker still matches.
   - Goal: The Money tab ledger detail and the line panel stop times written, then the retired docs removed.
   - Other: See notes/T-2854.md.
-- T-3931 [P3] {L:passing-tracks} A moved morning hour sized on the night's waits (taking, 2026-11-21, agent movedhour)
-  - Context: Found by returnrun (T-3929), 11-21: the moved 5-6 hour is a piece of the night slot and is sized on the night's averaged waits, so on counted lines its locals, timed against the morning's expresses, miss their departures and get floored (`a_moved_morning_hour_is_timed_too` fails on counted lines). Also left from T-3929: at 10/30, 8 locals in 3 h still leave service (round trip sized on averaged waits); at 30/10 the guard holds one local at G up to 217 s (was 30; T-3231's one-place end). Count 12/9's bad passes and the batch check's count regression were fixed 11-21 by soonest (16 versions, safe merging); on the map, counts 12/9, 12/8 and 4/9 still have locals leaving 1-26 s after an express drawn 6-19 min late from km 1 of its run (untraced), as before T-3929 (notes/T-3931.md).
-  - Goal: A slot piece is sized on its own row's waits, the moved-hour test passes on counted lines, and no local at 10/30 leaves service.
+- T-3931 [P3] {L:passing-tracks} Locals at 10/30 leaving service (taking, 2026-11-21, agent movedhour)
+  - Context: The moved morning hour now runs the morning's timetable (movedhour, 11-21). Left: at 10/30 one local in three waits about 6 min for its express, and its next departure needs 182 s of spare time where the round trip leaves 106 s, so 8 locals in 3 h leave service; the fix sizes the round trip on the trains' own waits, about one more train on such lines (T-3346's open fix). The map's late expresses at counts 12/9, 12/8, 4/9 and 30/10's hold at G were traced to T-3231's one-place terminal (notes/T-3931.md).
+  - Goal: No local at 10/30 leaves service.
 - T-1183 [P3] {L:cleanup} {after:T-3931} Remove the fixed-rate line path
   - Context: Stages 1-2 landed 11-21: tests build counted or headway lines, `Op::Schedule`, the test `set_line`/`set_schedule` and tiny_reversal are gone (all test-only). T-3929 moved three parked timing tests to headway lines. Left on rate lines: `a_moved_morning_hour_is_timed_too` (T-3931), `switching_to_headways_on_overfull_track`, `a_frequency_line_is_given_trains_on_load`, which keep `trains: None`, `continuous`, bench.rs and bin/realsave.rs alive. Old rate-only saves become whole trains at load (orchestrator's call).
   - Goal: The path is gone and those tests use train counts with the same assertions; after T-3873, before the track rework's build stages.

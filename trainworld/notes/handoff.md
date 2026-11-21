@@ -16,7 +16,9 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
    T-3632, egyptunits T-3660, autostops T-3924, busway T-3378 st.1-2, tweaks (Sonnet: upkeep 0.2%, tram brake 0.9,
    tint sheet with green city; no open task, not on the board), iphonesaves T-3781 (no tree; ssh may be refused:
    then ask her here).
-2. Queued for the next free slots: T-3934 first (her ask: bus reach 600 m vs 1 km vs none, on bus-heavy community
+2. HER 11-21 ~13:20 UTC: machine laggy, "lets not start any more compute tasks" (until she says). cachekey T-3926
+   landed 44316713 (c015 hidden: 0 of the last 5 releases would have kept the cache). She wants the track rework
+   (T-3444) this weekend: offered a design-draft agent (reading only). Queued when she allows: T-3934 first (her ask: bus reach 600 m vs 1 km vs none, on bus-heavy community
    saves; measure only); T-3373 B stage 1 (measure and simulate, 2-3 h, notes/T-3373-B-plan.md; raise A's
    limit to ~2 GB in it); T-3933 (load out of memory retries with fewer workers; wait for iphonesaves' findings);
    T-3932 (cores slider with memory and speed; after B's stage 1 so estimates match); T-1183 after T-3931; T-3378
@@ -41,8 +43,7 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
   uniform city run as a model, not Chicago in the sim.
 - 11-20 ~22:00 UTC: T-3888 option 4; ferry design OK + running cost -25%; bus reach 300 -> 600 "i do kinda want
   it" (if buses overshoot, make them slower); trams to 75. ~21:00: ferry types, a fare multiplier per type.
-- 11-20: cleanup, then "full track rework" (T-3444 talk); no minor track work till then; 400 km ferry legs stay;
-  PR 24 reply (notes/T-3659.md) "looks good": post it after the open-source sync.
+- 11-20: cleanup, then "full track rework" (T-3444 talk); no minor track work till then; 400 km ferry legs stay.
 - 11-19: "player complaints take precedent over other new features"; full playtest list before every publish.
 - When she plays games: no uploads until she says she's done; she may ask for a lower core cap.
 - Standing: lean testing, smoke per batch; long jobs in the background, answer her first; every publish, deploy and
