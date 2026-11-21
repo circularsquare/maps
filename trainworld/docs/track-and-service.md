@@ -1164,8 +1164,9 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   old saves load with none.
 - **Lines**: ordered stops, plus the exact path between them stored as edges with a direction, so
   new track never reroutes a line by itself. Splitting an edge rewrites the paths through it;
-  deleting one reroutes by the fastest path, unless that path reverses where the old one did not,
-  or marks the line broken. Removing a station a line stops at takes it out of the line's stops
+  deleting one reroutes by the fastest path, unless that path reverses where the old one did not
+  or the line would not run on it (`check_line`'s rules, a way back over one-way track included:
+  `Network::route_runs`, T-4000), or marks the line broken. Removing a station a line stops at takes it out of the line's stops
   and routes the line through the rest the same way, else leaves it broken (T-859); one undo
   restores both. The two pieces left either side of a removed station become one where they
   would join under a platform (on one straight, alike in track count, type and built state;

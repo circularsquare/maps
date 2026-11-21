@@ -2186,7 +2186,7 @@ impl TrackWorld {
                 let mut inv = vec![Op::Edge { id, data: n.set_edge(id, None)? }];
                 for (l, turns) in users.into_iter().zip(turns) {
                     let mut d = self.net.line_data(l).unwrap();
-                    if let Some(path) = self.net.route(&d.stops, &d.ones).filter(|p| self.net.turn_count(&d.stops, p) <= turns) {
+                    if let Some(path) = self.net.route(&d.stops, &d.ones).filter(|p| self.net.turn_count(&d.stops, p) <= turns && self.net.route_runs(l, &d.stops, p)) {
                         d.path = path;
                         let old = self.net.set_line(l, Some(d))?;
                         inv.push(Op::Line { id: l, data: old });

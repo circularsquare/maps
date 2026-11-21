@@ -140,6 +140,29 @@ fn deleting_the_track_a_return_run_uses_breaks_the_line() {
     assert!(a.w.net.line_broken[l as usize], "its way back is gone");
 }
 
+/// T-4000: removing the track a line runs on is never refused because the way it would reroute by has
+/// no way back over one-way track: the line is left broken, as removed track leaves any line.
+#[test]
+fn removing_track_is_never_refused_for_a_reroute_with_no_way_back() {
+    let (mut a, n, e) = triangle();
+    // BC one way into B: A - B could go out round by C, but never come back that way
+    assert_eq!(a.set_edge_oneway(e[1], 2), 0, "{}", a.issues());
+    let l = line(&mut a.w, &[n[0], n[1]], [8.0, 4.0, 2.0]);
+    assert_eq!(a.w.net.line_path(l), &[e[0] << 1]);
+    assert!(!a.w.net.line_broken[l as usize]);
+    let len = a.w.net.edge_len[e[0] as usize];
+    assert_eq!(a.delete_edge(e[0]), 0, "{}", a.issue_kinds());
+    // (trimmed to A's platform end: T-1161)
+    assert!(!a.w.net.edge_ok(e[0]) || a.w.net.edge_len[e[0] as usize] < len / 2.0);
+    assert!(a.w.net.line_ok(l) && a.w.net.line_broken[l as usize], "A - B is left broken");
+    assert_eq!(a.undo(), 0);
+    assert!(a.w.net.edge_ok(e[0]) && !a.w.net.line_broken[l as usize], "undo puts it back running");
+    // the same picked for removal with the delete tool's pick
+    assert_eq!(a.removal_lines(&[e[0]], &[]), vec![l as f64, 0.0, 1.0], "the ask names it as left broken");
+    assert_eq!(a.delete_pieces(&[e[0]], &[]), 0, "{}", a.issue_kinds());
+    assert!(!a.w.net.edge_ok(e[0]) && a.w.net.line_broken[l as usize]);
+}
+
 /// T-3945: a platform only a line's way back passes (C, round the one-way ring) goes with the line
 /// when the line changes. Left behind, it kept the old run's stop indices, and the next holds pass
 /// panicked once the line had fewer stops (a street tram's stop on each side of the road).

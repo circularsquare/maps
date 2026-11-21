@@ -128,6 +128,13 @@ impl Network {
         self.path_reversals(&back).len() <= self.path_reversals(path).len() && passes(&back) <= passes(path)
     }
 
+    /// T-4000: whether line `l` runs over `stops` and `path`, by `check_line`'s rules (a way back
+    /// included). A removal reroutes a line only onto such a path, else leaves it broken: a reroute
+    /// `check_line` refuses would refuse the removal.
+    pub fn route_runs(&self, l: u32, stops: &[u32], path: &[u32]) -> bool {
+        self.check_route(l, stops, path, self.runs_once(l, stops, path)).is_ok()
+    }
+
     /// A loop set to run one way (T-2981), over `stops` and `path`, whatever its track allows.
     pub(super) fn set_once(&self, l: u32, stops: &[u32], path: &[u32]) -> bool {
         self.line_one_way.get(l as usize).copied().unwrap_or(false) && self.loop_kind(stops, path) != LoopKind::None
