@@ -34,7 +34,6 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
   T-3373 B: "sounds good. we can pursue it. and yes we can raise memory limit, though ... players should be able to
   set it"; "if people are unable to lod the game at all because o fmemory issues it should probably autoset the
   memory cap lower and try again" (T-3933). Rounding change (~a millionth) taken as part of the approved design.
-- 11-21 ~12:40 UTC: keep 4-12 agents running (docs/orchestrator.md); hourly nudge OK (watch.py `idle:` line).
 - 11-21 ~02:20 UTC, playtesting plain buses on 8800 (Houston): "buses feel really easy ... mostly profitable ... 10%
   of people taking the bus ... 90% driving. which feels pretty realistic". Bus speeds set 11-21: plain floor 25,
   BRT +10, fast roads 1.4x street; BRT charged in town only; open-country main roads keep 75. "all text ack" ~02:45.
@@ -50,8 +49,7 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
   push to the website needs her yes in this tab, none overnight; advisor trial (log calls in handoff-log).
 
 ## Waiting on her (asks.py list has the open ones; 0 open)
-- She sends the T-3635 player reply herself. PR 24 reply (scratchpad/pr24-reply.md; posting refused: she posts or
-  allows).
+- She sends the T-3635 player reply herself. PR 24 reply (scratchpad/pr24-reply.md): she posts or allows.
 
 ## Only a person knows
 - Uncommitted on purpose: TODO.md (hers), notes/T-3397.md, jordan-save-investigation-2026-11-15.md,

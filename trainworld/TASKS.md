@@ -397,7 +397,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: A new count or headway on full track takes its share at the edit, within about 50 ms an edit on London's shared save.
   - Other: notes/T-3655.md, notes/T-3482.md "Follow-ups"
 - T-3231 [P3] {L:trains-drawn} {after:T-3264} Two lines drawn over each other at a terminal
-  - Context: A fix exists as notes/T-3231-fix.patch (trainGuard holdForPlaces): t1965-follow drops from 40-47 frames to 0-4, t2980 unchanged, but t2018-trail then halts the express 16-28 times and t3264's follow layout gains 4 overlap events, all from the express running later than the guard can draw (T-3271). Parked until T-3271, then re-measured.
+  - Context: A fix exists as notes/T-3231-fix.patch (trainGuard holdForPlaces): t1965-follow drops from 40-47 frames to 0-4, t2980 unchanged, but t2018-trail then halts the express 16-28 times and t3264's follow layout gains 4 overlap events, all from the express running later than the guard can draw (T-3271). Parked until T-3271, then re-measured. Traced 11-21 (movedhour, notes/T-3931.md): the late expresses at 12/9 and the 230-257 s hold at G at 30/10 are this too: an arriving train waits short of the end because the other line's train stands in the same end bay, and the next trip inherits the lag; `t2233 --count` stays red until this lands.
   - Goal: t1965-follow passes without breaking t2980. Part of T-3264.
   - Other: notes/T-3231.md
 Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese first, Spanish and German second; no human reviewer, Claude translates and reviews for meaning; plan in research/localization.md):
@@ -909,10 +909,11 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your ask: a wiki so agents read less. 26 pages are built and figures come from code through JSON markers; the trams landed and every marker still matches.
   - Goal: The Money tab ledger detail and the line panel stop times written, then the retired docs removed.
   - Other: See notes/T-2854.md.
-- T-3931 [P3] {L:passing-tracks} Locals at 10/30 leaving service (taking, 2026-11-21, agent movedhour)
+- T-3931 [P3] {L:passing-tracks} {waits:Anita} Locals at 10/30 leaving service
+  - Need from Anita: May such lines size their round trip on the trains' own waits (T-3346's rule), which means about one more train on them, so fleets and running costs go up? Recommended: yes.
   - Context: The moved morning hour now runs the morning's timetable (movedhour, 11-21). Left: at 10/30 one local in three waits about 6 min for its express, and its next departure needs 182 s of spare time where the round trip leaves 106 s, so 8 locals in 3 h leave service; the fix sizes the round trip on the trains' own waits, about one more train on such lines (T-3346's open fix). The map's late expresses at counts 12/9, 12/8, 4/9 and 30/10's hold at G were traced to T-3231's one-place terminal (notes/T-3931.md).
   - Goal: No local at 10/30 leaves service.
-- T-1183 [P3] {L:cleanup} {after:T-3931} Remove the fixed-rate line path
+- T-1183 [P3] {L:cleanup} Remove the fixed-rate line path
   - Context: Stages 1-2 landed 11-21: tests build counted or headway lines, `Op::Schedule`, the test `set_line`/`set_schedule` and tiny_reversal are gone (all test-only). T-3929 moved three parked timing tests to headway lines. Left on rate lines: `a_moved_morning_hour_is_timed_too` (T-3931), `switching_to_headways_on_overfull_track`, `a_frequency_line_is_given_trains_on_load`, which keep `trains: None`, `continuous`, bench.rs and bin/realsave.rs alive. Old rate-only saves become whole trains at load (orchestrator's call).
   - Goal: The path is gone and those tests use train counts with the same assertions; after T-3873, before the track rework's build stages.
   - Other: notes/T-1183.md
