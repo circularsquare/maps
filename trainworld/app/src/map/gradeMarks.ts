@@ -54,7 +54,7 @@ precision highp float;
 ${PROJECT_GLSL}
 uniform vec2 u_viewport;
 uniform vec3 u_r;            // radius in device px: loud badge, quiet badge, ramp mark
-uniform vec4 u_rw;           // T-3899: the track's drawn width (device px) for a ramp end: built single, blueprint single, built double, blueprint double
+uniform float u_rw[12];    // T-3899, T-3914: the track's drawn width (device px) for a ramp end, by tier: rail, tram, high speed, each built single, blueprint single, built double, blueprint double
 uniform float u_thick;       // a ramp end's thickness, device px
 uniform float u_ends;        // 1: ramp ends are drawn (the track level view)
 uniform float u_ramps;       // 0: no marks on ramps and portals
@@ -281,7 +281,7 @@ export class GradeMarks {
     this.drawing = this.upload(this.drawing, keep);
   }
 
-  draw(lc: LocalCamera, vp: readonly [number, number], zoom: number, dpr: number, levelColours: Float32Array, flat = true, ramps = true, ends: { w: readonly [number, number, number, number]; thick: number } | null = null) {
+  draw(lc: LocalCamera, vp: readonly [number, number], zoom: number, dpr: number, levelColours: Float32Array, flat = true, ramps = true, ends: { w: readonly number[]; thick: number } | null = null) {
     if ((!this.built && !this.drawing) || NO_MARKS) return;
     const [loud, quiet, ramp] = markRadii(zoom);
     if (!loud && !quiet && !ramp) return;
@@ -301,7 +301,7 @@ export class GradeMarks {
     gl.uniform1f(u.u_ramps, ramps ? 1 : 0);
     gl.uniform1i(u.u_level_hide, hidden.levels);
     gl.uniform1f(u.u_ends, ends && ramp > 0 ? 1 : 0);
-    if (ends) gl.uniform4f(u.u_rw, ends.w[0], ends.w[1], ends.w[2], ends.w[3]);
+    if (ends) gl.uniform1fv(u.u_rw, ends.w);
     gl.uniform1f(u.u_thick, ends ? ends.thick : 0);
     for (const s of [this.built, this.drawing]) {
       if (!s) continue;

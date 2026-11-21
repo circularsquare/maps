@@ -265,11 +265,20 @@ function strokeDraws(rnd: NetworkRenderer, c: Ctx2) {
  * double bare track as the stroke shader works it out (its width, grown to the pair's outer edges once double
  * track opens), and the line's thickness, 1/8 of the built double width, at least a pixel. */
 function rampEndSizes(c: Ctx3) {
-  const { wLine, lanes, G, bpMid, bpRail, dpr } = c;
+  const { wLine, lanes, G, bpMid, bpRail, dpr, zoom } = c;
   const kS = SINGLE_WIDTH + (1 - SINGLE_WIDTH) * lanes.grow, kD = DOUBLE_WIDTH + (1 - DOUBLE_WIDTH) * lanes.grow;
   const pair = G * (1 + lanes.share);
   const dBuilt = Math.max(wLine * kD, pair);
-  return { w: [wLine * kS, bpMid * kS + 2 * bpRail, dBuilt, Math.max(bpMid * kD + 2 * bpRail, pair)] as const, thick: Math.max(dpr, dBuilt / 8) };
+  // slots: variant (rail, tram, high speed) * 4 + built single, blueprint single, built double, blueprint double
+  const rail = [wLine * kS, bpMid * kS + 2 * bpRail, dBuilt, Math.max(bpMid * kD + 2 * bpRail, pair)];
+  // tram track is a fixed share of a line's width with no single/double narrowing; double grows to the pair's outer edges
+  const tc = wLine * TRAM_WIDTH, tb = bpMid * TRAM_WIDTH + 2 * bpRail;
+  const grow = (core: number, lt: number) => core + lanes.grow * Math.max(0, G + lt - core);
+  const tram = [tc, tb, grow(tc, lanes.share * G * TRAM_WIDTH), grow(tb, lanes.share * G)];
+  // high-speed built track is wider by u_hsr.x as one stroke; blueprint is drawn as rail
+  const h = interp(zoom, HSR_WIDTH);
+  const hsr = [wLine * kS * h, rail[1], wLine * kD * h + lanes.grow * Math.max(0, G * (1 + lanes.share) - wLine * kD), rail[3]];
+  return { w: [...rail, ...tram, ...hsr], thick: Math.max(dpr, dBuilt / 8) };
 }
 
 function strokesPass(rnd: NetworkRenderer, c: Ctx3) {

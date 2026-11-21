@@ -43,7 +43,7 @@ const GROUND_M = 0.1;
  * where the height keeps rising or keeps falling, up to the level it reaches. The mark sits at the
  * middle of the stretch and points along the track toward the end that is farther from the ground;
  * its level is that end's. A stretch that crosses the ground (-1 to +2) gets one mark for each side. */
-export function rampMarks(pts: ArrayLike<number>, tier: number, out: number[], tracks = 0) {
+export function rampMarks(pts: ArrayLike<number>, tier: number, out: number[], tracks = 0, variant = 0) {
   const n = pts.length / 3;
   const dz = (k: number) => pts[k * 3 + 5] - pts[k * 3 + 2];
   let k = 0;
@@ -53,7 +53,7 @@ export function rampMarks(pts: ArrayLike<number>, tier: number, out: number[], t
     let end = k + 1;
     while (end + 1 < n && (rising ? dz(end) > SLOPE_M : dz(end) < -SLOPE_M)) end++;
     if (tracks) {
-      const tr = tier + (tracks === 2 ? 2 : 0);
+      const tr = tier + (tracks === 2 ? 2 : 0) + 4 * variant;
       rampEnd(pts, k, k + 1, tr, out);
       rampEnd(pts, end, end - 1, tr, out);
     }

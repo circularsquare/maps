@@ -1605,7 +1605,7 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
       const b = new StrokeBuilder(false, MIN_SEG_M), from: number[] = [];
       b.add(lp.lpts, TRACK, e.id, flags, false, 0, undefined, lp.lane, undefined, undefined, from);
       const ramps: number[] = [];
-      rampMarks(own, e.built ? 0 : 1, ramps, e.kind ? 0 : e.tracks === 2 ? 2 : 1);
+      rampMarks(own, e.built ? 0 : 1, ramps, e.tracks === 2 ? 2 : 1, e.kind ? 1 : e.hsr ? 2 : 0);
       const strokes = b.build();
       // each stroke segment's segment of the edge's given points, for its speed
       const srcL = from.length === lp.lpts.length / 3 - 1 ? lp.src : from.map((k) => (lp.src ? lp.src[k] : k));
