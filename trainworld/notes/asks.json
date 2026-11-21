@@ -26,5 +26,19 @@
     "text": "Trams brake at 0.8 m/s2, trains 0.9 (T-3921), so trams lose slightly more per stop; real trams brake harder (1.2-1.3). Keep 0.8 (my pick) or 0.9 so only the dwell changed?",
     "since": "2026-11-21",
     "by": "maps-a3"
+  },
+  {
+    "id": "a-2026-11-21-5",
+    "title": "Two workers on big saves",
+    "text": "Lag survey (T-3917): on 2,000+ station saves the game runs one solving worker to save memory. Two workers would cut a load from 333 to 226 s and an edit's calculation from 296 to 188 s on the NA save, for +1.3-1.6 GB memory (desktop already 4.2-6.5 GB). Yes or no? I'd say no for now: build T-3925 and T-2624 first, which speed edits without more memory.",
+    "since": "2026-11-21",
+    "by": "maps-a3"
+  },
+  {
+    "id": "a-2026-11-21-6",
+    "title": "Read iPhone reporters' saves",
+    "text": "Five iPhone players reported the page crashing right away (11-19 to 11-20). Reading their saved games on the server (T-3781's route) would show which game was loading. May we, one yes per account? Their report ids: 262cb413, 98429d29, 7130f860, 9705548e, fa20c413.",
+    "since": "2026-11-21",
+    "by": "maps-a3"
   }
 ]

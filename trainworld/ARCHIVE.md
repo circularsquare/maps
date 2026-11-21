@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3917 [P1] {L:memory} Where big saves get slow and run out of memory (2026-11-21): measured: edits on 2,000+ station saves take 5-7.5 min to calculate trips, cold loads 5.5-7.5 min and every release forces one (build-keyed cache), 4.2-6.5 GB desktop, phones 2 GB on real-network starts, 6-11 main-thread stalls a minute; next: T-2624, newer edit replaces a half-done calculation, T-3373 B. notes/T-3917.md.
+- T-3919 [P2] {L:trams} Longer trips treat trams as trains (2026-11-21): IntercityApi::set_tram_lines; market caps tram stops and scales cars; a cross-zone tram 30,122 -> 28,139 riders; NYC save unchanged; Rust test; worker guard covers every population. notes/T-3919.md.
 - T-3920 [P2] {L:buses} Bus stops placed 400 m apart count as one every 2 km (2026-11-21): not reproduced for placed stops: every stop placed by hand counts for demand at any spacing (400 m apart: 10 of 10 stops); the 400 m jump is Auto (T-2947), left as is, and whether Auto should count its street stops goes to Anita (notes/T-3920.md)
 - T-3921 [P1] {L:trams} Trams lose at least as much time at a stop as trains (2026-11-21): TRAM_BRAKE 0.8 vs trains 0.9; tram dwell 30 s; per-stop loss 53-54 s vs train 52 s; frontier: tram's lead over metro gone (trails by 0.3-2 points), still pays; load bump 15/120 -> 30/120. notes/T-3921.md.
 - T-3916 [P2] {L:route-choice} Trips home lose their loads at drive-to-only stations (2026-11-21): egress_stations also marks stations of subzones with homes; NYC offshore test 0 -> 3,643 back; real save unchanged; standing Rust test. notes/T-3916.md.

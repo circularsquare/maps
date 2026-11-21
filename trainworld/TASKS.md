@@ -401,8 +401,18 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: t1965-follow passes without breaking t2980. Part of T-3264.
   - Other: notes/T-3231.md
 Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese first, Spanish and German second; no human reviewer, Claude translates and reviews for meaning; plan in research/localization.md):
-- T-2624 [P2] {L:solve-speed} Lines in view wait on a whole solve
-  - Context: After a trains-only edit, the zone shows in about 3 s but shown lines wait 40-120 s on your North America save.
+- T-3925 [P1] {L:solve-speed} A newer edit replaces a half-done calculation (taking, 2026-11-21, agent editrestart)
+  - Context: From the lag survey (T-3917, 11-21): on 2,000+ station saves an edit takes 5-7.5 minutes to calculate trips, and an edit made meanwhile waits for it to finish, then starts its own: two edits 60 s apart on the NA save finish 560 s after the first. A wang xinzhe report (1d19ecd9) asks for exactly this ("recalculated on every track fix").
+  - Goal: An edit made while a calculation is under about half done stops it and starts again from the newer network; two such edits on the NA save finish about 340 s after the first, figures equal to a single solve of the final network.
+  - Other: notes/T-3917.md "Edits".
+- T-3926 [P3] {L:loading} Cached trips survive a release that leaves demand alone
+  - Context: From T-3917: the demand cache key carries the build stamp (`demandClient.ts` `keyBase`, `BUILD` = build time), so every release makes the next open of every save a cold load, 5.5-7.5 minutes on a 2,000-station save. Releases that change demand need it anyway.
+  - Goal: The key is the demand code's own version (WASM and demand inputs), so a release that changes no demand rule keeps every cached result.
+- T-3927 [P3] {L:loading} A died-load report names the game being loaded
+  - Context: From T-3917: five iPhone "crashes right away / make it lighter" reports (11-19 to 11-20) carry T-2545's died-load text but not which game was loading, so the cause can't be placed; Tokyo and Kansai real-network starts peak at about 2 GB on an emulated iPhone.
+  - Goal: The report carries the game kind and city (new, slot, real network, which zone) and its last load step.
+- T-2624 [P1] {L:solve-speed} Lines in view wait on a whole solve (taking, 2026-11-21, agent viewplan)
+  - Context: From T-3917 (11-21): on 2,000+ station saves an edit's line riders and totals change only at the final, 5-7.5 minutes later; the lag survey's first pick. Earlier: after a trains-only edit, the zone shows in about 3 s but shown lines wait 40-120 s on your North America save.
   - Goal: Shown lines update in seconds after an edit, with figures close to the final solve.
   - Other: Recommended: the aside worker also solves the shown network, and lines show their riders plus the zone change. notes/T-2605.md
 - T-2667 [P2] {L:attractions} Attractions from OSM where Wikidata has none
@@ -776,9 +786,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Design is done and waits on your five calls. 2026-11-16 you want to transcribe handwritten thoughts and discuss first.
   - Goal: The player has a clear model of single, double and quad track, and of crossovers.
   - Other: notes/T-3365.md.
-- T-3917 [P1] {L:memory} Where big saves get slow and run out of memory (taking, 2026-11-20, agent lagsurvey)
-  - Context: You, 11-21: "general lag complaints are picking up. lots of people have 2000 station saves it seems, and they're having trouble continuing to play. so we can take a look at some more memory / demand solve speed tasks perhaps." Recent reports ask for a lighter version and say the page crashes soon after opening, phones most.
-  - Goal: Memory, trip calculation and edit times measured on our 2,000+ station saves, the biggest costs ranked with numbers and matched to open tasks (T-3373, T-3513, T-2624, T-3804, T-3160), and the next 2-3 tasks to start named with their expected gain.
 - T-3373 [P2] {L:memory} Split zones and the market between workers
   - Context: Each solving worker holds its own copy of the zones (250-550 MB a big city, 1.3 GB all-China); you saw 7.4 GB in Firefox after 43 minutes. You, 2026-11-16: do A (fewer, faster workers capped by memory on big saves) then B (split zones and the market between workers, T-1560, 25-40 h); queue C (one shared memory, threaded WASM, 60-100 h, Cloudflare header) only if it would help noticeably. A landed 2026-11-16 (b3d2ea95): NYC runs 2 workers (-0.5 GB, load about 15 s slower), all-China 1 (-2.9 GB, 30-50 s slower), figures identical.
   - Goal: B built, with memory and solve time measured before and after on NYC and all-China.
@@ -790,9 +797,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3837 [P3] {L:buses} Ferry routes found without a waypoint, and waypoints on touch
   - Context: T-3809 added shift click waypoints. A leg is still searched only in a box around its two ports, so a sea path that leaves it (Ma Liu Shui to Sai Kung) needs a waypoint; a wider third search would find it alone. Phones have no shift click.
   - Other: notes/T-3809.md
-- T-3919 [P2] {L:trams} Longer trips treat trams as trains (taking, 2026-11-21, agent tramlong)
-  - Context: Found by tramerr (T-3909) reading code, 11-21, not measured: `IntercityApi` has no `set_tram_lines` and intercity/setup.rs gives no tram lines and unscaled cars, so longer trips crowd a tram as a full train. Same kind of bug as T-3909.
-  - Goal: Confirmed on a save with a tram and longer trips, then longer trips see trams as commutes do, with a check.
 - T-3924 [P3] {L:buses} {waits:Anita} Auto bus stops count for demand only every 2 km
   - Need from Anita: Keep Auto bus lines as they are (recommended; a player can step to 600 m or place stops), or count every Auto street stop for demand (riders change on every Auto line in every save)?
   - Context: Found by busstop400 (T-3920), 11-21: on Auto the panel reads "400 m" and "10 stops", but demand sees about one stop every 2 km. A 3.7 km NYC line: Auto 2,814 riders a day, stops placed 400 m apart 3,580, 450 m 3,533. Stops a player places count at any spacing.
