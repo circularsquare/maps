@@ -280,7 +280,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3875 [P3] {L:cleanup} {after:T-2374 and T-3873} Cut code-map.md to one line per file
   - Context: docs/code-map.md is 707 lines and about 100 KB with 700 task ids, over the Read tool's cap, so no agent can read it whole though CLAUDE.md sends every agent there.
   - Goal: One line per file saying what it holds, task ids dropped, about a third of today's size.
-- T-3160 [P2] {L:memory} Phone memory left over from T-2802
+- T-3160 [P2] {L:memory} Phone memory left over from T-2802 (taking, 2026-11-21, agent phonemem)
   - Context: An emulated phone uses about 600 MB at the first line, peaking at 825; MapLibre's worker, Blink buffers, ArrayBuffers and WebGL hold most of the rest. T-3472 (desktop Chrome): 1.0 GB at the start menu, 1.6 GB in a one-city game. You, 2026-11-16: "lots of people are unable to really play properly cuz tehy dont have enoguh ram. especially on phones. if we can get that working itll increase reach."
   - Goal: Phone memory comes down by trimming the biggest pieces, measured before and after at the start menu and in a one-city game.
   - Other: notes/T-2802.md, "What is left".
@@ -794,6 +794,12 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3837 [P3] {L:buses} Ferry routes found without a waypoint, and waypoints on touch
   - Context: T-3809 added shift click waypoints. A leg is still searched only in a box around its two ports, so a sea path that leaves it (Ma Liu Shui to Sai Kung) needs a waypoint; a wider third search would find it alone. Phones have no shift click.
   - Other: notes/T-3809.md
+- T-3929 [P2] {L:passing-tracks} Expresses drawn through locals on count and headway lines
+  - Context: Found by fixedrate2 (T-1183), 11-21: on T-2228's 180 km line at 10/10, count and headway lines get 24 bad passes in 4 h against 0 on rate lines. Cause proved: `Service::lattice` `off_at` (service.rs ~1352) starts a count line's return run at trip_len + split x spare, where a rate line starts at 0; forcing 0 gives 0 bad. All on run 0; T-3346's open "both directions can't both have the best". `t2233-passing-map` can't see it (it checks drawn trains, which the guard holds back). Every player's lines are count lines.
+  - Goal: Count and headway lines on the T-2228 line give 0 bad passes, with the return run's timing no worse for the other direction; T-1183's four parked timing tests pass on counted lines.
+- T-3930 [P3] {L:small-fixes} Planned line shows the wrong train cost after a headway switch
+  - Context: Found by fixedrate2 (T-1183), 11-21: a planned line given 12 trains and then switched to a 300 s headway shows a train cost of 300 before it is built, while the quote and the charge are 75.
+  - Goal: The shown train cost matches the quote and the charge.
 - T-3928 [P3] {L:checks} Longer trips with no route are skipped uncounted (taking, 2026-11-21, agent skipcount)
   - Context: Found by droppedflow (T-3923), 11-21: intercity's `pass_window` (intercity/pass.rs) skips a destination with no strategy with a bare `continue`, so those trips never reach `assign_inner` and T-3923's dropped-trips count misses them. Also seen: the ignored test `trip_real_network` is 2.8e-3 off its 1e-4 tolerance (trip/tests.rs:497), not a drop.
   - Goal: Longer trips skipped this way are counted like T-3923's drops, and a test fails if a fixture skips any; the tolerance test passes or its limit is justified.
@@ -920,8 +926,8 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your ask: a wiki so agents read less. 26 pages are built and figures come from code through JSON markers; the trams landed and every marker still matches.
   - Goal: The Money tab ledger detail and the line panel stop times written, then the retired docs removed.
   - Other: See notes/T-2854.md.
-- T-1183 [P3] {L:cleanup} Remove the fixed-rate line path (taking, 2026-11-21, agent fixedrate2)
-  - Context: Every line in a game has train counts since T-1146, but the engine still keeps lines set by trains per hour (`LineData.trains` as an Option, capacity's continuous rounding, `Op::Schedule`, crate-only `set_line` and `set_schedule`). Stage 1 landed 11-21 (4fb32508): test helpers `counted_line`/`set_rate`, capacity tests converted. Left: about 20 tests in boarding, overtake, spacing, timing and tests.rs need rewritten expectations (not mechanical). Saves still read flag-0 rate-only lines: keep old saves loading by turning them into whole trains at load (orchestrator's call, 11-21), so the Option can go. Drop `tiny_reversal_does_not_couple...` (0.001 trains an hour can't be written as counts). Unexplained: counted lines on shared double track settle to about half the asked rate (`seven_express`, counts [27, 20] give 10.25 and 4.7 an hour); look at it first, it may be a real bug. Opus next time.
+- T-1183 [P3] {L:cleanup} {after:T-3929} Remove the fixed-rate line path
+  - Context: Stages 1-2 landed 11-21: tests build counted or headway lines, `Op::Schedule`, the test `set_line`/`set_schedule` and tiny_reversal are gone (all test-only). The half rate in `seven_express` was expected (two lines turning at dead ends with no terminal share 15 an hour). Left: six tests still on rate lines (four timing tests via `shinkansen_rates`, `switching_to_headways_on_overfull_track`, `a_frequency_line_is_given_trains_on_load`), which keep `trains: None`, `continuous`, bench.rs and bin/realsave.rs alive; the timing ones fail on counted lines because of T-3929. Old rate-only saves become whole trains at load (orchestrator's call).
   - Goal: The path is gone and those tests use train counts with the same assertions; after T-3873, before the track rework's build stages.
   - Other: notes/T-1183.md
 
