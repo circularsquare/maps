@@ -408,10 +408,10 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
 - T-3926 [P3] {L:loading} Cached trips survive a release that leaves demand alone
   - Context: From T-3917: the demand cache key carries the build stamp (`demandClient.ts` `keyBase`, `BUILD` = build time), so every release makes the next open of every save a cold load, 5.5-7.5 minutes on a 2,000-station save. Releases that change demand need it anyway.
   - Goal: The key is the demand code's own version (WASM and demand inputs), so a release that changes no demand rule keeps every cached result.
-- T-2624 [P1] {L:solve-speed} Lines in view wait on a whole solve (taking, 2026-11-21, agent viewplan)
-  - Context: From T-3917 (11-21): on 2,000+ station saves an edit's line riders and totals change only at the final, 5-7.5 minutes later; the lag survey's first pick. Earlier: after a trains-only edit, the zone shows in about 3 s but shown lines wait 40-120 s on your North America save.
-  - Goal: Shown lines update in seconds after an edit, with figures close to the final solve.
-  - Other: Recommended: the aside worker also solves the shown network, and lines show their riders plus the zone change. notes/T-2605.md
+- T-2624 [P1] {L:solve-speed} {after:T-3925} Lines in view move period by period after an edit
+  - Context: Planned 11-21 (viewplan, notes/T-2624.md): lines in view already move when the local result lands (Seoul 10 s, New York on the NA save 32-51 s; the New York save skips its local stage and waits for its 62 s final); only network totals wait for the final (208-232 s). The aside-worker idea is ruled out (it moved Line 6 by 1,300 riders where the real change is 17,000). Plan: the main pool's solve sends each period as it finishes, morning peak first; stage 1 the local solve (2-3 h), stage 2 whole solves with no local stage (3-4 h, also fixes T-3925's restarted edits losing their local stage).
+  - Goal: Stage 1: lines in view move within 12 s on NA (Seoul 4 s), the first step at least half the edited line's final change, other lines never past their final change. Stage 2: New York about 20-25 s from 62, figures unchanged.
+  - Other: notes/T-2624.md; earlier notes/T-2605.md. Unexplained, seen while planning: a low-only train edit on line E touched 10 zones and took 30 s where about 6 s was expected.
 - T-2667 [P2] {L:attractions} Attractions from OSM where Wikidata has none
   - Context: You said 2026-11-06: "though i think it snot super urgent, *adding* demand is not really a prolem post release". Wikidata leaves many places with no attraction.
   - Goal: Packs with no attraction fall under 20% (from 52%), and China, India, Brazil, the Philippines, Vietnam and Nigeria reach 1+ per million people.
@@ -794,7 +794,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3837 [P3] {L:buses} Ferry routes found without a waypoint, and waypoints on touch
   - Context: T-3809 added shift click waypoints. A leg is still searched only in a box around its two ports, so a sea path that leaves it (Ma Liu Shui to Sai Kung) needs a waypoint; a wider third search would find it alone. Phones have no shift click.
   - Other: notes/T-3809.md
-- T-3928 [P3] {L:checks} Longer trips with no route are skipped uncounted
+- T-3928 [P3] {L:checks} Longer trips with no route are skipped uncounted (taking, 2026-11-21, agent skipcount)
   - Context: Found by droppedflow (T-3923), 11-21: intercity's `pass_window` (intercity/pass.rs) skips a destination with no strategy with a bare `continue`, so those trips never reach `assign_inner` and T-3923's dropped-trips count misses them. Also seen: the ignored test `trip_real_network` is 2.8e-3 off its 1e-4 tolerance (trip/tests.rs:497), not a drop.
   - Goal: Longer trips skipped this way are counted like T-3923's drops, and a test fails if a fixture skips any; the tolerance test passes or its limit is justified.
 - T-3924 [P3] {L:buses} {waits:Anita} Auto bus stops count for demand only every 2 km
