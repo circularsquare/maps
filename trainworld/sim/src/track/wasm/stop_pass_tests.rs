@@ -46,7 +46,7 @@ fn barbell(west: bool, x_stop: bool) -> (TrackWorld, [u32; 5]) {
 /// A new line from clicks on `order`, each as the line tool sends it.
 fn clicked(a: &mut TrackApi, order: &[u32]) -> u32 {
     let id = a.new_line_id();
-    assert_eq!(a.set_line(id, &order[..1], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(id, &order[..1], 6, 4, 2, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
     for &s in &order[1..] {
         assert_eq!(a.add_stop(id, s), 0, "{}", a.issues());
     }
@@ -182,7 +182,7 @@ fn a_loop_whose_way_back_runs_past_its_stops_stops_there_too() {
     let (w, [a0, b, m, k, _]) = barbell(false, false);
     let mut a = api(w);
     let id = a.new_line_id();
-    assert_eq!(a.set_line(id, &[a0, b, m, k], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(id, &[a0, b, m, k], 6, 4, 2, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
     assert_eq!(a.set_stops(id, &[a0, b, m, k, a0]), 0, "{}", a.issues());
     assert_eq!(a.w.net.line_stops(id), &[a0, b, m, k, m, b, a0]);
 }
@@ -248,7 +248,7 @@ fn branch_circle(one_way: bool) -> (TrackApi, u32, [u32; 4]) {
     terminals_at_dead_ends(&mut w);
     let mut a = api(w);
     let id = a.new_line_id();
-    assert_eq!(a.set_line(id, &[k, b], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(id, &[k, b], 6, 4, 2, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
     let mut d = a.w.net.line_data(id).unwrap();
     d.stops = vec![k, b, k];
     d.path = vec![kj << 1, mj << 1 | 1, bm << 1 | 1, bm << 1, mj << 1, jk << 1];

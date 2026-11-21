@@ -48,7 +48,7 @@ fn a_loop_at_the_end_turns_the_line_one_way_round_it() {
     let (w, [a0, b, m, _, k]) = teardrop(false);
     let mut a = api(w);
     let id = a.new_line_id();
-    assert_eq!(a.set_line(id, &[a0, b, m, k], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(id, &[a0, b, m, k], 6, 4, 2, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
     // the stop before the branch offers it; the first stop no longer offers a balloon back past B
     // and M (a closing that turns back at A)
     assert_eq!(tier_of(&a, id, m), 7);
@@ -84,7 +84,7 @@ fn a_new_stop_on_a_turned_stem_is_served_both_ways() {
     let (w, [a0, b, m, _, k]) = teardrop(false);
     let mut a = api(w);
     let id = a.new_line_id();
-    assert_eq!(a.set_line(id, &[a0, m, k], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(id, &[a0, m, k], 6, 4, 2, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
     assert_eq!(a.turn_end(id, m), 0, "{}", a.issues());
     assert_eq!(a.w.net.line_stops(id), &[a0, m, k, m, a0]);
     // B, on the stem, goes in on both passes
@@ -106,7 +106,7 @@ fn a_loop_past_the_end_stop_turns_at_the_end_stop() {
     let (w, [a0, b, m, _, _]) = teardrop(false);
     let mut a = api(w);
     let id = a.new_line_id();
-    assert_eq!(a.set_line(id, &[a0, b, m], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(id, &[a0, b, m], 6, 4, 2, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
     assert_eq!(tier_of(&a, id, m), 7);
     assert_eq!(a.turn_end(id, m), 0, "{}", a.issues());
     assert_eq!(a.w.net.line_stops(id), &[a0, b, m, b, a0]);
@@ -131,7 +131,7 @@ fn a_long_loop_is_not_offered() {
     }
     let mut a = api(w);
     let id = a.new_line_id();
-    assert_eq!(a.set_line(id, &[a0, m, k], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(id, &[a0, m, k], 6, 4, 2, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
     assert_eq!(tier_of(&a, id, m), 0);
     assert_ne!(a.turn_end(id, m), 0);
 }
@@ -141,7 +141,7 @@ fn both_ends_turn() {
     let (w, [a0, b, m, _, k]) = teardrop(true);
     let mut a = api(w);
     let id = a.new_line_id();
-    assert_eq!(a.set_line(id, &[a0, b, m, k], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(id, &[a0, b, m, k], 6, 4, 2, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
     // the west loop is past A, so A is the stop before it; the east one's is M
     assert_eq!((tier_of(&a, id, m), tier_of(&a, id, a0)), (7, 7));
     assert_eq!(a.turn_end(id, m), 0, "{}", a.issues());
@@ -168,7 +168,7 @@ fn a_balloon_turns_at_its_first_stop_too() {
     let (w, [a0, b, m, _, k]) = teardrop(true);
     let mut a = api(w);
     let id = a.new_line_id();
-    assert_eq!(a.set_line(id, &[a0, b, m, k], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(id, &[a0, b, m, k], 6, 4, 2, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
     let mut d = a.w.net.line_data(id).unwrap();
     d.stops = vec![a0, b, m, k, m, b, a0];
     d.path = route_plain_close(&a.w.net, &d.stops, &mut HopMemo::new()).unwrap();

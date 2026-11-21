@@ -48,7 +48,7 @@ fn the_gap_is_between_the_nearest_loose_ends() {
     assert_eq!(gap(&a, s2), None);
     // and through the API, as longitude and latitude
     let id = a.new_line_id();
-    assert_eq!(a.set_line(id, &[s1, s2], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(id, &[s1, s2], 6, 4, 2, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
     let ll = a.stop_gap(id, far);
     assert_eq!(ll.len(), 4);
     let f = a.w.net.frame();

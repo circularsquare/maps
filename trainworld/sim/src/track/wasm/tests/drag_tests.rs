@@ -81,7 +81,7 @@ fn drag_several_blueprint_nodes() {
     let l1 = a.new_line_id();
     assert_eq!(a.add_station(1, w, 0.0, 0.0, 200, "W".into()), 0, "{}", a.issues());
     assert_eq!(a.add_station(1, east, 0.0, 0.0, 200, "E".into()), 0, "{}", a.issues());
-    assert_eq!(a.set_line(l1, &[w, s, east], 12.0, 8.0, 4.0, 30.0, 180.0, 0, 0xff0000, "Main".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(l1, &[w, s, east], 12, 8, 4, 30.0, 180.0, 0, 0xff0000, "Main".into()), 0, "{}", a.issues());
     let at = |a: &TrackApi, n: u32| (a.w.net.node_x[n as usize], a.w.net.node_y[n as usize]);
     let edge_between = |a: &TrackApi, p: u32, q: u32| live_edges(a).into_iter().find(|&e| { let (ea, eb) = (a.w.net.edge_a[e as usize], a.w.net.edge_b[e as usize]); (ea == p && eb == q) || (ea == q && eb == p) }).unwrap();
     let (js, jb) = (edge_between(&a, j, s), edge_between(&a, j, b));
@@ -132,9 +132,9 @@ fn drag_blueprint_nodes() {
         assert_eq!(a.add_station(1, n, 0.0, 0.0, 200, "S".into()), 0, "{}", a.issues());
     }
     let l1 = a.new_line_id();
-    assert_eq!(a.set_line(l1, &[w, s, east], 12.0, 8.0, 4.0, 30.0, 180.0, 0, 0xff0000, "Main".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(l1, &[w, s, east], 12, 8, 4, 30.0, 180.0, 0, 0xff0000, "Main".into()), 0, "{}", a.issues());
     let l2 = a.new_line_id();
-    assert_eq!(a.set_line(l2, &[w, b], 12.0, 8.0, 4.0, 30.0, 180.0, 0, 0x0000ff, "Branch".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(l2, &[w, b], 12, 8, 4, 30.0, 180.0, 0, 0x0000ff, "Branch".into()), 0, "{}", a.issues());
     let heading = |a: &TrackApi, n: u32| a.nodes_info().chunks(10).find(|c| c[0] as u32 == n).unwrap()[9];
     let same_axis = |h1: f64, h2: f64| geom::wrap(h1 - h2).abs() < 1e-6 || (geom::wrap(h1 - h2).abs() - PI).abs() < 1e-6;
     let at = |a: &TrackApi, n: u32| { let c = a.nodes_info().chunks(10).find(|c| c[0] as u32 == n).unwrap().to_vec(); (c[1], c[2]) };

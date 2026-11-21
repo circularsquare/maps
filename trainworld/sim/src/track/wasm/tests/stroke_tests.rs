@@ -156,7 +156,7 @@ fn a_station_next_to_a_joint_joins_the_pieces() {
     assert_eq!(a.add_station(1, w, 0.0, 0.0, 200, "West".into()), 0);
     assert_eq!(a.add_station(1, east, 0.0, 0.0, 200, "East".into()), 0);
     let id = a.new_line_id();
-    assert_eq!(a.set_line(id, &[w, east], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(id, &[w, east], 6, 4, 2, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
     let t0 = a.stop_times(id, 0, 0);
     let edges = live_edges(&a);
     // 30 m before the second joint, on the second piece
@@ -176,7 +176,7 @@ fn a_station_next_to_a_joint_joins_the_pieces() {
     assert!(a.w.net.node_ok(j));
     // after reversing the line's path: still fine
     let id2 = a.new_line_id();
-    assert_eq!(a.set_line(id2, &[east, w], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "R".into()), 0);
+    assert_eq!(a.set_line_with_trains(id2, &[east, w], 6, 4, 2, 30.0, 180.0, 0, 0, "R".into()), 0);
     assert_eq!(a.add_station(2, edges[1], x, y, 200, "Middle".into()), 0, "{}", a.issues());
     assert!(!a.w.net.line_broken[id2 as usize] && !a.w.net.line_broken[id as usize]);
 }

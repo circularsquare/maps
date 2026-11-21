@@ -218,7 +218,9 @@ fn upkeep_of_a_ten_km_line_and_its_shares() {
     }
     assert_eq!(a.upkeep(), vec![0.0; 10], "blueprint costs nothing");
     let l1 = a.new_line_id();
-    assert_eq!(a.set_line(l1, &st, 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0xd7263d, "L1".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(l1, &st, 6, 4, 2, 30.0, 180.0, 0, 0xd7263d, "L1".into()), 0, "{}", a.issues());
+    // by headway, 6, 4 and 2 an hour
+    assert_eq!(a.set_auto_headway(l1, 600, 900, 1800), 0, "{}", a.issues());
     assert_eq!(a.set_line_cars(l1, 6), 0, "{}", a.issues());
     assert_eq!(a.construct_all(), 0, "{}", a.issues());
     let up = a.upkeep();
@@ -231,12 +233,13 @@ fn upkeep_of_a_ten_km_line_and_its_shares() {
     assert!(s.len() == 4 && s[0] == l1 as f64 && (s[1] - 3.2).abs() < 1e-3 && s[3].abs() < 1e-9, "{s:?}");
     // a second line as busy over the first half shares that half's track and stations
     let l2 = a.new_line_id();
-    assert_eq!(a.set_line(l2, &st[..6], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0x2d7dd2, "L2".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(l2, &st[..6], 6, 4, 2, 30.0, 180.0, 0, 0x2d7dd2, "L2".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_auto_headway(l2, 600, 900, 1800), 0, "{}", a.issues());
     let s = a.line_upkeep(&hours);
     let share = |l: u32| s.chunks(2).find(|c| c[0] == l as f64).map_or(0.0, |c| c[1]);
     assert!((share(l1) - 2.35).abs() < 1e-3 && (share(l2) - 0.85).abs() < 1e-3, "{s:?}");
     // without trains the first line carries nothing; its own half goes to the rest
-    assert_eq!(a.set_schedule(l1, 0.0, 0.0, 0.0), 0, "{}", a.issues());
+    assert_eq!(a.set_train_counts(l1, 0, 0, 0), 0, "{}", a.issues());
     let s = a.line_upkeep(&hours);
     assert!(!s.chunks(2).any(|c| c[0] == l1 as f64), "{s:?}");
     assert!((s[s.len() - 1] - 1.5).abs() < 1e-3 && (s.chunks(2).map(|c| c[1]).sum::<f64>() - 3.2).abs() < 1e-3, "{s:?}");
@@ -262,7 +265,7 @@ fn a_partly_built_line_pays_upkeep_on_the_part_it_runs() {
         assert_eq!(a.add_station(1, n, 0.0, 0.0, 120, format!("S{i}")), 0, "{}", a.issues());
     }
     let l = a.new_line_id();
-    assert_eq!(a.set_line(l, &st, 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0xd7263d, "L1".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(l, &st, 6, 4, 2, 30.0, 180.0, 0, 0xd7263d, "L1".into()), 0, "{}", a.issues());
     assert_eq!(a.construct_all(), 0, "{}", a.issues());
     // S5 back to blueprint: S0-S4 and S6-S10 tie at 4 km and five stops, and the earlier runs
     let mut s5 = a.w.net.station_data(st[5]).unwrap();

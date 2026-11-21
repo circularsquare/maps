@@ -268,7 +268,7 @@ fn a_station_across_a_built_joint_keeps_the_line_its_trains_and_the_money() {
         assert_eq!(pieces.len(), 2);
         assert_eq!(a.construct(&pieces, &[w, east]), 0, "{}", a.issues());
         let id = a.new_line_id();
-        assert_eq!(a.set_line(id, &[w, east], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+        assert_eq!(a.set_line_with_trains(id, &[w, east], 6, 4, 2, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
         assert!(a.w.svc.lines[id as usize].running, "{levels:?}: the line runs");
         a.set_now(40_000.0);
         let snap = |t: &TrackApi| {

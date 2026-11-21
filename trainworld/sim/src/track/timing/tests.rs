@@ -1,9 +1,16 @@
-use super::super::overtake::tests::{set_passing, shinkansen};
+use super::super::overtake::tests::{set_passing, shinkansen, shinkansen_rates};
 use super::super::overtake::PASS_CLEAR_S;
 use super::super::profile;
 use super::super::service::Trip;
 use super::super::world::{Op, TrackWorld};
 use super::*;
+
+/// A fixed-rate line's trains an hour (`shinkansen_rates`).
+fn set_tph(w: &mut TrackWorld, id: u32, tph: [f32; 3]) {
+    let mut d = w.net.line_data(id).unwrap();
+    d.tph = tph;
+    w.apply(Op::Line { id, data: Some(d) }).unwrap();
+}
 
 /// The times a trip is at each of `nodes` (game time): reaching it, and leaving or passing it.
 fn at_nodes(w: &TrackWorld, t: &Trip, nodes: &[u32], mean: bool) -> Vec<(f64, f64)> {
@@ -62,9 +69,9 @@ fn bad_passes(w: &TrackWorld, local: u32, express: u32, stations: &[u32], passin
 #[test]
 fn every_local_waits_for_its_express() {
     for (hl, hx) in [(10.0f32, 10.0f32), (30.0, 10.0), (10.0, 30.0)] {
-        let (mut w, n, local, express) = shinkansen();
+        let (mut w, n, local, express) = shinkansen_rates();
         for (id, h) in [(local, hl), (express, hx)] {
-            w.apply(Op::Schedule { id, tph: [60.0 / h, 60.0 / h, 0.0] }).unwrap();
+            set_tph(&mut w, id, [60.0 / h, 60.0 / h, 0.0]);
         }
         set_passing(&mut w, &n[1..6], true);
         let t0 = 86400.0 + 8.0 * 3600.0;
@@ -94,7 +101,7 @@ fn every_local_waits_for_its_express() {
 fn an_express_with_nowhere_to_pass_follows_its_local() {
     let (mut w, n, local, express) = shinkansen();
     for (id, h) in [(local, 10.0f32), (express, 10.0f32)] {
-        w.apply(Op::Schedule { id, tph: [60.0 / h, 60.0 / h, 0.0] }).unwrap();
+        crate::track::tests::set_headway(&mut w, id, [60.0 / h, 60.0 / h, 0.0]);
     }
     let t0 = 86400.0 + 8.0 * 3600.0;
     let er = &w.svc.lines[express as usize].runs;
@@ -117,7 +124,7 @@ fn an_express_with_nowhere_to_pass_follows_its_local() {
 #[test]
 fn variants_come_back_after_a_load() {
     let (mut w, n, local, express) = shinkansen();
-    w.apply(Op::Schedule { id: express, tph: [2.0, 2.0, 0.0] }).unwrap();
+    crate::track::tests::set_headway(&mut w, express, [2.0, 2.0, 0.0]);
     set_passing(&mut w, &n[1..6], true);
     let back = TrackWorld::new(super::super::save::decode(&super::super::save::encode(&w.net)).unwrap());
     let t0 = 86400.0 + 8.0 * 3600.0;
@@ -215,9 +222,9 @@ fn headway_lines_waits_at_the_real_phase() {
 /// afternoon's locals wait for their own expresses, not the morning's.
 #[test]
 fn both_rush_stretches_are_timed_on_their_own() {
-    let (mut w, n, local, express) = shinkansen();
+    let (mut w, n, local, express) = shinkansen_rates();
     for (id, h) in [(local, 30.0f32), (express, 10.0f32)] {
-        w.apply(Op::Schedule { id, tph: [60.0 / h, 60.0 / h, 0.0] }).unwrap();
+        set_tph(&mut w, id, [60.0 / h, 60.0 / h, 0.0]);
     }
     set_passing(&mut w, &n[1..6], true);
     let op = w.rows_ops(None, 4).unwrap();
@@ -278,7 +285,7 @@ fn own_weekends_run_the_slot_timetable() {
 fn nothing_to_time_leaves_no_variant() {
     let (mut w, _, local, express) = shinkansen();
     // the express alone: no trains of the local to wait or follow
-    w.apply(Op::Schedule { id: local, tph: [0.0, 0.0, 0.0] }).unwrap();
+    w.apply(Op::AutoTrains { id: local, auto: None, trains: Some([0; 3]) }).unwrap();
     for l in [local, express] {
         assert!(w.svc.lines[l as usize].runs.iter().all(|r| r.vars.iter().all(|v| v.is_empty())));
         assert!(w.svc.line_trips(&w.net, l as usize, 86400.0, 2.0 * 86400.0).iter().all(|t| t.var == 0));
@@ -308,7 +315,7 @@ fn variants_come_back_after_a_reload_in_place() {
 #[test]
 fn headway_locals_make_their_next_departure() {
     for (hl, hx) in [(600u32, 600u32), (1800, 600), (600, 1800)] {
-        let (mut w, n, local, express) = shinkansen();
+        let (mut w, n, local, express) = shinkansen_rates();
         for (id, h) in [(local, hl), (express, hx)] {
             let k = w.net.line_trains[id as usize].unwrap_or([6, 6, 0]);
             w.apply(Op::AutoTrains { id, auto: Some([h, h, 0]), trains: Some(k) }).unwrap();
@@ -335,7 +342,7 @@ fn headway_locals_make_their_next_departure() {
 /// slot run at the morning's own rate; its locals are timed train by train like the morning's.
 #[test]
 fn a_moved_morning_hour_is_timed_too() {
-    let (mut w, n, local, express) = shinkansen();
+    let (mut w, n, local, express) = shinkansen_rates();
     set_passing(&mut w, &n[1..6], true);
     let op = w.rows_ops(None, 5).unwrap();
     w.apply(op).unwrap();
@@ -373,3 +380,4 @@ fn a_line_timed_otherwise_is_noted_changed() {
     w.retime();
     assert!(w.svc.take_changed().is_empty());
 }
+

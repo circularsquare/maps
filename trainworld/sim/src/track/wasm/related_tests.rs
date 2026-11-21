@@ -14,9 +14,9 @@ fn a_copied_express_runs_beside_its_local() {
     assert_eq!(a.add_station(2, edge, 3000.0, 0.0, 200, "M".into()), 0, "{}", a.issues());
     let m = node_at(&a, 3000.0);
     let local = a.new_line_id();
-    assert_eq!(a.set_line(local, &[w, m, e], 12.0, 6.0, 3.0, 30.0, 180.0, 0, 0xff0000, "Local".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(local, &[w, m, e], 12, 6, 3, 30.0, 180.0, 0, 0xff0000, "Local".into()), 0, "{}", a.issues());
     let express = a.new_line_id();
-    assert_eq!(a.set_line(express, &[w, e], 6.0, 3.0, 2.0, 30.0, 180.0, 0, 0xff0000, "Express".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(express, &[w, e], 6, 3, 2, 30.0, 180.0, 0, 0xff0000, "Express".into()), 0, "{}", a.issues());
     let ni = a.nodes_info();
     let max = ni.chunks(10).map(|c| c[0] as usize).max().unwrap();
     let mut cx = vec![u32::MAX; max + 1];

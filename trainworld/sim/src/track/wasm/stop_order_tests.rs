@@ -36,7 +36,7 @@ fn a_hand_order_is_kept_until_sorted() {
     let mut a = api();
     a.w = w;
     let id = a.new_line_id();
-    assert_eq!(a.set_line(id, &[sa, sb], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(id, &[sa, sb], 6, 4, 2, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
     assert!(!a.line_hand(id));
     assert!(!a.save().windows(4).any(|w| w == b"LHO1"), "no hand order: no block");
     // set_stops straightens this order (stop_edit_tests); order_stops keeps it
@@ -105,7 +105,7 @@ fn an_order_with_no_route_names_its_hop() {
     let mut a = api();
     a.w = w;
     let id = a.new_line_id();
-    assert_eq!(a.set_line(id, &[b, t, m], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(id, &[b, t, m], 6, 4, 2, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
     assert_eq!(a.line_reversals(id), [1.0], "B, T, M reverses at T");
     assert!(a.order_fault(&[b, t, m]).is_empty());
     assert_eq!(a.order_fault(&[t, b, m]), [1.0, b as f64, m as f64]);

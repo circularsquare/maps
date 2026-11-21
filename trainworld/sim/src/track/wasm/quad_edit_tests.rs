@@ -219,14 +219,14 @@ fn quad_station_one_pair_per_click_and_no_crossovers() {
     assert!(east.len() == 1 && a.w.net.node_y[east[0] as usize] > 1.0, "the express pair's");
     assert!(a.crossover_edges().is_empty(), "stations add none");
     let id = a.new_line_id();
-    assert_ne!(a.set_line(id, &[west[0], east[0]], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "X".into()), 0);
+    assert_ne!(a.set_line_with_trains(id, &[west[0], east[0]], 6, 4, 2, 30.0, 180.0, 0, 0, "X".into()), 0);
     assert!(a.issue_kinds().contains("LinePath"), "{}", a.issue_kinds());
     // track the player draws from one pair to the other
     let (from, to) = (track_at(&a, 1300.0, 0.0), track_at(&a, 1700.0, QUAD_SPACING));
     let ends = [2.0, from as f64, 1300.0, 0.0, 0.0, 2.0, to as f64, 1700.0, QUAD_SPACING, 0.0];
     assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
     assert!(a.crossover_edges().is_empty(), "drawing adds none");
-    assert_eq!(a.set_line(id, &[west[0], east[0]], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "X".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(id, &[west[0], east[0]], 6, 4, 2, 30.0, 180.0, 0, 0, "X".into()), 0, "{}", a.issues());
     // a free station on quad: the drawn pair's only
     let mut b = TrackApi::new(-73.985, 40.758, true);
     let ends = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 220.0, 0.0, 0.0];
@@ -250,12 +250,12 @@ fn passed_stations_in_path_order() {
         let on_drawn = |a: &TrackApi, k: usize| *stations(a, &format!("S{k}")).iter().min_by(|&&p, &&q| a.w.net.node_y[p as usize].abs().total_cmp(&a.w.net.node_y[q as usize].abs())).unwrap();
         let s: Vec<u32> = (0..xs.len()).map(|k| on_drawn(&a, k)).collect();
         let id = a.new_line_id();
-        assert_eq!(a.set_line(id, &[s[0], s[2], s[4]], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+        assert_eq!(a.set_line_with_trains(id, &[s[0], s[2], s[4]], 6, 4, 2, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
         let passed: Vec<(u32, u32)> = a.passed_stations(id).chunks(2).map(|c| (c[0] as u32, c[1] as u32)).collect();
         assert_eq!(passed, vec![(0, s[1]), (1, s[3])], "{tracks} tracks");
         // and the other way round
         let back = a.new_line_id();
-        assert_eq!(a.set_line(back, &[s[4], s[0]], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "B".into()), 0, "{}", a.issues());
+        assert_eq!(a.set_line_with_trains(back, &[s[4], s[0]], 6, 4, 2, 30.0, 180.0, 0, 0, "B".into()), 0, "{}", a.issues());
         let passed: Vec<u32> = a.passed_stations(back).chunks(2).map(|c| c[1] as u32).collect();
         assert_eq!(passed, vec![s[3], s[2], s[1]]);
         // adding them all: one edit, one undo
@@ -283,7 +283,7 @@ fn drop_stop_end_line_and_stop_passed_keep_the_path() {
     let on_drawn = |a: &TrackApi, k: usize| *stations(a, &format!("S{k}")).iter().min_by(|&&p, &&q| a.w.net.node_y[p as usize].abs().total_cmp(&a.w.net.node_y[q as usize].abs())).unwrap();
     let s: Vec<u32> = (0..xs.len()).map(|k| on_drawn(&a, k)).collect();
     let id = a.new_line_id();
-    assert_eq!(a.set_line(id, &s, 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(id, &s, 6, 4, 2, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
     let (stops0, path0) = (a.w.net.line_stops(id).to_vec(), a.w.net.line_path(id).to_vec());
     let now = |a: &TrackApi| (a.w.net.line_stops(id).to_vec(), a.w.net.line_path(id).to_vec());
     // a middle stop out: the path is the same, the station is passed
@@ -336,7 +336,7 @@ fn line_train_length_capped_by_platforms() {
     }
     let (sa, sb) = (stations(&a, "A")[0], stations(&a, "B")[0]);
     let id = a.new_line_id();
-    assert_eq!(a.set_line(id, &[sa, sb], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(id, &[sa, sb], 6, 4, 2, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
     let cars = |a: &TrackApi| a.w.svc.lines[id as usize].cars;
     assert_eq!(cars(&a), 10);
     assert_eq!(a.line_cars_cap(id), vec![10, sa]);
@@ -378,7 +378,7 @@ fn old_saves_with_crossovers_and_single_track_still_run() {
     }
     let single = a.new_line_id();
     let ss = [stations(&a, "S1")[0], stations(&a, "S2")[0]];
-    assert_eq!(a.set_line(single, &ss, 4.0, 2.0, 1.0, 30.0, 180.0, 0, 0, "Single".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(single, &ss, 4, 2, 1, 30.0, 180.0, 0, 0, "Single".into()), 0, "{}", a.issues());
     // quad with a station on each pair and a crossover placed by hand between
     route(&mut a, [0.0, 0.0, 2000.0, 0.0, 0.0], 6000.0, 0.0, 4);
     for (x, y, name) in [(2500.0, 0.0, "Q1"), (5500.0, QUAD_SPACING, "Q2")] {
@@ -387,7 +387,7 @@ fn old_saves_with_crossovers_and_single_track_still_run() {
     assert_eq!(a.add_crossover(track_at(&a, 4000.0, 0.0), 4000.0, 0.0), 0, "{}", a.issues());
     let (q1, q2) = (stations(&a, "Q1")[0], stations(&a, "Q2")[0]);
     let cross = a.new_line_id();
-    assert_eq!(a.set_line(cross, &[q1, q2], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "Cross".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(cross, &[q1, q2], 6, 4, 2, 30.0, 180.0, 0, 0, "Cross".into()), 0, "{}", a.issues());
     let bytes = a.save();
     let mut b = TrackApi::new(-73.985, 40.758, true);
     assert!(b.load(&bytes));

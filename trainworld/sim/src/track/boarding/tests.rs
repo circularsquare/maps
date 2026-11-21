@@ -1,5 +1,5 @@
 use super::*;
-use crate::track::tests::{edge, line, node, station, world};
+use crate::track::tests::{edge, headway_line, line, node, set_headway, station, world};
 
 /// Riders in the overload tests below, written for a car of 160 at crush, scaled to today's (T-2186).
 const X: f32 = (CRUSH_PER_CAR / 160.0) as f32;
@@ -83,7 +83,7 @@ fn setup(tph: f32) -> (crate::track::world::TrackWorld, u32) {
     for n in [a, b, c] {
         station(&mut w, n, 200);
     }
-    let l = line(&mut w, &[a, b, c], [tph, tph / 2.0, tph / 4.0]);
+    let l = headway_line(&mut w, &[a, b, c], [tph, tph / 2.0, tph / 4.0]);
     (w, l)
 }
 
@@ -534,7 +534,7 @@ fn a_change_mid_peak_keeps_the_account_on_the_drawn_trains() {
     let before_trips = w.svc.trips(&w.net, now - 600.0, now);
     let loads_before: Vec<Option<Vec<f32>>> = before_trips.iter().map(|t| b.trip_account(t.line, t.run as usize, t.dep)).collect();
     let before = w.svc.before_edit(&w.net, now);
-    w.apply(crate::track::world::Op::Schedule { id: l, tph: [4.0, 5.0, 2.5] }).unwrap();
+    set_headway(&mut w, l, [4.0, 5.0, 2.5]);
     w.svc.note_changes(&w.net, &before, now);
     b.ensure(&w.net, &w.svc);
     for epoch in [now - 1200.0, now + 2400.0] {
@@ -863,7 +863,7 @@ fn a_new_lines_platforms_fill_from_when_its_trains_start() {
     b.set_riders(&riders(l, [3000.0, 2000.0, 2000.0, 2000.0, 100.0]));
     let now = 2.0 * DAY + 8.0 * 3600.0 + 1200.0;
     let before = w.svc.before_edit(&w.net, now);
-    w.apply(crate::track::world::Op::Schedule { id: l, tph: [10.0, 5.0, 2.5] }).unwrap();
+    set_headway(&mut w, l, [10.0, 5.0, 2.5]);
     w.svc.note_changes(&w.net, &before, now);
     let epoch = now - 1200.0;
     let out = b.hour(&w.net, &w.svc, epoch);
@@ -922,7 +922,7 @@ fn a_long_lines_opening_day_runs_as_full_as_the_next() {
     b.set_riders(&v);
     let now = 2.0 * DAY + 7.0 * 3600.0 + 1200.0;
     let before = w.svc.before_edit(&w.net, now);
-    w.apply(crate::track::world::Op::Schedule { id: l, tph: [4.0, 4.0, 4.0] }).unwrap();
+    set_headway(&mut w, l, [4.0, 4.0, 4.0]);
     w.svc.note_changes(&w.net, &before, now);
     b.ensure(&w.net, &w.svc);
     let opening = b.line_periods(&w.svc, l as usize, 0);
@@ -948,3 +948,4 @@ fn a_long_lines_opening_day_runs_as_full_as_the_next() {
     assert!(today[5] < 1.0, "{} left behind", today[5]);
     assert!(today[3] > 0.0 && today[3] < 2.0 * 3600.0 * rate as f64 * 2.0 * (n - 1) as f64 / 3600.0, "{} riders", today[3]);
 }
+

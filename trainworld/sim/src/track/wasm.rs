@@ -2295,20 +2295,6 @@ impl TrackApi {
 
 #[cfg(test)]
 impl TrackApi {
-    /// Tests only: add or replace a line at trains per hour; its path is the fastest route through
-    /// the stops, and the next settle gives it whole trains (T-1146).
-    #[allow(clippy::too_many_arguments)]
-    pub(crate) fn set_line(&mut self, id: u32, stops: &[u32], high: f32, medium: f32, low: f32, dwell_s: f32, turnaround_s: f32, cars: u8, colour: u32, name: String) -> u32 {
-        let Some(path) = self.w.net.route(stops, &[]) else {
-            return self.refuse(Issue::LinePath { line: id });
-        };
-        let mut d = LineData { rows: 0, x: Default::default(), symbol: String::new(), trains: None, auto: None, name, colour, stops: stops.to_vec(), path, tph: [high, medium, low], dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), outer: vec![], day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![], fare_dist: false };
-        d.x = crate::track::net::Extra::of_high(&d);
-        self.run(Op::Line { id, data: Some(d) })
-    }
-    pub(crate) fn set_schedule(&mut self, id: u32, high: f32, medium: f32, low: f32) -> u32 {
-        self.run(Op::Schedule { id, tph: [high, medium, low] })
-    }
     /// Detailed refusal text for native test failures; absent from the production WASM API.
     fn issues(&self) -> String {
         self.issues.iter().map(|i| format!("{i:?}")).collect::<Vec<_>>().join("\n")

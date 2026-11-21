@@ -22,10 +22,6 @@ pub enum Op {
     Edge { id: u32, data: Option<EdgeData> },
     Station { node: u32, data: Option<StationData> },
     Line { id: u32, data: Option<LineData> },
-    /// Tests only: a line at these trains per hour, without trains; the next settle allocates the
-    /// whole trains that rate needs (T-1146).
-    #[cfg(test)]
-    Schedule { id: u32, tph: [f32; ROWS] },
     TrainCounts { id: u32, trains: Option<[u32; ROWS]>, tph: [f32; ROWS] },
     /// T-625: set a line's headways in seconds per level (`None`: counts set by hand) with the
     /// counts it starts from; the settle then keeps the counts to the headways.
@@ -2069,14 +2065,6 @@ impl TrackWorld {
             Op::Edge { id, data } => Op::Edge { id, data: n.set_edge(id, data)? },
             Op::Station { node, data } => Op::Station { node, data: n.set_station(node, data)? },
             Op::Line { id, data } => Op::Line { id, data: n.set_line(id, data)? },
-            #[cfg(test)]
-            Op::Schedule { id, tph } => {
-                let old = n.line_data(id).ok_or(Issue::NoSuchLine { line: id })?;
-                n.set_tph(id, tph)?;
-                n.line_trains[id as usize] = None;
-                n.line_auto[id as usize] = None;
-                Op::TrainCounts { id, trains: old.trains, tph: old.tph }
-            },
             Op::TrainCounts { id, trains, tph } => {
                 let old = n.line_data(id).ok_or(Issue::NoSuchLine { line: id })?;
                 n.set_tph(id, tph)?;

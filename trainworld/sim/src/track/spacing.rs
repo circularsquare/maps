@@ -315,9 +315,11 @@ mod tests {
     }
 
     /// T-1925: two lines on the same track at the same headway leave half a headway apart, and
-    /// keep it through a save; one on its own track is not moved.
+    /// keep it through a save; one on its own track is not moved. Set by headway, so the headways
+    /// are the same.
     #[test]
     fn lines_on_shared_track_leave_apart() {
+        use super::super::tests::headway_line;
         let mut w = world();
         let n: Vec<u32> = (0..=4).map(|k| node(&mut w, k as f64 * 1500.0, 0.0, 0)).collect();
         for k in 0..4 { edge(&mut w, n[k], n[k + 1], &[], 0).unwrap(); }
@@ -326,9 +328,9 @@ mod tests {
         edge(&mut w, q[0], q[1], &[], 0).unwrap();
         for &x in &q { station(&mut w, x, 200); }
         crate::track::tests::terminals_at_dead_ends(&mut w);
-        let a = line(&mut w, &n, [6.0, 4.0, 2.0]);
-        let alone = line(&mut w, &q, [6.0, 4.0, 2.0]);
-        let b = line(&mut w, &n, [6.0, 4.0, 2.0]);
+        let a = headway_line(&mut w, &n, [6.0, 4.0, 2.0]);
+        let alone = headway_line(&mut w, &q, [6.0, 4.0, 2.0]);
+        let b = headway_line(&mut w, &n, [6.0, 4.0, 2.0]);
         let (da, db) = (deps(&w, a), deps(&w, b));
         assert_eq!(da.len(), 6);
         let gap = closest(&da, &db);
@@ -336,7 +338,7 @@ mod tests {
         assert_eq!(w.net.line_phase_of(a), [0.0; crate::track::params::SLOTS], "the first line keeps its times");
         assert_eq!(w.net.line_phase_of(alone), [0.0; crate::track::params::SLOTS], "nothing shares its track");
         // a third line on the same track takes the gaps that are left
-        let c = line(&mut w, &n, [6.0, 4.0, 2.0]);
+        let c = headway_line(&mut w, &n, [6.0, 4.0, 2.0]);
         let dc = deps(&w, c);
         // (a third of the headway at best; phases are tried in 24ths of it)
         assert!(closest(&dc, &da).min(closest(&dc, &db)) > 0.2 * 600.0, "{da:?} {db:?} {dc:?} {:?}", [a, b, c].map(|l| w.net.line_phase_of(l)));
@@ -348,7 +350,7 @@ mod tests {
         }
         // an edit elsewhere moves nobody
         let before: Vec<_> = [a, b, c].iter().map(|&l| w.net.line_phase_of(l)).collect();
-        w.apply(Op::Schedule { id: alone, tph: [4.0, 4.0, 2.0] }).unwrap();
+        crate::track::tests::set_headway(&mut w, alone, [4.0, 4.0, 2.0]);
         assert_eq!(before, [a, b, c].iter().map(|&l| w.net.line_phase_of(l)).collect::<Vec<_>>());
     }
 

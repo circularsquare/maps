@@ -14,7 +14,7 @@ fn line_api() -> (TrackApi, u32) {
     let edges: Vec<u32> = (0..a.w.net.edge_count() as u32).filter(|&k| a.w.net.edge_ok(k)).collect();
     assert_eq!(a.construct(&edges, &[w, e]), 0, "{}", a.issues());
     let id = a.new_line_id();
-    assert_eq!(a.set_line(id, &[w, e], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(id, &[w, e], 6, 4, 2, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
     assert_eq!(a.set_train_counts(id, 2, 2, 2), 0, "{}", a.issues());
     (a, id)
 }
@@ -88,7 +88,7 @@ fn a_stop_added_at_an_end_moves_no_train() {
     let edges: Vec<u32> = (0..a.w.net.edge_count() as u32).filter(|&k| a.w.net.edge_ok(k)).collect();
     assert_eq!(a.construct(&edges, &ns), 0, "{}", a.issues());
     let id = a.new_line_id();
-    assert_eq!(a.set_line(id, &ns[..2], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(id, &ns[..2], 6, 4, 2, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
     assert_eq!(a.set_train_counts(id, 4, 4, 4), 0, "{}", a.issues());
     let now = 2.0 * 86400.0 + 11.0 * 3600.0 + 417.0;
     a.set_now(now);
@@ -107,7 +107,7 @@ fn a_stop_added_at_an_end_moves_no_train() {
     };
     let before = at_now(&a);
     assert!(before.iter().any(|t| t.0 == 1), "a train on the way back: {before:?}");
-    assert_eq!(a.set_line(id, &ns, 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(id, &ns, 6, 4, 2, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
     let after = at_now(&a);
     assert_eq!(before.len(), after.len(), "{before:?} {after:?}");
     for (p, q) in before.iter().zip(&after) {

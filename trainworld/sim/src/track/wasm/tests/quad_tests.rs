@@ -57,7 +57,7 @@ fn quad_track_and_twin_stations() {
     assert_eq!((0..a.w.net.node_count() as u32).filter(|&k| a.w.net.node_ok(k) && a.w.net.node_platform[k as usize] > 0 && a.w.net.node_name[k as usize] == "Joint").count(), 1);
     assert_eq!(a.undo(), 0);
     let id = a.new_line_id();
-    assert_eq!(a.set_line(id, &stops, 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "Local".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(id, &stops, 6, 4, 2, 30.0, 180.0, 0, 0, "Local".into()), 0, "{}", a.issues());
     assert!(a.line_path(id).iter().all(|&p| on_local(&a, p >> 1)));
     // deleting an express piece leaves the drawn pair
     assert_eq!(a.delete_edge(express[express.len() / 2]), 0, "{}", a.issues());
@@ -205,7 +205,7 @@ fn crossover_joins_the_pairs() {
     let (w_local, e_express) = (station_at(&a, 500.0, 0.0), station_at(&a, 3500.0, QUAD_SPACING));
     assert!((a.w.net.node_y[e_express as usize] - QUAD_SPACING).abs() < 0.1);
     let id = a.new_line_id();
-    assert_ne!(a.set_line(id, &[w_local, e_express], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "X".into()), 0, "no way across yet");
+    assert_ne!(a.set_line_with_trains(id, &[w_local, e_express], 6, 4, 2, 30.0, 180.0, 0, 0, "X".into()), 0, "no way across yet");
     // nothing beside plain double track
     let mut plain = api();
     assert_eq!(plain.add_route(&ends, &[], 2, false), 0);
@@ -234,7 +234,7 @@ fn crossover_joins_the_pairs() {
         assert_eq!(crossover_partner(&a.w.net, x), xs.iter().copied().find(|&o| o != x));
     }
     // a line from the local pair to the express pair now runs across it, at 50 km/h at most
-    assert_eq!(a.set_line(id, &[w_local, e_express], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "X".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(id, &[w_local, e_express], 6, 4, 2, 30.0, 180.0, 0, 0, "X".into()), 0, "{}", a.issues());
     let path = a.line_path(id);
     let over: Vec<u32> = path.iter().map(|p| p >> 1).filter(|e| xs.contains(e)).collect();
     assert_eq!(over.len(), 1, "one diagonal: {path:?}");
@@ -306,7 +306,7 @@ fn reshaping_a_piece_moves_its_joints() {
     assert_eq!(a.add_station(1, w, 0.0, 0.0, 200, "West".into()), 0);
     assert_eq!(a.add_station(1, east, 0.0, 0.0, 200, "East".into()), 0);
     let id = a.new_line_id();
-    assert_eq!(a.set_line(id, &[w, east], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(id, &[w, east], 6, 4, 2, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
     assert_eq!(a.line_path(id).len(), 4);
 }
 

@@ -66,7 +66,7 @@ fn branch_stops_go_in_route_order() {
     let mut a = api();
     a.w = w;
     let id = a.new_line_id();
-    assert_eq!(a.set_line(id, &[s0, t], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(id, &[s0, t], 6, 4, 2, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
     for s in [b3, b1, b2, s1] {
         let stops: Vec<u32> = a.insert_stop(id, s).iter().map(|&x| x as u32).collect();
         assert_eq!(a.set_stops(id, &stops), 0, "{}", a.issues());
@@ -128,7 +128,7 @@ fn stops_along_a_way_round_run_straight() {
         let mut a = api();
         a.w = w;
         let id = a.new_line_id();
-        assert_eq!(a.set_line(id, &[], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+        assert_eq!(a.set_line_with_trains(id, &[], 6, 4, 2, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
         click(&mut a, id, &order.map(|k| s[k]));
         let got = a.w.net.line_stops(id).to_vec();
         let mut back = got.clone();
@@ -141,7 +141,7 @@ fn stops_along_a_way_round_run_straight() {
     let mut a = api();
     a.w = w;
     let id = a.new_line_id();
-    assert_eq!(a.set_line(id, &[sa, sb], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(id, &[sa, sb], 6, 4, 2, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
     assert_eq!(a.set_stops(id, &[x2, x1, sa, sb]), 0, "{}", a.issues());
     assert_eq!(a.w.net.line_stops(id), &[sb, x2, x1, sa]);
     assert!(a.line_reversals(id).is_empty());
@@ -162,8 +162,8 @@ fn a_loop_that_only_goes_out_and_back_ends_where_it_turns() {
     let (w, [a, m, _, k]) = long_balloon();
     let mut api = api();
     api.w = w;
-    let id = api.new_line_id();
-    assert_eq!(api.set_line(id, &[a, m, k, m, a], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", api.issues());
+    // the stops as given, which the game's own line setter would have straightened already
+    let id = crate::track::tests::line(&mut api.w, &[a, m, k, m, a], [6.0, 4.0, 2.0]);
     assert_eq!(api.line_loop(id), 2, "a balloon");
     // the line panel's cross on K: M twice in a row counts once
     assert_eq!(api.set_stops(id, &[a, m, m, a]), 0, "{}", api.issues());
@@ -179,8 +179,7 @@ fn a_loop_that_only_goes_out_and_back_ends_where_it_turns() {
     // a balloon that goes round its loop stays one, and so does one through a single stop
     let (w, [a, m, _, k]) = crate::track::tests::balloon_fixture();
     api.w = w;
-    let id = api.new_line_id();
-    assert_eq!(api.set_line(id, &[a, m, k, m, a], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", api.issues());
+    let id = crate::track::tests::line(&mut api.w, &[a, m, k, m, a], [6.0, 4.0, 2.0]);
     assert_eq!(api.set_stops(id, &[a, m, m, a]), 0, "{}", api.issues());
     assert_eq!((api.w.net.line_stops(id), api.line_loop(id)), (&[a, m, a][..], 2));
     assert_eq!(api.set_stops(id, &[a, m, k, m, a]), 0, "{}", api.issues());

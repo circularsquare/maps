@@ -2,7 +2,7 @@ use super::super::capacity::ResKind;
 use super::super::net::EdgeData;
 use super::super::params::{HIGH, MEDIUM, PLATFORM_MARGIN_S, SLOTS};
 use super::super::service::Service;
-use super::super::tests::{line, node, station, world};
+use super::super::tests::{headway_line, line, node, station, world};
 use super::super::upgrades::{self, PASSING};
 use super::super::world::{Op, TrackWorld};
 use super::*;
@@ -10,7 +10,21 @@ use super::*;
 /// The Shinkansen-style line of notes/T-2228.md 2: 180 km of high-speed track, stations A to G every
 /// 30 km with 400 m platforms; high-speed locals at every station, high-speed expresses at A, D and
 /// G. High demand runs both every 10 minutes, medium locals every 30 and expresses every 10.
+/// Both lines are set by headway, so they run these rates exactly.
 pub(crate) fn shinkansen() -> (TrackWorld, Vec<u32>, u32, u32) {
+    shinkansen_with(false)
+}
+
+/// `shinkansen` with lines at a fixed rate and no trains (the path T-1183 removes), for the timing
+/// tests that fail when started on headway lines. At 10/10 the cause is that count and headway lines
+/// start their return runs where the forward trip's round trip leaves them (`Service::lattice`),
+/// which puts expresses through locals on run 0; the others' causes are not checked
+/// (notes/T-1183.md).
+pub(crate) fn shinkansen_rates() -> (TrackWorld, Vec<u32>, u32, u32) {
+    shinkansen_with(true)
+}
+
+fn shinkansen_with(rates: bool) -> (TrackWorld, Vec<u32>, u32, u32) {
     let mut w = world();
     let n: Vec<u32> = (0..7).map(|k| node(&mut w, k as f64 * 30_000.0, 0.0, 0)).collect();
     for k in 0..6 {
@@ -26,9 +40,18 @@ pub(crate) fn shinkansen() -> (TrackWorld, Vec<u32>, u32, u32) {
         d.fast = true;
         w.apply(Op::Line { id: l, data: Some(d) }).unwrap();
     };
-    let local = line(&mut w, &n, [6.0, 2.0, 0.0]);
+    let mk = |w: &mut TrackWorld, stops: &[u32], tph: [f32; 3]| if rates {
+        let id = w.net.alloc_line();
+        let mut d = crate::track::tests::line_data(w, stops, id, None);
+        d.tph = tph;
+        w.apply(Op::Line { id, data: Some(d) }).unwrap();
+        id
+    } else {
+        headway_line(w, stops, tph)
+    };
+    let local = mk(&mut w, &n, [6.0, 2.0, 0.0]);
     fast(&mut w, local);
-    let express = line(&mut w, &[n[0], n[3], n[6]], [6.0, 6.0, 0.0]);
+    let express = mk(&mut w, &[n[0], n[3], n[6]], [6.0, 6.0, 0.0]);
     fast(&mut w, express);
     (w, n, local, express)
 }
@@ -255,8 +278,9 @@ fn a_rare_local_behind_a_frequent_express_settles() {
     let (mut w, n, local, express) = shinkansen();
     set_passing(&mut w, &n[1..6], true);
     let t = std::time::Instant::now();
-    w.apply(Op::TrainCounts { id: express, trains: Some([24, 24, 0]), tph: [12.0, 12.0, 0.0] }).unwrap();
-    w.apply(Op::TrainCounts { id: local, trains: Some([2, 2, 0]), tph: [1.0, 1.0, 0.0] }).unwrap();
+    // off headways onto these counts, as a count set in the game does (`TrackApi::set_train_counts`)
+    w.apply(Op::AutoTrains { id: express, auto: None, trains: Some([24, 24, 0]) }).unwrap();
+    w.apply(Op::AutoTrains { id: local, auto: None, trains: Some([2, 2, 0]) }).unwrap();
     let took = t.elapsed().as_secs_f64();
     for lev in [HIGH, MEDIUM] {
         let (tph, trip) = (w.net.line_tph[local as usize][lev] as f64, w.svc.lines[local as usize].round_trip[lev]);

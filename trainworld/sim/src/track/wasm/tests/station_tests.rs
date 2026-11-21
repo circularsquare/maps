@@ -135,7 +135,7 @@ fn removing_a_station_joins_the_pieces_either_side() {
     assert_eq!(b.add_station(2, live_edges(&b)[0], 1500.0, 0.0, 200, "Middle".into()), 0, "{}", b.issues());
     let mid = end(&b, 1500.0);
     let id = b.new_line_id();
-    assert_eq!(b.set_line(id, &[w, mid, east], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", b.issues());
+    assert_eq!(b.set_line_with_trains(id, &[w, mid, east], 6, 4, 2, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", b.issues());
     assert_eq!(b.construct_line(id), 0, "{}", b.issues());
     assert_eq!(live_edges(&b).len(), 2);
     assert_eq!(b.remove_station(mid), 0, "{}", b.issues());

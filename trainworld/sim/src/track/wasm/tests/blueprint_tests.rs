@@ -19,7 +19,9 @@ fn blueprint_construct_run() {
     assert_eq!(a.add_station(2, e, 1500.0, 30.0, 200, "Middle".into()), 0, "{}", a.issues());
     let mid = a.nodes_info().chunks(10).find(|c| (c[1] - 1500.0).abs() < 1.0).unwrap()[0] as u32;
     let id = a.new_line_id();
-    assert_eq!(a.set_line(id, &[n0, mid, n1], 12.0, 8.0, 4.0, 30.0, 180.0, 0, 0xd7263d, "Line 1".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(id, &[n0, mid, n1], 0, 0, 0, 30.0, 180.0, 0, 0xd7263d, "Line 1".into()), 0, "{}", a.issues());
+    // by headway, 12, 8 and 4 an hour, with the trains those take (T-849)
+    assert_eq!(a.set_auto_headway(id, 300, 450, 900), 0, "{}", a.issues());
     // Planned over blueprint: times shown, no trips.
     let info = a.lines_info();
     assert_eq!((info[2], info[3]), (1.0, 0.0));
@@ -51,27 +53,28 @@ fn blueprint_construct_run() {
     // More trains an hour buys more trains; short of money it is refused and nothing changes.
     let (fleet, cash) = (a.fleet(), a.cash());
     a.set_cash(1.0);
-    assert_eq!(a.set_schedule(id, 30.0, 8.0, 4.0), 1);
+    assert_eq!(a.set_auto_headway(id, 120, 450, 900), 1);
     assert!(a.issue_kinds().starts_with("Money:"), "{}", a.issue_kinds());
     assert_eq!((a.fleet(), a.lines_info()[5]), (fleet, 12.0));
     // A sandbox (T-728) refuses nothing for money; the cash still pays, into the red.
     a.set_unlimited(true);
-    assert_eq!(a.set_schedule(id, 30.0, 8.0, 4.0), 0, "{}", a.issues());
+    assert_eq!(a.set_auto_headway(id, 120, 450, 900), 0, "{}", a.issues());
     assert!(a.fleet() > fleet && a.last_train_charge() > 0.0);
     assert!((a.cash() - (1.0 - a.last_train_charge())).abs() < 1e-9 && a.cash() < 0.0);
     a.set_unlimited(false);
     a.set_cash(cash - a.last_train_charge());
     // Fewer trains keeps the cars; going back up again is free, and so is undo / redo.
     let (fleet, cash) = (a.fleet(), a.cash());
-    assert_eq!(a.set_schedule(id, 12.0, 8.0, 4.0), 0);
+    assert_eq!(a.set_auto_headway(id, 300, 450, 900), 0);
     assert_eq!(a.undo(), 0);
     assert_eq!(a.redo(), 0);
-    assert_eq!(a.set_schedule(id, 30.0, 8.0, 4.0), 0);
+    assert_eq!(a.set_auto_headway(id, 120, 450, 900), 0);
     assert_eq!((a.fleet(), a.cash()), (fleet, cash));
     // Running cost (T-807, T-867): 4 a train-km plus 2 a car-km, trains an hour both ways times length.
     let len_km = a.lines_info()[9] / 1000.0;
     let cars = a.lines_info()[21];
-    let train_km = 30.0 * 2.0 * len_km;
+    // (a train every 2 minutes asked; one platform at each end turns 15 an hour, T-517)
+    let train_km = a.lines_info()[5] * 2.0 * len_km;
     assert_eq!((RUN_COST_TRAIN_KM, RUN_COST_CAR_KM), (4.0, 2.0));
     assert_eq!(a.money_params(), vec![CAR_PRICE, 2.0, ECONOMY, 4.0, 3.75, 3.0, 5.0, 350.0, 500.0, 0.6, 1.5, 0.6, 6.0, 30.0, BUS_ROUTE_COST_PER_KM, 500.0, 1000.0, 1300.0, 8.0, 30.0, 100.0, 10.0, 2000.0, 0.6, 15.0, 30.0, 50.0, 75.0, BRT_COST_PER_KM, UPKEEP_BRT_KM, crate::track::streets::lane_kmh(true), 0.001]);
     assert!((a.running_cost(0) - (4.0 * train_km + 2.0 * train_km * cars) * ECONOMY / 1e6).abs() < 1e-9);
@@ -93,7 +96,7 @@ fn blueprint_construct_run() {
     assert!((shares[1] - up[0]).abs() < 1e-9 && shares[3].abs() < 1e-9, "{shares:?}");
     // In debt, edits that cost nothing still go through.
     a.set_cash(-50.0);
-    assert_eq!(a.set_schedule(id, 20.0, 8.0, 4.0), 0, "{}", a.issues());
+    assert_eq!(a.set_auto_headway(id, 180, 450, 900), 0, "{}", a.issues());
     assert_eq!(a.blueprint_cost(), 0.0);
     let info = a.lines_info();
     assert_eq!(info[3], 1.0, "running");
@@ -307,7 +310,7 @@ fn blueprint_quote_shared_lines_matches_charge_without_changing_game() {
     for n in [n0, n1] { assert_eq!(a.add_station(1, n, 0.0, 0.0, 200, format!("S{n}")), 0); }
     for i in 0..2 {
         let id = a.new_line_id();
-        assert_eq!(a.set_line(id, &[n0, n1], 20.0, 10.0, 4.0, 30.0, 180.0, 0, 0, format!("L{i}")), 0);
+        assert_eq!(a.set_line_with_trains(id, &[n0, n1], 20, 10, 4, 30.0, 180.0, 0, 0, format!("L{i}")), 0);
     }
     let saved = save::encode(&a.w.net);
     let cash = a.cash();
@@ -337,9 +340,12 @@ fn junction_inspector_and_delay_split() {
         assert_eq!(a.add_station(1, s, 0.0, 0.0, 200, "S".into()), 0, "{}", a.issues());
     }
     let l1 = a.new_line_id();
-    assert_eq!(a.set_line(l1, &[w, east], 15.0, 8.0, 4.0, 30.0, 180.0, 0, 0xff0000, "Main".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(l1, &[w, east], 15, 8, 4, 30.0, 180.0, 0, 0xff0000, "Main".into()), 0, "{}", a.issues());
     let l2 = a.new_line_id();
-    assert_eq!(a.set_line(l2, &[w, branch], 18.0, 8.0, 4.0, 30.0, 180.0, 0, 0x0000ff, "Branch".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(l2, &[w, branch], 18, 8, 4, 30.0, 180.0, 0, 0x0000ff, "Branch".into()), 0, "{}", a.issues());
+    // by headway, 15 and 18 an hour at high
+    assert_eq!(a.set_auto_headway(l1, 240, 450, 900), 0, "{}", a.issues());
+    assert_eq!(a.set_auto_headway(l2, 200, 450, 900), 0, "{}", a.issues());
     let flyover = a.flyover_cost(j);
     assert!(flyover > 0.0);
     assert_eq!(a.construct_all(), 0, "{}", a.issues());
