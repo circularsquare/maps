@@ -1129,10 +1129,15 @@ impl Service {
         // The incremental capacity pass needs the old and new paths of the rebuilt lines.
         let mut path_edges: Vec<u32> = vec![];
         let mut path_nodes: Vec<u32> = vec![];
+        // T-3945: both runs, since the way back can call at platforms the way out does not (a street
+        // tram's stop on each side of the road): a platform only one run visits otherwise keeps the
+        // old line's stop indices
         let mut add_path = |ls: &LineSvc| {
             if ls.running {
-                path_edges.extend(ls.runs[0].segs.iter().map(|&p| path_edge(p)));
-                path_nodes.extend_from_slice(&ls.runs[0].nodes);
+                for run in &ls.runs {
+                    path_edges.extend(run.segs.iter().map(|&p| path_edge(p)));
+                    path_nodes.extend_from_slice(&run.nodes);
+                }
             }
         };
         for &l in rebuilt {

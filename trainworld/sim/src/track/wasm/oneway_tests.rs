@@ -140,6 +140,23 @@ fn deleting_the_track_a_return_run_uses_breaks_the_line() {
     assert!(a.w.net.line_broken[l as usize], "its way back is gone");
 }
 
+/// T-3945: a platform only a line's way back passes (C, round the one-way ring) goes with the line
+/// when the line changes. Left behind, it kept the old run's stop indices, and the next holds pass
+/// panicked once the line had fewer stops (a street tram's stop on each side of the road).
+#[test]
+fn a_platform_only_the_way_back_uses_goes_with_the_line() {
+    let (mut a, n, e) = triangle();
+    let l = line(&mut a.w, &[n[0], n[1]], [8.0, 4.0, 2.0]);
+    assert_eq!(a.set_edge_oneway(e[0], 1), 0, "{}", a.issues());
+    let ls = &a.w.svc.lines[l as usize];
+    assert!(!ls.runs[0].nodes.contains(&n[2]) && ls.runs[1].nodes.contains(&n[2]), "only the way back passes C");
+    assert!(a.w.svc.cap.res.iter().any(|r| r.kind == ResKind::Platform && r.node == n[2]));
+    assert_eq!(a.remove_line(l), 0, "{}", a.issues());
+    let mut g = crate::track::service::Service::default();
+    g.update_all(&a.w.net);
+    assert_eq!(a.w.svc.cap.canonical(), g.cap.canonical(), "nothing of the line is left at C");
+}
+
 #[test]
 fn one_way_single_track_has_double_tracks_capacity_per_direction() {
     let (mut a, n, e) = triangle();
