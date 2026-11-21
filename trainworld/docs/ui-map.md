@@ -449,7 +449,8 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
 ## Bus lines
 
 A bus line (T-1464) is drawn by its own pass under rail track: 0.45 of a rail line's width in its
-colour on a casing (white in light, dark in the dark theme), a planned one as rail blueprints are.
+colour on a casing (white in light, dark in the dark theme), a planned one as rail blueprints are; a BRT line
+(T-3907) 1.4 times as wide along its whole route (`BRT_WIDTH`), except in the Traffic view, where width is riders.
 In the Traffic view a running bus or ferry line is drawn as wide as a rail line with as many riders,
 stretch by stretch between the stops demand counts (a ferry's ports), on the rail lines' scale
 (`demandLayers.ts` `busWidths`, T-2274).

@@ -949,7 +949,7 @@ fn build_bus(net: &Network, l: u32, r: &super::bus::BusRoute) -> LineSvc {
     let fwd_s: Vec<f64> = plan.stops.iter().map(|s| s.s).collect();
     let fwd_dw: Vec<f64> = plan.stops.iter().map(|s| if s.station.is_some() { dwell } else { 0.0 }).collect();
     let len = plan.len;
-    let pace = super::bus::Pace::along(net, &r.points, &plan.cum, &r.kinds, len);
+    let pace = super::bus::Pace::along(net, &r.points, &plan.cum, &r.kinds, len).brt(r.brt);
     let rev_s: Vec<f64> = fwd_s.iter().rev().map(|s| len - s).collect();
     let rev_dw: Vec<f64> = fwd_dw.iter().rev().copied().collect();
     let rev_street: Vec<f64> = plan.street.iter().rev().map(|s| len - s).collect();

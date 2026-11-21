@@ -12,7 +12,7 @@
 import { computed } from "@preact/signals";
 import { demandByDay, type DemandView } from "./demand";
 import { stationZone } from "./listScope";
-import { baseTrips, lineGeo, liveMoney, moneyState, moneyTerms, moneyWorld, scalesOf, type MoneyTerms } from "./money";
+import { baseTrips, busUpkeepDay, lineGeo, liveMoney, moneyState, moneyTerms, moneyWorld, scalesOf, type MoneyTerms } from "./money";
 import { placeAt, zonesLoaded } from "./zones";
 import { zoneCountry } from "./cities";
 import { runFactorOf } from "./income";
@@ -185,7 +185,9 @@ export const upkeepShares = computed<Shares>(() => {
   for (const s of w.save.stations) if (s.built) add(out, stationZone(s) ?? "", s.port ? (m.upkeepPort ?? 0) * m.economy : stationUpkeepOf(m, s));
   for (const l of w.save.lines) {
     if (!w.lineStats[l.id]?.bus?.built || w.lineStats[l.id]?.bus?.ferry) continue; // T-2194: a ferry route has no upkeep
-    for (const [z, km] of busKmByRegion(w, l.id)) add(out, z, km * (m.upkeepBusKm ?? 0) * m.economy);
+    // T-3907: a BRT route's upkeep spread over its road as an average a km
+    const b = w.lineStats[l.id]!.bus!, perKm = b.roadM > 0 ? busUpkeepDay(m, b) / (b.roadM / 1000) : 0;
+    for (const [z, km] of busKmByRegion(w, l.id)) add(out, z, km * perKm * m.economy);
   }
   const next = norm(out);
   if (!sameShares(next, lastUpkeep)) lastUpkeep = next;
@@ -204,10 +206,14 @@ export function chargeShares(before: WorldView | null, after: WorldView, line?: 
     if (!a || !b) continue;
     add(cost, placeAt((a.lng + b.lng) / 2, (a.lat + b.lat) / 2) ?? "", e.cost);
   }
-  const perKm = (moneyState.peek()?.busRouteKm ?? 0) * 1e6;
+  const ms = moneyState.peek(), perKm = (ms?.busRouteKm ?? 0) * 1e6, brtKm = (ms?.brtRouteKm ?? 0) * 1e6;
   for (const l of after.save.lines) {
-    if (!after.lineStats[l.id]?.bus?.built || before?.lineStats[l.id]?.bus?.built || after.lineStats[l.id]?.bus?.ferry) continue;
-    for (const [z, km] of busKmByRegion(after, l.id)) add(cost, z, km * perKm);
+    const now = after.lineStats[l.id]?.bus, was = before?.lineStats[l.id]?.bus;
+    if (!now?.built || now.ferry) continue;
+    // T-3907: a constructed line switched to BRT pays its lanes in town, spread over its road
+    const town = now.roadM > 0 ? Math.min(1, now.townM / now.roadM) : 0;
+    const price = (was?.built ? 0 : perKm) + (now.brt && !(was?.built && was.brt) ? brtKm * town : 0);
+    if (price > 0) for (const [z, km] of busKmByRegion(after, l.id)) add(cost, z, km * price);
   }
   if (!cost.size) {
     const built = new Set(before?.save.stations.filter((s) => s.built).map((s) => s.id) ?? []);

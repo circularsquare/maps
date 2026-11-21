@@ -2321,13 +2321,17 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   it. Leaving to a spacing keeps the stops in `BusRoute::hand_kept` for the session (not saved); choosing hand again gives them back (T-2939). The Save keeps them (`LBH1`).
 - **Run** (T-2904, `streets.rs`, `bus::Pace`): a hop between two stops takes the car's time over its road
   at the bus's moving speed, plus 28 s for the stop (`BUS_STOP_S`: 20 standing, 8 speeding up and slowing
-  down). The moving speed is 85% of the car's (`BUS_SHARE`, 90% until T-3856), never under 30 km/h (`BUS_LANE_KMH`, its own
-  lane). The car's is demand's: over the hop, the first and last 2 km of road (at most half each) on local
+  down). The moving speed is 85% of the car's (`BUS_SHARE`, 90% until T-3856), never under 25 km/h (`BUS_LANE_KMH`, its own
+  lane; 30 until T-3907). A **BRT** line's (T-3907, `BusRoute::brt`, the bus panel's BRT box) is never under 35 km/h,
+  the plain floor plus 10 (`BRT_LANE_BONUS_KMH`), along its whole route. The car's is demand's: over the hop, the first and last 2 km of road (at most half each) on local
   streets, the next 8 km each end (at most half the rest) on main roads, any middle on open highway at 110;
   local streets 44 km/h in open country falling to 16.5 where homes and jobs are dense, main roads 88
   falling the same way (half way at 5,000 a km² in the 2 km zone, demand-mode.md). Each 100 m of road takes
   the density where it is; a stretch on a trunk road (`K_TRUNK`, below) counts the car at 88 at the least
-  (`CAR_TRUNK_KMH`), however dense the place and however short the hop. A line on automatic stops counts
+  (`CAR_TRUNK_KMH`), however dense the place and however short the hop, but lifts the bus to no more than 1.4
+  times the line's own street speed there (`BUS_TRUNK_MAX_X`, Anita 11-21: "25 35 35 49"; `streets::bus_fast_kmh`):
+  35 km/h for a plain bus in a dense centre, 49 for a BRT one, 52 on open country's streets; never under the same
+  road without the trunk (open country's main roads keep 75). A line on automatic stops counts
   its whole road as local streets, with one stop cost every 400 m: a line spaced at 400 m runs the same.
   The street speeds come from the packs (below); a route in a zone with none runs as open country. The
   line's dwell stands at train stations on top of the hop's time, the line's turnaround at the ends (120 s
@@ -2351,7 +2355,13 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   downloads whole for demand).
 - **Money**: US$0.1M a road-km (`BUS_ROUTE_COST_PER_KM`, a token since T-3856, was US$1M), paid on Construct with US$0.6M a bus, a fleet of its own with spares
   shared between bus lines; running US$6 a bus-km and upkeep US$30 a road-km a day (real figures,
-  `ECONOMY` times in the game). Removing or redrawing a constructed route is final and refunds
+  `ECONOMY` times in the game). BRT is paid and upkept only over its road **in town** (`streets::brt_in_town`: where a plain
+  bus moves under BRT's floor, the car's local streets under about 41 km/h; trunk roads there too; `bus::Pace::town_m`
+  at the pace's 100 m steps, none where no street grid reaches); out of town a BRT route costs what a plain one does
+  (Anita, 11-21). In town it adds US$5M a road-km (`BRT_COST_PER_KM`; real BRT US$5-20M a km, the low end while there
+  are no corridors or BRT stations), its own Construct row on a planned line, paid at once when switched on for a
+  constructed one; off gives nothing back and an undo or redo moves no money; and its upkeep there is street tram
+  track's, US$210 a road-km a day in place of the US$30 (`UPKEEP_BRT_KM`), in the line's and the network's upkeep. Removing or redrawing a constructed route is final and refunds
   nothing. A new bus line starts at a bus every 8, 15 and 30 minutes by level (Anita, 2026-11-09; the bus default for new lines instead once set, T-3703), 30 s dwell at
   train stations and 120 s turnaround (`NEW_LINE` in app/src/game/newLine.ts, the one place for what a new
   line of each mode starts with). A copy is planned.
@@ -2377,7 +2387,8 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   (T-2885) lists the lines with a stop spacing of their own, a trailing `LBH1` block (T-2891) those with stops
   placed by hand and the stops; without them, stops place themselves. A trailing `LOW1` block (T-2981, save
   level 11) lists the lines whose loop runs the other way from their mode's default (a train line one way, a
-  bus or ferry line both ways); a save without it loads every bus and ferry loop one way.
+  bus or ferry line both ways); a save without it loads every bus and ferry loop one way. A trailing `LBR1` block
+  (T-3907, save level 34) lists the bus lines on BRT; without it none is.
 
 ### 6.8 Ferry routes
 

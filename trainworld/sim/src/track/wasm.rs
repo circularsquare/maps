@@ -313,9 +313,14 @@ fn upkept_port(n: &Network, i: usize) -> bool {
 fn port_upkeep() -> f64 {
     UPKEEP_PORT * ECONOMY / 1e6
 }
-/// A constructed bus route's upkeep a game day, US$M; None for a planned one (T-1464).
+/// A constructed bus route's upkeep a game day, US$M, a BRT one's lanes included (T-3907); None for a
+/// planned one (T-1464).
 fn bus_upkeep(n: &Network, l: u32) -> Option<f64> {
-    n.line_bus.get(l as usize)?.as_ref().filter(|r| r.built && n.line_ok(l)).map(|_| n.bus_road_m(l) / 1000.0 * UPKEEP_BUS_KM * ECONOMY / 1e6)
+    n.line_bus.get(l as usize)?.as_ref().filter(|r| r.built && n.line_ok(l)).map(|_| {
+        // T-3907: a BRT route's road in town at street tram track's rate
+        let (road, town) = (n.bus_road_m(l), n.brt_town_m(l));
+        ((road - town) * UPKEEP_BUS_KM + town * UPKEEP_BRT_KM) / 1000.0 * ECONOMY / 1e6
+    })
 }
 fn station_upkeep(n: &Network, i: usize) -> f64 {
     let share = if n.one_platform(i as u32) { UPKEEP_ONE_PLATFORM_SHARE } else { 1.0 };

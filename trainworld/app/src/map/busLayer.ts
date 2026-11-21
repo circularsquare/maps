@@ -51,6 +51,8 @@ export const BUS_RING_ZOOM = 13;
 export const BUS_END_ZOOM = 11;
 /** A bus line is this share of a rail line's width, its casing this share of a rail line's. */
 const WIDTH_SHARE = 0.45;
+/** T-3907: a BRT line's route is drawn this much wider than a plain bus line's (outside the Traffic view, where width is riders) */
+const BRT_WIDTH = 1.4;
 const CASING_SHARE = 0.6;
 /** Ground metres each side of the route that its riders walk from (demand's corridor, sim `BUS_REACH_M`). */
 export const CORRIDOR_M = 600;
@@ -113,6 +115,8 @@ interface BusSource {
   transfers: number[];
   /** T-2194: a ferry line, and each port's landing and berth (lng, lat, lng, lat) */
   ferry: boolean;
+  /** T-3907: on BRT, drawn `BRT_WIDTH` wider */
+  brt: boolean;
   spurs: number[];
   /** the stops riders are counted between, in run 0's order (lng, lat): a ferry's berths, a bus's demand stops */
   marks: number[];
@@ -537,7 +541,7 @@ export class BusLayer {
         const marks = b.ferry ? b.ferry.ports.flatMap((p) => p.berth) : b.stops.flatMap((s) => [s.lng, s.lat]);
         const st = w.lineStats[l.id], n = marks.length / 2;
         const runs = st.status === "running" && Math.max(l.tph.high, l.tph.medium, l.tph.low) > 0 && st.stopS.length === 2 && st.stopS.every((s) => s.length === n);
-        next.push({ id: l.num, colour: l.colour, built: b.built, route: b.routeLL, street: b.streetLL, stops, stopIds, transfers, ferry: !!b.ferry, spurs, marks, stopS: runs ? st.stopS : null, oneWay: !!st.loop && st.oneWay, ways: st.oneWayAt ?? {} });
+        next.push({ id: l.num, colour: l.colour, built: b.built, route: b.routeLL, street: b.streetLL, stops, stopIds, transfers, ferry: !!b.ferry, brt: !!b.brt, spurs, marks, stopS: runs ? st.stopS : null, oneWay: !!st.loop && st.oneWay, ways: st.oneWayAt ?? {} });
       }
       // T-2992: a plain stop within demand's merge of another line's stop at a train station
       const links = busStopLinks(w.save.lines.flatMap((l) => { const b = w.lineStats[l.id]?.bus; return b && !b.ferry ? [{ line: l.num, stops: b.stops }] : []; }));
@@ -554,7 +558,7 @@ export class BusLayer {
     const sameLinks = this.linkSrc.length === nextLinks.length && this.linkSrc.every((x, i) => sameNums(x.at, nextLinks[i].at) && sameNums(x.stops, nextLinks[i].stops) && x.bp === nextLinks[i].bp);
     if (sameLinks && was.length === next.length && was.every((x, i) => {
       const y = next[i];
-      return x.id === y.id && x.colour === y.colour && x.built === y.built && x.oneWay === y.oneWay && sameNums(x.route, y.route) && sameNums(x.street, y.street) && sameNums(x.stops, y.stops) && sameNums(x.transfers, y.transfers) && sameNums(x.spurs, y.spurs) && sameNums(x.marks, y.marks) && sameS(x.stopS, y.stopS);
+      return x.id === y.id && x.colour === y.colour && x.built === y.built && x.brt === y.brt && x.oneWay === y.oneWay && sameNums(x.route, y.route) && sameNums(x.street, y.street) && sameNums(x.stops, y.stops) && sameNums(x.transfers, y.transfers) && sameNums(x.spurs, y.spurs) && sameNums(x.marks, y.marks) && sameS(x.stopS, y.stopS);
     })) return false;
     this.lines = next;
     this.linkSrc = nextLinks;
@@ -986,11 +990,17 @@ export class BusLayer {
   private widthsFor: Built | null = null;
   private wBuf: WebGLBuffer | null = null;
 
-  /** Per route segment the Traffic view's width share (1 outside it). */
+  /** Per route segment the Traffic view's width share (1 outside it, `BRT_WIDTH` on a BRT line). */
   private segWidths(b: Built): Float32Array {
     const out = new Float32Array(b.count).fill(1);
     const t = this.traffic;
-    if (!t) return out;
+    if (!t) {
+      for (const l of this.lines) {
+        const r = l.brt && b.range.get(l.id);
+        if (r) out.fill(BRT_WIDTH, r[0], r[0] + r[1]);
+      }
+      return out;
+    }
     for (const [line, ws] of t) {
       const r = b.range.get(line);
       const stops = r && this.stopsAlong(b, line);

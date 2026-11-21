@@ -141,6 +141,9 @@ impl TrackApi {
             // T-3892: a Small boat's price US$M and running cost per boat-km US$, then a Large one's
             // (indices 18 and 19 are Medium's)
             SMALL_BOAT_PRICE, SMALL_RUN_COST_BOAT_KM, LARGE_BOAT_PRICE, LARGE_RUN_COST_BOAT_KM,
+            // T-3907: BRT's price per road-km US$M, its upkeep a day per road-km in place of a bus route's US$, and
+            // its buses' least moving speed km/h
+            BRT_COST_PER_KM, UPKEEP_BRT_KM, crate::track::streets::lane_kmh(true),
         ]
     }
     /// Running cost of the running lines per hour at a demand level, US$M: trains an hour in each
@@ -197,7 +200,8 @@ impl TrackApi {
         let count = upkept.len() as f64;
         let stations: f64 = upkept.iter().map(|&i| station_upkeep(n, i)).sum();
         let bus_km: f64 = n.bus_lines().into_iter().filter_map(|l| bus_upkeep(n, l).map(|_| n.bus_road_m(l) / 1000.0)).sum();
-        let buses = bus_km * UPKEEP_BUS_KM * ECONOMY / 1e6;
+        // T-3907: a BRT route at its own rate
+        let buses: f64 = n.bus_lines().into_iter().filter_map(|l| bus_upkeep(n, l)).sum();
         let port_count = (0..n.node_alive.len()).filter(|&i| upkept_port(n, i)).count() as f64;
         let ports = port_count * port_upkeep();
         vec![track + stations + buses + ports, track, stations, km, count, buses, bus_km, ports, port_count]

@@ -134,6 +134,8 @@ export type EditOp =
   | { op: "busSpacing"; line: number; spacing: number }
   /** T-2891: the player places a bus line's stops, from none between its ends; `busSpacing` leaves it */
   | { op: "busHand"; line: number }
+  /** T-3907: a bus line on BRT or off it; switching on a constructed line is paid at once */
+  | { op: "busBrt"; line: number; on: boolean }
   /** T-2891: a stop on a by-hand bus line put where the route is nearest (x, y), or (`on` false) the stop there taken out */
   | { op: "busHandStop"; line: number; x: number; y: number; on: boolean }
   /** T-2194: a planned ferry line over its ports in route order (a port's node, or a new one added
@@ -498,6 +500,11 @@ export interface MoneyState {
   runCostSmallBoatKm: number;
   largeBoatPrice: number;
   runCostLargeBoatKm: number;
+  /** T-3907: BRT's price a road-km US$M, its upkeep a road-km a day in place of a bus route's (real US$), and its
+   * buses' least moving speed, km/h */
+  brtRouteKm: number;
+  upkeepBrtKm: number;
+  brtKmh: number;
   /** T-2926: tram cars (20 m sections) owned and needed, and a car's price US$M */
   fleetTram: number;
   tramsNeeded: number;
@@ -755,6 +762,11 @@ export interface ClockBus {
   spacing: number;
   /** T-2891: the player places the stops */
   hand: boolean;
+  /** T-3907: bus lanes along the whole route (BRT) */
+  brt: boolean;
+  /** T-3907: road metres in town for BRT (where a plain bus moves under BRT's floor), on BRT or not: what its
+   * lanes are paid and upkept over */
+  townM: number;
   /** T-2891: while `hand`, the stations the route can stop at, a stop or not */
   reach: { node: number; x: number; y: number; lng: number; lat: number }[];
   /** `route` and `street` as longitude, latitude pairs, flat */

@@ -217,6 +217,17 @@ pub const BUS_PRICE: f64 = 0.6;
 pub const RUN_COST_BUS_KM: f64 = 6.0;
 /// Upkeep a day per road-km of constructed route, real US$ (US$3k a game day at `ECONOMY`).
 pub const UPKEEP_BUS_KM: f64 = 30.0;
+/// T-3907: a BRT line's floor over a plain bus's (`streets::BUS_LANE_KMH`), km/h: Anita, "10km/h faster than bus
+/// whatever it is", so it follows the plain floor when that moves.
+pub const BRT_LANE_BONUS_KMH: f64 = 10.0;
+/// T-3907: switching a bus line to BRT, US$M per road-km of its route: real BRT runs about US$5-20M a km, the low
+/// end while the game has no corridors or stations for it.
+pub const BRT_COST_PER_KM: f64 = 5.0;
+/// T-3907: a BRT route's upkeep a day per road-km in place of `UPKEEP_BUS_KM`, real US$: street tram track's at
+/// ground (US$21k a game day at `ECONOMY`), as Anita asked, since bus lanes wear the road faster than rails wear.
+pub const UPKEEP_BRT_KM: f64 = UPKEEP_GROUND_KM * STREET_TRAM_UPKEEP;
+/// Street tram track's upkeep over double track's (its `TrackSpec::upkeep`).
+pub const STREET_TRAM_UPKEEP: f64 = 0.6;
 /// A bus's riders at crush: a third of a train car (T-2919; demand's `BUS_CARS`), 53 at the rated load.
 pub const BUS_CRUSH: f64 = 80.0;
 
@@ -367,7 +378,7 @@ pub static TRACK_SPECS: [TrackSpec; TRACK_KINDS] = [
         terrain_mult: TRAM_TERRAIN,
         water_mult: 0.5,
         price_scale: 1.0,
-        upkeep: 0.6,
+        upkeep: STREET_TRAM_UPKEEP,
         road_crossings: false,
         ramps_over: false,
         section_s: 60.0,

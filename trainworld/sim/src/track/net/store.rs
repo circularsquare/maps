@@ -549,9 +549,25 @@ impl Network {
     pub(super) fn bus_cost(&self, built: bool) -> f64 {
         (0..self.line_count() as u32)
             .filter(|&l| self.line_bus.get(l as usize).and_then(|b| b.as_ref()).is_some_and(|r| self.line_ok(l) && (!built || r.built)))
-            .map(|l| self.bus_road_m(l) / 1000.0 * BUS_ROUTE_COST_PER_KM)
+            .map(|l| self.bus_road_m(l) / 1000.0 * BUS_ROUTE_COST_PER_KM + self.brt_town_m(l) / 1000.0 * BRT_COST_PER_KM)
             .sum()
     }
+    /// T-3907: a bus line's road metres in town for BRT (`bus::Pace::town_m`), on BRT or not (0 for any other line).
+    pub fn bus_town_m(&self, l: u32) -> f64 {
+        match self.line_bus.get(l as usize).and_then(|b| b.as_ref()) {
+            Some(r) if self.line_ok(l) => super::bus::town_m(self, &r.points, &r.kinds),
+            _ => 0.0,
+        }
+    }
+    /// T-3907: the road metres a BRT line pays its lanes over: `bus_town_m` on BRT, else 0.
+    pub fn brt_town_m(&self, l: u32) -> f64 {
+        if self.is_brt(l) { self.bus_town_m(l) } else { 0.0 }
+    }
+    /// Whether a bus line runs on BRT (T-3907).
+    pub fn is_brt(&self, l: u32) -> bool {
+        self.line_bus.get(l as usize).and_then(|b| b.as_ref()).is_some_and(|r| r.brt)
+    }
+
     pub fn edge_pieces(&self, e: u32) -> &[Piece] {
         self.pieces.get(self.edge_pieces[e as usize])
     }

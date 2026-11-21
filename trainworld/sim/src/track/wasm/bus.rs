@@ -41,9 +41,10 @@ impl TrackApi {
         if !bus::route_ok(&self.w.net, &pts, &kinds) {
             return self.refuse(Issue::LinePath { line: id });
         }
-        let (built, spacing, hand, kept) = (r.built, r.spacing, r.hand.take(), std::mem::take(&mut r.hand_kept));
+        let (built, spacing, brt, hand, kept) = (r.built, r.spacing, r.brt, r.hand.take(), std::mem::take(&mut r.hand_kept));
         *r = BusRoute::new(pts, kinds, built);
         r.spacing = spacing;
+        r.brt = brt;
         // T-2891: stops the new route still passes go onto it; the rest are gone with the old road
         let net = &self.w.net;
         let poly = bus::Poly::new(net, &r.points, &r.kinds);
@@ -69,6 +70,26 @@ impl TrackApi {
             r.hand_kept = h;
         }
         self.run(Op::Line { id, data: Some(d) })
+    }
+    /// T-3907: put a bus line on BRT or take it off, one undoable edit. On a constructed line switching it on is
+    /// paid at once (the rise in built value, `BRT_COST_PER_KM` a road-km); off gives nothing back, nor does an
+    /// undo. On a planned line it is in the blueprint, paid on Construct.
+    pub fn set_bus_brt(&mut self, id: u32, on: bool) -> u32 {
+        let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
+        let Some(r) = d.bus.as_mut() else { return self.refuse(Issue::LinePath { line: id }) };
+        if r.brt == on {
+            return 0;
+        }
+        r.brt = on;
+        self.run(Op::Line { id, data: Some(d) })
+    }
+    /// Whether a bus line is on BRT (T-3907).
+    pub fn bus_brt(&self, line: u32) -> bool {
+        self.w.net.is_brt(line)
+    }
+    /// T-3907: a bus line's road metres in town for BRT, what its lanes would be paid over, on BRT or not.
+    pub fn bus_town_m(&self, line: u32) -> f64 {
+        self.w.net.bus_town_m(line)
     }
     /// A bus line's stop spacing, m (0: its stops place themselves or are placed by hand, or any other line).
     pub fn bus_spacing(&self, line: u32) -> f64 {
@@ -205,7 +226,9 @@ impl TrackApi {
         let road = if pts.len() >= 2 { poly.road_len() } else { 0.0 };
         let rule = net.line_bus.get(line as usize).and_then(|b| b.as_ref()).map_or(bus::StopRule::Auto, |r| r.rule());
         let plan = bus::plan_by(net, line, &pts, &kinds, false, rule);
-        let mut out = vec![road, road / 1000.0 * BUS_ROUTE_COST_PER_KM, (ok && plan.stops.len() >= 2) as u8 as f64, plan.stops.len() as f64];
+        // T-3907: a BRT line's route pays its lanes in town too
+        let town = if net.is_brt(line) { bus::town_m(net, &pts, &kinds) } else { 0.0 };
+        let mut out = vec![road, road / 1000.0 * BUS_ROUTE_COST_PER_KM + town / 1000.0 * BRT_COST_PER_KM, (ok && plan.stops.len() >= 2) as u8 as f64, plan.stops.len() as f64];
         for s in &plan.stops {
             out.extend([s.x, s.y, s.kind as f64]);
         }
@@ -215,7 +238,7 @@ impl TrackApi {
             out.extend([x, y]);
         }
         // then the stretches at one speed (`Pace::speed_runs`): count, then start m, end m, km/h, 1 on a trunk road
-        let runs = if pts.len() >= 2 { bus::Pace::along(net, &pts, &poly.road, &kinds, road).speed_runs(road) } else { vec![] };
+        let runs = if pts.len() >= 2 { bus::Pace::along(net, &pts, &poly.road, &kinds, road).brt(net.is_brt(line)).speed_runs(road) } else { vec![] };
         out.push(runs.len() as f64);
         for (a, b, kmh, trunk) in runs {
             out.extend([a, b, kmh, trunk as u8 as f64]);

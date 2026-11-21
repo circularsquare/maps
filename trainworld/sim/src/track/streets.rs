@@ -34,7 +34,19 @@ pub const BUS_SHARE: f64 = 0.85;
 /// Seconds each stop costs a bus: 20 standing, 8 speeding up and slowing down.
 pub const BUS_STOP_S: f64 = 28.0;
 /// The least a bus's moving speed falls to, km/h: its own lane, so the car's traffic does not hold it.
-pub const BUS_LANE_KMH: f64 = 30.0;
+pub const BUS_LANE_KMH: f64 = 25.0;
+
+/// The least a bus line's moving speed falls to, km/h: a BRT line's (T-3907) is the plain floor plus
+/// `params::BRT_LANE_BONUS_KMH`.
+pub fn lane_kmh(brt: bool) -> f64 {
+    if brt { BUS_LANE_KMH + super::params::BRT_LANE_BONUS_KMH } else { BUS_LANE_KMH }
+}
+/// T-3907: whether a place where the car's local streets run at `street_kmh` is in town for BRT: a plain bus there
+/// moves under BRT's floor, so the lanes make it faster. BRT's price and upkeep count only the road there (Anita,
+/// 11-21: "can we make brt free / same as normal bus cost for portions that are out of town").
+pub fn brt_in_town(street_kmh: f64) -> bool {
+    BUS_SHARE * street_kmh < lane_kmh(true)
+}
 /// The car on a trunk road, whatever the density and however short the bus's hop, km/h.
 pub const CAR_TRUNK_KMH: f64 = CAR_FAR_KMH;
 
@@ -52,7 +64,30 @@ pub fn car_main_kmh(street_kmh: f64) -> f64 {
 
 /// A bus's moving speed where the car runs at `car_kmh`.
 pub fn bus_kmh(car_kmh: f64) -> f64 {
-    (BUS_SHARE * car_kmh).max(BUS_LANE_KMH)
+    bus_kmh_at(car_kmh, BUS_LANE_KMH)
+}
+
+/// A bus's moving speed where the car runs at `car_kmh`, on a line whose floor is `lane` (`lane_kmh`).
+pub fn bus_kmh_at(car_kmh: f64, lane: f64) -> f64 {
+    (BUS_SHARE * car_kmh).max(lane)
+}
+
+/// The most a trunk road or motorway lifts a bus's moving speed to, over the same line's on the local streets at
+/// the same place (Anita, 11-21: trunk roads through city centres "75km/hing them is definitely concerning"; "lower
+/// it to like 150%"; then "ok sure we can do 25 35 35 49": plain and BRT on the street, then on a trunk road).
+pub const BUS_TRUNK_MAX_X: f64 = 1.4;
+
+/// A bus's moving speed on a trunk road on a line whose floor is `lane`: `bus_fast_kmh` at `BUS_TRUNK_MAX_X`.
+pub fn bus_trunk_kmh(road_kmh: f64, street_kmh: f64, lane: f64) -> f64 {
+    bus_fast_kmh(road_kmh, street_kmh, lane, BUS_TRUNK_MAX_X)
+}
+
+/// A bus's moving speed on a trunk road where the road's car runs at `road_kmh` and the car's local streets at
+/// `street_kmh`, on a line whose floor is `lane`: its share of the road's car, taken as at least `CAR_TRUNK_KMH`,
+/// but no more than `max_x` times the line's own street speed there (a dense centre at the 25 floor: 35 plain, 49 BRT;
+/// open country 52), and never under the same road's speed without the trunk (open country's main roads keep 75).
+pub fn bus_fast_kmh(road_kmh: f64, street_kmh: f64, lane: f64, max_x: f64) -> f64 {
+    (BUS_SHARE * road_kmh.max(CAR_TRUNK_KMH)).min(max_x * bus_kmh_at(street_kmh, lane)).max(bus_kmh_at(road_kmh, lane))
 }
 
 /// Quarter km/h in a byte (16.5 is 66, 44 is 176); 0 is no zone.

@@ -105,7 +105,7 @@ fn a_spaced_trip_takes_each_hops_time_and_stands_inside_it() {
 
 /// A route with the car's local streets at `car` km/h all the way, of `km` km.
 fn flat(car: f64, km: f64) -> Pace {
-    Pace { step: 100.0, car: vec![car; (km * 10.0).ceil() as usize], trunk: vec![] }
+    Pace { step: 100.0, car: vec![car; (km * 10.0).ceil() as usize], trunk: vec![], lane: 0.0 }
 }
 
 fn hop_kmh(p: &Pace, m: f64) -> f64 {
@@ -118,11 +118,14 @@ fn a_hop_is_the_cars_time_at_its_share_plus_the_stop() {
     let dense = flat(16.5, 30.0);
     let mid = flat(car_street_kmh(5000.0), 30.0);
     let open = Pace::default();
-    // the dense street's lane and mid density's are the same 30 km/h; open country its car's 44 times the share
-    for (m, want) in [(400.0, 18.95), (800.0, 23.23), (1000.0, 24.32), (2000.0, 26.87)] {
-        assert!((hop_kmh(&dense, m) - want).abs() < 0.01, "{m}: {}", hop_kmh(&dense, m));
+    // the dense street at the lane's floor, mid density at its share of the car or the floor; open country its car's
+    // 44 times the share (T-3907: a 25 floor, 16.8 km/h over 400 m)
+    let at = |kmh: f64, m: f64| m / (m / (kmh / 3.6) + 28.0) * 3.6;
+    for m in [400.0, 800.0, 1000.0, 2000.0] {
+        assert!((hop_kmh(&dense, m) - at(super::super::streets::BUS_LANE_KMH, m)).abs() < 1e-9, "{m}: {}", hop_kmh(&dense, m));
     }
-    assert!((hop_kmh(&mid, 400.0) - 18.95).abs() < 0.01);
+    assert!((at(25.0, 400.0) - 16.82).abs() < 0.01);
+    assert!((hop_kmh(&mid, 400.0) - at(super::super::streets::bus_kmh(car_street_kmh(5000.0)), 400.0)).abs() < 1e-9);
     // m/s on open country's local streets, main roads and highway
     let (local, main, open_hw) = (44.0 * BUS_SHARE / 3.6, 88.0 * BUS_SHARE / 3.6, 110.0 * BUS_SHARE / 3.6);
     let want = 400.0 / (400.0 / local + 28.0) * 3.6;
@@ -157,10 +160,10 @@ fn spacing_rises_smoothly_and_400_m_matches_automatic_stops() {
 fn a_trunk_road_runs_at_highway_speed_even_on_a_short_hop() {
     let mut p = flat(16.5, 2.0);
     p.trunk = vec![true; p.car.len()];
-    // 400 m at the bus's share of 88 km/h and the stop
-    let want = 400.0 / (400.0 / (88.0 * super::super::streets::BUS_SHARE / 3.6) + 28.0) * 3.6;
+    // T-3907: in a dense centre 400 m at `BUS_TRUNK_MAX_X` times the bus's street floor (under the share of 88) and the stop
+    let want = 400.0 / (400.0 / (super::super::streets::BUS_TRUNK_MAX_X * super::super::streets::BUS_LANE_KMH / 3.6) + 28.0) * 3.6;
     assert!((hop_kmh(&p, 400.0) - want).abs() < 1e-6, "{}", hop_kmh(&p, 400.0));
-    assert!(hop_kmh(&p, 400.0) > hop_kmh(&flat(16.5, 2.0), 400.0) + 10.0);
+    assert!(hop_kmh(&p, 400.0) > hop_kmh(&flat(16.5, 2.0), 400.0) + 3.0);
     // automatic stops too
     assert!((p.auto_time(0.0, 400.0) - p.hop_time(0.0, 400.0)).abs() < 1e-9);
     // a route's kinds mark the stretches: the first 1 km local, the second on a trunk road
@@ -221,10 +224,10 @@ fn simplify_keeps_the_shape_within_the_tolerance() {
 #[test]
 fn a_hop_takes_the_time_of_the_streets_it_crosses() {
     // 100 m steps: the car at 100 km/h for the first 300 m, 40 for the next 200, then 100 again; the bus at its share
-    let pace = Pace { step: 100.0, car: vec![100.0, 100.0, 100.0, 40.0, 40.0, 100.0, 100.0, 100.0, 100.0, 100.0], trunk: vec![] };
+    let pace = Pace { step: 100.0, car: vec![100.0, 100.0, 100.0, 40.0, 40.0, 100.0, 100.0, 100.0, 100.0, 100.0], trunk: vec![], lane: 0.0 };
     let (fast, slow) = (100.0 * super::super::streets::BUS_SHARE / 3.6, 40.0 * super::super::streets::BUS_SHARE / 3.6);
     assert!(slow * 3.6 > 30.0, "the slow stretch is above the bus lane's floor");
-    let t = |p: &Pace, a: f64, b: f64| p.seconds(a, b, street_bus_kmh);
+    let t = |p: &Pace, a: f64, b: f64| p.seconds(a, b, street_bus_kmh_at);
     let all = 800.0 / fast + 200.0 / slow;
     assert!((t(&pace, 0.0, 1000.0) - all).abs() < 1e-9);
     // inside one step, across two
@@ -281,4 +284,43 @@ fn a_route_through_dense_streets_runs_slower() {
     assert!(pace.auto_time(0.0, len) > Pace::default().auto_time(0.0, len));
     // where no grid covers, open country
     assert_eq!(net.car_kmh_at(30_000.0, 0.0), CAR_TOWN_KMH);
+}
+
+/// T-3907: a trunk road lifts a bus to at most `BUS_TRUNK_MAX_X` times its line's street speed at the place (35 in a dense
+/// centre, 52 on open country's streets), never under the road's speed without it; a BRT line takes the same cap and
+/// never less than its floor.
+#[test]
+fn a_trunk_road_is_capped_at_its_share_over_the_street_speed_and_brt_keeps_its_floor() {
+    use super::super::streets::{bus_kmh, lane_kmh, BUS_LANE_KMH, BUS_SHARE, BUS_TRUNK_MAX_X};
+    let trunk = |car: f64| {
+        let mut p = flat(car, 30.0);
+        p.trunk = vec![true; p.car.len()];
+        p
+    };
+    // the moving speed over 2 km of local street on a trunk road, no stop
+    let moving = |p: &Pace| 2000.0 / p.seconds(0.0, 2000.0, street_bus_kmh_at) * 3.6;
+    let (dense, open) = (trunk(16.5), trunk(44.0));
+    assert!((moving(&dense) - BUS_TRUNK_MAX_X * BUS_LANE_KMH).abs() < 1e-9, "{}", moving(&dense));
+    assert!((moving(&open) - BUS_TRUNK_MAX_X * bus_kmh(44.0)).abs() < 1e-9 && moving(&open) < 88.0 * BUS_SHARE, "{}", moving(&open));
+    // a long hop on a dense trunk road: its main roads are capped too, so the whole 20 km runs at the cap
+    assert!((20_000.0 / (dense.hop_time(0.0, 20_000.0) - 28.0) * 3.6 - BUS_TRUNK_MAX_X * BUS_LANE_KMH).abs() < 1e-9);
+    // open country's main roads are no slower for the trunk: 2 km of streets each end at 52, 16 km at the share of 88
+    let want = 20_000.0 / (4000.0 / (BUS_TRUNK_MAX_X * bus_kmh(44.0) / 3.6) + 16_000.0 / (88.0 * BUS_SHARE / 3.6) + 28.0) * 3.6;
+    assert!((hop_kmh(&open, 20_000.0) - want).abs() < 1e-9 && hop_kmh(&open, 20_000.0) > hop_kmh(&flat(44.0, 30.0), 20_000.0), "{want}");
+    // off the trunk road nothing changes
+    assert!((moving(&flat(16.5, 30.0)) - BUS_LANE_KMH).abs() < 1e-9);
+    // BRT: the dense street at its floor, the dense trunk road at the plain cap above it
+    assert_eq!(lane_kmh(true), BUS_LANE_KMH + crate::track::params::BRT_LANE_BONUS_KMH);
+    assert!((moving(&flat(16.5, 30.0).brt(true)) - lane_kmh(true)).abs() < 1e-9);
+    // the BRT line's own street speed (40) times the share: 60
+    assert!((moving(&dense.clone().brt(true)) - BUS_TRUNK_MAX_X * lane_kmh(true)).abs() < 1e-9);
+    // open country streets (37.4) are over the floor: out of town, BRT changes nothing there
+    assert!((moving(&flat(44.0, 30.0).brt(true)) - bus_kmh(44.0).max(lane_kmh(true))).abs() < 1e-9);
+    assert_eq!(flat(44.0, 30.0).town_m(3000.0), 0.0);
+    assert_eq!(flat(16.5, 30.0).town_m(3000.0), 3000.0);
+    assert_eq!(Pace::default().town_m(3000.0), 0.0);
+    assert!((moving(&flat(100.0, 30.0).brt(true)) - 100.0 * BUS_SHARE).abs() < 1e-9);
+    // and both ways
+    assert!((moving(&flat(16.5, 30.0).brt(true).reversed()) - lane_kmh(true)).abs() < 1e-9);
+    assert_eq!(Pace::default().brt(true).auto_time(0.0, 1000.0), Pace::default().auto_time(0.0, 1000.0));
 }

@@ -88,14 +88,21 @@ export interface Income {
   lines: Map<string, LineMoney>;
 }
 
+/** T-3907: a bus route's upkeep a day, real US$ (times the economy in the game): a BRT one's road in town at its own
+ * rate. */
+export const busUpkeepDay = (t: { upkeepBusKm?: number; upkeepBrtKm?: number }, b: { roadM: number; brt?: boolean; townM?: number }) => {
+  const town = b.brt ? Math.min(b.roadM, b.townM ?? 0) : 0;
+  return ((b.roadM - town) * (t.upkeepBusKm ?? 0) + town * (t.upkeepBrtKm ?? 0)) / 1000;
+};
+
 /** What the money, points and region figures read of `moneyState`: the same object while these are
  * the same, so a state or an hour's money that leaves them alone redoes no sums (T-1209). */
-export type MoneyTerms = Pick<MoneyState, "fares" | "economy" | "upkeepTrackKm" | "upkeepViaductKm" | "upkeepCutKm" | "upkeepBoredKm" | "upkeepStation" | "upkeepStationUnder" | "upkeepOnePlatform" | "upkeepSingle" | "upkeepHsr" | "upkeepBusKm" | "upkeepPort">;
+export type MoneyTerms = Pick<MoneyState, "fares" | "economy" | "upkeepTrackKm" | "upkeepViaductKm" | "upkeepCutKm" | "upkeepBoredKm" | "upkeepStation" | "upkeepStationUnder" | "upkeepOnePlatform" | "upkeepSingle" | "upkeepHsr" | "upkeepBusKm" | "upkeepBrtKm" | "upkeepPort">;
 let termsKey = "", terms: MoneyTerms | null = null;
 export const moneyTerms = computed<MoneyTerms | null>(() => {
   const m = moneyState.value;
   if (!m) return (termsKey = "", terms = null);
-  const t: MoneyTerms = { fares: m.fares, economy: m.economy, upkeepTrackKm: m.upkeepTrackKm, upkeepViaductKm: m.upkeepViaductKm, upkeepCutKm: m.upkeepCutKm, upkeepBoredKm: m.upkeepBoredKm, upkeepStation: m.upkeepStation, upkeepStationUnder: m.upkeepStationUnder, upkeepOnePlatform: m.upkeepOnePlatform, upkeepSingle: m.upkeepSingle, upkeepHsr: m.upkeepHsr, upkeepBusKm: m.upkeepBusKm, upkeepPort: m.upkeepPort };
+  const t: MoneyTerms = { fares: m.fares, economy: m.economy, upkeepTrackKm: m.upkeepTrackKm, upkeepViaductKm: m.upkeepViaductKm, upkeepCutKm: m.upkeepCutKm, upkeepBoredKm: m.upkeepBoredKm, upkeepStation: m.upkeepStation, upkeepStationUnder: m.upkeepStationUnder, upkeepOnePlatform: m.upkeepOnePlatform, upkeepSingle: m.upkeepSingle, upkeepHsr: m.upkeepHsr, upkeepBusKm: m.upkeepBusKm, upkeepBrtKm: m.upkeepBrtKm, upkeepPort: m.upkeepPort };
   const key = JSON.stringify(t);
   if (key !== termsKey || !terms) { termsKey = key; terms = t; }
   return terms;
@@ -128,10 +135,10 @@ function sameShape(a: WorldView, b: WorldView): boolean {
   return true;
 }
 /** T-1464: a bus line's stops in the same places, built or not, the same road length; T-3892: a ferry line's boat
- * size too (its fare multiple). */
+ * size too (its fare multiple); T-3907: on BRT or not (its upkeep). */
 function sameBus(a: LineStats["bus"], b: LineStats["bus"]): boolean {
   if (!a || !b) return a === b;
-  if (a.built !== b.built || a.roadM !== b.roadM || a.stops.length !== b.stops.length || a.ferry?.boat !== b.ferry?.boat) return false;
+  if (a.built !== b.built || a.roadM !== b.roadM || a.stops.length !== b.stops.length || a.ferry?.boat !== b.ferry?.boat || a.brt !== b.brt || a.townM !== b.townM) return false;
   return a.stops.every((s, i) => s.id === b.stops[i].id && s.lng === b.stops[i].lng && s.lat === b.stops[i].lat);
 }
 let shaped: WorldView | null = null;

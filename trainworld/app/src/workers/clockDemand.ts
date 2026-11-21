@@ -424,7 +424,7 @@ export function busRow(a: TrackApi, id: number, nodes: ClockNode[]): ClockBus {
       reach.push({ node: rs[k], x: rs[k + 1], y: rs[k + 2], lng, lat });
     }
   }
-  return { built: r[0] === 1, route, kinds, roadM: a.bus_road_m(id), stops, street, spacing: a.bus_spacing(id), hand, reach, routeLL, streetLL: ll(street) };
+  return { built: r[0] === 1, route, kinds, roadM: a.bus_road_m(id), stops, street, spacing: a.bus_spacing(id), hand, brt: a.bus_brt(id), townM: a.bus_town_m(id), reach, routeLL, streetLL: ll(street) };
 }
 /** a bus route's longitude, latitude pairs by line, until the route changes */
 const busRouteLL = new Map<number, { route: number[]; ll: number[] }>();
@@ -461,7 +461,7 @@ function ferryRow(a: TrackApi, id: number): ClockBus {
     const berth: [number, number] = [routeLL[2 * i], routeLL[2 * i + 1]];
     ports.push({ node, landing: s && s.id === node ? [s.lng, s.lat] : berth, berth });
   });
-  return { built: r[0] === 1, route, kinds, roadM: a.ferry_m(id), stops, street: [], spacing: 0, hand: false, reach: [], routeLL, streetLL: [], ferry: { speeds, ports, boat: a.ferry_boat(id) as Boat } };
+  return { built: r[0] === 1, route, kinds, roadM: a.ferry_m(id), stops, street: [], spacing: 0, hand: false, brt: false, townM: 0, reach: [], routeLL, streetLL: [], ferry: { speeds, ports, boat: a.ferry_boat(id) as Boat } };
 }
 
 /** T-2194: a ferry line's ports as the network's nodes, new ones added first as blueprint ports; null

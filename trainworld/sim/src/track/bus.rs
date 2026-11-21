@@ -16,7 +16,7 @@
 
 use super::net::Network;
 use super::profile::{Phase, Profile};
-use super::streets::{bus_kmh, car_main_kmh, BUS_STOP_S, CAR_END_M, CAR_LOCAL_M, CAR_OPEN_KMH, CAR_TOWN_KMH, CAR_TRUNK_KMH};
+use super::streets::{brt_in_town, bus_kmh_at, bus_trunk_kmh, car_main_kmh, lane_kmh, BUS_LANE_KMH, BUS_STOP_S, CAR_END_M, CAR_LOCAL_M, CAR_OPEN_KMH, CAR_TOWN_KMH};
 
 /// Road metres of a route that share one speed (`Pace`).
 const PACE_STEP_M: f64 = 100.0;
@@ -88,13 +88,16 @@ pub struct BusRoute {
     /// T-2939: the hand-placed stops of the last time this line was by hand, given back when it is chosen
     /// again. Not saved: it lasts as long as the session.
     pub hand_kept: Vec<[f64; 2]>,
+    /// T-3907: bus lanes along the whole route (BRT): its buses never run under `streets::lane_kmh(true)`, and
+    /// the route costs `BRT_COST_PER_KM` more a road-km and its upkeep is `UPKEEP_BRT_KM` a road-km.
+    pub brt: bool,
 }
 
 impl BusRoute {
     /// A route with `kinds` cut or padded (with plain corners) to its points.
     pub fn new(points: Vec<[f64; 2]>, mut kinds: Vec<u8>, built: bool) -> BusRoute {
         kinds.resize(points.len(), K_CORNER);
-        BusRoute { points, kinds, built, spacing: 0, hand: None, hand_kept: vec![] }
+        BusRoute { points, kinds, built, spacing: 0, hand: None, hand_kept: vec![], brt: false }
     }
     pub fn rule(&self) -> StopRule<'_> {
         match &self.hand {
@@ -665,6 +668,16 @@ pub fn plan_by(net: &Network, l: u32, pts: &[[f64; 2]], kinds: &[u8], built_only
     Plan { stops, street, len, cum: poly.road.clone(), reach: kept.iter().map(|k| k.1).collect() }
 }
 
+/// T-3907: a route's road metres in town for BRT (`Pace::town_m`).
+pub fn town_m(net: &Network, pts: &[[f64; 2]], kinds: &[u8]) -> f64 {
+    if pts.len() < 2 {
+        return 0.0;
+    }
+    let poly = Poly::new(net, pts, kinds);
+    let len = poly.road_len();
+    Pace::along(net, pts, &poly.road, kinds, len).town_m(len)
+}
+
 /// What a route's road is like along it: per `step` road metres the car's local street speed there,
 /// km/h, and whether it is a trunk road. Empty: open country and no trunk all the way.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -673,6 +686,8 @@ pub struct Pace {
     car: Vec<f64>,
     /// empty when the route has no trunk road
     trunk: Vec<bool>,
+    /// T-3907: the line's floor, km/h (`streets::lane_kmh`); 0 for a plain line's, `BUS_LANE_KMH`
+    lane: f64,
 }
 
 impl Pace {
@@ -698,7 +713,22 @@ impl Pace {
         } else {
             vec![]
         };
-        Pace { step, car, trunk }
+        Pace { step, car, trunk, lane: 0.0 }
+    }
+    /// T-3907: the same road for a line on BRT (`brt`): its floor `streets::lane_kmh(true)`, on the streets and
+    /// as the base of its trunk roads' cap.
+    pub fn brt(mut self, brt: bool) -> Pace {
+        self.lane = if brt { lane_kmh(true) } else { 0.0 };
+        self
+    }
+    /// The line's floor, km/h: `lane`, where 0 means a plain line's `BUS_LANE_KMH`.
+    fn floor(&self) -> f64 {
+        if self.lane > 0.0 { self.lane } else { BUS_LANE_KMH }
+    }
+    /// T-3907: the road metres of a route `len` long that are in town for BRT (`streets::brt_in_town`), trunk roads
+    /// included: none where no street grid reaches (open country).
+    pub fn town_m(&self, len: f64) -> f64 {
+        (self.car.iter().filter(|&&c| brt_in_town(c)).count() as f64 * self.step).min(len.max(0.0))
     }
     /// The route cut into stretches that run at one moving speed on the streets (a bus's own, whole km/h):
     /// start and end road metres, km/h, and whether it is a trunk road. `len`: the route's road metres.
@@ -707,12 +737,12 @@ impl Pace {
             return vec![];
         }
         if self.car.is_empty() {
-            return vec![(0.0, len, street_bus_kmh(CAR_TOWN_KMH, false).round(), false)];
+            return vec![(0.0, len, street_bus_kmh_at(CAR_TOWN_KMH, false, self.floor()).round(), false)];
         }
         let mut out: Vec<(f64, f64, f64, bool)> = vec![];
         for (i, &c) in self.car.iter().enumerate() {
             let trunk = self.trunk.get(i).copied().unwrap_or(false);
-            let kmh = street_bus_kmh(c, trunk).round();
+            let kmh = street_bus_kmh_at(c, trunk, self.floor()).round();
             let (a, b) = (i as f64 * self.step, (i + 1) as f64 * self.step);
             match out.last_mut() {
                 Some(l) if l.2 == kmh && l.3 == trunk => l.1 = b,
@@ -723,14 +753,17 @@ impl Pace {
     }
     /// The same route run from its other end.
     pub fn reversed(&self) -> Pace {
-        Pace { step: self.step, car: self.car.iter().rev().copied().collect(), trunk: self.trunk.iter().rev().copied().collect() }
+        Pace { step: self.step, car: self.car.iter().rev().copied().collect(), trunk: self.trunk.iter().rev().copied().collect(), lane: self.lane }
     }
-    /// Seconds to run from road metre `a` to `b` (a before b) at `kmh(car's local street speed, trunk)`.
-    fn seconds(&self, a: f64, b: f64, kmh: impl Fn(f64, bool) -> f64) -> f64 {
+    /// Seconds to run from road metre `a` to `b` (a before b) at `kmh(car's local street speed, trunk, the line's
+    /// floor)`.
+    fn seconds(&self, a: f64, b: f64, kmh: impl Fn(f64, bool, f64) -> f64) -> f64 {
         let d = (b - a).max(0.0);
         if d == 0.0 {
             return 0.0;
         }
+        let lane = if self.lane > 0.0 { self.lane } else { BUS_LANE_KMH };
+        let kmh = |car: f64, trunk: bool| kmh(car, trunk, lane);
         if self.car.is_empty() {
             return d * 3.6 / kmh(CAR_TOWN_KMH, false);
         }
@@ -749,7 +782,7 @@ impl Pace {
     /// Seconds for road metres `a` to `b` on automatic stops: all local streets, a stop every
     /// `STREET_STOP_M`.
     pub fn auto_time(&self, a: f64, b: f64) -> f64 {
-        self.seconds(a, b, street_bus_kmh) + BUS_STOP_S * (b - a).max(0.0) / STREET_STOP_M
+        self.seconds(a, b, street_bus_kmh_at) + BUS_STOP_S * (b - a).max(0.0) / STREET_STOP_M
     }
     /// Seconds for a hop between two stops `a` and `b` road metres along: the car's model over the
     /// hop, local streets at each end, then main roads, then open highway, plus one stop.
@@ -758,17 +791,25 @@ impl Pace {
         let local = (0.5 * d).min(CAR_LOCAL_M);
         let main = (0.5 * (d - 2.0 * local)).min(CAR_END_M);
         let (a1, a2, b2, b1) = (a + local, a + local + main, b - local - main, b - local);
-        self.seconds(a, a1, street_bus_kmh) + self.seconds(a1, a2, main_bus_kmh) + self.seconds(a2, b2, |_, _| bus_kmh(CAR_OPEN_KMH)) + self.seconds(b2, b1, main_bus_kmh) + self.seconds(b1, b, street_bus_kmh) + BUS_STOP_S
+        self.seconds(a, a1, street_bus_kmh_at) + self.seconds(a1, a2, main_bus_kmh_at) + self.seconds(a2, b2, |_, _, lane| bus_kmh_at(CAR_OPEN_KMH, lane)) + self.seconds(b2, b1, main_bus_kmh_at) + self.seconds(b1, b, street_bus_kmh_at) + BUS_STOP_S
     }
 }
 
+/// A plain bus's moving speed on local streets where the car's run at `car` (`street_bus_kmh_at` at the plain floor).
+#[cfg_attr(not(test), allow(dead_code))]
 fn street_bus_kmh(car: f64, trunk: bool) -> f64 {
-    bus_kmh(if trunk { car.max(CAR_TRUNK_KMH) } else { car })
+    street_bus_kmh_at(car, trunk, BUS_LANE_KMH)
 }
 
-fn main_bus_kmh(car: f64, trunk: bool) -> f64 {
+/// A bus's moving speed on local streets where the car's run at `car`, on a line whose floor is `lane`.
+fn street_bus_kmh_at(car: f64, trunk: bool, lane: f64) -> f64 {
+    if trunk { bus_trunk_kmh(car, car, lane) } else { bus_kmh_at(car, lane) }
+}
+
+/// And on main roads, at the same place.
+fn main_bus_kmh_at(car: f64, trunk: bool, lane: f64) -> f64 {
     let main = car_main_kmh(car);
-    bus_kmh(if trunk { main.max(CAR_TRUNK_KMH) } else { main })
+    if trunk { bus_trunk_kmh(main, car, lane) } else { bus_kmh_at(main, lane) }
 }
 
 /// A bus's trip on automatic stops at road offsets `stop_s` (ascending), standing `dwell[i]` at each

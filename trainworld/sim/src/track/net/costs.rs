@@ -89,6 +89,11 @@ impl Network {
             if self.line_bus[l as usize].as_ref().is_some_and(|r| !r.built) {
                 let m = self.bus_road_m(l);
                 add(10, 0, 0, false, 0, m, m / 1000.0 * BUS_ROUTE_COST_PER_KM);
+                // kind 16: their BRT (T-3907), road metres in town
+                let town = self.brt_town_m(l);
+                if town > 0.0 {
+                    add(16, 0, 0, false, 0, town, town / 1000.0 * BRT_COST_PER_KM);
+                }
             }
         }
         // kind 14: ferry routes still to be constructed (T-2193): ground metres, free

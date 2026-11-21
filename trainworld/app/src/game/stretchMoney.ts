@@ -24,7 +24,7 @@ import { faresOf, lineFareMul, type Fares } from "./fareCurve";
 import { lineFares } from "./fareInEffect";
 import { trainKind } from "./format";
 import { boatOf, boatRunKm } from "./boats";
-import { baseTrips, lineGeo, moneyState, moneyTerms, moneyWorld, scalesOf, type MoneyTerms } from "./money";
+import { baseTrips, busUpkeepDay, lineGeo, moneyState, moneyTerms, moneyWorld, scalesOf, type MoneyTerms } from "./money";
 import { trainsADay } from "./periods";
 import { edgeUpkeep, lineRunFactor, stationUpkeepOf } from "./regionMoney";
 import { stopsById, world } from "./world";
@@ -117,7 +117,7 @@ export function stretchMoneyOf(w: WorldView, t: MoneyTerms, dv: DemandView, shap
       busFigs.set(l.id, figs);
       const runDay = (st.bus.ferry ? boatRunKm(m, boatOf(st.bus)) : m.runCostBusKm) * E * wt * (st.oneWay ? 1 : 2) * st.km * lineRunFactor(l.num);
       // the route's upkeep is its own line's (`line_upkeep`), there while vehicles run
-      const route = st.bus.built && !st.bus.ferry && wt > 0 ? (st.bus.roadM / 1000) * (t.upkeepBusKm ?? 0) * E : 0;
+      const route = st.bus.built && !st.bus.ferry && wt > 0 ? busUpkeepDay(t, st.bus) * E : 0;
       let km = 0;
       for (const f of figs) km += f.km;
       if (km > 0) for (const f of figs) { f.running += runDay * f.km / km; f.upkeep += route * f.km / km; }

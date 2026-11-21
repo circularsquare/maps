@@ -215,6 +215,8 @@ function applyInner(op: EditOp): Applied {
       return { r: a.set_bus_route(op.line, Float64Array.from(op.route)) };
     case "busSpacing":
       return { r: a.set_bus_spacing(op.line, op.spacing) };
+    case "busBrt":
+      return { r: a.set_bus_brt(op.line, op.on) };
     case "busHand":
       return { r: a.set_bus_hand(op.line) };
     case "busHandStop":

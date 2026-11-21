@@ -421,8 +421,8 @@ fn a_bus_in_dense_streets_runs_slower_and_needs_more_buses() {
     assert!(!a.add_pack_streets(2000.0, -1000.0, -1000.0, 3, 1, &pop, &jobs, &[0, 1], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758));
     assert!(a.add_pack_streets(2000.0, -1000.0, -1000.0, 3, 1, &pop, &jobs, &[0, 1, 2], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758));
     let slow = *a.stop_times(b, 0, 0).last().unwrap();
-    // the first 3 km of ground (3.6 km of road) in the 30 km/h lane, the rest at open country's bus speed, and 18 stops
-    let want = 3600.0 / (30.0 / 3.6) + 3600.0 / (crate::track::streets::bus_kmh(44.0) / 3.6) + 18.0 * 28.0;
+    // the first 3 km of ground (3.6 km of road) in the bus lane, the rest at open country's bus speed, and 18 stops
+    let want = 3600.0 / (crate::track::streets::BUS_LANE_KMH / 3.6) + 3600.0 / (crate::track::streets::bus_kmh(44.0) / 3.6) + 18.0 * 28.0;
     assert!(slow > flat && (slow - want).abs() < 0.04 * want, "{flat} {slow} {want}");
     assert!(a.w.svc.lines[b as usize].trains[0] >= buses);
     // the way back is as long
@@ -545,4 +545,73 @@ fn an_older_saves_bus_lines_keep_three_rows() {
     assert!(c.load(&saved));
     assert_eq!(c.line_periods_own(b), 0);
     assert_eq!(c.save(), saved);
+}
+
+/// T-3907: a BRT line runs at no less than its floor along its whole route, costs `BRT_COST_PER_KM` a road-km on a
+/// constructed line (nothing back when switched off or undone), upkeeps at `UPKEEP_BRT_KM`, is kept by a save and a
+/// redraw, and a planned line's BRT is in the blueprint.
+#[test]
+fn a_brt_line_runs_at_its_floor_is_paid_for_saved_and_undone() {
+    use crate::track::streets::{bus_kmh, lane_kmh};
+    let mut a = api();
+    let b = a.new_line_id();
+    assert_eq!(a.set_bus_line(b, &[0.0, 0.0, 1.0, 6000.0, 0.0, 1.0], 480, 600, 1200, 30.0, 120.0, 0, "B".into()), 0, "{}", a.issues());
+    let road = 6000.0 * ROAD_FACTOR;
+    // the first 3.6 km of road dense, the rest open country (as `a_bus_in_dense_streets_runs_slower_and_needs_more_buses`)
+    let (pop, jobs) = ([30_000.0f32, 30_000.0, 50.0], [20_000.0f32, 20_000.0, 5.0]);
+    assert!(a.add_pack_streets(2000.0, -1000.0, -1000.0, 3, 1, &pop, &jobs, &[0, 1, 2], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758));
+    let time = |a: &TrackApi| *a.stop_times(b, 0, 0).last().unwrap();
+    let plain = time(&a);
+    let want_plain = 3600.0 / (crate::track::streets::BUS_LANE_KMH / 3.6) + 3600.0 / (bus_kmh(44.0) / 3.6) + 18.0 * 28.0;
+    assert!((plain - want_plain).abs() < 0.04 * want_plain, "{plain} {want_plain}");
+    // planned: switching on is free now and in the blueprint as its own row (kind 16)
+    let cash = a.cash();
+    assert_eq!(a.set_bus_brt(b, true), 0, "{}", a.issues());
+    assert!(a.bus_brt(b) && a.cash() == cash);
+    // in town: the dense 3.6 km of road, where a plain bus is under BRT's floor; open country's 37.4 is not
+    let town = a.bus_town_m(b);
+    assert!((town - 3600.0).abs() <= 100.0, "{town}");
+    let rows = a.w.net.blueprint_cost_items();
+    let brt_row = rows.chunks_exact(7).find(|r| r[0] == 16.0).expect("a BRT row");
+    assert!((brt_row[5] - town).abs() < 1e-6 && (brt_row[6] - town / 1000.0 * BRT_COST_PER_KM).abs() < 1e-6, "{brt_row:?}");
+    assert!((a.w.net.total_cost() - a.w.net.built_cost() - rows.chunks_exact(7).map(|r| r[6]).sum::<f64>()).abs() < 1e-8);
+    // the dense streets rise from 25 to BRT's floor; open country's 37.4 is over it and stays
+    let brt = time(&a);
+    let want = 3600.0 / (lane_kmh(true) / 3.6) + 3600.0 / (bus_kmh(44.0).max(lane_kmh(true)) / 3.6) + 18.0 * 28.0;
+    assert!((brt - want).abs() < 0.04 * want && brt < plain, "{brt} {want} {plain}");
+    // off again, constructed plain, then on: paid at once, the rise in built value
+    assert_eq!(a.set_bus_brt(b, false), 0);
+    assert_eq!(a.construct_line(b), 0, "{}", a.issues());
+    let cash = a.cash();
+    assert!((time(&a) - plain).abs() < 1e-6);
+    assert_eq!(a.set_bus_brt(b, true), 0, "{}", a.issues());
+    assert!((cash - a.cash() - town / 1000.0 * BRT_COST_PER_KM).abs() < 1e-6, "{}", cash - a.cash());
+    assert!((time(&a) - brt).abs() < 1e-6);
+    // the upkeep: street tram track's a road-km in town, a plain route's out of town
+    let up = a.upkeep();
+    assert_eq!(UPKEEP_BRT_KM, UPKEEP_GROUND_KM * TrackKind::StreetTram.spec().upkeep);
+    assert!((up[5] - ((road - town) * UPKEEP_BUS_KM + town * UPKEEP_BRT_KM) / 1000.0 * ECONOMY / 1e6).abs() < 1e-9, "{up:?}");
+    // saved and loaded (`LBR1`)
+    let saved = a.save();
+    assert!(saved.windows(4).any(|w| w == b"LBR1"));
+    assert!(a.load(&saved));
+    assert!(a.bus_brt(b) && (time(&a) - brt).abs() < 1e-6);
+    // one undo step: off, nothing back; redo: on, nothing charged again
+    let cash = a.cash();
+    assert_eq!(a.set_bus_brt(b, false), 0);
+    assert!(!a.bus_brt(b) && a.cash() == cash && (time(&a) - plain).abs() < 1e-6);
+    assert!(a.can_undo());
+    assert_eq!(a.undo(), 0, "{}", a.issues());
+    assert!(a.bus_brt(b) && a.cash() == cash && (time(&a) - brt).abs() < 1e-6);
+    assert_eq!(a.redo(), 0, "{}", a.issues());
+    assert!(!a.bus_brt(b) && a.cash() == cash);
+    assert_eq!(a.undo(), 0);
+    // a redraw keeps it
+    assert_eq!(a.set_bus_route(b, &[0.0, 0.0, 1.0, 6500.0, 0.0, 1.0]), 0, "{}", a.issues());
+    assert!(a.bus_brt(b));
+    // a save with no BRT line writes no block and loads with none
+    assert_eq!(a.set_bus_brt(b, false), 0);
+    let plain_save = a.save();
+    assert!(!plain_save.windows(4).any(|w| w == b"LBR1"));
+    assert!(a.load(&plain_save) && !a.bus_brt(b));
 }

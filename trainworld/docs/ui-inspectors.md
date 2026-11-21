@@ -678,7 +678,8 @@ schedule and counts block are the line panel's own parts (`LineTitle.tsx`, `sche
 buses: buses or a headway per demand level with the same hovers, the crowding dots, beside the heading the
 schedule panel button of a running line (its weekends and new bus lines' headways, no board or timetable chart,
 [ui-panels.md](ui-panels.md#schedule-panel), T-3703; no chart toggle), the waiting
-spinner on a level with buses while demand loads, and the average speed; no track limits (T-2919). Stops: the ends and the
+spinner on a level with buses while demand loads, a BRT box (T-3907; its hover the floor, the price a km in town with
+the route's km in town, and the upkeep a km there), and the average speed; no track limits (T-2919). Stops: the ends and the
 train stations met, the street stops between folded into one row each, in the line panel's order (north or
 west end on top) with its stop times (the time from the stop on top after each name, "12m30s").
 The counts block, headingless as the line panel's: riders by purpose, Changing to trains (riders a day changing between this bus and any rail

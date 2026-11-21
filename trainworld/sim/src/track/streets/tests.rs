@@ -4,8 +4,31 @@ use super::*;
 fn a_bus_runs_at_its_share_of_the_car_or_its_lane() {
     assert!((bus_kmh(car_street_kmh(0.0)) - 44.0 * BUS_SHARE).abs() < 1e-9);
     assert_eq!(bus_kmh(car_street_kmh(1e9)), BUS_LANE_KMH);
-    assert_eq!(bus_kmh(car_street_kmh(5000.0)), BUS_LANE_KMH);
+    assert_eq!(bus_kmh(car_street_kmh(5000.0)), (BUS_SHARE * car_street_kmh(5000.0)).max(BUS_LANE_KMH));
     assert!((bus_kmh(100.0) - 100.0 * BUS_SHARE).abs() < 1e-9);
+}
+
+/// T-3907: the trunk road cap is the line's own street speed times the share, so the floor and the share are the
+/// two numbers to set: at a 25 floor and 1.4x a dense place gives 25 / 35 on the street and 35 / 49 on a trunk road
+/// for a plain bus / a BRT one; open country's main roads keep their speed.
+#[test]
+fn a_trunk_road_lifts_each_line_to_its_share_over_its_own_street_speed() {
+    let floor = 25.0;
+    let brt = floor + crate::track::params::BRT_LANE_BONUS_KMH;
+    let car = car_street_kmh(1e9);
+    let road = car_main_kmh(car);
+    assert!((bus_kmh_at(car, floor) - 25.0).abs() < 1e-9 && (bus_kmh_at(car, brt) - 35.0).abs() < 1e-9);
+    assert!((bus_fast_kmh(road, car, floor, 1.4) - 35.0).abs() < 1e-9, "{}", bus_fast_kmh(road, car, floor, 1.4));
+    assert!((bus_fast_kmh(road, car, brt, 1.4) - 49.0).abs() < 1e-9, "{}", bus_fast_kmh(road, car, brt, 1.4));
+    assert!((bus_fast_kmh(car, car, brt, 1.4) - 49.0).abs() < 1e-9);
+    // today's figures: 30 and 1.5
+    assert!((bus_trunk_kmh(road, car, lane_kmh(false)) - BUS_TRUNK_MAX_X * BUS_LANE_KMH).abs() < 1e-9);
+    // open country: the trunk's street at 1.5 x 37.4, its main road at the share of 88 as without the trunk
+    let open = car_street_kmh(0.0);
+    assert!((bus_fast_kmh(open, open, floor, 1.5) - 1.5 * BUS_SHARE * open).abs() < 1e-9);
+    assert!((bus_fast_kmh(car_main_kmh(open), open, floor, 1.5) - BUS_SHARE * CAR_FAR_KMH).abs() < 1e-9);
+    // never over the share of the trunk's car
+    assert!((bus_fast_kmh(open, open, floor, 3.0) - BUS_SHARE * CAR_TRUNK_KMH).abs() < 1e-9);
 }
 
 #[test]

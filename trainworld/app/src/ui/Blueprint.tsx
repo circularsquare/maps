@@ -9,7 +9,7 @@ import { distUnit, distance, levelLabel, levelName, millions, money, moneyCash, 
 import { edgeUpkeep, stationUpkeepOf } from "../game/regionMoney";
 import { bpPicked, clearBpPicked, dropPicked, doubleUpPicked, doubleUpPieces, enableAll, limitPieces, oneWayPicked, oneWayPieces, reversePicked, kindPicked, levelPicked, offTotals, pickedState, removePicked, switchPicked, tracksPicked } from "../game/blueprintPick";
 import { canRebuild, type RebuildKind, rebuildKind, rebuildLevel, rebuildPicked, rebuildQuote, rebuildTip, rebuildTracks } from "../game/rebuild";
-import { liveMoney, moneyState } from "../game/money";
+import { busUpkeepDay, liveMoney, moneyState } from "../game/money";
 import { tool } from "../game/ui";
 import type { BlueprintItem } from "../game/types";
 import { constructBlueprints } from "../game/lineActions";
@@ -40,6 +40,8 @@ const TRAM_ROW = 4;
 const STREET_TRAM_ROW = 5;
 /** the quote row of tram cars (sim `blueprint_cost_items`; 14 is a ferry route) */
 const TRAM_CARS = 15;
+/** T-3907: and of bus routes' BRT, road metres */
+const BRT = 16;
 
 const NOUN = ["track", "station", "junction", "flyover", "flatCrossing", "car", "ground", "roadCrossing", "stationUpgrade", "passage", "route", "bus", "port", "boat", "ferryRoute", "tram car"];
 /** "3 stations", "2 new cars": a counted noun by its id, the plural chosen in the message */
@@ -49,7 +51,7 @@ const levelWords = (r: BlueprintItem) => `${lowerWord(levelName(r.level))} (${le
 /** T-1839: a quote row as it reads in the list, "3.7 km viaduct (+2)"; the price's factors are in `rowTip`. */
 function rowName(r: BlueprintItem) {
   if (r.kind === 5) return counted("newCar", r.quantity);
-  if (r.kind === 10) return distance(r.quantity);
+  if (r.kind === 10 || r.kind === BRT) return distance(r.quantity);
   if (r.kind === 11) return counted("newBus", r.quantity);
   // T-2193: ports, boats and a ferry route's metres (free)
   if (r.kind === 12) return counted("port", r.quantity);
@@ -70,7 +72,7 @@ const BASE_M_PER_KM = 75;
 const MULT: Record<Level, number> = { 3: 2.0, 2: 1.5, 1: 1.0, 0: 0.5, [-1]: 1.0, [-2]: 1.6, [-3]: 2.0 };
 const STATION_M: Record<Level, number> = { 3: 70, 2: 55, 1: 40, 0: 25, [-1]: 75, [-2]: 100, [-3]: 125 };
 const STATION_FIXED_M = 50;
-const SINGLE_STATION = 0.7, SINGLE_TRACK = 0.6, HSR_TRACK = 1.5, WATER = 2, BUS_ROUTE_M_PER_KM = 1;
+const SINGLE_STATION = 0.7, SINGLE_TRACK = 0.6, HSR_TRACK = 1.5, WATER = 2;
 /** the level a flying junction's flyover sits at (sim `junction_cost`) */
 const awayLevel = (l: Level): Level => (l === 3 ? 2 : l === -3 ? -2 : l >= 0 ? l + 1 : l - 1) as Level;
 const num = (v: number) => tNumber(v, { maximumFractionDigits: 2 });
@@ -126,8 +128,10 @@ function rowTip(r: BlueprintItem) {
     wet();
     const product = BASE_M_PER_KM * n * km * MULT[l] * water;
     if (Math.abs(r.cost / 1e6 / product - 1) > 0.005) factors.push([t("blueprint.crossoverTrack"), "", r.cost / 1e6 / product]);
-  } else if (r.kind === 10) {
-    base = t("blueprint.baseCostDist", { price: mil(perDistance(BUS_ROUTE_M_PER_KM)), unit: distUnit() });
+  } else if (r.kind === 10 || r.kind === BRT) {
+    // the sim's price a road-km (T-3856 made a bus route's a token)
+    const m = moneyState.peek();
+    base = t("blueprint.baseCostDist", { price: mil(perDistance((r.kind === BRT ? m?.brtRouteKm : m?.busRouteKm) ?? 0)), unit: distUnit() });
     factors.push([t("blueprint.length"), withUnit(n / 1000 / perDistance(1)), 1]);
   } else if (r.kind === 14) {
     base = t("blueprint.ferryFree");
@@ -153,7 +157,7 @@ export function BlueprintControls() {
     for (const e of w.edges) if (!e.built && !e.off) upkeep += edgeUpkeep({ ...e, built: true }, m);
     // T-2194: a port's upkeep is its own, a fifth of a station's
     for (const s of w.save.stations) if (!s.built && !s.off) upkeep += s.port ? m.upkeepPort * m.economy : stationUpkeepOf(m, s);
-    for (const st of Object.values(w.lineStats)) if (st.bus && !st.bus.built && !st.bus.ferry) upkeep += (st.bus.roadM / 1000) * m.upkeepBusKm * m.economy;
+    for (const st of Object.values(w.lineStats)) if (st.bus && !st.bus.built && !st.bus.ferry) upkeep += busUpkeepDay(m, st.bus) * m.economy;
   }
   return (
     <div class="blueprint-controls">
@@ -388,7 +392,7 @@ export function BlueprintBar() {
 function KindRows({ items, only }: { items: BlueprintItem[]; only?: Set<number> }) {
   return (
     <>
-      {[...KINDS.map((kind, k): [MessageKey, number] => [kind, k]), ["blueprint.kindTramCars", TRAM_CARS] as [MessageKey, number]].map(([kind, k]) => {
+      {[...KINDS.map((kind, k): [MessageKey, number] => [kind, k]), ["blueprint.kindTramCars", TRAM_CARS] as [MessageKey, number], ["blueprint.kindBrt", BRT] as [MessageKey, number]].map(([kind, k]) => {
         const rows = items.filter((r) => r.kind === k && (!only || only.has(k)));
         if (!rows.length) return null;
         return (
@@ -410,7 +414,7 @@ function KindRows({ items, only }: { items: BlueprintItem[]; only?: Set<number> 
 }
 
 /** the quote's kinds that are no piece of track or station: trains, bus routes and buses, ports, boats, ferry routes */
-const NOT_TRACK = new Set([5, 10, 11, 12, 13, 14, TRAM_CARS]);
+const NOT_TRACK = new Set([5, 10, 11, 12, 13, 14, TRAM_CARS, BRT]);
 
 const levelsText = (r: { levelMin: Level; levelMax: Level }) =>
   r.levelMin === r.levelMax ? `${levelName(r.levelMin)} (${levelLabel(r.levelMin)})` : t("blueprint.levels", { from: levelLabel(r.levelMin), to: levelLabel(r.levelMax) });
