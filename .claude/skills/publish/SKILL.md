@@ -50,6 +50,10 @@ changelog (T-3424):
 4. Translate the new `updates.vXYZ*` keys.
 5. deploy.py. Its rclone can saturate her Wi-Fi upload and slow her game.
 
+## Wiki pages for the website (T-3447)
+
+After each game publish: `venv\Scripts\python.exe trainworld/tools/wiki_site.py` rebuilds the player wiki into the website clone (`projects/trainsworld/wiki/`, the wiki as of the newest release's changelog commit), then tell her it waits in ..\website for her push. Notes: notes/T-3447.md.
+
 ## Open-source copy (T-2913, notes/T-2913.md)
 
 Synced at each game publish, under the same yes: `venv\Scripts\python.exe trainworld/tools/opensource/export.py`,
