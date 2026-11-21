@@ -6,7 +6,7 @@ A train goes as fast as the slowest thing in front of it. That is its own top sp
 
 **Two kinds of train.** An ordinary train tops out at 160 km/h. A high-speed train reaches 320 km/h, and only on track built for it. On other track it goes as fast as an ordinary one. You pick the kind per line.
 
-**Trams.** A line that stops at a tram stop runs trams. Trams run on tram track and on regular and high-speed track too, never faster than 75 km/h. A line with no tram stop runs trains, and trains can't run on tram track.
+**Trams.** A line that stops at a tram stop runs trams. Trams run on tram track and on regular and high-speed track too, never faster than 75 km/h. They brake more gently than trains, at 0.8 m/s², and wait at a stop as long as a train does, so a tram loses a little more time at each stop than a train going as fast. A line with no tram stop runs trains, and trains can't run on tram track.
 
 **Speeding up and stopping.** Trains speed up in three bands. They pull hardest at low speed and ease off as they go faster, like a real electric train. Only a high-speed train reaches the last band. Braking is gentler than pulling away: 0.9 m/s². A train waits at each stop for about 30 seconds.
 
@@ -21,4 +21,4 @@ So stations close together mean slow lines, because the train spends its time sp
 The line panel's hover on a stop's time says what limited the speed on that stretch. How long a trip takes feeds into the cost of a ride in [perceived minutes](perceived-minutes.md).
 
 Exact rule: `docs/track-and-service.md` "Placing stations, curve speed and levels" for bends and caps, "Trains and lines" for the two kinds and how they speed up. Stop times and turnaround at the ends of a line are in "Scheduling".
-In the code: **main** `sim/src/track/params.rs` `A_LAT`, also `MIN_RADIUS`, `V_TOP`, `V_HSR`, `ACCEL_LOW`, `ACCEL_HIGH`, `ACCEL_TOP`, `BRAKE`, `DEFAULT_DWELL_S`, `design_radius`, `RAMP_KMH_PER_M`, `RAMP_FLOOR`, `ramp_for` `sim/src/track/geom.rs` `limits`, `ramp_speed` `sim/src/track/profile.rs` `BANDS`
+In the code: **main** `sim/src/track/params.rs` `A_LAT`, also `MIN_RADIUS`, `V_TOP`, `V_HSR`, `ACCEL_LOW`, `ACCEL_HIGH`, `ACCEL_TOP`, `BRAKE`, `TRAM_BRAKE`, `DEFAULT_DWELL_S`, `design_radius`, `RAMP_KMH_PER_M`, `RAMP_FLOOR`, `ramp_for` `sim/src/track/geom.rs` `limits`, `ramp_speed` `sim/src/track/profile.rs` `BANDS`

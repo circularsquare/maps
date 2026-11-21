@@ -154,20 +154,20 @@ fn accel(out: &mut Sink, mut t: f64, x0: f64, x1: f64, u2: f64) -> f64 {
     }
 }
 
-/// Brake from x0 to x1, ending at speed² w2.
-fn brake(out: &mut Sink, t: f64, x0: f64, x1: f64, w2: f64) -> f64 {
+/// Brake at `br` m/s² from x0 to x1, ending at speed² w2.
+fn brake(out: &mut Sink, t: f64, x0: f64, x1: f64, w2: f64, br: f64) -> f64 {
     if x1 <= x0 + 1e-12 {
         return t;
     }
-    let v0 = (w2 + 2.0 * BRAKE * (x1 - x0)).sqrt();
+    let v0 = (w2 + 2.0 * br * (x1 - x0)).sqrt();
     let v1 = w2.max(0.0).sqrt();
-    out.push(t, x0, v0, -BRAKE);
-    t + (v0 - v1) / BRAKE
+    out.push(t, x0, v0, -br);
+    t + (v0 - v1) / br
 }
 
 /// From standstill at the first interval's start to standstill at the last one's end, through
-/// intervals `(x0, x1, v_limit)`. Returns the end time.
-fn segment(iv: &[(f64, f64, f64)], fw: &mut Vec<f64>, bend: &mut Vec<f64>, mut t: f64, out: &mut Sink) -> f64 {
+/// intervals `(x0, x1, v_limit)`, braking at `br`. Returns the end time.
+fn segment(iv: &[(f64, f64, f64)], fw: &mut Vec<f64>, bend: &mut Vec<f64>, mut t: f64, out: &mut Sink, br: f64) -> f64 {
     let m = iv.len();
     if m == 0 {
         return t;
@@ -188,43 +188,43 @@ fn segment(iv: &[(f64, f64, f64)], fw: &mut Vec<f64>, bend: &mut Vec<f64>, mut t
         let v2 = iv[k].2 * iv[k].2;
         let w = b.min(v2);
         bend[k] = w;
-        b = (w + 2.0 * BRAKE * (iv[k].1 - iv[k].0)).min(v2);
+        b = (w + 2.0 * br * (iv[k].1 - iv[k].0)).min(v2);
     }
     for k in 0..m {
-        t = cross(out, t, iv[k], fw[k], bend[k]);
+        t = cross(out, t, iv[k], fw[k], bend[k], br);
     }
     t
 }
 
 /// Across one interval `(xa, xb, v_limit)`, entering at speed² u2 and leaving at w2 (the forward
-/// and braking envelopes there). Returns the time at its end.
-fn cross(out: &mut Sink, mut t: f64, (xa, xb, vl): (f64, f64, f64), u2: f64, w2: f64) -> f64 {
+/// and braking envelopes there), braking at `br`. Returns the time at its end.
+fn cross(out: &mut Sink, mut t: f64, (xa, xb, vl): (f64, f64, f64), u2: f64, w2: f64, br: f64) -> f64 {
     let (v2, len) = (vl * vl, xb - xa);
     let s_fv = xa + acc_dist(u2, v2);
-    let s_bv = xb - (v2 - w2) / (2.0 * BRAKE);
+    let s_bv = xb - (v2 - w2) / (2.0 * br);
     if s_fv <= s_bv {
         t = accel(out, t, xa, s_fv, u2);
         if s_bv > s_fv {
             out.push(t, s_fv, vl, 0.0);
             t += (s_bv - s_fv) / vl;
         }
-        brake(out, t, s_bv, xb, w2)
+        brake(out, t, s_bv, xb, w2, br)
     } else {
-        let b_at_xa = w2 + 2.0 * BRAKE * len;
+        let b_at_xa = w2 + 2.0 * br * len;
         let sx = if u2 >= b_at_xa {
             xa
         } else if acc_v2(u2, len) <= w2 {
             xb
         } else {
             // acc_v2(u2, d) = w2 + 2B(len - d), solved per traction band: v² = c + 2 a d there.
-            let rhs = w2 + 2.0 * BRAKE * len;
+            let rhs = w2 + 2.0 * br * len;
             let (mut k, mut end) = band(u2);
             let (mut from, mut at) = (u2, 0.0);
             let d = loop {
                 let a = BANDS[k].1;
                 let dk = (end - from) / (2.0 * a);
                 let c = from - 2.0 * a * at;
-                let d = (rhs - c) / (2.0 * (a + BRAKE));
+                let d = (rhs - c) / (2.0 * (a + br));
                 if d <= at + dk || k + 1 == BANDS.len() {
                     break d;
                 }
@@ -236,7 +236,7 @@ fn cross(out: &mut Sink, mut t: f64, (xa, xb, vl): (f64, f64, f64), u2: f64, w2:
             xa + d.clamp(0.0, len)
         };
         t = accel(out, t, xa, sx, u2);
-        brake(out, t, sx, xb, w2)
+        brake(out, t, sx, xb, w2, br)
     }
 }
 
@@ -282,13 +282,13 @@ fn intervals(sc: &mut Scratch, limits: &[[f64; 2]], a: f64, b: f64, zones: &[(f6
 }
 
 /// One hop from a stop at `a` to a stop at `b`, with slow zones and intermediate standstills
-/// `(s, stand seconds)` (sorted). Returns the arrival time.
-fn hop(sc: &mut Scratch, limits: &[[f64; 2]], a: f64, b: f64, zones: &[(f64, f64, f64)], mids: &[(f64, f64)], mut t: f64, out: &mut Sink) -> f64 {
+/// `(s, stand seconds)` (sorted), braking at `br`. Returns the arrival time.
+fn hop(sc: &mut Scratch, limits: &[[f64; 2]], a: f64, b: f64, zones: &[(f64, f64, f64)], mids: &[(f64, f64)], mut t: f64, out: &mut Sink, br: f64) -> f64 {
     let mut from = a;
     for &(s, stand) in mids {
         t = {
             intervals(sc, limits, from, s, zones);
-            segment(&sc.iv, &mut sc.fw, &mut sc.bend, t, out)
+            segment(&sc.iv, &mut sc.fw, &mut sc.bend, t, out, br)
         };
         if stand > 0.0 {
             out.push(t, s, 0.0, 0.0);
@@ -297,7 +297,7 @@ fn hop(sc: &mut Scratch, limits: &[[f64; 2]], a: f64, b: f64, zones: &[(f64, f64
         from = s;
     }
     intervals(sc, limits, from, b, zones);
-    segment(&sc.iv, &mut sc.fw, &mut sc.bend, t, out)
+    segment(&sc.iv, &mut sc.fw, &mut sc.bend, t, out, br)
 }
 
 /// How near a crawl speed's added time comes to its hold's delay, seconds.
@@ -315,6 +315,8 @@ struct Stretch {
     /// The hop's time before the stretch (earlier stretches and stands), and the stretch's own.
     pre: f64,
     total: f64,
+    /// Braking rate, m/s².
+    br: f64,
 }
 
 /// A piece of track standing in for some of a stretch's intervals in `retime`: `(xa, xb, v_limit,
@@ -332,15 +334,16 @@ struct Retime {
 
 impl Stretch {
     /// The hop from `a` to `b` with these zones and standstills between: the stretches before the
-    /// last one timed, the last one kept.
-    fn of_hop(&mut self, sc: &mut Scratch, limits: &[[f64; 2]], a: f64, b: f64, zones: &[(f64, f64, f64)], mids: &[(f64, f64)]) {
+    /// last one timed, the last one kept; braking at `br`.
+    fn of_hop(&mut self, sc: &mut Scratch, limits: &[[f64; 2]], a: f64, b: f64, zones: &[(f64, f64, f64)], mids: &[(f64, f64)], br: f64) {
         let (mut from, mut t) = (a, 0.0);
         for &(s, stand) in mids {
             intervals(sc, limits, from, s, zones);
-            t = segment(&sc.iv, &mut sc.fw, &mut sc.bend, t, &mut Sink(None)) + stand;
+            t = segment(&sc.iv, &mut sc.fw, &mut sc.bend, t, &mut Sink(None), br) + stand;
             from = s;
         }
         intervals(sc, limits, from, b, zones);
+        self.br = br;
         self.pre = t;
         self.iv.clone_from(&sc.iv);
         let m = self.iv.len();
@@ -359,11 +362,11 @@ impl Stretch {
             let (xa, xb, v) = self.iv[k];
             let w = w_next.min(v * v);
             self.bend[k] = w;
-            w_next = (w + 2.0 * BRAKE * (xb - xa)).min(v * v);
+            w_next = (w + 2.0 * br * (xb - xa)).min(v * v);
         }
         self.total = 0.0;
         for k in 0..m {
-            let d = cross(&mut Sink(None), 0.0, self.iv[k], self.fw[k], self.bend[k]);
+            let d = cross(&mut Sink(None), 0.0, self.iv[k], self.fw[k], self.bend[k], br);
             self.dt.push(d);
             self.total += d;
         }
@@ -390,7 +393,7 @@ impl Stretch {
         let mut sink = Sink(Some(buf));
         let mut t = 0.0;
         for k in k0..=k1 {
-            t = cross(&mut sink, t, self.iv[k], self.fw[k], self.bend[k]);
+            t = cross(&mut sink, t, self.iv[k], self.fw[k], self.bend[k], self.br);
         }
         (time_at(buf, z1) - time_at(buf, z0), v_max(buf, z0, z1))
     }
@@ -441,7 +444,7 @@ impl Stretch {
     /// envelope after the pieces until it meets the old one (where both reach a speed limit), the
     /// braking one before them likewise.
     fn retime(&self, rt: &mut Retime, k0: usize, k1: usize) -> f64 {
-        let m = self.iv.len();
+        let (m, br) = (self.iv.len(), self.br);
         let (pfw, pbend, nfw, nbend) = (&mut rt.pfw, &mut rt.pbend, &mut rt.nfw, &mut rt.nbend);
         pfw.clear();
         nfw.clear();
@@ -473,14 +476,14 @@ impl Stretch {
             kf += 1;
         }
         let mut b = match self.iv.get(k1 + 1) {
-            Some(&(xa, xb, v)) => (self.bend[k1 + 1] + 2.0 * BRAKE * (xb - xa)).min(v * v),
+            Some(&(xa, xb, v)) => (self.bend[k1 + 1] + 2.0 * br * (xb - xa)).min(v * v),
             None => 0.0,
         };
         pbend.resize(rt.pieces.len(), 0.0);
         for (j, &(xa, xb, v, stand)) in rt.pieces.iter().enumerate().rev() {
             let w = b.min(v * v);
             pbend[j] = w;
-            b = if stand { 0.0 } else { (w + 2.0 * BRAKE * (xb - xa)).min(v * v) };
+            b = if stand { 0.0 } else { (w + 2.0 * br * (xb - xa)).min(v * v) };
         }
         let mut kb = k0;
         while kb > 0 {
@@ -490,19 +493,19 @@ impl Stretch {
                 break;
             }
             nbend.push(w);
-            b = (w + 2.0 * BRAKE * (xb - xa)).min(v * v);
+            b = (w + 2.0 * br * (xb - xa)).min(v * v);
             kb -= 1;
         }
         let none = &mut Sink(None);
         let mut t = self.total - self.dt[kb..kf].iter().sum::<f64>();
         for k in kb..k0 {
-            t += cross(none, 0.0, self.iv[k], self.fw[k], nbend[k0 - 1 - k]);
+            t += cross(none, 0.0, self.iv[k], self.fw[k], nbend[k0 - 1 - k], br);
         }
         for (j, &(xa, xb, v, _)) in rt.pieces.iter().enumerate() {
-            t += cross(none, 0.0, (xa, xb, v), pfw[j], pbend[j]);
+            t += cross(none, 0.0, (xa, xb, v), pfw[j], pbend[j], br);
         }
         for k in k1 + 1..kf {
-            t += cross(none, 0.0, self.iv[k], nfw[k - k1 - 1], self.bend[k]);
+            t += cross(none, 0.0, self.iv[k], nfw[k - k1 - 1], self.bend[k], br);
         }
         t
     }
@@ -593,29 +596,30 @@ fn crawl_speed(mut time: impl FnMut(f64) -> f64, base: f64, delay: f64, len: f64
 #[derive(Clone, Debug, Default)]
 pub struct Hops(Vec<(Vec<Phase>, f64)>);
 
-pub fn hops(limits: &[[f64; 2]], stops: &[f64], jump: &[f64]) -> Hops {
+pub fn hops(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], br: f64) -> Hops {
     let leave = |i: usize| stops[i] + jump.get(i).copied().unwrap_or(0.0);
     Hops((0..stops.len().saturating_sub(1)).map(|i| {
         let mut out = vec![];
         let d = {
             let mut sink = Sink(Some(&mut out));
-            with_scratch(|sc| hop(sc, limits, leave(i), stops[i + 1], &[], &[], 0.0, &mut sink))
+            with_scratch(|sc| hop(sc, limits, leave(i), stops[i + 1], &[], &[], 0.0, &mut sink, br))
         };
         (out, d)
     }).collect())
 }
 
-/// The trip's profile. `limits` are speed-limit breakpoints `[s, v]` from 0 (already widened by
+/// A train's trip profile (braking at `BRAKE`). `limits` are speed-limit breakpoints `[s, v]` from 0 (already widened by
 /// half the train length); `stops` are the stop offsets in order; `jump[i]` (empty for none)
 /// moves stop i's departure on from its arrival (a reversal, T-797: the train is drawn jumping
 /// once as it stops); `dwell[i]` is the standing time at stop i (extra at the first stop delays
 /// departure; the last is ignored); `holds` are capacity delays at track points, sorted by offset.
 pub fn run(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], dwell: &[f64], holds: &[Hold]) -> Profile {
-    run_with(limits, stops, jump, dwell, holds, &Hops::default())
+    run_with(limits, stops, jump, dwell, holds, &Hops::default(), BRAKE)
 }
 
-/// `run`, with `hops` from `hops` over the same limits, stops and jumps (or none).
-pub fn run_with(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], dwell: &[f64], holds: &[Hold], hops: &Hops) -> Profile {
+/// `run`, braking at `br` (T-3921: `TRAM_BRAKE` for a tram line), with `hops` from `hops` over the
+/// same limits, stops, jumps and braking (or none).
+pub fn run_with(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], dwell: &[f64], holds: &[Hold], hops: &Hops, br: f64) -> Profile {
     let n = stops.len();
     let mut p = Profile::default();
     if n < 2 {
@@ -650,7 +654,7 @@ pub fn run_with(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], dwell: &[f64],
         }
         let (mut base, mut t_in, mut v_in, mut len) = (0.0, 0.0, 0.0f64, 0.0);
         for (j, &(i, z0, z1)) in parts.iter().enumerate() {
-            with_scratch(|sc| st[j].of_hop(sc, limits, leave(i), stops[i + 1], &hop_zones[i], &[]));
+            with_scratch(|sc| st[j].of_hop(sc, limits, leave(i), stops[i + 1], &hop_zones[i], &[], br));
             let (ti, vi) = st[j].through(z0, z1, &mut buf);
             base += st[j].time();
             t_in += ti;
@@ -706,7 +710,7 @@ pub fn run_with(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], dwell: &[f64],
         for h in &per_hop[i] {
             // every point hold lies after the stands so far (holds are sorted), so in the last stretch
             let sr = &mut st[0];
-            with_scratch(|sc| sr.of_hop(sc, limits, a, b, &zones, &mids));
+            with_scratch(|sc| sr.of_hop(sc, limits, a, b, &zones, &mids, br));
             let base = sr.time();
             let loss = sr.with_stand(&mut rt, h.s) - base;
             let k = mids.partition_point(|m| m.0 < h.s);
@@ -740,7 +744,7 @@ pub fn run_with(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], dwell: &[f64],
             }
             None => {
                 let mut sink = Sink(Some(&mut out));
-                t = with_scratch(|sc| hop(sc, limits, a, b, &zones, &mids, t, &mut sink));
+                t = with_scratch(|sc| hop(sc, limits, a, b, &zones, &mids, t, &mut sink, br));
             }
         }
         p.arr.push(t);
@@ -907,24 +911,26 @@ mod tests {
     fn stretch_retimes_match_whole_hops() {
         let raw = vec![[0.0, V_TOP], [800.0, 12.0], [1100.0, 30.0], [2600.0, 20.0], [3900.0, V_TOP]];
         let lim = widen(&raw, 6000.0, 60.0);
-        let whole = |zones: &[(f64, f64, f64)], mids: &[(f64, f64)]| with_scratch(|sc| hop(sc, &lim, 0.0, 6000.0, zones, mids, 0.0, &mut Sink(None)));
+        let whole = |zones: &[(f64, f64, f64)], mids: &[(f64, f64)], br: f64| with_scratch(|sc| hop(sc, &lim, 0.0, 6000.0, zones, mids, 0.0, &mut Sink(None), br));
         let mut rt = Retime::default();
-        for mids in [vec![], vec![(1500.0, 20.0)]] {
+        // a train's braking and a tram's (T-3921)
+        let cases = [BRAKE, TRAM_BRAKE].into_iter().flat_map(|br| [(br, vec![]), (br, vec![(1500.0, 20.0)])]);
+        for (br, mids) in cases {
             for zones in [vec![], vec![(2000.0, 2300.0, 9.0)]] {
                 let mut st = Stretch::default();
-                with_scratch(|sc| st.of_hop(sc, &lim, 0.0, 6000.0, &zones, &mids));
-                assert!((st.time() - whole(&zones, &mids)).abs() < 1e-9);
+                with_scratch(|sc| st.of_hop(sc, &lim, 0.0, 6000.0, &zones, &mids, br));
+                assert!((st.time() - whole(&zones, &mids, br)).abs() < 1e-9);
                 for x in [1700.0, 2150.0, 3000.0, 3950.0, 5990.0] {
                     let mut m = mids.clone();
                     m.push((x, 0.0));
-                    let (a, b) = (st.with_stand(&mut rt, x), whole(&zones, &m));
+                    let (a, b) = (st.with_stand(&mut rt, x), whole(&zones, &m, br));
                     assert!((a - b).abs() < 1e-9, "stand at {x}, {mids:?} {zones:?}: {a} vs {b}");
                 }
                 for (z0, z1) in [(1600.0, 1900.0), (2100.0, 2400.0), (3700.0, 4000.0), (5700.0, 5999.0), (1501.0, 5000.0)] {
                     for vc in [0.5, 5.0, 11.0, 19.0, 25.0, 45.0] {
                         let mut z = zones.clone();
                         z.push((z0, z1, vc));
-                        let (a, b) = (st.with_zone(&mut rt, z0, z1, vc), whole(&z, &mids));
+                        let (a, b) = (st.with_zone(&mut rt, z0, z1, vc), whole(&z, &mids, br));
                         assert!((a - b).abs() < 1e-9, "zone {z0}-{z1} at {vc}, {mids:?} {zones:?}: {a} vs {b}");
                     }
                 }

@@ -1446,8 +1446,21 @@ fn decode_read_at(bytes: &[u8], level: u32) -> Result<(Network, usize), String> 
     for l in manual {
         fold_manual(&mut net, l);
     }
+    bump_tram_dwell(&mut net);
     net.take_touch();
     Ok((net, bytes.len() - r.1 + unknown))
+}
+
+/// T-3921: a tram line standing the old tram default (15 s dwell, 120 s turnaround) stands the
+/// new one; players cannot set dwell, so only lines made before stand 15 s. Any other value stays.
+fn bump_tram_dwell(net: &mut Network) {
+    let now = TrackKind::Tram.spec();
+    for l in 0..net.line_count() {
+        let i = l as u32;
+        if net.line_ok(i) && net.line_bus[l].is_none() && net.line_ferry[l].is_none() && (net.line_dwell[l], net.line_turn[l]) == (15.0, now.turnaround_s) && net.line_tram(i) {
+            net.line_dwell[l] = now.dwell_s;
+        }
+    }
 }
 
 /// T-3542: an `LPD1` block (`encode`): the rows, the midday and afternoon rows, then the slots they

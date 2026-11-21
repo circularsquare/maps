@@ -390,7 +390,10 @@ Full design, numbers and sources: `notes/T-008.md`.
   edit that adds a line's first tram stop or takes its last changes its kind (`Network::fit_kind`, not on undo):
   high-speed trains go, over 4 cars become 2, and the dwell and turnaround follow where they were the old kind's
   defaults. A tram line
-  starts with a 15 s dwell, 120 s turnaround and 2 cars of 20 m (1 to 4), and uses
+  starts with a train's 30 s dwell (T-3921; a saved tram line at the old 15 s and 120 s loads at 30 s, any other
+  value stays, `save::bump_tram_dwell`), 120 s turnaround and 2 cars of 20 m (1 to 4), brakes at 0.8 m/s²
+  against a train's 0.9 (`TRAM_BRAKE`, T-3921: a tram stopping loses a little more than a train at the same speed,
+  1-2 s a stop; real trams brake harder, about 1.2-1.3 m/s² in service), and uses
   the tram fleet (`fleet_tram`, "Tram cars owned" in the Money tab, `fleetTram` in the save header), US$2M a car, running costs as
   a train's. Demand counts a tram car as 0.75 of a car (docs/demand-worldwide.md).
 - **Street tram track** (T-2927, `TrackKind::StreetTram`): tram track on streets, 0.1x at ground, 60 km/h cap, 0.6x the
@@ -856,7 +859,7 @@ lines is plain track for capacity: a branch no train uses yet does not cut the s
 - track section (a run with the same set of lines), per direction: `s = 70 s + v / 0.6 m/s²`
   (v the top speed reached on it), so at most 41 trains/h at 40 km/h, 34 at 80, 29 at 120, 25 at
   160, 16 at 320 (T-517). Tram track (both kinds) holds 60 s + v / 0.6 (41 an hour at the street
-  tram's 60 km/h), its platform dwell + 60 s (48 an hour at the 15 s dwell), its own crossings
+  tram's 60 km/h), its platform dwell + 60 s (40 an hour at the 30 s dwell), its own crossings
   and junction moves 45 s (T-3125, Anita 2026-11-10)
 - single-track section between passing points (every station but a one-track one, T-3332): run time + 240 s (`SINGLE_TRACK_MARGIN_S`, T-3112), counting both directions (a line with one train, on track no other line uses, has no train to keep the margin from and takes the run time alone; T-3201): a headway each way of
   about 10 minutes over 1 km, 12 over 2 km, 14 over 5 km, 20 over 10 km; single track that

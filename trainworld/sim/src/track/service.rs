@@ -43,6 +43,8 @@ pub struct Run {
     pub limits: Vec<[f64; 2]>,
     /// The hops between stops and ends with no holds (`run_profile`).
     pub hops: profile::Hops,
+    /// A tram line's run (`Network::line_tram`): it brakes at `TRAM_BRAKE` (T-3921).
+    pub tram: bool,
     /// No capacity delay.
     pub free: Profile,
     /// Per slot (`params::SLOTS`): track holds and extra dwell per stop from the capacity pass.
@@ -122,6 +124,11 @@ impl Run {
     /// Trains pass stop `j` without stopping (T-3332).
     pub fn passes(&self, j: usize) -> bool {
         self.pass.get(j).copied().unwrap_or(false)
+    }
+
+    /// Its trains' braking, m/s².
+    pub fn brake(&self) -> f64 {
+        if self.tram { TRAM_BRAKE } else { BRAKE }
     }
 }
 
@@ -703,7 +710,7 @@ struct Served<'a> {
 fn build_run(net: &Network, l: u32, on: &Served, rev: bool, train_len: f64, dwell: f64) -> Option<Run> {
     let path = on.path;
     let running = on.running;
-    let mut run = Run::default();
+    let mut run = Run { tram: net.line_tram(l), ..Default::default() };
     // T-3348: each run's own stop nodes, run 1's in its order
     let stops = if rev {
         let (stops, segs) = net.back_run_of(on.stops, path, net.line_ones(l))?;
@@ -814,8 +821,8 @@ fn build_run(net: &Network, l: u32, on: &Served, rev: bool, train_len: f64, dwel
     let turn = net.line_turn[l as usize] as f64;
     let dw = stand_times(&run, dwell, turn);
     run.hops = match with_ends(&run, &dw, turn) {
-        None => profile::hops(&run.limits, &run.stop_s, &run.jump),
-        Some((s, jump, ..)) => profile::hops(&run.limits, &s, &jump),
+        None => profile::hops(&run.limits, &run.stop_s, &run.jump, run.brake()),
+        Some((s, jump, ..)) => profile::hops(&run.limits, &s, &jump, run.brake()),
     };
     run.free = run_profile(&run, &dw, turn, &[]);
     Some(run)
@@ -826,9 +833,9 @@ fn build_run(net: &Network, l: u32, on: &Served, rev: bool, train_len: f64, dwel
 /// timed as the train goes by.
 fn run_profile(run: &Run, dw: &[f64], turn: f64, holds: &[Hold]) -> Profile {
     let Some((s, jump, stand, keep)) = with_ends(run, dw, turn) else {
-        return profile::run_with(&run.limits, &run.stop_s, &run.jump, dw, holds, &run.hops);
+        return profile::run_with(&run.limits, &run.stop_s, &run.jump, dw, holds, &run.hops, run.brake());
     };
-    let mut p = profile::run_with(&run.limits, &s, &jump, &stand, holds, &run.hops);
+    let mut p = profile::run_with(&run.limits, &s, &jump, &stand, holds, &run.hops, run.brake());
     let n = run.stop_s.len();
     let (mut arr, mut dep) = (vec![0.0; n], vec![0.0; n]);
     for (i, k) in keep.iter().enumerate() {

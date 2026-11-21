@@ -580,7 +580,7 @@ fn a_rail_run_rebuilds_as_tram_and_back() {
     assert!(a.line_tram(line));
     assert_eq!(a.line_stops(line), st);
     let l = line as usize;
-    assert_eq!((a.w.net.line_dwell[l], a.w.net.line_turn[l]), (15.0, 120.0));
+    assert_eq!((a.w.net.line_dwell[l], a.w.net.line_turn[l]), (DEFAULT_DWELL_S, 120.0));
     assert!(a.w.svc.lines[l].running && !a.w.net.line_broken[l]);
     assert!(a.trams_needed() > 0 && a.cars_needed() == 0 && a.fleet_tram() >= a.trams_needed());
     // and back to rail: a tram stop's 80 m is long enough for a train
@@ -648,7 +648,7 @@ fn part_of_a_run_becomes_tram_track_joined_to_the_rail() {
     assert_eq!((a.w.net.node_platform[st[0] as usize], a.w.net.node_platform[st[1] as usize]), (80, 200));
     assert!(a.line_tram(line));
     let l = line as usize;
-    assert_eq!((a.w.net.line_dwell[l], a.w.net.line_turn[l]), (15.0, 120.0));
+    assert_eq!((a.w.net.line_dwell[l], a.w.net.line_turn[l]), (DEFAULT_DWELL_S, 120.0));
     assert!(a.w.svc.lines[l].running && !a.w.net.line_broken[l]);
     assert!(a.trams_needed() > 0 && a.cars_needed() == 0);
 }
@@ -712,7 +712,7 @@ fn blueprint_switches_between_regular_high_speed_and_tram() {
     assert!(kinds(&a, TrackKind::Tram));
     assert!(st.iter().all(|&n| a.w.net.node_platform[n as usize] == 80 && !a.w.net.node_built[n as usize]));
     assert!(a.line_tram(line));
-    assert_eq!((a.w.net.line_dwell[line as usize], a.w.net.line_turn[line as usize]), (15.0, 120.0));
+    assert_eq!((a.w.net.line_dwell[line as usize], a.w.net.line_turn[line as usize]), (DEFAULT_DWELL_S, 120.0));
     assert_eq!(a.cash(), cash);
     // already tram: nothing to do
     assert_eq!(a.set_edges_kind(&edges, 3), 1);

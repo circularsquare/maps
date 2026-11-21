@@ -5,9 +5,9 @@
 // train cap. Then:
 //  - tram loop: single-track stretches of 3 km, so a shorter limiting headway than tram noloop's one of 12 km, and
 //    more trams fit (they meet at the loops);
-//  - tram loop against rail loop, and tram noloop against rail noloop: the same cap; the headways differ only by the
-//    tram's shorter dwell (15 s against 30 s), both ways at the stops each stretch takes in: at most 30 s with loops,
-//    90 s without (three stops). The Rust test trams_pass_and_turn_at_a_stop_as_trains_do has them equal outright.
+//  - tram loop against rail loop, and tram noloop against rail noloop: the same cap and dwell (30 s, T-3921); the
+//    headways differ only by the tram's gentler braking (T-3921: about 1.2 s a stop from 60 km/h), so the tram's is
+//    at most 10 s longer with loops, 20 s without. The Rust test trams_pass_and_turn_at_a_stop_as_trains_do has the exact figure.
 // With BEFORE=1 it only prints (on the old code tram loop and tram noloop come out the same).
 // Screenshot artifacts/trainworld/t3563-tram-loop.png: the tram loop stop with the line selected.
 // From the maps root (or a tree root), on a Vite of your own:   node trainworld/checks/t3563-tram-loops.mjs [dev url]
@@ -57,7 +57,7 @@ try {
       const line = tw.world.value.save.lines.find((x) => x.num === l.line);
       const mid = near(xy[1]);
       const st = tw.world.value.save.stations.find((s) => String(s.num) === String(mid) || s.id === String(mid));
-      return { num: l.line, id: line.id, stops: xy.map(near), tram: !!tw.world.value.lineStats[line.id]?.tram, one: !!st?.one, mid: st ? { id: st.id, lng: st.lng, lat: st.lat } : null };
+      return { num: l.line, id: line.id, stops: xy.map(near), tram: !!tw.world.value.lineStats[line.id]?.tram, dwell: tw.world.value.lineStats[line.id]?.dwellS, one: !!st?.one, mid: st ? { id: st.id, lng: st.lng, lat: st.lat } : null };
     };
     window.__info = async (num) => {
       const { queryClock } = await import('/src/workers/clockClient.ts');
@@ -97,9 +97,10 @@ try {
     check(tl.kind === 1 && tn.kind === 1 && rl.kind === 1 && rn.kind === 1, 'every line is limited by its single track', [tl, tn, rl, rn].map((x) => x.kind).join(', '));
     check(tl.head < tn.head - 60, 'tram loop: the trams meet at the loop, a shorter headway than with no loop', `${tl.head} s against ${tn.head} s`);
     check(tl.cap > tn.cap, 'tram loop: more trams fit than with no loop', `${tl.cap} against ${tn.cap}`);
-    // the tram's 15 s less dwell, both ways, at each stop the stretch takes in (30 s a stop, one counted with none)
-    check(tl.cap === rl.cap && rl.head - tl.head >= 0 && rl.head - tl.head <= 30, 'tram loop runs as rail loop', `cap ${tl.cap} / ${rl.cap}, headway ${tl.head} s / ${rl.head} s`);
-    check(tn.cap === rn.cap && rn.head - tn.head >= 0 && rn.head - tn.head <= 90, 'tram noloop runs as rail noloop', `cap ${tn.cap} / ${rn.cap}, headway ${tn.head} s / ${rn.head} s`);
+    // T-3921: a new tram line stands a train's 30 s; its gentler braking adds a little at each stop a stretch takes in
+    check([tl, tn, rl, rn].every((x) => x.b.dwell === 30), 'new tram and train lines both stand 30 s', [tl, tn, rl, rn].map((x) => x.b.dwell).join(', '));
+    check(tl.cap === rl.cap && tl.head - rl.head >= 0 && tl.head - rl.head <= 10, 'tram loop runs as rail loop', `cap ${tl.cap} / ${rl.cap}, headway ${tl.head} s / ${rl.head} s`);
+    check(tn.cap === rn.cap && tn.head - rn.head >= 0 && tn.head - rn.head <= 20, 'tram noloop runs as rail noloop', `cap ${tn.cap} / ${rn.cap}, headway ${tn.head} s / ${rn.head} s`);
   }
   // the tram loop stop, its line selected
   await page.evaluate(([id, s]) => { const tw = window.tw; tw.selection.value = { kind: 'line', line: id }; if (s) tw.map.jumpTo({ center: [s.lng, s.lat], zoom: 15.5 }); }, [tl.b.id, tl.b.mid]);

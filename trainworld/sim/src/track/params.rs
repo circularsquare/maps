@@ -106,6 +106,10 @@ pub const ACCEL_TOP: f64 = 0.3;
 pub const ACCEL_SWITCH_V: f64 = 60.0 / 3.6;
 pub const ACCEL_TOP_V: f64 = 200.0 / 3.6;
 pub const BRAKE: f64 = 0.9;
+/// T-3921 (Anita, 2026-11-21): a tram line's braking, gentler than a train's so a tram stopping
+/// loses a little more than a train at the same speed. A game choice: real trams brake harder in
+/// service (about 1.2-1.3 m/s²); this stands for a tram easing into a street stop.
+pub const TRAM_BRAKE: f64 = 0.8;
 
 // ---- costs, US$M (SPEC 6.4) ----
 
@@ -387,7 +391,8 @@ pub static TRACK_SPECS: [TrackSpec; TRACK_KINDS] = [
         platform: (20, 80),
         station_flat: Some(2.0),
         station_upkeep: Some(50.0),
-        dwell_s: 15.0,
+        // T-3921: a train's dwell
+        dwell_s: DEFAULT_DWELL_S,
         turnaround_s: 120.0,
         car: CarSpec { price: TRAM_CAR_PRICE, run_train_km: RUN_COST_TRAIN_KM, run_car_km: RUN_COST_CAR_KM, riders_scale: 0.75, fleet: 4 },
     },
@@ -408,7 +413,7 @@ pub static TRACK_SPECS: [TrackSpec; TRACK_KINDS] = [
         platform: (20, 80),
         station_flat: Some(2.0),
         station_upkeep: Some(50.0),
-        dwell_s: 15.0,
+        dwell_s: DEFAULT_DWELL_S,
         turnaround_s: 120.0,
         car: CarSpec { price: TRAM_CAR_PRICE, run_train_km: RUN_COST_TRAIN_KM, run_car_km: RUN_COST_CAR_KM, riders_scale: 0.75, fleet: 4 },
     },

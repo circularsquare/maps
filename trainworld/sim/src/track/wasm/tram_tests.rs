@@ -74,6 +74,23 @@ fn tram_track_is_drawn_double_priced_by_its_table_and_saved() {
     assert!(live(&a).iter().any(|&e| a.w.net.edge_kind[e as usize] == TrackKind::Regular));
 }
 
+/// T-3921: a saved tram line at the old default (15 s dwell, 120 s turnaround) loads standing 30 s; one at any
+/// other dwell or turnaround keeps its own.
+#[test]
+fn a_tram_line_at_the_old_default_dwell_loads_at_the_new_one() {
+    let (mut a, stops) = tram_line();
+    let lines: Vec<(u32, f32, f32)> = [(15.0, 120.0), (20.0, 120.0), (15.0, 180.0)].into_iter().map(|(dw, turn)| {
+        let l = a.new_line_id();
+        assert_eq!(a.set_line_with_trains(l, &stops, 2, 1, 0, dw, turn, 2, 0, "Tram".into()), 0, "{}", a.issues());
+        (l, dw, turn)
+    }).collect();
+    assert!(lines.iter().all(|&(l, dw, _)| a.line_tram(l) && a.w.net.line_dwell[l as usize] == dw));
+    let mut b = api();
+    assert!(b.load(&a.save()));
+    let got: Vec<(f32, f32)> = lines.iter().map(|&(l, ..)| (b.w.net.line_dwell[l as usize], b.w.net.line_turn[l as usize])).collect();
+    assert_eq!(got, vec![(DEFAULT_DWELL_S, 120.0), (20.0, 120.0), (15.0, 180.0)]);
+}
+
 #[test]
 fn tram_stops_are_short_and_flat_priced() {
     let mut a = api();
@@ -147,7 +164,7 @@ fn tram_between_rail() -> (TrackApi, [u32; 3]) {
 fn a_tram_line_runs_onto_rail_track_and_a_train_line_keeps_off_tram_track() {
     let (mut a, st) = tram_between_rail();
     let tram = a.new_line_id();
-    assert_eq!(a.set_line_with_trains(tram, &st[1..], 6, 3, 1, 15.0, 120.0, 2, 0xff0000, "Tram-train".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(tram, &st[1..], 6, 3, 1, DEFAULT_DWELL_S, 120.0, 2, 0xff0000, "Tram-train".into()), 0, "{}", a.issues());
     assert!(a.line_tram(tram));
     let net = &a.w.net;
     assert!(net.line_path(tram).iter().any(|&p| net.edge_kind[(p >> 1) as usize] == TrackKind::Regular), "it runs on the rail");
@@ -156,6 +173,9 @@ fn a_tram_line_runs_onto_rail_track_and_a_train_line_keeps_off_tram_track() {
     assert!(l.running);
     let top = l.runs[0].limits.iter().map(|x| x[1]).fold(0.0, f64::max);
     assert!((top - 75.0 / 3.6).abs() < 1e-9, "top {} km/h", top * 3.6);
+    // T-3921: it brakes as a tram, on the rail too
+    let braking: Vec<f64> = l.runs.iter().flat_map(|r| r.free.phases.iter().filter(|p| p.a < 0.0).map(|p| p.a)).collect();
+    assert!(!braking.is_empty() && braking.iter().all(|&b| b == -TRAM_BRAKE), "{braking:?}");
     assert!(a.trams_needed() > 0 && a.cars_needed() == 0);
 
     let train = a.new_line_id();
@@ -168,7 +188,7 @@ fn a_tram_line_runs_onto_rail_track_and_a_train_line_keeps_off_tram_track() {
     // the tram stop clicked: a tram line, with the tram's dwell and turnaround, that then takes the far station
     assert_eq!(a.add_stop(train, st[1]), 0, "{}", a.issues());
     assert!(a.line_tram(train));
-    assert_eq!((a.w.net.line_dwell[train as usize], a.w.net.line_turn[train as usize]), (15.0, 120.0));
+    assert_eq!((a.w.net.line_dwell[train as usize], a.w.net.line_turn[train as usize]), (DEFAULT_DWELL_S, 120.0));
     assert_eq!(a.add_stop(train, st[2]), 0, "{}", a.issues());
     assert_eq!(a.line_stops(train), st);
     // and back: without its tram stop it would run trains over tram track
@@ -219,11 +239,11 @@ fn tram_track_branches_off_regular_and_high_speed_track() {
 #[test]
 fn a_tram_line_has_its_own_fleet_and_defaults() {
     let d = TrackApi::kind_defaults(3);
-    assert_eq!((d[0], d[1], d[2], d[3], d[4]), (15.0, 120.0, 20.0, 80.0, 2.0));
+    assert_eq!((d[0], d[1], d[2], d[3], d[4]), (30.0, 120.0, 20.0, 80.0, 2.0));
     assert_eq!(TrackApi::kind_defaults(0)[..2], [30.0, 180.0]);
     let (mut a, stops) = tram_line();
     let l = a.new_line_id();
-    assert_eq!(a.set_line_with_trains(l, &stops, 3, 2, 1, 15.0, 120.0, 2, 0xff0000, "Tram".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(l, &stops, 3, 2, 1, DEFAULT_DWELL_S, 120.0, 2, 0xff0000, "Tram".into()), 0, "{}", a.issues());
     assert!(a.line_tram(l));
     assert_eq!(a.construct_all(), 0, "{}", a.issues());
     assert_eq!((a.trams_needed(), a.cars_needed(), a.buses_needed()), (6, 0, 0));
@@ -480,7 +500,7 @@ fn a_tram_stop_takes_a_terminal_and_passing_tracks_priced_as_tram_track() {
     assert!((a.station_upgrade_cost(t, upgrades::PASSING) - 75.0 * 0.5 * 0.44).abs() < 1e-9);
     assert_eq!(a.construct_all(), 0, "{}", a.issues());
     let id = a.new_line_id();
-    assert_eq!(a.set_line_with_trains(id, &stops, 4, 2, 0, 15.0, 120.0, 2, 0, "L".into()), 0, "{}", a.issue_kinds());
+    assert_eq!(a.set_line_with_trains(id, &stops, 4, 2, 0, DEFAULT_DWELL_S, 120.0, 2, 0, "L".into()), 0, "{}", a.issue_kinds());
     let turns = |a: &TrackApi| {
         let cap = &a.w.svc.cap;
         let r = (0..cap.res.len()).find(|&r| cap.res[r].node == t && cap.res[r].kind == ResKind::Terminus).unwrap();
@@ -529,7 +549,7 @@ fn tram_track_takes_crossovers_priced_as_tram_track() {
         assert!(xs.iter().all(|&x| a.w.net.edge_kind[x as usize].spec().family == (kind == 3) as u8));
         let price: f64 = xs.iter().map(|&x| a.w.net.edge_cost[x as usize]).sum();
         assert_eq!(a.construct_all(), 0, "{}", a.issues());
-        assert_eq!(a.set_line_with_trains(id, &st, 2, 1, 0, 15.0, 120.0, 2, 0, "L".into()), 0, "{}", a.issue_kinds());
+        assert_eq!(a.set_line_with_trains(id, &st, 2, 1, 0, DEFAULT_DWELL_S, 120.0, 2, 0, "L".into()), 0, "{}", a.issue_kinds());
         assert!(a.w.net.line_path(id).iter().any(|&p| xs.contains(&(p >> 1))), "kind {kind}: path {:?} crossovers {xs:?} stops {st:?}", a.w.net.line_path(id));
         let bytes = a.save();
         let mut b = api();
