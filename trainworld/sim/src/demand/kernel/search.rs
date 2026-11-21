@@ -2159,15 +2159,16 @@ pub(super) fn platform_walk(g: &Graph, p: &Params, pool: &[(f32, f32, f32)], fro
     if f > 0.0 { w / f } else { 0.0 }
 }
 
-/// The stations anyone can alight at: those in the access lists of subzones with jobs. Nobody's
-/// rail trip ends anywhere else, so the strategy searches towards other stations are not needed.
+/// The stations a commute can alight at: the walks of subzones with jobs (trips to work), and the
+/// walks and rides of subzones with homes (trips home, which end where the trip out started,
+/// T-3916). Nobody's rail trip ends anywhere else, so the strategy searches towards other stations
+/// are not needed.
 pub fn egress_stations(sz: &Subzones, n_st: usize) -> Vec<bool> {
     let mut want = vec![false; n_st];
     for v in 0..sz.n {
-        if sz.jobs[v] > 0.0 {
-            for k in sz.walk(v) {
-                want[sz.acc_st[k] as usize] = true;
-            }
+        let r = if sz.pop[v] > 0.0 { sz.acc_off[v] as usize..sz.acc_off[v + 1] as usize } else if sz.jobs[v] > 0.0 { sz.walk(v) } else { 0..0 };
+        for k in r {
+            want[sz.acc_st[k] as usize] = true;
         }
     }
     want

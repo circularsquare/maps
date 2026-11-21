@@ -196,6 +196,46 @@ fn searching_only_the_egress_stations_changes_nothing() {
     clear_skim_cache();
 }
 
+/// T-3916: a station people only drive to (beyond every cell's walk, within homes' rides) is where
+/// its trips home end: it is searched towards, and every period's exits are its rail trips, at that
+/// station as at all of them, with nothing cached.
+#[test]
+fn trips_home_end_at_stations_people_drive_to() {
+    let (mut api, mut xy, mut n, mut stops, mut times, mut tph, mut cars) = small();
+    // a two-stop line from 16 km east, 4 km past the city's last cell, to the centre in 4 minutes
+    let far = (xy.len() / 2) as u32;
+    xy.extend([16_000.0, 0.0]);
+    n.push(2);
+    stops.extend([far, 8]);
+    for _ in 0..2 {
+        times.extend([240.0, 0.0, 240.0, 0.0, 240.0, 0.0]);
+    }
+    let at = times.len() - 6;
+    times[at..].copy_from_slice(&[0.0, 240.0, 0.0, 240.0, 0.0, 240.0]);
+    tph.extend([6.0, 6.0, 6.0]);
+    cars.push(8.0);
+    api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+    let sz = api.sz.as_ref().unwrap();
+    let far = far as usize;
+    assert!((0..sz.n).all(|u| sz.walk(u).all(|k| sz.acc_st[k] as usize != far)), "nobody walks to it");
+    assert!((0..sz.n).any(|u| sz.ride(u).any(|k| sz.acc_st[k] as usize == far)), "homes drive to it");
+    assert!(api.want[far]);
+    for q in 0..PERIODS {
+        clear_skim_cache();
+        assert!(api.solve(q));
+        // (entries and exits count a trip before its ride is walked: the boardings and alightings
+        // are the rides)
+        let rn_st = api.route_nodes(q).0;
+        let at_far = |v: Vec<f32>| v.iter().zip(&rn_st).filter(|&(_, &st)| st as usize == far).map(|(x, _)| x).sum::<f32>();
+        let (on, off) = (at_far(api.board(q)), at_far(api.alight(q)));
+        let (w, h) = (TO_WORK[q], TO_HOME[q]);
+        assert!(on > 1.0, "period {q}: rides from it");
+        // its trips start and end at home: out at the share of trips to work, back at trips home
+        assert!((off / on - h / w).abs() <= 1e-3 * (h / w), "period {q}: out {on}, back {off}, shares {w} and {h}");
+    }
+    clear_skim_cache();
+}
+
 /// T-119: when nothing is crowded a crowding round solves what the free-flow estimate did, so it
 /// is skipped, and the skip changes nothing: the loads, the rail trips and the views' sums are
 /// the free-flow estimate's to the last bit, round by round, and the round count still moves.
@@ -1641,16 +1681,16 @@ fn commute_fans_are_the_mix_of_two_choices() {
 }
 
 /// T-3892: a fan's way back reaches only stations searched to (the assignment drops flow towards
-/// any other): a ferry from the centre to a port past every cell's walk with a train on from it,
-/// flagged a ferry. A fan may leave the ferry there; the commute's fans never do, and every rail trip
-/// is one entry and one exit.
+/// any other): a ferry from the centre to a port past every cell's walk and drive (T-3916: a port
+/// homes drive to is searched to) with a train on from it, flagged a ferry. A fan may leave the ferry
+/// there; the commute's fans never do, and every rail trip is one entry and one exit.
 #[test]
 fn commute_fans_go_back_by_stations_searched_to() {
     let (mut api, mut xy, mut n, mut stops, mut times, mut tph, mut cars) = small();
     let port = (xy.len() / 2) as u32;
-    xy.extend([15_000.0, 0.0]);
+    xy.extend([30_000.0, 0.0]);
     let two = |t: f32| [t, 0.0, t, 0.0, t, 0.0, 0.0, t, 0.0, t, 0.0, t];
-    // a ferry from the centre (station 8) 20 minutes to a port 15 km out, a train on a minute to
+    // a ferry from the centre (station 8) 20 minutes to a port 30 km out, a train on a minute to
     // station 16 (as times, not as km)
     n.extend([2, 2]);
     stops.extend([8, port, port, 16]);

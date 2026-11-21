@@ -220,9 +220,9 @@ levels:
    builds, linked stations; the real New York save has none, notes/T-161.md).
    Destination strategies and boarding frequencies
    are kept for loading. Each destination's search is independent, so only stations someone can
-   end a rail trip at are searched towards (those in the access lists of subzones with jobs,
-   `egress_stations`): a population living near two stations of an 875-station network needs two
-   searches. The tables are shared by the populations of a worker (`kernel::with_skims`, T-119):
+   end a rail trip at are searched towards (`egress_stations`: the walks of subzones with jobs, and
+   the walks and rides of subzones with homes, where trips home end, T-3916): a population living
+   near a few stations of an 875-station network searches towards those few. The tables are shared by the populations of a worker (`kernel::with_skims`, T-119):
    populations whose graphs are the same to the bit (a city's commutes and everyday layer; on the
    real save also New York and the regional market) search once per period and round. Each city
    converts station positions to its own frame, so cities can differ in the last bits and bring a
