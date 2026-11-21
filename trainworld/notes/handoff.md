@@ -13,12 +13,17 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
 1. Batches 9 and 10 checked PASS (notes/batch-2026-11-21.md); 8800 = 6a642fb1 (save level 36). Batch 11 on master,
    unchecked, not on 8800: oneway T-4000 (own check PASS), pausebp T-4002/T-4003, placeindex T-4004. Next: batchchk11
    when a few more land (add stationkinds' "stop on a station joined to nothing does nothing and says nothing").
-2. Running (~18:10 UTC): brtdash T-3996 (Sonnet), trackprep T-3948 (Opus, track stage 1 + T-1183), oomretry T-3933
-   (Opus). Held for collisions: T-3373 B stage 3 and T-3932 (oomretry's worker pool), T-3378 stage 4 (brtdash).
+   8800 = 3b521b1d (batch 11 minus brtdash 5b225105, landed after).
+2. Running: trackprep T-3948 (Opus, track stage 1 + T-1183), oomretry T-3933 (Opus), timegroups T-4008 (Opus,
+   measure only), hovers T-4009 (Sonnet), kinds2 T-4010 (Sonnet: train/tram split, BRT cap 100, icon, no parking).
+   busways T-3378 stage 4 (Opus, started despite kinds2's BRT overlap: her BRT priority). hovers landed.
+   Held for collisions: T-3373 B stage 3 and T-3932 (oomretry). T-4011 folded into kinds2.
 3. Then: T-3937 needs a quiet machine; ownwaits T-3931 held for T-3231 (patch in notes/); T-3655 left: faster
    full-track edits; T-3939 left: B's ~140 MB unnamed; T-3395: save_health.py after the next scan.
 4. Open ask: a-2026-11-21-15 income groups (notes/T-3246.md; I said keep out).
 ## Her words
+- 11-21 ~18:45 UTC: main priorities now: keep the track rework moving, finish and polish BRT. She's out with remote
+  control on this session; standby orchestrator tabs (notes/standby.txt, docs/orchestrator.md "Your own cycling").
 - 11-21 ~17:50 UTC: "text ack" for everything listed to then (viewonly, BRT stations, modeldown, brtblueprint,
   community, stationkinds). Search must reach far towns, "general" against crashes (T-4004 built). Server deploy yes.
 - 11-21 ~17:00 UTC: closed T-3365; levels -5 to +5 with the track rework, Settings toggle (T-3691). Station totals by

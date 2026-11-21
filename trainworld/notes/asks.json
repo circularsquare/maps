@@ -1,9 +1,1 @@
-[
-  {
-    "id": "a-2026-11-21-15",
-    "title": "Income groups: build A2 or keep out?",
-    "text": "T-3246 measured income groups for local trips (poorest fifth, middle three fifths, richest fifth, from the World Bank income table; the poor weigh fares and car costs more). Totals barely move (New York rail -0.4%, Tokyo +0.4%; your ceiling tests unchanged); what changes is who rides: the poorest fifth take the train 8% more than average, the richest 10% less. Cheapest good option (A2): calculating trips +15-24% in New York, +8-10% on Tokyo's real network, no extra memory. Per-route choice by income costs about 3x and is not worth it. Since every neighbourhood has the same income mix, a per-line split would show the same on every line, so it only pays off as a citywide 'riders by income' readout. Build A2 with that readout in the city panel, or keep groups out? I'd keep them out for now: a real cost for a small visible change. (Your 20/70/10 measured +1.0% rail if you'd rather that split.)",
-    "since": "2026-11-21",
-    "by": "maps-ac"
-  }
-]
+[]

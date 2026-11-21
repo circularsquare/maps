@@ -214,6 +214,15 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-2867.md
 - T-2869 [P3] {L:region-redraws} Zone edges leave gaps at sea
   - Context: Port islands off Jakarta sit in no zone, so the border shows a gap. You said it is not a real issue but would be nice to fill.
+- T-4008 [P2] {L:wealth-split} Do income groups even out express and local (taking, 2026-11-21, agent timegroups)
+  - Context: You, 11-21, on T-3246: "the problem this aims to solve is like people using express and local more evenly, where both are offered. cuz like theoreticallyrich people are more time senstiive. did we / could we test to see if income groups helps with that?" T-3246's options A and A2 split only train vs car; only C (each group its own route choice) touches express vs local, and its ~3x cost was added up, not run.
+  - Goal: Measured on New York and the passing-track test map: the express/local split today, with two or three time-value groups choosing routes, and the cost in time and memory; with a recommendation.
+- T-4010 [P2] {L:buses} Station kinds: train, tram, BRT, port; BRT tweaks (taking, 2026-11-21, agent kinds2)
+  - Context: You, 11-21, playing T-3999 and T-3944: train kind "assumes i want to put a tram stop. and caps me at 4 cars ... maybe we should have them as separate buttons"; BRT lanes up to about 100 buses an hour ("would be kinda silly looking but i dont see why not"); the BRT icon a road with a lane, no bus rectangle; BRT stations offer only waiting room and passage, no parking.
+  - Goal: Separate Train station and Tram stop kinds (a train station never capped at 4 cars); BRT lane cap 100 an hour each way; the new BRT icon; no park and ride on BRT stations.
+- T-4011 [P3] {L:map-look} {waits:Anita} A nicer train icon (taking, 2026-11-21, agent kinds2)
+  - Need from Anita: The image search you mentioned, for diagonal-looking track and a squarer train.
+  - Context: You, 11-21: "the train icon is a little ugly. i feel like the little feet / rails are a bit too tall, and the train is also a bit too tall."
 - T-4005 [P3] {L:community} Bookmark community saves
   - Context: Your scratch pad, 11-21: "maybe add bookmark feature to community saves to save cool ones".
   - Goal: A bookmark button on a community save, and a Bookmarked view in Community listing them; kept with the account when signed in, else in the browser.
@@ -951,14 +960,11 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3837 [P3] {L:buses} Ferry routes found without a waypoint, and waypoints on touch
   - Context: T-3809 added shift click waypoints. A leg is still searched only in a box around its two ports, so a sea path that leaves it (Ma Liu Shui to Sai Kung) needs a waypoint; a wider third search would find it alone. Phones have no shift click.
   - Other: notes/T-3809.md
-- T-3996 [P2] {L:buses} {after:T-3944} Built BRT border dashes fixed on the ground (taking, 2026-11-21, agent brtdash)
-  - Context: You, 11-21, on the built-lanes border: "inside casing is good. ideally the dashes are same length world-wise as we zoom out. and they handle turns okay."
-  - Goal: The dashed border on built BRT lanes keeps the same dash length on the ground at every zoom, and stays even around bends.
 - T-3993 [P3] {L:buses} Group homes by bus line stretch
   - Context: From T-3934, 11-21: mode choice runs over groups of homes, and every bus stop splits them (about 130 s of Tokyo's 1,050 s). Grouping by stretch of line instead of exact stop.
   - Goal: About 6% off Tokyo and 10-15% off Taipei's calculating time with riders per line within 1-2%. 2-3 h.
   - Other: notes/T-3934.md
-- T-3378 [P1] {L:buses} {after:T-3944} Finish BRT with off-road busways
+- T-3378 [P1] {L:buses} {after:T-3944} Finish BRT with off-road busways (taking, 2026-11-21, agent busways)
   - Context (11-21): stages 1-3 landed 11-21 (shared lanes paid once, 60 buses an hour a lane, BRT stations beside a road for BRT lines only). Left: stage 4 off-road busways (US$25M a km, 60 km/h, upkeep like off-road tram track; plain buses in traffic in town). Her answers: "yes this all sounds fine". Waits for T-3944 (BRT as a blueprint), which reworks the same BRT panel. Weekend lanes are T-3941.
   - Context: Design done 11-21 (busdesign, notes/T-3378.md): four stages, shared lanes 3 h, shared room 3 h, BRT stations 4-5 h, off-road busways 5-6 h; how far people come to the bus decides riders, so stations are the big part. You, 11-21: "i think we should finish BRT / busways. we should also allow building busways off road for high expense, sorta like trams off road." Preliminary BRT (a per-line speed upgrade, T-3907) shipped in v0.4.5. You, 11-20: "lots of people really like buses and want them to be more competitive with other modes ... plain buses still have a niche, brt is more competitive with trams and other modes, and its all like at least a little realistic"; "i do kinda want Brt to be an upgrade on a whole line, but also for lines sharing a road to share pay and throughput. so a hybrid"; "do also want BRt stations yeah". Sketch from 11-20: own lane (at least 35-40 km/h, up to the road's speed), shorter stops (about 18 s), BRT stations, build about US$4-5M a road-km against street tram's 7.5M; the same bus. You, 11-21 after the design: "we should maybe do upgradable bus stations".
   - Goal: Stage 4 built as notes/T-3378.md designs it: Busway as a fourth track type off road, drawn like off-road tram track, with levels and bridges.

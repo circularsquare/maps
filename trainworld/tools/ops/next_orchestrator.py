@@ -20,15 +20,23 @@ def main():
     ap.add_argument("project")
     ap.add_argument("--model", default="opus")
     ap.add_argument("--advisor", help="advisor model for that session only, e.g. fable (Anita 2026-11-16 trial)")
+    ap.add_argument("--standby", action="store_true",
+                    help="open a standby tab that lists itself in <project>/notes/standby.txt and waits (Anita 2026-11-21)")
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()
+    prompt = f"/takeover {a.project}"
+    if a.standby:
+        prompt = (f"You are a standby {a.project} orchestrator. Run ListAgents to learn your own name, append one line "
+                  f"with your name and the date to {a.project}/notes/standby.txt, then wait and do nothing else "
+                  f"until a message asks you to run /takeover {a.project}.")
     if not (MAPS / a.project / "notes" / "handoff.md").exists():
         raise SystemExit(f"no {a.project}/notes/handoff.md under {MAPS}")
     wt = shutil.which("wt") or shutil.which("wt.exe")
     if not wt:
         raise SystemExit("Windows Terminal (wt.exe) not found")
-    cmd = [wt, "-w", "0", "new-tab", "--title", f"{a.project} orchestrator", "-d", str(MAPS),
-           "claude", "--model", a.model] + (["--advisor", a.advisor] if a.advisor else []) + [f"/takeover {a.project}"]
+    title = f"{a.project} standby" if a.standby else f"{a.project} orchestrator"
+    cmd = [wt, "-w", "0", "new-tab", "--title", title, "-d", str(MAPS),
+           "claude", "--model", a.model] + (["--advisor", a.advisor] if a.advisor else []) + [prompt]
     print(" ".join(cmd))
     if not a.dry_run:
         # wt hands its caller's environment to the new tab; launched from inside a Claude session that carries

@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4009 [P2] {L:small-fixes} Map hover stays up over the panels (2026-11-21): the map's hover tag and tool ghosts hide when the pointer is over a bar, button or panel inside the map (map/overChrome.ts turns it into the container's mouseleave)
+- T-3996 [P2] {L:buses} Built BRT border dashes fixed on the ground (2026-11-21): BRT lane dashes (built border and blueprint free edge, one shared shader path) are now 24 m on, 16 m off on the ground at every zoom, carried continuously around bends; busLayer.ts LANE_PERIOD_M.
 - T-4004 [P2] {L:small-fixes} Search finds far towns without slowing the game (2026-11-21): search finds towns anywhere: a world name index from the zones' place lists (pipeline/place_index.py, 4,097 files, ~135 MB gzipped on R2, ~30 KB a shard per search; all 3.65M places found by name), and place matching moved to a worker, so at 100x on the real save no query put the trips past the 1 h pull lag. notes/T-4004.md.
 - T-4003 [P2] {L:map-look} Hide all blueprints toggle (2026-11-21): Settings > Show > Blueprints hides every blueprint (track, stations, planned lines, BRT lanes, marks, picks); view only, session only like Buses and ferries.
 - T-4002 [P2] {L:community} Community saves open paused (2026-11-21): community saves open paused with blueprints hidden (own switch while viewing); leaving an unedited viewed network no longer asks.

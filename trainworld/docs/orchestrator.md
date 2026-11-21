@@ -40,7 +40,10 @@ incidents behind the rules here are in `notes/rule-history.md`.
   follow-up goes to a fresh agent on its tree and notes. `reports.py sweep` backfills from transcripts if the hook
   missed one.
 - **Your own cycling**: at about 500k tokens (the stop hook says so) hand over without waiting for her. Finish
-  anything mid-landing, bring the handoff current, and run
+  anything mid-landing and bring the handoff current. Then, if `trainworld/notes/standby.txt` lists a standby
+  session (one she pre-started with remote control, her idea 11-21, so she can reach the next orchestrator
+  directly), check it in `ListAgents`, SendMessage it "Please run /takeover trainworld now (Skill takeover, args
+  trainworld).", and delete its line from standby.txt once it answers. Otherwise run
   `venv\Scripts\python.exe trainworld/tools/ops/next_orchestrator.py trainworld --advisor fable` (a new Windows
   Terminal tab running /takeover), day or night. Keep starting agents until then. The rest of the steps (what to finish,
   what to tell her and the new orchestrator, your agents still running) are in the `handoff` skill, "After
