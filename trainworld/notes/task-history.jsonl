@@ -322,3 +322,4 @@
 {"t":"2026-11-21T14:36Z","n":248,"area":{"demand":94,"interface":17,"ops":16,"performance":34,"schedule":13,"track":39,"community":17,"schematic":18},"pri":{"P3":201,"P2":42,"P1":5},"opened":7,"closed":1}
 {"t":"2026-11-21T15:26Z","n":283,"area":{"demand":95,"interface":18,"ops":15,"performance":34,"schedule":15,"track":70,"community":17,"schematic":19},"pri":{"P3":216,"P2":62,"P1":5},"opened":40,"closed":2}
 {"t":"2026-11-21T16:16Z","n":281,"area":{"demand":96,"interface":16,"ops":15,"performance":34,"schedule":15,"track":69,"community":17,"schematic":19},"pri":{"P3":217,"P2":60,"P1":4},"opened":2,"closed":4}
+{"t":"2026-11-21T17:06Z","n":284,"area":{"demand":96,"interface":17,"ops":15,"performance":34,"schedule":15,"track":71,"community":17,"schematic":19},"pri":{"P3":218,"P2":61,"P1":5},"opened":5,"closed":2}

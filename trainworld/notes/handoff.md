@@ -16,12 +16,25 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
    DECISIONS written); splitb2 T-3373 B2 (behind `?exactSum=1`, off); reach1k T-3995 (bus reach 1 km; a lone NYC
    bus +34%). Then Rust suites on master (fullrate and brtblueprint share lane code), batchchk10 (add: a
    blueprint-only BRT line on a weekend takes no lane room), smoke, snap8800.
-3. fullrate T-3655/T-3941: fullchk checking (boarding steps per count edit on London/T-007/fresh; do real-network
-   starts lose cash at load on live?). Land only if ordinary edits don't slow down (advisor, handoff-log).
+3. fullrate T-3655/T-3941: fullchk PASS (slow edits only where rates really move; shipped real starts lose no cash,
+   only the dev lon_real.save). Land after land10.ps1: `finish fullrate ... --task T-3941`; T-3655 stays open.
+   Then searchcrash T-3997 (done, archived; UI only: place lists bounded to 48 zones within 200 km).
+   land10 landed community, linecols, credits, brtblueprint, clockmem, splitb2; land11.ps1 (scratch) runs reach1k,
+   fullrate, searchcrash, then Rust suites. Then batchchk10 + smoke + snap8800. oneway T-4000 (done, archived, edit
+   path): onewaychk (Sonnet) on its tree first, then land. pausebp T-4002+T-4003 (Sonnet) running.
+   stationkinds T-3999 done, archived (UI + addPort op): land after land11, into batch 10's check.
+   searchcrash and reach1k landed. fullrate and stationkinds stopped on rebase conflicts: rebasefix (Sonnet)
+   resolving; then finish both, Rust suites on master, batchchk10, smoke, snap8800.
+   placeindex T-4004 (Opus, search finds far towns, general bound) running. oneway T-4000 landed (onewaychk PASS);
+   land12.ps1 lands fullrate + stationkinds (rebasefix resolved both) then Rust suites. T-4006 done: shonei-server
+   513353d (open saves 300/h, burst 30). savelevel T-4007 (Sonnet) teaches the server LBT1/LBQ1 (levels 35-36); one
+   deploy (`.\deploy\deploy.ps1` from shonei-server) for both after her yes; must precede the next publish. T-4005 bookmarks filed P3.
 4. Running: batchchk9, fullchk, searchcrash T-3997 (Opus, P1 player bug: search at 100x crashes / stops trains),
    stationkinds T-3999 (Opus, station tool train/bus/port + free-standing stations by two clicks; lands after
    T-3944), oneway T-4000 (Opus, player report), incomes T-3246 (Opus, design and cost only, goes to her).
-5. Start next: T-3373 B stage 3 (Opus) once splitb2 lands; T-3996 after T-3944; T-3948 once fullrate lands;
+5. No publish yet: she said 11-21 ~17:15 "no rush to push any updates ... nothing super urgent/gamebreaking".
+   Start next: one Sonnet agent on T-4002 + T-4003 (community opens paused; hide-blueprints toggle) after
+   land10.ps1; T-3373 B stage 3 (Opus) once splitb2 lands; T-3996 after T-3944; T-3948 once fullrate lands;
    T-3378 stage 4 after T-3944; T-3933/T-3932 after clockmem and splitb2; T-3937 needs a quiet machine.
    ownwaits T-3931 held for T-3231 (patch in notes/). T-3395: save_health.py after the next scan.
 ## Her words
@@ -32,7 +45,9 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
   inside the colour, dashes fixed on the ground (T-3996); credits folded (T-3998); station tool picks train/bus/port,
   bus stations snap harder, ports without ferry routes (T-3999); community view-only "looks good".
 - 11-21 ~16:10 UTC: Report as a flag with a confirm (T-3991); Discord and leaderboards in Community (T-3990);
-  itch.io $0-or-donate, $5 suggested (T-3988). Text acks still due: viewonly, BRT stations.
+  itch.io $0-or-donate, $5 suggested (T-3988).
+- 11-21 ~17:50 UTC: "text ack" for everything listed so far (viewonly, BRT stations, modeldown, brtblueprint,
+  community, stationkinds).
 - 11-21 ~15:55 UTC: track rework all calls made (notes/T-3444-design/answers-2026-11-21.md). 38 stages
   T-3948..T-3985 on tw/track.
 - 11-21 ~14:05 UTC: keep 4-12 agents. Count every Auto stop ("if people are seeing bus stops the bus stops have to

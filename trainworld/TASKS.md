@@ -168,10 +168,11 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-3936 [P3] {L:route-choice} Intercity effective time for the route shown
   - Context: From T-3632, 11-21: the intercity panel's "Effective time" is the average over the whole place, not the route shown (Nagoya - Osaka: the route's own 136 min, the panel 237, the car 174), so a click beside a station reads as the train losing.
   - Goal: The panel shows the shown route's own effective time beside the car's.
-- T-3246 [P2] {L:wealth-split} Income groups for local trips (taking, 2026-11-21, agent incomes)
-  - Context: Your TODO 2026-11-15: "maybe actually we do add the wealth split ... we could also consider doing like 20/70/10 or something like that ... perhaps we can even display this to the player". Three groups cost about 2.4x the local solve when measured (T-1431).
-  - Goal: A cheaper way to give local trips income groups, after an estimate.
-  - Other: Options: one search with a money-weight spread, two groups, or groups only past some trip length. Folds in T-1519. notes/T-3239.md "Cost of groups in route choice"
+- T-3246 [P2] {L:wealth-split} {waits:Anita} Income groups for local trips (taking, 2026-11-21, agent incomes)
+  - Need from Anita: Build option A2 (poorest fifth, middle three fifths at today's weight, richest fifth; +8-10% solve time on Tokyo, +15-24% on New York, no memory) with rail riders by income shown in the city panel, or keep groups out? My pick: A2, but only if you want the split shown, since totals move under 1% and nobody changes trains.
+  - Context: The proposal is in the notes (your TODO 2026-11-15: "maybe actually we do add the wealth split ... perhaps we can even display this to the player"). With groups the poorest fifth ride 8% more than average and the richest 10% less, since the car's money weighs more on the poor. Fifths, not your 20/70/10, because the income table comes in fifths. The express-or-local split needs each group's own route choice (option C), about 3x the solve and +200 MB on Tokyo.
+  - Goal: Your pick of an option, then built with both ceiling tests still met.
+  - Other: Folds in T-1519. notes/T-3246.md
 - T-3247 [P2] {L:attractions} {after:next world rebuild} Beach towns and attractions
   - Context: Your 2026-11-11 note: "we can sorta do that. capri included i guess. perhaps on a local scale we should also maybe add beaches as attractions if they are not there?"
   - Goal: Beach and resort towns get long-trip pull (with T-3240), beaches are local attractions where missing, and attraction sources are surveyed.
@@ -213,15 +214,17 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-2867.md
 - T-2869 [P3] {L:region-redraws} Zone edges leave gaps at sea
   - Context: Port islands off Jakarta sit in no zone, so the border shows a gap. You said it is not a real issue but would be nice to fill.
-- T-3997 [P1] {L:small-fixes} Search while running crashes the tab (taking, 2026-11-21, agent searchcrash)
-  - Context: A player on Discord (ttcm), via your scratch pad 11-21: "also apparently if you use search while the game is running it crashes the tab / and if you use it in 100x then all the trains stop running and the sttaions overcrowd". Likely reaches anyone who searches with the clock running.
-  - Goal: Search with the clock running, at any speed up to 100x, neither crashes the tab nor stops the trains.
-- T-3999 [P2] {L:buses} Station tool picks train, bus or port (taking, 2026-11-21, agent stationkinds)
-  - Context: You, 11-21, after playing BRT stations: "brt stations are a bit weird (i feel liek they should snap a little more aggressively to nearby already placed bus routes) ... we should not like automatically assuem we want to palce a brt station when we are just hovering over empty space with the station tool. this would confuse people and be annoying for people who dont play with buses ... in the station tool lets have an option for placing train/tram station or bus station, can select either one. while we're here maybe also allow placing ports without a ferry route."
-  - Goal: The Station tool has a train/tram, bus and port choice; a bus station is placed only with bus chosen and snaps to a nearby bus route; a port can be placed with no ferry route. Train stations can also go in empty space again (players asked): first click the start, second the direction, at the set station length; near track it still snaps.
-- T-4000 [P2] {L:single-track} Removing single track refused as one-way (taking, 2026-11-21, agent oneway)
-  - Context: A player's report 11-21 (1795275871-c41f9b5f, Japanese, v0.4.5): removing single track sometimes says "you can't turn back from this station on one-way track" and won't remove it. Few players, but anyone with single track could meet it.
-  - Goal: Removing track is never refused by a one-way turn-back rule; the lines that used it follow the usual rule for a removed track.
+- T-4004 [P2] {L:small-fixes} {after:T-3997 landing} Search finds far towns without slowing the game (taking, 2026-11-21, agent placeindex)
+  - Context: T-3997 stopped the 100x crash by searching towns only within 200 km of the view (cities and zones anywhere). You, 11-21: "i'd rather have it eventually be able to show towns more than 200km away. i often use it to find places that are far away ... it can come in slowly. also this is the second time we've had to deal with search crashing so we should make sure that whatever solution we come up with is general."
+  - Goal: Any town in the world can be found by name, far results arriving after near ones, and search can never block the game: its work is bounded per frame or off the main thread, whatever the query.
+- T-4005 [P3] {L:community} Bookmark community saves
+  - Context: Your scratch pad, 11-21: "maybe add bookmark feature to community saves to save cool ones".
+  - Goal: A bookmark button on a community save, and a Bookmarked view in Community listing them; kept with the account when signed in, else in the browser.
+- T-4002 [P2] {L:community} Community saves open paused (taking, 2026-11-21, agent pausebp)
+  - Context: You, 11-21: "when opening a community save i think we should start it paused." Also: blueprints hidden by default there, your own setting kept for your games; and leaving a view-only save without the "won't be saved" confirm ("its kinda risk free to leave").
+- T-4003 [P2] {L:map-look} Hide all blueprints toggle (taking, 2026-11-21, agent pausebp)
+  - Context: You, 11-21: "we should probably add a toggle to hide all blueprints. along with the hide trams/hsr/etc."
+  - Goal: Beside the hide trams / high speed toggles, one more hides every blueprint (track, stations, lines, BRT lanes) on the map.
 - T-2872 [P3] {L:small-fixes} {after:Anita asks} Timeline of what was built
   - Context: A player asked for playback of what was built. The build days are recorded already (T-2871), with no UI.
   - Goal: Build it only when you ask.
@@ -560,7 +563,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3655 [P2] {L:line-rates} Count edits on full track slow from boarding redone (taking, 2026-11-21, agent fullrate4)
   - Context: LAND-READY 11-21 in tree .tw-trees/fullrate (uncommitted; notes/T-3655.md there, "Even caps at load" newest): the re-share (`world.rs` `reshare_full`), the load's caps made even (they were refused for money, not late: London's save runs more trains than its fleet, so a game-made edit now pays only for trains it adds; Victoria's first edit 12.80, 13.24 after a line 120 edit, against master's 2.78) and T-3941. Left: the speed. A Victoria count edit re-shares its track and moves 14-23 lines' rates, so boarding is redone for about 25 lines before the answer: 0.7-2.2 s worker time against master's 63-124 ms on a full machine. Leads: answer before the boarding steps (trips without loads first, as T-3804's stale account), or redo boarding only past a departure threshold.
   - Goal: Count edits on full track within about 50 ms of master's on London's shared save, or the reason they can't be.
-  - Other: notes/T-3655.md, notes/T-3482.md "Follow-ups"
+  - Other: fullchk 11-21: the 25 boarding steps come only when an edit moves other lines' rates (T-007 and a fresh game: 1 step, as master). Also seen: the rate depends on edit order (Victoria's 16 trains give 12.69 or 13.23). notes/T-3655.md, notes/T-3482.md "Follow-ups"
 - T-3231 [P3] {L:trains-drawn} {after:T-3264} Two lines drawn over each other at a terminal
   - Context: A fix exists as notes/T-3231-fix.patch (trainGuard holdForPlaces): t1965-follow drops from 40-47 frames to 0-4, t2980 unchanged, but t2018-trail then halts the express 16-28 times and t3264's follow layout gains 4 overlap events, all from the express running later than the guard can draw (T-3271). Parked until T-3271, then re-measured. Traced 11-21 (movedhour, notes/T-3931.md): the late expresses at 12/9 and the 230-257 s hold at G at 30/10 are this too: an arriving train waits short of the end because the other line's train stands in the same end bay, and the next trip inherits the lag; `t2233 --count` stays red until this lands.
   - Goal: t1965-follow passes without breaking t2980. Part of T-3264.
@@ -967,9 +970,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context (11-21): stages 1-3 landed 11-21 (shared lanes paid once, 60 buses an hour a lane, BRT stations beside a road for BRT lines only). Left: stage 4 off-road busways (US$25M a km, 60 km/h, upkeep like off-road tram track; plain buses in traffic in town). Her answers: "yes this all sounds fine". Waits for T-3944 (BRT as a blueprint), which reworks the same BRT panel. Weekend lanes are T-3941.
   - Context: Design done 11-21 (busdesign, notes/T-3378.md): four stages, shared lanes 3 h, shared room 3 h, BRT stations 4-5 h, off-road busways 5-6 h; how far people come to the bus decides riders, so stations are the big part. You, 11-21: "i think we should finish BRT / busways. we should also allow building busways off road for high expense, sorta like trams off road." Preliminary BRT (a per-line speed upgrade, T-3907) shipped in v0.4.5. You, 11-20: "lots of people really like buses and want them to be more competitive with other modes ... plain buses still have a niche, brt is more competitive with trams and other modes, and its all like at least a little realistic"; "i do kinda want Brt to be an upgrade on a whole line, but also for lines sharing a road to share pay and throughput. so a hybrid"; "do also want BRt stations yeah". Sketch from 11-20: own lane (at least 35-40 km/h, up to the road's speed), shorter stops (about 18 s), BRT stations, build about US$4-5M a road-km against street tram's 7.5M; the same bus. You, 11-21 after the design: "we should maybe do upgradable bus stations".
   - Goal: Stage 4 built as notes/T-3378.md designs it: Busway as a fourth track type off road, drawn like off-road tram track, with levels and bridges.
-- T-3944 [P1] {L:buses} BRT built as a blueprint, drawn on the map (taking, 2026-11-21, agent brtblueprint)
-  - Context: You, 11-21, after trying stages 1-2 on 8800: "for brt testing its kinda hard to tell whats going on. lets build the BRT toggle actually like putting a blueprint that is visible on the map (maybe like highlight the corridor that will get a dedicated lane somehow) and shows construction cost like a blueprint and actually has to be constructed with a click. and maybe for already constructed brts we running a dashed thin white border around the bus line to indicate that it has its own lane. super thin. also the BRT toggle doesnt really fit with how we do other constructions. like it shouldnt be a toggle, it should be more like a station upgrade or something. appearancewise."
-  - Goal: Upgrading a bus line to BRT places a blueprint (the corridor that gets lanes highlighted on the map, its cost as other blueprints show it) built with a click like other blueprints; the control looks like a station upgrade, not a toggle; built BRT lanes draw a super thin dashed white border around the bus line.
 - T-3947 [P3] {L:schematic-layout} Schematic redraw that takes buses into account
   - Context: Your scratch pad, 11-21: "bus-heavy maps do kinda come out looking like spaghetti on the schematic map. cuz we dont actually redraw taking bus routes into account. people request an option to manually start a redraw taking buses into account."
   - Goal: A control that redraws the schematic with bus routes included in the layout, started manually.
@@ -977,10 +977,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: From the T-2216 stage 3 check, 11-21: once a place's market is open, the cell bubbles' legs with other places have no No route part, so the own row's island trips show as car there (Athens's split shows No route 92,187, its bubbles 82,806).
   - Goal: A no-way figure per square in the sim's `zone_legs`, so the bubbles' No route matches the city panel.
   - Other: notes/T-2216.md "Stage 3 fix"
-- T-3941 [P3] {L:buses} {after:T-3655} Weekend BRT lanes past 60 buses an hour
-  - Context: From T-3378 stage 2, 11-21: `settle_weekend` doesn't run `fit_lanes`, so in a game where any line has its own weekend schedule, weekend lanes can go past 60. Fixed 11-21 (fullrate4) in tree .tw-trees/fullrate with T-3655: the weekend settle runs `fit_lanes` (two lines with weekend headways of their own, then put on BRT: 40 + 40 on weekends before, 30 + 30 now; `bus_tests::a_full_brt_lane_cuts_weekend_buses_too`); closes when that lands.
-  - Goal: Weekend lanes cut to 60 an hour as weekdays are.
-  - Other: Folds in T-1467 and T-3830 (bus stations a player can build: your pad, "bus stations, constructible, that look kinda like train and tram stations ... slight waiting/boarding bonus").
 - T-3377 [P3] {L:open-source} Mod support beyond forks
   - Context: Level 1 (data open to any site) is done. Levels 2-4 are data-file mods, a JavaScript mod API, then city packs.
   - Goal: A design for you first that works for modders writing code by hand and with a coding assistant alike (you, 2026-11-18; player-facing text never says it is aimed at vibe-coders): a small stable mod API (hooks for prices, speeds, buttons, reading the network), a how-to page with two or three tiny example mods, notes in the open-source repo an assistant can read too, and loading a mod from a file or link; a loaded mod marks the save modded (T-3707).
