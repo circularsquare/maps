@@ -11,6 +11,13 @@
 //!
 //! `--parts` prints each population's structures (`mem_parts`) after the solve; `--stages` marks each population's
 //! solve and each crowding round inside a period.
+//!
+//! `--app-order` solves as the game's worker does a cluster with no market (a phone's start): round by round over
+//! the five periods, the skims released after each period's stage (period by period without it, which keeps
+//! fewer periods held at a round's peak). Its rail trips differ from the default order's (it crowds on the
+//! boardings too and holds the last round to the trains' room), so compare totals within one order.
+//! T-3160: on the Tokyo real-network start (`--zones tyo,tcg,gnm,yns,szo --market "" --net tyo --app-order`)
+//! the peak is a crowding round's period 4: every period held, the crowded graph's skims, one pass's working set.
 
 use serde_json::Value;
 use trainworld_sim::demand::alloc;
@@ -138,7 +145,52 @@ fn main() {
     let t_solve = now_ms();
     let mut peak_all = 0usize;
     let stages = args.iter().any(|a| a == "--stages");
-    for q in 0..PERIODS {
+    // `--app-order`: as `demand.worker.ts` `step` solves one cluster with no market: round by round over
+    // the five periods, the skims released after each period's stage, the crowding priced on the
+    // segment loads, boardings and alightings, and the last round's riders held to the trains' room
+    let app_order = args.iter().any(|a| a == "--app-order");
+    if app_order {
+        let blocks = |pops: &Vec<(String, DemandApi, Option<EverydayApi>)>, q: usize| {
+            let mut t: Vec<f32> = vec![];
+            let mut put = |v: Vec<f32>, b: usize, n: usize| {
+                if t.len() < 3 * n { t.resize(3 * n, 0.0); }
+                for (k, x) in v.into_iter().enumerate() { t[b * n + k] += x; }
+            };
+            for (_, a, e) in pops.iter() {
+                let n = a.seg(q).len();
+                put(a.seg(q), 0, n); put(a.board(q), 1, n); put(a.alight(q), 2, n);
+                if let Some(e) = e { put(e.seg(q), 0, n); put(e.board(q), 1, n); put(e.alight(q), 2, n); }
+            }
+            t
+        };
+        for round in 0..=rounds {
+            for q in 0..PERIODS {
+                let total = if round > 0 { Some(blocks(&pops, q)) } else { None };
+                for (id, a, e) in pops.iter_mut() {
+                    match &total { None => { a.solve(q); } Some(t) => assert!(a.crowd_with_external(q, t)) }
+                    if stages { peak_all = peak_all.max(alloc::peak()); st.mark(&format!("  round {round} period {q}: {id} commutes")); }
+                    if let Some(e) = e {
+                        match &total { None => { e.solve(q); } Some(t) => assert!(e.crowd_with_external(q, t)) }
+                        if stages { peak_all = peak_all.max(alloc::peak()); st.mark(&format!("  round {round} period {q}: {id} everyday")); }
+                    }
+                }
+                if round == rounds && round > 0 {
+                    let fin = blocks(&pops, q);
+                    let n = fin.len() / 3;
+                    let mut four = fin.clone();
+                    four.extend_from_slice(&fin[n..2 * n]);
+                    for (_, a, e) in pops.iter_mut() {
+                        assert!(a.cap_with_external(q, &four));
+                        if let Some(e) = e { assert!(e.cap_with_external(q, &four)); }
+                    }
+                }
+                peak_all = peak_all.max(alloc::peak());
+                release_skims();
+                st.mark(&format!("round {round} period {q}: skims released"));
+            }
+        }
+    }
+    for q in 0..if app_order { 0 } else { PERIODS } {
         for (id, a, e) in pops.iter_mut() {
             a.solve(q);
             if stages { peak_all = peak_all.max(alloc::peak()); st.mark(&format!("  period {q}: {id} commutes solved")); }
@@ -181,6 +233,18 @@ fn main() {
         }
     }
     println!("rail trips (summary slot 2, every population and period): {rail:.0}");
+    // every population's loads to the bit, so two builds can be told apart where the total rounds alike
+    let mut h: u64 = 0xcbf2_9ce4_8422_2325;
+    for q in 0..PERIODS {
+        for (_, a, e) in pops.iter() {
+            let mut vs = vec![a.seg(q), a.board(q), a.alight(q)];
+            if let Some(e) = e { vs.extend([e.seg(q), e.board(q), e.alight(q)]); }
+            for x in vs.iter().flatten() {
+                h = (h ^ x.to_bits() as u64).wrapping_mul(0x100_0000_01b3);
+            }
+        }
+    }
+    println!("loads hash {h:016x}, rail trips {rail:.4}");
     if parts {
         for (id, a, e) in pops.iter() {
             println!("\n{id} commutes:\n{}", a.mem_report());

@@ -491,53 +491,53 @@ fn add_lanes(a: &mut Lanes, b: &Lanes) {
 }
 
 /// Each purpose's station-pair trips by destination station (T-433): for kind k and destination
-/// b, entries `off[k][b]..off[k][b + 1]` of `src` and `trips`, origins ascending. `off[k]` is
+/// b, entries `off[k][b]..off[k][b + 1]` of `src[k]` and `trips[k]`, origins ascending. `off[k]` is
 /// empty for a kind with no trips.
 struct Columns {
     off: Vec<Vec<u32>>,
-    src: Vec<u32>,
-    trips: Vec<f32>,
-    /// (destination, origin, trips) in origin order, while packing
-    tmp: Vec<(u32, u32, f32)>,
+    src: Vec<Vec<u32>>,
+    trips: Vec<Vec<f32>>,
     /// The origin rows of `od` written since the last `pack`.
     rows: Vec<bool>,
 }
 
 impl Columns {
     fn new(kinds: usize, s: usize) -> Columns {
-        Columns { off: vec![vec![]; kinds], src: vec![], trips: vec![], tmp: vec![], rows: vec![false; s] }
+        Columns { off: vec![vec![]; kinds], src: vec![vec![]; kinds], trips: vec![vec![]; kinds], rows: vec![false; s] }
     }
-    /// Moves one kind's trips out of `od` (`od[a * s + b]`), leaving it zero.
+    /// Moves one kind's trips out of `od` (`od[a * s + b]`), leaving it zero. Counted, then placed
+    /// in arrays of the kind's own exact length, so packing copies nothing: the everyday pass sets
+    /// a solving worker's peak (T-3160).
     fn pack(&mut self, od: &mut [f32], s: usize, kind: usize) {
         debug_assert!(self.off[kind].is_empty(), "the pairs are stored purpose by purpose");
         let mut off = vec![0u32; s + 1];
-        self.tmp.clear();
+        for (a, row) in od.chunks_exact(s).enumerate() {
+            if self.rows[a] {
+                for (b, v) in row.iter().enumerate() {
+                    off[b + 1] += (*v != 0.0) as u32;
+                }
+            }
+        }
+        for b in 0..s {
+            off[b + 1] += off[b];
+        }
+        let n = off[s] as usize;
+        let (mut src, mut trips) = (vec![0u32; n], vec![0f32; n]);
+        let mut at = off.clone();
         for (a, row) in od.chunks_exact_mut(s).enumerate() {
             if !std::mem::take(&mut self.rows[a]) {
                 continue;
             }
             for (b, v) in row.iter_mut().enumerate() {
                 if *v != 0.0 {
-                    self.tmp.push((b as u32, a as u32, *v));
-                    off[b + 1] += 1;
+                    let j = at[b] as usize;
+                    (src[j], trips[j]) = (a as u32, *v);
+                    at[b] += 1;
                     *v = 0.0;
                 }
             }
         }
-        let base = self.src.len() as u32;
-        off[0] = base;
-        for b in 0..s {
-            off[b + 1] += off[b];
-        }
-        self.src.resize(base as usize + self.tmp.len(), 0);
-        self.trips.resize(self.src.len(), 0.0);
-        let mut at = off.clone();
-        for &(b, a, v) in &self.tmp {
-            let j = at[b as usize] as usize;
-            (self.src[j], self.trips[j]) = (a, v);
-            at[b as usize] += 1;
-        }
-        self.off[kind] = off;
+        (self.off[kind], self.src[kind], self.trips[kind]) = (off, src, trips);
     }
 }
 
@@ -606,12 +606,12 @@ fn assign_lanes(g: &Graph, sk: &Skims, cols: &Columns, ix: &XferIndex, xfer: &mu
     let bent = !g.fare_curve.flat();
     // T-3578
     let based = !g.rn_base_mul.is_empty();
-    let used: Vec<(usize, &[u32])> = cols.off.iter().enumerate().filter(|(_, o)| !o.is_empty()).map(|(k, o)| (k, &o[..])).collect();
+    let used: Vec<(usize, &[u32], &[u32], &[f32])> = cols.off.iter().enumerate().filter(|(_, o)| !o.is_empty()).map(|(k, o)| (k, &o[..], &cols.src[k][..], &cols.trips[k][..])).collect();
     for dst in 0..s {
         let mut total = ZERO;
-        for &(k, off) in &used {
+        for &(k, off, srcs, trips) in &used {
             for j in off[dst] as usize..off[dst + 1] as usize {
-                let (src, v) = (cols.src[j] as usize, cols.trips[j]);
+                let (src, v) = (srcs[j] as usize, trips[j]);
                 flow[src][k] = v;
                 l.entry[src][k] += v;
                 total[k] += v;
@@ -665,9 +665,9 @@ fn assign_lanes(g: &Graph, sk: &Skims, cols: &Columns, ix: &XferIndex, xfer: &mu
         }
         // the walk leaves zero every node it took flow from; the rest set here
         flow[dst] = ZERO;
-        for &(_, off) in &used {
+        for &(_, off, srcs, _) in &used {
             for j in off[dst] as usize..off[dst + 1] as usize {
-                flow[cols.src[j] as usize] = ZERO;
+                flow[srcs[j] as usize] = ZERO;
             }
         }
         debug_assert!(flow.iter().all(|f| *f == ZERO));
@@ -827,7 +827,7 @@ fn check_lanes(g: &Graph, sk: &Skims, cols: &Columns, ix: &XferIndex, lanes: &La
         let mut od = vec![0.0f32; s * s];
         for b in 0..s {
             for j in off[b] as usize..off[b + 1] as usize {
-                od[cols.src[j] as usize * s + b] = cols.trips[j];
+                od[cols.src[k][j] as usize * s + b] = cols.trips[k][j];
             }
         }
         let r = assign_with_transfers(g, sk, &od, ix, &mut want);
@@ -1230,8 +1230,10 @@ impl EverydayApi {
             return (probability, zero.clone(), vec![Part::of(&zero); kinds], xfer, walk_lost, rail_d, unr_lost);
         }
         let (loads, parts) = with_skims(g, p, &want, |sk| {
-            // a table per distance band (T-710)
-            let ers = station_exp(sk, p);
+            // The station pairs' `station_exp` in the pair's distance band (T-710) are worked out
+            // for each pair as it comes, not as one table per band (stations² floats each, the
+            // largest part of a solving worker's peak, T-3160): its costs gathered, then the exps
+            // in one loop over them
             let ss = s * s;
             // One station-pair matrix, filled by one purpose's pairs (they are
             // stored purpose by purpose) and packed into its columns; then one walk of each
@@ -1302,6 +1304,7 @@ impl EverydayApi {
             // per access entry of a pair's start, a bit per entry at its end the walking rule keeps
             let mut kept_rows: Vec<u32> = vec![];
             let mut pair_c: Vec<f32> = vec![];
+            let mut pair_e: Vec<f32> = vec![];
             for (i, pair) in self.pairs.iter().enumerate() {
                 if parts > 1 && i as u32 % parts != part {
                     continue;
@@ -1317,7 +1320,6 @@ impl EverydayApi {
                 let bd = p.band_of_d2(pair.distance * pair.distance);
                 let (th, off) = bands[bd];
                 let (acc, acc_r) = (&accs[bd * na..(bd + 1) * na], &acc_rs[bd * na..(bd + 1) * na]);
-                let er = &ers[bd * ss..(bd + 1) * ss];
                 // the home end: its walks, or on a trip of `ride_min_km` or more its walks and
                 // rides (T-389, as the commute's `ride_offered` but on the pair's own distance);
                 // the activity end walks
@@ -1349,11 +1351,25 @@ impl EverydayApi {
                     // up once into a bit per pair for the passes below (T-2307)
                     let check = rule && rule_from[u] + rule_to[v] > walk_on && !apart && p.walk_rule_at(walk_on);
                     // every station pair's weight, and their sum as with the rule off
+                    // (and each one's exp, `pair_e`, for the assignment below)
                     pair_c.clear();
+                    pair_e.clear();
+                    for ka in a.clone() {
+                        let ia = sz.acc_st[ka] as usize;
+                        let row = &sk.r[ia * s..(ia + 1) * s];
+                        // (boarding and alighting at one station is no rail trip: `station_exp`'s zero diagonal)
+                        pair_e.extend(b.clone().map(|kb| { let ib = sz.acc_st[kb] as usize; if ib == ia { f32::INFINITY } else { row[ib] } }));
+                    }
+                    // (every exp taken, then kept or zeroed: with a branch around it the load was 8% slower)
+                    for e in pair_e.iter_mut() {
+                        let x = fast_exp(-th * (*e - off));
+                        *e = if e.is_finite() { x } else { 0.0 };
+                    }
                     let mut all_sum = 0.0;
+                    let mut es = pair_e.iter();
                     for ka in a.clone() {
                         for kb in b.clone() {
-                            let c = wa[ka] * wb[kb] * er[sz.acc_st[ka] as usize * s + sz.acc_st[kb] as usize];
+                            let c = wa[ka] * wb[kb] * *es.next().unwrap();
                             all_sum += c;
                             pair_c.push(c);
                         }
@@ -1401,6 +1417,8 @@ impl EverydayApi {
                     }
                     let (a0, b0) = (a.start, b.start);
                     let keep = |ka: usize, kb: usize| kept_rows[ka - a0] >> (kb - b0) & 1 != 0;
+                    let nb = b.len();
+                    let er = |ka: usize, kb: usize| pair_e[(ka - a0) * nb + kb - b0];
                     // T-3888: the walk tier rides where the rule keeps no pair too
                     let t = if apart || all_sum < 1e-30 { 0.0 } else { p.tier_at(cw) };
                     let kept = sum >= 1e-30;
@@ -1425,7 +1443,7 @@ impl EverydayApi {
                                 if fc.via[at] != NO_FAN && keep(ka, kb) {
                                     any = true;
                                     e = fast_exp(-th * (fc.cost[at] - off));
-                                    sum_f += wa[ka] * wb[kb] * (e - er[at]);
+                                    sum_f += wa[ka] * wb[kb] * (e - er(ka, kb));
                                 }
                                 fan_e.push(e);
                             }
@@ -1507,7 +1525,7 @@ impl EverydayApi {
                                 }
                                 let ia = sz.acc_st[ka] as usize;
                                 let ib = sz.acc_st[kb] as usize;
-                                od[ia * s + ib] += trips * wa[ka] * wb[kb] * er[ia * s + ib];
+                                od[ia * s + ib] += trips * wa[ka] * wb[kb] * er(ka, kb);
                             }
                         }
                         continue;
@@ -1530,10 +1548,10 @@ impl EverydayApi {
                             let (at, w) = (ia * s + ib, wa[ka] * wb[kb]);
                             let j = fc.via[at] as usize;
                             if j == NO_FAN as usize {
-                                od[at] += (trips + trips_f) * w * er[at];
+                                od[at] += (trips + trips_f) * w * er(ka, kb);
                                 continue;
                             }
-                            od[at] += trips * w * er[at];
+                            od[at] += trips * w * er(ka, kb);
                             let x = trips_f * w * fe;
                             let fi = fc.first[ia * np + j] as usize;
                             let (pp, qq) = (fc.ports[fi] as usize, fc.ports[j] as usize);
@@ -1559,7 +1577,7 @@ impl EverydayApi {
             if od_used {
                 cols.pack(&mut od, s, od_kind);
             }
-            drop(od);
+            drop((od, accs, acc_rs));
             let mut lanes = assign_lanes(g, sk, &cols, ix, &mut xfer);
             #[cfg(test)]
             if CHECK_LANES.with(|c| c.get()) {
