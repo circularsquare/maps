@@ -2,15 +2,19 @@ use super::*;
 use crate::demand::network::{route_nodes, RealNet};
 use crate::demand::{kernel, pack, synth};
 
-/// A small pack (the synthetic city's inner 12 km, gravity solved and shipped) and two
-/// crossing lines.
-pub(super) fn small() -> (DemandApi, Vec<f32>, Vec<u32>, Vec<u32>, Vec<f32>, Vec<f32>, Vec<f32>) {
+/// The small pack: the synthetic city's inner 12 km, gravity solved and shipped.
+pub(super) fn small_pack() -> (String, Vec<u8>) {
     let mut city = synth::synth_city(1).inner(12_000.0);
     let p = Params::default();
     let z = kernel::build_zones(&city, p.zone_m);
     let g = kernel::gravity(&z, &p, 100, 1e-5);
     city.gravity = Some(kernel::to_pack_gravity(&z, &g, &p));
-    let (h, b) = pack::write(&city);
+    pack::write(&city)
+}
+
+/// The small pack and two crossing lines.
+pub(super) fn small() -> (DemandApi, Vec<f32>, Vec<u32>, Vec<u32>, Vec<f32>, Vec<f32>, Vec<f32>) {
+    let (h, b) = small_pack();
     let api = DemandApi::new(&h, &b).unwrap();
     // stations every 1 km along x and along y through the centre (shared at the origin)
     let mut xy = vec![];

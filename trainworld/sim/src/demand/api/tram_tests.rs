@@ -113,6 +113,47 @@ fn a_per_line_input_of_the_wrong_length_is_an_error() {
     api.set_network(&xy, &counts, &stops, &times, &tph, &cars).unwrap();
 }
 
+/// T-3909: the everyday layer, given the tram flags as the worker gives both populations, solves on the network the
+/// commutes do (a tram's three quarters of a car, the same tram-only stops); with no flags it would hold the tram as
+/// a train, and its tram riders differ.
+#[test]
+fn everyday_trips_see_the_tram_lines_as_commutes_do() {
+    use crate::demand::everyday::EverydayApi;
+    // the small pack with errand and leisure places: a cell's jobs each
+    let (h, mut b) = super::tests::small_pack();
+    let jobs = DemandApi::new(&h, &b).unwrap().city.jobs.clone();
+    let mut h: serde_json::Value = serde_json::from_str(&h).unwrap();
+    for name in ["errand_jobs", "leisure_jobs"] {
+        let offset = b.len();
+        b.extend(jobs.iter().flat_map(|v| v.to_le_bytes()));
+        h["arrays"].as_array_mut().unwrap().push(serde_json::json!({"name": name, "dtype": "f32", "per": "cell", "count": jobs.len(), "offset": offset}));
+    }
+    let h = h.to_string();
+    let open = |tram: bool| {
+        let (mut api, xy, counts, stops, times, tph, cars) = with_line(5, -300.0, 300.0, 150.0, 2.0);
+        let mut ev = EverydayApi::beside_with(&api, &h, &b, &[]).unwrap();
+        if tram {
+            api.set_tram_lines(&[0, 0, 1]);
+            ev.set_tram_lines(&[0, 0, 1]);
+        }
+        api.set_network(&xy, &counts, &stops, &times, &tph, &cars).unwrap();
+        ev.set_network(&xy, &counts, &stops, &times, &tph, &cars).unwrap();
+        (api, ev)
+    };
+    let (api, mut ev) = open(true);
+    let (a, e) = (api.svc.as_ref().unwrap(), ev.engine().svc.as_ref().unwrap());
+    assert_eq!(e.cars, vec![10.0, 8.0, 1.5], "the everyday layer's tram: three quarters of a car a section");
+    assert_eq!(e.st_tram, a.st_tram);
+    assert_eq!(e.st_tram.iter().filter(|&&t| t).count(), 5);
+    assert!(e.same_layout(a), "the everyday layer's network is the commutes'");
+    let (_, mut plain) = open(false);
+    assert!(ev.solve(0) && plain.solve(0));
+    // the tram line's route nodes are the last 10
+    let on = |b: Vec<f32>| b[b.len() - 10..].iter().sum::<f32>();
+    let (with, without) = (on(ev.board(0)), on(plain.board(0)));
+    assert!(with > 0.0 && (with - without).abs() > 1e-3 * without, "tram riders {with} with the flags, {without} without");
+}
+
 /// Solve time with and without a tram line of 20 stops on top of the 34 metro ones (printed, not
 /// asserted: timings are noisy). `cargo test --release --features demand --lib tram_solve_time -- --ignored --nocapture`.
 #[test]

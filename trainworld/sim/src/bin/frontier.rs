@@ -324,8 +324,8 @@ fn main() {
         let mul = if s.bus { num(fares, "bus") } else if s.fast { num(fares, "hsr") } else { 1.0 } as f32;
         let fare_mul = if mul != 1.0 { vec![mul; 2 * n] } else { vec![] };
         // setUpPops, in its order
-        // (the everyday layer is given no tram flags: the worker sets them on the commutes only)
         api.set_tram_lines(&[s.tram as u8]);
+        ev.set_tram_lines(&[s.tram as u8]);
         api.set_stairs(&[], &s.grade);
         ev.set_stairs(&[], &s.grade);
         api.set_chunked(true);

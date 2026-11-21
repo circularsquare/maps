@@ -1976,6 +1976,10 @@ impl EverydayApi {
     pub fn set_stairs(&mut self, ferry_lines: &[u8], grade_stops: &[u8]) {
         self.engine.set_stairs(ferry_lines, grade_stops);
     }
+    /// `DemandApi::set_tram_lines` (T-2926, T-3909).
+    pub fn set_tram_lines(&mut self, flags: &[u8]) {
+        self.engine.set_tram_lines(flags);
+    }
     pub fn set_network(
         &mut self,
         xy: &[f32],
