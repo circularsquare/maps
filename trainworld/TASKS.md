@@ -539,13 +539,13 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3654 [P3] {L:map-look} Draw on the map for planning
   - Context: Your pad, 2026-11-18, from Discord, "not high prio": "some people want draw on map tool for planning stuff. could add it in a discreet way, hideable".
   - Goal: A design to you first (what can be drawn, whether it saves and shares, where the hide control sits), then a first version.
+- T-4021 [P3] {L:line-rates} Load's cap lowering can miss a line after an early edit
+  - Context: Seen by fullspeed (T-3655), 11-21, on London's save: with a count edit about 2 s after the load's final, the load's cap lowering never reached Victoria for the whole session (368/136/7); an edit 10 s after, or a single edit right after, let it finish (37 lines lowered, Victoria 15/16/7). Cause unknown; not from T-3655. Not started while usage is high.
+  - Goal: The cause named, and the lowering always finishes whatever the edit timing.
+  - Other: notes/T-3655.md
 - T-3894 [P3] {L:line-rates} A line with no trains still caps the lines it crosses
   - Context: Found by fullrate (T-3646), 11-20: on Tokyo a crossing of lines [150, 42, 42] at 100% stays capped by a line with no trains. Not looked at further.
   - Goal: A line with no trains in a period holds no share of a crossing or shared track in it, or the reason it should.
-- T-3655 [P2] {L:line-rates} Count edits on full track slow from boarding redone (taking, 2026-11-21, agent fullspeed)
-  - Context: LAND-READY 11-21 in tree .tw-trees/fullrate (uncommitted; notes/T-3655.md there, "Even caps at load" newest): the re-share (`world.rs` `reshare_full`), the load's caps made even (they were refused for money, not late: London's save runs more trains than its fleet, so a game-made edit now pays only for trains it adds; Victoria's first edit 12.80, 13.24 after a line 120 edit, against master's 2.78) and T-3941. Left: the speed. A Victoria count edit re-shares its track and moves 14-23 lines' rates, so boarding is redone for about 25 lines before the answer: 0.7-2.2 s worker time against master's 63-124 ms on a full machine. Leads: answer before the boarding steps (trips without loads first, as T-3804's stale account), or redo boarding only past a departure threshold.
-  - Goal: Count edits on full track within about 50 ms of master's on London's shared save, or the reason they can't be.
-  - Other: fullchk 11-21: the 25 boarding steps come only when an edit moves other lines' rates (T-007 and a fresh game: 1 step, as master). Also seen: the rate depends on edit order (Victoria's 16 trains give 12.69 or 13.23). notes/T-3655.md, notes/T-3482.md "Follow-ups"
 - T-3231 [P3] {L:trains-drawn} {after:T-3264} Two lines drawn over each other at a terminal
   - Context: A fix exists as notes/T-3231-fix.patch (trainGuard holdForPlaces): t1965-follow drops from 40-47 frames to 0-4, t2980 unchanged, but t2018-trail then halts the express 16-28 times and t3264's follow layout gains 4 overlap events, all from the express running later than the guard can draw (T-3271). Parked until T-3271, then re-measured. Traced 11-21 (movedhour, notes/T-3931.md): the late expresses at 12/9 and the 230-257 s hold at G at 30/10 are this too: an arriving train waits short of the end because the other line's train stands in the same end bay, and the next trip inherits the lag; `t2233 --count` stays red until this lands.
   - Goal: t1965-follow passes without breaking t2980. Part of T-3264.
