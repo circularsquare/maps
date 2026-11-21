@@ -93,6 +93,97 @@ fn sample_count(kind: usize, trips: f32) -> usize {
 }
 /// No airport trip ends this close to a terminal (its own jobs are not its passengers' ends).
 pub(crate) const AIRPORT_CLEAR_M: f32 = 1500.0;
+/// T-3502: big airports draw ground trips from farther away. An airport's O&D passengers a year
+/// over `AIR_FAR_FROM`, kept between 1 and `AIR_FAR_MAX`, multiply its decay length and its reach
+/// (`AIR_REACH_M`, where `local_share` ends), the reach at most `AIR_REACH_MAX_M` and faded over its
+/// last `AIR_FADE_M` as `local_share` is. Set on the CAA's 2023 survey of where Heathrow's, Gatwick's,
+/// Stansted's and Manchester's passengers start (notes/T-3502.md); the 10-30M ramp is judgement.
+pub const AIR_FAR_FROM: f64 = 10_000_000.0;
+pub const AIR_FAR_MAX: f32 = 3.0;
+pub const AIR_REACH_M: f32 = 80_000.0;
+pub const AIR_REACH_MAX_M: f32 = 150_000.0;
+pub const AIR_FADE_M: f32 = 40_000.0;
+/// O&D passengers a year per ground outing a day: an outing is a boarding (`airport_trips`), two
+/// passengers, over the build's 366 days.
+pub const AIR_PASSENGERS_PER_OUTING: f64 = 2.0 * 366.0;
+/// Terminal cells this close together are one airport's (`cross.rs`'s `TERMINAL_M`).
+pub(crate) const AIR_TERMINAL_M: f32 = 4000.0;
+/// T-3502: the decay and reach multiplier of an airport whose ground outings a day are `outings`.
+pub fn air_far(outings: f64) -> f32 {
+    ((outings * AIR_PASSENGERS_PER_OUTING / AIR_FAR_FROM) as f32).clamp(1.0, AIR_FAR_MAX)
+}
+/// T-3502: the reach, metres, of an airport with multiplier `m` (`air_far`).
+pub fn air_reach_m(m: f32) -> f32 {
+    (AIR_REACH_M * m).min(AIR_REACH_MAX_M)
+}
+/// T-3502: the share kept of a pair `d` metres apart whose purpose reaches `reach` metres: all of
+/// it up to `AIR_FADE_M` short of the reach, none at it (`local_share` is this at 80 km).
+pub(crate) fn fade_to(d: f32, reach: f32) -> f32 {
+    let x = ((d - (reach - AIR_FADE_M)) / AIR_FADE_M).clamp(0.0, 1.0);
+    1.0 - x * x * (3.0 - 2.0 * x)
+}
+/// T-3502: the pack's airports' outings of their people outside it (the header's `airport.sites`,
+/// tier0's, T-2896): x, y in the pack's frame and outings a day. None in a pack built before.
+fn air_sites(header: &str) -> Result<Vec<(f32, f32, f64)>, String> {
+    let h: serde_json::Value = serde_json::from_str(header).map_err(|e| e.to_string())?;
+    let Some(sites) = h["airport"]["sites"].as_array() else { return Ok(vec![]) };
+    let (Some(lon0), Some(lat0)) = (h["origin"]["lon"].as_f64(), h["origin"]["lat"].as_f64()) else { return Ok(vec![]) };
+    let fr = crate::track::frame::Frame::equirect(lon0, lat0);
+    Ok(sites
+        .iter()
+        .filter_map(|s| {
+            let (lon, lat, out) = (s["lon"].as_f64()?, s["lat"].as_f64()?, s["outside_outings"].as_f64()?);
+            let (x, y) = fr.from_lonlat(lon, lat);
+            Some((x as f32, y as f32, out))
+        })
+        .collect())
+}
+/// T-3502: each cell's airport multiplier (`air_far`; 1 off the terminals). Terminal cells (any
+/// `trips`) within `AIR_TERMINAL_M` of one another are one airport, sized by their outings plus the
+/// outings its people outside the pack make (`sites`: x, y in the pack's frame, outings a day; each
+/// joins the airport of the nearest terminal cell within `AIR_TERMINAL_M`).
+pub(crate) fn airport_multipliers(x: &[f32], y: &[f32], trips: &[f32], sites: &[(f32, f32, f64)]) -> Vec<f32> {
+    let cells: Vec<usize> = (0..trips.len()).filter(|&c| trips[c] > 0.0).collect();
+    let near = |a: usize, b: usize| (x[a] - x[b]).powi(2) + (y[a] - y[b]).powi(2) <= AIR_TERMINAL_M * AIR_TERMINAL_M;
+    // one airport per group of terminal cells linked within the distance
+    let mut group: Vec<usize> = (0..cells.len()).collect();
+    fn root(g: &mut [usize], mut i: usize) -> usize {
+        while g[i] != i {
+            g[i] = g[g[i]];
+            i = g[i];
+        }
+        i
+    }
+    for i in 0..cells.len() {
+        for j in 0..i {
+            if near(cells[i], cells[j]) {
+                let (a, b) = (root(&mut group, i), root(&mut group, j));
+                group[a.max(b)] = a.min(b);
+            }
+        }
+    }
+    let mut outings = vec![0.0f64; cells.len()];
+    for i in 0..cells.len() {
+        let r = root(&mut group, i);
+        outings[r] += trips[cells[i]] as f64;
+    }
+    for &(sx, sy, out) in sites {
+        let nearest = (0..cells.len())
+            .map(|i| ((x[cells[i]] - sx).powi(2) + (y[cells[i]] - sy).powi(2), i))
+            .filter(|&(d2, _)| d2 <= AIR_TERMINAL_M * AIR_TERMINAL_M)
+            .min_by(|a, b| a.0.total_cmp(&b.0));
+        if let Some((_, i)) = nearest {
+            let r = root(&mut group, i);
+            outings[r] += out.max(0.0);
+        }
+    }
+    let mut m = vec![1.0f32; trips.len()];
+    for i in 0..cells.len() {
+        let r = root(&mut group, i);
+        m[cells[i]] = air_far(outings[r]);
+    }
+    m
+}
 /// T-196: the share of the social/leisure attraction that is parks (the pack's `park_draw`, OSM
 /// parks by area and residents nearby), taken evenly from the population and leisure-jobs halves.
 /// ATUS 2023: 7.6% of leisure outings (eating out, socialising, sport and recreation) end
@@ -186,6 +277,9 @@ struct Sampler<'a> {
     mass: &'a [f64],
     cell_cdf: &'a [Vec<f64>],
     members: &'a [Vec<usize>],
+    /// T-3502: per destination zone, the purpose's reach there (`fade_to`); empty for
+    /// `local_share`'s
+    reach: &'a [f32],
 }
 
 impl Sampler<'_> {
@@ -211,8 +305,9 @@ impl Sampler<'_> {
                 let j = self.cell_cdf[z].partition_point(|&v| v <= target).min(self.members[z].len() - 1);
                 let d = self.members[z][j];
                 let distance = ((self.x[c] - self.x[d]).powi(2) + (self.y[c] - self.y[d]).powi(2)).sqrt();
+                let kept = if self.reach.is_empty() { local_share(distance) } else { fade_to(distance, self.reach[z]) };
                 // Excluded trips vanish, including from all-mode denominators. No replacement.
-                if distance >= MIN_DISTANCE_M && local_share(distance) > 0.0 {
+                if distance >= MIN_DISTANCE_M && kept > 0.0 {
                     out[at + k] = d as u32;
                 }
             }
@@ -338,6 +433,24 @@ impl DecayTable {
     }
 }
 
+/// T-3502: `DecayTable::cdf` with each listed zone's own table (`which`, into `tables`, all built
+/// on the same zones), for airports whose decay lengths differ.
+#[inline(never)]
+fn cdf_each(tables: &[DecayTable], which: &[u8], z: &Zones, o: usize, zx: &[i32], zy: &[i32], mass: &[f64], cdf: &mut Vec<f64>) -> f64 {
+    cdf.clear();
+    let mut total = 0.0;
+    for k in 0..zx.len() {
+        let t = &tables[which[k] as usize];
+        let at = match &t.layout {
+            Some(g) => (g.base(z, o) + zx[k]) as usize,
+            None => (zx[k] - z.gx[o]).unsigned_abs() as usize * t.span + (zy[k] - z.gy[o]).unsigned_abs() as usize,
+        };
+        total += mass[k] * t.v[at] as f64;
+        cdf.push(total);
+    }
+    total
+}
+
 /// T-1092: `cdf` (the local draw, summing to `local`) becomes the mixture, a share `q` drawn
 /// from `central` (summing to `tc`) appended after it, over the same zones; returns its total. A
 /// part with nothing in reach leaves the other the whole draw.
@@ -358,13 +471,14 @@ fn mix_central(cdf: &mut Vec<f64>, local: f64, central: &[f64], tc: f64, q: f64)
 /// around it (sum over zones of their origin weight x decay to the airport's zone), as the mass
 /// origin cells sample airports by. An origin cell then sends `origin x` the sum over airports of
 /// mass x decay from its zone, and every airport receives exactly its trips (before the 150 m
-/// exclusion and the 40-80 km taper, which apply to every purpose).
-fn airport_draw(z: &Zones, members: &[Vec<usize>], origin: &[f32], trips: &[f32], decay_m: f32) -> Vec<f32> {
-    let table = DecayTable::new(z, decay_m);
+/// exclusion and the fade, which apply to every purpose). `decay_m`: the decay length at each
+/// site zone (T-3502: an airport's own).
+fn airport_draw(z: &Zones, members: &[Vec<usize>], origin: &[f32], trips: &[f32], decay_m: impl Fn(usize) -> f32) -> Vec<f32> {
     let w: Vec<f64> = members.iter().map(|m| m.iter().map(|&c| origin[c] as f64).sum()).collect();
     let zones: Vec<usize> = (0..z.n).filter(|&k| w[k] > 0.0).collect();
-    let (zx, zy) = table.places(z, &zones);
+    let mut tables: Vec<(f32, DecayTable)> = vec![];
     let zw: Vec<f64> = zones.iter().map(|&k| w[k]).collect();
+    let mut places = None;
     let mut draw = vec![None; z.n];
     let mut cdf = Vec::with_capacity(zones.len());
     let mut mass = vec![0.0f32; trips.len()];
@@ -373,7 +487,14 @@ fn airport_draw(z: &Zones, members: &[Vec<usize>], origin: &[f32], trips: &[f32]
             continue;
         }
         let a = z.cell_zone[c] as usize;
-        let d = *draw[a].get_or_insert_with(|| table.cdf(z, a, &zx, &zy, &zw, &mut cdf));
+        let decay = decay_m(a);
+        let i = tables.iter().position(|e| e.0 == decay).unwrap_or_else(|| {
+            tables.push((decay, DecayTable::new(z, decay)));
+            tables.len() - 1
+        });
+        let table = &tables[i].1;
+        let (zx, zy) = places.get_or_insert_with(|| table.places(z, &zones));
+        let d = *draw[a].get_or_insert_with(|| table.cdf(z, a, zx, zy, &zw, &mut cdf));
         if d > 0.0 {
             mass[c] = (t as f64 / d) as f32;
         }
@@ -910,6 +1031,9 @@ pub struct EverydayApi {
     /// cell's airport trips are `airport_origin[c] x airport_scale[zone]`. Empty without airports.
     airport_origin: Vec<f32>,
     airport_scale: Vec<f64>,
+    /// T-3502: per zone, an airport's reach there (`fade_to`); empty while every airport's is
+    /// `AIR_REACH_M` (`local_share`)
+    airport_reach: Vec<f32>,
     /// T-263, attractions, as the airports': visitors' home and lodging ends, and the draw.
     attraction_origin: Vec<f32>,
     attraction_scale: Vec<f64>,
@@ -1184,7 +1308,12 @@ impl EverydayApi {
             _ => self.engine.pop()[c],
         };
         let kept = self.kept.get(kind).filter(|k| !k.is_empty()).map_or(1.0, |k| k[self.engine.z.cell_zone[if site_anchored(kind) { d } else { c }] as usize]);
-        let weight = budget * self.rate[kind] * share * local_share(distance) * kept;
+        let fade = if kind == AIRPORT && !self.airport_reach.is_empty() {
+            fade_to(distance, self.airport_reach[self.engine.z.cell_zone[d] as usize])
+        } else {
+            local_share(distance)
+        };
+        let weight = budget * self.rate[kind] * share * fade * kept;
         (weight, self.no_rail(kind, c, d, distance))
     }
     fn edge(&self, k: usize) -> Option<(usize, usize, usize, f32, f32)> {
@@ -1639,7 +1768,7 @@ impl EverydayApi {
         r.add(format!("{at}samples: pairs (Pair)"), vb(&self.pairs));
         r.add(format!("{at}samples: edge_pair"), vb(&self.edge_pair));
         r.add(format!("{at}samples: live, first, norm, kept"), [&self.live, &self.first].iter().map(|v| vb(*v) + v.iter().map(vb).sum::<usize>()).sum::<usize>() + vb(&self.norm) + self.norm.iter().map(vb).sum::<usize>() + vb(&self.kept) + self.kept.iter().map(vb).sum::<usize>());
-        r.add(format!("{at}per cell and zone (sz_part, airports, attractions, enrollment)"), vb(&self.sz_part) + vb(&self.wplace) + vb(&self.wpark) + vb(&self.school_enrollment) + vb(&self.university_enrollment) + vb(&self.airport_origin) + vb(&self.airport_scale) + vb(&self.attraction_origin) + vb(&self.attraction_scale) + vb(&self.attractions));
+        r.add(format!("{at}per cell and zone (sz_part, airports, attractions, enrollment)"), vb(&self.sz_part) + vb(&self.wplace) + vb(&self.wpark) + vb(&self.school_enrollment) + vb(&self.university_enrollment) + vb(&self.airport_origin) + vb(&self.airport_scale) + vb(&self.airport_reach) + vb(&self.attraction_origin) + vb(&self.attraction_scale) + vb(&self.attractions));
         let (mut net, mut g, mut l, mut parts, mut rest) = (0, 0, 0, 0, 0);
         for p in self.per.iter().flatten() {
             net += mem::network(&p.net);
@@ -1742,6 +1871,22 @@ impl EverydayApi {
         for c in 0..n {
             members[engine.z.cell_zone[c] as usize].push(c);
         }
+        // T-3502: each airport zone's decay and reach multiplier (`air_far`), 1 elsewhere; the
+        // reaches only where some airport's goes past `AIR_REACH_M`
+        let air_m: Vec<f32> = match &airport_trips {
+            Some(trips) => {
+                let m = airport_multipliers(&engine.city.x, &engine.city.y, trips, &air_sites(header)?);
+                let mut zm = vec![1.0f32; nz];
+                for c in 0..n {
+                    let k = engine.z.cell_zone[c] as usize;
+                    zm[k] = zm[k].max(m[c]);
+                }
+                zm
+            }
+            None => vec![],
+        };
+        let air_decay = |k: usize| decay[AIRPORT] * air_m.get(k).copied().unwrap_or(1.0);
+        let airport_reach: Vec<f32> = if air_m.iter().any(|&m| m > 1.0) { air_m.iter().map(|&m| air_reach_m(m)).collect() } else { vec![] };
         // Airports: the home and visitor ends are half residents, a quarter jobs (business
         // visitors) and a quarter leisure jobs (hotels, restaurants, attractions), each normalised.
         // Each airport keeps its own total: its trips are divided by its draw over every origin
@@ -1762,7 +1907,7 @@ impl EverydayApi {
                         *o = 0.0;
                     }
                 }
-                let mass = airport_draw(&engine.z, &members, &origin, trips, decay[AIRPORT]);
+                let mass = airport_draw(&engine.z, &members, &origin, trips, air_decay);
                 (origin, Some(mass))
             }
             None => (vec![], None),
@@ -1780,7 +1925,7 @@ impl EverydayApi {
                     ((if tl > 0.0 { 0.5 } else { 1.0 }) * engine.pop()[c] as f64 / tp + lodging) as f32
                 })
                 .collect();
-            let mass = airport_draw(&engine.z, &members, &origin, &attraction_visits, decay[ATTRACTION]);
+            let mass = airport_draw(&engine.z, &members, &origin, &attraction_visits, |_| decay[ATTRACTION]);
             (origin, Some(mass))
         };
         // Purpose indices stay stable: a missing purpose before a present one is an empty slot.
@@ -1839,6 +1984,21 @@ impl EverydayApi {
             let zmass: Vec<f64> = zones.iter().map(|&z| mass[z]).collect();
             let table = DecayTable::new(&engine.z, decay[kind]);
             let (zx, zy) = table.places(&engine.z, &zones);
+            // T-3502: with a big airport, each airport zone's own decay (one table per length)
+            let far = kind == AIRPORT && !airport_reach.is_empty();
+            let mut each: (Vec<DecayTable>, Vec<u8>) = (vec![], vec![]);
+            if far {
+                let mut lengths: Vec<f32> = vec![];
+                for &k in &zones {
+                    let d = air_decay(k);
+                    let i = lengths.iter().position(|&e| e == d).unwrap_or_else(|| {
+                        lengths.push(d);
+                        each.0.push(DecayTable::new(&engine.z, d));
+                        lengths.len() - 1
+                    });
+                    each.1.push(i as u8);
+                }
+            }
             let q = if has_central(kind) { engine.base.everyday_central_share.clamp(0.0, 1.0) as f64 } else { 0.0 };
             let mut central = (q > 0.0).then(|| {
                 let z = &engine.z;
@@ -1864,6 +2024,7 @@ impl EverydayApi {
                 mass: &mass,
                 cell_cdf: &cell_cdf,
                 members: &members,
+                reach: if far { &airport_reach } else { &[] },
             };
             let out = &mut destinations[start[kind]..start[kind + 1]];
             let mut cdf = Vec::with_capacity(zones.len());
@@ -1872,7 +2033,7 @@ impl EverydayApi {
                 if !members[oz].iter().any(|&c| budget.get(c).copied().unwrap_or(0.0) > 0.0) {
                     continue;
                 }
-                let mut total = table.cdf(&engine.z, oz, &zx, &zy, &zmass, &mut cdf);
+                let mut total = if far { cdf_each(&each.0, &each.1, &engine.z, oz, &zx, &zy, &zmass, &mut cdf) } else { table.cdf(&engine.z, oz, &zx, &zy, &zmass, &mut cdf) };
                 if let Some((ctable, cmass, ccdf)) = central.as_mut() {
                     let tc = ctable.cdf(&engine.z, oz, &zx, &zy, cmass, ccdf);
                     total = mix_central(&mut cdf, total, ccdf, tc, q);
@@ -1930,6 +2091,7 @@ impl EverydayApi {
             university_enrollment: university_enrollment.unwrap_or_default(),
             airport_origin,
             airport_scale,
+            airport_reach,
             attraction_origin,
             attraction_scale,
             attractions: sites,

@@ -465,11 +465,13 @@ from both sides, so the everyday draw does not stop at the line.
 - **Airports** (T-2896) keep their pack share in the pack (`airport_trips`, unchanged by this step).
   The rest, each airport's outings of the people outside its pack (the header's `airport.sites`:
   `outside_outings`, and `outside_weight`, those people x exp(-d / 20 km) by GHSL), is drawn over
-  every other loaded pack's cells within 80 km, none within 1.5 km of the airport, each weighed as
+  every other loaded pack's cells within the airport's reach (80 km; a big airport's the site's
+  `reach_m`, up to 150 km, T-3502), none within 1.5 km of the airport, each weighed as
   the everyday layer weighs an airport's ends (half residents, a quarter jobs, a quarter leisure
-  jobs, scaled to the pack's people) x exp(-d / 20 km) x the border factor. A cell gets
-  `outside_outings` x its weight / the larger of `outside_weight` and the cells' sum, so where the
-  neighbours are unbuilt or sea their share is dropped; then the 40-80 km taper. The airport is the
+  jobs, scaled to the pack's people) x exp(-d / decay) (20 km, or the site's `decay_m`) x the border
+  factor. A cell gets `outside_outings` x its weight / the larger of `outside_weight` and the cells'
+  sum, so where the neighbours are unbuilt or sea their share is dropped; then the fade over the
+  reach's last 40 km. The airport is the
   draw's end (kind 4 joins school and university in the file's `site_kinds`). A pack built before
   T-2896 has no `sites` and sends none.
 - **Kept share.** The share of each zone's draw that stays in its own pack, by purpose, goes into

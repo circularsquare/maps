@@ -12,7 +12,7 @@
 //! layer's `no_rail` does (straight walks: no pack's water routes span two packs). The regional
 //! layer carries those pairs.
 use super::{
-    everyday::{car_mul, local_share, AIRPORT_CLEAR_M, CENTRAL_DECAY_M, CENTRAL_SHARE, DECAY, KINDS},
+    everyday::{car_mul, fade_to, local_share, AIRPORT_CLEAR_M, CENTRAL_DECAY_M, CENTRAL_SHARE, DECAY, KINDS},
     kernel::{zones_from_pack, Params, Zones, CELL_KM2},
     pack,
 };
@@ -68,9 +68,13 @@ struct AirSite {
     y: f64,
     wx: f64,
     wy: f64,
-    /// outings a day of the people outside the pack, and their weight (people x exp(-d / 20 km))
+    /// outings a day of the people outside the pack, and their weight (people x exp(-d / decay))
     outside: f64,
     weight: f64,
+    /// T-3502: the decay and reach `weight` was worked out with (the site's `decay_m`, `reach_m`;
+    /// a site without them, 20 km and 80 km)
+    decay: f64,
+    reach: f64,
     /// its terminal cells and each one's share of its trips
     cells: Vec<(u32, f64)>,
 }
@@ -226,8 +230,10 @@ impl CrossPack {
                     .map(|c| (c as u32, trips[c] as f64))
                     .collect();
                 let t: f64 = near.iter().map(|e| e.1).sum();
+                let decay = s["decay_m"].as_f64().unwrap_or(DECAY[AIRPORT] as f64);
+                let reach = s["reach_m"].as_f64().unwrap_or(REACH_KM * 1000.0);
                 if t > 0.0 {
-                    airports.push(AirSite { x, y, wx: 0.0, wy: 0.0, outside, weight, cells: near.into_iter().map(|(c, v)| (c, v / t)).collect() });
+                    airports.push(AirSite { x, y, wx: 0.0, wy: 0.0, outside, weight, decay, reach, cells: near.into_iter().map(|(c, v)| (c, v / t)).collect() });
                 }
             }
         }
@@ -576,21 +582,21 @@ pub fn run(packs: &mut [CrossPack], borders: &Value, threads: usize) -> Unit {
 }
 
 /// T-2896 (5): each solved pack's airports' outings of the people outside the pack, over every other
-/// pack's cells within `REACH_KM` (none within `AIRPORT_CLEAR_M` of the airport), each cell weighed
-/// by its airport end weight x exp(-d / 20 km) x the border factor. The airport's people outside
-/// weigh `weight` (GHSL), so a cell gets `outside` x its weight over the larger of that and the
-/// cells' sum: where the neighbours are unbuilt or sea, their share is dropped, never handed to the
-/// built ones. Then the 40-80 km taper, as every purpose; walking shares at cell grain within
-/// `WALK_PAIR_KM`. `grid`: every zone in 10 km buckets of the unit's frame.
+/// pack's cells within the airport's reach (80 km, a big airport's farther, T-3502; none within
+/// `AIRPORT_CLEAR_M` of the airport), each cell weighed by its airport end weight x exp(-d / the
+/// airport's decay) x the border factor. The airport's people outside weigh `weight` (GHSL), so a
+/// cell gets `outside` x its weight over the larger of that and the cells' sum: where the neighbours
+/// are unbuilt or sea, their share is dropped, never handed to the built ones. Then the fade over the
+/// reach's last 40 km, as every purpose; walking shares at cell grain within `WALK_PAIR_KM`. `grid`:
+/// every zone in 10 km buckets of the unit's frame.
 fn airport_draw(packs: &[CrossPack], grid: &HashMap<(i32, i32), Vec<(u32, u32)>>, factor: &[Vec<f64>], unit: &mut Unit) {
     let bucket_m = 10_000.0;
-    let reach_m = REACH_KM * 1000.0;
-    let reach = (reach_m / bucket_m).ceil() as i32 + 1;
-    let decay = DECAY[AIRPORT] as f64;
     let clear = AIRPORT_CLEAR_M as f64;
     let mut near: Vec<(u32, u32, f64, f64)> = vec![];
     for (pi, p) in packs.iter().enumerate().filter(|(_, p)| p.solved) {
         for a in &p.airports {
+            let (decay, reach_m) = (a.decay, a.reach);
+            let reach = (reach_m / bucket_m).ceil() as i32 + 1;
             unit.air_outside[pi] += a.outside * p.air_rate;
             near.clear();
             let (bx, by) = ((a.wx / bucket_m).floor() as i32, (a.wy / bucket_m).floor() as i32);
@@ -625,7 +631,7 @@ fn airport_draw(packs: &[CrossPack], grid: &HashMap<(i32, i32), Vec<(u32, u32)>>
                 let q = &packs[qi as usize];
                 let t = scale * w;
                 unit.air_moved[pi] += t;
-                let t = t * local_share(d as f32) as f64;
+                let t = t * fade_to(d as f32, reach_m as f32) as f64;
                 if t < 1e-6 {
                     continue;
                 }

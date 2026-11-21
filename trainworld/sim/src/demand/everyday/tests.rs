@@ -689,6 +689,73 @@ fn airport_and_medical_purposes_conserve_and_stay_optional() {
     assert!((to[1] - 30.0).abs() <= one && (to[2] - 20.0).abs() <= one, "{to:?}");
 }
 
+/// T-3502: an airport at x = 0 with `trips` outings a day, homes (residents, jobs, leisure and shops
+/// alike) every 10 km from 5 km to 165 km.
+fn far_airport_fixture(trips: f32) -> (String, Vec<u8>) {
+    let mut x = vec![0.0f32];
+    x.extend((0..17).map(|i| 5000.0 + 10000.0 * i as f32));
+    let n = x.len();
+    let homes = |v: f32| (0..n).map(|c| if c == 0 { 0.0 } else { v }).collect::<Vec<f32>>();
+    let city = pack::City { name: "far".into(), h3: (1..=n as u64).collect(), x, y: vec![0.0; n], pop: homes(1000.0), jobs: homes(1000.0), region: vec![], gravity: None };
+    let (h, mut b) = pack::write(&city);
+    let mut h: serde_json::Value = serde_json::from_str(&h).unwrap();
+    let air = (0..n).map(|c| if c == 0 { trips } else { 0.0 }).collect::<Vec<f32>>();
+    for (name, values) in [("errand_jobs", homes(1000.0)), ("leisure_jobs", homes(1000.0)), ("airport_trips", air)] {
+        let offset = b.len();
+        b.extend(values.into_iter().flat_map(|v| v.to_le_bytes()));
+        h["arrays"].as_array_mut().unwrap().push(serde_json::json!({"name":name,"dtype":"f32","per":"cell","count":n,"offset":offset}));
+    }
+    (h.to_string(), b)
+}
+
+#[test]
+fn big_airports_reach_farther_and_small_ones_do_not() {
+    // the fade at the old reach is `local_share`, bit for bit
+    for i in 0..=1000 {
+        let d = i as f32 * 100.0;
+        assert_eq!(fade_to(d, AIR_REACH_M).to_bits(), local_share(d).to_bits(), "{d}");
+    }
+    // 10M O&D passengers a year and under: today's rule; 30M and over: three times its decay
+    let outings = |m: f64| m * 1e6 / AIR_PASSENGERS_PER_OUTING;
+    assert_eq!((air_far(outings(4.0)), air_far(outings(9.9)), air_far(outings(90.0))), (1.0, 1.0, 3.0));
+    assert!((air_far(outings(20.0)) - 2.0).abs() < 1e-5);
+    assert_eq!((air_reach_m(1.0), air_reach_m(1.5), air_reach_m(3.0)), (80_000.0, 120_000.0, 150_000.0));
+    // one airport's terminals 3 km apart count together, with its outings from outside the pack
+    let (x, y) = ([0.0, 3000.0, 50_000.0, 9000.0], [0.0; 4]);
+    let trips = [outings(3.0) as f32, outings(3.0) as f32, outings(15.0) as f32, 0.0];
+    let m = airport_multipliers(&x, &y, &trips, &[(100.0, 0.0, outings(6.0))]);
+    assert!((m[0] - 1.2).abs() < 1e-4 && m[0] == m[1] && (m[2] - 1.5).abs() < 1e-4 && m[3] == 1.0, "{m:?}");
+    // by distance of the home end: 0-40, 40-80, 80-150, 150 km and over
+    let bands = |trips: f32| {
+        let (h, b) = far_airport_fixture(trips);
+        let a = EverydayApi::new(&h, &b).unwrap();
+        let mut out = [0.0f64; 4];
+        for k in 0..a.destinations.len() {
+            if let Some((AIRPORT, home, site, w, _)) = a.edge(k) {
+                assert_eq!(site, 0);
+                let d = a.engine.city.x[home];
+                out[(d >= 40_000.0) as usize + (d >= 80_000.0) as usize + (d >= 150_000.0) as usize] += w as f64;
+            }
+        }
+        (out, a.airport_reach.is_empty())
+    };
+    let small = outings(8.0) as f32;
+    let (s, plain) = bands(small);
+    assert!(plain, "a small airport keeps the plain fade");
+    assert!(s[2] == 0.0 && s[3] == 0.0 && s[0] > 0.0, "{s:?}");
+    // the same airport's trips, share for share, at a tenth of the size (rule unchanged)
+    let (t, _) = bands(small / 10.0);
+    for i in 0..4 {
+        assert!((s[i] / 10.0 - t[i]).abs() <= 1e-3 * s[i].max(1.0), "{s:?} {t:?}");
+    }
+    let (f, plain) = bands(outings(60.0) as f32);
+    assert!(!plain);
+    let all: f64 = f.iter().sum();
+    assert!(f[3] == 0.0, "nothing past 150 km: {f:?}");
+    assert!(f[2] / all > 0.1, "a 60M hub draws from 80-150 km: {f:?}");
+    assert!(f[0] / all < s[0] / s.iter().sum::<f64>(), "and less of its trips are near: {f:?} {s:?}");
+}
+
 #[test]
 fn attractions_keep_their_visits_and_stay_optional() {
     let x = [0.0, 4000.0, 9000.0];

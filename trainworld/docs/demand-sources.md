@@ -245,7 +245,9 @@ alightings are about equal, so legs a day are twice the outings. The other end i
 residents, a quarter jobs (business visitors) and a quarter leisure jobs (hotels, food,
 attractions), each normalised, none within 1.5 km of a terminal (its own jobs are not its
 passengers' ends), drawn with a 20 km exponential decay and normalised per airport, so each
-airport keeps its total before the 150 m exclusion and the 40-80 km taper. Two stratified
+airport keeps its total before the 150 m exclusion and the 40-80 km taper (an airport over 10M
+O&D passengers a year has a longer decay and reach, up to 60 km and 150 km: docs/demand-worldwide.md
+"Big airports reach farther"). Two stratified
 destination samples a home cell, not sixteen: the destinations are a handful of airports, and
 each sample costs the same at opening. Airport staff are commuters already (LODES) and are not
 counted again. Connecting passengers are not modelled. In tier 0 packs (every world-run zone) the

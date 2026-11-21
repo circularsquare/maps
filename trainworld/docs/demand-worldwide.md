@@ -909,6 +909,22 @@ notes/T-420.md has the tables.
   people outside it, go to the neighbouring packs through `cross_everyday` (docs/zones.md 4a), so
   Wuhan's airport in the Huangpi zone takes its passengers from Wuhan. Unbuilt land and sea keep
   their share out (never handed to the built packs).
+- **Big airports reach farther** (T-3502, issue 6; everyday.rs `air_far`). An airport's O&D
+  passengers a year over 10M, kept between 1 and 3, multiply its 20 km decay and its 80 km reach,
+  the reach at most 150 km and faded over its last 40 km (today's 40-80 km at 10M and under): 20M
+  is 40 km and 150 km, 30M and over 60 km and 150 km. Its size is its terminal cells' outings (cells
+  within 4 km together) plus its sites' `outside_outings`, x 732; tier0's pack share and
+  `cross_everyday`'s draw take the same decay and reach (each site's `decay_m`, `reach_m`; a site
+  without them keeps 20 and 80 km), so trips from cities in other zones (Suzhou to Pudong) come
+  with the next airports step and cross_everyday; until then a pack holds only its own 80-150 km
+  (Seoul to Incheon, 50 km, is in the `seo` pack). Set on the CAA's 2023 survey of terminating
+  passengers by county and region against the rule on GHSL people (where a pack holds a band, the
+  game's share follows the kernel's: JFK 20.7% at 40-80 km against 20.6%): the share from 80-150 km comes out Heathrow
+  11% (published about 13%), Gatwick 11% (16%), Stansted 15% (17%), Manchester 18% (15%), and
+  Greater London's share Heathrow 52% (52%), Gatwick 50% (42%), Stansted 46% (47%). Why it may not
+  carry over: all of it is the UK, where few airports serve many people; the 10-30M ramp is
+  judgement, and Birmingham (12M, about 10% from 80-150 km) stays under it. Check: an airport
+  survey of where passengers start, outside the UK (Massport's Logan survey, Incheon's).
 - **Medical** (T-142, T-387; `enrich_medical.py`, numbers in `pipeline/hospital_beds.json`). OSM
   hospitals, clinics, doctors and dentists everywhere; a hospital draws 1,000 visits a year a bed.
   Beds are OSM's `beds` where tagged; else 0.588 x the square root of the site's floor area in m²

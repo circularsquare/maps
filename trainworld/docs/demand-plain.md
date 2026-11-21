@@ -26,7 +26,11 @@ station buildings and T-2278's parking by income). The full rules are in demand.
 - **Everyday trips.** Errands, visits, school, university, medical, airports. How often people make
   them comes from each country's travel survey. How far they go is one rule for the whole world:
   the chance of going somewhere halves about every 0.7 km for errands and visits, 1.0 km for
-  school, 1.4 km for medical, 2.4 km for university and 14 km for airports. Trips are
+  school, 1.4 km for medical, 2.4 km for university and 14 km for airports. Big airports reach
+  farther: from 10 million passengers a year (not counting those changing planes) their reach grows
+  with their passengers, to three times as far (42 km to halve) at 30 million, with trips from up to
+  150 km instead of 80 km, about as the UK's surveys show Heathrow, Gatwick, Stansted and Manchester
+  drawing. So Seoul goes to Incheon, 50 km off. Trips are
   kept short on purpose: real surveys have about half of everyday trips under 2 km, and short trips
   are the ones people walk. But one in five errands and visits goes into town instead: there each
   place counts by how much there is to visit times how tightly it is packed, and the chance halves
@@ -51,7 +55,8 @@ station buildings and T-2278's parking by income). The full rules are in demand.
   as if it were not there: a place right on the Guangzhou - Foshan line gets about a quarter of its
   visitors from the other side. Airport trips cross too: an airport in a county zone outside its
   city (Wuhan's, Istanbul's) takes its passengers from the city, up to the airport's published
-  passengers and never more. These come with the next rebuild of the data.
+  passengers and never more. These come with the next rebuild of the data, and so do a big
+  airport's trips from cities in other zones up to 150 km away (Suzhou to Pudong).
   A longer trip goes to a place by its people and jobs; in Japan, about 80 resort towns (Hakone,
   Atami, Kusatsu, Beppu and the like) also count 4 people for every visitor a day in their published
   tourism figures, so Tokyo's day trips and weekends away go to Hakone and Izu (Hakone about 9,100 a

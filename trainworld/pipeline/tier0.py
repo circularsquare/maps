@@ -1791,9 +1791,20 @@ def airports(city, boundary):
     cfg = b.CITIES[city]
     aps = air.airports_in(boundary)
     found = air.terminals(city, boundary, aps) if aps else {}
-    # pack share: GHSL population around the airport within 300 km at exp(-d/20 km); in the
-    # boundary or not. A 60 km pad is enough (exp(-3) beyond it).
-    arr, X0, Y0 = ghsl_window("pop", boundary.bounds, cfg.get("epoch", 2020), pad_m=60000.0)
+    air.fill_wikidata_boardings([ap["iata"] for ap in aps])  # one query for the zone's airports
+    counts = {}
+    for ap in aps:
+        given = cfg.get("boardings", {}).get(ap["ident"])  # a city's own figure first (T-291)
+        if given:
+            counts[ap["ident"]] = (given[0], given[1], "config")
+        else:  # a national authority's count or Wikidata's, the newer (T-2896)
+            counts[ap["ident"]] = air.best_boardings(ap)
+    # T-3502: each airport's decay and reach by its O&D passengers (2 x boardings x O&D share)
+    reach = {ap["ident"]: air.reach_of(2.0 * (counts[ap["ident"]][0] or 0.0) * air.od_share_of(ap, cfg)[0]) for ap in aps}
+    # pack share: GHSL population around the airport at exp(-d/decay); in the boundary or not. A
+    # 60 km pad is enough at 20 km (exp(-3) beyond it); a big airport's reach is its pad.
+    pad = max([60000.0] + [r for d, r in reach.values() if d > air.DECAY_M])
+    arr, X0, Y0 = ghsl_window("pop", boundary.bounds, cfg.get("epoch", 2020), pad_m=pad)
     f = 10
     h, w = arr.shape[0] // f, arr.shape[1] // f
     blk = arr[:h * f, :w * f].reshape(h, f, w, f).sum(axis=(1, 3))
@@ -1807,18 +1818,16 @@ def airports(city, boundary):
     index = {int(c): i for i, c in enumerate(cells)}
     trips = np.zeros(len(cells), "<f4")
     audit, sites_out = [], []
-    air.fill_wikidata_boardings([ap["iata"] for ap in aps])  # one query for the zone's airports
     for ap in aps:
-        given = cfg.get("boardings", {}).get(ap["ident"])  # a city's own figure first (T-291)
-        if given:
-            boardings, when, source = given[0], given[1], "config"
-        else:  # a national authority's count or Wikidata's, the newer (T-2896)
-            boardings, when, source = air.best_boardings(ap)
+        boardings, when, source = counts[ap["ident"]]
         if not boardings:
             audit.append(ap | dict(skipped="no passenger count"))
             continue
         d = air.metres(ap["lat"], ap["lon"], lat, lon)
-        wgt = pp * np.exp(-d / air.DECAY_M)
+        decay, reach_m = reach[ap["ident"]]
+        # an airport at the 20 km decay keeps its weight as before T-3502; a bigger one's people past
+        # its reach drop out (cross_everyday's draw sums the same kernel, fading the trips after)
+        wgt = pp * np.exp(-d / decay) * ((d <= reach_m) if decay > air.DECAY_M else 1.0)
         share = float(wgt[ins].sum() / wgt.sum())
         od, od_from = air.od_share_of(ap, cfg)
         daily = boardings * od * share / air.DAYS
@@ -1832,7 +1841,7 @@ def airports(city, boundary):
         else:  # T-2896 (5): what the airport's people outside the zone send, for cross_everyday
             sites_out.append(dict(ident=ap["ident"], iata=ap["iata"], lat=ap["lat"], lon=ap["lon"],
                                   outside_outings=boardings * od * (1.0 - share) / air.DAYS,
-                                  outside_weight=float(wgt[~ins].sum())))
+                                  outside_weight=float(wgt[~ins].sum()), decay_m=decay, reach_m=reach_m))
         audit.append(ap | dict(boardings=boardings, when=when, source=source, od_share=od, od_from=od_from, pack_share=share, daily_outings=daily,
                                placed=len(placed), max_snap_m=max((p[2] for p in placed), default=None)))
         print(f"  {ap['ident']} {ap['name']}: {boardings:,.0f} boardings ({source} {when}), O&D {od:.2f} ({od_from}), pack {share:.2f}, "
@@ -1843,7 +1852,8 @@ def airports(city, boundary):
         airports=sum(1 for r in audit if r.get("placed")), outings=float(trips.sum(dtype=np.float64)), decay_m=air.DECAY_M,
         origin_mix="half residents, half visitors (jobs and leisure/hotel jobs, a quarter each)",
         formula="daily outings = passengers / 2 (a national authority's count, else Wikidata patronage; the newer year, "
-                "the lower within one) x O&D share (1, or judgement for hubs) x pack share (GHSL population x exp(-d/20 km)) / 366",
+                "the lower within one) x O&D share (1, or judgement for hubs) x pack share (GHSL population x exp(-d/20 km); "
+                "over 10M O&D passengers a year the decay and the 80 km reach grow with them, T-3502) / 366",
         limitations="no connecting-share source", sources=[air.OURAIRPORTS, WIKIDATA, "pipeline/airport_passengers.csv"],
         # per airport, the outings of the people outside the boundary (the pack share's rest) and their GHSL weight
         # (people x exp(-d/20 km)): cross_everyday draws them over the neighbouring packs (T-2896)

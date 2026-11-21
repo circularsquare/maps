@@ -42,6 +42,18 @@ import overpass
 YEAR = 2024
 DAYS = 366
 DECAY_M = 20000.0          # same as everyday.rs DECAY[4]
+# T-3502, as everyday.rs `air_far`: O&D passengers a year over FAR_FROM (between 1 and FAR_MAX)
+# multiply an airport's decay and its reach (80 km, at most 150 km, faded over its last 40 km)
+FAR_FROM, FAR_MAX = 10.0e6, 3.0
+REACH_M, REACH_MAX_M = 80000.0, 150000.0
+
+
+def reach_of(od_passengers):
+    """T-3502: (decay, reach) in metres for an airport with this many O&D passengers a year."""
+    m = min(max(od_passengers / FAR_FROM, 1.0), FAR_MAX)
+    return DECAY_M * m, min(REACH_M * m, REACH_MAX_M)
+
+
 SHARE_RADIUS_M = 300000.0
 MIN_DB1B_SAMPLE = 50       # sampled passengers (10% sample: about 500 a quarter)
 TERMINAL_RADIUS_M = 4000.0

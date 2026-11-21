@@ -322,7 +322,7 @@ split over 100 km (microdata by application).
 |---|---|---|---|---|
 | United States | U NCES CCD public schools (planned rows OSM until T-1019); N NCES PSS private, T-142 | U IPEDS (planned rows OSM until T-1019) | U OSM (relations skipped, T-203) | U FAA enplanements, DB1B connecting share (planned rows: Wikidata passengers until T-1019, DB1B connecting share from the next rebuild, T-2896) |
 | Canada | U Ontario school file (per province) | U COU and Ontario college files (per province, tor only); N partner campuses, T-282; planned rows tier 0 (UBC Vancouver's Wikidata item has no count; from its next rebuild it takes UBC's by occupant, T-3216); ? Universities Canada enrolment by university (national), T-3213 | U OSM | U StatCan 23-10-0253-01; connecting by judgement |
-| England | U GIAS | N HESA Table 1 by provider, T-382 | U OSM | U Wikidata; Heathrow 0.7 by judgement |
+| England | U GIAS | N HESA Table 1 by provider, T-382 | U OSM | U Wikidata; Heathrow 0.7 by judgement; U CAA Passenger Survey 2023 tables 4.1 and 5 (terminating passengers by region and county) set the big-airport reach, T-3502 |
 | France | N ministry directory with pupils, T-385 | ? ministry students by site, T-505 | U OSM | U Wikidata; CDG 0.75 by judgement |
 | Germany | U tier 0 OSM (school files per Land) | ? Destatis 21311 by institution, T-505 | U OSM | U Wikidata |
 | Japan | U KSJ P29 points, mesh children 0-14 | U tier 0 (short in some zones, T-462) | U OSM, beds almost never tagged (sized by rule, T-387) | U Wikidata (Haneda's and Narita's 2024 match the airports' published totals, T-2896); Narita 0.8 by judgement; ? MLIT's airport management survey (every airport's passengers, yearly), not opened |
