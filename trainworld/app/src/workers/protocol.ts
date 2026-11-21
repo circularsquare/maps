@@ -98,6 +98,8 @@ export type EditOp =
   | { op: "addStation"; at: StationAt; platform: number; name: string }
   /** T-3378: a blueprint BRT station at x, y (world metres) on no track, its platform along a road on `heading` (radians) */
   | { op: "addBrtStation"; x: number; y: number; heading: number; name: string }
+  /** T-3999: a blueprint port on no ferry line, its landing at x, y and its berth at bx, by (world metres) */
+  | { op: "addPort"; x: number; y: number; bx: number; by: number; name: string }
   /** a crossover on track `edge` near x, y and the track running beside it (T-338) */
   | { op: "crossover"; edge: EdgeId; x: number; y: number }
   /** an express pair beside double track `edge` and the run it is on, as blueprint (T-708) */

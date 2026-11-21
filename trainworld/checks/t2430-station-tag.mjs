@@ -5,7 +5,7 @@
 // The station tool is picked as the save loads, a blueprint piece is drawn (by Central Park unless
 // --piece), demand is waited for, and the pointer moves from open ground onto the piece: within 300 ms
 // the tag must say the trips near (before T-2430 they were asked for only then, and came a second or
-// more later, or with a big zone's solve running not until it ended). Open ground keeps its refusal,
+// more later, or with a big zone's solve running not until it ended). Open ground has the first click's hint (T-3999),
 // and after placing one the next spot has the distance and the trips. Screenshots to
 // artifacts/trainworld/t2430/.
 import { readFile, mkdir } from 'node:fs/promises';
@@ -59,11 +59,11 @@ try {
     const t = document.querySelector('.tool-tag.build-tag'), vis = !!t && t.style.display !== 'none';
     return { hover: window.tw.tools.hover?.kind ?? null, tag: vis ? t.textContent : '', bad: vis && t.classList.contains('bad'), bar: vis && !!t.querySelector('.size-bar') };
   });
-  // open ground: the refusal, as before
+  // open ground: the first click's hint (T-3999; a refusal before)
   await page.mouse.move(ground.x + 2, ground.y + 2);
   await page.waitForTimeout(300);
   const g = await state();
-  report(g.hover === 'free' && g.tag === 'Place stations on track' && g.bad, 'open ground has the refusal', JSON.stringify(g));
+  report(g.hover === 'free' && g.tag.startsWith('Click to start a station here') && !g.bad, 'open ground has the hint for the first click', JSON.stringify(g));
   // onto the piece: the trips near at once
   const p = await at(0.15);
   await page.mouse.move(p.x - 3, p.y - 2);

@@ -3,7 +3,7 @@
 import { t as tr } from "../i18n";
 import { distance } from "../game/format";
 import { metresBetween } from "../game/walks";
-import { buildLevel, besideOn, tool, tramTrack } from "../game/ui";
+import { buildLevel, besideOn, stationKind, tool, tramTrack } from "../game/ui";
 import { describeRemovable } from "../game/remove";
 import { realStationUnder } from "./realStations";
 import { world } from "../game/world";
@@ -14,8 +14,10 @@ import { placeAt } from "./screenPlace";
 import { curveLabels, legCurveLabels, placeCurveLabels, placementTag, rampLabels } from "./trackTagRows";
 import { TRACK_SPECS } from "../game/trackKinds";
 import { logShare } from "./modeBar";
-import { notOnTrack, NEAR_BAR_LO, NEAR_BAR_HI, BESIDE_PX, type Snap, tooFarText, withName } from "./toolParts";
+import { NEAR_BAR_LO, NEAR_BAR_HI, BESIDE_PX, type Snap, tooFarText, withName } from "./toolParts";
 import { tripsNear, lastPlacedName, el, svgMark, stationGhost, stationRings, checkGhost, brtSpot, boxGhost, BRT_STATION_PLATFORM } from "./stationTool";
+import { hidePortGhost, portMarks } from "./stationPort";
+import { freeGhost, freeHint, freeStarted } from "./stationFree";
 import type { Tools } from "./tools";
 
 export function curveCircle(tk: Tools, pv: PreviewAnswer | null) {
@@ -145,24 +147,59 @@ export function placeMarks(tk: Tools) {
     return;
   }
   // the snap ring and the cursor tag
+  const kind = t === "station" ? stationKind.peek() : null;
+  if (kind !== "port") hidePortGhost();
+  if (kind === "port") {
+    tk.ring.style.display = "none";
+    tk.shown = null;
+    // T-1777: a pointer gone off the map (no hover) leaves no ghost or tag
+    if (!tk.hover) return void (hidePortGhost(), (tk.tag.style.display = "none"));
+    return portMarks(tk, (c, bad, x, y) => showTag(tk, c, bad, x, y));
+  }
+  // T-3802: the real station ring under the pointer, named first in the tag (it holds the hover's back)
+  const real = t === "station" && tk.pointer ? realStationUnder(tk.pointer.lng, tk.pointer.lat) : null;
+  if (kind === "bus") {
+    // T-3378: a BRT station's ghost along the road or bus route by the pointer; T-3999: the bus kind only
+    tk.ring.style.display = "none";
+    tk.shown = null;
+    const p = tk.pointer;
+    if (!p || !tk.hover || tk.ghostSpent) return void (tk.tag.style.display = "none");
+    const b = brtSpot(tk, p.lng, p.lat), here: Snap = { kind: "free", lx: 0, ly: 0 };
+    if (b) {
+      boxGhost(tk, b.lx, b.ly, b.ways, b.perM, false, null, BRT_STATION_PLATFORM, false, null, true);
+      stationRings(tk, { ...here, lx: b.lx, ly: b.ly });
+      showTag(tk, helpLines(tk, { ...here, lx: b.lx, ly: b.ly }, tr("stationInspector.brtStation")), false, p.px, p.py);
+    } else if (b === null) showTag(tk, ...withName(real, tr("tools.notBesideRoad")), p.px, p.py);
+    else tk.tag.style.display = "none";
+    return;
+  }
+  const row = (s: string) => Object.assign(document.createElement("div"), { textContent: s });
+  if (t === "station" && freeStarted()) {
+    // T-3999 (T-794, T-907): after the first click on open ground, the station and its own piece toward the pointer
+    tk.ring.style.display = "none";
+    tk.shown = null;
+    const g = freeGhost(tk, (lx, ly, ways, perM, bad, plat, tram) => boxGhost(tk, lx, ly, ways, perM, bad, null, plat, false, null, tram));
+    const p = tk.pointer;
+    if (!g || !p) return void (tk.tag.style.display = "none");
+    stationRings(tk, g.mid);
+    if (g.ok === false) return void showTag(tk, g.why, true, p.px, p.py);
+    const lines = helpLines(tk, g.mid, freeHint());
+    if (g.text) lines.splice(1, 0, row(g.text));
+    showTag(tk, lines, false, p.px, p.py);
+    return;
+  }
   if (t === "station") checkGhost(tk);
   const h = t === "station" ? (tk.ghostSpent ? null : tk.stationSpot()) : tk.hover;
   const v = t === "station" ? tk.verdict() : null;
   if (t === "station") tk.shown = h && h.kind !== "free" ? v : null;
-  // T-3802: the real station ring under the pointer, named first in the tag (it holds the hover's back)
-  const real = t === "station" && tk.pointer ? realStationUnder(tk.pointer.lng, tk.pointer.lat) : null;
   if (t === "station" && h?.kind === "free") {
-    tk.ring.style.display = "none";
-    // T-3378: beside a road, a BRT station's ghost along it
-    const [lng, lat] = toLngLat(h.lx, h.ly), b = brtSpot(tk, lng, lat);
-    if (b) {
-      boxGhost(tk, b.lx, b.ly, b.ways, b.perM, false, null, BRT_STATION_PLATFORM, false, null, true);
-      stationRings(tk, { ...h, lx: b.lx, ly: b.ly });
-      showTag(tk, helpLines(tk, { ...h, lx: b.lx, ly: b.ly }, tr("stationInspector.brtStation")), false, ...tk.screen(h.lx, h.ly));
-      return;
-    }
-    // T-1820: open ground takes no station; no ghost, only the reason by the pointer
-    showTag(tk, ...withName(real, notOnTrack()), ...tk.screen(h.lx, h.ly));
+    // T-3999: open ground takes a station by two clicks (its first end, then its direction); the ring marks the first
+    tk.ring.className = "snap-ring";
+    tk.ring.style.display = "";
+    put(tk.ring, h.lx, h.ly);
+    const lines = helpLines(tk, h, real);
+    lines.splice(real ? 1 : 0, 0, row(freeHint()));
+    showTag(tk, lines, false, ...tk.screen(h.lx, h.ly));
     return;
   }
   // T-1721: the track tool's point: red branching off a piece, yellow joining at a node, blue beside track

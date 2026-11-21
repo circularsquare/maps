@@ -2428,7 +2428,6 @@
   "tools.near": "{n} desplaçaments en un radi d’1 {unit}",
   "tools.nearUnder": "Menys de 50 desplaçaments en un radi d’1 {unit}",
   "tools.noRealTrack": "No hi ha cap via real que uneixi aquests punts.",
-  "tools.notOnTrack": "Col·loca les estacions sobre la via",
   "tools.placeStation": "Col·loca l’estació",
   "tools.placeTrack": "Col·loca la via",
   "tools.remove": "Elimina",

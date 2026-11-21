@@ -21,7 +21,6 @@ export const DEAD_PX = 3, DOT_MIN_PX = 6;
 /** T-2404: the pointer this near a segment whose state is held (twice the node snap, so the state
  * lands before the pointer reaches what it could snap to), unless this near the start */
 export const HELD_NEAR_PX = 2 * TRACK_NODE_PX, HELD_START_PX = 3 * TRACK_NODE_PX;
-export const notOnTrack = () => tr("tools.notOnTrack");
 /** T-2271: the station tool's trips-near bar is empty at 1,000 trips and full at 1M, log scaled
  * (New York's lines have 30k-1M within 1 km); its ticks (style.css `.size-bar`) are 10k and 100k */
 export const NEAR_BAR_LO = 1e3, NEAR_BAR_HI = 1e6;

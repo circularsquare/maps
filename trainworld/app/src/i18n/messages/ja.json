@@ -2428,7 +2428,6 @@
   "tools.near": "半径1{unit}以内で発着する移動：{n}回",
   "tools.nearUnder": "半径1{unit}以内で発着する移動：50回未満",
   "tools.noRealTrack": "これらの点を結ぶ実在の線路がありません。",
-  "tools.notOnTrack": "駅は線路上に置いてください",
   "tools.placeStation": "駅を置く",
   "tools.placeTrack": "この線路を置く",
   "tools.remove": "撤去",

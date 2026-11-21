@@ -31,7 +31,7 @@ import { activeCity, worldFrameEpoch } from "../game/cities";
 import { demandView } from "../game/demand";
 import { settleNewLineColour } from "../game/lineColour";
 import { metresBetween } from "../game/walks";
-import { ask, autoRamp, buildLevel, buildPlatform, buildTramPlatform, designSpeed, flyoverSpeed, highSpeed, keepPlacing, lineDraft, newLine, quadTrack, selection, singleTrack, besideOn, snapping, snapMode, snapRealTram, snapRoads, snapStreets, stationOnTram, stationOneTrack, tool, tramTrack } from "../game/ui";
+import { ask, autoRamp, buildLevel, buildPlatform, buildTramPlatform, designSpeed, flyoverSpeed, highSpeed, keepPlacing, lineDraft, newLine, quadTrack, selection, singleTrack, besideOn, snapping, snapMode, snapRealTram, snapRoads, snapStreets, stationKind, stationOnTram, stationOneTrack, tool, tramTrack } from "../game/ui";
 import { type Removable } from "../game/remove";
 import { loadPlacesAt } from "../game/placeList";
 import { warmStreetNames } from "./stationNames";
@@ -68,6 +68,7 @@ import { guessRow, settleRow } from "../ui/inspector/stopRowGuess";
 import { type LngLatish, SNAP_EDGE_PX, TRACK_NODE_PX, TRACK_EDGE_PX, DEAD_PX, DOT_MIN_PX, HELD_NEAR_PX, HELD_START_PX, BESIDE_PX, OVERLAP_PX, type Snap, type Spot, type Verdict, BESIDE_SPACING_M, LANE_HALF_M, type Placed, MAX_PIECE_KM, WAIT_MS, tooFarText, placedAt } from "./toolParts";
 import { nearTouch, touchConfirm, touchBack, touchStop, dragHandle, placeTouch } from "./toolTouch";
 import { nameAhead, stationClick, askLegs, placePending, layout } from "./stationTool";
+import { freeCancel, freeStarted } from "./stationFree";
 import { clearDelHover, deleteHover, deleteClick } from "./toolDelete";
 import { drawBand, placeMarks } from "./toolMarks";
 
@@ -161,7 +162,9 @@ export class Tools {
       clearDelHover(this);
       this.place();
     });
-    effect(() => { buildPlatform.value; buildTramPlatform.value; if (tool.value === "station") this.place(); });
+    effect(() => { buildPlatform.value; buildTramPlatform.value; stationKind.value; if (tool.value === "station") this.place(); });
+    // T-3999: an open-ground station's first end goes with the tool or the kind
+    effect(() => { if (tool.value !== "station" || stationKind.value !== "rail") freeCancel(this); });
     effect(() => { if (tool.value === "station") stationOnTram.value = tramTrack.value; }); // T-3015: also when the type changes with the station tool in hand
     // the place lists name stations where the tiles have no streets (T-065); the view's zones' are
     // fetched when the station tool is picked, not at startup (T-400)
@@ -694,7 +697,7 @@ export class Tools {
       this.touchAt = ll;
       this.move(e);
     } else if (t === "station") {
-      if (this.snap(e.point.x, e.point.y, e.lngLat).kind === "free") {
+      if (stationKind.peek() !== "rail" || freeStarted() || this.snap(e.point.x, e.point.y, e.lngLat).kind === "free") {
         this.touchAt = null;
         this.move(e);
         void stationClick(this, e);
@@ -717,6 +720,10 @@ export class Tools {
     if (t === "building") return this.building.key(e);
     if (e.key === "Escape") {
       if (t === "track" && this.start) this.reset();
+      else if (t === "station" && freeStarted()) {
+        freeCancel(this);
+        this.place();
+      }
       else this.exit();
       return true;
     }
@@ -1332,7 +1339,7 @@ export class Tools {
   tangent: SVGSVGElement | null = null;
   /** Move the DOM markers to the camera (after each MapLibre frame and each change). */
   place() {
-    if (tool.peek() === "station" && this.hover && this.hover.kind !== "free") stationOnTram.value = this.tramSpot(this.stationSpot() as Spot | null);
+    if (tool.peek() === "station" && stationKind.peek() === "rail" && this.hover && this.hover.kind !== "free") stationOnTram.value = this.tramSpot(this.stationSpot() as Spot | null);
     // on touch the pointer is a tap, a place on the map: its screen point follows the camera
     const p = this.pointer;
     if (p && touchInput.peek()) {

@@ -2428,7 +2428,6 @@
   "tools.near": "1{unit}内的出行{n}人次",
   "tools.nearUnder": "1{unit}内的出行不到50人次",
   "tools.noRealTrack": "没有真实轨道连接这几个点。",
-  "tools.notOnTrack": "请把车站放在轨道上",
   "tools.placeStation": "放置车站",
   "tools.placeTrack": "放置这段轨道",
   "tools.remove": "移除",

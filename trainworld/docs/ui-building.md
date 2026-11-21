@@ -144,8 +144,10 @@ the map's other controls', and the level buttons' numbers 15 px (also in the pho
   [track-and-service.md](track-and-service.md) 6.1]. Everything the player reads says level for the
   track's seven steps, never elevation ("Level", "Level +1", "Levels go from −3 to +3."; "ground
   level" is one of them) [T-2226, reversing T-526].
-- **The station bar**, one row: **Platform length** and its stepper, for new stations. The station
-  tool reads no other option. Tram stops and the other stations each keep their own length (tram 2
+- **The station bar**, one row: first what the tool places [T-3999], three icon buttons with their names as hovers,
+  **Train or tram station** (the default), **BRT station** and **Port**, remembered per browser (`build.stationKind`);
+  on a phone one button showing the picked kind, which opens the three above the bar. With Train or tram station picked,
+  **Station length** (the label left out on a phone) and its stepper, then the one or both tracks buttons (T-3332). Tram stops and the other stations each keep their own length (tram 2
   cars to start, regular and high speed 10 cars, shared by those two); the bar shows the length of
   the kind under the pointer, else of the track type picked [T-3015].
 - The level, the ramp switch, the track type, both target speeds, the Advanced row, the keep placing switch, the
@@ -203,7 +205,8 @@ mouse moving again takes it back).
   end or the handle, or confirm, places the segment, and with keep placing the next starts at its
   end. A tap on the start with no end waiting ends the run, as a click on it does.
 - **Stations**: on track, a tap shows the platform ghost and its tag, a second tap or confirm
-  places it. A tap on open ground is refused at once (no second tap, as a click). After
+  places it. On open ground the first tap is the platform's end and the next places it toward that tap; a BRT station
+  or a port is placed by one tap (T-3999). After
   it is placed no ghost shows there until the finger moves or taps elsewhere [T-1756].
 - **Delete**: a tap shows what would go (drawn red, its name in the tag); confirm or a second tap
   removes it (built things still ask), cancel drops it.
@@ -541,7 +544,7 @@ lighter; at most 16 of each.
 
 [T-2194; `map/ferryDraw.ts`; design notes/T-2177.md 3.2] The Build tab's Ferry button (beside Bus,
 each half the row, key O) or O from any tab starts
-the ferry tool for a new line. The player places ports, and waypoints where the route must pass; between
+the ferry tool for a new line (a lone port is placed with the station tool, "Placing stations"). The player places ports, and waypoints where the route must pass; between
 them the route is found over the basemap's water (track-and-service.md 6.8), never drawn by hand.
 
 - **A click** within the reach of the shore, on land or on the water, puts a new port on the nearest shore
@@ -749,11 +752,22 @@ switch on, the track tool follows the real network the layer draws.
   A refused spot shows only the reason. Two thin rings at 1 km and
   2 km of ground distance (0.5 and 1 km for a tram stop, T-3001), each labelled at its top, follow the spot under the ghost
   (`stationRings` in `map/tools.ts`, an SVG layer, fixed grey ink at 35%).
-- **Only on track** [T-1820]: with the pointer further than the snap radii from track and nodes, the
-  ghost is a refusal: no platform, no rings, the tag "Place stations on track" in red by the pointer.
-  A click there places nothing and says the same in the notice. The game has no station on open
-  ground any more; a save's old ones stay. The sim's `add_free_station` and the worker's free
-  `StationAt` stay for other callers, and the page no longer calls them.
+- **On open ground** [T-794, T-907; taken out by T-1820, back with T-3999 at players' asking; `map/stationFree.ts`]:
+  with the pointer further than the snap radii from track and nodes, a ring marks the spot and the tag says "Click to
+  start a station here" over the placement help. The first click is one end of the platform; then the platform points
+  from it toward the pointer, at the station length set, with its own straight piece of track 10 m longer at each end
+  drawn as the track ghost (track-and-service.md 6.1 "Placing stations"), the tag "Click to set the station's
+  direction", "220 m of new track, $106M" (the worker's price for both, `preview_free_station`) and the help, or the
+  refusal in red. The second click places both as one edit; the pointer within 8 px of the first end keeps the last
+  heading. Esc, another tool or another kind drops the first end. By touch the first tap places the end and the next
+  places the station toward it; the bar's cancel drops the end.
+- **BRT station** [T-3378, T-3999]: never on track. The ghost is a tram stop's box beside the bus route or road the
+  station would take (track-and-service.md 6.7 "BRT stations"), the tag "BRT station" over the help; with neither
+  near, "Place BRT stations beside a road" in red. A click or tap places it at once.
+- **Port** [T-3999; `map/stationPort.ts`]: a port on no ferry line, found as the ferry tool finds one ("Drawing a
+  ferry line"): the same ghost, tags and refusals, and a pointer on a port the network has, or a landing within 30 m of
+  one, says its name over "There is already a station here." A click or tap places a blueprint port (US$10M,
+  `TrackApi::add_port`), which a ferry line drawn later stops at as at any port.
 - How a new station is named: [track-and-service.md](track-and-service.md) 6.1. A double click on
   the name in its inspector renames it.
 

@@ -2428,7 +2428,6 @@
   "tools.near": "Поездки в пределах 1 {unit}: {n}",
   "tools.nearUnder": "Меньше 50 поездок в пределах 1 {unit}",
   "tools.noRealTrack": "Реального пути между этими точками нет.",
-  "tools.notOnTrack": "Ставьте станции на путь",
   "tools.placeStation": "Поставить станцию",
   "tools.placeTrack": "Проложить этот путь",
   "tools.remove": "Удалить",

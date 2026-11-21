@@ -2428,7 +2428,6 @@
   "tools.near": "1{unit} içinde {n} yolculuk",
   "tools.nearUnder": "1{unit} içinde 50 yolculuktan az",
   "tools.noRealTrack": "Bu noktalar arasında gerçek ray yok.",
-  "tools.notOnTrack": "İstasyonları rayın üstüne yerleştir",
   "tools.placeStation": "İstasyonu yerleştir",
   "tools.placeTrack": "Bu rayı yerleştir",
   "tools.remove": "Kaldır",

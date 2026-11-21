@@ -161,6 +161,8 @@ function applyInner(op: EditOp): Applied {
         : op.at.kind === "edge"
           ? { r: a.add_station(2, op.at.edge, op.at.x, op.at.y, op.platform, op.name) }
           : (a.set_route_kind(op.at.tram ? 3 : 0), a.set_route_hsr(!!op.at.hsr), { r: a.add_free_station(freeEnds(op.at), op.at.quad ? 4 : 2, op.platform, op.name) });
+    case "addPort":
+      return { r: a.add_port(op.x, op.y, op.bx, op.by, op.name) };
     case "addBrtStation":
       return { r: a.add_brt_station(op.x, op.y, op.heading, op.name) };
     case "crossover":

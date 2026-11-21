@@ -153,10 +153,10 @@ Full design, numbers and sources: `notes/T-008.md`.
 #### Placing stations, curve speed and levels
 
 - **Placing stations**: click on track (it is split there), or a loose end's node for an end
-  station when the pointer is within half a platform of it; the station tool takes nothing else
-  (T-1820, T-1870; ui-building.md "Room along the track"). The sim can still place one on open ground, where the station
-  brings its own track [T-794, `TrackApi::add_free_station`], no tool calls it: a straight blueprint piece at the
-  selected level, double or quad as the Build tab is set, the platform plus 10 m past each end
+  station when the pointer is within half a platform of it (T-1870; ui-building.md "Room along the track"); or on open
+  ground, where the station brings its own track [T-794, T-3999, `TrackApi::add_free_station`; ui-building.md "On open
+  ground"]: a straight blueprint piece at the selected level, double or quad as the track bar is set, tram or high-speed
+  track with that type picked, the platform plus 10 m past each end
   long, with the station at its middle (on quad on the drawn pair only, T-1687), one undoable edit
   priced as the track and station together. Its ends are ordinary loose ends, so later track joins
   them by the drawing rules. The edit's own checks refuse it as any track or station (water, a
@@ -2432,8 +2432,11 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   buses per hour, red once full), the full lane's alert with the buses held out, and the headways it limits.
   Worked out again only when a BRT route, a loop's one way or the street grids change (`Network::brt_room`).
 - **BRT stations** (T-3378 stage 3, Anita 11-21; `StationData::road`, `TrackApi::add_brt_station`): a station on no
-  track, placed with the Station tool by a click off track within 50 m of a road a bus may use (the app's road
-  tiles, `BusRoads::kerb`; the sim knows no roads): 10 m off the road's centre line on the click's side, its 40 m
+  track, placed with the Station tool's BRT station kind (T-3999) beside a bus line's route within 80 screen pixels of
+  ground (146 m at zoom 15 at 40° latitude; 50 m to 400 m), else beside the nearest road a bus may use within 50 m
+  (the app's road tiles, `BusRoads::kerb`; the sim knows no roads); a pointer within 8 m of another road, the route
+  more than 8 m further, takes that road (`brtSpot` in app/src/map/stationTool.ts). 10 m off the route's or road's
+  centre line on the click's side, its 40 m
   platform (`BRT_STATION_PLATFORM`) along the road, drawn as a tram stop's box. US$2M and US$50 a day real (US$5k a
   game day), a tram stop's (`BRT_STATION_COST`, `UPKEEP_BRT_STATION`), its own Construct row (kind 17); park and ride
   is the one upgrade it takes, a passage joins it as any station, no building, no platform or track rows. Only a

@@ -2428,7 +2428,6 @@
   "tools.near": "{n} déplacements à moins de 1 {unit}",
   "tools.nearUnder": "Moins de 50 déplacements à moins de 1 {unit}",
   "tools.noRealTrack": "Aucune voie réelle ne relie ces points.",
-  "tools.notOnTrack": "Placez les stations sur la voie",
   "tools.placeStation": "Placer la station",
   "tools.placeTrack": "Poser cette voie",
   "tools.remove": "Supprimer",

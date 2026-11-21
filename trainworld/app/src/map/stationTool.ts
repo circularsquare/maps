@@ -8,7 +8,7 @@ import { count, unitMetres, unitShort } from "../game/format";
 import { activeCity, getWorldFrame, worldFrameEpoch } from "../game/cities";
 import { cellModes, cityCells, demandView } from "../game/demand";
 import { metresBetween } from "../game/walks";
-import { stationOnTram, tool } from "../game/ui";
+import { stationKind, stationOnTram, tool } from "../game/ui";
 import { newStationName, trackDirection } from "./stationNames";
 import { edit, rightHand, say, stationNames, world } from "../game/world";
 import { type ClockEdge, type ClockNode } from "../workers/protocol";
@@ -22,7 +22,9 @@ import { placeAt } from "./screenPlace";
 import { firstAccepted, fractionAlong, layoutIssues, layoutOf, likelyFirst, nearestOn, pointAlong, roomNear, type Candidate } from "./stationSnap";
 import { M_CROSSING, MARK_STRIDE } from "./markData";
 import { playBuild } from "./buildSound";
-import { SNAP_EDGE_PX, notOnTrack, type Snap, type Spot, type Verdict, HOLD_AT, KNOWN_PX, LAYOUT_ISSUES, lengthOf } from "./toolParts";
+import { SNAP_EDGE_PX, type Snap, type Spot, type Verdict, HOLD_AT, KNOWN_PX, LAYOUT_ISSUES, lengthOf } from "./toolParts";
+import { portClick } from "./stationPort";
+import { freeClick, freeStart, freeStarted } from "./stationFree";
 import type { Tools } from "./tools";
 
 export function nameKey(tk: Tools, px: number, py: number) {
@@ -59,11 +61,51 @@ export const BRT_STATION_PLATFORM = 40;
 const BRT_SIDE_M = 10;
 export const BRT_REACH_M = 50;
 
-/** T-3378: where a click at `lng, lat` off track places a BRT station: beside the nearest road a bus may use within
- * `BRT_REACH_M`, on the click's side of it, its platform along the road (`heading` in the world frame); null where
- * there is none, undefined while the roads load. */
+/** T-3999: a BRT station snaps to a bus route within this many screen pixels of ground (146 m at zoom 15 at 40°
+ * latitude), at least `BUS_ROUTE_MIN_M` and at most `BUS_ROUTE_MAX_M`; a pointer within `ON_ROAD_M` of another road
+ * nearer than the route takes that road */
+const BUS_ROUTE_PX = 80, BUS_ROUTE_MIN_M = 50, BUS_ROUTE_MAX_M = 400, ON_ROAD_M = 8;
+const M_PER_DEG = 111_320;
+
+/** Ground metres a screen pixel spans at `lat` (512 px tiles). */
+export function metresPerPx(tk: Tools, lat: number): number {
+  return (78271.517 * Math.cos((lat * Math.PI) / 180)) / 2 ** tk.map.getZoom();
+}
+
+/** T-3999: the nearest point within `m` ground metres on a bus line's route (no ferry's), a point 10 m along it and
+ * how far off it is; null where none is. */
+function busRouteNear(lng: number, lat: number, m: number): { at: { lng: number; lat: number }; along: { lng: number; lat: number }; d: number } | null {
+  const w = world.peek();
+  if (!w) return null;
+  const kx = M_PER_DEG * Math.cos((lat * Math.PI) / 180), ky = M_PER_DEG;
+  let best = m, out: ReturnType<typeof busRouteNear> = null;
+  for (const st of Object.values(w.lineStats)) {
+    const b = st.bus;
+    if (!b || b.ferry) continue;
+    const r = b.routeLL;
+    for (let i = 0; i + 3 < r.length; i += 2) {
+      const ax = (r[i] - lng) * kx, ay = (r[i + 1] - lat) * ky, dx = (r[i + 2] - r[i]) * kx, dy = (r[i + 3] - r[i + 1]) * ky, l2 = dx * dx + dy * dy;
+      if (!l2) continue;
+      const k = Math.max(0, Math.min(1, -(ax * dx + ay * dy) / l2)), px = ax + k * dx, py = ay + k * dy, d = Math.hypot(px, py);
+      if (d >= best) continue;
+      const l = Math.sqrt(l2);
+      best = d;
+      out = { at: { lng: lng + px / kx, lat: lat + py / ky }, along: { lng: lng + (px + (dx / l) * 10) / kx, lat: lat + (py + (dy / l) * 10) / ky }, d };
+    }
+  }
+  return out;
+}
+
+/** T-3378: where a click at `lng, lat` places a BRT station: T-3999: beside the nearest bus route within
+ * `BUS_ROUTE_PX`, else beside the nearest road a bus may use within `BRT_REACH_M`; on the click's side of it, its
+ * platform along the road (`heading` in the world frame); null where there is none, undefined while the roads load
+ * (and no route is near). */
 export function brtSpot(tk: Tools, lng: number, lat: number): { lx: number; ly: number; x: number; y: number; heading: number; ways: Float32Array[]; perM: number } | null | undefined {
-  const k = tk.street.busRoads.kerb({ lng, lat }, BRT_REACH_M);
+  const route = busRouteNear(lng, lat, Math.max(BUS_ROUTE_MIN_M, Math.min(BUS_ROUTE_MAX_M, BUS_ROUTE_PX * metresPerPx(tk, lat))));
+  const road = tk.street.busRoads.kerb({ lng, lat }, BRT_REACH_M);
+  // a pointer on another road takes that road, so the street beside a route can still have its own station
+  const onRoad = road ? metresBetween(lng, lat, road.at.lng, road.at.lat) : Infinity;
+  const k = route && !(onRoad <= ON_ROAD_M && route.d > onRoad + ON_ROAD_M) ? route : road;
   if (!k) return k;
   const [ax, ay] = toLocal(k.at.lng, k.at.lat), [bx, by] = toLocal(k.along.lng, k.along.lat), [cx, cy] = toLocal(lng, lat);
   const l = Math.hypot(bx - ax, by - ay) || 1, ux = (bx - ax) / l, uy = (by - ay) / l;
@@ -76,9 +118,10 @@ export function brtSpot(tk: Tools, lng: number, lat: number): { lx: number; ly: 
 }
 
 export async function stationClick(tk: Tools, e: MapMouseEvent) {
-  const first = tk.snap(e.point.x, e.point.y, e.lngLat);
-  if (first.kind === "free") {
-    // T-1820: stations go on track only; T-3378: or beside a road, a BRT station
+  const kind = stationKind.peek();
+  if (kind === "port") return portClick(tk, e);
+  if (kind === "bus") {
+    // T-3378: a BRT station beside a road; T-3999: only with the bus kind picked, never snapped to track
     let b = brtSpot(tk, e.lngLat.lng, e.lngLat.lat);
     // a click before the roads there have loaded waits for them a few seconds
     for (let i = 0; b === undefined && i < 50; i++) {
@@ -86,7 +129,7 @@ export async function stationClick(tk: Tools, e: MapMouseEvent) {
       b = brtSpot(tk, e.lngLat.lng, e.lngLat.lat);
     }
     if (!b) {
-      say(notOnTrack(), true);
+      say(tr("tools.notBesideRoad"), true);
       return;
     }
     playBuild("station");
@@ -100,6 +143,10 @@ export async function stationClick(tk: Tools, e: MapMouseEvent) {
     } else if (r.issues.length) say(describeIssues(r.issues, undefined, undefined, true), true);
     return;
   }
+  // T-3999: on open ground the first click is the platform's first end and the second its direction
+  if (freeStarted()) return freeClick(tk, e, (px, py) => nameFor(tk, px, py));
+  const first = tk.snap(e.point.x, e.point.y, e.lngLat);
+  if (first.kind === "free") return freeStart(tk, first);
   // T-671, T-695: the spot the ghost shows, else the first the track model takes of what is under the pointer
   const v = tk.verdict();
   // T-1474: heard at the click, not when the edit is answered; not when the ghost shows a refusal

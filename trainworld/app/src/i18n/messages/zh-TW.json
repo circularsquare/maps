@@ -2428,7 +2428,6 @@
   "tools.near": "1{unit}內有{n}旅次",
   "tools.nearUnder": "1{unit}內不到50旅次",
   "tools.noRealTrack": "這些點之間沒有真實軌道相連。",
-  "tools.notOnTrack": "請把車站放在軌道上",
   "tools.placeStation": "放置車站",
   "tools.placeTrack": "放置這段軌道",
   "tools.remove": "移除",

@@ -2428,7 +2428,6 @@
   "tools.near": "{n} trips within 1{unit}",
   "tools.nearUnder": "Under 50 trips within 1{unit}",
   "tools.noRealTrack": "No real track joins these points.",
-  "tools.notOnTrack": "Place stations on track",
   "tools.placeStation": "Place the station",
   "tools.placeTrack": "Place this track",
   "tools.remove": "Remove",

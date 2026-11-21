@@ -4,7 +4,7 @@
 
 import { batch, computed, type Signal } from "@preact/signals";
 import { useState } from "preact/hooks";
-import type { ComponentChildren } from "preact";
+import type { ComponentChildren, JSX } from "preact";
 import { distUnit, kmhFromShown, kmhToShown, levelLabel, levelName, millions, speed } from "../game/format";
 import { linking } from "../game/links";
 import { moneyState } from "../game/money";
@@ -13,7 +13,7 @@ import { buildMode } from "../game/buildMode";
 import { linesByNum, world } from "../game/world";
 import { CAR_M, stepPlatform } from "../game/boarding";
 import { carsText } from "./inspector/schedule";
-import { autoRamp, buildAdvanced, buildLevel, buildPlatform, buildTramPlatform, clampDesign, DESIGN_SPEEDS, designSpeed, flyoverSpeed, keepPlacing, lineDraft, quadTrack, setDoubleTrack, setQuadTrack, setSingleTrack, setTrackType, singleTrack, shade, besideOn, snapBeside, snapReal, snapRealTram, snapRoads, snapStreets, stationOnTram, stationOneTrack, TRAM_PLATFORM, tool, trackType, type TrackType } from "../game/ui";
+import { autoRamp, buildAdvanced, buildLevel, buildPlatform, buildTramPlatform, clampDesign, DESIGN_SPEEDS, designSpeed, flyoverSpeed, keepPlacing, lineDraft, quadTrack, setDoubleTrack, setQuadTrack, setSingleTrack, setTrackType, singleTrack, shade, besideOn, snapBeside, snapReal, snapRealTram, snapRoads, snapStreets, stationKind, stationOnTram, stationOneTrack, TRAM_PLATFORM, tool, trackType, type StationKind, type TrackType } from "../game/ui";
 import { costBackground } from "../map/trackTagRows";
 import { levelTip, multText, trackMult, unitPrice, upkeepAt } from "./trackPrice";
 import { Icon, LevelButtons, Segmented, Stepper, TrackCountButtons } from "./widgets";
@@ -173,22 +173,43 @@ function TrackBar() {
   );
 }
 
+/** T-3999: what the station tool places, a train or tram station, a BRT station or a port. */
+const stationKinds = (): [StationKind, string, () => JSX.Element][] => [["rail", t("toolBar.kindRail"), Icon.train], ["bus", t("stationInspector.brtStation"), Icon.bus], ["port", t("stationInspector.port"), Icon.anchor]];
+
 function StationBar() {
   const tram = stationOnTram.value;
   const len = tram ? buildTramPlatform : buildPlatform;
+  const kind = stationKind.value;
+  const [open, setOpen] = useState(false);
+  const kinds = (pick: (k: StationKind) => void, cls = "") => (
+    <div class={"group tb-kind" + cls} role="group" aria-label={t("toolBar.stationKind")}>
+      {stationKinds().map(([k, label, I]) => (
+        <button class={"btn icon" + (kind === k ? " on" : "")} aria-label={label} aria-pressed={kind === k} data-tip={label} onClick={() => pick(k)}><I /></button>
+      ))}
+    </div>
+  );
+  const [, kindLabel, KindIcon] = stationKinds().find(([k]) => k === kind)!;
   return (
+    <>
     <div class="tool-bar station-bar" role="group" aria-label={t("toolBar.station")} style={{ "--mode": CLICK_MODE_COLOURS.station }}>
       <div class="tb-row">
-        <span>{t("toolBar.platformLength")}</span>
-        <Stepper value={carsText(Math.round(len.value / CAR_M))} wide label={t("toolBar.platformLengthLabel")} onStep={(s) => {
-          const to = tram ? Math.max(TRAM_PLATFORM.min, Math.min(TRAM_PLATFORM.max, len.value + s * TRAM_PLATFORM.step)) : stepPlatform(len.value, s);
-          if (to === len.value) return false;
-          len.value = to;
-          return undefined;
-        }} />
-        <PlatformTracks one={stationOneTrack.value} onPick={(one) => (stationOneTrack.value = one)} />
+        {kinds((k) => (stationKind.value = k), " tb-wide")}
+        {/* on a phone the kind is one button that opens the three above the bar, as the track type */}
+        <button class="btn icon tb-narrow" aria-label={kindLabel} aria-expanded={open} onClick={() => setOpen(!open)}><KindIcon /></button>
+        {kind === "rail" && <>
+          <span class="tb-wide">{t("toolBar.platformLength")}</span>
+          <Stepper value={carsText(Math.round(len.value / CAR_M))} wide label={t("toolBar.platformLengthLabel")} onStep={(s) => {
+            const to = tram ? Math.max(TRAM_PLATFORM.min, Math.min(TRAM_PLATFORM.max, len.value + s * TRAM_PLATFORM.step)) : stepPlatform(len.value, s);
+            if (to === len.value) return false;
+            len.value = to;
+            return undefined;
+          }} />
+          <PlatformTracks one={stationOneTrack.value} onPick={(one) => (stationOneTrack.value = one)} />
+        </>}
       </div>
     </div>
+    {open && <div class="tool-bar-pop">{kinds((k) => { stationKind.value = k; setOpen(false); })}</div>}
+    </>
   );
 }
 

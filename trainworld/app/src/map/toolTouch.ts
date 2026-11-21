@@ -7,6 +7,7 @@ import { hiddenOnGlobe } from "./live";
 import { SAME_TAP_PX, touchCtl, touchInput, type TouchCtl } from "./touch";
 import { TOUCH_GAP_PX, type LngLatish } from "./toolParts";
 import { stationClick } from "./stationTool";
+import { freeCancel, freeFirst, freeStarted } from "./stationFree";
 import { deleteClick } from "./toolDelete";
 import type { Tools } from "./tools";
 
@@ -75,6 +76,7 @@ export function touchStop(tk: Tools) {
   if (t === "track") return tk.reset();
   tk.touchAt = null;
   tk.hover = null;
+  if (t === "station") freeCancel(tk);
   if (t === "delete") {
     tk.delHover = null;
     tk.clearPreview();
@@ -121,6 +123,8 @@ export function touchState(tk: Tools): TouchCtl | null {
     const bad = !!pv && !pv.ok && tk.previewKey === tk.wantKey && !tk.snapped;
     return { confirm: tk.touchAt ? !bad && !tk.placing : null, confirmTip: tr("tools.placeTrack"), back: !!tk.touchAt || tk.chain.length > 0, stopTip: tr("tools.stopDrawing") };
   }
+  // T-3999: the first end of a station on open ground placed, the next tap its direction
+  if (t === "station" && freeStarted()) return { confirm: null, confirmTip: tr("tools.placeStation"), back: false, stopTip: tr("tools.cancelStation") };
   if (t === "station" && tk.touchAt && tk.hover && tk.hover.kind !== "free") return { confirm: tk.shown?.ok !== false, confirmTip: tr("tools.placeStation"), back: false, stopTip: tr("tools.cancelStation") };
   if (t === "delete" && tk.touchAt && tk.delHover) return { confirm: true, confirmTip: tr("tools.remove"), back: false, stopTip: tr("tools.cancelRemove") };
   return null;
@@ -137,7 +141,7 @@ export function placeTouch(tk: Tools) {
     touchCtl.value = ctl;
   }
   const host = tk.touchHost, t = tool.peek();
-  const at = t === "bus" ? tk.bus.touchPoint() : t === "ferry" ? tk.ferry.touchPoint() : t === "building" ? tk.building.touchPoint() : tk.touchAt ?? (t === "track" && tk.start ? tk.start : null);
+  const at = t === "bus" ? tk.bus.touchPoint() : t === "ferry" ? tk.ferry.touchPoint() : t === "building" ? tk.building.touchPoint() : tk.touchAt ?? (t === "track" && tk.start ? tk.start : t === "station" ? freeFirst() : null);
   if (!ctl || !at) {
     host.style.display = "none";
     tk.handle.style.display = "none";

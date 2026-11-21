@@ -2428,7 +2428,6 @@
   "tools.near": "{n} perjalanan dalam radius 1{unit}",
   "tools.nearUnder": "Kurang dari 50 perjalanan dalam radius 1{unit}",
   "tools.noRealTrack": "Tidak ada rel nyata yang menghubungkan titik-titik ini.",
-  "tools.notOnTrack": "Taruh stasiun di atas rel",
   "tools.placeStation": "Taruh stasiun",
   "tools.placeTrack": "Taruh rel ini",
   "tools.remove": "Hapus",

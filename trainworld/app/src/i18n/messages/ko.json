@@ -2428,7 +2428,6 @@
   "tools.near": "1{unit} 이내 이동 {n}회",
   "tools.nearUnder": "1{unit} 이내 이동 50회 미만",
   "tools.noRealTrack": "이 지점들을 잇는 실제 선로가 없어요.",
-  "tools.notOnTrack": "역은 선로 위에 놓으세요",
   "tools.placeStation": "역 놓기",
   "tools.placeTrack": "이 선로 놓기",
   "tools.remove": "철거",

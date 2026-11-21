@@ -2428,7 +2428,6 @@
   "tools.near": "{n} Reisen im Umkreis von 1 {unit}",
   "tools.nearUnder": "Unter 50 Reisen im Umkreis von 1 {unit}",
   "tools.noRealTrack": "Kein echtes Gleis verbindet diese Punkte.",
-  "tools.notOnTrack": "Stationen auf Gleis setzen",
   "tools.placeStation": "Station setzen",
   "tools.placeTrack": "Dieses Gleis legen",
   "tools.remove": "Entfernen",
