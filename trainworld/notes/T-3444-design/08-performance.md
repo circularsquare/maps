@@ -1,10 +1,15 @@
 # T-3444 design, part 8: performance
 
-Agent tdperf, 2026-11-21. Design draft; nothing is built or measured here. Figures are from research/code.md section 7
-and the notes it cites. Each is tagged **measured** (task, date, conditions), **stale** (from before fixes that
-changed the path), or **proposed** (a budget). Most measurements were taken on a loaded machine, so every budget has
-two parts: an absolute number, and a same-run ratio against master, old and new alternating in one loaded game
-(T-3803's method, 20 arms a side).
+Agent tdperf, 2026-11-21. Design for the track rework; nothing is built or measured here. Figures are from
+research/code.md section 7 and the notes it cites. Each is tagged **measured** (task, date, conditions), **stale**
+(from before fixes that changed the path), or **proposed** (a budget). Most measurements were taken on a loaded
+machine, so every budget has two parts: an absolute number, and a same-run ratio, the `tw/track` branch against
+master alternating in one loaded game (T-3803's method, 20 arms a side).
+
+**Saves used.** Timing: real NYC and the 2,647-station save (`artifacts/trainworld/t3600-asianita-1852.save`), kept as
+the big-save timing case because T-3803's "before" figures were measured on it; North America day 383 for the
+widest network. Conversion and look: her Amsterdam test save first (lightest), the Vienna community save (share
+3znpvqx7 rev 2, fetched in stage 1), North America day 383. Parity: real NYC (gate A).
 
 Anita's accepted requirements (TASKS.md, 11-20): a station placed on track that leaves its shape alone redraws no
 neighbours (T-2767); the drawn network rebuilds only near a change (T-2701); the Penn Station to Emeryville snapped
@@ -18,21 +23,22 @@ preview is a check case (T-763).
 | R2 | Rebuild only near a change (T-2701) | `networkFromState` walks every edge, line, sample and station: 150-740 ms of a 0.4-1.1 s follow-up on North America (measured, T-2404, 11-06, cores 12-15 pinned); one full state on the 2,647-station save 301 ms network, 94 rows, 29 netForPost, 22 post (measured, T-3803 after option 3) | Drawn-network work for a one-bundle edit independent of network size: 30 ms or less in the worker on North America day 383, and within 2x of the same edit on a 10-station save. Items visited at most 4x items changed plus a constant | Counters; one segment added on NA and on a small save |
 | R3 | Penn Station to Emeryville snapped preview (T-763) | 3 s (stale, 2026-10-19, before T-1779 and T-2700); the quad edit 3.3 s to 0.15 s natively (measured, T-727c) | No slower than master in the same run, and 1 s or less in the browser on real NYC, double and quad | Measured first in stage 1; `t2403-follow.mjs` style timing of the one ghost |
 | R4 | Delete | Built station delete 650-2,200 ms, about 0.5 s less after T-2768 (measured, 11-17, real NYC) | A station delete: R1's numbers. A bundle delete: drawn work of its own chunks and the lines on it only. Delete one track: that bundle's chunks and its lines | `t2763-edit-lag.mjs` delete arms |
-| R5 | Track edit, click to follow-up at rest | NYC worker 40-60 ms of own work; NA 0.4-1.1 s (measured, T-2404) | NYC 60 ms or less; NA 100 ms or less in the worker; main thread 30 ms or less on NA (today 35-100 ms) | `t2763-edit-lag.mjs`, segment add and reshape |
+| R5 | Track edit, click to follow-up at rest | NYC worker 40-60 ms of own work; NA 0.4-1.1 s (measured, T-2404) | NYC 60 ms or less; NA 100 ms or less in the worker; main thread 30 ms or less on NA (today 35-100 ms). A way or purpose set on a long traced selection: the trace walks continues only (no network scan), and the edit costs what editing the traced bundles costs | `t2763-edit-lag.mjs`, segment add, reshape, a 50 km way set |
 | R6 | Previews, per pointer move | Ghost 35-37 ms p50 pointer to drawn on NYC (measured, T-2404); `preview_route` 5-8 ms in the worker on NYC, 2-3 ms WASM own time on all Japan (measured, T-2700) | Track ghost no slower than master. Station ghost 5 ms or less in the worker (it compiles the bundle under the pointer only, never the world) | `t2403-follow.mjs`; a station-ghost arm |
-| R7 | Load | Native: NYC 88-110 ms, Northeast 1,271-1,559 ms (measured, T-3137 C1-C2); shipped London start 0.6 s settled (measured, T-3233). Browser: not measured on master | Native 1.2x master or less on NYC and Northeast; London start 1 s or less; browser 1.1x master or less on the 2,647-station save. An old save's one-time conversion adds at most one load's time, plus a settle only for lines the conversion changed | Stage 1 measurement; the parity bin's timing |
+| R7 | Load | Native: NYC 88-110 ms, Northeast 1,271-1,559 ms (measured, T-3137 C1-C2); shipped London start 0.6 s settled (measured, T-3233). Browser: not measured on master | Native 1.2x master or less on NYC and Northeast; London start 1 s or less; browser 1.1x master or less on the 2,647-station save. An old save's one-time conversion adds at most one load's time, plus a settle only for lines the conversion changed; timed on Amsterdam test, Vienna and NA day 383 | Stage 1 measurement; the parity bin's timing |
 | R8 | Compile | (new) | A whole compile at load 30 ms or less natively on real NYC. A platform edit 2 ms or less natively, also on a 5,400 km bundle | Native bench beside the parity bin |
 | R9 | Memory | Not measured | WASM memory after load and the clock worker's drawn-network cache, each 1.2x master or less on the 2,647-station save and NA | Stage 1 measurement |
-| R10 | No quiet change | `t3137-lanes-parity.mjs` (bin `lanes_parity`): 44 sections equal (measured, C1-C2) | At stages 2, 3 and 4, every section equal on real NYC, the Northeast save, London's start and the small games, or each difference reviewed and recorded | The parity check extended to platforms and stations |
+| R10 | No quiet change | `t3137-lanes-parity.mjs` (bin `lanes_parity`): 44 sections equal (measured, C1-C2) | At stages 2, 3 and 4, every section equal on real NYC, the Northeast save, London's start and the small games, or each difference reviewed and recorded; the three reference saves convert with every line stopping where it did | The parity check extended to platforms, stations and stop points |
+| R11 | Stop click (smart allocation) | (new); today's click runs `best_slot` with routing memoised per edit (`HopMemo`) | Picking the out and back stop points adds 1 ms or less natively to today's stop click: it looks only at the clicked station's stop points and stations within 300 m through a grid, never all stations | Native bench on real NYC; a one-click two-way stop on her split legs |
 
 Wording for player text and the changelog: the map catching up is "shows up". The numbers updating afterwards are
 "calculating trips", which is not part of any budget here.
 
 **What stages 2-4 can and cannot meet.** R1 and R2 need the drawn network keyed by records (stage 5). Before that,
-stage 3 doubles the edges going through today's whole-network build: 1,647 double edges become 3,294 track edges
-on real NYC. So stages 2-4 get a no-regress guard instead: worker follow-up and shows-up within 1.2x of master in the
-same run, plus R7 and R10. Stage 4 does meet R1's sim half: no `back_lines`, `twin_at`, `complex_of` or
-`way_group` scans.
+3d (each track drawn) doubles the edges going through today's whole-network build: 1,647 double edges become 3,294
+track edges on real NYC. So stages 2-4 get a no-regress guard instead: worker follow-up and shows-up within 1.2x of
+master in the same run, plus R7 and R10. Stage 4a does meet R1's sim half: no `back_lines`, `twin_at`,
+`complex_of` or `way_group` scans.
 
 ## Whole-network passes to design out
 
@@ -40,15 +46,15 @@ same run, plus R7 and R10. Stage 4 does meet R1's sim half: no `back_lines`, `tw
 |---|---|---|---|
 | `networkFromState` walks every edge, line, sample, station to find what changed (T-2404) | 150-740 ms NA | the edit's touched set, carried from the sim with the state (T-2404's "medium work") | 5 |
 | Posted arrays compared with the last ones | part of the above | patches by range (`NetCache.last`, `NetPatch`) | 5 |
-| `back_lines` scans every edge and line each edit and rebuilds every line with a derived return | every edit | return paths stored with the line (01) | 4 |
+| `back_lines` scans every edge and line each edit and rebuilds every line with a derived return | every edit | return paths stored with the line (01) | 4a |
 | `twin_at` scans every edge per station placement | O(E) | bundle slots | 2 |
-| `complex_of` scans every station per call, called per stop | O(N) per stop | complex kept per station, updated near the edit through a grid | 4 |
-| `way_group` scans every node | O(N) | the simple-stops rule (membership) | 4 |
-| `find_path_side` allocates `2 * edge_count` per hop | O(E) per hop | routing on authored tracks (smaller than the derived graph: no stop splits) with scratch arrays kept and stamped by generation | 3 |
-| `derive_ways` over runs | per edit | ways stored | 3 |
+| `complex_of` scans every station per call, called per stop | O(N) per stop | complex kept per station, updated near the edit through a grid | 4a |
+| `way_group` scans every node | O(N) | stop points stored on each stop (smart allocation, picked once at the click) | 4a |
+| `find_path_side` allocates `2 * edge_count` per hop | O(E) per hop | routing on authored tracks (smaller than the derived graph: no stop splits) with scratch arrays kept and stamped by generation | 3c |
+| `derive_ways` over runs | per edit | ways stored, spread to branch points by the edit that sets them | 3a, 3f |
 | `legShifts` builds a per-node table over every edge on every build | 0.7 s of a profiled 3.8 s (T-3803) | each track drawn at its offset | 5 |
 | `besideSamples` resamples neighbours of changed edges | 60-350 ms midtown | gone: lines on a track are known from paths | 5 |
-| Complex rule in `game/complexes.ts` as well as `twin.rs` | per state | one copy in the sim, sent to the app | 4 |
+| Complex rule in `game/complexes.ts` as well as `twin.rs` | per state | one copy in the sim, sent to the app | 4a |
 
 ## Keys: why stable ids make caching work
 
@@ -82,6 +88,8 @@ What each edit rebuilds:
 | Segment added | its bundle's chunks, end nodes' drawing, lines on it |
 | Reshape (one PI) | 1-3 chunks of that bundle, lines on those chunks; platforms the edit re-projects |
 | Delete one track | that bundle's chunks, lines on it |
+| Crossover drawn (a single between two tracks) | the new single's chunks, the two split points' chunks, lines rerouted over it |
+| Way or purpose set on a traced selection | the traced tracks' chunks (arrows), lines on them |
 | Train count or headway | that line's samples only |
 
 ## The compile, per bundle
@@ -125,13 +133,19 @@ capacity keys change), so it is budgeted the same as one with stops.
 
 | Stage | Must meet |
 |---|---|
-| 1 | Measurements below, on master |
-| 2 | No regress (1.2x); R10 |
-| 3 | No regress; R7, R8 (load compile), R10; routing without the 2E allocation |
-| 4 | No regress; R1's sim half; R7; R10 with stations and platforms |
-| 5 | R1, R2, R4, R5, R6, R9 |
-| 6-11 | No regress against stage 5; R3 again at 6 (bundles of 4) and 8 (crossovers) |
-| 12 | R7 on the rebuilt shipped starts |
+| 1 (master) | Measurements below |
+| 2a-2b | No regress (1.2x); R10 |
+| 3a | R8 (compile) |
+| 3b | R7 (load, conversion of the reference saves); R10 |
+| 3c | Routing without the 2E allocation; no regress on stop clicks |
+| 3d-3f | No regress (3d's doubled track edges are the risk); R5's long-selection arm at 3f |
+| 3g | R7 on the rebuilt starts (London 1 s or less) |
+| 4a | R1's sim half; R11 |
+| 4b | R7 and R10 with stations, platforms and stop points |
+| 4c-4f | No regress; R6's station ghost at 4d; R7 on the starts at 4f |
+| 5a-5b | R1, R2, R4, R5, R6, R9 |
+| 6a-11b | No regress against stage 5; R3 again at 6a (bundles of 4) and 8 (crossovers as single track) |
+| 12a-12c | R7 on the rebuilt starts |
 
 ## Measurements to take first on master (stage 1, when cores are free)
 
@@ -143,9 +157,11 @@ Claim cores in the ledger; alternate master and a copy in one loaded game where 
 3. Penn Station to Emeryville snapped preview on real NYC, double and quad (R3).
 4. Native, T-3137 C1's set: NYC and Northeast load, a station split into the busiest edge, reroute all lines, 600
    station-pair searches.
-5. Browser load to playable: real NYC, the 2,647-station save, London's start.
+5. Browser load to playable: real NYC, the 2,647-station save, London's start, and the three reference saves
+   (Amsterdam test first; fetch Vienna read-only from its share link, once, waiting out the rate limit).
 6. Memory: WASM memory after load and clock worker heap, 2,647-station save and NA.
 7. Save bytes per section (part 7).
+8. A stop click on real NYC natively (R11's baseline).
 About 3-4 h of agent time, most of it waiting on runs.
 
-No calls for her.
+Nothing open for her.

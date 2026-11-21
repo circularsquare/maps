@@ -12,6 +12,7 @@ line through its `{L:<slug>}` tag. Areas are the board's rows. Format and the bo
 - stops | Stops and stop order | Which stations a line stops at and in what order: stopping twice at one station, reordering, waypoints. | update:track-stations
 - station-placement | Station placement | Placing stations: room on ramps, snapping to a good spot, clearer refusals, the name a new station shows. | update:track-stations
 - track-drawing | Track drawing tool | Drawing and dragging track: curves, ramps, bridges, snapping, and copying blueprints. | update:track-stations
+- track-rework | Track rework | Tracks, platforms and stations rebuilt as records: every track its own, stations that don't cut track, any count of tracks, on the tw/track branch (T-3444). | update:track-stations
 - rebuild-track | Rebuild built track | Changing built track's level or kind in place. Rebuilding landed; the preview before you pay is left. | update:track-stations
 - trams | Trams | Trams after their release: snapping to real light rail, shorter ramps, crossing water on a road bridge.
 - buses | Buses, BRT and ferries | Bus balance against trams and a possible BRT upgrade, long distance buses, and small bus and ferry fixes.

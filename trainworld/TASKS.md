@@ -365,11 +365,160 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3675 [P3] {L:feedback} Feedback button on the graphics error screens
   - Context: From T-3630: the no-WebGL2 and graphics-lost screens have no button at all (T-3307's call), so a player stuck there can't report it.
   - Other: notes/T-3630.md "Follow-ups"
-- T-3444 [P2] {L:track-kinds} Track, platform and station model rework (taking, 2026-11-21, agent trackdesign)
-  - Context (11-21): design draft in notes/T-3444-design/; she answered all 27 decisions (yes, with additions: notes/T-3444-design/answers-2026-11-21.md). trackdesign is revising it and writing the stage tasks to file. Builds on a long-lived branch tw/track, merged into master at each release.
-  - Context: Your weekend notes (2026-11-16): double track as a pair of singles, any number of parallel tracks and platforms (Grand Central, Spanish solution, AABB, ABBA, AA above BB), island platforms that shift the tracks, a definition of a station, per-track stop picking with numbered circles; simple stop assignment kept for simple two-track lines.
-  - Goal: An agreed design that covers those cases and can grow, then a staged plan, with the track model split into parts an agent can read whole (you 11-16, after the code tour: it is too big to read fully today).
+- T-3444 [P2] {L:track-rework} Track, platform and station model rework
+  - Context: Design agreed 11-21 (notes/T-3444-design/, her answers in answers-2026-11-21.md; three small calls still open in review/track-rework-design.md). Built in 38 stages, T-3948 to T-3985, in four releases, on a long-lived branch tw/track merged into master at each release. Your weekend notes (2026-11-16) are the heart of it.
+  - Goal: Closes with the last of its stages.
   - Other: Your notes verbatim: notes/T-3444.md; sizes in notes/code-tour.md. Requirements folded in 11-20: a station placed on track that leaves its shape alone redraws no neighbours (T-2767, 0.2-0.9 s today); the drawn network rebuilds only near a change (T-2701); the Penn Station to Emeryville snapped preview (3 s, T-763) as a check case. notes/review-edit-speed-2026-11-20.md
+- T-3948 [P2] {L:track-rework} Track rework prep on master
+  - Context: Before the tw/track branch is cut: T-1183 out (the fixed-rate path its tests still use), a save guard so today's game reads a tw/track save as "saved by a newer version" (it must ship in a release before the first merge back), part 8's seven baseline timings on master, and the community Vienna save (share 3znpvqx7 rev 2) fetched read-only into notes/T-3444-design/saves/ (rate limited on 2026-11-21).
+  - Goal: T-1183 done, the guard shipped, the seven timings written down, the three reference saves in saves/.
+  - Other: Starts now. Files: save.rs decoder top, the 13 test files of T-1183. 4-6 h. notes/T-3444-design/10-build-plan.md stage 1
+- T-3949 [P2] {L:track-rework} {after:T-3948} Bundles as saved records
+  - Context: Quad is two doubles found again by geometry in six places with six distances. A bundle id and slot on today's edges, saved, set by drawing and doubling up, found once on old saves by today's twin rule.
+  - Goal: The geometry pairing rules (`twin_at`, `quad_beside`, `quadPairs.ts`, `Alongside`) are gone and the real save's figures are unchanged.
+  - Other: Files: save.rs (LBN1), wasm.rs quad, wasm/draw.rs, wasm/crossings.rs, twin.rs, quadPairs.ts. 3-4 h. stage 2a
+- T-3950 [P2] {L:track-rework} {after:T-3949} Single, double and more in the tools
+  - Context: Your three cases: the track bar's 1, 2 and More (4 for now); 4 tracks picked whole, a second click picks one double; the Select bar's 4 replaces Double up; titles "Single track", "Double track", "4 tracks".
+  - Goal: Every tool picks by one shared pointer rule; no "Quad track" or Double up left.
+  - Other: Files: tools.ts, ToolBar.tsx, Blueprint.tsx, TrackInspector.tsx, blueprintPick.ts. 3-4 h. stage 2b
+- T-3951 [P2] {L:track-rework} {after:T-3950} Every track its own edge
+  - Context: The compile from bundles with tracks to the derived graph, one track per edge, with stable ids, the node pitch and capacity's keys; the two-lane cap and the inferred-way code go. Stations are still nodes in this stage.
+  - Goal: The sim tests pass on the small saves.
+  - Other: Files: net/*.rs, lanes.rs, capacity.rs keys, a new compile module. 4-6 h. stage 3a1
+- T-3952 [P2] {L:track-rework} {after:T-3951} Track partners, turns and parity
+  - Context: Each track's partner stored (the loader pairs each old double); turn moves at stop nodes and bare ends; routing and capacity on the new keys checked whole.
+  - Goal: Parity gates A (real NYC) and B (the small saves and the Amsterdam "test" save) equal to master: paths, capacity and rides.
+  - Other: Files: the compile module, net/paths.rs, capacity.rs. 3-4 h. stage 3a2
+- T-3953 [P2] {L:track-rework} {after:T-3952} New save format and old saves
+  - Context: TWT7 at level 36; old saves converted on load with the old bytes kept.
+  - Goal: Amsterdam "test", Vienna and North America day 383 load to parity, Amsterdam first.
+  - Other: Side by side with 3c and 3d. Files: save.rs, saveFile.ts. 3-5 h. stage 3b
+- T-3954 [P2] {L:track-rework} {after:T-3952} Line paths in track spans
+  - Context: Lines store paths as (track, direction) spans; the return run by partner lookup; routed returns stored, so `back_lines` stops rebuilding lines every edit; routing searches authored tracks.
+  - Goal: Parity A and B; the perdir and t3565 checks pass.
+  - Other: Side by side with 3b and 3d. Files: net/paths.rs, perdir.rs, wasm/lines.rs, LineData. 4-6 h. stage 3c
+- T-3955 [P2] {L:track-rework} {after:T-3952} Draw each track at its own offset
+  - Context: Per-track rows to the app; `legShifts`, the double-to-single taper and `singleLeadStrokes` go; the wiki gets a "Tracks" page.
+  - Goal: Joins, branches and flyovers look right on both running sides.
+  - Other: Side by side with 3b and 3c. Files: wasm/snapshot.rs, stateRows.ts, network.ts, renderer and shaders. 5-6 h. stage 3d
+- T-3956 [P2] {L:track-rework} {after:T-3955} Extend and edit one track
+  - Context: A single drawn from a double's end extends the track under the pointer, with no automatic merge (your note: merging is manual); joins come from the pointer's pick; the second click reaches one track, which can be deleted or flipped.
+  - Goal: Extending each track of a double, merging two singles manually and deleting one side all work; lines are rerouted or refused by name.
+  - Other: Closes T-3353 with it. Files: tools.ts, wasm/draw.rs, wasm/edits.rs, toolDelete.ts. 4-5 h. stage 3e
+- T-3957 [P2] {L:track-rework} {after:T-3956} Long track selections and ways
+  - Context: Your decision 10: a way set on a track spreads to the nearest branch points; a double click traces one track to the next branch points and Shift+click extends it; a selection's way is set in one edit.
+  - Goal: A long one-way leg set in one edit; T-3662's kerbside case keeps its lines.
+  - Other: Closes T-3662. Files: blueprintBox.ts, pick.ts, wasm/oneway.rs, TrackInspector.tsx. 3-4 h. stage 3f
+- T-3958 [P2] {L:track-rework} {after:T-3953} Sandbox starts on the new format
+  - Context: `realsave` builds today's edges directly, so it changes with the format; the starts must keep loading settled (London 0.6 s, not 43 s).
+  - Goal: Every start rebuilt and loading settled.
+  - Other: Files: sim/src/bin/realsave.rs, pipeline realshared.py. 2-3 h. stage 3g
+- T-3959 [P2] {L:track-rework} {after:T-3957} Stations as platform records
+  - Context: Platforms and stations as records (level 37); stations stop cutting track; stop points compiled; the station fields on nodes go.
+  - Goal: Parity where nothing new is used.
+  - Other: Files: net/stations.rs, service.rs, the compile module. 4-6 h. stage 4a1
+- T-3960 [P2] {L:track-rework} {after:T-3959} Smart stop allocation
+  - Context: Your decision 3: one click makes a two-way stop, each way's stop point picked at the click and stored, re-picked only when it goes; the "trains can't pass here" flag; `perdir` way stations and `station_beside` go.
+  - Goal: Your split legs get a two-way stop in one click; the T-3605 and T-3711 cases are unchanged.
+  - Other: Files: perdir.rs, twin.rs, wasm/lines.rs. 3-4 h. stage 4a2
+- T-3961 [P2] {L:track-rework} {after:T-3960} Old stations converted
+  - Context: Each old station node becomes a station with its platforms; each stop keeps the way picks today's rule makes.
+  - Goal: The three reference saves' figures equal to master.
+  - Other: Side by side with 4c, 4d, 4e. Files: save.rs converter. 3-4 h. stage 4b
+- T-3962 [P2] {L:track-rework} {after:T-3960} Demand from stop points and the track chip
+  - Context: Demand's snapshot rows come from stop points; one complex rule, in the sim; the stop list gets its track chip.
+  - Goal: Packed demand arrays byte for byte on NYC, then the same rail trips a day.
+  - Other: Side by side with 4b, 4d, 4e. Files: demandClient.ts, demand/network.rs, complexes.ts, the line panel's stop list. 4-6 h. stage 4c
+- T-3963 [P2] {L:track-rework} {after:T-3960} Station tool templates and preview
+  - Context: Your decision 2: Side platforms, Island (zero width for now) and Single platform; the pointer and count pick the tracks; a platform placed overlapping a station joins it; the ghost shows the covered tracks and their ways.
+  - Goal: All three templates on single, double and 4 tracks; strings listed.
+  - Other: Side by side with 4b, 4c, 4e. Closes T-3354. Files: stationTool.ts, stationSnap.ts, ToolBar.tsx. 5-6 h. stage 4d
+- T-3964 [P2] {L:track-rework} {after:T-3960} Station panel platform picture
+  - Context: A picture of the station's tracks (one way red, the other blue, two-way grey) with platforms to add and remove; Join to station and Make a separate station.
+  - Goal: Platforms added and removed from the panel; lines that need a platform are named when refused.
+  - Other: Side by side with 4b, 4c, 4d. Files: StationInspector.tsx, StationSides.tsx. 4-5 h. stage 4e
+- T-3965 [P2] {L:track-rework} {after:T-3961} Sandbox starts with station records
+  - Context: The starts rebuilt with stations as records, keeping today's stations.
+  - Goal: Every start loads settled; rides within 2% of today's.
+  - Other: Files: realsave.rs, realshared.py. 2-3 h. stage 4f
+- T-3966 [P2] {L:track-rework} {after:T-3964} Drawn network rebuilt per bundle
+  - Context: Drawn records keyed by bundle chunk and chainage, so an edit redraws only what it touched (T-2767, T-2701).
+  - Goal: A station on built track redraws no other bundle: worker 30 ms or less, shows up in 400 ms median or less on the 2,647-station save (1,925 ms today).
+  - Other: Closes T-2767 and T-2701. Files: network.ts, strokeCache.ts, clockPost.ts. 4-6 h. stage 5a
+- T-3967 [P2] {L:track-rework} {after:T-3966} Line ribbons per track
+  - Context: Lines side by side on one track laid out from their paths; `besideSamples` goes.
+  - Goal: Midtown's ribbons look as today; the Penn Station to Emeryville preview timed (3 s on 10-19).
+  - Other: Closes T-763. Files: lineBands.ts, corridors.ts. 3-4 h. stage 5b
+- T-3968 [P3] {L:track-rework} {after:T-3967} More tracks up to sixteen
+  - Context: The More button's count and layout; tracks added to a selection run unconnected until crossovers are built (your follow-up on decision 8); one track removed; the price per track (half a double beside an other-way track, else 0.6).
+  - Goal: A fifth track added and priced; a line set on it is refused until crossovers are built.
+  - Other: Files: ToolBar.tsx, Blueprint.tsx, wasm/draw.rs, cost.rs. 4-6 h. stage 6a
+- T-3969 [P3] {L:quad-track} {after:T-3968} Tracks by direction
+  - Context: AA/BB and ABBA layouts; drawing by direction, the peel-off and the flying split (T-3348's stages 2-3); crossing flat with ramps off.
+  - Goal: Locals and expresses on AA/BB with no flat crossing at the split.
+  - Other: Closes T-3348 and T-340 with 6c. Files: wasm/draw.rs, flyover.rs, tools.ts. 5-6 h. stage 6b
+- T-3970 [P3] {L:quad-track} {after:T-3967} One line over several tracks
+  - Context: The hidden twin line goes; a line runs equal shares of its trains on each track it uses; panels read one line.
+  - Goal: The t3333 save gives the same trains and rides.
+  - Other: Side by side with 6a and 6b. Closes T-3335. Files: twin.rs, service.rs, world.rs twin_ops, the line panel. 3-5 h. stage 6c
+- T-3971 [P3] {L:passing-tracks} {after:T-3970} Real passing loops on single track
+  - Context: The loop drawn at a single-track station becomes real track; a little less waiting where lines share one, and a terminal there turns 30 an hour (decision 20).
+  - Goal: Parity B except the reviewed differences part 5 lists.
+  - Other: Files: capacity.rs, overtake.rs, terminalBays.ts, save.rs converter. 3-5 h. stage 7a
+- T-3972 [P3] {L:passing-tracks} {after:T-3971} Passing tracks as real track
+  - Context: The passing tracks button builds real tracks with the passing purpose; overtakes read the tracks; each line stops on one platform track (decision 19); the terminal stays an upgrade.
+  - Goal: T-2231's line keeps its express and local times.
+  - Other: Files: upgrades.rs, overtake.rs, network.ts passing drawing, the station panel. 4-6 h. stage 7b
+- T-3973 [P3] {L:track-rework} {after:T-3972} Track purpose
+  - Context: Each track or long selection can be Any line, Passing track or Only for chosen lines; routing, overtakes and capacity read it.
+  - Goal: An express pair kept to expresses; a passing track used only for overtakes.
+  - Other: Files: net/paths.rs, overtake.rs, TrackInspector.tsx. 4-6 h. stage 7c
+- T-3974 [P3] {L:track-rework} {after:T-3973} Crossovers drawn as single track
+  - Context: Your note: a crossover is a single track drawn between two tracks (the tool lays the S); a scissors is two; old crossovers load as singles; turnback crossovers are laid with the stop edit, priced, deletable; figures at termini unchanged.
+  - Goal: A line turning at a terminus has today's figures; deleting its crossover refuses or reroutes it by name.
+  - Other: An old double-track diagonal loads as a double, so the derived graph stays as today; the sandbox starts are rebuilt with their crossovers. Files: tools.ts, wasm/draw.rs, wasm/crossings.rs, capacity.rs turns, network.ts. 4-6 h. stage 8a
+- T-3975 [P3] {L:track-rework} {after:T-3974} Build crossovers offer
+  - Context: Your follow-up on decision 8: when a line can't reach a track for lack of crossovers, the refusal offers to build them in sensible spots, as a blueprint with its cost, in one click.
+  - Goal: The fifth track's line and a stop on a quad's far pair each work in one click.
+  - Other: Files: a crossover placer in the sim, issues.ts, the stop and chip UI. 4-6 h. stage 8b
+- T-3976 [P3] {L:track-rework} {after:T-3975} Island platforms that spread the tracks
+  - Context: The Island template spreads the tracks for a 6 m island, the S laid for the target max speed (flyover speed where room is short); built track gets a blueprint reconstruct.
+  - Goal: At 80 and 160 km/h the S is about 70 and 140 m each end and trains never slow below the target.
+  - Other: Files: geom.rs offsets, stationTool.ts, stationGeometry.ts. 5-6 h. stage 9a
+- T-3977 [P3] {L:track-rework} {after:T-3975} Getting on and off sides
+  - Context: Faces on platform edges for the Spanish solution; no effect on the figures for now (decision 22).
+  - Other: Side by side with 9a. Files: the platform record, StationSides.tsx, stationGeometry.ts. 2-4 h. stage 9b
+- T-3978 [P3] {L:route-choice} {after:T-3962} Island change counts one minute
+  - Context: Your decision 23: a change between the two edges of one island counts 1 minute instead of 2, as flavour.
+  - Goal: The kernel test passes; ceiling tests unchanged.
+  - Other: Side by side with anything. Files: demand kernel change cost, demand-worldwide.md. 2-3 h. stage 9c
+- T-3979 [P3] {L:track-rework} {after:T-3976} Tapering and drawn platforms
+  - Context: Platforms between two bundles' tracks where they split; the drawn platform from T-3859.
+  - Goal: A wedge station at a Y works.
+  - Other: Closes T-3859. 4-6 h. stage 10
+- T-3980 [P3] {L:stops} {after:T-3962} Exact stops in running order
+  - Context: A line's stops as stop points in running order, out and back; switching between simple and exact both ways with a notice.
+  - Goal: A line listed exactly as its simple stops gives the same runs and demand arrays.
+  - Other: Side by side with 7 and 8, not with 6c. Files: wasm/lines.rs, LineData, demandClient.ts. 5-6 h. stage 11a
+- T-3981 [P3] {L:stops} {after:T-3980} Numbered stop circles per track
+  - Context: Your notes: a circle per stop point, pushed apart along its platform, tinted by level, the chosen ones in the line colour with the stop number; clicks, waypoints, touch.
+  - Goal: Works on 4 tracks and a Spanish station; closes T-3079.
+  - Other: Files: stopMarkers.ts, the line panel. 5-6 h. stage 11b
+- T-3982 [P3] {L:track-rework} {after:T-3969} Quick-place and copy station layouts
+  - Context: Your decision 2: place a station on all of a bundle's tracks in one click (AA/BB's islands too) and copy a station's layout to another place.
+  - Other: Files: stationTool.ts, ToolBar.tsx. 4-6 h. stage 13
+- T-3983 [P4] {L:real-networks} Track and platform extract from OSM
+  - Context: OSM platforms, stop areas, `railway:track_ref` and preferred direction, from a trainworld-owned extract (or noritetsu's if it keeps them); one region measured first.
+  - Goal: The region's counts match taginfo's.
+  - Other: Could start now (pipeline only). 4-6 h. stage 12a
+- T-3984 [P4] {L:real-networks} {after:T-3983} Real platform shapes and track order
+  - Context: Island or side platforms and track order (AA/BB against side by side) for the sandbox starts and the 34 extract cities.
+  - Goal: The starts build; rides within 2%.
+  - Other: Also after stage 4f. 4-6 h. stage 12b
+- T-3985 [P4] {L:real-networks} {after:T-3965} One station per real station in starts
+  - Context: Your decision 26 (low priority): a stop where local and express tracks run side by side becomes one station with four platforms; separate lines under one name stay separate stations in one complex.
+  - Goal: Every start loads settled; rides within 2%.
+  - Other: 2-3 h. stage 12c
 - T-3859 [P4] {L:track-kinds} Custom drawn platforms
   - Context: Your TODO.md, 11-20, from player suggestions: "custom drawable platforms like station boxes? for tapered platforms might be cool". Design for you first; may fold into T-3444.
 - T-3434 [P3] {L:region-redraws} Sabang Island missing from the Banda Aceh zone
@@ -939,10 +1088,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3931 [P3] {L:passing-tracks} Locals at 10/30 leaving service (taking, 2026-11-21, agent ownwaits)
   - Context: You, 11-21: "yes each trains round trip can be budgeted on own weight" (each train's round trip sized on its own waits, about one more train on such lines). The moved morning hour now runs the morning's timetable (movedhour, 11-21). Left: at 10/30 one local in three waits about 6 min for its express, and its next departure needs 182 s of spare time where the round trip leaves 106 s, so 8 locals in 3 h leave service; the fix sizes the round trip on the trains' own waits, about one more train on such lines (T-3346's open fix). The map's late expresses at counts 12/9, 12/8, 4/9 and 30/10's hold at G were traced to T-3231's one-place terminal (notes/T-3931.md).
   - Goal: No local at 10/30 leaves service.
-- T-1183 [P3] {L:cleanup} Remove the fixed-rate line path
-  - Context: Stages 1-2 landed 11-21: tests build counted or headway lines, `Op::Schedule`, the test `set_line`/`set_schedule` and tiny_reversal are gone (all test-only). T-3929 moved three parked timing tests to headway lines. Left on rate lines: `a_moved_morning_hour_is_timed_too` (T-3931), `switching_to_headways_on_overfull_track`, `a_frequency_line_is_given_trains_on_load`, which keep `trains: None`, `continuous`, bench.rs and bin/realsave.rs alive. Old rate-only saves become whole trains at load (orchestrator's call).
-  - Goal: The path is gone and those tests use train counts with the same assertions; after T-3873, before the track rework's build stages.
-  - Other: notes/T-1183.md
 
 ## Waits on a rebuild
 - T-3270 [P3] {L:airports} {after:next world rebuild} Eurostat airport passengers for Europe

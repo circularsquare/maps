@@ -1,6 +1,6 @@
 # T-3444 design, part 9: real networks
 
-Agent tdperf, 2026-11-21. Design draft; nothing run. Vocabulary as in `01-model.md`, stages as in
+Agent tdperf, 2026-11-21. Design for the track rework; nothing run. Vocabulary as in `01-model.md`, stages as in
 `10-build-plan.md`. Sources read: `docs/code-map.md` 595-631, the docstrings of `pipeline/realnet.py`,
 `realauto.py`, `realcorridors.py`, `realshared.py`, `reallevels.py`, `realgraph.py`, `sim/src/bin/realsave.rs`,
 `noritetsu/extract.py`, and research/realworld.md for what OSM and GTFS hold.
@@ -29,41 +29,46 @@ its own station nodes: 109 lines, 1,756 station nodes, one complex per real stat
 The pipeline already holds most of what the new records need; only `realshared.py` and `realsave.rs` change, and they
 must (realsave builds `EdgeData` and `StationData` directly, which go at stage 3-4).
 
-**Stage 3 (bundles and tracks).**
+**Stage 3g (starts on the new format).**
 - Each piece becomes **one bundle of 2 x pairs tracks**, pairs side by side as today: ways A B A B by running side,
   slots at -6, -2, +2, +6 for two pairs (`PAIR_GAP` 8 m is 01's default). The pipeline knows the pairs, so there is
   no geometry guess.
 - A line's path `[piece, +1/-1, pair]` becomes a span (bundle, slot): the pair and direction pick the slot.
-- Nodes as today. Where a line changes pair at a node (today a junction there), the bundle's node gets a stored join
-  from the old pair's track to the new one. That is exact, since the pipeline knows the move.
-- Stations stay on nodes at stage 3 (part 7's station section), as the game's do.
+- Nodes as today. Where a line changes pair at a node (today a junction there), the node gets a stored join from the
+  old pair's track to the new one, exact since the pipeline knows the move. No crossover record exists (crossovers
+  are single track), and the starts need none at this stage.
+- Stations stay on nodes (part 7's level 36 station section), as the game's do.
 
-**Stage 4 (platforms and stations).**
-- **One station per corridor node with stops**, named from its key. A key is often a whole complex (New York's MTA
-  Complex ID, Paris ZDC, London CRS, a 400 m name cluster), so the key alone would make Times Sq or every operator
-  at Shinjuku one station, against 02. The corridor node is 02's rule already applied: the pairs whose platforms lie
-  side by side at one place. So all pairs at one node (local and express) are one station with platforms on each
-  served track (zero-width side platforms outside each, length from the longest train, `platform_len`), and the
-  key's other nodes (IRT and BMT at Times Sq, lines on other corridors) are other stations of the same name,
-  grouped by the complex rule as today. Today each pair group at a node is its own station node, named alike.
-- **Station nodes go.** A station no longer splits the bundle, so pieces cut only at stations (`realcorridors.py`'s
-  cuts "at stations") can be joined across the station wherever the lines and pair count match on both sides.
-  Junction nodes past the platforms stay.
-- **Extra platform tracks** (`PLAT_LOAD`, London Bridge, Clapham Junction): today several station nodes side by
-  side between two junctions. They become a bundle of 2 x n tracks between those two junction nodes, with a
-  platform per track. They are already real track, so the mapping is direct.
-- **Complexes stay derived** by the game's rule (50 m, passages, buildings). 02's "a direct copy" does not hold as
-  written: our keys are often complexes already, stations come from corridor nodes, and the game stores no complex.
-  OSM's `stop_area_group` (7,123 worldwide) is too thin to import anyway.
-- Terminals: every dead-end station keeps the terminal rule until stage 7 decides presets.
+**Stage 4f (starts with stations, format only).** Today's stations are kept exactly: each station node becomes a
+station with its platforms through the same function the old-save converter uses (part 7, steps 5-6: two side
+platforms per served pair, the node merged into the bundle where that is length-exact). Each stop stores its out
+and back stop points, written from the platform each run's path passes, so no line moves. `realsave` then settles
+and writes `LRT1` as now. Junction nodes past the platforms and the extra platform tracks (`PLAT_LOAD`: London
+Bridge, Clapham Junction, several station nodes side by side between two junctions) come out as real track: a
+bundle of 2 x n tracks between those two junction nodes, a platform per track. Terminals keep today's rule.
 
-**Stage 7 and later.** Turn-back stubs could become crossovers on the bundle (stage 8). Express/local roles could set
-AA/BB layouts where OSM shows the track order (stage 12, below).
+**Stage 8 (crossovers as single track).** Where a start's line turns back on double track with no crossover, the
+rebuild lays a real crossover single, as the game's own turnback rule does; the T-3790 turn-back stubs at stop-less
+nodes can become such crossovers in the same pass.
+
+**Stage 12c (one station per side-by-side place, low priority, P4).** One station per corridor node with stops,
+named from its key. A key is often a whole complex (New York's MTA Complex ID, Paris ZDC, London CRS, a 400 m name
+cluster), so the key alone would make Times Sq or every operator at Shinjuku one station, against 02. The corridor
+node is 02's side-by-side rule already applied. So all pairs at one node (local and express) become one station with
+platforms on each served track, and the key's other nodes (IRT and BMT at Times Sq, lines on other corridors) stay
+other stations of the same name, grouped by the complex rule. Pieces cut only at stations can then be joined across
+them wherever the lines and pair count match. The circle and the name stay one per complex.
+
+**Complexes stay derived** by the game's rule (50 m, passages, buildings). 02's "a direct copy" does not hold as
+written: our keys are often complexes already, stations come from corridor nodes, and the game stores no complex.
+OSM's `stop_area_group` (7,123 worldwide) is too thin to import anyway.
+
+**Track purpose and ways** are not imported: each line's path already keeps the classes of service apart
+(`realcorridors.py` routes them off each other's track), and every track's way is the running side's.
 
 **The node end cap.** `fabric` and `fan_out` exist only because a game node takes 8 edge ends. With bundles, a
-4-track piece is one end, not two, so far fewer junctions need splitting. 01 states no cap for bundle ends: the lead
-should say whether `MAX_PORTS` 8 counts bundle ends or track ends. Bundle ends is recommended; then most of `fabric`
-can go.
+4-track piece is one end, not two, so far fewer junctions need splitting. `MAX_PORTS` 8 counts bundle ends, not track
+ends (01-model, "The derived graph"), so most of `fabric` can go.
 
 ## What OSM and GTFS offer
 
@@ -90,16 +95,18 @@ Per the game principles: the whole world first, global sources first, a one-city
 
 | What | When | Why |
 |---|---|---|
-| Bundles from pairs, joins at pair changes, one station per corridor node with stops, platforms on served tracks, widened bundles for extra platform tracks | **Now** (stages 3-4) | Needed for the format change; no new source; every city alike |
-| Platform shape from OSM `railway=platform` areas: island or side, by which tracks the area lies between, decided once at import (02's "geometry decides only at placement, once") | **Later**, stage 12 | Global, but needs platforms in the extract |
-| Track order and ways from `railway:track_ref` and `preferred_direction` (AA/BB against ABAB on real quad lines) | Later, stage 12 | Global but thin (16% of rail ways at most); needs the extract change |
-| Stop areas for the 34 extract cities | Later, stage 12 | Better station keys than the 400 m name rule; needs the extract change |
+| Bundles from pairs, joins at pair changes, today's stations as platforms on served tracks, stored stop points, widened bundles for extra platform tracks | **Now** (3g, 4f) | Needed for the format change; no new source; every city alike |
+| Real turnback crossovers | 8 | The game's own rule, applied in the rebuild |
+| Platform shape from OSM `railway=platform` areas: island or side, by which tracks the area lies between, decided once at import (02's "geometry decides only at placement, once") | **Later**, 12a-12b | Global, but needs platforms in the extract |
+| Track order and ways from `railway:track_ref` and `preferred_direction` (AA/BB against ABAB on real quad lines) | Later, 12a-12b | Global but thin (16% of rail ways at most); needs the extract change |
+| Stop areas for the 34 extract cities | Later, 12a-12b | Better station keys than the 400 m name rule; needs the extract change |
+| One station per side-by-side place | 12c (P4) | Above |
 | Track counts above what lines need (`tracks`, parallel chains) | Later | Extra tracks with no line add cost and nothing a player uses yet |
 | GTFS `platform_code`, `pathways`, `levels` | Not planned | Per feed, the seven only. `platform_code` is a label, which the game does not show |
 | MTA station and complex ids | As a **check**, not an import | One city. Compare the game's derived complexes on New York with the MTA's 445 |
 
 **The extract change.** Platforms, stop areas and the two track tags come from noritetsu's extract, which belongs to
-another project and is read-only from trainworld (`realgraph.py`: "never writes there"). So stage 12 either asks
+another project and is read-only from trainworld (`realgraph.py`: "never writes there"). So 12a either asks
 noritetsu to keep them (`WAY_TAGS` plus `railway:track_ref`, `railway:preferred_direction`; platforms as a new
 kind; `stop_area` relations) or runs a trainworld-owned extract from the same PBFs. The re-extract's run time is
 unknown; measure one region first. That is why all of it is later.
@@ -113,16 +120,12 @@ or they were cleared), so a rebuild is a full pipeline run:
 - The seven: `realnet.py net`, `geom`, `route`, corridors, `realsave`, `gamesave` per city. `realsave` itself takes
   30 s for London and 3 s or less for the rest (measured, T-3233). Their raw inputs look present
   (`data/raw/t509/` has gb, idfm, tor, tyo, `osm_sdj.json`; `data/raw/gtfs/`); a dry `net` per city confirms that
-  before stage 3 promises a rebuild.
+  before 3g promises a rebuild.
 - If the staged JSONs turn up under `REALNET_OUT`, only `realsave`, `gamesave` and `ship` need running (minutes).
-- Per stage that changes the format (3, 4, 7): 1-2 h of agent time plus the machine time above. Stage 12's real
-  import (the extract, platform shapes, track order) is its own 8-14 h, after the extract is measured.
+- Per rebuild (3g, 4f, 8): 1-2 h of agent time plus the machine time above, on `tw/track`; the rebuilt files reach
+  master with the merge that carries their format. 12a-12b's real import (the extract, platform shapes, track order)
+  is its own 8-14 h, after the extract is measured; 12c about 3-5 h.
 - A look per rebuilt city as T-3225's hand check (a screenshot at zoom 12, the lines list), and R7 from part 8 (London
   start 1 s or less natively).
 
-## Her calls
-
-- Real networks import **one station per place where tracks run side by side**: a 4-track stop's local and express
-  pairs become one station with four platforms, instead of today's two stations named alike in one complex.
-  Separate lines under one name (Times Sq's IRT and BMT) stay separate stations in one complex. The circle and the
-  name stay one per complex. [Yes.]
+Nothing open for her.

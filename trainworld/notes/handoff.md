@@ -41,8 +41,8 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
 - 11-21 ~02:20 UTC, playtesting plain buses on 8800 (Houston): "buses feel really easy ... mostly profitable ... 10%
   of people taking the bus ... 90% driving. which feels pretty realistic". Bus speeds set 11-21: plain floor 25,
   BRT +10, fast roads 1.4x street; BRT charged in town only; open-country main roads keep 75. "all text ack" ~02:45.
-- 11-21 ~15:00 UTC: track rework design: all 27 picks yes with additions (notes/T-3444-design/answers-2026-11-21.md);
-  trackdesign revising and writing stage tasks; rework on long-lived branch tw/track, merged at releases.
+- 11-21 ~15:00 UTC: track rework design agreed (notes/T-3444-design/answers-2026-11-21.md); 38 stages filed T-3948..
+  T-3985 on tw/track (merged at releases); stage 1 (T-3948, T-1183 folded in) starts once ownwaits and fullrate4 land.
 - 11-20: cleanup, then "full track rework" (T-3444 talk); no minor track work till then; 400 km ferry legs stay.
 - 11-19: "player complaints take precedent over other new features"; full playtest list before every publish.
 - When she plays games: no uploads until she says she's done; she may ask for a lower core cap.

@@ -2,7 +2,8 @@
 
 Agent trackdesign, 2026-11-21. Vocabulary as in `01-model.md`. Her question (notes/T-3444.md): "we might need some
 sort of actual definition of what a "station" is, for display purposes and such ... not sure which of these makes
-sense." Her four candidates are A-D below.
+sense." Her four candidates are A-D below. She agreed the rule below (B plus C) on 2026-11-21 (decision 2), adding
+templates and a placing preview.
 
 ## What a station is used for in the game
 
@@ -54,7 +55,7 @@ Everything within 50 m, joined by a passage or inside a station building, is one
   1795163330, the setting added for it); Times Sq-42 St and 42 St-Port Authority would be forced into one name; a
   passage would rename stations.
 
-## Recommendation: B plus C, with an explicit join, and the complex kept above
+## The rule: B plus C, with an explicit join, and the complex kept above
 
 > **A station is a named group of platforms: the platforms placed together, any platform placed so that it overlaps
 > one of them side by side (at any level), and any platform the player joins to it. Stations a rider walks between
@@ -66,8 +67,9 @@ Everything within 50 m, joined by a passage or inside a station building, is one
   membership is stored and never re-derived, so moving track later cannot split or merge stations by surprise (the
   failure mode of class B).
 - **The player can join and split.** Station panel: "Join to station" (pick another station within 300 m, the change
-  walk limit) and "Make a separate station" on one platform. This is how NYC's offset platforms become one station,
-  and how her split legs 150 m apart become one station (part 1, simple stops rule).
+  walk limit) and "Make a separate station" on one platform. This is how NYC's offset platforms become one station.
+  Joining is about the name; a line does not need it to stop both ways (part 1, smart allocation picks each way's
+  stop point at the click, so her split legs 150 m apart work as two stations).
 - **The complex stays** (derived, 50 m, passages, buildings), with its one circle and its two naming settings. Times
   Sq is one complex of four or five stations, as in the MTA's data.
 - **Two levels, like every real data source**: station holds platforms (OSM stop_area, GTFS station, NeTEx
@@ -84,18 +86,33 @@ What a player sees, case by case:
 | AA above BB, 125th St Lexington | One station (overlap at any level) |
 | Lexington Av/59th St (IRT and BMT) | Two stations, one complex |
 | Offset platforms on a local and an express pair | Two stations in one complex, one station after "Join to station" |
-| Her split one-way legs 150 m apart | Two stations until joined; placed in one click on both legs, one station |
+| Her split one-way legs 150 m apart | Two stations (one if placed in one click on both legs, or joined); either way one stop click serves both ways |
 | Times Sq | Several stations, one complex, as the MTA counts it |
 
 ## Old saves
 
 Each station node becomes a station with its platforms (two zero-width side platforms on double, one on a one-track
 station, both tracks of a single-track station's loop). Twins named alike on the two pairs of quad (`twin_at`) become
-one station of four platforms. Pairs that today's per-direction rule pairs (`way_station`) become one station. Nicety,
-not a migration project (CLAUDE.md "Saves are hers").
+one station of four platforms. Stations that today's per-direction rule pairs (`way_station`) stay separate stations;
+the stops that use them keep each way's stop point as the rule picks it today (part 1). Nicety, not a migration
+project (CLAUDE.md "Saves are hers"); the reference saves are her Amsterdam "test" save, the community Vienna save and
+North America day 383 (part 7).
 
-## Her decision
+## Placing: templates and the preview
 
-**Station is B plus C** (placed together, or overlapping side by side when placed, or joined by the player), with the
-complex kept above it for changes and the circle? Recommended: yes. The alternative closest to it is D, if she would
-rather players never meet the word "complex".
+Her additions to decision 2: "at first i think offering like single platform stations, islands, side, are
+reasonable catch most cases", "an option to quick place quad stations ... or like copy station layouts (can come
+later)", and "placing a station should show in the tooltip a preview of which tracks its going over / which tracks
+will be able to stop at that station".
+
+- **Three templates** in the station bar (stage 4): **Side platforms** (default: a platform outside each picked
+  track, today's station), **Island** (one platform between two picked tracks; zero width at first, and from stage 9
+  the tracks spread for a 6 m island), **Single platform** (one platform on the track under the pointer, today's one
+  way station). The pointer and the count pick the tracks (part 3).
+- **The preview**: under the ghost, every track the station covers is drawn highlighted with its way, and tracks it
+  passes without a platform are dimmed; the tag names in words only what the picture can't show ("Adds a platform
+  to {station}"). Part 3 has the strings.
+- **Later** (stage 13): quick-placing a station on more tracks in one click (all four, or the islands of AA/BB), and
+  copying a station's layout to another place.
+
+Nothing open for her.
