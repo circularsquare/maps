@@ -13,12 +13,13 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
    after. Standby tabs left: maps-5a, maps-17 (notes/standby.txt).
 1. master 7964bcf2 = 8800 3f917ba3 (save level 38). Batch 12 (T-4005, T-4013, T-3373 s3 flagged, T-4017, T-4014
    with its own checker) landed; smoke on 8800 PASS. No batch checker: each risky one had its own or is flagged.
-2. TRACK (her top priority): stages 1 and 2a landed; tw/track 833bb1ca (save level 39, LBN1). trackpick (Opus)
-   on 2b T-3950 in a tree from tw/track; land with `finish trackpick ... --into tw/track`; then 3a1 T-3951.
+2. TRACK (her top priority): stages 1, 2a, 2b landed; tw/track a7818245 (save level 39, LBN1). trackedges (Opus)
+   on 3a1 T-3951 from tw/track; land with `finish trackedges ... --into tw/track`; then 3a2 T-3952 (parity gates).
+   2b strings sent to her for text ack (Quad track -> 4 tracks, Double up -> 4 tracks, ...: notes/T-3950.md).
    Batch 13 on master for one checker before publish: T-3502 airports (demand), bmtab, then fullspeed/splitb5.
 3. BRT: all landed. Bookmarked tab hidden until something is bookmarked landed 8b65274c; 8800 rebuild waits for
    the next landings (one rebuild for the lot).
-4. Running: splitb5 T-3373 B s5, fullspeed T-3655, trackpick T-3950 (Opus). Successors only for track (usage).
+4. Running: splitb5 T-3373 B s5, fullspeed T-3655, trackedges T-3951 (Opus). Successors only for track (usage).
 5. Deferred by her until home: server deploy (a-..-20), wiki push (a-..-18). Waiting: T-2264 help panels (she'll
    look). Later: T-3937 quiet machine; T-3931 held for T-3231; T-3939 B's 140 MB.
 ## Her words
