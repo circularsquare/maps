@@ -972,10 +972,14 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3947 [P3] {L:schematic-layout} Schematic redraw that takes buses into account
   - Context: Your scratch pad, 11-21: "bus-heavy maps do kinda come out looking like spaghetti on the schematic map. cuz we dont actually redraw taking bus routes into account. people request an option to manually start a redraw taking buses into account."
   - Goal: A control that redraws the schematic with bus routes included in the layout, started manually.
-- T-3986 [P2] {L:small-fixes} Say so when the train model is down
+- T-3986 [P2] {L:small-fixes} Say so when the train model is down (taking, 2026-11-21, agent modeldown)
   - Context: From T-3945, 11-21: after four crashes in a minute the train model stays down; edits then show "That edit failed and was undone." or nothing, saves and downloads get no answer, and leaving fails with "This game could not be saved. Download it as a file before leaving it." (an untranslated literal, slots.ts:209 and :212).
   - Goal: While the model is down, refused edits, saves and downloads show the existing "The train simulation stopped working. Reload the page to go on. Your last autosave is kept."; leaving skips the save so the menu opens; the two slots.ts literals get message keys.
   - Other: notes/T-3945.md
+- T-3987 [P3] {L:islands} Bubbles count island trips with other places as car
+  - Context: From the T-2216 stage 3 check, 11-21: once a place's market is open, the cell bubbles' legs with other places have no No route part, so the own row's island trips show as car there (Athens's split shows No route 92,187, its bubbles 82,806).
+  - Goal: A no-way figure per square in the sim's `zone_legs`, so the bubbles' No route matches the city panel.
+  - Other: notes/T-2216.md "Stage 3 fix"
 - T-3941 [P3] {L:buses} {after:T-3655} Weekend BRT lanes past 60 buses an hour
   - Context: From T-3378 stage 2, 11-21: `settle_weekend` doesn't run `fit_lanes`, so in a game where any line has its own weekend schedule, weekend lanes can go past 60. The fix sits in the same code as T-3655's unlanded work.
   - Goal: Weekend lanes cut to 60 an hour as weekdays are.
