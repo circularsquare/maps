@@ -823,6 +823,12 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3945 [P1] {L:small-fixes} Every edit fails and the game won't save (taking, 2026-11-21, agent editfail)
   - Context: A Discord player, 11-21 (your scratch pad, artifacts/trainworld/board/20261121-092545-e355.png and -092553-d101.png): on an Espana game every edit shows "That edit failed and was undone.", saving shows "This game could not be saved", no edits work "not even routes"; the UI was in Spanish; they later managed to download the save (trainsworld-espana-day-172.save, 79 KB, in your Downloads). You asked whether they saw a banner at the top; they didn't. Reach unknown.
   - Goal: The cause found from that save and fixed, or the player's save loading and editing on master with the reason it failed for them.
+- T-3946 [P3] {L:small-fixes} Drop line into a group shows at the wrong indent (taking, 2026-11-21, agent dropindent)
+  - Context: Your scratch pad, 11-21: "dragging lines around in lines list feels a bit weird. if you drag something into the middle of a group, itll show a line that extends all the way to the left, when it should extend only to the indent of the group to indicate that its gonna go into the group".
+  - Goal: The drop marker starts at the indent of the group the line will join.
+- T-3947 [P3] {L:schematic-layout} Schematic redraw that takes buses into account
+  - Context: Your scratch pad, 11-21: "bus-heavy maps do kinda come out looking like spaghetti on the schematic map. cuz we dont actually redraw taking bus routes into account. people request an option to manually start a redraw taking buses into account."
+  - Goal: A control that redraws the schematic with bus routes included in the layout, started manually.
 - T-3941 [P3] {L:buses} {after:T-3655} Weekend BRT lanes past 60 buses an hour
   - Context: From T-3378 stage 2, 11-21: `settle_weekend` doesn't run `fit_lanes`, so in a game where any line has its own weekend schedule, weekend lanes can go past 60. The fix sits in the same code as T-3655's unlanded work.
   - Goal: Weekend lanes cut to 60 an hour as weekdays are.
