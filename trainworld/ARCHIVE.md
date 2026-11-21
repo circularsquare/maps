@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3989 [P3] {L:community} Hide the Ko-fi link for people who donated (2026-11-21): closed without code: Dropped by Anita 11-21: 'lets forget about hiding the kofi button, its whatever.'.
+- T-3851 [P2] {L:community} Light view of another player's map (2026-11-21): Community's Calculate trips tick beside View (off by default, remembered): off, View loads the network alone with no demand workers and no memory check (Asia save on one core: playable in 55 s and 2.4 GB against not playable after 15 min and 4.8 GB), the demand rows hidden, the top bar's Calculate trips reopens it in full (tree tw/viewonly, not committed). notes/T-3851.md.
 - T-1183 [P3] {L:cleanup} Remove the fixed-rate line path (2026-11-21): closed without code: Folded into T-3948 (track rework stage 1), which removes the fixed-rate path first. notes/T-1183.md.
 - T-3946 [P3] {L:small-fixes} Drop line into a group shows at the wrong indent (2026-11-21): Gap marker is a 2px line at the target group's indent; top-level gaps full width.
 - T-3924 [P2] {L:buses} Count every Auto bus stop for demand (2026-11-21): Every Auto stop is a demand stop; 3.7 km NYC line 2,868 -> 3,606 riders (placed 400 m: 3,580); cost about 50 ms and 0.4 MB per added stop; demand_mem --snapshot kept. notes/T-3924.md.
