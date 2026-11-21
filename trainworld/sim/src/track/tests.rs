@@ -446,6 +446,26 @@ fn a_frequency_line_is_given_trains_on_load() {
     assert!(super::save::decode(&old).is_err());
 }
 
+/// T-3948: a network in the track rework's format (TWT7 or later) is refused as a newer save, never read as a
+/// damaged one; TWT4-6 are not.
+#[test]
+fn a_newer_network_format_is_refused_as_newer() {
+    let (w, ..) = simple();
+    let bytes = super::save::encode(&w.net);
+    assert!(!super::save::is_newer_magic(&bytes));
+    for m in [b"TWT7", b"TWT9", b"TWTA"] {
+        let mut b = bytes.clone();
+        b[..4].copy_from_slice(m);
+        assert!(super::save::is_newer_magic(&b));
+        assert_eq!(super::save::decode(&b).err().as_deref(), Some(super::save::NEWER_FORMAT));
+    }
+    for m in [b"TWT2", b"TWT4", b"TWT5", b"TWT6", b"PNG\x89"] {
+        let mut b = bytes.clone();
+        b[..4].copy_from_slice(m);
+        assert!(!super::save::is_newer_magic(&b), "{m:?}");
+    }
+}
+
 #[test]
 fn split_keeps_geometry_and_times_and_undoes_exactly() {
     let (mut w, _, [_, e1], l) = simple();

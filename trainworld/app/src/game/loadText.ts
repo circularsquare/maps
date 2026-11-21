@@ -17,6 +17,6 @@ export const loadFailedText = () => t("loadText.failed");
  * text always names its WASM size and a panic always aborts as `unreachable`, so those alone do not count (T-1891). */
 export const isMemoryFailure = (why: string) => /out of memory|could not allocate|allocation failed|WebAssembly\.Memory|Array buffer allocation/i.test(why);
 
-/** The sentence for a load that failed with `why`. */
-export const loadFailKey = (why: string): MessageKey => (isMemoryFailure(why) ? outOfMemoryKey() : "loadText.failed");
+/** The sentence for a load that failed with `why`; T-3948: a save from a newer version says so (`SAVE_NEWER`). */
+export const loadFailKey = (why: string): MessageKey => (why.includes("clockWorker.newer") ? "clockWorker.newer" : isMemoryFailure(why) ? outOfMemoryKey() : "loadText.failed");
 export const loadFailText = (why: string) => t(loadFailKey(why));

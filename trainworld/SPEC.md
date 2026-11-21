@@ -401,7 +401,8 @@ backup; its card offers its last undamaged copy, from this browser or the accoun
 the start menu with the reason on its card, its slot and account copy untouched and nothing new saved
 [T-3773]. A save that fails for a full disk frees the demand caches and tries again, and a
 database cleared under a running game is made again with the game in it [T-1829]. A game saved by a newer build with parts this one cannot read plays but is never written
-or uploaded here [T-1826]; closing the page asks first only while a change cannot be saved. Beside each slot the page keeps its last final demand result, shown at once
+or uploaded here [T-1826]; one whose network this build cannot read at all (TWT7 and later) does not open, says
+it was saved by a newer version, and stays in its slot as it is, never marked damaged [T-3948]; closing the page asks first only while a change cannot be saved. Beside each slot the page keeps its last final demand result, shown at once
 on reload when the network, packs and build match [T-328].
 Keeping old saves loading is a nicety: only Anita has saves. An optional account, noritetsu's on
 `shonei-server` (one sign-in for both pages), lists a signed-in player's normal games by points on

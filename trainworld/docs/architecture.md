@@ -549,6 +549,12 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   with the game as played here, without the parts it could not read, and autosaves from then on.
   Saves without a level are judged by their network bytes alone (they can carry retired header
   fields such as `points`), so every older save opens as before.
+  A save this build cannot decode at all does not play [T-3948]: a newer header `format`, or a
+  network magic past TWT6 (`TWT7` on, the track rework's; `isNewerTrackFormat` in
+  workers/saveFile.ts, `save::is_newer_magic` in the sim), checked before anything reads the
+  network. Its open fails with "This game was saved on a newer game version. Reload the page to
+  update." (`clockWorker.newer`), back to the start menu; its slot stays as it is, with no aside
+  copy and no damaged mark, and the save check calls it "other", so no good copy is rescued over it.
 - **Removed zones** [T-1053]: a save opens if its header names the registry's world (or none, as
   legacy New York files do); the zones it names need not all exist. The header's `cities` lists
   every zone registered when it was written, so a replan that merges or re-splits zones would

@@ -41,7 +41,7 @@ answers added long selections, track purpose, the crossover offer, station templ
 
 | # | Stage | What lands | Check | Hours |
 |---|---|---|---|---|
-| 1 | Prep, on master | T-1183 (the fixed-rate line path out of 69 tests); the save guard for the new magic; part 8's seven baseline timings, when cores are free; the Vienna save fetched | cargo suites; timings in notes | 4-6 |
+| 1 | Prep, on master. **Done 2026-11-21** (T-3948, notes/T-3948.md: the guard, the baselines, the saves) | T-1183 (the fixed-rate line path out of 69 tests); the save guard for the new magic; part 8's seven baseline timings, when cores are free; the Vienna save fetched | cargo suites; timings in notes | 4-6 |
 | 2a | Bundles as saved records | A bundle id and slot on today's edges (`LBN1`, level 35), set by drawing quad and doubling up, found once on old saves by today's twin rule; `twin_at`, `quad_beside`, `quadPairs.ts`, `Alongside` read it and go | real save figures unchanged; t3333 and t3348 checks | 3-4 |
 | 2b | The three cases in the tools | Track bar 1, 2 and More (4 for now); 4 tracks picked whole, a second click picks one double; Select bar's 4 replaces Double up; one shared pointer pick for every tool; titles "Single track", "Double track", "4 tracks" | play check on 4 tracks and double | 3-4 |
 | 3a1 | Tracks as their own edges: the compile | Authored bundles with tracks, nodes with joins; the compile to the derived graph, one track per edge, stable ids, the node pitch, capacity's keys; lanes' cap and the inferred-way code out. Stations still nodes here | sim tests on the small saves | 4-6 |

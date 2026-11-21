@@ -107,8 +107,7 @@ pub struct Capacity {
     pub users: Vec<User>,
     /// Utilisation per slot (`params::SLOTS`).
     pub rho: Vec<[f64; SLOTS]>,
-    /// Delay per train per level: continuous for resources used by count schedules; legacy-only
-    /// resources round to whole seconds and omit holds under 2 s.
+    /// Delay per train per level, s, unrounded.
     pub delay: Vec<[f64; SLOTS]>,
     tag: Vec<Tag>,
     keys: Vec<u32>,
@@ -1197,7 +1196,6 @@ fn occ_at(net: &Network, us: &[User], single: bool, u: &User, lev: usize) -> f64
 
 fn solve_one(us: &[User], net: &Network, streams: &mut Vec<((u32, u8), f64)>, tag: Tag, single: bool, plans: &[Arc<Plan>]) -> ([f64; SLOTS], [f64; SLOTS]) {
     let (mut rho_r, mut delay_r) = ([0.0; SLOTS], [0.0; SLOTS]);
-    let continuous = us.iter().any(|u| net.line_trains[u.line as usize].is_some());
     if matches!(tag, Tag::Follow { .. } | Tag::Wait { .. }) {
         // T-1924: no utilisation, so no map dot; only the faster line's loss, or (T-2231) the
         // slower line's wait at a passing station
@@ -1206,7 +1204,7 @@ fn solve_one(us: &[User], net: &Network, streams: &mut Vec<((u32, u8), f64)>, ta
                 Tag::Wait { point, .. } => plans.first().map_or(0.0, |p| p.outcome(net, lev).waits[point as usize]),
                 _ => follow_loss(us, net, lev, plans).0,
             };
-            *d = if continuous { w } else if w.round() < HOLD_MIN_S { 0.0 } else { w.round() };
+            *d = w;
         }
         return (rho_r, delay_r);
     }
@@ -1235,10 +1233,8 @@ fn solve_one(us: &[User], net: &Network, streams: &mut Vec<((u32, u8), f64)>, ta
         let rho = load / 3600.0;
         let tot: f64 = streams.iter().map(|s| s.1).sum();
         let mix = 1.0 - streams.iter().map(|s| (s.1 / tot).powi(2)).sum::<f64>();
-        let raw = kingman(rho, mix, load / trains);
-        let w = if continuous { raw } else { raw.round() };
         rho_r[lev] = rho;
-        delay_r[lev] = if !continuous && w < HOLD_MIN_S { 0.0 } else { w };
+        delay_r[lev] = kingman(rho, mix, load / trains);
     }
     (rho_r, delay_r)
 }

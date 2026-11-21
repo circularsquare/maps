@@ -916,6 +916,15 @@ pub fn decode(bytes: &[u8]) -> Result<Network, String> {
     decode_read(bytes).map(|(net, _)| net)
 }
 
+/// T-3948: the error `decode` gives for a network in a format newer than this build reads.
+pub const NEWER_FORMAT: &str = "a track save from a newer version";
+
+/// T-3948: whether a network's magic is one this build cannot read because a newer build wrote it: `TWT7` and
+/// later (the track rework's bodies). The app makes the same test (`isNewerTrackFormat`, workers/saveFile.ts).
+pub fn is_newer_magic(bytes: &[u8]) -> bool {
+    bytes.len() >= 4 && &bytes[..3] == b"TWT" && bytes[3] > b'6' && bytes[3].is_ascii_alphanumeric()
+}
+
 /// `decode` of a save written at save level `level` (the game header's).
 pub fn decode_at(bytes: &[u8], level: u32) -> Result<Network, String> {
     decode_read_at(bytes, level).map(|(net, _)| net)
@@ -930,6 +939,9 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
 
 fn decode_read_at(bytes: &[u8], level: u32) -> Result<(Network, usize), String> {
     let mut unknown = 0usize;
+    if is_newer_magic(bytes) {
+        return Err(NEWER_FORMAT.into());
+    }
     if bytes.len() < 20 || (&bytes[..4] != MAGIC && &bytes[..4] != MAGIC_TWT5 && &bytes[..4] != MAGIC_TWT6) {
         return Err("not a trainworld track save".into());
     }

@@ -38,7 +38,7 @@ import { bandTry } from "../perfFlags";
 import { anchor, anchorWanted, EARTH_C, HOME_ANCHOR, makeAnchor, setAnchor, type Anchor } from "../map/geo";
 import { loadFailText } from "../game/loadText";
 import { noteOpenFailure, openedFine } from "../game/openFailures";
-import { decodeSave, isDamagedError, isUncheckedError, readStored, writePending, type GuideSave, type NewGameSpec, type PendingLoad, type SaveSlot } from "./saveFile";
+import { decodeSave, isDamagedError, isNewerError, isUncheckedError, readStored, writePending, type GuideSave, type NewGameSpec, type PendingLoad, type SaveSlot } from "./saveFile";
 import type { CloudContext } from "./cloud";
 import type { FrameSpec } from "../game/frame";
 import { dataUrl, TERRAIN_BASE } from "../game/dataBase";
@@ -501,7 +501,7 @@ export async function importGame(file: File, version?: { origin: string; edit: n
  * when the file cannot open. */
 export async function fileChoice(file: File, version?: { origin: string; edit: number }, warn?: boolean): Promise<GameChoice | string | { warn: string }> {
   const bytes = new Uint8Array(await file.arrayBuffer());
-  try { await decodeSave(bytes); } catch (err) { return isDamagedError(err) ? t("clockWorker.saveDamaged") : isUncheckedError(err) ? loadFailText(String(err)) : t("clockClient.notSave"); }
+  try { await decodeSave(bytes); } catch (err) { return isDamagedError(err) ? t("clockWorker.saveDamaged") : isNewerError(err) ? t("clockWorker.newer") : isUncheckedError(err) ? loadFailText(String(err)) : t("clockClient.notSave"); }
   const why = await saveRefusal({ bytes }, warn);
   if (why) return why.soft ? { warn: why.text } : why.text;
   if (!await writePending({ kind: "import", bytes, name: file.name.replace(/\.save$/i, ""), from: "", ...version })) return t("clockClient.noStorage");

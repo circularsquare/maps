@@ -24,7 +24,7 @@ import { readOutlinesForPlaces } from "../map/coarseOutlines";
 import { canvasReadsTrue } from "../map/canvasRead";
 import { UPGRADE, UPGRADE_BITS } from "../game/upgrades";
 import { saveNetKey } from "./demandCache";
-import { currentZones, decodeSave, encodeSave, encodeSaveParts, refuseSaveBuffers, isThisWorld, isRetiredTrackFormat, trackFrameKind, readStored, failReads, StorageReadError, SAVE_FORMAT, START_CASH, NEW_LINE_CARS, START_CLOCK, writeStored, listSlots, leaseSlot, ORIGINAL_SLOT, SAVE_DAMAGED, NO_CITIES, isDamagedError, unreadableKey, setNetworkCheck, markDamaged, rescueGood, BACKUP_STEPS, headerUnread, newGameName, slotName, backupSlot, takePending, sweepDeleted, WHOLE_PANEL, type NewGameSpec, type SlotSummary, type SaveHeader, cleanNewHeadways } from "./saveFile";
+import { currentZones, decodeSave, encodeSave, encodeSaveParts, refuseSaveBuffers, isThisWorld, isRetiredTrackFormat, isNewerTrackFormat, isNewerError, SAVE_NEWER, trackFrameKind, readStored, failReads, StorageReadError, SAVE_FORMAT, START_CASH, NEW_LINE_CARS, START_CLOCK, writeStored, listSlots, leaseSlot, ORIGINAL_SLOT, SAVE_DAMAGED, NO_CITIES, isDamagedError, unreadableKey, setNetworkCheck, markDamaged, rescueGood, BACKUP_STEPS, headerUnread, newGameName, slotName, backupSlot, takePending, sweepDeleted, WHOLE_PANEL, type NewGameSpec, type SlotSummary, type SaveHeader, cleanNewHeadways } from "./saveFile";
 import { lineProfile } from "./lineProfile";
 import type { EditOp, RouteAsk, ToClock } from "./protocol";
 import { stampAll } from "./cloud";
@@ -302,6 +302,8 @@ async function openSave(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
     : decoded.header);
   if (!isThisWorld(h)) throw new Error("This save is for another world.");
   if (isRetiredTrackFormat(track)) throw new Error("This save is from an older version of the game and no longer opens.");
+  // T-3948: before anything reads the network, which this build would take for a damaged one
+  if (isNewerTrackFormat(track)) throw new Error(SAVE_NEWER);
   // T-1826: before any conversion, which would write only what this build read
   const unread = !fresh && (headerUnread(decoded.header, TrackApi.save_level()) || TrackApi.save_unread(track) > 0);
   let net = track, converted = false;
@@ -638,8 +640,9 @@ async function processMessage(msg: ToClock) {
           // T-2820: first, so a panic's stopped model is out of the way of everything below
           const panicked = isPanic(err) ? afterLoadPanic(err) : null;
           const key = saves.activeSlot;
-          // Keep the unreadable save aside (T-743), its slot as it is
-          await writeStored(unreadableKey(key, stored.at), stored).catch(() => {});
+          // Keep the unreadable save aside (T-743), its slot as it is; T-3948: a newer version's save is not
+          // unreadable, only not readable here, so it stays in its slot alone
+          if (!isNewerError(err)) await writeStored(unreadableKey(key, stored.at), stored).catch(() => {});
           // T-3395: a damaged slot is marked so (never uploaded) and its last good copy found
           const damaged = isDamagedError(err);
           if (damaged && saves.activeLease) { await markDamaged(key, stored.at).catch(() => {}); await rescueGood(key).catch(() => {}); }

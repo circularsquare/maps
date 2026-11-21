@@ -299,6 +299,15 @@ export function isRetiredTrackFormat(track: Uint8Array): boolean {
   return m === "TWT2" || m === "TWT3";
 }
 
+/** T-3948: whether the network bytes are in a format a newer build wrote and this one cannot read at all (TWT7 and
+ * later, the track rework's; `save::is_newer_magic` in the sim). Such a game does not open here and its slot is left
+ * as it is, never marked damaged. */
+export function isNewerTrackFormat(track: Uint8Array): boolean {
+  if (track.length < 4 || track[0] !== 0x54 || track[1] !== 0x57 || track[2] !== 0x54) return false;
+  const c = String.fromCharCode(track[3]);
+  return c > "6" && /[0-9A-Za-z]/.test(c);
+}
+
 /** Header and network bytes -> the compressed file. In a worker (the clock worker's saves) it is made in parts
  * (`encodeSaveParts`) and joined; on the page the codec worker packs it. */
 export async function encodeSave(h: SaveHeader, track: Uint8Array): Promise<Uint8Array> {
@@ -388,7 +397,11 @@ export const SAVE_UNCHECKED = "The save could not be read"; // i18n-ignore: inte
 /** T-3395: whether an error is `SAVE_UNCHECKED`'s. */
 export const isUncheckedError = (err: unknown): boolean => errorText(err).includes(SAVE_UNCHECKED);
 const NOT_SAVE = "This file is not a trainsworld save.";
-const NEWER_SAVE = "This save is from a newer version of the game.";
+/** T-3948: the message key a save from a newer build throws when it cannot open here at all (a newer header format,
+ * a newer network format); one a newer build wrote only in part opens and plays (T-1826). */
+export const SAVE_NEWER = "clockWorker.newer";
+/** T-3948: whether an error is `SAVE_NEWER`'s. */
+export const isNewerError = (err: unknown): boolean => errorText(err).includes(SAVE_NEWER);
 
 /** The compressed file -> header and network bytes; throws a player-readable reason (`SAVE_DAMAGED`, a key,
  * for a damaged save). */
@@ -412,7 +425,7 @@ export async function decodeSave(file: Uint8Array): Promise<{ header: SaveHeader
     throw new Error(err instanceof SyntaxError ? SAVE_DAMAGED : `${SAVE_UNCHECKED}: ${errorText(err)}`);
   }
   if (!header || typeof header !== "object" || header.game !== "anitabuilder" || typeof header.format !== "number") throw new Error(NOT_SAVE);
-  if (header.format > SAVE_FORMAT) throw new Error(NEWER_SAVE);
+  if (header.format > SAVE_FORMAT) throw new Error(SAVE_NEWER);
   return { header, track: raw.slice(8 + n) };
 }
 
@@ -432,8 +445,9 @@ export async function checkSave(bytes: Uint8Array): Promise<SaveCheck> {
   } catch (err) {
     if (isDamagedError(err)) return "damaged";
     const why = errorText(err);
-    return why === NOT_SAVE || why === NEWER_SAVE ? "other" : "unchecked";
+    return why === NOT_SAVE || why === SAVE_NEWER ? "other" : "unchecked";
   }
+  if (isNewerTrackFormat(track)) return "other";
   if (!networkCheck || isRetiredTrackFormat(track)) return "intact";
   try {
     return networkCheck(track) ? "intact" : "damaged";

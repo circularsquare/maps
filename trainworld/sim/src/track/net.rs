@@ -257,7 +257,9 @@ pub struct LineData {
     pub path: Vec<u32>,
     /// Trains per hour for high, medium and low demand (SPEC 6.3).
     pub tph: [f32; 3],
-    /// Whole trains allocated across both directions; None only until the next settle, which gives a line its trains from `tph` (`TrackWorld::allocate_unallocated`, T-1146).
+    /// Whole trains allocated across both directions. None only for a line known by its rate alone (a TWT4 save's
+    /// frequency line, `realsave`'s and bench's lines as built), between its decode or build and
+    /// `TrackWorld::allocate_unallocated` in the same load, which gives it trains from `tph` (T-1146, T-1183).
     pub trains: Option<[u32; 3]>,
     /// T-625: headway in seconds for high, medium and low demand (0 = no service). When set the
     /// whole-line counts follow it: the fewest trains that keep it over the round trip.

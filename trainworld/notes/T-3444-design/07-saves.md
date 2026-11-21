@@ -84,6 +84,10 @@ line index and do not change. To confirm at build time: that `LBS2`/`LBH1` bus s
 
 ## Save level, stage by stage
 
+**Master moved on (T-3948, 2026-11-21):** master is at level 36 (LBT1 35, LBQ1 36) and the stage 1 guard shipped
+on the magic alone (no level), so every level below moves up by at least two, and each merge of master into tw/track
+renumbers tw/track's levels past master's.
+
 The rework lands on the long-lived branch `tw/track` and merges into master at each release point. A level is
 raised per format that reaches master; sub-stages between two merges need not read each other's saves.
 

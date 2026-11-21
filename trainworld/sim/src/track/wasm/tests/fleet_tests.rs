@@ -116,45 +116,6 @@ fn a_part_train_is_not_marked_as_held() {
     assert!(marked(&a));
 }
 
-/// T-752: on track another line's fixed rate already overfills, switching between counts and
-/// headways buys and sells no train; the trains that cannot run are held out of service.
-#[test]
-fn switching_to_headways_on_overfull_track_keeps_every_train() {
-    let (mut a, id) = four_minute_line();
-    let stops = a.line_stops(id).to_vec();
-    let other = a.new_line_id();
-    // 20 an hour by rate against the termini's 15: over-full before the counted line runs at all.
-    // The over-full track here comes from a line at a fixed rate (no trains, the path T-1183
-    // removes); the fill holds count lines to full, and whether they can overfill it some other
-    // way (a lone train on single track, T-3526) is not checked.
-    let rate = |a: &mut TrackApi, high: f32| {
-        let mut d = crate::track::tests::line_data(&a.w, &stops, other, None);
-        (d.tph, d.turnaround_s) = ([high, 4.0, 2.0], 420.0);
-        a.w.apply(crate::track::world::Op::Line { id: other, data: Some(d) }).unwrap();
-    };
-    rate(&mut a, 20.0);
-    assert_eq!(a.set_train_counts(id, 6, 2, 2), 0, "{}", a.issues());
-    let (trains, fleet) = (slots_to_rows(a.w.svc.lines[id as usize].trains), a.fleet());
-    assert_eq!(trains, [6, 2, 2]);
-    assert!(a.line_held(id)[0] > 0.0, "the high level's trains wait at the ends");
-    let trip = a.w.svc.lines[id as usize].round_trip;
-    let h: [u32; 3] = std::array::from_fn(|lev| (trip[lev] / trains[lev] as f64).ceil() as u32);
-    assert_eq!(a.set_auto_headway(id, h[0], h[1], h[2]), 0, "{}", a.issues());
-    assert_eq!(a.line_auto(id).len(), 3);
-    assert_eq!(slots_to_rows(a.w.svc.lines[id as usize].trains), trains, "no train sold by the switch");
-    assert_eq!(a.w.net.line_trains[id as usize], Some(trains));
-    assert!(a.line_held(id)[0] > 0.0, "held out of service instead");
-    assert_eq!(a.clear_auto_headway(id), 0, "{}", a.issues());
-    assert_eq!(slots_to_rows(a.w.svc.lines[id as usize].trains), trains, "and none by the switch back");
-    assert_eq!(a.fleet(), fleet, "no train bought");
-    // another edit on the headway line keeps the held trains too: the track is over-full
-    assert_eq!(a.set_auto_headway(id, h[0], h[1], h[2]), 0, "{}", a.issues());
-    rate(&mut a, 21.0);
-    let s = &a.w.svc.lines[id as usize];
-    assert_eq!(s.trains[0], auto_trains(s.round_trip[0], h[0]), "the headway's count, with no train trimmed on over-full track");
-    assert!(a.line_held(id)[0] > 0.0);
-}
-
 #[test]
 fn headway_lines_follow_their_round_trip() {
     let mut a = api();

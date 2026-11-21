@@ -329,4 +329,17 @@ fn main() {
             eprintln!("double branch off edge {e}: edit {d:.1} ms, undo {u:.1} ms");
         }
     }
+    // T-3948: a stop click (the line tool's `add_stop`) on the rail line with the most stops, at its middle stop taken
+    // out first, so the click puts back a station the line passes
+    let net = &a.world().net;
+    let pick = (0..net.line_count() as u32).filter(|&l| net.line_ok(l) && !net.is_bus(l) && !net.is_ferry(l)).max_by_key(|&l| net.line_stops(l).len());
+    if let Some(l) = pick {
+        let stops = net.line_stops(l).to_vec();
+        let (i, s) = (stops.len() / 2, stops[stops.len() / 2]);
+        if a.drop_stop(l, i as u32) == 0 {
+            if let Some((d, u)) = time_edit(&mut a, 5, &|a| a.add_stop(l, s)) {
+                eprintln!("stop click, line {l} at station {s}: edit {d:.1} ms, undo {u:.1} ms");
+            }
+        }
+    }
 }
