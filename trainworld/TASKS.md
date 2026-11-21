@@ -219,9 +219,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Measured, route choice per group: the express carries 46.8% of riders' km on shared New York stretches today and 46.8% with 2 or 3 time-value groups; trips on pairs going all one way 37.0% and 36.8%; the passing map unchanged. Express and local charge the same, so valuing time more weighs wait and ride alike. Groups cost +38-42% calculating trips natively and +67 MB, about 2x in the browser. A soft rule, worked out from today's costs, gives 48% express on direct pairs and almost no all-one-way pairs, with no extra search.
   - Goal: Her call on the two; a soft-rule prototype would be measured with crowding on New York and the passing map before anything lands.
   - Other: notes/T-4008.md
-- T-4014 [P1] {L:track-rework} {after:T-3948 landing} Old builds refuse and never overwrite a newer save (taking, 2026-11-21, agent newerlevel)
-  - Context: From T-3948, 11-21: the save guard refuses a track-rework (TWT7) save on load, but nobody has checked whether an old build that pulled a TWT7 account copy mid-game can later upload its own game over it. And from buswaychk 11-21: a level-37 save (busways) opens on a level-36 build with no message, its busways read as rail track, and saving there writes them back as rail. So any build must refuse a save from a newer level, not only a newer magic.
-  - Goal: A build refuses to open a save whose level is above its own ("saved on a newer game version"), leaving the slot untouched, and can't overwrite a newer account save; both in a release before tw/track's first merge back and before busways ship.
 - T-4015 [P3] {L:track-drawing} Long track previews hit the search budget
   - Context: From T-3948's baselines, 11-21: Penn Station to Emeryville searches about 373k states, right at the router's 2 s budget; found 2 of 6 tries in a new game, 0 of 12 on the real NYC save.
   - Goal: Cross-country track previews found every time, or the budget's limit named in the tool's hint.
@@ -237,7 +234,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3485: the airport's pack share counts people across a border at full weight, then the border factor drops what doesn't land: Hong Kong loses 54% of its ground trips, Luton 77%, Basel 71%, Geneva 42%; 0.6M a day worldwide.
   - Goal: Outside people weighed by the border factor in the pack share at the next world rebuild; Hong Kong near its published ground trips.
   - Other: notes/T-3485.md
-- T-3502 [P3] {L:airports} Big airports draw ground trips from farther away
+- T-3502 [P3] {L:airports} Big airports draw ground trips from farther away (taking, 2026-11-21, agent airfar)
   - Context: Open-source issue 6: Suzhou to Shanghai's airports, Seoul to Incheon. Ground trips fade out from 40 km and stop at 80 km. You, 2026-11-17: "sure we can do big airports drawing ground trips from far away, not super high prio tho."
   - Goal: Hubs above a passenger threshold draw from cities 80-150 km away, sized by passengers, measured on a few hubs against published catchments.
   - Other: notes/T-3485.md
@@ -557,7 +554,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3894 [P3] {L:line-rates} A line with no trains still caps the lines it crosses
   - Context: Found by fullrate (T-3646), 11-20: on Tokyo a crossing of lines [150, 42, 42] at 100% stays capped by a line with no trains. Not looked at further.
   - Goal: A line with no trains in a period holds no share of a crossing or shared track in it, or the reason it should.
-- T-3655 [P2] {L:line-rates} Count edits on full track slow from boarding redone
+- T-3655 [P2] {L:line-rates} Count edits on full track slow from boarding redone (taking, 2026-11-21, agent fullspeed)
   - Context: LAND-READY 11-21 in tree .tw-trees/fullrate (uncommitted; notes/T-3655.md there, "Even caps at load" newest): the re-share (`world.rs` `reshare_full`), the load's caps made even (they were refused for money, not late: London's save runs more trains than its fleet, so a game-made edit now pays only for trains it adds; Victoria's first edit 12.80, 13.24 after a line 120 edit, against master's 2.78) and T-3941. Left: the speed. A Victoria count edit re-shares its track and moves 14-23 lines' rates, so boarding is redone for about 25 lines before the answer: 0.7-2.2 s worker time against master's 63-124 ms on a full machine. Leads: answer before the boarding steps (trips without loads first, as T-3804's stale account), or redo boarding only past a departure threshold.
   - Goal: Count edits on full track within about 50 ms of master's on London's shared save, or the reason they can't be.
   - Other: fullchk 11-21: the 25 boarding steps come only when an edit moves other lines' rates (T-007 and a fresh game: 1 step, as master). Also seen: the rate depends on edit order (Victoria's 16 trains give 12.69 or 13.23). notes/T-3655.md, notes/T-3482.md "Follow-ups"
@@ -953,10 +950,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3837 [P3] {L:buses} Ferry routes found without a waypoint, and waypoints on touch
   - Context: T-3809 added shift click waypoints. A leg is still searched only in a box around its two ports, so a sea path that leaves it (Ma Liu Shui to Sai Kung) needs a waypoint; a wider third search would find it alone. Phones have no shift click.
   - Other: notes/T-3809.md
-- T-4017 [P2] {L:buses} Busway price and station refusal (taking, 2026-11-21, agent buswayfix2)
-  - Context: batchchk11, 11-21: a 1.2 km busway blueprint cost US$42.6M (about US$35M a km, not US$25M), unexplained; a Train station over a built busway is refused with "The platform would be on a ramp." where tram track is skipped.
-  - Goal: A busway on open ground costs US$25M a km plus what the ground adds, the same rule as tram track; a station over a busway is placed or refused for the right reason.
-  - Other: notes/batch-2026-11-21.md "Batch 11"
 - T-3993 [P3] {L:buses} Group homes by bus line stretch
   - Context: From T-3934, 11-21: mode choice runs over groups of homes, and every bus stop splits them (about 130 s of Tokyo's 1,050 s). Grouping by stretch of line instead of exact stop.
   - Goal: About 6% off Tokyo and 10-15% off Taipei's calculating time with riders per line within 1-2%. 2-3 h.
@@ -972,10 +965,11 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Level 1 (data open to any site) is done. Levels 2-4 are data-file mods, a JavaScript mod API, then city packs.
   - Goal: A design for you first that works for modders writing code by hand and with a coding assistant alike (you, 2026-11-18; player-facing text never says it is aimed at vibe-coders): a small stable mod API (hooks for prices, speeds, buttons, reading the network), a how-to page with two or three tiny example mods, notes in the open-source repo an assistant can read too, and loading a mod from a file or link; a loaded mod marks the save modded (T-3707).
   - Other: Reference (you, 2026-11-18): peanutmow (Alice) runs an unofficial wiki, trainsworld.org, and hosts her mod there; look at how that mod is set up when designing this. The mark's entry point exists: `trainsworld.markModded("<name>")` (notes/T-3707.md); a page on another site such as trainsworld.org already marks its games.
-- T-3376 [P2] {L:jobs-places} Industrial areas' jobs (taking, 2026-11-21, agent industry)
-  - Context: Your 2026-11-13 note: "semi high prio to try to fit industrial areas in general later". Jurong Island holds 128,000 jobs, the published figure is over 27,000.
-  - Goal: A sourced workforce figure and a way to place jobs on industrial land with tanks, as a proposal.
-  - Other: From gaprun3's check. Not blocking v0.3.3.
+- T-3376 [P2] {L:jobs-places} {waits:Anita} Industrial areas' jobs (taking, 2026-11-21, agent industry)
+  - Need from Anita: Count OSM industrial land and the buildings on it at a quarter in the jobs estimate, from the next world rebuild? Recommended yes.
+  - Context: Jurong Island has about 102,000 jobs in the game (128,000 with Bukom's refinery), against about 26,000 published. The cause is OSM industrial land, drawn there as one polygon per plant, at 40 jobs per 5,000 m2. Measured on cities with real job counts (Houston, Atlanta, Tokyo, Osaka, Nagoya, nine English cities, 12 Mexican), a quarter fits well everywhere: Jurong to about 41,000, ports and refinery belts down 30-50% (still about 2x over), town centres up.
+  - Goal: The rule in tier 0's jobs, riding along with the world rebuild (T-3245) in its full re-read form, at no machine cost of its own.
+  - Other: From gaprun3's check. notes/T-3376.md
 - T-3375 [P2] {L:region-redraws} Empty units beside a metro stay dark
   - Context: Ports, industrial estates and airports with no residents stay dark (Tuas and Jurong were fixed by hand 11-13). Half done: units keep outlines with 0.2 km2 of built surface.
   - Goal: A free unit under the floor sharing half its land border with one metro joins it, after a worldwide count.

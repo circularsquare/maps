@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4017 [P2] {L:buses} Busway price and station refusal (2026-11-21): Busway price needed no change: its ground surcharge per metre equals tram's, the extra on the checker's blueprint was terrain and a bridge. A station refused over a busway now says only the busway reason, without the ramp line. notes/T-4017.md.
+- T-4014 [P1] {L:track-rework} Old builds refuse and never overwrite a newer save (2026-11-21): a save from a newer build (level above the build's, unknown header field or block, newer format or magic) never opens: refused at every read like TWT7, slot untouched; T-1826's read-only mode removed; uploads carry the build's level and the page and the server (shonei-server f16278a, not deployed) refuse writing over a newer build's account copy, force or not. notes/T-4014.md.
 - T-4018 [P1] {L:accounts-server} Server save check learns levels 37 and 38 (2026-11-21): shonei-server save check reads levels 37 and 38 (kind 4, LBO1), tests pass with a real level 38 fixture; committed, not deployed.
 - T-4005 [P3] {L:community} Bookmark community saves (2026-11-21): Bookmark button on Community cards and opened networks plus a Bookmarked tab; kept in the browser, and on the account when signed in (shonei-server 04369d6, needs a deploy; older servers leave them in the browser). notes/T-4005.md.
 - T-3447 [P2] {L:wiki} Player wiki on the website (2026-11-21): wiki_site.py builds the live version's wiki (v0.4.5, 27 pages) into website/projects/trainsworld/wiki with the site's GA tag; link line added on the trainsworld page; preview on 8800 twwikisite. notes/T-3447.md.

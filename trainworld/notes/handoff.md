@@ -16,13 +16,15 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
 2. TRACK (her top priority): stage 1 landed; tw/track synced to eec90a0e. bundles T-3949 stage 2a (Opus, maps-ac's)
    in a tree from tw/track (it will meet level 38 when it rebases): land with `agent-tree.mjs finish bundles "..."
    --into tw/track --task T-3949` (first use builds .tw-trees/_track, ~4 min WASM). Next stages per
-   notes/T-3444-design/10-build-plan.md (2b T-3950...). T-4014 (newerlevel, Opus, P1, maps-ac's) running on master.
+   notes/T-3444-design/10-build-plan.md (2b T-3950...). T-4014 rebased to level 38 in tree newerlevel
+   (archived, uncommitted); newerchk checking save loading; land on PASS; server f16278a goes in the one deploy.
 3. BRT (her other priority): all landed. Open her call: busways 60 km/h for any bus (built) or BRT only.
-   buswayfix2 T-4017 (Sonnet, mine): busway US$35M/km vs 25 and station-over-busway refusal, from batch 11.
-4. Running: maps-ac's (reports via the board) bundles T-3949, newerlevel T-4014; mine: industry T-3376 (Opus,
-   proposal), buswayfix2 T-4017, splitb4 T-3373 B stage 4 (Opus; stage 3 landed 71156209), phonemem T-3160 s4.
+   T-4017 landed b987ac9e (price was right: terrain and a bridge; ramp reason dropped). Not on 8800 yet.
+4. Running: maps-ac's bundles T-3949 (report via the board); mine: splitb4 T-3373 B stage 4 (Opus), phonemem
+   T-3160 s4, airfar T-3502 (Opus), fullspeed T-3655 (Opus), newerchk (T-4014 checker).
    Held: T-3932 (B stage 7's pool), T-3060 (tool files of track 2b), T-1354/T-1610 (near splitb4's worker code).
-5. Open asks: T-3742 nudge design (a-..-16), T-4008 soft rule (a-..-17); T-2264 help wording; busway speed;
+5. Open asks: T-3742 nudge (a-..-16), T-4008 soft rule (-17), wiki push (-18), T-3376 industrial jobs at a
+   quarter (-19); text acks for T-4005 and T-4013 strings; T-2264 help wording; busway speed;
    T-4013 per-direction follow-up (I'd file P3). Later: T-3937 quiet machine; T-3931 held for T-3231; T-3655
    faster full-track edits; T-3939 B's 140 MB.
 ## Her words
@@ -37,8 +39,6 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
   blueprints hidden, no leave confirm (T-4002); bookmarks maybe (T-4005); raise limits (T-4006, deployed).
 - 11-21 ~16:10-16:40 UTC: bus reach 1 km; no borrowed-search bus stops ("a lie"); itch.io $0-or-donate, $5
   suggested (T-3988).
-- 11-21 ~15:55 UTC: track rework all calls made (notes/T-3444-design/answers-2026-11-21.md). 38 stages
-  T-3948..T-3985 on tw/track.
 - 11-21 ~14:05 UTC: keep 4-12 agents. Count every Auto stop ("if people are seeing bus stops the bus stops have to
   be real").
 - 11-21 ~12:50 UTC: BRT stations for BRT lines only; T-3373 B go, the memory limit rises (players set it: T-3932; a

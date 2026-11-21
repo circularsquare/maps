@@ -19,5 +19,12 @@
     "text": "T-3447 is landed: 27 wiki pages for the live version (v0.4.5) sit uncommitted in C:\\Users\\anita\\projects\\website at projects/trainsworld/wiki/, plus your link sentence on pages/projects/abouttrainsworld.md. Preview http://localhost:8800/twwikisite/. Push when you like, or say and I'll commit and push it.",
     "since": "2026-11-21",
     "by": "maps-6a"
+  },
+  {
+    "id": "a-2026-11-21-19",
+    "title": "Industrial land jobs at a quarter?",
+    "text": "T-3376: count OSM industrial land and the buildings on it at a quarter of today's weight in the jobs estimate, from the next world rebuild? Jurong Island goes from about 102,000 jobs to about 41,000 (real about 26,000), refinery belts stay about 2x over, town centres gain; fits real job counts a bit better in England, Atlanta, Houston, Japan and Mexico. Rides along with T-3245's rebuild, no machine time of its own. I'd say yes. Detail: notes/T-3376.md.",
+    "since": "2026-11-21",
+    "by": "maps-6a"
   }
 ]
