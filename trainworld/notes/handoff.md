@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session 4feb4373-1fa9-4b66-9592-396d40896c0a, name maps-a3 [ede33a], since 2026-11-21 03:24 UTC
-Updated: 2026-11-21 12:20 UTC (she is up; cycling to a successor)
+Orchestrator: session ca3a5e8b-220b-4b3d-a5e9-87f500e687dc, name maps-98 [60f1c2], since 2026-11-21 12:25 UTC
+Updated: 2026-11-21 12:30 UTC (maps-a3 wound down; periodschk still runs in its tab, report via the inbox)
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5. She is home, at this tab.
 
@@ -15,9 +15,12 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
 1. Waiting on her (asks.py list, 7 open): PR 24 reply (scratchpad/pr24-reply.md; posting refused: she posts or allows);
    BRT design (review/brt-design.md); upkeep 0.1%; tram brake 0.8; Auto bus stops (T-3924); two workers; iPhone saves;
    town tint look (review/bus-town-tint.png).
-2. Running: periodschk (checker for T-2624 in tree periods; land it if PASS, merge its two changelog items into one).
-   Parked: T-3655 (tree fullrate, blockers in its task). Next: T-3926 (cache key), T-3931 rest, T-3160 next step
-   (--app-order in demand_mem), T-1183 after T-3931, T-3373 B if she wants more memory/speed.
+2. T-2624 landed 4141e6bc 12:33 UTC (periodschk PASS; changelog c014, c013 hidden); 8800 rebuild + master smoke
+   running. Started 12:35 UTC by maps-98, all Opus: crowdfast T-3513 (tree crowdfast), cachekey T-3926 (tree cachekey),
+   movedhour T-3931 (tree movedhour), phonemem2 T-3160 (tree phonemem2), fullrate3 T-3655 (tree fullrate),
+   splitplan T-3373 B (design only, notes/T-3373-B-plan.md, goes to her); ~12:50 UTC islands3 T-2216 st.3 (Sonnet),
+   noroute T-3632, egyptunits T-3660 (each its own tree). Next: T-1183 after T-3931. Translations of the next
+   update's strings wait until nearer publish (strings still changing). watch.py prints an hourly `idle:` line.
 4. T-3395: save_health.py after the next scan; clean = close it (no 11-21 report at 04:30 UTC; 11-20 found 0).
 ## Her words
 - 11-21 ~02:20 UTC, playtesting plain buses on 8800 (Houston): "buses feel really easy ... mostly profitable ... 10%

@@ -2,6 +2,7 @@
 
     python trainworld/board/watch.py --session <id> # keeps running; one line per batch that is ready
     python trainworld/board/watch.py pending      # her pending actions, one JSON line each
+    python trainworld/board/watch.py idle         # the hourly idle line once, or "busy"
     python trainworld/board/watch.py handled <id> [<id> ...] --by <orchestrator> [--note "..."]
 
 A batch is ready when something is pending and she pressed Send now after the last batch was
@@ -17,6 +18,8 @@ the reports hook, and the watch stops once notes/handoff.md names another orches
 import argparse
 import datetime as dt
 import json
+import re
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -84,12 +87,64 @@ def agent_reports(box, session, told):
     return out
 
 
+ROOT = TW.parent
+HEAD = re.compile(r"^- (T-\d+) \[(P\d)\] (.*)$")
+IDLE_EVERY = 3600
+MIN_AGENTS, MIN_FREE = 4, 4
+
+
+def idle_line():
+    """The idle nudge, or None when 4+ agents run and under 4 cores are free. Reads files only when called."""
+    try:
+        live = json.loads((TW / "notes" / "board-live.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        live = {}
+    agents = live.get("agents") or []
+    free = cap = None
+    try:
+        r = subprocess.run([sys.executable, str(ROOT / "cores.py"), "list"], cwd=str(ROOT), capture_output=True,
+                           text=True, timeout=20, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        m = re.search(r"of cap (\d+).*?free (\d+)", r.stdout)
+        if m:
+            cap, free = int(m.group(1)), int(m.group(2))
+    except (OSError, subprocess.SubprocessError):
+        pass
+    if len(agents) >= MIN_AGENTS and (free is None or free < MIN_FREE):
+        return None
+    onboard = {a.get("task") for a in agents}
+    try:
+        text = (TW / "TASKS.md").read_text(encoding="utf-8")
+    except OSError:
+        text = ""
+    open_t, ranked = set(), []
+    for l in text.splitlines():
+        m = HEAD.match(l)
+        if not m:
+            continue
+        tid, pr, rest = m.groups()
+        if pr in ("P1", "P2", "P3") and "(taking" not in rest and "{waits:" not in rest and "{after:" not in rest:
+            ranked.append((pr, len(ranked), tid))
+        open_t.add(tid)
+    ready = {t for _, _, t in ranked}
+    order = [t for t in live.get("upnext") or [] if t in ready]
+    order += [t for _, _, t in sorted(ranked)]
+    start = []
+    for t in order:
+        if t not in onboard and t not in start:
+            start.append(t)
+    start = start[:5]
+    cores = f"{free} of {cap} cores free" if free is not None else "cores unknown"
+    return f"idle: running {len(agents)} agents, {cores}, startable: {', '.join(start) or 'none found'}"
+
+
 def watch(path, idle, poll, box=None, session=None):
     # At start, leftovers from before count as ready at once if she had pressed Send now.
     # The orchestrator handling part of a batch is not news; only actions not yet reported are.
     reported, seen_sent = set(), None
     told, next_reports = set(), 0.0
+    next_idle, last_idle = time.time() + IDLE_EVERY, None
     while True:
+        nudge = False
         if box is not None and time.time() >= next_reports:
             next_reports = time.time() + 10
             lines = agent_reports(box, session, told)
@@ -98,6 +153,15 @@ def watch(path, idle, poll, box=None, session=None):
                 return
             for l in lines:
                 print(l, flush=True)
+            nudge = bool(lines)
+        if box is not None and (nudge or time.time() >= next_idle):
+            if time.time() >= next_idle:
+                last_idle = None
+            next_idle = time.time() + IDLE_EVERY
+            l = idle_line()
+            if l and l != last_idle:
+                print(l, flush=True)
+                last_idle = l
         pending, last, sent = state(path)
         pushed = sent is not None and sent != seen_sent
         seen_sent = sent
@@ -122,7 +186,7 @@ def append(path, obj):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", nargs="?", default="watch", choices=["watch", "pending", "handled"])
+    ap.add_argument("cmd", nargs="?", default="watch", choices=["watch", "pending", "handled", "idle"])
     ap.add_argument("ids", nargs="*")
     ap.add_argument("--by", help="who handled them (the orchestrator's name)")
     ap.add_argument("--note", default="", help="what was done, a few words")
@@ -142,6 +206,8 @@ def main():
             watch(path, a.idle, a.poll, box, session)
         except KeyboardInterrupt:
             pass
+    elif a.cmd == "idle":
+        print(idle_line() or "busy")
     elif a.cmd == "pending":
         for r in state(path)[0]:
             print(json.dumps(r, ensure_ascii=False))
