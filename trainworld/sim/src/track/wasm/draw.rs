@@ -1238,6 +1238,10 @@ impl TrackApi {
         if r != 0 && self.issues.iter().any(|i| matches!(i, Issue::PlatformNotLevel { .. })) {
             self.issues.retain(|i| !matches!(i, Issue::Geom { .. } | Issue::NodeHeading { .. }));
         }
+        // a station on a busway is refused for the busway; its ramp or length is not what the player must fix
+        if r != 0 && self.issues.iter().any(|i| matches!(i, Issue::BuswayStation { .. })) {
+            self.issues.retain(|i| !matches!(i, Issue::PlatformNotLevel { .. } | Issue::PlatformTooLong { .. } | Issue::PlatformJoint { .. } | Issue::PlatformJunction { .. } | Issue::PlatformStation { .. } | Issue::PlatformCrossing { .. }));
+        }
         r
     }
 
