@@ -73,16 +73,21 @@ fn tram_sections_are_three_quarters_of_a_car() {
     assert_eq!((0..net.st_x.len()).filter(|&s| net.tram_only(s)).count(), 4, "the stop merged into the metro station is not tram-only");
 }
 
-/// A tram along a corridor carries at least what the bus it replaces does: same stops, same trains an
-/// hour, same hop times; the bus is a third of a car, the tram two sections of three quarters. With no bus
-/// boarding cost (T-3856) the two board alike, so on this light corridor they carry the same, to rounding.
+/// A tram along a corridor carries at least what the bus it replaces does when the two board alike: same
+/// stops, same trains an hour, same hop times; the bus is a third of a car, the tram two sections of three
+/// quarters. Since T-3910 a tram trip pays the 2 + 2 boarding minutes at its ends and a bus trip none (T-3856), so
+/// with the cost on the tram carries less than the bus on this corridor, but still a good part of it.
 #[test]
 fn a_tram_carries_at_least_the_bus_it_replaces() {
-    let load = |tram: bool| {
+    let load = |tram: bool, boarding: bool| {
         let cars = if tram { 2.0 } else { crate::demand::network::BUS_CARS };
         let (mut api, xy, counts, stops, times, tph, c) = with_line(8, -3500.0, 600.0, 1000.0, cars);
         if tram {
             api.set_tram_lines(&[0, 0, 1]);
+        }
+        if !boarding {
+            api.base.train_in_min = 0.0;
+            api.base.train_out_min = 0.0;
         }
         // (T-3888: its stops on the street, at grade, as a bus's; the metro's below)
         let grade: Vec<u8> = (0..stops.len()).map(|k| (k >= stops.len() - 8) as u8).collect();
@@ -93,8 +98,12 @@ fn a_tram_carries_at_least_the_bus_it_replaces() {
         let b = api.board(0);
         b[b.len() - 16..].iter().sum::<f32>()
     };
-    let (bus, tram) = (load(false), load(true));
-    assert!(tram >= bus * 0.9999, "tram {tram} against bus {bus}");
+    // boarding alike (none): the tram carries at least the bus
+    let (bus, tram) = (load(false, false), load(true, false));
+    assert!(tram >= bus * 0.9999, "no boarding cost: tram {tram} against bus {bus}");
+    // with the boarding cost on the tram only: less than the bus, not by more than half
+    let (bus, tram) = (load(false, true), load(true, true));
+    assert!(tram >= bus * 0.5, "boarding cost: tram {tram} against bus {bus}");
 }
 
 /// T-3903: a per-line or per-stop input of the wrong length is an error, not read as none (the page's copy of a
