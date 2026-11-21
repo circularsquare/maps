@@ -1,51 +1,9 @@
 [
   {
-    "id": "a-2026-11-21-1",
-    "title": "Auto bus stops and demand",
-    "text": "Auto bus lines show 400 m and every street stop, but demand counts a stop only about every 2 km, so an Auto line gets about a fifth fewer riders than stops placed 400 m apart (2,814 against 3,580 a day on a 3.7 km NYC line). Keep it as is (my pick: players can step to 600 m or place stops), or count every Auto stop for demand, which changes riders on every Auto line in every save? T-3924.",
+    "id": "a-2026-11-21-11",
+    "title": "Count lines sized on own waits?",
+    "text": "T-3931's fix sizes a headway line's round trip on its trains' own waits at the ends. Lines set by count (and the Tokyo fixtures) still lose trains at the ends the same way; sizing theirs the same way would lower their rate and move every departure. File a task for it? I'd file it P3 and leave it until the T-3931 fix itself can land (it is held for T-3231).",
     "since": "2026-11-21",
-    "by": "maps-a3"
-  },
-  {
-    "id": "a-2026-11-21-2",
-    "title": "BRT design answers",
-    "text": "Five questions in artifacts/trainworld/review/brt-design.md (T-3378). Picks: BRT stations for BRT lines only; 60 buses an hour a lane, lines cut to fit; off-road busway US$25M a km at 60 km/h; plain buses stay in traffic in town; keep 35 km/h, 18 s at a station, US$2M a station.",
-    "since": "2026-11-21",
-    "by": "maps-a3"
-  },
-  {
-    "id": "a-2026-11-21-3",
-    "title": "Station upgrade upkeep rate",
-    "text": "Station upgrades now cost 0.1% of their price a day (waiting room US$5k, park and ride US$20k; T-3922). It barely deters spam on a rich network. Keep 0.1%, or raise to 0.25% like tram stops (my pick)?",
-    "since": "2026-11-21",
-    "by": "maps-a3"
-  },
-  {
-    "id": "a-2026-11-21-4",
-    "title": "Tram braking value",
-    "text": "Trams brake at 0.8 m/s2, trains 0.9 (T-3921), so trams lose slightly more per stop; real trams brake harder (1.2-1.3). Keep 0.8 (my pick) or 0.9 so only the dwell changed?",
-    "since": "2026-11-21",
-    "by": "maps-a3"
-  },
-  {
-    "id": "a-2026-11-21-5",
-    "title": "Two workers on big saves",
-    "text": "Lag survey (T-3917): on 2,000+ station saves the game runs one solving worker to save memory. Two workers would cut a load from 333 to 226 s and an edit's calculation from 296 to 188 s on the NA save, for +1.3-1.6 GB memory (desktop already 4.2-6.5 GB). Yes or no? I'd say no for now: build T-3925 and T-2624 first, which speed edits without more memory.",
-    "since": "2026-11-21",
-    "by": "maps-a3"
-  },
-  {
-    "id": "a-2026-11-21-6",
-    "title": "Read iPhone reporters' saves",
-    "text": "Five iPhone players reported the page crashing right away (11-19 to 11-20). Reading their saved games on the server (T-3781's route) would show which game was loading. May we, one yes per account? Their report ids: 262cb413, 98429d29, 7130f860, 9705548e, fa20c413.",
-    "since": "2026-11-21",
-    "by": "maps-a3"
-  },
-  {
-    "id": "a-2026-11-21-7",
-    "title": "In-town bus tint look",
-    "text": "The bus tool now tints the ground in town, not the streets (basemap tiles merge roads across tiles, so street colours would need our own road source, about 3-4 h). Sheet: artifacts/trainworld/review/bus-town-tint.png. Landed A (town teal); B tints out-of-town khaki and leaves the city as now; C both. Which letter, and do you want true street colours (T-3913)?",
-    "since": "2026-11-21",
-    "by": "maps-a3"
+    "by": "maps-ac"
   }
 ]

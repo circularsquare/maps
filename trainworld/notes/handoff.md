@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session ca3a5e8b-220b-4b3d-a5e9-87f500e687dc, name maps-98 [60f1c2], since 2026-11-21 12:25 UTC
-Updated: 2026-11-21 16:15 UTC (cycling to a successor at 500k; she is up and at this tab)
+Orchestrator: session d15915ac-6dd5-4586-bd98-843cbc616824, name maps-ac [1ef926], since 2026-11-21 15:53 UTC
+Updated: 2026-11-21 16:45 UTC (maps-98 wound down; its landings done)
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5.
 
@@ -12,11 +12,18 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
    2382b9b8, brtstations 49fa812e (save level 35: tell her a save made on 8800 may not load if reverted). maps-98's
    land3.ps1 (scratch) lands editfail T-3945, islandfix (check only), viewonly T-3851 in that order; check `git log`.
    Then: batchchk9 (Sonnet; brief like batchchk8, notes/batch-2026-11-21.md "Batch 8") + smoke + snap8800.
-2. Running (adopt from the board): ownwaits T-3931, fullrate4 T-3655 (+T-3941), clockmem T-3939, keihan T-3935,
-   brtblueprint T-3944, busreach T-3934, splitb2 (T-3373 B stage 2), modeldown T-3986.
+   maps-ac lands modeldown T-3986 (report r-9b259e37, done; its smoke failed on load, rerun on master) after maps-98.
+   Then keihan T-3935 (r-316b7ddd): land (with realauto.json's two `tracks` flags), then ship osa+ngo per the report
+   (back up the two saves to data/work/pre-T3935/ first, no join running); task stays open until the ship.
+   brtblueprint T-3944 (r-8fa7cb8e, done): agent brtrebase (Sonnet, maps-ac's) moves the tree onto master at save
+   level 36 / BLOCKS 40; then its own save checker before landing.
+2. Running (adopted from the board): fullrate4 T-3655 (+T-3941), clockmem T-3939,
+   busreach T-3934, splitb2 (T-3373 B stage 2). ownwaits T-3931 held (DECISIONS 11-21, patch
+   in notes/), tree removed. New starts wait until batch 9's checker and smoke have the cores (two smokes timed out
+   at 14/14).
 3. Start next: one Sonnet agent on T-3990 + T-3991 (Community: Discord and leaderboards links; Report as a flag icon
-   with a confirm popup) once viewonly has landed; T-3948 (track stage 1, T-1183 folded in) once ownwaits and
-   fullrate4 land; T-3378 stage 4 after T-3944; T-3933/T-3932 later; T-3937 needs a quiet machine. Keep 4-12 agents.
+   with a confirm popup) once viewonly has landed; T-3948 (track stage 1, T-1183 folded in) once fullrate4
+   lands; T-3378 stage 4 after T-3944; T-3933/T-3932 later; T-3937 needs a quiet machine. Keep 4-12 agents.
 4. T-3395: save_health.py after the next scan; clean = close it.
 ## Her words
 - 11-21 ~16:10 UTC: Report on a community save is "a bit of a killjoy": a flag icon, and a confirm popup "Report this

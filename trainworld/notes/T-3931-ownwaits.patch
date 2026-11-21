@@ -1,0 +1,312 @@
+diff --git a/trainworld/docs/track-and-service.md b/trainworld/docs/track-and-service.md
+index 2a86e0b0..9640a133 100644
+--- a/trainworld/docs/track-and-service.md
++++ b/trainworld/docs/track-and-service.md
+@@ -1007,8 +1007,17 @@ the wait it needs is past its cap), and a merge every train of may run is taken
+ and its number in it (`Run::pattern`, into `Trip::var`; the renderer, boarding, the chart, the board and
+ the train's stops read the trip's). Weekends of a line's own run the slot's timetable (the versions
+ were worked out against weekday trains). A train whose own version runs longer than the slot's stands
+-less at its last stop, down to 60 s (`timing::TURN_MIN_S`), so it still takes its next departure. **The
+-floor**: a run whose trains on their own versions would on average stand less than that at their last
++less at its last stop, down to 60 s (`timing::TURN_MIN_S`), so it still takes its next departure.
++**Round trips on the trains' own waits** (T-3931, Anita 2026-11-21): on a headway line, where some
++train's own version still reaches an end too late for the departure the slot's train takes there (at
++10/30 one local in three waits about 6 min for its express, more than any split of the spare time
++covers), every train of that run and slot stands whole headways more at that end, as many as the latest
++train misses by (`LineSvc::end_wait`, `timing::own_ends`, over the reference weekday; a departure whose
++next is in another stretch of the day is left out, as the fleet changes there anyway). A whole headway
++moves no departure, so the waits stand; the round trip grows by it, and the settle buys the trains
++(at 10/30, 11 trains to 12). Count lines keep their round trips: a longer one would lower their rate and
++move every departure. Derived after each retime (`TrackWorld::retime`, at most two rounds), never saved.
++**The floor**: a run whose trains on their own versions would on average stand less than that at their last
+ stop (the round trip is sized on the averages, and the trains run at another phase than the plan's
+ best, as the two directions of a pair can) keeps the slot's timetable for that slot, as before; so
+ does a pair of lines only one of which runs its own weekends. The lie (DECISIONS 2026-11-19): riders
+diff --git a/trainworld/sim/src/track/service.rs b/trainworld/sim/src/track/service.rs
+index ff61608e..d2f1366e 100644
+--- a/trainworld/sim/src/track/service.rs
++++ b/trainworld/sim/src/track/service.rs
+@@ -102,6 +102,11 @@ pub struct LineSvc {
+     /// Per slot: both runs with dwell, holds and their closing stands (`LineSvc::lap`);
+     /// for a loop, twice the longer lap.
+     pub round_trip: [f64; SLOTS],
++    /// T-3931: per slot and run, whole headways more its trains stand at the end of that run, so
++    /// the one whose own timetable runs longest still makes its next departure there (headway lines,
++    /// `timing::own_ends`). In the round trip and each trip's length, never in the departure
++    /// pattern (a whole headway moves no departure). Derived, never saved.
++    pub end_wait: [[f64; 2]; SLOTS],
+     pub trains: [u32; SLOTS],
+     /// Per slot: capacity delay over the round trip.
+     pub delay: [f64; SLOTS],
+@@ -186,15 +191,19 @@ impl LineSvc {
+     }
+     /// `trip_len` for a trip with variant `var`: a train that ran its own timetable still takes
+     /// its next departure as the slot's would, standing less at the end where it waited longer on
+-    /// the way, down to `timing::TURN_MIN_S` (T-3346 stage 2).
++    /// the way, down to `timing::TURN_MIN_S` (T-3346 stage 2); with the end's `end_wait` on.
+     pub fn trip_len_var(&self, net: &Network, line: u32, run: usize, level: usize, var: u8) -> f64 {
+-        let mean = self.trip_len(net, line, run, level);
++        let mean = self.trip_len(net, line, run, level) + self.end_wait[level][run];
+         if var == 0 {
+             return mean;
+         }
+         let stand = self.close_stand(net, line).min(super::timing::TURN_MIN_S);
+         mean.max(self.prof_of(run, level, var).duration + stand)
+     }
++    /// `round_trip_of` at slot `lev`, with its ends' `end_wait`.
++    pub fn round_trip_at(&self, lev: usize, a: f64, b: f64, stand: f64) -> f64 {
++        self.round_trip_of(a, b, stand) + self.end_wait[lev][0] + self.end_wait[lev][1]
++    }
+     /// What a train stands at the end of a run: the turnaround, or the dwell where a circle carries
+     /// on round (T-798).
+     pub fn close_stand(&self, net: &Network, line: u32) -> f64 {
+@@ -527,7 +536,7 @@ pub const NO_PLACE: u32 = u32::MAX;
+ pub const HANDOVER_MAX_S: f64 = 3600.0;
+ /// A train ready this little after a departure still takes it (a whole-line fleet's round trip is
+ /// solved to about 0.04 s of its trains times the headway).
+-const HANDOVER_TOL_S: f64 = 1.0;
++pub(crate) const HANDOVER_TOL_S: f64 = 1.0;
+ /// At a change of pattern (a new period, an edit), a departure closer than this share of its
+ /// headway after the last one of the old pattern is left out, so trains never leave in pairs.
+ const MIN_GAP_SHARE: f64 = 0.5;
+@@ -1207,7 +1216,7 @@ impl Service {
+                 let stand = ls.close_stand(net, l as u32);
+                 for lev in net.slots() {
+                     let (a, b) = (&ls.runs[0].prof[lev], &ls.runs[1].prof[lev]);
+-                    ls.round_trip[lev] = ls.round_trip_of(a.duration, b.duration, stand);
++                    ls.round_trip[lev] = ls.round_trip_at(lev, a.duration, b.duration, stand);
+                     ls.delay[lev] = a.hold + if ls.one_way { 0.0 } else { b.hold };
+                     ls.trains[lev] = ls.fleet(ls.round_trip[lev], net.line_tph[l][lev] as f64);
+                 }
+@@ -1303,7 +1312,7 @@ impl Service {
+                     let (h, sh) = &holds[l as usize][r][lev];
+                     run.prof[lev].duration + total(h, sh) - total(&run.holds[lev], &run.stop_holds[lev])
+                 });
+-                ls.round_trip_of(a, b, stand)
++                ls.round_trip_at(lev, a, b, stand)
+             })
+         }).collect()
+     }
+@@ -1515,10 +1524,10 @@ impl Service {
+         Before { lat, flight, lens }
+     }
+ 
+-    /// A line's trip lengths (run and turnaround) per run and slot.
++    /// A line's trip lengths (run, turnaround and `end_wait`) per run and slot.
+     fn trip_lens(&self, net: &Network, l: usize) -> [f64; 2 * SLOTS] {
+         let ls = &self.lines[l];
+-        std::array::from_fn(|k| if ls.ok && l < net.line_count() && net.slot_worked(k % SLOTS) { ls.trip_len(net, l as u32, k / SLOTS, k % SLOTS) } else { 0.0 })
++        std::array::from_fn(|k| if ls.ok && l < net.line_count() && net.slot_worked(k % SLOTS) { ls.trip_len_var(net, l as u32, k / SLOTS, k % SLOTS, 0) } else { 0.0 })
+     }
+ 
+     /// After an edit at game time `now` (T-206): a running line whose pattern changed keeps its
+@@ -1813,8 +1822,7 @@ impl Service {
+         let mut dur = 0.0f64;
+         for r in 0..2 {
+             for lev in net.slots() {
+-                dur = dur.max(ls.trip_len(net, l as u32, r, lev));
+-                for v in 1..=ls.runs[r].vars[lev].len() {
++                for v in 0..=ls.runs[r].vars[lev].len() {
+                     dur = dur.max(ls.trip_len_var(net, l as u32, r, lev, v as u8));
+                 }
+             }
+diff --git a/trainworld/sim/src/track/timing.rs b/trainworld/sim/src/track/timing.rs
+index 457b3959..fb06734b 100644
+--- a/trainworld/sim/src/track/timing.rs
++++ b/trainworld/sim/src/track/timing.rs
+@@ -24,7 +24,7 @@ use super::net::Network;
+ use super::overtake::{self, Pass, PASS_CLEAR_S};
+ use super::params::*;
+ use super::profile::{self, Hold, Profile};
+-use super::service::{lattice_deps, lattice_deps_local, profile_with, Cal, Dep, Lattice, Run, Service, Variant, NO_PLACE};
++use super::service::{lattice_deps, lattice_deps_local, profile_with, Cal, Dep, Lattice, Run, Service, Variant, HANDOVER_TOL_S, NO_PLACE};
+ 
+ /// Variants per run and slot, besides the slot's own timetable.
+ pub const MAX_VARS: usize = 16;
+@@ -39,6 +39,9 @@ pub const TURN_MIN_S: f64 = 60.0;
+ /// one is off the running line. (The plan's `PASS_CLEAR_S` there would hold every such train for
+ /// the share of its averaged loss the slot spreads past that station.)
+ const LEAD_IN_CLEAR_S: f64 = 10.0;
++/// T-3931: how late at an end a train may be before its line stands a headway more there (s): under
++/// the 1 s a train ready after a departure still takes it (`service::HANDOVER_TOL_S`).
++const END_TOL_S: f64 = 0.5;
+ /// Waits and losses are rounded up to whole steps of this (s) before variants are told apart.
+ const STEP_S: f64 = 2.0;
+ const DAY: f64 = 86400.0;
+@@ -127,6 +130,72 @@ pub fn retime(net: &Network, svc: &mut Service) {
+     svc.note_changed(&moved);
+ }
+ 
++/// T-3931: each headway line's `end_wait` from the variants `retime` left: at each end, the whole
++/// headways more its trains stand there so the train whose own timetable runs longest still makes
++/// its next departure (Anita 2026-11-21: "each trains round trip can be budgeted on own weight").
++/// A whole headway moves no departure, so the waits that sized it stand. Count lines keep theirs
++/// (a longer round trip would lower their rate and move every departure). The round trips are
++/// worked out again with it; returns the lines whose `end_wait` moved.
++pub fn own_ends(net: &Network, svc: &mut Service) -> Vec<u32> {
++    let mut moved = vec![];
++    for l in 0..svc.lines.len() {
++        let want = end_waits(net, svc, l);
++        let ls = &mut svc.lines[l];
++        if want == ls.end_wait {
++            continue;
++        }
++        ls.end_wait = want;
++        let stand = ls.close_stand(net, l as u32);
++        for lev in net.slots() {
++            let (a, b) = (ls.runs[0].prof[lev].duration, ls.runs[1].prof[lev].duration);
++            ls.round_trip[lev] = ls.round_trip_at(lev, a, b, stand);
++        }
++        moved.push(l as u32);
++    }
++    moved
++}
++
++/// Line `l`'s `end_wait` for its variants now (`own_ends`), over the reference weekday: each timed
++/// train ready at the end of its run (`LineSvc::trip_len_var` without `end_wait`) after the
++/// departure the slot's train takes there misses it by some headways, and the most any train of a
++/// run and slot misses by is its `end_wait`. Only where that departure is in the same stretch of
++/// the day: at a stretch's end the fleet changes anyway, and trains leave service there.
++fn end_waits(net: &Network, svc: &Service, l: usize) -> [[f64; 2]; SLOTS] {
++    let mut out = [[0.0; 2]; SLOTS];
++    let ls = &svc.lines[l];
++    if !ls.running || ls.is_loop() || ls.one_way || ls.timed.is_none() || l >= net.line_count() {
++        return out;
++    }
++    let Some(lat) = svc.lattice(net, l).map(|x| weekday(&x)) else { return out };
++    if ls.timed != Some(lat.timing_key()) {
++        return out;
++    }
++    let stand = ls.close_stand(net, l as u32).min(TURN_MIN_S);
++    let day = |d: f64| ((d + lat.shift) / DAY).floor() as i64;
++    for r in 0..2 {
++        // the other run's departures, where this run's trains take their next (game time)
++        let mut next: Vec<Dep> = vec![];
++        lattice_deps_local(&lat, 1 - r, DAY_REF as f64 * DAY - 3.0 * 3600.0, (DAY_REF + 2) as f64 * DAY, &mut next);
++        next.iter_mut().for_each(|x| x.0 -= lat.shift);
++        for lev in net.slots().filter(|&lev| net.auto_at(l, lev).is_some_and(|a| a > 0) && !ls.runs[r].pattern[lev].is_empty()) {
++            let mean = ls.trip_len(net, l as u32, r, lev);
++            for (d, hw, place) in day_deps(&lat, r, lev) {
++                let v = ls.runs[r].var_at(lev, place);
++                let ready = d + mean.max(ls.prof_of(r, lev, v).duration + stand);
++                let i = next.partition_point(|x| x.0 < d + mean - HANDOVER_TOL_S);
++                let Some(&(nd, nlev, _, nplace)) = next.get(i) else { continue };
++                if nlev as usize != lev || nplace == NO_PLACE || nplace >> 16 != place >> 16 || day(nd) != day(d) {
++                    continue;
++                }
++                if ready - nd > END_TOL_S {
++                    out[lev][r] = out[lev][r].max(((ready - nd - END_TOL_S) / hw).ceil() * hw);
++                }
++            }
++        }
++    }
++    out
++}
++
+ /// Every run's variants and patterns dropped, and every line untimed.
+ fn clear(svc: &mut Service) {
+     for ls in svc.lines.iter_mut() {
+diff --git a/trainworld/sim/src/track/timing/tests.rs b/trainworld/sim/src/track/timing/tests.rs
+index 9c220803..156ccd2a 100644
+--- a/trainworld/sim/src/track/timing/tests.rs
++++ b/trainworld/sim/src/track/timing/tests.rs
+@@ -347,8 +347,11 @@ fn variants_come_back_after_a_reload_in_place() {
+ 
+ /// T-3346 stage 2's 30/10 (t2233-passing-map): a local whose own timetable runs longer one way than
+ /// its round trip leaves room for would miss its next departure at that end and stand a whole
+-/// headway there, holding the expresses behind it. That run keeps the slot's timetable (`floor`),
+-/// and every local in steady service takes its next departure.
++/// headway there, holding the expresses behind it. That run keeps the slot's timetable (`floor`).
++/// T-3931: at 10/30 one local in three waits about 6 min for its express, more than any split of
++/// the spare time covers, so 8 locals in 3 h left service; the line now stands a headway more at
++/// that end (`own_ends`), with a train more, and every local in steady service takes its next
++/// departure.
+ #[test]
+ fn headway_locals_make_their_next_departure() {
+     for (hl, hx) in [(600u32, 600u32), (1800, 600), (600, 1800)] {
+@@ -366,10 +369,20 @@ fn headway_locals_make_their_next_departure() {
+         // what 30/10 did before the floor: a train missing its next departure and standing at the
+         // end for the one after (half a headway more than the slot's timetable stands there)
+         let ls = &w.svc.lines[local as usize];
+-        let most = ls.close_stand(&w.net, local) + w.svc.spare(&w.net, local as usize, 0) + 0.5 * hl as f64;
+-        let long = trips.iter().filter(|t| t.next.is_some() && t.end - (t.draw + ls.prof_of(t.run as usize, t.level as usize, t.var).duration) > most).count();
+-        eprintln!("{}/{}: stands at the ends {ends:.0?}, trips timed per run {timed:?} of {}, {lost} leave service, {long} stand longer than {most:.0} s", hl / 60, hx / 60, trips.len());
+-        assert_eq!(long, 0, "{}/{}: no local stands a headway at an end", hl / 60, hx / 60);
++        let most = |r: u8| ls.close_stand(&w.net, local) + w.svc.spare(&w.net, local as usize, 0) + ls.end_wait[0][r as usize] + 0.5 * hl as f64;
++        let long = trips.iter().filter(|t| t.next.is_some() && t.end - (t.draw + ls.prof_of(t.run as usize, t.level as usize, t.var).duration) > most(t.run)).count();
++        let fleet = w.net.line_trains[local as usize].unwrap()[0];
++        eprintln!("{}/{}: stands at the ends {ends:.0?}, a headway more {:?}, {fleet} trains, round trip {:.0} s, trips timed per run {timed:?} of {}, {lost} leave service, {long} stand longer than {:.0?} s", hl / 60, hx / 60, ls.end_wait[0], ls.round_trip[0], trips.len(), [most(0), most(1)]);
++        assert_eq!(long, 0, "{}/{}: no local stands a headway at an end past its round trip's", hl / 60, hx / 60);
++        assert_eq!(lost, 0, "{}/{}: every local takes its next departure", hl / 60, hx / 60);
++        // the extra stand is whole headways, so the departures are those its waits were worked on
++        let h = 3600.0 / w.net.line_tph[local as usize][0] as f64;
++        assert!(ls.end_wait[0].iter().all(|&x| (x / h - (x / h).round()).abs() < 1e-9));
++        // derived, never saved: a load sizes the round trip and the fleet the same
++        let back = TrackWorld::new(super::super::save::decode(&super::super::save::encode(&w.net)).unwrap());
++        assert_eq!(back.net.line_trains[local as usize], w.net.line_trains[local as usize]);
++        assert_eq!(back.svc.lines[local as usize].round_trip, ls.round_trip);
++        assert_eq!(back.svc.line_trips(&back.net, local as usize, t0, t0 + 4.0 * 3600.0), trips);
+         assert!(ends.iter().flatten().all(|&s| s >= TURN_MIN_S - 1.0));
+         assert!(timed.iter().sum::<usize>() > 0, "{}/{}: some run timed train by train", hl / 60, hx / 60);
+     }
+diff --git a/trainworld/sim/src/track/world.rs b/trainworld/sim/src/track/world.rs
+index 44b63013..42bebb90 100644
+--- a/trainworld/sim/src/track/world.rs
++++ b/trainworld/sim/src/track/world.rs
+@@ -69,6 +69,9 @@ const PACE_SLACK: f64 = 0.002;
+ /// T-2973: a merge this full is shared out evenly.
+ const PACE_FULL_RHO: f64 = 0.98;
+ const PACE_ROUNDS: usize = 3;
++/// T-3931: most rounds of "round trip from the trains' own timetables, settle, time again" per
++/// retime (`TrackWorld::retime`).
++const OWN_END_ROUNDS: usize = 2;
+ /// T-3388: a count line's headway moving by no more than this share keeps its merge's pacing, while
+ /// the line can still run its pace. A line on the edge of a set moves its own round trip by about
+ /// 0.2% as it joins or leaves it.
+@@ -325,6 +328,20 @@ impl TrackWorld {
+     /// service has settled and the departures are placed.
+     pub fn retime(&mut self) {
+         super::timing::retime(&self.net, &mut self.svc);
++        // T-3931: where the trains' own timetables moved a headway line's round trip
++        // (`timing::own_ends`), its counts follow it as the settle sizes them, and the trains are
++        // timed again (a whole headway more at an end moves no departure, so this is one round
++        // unless a full track keeps the train out). Not the pacing or the weekends: their rates
++        // read no headway line's count while it has the trains its headway needs.
++        for _ in 0..OWN_END_ROUNDS {
++            let moved = super::timing::own_ends(&self.net, &mut self.svc);
++            if moved.is_empty() {
++                break;
++            }
++            self.settle_unpaced(false);
++            self.svc.note_changed(&moved);
++            super::timing::retime(&self.net, &mut self.svc);
++        }
+     }
+ 
+     /// T-3542: after an edit split or joined the slots (`Network::refresh_slots`, from `old`): the
+diff --git a/trainworld/wiki/read/slower-trains.md b/trainworld/wiki/read/slower-trains.md
+index 8fc260f0..92a4a372 100644
+--- a/trainworld/wiki/read/slower-trains.md
++++ b/trainworld/wiki/read/slower-trains.md
+@@ -10,7 +10,7 @@ A fast line that shares track with a slow one in the same direction catches it u
+ 
+ **Passing tracks.** A station with [passing tracks](station-upgrades.md) changes who waits. The slow train that stops there waits for the fast ones to pass, and the fast line keeps its speed. A slow train leaves 60 seconds after the last fast train has passed. It waits no longer than the gap between two fast trains, since the next one would catch it just the same, and never so long that it holds up its own next train. Several passing stations in a row pass trains the same way, as often as each line's headways make them meet. Each slow train has its own times, so it waits only for the fast trains that would catch it, and one that no fast train catches does not wait at all. Before the first passing station there is nowhere to step aside, so a fast train that catches a slow one on the way there follows it until the station. On weekends a line with its own weekend trains runs the average waits.
+ 
+-**Averages in the figures.** The round trip, the trains a line needs and the trip times riders see use the average wait and the average loss per train. The trains on the map and in the timetable chart run their own times. Where a slow line's own waits one way add up to more than its trains have to spare at the end, that direction runs the average waits. A fast train slows behind a slow one only as much as it has to spare at the end, so it still makes its next departure. Past that it catches the slow train and waits behind it on the map.
++**Averages in the figures.** The round trip, the trains a line needs and the trip times riders see use the average wait and the average loss per train. The trains on the map and in the timetable chart run their own times. On a line that keeps a headway, where one slow train's own waits make it too late for its next departure, all its trains stand a headway longer at that end, and the line runs a train more. Where a slow line's own waits one way add up to more than its trains have to spare at the end, that direction runs the average waits. A fast train slows behind a slow one only as much as it has to spare at the end, so it still makes its next departure. Past that it catches the slow train and waits behind it on the map.
+ 
+ The loss counts like any other delay: it lengthens the round trip, so the line needs more trains for the same headway, and the average speed falls. It shows up in the trip times riders see ([perceived minutes](perceived-minutes.md)). It does not fill track, so it is not a place trains queue ([line capacity](line-capacity.md)).
+ 
+diff --git a/trainworld/wiki/slower-trains.md b/trainworld/wiki/slower-trains.md
+index b9f293db..b91bfe9e 100644
+--- a/trainworld/wiki/slower-trains.md
++++ b/trainworld/wiki/slower-trains.md
+@@ -10,7 +10,7 @@ A fast line that shares track with a slow one in the same direction catches it u
+ 
+ **Passing tracks.** A station with [[station-upgrades|passing tracks]] changes who waits. The slow train that stops there waits for the fast ones to pass, and the fast line keeps its speed. A slow train leaves {{sim/src/track/overtake.rs:PASS_CLEAR_S|0}} seconds after the last fast train has passed. It waits no longer than the gap between two fast trains, since the next one would catch it just the same, and never so long that it holds up its own next train. Several passing stations in a row pass trains the same way, as often as each line's headways make them meet. Each slow train has its own times, so it waits only for the fast trains that would catch it, and one that no fast train catches does not wait at all. Before the first passing station there is nowhere to step aside, so a fast train that catches a slow one on the way there follows it until the station. On weekends a line with its own weekend trains runs the average waits.
+ 
+-**Averages in the figures.** The round trip, the trains a line needs and the trip times riders see use the average wait and the average loss per train. The trains on the map and in the timetable chart run their own times. Where a slow line's own waits one way add up to more than its trains have to spare at the end, that direction runs the average waits. A fast train slows behind a slow one only as much as it has to spare at the end, so it still makes its next departure. Past that it catches the slow train and waits behind it on the map.
++**Averages in the figures.** The round trip, the trains a line needs and the trip times riders see use the average wait and the average loss per train. The trains on the map and in the timetable chart run their own times. On a line that keeps a headway, where one slow train's own waits make it too late for its next departure, all its trains stand a headway longer at that end, and the line runs a train more. Where a slow line's own waits one way add up to more than its trains have to spare at the end, that direction runs the average waits. A fast train slows behind a slow one only as much as it has to spare at the end, so it still makes its next departure. Past that it catches the slow train and waits behind it on the map.
+ 
+ The loss counts like any other delay: it lengthens the round trip, so the line needs more trains for the same headway, and the average speed falls. It shows up in the trip times riders see ([[perceived-minutes]]). It does not fill track, so it is not a place trains queue ([[line-capacity]]).
+ 

@@ -164,10 +164,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Other: notes/T-3659.md
 
 ## Demand
-- T-3935 [P3] {L:real-networks} Real networks miss lines OSM maps only as track (taking, 2026-11-21, agent keihan)
-  - Context: From T-3632, 11-21: real networks are built from OSM passenger routes, and some lines exist in OSM only as a track relation. Kansai has no Keihan Main Line (its Uji and Katano branches touch nothing; about 2% of sampled Osaka commutes get "No transit route", all near Hirakata or Katano); also missing: JR Wakayama and Kakogawa, Keihan Ishiyama-Sakamoto and Keishin (Kansai), JR Kansai Main Line, Yoro and Ise Railway (Nagoya). Players reported it (board g024). n02_trim.json sets the Keihan Main Line to null, so N02 drops it too.
-  - Goal: realauto.py takes a line from its track relation (or N02 in Japan) when no passenger route runs on named track; Kansai and Nagoya rebuilt with those lines.
-  - Other: notes/T-3632.md "Stage 3"
 - T-3936 [P3] {L:route-choice} Intercity effective time for the route shown
   - Context: From T-3632, 11-21: the intercity panel's "Effective time" is the average over the whole place, not the route shown (Nagoya - Osaka: the route's own 136 min, the panel 237, the car 174), so a click beside a station reads as the train losing.
   - Goal: The panel shows the shown route's own effective time beside the car's.
@@ -557,9 +553,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3894 [P3] {L:line-rates} A line with no trains still caps the lines it crosses
   - Context: Found by fullrate (T-3646), 11-20: on Tokyo a crossing of lines [150, 42, 42] at 100% stays capped by a line with no trains. Not looked at further.
   - Goal: A line with no trains in a period holds no share of a crossing or shared track in it, or the reason it should.
-- T-3655 [P2] {L:line-rates} A line on full track keeps its old rate after a new count (taking, 2026-11-21, agent fullrate4)
-  - Context: PARKED 11-21 in tree .tw-trees/fullrate (uncommitted; notes/T-3655.md there, "Load and the first edit" newest). The re-share fix (`world.rs` `reshare_full`) is right natively and, since fullrate3 (11-21), a load leaves every line's rate as saved (171 of 171 on London). Left: (1) the first edit after a load drops Victoria medium 14.39 -> 5.80, because the load caps no line below 44 (their `lineHeld` caps answer too late), so held lines beside it keep 21-26 idle trains; master has the same bug (a +1 on line 120 takes Victoria to 2.78). Decided (orchestrator, 11-21): option 1, cap every over-cap line alike at load (first edit 12.80, and master's 2.78 becomes 13.23). (2) Browser count edits 264-643 ms against master 177-302: a Victoria edit moves 25 lines' service, and boarding is redone for them. Opus, fresh, when compute allows.
-  - Goal: A new count or headway on full track takes its share at the edit, within about 50 ms an edit on London's shared save.
+- T-3655 [P2] {L:line-rates} Count edits on full track slow from boarding redone (taking, 2026-11-21, agent fullrate4)
+  - Context: LAND-READY 11-21 in tree .tw-trees/fullrate (uncommitted; notes/T-3655.md there, "Even caps at load" newest): the re-share (`world.rs` `reshare_full`), the load's caps made even (they were refused for money, not late: London's save runs more trains than its fleet, so a game-made edit now pays only for trains it adds; Victoria's first edit 12.80, 13.24 after a line 120 edit, against master's 2.78) and T-3941. Left: the speed. A Victoria count edit re-shares its track and moves 14-23 lines' rates, so boarding is redone for about 25 lines before the answer: 0.7-2.2 s worker time against master's 63-124 ms on a full machine. Leads: answer before the boarding steps (trips without loads first, as T-3804's stale account), or redo boarding only past a departure threshold.
+  - Goal: Count edits on full track within about 50 ms of master's on London's shared save, or the reason they can't be.
   - Other: notes/T-3655.md, notes/T-3482.md "Follow-ups"
 - T-3231 [P3] {L:trains-drawn} {after:T-3264} Two lines drawn over each other at a terminal
   - Context: A fix exists as notes/T-3231-fix.patch (trainGuard holdForPlaces): t1965-follow drops from 40-47 frames to 0-4, t2980 unchanged, but t2018-trail then halts the express 16-28 times and t3264's follow layout gains 4 overlap events, all from the express running later than the guard can draw (T-3271). Parked until T-3271, then re-measured. Traced 11-21 (movedhour, notes/T-3931.md): the late expresses at 12/9 and the 230-257 s hold at G at 30/10 are this too: an arriving train waits short of the end because the other line's train stands in the same end bay, and the next trip inherits the lag; `t2233 --count` stays red until this lands.
@@ -972,22 +968,15 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3944 [P1] {L:buses} BRT built as a blueprint, drawn on the map (taking, 2026-11-21, agent brtblueprint)
   - Context: You, 11-21, after trying stages 1-2 on 8800: "for brt testing its kinda hard to tell whats going on. lets build the BRT toggle actually like putting a blueprint that is visible on the map (maybe like highlight the corridor that will get a dedicated lane somehow) and shows construction cost like a blueprint and actually has to be constructed with a click. and maybe for already constructed brts we running a dashed thin white border around the bus line to indicate that it has its own lane. super thin. also the BRT toggle doesnt really fit with how we do other constructions. like it shouldnt be a toggle, it should be more like a station upgrade or something. appearancewise."
   - Goal: Upgrading a bus line to BRT places a blueprint (the corridor that gets lanes highlighted on the map, its cost as other blueprints show it) built with a click like other blueprints; the control looks like a station upgrade, not a toggle; built BRT lanes draw a super thin dashed white border around the bus line.
-- T-3945 [P1] {L:small-fixes} Every edit fails and the game won't save (taking, 2026-11-21, agent editfail)
-  - Context: A Discord player, 11-21 (your scratch pad, artifacts/trainworld/board/20261121-092545-e355.png and -092553-d101.png): on an Espana game every edit shows "That edit failed and was undone.", saving shows "This game could not be saved", no edits work "not even routes"; the UI was in Spanish; they later managed to download the save (trainsworld-espana-day-172.save, 79 KB, in your Downloads). You asked whether they saw a banner at the top; they didn't. Reach unknown.
-  - Goal: The cause found from that save and fixed, or the player's save loading and editing on master with the reason it failed for them.
 - T-3947 [P3] {L:schematic-layout} Schematic redraw that takes buses into account
   - Context: Your scratch pad, 11-21: "bus-heavy maps do kinda come out looking like spaghetti on the schematic map. cuz we dont actually redraw taking bus routes into account. people request an option to manually start a redraw taking buses into account."
   - Goal: A control that redraws the schematic with bus routes included in the layout, started manually.
-- T-3986 [P2] {L:small-fixes} Say so when the train model is down (taking, 2026-11-21, agent modeldown)
-  - Context: From T-3945, 11-21: after four crashes in a minute the train model stays down; edits then show "That edit failed and was undone." or nothing, saves and downloads get no answer, and leaving fails with "This game could not be saved. Download it as a file before leaving it." (an untranslated literal, slots.ts:209 and :212).
-  - Goal: While the model is down, refused edits, saves and downloads show the existing "The train simulation stopped working. Reload the page to go on. Your last autosave is kept."; leaving skips the save so the menu opens; the two slots.ts literals get message keys.
-  - Other: notes/T-3945.md
 - T-3987 [P3] {L:islands} Bubbles count island trips with other places as car
   - Context: From the T-2216 stage 3 check, 11-21: once a place's market is open, the cell bubbles' legs with other places have no No route part, so the own row's island trips show as car there (Athens's split shows No route 92,187, its bubbles 82,806).
   - Goal: A no-way figure per square in the sim's `zone_legs`, so the bubbles' No route matches the city panel.
   - Other: notes/T-2216.md "Stage 3 fix"
 - T-3941 [P3] {L:buses} {after:T-3655} Weekend BRT lanes past 60 buses an hour
-  - Context: From T-3378 stage 2, 11-21: `settle_weekend` doesn't run `fit_lanes`, so in a game where any line has its own weekend schedule, weekend lanes can go past 60. The fix sits in the same code as T-3655's unlanded work.
+  - Context: From T-3378 stage 2, 11-21: `settle_weekend` doesn't run `fit_lanes`, so in a game where any line has its own weekend schedule, weekend lanes can go past 60. Fixed 11-21 in tree .tw-trees/fullrate with T-3655 (`bus_tests::a_full_brt_lane_cuts_weekend_buses_too`); closes when that lands.
   - Goal: Weekend lanes cut to 60 an hour as weekdays are.
   - Other: Folds in T-1467 and T-3830 (bus stations a player can build: your pad, "bus stations, constructible, that look kinda like train and tram stations ... slight waiting/boarding bonus").
 - T-3377 [P3] {L:open-source} Mod support beyond forks
@@ -1099,9 +1088,10 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your ask: a wiki so agents read less. 26 pages are built and figures come from code through JSON markers; the trams landed and every marker still matches.
   - Goal: The Money tab ledger detail and the line panel stop times written, then the retired docs removed.
   - Other: See notes/T-2854.md.
-- T-3931 [P3] {L:passing-tracks} Locals at 10/30 leaving service (taking, 2026-11-21, agent ownwaits)
+- T-3931 [P3] {L:passing-tracks} {after:T-3231} Locals at 10/30 leaving service
   - Context: You, 11-21: "yes each trains round trip can be budgeted on own weight" (each train's round trip sized on its own waits, about one more train on such lines). The moved morning hour now runs the morning's timetable (movedhour, 11-21). Left: at 10/30 one local in three waits about 6 min for its express, and its next departure needs 182 s of spare time where the round trip leaves 106 s, so 8 locals in 3 h leave service; the fix sizes the round trip on the trains' own waits, about one more train on such lines (T-3346's open fix). The map's late expresses at counts 12/9, 12/8, 4/9 and 30/10's hold at G were traced to T-3231's one-place terminal (notes/T-3931.md).
   - Goal: No local at 10/30 leaves service.
+  - Other: Built 11-21 (ownwaits) and held: the longer stands make the map's 10/30 locals leave the dead end up to 5.5 min late (three trains on two platforms), so it waits for T-3231's terminal fix. Code in notes/T-3931-ownwaits.patch; detail notes/T-3931.md.
 
 ## Waits on a rebuild
 - T-3270 [P3] {L:airports} {after:next world rebuild} Eurostat airport passengers for Europe
