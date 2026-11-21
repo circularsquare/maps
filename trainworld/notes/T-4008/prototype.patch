@@ -1,0 +1,978 @@
+diff --git a/trainworld/app/src/workers/demand.worker.ts b/trainworld/app/src/workers/demand.worker.ts
+index 7a17299a..15a4dfae 100644
+--- a/trainworld/app/src/workers/demand.worker.ts
++++ b/trainworld/app/src/workers/demand.worker.ts
+@@ -19,7 +19,7 @@
+ // T-301: `close` frees packs (and the market) the page no longer needs; one the solve in hand
+ // covers goes when that solve ends.
+ 
+-import init, { DemandApi, EverydayApi, IntercityApi, MarketPacks, day_factors, demand_periods, everyday_warm_up, last_panic, release_skims, set_heap_step, trip_length_edges, wasm_heap_bytes, wasm_heap_peak, wasm_memory_bytes } from "../wasm/demand/sim"; // demand only (T-051)
++import init, { DemandApi, EverydayApi, IntercityApi, MarketPacks, day_factors, demand_periods, everyday_warm_up, last_panic, release_skims, set_heap_step, t4008_set, trip_length_edges, wasm_heap_bytes, wasm_heap_peak, wasm_memory_bytes } from "../wasm/demand/sim"; // demand only (T-051)
+ import { shareCode } from "../game/corridorShares";
+ import { CITIES, REGISTRY, cityById, cityToMarket, cityToWorld, lonLatToCity, marketWorld, setWorldFrame, widenBox, worldToCity, worldToLonLat, zoneBox, type CityId } from "../game/cities";
+ import { loadAttractions, type Attraction } from "../game/attractions";
+@@ -1015,6 +1015,8 @@ onmessage = (e: MessageEvent<ToDemand>) => {
+         const t0 = performance.now();
+         [, attractions] = await Promise.all([initWasm(() => init(), "demand worker"), loadAttractions()]); // i18n-ignore
+         if (msg.heapStep) set_heap_step(msg.heapStep);
++        // T-4008 PROTOTYPE: ?t4008=<groups> reaches the worker as its name
++        if (typeof self.name === "string" && self.name.startsWith("t4008:")) console.log("t4008", self.name, t4008_set(self.name.slice(6), false) || "ok"); // i18n-ignore
+         const t1 = performance.now();
+         aux = !!msg.aux;
+         mine = msg.periods;
+diff --git a/trainworld/app/src/workers/demandClient.ts b/trainworld/app/src/workers/demandClient.ts
+index c1676553..10707c6d 100644
+--- a/trainworld/app/src/workers/demandClient.ts
++++ b/trainworld/app/src/workers/demandClient.ts
+@@ -1021,7 +1021,9 @@ class DemandClient {
+    * when the pool shrinks. */
+   private spawn(i: number, warmEveryday: boolean): Worker {
+     const n = this.computeN;
+-    const w = new Worker(new URL("./demand.worker.ts", import.meta.url), { type: "module" });
++    // T-4008 PROTOTYPE: ?t4008=<groups> (time-value groups in route choice), passed as the worker's name
++    const t4008 = new URLSearchParams(location.search).get("t4008");
++    const w = new Worker(new URL("./demand.worker.ts", import.meta.url), { type: "module", name: t4008 ? "t4008:" + t4008 : "" });
+     const at = () => this.workers.indexOf(w);
+     w.onmessage = (e: MessageEvent<FromDemand>) => { const j = at(); if (j >= 0) this.receive(j, e.data); };
+     // an uncaught WASM trap is a panic as `dead` reports one
+diff --git a/trainworld/sim/src/bin/calib.rs b/trainworld/sim/src/bin/calib.rs
+index 29b40808..96cf8be9 100644
+--- a/trainworld/sim/src/bin/calib.rs
++++ b/trainworld/sim/src/bin/calib.rs
+@@ -49,6 +49,58 @@ fn add(acc: &mut Vec<f64>, v: &[f32]) {
+     }
+ }
+ 
++/// T-4008 PROTOTYPE: rider-km on stretches two lines both run, one with no stop between two
++/// stations (express), the other with stops (local): JSON, the totals and by (express, local) line.
++fn stretches(rn_st: &[u32], rn_line: &[usize], seg: &[f64], line_n: &[u32], hop_km: &[f32]) -> String {
++    use std::collections::{BTreeMap, HashSet};
++    // per line and direction, its route nodes in order
++    let mut runs: Vec<(usize, Vec<usize>)> = vec![];
++    let mut base = 0usize;
++    for (l, &n) in line_n.iter().enumerate() {
++        let n = n as usize;
++        runs.push((l, (base..base + n).collect()));
++        runs.push((l, (base + n..base + 2 * n).collect()));
++        base += 2 * n;
++    }
++    assert_eq!(base, rn_line.len());
++    let at = |r: usize| seg.get(r).copied().unwrap_or(0.0) * hop_km.get(r).copied().unwrap_or(0.0) as f64;
++    let (mut ex_seen, mut lo_seen): (HashSet<usize>, HashSet<usize>) = (HashSet::new(), HashSet::new());
++    let (mut ex, mut lo) = (0f64, 0f64);
++    let mut by: BTreeMap<(usize, usize), [f64; 2]> = BTreeMap::new();
++    for (le, re) in &runs {
++        for w in re.windows(2) {
++            let (a, b) = (rn_st[w[0]], rn_st[w[1]]);
++            for (ll, rl) in &runs {
++                if ll == le {
++                    continue;
++                }
++                let Some(j) = rl.iter().position(|&r| rn_st[r] == a) else { continue };
++                let Some(j2) = rl[j + 1..].iter().position(|&r| rn_st[r] == b).map(|x| x + j + 1) else { continue };
++                if j2 - j < 2 {
++                    continue;
++                }
++                let e = at(w[0]);
++                let l: f64 = rl[j..j2].iter().map(|&r| at(r)).sum();
++                let entry = by.entry((*le, *ll)).or_insert([0.0; 2]);
++                entry[0] += e;
++                entry[1] += l;
++                if ex_seen.insert(w[0]) {
++                    ex += e;
++                }
++                for &r in &rl[j..j2] {
++                    if lo_seen.insert(r) {
++                        lo += at(r);
++                    }
++                }
++            }
++        }
++    }
++    let mut top: Vec<_> = by.into_iter().collect();
++    top.sort_by(|a, b| (b.1[0] + b.1[1]).total_cmp(&(a.1[0] + a.1[1])));
++    let tops: Vec<String> = top.iter().take(14).map(|((e, l), v)| format!("[{e},{l},{:.0},{:.0}]", v[0], v[1])).collect();
++    format!("{{\"express_pkm\":{ex:.0},\"local_pkm\":{lo:.0},\"express_share\":{:.4},\"by_pair\":[{}]}}", ex / (ex + lo).max(1e-9), tops.join(","))
++}
++
+ fn main() {
+     let args: Vec<String> = std::env::args().skip(1).collect();
+     let get = |k: &str| args.iter().position(|a| a == k).map(|i| args[i + 1].clone());
+@@ -75,6 +127,12 @@ fn main() {
+         }
+     }
+ 
++    // T-4008 PROTOTYPE: `--t4008 share:k[:wait],..` time-value groups in route choice; `--probe` the
++    // express/local split by station pair
++    if get("--t4008").is_some() || has("--probe") {
++        let e = trainworld_sim::demand::api::t4008_set(&get("--t4008").unwrap_or_default(), has("--probe"));
++        assert!(e.is_empty(), "--t4008: {e}");
++    }
+     let t0 = now_ms();
+     let (h, b) = pack::load_raw(&pack_path).unwrap();
+     let mut api = DemandApi::new(&h, &b).unwrap();
+@@ -296,6 +354,17 @@ fn main() {
+         t_open / 1e3, t_net / 1e3, t_solve / 1e3, t_all / 1e3
+     );
+     eprintln!("operators: {}", ops.iter().map(|(k, v)| format!("{k} {:.0}", v)).collect::<Vec<_>>().join(", "));
++    // T-4008 PROTOTYPE: stage times, heap peak, the express/local split by stretch and by pair
++    {
++        use trainworld_sim::demand::{alloc, t4008};
++        let m = t4008::ms();
++        eprintln!("t4008 ms: group search {:.0}, group assign {:.0}, probe {:.0}; heap peak {:.1} MB", m[0], m[1], m[2], alloc::mb(alloc::peak()));
++        let rn_st = api.route_nodes(0).0;
++        eprintln!("t4008 stretches: {}", stretches(&rn_st, &rn_line, &seg_all, &line_n, &hop_km));
++        if has("--probe") {
++            eprintln!("t4008 pairs: {}", t4008::report());
++        }
++    }
+     let mut set_out = Map::new();
+     for (k, v) in &set {
+         set_out.insert(k.clone(), json!(v));
+diff --git a/trainworld/sim/src/demand/api.rs b/trainworld/sim/src/demand/api.rs
+index aa4186a1..4f77808c 100644
+--- a/trainworld/sim/src/demand/api.rs
++++ b/trainworld/sim/src/demand/api.rs
+@@ -795,6 +795,19 @@ pub(crate) fn scale_triples(v: &mut [f32], f: f32) {
+ #[wasm_bindgen]
+ pub fn release_skims() {
+     clear_skim_cache();
++    // T-4008 PROTOTYPE: the groups' tables (none while off)
++    super::kernel::clear_group_skims();
++}
++
++/// T-4008 PROTOTYPE: time-value groups in route choice, `share:k[:wait],..` (empty: off), and the
++/// express/local probe.
++#[wasm_bindgen]
++pub fn t4008_set(groups: &str, probe: bool) -> String {
++    super::t4008::set_probe(probe);
++    match super::t4008::set_groups(groups) {
++        Ok(()) => String::new(),
++        Err(e) => e,
++    }
+ }
+ 
+ impl DemandApi {
+@@ -904,9 +917,22 @@ impl DemandApi {
+                 }
+             }
+             let rides = fans.as_ref().map(|cf| cf.both_ways(s, &rides, fw, fh, &mut od));
+-            let mut l = match xfer {
+-                Some((ix, x)) => assign_with_transfers(g, sk, &od, ix, x),
+-                None => assign(g, sk, &od),
++            // T-4008 PROTOTYPE: time-value groups, each on its own strategies; the probe
++            if super::t4008::probing() {
++                super::t4008::begin_pass(q);
++            }
++            let mut l = if let Some(gs) = super::t4008::groups() {
++                let svc = self.svc.as_ref().unwrap();
++                super::t4008::assign_groups(g, p, sk, &od, &self.want, xfer, &gs, q, &svc.st_x, &svc.st_y)
++            } else {
++                if super::t4008::probing() {
++                    let svc = self.svc.as_ref().unwrap();
++                    super::t4008::probe(g, p, sk, &od, 1.0, q, &svc.st_x, &svc.st_y);
++                }
++                match xfer {
++                    Some((ix, x)) => assign_with_transfers(g, sk, &od, ix, x),
++                    None => assign(g, sk, &od),
++                }
+             };
+             if let (Some(cf), Some(r)) = (fans.as_ref(), rides.as_ref()) {
+                 cf.add_rides(g, r, &mut l);
+diff --git a/trainworld/sim/src/demand/everyday.rs b/trainworld/sim/src/demand/everyday.rs
+index 3416ecb1..2a53282a 100644
+--- a/trainworld/sim/src/demand/everyday.rs
++++ b/trainworld/sim/src/demand/everyday.rs
+@@ -501,6 +501,48 @@ struct Columns {
+     rows: Vec<bool>,
+ }
+ 
++/// T-4008 PROTOTYPE: the everyday assignment with time-value groups, each group's share of every
++/// purpose's trips on its own strategies (today's on `sk`).
++fn assign_lanes_groups(g: &Graph, p: &Params, sk: &Skims, cols: &Columns, want: &[bool], ix: &XferIndex, xfer: &mut [f32], gs: &[super::t4008::Group]) -> LaneLoads {
++    use super::t4008::{add_ms, group_graph, keep, T_GROUP_ASSIGN, T_GROUP_SEARCH};
++    let (s, n) = (sk.s, sk.n);
++    let mut total = LaneLoads::zero(s, n - s);
++    for gr in gs {
++        let cw = Columns { off: cols.off.clone(), src: cols.src.clone(), trips: cols.trips.iter().map(|t| t.iter().map(|v| v * gr.share).collect()).collect(), rows: cols.rows.clone() };
++        let l = if gr.is_today() {
++            let t = super::clock::now_ms();
++            let l = assign_lanes(g, sk, &cw, ix, xfer);
++            add_ms(T_GROUP_ASSIGN, super::clock::now_ms() - t);
++            l
++        } else {
++            let (h, hp) = group_graph(g, p, gr);
++            let t = super::clock::now_ms();
++            super::kernel::with_group_skims(&h, &hp, want, keep(), |sg| {
++                add_ms(T_GROUP_SEARCH, super::clock::now_ms() - t);
++                let t = super::clock::now_ms();
++                let l = assign_lanes(&h, sg, &cw, ix, xfer);
++                add_ms(T_GROUP_ASSIGN, super::clock::now_ms() - t);
++                l
++            })
++        };
++        for (a, b) in [(&mut total.seg, &l.seg), (&mut total.board, &l.board), (&mut total.alight, &l.alight), (&mut total.rn_board, &l.rn_board), (&mut total.rn_alight, &l.rn_alight), (&mut total.entry, &l.entry), (&mut total.exit, &l.exit)] {
++            for (x, y) in a.iter_mut().zip(b) {
++                add_lanes(x, y);
++            }
++        }
++        for k in 0..LANES {
++            total.pax_min[k] += l.pax_min[k];
++            total.dropped[k] += l.dropped[k];
++        }
++        for (a, b) in [(&mut total.rn_fare_x, &l.rn_fare_x), (&mut total.rn_base_x, &l.rn_base_x)] {
++            for (x, y) in a.iter_mut().zip(b) {
++                *x += y;
++            }
++        }
++    }
++    total
++}
++
+ impl Columns {
+     fn new(kinds: usize, s: usize) -> Columns {
+         Columns { off: vec![vec![]; kinds], src: vec![vec![]; kinds], trips: vec![vec![]; kinds], rows: vec![false; s] }
+@@ -1578,7 +1620,8 @@ impl EverydayApi {
+                 cols.pack(&mut od, s, od_kind);
+             }
+             drop((od, accs, acc_rs));
+-            let mut lanes = assign_lanes(g, sk, &cols, ix, &mut xfer);
++            // T-4008 PROTOTYPE: time-value groups
++            let mut lanes = if let Some(gs) = super::t4008::groups() { assign_lanes_groups(g, p, sk, &cols, &want, ix, &mut xfer, &gs) } else { assign_lanes(g, sk, &cols, ix, &mut xfer) };
+             #[cfg(test)]
+             if CHECK_LANES.with(|c| c.get()) {
+                 check_lanes(g, sk, &cols, ix, &lanes, &xfer);
+diff --git a/trainworld/sim/src/demand/kernel/search.rs b/trainworld/sim/src/demand/kernel/search.rs
+index 7d0b49ec..e515f352 100644
+--- a/trainworld/sim/src/demand/kernel/search.rs
++++ b/trainworld/sim/src/demand/kernel/search.rs
+@@ -2278,6 +2278,37 @@ pub fn with_skims<R>(g: &Graph, p: &Params, want: &[bool], f: impl FnOnce(&Skims
+     })
+ }
+ 
++// T-4008 PROTOTYPE: the time-value groups' own strategies (`demand::t4008`), in a cache of their
++// own so a group's search can run while `SKIM_CACHE` lends today's; `keep` tables, oldest first out.
++thread_local! {
++    static GROUP_CACHE: std::cell::RefCell<Vec<(SkimKey, Skims)>> = const { std::cell::RefCell::new(Vec::new()) };
++}
++
++pub fn with_group_skims<R>(g: &Graph, p: &Params, want: &[bool], keep: usize, f: impl FnOnce(&Skims) -> R) -> R {
++    GROUP_CACHE.with(|c| {
++        let mut c = c.borrow_mut();
++        match c.iter().position(|(k, _)| k.same(g, p)) {
++            Some(i) => {
++                let e = c.remove(i);
++                c.push(e);
++            }
++            None => {
++                while c.len() >= keep.max(1) {
++                    c.remove(0);
++                }
++                c.push((SkimKey::of(g, p), Skims::empty(g)));
++            }
++        }
++        let sk = &mut c.last_mut().unwrap().1;
++        skims_extend(sk, g, p, want);
++        f(sk)
++    })
++}
++
++pub fn clear_group_skims() {
++    GROUP_CACHE.with(|c| c.borrow_mut().clear());
++}
++
+ /// Whether this thread holds skims of `g` (`with_skims`).
+ pub fn skims_cached(g: &Graph, p: &Params) -> bool {
+     SKIM_CACHE.with(|c| c.borrow().iter().any(|(k, _)| k.same(g, p)))
+diff --git a/trainworld/sim/src/demand/mod.rs b/trainworld/sim/src/demand/mod.rs
+index bb52206e..606e89d1 100644
+--- a/trainworld/sim/src/demand/mod.rs
++++ b/trainworld/sim/src/demand/mod.rs
+@@ -46,6 +46,8 @@ pub mod synth;
+ pub mod trip;
+ #[cfg(test)]
+ mod t720;
++/// T-4008 PROTOTYPE: time-value groups in route choice and the express/local probe (not for landing).
++pub mod t4008;
+ /// T-173: the everyday warm-up a demand worker runs at startup.
+ pub mod warm;
+ 
+diff --git a/trainworld/sim/src/demand/t4008.rs b/trainworld/sim/src/demand/t4008.rs
+new file mode 100644
+index 00000000..c629d766
+--- /dev/null
++++ b/trainworld/sim/src/demand/t4008.rs
+@@ -0,0 +1,541 @@
++//! T-4008 PROTOTYPE, not for landing (notes/T-4008.md): time-value groups in route choice, and
++//! probes of the express/local split.
++//!
++//! - Groups: each group searches its own strategies, with its waits and rides times `k` (a richer
++//!   rider's minutes count more) and fares as today, and the station-pair trips today's mode choice
++//!   gives are assigned share by share on each group's strategies; the crowding rounds see every
++//!   group's riders. A strategy with every minute times `k` is the one with every fare over `k`
++//!   (each cost the search compares is minutes plus fare, and the comparisons are homogeneous), so
++//!   a group's graph is today's with its fares over `k` (`group_graph`). `wait` times a group's
++//!   waits alone (a spread in how riders weigh waiting against riding).
++//! - The probe: for station pairs two or more lines ride between without a change, at different
++//!   numbers of stops, the riders' first boarding on the line with the fewest stops (express) or
++//!   another (local), weighted by the pair's commute trips; and the same split by a
++//!   frequency-weighted logit on the lines' costs from boarding (`soft`).
++//!
++//! Off (no groups, no probe) every call site branches past it, so the figures are today's to the bit.
++
++use super::kernel::{assign, assign_with_transfers, departures, with_group_skims, Graph, Loads, NodeIds, Params, Skims, Strategy, XferIndex};
++use std::cell::RefCell;
++use std::collections::HashMap;
++use std::sync::RwLock;
++
++const NONE: u32 = u32::MAX;
++
++#[cfg(test)]
++#[path = "t4008_tests.rs"]
++mod tests;
++
++#[derive(Clone, Copy, Debug)]
++pub struct Group {
++    pub share: f32,
++    /// minutes (waits and rides) times this
++    pub k: f32,
++    /// waits alone times this, on top of `k`
++    pub wait: f32,
++}
++
++impl Group {
++    pub fn is_today(&self) -> bool {
++        self.k == 1.0 && self.wait == 1.0
++    }
++}
++
++#[derive(Default)]
++struct Cfg {
++    groups: Vec<Group>,
++    probe: bool,
++}
++
++static CFG: RwLock<Cfg> = RwLock::new(Cfg { groups: vec![], probe: false });
++
++/// `share:k[:wait],..`, e.g. `0.2:0.57,0.6:1,0.2:1.72`; empty for none.
++pub fn set_groups(spec: &str) -> Result<(), String> {
++    let mut gs = vec![];
++    for part in spec.split(',').filter(|s| !s.trim().is_empty()) {
++        let v: Vec<f32> = part.split(':').map(|x| x.trim().parse::<f32>().map_err(|e| format!("{part}: {e}"))).collect::<Result<_, _>>()?;
++        if v.len() < 2 {
++            return Err(format!("{part}: share:k[:wait]"));
++        }
++        gs.push(Group { share: v[0], k: v[1], wait: v.get(2).copied().unwrap_or(1.0) });
++    }
++    let sum: f32 = gs.iter().map(|g| g.share).sum();
++    if !gs.is_empty() && (sum - 1.0).abs() > 1e-3 {
++        return Err(format!("shares add up to {sum}"));
++    }
++    CFG.write().unwrap().groups = gs;
++    Ok(())
++}
++
++pub fn set_probe(on: bool) {
++    CFG.write().unwrap().probe = on;
++}
++
++/// The groups, or `None` when off.
++pub fn groups() -> Option<Vec<Group>> {
++    let c = CFG.read().unwrap();
++    if c.groups.is_empty() { None } else { Some(c.groups.clone()) }
++}
++
++pub fn probing() -> bool {
++    CFG.read().unwrap().probe
++}
++
++/// Tables `kernel::with_group_skims` keeps: one per group with its own strategies.
++pub fn keep() -> usize {
++    CFG.read().unwrap().groups.iter().filter(|g| !g.is_today()).count().max(1)
++}
++
++/// The graph a group searches: today's with every fare over `k` (the same strategies as every
++/// minute times `k`), and its waits times `wait`.
++pub fn group_graph(g: &Graph, p: &Params, gr: &Group) -> (Graph, Params) {
++    let mut h = clone_graph(g);
++    let mut q = p.clone();
++    if gr.k != 1.0 {
++        let k = gr.k;
++        for e in 0..h.adj_to.len() {
++            let seg = h.adj_seg[e];
++            if seg != NONE {
++                let r = seg as usize - h.n_st;
++                h.adj_cost[e] = g.adj_cost[e] - g.rn_fare[r] + g.rn_fare[r] / k;
++            }
++        }
++        for f in h.rn_fare.iter_mut() {
++            *f /= k;
++        }
++        h.xfer_fare /= k;
++        h.base_min /= k;
++        // (a change's fixed minutes and the walks stay, so they count times `k` against the fares)
++        q.xfer_fare /= k;
++    }
++    if gr.wait != 1.0 {
++        let w = gr.wait;
++        for v in 0..h.n_st {
++            let change = p.change_at(h.change_f(v));
++            for e in h.adj_off[v] as usize..h.adj_off[v + 1] as usize {
++                if h.adj_to[e] as usize >= h.n_st {
++                    h.adj_cost[e] = change + (g.adj_cost[e] - change) * w;
++                }
++            }
++        }
++        for x in h.st_wait.iter_mut() {
++            *x *= w;
++        }
++        for x in h.rn_left.iter_mut() {
++            *x *= w;
++        }
++    }
++    (h, q)
++}
++
++fn clone_graph(g: &Graph) -> Graph {
++    Graph {
++        n_st: g.n_st,
++        n: g.n,
++        rn_station: g.rn_station.clone(),
++        rn_line: g.rn_line.clone(),
++        rn_ride: g.rn_ride.clone(),
++        rn_fare: g.rn_fare.clone(),
++        rn_tph: g.rn_tph.clone(),
++        rn_left: g.rn_left.clone(),
++        rn_span: g.rn_span.clone(),
++        rn_in: g.rn_in.clone(),
++        rn_out: g.rn_out.clone(),
++        rn_dx: g.rn_dx.clone(),
++        rn_dy: g.rn_dy.clone(),
++        st_spread: g.st_spread.clone(),
++        st_wait: g.st_wait.clone(),
++        st_bld: g.st_bld.clone(),
++        st_walk_off: g.st_walk_off.clone(),
++        st_walk_to: g.st_walk_to.clone(),
++        st_walk_min: g.st_walk_min.clone(),
++        rev_off: g.rev_off.clone(),
++        rev_from: g.rev_from.clone(),
++        rev_edge: g.rev_edge.clone(),
++        adj_off: g.adj_off.clone(),
++        adj_to: g.adj_to.clone(),
++        adj_cost: g.adj_cost.clone(),
++        adj_seg: g.adj_seg.clone(),
++        rn_next: g.rn_next.clone(),
++        fare_curve: g.fare_curve.clone(),
++        rn_km: g.rn_km.clone(),
++        rn_fare_mul: g.rn_fare_mul.clone(),
++        rn_kmw: g.rn_kmw.clone(),
++        rn_base_mul: g.rn_base_mul.clone(),
++        base_min: g.base_min,
++        xfer_fare: g.xfer_fare,
++    }
++}
++
++/// `b` times `w` into `a`.
++pub fn add_loads_w(a: &mut Loads, b: &Loads, w: f32) {
++    for (x, y) in [
++        (&mut a.seg, &b.seg),
++        (&mut a.board, &b.board),
++        (&mut a.alight, &b.alight),
++        (&mut a.rn_board, &b.rn_board),
++        (&mut a.rn_alight, &b.rn_alight),
++        (&mut a.entry, &b.entry),
++        (&mut a.exit, &b.exit),
++        (&mut a.rn_fare_x, &b.rn_fare_x),
++        (&mut a.rn_base_x, &b.rn_base_x),
++    ] {
++        for (p, q) in x.iter_mut().zip(y) {
++            *p += w * q;
++        }
++    }
++    a.pax_min += w as f64 * b.pax_min;
++    a.dropped += w as f64 * b.dropped;
++}
++
++/// The commutes' assignment with groups: the station-pair trips `od` share by share on each group's
++/// strategies (today's on `sk`), the transfers counted into `xfer` the same way.
++#[allow(clippy::too_many_arguments)]
++pub fn assign_groups(g: &Graph, p: &Params, sk: &Skims, od: &[f32], want: &[bool], mut xfer: Option<(&XferIndex, &mut [f32])>, gs: &[Group], q: usize, st_x: &[f32], st_y: &[f32]) -> Loads {
++    let probe_on = probing();
++    let mut total = Loads::zero(g.n_st, g.n - g.n_st);
++    for gr in gs {
++        let odw: Vec<f32> = od.iter().map(|v| v * gr.share).collect();
++        let run = |h: &Graph, hp: &Params, s: &Skims, x: Option<(&XferIndex, &mut [f32])>| -> Loads {
++            if probe_on {
++                probe(h, hp, s, od, gr.share, q, st_x, st_y);
++            }
++            let t = super::clock::now_ms();
++            let l = match x {
++                Some((ix, x)) => assign_with_transfers(h, s, &odw, ix, x),
++                None => assign(h, s, &odw),
++            };
++            add_ms(T_GROUP_ASSIGN, super::clock::now_ms() - t);
++            l
++        };
++        let x = xfer.as_mut().map(|(ix, x)| (*ix, &mut **x));
++        let l = if gr.is_today() {
++            run(g, p, sk, x)
++        } else {
++            let (h, hp) = group_graph(g, p, gr);
++            let t = super::clock::now_ms();
++            with_group_skims(&h, &hp, want, keep(), |s| {
++                add_ms(T_GROUP_SEARCH, super::clock::now_ms() - t);
++                run(&h, &hp, s, x)
++            })
++        };
++        add_loads_w(&mut total, &l, 1.0);
++    }
++    total
++}
++
++// ---------------------------------------------------------------------------------------------
++// stage timers
++
++thread_local! {
++    static MS: RefCell<[f64; 8]> = const { RefCell::new([0.0; 8]) };
++}
++pub const T_GROUP_SEARCH: usize = 0;
++pub const T_GROUP_ASSIGN: usize = 1;
++pub const T_PROBE: usize = 2;
++
++pub fn add_ms(i: usize, ms: f64) {
++    MS.with(|m| m.borrow_mut()[i] += ms);
++}
++pub fn ms() -> [f64; 8] {
++    MS.with(|m| *m.borrow())
++}
++
++// ---------------------------------------------------------------------------------------------
++// the probe
++
++/// Per station pair (o, d): od trips, express, local, other (first boarding shares times trips),
++/// soft express, soft local.
++type PairAcc = HashMap<(u32, u32), [f64; 6]>;
++
++#[derive(Default)]
++struct ProbeState {
++    /// per period: passes seen, the free-flow pass's pairs, the last pass's pairs
++    passes: Vec<usize>,
++    free: Vec<PairAcc>,
++    last: Vec<PairAcc>,
++    /// per period, how many pairs' first boardings differ between groups (any line's share by over 1%)
++    diff: Vec<usize>,
++}
++
++thread_local! {
++    static PROBE: RefCell<ProbeState> = RefCell::new(ProbeState::default());
++}
++
++/// A commute pass of period `q` starts.
++pub fn begin_pass(q: usize) {
++    PROBE.with(|p| {
++        let mut p = p.borrow_mut();
++        if p.passes.len() <= q {
++            p.passes.resize(q + 1, 0);
++            p.free.resize_with(q + 1, HashMap::new);
++            p.last.resize_with(q + 1, HashMap::new);
++            p.diff.resize(q + 1, 0);
++        }
++        p.passes[q] += 1;
++        p.last[q].clear();
++        p.diff[q] = 0;
++    });
++}
++
++/// From route node r riding on: (station, stops ridden, cost from boarding) for each later stop,
++/// the ride's minutes as the graph costs them (crowding and fare included), nobody alighting.
++fn downstream(g: &Graph, r: usize) -> Vec<(u32, u16, f32)> {
++    let s = g.n_st;
++    let mut out = vec![];
++    let (mut x, mut c, mut k) = (r, 0f32, 0u16);
++    let start = r;
++    loop {
++        let nx = g.rn_next[x];
++        if nx == NONE {
++            break;
++        }
++        // the ride edge's cost
++        let e = (g.adj_off[s + x] as usize..g.adj_off[s + x + 1] as usize).find(|&e| g.adj_to[e] == nx).unwrap();
++        c += g.adj_cost[e];
++        k += 1;
++        x = nx as usize - s;
++        if x == start || k > 400 {
++            break;
++        }
++        out.push((g.rn_station[x], k, c));
++    }
++    out
++}
++
++/// One unit of riders from station `o` towards `d` on its strategy: the shares that ride straight to
++/// `d` on each first-boarding route node (the rest change, or walk first).
++fn first_boardings(g: &Graph, st: &Strategy, o: usize, d: usize, dep: &mut Vec<(u32, f32)>) -> Vec<(u32, f32, bool)> {
++    let s = g.n_st;
++    let mut from = o;
++    for &(a, b) in st.start.iter() {
++        if a as usize == o {
++            from = b as usize;
++        }
++    }
++    departures(g, st.board, st.change, from, dep);
++    let sum: f32 = dep.iter().map(|x| x.1).sum();
++    if sum == 0.0 {
++        return vec![];
++    }
++    let next = |v: usize| -> usize {
++        match st.next {
++            NodeIds::Short(n) => {
++                let x = n[v];
++                if x == u16::MAX { NONE as usize } else { x as usize }
++            }
++            NodeIds::Long(n) => n[v] as usize,
++        }
++    };
++    let mut out = vec![];
++    for &(e, a) in dep.iter() {
++        let r = g.adj_to[e as usize] as usize - s;
++        // a boarding rides at least one stop (T-1055)
++        let mut x = g.rn_next[r] as usize;
++        let mut direct = false;
++        for _ in 0..500 {
++            if x == NONE as usize || x < s {
++                break;
++            }
++            let nx = next(x);
++            if nx >= s && nx < g.n {
++                x = nx;
++                continue;
++            }
++            direct = nx == d && g.rn_station[x - s] as usize == d;
++            break;
++        }
++        out.push((r as u32, a / sum, direct));
++    }
++    out
++}
++
++/// Each station's boarding route nodes, each with the stations it rides direct to (`downstream`,
++/// by station).
++pub type Boards = Vec<Vec<(u32, Vec<(u32, u16, f32)>)>>;
++
++pub fn boards(g: &Graph) -> Boards {
++    let s = g.n_st;
++    let mut boards: Boards = vec![vec![]; s];
++    for (v, b) in boards.iter_mut().enumerate() {
++        for e in g.adj_off[v] as usize..g.adj_off[v + 1] as usize {
++            let to = g.adj_to[e] as usize;
++            if to >= s && to < g.n {
++                let r = to - s;
++                if g.rn_tph[r] > 0.0 && g.rn_next[r] != NONE {
++                    let mut ds = downstream(g, r);
++                    ds.sort_by_key(|x| x.0);
++                    ds.dedup_by_key(|x| x.0);
++                    b.push((r as u32, ds));
++                }
++            }
++        }
++    }
++    boards
++}
++
++/// For a pair two or more lines ride direct between at different numbers of stops: the shares of
++/// riders whose first boarding rides direct on a line with the fewest stops (express), on another
++/// (local), and the rest (other), then the direct riders split again by the soft rule (express,
++/// local); `None` for any other pair. `km` the pair's straight length.
++#[allow(clippy::too_many_arguments)]
++pub fn pair_split(g: &Graph, p: &Params, st: &Strategy, from_o: &[(u32, Vec<(u32, u16, f32)>)], o: usize, d: usize, km: f32, dep: &mut Vec<(u32, f32)>) -> Option<[f64; 5]> {
++    // the lines from o riding direct to d: (route node, stops, cost from boarding)
++    let mut direct: Vec<(u32, u16, f32)> = vec![];
++    for (r, ds) in from_o {
++        if let Ok(i) = ds.binary_search_by_key(&(d as u32), |x| x.0) {
++            direct.push((*r, ds[i].1, ds[i].2));
++        }
++    }
++    if direct.len() < 2 {
++        return None;
++    }
++    let fewest = direct.iter().map(|x| x.1).min().unwrap();
++    if direct.iter().all(|x| x.1 == fewest) {
++        return None;
++    }
++    let fb = first_boardings(g, st, o, d, dep);
++    let (mut ex, mut lo, mut other) = (0f64, 0f64, 0f64);
++    for &(r, sh, ok) in &fb {
++        match direct.iter().find(|x| x.0 == r) {
++            Some(x) if ok => {
++                if x.1 == fewest { ex += sh as f64 } else { lo += sh as f64 }
++            }
++            _ => other += sh as f64,
++        }
++    }
++    // the soft split among the direct lines: a rider on the platform takes a line's train if it costs
++    // from boarding no more than waiting for the best line alone (c*: its half headway and its cost
++    // from boarding), as today's rule has it for two lines, and past that with the chance
++    // exp(-theta x the excess), theta T-710's relative scale for the pair's straight length; each
++    // line's riders as its trains an hour times that chance
++    let len = (p.rel_t0 + p.rel_tkm * km).min(p.rel_tmax);
++    let theta = p.rel_gamma / len;
++    let wait = |r: u32| g.st_wait[o] * 30.0 / g.rn_tph[r as usize];
++    let cstar = direct.iter().map(|x| wait(x.0) + x.2).fold(f32::INFINITY, f32::min);
++    let (mut se, mut sl) = (0f64, 0f64);
++    for x in &direct {
++        let v = g.rn_tph[x.0 as usize] as f64 * (-(theta * (x.2 - cstar).max(0.0)) as f64).exp();
++        if x.1 == fewest { se += v } else { sl += v }
++    }
++    let dir = ex + lo;
++    let (se, sl) = if se + sl > 0.0 { (dir * se / (se + sl), dir * sl / (se + sl)) } else { (0.0, 0.0) };
++    Some([ex, lo, other, se, sl])
++}
++
++/// Adds the pairs of `od` (weighted `w`, a group's share) on the strategies of `sk` into period
++/// `q`'s figures; `st_x`, `st_y` the stations' positions (m), for the soft split's scale.
++#[allow(clippy::too_many_arguments)]
++pub fn probe(g: &Graph, p: &Params, sk: &Skims, od: &[f32], w: f32, q: usize, st_x: &[f32], st_y: &[f32]) {
++    let t0 = super::clock::now_ms();
++    let s = g.n_st;
++    let boards = boards(g);
++    let mut dep = vec![];
++    let mut acc: Vec<((u32, u32), [f64; 6])> = vec![];
++    for d in 0..s {
++        let slot = sk.slot[d];
++        if slot == NONE {
++            continue;
++        }
++        let st = sk.strategy(slot as usize);
++        for o in 0..s {
++            if o == d {
++                continue;
++            }
++            let t = od[o * s + d];
++            if t <= 0.0 {
++                continue;
++            }
++            let km = ((st_x[o] - st_x[d]).powi(2) + (st_y[o] - st_y[d]).powi(2)).sqrt() / 1000.0;
++            let Some([ex, lo, other, se, sl]) = pair_split(g, p, &st, &boards[o], o, d, km, &mut dep) else { continue };
++            let tw = (t * w) as f64;
++            acc.push(((o as u32, d as u32), [tw, tw * ex, tw * lo, tw * other, tw * se, tw * sl]));
++        }
++    }
++    PROBE.with(|ps| {
++        let mut ps = ps.borrow_mut();
++        let first = ps.passes.get(q).copied().unwrap_or(1) == 1;
++        let mut diff = 0;
++        {
++            let last = &mut ps.last[q];
++            for (k, v) in &acc {
++                let a = last.entry(*k).or_insert([0.0; 6]);
++                // a group after the first: does its split differ from the groups' so far?
++                if a[0] > 0.0 && v[0] > 0.0 {
++                    let (e0, e1) = (a[1] / a[0], v[1] / v[0]);
++                    if (e0 - e1).abs() > 0.01 {
++                        diff += 1;
++                    }
++                }
++                for i in 0..6 {
++                    a[i] += v[i];
++                }
++            }
++        }
++        ps.diff[q] += diff;
++        if first {
++            let l = ps.last[q].clone();
++            ps.free[q] = l;
++        }
++    });
++    add_ms(T_PROBE, super::clock::now_ms() - t0);
++}
++
++/// Totals over pairs: trips, express, local, other, soft express, soft local, trips on pairs going
++/// at least 99% one way (of their direct riders), pairs, pairs at least 99% one way.
++fn sums(acc: &PairAcc) -> [f64; 10] {
++    let mut t = [0f64; 10];
++    for v in acc.values() {
++        for i in 0..6 {
++            t[i] += v[i];
++        }
++        t[7] += 1.0;
++        let dir = v[1] + v[2];
++        if dir > 0.0 && (v[1] / dir >= 0.99 || v[2] / dir >= 0.99) {
++            t[6] += v[0];
++            t[8] += 1.0;
++        }
++        let sd = v[4] + v[5];
++        if sd > 0.0 && (v[4] / sd >= 0.99 || v[5] / sd >= 0.99) {
++            t[9] += v[0];
++        }
++    }
++    t
++}
++
++/// The probe's figures as JSON: per period free flow and last pass, and the day.
++pub fn report() -> String {
++    PROBE.with(|ps| {
++        let ps = ps.borrow();
++        let fmt = |t: [f64; 10]| {
++            let dir = t[1] + t[2];
++            let sdir = t[4] + t[5];
++            format!(
++                "{{\"trips\":{:.1},\"express\":{:.4},\"local\":{:.4},\"other\":{:.4},\"one_way_trips\":{:.4},\"pairs\":{},\"one_way_pairs\":{:.4},\"soft_express\":{:.4},\"soft_one_way_trips\":{:.4}}}",
++                t[0],
++                t[1] / dir.max(1e-9),
++                t[2] / dir.max(1e-9),
++                t[3] / t[0].max(1e-9),
++                t[6] / t[0].max(1e-9),
++                t[7],
++                t[8] / t[7].max(1e-9),
++                t[4] / sdir.max(1e-9),
++                t[9] / t[0].max(1e-9)
++            )
++        };
++        let add = |a: &mut [f64; 10], b: [f64; 10]| {
++            for i in 0..10 {
++                a[i] += b[i];
++            }
++        };
++        let (mut df, mut dl) = ([0f64; 10], [0f64; 10]);
++        let mut per = vec![];
++        for q in 0..ps.passes.len() {
++            let (f, l) = (sums(&ps.free[q]), sums(&ps.last[q]));
++            add(&mut df, f);
++            add(&mut dl, l);
++            per.push(format!("{{\"q\":{q},\"passes\":{},\"group_diff_pairs\":{},\"free\":{},\"last\":{}}}", ps.passes[q], ps.diff[q], fmt(f), fmt(l)));
++        }
++        format!("{{\"day_free\":{},\"day_last\":{},\"periods\":[{}]}}", fmt(df), fmt(dl), per.join(","))
++    })
++}
+diff --git a/trainworld/sim/src/demand/t4008_tests.rs b/trainworld/sim/src/demand/t4008_tests.rs
+new file mode 100644
+index 00000000..4a7d1e64
+--- /dev/null
++++ b/trainworld/sim/src/demand/t4008_tests.rs
+@@ -0,0 +1,126 @@
++//! T-4008 PROTOTYPE: the passing-track test map's line (T-2228's: 180 km of high-speed track, A to G
++//! every 30 km, locals at all seven, expresses at A, D and G, passing tracks at B to F), its run
++//! times from the track model, and the strategies demand finds on it today, with time-value groups,
++//! with a fare premium on the express, and by the soft rule. Route choice only: no population.
++//!
++//!   cargo test --profile agent --features demand --lib t4008 -- --nocapture
++
++use super::*;
++use crate::demand::kernel::{build_graph, set_crowding, skims};
++use crate::demand::network::{Network, PERIODS};
++use crate::track::overtake::tests::{set_passing, shinkansen};
++use crate::track::world::Op;
++
++/// US starting fares: $0.20 a km above the base at 4.4 perceived minutes a dollar, times the
++/// high-speed multiplier 1.25 on both lines
++const PER_KM_MIN: f32 = 0.20 * 4.4 * 1.25;
++
++/// The line with locals every `local_s` and expresses every `express_s`, as demand's network;
++/// and each route node's fare km.
++fn passing_net(local_s: u32, express_s: u32) -> (Network, Vec<f32>, Vec<f32>) {
++    let (mut w, n, local, express) = shinkansen();
++    set_passing(&mut w, &n[1..6], true);
++    for (id, hw) in [(local, local_s), (express, express_s)] {
++        let trains = w.net.line_trains[id as usize];
++        w.apply(Op::AutoTrains { id, auto: Some([hw, hw, 0]), trains }).unwrap();
++    }
++    let lines: [(u32, Vec<u32>, u32); 2] = [(local, (0..7).collect(), local_s), (express, vec![0, 3, 6], express_s)];
++    let mut net = Network {
++        st_x: (0..7).map(|k| k as f32 * 30_000.0).collect(),
++        st_y: vec![0.0; 7],
++        line_name: vec!["Local".into(), "Express".into()],
++        line_off: vec![0],
++        line_stops: vec![],
++        hop_min: vec![],
++        hop_back: vec![],
++        line_speed_kmh: vec![0.0; 2],
++        line_headway_min: lines.iter().map(|l| [l.2 as f32 / 60.0; PERIODS]).collect(),
++        line_seats: vec![1000.0; 2],
++        line_rated: vec![],
++        line_crush: vec![2000.0; 2],
++        st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![], span: vec![], st_ups: vec![], st_passage: vec![], catches: vec![], st_bus: vec![], st_tram: vec![], back_stops: vec![], line_pier: vec![], stop_grade: vec![],
++    };
++    let (mut km, mut is_ex) = (vec![], vec![]);
++    for (li, (id, stops, _)) in lines.iter().enumerate() {
++        let ls = &w.svc.lines[*id as usize];
++        let k0 = net.line_stops.len();
++        let m = stops.len();
++        net.line_stops.extend_from_slice(stops);
++        net.line_off.push(net.line_stops.len() as u32);
++        net.hop_min.resize(k0 + m, 0.0);
++        net.hop_back.resize(k0 + m, 0.0);
++        for run in 0..2 {
++            let (arr, dep) = (ls.cumulative(run, 0), &ls.runs[run].prof[0].dep);
++            assert_eq!(arr.len(), m);
++            for j in 0..m - 1 {
++                let dwell = if j == 0 { 0.0 } else { dep[j] - arr[j] };
++                let v = ((arr[j + 1] - dep[j] + dwell) / 60.0) as f32;
++                if run == 0 { net.hop_min[k0 + j] = v } else { net.hop_back[k0 + m - 1 - j] = v }
++            }
++        }
++        // route nodes: forward then back, km to the next stop
++        let step = 30.0 * (stops[1] - stops[0]) as f32;
++        for _dir in 0..2 {
++            for i in 0..m {
++                km.push(if i + 1 < m { step } else { 0.0 });
++                is_ex.push(li == 1);
++            }
++        }
++        eprintln!("{}: every {} min, {:.1} min one way, {:.1} back", net.line_name[li], lines[li].2 / 60, net.hop_min[k0..k0 + m].iter().sum::<f32>(), net.hop_back[k0..k0 + m].iter().sum::<f32>());
++    }
++    let mul: Vec<f32> = is_ex.iter().map(|&e| if e { 1.0 } else { 0.0 }).collect();
++    (net, km, mul)
++}
++
++/// Express share of the direct riders, and the soft rule's, for A-D, D-G, A-G both ways; the share
++/// of B, C -> G and E, F -> A riders changing to the express at D.
++fn splits(net: &Network, km: &[f32], is_ex: &[f32], premium: f32, gr: Option<Group>) -> String {
++    let p = Params { xfer_walk_m: 0.0, train_in_min: 0.0, train_out_min: 0.0, ..Params::default() };
++    let mut g = build_graph(net, &p);
++    for r in 0..g.rn_fare.len() {
++        g.rn_fare[r] = km[r] * PER_KM_MIN * if is_ex[r] > 0.0 { premium } else { 1.0 };
++    }
++    let ones = vec![1.0; g.rn_fare.len()];
++    set_crowding(&mut g, &ones);
++    let (g, p) = match gr { Some(gr) => group_graph(&g, &p, &gr), None => (g, p) };
++    let sk = skims(&g, &p);
++    let b = boards(&g);
++    let mut dep = vec![];
++    let mut out = vec![];
++    for (o, d) in [(0, 3), (3, 6), (0, 6), (3, 0), (6, 3), (6, 0)] {
++        let st = sk.strategy(sk.slot[d] as usize);
++        let km = 30.0 * (o as f32 - d as f32).abs();
++        let x = pair_split(&g, &p, &st, &b[o], o, d, km, &mut dep).unwrap();
++        out.push(format!("{}{} {:.0}% (soft {:.0}%)", "ABCDEFG".as_bytes()[o] as char, "ABCDEFG".as_bytes()[d] as char, 100.0 * x[0] / (x[0] + x[1]), 100.0 * x[3] / (x[3] + x[4])));
++    }
++    let mut ch = vec![];
++    for (o, d) in [(1, 6), (2, 6), (5, 0), (4, 0)] {
++        let st = sk.strategy(sk.slot[d] as usize);
++        let fb = first_boardings(&g, &st, o, d, &mut dep);
++        let direct: f32 = fb.iter().filter(|x| x.2).map(|x| x.1).sum();
++        ch.push(format!("{}{} {:.0}%", "ABCDEFG".as_bytes()[o] as char, "ABCDEFG".as_bytes()[d] as char, 100.0 * (1.0 - direct)));
++    }
++    format!("express {} | change to the express at D: {}", out.join(", "), ch.join(", "))
++}
++
++#[test]
++fn t4008_passing_map_express_and_local() {
++    let lo = Group { share: 1.0, k: 0.57, wait: 1.0 };
++    let hi = Group { share: 1.0, k: 1.72, wait: 1.0 };
++    let w_lo = Group { share: 1.0, k: 1.0, wait: 0.6 };
++    let w_hi = Group { share: 1.0, k: 1.0, wait: 1.6 };
++    for (ls, es) in [(600, 600), (1800, 600), (600, 1800)] {
++        let (net, km, ex) = passing_net(ls, es);
++        eprintln!("local every {} min, express every {} min", ls / 60, es / 60);
++        eprintln!("  today:            {}", splits(&net, &km, &ex, 1.0, None));
++        eprintln!("  time x 0.57:      {}", splits(&net, &km, &ex, 1.0, Some(lo)));
++        eprintln!("  time x 1.72:      {}", splits(&net, &km, &ex, 1.0, Some(hi)));
++        eprintln!("  waits x 0.6:      {}", splits(&net, &km, &ex, 1.0, Some(w_lo)));
++        eprintln!("  waits x 1.6:      {}", splits(&net, &km, &ex, 1.0, Some(w_hi)));
++        for prem in [1.1, 1.25] {
++            eprintln!("  express fare x {prem}: today {}", splits(&net, &km, &ex, prem, None));
++            eprintln!("    time x 0.57:    {}", splits(&net, &km, &ex, prem, Some(lo)));
++            eprintln!("    time x 1.72:    {}", splits(&net, &km, &ex, prem, Some(hi)));
++        }
++    }
++}

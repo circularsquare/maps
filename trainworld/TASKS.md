@@ -168,7 +168,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-3936 [P3] {L:route-choice} Intercity effective time for the route shown
   - Context: From T-3632, 11-21: the intercity panel's "Effective time" is the average over the whole place, not the route shown (Nagoya - Osaka: the route's own 136 min, the panel 237, the car 174), so a click beside a station reads as the train losing.
   - Goal: The panel shows the shown route's own effective time beside the car's.
-- T-3246 [P2] {L:wealth-split} {waits:Anita} Income groups for local trips (taking, 2026-11-21, agent incomes)
+- T-3246 [P2] {L:wealth-split} {waits:Anita} Income groups for local trips
   - Need from Anita: Build option A2 (poorest fifth, middle three fifths at today's weight, richest fifth; +8-10% solve time on Tokyo, +15-24% on New York, no memory) with rail riders by income shown in the city panel, or keep groups out? My pick: A2, but only if you want the split shown, since totals move under 1% and nobody changes trains.
   - Context: The proposal is in the notes (your TODO 2026-11-15: "maybe actually we do add the wealth split ... perhaps we can even display this to the player"). With groups the poorest fifth ride 8% more than average and the richest 10% less, since the car's money weighs more on the poor. Fifths, not your 20/70/10, because the income table comes in fifths. The express-or-local split needs each group's own route choice (option C), about 3x the solve and +200 MB on Tokyo.
   - Goal: Your pick of an option, then built with both ceiling tests still met.
@@ -214,12 +214,20 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-2867.md
 - T-2869 [P3] {L:region-redraws} Zone edges leave gaps at sea
   - Context: Port islands off Jakarta sit in no zone, so the border shows a gap. You said it is not a real issue but would be nice to fill.
-- T-4008 [P2] {L:wealth-split} Do income groups even out express and local (taking, 2026-11-21, agent timegroups)
-  - Context: You, 11-21, on T-3246: "the problem this aims to solve is like people using express and local more evenly, where both are offered. cuz like theoreticallyrich people are more time senstiive. did we / could we test to see if income groups helps with that?" T-3246's options A and A2 split only train vs car; only C (each group its own route choice) touches express vs local, and its ~3x cost was added up, not run.
-  - Goal: Measured on New York and the passing-track test map: the express/local split today, with two or three time-value groups choosing routes, and the cost in time and memory; with a recommendation.
-- T-4013 [P3] {L:stops} Boarding-only and alighting-only stops
+- T-4008 [P2] {L:wealth-split} {waits:Anita} Income groups don't even out express and local
+  - Need from Anita: drop income groups for evening out express and local (recommended), and say whether to prototype the soft rule (a slower train that comes first is sometimes taken) instead.
+  - Context: Measured, route choice per group: the express carries 46.8% of riders' km on shared New York stretches today and 46.8% with 2 or 3 time-value groups; trips on pairs going all one way 37.0% and 36.8%; the passing map unchanged. Express and local charge the same, so valuing time more weighs wait and ride alike. Groups cost +38-42% calculating trips natively and +67 MB, about 2x in the browser. A soft rule, worked out from today's costs, gives 48% express on direct pairs and almost no all-one-way pairs, with no extra search.
+  - Goal: Her call on the two; a soft-rule prototype would be measured with crowding on New York and the passing map before anything lands.
+  - Other: notes/T-4008.md
+- T-4013 [P3] {L:stops} Boarding-only and alighting-only stops (taking, 2026-11-21, agent boardonly)
   - Context: A player request, via you 11-21: "being able to set stations to only allow boarding or only allow disembarking. seems easy to do."
   - Goal: A stop on a line can be set to boarding only or getting off only, and trips and the timetable respect it.
+- T-4014 [P2] {L:track-rework} {after:T-3948 landing} Old builds never upload over a newer save
+  - Context: From T-3948, 11-21: the save guard refuses a track-rework (TWT7) save on load, but nobody has checked whether an old build that pulled a TWT7 account copy mid-game can later upload its own game over it.
+  - Goal: An old build can't overwrite a newer-format account save; checked, and fixed in a release before tw/track's first merge back.
+- T-4015 [P3] {L:track-drawing} Long track previews hit the search budget
+  - Context: From T-3948's baselines, 11-21: Penn Station to Emeryville searches about 373k states, right at the router's 2 s budget; found 2 of 6 tries in a new game, 0 of 12 on the real NYC save.
+  - Goal: Cross-country track previews found every time, or the budget's limit named in the tool's hint.
 - T-4005 [P3] {L:community} Bookmark community saves
   - Context: Your scratch pad, 11-21: "maybe add bookmark feature to community saves to save cool ones".
   - Goal: A bookmark button on a community save, and a Bookmarked view in Community listing them; kept with the account when signed in, else in the browser.
@@ -239,9 +247,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Open-source issue 6: Suzhou to Shanghai's airports, Seoul to Incheon. Ground trips fade out from 40 km and stop at 80 km. You, 2026-11-17: "sure we can do big airports drawing ground trips from far away, not super high prio tho."
   - Goal: Hubs above a passenger threshold draw from cities 80-150 km away, sized by passengers, measured on a few hubs against published catchments.
   - Other: notes/T-3485.md
-- T-3742 [P2] {L:timetables} {after:v0.4.3} Nudge a line's departure times
-  - Context: You, 2026-11-18, for v0.4.3 ("train adjustments"), from a player: "the ability to offset departure times from whatever the game defaults to (like for example +4 minutes or -5 minutes) to have finer control over train movements and minimise conflicts between lines that share tracks". Per-train nudges are T-3346's Exact mode (stage 6, 24-34 h); a per-line offset is a smaller piece, but it meets the automatic pacing of lines sharing track (T-3584, `pace_merges`).
-  - Goal: A design for you first (per line or per row, how it meets automatic pacing, where the control sits), with an hour estimate.
+- T-3742 [P2] {L:timetables} {waits:Anita} Nudge a line's departure times
+  - Need from Anita: Build an Offset per weekday row in the schedule window, held so the game stops re-timing that row (about 5-7 h, after track stage 1), rather than one per line or waiting for Exact mode? I'd say yes.
+  - Context: You, 2026-11-18, for v0.4.3 ("train adjustments"), from a player: "the ability to offset departure times from whatever the game defaults to (like for example +4 minutes or -5 minutes) to have finer control over train movements and minimise conflicts between lines that share tracks". Design done 2026-11-21 (agent nudgedesign): 1 min a click, 15 s with Shift, 10 min with Ctrl; an express moves with the local it is timed behind; pacing and turnarounds are untouched; it moves the timetable, board and map's trains, while riders and money barely move and shared-track delay doesn't drop (it comes from how many trains run, not when). Neither it nor the track rework waits for the other. Strings drafted in the note.
+  - Goal: Rail lines' rows take an offset from the game's timing that holds through later edits, shown at once on the board, chart and map.
   - Other: notes/T-3742.md
 - T-3572 [P4] {L:accounts-server} Money and costs much higher on another device
   - Context: Player report (Japanese, via your pad 2026-11-17): "別の端末で自分のアカウントにログインした際に資金がとても多くなり、建設費もとても高くなってしまうバグが発生しています。" (signing in on another device, their money became very large and building costs very high). Reach guess: players who switch devices; a currency shown differently per device. You, 2026-11-17: "we can store currency in save i guess yeah. but like p4 can do whenever".
@@ -286,7 +295,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3875 [P3] {L:cleanup} {after:T-2374 and T-3873} Cut code-map.md to one line per file
   - Context: docs/code-map.md is 707 lines and about 100 KB with 700 task ids, over the Read tool's cap, so no agent can read it whole though CLAUDE.md sends every agent there.
   - Goal: One line per file saying what it holds, task ids dropped, about a third of today's size.
-- T-3160 [P2] {L:memory} Phone memory on real-network starts (taking, 2026-11-21, agent phonemem2)
+- T-3160 [P2] {L:memory} Phone memory on real-network starts
   - Context: The Tokyo real-network start on an emulated iPhone (production build) peaked at 1.6 GB in the tab, now 1.4 since the loading card's train stopped leaving garbage in Chrome; that cut is Chrome's only. What Safari holds too: the solving worker's WASM, 283 MB since the everyday trips' exp tables went (343 before; 278 in use at its peak, 322 before), the clock worker 260, the page about 200. You, 2026-11-16: "lots of people are unable to really play properly cuz tehy dont have enoguh ram. especially on phones. if we can get that working itll increase reach."
   - Goal: The solving worker's peak comes down again by its next piece, the commutes' exp tables (32 MB in every zone's pass), rail trips unchanged, measured on a production build.
   - Other: notes/T-3160.md, stage 4.
@@ -376,14 +385,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3630: the no-WebGL2 and graphics-lost screens have no button at all (T-3307's call), so a player stuck there can't report it.
   - Other: notes/T-3630.md "Follow-ups"
 - T-3444 [P2] {L:track-rework} Track, platform and station model rework
-  - Context: Design agreed 11-21 (notes/T-3444-design/, her answers in answers-2026-11-21.md; three small calls still open in review/track-rework-design.md). Built in 38 stages, T-3948 to T-3985, in four releases, on a long-lived branch tw/track merged into master at each release. Your weekend notes (2026-11-16) are the heart of it.
+  - Context: Design agreed 11-21 (notes/T-3444-design/, her answers in answers-2026-11-21.md; three small calls still open in review/track-rework-design.md). Built in 38 stages, T-3948 to T-3985, in four releases, on a long-lived branch tw/track merged into master at each release. Stage 1 (T-3948) is done on master; next is stage 2a (T-3949) on tw/track once the branch is cut. Your weekend notes (2026-11-16) are the heart of it.
   - Goal: Closes with the last of its stages.
   - Other: Your notes verbatim: notes/T-3444.md; sizes in notes/code-tour.md. Requirements folded in 11-20: a station placed on track that leaves its shape alone redraws no neighbours (T-2767, 0.2-0.9 s today); the drawn network rebuilds only near a change (T-2701); the Penn Station to Emeryville snapped preview (3 s, T-763) as a check case. notes/review-edit-speed-2026-11-20.md
-- T-3948 [P2] {L:track-rework} Track rework prep on master (taking, 2026-11-21, agent trackprep)
-  - Context: Before the tw/track branch is cut: T-1183 out (the fixed-rate path its tests still use), a save guard so today's game reads a tw/track save as "saved by a newer version" (it must ship in a release before the first merge back), part 8's seven baseline timings on master, and the community Vienna save (share 3znpvqx7 rev 2) fetched read-only into notes/T-3444-design/saves/ (rate limited on 2026-11-21).
-  - Goal: T-1183 done, the guard shipped, the seven timings written down, the three reference saves in saves/.
-  - Other: Starts now. Files: save.rs decoder top, the 13 test files of T-1183. 4-6 h. notes/T-3444-design/10-build-plan.md stage 1
-- T-3949 [P2] {L:track-rework} {after:T-3948} Bundles as saved records
+- T-3949 [P2] {L:track-rework} {after:tw/track branch cut} Bundles as saved records
   - Context: Quad is two doubles found again by geometry in six places with six distances. A bundle id and slot on today's edges, saved, set by drawing and doubling up, found once on old saves by today's twin rule.
   - Goal: The geometry pairing rules (`twin_at`, `quad_beside`, `quadPairs.ts`, `Alongside`) are gone and the real save's figures are unchanged.
   - Other: Files: save.rs (LBN1), wasm.rs quad, wasm/draw.rs, wasm/crossings.rs, twin.rs, quadPairs.ts. 3-4 h. stage 2a
@@ -558,7 +563,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3894 [P3] {L:line-rates} A line with no trains still caps the lines it crosses
   - Context: Found by fullrate (T-3646), 11-20: on Tokyo a crossing of lines [150, 42, 42] at 100% stays capped by a line with no trains. Not looked at further.
   - Goal: A line with no trains in a period holds no share of a crossing or shared track in it, or the reason it should.
-- T-3655 [P2] {L:line-rates} Count edits on full track slow from boarding redone (taking, 2026-11-21, agent fullrate4)
+- T-3655 [P2] {L:line-rates} Count edits on full track slow from boarding redone
   - Context: LAND-READY 11-21 in tree .tw-trees/fullrate (uncommitted; notes/T-3655.md there, "Even caps at load" newest): the re-share (`world.rs` `reshare_full`), the load's caps made even (they were refused for money, not late: London's save runs more trains than its fleet, so a game-made edit now pays only for trains it adds; Victoria's first edit 12.80, 13.24 after a line 120 edit, against master's 2.78) and T-3941. Left: the speed. A Victoria count edit re-shares its track and moves 14-23 lines' rates, so boarding is redone for about 25 lines before the answer: 0.7-2.2 s worker time against master's 63-124 ms on a full machine. Leads: answer before the boarding steps (trips without loads first, as T-3804's stale account), or redo boarding only past a departure threshold.
   - Goal: Count edits on full track within about 50 ms of master's on London's shared save, or the reason they can't be.
   - Other: fullchk 11-21: the 25 boarding steps come only when an edit moves other lines' rates (T-007 and a fresh game: 1 step, as master). Also seen: the rate depends on edit order (Victoria's 16 trains give 12.69 or 13.23). notes/T-3655.md, notes/T-3482.md "Follow-ups"
@@ -917,7 +922,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your TODO.md, 11-20, from player suggestions: "station logo?? paint it?" Design for you first.
 
 ## Track and trains
-- T-3691 [P3] {L:track-rework} {after:T-3948} Track levels -5 to +5
+- T-3691 [P3] {L:track-rework} {after:tw/track branch cut} Track levels -5 to +5
   - Context: Your old TODO: "-5 to +5 for track level, in advanced mode only? maybe -4 maroon, -5 dark magenta, and lighten +3 to like periwinkle, +4 light purple, +5 light violet". You, 11-21: the extra levels "should come with the track rework, toggleable in settings whether you show them".
   - Goal: Levels -5 to +5 with those colours, built with the track rework, and a Settings toggle for whether the extra levels show.
 - T-3692 [P3] {L:track-drawing} Bezier track as a setting
@@ -932,7 +937,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Several parts of a line's panel still show only its own pair: timetable, held trains, delays, riders, boardings.
   - Goal: Each part folds in the twin line, as `foldTwins` does.
   - Other: About 2-3 h. notes/T-3333.md "As built".
-- T-3373 [P2] {L:memory} Split zones and the market between workers, stage B (taking, 2026-11-21, agent splitb1)
+- T-3373 [P2] {L:memory} Split zones and the market between workers, stage B
   - Context (B): You, 11-21: "that 3373 stage B sounds good. we can pursue it. and yes we can raise memory limit, though as mentioned players should be able to set it" (T-3932, T-3933). Design: notes/T-3373-B-plan.md, 9 stages, 24-40 h; stage 1 (measure and simulate, 2-3 h) can stop it. Stage A's limit on 8 GB machines rises from 1.4 to about 2 GB.
   - Context: Each solving worker holds its own copy of the zones (250-550 MB a big city, 1.3 GB all-China); you saw 7.4 GB in Firefox after 43 minutes. You, 2026-11-16: do A (fewer, faster workers capped by memory on big saves) then B (split zones and the market between workers, T-1560, 25-40 h); queue C (one shared memory, threaded WASM, 60-100 h, Cloudflare header) only if it would help noticeably. A landed 2026-11-16 (b3d2ea95): NYC runs 2 workers (-0.5 GB, load about 15 s slower), all-China 1 (-2.9 GB, 30-50 s slower), figures identical.
   - Goal: B built, with memory and solve time measured before and after on NYC and all-China.
@@ -943,7 +948,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3933 [P2] {L:memory} A load out of memory retries with fewer workers (taking, 2026-11-21, agent oomretry)
   - Context: You, 11-21: "if people are unable to lod the game at all because o fmemory issues it should probably autoset the memory cap lower and try again, if thats feasible". Three iPhone players (five reports) hit the out-of-memory screen 11-19 to 11-20 (T-3781). On phones the pool is already 1 solving worker plus the aux worker, so a retry there can drop only the aux worker (at most 65-97 MB): it saves some loads near the limit, not the biggest; it has more room on desktop.
   - Goal: A load whose worker runs out of memory restarts once with a lower cap (fewer workers), says so to the player, and keeps that cap for the next load; or the measured reason the page dies before it can.
-- T-3939 [P2] {L:memory} Clock worker memory on many-zone phone saves (taking, 2026-11-21, agent clockmem)
+- T-3939 [P2] {L:memory} Clock worker memory on many-zone phone saves
   - Context: From T-3781, 11-21: on an iPhone reporter's 13-zone Tokyo-start save the clock worker held 15-30% of the tab, 359 MB settled and up to 493 MB before a collection; the tab peaked at 1,628-1,705 MB.
   - Goal: The clock worker's share on that save named piece by piece, and its biggest piece cut, measured on a production build as T-3160 measures.
   - Other: notes/T-3781.md "The iPhone crash reports"
@@ -961,10 +966,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: From T-3934, 11-21: mode choice runs over groups of homes, and every bus stop splits them (about 130 s of Tokyo's 1,050 s). Grouping by stretch of line instead of exact stop.
   - Goal: About 6% off Tokyo and 10-15% off Taipei's calculating time with riders per line within 1-2%. 2-3 h.
   - Other: notes/T-3934.md
-- T-3378 [P1] {L:buses} {after:T-3944} Finish BRT with off-road busways (taking, 2026-11-21, agent busways)
-  - Context (11-21): stages 1-3 landed 11-21 (shared lanes paid once, 60 buses an hour a lane, BRT stations beside a road for BRT lines only). Left: stage 4 off-road busways (US$25M a km, 60 km/h, upkeep like off-road tram track; plain buses in traffic in town). Her answers: "yes this all sounds fine". Waits for T-3944 (BRT as a blueprint), which reworks the same BRT panel. Weekend lanes are T-3941.
-  - Context: Design done 11-21 (busdesign, notes/T-3378.md): four stages, shared lanes 3 h, shared room 3 h, BRT stations 4-5 h, off-road busways 5-6 h; how far people come to the bus decides riders, so stations are the big part. You, 11-21: "i think we should finish BRT / busways. we should also allow building busways off road for high expense, sorta like trams off road." Preliminary BRT (a per-line speed upgrade, T-3907) shipped in v0.4.5. You, 11-20: "lots of people really like buses and want them to be more competitive with other modes ... plain buses still have a niche, brt is more competitive with trams and other modes, and its all like at least a little realistic"; "i do kinda want Brt to be an upgrade on a whole line, but also for lines sharing a road to share pay and throughput. so a hybrid"; "do also want BRt stations yeah". Sketch from 11-20: own lane (at least 35-40 km/h, up to the road's speed), shorter stops (about 18 s), BRT stations, build about US$4-5M a road-km against street tram's 7.5M; the same bus. You, 11-21 after the design: "we should maybe do upgradable bus stations".
-  - Goal: Stage 4 built as notes/T-3378.md designs it: Busway as a fourth track type off road, drawn like off-road tram track, with levels and bridges.
 - T-3947 [P3] {L:schematic-layout} Schematic redraw that takes buses into account
   - Context: Your scratch pad, 11-21: "bus-heavy maps do kinda come out looking like spaghetti on the schematic map. cuz we dont actually redraw taking bus routes into account. people request an option to manually start a redraw taking buses into account."
   - Goal: A control that redraws the schematic with bus routes included in the layout, started manually.

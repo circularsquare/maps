@@ -1,26 +1,25 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session d15915ac-6dd5-4586-bd98-843cbc616824, name maps-ac [1ef926], since 2026-11-21 15:53 UTC
-Updated: 2026-11-21 18:20 UTC
+Updated: 2026-11-21 19:55 UTC
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5.
 
 ## Next
-0. LIVE v0.4.5. Cap 10 (her ask 11-21 ~19:40 UTC, while she's at the machine; was 14). Cores 0-1 are hers: `reserve_cores.ps1 -Loop 30` at takeover (docs/orchestrator.md).
-   No publish yet (her 11-21: "no rush ... nothing super urgent/gamebreaking"). Before the next one: a fresh freeze
-   (placeindex's world index, 135 MB gz, 4,097 files on R2), translations (T-3986, T-3991, T-3999, T-4003 keys).
-   Server deployed 17:56 UTC (community limits; save levels 35-36), so publishing level-36 saves is safe.
-1. Batches 9 and 10 checked PASS (notes/batch-2026-11-21.md); 8800 = 6a642fb1 (save level 36). Batch 11 on master,
-   unchecked, not on 8800: oneway T-4000 (own check PASS), pausebp T-4002/T-4003, placeindex T-4004. Next: batchchk11
-   when a few more land (add stationkinds' "stop on a station joined to nothing does nothing and says nothing").
-   8800 = 3b521b1d (batch 11 minus brtdash 5b225105, landed after).
-2. Running: trackprep T-3948 (Opus, track stage 1 + T-1183), oomretry T-3933 (Opus), timegroups T-4008 (Opus,
-   measure only), hovers T-4009 (Sonnet), kinds2 T-4010 (Sonnet: train/tram split, BRT cap 100, icon, no parking).
-   busways T-3378 stage 4 (Opus, started despite kinds2's BRT overlap: her BRT priority). hovers landed.
-   Held for collisions: T-3373 B stage 3 and T-3932 (oomretry). T-4011 folded into kinds2.
-3. Then: T-3937 needs a quiet machine; ownwaits T-3931 held for T-3231 (patch in notes/); T-3655 left: faster
-   full-track edits; T-3939 left: B's ~140 MB unnamed; T-3395: save_health.py after the next scan.
-4. Open ask: a-2026-11-21-15 income groups (notes/T-3246.md; I said keep out).
+0. LIVE v0.4.5. Cap 14. Cores 0-1 hers (`reserve_cores.ps1 -Loop 30` at takeover). No publish yet ("no rush").
+   Before the next publish: fresh freeze (place index), translations (T-3986, T-3991, T-3999, T-4003, T-4010 keys),
+   server learns save level 37+ (busways; boardonly may add one), batchchk11. Standby tabs: notes/standby.txt.
+1. Master 28531e0f, unchecked since batch 10: oneway T-4000 (own check PASS), pausebp, placeindex, brtdash,
+   hovers, kinds2, brtwait, helppanels. 8800 = 182e8e8e (lacks helppanels). batchchk11 after busways lands (add:
+   a stop on a station joined to nothing does nothing and says nothing).
+2. TRACK (her top priority): trackprep T-3948 done in tree; guardchk checking the save guard; land, cut tw/track
+   from master, start stage 2a T-3949 on a tree from tw/track. T-4014 must ship before the first merge back.
+3. BRT (her other priority): busways T-3378 stage 4 done in tree (level 37); buswaychk checking; land (merge with
+   kinds2/brtwait). Open her call: any bus 60 km/h on busways (built) or BRT only.
+4. Running: guardchk, buswaychk, boardonly T-4013 (Opus), oomretry T-3933 (Opus). Held: T-3373 B stage 3 and
+   T-3932 (oomretry). Up next on the board: draw from it when below 4.
+5. Open asks: T-3742 nudge design (a-..-16), T-4008 soft rule (a-..-17); T-2264 help wording; busway speed.
+   Later: T-3937 quiet machine; T-3931 held for T-3231; T-3655 faster full-track edits; T-3939 B's 140 MB.
 ## Her words
 - 11-21 ~19:20 UTC: BRT stations come with a waiting room, shown as bought (T-4012, brtwait running); tram icon's
   top piece bigger; "text ack" (kinds2 strings); boarding-only / alighting-only stops filed (T-4013).

@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3378 [P1] {L:buses} Finish BRT with off-road busways (2026-11-21): Off-road busways built (stage 4, the last): a fourth track type, US$25M a km, any bus on one runs 60 km/h, save level 37; BRT is finished. notes/T-3378.md.
+- T-3948 [P2] {L:track-rework} Track rework prep on master (2026-11-21): save guard on the network magic (TWT7 and later refused as a newer version with clockWorker.newer, slot left as it is, no level raise); T-1183's rate path out of play (capacity delays unrounded, the over-full rate test gone; the Option stays as a frequency line's load-time state); six of part 8's seven baselines measured on master, Penn Station to Emeryville found only 2 of 6 tries at the router's 2 s budget, save bytes per section not measured; Vienna rev 2 and NA 383 in saves/. notes/T-3948.md.
 - T-4012 [P2] {L:buses} BRT stations come with a waiting room (2026-11-21): BRT stations have a built-in waiting room (wait counts 0.8), shown bought in the upgrades; passage is the only buy; tram icon pantograph bigger.
 - T-4011 [P3] {L:map-look} A nicer train icon (2026-11-21): Train icon redrawn squarer and lower with splayed rails; before/after in artifacts/trainworld/kinds2/icons-before-after.png.
 - T-4010 [P2] {L:buses} Station kinds: train, tram, BRT, port; BRT tweaks (2026-11-21): Station tool split into Train station, Tram stop, BRT station, Port (each places only its own); BRT lane takes 100 buses an hour; BRT icon is a road with a lane, no bus; BRT stations sell waiting room and passage, no park and ride. Notes: T-3999.
