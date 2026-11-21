@@ -700,6 +700,27 @@ impl Pace {
         };
         Pace { step, car, trunk }
     }
+    /// The route cut into stretches that run at one moving speed on the streets (a bus's own, whole km/h):
+    /// start and end road metres, km/h, and whether it is a trunk road. `len`: the route's road metres.
+    pub fn speed_runs(&self, len: f64) -> Vec<(f64, f64, f64, bool)> {
+        if len <= 0.0 {
+            return vec![];
+        }
+        if self.car.is_empty() {
+            return vec![(0.0, len, street_bus_kmh(CAR_TOWN_KMH, false).round(), false)];
+        }
+        let mut out: Vec<(f64, f64, f64, bool)> = vec![];
+        for (i, &c) in self.car.iter().enumerate() {
+            let trunk = self.trunk.get(i).copied().unwrap_or(false);
+            let kmh = street_bus_kmh(c, trunk).round();
+            let (a, b) = (i as f64 * self.step, (i + 1) as f64 * self.step);
+            match out.last_mut() {
+                Some(l) if l.2 == kmh && l.3 == trunk => l.1 = b,
+                _ => out.push((a, b, kmh, trunk)),
+            }
+        }
+        out
+    }
     /// The same route run from its other end.
     pub fn reversed(&self) -> Pace {
         Pace { step: self.step, car: self.car.iter().rev().copied().collect(), trunk: self.trunk.iter().rev().copied().collect() }

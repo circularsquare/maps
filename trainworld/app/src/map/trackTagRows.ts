@@ -321,6 +321,10 @@ export interface CurveLabel {
   x: number;
   y: number;
   kmh: number;
+  /** the chip's colour where it is not the speed colour (T-3901, the bus tool's stretches) */
+  colour?: string;
+  /** the label sits on its point, not beside it */
+  centred?: boolean;
 }
 
 /**
@@ -363,11 +367,11 @@ export function rampLabels(ramps: Float32Array | undefined): CurveLabel[] {
 /** A curve label's content (T-417; the radius left out, T-530): the speed limit on the speed colour,
  * as the track tool's tag colours the speed. Set only when it changes, since the labels are placed
  * every frame. */
-export function setCurveLabel(el: HTMLElement, kmh: number) {
-  const key = String(kmh);
+export function setCurveLabel(el: HTMLElement, kmh: number, colour?: string) {
+  const key = `${kmh}|${colour ?? ""}`;
   if (el.dataset.curve === key && el.firstChild) return;
   el.dataset.curve = key;
-  el.replaceChildren(chip(speed(kmh), speedColour(kmh)));
+  el.replaceChildren(chip(speed(kmh), colour ?? speedColour(kmh)));
 }
 
 /**
@@ -386,8 +390,9 @@ export function placeCurveLabels(labels: readonly CurveLabel[], toScreen: (x: nu
     if (shown.length >= MAX_CURVE_LABELS) break;
     shown.push([x, y]);
     const el = take(shown.length - 1);
-    setCurveLabel(el, c.kmh);
-    placeAt(el, x, y, 8, 6);
+    setCurveLabel(el, c.kmh, c.colour);
+    el.classList.toggle("centred", !!c.centred);
+    placeAt(el, x, y, c.centred ? 0 : 8, c.centred ? 0 : 6);
   }
   return shown.length;
 }

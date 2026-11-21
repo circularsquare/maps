@@ -640,6 +640,11 @@ function repaintRoadHints(map: maplibregl.Map) {
 /** T-3829 (Anita picked it from three): the bus hint draws the roads a bus runs fastest on (`fastRoadExpr`) in
  * blue, a little wider, the other roads in its teal. */
 const BUS_FAST_COLOUR = ["#3a4fb0", "#a6bcff"], BUS_FAST_OPACITY = [0.85, 0.9], BUS_FAST_WIDTH = 1.2;
+/** T-3901: the bus hint's colour of a fast or an ordinary road in the current shade, for a speed tag over it */
+export function busRoadColour(fast: boolean): string {
+  const dark = shadeAs[0] === "dark" ? 1 : 0;
+  return fast ? BUS_FAST_COLOUR[dark] : ROAD_HINTS.bus.colour[dark];
+}
 /** the hint's width at each zoom, `mul` times (a number or a per-road expression) */
 const hintWidth = (w: number, mul: unknown = 1) =>
   zoomWidth(11, 0.4 * w, 12, 0.5 * w, 14, w, 16, 2.5 * w, 20, 10 * w).map((s, i) => (i >= 4 && i % 2 === 0 && mul !== 1 ? ["*", s, mul] : s));

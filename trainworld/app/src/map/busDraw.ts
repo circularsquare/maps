@@ -49,6 +49,8 @@ import { playBuild } from "./buildSound";
 import { safeColour } from "./safeColour";
 import { setToolHot } from "./hovered";
 import { routeMeets } from "../game/busLinks";
+import { CurveLabelPool, type CurveLabel } from "./trackTagRows";
+import { busRoadColour } from "./basemap";
 
 /** the sim's `bus::MIN_ROUTE_M` */
 const MIN_ROUTE_M = 100;
@@ -84,7 +86,11 @@ interface Pt { lng: number; lat: number }
 interface Snap { pts: Pt[]; legs: Leg[] }
 const samePts = (a: Pt[], b: Pt[]) => a.length === b.length && a.every((p, i) => p.lng === b[i].lng && p.lat === b[i].lat);
 interface Stop { x: number; y: number; kind: number; lng: number; lat: number }
-interface Quote { road: number; cost: number; ok: boolean; stops: Stop[]; street: Pt[] }
+/** a stretch of the route at one moving speed (`Pace::speed_runs`): road m from the start, km/h, on a fast road */
+interface Run { a: number; b: number; kmh: number; fast: boolean }
+interface Quote { road: number; cost: number; ok: boolean; stops: Stop[]; street: Pt[]; runs: Run[] }
+/** a speed tag needs a stretch at least this long on the screen (px); it is about this wide */
+const TAG_PX = 64;
 
 /** What the tool is doing, for the panels: null while it is off. `line` the line whose route is
  * redrawn (its number), null for a new line; `points` placed so far. */
@@ -97,7 +103,10 @@ function parseQuote(d: Float64Array): Quote {
   for (let i = 0; i < d[3]; i++, k += 5) stops.push({ x: d[k], y: d[k + 1], kind: d[k + 2], lng: d[k + 3], lat: d[k + 4] });
   const m = d[k++];
   for (let i = 0; i < m; i++, k += 4) street.push({ lng: d[k + 2], lat: d[k + 3] });
-  return { road: d[0], cost: d[1], ok: d[2] === 1, stops, street };
+  const runs: Run[] = [];
+  const nr = d[k++] || 0;
+  for (let i = 0; i < nr; i++, k += 4) runs.push({ a: d[k], b: d[k + 1], kmh: d[k + 2], fast: d[k + 3] === 1 });
+  return { road: d[0], cost: d[1], ok: d[2] === 1, stops, street, runs };
 }
 
 /** the sim's `bus::K_CORNER`, `K_ROAD` and `K_TRUNK` */
@@ -174,6 +183,10 @@ export class BusDraw {
   private links: number[] = [];
   private wantKey = "";
   private wantRoute: number[] = [];
+  /** the route the quote is of, for placing its speed tags (T-3901) */
+  private wantBuilt: Built | null = null;
+  private quoteBuilt: Built | null = null;
+  private tags: CurveLabelPool;
   private inflight = false;
   private busy = false;
   private svg: SVGSVGElement;
@@ -184,6 +197,7 @@ export class BusDraw {
     this.svg.setAttribute("class", "bus-draw");
     this.svg.style.cssText = "position:absolute;left:0;top:0;overflow:visible;display:none";
     box.insertBefore(this.svg, box.firstChild);
+    this.tags = new CurveLabelPool(box);
     map.on("contextmenu", (e) => {
       if (tool.peek() !== "bus") return;
       e.originalEvent.preventDefault();
@@ -282,6 +296,7 @@ export class BusDraw {
     this.setQuote(null);
     this.wantKey = "";
     this.svg.style.display = "none";
+    this.speedTags(null);
     busDraft.value = null;
   }
 
@@ -442,6 +457,7 @@ export class BusDraw {
     if (b.sig === this.wantKey) return;
     this.wantKey = b.sig;
     this.wantRoute = routeOf(b);
+    this.wantBuilt = b;
     if (!this.inflight) this.fire();
   }
 
@@ -449,6 +465,7 @@ export class BusDraw {
    * and the other bus lines it will change with. */
   private setQuote(q: Quote | null) {
     this.quote = q;
+    if (!q) this.quoteBuilt = null;
     this.links = [];
     const w = world.peek();
     if (!q || !w) return setToolHot(null);
@@ -462,13 +479,14 @@ export class BusDraw {
   }
 
   private fire() {
-    const key = this.wantKey, route = this.wantRoute;
+    const key = this.wantKey, route = this.wantRoute, built = this.wantBuilt;
     this.inflight = true;
     void this.client.query({ what: "busQuote", line: this.line ?? NEW_LINE, route }).then((d) => {
       this.inflight = false;
       if (tool.peek() !== "bus") return;
       if (key === this.wantKey) {
         this.setQuote(parseQuote(d));
+        this.quoteBuilt = built;
         this.place();
       } else if (this.wantKey) this.fire();
     });
@@ -1250,6 +1268,7 @@ export class BusDraw {
   place() {
     if (tool.peek() !== "bus") {
       this.svg.style.display = "none";
+      this.speedTags(null);
       return;
     }
     const hover = this.hoverPt();
@@ -1323,6 +1342,47 @@ export class BusDraw {
     this.svg.setAttribute("height", String(this.overlay.cssH));
     this.svg.innerHTML = parts.join("");
     this.placeTag(q, n, b);
+    this.speedTags(hover && !this.drag && q?.ok && !b.hoverRefused ? q : null);
+  }
+
+  /** T-3901: while a point is being placed, each stretch of the previewed route at one speed gets a speed tag on
+   * its middle, in the colour the bus road hint gives that road; a stretch shorter than a tag on the screen gets none,
+   * and where two would overlap the longer one's stays (`placeCurveLabels`). */
+  private speedTags(q: Quote | null) {
+    const w = this.overlay.cssW, h = this.overlay.cssH, b = this.quoteBuilt;
+    const labels: (CurveLabel & { len: number })[] = [];
+    const n = b ? b.kinds.length : 0;
+    if (q && b && n >= 2 && q.road > 0 && q.runs.length) {
+      const px = new Float64Array(2 * n), cm = new Float64Array(n), cp = new Float64Array(n);
+      for (let i = 0; i < n; i++) {
+        const s = this.map.project([b.ll[2 * i], b.ll[2 * i + 1]]);
+        px[2 * i] = s.x;
+        px[2 * i + 1] = s.y;
+        if (i > 0) {
+          cm[i] = cm[i - 1] + metresBetween(b.ll[2 * i - 2], b.ll[2 * i - 1], b.ll[2 * i], b.ll[2 * i + 1]);
+          cp[i] = cp[i - 1] + Math.hypot(px[2 * i] - px[2 * i - 2], px[2 * i + 1] - px[2 * i - 1]);
+        }
+      }
+      const total = cm[n - 1];
+      // the screen point and px along the route at `m` ground metres
+      const at = (m: number) => {
+        let lo = 1, hi = n - 1;
+        while (lo < hi) {
+          const mid = (lo + hi) >> 1;
+          if (cm[mid] < m) lo = mid + 1;
+          else hi = mid;
+        }
+        const span = cm[lo] - cm[lo - 1], f = span > 0 ? Math.min(1, Math.max(0, (m - cm[lo - 1]) / span)) : 0;
+        return { x: px[2 * lo - 2] + f * (px[2 * lo] - px[2 * lo - 2]), y: px[2 * lo - 1] + f * (px[2 * lo + 1] - px[2 * lo - 1]), p: cp[lo - 1] + f * (cp[lo] - cp[lo - 1]) };
+      };
+      for (const r of q.runs) {
+        const m0 = (r.a / q.road) * total, m1 = (r.b / q.road) * total;
+        const a = at(m0), z = at(m1), mid = at((m0 + m1) / 2), len = z.p - a.p;
+        if (len >= TAG_PX) labels.push({ x: mid.x, y: mid.y, kmh: r.kmh, colour: busRoadColour(r.fast), centred: true, len });
+      }
+      labels.sort((x, y) => y.len - x.len);
+    }
+    this.tags.place(labels, (x, y) => [x, y], w, h);
   }
 
   private placeTag(q: Quote | null, n: number, b: Built) {

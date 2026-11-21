@@ -520,7 +520,7 @@ export function nextBusName(a: TrackApi, word = "Bus "): string { // i18n-ignore
 
 /** T-1464: `TrackApi.bus_quote` with each stop's and street stop's longitude and latitude after
  * its x, y: [road m, US$M, 1 if it makes a line, n, then x, y, kind, lng, lat per stop, then m and
- * x, y, lng, lat per street stop]. */
+ * x, y, lng, lat per street stop, then the run count and start m, end m, km/h, 1 on a trunk road per run]. */
 export function busQuoteLL(a: TrackApi, line: number, route: number[]): Float64Array {
   const q = a.bus_quote(line, Float64Array.from(route)), out = [q[0], q[1], q[2], q[3]];
   let k = 4;
@@ -528,6 +528,7 @@ export function busQuoteLL(a: TrackApi, line: number, route: number[]): Float64A
   const m = q[k++];
   out.push(m);
   for (let i = 0; i < m; i++, k += 2) out.push(q[k], q[k + 1], ...packLngLat(q[k], q[k + 1]));
+  for (; k < q.length; k++) out.push(q[k]);
   return Float64Array.from(out);
 }
 

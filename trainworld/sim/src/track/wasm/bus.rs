@@ -214,6 +214,12 @@ impl TrackApi {
             let (x, y) = poly.at_road(s);
             out.extend([x, y]);
         }
+        // then the stretches at one speed (`Pace::speed_runs`): count, then start m, end m, km/h, 1 on a trunk road
+        let runs = if pts.len() >= 2 { bus::Pace::along(net, &pts, &poly.road, &kinds, road).speed_runs(road) } else { vec![] };
+        out.push(runs.len() as f64);
+        for (a, b, kmh, trunk) in runs {
+            out.extend([a, b, kmh, trunk as u8 as f64]);
+        }
         out
     }
 }
