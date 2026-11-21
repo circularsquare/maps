@@ -142,7 +142,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   a name: `flags.ts` and its list `flags.json`, `ui/Flag.tsx` (the picture, a name with its flag, the account panel's
   flag button and picker), `public/flags/` and `tzCountry.json` (time zone to country) written by `tools/flags.mjs`;
   check `checks/t3279-flags.mjs` (T-3279).
-  T-2887, Community: `community.ts` (share, lists, like, report, the `?share=` link, View), `ui/Community.tsx` (the
+  T-2887, Community: `community.ts` (share, lists, like, bookmarks T-4005, report, the `?share=` link, View), `ui/Community.tsx` (the
   modal, the Share button and dialog), `diagram/shared.ts` (a schematic in the server's drawing format and back),
   `sharedSave.ts` (T-3115: a save going up with a share, and a stranger's checked before the loader); Anita's side is
   `tools/feedback-inbox/`.

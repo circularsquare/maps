@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { CITIES, zoneCountry } from "../game/cities";
 import realmsJson from "../game/realms.json";
 import { accountOpen, accountState, boardsOpen, boardSetting, loadBoardSetting, session, shareableSlot } from "../game/account";
-import { SEARCH_MAX, TITLE_MAX, communityOn, communityNewestOn, communityPagesOn, communitySearchOn, communityOpen, copyName, currentShare, fetchShare, fetchShares, linkedShare, loadDrawing, releaseDrawing, myShares, newSeed, openSharedView, refreshMyShares, reportShare, setLiked, setViewTrips, shareAgain, shareAsk, shareTick, sharedWhen, viewedRow, viewedShare, sharesLeft, shareLink, sharePhase, shareGame, stopSharing, viewTrips, type ReportReason, type ShareRow, type ShareView } from "../game/community";
+import { bookmarks, setBookmarked, SEARCH_MAX, TITLE_MAX, communityOn, communityNewestOn, communityPagesOn, communitySearchOn, communityOpen, copyName, currentShare, fetchShare, fetchShares, linkedShare, loadDrawing, releaseDrawing, myShares, newSeed, openSharedView, refreshMyShares, reportShare, setLiked, setViewTrips, shareAgain, shareAsk, shareTick, sharedWhen, viewedRow, viewedShare, sharesLeft, shareLink, sharePhase, shareGame, stopSharing, viewTrips, type ReportReason, type ShareRow, type ShareView } from "../game/community";
 import { saveSlotsState } from "../workers/clockClient";
 import { pointsScore, pointsShort } from "../game/points";
 import { shade, theme as colourTheme } from "../game/ui";
@@ -119,6 +119,13 @@ export function ViewedLike() {
   </div>;
 }
 
+/** T-4005: a share's bookmark, kept in this browser and, signed in, on the account */
+function BookmarkButton({ id }: { id: string }) {
+  const on = bookmarks.value.includes(id), label = on ? t("community.unbookmark") : t("community.bookmark");
+  return <button type="button" class={"btn icon cm-bm" + (on ? " on" : "")} data-tip={label} aria-label={label} aria-pressed={on}
+    onClick={(e) => { e.stopPropagation(); void setBookmarked(id, !on); }}><Icon.bookmark /></button>;
+}
+
 function Likes({ row }: { row: ShareRow }) {
   return <span class="cm-likes small num" data-tip={t("community.likes", { count: row.likes })}><Icon.heart />{row.likes}</span>;
 }
@@ -156,6 +163,7 @@ function Card({ row, onOpen }: { row: ShareRow; onOpen: () => void }) {
         <div class="small muted num">{t("savesPanel.lines", { count: row.lines })} · {t("savesPanel.stations", { count: row.stations })}</div>
       </div>
     </button>
+    <BookmarkButton id={row.id} />
   </li>;
 }
 
@@ -265,6 +273,7 @@ function Detail({ row, onBack, onChange }: { row: ShareRow; onBack: () => void; 
         </label>}
         {row.copy && <button type="button" class="btn text cm-open-copy" disabled={opening} onClick={() => void openView()}><Icon.copy />{opening ? t("leaderboard.loading") : t("community.openCopy")}</button>}
         <CopyLink id={row.id} />
+        <BookmarkButton id={row.id} />
         {!row.mine && (reported
           ? <span class="small muted">{t("community.reported")}</span>
           : <button type="button" class="btn icon cm-report" data-tip={t("community.report")} aria-label={t("community.report")} aria-haspopup="dialog" onClick={() => { if (!needSignIn()) setReporting(true); }}><Icon.flag /></button>)}
@@ -314,7 +323,8 @@ function Browse() {
   // the player's own shares, for Share again on an opened one
   useEffect(() => { void refreshMyShares(); }, [signedIn]);
   // T-3402: Random is fetched a page at a time (the server's order is the seed's); the others arrive whole
-  const paged = (view === "random" || view === "newest") && communityPagesOn();
+  const paged = view === "bookmarked" || ((view === "random" || view === "newest") && communityPagesOn());
+  const marked = view === "bookmarked" ? bookmarks.value.join() : "";
   useEffect(() => { setPage(0); }, [view, city, seed, search, signedIn, shareTick.value]);
   useEffect(() => {
     let live = true;
@@ -322,7 +332,7 @@ function Browse() {
     setError("");
     fetchShares(view, city, seed, search, paged ? page * PAGE : 0).then((l) => { if (live) { setRows(l.rows); setCount(l.count); } }, (e) => { if (live) setError((e as Error).message); });
     return () => { live = false; };
-  }, [view, city, seed, search, signedIn, shareTick.value, paged ? page : 0]);
+  }, [view, city, seed, search, signedIn, shareTick.value, paged ? page : 0, marked]);
   const mine = [...pointsScore.value].filter(([id, v]) => id && v > 0).sort((a, b) => b[1] - a[1]).map(([id]) => id);
   const lands = [...new Set(mine.map((id) => zoneCountry(id)?.toLowerCase() ?? "").filter(Boolean))];
   const areas = [...new Set(mine.map(regionOf).filter((r): r is string => !!r))];
@@ -330,25 +340,25 @@ function Browse() {
   if (picked) return <Detail key={picked.id} row={picked} onBack={() => setPicked(null)} onChange={change} />;
   if (linked || linkWait) return <p class="small muted">{t("leaderboard.loading")}</p>;
   const list = rows ?? [], total = paged ? count : list.length, pages = Math.max(1, Math.ceil(total / PAGE)), shown = paged ? list : list.slice(page * PAGE, (page + 1) * PAGE);
-  const views: [ShareView, string][] = [["random", t("community.random")], ...(communityNewestOn() ? [["newest", t("community.newest")] as [ShareView, string]] : []), ["top", t("community.biggest")], ["liked", t("community.mostLiked")]];
+  const views: [ShareView, string][] = [["random", t("community.random")], ...(communityNewestOn() ? [["newest", t("community.newest")] as [ShareView, string]] : []), ["top", t("community.biggest")], ["liked", t("community.mostLiked")], ["bookmarked", t("community.bookmarked")]];
   return <>
     <div class="cm-bar">
       <div class="cm-views" role="tablist">
         {views.map(([v, label]) => <button type="button" role="tab" aria-selected={view === v} class={"btn text" + (view === v ? " on" : "")} onClick={() => setView(v)}>{label}</button>)}
       </div>
-      <div class="cm-where">
+      {view !== "bookmarked" && <div class="cm-where">
         <span>{t("community.in")}</span>
         <CityPick boardKey={boardKey} mine={mine} all={ALL_CITIES} countries={lands} more={{ ...MORE_PLACES, regions: areas }} onPick={setBoardKey} />
-      </div>
+      </div>}
       {view === "random" && <button type="button" class="btn text cm-shuffle" onClick={() => setSeed(newSeed())}>{t("community.shuffle")}</button>}
-      {searchOn && <FindInput type="search" wrap="cm-search" class="new-game-find" onClear={() => setTyped("")} maxLength={SEARCH_MAX} placeholder={t("community.search")} aria-label={t("community.search")}
+      {searchOn && view !== "bookmarked" && <FindInput type="search" wrap="cm-search" class="new-game-find" onClear={() => setTyped("")} maxLength={SEARCH_MAX} placeholder={t("community.search")} aria-label={t("community.search")}
         value={typed} onInput={(e) => setTyped((e.target as HTMLInputElement).value)}
         onKeyDown={(e) => { if (e.key === "Escape" && typed) { e.preventDefault(); e.stopPropagation(); setTyped(""); } }} />}
     </div>
     {linkError && <p class="acct-msg bad">{linkError}</p>}
     {error ? <p class="acct-msg bad">{error}</p>
       : !rows ? <p class="small muted">{t("leaderboard.loading")}</p>
-      : !list.length ? <p class="muted">{search ? t("community.noMatch") : t("community.empty")}</p>
+      : !list.length ? <p class="muted">{view === "bookmarked" ? t("community.noBookmarks") : search ? t("community.noMatch") : t("community.empty")}</p>
       : <ul class="cm-cards">{shown.map((r) => <Card key={r.id + r.rev} row={r} onOpen={() => setPicked(r)} />)}</ul>}
     {view === "top" && !error && rows && <p class="small muted cm-note-foot">{t("community.sandboxNote")}</p>}
     {rows && list.length > 0 && <div class="cm-pager">

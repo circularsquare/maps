@@ -17,7 +17,7 @@ import { accountList } from "./accountGames";
 import { playedText } from "./gameTime";
 
 /** T-3132: Random, Biggest (`top`, by points) and Most liked; T-3652: Newest, shown only when the server says it has it */
-export type ShareView = "random" | "newest" | "top" | "liked";
+export type ShareView = "random" | "newest" | "top" | "liked" | "bookmarked";
 export type ReportReason = "offensive" | "fake-score" | "other";
 
 export interface ShareRow {
@@ -48,6 +48,7 @@ const FLAG = /[?&]community(?:[=&]|$)/.test(location.search);
 const available = (c: typeof accountConfig.value) => c?.trainworldCommunity === true || (FLAG && c?.trainworldCommunityPreview === true);
 export const communityOn = () => accountState.value === "on" && available(accountConfig.value);
 const on = () => accountState.peek() === "on" && available(accountConfig.peek());
+const communityLive = on;
 
 const SHARE_ID = /^[a-z2-9]{8}$/;
 /** The share a `?share=<id>` link opened, until Community shows it. The switch leaves the address bar at once, so a
@@ -285,11 +286,74 @@ export const communityNewestOn = () => accountConfig.value?.trainworldCommunityN
 export const SEARCH_MAX = 40;
 
 export async function fetchShares(view: ShareView, city: string, seed: string, search = "", offset = 0): Promise<ShareList> {
+  if (view === "bookmarked") return fetchBookmarked(offset);
   const q = new URLSearchParams({ view, city, seed });
   if (offset) q.set("offset", String(offset));
   if (search) q.set("q", search.slice(0, SEARCH_MAX));
   const j = await api<ShareList>("GET", `trainworld/community/list?${q}`);
   return { ...j, rows: j.rows ?? [] };
+}
+
+// T-4005: bookmarks. The browser keeps the list (newest first); signed in, the account keeps it too through
+// shonei-server's `.../bookmark` and `list?view=bookmarked`. A server without them answers 404 or 400, and the list
+// stays in the browser alone until a later page load tries again. The first time an account is seen here, the two
+// lists are merged; after that the account's is the list. A bookmark made signed out clears that mark, so the next
+// sign-in merges again.
+const BOOKMARKS_KEY = "tw.community.bookmarks", MERGED_KEY = "tw.community.bookmarksMerged";
+const readKey = (k: string) => { try { return localStorage.getItem(k); } catch { return null; } };
+const writeKey = (k: string, v: string) => { try { localStorage.setItem(k, v); } catch { /* kept for this page only */ } };
+export const bookmarks = signal<string[]>((() => {
+  try { const v = JSON.parse(readKey(BOOKMARKS_KEY) ?? "[]"); return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string" && SHARE_ID.test(x)) : []; } catch { return []; }
+})());
+function setBookmarks(ids: string[]) { bookmarks.value = ids; writeKey(BOOKMARKS_KEY, JSON.stringify(ids)); }
+/** a server without bookmarks: 404 "not found" on the mark, 400 on the list's view */
+const noBookmarkRoute = (e: unknown) => e instanceof ApiError && (e.status === 400 || (e.status === 404 && e.code !== "no-share"));
+let serverBookmarks = true;
+
+export async function setBookmarked(id: string, on: boolean): Promise<void> {
+  const rest = bookmarks.peek().filter((x) => x !== id);
+  setBookmarks(on ? [id, ...rest] : rest);
+  if (!session.peek()) { writeKey(MERGED_KEY, ""); return; }
+  if (!serverBookmarks || !communityLive()) return;
+  try { await api(on ? "PUT" : "DELETE", `trainworld/community/${encodeURIComponent(id)}/bookmark`); }
+  catch (e) { if (noBookmarkRoute(e)) serverBookmarks = false; }
+}
+
+let syncing = "";
+/** Merge or read the account's bookmarks once Community is on and someone is signed in. */
+async function syncBookmarks(acct: string) {
+  if (syncing === acct || !serverBookmarks) return;
+  syncing = acct;
+  try {
+    const l = await api<{ rows?: { id: string }[] }>("GET", "trainworld/community/list?view=bookmarked");
+    const there = (l.rows ?? []).map((r) => r.id), merged = readKey(MERGED_KEY) === acct;
+    if (merged) { setBookmarks(there); return; }
+    const here = bookmarks.peek(), gone = new Set<string>();
+    for (const id of here.filter((x) => !there.includes(x)).reverse()) {
+      try { await api("PUT", `trainworld/community/${encodeURIComponent(id)}/bookmark`); }
+      catch (e) {
+        if (e instanceof ApiError && e.code === "no-share") gone.add(id);
+        else throw e;
+      }
+    }
+    setBookmarks([...here, ...there.filter((x) => !here.includes(x))].filter((x) => !gone.has(x)));
+    writeKey(MERGED_KEY, acct);
+  } catch (e) { if (noBookmarkRoute(e)) serverBookmarks = false; /* else tried again next time */ }
+  finally { syncing = ""; }
+}
+effect(() => { const acct = session.value?.account.id; if (acct && communityOn()) void syncBookmarks(acct); });
+
+/** One page of the Bookmarked list: each share's card, asked for one by one. One that is hidden or gone (404) is
+ * dropped from the list. */
+async function fetchBookmarked(offset: number): Promise<ShareList> {
+  const ids = bookmarks.peek(), page = ids.slice(offset, offset + 12);
+  const got = await Promise.all(page.map((id) => api<ShareRow>("GET", `trainworld/community/${encodeURIComponent(id)}`).catch((e) => {
+    if (e instanceof ApiError && e.status === 404) return null;
+    throw e;
+  })));
+  const gone = page.filter((_, i) => !got[i]);
+  if (gone.length) setBookmarks(bookmarks.peek().filter((x) => !gone.includes(x)));
+  return { view: "bookmarked", city: "", seed: "", count: ids.length - gone.length, rows: got.filter((r): r is ShareRow => !!r) };
 }
 
 export const newSeed = () => Math.random().toString(36).slice(2, 12);

@@ -164,6 +164,8 @@ export const Icon = {
   // T-3115: a share's link, two links of a chain
   link: () => <svg viewBox="0 0 16 16"><path d="M6.4 9.6l3.2-3.2M7.2 4.8l1.3-1.3a2.6 2.6 0 013.7 3.7l-1.3 1.3M8.8 11.2l-1.3 1.3a2.6 2.6 0 01-3.7-3.7l1.3-1.3" /></svg>,
   heart: () => <svg viewBox="0 0 16 16"><path d="M8 13.8S2 10.3 2 6.1A3.1 3.1 0 018 5a3.1 3.1 0 016 1.1c0 4.2-6 7.7-6 7.7z" /></svg>,
+  // T-4005: a bookmark; filled by `.cm-bm.on` in community.css
+  bookmark: () => <svg viewBox="0 0 16 16"><path d="M4 2.5h8v11L8 10.5l-4 3z" /></svg>,
   flag: () => <svg viewBox="0 0 16 16"><path d="M3.5 14.5v-12M3.5 2.5h9l-2 3 2 3h-9" /></svg>,
   // T-3466: the changelog's areas without an icon of their own: a folded map (map and schematic), a bug (a fix that
   // fits no area), a computer (performance)
