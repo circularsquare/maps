@@ -165,6 +165,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Other: notes/T-3659.md
 
 ## Demand
+- T-4019 [P3] {L:route-choice} Players see riders skip the express
+  - Context: You, 11-21: "the complaint people have is actually that people are not taking the express route. which kinda confuses me. it might just be cuz they have high speed fare mult set high." T-4008 measured 55.7% taking the express on New York's direct pairs at default fares. Not started while usage is high.
+  - Goal: The reported saves' express share explained (fare multiplier or something else), and a fix proposed if it isn't the fare.
 - T-3936 [P3] {L:route-choice} Intercity effective time for the route shown
   - Context: From T-3632, 11-21: the intercity panel's "Effective time" is the average over the whole place, not the route shown (Nagoya - Osaka: the route's own 136 min, the panel 237, the car 174), so a click beside a station reads as the train losing.
   - Goal: The panel shows the shown route's own effective time beside the car's.
@@ -214,11 +217,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-2867.md
 - T-2869 [P3] {L:region-redraws} Zone edges leave gaps at sea
   - Context: Port islands off Jakarta sit in no zone, so the border shows a gap. You said it is not a real issue but would be nice to fill.
-- T-4008 [P2] {L:wealth-split} {waits:Anita} Income groups don't even out express and local
-  - Need from Anita: drop income groups for evening out express and local (recommended), and say whether to prototype the soft rule (a slower train that comes first is sometimes taken) instead.
-  - Context: Measured, route choice per group: the express carries 46.8% of riders' km on shared New York stretches today and 46.8% with 2 or 3 time-value groups; trips on pairs going all one way 37.0% and 36.8%; the passing map unchanged. Express and local charge the same, so valuing time more weighs wait and ride alike. Groups cost +38-42% calculating trips natively and +67 MB, about 2x in the browser. A soft rule, worked out from today's costs, gives 48% express on direct pairs and almost no all-one-way pairs, with no extra search.
-  - Goal: Her call on the two; a soft-rule prototype would be measured with crowding on New York and the passing map before anything lands.
-  - Other: notes/T-4008.md
 - T-4015 [P3] {L:track-drawing} Long track previews hit the search budget
   - Context: From T-3948's baselines, 11-21: Penn Station to Emeryville searches about 373k states, right at the router's 2 s budget; found 2 of 6 tries in a new game, 0 of 12 on the real NYC save.
   - Goal: Cross-country track previews found every time, or the budget's limit named in the tool's hint.
@@ -238,9 +236,8 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Open-source issue 6: Suzhou to Shanghai's airports, Seoul to Incheon. Ground trips fade out from 40 km and stop at 80 km. You, 2026-11-17: "sure we can do big airports drawing ground trips from far away, not super high prio tho."
   - Goal: Hubs above a passenger threshold draw from cities 80-150 km away, sized by passengers, measured on a few hubs against published catchments.
   - Other: notes/T-3485.md
-- T-3742 [P2] {L:timetables} {waits:Anita} Nudge a line's departure times
-  - Need from Anita: Build an Offset per weekday row in the schedule window, held so the game stops re-timing that row (about 5-7 h, after track stage 1), rather than one per line or waiting for Exact mode? I'd say yes.
-  - Context: You, 2026-11-18, for v0.4.3 ("train adjustments"), from a player: "the ability to offset departure times from whatever the game defaults to (like for example +4 minutes or -5 minutes) to have finer control over train movements and minimise conflicts between lines that share tracks". Design done 2026-11-21 (agent nudgedesign): 1 min a click, 15 s with Shift, 10 min with Ctrl; an express moves with the local it is timed behind; pacing and turnarounds are untouched; it moves the timetable, board and map's trains, while riders and money barely move and shared-track delay doesn't drop (it comes from how many trains run, not when). Neither it nor the track rework waits for the other. Strings drafted in the note.
+- T-3742 [P2] {L:timetables} {after:Anita asks} Nudge a line's departure times
+  - Context: You, 11-21: per-row Offset design approved, "we can leave it for now, but good that its planned! will start later". You, 2026-11-18, for v0.4.3 ("train adjustments"), from a player: "the ability to offset departure times from whatever the game defaults to (like for example +4 minutes or -5 minutes) to have finer control over train movements and minimise conflicts between lines that share tracks". Design done 2026-11-21 (agent nudgedesign): 1 min a click, 15 s with Shift, 10 min with Ctrl; an express moves with the local it is timed behind; pacing and turnarounds are untouched; it moves the timetable, board and map's trains, while riders and money barely move and shared-track delay doesn't drop (it comes from how many trains run, not when). Neither it nor the track rework waits for the other. Strings drafted in the note.
   - Goal: Rail lines' rows take an offset from the game's timing that holds through later edits, shown at once on the board, chart and map.
   - Other: notes/T-3742.md
 - T-3572 [P4] {L:accounts-server} Money and costs much higher on another device
@@ -379,10 +376,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Design agreed 11-21 (notes/T-3444-design/, her answers in answers-2026-11-21.md; three small calls still open in review/track-rework-design.md). Built in 38 stages, T-3948 to T-3985, in four releases, on a long-lived branch tw/track merged into master at each release. Stage 1 (T-3948) is done on master; next is stage 2a (T-3949) on tw/track once the branch is cut. Your weekend notes (2026-11-16) are the heart of it.
   - Goal: Closes with the last of its stages.
   - Other: Your notes verbatim: notes/T-3444.md; sizes in notes/code-tour.md. Requirements folded in 11-20: a station placed on track that leaves its shape alone redraws no neighbours (T-2767, 0.2-0.9 s today); the drawn network rebuilds only near a change (T-2701); the Penn Station to Emeryville snapped preview (3 s, T-763) as a check case. notes/review-edit-speed-2026-11-20.md
-- T-3949 [P2] {L:track-rework} {after:tw/track branch cut} Bundles as saved records (taking, 2026-11-21, agent bundles)
-  - Context: Quad is two doubles found again by geometry in six places with six distances. A bundle id and slot on today's edges, saved, set by drawing and doubling up, found once on old saves by today's twin rule.
-  - Goal: The geometry pairing rules (`twin_at`, `quad_beside`, `quadPairs.ts`, `Alongside`) are gone and the real save's figures are unchanged.
-  - Other: Files: save.rs (LBN1), wasm.rs quad, wasm/draw.rs, wasm/crossings.rs, twin.rs, quadPairs.ts. 3-4 h. stage 2a
 - T-3950 [P2] {L:track-rework} {after:T-3949} Single, double and more in the tools
   - Context: Your three cases: the track bar's 1, 2 and More (4 for now); 4 tracks picked whole, a second click picks one double; the Select bar's 4 replaces Double up; titles "Single track", "Double track", "4 tracks".
   - Goal: Every tool picks by one shared pointer rule; no "Quad track" or Double up left.
@@ -965,9 +958,8 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Level 1 (data open to any site) is done. Levels 2-4 are data-file mods, a JavaScript mod API, then city packs.
   - Goal: A design for you first that works for modders writing code by hand and with a coding assistant alike (you, 2026-11-18; player-facing text never says it is aimed at vibe-coders): a small stable mod API (hooks for prices, speeds, buttons, reading the network), a how-to page with two or three tiny example mods, notes in the open-source repo an assistant can read too, and loading a mod from a file or link; a loaded mod marks the save modded (T-3707).
   - Other: Reference (you, 2026-11-18): peanutmow (Alice) runs an unofficial wiki, trainsworld.org, and hosts her mod there; look at how that mod is set up when designing this. The mark's entry point exists: `trainsworld.markModded("<name>")` (notes/T-3707.md); a page on another site such as trainsworld.org already marks its games.
-- T-3376 [P2] {L:jobs-places} {waits:Anita} Industrial areas' jobs (taking, 2026-11-21, agent industry)
-  - Need from Anita: Count OSM industrial land and the buildings on it at a quarter in the jobs estimate, from the next world rebuild? Recommended yes.
-  - Context: Jurong Island has about 102,000 jobs in the game (128,000 with Bukom's refinery), against about 26,000 published. The cause is OSM industrial land, drawn there as one polygon per plant, at 40 jobs per 5,000 m2. Measured on cities with real job counts (Houston, Atlanta, Tokyo, Osaka, Nagoya, nine English cities, 12 Mexican), a quarter fits well everywhere: Jurong to about 41,000, ports and refinery belts down 30-50% (still about 2x over), town centres up.
+- T-3376 [P2] {L:jobs-places} {after:next world rebuild} Industrial areas' jobs
+  - Context: You, 11-21: "yes, if we dont think there are any huge overshoots" (none: 3 packs newly pass the 0.2 top-zone limit, 4 drop under it; the rest move toward real counts). Jurong Island has about 102,000 jobs in the game (128,000 with Bukom's refinery), against about 26,000 published. The cause is OSM industrial land, drawn there as one polygon per plant, at 40 jobs per 5,000 m2. Measured on cities with real job counts (Houston, Atlanta, Tokyo, Osaka, Nagoya, nine English cities, 12 Mexican), a quarter fits well everywhere: Jurong to about 41,000, ports and refinery belts down 30-50% (still about 2x over), town centres up.
   - Goal: The rule in tier 0's jobs, riding along with the world rebuild (T-3245) in its full re-read form, at no machine cost of its own.
   - Other: From gaprun3's check. notes/T-3376.md
 - T-3375 [P2] {L:region-redraws} Empty units beside a metro stay dark

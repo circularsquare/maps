@@ -1,29 +1,8 @@
 [
   {
-    "id": "a-2026-11-21-16",
-    "title": "Departure nudge: per row, held?",
-    "text": "T-3742 design (notes/T-3742.md): an Offset per weekday schedule row in the schedule window, in 1 min steps (15 s with Shift, 10 min with Ctrl), held so the game stops re-timing that row; both directions shift together so turnarounds are kept, and a line timed with a faster partner shifts the partner by the same seconds. Riders and money barely move; a nudge only lasts between lines on matching headways. About 5-7 h, after track stage 1 lands. Alternatives: one offset per line (4-6 h) or wait for Exact mode (24-34 h). Build per row? I'd say yes. Draft strings: column 'Offset', '1 min earlier' / '1 min later', 'Half a headway at most', 'Follows weekdays'.",
-    "since": "2026-11-21",
-    "by": "maps-ac"
-  },
-  {
-    "id": "a-2026-11-21-17",
-    "title": "Express vs local: soft rule prototype?",
-    "text": "T-4008 measured it: income groups don't even out express and local, since both lines charge the same fare and a rider who values time more counts the wait and the ride more by the same factor. New York today: 55.7% take the express where both serve a pair directly, and 37% of those trips go nearly all one way. With 2 or 3 groups: unchanged, for +20-40% calculating time and +34-67 MB. What does even them out: a soft rule (a slower train that comes first is sometimes taken) gives about 48% express and about 5% all-one-way on direct pairs, with no extra search; a small lie, since riders move while the costs shown stay today's. Drop income groups for this, and prototype the soft rule with crowding (about 2-3 h)? I'd say yes to both.",
-    "since": "2026-11-21",
-    "by": "maps-ac"
-  },
-  {
     "id": "a-2026-11-21-18",
     "title": "Wiki on the website: push?",
     "text": "T-3447 is landed: 27 wiki pages for the live version (v0.4.5) sit uncommitted in C:\\Users\\anita\\projects\\website at projects/trainsworld/wiki/, plus your link sentence on pages/projects/abouttrainsworld.md. Preview http://localhost:8800/twwikisite/. Push when you like, or say and I'll commit and push it.",
-    "since": "2026-11-21",
-    "by": "maps-6a"
-  },
-  {
-    "id": "a-2026-11-21-19",
-    "title": "Industrial land jobs at a quarter?",
-    "text": "T-3376: count OSM industrial land and the buildings on it at a quarter of today's weight in the jobs estimate, from the next world rebuild? Jurong Island goes from about 102,000 jobs to about 41,000 (real about 26,000), refinery belts stay about 2x over, town centres gain; fits real job counts a bit better in England, Atlanta, Houston, Japan and Mexico. Rides along with T-3245's rebuild, no machine time of its own. I'd say yes. Detail: notes/T-3376.md.",
     "since": "2026-11-21",
     "by": "maps-6a"
   },

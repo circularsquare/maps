@@ -13,21 +13,21 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
    after. Standby tabs left: maps-5a, maps-17 (notes/standby.txt).
 1. master 7964bcf2 = 8800 3f917ba3 (save level 38). Batch 12 (T-4005, T-4013, T-3373 s3 flagged, T-4017, T-4014
    with its own checker) landed; smoke on 8800 PASS. No batch checker: each risky one had its own or is flagged.
-2. TRACK (her top priority): stage 1 landed; tw/track synced to 7964bcf2. bundles T-3949 stage 2a (Opus, maps-ac's)
-   in a tree from tw/track (it will meet level 38 when it rebases): land with `agent-tree.mjs finish bundles "..."
-   --into tw/track --task T-3949`. Next stages per notes/T-3444-design/10-build-plan.md (2b T-3950...).
-3. BRT (her other priority): all landed. Open her call: busways 60 km/h for any bus (built) or BRT only.
-4. Running: maps-ac's bundles T-3949 (report via the board); mine: splitb5 T-3373 B stage 5 (Opus; s4 landed
-   de9e8154: all-China 31% faster at 2 workers, +0.07-0.18 GB), phonemem
-   T-3160 s4, airfar T-3502 (Opus), fullspeed T-3655 (Opus).
-   Held: T-3932 (B stage 7's pool), T-3060 (tool files of track 2b), T-1354/T-1610 (near splitb4's worker code).
-5. Open asks: T-3742 nudge (a-..-16), T-4008 soft rule (-17), wiki push (-18), T-3376 industrial jobs at a
-   quarter (-19); text acks for T-4005 and T-4013 strings; T-2264 help wording; busway speed;
-   server deploy (-20); T-4013 per-direction follow-up (I'd file P3). Later: T-3937 quiet machine; T-3931 held for
-   T-3231; T-3939 B's 140 MB.
+2. TRACK (her top priority): stage 1 landed; tw/track synced to 924b642c. T-3949 stage 2a built (tree bundles);
+   bundlesrebase (Sonnet) moving it onto tw/track with LBN1 at level 39; then `agent-tree.mjs finish bundles "..."
+   --into tw/track --task T-3949` (DECISIONS line already in). Then 2b T-3950 (notes/T-3444-design/10-build-plan.md).
+3. BRT: all landed. bmtab (Sonnet): Bookmarked tab hidden until something is bookmarked (her ask); land, no checker.
+4. Running: splitb5 T-3373 B stage 5 (Opus; s4 landed de9e8154), phonemem T-3160 s4, airfar T-3502 (Opus),
+   fullspeed T-3655 (Opus), bundlesrebase, bmtab. Under the usage stance none of these gets a successor.
+5. Deferred by her until home: server deploy (a-..-20), wiki push (a-..-18). Waiting: T-2264 help panels (she'll
+   look). Later: T-3937 quiet machine; T-3931 held for T-3231; T-3939 B's 140 MB.
 ## Her words
-- 11-21 ~19:20 UTC: BRT stations come with a waiting room, shown as bought (T-4012, brtwait running); tram icon's
-  top piece bigger; "text ack" (kinds2 strings); boarding-only / alighting-only stops filed (T-4013).
+- 11-21 ~22:40 UTC: deploy and wiki deferred till home; T-3376 yes; T-3742 planned, start later; T-4008 no soft
+  rule, drop income groups (players say riders skip the express: T-4019); busways any bus; hide empty Bookmarked
+  tab; text ack (bookmarks, boarding-only); help panels not seen yet.
+- 11-21 ~22:20 UTC (outside): "running high on usage so i think we can wind down starting new tasks, except we
+  should keep working on anything related to track rework, or any pressing bugs". Running agents finish; no
+  replacements unless track rework or a pressing bug (overrides 4-12 agents for now).
 - 11-21 ~18:45 UTC: main priorities now: keep the track rework moving, finish and polish BRT. She's out with remote
   control on this session; standby orchestrator tabs (notes/standby.txt, docs/orchestrator.md "Your own cycling").
 - 11-21 ~17:50 UTC: "text ack" for everything listed to then (viewonly, BRT stations, modeldown, brtblueprint,
