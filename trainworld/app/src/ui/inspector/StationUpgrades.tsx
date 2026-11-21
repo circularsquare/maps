@@ -64,7 +64,7 @@ export function StationUpgrades({ s, members }: { s: StationInput; members?: str
     <div class="upgrades" role="group" aria-label={t("stationUpgrades.group")}>
       {/* T-3332: a one-track station has no terminal and no passing tracks */}
       {/* T-3574: a tram stop takes the terminal and passing tracks as a rail station does; park and ride is rail's */}
-      {/* T-4010: a BRT station takes the waiting room and a passage; a park and ride from an older save shows so it can be removed */}
+      {/* T-4012: a BRT station has its waiting room built in, shown bought; a park and ride from an older save shows so it can be removed */}
       {UPGRADE_TEXT.filter((u) => (s.brt ? u.bit === UPGRADE.waitingRoom || (u.bit === UPGRADE.parkRide && hasUpgrade(s.upgrades, u.bit)) : (!s.tram && !s.port) || u.bit === UPGRADE.waitingRoom || (s.tram && !s.port && (u.bit === UPGRADE.terminal || u.bit === UPGRADE.passing))) && (u.bit !== UPGRADE.passing || double || hasUpgrade(s.upgrades, u.bit))
         && !(s.one && (u.bit === UPGRADE.terminal || u.bit === UPGRADE.passing) && !hasUpgrade(s.upgrades, u.bit))).map((u) => (
         <UpgradeButton s={s} u={u} price={prices?.[UPGRADE_BITS.indexOf(u.bit)] ?? 0} housed={housed} />
@@ -83,6 +83,13 @@ function UpgradeButton({ s, u, price, housed = false }: { s: StationInput; u: Up
     ? t(s.built ? "stationUpgrades.actBuilt" : "stationUpgrades.actPlanned")
     : t(s.built ? "stationUpgrades.actBuild" : "stationUpgrades.actAdd");
   const Ic = ICONS[u.bit];
+  if (s.brt && u.bit === UPGRADE.waitingRoom) return (
+    <button class={"btn icon upgrade" + " on"} aria-label={u.name} aria-pressed disabled data-tip={`${u.name}
+${u.does(s.tram, !!s.port)}
+${t("stationUpgrades.brtBuiltIn")}`}>
+      <Ic />
+    </button>
+  );
   const toggle = async () => {
     const a = await edit({ op: "stationUpgrade", nodes: [s.num], bit: u.bit, on: !on });
     if (!a.ok) return;
@@ -143,7 +150,8 @@ function BuildingButton({ s }: { s: StationInput }) {
 function ComplexUpgrade({ u, members, price }: { u: UpgradeText; members: string[]; price: number }) {
   const w = world.value;
   const byId = w ? stationsById(w) : new Map<string, StationInput>();
-  const st = members.map((id) => byId.get(id)).filter((x): x is StationInput => !!x);
+  // T-4012: a BRT station's waiting room is built in, so it is no part of the count
+  const st = members.map((id) => byId.get(id)).filter((x): x is StationInput => !!x && !(x.brt && u.bit === UPGRADE.waitingRoom));
   const have = st.filter((x) => hasUpgrade(x.upgrades, u.bit)), missing = st.filter((x) => !hasUpgrade(x.upgrades, u.bit));
   const all = missing.length === 0, built = st.some((x) => x.built), name = st[0]?.name ?? "", allTram = st.length > 0 && st.every((x) => x.tram);
   const state = !all ? "" : have.some((x) => x.built) ? " on" : " planned";

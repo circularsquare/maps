@@ -761,7 +761,7 @@ fn a_full_brt_lane_cuts_its_lines_buses() {
 
 /// T-3378 stage 3: a BRT station beside the road, constructed for its flat price: only a BRT line stops there,
 /// standing no dwell, its stop costing `BRT_STATION_STOP_S`; a plain line passes it until it goes on BRT. It takes
-/// the waiting room and no park and ride, pays a tram stop's upkeep, saves in `LBT1` and is removed with its node.
+/// no upgrade (its waiting room is built in), pays a tram stop's upkeep, saves in `LBT1` and is removed with its node.
 #[test]
 fn a_brt_station_serves_brt_lines_only() {
     let mut a = api();
@@ -796,13 +796,13 @@ fn a_brt_station_serves_brt_lines_only() {
     assert_eq!(a.construct_all(), 0, "{}", a.issues());
     assert!(a.bus_brt(p) && at(&a, p).is_some());
     assert_eq!(a.set_bus_brt(p, false), 0, "{}", a.issues());
-    // T-4010: a waiting room, no park and ride
+    // T-4012: the waiting room is built in, so no upgrade is sold
     assert_ne!(a.set_station_upgrade(&[s], crate::track::upgrades::PARK_RIDE, true), 0);
-    assert_eq!(a.set_station_upgrade(&[s], crate::track::upgrades::WAITING_ROOM, true), 0, "{}", a.issues());
+    assert_ne!(a.set_station_upgrade(&[s], crate::track::upgrades::WAITING_ROOM, true), 0);
     // a tram stop's upkeep among the stations
     let up = a.upkeep();
     assert_eq!(up[4], 1.0, "{up:?}");
-    assert!((up[2] - UPKEEP_BRT_STATION * ECONOMY / 1e6 - crate::track::upgrades::upkeep(crate::track::upgrades::WAITING_ROOM_COST)).abs() < 1e-9, "{up:?}");
+    assert!((up[2] - UPKEEP_BRT_STATION * ECONOMY / 1e6).abs() < 1e-9, "{up:?}");
     // saved and loaded
     let saved = a.save();
     assert!(saved.windows(4).any(|w| w == b"LBT1"));

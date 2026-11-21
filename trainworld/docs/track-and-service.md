@@ -2439,13 +2439,15 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   centre line on the click's side, its 40 m
   platform (`BRT_STATION_PLATFORM`) along the road, drawn as a tram stop's box. US$2M and US$50 a day real (US$5k a
   game day), a tram stop's (`BRT_STATION_COST`, `UPKEEP_BRT_STATION`), its own Construct row (kind 17); the
-  waiting room is the one upgrade it is sold (T-4010: no park and ride; one from an older save still loads and keeps
-  its effect, and can be removed), a passage joins it as any station, no building, no platform or track rows. Only a
+  it is sold no upgrade (Anita 11-21, T-4012: the waiting room is built in, shown in the station's upgrades as bought and
+  not removable; no park and ride, though one from an older save still loads and can be removed; a waiting room an
+  older save bought is dropped on load), a passage joins it as any station, no building, no platform or track rows. Only a
   line on BRT stops there (`bus::reach` leaves BRT stations out for a plain line, which passes them; a line switched
   to BRT stops there once its lanes are built). At a BRT station a BRT line stands no dwell, and its stop costs 18 s
   (`BRT_STATION_STOP_S`) in place of 28: the hop arriving there is 10 s shorter and the bus stands the 18 s inside it
   (`bus::profile_cut`). People reach it as any station (walk, car, 6 nearest); in demand's snapshot it carries
-  `upgrades::BRT_STATION`, so a station of BRT stations alone takes a tram stop's slot (`TRAM_SLOTS`, `tram_stops`). Removed as any station; a bus line never
+  `upgrades::BRT_STATION`, so a wait there counts 0.8 as in a waiting room (`wait_factor`), and a station of BRT
+  stations alone takes a tram stop's slot (`TRAM_SLOTS`, `tram_stops`). Removed as any station; a bus line never
   holds it among its stops, so it can be removed while a line stops there, as a train station a bus passes can.
 - A new bus line starts at a bus every 8, 15 and 30 minutes by level (Anita, 2026-11-09; the bus default for new lines instead once set, T-3703), 30 s dwell at
   train stations and 120 s turnaround (`NEW_LINE` in app/src/game/newLine.ts, the one place for what a new

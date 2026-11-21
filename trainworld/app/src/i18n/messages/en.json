@@ -2186,6 +2186,7 @@
   "stationUpgrades.complexGroup": "Complex upgrades",
   "stationUpgrades.costs": "Costs {price}",
   "stationUpgrades.group": "Station upgrades",
+  "stationUpgrades.brtBuiltIn": "Every BRT station has one",
   "stationUpgrades.housed": "The station building already counts as a waiting room.",
   "stationUpgrades.passage": "Passage",
   "stationUpgrades.passageTip": "Passage\nJoins two stations up to {distance} apart into one complex so that people can transfer.\nCosts {range} depending on length\nUpkeep {upkeep} per day\n{picking, select, true {Click another station on the map, or here to stop.} other {Click, then click the other station on the map.}}",

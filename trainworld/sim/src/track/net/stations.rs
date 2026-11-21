@@ -108,7 +108,8 @@ impl Network {
                 self.node_named[i] = d.named;
                 self.node_built[i] = d.built;
                 self.node_off[i] = d.off && !d.built;
-                self.node_upgrades[i] = d.upgrades & super::upgrades::ALL;
+                // T-4012: a BRT station's waiting room is built in (`BRT_STATION`), so one a save bought is dropped, not counted twice
+                self.node_upgrades[i] = d.upgrades & super::upgrades::ALL & if d.road.is_some() { !super::upgrades::WAITING_ROOM } else { 0xff };
                 self.node_one[i] = d.one.min(2);
                 self.node_fare[i] = d.fare;
                 self.node_own[i] = d.own;
@@ -151,9 +152,9 @@ impl Network {
             return;
         }
         if let Some(h) = self.node_road[i] {
-            // T-3378: beside a road (the app's test; a road on a bridge stands over water); T-4010: a waiting room is
-            // the one upgrade it is sold, and a park and ride from an older save still loads
-            if self.node_ports[i].n > 0 || self.node_upgrades[i] & !(super::upgrades::WAITING_ROOM | super::upgrades::PARK_RIDE) != 0 || self.node_level[i] != 0 || !h.is_finite() {
+            // T-3378: beside a road (the app's test; a road on a bridge stands over water); park and ride from an older
+            // save still loads
+            if self.node_ports[i].n > 0 || self.node_upgrades[i] & !super::upgrades::PARK_RIDE != 0 || self.node_level[i] != 0 || !h.is_finite() {
                 out.push(Issue::NotAtBrtStation { node: n });
             }
             return;

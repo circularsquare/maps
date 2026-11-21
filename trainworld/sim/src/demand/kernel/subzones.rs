@@ -114,9 +114,9 @@ pub fn ride_fixed(p: &Params, net: &Network, s: usize) -> f32 {
 }
 
 /// How much of its minutes a wait at station `s` counts in mode choice (T-1281): less in a
-/// waiting room, which a station building is for its members (T-2276).
+/// waiting room, which a station building is for its members (T-2276) and a BRT station for its riders (T-3378).
 pub fn wait_factor(net: &Network, s: usize) -> f32 {
-    if net.ups(s) & (upgrades::WAITING_ROOM | upgrades::IN_BUILDING) != 0 { upgrades::WAITING_ROOM_WAIT } else { 1.0 }
+    if net.ups(s) & (upgrades::WAITING_ROOM | upgrades::IN_BUILDING | upgrades::BRT_STATION) != 0 { upgrades::WAITING_ROOM_WAIT } else { 1.0 }
 }
 
 /// Past the `ride_lines` cheapest, a place's rides take up to this many more (T-1511): the

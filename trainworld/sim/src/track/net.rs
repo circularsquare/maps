@@ -571,7 +571,7 @@ pub enum Issue {
     NotAtPort { node: u32 },
     /// A port's berth missing, outside the world or too far from its landing (T-2193).
     PortBerth { node: u32 },
-    /// Track, a level, water or an upgrade other than the waiting room at a BRT station (T-3378).
+    /// Track, a level, water or an upgrade other than Park and ride (kept from older saves) at a BRT station (T-3378).
     NotAtBrtStation { node: u32 },
 }
 

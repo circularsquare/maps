@@ -29,8 +29,9 @@ impl TrackApi {
             if on && d.berth.is_some() && bit != upgrades::WAITING_ROOM {
                 return self.refuse(Issue::NotAtPort { node });
             }
-            // T-3378, T-4010: a BRT station takes the waiting room and nothing else (the passage is another edit)
-            if on && d.road.is_some() && bit != upgrades::WAITING_ROOM {
+            // T-3378, T-4012: a BRT station has its waiting room built in and sells no upgrade (the passage is another
+            // edit); a park and ride from an older save can still be removed
+            if d.road.is_some() && (on || bit == upgrades::WAITING_ROOM) {
                 return self.refuse(Issue::NotAtBrtStation { node });
             }
             let ups = if on { d.upgrades | bit } else { d.upgrades & !bit };
