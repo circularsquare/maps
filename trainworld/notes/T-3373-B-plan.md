@@ -9,8 +9,8 @@ estimate, with its method in "Method".
 - Today each worker copies every city and the longer-trips market, so an extra worker costs 0.4 GB on New York and
   1.3-1.5 GB on all of China and the 2,000-station saves. That is why stage A left those on one worker.
 - B gives each city to one worker and the market to one worker. After each crowding round they swap line loads.
-- On those big saves a second worker would then cost about 0.25 GB, and loads and edits would be about a third
-  faster, as two workers are today (est.: the first stage checks the split it rests on).
+- On those big saves a second worker would then cost about 0.2 GB. Loads and edits would be about 40-50% faster on
+  all-China and 27-38% on North America. Those are stage 1's predictions from measured shares; stage 4 measures them.
 - New York gains little: one city is three quarters of its work, so it stays copied. B lets it run 3 workers in
   today's memory limit (load about 50 s, from 60-70).
 - Yours: A's limit (1.4 GB for all workers on an 8 GB machine) is below one worker on these saves, so it would
@@ -139,6 +139,9 @@ puts W-1 hops in every exchange and every result part, and every holder has to t
 
 ### Table (solving workers' memory in GB; times to the demand final)
 
+The design's estimates, from older notes. Stage 1's predictions, made from measured shares, are in "Stage 1 results"
+below and take precedence.
+
 | Save | Today, A's pool | Today, 2 workers (periods) | B, 2 workers | B, 3 workers |
 |---|---|---|---|---|
 | New York real save (one city 3/4 of the work) | 2 workers: 1.06 GB; load 60-72 s | (that is A's) | 0.90 GB est.; load about the same | 1.25 GB est., inside 1.4 GB; load about 47-54 s (today's 3-worker time) |
@@ -175,6 +178,104 @@ the page's "open in every worker" assumption runs through about twenty places in
 
 Order: after T-2624 stage 2. Both change the worker's round loop (`step`), `figures`, the page's `receive` and
 `addParts`. Stage 2 here (exact sums) touches only the sums and could go before T-2624 if the tree is free.
+
+## Stage 1 results (agent splitb1, 2026-11-21)
+
+**Verdict: go on, uncalibrated.** The stop rule was at least 25% faster than 1 worker for at most 0.4 GB more,
+at 2 workers with the market held once.
+
+- All-China: loads 41-48% faster, edits 40-50% faster, about 0.2 GB more.
+- North America is the thin one. Loads come out 27-29% faster with the plan's planner, and 36-38% once the planner
+  also counts opening time (a step added after that first figure). Its opening figures come from a 2-core run.
+  Edits come out 32-34% faster, or about 26-28% if the market alone on a worker runs 10% slower. About 0.2 GB more.
+
+What the terms mean:
+- **Load**: from the import to the whole solve's last result.
+- **Edit**: that solve without the opening. A train edit on these saves re-solves every period of the one big cluster.
+  No edit was run.
+- **Memory**: the solving workers' WASM plus 0.15 GB of JS each.
+
+Every prediction assumes two workers run side by side as fast as one alone. The one 2-worker load this session (on a
+fully loaded machine) ran each worker 1.7-1.8 times slower. So the figures are checked only against the gains
+earlier sessions measured for today's 2-worker pool, and stage 4's measured stop rule is the real test.
+
+**How measured.** My Vite (6150), headless Chrome pinned to 2-5 cores claimed from the ledger, `?new=1&paused=1`,
+explicit `demandWorkers`, the save imported. The machine was busy throughout: the ledger at 8-14 of 14 claimed and
+80-100% CPU, so wall times are slow and noisy, and shares within one run are what the prediction uses. Each solving
+worker's `opened` and `done` messages were recorded (open ms, live heap) through a listener the init script added. A
+dev-only scratch hook in `demand.worker.ts` gave each population's pass ms per period and round (`passByRound`) and
+its cluster, read over CDP after the final. The hook is reverted; it is kept in the scratchpad as
+`splitb1/probe-hook.ts.txt` for stages 4 and 8. Figures were hashed by section with `t328-cache-check`'s `__sig`.
+Scripts: scratchpad `splitb1/measure.mjs`, `sim.mjs` (the prediction), `summary.mjs`, `sigs.mjs`; per-run JSON
+`run-<name>.json`.
+
+**Measured on 1 worker** (load s; the solve is set-up + passes + the rest; heap MB at the end):
+
+| Save | Load | Opening on the worker | Solve | Market's share of passes | Heap: cities / market | WASM | Above live heap at the peak |
+|---|---|---|---|---|---|---|---|
+| all-China, 2 runs | 229, 230 | 71-73 s, market composing 13-15 s of it | 143-146 = 18-21 + 96-102 + 26 | 26-28% (Shanghai 15%) | 674 / 510 | 1,299 | 108 with the market, 12 cities alone |
+| North America (2 cores) | 464 | 120 s (cities alone on 4 cores: 63 s), market 14.5 | 331 = 34 + 278 + 19 | 65% (New York 16%) | 670 / 474 | 1,325 | 163 with the market, 18 cities alone |
+| New York, 2 runs (2 cores) | 177, 208 | 16-18 s, market 7-10 | 160-188 = 3-4 + 149-169 + 7-16 | 23% (New York city 76-77%) | 117 / 151 | 365 | 82 |
+| asianita | 441 | 60 s, market 11 | 374 = 18 + 319 + 38 | 61% (Tokyo 14%) | 572 / 662 (split by pass share, no run without the market) | 1,489 | 247 |
+
+- Opening, not downloading, holds a load up: on all-China every pack was downloaded by 44 s and the worker opened
+  until 87 s. Each worker opens every pack today, so 2 workers today wait just as long. Under B each worker opens its
+  own share.
+- Each save is one cluster: all-China 170 of its 171 zones with the market, North America 124 of 129, New York all
+  4, asianita 120 of 123. So every round is a meeting point of every worker.
+- 2 workers in this session were slower than 1: all-China took 317 s against 230 on 5 cores, each worker's opening
+  and passes about 1.7-1.8 times slower, with the machine at full load. So no calibration run was possible.
+  Instead, the model's figures for today's 2-worker pool, made from the 1-worker shares, were checked against the
+  earlier sessions' measured gains. All-China: 23-28% predicted, 25-36% measured (T-3373 A). North America: 29-31%
+  predicted, 32% measured (T-3917). asianita: 33-37% predicted, 45% indicative. Memory came out at 2.84 GB predicted
+  against 2.74 GB measured in this session's 2-worker all-China run.
+
+**Predicted** (`sim.mjs`). The planner's plan, with each worker's opening as its units' open ms. Passes use the
+load's round barrier (each round as long as its slowest worker) for the high end and perfect interleaving for the
+low end. The rest of the solve is unchanged (high end) or shrinks with the busiest worker's share (low end). The
+market is held once.
+
+| Save | 1 worker | Today, 2 workers | B, 2 workers | B, 3 workers |
+|---|---|---|---|---|
+| all-China | 230 s; 1.42 GB | 164-176 s; 2.84 GB | load 118-136 s (41-48% faster), edit 40-50% faster; 1.59 GB | load 85-105 s; 1.75 GB |
+| North America | 464 s; 1.44 GB | 322-330 s; 2.89 GB | load 289-296 s (36-38%), edit 32-34%; 1.63 GB | held once: 264-270 s, 1.81 GB; market copied on all 3: 193-205 s, 3.02 GB |
+| New York | 177-208 s; 0.51 GB | 104-108 s; 1.01 GB | the planner keeps today's pool (faster than any split) | load 77-100 s (today's 3: 95-117 s); 1.20 GB, inside 1.4 GB |
+| asianita | 441 s; 1.60 GB | 277-294 s; 3.21 GB | load 267-281 s (36-39%), edit 35-38%; 2.00 GB est. (1.77 if a cities-only worker grows as little past its live heap as China's and North America's) | held once: 257-271 s, 2.40 GB est. |
+
+**Hashes repeat.** New York's two 1-worker loads match to the bit in every section. All-China's two match in every
+section but the per-zone figures. There, one load had one more zone shown (176 against 175, 10 more numbers);
+`t328-cache-check` already leaves that section out, and the other zones were not compared one by one. The 2-worker
+all-China load matched the rest too. Both imports composed the market once from all 370 packs, so pack order never
+varied, and T-1354 is untested here, not ruled out. Stage 4's "equal to the bit" can compare every section but the
+per-zone one, with per-zone hashes added to tell a zone shown once from a zone that differs.
+
+**What changes for the later stages**
+
+- The planner (`app/src/workers/demandPlan.ts`, unused; tests `checks/t3373-plan.mjs`, 23 pass) also weighs each
+  unit's opening, since a load waits for the slowest worker's opening. Unit by unit, it moves zones held once where
+  that shortens the slowest opening plus the busiest solve. On North America that takes the load from 27-29% to
+  36-38% faster: the market's worker takes the small zones whose opening outweighs their passes. Stage 3 sends the
+  open ms (the `opened` message has it) and stage 8 keeps it in the save header beside the pass costs.
+- Memory: a cities-only worker grows only 12-18 MB past its live heap, and the market's worker carries the 108-163
+  MB peak. `sim.mjs` gives B's second worker 0.17-0.19 GB on all-China and North America. That leaves out a worker's
+  own floor: an idle focus worker holds 33 MB of WASM, and the no-market worker sat 31 MB over its live heap where
+  the model adds 19. Call it about 0.2 GB, close to the plan's 0.25.
+- North America and asianita are market-heavy (61-65% of passes). With the market held once, 2 workers can take at
+  most about 35% off their passes, and edits come out 32-38% faster. The stage-1 data cannot show the risk to this:
+  the market alone on a worker might be slower than its share on one worker. A 10% loss would put North America's
+  edit at about 26-28% faster. Stage 4 measures it. A second market copy (+0.6 GB) is worth it only at 3 workers.
+- Not tested here:
+  - the plan's +5% for stations searched twice
+  - the time to exchange loads between rounds
+  - whether opening in parallel splits evenly. In the 2-worker run each worker's open ms went from 71 s to 118 s,
+    and T-173 describes the same kind of effect. The load figures depend on this; the edit figures don't.
+- Hours are unchanged: 24-40 for the 9 stages. This stage took about 1.5 h.
+
+**Stage A's memory limit: left as it is.** The raise is one line (`SOLVING_SHARE` in `demandClient.ts`, 0.175 to
+0.25), and it was not made. Raising A's share to 25% (2 GB on a reported 8 GB) before B splits anything changes
+only New York-sized saves. They go back to 3 workers (0.53 GB each, 1.6 GB together, +0.5 GB), and
+all-China, North America and asianita stay at 1 (1.45-1.64 GB a worker). The raise belongs in stage 7, where the
+limit counts the plan's per-worker needs.
 
 ## Risks
 
