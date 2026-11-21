@@ -715,6 +715,7 @@
   "figuresStopped.reload": "Reload",
   "noMarketNote.text": "Intercity trips are off on mobile. You can turn them on in Settings, or try a computer for bigger games.",
   "noMarketNote.memory": "This device has 4GB of RAM or less. The game probably will not run well.",
+  "retryNote.text": "This game ran out of memory, so it loaded again with fewer cores.",
   "diagramButton.showMap": "Show map (M)",
   "diagramButton.showDiagram": "Show network diagram (M)",
   "diagramButton.showWater": "Show water",

@@ -85,7 +85,7 @@ import { outsideWasmBytes } from "./liveMemory";
 import { isMemoryFailure } from "../game/loadText";
 import { makeFrame } from "../game/frame";
 import { editLeft, editPrior, noteEditSolve } from "../game/editLeft";
-import { choosing, demandIdle, endCardFull, noteLoad, gameLoadArmed, gameLoadSeq, viewFiguresIn, gameWait, loadComplete, loadFailed, loadProgress, lastStep, markAlive, markStep, memoryResolve, onLoadStop, onLoadStuck, setDownloadProbe, solveLeft, startup, takeGameLoadHold, zoneFailures, zoneLoads, zoneSteps, type ZoneStep } from "../game/loading";
+import { choosing, demandIdle, endCardFull, noteLoad, noteLoadWorkers, gameLoadArmed, gameLoadSeq, viewFiguresIn, gameWait, loadComplete, loadFailed, loadProgress, lastStep, markAlive, markStep, memoryResolve, onLoadStop, onLoadStuck, setDownloadProbe, solveLeft, startup, takeGameLoadHold, zoneFailures, zoneLoads, zoneSteps, type ZoneStep } from "../game/loading";
 import { type BarPlace, CACHE_SHOW_MS, GAME_MS, GUESS_SHARES, keepPlace, LATER_GUESS, lastWait, loadPace, nextLeft, rememberPace, rememberWait, sameSize, type Pace, sharesOf, shownShare, solveStage, STAGE_TEXT, stagedFraction, stageInHand, STEP_CAP, timeShare, type StageMs, zoneShare } from "../game/loadBar";
 import { linesSettled } from "../game/lineFigures";
 import { clock } from "../game/clock";
@@ -262,7 +262,8 @@ const POOL_CAP_KEY = "anitabuilder-pool-cap";
 function rememberedPoolCap(): number {
   try { const n = Number(sessionStorage.getItem(POOL_CAP_KEY)); return Number.isInteger(n) && n >= 1 ? n : Infinity; } catch { return Infinity; }
 }
-function rememberPoolCap(n: number) {
+/** (T-3933: also a load that took the tab down with it, game/oomRetry.ts) */
+export function rememberPoolCap(n: number) {
   try { sessionStorage.setItem(POOL_CAP_KEY, String(Math.min(n, rememberedPoolCap()))); } catch { /* storage blocked */ }
 }
 
@@ -2584,7 +2585,7 @@ class DemandClient {
     const cityMb =job.items.filter((i) => !isMarket(i)).reduce((n, i) => n + (this.bytes.get(i) ?? 0), 0) / 1e6;
     this.barParts = { dlMs, dl, openMs, open, openReal, dataPart, solveMs, solve, prior, stops: stops ?? -1, lines: svc?.lines.length ?? -1, zones: sn?.size ?? -1, items: job.items.length, cityMb, workers: this.computeN, netIn: netIn ? 1 : 0, sinceNet: job.netAt !== undefined ? now - job.netAt : -1, sinceData: job.dataAt !== undefined ? now - job.dataAt : -1, elapsed: now - job.since, published: s && job.version === s.version ? s.published : -2, sent: s && job.version === s.version ? now - s.sentAt : -1,...Object.fromEntries(Object.entries(shares).map(([k, v]) => [`share_${k}`, v])), ...Object.fromEntries(Object.entries(parts).map(([k, v]) => [`part_${k}`, v])), was: was ? 1 : 0, viaCache: viaCache ? 1 : 0, fraction, shown: job.best, leftTarget: target ?? -1, left: job.left?.ms ?? -1, modelSolve: job.modelSolve ?? -1, solveLeft }; // ?debug=1
     const cities = job.cities.filter((id) => !isMarket(id));
-    noteLoad("demand " + stageInHand(parts), { zones: cities }); // T-3927
+    noteLoad("demand " + stageInHand(parts), { zones: cities, workers: this.computeN }); // T-3927, T-3933
     loadProgress.value = { cities, fraction: shownShare(job.best), step: STAGE_TEXT[stageInHand(parts)], startup: job.startup, leftMs: job.left?.ms ?? null };
   }
 
@@ -3319,7 +3320,7 @@ class DemandClient {
     const share = shareCapped() ? SOLVING_SHARE * budget : Infinity;
     while (n > 1 && (other + n * (per + js) + aux > budget || n * (per + MEM_WORKER) > share)) n--;
     // i18n-ignore
-    if (n < this.computeN) this.shrink(n, `about ${mb(per + js)} MB a solving worker, ${mb(aux)} MB the aux worker, ${mb(other)} MB the rest of the page, against ${mb(budget)} MB`);
+    if (n < this.computeN) { this.shrink(n, `about ${mb(per + js)} MB a solving worker, ${mb(aux)} MB the aux worker, ${mb(other)} MB the rest of the page, against ${mb(budget)} MB`); noteLoadWorkers(n); }
   }
 
   /** T-3373: a loading save's pool cut to what workers of `perWorker` bytes may be (`workersFor`), before
@@ -3329,7 +3330,7 @@ class DemandClient {
     if (this.computeN <= 1 || this.respawn.size || perfOff("cap") || workersAsked() !== null || this.solving()) return;
     const byBudget = () => Math.max(1, Math.floor((memBudget() - outsideWasmBytes(perWorker, 0)) / perWorker));
     const n = Math.min(this.computeN, shareCapped() ? workersFor(perWorker) : byBudget());
-    if (n < this.computeN) this.shrink(n, `about ${mb(perWorker)} MB a solving worker by the save's zones`); // i18n-ignore
+    if (n < this.computeN) { this.shrink(n, `about ${mb(perWorker)} MB a solving worker by the save's zones`); noteLoadWorkers(n); } // i18n-ignore (T-3933: a planned cut is what the load runs)
   }
 
   /** The pool's last solving workers stop and the periods are dealt again among the rest (between

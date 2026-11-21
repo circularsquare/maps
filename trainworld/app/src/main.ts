@@ -97,6 +97,8 @@ import { NewVersion } from "./ui/NewVersion";
 import { FiguresStopped } from "./ui/FiguresStopped";
 import { figuresPeaks, figuresStopped, watchFigures } from "./game/figuresStopped";
 import { DeviceNote, deviceNoteApplies } from "./ui/DeviceNote";
+import { RetryNote } from "./ui/RetryNote";
+import { retryDiedLoad, retryLoadsInPage } from "./game/oomRetry";
 import { MapSky, TopBar } from "./ui/TopBar";
 import { cycleDemandEnd, MapTopLeft } from "./ui/DemandSelector";
 import { diagramShown, startDiagramView } from "./diagram/view";
@@ -175,10 +177,11 @@ if (!hasWasmSimd()) {
 // once the page is set up, and the workers start with the pick (`startWorkers` below), the map
 // already drawn under it.
 // T-2545: the last load in this tab never ended (iOS reloads a page that ran out of memory): say so and
-// start no game, or a game too big for the device would load and die again
+// start no game, or a game too big for the device would load and die again; T-3933: unless it can open again once
+// with fewer solving workers
 const lastDied = lastLoadDied();
-const urlChoice = lastDied ? null : choiceFromUrl();
-if (lastDied) loadCannotFinish(outOfMemoryText(), true);
+const urlChoice = lastDied ? retryDiedLoad() : choiceFromUrl();
+if (lastDied && !urlChoice) loadCannotFinish(outOfMemoryText(), true);
 // Demand pool (T-026) first: its downloads and pack opening are the longest part of startup, so
 // they start before the map is set up (T-172). The clock worker's network snapshots go to
 // `submitNetwork` below (workers/demandClient.ts); `?demandTest=1` solves T-005's hand-made
@@ -213,6 +216,7 @@ map.getContainer().appendChild(demandStoppedRoot);
 // the notices below can fire before the clock client exists (the graphics lost while the game loads): nothing to save then
 let earlyClient: ClockClient | null = null;
 const saveGame = () => earlyClient ? earlyClient.saveBeforeReload() : Promise.resolve();
+retryLoadsInPage(saveGame); // T-3933: a load the page sees run out of memory opens again with fewer workers
 render(h(DemandStopped, { save: saveGame }), demandStoppedRoot);
 // T-3582: the browser refused the page graphics mid-game: the game is saved before the player restarts the browser
 onGraphicsGone(() => { void saveGame(); });
@@ -229,6 +233,12 @@ if (deviceNoteApplies()) {
   const noMarketRoot = document.createElement("div");
   map.getContainer().appendChild(noMarketRoot);
   render(h(DeviceNote, null), noMarketRoot);
+}
+// T-3933: a load that ran out of memory opened again with fewer workers
+if (lastDied) {
+  const retryRoot = document.createElement("div");
+  map.getContainer().appendChild(retryRoot);
+  render(h(RetryNote, null), retryRoot);
 }
 const blueprintBarRoot = document.createElement("div");
 map.getContainer().appendChild(blueprintBarRoot);

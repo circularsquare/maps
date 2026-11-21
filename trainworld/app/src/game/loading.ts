@@ -244,31 +244,61 @@ if (typeof document !== "undefined") {
  * found still set at the next start, the last load died, and main.ts says so. */
 const LOAD_FLAG = "tw-load-started";
 /** T-3927: what the flag also holds, so a report after a died load says which game it was: the kind, the zones, the
- * save's station and line counts, the last step reached and when (ms since the pick). No slot name or account. */
-interface LoadMark { kind: string; zones?: string; city?: string; stations?: number; lines?: number; step: string; ms: number }
+ * save's station and line counts, the last step reached and when (ms since the pick). No slot name or account.
+ * T-3933: also what a retry needs, kept out of the report: the most solving workers the load ran (`workers`; a worker
+ * that ran out of memory may have cut them before the tab died), the slot the game is in once the page knows it
+ * (`slot`), whether this load is itself the retry of one that died (`retry`), and whether the page saw its failure and
+ * reloaded for the retry (`caught`). */
+interface LoadMark { kind: string; zones?: string; city?: string; stations?: number; lines?: number; step: string; ms: number; workers?: number; slot?: string; retry?: boolean; caught?: boolean }
 let mark: (LoadMark & { t0: number }) | null = null;
+/** T-3933: the next load to start is the retry of one that died (main.ts) */
+let nextIsRetry = false;
+function writeMark() {
+  try {
+    if (!mark) { sessionStorage.removeItem(LOAD_FLAG); return; }
+    const { t0: _t0, ...out } = mark; void _t0;
+    sessionStorage.setItem(LOAD_FLAG, JSON.stringify(out));
+  } catch { /* storage unavailable */ }
+}
 function setLoadFlag(on: boolean, kind = "unknown") {
-  if (on) mark = { kind, step: "picked", ms: 0, t0: Date.now() };
+  if (on) { mark = { kind, step: "picked", ms: 0, t0: Date.now(), ...(nextIsRetry ? { retry: true } : {}) }; nextIsRetry = false; }
   else mark = null;
-  try { if (on) sessionStorage.setItem(LOAD_FLAG, JSON.stringify(mark)); else sessionStorage.removeItem(LOAD_FLAG); } catch { /* storage unavailable */ }
+  writeMark();
 }
 /** T-3927: a step of the load in hand (a name), and what is known of the game; no-op when no load is in hand or nothing
- * changed. Zones, a city and counts are kept once known. */
-export function noteLoad(step: string, known: { zones?: string[]; city?: string; stations?: number; lines?: number } = {}) {
+ * changed. Zones, a city, counts and the solving workers are kept once known. */
+export function noteLoad(step: string, known: { zones?: string[]; city?: string; stations?: number; lines?: number; workers?: number } = {}) {
   if (!mark) return;
   const m = mark;
   const zones = known.zones?.length ? known.zones.slice(0, 12).join(",") : undefined;
-  if (step === m.step && (!zones || zones === m.zones) && known.city === undefined && known.stations === m.stations && known.lines === m.lines) return;
+  if (step === m.step && (!zones || zones === m.zones) && known.city === undefined && known.stations === m.stations && known.lines === m.lines && (known.workers === undefined || known.workers <= (m.workers ?? 0))) return;
   m.step = step;
   if (zones) m.zones = zones;
   if (known.city !== undefined) m.city = known.city;
   if (known.stations !== undefined) m.stations = known.stations;
   if (known.lines !== undefined) m.lines = known.lines;
+  if (known.workers !== undefined) m.workers = Math.max(known.workers, m.workers ?? 0);
   m.ms = Date.now() - m.t0;
-  try { const { t0: _t0, ...out } = m; void _t0; sessionStorage.setItem(LOAD_FLAG, JSON.stringify(out)); } catch { /* storage unavailable */ }
+  writeMark();
+}
+/** T-3933: the pool was cut by plan (by memory estimate, not a failure): from here the load runs `n` solving workers */
+export function noteLoadWorkers(n: number) {
+  if (!mark || mark.workers === n) return;
+  mark.workers = n;
+  writeMark();
+}
+/** T-3933: the slot the loading game is in (the clock worker's saves list names it); "" for none (a test page, a
+ * network only viewed). */
+export function noteLoadSlot(slot: string) {
+  if (!mark || (mark.slot ?? "") === slot) return;
+  mark.slot = slot || undefined;
+  writeMark();
 }
 /** T-3927: the unfinished load found at this start, as a line for the report; empty when none or an old flag. */
 export let diedLoadReport = "";
+/** T-3933: what a retry of the died load needs (null when none died, or an old flag) */
+let died: Pick<LoadMark, "workers" | "slot" | "retry"> | null = null;
+export const diedLoad = () => died;
 /** Whether the last load in this tab never ended; the flag is cleared. */
 export function lastLoadDied(): boolean {
   try {
@@ -284,19 +314,55 @@ export function lastLoadDied(): boolean {
           m.zones ? "zones " + String(m.zones).slice(0, 200) : "",
           m.city ? "start city " + String(m.city).slice(0, 40) : "",
           m.stations !== undefined ? `${m.stations} stations, ${m.lines ?? "?"} lines` : "counts not known yet",
+          m.workers !== undefined ? `up to ${m.workers} solving workers` : "",
+          m.retry ? "it was the retry with fewer workers" : "",
+          m.caught ? "a worker ran out of memory and the page reloaded to load it again" : "",
           `last step: ${String(m.step ?? "?").slice(0, 80)}, ${secs(m.ms)} s after the pick`,
         ].filter(Boolean).join("; ");
+        died = {
+          workers: Number.isInteger(m.workers) && m.workers! >= 1 ? m.workers : undefined,
+          slot: typeof m.slot === "string" && m.slot ? m.slot : undefined,
+          retry: m.retry === true,
+        };
       }
     } catch { /* an older flag ("1") has no fields */ }
     return true;
   } catch { return false; }
 }
-if (typeof addEventListener === "function") addEventListener("pagehide", () => setLoadFlag(false));
-effect(() => { if (gameReady.value || demandIdle.value) setLoadFlag(false); });
+/** T-3933: the load main.ts starts next retries one that died; the notice is up until a while after it is ready */
+export const loadRetried = signal(false);
+export function startRetry() {
+  nextIsRetry = true;
+  loadRetried.value = true;
+}
+/** T-3933: the load in hand, for a retry of it (null when none) */
+export const loadInHand = (): Pick<LoadMark, "workers" | "slot" | "retry"> | null => mark && { workers: mark.workers, slot: mark.slot, retry: mark.retry };
+/** T-3933: the page is about to reload to open the load in hand again (it saves first), so its flag stays set for the
+ * next page; `keepLoadForRetry(false)` lets it go after all */
+let leavingForRetry = false;
+export function keepLoadForRetry(on: boolean) {
+  leavingForRetry = on;
+  if (!on && (gameReady.peek() || demandIdle.peek())) setLoadFlag(false);
+}
+export function reloadForRetry() {
+  if (!mark) return;
+  leavingForRetry = true;
+  mark.caught = true;
+  writeMark();
+  location.reload();
+}
+/** T-3933: a load whose demand failed in the page's sight (not the tab dying): game/oomRetry.ts may take the failure over
+ * (true) and open the game again in a fresh page when it ran out of memory (`memory`); once it has, every later failure
+ * on the way out too */
+let onLoadFail: ((why: string, memory: boolean) => boolean) | null = null;
+export const handleLoadFail = (f: (why: string, memory: boolean) => boolean) => { onLoadFail = f; };
+if (typeof addEventListener === "function") addEventListener("pagehide", () => { if (!leavingForRetry) setLoadFlag(false); });
+effect(() => { if ((gameReady.value || demandIdle.value) && !leavingForRetry) setLoadFlag(false); });
 
 /** Demand could not load. At startup the loading screen says so and offers a way on; later the
- * clock is released at once, since there is no result to wait for. */
-export function loadFailed(why: string) {
+ * clock is released at once, since there is no result to wait for. `retried`: T-3933's retry already passed on it. */
+export function loadFailed(why: string, retried = false) {
+  if (!retried && mark && onLoadFail?.(why, isMemoryFailure(why))) { console.warn("load failed, opening it again:", why); return; } // i18n-ignore
   console.error("load failed:", why); // i18n-ignore
   loadFailure.value = why;
   loadProgress.value = null;

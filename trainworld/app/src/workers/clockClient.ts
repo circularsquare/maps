@@ -18,7 +18,7 @@ import { setHiddenLinesSink, takeHiddenLines } from "../game/lineVisibility";
 import { takeDiagramCities } from "../game/diagramCities";
 import { hiddenZones, setGameStart } from "../game/realms";
 import { home } from "../game/home";
-import { fitView, holdForGameLoad, loadCannotFinish, markAlive, networkInWithoutTrips, noteLoad, tripsOff } from "../game/loading";
+import { fitView, holdForGameLoad, loadCannotFinish, markAlive, networkInWithoutTrips, noteLoad, noteLoadSlot, tripsOff } from "../game/loading";
 import { incomeByDay, lastSaved, liveMoney, moneyState, moneyTerms, moneyWorld, setMoneyState } from "../game/money";
 import { zonesLoaded } from "../game/zones";
 import { chargeShares, lineShares, upkeepShares } from "../game/regionMoney";
@@ -687,6 +687,8 @@ export class ClockClient {
   /** the last game load: where it came from and whether its save was converted to the world frame
    * (T-308; read by `?debug=1` checks, the player is told nothing) */
   lastLoad: { from: "autosave" | "file" | "new"; converted: boolean } | null = null;
+  /** T-3933: the slot the last "loaded" named ("" for none): noted for a retry once the saves list shows it written */
+  private loadedInto = "";
   /** the renderer's hooks, set by main.ts */
   onState: (s: ClockState) => void = () => {};
   /** T-2159: the network diagram's graph, while the diagram is shown (diagram/view.ts) */
@@ -1336,6 +1338,7 @@ export class ClockClient {
         this.post({ kind: "bindNew", on: bindNewStations.peek() });
         this.lastLoad = { from: msg.from, converted: !!msg.converted };
         noteLoad(msg.error ? "clock worker: game did not open" : `game open in clock worker (${msg.from})`);
+        this.loadedInto = msg.error ? "" : msg.slot ?? "";
         this.fitState = this.fitNext && msg.from !== "new" && !msg.error;
         this.fitNext = false;
         if (msg.error) {
@@ -1392,6 +1395,8 @@ export class ClockClient {
         const before = saveSlotsState.value;
         saveSlotsState.value = { slots: msg.slots, active: msg.active, game: msg.game, writable: msg.writable, at: msg.at, reason: workerText(msg.reason), error: workerText(msg.error), backups: msg.backups, newer: msg.newer, viewing: msg.viewing };
         lastSaved.value = msg.at;
+        // T-3933: the slot a load that dies is opened again from: the one the game went into, once it is written
+        if (this.loadedInto && msg.active === this.loadedInto && msg.slots.some((s) => s.key === msg.active && !s.unreadable)) noteLoadSlot(msg.active);
         if (msg.at > 0 && !this.testPage) void keepStorage(); // T-1214: a slot is written
         // a test page does not make its slot the one the next page opens, until it changes (T-320)
         if (msg.active && ((!this.sawSlots && !this.testPage) || before.active !== msg.active)) {
