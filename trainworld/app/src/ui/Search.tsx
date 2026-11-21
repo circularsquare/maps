@@ -1,6 +1,6 @@
 // The search box at the map's upper left, under the station ridership row (T-148, T-1868): stations, lines, cities, towns and
-// neighbourhoods by name (game/search.ts; the view's zones' place lists load on first focus, T-177,
-// T-400). Most of the time it is a small magnifying glass (T-211); a click on it, "/", Ctrl+K or
+// neighbourhoods by name (game/search.ts; towns from a worker, game/placeSearch.ts, T-4004, which loads
+// the view's place lists on first focus). Most of the time it is a small magnifying glass (T-211); a click on it, "/", Ctrl+K or
 // Ctrl+F opens the box
 // and focuses it, the arrow keys move through the results, Enter picks, and Escape, a pick or
 // leaving the box empty closes it again. Picking moves the camera there at once (no flight, like
@@ -12,9 +12,9 @@ import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { activeCity } from "../game/cities";
 import { zoneAt } from "../game/zones";
 import { realmOfPlace, showRealm, showZoneRealm } from "../game/realms";
-import { loadPlacesAt, places, widenPlaces } from "../game/placeList";
+import { findPlaces, placeResults } from "../game/placeSearch";
 import { viewCentre } from "../game/listScope";
-import { search, type SearchHit } from "../game/search";
+import { normalise, search, type SearchHit } from "../game/search";
 import { ask, selection, tool } from "../game/ui";
 import type { LineInput } from "../game/types";
 import { world } from "../game/world";
@@ -26,8 +26,6 @@ import { Chip } from "./widgets";
 import { shapeOf } from "../game/lineShapeState";
 import { t } from "../i18n";
 
-/** T-400: a search showing fewer results than this asks for more zones' place lists. */
-const WANT = 5;
 /** The zoom a town or neighbourhood opens at (T-177), by its OSM kind: a town whole, a
  * neighbourhood at street level. */
 const PLACE_ZOOM: Record<string, number> = {
@@ -93,21 +91,22 @@ export function Search() {
     return () => clearTimeout(timer);
   }, [query]);
   const w = world.value; // results follow the network
-  void places.value; // and the place lists as they arrive (fetched on first focus, T-177)
-  const hits = useMemo(() => (open ? search(searched) : []), [open, searched, w?.save.stations, w?.save.lines, places.value]);
+  const found = placeResults.value; // and the worker's towns as they arrive (T-4004)
+  const hits = useMemo(() => (open ? search(searched, found) : []), [open, searched, w?.save.stations, w?.save.lines, found]);
   const settled = searched === query;
-  const cur = Math.min(at, Math.max(0, hits.length - 1));
-  // T-400: few results from the lists in so far: the next nearest zones' lists, until enough or all
-  const wanting = open && query.trim().length >= 3 && hits.length < WANT;
-  // one batch at a time (T-3997): the next is asked for once this one is in and still too few are found
-  const [widened, setWidened] = useState(0);
+  // T-4004: towns arriving later keep the row the player moved to under the cursor
+  const moved = useRef<string | null>(null);
+  const kept = moved.current === null ? -1 : hits.findIndex((h) => hitKey(h) === moved.current);
+  const cur = kept >= 0 ? kept : Math.min(at, Math.max(0, hits.length - 1));
+  const moveTo = (i: number) => {
+    moved.current = hits[i] ? hitKey(hits[i]) : null;
+    setAt(i);
+  };
+  // the view's place lists load on first focus, an empty search
   useEffect(() => {
     const c = viewCentre.peek();
-    if (!wanting || !c) return;
-    let gone = false;
-    void widenPlaces(c[0], c[1]).then((more) => { if (more && !gone) setWidened((n) => n + 1); });
-    return () => { gone = true; };
-  }, [wanting, query, widened]);
+    if (open && c) findPlaces(searched, c[0], c[1]);
+  }, [open, searched]);
 
   const expand = () => {
     if (input.current) {
@@ -161,11 +160,11 @@ export function Search() {
       e.preventDefault();
       if (!hits.length) return;
       const n = hits.length;
-      setAt((cur + (e.key === "ArrowDown" ? 1 : n - 1)) % n);
+      moveTo((cur + (e.key === "ArrowDown" ? 1 : n - 1)) % n);
     } else if (e.key === "Enter") {
       e.preventDefault();
       // typed faster than the search settles: the text in the box, searched now
-      pick(settled ? hits[cur] : search(query)[0]);
+      pick(settled ? hits[cur] : search(query, placeResults.peek())[0]);
     }
   };
 
@@ -185,16 +184,16 @@ export function Search() {
       <FindInput inputRef={input} onClear={() => setQuery("")} type="text" value={query} placeholder={t("search.find")} aria-label={t("search.find")}
         autocomplete="off" spellcheck={false} role="combobox" aria-expanded={open && !!query.trim()}
         aria-controls="map-search-results" aria-activedescendant={hits.length ? `map-search-${cur}` : undefined}
-        onInput={(e) => { setQuery(e.currentTarget.value); setOpen(true); setAt(0); }}
-        onFocus={() => { setOpen(true); const c = viewCentre.peek(); if (c) void loadPlacesAt(c[0], c[1]); }}
+        onInput={(e) => { setQuery(e.currentTarget.value); setOpen(true); moved.current = null; setAt(0); }}
+        onFocus={() => setOpen(true)}
         onBlur={(e) => { setOpen(false); if (!e.currentTarget.value) setExpanded(false); }}
         onKeyDown={onKey} />
       {open && query.trim() && (
         <ul class="map-search-results" id="map-search-results" role="listbox">
-          {hits.length === 0 && settled && <li class="muted none">{t("search.none")}</li>}
+          {hits.length === 0 && settled && found.done && found.q === normalise(searched) && <li class="muted none">{t("search.none")}</li>}
           {hits.map((hit, i) => (
             <li id={`map-search-${i}`} role="option" aria-selected={i === cur} class={i === cur ? "on" : ""}
-              onMouseDown={(e) => e.preventDefault()} onMouseMove={() => i !== cur && setAt(i)} onClick={() => pick(hit)}>
+              onMouseDown={(e) => e.preventDefault()} onMouseMove={() => i !== cur && moveTo(i)} onClick={() => pick(hit)}>
               <Row hit={hit} pickLine={(line) => pick({ kind: "line", line, name: line.name })} />
             </li>
           ))}
@@ -202,6 +201,14 @@ export function Search() {
       )}
     </div>
   );
+}
+
+/** What a result is, across searches: the row the cursor stays on. */
+function hitKey(h: SearchHit): string {
+  if (h.kind === "line") return "l" + h.line.id;
+  if (h.kind === "city") return "c" + h.city.id;
+  if (h.kind === "station") return "s" + h.target;
+  return `p${h.place.city}|${h.name}|${h.lng}|${h.lat}`;
 }
 
 function Row({ hit, pickLine }: { hit: SearchHit; pickLine: (l: LineInput) => void }) {

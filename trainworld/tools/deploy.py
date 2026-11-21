@@ -209,6 +209,8 @@ def preflight(dist, allow_dirty, app=None, r2_version=None):
                 missing.append(f"realgraph/{cc}.rgr")
     except (OSError, ValueError, KeyError):
         pass
+    if not r2_version and not os.path.isfile(os.path.join(packs, "place-index", "index.json")):
+        warnings.append("the build has no packs/place-index/: search finds near towns only (pipeline/place_index.py, then rebuild)")
     if missing:
         where = f"on R2 at {r2_version}" if r2_version else "in the build"
         problems.append(f"{len(missing)} files the registry needs are not {where}: {', '.join(missing[:12])}{' ...' if len(missing) > 12 else ''}")

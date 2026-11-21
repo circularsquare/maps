@@ -1,12 +1,12 @@
 // Each city's place list from OpenStreetMap (T-177, T-065): towns, villages and neighbourhoods
-// inside the pack's footprint, `packs/<id>.places.json` (pipeline/places.py). The search box finds
-// them, and station names come from them where there is no cross street (map/stationNames.ts).
-// Fetched per zone when a search or the station tool needs that zone (the view's first), never at
-// startup; a failed fetch is forgotten, so the next caller tries again.
+// inside the pack's footprint, `packs/<id>.places.json` (pipeline/places.py). Station names come
+// from them where there is no cross street (map/stationNames.ts); the search box's worker loads its own
+// (workers/placeSearch.worker.ts, T-4004). Fetched per zone when the station tool needs that zone (the
+// view's first), never at startup; a failed fetch is forgotten, so the next caller tries again.
 
 import { signal } from "@preact/signals";
 import { CITIES, cityNear, zoneBox, type City, type CityId } from "./cities";
-import { normalise } from "./search";
+import { normalise } from "./nameMatch";
 import { dataUrl } from "./dataBase";
 import { M_PER_DEG, M_PER_DEG_LAT } from "./frame";
 import { patientFetch } from "../workers/patientFetch";
@@ -66,32 +66,11 @@ function boxDistance(c: City, lng: number, lat: number): number {
 }
 
 /** T-400: the lists of the zones whose boxes hold (lng, lat) or lie within VIEW_M of it, else the
- * nearest zone's: what the station tool and a first search need. */
+ * nearest zone's: what the station tool needs. */
 const VIEW_M = 30_000;
 export function loadPlacesAt(lng: number, lat: number): Promise<void> {
   const ids = CITIES.filter((c) => boxDistance(c, lng, lat) <= VIEW_M).map((c) => c.id);
   return loadAll(ids.length ? ids : [cityNear(lng, lat)]);
-}
-
-/** T-400: a search finding too little: the next WIDEN zones' lists not yet asked for, nearest to
- * (lng, lat) first, among the WIDEN_MAX nearest zones within WIDEN_M. One batch at a time: a call
- * while one is loading gets that one. Resolves false when there is nothing left to ask for. T-3997:
- * unbounded, a search with few results kept loading lists until the tab hung at over 3 GB. */
-const WIDEN = 4;
-const WIDEN_M = 200_000;
-const WIDEN_MAX = 48;
-let widening: Promise<boolean> | null = null;
-export function widenPlaces(lng: number, lat: number): Promise<boolean> {
-  if (widening) return widening;
-  const near = CITIES.map((c) => ({ c, d: boxDistance(c, lng, lat) })).filter((x) => x.d <= WIDEN_M)
-    .sort((a, b) => a.d - b.d).slice(0, WIDEN_MAX);
-  const next = near.filter((x) => !files.has(x.c.id)).slice(0, WIDEN);
-  if (!next.length) return Promise.resolve(false);
-  // true when any arrived: a batch that all failed is not asked for again at once
-  const p = Promise.all(next.map((x) => load(x.c.id).then(() => true, () => false))).then((got) => got.some(Boolean));
-  widening = p;
-  void p.finally(() => { if (widening === p) widening = null; });
-  return p;
 }
 
 const COUNTRY = new Map(CITIES.map((c) => [c.id, c.country]));
@@ -112,16 +91,21 @@ const NAMING_M: Record<string, number> = {
 
 export interface NearPlace { place: Place; d: number; dx: number; dy: number }
 
-/** Every listed place within `maxM` (each way) of a point, with its distance, unsorted. */
+const ZONE = new Map(CITIES.map((c) => [c.id, c]));
+/** Every listed place within `maxM` (each way) of a point, with its distance, unsorted: only the lists of
+ * zones whose boxes lie that near, as the lists loaded grow over a session. */
 function around(lng: number, lat: number, maxM: number): NearPlace[] {
   const kx = M_PER_DEG * Math.cos((lat * Math.PI) / 180), ky = M_PER_DEG_LAT;
   const out: NearPlace[] = [];
-  for (const list of places.peek().values())
+  for (const [id, list] of places.peek()) {
+    const z = ZONE.get(id);
+    if (z && boxDistance(z, lng, lat) > maxM * Math.SQRT2) continue;
     for (const p of list) {
       const dx = (lng - p.lng) * kx, dy = (lat - p.lat) * ky;
       if (Math.abs(dx) > maxM || Math.abs(dy) > maxM) continue;
       out.push({ place: p, d: Math.hypot(dx, dy), dx, dy });
     }
+  }
   return out;
 }
 

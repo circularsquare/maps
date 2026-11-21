@@ -167,7 +167,8 @@ registry (T-441). A zone registered by hand also needs `python pipeline/realms.p
 T-975; a country in no realm of `app/src/game/realms.json` gets a line there first) and `python pipeline/zone_outlines.py`, which
 rewrites `data/packs/outlines.json`, the coarse outline of every registered zone the map draws
 before the zone's own boundary has loaded (T-800); `world_run.py join` runs it, then
-`pipeline/zone_aliases.py` (T-836), which a zone registered by hand needs too.
+`pipeline/zone_aliases.py` (T-836) and `pipeline/place_index.py` (T-4004, search's world name index), which a
+zone registered by hand needs too.
 
 - Append to `cities`: `id`, `name`, `origin` (**exactly** the `build_city.py` origin, since it is
   the pack's frame), `center` (usually the origin), `zoom` 11.2, `utcOffset`, `market`.

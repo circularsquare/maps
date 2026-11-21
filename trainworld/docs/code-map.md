@@ -105,7 +105,9 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   only), `market-rows.json` (each zone's world market row, fetched by `workers/demandClient.ts` beside
   the first market pack and sent with it to the solving workers, `cities.ts` `marketWorld`), `places.ts` (station and
   compass names for the inspectors), `placeList.ts` (each city's OSM place list, fetched per zone by
-  search or station naming, the view's zones first, T-177, T-065, T-400), `boundaries.ts` (each city's boundary file, fetched
+  station naming, the view's zones first, T-177, T-065, T-400), `placeSearch.ts` (the search box's towns, asked of
+  `workers/placeSearch.worker.ts`, which loads the near zones' place lists and the world name index's shards, T-4004),
+  `nameMatch.ts` (the name normalising and match score search and the worker share), `boundaries.ts` (each city's boundary file, fetched
   once, T-172), `zoneNames.ts` (zones' shown names and search aliases from the hand-edited
   `zone-names.json` and the generated `zone-aliases.json`, `pipeline/zone_aliases.py`; T-825),
   `zone-successors.json` (each removed zone id's successor, for old saves, `pipeline/zone_successors.py`; T-1053),
@@ -519,6 +521,8 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
 - `osm_features.py [extracts]` reads a Geofabrik extract's point and area features once into
   `data/raw/osm/<extract>.points.fgb`, `.stations.fgb` (the gate's, T-770) and `.areas.fgb`; `read()` gives tier0.py, canada.py and
   places.py the rows a GDAL read of the .osm.pbf would (T-363).
+- `place_index.py` writes `data/packs/place-index/`, the world name index from every zone's place list: each
+  name word keyed by its first letters, hashed into 2,048 shards per tier, so a search fetches one (T-4004).
 - `places.py [ids]` writes each city's OSM place list, `data/packs/<id>.places.json` (towns and
   neighbourhoods inside the boundary, or a node in a gap of it under about 1 km across that no other
   pack's boundary holds, such as a Nile island at Aswan; an area holding a node of its own name is that

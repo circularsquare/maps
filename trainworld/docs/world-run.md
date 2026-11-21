@@ -214,7 +214,10 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
   and `data/packs/realms.geojson` (T-975, about 1.5 minutes; a failure leaves both as they were, and
   a zone without a realm always shows), then `zone_aliases.py` rewrites
   `app/src/game/zone-aliases.json`, the search aliases of every zone (T-836, seconds; the same
-  warning-only failure, so the new zones are found by their own name only until it is rerun).
+  warning-only failure, so the new zones are found by their own name only until it is rerun), then
+  `place_index.py` rewrites `data/packs/place-index/`, the world name index the search box finds far
+  towns with (T-4004, about 2 minutes; the same warning-only failure, so the new zones' towns are found
+  only near them until it is rerun).
   Status `shipped`; a shipped row's build hand-offs (`data/work/<id>.cells.*`, `walk_zone.u8*`) are deleted
   then, since nothing reads them after (T-2554).
 - **A join costs its groups** (T-2702): a join solves every solve unit a gated pack joined whole (a country's part of

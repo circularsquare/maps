@@ -140,6 +140,17 @@ function packs(): Plugin {
         mkdirSync(join(out, "realgraph"), { recursive: true });
         for (const f of readdirSync(graphs)) if (f.endsWith(".rgr") || f === "index.json") put(join(graphs, f), join(out, "realgraph", f));
       } else this.warn("real-network graphs missing: run pipeline/realgraph.py <regions>");
+      // T-4004: the world name index the search box finds far towns with (pipeline/place_index.py); without it only near ones
+      const index = join(PACKS, "place-index");
+      if (existsSync(join(index, "index.json"))) {
+        mkdirSync(join(out, "place-index"), { recursive: true });
+        put(join(index, "index.json"), join(out, "place-index", "index.json"));
+        for (const tier of readdirSync(index, { withFileTypes: true })) {
+          if (!tier.isDirectory()) continue;
+          mkdirSync(join(out, "place-index", tier.name), { recursive: true });
+          for (const f of readdirSync(join(index, tier.name))) put(join(index, tier.name, f), join(out, "place-index", tier.name, f));
+        }
+      } else this.warn("place name index missing: run pipeline/place_index.py");
     },
   };
 }

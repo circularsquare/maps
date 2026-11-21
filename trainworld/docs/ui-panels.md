@@ -540,7 +540,7 @@ click downloads the game, as the saved games panel's Download does.
 
 ## Search
 
-[T-148, T-177, T-183, T-211; `game/search.ts`, `ui/Search.tsx`]
+[T-148, T-177, T-183, T-211, T-4004; `game/search.ts`, `game/placeSearch.ts`, `ui/Search.tsx`]
 
 - A square button with a magnifying glass at the map's upper left, under the station ridership row
   (the last of the controls stacked there, in `.map-top-left`, its rows 4 px apart; the top right is the day and night
@@ -549,21 +549,28 @@ click downloads the game, as the saved games panel's Download does.
   browser only then. Up and down move through results, Enter or a click picks, Escape clears and
   closes it, as does leaving it empty; left with text, it stays open.
 - It finds the save's stations, its lines (by name, or the badge symbol exactly), the registry's
-  cities and zones, and the towns and neighbourhoods on each city's OSM place list (fetched the
-  first time the box is focused, `game/placeList.ts`; a place's other OSM names count). Place lists
-  are those of the zones within 30 km of the view; while a search of three letters or more finds
-  fewer than five results, the nearest other zones' lists load four at a time, the 48 nearest within
-  200 km at most, so a far town is found only when looking near it [T-400, T-3997]. Matching
-  ignores case, accents and punctuation: exact names, then names starting with the text, a word
-  starting with it, containing it, then clipped nicknames ("south philly": each word starts like a
-  word of the name bar its last two letters, keeping at least four). Ties list cities, lines,
-  stations (busiest first), then places (bigger kinds first, then population). No addresses (no
+  cities and zones, and the towns and neighbourhoods of every zone's OSM place list (a place's other
+  OSM names count). Places are found by a worker (`workers/placeSearch.worker.ts`), so no query holds
+  up the game [T-4004]: it loads the place lists of the zones within 30 km of the view when the box
+  is first focused (while a search of three letters or more finds fewer than five, the next nearest
+  zones' lists one at a time, the 48 nearest within 200 km at most) [T-400, T-3997], and for each
+  query one shard of the world name index (`pipeline/place_index.py`: every word of every name, and a
+  name of several words joined, keyed by its first three letters, two for CJK, kana and Hangul; towns down to villages first, then
+  neighbourhoods and hamlets), so a town anywhere is found by a word of its name starting with the
+  text; substrings and nicknames only in the lists near the view. One fetch at a time, at most 56
+  lists and 24 shards kept, eight places posted back. Results show as they come; the row the player
+  moved to stays under the cursor. Matching ignores case, accents and punctuation: exact names, then
+  names starting with the text, a word starting with it, containing it, then clipped nicknames
+  ("south philly": each word starts like a word of the name bar its last two letters, keeping at
+  least four). Ties list cities, lines, stations (busiest first), then places: those within 200 km of
+  the view first, then bigger kinds, then population. A query of one or two letters (one CJK
+  character) finds a far place only by its whole name, after every near one. No addresses (no
   geocoder).
 - Up to eight rows: a line's badge and "Line", a city "City", a place a hollow ring and its kind,
   a station its line badges (one per badge look, four at most), blueprint stations muted. Results
   sharing a name get a muted second line telling them apart: the city; within one city the lines
   only this one serves (three at most, a shared first word once) or else its compass direction
-  from the others. Stations of one complex sharing a name are one result, picking the platform
+  from the others. A place more than 200 km from the view gets its city there too. Stations of one complex sharing a name are one result, picking the platform
   with the most lines [T-182].
 - A pick moves the camera at once: a station to zoom 14 or closer, a line to its stops' bounds, a
   city to its registry centre and zoom, a place by its kind (town 12.5, suburb 13, neighbourhood

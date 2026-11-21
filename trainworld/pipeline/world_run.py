@@ -1481,6 +1481,12 @@ class Run:
                 print(f"  warning: zone search aliases not rebuilt: {str(tail)[-200:]}", flush=True)
         except Exception as e:
             print(f"  warning: zone search aliases not rebuilt: {e}", flush=True)
+        try:  # T-4004: the world name index search finds far towns with; a failure only leaves it as it was
+            ok, _, tail = self.step("place_index", [], f"{L}.placeindex.log")
+            if not ok:
+                print(f"  warning: place name index not rebuilt: {str(tail)[-200:]}", flush=True)
+        except Exception as e:
+            print(f"  warning: place name index not rebuilt: {e}", flush=True)
 
     def market_step(self, ids, L):
         """The join's market and trips step for `ids` (registry order). Its limit grows with the registry,

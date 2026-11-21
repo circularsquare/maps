@@ -1,8 +1,8 @@
 // Search (T-148): stations, lines and the registry's cities by name, for the search box at the
 // map's upper right (ui/Search.tsx). Stations sharing a name within one station complex
 // (game/complexes.ts) are one result, so "Times Sq" with three platforms is found once. Towns and
-// neighbourhoods come from each city's OSM place list (T-177, game/placeList.ts), once the box has
-// loaded them; addresses are not searched (notes/T-148.md).
+// neighbourhoods are found by a worker (T-4004, game/placeSearch.ts) and merged in here; addresses are
+// not searched (notes/T-148.md).
 
 import { t, tSeries } from "../i18n";
 import { tPlace } from "../i18n/places";
@@ -10,7 +10,9 @@ import { CITIES, type City } from "./cities";
 import { zoneAt } from "./zones";
 import { complexes } from "./complexView";
 import { lineDemand, stationDemand } from "./demand";
-import { places, type Place } from "./placeList";
+import type { Place } from "./placeList";
+import type { PlaceFound } from "./placeSearch";
+import { matchScore, normalise, PLACE_WEIGHT } from "./nameMatch";
 import { compass } from "./places";
 import type { LineInput, StationId } from "./types";
 import { listedLines, world } from "./world";
@@ -36,63 +38,17 @@ export type SearchHit =
   | { kind: "line"; name: string; line: LineInput }
   /** `matched`: the alias the query matched, when it was not the name (T-825) */
   | { kind: "city"; name: string; city: City; matched?: string }
-  /** a town or neighbourhood from a place list; `tag` as for stations (its city, or a direction) */
-  | { kind: "place"; name: string; place: Place; lng: number; lat: number; city: string; tag?: string };
+  /** a town or neighbourhood from a place list; `tag` as for stations (its city, or a direction); `far`
+   * beyond the view's NEAR_M (T-4004), which tags it with its city */
+  | { kind: "place"; name: string; place: Place; lng: number; lat: number; city: string; tag?: string; far?: boolean };
 
-/** Letters NFD does not split into a base and an accent. */
-const PLAIN: Record<string, string> = { ł: "l", ø: "o", đ: "d", ħ: "h", ı: "i", ß: "ss", æ: "ae", œ: "oe", þ: "th" };
-
-/** Lower case, accents and punctuation dropped, spaces collapsed. */
-export function normalise(s: string): string {
-  return s
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replace(/[łøđħıßæœþ]/g, (ch) => PLAIN[ch])
-    .replace(/&/g, " and ")
-    .replace(/[^\p{L}\p{N}]+/gu, " ")
-    .trim();
-}
-
-/** How well `name` matches the query `q` (both normalised): 0 exact, 1 starts with it, 2 a word
- * starts with it, 3 contains it, 4 contains it ignoring spaces, 5 its words are clipped forms of
- * the name's (looseWords); -1 no match. */
-export function matchScore(name: string, q: string): number {
-  if (!q) return -1;
-  if (name === q) return 0;
-  if (name.startsWith(q)) return 1;
-  if ((" " + name).includes(" " + q)) return 2;
-  if (name.includes(q)) return 3;
-  if (name.replace(/ /g, "").includes(q.replace(/ /g, ""))) return 4;
-  if (looseWords(name, q)) return 5;
-  return -1;
-}
-
-/** Nicknames made by clipping a word and adding an ending (T-177: "south philly" for South
- * Philadelphia): the query's words match consecutive words of the name, each either starting it
- * or sharing its first letters bar the query word's last two, at least four and not the whole
- * name word (so "southie" does not find every South Street). */
-function looseWords(name: string, q: string): boolean {
-  const qw = q.split(" ");
-  if (!name.includes(qw[0].slice(0, 4))) return false; // the common case, cheaply
-  const nw = name.split(" ");
-  const like = (n: string, w: string) => {
-    if (n.startsWith(w)) return true;
-    let k = 0;
-    while (k < n.length && k < w.length && n[k] === w[k]) k++;
-    return k >= Math.max(4, w.length - 2) && k < n.length;
-  };
-  for (let i = 0; i + qw.length <= nw.length; i++) if (qw.every((w, j) => like(nw[i + j], w))) return true;
-  return false;
-}
+export { matchScore, normalise };
 
 /** Equal matches: cities first (few, and the biggest places), then lines, then stations, then
  * towns and neighbourhoods. */
 const KIND_ORDER = { city: 0, line: 1, station: 2, place: 3 } as const;
-/** Equal place matches: bigger kinds first, then by population. */
-const PLACE_WEIGHT: Record<string, number> = {
-  city: 1e8, town: 1e7, borough: 1e7, suburb: 5e6, quarter: 4e6, village: 3e6, neighbourhood: 2e6, hamlet: 0,
-};
+/** Equal place matches: one near the view first (T-4004), then PLACE_WEIGHT's. */
+const NEAR_WEIGHT = 1e12;
 export const MAX_HITS = 8;
 
 /** Station names normalised, kept: a big save has tens of thousands, searched on every key. */
@@ -106,9 +62,10 @@ const norm = (s: string) => {
   return n;
 };
 
-/** The best matches for `query`, best first. A result's city is looked up only for those kept: a
- * short query matches most stations of a big save. */
-export function search(query: string): SearchHit[] {
+/** The best matches for `query`, best first, with the places the worker found for it (`found`, used
+ * when it answers this query). A result's city is looked up only for those kept: a short query
+ * matches most stations of a big save. */
+export function search(query: string, found?: { q: string; hits: readonly PlaceFound[] }): SearchHit[] {
   const q = normalise(query);
   if (!q) return [];
   const scored: { hit: SearchHit; score: number; weight: number; cityOf?: () => string }[] = [];
@@ -156,20 +113,13 @@ export function search(query: string): SearchHit[] {
     const m = cityMatch(c, q);
     if (m) scored.push({ hit: { kind: "city", name: tPlace(c.id, c.name), city: c, matched: m.matched }, score: m.score, weight: (m.matched ? -1e6 : 0) - i });
   });
-  for (const list of places.peek().values())
-    for (const p of list) {
-      let score = -1;
-      for (const k of p.keys) {
-        const s = matchScore(k, q);
-        if (s >= 0 && (score < 0 || s < score)) score = s;
-      }
-      if (score < 0 || isRegistryCity(p)) continue;
+  if (found?.q === q)
+    for (const { place: p, score, near } of found.hits)
       scored.push({
-        hit: { kind: "place", name: p.name, place: p, lng: p.lng, lat: p.lat, city: "" },
-        score, weight: (PLACE_WEIGHT[p.kind] ?? 0) + p.pop,
+        hit: { kind: "place", name: p.name, place: p, lng: p.lng, lat: p.lat, city: "", far: !near },
+        score, weight: (near ? NEAR_WEIGHT : 0) + (PLACE_WEIGHT[p.kind] ?? 0) + p.pop,
         cityOf: () => cityById(p.city),
       });
-    }
   scored.sort((a, b) => a.score - b.score || KIND_ORDER[a.hit.kind] - KIND_ORDER[b.hit.kind] || b.weight - a.weight
     || numeric(a.hit.name, b.hit.name));
   const hits = scored.slice(0, MAX_HITS).map((s) => {
@@ -238,7 +188,11 @@ export function tagTwins(hits: SearchHit[]) {
   const found = hits.filter((h): h is PlaceHit => h.kind === "place");
   for (const hit of found) {
     const twins = found.filter((o) => o !== hit && normalise(o.name) === normalise(hit.name));
-    if (!twins.length) continue;
+    if (!twins.length) {
+      // T-4004: a town far from the view says where it is
+      if (hit.far && hit.city) hit.tag = hit.city;
+      continue;
+    }
     const near = twins.filter((o) => o.city === hit.city);
     const way = near.length ? direction(hit, near) : undefined;
     // "New York, northeast" when other cities have one too, so the direction is not read as theirs
@@ -247,37 +201,6 @@ export function tagTwins(hits: SearchHit[]) {
 }
 
 type PlaceHit = Extract<SearchHit, { kind: "place" }>;
-
-/** How near a registry city's centre a place list's city or town is taken for it, degrees. */
-const SAME_CITY_DEG = 0.15;
-/** Registry cities by 1-degree cell of their centre, names normalised (built once). */
-let cityCells: Map<string, { name: string; lng: number; lat: number }[]> | null = null, cellsFor = -1;
-const isCity = new WeakMap<Place, boolean>();
-
-/** A place list's own entry for a registry city ("Washington" near Washington, DC's centre),
- * which the city's own result already covers. Kept per place: it does not depend on the query, and
- * a short query matches most places of the lists loaded (T-3997: 7 s for "s"). */
-function isRegistryCity(p: Place): boolean {
-  if (p.kind !== "city" && p.kind !== "town") return false;
-  let known = isCity.get(p);
-  if (known !== undefined) return known;
-  if (!cityCells || cellsFor !== CITIES.length) {
-    cityCells = new Map();
-    for (const c of CITIES) {
-      const k = `${Math.floor(c.center[0])}:${Math.floor(c.center[1])}`;
-      (cityCells.get(k) ?? cityCells.set(k, []).get(k)!).push({ name: normalise(c.name), lng: c.center[0], lat: c.center[1] });
-    }
-    cellsFor = CITIES.length;
-  }
-  const name = p.keys[0], kx = Math.cos((p.lat * Math.PI) / 180), x = Math.floor(p.lng), y = Math.floor(p.lat);
-  known = false;
-  for (let i = -1; i <= 1 && !known; i++)
-    for (let j = -1; j <= 1 && !known; j++)
-      for (const c of cityCells.get(`${x + i}:${y + j}`) ?? [])
-        if (c.name.startsWith(name) && Math.hypot((p.lng - c.lng) * kx, p.lat - c.lat) < SAME_CITY_DEG) { known = true; break; }
-  isCity.set(p, known);
-  return known;
-}
 
 /** "subway A, C, E": line names in order, a first word they all share written once, three at
  * most ("subway 1, 2, 3 and 7 more"). */
