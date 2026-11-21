@@ -16,7 +16,9 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
    notes/T-3444-design/ + review/track-rework-design.md). Landed since 8800 (4141e6bc), UNCHECKED BATCH: cachekey
    44316713, movedhour 4f8b9e0d, tweaks e778ce68, egyptunits c2ec5711 (pipeline), islands3 a2062187 (CACHE_FORMAT 13).
    Batch checker + smoke + 8800 rebuild wait for her OK on compute. T-3655 parked again (option 1 decided).
-2. HER 11-21 ~14:05 UTC: the 13:20 "no more compute" was a moment, not a standing hold ("that doesnt mean we should
+2. Batch 9 on master (unchecked, not on 8800): phonemem2 49a4142e, autostops 94832b99, dropindent d80eaa39; islandfix
+   (T-2216 ferry case, batchchk8 item 4) to come. Smoke at 14:50 failed only on page.goto timeouts with every core
+   claimed: rerun with the batch-9 check once islandfix lands. HER 11-21 ~14:05 UTC: the 13:20 "no more compute" was a moment, not a standing hold ("that doesnt mean we should
    not be using compute now"); keep 4-12 agents. Count every Auto stop (T-3924, autostops finishing). PR 24 reply
    posted 14:10. Batch 8 (cachekey, movedhour, tweaks, islands3, busway) checking: batchchk8 + smoke + 8800 at
    7e04ea1f. Running too: ownwaits T-3931, fullrate4 T-3655, splitb1 T-3373 B st.1, brtstations T-3378 st.3,
