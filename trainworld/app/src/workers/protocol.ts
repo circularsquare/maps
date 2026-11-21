@@ -770,9 +770,16 @@ export interface ClockBus {
   hand: boolean;
   /** T-3907: bus lanes along the whole route (BRT) */
   brt: boolean;
-  /** T-3907: road metres in town for BRT (where a plain bus moves under BRT's floor), on BRT or not: what its
-   * lanes are paid and upkept over */
+  /** T-3907: road metres in town for BRT (where a plain bus moves under BRT's floor), on BRT or not */
   townM: number;
+  /** T-3378: of `townM`, the road metres no other BRT line has lanes on (constructed ones, for a constructed
+   * line): what switching it on pays for */
+  newM: number;
+  /** T-3378: its part of the lanes' upkeep, road metres (a lane two lines share, half each); 0 off BRT */
+  laneM: number;
+  /** T-3378: per demand period, buses an hour one way on its fullest stretch of BRT lane (0 with none), then the
+   * most a lane takes */
+  laneLoad: number[];
   /** T-2891: while `hand`, the stations the route can stop at, a stop or not */
   reach: { node: number; x: number; y: number; lng: number; lat: number }[];
   /** `route` and `street` as longitude, latitude pairs, flat */

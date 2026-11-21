@@ -206,9 +206,10 @@ impl TrackApi {
         let [own, at_ports, passages, buildings] = n.upkept_upgrades_value().map(crate::track::upgrades::upkeep);
         let ups = own + at_ports + passages + buildings;
         let stations: f64 = upkept.iter().map(|&i| station_upkeep(n, i)).sum::<f64>() + own + passages + buildings;
-        let bus_km: f64 = n.bus_lines().into_iter().filter_map(|l| bus_upkeep(n, l).map(|_| n.bus_road_m(l) / 1000.0)).sum();
+        let lanes = n.brt_upkeep_m();
+        let bus_km: f64 = n.bus_lines().into_iter().filter_map(|l| bus_upkeep(n, l, &lanes).map(|_| n.bus_road_m(l) / 1000.0)).sum();
         // T-3907: a BRT route at its own rate
-        let buses: f64 = n.bus_lines().into_iter().filter_map(|l| bus_upkeep(n, l)).sum();
+        let buses: f64 = n.bus_lines().into_iter().filter_map(|l| bus_upkeep(n, l, &lanes)).sum();
         let port_count = (0..n.node_alive.len()).filter(|&i| upkept_port(n, i)).count() as f64;
         let ports = port_count * port_upkeep() + at_ports;
         vec![track + stations + buses + ports, track, stations, km, count, buses, bus_km, ports, port_count, ups]
@@ -311,8 +312,9 @@ impl TrackApi {
             }
         }
         // a bus route's upkeep is its own line's (T-1464)
+        let lanes = n.brt_upkeep_m();
         for l in n.bus_lines() {
-            let Some(u) = bus_upkeep(n, l) else { continue };
+            let Some(u) = bus_upkeep(n, l, &lanes) else { continue };
             if weight(l) > 0.0 { share[l as usize] += u } else { rest += u }
         }
         let mut out: Vec<f64> = share.iter().enumerate().filter(|(_, &s)| s > 0.0).flat_map(|(l, &s)| [l as f64, s]).collect();

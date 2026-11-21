@@ -314,11 +314,11 @@ fn port_upkeep() -> f64 {
     UPKEEP_PORT * ECONOMY / 1e6
 }
 /// A constructed bus route's upkeep a game day, US$M, a BRT one's lanes included (T-3907); None for a
-/// planned one (T-1464).
-fn bus_upkeep(n: &Network, l: u32) -> Option<f64> {
+/// planned one (T-1464). `lanes`: each line's part of the lanes' upkeep, road metres (`Network::brt_upkeep_m`).
+fn bus_upkeep(n: &Network, l: u32, lanes: &[f64]) -> Option<f64> {
     n.line_bus.get(l as usize)?.as_ref().filter(|r| r.built && n.line_ok(l)).map(|_| {
-        // T-3907: a BRT route's road in town at street tram track's rate
-        let (road, town) = (n.bus_road_m(l), n.brt_town_m(l));
+        // T-3907: a BRT route's road in town at street tram track's rate; T-3378: a lane two lines share, half each
+        let (road, town) = (n.bus_road_m(l), lanes.get(l as usize).copied().unwrap_or(0.0));
         ((road - town) * UPKEEP_BUS_KM + town * UPKEEP_BRT_KM) / 1000.0 * ECONOMY / 1e6
     })
 }

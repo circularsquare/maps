@@ -242,10 +242,14 @@ function LineBody({ l, st }: { l: LineInput; st: LineStats }) {
  * T-3767: its periods and hours as a rail line's. */
 function BusBody({ l, st }: { l: LineInput; st: LineStats }) {
   const { periods } = useLinePeriods(l.id, l);
+  // T-3378: a BRT line's headways are limited by its lanes' room
+  const w = world.value!;
+  const lanes = !!st.bus?.brt && !!st.bus.built;
+  const limits = useClockQuery(lanes ? { what: "lineHeld", line: l.num, rows: true } : null, [l.num, w.version, lanes], (d) => limitsFrom(d, "bus")) ?? NO_LIMITS;
   return (
     <div class="sp-body">
       <div class="sp-left">
-        <Schedule l={l} st={st} period={periodAt(lineSeconds(st))} crowd={periods} label={t("schedulePanel.setBy")} weekends hours above={<Periods l={l} st={st} />} />
+        <Schedule l={l} st={st} period={periodAt(lineSeconds(st))} limits={limits} crowd={periods} label={t("schedulePanel.setBy")} weekends hours above={<Periods l={l} st={st} />} />
       </div>
     </div>
   );

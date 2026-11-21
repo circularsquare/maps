@@ -680,7 +680,11 @@ buses: buses or a headway per demand level with the same hovers, the crowding do
 schedule panel button of a running line (its weekends and new bus lines' headways, no board or timetable chart,
 [ui-panels.md](ui-panels.md#schedule-panel), T-3703; no chart toggle), the waiting
 spinner on a level with buses while demand loads, a BRT box (T-3907; its hover the floor, the price a km in town with
-the route's km in town, and the upkeep a km there), and the average speed; no track limits (T-2919). Stops: the ends and the
+the route's km in town, and the upkeep a km there; T-3378: a last line with the km of that another BRT line already
+has lanes on, paid for once), on a constructed BRT line "Busiest lane" (its fullest stretch of lane now, "48/60 buses
+per hour", red at 60 with a hover), and the average speed. No track limits (T-2919), but a BRT line's lanes limit it as
+track does (T-3378): its headways red past its share, and under the rows a full lane's alert ("BRT lane near X is full")
+with the buses held out of service a row. Stops: the ends and the
 train stations met, the street stops between folded into one row each, in the line panel's order (north or
 west end on top) with its stop times (the time from the stop on top after each name, "12m30s").
 The counts block, headingless as the line panel's: riders by purpose, Changing to trains (riders a day changing between this bus and any rail

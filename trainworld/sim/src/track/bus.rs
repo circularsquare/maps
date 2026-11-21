@@ -14,6 +14,8 @@
 //! otherwise only drawn. Every point of the route belongs to its nearest stop that is not a station
 //! (the stop's `cover`), so a home near the route walks to the route and rides from there.
 
+pub mod lanes;
+
 use super::net::Network;
 use super::profile::{Phase, Profile};
 use super::streets::{brt_in_town, bus_kmh_at, bus_trunk_kmh, car_main_kmh, lane_kmh, BUS_LANE_KMH, BUS_STOP_S, CAR_END_M, CAR_LOCAL_M, CAR_OPEN_KMH, CAR_TOWN_KMH};

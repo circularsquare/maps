@@ -615,3 +615,109 @@ fn a_brt_line_runs_at_its_floor_is_paid_for_saved_and_undone() {
     assert!(!plain_save.windows(4).any(|w| w == b"LBR1"));
     assert!(a.load(&plain_save) && !a.bus_brt(b));
 }
+
+/// T-3378: two BRT lines on one road share its lanes: the second pays only its own road in town, run either way and
+/// a carriageway apart; the lanes' upkeep is paid once, split between them; switching one off or deleting it costs
+/// nothing; a planned line on constructed lanes adds nothing to the blueprint; and a save keeps it all.
+#[test]
+fn brt_lines_on_one_road_share_its_lanes() {
+    let mut a = api();
+    let (pop, jobs) = ([30_000.0f32, 30_000.0, 50.0], [20_000.0f32, 20_000.0, 5.0]);
+    assert!(a.add_pack_streets(2000.0, -1000.0, -1000.0, 3, 1, &pop, &jobs, &[0, 1, 2], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758));
+    let line = |a: &mut TrackApi, pts: &[f64]| {
+        let l = a.new_line_id();
+        assert_eq!(a.set_bus_line(l, pts, 480, 600, 1200, 30.0, 120.0, 0, "B".into()), 0, "{}", a.issues());
+        assert_eq!(a.construct_line(l), 0, "{}", a.issues());
+        l
+    };
+    let price = |m: f64| m / 1000.0 * BRT_COST_PER_KM;
+    let l1 = line(&mut a, &[0.0, 0.0, 1.0, 6000.0, 0.0, 1.0]);
+    // the other way, 10 m over, and on 500 m further west, in the dense streets too
+    let l2 = line(&mut a, &[6000.0, 10.0, 1.0, -500.0, 10.0, 1.0]);
+    let (t1, t2) = (a.bus_town_m(l1), a.bus_town_m(l2));
+    assert!((t2 - t1 - 500.0 * ROAD_FACTOR).abs() <= 100.0, "{t1} {t2}");
+    let cash = a.cash();
+    assert_eq!(a.set_bus_brt(l1, true), 0, "{}", a.issues());
+    assert!((cash - a.cash() - price(t1)).abs() < 1e-6, "{}", cash - a.cash());
+    // the second pays its 600 road-m west of the first, and its hover says so
+    let lanes = a.bus_lanes(l2);
+    assert!((lanes[0] - t2).abs() < 1e-6 && (lanes[1] - 500.0 * ROAD_FACTOR).abs() <= 100.0 && lanes[2] == 0.0, "{lanes:?}");
+    let cash = a.cash();
+    assert_eq!(a.set_bus_brt(l2, true), 0, "{}", a.issues());
+    let paid = cash - a.cash();
+    assert!((paid - price(lanes[1])).abs() <= price(100.0) + 1e-6, "{paid} {lanes:?}");
+    let union = a.w.net.brt_lane_m(true);
+    assert!((union - t1 - lanes[1]).abs() <= 100.0, "{union}");
+    // upkeep: the shared road once, half on each line's share; each line's own road at a plain route's rate
+    let parts = a.w.net.brt_upkeep_m();
+    assert!((parts[l1 as usize] + parts[l2 as usize] - union).abs() <= 100.0, "{parts:?} {union}");
+    assert!((parts[l1 as usize] - 0.5 * t1).abs() <= 100.0, "{parts:?}");
+    let road = a.bus_road_m(l1) + a.bus_road_m(l2);
+    let want = ((road - parts[l1 as usize] - parts[l2 as usize]) * UPKEEP_BUS_KM + (parts[l1 as usize] + parts[l2 as usize]) * UPKEEP_BRT_KM) / 1000.0 * ECONOMY / 1e6;
+    assert!((a.upkeep()[5] - want).abs() < 1e-9, "{} {want}", a.upkeep()[5]);
+    // a planned third line on the first's road: no blueprint row for its lanes
+    let l3 = a.new_line_id();
+    assert_eq!(a.set_bus_line(l3, &[100.0, 0.0, 1.0, 2900.0, 0.0, 1.0], 480, 600, 1200, 30.0, 120.0, 0, "C".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_bus_brt(l3, true), 0, "{}", a.issues());
+    let rows = a.w.net.blueprint_cost_items();
+    assert!(rows.chunks_exact(7).filter(|r| r[0] == 16.0).all(|r| r[5] <= 100.0), "{rows:?}");
+    assert!((a.w.net.total_cost() - a.w.net.built_cost() - rows.chunks_exact(7).map(|r| r[6]).sum::<f64>()).abs() < 1e-8);
+    // a save keeps the sharing
+    let built = a.w.net.built_cost();
+    let saved = a.save();
+    assert!(a.load(&saved));
+    assert!((a.w.net.built_cost() - built).abs() < 1e-9);
+    // off and deleted: nothing charged
+    let cash = a.cash();
+    assert_eq!(a.set_bus_brt(l1, false), 0, "{}", a.issues());
+    assert_eq!(a.cash(), cash);
+    assert_eq!(a.set_bus_brt(l1, true), 0, "{}", a.issues());
+    assert!(cash - a.cash() <= price(100.0) + 1e-6, "{}", cash - a.cash());
+    let cash = a.cash();
+    assert_eq!(a.remove_line(l1), 0, "{}", a.issues());
+    assert_eq!(a.cash(), cash);
+}
+
+/// T-3378 stage 2: a BRT lane takes `LANE_BUSES_H` buses an hour each way; past it the lines on it run fewer, each
+/// cut by the same share, plain lines on the road are not, and the panel's reads say so.
+#[test]
+fn a_full_brt_lane_cuts_its_lines_buses() {
+    use crate::track::bus::lanes::LANE_BUSES_H;
+    let mut a = api();
+    let (pop, jobs) = ([30_000.0f32, 30_000.0, 50.0], [20_000.0f32, 20_000.0, 5.0]);
+    assert!(a.add_pack_streets(2000.0, -1000.0, -1000.0, 3, 1, &pop, &jobs, &[0, 1, 2], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758));
+    // a bus every 90 s each: 40 an hour each way, 80 on the shared road
+    let line = |a: &mut TrackApi, pts: &[f64]| {
+        let l = a.new_line_id();
+        assert_eq!(a.set_bus_line(l, pts, 90, 90, 90, 30.0, 120.0, 0, "B".into()), 0, "{}", a.issues());
+        assert_eq!(a.construct_line(l), 0, "{}", a.issues());
+        l
+    };
+    let l1 = line(&mut a, &[0.0, 0.0, 1.0, 2800.0, 0.0, 1.0]);
+    let l2 = line(&mut a, &[-400.0, 10.0, 1.0, 2800.0, 10.0, 1.0]);
+    let lev = a.w.net.period_slot()[0];
+    let tph = |a: &TrackApi, l: u32| a.w.net.line_tph[l as usize][lev] as f64;
+    let (p1, p2) = (tph(&a, l1), tph(&a, l2));
+    assert!(p1 > 38.0 && p2 > 38.0, "{p1} {p2}");
+    // on plain lines nothing is cut, and the lane read is empty
+    assert_eq!(a.bus_lane_load(l1)[0], 0.0);
+    assert_eq!(a.set_bus_brt(l1, true), 0, "{}", a.issues());
+    assert!((tph(&a, l1) - p1).abs() < 0.5, "{} {p1}", tph(&a, l1));
+    // both on BRT: cut to fit, each by about the same share
+    assert_eq!(a.set_bus_brt(l2, true), 0, "{}", a.issues());
+    let (b1, b2) = (tph(&a, l1), tph(&a, l2));
+    assert!(b1 + b2 <= LANE_BUSES_H + 0.5 && b1 + b2 >= LANE_BUSES_H - 2.0, "{b1} {b2}");
+    assert!((b1 / p1 - b2 / p2).abs() < 0.05, "{b1} {b2} {p1} {p2}");
+    let load = a.bus_lane_load(l2);
+    assert!((load[0] - b1 - b2).abs() < 1e-3 && load[5] == LANE_BUSES_H, "{load:?}");
+    // a headway the lane can't give shows as limited by it (`LANE_KIND`)
+    let held = a.line_held(l1);
+    let limits = &held[7 * ROWS..12 * ROWS];
+    assert!(limits.chunks_exact(5).any(|r| r[1] == crate::track::capacity::LANE_KIND as f64 && r[0] > 90.0), "{held:?}");
+    // a plain line on the same road neither counts nor is cut
+    let l3 = line(&mut a, &[0.0, 5.0, 1.0, 2800.0, 5.0, 1.0]);
+    assert!(tph(&a, l3) > 38.0 && (tph(&a, l1) - b1).abs() < 0.5, "{} {}", tph(&a, l3), tph(&a, l1));
+    // one off BRT: the other runs all its buses again
+    assert_eq!(a.set_bus_brt(l2, false), 0, "{}", a.issues());
+    assert!(tph(&a, l1) > 38.0 && tph(&a, l2) > 38.0, "{} {}", tph(&a, l1), tph(&a, l2));
+}

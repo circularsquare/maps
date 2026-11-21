@@ -88,10 +88,10 @@ export interface Income {
   lines: Map<string, LineMoney>;
 }
 
-/** T-3907: a bus route's upkeep a day, real US$ (times the economy in the game): a BRT one's road in town at its own
- * rate. */
-export const busUpkeepDay = (t: { upkeepBusKm?: number; upkeepBrtKm?: number }, b: { roadM: number; brt?: boolean; townM?: number }) => {
-  const town = b.brt ? Math.min(b.roadM, b.townM ?? 0) : 0;
+/** T-3907: a bus route's upkeep a day, real US$ (times the economy in the game): a BRT one's lanes at their own
+ * rate, T-3378: its part of them (a lane two lines share, half each). */
+export const busUpkeepDay = (t: { upkeepBusKm?: number; upkeepBrtKm?: number }, b: { roadM: number; brt?: boolean; laneM?: number }) => {
+  const town = b.brt ? Math.min(b.roadM, b.laneM ?? 0) : 0;
   return ((b.roadM - town) * (t.upkeepBusKm ?? 0) + town * (t.upkeepBrtKm ?? 0)) / 1000;
 };
 
@@ -138,7 +138,7 @@ function sameShape(a: WorldView, b: WorldView): boolean {
  * size too (its fare multiple); T-3907: on BRT or not (its upkeep). */
 function sameBus(a: LineStats["bus"], b: LineStats["bus"]): boolean {
   if (!a || !b) return a === b;
-  if (a.built !== b.built || a.roadM !== b.roadM || a.stops.length !== b.stops.length || a.ferry?.boat !== b.ferry?.boat || a.brt !== b.brt || a.townM !== b.townM) return false;
+  if (a.built !== b.built || a.roadM !== b.roadM || a.stops.length !== b.stops.length || a.ferry?.boat !== b.ferry?.boat || a.brt !== b.brt || a.townM !== b.townM || a.laneM !== b.laneM || a.newM !== b.newM) return false;
   return a.stops.every((s, i) => s.id === b.stops[i].id && s.lng === b.stops[i].lng && s.lat === b.stops[i].lat);
 }
 let shaped: WorldView | null = null;

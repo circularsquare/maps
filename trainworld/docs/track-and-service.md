@@ -2389,8 +2389,27 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   (Anita, 11-21). In town it adds US$5M a road-km (`BRT_COST_PER_KM`; real BRT US$5-20M a km, the low end while there
   are no corridors or BRT stations), its own Construct row on a planned line, paid at once when switched on for a
   constructed one; off gives nothing back and an undo or redo moves no money; and its upkeep there is street tram
-  track's, US$210 a road-km a day in place of the US$30 (`UPKEEP_BRT_KM`), in the line's and the network's upkeep. Removing or redrawing a constructed route is final and refunds
-  nothing. A new bus line starts at a bus every 8, 15 and 30 minutes by level (Anita, 2026-11-09; the bus default for new lines instead once set, T-3703), 30 s dwell at
+  track's, US$210 a road-km a day in place of the US$30 (`UPKEEP_BRT_KM`), in the line's and the network's upkeep.
+  **Shared lanes** (T-3378, `bus/lanes.rs`): BRT lines on one road share its lanes. A 100 m step of one line shares
+  another's lane where its middle lies within 20 m of that line's road in town and the two run within 30 degrees,
+  either way (`MATCH_M`, `MATCH_DEG`); a line never shares with itself, so a route out and back along one road pays
+  both ways. The lanes' built value counts each shared step once: constructed lines first, then planned ones, each
+  part by id, a step counted only when no line before it has a lane there, so a planned line's Construct row is what
+  it adds beyond the constructed lanes and a second line switched on pays only its own road. Each line's lane
+  upkeep is its steps split evenly between the lines on them (`Network::brt_upkeep_m`). Taking a line off BRT or
+  deleting a bus line charges nothing, though the lanes it shared are then counted on the other line. A level-34
+  game loads with its overlapping lanes shared, its upkeep lower there and its cash as saved. Removing or redrawing
+  a constructed route is final and refunds nothing.
+- **Lane room** (T-3378 stage 2, `bus::lanes::Room`, Anita 11-21): each way of a BRT lane takes 60 buses an hour
+  (`LANE_BUSES_H`). The constructed BRT lines' lanes make a list of ways: per step, the lines whose buses run along it
+  one way (a line runs both ways unless it is a loop run one way), each distinct set once. These are filled as track
+  is: `Capacity::fill` cuts the lines' rates by progressive filling over the ways beside the track's resources, and
+  `line_limits` names a way (`LANE_RES`, kind 15) where it limits a line, so a headway line keeps the buses its
+  share runs and the rest are not bought (`trim_auto`), and a count line's extra buses wait at its ends. No slowdown:
+  a full lane only cuts buses. Plain bus lines on the road neither count nor are cut. An edit of any bus line settles
+  every BRT line (`sharing_closure`). The bus panel shows the busiest way under the BRT box ("Busiest lane", n/60
+  buses per hour, red once full), the full lane's alert with the buses held out, and the headways it limits.
+  Worked out again only when a BRT route, a loop's one way or the street grids change (`Network::brt_room`). A new bus line starts at a bus every 8, 15 and 30 minutes by level (Anita, 2026-11-09; the bus default for new lines instead once set, T-3703), 30 s dwell at
   train stations and 120 s turnaround (`NEW_LINE` in app/src/game/newLine.ts, the one place for what a new
   line of each mode starts with). A copy is planned.
 - **Loops** (T-2899; `bus::is_closed`): a route of four points or more whose last point is its first is a loop.

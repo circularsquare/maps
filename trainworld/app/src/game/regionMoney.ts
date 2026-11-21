@@ -214,8 +214,9 @@ export function chargeShares(before: WorldView | null, after: WorldView, line?: 
   for (const l of after.save.lines) {
     const now = after.lineStats[l.id]?.bus, was = before?.lineStats[l.id]?.bus;
     if (!now?.built || now.ferry) continue;
-    // T-3907: a constructed line switched to BRT pays its lanes in town, spread over its road
-    const town = now.roadM > 0 ? Math.min(1, now.townM / now.roadM) : 0;
+    // T-3907: a constructed line switched to BRT pays its lanes in town, spread over its road; T-3378: those no
+    // other BRT line has
+    const town = now.roadM > 0 ? Math.min(1, now.newM / now.roadM) : 0;
     const price = (was?.built ? 0 : perKm) + (now.brt && !(was?.built && was.brt) ? brtKm * town : 0);
     if (price > 0) for (const [z, km] of busKmByRegion(after, l.id)) add(cost, z, km * price);
   }

@@ -832,6 +832,10 @@ pub struct Network {
     mask_epoch: u32,
     /// Off: every node is asked of the mask each time (the rows check compares the two).
     pub wet_cache: bool,
+    /// T-3378: the BRT lanes' room (`brt_room`), kept with a hash of everything it was worked out from.
+    brt_room: std::cell::RefCell<Option<(u64, std::sync::Arc<super::bus::lanes::Room>)>>,
+    /// T-3378: every BRT line's lanes (`brt_lanes`), kept the same way.
+    brt_lanes: std::cell::RefCell<Option<(u64, std::sync::Arc<(super::bus::lanes::Lanes, u32)>)>>,
 }
 
 /// Slack in a Dijkstra key.

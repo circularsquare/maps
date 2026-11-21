@@ -22,7 +22,7 @@ export interface CapacityKindText {
   readonly fix: string;
 }
 
-type KindBase = "track" | "single" | "platform" | "terminus" | "junction" | "flat" | "turnPlatform" | "shared" | "turnAcross" | "reversing" | "sidings" | "merge" | "terminusOne";
+type KindBase = "track" | "single" | "platform" | "terminus" | "junction" | "flat" | "turnPlatform" | "shared" | "turnAcross" | "reversing" | "sidings" | "merge" | "terminusOne" | "lane";
 // the texts read their messages when read, so the list follows the language
 // and say tram for a tram's track (T-3067): every message takes the vehicle
 // and, for turning, the advice for a station that already has a terminal (T-3107: one doubles the
@@ -58,6 +58,10 @@ const KINDS = [
 ];
 KINDS[12] = kind("merge", "near", "");
 KINDS[14] = kind("terminusOne", "at", "");
+/** T-3378: a BRT lane past its buses an hour (`LANE_KIND`): never a map dot or an Issues row, so only its title
+ * has a message */
+export const LANE_KIND = 15;
+KINDS[LANE_KIND] = kind("lane", "near", "each");
 
 /** A kind's words for a train's or a tram's track; `terminal`: the station it is at has a terminal. */
 export const capacityKind = (kind: number, vehicle: Vehicle = "train", terminal = false): CapacityKindText => (KINDS[kind] ?? KINDS[0])(vehicle, terminal);

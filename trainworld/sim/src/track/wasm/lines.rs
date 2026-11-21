@@ -668,8 +668,10 @@ impl TrackApi {
         if !rest.is_empty() {
             op = Op::Batch(std::iter::once(op).chain(rest).collect());
         }
-        if self.w.net.line_bus.get(id as usize).and_then(|b| b.as_ref()).is_some_and(|r| r.built) {
-            return self.run_charged(op);
+        // T-3378: free, though another BRT line's lanes counted again where they were shared can move the built value
+        if let Some(r) = self.w.net.line_bus.get(id as usize).and_then(|b| b.as_ref()) {
+            let built = r.built;
+            return self.run_free(op, built);
         }
         self.run(op)
     }

@@ -546,6 +546,14 @@ impl TrackWorld {
             if (l as usize) < n { hit[l as usize] = true; }
         }
         let cap = &self.svc.cap;
+        // T-3378: and BRT lines sharing a lane, whose buses share its room as trains share track; after an edit of any
+        // bus line every BRT line, as one taken off BRT or redrawn shares no lane any more with the lines it held back
+        let room = self.net.brt_room();
+        if seeds.iter().any(|&l| (l as usize) < n && self.net.is_bus(l)) {
+            for l in self.net.brt_order(true) {
+                hit[l as usize] = true;
+            }
+        }
         loop {
             let mut grew = false;
             for r in 0..cap.res.len() {
@@ -556,6 +564,17 @@ impl TrackWorld {
                             hit[u.line as usize] = true;
                             grew = true;
                         }
+                    }
+                }
+            }
+            for w in &room.ways {
+                if !w.lines.iter().any(|&l| (l as usize) < n && hit[l as usize]) {
+                    continue;
+                }
+                for &l in &w.lines {
+                    if (l as usize) < n && !hit[l as usize] {
+                        hit[l as usize] = true;
+                        grew = true;
                     }
                 }
             }
@@ -769,10 +788,48 @@ impl TrackWorld {
         true
     }
 
+    /// T-3378 stage 2: cut the bus lines on a BRT lane past its room to fit (`Capacity::fill`, which counts the lanes),
+    /// at each slot where one is: a settle steps only lines off their fleet, and lines at their headways can overfill a
+    /// lane without being off it. Then settled again, the cut lines are short of their fleet and held to it as track
+    /// holds trains. The lines it moved.
+    fn fit_lanes(&mut self) -> Vec<u32> {
+        let room = self.net.brt_room();
+        let mut ids: Vec<u32> = room.ways.iter().flat_map(|w| w.lines.iter().copied()).filter(|&l| self.net.line_ok(l) && self.svc.lines.get(l as usize).is_some_and(|s| s.ok)).collect();
+        ids.sort_unstable();
+        ids.dedup();
+        let mut moved = vec![];
+        for lev in self.net.slots() {
+            let over = room.ways.iter().any(|w| w.lines.iter().map(|&l| self.net.line_tph[l as usize][lev] as f64).sum::<f64>() > super::bus::lanes::LANE_BUSES_H + 1e-6);
+            if !over {
+                continue;
+            }
+            let want: Vec<(u32, f64)> = ids.iter().map(|&l| (l, self.net.line_tph[l as usize][lev] as f64)).collect();
+            for (&l, got) in ids.iter().zip(self.svc.cap.fill(&self.net, &want, lev)) {
+                if (got as f32) != self.net.line_tph[l as usize][lev] {
+                    self.net.line_tph[l as usize][lev] = got as f32;
+                    moved.push(l);
+                }
+            }
+        }
+        if !moved.is_empty() {
+            moved.sort_unstable();
+            moved.dedup();
+            self.svc.update_scoped(&self.net, &[], &moved, true, Some((&[], &[])));
+        }
+        moved
+    }
+
     /// The settle without `pace_merges`.
     fn settle_unpaced(&mut self, full: bool) -> Vec<u32> {
         if !self.net.line_auto.iter().any(|a| a.is_some()) {
-            let affected = self.settle_counts(full);
+            let mut affected = self.settle_counts(full);
+            // T-3378: and to the BRT lanes' room
+            let cut = self.fit_lanes();
+            if !cut.is_empty() {
+                affected.extend(cut);
+                affected.extend(self.settle_counts(full));
+                affected.sort_unstable(); affected.dedup();
+            }
             self.settle_edited.clear();
             return affected;
         }
@@ -784,6 +841,12 @@ impl TrackWorld {
             let moved = self.auto_counts(round + 1 == AUTO_ROUNDS);
             affected.extend(self.settle_counts(full));
             if !moved && round > 0 { break; }
+        }
+        // T-3378: and to the BRT lanes' room, before the buses it leaves waiting are trimmed
+        let cut = self.fit_lanes();
+        if !cut.is_empty() {
+            affected.extend(cut);
+            affected.extend(self.settle_counts(full));
         }
         // T-3482: the edited lines have their share of full track, with the counts that took it; the
         // trains it leaves waiting are trimmed from them as from any other line

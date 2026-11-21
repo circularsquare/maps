@@ -23,16 +23,19 @@ import { editBusRoute, editFerryRoute, toggleEditStops } from "../../game/lineAc
 import { busDraft } from "../../map/busDraw";
 import { ferryDraft } from "../../map/ferryDraw";
 import { edit, fleetOf, linesById, say, stationNames, world } from "../../game/world";
-import { Check, Icon, Row, Segmented, Stepper, SwapLabel } from "../widgets";
+import { Alert, Check, Icon, Row, Segmented, Stepper, SwapLabel } from "../widgets";
+import { nearestStation } from "../../game/places";
+import { fullTitle, heldTrains, LANE_KIND } from "../../game/capacityKinds";
+import { useClockQuery } from "../useClockQuery";
 import { demandView, complexTransfers } from "../../game/demand";
 import { placesNear, hoodsNear, townsNear } from "../../game/placeList";
 import { endsInStation, placeName } from "../../map/stationNames";
 import type { ClockBus } from "../../workers/protocol";
-import { RoundTrip, ScheduleButtons, StopToday, StopTransfers, StretchHalf, stretchLooks } from "./LineInspector";
+import { limitsFrom, RoundTrip, ScheduleButtons, StopToday, StopTransfers, StretchHalf, stretchLooks } from "./LineInspector";
 import { LineFare, LineMoney } from "./LineMoney";
 import { PurposeSplit } from "./PurposeSplit";
 import { drawnReversed } from "../../game/northUp";
-import { AverageSpeed, boatsBought, PastDay, Schedule, useLinePeriods } from "./schedule";
+import { AverageSpeed, boatsBought, NO_LIMITS, PastDay, rowLabel, Schedule, useLinePeriods } from "./schedule";
 import { LineTitle, useLineTitle } from "./LineTitle";
 import { afterCopy } from "../../game/lineGroups";
 
@@ -324,8 +327,10 @@ function BrtRow({ l, bus }: { l: LineInput; bus: ClockBus }) {
   const m = moneyState.value;
   const [asked, setAsked] = useState<boolean | null>(null);
   const on = asked ?? bus.brt;
-  // T-3907: paid and upkept over the road in town only
-  const tip = m ? t("busInspector.brtTip", { speed: speed(m.brtKmh), price: millions(perDistance(m.brtRouteKm)), upkeep: money(perDistance(m.upkeepBrtKm * m.economy)), unit: distUnit(), town: distance(bus.townM) }) : undefined;
+  // T-3907: paid and upkept over the road in town only; T-3378: lanes another BRT line has are not paid again
+  const shared = bus.townM - bus.newM;
+  const tip = m ? t("busInspector.brtTip", { speed: speed(m.brtKmh), price: millions(perDistance(m.brtRouteKm)), upkeep: money(perDistance(m.upkeepBrtKm * m.economy)), unit: distUnit(), town: distance(bus.townM) })
+    + (shared >= 50 ? "\n" + t("busInspector.brtShared", { shared: distance(shared) }) : "") : undefined;
   const set = (to: boolean) => {
     setAsked(to);
     void edit({ op: "busBrt", line: l.num, on: to }).then(() => setAsked(null));
@@ -334,6 +339,50 @@ function BrtRow({ l, bus }: { l: LineInput; bus: ClockBus }) {
     <li>
       <Check checked={on} onChange={set} tip={tip}>{t("busInspector.brt")}</Check>
     </li>
+  );
+}
+
+/** T-3378: a constructed BRT line's fullest stretch of lane now, buses an hour one way against the most it takes;
+ * red once full, when the lines on it run fewer buses than asked. */
+function LaneRow({ bus, period }: { bus: ClockBus; period: number }) {
+  const most = bus.laneLoad[5] ?? 0, n = bus.laneLoad[period] ?? 0;
+  if (!bus.brt || !bus.built || !(n > 0) || !(most > 0)) return null;
+  const full = n >= most - 0.05;
+  return (
+    <li>
+      <span class="grow">{t("busInspector.lane")}</span>
+      <span class={"val" + (full ? " bad" : "")} data-tip={full ? t("busInspector.laneFullTip", { most: Math.round(most) }) : undefined}>{t("busInspector.laneLoad", { n: Math.round(n), most: Math.round(most) })}</span>
+    </li>
+  );
+}
+
+interface LaneHold { row: number; rows: number; wait: number; place: string }
+/** T-3378: a BRT line's `line_held` (`line_row_held`): where a full lane keeps some of its buses from running, by
+ * row, and the headways the lanes limit it to (`limitsFrom`). */
+function useLaneHeld(l: LineInput | undefined, bus: ClockBus | undefined) {
+  const w = world.value;
+  return useClockQuery(l && bus?.brt && bus.built ? { what: "lineHeld", line: l.num, rows: true } : null, [l?.num, w?.version, bus?.brt], (d) => {
+    const rows = Math.round(d.length / 13), held: LaneHold[] = [];
+    for (let r = 0; r < rows; r++) {
+      const [wait, kind, , x, y] = d.subarray(7 * r, 7 * r + 5);
+      if (kind === LANE_KIND && heldTrains(wait) > 0) held.push({ row: r, rows, wait, place: fullTitle(kind, nearestStation(x, y)?.name ?? "", "bus") });
+    }
+    return { held, limits: limitsFrom(d, "bus") };
+  });
+}
+
+/** T-3378: the alert of a full BRT lane, as a rail line's of full track (`lineInspector.heldLevel`). */
+function LaneHeld({ st, lanes }: { st: LineStats; lanes: LaneHold[] }) {
+  if (st.status !== "running" || lanes.length === 0) return null;
+  return (
+    <ul class="alerts">
+      {[...new Set(lanes.map((h) => h.place))].map((place) => (
+        <Alert tip={t("busInspector.laneFullTip", { most: Math.round(st.bus?.laneLoad[5] ?? 0) })}>
+          {place}
+          {lanes.filter((h) => h.place === place).map((h) => <div class="detail">{t("lineInspector.heldLevel", { level: rowLabel(h.rows, h.row), text: t("busInspector.laneHeld", { n: heldTrains(h.wait) }) })}</div>)}
+        </Alert>
+      ))}
+    </ul>
   );
 }
 
@@ -349,6 +398,7 @@ export function BusInspector({ id }: { id: string }) {
   const st = w && l ? w.lineStats[l.id] : undefined;
   const bus = st?.bus;
   const endName = useEndNames(bus, new Set((w?.save.stations ?? []).map((s) => s.name)));
+  const lanes = useLaneHeld(l, bus);
   if (!w || !l || !st || !bus) return null;
   const names = stationNames(w);
 
@@ -433,12 +483,14 @@ export function BusInspector({ id }: { id: string }) {
         <button class="btn text danger" onClick={remove}>{t("busInspector.deleteYes")}</button>
       </div>
 
-      <Schedule l={l} st={st} period={periodAt(lineSeconds(st))} crowd={periods} copy={<ScheduleButtons l={l} st={st} />} />
+      <Schedule l={l} st={st} period={periodAt(lineSeconds(st))} limits={lanes?.limits ?? NO_LIMITS} crowd={periods} copy={<ScheduleButtons l={l} st={st} />} />
       <ul class="rows">
         {ferry && <BoatSize l={l} st={st} bus={bus} />}
         {!ferry && <BrtRow l={l} bus={bus} />}
+        {!ferry && <LaneRow bus={bus} period={periodAt(lineSeconds(st))} />}
         <AverageSpeed st={st} lev={lev} />
       </ul>
+      <LaneHeld st={st} lanes={lanes?.held ?? []} />
 
       {st.status === "running" && <div class="line-day"><PastDay l={l} st={st} periods={periods} kind={kind} extra={<><PurposeSplit scope={[{ line: l.id }]} unit={t("lineInspector.ridersUnit")} /><ChangingToTrains l={l} bus={bus} /></>} /></div>}
 

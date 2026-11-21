@@ -59,6 +59,18 @@ impl TrackApi {
         self.settle(r, &before)
     }
 
+    /// T-3378: an edit that charges nothing for construction (trains it needs still paid), final or undoable:
+    /// taking a bus line off BRT, or deleting a bus line, where the lanes another BRT line shared are counted
+    /// on that line again and could move the built value up by a step.
+    pub(super) fn run_free(&mut self, op: Op, final_: bool) -> u32 {
+        let fleet = self.fleet;
+        let at = self.edit_start();
+        let before = self.w.svc.before_edit(&self.w.net, at);
+        let cash = self.spendable();
+        let r = self.w.apply_priced(op, cash, final_, &|w| trains_to_buy(w, fleet), Some(&|_: &TrackWorld| 0.0));
+        self.settle(r, &before)
+    }
+
     /// A final, charged edit (see the module comment), trains included.
     pub(super) fn run_charged(&mut self, op: Op) -> u32 {
         let fleet = self.fleet;

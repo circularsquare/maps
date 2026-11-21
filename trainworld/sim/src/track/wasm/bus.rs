@@ -72,8 +72,9 @@ impl TrackApi {
         self.run(Op::Line { id, data: Some(d) })
     }
     /// T-3907: put a bus line on BRT or take it off, one undoable edit. On a constructed line switching it on is
-    /// paid at once (the rise in built value, `BRT_COST_PER_KM` a road-km); off gives nothing back, nor does an
-    /// undo. On a planned line it is in the blueprint, paid on Construct.
+    /// paid at once (the rise in built value, `BRT_COST_PER_KM` a road-km of lanes no other constructed BRT line
+    /// has, T-3378); off gives nothing back, nor does an undo, and costs nothing. On a planned line it is in the
+    /// blueprint, paid on Construct.
     pub fn set_bus_brt(&mut self, id: u32, on: bool) -> u32 {
         let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
         let Some(r) = d.bus.as_mut() else { return self.refuse(Issue::LinePath { line: id }) };
@@ -81,7 +82,12 @@ impl TrackApi {
             return 0;
         }
         r.brt = on;
-        self.run(Op::Line { id, data: Some(d) })
+        if on { self.run(Op::Line { id, data: Some(d) }) } else { self.run_free(Op::Line { id, data: Some(d) }, false) }
+    }
+    /// T-3378: a bus line's lanes, road metres: [in town, shared with no other BRT line, its part of the lanes'
+    /// upkeep] (`Network::brt_split`).
+    pub fn bus_lanes(&self, line: u32) -> Vec<f64> {
+        self.w.net.brt_split(line).to_vec()
     }
     /// Whether a bus line is on BRT (T-3907).
     pub fn bus_brt(&self, line: u32) -> bool {
@@ -226,8 +232,8 @@ impl TrackApi {
         let road = if pts.len() >= 2 { poly.road_len() } else { 0.0 };
         let rule = net.line_bus.get(line as usize).and_then(|b| b.as_ref()).map_or(bus::StopRule::Auto, |r| r.rule());
         let plan = bus::plan_by(net, line, &pts, &kinds, false, rule);
-        // T-3907: a BRT line's route pays its lanes in town too
-        let town = if net.is_brt(line) { bus::town_m(net, &pts, &kinds) } else { 0.0 };
+        // T-3907: a BRT line's route pays its lanes in town too; T-3378: not where another BRT line has them
+        let town = if net.is_brt(line) { net.brt_new_m(line, &pts, &kinds) } else { 0.0 };
         let mut out = vec![road, road / 1000.0 * BUS_ROUTE_COST_PER_KM + town / 1000.0 * BRT_COST_PER_KM, (ok && plan.stops.len() >= 2) as u8 as f64, plan.stops.len() as f64];
         for s in &plan.stops {
             out.extend([s.x, s.y, s.kind as f64]);
