@@ -103,9 +103,11 @@ import { stopsById, world } from "../game/world";
 import { stopFareScales } from "../game/money";
 import { trackZones } from "../game/trackZones";
 import { viewCentre } from "../game/listScope";
-import { ALL_PERIODS, isQuery, type SelSquares, type BareFigures, type DemandNetwork, type FromDemand, type Heap, type OpenRejected, type QueryKind, type ToDemand } from "./demandProtocol";
+import { ALL_PERIODS, isQuery, type SplitPlan, type SelSquares, type BareFigures, type DemandNetwork, type FromDemand, type Heap, type OpenRejected, type QueryKind, type ToDemand } from "./demandProtocol";
 import { addParts, dayFactor, dayResultOf, dayViews, flowsBody, selectionFlows, signature, stationFlows, summaryOnDay, sumParts, unpackDays, type CorridorRail, type DayInput, type DayViews, type FlowsAnswer, type FromSums, type PackedDays, type PurposePart, type SumsAsk, type SumsCtx, type ToSums } from "./demandSums";
-import { SUM_FLAGS } from "./exactSum";
+import { SPLIT, SUM_FLAGS } from "./exactSum";
+import { Holding, MARKET_UNIT } from "./demandPlan";
+import type { Box } from "./demandClusters";
 import { primeDealt } from "../game/farChunks";
 import { tripLengthsOf, type TripLengths } from "../game/tripLengths";
 import { readMarketPeriod, readTripPeriod, setMarketTripQuery, setTripQuery, tripKey, type MarketPeriod, type RouteNodes, type Trip } from "../game/trip";
@@ -817,6 +819,39 @@ class DemandClient {
   /** T-1607: the periods whose market each solving worker solves in a solve with the barrier */
   private marketsOf: number[][] = [];
   private marketsMsg(i: number) { const m = this.marketsOf[i] ?? []; return { markets: m, share: this.marketsOf.some((qs, j) => qs.join() !== this.periodsOf[j]?.join()) }; }
+  /** each worker's periods for `n` solving workers (the aux worker none). T-3373 B (`?split=1`): every solving
+   * worker solves every period of what it holds, the market with its cities (no T-1607 sharing) */
+  private dealPeriods(n: number) {
+    const all = PERIODS.map((_, q) => q);
+    this.periodsOf = [...Array.from({ length: n }, (_, i) => (this.holding ? all : periodsOfWorker(i, n))), []];
+    this.marketsOf = this.holding ? this.periodsOf.slice(0, n) : marketsOfWorkers(n);
+  }
+  /** the aux worker's groups: each solving worker's periods (T-325); under the split one group of all */
+  private auxGroups(): number[][] {
+    return this.holding ? [PERIODS.map((_, q) => q)] : this.periodsOf.slice(0, this.computeN);
+  }
+
+  // --- T-3373 B stage 3: who holds what (`?split=1`; `?split=all` and off: every worker) ---
+  /** each unit's one solving worker under `?split=1`; null otherwise */
+  private holding: Holding | null = SPLIT === "plan" ? new Holding(1) : null;
+  /** each city pack's cells' box (from a worker's `opened`), which workers not holding it join clusters by */
+  private boxes = new Map<CityId, Box>();
+  /** each city pack's everyday purposes (from a solving worker's `opened`; the aux worker opens none) */
+  private kinds = new Map<CityId, number>();
+  /** the solving workers holding `item` (a zone, or "market:<id>"), placing it if it has no holder yet */
+  private solvingHolders(item: string): number[] {
+    if (!this.holding) return Array.from({ length: this.computeN }, (_, i) => i);
+    const unit = isMarket(item) ? MARKET_UNIT : item;
+    return [this.holding.holder(unit, isMarket(item) ? 1 : cityById(item as CityId)?.localTrips ?? 1)];
+  }
+  /** the workers an item is posted to and must be acknowledged by: its solving holders and the aux worker (a
+   * market pack's as empty bytes) */
+  private holdersOf(item: string): number[] {
+    return [...this.solvingHolders(item), this.computeN];
+  }
+  private holds(i: number, item: string): boolean {
+    return i === this.computeN || this.solvingHolders(item).includes(i);
+  }
   /** every worker's sums for a round of the newest solve, sent unasked (T-119): `version:round:city` */
   private pushed = new Map<string, { mask: number; sums: Float32Array; everyday: Float32Array | null }[]>();
   private ready = 0;
@@ -965,8 +1000,8 @@ class DemandClient {
     solveWaves = Math.ceil(PERIODS.length / n);
     // i18n-ignore: a stored name or a developer diagnostic
     if (new URLSearchParams(location.search).has("debug")) console.info(`demand workers: ${n} (threads ${navigator.hardwareConcurrency}, memory ${(navigator as { deviceMemory?: number }).deviceMemory ?? "not reported"})`);
-    for (let i = 0; i <= n; i++) this.periodsOf.push(i < n ? periodsOfWorker(i, n) : []);
-    this.marketsOf = marketsOfWorkers(n);
+    if (this.holding) this.holding = new Holding(n);
+    this.dealPeriods(n);
     for (let i = 0; i <= n; i++) this.workers.push(this.spawn(i, i === 0 && n > 1));
     if (this.viewHeld) setTimeout(() => this.releaseView(), 10_000);
     // the viewed city loads when it changes (a pan, the city buttons)
@@ -1040,7 +1075,7 @@ class DemandClient {
     };
     w.onmessageerror = () => { const j = at(); if (j >= 0) this.fail(`worker ${j}: a message could not be read`); }; // i18n-ignore
     // T-325: the aux worker is told every solving worker's periods, for the zones it holds bare
-    const msg: ToDemand = { kind: "init", packs: [], periods: this.periodsOf[i], ...(i < n ? this.marketsMsg(i) : {}), aux: i === n, warmEveryday, ...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}), heapStep: heapStep(), ...SUM_FLAGS };
+    const msg: ToDemand = { kind: "init", packs: [], periods: this.periodsOf[i], ...(i < n ? this.marketsMsg(i) : {}), aux: i === n, warmEveryday, ...(i === n ? { groups: this.auxGroups() } : {}), heapStep: heapStep(), ...SUM_FLAGS };
     w.postMessage(msg);
     // T-3781, dev server only: `?debugStall=i` has worker i's first solve wait forever (a replacement does not)
     if (import.meta.env.DEV && Number(new URLSearchParams(location.search).get("debugStall") ?? -1) === i && !this.stallSent) {
@@ -1819,13 +1854,17 @@ class DemandClient {
     // T-2045: the zone in view's pack to the focus pool as well, during a game load
     const fp = this.fpool;
     if (open.pack && fp?.alive && open.pack.id === activeCity.peek() && !fp.holds(open.pack.id)) fp.post({ ...open.pack, bin: open.pack.bin.slice(0) });
+    // T-3373 B: to the item's holders and the aux worker (every worker unless `?split=1`)
+    const to = this.holdersOf(open.pack ? open.pack.id : MARKET);
+    const lastSolving = to.filter((i) => i < this.computeN).pop();
     this.workers.forEach((w, i) => {
+      if (!to.includes(i)) return;
       const last = i === this.workers.length - 1;
       const pack = open.pack && { ...open.pack, bin: last ? open.pack.bin : open.pack.bin.slice(0) };
       // T-180: a market pack as bytes, each solving worker its own copy (the last solving one the
       // original), decoded there: decoding megabytes and cloning the text six times held the main
       // thread up while the player could already pan. The aux worker never opens one: empty bytes.
-      const own = <T extends Uint8Array>(b: T) => (i === this.computeN ? new Uint8Array(0) : i === this.computeN - 1 ? b : b.slice());
+      const own = <T extends Uint8Array>(b: T) => (i === this.computeN ? new Uint8Array(0) : i === lastSolving ? b : b.slice());
       const ms = open.intercity?.map((m) => ({ id: m.id, pack: own(m.bytes) })), r = rows && own(rows);
       const dr = r?.byteLength && this.drives ? this.drives.slice() : undefined;
       const msg: ToDemand = { kind: "open", packs: pack ? [pack] : [], ...(ms ? { intercity: ms } : {}), ...(r?.byteLength ? { rows: r } : {}), ...(dr ? { drives: dr } : {}) };
@@ -1851,7 +1890,7 @@ class DemandClient {
    * by the reach known once it has downloaded. A pack opened bare and reached later is fetched
    * again for every worker (the page keeps no copy). */
   private fetchCity(id: CityId, mode: "full" | "bare" | "undecided") {
-    if (mode === "full") this.fetching.add(id);
+    if (mode === "full") { this.fetching.add(id); this.solvingHolders(id); } // (T-3373 B: placed in the order asked)
     else if (mode === "bare") this.fetchingBare.add(id);
     else this.fetchingUndecided.add(id);
     const log: LoadLog = { item: id, requestedAt: performance.now(), ...(mode === "bare" ? { bare: true } : {}) };
@@ -2050,12 +2089,13 @@ class DemandClient {
     const by = (this.ackedBy[i] ??= new Set());
     if (by.has(item)) return;
     by.add(item);
+    if (!this.holds(i, item)) return; // (T-3373 B: a worker that no longer holds it, after a shrink)
     const n = (this.acks.get(item) ?? 0) + 1;
     this.acks.set(item, n);
-    if (n >= this.workers.length) this.openEverywhere(item);
+    if (n >= this.holdersOf(item).length) this.openEverywhere(item);
   }
 
-  /** Every worker holds `item`. */
+  /** Every worker that should holds `item` (T-3373 B: its holders and the aux worker under `?split=1`). */
   private openEverywhere(item: string) {
     this.opened.add(item);
     if (this.releveling.delete(item as CityId)) this.lodShown();
@@ -2200,7 +2240,8 @@ class DemandClient {
   private roughSoon(svc: Service, need: Set<CityId> | null) {
     const id = activeCity.peek();
     // (T-2045: during a game load the focus pool solves the zone in view, to its last round)
-    if (this.fpool?.alive || perfOff("rough") || !need?.has(id) || !this.viewedSet().has(id) || this.ready !== this.workers.length || !this.opened.has(id)) return;
+    // (T-3373 B: no rough solve under `?split=1`: one on the zone in view's holder is stage 4's)
+    if (this.fpool?.alive || perfOff("rough") || this.holding || !need?.has(id) || !this.viewedSet().has(id) || this.ready !== this.workers.length || !this.opened.has(id)) return;
     if (this.rough?.svc === svc && this.rough.id === id) return;
     // a zone with figures is solved rough only for lines new since them, which take its free-flow
     // round's figures as a whole solve's would (T-324); its other figures stay
@@ -2336,7 +2377,7 @@ class DemandClient {
         const log = lastLoad(this.start.loads, (l) => l.item === id && l.downloadedAt !== undefined && !l.openedAt);
         // (a zone a solve covers opens in every solving worker: their acks are its real progress)
         const toSolve = !!sn?.has(id);
-        const acked = toSolve ? Math.min(1, 0.9 * (this.packAcks.get(id) ?? 0) / this.computeN) : 0;
+        const acked = toSolve ? Math.min(1, 0.9 * (this.packAcks.get(id) ?? 0) / this.solvingHolders(id).length) : 0;
         const open = this.isOpen(id) ? 1 : Math.max(acked, log ? Math.min(STEP_CAP, (now - log.downloadedAt!) / openMs) : 0);
         // T-2552: and it waits for that solve: the one running, to its final with the barrier and to its first
         // round without, else the next, expected as the solves before it took
@@ -2488,7 +2529,7 @@ class DemandClient {
       openMs += ms;
       // T-1195: by the packs in at the solving workers (the aux worker opens far faster); a market pack
       // in counts less, as the market is composed after a batch's last
-      openDone += loaded(item) ? ms : ms * Math.min(1, (isMarket(item) ? 0.3 : 0.9) * (this.packAcks.get(item) ?? 0) / this.computeN);
+      openDone += loaded(item) ? ms : ms * Math.min(1, (isMarket(item) ? 0.3 : 0.9) * (this.packAcks.get(item) ?? 0) / this.solvingHolders(item).length);
       const log = lastLoad(this.start.loads, (l) => l.item === item);
       if (log?.downloadedAt !== undefined) openStart = Math.min(openStart, log.downloadedAt);
     }
@@ -3025,7 +3066,7 @@ class DemandClient {
    * copy; the browser's cache has them) and open it there. */
   private async reopen(i: number) {
     const r = this.respawn.get(i)!, aux = i === this.computeN;
-    const items = [...this.fetching].filter((x) => !aux || !isMarket(x));
+    const items = [...this.fetching].filter((x) => (!aux || !isMarket(x)) && this.holds(i, x));
     const bare = aux ? [...this.fetchingBare] : [];
     // the downloads of every replacement share REOPEN_FETCHES places (T-3604: all of them at once, in three
     // workers, ran the browser out of connections: ERR_INSUFFICIENT_RESOURCES, and the replacements never opened)
@@ -3077,6 +3118,8 @@ class DemandClient {
     // parts of older compositions (their corridor tables then differ): all make theirs afresh
     this.freshParts = true;
     if (this.waiting) this.flush(true);
+    // (T-3373 B: a shrink moves packs, which open again before the solve can cover them)
+    else if (this.cur && this.holding) { this.waiting = { svc: this.cur.svc, arrivedAt: performance.now() }; this.flush(true); }
     else if (this.cur) this.dispatch(this.cur.svc, performance.now());
     else { this.respawn.clear(); this.releaseRespawnWaits(); }
   }
@@ -3265,7 +3308,8 @@ class DemandClient {
    * of `capPool`'s two limits, so a pool grown is a step away from being cut again. */
   private growTo(restarting: Set<number>): number {
     const n0 = this.computeN, max = Math.min(this.poolN, poolSize());
-    if (n0 >= max || this.respawn.size || perfOff("cap") || perfOff("grow") || workersAsked() !== null) return n0;
+    // (T-3373 B: under `?split=1` a grown worker would hold nothing; dealing to it is stage 7's)
+    if (n0 >= max || this.respawn.size || perfOff("cap") || perfOff("grow") || workersAsked() !== null || this.holding) return n0;
     const held = (i: number) => { const need = this.needOf(i); return need === null ? null : restarting.has(i) ? need : Math.max(need, this.mem[i]?.wasm ?? 0); };
     let per = 0;
     for (let i = 0; i < n0; i++) { const h = held(i); if (h === null) return n0; per = Math.max(per, h); }
@@ -3290,10 +3334,9 @@ class DemandClient {
     }
     if (this.isReady.delete(old)) this.isReady.add(n);
     this.computeN = n;
-    this.periodsOf = [...Array.from({ length: n }, (_, i) => periodsOfWorker(i, n)), []];
-    this.marketsOf = marketsOfWorkers(n);
+    this.dealPeriods(n);
     solveWaves = Math.ceil(PERIODS.length / n);
-    this.periodsOf.forEach((periods, i) => { if (i < old || i === n) this.workers[i].postMessage({ kind: "periods", periods, ...(i < n ? this.marketsMsg(i) : {}), ...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}) } satisfies ToDemand); });
+    this.periodsOf.forEach((periods, i) => { if (i < old || i === n) this.workers[i].postMessage({ kind: "periods", periods, ...(i < n ? this.marketsMsg(i) : {}), ...(i === n ? { groups: this.auxGroups() } : {}) } satisfies ToDemand); });
     for (let i = old; i < n; i++) {
       this.respawn.set(i, { left: null, solving: false, planned: true });
       this.workers[i] = this.spawn(i, false);
@@ -3348,15 +3391,23 @@ class DemandClient {
     this.ready = this.isReady.size;
     this.acks.clear();
     for (const by of this.ackedBy) for (const item of by ?? []) this.acks.set(item, (this.acks.get(item) ?? 0) + 1);
-    // (T-2867: in a load, what only the stopped workers were still opening is now open everywhere)
-    for (const [item, count] of this.acks) if (count >= this.workers.length && !this.opened.has(item) && !this.broken.has(item)) this.openEverywhere(item);
     this.computeN = n;
-    this.periodsOf = [...Array.from({ length: n }, (_, i) => periodsOfWorker(i, n)), []];
-    this.marketsOf = marketsOfWorkers(n);
+    // (T-2867: in a load, what only the stopped workers were still opening is now open everywhere)
+    for (const [item, count] of this.acks) if (count >= this.holdersOf(item).length && !this.opened.has(item) && !this.broken.has(item)) this.openEverywhere(item);
+    this.dealPeriods(n);
     solveWaves = Math.ceil(PERIODS.length / n);
-    this.periodsOf.forEach((periods, i) => this.workers[i].postMessage({ kind: "periods", periods, ...(i < n ? this.marketsMsg(i) : {}), ...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}) } satisfies ToDemand));
+    this.periodsOf.forEach((periods, i) => this.workers[i].postMessage({ kind: "periods", periods, ...(i < n ? this.marketsMsg(i) : {}), ...(i === n ? { groups: this.auxGroups() } : {}) } satisfies ToDemand));
     this.endQueries();
     this.freshParts = true;
+    // T-3373 B: what only the stopped workers held goes to a survivor, downloaded again; the next solve waits for it
+    for (const unit of this.holding?.shrink(n) ?? []) {
+      const items = unit === MARKET_UNIT ? [...this.fetching].filter(isMarket) : this.fetching.has(unit) ? [unit] : [];
+      for (const item of items) { this.opened.delete(item); this.unack(item); this.packAcks.delete(item); }
+      if (unit !== MARKET_UNIT) { if (items.length) this.fetchCity(unit as CityId, "full"); continue; }
+      this.rows = null;
+      this.rowsSent = false;
+      for (const item of items) { this.fetching.delete(item); this.fetchMarket(marketZone(item)); }
+    }
     // T-3868: only a game already solved is solved again; a load's cut (`capAhead` on every big save) frees nothing
     if (!this.hold && !gameLoadArmed() && !this.cacheShown() && demandView.peek()?.final) memoryResolve.value = true;
   }
@@ -3779,7 +3830,7 @@ class DemandClient {
     if (msg.kind === "dead") return this.workerDied(i, `${msg.error}${msg.panic ? ` (${msg.panic})` : ""}, ${Math.round(msg.memBytes / 2 ** 20)} MB of WASM memory`);
     if (msg.kind === "packOpened") {
       const item = msg.market ? marketItem(msg.id) : msg.id;
-      if (i < this.computeN) this.packAcks.set(item, (this.packAcks.get(item) ?? 0) + 1);
+      if (i < this.computeN && this.holds(i, item)) this.packAcks.set(item, (this.packAcks.get(item) ?? 0) + 1);
       markStep();
       return this.progressSoon();
     }
@@ -3789,6 +3840,15 @@ class DemandClient {
     markStep();
     if (msg.kind === "unit") { this.inUnit[i] = { round: msg.round, period: msg.period, at: performance.now() }; return; }
     if (msg.kind === "result") this.inUnit[i] = null;
+    if (msg.kind === "loads" && msg.to) {
+      // T-3373 B: on to the cluster's other holders
+      msg.to.forEach((j, k) => { if (j !== i && j < this.computeN) this.workers[j].postMessage(msg, k === msg.to!.length - 1 ? [msg.loads.buffer] : []); });
+      return;
+    }
+    if (msg.kind === "zones") {
+      for (let j = 0; j < this.computeN; j++) if (j !== i) this.workers[j].postMessage(msg);
+      return;
+    }
     if (msg.kind === "loads") {
       // T-1607: on to the worker solving the period's other side
       const to = msg.side === "cities" ? this.marketsOf.findIndex((qs) => qs.includes(msg.period)) : this.periodsOf.findIndex((qs, j) => j < this.computeN && qs.includes(msg.period));
@@ -3850,6 +3910,8 @@ class DemandClient {
         this.checkHold();
         return;
       }
+      for (const [id, box] of Object.entries(msg.boxes ?? {})) this.boxes.set(id, box);
+      for (const [id, k] of Object.entries(msg.kinds ?? {})) this.kinds.set(id, k);
       for (const id of Object.keys(msg.cityInfo)) this.openedBy(id, i);
       for (const id of msg.markets) this.openedBy(marketItem(id), i);
       if (left && !left.size) this.reopened(i);
@@ -4185,7 +4247,8 @@ class DemandClient {
     const showEstimates = !demandView.peek()?.final || (!!this.hold && !this.cacheShown());
     const newZones = !showEstimates && unshown;
     // (T-2560: a cached result's network solved again after its card went, as under the card)
-    const barrier = showEstimates || newZones || !!this.hold || svc === this.cacheSolve;
+    // (T-3373 B: under `?split=1` every solve is whole, round by round with every holder: stage 6 adds the edits' own)
+    const barrier = showEstimates || newZones || !!this.hold || svc === this.cacheSolve || !!this.holding;
     const markets = [...this.opened].filter(isMarket).map(marketZone);
     // T-3616: an edit's solve sent before the one in hand started its whole solve follows on from it
     const prev = this.cur;
@@ -4233,7 +4296,20 @@ class DemandClient {
   /** A solve to every worker, each solving worker told its part of the origins (T-1543). */
   private postSolve(msg: Extract<ToDemand, { kind: "solve" }>) {
     const n = this.computeN;
+    // T-3373 B: under `?split=1` each solving worker its holding plan (no T-1543 parts: every solve is whole)
+    const plan = this.holding && this.splitPlan(msg.version);
+    if (plan) return this.workers.forEach((w, i) => w.postMessage(i < n ? { ...msg, split: { ...plan, me: i } } : msg));
     this.workers.forEach((w, i) => w.postMessage(n > 1 && i < n ? { ...msg, part: [i, n] } : msg));
+  }
+  /** T-3373 B: the solve's holding plan: its zones (the solve's, in the registry's order) with their boxes and holders */
+  private splitPlan(version: number): Omit<SplitPlan, "me"> | null {
+    const s = this.log.find((x) => x.version === version);
+    if (!s || !this.holding) return null;
+    const cities = s.cities.map((id) => ({ id, box: this.boxes.get(id) ?? null, by: this.solvingHolders(id)[0], kinds: this.kinds.get(id) ?? 0 }));
+    const market = s.markets.length ? this.solvingHolders(MARKET)[0] : null;
+    const active = [...new Set([...cities.map((c) => c.by), ...(market === null ? [] : [market])])].sort((a, b) => a - b);
+    // (a solve covering nothing still gives every period its figures: worker 0's)
+    return { cities, market, active: active.length ? active : [0] };
   }
 
   // --- Demand views (T-078; types and meaning in game/demand.ts) ---------------------------------

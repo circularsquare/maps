@@ -123,7 +123,16 @@ export function arriveOf(come: Float32Array, rounds: Float32Array, board: Float3
  * whole network's route nodes (3 x nodes), for cluster `cluster` (index in the job's clusters).
  * The page passes it on to the other side's worker.
  */
-export type Loads = { kind: "loads"; version: number; cluster: number; period: number; round: number; side: "cities" | "market"; loads: Float32Array | Float64Array };
+export type Loads = { kind: "loads"; version: number; cluster: number; period: number; round: number; side: "cities" | "market" | "held"; loads: Float32Array | Float64Array;
+  /** T-3373 B (`solve.split`, side "held"): the sending worker, and the workers holding the cluster's other populations */
+  from?: number; to?: number[] };
+/** T-3373 B (`solve.split`): the market's 6 km zones as its holder composed them for `version` (`IntercityApi.zone_boxes`,
+ * empty: no market), which the workers holding no market split their clusters by. The page passes it on. */
+export type Zones = { kind: "zones"; version: number; zones: Float64Array };
+/** T-3373 B stage 3: a solve's holding plan (`?split=1`). Every zone the solve covers in the registry's order with
+ * its cells' box and the solving worker holding it, the market's holder (null: no market open), the workers that
+ * hold anything (a part's index is a worker's place among them) and this worker's index */
+export interface SplitPlan { cities: { id: CityId; box: [number, number, number, number] | null; by: number; kinds: number }[]; market: number | null; active: number[]; me: number }
 /** T-3373 B stage 2: a part's sums before rounding to f32, whole steps (`exactSum.ts`), so the page adds parts
  * exactly: the result's arrays of the same names, and `come` */
 export interface ExactParts { seg: Float64Array; board: Float64Array; alight: Float64Array; loadOfCrush: Float64Array; fareX: Float64Array; baseX: Float64Array; xferIn: Float64Array; come?: [Float64Array, Float64Array]; parts: { seg: Float64Array; board: Float64Array; alight: Float64Array; lean?: Float64Array } }
@@ -226,7 +235,10 @@ export type ToDemand =
       localShare?: number[];
       /** T-1733: the network's line ids (`lineN` order) and station ids (`stXY` order), so a worker
        * can carry what it holds solved over to the next network's route nodes */
-      ids?: { lines: string[]; stations: string[] } }
+      ids?: { lines: string[]; stations: string[] };
+      /** T-3373 B stage 3 (`?split=1`): this worker solves only the zones and market it holds, every period, and
+       * trades each round's loads with the other holders of a cluster through the page */
+      split?: SplitPlan }
   /** T-327: every worker has finished `round - 1` of `version`, so this worker may start `round`.
    * A worker ahead waits at the boundary holding its last round, so every worker holds the round
    * after the published one at some moment, and a question about it can be answered (the final
@@ -252,6 +264,7 @@ export type ToDemand =
   | { kind: "periods"; periods: number[]; groups?: number[][]; markets?: number[]; share?: boolean }
   /** T-1607: a period's loads from the worker solving the other side of it (`FromDemand` "loads") */
   | Loads
+  | Zones
   // Queries for the demand views (T-078, notes/T-078.md, `QUERY_KINDS`), answered between periods.
   // `id` matches the reply; `version` is the solve they ask about: a worker that has moved on to a
   // newer network answers with nulls. Every query also carries `day` (T-260, game/ui.ts `shownDay`,
@@ -357,6 +370,10 @@ export type FromDemand =
   | { kind: "packOpened"; id: CityId; market?: boolean }
   /** an `open` is done: its cities' info as `ready`'s, and the zones whose market packs it opened */
   | { kind: "opened"; cityInfo: Record<CityId, number[]>; markets: CityId[]; openMs: number; warmMs: number; memBytes: number; heap?: Heap;
+      /** T-3373 B: each city pack opened's cells' box (`cellBox`), which a worker not holding it joins clusters by */
+      boxes?: Record<CityId, [number, number, number, number] | null>;
+      /** T-3373 B: each city pack opened's everyday purposes (`EverydayApi.purpose_count`, 0 without the layer) */
+      kinds?: Record<CityId, number>;
       /** T-325: the packs were opened bare (aux worker), with each one's figures */
       bare?: Record<CityId, BareFigures>;
       /** T-492: packs of this `open` that did not open (left out of `cityInfo`, `markets`, `bare`) */
@@ -459,6 +476,7 @@ export type FromDemand =
       exact?: ExactParts;
     }
   | Loads
+  | Zones
   /** T-392: at a solve's start, the cities of each cluster it solves (in order) and of those it
    * keeps. `ahead` (T-402, a solve with the barrier): the cities of the cluster in view, stepped
    * through its rounds alone (group 0) before the other clusters together (group 1) */

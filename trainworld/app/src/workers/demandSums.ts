@@ -293,7 +293,36 @@ type PeriodResult = Extract<FromDemand, { kind: "result" }>;
  * the local fare sensitivity's reach worked out again from the added sums (`fareRaw`). The round,
  * the cluster and the version are the first part's; the times the longest part's.
  */
-export function addParts(list: readonly PeriodResult[]): PeriodResult {
+/**
+ * T-3373 B: parts from workers holding different populations can carry different purpose blocks (each worker's
+ * own everyday kinds; the longer trips only from the market's holder). Each part laid out on the keys of them all,
+ * as one worker holding every population gives them: the purposes a prefix of the commutes and `EVERYDAY_KEYS`,
+ * then the longer trips; each city's `cityParts` padded to as many purposes. Parts that agree are returned as they came.
+ */
+function alignParts(list: readonly PeriodResult[]): readonly PeriodResult[] {
+  if (list.some((r) => !r.parts)) return list;
+  const keys = list.map((r) => r.parts!.keys);
+  if (keys.every((k) => k.join() === keys[0].join())) return list;
+  let local: string[] = [];
+  for (const k of keys) { const l = k.filter((x) => x !== "longer"); if (l.length > local.length) local = l; }
+  const all = keys.some((k) => k.includes("longer")) ? [...local, "longer"] : local;
+  const lay = <T extends Float32Array | Float64Array>(v: T, from: string[]): T => {
+    const nr = v.length / from.length, out = new (v.constructor as new (n: number) => T)(all.length * nr);
+    from.forEach((k, i) => out.set(v.subarray(i * nr, (i + 1) * nr), all.indexOf(k) * nr));
+    return out;
+  };
+  return list.map((r) => {
+    const from = r.parts!.keys;
+    if (from.join() === all.join()) return r;
+    const p = r.parts!, e = r.exact;
+    const cityParts = r.cityParts && Object.fromEntries(Object.entries(r.cityParts).map(([id, v]) => [id, [...v, ...new Array(Math.max(0, 3 * local.length - v.length)).fill(0)]])) as Record<CityId, number[]>;
+    return { ...r, cityParts, parts: { ...p, keys: all, seg: lay(p.seg, from), board: lay(p.board, from), alight: lay(p.alight, from) },
+      ...(e ? { exact: { ...e, parts: { ...e.parts, seg: lay(e.parts.seg, from), board: lay(e.parts.board, from), alight: lay(e.parts.alight, from) } } } : {}) };
+  });
+}
+
+export function addParts(parts: readonly PeriodResult[]): PeriodResult {
+  const list = alignParts(parts);
   const [first] = list;
   const market = list.find((r) => r.intercitySummary.length) ?? first;
   // T-3373 B stage 2: parts summed in whole steps (`exactSum`) carry their sums unrounded, which add exactly

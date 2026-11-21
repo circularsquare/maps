@@ -7,12 +7,21 @@
  * check loads it in Node (`checks/t3373-sums.mjs`).
  */
 
-/** What a solving worker's `init` carries, off by default until stage 4: `?exactSum=1` sums this way; dev
- * `?sumOrder=reverse` takes every such sum's populations in reverse order */
+/** T-3373 B stage 3, off by default: `?split=1` gives each zone and the market one solving worker (`Holding`,
+ * demandPlan.ts), `?split=all` holds everything in every worker through the same code (today's pool) */
+export const SPLIT: "off" | "all" | "plan" = (() => {
+  if (typeof location === "undefined") return "off";
+  const v = new URLSearchParams(location.search).get("split");
+  return v === "1" ? "plan" : v === "all" ? "all" : "off";
+})();
+
+/** What a solving worker's `init` carries, off by default until stage 4: `?exactSum=1` sums this way (and
+ * `?split=1`, whose figures must not depend on which worker holds what); dev `?sumOrder=reverse` takes every such
+ * sum's populations in reverse order */
 export const SUM_FLAGS: { exactSum?: true; reverseSums?: true } = (() => {
   if (typeof location === "undefined") return {};
   const q = new URLSearchParams(location.search), dev = !!(import.meta as { env?: { DEV?: boolean } }).env?.DEV;
-  return { ...(q.get("exactSum") === "1" ? { exactSum: true as const } : {}), ...(dev && q.get("sumOrder") === "reverse" ? { reverseSums: true as const } : {}) };
+  return { ...(q.get("exactSum") === "1" || SPLIT === "plan" ? { exactSum: true as const } : {}), ...(dev && q.get("sumOrder") === "reverse" ? { reverseSums: true as const } : {}) };
 })();
 
 /** steps a rider: a load's term is off by at most 2^-21 of a rider */

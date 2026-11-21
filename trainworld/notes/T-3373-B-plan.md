@@ -164,7 +164,7 @@ If stage 1 finds it nearer all-China's 30%, 2 workers come out about 15% faster 
 | 1 | **Measure and simulate.** Per population: WASM grown at its open (`opened` memBytes deltas, one worker, `?lod=fine` off), pass time per period (`passMs`), the market's share, on New York, all-China, North America and asianita. The unsplit build loaded twice on all-China and New York, to see whether its hashes repeat (T-1354, T-1594: they may not). The planner as a pure function with unit tests, run offline on those numbers for 2 and 3 workers. | 2-3 | the planner module, unused; numbers in notes | Stop and report if all-China and North America at 2 workers aren't predicted at least 25% faster than 1 worker for at most 0.4 GB more. If the baseline's hashes don't repeat, later "equal to the bit" checks compare the sections that do (rail, the market) and name the rest. |
 | 2 | **Exact sums.** Whole-number sums in every cross-population sum in the worker and in `addParts`; per-city totals re-added on the page. | 2-4 | off by default (`?exactSum=1`) until stage 4 passes and she has OK'd the rounding change | Same bits at 1, 2 and 3 workers and with `?perfOff=share`; against master, the largest change of any figure reported (expected about 1e-6). |
 | 3 | **Who opens what, behind `?split=1`.** The plan on the page; every rule that now means "open in every worker" made to mean "open in its holders": a solve sent once every city is open (the per-item opened sets, about line 889 and 1299 of `demandClient.ts`), the `open` posts (about 1811), the first-station prefetch (`prefetchViewed`), the warm-up hold (`held`), the reopen at another level (`releveling`), closes (`sweep`, `closeStrays`), the pack hashes, the loading card's progress by worker acks, a replacement worker's `reopen`, the watchdog's replace-all (T-3781), `shrink`. Boxes for the clusters sent with the plan. | 3-5 | off by default | With `?split=1` and the plan forced to "everything everywhere", everything as today (figures equal); with a real plan, each pack opened on its holders only (load log), the load reaches its solve. |
-| 4 | **B for whole solves.** The per-round exchange over ports, the capacity fit's input, result parts added on the page, the rough solve on the zone in view's holder. Every solve is whole: no local stage, no kept periods, no refine, no T-1543 parts. | 4-6 | under the flag | Figures equal to the bit to the unsplit build with exact sums, on New York and all-China. All-China at 2 workers: memory and load time measured. Stop rule: under 20% faster than 1 worker, or over 0.4 GB more, stops the plan here. |
+| 4 | **B for whole solves.** (Stage 3 built the exchange through the page, the capacity fit's input and the result parts, every solve whole.) Left: the per-round exchange over `MessageChannel` ports, the rough solve on the zone in view's holder, `capAhead` counting the plan so a big save gets 2 workers without `demandWorkers`. | 2-4 | under the flag | Figures equal to the bit to the unsplit build with exact sums, on New York and all-China. All-China at 2 workers: memory and load time measured. Stop rule: under 20% faster than 1 worker, or over 0.4 GB more, stops the plan here. |
 | 5 | **Questions.** 20 query kinds and `rows`, sorted into four groups (provisional: this plan read about half the handlers, the stage reads each). A zone's own questions go to its holders (subSums, cellModes, purposes, flowRail, flows, purposeModes, trip, tripLengths, cells). The station-wide ones go to every worker, whose answers add (station, transfers). The market's go to its holder (icStation, icTrip, airLegs, regLegs, rows, zoneSquares), and icSel gets the zone's squares from the zone's holder, as bare zones do now (`bareSquares`). The aux worker's (bare, bareFlows, bareSquares) stay as they are. Answers record which populations they cover; today they record a period mask. | 3-5 | under the flag | Each kind answered equal (to rounding) split against not, on New York and North America: a station, a bubble selection, a trip, transfers. |
 | 6 | **Edits.** Kept periods: holders agree a cluster's period is kept (every population kept it). The local solve runs on the holders of the touched populations only, crowding on the last whole solve's total minus their own (exact), so other workers stay free. The market window runs on the market's holder. Then the local refine and T-3925's restart, and T-2624's per-period results arriving as one part per holder. | 4-6 | under the flag | North America Line 6 +1 and a station: local result within today's local's spread, final equal to the bit; paired runs on and off for timing. |
 | 7 | **Pool size and memory rules.** `workersFor`, `capAhead`, `capPool` and `growTo` count the plan's per-worker needs. Memory restarts (T-1205) and running out of memory (T-3072) deal the plan again. A grown worker opens only its share. The detail budget (`demandLod`) stays a total for all zones; the 3.5 GB refusal applies to the largest worker; the saves card and `memoryNeed` follow the plan. The pool is decided before packs open, since WASM never shrinks and a late re-deal leaves the old high water. | 2-4 | under the flag | all-China and North America on a reported 8 GB pick 2 workers at the new limit, New York 3. A forced out-of-memory still finishes with the same figures. |
@@ -342,6 +342,116 @@ the local solve's lines changed. No timing was taken either way.
   - the questions (stations, transfers): stage 5's
 - No Rust change, so no cargo suites. Typecheck clean; smoke 30/30 with the flag off.
 - Left for stage 9: the docs (`demand-runtime.md`'s sums) and a DECISIONS line for the step sizes.
+
+## Stage 3 results (agent splitb3, tree splitb3, 2026-11-21)
+
+**Built, off by default, and further than the row asked.** `?split=1` gives each zone and the market one solving
+worker, and those workers now trade each round's loads, so a split load already reaches the same figures. Stage 3
+was meant to stop at "opens on holders only"; the exchange at the end of a round was part of stage 4. With exact sums
+the general form was small, so it went in here. `?split=all` runs the same holder code with every pack on every
+worker (today's pool).
+
+**On the page** (`demandClient.ts`; `Holding` in `demandPlan.ts`):
+- One rule, `holdersOf(item)`: an item's solving holder plus the aux worker. Flag off or `split=all`, it is every
+  worker, so nothing else changed there. Read by:
+  - the `open` posts and the T-173 warm-up hold
+  - acks and "open everywhere": a solve is sent once every holder has acked
+  - the loading card's progress by worker acks (`packAcks` over the item's holders)
+  - a replacement's `reopen` (only what it holds), so the watchdog's replace-all and `restartForSave` reopen by holding too
+  - `shrink`'s ack recount
+- `prefetchViewed`, the reopen at another level (`lodApply`), `closeStrays` and the sweep need no change of their
+  own: they go through `fetchCity` and `closeFull`.
+  - Closes still go to every worker. A worker not holding a pack ignores its close.
+  - The pack hashes are unchanged: they are of the bytes, whoever opens them.
+- **Dealing** (`Holding`): a zone is placed when it is first asked for (`fetchCity`, so in the order the page asks
+  for zones, not the order downloads land) and keeps its holder for good.
+  - The market goes on the last worker.
+  - A zone goes to the worker it adds least to, by its `localTrips`.
+  - The market counts as 40% of the work from the start (stage 1 measured 23-65%). The first run counted it only
+    once its packs arrived, and its worker got 93 of China's 171 zones on top of the market.
+- **Shrink** (`memoryShort`, `capAhead`, `capPool`, `restartForSave`): units the stopped workers held are placed
+  again on the survivors and downloaded again (the browser's cache). The next solve waits for them. `growTo`
+  never grows under the split (stage 7 deals to new workers).
+- **Every solve under the split is a barrier solve, whole.** No local stage, no kept periods or clusters, no rough
+  solve, no T-1543 parts, no T-1607 market sharing. Every solving worker gets every period; the aux worker one group.
+- **The solve message** carries the plan (`split`): each zone the solve covers, in registry order, with its cells'
+  box and its holder; the market's holder; the workers holding anything; and the worker's own index.
+  - Boxes and each zone's everyday purpose count come with each `opened` (`boxes`, `kinds`).
+  - The market's 6 km zone boxes come from its holder at each solve's start (`zones`, relayed by the page), since
+    a deferred close can change the composition after the page last heard.
+
+**In the worker** (`demand.worker.ts`):
+- A worker solves only the zones the plan gives it (`by === me`), and the market only if it is its holder.
+- Clusters are joined from every zone of the plan and the holder's market zones, so all workers split alike.
+- A cluster's period goes round by round as before (side `"held"`). After each round a worker sends its own loads to
+  the cluster's other holders (`loads` with `from`, `to`, relayed through the page). It then crowds on the exact sum
+  of its own and theirs.
+- The capacity fit and the riders coming (`come`) are added up the same way.
+- Each holder sends a `result` part for every period and round. The page adds them (`addParts`, exact).
+- `alignParts` (`demandSums.ts`) lays each part's purpose blocks out on the union of their keys: a worker holding no
+  market has no longer-trips block. Each worker also makes as many everyday blocks as the clusters' zones have on
+  any worker (`planKinds`), so the market's outings across a zone line go to their purposes as with one worker. A
+  first 3-worker run, whose market worker held no zone, put them in the longer trips: the purposes section differed
+  (every other section matched).
+
+**Checks** (my Vite 6221, save imported into `?new=1`, `demandWorkers=2` unless the row says 3; `measure.mjs`, `fields.mjs` and
+`opens.mjs` in scratchpad `splitb3/`). Each run has a fresh profile, so every hash is from a fresh final, not a
+cached result.
+
+| Run | Hash | Final | WASM per solving worker (aux) |
+|---|---|---|---|
+| NYC flag off, master | 5657f014 | 139 s | 333, 333 (65) |
+| NYC flag off, this tree | 5657f014 | 119 s | 333, 333 (65) |
+| NYC `exactSum=1`, master | 7c35251f | 161 s | 333, 333 (65) |
+| NYC `exactSum=1&split=all` | 7c35251f | 146 s | 333, 333 (65) |
+| NYC `split=1` | 7c35251f | 121 s | 161 (New York City), 237 (the market, New Haven, Hartford, Long Island) (65) |
+| NYC `split=1`, after the purposes fix | 7c35251f | 121 s | 161, 237 (65) |
+| NYC `split=1`, 3 workers | 7c35251f | 124 s | 161 (New York City), 33 (the 3 small zones), 237 (the market alone) (65) |
+| NYC `split=1`, worker 1 out of memory 15 s into the load | 7c35251f | 159 s, on 1 worker | 365 (65) |
+| NYC flag off, worker 1 out of memory 15 s into the load | 5657f014 | 198 s, on 1 worker | 365 (65) |
+| all-China `exactSum=1`, master | 90310524 | 170 s | 1,267, 1,235 (289) |
+| all-China `split=1`, first dealing (market counted late) | 90310524 | 127 s | 353, 979 (289) |
+| all-China `split=1` | 90310524 | 112 s | 577 (136 zones), 755 (the market's 370 packs and 35 zones) (289) |
+| all-China `split=1`, 3 workers, after the purposes fix | 90310524 | 118 s | 353, 353, 627 (the market alone) (289) |
+
+- **Every array of the final results matches to the bit** on both saves: `seg`, `board`, `alight`, `arrive`,
+  `loadOfCrush`, `fareX`, `baseX`, `xferIn`, the purpose blocks, `lean`, the summaries and `fareSense`.
+  The hash covers every section, per-zone figures included.
+- **Each pack opened on its holders only**, by the workers' own `opened` messages:
+  - NYC: worker 0 held New York City alone; worker 1 the other 3 zones and the 9 market packs.
+  - all-China: worker 0 held 136 zones and no market pack; worker 1 held 35 zones and 370 market packs.
+  - The aux worker still holds every zone, as planned.
+- **Memory**, solving workers' WASM at 2 workers: NYC 666 MB to 398 MB; all-China 2,502 MB to 1,332 MB. One worker
+  alone holds 365 MB on NYC and about 1,300 MB on all-China, so a second worker now adds about 33 MB of WASM on
+  each (plus its JS heap, about 0.15 GB), where it added 300 MB and 1,200 MB. Load times are from a machine at 3-10 of 14 cores
+  claimed, so only roughly comparable; stage 4 times them properly.
+- **Edits** (play.mjs, new NYC game, `demandWorkers=2`, two three-station lines one after the other): under
+  `split=1` each edit solve reaches its final. The second line's rail trips equal the unsplit `exactSum=1` game's to
+  every digit (483,720.38901925).
+- **T-3933 with the flag on** (oomretry's `inpage.mjs` with `split=1`, real save through Saved games):
+  - the failed grow in worker 1 halved the pool (2 to 1, the units moved and reopened)
+  - worker 0's two failures saved the game and reloaded it into the retry on 1 worker, with the note
+  - the final came with 12,886,431 rail trips a day, the T-3933 figure
+- `npm run check` clean. `checks/t3373-plan.mjs` 26 pass, 3 of them new for `Holding`. No Rust change. Smoke with
+  the flag off: 29 of 30. The one failure is the wiki figures check (`wiki/read/brt.md` out of date), in a tree with
+  no wiki change.
+
+**Not done, for the next stages:**
+- **Questions (stage 5).** Station, transfers, trips and the market's questions still go out as if periods were
+  dealt by worker. Under the split each worker answers for its own zones over all five periods, so a panel may
+  show one worker's part or count a period twice. Not checked.
+- **Edits (stage 6).** Every edit re-solves every cluster whole, with no local result. That is slower than today
+  after an edit, and fine behind a flag.
+- **Pool rules (stage 7).** `capAhead` still counts a whole save per worker, so all-China and North America get 1
+  worker under the split unless `demandWorkers` is set. `growTo` is off under the split.
+- **Ports (stage 4's other half).** Loads still go through the page.
+  - NYC per round: 84 KB per period per worker.
+  - All of Japan: about 0.5 MB.
+  - The T-3917 stalls on the main thread are what ports would remove; not measured.
+- **Load timing (stage 4).** The stop rule (at least 20% faster than 1 worker, at most 0.4 GB more) needs paired
+  runs on a quiet machine. Memory already passes: all-China's second worker adds about 0.05 GB of WASM against one
+  worker (1,332 against about 1,300), plus the JS heap of 0.15 GB.
+- Copies and measured costs (stage 8).
 
 ## Risks
 

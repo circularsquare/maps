@@ -1,12 +1,72 @@
 /**
  * T-3373 B: which solving workers hold which populations, and which holder solves each period
  * (notes/T-3373-B-plan.md "What is copied today, and what B changes"). Pure, with no imports, so a
- * check loads it in Node (`checks/t3373-plan.mjs`). Not used by the game yet.
+ * check loads it in Node (`checks/t3373-plan.mjs`). The game uses `Holding` under `?split=1`; `planHolding` not yet.
  *
  * A unit is what is held together: a city's commutes with its everyday layer (they share their
  * cells), or the market (every cluster's part shares one composition). Today's pool is the plan
  * that holds every unit on every worker (`everywhere`); stage A's is one worker.
  */
+
+/** the market's unit: every zone's market pack, one composition */
+export const MARKET_UNIT = "market";
+/** the market's share of a load's passes before any are measured (stage 1 measured 23-65%) */
+const MARKET_SHARE = 0.4;
+
+/**
+ * T-3373 B stage 3 (`?split=1`): the page's holding plan as packs are first posted. Each unit has one holder, kept
+ * for good once placed (WASM never shrinks, and the page keeps no copy of a pack): the market on the last worker,
+ * a city on the worker it adds least to, by `cost` (its trips), counting the market as MARKET_SHARE of the work.
+ * Copies (a dominant city's periods split, the market twice) and costs from measured passes are stage 8's.
+ */
+export class Holding {
+  private of = new Map<string, number>();
+  private cost = new Map<string, number>();
+  private n: number;
+  constructor(n: number) { this.n = n; }
+  get workers() { return this.n; }
+  private marketAt() { return this.n - 1; }
+  /** each worker's load as placed, in cost units, the market counted on its worker before it is placed (a save's
+   * zones are dealt before its market packs arrive) */
+  loads(): number[] {
+    const load = new Array<number>(this.n).fill(0);
+    let cities = 0;
+    for (const [u, w] of this.of) if (u !== MARKET_UNIT) { load[w] += this.cost.get(u) ?? 0; cities += this.cost.get(u) ?? 0; }
+    load[this.of.get(MARKET_UNIT) ?? this.marketAt()] += (cities * MARKET_SHARE) / (1 - MARKET_SHARE);
+    return load;
+  }
+  private place(unit: string, cost: number, among: number): number {
+    if (unit === MARKET_UNIT) return among - 1;
+    const load = this.loads().slice(0, among), k = MARKET_SHARE / (1 - MARKET_SHARE), mh = this.of.get(MARKET_UNIT) ?? among - 1;
+    let best = 0, bestLoad = Infinity;
+    for (let w = 0; w < among; w++) {
+      const l = load[w] + cost + (w === mh ? k * cost : 0);
+      if (l < bestLoad - 1e-9) { best = w; bestLoad = l; }
+    }
+    return best;
+  }
+  /** `unit`'s holder, placed now if it has none */
+  holder(unit: string, cost = 1): number {
+    let w = this.of.get(unit);
+    if (w === undefined) {
+      this.cost.set(unit, Math.max(1, cost));
+      w = unit === MARKET_UNIT ? this.marketAt() : this.place(unit, Math.max(1, cost), this.n);
+      this.of.set(unit, w);
+    }
+    return w;
+  }
+  placed(unit: string): number | undefined { return this.of.get(unit); }
+  /** the pool is cut to `n`: units held past it are placed again among the first `n` (returned); the rest stay */
+  shrink(n: number): string[] {
+    const moved = [...this.of].filter(([, w]) => w >= n).map(([u]) => u);
+    for (const u of moved) this.of.delete(u);
+    this.n = n;
+    for (const u of moved.sort((a, b) => (a === MARKET_UNIT ? -1 : b === MARKET_UNIT ? 1 : (this.cost.get(b) ?? 0) - (this.cost.get(a) ?? 0) || (a < b ? -1 : 1)))) {
+      this.of.set(u, u === MARKET_UNIT ? this.marketAt() : this.place(u, this.cost.get(u) ?? 1, n));
+    }
+    return moved;
+  }
+}
 
 export interface PlanUnit {
   /** a zone id, or "market" */

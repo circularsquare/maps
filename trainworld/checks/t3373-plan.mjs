@@ -1,6 +1,6 @@
 // T-3373 B: unit tests of the holding planner (app/src/workers/demandPlan.ts), loaded in Node (22.18+ strips
 // its types). No browser.   node trainworld/checks/t3373-plan.mjs
-import { planHolding, everywhere, measure, spanOf } from '../app/src/workers/demandPlan.ts';
+import { planHolding, everywhere, measure, spanOf, Holding, MARKET_UNIT } from '../app/src/workers/demandPlan.ts';
 
 let fails = 0;
 const ok = (cond, what) => { console.log(`${cond ? 'PASS' : 'FAIL'}  ${what}`); if (!cond) fails++; };
@@ -83,6 +83,18 @@ for (const [name, units] of [['many zones', china], ['one dominant city', nyc]])
 {
   const p = planHolding({ units: [unit('big', 1, 50)], workers: 2, room: 10 });
   ok(!p.fits, 'a unit past every worker\'s room: the plan says it does not fit');
+}
+
+// stage 3's page-side dealing (`Holding`): zones as they are asked for, the market after them
+{
+  const h = new Holding(2), zones = Array.from({ length: 170 }, (_, i) => ['z' + i, 1e6 / (i + 4)]);
+  for (const [id, c] of zones) h.holder(id, c);
+  const m = h.holder(MARKET_UNIT), load = h.loads(), mean = (load[0] + load[1]) / 2;
+  ok(m === 1 && Math.max(...load) <= mean * 1.15, `Holding, 2 workers: the market on the last, loads within 15% (${load.map((x) => (x / mean).toFixed(2)).join(', ')})`);
+  ok(zones.every(([id]) => h.holder(id) === h.placed(id)) && h.holder('z0') === h.placed('z0'), 'Holding: a unit keeps its holder');
+  const on1 = zones.filter(([id]) => h.placed(id) === 1).map(([id]) => id), was0 = zones.filter(([id]) => h.placed(id) === 0).map(([id]) => id);
+  const moved = h.shrink(1);
+  ok(moved.length === on1.length + 1 && moved.includes(MARKET_UNIT) && was0.every((id) => !moved.includes(id)) && zones.every(([id]) => h.placed(id) === 0) && h.placed(MARKET_UNIT) === 0, `Holding: a cut to 1 moves only what worker 1 held (${moved.length})`);
 }
 
 console.log(fails ? `${fails} failed` : 'all passed');
