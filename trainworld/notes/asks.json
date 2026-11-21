@@ -40,5 +40,12 @@
     "text": "Five iPhone players reported the page crashing right away (11-19 to 11-20). Reading their saved games on the server (T-3781's route) would show which game was loading. May we, one yes per account? Their report ids: 262cb413, 98429d29, 7130f860, 9705548e, fa20c413.",
     "since": "2026-11-21",
     "by": "maps-a3"
+  },
+  {
+    "id": "a-2026-11-21-7",
+    "title": "In-town bus tint look",
+    "text": "The bus tool now tints the ground in town, not the streets (basemap tiles merge roads across tiles, so street colours would need our own road source, about 3-4 h). Sheet: artifacts/trainworld/review/bus-town-tint.png. Landed A (town teal); B tints out-of-town khaki and leaves the city as now; C both. Which letter, and do you want true street colours (T-3913)?",
+    "since": "2026-11-21",
+    "by": "maps-a3"
   }
 ]
