@@ -106,6 +106,12 @@ name = "start_difficulty"
 path = "src/bin/start_difficulty.rs"
 required-features = ["demand"]
 
+# T-3887: the mode frontier on a made-up city (tools/frontier.py runs it).
+[[bin]]
+name = "frontier"
+path = "src/bin/frontier.rs"
+required-features = ["demand"]
+
 # T-3443: clippy (checks/lint.cmd) runs with -D warnings; the style and complexity groups are
 # allowed, they are mostly taste (index loops, chunks_exact, long argument lists).
 [lints.clippy]
