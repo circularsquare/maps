@@ -371,7 +371,12 @@ export async function ensureStreets(ids: Iterable<string>): Promise<void> {
     if (!g || streetsIn.has(id)) return;
     streetsIn.add(id);
     const d = g.d;
-    if (d && a.add_pack_streets(d.zoneM, d.x0, d.y0, d.w, d.h, d.pop, d.jobs, d.zone, d.gx, d.gy, d.size, d.cells9, d.lon, d.lat)) added = true;
+    if (d && a.add_pack_streets(d.zoneM, d.x0, d.y0, d.w, d.h, d.pop, d.jobs, d.zone, d.gx, d.gy, d.size, d.cells9, d.lon, d.lat)) {
+      added = true;
+      // T-3913: where BRT runs faster, for the bus tool's road hint
+      const outline = a.last_town_outline();
+      if (outline.length > 1) send({ kind: "town", id, outline }, [outline.buffer]);
+    }
   });
   if (added && a.bus_lines().length) {
     sendStateOutside();

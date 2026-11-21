@@ -101,6 +101,7 @@ function replaceModel() {
   newModel();
   masksIn.clear();
   streetsIn.clear();
+  send({ kind: "townClear" });
   putRowsSent(""); putHolidaysSent(rowsSent);
 }
 

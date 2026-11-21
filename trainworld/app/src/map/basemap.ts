@@ -15,7 +15,9 @@ import { signal } from "@preact/signals";
 import { SHADES, type ShadeColours } from "../game/shades";
 import { display, SAT_INK_FLIP, shade, type Shade } from "../game/ui";
 import { styleUp } from "./styleReady";
-import { busRoadFilter, fastRoadExpr, railRoadFilter } from "./busRoads";import { demBytes, flattenDem, onRedraw } from "./demFlat";
+import { busRoadFilter, fastRoadExpr, railRoadFilter } from "./busRoads";
+import { townGeometry } from "./townArea";
+import { demBytes, flattenDem, onRedraw } from "./demFlat";
 import { canvasReadsTrue } from "./canvasRead";
 
 const POSITRON = "https://tiles.openfreemap.org/styles/positron";
@@ -501,6 +503,8 @@ export function setBasemapShade(map: maplibregl.Map, s: Shade, contrast: number)
     map.setPaintProperty(t.id, t.key as any, atContrast(v, t.how, land, satOn && t.how !== "fade" ? 0 : contrast));
   }
   if (satOn) paintSatellite(map);
+  // T-3913: the town covered in the land as now painted
+  if (hintOn.bus) setTownFill(map, true);
 }
 
 /**
@@ -656,6 +660,77 @@ function hintPaint(kind: RoadHint, dark: 0 | 1): { colour: unknown; opacity: unk
   const mul = byFast(BUS_FAST_WIDTH, 1);
   return { colour: byFast(BUS_FAST_COLOUR[dark], h.colour[dark]), opacity: byFast(BUS_FAST_OPACITY[dark], h.opacity[dark]), width: hintWidth(h.width, mul), mul };
 }
+/** T-3913: the bus hint tints the ground by where a bus is in town for BRT (`townArea.ts`), under the streets: `town`
+ * tints the town, `country` what is out of town (drawn over the whole world, then the town covered in the land's own
+ * colour), each light and dark. `?town=<letter>` picks one and keeps it in this browser. Streets keep their colours:
+ * splitting the street layer by `within` miscoloured whole tiles (notes/T-3913.md). */
+interface Tint { colour: [string, string]; opacity: [number, number] }
+const TOWN_TEAL: Tint = { colour: ["#1a9e94", "#3fd0c4"], opacity: [0.14, 0.12] };
+const COUNTRY_KHAKI: Tint = { colour: ["#9a8a3a", "#c8b468"], opacity: [0.2, 0.14] };
+const TOWN_LOOKS: Record<string, { town?: Tint; country?: Tint }> = {
+  none: {},
+  a: { town: TOWN_TEAL },
+  b: { country: COUNTRY_KHAKI },
+  c: { town: TOWN_TEAL, country: COUNTRY_KHAKI },
+};
+const TOWN_LOOK_DEFAULT = "a";
+const townLook = (() => {
+  let k = TOWN_LOOK_DEFAULT;
+  try {
+    const asked = new URLSearchParams(location.search).get("town");
+    if (asked && asked in TOWN_LOOKS) localStorage.setItem("twTownLook", asked);
+    const kept = localStorage.getItem("twTownLook");
+    if (kept && kept in TOWN_LOOKS) k = kept;
+  } catch {
+    // no storage: the default
+  }
+  return TOWN_LOOKS[k];
+})();
+const TOWN_SOURCE = "bus_town", WORLD_SOURCE = "bus_world";
+const TOWN_FILL = "bus_town_fill", COUNTRY_FILL = "bus_country_fill", TOWN_MASK = "bus_town_mask";
+let townTimer: ReturnType<typeof setTimeout> | undefined;
+/** T-3913: the town's polygons changed: drawn again a moment later, once a burst of packs is in */
+export function townChanged(map: maplibregl.Map) {
+  clearTimeout(townTimer);
+  townTimer = setTimeout(() => {
+    if (hintOn.bus) setTownFill(map, true);
+  }, 300);
+}
+/** T-3913: the ground's tints under the bus hint, in the look's layers */
+function setTownFill(map: maplibregl.Map, on: boolean) {
+  const geometry = on ? townGeometry() : null;
+  const look = townLook;
+  const ids = [TOWN_FILL, COUNTRY_FILL, TOWN_MASK];
+  if (!styleUp(map)) return;
+  if (!on || !(look.town || look.country)) {
+    for (const id of ids) if (map.getLayer(id)) map.removeLayer(id);
+    for (const id of [TOWN_SOURCE, WORLD_SOURCE]) if (map.getSource(id)) map.removeSource(id);
+    return;
+  }
+  const dark = shadeAs[0] === "dark" ? 1 : 0;
+  // out of town where no pack's street speeds are in, as in the sim
+  const data = { type: "FeatureCollection" as const, features: geometry ? [{ type: "Feature" as const, properties: {}, geometry }] : [] };
+  const src = map.getSource(TOWN_SOURCE) as maplibregl.GeoJSONSource | undefined;
+  if (src) src.setData(data);
+  else map.addSource(TOWN_SOURCE, { type: "geojson", data, tolerance: 0 });
+  const put = (id: string, source: string, colour: string, opacity: number, before: string | undefined) => {
+    if (map.getLayer(id)) {
+      map.setPaintProperty(id, "fill-color", colour);
+      map.setPaintProperty(id, "fill-opacity", opacity);
+    } else map.addLayer({ id, type: "fill", source, minzoom: ROAD_HINTS.bus.minzoom, paint: { "fill-color": colour, "fill-opacity": opacity, "fill-antialias": false } }, before);
+  };
+  const layers = map.getStyle().layers;
+  // the town's tint under the water and the roads: the ground of the town only
+  if (look.town) put(TOWN_FILL, TOWN_SOURCE, look.town.colour[dark], look.town.opacity[dark], map.getLayer("water") ? "water" : layers.find((l) => l.type === "line")?.id);
+  if (look.country) {
+    if (!map.getSource(WORLD_SOURCE)) map.addSource(WORLD_SOURCE, { type: "geojson", data: { type: "Polygon", coordinates: [[[-180, -85], [180, -85], [180, 85], [-180, 85], [-180, -85]]] } });
+    // right over the land, under imagery, parks and everything else
+    const above = layers.slice(layers.findIndex((l) => l.type === "background") + 1).find((l) => !ids.includes(l.id))?.id;
+    const land = map.getLayer("background") ? (map.getPaintProperty("background", "background-color") as string) : SHADES[shadeAs[0]].land;
+    put(COUNTRY_FILL, WORLD_SOURCE, look.country.colour[dark], look.country.opacity[dark], above);
+    put(TOWN_MASK, TOWN_SOURCE, land, 1, above);
+  }
+}
 function setRoadHint(map: maplibregl.Map, kind: RoadHint, on: boolean) {
   hintOn[kind] = on;
   if (!styleUp(map)) return;
@@ -663,6 +738,7 @@ function setRoadHint(map: maplibregl.Map, kind: RoadHint, on: boolean) {
   if (!on) {
     if (map.getLayer(h.id)) map.removeLayer(h.id);
     if (kind === "bus" && map.getLayer(ONEWAY_LAYER)) map.removeLayer(ONEWAY_LAYER);
+    if (kind === "bus") setTownFill(map, false);
     return;
   }
   const style = map.getStyle();
@@ -682,6 +758,7 @@ function setRoadHint(map: maplibregl.Map, kind: RoadHint, on: boolean) {
     }, before);
   }
   if (kind === "bus") {
+    setTownFill(map, true);
     if (busOneWayOn) setBusOnewayArrows(map, dark === 1, before, p.mul);
     else if (map.getLayer(ONEWAY_LAYER)) map.removeLayer(ONEWAY_LAYER);
   }

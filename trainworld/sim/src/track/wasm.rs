@@ -711,6 +711,12 @@ impl TrackApi {
         true
     }
 
+    /// T-3913: the in-town squares of the street speeds last added (`add_pack_streets`), as polygons for the bus tool's
+    /// road hint (`streets::StreetGrid::town_outline` has the layout).
+    pub fn last_town_outline(&self) -> Vec<f64> {
+        self.w.net.streets.last_town_outline()
+    }
+
     /// Metres of the last route or edge preview in each terrain class where it is charged (flat,
     /// rolling, hilly, mountain; T-1270) and over water (T-1887), then the roads it crosses at
     /// ground level, weighted, and their price, US$M (T-1929), for the track tool's tag.

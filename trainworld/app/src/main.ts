@@ -40,7 +40,8 @@ import { lineRunFactor } from "./game/regionMoney";
 import { stretchMoney } from "./game/stretchMoney";
 import { faresOf } from "./game/fareCurve";
 import { live } from "./map/live";
-import { setBasemapLabels, setBasemapShade, setSatellite, setBusRoadHint, setHillshade, setRailRoadHint, setTramRoadHint } from "./map/basemap";
+import { setBasemapLabels, setBasemapShade, setSatellite, setBusRoadHint, setHillshade, setRailRoadHint, setTramRoadHint, townChanged } from "./map/basemap";
+import { townVersion } from "./map/townArea";
 import { createMap } from "./map/mapView";
 import { startRealNetwork } from "./map/realNetwork";
 import { startRealStations } from "./map/realStations";
@@ -535,6 +536,7 @@ map.on("load", () => {
   effect(() => setSatellite(map, display.value.satellite)); // T-3249
   effect(() => setHillshade(map, display.value.hillshade)); // T-1270
   effect(() => setBusRoadHint(map, tool.value === "bus", display.value.busOneWay)); // T-2883
+  effect(() => (townVersion.value, townChanged(map))); // T-3913
   effect(() => setTramRoadHint(map, tool.value === "track" && tramTrack.value && snapStreets.value && !snapRealTram.value)); // T-2998
   effect(() => setRailRoadHint(map, tool.value === "track" && !tramTrack.value && snapRoads.value)); // T-3129
   startTerrainTint(map); // T-1270 stage 3

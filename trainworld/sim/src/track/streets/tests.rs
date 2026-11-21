@@ -80,3 +80,45 @@ fn arrays_that_do_not_fit_make_no_grid() {
     assert!(StreetGrid::from_zones(2000.0, 0.0, 0.0, 4, 2, &[1.0], &[1.0], &[0], &[0], &[0], &[], &[], 0.0, 0.0).is_none());
     assert!(StreetGrid::from_zones(2000.0, 0.0, 0.0, 4, 2, &[1.0], &[1.0], &[3], &[0], &[0], &[], &[1], 0.0, 0.0).is_none());
 }
+
+/// T-3913: the in-town squares come out as one polygon per patch joined side to side, its outline first and then its
+/// holes, a patch meeting another only at a corner kept apart; squares an earlier grid covers are left to it.
+#[test]
+fn the_town_outline_merges_squares_into_polygons_with_holes() {
+    // 4 x 4 squares, one zone each: a 3 x 3 block in town around an open square, and one more in town touching its
+    // corner
+    let town = |x: u16, y: u16| (x < 3 && y < 3 && (x, y) != (1, 1)) || (x, y) == (3, 3);
+    let (mut gx, mut gy, mut pop) = (vec![], vec![], vec![]);
+    for x in 0..4u16 {
+        for y in 0..4u16 {
+            gx.push(x);
+            gy.push(y);
+            pop.push(if town(x, y) { 40_000.0f32 } else { 1.0 });
+        }
+    }
+    let zone: Vec<u32> = (0..16).collect();
+    let grid = || StreetGrid::from_zones(1000.0, 0.0, 0.0, 4, 4, &pop, &pop, &zone, &gx, &gy, &[], &[1; 16], 10.0, 0.0).unwrap();
+    let out = grid().town_outline(&[]);
+    let (mut at, mut polys) = (1, vec![]);
+    for _ in 0..out[0] as usize {
+        let mut rings = vec![];
+        let n = out[at] as usize;
+        at += 1;
+        for _ in 0..n {
+            let k = out[at] as usize;
+            rings.push(out[at + 1..at + 1 + 2 * k].to_vec());
+            at += 1 + 2 * k;
+        }
+        polys.push(rings);
+    }
+    assert_eq!(at, out.len());
+    let sizes: Vec<Vec<usize>> = polys.iter().map(|p| p.iter().map(|r| r.len() / 2).collect()).collect();
+    assert_eq!(sizes, vec![vec![5, 5], vec![5]]);
+    // the block's outline runs from the frame's origin to 3 km east and north
+    let lons: Vec<f64> = polys[0][0].iter().step_by(2).copied().collect();
+    let east = Frame::equirect(10.0, 0.0).to_lonlat(3000.0, 0.0).0;
+    assert!(lons.iter().any(|&l| (l - 10.0).abs() < 1e-9) && lons.iter().any(|&l| (l - east).abs() < 1e-9));
+    // the same squares again in a second grid: all of them are the first grid's
+    let streets = Streets { grids: vec![Arc::new(grid()), Arc::new(grid())] };
+    assert_eq!(streets.last_town_outline(), vec![0.0]);
+}

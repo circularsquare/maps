@@ -49,6 +49,7 @@ import { saveRefusal } from "../game/memoryCheck";
 import { askBeforeLeaving, keepStorage } from "../game/saveSafety";
 import { afterPaint, BUSY_MS, expectedMs, hideBusy, learnBusy, showBusy } from "../game/busy";
 import { addTerrainGrid, dropTerrainGrids, groundNet, setTerrainIndex } from "../game/terrain";
+import { addTownOutline, clearTownOutlines } from "../map/townArea";
 import { letterOf } from "../game/lineLetter";
 
 /** Text from the clock worker: it sends message keys (docs/localization.md "Workers"), worded here; anything else as it is. */
@@ -1284,6 +1285,12 @@ export class ClockClient {
         break;
       case "terrainIndex":
         setTerrainIndex(msg.bytes);
+        break;
+      case "town":
+        addTownOutline(msg.id, msg.outline);
+        break;
+      case "townClear":
+        clearTownOutlines();
         break;
       case "ground":
         groundNet.value = { pending: msg.pending, failed: msg.failed };

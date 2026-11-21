@@ -1020,6 +1020,10 @@ export type FromClock =
   | { kind: "terrainDrop"; keys: number[] }
   /** `index.bin`: which blocks have a file */
   | { kind: "terrainIndex"; bytes: ArrayBuffer }
+  /** T-3913: a pack's in-town squares for BRT as polygons (`TrackApi.last_town_outline`), for the bus tool's road hint */
+  | { kind: "town"; id: string; outline: Float64Array }
+  /** the street speeds were dropped (a new model after a panic): every pack's polygons go */
+  | { kind: "townClear" }
   /** T-2613: terrain grids and water masks on their way, and those whose last fetch failed */
   | { kind: "ground"; pending: number; failed: number; why: string[] }
   /** T-1929: road tiles just put in the track model: a preview asked before them is out of date */

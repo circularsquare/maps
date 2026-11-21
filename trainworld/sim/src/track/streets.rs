@@ -158,6 +158,122 @@ impl StreetGrid {
             v => Some(v as f64 / Q),
         }
     }
+
+    /// T-3913: the squares in town for BRT (`brt_in_town`), merged into polygons in longitude and latitude, for the
+    /// bus tool's road hint: the polygon count, then per polygon its ring count, then per ring (its outline first, then
+    /// its holes) its point count and the points' longitude, latitude, the first repeated last. A square whose centre
+    /// a grid in `before` covers is left to that grid, as `Streets::car_kmh_at` does.
+    pub fn town_outline(&self, before: &[Arc<StreetGrid>]) -> Vec<f64> {
+        let (w, h) = (self.w, self.h);
+        let mut town: Vec<bool> = self.q.iter().map(|&v| v != 0 && brt_in_town(v as f64 / Q)).collect();
+        if !before.is_empty() {
+            for sx in 0..w {
+                for sy in 0..h {
+                    let i = (sx * h + sy) as usize;
+                    if town[i] {
+                        let (lon, lat) = self.pack.to_lonlat(self.x0 + (sx as f64 + 0.5) * self.zone_m, self.y0 + (sy as f64 + 0.5) * self.zone_m);
+                        town[i] = !before.iter().any(|g| g.at(lon, lat).is_some());
+                    }
+                }
+            }
+        }
+        let inside = |sx: i32, sy: i32| sx >= 0 && sy >= 0 && sx < w && sy < h && town[(sx * h + sy) as usize];
+        // the squares joined side to side, one label each
+        let mut part = vec![u32::MAX; town.len()];
+        let mut parts = 0u32;
+        let mut stack = Vec::new();
+        for i in 0..town.len() {
+            if !town[i] || part[i] != u32::MAX {
+                continue;
+            }
+            part[i] = parts;
+            stack.push(i);
+            while let Some(j) = stack.pop() {
+                let (sx, sy) = ((j as i32) / h, (j as i32) % h);
+                for (nx, ny) in [(sx + 1, sy), (sx - 1, sy), (sx, sy + 1), (sx, sy - 1)] {
+                    let k = (nx * h + ny) as usize;
+                    if inside(nx, ny) && part[k] == u32::MAX {
+                        part[k] = parts;
+                        stack.push(k);
+                    }
+                }
+            }
+            parts += 1;
+        }
+        // the edges between a town square and any other, the town on their left: start corner, direction (east,
+        // north, west, south), the square's label
+        const STEP: [(i32, i32); 4] = [(1, 0), (0, 1), (-1, 0), (0, -1)];
+        let mut edges: Vec<(i32, i32, usize, u32)> = Vec::new();
+        for sx in 0..w {
+            for sy in 0..h {
+                if !inside(sx, sy) {
+                    continue;
+                }
+                let p = part[(sx * h + sy) as usize];
+                if !inside(sx, sy - 1) { edges.push((sx, sy, 0, p)); }
+                if !inside(sx + 1, sy) { edges.push((sx + 1, sy, 1, p)); }
+                if !inside(sx, sy + 1) { edges.push((sx + 1, sy + 1, 2, p)); }
+                if !inside(sx - 1, sy) { edges.push((sx, sy + 1, 3, p)); }
+            }
+        }
+        let key = |x: i32, y: i32| x as i64 * (h as i64 + 1) + y as i64;
+        let mut from: std::collections::HashMap<i64, [usize; 2]> = std::collections::HashMap::new();
+        for (e, &(x, y, _, _)) in edges.iter().enumerate() {
+            let slot = from.entry(key(x, y)).or_insert([usize::MAX; 2]);
+            if slot[0] == usize::MAX { slot[0] = e } else { slot[1] = e }
+        }
+        // each edge's next: where two town squares meet only at a corner, the left turn, so a ring keeps to its
+        // own squares
+        let next = |e: usize| -> usize {
+            let (x, y, d, _) = edges[e];
+            let at = from[&key(x + STEP[d].0, y + STEP[d].1)];
+            for turn in [1, 0, 3] {
+                for &o in &at {
+                    if o != usize::MAX && edges[o].2 == (d + turn) % 4 {
+                        return o;
+                    }
+                }
+            }
+            unreachable!("a town edge with no edge after it")
+        };
+        let mut used = vec![false; edges.len()];
+        // per label: its outline and its holes, in grid corners
+        let mut rings: Vec<Vec<Vec<(i32, i32)>>> = vec![Vec::new(); parts as usize];
+        for e0 in 0..edges.len() {
+            if used[e0] {
+                continue;
+            }
+            let mut ring = Vec::new();
+            let mut e = e0;
+            loop {
+                used[e] = true;
+                let n = next(e);
+                if edges[n].2 != edges[e].2 {
+                    ring.push((edges[n].0, edges[n].1));
+                }
+                e = n;
+                if e == e0 {
+                    break;
+                }
+            }
+            ring.push(ring[0]);
+            let twice_area: i64 = ring.windows(2).map(|s| s[0].0 as i64 * s[1].1 as i64 - s[1].0 as i64 * s[0].1 as i64).sum();
+            let r = &mut rings[edges[e0].3 as usize];
+            if twice_area > 0 { r.insert(0, ring) } else { r.push(ring) }
+        }
+        let mut out = vec![parts as f64];
+        for p in &rings {
+            out.push(p.len() as f64);
+            for ring in p {
+                out.push(ring.len() as f64);
+                for &(x, y) in ring {
+                    let (lon, lat) = self.pack.to_lonlat(self.x0 + x as f64 * self.zone_m, self.y0 + y as f64 * self.zone_m);
+                    out.extend([lon, lat]);
+                }
+            }
+        }
+        out
+    }
 }
 
 /// The street grids installed, one per pack near the track or the view. Cheap to clone: the grids
@@ -174,6 +290,13 @@ impl Streets {
     /// The car's street speed at a place, km/h, from the first grid with a zone there.
     pub fn car_kmh_at(&self, lon: f64, lat: f64) -> Option<f64> {
         self.grids.iter().find_map(|g| g.at(lon, lat))
+    }
+    /// T-3913: the last grid's in-town squares as polygons (`StreetGrid::town_outline`); empty with no grid.
+    pub fn last_town_outline(&self) -> Vec<f64> {
+        match self.grids.split_last() {
+            Some((g, before)) => g.town_outline(before),
+            None => Vec::new(),
+        }
     }
 }
 
