@@ -5,6 +5,7 @@
 // every drawn quantity has a hover with it.
 
 import { Fragment } from "preact";
+import { HelpTopicButton } from "../HelpPanel";
 import { capitalise, count, distance, distUnit, exact, speed } from "../../game/format";
 import { modeColours } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
@@ -412,7 +413,7 @@ export function TripInspector() {
   }) : undefined;
   const head = (
     <>
-      <div class="title"><span class="name" data-tip={about}>{tr("tripInspector.title")}</span></div>
+      <div class="title"><span class="name" data-tip={about}>{tr("tripInspector.title")}</span><HelpTopicButton topic="time" /></div>
       {back && back.trip === sel && (
         <Actions>
           <button class="btn text" onClick={() => (selection.value = back.from)}>{tr("tripInspector.back")}</button>

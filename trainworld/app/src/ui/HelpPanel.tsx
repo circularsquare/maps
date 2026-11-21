@@ -4,7 +4,7 @@
 
 import { signal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
-import { t } from "../i18n";
+import { t, type MessageKey } from "../i18n";
 import { mobileDevice } from "../workers/deviceMemory";
 import { marketOff } from "../game/ui";
 import { ACTION_KEYS, BUS_KEY, DEMAND_KEY, HELP_KEY, HIDE_UI_KEY, SWITCH_PICK_KEY, TAB_KEYS, TOOL_KEYS, TOOLS, TRIP_KEY } from "./toolKeys";
@@ -143,6 +143,74 @@ function sections(): [string, [string, string][]][] {
     [t("help.stepTrains"), t("help.stepBy")],
   ]],
   ];
+}
+
+/** T-2264: a short explainer opened by a "?" beside the figure it explains (the city panel's trips, the trip
+ * panel's effective time). It sits where the help panel does; one is open at a time, and opening the help
+ * panel closes it. */
+export type HelpTopic = "demand" | "time";
+export const helpTopic = signal<HelpTopic | null>(null);
+
+const TOPICS: Record<HelpTopic, { title: MessageKey; intro: MessageKey; head: MessageKey; list: MessageKey[]; outro: MessageKey }> = {
+  demand: {
+    title: "helpTopic.demandTitle", intro: "helpTopic.demandIntro", head: "helpTopic.demandHead",
+    list: ["helpTopic.demandEqual", "helpTopic.demandTwice", "helpTopic.demandFour"], outro: "helpTopic.demandOutro",
+  },
+  time: {
+    title: "helpTopic.timeTitle", intro: "helpTopic.timeIntro", head: "helpTopic.timeHead",
+    list: ["helpTopic.timeWalk", "helpTopic.timeWait", "helpTopic.timeRide", "helpTopic.timeBoard", "helpTopic.timeChange", "helpTopic.timeFare"],
+    outro: "helpTopic.timeOutro",
+  },
+};
+
+/** The "?" that opens a topic, or closes it again */
+export function HelpTopicButton({ topic }: { topic: HelpTopic }) {
+  const on = helpTopic.value === topic;
+  const name = t(TOPICS[topic].title);
+  return (
+    <button class={"btn icon help-topic-open" + (on ? " on" : "")} data-tip={name} aria-label={name} aria-pressed={on}
+      onClick={() => { helpTopic.value = on ? null : topic; helpOpen.value = false; }}>
+      <Icon.question />
+    </button>
+  );
+}
+
+export function HelpTopicPanel() {
+  const topic = helpTopic.value;
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!topic) return;
+    const key = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      helpTopic.value = null;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    };
+    const press = (e: PointerEvent) => {
+      const el = e.target as Element;
+      if (!ref.current?.contains(el) && !el.closest?.(".help-topic-open")) helpTopic.value = null;
+    };
+    window.addEventListener("keydown", key, true);
+    window.addEventListener("pointerdown", press, true);
+    return () => {
+      window.removeEventListener("keydown", key, true);
+      window.removeEventListener("pointerdown", press, true);
+    };
+  }, [topic]);
+  // opening the help panel (F1 included) takes the place of an open topic
+  const helpIsOpen = helpOpen.value;
+  useEffect(() => { if (helpIsOpen) helpTopic.value = null; }, [helpIsOpen]);
+  if (!topic) return null;
+  const x = TOPICS[topic];
+  return (
+    <div class="help-panel help-topic" ref={ref} role="dialog" aria-label={t(x.title)}>
+      <h3>{t(x.title)}</h3>
+      <p>{t(x.intro)}</p>
+      <p class="help-head">{t(x.head)}</p>
+      <ul>{x.list.map((k) => <li key={k}>{t(k)}</li>)}</ul>
+      <p>{t(x.outro)}</p>
+    </div>
+  );
 }
 
 export function HelpPanel() {
