@@ -102,11 +102,14 @@ export function FeedbackOpen({ class: cls }: { class: string }) {
   return <button class={cls + " fb-open" + (feedbackOpen.value ? " on" : "")} data-tip={replyTip()} onClick={() => (feedbackOpen.value = true)}>{t("feedbackPanel.open")}<NewReplyDot /></button>;
 }
 
+/** The game's Discord invite, linked from Settings and Community. */
+export const DISCORD_URL = "https://discord.gg/RemhwVcZFw";
+
 /** The Settings button. */
 export function FeedbackButton() {
   return <div class="pane-foot">
     <button class={"btn text fb-open" + (feedbackOpen.value ? " on" : "")} data-tip={replyTip()} onClick={() => (feedbackOpen.value = true)}>{t("feedbackPanel.open")}<NewReplyDot /></button>
-    <a class="btn icon discord-link" href="https://discord.gg/RemhwVcZFw" target="_blank" rel="noopener noreferrer" data-tip={t("settingsTab.discord")} aria-label={t("settingsTab.discord")}>
+    <a class="btn icon discord-link" href={DISCORD_URL} target="_blank" rel="noopener noreferrer" data-tip={t("settingsTab.discord")} aria-label={t("settingsTab.discord")}>
       <Icon.discord />
     </a>
   </div>;

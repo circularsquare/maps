@@ -7,7 +7,7 @@ import { FindInput } from "./FindInput";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { CITIES, zoneCountry } from "../game/cities";
 import realmsJson from "../game/realms.json";
-import { accountOpen, boardSetting, loadBoardSetting, session, shareableSlot } from "../game/account";
+import { accountOpen, accountState, boardsOpen, boardSetting, loadBoardSetting, session, shareableSlot } from "../game/account";
 import { SEARCH_MAX, TITLE_MAX, communityOn, communityNewestOn, communityPagesOn, communitySearchOn, communityOpen, copyName, currentShare, fetchShare, fetchShares, linkedShare, loadDrawing, releaseDrawing, myShares, newSeed, openSharedView, refreshMyShares, reportShare, setLiked, setViewTrips, shareAgain, shareAsk, shareTick, sharedWhen, viewedRow, viewedShare, sharesLeft, shareLink, sharePhase, shareGame, stopSharing, viewTrips, type ReportReason, type ShareRow, type ShareView } from "../game/community";
 import { saveSlotsState } from "../workers/clockClient";
 import { pointsScore, pointsShort } from "../game/points";
@@ -19,9 +19,10 @@ import { fitView, type DecodedShare } from "../diagram/shared";
 import { t } from "../i18n";
 import { tPlace } from "../i18n/places";
 import { CityPick, WORLD, type MorePlaces } from "./Leaderboard";
+import { DISCORD_URL } from "./FeedbackPanel";
 import { Named } from "./Flag";
 import { LoadBar } from "./LoadingScreen";
-import { Modal } from "./Modal";
+import { Modal, useModalDialog } from "./Modal";
 import { Icon } from "./widgets";
 import "./community.css";
 
@@ -169,6 +170,7 @@ function Detail({ row, onBack, onChange }: { row: ShareRow; onBack: () => void; 
   const [msg, setMsg] = useState("");
   const [reporting, setReporting] = useState(false);
   const [reported, setReported] = useState(false);
+  const [sending, setSending] = useState(false);
   useEffect(() => {
     const c = canvas.current;
     if (!c || !s) return;
@@ -232,10 +234,11 @@ function Detail({ row, onBack, onChange }: { row: ShareRow; onBack: () => void; 
   };
   const report = async (reason: ReportReason) => {
     setMsg("");
+    setSending(true);
     try { await reportShare(row.id, reason); setReporting(false); setReported(true); }
-    catch (e) { setMsg((e as Error).message); }
+    catch (e) { setReporting(false); setMsg((e as Error).message); }
+    setSending(false);
   };
-  const reasons: [ReportReason, string][] = [["offensive", t("community.offensive")], ["fake-score", t("community.fakeScore")], ["other", t("community.somethingElse")]];
   const likeLabel = row.liked ? t("community.unlike") : t("community.like");
   const [opening, setOpening] = useState(false);
   // T-3257: the page reloads into the network, kept nowhere until saved, under a name saying whose it is
@@ -264,11 +267,11 @@ function Detail({ row, onBack, onChange }: { row: ShareRow; onBack: () => void; 
         <CopyLink id={row.id} />
         {!row.mine && (reported
           ? <span class="small muted">{t("community.reported")}</span>
-          : <button type="button" class={"btn text" + (reporting ? " on" : "")} aria-expanded={reporting} onClick={() => { if (!needSignIn()) setReporting(!reporting); }}><Icon.flag />{t("community.report")}</button>)}
+          : <button type="button" class="btn icon cm-report" data-tip={t("community.report")} aria-label={t("community.report")} aria-haspopup="dialog" onClick={() => { if (!needSignIn()) setReporting(true); }}><Icon.flag /></button>)}
         <button type="button" class={"btn text cm-like" + (row.liked || row.mine ? " on" : "")} disabled={row.mine} aria-label={likeLabel} aria-pressed={!!row.liked} data-tip={row.mine ? t("community.errOwn") : undefined} onClick={like}><Icon.heart /><span class="num">{row.likes}</span></button>
       </div>
     </div>
-    {reporting && <div class="cm-reasons">{reasons.map(([r, label]) => <button type="button" class="btn text" onClick={() => void report(r)}>{label}</button>)}</div>}
+    {reporting && <ReportAsk busy={sending} onCancel={() => setReporting(false)} onSubmit={(r) => void report(r)} />}
     {msg && <p class="acct-msg bad">{msg}</p>}
     <div class="cm-canvas-box">
       <canvas ref={canvas} class="cm-canvas" style={{ touchAction: "none" }} />
@@ -359,9 +362,36 @@ const ALL_CITIES: ReadonlySet<string> = new Set(CITIES.map((c) => c.id));
 
 export function Community() {
   const open = communityOpen.value && communityOn();
-  return <Modal open={open} onClose={() => (communityOpen.value = false)} title={t("community.heading")} cls="community-panel" head={<ShareButton upload />}>
+  return <Modal open={open} onClose={() => (communityOpen.value = false)} title={t("community.heading")} cls="community-panel" head={<><ShareButton upload /><CommunityLinks /></>}>
     {open && <Browse />}
   </Modal>;
+}
+
+/** T-3990: the leaderboards and the Discord server, in Community's head beside Share (the leaderboards' head has Community's people). */
+function CommunityLinks() {
+  return <>
+    {accountState.value === "on" && <button type="button" class="btn icon save-head-mark" data-tip={t("leaderboard.title")} aria-label={t("leaderboard.title")} onClick={() => (boardsOpen.value = true)}><Icon.trophy /></button>}
+    <a class="btn icon save-head-mark" href={DISCORD_URL} target="_blank" rel="noopener noreferrer" data-tip={t("settingsTab.discord")} aria-label={t("settingsTab.discord")}><Icon.discord /></a>
+  </>;
+}
+
+/** T-3991: Report this save?, with the reasons to pick from. Built on the game's confirmation dialog look. */
+function ReportAsk({ onCancel, onSubmit, busy }: { onCancel: () => void; onSubmit: (reason: ReportReason) => void; busy: boolean }) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const [reason, setReason] = useState<ReportReason>("offensive");
+  useModalDialog(dialog, true);
+  const reasons: [ReportReason, string][] = [["offensive", t("community.offensive")], ["fake-score", t("community.fakeScore")], ["other", t("community.somethingElse")]];
+  return <dialog class="confirmation" ref={dialog} aria-labelledby="report-title" onCancel={(e) => { e.preventDefault(); onCancel(); }}
+    onKeyDown={(e) => e.stopPropagation()}>
+    <h2 id="report-title">{t("community.reportTitle")}</h2>
+    <div class="cm-reasons" role="radiogroup" aria-labelledby="report-title">
+      {reasons.map(([r, label]) => <label class="check"><input type="radio" name="report-reason" checked={reason === r} onChange={() => setReason(r)} /><span>{label}</span></label>)}
+    </div>
+    <div class="confirmation-actions">
+      <button type="button" class="btn text" disabled={busy} onClick={onCancel}>{t("community.reportCancel")}</button>
+      <button type="button" class="btn text danger" disabled={busy} onClick={() => onSubmit(reason)}>{t("community.reportSubmit")}</button>
+    </div>
+  </dialog>;
 }
 
 /** Opens Community: in the head of the saves panel and of the leaderboards, and in Settings beside Controls (T-3132). */

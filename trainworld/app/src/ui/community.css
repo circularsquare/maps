@@ -37,7 +37,8 @@
 .cm-detail-acts { display: flex; align-items: center; gap: 6px; flex: none; }
 .cm-like.on { color: var(--accent); }
 .cm-trips-tick { margin-right: 4px; white-space: nowrap; }
-.cm-reasons { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+.cm-reasons { display: grid; gap: 8px; margin: 0 0 18px; }
+.cm-reasons .check input, .cm-reasons .check input::after { border-radius: 50%; }
 .cm-canvas-box { position: relative; border: 1px solid var(--rule); }
 .cm-canvas { display: block; width: 100%; height: min(70vh, 720px); cursor: grab; }
 .cm-canvas:active { cursor: grabbing; }
