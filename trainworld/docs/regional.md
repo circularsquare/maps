@@ -113,6 +113,12 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
   income group's rail share is `Params::bound_share` against the car the pair would have over a
   bridge that is not there (all up to 3 times its cost, none from 4, linear between), the rest no
   way. Commutes and outings between two landmasses the same against their own car, with no walkers.
+  Zones on two lands count as two landmasses (T-2216 stage 2, `Market::zone_rule`): a zone's land is
+  its main part's (`zone_parts`; the pack's most populous part is its place's landmass, another part
+  its world landmass where it reaches the grid's edge or lies on another landmass than the main
+  part, else an island of its own), so the pair loses the car, keeps its places' plane, and with
+  none takes the bound. A zone's sites walk and ride only to stations on its land, a station's land
+  being its nearest site's own part's (the local layer's rule, demand-mode.md 4.3).
   The trip explorer gives code 8 where that cut-off leaves rail at 0. The market's day and its
   corridors (place pairs) come from the rows, the same in every part of it.
 - **Zone pairs in chunks** [T-780]: a zone's trips with the zones of each place that come after it
@@ -233,7 +239,8 @@ T-918; no walking between zones), the drive weighted 1.33 plus the work end's pa
 shares are 20/35/25/15/5%; their weekend factor 1.58.
 
 Not modelled yet: coach, a car carried by ferry between landmasses (car ferries count as no road,
-T-1396), islands inside a place's own area (T-2216 stage 2), induced travel, traffic on routed drives.
+T-1396), flights within a place (Naha - Ishigaki is Okinawa's own: boat only), induced travel, traffic
+on routed drives.
 
 ## 5.2 Where a long-distance trip starts and ends
 

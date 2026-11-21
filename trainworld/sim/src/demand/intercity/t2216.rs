@@ -130,7 +130,8 @@ fn island_pairs_ride_by_the_bound_and_every_other_pair_as_before() {
         let road = |z: usize| on.m.places[on.m.zones[z].place].road;
         for (i, cp) in on.cpairs.iter().enumerate() {
             let (h, w, _) = on.m.commutes[cp.c as usize];
-            assert_eq!(cp.apart, road(h as usize) != road(on.m.comp_of_gid[w as usize] as usize));
+            let w = on.m.comp_of_gid[w as usize] as usize;
+            assert_eq!(cp.apart, road(h as usize) != road(w) || on.m.zone_land(&on.m.zones[h as usize]) != on.m.zone_land(&on.m.zones[w]));
             if !cp.apart {
                 assert_eq!(a.c_frac[i].to_bits(), b.c_frac[i].to_bits());
             }
@@ -188,6 +189,119 @@ fn island_pairs_ride_by_the_bound_and_every_other_pair_as_before() {
         assert_eq!(h[14], if off { 5. } else { 2. });
         set_off(false);
     }
+}
+
+fn set_lands_off(off: bool) {
+    ZONE_LANDS_OFF.with(|c| c.set(off));
+}
+
+/// `world_packs`, place 0's second zone (10 km east of its first) on an island of its own: a part
+/// not reaching the grid's edge on the main part's world landmass, as Salamis. Its people commute
+/// to place 1 and run errands to place 0's first zone (a third walking).
+fn zone_island_packs() -> Vec<String> {
+    let mut packs = world_packs();
+    let mut v: serde_json::Value = serde_json::from_str(&packs[0]).unwrap();
+    let add = [
+        ("zone_parts", json!([[[0, 1.0]], [[1, 1.0]], [[0, 1.0]]])),
+        ("site_part", json!([0, 1, 0])),
+        ("parts", json!({"people": [350000., 100000.], "jobs": [210000., 30000.], "open": [1, 0], "landmass": [0, 0]})),
+        ("commute_home", json!([1])),
+        ("commute_place", json!([1])),
+        ("commute_work", json!([0])),
+        ("commute_trips", json!([2000.])),
+        ("everyday_home", json!([1])),
+        ("everyday_place", json!([0])),
+        ("everyday_zone", json!([0])),
+        ("everyday_kind", json!([0])),
+        ("everyday_trips", json!([1500.])),
+        ("everyday_walk", json!([0.3])),
+    ];
+    for (k, x) in add {
+        v[k] = x;
+    }
+    packs[0] = v.to_string();
+    packs
+}
+
+/// T-2216 stage 2: a zone off its pack's main land has no car to any other zone, its pairs ride by
+/// the bound (no plane between them); every pair of two zones on one land as before, to the bit.
+#[test]
+fn zones_off_their_main_land_ride_by_the_bound() {
+    let packs = zone_island_packs();
+    let world = composition(&packs, Some(&rows_json(&packs)));
+    let open = |off: bool, net: bool| {
+        set_lands_off(off);
+        let mut a = IntercityApi::new(&world).unwrap();
+        if net {
+            lines(&mut a, None);
+        } else {
+            a.set_network_ll(&[], &[], &[], &[], &[], &[]).unwrap();
+        }
+        solve_all(&mut a);
+        set_lands_off(false);
+        a
+    };
+    let (on, off) = (open(false, true), open(true, true));
+    let isle = on.m.comp_of_gid[on.m.places[0].off as usize + 1] as usize;
+    assert!(on.m.zone_land(&on.m.zones[isle]) != on.m.zone_land(&on.m.zones[isle - 1]));
+    assert_eq!(on.m.zone_land(&on.m.zones[isle - 1]), on.m.zone_land(&on.m.zones[isle + 1]));
+    let touches = |a: &IntercityApi, i: usize| a.pairs[i].a as usize == isle || a.pairs[i].b as usize == isle;
+    // the station 0.7 km from the island's site is the island's: only the island reaches it, and
+    // the island no other
+    let st_isle = 1;
+    for (z, list) in on.access.iter().chain(&on.access_work).enumerate().map(|(k, l)| (k % on.m.zones.len(), l)) {
+        assert!(list.iter().all(|e| (e.0 == st_isle) == (z == isle)), "zone {z}: {list:?}");
+    }
+    // in a single pass, every pair not touching the island whose zones reach the same stations as
+    // with the rule off to the bit
+    let per = off.per(0).unwrap();
+    let (g, p, ix) = (&per.g, &per.p, &per.xi);
+    set_lands_off(true);
+    let b = off.pass_on(g, p, 0, &skims_for(g, p, &off.want), ix);
+    set_lands_off(false);
+    let a = on.pass_on(g, p, 0, &skims_for(g, p, &on.want), ix);
+    let same_access = |z: usize| on.access[z] == off.access[z] && on.access_work[z] == off.access_work[z];
+    let (mut n_isle, mut n_same) = (0, 0);
+    for i in 0..on.pairs.len() {
+        let (za, zb) = (on.pairs[i].a as usize, on.pairs[i].b as usize);
+        let j = off.pair_at(za, zb);
+        if touches(&on, i) {
+            n_isle += 1;
+            let r = on.m.zone_rule(&on.m.zones[za], &on.m.zones[zb]);
+            assert!(!r.car && r.bounded(), "pair {i}");
+            // a short ride against a drive over a bridge: everyone rides
+            assert!((share(&on, &a, i) - 1.).abs() < 1e-6, "pair {i}: on {}", share(&on, &a, i));
+            if j != u32::MAX {
+                assert!(share(&off, &b, j as usize) < 1., "pair {i}: off {}", share(&off, &b, j as usize));
+            }
+        } else if same_access(za) && same_access(zb) {
+            n_same += 1;
+            assert_eq!(a.pair_rail[i].to_bits(), b.pair_rail[j as usize].to_bits(), "pair {i}");
+        }
+    }
+    assert!(n_isle >= 2 && n_same > 0, "the island's pairs with place 1 ({n_isle}), others the same ({n_same})");
+    // its commute and errands: apart, no walkers, all ride
+    let ci = on.cpairs.iter().position(|c| on.m.commutes[c.c as usize].0 as usize == isle).unwrap();
+    let ei = on.epairs.iter().position(|e| on.m.everyday[e.e as usize].h as usize == isle).unwrap();
+    let cj = off.cpairs.iter().position(|c| off.m.commutes[c.c as usize].0 as usize == isle).unwrap();
+    let ej = off.epairs.iter().position(|e| off.m.everyday[e.e as usize].h as usize == isle).unwrap();
+    assert!(on.cpairs[ci].apart && on.epairs[ei].apart && !off.cpairs[cj].apart && !off.epairs[ej].apart);
+    assert_eq!(on.m.everyday[on.epairs[ei].e as usize].walk, 0.);
+    assert!(off.m.everyday[off.epairs[ej].e as usize].walk > 0.29);
+    assert!(a.c_frac[ci] == 1. && a.e_frac[ei] > 0.99, "commute {} errands {}", a.c_frac[ci], a.e_frac[ei]);
+    // the trip explorer: from the island no car to place 1 or to its own place's first zone; from
+    // that first zone the car as before
+    let none = open(false, false);
+    let (z0, z1) = (none.m.places[0].off as i32, none.m.places[0].off as i32 + 1);
+    let h = none.market_trip_between(0, WEEKDAY as u32, 0, z1, 0, 1, -1);
+    assert!(h[2] > 0. && h[5] == 0. && h[4] == 0. && h[14] == 2., "island to place 1: trips {} car {} code {}", h[2], h[5], h[14]);
+    // (its third zone, 30 km off: the longer trips start at 25 km)
+    let h = none.market_trip_between(0, WEEKDAY as u32, 0, z1, 0, 0, z0 + 2);
+    assert!(h[2] > 0. && h[5] == 0., "island to its own mainland: trips {} car {}", h[2], h[5]);
+    let h = none.market_trip_between(0, WEEKDAY as u32, 0, z0, 0, 0, z0 + 2);
+    assert!(h[2] > 0. && h[5] > 0., "within the mainland: trips {} car {}", h[2], h[5]);
+    let h = none.market_trip_between(0, WEEKDAY as u32, 0, z0, 0, 1, -1);
+    assert!(h[5] > 0. && (h[5] - h[2]).abs() < 1e-9 * h[2], "mainland to place 1 drives: trips {} car {}", h[2], h[5]);
 }
 
 /// A captured market network (`checks/t761-plain-net.mjs`), opened once from one read of the packs.
@@ -252,6 +366,314 @@ fn t2216_ab() {
     }
     eprintln!("all periods: off {:.0} ms, on {:.0} ms", best[1].iter().sum::<f64>(), best[0].iter().sum::<f64>());
     assert!(figs[0] == figs[1], "not the same to the bit");
+}
+
+/// T-2216 stage 2 on a captured network, the zones' own lands off and on: the zones off their pack's
+/// main land; in one pass of period 0 every pair not touching one to the bit, and the rail of those
+/// that do; then all periods solved, the rail of each and, by the place of the zone off its main
+/// land, the longer trips' rail a day on its pairs.
+/// `TW_T780_NET=<plain net> cargo test --profile agent --features demand --lib t2216_zones_ab -- --ignored --nocapture`
+#[test]
+#[ignore]
+fn t2216_zones_ab() {
+    let path = std::env::var("TW_T780_NET").unwrap();
+    let (world, j) = net_world(&path);
+    let open = |off: bool| {
+        set_lands_off(off);
+        let mut a = net_on(&world, &j);
+        let t = now_ms();
+        for q in 0..PERIODS {
+            assert!(a.solve(q));
+        }
+        let ms = now_ms() - t;
+        set_lands_off(false);
+        (a, ms)
+    };
+    let ((mut on, mut ms_on), (mut off, mut ms_off)) = (open(true), open(false));
+    std::mem::swap(&mut on, &mut off);
+    std::mem::swap(&mut ms_on, &mut ms_off);
+    // (the times: best of `TW_REPS`, off and on alternating)
+    let reps: usize = std::env::var("TW_REPS").unwrap_or("2".into()).parse().unwrap();
+    for _ in 1..reps {
+        ms_off = ms_off.min(open(true).1);
+        ms_on = ms_on.min(open(false).1);
+    }
+    let m = &on.m;
+    let isle = |z: usize| m.zones[z].land != MAIN_LAND;
+    let (n_isle, pop_isle) = (0..m.zones.len()).filter(|&z| isle(z)).fold((0, 0.), |(n, p), z| (n + 1, p + m.zones[z].pop));
+    eprintln!("open zones {}, off their main land {n_isle} ({pop_isle:.0} people); pairs {} (lands off {})", m.zones.len(), on.pairs.len(), off.pairs.len());
+    let touches = |i: usize| isle(on.pairs[i].a as usize) || isle(on.pairs[i].b as usize);
+    let same_access = |z: usize| on.access[z] == off.access[z] && on.access_work[z] == off.access_work[z];
+    let lost: Vec<usize> = (0..m.zones.len()).filter(|&z| !isle(z) && !same_access(z)).collect();
+    eprintln!("zones on their main land whose stations changed: {} ({:.0} people)", lost.len(), lost.iter().map(|&z| m.zones[z].pop).sum::<f64>());
+    {
+        let (net, anchor) = (&off.per(0).unwrap().net, m.anchor.unwrap());
+        let stl = m.station_lands(net);
+        for &z in lost.iter().take(20) {
+            let zz = &m.zones[z];
+            let (lon, lat) = lonlat_of(&zz.u);
+            let gone: Vec<String> = off.access[z].iter().chain(&off.access_work[z]).filter(|e| !on.access[z].iter().chain(&on.access_work[z]).any(|f| f.0 == e.0)).take(3).map(|e| {
+                let (x, y) = anchor.to_lonlat(net.st_x[e.0] as f64, net.st_y[e.0] as f64);
+                format!("st {} ({x:.4},{y:.4}) land {:?} w {:.3}", e.0, stl[e.0], e.1)
+            }).collect();
+            eprintln!("  main zone {z} of {} ({lon:.4},{lat:.4}, {:.0} people, land {}) lost {}", m.places[zz.place].zone, zz.pop, m.zone_land(zz), gone.join("; "));
+        }
+    }
+    // one pass of period 0 on the lands-off solve's graph
+    let per = off.per(0).unwrap();
+    let (g, p, ix) = (&per.g, &per.p, &per.xi);
+    set_lands_off(true);
+    let b = off.pass_on(g, p, 0, &skims_for(g, p, &off.want), ix);
+    set_lands_off(false);
+    let a = on.pass_on(g, p, 0, &skims_for(g, p, &on.want), ix);
+    let (mut moved, mut same, mut n_t, mut r_on, mut r_off) = (0, 0, 0, 0f64, 0f64);
+    for i in 0..on.pairs.len() {
+        let (za, zb) = (on.pairs[i].a as usize, on.pairs[i].b as usize);
+        let j = off.pair_at(za, zb);
+        if touches(i) {
+            n_t += 1;
+            r_on += a.pair_rail[i] as f64;
+        } else if same_access(za) && same_access(zb) {
+            same += 1;
+            if j == u32::MAX || a.pair_rail[i].to_bits() != b.pair_rail[j as usize].to_bits() {
+                moved += 1;
+                if moved <= 6 {
+                    let pl = |z: usize| m.places[m.zones[z].place].zone.clone();
+                    eprintln!("  moved: zones {za} ({}) - {zb} ({}): on {} off {}", pl(za), pl(zb), a.pair_rail[i], if j == u32::MAX { f32::NAN } else { b.pair_rail[j as usize] });
+                }
+            }
+        }
+    }
+    for j in 0..off.pairs.len() {
+        if isle(off.pairs[j].a as usize) || isle(off.pairs[j].b as usize) {
+            r_off += b.pair_rail[j] as f64;
+        }
+    }
+    eprintln!("one pass, period 0: pairs touching a zone off its main land {n_t}, their rail off {r_off:.1} on {r_on:.1}; other pairs with the same stations {same}, of them not to the bit: {moved}");
+    let (c_on, c_off) = (on.cpairs.iter().filter(|c| c.apart).count(), off.cpairs.iter().filter(|c| c.apart).count());
+    let (e_on, e_off) = (on.epairs.iter().filter(|e| e.apart).count(), off.epairs.iter().filter(|e| e.apart).count());
+    eprintln!("commute pairs apart: off {c_off} on {c_on}; outing pairs apart: off {e_off} on {e_on}");
+    // all periods
+    let (mut all_on, mut all_off) = (0f64, 0f64);
+    for q in 0..PERIODS {
+        let (x, y) = (on.summary(q)[2], off.summary(q)[2]);
+        all_on += x;
+        all_off += y;
+        eprintln!("period {q}: rail off {y:.1} on {x:.1} ({:+.4}%)", 100. * (x - y) / y.max(1e-9));
+    }
+    eprintln!("all periods: rail off {all_off:.1} on {all_on:.1} ({:+.4}%); solve {ms_off:.0} ms off, {ms_on:.0} ms on", 100. * (all_on - all_off) / all_off.max(1e-9));
+    // by place of the zone off its main land: longer trips a day on its pairs, and their rail
+    let mut by: std::collections::BTreeMap<String, (f64, f64, f64)> = Default::default();
+    for i in (0..on.pairs.len()).filter(|&i| touches(i)) {
+        let pr = &on.pairs[i];
+        let z = if isle(pr.a as usize) { pr.a } else { pr.b } as usize;
+        let e = by.entry(m.places[m.zones[z].place].zone.clone()).or_default();
+        let j = off.pair_at(pr.a as usize, pr.b as usize);
+        for q in 0..PERIODS {
+            e.0 += pr.trips * SHARES[q] as f64;
+            if j != u32::MAX {
+                e.1 += off.per(q).unwrap().pair_rail[j as usize] as f64;
+            }
+            e.2 += on.per(q).unwrap().pair_rail[i] as f64;
+        }
+    }
+    for (k, (t, x, y)) in &by {
+        if *t > 0. {
+            eprintln!("  {k}: longer trips a day on pairs off the main land {t:.0}, rail off {x:.0} on {y:.0}");
+        }
+    }
+    // network set with lands off and on (`set_access` holds `station_lands`), best of 3
+    let mut set_ms = [f64::INFINITY; 2];
+    for _ in 0..3 {
+        for off_ in [true, false] {
+            set_lands_off(off_);
+            let t = now_ms();
+            let _a = net_on(&world, &j);
+            set_ms[off_ as usize] = set_ms[off_ as usize].min(now_ms() - t);
+            set_lands_off(false);
+        }
+    }
+    eprintln!("opened and network set: off {:.0} ms, on {:.0} ms (best of 3)", set_ms[1], set_ms[0]);
+    {
+        let net = &on.per(0).unwrap().net;
+        let t = now_ms();
+        let _ = m.station_lands(net);
+        eprintln!("station_lands alone: {:.0} ms for {} stations; sites {}, of them kept off the main part {}", now_ms() - t, net.st_x.len(), m.n_sites(), m.site_land.len());
+    }
+    // each station's nearest site and nearest site on another land (within 3 km), the close calls
+    {
+        let (net, anchor) = (&on.per(0).unwrap().net, m.anchor.unwrap());
+        let mut close = vec![];
+        for s in 0..net.st_x.len() {
+            let (lon, lat) = anchor.to_lonlat(net.st_x[s] as f64, net.st_y[s] as f64);
+            let u = unit(lon, lat);
+            let (mut best, mut other) = ((f64::INFINITY, MAIN_LAND), f64::INFINITY);
+            let mut seen: Vec<(f64, i64)> = vec![];
+            for g in &m.groups {
+                let Some(f) = g.frame else { continue };
+                let (x, y) = f.from_lonlat(lon, lat);
+                let (x, y) = (x as f32, y as f32);
+                if g.city.x.is_empty() {
+                    continue;
+                }
+                let lo = |v: &[f32]| v.iter().cloned().fold(f32::INFINITY, f32::min);
+                let hi = |v: &[f32]| v.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
+                if x < lo(&g.city.x) - 3000. || x > hi(&g.city.x) + 3000. || y < lo(&g.city.y) - 3000. || y > hi(&g.city.y) + 3000. {
+                    continue;
+                }
+                for i in 0..g.city.len() {
+                    let d = (((g.city.x[i] - x).powi(2) + (g.city.y[i] - y).powi(2)) as f64).sqrt();
+                    if d < 3000. {
+                        seen.push((d, m.site_land_of(g.lo + i)));
+                    }
+                }
+            }
+            for &(d, l) in &seen {
+                if d < best.0 {
+                    best = (d, l);
+                }
+            }
+            for &(d, l) in &seen {
+                if l != best.1 {
+                    other = other.min(d);
+                }
+            }
+            let _ = u;
+            if other.is_finite() && (other - best.0 < 600. || s == 1854) {
+                close.push(format!("st {s} ({lon:.4},{lat:.4}): nearest site {:.0} m (land {}), other land {:.0} m", best.0, best.1, other));
+            }
+        }
+        eprintln!("stations with a site on another land under 600 m farther than the nearest: {}", close.len());
+        for c in close.iter().take(30) {
+            eprintln!("  {c}");
+        }
+    }
+    // the rail a day by place, lands off and on (either end's place, the longer trips)
+    {
+        let mut by: std::collections::BTreeMap<String, (f64, f64)> = Default::default();
+        for (k, a) in [&off, &on].into_iter().enumerate() {
+            for (i, pr) in a.pairs.iter().enumerate() {
+                let r: f64 = (0..PERIODS).map(|q| a.per(q).unwrap().pair_rail[i] as f64).sum();
+                let e = by.entry(m.places[m.zones[pr.a as usize].place].zone.clone()).or_default();
+                if k == 0 { e.0 += r } else { e.1 += r }
+            }
+        }
+        let mut v: Vec<_> = by.into_iter().map(|(k, (x, y))| (y - x, k, x, y)).collect();
+        v.sort_by(|a, b| a.0.abs().total_cmp(&b.0.abs()).reverse());
+        for (d, k, x, y) in v.iter().take(12) {
+            eprintln!("  longer trips' rail a day from {k}: off {x:.0} on {y:.0} ({d:+.0})");
+        }
+    }
+    // the zones off the main land whose pairs ride most, and the stations they reach
+    let (net, anchor) = (&on.per(0).unwrap().net, m.anchor.unwrap());
+    let st: Vec<(f64, f64)> = (0..net.st_x.len()).map(|s| anchor.to_lonlat(net.st_x[s] as f64, net.st_y[s] as f64)).collect();
+    let mut by_zone: std::collections::BTreeMap<usize, f64> = Default::default();
+    for i in (0..on.pairs.len()).filter(|&i| touches(i)) {
+        let pr = &on.pairs[i];
+        let z = if isle(pr.a as usize) { pr.a } else { pr.b } as usize;
+        *by_zone.entry(z).or_default() += (0..PERIODS).map(|q| on.per(q).unwrap().pair_rail[i] as f64).sum::<f64>();
+    }
+    let mut top: Vec<(usize, f64)> = by_zone.into_iter().collect();
+    top.sort_by(|a, b| b.1.total_cmp(&a.1));
+    for &(z, r) in top.iter().take(12) {
+        let zz = &m.zones[z];
+        let (lon, lat) = lonlat_of(&zz.u);
+        let acc: Vec<String> = on.access[z].iter().take(4).map(|&(s, w)| { let (x, y) = st[s]; format!("st {s} ({x:.4},{y:.4}) {:.1} km w {w:.3}", chord_km(&zz.u, &unit(x, y))) }).collect();
+        eprintln!("  zone {z} of {} ({lon:.4},{lat:.4}, {:.0} people, land {}): rail a day {r:.0}; reaches {}", m.places[zz.place].zone, zz.pop, zz.land, acc.join("; "));
+    }
+}
+
+/// T-2216 stage 2, real places: Sado (Niigata's pack) with Tokyo, Salamis and Aegina (Athens's), with
+/// no network and with a default boat (32 km/h on the water, the straight line x 1.15, every 20
+/// minutes, $2.50 + $0.20 a km), Sado's boat meeting a train to Tokyo (100 minutes, 3 an hour). For
+/// the island's zones: their longer trips with the place named in period 0, how many go by car and
+/// by rail, the zones' own lands off and on.
+/// `cargo test --profile agent --features demand --lib t2216_zones_places -- --ignored --nocapture`
+#[test]
+#[ignore]
+fn t2216_zones_places() {
+    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+    let reg: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(format!("{root}/app/src/game/registry.json")).unwrap()).unwrap();
+    let place = |id: &str| reg["cities"].as_array().unwrap().iter().find(|c| c["id"] == id).unwrap()["place"].as_u64().unwrap() as u32;
+    let km = |a: [f64; 2], b: [f64; 2]| {
+        let (la, lb) = (a[1].to_radians(), b[1].to_radians());
+        let h = ((lb - la) / 2.).sin().powi(2) + la.cos() * lb.cos() * ((b[0] - a[0]).to_radians() / 2.).sin().powi(2);
+        2. * 6371. * h.sqrt().asin() * 1.15
+    };
+    // (name, packs, island's place, ports, train on from the mainland port, far place)
+    let (ryotsu, niigata, tokyo) = ([138.4385, 38.0800], [139.0586, 37.9283], [139.7671, 35.6812]);
+    let (paloukia, perama) = ([23.4795, 37.9615], [23.5640, 37.9640]);
+    let (aegina, piraeus) = ([23.4285, 37.7460], [23.6400, 37.9425]);
+    let cases: [(&str, &[&str], &str, [f64; 2], [f64; 2], Option<[f64; 2]>, &str); 4] = [
+        ("Sado - Tokyo", &["nig", "tyo"], "nig", ryotsu, niigata, Some(tokyo), "tyo"),
+        ("Sado - Niigata", &["nig", "tyo"], "nig", ryotsu, niigata, Some(tokyo), "nig"),
+        ("Salamis - Athens", &["ath"], "ath", paloukia, perama, None, "ath"),
+        ("Aegina - Athens", &["ath"], "ath", aegina, piraeus, None, "ath"),
+    ];
+    for (name, ids, home, port_i, port_m, train, far) in cases {
+        let world = real_world(root, Some(ids));
+        let (pi, pf) = (place(home), place(far));
+        for off in [true, false] {
+            for with_net in [false, true] {
+                set_lands_off(off);
+                let mut a = IntercityApi::new(&world).unwrap();
+                a.set_chunk(MARKET_CHUNK);
+                if with_net {
+                    let k = km(port_i, port_m);
+                    let s = (k / 32. * 3600.) as f32;
+                    let mut ll = vec![port_i[0], port_i[1], port_m[0], port_m[1]];
+                    let mut n = vec![2u32];
+                    let mut stops = vec![0u32, 1];
+                    let mut times = vec![s, 0., s, 0., s, 0., 0., s, 0., s, 0., s];
+                    let mut tph = vec![3f32; 3];
+                    let mut cars = vec![8f32];
+                    let mut hop = vec![k as f32, 0., k as f32, 0.];
+                    if let Some(t) = train {
+                        ll.extend_from_slice(&t);
+                        n.push(2);
+                        stops.extend([1, 2]);
+                        let s = 6000f32;
+                        times.extend([s, 0., s, 0., s, 0., 0., s, 0., s, 0., s]);
+                        tph.extend([3f32; 3]);
+                        cars.push(8.);
+                        let k = (km(port_m, t) / 1.15 * 1.2) as f32;
+                        hop.extend([k, 0., k, 0.]);
+                    }
+                    a.set_network_ll(&ll, &n, &stops, &times, &tph, &cars).unwrap();
+                    a.set_fares(2.5, 0.2, &hop).unwrap();
+                } else {
+                    a.set_network_ll(&[], &[], &[], &[], &[], &[]).unwrap();
+                }
+                assert!(a.solve(0));
+                let m = &a.m;
+                let pl = &m.places[pi as usize];
+                // the island: the zones off the main land nearest the island's port
+                let u = unit(port_i[0], port_i[1]);
+                let isle: Vec<usize> = (pl.off..pl.off + pl.zones).map(|g| m.comp_of_gid[g as usize] as usize).filter(|&z| z != u32::MAX as usize).collect();
+                let near_land = isle.iter().copied().min_by(|&x, &y| chord_km(&m.zones[x].u, &u).total_cmp(&chord_km(&m.zones[y].u, &u))).map(|z| m.zones[z].land).unwrap();
+                let isle: Vec<usize> = isle.into_iter().filter(|&z| m.zones[z].land == near_land).collect();
+                // longer trips, rail, car; outings legs, rail, walking; commute legs, rail
+                let mut s = [0f64; 8];
+                let mut pop = 0.;
+                for &z in &isle {
+                    pop += m.zones[z].pop;
+                    let h = a.market_trip_between(0, WEEKDAY as u32, pi, m.zones[z].gid as i32, 0, pf, -1);
+                    for (k, i) in [2, 3, 5, 19, 20, 21, 22, 23].into_iter().enumerate() {
+                        s[k] += h[i];
+                    }
+                }
+                set_lands_off(false);
+                eprintln!(
+                    "{name}: lands {}, {}: island zones {} ({pop:.0} people, land {}), period 0 with {far}: longer trips {:.0}, rail {:.0}, car {:.0}; outing legs {:.0}, rail {:.0}, walking {:.0}, rest {:.0}; commute legs {:.0}, rail {:.0}, rest {:.0}",
+                    if off { "off" } else { "on" },
+                    if with_net { "boat" } else { "no network" },
+                    isle.len(),
+                    if near_land == MAIN_LAND { "main".into() } else { near_land.to_string() },
+                    s[0], s[1], s[2], s[3], s[4], s[5], s[3] - s[4] - s[5], s[6], s[7], s[6] - s[7]
+                );
+            }
+        }
+    }
 }
 
 /// A world opened from the rows alone: the place pairs with no car and no plane, near and far, and

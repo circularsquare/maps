@@ -164,7 +164,7 @@ impl IntercityApi {
                 if any[(bit - 1) / 64] >> ((bit - 1) % 64) & 1 == 0 {
                     continue;
                 }
-                let (r, back) = (m.pr(za.place, zb.place), m.pr(zb.place, za.place));
+                let (r, back) = (m.zone_rule(za, zb), m.zone_rule(zb, za));
                 let trips = next.next().unwrap();
                 let d = m.zone_km(za, zb) as f32;
                 let corridor = m.open_corridor(za.place, zb.place) as u32;
@@ -193,7 +193,7 @@ impl IntercityApi {
             }
             let (zh, zw) = (&m.zones[h], &m.zones[w]);
             let km = m.zone_km(zh, zw) as f32;
-            let r = m.pr(zh.place, zw.place);
+            let r = m.zone_rule(zh, zw);
             let (rt, rk) = m.zone_ratios(&r, zh, zw);
             let car = drive_min(km) * rt * pc.w_drive + zw.park + pc.car_own_min() + km * ROAD_DETOUR * rk * pc.car_own_km_min() + r.cross.at(FARE_MIN_PER_USD);
             let corridor = m.open_corridor(zh.place, zw.place);
@@ -214,7 +214,7 @@ impl IntercityApi {
             }
             let (zh, za) = (&m.zones[h], &m.zones[a]);
             let km = m.zone_km(zh, za) as f32;
-            let r = m.pr(zh.place, za.place);
+            let r = m.zone_rule(zh, za);
             let (rt, rk) = m.zone_ratios(&r, zh, za);
             let car = drive_min(km) * rt * pc.w_drive + za.park + pc.car_own_min() + km * ROAD_DETOUR * rk * pc.car_own_km_min() + r.cross.at(FARE_MIN_PER_USD);
             let w = ep.walk.min(0.999);
@@ -354,6 +354,10 @@ impl IntercityApi {
         let mut walks: Vec<(usize, f32)> = Vec::with_capacity(K);
         let comp = station_components(&build_graph(&net0, &self.base));
         let on_train = on_train(&net0);
+        // T-2216 stage 2: a zone's sites walk and ride only to stations on its land (`zone_land`; a
+        // station's is its nearest site's), as the local layer between land parts
+        let st_land = zone_lands_on().then(|| m.station_lands(&net0));
+        let (mut home_on, mut far_on): (Vec<Ride>, Vec<Ride>) = (vec![], vec![]);
         for g in &m.groups {
             // the stations in this group's frame
             let mut net = net0.clone();
@@ -387,13 +391,25 @@ impl IntercityApi {
                 let jw = g.city.jobs[c] / zz.w_attr.max(1e-12) as f32;
                 let cjw = ((g.city.jobs[c] - g.city.pop[c]) / 2.).max(0.) / zz.jobs.max(1e-12) as f32;
                 let kz = g.kz.cell_zone[c] as usize;
-                let home = &h_rides[h_off[kz] as usize..h_off[kz + 1] as usize];
-                let far = &f_rides[f_off[kz] as usize..f_off[kz + 1] as usize];
+                let mut home = &h_rides[h_off[kz] as usize..h_off[kz + 1] as usize];
+                let mut far = &f_rides[f_off[kz] as usize..f_off[kz + 1] as usize];
                 walks.clear();
                 for i in acc.of(c) {
                     let walk = acc.walk[i];
                     let cost = walk.min(self.base.walk_easy_min) * self.base.w_walk + (walk - self.base.walk_easy_min).max(0.) * self.base.w_walk_far;
                     walks.push((acc.st[i] as usize, cost));
+                }
+                if let Some(stl) = &st_land {
+                    let zl = m.zone_land(zz);
+                    let on = |st: usize| stl[st].is_none_or(|l| l == zl);
+                    if walks.iter().any(|w| !on(w.0)) || home.iter().chain(far).any(|r| !on(r.0 as usize)) {
+                        walks.retain(|w| on(w.0));
+                        home_on.clear();
+                        home_on.extend(home.iter().filter(|r| on(r.0 as usize)).cloned());
+                        far_on.clear();
+                        far_on.extend(far.iter().filter(|r| on(r.0 as usize)).cloned());
+                        (home, far) = (&home_on[..], &far_on[..]);
+                    }
                 }
                 add_access(&mut weights[z], &walks, home, theta, w);
                 add_access(&mut work[z], &walks, far, theta, jw);

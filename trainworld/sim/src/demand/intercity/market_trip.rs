@@ -316,7 +316,7 @@ impl IntercityApi {
                 }
                 // T-1373, T-1374: a rush day's trips lean by their places and zones
                 let t = w[z] * trips * sh * (1. + (lean_sign(day as usize) * m.zone_lean(za, zb)) as f64);
-                let r = m.pr(za.place, zb.place);
+                let r = m.zone_rule(za, zb);
                 let (from, to) = (&m.places[za.place], &m.places[zb.place]);
                 let split = r.split_car(from, to);
                 let d = m.zone_km(za, zb) as f32;

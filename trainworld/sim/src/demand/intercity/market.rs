@@ -138,6 +138,101 @@ impl Market {
             pair_rule(&self.places, &self.countries, &self.rule, self.ground, &self.mp, &self.drives, i, j)
         }
     }
+    /// T-2216 stage 2: zone `z`'s land (`Zone::land`), its place's landmass on its pack's main part.
+    #[inline(always)]
+    pub(super) fn zone_land(&self, z: &Zone) -> i64 {
+        if z.land == MAIN_LAND { self.places[z.place].road } else { z.land }
+    }
+    /// T-2216 stage 2: site `s`'s (global) land, its own part's, as `zone_land`.
+    #[inline]
+    pub(super) fn site_land_of(&self, s: usize) -> i64 {
+        let l = self.site_land.binary_search_by_key(&(s as u32), |e| e.0).map_or(MAIN_LAND, |k| self.land_codes[self.site_land[k].1 as usize]);
+        if l == MAIN_LAND { self.places[self.zones[self.cell_zone[s]].place].road } else { l }
+    }
+    /// T-2216 stage 2: each of `net`'s stations' land, its nearest site's (a ferry port's, its own
+    /// shore's: the local layer's rule, T-2214), as `zone_land`; `None` with no site within 20 km
+    /// (open to every zone: only a long ride reaches it, and its land is not known).
+    pub(super) fn station_lands(&self, net: &crate::demand::network::Network) -> Vec<Option<i64>> {
+        const B: f32 = 2000.;
+        const FAR: f32 = 20000.;
+        let ns = net.n_stations();
+        let mut best = vec![(FAR * FAR, usize::MAX); ns];
+        for g in &self.groups {
+            let c = &g.city;
+            if c.x.is_empty() {
+                continue;
+            }
+            let (x0, y0) = (c.x.iter().cloned().fold(f32::INFINITY, f32::min), c.y.iter().cloned().fold(f32::INFINITY, f32::min));
+            let (x1, y1) = (c.x.iter().cloned().fold(f32::NEG_INFINITY, f32::max), c.y.iter().cloned().fold(f32::NEG_INFINITY, f32::max));
+            let (w, h) = (((x1 - x0) / B) as i32 + 1, ((y1 - y0) / B) as i32 + 1);
+            let mut off = vec![0u32; (w * h + 1) as usize];
+            let bucket = |x: f32, y: f32| ((((x - x0) / B) as i32).clamp(0, w - 1) * h + (((y - y0) / B) as i32).clamp(0, h - 1)) as usize;
+            for i in 0..c.len() {
+                off[bucket(c.x[i], c.y[i]) + 1] += 1;
+            }
+            for i in 0..(w * h) as usize {
+                off[i + 1] += off[i];
+            }
+            let mut fill = off.clone();
+            let mut cells = vec![0u32; c.len()];
+            for i in 0..c.len() {
+                let b = bucket(c.x[i], c.y[i]);
+                cells[fill[b] as usize] = i as u32;
+                fill[b] += 1;
+            }
+            for s in 0..ns {
+                let (sx, sy) = match (&self.anchor, &g.frame) {
+                    (Some(a), Some(f)) if a != f => {
+                        let (lon, lat) = a.to_lonlat(net.st_x[s] as f64, net.st_y[s] as f64);
+                        let (x, y) = f.from_lonlat(lon, lat);
+                        (x as f32, y as f32)
+                    }
+                    _ => (net.st_x[s], net.st_y[s]),
+                };
+                // (no nearer site here than the best so far: the box is farther)
+                let (dx, dy) = ((x0 - sx).max(sx - x1).max(0.), (y0 - sy).max(sy - y1).max(0.));
+                if dx * dx + dy * dy >= best[s].0 {
+                    continue;
+                }
+                let (bx, by) = ((((sx - x0) / B).floor() as i32).clamp(0, w - 1), (((sy - y0) / B).floor() as i32).clamp(0, h - 1));
+                for r in 0..(w.max(h) + 1) {
+                    // ring r's buckets are at least (r - 1) buckets off
+                    let near = (r - 1).max(0) as f32 * B;
+                    if near * near + dx * dx + dy * dy >= best[s].0 {
+                        break;
+                    }
+                    for gx in (bx - r).max(0)..=(bx + r).min(w - 1) {
+                        for gy in (by - r).max(0)..=(by + r).min(h - 1) {
+                            if (gx - bx).abs() != r && (gy - by).abs() != r {
+                                continue;
+                            }
+                            let k = (gx * h + gy) as usize;
+                            for &i in &cells[off[k] as usize..off[k + 1] as usize] {
+                                let d2 = (c.x[i as usize] - sx).powi(2) + (c.y[i as usize] - sy).powi(2);
+                                if d2 < best[s].0 {
+                                    best[s] = (d2, g.lo + i as usize);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        best.iter().map(|&(_, site)| (site != usize::MAX).then(|| self.site_land_of(site))).collect()
+    }
+    /// The modes of the zone pair (a, b): its places' rule (`pr`), but with no car where the two
+    /// zones are on two lands (`zone_land`, T-2216 stage 2), and then, as between two landmasses, the
+    /// imagined drive over a bridge that is not there: the rule's, no ferry. A plane stays.
+    #[inline(always)]
+    pub(super) fn zone_rule(&self, a: &Zone, b: &Zone) -> PairRule {
+        let mut r = self.pr(a.place, b.place);
+        if r.car && zone_lands_on() && self.zone_land(a) != self.zone_land(b) {
+            r.car = false;
+            r.cross = Cost::default();
+            (r.rt, r.rk) = (Drive::RULE.rt, Drive::RULE.rk);
+        }
+        r
+    }
     /// Trips a day from zone-like sums `(g, t)` at place `i` to `(a, ta)` at place `j`, `d` km.
     #[inline(always)]
     pub(super) fn directed(&self, i: usize, j: usize, g: f64, t: f64, a: f64, ta: f64, d: f64) -> f64 {

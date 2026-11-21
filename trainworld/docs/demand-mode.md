@@ -146,7 +146,8 @@ serves**: those trips keep their place in every total, in no mode (`DemandApi::c
 riders the trains' room turns away, all stay home. Car ferries are no road (Anita, 2026-11-03): the
 player's ferry or train is an island's only way, and a rail bridge the player builds joins nothing.
 The everyday layer applies it per sample (a pair of subzones is on one pair of parts). The regional
-layer's commutes and outings between zones and the market do not yet (T-2256, T-2216).
+market applies it by 6 km zone (each zone on its main part's land, docs/regional.md 5.1, T-2216);
+the far-end selection does not yet (T-2256).
 
 #### Weights, ferry fans, driving and parking
 

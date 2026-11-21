@@ -484,7 +484,14 @@ notes/T-420.md has the tables.
   that is not there, and the rest no way serves. No constant. Car ferries count as no road, one
   rule everywhere (Anita, 2026-11-03). The regional market takes the same rule between places on
   two landmasses with no flight (T-2216, Anita's call 2026-11-20; Vancouver - Victoria, Singapore - Batam):
-  longer trips, commutes and outings, each against its own car's cost on that bridge. Why it may not carry over: where road ferries are part of
+  longer trips, commutes and outings, each against its own car's cost on that bridge. It takes it
+  too between 6 km zones on two lands (T-2216 stage 2, Anita's yes 2026-11-20; Sado in Niigata's
+  place, Okinawa's outer islands, Aegina in Athens's): a zone's land is its main part's (T-2213's
+  `zone_parts`), its place's landmass on the pack's most populous part, else the part's world
+  landmass where the part reaches the grid's edge or lies on another landmass than the main part,
+  else an island of its own. A plane between the two places stays; there is none within a place. A
+  zone's people walk and ride only to stations on its land (a station's land is its nearest site's).
+  Why it may not carry over: where road ferries are part of
   the road network (Sweden's vägfärjor, Norway's riksvei ferries, the Philippines' RoRo routes,
   Indonesia's ASDP crossings) an island keeps a real car the model takes away, and a player's
   boat there fills with drivers who in fact cross by car; OSM ways a car can use but the public

@@ -109,7 +109,9 @@ them: the player's ferry or train is the only way. It takes every such trip unle
 times a drive over a bridge that isn't there, and none past 4 times. The rest are "no route":
 counted in the totals, by no mode. Car ferries don't count as roads. The same goes for longer trips
 and commutes between places on two landmasses with no flight between them (Vancouver to Victoria,
-Singapore to Batam, Tenerife to Gran Canaria).
+Singapore to Batam, Tenerife to Gran Canaria), and between an island and the rest of its own place
+(Sado and Niigata, Okinawa's outer islands and Naha, Aegina and Athens). People on such an island
+only reach stations on it.
 
 ### By train
 

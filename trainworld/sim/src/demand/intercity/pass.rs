@@ -446,7 +446,7 @@ impl IntercityApi {
                     let swap = l_swapped(pi);
                     let (pa, pb) = (m.zones[za].place, m.zones[zb].place);
                     let (from, to) = (&m.places[pa], &m.places[pb]);
-                    let rule = m.pr(pa, pb);
+                    let rule = m.zone_rule(&m.zones[za], &m.zones[zb]);
                     let split = rule.split_car(from, to);
                     let (a, b) = (&self.access[za], &self.access_work[zb]);
                     let (ca, cb) = (nz + zcol[za] as usize, zcol[zb] as usize);

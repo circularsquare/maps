@@ -154,6 +154,7 @@ pub(super) fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Co
     let mut site_mult: Vec<(f64, f64)> = vec![];
     let mut pack_first_zone: Vec<usize> = vec![0; np];
     let mut pack_first_site: Vec<usize> = vec![0; np];
+    let (mut site_land, mut land_codes, mut land_code): (Vec<(u32, u32)>, Vec<i64>, HashMap<i64, u32>) = (vec![], vec![], HashMap::new());
     // sites are laid out group by group, so one group's are contiguous
     let mut order: Vec<usize> = (0..zones.len()).collect();
     let frame_of = |z: &ZoneIn| -> Result<Option<Frame>, String> {
@@ -202,7 +203,8 @@ pub(super) fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Co
         pack_first_site[place] = cell_zone.len();
         let f = frames[zi_];
         for k in 0..nz {
-            mz.push(Zone { x: 0., y: 0., u: [0.; 3], pop: 0., w_attr: 0., jobs: 0., g: 0., t: 0., a: 0., ta: 0., place, park: 0., gid: places[place].off + k as u32, dep: 0., tour: 0. });
+            let land = zin.zone_land.get(k).map_or(MAIN_LAND, |&l| if l == MAIN_LAND || l >= 0 { l } else { place_land(place, l) });
+            mz.push(Zone { x: 0., y: 0., u: [0.; 3], pop: 0., w_attr: 0., jobs: 0., g: 0., t: 0., a: 0., ta: 0., place, park: 0., gid: places[place].off + k as u32, dep: 0., tour: 0., land });
         }
         let s_inc = zin.inc.min(1.).powf(rule.eps);
         let total_pop: f64 = zin.sites.pop.iter().sum();
@@ -212,6 +214,19 @@ pub(super) fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Co
         let k_attr = if closed || total_attr <= 0. { 1. } else { total_pop / total_attr * s_inc };
         let mut park_w = vec![0f64; nz];
         let mut park = vec![0f64; nz];
+        // T-2216: the lands of the sites off their pack's main part
+        for (si, &l) in zin.site_land.iter().enumerate() {
+            if l == MAIN_LAND {
+                continue;
+            }
+            let l = if l >= 0 { l } else { place_land(place, l) };
+            let n = land_codes.len() as u32;
+            let k = *land_code.entry(l).or_insert(n);
+            if k == n {
+                land_codes.push(l);
+            }
+            site_land.push(((cell_zone.len() + si) as u32, k));
+        }
         for si in 0..zin.sites.len() {
             let (x, y, pop, jobs, z) = zin.sites.at(si);
             if !x.is_finite() || !y.is_finite() || pop < 0. || jobs < 0. || z as usize >= nz {
@@ -458,7 +473,11 @@ pub(super) fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Co
         rules.out.extend(rules.open.iter().map(|&j| pair_rule(&places, &countries, &rule, ground, &mp, &drives, i, j)));
     }
     let grouped = places.iter().any(|p| p.groups().iter().any(|g| g.1 != 1.));
+    site_land.sort_unstable();
+    site_land.shrink_to_fit();
     let mut m = Market {
+        site_land,
+        land_codes,
         grouped,
         rule,
         ground,
@@ -566,8 +585,14 @@ pub(super) fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Co
             }
         }
     }
-    // T-2216: no one walks between two landmasses
-    let apart = |h: u32, a: u32| islands() && m.places[m.zones[h as usize].place].road != m.places[m.gid_place[a as usize] as usize].road;
+    // T-2216: no one walks between two landmasses, or between two zones' lands (an activity zone
+    // not open here on its place's)
+    let apart = |h: u32, a: u32| {
+        let zh = &m.zones[h as usize];
+        let ca = m.comp_of_gid[a as usize];
+        let off_land = ca != u32::MAX && zone_lands_on() && m.zone_land(zh) != m.zone_land(&m.zones[ca as usize]);
+        islands() && (off_land || m.places[zh.place].road != m.places[m.gid_place[a as usize] as usize].road)
+    };
     m.everyday = by_kind.into_iter().map(|((h, a, kind), (n, w))| EPair { h, a, kind, trips: n as f32, walk: if apart(h, a) { 0. } else { (w / n.max(1e-12)) as f32 } }).collect();
     let csr = |key: &dyn Fn(&(u32, u32, f32)) -> Option<u32>, n: usize, list: &[(u32, u32, f32)]| {
         let mut off = vec![0u32; n + 1];
