@@ -103,8 +103,8 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: A cold run takes 4.4-5.1 min at 4 jobs, against the 3 min aimed for; most of it is zone_water's 368 windows.
   - Goal: A cold run is near 3 min.
   - Other: See notes/T-1992.md.
-- T-3781 [P1] {L:loading} {after:a report with the new diagnosis} Demand data not loading within 10 minutes (taking, 2026-11-21, agent iphonesaves)
-  - Context: Two anonymous reports on v0.4.2 (feedback 1795092485-688b2e15, 1795083347-52a31102), plus a third, "crashes every time it opens" (1795097335-fa20c413), all Japanese, 11-19 (board group g115). Their saves load normally on master. A stuck load now restarts once, and the report names the stuck worker and period (tree demandload). Also cities not loading on Safari and iPad (feedback 1794957009, 1794891212; found by T-3632).
+- T-3781 [P1] {L:loading} {after:a report with the new diagnosis} Demand data not loading within 10 minutes
+  - Context: Two anonymous reports on v0.4.2 (feedback 1795092485-688b2e15, 1795083347-52a31102), plus a third, "crashes every time it opens" (1795097335-fa20c413), all Japanese, 11-19 (board group g115). Their saves load normally on master. A stuck load now restarts once, and the report names the stuck worker and period (tree demandload). Also cities not loading on Safari and iPad (feedback 1794957009, 1794891212; found by T-3632). The five iPhone crash reports of 11-19 to 11-20 (3 accounts, read 11-21 on your yes) were all out-of-memory screens loading Tokyo-start games of 1,156-2,090 stations; their tab peaks 1,254-1,705 MB on an emulated iPhone against iOS's 1.4-2 GB limit (T-3160, T-3939, T-3940; notes/T-3781.md "The iPhone crash reports").
   - Goal: The cause found from the next report's diagnosis, or closed if no report comes.
   - Other: notes/T-3781.md
 - T-3780 [P2] {L:timetables} {after:T-3346 stage 2 landing} Station and complex timetables
@@ -784,8 +784,15 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: You, 11-21, on whether big saves should run two workers: "if we dont have a way of telling how much memory a person actually has this question is meaningless and its on the player to decide. i thinkthe only actionable item here is to like maybe rework "use more cores" to have an actual slider where people can select how many cores and it estimates the resulting memory usage right below and the estimated speed gain or loss." Today Settings has a "Use more cores" switch; stage A (T-3373) caps workers by memory on big saves.
   - Goal: Settings has a slider for the number of solving workers, with the estimated memory and the estimated load and edit time for the open game shown below it, and the player's pick overrides stage A's memory cap.
 - T-3933 [P2] {L:memory} A load out of memory retries with fewer workers
-  - Context: You, 11-21: "if people are unable to lod the game at all because o fmemory issues it should probably autoset the memory cap lower and try again, if thats feasible". Five iPhone players reported the page crashing right away 11-19 to 11-20 (T-3781).
+  - Context: You, 11-21: "if people are unable to lod the game at all because o fmemory issues it should probably autoset the memory cap lower and try again, if thats feasible". Three iPhone players (five reports) hit the out-of-memory screen 11-19 to 11-20 (T-3781). On phones the pool is already 1 solving worker plus the aux worker, so a retry there can drop only the aux worker (at most 65-97 MB): it saves some loads near the limit, not the biggest; it has more room on desktop.
   - Goal: A load whose worker runs out of memory restarts once with a lower cap (fewer workers), says so to the player, and keeps that cap for the next load; or the measured reason the page dies before it can.
+- T-3939 [P2] {L:memory} Clock worker memory on many-zone phone saves
+  - Context: From T-3781, 11-21: on an iPhone reporter's 13-zone Tokyo-start save the clock worker held 15-30% of the tab, 359 MB settled and up to 493 MB before a collection; the tab peaked at 1,628-1,705 MB.
+  - Goal: The clock worker's share on that save named piece by piece, and its biggest piece cut, measured on a production build as T-3160 measures.
+  - Other: notes/T-3781.md "The iPhone crash reports"
+- T-3940 [P3] {L:memory} A warning before a big load on Safari
+  - Context: From T-3781, 11-21: Safari reports no device memory, so the over-budget warning never fires before a load that may be killed.
+  - Goal: A big save on Safari (by its stations and zones) gets the same warning as an over-budget one elsewhere.
 - T-3523 [P3] {L:open-source} Make the public repo the real one
   - Context: Your pad, 2026-11-17: with many pull requests, applying them is clunky, and contributors can't see what we're already working on. You chose 2026-11-17: "lets work on making the public repo the real one. we can do it some time after 0.4 publish." About 1-2 days: private notes and tooling split out, every commit public.
   - Goal: The public repo is where trainworld is developed; pull requests merge there directly, and nothing private lands in it. The design goes to you before it is built.
