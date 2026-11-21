@@ -23,7 +23,8 @@ import { editBusRoute, editFerryRoute, toggleEditStops } from "../../game/lineAc
 import { busDraft } from "../../map/busDraw";
 import { ferryDraft } from "../../map/ferryDraw";
 import { edit, fleetOf, linesById, say, stationNames, world } from "../../game/world";
-import { Alert, Check, Icon, Row, Segmented, Stepper, SwapLabel } from "../widgets";
+import { Alert, Icon, Row, Segmented, Stepper, SwapLabel } from "../widgets";
+import { useLineQuote } from "../../game/quotes";
 import { nearestStation } from "../../game/places";
 import { fullTitle, heldTrains, LANE_KIND } from "../../game/capacityKinds";
 import { useClockQuery } from "../useClockQuery";
@@ -321,23 +322,51 @@ function BoatSize({ l, st, bus }: { l: LineInput; st: LineStats; bus: ClockBus }
   );
 }
 
+// T-3944: a road's two edges, its lane line dashed, a bus in one lane
+const BrtIcon = () => <svg viewBox="0 0 16 16"><path d="M2.5 1.5v13M13.5 1.5v13M8 2v2M8 7v2M8 12v2" /><path class="solid" d="M3.75 5h3v6h-3z" /></svg>;
+
 /** T-3907: a bus line on BRT or off it: bus lanes along the whole route, its buses at no less than the BRT floor.
- * On a constructed line switching on is paid at once; off gives nothing back. */
+ * T-3944: an upgrade as a station's are (StationUpgrades.tsx): outlined when off, dashed while its lanes are in the
+ * blueprint, filled once built. A click puts it in the blueprint or takes it out, or takes built lanes away (nothing
+ * refunded); a constructed line's lanes in the blueprint are built by Construct beside it or the Build tab's. */
 function BrtRow({ l, bus }: { l: LineInput; bus: ClockBus }) {
   const m = moneyState.value;
   const [asked, setAsked] = useState<boolean | null>(null);
-  const on = asked ?? bus.brt;
+  const on = asked ?? (bus.brt || bus.brtBp);
+  const built = on && asked === null && bus.brt && bus.built;
+  // the Construct beside it: a constructed line whose lanes are in the blueprint
+  const pending = asked === null && bus.built && bus.brtBp;
+  const q = useLineQuote(pending ? l.num : null);
   // T-3907: paid and upkept over the road in town only; T-3378: lanes another BRT line has are not paid again
   const shared = bus.townM - bus.newM;
-  const tip = m ? t("busInspector.brtTip", { speed: speed(m.brtKmh), price: millions(perDistance(m.brtRouteKm)), upkeep: money(perDistance(m.upkeepBrtKm * m.economy)), unit: distUnit(), town: distance(bus.townM) })
-    + (shared >= 50 ? "\n" + t("busInspector.brtShared", { shared: distance(shared) }) : "") : undefined;
+  const price = m ? (bus.newM / 1000) * m.brtRouteKm * 1e6 : 0;
+  const act = t(on ? (built ? "stationUpgrades.actBuilt" : "stationUpgrades.actPlanned") : "stationUpgrades.actAdd");
+  const tip = m ? [t("busInspector.brt"), t("busInspector.brtTip", { speed: speed(m.brtKmh), price: millions(perDistance(m.brtRouteKm)), upkeep: money(perDistance(m.upkeepBrtKm * m.economy)), unit: distUnit(), town: distance(bus.townM) }),
+    ...(shared >= 50 ? [t("busInspector.brtShared", { shared: distance(shared) })] : []), ...(built ? [] : [t("stationUpgrades.costs", { price: money(price) })]), act].join("\n") : undefined;
   const set = (to: boolean) => {
     setAsked(to);
-    void edit({ op: "busBrt", line: l.num, on: to }).then(() => setAsked(null));
+    void edit({ op: "busBrt", line: l.num, on: to }).then((a) => {
+      setAsked(null);
+      if (!a.ok) return;
+      if (to) say(t("stationUpgrades.added", { name: t("busInspector.brt") }));
+      else if (built) say(t("stationUpgrades.removed", { name: t("busInspector.brt"), station: l.name }));
+    });
+  };
+  const build = async () => {
+    const a = await edit({ op: "constructLine", line: l.num });
+    if (a.ok) say(t("busInspector.brtBuilt", { name: l.name, price: money(a.charge * 1e6) }));
   };
   return (
-    <li>
-      <Check checked={on} onChange={set} tip={tip}>{t("busInspector.brt")}</Check>
+    <li class="brt-up">
+      <button class={"btn icon upgrade" + (!on ? "" : built ? " on" : " planned")} aria-label={t("busInspector.brt")} aria-pressed={on} data-tip={tip} onClick={() => set(!on)}>
+        <BrtIcon />
+      </button>
+      <span class="grow" data-tip={tip}>{t("busInspector.brt")}</span>
+      {pending && (
+        <button class="btn text" onClick={() => void build()}>
+          {q ? t("constructButton.priced", { price: money(q.build + q.trains) }) : t("constructButton.plain")}
+        </button>
+      )}
     </li>
   );
 }

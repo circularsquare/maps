@@ -433,7 +433,10 @@ export function busRow(a: TrackApi, id: number, nodes: ClockNode[]): ClockBus {
     }
   }
   const [townM, newM, laneM] = a.bus_lanes(id);
-  return { built: r[0] === 1, route, kinds, roadM: a.bus_road_m(id), stops, street, spacing: a.bus_spacing(id), hand, brt: a.bus_brt(id), townM: townM ?? 0, newM: newM ?? 0, laneM: laneM ?? 0, laneLoad: [...a.bus_lane_load(id)], reach, routeLL, streetLL: ll(street) };
+  // T-3944: the lanes' runs with their points as longitude, latitude
+  const marks = a.bus_lane_marks(id), lanes: number[] = [];
+  for (let k = 0; k + 1 < marks.length; k += 2 + 2 * marks[k + 1]) lanes.push(marks[k], marks[k + 1], ...ll(Array.from(marks.subarray(k + 2, k + 2 + 2 * marks[k + 1]))));
+  return { built: r[0] === 1, route, kinds, roadM: a.bus_road_m(id), stops, street, spacing: a.bus_spacing(id), hand, brt: a.bus_brt(id), brtBp: a.bus_brt_bp(id), lanes, townM: townM ?? 0, newM: newM ?? 0, laneM: laneM ?? 0, laneLoad: [...a.bus_lane_load(id)], reach, routeLL, streetLL: ll(street) };
 }
 /** a bus route's longitude, latitude pairs by line, until the route changes */
 const busRouteLL = new Map<number, { route: number[]; ll: number[] }>();
@@ -470,7 +473,7 @@ function ferryRow(a: TrackApi, id: number): ClockBus {
     const berth: [number, number] = [routeLL[2 * i], routeLL[2 * i + 1]];
     ports.push({ node, landing: s && s.id === node ? [s.lng, s.lat] : berth, berth });
   });
-  return { built: r[0] === 1, route, kinds, roadM: a.ferry_m(id), stops, street: [], spacing: 0, hand: false, brt: false, townM: 0, newM: 0, laneM: 0, laneLoad: [], reach: [], routeLL, streetLL: [], ferry: { speeds, ports, boat: a.ferry_boat(id) as Boat } };
+  return { built: r[0] === 1, route, kinds, roadM: a.ferry_m(id), stops, street: [], spacing: 0, hand: false, brt: false, brtBp: false, lanes: [], townM: 0, newM: 0, laneM: 0, laneLoad: [], reach: [], routeLL, streetLL: [], ferry: { speeds, ports, boat: a.ferry_boat(id) as Boat } };
 }
 
 /** T-2194: a ferry line's ports as the network's nodes, new ones added first as blueprint ports; null

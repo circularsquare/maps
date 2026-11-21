@@ -551,8 +551,8 @@ fn an_older_saves_bus_lines_keep_three_rows() {
     assert_eq!(c.save(), saved);
 }
 
-/// T-3907: a BRT line runs at no less than its floor along its whole route, costs `BRT_COST_PER_KM` a road-km on a
-/// constructed line (nothing back when switched off or undone), upkeeps at `UPKEEP_BRT_KM`, is kept by a save and a
+/// T-3907: a BRT line runs at no less than its floor along its whole route, costs `BRT_COST_PER_KM` a road-km when its
+/// lanes are constructed (T-3944: put in the blueprint first; nothing back when switched off or undone), upkeeps at `UPKEEP_BRT_KM`, is kept by a save and a
 /// redraw, and a planned line's BRT is in the blueprint.
 #[test]
 fn a_brt_line_runs_at_its_floor_is_paid_for_saved_and_undone() {
@@ -583,21 +583,39 @@ fn a_brt_line_runs_at_its_floor_is_paid_for_saved_and_undone() {
     let brt = time(&a);
     let want = 3600.0 / (lane_kmh(true) / 3.6) + 3600.0 / (bus_kmh(44.0).max(lane_kmh(true)) / 3.6) + 18.0 * 28.0;
     assert!((brt - want).abs() < 0.04 * want && brt < plain, "{brt} {want} {plain}");
-    // off again, constructed plain, then on: paid at once, the rise in built value
+    // off again, constructed plain, then on: T-3944, in the blueprint, free and no faster, its lanes drawn as new
     assert_eq!(a.set_bus_brt(b, false), 0);
     assert_eq!(a.construct_line(b), 0, "{}", a.issues());
     let cash = a.cash();
     assert!((time(&a) - plain).abs() < 1e-6);
+    assert!(a.bus_lane_marks(b).is_empty());
     assert_eq!(a.set_bus_brt(b, true), 0, "{}", a.issues());
+    assert!(a.cash() == cash && !a.bus_brt(b) && a.bus_brt_bp(b) && (time(&a) - plain).abs() < 1e-6);
+    let rows = a.w.net.blueprint_cost_items();
+    assert!(rows.chunks_exact(7).any(|r| r[0] == 16.0 && (r[5] - town).abs() < 1e-6), "{rows:?}");
+    assert!((a.line_build_cost(b) - town / 1000.0 * BRT_COST_PER_KM).abs() < 1e-6, "{}", a.line_build_cost(b));
+    let marks = a.bus_lane_marks(b);
+    assert!(marks[0] == 0.0 && marks[1] >= 2.0 && marks.len() == 2 + 2 * marks[1] as usize, "{marks:?}");
+    // the blueprint is saved (`LBQ1`) and taken out free in one undo step
+    let saved = a.save();
+    assert!(saved.windows(4).any(|w| w == b"LBQ1"));
+    assert!(a.load(&saved) && a.bus_brt_bp(b) && !a.bus_brt(b));
+    assert_eq!(a.set_bus_brt(b, false), 0);
+    assert!(!a.bus_brt_bp(b) && a.w.net.blueprint_cost_items().chunks_exact(7).all(|r| r[0] != 16.0));
+    assert_eq!(a.undo(), 0, "{}", a.issues());
+    assert!(a.bus_brt_bp(b) && a.cash() == cash);
+    // Construct pays the rise in built value and the buses run faster
+    assert_eq!(a.construct_all(), 0, "{}", a.issues());
     assert!((cash - a.cash() - town / 1000.0 * BRT_COST_PER_KM).abs() < 1e-6, "{}", cash - a.cash());
-    assert!((time(&a) - brt).abs() < 1e-6);
+    assert!(a.bus_brt(b) && !a.bus_brt_bp(b) && (time(&a) - brt).abs() < 1e-6);
+    assert!(a.bus_lane_marks(b)[0] == 2.0);
     // the upkeep: street tram track's a road-km in town, a plain route's out of town
     let up = a.upkeep();
     assert_eq!(UPKEEP_BRT_KM, UPKEEP_GROUND_KM * TrackKind::StreetTram.spec().upkeep);
     assert!((up[5] - ((road - town) * UPKEEP_BUS_KM + town * UPKEEP_BRT_KM) / 1000.0 * ECONOMY / 1e6).abs() < 1e-9, "{up:?}");
-    // saved and loaded (`LBR1`)
+    // saved and loaded (`LBR1`), no blueprint block
     let saved = a.save();
-    assert!(saved.windows(4).any(|w| w == b"LBR1"));
+    assert!(saved.windows(4).any(|w| w == b"LBR1") && !saved.windows(4).any(|w| w == b"LBQ1"));
     assert!(a.load(&saved));
     assert!(a.bus_brt(b) && (time(&a) - brt).abs() < 1e-6);
     // one undo step: off, nothing back; redo: on, nothing charged again
@@ -618,6 +636,12 @@ fn a_brt_line_runs_at_its_floor_is_paid_for_saved_and_undone() {
     let plain_save = a.save();
     assert!(!plain_save.windows(4).any(|w| w == b"LBR1"));
     assert!(a.load(&plain_save) && !a.bus_brt(b));
+}
+
+/// T-3944: a constructed line on BRT: its lanes put in the blueprint, then constructed.
+fn brt_on(a: &mut TrackApi, l: u32) {
+    assert_eq!(a.set_bus_brt(l, true), 0, "{}", a.issues());
+    assert_eq!(a.construct_line(l), 0, "{}", a.issues());
 }
 
 /// T-3378: two BRT lines on one road share its lanes: the second pays only its own road in town, run either way and
@@ -641,13 +665,22 @@ fn brt_lines_on_one_road_share_its_lanes() {
     let (t1, t2) = (a.bus_town_m(l1), a.bus_town_m(l2));
     assert!((t2 - t1 - 500.0 * ROAD_FACTOR).abs() <= 100.0, "{t1} {t2}");
     let cash = a.cash();
-    assert_eq!(a.set_bus_brt(l1, true), 0, "{}", a.issues());
+    brt_on(&mut a, l1);
     assert!((cash - a.cash() - price(t1)).abs() < 1e-6, "{}", cash - a.cash());
     // the second pays its 600 road-m west of the first, and its hover says so
     let lanes = a.bus_lanes(l2);
     assert!((lanes[0] - t2).abs() < 1e-6 && (lanes[1] - 500.0 * ROAD_FACTOR).abs() <= 100.0 && lanes[2] == 0.0, "{lanes:?}");
     let cash = a.cash();
+    // T-3944: in the blueprint, the stretch on the first's lanes is drawn as shared
     assert_eq!(a.set_bus_brt(l2, true), 0, "{}", a.issues());
+    let marks = a.bus_lane_marks(l2);
+    let (mut k, mut kinds) = (0, vec![]);
+    while k < marks.len() {
+        kinds.push(marks[k]);
+        k += 2 + 2 * marks[k + 1] as usize;
+    }
+    assert!(kinds.contains(&0.0) && kinds.contains(&1.0), "{kinds:?}");
+    assert_eq!(a.construct_line(l2), 0, "{}", a.issues());
     let paid = cash - a.cash();
     assert!((paid - price(lanes[1])).abs() <= price(100.0) + 1e-6, "{paid} {lanes:?}");
     let union = a.w.net.brt_lane_m(true);
@@ -675,7 +708,7 @@ fn brt_lines_on_one_road_share_its_lanes() {
     let cash = a.cash();
     assert_eq!(a.set_bus_brt(l1, false), 0, "{}", a.issues());
     assert_eq!(a.cash(), cash);
-    assert_eq!(a.set_bus_brt(l1, true), 0, "{}", a.issues());
+    brt_on(&mut a, l1);
     assert!(cash - a.cash() <= price(100.0) + 1e-6, "{}", cash - a.cash());
     let cash = a.cash();
     assert_eq!(a.remove_line(l1), 0, "{}", a.issues());
@@ -705,10 +738,10 @@ fn a_full_brt_lane_cuts_its_lines_buses() {
     assert!(p1 > 38.0 && p2 > 38.0, "{p1} {p2}");
     // on plain lines nothing is cut, and the lane read is empty
     assert_eq!(a.bus_lane_load(l1)[0], 0.0);
-    assert_eq!(a.set_bus_brt(l1, true), 0, "{}", a.issues());
+    brt_on(&mut a, l1);
     assert!((tph(&a, l1) - p1).abs() < 0.5, "{} {p1}", tph(&a, l1));
     // both on BRT: cut to fit, each by about the same share
-    assert_eq!(a.set_bus_brt(l2, true), 0, "{}", a.issues());
+    brt_on(&mut a, l2);
     let (b1, b2) = (tph(&a, l1), tph(&a, l2));
     assert!(b1 + b2 <= LANE_BUSES_H + 0.5 && b1 + b2 >= LANE_BUSES_H - 2.0, "{b1} {b2}");
     assert!((b1 / p1 - b2 / p2).abs() < 0.05, "{b1} {b2} {p1} {p2}");
@@ -757,9 +790,11 @@ fn a_brt_station_serves_brt_lines_only() {
     // no dwell of the line's 30 s: it stands its stop's 18 s
     let (arr, dep) = (a.stop_times(b, 0, 0), a.stop_departures(b, 0, 0));
     assert!((dep[k] - arr[k] - BRT_STATION_STOP_S).abs() < 1e-6, "{} {}", arr[k], dep[k]);
-    // the plain line on BRT stops there too
+    // the plain line on BRT stops there once its lanes are built (T-3944: until then they are in the blueprint)
     assert_eq!(a.set_bus_brt(p, true), 0, "{}", a.issues());
-    assert!(at(&a, p).is_some());
+    assert!(a.bus_brt_bp(p) && at(&a, p).is_none());
+    assert_eq!(a.construct_all(), 0, "{}", a.issues());
+    assert!(a.bus_brt(p) && at(&a, p).is_some());
     assert_eq!(a.set_bus_brt(p, false), 0, "{}", a.issues());
     // park and ride, no waiting room
     assert_ne!(a.set_station_upgrade(&[s], crate::track::upgrades::WAITING_ROOM, true), 0);
@@ -777,4 +812,37 @@ fn a_brt_station_serves_brt_lines_only() {
     // removed as any station a bus passes is (its node with it): the line stops there no more
     assert_eq!(a.remove_station(s), 0, "{}", a.issues());
     assert!(a.brt_stations().is_empty() && !a.w.net.node_ok(s) && at(&a, b).is_none());
+}
+
+/// T-3944 on T-3378: a BRT station, built lanes and a blueprint's lanes, saved together. A level-35 save (the
+/// station, no `LBQ1`) and an older one (`LBR1` only) load, the lanes of `LBR1` as built.
+#[test]
+fn brt_stations_and_blueprint_lanes_save_together() {
+    let mut a = api();
+    let line = |a: &mut TrackApi, y: f64| {
+        let l = a.new_line_id();
+        assert_eq!(a.set_bus_line(l, &[0.0, y, 1.0, 6000.0, y, 1.0], 480, 600, 1200, 30.0, 120.0, 0, "B".into()), 0, "{}", a.issues());
+        assert_eq!(a.construct_line(l), 0, "{}", a.issues());
+        l
+    };
+    let (built, bp) = (line(&mut a, 0.0), line(&mut a, 5.0));
+    assert_eq!(a.set_bus_brt(built, true), 0, "{}", a.issues());
+    assert_eq!(a.add_brt_station(3000.0, 20.0, 0.0, "Mid".into()), 0, "{}", a.issues());
+    assert_eq!(a.construct_all(), 0, "{}", a.issues());
+    assert_eq!(a.set_bus_brt(bp, true), 0, "{}", a.issues());
+    assert!(a.bus_brt(built) && !a.bus_brt_bp(built) && a.bus_brt_bp(bp) && !a.bus_brt(bp));
+    let s = a.brt_stations()[0];
+    let saved = a.save();
+    let pos = |b: &[u8], t: &[u8; 4]| b.windows(4).rposition(|w| w == t);
+    let (r, t, q) = (pos(&saved, b"LBR1").unwrap(), pos(&saved, b"LBT1").unwrap(), pos(&saved, b"LBQ1").unwrap());
+    assert!(r < t && t < q, "LBQ1 follows LBT1: {r} {t} {q}");
+    assert!(a.load(&saved));
+    assert!(a.bus_brt(built) && a.bus_brt_bp(bp) && !a.bus_brt(bp) && a.brt_stations() == vec![s]);
+    // a level-35 save: the station and the built lanes, no blueprint block
+    assert!(a.load(&saved[..q]));
+    assert!(a.bus_brt(built) && !a.bus_brt(bp) && !a.bus_brt_bp(bp) && a.brt_stations() == vec![s]);
+    assert!(a.w.net.node_road[s as usize] == Some(0.0));
+    // an older save, `LBR1` lines with no station block: the lanes are as built
+    assert!(a.load(&saved[..t]));
+    assert!(a.bus_brt(built) && !a.bus_brt_bp(built) && a.brt_stations().is_empty());
 }

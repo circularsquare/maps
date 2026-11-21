@@ -1,10 +1,10 @@
 # BRT
 
-BRT gives a bus line its own lanes. Tick the BRT box on a bus line's panel.
+BRT gives a bus line its own lanes. It's an upgrade on the bus line's panel, built like anything else: click it and the lanes go in the blueprint, then construct them. On the map the stretches getting new lanes are outlined in blueprint blue, and stretches with lanes already there are dashed blue, since they cost nothing. Built lanes get a thin dashed white border.
 
 **Faster in town.** A plain bus crawls in a dense centre, down to {{sim/src/track/streets.rs:BUS_LANE_KMH|0}} km/h. A BRT bus gets {{sim/src/track/params.rs:BRT_LANE_BONUS_KMH|0}} km/h more there, and never moves slower than that anywhere on its route.
 
-**Paid only in town.** The lanes go where a plain bus would be slower than that. There they cost ${{sim/src/track/params.rs:BRT_COST_PER_KM|0}}M a km of road and ${{sim/src/track/params.rs:UPKEEP_BRT_KM * ECONOMY / 1000|0}}k a km a day, the same upkeep as street tram track. Out of town a BRT route costs what a plain bus route does. A constructed line pays when you switch it on. Switching it off gives nothing back.
+**Paid only in town.** The lanes go where a plain bus would be slower than that. There they cost ${{sim/src/track/params.rs:BRT_COST_PER_KM|0}}M a km of road and ${{sim/src/track/params.rs:UPKEEP_BRT_KM * ECONOMY / 1000|0}}k a km a day, the same upkeep as street tram track. Out of town a BRT route costs what a plain bus route does. You pay when the lanes are constructed. Taking them away gives nothing back.
 
 **Lines share lanes.** Two BRT lines on the same road use the same lanes, whichever way each one runs. The second line pays only for road the first one doesn't cover, and the upkeep of a shared stretch is split between them. A plain bus line on that road stays in traffic.
 
@@ -13,4 +13,4 @@ BRT gives a bus line its own lanes. Tick the BRT box on a bus line's panel.
 **BRT stations.** Click with the Station tool off track, within {{app/src/map/stationTool.ts:BRT_REACH_M|0}} m of a road, to place one beside it. It costs ${{sim/src/track/params.rs:BRT_STATION_COST|0}}M and ${{sim/src/track/params.rs:UPKEEP_BRT_STATION * ECONOMY / 1000|0}}k a day, like a tram stop. Only BRT lines stop there; a plain bus drives past. A stop there takes {{sim/src/track/params.rs:BRT_STATION_STOP_S|0}} seconds instead of {{sim/src/track/streets.rs:BUS_STOP_S|0}}, with no dwell, and waiting there feels like a waiting room. People walk and drive to it from as far as they would to any station, where a plain bus stop only draws people living near the route. That is where most of BRT's riders come from: a line stopping at stations carries three or four times as many.
 
 Exact rule: `docs/track-and-service.md` "6.7 Bus lines", its Money, Lane room and BRT stations items. Applies to commutes, everyday trips and trips between cities alike.
-In the code: **main** `sim/src/track/bus/lanes.rs` `Lanes`, `Room`, also `sim/src/track/bus.rs` `reach`, `profile_cut`, `sim/src/track/net/store.rs` `bus_cost`, `brt_split`, `brt_room`, `sim/src/track/capacity.rs` `fill`
+In the code: **main** `sim/src/track/bus/lanes.rs` `Lanes`, `Room`, also `sim/src/track/bus.rs` `reach`, `profile_cut`, `sim/src/track/net/store.rs` `bus_cost`, `brt_split`, `brt_room`, `sim/src/track/capacity.rs` `fill`, `sim/src/track/wasm/links.rs` `construct_ops`

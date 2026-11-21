@@ -194,6 +194,8 @@ impl TrackApi {
         // a bus line's copy is a planned route, paid for on Construct (T-1464)
         if let Some(r) = d.bus.as_mut() {
             r.built = false;
+            // T-3944: a planned route's BRT is its own, paid with it
+            (r.brt, r.brt_bp) = (r.brt_any(), false);
         }
         if let Some(r) = d.ferry.as_mut() {
             r.built = false;

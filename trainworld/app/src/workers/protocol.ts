@@ -774,8 +774,13 @@ export interface ClockBus {
   spacing: number;
   /** T-2891: the player places the stops */
   hand: boolean;
-  /** T-3907: bus lanes along the whole route (BRT) */
+  /** T-3907: bus lanes along the whole route (BRT), constructed on a constructed line */
   brt: boolean;
+  /** T-3944: a constructed line's BRT lanes in the blueprint (`brt` false till Construct) */
+  brtBp: boolean;
+  /** T-3944: its BRT lanes on the map, runs of [kind, points, lng, lat, ...] flat: kind 0 new lanes in the blueprint,
+   * 1 in the blueprint on lanes a constructed BRT line has, 2 constructed; empty off BRT */
+  lanes: number[];
   /** T-3907: road metres in town for BRT (where a plain bus moves under BRT's floor), on BRT or not */
   townM: number;
   /** T-3378: of `townM`, the road metres no other BRT line has lanes on (constructed ones, for a constructed

@@ -16,8 +16,8 @@ pub const MATCH_DEG: f64 = 30.0;
 /// The grid's square, ground metres: more than `MATCH_M`, so a step looks in its own square only.
 const CELL_M: f64 = 50.0;
 
-/// One pace step of a route in town: its middle, unit heading (frame), road metres, and the frame's metres a
-/// ground metre there (`Network::k_at`).
+/// One pace step of a route in town: its middle, unit heading (frame), road metres, the frame's metres a
+/// ground metre there (`Network::k_at`), and where it starts.
 #[derive(Clone, Copy, Debug)]
 pub struct Step {
     pub x: f64,
@@ -26,13 +26,49 @@ pub struct Step {
     dy: f64,
     pub m: f64,
     k: f64,
+    /// road metres along the route where it starts
+    a: f64,
 }
 
 /// A route's road in town: its steps, and the stretches of road (frame) they cover.
 pub fn town_steps(net: &Network, pts: &[[f64; 2]], kinds: &[u8]) -> (Vec<Step>, Vec<[[f64; 2]; 2]>) {
     let (mut steps, mut segs) = (vec![], vec![]);
+    each_town_step(net, pts, kinds, |s, line| {
+        steps.push(s);
+        segs.extend(line.windows(2).map(|w| [w[0], w[1]]));
+    });
+    (steps, segs)
+}
+
+/// T-3944: a route's road in town as runs of steps of one kind (`kind` of each step), each `[kind, points, x, y,
+/// ...]` flat, for the map (`Network::brt_marks`).
+pub fn marks(net: &Network, pts: &[[f64; 2]], kinds: &[u8], kind: impl Fn(&Step) -> u8) -> Vec<f64> {
+    let mut out: Vec<f64> = vec![];
+    // where the open run starts in `out`, its kind, and the road metres it ends at
+    let mut open: Option<(usize, u8, f64)> = None;
+    each_town_step(net, pts, kinds, |s, line| {
+        let k = kind(&s);
+        let joins = open.is_some_and(|(_, ok, end)| ok == k && (s.a - end).abs() < 1e-6);
+        if !joins {
+            out.extend([k as f64, 0.0]);
+            open = Some((out.len() - 2, k, 0.0));
+        }
+        let (at, _, _) = open.unwrap();
+        // a joined run's first point is the last one's end
+        for p in &line[if joins { 1 } else { 0 }..] {
+            out.extend(p);
+            out[at + 1] += 1.0;
+        }
+        open = Some((at, k, s.a + s.m));
+    });
+    out
+}
+
+/// Each step of a route's road in town, with its stretch of road as points (frame): its start, the road's own
+/// points between, its end.
+fn each_town_step(net: &Network, pts: &[[f64; 2]], kinds: &[u8], mut f: impl FnMut(Step, &[[f64; 2]])) {
     if pts.len() < 2 {
-        return (steps, segs);
+        return;
     }
     let poly = Poly::new(net, pts, kinds);
     let len = poly.road_len();
@@ -41,6 +77,7 @@ pub fn town_steps(net: &Network, pts: &[[f64; 2]], kinds: &[u8]) -> (Vec<Step>, 
         let (x, y) = at_road(pts, &poly.road, s);
         [x, y]
     };
+    let mut line: Vec<[f64; 2]> = vec![];
     for (i, &c) in pace.car.iter().enumerate() {
         if !brt_in_town(c) {
             continue;
@@ -50,17 +87,14 @@ pub fn town_steps(net: &Network, pts: &[[f64; 2]], kinds: &[u8]) -> (Vec<Step>, 
         let (dx, dy) = (pb[0] - pa[0], pb[1] - pa[1]);
         let d = dx.hypot(dy);
         let (dx, dy) = if d > 0.0 { (dx / d, dy / d) } else { (0.0, 0.0) };
-        steps.push(Step { x: pm[0], y: pm[1], dx, dy, m: pace.step, k: net.k_at(pm[1]) });
         // the road's own points between, so a bend is followed
         let (k0, k1) = (poly.road.partition_point(|&r| r <= a), poly.road.partition_point(|&r| r < b));
-        let mut prev = pa;
-        for p in pts.iter().take(k1).skip(k0) {
-            segs.push([prev, *p]);
-            prev = *p;
-        }
-        segs.push([prev, pb]);
+        line.clear();
+        line.push(pa);
+        line.extend(pts.iter().take(k1).skip(k0));
+        line.push(pb);
+        f(Step { x: pm[0], y: pm[1], dx, dy, m: pace.step, k: net.k_at(pm[1]), a }, &line);
     }
-    (steps, segs)
 }
 
 /// What a line's lanes come to beside the others' (`Lanes::split`), road metres.

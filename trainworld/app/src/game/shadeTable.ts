@@ -71,6 +71,8 @@ export interface ShadeColours {
   ghost: string;
   /** a tram's two wires on built track and lines (T-3006: white in both, Anita 2026-11-10) */
   tramWire: string;
+  /** T-3944: the thin dashed border round a bus line's constructed BRT lanes (Anita 11-21: "white", "super thin") */
+  brtLane: string;
 }
 
 export const SHADES: Record<Shade, ShadeColours> = {
@@ -86,6 +88,7 @@ export const SHADES: Record<Shade, ShadeColours> = {
     fullTrack: "#c0392b",
     ghost: "#000000",
     tramWire: "#ffffff",
+    brtLane: "#ffffff",
   },
   dark: {
     land: DARK_LAND, water: DARK_WATER, park: DARK_PARK, road: DARK_ROAD, label: DARK_LABEL, basemapMix: DARK_WARM,
@@ -99,6 +102,7 @@ export const SHADES: Record<Shade, ShadeColours> = {
     fullTrack: "#f0584f",
     ghost: "#e6e4e0",
     tramWire: "#e6e4e0",
+    brtLane: "#ffffff",
   },
 };
 

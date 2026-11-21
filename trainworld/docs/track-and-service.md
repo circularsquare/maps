@@ -2351,7 +2351,7 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
 - **Run** (T-2904, `streets.rs`, `bus::Pace`): a hop between two stops takes the car's time over its road
   at the bus's moving speed, plus 28 s for the stop (`BUS_STOP_S`: 20 standing, 8 speeding up and slowing
   down). The moving speed is 85% of the car's (`BUS_SHARE`, 90% until T-3856), never under 25 km/h (`BUS_LANE_KMH`, its own
-  lane; 30 until T-3907). A **BRT** line's (T-3907, `BusRoute::brt`, the bus panel's BRT box) is never under 35 km/h,
+  lane; 30 until T-3907). A **BRT** line's (T-3907, `BusRoute::brt`, the bus panel's BRT upgrade, once its lanes are built) is never under 35 km/h,
   the plain floor plus 10 (`BRT_LANE_BONUS_KMH`), along its whole route. The car's is demand's: over the hop, the first and last 2 km of road (at most half each) on local
   streets, the next 8 km each end (at most half the rest) on main roads, any middle on open highway at 110;
   local streets 44 km/h in open country falling to 16.5 where homes and jobs are dense, main roads 88
@@ -2388,8 +2388,10 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   bus moves under BRT's floor, the car's local streets under about 41 km/h; trunk roads there too; `bus::Pace::town_m`
   at the pace's 100 m steps, none where no street grid reaches); out of town a BRT route costs what a plain one does
   (Anita, 11-21). In town it adds US$5M a road-km (`BRT_COST_PER_KM`; real BRT US$5-20M a km, the low end, stations
-  priced apart), its own Construct row on a planned line, paid at once when switched on for a
-  constructed one; off gives nothing back and an undo or redo moves no money; and its upkeep there is street tram
+  priced apart), its own Construct row (kind 16). Switching it on puts the lanes in the blueprint, free,
+  on a constructed line too (T-3944, `BusRoute::brt_bp`: no speed, fare or lane room until built), and Construct (the
+  line's, beside the BRT upgrade, or the Build tab's) pays the rise in built value; off takes a blueprint's lanes
+  out, or takes built ones away, giving nothing back, and an undo or redo moves no money; and its upkeep there is street tram
   track's, US$210 a road-km a day in place of the US$30 (`UPKEEP_BRT_KM`), in the line's and the network's upkeep.
   **Shared lanes** (T-3378, `bus/lanes.rs`): BRT lines on one road share its lanes. A 100 m step of one line shares
   another's lane where its middle lies within 20 m of that line's road in town and the two run within 30 degrees,
@@ -2408,7 +2410,7 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   `line_limits` names a way (`LANE_RES`, kind 15) where it limits a line, so a headway line keeps the buses its
   share runs and the rest are not bought (`trim_auto`), and a count line's extra buses wait at its ends. No slowdown:
   a full lane only cuts buses. Plain bus lines on the road neither count nor are cut. An edit of any bus line settles
-  every BRT line (`sharing_closure`). The bus panel shows the busiest way under the BRT box ("Busiest lane", n/60
+  every BRT line (`sharing_closure`). The bus panel shows the busiest way under the BRT row ("Busiest lane", n/60
   buses per hour, red once full), the full lane's alert with the buses held out, and the headways it limits.
   Worked out again only when a BRT route, a loop's one way or the street grids change (`Network::brt_room`).
 - **BRT stations** (T-3378 stage 3, Anita 11-21; `StationData::road`, `TrackApi::add_brt_station`): a station on no
@@ -2418,7 +2420,7 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   game day), a tram stop's (`BRT_STATION_COST`, `UPKEEP_BRT_STATION`), its own Construct row (kind 17); park and ride
   is the one upgrade it takes, a passage joins it as any station, no building, no platform or track rows. Only a
   line on BRT stops there (`bus::reach` leaves BRT stations out for a plain line, which passes them; a line switched
-  to BRT is planned again and stops there). At a BRT station a BRT line stands no dwell, and its stop costs 18 s
+  to BRT stops there once its lanes are built). At a BRT station a BRT line stands no dwell, and its stop costs 18 s
   (`BRT_STATION_STOP_S`) in place of 28: the hop arriving there is 10 s shorter and the bus stands the 18 s inside it
   (`bus::profile_cut`). People reach it as any station (walk, car, 6 nearest); in demand's snapshot it carries
   `upgrades::BRT_STATION`, so a wait there counts 0.8 as in a waiting room (`wait_factor`), and a station of BRT
@@ -2451,7 +2453,9 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   level 11) lists the lines whose loop runs the other way from their mode's default (a train line one way, a
   bus or ferry line both ways); a save without it loads every bus and ferry loop one way. A trailing `LBR1` block
   (T-3907, save level 34) lists the bus lines on BRT; without it none is. A trailing `LBT1` block (T-3378, save
-  level 35) lists the BRT stations and their road headings; without it none is.
+  level 35) lists the BRT stations and their road headings; without it none is. A trailing `LBQ1` block (T-3944,
+  level 36) lists the constructed lines whose BRT lanes are in the blueprint; without it a constructed line on BRT
+  has its lanes built.
 
 ### 6.8 Ferry routes
 

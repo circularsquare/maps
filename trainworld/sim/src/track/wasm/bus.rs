@@ -41,10 +41,10 @@ impl TrackApi {
         if !bus::route_ok(&self.w.net, &pts, &kinds) {
             return self.refuse(Issue::LinePath { line: id });
         }
-        let (built, spacing, brt, hand, kept) = (r.built, r.spacing, r.brt, r.hand.take(), std::mem::take(&mut r.hand_kept));
+        let (built, spacing, brt, brt_bp, hand, kept) = (r.built, r.spacing, r.brt, r.brt_bp, r.hand.take(), std::mem::take(&mut r.hand_kept));
         *r = BusRoute::new(pts, kinds, built);
         r.spacing = spacing;
-        r.brt = brt;
+        (r.brt, r.brt_bp) = (brt, brt_bp);
         // T-2891: stops the new route still passes go onto it; the rest are gone with the old road
         let net = &self.w.net;
         let poly = bus::Poly::new(net, &r.points, &r.kinds);
@@ -71,18 +71,33 @@ impl TrackApi {
         }
         self.run(Op::Line { id, data: Some(d) })
     }
-    /// T-3907: put a bus line on BRT or take it off, one undoable edit. On a constructed line switching it on is
-    /// paid at once (the rise in built value, `BRT_COST_PER_KM` a road-km of lanes no other constructed BRT line
-    /// has, T-3378); off gives nothing back, nor does an undo, and costs nothing. On a planned line it is in the
-    /// blueprint, paid on Construct.
+    /// T-3907: put a bus line on BRT or take it off, one undoable edit. T-3944: on puts its lanes in the blueprint,
+    /// free (on a constructed line `BusRoute::brt_bp`), paid on Construct (`construct_ops`); off takes a blueprint's
+    /// out, or takes constructed lanes away, giving nothing back (nor does an undo) and costing nothing.
     pub fn set_bus_brt(&mut self, id: u32, on: bool) -> u32 {
         let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
         let Some(r) = d.bus.as_mut() else { return self.refuse(Issue::LinePath { line: id }) };
-        if r.brt == on {
+        if r.brt_any() == on {
             return 0;
         }
-        r.brt = on;
-        if on { self.run(Op::Line { id, data: Some(d) }) } else { self.run_free(Op::Line { id, data: Some(d) }, false) }
+        if on {
+            if r.built { r.brt_bp = true } else { r.brt = true }
+            self.run(Op::Line { id, data: Some(d) })
+        } else if r.brt_bp {
+            r.brt_bp = false;
+            self.run(Op::Line { id, data: Some(d) })
+        } else {
+            r.brt = false;
+            self.run_free(Op::Line { id, data: Some(d) }, false)
+        }
+    }
+    /// T-3944: whether a constructed bus line's BRT lanes are in the blueprint, not yet built.
+    pub fn bus_brt_bp(&self, line: u32) -> bool {
+        self.w.net.brt_bp(line)
+    }
+    /// T-3944: a bus line's BRT lanes for the map, runs of `[kind, points, x, y, ...]` (`Network::brt_marks`).
+    pub fn bus_lane_marks(&self, line: u32) -> Vec<f64> {
+        self.w.net.brt_marks(line)
     }
     /// T-3378: a bus line's lanes, road metres: [in town, shared with no other BRT line, its part of the lanes'
     /// upkeep] (`Network::brt_split`).

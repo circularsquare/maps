@@ -451,6 +451,12 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
 A bus line (T-1464) is drawn by its own pass under rail track: 0.45 of a rail line's width in its
 colour on a casing (white in light, dark in the dark theme), a planned one as rail blueprints are; a BRT line
 (T-3907) 1.4 times as wide along its whole route (`BRT_WIDTH`), except in the Traffic view, where width is riders.
+Its lanes (T-3944, the road in town, `Network::brt_marks`) are drawn round the line from zoom 11, outside the Traffic and
+Level views: built ones a 1 px dashed white border 1 px inside the line's colour each side (`brtLane`; outside the colour a white
+casing hid it in light), once the colour is 5 px wide; new ones in the blueprint a band of blueprint each side of the
+casing (a blueprint station's light blue, the blueprint's rail colour along its edge), and ones in the blueprint on a
+constructed BRT line's lanes, which cost nothing, only that edge, dashed (against the constructed lanes, as the
+line's Construct price).
 In the Traffic view a running bus or ferry line is drawn as wide as a rail line with as many riders,
 stretch by stretch between the stops demand counts (a ferry's ports), on the rail lines' scale
 (`demandLayers.ts` `busWidths`, T-2274).

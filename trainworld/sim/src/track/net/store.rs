@@ -568,10 +568,11 @@ impl Network {
             .sum();
         road + self.brt_lane_m(built) / 1000.0 * BRT_COST_PER_KM
     }
-    /// T-3378: the BRT lines, constructed ones first, each part by id; only the constructed ones with `built`.
+    /// T-3378: the BRT lines, those with constructed lanes first, each part by id; only those with `built`. T-3944:
+    /// a constructed route with its lanes in the blueprint is among the planned ones.
     pub fn brt_order(&self, built: bool) -> Vec<u32> {
-        let brt: Vec<u32> = (0..self.line_count() as u32).filter(|&l| self.line_ok(l) && self.is_brt(l)).collect();
-        let (mut done, rest): (Vec<u32>, Vec<u32>) = brt.into_iter().partition(|&l| self.route_built(l));
+        let brt: Vec<u32> = (0..self.line_count() as u32).filter(|&l| self.line_ok(l) && self.bus_route(l).is_some_and(|r| r.brt_any())).collect();
+        let (mut done, rest): (Vec<u32>, Vec<u32>) = brt.into_iter().partition(|&l| self.lanes_built(l));
         if !built {
             done.extend(rest);
         }
@@ -586,7 +587,7 @@ impl Network {
             l.hash(&mut h);
             self.line_one_way.get(l as usize).copied().unwrap_or(false).hash(&mut h);
             if let Some(r) = self.line_bus.get(l as usize).and_then(|b| b.as_ref()) {
-                r.built.hash(&mut h);
+                (r.built, r.brt, r.brt_bp).hash(&mut h);
                 r.points.len().hash(&mut h);
                 r.points.iter().flatten().for_each(|v| v.to_bits().hash(&mut h));
                 r.kinds.hash(&mut h);
@@ -605,7 +606,7 @@ impl Network {
                 return lanes.clone();
             }
         }
-        let built = order.iter().filter(|&&l| self.route_built(l)).count() as u32;
+        let built = order.iter().filter(|&&l| self.lanes_built(l)).count() as u32;
         let lanes = std::sync::Arc::new((super::bus::lanes::Lanes::build(self, &order), built));
         *self.brt_lanes.borrow_mut() = Some((key, lanes.clone()));
         lanes
@@ -676,6 +677,26 @@ impl Network {
     /// Whether a bus line runs on BRT (T-3907).
     pub fn is_brt(&self, l: u32) -> bool {
         self.line_bus.get(l as usize).and_then(|b| b.as_ref()).is_some_and(|r| r.brt)
+    }
+    /// T-3944: whether a constructed bus line's BRT lanes are in the blueprint.
+    pub fn brt_bp(&self, l: u32) -> bool {
+        self.bus_route(l).is_some_and(|r| r.brt_bp)
+    }
+    /// T-3944: whether a bus line's BRT lanes are constructed.
+    pub fn lanes_built(&self, l: u32) -> bool {
+        self.bus_route(l).is_some_and(|r| r.lanes_built())
+    }
+    fn bus_route(&self, l: u32) -> Option<&super::bus::BusRoute> {
+        self.line_bus.get(l as usize).and_then(|b| b.as_ref())
+    }
+    /// T-3944: a BRT line's lanes on the map: runs of its road in town, each `[kind, points, x, y, ...]` (frame), kind 0
+    /// new lanes in the blueprint, 1 in the blueprint on lanes a constructed BRT line has (free), 2 constructed. The
+    /// blueprint's kinds are against the constructed lanes, as its Construct price is. Empty off BRT.
+    pub fn brt_marks(&self, l: u32) -> Vec<f64> {
+        let Some(r) = self.bus_route(l).filter(|r| self.line_ok(l) && r.brt_any()) else { return vec![] };
+        let all = self.brt_lanes();
+        let built = r.lanes_built();
+        super::bus::lanes::marks(self, &r.points, &r.kinds, |s| if built { 2 } else if all.0.sharers(s, all.0.position(l)).iter().any(|&j| j < all.1) { 1 } else { 0 })
     }
 
     pub fn edge_pieces(&self, e: u32) -> &[Piece] {

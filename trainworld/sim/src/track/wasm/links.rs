@@ -186,7 +186,8 @@ impl TrackApi {
         }
         if net.is_bus(line) {
             let r = net.line_bus[line as usize].as_ref().unwrap();
-            let stops = crate::track::bus::plan_route(net, line, r, false).stops.iter().filter_map(|s| s.station).collect();
+            // T-3944: a constructed route's Construct is its BRT lanes alone, not stations built beside it since
+            let stops = if r.built { vec![] } else { crate::track::bus::plan_route(net, line, r, false).stops.iter().filter_map(|s| s.station).collect() };
             return Some((vec![], stops, vec![line]));
         }
         // a ferry line: its route (free) and its ports (T-2193)
@@ -232,8 +233,10 @@ impl TrackApi {
         }
         for &l in buses {
             if let Some(mut d) = net.line_data(l) {
-                if let Some(r) = d.bus.as_mut().filter(|r| !r.built) {
+                // T-3944: a constructed route's BRT lanes in the blueprint are built here too
+                if let Some(r) = d.bus.as_mut().filter(|r| !r.built || r.brt_bp) {
                     r.built = true;
+                    (r.brt, r.brt_bp) = (r.brt_any(), false);
                     ops.push(Op::Line { id: l, data: Some(d) });
                 } else if let Some(r) = d.ferry.as_mut().filter(|r| !r.built) {
                     r.built = true;

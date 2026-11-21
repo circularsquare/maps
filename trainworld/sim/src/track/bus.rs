@@ -88,13 +88,24 @@ pub struct BusRoute {
     /// T-3907: bus lanes along the whole route (BRT): its buses never run under `streets::lane_kmh(true)`, and
     /// the route costs `BRT_COST_PER_KM` more a road-km and its upkeep is `UPKEEP_BRT_KM` a road-km.
     pub brt: bool,
+    /// T-3944: on a constructed route only, its BRT lanes are in the blueprint (`brt` stays false until
+    /// Construct builds them): priced as blueprint (kind 16), drawn as blueprint, no speed or charge yet.
+    pub brt_bp: bool,
 }
 
 impl BusRoute {
     /// A route with `kinds` cut or padded (with plain corners) to its points.
     pub fn new(points: Vec<[f64; 2]>, mut kinds: Vec<u8>, built: bool) -> BusRoute {
         kinds.resize(points.len(), K_CORNER);
-        BusRoute { points, kinds, built, spacing: 0, hand: None, hand_kept: vec![], brt: false }
+        BusRoute { points, kinds, built, spacing: 0, hand: None, hand_kept: vec![], brt: false, brt_bp: false }
+    }
+    /// T-3944: BRT asked for, built or in the blueprint: the lanes `Network::brt_order(false)` counts.
+    pub fn brt_any(&self) -> bool {
+        self.brt || self.brt_bp
+    }
+    /// T-3944: its BRT lanes are constructed: a constructed route on BRT.
+    pub fn lanes_built(&self) -> bool {
+        self.brt && self.built
     }
     pub fn rule(&self) -> StopRule<'_> {
         match &self.hand {

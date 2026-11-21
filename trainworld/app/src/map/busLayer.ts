@@ -97,6 +97,16 @@ const BP_FILL = "vec3(0.663, 0.804, 0.953)";
  * and as a share of the route's width */
 const ARROW_TURN_M = 12;
 const ARROW_BARB_PX = 4, ARROW_BARB_SHARE = 1.5;
+/** T-3944: a BRT line's lanes, out of the picking and drawn in pass 5: constructed ones a thin dashed white border
+ * just inside the line's colour each side (`brtLane`; outside it, a white casing hid it in the light theme), new ones in the blueprint a band of blueprint round the line's casing (a blueprint station's fill, the
+ * blueprint's rail along its edge), and ones in the blueprint on a constructed line's lanes (`FLAG_LANE_FREE`, nothing
+ * to pay) only that edge, dashed */
+const FLAG_LANE = 64, FLAG_LANE_FREE = 128;
+/** the constructed lanes' border: its width, how far inside the colour's edge, its dash and gap, CSS px; drawn once
+ * the line's colour is `LANE_MIN_PX` wide */
+const LANE_PX = 1, LANE_INSET_PX = 1, LANE_DASH_PX = 4, LANE_SPACE_PX = 3, LANE_MIN_PX = 5;
+/** the blueprint's band each side: this share of the line's width, at least `LANE_BP_PX` CSS px */
+const LANE_BP_SHARE = 0.8, LANE_BP_PX = 3;
 /** Bus arrows keep at least this gap, CSS px (Anita, 2026-11-18: seen from zoom 12, a chevron on every side of a small loop). */
 const BUS_ARROW_GAP_PX = 50;
 
@@ -117,6 +127,8 @@ interface BusSource {
   ferry: boolean;
   /** T-3907: on BRT, drawn `BRT_WIDTH` wider */
   brt: boolean;
+  /** T-3944: its BRT lanes, runs of [kind, points, lng, lat, ...] (`ClockBus.lanes`) */
+  lanes: number[];
   spurs: number[];
   /** the stops riders are counted between, in run 0's order (lng, lat): a ferry's berths, a bus's demand stops */
   marks: number[];
@@ -168,6 +180,8 @@ interface Built {
   arrows: Float32Array;
   /** T-3890: per connector drawn, its two stops' ids */
   linkStops: number[];
+  /** T-3944: the first lane segment; they run to `count` */
+  laneFirst: number;
 }
 
 /** Per arrow: x, y, its direction (a unit vector), its colour packed as `info`'s, its line, its
@@ -210,7 +224,14 @@ uniform vec2 u_link;         // T-3890: a connector's white width and rim, devic
 uniform vec3 u_link_ink;
 uniform int u_lit_links[${LIT_LINKS}];
 uniform int u_lit_links_n;
+uniform int u_lane_kind;     // T-3944: pass 5 draws the blueprint's new lanes (0), the constructed ones (1) or the blueprint's free ones (2)
+uniform vec3 u_lane_rgb;     // the constructed lanes' border
+uniform float u_lane_edge;   // the new lanes' band's edge in the rail's colour, device px
+uniform float u_lane_period; // their dash and gap, device px
+uniform float u_lane_in;     // with no stencil, the band's inner edge as a width beyond the line's own; under -1e5 with one
 out vec3 v_color;
+flat out float v_in;         // T-3944: half that width, device px; -1 for none
+flat out float v_edge;       // the band's edge, device px, where it has one (the new lanes'), else 0
 out float v_alpha;
 out vec4 v_cap;
 out float v_dash;            // T-2194: device px along a ferry's route, -1 elsewhere
@@ -225,15 +246,17 @@ void main() {
   for (int k = 0; k < ${LIT_MAX}; k++) if (k < u_lit_n && u_lit[k] == id) lit = true;
   bool xfer = (flags & ${FLAG_TRANSFER}) != 0;
   bool link = (flags & ${FLAG_LINK}) != 0;
+  bool lane = (flags & ${FLAG_LANE}) != 0;
   if ((u_only >= 0 && id != u_only) || (u_only == -2 && (!sel || xfer)) || (u_pass == 2 && (flags & ${FLAG_FERRY | FLAG_SPUR | FLAG_TRANSFER | FLAG_MUTE | FLAG_LINK}) != 0)
-      || (xfer && (u_pass != 1 || u_xfer < 0.5)) || (link != (u_pass >= 3))) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+      || (xfer && (u_pass != 1 || u_xfer < 0.5)) || (link != (u_pass == 3 || u_pass == 4)) || (lane != (u_pass == 5)) || (lane && u_lane_kind != (!bp ? 1 : (flags & ${FLAG_LANE_FREE}) != 0 ? 2 : 0))) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   bool hotLink = false;
   if (link) for (int k = 0; k < ${LIT_LINKS}; k++) if (k < u_lit_links_n && u_lit_links[k] == int(a_info.z + 0.5)) hotLink = true;
   bool paint = u_pass == 1 && !bp && !xfer && !mute;
   float p = paint && a_col >= 0.0 ? a_col : a_info.z;
   vec3 own = vec3(floor(p / 65536.0), mod(floor(p / 256.0), 256.0), mod(p, 256.0)) / 255.0;
   vec3 col = mute ? mix(own, u_xfer_rgb, ${MUTE_GREY}) : paint && a_col < -1.5 ? u_track_rgb : own;
-  float w = link ? u_link.x + (u_pass == 3 ? 2.0 * u_link.y : 0.0) : xfer ? u_xfer_w : u_pass < 2 ? u_width * a_w + (u_pass == 0 ? u_add : 0.0) + (sel || lit ? u_extra : 0.0) : u_width;
+  float w = link ? u_link.x + (u_pass == 3 ? 2.0 * u_link.y : 0.0) : xfer ? u_xfer_w : u_pass < 2 ? u_width * a_w + (u_pass == 0 ? u_add : 0.0) + (sel || lit ? u_extra : 0.0)
+    : lane ? u_width * a_w + u_add + (sel || lit ? u_extra : 0.0) : u_width;
   if (u_pass == 0 && bp) w += 2.0 * u_rail;
   float faint = 1.0;
   if (u_pass < 2) {
@@ -258,10 +281,13 @@ void main() {
   gl_Position = c;
   float ext = (along * 2.0 - 1.0) * w * 0.5, ua = along * len + ext;
   v_cap = vec4(ua, len - ua, side * w * 0.5, w * 0.5);
-  v_period = xfer ? max(${TRANSFER_DASH_WIDTHS.toFixed(1)} * w, 5.0) : max(${DASH_WIDTHS.toFixed(1)} * w, 6.0);
-  v_dash = u_pass == 1 && (flags & ${FLAG_FERRY | FLAG_TRANSFER}) != 0 ? a_info.w * u_px_per_unit + ua : -1.0;
+  v_in = lane && u_lane_in > -1e5 ? 0.5 * (u_width * a_w + u_lane_in + (sel || lit ? u_extra : 0.0)) : -1.0;
+  v_period = lane ? u_lane_period : xfer ? max(${TRANSFER_DASH_WIDTHS.toFixed(1)} * w, 5.0) : max(${DASH_WIDTHS.toFixed(1)} * w, 6.0);
+  v_dash = (u_pass == 1 && (flags & ${FLAG_FERRY | FLAG_TRANSFER}) != 0) || (lane && (!bp || (flags & ${FLAG_LANE_FREE}) != 0)) ? a_info.w * u_px_per_unit + ua : -1.0;
   v_alpha = link ? faint : faint * (u_pass == 2 ? u_alpha : (sel ? 1.0 : mute ? ${MUTE_ALPHA} : u_dim)) * (xfer ? u_xfer_alpha : 1.0);
-  if (link) v_color = u_pass == 3 ? mix(bp ? u_rail_rgb : u_link_ink, vec3(1.0), hotLink ? ${HOT_RIM_MIX} : 0.0) : bp ? ${BP_FILL} : vec3(1.0);
+  v_edge = lane && u_lane_kind == 0 ? u_lane_edge : 0.0;
+  if (lane) v_color = u_lane_kind == 0 ? ${BP_FILL} : u_lane_kind == 2 ? u_rail_rgb : u_lane_rgb;
+  else if (link) v_color = u_pass == 3 ? mix(bp ? u_rail_rgb : u_link_ink, vec3(1.0), hotLink ? ${HOT_RIM_MIX} : 0.0) : bp ? ${BP_FILL} : vec3(1.0);
   else if (u_pass == 0) v_color = bp ? u_rail_rgb : u_casing_rgb;
   else if (xfer) v_color = u_xfer_rgb;
   else {
@@ -280,9 +306,13 @@ in float v_alpha;
 in vec4 v_cap;
 in float v_dash;
 flat in float v_period;
+flat in float v_in;
+flat in float v_edge;
+uniform vec3 u_rail_rgb;
 out vec4 o;
 void main() {
   float past = -min(v_cap.x, v_cap.y);
+  if (v_in > 0.0 && (past > 0.0 ? length(vec2(past, v_cap.z)) : abs(v_cap.z)) < v_in) discard;
   float a = past > 0.0 ? clamp(0.5 - (length(vec2(past, v_cap.z)) - v_cap.w), 0.0, 1.0) * v_alpha : v_alpha;
   if (v_dash >= 0.0) {
     // a ferry's dash, its ends softened over a pixel
@@ -290,7 +320,10 @@ void main() {
     a *= clamp(min(f, on - f) + 0.5, 0.0, 1.0);
   }
   if (a <= 0.0) discard;   // the stencil passes must not mark a cap's empty corners
-  o = vec4(v_color * a, a);
+  vec3 col = v_color;
+  // T-3944: the new lanes' band takes the rail's colour along its outer edge
+  if (v_edge > 0.0) col = mix(col, u_rail_rgb, clamp((past > 0.0 ? length(vec2(past, v_cap.z)) : abs(v_cap.z)) - (v_cap.w - v_edge) + 0.5, 0.0, 1.0));
+  o = vec4(col * a, a);
 }`;
 
 const STOP_VS = `#version 300 es
@@ -498,7 +531,7 @@ export class BusLayer {
     this.gl = gl;
     this.segProg = compile(gl, SEG_VS, SEG_FS);
     this.stopProg = compile(gl, STOP_VS, STOP_FS);
-    this.su = uniforms(gl, this.segProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_add", "u_extra", "u_pass", "u_sel", "u_hot", "u_lit", "u_lit_n", "u_only", "u_dim", "u_alpha", "u_casing_rgb", "u_rail_rgb", "u_rail", "u_px_per_unit", "u_track_rgb", "u_xfer", "u_xfer_w", "u_xfer_rgb", "u_xfer_alpha", "u_link", "u_link_ink", "u_lit_links", "u_lit_links_n"]);
+    this.su = uniforms(gl, this.segProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_add", "u_extra", "u_pass", "u_sel", "u_hot", "u_lit", "u_lit_n", "u_only", "u_dim", "u_alpha", "u_casing_rgb", "u_rail_rgb", "u_rail", "u_px_per_unit", "u_track_rgb", "u_xfer", "u_xfer_w", "u_xfer_rgb", "u_xfer_alpha", "u_link", "u_link_ink", "u_lit_links", "u_lit_links_n", "u_lane_kind", "u_lane_rgb", "u_lane_period", "u_lane_in", "u_lane_edge"]);
     this.pu = uniforms(gl, this.stopProg, [...PROJECT_UNIFORMS, "u_viewport", "u_r", "u_rail_rgb", "u_rings", "u_fill", "u_rim", "u_keep", "u_lit_stops", "u_lit_stops_n", "u_base"]);
     this.arrowProg = compile(gl, ARROW_VS, ARROW_FS);
     this.au = uniforms(gl, this.arrowProg, [...PROJECT_UNIFORMS, "u_viewport", "u_size", "u_every", "u_m_px", "u_clear", "u_sel", "u_hot", "u_dim", "u_casing_rgb"]);
@@ -541,7 +574,7 @@ export class BusLayer {
         const marks = b.ferry ? b.ferry.ports.flatMap((p) => p.berth) : b.stops.flatMap((s) => [s.lng, s.lat]);
         const st = w.lineStats[l.id], n = marks.length / 2;
         const runs = st.status === "running" && Math.max(l.tph.high, l.tph.medium, l.tph.low) > 0 && st.stopS.length === 2 && st.stopS.every((s) => s.length === n);
-        next.push({ id: l.num, colour: l.colour, built: b.built, route: b.routeLL, street: b.streetLL, stops, stopIds, transfers, ferry: !!b.ferry, brt: !!b.brt, spurs, marks, stopS: runs ? st.stopS : null, oneWay: !!st.loop && st.oneWay, ways: st.oneWayAt ?? {} });
+        next.push({ id: l.num, colour: l.colour, built: b.built, route: b.routeLL, street: b.streetLL, stops, stopIds, transfers, ferry: !!b.ferry, brt: !!b.brt, lanes: b.lanes ?? [], spurs, marks, stopS: runs ? st.stopS : null, oneWay: !!st.loop && st.oneWay, ways: st.oneWayAt ?? {} });
       }
       // T-2992: a plain stop within demand's merge of another line's stop at a train station
       const links = busStopLinks(w.save.lines.flatMap((l) => { const b = w.lineStats[l.id]?.bus; return b && !b.ferry ? [{ line: l.num, stops: b.stops }] : []; }));
@@ -558,7 +591,7 @@ export class BusLayer {
     const sameLinks = this.linkSrc.length === nextLinks.length && this.linkSrc.every((x, i) => sameNums(x.at, nextLinks[i].at) && sameNums(x.stops, nextLinks[i].stops) && x.bp === nextLinks[i].bp);
     if (sameLinks && was.length === next.length && was.every((x, i) => {
       const y = next[i];
-      return x.id === y.id && x.colour === y.colour && x.built === y.built && x.brt === y.brt && x.oneWay === y.oneWay && sameNums(x.route, y.route) && sameNums(x.street, y.street) && sameNums(x.stops, y.stops) && sameNums(x.transfers, y.transfers) && sameNums(x.spurs, y.spurs) && sameNums(x.marks, y.marks) && sameS(x.stopS, y.stopS);
+      return x.id === y.id && x.colour === y.colour && x.built === y.built && x.brt === y.brt && x.oneWay === y.oneWay && sameNums(x.lanes, y.lanes) && sameNums(x.route, y.route) && sameNums(x.street, y.street) && sameNums(x.stops, y.stops) && sameNums(x.transfers, y.transfers) && sameNums(x.spurs, y.spurs) && sameNums(x.marks, y.marks) && sameS(x.stopS, y.stopS);
     })) return false;
     this.lines = next;
     this.linkSrc = nextLinks;
@@ -586,6 +619,7 @@ export class BusLayer {
     for (const l of this.lines) {
       nSeg += l.route.length / 2 - 1 + l.spurs.length / 4 + l.transfers.length / 4;
       nStop += l.street.length / 2 + l.stops.length / 3;
+      for (let k = 0; k + 1 < l.lanes.length; k += 2 + 2 * l.lanes[k + 1]) nSeg += Math.max(0, l.lanes[k + 1] - 1);
     }
     const seg = new Float32Array(nSeg * 4), info = new Float32Array(nSeg * 4);
     const rings: number[] = [], ends: number[] = [], ringLine: number[] = [], endLine: number[] = [];
@@ -659,6 +693,27 @@ export class BusLayer {
       linkStops.push(k.stops[0], k.stops[1]);
       at++;
     }
+    // T-3944: the BRT lanes, last; each run's dashes carried on across its points
+    const laneFirst = at;
+    for (const l of this.lines) {
+      if (l.id === this.muted) continue;
+      const v = l.lanes, col = pack(l.colour);
+      for (let k = 0; k + 1 < v.length; k += 2 + 2 * v[k + 1]) {
+        const kind = v[k], n = v[k + 1], flags = FLAG_LANE | (kind < 2 ? FLAG_BLUEPRINT : 0) | (kind === 1 ? FLAG_LANE_FREE : 0);
+        let px = 0, py = 0, run = 0;
+        for (let i = 0; i < n; i++) {
+          const [x, y] = toLocal(v[k + 2 + 2 * i], v[k + 3 + 2 * i], a);
+          if (i > 0) {
+            seg.set([px, py, x, y], at * 4);
+            info.set([l.id, flags, col, run], at * 4);
+            run += Math.hypot(x - px, y - py);
+            at++;
+          }
+          px = x;
+          py = y;
+        }
+      }
+    }
     // T-2991: a one-way loop's arrows, one every ONE_WAY_STEP_M * ARROW_SPREAD along its route
     const arrows: number[] = [];
     for (const l of this.lines) {
@@ -687,7 +742,7 @@ export class BusLayer {
       stopId: Int32Array.from([...idRings, ...idEnds, ...idSRings, ...idSEnds]),
       stopWay: Float32Array.from([...wRings, ...wEnds, ...wSRings, ...wSEnds]),
       stopEnd: Uint8Array.from([...ringLine.map(() => 0), ...endLine.map(() => 1), ...sRingLine.map(() => 0), ...sEndLine.map(() => 1)]),
-      k, cum, range, stopAlong: new Map(), arrows: new Float32Array(arrows), linkStops,
+      k, cum, range, stopAlong: new Map(), arrows: new Float32Array(arrows), linkStops, laneFirst,
     };
     return this.built;
   }
@@ -836,6 +891,8 @@ export class BusLayer {
     body(-1);
     // the selected line again over the rest, as the rail lines' (renderer.ts)
     if (this.byId.has(s.sel)) body(-2);
+    // T-3944: the BRT lanes round their lines, in the line view and the Speed and Profit ones, from where the ends show
+    if (b.laneFirst < b.count && !this.traffic && s.paint !== "level" && zoom >= BUS_END_ZOOM) this.drawLanes(b, s, bus, dpr);
     const ringR = Math.max(MIN_RING_PX * dpr, bus * RING_SHARE), endR = Math.max(MIN_RING_PX * 1.25 * dpr, bus * END_SHARE);
     const rim = Math.max(1, 0.45 * bus);
     // T-3890: the connectors over the routes and under the stops, from where the stop rings show
@@ -889,6 +946,48 @@ export class BusLayer {
   }
 
   private style: BusStyle | null = null;
+
+  /** T-3944: the lanes as a band round each line's casing, drawn through the stencil as the corridor's outline is,
+   * so a band is whole across the joints of its segments: the stencil gets 1 inside the band's outer edge and 0
+   * inside its inner one, then the colour pass draws where it is 1, once. Each kind with its own band; without a
+   * stencil a segment's band is cut out of its own middle only. */
+  private drawLanes(b: Built, s: BusStyle, bus: number, dpr: number) {
+    const gl = this.gl!, u = this.su;
+    const stencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
+    gl.uniform1i(u.u_pass, 5);
+    gl.uniform1i(u.u_only, -1);
+    gl.uniform1f(u.u_width, bus);
+    gl.uniform3fv(u.u_lane_rgb, rgbf(s.shades.brtLane));
+    gl.uniform1f(u.u_lane_period, (LANE_DASH_PX + LANE_SPACE_PX) * dpr);
+    const casing = s.casing * CASING_SHARE, rail = Math.max(dpr, s.railShare * bus), t = LANE_PX * dpr;
+    const band = Math.max(LANE_BP_PX * dpr, LANE_BP_SHARE * bus);
+    gl.uniform1f(u.u_lane_edge, rail);
+    // each band's inner and outer edges as widths beyond the line's own (negative: inside its colour)
+    const inset = LANE_INSET_PX * dpr, bands: [number, number, number][] = [[0, casing, casing + 2 * band], [2, casing + 2 * (band - rail), casing + 2 * band]];
+    if (bus * BRT_WIDTH >= LANE_MIN_PX * dpr) bands.unshift([1, -2 * (inset + t), -2 * inset]);
+    for (const [kind, inner, outer] of bands) {
+      gl.uniform1i(u.u_lane_kind, kind);
+      gl.uniform1f(u.u_lane_in, stencil ? -1e6 : inner);
+      if (stencil) {
+        gl.enable(gl.STENCIL_TEST);
+        gl.clearStencil(0);
+        gl.clear(gl.STENCIL_BUFFER_BIT);
+        gl.colorMask(false, false, false, false);
+        gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
+        for (const [ref, add] of [[1, outer], [0, inner]] as const) {
+          gl.stencilFunc(gl.ALWAYS, ref, 0xff);
+          gl.uniform1f(u.u_add, add);
+          gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, b.count);
+        }
+        gl.colorMask(true, true, true, true);
+        gl.stencilFunc(gl.EQUAL, 1, 0xff);
+        gl.stencilOp(gl.KEEP, gl.KEEP, gl.ZERO);
+      }
+      gl.uniform1f(u.u_add, outer);
+      gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, b.count);
+      if (stencil) gl.disable(gl.STENCIL_TEST);
+    }
+  }
 
   /** T-2948: the stops at train stations, over the stations the renderer has drawn since `draw`, so
    * the station's mark and the line's stop both read. Nothing when `draw` drew no stops. */
@@ -993,6 +1092,7 @@ export class BusLayer {
   /** Per route segment the Traffic view's width share (1 outside it, `BRT_WIDTH` on a BRT line). */
   private segWidths(b: Built): Float32Array {
     const out = new Float32Array(b.count).fill(1);
+    for (let i = b.laneFirst; i < b.count; i++) if (this.byId.get(b.info[i * 4])?.brt) out[i] = BRT_WIDTH;
     const t = this.traffic;
     if (!t) {
       for (const l of this.lines) {
@@ -1167,7 +1267,9 @@ export function busLineTip(w: WorldView, line: number, rows: TipLine[] = []): Ti
   const b = l ? w.lineStats[l.id]?.bus : undefined, built = b ? b.built : true;
   const name = nameRow(w, line);
   if (typeof name !== "string") name.append(vehicleIcon(b?.ferry ? "ferry" : "bus"));
-  return built ? [name, ...rows] : [name, t("busLayer.notRunning")];
+  // T-3944: what the blue band round it is
+  const bp = b && !b.ferry && b.lanes.length > 0 && b.lanes[0] < 2 ? [t("busLayer.brtBlueprint")] : [];
+  return built ? [name, ...bp, ...rows] : [name, t("busLayer.notRunning"), ...bp];
 }
 
 /** The tag for one of its stops: the line, then the other bus lines stopping at its place (T-3890). */
