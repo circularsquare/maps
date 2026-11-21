@@ -110,6 +110,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-3780 [P2] {L:timetables} {after:T-3346 stage 2 landing} Station and complex timetables
   - Context: Your pad, 2026-11-19: players ask for per-station timetables, "could be cool and not so hard". Per station and per complex, every line in its line colour; for a complex, pick the direction most platforms roughly align with and show trains as that way or the opposite ("eastbound"), "people should mostly use the station timetables anyways"; line numbers show the bullet and line name on hover; opened by a timetable icon button on the station or complex view, like the line's schedule button. Waits for the timetables port so it reads the new departure times.
   - Goal: A timetable icon on the station and complex views opens departures by line in line colours, a complex's split into two directions, with bullet and line name on hover.
+  - Other: Also a totals row (your scratch pad, 11-21): today's scheduled departures by mode, "[train icon] 45 | [bus icon] 140", hover "[station] has [n] scheduled [mode] today"; "then people can brag about how their station serves like 5000 high speed trains a day".
 - T-3754 [P3] {L:region-redraws} La Gonave zone parked
   - Context: From T-3620: ase (La Gonave, Haiti) is parked at top_zone_jobs_share 0.43 (one zone holds too many of its jobs).
   - Goal: Merged into a neighbouring Haitian zone and shipped, or left out with the reason in DECISIONS.md.
@@ -167,7 +168,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-3936 [P3] {L:route-choice} Intercity effective time for the route shown
   - Context: From T-3632, 11-21: the intercity panel's "Effective time" is the average over the whole place, not the route shown (Nagoya - Osaka: the route's own 136 min, the panel 237, the car 174), so a click beside a station reads as the train losing.
   - Goal: The panel shows the shown route's own effective time beside the car's.
-- T-3246 [P2] {L:wealth-split} Income groups for local trips
+- T-3246 [P2] {L:wealth-split} Income groups for local trips (taking, 2026-11-21, agent incomes)
   - Context: Your TODO 2026-11-15: "maybe actually we do add the wealth split ... we could also consider doing like 20/70/10 or something like that ... perhaps we can even display this to the player". Three groups cost about 2.4x the local solve when measured (T-1431).
   - Goal: A cheaper way to give local trips income groups, after an estimate.
   - Other: Options: one search with a money-weight spread, two groups, or groups only past some trip length. Folds in T-1519. notes/T-3239.md "Cost of groups in route choice"
@@ -212,6 +213,15 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-2867.md
 - T-2869 [P3] {L:region-redraws} Zone edges leave gaps at sea
   - Context: Port islands off Jakarta sit in no zone, so the border shows a gap. You said it is not a real issue but would be nice to fill.
+- T-3997 [P1] {L:small-fixes} Search while running crashes the tab (taking, 2026-11-21, agent searchcrash)
+  - Context: A player on Discord (ttcm), via your scratch pad 11-21: "also apparently if you use search while the game is running it crashes the tab / and if you use it in 100x then all the trains stop running and the sttaions overcrowd". Likely reaches anyone who searches with the clock running.
+  - Goal: Search with the clock running, at any speed up to 100x, neither crashes the tab nor stops the trains.
+- T-3999 [P2] {L:buses} Station tool picks train, bus or port (taking, 2026-11-21, agent stationkinds)
+  - Context: You, 11-21, after playing BRT stations: "brt stations are a bit weird (i feel liek they should snap a little more aggressively to nearby already placed bus routes) ... we should not like automatically assuem we want to palce a brt station when we are just hovering over empty space with the station tool. this would confuse people and be annoying for people who dont play with buses ... in the station tool lets have an option for placing train/tram station or bus station, can select either one. while we're here maybe also allow placing ports without a ferry route."
+  - Goal: The Station tool has a train/tram, bus and port choice; a bus station is placed only with bus chosen and snaps to a nearby bus route; a port can be placed with no ferry route. Train stations can also go in empty space again (players asked): first click the start, second the direction, at the set station length; near track it still snaps.
+- T-4000 [P2] {L:single-track} Removing single track refused as one-way (taking, 2026-11-21, agent oneway)
+  - Context: A player's report 11-21 (1795275871-c41f9b5f, Japanese, v0.4.5): removing single track sometimes says "you can't turn back from this station on one-way track" and won't remove it. Few players, but anyone with single track could meet it.
+  - Goal: Removing track is never refused by a one-way turn-back rule; the lines that used it follow the usual rule for a removed track.
 - T-2872 [P3] {L:small-fixes} {after:Anita asks} Timeline of what was built
   - Context: A player asked for playback of what was built. The build days are recorded already (T-2871), with no UI.
   - Goal: Build it only when you ask.
@@ -347,12 +357,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: 2026-11-19: Steamworks account made, fee paid, tax form in (Valve's checks take up to about 45 days); you're taking screenshots into artifacts/trainworld/steam/screenshots; then agents make the store images from the landing page's "trains world!" logo. You, 2026-11-18: a free downloadable version on Steam, no paid DLC, a Ko-fi link if allowed; disclose AI code and translations regardless; "idrc about art style ... a low effort way to get another thing that might have a chance to get algo boosted". Checklist done (research/steam-page.md). Valve bans links in the description since 2024-09; the store page's website link field is allowed. No standalone build yet.
   - Goal: A live Coming soon page, then the downloadable build at least 2 weeks later.
   - Other: research/steam-page.md
-- T-3990 [P2] {L:community} {after:T-3851} Discord and leaderboards links in Community
-  - Context: You, 11-21: "we can also put the discord link in community, and the leaderboards link in community." The Discord invite is the one the feedback panel uses (discord.gg/RemhwVcZFw); the leaderboards are a panel of their own today.
-  - Goal: The Community panel has a Discord link and a link that opens the leaderboards.
-- T-3991 [P2] {L:community} {after:T-3851} Report as a flag icon with a confirm
-  - Context: You, 11-21: "opening someones community save and seeing the word "report" is a bit of a killjoy. mybe lets hide it and just have a flag icon button. also instead of it expanding right away when you click on it and showing the three reasons, i think lets have it show a confirmation popup like Report this save? [reason] cancel submit".
-  - Goal: The Report button is a flag icon only; a click opens a popup "Report this save?" with the reason picker and Cancel / Submit.
 - T-3988 [P3] {L:steam} {after:the standalone build} Downloadable build on itch.io, $5 suggested
   - Context: You, 11-21: the standalone downloadable game with "a suggested donation of 5 dollars (but you can set it to 0)"; itch as the store, its "$0 or donate" pricing with $5 suggested, and the anita.garden page linking to it. Steam stays free (no optional donations there); keep any in-game donation link out of the Steam build unless Valve's rules allow it.
   - Goal: An itch.io page with the downloadable build at $0 or donate ($5 suggested), linked from anita.garden.
@@ -912,10 +916,9 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your TODO.md, 11-20, from player suggestions: "station logo?? paint it?" Design for you first.
 
 ## Track and trains
-- T-3691 [P3] {L:track-kinds} {waits:Anita} Track levels -5 to +5
-  - Need from Anita: Where it fits (advanced mode only, which task or update); you said you'd give input later.
-  - Context: Your old TODO: "-5 to +5 for track level, in advanced mode only? maybe -4 maroon, -5 dark magenta, and lighten +3 to like periwinkle, +4 light purple, +5 light violet".
-  - Goal: Levels -5 to +5 with those colours, where you place it.
+- T-3691 [P3] {L:track-rework} {after:T-3948} Track levels -5 to +5
+  - Context: Your old TODO: "-5 to +5 for track level, in advanced mode only? maybe -4 maroon, -5 dark magenta, and lighten +3 to like periwinkle, +4 light purple, +5 light violet". You, 11-21: the extra levels "should come with the track rework, toggleable in settings whether you show them".
+  - Goal: Levels -5 to +5 with those colours, built with the track rework, and a Settings toggle for whether the extra levels show.
 - T-3692 [P3] {L:track-drawing} Bezier track as a setting
   - Context: Your old TODO: "bezier track placement, toggleable". You, 2026-11-18: "bezier track should be toggleable in settings yes".
   - Goal: A design to you first (how a curve is drawn and edited, what speed rules apply), then a settings toggle for bezier placement.
@@ -928,11 +931,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Several parts of a line's panel still show only its own pair: timetable, held trains, delays, riders, boardings.
   - Goal: Each part folds in the twin line, as `foldTwins` does.
   - Other: About 2-3 h. notes/T-3333.md "As built".
-- T-3365 [P2] {L:track-kinds} {waits:Anita} What single, double and quad track mean
-  - Need from Anita: Discuss your handwritten thoughts and the five design calls.
-  - Context: Design is done and waits on your five calls. 2026-11-16 you want to transcribe handwritten thoughts and discuss first.
-  - Goal: The player has a clear model of single, double and quad track, and of crossovers.
-  - Other: notes/T-3365.md.
 - T-3373 [P2] {L:memory} Split zones and the market between workers, stage B (taking, 2026-11-21, agent splitb1)
   - Context (B): You, 11-21: "that 3373 stage B sounds good. we can pursue it. and yes we can raise memory limit, though as mentioned players should be able to set it" (T-3932, T-3933). Design: notes/T-3373-B-plan.md, 9 stages, 24-40 h; stage 1 (measure and simulate, 2-3 h) can stop it. Stage A's limit on 8 GB machines rises from 1.4 to about 2 GB.
   - Context: Each solving worker holds its own copy of the zones (250-550 MB a big city, 1.3 GB all-China); you saw 7.4 GB in Firefox after 43 minutes. You, 2026-11-16: do A (fewer, faster workers capped by memory on big saves) then B (split zones and the market between workers, T-1560, 25-40 h); queue C (one shared memory, threaded WASM, 60-100 h, Cloudflare header) only if it would help noticeably. A landed 2026-11-16 (b3d2ea95): NYC runs 2 workers (-0.5 GB, load about 15 s slower), all-China 1 (-2.9 GB, 30-50 s slower), figures identical.
@@ -958,9 +956,13 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3837 [P3] {L:buses} Ferry routes found without a waypoint, and waypoints on touch
   - Context: T-3809 added shift click waypoints. A leg is still searched only in a box around its two ports, so a sea path that leaves it (Ma Liu Shui to Sai Kung) needs a waypoint; a wider third search would find it alone. Phones have no shift click.
   - Other: notes/T-3809.md
-- T-3934 [P2] {L:buses} What the bus walking reach costs and gains (taking, 2026-11-21, agent busreach)
-  - Context: You, 11-21: "why is the 600m walking gap there? i think we should maybe try to quantify like how much performance is saved by having 600m limit. and how many more people use a typical length bus route that has a 600m vs like a 1km vs a no limit. perhaps we can test performance by using a primarily bus network. these definitely exist on the community saves". Reach went 300 to 600 m on 11-20 (T-3856), measured then only on NYC and London with 12 buses (no measurable cost). `BUS_REACH_M`.
-  - Goal: Riders on a typical bus route and calculating time and worker memory on two or three bus-heavy community saves, at 600 m, 1 km and no limit (or the largest that loads), written up for you; nothing changed in the game.
+- T-3996 [P2] {L:buses} {after:T-3944} Built BRT border dashes fixed on the ground
+  - Context: You, 11-21, on the built-lanes border: "inside casing is good. ideally the dashes are same length world-wise as we zoom out. and they handle turns okay."
+  - Goal: The dashed border on built BRT lanes keeps the same dash length on the ground at every zoom, and stays even around bends.
+- T-3993 [P3] {L:buses} Group homes by bus line stretch
+  - Context: From T-3934, 11-21: mode choice runs over groups of homes, and every bus stop splits them (about 130 s of Tokyo's 1,050 s). Grouping by stretch of line instead of exact stop.
+  - Goal: About 6% off Tokyo and 10-15% off Taipei's calculating time with riders per line within 1-2%. 2-3 h.
+  - Other: notes/T-3934.md
 - T-3378 [P1] {L:buses} {after:T-3944} Finish BRT with off-road busways
   - Context (11-21): stages 1-3 landed 11-21 (shared lanes paid once, 60 buses an hour a lane, BRT stations beside a road for BRT lines only). Left: stage 4 off-road busways (US$25M a km, 60 km/h, upkeep like off-road tram track; plain buses in traffic in town). Her answers: "yes this all sounds fine". Waits for T-3944 (BRT as a blueprint), which reworks the same BRT panel. Weekend lanes are T-3941.
   - Context: Design done 11-21 (busdesign, notes/T-3378.md): four stages, shared lanes 3 h, shared room 3 h, BRT stations 4-5 h, off-road busways 5-6 h; how far people come to the bus decides riders, so stations are the big part. You, 11-21: "i think we should finish BRT / busways. we should also allow building busways off road for high expense, sorta like trams off road." Preliminary BRT (a per-line speed upgrade, T-3907) shipped in v0.4.5. You, 11-20: "lots of people really like buses and want them to be more competitive with other modes ... plain buses still have a niche, brt is more competitive with trams and other modes, and its all like at least a little realistic"; "i do kinda want Brt to be an upgrade on a whole line, but also for lines sharing a road to share pay and throughput. so a hybrid"; "do also want BRt stations yeah". Sketch from 11-20: own lane (at least 35-40 km/h, up to the road's speed), shorter stops (about 18 s), BRT stations, build about US$4-5M a road-km against street tram's 7.5M; the same bus. You, 11-21 after the design: "we should maybe do upgradable bus stations".
@@ -976,7 +978,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Goal: A no-way figure per square in the sim's `zone_legs`, so the bubbles' No route matches the city panel.
   - Other: notes/T-2216.md "Stage 3 fix"
 - T-3941 [P3] {L:buses} {after:T-3655} Weekend BRT lanes past 60 buses an hour
-  - Context: From T-3378 stage 2, 11-21: `settle_weekend` doesn't run `fit_lanes`, so in a game where any line has its own weekend schedule, weekend lanes can go past 60. Fixed 11-21 in tree .tw-trees/fullrate with T-3655 (`bus_tests::a_full_brt_lane_cuts_weekend_buses_too`); closes when that lands.
+  - Context: From T-3378 stage 2, 11-21: `settle_weekend` doesn't run `fit_lanes`, so in a game where any line has its own weekend schedule, weekend lanes can go past 60. Fixed 11-21 (fullrate4) in tree .tw-trees/fullrate with T-3655: the weekend settle runs `fit_lanes` (two lines with weekend headways of their own, then put on BRT: 40 + 40 on weekends before, 30 + 30 now; `bus_tests::a_full_brt_lane_cuts_weekend_buses_too`); closes when that lands.
   - Goal: Weekend lanes cut to 60 an hour as weekdays are.
   - Other: Folds in T-1467 and T-3830 (bus stations a player can build: your pad, "bus stations, constructible, that look kinda like train and tram stations ... slight waiting/boarding bonus").
 - T-3377 [P3] {L:open-source} Mod support beyond forks

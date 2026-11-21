@@ -1,44 +1,45 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session d15915ac-6dd5-4586-bd98-843cbc616824, name maps-ac [1ef926], since 2026-11-21 15:53 UTC
-Updated: 2026-11-21 16:45 UTC (maps-98 wound down; its landings done)
+Updated: 2026-11-21 17:05 UTC
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5.
 
 ## Next
 0. LIVE v0.4.5 (11-21 ~04:15 UTC). Cap 14 by day. Cores 0-1 are hers: start `reserve_cores.ps1 -Loop 30` at takeover
-   (docs/orchestrator.md). 8800 = 7e04ea1f. Next update: translations nearer publish (T-3986's new keys too).
-1. Batch 9 on master, not on 8800, unchecked: phonemem2 49a4142e, autostops 94832b99, dropindent d80eaa39, splitb1
-   2382b9b8, brtstations 49fa812e (save level 35: tell her a save made on 8800 may not load if reverted). maps-98's
-   land3.ps1 (scratch) lands editfail T-3945, islandfix (check only), viewonly T-3851 in that order; check `git log`.
-   Then: batchchk9 (Sonnet; brief like batchchk8, notes/batch-2026-11-21.md "Batch 8") + smoke + snap8800.
-   maps-ac lands modeldown T-3986 (report r-9b259e37, done; its smoke failed on load, rerun on master) after maps-98.
-   Then keihan T-3935 (r-316b7ddd): land (with realauto.json's two `tracks` flags), then ship osa+ngo per the report
-   (back up the two saves to data/work/pre-T3935/ first, no join running); task stays open until the ship.
-   brtblueprint T-3944 (r-8fa7cb8e, done): agent brtrebase (Sonnet, maps-ac's) moves the tree onto master at save
-   level 36 / BLOCKS 40; then its own save checker before landing.
-2. Running (adopted from the board): fullrate4 T-3655 (+T-3941), clockmem T-3939,
-   busreach T-3934, splitb2 (T-3373 B stage 2). ownwaits T-3931 held (DECISIONS 11-21, patch
-   in notes/), tree removed. New starts wait until batch 9's checker and smoke have the cores (two smokes timed out
-   at 14/14).
-3. Start next: one Sonnet agent on T-3990 + T-3991 (Community: Discord and leaderboards links; Report as a flag icon
-   with a confirm popup) once viewonly has landed; T-3948 (track stage 1, T-1183 folded in) once fullrate4
-   lands; T-3378 stage 4 after T-3944; T-3933/T-3932 later; T-3937 needs a quiet machine. Keep 4-12 agents.
-4. T-3395: save_health.py after the next scan; clean = close it.
+   (docs/orchestrator.md). Next update: translations nearer publish (T-3986's, T-3991's new keys too).
+1. Batch 9 = master 7e6791a6 = 8800 (phonemem2, autostops, dropindent, splitb1, brtstations at save level 35,
+   editfail, islandfix, viewonly, modeldown, keihan; osa+ngo shipped, old saves data/work/pre-T3935). batchchk9
+   (Sonnet) checking it + smoke on the main tree; publish waits for its pass; no landings until it reports.
+2. Landing queue (batch 10), all done: community T-3990/91, linecols T-3994, credits T-3998 (UI); brtblueprint
+   T-3944 (level 36 / BLOCKS 40, brtchk PASS; dry-run finish, 5 behind); clockmem T-3939 (sim, task stays open,
+   DECISIONS written); splitb2 T-3373 B2 (behind `?exactSum=1`, off); reach1k T-3995 (bus reach 1 km; a lone NYC
+   bus +34%). Then Rust suites on master (fullrate and brtblueprint share lane code), batchchk10 (add: a
+   blueprint-only BRT line on a weekend takes no lane room), smoke, snap8800.
+3. fullrate T-3655/T-3941: fullchk checking (boarding steps per count edit on London/T-007/fresh; do real-network
+   starts lose cash at load on live?). Land only if ordinary edits don't slow down (advisor, handoff-log).
+4. Running: batchchk9, fullchk, searchcrash T-3997 (Opus, P1 player bug: search at 100x crashes / stops trains),
+   stationkinds T-3999 (Opus, station tool train/bus/port + free-standing stations by two clicks; lands after
+   T-3944), oneway T-4000 (Opus, player report), incomes T-3246 (Opus, design and cost only, goes to her).
+5. Start next: T-3373 B stage 3 (Opus) once splitb2 lands; T-3996 after T-3944; T-3948 once fullrate lands;
+   T-3378 stage 4 after T-3944; T-3933/T-3932 after clockmem and splitb2; T-3937 needs a quiet machine.
+   ownwaits T-3931 held for T-3231 (patch in notes/). T-3395: save_health.py after the next scan.
 ## Her words
-- 11-21 ~16:10 UTC: Report on a community save is "a bit of a killjoy": a flag icon, and a confirm popup "Report this
-  save? [reason] cancel submit" (T-3991). Discord and leaderboards links in Community (T-3990). itch.io $0-or-donate,
-  $5 suggested (T-3988); Ko-fi hiding dropped. Light view: money frozen (built), "text ack" for viewonly, BRT
-  station text ack.
-- 11-21 ~15:55 UTC: track rework all calls made (notes/T-3444-design/answers-2026-11-21.md): no passing-track
-  purpose; added tracks stay unconnected with a "Build crossovers?" offer. 38 stages T-3948..T-3985 on tw/track.
-- 11-21 ~14:05 UTC: her "no more compute" at 13:20 was a moment, not a standing hold; keep 4-12 agents. Count every
-  Auto stop ("if people are seeing bus stops the bus stops have to be real"; optimizations elsewhere: T-3934).
-- 11-21 ~12:50 UTC: BRT design yes, BRT stations for BRT lines only; upkeep 0.2%; tram brake 0.9; T-3373 B go, the
-  memory limit rises (players set it: T-3932; a load out of memory retries lower: T-3933). Never ask her again
-  whether big saves should get more workers ("on the player to decide").
-- 11-21 ~02:20 UTC, playtesting plain buses: "buses feel really easy ... 10% ... taking the bus ... 90% driving.
-  which feels pretty realistic". Bus speeds set 11-21: plain floor 25, BRT +10, fast roads 1.4x street.
+- 11-21 ~17:00 UTC: closed T-3365 (track rework carries it); levels -5 to +5 come with the track rework, a Settings
+  toggle for showing them (T-3691). Station totals by mode go with station timetables (T-3780). Free-standing
+  stations back, two clicks for start and direction (T-3999). Exact sums OK ("<0.5% is never that much").
+- 11-21 ~16:40 UTC: bus reach 1 km (T-3995); no borrowed-search bus stops (T-3992 closed, "a lie"); BRT built border
+  inside the colour, dashes fixed on the ground (T-3996); credits folded (T-3998); station tool picks train/bus/port,
+  bus stations snap harder, ports without ferry routes (T-3999); community view-only "looks good".
+- 11-21 ~16:10 UTC: Report as a flag with a confirm (T-3991); Discord and leaderboards in Community (T-3990);
+  itch.io $0-or-donate, $5 suggested (T-3988). Text acks still due: viewonly, BRT stations.
+- 11-21 ~15:55 UTC: track rework all calls made (notes/T-3444-design/answers-2026-11-21.md). 38 stages
+  T-3948..T-3985 on tw/track.
+- 11-21 ~14:05 UTC: keep 4-12 agents. Count every Auto stop ("if people are seeing bus stops the bus stops have to
+  be real").
+- 11-21 ~12:50 UTC: BRT stations for BRT lines only; T-3373 B go, the memory limit rises (players set it: T-3932; a
+  load out of memory retries lower: T-3933). Never ask again whether big saves get more workers.
+- 11-21 ~02:20 UTC: buses "feel pretty realistic"; bus speeds plain floor 25, BRT +10, fast roads 1.4x street.
 - 11-19: "player complaints take precedent over other new features"; full playtest list before every publish.
 - When she plays games: no uploads until she says she's done; she may ask for a lower core cap.
 - Standing: lean testing, smoke per batch; long jobs in the background, answer her first; every publish, deploy and
@@ -51,8 +52,6 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
 - Uncommitted on purpose: TODO.md (hers), notes/T-3397.md, jordan-save-investigation-2026-11-15.md,
   tools/ops/archive_bad_saves.py, changelog/roadmap.json, changelog/next.json, notes/asks-log.jsonl,
   notes/board-live.json; maps .claude/settings.json. Not mine: notes/T-2380.md, notes/T-3382.md.
-- Tree .tw-trees/autostops is gone; .tw-trees/busreach changes only a constant for measuring: never land its code,
-  only its notes.
 - A yes she gives in another session's tab doesn't pass the permission check here: ask again in this tab.
 - Never delete a tree folder by hand (its app/node_modules junction deletes the main tree's).
 - Commit messages through PowerShell: single quotes, or "$2M" becomes empty (49fa812e lost "US$2M").

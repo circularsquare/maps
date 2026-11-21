@@ -1,9 +1,1 @@
-[
-  {
-    "id": "a-2026-11-21-11",
-    "title": "Count lines sized on own waits?",
-    "text": "T-3931's fix sizes a headway line's round trip on its trains' own waits at the ends. Lines set by count (and the Tokyo fixtures) still lose trains at the ends the same way; sizing theirs the same way would lower their rate and move every departure. File a task for it? I'd file it P3 and leave it until the T-3931 fix itself can land (it is held for T-3231).",
-    "since": "2026-11-21",
-    "by": "maps-ac"
-  }
-]
+[]

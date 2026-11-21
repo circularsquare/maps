@@ -1,6 +1,14 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3365 [P2] {L:track-kinds} What single, double and quad track mean (2026-11-21): closed without code: Anita 11-21: closed, the track rework (T-3444) now carries what single, double and quad mean.
+- T-3995 [P2] {L:buses} Bus walking reach to 1 km (2026-11-21): Bus walking reach raised from 600 m to 1 km (BUS_REACH_M 1000, corridor outline, SPEC and demand docs); demand cache key follows the WASM hash so old results drop; tests, typecheck and smoke pass; one 9.6 km New York bus line went from 24.6k to 33.0k riders a day. notes/T-3995.md.
+- T-3998 [P2] {L:small-fixes} Map credits folded away by default (2026-11-21): Map credits start folded in the (i) button at every load and open, hover or click opens them; the duplicate OpenFreeMap credit was ours and is gone; every required credit kept.
+- T-3992 [P3] {L:buses} Search from every third bus stop only (2026-11-21): closed without code: Anita 11-21: every Auto stop was made real hours before (T-3924); borrowing a neighbour's search is a lie that makes stops worth nothing; she doesn't want it.
+- T-3994 [P2] {L:small-fixes} Lines list hides money when other columns are off (2026-11-21): Lines list drops Money by the width of the columns actually shown (measured), not fixed widths; with only Name and Money it stays down to the narrowest panel.
+- T-3934 [P2] {L:buses} What the bus walking reach costs and gains (2026-11-21): measured: 600 m to no limit (3 km) costs Tokyo +7%, Taipei +34% calculating time, memory flat; riders on a 7-10 km bus +3-7% in rail cities, about +40% in Taipei; two speedups filed T-3992, T-3993. notes/T-3934.md.
+- T-3991 [P2] {L:community} Report as a flag icon with a confirm (2026-11-21): Report is a flag icon; click opens Report this save? with reasons, Cancel and Submit.
+- T-3990 [P2] {L:community} Discord and leaderboards links in Community (2026-11-21): Community head has leaderboards and Discord icons (DISCORD_URL shared with Settings).
 - T-3935 [P3] {L:real-networks} Real networks miss lines OSM maps only as track (2026-11-21): osa and ngo shipped with 8 and 11 track-only lines (Keihan Main Line among them); old saves in data/work/pre-T3935. notes/T-3935.md.
 - T-3986 [P2] {L:small-fixes} Say so when the train model is down (2026-11-21): modelDown notice for refused edits, saves and downloads; leaving while down skips the save. notes/T-3986.md.
 - T-3945 [P1] {L:small-fixes} Every edit fails and the game won't save (2026-11-21): Cause: update_scoped passed only the outbound route; fixed to pass both; player save 2400 deletes 0 crashes; new Rust test. notes/T-3945.md.
