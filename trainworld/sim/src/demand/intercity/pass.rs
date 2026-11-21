@@ -36,6 +36,7 @@ impl IntercityApi {
             bus_in: (vec![], vec![]),
             back_in: vec![],
             pier_in: (vec![], vec![]),
+            tram_in: vec![],
             chunk: 0.,
             far_chunks: true,
             served_comp: vec![],

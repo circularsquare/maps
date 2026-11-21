@@ -200,6 +200,8 @@ pub struct IntercityApi {
     pub(super) back_in: Vec<u32>,
     /// `DemandApi::set_stairs` (T-3888).
     pub(super) pier_in: (Vec<u8>, Vec<u8>),
+    /// `DemandApi::set_tram_lines` (T-3919).
+    pub(super) tram_in: Vec<u8>,
     /// T-409: per served zone, the track components its stations lie in.
     pub(super) served_comp: Vec<Vec<u32>>,
     pub(super) st_pat: StPattern,

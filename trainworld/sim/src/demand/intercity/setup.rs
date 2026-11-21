@@ -552,15 +552,17 @@ impl IntercityApi {
         let Some((times, tph)) = per.filter(|_| st_xy.len() % 2 == 0 && stops.len() == *off.last().unwrap() as usize && cars.len() == line_n.len() && stops.iter().all(|&s| (s as usize) < st_xy.len() / 2)) else {
             return Err("intercity network arrays disagree".into());
         };
-        crate::demand::api::NetInputs { stations: st_xy.len() / 2, lines: line_n.len(), stops: stops.len(), complex: &self.complex_in, ups: &self.ups_in, bus_n: &self.bus_in.0, tram: &[], pier: &self.pier_in, back: &self.back_in, span: &self.span_in }.check()?;
+        crate::demand::api::NetInputs { stations: st_xy.len() / 2, lines: line_n.len(), stops: stops.len(), complex: &self.complex_in, ups: &self.ups_in, bus_n: &self.bus_in.0, tram: &self.tram_in, pier: &self.pier_in, back: &self.back_in, span: &self.span_in }.check()?;
         let (st_x, st_y, st_map) = merge_stations(st_xy, &off, stops, self.base.station_merge_m);
         let group = demand_groups(&st_map, st_x.len(), &self.complex_in);
         let ups = demand_ups(&st_map, st_x.len(), &self.ups_in);
         let (catches, st_bus) = demand_catches(&st_map, st_x.len(), stops, &self.bus_in.0, &self.bus_in.1);
+        let tram_line: Vec<bool> = if self.tram_in.len() == line_n.len() { self.tram_in.iter().map(|&f| f != 0).collect() } else { vec![] };
+        let st_tram = tram_stops(&st_map, st_x.len(), stops, &off, &tram_line);
         let svc = Service {
             catches,
             st_bus,
-            st_tram: vec![],
+            st_tram,
             back: demand_back(&st_map, stops, &self.back_in),
             pier: pier_lines(&self.pier_in.0, line_n.len()),
             grade: pier_lines(&self.pier_in.1, stops.len()),
@@ -572,7 +574,7 @@ impl IntercityApi {
             stop_xy: stops.iter().flat_map(|&s| [st_xy[2 * s as usize], st_xy[2 * s as usize + 1]]).collect(),
             times,
             tph,
-            cars: cars.to_vec(),
+            cars: cars.iter().enumerate().map(|(l, &c)| if tram_line.get(l).copied().unwrap_or(false) { c * crate::demand::network::TRAM_CARS } else { c }).collect(),
             group,
             span: span_for(&self.span_in, stops.len()),
             ups,

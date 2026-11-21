@@ -666,8 +666,8 @@ notes/T-420.md has the tables.
 - **Trams** (T-2926). A tram line is a rail line: it boards with no penalty (as every line since T-3856), each tram section counts as three quarters of a rail car in seats, rated and crush loads,
   and a cell keeps at most 3 stops served only by tram lines among its 6 nearest stations, so a street of
   close stops does not crowd out the metro a short walk away. A stop a metro or rail line also serves is
-  an ordinary station. All three are one number for every place, for commutes and everyday trips alike; longer
-  trips (the market) do not have them yet and count a tram as a train (T-3909). Why they may not carry over: where
+  an ordinary station. All three are one number for every place, for commutes, everyday trips and the market
+  (longer trips, and commutes and outings across a zone line) alike (T-3909, T-3919). Why they may not carry over: where
   trams run in mixed traffic with long waits at signals or are unreliable, the missing boarding penalty
   makes them too attractive; where trams are the main mode (Melbourne, Zurich) a cap of 3 undercounts
   how many tram stops people choose among. Check: a city's tram boardings per route-km against its

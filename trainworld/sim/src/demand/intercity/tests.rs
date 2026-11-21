@@ -2985,3 +2985,55 @@ fn long_trip_pull_by_destination_excess() {
     // a bad rule does not open
     assert!(IntercityApi::new(&with(&pull.replace("[50,150]", "[150,50]"), None)).is_err());
 }
+/// T-3919: the market, given the tram flags as the worker gives every population, holds a tram as the commutes do
+/// (`DemandApi::set_network`): three quarters of a car a section, and its stops tram stops, so a cell walks to at
+/// most `TRAM_SLOTS` of them. Without the flags it would hold the tram as a train, and its riders differ.
+#[test]
+fn longer_trips_see_the_tram_lines_as_commutes_do() {
+    use crate::demand::kernel::TRAM_SLOTS;
+    // a tram from place 0, with stops every 250 m on its way out, to place 1 120 km off, one an hour; a train
+    // from place 1 to place 2 between them
+    let mut xy = vec![];
+    for k in 0..6 {
+        xy.extend([250. * k as f32, 0.]);
+    }
+    xy.extend([120000., 0., 60000., 0.]);
+    let (n, stops) = ([7, 2], [0, 1, 2, 3, 4, 5, 6, 6, 7]);
+    let mut times = vec![];
+    for (len, sec) in [(7, 600.), (2, 1800.)] {
+        let mut t = vec![0f32; 6 * len];
+        for lev in 0..3 {
+            for k in 0..len - 1 {
+                t[lev * len + k] = sec;
+                t[(3 + lev) * len + k + 1] = sec;
+            }
+        }
+        times.extend(t);
+    }
+    let open = |tram: bool| {
+        let mut a = api();
+        if tram {
+            a.set_tram_lines(&[1, 0]);
+        }
+        a.set_network(&xy, &n, &stops, &times, &[1., 1., 1., 6., 6., 6.], &[4., 4.]).unwrap();
+        a.set_fares(0., 0., &[0.; 18]).unwrap();
+        a
+    };
+    let (mut a, mut plain) = (open(true), open(false));
+    let svc = a.svc.as_ref().unwrap();
+    assert_eq!(svc.cars, vec![3., 4.], "the market's tram: three quarters of a car a section");
+    assert_eq!(svc.st_tram, vec![true, true, true, true, true, true, false, false], "the stations only the tram serves");
+    // the cell at place 0 walks to the three nearest of its six tram stops, as a commute's would
+    let near = |a: &IntercityApi| {
+        let z = a.m.cell_zone[0];
+        let mut v: Vec<usize> = a.access[z].iter().map(|&(s, _)| s).filter(|&s| s < 6).collect();
+        v.sort_unstable();
+        v
+    };
+    assert!(near(&a).len() <= TRAM_SLOTS && near(&plain).len() > TRAM_SLOTS, "tram stops reached: {:?} with the flags, {:?} without", near(&a), near(&plain));
+    assert!(a.solve(0) && plain.solve(0));
+    // the tram's route nodes are the first 14 of 18, two a stop
+    let on = |b: Vec<f32>| { assert_eq!(b.len(), 18); b[..14].iter().sum::<f32>() };
+    let (with, without) = (on(a.board(0)), on(plain.board(0)));
+    assert!(with > 0. && (with - without).abs() > 1e-3 * without, "tram riders {with} with the flags, {without} without");
+}

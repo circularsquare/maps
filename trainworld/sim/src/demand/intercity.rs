@@ -15,7 +15,7 @@
 //! A pack in the old single-pack form (`sites` with a market column: the tests' fixtures) opens as
 //! a closed world over its own zones with the ground curve alone.
 use super::{
-    api::{check_fare_curve, demand_back, demand_catches, demand_groups, demand_passages, demand_ups, fare_x_usd, pier_lines, merge_stations, put_fares, check_fare_mul, same_bits, span_for, scale_triples, DemandApi, Service, FARE_MIN_PER_USD, PEAK_HOUR_FACTOR, TO_HOME, TO_WORK},
+    api::{check_fare_curve, demand_back, demand_catches, demand_groups, demand_passages, demand_ups, fare_x_usd, pier_lines, merge_stations, put_fares, tram_stops, check_fare_mul, same_bits, span_for, scale_triples, DemandApi, Service, FARE_MIN_PER_USD, PEAK_HOUR_FACTOR, TO_HOME, TO_WORK},
     clock::now_ms,
     days::{everyday as everyday_purpose, lean_sign, load_factor, share_out, share_ret, LONGER, WEEKDAY, WORK},
     everyday::{car_mul, KIND_COUNT, OUTWARD, RETURN},
