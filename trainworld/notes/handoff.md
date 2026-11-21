@@ -41,9 +41,8 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
 - 11-21 ~02:20 UTC, playtesting plain buses on 8800 (Houston): "buses feel really easy ... mostly profitable ... 10%
   of people taking the bus ... 90% driving. which feels pretty realistic". Bus speeds set 11-21: plain floor 25,
   BRT +10, fast roads 1.4x street; BRT charged in town only; open-country main roads keep 75. "all text ack" ~02:45.
-- 11-20 ~22:10 UTC: "lets freeze the set of proposed changes here for now, and test with these"; chart remake
-  after: no separate street tram, half the trip lengths, 2 more stop spacings at the high end, add HSR; a made-up
-  uniform city run as a model, not Chicago in the sim.
+- 11-21 ~15:00 UTC: track rework design: all 27 picks yes with additions (notes/T-3444-design/answers-2026-11-21.md);
+  trackdesign revising and writing stage tasks; rework on long-lived branch tw/track, merged at releases.
 - 11-20: cleanup, then "full track rework" (T-3444 talk); no minor track work till then; 400 km ferry legs stay.
 - 11-19: "player complaints take precedent over other new features"; full playtest list before every publish.
 - When she plays games: no uploads until she says she's done; she may ask for a lower core cap.
