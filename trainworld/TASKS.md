@@ -228,13 +228,12 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3457 [P3] {L:checks} Slim the standing checks
   - Context: The code tour (notes/code-tour.md) counts 283 of 320 checks named after the task that made them, 42 more in checks/old, 45,700 lines, more than the pipeline. You 11-16: Claude leans a bit too much toward writing checks.
   - Goal: Checks that no longer guard anything are deleted, the rest named by what they check; smoke and the standing set still pass.
+- T-4020 [P3] {L:airports} {after:next world rebuild} Rerun airports for packs with a hub over 10M
+  - Context: T-3502 landed the farther reach for big airports in sim and tier0, but sha, seo and lon have no `airport.sites`, so nothing crosses zone lines yet (Suzhou to Pudong). Rerun the airports step for packs with a hub over 10M, then `cross_everyday` and `market_zones` for their units; T-3485 cause 2 needs the same rerun. The tier0 path is unit-tested only.
+  - Goal: The 80-150 km share of ground trips in the game at Heathrow, Pudong and Incheon near the published shares (notes/T-3502.md).
 - T-3501 [P2] {L:airports} {after:next world rebuild} Border airports lose ground trips in the build
   - Context: From T-3485: the airport's pack share counts people across a border at full weight, then the border factor drops what doesn't land: Hong Kong loses 54% of its ground trips, Luton 77%, Basel 71%, Geneva 42%; 0.6M a day worldwide.
   - Goal: Outside people weighed by the border factor in the pack share at the next world rebuild; Hong Kong near its published ground trips.
-  - Other: notes/T-3485.md
-- T-3502 [P3] {L:airports} Big airports draw ground trips from farther away (taking, 2026-11-21, agent airfar)
-  - Context: Open-source issue 6: Suzhou to Shanghai's airports, Seoul to Incheon. Ground trips fade out from 40 km and stop at 80 km. You, 2026-11-17: "sure we can do big airports drawing ground trips from far away, not super high prio tho."
-  - Goal: Hubs above a passenger threshold draw from cities 80-150 km away, sized by passengers, measured on a few hubs against published catchments.
   - Other: notes/T-3485.md
 - T-3742 [P2] {L:timetables} {after:Anita asks} Nudge a line's departure times
   - Context: You, 11-21: per-row Offset design approved, "we can leave it for now, but good that its planned! will start later". You, 2026-11-18, for v0.4.3 ("train adjustments"), from a player: "the ability to offset departure times from whatever the game defaults to (like for example +4 minutes or -5 minutes) to have finer control over train movements and minimise conflicts between lines that share tracks". Design done 2026-11-21 (agent nudgedesign): 1 min a click, 15 s with Shift, 10 min with Ctrl; an express moves with the local it is timed behind; pacing and turnarounds are untouched; it moves the timetable, board and map's trains, while riders and money barely move and shared-track delay doesn't drop (it comes from how many trains run, not when). Neither it nor the track rework waits for the other. Strings drafted in the note.
@@ -376,7 +375,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Design agreed 11-21 (notes/T-3444-design/, her answers in answers-2026-11-21.md; three small calls still open in review/track-rework-design.md). Built in 38 stages, T-3948 to T-3985, in four releases, on a long-lived branch tw/track merged into master at each release. Stage 1 (T-3948) is done on master; next is stage 2a (T-3949) on tw/track once the branch is cut. Your weekend notes (2026-11-16) are the heart of it.
   - Goal: Closes with the last of its stages.
   - Other: Your notes verbatim: notes/T-3444.md; sizes in notes/code-tour.md. Requirements folded in 11-20: a station placed on track that leaves its shape alone redraws no neighbours (T-2767, 0.2-0.9 s today); the drawn network rebuilds only near a change (T-2701); the Penn Station to Emeryville snapped preview (3 s, T-763) as a check case. notes/review-edit-speed-2026-11-20.md
-- T-3950 [P2] {L:track-rework} {after:T-3949} Single, double and more in the tools
+- T-3950 [P2] {L:track-rework} {after:T-3949} Single, double and more in the tools (taking, 2026-11-21, agent trackpick)
   - Context: Your three cases: the track bar's 1, 2 and More (4 for now); 4 tracks picked whole, a second click picks one double; the Select bar's 4 replaces Double up; titles "Single track", "Double track", "4 tracks".
   - Goal: Every tool picks by one shared pointer rule; no "Quad track" or Double up left.
   - Other: Files: tools.ts, ToolBar.tsx, Blueprint.tsx, TrackInspector.tsx, blueprintPick.ts. 3-4 h. stage 2b
