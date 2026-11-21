@@ -21,13 +21,11 @@ Anita, a change of plan. One or two lines each time; rewrite a section only when
 
 These steps live here; other files point to them.
 
-- From about 450k start no new agents: list what you would start under "Next" and the new orchestrator starts
-  them.
-- At about 500k (the stop hook says so), don't wait for her: finish anything mid-landing, bring this file
-  current, and start the successor with the project's command (trainworld's is in docs/orchestrator.md, "Your
+- Keep starting agents right up to the handover; the successor adopts them.
+- At about 500k (the stop hook says so), day or night, don't wait for her: finish anything mid-landing, bring this
+  file current, and start the successor with the project's command (trainworld's is in docs/orchestrator.md, "Your
   own cycling").
 - Once the new orchestrator messages you, wind down as "After another session takes over" below says.
-- Overnight, while she sleeps, keep going past 500k instead of handing over.
 
 ## Shape
 

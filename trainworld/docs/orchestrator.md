@@ -42,7 +42,7 @@ incidents behind the rules here are in `notes/rule-history.md`.
 - **Your own cycling**: at about 500k tokens (the stop hook says so) hand over without waiting for her. Finish
   anything mid-landing, bring the handoff current, and run
   `venv\Scripts\python.exe trainworld/tools/ops/next_orchestrator.py trainworld --advisor fable` (a new Windows
-  Terminal tab running /takeover). From about 450k start no new agents. The rest of the steps (what to finish,
+  Terminal tab running /takeover), day or night. Keep starting agents until then. The rest of the steps (what to finish,
   what to tell her and the new orchestrator, your agents still running) are in the `handoff` skill, "After
   another session takes over".
 - **Never go quiet on her** (she once waited 25 minutes for an answer): anything you run that takes over a
@@ -51,9 +51,14 @@ incidents behind the rules here are in `notes/rule-history.md`.
   `snap8800.py` writes the 8800 build id when it swaps, and the takeover sets the orchestrator's name
   (`tasks.py set --orchestrator "<id> (<name>)"`).
 - **Cycling**: an agent past about 500k tokens with real work left writes its state to its notes and a fresh one
-  continues. Overnight, while she sleeps, agents and you keep going past that.
+  continues. Overnight, while she sleeps, an agent may keep going past that; the orchestrator still cycles.
 - **Supervising**: check long runs (process and `world_run.py status`) at least every couple of hours; ask after any
-  agent quiet for about 45 minutes. Keep the work moving (the `takeover` skill) within the ledger's core cap.
+  agent quiet for about 45 minutes.
+- **Keep 4-12 agents running** (her rule, 11-21: "we basically always want to have 4-12 agents running"), within the
+  ledger's core cap, unless nothing in TASKS can go ahead without her. When an agent reports, start its replacement
+  in the same turn, before replying to anything else. A file collision rules out only the tasks that share files with
+  a running agent; name them, and start something else. Below 4 with startable work is a slip to fix at once, not
+  a judgement call.
 - **Overnight, the core cap goes to the machine's max** (her rule, 11-21: "we should have been running with max core
   cap cuz it was overnight"): when she goes to bed, `python cores.py cap <machine cores>` and fill it; set it back to
   her daytime number when she is up (ask if unsure).
