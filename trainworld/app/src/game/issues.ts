@@ -69,6 +69,7 @@ const TEXT: Record<string, () => string> = {
   OneTrackStop: () => t("issues.oneTrackStop"),
   OneTrackHere: () => t("issues.oneTrackHere"),
   TramTrack: () => t("issues.tramTrack"), // T-3889
+  PortStop: () => t("issues.portStop"), // T-3911
   StationFamily: () => t("issues.stationFamily"),
   NothingToConstruct: () => t("issues.nothingToConstruct"),
   TerrainMissing: () => t("issues.terrainMissing"),

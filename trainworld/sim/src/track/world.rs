@@ -2048,7 +2048,11 @@ impl TrackWorld {
             lines.dedup();
         }
         for l in lines {
-            if self.net.line_ok(l) && self.net.line_path(l).iter().all(|&p| self.net.edge_ok(path_edge(p))) {
+            // T-3911: an edit of a rail line with a port among its stops is refused; loading such a save
+            // (`derive`) keeps the line as it is
+            if self.net.line_ok(l) && !self.net.is_bus(l) && !self.net.is_ferry(l) &&self.net.line_stops(l).iter().any(|&s| self.net.is_port(s)) {
+                issues.push(Issue::PortStop { line: l });
+            } else if self.net.line_ok(l) && self.net.line_path(l).iter().all(|&p| self.net.edge_ok(path_edge(p))) {
                 if let Err(i) = self.net.check_line(l) {
                     issues.push(i);
                 }

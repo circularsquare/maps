@@ -514,6 +514,8 @@ pub enum Issue {
     LinePath { line: u32 },
     /// T-3889: a line with no tram stop (a train line) would run on tram track.
     TramTrack { line: u32 },
+    /// T-3911: a train or tram line has a ferry port among its stops.
+    PortStop { line: u32 },
     /// A line's return run has no track to come back on: one-way track runs against it (T-3094).
     NoWayBack { line: u32 },
     /// One-way single track (T-3094) that a line cannot go round: it has no other way between its stations.

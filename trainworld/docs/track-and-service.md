@@ -386,7 +386,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   high-speed track, its trams capped at 75 km/h wherever they run (`line_top`; slower track and limits still apply),
   and shares that track's capacity as a train does. A line with no tram stop is a train line, routed over rail
   track only (`find_path_side`'s `tram`; a line's whole stops decide, `HopMemo::tram` carrying it to routes of part of
-  them), and a stop edit that would need tram track is refused (`TramTrack`: "Trains can't run on tram track."), as is an edit that would leave a train line on tram track. A stop
+  them), and a stop edit that would need tram track is refused (`TramTrack`: "Trains can't run on tram track."), as is an edit that would leave a train line on tram track. A train or tram line takes no ferry port as a stop (`PortStop`: "Ferry ports are for ferry lines."; checked in `TrackWorld::check`, so any edit of such a line is refused; a save that has one still loads it unchanged; the line tool's tier 10 draws a port as unreachable). A stop
   edit that adds a line's first tram stop or takes its last changes its kind (`Network::fit_kind`, not on undo):
   high-speed trains go, over 4 cars become 2, and the dwell and turnaround follow where they were the old kind's
   defaults. A tram line

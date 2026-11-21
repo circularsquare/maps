@@ -29,6 +29,9 @@ impl TrackApi {
     /// Change a line's stops, keeping everything else; the path is found again.
     pub fn set_stops(&mut self, id: u32, stops: &[u32]) -> u32 {
         let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
+        if self.port_clash(&d, stops) {
+            return self.refuse(Issue::PortStop { line: id });
+        }
         let Some((stops, path)) = edited_stops(&self.w.net, stops, d.hand, &d.ones) else { return self.no_route(id, stops) };
         d.stops = stops;
         d.path = path;
@@ -342,6 +345,9 @@ impl TrackApi {
     /// 2 when there is nowhere to put it.
     pub fn add_stop(&mut self, id: u32, station: u32) -> u32 {
         let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
+        if self.port_clash(&d, &[station]) {
+            return self.refuse(Issue::PortStop { line: id });
+        }
         let Some((stops, _)) = best_insert(&self.w.net, id, station, &mut HopMemo::new()) else {
             if self.train_kept_off(&d.stops, station) {
                 return self.refuse(Issue::TramTrack { line: id });
@@ -368,6 +374,9 @@ impl TrackApi {
         let net = &self.w.net;
         if d.bus.is_some() || d.ferry.is_some() || !net.is_station(station) {
             return self.refuse(Issue::LinePath { line: id });
+        }
+        if net.is_port(station) {
+            return self.refuse(Issue::PortStop { line: id });
         }
         if !net.can_one_stop(station) {
             return if d.stops.contains(&station) { 0 } else { self.add_stop(id, station) };
@@ -438,13 +447,14 @@ impl TrackApi {
     /// first or last stop, where a click closes the line into a circle (T-3203), 6 a loop's first stop, where a click
     /// opens it (T-798), 7 the stop before a loop at an end of the line, where a click turns the
     /// line round it (`turn_end`), 8 that stop on a line so turned, where a click opens it again
-    /// (`open_loop`, T-3021), 9 a train line reaches it only over tram track (T-3889). Worked out with
+    /// (`open_loop`, T-3021), 9 a train line reaches it only over tram track (T-3889), 10 a ferry port (T-3911). Worked out with
     /// `insert_stop`'s own search, so the markers say what a click does. Empty if the line is not there.
     pub fn stop_tiers(&self, line: u32) -> Vec<f64> {
         let net = &self.w.net;
         if !net.line_ok(line) {
             return vec![];
         }
+        let Some(line_d) = net.line_data(line) else { return vec![] };
         let stops = net.line_stops(line);
         let old = net.line_path(line);
         let old_turns = turn_nodes(net, old);
@@ -457,7 +467,9 @@ impl TrackApi {
             if !net.node_ok(n) || net.node_platform[n as usize] == 0 {
                 continue;
             }
-            let (tier, at) = if turn_at.contains(&n) && ((stops.first() != Some(&n) && stops.last() != Some(&n)) || closed(stops)) {
+            let (tier, at) = if self.port_clash(&line_d, &[n]) {
+                (10.0, -1.0)
+            } else if turn_at.contains(&n) && ((stops.first() != Some(&n) && stops.last() != Some(&n)) || closed(stops)) {
                 (7.0, -1.0)
             } else if stops.first() == Some(&n) && closed(stops) {
                 (6.0, -1.0)
@@ -1077,6 +1089,11 @@ impl TrackApi {
 
     /// T-3889: `station` would join a train line with `stops` (neither has a tram stop) only over
     /// tram track.
+    /// T-3911: a ferry port among `stops` of a train or tram line `d`.
+    fn port_clash(&self, d: &LineData, stops: &[u32]) -> bool {
+        d.bus.is_none() && d.ferry.is_none() && stops.iter().any(|&s| self.w.net.is_port(s))
+    }
+
     fn train_kept_off(&self, stops: &[u32], station: u32) -> bool {
         let net = &self.w.net;
         !net.stops_tram(stops) && !net.tram_stop(station) && stops.first().is_some_and(|&a| net.node_ok(a) && net.node_ok(station) && !net.joined_by(a, station, false) && net.joined(a, station))

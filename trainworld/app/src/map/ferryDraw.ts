@@ -390,7 +390,7 @@ export class FerryDraw {
   /** A new route being drawn, or one with a port short of two ends: a waypoint goes after the last point and
    * only that leg is searched (T-3845). An existing route's waypoint goes where it adds the least distance. */
   private appending(): boolean {
-    return this.line === null || this.ports.length < 2;
+    return (this.line === null || this.ports.length < 2) && !this.head;
   }
 
   /** T-3809: where a waypoint at `w` would go: the leg `k` and its place `j` among that leg's waypoints where it
@@ -554,6 +554,11 @@ export class FerryDraw {
       if (this.ports.length >= 2 && (h < 0 || finishes(h))) void this.finish();
       return;
     }
+    // T-3912: Shift on the end the line is not extending from makes it the one new ports go on
+    if (e.originalEvent.shiftKey && h >= 0 && h === this.otherEnd()) {
+      this.firstEdited = true;
+      return void this.extendFrom();
+    }
     // T-3809: Shift on anything but the line's own ports and waypoints puts a waypoint
     if (e.originalEvent.shiftKey && h < 0 && !way) {
       this.firstEdited = true;
@@ -561,6 +566,23 @@ export class FerryDraw {
     }
     this.firstEdited = way || (h >= 0 && this.ports.length >= 2 && !finishes(h));
     void this.press(e.point.x, e.point.y, at);
+  }
+
+  /** T-3912: the port at the end new ports are not going on, -1 for a loop or a line of one port. */
+  private otherEnd(): number {
+    const n = this.ports.length;
+    return n < 2 || this.looped() ? -1 : this.head ? n - 1 : 0;
+  }
+
+  /** T-3912: new ports go on the other end from now. Waypoints waiting after the last port are given up, as they
+   * have no next port to join. */
+  private extendFrom() {
+    if (this.busy) return;
+    this.head = !this.head;
+    this.tail = [];
+    playBuild("snap");
+    this.reunder();
+    this.place();
   }
 
   /** T-3809: a waypoint at `at`, on water, on the leg where it adds the least (`wayPlace`). */
@@ -1165,6 +1187,7 @@ export class FerryDraw {
       const right = { open: "ferryDraw.rightOpen", stop: "ferryDraw.rightStopLooping", delete: "ferryDraw.rightDelete", close: "ferryDraw.rightClose", loopBack: "ferryDraw.rightLoopBack" } as const;
       const a = this.rightAction(u.i);
       if (a) rows.push(row(t(right[a])));
+      if (u.i === this.otherEnd()) rows.push(row(t("ferryDraw.shiftExtend")));
     } else if (u.kind === "port") rows.push(row(this.ports.some((p) => p.node === u.node) ? u.name : t("ferryDraw.stopAt", { name: u.name })));
     else if (u.kind === "shore") rows.push(row(t("ferryDraw.placePort")));
     // T-3845: over water with a port placed, the click that would work is a shift click's

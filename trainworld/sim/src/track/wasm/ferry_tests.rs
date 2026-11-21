@@ -320,3 +320,34 @@ fn a_ferry_line_runs_five_periods() {
     let r = a.w.net.line_tph[l as usize];
     assert!((r[1] - 1.0).abs() < 0.01 && (r[0] - 4.0).abs() < 0.01 && (r[2] - 4.0).abs() < 0.01, "{r:?}");
 }
+
+/// T-3911: a train or tram line takes no ferry port as a stop, whichever edit adds it.
+#[test]
+fn a_train_line_refuses_a_ferry_port_as_a_stop() {
+    let mut a = api();
+    let p = port(&mut a, 0.0, "Whitehall");
+    let l = a.new_line_id();
+    assert_ne!(a.set_line_with_trains(l, &[p], 2, 1, 0, 30.0, 180.0, 0, 0, "Train".into()), 0);
+    assert!(a.issue_kinds().contains("PortStop"), "{}", a.issue_kinds());
+}
+
+/// T-3911: a save made when a train line could stop at a port still loads that line as it was; only an edit of it
+/// is refused.
+#[test]
+fn a_saved_train_line_with_a_port_stop_loads_as_it_was() {
+    let mut a = api();
+    let (p, q) = (port(&mut a, 0.0, "Whitehall"), port(&mut a, 8000.0, "St George"));
+    let f = ferry_line(&mut a, &[p, q], &straight(&[0.0, 8000.0], &[0, 1], 25.0));
+    let mut d = a.w.net.line_data(f).unwrap();
+    (d.ferry, d.bus, d.stops, d.path) = (None, None, vec![p], vec![]);
+    let l = a.w.net.alloc_line();
+    a.w.net.set_line(l, Some(d)).unwrap();
+    let bytes = crate::track::save::encode(&a.w.net);
+    let w = crate::track::world::TrackWorld::new(crate::track::save::decode(&bytes).unwrap());
+    assert!(w.net.line_ok(l) && w.net.line_stops(l) == [p] && !w.net.line_broken[l as usize], "kept, not broken");
+    assert!(w.net.check_line(l).is_ok());
+    let mut b = TrackApi::new(-73.985, 40.758, true);
+    b.w = w;
+    assert_ne!(b.set_stops(l, &[p]), 0);
+    assert!(b.issue_kinds().contains("PortStop"), "{}", b.issue_kinds());
+}

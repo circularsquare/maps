@@ -583,6 +583,12 @@ them the route is found over the basemap's water (track-and-service.md 6.8), nev
   port of it stops it looping back ("Right click to stop looping back"). The touch Loop button works here as in the
   bus tool. In the panel's port list a loop keeps its order (no dragging); taking out its first or last port
   opens it, and one of a ring of three leaves a line of two.
+- **Extending from the other end** (T-3912): new ports go on the last port (the active end). A shift click on the
+  other end of an open route (not a loop, two ports or more) makes it the active end, so new ports go before the
+  first and the pointer leg starts there; a shift click on the last port switches back, and Backspace takes back
+  whichever end is active. The other end's tag adds "Shift click to extend the route from here". Waypoints waiting
+  after the last port are dropped by the switch. Mouse only; a finger has no Shift. The bus tool has the same
+  unused `head` switch and is unchanged.
 - **Waypoints** (T-3809, T-3845): a shift click on water puts a point the route passes through without stopping, so a
   player steers it through an archipelago, around a peninsula the search's box misses, or splits a leg over the 400
   km limit. While a new route is drawn it goes after the last point placed, and that leg alone is searched at once

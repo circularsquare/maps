@@ -42,6 +42,8 @@ export type StopTier =
   | "cut"
   /** a train line reaches it only over tram track (T-3889) */
   | "tram"
+  /** a ferry port, which only ferry lines stop at (T-3911) */
+  | "port"
   /** adding it makes the line's trains reverse at a station where they did not (T-797) */
   | "reverse"
   /** the first stop, where a right click closes the line into a loop (T-798) */
@@ -82,12 +84,12 @@ export function sizeAt(zoom: number): number {
 
 /**
  * The tiers as the clock worker works them out (`TrackApi::stop_tiers`, T-237): per station node
- * its tier, 0 on, 1 route, 2 reroute, 3 cut, 4 reverse, 5 close, 6 open, 7 turn, 8 unturn, 9 tram, and for 4
+ * its tier, 0 on, 1 route, 2 reroute, 3 cut, 4 reverse, 5 close, 6 open, 7 turn, 8 unturn, 9 tram, 10 port, and for 4
  * the station trains would reverse at (T-797), from the same search a click makes, so a station past
  * an end that the line can carry on to is on route.
  */
 function tiersFrom(d: Float64Array, w: WorldView, revAt: Map<string, string>): Map<string, StopTier> {
-  const names: StopTier[] = ["on", "route", "reroute", "cut", "reverse", "close", "open", "turn", "unturn", "tram"];
+  const names: StopTier[] = ["on", "route", "reroute", "cut", "reverse", "close", "open", "turn", "unturn", "tram", "port"];
   const byNum = new Map(w.save.stations.map((s) => [s.num, s.id]));
   const out = new Map<string, StopTier>();
   revAt.clear();
@@ -132,7 +134,8 @@ function stopTiers(w: WorldView, line: LineInput): Map<string, StopTier> {
   const n = plan.length;
   const loop = n >= 3 && plan[0] === plan[n - 1];
   for (const s of w.save.stations) {
-    if (loop && s.id === plan[0]) out.set(s.id, "open");
+    if (s.port) out.set(s.id, "port");
+    else if (loop && s.id === plan[0]) out.set(s.id, "open");
     else if (stops.has(s.id)) out.set(s.id, "on");
     else if (!plan.length) out.set(s.id, "route");
     else if (hasRoute) out.set(s.id, routeNodes.has(s.num) ? "route" : joined.has(s.num) ? "reroute" : "cut");
@@ -154,7 +157,7 @@ interface Mark {
 }
 
 /** In the order a click prefers when markers overlap: the stops, then the ones that can be added. */
-const RANK: Record<StopTier, number> = { on: 3, close: 3, open: 3, turn: 3, unturn: 3, route: 2, reroute: 1, reverse: 1, cut: 0, tram: 0 };
+const RANK: Record<StopTier, number> = { on: 3, close: 3, open: 3, turn: 3, unturn: 3, route: 2, reroute: 1, reverse: 1, cut: 0, tram: 0, port: 0 };
 
 export class StopMarkers {
   private box: HTMLDivElement;
@@ -373,7 +376,7 @@ export class StopMarkers {
       }
       // a stop that closes, opens or turns a loop is drawn as the stop it is
       const stop = tier === "on" || tier === "close" || tier === "open" || tier === "turn" || tier === "unturn";
-      const cls = "stop-mark " + (stop ? "on" : tier === "tram" ? "cut" : tier) + (lit.has(id) ? " hot" : "");
+      const cls = "stop-mark " + (stop ? "on" : tier === "tram" || tier === "port" ? "cut" : tier) + (lit.has(id) ? " hot" : "");
       if (m.cls !== cls) {
         m.cls = cls;
         m.el.className = cls;
@@ -459,6 +462,7 @@ export class StopMarkers {
         return [name, at === "" ? t("stopMarkers.reverseEnd", { tram: this.tram }) : this.names.get(at ?? "") ? t("stopMarkers.reverseAt", { name: this.names.get(at ?? ""), tram: this.tram }) : t("stopMarkers.reverseSome", { tram: this.tram }), ...shiftAdd];
       }
       case "tram": return [name, t("issues.tramTrack")];
+      case "port": return [name, t("issues.portStop")];
       default: return [name, t("stopMarkers.noTrack")];
     }
   }
@@ -497,10 +501,11 @@ export class StopMarkers {
       loopTap.value = false;
       return this.loopAt(id, px, py);
     }
-    if (this.tierOf(id) === "tram") {
+    const refused = this.tierOf(id);
+    if (refused === "tram" || refused === "port") {
       this.hideTag();
       this.reasonFor = id;
-      this.showTag([t("issues.tramTrack")], px, py, true);
+      this.showTag([t(refused === "port" ? "issues.portStop" : "issues.tramTrack")], px, py, true);
       this.reasonTimer = window.setTimeout(() => this.hideTag(), REASON_MS);
       return;
     }
