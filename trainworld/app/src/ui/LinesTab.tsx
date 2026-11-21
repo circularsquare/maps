@@ -344,7 +344,7 @@ export function LinesTab() {
     return { g: under, before: linesIn(b.it)[0] };
   };
   /** what the drag would change, or null for nothing */
-  type Plan = { join?: number | "new"; with?: string; parent?: number; order?: string[] };
+  type Plan = { join?: number | "new"; with?: string; parent?: number; order?: string[]; gapG?: number };
   const plan = (d: Drag): Plan | null => {
     const to = dropAt(d);
     if (!to) return null;
@@ -369,7 +369,7 @@ export function LinesTab() {
     if (anchor && moved.includes(anchor)) return null; // onto its own place
     const i = anchor ? order.indexOf(anchor) + (gap.after ? 1 : 0) : order.length;
     order = [...order.slice(0, i), ...moved, ...order.slice(i)];
-    const out: Plan = { ...(order.join() === fullOrder().join() ? {} : { order }), ...(gap.g !== from ? { join: gap.g } : {}) };
+    const out: Plan = { gapG: gap.g, ...(order.join() === fullOrder().join() ? {} : { order }), ...(gap.g !== from ? { join: gap.g } : {}) };
     return out.order || out.join !== undefined ? out : null;
   };
   const dropLine = (d: Drag) => {
@@ -417,22 +417,32 @@ export function LinesTab() {
   };
   /** the rows marked while dragging: the one dropped onto, or the gap's line above or below a row */
   const marks = new Map<string, string>();
+  let markDepth = 0; // the indent of the group the gap marker puts the row in
   if (drag?.on) {
     const p = plan(drag), to = p && dropAt(drag);
     if (to && "with" in to) {
       marks.set(to.with.key, " drop-on");
       if (typeof p.join === "number" && to.with.line) marks.set("g:" + p.join, " drop-on");
-    } else if (to) marks.set(drag.over!, drag.part === "before" ? " drop-before" : " drop-after");
+    } else if (to) {
+      marks.set(drag.over!, drag.part === "before" ? " drop-before" : " drop-after");
+      const gr = p?.gapG ? rowList.find((r) => r.key === "g:" + p.gapG) : undefined;
+      markDepth = gr ? gr.depth + 1 : 0;
+    }
   }
   const pick = (id: string) => { if (!dragged.current) selection.value = { kind: "line", line: id }; };
   // T-3420: the lines hidden on the map, and whether the rows show their eyes
   const hid = hiddenLines.value, eyes = visToggles.value;
   /** T-3423: a row in a group, indented a step for each group it is in */
-  const depthOf = (depth: number) => (depth ? { cls: " in-group", style: { "--depth": depth } } : { cls: "", style: undefined });
+  const depthOf = (depth: number, drop?: string) => {
+    const style: Record<string, number> = {};
+    if (depth) style["--depth"] = depth;
+    if (drop && marks.has(drop)) style["--mark-depth"] = markDepth;
+    return { cls: depth ? " in-group" : "", style: depth || drop && marks.has(drop) ? style : undefined };
+  };
   const lineRow = (l: LineInput, depth: number) => {
     const st = w.lineStats[l.id];
     const on = (sel?.kind === "line" || sel?.kind === "train") && sel.line === l.id;
-    const drop = "l:" + l.id, dp = depthOf(depth);
+    const drop = "l:" + l.id, dp = depthOf(depth, drop);
     return (
       <li class={(on ? "on" : "") + dp.cls + (hid.has(l.id) ? " hidden-line" : "") + (marks.get(drop) ?? "") + (drag?.on && drag.id === l.id ? " dragged" : "")} style={dp.style}
         data-drop={drop} onPointerDown={(e) => pointerDown(e, l.id)} onClick={() => pick(l.id)} onDblClick={() => locateLine(l.stops)}>
@@ -462,7 +472,7 @@ export function LinesTab() {
     );
   };
   const groupRows = (it: Item, depth: number): JSX.Element => {
-    const isOpen = !closed.has(it.g), drop = "g:" + it.g, dp = depthOf(depth);
+    const isOpen = !closed.has(it.g), drop = "g:" + it.g, dp = depthOf(depth, drop);
     const on = !isOpen && sel?.kind === "group" && sel.group === it.g;
     return (
       <>
