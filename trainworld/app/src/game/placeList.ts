@@ -74,13 +74,24 @@ export function loadPlacesAt(lng: number, lat: number): Promise<void> {
 }
 
 /** T-400: a search finding too little: the next WIDEN zones' lists not yet asked for, nearest to
- * (lng, lat) first. Resolves false when every list has been asked for. */
+ * (lng, lat) first, among the WIDEN_MAX nearest zones within WIDEN_M. One batch at a time: a call
+ * while one is loading gets that one. Resolves false when there is nothing left to ask for. T-3997:
+ * unbounded, a search with few results kept loading lists until the tab hung at over 3 GB. */
 const WIDEN = 4;
-export async function widenPlaces(lng: number, lat: number): Promise<boolean> {
-  const next = CITIES.filter((c) => !files.has(c.id)).sort((a, b) => boxDistance(a, lng, lat) - boxDistance(b, lng, lat)).slice(0, WIDEN);
-  if (!next.length) return false;
-  await loadAll(next.map((c) => c.id));
-  return true;
+const WIDEN_M = 200_000;
+const WIDEN_MAX = 48;
+let widening: Promise<boolean> | null = null;
+export function widenPlaces(lng: number, lat: number): Promise<boolean> {
+  if (widening) return widening;
+  const near = CITIES.map((c) => ({ c, d: boxDistance(c, lng, lat) })).filter((x) => x.d <= WIDEN_M)
+    .sort((a, b) => a.d - b.d).slice(0, WIDEN_MAX);
+  const next = near.filter((x) => !files.has(x.c.id)).slice(0, WIDEN);
+  if (!next.length) return Promise.resolve(false);
+  // true when any arrived: a batch that all failed is not asked for again at once
+  const p = Promise.all(next.map((x) => load(x.c.id).then(() => true, () => false))).then((got) => got.some(Boolean));
+  widening = p;
+  void p.finally(() => { if (widening === p) widening = null; });
+  return p;
 }
 
 const COUNTRY = new Map(CITIES.map((c) => [c.id, c.country]));

@@ -99,10 +99,15 @@ export function Search() {
   const cur = Math.min(at, Math.max(0, hits.length - 1));
   // T-400: few results from the lists in so far: the next nearest zones' lists, until enough or all
   const wanting = open && query.trim().length >= 3 && hits.length < WANT;
+  // one batch at a time (T-3997): the next is asked for once this one is in and still too few are found
+  const [widened, setWidened] = useState(0);
   useEffect(() => {
     const c = viewCentre.peek();
-    if (wanting && c) void widenPlaces(c[0], c[1]);
-  }, [wanting, query, places.value.size]);
+    if (!wanting || !c) return;
+    let gone = false;
+    void widenPlaces(c[0], c[1]).then((more) => { if (more && !gone) setWidened((n) => n + 1); });
+    return () => { gone = true; };
+  }, [wanting, query, widened]);
 
   const expand = () => {
     if (input.current) {

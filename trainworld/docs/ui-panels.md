@@ -550,7 +550,10 @@ click downloads the game, as the saved games panel's Download does.
   closes it, as does leaving it empty; left with text, it stays open.
 - It finds the save's stations, its lines (by name, or the badge symbol exactly), the registry's
   cities and zones, and the towns and neighbourhoods on each city's OSM place list (fetched the
-  first time the box is focused, `game/placeList.ts`; a place's other OSM names count). Matching
+  first time the box is focused, `game/placeList.ts`; a place's other OSM names count). Place lists
+  are those of the zones within 30 km of the view; while a search of three letters or more finds
+  fewer than five results, the nearest other zones' lists load four at a time, the 48 nearest within
+  200 km at most, so a far town is found only when looking near it [T-400, T-3997]. Matching
   ignores case, accents and punctuation: exact names, then names starting with the text, a word
   starting with it, containing it, then clipped nicknames ("south philly": each word starts like a
   word of the name bar its last two letters, keeping at least four). Ties list cities, lines,

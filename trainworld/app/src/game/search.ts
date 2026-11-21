@@ -248,13 +248,35 @@ export function tagTwins(hits: SearchHit[]) {
 
 type PlaceHit = Extract<SearchHit, { kind: "place" }>;
 
+/** How near a registry city's centre a place list's city or town is taken for it, degrees. */
+const SAME_CITY_DEG = 0.15;
+/** Registry cities by 1-degree cell of their centre, names normalised (built once). */
+let cityCells: Map<string, { name: string; lng: number; lat: number }[]> | null = null, cellsFor = -1;
+const isCity = new WeakMap<Place, boolean>();
+
 /** A place list's own entry for a registry city ("Washington" near Washington, DC's centre),
- * which the city's own result already covers. */
+ * which the city's own result already covers. Kept per place: it does not depend on the query, and
+ * a short query matches most places of the lists loaded (T-3997: 7 s for "s"). */
 function isRegistryCity(p: Place): boolean {
   if (p.kind !== "city" && p.kind !== "town") return false;
-  const name = p.keys[0];
-  return CITIES.some((c) => normalise(c.name).startsWith(name)
-    && Math.hypot((p.lng - c.center[0]) * Math.cos((p.lat * Math.PI) / 180), p.lat - c.center[1]) < 0.15);
+  let known = isCity.get(p);
+  if (known !== undefined) return known;
+  if (!cityCells || cellsFor !== CITIES.length) {
+    cityCells = new Map();
+    for (const c of CITIES) {
+      const k = `${Math.floor(c.center[0])}:${Math.floor(c.center[1])}`;
+      (cityCells.get(k) ?? cityCells.set(k, []).get(k)!).push({ name: normalise(c.name), lng: c.center[0], lat: c.center[1] });
+    }
+    cellsFor = CITIES.length;
+  }
+  const name = p.keys[0], kx = Math.cos((p.lat * Math.PI) / 180), x = Math.floor(p.lng), y = Math.floor(p.lat);
+  known = false;
+  for (let i = -1; i <= 1 && !known; i++)
+    for (let j = -1; j <= 1 && !known; j++)
+      for (const c of cityCells.get(`${x + i}:${y + j}`) ?? [])
+        if (c.name.startsWith(name) && Math.hypot((p.lng - c.lng) * kx, p.lat - c.lat) < SAME_CITY_DEG) { known = true; break; }
+  isCity.set(p, known);
+  return known;
 }
 
 /** "subway A, C, E": line names in order, a first word they all share written once, three at
