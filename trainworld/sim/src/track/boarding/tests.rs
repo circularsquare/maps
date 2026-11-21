@@ -4,6 +4,30 @@ use crate::track::tests::{edge, headway_line, line, node, set_headway, station, 
 /// Riders in the overload tests below, written for a car of 160 at crush, scaled to today's (T-2186).
 const X: f32 = (CRUSH_PER_CAR / 160.0) as f32;
 
+/// T-3939: the stop times worked out where read are `rem_euclid(DAY)` to the bit, far into a game too.
+#[test]
+fn day_rem_is_rem_euclid_to_the_bit() {
+    let mut seed = 12345u64;
+    let mut next = || {
+        seed = seed.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+        (seed >> 11) as f64 / (1u64 << 53) as f64
+    };
+    let mut xs = vec![0.0, -0.0, 1e-300, DAY, -1.0, -DAY * 3.5, 1e15, 2e15];
+    for d in [1.0, 2.0, 3.0, 7.0, 1240.0, 11574.0] {
+        let c = d * DAY;
+        for e in [0.0, 1e-9, 1e-6, 1e-3, 0.5] {
+            xs.extend([c + e, c - e, f64::from_bits(c.to_bits() + 1), f64::from_bits(c.to_bits() - 1)]);
+        }
+    }
+    for _ in 0..200_000 {
+        xs.push(next() * 1e9);
+        xs.push(next() * 3.0 * DAY);
+    }
+    for x in xs {
+        assert_eq!(day_rem(x).to_bits(), x.rem_euclid(DAY).to_bits(), "{x:e}");
+    }
+}
+
 #[test]
 fn ride_km_follows_the_alighting_shares() {
     // stops 0, 10, 20 and 120 km; half of whoever is aboard gets off at each middle stop
@@ -343,7 +367,7 @@ fn an_overloaded_line_leaves_people_behind_and_the_queue_clears() {
     let ra = &b.accounts[0][l as usize].as_ref().unwrap().runs[0];
     let m = ra.deps.len();
     // the queue at A, train by train through the day
-    let q: Vec<(f64, f32, f32)> = (0..m).map(|j| (ra.order_t[j], ra.q_after[ra.order[j] as usize * 3], ra.load[ra.order[j] as usize * 3])).collect();
+    let q: Vec<(f64, f32, f32)> = (0..m).map(|j| (ra.stop_times(0).at(j), ra.q_after[ra.order[j] as usize * 3], ra.load[ra.order[j] as usize * 3])).collect();
     let at = |h: f64| q.iter().filter(|e| e.0 < h * 3600.0).next_back().unwrap().1;
     assert!(at(7.0) > 0.0 && at(9.0) >= at(7.0), "{} {}", at(7.0), at(9.0));
     // T-1067: 600 more a train than it takes, until the platform holds WAITING_CAP as a train
@@ -384,8 +408,8 @@ fn riders_left_behind_too_long_go_another_way() {
     // the queue grows 600 a train through the morning and fills the platform before noon
     let most = (0..m).map(|j| ra.q_after[j * 3]).fold(0.0f32, f32::max) as f64;
     assert!(most <= WAITING_CAP - cap + 1e-3, "{most}");
-    let gave_by_noon: f64 = (0..m).filter(|&j| ra.order_t[j] < 12.5 * 3600.0).map(|j| ra.gone[ra.order[j] as usize * 3] as f64).sum();
-    let gave_after: f64 = (0..m).filter(|&j| ra.order_t[j] > 12.5 * 3600.0).map(|j| ra.gone[ra.order[j] as usize * 3] as f64).sum();
+    let gave_by_noon: f64 = (0..m).filter(|&j| ra.stop_times(0).at(j) < 12.5 * 3600.0).map(|j| ra.gone[ra.order[j] as usize * 3] as f64).sum();
+    let gave_after: f64 = (0..m).filter(|&j| ra.stop_times(0).at(j) > 12.5 * 3600.0).map(|j| ra.gone[ra.order[j] as usize * 3] as f64).sum();
     assert!(gave_by_noon > 0.0 && gave_after > 0.0, "{gave_by_noon} {gave_after}");
     // whoever is left waits at most GIVE_UP_S past their first train (T-1255: on a train every 30
     // minutes or rarer, a rider joins only for a train with room)
@@ -421,7 +445,7 @@ fn riders_come_and_wait_only_for_a_train_with_room_soon() {
     let ra = &b.accounts[0][l as usize].as_ref().unwrap().runs[0];
     let m = ra.deps.len();
     // every peak train leaves full and the platform holds at most the next 30 minutes' trains
-    let peak: Vec<usize> = (0..m).filter(|&j| ra.order_t[j] > 7.0 * 3600.0 && ra.order_t[j] < 9.5 * 3600.0).map(|j| ra.order[j] as usize).collect();
+    let peak: Vec<usize> = (0..m).filter(|&j| ra.stop_times(0).at(j) > 7.0 * 3600.0 && ra.stop_times(0).at(j) < 9.5 * 3600.0).map(|j| ra.order[j] as usize).collect();
     assert!(peak.iter().all(|&i| (ra.load[i * 3] as f64 - cap).abs() < 1e-3));
     let most = (0..m).map(|i| ra.q_after[i * 3]).fold(0.0f32, f32::max) as f64;
     assert!(most <= 5.0 * cap + 1e-3, "{most}");
@@ -788,7 +812,8 @@ fn riders_changing_lines_arrive_with_their_train() {
         let g_t: Vec<f64> = {
             let ra = &b.accounts[0][l2 as usize].as_ref().unwrap().runs[0];
             let m = ra.deps.len();
-            ra.order_t[2 * m..3 * m].to_vec()
+            let ts = ra.stop_times(2);
+            (0..m).map(|j| ts.at(j)).collect::<Vec<f64>>()
         };
         let h0 = epoch.rem_euclid(DAY);
         for c in &hour {

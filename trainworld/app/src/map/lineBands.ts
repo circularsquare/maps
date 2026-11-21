@@ -160,8 +160,11 @@ export function lineBands(lines: readonly BandLine[], edges: readonly BandEdge[]
     const bad = bandsDiffer(out, bands(rail, on, ends, pts, { ...opts, fresh: true }));
     if (bad) console.error(`T-2238 check: bands worked out again for an edit differ from a whole pass: ${bad}`);
   }
-  // (a copy: the clock worker transfers the array it posts)
-  last = { sig, used, out, corridor: out.corridor.slice() };
+  // (a copy: the clock worker transfers the array it posts.) T-3939: kept without `rule`, whose closure holds the
+  // whole of `bands`' working set (18 MB on a 13-zone Tokyo game); asked of a kept result, one whole pass answers
+  let whole: LineBands | null = null;
+  const rule = (edge: number, x: number, y: number) => (whole ??= bands(rail, on, ends, pts, { ...opts, fresh: true })).rule(edge, x, y);
+  last = { sig, used, out: { of: out.of, order: out.order, rule, corridor: out.corridor }, corridor: out.corridor.slice() };
   return out;
 }
 

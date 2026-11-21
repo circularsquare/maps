@@ -39,6 +39,19 @@ fn riders(lines: &[(u32, usize)], round: u32) -> Vec<f32> {
     v
 }
 
+/// T-3939: the native heap live now and at its peak since the last call, MB, when built with the `demand`
+/// feature (its counting allocator); nothing otherwise.
+fn heap(what: &str) {
+    #[cfg(feature = "demand")]
+    {
+        use trainworld_sim::demand::alloc;
+        eprintln!("  heap {what}: live {:.1} MB, peak {:.1} MB", alloc::mb(alloc::current()), alloc::mb(alloc::peak()));
+        alloc::reset_peak();
+    }
+    #[cfg(not(feature = "demand"))]
+    let _ = what;
+}
+
 fn round(a: &mut TrackApi, what: &str) {
     let mut ms = vec![];
     let t0 = Instant::now();
@@ -72,29 +85,59 @@ fn main() {
         let c = TrackApi::convert_save_frame(&bytes, 2);
         if c.is_empty() { bytes } else { c }
     };
+    heap("before the model");
     let mut a = TrackApi::new(-73.985, 40.758, true);
     let t = Instant::now();
     assert!(a.load(&bytes), "not a save");
     eprintln!("load {:.0} ms", t.elapsed().as_secs_f64() * 1e3);
+    heap("after load");
     a.set_unlimited(true);
     a.set_now(clock);
     let info = a.lines_info();
     let lines: Vec<(u32, usize)> = info.chunks(22).filter(|c| c[3] > 0.0).map(|c| (c[0] as u32, a.line_stops(c[0] as u32).len())).filter(|l| l.1 >= 2).collect();
     eprintln!("{} lines, {} running with 2 stops or more, {} stops in all", info.len() / 22, lines.len(), lines.iter().map(|l| l.1).sum::<usize>());
+    heap("after lines_info");
     for day in 0..3 {
         a.set_riders(riders(&lines, day), day);
     }
+    heap("after riders");
     round(&mut a, "three kinds of day");
+    heap("after the account");
     for r in 1..=rounds {
         a.set_riders(riders(&lines, 10 + r), 0);
         round(&mut a, &format!("new weekday riders {r}"));
     }
+    heap("after the rounds");
     let mem = a.boarding_mem();
     let tot: usize = mem.iter().map(|x| x.1).sum();
     eprintln!("account memory {:.1} MB:", tot as f64 / 1e6);
     for (k, b) in mem {
         eprintln!("  {k}: {:.1} MB", b as f64 / 1e6);
     }
+    // T-3939: the readouts the panels poll, every line and kind of day, timed
+    let t = Instant::now();
+    for _ in 0..5 {
+        for &(id, _) in &lines {
+            for day in 0..3 {
+                std::hint::black_box(a.line_account(id, day));
+                std::hint::black_box(a.line_periods(id, day));
+            }
+        }
+        std::hint::black_box(a.today(clock));
+        std::hint::black_box(a.past_day(clock));
+        std::hint::black_box(a.boarding_hour((clock / 3600.0).floor() * 3600.0));
+    }
+    eprintln!("readouts (every line's account and periods, today, past day, the hour) x5: {:.0} ms", t.elapsed().as_secs_f64() * 1e3);
+    let t = Instant::now();
+    for _ in 0..10 {
+        std::hint::black_box(a.today(clock));
+    }
+    let today_ms = t.elapsed().as_secs_f64() * 1e2;
+    let t = Instant::now();
+    for _ in 0..10 {
+        std::hint::black_box(a.boarding_hour((clock / 3600.0).floor() * 3600.0));
+    }
+    eprintln!("  today {today_ms:.1} ms a call, the hour's platforms {:.1} ms a call", t.elapsed().as_secs_f64() * 1e2);
     if let Ok(path) = std::env::var("TW_DUMP") {
         let mut s = String::new();
         for &(id, _) in &lines {

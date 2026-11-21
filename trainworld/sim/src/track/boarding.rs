@@ -248,10 +248,13 @@ pub struct RunAccount {
     /// `[trip * n + stop]`: riders who went another way as the train left (T-1067: `GIVE_UP_S`,
     /// `WAITING_CAP`), never boarding.
     pub gone: Vec<f32>,
-    /// Per stop, the trips in the order they leave it in a day (`stop * trips + k`), and the time
-    /// of day each leaves it.
+    /// Per stop, the trips in the order they leave it in a day (`stop * trips + k`); `stop_times`
+    /// gives the time of day each leaves it.
     pub order: Vec<u32>,
-    pub order_t: Vec<f64>,
+    /// Per departure, as `deps`, its time leaving the first stop not wrapped into the day: with
+    /// `stop_dep_of` the time it leaves each stop (`leaves`). T-3939: worked out where read rather
+    /// than kept per trip and stop, a third of the account's memory.
+    pub dep0: Vec<f64>,
     /// Per stop and hour of the day (`stop * 24 + hour`): riders who could not get on the first
     /// train to leave after they arrived, and the longest anyone waited for a train leaving then.
     pub left_h: Vec<f32>,
@@ -277,6 +280,53 @@ pub struct RunAccount {
     /// mean riders aboard the trains leaving its first stop in that hour, 0 with none
     /// (`hour_loads`, T-2236).
     pub hour_load: Vec<f32>,
+}
+
+/// `x.rem_euclid(DAY)` to the bit, without the division's library call for a time above 0: `x - k * DAY` is
+/// exact there (Sterbenz: `k * DAY` is within a factor of two of `x` once `k` is 1 or more), and a `k` one off
+/// is put right by one exact step.
+#[inline]
+fn day_rem(x: f64) -> f64 {
+    // (zeros too: -0.0 keeps its sign)
+    if !(x > 0.0) || x >= 1e15 {
+        return x.rem_euclid(DAY);
+    }
+    let mut r = x - (x / DAY).floor() * DAY;
+    if r < 0.0 {
+        r += DAY;
+    } else if r >= DAY {
+        r -= DAY;
+    }
+    r
+}
+
+/// One stop's departures in the order they leave it in a day, sorted by time of day (`RunAccount::stop_times`).
+pub struct StopTimes<'a> {
+    ra: &'a RunAccount,
+    k: usize,
+    /// the departures' account indices, in that order
+    pub ord: &'a [u32],
+}
+
+impl StopTimes<'_> {
+    /// The time of day the `i`th of them leaves.
+    #[inline]
+    pub fn at(&self, i: usize) -> f64 {
+        self.ra.leaves(self.ord[i] as usize, self.k)
+    }
+    /// As `slice::partition_point` over the times.
+    pub fn partition_point(&self, pred: impl Fn(f64) -> bool) -> usize {
+        let (mut lo, mut hi) = (0, self.ord.len());
+        while lo < hi {
+            let mid = lo + (hi - lo) / 2;
+            if pred(self.at(mid)) {
+                lo = mid + 1;
+            } else {
+                hi = mid;
+            }
+        }
+        lo
+    }
 }
 
 /// One line's counts over a window of the day (`Boarding::window`).
@@ -713,16 +763,15 @@ impl Boarding {
                     if arr.day <= 0.0 {
                         continue;
                     }
-                    let ord = &ra.order[k * m..(k + 1) * m];
-                    let ts = &ra.order_t[k * m..(k + 1) * m];
-                    let first = ts.partition_point(|&t| t < h0);
-                    let end = ts.partition_point(|&t| t < h0 + 3600.0);
+                    let ts = ra.stop_times(k);
+                    let first = ts.partition_point(|t| t < h0);
+                    let end = ts.partition_point(|t| t < h0 + 3600.0);
                     let start = events.len() / 2;
                     // the last train before the hour, the hour's, and the first after it
                     let at = |j: isize| -> (f64, usize) {
                         let jj = j.rem_euclid(m as isize) as usize;
                         let wrap = j.div_euclid(m as isize) as f64 * DAY;
-                        (ts[jj] + wrap - h0, ord[jj] as usize)
+                        (ts.at(jj) + wrap - h0, ts.ord[jj] as usize)
                     };
                     // T-1123: each train's arrival too, when its riders get off and on: its stand
                     // there before it leaves (the closing stand at a first stop), never before
@@ -886,8 +935,8 @@ impl Boarding {
             let fnode = fnode as usize;
             let d = (net.node_x[fnode] - x0).hypot(net.node_y[fnode] - y0) / net.k_at(y0);
             let walk = d * XFER_DETOUR / XFER_MPS;
-            let ts = &ra.order_t[kf * m..(kf + 1) * m];
-            let ord = &ra.order[kf * m..(kf + 1) * m];
+            let ts = ra.stop_times(kf);
+            let ord = ts.ord;
             let h0 = fe.rem_euclid(DAY);
             // T-1124: riders get off as the train stops, its stand before it leaves
             let stand = |i: usize| Some(fls.prof_of((f.run as usize).min(1), ra.levels[i] as usize, ra.vars[i])).and_then(|p| Some(p.dep.get(kf)? - p.arr.get(kf)?)).unwrap_or(0.0).max(0.0);
@@ -898,9 +947,9 @@ impl Boarding {
                 let (lo, hi) = (h0 + a - walk, h0 + a + 3600.0 - walk);
                 for d in ((lo / DAY).floor() as i64)..=(((hi + most) / DAY).floor() as i64) {
                     let off = d as f64 * DAY;
-                    let (i0, i1) = (ts.partition_point(|&t| t + off < lo), ts.partition_point(|&t| t + off < hi + most));
+                    let (i0, i1) = (ts.partition_point(|t| t + off < lo), ts.partition_point(|t| t + off < hi + most));
                     for j in i0..i1 {
-                        let reach = ts[j] + off - stand(ord[j] as usize) - h0 + walk;
+                        let reach = ts.at(j) + off - stand(ord[j] as usize) - h0 + walk;
                         let w = ra.load[ord[j] as usize * n + kf - 1] as f64;
                         if w > 0.0 && reach >= a && reach < a + 3600.0 {
                             trains.push((reach, w));
@@ -1070,17 +1119,21 @@ impl Boarding {
                 continue;
             }
             for k in 0..n {
-                let ts = &ra.order_t[k * m..(k + 1) * m];
-                let ord = &ra.order[k * m..(k + 1) * m];
+                let ts = ra.stop_times(k);
+                let ord = ts.ord;
                 let s = if r == 0 { k } else { n - 1 - k };
                 let mut here = [0.0f64; PERIODS];
+                let t0 = if m > 0 { ts.at(0) } else { 0.0 };
+                let mut ti = t0;
                 for i in 0..m {
                     let q = ra.q_after[ord[i] as usize * n + k] as f64;
                     let gone = ra.gone[ord[i] as usize * n + k] as f64;
-                    let gap = if i + 1 < m { ts[i + 1] - ts[i] } else { ts[0] + DAY - ts[i] };
+                    let next = if i + 1 < m { ts.at(i + 1) } else { t0 + DAY };
+                    let gap = next - ti;
                     let w = q * gap.max(0.0) + gone * WAIT_FOR_ROOM_S;
-                    at[period_at(ts[i]) * n + s] += w;
-                    here[period_at(ts[i])] += w;
+                    at[period_at(ti) * n + s] += w;
+                    here[period_at(ti)] += w;
+                    ti = next;
                 }
                 // T-1926: the stretch leaving this stop, in run 0's numbering; the fuller way's
                 if k + 1 < n {
@@ -1142,14 +1195,18 @@ impl Boarding {
                 for h in 0..24 {
                     out[period_at(h as f64 * 3600.0)][3] += ra.left_h[k * 24 + h] as f64;
                 }
-                let ts = &ra.order_t[k * m..(k + 1) * m];
-                let ord = &ra.order[k * m..(k + 1) * m];
+                let ts = ra.stop_times(k);
+                let ord = ts.ord;
                 let mut here = [0.0f64; PERIODS];
+                let t0 = ts.at(0);
+                let mut ti = t0;
                 for i in 0..m {
                     let q = ra.q_after[ord[i] as usize * n + k] as f64;
                     let gone = ra.gone[ord[i] as usize * n + k] as f64;
-                    let gap = if i + 1 < m { ts[i + 1] - ts[i] } else { ts[0] + DAY - ts[i] };
-                    let p = period_at(ts[i]);
+                    let next = if i + 1 < m { ts.at(i + 1) } else { t0 + DAY };
+                    let gap = next - ti;
+                    let p = period_at(ti);
+                    ti = next;
                     // T-1255: a rider who went another way counts the wait they would not take
                     let w = q * gap.max(0.0) + gone * WAIT_FOR_ROOM_S;
                     out[p][4] += w;
@@ -1250,24 +1307,25 @@ impl Boarding {
                 let open = ra.stop_open.get(k).map_or(open, |o| o - day0);
                 let from = if open > from { open - 1e-6 } else { from };
                 let arr = &ra.arrivals[k];
-                let ts = &ra.order_t[k * m..(k + 1) * m];
-                let ord = &ra.order[k * m..(k + 1) * m];
+                let ts = ra.stop_times(k);
+                let ord = ts.ord;
                 let q = |j: usize| ra.q_after[ord[j] as usize * n + k] as f64;
-                let lo = ts.partition_point(|&s| s <= from);
-                let done = ts.partition_point(|&s| s <= to);
+                let lo = ts.partition_point(|s| s <= from);
+                let done = ts.partition_point(|s| s <= to);
                 if done <= lo {
                     continue;
                 }
-                let (t_before, q_before) = if lo > 0 { (ts[lo - 1], q(lo - 1)) } else { (ts[m - 1] - DAY, q(m - 1)) };
+                let (t_before, q_before) = if lo > 0 { (ts.at(lo - 1), q(lo - 1)) } else { (ts.at(m - 1) - DAY, q(m - 1)) };
                 let last = done - 1;
                 // T-1815: each departure's `cum` is the next one's `cum(prev)`, worked out once
                 let c_before = arr.cum(t_before);
-                let mut b = (arr.cum(ts[last]) - q(last)) - (c_before - q_before);
+                let mut b = (arr.cum(ts.at(last)) - q(last)) - (c_before - q_before);
                 let (mut prev, mut q_prev, mut c_prev) = (t_before, q_before, c_before);
                 for j in lo..done {
-                    let c_j = arr.cum(ts[j]);
+                    let tj = ts.at(j);
+                    let c_j = arr.cum(tj);
                     let mut a = (c_j - c_prev).max(0.0);
-                    if prev < open && open <= ts[j] {
+                    if prev < open && open <= tj {
                         // whoever was waiting then never was: the platform starts empty
                         b -= q_prev + arr.cum(open) - c_prev;
                         a = (c_j - arr.cum(open)).max(0.0);
@@ -1275,7 +1333,7 @@ impl Boarding {
                     w.left += a.min(q(j));
                     // T-1067: those who went another way never boarded
                     b -= ra.gone[ord[j] as usize * n + k] as f64;
-                    (prev, q_prev, c_prev) = (ts[j], q(j), c_j);
+                    (prev, q_prev, c_prev) = (tj, q(j), c_j);
                 }
                 let b = b.max(0.0);
                 w.stops[if r == 0 { k } else { n - 1 - k }] += b;
@@ -1330,7 +1388,7 @@ impl Boarding {
                 for ra in &acc.runs {
                     add("deps, levels, stop_dep", v(ra.deps.capacity(), 8) + 2 * ra.levels.capacity() + ra.stop_dep.iter().map(|x| x.capacity() * 8).sum::<usize>());
                     add("load, q_after, gone", v(ra.load.capacity() + ra.q_after.capacity() + ra.gone.capacity(), 4));
-                    add("order, order_t", v(ra.order.capacity(), 4) + v(ra.order_t.capacity(), 8));
+                    add("order, dep0", v(ra.order.capacity(), 4) + v(ra.dep0.capacity(), 8));
                     add("left_h, wait_h, hour_load", v(ra.left_h.capacity() + ra.wait_h.capacity() + ra.hour_load.capacity(), 4));
                     add("stop_open, ride_km", v(ra.stop_open.capacity() + ra.ride_km.capacity(), 8));
                     add("arrivals", v(ra.arrivals.capacity(), size_of::<Arrivals>()));
@@ -1378,6 +1436,18 @@ impl RunAccount {
         self.stop_dep.get(self.levels[j] as usize * PROFILE_VARS + self.vars.get(j).copied().unwrap_or(0) as usize).map_or(&[], |v| &v[..])
     }
 
+    /// The time of day departure `j` leaves stop `k` (the same sum `simulate_carry` orders by).
+    #[inline]
+    pub fn leaves(&self, j: usize, k: usize) -> f64 {
+        day_rem(self.dep0[j] + self.stop_dep_of(j).get(k).copied().unwrap_or(0.0))
+    }
+
+    /// Stop `k`'s departures in the order they leave it in a day.
+    pub fn stop_times(&self, k: usize) -> StopTimes<'_> {
+        let m = self.deps.len();
+        StopTimes { ra: self, k, ord: &self.order[k * m..(k + 1) * m] }
+    }
+
     /// The account's index of a trip leaving its first stop at game time `dep` (any day).
     pub fn find(&self, dep: f64) -> Option<usize> {
         let rel = dep.rem_euclid(DAY);
@@ -1402,7 +1472,8 @@ impl RunAccount {
         let (mut sum, mut trains) = (vec![0.0f64; s * 24], vec![0u32; s * 24]);
         for k in 0..s {
             for i in 0..m {
-                let (Some(&j), Some(&t)) = (self.order.get(k * m + i), self.order_t.get(k * m + i)) else { continue };
+                let Some(&j) = self.order.get(k * m + i) else { continue };
+                let t = self.leaves(j as usize, k);
                 let h = ((t.rem_euclid(DAY) / 3600.0) as usize).min(23);
                 sum[k * 24 + h] += self.load.get(j as usize * n + k).copied().unwrap_or(0.0) as f64;
                 trains[k * 24 + h] += 1;
@@ -1589,7 +1660,7 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
         q_after: vec![0.0; mk * n],
         gone: vec![0.0; mk * n],
         order: vec![0; mk * n],
-        order_t: vec![0.0; mk * n],
+        dep0: keep.iter().map(|&i| trips[i].dep).collect(),
         left_h: vec![0.0; n * 24],
         wait_h: vec![0.0; n * 24],
         arrivals: vec![],
@@ -1710,9 +1781,8 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
         // this stop's departures in a day, by time of day
         let mut day: Vec<(f64, u32)> = order.iter().filter(|&&i| kept(i)).map(|&i| (time(i, k).rem_euclid(DAY), slot[i])).collect();
         day.sort_by(|a, b| a.0.total_cmp(&b.0));
-        for (j, (t, s)) in day.into_iter().enumerate() {
+        for (j, (_, s)) in day.into_iter().enumerate() {
             acc.order[k * mk + j] = s;
-            acc.order_t[k * mk + j] = t;
         }
     }
     acc.arrivals = arrivals;
