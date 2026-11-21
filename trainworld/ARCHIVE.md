@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4011 [P3] {L:map-look} A nicer train icon (2026-11-21): Train icon redrawn squarer and lower with splayed rails; before/after in artifacts/trainworld/kinds2/icons-before-after.png.
+- T-4010 [P2] {L:buses} Station kinds: train, tram, BRT, port; BRT tweaks (2026-11-21): Station tool split into Train station, Tram stop, BRT station, Port (each places only its own); BRT lane takes 100 buses an hour; BRT icon is a road with a lane, no bus; BRT stations sell waiting room and passage, no park and ride. Notes: T-3999.
 - T-4009 [P2] {L:small-fixes} Map hover stays up over the panels (2026-11-21): the map's hover tag and tool ghosts hide when the pointer is over a bar, button or panel inside the map (map/overChrome.ts turns it into the container's mouseleave)
 - T-3996 [P2] {L:buses} Built BRT border dashes fixed on the ground (2026-11-21): BRT lane dashes (built border and blueprint free edge, one shared shader path) are now 24 m on, 16 m off on the ground at every zoom, carried continuously around bends; busLayer.ts LANE_PERIOD_M.
 - T-4004 [P2] {L:small-fixes} Search finds far towns without slowing the game (2026-11-21): search finds towns anywhere: a world name index from the zones' place lists (pipeline/place_index.py, 4,097 files, ~135 MB gzipped on R2, ~30 KB a shard per search; all 3.65M places found by name), and place matching moved to a worker, so at 100x on the real save no query put the trips past the 1 h pull lag. notes/T-4004.md.
