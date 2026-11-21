@@ -95,10 +95,15 @@ fn every_local_waits_for_its_express() {
 /// a local and caught it before B, the first passing station, 24 times in 4 h. At any phase of the
 /// express no express now catches a local before the first passing station either way (`lead_in`);
 /// at the phase spacing gives it (by what each offset costs, `spacing`) there is no bad pass at
-/// all on headway lines. Plain count lines (12 and 9 trains) too, before the first passing station.
+/// all on headway lines. Count lines too (T-3931, the batch check of T-3929: locals leaving 1 s
+/// after their express): their trains drift against each other's, so a run has many different
+/// waits to fit in its `MAX_VARS` timetables, and merged by sort order they added enough waiting
+/// to put whole runs back on the slot's (`floor`) or waited longer at one station than a train
+/// needed, just in front of the next express. Each of these counts (local/express trains) had bad
+/// passes before (12/9 2, 12/7 25, 13/9 58, 9/6 31, 10/12 52 in 4 h).
 #[test]
 fn counted_expresses_never_run_through_locals() {
-    for counts in [None, Some((12u32, 9u32))] {
+    for counts in [None, Some((12u32, 9u32)), Some((12, 7)), Some((13, 9)), Some((9, 6)), Some((10, 12))] {
         let (mut w, n, local, express) = shinkansen();
         for id in [local, express] {
             match counts {
@@ -115,10 +120,7 @@ fn counted_expresses_never_run_through_locals() {
         let (bad, good) = bad_passes(&w, local, express, &n, &n[1..6], t0, t0 + 4.0 * 3600.0, false);
         eprintln!("{counts:?}: {good} passes at passing stations, {} bad", bad.len());
         assert!(good >= 8, "{counts:?}: the expresses pass the locals");
-        if counts.is_none() {
-            assert!(bad.is_empty(), "{} bad passes, first {:?}", bad.len(), &bad[..bad.len().min(6)]);
-        }
-        assert!(early(&bad).is_empty(), "{counts:?}: {:?}", early(&bad));
+        assert!(bad.is_empty(), "{counts:?}: {} bad passes, first {:?}", bad.len(), &bad[..bad.len().min(6)]);
         let h = 3600.0 / w.net.line_tph[express as usize][0] as f64;
         for k in 0..24 {
             w.net.line_phase[express as usize][0] = (h * k as f64 / 24.0) as f32;
@@ -172,7 +174,7 @@ fn variants_come_back_after_a_load() {
 #[test]
 fn cluster_keeps_every_departure_under_its_variant() {
     let each: Vec<Vec<i64>> = (0..40).map(|i| vec![(i * 7) % 13, (i * 3) % 5, 0]).collect();
-    let (reps, which) = cluster(&each);
+    let (reps, which) = cluster(&each, |_, _| true);
     assert!(reps.len() <= MAX_VARS);
     for (e, &k) in each.iter().zip(&which) {
         assert!(reps[k].iter().zip(e).all(|(r, x)| r >= x), "{e:?} under {:?}", reps[k]);
@@ -415,4 +417,3 @@ fn a_line_timed_otherwise_is_noted_changed() {
     w.retime();
     assert!(w.svc.take_changed().is_empty());
 }
-

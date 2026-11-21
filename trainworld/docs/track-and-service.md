@@ -946,7 +946,7 @@ stop before the stretch. Behind the one slower line it is timetabled with, the d
 each faster train behind the slower train ahead of it (T-3346 stage 2, `timing::follow_one`): a train
 that never comes within `s` of it loses nothing; one that would runs slower from the node before the
 first place it would, losing just enough to keep `s` at every node of the stretch (and stands at the
-stretch's start if it reaches it too close), in at most 8 versions per slot as for waits at passing
+stretch's start if it reaches it too close), in at most 16 versions per slot as for waits at passing
 stations below; the averaged loss stays the figure. A train loses at most the averaged loss plus its
 stand at the far end less 60 s (`timing::TURN_MIN_S`), so it still takes its next departure (the fleet
 is sized on the averaged loss); past that it is held behind the slower train by the display guard.
@@ -998,9 +998,12 @@ rule and caps, so a local waits for exactly the expresses that would catch it an
 the last of them. Before the first passing point there is nowhere to step aside: a faster train that
 would get there less than 10 s after the slower one it caught on the way (`timing::LEAD_IN_CLEAR_S`) is
 timed behind it to there, standing at the stretch's start or running slower, no more than its stand at
-the far end allows (`timing::lead_in`, T-3929), and the slower train's waits read it as it runs. A run keeps at most 8 versions of its timetable per slot (`timing::MAX_VARS`; waits
-rounded up to whole 2 s, and past 8 the two versions that add the least waiting merge into one whose
-waits cover both), and each weekday departure names its version by its place in the day, its stretch
+the far end allows (`timing::lead_in`, T-3929), and the slower train's waits read it as it runs. A run keeps at most 16 versions of its timetable per slot (`timing::MAX_VARS`; waits
+rounded up to whole 2 s, and past 16 the two versions, of any, that add the least waiting merge into
+one whose waits cover both, T-3931). A merged version can wait longer at a station than one of its
+trains needs and leave just in front of the next faster train, so a train runs one only where it then
+meets no faster train at a station its own waits do not (`overtake::conflicts`; at its own, only where
+the wait it needs is past its cap), and a merge every train of may run is taken first. Each weekday departure names its version by its place in the day, its stretch
 and its number in it (`Run::pattern`, into `Trip::var`; the renderer, boarding, the chart, the board and
 the train's stops read the trip's). Weekends of a line's own run the slot's timetable (the versions
 were worked out against weekday trains). A train whose own version runs longer than the slot's stands

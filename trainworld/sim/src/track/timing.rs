@@ -27,7 +27,7 @@ use super::profile::{self, Hold, Profile};
 use super::service::{lattice_deps, lattice_deps_local, profile_with, Cal, Dep, Lattice, Run, Service, Variant, NO_PLACE};
 
 /// Variants per run and slot, besides the slot's own timetable.
-pub const MAX_VARS: usize = 8;
+pub const MAX_VARS: usize = 16;
 /// Profiles per (line, run, slot) the renderer indexes: the slot's and its variants
 /// (`((line * 2 + run) * SLOTS + slot) * PROFILE_VARS + var`).
 pub const PROFILE_VARS: usize = MAX_VARS + 1;
@@ -284,38 +284,86 @@ fn step(x: f64) -> i64 {
 }
 
 /// At most `MAX_VARS` keys that every departure's own fits under (each part no smaller), and per
-/// departure which: alike keys merge, the pair that adds the least waiting first.
-fn cluster(each: &[Vec<i64>]) -> (Vec<Vec<i64>>, Vec<usize>) {
-    let mut keys: Vec<(Vec<i64>, f64)> = vec![];
-    let mut sorted: Vec<&Vec<i64>> = each.iter().collect();
-    sorted.sort();
-    for k in sorted {
+/// departure which: alike keys merge, the pair that adds the least waiting first, of any two
+/// (T-3931: on lines whose trains drift against each other's, count lines, the keys that sort
+/// together are rarely alike, and merging only those added enough waiting to put whole runs back
+/// on the slot's timetable, `floor`). `ok(key, i)`: whether departure `i` may run that key's
+/// timetable; a merge every departure of may is taken first, and only where none is left one
+/// that may not.
+fn cluster(each: &[Vec<i64>], ok: impl Fn(&[i64], usize) -> bool) -> (Vec<Vec<i64>>, Vec<usize>) {
+    // (key, its departures)
+    let mut keys: Vec<(Vec<i64>, Vec<usize>)> = vec![];
+    let mut sorted: Vec<usize> = (0..each.len()).collect();
+    sorted.sort_by(|&a, &b| each[a].cmp(&each[b]));
+    for i in sorted {
         match keys.last_mut() {
-            Some(x) if &x.0 == k => x.1 += 1.0,
-            _ => keys.push((k.clone(), 1.0)),
+            Some(x) if x.0 == each[i] => x.1.push(i),
+            _ => keys.push((each[i].clone(), vec![i])),
         }
     }
     let max = |a: &[i64], b: &[i64]| a.iter().zip(b).map(|(x, y)| *x.max(y)).collect::<Vec<i64>>();
-    let cost = |a: &(Vec<i64>, f64), b: &(Vec<i64>, f64)| {
+    // what a merge adds (the waiting every departure of both gains), past every merge all of whose
+    // departures may run it where one may not
+    const UNSAFE: f64 = 1e15;
+    let cost = |a: &(Vec<i64>, Vec<usize>), b: &(Vec<i64>, Vec<usize>)| {
         let m = max(&a.0, &b.0);
-        m.iter().zip(&a.0).map(|(x, y)| (x - y) as f64).sum::<f64>() * a.1 + m.iter().zip(&b.0).map(|(x, y)| (x - y) as f64).sum::<f64>() * b.1
+        let add = |k: &(Vec<i64>, Vec<usize>)| m.iter().zip(&k.0).map(|(x, y)| (x - y) as f64).sum::<f64>() * k.1.len() as f64;
+        add(a) + add(b) + if a.1.iter().chain(&b.1).all(|&i| ok(&m, i)) { 0.0 } else { UNSAFE }
     };
+    if keys.len() <= MAX_VARS {
+        let which = (0..each.len()).map(|i| keys.iter().position(|k| k.1.contains(&i)).unwrap()).collect();
+        return (keys.into_iter().map(|k| k.0).collect(), which);
+    }
+    // every pair's cost, and per key the cheapest other (the scan per merge is then one per key)
+    let mut c: Vec<Vec<f64>> = vec![vec![f64::INFINITY; keys.len()]; keys.len()];
+    for i in 0..keys.len() {
+        for j in i + 1..keys.len() {
+            let x = cost(&keys[i], &keys[j]);
+            (c[i][j], c[j][i]) = (x, x);
+        }
+    }
+    let low = |row: &[f64]| row.iter().enumerate().fold((f64::INFINITY, 0), |b, (j, &x)| if x < b.0 { (x, j) } else { b });
+    let mut near: Vec<(f64, usize)> = c.iter().map(|r| low(r)).collect();
     while keys.len() > MAX_VARS {
-        let i = (0..keys.len() - 1).min_by(|&i, &j| cost(&keys[i], &keys[i + 1]).total_cmp(&cost(&keys[j], &keys[j + 1]))).unwrap();
-        let b = keys.remove(i + 1);
-        keys[i] = (max(&keys[i].0, &b.0), keys[i].1 + b.1);
+        let bi = (0..keys.len()).min_by(|&a, &b| near[a].0.total_cmp(&near[b].0)).unwrap();
+        let (bi, bj) = (bi.min(near[bi].1), bi.max(near[bi].1));
+        let b = keys.remove(bj);
+        c.remove(bj);
+        c.iter_mut().for_each(|row| {
+            row.remove(bj);
+        });
+        near.remove(bj);
+        keys[bi] = (max(&keys[bi].0, &b.0), keys[bi].1.iter().chain(&b.1).copied().collect());
+        for j in (0..keys.len()).filter(|&j| j != bi) {
+            let x = cost(&keys[bi], &keys[j]);
+            (c[bi][j], c[j][bi]) = (x, x);
+        }
+        for i in 0..keys.len() {
+            let (x, j) = near[i];
+            near[i] = if i == bi || j == bi || j == bj {
+                low(&c[i])
+            } else {
+                let j = if j > bj { j - 1 } else { j };
+                if c[i][bi] < x { (c[i][bi], bi) } else { (x, j) }
+            };
+        }
+    }
+    let mut which = vec![0; each.len()];
+    for (k, key) in keys.iter().enumerate() {
+        for &i in &key.1 {
+            which[i] = k;
+        }
     }
     let reps: Vec<Vec<i64>> = keys.into_iter().map(|k| k.0).collect();
-    let which = each
-        .iter()
-        .map(|e| {
-            // the representative it fits under that adds the least
-            (0..reps.len())
-                .filter(|&i| reps[i].iter().zip(e).all(|(r, x)| r >= x))
-                .min_by_key(|&i| reps[i].iter().zip(e).map(|(r, x)| r - x).sum::<i64>())
-                .unwrap_or(0)
-        })
-        .collect();
+    for (i, e) in each.iter().enumerate() {
+        // the representative it fits under and may run that adds the least, if not its own
+        let add = |k: usize| reps[k].iter().zip(e).map(|(r, x)| r - x).sum::<i64>();
+        if let Some(k) = (0..reps.len()).filter(|&k| reps[k].iter().zip(e).all(|(r, x)| r >= x) && ok(&reps[k], i)).min_by_key(|&k| add(k)) {
+            if add(k) < add(which[i]) || !ok(&reps[which[i]], i) {
+                which[i] = k;
+            }
+        }
+    }
     (reps, which)
 }
 
@@ -399,7 +447,11 @@ fn passing_waits(net: &Network, svc: &Service, lats: &[Option<Lattice>], built: 
             let times: Vec<(f64, f64)> = deps.iter().map(|d| (d.0, d.1.min(hcap))).collect();
             let waits = overtake::train_waits(&times, &stations);
             let each: Vec<Vec<i64>> = waits.iter().map(|w| w.iter().map(|&x| step(x)).collect()).collect();
-            let (reps, which) = cluster(&each);
+            // a train runs a merged timetable only where it meets no faster train at a station its
+            // own does not
+            let secs = |k: &[i64]| k.iter().map(|&x| x as f64 * STEP_S).collect::<Vec<f64>>();
+            let own: Vec<u64> = each.iter().zip(&times).map(|(k, t)| overtake::conflicts(t.0, &stations, &secs(k))).collect();
+            let (reps, which) = cluster(&each, |k, i| overtake::conflicts(times[i].0, &stations, &secs(k)) & !own[i] == 0);
             let vars = reps
                 .iter()
                 .map(|rep| {
@@ -723,7 +775,7 @@ fn following(net: &Network, svc: &Service, lats: &[Option<Lattice>], built: &mut
 fn cluster_follow(each: &[Vec<i64>]) -> (Vec<Vec<i64>>, Vec<usize>) {
     // an earlier start is the larger key's part, as `cluster` merges by the larger part
     let flip: Vec<Vec<i64>> = each.iter().map(|k| vec![k[0], -k[1], k[2]]).collect();
-    let (reps, which) = cluster(&flip);
+    let (reps, which) = cluster(&flip, |_, _| true);
     (reps.into_iter().map(|k| vec![k[0], -k[1], k[2]]).collect(), which)
 }
 

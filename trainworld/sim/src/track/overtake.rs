@@ -438,5 +438,26 @@ pub fn train_waits(deps: &[(f64, f64)], stations: &[(usize, f64, Vec<Pass>)]) ->
         .collect()
 }
 
+/// T-3931: at which of `stations` (as `train_waits` takes them; bits, the 64th standing for
+/// every one from there on) a slower train leaving at `d` and waiting `waits` (s) there would
+/// leave with a faster train less than its lead behind that catches it before the next passing
+/// point: a timetable of waits merged from several trains' can wait longer at one station than
+/// this train needs, and leave just in front of the next faster train. (A train's own waits have
+/// such a station where the wait it needs is past its cap.)
+pub fn conflicts(d: f64, stations: &[(usize, f64, Vec<Pass>)], waits: &[f64]) -> u64 {
+    let mut acc = 0.0;
+    let mut n = 0;
+    for (j, ((_, off, passes), &w)) in stations.iter().zip(waits).enumerate() {
+        acc += w;
+        let dep = d + off + acc;
+        // (a lead is a minute or two: none reaches back an hour)
+        let i = passes.partition_point(|p| p.at < dep - 3600.0);
+        if passes[i..].iter().find(|p| p.at + p.lead > dep).is_some_and(|p| p.at + p.run_f < dep + p.run_s + p.spacing) {
+            n |= 1 << j.min(63);
+        }
+    }
+    n
+}
+
 #[cfg(test)]
 pub(crate) mod tests;

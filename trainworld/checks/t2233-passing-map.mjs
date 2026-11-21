@@ -9,18 +9,22 @@
 // shots of E, light and dark, with an express passing a local standing there, in
 // artifacts/trainworld/t2233/. T-3346 stage 2: each local leaves a passing station at least 60 s
 // (`PASS_CLEAR_S`) after the express that passed it, in the timetable (positions with no lag) and as
-// drawn; other headways (local, express, s) for its 30/10 and 10/30. From the maps root:
-//   node trainworld/checks/t2233-passing-map.mjs [url] [hours] [local s] [express s]
-import { mkdir, writeFile } from 'node:fs/promises';
+// drawn; other headways (local, express, s) for its 30/10 and 10/30. T-3929, T-3931: with `--count`
+// the two numbers are train counts (lines set by count, which drift against each other). From the
+// maps root:
+//   node trainworld/checks/t2233-passing-map.mjs [url] [hours] [local s] [express s] [--count]
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { ARTIFACTS, launchChrome, collectErrors } from './lib.mjs';
 
 const OUT = join(ARTIFACTS, 't2233');
 await mkdir(OUT, { recursive: true });
-const url = process.argv[2] ?? 'http://localhost:6187/';
-const HOURS = Number(process.argv[3] ?? 2);
-const HW = [Number(process.argv[4] ?? 600), Number(process.argv[5] ?? 600)];
-const TAG = HW[0] === 600 && HW[1] === 600 ? '' : `-${HW[0] / 60}-${HW[1] / 60}`;
+const COUNT = process.argv.includes('--count');
+const argv = process.argv.filter((a) => a !== '--count');
+const url = argv[2] ?? 'http://localhost:6187/';
+const HOURS = Number(argv[3] ?? 2);
+const HW = [Number(argv[4] ?? 600), Number(argv[5] ?? 600)];
+const TAG = COUNT ? `-count-${HW[0]}-${HW[1]}` : HW[0] === 600 && HW[1] === 600 ? '' : `-${HW[0] / 60}-${HW[1] / 60}`;
 /** as overtake.rs: a local leaves this long after the express passing it; frames are a few game
  * seconds apart at 60x, and the express's middle passes the local's a little before the station */
 const PASS_CLEAR_S = 60, CLEAR_SLACK_S = 8;
@@ -45,7 +49,7 @@ try {
   await page.waitForFunction(() => window.tw?.world?.value && window.tw?.client, undefined, { timeout: 180000 });
   await page.evaluate(() => window.tw.client.post({ kind: 'sandbox' }));
   await page.waitForTimeout(1000);
-  const built = await page.evaluate(async ([PTS, HW]) => {
+  const built = await page.evaluate(async ([PTS, HW, COUNT]) => {
     const tw = window.tw, c = tw.client;
     const pause = (ms) => new Promise((d) => setTimeout(d, ms));
     const xy = PTS.map(([lng, lat]) => { const p = tw.lngLatToPack(lng, lat); return [p.x, p.y]; });
@@ -73,8 +77,8 @@ try {
     await c.edit({ op: 'setStops', line: express, stops: [stops[0], stops[3], stops[6]] });
     await c.edit({ op: 'lineFast', line: express, fast: true });
     await c.edit({ op: 'lineLook', line: express, name: 'Express', colour: '#d9467a', letter: 'X' });
-    await c.edit({ op: 'setHeadway', line: local, seconds: [HW[0], HW[0], 0] });
-    await c.edit({ op: 'setHeadway', line: express, seconds: [HW[1], HW[1], 0] });
+    for (const [line, x] of [[local, HW[0]], [express, HW[1]]])
+      await c.edit(COUNT ? { op: 'setTrainCount', line, trains: [x, x, 0] } : { op: 'setHeadway', line, seconds: [x, x, 0] });
     log.push((await c.edit({ op: 'stationUpgrade', nodes: stops.slice(1, 6), bit: 8, on: true }))?.ok);
     await pause(2500);
     const n = tw.renderer.net, T = n.turnbacks;
@@ -86,8 +90,14 @@ try {
       if (last) outerEnds.push([T.edge[i], T.lane ? T.lane[i * 2 + 1] : -1]);
     }
     return { log, stops, local, express, passing: n.passing ? Array.from(n.passing) : [], outerEnds, cars: [n.lineCars?.[local] ?? 8, n.lineCars?.[express] ?? 8] };
-  }, [PTS, HW]);
+  }, [PTS, HW, COUNT]);
   console.log('built', JSON.stringify({ ...built, passing: built.passing.length / STRIDE }));
+  // the game as built, for a Rust probe of the same timetable (`SAVE_TO=<file>`)
+  if (process.env.SAVE_TO) {
+    const dl = page.waitForEvent('download', { timeout: 60000 });
+    await page.evaluate(() => window.tw.client.post({ kind: 'export' }));
+    await writeFile(process.env.SAVE_TO, await readFile(await (await dl).path()));
+  }
   check(built.log.every(Boolean), 'the test line was built, a spur 280 m past E, passing tracks at B to F');
   // where each line's trains are at passing stations, along run 0 (m): on the outer track (stopsOf) or
   // the running track (through: running through, or stopping beside a slower line, T-2248)
@@ -144,7 +154,7 @@ try {
       requestAnimationFrame(step);
     });
     c.setRunning(false);
-    return { frames, error, passedBy: r.guard.passedBy, wall: performance.now() - w0 };
+    return { frames, error, passedBy: r.guard.passedBy, wall: performance.now() - w0, pv: tw.profiles.PROFILE_VARS };
   }, [HOURS, [built.local, built.express]]);
   check(!run.error, `the sampling ran${run.error ? ': ' + run.error : ''}`);
   const f = run.frames;
@@ -224,7 +234,10 @@ try {
     return out;
   };
   const leaveT = leaves(7), leaveM = leaves(3);
-  const res = { headways: HW, leaveTimetable: leaveT, leaveMap: leaveM, frames: f.length, gameHours: f.length ? +((f[f.length - 1][0] - f[0][0]) / 3600).toFixed(2) : 0, wallS: +(run.wall / 1000).toFixed(0), passes, where, passesBad, overlaps, besideFrames, guardBeside: run.passedBy, lagMax, lags, bad };
+  // which of its timetables (0: the slot's, k: its kth train-by-train version) each run's trips ran
+  const vars = {};
+  for (const [, tr] of f) for (const x of tr) { const k = `${x[1] === built.local ? 'local' : 'express'} run ${x[2]}`; (vars[k] ??= new Set()).add(x[4] % run.pv); }
+  const res = { headways: HW, count: COUNT, vars: Object.fromEntries(Object.entries(vars).map(([k, v]) => [k, [...v].sort((a, b) => a - b)])), leaveTimetable: leaveT, leaveMap: leaveM, frames: f.length, gameHours: f.length ? +((f[f.length - 1][0] - f[0][0]) / 3600).toFixed(2) : 0, wallS: +(run.wall / 1000).toFixed(0), passes, where, passesBad, overlaps, besideFrames, guardBeside: run.passedBy, lagMax, lags, bad };
   console.log(JSON.stringify(res));
   await writeFile(join(OUT, `passing-map${TAG}.json`), JSON.stringify(res));
   if (process.env.DUMP) await writeFile(process.env.DUMP, JSON.stringify(f));

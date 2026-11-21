@@ -9,7 +9,7 @@
 /** The sim's `params::SLOTS` (the clock worker checks it against `TrackApi.profile_slots`). */
 export const SLOTS = 5;
 /** The sim's `timing::PROFILE_VARS` (checked against `TrackApi.profile_vars`). */
-export const PROFILE_VARS = 9;
+export const PROFILE_VARS = 17;
 /** Profiles a run has: its slots' and their variants. */
 export const PROFILES_PER_RUN = SLOTS * PROFILE_VARS;
 /** Profiles a line has: both runs'. */
