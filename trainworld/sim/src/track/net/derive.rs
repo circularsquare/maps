@@ -252,9 +252,9 @@ impl Network {
     }
 
     /// T-3062: the tram tracks (0 to 2) of a crossing of edges `e1` and `e2`. At a flat crossing a tram
-    /// gives way to a train, and the map draws its stroke of the mark broken.
+    /// gives way to a train, and the map draws its stroke of the mark broken (a busway's as a tram's, T-3378).
     pub fn crossing_trams(&self, e1: u32, e2: u32) -> u8 {
-        [e1, e2].into_iter().filter(|&e| self.edge_kind[e as usize].spec().family == 1).count() as u8
+        [e1, e2].into_iter().filter(|&e| self.edge_kind[e as usize].spec().family != 0).count() as u8
     }
 
     pub(super) fn rebuild_edge_lines(&mut self) {

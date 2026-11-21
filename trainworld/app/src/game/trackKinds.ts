@@ -1,12 +1,12 @@
 // The kinds of track and what differs between them: a display copy of sim/src/track/params.rs
 // (`TrackKind`, `TRACK_SPECS`; T-2921 section 5), which owns the real table.
 
-export type TrackKind = "regular" | "highSpeed" | "streetTram" | "tram";
+export type TrackKind = "regular" | "highSpeed" | "streetTram" | "tram" | "busway";
 
 export interface TrackSpec {
   /** the number a save stores in edge flags bits 8-10 (0 and 1 are also written as bit 6) */
   id: number;
-  /** nodes join only within a family: 0 rail, 1 tram */
+  /** 0 rail, 1 tram (rail and tram join), 2 busway (T-3378: joins only busways) */
   family: number;
   vCapKmh: number;
   minRadius: number;
@@ -30,7 +30,10 @@ export const TRACK_SPECS: Record<TrackKind, TrackSpec> = {
   highSpeed: { id: 1, family: 0, vCapKmh: 320, minRadius: 50, levelMult: LEVEL_MULT.map(m => m * HSR_COST), terrain: 1, water: 1, upkeep: HSR_COST, roadCrossings: true },
   streetTram: { id: 2, family: 1, vCapKmh: 60, minRadius: 18, levelMult: [1.6, 1.2, 0.6, 0.1, 0.6, 1.1, 1.6], terrain: 0.25, water: 0.5, upkeep: 0.6, roadCrossings: false },
   tram: { id: 3, family: 1, vCapKmh: 75, minRadius: 18, levelMult: [1.6, 1.2, 0.6, 0.5, 0.6, 1.1, 1.6], terrain: 0.25, water: 1, upkeep: 1, roadCrossings: false },
+  // T-3378: off-street tram track's prices times two thirds (US$25M a km at ground)
+  busway: { id: 4, family: 2, vCapKmh: 60, minRadius: 12, levelMult: [1.6, 1.2, 0.6, 0.5, 0.6, 1.1, 1.6].map((m) => (m * 2) / 3), terrain: 0.25, water: 1, upkeep: 1, roadCrossings: false },
 };
+
 
 /** a tram stop's upkeep a day, real US$ (sim `TrackSpec::station_upkeep`) */
 export const TRAM_STOP_UPKEEP = 50;

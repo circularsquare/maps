@@ -38,8 +38,8 @@ export function clickColour(mode: ClickMode): string {
   return CLICK_MODE_COLOURS[mode];
 }
 
-const trackTypes = (): [TrackType, string][] => [[2, t("toolBar.regular")], ["hsr", t("toolBar.highSpeed")], ["tram", t("toolBar.tram")]];
-const typeLabel = (tt: TrackType) => (tt === "tram" ? t("toolBar.tram") : tt === "hsr" ? t("toolBar.highSpeed") : t("toolBar.regular"));
+const trackTypes = (): [TrackType, string][] => [[2, t("toolBar.regular")], ["hsr", t("toolBar.highSpeed")], ["tram", t("toolBar.tram")], ["busway", t("toolBar.busway")]];
+const typeLabel = (tt: TrackType) => (tt === "busway" ? t("toolBar.busway") : tt === "tram" ? t("toolBar.tram") : tt === "hsr" ? t("toolBar.highSpeed") : t("toolBar.regular"));
 const speedTip = () => t("toolBar.speedTip");
 
 /** T-3121: the next step up or down from the speed set, which may be a typed one between steps. */
@@ -84,7 +84,9 @@ function AdvancedSettings() {
 function TrackBar() {
   const lv = buildLevel.value;
   const tt = trackType.value;
-  const tram = tt === "tram";
+  // T-3378: a busway is drawn as off-street tram track, with no street snaps and always double
+  const busway = tt === "busway";
+  const tram = tt === "tram" || busway;
   const q = quadTrack.value;
   const one = singleTrack.value;
   const m = moneyState.value;
@@ -104,23 +106,23 @@ function TrackBar() {
           {!tram && <button class={"btn icon tb-ramp" + (autoRamp.value ? " on" : "")} aria-label={t("toolBar.ramp")} aria-pressed={autoRamp.value}
             data-tip={t("toolBar.rampTip")}
             onClick={() => (autoRamp.value = !autoRamp.peek())}><Icon.autoRamp /></button>}
-          <p class="muted small price tb-wide" data-tip={t(tram ? "toolBar.priceTipTram" : "toolBar.priceTip", { level: levelName(lv), hsr: tt === "hsr", street: tram && snapStreets.value }) + (upkeep ? "\n" + upkeep : "")}>
+          <p class="muted small price tb-wide" data-tip={t(busway ? "toolBar.priceTipBusway" : tram ? "toolBar.priceTipTram" : "toolBar.priceTip", { level: levelName(lv), hsr: tt === "hsr", street: tram && snapStreets.value }) + (upkeep ? "\n" + upkeep : "")}>
             {tRich("toolBar.price", { price: millions(unitPrice(lv, tt, q, one)), unit: distUnit(), cost: <span class={costBackground(mult) ? "cost-mult tinted" : "cost-mult"} style={{ background: costBackground(mult) }}>{t("toolBar.cost", { mult: multText(lv, tt, q, one) })}</span> })}
           </p>
         </div>
         <div class="tb-row">
           <div class="tb-wide"><Segmented<TrackType> options={trackTypes()} value={tt} onChange={setTrackType} /></div>
           <button class="btn tb-narrow tb-type" aria-label={t("toolBar.trackType")} aria-expanded={open === "type"} onClick={() => toggle("type")}>{typeLabel(tt)}</button>
-          <TrackCountButtons value={q ? null : one ? 1 : 2}
+          {!busway && <TrackCountButtons value={q ? null : one ? 1 : 2}
             onPick={(n) => n === 1 ? setSingleTrack(true) : setDoubleTrack()}>
             <button class={"btn icon" + (q ? " on" : "")} aria-label={t("toolBar.quadTrack")} aria-pressed={q} data-tip={t("toolBar.quadTrackTip")}
               onClick={() => setQuadTrack(true)}><Icon.tracks4 /></button>
-          </TrackCountButtons>
+          </TrackCountButtons>}
           <span class="build-toggles">
             <button class={"btn icon" + (keepPlacing.value ? " on" : "")} aria-label={t("toolBar.keepPlacing")} aria-pressed={keepPlacing.value}
               data-tip={t(mobileDevice() ? "toolBar.keepPlacingTipTouch" : "toolBar.keepPlacingTip")}
               onClick={() => (keepPlacing.value = !keepPlacing.peek())}><Icon.keepPlacing /></button>
-            {tram ? (
+            {busway ? null : tram ? (
               <>
                 {/* T-3069: tram track's own real network snap (tram and light rail), beside Snap to streets; the two exclude each other */}
                 <button class={"btn icon" + (snapRealTram.value ? " on" : "")} aria-label={t("toolBar.snapReal")} aria-pressed={snapRealTram.value}

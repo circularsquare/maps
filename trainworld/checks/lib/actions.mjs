@@ -32,7 +32,7 @@ async function until(d, get, ok, { timeout = 30000, every = 150, what = 'a condi
   }
 }
 
-const TRACK_TYPES = { regular: 'Regular', hsr: 'High speed', tram: 'Tram' };
+const TRACK_TYPES = { regular: 'Regular', hsr: 'High speed', tram: 'Tram', busway: 'Busway' };
 const TRACK_COUNTS = { 1: 'Single track', 2: 'Double track', 4: 'Quad track' };
 const SNAPS = { streets: 'Snap to streets', real: 'Snap to real world network', roads: 'Snap to roads', beside: 'Snap beside track' };
 const TOOL_LABELS = { track: 'Track', station: 'Station', delete: 'Delete', select: 'Select' };

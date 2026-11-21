@@ -31,7 +31,7 @@ How trips and track money work, in plain words. Agents: open `wiki/read/<page>.m
 - [[slower-trains]]: What happens when a fast line shares track with a slow one?
 - [[train-length-and-cars]]: How long are trains, what do cars cost to buy and to run?
 - [[ferries]]: What do the three boat sizes carry, cost and charge?
-- [[brt]]: What do bus lanes do and cost, and how do BRT lines share them?
+- [[brt]]: What do bus lanes and busways do and cost, and how do BRT lines share them?
 - [[station-upgrades]]: What do terminals, passing tracks, park and ride and waiting rooms do and cost?
 - [[fares]]: How is a fare worked out, and who gets it?
 - [[points-and-goals]]: How are points and goals earned, and how is money split by region?

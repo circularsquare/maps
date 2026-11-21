@@ -25,8 +25,8 @@ impl Network {
                 cost::track_cost_parts_t(self.edge_len[e], self.edge_vert(e as u32), self.edge_water(e as u32), self.edge_terrain(e as u32), tracks, kind, |level, wet, _ramp, class, m, c| {
                     // T-1839: the whole price, keyed by terrain class (0 where it does not count)
                     let class = if cost::terrain_surcharge(level, class) == 0.0 { 0 } else { class };
-                    let row = if kind.is_hsr() { HSR_ROW } else if kind == TrackKind::Tram { TRAM_ROW } else if kind == TrackKind::StreetTram { STREET_TRAM_ROW } else { tracks };
-                    add(0, level, if tracks == 1 && row > 2 { row + SINGLE_ROW_OFFSET } else { row }, wet, class, m, c);
+                    let row = if kind.is_hsr() { HSR_ROW } else if kind == TrackKind::Tram { TRAM_ROW } else if kind == TrackKind::StreetTram { STREET_TRAM_ROW } else if kind.is_busway() { BUSWAY_ROW } else { tracks };
+                    add(0, level, if tracks == 1 && row > 2 && row != BUSWAY_ROW { row + SINGLE_ROW_OFFSET } else { row }, wet, class, m, c);
                 });
                 // kind 7: roads crossed at ground level (T-1929), a count
                 let (n, c) = roads::charge(self.edge_vert(e as u32), self.edge_roads(e as u32));
@@ -99,8 +99,11 @@ impl Network {
             }
         }
         // kind 16: their BRT lanes (T-3907), road metres in town not already constructed for another line (T-3378)
-        let town = self.brt_lane_m(false) - self.brt_lane_m(true);
-        if town > 1e-6 {
+        // Construct builds the blueprint's busways too, and a lane on a built busway is none: the lanes they free
+        // come off (a negative row when those outnumber the new ones)
+        let all = if self.busway_planned() { self.with_busways_planned(|| self.brt_lane_m(false)) } else { self.brt_lane_m(false) };
+        let town = all - self.brt_lane_m(true);
+        if town.abs() > 1e-6 {
             add(16, 0, 0, false, 0, town, town / 1000.0 * BRT_COST_PER_KM);
         }
         // kind 14: ferry routes still to be constructed (T-2193): ground metres, free

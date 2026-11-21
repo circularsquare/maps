@@ -108,7 +108,7 @@ fn a_spaced_trip_takes_each_hops_time_and_stands_inside_it() {
 
 /// A route with the car's local streets at `car` km/h all the way, of `km` km.
 fn flat(car: f64, km: f64) -> Pace {
-    Pace { step: 100.0, car: vec![car; (km * 10.0).ceil() as usize], trunk: vec![], lane: 0.0 }
+    Pace { step: 100.0, car: vec![car; (km * 10.0).ceil() as usize], trunk: vec![], lane: 0.0, busway: vec![] }
 }
 
 fn hop_kmh(p: &Pace, m: f64) -> f64 {
@@ -228,7 +228,7 @@ fn simplify_keeps_the_shape_within_the_tolerance() {
 #[test]
 fn a_hop_takes_the_time_of_the_streets_it_crosses() {
     // 100 m steps: the car at 100 km/h for the first 300 m, 40 for the next 200, then 100 again; the bus at its share
-    let pace = Pace { step: 100.0, car: vec![100.0, 100.0, 100.0, 40.0, 40.0, 100.0, 100.0, 100.0, 100.0, 100.0], trunk: vec![], lane: 0.0 };
+    let pace = Pace { step: 100.0, car: vec![100.0, 100.0, 100.0, 40.0, 40.0, 100.0, 100.0, 100.0, 100.0, 100.0], trunk: vec![], lane: 0.0, busway: vec![] };
     let (fast, slow) = (100.0 * super::super::streets::BUS_SHARE / 3.6, 40.0 * super::super::streets::BUS_SHARE / 3.6);
     assert!(slow * 3.6 > 30.0, "the slow stretch is above the bus lane's floor");
     let t = |p: &Pace, a: f64, b: f64| p.seconds(a, b, street_bus_kmh_at);

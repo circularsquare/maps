@@ -106,7 +106,7 @@ the map's other controls', and the level buttons' numbers 15 px (also in the pho
   at 0.5x [T-2744] (`costTint` in
   `map/trackTagRows.ts`); its hover names the level [T-1159] (with ", high-speed track" after it)
   and gives the same upkeep line as the level buttons [T-2006].
-  The second row: **Regular** or **High speed** track [T-255, T-817], the
+  The second row: **Regular**, **High speed**, **Tram** or **Busway** track [T-255, T-817, T-2926, T-3378: Busway hides the snaps but beside, the count buttons and the ramp switch, and gives the snaps and count back when another type is picked], the
   selection bar's words, then three icon buttons, **Single track** (one line), **Double track** (two lines)
   and **Quad track** (four lines) [T-2931, T-3093]. Single is 0.6x the cost and the single-track upkeep shown;
   quad is two double tracks' price (2x the cost and upkeep shown). Single goes with every type, High speed and Tram too [T-3352]

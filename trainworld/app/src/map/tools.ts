@@ -31,7 +31,7 @@ import { activeCity, worldFrameEpoch } from "../game/cities";
 import { demandView } from "../game/demand";
 import { settleNewLineColour } from "../game/lineColour";
 import { metresBetween } from "../game/walks";
-import { ask, autoRamp, buildLevel, buildPlatform, buildTramPlatform, designSpeed, flyoverSpeed, highSpeed, keepPlacing, lineDraft, newLine, quadTrack, selection, singleTrack, besideOn, snapping, snapMode, snapRealTram, snapRoads, snapStreets, stationKind, stationOnTram, stationOneTrack, tool, tramTrack } from "../game/ui";
+import { ask, autoRamp, buildLevel, buildPlatform, buildTramPlatform, buswayTrack, designSpeed, flyoverSpeed, highSpeed, keepPlacing, lineDraft, newLine, quadTrack, selection, singleTrack, besideOn, snapping, snapMode, snapRealTram, snapRoads, snapStreets, stationKind, stationOnTram, stationOneTrack, tool, tramTrack } from "../game/ui";
 import { type Removable } from "../game/remove";
 import { loadPlacesAt } from "../game/placeList";
 import { warmStreetNames } from "./stationNames";
@@ -518,7 +518,7 @@ export class Tools {
   tramEdges: { edges: unknown; set: Set<number> } | null = null;
   /** the ids of the world's tram edges (T-2926), kept while its edges are the same */
   tramEdgeSet(w: NonNullable<ReturnType<typeof world.peek>>): Set<number> {
-    if (this.tramEdges?.edges !== w.edges) this.tramEdges = { edges: w.edges, set: new Set(w.edges.filter((e) => e.kind).map((e) => e.id)) };
+    if (this.tramEdges?.edges !== w.edges) this.tramEdges = { edges: w.edges, set: new Set(w.edges.filter((e) => e.kind === 2 || e.kind === 3).map((e) => e.id)) };
     return this.tramEdges.set;
   }
 
@@ -527,7 +527,7 @@ export class Tools {
     const w = world.peek();
     if (!s || !w) return false;
     if (s.kind === "free") return false;
-    return s.kind === "node" ? (w.nodes.get(s.node)?.kind ?? 0) >= 2 : this.tramEdgeSet(w).has(s.edge);
+    return s.kind === "node" ? [2, 3].includes(w.nodes.get(s.node)?.kind ?? 0) : this.tramEdgeSet(w).has(s.edge);
   }
 
   /** the platform length a new station gets at a spot: tram stops have their own (T-2926) */
@@ -933,7 +933,7 @@ export class Tools {
 
   routeReq(to: RouteEnd, by: { edge: number } | null = this.hoverBeside, at: Snap | null = this.hover) {
     const beside: { beside?: [number, number] } = by && to.kind === "free" ? { beside: [this.start!.beside ?? 0xffffffff, by.edge] } : {};
-    return { from: this.start!.end, to, pis: [], single: singleTrack.peek(), quad: quadTrack.peek(), through: true, design: designSpeed.peek(), flyover: flyoverSpeed.peek(), hsr: highSpeed.peek(), tram: tramTrack.peek(), ramp: autoRamp.peek() && !tramTrack.peek(), ...beside, ...this.joinReq(at) };
+    return { from: this.start!.end, to, pis: [], single: singleTrack.peek(), quad: quadTrack.peek(), through: true, design: designSpeed.peek(), flyover: flyoverSpeed.peek(), hsr: highSpeed.peek(), tram: tramTrack.peek(), busway: buswayTrack.peek(), ramp: autoRamp.peek() && !tramTrack.peek(), ...beside, ...this.joinReq(at) };
   }
 
   /** T-3137: a single-track route's `RouteAsk.join`, from the start's and `at`'s `Snap.join`; nothing when neither has one */
@@ -975,7 +975,7 @@ export class Tools {
   realReq(r: RealRoute, at: Snap | null = this.hover) {
     const free = ([lng, lat]: [number, number]): RouteEnd => ({ kind: "free", ...lngLatToPack(lng, lat), level: this.freeLevel() });
     const se = this.start!.end;
-    return { from: se.kind === "free" ? free(r.first) : se, to: at && at.kind !== "free" ? this.endOf(at) : free(r.last), pis: r.pis, single: singleTrack.peek(), quad: quadTrack.peek(), through: true, design: designSpeed.peek(), flyover: flyoverSpeed.peek(), hsr: highSpeed.peek(), tram: tramTrack.peek(), ramp: autoRamp.peek() && !tramTrack.peek(), ...this.joinReq(at) };
+    return { from: se.kind === "free" ? free(r.first) : se, to: at && at.kind !== "free" ? this.endOf(at) : free(r.last), pis: r.pis, single: singleTrack.peek(), quad: quadTrack.peek(), through: true, design: designSpeed.peek(), flyover: flyoverSpeed.peek(), hsr: highSpeed.peek(), tram: tramTrack.peek(), busway: buswayTrack.peek(), ramp: autoRamp.peek() && !tramTrack.peek(), ...this.joinReq(at) };
   }
 
   /** Ask for the ghost of a segment from the start to the pointer; true if asked. */

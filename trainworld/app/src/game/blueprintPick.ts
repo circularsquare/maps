@@ -178,8 +178,8 @@ export function doubleUpPieces(p: BpPicked): number[] {
   const w = world.peek();
   if (!w) return [];
   const picked = new Set(p.edges);
-  const ok = (e: TrackEdge) => e.tracks === 2 && !e.crossover;
-  const family = (e: TrackEdge) => (e.hsr ? 1 : e.kind ? 2 : 0);
+  const ok = (e: TrackEdge) => e.tracks === 2 && !e.crossover && e.kind !== 4; // (T-3378: a busway never doubles up)
+  const family = (e: TrackEdge) => (e.hsr ? 1 : e.kind === 4 ? 3 : e.kind ? 2 : 0);
   const adj = adjacency(w.edges);
   const seen = new Set<number>(), out: number[] = [];
   for (const e0 of w.edges) {
@@ -254,7 +254,7 @@ export const pickedState = computed(() => {
     const l = e.levelMin === e.levelMax ? e.levelMin : null;
     level = level === undefined || level === l ? l : null;
     if (canBeHsr(e)) e.hsr ? hsr++ : regular++;
-    else if (e.kind && !e.crossover) tram++;
+    else if (e.kind && e.kind !== 4 && !e.crossover) tram++; // T-3378: a busway is never retyped
     if (!e.crossover) e.tracks === 1 ? ones++ : twos++;
   }
   for (const id of p.stations) (stations.get(id)?.off ? off++ : on++);

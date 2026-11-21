@@ -3,7 +3,7 @@
 import { t as tr } from "../i18n";
 import { distance } from "../game/format";
 import { metresBetween } from "../game/walks";
-import { buildLevel, besideOn, stationKind, tool, tramTrack } from "../game/ui";
+import { buildLevel, besideOn, buswayTrack, stationKind, tool, tramTrack } from "../game/ui";
 import { describeRemovable } from "../game/remove";
 import { realStationUnder } from "./realStations";
 import { world } from "../game/world";
@@ -233,7 +233,7 @@ export function placeMarks(tk: Tools) {
   } else if (t === "track" && tk.start && h && !tk.snapped && tk.tooFar(h)) {
     showTag(tk, tooFarText(), true, ...at!);
   } else if (t === "track" && tk.start && h && (pv || tk.waiting())) {
-    const rows: HTMLDivElement[] = pv ? placementTag(pv, buildLevel.peek(), !tramTrack.peek() ? TRACK_SPECS.regular : tk.street.active ? TRACK_SPECS.streetTram : TRACK_SPECS.tram) : [document.createElement("div")];
+    const rows: HTMLDivElement[] = pv ? placementTag(pv, buildLevel.peek(), !tramTrack.peek() ? TRACK_SPECS.regular : buswayTrack.peek() ? TRACK_SPECS.busway : tk.street.active ? TRACK_SPECS.streetTram : TRACK_SPECS.tram) : [document.createElement("div")];
     // T-1039: still working on the newest ghost or the click
     if (tk.waiting()) rows[0].prepend(Object.assign(document.createElement("i"), { className: "spin row-dot" }));
     showTag(tk, rows, false, ...at!);

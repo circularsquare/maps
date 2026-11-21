@@ -155,6 +155,14 @@ impl Network {
                 out.push(Issue::NodeHeading { node: n, edge: e });
             }
         }
+        // T-3378: a busway joins only busways, and holds no station (a BRT station stands beside it)
+        let busways = p.ends().iter().filter(|&&c| self.edge_busway(c >> 1)).count();
+        if busways > 0 && busways < p.n as usize {
+            out.push(Issue::BuswayJoin { node: n });
+        }
+        if busways > 0 && self.node_platform[i] > 0 && self.node_berth[i].is_none() && self.node_road[i].is_none() {
+            out.push(Issue::BuswayStation { node: n });
+        }
         // T-3889: tram track joins rail, but not at a station, whose kind (tram stop or rail station) is
         // its track's: drawing on from one, or deleting one kind beside it, would change a line's kind
         if self.node_platform[i] > 0 && self.node_berth[i].is_none() {
@@ -203,7 +211,7 @@ impl Network {
             return Err(Issue::LineStops { line: l });
         }
         for &p in path {
-            if !self.edge_ok(path_edge(p)) || !self.dir_ok(p) {
+            if !self.edge_ok(path_edge(p)) || !self.dir_ok(p) || self.edge_busway(path_edge(p)) {
                 return Err(Issue::LinePath { line: l });
             }
         }

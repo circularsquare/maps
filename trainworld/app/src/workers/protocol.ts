@@ -54,7 +54,7 @@ export type StationAt = (
 /** A route turning at the clicked points `pis`; a junction it makes is flat (T-080). `through`
  * (T-418): a route with no PIs from a heading to open ground is one tangent arc. `design` (T-817):
  * the design speed its curves are laid out for, km/h; 160 when absent. */
-export interface RouteAsk { from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean; design?: number; hsr?: boolean; tram?: boolean; /** T-2927: tram track that follows the streets (street tram track), along `streetLine` (lng, lat pairs, flat) */ street?: boolean; streetLine?: number[]; ramp?: boolean; beside?: [number, number];
+export interface RouteAsk { from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean; design?: number; hsr?: boolean; tram?: boolean; /** T-3378: an off-road busway (kind 4) */ busway?: boolean; /** T-2927: tram track that follows the streets (street tram track), along `streetLine` (lng, lat pairs, flat) */ street?: boolean; streetLine?: number[]; ramp?: boolean; beside?: [number, number];
   /** T-3137: which of double track's two tracks single track joins at its start and end: a point (pack units) on that
    * track, start x, y, end x, y (`TrackApi::set_route_join`); null for the track beside the route there */
   join?: [number | null, number | null, number | null, number | null];

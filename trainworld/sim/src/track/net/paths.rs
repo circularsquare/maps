@@ -203,7 +203,7 @@ impl Network {
     /// arrives so the train carries on round). `tram`: the hop is a tram line's, which may run on
     /// any track; else it keeps off tram track (T-3889).
     pub fn find_path_side(&self, from: u32, to: u32, arrived: Option<u8>, want: Option<u8>, tram: bool) -> Option<(Vec<u32>, u8)> {
-        let barred = |e: u32| !tram && self.edge_tram(e);
+        let barred = |e: u32| self.edge_barred(e, tram);
         let ne = self.edge_count();
         let mut dist = vec![f64::INFINITY; 2 * ne];
         let mut prev = vec![u32::MAX; 2 * ne];
@@ -318,7 +318,7 @@ impl Network {
                 return true;
             }
             for &c in self.node_ports[n as usize].ends() {
-                if !tram && self.edge_tram(c >> 1) {
+                if self.edge_barred(c >> 1, tram) {
                     continue;
                 }
                 let m = self.path_nodes(c).1;
@@ -353,7 +353,7 @@ impl Network {
     /// fit); else carrying on along `path[k]` (a balloon's first pass, k <= `limit`, the earliest).
     /// Over tram track only for a tram line (`tram`, T-3889).
     pub fn loop_back(&self, path: &[u32], back: bool, limit: usize, budget: f64, tram: bool) -> Option<(Vec<u32>, usize)> {
-        let barred = |c: u32| !tram && self.edge_tram(c >> 1);
+        let barred = |c: u32| self.edge_barred(c >> 1, tram);
         let &last = path.last()?;
         let mut nodes = vec![self.path_nodes(path[0]).0];
         nodes.extend(path.iter().map(|&p| self.path_nodes(p).1));

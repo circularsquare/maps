@@ -168,6 +168,8 @@ flat out vec4 v_stripe;     // T-817: high-speed track's centre line, its colour
 flat out float v_stripe_only; // 1: only that line is drawn (bare track between its parted tracks)
 flat out vec4 v_wire;       // T-2927: a tram's wires, their colour and how far each one's middle is from the centre (px)
 flat out float v_wire_hw;   // and each one's half width (px), 0 none
+flat out float v_wire_dash; // T-3378: a busway's centre line dashed at this period (px), 0 solid
+flat out float v_road;      // T-3378: 1 on a built busway, drawn as a road the bus lines under it show through
 flat out float v_dash;      // T-1284: the red band's dash period (px), 0 for every other stroke
 out float v_along;          // T-2184: px along the stroke's run, so dashes keep one length round curves
 flat out vec4 v_inner;      // T-2184: a band's red edges over its neighbours: its colour's half width, the red's and the rim's px, strength; 0 none
@@ -180,11 +182,15 @@ void main() {
   int flags = int(a_flags + 0.5);
   bool hsr = (flags & 256) != 0;
   bool tram = (flags & 4096) != 0;
+  // T-3378: a busway, drawn as tram track (its flag is set too) in a road's grey with a dashed white centre line
+  bool busway = (flags & 16384) != 0;
   bool striped = hsr;
   v_stripe = vec4(0.0);
   v_stripe_only = 0.0;
   v_wire = vec4(0.0);
   v_wire_hw = 0.0;
+  v_wire_dash = 0.0;
+  v_road = 0.0;
   v_dash = u_full_pass == 1 ? u_full_dash : 0.0;
   if (int(a_edge) == u_hide.x || int(a_edge) == u_hide.y) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   // T-3420: a line the player hid, and track and lines on a hidden level, a ramp fading toward it
@@ -206,7 +212,8 @@ void main() {
   // the middle is a line wide, so a line planned along it fills it and the rails show either side
   bool bpTrack = blueprint && !placement && u_kind == 0;
   bool swOff = (flags & 64) != 0;
-  if ((u_only_sel == 1 && !sel) || (u_casing > 0.0 && blueprint && !placement && !bpTrack) || (u_bp_part == 1 && blueprint) || (u_bp_part == 2 && !blueprint)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  // (T-3378: a built busway has no casing: the bus lines are drawn under the track, and show through its road)
+  if ((u_only_sel == 1 && !sel) || (u_casing > 0.0 && blueprint && !placement && !bpTrack) || (busway && u_kind == 0 && u_casing > 0.0 && !blueprint && !placement) || (u_bp_part == 1 && blueprint) || (u_bp_part == 2 && !blueprint)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   // a line planned along blueprint fills the track's middle (T-331: narrower than a line now)
   bool bpLine = blueprint && !placement && u_kind == 1;
   // double track as its two tracks close in (T-658): first the stroke grows to the pair's width
@@ -290,6 +297,8 @@ void main() {
       : wl;
     if (u_cap > 0.0 && u_lane_mode > 1) w = min(w, 0.5 * u_cap);
   }
+  // T-3378: a built busway is one road as wide as double track's two tracks (G + lt) once they would part
+  if (busway && u_kind == 0 && (u_lane_mode == 0 || u_lane_mode == 2) && !bpShape && !ghost) w = max(w, G + lt + extra + cas);
   if (u_cap > 0.0) w = min(w, u_cap);
   if (ghost) {
     w = max(w, u_ghost_min.x);
@@ -374,7 +383,7 @@ void main() {
   }
   else if (placement) v_color = ghost ? u_bp_mid : vec3(1.0);
   else if (u_kind == 0 && bpTrack && !sel) { v_color = swOff ? u_bp_off_mid : u_bp_mid; bpMid = true; }
-  else if (u_kind == 0) v_color = sel ? u_sel : u_track;
+  else if (u_kind == 0) v_color = sel ? u_sel : busway ? mix(u_track, u_casing_rgb, 0.3) : u_track;
   else v_color = texelFetch(u_line_colours, ivec2(int(a_colour) % ${LINES_W}, int(a_colour) / ${LINES_W}), 0).rgb;
   // other blueprint colours (a planned line, a selected blueprint, by height or speed) lighter
   if (bp && !bpMid && u_casing <= 0.0) v_color = swOff ? mix(v_color, u_bp_off_fade, 0.8) : mix(v_color, vec3(1.0), 0.45);
@@ -399,6 +408,11 @@ void main() {
       v_wire = vec4(bpShape || placement ? rail : u_wire, u_lane_mode == 0 ? ${WIRE_OFF.toFixed(3)} * w : 0.0);
       v_wire_hw = hw;
     }
+    if (busway) {
+      v_road = bpShape || placement ? 0.0 : 1.0;
+      v_wire.w = 0.0;
+      v_wire_dash = max(6.0, 12.0 * u_band_m);
+    }
   }
   // T-1125: a line at capacity a little darker under its red edge, as strong as the edge (T-1152)
   if (u_kind == 1 && a_full.x != 0.0 && u_casing <= 0.0 && !full) v_color = mix(v_color, vec3(0.0), ${FULL_DARKEN} * fs);
@@ -417,6 +431,8 @@ flat in vec4 v_stripe;
 flat in float v_stripe_only;
 flat in vec4 v_wire;
 flat in float v_wire_hw;
+flat in float v_wire_dash;
+flat in float v_road;
 flat in float v_dash;
 in float v_along;
 flat in vec4 v_inner;
@@ -453,7 +469,14 @@ void main() {
     c = mix(c, v_stripe.rgb, s);
     if (v_stripe_only > 0.5) { c = v_stripe.rgb; a *= s; }
   }
-  if (v_wire_hw > 0.0) c = mix(c, v_wire.rgb, clamp(v_wire_hw + 0.5 - abs(abs(v_cap.z) - v_wire.w), 0.0, 1.0));
+  float wire = v_wire_hw > 0.0 && (v_wire_dash <= 0.0 || mod(v_along, v_wire_dash) < 0.5 * v_wire_dash) ? clamp(v_wire_hw + 0.5 - abs(abs(v_cap.z) - v_wire.w), 0.0, 1.0) : 0.0;
+  c = mix(c, v_wire.rgb, wire);
+  // T-3378: a built busway's road: its kerbs solid, between them see-through, so a bus line under it shows; its dashes solid
+  if (v_road > 0.5) {
+    float kerb = max(1.0, 0.15 * v_cap.w);
+    float k = clamp(abs(v_cap.z) - (v_cap.w - kerb) + 0.5, 0.0, 1.0);
+    a *= max(max(0.3, k), wire);
+  }
   o = vec4(c * a, a);
 }`;
 

@@ -31,6 +31,16 @@ impl Network {
     pub fn edge_tram(&self, e: u32) -> bool {
         self.edge_kind[e as usize].spec().family == 1
     }
+    /// T-3378: a busway, which no train or tram runs on.
+    pub fn edge_busway(&self, e: u32) -> bool {
+        self.edge_kind[e as usize].is_busway()
+    }
+    /// Whether a train line's path (a tram line's: `tram`) keeps off edge `e`: tram track for a train (T-3889), a
+    /// busway for both (T-3378).
+    pub fn edge_barred(&self, e: u32, tram: bool) -> bool {
+        let k = self.edge_kind[e as usize].spec().family;
+        k == 2 || (!tram && k == 1)
+    }
     pub fn edge_section_s(&self, e: u32) -> f64 {
         self.edge_kind[e as usize].spec().section_s
     }
@@ -223,6 +233,9 @@ impl Network {
             }
         }
         self.touch.edges.push(id);
+        if old.as_ref().is_some_and(|o| o.kind.is_busway()) || self.edge_alive[id as usize] && self.edge_kind[id as usize].is_busway() {
+            self.touch.busways = true;
+        }
         Ok(old)
     }
 

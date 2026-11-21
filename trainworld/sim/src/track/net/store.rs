@@ -177,7 +177,58 @@ impl Network {
             wet_cache: true,
             brt_room: Default::default(),
             brt_lanes: Default::default(),
+            busways: Default::default(),
+            busways_planned: Default::default(),
         }
+    }
+
+    /// T-3378 stage 4: the constructed busway edges.
+    pub fn built_busways(&self) -> impl Iterator<Item = u32> + '_ {
+        let planned = self.busways_planned.get();
+        (0..self.edge_count() as u32).filter(move |&e| {
+            let e = e as usize;
+            self.edge_alive[e] && self.edge_kind[e].is_busway() && (self.edge_built[e] || planned && !self.edge_off[e])
+        })
+    }
+    /// T-3378: whether the blueprint holds a busway Construct would build.
+    pub fn busway_planned(&self) -> bool {
+        (0..self.edge_count()).any(|e| self.edge_alive[e] && !self.edge_built[e] && !self.edge_off[e] && self.edge_kind[e].is_busway())
+    }
+    /// T-3378: `f` worked out as if every busway in the blueprint were constructed: Construct takes the BRT lanes they
+    /// run along off the lanes it charges for, so the quote must too.
+    pub fn with_busways_planned<T>(&self, f: impl FnOnce() -> T) -> T {
+        self.busways_planned.set(true);
+        let out = f();
+        self.busways_planned.set(false);
+        out
+    }
+    /// T-3378: a hash of the constructed busways: each one's id, length and ends.
+    pub fn busway_key(&self) -> u64 {
+        use std::hash::{Hash, Hasher};
+        let mut h = std::collections::hash_map::DefaultHasher::new();
+        for e in self.built_busways() {
+            e.hash(&mut h);
+            let len = self.edge_len[e as usize];
+            len.to_bits().hash(&mut h);
+            let pcs = self.edge_pieces(e);
+            for s in [0.0, 0.5 * len, len] {
+                let (x, y, _) = super::geom::pos_at(pcs, s);
+                (x.to_bits(), y.to_bits()).hash(&mut h);
+            }
+        }
+        h.finish()
+    }
+    /// T-3378: the constructed busways a bus route runs along, worked out again only when `busway_key` changes.
+    pub fn busways(&self) -> std::sync::Arc<super::bus::busway::Busways> {
+        let key = self.busway_key();
+        if let Some((k, b)) = self.busways.borrow().as_ref() {
+            if *k == key {
+                return b.clone();
+            }
+        }
+        let b = std::sync::Arc::new(super::bus::busway::Busways::build(self));
+        *self.busways.borrow_mut() = Some((key, b.clone()));
+        b
     }
 
     /// Whether the node lies on water (`water_mask.is_water` at it), asked of the mask once while the
@@ -594,6 +645,10 @@ impl Network {
             }
         }
         self.streets.grids.iter().for_each(|g| (std::sync::Arc::as_ptr(g) as usize).hash(&mut h));
+        // T-3378: a lane on a busway is none (the busway paid), but its room counts
+        if !order.is_empty() {
+            self.busway_key().hash(&mut h);
+        }
         h.finish()
     }
     /// T-3378: every BRT line's lanes in `brt_order(false)`, and how many of them are constructed (they come first),

@@ -272,6 +272,9 @@ impl TrackApi {
         if net.edge_crossover[edge as usize] {
             return Err(Issue::Crossover { edge });
         }
+        if net.edge_busway(edge) {
+            return Err(Issue::BuswayTrack { edge });
+        }
         let (s, _) = net.project(edge, x, y);
         let (cx, cy, th) = geom::pos_at(net.edge_pieces(edge), s);
         let k = net.k_at(cy);

@@ -96,6 +96,9 @@ use super::twin::Twin;
 /// node index and road heading as f32 bits; without it no station is.
 /// A trailing `LBQ1` block (T-3944, level 36) gives the constructed bus lines whose BRT lanes are in the blueprint
 /// (`BusRoute::brt_bp`): count, then line indexes; without it none is, and `LBR1`'s lines have theirs built.
+/// Level 37 (T-3378) adds no block: an edge's kind 4 in its flag bits 8-10 is a busway. An older build does not
+/// compare levels and ignores that kind field, so it loads the busway as ordinary rail track and the bus lines lose
+/// their busway timing (T-4014 is for older builds to refuse such a save).
 const MAGIC: &[u8; 4] = b"TWT4";
 /// TWT5 (T-125) is TWT4 byte for byte except that the metres are in the Lambert conformal world
 /// frame (`frame.rs`). TWT4 and older are always the legacy equirectangular frame, and a network
@@ -113,7 +116,7 @@ pub const BLOCKS: [&[u8; 4]; 40] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1",
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over. Saves from before it have none, read as 0.
-pub const LEVEL: u32 = 36;
+pub const LEVEL: u32 = 37;
 /// T-3759: the last level from before stations could be unbound from their complex's name; a typed
 /// station there showed its own name, so loading one makes such a station unbound (the app's pass).
 pub const OLD_BOUND_NAMES: u32 = 26;
@@ -1756,7 +1759,7 @@ mod tests {
         for tag in &written {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
-        assert_eq!((LEVEL, BLOCKS.len()), (36, 40), "a new block raises LEVEL: raise it, then update this pin");
+        assert_eq!((LEVEL, BLOCKS.len()), (37, 40), "a new block raises LEVEL: raise it, then update this pin");
     }
 
     /// T-2217: buildings come back as they were, in their order; a network without them encodes as

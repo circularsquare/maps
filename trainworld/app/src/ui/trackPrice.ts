@@ -16,7 +16,7 @@ const SINGLE_MULT = 0.6;
 
 /** The cost multiplier at a level, high-speed track's included; quad track (T-2931) is two double tracks'. */
 export const trackMult = (l: Level, t: TrackType, quad = false, single = false) =>
-  kindLevelMult(t === "tram" ? tramKind() : t === "hsr" ? "highSpeed" : "regular", l) * (quad ? 2 : single ? SINGLE_MULT : 1);
+  kindLevelMult(t === "busway" ? "busway" : t === "tram" ? tramKind() : t === "hsr" ? "highSpeed" : "regular", l) * (quad ? 2 : single ? SINGLE_MULT : 1);
 /** T-2927: the tram track the tool lays: on streets while the street snap is on */
 export const tramKind = () => (snapStreets.value && !snapRealTram.value ? "streetTram" : "tram") as "streetTram" | "tram";
 /** "1.0x", "1.50x" for high-speed track */
@@ -31,7 +31,7 @@ export const unitPrice = (l: Level, t: TrackType, quad = false, single = false) 
 export function upkeepMult(l: Level, t: TrackType, m: Parameters<typeof edgeUpkeep>[1], quad = false, single = false): number {
   const at = (lev: Level, hsr: boolean, tracks = 2) => edgeUpkeep({ built: true, tracks, hsr, lengthM: 1000, levelMin: lev, levelMax: lev }, m);
   const base = at(1, false);
-  return base > 0 ? (at(l, t === "hsr", single ? 1 : 2) / base) * (quad ? 2 : 1) * (t === "tram" ? TRACK_SPECS[tramKind()].upkeep : 1) : 1;
+  return base > 0 ? (at(l, t === "hsr", single ? 1 : 2) / base) * (quad ? 2 : 1) * (t === "busway" ? TRACK_SPECS.busway.upkeep : t === "tram" ? TRACK_SPECS[tramKind()].upkeep : 1) : 1;
 }
 /** "0.7x upkeep" ("1.50x" for high-speed track, as the cost multiple), or "" before the money has come. */
 export function upkeepAt(l: Level, t: TrackType, m: MoneyState | null, quad = false, single = false): string {

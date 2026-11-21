@@ -26,15 +26,15 @@ export function TrackInspector({ edge }: { edge: number }) {
   return (
     <>
       <div class="title">
-        <span class="name" data-tip={touchInput.value ? undefined : t("trackInspector.shiftTip")}>{e.kind && !e.crossover ? t(e.kind === 2 ? "trackInspector.nameStreetTram" : "trackInspector.nameTram") : t("trackInspector.name", { kind: e.crossover ? "crossover" : e.hsr ? "hsr" : e.tracks === 2 ? "double" : "single" })}</span>
+        <span class="name" data-tip={touchInput.value ? undefined : t("trackInspector.shiftTip")}>{e.kind && !e.crossover ? t(e.kind === 4 ? "trackInspector.nameBusway" : e.kind === 2 ? "trackInspector.nameStreetTram" : "trackInspector.nameTram") : t("trackInspector.name", { kind: e.crossover ? "crossover" : e.hsr ? "hsr" : e.tracks === 2 ? "double" : "single" })}</span>
       </div>
       <div class="sub muted">
-        {tSeries([distance(e.lengthM), t("trackInspector.kind", { kind: e.crossover ? "crossover" : e.kind ? (e.kind === 2 ? "streetTram" : "tram") : e.hsr ? "hsr" : e.tracks === 2 ? "double" : "single" }), lv])}
+        {tSeries([distance(e.lengthM), e.kind === 4 && !e.crossover ? t("trackInspector.kindBusway") : t("trackInspector.kind", { kind: e.crossover ? "crossover" : e.kind ? (e.kind === 2 ? "streetTram" : "tram") : e.hsr ? "hsr" : e.tracks === 2 ? "double" : "single" }), lv])}
       </div>
       <Built built={e.built} />
       {!e.built && e.off && <p class="muted" data-tip={t("trackInspector.disabledTip")}>{t("trackInspector.disabled")}</p>}
       <ul class="rows top-speed">
-        {!e.crossover && <PieceLimit e={e} />}
+        {!e.crossover && e.kind !== 4 && <PieceLimit e={e} />}
         <Row label={t("trackInspector.slowest")}>{speed(e.vminKmh)}</Row>
         <Row label={t("trackInspector.cost")}>{money(cost)}</Row>
         {!e.crossover && m && (

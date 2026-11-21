@@ -499,6 +499,12 @@ pub enum Issue {
     StationPorts { node: u32 },
     /// T-3889: a station where tram track meets rail.
     StationFamily { node: u32 },
+    /// T-3378: a busway meets other track at a node (a busway joins only busways).
+    BuswayJoin { node: u32 },
+    /// T-3378: a station on a busway (BRT stations go beside one).
+    BuswayStation { node: u32 },
+    /// T-3378: what is for trains and trams only (a crossover, a train line's path) on a busway.
+    BuswayTrack { edge: u32 },
     /// A station on a node where more than two pieces of track meet.
     StationJunction { node: u32 },
     PlatformLength { node: u32 },
@@ -588,6 +594,8 @@ pub struct Touch {
     /// T-3521: lines whose weekend setting changed (`set_weekend`), which settle only the weekends
     pub weekend: Vec<u32>,
     pub paths_changed: bool,
+    /// T-3378: a busway was added, changed or removed, so every bus line is timed again
+    pub busways: bool,
 }
 
 /// What `derive` rebuilt.
@@ -845,6 +853,10 @@ pub struct Network {
     brt_room: std::cell::RefCell<Option<(u64, std::sync::Arc<super::bus::lanes::Room>)>>,
     /// T-3378: every BRT line's lanes (`brt_lanes`), kept the same way.
     brt_lanes: std::cell::RefCell<Option<(u64, std::sync::Arc<(super::bus::lanes::Lanes, u32)>)>>,
+    /// T-3378 stage 4: the constructed busways (`busways`), kept with `busway_key`.
+    busways: std::cell::RefCell<Option<(u64, std::sync::Arc<super::bus::busway::Busways>)>>,
+    /// T-3378: set while the blueprint is priced, so the busways still to be built count as built (`built_busways`).
+    busways_planned: std::cell::Cell<bool>,
 }
 
 /// Slack in a Dijkstra key.

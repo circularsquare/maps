@@ -51,6 +51,7 @@ import { setToolHot } from "./hovered";
 import { routeMeets } from "../game/busLinks";
 import { CurveLabelPool, type CurveLabel } from "./trackTagRows";
 import { busRoadColour } from "./basemap";
+import { toLngLat } from "./geo";
 
 /** the sim's `bus::MIN_ROUTE_M` */
 const MIN_ROUTE_M = 100;
@@ -193,6 +194,7 @@ export class BusDraw {
 
   constructor(private map: MlMap, box: HTMLElement, private tag: HTMLElement, private client: ClockClient, private overlay: Overlay, private host: { exit(): void }) {
     this.roads = new BusRoads(map, () => this.loaded(), undefined, () => display.peek().busOneWay);
+    this.roads.buswaySource = () => buswaysOf(overlay);
     this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     this.svg.setAttribute("class", "bus-draw");
     this.svg.style.cssText = "position:absolute;left:0;top:0;overflow:visible;display:none";
@@ -1436,4 +1438,25 @@ function reversedLeg(leg: Leg): Leg {
   const pts: number[] = [];
   for (let i = leg.pts.length - 2; i >= 0; i -= 2) pts.push(leg.pts[i], leg.pts[i + 1]);
   return { ...leg, pts, ...(leg.fast ? { fast: [...leg.fast].reverse() } : {}) };
+}
+
+/** T-3378: the busways (track of kind 4, constructed or planned) as lng, lat lines for the bus router, worked out again
+ * when the world's edges or the drawn network change. */
+let buswayMemo: { edges: unknown; net: unknown; out: { key: string; lines: number[][] } } | null = null;
+function buswaysOf(overlay: Overlay): { key: string; lines: number[][] } {
+  const w = world.peek(), n = overlay.renderer.net;
+  if (!w || !n) return { key: "", lines: [] };
+  if (buswayMemo && buswayMemo.edges === w.edges && buswayMemo.net === n) return buswayMemo.out;
+  const lines: number[][] = [], keys: string[] = [];
+  for (const e of w.edges) {
+    if (e.kind !== 4) continue;
+    const pts = n.edgePts.get(e.id);
+    if (!pts || pts.length < 6) continue;
+    const ll: number[] = [];
+    for (let k = 0; k + 2 < pts.length; k += 3) ll.push(...toLngLat(pts[k], pts[k + 1]));
+    lines.push(ll);
+    keys.push(`${e.id}:${e.lengthM}:${ll[0]},${ll[1]}`);
+  }
+  buswayMemo = { edges: w.edges, net: n, out: { key: keys.join("|"), lines } };
+  return buswayMemo.out;
 }

@@ -207,7 +207,7 @@ export interface DockLayout {
  * saved the old default with everything else, so that setting is dropped once and the new default applies; 9 since the ramp's ends are lighter (T-1138); 10 since the track display starts on Line (T-1244); 11 since the station circles start off (T-1585); 12 since lines side by side are on (T-2346); 13 since everyone starts on High map detail (T-2840); 14 since the currency starts from the browser's region (T-2860). */
 const VERSION = 15;
 
-function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; ramp: boolean; tracks: 1 | 2 | 4; hsr: boolean; tram: boolean; keep: boolean; snap: boolean; tramSnap: boolean; streets: boolean; roads: boolean; beside: boolean; design: number; fly: number; advanced: boolean; platform: number; tramPlatform: number; oneTrack: boolean; stationKind: StationKind }>; guide: boolean; v: number }> {
+function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; ramp: boolean; tracks: 1 | 2 | 4; hsr: boolean; tram: boolean; busway: boolean; keep: boolean; snap: boolean; tramSnap: boolean; streets: boolean; roads: boolean; beside: boolean; design: number; fly: number; advanced: boolean; platform: number; tramPlatform: number; oneTrack: boolean; stationKind: StationKind }>; guide: boolean; v: number }> {
   try {
     return JSON.parse(localStorage.getItem(STORE) || "{}");
   } catch {
@@ -409,8 +409,12 @@ export const highSpeed = signal(saved.build?.hsr === true && saved.build?.tram !
 /** T-2926: the track tool lays tram track (always double, ground level to start with), the third type beside
  * Regular and High speed. Drawn by hand it is the off-street kind (`TrackApi::set_route_kind(3)`). */
 export const tramTrack = signal(saved.build?.tram === true);
+/** T-3378 stage 4: the track tool lays an off-road busway (`TrackApi::set_route_kind(4)`), the fourth type. It is
+ * drawn as off-street tram track is, so `tramTrack` is on with it; the street and real network snaps are off and the
+ * track double while it is picked, and come back as they were when another type is. */
+export const buswayTrack = signal(saved.build?.tram === true && saved.build?.busway === true);
 /** T-2931: the track tool lays quad track (two pairs) instead of double; high-speed (T-3126) and tram (T-3166) too. */
-export const quadTrack = signal(saved.build?.tracks === 4);
+export const quadTrack = signal(saved.build?.tracks === 4 && saved.build?.busway !== true);
 /** T-3262: the track count the player last picked. Single is kept here while High speed or Tram shows it as
  * double, and comes back with Regular; it is what the browser remembers. */
 const countPicked = signal<1 | 2 | 4>(saved.build?.tracks === 1 || saved.build?.tracks === 4 ? saved.build.tracks : 2);
@@ -424,7 +428,7 @@ export function setQuadTrack(on: boolean) {
   });
 }
 /** T-3093: the track tool lays single track (0.6x the cost), beside double and quad; with any track type. */
-export const singleTrack = signal(saved.build?.tracks === 1);
+export const singleTrack = signal(saved.build?.tracks === 1 && saved.build?.busway !== true);
 /** T-3352: single track goes with every track type. */
 export function setSingleTrack(on: boolean): boolean {
   if (on === singleTrack.peek()) return true;
@@ -448,15 +452,35 @@ export const trackCountPicked = (): 1 | 2 | 4 => countPicked.value;
 let designBeforeHsr: DesignSpeed | null = null;
 /** The level before Tram was picked, put back when another type is. */
 let levelBeforeTram: Level | null = null;
-export type TrackType = 2 | "hsr" | "tram";
-export const trackType = computed<TrackType>(() => (tramTrack.value ? "tram" : highSpeed.value ? "hsr" : 2));
+export type TrackType = 2 | "hsr" | "tram" | "busway";
+export const trackType = computed<TrackType>(() => (buswayTrack.value ? "busway" : tramTrack.value ? "tram" : highSpeed.value ? "hsr" : 2));
+/** T-3378: the street snaps as they were before Busway was picked, put back when it is left. */
+let snapsBeforeBusway: { streets: boolean; real: boolean } | null = null;
 /** The track bar's Regular / High speed choice. High speed sets the design speed to its top (the
  * player can step it down); leaving it puts back the speed there was before. One batch, so the track
  * tool never sees the old type with the new speed (T-1001). */
 export function setTrackType(t: TrackType) {
-  const was = highSpeed.peek(), wasTram = tramTrack.peek();
-  if ((t === "hsr" && was) || (t === "tram" && wasTram) || (t === 2 && !was && !wasTram)) return;
+  const was = highSpeed.peek(), wasTram = tramTrack.peek(), wasBusway = buswayTrack.peek();
+  if ((t === "hsr" && was) || (t === "busway" && wasBusway) || (t === "tram" && wasTram && !wasBusway) || (t === 2 && !was && !wasTram)) return;
   batch(() => {
+    if (wasBusway && t !== "busway") {
+      buswayTrack.value = false;
+      const s = snapsBeforeBusway ?? { streets: true, real: false };
+      snapStreets.value = s.streets && !s.real;
+      snapRealTram.value = s.real;
+      snapsBeforeBusway = null;
+      singleTrack.value = countPicked.peek() === 1;
+      quadTrack.value = countPicked.peek() === 4;
+      if (t === "tram") return;
+    }
+    if (t === "busway") {
+      snapsBeforeBusway = { streets: snapStreets.peek(), real: snapRealTram.peek() };
+      snapStreets.value = snapRealTram.value = false;
+      singleTrack.value = quadTrack.value = false;
+      buswayTrack.value = true;
+      if (wasTram) return;
+      t = "tram";
+    }
     if (t === "tram") {
       if (quadTrack.peek()) snapStreets.value = false;
       if (was && designBeforeHsr !== null) designSpeed.value = designBeforeHsr;
@@ -537,7 +561,7 @@ if (typeof window !== "undefined") {
 void loadNunito().then(() => document.dispatchEvent?.(new Event("tw-fontchange")));
 effect(() => {
   if (VIDEO) return; // T-2774
-  const s = { tab: tab.value, theme:theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, ramp: autoRamp.value, hsr: highSpeed.value, tram: tramTrack.value, tracks: countPicked.value, keep: keepPlacing.value, snap: snapReal.value, tramSnap: snapRealTram.value, streets: snapStreets.value, roads: snapRoads.value, beside: snapBeside.value, design: designSpeed.value, fly: flyoverSpeed.value, advanced: buildAdvanced.value, platform: buildPlatform.value, tramPlatform: buildTramPlatform.value, oneTrack: stationOneTrack.value, stationKind: stationKind.value }, guide: guideFinished.value, v: VERSION };
+  const s = { tab: tab.value, theme:theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, ramp: autoRamp.value, hsr: highSpeed.value, tram: tramTrack.value, busway: buswayTrack.value, tracks: countPicked.value, keep: keepPlacing.value, snap: snapReal.value, tramSnap: snapRealTram.value, streets: snapStreets.value, roads: snapRoads.value, beside: snapBeside.value, design: designSpeed.value, fly: flyoverSpeed.value, advanced: buildAdvanced.value, platform: buildPlatform.value, tramPlatform: buildTramPlatform.value, oneTrack: stationOneTrack.value, stationKind: stationKind.value }, guide: guideFinished.value, v: VERSION };
   try {
     localStorage.setItem(STORE, JSON.stringify(s));
   } catch {

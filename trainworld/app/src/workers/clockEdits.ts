@@ -549,12 +549,12 @@ export function routeArgs(a: TrackApi, r: RouteAsk): [Float64Array, Float64Array
   a.set_route_tangent(!!r.through);
   a.set_design_speed(designOf(r));
   a.set_flyover_speed(r.flyover ?? 80);
-  a.set_route_kind(r.tram ? (r.street ? 2 : 3) : 0);
+  a.set_route_kind(r.busway ? 4 : r.tram ? (r.street ? 2 : 3) : 0);
   a.set_route_street(new Float64Array(r.tram && r.street ? r.streetLine ?? [] : []));
   a.set_route_hsr(!!r.hsr);
   a.set_route_ramp(!!r.ramp);
   a.set_route_beside(...besideOf(r));
   a.set_route_join(new Float64Array((r.join ?? [null, null, null, null]).map((v) => v ?? NaN)));
   // T-3092: with ramps on, new junctions on double track are laid as flyovers
-  return [new Float64Array([...endArr(r.from), ...endArr(r.to)]), pisArr(r.pis), r.single ? 1 : r.quad ? 4 : 2, !!r.ramp];
+  return [new Float64Array([...endArr(r.from), ...endArr(r.to)]), pisArr(r.pis), r.busway ? 2 : r.single ? 1 : r.quad ? 4 : 2, !!r.ramp]; // (T-3378: a busway is always double)
 }

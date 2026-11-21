@@ -5,17 +5,18 @@ import { area, length, money, roughDistance } from "./format";
 import { t } from "../i18n";
 import type { Vehicle } from "./vehicle";
 import { TRACK_SPECS } from "./trackKinds";
-import { highSpeed, stationOnTram, tool, tramTrack, TRAM_PLATFORM } from "./ui";
+import { buswayTrack, highSpeed, stationOnTram, tool, tramTrack, TRAM_PLATFORM } from "./ui";
 import { linesByNum, world } from "./world";
 
 /** T-2926: the track kind the player is working on, for the text of a limit that differs by kind */
 const onTram = () => (tool.peek() === "station" ? stationOnTram.peek() : tool.peek() === "track" && tramTrack.peek());
+const onBusway = () => tool.peek() === "track" && buswayTrack.peek(); // T-3378
 const onHsr = () => tool.peek() === "track" && highSpeed.peek(); // T-3153: other tools do not read the track tool's type
 
 const TEXT: Record<string, () => string> = {
   "Geom:ZeroLeg": () => t("issues.zeroLeg"),
   "Geom:Reversal": () => t("issues.reversal"),
-  "Geom:RadiusTooSmall": () => t("issues.radiusTooSmall", { radius: length(TRACK_SPECS[onTram() ? "tram" : onHsr() ? "highSpeed" : "regular"].minRadius) }),
+  "Geom:RadiusTooSmall": () => t("issues.radiusTooSmall", { radius: length(TRACK_SPECS[onBusway() ? "busway" : onTram() ? "tram" : onHsr() ? "highSpeed" : "regular"].minRadius) }),
   "Geom:RampTooShort": () => t("issues.rampTooShort", { ramp: length(onTram() ? 100 : 160) }), // T-3027: the floor, params.rs RAMP_FLOOR
   "Geom:LevelRange": () => t("issues.levelRange"),
   NodeLevel: () => t("issues.levelRange"),
@@ -71,6 +72,9 @@ const TEXT: Record<string, () => string> = {
   TramTrack: () => t("issues.tramTrack"), // T-3889
   PortStop: () => t("issues.portStop"), // T-3911
   StationFamily: () => t("issues.stationFamily"),
+  BuswayJoin: () => t("issues.buswayJoin"), // T-3378
+  BuswayStation: () => t("issues.buswayStation"),
+  BuswayTrack: () => t("issues.buswayTrack"),
   NothingToConstruct: () => t("issues.nothingToConstruct"),
   TerrainMissing: () => t("issues.terrainMissing"),
   RoadsMissing: () => t("issues.roadsMissing"),

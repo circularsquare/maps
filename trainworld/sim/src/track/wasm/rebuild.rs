@@ -366,8 +366,9 @@ fn beyond(net: &Network, cand: &[u32], level: Option<i8>, built_ok: bool) -> Bey
 
 /// A piece whose track type can change: plain double track (single track and crossovers have no high-speed or
 /// tram form).
-fn kind_ok(d: &EdgeData, _w: Want) -> bool {
-    !d.crossover
+fn kind_ok(d: &EdgeData, w: Want) -> bool {
+    // T-3378: a busway is never retyped, nor anything retyped to one
+    !d.crossover && !(w.kind.is_some() && d.kind.is_busway())
 }
 
 /// T-3296: single track that becomes double: plain rail track that runs both ways. A piece set or joined to
@@ -557,6 +558,7 @@ fn culprits(net: &Network, cand: &[u32], issues: &[Issue], flats: &[(u32, u32)],
             | Issue::Crossover { edge: e }
             | Issue::NoParallel { edge: e }
             | Issue::Alongside { edge: e }
+            | Issue::BuswayTrack { edge: e }
             | Issue::HighSpeed { edge: e } => edge(e, &mut out),
             Issue::NoSuchNode { node }
             | Issue::TooManyPorts { node }
@@ -566,6 +568,8 @@ fn culprits(net: &Network, cand: &[u32], issues: &[Issue], flats: &[(u32, u32)],
             | Issue::StationPorts { node }
             | Issue::StationJunction { node }
             | Issue::StationFamily { node }
+            | Issue::BuswayJoin { node }
+            | Issue::BuswayStation { node }
             | Issue::PlatformLength { node }
             | Issue::PlatformTooLong { node }
             | Issue::PlatformStation { node }

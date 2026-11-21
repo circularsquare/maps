@@ -63,6 +63,9 @@ const GRAPH_TILES = 220;
 const KEEP_TILES = 500;
 const PARALLEL = 8;
 const RETRY_MS = 15000;
+/** T-3378: a busway's end joins both ends of the nearest road piece within this, ground metres (a busway is drawn
+ * as track, with no snap to the streets) */
+const BUSWAY_JOIN_M = 60;
 
 export interface Pt {
   lng: number;
@@ -121,6 +124,10 @@ export class BusRoads {
   private snaps = new Map<string, Snap | null>();
   private cachedVersion = -1;
   private notify = false;
+  /** T-3378: the busways, constructed and planned (lng, lat pairs flat, a line each), roads like any other here */
+  private busways: { key: string; lines: number[][] } = { key: "", lines: [] };
+  /** where the busways come from, asked before each search (none: no busways) */
+  buswaySource: (() => { key: string; lines: number[][] }) | null = null;
   /** the search's cost, for the check: calls, total and slowest, ms */
   stats = { legs: 0, ms: 0, max: 0, tiles: 0 };
 
@@ -182,6 +189,10 @@ export class BusRoads {
   /** Make sure the tiles over a grid box are loading or loaded; true when every one is in the graph.
    * A tile that failed counts as empty for `RETRY_MS`. */
   private need(x0: number, y0: number, x1: number, y1: number): boolean {
+    if (this.buswaySource) {
+      const b = this.buswaySource();
+      this.setBusways(b.key, b.lines);
+    }
     const tx0 = Math.floor(x0 / EXTENT), tx1 = Math.floor(x1 / EXTENT), ty0 = Math.floor(y0 / EXTENT), ty1 = Math.floor(y1 / EXTENT);
     const keys: number[] = [];
     let all = true;
@@ -206,9 +217,60 @@ export class BusRoads {
     }
     for (const k of missing) {
       const t = this.tiles.get(k);
-      this.graph.addTile(Math.floor(k / 16384), k % 16384, t && t !== "loading" && t.rl ? t.rl : { extent: EXTENT, lines: [] });
+      this.graph.addTile(Math.floor(k / 16384), k % 16384, this.withBusways(Math.floor(k / 16384), k % 16384, t && t !== "loading" && t.rl ? t.rl : { extent: EXTENT, lines: [] }));
     }
     return true;
+  }
+
+  /** T-3378: the busways a route may follow; the graph is built again when they change. */
+  setBusways(key: string, lines: number[][]) {
+    if (key === this.busways.key) return;
+    this.busways = { key, lines };
+    this.graph.clear();
+  }
+
+  /** A tile's roads with the busways over it, each end of a busway joined to the nearest road piece (not a motorway)
+   * within `BUSWAY_JOIN_M` by a short road to each of its ends. */
+  private withBusways(tx: number, ty: number, rl: RoadLines): RoadLines {
+    if (!this.busways.lines.length) return rl;
+    const ext = rl.extent, k = ext / EXTENT, ox = tx * EXTENT, oy = ty * EXTENT, pad = 0.05 * ext;
+    const lines = [...rl.lines], weights = rl.weights ? [...rl.weights] : rl.lines.map(() => 1), levels = rl.levels ? [...rl.levels] : undefined, ways = rl.ways ? [...rl.ways] : undefined;
+    const add = (pts: number[]) => {
+      lines.push(Int32Array.from(pts));
+      weights.push(1);
+      levels?.push(0);
+      ways?.push(0);
+    };
+    const inside = (x: number, y: number, m = 0) => x >= -m && x <= ext + m && y >= -m && y <= ext + m;
+    for (const ll of this.busways.lines) {
+      const g: number[] = [];
+      for (let i = 0; i + 1 < ll.length; i += 2) g.push(Math.round((gxOf(ll[i]) - ox) * k), Math.round((gyOf(ll[i + 1]) - oy) * k));
+      let near = false;
+      for (let i = 0; i + 1 < g.length; i += 2) if (inside(g[i], g[i + 1], pad)) near = true;
+      if (!near || g.length < 4) continue;
+      add(g);
+      for (const end of [0, g.length - 2]) {
+        const x = g[end], y = g[end + 1];
+        if (!inside(x, y)) continue;
+        const mpu = metresPerUnit(oy + y / k) / k;
+        let best = BUSWAY_JOIN_M / mpu, at: number[] | null = null;
+        rl.lines.forEach((line, li) => {
+          if ((rl.weights?.[li] ?? 1) >= MOTORWAY) return;
+          for (let i = 2; i + 1 < line.length; i += 2) {
+            const ax = line[i - 2], ay = line[i - 1], dx = line[i] - ax, dy = line[i + 1] - ay, l2 = dx * dx + dy * dy;
+            const t = l2 > 0 ? Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / l2)) : 0;
+            const d = Math.hypot(ax + t * dx - x, ay + t * dy - y);
+            if (d < best) (best = d), (at = [ax, ay, line[i], line[i + 1]]);
+          }
+        });
+        if (at) {
+          const a = at as number[];
+          add([x, y, a[0], a[1]]);
+          add([x, y, a[2], a[3]]);
+        }
+      }
+    }
+    return { ...rl, lines, weights, levels, ways };
   }
 
   private fresh() {

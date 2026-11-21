@@ -2101,7 +2101,8 @@ impl TrackWorld {
             }
         }
         // a bus line's stops follow the stations near its route and the routes it crosses (T-1464)
-        if !t.stations.is_empty() || !t.lines.is_empty() {
+        // T-3378: and a bus line's speed follows the constructed busways it runs on
+        if !t.stations.is_empty() || !t.lines.is_empty() || t.busways {
             lines.extend(self.net.bus_lines());
         }
         lines.sort_unstable();

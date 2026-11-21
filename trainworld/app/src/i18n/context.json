@@ -1,4 +1,12 @@
 {
+  "blueprint.lengthLevelBusway": "Build tab blueprint row: the length of off-road busway (T-3378, a road for buses only, drawn with the track tool) at a level, e.g. \"3.2 km busway, ground level (0)\".",
+  "issues.buswayJoin": "Refusal when track drawn would join a busway (a road for buses only, T-3378) to train or tram track: a busway joins only other busways.",
+  "issues.buswayStation": "Refusal when a train or tram station would be placed on a busway (a road for buses only); BRT stations are a separate kind of station placed beside a road or busway.",
+  "issues.buswayTrack": "Refusal when something for trains and trams only (a crossover, a train line's route) would go on a busway, a road for buses only.",
+  "toolBar.busway": "Track tool: the fourth track type, Busway, beside Regular, High speed and Tram: an off-road road for buses only (T-3378). Short label on a segmented button.",
+  "toolBar.priceTipBusway": "Track tool price hover while Busway is the track type: the level's name, then 'busway', e.g. 'Ground level, busway'.",
+  "trackInspector.nameBusway": "Track panel title for a piece of busway (a road for buses only, built with the track tool).",
+  "trackInspector.kindBusway": "Track panel subtitle part naming the kind of piece, lowercase, between its length and its level: 'busway'.",
   "account.unreachable": "Error shown under an account form (sign in, feedback, saves) when the request did not get through.",
   "account.answered": "Error shown under an account form when the server gave an error with no message. status: the HTTP status, 500.",
   "account.noServer": "Error shown when sending feedback from a copy of the game with no account server.",

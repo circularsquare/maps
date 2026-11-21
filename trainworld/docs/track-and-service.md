@@ -2428,7 +2428,7 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   share runs and the rest are not bought (`trim_auto`), and a count line's extra buses wait at its ends. Weekends
   that run their own settle (`settle_weekend`) are cut the same way on their own rates (T-3941). No slowdown:
   a full lane only cuts buses. Plain bus lines on the road neither count nor are cut. An edit of any bus line settles
-  every BRT line (`sharing_closure`). The bus panel shows the busiest way under the BRT row ("Busiest lane", n/60
+  every BRT line (`sharing_closure`). The bus panel shows the busiest way under the BRT row ("Busiest lane", n/100
   buses per hour, red once full), the full lane's alert with the buses held out, and the headways it limits.
   Worked out again only when a BRT route, a loop's one way or the street grids change (`Network::brt_room`).
 - **BRT stations** (T-3378 stage 3, Anita 11-21; `StationData::road`, `TrackApi::add_brt_station`): a station on no
@@ -2449,6 +2449,29 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   `upgrades::BRT_STATION`, so a wait there counts 0.8 as in a waiting room (`wait_factor`), and a station of BRT
   stations alone takes a tram stop's slot (`TRAM_SLOTS`, `tram_stops`). Removed as any station; a bus line never
   holds it among its stops, so it can be removed while a line stops there, as a train station a bus passes can.
+- **Busways** (T-3378 stage 4, Anita 11-21; `TrackKind::Busway`, kind 4 in an edge's flag bits 8-10, save level 37):
+  an off-road road for buses only, the track tool's fourth type after Tram. Drawn and built as off-street tram track
+  (`set_route_kind(4)`: tram's curves and leads, levels, bridges, blueprint and Construct, no street or real-network
+  snap, always double, no ramp switch, 12 m smallest radius); its own family 2, so it joins only busways
+  (`BuswayJoin`: "A busway joins only other busways."), holds no station (`BuswayStation`: "Stations can't go on
+  busways. Place a BRT station beside one."), takes no crossover and is never retyped (`BuswayTrack`: "Trains and
+  trams can't run on busways."); every train and tram path search keeps off it (`Network::edge_barred`), and it
+  crosses rail and tram flat, giving way as a tram does. Price: off-street tram track's level table times two thirds
+  (`BUSWAY_COST`: US$25M a km at ground, 30 at +1 and -1), its terrain and water shares, its own Construct row
+  (`BUSWAY_ROW` 9); upkeep off-street tram track's (1.0x ground rail, US$350 a km a day real). The bus tool's router
+  takes every busway, constructed or planned, as a street, each end joined to both ends of the nearest road piece
+  within 60 m (`BusRoads::withBusways`, fed from the drawn network by `busDraw.ts`). The sim decides where a route
+  runs on one: a 100 m pace step whose middle lies within 8 m of a constructed busway and runs within 30 degrees of
+  it, either way (`BUSWAY_MATCH_M`, `BUSWAY_MATCH_DEG`, `bus::busway::Busways`, cached on `Network::busways` with
+  `busway_key`), so deleting a busway takes its speed away. There any bus, plain or BRT (Anita 11-21: "off road every
+  bus uses the busway"), runs 60 km/h (`BUSWAY_KMH`), each stop costing 7 s more (`BUSWAY_STOP_EXTRA_S`: the run has
+  no acceleration), and a BRT line needs no lane there: no lane price, upkeep or lane marks. Its buses there still
+  count toward lane room (`Room` takes a BRT line's busway steps as lane steps); a plain line's do not. An edit that
+  adds, changes or removes a busway re-times every bus line (`Touch::busways`). On the map a built busway (`F_BUSWAY`,
+  with `F_TRAM`) is one road as wide as double track's two tracks, in a road grey (`u_track` mixed 30% toward the
+  casing): solid kerbs, see-through between (the bus lines are drawn under the track and show through), no casing,
+  and a white centre line dashed every 12 m of ground (6 px at least); its blueprint is tram track's. It never
+  doubles up, and the tool lays it double whatever track count is remembered.
 - A new bus line starts at a bus every 8, 15 and 30 minutes by level (Anita, 2026-11-09; the bus default for new lines instead once set, T-3703), 30 s dwell at
   train stations and 120 s turnaround (`NEW_LINE` in app/src/game/newLine.ts, the one place for what a new
   line of each mode starts with). A copy is planned.

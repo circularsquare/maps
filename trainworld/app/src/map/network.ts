@@ -58,6 +58,8 @@ export const F_TRAM = 4096;
 /** Single track splitting through a station (T-3212), and lines over it: its lanes widen the stroke
  * only as double track grows into two tracks, so zoomed out it stays single track's width. */
 export const F_SPLIT = 8192;
+/** T-3378: a busway (always with `F_TRAM`): a road's grey, one dashed centre line in place of the wires. */
+export const F_BUSWAY = 16384;
 /** A tram line's `lineCars` is its sections plus this, so the car shader tells it from a train of as many cars
  * (readers of the count use `carsOf`). */
 export const TRAM_MARK = 0.5;
@@ -1588,9 +1590,10 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
     const given = r.edgeParts![i];
     const sg: ArrayLike<number> | undefined = r.edgeSpeedParts?.[i];
     builtEdge.set(e.id, e.built);
-    const flags = (e.built ? 0 : F_BLUEPRINT | (e.off ? F_OFF : 0)) | (e.hsr ? F_HSR : 0) | (e.kind ? F_TRAM : 0) | (e.tracks === 1 && splits.ends.has(e.id) ? F_SPLIT : 0);
+    const flags = (e.built ? 0 : F_BLUEPRINT | (e.off ? F_OFF : 0)) | (e.hsr ? F_HSR : 0) | (e.kind ? F_TRAM : 0) | (e.kind === 4 ? F_BUSWAY : 0) | (e.tracks === 1 && splits.ends.has(e.id) ? F_SPLIT : 0);
     if (flags & F_SPLIT) splitEdge.add(e.id);
-    const lanes = (e.tracks === 2 ? 1 : 0) | (e.tracks === 2 && taperAt(e.a) ? 2 : 0) | (e.tracks === 2 && taperAt(e.b) ? 4 : 0);
+    // (a busway is one road, never two tracks parting)
+    const lanes = e.kind === 4 ? 0 : (e.tracks === 2 ? 1 : 0) | (e.tracks === 2 && taperAt(e.a) ? 2 : 0) | (e.tracks === 2 && taperAt(e.b) ? 4 : 0);
     const split = e.tracks === 1 ? splits.ends.get(e.id) ?? null : null;
     const splitKey = split ? `${e.lengthM}|` + split.map((x) => `${+x.a},${x.p},${x.lead}`).join("|") : "";
     let c = cache.edges.get(e.id);

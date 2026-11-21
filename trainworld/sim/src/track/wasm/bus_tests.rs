@@ -876,3 +876,98 @@ fn a_full_brt_lane_cuts_weekend_buses_too() {
     let (r1, r2) = (rest(&a, l1), rest(&a, l2));
     assert!(r1 + r2 <= LANE_BUSES_H + 0.5 && r1 + r2 >= LANE_BUSES_H - 2.0, "weekends {r1} {r2}");
 }
+
+/// T-3378 stage 4: a busway built over constructed BRT lanes frees them, and the blueprint's total is what Construct
+/// charges: the lanes it frees come off.
+#[test]
+fn a_busway_over_built_brt_lanes_quotes_what_construct_charges() {
+    let mut a = api();
+    let (pop, jobs) = ([30_000.0f32, 30_000.0, 50.0], [20_000.0f32, 20_000.0, 5.0]);
+    assert!(a.add_pack_streets(2000.0, -1000.0, -1000.0, 3, 1, &pop, &jobs, &[0, 1, 2], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758));
+    let l = a.new_line_id();
+    assert_eq!(a.set_bus_line(l, &[0.0, 0.0, 1.0, 3000.0, 0.0, 1.0], 480, 600, 1200, 30.0, 120.0, 0, "B".into()), 0, "{}", a.issues());
+    assert_eq!(a.construct_line(l), 0, "{}", a.issues());
+    brt_on(&mut a, l);
+    let lanes = a.w.net.brt_lane_m(true);
+    assert!(lanes > 1000.0, "{lanes}");
+    a.set_route_kind(TrackKind::Busway as u8);
+    let ends = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2000.0, 0.0, 0.0];
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+    let total = |a: &mut TrackApi| a.blueprint_cost_items().chunks_exact(7).map(|r| r[6]).sum::<f64>();
+    let shown = total(&mut a);
+    let cash = a.cash();
+    assert_eq!(a.construct_all(), 0, "{}", a.issues());
+    let charged = cash - a.cash();
+    assert!(a.w.net.brt_lane_m(true) < lanes - 500.0, "{}", a.w.net.brt_lane_m(true));
+    assert!((shown - charged).abs() < 1e-6, "shown {shown} charged {charged}");
+}
+
+/// T-3378 stage 4: an off-road busway, drawn as track of kind 4: US$25M a km in the blueprint (its own row), built
+/// at Construct; any bus on it runs 60 km/h with 7 s more a stop, BRT or not, and needs no BRT lane there; its
+/// upkeep is off-road tram track's; it joins no other track and holds no station; no train path uses it; it saves at
+/// level 37, undoes as track does, and deleting it takes the speed away.
+#[test]
+fn a_busway_costs_runs_buses_at_its_speed_and_saves() {
+    use crate::track::bus::{Pace, K_CORNER, K_ROAD};
+    let mut a = api();
+    let route = [-100.0, 50.0, 3100.0, 50.0];
+    a.set_route_kind(TrackKind::Busway as u8);
+    let ends = [0.0, 0.0, route[0], route[1], 0.0, 0.0, 0.0, route[2], route[3], 0.0];
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+    let ways: Vec<u32> = (0..a.w.net.edge_count() as u32).filter(|&e| a.w.net.edge_ok(e)).collect();
+    assert!(!ways.is_empty() && ways.iter().all(|&e| a.w.net.edge_kind[e as usize] == TrackKind::Busway), "{ways:?}");
+    let len: f64 = ways.iter().map(|&e| a.w.net.edge_len[e as usize]).sum();
+    // the blueprint: its own row at US$25M a km, the whole blueprint
+    let rows = a.w.net.blueprint_cost_items();
+    let row = rows.chunks_exact(7).find(|r| r[0] == 0.0 && r[2] == BUSWAY_ROW as f64).expect("a busway row");
+    assert!((row[5] - len).abs() < 1e-6 && (row[6] - len / 1000.0 * 25.0).abs() < 1e-6, "{row:?} {len}");
+    assert!((a.w.net.total_cost() - a.w.net.built_cost() - len / 1000.0 * 25.0).abs() < 1e-6);
+    // undo takes the blueprint away, redo puts it back
+    assert_eq!(a.undo(), 0, "{}", a.issues());
+    assert!(a.w.net.blueprint_cost_items().chunks_exact(7).all(|r| r[2] != BUSWAY_ROW as f64));
+    assert_eq!(a.redo(), 0, "{}", a.issues());
+    // a bus line along it, BRT and a plain one, each constructed while the busway is still blueprint
+    let k = (K_CORNER | K_ROAD) as f64;
+    let pts = [0.0, 50.0, k, 3000.0, 50.0, k];
+    let mk = |a: &mut TrackApi, brt: bool| {
+        let l = a.new_line_id();
+        assert_eq!(a.set_bus_line(l, &pts, 480, 600, 1200, 30.0, 120.0, 0, "B".into()), 0, "{}", a.issues());
+        assert_eq!(a.construct_line(l), 0, "{}", a.issues());
+        if brt {
+            brt_on(a, l);
+        }
+        l
+    };
+    let (brt, plain) = (mk(&mut a, true), mk(&mut a, false));
+    let time = |a: &TrackApi, l: u32| *a.stop_times(l, 0, 0).last().unwrap();
+    let road = 3000.0;
+    let before = time(&a, plain);
+    assert!((before - Pace::default().auto_time(0.0, road)).abs() < 1e-6, "{before}");
+    // Construct pays US$25M a km; the buses then run 60 with 35 s a stop every 400 m of road
+    let cash = a.cash();
+    assert_eq!(a.construct_all(), 0, "{}", a.issues());
+    assert!((cash - a.cash() - len / 1000.0 * 25.0).abs() < 1e-6, "{}", cash - a.cash());
+    let want = road * 3.6 / BUSWAY_KMH + (28.0 + BUSWAY_STOP_EXTRA_S) * road / 400.0;
+    for l in [brt, plain] {
+        assert!((time(&a, l) - want).abs() < 1e-6, "{l}: {} {want}", time(&a, l));
+    }
+    assert!(want < before);
+    // no lanes on a busway to pay for or draw; upkeep off-road tram track's, US$35k a km a game day
+    assert!(a.bus_town_m(brt) == 0.0 && a.bus_lane_marks(brt).is_empty());
+    let up = a.upkeep();
+    assert!((up[1] - len / 1000.0 * UPKEEP_GROUND_KM * TrackKind::Tram.spec().upkeep * ECONOMY / 1e6).abs() < 1e-9, "{up:?}");
+    // it joins no other track and holds no station
+    let end = a.w.net.edge_b[ways[ways.len() - 1] as usize];
+    a.set_route_kind(0);
+    let on = [1.0, end as f64, 0.0, 0.0, 0.0, 0.0, 0.0, 3100.0, 1000.0, 0.0];
+    assert_ne!(a.add_route(&on, &[], 2, false), 0);
+    assert!(a.issues().contains("BuswayJoin"), "{}", a.issues());
+    assert_ne!(a.add_station(1, end, 0.0, 0.0, 60, "S".into()), 0);
+    // saved at level 37 and loaded, the buses as fast
+    let saved = a.save();
+    assert!(a.load(&saved));
+    assert!(a.w.net.edge_kind[ways[0] as usize] == TrackKind::Busway && (time(&a, plain) - want).abs() < 1e-6);
+    // deleting it takes the speed away
+    assert_eq!(a.delete_pieces(&ways, &[]), 0, "{}", a.issues());
+    assert!((time(&a, plain) - before).abs() < 1e-6, "{}", time(&a, plain));
+}
