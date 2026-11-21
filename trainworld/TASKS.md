@@ -790,24 +790,15 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3837 [P3] {L:buses} Ferry routes found without a waypoint, and waypoints on touch
   - Context: T-3809 added shift click waypoints. A leg is still searched only in a box around its two ports, so a sea path that leaves it (Ma Liu Shui to Sai Kung) needs a waypoint; a wider third search would find it alone. Phones have no shift click.
   - Other: notes/T-3809.md
-- T-3916 [P2] {L:route-choice} Trips home lose their loads at drive-to-only stations (taking, 2026-11-20, agent homeload)
-  - Context: Found by comfans (T-3892), 11-21, also on master: `egress_stations` lists only work-end walk stations, so a trip home that ends at a station people only drive to loses its load. In a test fixture a ride-only port had 10,285 boardings out and 0 back, with no ferry flagged. Reach unknown; it may undercount return riders at park-and-ride stations in every game.
-  - Goal: Confirmed in the game (a park-and-ride station's boardings out and back), then trips home end at the stations their outbound trips started from.
-- T-3918 [P2] {L:checks} Tram-replaces-bus Rust test fails on master
-  - Context: Found by tramerr (T-3909), 11-21: `a_tram_carries_at_least_the_bus_it_replaces` gives tram 39,124 against bus 60,668, so `agent_cargo.py test` is red for every agent. Likely T-3910 (trams pay 2+2 boarding minutes, buses none), which breaks the test's premise.
-  - Goal: The test states what is still true after T-3910 and T-3856 and passes, or is removed with the reason.
-- T-3919 [P2] {L:trams} Longer trips treat trams as trains
+- T-3919 [P2] {L:trams} Longer trips treat trams as trains (taking, 2026-11-21, agent tramlong)
   - Context: Found by tramerr (T-3909) reading code, 11-21, not measured: `IntercityApi` has no `set_tram_lines` and intercity/setup.rs gives no tram lines and unscaled cars, so longer trips crowd a tram as a full train. Same kind of bug as T-3909.
   - Goal: Confirmed on a save with a tram and longer trips, then longer trips see trams as commutes do, with a check.
-- T-3920 [P2] {L:buses} Bus stops placed 400 m apart count as one every 2 km
+- T-3920 [P2] {L:buses} Bus stops placed 400 m apart count as one every 2 km (taking, 2026-11-21, agent busstop400)
   - Context: Found by busdesign (T-3378), 11-21: in the frontier model a bus line with stops 400 m apart gets 31 demand stops on 60 km (the automatic rule, one about every 2 km), while 401 m gets 151 and 18% more riders. Not tried with stops placed by a player.
   - Goal: Confirmed in the game with stops placed 400 m apart; if so, placed stops count as stops whatever their spacing.
-- T-3921 [P1] {L:trams} Trams lose at least as much time at a stop as trains (taking, 2026-11-21, agent tramstop)
-  - Context: You, 11-21, after the frontier chart showed the tram's lead over the metro is mostly its 15 s dwell against a new train line's 30 s: "i feel like we should add some more deceleration to the tram and maybe make their dwell times more similar. i think their total time lost should probably be similar, or tbh i think it dprobably make more sense for trams to have more time lost per stop."
-  - Goal: A tram stopping loses at least what a train does at the same speed (braking, standing, speeding up), new tram lines' default dwell matched; frontier rerun shows the tram's 400 m lead mostly gone.
-- T-3922 [P2] {L:money} Station upgrades cost upkeep (taking, 2026-11-21, agent upkeepup)
-  - Context: You, 11-21: "probably start charging maintenance cost for station upgrades. i think in long term if they dont, i tjuts incentivizes mindless spamming."
-  - Goal: Each station upgrade has a daily upkeep shown where it is bought and in the Money tab, sized so an upgrade nobody uses is a visible cost; existing games start paying it.
+- T-3923 [P3] {L:checks} Trips assigned to an unsearched station vanish silently
+  - Context: Found by homeload (T-3916), 11-21: `assign_inner` drops flow to a station the strategy search never reached, its `debug_assert` is off in release, and entries and exits are counted before that check, so the one-entry-one-exit assertions can't catch a loss like T-3916's.
+  - Goal: Such a loss is counted where a check (and diagnostics) can see it, and a Rust test fails if any trips are dropped this way on our fixtures.
 - T-3913 [P3] {L:buses} Bus road hint shades in-town streets apart
   - Context: You, 11-21: "could we color what is in town and out of town, with a slightly different color for streets in town and out of town?" Not built with BRT (T-3907): the hint is a map tile layer on the main thread and the street speeds live in the clock worker. brt's untested idea: a sim call returning the in-town zone squares as polygons, and the hint split in two layers by a `within` filter; a few hours.
   - Goal: In the bus tool, local streets where BRT would run faster than a plain bus show a slightly different shade from those out of town, light and dark.
