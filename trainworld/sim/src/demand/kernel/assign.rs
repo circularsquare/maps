@@ -18,6 +18,9 @@ pub struct Loads {
     pub entry: Vec<f32>,
     pub exit: Vec<f32>,
     pub pax_min: f64,
+    /// Trips taken towards a station the strategy search never reached (`Skims::slot` is `NONE`): they are in
+    /// `entry` and `exit` but walked nowhere, so no rail trip is made of them. Nonzero means a lost flow (T-3923).
+    pub dropped: f64,
     /// The fare curve's extra on the km ridden from each route node, perceived minutes
     /// (`board_extra`; all 0 while the curve is a straight line).
     pub rn_fare_x: Vec<f32>,
@@ -29,13 +32,35 @@ pub struct Loads {
 
 impl Loads {
     pub fn zero(n_st: usize, n_rn: usize) -> Loads {
-        Loads { seg: vec![0.0; n_rn], board: vec![0.0; n_st], alight: vec![0.0; n_st], rn_board: vec![0.0; n_rn], rn_alight: vec![0.0; n_rn], entry: vec![0.0; n_st], exit: vec![0.0; n_st], pax_min: 0.0, rn_fare_x: vec![0.0; n_rn], rn_base_x: vec![0.0; n_rn] }
+        Loads { seg: vec![0.0; n_rn], board: vec![0.0; n_st], alight: vec![0.0; n_st], rn_board: vec![0.0; n_rn], rn_alight: vec![0.0; n_rn], entry: vec![0.0; n_st], exit: vec![0.0; n_st], pax_min: 0.0, dropped: 0.0, rn_fare_x: vec![0.0; n_rn], rn_base_x: vec![0.0; n_rn] }
     }
     /// Every figure times `k` (T-1538's estimate of one period from another).
     pub fn scaled(&self, k: f32) -> Loads {
         let s = |v: &[f32]| v.iter().map(|x| x * k).collect::<Vec<f32>>();
-        Loads { seg: s(&self.seg), board: s(&self.board), alight: s(&self.alight), rn_board: s(&self.rn_board), rn_alight: s(&self.rn_alight), entry: s(&self.entry), exit: s(&self.exit), pax_min: self.pax_min * k as f64, rn_fare_x: s(&self.rn_fare_x), rn_base_x: s(&self.rn_base_x) }
+        Loads { seg: s(&self.seg), board: s(&self.board), alight: s(&self.alight), rn_board: s(&self.rn_board), rn_alight: s(&self.rn_alight), entry: s(&self.entry), exit: s(&self.exit), pax_min: self.pax_min * k as f64, dropped: self.dropped * k as f64, rn_fare_x: s(&self.rn_fare_x), rn_base_x: s(&self.rn_base_x) }
     }
+}
+
+#[cfg(test)]
+thread_local! {
+    /// T-3923: a test thread may drop trips only after `KNOWN_DROPS` is set (the cases that do are listed in notes/T-3923.md).
+    pub static KNOWN_DROPS: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+    /// Every (station, trips) dropped on this thread.
+    pub static DROP_LOG: std::cell::RefCell<Vec<(usize, f64)>> = const { std::cell::RefCell::new(vec![]) };
+}
+
+/// A destination's trips found no strategy: counted in `Loads::dropped`, and in a test build also logged, and a
+/// panic unless the test is a known case, so every demand test is a check that nothing is dropped.
+#[inline(never)]
+pub fn note_dropped(dst: usize, trips: f64) {
+    #[cfg(test)]
+    {
+        DROP_LOG.with(|l| l.borrow_mut().push((dst, trips)));
+        if !KNOWN_DROPS.with(|k| k.get()) && trips > 0.0 {
+            panic!("T-3923: {trips} trips taken towards station {dst}, which was not searched, were dropped");
+        }
+    }
+    let _ = (dst, trips);
 }
 
 /// Each destination's strategy is walked from its farthest nodes towards it. Station flow
@@ -145,8 +170,11 @@ pub(super) fn assign_inner(g: &Graph, sk: &Skims, od: &[f32], mut xf: Option<(&X
     for dst in 0..s {
         if !a.take(dst, |src| od[src * s + dst]) { continue; }
         let slot = sk.slot[dst] as usize;
-        debug_assert!(slot != NONE as usize, "flow towards station {dst}, which was not searched");
-        if slot == NONE as usize { continue; }
+        if slot == NONE as usize {
+            a.l.dropped += a.taken;
+            note_dropped(dst, a.taken);
+            continue;
+        }
         a.walk(g, dst, sk.strategy(slot), xf.as_mut().map(|(ix, x)| (*ix, &mut **x)));
     }
     a.l
@@ -165,6 +193,8 @@ pub struct DestAssign {
     pub(super) use_k: Vec<(u32, f32)>,
     pub(super) dep: Vec<(u32, f32)>,
     pub(super) counting: bool,
+    /// The riders the last `take` took (all stations' columns together).
+    pub(super) taken: f64,
     /// Whether the fare curve's extra is put on the loads (`Loads::rn_fare_x`); on by default.
     pub fares: bool,
     pub(super) km: Vec<f32>,
@@ -187,6 +217,7 @@ impl DestAssign {
             use_k: vec![],
             dep: vec![],
             counting,
+            taken: 0.0,
             fares: true,
             km: vec![],
             fx: vec![],
@@ -208,6 +239,7 @@ impl DestAssign {
             total += v;
         }
         self.l.exit[dst] += total;
+        self.taken = total as f64;
         total != 0.0
     }
     /// Walk the column taken towards `dst` along its strategy.

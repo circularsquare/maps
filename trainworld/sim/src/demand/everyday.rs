@@ -475,6 +475,7 @@ fn add_loads(total: &mut Loads, l: &Loads) {
         }
     }
     total.pax_min += l.pax_min;
+    total.dropped += l.dropped;
 }
 
 /// One lane per purpose kind in the everyday assignment (T-433); `RATE` has six kinds.
@@ -550,6 +551,7 @@ struct LaneLoads {
     entry: Vec<Lanes>,
     exit: Vec<Lanes>,
     pax_min: [f64; LANES],
+    dropped: [f64; LANES],
     /// `Loads::rn_fare_x` of every purpose together
     rn_fare_x: Vec<f32>,
     /// `Loads::rn_base_x` of every purpose together
@@ -558,11 +560,11 @@ struct LaneLoads {
 
 impl LaneLoads {
     fn zero(s: usize, nr: usize) -> LaneLoads {
-        LaneLoads { seg: vec![ZERO; nr], board: vec![ZERO; s], alight: vec![ZERO; s], rn_board: vec![ZERO; nr], rn_alight: vec![ZERO; nr], entry: vec![ZERO; s], exit: vec![ZERO; s], pax_min: [0.0; LANES], rn_fare_x: vec![0.0; nr], rn_base_x: vec![0.0; nr] }
+        LaneLoads { seg: vec![ZERO; nr], board: vec![ZERO; s], alight: vec![ZERO; s], rn_board: vec![ZERO; nr], rn_alight: vec![ZERO; nr], entry: vec![ZERO; s], exit: vec![ZERO; s], pax_min: [0.0; LANES], dropped: [0.0; LANES], rn_fare_x: vec![0.0; nr], rn_base_x: vec![0.0; nr] }
     }
     fn lane(&self, k: usize) -> Loads {
         let f = |v: &[Lanes]| v.iter().map(|x| x[k]).collect();
-        Loads { seg: f(&self.seg), board: f(&self.board), alight: f(&self.alight), rn_board: f(&self.rn_board), rn_alight: f(&self.rn_alight), entry: f(&self.entry), exit: f(&self.exit), pax_min: self.pax_min[k], rn_fare_x: vec![0.0; self.seg.len()], rn_base_x: vec![0.0; self.seg.len()] }
+        Loads { seg: f(&self.seg), board: f(&self.board), alight: f(&self.alight), rn_board: f(&self.rn_board), rn_alight: f(&self.rn_alight), entry: f(&self.entry), exit: f(&self.exit), pax_min: self.pax_min[k], dropped: self.dropped[k], rn_fare_x: vec![0.0; self.seg.len()], rn_base_x: vec![0.0; self.seg.len()] }
     }
 }
 
@@ -617,7 +619,12 @@ fn assign_lanes(g: &Graph, sk: &Skims, cols: &Columns, ix: &XferIndex, xfer: &mu
         }
         add_lanes(&mut l.exit[dst], &total);
         let slot = sk.slot[dst];
-        debug_assert!(total == ZERO || slot != NONE, "flow towards station {dst}, which was not searched");
+        if slot == NONE {
+            for k in 0..LANES {
+                l.dropped[k] += total[k] as f64;
+            }
+            note_dropped(dst, total.iter().map(|&x| x as f64).sum());
+        }
         if total != ZERO && slot != NONE {
             let slot = slot as usize;
             if counting {
@@ -2382,6 +2389,10 @@ impl EverydayApi {
                     s.unr,
                 ]
             })
+    }
+    /// T-3923: as `DemandApi::dropped`.
+    pub fn dropped(&self, q: usize) -> f64 {
+        self.per.get(q).and_then(|v| v.as_ref()).map_or(0.0, |s| s.loads.dropped)
     }
     pub fn seg(&self, q: usize) -> Vec<f32> {
         self.per

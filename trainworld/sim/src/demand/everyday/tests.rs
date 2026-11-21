@@ -121,6 +121,18 @@ fn purpose_periods_cells_and_assignment_conserve_trip_legs() {
     assert!(a.summary(0)[2] < before);
     assert!(!a.crowd_with_external(0, &[f32::NAN]));
 }
+/// T-3923: no everyday trips are dropped towards an unsearched station, in any period, and some rail trips are made.
+#[test]
+fn no_everyday_trips_are_dropped() {
+    let (h, b) = fixture(4000.0);
+    let mut a = EverydayApi::new(&h, &b).unwrap();
+    network(&mut a, 4000.0, [12.0; 3]);
+    for q in 0..5 {
+        assert!(a.solve(q));
+        assert_eq!(a.dropped(q), 0.0, "period {q}");
+        assert!(a.entries(q).iter().sum::<f32>() > 0.0, "period {q} has no trips to lose");
+    }
+}
 #[test]
 fn schedules_and_directional_service_are_independent() {
     for k in 0..OUTWARD.len() {

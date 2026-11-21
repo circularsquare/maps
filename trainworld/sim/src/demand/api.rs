@@ -1796,6 +1796,7 @@ impl DemandApi {
             msa(&mut st.avg.rn_base_x, &l.rn_base_x, r);
             st.sub.msa(&sub, r);
             let w = 1.0 / (r as f64 + 1.0);
+            st.avg.dropped += (l.dropped - st.avg.dropped) * w;
             st.rail += (rail - st.rail) * w;
             st.rail_d.toward(rail_d, w);
             st.len.toward(&len, w);
@@ -1919,6 +1920,12 @@ impl DemandApi {
             st.rail_d.km,
             st.unr,
         ]
+    }
+
+    /// T-3923: trips in period `q` taken towards a station the strategy search never reached, so
+    /// walked nowhere (0 when none; they are still in the entries and exits). 0 if `q` has no solve.
+    pub fn dropped(&self, q: usize) -> f64 {
+        self.per.get(q).and_then(|p| p.as_ref()).map_or(0.0, |st| st.avg.dropped)
     }
 
     /// Riders in period `q` on the segment leaving each route node (0 at a run's last stop).

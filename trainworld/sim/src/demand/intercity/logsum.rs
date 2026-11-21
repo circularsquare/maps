@@ -233,6 +233,7 @@ pub(super) fn mirror_into(g: &Graph, l: &Loads, out: &mut Loads) {
         out.exit[x] += l.entry[x];
     }
     out.pax_min += l.pax_min;
+    out.dropped += l.dropped;
 }
 /// Where `IntercityApi::pass_window` gets a destination's route costs and strategy (T-1545): a
 /// table of every destination's, or a search for it alone.

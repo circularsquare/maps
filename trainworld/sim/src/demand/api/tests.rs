@@ -1728,3 +1728,35 @@ fn commute_fans_go_back_by_stations_searched_to() {
     });
     assert!(all > 0 && kept == 0, "fan ways on from the port: {all}, the commute's {kept}");
 }
+
+/// T-3923: nothing is dropped on the small city's two crossing lines, in any period. (Every demand test
+/// also fails on a drop: `kernel::note_dropped` panics in a test build unless the test sets `KNOWN_DROPS`.)
+#[test]
+fn no_trips_are_dropped_on_the_small_city() {
+    let (mut api, xy, n, stops, times, tph, cars) = small();
+    api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+    for q in 0..PERIODS {
+        assert!(api.solve(q));
+        assert_eq!(api.dropped(q), 0.0, "period {q}");
+        assert!(api.entries(q).iter().sum::<f32>() > 0.0, "period {q} has no trips to lose");
+    }
+}
+
+/// T-3923: trips towards a station the search was not asked to reach are counted in `dropped`, and
+/// the log names the stations and adds up to it (every other demand test panics on such a drop).
+#[test]
+fn trips_towards_an_unsearched_station_are_counted() {
+    let (mut api, xy, n, stops, times, tph, cars) = small();
+    api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+    let all = api.want.len();
+    assert!(all > 1, "the network wants a search of stations");
+    api.want = (0..all).map(|i| i == 0).collect();
+    kernel::KNOWN_DROPS.with(|k| k.set(true));
+    kernel::DROP_LOG.with(|l| l.borrow_mut().clear());
+    assert!(api.solve(1));
+    let dropped = api.dropped(1);
+    let logged: f64 = kernel::DROP_LOG.with(|l| l.borrow().iter().map(|e| e.1).sum());
+    assert!(dropped > 0.0, "nothing counted");
+    assert!((dropped - logged).abs() <= 1e-3 * dropped, "counted {dropped}, logged {logged}");
+    assert!(kernel::DROP_LOG.with(|l| l.borrow().iter().all(|e| e.0 != 0)), "station 0 was searched");
+}
