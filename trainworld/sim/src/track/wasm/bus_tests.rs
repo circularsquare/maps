@@ -846,3 +846,33 @@ fn brt_stations_and_blueprint_lanes_save_together() {
     assert!(a.load(&saved[..t]));
     assert!(a.bus_brt(built) && !a.bus_brt_bp(built) && a.brt_stations().is_empty());
 }
+
+/// T-3941: weekends settled on their own cut a full BRT lane's lines to fit as weekdays do: two lines at 40 an hour
+/// each way on one road, given weekend headways of their own (spare buses), then both put on BRT.
+#[test]
+fn a_full_brt_lane_cuts_weekend_buses_too() {
+    use crate::track::bus::lanes::LANE_BUSES_H;
+    let mut a = api();
+    let (pop, jobs) = ([30_000.0f32, 30_000.0, 50.0], [20_000.0f32, 20_000.0, 5.0]);
+    assert!(a.add_pack_streets(2000.0, -1000.0, -1000.0, 3, 1, &pop, &jobs, &[0, 1, 2], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758));
+    let line = |a: &mut TrackApi, pts: &[f64]| {
+        let l = a.new_line_id();
+        assert_eq!(a.set_bus_line(l, pts, 90, 90, 90, 30.0, 120.0, 0, "B".into()), 0, "{}", a.issues());
+        assert_eq!(a.construct_line(l), 0, "{}", a.issues());
+        l
+    };
+    let l1 = line(&mut a, &[0.0, 0.0, 1.0, 2800.0, 0.0, 1.0]);
+    let l2 = line(&mut a, &[-400.0, 10.0, 1.0, 2800.0, 10.0, 1.0]);
+    let lev = a.w.net.period_slot()[0];
+    let rest = |a: &TrackApi, l: u32| a.w.net.line_tph_rest[l as usize][lev] as f64;
+    for l in [l1, l2] {
+        assert_eq!(a.set_line_weekend_headways(l, 30, 30, 30, 90, 90, 90), 0, "{}", a.issues());
+    }
+    assert!(a.w.net.rest_solved && rest(&a, l1) + rest(&a, l2) > LANE_BUSES_H + 5.0, "{} {}", rest(&a, l1), rest(&a, l2));
+    for l in [l1, l2] {
+        assert_eq!(a.set_bus_brt(l, true), 0, "{}", a.issues());
+    }
+    assert_eq!(a.construct_all(), 0, "{}", a.issues());
+    let (r1, r2) = (rest(&a, l1), rest(&a, l2));
+    assert!(r1 + r2 <= LANE_BUSES_H + 0.5 && r1 + r2 >= LANE_BUSES_H - 2.0, "weekends {r1} {r2}");
+}

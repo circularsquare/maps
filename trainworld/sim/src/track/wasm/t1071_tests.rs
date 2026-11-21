@@ -465,3 +465,17 @@ fn an_unrecorded_count_change_stays_off_the_undo_history() {
     assert_eq!(c.set_train_counts_unrecorded(idc, 4, 4, 4), 0, "{}", c.issues());
     assert!(c.can_redo(), "the lowering must not clear the redo history");
 }
+
+/// T-3655: a game running more trains than its fleet (a save made so) has the load's cap lowering go
+/// through at no cost, with little cash: before, it was refused for the whole shortfall's price.
+#[test]
+fn an_unrecorded_lowering_is_free_where_the_fleet_is_short() {
+    let (mut a, id) = line_api();
+    assert_eq!(a.set_train_counts(id, 6, 6, 6), 0, "{}", a.issues());
+    a.set_fleet(0);
+    a.set_cash(1.0);
+    assert_eq!(a.set_train_counts_unrecorded(id, 4, 4, 4), 0, "{}", a.issues());
+    assert_eq!(a.cash(), 1.0, "the lowering costs nothing");
+    assert_eq!(a.fleet(), 0, "and gives no cars");
+    assert_eq!(a.set_train_counts_unrecorded(id, 5, 5, 5), 1, "a rise still pays for its trains");
+}

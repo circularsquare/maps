@@ -1039,7 +1039,23 @@ cut to the stretch (T-3526). Nor is a line the edit changed at a level where it 
 (a new line, one given trains there): no fill has given it a share, so it
 steps with the lines already filling the track until its rate moves less than 0.01 trains an hour
 a round, on weekdays and weekends alike, and takes its share at the edit rather than 0 until some later
-edit nearby (T-3482).
+edit nearby (T-3482). A line the edit gives other trains or another headway at a level, on full track
+there or with a fleet that would fill it, takes its share at the edit too (T-3655): it, every line on
+full track with it and every line on full track with those in turn run the rate their fleets would
+give over their round trips as they stand, and one fill cuts them together, the other lines keeping
+their rates; so the share follows the fleets on that track, the same share at the same fleets
+whichever way edits that re-share came, not the rates the lines had. As round trips move with the new rates,
+a line left off its fleet by more than 0.1% of it (at most 0.05 trains) and not held, and any line
+on track the share filled, joins them and the fill is made again, up to 8 times, each line aiming
+by the secant of its last two passes. Then a line over its fleet is taken just under it (which only
+shortens round trips), and one up to 0.05 trains under it is left there, as a line whose round
+trip swings is (T-1283), or up to 0.5 trains where its shortfall turned 3 times in the passes with
+its rate within 0.2% of the last (a round trip that jumps as a hold comes and goes has no rate that
+fits it): its trains wait that much longer at
+the ends, rather than every line of the level being stepped for it. An edit the game makes for the
+player (the load's lowering of counts over the panel cap) shares out only where it leaves a line
+fewer trains than its rate runs: a held line lowered to what it runs plus one keeps the rate it was
+saved with.
 
 **Settled in the clock worker before demand runs.** Whole-line train allocations derive their
 frequencies from capacity-adjusted round trips with a bounded, damped solve on edits (T-104).
@@ -2409,7 +2425,8 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   one way (a line runs both ways unless it is a loop run one way), each distinct set once. These are filled as track
   is: `Capacity::fill` cuts the lines' rates by progressive filling over the ways beside the track's resources, and
   `line_limits` names a way (`LANE_RES`, kind 15) where it limits a line, so a headway line keeps the buses its
-  share runs and the rest are not bought (`trim_auto`), and a count line's extra buses wait at its ends. No slowdown:
+  share runs and the rest are not bought (`trim_auto`), and a count line's extra buses wait at its ends. Weekends
+  that run their own settle (`settle_weekend`) are cut the same way on their own rates (T-3941). No slowdown:
   a full lane only cuts buses. Plain bus lines on the road neither count nor are cut. An edit of any bus line settles
   every BRT line (`sharing_closure`). The bus panel shows the busiest way under the BRT row ("Busiest lane", n/60
   buses per hour, red once full), the full lane's alert with the buses held out, and the headways it limits.

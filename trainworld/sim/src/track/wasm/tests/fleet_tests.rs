@@ -298,3 +298,98 @@ fn high_speed_trains_are_a_fleet_of_their_own() {
     assert_eq!(a.set_line_fast(id, false), 0);
     assert!(!a.save().windows(4).any(|w| w == b"LHS1"));
 }
+
+/// T-3655: on London's shared save (`data/work/realnet/lon_real.twt2`; skipped where it is not
+/// there), its busiest line, held on full track, takes its share at each new headway or count, up
+/// and down: the same share at the same fleet whichever way it came, no line beside it swinging,
+/// in at most 20 settle rounds an edit (a stepped level runs to hundreds); undo and redo put back the exact shares.
+#[test]
+fn a_new_count_or_headway_on_full_track_takes_its_share() {
+    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../data/work/realnet/lon_real.twt2");
+    let Ok(bytes) = std::fs::read(path) else {
+        eprintln!("skipped: no {path}");
+        return;
+    };
+    let bytes = {
+        let c = TrackApi::convert_save_frame(&bytes, 2);
+        if c.is_empty() { bytes } else { c }
+    };
+    let mut a = TrackApi::new(-73.985, 40.758, true);
+    assert!(a.load(&bytes));
+    a.set_unlimited(true);
+    let medium_all = |a: &TrackApi| -> Vec<(u32, f64)> { a.lines_info().chunks(22).map(|c| (c[0] as u32, c[6])).collect() };
+    let line = a.lines_info().chunks(22).max_by_key(|c| c[14] as u32).map(|c| c[0] as u32).unwrap();
+    let medium = |a: &TrackApi| medium_all(a).iter().find(|r| r.0 == line).unwrap().1;
+    let state = |a: &TrackApi| crate::track::save::encode(&a.world().net);
+    let mut now = 111600.0;
+    // the settle rounds an edit runs (`SETTLE_UPDATES`), each a service update of every line
+    let mut edit = |a: &mut TrackApi, f: &dyn Fn(&mut TrackApi) -> u32| -> u32 {
+        now += 30.0;
+        a.set_now(now);
+        crate::track::world::SETTLE_UPDATES.with(|c| c.set(0));
+        assert_eq!(f(a), 0);
+        crate::track::world::SETTLE_UPDATES.with(|c| c.get())
+    };
+    // `ups` then `downs` edits, each giving (the line's medium rate, every line's, rounds)
+    let sweep = |a: &mut TrackApi, edit: &mut dyn FnMut(&mut TrackApi, &dyn Fn(&mut TrackApi) -> u32) -> u32, set: &dyn Fn(&mut TrackApi, u32) -> u32, steps: &[u32]| {
+        steps.iter().map(|&s| {
+            let r = edit(a, &|a| set(a, s));
+            (medium(a), medium_all(a), r)
+        }).collect::<Vec<_>>()
+    };
+    // the same fleet up and down: every line within 1% (the pacing's own noise is up to 3%, T-3388)
+    let same = |x: &[(u32, f64)], y: &[(u32, f64)], what: &str| {
+        for (p, q) in x.iter().zip(y) {
+            assert!((p.1 - q.1).abs() <= 0.01 * p.1.max(q.1) + 1e-3, "{what}: line {} {:.4} going up, {:.4} coming down", p.0, p.1, q.1);
+        }
+    };
+    // no line beside it turns back as the line's fleet keeps growing (or shrinking)
+    let no_swing = |runs: &[(f64, Vec<(u32, f64)>, u32)], what: &str| {
+        for (k, &(l, _)) in runs[0].1.iter().enumerate().filter(|(_, x)| x.0 != line) {
+            let v: Vec<f64> = runs.iter().map(|r| r.1[k].1).collect();
+            let d: Vec<f64> = v.windows(2).map(|w| w[1] - w[0]).filter(|d| d.abs() > 0.005 * v[0].max(0.1)).collect();
+            assert!(d.iter().all(|&x| x > 0.0) || d.iter().all(|&x| x < 0.0), "{what}: line {l} swings: {v:?}");
+        }
+    };
+    let headway = |a: &mut TrackApi, m: u32| a.set_auto_headway(line, 300, m, 1200);
+    edit(&mut a, &|a| headway(a, 600));
+    let up = sweep(&mut a, &mut edit, &headway, &[540, 480, 420, 360]);
+    let down = sweep(&mut a, &mut edit, &headway, &[420, 480, 540]);
+    let rates: Vec<f64> = up.iter().chain(&down).map(|r| r.0).collect();
+    assert!(up.windows(2).all(|w| w[1].0 > w[0].0 + 0.05), "a shorter headway runs more often: {rates:?}");
+    assert!(down.windows(2).all(|w| w[1].0 < w[0].0 - 0.05), "a longer one less often: {rates:?}");
+    assert!(up[3].0 > 1.3 * up[0].0, "360 s runs well over 540 s: {rates:?}");
+    for (k, d) in down.iter().enumerate() {
+        same(&up[2 - k].1, &d.1, &format!("headway {}", [420, 480, 540][k]));
+    }
+    no_swing(&up, "headways going up");
+    no_swing(&down, "headways coming down");
+    assert!(up.iter().chain(&down).all(|r| r.2 <= 20), "settle rounds an edit: {:?}", up.iter().chain(&down).map(|r| r.2).collect::<Vec<_>>());
+    // counts, after the switch back
+    edit(&mut a, &|a| a.clear_auto_headway(line));
+    let counts = |a: &mut TrackApi, n: u32| a.set_train_counts(line, 20, n, 4);
+    edit(&mut a, &|a| counts(a, 10));
+    let up = sweep(&mut a, &mut edit, &counts, &[11, 12, 13, 14]);
+    let down = sweep(&mut a, &mut edit, &counts, &[13, 12, 11]);
+    let rates: Vec<f64> = up.iter().chain(&down).map(|r| r.0).collect();
+    assert!(up.windows(2).all(|w| w[1].0 > w[0].0 + 0.05), "more trains run more often: {rates:?}");
+    assert!(down.windows(2).all(|w| w[1].0 < w[0].0 - 0.05), "fewer less often: {rates:?}");
+    for (k, d) in down.iter().enumerate() {
+        same(&up[2 - k].1, &d.1, &format!("{} trains", [13, 12, 11][k]));
+    }
+    no_swing(&up, "counts going up");
+    no_swing(&down, "counts coming down");
+    assert!(up.iter().chain(&down).all(|r| r.2 <= 20), "settle rounds an edit: {:?}", up.iter().chain(&down).map(|r| r.2).collect::<Vec<_>>());
+    // undo and redo put back the shares exactly, a headway's and a count's
+    let changes: [&dyn Fn(&mut TrackApi) -> u32; 2] = [&|a| headway(a, 420), &|a| counts(a, 14)];
+    for f in changes {
+        let before = state(&a);
+        edit(&mut a, f);
+        let after = state(&a);
+        assert!(after != before);
+        assert_eq!(a.undo(), 0);
+        assert!(state(&a) == before, "undo lands elsewhere");
+        assert_eq!(a.redo(), 0);
+        assert!(state(&a) == after, "redo lands elsewhere");
+    }
+}

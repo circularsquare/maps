@@ -51,6 +51,31 @@ const SETTLE_ROUNDS: usize = 80;
 /// T-3482: trains an hour a round may move a line the edit changed by before its share of full
 /// track counts as found.
 const EDITED_SETTLED_TPH: f32 = 0.01;
+/// T-3655: most fills of an edit's share of full track (`reshare_full`).
+const RESHARE_PASSES: usize = 8;
+/// T-3655: trains under its fleet a line the share of full track leaves is kept at (`reshare_full`),
+/// as near as a swinging line is (T-1283).
+const RESHARE_NEAR: f64 = SWING_NEAR;
+/// T-3655: trains under its fleet a line the share leaves over it is taken to.
+const RESHARE_UNDER: f64 = 0.001;
+/// T-3655: `RESHARE_NEAR` for a line whose shortfall turned `SWING_TURNS` times in the share's passes, its
+/// rate each time within `RESHARE_BRACKET` of the last.
+const RESHARE_JUMP: f64 = 0.5;
+const RESHARE_BRACKET: f64 = 0.002;
+/// T-3655: share of the higher of its last two rates they must be apart for the secant across a
+/// turn: a start that far off (a held share a load left) is no bracket halving closes in a few passes.
+const RESHARE_STALE: f64 = 0.5;
+/// T-3655: most rounds of taking lines the share leaves over their fleets under them.
+const RESHARE_LOWER: usize = 3;
+/// T-3655: share of its fleet (at most `RESHARE_NEAR` trains) a line may be off by and not join
+/// another fill of the share: the end below takes a line over its fleet under it and keeps one under it.
+const RESHARE_CLOSE: f64 = 0.001;
+
+thread_local! {
+    /// T-3655: the settle rounds run on this thread (each a service update), for tests and probes
+    /// to count an edit's cost in rounds.
+    pub static SETTLE_UPDATES: std::cell::Cell<u32> = const { std::cell::Cell::new(0) };
+}
 /// T-3233: the longest repeat a settle looks for.
 const CYCLE_MAX: usize = 4;
 /// Within this many trains of its fleet, a line whose shortfall keeps turning is settled (T-1283).
@@ -257,6 +282,17 @@ pub struct TrackWorld {
     settle_edited: Vec<(u32, [bool; SLOTS])>,
     /// T-3482: `settle_edited` for the weekends' settle (`settle_weekend`), by the weekend rates.
     settle_edited_rest: Vec<(u32, [bool; SLOTS])>,
+    /// T-3655: the lines the edit gave other trains or another headway, sorted, with the levels where
+    /// it did (besides `settle_edited`'s): on full track there they take their share from their new
+    /// fleets in the edit's first settle (`reshare_full`). Empty outside an edit.
+    settle_reshare: Vec<(u32, [bool; SLOTS])>,
+    /// T-3655: `settle_reshare` for the weekends' settle.
+    settle_reshare_rest: Vec<(u32, [bool; SLOTS])>,
+    /// T-3655: an edit the game makes off the history is being committed (`apply_off_history`,
+    /// `make_again`): it seeds a re-share only where it leaves a line fewer trains than its rate
+    /// runs. The load's cap lowering leaves held lines' counts over what they run, so they keep the
+    /// rates the player saved.
+    off_history: bool,
     /// T-3521: the weekend service (`settle_weekend`) where weekends were settled on their own; not
     /// saved. None: worked out again from the weekdays' at the next weekend settle.
     svc_rest: Option<Box<Service>>,
@@ -281,7 +317,7 @@ pub enum ChargeError {
 
 impl TrackWorld {
     pub fn new(net: Network) -> TrackWorld {
-        let mut w = TrackWorld { net, svc: Service::default(), undo: vec![], redo: vec![], restore_to: None, switching: None, settle_scope: None, settle_edited: vec![], settle_edited_rest: vec![], svc_rest: None, weekend_as_saved: false, pace_in: vec![], pace_in_rest: vec![] };
+        let mut w = TrackWorld { net, svc: Service::default(), undo: vec![], redo: vec![], restore_to: None, switching: None, settle_scope: None, settle_edited: vec![], settle_edited_rest: vec![], settle_reshare: vec![], settle_reshare_rest: vec![], off_history: false, svc_rest: None, weekend_as_saved: false, pace_in: vec![], pace_in_rest: vec![] };
         w.reload();
         w
     }
@@ -1079,12 +1115,17 @@ impl TrackWorld {
                 self.pace_in = std::mem::take(&mut self.pace_in_rest);
             }
             self.settle_edited = std::mem::take(&mut self.settle_edited_rest);
+            self.settle_reshare = std::mem::take(&mut self.settle_reshare_rest);
             self.settle_counts(full);
             self.settle_edited.clear();
             for _ in 0..PACE_ROUNDS {
                 if !self.pace_merges(false) {
                     break;
                 }
+                self.settle_counts(full);
+            }
+            // T-3941: and to the BRT lanes' room, on the weekends' rates and service
+            if !self.fit_lanes().is_empty() {
                 self.settle_counts(full);
             }
             self.pace_in.iter_mut().flatten().for_each(|p| p.fresh = false);
@@ -1129,6 +1170,10 @@ impl TrackWorld {
         }
         let before = self.net.line_tph.clone();
         let mut affected = vec![];
+        if !self.settle_reshare.is_empty() {
+            let seeds = std::mem::take(&mut self.settle_reshare);
+            self.reshare_full(&ids, &seeds, &mut affected);
+        }
         // T-1283: per line and level, the sign its shortfall last had, how often it has turned
         // without shrinking by half, and its size at the last turn
         let mut swings: Vec<[(i8, u8, f64); SLOTS]> = vec![[(0, 0, 0.0); SLOTS]; ids.len()];
@@ -1168,16 +1213,11 @@ impl TrackWorld {
                     // T-3526: not single track it alone runs over past full: only its own rate can
                     // overfill that (a lone train's rate, T-3201, when a second train comes), so it is
                     // stepped and the fill cuts it to the stretch.
-                    let (wr, wres) = worst[id as usize][lev];
-                    let own_over = wr > 1.0 + 1e-9 && wres != u32::MAX && {
-                        let cap = &self.svc.cap;
-                        cap.res[wres as usize].kind == ResKind::SingleTrack && cap.users_of(wres as usize).iter().all(|u| u.line == id)
-                    };
                     // T-3482: not a line the edit changed, whose rate no fill has given it yet (a new
                     // line on track others fill would keep the rate it came with), until its share
                     // stops moving
                     let edited = self.settle_edited.binary_search_by_key(&id, |e| e.0).is_ok_and(|k| self.settle_edited[k].1[lev]) && last_rates.as_ref().map_or(true, |p| (rates[j][lev] - p[j][lev]).abs() > EDITED_SETTLED_TPH);
-                    let held = short > 0.0 && wr >= FULL_RHO && !own_over && !edited;
+                    let held = short > 0.0 && self.on_full_track(&worst, id, lev) && !edited;
                     // T-1283: a round trip that jumps as the rate passes a threshold (a hold coming
                     // and going) has no rate that fits the fleet exactly, and the steps below circle
                     // it to the cap, each a pass over every line. Near the fit, a shortfall that
@@ -1247,6 +1287,7 @@ impl TrackWorld {
                 }
             }
             let d = self.svc.update_scoped(&self.net, &[], &ids, true, Some((&[], &[])));
+            SETTLE_UPDATES.with(|c| c.set(c.get() + 1));
             affected.extend(d.recomputed);
             // T-747: a round that ends where it began repeats itself to the cap, ~12 ms a round on
             // 143 lines
@@ -1263,6 +1304,189 @@ impl TrackWorld {
         }
         affected.extend(ids.into_iter().filter(|&id| before[id as usize] != self.net.line_tph[id as usize]));
         affected.sort_unstable(); affected.dedup(); affected
+    }
+
+    /// T-517: whether line `id` runs over full track at level `lev` (`worst`: `bottlenecks`), so
+    /// that a shortfall there settles it. T-3526: not single track it alone runs over past full:
+    /// only its own rate can overfill that (a lone train's rate, T-3201, when a second train
+    /// comes), so it is stepped and the fill cuts it to the stretch.
+    fn on_full_track(&self, worst: &[[(f64, u32); SLOTS]], id: u32, lev: usize) -> bool {
+        let (wr, wres) = worst[id as usize][lev];
+        let cap = &self.svc.cap;
+        let own_over = wr > 1.0 + 1e-9 && wres != u32::MAX && cap.res[wres as usize].kind == ResKind::SingleTrack && cap.users_of(wres as usize).iter().all(|u| u.line == id);
+        wr >= FULL_RHO && !own_over
+    }
+
+    /// T-3655: a line the edit gave other trains or another headway (`seeds`) on full track takes
+    /// its share there from its new fleet, at once. Held (T-517), it would keep the rate it came
+    /// with however its fleet changed, and a damped step from the old shares races its neighbours
+    /// to whichever steps first. So it and every line on full track with it, and on full track
+    /// with those in turn, run what their fleets would over their round trips as they stand, and
+    /// one fill cuts them together, the rest keeping their rates (`Capacity::fill`): the share
+    /// follows the fleets on that track, not the rates they came with. A line the share leaves off
+    /// its fleet and not held (track it freed, a round trip that moved) joins them, as does track
+    /// the share filled, and the fill is made again, up to `RESHARE_PASSES` times. Lines left near
+    /// their fleets are settled under them (below); anything else the settle's steps take.
+    fn reshare_full(&mut self, ids: &[u32], seeds: &[(u32, [bool; SLOTS])], affected: &mut Vec<u32>) {
+        let n = self.net.line_count();
+        let mut settled = vec![false; n];
+        for &id in ids {
+            settled[id as usize] = self.settle_scope.as_deref().map_or(true, |s| s[id as usize]);
+        }
+        let mut group = vec![[false; SLOTS]; n];
+        // per line and level, the rate it started the last fill at and its fleet's rate then, and
+        // whether that fill cut it
+        let mut last: Vec<[Option<(f64, f64)>; SLOTS]> = vec![[None; SLOTS]; n];
+        let mut cut = vec![[false; SLOTS]; n];
+        // per line and level, uncut: the most it ran under its fleet's rate, and whether its
+        // shortfall turned (a round trip that jumps as a hold comes and goes)
+        let mut under: Vec<[Option<f64>; SLOTS]> = vec![[None; SLOTS]; n];
+        let mut turned = vec![[0u8; SLOTS]; n];
+        for pass in 0..=RESHARE_PASSES {
+            let worst = self.svc.cap.bottlenecks(n);
+            // as `settle_counts` keeps it (T-1283)
+            let kept = |w: &TrackWorld, i: usize, lev: usize, trip: f64| w.net.settle_kept.contains(&(i as u32, lev, w.net.line_tph[i][lev].to_bits(), trip.to_bits(), w.net.trains_key(i, lev)));
+            let mut new = vec![[false; SLOTS]; n];
+            // what each line could run with the others' rates as they stand (T-679)
+            let most = if pass == 0 { self.svc.cap.line_limits(&self.net) } else { vec![] };
+            for &id in ids.iter().filter(|&&id| settled[id as usize]) {
+                let i = id as usize;
+                let trip = self.svc.lines[i].round_trip;
+                for lev in self.net.slots() {
+                    let short = self.net.running_trains(i, lev, trip[lev]) - self.net.line_tph[i][lev] as f64 * trip[lev] / 3600.0;
+                    let full = self.on_full_track(&worst, id, lev);
+                    new[i][lev] = if pass == 0 {
+                        // on full track, or a fleet that would fill it
+                        let fleet = || if trip[lev] > 0.0 { self.net.running_trains(i, lev, trip[lev]) * 3600.0 / trip[lev] } else { 0.0 };
+                        seeds.binary_search_by_key(&id, |e| e.0).is_ok_and(|k| seeds[k].1[lev]) && (full || fleet() > most[i][lev].0)
+                    } else {
+                        // it would be stepped: off its fleet and not held, at a level shared out
+                        group.iter().any(|g| g[lev]) && short.abs() >= SETTLED.max((RESHARE_CLOSE * self.net.running_trains(i, lev, trip[lev])).min(RESHARE_NEAR)) && !(short > 0.0 && full) && !kept(self, i, lev, trip[lev])
+                    };
+                }
+            }
+            if pass == RESHARE_PASSES || (pass == 0 && !new.iter().flatten().any(|&x| x)) {
+                break;
+            }
+            // the lines on full track with the new ones or the group join them, and those on full
+            // track with them in turn
+            let cap = &self.svc.cap;
+            loop {
+                let mut more = vec![];
+                for r in (0..cap.res.len()).filter(|&r| cap.limits(r)) {
+                    let us = cap.users_of(r);
+                    for lev in self.net.slots().filter(|&lev| cap.rho[r][lev] >= FULL_RHO) {
+                        if !us.iter().any(|u| cap.caps(r, u) && (u.line as usize) < n && (new[u.line as usize][lev] || group[u.line as usize][lev])) { continue; }
+                        for u in us.iter().filter(|u| cap.caps(r, u)) {
+                            let i = u.line as usize;
+                            if i >= n || !settled[i] || group[i][lev] || new[i][lev] { continue; }
+                            if self.on_full_track(&worst, u.line, lev) && !kept(self, i, lev, self.svc.lines[i].round_trip[lev]) {
+                                more.push((i, lev));
+                            }
+                        }
+                    }
+                }
+                if more.is_empty() { break; }
+                for (i, lev) in more { new[i][lev] = true; }
+            }
+            if !new.iter().flatten().any(|&x| x) {
+                break;
+            }
+            let mut levels = [false; SLOTS];
+            for i in 0..n {
+                for lev in 0..SLOTS {
+                    if new[i][lev] { group[i][lev] = true; levels[lev] = true; }
+                }
+            }
+            let was = self.net.line_tph.clone();
+            for lev in (0..SLOTS).filter(|&lev| levels[lev]) {
+                let want: Vec<(u32, f64)> = (0..n).filter(|&i| group[i][lev]).map(|i| {
+                    let trip = self.svc.lines[i].round_trip[lev];
+                    let fleet = if self.net.trains_in(i, lev) == 0.0 || trip <= 0.0 { 0.0 } else { self.net.running_trains(i, lev, trip) * 3600.0 / trip };
+                    let x = self.net.line_tph[i][lev] as f64;
+                    // a line the last fill left at its fleet's rate: the rate its fleet runs at the
+                    // round trip that rate gives (a round trip moving with the rate, through its
+                    // holds, swings a plain repeat about it), by the secant of the last two; where
+                    // its shortfall turned, by that secant where they are far apart (`RESHARE_STALE`:
+                    // from a stale start, a held share a load left, halving crawls), else halfway
+                    // between them (a hold's jump, where no rate fits, stalls the secant on one side)
+                    let mut tph = fleet;
+                    if let Some((px, pg)) = last[i][lev].filter(|_| !cut[i][lev]) {
+                        if fleet > x { under[i][lev] = Some(under[i][lev].map_or(x, |u| u.max(x))); }
+                        if (fleet - x) * (pg - px) < 0.0 {
+                            if (x - px).abs() <= RESHARE_BRACKET * x { turned[i][lev] += 1; }
+                            tph = if (x - px).abs() > RESHARE_STALE * x.max(px) {
+                                x + (fleet - x) * (x - px) / ((x - px) - (fleet - pg))
+                            } else {
+                                0.5 * (x + px)
+                            };
+                        } else if (x - px).abs() > 1e-9 {
+                            let s = ((fleet - pg) / (x - px)).clamp(-4.0, 0.8);
+                            tph = (x + (fleet - x) / (1.0 - s)).max(0.0);
+                        }
+                    }
+                    last[i][lev] = Some((x, fleet));
+                    (i as u32, tph)
+                }).collect();
+                for (&(id, w), got) in want.iter().zip(self.svc.cap.fill(&self.net, &want, lev)) {
+                    self.net.line_tph[id as usize][lev] = got as f32;
+                    cut[id as usize][lev] = got < w;
+                }
+            }
+            // only the lines whose rates the fill moved: a resource none of them uses solves as it
+            // did (the same service to the bit as updating every line, at a fraction of the time)
+            let moved: Vec<u32> = ids.iter().copied().filter(|&id| self.net.line_tph[id as usize] != was[id as usize]).collect();
+            let d = self.svc.update_scoped(&self.net, &[], &moved, true, Some((&[], &[])));
+            SETTLE_UPDATES.with(|c| c.set(c.get() + 1));
+            affected.extend(d.recomputed);
+        }
+        // what the passes leave off its fleet at a level shared out: one over it is taken under it
+        // (to the most it ran under it, or a little under it), which only shortens round trips
+        // (less on the track), so every line there ends at or under its fleet; one within
+        // `RESHARE_NEAR` trains under it stays there, as `settle_counts` keeps a line that swings
+        // (T-1283), or within `RESHARE_JUMP` where its shortfall turned: a round trip that jumps as
+        // a hold comes and goes has no rate that fits it exactly, and a step would step every line
+        // of the level, each on its full track with the rest.
+        let levels: [bool; SLOTS] = std::array::from_fn(|lev| (0..n).any(|i| group[i][lev]));
+        if !levels.contains(&true) { return; }
+        let off = |w: &TrackWorld, worst: &[[(f64, u32); SLOTS]], i: usize, lev: usize| -> Option<(f64, f64)> {
+            let t = w.svc.lines[i].round_trip[lev];
+            let short = w.net.running_trains(i, lev, t) - w.net.line_tph[i][lev] as f64 * t / 3600.0;
+            let kept = w.net.settle_kept.contains(&(i as u32, lev, w.net.line_tph[i][lev].to_bits(), t.to_bits(), w.net.trains_key(i, lev)));
+            (settled[i] && levels[lev] && short.abs() >= SETTLED && !(short > 0.0 && w.on_full_track(worst, i as u32, lev)) && !kept).then_some((short, t))
+        };
+        // (a few times: a round trip can still grow a little as others' rates fall, through the
+        // order they meet in)
+        for _ in 0..RESHARE_LOWER {
+            let worst = self.svc.cap.bottlenecks(n);
+            let was = self.net.line_tph.clone();
+            let mut lowered = false;
+            for &id in ids {
+                let i = id as usize;
+                for lev in self.net.slots() {
+                    if let Some((_, t)) = off(self, &worst, i, lev).filter(|x| x.0 < 0.0 && x.1 > 0.0) {
+                        let x = self.net.line_tph[i][lev] as f64;
+                        let at = ((self.net.running_trains(i, lev, t) - RESHARE_UNDER) * 3600.0 / t).max(0.0);
+                        self.net.line_tph[i][lev] = under[i][lev].filter(|&u| u < x && u > at).unwrap_or(at) as f32;
+                        lowered = true;
+                    }
+                }
+            }
+            if !lowered { break; }
+            let moved: Vec<u32> = ids.iter().copied().filter(|&id| self.net.line_tph[id as usize] != was[id as usize]).collect();
+            let d = self.svc.update_scoped(&self.net, &[], &moved, true, Some((&[], &[])));
+            SETTLE_UPDATES.with(|c| c.set(c.get() + 1));
+            affected.extend(d.recomputed);
+        }
+        let worst = self.svc.cap.bottlenecks(n);
+        for &id in ids {
+            let i = id as usize;
+            for lev in self.net.slots() {
+                if let Some((_, t)) = off(self, &worst, i, lev).filter(|x| x.0 > 0.0 && x.0 < if turned[i][lev] >= SWING_TURNS { RESHARE_JUMP } else { RESHARE_NEAR }) {
+                    self.net.settle_kept.push((id, lev, self.net.line_tph[i][lev].to_bits(), t.to_bits(), self.net.trains_key(i, lev)));
+                }
+            }
+        }
     }
 
     pub fn can_undo(&self) -> bool {
@@ -1352,8 +1576,12 @@ impl TrackWorld {
     pub fn apply_off_history(&mut self, op: Op, cash: f64, extra: &dyn Fn(&TrackWorld) -> f64, with_edit: bool) -> Result<(EditResult, f64), ChargeError> {
         let phases = self.phases();
         let again = op.clone();
-        let (r, inv) = self.commit(op).map_err(ChargeError::Issues)?;
-        let x = extra(self);
+        // T-3655: the game's own edit pays only for the trains it adds: a save running more than its
+        // fleet (London's realnet save) had every cap lowering on load refused for money, and the first
+        // let through charged the whole shortfall
+        let x0 = extra(self);
+        let (r, inv) = self.commit_off_history(op).map_err(ChargeError::Issues)?;
+        let x = (extra(self) - x0).max(0.0);
         let need = r.charge + x;
         if need > 1e-9 && need > cash + 1e-6 {
             let _ = self.restore(inv);
@@ -1441,8 +1669,13 @@ impl TrackWorld {
 
     /// Edits off the history made again in order, each kept on the undo stack.
     fn make_again(&mut self, all: &mut Option<EditResult>, again: Vec<Op>) {
-        for op in again {
-            if let Ok((r, inv)) = self.commit(op.clone()) {
+        for mut op in again {
+            // T-3655: a count edit's rates as they stand here, not as on the state it was first made
+            // on: kept held (`off_history`), a line would run the other state's rate
+            let net = &self.net;
+            let fresh = |o: &mut Op| if let Op::TrainCounts { id, tph, .. } = o { if net.line_ok(*id) { *tph = net.rows_of(net.line_tph[*id as usize]); } };
+            match &mut op { Op::Batch(v) => v.iter_mut().for_each(fresh), o => fresh(o) }
+            if let Ok((r, inv)) = self.commit_off_history(op.clone()) {
                 merge_results(all, r);
                 self.undo.push(Back { step: inv, again: Some(op) });
             }
@@ -1506,6 +1739,14 @@ impl TrackWorld {
 
     fn commit(&mut self, op: Op) -> Result<(EditResult, (Op, Rates)), Vec<Issue>> {
         self.commit_recorded(op, true, None)
+    }
+
+    /// `commit` for an edit the game makes off the history (T-3655: no re-share, `off_history`).
+    fn commit_off_history(&mut self, op: Op) -> Result<(EditResult, (Op, Rates)), Vec<Issue>> {
+        self.off_history = true;
+        let r = self.commit(op);
+        self.off_history = false;
+        r
     }
 
     /// T-1649: an undo, a redo or a trial's rollback puts back what an edit took, so it is not
@@ -1594,6 +1835,9 @@ impl TrackWorld {
             n.settle_kept.extend_from_slice(&r.kept[0]);
             n.settle_kept_rest.extend_from_slice(&r.kept[1]);
         }
+        // in line order, as a settle leaves them (and a save writes them)
+        n.settle_kept.sort_unstable();
+        n.settle_kept_rest.sort_unstable();
         lines
     }
 
@@ -1621,6 +1865,21 @@ impl TrackWorld {
         let worked: [bool; SLOTS] = std::array::from_fn(|s| self.net.slot_worked(s));
         let none_at = |lines: &[u32], row: usize| -> Vec<(u32, [bool; SLOTS])> {
             lines.iter().map(|&l| (l, had.get(l as usize).copied().flatten().map_or(worked, |r| std::array::from_fn(|s| worked[s] && r[row][s] == 0.0)))).filter(|e| e.1.contains(&true)).collect()
+        };
+        // T-3655: each line's fleet per level before the edit: its headway, or a count line's trains
+        // (a headway line's trains follow from its headway, and an edit setting it sends them anew)
+        let fleet_key = |net: &Network, l: usize, s: usize| match net.auto_at(l, s) { Some(a) => (u32::MAX, Some(a)), None => (net.trains_key(l, s), None) };
+        let keys: Vec<Option<[(u32, Option<u32>); SLOTS]>> = (0..self.net.line_count()).map(|l| self.net.line_ok(l as u32).then(|| std::array::from_fn(|s| fleet_key(&self.net, l, s)))).collect();
+        // the levels each of `lines` the edit gave other trains or another headway at, where it ran
+        // trains before (the others are `none_at`'s)
+        let reshare_at = |net: &Network, lines: &[u32]| -> Vec<(u32, [bool; SLOTS])> {
+            let zero = none_at(lines, 0);
+            lines.iter().filter(|&&l| net.line_ok(l)).filter_map(|&l| {
+                let k = keys.get(l as usize).copied().flatten()?;
+                let z = zero.iter().find(|e| e.0 == l).map_or([false; SLOTS], |e| e.1);
+                let at: [bool; SLOTS] = std::array::from_fn(|s| worked[s] && !z[s] && k[s] != fleet_key(net, l as usize, s));
+                at.contains(&true).then_some((l, at))
+            }).collect()
         };
         // (T-3542: also inside a batch, as a line of four or five rows sets its midday and afternoon with it)
         let auto_op = match &op {
@@ -1731,6 +1990,24 @@ impl TrackWorld {
             // the levels a line ran no trains at, or every level of a line the edit made (or brought back)
             self.settle_edited = none_at(&changed, 0);
             self.settle_edited_rest = none_at(&changed, 1);
+            self.settle_reshare = reshare_at(&self.net, &changed);
+            if self.off_history {
+                // only where the line now has fewer trains than its rate runs: one still over it (the
+                // load's caps) keeps the rate it was saved with; one under it must come down anyway, and
+                // the re-share takes it there from any state alike (T-3646: the cap lowering made again
+                // on another state)
+                let svc = &self.svc;
+                let net = &self.net;
+                self.settle_reshare.retain_mut(|(l, at)| {
+                    let i = *l as usize;
+                    for s in 0..SLOTS {
+                        let t = svc.lines.get(i).map_or(0.0, |x| x.round_trip[s]);
+                        at[s] &= t > 0.0 && net.running_trains(i, s, t) < net.line_tph[i][s] as f64 * t / 3600.0 - SETTLED;
+                    }
+                    at.contains(&true)
+                });
+            }
+            self.settle_reshare_rest = self.settle_reshare.clone();
             let counts = match &restored {
                 // T-3646: put back as settled, so not settled again: a settle from there is no
                 // no-op where a line is kept off its fleet by having been left out of a scope (a
@@ -1749,6 +2026,8 @@ impl TrackWorld {
             self.settle_scope = None;
             self.settle_edited.clear();
             self.settle_edited_rest.clear();
+            self.settle_reshare.clear();
+            self.settle_reshare_rest.clear();
             self.switching = None;
             for id in counts {
                 // T-1805: what the settle moved on other lines counts for demand once it shows

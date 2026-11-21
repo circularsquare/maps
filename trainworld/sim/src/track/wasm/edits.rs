@@ -56,7 +56,13 @@ impl TrackApi {
         let before = self.w.svc.before_edit(&self.w.net, at);
         let cash = self.spendable();
         let r = self.w.apply_off_history(op, cash, &|w| trains_to_buy(w, fleet), with_edit);
-        self.settle(r, &before)
+        // T-3655: one that buys nothing leaves the fleet too: a save running more trains than its fleet
+        // would be given the shortfall's cars by the first cap lowering on load, before the rest bring
+        // what runs under the fleet
+        let free = matches!(r, Ok((_, t)) if t <= 0.0);
+        let out = self.settle(r, &before);
+        if free { self.fleet = fleet; }
+        out
     }
 
     /// T-3378: an edit that charges nothing for construction (trains it needs still paid), final or undoable:
