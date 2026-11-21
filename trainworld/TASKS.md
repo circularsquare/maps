@@ -222,9 +222,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-4013 [P3] {L:stops} Boarding-only and alighting-only stops (taking, 2026-11-21, agent boardonly)
   - Context: A player request, via you 11-21: "being able to set stations to only allow boarding or only allow disembarking. seems easy to do."
   - Goal: A stop on a line can be set to boarding only or getting off only, and trips and the timetable respect it.
-- T-4014 [P2] {L:track-rework} {after:T-3948 landing} Old builds never upload over a newer save
-  - Context: From T-3948, 11-21: the save guard refuses a track-rework (TWT7) save on load, but nobody has checked whether an old build that pulled a TWT7 account copy mid-game can later upload its own game over it.
-  - Goal: An old build can't overwrite a newer-format account save; checked, and fixed in a release before tw/track's first merge back.
+- T-4014 [P1] {L:track-rework} {after:T-3948 landing} Old builds refuse and never overwrite a newer save
+  - Context: From T-3948, 11-21: the save guard refuses a track-rework (TWT7) save on load, but nobody has checked whether an old build that pulled a TWT7 account copy mid-game can later upload its own game over it. And from buswaychk 11-21: a level-37 save (busways) opens on a level-36 build with no message, its busways read as rail track, and saving there writes them back as rail. So any build must refuse a save from a newer level, not only a newer magic.
+  - Goal: A build refuses to open a save whose level is above its own ("saved on a newer game version"), leaving the slot untouched, and can't overwrite a newer account save; both in a release before tw/track's first merge back and before busways ship.
 - T-4015 [P3] {L:track-drawing} Long track previews hit the search budget
   - Context: From T-3948's baselines, 11-21: Penn Station to Emeryville searches about 373k states, right at the router's 2 s budget; found 2 of 6 tries in a new game, 0 of 12 on the real NYC save.
   - Goal: Cross-country track previews found every time, or the budget's limit named in the tool's hint.
@@ -937,7 +937,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Several parts of a line's panel still show only its own pair: timetable, held trains, delays, riders, boardings.
   - Goal: Each part folds in the twin line, as `foldTwins` does.
   - Other: About 2-3 h. notes/T-3333.md "As built".
-- T-3373 [P2] {L:memory} Split zones and the market between workers, stage B
+- T-3373 [P2] {L:memory} Split zones and the market between workers, stage B (taking, 2026-11-21, agent splitb3)
   - Context (B): You, 11-21: "that 3373 stage B sounds good. we can pursue it. and yes we can raise memory limit, though as mentioned players should be able to set it" (T-3932, T-3933). Design: notes/T-3373-B-plan.md, 9 stages, 24-40 h; stage 1 (measure and simulate, 2-3 h) can stop it. Stage A's limit on 8 GB machines rises from 1.4 to about 2 GB.
   - Context: Each solving worker holds its own copy of the zones (250-550 MB a big city, 1.3 GB all-China); you saw 7.4 GB in Firefox after 43 minutes. You, 2026-11-16: do A (fewer, faster workers capped by memory on big saves) then B (split zones and the market between workers, T-1560, 25-40 h); queue C (one shared memory, threaded WASM, 60-100 h, Cloudflare header) only if it would help noticeably. A landed 2026-11-16 (b3d2ea95): NYC runs 2 workers (-0.5 GB, load about 15 s slower), all-China 1 (-2.9 GB, 30-50 s slower), figures identical.
   - Goal: B built, with memory and solve time measured before and after on NYC and all-China.
@@ -945,9 +945,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3932 [P2] {L:memory} A cores slider with its memory and speed
   - Context: You, 11-21, on whether big saves should run two workers: "if we dont have a way of telling how much memory a person actually has this question is meaningless and its on the player to decide. i thinkthe only actionable item here is to like maybe rework "use more cores" to have an actual slider where people can select how many cores and it estimates the resulting memory usage right below and the estimated speed gain or loss." Today Settings has a "Use more cores" switch; stage A (T-3373) caps workers by memory on big saves.
   - Goal: Settings has a slider for the number of solving workers, with the estimated memory and the estimated load and edit time for the open game shown below it, and the player's pick overrides stage A's memory cap.
-- T-3933 [P2] {L:memory} A load out of memory retries with fewer workers (taking, 2026-11-21, agent oomretry)
-  - Context: You, 11-21: "if people are unable to lod the game at all because o fmemory issues it should probably autoset the memory cap lower and try again, if thats feasible". Three iPhone players (five reports) hit the out-of-memory screen 11-19 to 11-20 (T-3781). On phones the pool is already 1 solving worker plus the aux worker, so a retry there can drop only the aux worker (at most 65-97 MB): it saves some loads near the limit, not the biggest; it has more room on desktop.
-  - Goal: A load whose worker runs out of memory restarts once with a lower cap (fewer workers), says so to the player, and keeps that cap for the next load; or the measured reason the page dies before it can.
 - T-3939 [P2] {L:memory} Clock worker memory on many-zone phone saves
   - Context: From T-3781, 11-21: on an iPhone reporter's 13-zone Tokyo-start save the clock worker held 15-30% of the tab, 359 MB settled and up to 493 MB before a collection; the tab peaked at 1,628-1,705 MB.
   - Goal: The clock worker's share on that save named piece by piece, and its biggest piece cut, measured on a production build as T-3160 measures.

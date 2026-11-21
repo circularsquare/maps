@@ -14,10 +14,11 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
    a stop on a station joined to nothing does nothing and says nothing).
 2. TRACK (her top priority): trackprep T-3948 done in tree; guardchk checking the save guard; land, cut tw/track
    from master, start stage 2a T-3949 on a tree from tw/track. T-4014 must ship before the first merge back.
-3. BRT (her other priority): busways T-3378 stage 4 done in tree (level 37); buswaychk checking; land (merge with
-   kinds2/brtwait). Open her call: any bus 60 km/h on busways (built) or BRT only.
-4. Running: guardchk, buswaychk, boardonly T-4013 (Opus), oomretry T-3933 (Opus). Held: T-3373 B stage 3 and
-   T-3932 (oomretry). Up next on the board: draw from it when below 4.
+3. BRT (her other priority): busways T-3378 stage 4 in tree (level 37); buswaychk: 4 PASS, saves FAIL (a level-37
+   save opens silently as rail on master: general fix is T-4014, now P1-ish, start after trackprep lands);
+   buswayfix (Sonnet) rebasing onto master + Blueprint total fix; then land. Open her call: any bus 60 km/h on busways (built) or BRT only.
+4. Running: guardchk, buswaychk, boardonly T-4013 (Opus), splitb3 T-3373 B stage 3 (Opus). oomretry T-3933 landed
+   6fcccc9a. Held: T-3932 (splitb3's worker pool). Up next on the board: draw from it when below 4.
 5. Open asks: T-3742 nudge design (a-..-16), T-4008 soft rule (a-..-17); T-2264 help wording; busway speed.
    Later: T-3937 quiet machine; T-3931 held for T-3231; T-3655 faster full-track edits; T-3939 B's 140 MB.
 ## Her words
