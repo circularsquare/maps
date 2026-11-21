@@ -225,9 +225,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-4015 [P3] {L:track-drawing} Long track previews hit the search budget
   - Context: From T-3948's baselines, 11-21: Penn Station to Emeryville searches about 373k states, right at the router's 2 s budget; found 2 of 6 tries in a new game, 0 of 12 on the real NYC save.
   - Goal: Cross-country track previews found every time, or the budget's limit named in the tool's hint.
-- T-4005 [P3] {L:community} Bookmark community saves
-  - Context: Your scratch pad, 11-21: "maybe add bookmark feature to community saves to save cool ones".
-  - Goal: A bookmark button on a community save, and a Bookmarked view in Community listing them; kept with the account when signed in, else in the browser.
 - T-2872 [P3] {L:small-fixes} {after:Anita asks} Timeline of what was built
   - Context: A player asked for playback of what was built. The build days are recorded already (T-2871), with no UI.
   - Goal: Build it only when you ask.
@@ -935,7 +932,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Goal: Each part folds in the twin line, as `foldTwins` does.
   - Other: About 2-3 h. notes/T-3333.md "As built".
 - T-3373 [P2] {L:memory} Split zones and the market between workers, stage B (taking, 2026-11-21, agent splitb3)
-  - Context (B): You, 11-21: "that 3373 stage B sounds good. we can pursue it. and yes we can raise memory limit, though as mentioned players should be able to set it" (T-3932, T-3933). Design: notes/T-3373-B-plan.md, 9 stages, 24-40 h. Stages 1-3 are built: under `?split=1` each zone and the market open on one worker, which trade line loads every round. Figures equal the unsplit ones to the bit on NYC and all-China. Solving memory: all-China 2.5 to 1.3 GB at 2 workers, NYC 0.67 to 0.40 GB. Next is stage 4: loads over ports, timed against 1 worker (the stop rule). Then questions, edits and pool rules (stages 5-7). Stage A's limit on 8 GB machines rises from 1.4 to about 2 GB.
+  - Context (B): You, 11-21: "that 3373 stage B sounds good. we can pursue it. and yes we can raise memory limit, though as mentioned players should be able to set it" (T-3932, T-3933). Design: notes/T-3373-B-plan.md, 9 stages, 24-40 h. Stages 1-3 are built: under `?split=1` each zone and the market open on one worker, which trade line loads every round. Figures equal the unsplit ones with exact sums to the bit, on NYC and all-China. Solving memory: all-China 2.5 to 1.3 GB at 2 workers, NYC 0.67 to 0.40 GB. Next is stage 4: loads over ports, timed against 1 worker (the stop rule). Then questions, edits and pool rules (stages 5-7). Stage A's limit on 8 GB machines rises from 1.4 to about 2 GB.
   - Context: Each solving worker holds its own copy of the zones (250-550 MB a big city, 1.3 GB all-China); you saw 7.4 GB in Firefox after 43 minutes. You, 2026-11-16: do A (fewer, faster workers capped by memory on big saves) then B (split zones and the market between workers, T-1560, 25-40 h); queue C (one shared memory, threaded WASM, 60-100 h, Cloudflare header) only if it would help noticeably. A landed 2026-11-16 (b3d2ea95): NYC runs 2 workers (-0.5 GB, load about 15 s slower), all-China 1 (-2.9 GB, 30-50 s slower), figures identical.
   - Goal: B built, with memory and solve time measured before and after on NYC and all-China.
   - Other: notes/pr-survey-2026-11-16.md "T-3373 options"; notes/T-3329.md and notes/T-3071.md.
@@ -956,6 +953,10 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3837 [P3] {L:buses} Ferry routes found without a waypoint, and waypoints on touch
   - Context: T-3809 added shift click waypoints. A leg is still searched only in a box around its two ports, so a sea path that leaves it (Ma Liu Shui to Sai Kung) needs a waypoint; a wider third search would find it alone. Phones have no shift click.
   - Other: notes/T-3809.md
+- T-4017 [P2] {L:buses} Busway price and station refusal (taking, 2026-11-21, agent buswayfix2)
+  - Context: batchchk11, 11-21: a 1.2 km busway blueprint cost US$42.6M (about US$35M a km, not US$25M), unexplained; a Train station over a built busway is refused with "The platform would be on a ramp." where tram track is skipped.
+  - Goal: A busway on open ground costs US$25M a km plus what the ground adds, the same rule as tram track; a station over a busway is placed or refused for the right reason.
+  - Other: notes/batch-2026-11-21.md "Batch 11"
 - T-3993 [P3] {L:buses} Group homes by bus line stretch
   - Context: From T-3934, 11-21: mode choice runs over groups of homes, and every bus stop splits them (about 130 s of Tokyo's 1,050 s). Grouping by stretch of line instead of exact stop.
   - Goal: About 6% off Tokyo and 10-15% off Taipei's calculating time with riders per line within 1-2%. 2-3 h.
@@ -971,7 +972,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Level 1 (data open to any site) is done. Levels 2-4 are data-file mods, a JavaScript mod API, then city packs.
   - Goal: A design for you first that works for modders writing code by hand and with a coding assistant alike (you, 2026-11-18; player-facing text never says it is aimed at vibe-coders): a small stable mod API (hooks for prices, speeds, buttons, reading the network), a how-to page with two or three tiny example mods, notes in the open-source repo an assistant can read too, and loading a mod from a file or link; a loaded mod marks the save modded (T-3707).
   - Other: Reference (you, 2026-11-18): peanutmow (Alice) runs an unofficial wiki, trainsworld.org, and hosts her mod there; look at how that mod is set up when designing this. The mark's entry point exists: `trainsworld.markModded("<name>")` (notes/T-3707.md); a page on another site such as trainsworld.org already marks its games.
-- T-3376 [P2] {L:jobs-places} Industrial areas' jobs
+- T-3376 [P2] {L:jobs-places} Industrial areas' jobs (taking, 2026-11-21, agent industry)
   - Context: Your 2026-11-13 note: "semi high prio to try to fit industrial areas in general later". Jurong Island holds 128,000 jobs, the published figure is over 27,000.
   - Goal: A sourced workforce figure and a way to place jobs on industrial land with tanks, as a proposal.
   - Other: From gaprun3's check. Not blocking v0.3.3.
@@ -1069,9 +1070,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: The tsconfig part is done (T-3443). Left: about 125 lines of ?debug probes in main.ts, URL parameters read in 28 files, ten unused CSS classes.
   - Goal: The probes in their own module loaded only under ?debug, one module reads the URL parameters, the unused CSS gone.
   - Other: notes/T-2375.md, notes/T-2360.md stage 9.
-- T-3447 [P2] {L:wiki} Player wiki on the website
-  - Context: You, 2026-11-16 on the board: link it from anita.garden/projects/trainsworld right below the section links: "there is also an ai-written [wiki](link) that is updated more often than this anita-written guide below." Updated every big update, only about the live version, as readable as possible, no translation for now (browser translate; maybe a cheap translation feature later), Google Analytics on it to see which languages readers use.
-  - Goal: The wiki is published for the live version with analytics and linked from the trainsworld page; the website push waits for your word.
 - T-2854 [P3] {L:wiki} Last wiki pages, then retire old docs
   - Context: Your ask: a wiki so agents read less. 26 pages are built and figures come from code through JSON markers; the trams landed and every marker still matches.
   - Goal: The Money tab ledger detail and the line panel stop times written, then the retired docs removed.

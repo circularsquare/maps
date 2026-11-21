@@ -23,6 +23,7 @@ every-pack-opens.mjs | tool | - | 1 | 2026-11-03 | every registered zone opens a
 fixtures/t3302-tokyo-day60.save | fixture | - | 0 | 2026-11-12 | data file read by a check
 fixtures/t3302-tokyo-day77.save | fixture | - | 0 | 2026-11-12 | data file read by a check
 fixtures/t3470-big240.save | fixture | - | 0 | 2026-11-16 | data file read by a check
+fixtures/t4018-busway-only.save | fixture | - | 0 | 2026-11-21 | data file read by a check
 ghsl_blobs.py | tool | - | 6 | 2026-11-07 | GHS-POP's village blobs at zone origins
 i18n.mjs | tool | smoke | 825 | 2026-11-10 | the message files and the text still written inline (docs/localization.md)
 keep_hunks.py | tool | - | 38 | 2026-11-11 | Stage only some hunks of one file's working-tree diff

@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session d15915ac-6dd5-4586-bd98-843cbc616824, name maps-ac [1ef926], since 2026-11-21 15:53 UTC
-Updated: 2026-11-21 20:45 UTC (cycling at 500k to standby maps-6a; she has remote control on the standby tabs)
+Orchestrator: session 427323a8-53ce-483c-9c28-8f1452e36f9f, name maps-6a [a48b3e], since 2026-11-21 20:45 UTC
+Updated: 2026-11-21 20:45 UTC
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5.
 
@@ -18,8 +18,8 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
    Next stages per notes/T-3444-design/10-build-plan.md (2b...). T-4014 (newerlevel, Opus, P1) running on master.
 3. BRT (her other priority): all 4 stages landed (busways 6a1b640d). Open her call: busways 60 km/h for any bus
    (built) or BRT only. boardonly T-4013 at level 38 in its tree; boardchk (Sonnet) checking; land on PASS.
-4. Running agents (reports arrive via the board): batchchk11, boardchk, bundles T-3949, newerlevel T-4014, splitb3
-   T-3373 B stage 3. Held: T-3932 (splitb3's pool). Up next on the board: draw from it when below 4.
+4. Running agents: maps-ac's (reports via the board) batchchk11, boardchk, bundles T-3949, newerlevel T-4014,
+   splitb3 T-3373 B stage 3; mine: industry T-3376 (Opus, proposal only), bookmarks T-4005 (may commit a shonei-server endpoint; deploy needs her yes). Held: T-3932 (splitb3's pool).
 5. Open asks: T-3742 nudge design (a-..-16), T-4008 soft rule (a-..-17); T-2264 help wording; busway speed;
    T-4013 per-direction follow-up (I'd file P3). Later: T-3937 quiet machine; T-3931 held for T-3231; T-3655
    faster full-track edits; T-3939 B's 140 MB.
