@@ -11,7 +11,8 @@ import { splitOf } from "../game/types";
 import { BACK_DAY, DEMAND_DAYS, OUT_DAY, type DemandDay } from "../game/days";
 import type { Corridors, DemandView, FarEnd, Flows, IntercityDemand, IntercitySelection, IntercityStation, LineDemand, PlaceFlows, PlaceTrips, PurposeDemand, StationDemand, ZoneTrips } from "../game/demand";
 import type { DealtCells } from "../game/farChunks";
-import { arriveOf, comeMax, type FromDemand } from "./demandProtocol";
+import { arriveOf, comeMax, type ExactParts, type FromDemand } from "./demandProtocol";
+import { addInto, toF32 } from "./exactSum";
 import { marketPartsOn } from "./marketParts";
 import { mergeEveryday } from "./selectionMerge";
 
@@ -295,7 +296,16 @@ type PeriodResult = Extract<FromDemand, { kind: "result" }>;
 export function addParts(list: readonly PeriodResult[]): PeriodResult {
   const [first] = list;
   const market = list.find((r) => r.intercitySummary.length) ?? first;
-  const sum = <T extends Float32Array>(get: (r: PeriodResult) => T | undefined): T | undefined => {
+  // T-3373 B stage 2: parts summed in whole steps (`exactSum`) carry their sums unrounded, which add exactly
+  // here and are rounded to f32 once, so the parts' figures are those of one worker adding every population
+  const exact = list.every((r) => r.exact) ? list.map((r) => r.exact!) : null;
+  const sum64 = (get: (e: ExactParts) => Float64Array | undefined): Float32Array | undefined => {
+    let out: Float64Array | undefined;
+    for (const e of exact!) { const v = get(e); if (v) out = out ? addInto(out, v) : v.slice(); }
+    return out && toF32(out);
+  };
+  const sum = <T extends Float32Array>(get: (r: PeriodResult) => T | undefined, ex?: (e: ExactParts) => Float64Array | undefined): T | undefined => {
+    if (exact && ex) return sum64(ex) as T | undefined;
     let out: T | undefined;
     for (const r of list) {
       const v = get(r);
@@ -326,10 +336,10 @@ export function addParts(list: readonly PeriodResult[]): PeriodResult {
     const reach = d < 0 && km > 0 && rail > 0 ? dKm / d / (km / rail) : 1;
     fareSense = [d, market.fareSense[1], reach, market.fareSense[3]];
   }
-  const { part: _p, fareRaw: _f, come: _c, ...base } = first;
-  const board = sum((r) => r.board)!;
+  const { part: _p, fareRaw: _f, come: _c, exact: _e, ...base } = first;
+  const board = sum((r) => r.board, (e) => e.board)!;
   // T-1607: `arrive` is not a sum: worked out again from the parts' boardings added up
-  const arrive = list.every((r) => r.come) ? arriveOf(comeMax(sum((r) => r.come![0])!, sum((r) => r.come![1])!), sum((r) => r.come![1])!, board) : sum((r) => r.arrive);
+  const arrive = list.every((r) => r.come) ? arriveOf(comeMax(sum((r) => r.come![0], (e) => e.come?.[0])!, sum((r) => r.come![1], (e) => e.come?.[1])!), sum((r) => r.come![1], (e) => e.come?.[1])!, board) : sum((r) => r.arrive);
   return {
     ...base,
     summary,
@@ -344,15 +354,15 @@ export function addParts(list: readonly PeriodResult[]): PeriodResult {
     corridorRail: market.corridorRail,
     elsewhere: market.elsewhere,
     everydayPlaces: market.everydayPlaces,
-    seg: sum((r) => r.seg)!,
+    seg: sum((r) => r.seg, (e) => e.seg)!,
     board,
-    alight: sum((r) => r.alight)!,
+    alight: sum((r) => r.alight, (e) => e.alight)!,
     arrive,
-    loadOfCrush: sum((r) => r.loadOfCrush)!,
-    fareX: sum((r) => r.fareX),
-    baseX: sum((r) => r.baseX),
-    xferIn: sum((r) => r.xferIn),
-    parts: first.parts && { keys: first.parts.keys, seg: sum((r) => r.parts?.seg)!, board: sum((r) => r.parts?.board)!, alight: sum((r) => r.parts?.alight)!, ...(list.some((r) => r.parts?.lean) ? { lean: sum((r) => r.parts?.lean) } : {}) },
+    loadOfCrush: sum((r) => r.loadOfCrush, (e) => e.loadOfCrush)!,
+    fareX: sum((r) => r.fareX, (e) => e.fareX),
+    baseX: sum((r) => r.baseX, (e) => e.baseX),
+    xferIn: sum((r) => r.xferIn, (e) => e.xferIn),
+    parts: first.parts && { keys: first.parts.keys, seg: sum((r) => r.parts?.seg, (e) => e.parts.seg)!, board: sum((r) => r.parts?.board, (e) => e.parts.board)!, alight: sum((r) => r.parts?.alight, (e) => e.parts.alight)!, ...(list.some((r) => r.parts?.lean) ? { lean: sum((r) => r.parts?.lean, (e) => e.parts.lean) } : {}) },
     ms: most((r) => r.ms),
     setupMs: most((r) => r.setupMs),
     memBytes: most((r) => r.memBytes),

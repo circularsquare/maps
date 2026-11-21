@@ -8,6 +8,7 @@
 
 import type { CityId } from "../game/cities";
 import type { FromDemand, ToDemand } from "./demandProtocol";
+import { SUM_FLAGS } from "./exactSum";
 
 /** zones the pool holds at once: each is a fine city in every one of its workers */
 export const FOCUS_MAX_ZONES = 3;
@@ -47,7 +48,7 @@ export class FocusPool {
       w.onmessage = (e: MessageEvent<FromDemand>) => this.receive(i, e.data);
       w.onerror = (e) => this.fail(`focus worker ${i}: ${e.message}`); // i18n-ignore
       const aux = i === n;
-      w.postMessage({ kind: "init", packs: [], periods: aux ? [] : periodsOf[i], aux, warmEveryday: false, ...(aux ? { groups: periodsOf.slice(0, n) } : { markets: periodsOf[i], share: false }) } satisfies ToDemand);
+      w.postMessage({ kind: "init", packs: [], periods: aux ? [] : periodsOf[i], aux, warmEveryday: false, ...(aux ? { groups: periodsOf.slice(0, n) } : { markets: periodsOf[i], share: false }), ...SUM_FLAGS } satisfies ToDemand);
       w.postMessage(view);
       this.workers.push(w);
     }

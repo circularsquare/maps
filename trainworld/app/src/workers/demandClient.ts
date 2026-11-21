@@ -105,6 +105,7 @@ import { trackZones } from "../game/trackZones";
 import { viewCentre } from "../game/listScope";
 import { ALL_PERIODS, isQuery, type SelSquares, type BareFigures, type DemandNetwork, type FromDemand, type Heap, type OpenRejected, type QueryKind, type ToDemand } from "./demandProtocol";
 import { addParts, dayFactor, dayResultOf, dayViews, flowsBody, selectionFlows, signature, stationFlows, summaryOnDay, sumParts, unpackDays, type CorridorRail, type DayInput, type DayViews, type FlowsAnswer, type FromSums, type PackedDays, type PurposePart, type SumsAsk, type SumsCtx, type ToSums } from "./demandSums";
+import { SUM_FLAGS } from "./exactSum";
 import { primeDealt } from "../game/farChunks";
 import { tripLengthsOf, type TripLengths } from "../game/tripLengths";
 import { readMarketPeriod, readTripPeriod, setMarketTripQuery, setTripQuery, tripKey, type MarketPeriod, type RouteNodes, type Trip } from "../game/trip";
@@ -1038,7 +1039,7 @@ class DemandClient {
     };
     w.onmessageerror = () => { const j = at(); if (j >= 0) this.fail(`worker ${j}: a message could not be read`); }; // i18n-ignore
     // T-325: the aux worker is told every solving worker's periods, for the zones it holds bare
-    const msg: ToDemand = { kind: "init", packs: [], periods: this.periodsOf[i], ...(i < n ? this.marketsMsg(i) : {}), aux: i === n, warmEveryday, ...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}), heapStep: heapStep() };
+    const msg: ToDemand = { kind: "init", packs: [], periods: this.periodsOf[i], ...(i < n ? this.marketsMsg(i) : {}), aux: i === n, warmEveryday, ...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}), heapStep: heapStep(), ...SUM_FLAGS };
     w.postMessage(msg);
     // T-3781, dev server only: `?debugStall=i` has worker i's first solve wait forever (a replacement does not)
     if (import.meta.env.DEV && Number(new URLSearchParams(location.search).get("debugStall") ?? -1) === i && !this.stallSent) {

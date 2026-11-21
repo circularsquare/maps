@@ -14,7 +14,8 @@ estimate, with its method in "Method".
 - New York gains little: one city is three quarters of its work, so it stays copied. B lets it run 3 workers in
   today's memory limit (load about 50 s, from 60-70).
 - Yours: A's limit (1.4 GB for all workers on an 8 GB machine) is below one worker on these saves, so it would
-  have to rise to about 2 GB. And every trip figure moves once, by about a millionth.
+  have to rise to about 2 GB. And every trip figure moves once: typically by a ten-millionth or less, at most by
+  about a third of a rider on a busy station (measured on New York, stage 2).
 - 24-40 hours in 9 stages; the first (2-3 h) can stop the plan cheaply. C (one shared memory) would replace B only
   in browsers that support it, and only B lets a save past 4 GB load. Build B, decide on C after.
 
@@ -105,11 +106,11 @@ adds each value rounded to a whole number of steps, held in a Float64Array. The 
 largest total stays well under 2^53 steps: 2^-20 of a rider for loads and boardings, a finer one for the fare
 arrays (`fareX`, `baseX`, in dollars). Whole numbers below 2^53 add
 exactly in any order, so the total is the same whatever the order, plan or worker count, then rounded once to f32
-for the kernel. Per-city totals (the summary, fare sensitivity) are re-added on the page from the per-city figures
-each result already carries, in the registry's order. Effect: every figure moves once, at the rounding level (T-1545
-moved loads by about 1e-6, the worst element 1.4e-5; this should be smaller, since the rounding is 2^-20 riders and
-an f64 total is more exact than today's f32 running sum). After that, the same network gives the same bits at 1, 2
-or 3 workers, under any plan. It also makes "the others' loads" exact as total minus mine, which the edit stages use.
+for the kernel. Per-city totals (the summary, fare sensitivity) need no re-adding on the page: their terms are
+stepped too, so they add the same in any order. Effect, measured in stage 2 on New York only: every figure moves
+once. The typical figure moves by 1e-8 to 1e-7 of itself; the largest by 0.375 riders on a station of 14,276
+(2.6e-5), and 2.8e-4 on one line figure. Taking today's sums in reverse order moves the same figures by about the
+same. After that, the same network gives the same bits at 1, 2 or 3 workers, under any plan. It also makes "the others' loads" exact as total minus mine, which the edit stages use.
 
 Alternative with no figure change at all: a chained fold. The plan deals each cluster's populations in runs of the
 registry's order, and every exchange passes the running f32 sum from worker to worker in that order (w0's sum to
@@ -276,6 +277,71 @@ per-zone one, with per-zone hashes added to tell a zone shown once from a zone t
 only New York-sized saves. They go back to 3 workers (0.53 GB each, 1.6 GB together, +0.5 GB), and
 all-China, North America and asianita stay at 1 (1.45-1.64 GB a worker). The raise belongs in stage 7, where the
 limit counts the plan's per-worker needs.
+
+## Stage 2 results (agent splitb1, tree splitb2, 2026-11-21)
+
+**Built, off by default.** `?exactSum=1` turns it on for a tab (`exactSum.ts` `SUM_FLAGS`, sent in every solving
+and focus worker's `init`). It covers every sum across populations in the worker:
+- the round loads and the T-1607 sides' exchange (`loads` carries f64 whole steps; `bothSides`)
+- the riders coming (`comeRaw`) and the capacity fit's inputs
+- a result's per-node arrays (`seg`, `board`, `alight`, `loadOfCrush`, `fareX`, `baseX`, `xferIn`), its purpose
+  blocks (`purposeParts`) and the `extra` and `delta` added to them
+- the summary's slots 1, 2, 3 and 5, and `fareRaw`'s terms
+- the local solve's frozen loads (`frozenAt`, the cap ratios, the window's `less`)
+- the stored partner loads (`inbox`, `sharedMkt`, `sharedTrail`, `remapKept`)
+
+On the page, `addParts` adds parts from their unrounded sums (`exact`, f64) and rounds once. Steps:
+- 2^-20 of a rider for loads, boardings, transfers and summaries
+- 2^-24 of a dollar for the fare extras
+- 2^-32 for `loadOfCrush` (a share of crush capacity)
+
+Every term is rounded to its step and added in an f64, which is exact while a total stays under 2^53 steps. That
+is 8.6 billion riders, 537 million dollars, or 2 million units of crush at a route node. Per-city totals did not
+need re-adding on the page: stepped terms add the same in any order.
+
+Left as they were:
+- `marketFigures` (the market's parts, one unit held whole)
+- the question answers (stage 5)
+
+With the flag off the figures are unchanged, but the code is not. The summing loops call `termOf` per element, and
+the local solve's lines changed. No timing was taken either way.
+
+**Checks** (New York real save, imported, `?new=1`, my Vite on 6150; the machine at full load, runs on 1-3 cores):
+
+| Run | Workers | Hash | Note |
+|---|---|---|---|
+| flag off | 1 | 5657f014 | same as stage 1's on the earlier master: the flag-off path is unchanged |
+| flag off | 3 | 5657f014 | today's T-1607 sharing (8 `loads` messages, 8 part results) still matches 1 worker |
+| flag off, populations in reverse (`?sumOrder=reverse`, dev) | 1 | e5dbc9e0 | the control: today's sums depend on the order |
+| `exactSum=1` | 1, 2 and 3 | 7c35251f | 3 workers shared period 3: 8 `loads` messages, all f64, and 8 part results, all with `exact` |
+| `exactSum=1&perfOff=share` | 3 | 7c35251f | no sharing |
+| `exactSum=1`, in reverse | 1 | 7c35251f | the order no longer matters |
+
+- **Every array of the final period results**, which the hash leaves out, was dumped too: `seg`, `board`,
+  `alight`, `arrive`, `loadOfCrush`, `fareX`, `baseX`, `xferIn`, the purpose blocks, `lean`, the summaries and
+  `fareSense`. With `exactSum=1` all 13 match to the bit at 1 worker, in reverse and at 3 workers sharing. Against
+  flag off they move by at most 0.375 riders (`xferIn` 0.374 at 372, 1.7e-3 relative), `loadOfCrush` by 1e-5,
+  `fareX` by 4e-6 dollars, `fareSense` by 1e-8 relative. `baseX` is all zero on this save. The fare-sensitivity
+  terms run to about 4.9 million, far inside the step's room.
+- `checks/t3373-sums.mjs` (Node, 6 pass): 300 random populations give the same bits in 20 shuffled orders and split
+  over 1-5 workers. The plain f32 control differs between orders.
+- **How far figures move**, flag on against off at 1 worker:
+  - The day's rail trips: 13,252,827.509 against 13,252,827.507.
+  - Every other number: median 2e-8 to 8e-8 relative among values of 10 or more.
+  - Largest: 0.375 riders on a station of 14,276 (2.6e-5 relative), and 2.8e-4 on one line figure of 1,340.
+  - Today's own sums taken in reverse order move the same figures by the same amounts (0.374 riders, 2.8e-4).
+    The reversed run and the exact run agree with each other within 0.012 riders on every line and 0.009 at that
+    station. So both small changes take the same jump there; what makes it was not looked into. The jump is
+    larger than the plan's "about 1e-6" for the worst figure; the typical figure is well under it. New York only:
+    no big save was compared.
+- **Not covered by these checks:**
+  - T-1543's preview parts: no run produced one with `exact`
+  - the local solve after an edit and T-1609's refine: no edit was run; their result is an interim one that the
+    edit's whole solve replaces
+  - the bubbles' subzone sums the page adds across workers: per period, not across populations; stage 5's
+  - the questions (stations, transfers): stage 5's
+- No Rust change, so no cargo suites. Typecheck clean; smoke 30/30 with the flag off.
+- Left for stage 9: the docs (`demand-runtime.md`'s sums) and a DECISIONS line for the step sizes.
 
 ## Risks
 

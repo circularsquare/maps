@@ -123,7 +123,10 @@ export function arriveOf(come: Float32Array, rounds: Float32Array, board: Float3
  * whole network's route nodes (3 x nodes), for cluster `cluster` (index in the job's clusters).
  * The page passes it on to the other side's worker.
  */
-export type Loads = { kind: "loads"; version: number; cluster: number; period: number; round: number; side: "cities" | "market"; loads: Float32Array };
+export type Loads = { kind: "loads"; version: number; cluster: number; period: number; round: number; side: "cities" | "market"; loads: Float32Array | Float64Array };
+/** T-3373 B stage 2: a part's sums before rounding to f32, whole steps (`exactSum.ts`), so the page adds parts
+ * exactly: the result's arrays of the same names, and `come` */
+export interface ExactParts { seg: Float64Array; board: Float64Array; alight: Float64Array; loadOfCrush: Float64Array; fareX: Float64Array; baseX: Float64Array; xferIn: Float64Array; come?: [Float64Array, Float64Array]; parts: { seg: Float64Array; board: Float64Array; alight: Float64Array; lean?: Float64Array } }
 
 /** T-336: a selection as the regional market's squares: their centres (market metres) and the share
  * of each selected; T-3500: `air`, the zone's airport terminals' squares, four numbers each (x, y,
@@ -152,7 +155,10 @@ export type ToDemand =
       groups?: number[][];
       /** T-1607: the periods whose market this worker solves in a solve with the barrier (`share`
        * true in every solving worker when any market sits apart from its period's cities) */
-      markets?: number[]; share?: boolean }
+      markets?: number[]; share?: boolean;
+      /** T-3373 B stage 2 `?exactSum=1`: sums across populations in whole steps (`exactSum.ts`); dev
+       * `?sumOrder=reverse` (`reverseSums`): their populations taken in reverse order */
+      exactSum?: boolean; reverseSums?: boolean }
   /** open more city packs and/or zones' market packs (T-149, T-377); answered by `opened`. A
    * market pack is its text or, from the page, its UTF-8 bytes (T-180: decoded in the worker; the
    * aux worker, which never opens one, gets empty bytes). `bare` (T-325, aux worker only): a zone
@@ -449,6 +455,8 @@ export type FromDemand =
       /** T-1607: a part's boardings summed as `arrive` reads them (the free-flow pass's, the last
        * round's before the cap), so the page works `arrive` out again from the added parts */
       come?: [Float32Array, Float32Array];
+      /** T-3373 B stage 2 (`exactSum`): with `part`, the part's sums before rounding */
+      exact?: ExactParts;
     }
   | Loads
   /** T-392: at a solve's start, the cities of each cluster it solves (in order) and of those it
