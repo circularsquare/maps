@@ -103,7 +103,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: A cold run takes 4.4-5.1 min at 4 jobs, against the 3 min aimed for; most of it is zone_water's 368 windows.
   - Goal: A cold run is near 3 min.
   - Other: See notes/T-1992.md.
-- T-3781 [P1] {L:loading} {after:a report with the new diagnosis} Demand data not loading within 10 minutes
+- T-3781 [P1] {L:loading} {after:a report with the new diagnosis} Demand data not loading within 10 minutes (taking, 2026-11-21, agent iphonesaves)
   - Context: Two anonymous reports on v0.4.2 (feedback 1795092485-688b2e15, 1795083347-52a31102), plus a third, "crashes every time it opens" (1795097335-fa20c413), all Japanese, 11-19 (board group g115). Their saves load normally on master. A stuck load now restarts once, and the report names the stuck worker and period (tree demandload).
   - Goal: The cause found from the next report's diagnosis, or closed if no report comes.
   - Other: notes/T-3781.md
@@ -775,11 +775,17 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Design is done and waits on your five calls. 2026-11-16 you want to transcribe handwritten thoughts and discuss first.
   - Goal: The player has a clear model of single, double and quad track, and of crossovers.
   - Other: notes/T-3365.md.
-- T-3373 [P2] {L:memory} {waits:Anita} Split zones and the market between workers
-  - Need from Anita: approve stage B's design (notes/T-3373-B-plan.md, summary at its top), raise stage A's worker memory limit on 8 GB machines from 1.4 to about 2 GB, and OK every trip figure moving once by about a millionth (or ask for the no-change version, 3-5 h more). Recommended: yes to all three.
+- T-3373 [P2] {L:memory} Split zones and the market between workers, stage B
+  - Context (B): You, 11-21: "that 3373 stage B sounds good. we can pursue it. and yes we can raise memory limit, though as mentioned players should be able to set it" (T-3932, T-3933). Design: notes/T-3373-B-plan.md, 9 stages, 24-40 h; stage 1 (measure and simulate, 2-3 h) can stop it. Stage A's limit on 8 GB machines rises from 1.4 to about 2 GB.
   - Context: Each solving worker holds its own copy of the zones (250-550 MB a big city, 1.3 GB all-China); you saw 7.4 GB in Firefox after 43 minutes. You, 2026-11-16: do A (fewer, faster workers capped by memory on big saves) then B (split zones and the market between workers, T-1560, 25-40 h); queue C (one shared memory, threaded WASM, 60-100 h, Cloudflare header) only if it would help noticeably. A landed 2026-11-16 (b3d2ea95): NYC runs 2 workers (-0.5 GB, load about 15 s slower), all-China 1 (-2.9 GB, 30-50 s slower), figures identical.
   - Goal: B built, with memory and solve time measured before and after on NYC and all-China.
   - Other: notes/pr-survey-2026-11-16.md "T-3373 options"; notes/T-3329.md and notes/T-3071.md.
+- T-3932 [P2] {L:memory} A cores slider with its memory and speed
+  - Context: You, 11-21, on whether big saves should run two workers: "if we dont have a way of telling how much memory a person actually has this question is meaningless and its on the player to decide. i thinkthe only actionable item here is to like maybe rework "use more cores" to have an actual slider where people can select how many cores and it estimates the resulting memory usage right below and the estimated speed gain or loss." Today Settings has a "Use more cores" switch; stage A (T-3373) caps workers by memory on big saves.
+  - Goal: Settings has a slider for the number of solving workers, with the estimated memory and the estimated load and edit time for the open game shown below it, and the player's pick overrides stage A's memory cap.
+- T-3933 [P2] {L:memory} A load out of memory retries with fewer workers
+  - Context: You, 11-21: "if people are unable to lod the game at all because o fmemory issues it should probably autoset the memory cap lower and try again, if thats feasible". Five iPhone players reported the page crashing right away 11-19 to 11-20 (T-3781).
+  - Goal: A load whose worker runs out of memory restarts once with a lower cap (fewer workers), says so to the player, and keeps that cap for the next load; or the measured reason the page dies before it can.
 - T-3523 [P3] {L:open-source} Make the public repo the real one
   - Context: Your pad, 2026-11-17: with many pull requests, applying them is clunky, and contributors can't see what we're already working on. You chose 2026-11-17: "lets work on making the public repo the real one. we can do it some time after 0.4 publish." About 1-2 days: private notes and tooling split out, every commit public.
   - Goal: The public repo is where trainworld is developed; pull requests merge there directly, and nothing private lands in it. The design goes to you before it is built.
@@ -787,11 +793,10 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3837 [P3] {L:buses} Ferry routes found without a waypoint, and waypoints on touch
   - Context: T-3809 added shift click waypoints. A leg is still searched only in a box around its two ports, so a sea path that leaves it (Ma Liu Shui to Sai Kung) needs a waypoint; a wider third search would find it alone. Phones have no shift click.
   - Other: notes/T-3809.md
-- T-3924 [P3] {L:buses} {waits:Anita} Auto bus stops count for demand only every 2 km
-  - Need from Anita: Keep Auto bus lines as they are (recommended; a player can step to 600 m or place stops), or count every Auto street stop for demand (riders change on every Auto line in every save)?
-  - Context: Found by busstop400 (T-3920), 11-21: on Auto the panel reads "400 m" and "10 stops", but demand sees about one stop every 2 km. A 3.7 km NYC line: Auto 2,814 riders a day, stops placed 400 m apart 3,580, 450 m 3,533. Stops a player places count at any spacing.
-- T-3378 [P1] {L:buses} {waits:Anita} Finish BRT with shared and off-road busways and BRT stations
-  - Need from Anita: Read artifacts/trainworld/review/brt-design.md and answer its five questions (picks: BRT stations for BRT lines only; 60 buses an hour a lane; off-road busway US$25M a km at 60 km/h; plain buses stay in traffic in town; keep 35 km/h, 18 s, US$2M a station).
+- T-3924 [P2] {L:buses} Count every Auto bus stop for demand (taking, 2026-11-21, agent autostops)
+  - Context: You, 11-21: "i would rather coutn every auto stop for demand ... it seems pretty misleading and like something we should fix". Found by busstop400 (T-3920), 11-21: on Auto the panel reads "400 m" and "10 stops", but demand sees about one stop every 2 km. A 3.7 km NYC line: Auto 2,814 riders a day, stops placed 400 m apart 3,580, 450 m 3,533. Stops a player places count at any spacing.
+- T-3378 [P1] {L:buses} Finish BRT with shared and off-road busways and BRT stations (taking, 2026-11-21, agent busway)
+  - Context (11-21 answers): "yes this all sounds fine. the one thing im less sure about is BRT stations for BRT lines only, whats the reasoning there? im not necessarily against it". So: 60 buses an hour a lane, lines cut to fit; off-road busway US$25M a km at 60 km/h; plain buses in traffic in town; 35 km/h, 18 s, US$2M a station. Who stops at a BRT station is still open (stage 3).
   - Context: Design done 11-21 (busdesign, notes/T-3378.md): four stages, shared lanes 3 h, shared room 3 h, BRT stations 4-5 h, off-road busways 5-6 h; how far people come to the bus decides riders, so stations are the big part. You, 11-21: "i think we should finish BRT / busways. we should also allow building busways off road for high expense, sorta like trams off road." Preliminary BRT (a per-line speed upgrade, T-3907) shipped in v0.4.5. You, 11-20: "lots of people really like buses and want them to be more competitive with other modes ... plain buses still have a niche, brt is more competitive with trams and other modes, and its all like at least a little realistic"; "i do kinda want Brt to be an upgrade on a whole line, but also for lines sharing a road to share pay and throughput. so a hybrid"; "do also want BRt stations yeah". Sketch from 11-20: own lane (at least 35-40 km/h, up to the road's speed), shorter stops (about 18 s), BRT stations, build about US$4-5M a road-km against street tram's 7.5M; the same bus. You, 11-21 after the design: "we should maybe do upgradable bus stations".
   - Goal: A short staged design for you (numbers checked on the frontier chart), then built: upgrading a line makes its road stretches busway; another line on the same stretch shares it without paying again and shares its throughput; busways built off road at a high cost, like off-road tram track; BRT stations.
   - Other: Folds in T-1467 and T-3830 (bus stations a player can build: your pad, "bus stations, constructible, that look kinda like train and tram stations ... slight waiting/boarding bonus").
