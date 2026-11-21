@@ -164,7 +164,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Other: notes/T-3659.md
 
 ## Demand
-- T-3935 [P3] {L:real-networks} Real networks miss lines OSM maps only as track
+- T-3935 [P3] {L:real-networks} Real networks miss lines OSM maps only as track (taking, 2026-11-21, agent keihan)
   - Context: From T-3632, 11-21: real networks are built from OSM passenger routes, and some lines exist in OSM only as a track relation. Kansai has no Keihan Main Line (its Uji and Katano branches touch nothing; about 2% of sampled Osaka commutes get "No transit route", all near Hirakata or Katano); also missing: JR Wakayama and Kakogawa, Keihan Ishiyama-Sakamoto and Keishin (Kansai), JR Kansai Main Line, Yoro and Ise Railway (Nagoya). Players reported it (board g024). n02_trim.json sets the Keihan Main Line to null, so N02 drops it too.
   - Goal: realauto.py takes a line from its track relation (or N02 in Japan) when no passenger route runs on named track; Kansai and Nagoya rebuilt with those lines.
   - Other: notes/T-3632.md "Stage 3"
@@ -399,7 +399,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3894 [P3] {L:line-rates} A line with no trains still caps the lines it crosses
   - Context: Found by fullrate (T-3646), 11-20: on Tokyo a crossing of lines [150, 42, 42] at 100% stays capped by a line with no trains. Not looked at further.
   - Goal: A line with no trains in a period holds no share of a crossing or shared track in it, or the reason it should.
-- T-3655 [P2] {L:line-rates} A line on full track keeps its old rate after a new count
+- T-3655 [P2] {L:line-rates} A line on full track keeps its old rate after a new count (taking, 2026-11-21, agent fullrate4)
   - Context: PARKED 11-21 in tree .tw-trees/fullrate (uncommitted; notes/T-3655.md there, "Load and the first edit" newest). The re-share fix (`world.rs` `reshare_full`) is right natively and, since fullrate3 (11-21), a load leaves every line's rate as saved (171 of 171 on London). Left: (1) the first edit after a load drops Victoria medium 14.39 -> 5.80, because the load caps no line below 44 (their `lineHeld` caps answer too late), so held lines beside it keep 21-26 idle trains; master has the same bug (a +1 on line 120 takes Victoria to 2.78). Decided (orchestrator, 11-21): option 1, cap every over-cap line alike at load (first edit 12.80, and master's 2.78 becomes 13.23). (2) Browser count edits 264-643 ms against master 177-302: a Victoria edit moves 25 lines' service, and boarding is redone for them. Opus, fresh, when compute allows.
   - Goal: A new count or headway on full track takes its share at the edit, within about 50 ms an edit on London's shared save.
   - Other: notes/T-3655.md, notes/T-3482.md "Follow-ups"
@@ -775,7 +775,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Design is done and waits on your five calls. 2026-11-16 you want to transcribe handwritten thoughts and discuss first.
   - Goal: The player has a clear model of single, double and quad track, and of crossovers.
   - Other: notes/T-3365.md.
-- T-3373 [P2] {L:memory} Split zones and the market between workers, stage B
+- T-3373 [P2] {L:memory} Split zones and the market between workers, stage B (taking, 2026-11-21, agent splitb1)
   - Context (B): You, 11-21: "that 3373 stage B sounds good. we can pursue it. and yes we can raise memory limit, though as mentioned players should be able to set it" (T-3932, T-3933). Design: notes/T-3373-B-plan.md, 9 stages, 24-40 h; stage 1 (measure and simulate, 2-3 h) can stop it. Stage A's limit on 8 GB machines rises from 1.4 to about 2 GB.
   - Context: Each solving worker holds its own copy of the zones (250-550 MB a big city, 1.3 GB all-China); you saw 7.4 GB in Firefox after 43 minutes. You, 2026-11-16: do A (fewer, faster workers capped by memory on big saves) then B (split zones and the market between workers, T-1560, 25-40 h); queue C (one shared memory, threaded WASM, 60-100 h, Cloudflare header) only if it would help noticeably. A landed 2026-11-16 (b3d2ea95): NYC runs 2 workers (-0.5 GB, load about 15 s slower), all-China 1 (-2.9 GB, 30-50 s slower), figures identical.
   - Goal: B built, with memory and solve time measured before and after on NYC and all-China.
@@ -786,7 +786,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3933 [P2] {L:memory} A load out of memory retries with fewer workers
   - Context: You, 11-21: "if people are unable to lod the game at all because o fmemory issues it should probably autoset the memory cap lower and try again, if thats feasible". Three iPhone players (five reports) hit the out-of-memory screen 11-19 to 11-20 (T-3781). On phones the pool is already 1 solving worker plus the aux worker, so a retry there can drop only the aux worker (at most 65-97 MB): it saves some loads near the limit, not the biggest; it has more room on desktop.
   - Goal: A load whose worker runs out of memory restarts once with a lower cap (fewer workers), says so to the player, and keeps that cap for the next load; or the measured reason the page dies before it can.
-- T-3939 [P2] {L:memory} Clock worker memory on many-zone phone saves
+- T-3939 [P2] {L:memory} Clock worker memory on many-zone phone saves (taking, 2026-11-21, agent clockmem)
   - Context: From T-3781, 11-21: on an iPhone reporter's 13-zone Tokyo-start save the clock worker held 15-30% of the tab, 359 MB settled and up to 493 MB before a collection; the tab peaked at 1,628-1,705 MB.
   - Goal: The clock worker's share on that save named piece by piece, and its biggest piece cut, measured on a production build as T-3160 measures.
   - Other: notes/T-3781.md "The iPhone crash reports"
@@ -806,10 +806,13 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3924 [P2] {L:buses} {waits:Anita} Count every Auto bus stop for demand
   - Need from Anita: Built in tree autostops (not landed): counting every Auto stop costs about 50 ms of calculating and 0.4 MB per added stop, so a game with lots of Auto bus (30 lines of 10 km on NYC) calculates trips about 1.5x as long with about a quarter more memory, while one or two lines cost a few percent. Land it anyway, count every second stop, or keep 2 km with the panel saying so? Recommended: land it.
   - Context: You, 11-21: "i would rather coutn every auto stop for demand ... it seems pretty misleading and like something we should fix". Found by busstop400 (T-3920), 11-21: on Auto the panel reads "400 m" and "10 stops", but demand sees about one stop every 2 km. A 3.7 km NYC line: Auto 2,814 riders a day, stops placed 400 m apart 3,580, 450 m 3,533. Stops a player places count at any spacing.
-- T-3378 [P1] {L:buses} Finish BRT with shared and off-road busways and BRT stations (taking, 2026-11-21, agent busway)
-  - Context (11-21 answers): "yes this all sounds fine. the one thing im less sure about is BRT stations for BRT lines only, whats the reasoning there? im not necessarily against it". So: 60 buses an hour a lane, lines cut to fit; off-road busway US$25M a km at 60 km/h; plain buses in traffic in town; 35 km/h, 18 s, US$2M a station. BRT stations serve BRT lines only (her OK 11-21 ~13:00 UTC, after asking whether speed alone made BRT worth buying).
+- T-3378 [P1] {L:buses} Finish BRT with BRT stations and off-road busways (taking, 2026-11-21, agent brtstations)
+  - Context (11-21): stages 1-2 landed 11-21 (busway: shared lanes paid once with upkeep split; 60 buses an hour a lane each way, lines on a full lane cut). Left: stage 3 BRT stations (BRT lines only, her OK ~13:00 UTC; 18 s, US$2M a station, wait counts 0.8) and stage 4 off-road busways (US$25M a km, 60 km/h, upkeep like off-road tram track; plain buses in traffic in town). Her answers: "yes this all sounds fine". Weekend lanes are T-3941.
   - Context: Design done 11-21 (busdesign, notes/T-3378.md): four stages, shared lanes 3 h, shared room 3 h, BRT stations 4-5 h, off-road busways 5-6 h; how far people come to the bus decides riders, so stations are the big part. You, 11-21: "i think we should finish BRT / busways. we should also allow building busways off road for high expense, sorta like trams off road." Preliminary BRT (a per-line speed upgrade, T-3907) shipped in v0.4.5. You, 11-20: "lots of people really like buses and want them to be more competitive with other modes ... plain buses still have a niche, brt is more competitive with trams and other modes, and its all like at least a little realistic"; "i do kinda want Brt to be an upgrade on a whole line, but also for lines sharing a road to share pay and throughput. so a hybrid"; "do also want BRt stations yeah". Sketch from 11-20: own lane (at least 35-40 km/h, up to the road's speed), shorter stops (about 18 s), BRT stations, build about US$4-5M a road-km against street tram's 7.5M; the same bus. You, 11-21 after the design: "we should maybe do upgradable bus stations".
-  - Goal: A short staged design for you (numbers checked on the frontier chart), then built: upgrading a line makes its road stretches busway; another line on the same stretch shares it without paying again and shares its throughput; busways built off road at a high cost, like off-road tram track; BRT stations.
+  - Goal: Stages 3 and 4 built as notes/T-3378.md designs them: BRT stations built with the Station tool beside a road, and Busway as a fourth track type off road.
+- T-3941 [P3] {L:buses} {after:T-3655} Weekend BRT lanes past 60 buses an hour
+  - Context: From T-3378 stage 2, 11-21: `settle_weekend` doesn't run `fit_lanes`, so in a game where any line has its own weekend schedule, weekend lanes can go past 60. The fix sits in the same code as T-3655's unlanded work.
+  - Goal: Weekend lanes cut to 60 an hour as weekdays are.
   - Other: Folds in T-1467 and T-3830 (bus stations a player can build: your pad, "bus stations, constructible, that look kinda like train and tram stations ... slight waiting/boarding bonus").
 - T-3377 [P3] {L:open-source} Mod support beyond forks
   - Context: Level 1 (data open to any site) is done. Levels 2-4 are data-file mods, a JavaScript mod API, then city packs.
@@ -920,7 +923,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your ask: a wiki so agents read less. 26 pages are built and figures come from code through JSON markers; the trams landed and every marker still matches.
   - Goal: The Money tab ledger detail and the line panel stop times written, then the retired docs removed.
   - Other: See notes/T-2854.md.
-- T-3931 [P3] {L:passing-tracks} Locals at 10/30 leaving service
+- T-3931 [P3] {L:passing-tracks} Locals at 10/30 leaving service (taking, 2026-11-21, agent ownwaits)
   - Context: You, 11-21: "yes each trains round trip can be budgeted on own weight" (each train's round trip sized on its own waits, about one more train on such lines). The moved morning hour now runs the morning's timetable (movedhour, 11-21). Left: at 10/30 one local in three waits about 6 min for its express, and its next departure needs 182 s of spare time where the round trip leaves 106 s, so 8 locals in 3 h leave service; the fix sizes the round trip on the trains' own waits, about one more train on such lines (T-3346's open fix). The map's late expresses at counts 12/9, 12/8, 4/9 and 30/10's hold at G were traced to T-3231's one-place terminal (notes/T-3931.md).
   - Goal: No local at 10/30 leaves service.
 - T-1183 [P3] {L:cleanup} Remove the fixed-rate line path
