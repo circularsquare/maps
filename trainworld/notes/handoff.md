@@ -17,7 +17,8 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
    in a tree from tw/track (it will meet level 38 when it rebases): land with `agent-tree.mjs finish bundles "..."
    --into tw/track --task T-3949`. Next stages per notes/T-3444-design/10-build-plan.md (2b T-3950...).
 3. BRT (her other priority): all landed. Open her call: busways 60 km/h for any bus (built) or BRT only.
-4. Running: maps-ac's bundles T-3949 (report via the board); mine: splitb4 T-3373 B stage 4 (Opus), phonemem
+4. Running: maps-ac's bundles T-3949 (report via the board); mine: splitb5 T-3373 B stage 5 (Opus; s4 landed
+   de9e8154: all-China 31% faster at 2 workers, +0.07-0.18 GB), phonemem
    T-3160 s4, airfar T-3502 (Opus), fullspeed T-3655 (Opus).
    Held: T-3932 (B stage 7's pool), T-3060 (tool files of track 2b), T-1354/T-1610 (near splitb4's worker code).
 5. Open asks: T-3742 nudge (a-..-16), T-4008 soft rule (-17), wiki push (-18), T-3376 industrial jobs at a
