@@ -351,6 +351,12 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: 2026-11-19: Steamworks account made, fee paid, tax form in (Valve's checks take up to about 45 days); you're taking screenshots into artifacts/trainworld/steam/screenshots; then agents make the store images from the landing page's "trains world!" logo. You, 2026-11-18: a free downloadable version on Steam, no paid DLC, a Ko-fi link if allowed; disclose AI code and translations regardless; "idrc about art style ... a low effort way to get another thing that might have a chance to get algo boosted". Checklist done (research/steam-page.md). Valve bans links in the description since 2024-09; the store page's website link field is allowed. No standalone build yet.
   - Goal: A live Coming soon page, then the downloadable build at least 2 weeks later.
   - Other: research/steam-page.md
+- T-3988 [P3] {L:steam} {after:the standalone build} Downloadable build on itch.io, $5 suggested
+  - Context: You, 11-21: the standalone downloadable game with "a suggested donation of 5 dollars (but you can set it to 0)"; itch as the store, its "$0 or donate" pricing with $5 suggested, and the anita.garden page linking to it. Steam stays free (no optional donations there); keep any in-game donation link out of the Steam build unless Valve's rules allow it.
+  - Goal: An itch.io page with the downloadable build at $0 or donate ($5 suggested), linked from anita.garden.
+- T-3989 [P3] {L:community} Hide the Ko-fi link for people who donated
+  - Context: You, 11-21: "could we disable the in game kofi link for people who have already donated, if we could detect that somehow." Ko-fi can send each donation to a webhook (with the donor's email and message); itch's API lists purchases by email. Matching needs the player's account (its email, or a code they paste in the donation message); signed-out players can't be matched, so a manual "I've donated" hide would cover them. Needs a server change (deploy on your yes).
+  - Goal: A design for you first: how a donation is matched to an account, what is stored, and the manual hide; then built.
 - T-3853 [P3] {L:steam} Offline version with chosen cities
   - Context: Your TODO.md, 11-20: "when we build standalone, allow offline version, choose which cities you wanna have downloaded i guess (say how much storage each one will take up)". Also from the suggestions: "make downloadable (doesnt have to be offline, but just not on web, i guess)", which T-3729's standalone build covers. Design for you first.
 - T-3696 [P4] {L:money} Lines' money and ridership changes as a list
@@ -887,9 +893,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Goal: A design for you first; then a save traces back to its original.
 - T-3850 [P3] {L:community} Friend requests and messages
   - Context: Your TODO.md, 11-20: "community: friend request and message people?" Design for you first.
-- T-3851 [P2] {L:community} Light view of another player's map (taking, 2026-11-21, agent viewonly)
-  - Context: Your TODO.md, 11-20: "view only for someone elses map (dont load demand, should keep it lightweight, only see where the tracks and statiosnn are i guess, and maybe some general high level stats that are saved like per city trip count? idk) with option to full load from a view only". View (T-3257) plays the whole network today. You, 11-21 (raised to P2): "we should probably slightly prioritize the feature where we can open community saves as view only and not compute their trips, just look at their network. i guess when opening we show the saved toggle "compute trips?" and if its off we just look at the network which should be much faster to load and shouuld get people liking and interacting with each otthers saves more".
-  - Goal: Opening a community save offers a remembered "compute trips?" switch; with it off the network loads without calculating trips, much faster, and a full load is one click away.
 - T-3943 [P3] {L:map-look} Hide lines by mode
   - Context: Player request via your scratch pad, 11-21: "hide lines of a certain type from map (i thin kwe can just expand the settings "ferries and buses" to include icons for each mode type, train, tram, bus, etc.. show all should show all of those too. for trains and trams, if mode is disabled *or* level is disabled we can hide the line."
   - Goal: The map settings' "ferries and buses" row becomes one toggle per mode (train, tram, bus, ferry, ...), Show all covers them, and a train or tram line hides when its mode or its level is off.
