@@ -41,7 +41,8 @@ U. Everything else paused for usage, trees kept, {after:next week's usage}: T-40
 - 11-19: "player complaints take precedent over other new features"; full playtest list before every publish. When
   she plays: no uploads until she's done; she may ask for a lower core cap.
 - Standing: lean testing, smoke per batch; long jobs in the background, answer her first; every publish, deploy and
-  push to the website needs her yes in this tab, none overnight; advisor trial (log calls in handoff-log).
+  push to the website needs her yes in this tab, none overnight; advisor trial (log calls in handoff-log); BRT
+  stations for BRT lines only; never ask again whether big saves get more workers (11-21).
 
 ## Waiting on her (asks.py list has the open ones)
 - All re-asked in the 11-22 ~16:00 UTC catch-up (maps-17), plus the 4-track sheet track-4034.png to look at.
