@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4033 [P2] {L:track-rework} Paths name tracks (2026-11-22): Paths as (piece, key, dir), routing by track id, 1-16 tracks of any ways with the bracket rule; parity byte identical three ways; station-pair search slower (Vienna 86 to 126 ms). Third track past a station left to T-4035; Add a track now after T-4036. notes/T-4033.md.
 - T-4027 [P2] {L:world-tooling} Downloads break on Geofabrik's India move (2026-11-22): pipeline/geofabrik.py resolves every download (world_run, routes, osm_water, japan_zones, world_plan); ids unchanged for old and new index URLs; HEAD 200 for India, Philippines, Hokkaido, Bavaria and European regions. notes/T-4027.md.
 - T-4029 [P2] {L:map-look} Population view stuck on after a load (2026-11-22): Cause: DemandOverlay.draw() returned on a lost context before hiding the canvas; it now empties and hides first. Shown with a forced context loss; likely but not proven to be the player's case. notes/T-4029.md.
 - T-3962 [P2] {L:track-rework} Demand from stop points and the track chip (2026-11-22): Demand rows and the one complex rule in the sim, packed demand byte for byte on Amsterdam, Vienna and real NYC; stop list track chip; the one-track Vienna fix moved to 4b (T-3961). notes/T-3962.md.

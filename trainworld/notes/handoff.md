@@ -10,16 +10,16 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
    (`reserve_cores.ps1 -Loop 30` at takeover). No publish yet. Before one: fresh freeze, translations (T-3986, T-3991,
    T-3999, T-4003, T-4010, T-2264, T-3933, T-3378 s4, T-4013, T-4005), smoke on a quiet machine, and one batch
    checker for batch 13 (T-3502 airports, T-3655 edit speed, T-4022, T-2264, T-3373 s4-5 flagged). Server deployed
-   3b14158 (11-22 01:26 UTC). Standby tab: maps-17. 8800 = b0647110 (save level 38).
+   3b14158 (11-22 01:26 UTC). Standby tab: maps-17. Save level 38 on master.
 2. TRACK (her top priority): stages 1-3g, 4a1 landed (3f landing); save level 41. Pre-merge: T-4026, T-3958;
    a checker before the first merge (save format, sim core). T-4030 (tracks as records in memory, the gap 3a1-4a1
    deferred) gates 4b, Add a track, 5a: plan note first, after 3f answers. A finish onto
    tw/track can stop on a docs conflict: resolve in the tree (CRLF files), rebase --continue, rerun tests, finish.
 3. T-3373 B: stages 3-5 landed under ?split=1; stage 6 (edits) next, not started (usage).
 4. Night data committed (97b660d9: Muzaffarpur, Manila, GE AM AZ AF, changelog c047 c048); popstuck and geofab
-   landed; smoke 30/30 on 547389c2; 8800 rebuilding to it; batchchk (Sonnet) checks batch 13 + tonight on master.
+   landed; smoke 30/30 on 547389c2; 8800 = 547389c2 (swapped ~05:20 local); batchchk (Sonnet) checks batch 13 + tonight on master.
    Left for her: Abkhazia/South Ossetia left out, Northern Cyprus with Cyprus (T-3764). Hokkaido: day session.
-5. Waiting on her: T-4025 perf ledger go. Wiki on the website on hold. Agents: trackmodel (fresh, T-4033 stage c), batchchk (master checker).
+5. Waiting on her: T-4025 perf ledger go. Wiki on the website on hold. Agents: trackdraw (T-4034 stage d), batchchk (master checker). Stages a-c landed (tw/track 929a2be5).
    T-4030 planned as T-4031-T-4037 (+T-4038 flip); stages a, b landed (tw/track b3529ede). 4e's Join waits on 4b. 3e/3f strings to her (notes).
 ## Her words
 - 11-22 ~04:30 UTC: last day of the usage week, a decent chunk left: aim to finish track stage 4 overnight ("if we run
