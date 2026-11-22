@@ -117,9 +117,23 @@ levels:
    `Network::line_wrap`) each direction's last node rides on to its first, costing the stand at
    the first stop, and nobody boards at the last: a rider rides through the first stop the short
    way around without changing; on a one-way loop (T-2981) run 1 has no train due anywhere (its span is
-   0), so the long way around is the only ride. At each station, useful lines
-   share their departure frequency: boarding costs the wait (half the combined headway, in plain
-   minutes: T-585) plus their frequency-weighted downstream cost.
+   0), so the long way around is the only ride. **At each station riders take whichever of its
+   useful lines gets them to their stop first, or the first train that comes** (Anita 2026-11-22,
+   T-4041: "evenly distribute the passengers by when they arrive", then "some people would probably
+   just take the first train that comes ... take us like 75% of the way"): a rider turns up at a
+   random time, each line's wait is uniform over its headway (in plain minutes, T-585, times the
+   station's wait weight) and independent of the other lines'. The useful lines are those that can
+   be first: cost from boarding under cut, the least of every line's cost plus its headway (the
+   latest anyone gets there). `FIRST_ARRIVAL_SHARE` (0.75) of the riders board the line whose wait
+   plus cost from boarding is least; the rest board the first departure that can still get them
+   there by cut, so their share of a slow line fades to nothing as it nears cut. The station's
+   cost is the two groups' expected arrival, weighed, plus the change's fixed cost
+   (`search::pool_cost`, integrated exactly; it can rise when a slow line joins), and each line's
+   share of the riders is the two groups' chances weighed. One line costs half its headway, as
+   before; two lines every 10 minutes with the same ride wait a third of the headway, not a quarter
+   (they are not spread evenly); the same ride every 10 and every 5 splits a quarter and three
+   quarters; Newark to Trenton (41.2 minutes every 22.6 against 31.2 every 35.9) goes 52% express;
+   an express every 40 against a local every 10 that is 25 minutes slower: the local 41%.
    **The service span** (T-842, Anita 2026-10-21: "demand should know the schedule, roughly").
    Riders differ in how long they would wait for the next train rather than go another way: the
    tolerance is spread log-uniformly from 30 minutes to 6 hours (half of riders take up to 1.7 h;
@@ -159,11 +173,19 @@ levels:
    which lines are ferries (`EverydayApi.set_ferry`, `DemandApi.set_ferry`, `DemandNetwork.ferry`).
    A change of trains costs a fixed 2 perceived minutes (`transfer_min`, Anita, T-717), its wait
    and the walk between the two platforms' centres (below); the first boarding pays neither the
-   fixed cost nor a platform walk. A line joins only if it improves expected trip cost;
-   wrong branches and off, slow, expensive or crowded alternatives add no useful frequency when
-   they worsen that cost. Lines are offered to a station cheapest first by their cost from
-   boarding, which includes the extra wait where full trains leave riders behind (step 7): a full
-   train is weighed after the lines that beat it, never kept ahead of them (T-552). **A rider
+   fixed cost nor a platform walk. A line joins only if it can be first (its cost from boarding
+   is under every joined line's plus that line's whole headway); wrong branches add nothing. A line
+   offered after its station (or change node) has left the search's queue joins too
+   (`Search::late_fix`, T-4041): riders who came straight in off that line get a change node that
+   bars it, the settle order is made again so every node comes after the nodes it sends riders to,
+   and a late line whose riders would come back round to the station is left out. Lines are offered to a station cheapest
+   first by their cost from boarding, which includes the extra wait where full trains leave riders
+   behind (step 7): a full train is weighed after the lines that beat it, never kept ahead of them
+   (T-552). **The lie** (T-4041): a late line lowers its station's cost, but not the costs of the
+   nodes settled before it (those keep a slightly higher cost); riders who came off a line into a
+   station where it joined late are barred it, as at any change, though some would rather have
+   stayed on; and lines being independent, a frequent line to a junction is sometimes taken to
+   change there, its train not timed with the other line's. **A rider
    never changes onto the line they left towards the stop they came from** (Anita, T-575), **nor
    towards the one their train goes on to**: where full trains leave riders behind they wait at
    their station, and the trip explorer shows that wait in the boarding, rather than ride the
@@ -207,9 +229,8 @@ levels:
    change's fixed 2 minutes. **Walks between platforms** (T-717): a demand station keeps each
    stop's platform (its snapshot station's position, `Network::stop_x`), and a change there walks
    from the platform arrived at (or the station's position, after a walk from another station) to
-   the platform of the train taken, at the same speed and weight. Riders take the first useful
-   train, so the search adds the expected walk over the departures pooled there, by frequency, to
-   the arrival's cost (`platform_walk`), and which lines join the pool does not depend on the
+   the platform of the train taken, at the same speed and weight. The search adds the expected
+   walk over the departures taken there, by their shares, to the arrival's cost (`platform_walk`), and which lines join the pool does not depend on the
    platform arrived at; the trip explorer shows each route's own walk. A change across one
    platform walks nothing, platforms 80 m apart cost 2.0 perceived minutes, 120 m 3.0 and a linked
    pair 1 km apart 25, each with the fixed 2. **In a station building** (T-2220, T-2276) the fixed
@@ -237,10 +258,12 @@ levels:
    is searched for that call alone), so the order populations are solved in does not change what
    is searched (T-405). A table is stations² costs and stations² real minutes (u16, as metres walked at walking's pace, T-1059, T-2265) plus, per searched destination, each node's next
    node and the settle order (u16 ids below 65,535 nodes, change nodes included), one bit per
-   boarding route node for the departures accepted there (their trains an hour are the graph's),
-   and each change node's station and a bit per boarding edge of that station for the departures
-   it accepts: about 4 bytes a node and 16 a change node (T-398, T-581; sizes in
-   notes/T-581.md). The search's queue pops by cost, then id; a lower cost for a node already
+   boarding route node for the departures accepted there, each change node's station and a bit per
+   boarding edge of that station for the departures it accepts: about 4 bytes a node and 16 a
+   change node (T-398, T-581; sizes in notes/T-581.md); and for the stations and change nodes
+   accepting more than one departure, the expected wait and each departure's share (`Shares`,
+   T-4041), and for the stations whose inter-city start boards otherwise, its departures and shares
+   at the planned waits (`EntryDeps`). The search's queue pops by cost, then id; a lower cost for a node already
    queued adds a copy, and the stale copy is skipped when it pops (T-1647).
    **Leaf stations stay out of the queue** (T-2652, design notes/T-2642.md). A station is a leaf
    when its departures are all one line's, no walk comes in or goes out, and every arrival there
@@ -308,10 +331,10 @@ levels:
    than walking between the trip's ends. All in metres walked at walking's pace
    (`Params::walk_eq_m`, 76.9 m a minute): an access entry's mean distance (a drive's real
    minutes), the strategy's expected real minutes (`Skims::walk`, u16 station to station, worked
-   out from each destination's strategy as it is searched, `walk_column`: half the accepted
-   departures' headway at each boarding, the rides, a walk to another station from the platform
-   left, and at a change the walk to the first train's platform at the change's pace, by
-   frequency; no crowding, fare, left-behind wait or fixed change minutes), and for the trip the
+   out from each destination's strategy as it is searched, `walk_column`: the expected wait for the
+   first useful train at each boarding, the rides, a walk to another station from the platform
+   left, and at a change the walk to the first train's platform at the change's pace, by the
+   departures' shares; no crowding, fare, left-behind wait or fixed change minutes), and for the trip the
    distance its walk uses (commutes: between the subzones' centres; everyday: the pair's mean),
    times the pack's walk factor over water. The refused pairs leave the logsum, so rail costs
    more there, and a trip with none left has no rail (`WALK_FURTHER`: the trip explorer says
@@ -337,7 +360,7 @@ levels:
 #### Loading and crowding
 
 6. **Loading**: each destination's strategy is walked from farthest settled nodes towards it.
-   Station flow (and a change node's) splits by accepted departure frequency, retaining each line's individual segment
+   Station flow (and a change node's) splits by the accepted departures' shares (T-4041), retaining each line's individual segment
    loads and boarding/alighting counts (T-069). Transfers are counted beside the loads (T-176,
    "Transfers" below).
 7. **Crowding**: a penalty per segment from the loads, then the pass again, averaging the loads

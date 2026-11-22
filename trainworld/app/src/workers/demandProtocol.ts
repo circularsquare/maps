@@ -90,8 +90,8 @@ export interface DemandNetwork {
   tram?: Uint8Array;
   /** T-3888 (`set_stairs`): 1 for each ferry line, whose trips pay no stairs; absent with none */
   pierLines?: Uint8Array;
-  /** T-3888 (`set_stairs`): per stop (as `stops`), 1 where its platform is at grade and pays no stairs */
-  gradeStops?: Uint8Array;
+  /** T-4041 (`set_stairs`): per stop (as `stops`), 1 at a tram stop on the street, where a trip pays no boarding cost; absent with none */
+  streetStops?: Uint8Array;
 }
 
 /** T-377: a zone's part of the world market (`data/packs/<id>.market.json`). */

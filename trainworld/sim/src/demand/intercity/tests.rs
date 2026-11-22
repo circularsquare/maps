@@ -584,7 +584,7 @@ fn rides_nest_with_walks() {
 #[test]
 fn another_station_never_makes_rail_dearer() {
     let inf = f32::INFINITY;
-    let sk = Skims { s: 3, n: 3, r: vec![0., inf, 30., inf, 0., 45., inf, inf, 0.], walk: vec![], walk_max: vec![], slot: vec![], next: vec![], board: vec![], order: vec![], change: vec![], entry: vec![], start: vec![] };
+    let sk = Skims { s: 3, n: 3, r: vec![0., inf, 30., inf, 0., 45., inf, inf, 0.], walk: vec![], walk_max: vec![], slot: vec![], next: vec![], board: vec![], order: vec![], change: vec![], entry: vec![], start: vec![], share: vec![], entry_dep: vec![] };
     let p = Params::default();
     let theta = p.band_unsoftened(p.n_bands() - 1);
     let list = |walks: &[(usize, f32)]| {
@@ -1960,7 +1960,7 @@ pub(crate) fn real_world(root: &str, ids: Option<&[&str]>) -> String {
 fn regional_station_pairs_take_the_local_scale() {
     // stations 0 and 1 near the home, 2 at work: 0 -> 2 costs 30, 1 -> 2 costs 33
     let inf = f32::INFINITY;
-    let sk = Skims { s: 3, n: 3, r: vec![0., inf, 30., inf, 0., 33., inf, inf, 0.], walk: vec![], walk_max: vec![], slot: vec![], next: vec![], board: vec![], order: vec![], change: vec![], entry: vec![], start: vec![] };
+    let sk = Skims { s: 3, n: 3, r: vec![0., inf, 30., inf, 0., 33., inf, inf, 0.], walk: vec![], walk_max: vec![], slot: vec![], next: vec![], board: vec![], order: vec![], change: vec![], entry: vec![], start: vec![], share: vec![], entry_dep: vec![] };
     let p = Params::default();
     // a pair whose car takes 60 perceived minutes, past 12 km: the band's scale, not softened
     let th = p.soften(p.band_unsoftened(p.band_of_d2(20e3 * 20e3)), 60.);

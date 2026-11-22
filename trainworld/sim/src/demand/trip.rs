@@ -434,20 +434,20 @@ impl Leg {
 
 /// Every route of the strategy from station `a` to station `t` carrying at least `min_share` of
 /// what leaves `a` (each with its share): at a station riders split over the useful departures by
-/// their frequency, and a route node follows its best edge, as `kernel::assign` loads them.
+/// their shares (T-4041), and a route node follows its best edge, as `kernel::assign` loads them.
 pub(crate) fn routes(g: &Graph, sk: &Skims, p: &Params, a: usize, t: usize, min_share: f32) -> Vec<(f32, Vec<Leg>)> {
     let mut out = vec![];
     let slot = sk.slot[t];
     if slot == NONE || a == t {
         return out;
     }
-    let (next, board) = (&sk.next[slot as usize].to_vec(), &sk.board_tph(g, slot as usize));
+    let next = &sk.next[slot as usize].to_vec();
     let mut rep = vec![NONE; g.n_st];
     for (r, &st) in g.rn_station.iter().enumerate().rev() {
         rep[st as usize] = r as u32;
     }
     let mut legs = vec![];
-    let at = At { g, p, next, board, cn: &sk.change[slot as usize], rep: &rep, t, min_share };
+    let at = At { g, p, next, st: sk.strategy(slot as usize), rep: &rep, t, min_share };
     // T-3718: a trip that starts with a walk to a station nearby, as a walk leg first; the walk to
     // the platform there joins it, by the train taken
     match sk.start[slot as usize].iter().find(|x| x.0 as usize == a) {
@@ -508,8 +508,7 @@ struct At<'a> {
     g: &'a Graph,
     p: &'a Params,
     next: &'a [u32],
-    board: &'a [f32],
-    cn: &'a ChangeNodes,
+    st: Strategy<'a>,
     rep: &'a [u32],
     t: usize,
     min_share: f32,
@@ -519,7 +518,8 @@ struct At<'a> {
 /// node the rider left by an alighting or a walk to it, None at the trip's start; `walked` at a
 /// trip's start reached by its start walk (T-3718), the rider at the station's position.
 fn walk(at: &At, v: usize, came: Option<usize>, walked: bool, share: f32, legs: &mut Vec<Leg>, out: &mut Vec<(f32, Vec<Leg>)>) {
-    let At { g, p, next, board, cn, rep, t, min_share } = *at;
+    let At { g, p, next, st: strat, rep, t, min_share } = *at;
+    let cn = strat.change;
     if v == t {
         out.push((share, legs.clone()));
         return;
@@ -528,21 +528,20 @@ fn walk(at: &At, v: usize, came: Option<usize>, walked: bool, share: f32, legs: 
         return; // a guard: strategies have no cycles
     }
     let s = g.n_st;
-    let (st, k) = if v < s { (v, NONE as usize) } else { (cn.st[v - g.n] as usize, v - g.n) };
-    let acc = |r: usize| if v < s { board[r] } else { cn.tph(g, k, r) };
-    let v = st;
-    let edges = g.adj_off[v] as usize..g.adj_off[v + 1] as usize;
-    let sum: f32 = edges.clone().map(|e| acc(g.adj_to[e] as usize - s)).sum();
-    if sum == 0.0 {
+    let mut dep = vec![];
+    let st = departures(g, strat.board, strat.change, strat.share, v, &mut dep);
+    let sum: f32 = dep.iter().map(|d| d.1).sum();
+    if !(sum > 0.0) {
         return;
     }
-    let headway = 60.0 / sum;
-    let wait_min = headway / 2.0;
+    // the node's expected wait for whichever comes first (T-4041), the same on every leg from it
+    let wait_min = strat.share.wait(g, v, &dep);
+    let v = st;
     let arrived = came.map(|c| arrival_at(g, c, v)).or(walked.then_some((0.0, 0.0)));
-    for e in edges {
-        let r0 = g.adj_to[e] as usize;
-        let sh = share * acc(r0 - s) / sum;
-        if acc(r0 - s) == 0.0 || sh < min_share {
+    for &(e, a) in &dep {
+        let r0 = g.adj_to[e as usize] as usize;
+        let sh = share * a / sum;
+        if sh < min_share {
             continue;
         }
         // T-717: a change walks to this train's platform, as part of the walk into the station if

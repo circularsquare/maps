@@ -2,11 +2,13 @@
 
 **Waiting** is half the gap between trains, in plain minutes. A train every ten minutes means five minutes on the platform. At a station with a waiting room, or inside a station building, each of those minutes counts {{sim/src/track/upgrades.rs:WAITING_ROOM_WAIT}} instead.
 
+**Several lines.** Where more than one line goes your way, people turn up at any time. Three in four take whichever gets them there first, and the rest take the first train that comes. A faster express that comes less often still gets its riders: the ones who turn up just before it, or who can wait a bit for it and still get there sooner. A slower local keeps the people it gets there first, and some who just take it because it came. A line so slow it gets there after the other line's worst case gets nobody. Two lines with the same gap going the same way mean waiting a third of that gap, not a quarter, since their trains aren't spread out evenly.
+
 **No train for hours.** People differ in how long they'd wait. On a line with long gaps, or at the end of the day when the last train has gone, only some people have a train coming soon enough. Boarding there counts extra, the fewer the people with a train coming, the more it counts. If nobody has one, nobody boards.
 
-A boarding costs half the gap between trains, times the station's wait weight, plus the change cost when it is a change.
+A boarding costs the wait for the first train worth taking, times the station's wait weight, plus the change cost when it is a change.
 
-**Stairs.** At a station below or above ground, getting down to your first train costs {{sim/src/demand/kernel.rs:Params.train_in_min|0}} minutes and getting up from your last one {{sim/src/demand/kernel.rs:Params.train_out_min|0}}, trams included. A platform at street level costs nothing, and so do buses and ferries. A change pays its own bother instead.
+**Boarding.** Getting onto your first train costs {{sim/src/demand/kernel.rs:Params.train_in_min|0}} minutes and off your last one {{sim/src/demand/kernel.rs:Params.train_out_min|0}}, trams included, at any level. A tram stop on the street costs nothing, and neither do buses and ferries. A change pays its own bother instead.
 
 **Changing trains** costs {{sim/src/demand/kernel.rs:Params.transfer_min|0}} minutes for the bother, plus the walk from one platform to the other, plus the wait for the next train. Inside a [[station-buildings|station building]] the bother is {{sim/src/track/upgrades.rs:BUILDING_CHANGE*100|0}}% of that. The walk counts extra, as in [[perceived-minutes]].
 
@@ -20,5 +22,5 @@ A line that bends back close to itself can be changed onto across the bend. Peop
 
 If the train that arrives is full, the wait gets longer: see [[full-trains]].
 
-Exact rule: `docs/demand-kernel.md` "Access and station-to-station times". A longer trip between cities is planned, so its first wait is shorter, at most {{sim/src/demand/kernel/search.rs:PLANNED_WAIT_CAP_MIN|0}} minutes, and it has no extra for long gaps. Commutes and outings between cities wait as local trips do.
-In the code: **main** `sim/src/demand/kernel/search.rs` `board_cost`, `build_graph`, also `planned_board_cost`, `change_f`, `trip_ends`, `walk_ban` `sim/src/demand/kernel/subzones.rs` `wait_factor` `sim/src/track/upgrades.rs` `WAITING_ROOM_WAIT`, `PASSAGE_MPS` `sim/src/track/span.rs` `line_span`, `stop_span`
+Exact rule: `docs/demand-kernel.md` "Access and station-to-station times". A longer trip between cities is planned, so its first wait is shorter, at most {{sim/src/demand/kernel/search.rs:PLANNED_WAIT_CAP_MIN|0}} minutes, and it has no extra for long gaps; with several lines it takes whichever gets there first in the same way. Commutes and outings between cities wait as local trips do.
+In the code: **main** `sim/src/demand/kernel/search.rs` `board_cost`, `pool_cost`, `build_graph`, also `planned_board_cost`, `wait_spread`, `change_f`, `trip_ends`, `walk_ban` `sim/src/demand/kernel/subzones.rs` `wait_factor` `sim/src/track/upgrades.rs` `WAITING_ROOM_WAIT`, `PASSAGE_MPS` `sim/src/track/span.rs` `line_span`, `stop_span`

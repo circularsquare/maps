@@ -316,7 +316,9 @@ export function buildSnapshot(): NetworkSnapshot {
   for (let i = 0; i < ni.length; i += 10) {
     if (ni[i + 7] > 0 && ni[i + 8] === 1) {
       const u = ups.get(ni[i]), z = fz.get(ni[i]);
-      stations.push({ id: ni[i], name: stateRows.nameOf(a, ni[i], frame), x: ni[i + 1], y: ni[i + 2], level: ni[i + 3] as any, platform: ni[i + 7], ...(u ? { upgrades: u } : {}), ...(z ? { fare: z } : {}) });
+      // T-4041: a tram stop on street track (`TrackKind::StreetTram`) at ground
+      const street = ni[i + 3] === 0 && a.node_kind(ni[i]) === 2;
+      stations.push({ id: ni[i], name: stateRows.nameOf(a, ni[i], frame), x: ni[i + 1], y: ni[i + 2], level: ni[i + 3] as any, platform: ni[i + 7], ...(u ? { upgrades: u } : {}), ...(z ? { fare: z } : {}), ...(street ? { street: true as const } : {}) });
       geo.push(stationGeo(a, ni, i));
     }
   }

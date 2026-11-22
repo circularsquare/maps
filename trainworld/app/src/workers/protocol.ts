@@ -1156,6 +1156,8 @@ export interface SnapshotStation {
   /** T-1464: a bus stop that is no station (id from `bus::STOP_ID_BASE` up, platform 0), reached
    * only through its line's corridor (`SnapshotLine.catches`) */
   bus?: true;
+  /** T-4041: a tram stop on street track at ground, where a trip pays no boarding cost */
+  street?: true;
 }
 
 export interface SnapshotLine {

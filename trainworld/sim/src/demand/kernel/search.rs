@@ -24,8 +24,7 @@ pub struct Graph {
     /// logit's own form for an option open to that share. 0 with service all period.
     pub rn_span: Vec<f32>,
     /// T-3888: perceived minutes a trip pays where its first boarding is at route node r
-    /// (`Params::train_in_min` on a train or tram, at grade too unless `STAIRS_AT_GRADE` is off,
-    /// else 0), and where its last ride leaves at r (`train_out_min`); both empty where nothing pays. In the station pair's cost after the
+    /// (`Params::train_in_min` on a train or tram but at a tram stop on the street, T-4041, else 0), and where its last ride leaves at r (`train_out_min`); both empty where nothing pays. In the station pair's cost after the
     /// search (`trip_ends`), so route choice between lines does not see them.
     pub rn_in: Vec<f32>,
     pub rn_out: Vec<f32>,
@@ -473,6 +472,10 @@ pub struct Skims {
     pub entry: Vec<Box<[(u32, f32)]>>,
     /// Per searched destination, its start walks (`DestStrategy::start`).
     pub start: Vec<Box<[(u32, u32)]>>,
+    /// Per searched destination, its departures' shares (`DestStrategy::share`).
+    pub share: Vec<Shares>,
+    /// Per searched destination, its inter-city starts' departures (`DestStrategy::entry_dep`).
+    pub entry_dep: Vec<EntryDeps>,
 }
 
 /// A station as reached off one of the lines its own strategy boards (T-575): a rider never changes
@@ -552,7 +555,7 @@ pub(super) fn accepted(bits: &[u64], g: &Graph, r: usize) -> f32 {
 
 impl Skims {
     pub fn empty(g: &Graph) -> Skims {
-        Skims { s: g.n_st, n: g.n, r: vec![f32::INFINITY; g.n_st * g.n_st], walk: vec![u16::MAX; g.n_st * g.n_st], walk_max: vec![0; g.n_st], slot: vec![NONE; g.n_st], next: vec![], board: vec![], order: vec![], change: vec![], entry: vec![], start: vec![] }
+        Skims { s: g.n_st, n: g.n, r: vec![f32::INFINITY; g.n_st * g.n_st], walk: vec![u16::MAX; g.n_st * g.n_st], walk_max: vec![0; g.n_st], slot: vec![NONE; g.n_st], next: vec![], board: vec![], order: vec![], change: vec![], entry: vec![], start: vec![], share: vec![], entry_dep: vec![] }
     }
     /// `r` with the first boarding at the planned wait (T-1430), as the inter-city trips cost it.
     pub fn entry_r(&self) -> std::borrow::Cow<'_, [f32]> {
@@ -613,7 +616,7 @@ pub fn skims_extend(sk: &mut Skims, g: &Graph, p: &Params, want: &[bool]) {
         if !d.start.is_empty() {
             let f = from.to_mut();
             for &(a, b) in d.start.iter() {
-                f[a as usize] = start_walk_min(g, &d.board, a as usize, b as usize, p) + wm[b as usize];
+                f[a as usize] = start_walk_min(g, &d.board, &d.share, a as usize, b as usize, p) + wm[b as usize];
             }
         }
         for (a, &m) in from.iter().enumerate() {
@@ -631,31 +634,35 @@ pub fn skims_extend(sk: &mut Skims, g: &Graph, p: &Params, want: &[bool]) {
         sk.change.push(d.change);
         sk.entry.push(d.entry);
         sk.start.push(d.start);
+        sk.share.push(d.share);
+        sk.entry_dep.push(d.entry_dep);
     }
 }
 
 /// T-3718: a trip's walk from station `a` to station `b` before its first boarding, real minutes:
 /// between the stations' positions (`Graph::st_walk_min`), then at `b` to the platforms of the
-/// departures `board` accepts there, by their frequency, as a walk in after a ride does (T-717).
+/// departures `board` accepts there, by their shares, as a walk in after a ride does (T-717).
 /// Infinite where `b` is not one of `a`'s.
-pub fn start_walk_min(g: &Graph, board: &[u64], a: usize, b: usize, p: &Params) -> f32 {
+pub fn start_walk_min(g: &Graph, board: &[u64], share: &Shares, a: usize, b: usize, p: &Params) -> f32 {
     let (i0, i1) = (g.st_walk_off[a] as usize, g.st_walk_off[a + 1] as usize);
     match (i0..i1).find(|&i| g.st_walk_to[i] as usize == b) {
-        Some(i) => g.st_walk_min[i] + start_platform_min(g, board, b, p),
+        Some(i) => g.st_walk_min[i] + start_platform_min(g, board, share, b, p),
         None => f32::INFINITY,
     }
 }
 
-fn start_platform_min(g: &Graph, board: &[u64], b: usize, p: &Params) -> f32 {
+fn start_platform_min(g: &Graph, board: &[u64], share: &Shares, b: usize, p: &Params) -> f32 {
     if !g.st_spread[b] {
         return 0.0;
     }
     let s = g.n_st;
-    let (mut f, mut w) = (0f32, 0f32);
+    let at = share.find(b);
+    let (mut f, mut w, mut j) = (0f32, 0f32, 0);
     for e in g.adj_off[b] as usize..g.adj_off[b + 1] as usize {
         let r = g.adj_to[e] as usize - s;
-        let a = accepted(board, g, r);
-        if a > 0.0 {
+        if accepted(board, g, r) != 0.0 {
+            let a = at.map_or(1.0, |i| share.val[i + 1 + j]);
+            j += 1;
             f += a;
             w += a * g.rn_dx[r].hypot(g.rn_dy[r]);
         }
@@ -691,7 +698,7 @@ pub(super) fn walk_column_in<I: Id>(g: &Graph, p: &Params, st: Strategy, dst: us
         if id == dst {
             wm[id] = 0.0;
         } else if id < s || id >= n {
-            departures(g, st.board, st.change, id, dep);
+            departures(g, st.board, st.change, st.share, id, dep);
             let (mut f, mut w) = (0f32, 0f32);
             for &(e, a) in dep.iter() {
                 let r = g.adj_to[e as usize] as usize - s;
@@ -702,7 +709,7 @@ pub(super) fn walk_column_in<I: Id>(g: &Graph, p: &Params, st: Strategy, dst: us
                 }
             }
             if f > 0.0 {
-                wm[id] = 30.0 / f + w / f;
+                wm[id] = st.share.wait(g, id, dep) + w / f;
             }
         } else {
             let nx = next[id].ix();
@@ -724,7 +731,7 @@ pub(super) fn walk_column_in<I: Id>(g: &Graph, p: &Params, st: Strategy, dst: us
             let (ax, ay) = if to == here { (g.rn_dx[r], g.rn_dy[r]) } else { (0.0, 0.0) };
             let mut plat = 0.0;
             if nx != dst && g.st_spread[to] {
-                departures(g, st.board, st.change, nx, dep);
+                departures(g, st.board, st.change, st.share, nx, dep);
                 let (mut f, mut w) = (0f32, 0f32);
                 for &(e, a) in dep.iter() {
                     let r2 = g.adj_to[e as usize] as usize - s;
@@ -771,7 +778,7 @@ pub(super) fn trip_km_in<I: Id>(g: &Graph, st: Strategy, dst: usize, next: &[I],
             continue;
         }
         if id < s || id >= n {
-            departures(g, st.board, st.change, id, dep);
+            departures(g, st.board, st.change, st.share, id, dep);
             let (mut f, mut w) = (0f32, 0f32);
             for &(e, a) in dep.iter() {
                 let r = g.adj_to[e as usize] as usize - s;
@@ -819,7 +826,7 @@ pub(super) fn trip_base_mul_in<I: Id>(g: &Graph, st: Strategy, dst: usize, next:
             continue;
         }
         if id < s || id >= n {
-            departures(g, st.board, st.change, id, dep);
+            departures(g, st.board, st.change, st.share, id, dep);
             let (mut f, mut w) = (0f32, 0f32);
             for &(e, a) in dep.iter() {
                 let r = g.adj_to[e as usize] as usize - s;
@@ -868,7 +875,7 @@ pub(super) fn trip_ends_in<I: Id>(g: &Graph, st: Strategy, dst: usize, next: &[I
             continue;
         }
         if id < s || id >= n {
-            departures(g, st.board, st.change, id, dep);
+            departures(g, st.board, st.change, st.share, id, dep);
             let (mut f, mut w, mut wi) = (0f32, 0f32, 0f32);
             for &(e, a) in dep.iter() {
                 let r = g.adj_to[e as usize] as usize - s;
@@ -972,7 +979,7 @@ pub(super) fn board_extra_in<I: Id>(g: &Graph, st: Strategy, dst: usize, next: &
             continue;
         }
         if id < s || id >= n {
-            departures(g, st.board, st.change, id, dep);
+            departures(g, st.board, st.change, st.share, id, dep);
             let sum: f32 = dep.iter().map(|d| d.1).sum();
             if !(sum > 0.0) {
                 continue;
@@ -1021,6 +1028,31 @@ pub struct DestStrategy {
     /// by the station a trip starts from (route cost, real minutes, fare km) is that station's
     /// plus the walk (`start_walk_min`). Nobody changing trains takes it.
     pub start: Box<[(u32, u32)]>,
+    /// T-4041: the shares riders take its departures in where a node accepts more than one.
+    pub share: Shares,
+    /// T-4041: the departures an inter-city trip's first boarding takes, by the planned waits
+    /// (`Search::entry_costs`), where they are not the plain strategy's one departure.
+    pub entry_dep: EntryDeps,
+}
+
+/// T-4041: per station, the departures a trip starting there boards at the planned waits, (route
+/// node, share), each station's from its first in `dep` to the next station's; stations ascending.
+#[derive(Clone, Default, PartialEq, Debug)]
+pub struct EntryDeps {
+    pub at: Box<[(u32, u32)]>,
+    pub dep: Box<[(u32, f32)]>,
+}
+
+impl EntryDeps {
+    pub fn bytes(&self) -> usize {
+        8 * self.at.len() + 8 * self.dep.len()
+    }
+    /// Station `v`'s, or None where a trip starting there boards as the plain strategy does.
+    pub fn of(&self, v: usize) -> Option<&[(u32, f32)]> {
+        let i = self.at.binary_search_by_key(&(v as u32), |x| x.0).ok()?;
+        let end = self.at.get(i + 1).map_or(self.dep.len(), |x| x.1 as usize);
+        Some(&self.dep[self.at[i].1 as usize..end])
+    }
 }
 
 /// A destination's strategy, borrowed from a `Skims` slot or a `DestStrategy`.
@@ -1031,6 +1063,8 @@ pub struct Strategy<'a> {
     pub order: &'a NodeIds,
     pub change: &'a ChangeNodes,
     pub start: &'a [(u32, u32)],
+    pub share: &'a Shares,
+    pub entry_dep: &'a EntryDeps,
 }
 
 impl Strategy<'_> {
@@ -1070,16 +1104,16 @@ impl NodeIds {
 
 impl DestStrategy {
     pub fn bytes(&self) -> usize {
-        self.next.bytes() + self.order.bytes() + 8 * self.board.len() + 4 * (self.change.st.len() + self.change.off.len()) + 8 * self.change.bits.len() + 8 * self.entry.len() + 8 * self.start.len()
+        self.next.bytes() + self.order.bytes() + 8 * self.board.len() + 4 * (self.change.st.len() + self.change.off.len()) + 8 * self.change.bits.len() + 8 * self.entry.len() + 8 * self.start.len() + self.share.bytes() + self.entry_dep.bytes()
     }
     pub fn view(&self) -> Strategy<'_> {
-        Strategy { next: &self.next, board: &self.board, order: &self.order, change: &self.change, start: &self.start }
+        Strategy { next: &self.next, board: &self.board, order: &self.order, change: &self.change, start: &self.start, share: &self.share, entry_dep: &self.entry_dep }
     }
 }
 
 impl Skims {
     pub fn strategy(&self, slot: usize) -> Strategy<'_> {
-        Strategy { next: &self.next[slot], board: &self.board[slot], order: &self.order[slot], change: &self.change[slot], start: &self.start[slot] }
+        Strategy { next: &self.next[slot], board: &self.board[slot], order: &self.order[slot], change: &self.change[slot], start: &self.start[slot], share: &self.share[slot], entry_dep: &self.entry_dep[slot] }
     }
 }
 
@@ -1165,17 +1199,34 @@ impl<'a> DestSearch<'a> {
         assert_eq!(a.board, b.board, "T-2652: accepted departures towards {dst}");
         assert_eq!(bits(&a.offer), bits(&b.offer), "T-2652: offers towards {dst}");
         assert_eq!(sorted(&a.order), sorted(&b.order), "T-2652: settled nodes towards {dst}");
-        let cn = |q: &Search| q.cn.iter().map(|c| (c.st, c.line, c.ban, c.frequency.to_bits(), c.weighted.to_bits(), c.dist.to_bits(), c.done, c.feed, c.bits)).collect::<Vec<_>>();
+        let cn = |q: &Search| q.cn.iter().map(|c| (c.st, c.line, c.ban, c.cut.to_bits(), c.n, c.dist.to_bits(), c.done, c.feed, c.bits)).collect::<Vec<_>>();
         assert_eq!(cn(a), cn(b), "T-2652: change nodes towards {dst}");
         assert_eq!((&a.cn_bits, &a.cn_feed), (&b.cn_bits, &b.cn_feed), "T-2652: change nodes' departures towards {dst}");
+        assert_eq!(a.share, b.share, "T-2652: departures' shares towards {dst}");
         let mut at = vec![usize::MAX; a.n + a.cn.len()];
         for (k, &v) in a.order.iter().enumerate() {
             at[v as usize] = k;
         }
         for &v in &a.order[1..] {
             let v = v as usize;
-            if v < a.n {
+            if v < a.n && (v >= a.s || a.next[v] != NONE) {
                 assert!(at[a.next[v] as usize] < at[v], "T-2652: node {v} settled before its next towards {dst}");
+            }
+            // T-4041: a station or change node after its departures, late lines too
+            if v < a.s || v >= a.n {
+                let (st, on): (usize, Box<dyn Fn(usize, usize) -> bool>) = if v < a.s {
+                    (v, Box::new(|_, r: usize| a.board[r >> 6] >> (r & 63) & 1 == 1))
+                } else {
+                    let b0 = a.cn[v - a.n].bits as usize;
+                    (a.cn[v - a.n].st as usize, Box::new(move |i: usize, _| a.cn_bits[b0 + i / 64] >> (i % 64) & 1 == 1))
+                };
+                let e0 = g.adj_off[st] as usize;
+                for e in e0..g.adj_off[st + 1] as usize {
+                    let r = g.adj_to[e] as usize - a.s;
+                    if on(e - e0, r) {
+                        assert!(at[a.s + r] < at[v], "T-4041: node {v} settled before its departure {r} towards {dst}");
+                    }
+                }
             }
         }
     }
@@ -1202,7 +1253,9 @@ impl<'a> DestSearch<'a> {
         let (s, n) = (q.s, q.n);
         let ids = n + q.cn.len();
         let start = q.start_walks(dst).into_boxed_slice();
-        let mut d = DestStrategy { next: NodeIds::of(&q.next, ids), board: std::mem::take(&mut q.board), order: NodeIds::of(&q.order, ids), change: q.change_nodes(), entry: Box::new([]), start };
+        q.entry_costs(dst);
+        let entry_dep = EntryDeps { at: q.entry_at.as_slice().into(), dep: q.entry_dep.as_slice().into() };
+        let mut d = DestStrategy { next: NodeIds::of(&q.next, ids), board: std::mem::take(&mut q.board), order: NodeIds::of(&q.order, ids), change: q.change_nodes(), entry: Box::new([]), start, share: std::mem::take(&mut q.share), entry_dep };
         if let Some(mut put) = put {
             let curve = &q.g.fare_curve;
             // T-3758: under fare zones a trip's fare follows its rides (`ZoneWork`)
@@ -1228,7 +1281,6 @@ impl<'a> DestSearch<'a> {
             if ends {
                 trip_ends(q.g, d.view(), dst, &mut self.ends, &mut self.ends_last, &mut self.dep);
             }
-            q.entry_costs(dst);
             // each station's route cost, and its cost as an inter-city trip's start where lower
             let (col, ent) = (&mut self.col, &mut self.ent);
             col.clear();
@@ -1251,7 +1303,7 @@ impl<'a> DestSearch<'a> {
             // stations' own (no walk follows another)
             self.fold.clear();
             for &(a, b) in d.start.iter() {
-                let w = start_walk_min(q.g, &d.board, a as usize, b as usize, q.p) * q.p.w_xfer;
+                let w = start_walk_min(q.g, &d.board, &d.share, a as usize, b as usize, q.p) * q.p.w_xfer;
                 let (b, a) = (b as usize, a as usize);
                 self.fold.push((a, col[b] + w, ent[b] + w));
             }
@@ -1347,16 +1399,19 @@ impl IdHeap {
 }
 
 /// A change node being searched (`ChangeNodes`): its station, the line it was reached off and which
-/// of that line's departures it bars (`barred`), the pooled frequency and frequency-weighted cost
-/// of the lines it accepts, its cost, settled, its arrivals (a range of `Search::cn_feed`: the
+/// of that line's departures it bars (`barred`), the least of its accepted lines' cost from boarding
+/// plus their spread (`cut`: a line costing that from boarding is never first), its cost, settled, its arrivals (a range of `Search::cn_feed`: the
 /// station's incoming edges off that line) and where its accepted departures' bits start in
 /// `Search::cn_bits`.
 pub(super) struct Change {
     pub(super) st: u32,
     pub(super) line: u32,
     pub(super) ban: [u32; 2],
-    pub(super) frequency: f32,
-    pub(super) weighted: f32,
+    pub(super) cut: f32,
+    /// How many lines it accepts, and their list in `Search::lines_at` (cost from boarding,
+    /// departures an hour, route node, next; `NONE` ends it).
+    pub(super) n: u32,
+    pub(super) head: u32,
     pub(super) dist: f32,
     pub(super) done: bool,
     pub(super) feed: (u32, u32),
@@ -1374,8 +1429,13 @@ pub(super) struct Search<'a> {
     pub(super) nr: usize,
     pub(super) dist: Vec<f32>,
     pub(super) done: Vec<bool>,
-    pub(super) frequency: Vec<f32>,
-    pub(super) weighted: Vec<f32>,
+    /// Per station, `Change::cut` for its strategy (T-4041), and how many lines it has joined.
+    pub(super) cut: Vec<f32>,
+    pub(super) joined: Vec<u32>,
+    /// Per station, its joined lines' list in `lines_at`, as `Change::head`.
+    pub(super) st_head: Vec<u32>,
+    pub(super) lines_at: Vec<(f32, f32, u32, u32)>,
+    pub(super) by_edge: Vec<(u32, f32, f32)>,
     pub(super) heap: IdHeap,
     pub(super) next: Vec<u32>,
     pub(super) order: Vec<u32>,
@@ -1409,6 +1469,26 @@ pub(super) struct Search<'a> {
     pub(super) pool: Vec<(f32, f32, f32)>,
     /// Each station's cost as an inter-city trip's start (`entry_costs`).
     pub(super) entry: Vec<f32>,
+    /// T-4041: the lines a node being joined accepts, (cost from boarding, departures an hour), its
+    /// departures' shares, `pool_cost`'s scratch, and the shares of the nodes settled so far
+    pub(super) pl: Vec<(f32, f32)>,
+    pub(super) sh: Vec<f32>,
+    pub(super) pw: PoolWork,
+    pub(super) shares: SharesBuild,
+    /// After `run`, the departures' shares towards its destination.
+    pub(super) share: Shares,
+    /// T-4041: the lines that joined a node already settled, (station, or change node from `n`,
+    /// route node), and `late_fix`'s scratch: per node its state in the walk for the settle order,
+    /// the walk's stack and the departures it has yet to go through, (node, late line or `NONE`).
+    pub(super) late: Vec<(u32, u32)>,
+    pub(super) late_out: Vec<bool>,
+    pub(super) mark: Vec<u8>,
+    pub(super) stack: Vec<(u32, u32, u32, u32, u32)>,
+    pub(super) succ: Vec<(u32, u32)>,
+    pub(super) reorder: Vec<u32>,
+    /// After `entry_costs`, `EntryDeps`' two lists.
+    pub(super) entry_at: Vec<(u32, u32)>,
+    pub(super) entry_dep: Vec<(u32, f32)>,
     /// Each incoming edge's cost (`Graph::rev_edge`'s), read in edge order.
     pub(super) rev_cost: Vec<f32>,
     /// Per route node, what settling it reads, in one place (T-1647).
@@ -1611,8 +1691,11 @@ impl Search<'_> {
             nr,
             dist: vec![f32::INFINITY; n],
             done: vec![false; n],
-            frequency: vec![0f32; s],
-            weighted: vec![0f32; s],
+            cut: vec![f32::INFINITY; s],
+            joined: vec![0; s],
+            st_head: vec![NONE; s],
+            lines_at: vec![],
+            by_edge: vec![],
             // a change node per station and line its strategy boards: fewer than route nodes
             heap: IdHeap::new(n + 2 * nr),
             next: vec![NONE; n],
@@ -1634,6 +1717,19 @@ impl Search<'_> {
             edge_ix,
             pool: vec![],
             entry: vec![],
+            pl: vec![],
+            sh: vec![],
+            pw: PoolWork::default(),
+            shares: SharesBuild::default(),
+            share: Shares::default(),
+            entry_at: vec![],
+            entry_dep: vec![],
+            late: vec![],
+            late_out: vec![],
+            mark: vec![],
+            stack: vec![],
+            succ: vec![],
+            reorder: vec![],
             rn,
             rev_cost,
             banned_off,
@@ -1645,13 +1741,14 @@ impl Search<'_> {
 
     /// T-1430: after `run`, each station's cost towards `dst` as an inter-city trip's start: the
     /// departures offered to it, less their tolerance penalty (`Graph::rn_span`), pooled as
-    /// `join_line` pools them but at the planned wait (`planned_board_cost`). Every departure was
-    /// offered by the search's end; the pool takes them cheapest first and stops at the first that
-    /// would not lower it, as `join_line` would refuse every later one too.
+    /// `pool_cost` pools them but at the planned waits. Every departure was offered by the search's
+    /// end; the pool takes every one that can be first.
     pub(super) fn entry_costs(&mut self, dst: usize) {
         let (g, s) = (self.g, self.s);
         self.entry.clear();
         self.entry.resize(s, f32::INFINITY);
+        self.entry_at.clear();
+        self.entry_dep.clear();
         for v in 0..s {
             if v == dst || !self.dist[v].is_finite() {
                 continue;
@@ -1664,16 +1761,39 @@ impl Search<'_> {
                 }
             }
             self.cand.sort_unstable_by(|a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)));
-            let (mut f, mut w, mut cost) = (0f32, 0f32, f32::INFINITY);
+            // T-4041: every line that can be first, at the planned waits
+            self.pl.clear();
+            let mut cut = f32::INFINITY;
             for &(d, r) in &self.cand {
-                let sum = f + g.rn_tph[r as usize];
-                let c = (w + g.rn_tph[r as usize] * d) / sum + planned_board_cost(60.0 / sum, g.st_wait[v], g.change_f(v), self.p);
-                if c >= cost {
+                if !(d < cut) {
                     break;
                 }
-                (f, w, cost) = (sum, w + g.rn_tph[r as usize] * d, c);
+                let f = g.rn_tph[r as usize];
+                cut = cut.min(d + wait_spread(f, g.st_wait[v], true));
+                self.pl.push((d, f));
             }
-            self.entry[v] = cost;
+            if self.pl.is_empty() {
+                continue;
+            }
+            self.sh.clear();
+            self.sh.resize(self.pl.len(), 1.0);
+            self.entry[v] = pool_cost(&self.pl, g.st_wait[v], g.change_f(v), true, self.p, &mut self.pw, Some(&mut self.sh)).0;
+            // kept where the planned waits cost less (else the trip is costed, so loaded, as any)
+            // and the first boarding is not the plain strategy's one departure
+            if !(self.entry[v] < self.dist[v] - 1e-4) {
+                continue;
+            }
+            let r0 = self.cand[0].1 as usize;
+            let plain_one = self.pl.len() == 1 && self.board[r0 >> 6] >> (r0 & 63) & 1 == 1 && self.share.find(v).is_none()
+                && (g.adj_off[v] as usize..g.adj_off[v + 1] as usize).filter(|&e| { let r = g.adj_to[e] as usize - s; self.board[r >> 6] >> (r & 63) & 1 == 1 }).count() == 1;
+            if !plain_one {
+                self.entry_at.push((v as u32, self.entry_dep.len() as u32));
+                for (k, &x) in self.sh.iter().enumerate() {
+                    if x > 0.0 {
+                        self.entry_dep.push((self.cand[k].1, x));
+                    }
+                }
+            }
         }
     }
 
@@ -1700,7 +1820,7 @@ impl Search<'_> {
                 if b == dst || !self.dist[b].is_finite() {
                     continue;
                 }
-                let c = (g.st_walk_min[i] + start_platform_min(g, &self.board, b, p)) * p.w_xfer + own(b);
+                let c = (g.st_walk_min[i] + start_platform_min(g, &self.board, &self.share, b, p)) * p.w_xfer + own(b);
                 if c < best {
                     (best, to) = (c, b as u32);
                 }
@@ -1716,8 +1836,14 @@ impl Search<'_> {
         let (g, s, n, nr) = (self.g, self.s, self.n, self.nr);
         self.dist.fill(f32::INFINITY);
         self.done.fill(false);
-        self.frequency.fill(0.0);
-        self.weighted.fill(0.0);
+        self.cut.fill(f32::INFINITY);
+        // (no line joins the destination)
+        self.cut[dst] = f32::NEG_INFINITY;
+        self.late.clear();
+        self.joined.fill(0);
+        self.st_head.fill(NONE);
+        self.lines_at.clear();
+        self.shares.clear();
         self.next.fill(NONE);
         self.order.clear();
         self.board = vec![0u64; nr.div_ceil(64)].into_boxed_slice();
@@ -1758,6 +1884,7 @@ impl Search<'_> {
             self.order.push(v as u32);
             let d = self.dist[v];
             if v < s {
+                self.note_station(v);
                 self.settle_station(v);
                 continue;
             }
@@ -1806,6 +1933,95 @@ impl Search<'_> {
                 self.chain[self.lf_rn[i] as usize] = true;
             }
         }
+        self.late_fix(dst);
+        self.share = self.shares.finish();
+    }
+
+    /// The cost at station `v` (the wait's and change's factors) of the lines in `pl`.
+    #[inline]
+    fn pool_at(&mut self, v: usize) -> f32 {
+        let g = self.g;
+        pool_cost(&self.pl, g.st_wait[v], g.change_f(v), false, self.p, &mut self.pw, None).0
+    }
+
+    /// Node `id` (a station, or change node `id - n`) at station `v` settled with the lines in `pl`:
+    /// their shares into `sh`, and where two or more, into `shares`.
+    fn note_shares(&mut self, id: usize, v: usize) -> f32 {
+        let g = self.g;
+        self.sh.clear();
+        self.sh.resize(self.pl.len(), 1.0);
+        if self.pl.is_empty() {
+            return f32::INFINITY;
+        }
+        // (`pool_cost` gives the same to the bit whatever the lines' order)
+        let (cost, wait) = pool_cost(&self.pl, g.st_wait[v], g.change_f(v), false, self.p, &mut self.pw, Some(&mut self.sh));
+        if self.pl.len() > 1 {
+            self.shares.push(id, wait / g.st_wait[v], &self.sh);
+        }
+        cost
+    }
+
+    fn note_station(&mut self, v: usize) {
+        if self.joined[v] > 1 {
+            self.list_by_edge(self.st_head[v]);
+            let _ = self.note_shares(v, v);
+        } else {
+            self.sh.clear();
+            self.sh.resize(self.joined[v] as usize, 1.0);
+        }
+    }
+
+    /// Station `v`'s cost after line `r` (cost `d` from boarding) joins it: alone, as `pool_cost`
+    /// gives one line, else over every line it has joined.
+    #[inline]
+    fn join_cost(&mut self, v: usize, r: usize, d: f32) -> f32 {
+        self.joined[v] += 1;
+        self.st_head[v] = self.add_line(self.st_head[v], d, r);
+        if self.joined[v] == 1 {
+            return self.one_cost(v, r, d);
+        }
+        self.list_lines(self.st_head[v]);
+        self.pool_at(v)
+    }
+
+    /// A line onto the front of a list in `lines_at`: the list's new head.
+    #[inline]
+    fn add_line(&mut self, head: u32, d: f32, r: usize) -> u32 {
+        self.lines_at.push((d, self.g.rn_tph[r], r as u32, head));
+        (self.lines_at.len() - 1) as u32
+    }
+
+    /// `list_lines` in edge order (as `station_lines` and `change_lines` give them).
+    fn list_by_edge(&mut self, head: u32) {
+        self.by_edge.clear();
+        let mut i = head;
+        while i != NONE {
+            let (d, f, r, nx) = self.lines_at[i as usize];
+            self.by_edge.push((self.edge_ix[r as usize], d, f));
+            i = nx;
+        }
+        self.by_edge.sort_unstable_by_key(|x| x.0);
+        self.pl.clear();
+        self.pl.extend(self.by_edge.iter().map(|x| (x.1, x.2)));
+    }
+
+    /// The lines of the list from `head` into `pl` (in no particular order: `pool_cost` sorts them).
+    #[inline]
+    fn list_lines(&mut self, head: u32) {
+        self.pl.clear();
+        let mut i = head;
+        while i != NONE {
+            let (d, f, _, nx) = self.lines_at[i as usize];
+            self.pl.push((d, f));
+            i = nx;
+        }
+    }
+
+    /// Line `r` alone at station `v`, `d` from boarding: what `pool_cost` gives one line.
+    #[inline]
+    fn one_cost(&self, v: usize, r: usize, d: f32) -> f32 {
+        let g = self.g;
+        d + board_cost(60.0 / g.rn_tph[r], g.st_wait[v], g.change_f(v), self.p)
     }
 
     /// T-2652: route node `r` at a leaf station, settled at `d`: its offer to its station noted for
@@ -1849,8 +2065,8 @@ impl Search<'_> {
 
     /// T-2652: leaf station `leaves[i]`'s strategy, after the queue: its route nodes' offers joined
     /// in the order the queue would have brought them (by its key: cost, then the id of the node,
-    /// or of the boarding's turn for a line with a wait of its own), up to the first that would
-    /// have come after the station itself was settled. Settled last if reached.
+    /// or of the boarding's turn for a line with a wait of its own), each that can be first, as
+    /// `offer_line` joins them before and after the station is settled. Settled last if reached.
     pub(super) fn leaf_join(&mut self, i: usize) {
         let (g, s, n) = (self.g, self.s, self.n);
         let u = self.leaves[i] as usize;
@@ -1869,16 +2085,17 @@ impl Search<'_> {
         if self.lf_cand.len() > 1 {
             self.lf_cand.sort_unstable();
         }
-        let (mut f, mut w, mut cur, mut nx) = (0f32, 0f32, f32::INFINITY, NONE);
+        // as `offer_line` joins them while the station waits in the queue
+        // as `offer_line` joins them, while the station waits in the queue and after (its cost is
+        // the last)
+        let (mut cut, mut cur, mut nx) = (f32::INFINITY, f32::INFINITY, NONE);
         for k in 0..self.lf_cand.len() {
-            let (key, r) = self.lf_cand[k];
-            if ((cur.to_bits() as u64) << 32 | u as u64) < key {
-                break;
-            }
-            let r = r as usize;
-            if let Some(c) = join_line(&mut f, &mut w, cur, g.rn_tph[r], self.offer[r], g.st_wait[u], g.change_f(u), self.p) {
+            let r = self.lf_cand[k].1 as usize;
+            let o = self.offer[r];
+            if o < cut {
                 self.board[r >> 6] |= 1 << (r & 63);
-                cur = c;
+                cut = cut.min(o + wait_spread(g.rn_tph[r], g.st_wait[u], false));
+                cur = self.join_cost(u, r, o);
                 nx = (s + r) as u32;
             }
         }
@@ -1886,6 +2103,7 @@ impl Search<'_> {
         self.next[u] = nx;
         self.done[u] = true;
         self.order.push(u as u32);
+        self.note_station(u);
     }
 
     #[inline(always)]
@@ -1903,26 +2121,58 @@ impl Search<'_> {
         let g = self.g;
         let (from, f) = (g.rn_station[r] as usize, g.rn_tph[r]);
         self.offer[r] = d;
+        // T-4041: a line joins while its station waits in the queue, unless it is never first
+        let spread = wait_spread(f, g.st_wait[from], false);
         if !self.done[from] {
-            if let Some(cost) = join_line(&mut self.frequency[from], &mut self.weighted[from], self.dist[from], f, d, g.st_wait[from], g.change_f(from), self.p) {
+            if d < self.cut[from] {
                 self.board[r >> 6] |= 1 << (r & 63);
-                self.dist[from] = cost;
+                self.cut[from] = self.cut[from].min(d + spread);
+                // the cost can rise as a slow line joins (`pool_cost`); the station keeps its
+                // place in the queue by the least
+                let cost = self.join_cost(from, r, d);
                 self.next[from] = (self.s + r) as u32;
-                self.heap.push(cost, from as u32);
+                if cost < self.dist[from] {
+                    self.heap.push(cost, from as u32);
+                }
+                self.dist[from] = cost;
             }
             return;
+        }
+        if d < self.cut[from] {
+            // a line that can be first, offered after its station left the queue: it joins all
+            // the same (its cost and shares are made in `late_fix`)
+            self.board[r >> 6] |= 1 << (r & 63);
+            self.cut[from] = self.cut[from].min(d + spread);
+            self.joined[from] += 1;
+            self.st_head[from] = self.add_line(self.st_head[from], d, r);
+            self.next[from] = (self.s + r) as u32;
+            self.late.push((from as u32, r as u32));
         }
         let (a, b) = self.cn_of[from];
         let i = self.edge_ix[r] as usize;
         for k in a as usize..b as usize {
             let c = &mut self.cn[k];
-            // a line costing more from boarding than the pool does already never joins it
-            if c.done || d >= c.dist || barred(g, &self.nst, r, c.line, c.ban) { continue; }
-            if let Some(cost) = join_line(&mut c.frequency, &mut c.weighted, c.dist, f, d, g.st_wait[from], g.change_f(from), self.p) {
-                c.dist = cost;
-                self.cn_bits[c.bits as usize + i / 64] |= 1 << (i % 64);
+            if !(d < c.cut) || barred(g, &self.nst, r, c.line, c.ban) { continue; }
+            c.cut = c.cut.min(d + spread);
+            c.n += 1;
+            self.cn_bits[c.bits as usize + i / 64] |= 1 << (i % 64);
+            let head = self.cn[k].head;
+            self.cn[k].head = self.add_line(head, d, r);
+            if self.cn[k].done {
+                self.late.push(((self.n + k) as u32, r as u32));
+                continue;
+            }
+            let cost = if self.cn[k].n == 1 {
+                self.one_cost(from, r, d)
+            } else {
+                self.list_lines(self.cn[k].head);
+                self.pool_at(from)
+            };
+            let c = &mut self.cn[k];
+            if cost < c.dist {
                 self.heap.push(cost, (self.n + self.nr + k) as u32);
             }
+            c.dist = cost;
         }
     }
 
@@ -1987,6 +2237,275 @@ impl Search<'_> {
         }
     }
 
+    /// T-4041: after the queue, the lines that joined nodes already settled (`late`). A line can be
+    /// first though its cost from boarding is above the station's cost, so it is offered once the
+    /// station has left the queue; without it a line slower by more than about half the faster
+    /// one's headway would get nobody. Here: riders who came off that line straight into the
+    /// station get a change node barring it (as `settle_station` makes them), the settle order is
+    /// made again so every node comes after those it sends riders to (a late line whose riders
+    /// would come back to it is left out), and the nodes' costs and shares are made with their
+    /// late lines. Their costs reach no node settled before (a cost a little high there).
+    pub(super) fn late_fix(&mut self, dst: usize) {
+        if self.late.is_empty() {
+            return;
+        }
+        let (s, n) = (self.s, self.n);
+        // the late lines' own riders: per station, those that came off a line late there
+        self.late.sort_unstable();
+        let mut i = 0;
+        while i < self.late.len() && (self.late[i].0 as usize) < s {
+            let v = self.late[i].0 as usize;
+            let mut j = i;
+            while j < self.late.len() && self.late[j].0 as usize == v {
+                j += 1;
+            }
+            self.change_off_late(v, i, j);
+            i = j;
+        }
+        self.late.sort_unstable();
+        self.late_out.clear();
+        self.late_out.resize(self.late.len(), false);
+        self.settle_order(dst);
+        // costs and shares where lines joined late, without those left out
+        let mut last = NONE;
+        for k in 0..self.late.len() {
+            let x = self.late[k].0;
+            if x == last {
+                continue;
+            }
+            last = x;
+            let x = x as usize;
+            if x < s {
+                self.list_by_edge_kept(self.st_head[x], |q, r| q.board[r >> 6] >> (r & 63) & 1 == 1);
+                self.dist[x] = self.note_shares(x, x);
+            } else {
+                let c = x - n;
+                let (v, b0, head) = (self.cn[c].st as usize, self.cn[c].bits as usize, self.cn[c].head);
+                let on = move |q: &Search, r: usize| {
+                    let e = q.edge_ix[r] as usize;
+                    q.cn_bits[b0 + e / 64] >> (e % 64) & 1 == 1
+                };
+                self.list_by_edge_kept(head, on);
+                self.cn[c].n = self.pl.len() as u32;
+                self.cn[c].dist = self.note_shares(x, v);
+            }
+        }
+    }
+
+    /// `late_fix` at station `v`, its late lines `late[i..j]`: the arrivals that came straight in
+    /// off one of their lines, and would be barred it at a change node now (`ban`), to a change
+    /// node of the station's departures less the barred, its late lines late there too.
+    fn change_off_late(&mut self, v: usize, i: usize, j: usize) {
+        let (g, s, n) = (self.g, self.s, self.n);
+        let (e0, e1) = (g.adj_off[v] as usize, g.adj_off[v + 1] as usize);
+        self.lines.clear();
+        for e in e0..e1 {
+            let r = g.adj_to[e] as usize - s;
+            if self.board[r >> 6] >> (r & 63) & 1 == 1 && !self.lines.contains(&g.rn_line[r]) {
+                self.lines.push(g.rn_line[r]);
+            }
+        }
+        self.keys.clear();
+        self.feed.clear();
+        for jj in g.rev_off[v] as usize..g.rev_off[v + 1] as usize {
+            let from = g.rev_from[jj] as usize;
+            if from < s || self.next[from] as usize != v {
+                continue;
+            }
+            let line = g.rn_line[from - s];
+            if !self.late[i..j].iter().any(|x| g.rn_line[x.1 as usize] == line) {
+                continue;
+            }
+            match self.ban(from - s, v) {
+                Some((l, WHOLE)) if l == self.lone[v] => {}
+                Some(key) => {
+                    let k = self.keys.iter().position(|&x| x == key).unwrap_or_else(|| {
+                        self.keys.push(key);
+                        self.keys.len() - 1
+                    });
+                    self.feed.push((k as u32, from as u32));
+                }
+                None => {}
+            }
+        }
+        for ki in 0..self.keys.len() {
+            let (line, ban) = self.keys[ki];
+            let k = self.cn.len();
+            let b0 = self.cn_bits.len();
+            self.cn_bits.resize(b0 + (e1 - e0).div_ceil(64), 0);
+            let mut c = Change { st: v as u32, line, ban, cut: f32::INFINITY, n: 0, head: NONE, dist: f32::INFINITY, done: true, feed: (0, 0), bits: b0 as u32 };
+            let mut at = self.st_head[v];
+            while at != NONE {
+                let (d, f, r, nx) = self.lines_at[at as usize];
+                at = nx;
+                let ru = r as usize;
+                if self.board[ru >> 6] >> (ru & 63) & 1 == 0 || barred(g, &self.nst, ru, line, ban) {
+                    continue;
+                }
+                let e = self.edge_ix[ru] as usize;
+                self.cn_bits[b0 + e / 64] |= 1 << (e % 64);
+                c.n += 1;
+                self.lines_at.push((d, f, r, c.head));
+                c.head = (self.lines_at.len() - 1) as u32;
+            }
+            if c.n == 0 {
+                self.cn_bits.truncate(b0);
+                continue;
+            }
+            self.cn.push(c);
+            // its costs and shares are made with the late nodes'; its late lines can be left out
+            let id = (n + k) as u32;
+            let mut any = false;
+            for x in i..j {
+                let r = self.late[x].1 as usize;
+                let e = self.edge_ix[r] as usize;
+                if self.cn_bits[b0 + e / 64] >> (e % 64) & 1 == 1 {
+                    self.late.push((id, r as u32));
+                    any = true;
+                }
+            }
+            if !any {
+                // (no late line of its own: still its costs and shares)
+                self.late.push((id, NONE));
+            }
+            for f in 0..self.feed.len() {
+                if self.feed[f].0 == ki as u32 {
+                    self.next[self.feed[f].1 as usize] = id;
+                }
+            }
+        }
+    }
+
+    /// `list_by_edge`, the lines whose departure `keep` says is still accepted.
+    fn list_by_edge_kept(&mut self, head: u32, keep: impl Fn(&Search, usize) -> bool) {
+        self.by_edge.clear();
+        let mut i = head;
+        while i != NONE {
+            let (d, f, r, nx) = self.lines_at[i as usize];
+            if keep(self, r as usize) {
+                self.by_edge.push((self.edge_ix[r as usize], d, f));
+            }
+            i = nx;
+        }
+        self.by_edge.sort_unstable_by_key(|x| x.0);
+        self.pl.clear();
+        self.pl.extend(self.by_edge.iter().map(|x| (x.1, x.2)));
+    }
+
+    /// `late_fix`'s settle order: each node after every node it sends riders to (a route node its
+    /// next; a station or change node its departures, and where a boarding rides a stop first,
+    /// that stop), by a depth-first walk from the nodes in the order they were settled. A late
+    /// line found on a loop is left out (`late_out`, its departure's bit cleared), and the walk
+    /// goes back to before it.
+    fn settle_order(&mut self, dst: usize) {
+        let n = self.n;
+        let ids = n + self.cn.len();
+        self.mark.clear();
+        self.mark.resize(ids, 0);
+        self.reorder.clear();
+        self.stack.clear();
+        self.succ.clear();
+        for o in 0..self.order.len() {
+            let root = self.order[o] as usize;
+            if self.mark[root] != 0 {
+                continue;
+            }
+            self.enter(root, NONE, dst);
+            while let Some(&(_, _, pos, end, _)) = self.stack.last() {
+                if pos == end {
+                    let (x, start, _, _, _) = self.stack.pop().unwrap();
+                    self.succ.truncate(start as usize);
+                    self.mark[x as usize] = 2;
+                    self.reorder.push(x);
+                    continue;
+                }
+                self.stack.last_mut().unwrap().2 += 1;
+                let (y, li) = self.succ[pos as usize];
+                if li != NONE && self.late_out[li as usize] {
+                    continue;
+                }
+                match self.mark[y as usize] {
+                    0 => self.enter(y as usize, li, dst),
+                    2 => {}
+                    _ => {
+                        // a loop: back to before its last late line
+                        let out = if li != NONE {
+                            Some((li, self.stack.len()))
+                        } else {
+                            let from = self.stack.iter().rposition(|f| f.0 == y).unwrap();
+                            (from + 1..self.stack.len()).rev().find(|&f| self.stack[f].4 != NONE).map(|f| (self.stack[f].4, f))
+                        };
+                        let Some((li, f)) = out else {
+                            debug_assert!(false, "T-4041: a loop with no late line");
+                            continue;
+                        };
+                        self.drop_late(li as usize);
+                        while self.stack.len() > f {
+                            let (x, start, _, _, _) = self.stack.pop().unwrap();
+                            self.succ.truncate(start as usize);
+                            self.mark[x as usize] = 0;
+                        }
+                    }
+                }
+            }
+        }
+        std::mem::swap(&mut self.order, &mut self.reorder);
+    }
+
+    /// `settle_order`: node `x`, reached by late line `li` (or `NONE`), onto the walk's stack with
+    /// the nodes it sends riders to.
+    fn enter(&mut self, x: usize, li: u32, dst: usize) {
+        let (g, s, n) = (self.g, self.s, self.n);
+        self.mark[x] = 1;
+        let start = self.succ.len() as u32;
+        if s <= x && x < n {
+            let nx = self.next[x];
+            if nx != NONE {
+                self.succ.push((nx, NONE));
+            }
+        } else if x != dst {
+            let (v, b0) = if x < s { (x, NONE) } else { (self.cn[x - n].st as usize, self.cn[x - n].bits) };
+            let e0 = g.adj_off[v] as usize;
+            for e in e0..g.adj_off[v + 1] as usize {
+                let r = g.adj_to[e] as usize - s;
+                let on = if b0 == NONE { self.board[r >> 6] >> (r & 63) & 1 == 1 } else { self.cn_bits[b0 as usize + (e - e0) / 64] >> ((e - e0) % 64) & 1 == 1 };
+                if !on {
+                    continue;
+                }
+                let li = self.late.binary_search(&(x as u32, r as u32)).map_or(NONE, |k| k as u32);
+                self.succ.push(((s + r) as u32, li));
+                let nx = self.next[s + r] as usize;
+                if !(nx >= s && nx < n) {
+                    self.succ.push((g.rn_next[r], li));
+                }
+            }
+        }
+        let end = self.succ.len() as u32;
+        self.stack.push((x as u32, start, start, end, li));
+    }
+
+    /// Late line `late[li]` left out: its departure no longer accepted there.
+    fn drop_late(&mut self, li: usize) {
+        let (s, n) = (self.s, self.n);
+        self.late_out[li] = true;
+        let (x, r) = (self.late[li].0 as usize, self.late[li].1 as usize);
+        if x < s {
+            self.board[r >> 6] &= !(1 << (r & 63));
+            self.joined[x] -= 1;
+            if self.next[x] as usize == s + r {
+                // (a station's next is one of its departures)
+                let g = self.g;
+                self.next[x] = (g.adj_off[x] as usize..g.adj_off[x + 1] as usize).map(|e| g.adj_to[e]).find(|&to| {
+                    let q = to as usize - s;
+                    self.board[q >> 6] >> (q & 63) & 1 == 1
+                }).unwrap_or(NONE);
+            }
+        } else {
+            let (b0, e) = (self.cn[x - n].bits as usize, self.edge_ix[r] as usize);
+            self.cn_bits[b0 + e / 64] &= !(1 << (e % 64));
+        }
+    }
+
     /// Station `v` is settled with its strategy. Riders reach it as they would start there unless
     /// the strategy boards a departure `ban` bars them; those come to a change node, made here
     /// from the departures offered so far less the barred ones.
@@ -2010,11 +2529,14 @@ impl Search<'_> {
         }
         let spread = g.st_spread[v];
         if spread {
+            // by the departures' shares (`note_station`)
             self.pool.clear();
+            let mut j = 0;
             for e in e0..e1 {
                 let r = g.adj_to[e] as usize - s;
                 if self.board[r >> 6] >> (r & 63) & 1 == 1 {
-                    self.pool.push((g.rn_dx[r], g.rn_dy[r], g.rn_tph[r]));
+                    self.pool.push((g.rn_dx[r], g.rn_dy[r], self.sh[j]));
+                    j += 1;
                 }
             }
         }
@@ -2061,18 +2583,29 @@ impl Search<'_> {
                 let k = self.cn.len();
                 let b0 = self.cn_bits.len();
                 self.cn_bits.resize(b0 + (e1 - e0).div_ceil(64), 0);
-                let mut c = Change { st: v as u32, line, ban, frequency: 0.0, weighted: 0.0, dist: f32::INFINITY, done: false, feed: (f0 as u32, self.cn_feed.len() as u32), bits: b0 as u32 };
+                // T-4041: every line offered so far that can be first (all settled already)
+                let mut c = Change { st: v as u32, line, ban, cut: f32::INFINITY, n: 0, head: NONE, dist: f32::INFINITY, done: false, feed: (f0 as u32, self.cn_feed.len() as u32), bits: b0 as u32 };
+                // (the cost does not depend on the lines' order: `pool_cost`)
+                self.pl.clear();
                 for &(od, r) in &self.cand {
-                    if let Some(cost) = join_line(&mut c.frequency, &mut c.weighted, c.dist, g.rn_tph[r as usize], od, g.st_wait[v], g.change_f(v), self.p) {
-                        c.dist = cost;
-                        let i = self.edge_ix[r as usize] as usize;
-                        self.cn_bits[b0 + i / 64] |= 1 << (i % 64);
+                    if !(od < c.cut) {
+                        break;
                     }
+                    let f = g.rn_tph[r as usize];
+                    c.cut = c.cut.min(od + wait_spread(f, g.st_wait[v], false));
+                    let i = self.edge_ix[r as usize] as usize;
+                    self.cn_bits[b0 + i / 64] |= 1 << (i % 64);
+                    self.pl.push((od, f));
+                    self.lines_at.push((od, f, r, c.head));
+                    c.head = (self.lines_at.len() - 1) as u32;
                 }
-                if c.dist.is_finite() {
-                    self.heap.push(c.dist, (self.n + self.nr + k) as u32);
-                }
+                c.n = self.pl.len() as u32;
                 self.cn.push(c);
+                if !self.pl.is_empty() {
+                    let cost = if self.pl.len() == 1 { self.one_cost(v, self.cand[0].1 as usize, self.cand[0].0) } else { self.pool_at(v) };
+                    self.cn[k].dist = cost;
+                    self.heap.push(cost, (self.n + self.nr + k) as u32);
+                }
             }
         }
         self.cn_of[v] = (first, self.cn.len() as u32);
@@ -2086,15 +2619,24 @@ impl Search<'_> {
         self.order.push(id);
         let (d, (f0, f1)) = (self.cn[k].dist, self.cn[k].feed);
         let v = self.cn[k].st as usize;
+        if self.cn[k].n > 1 {
+            self.list_by_edge(self.cn[k].head);
+            let _ = self.note_shares(id as usize, v);
+        } else {
+            self.sh.clear();
+            self.sh.resize(self.cn[k].n as usize, 1.0);
+        }
         let spread = g.st_spread[v];
         if spread {
             self.pool.clear();
             let (s, e0, b0) = (self.s, g.adj_off[v] as usize, self.cn[k].bits as usize);
+            let mut j = 0;
             for e in e0..g.adj_off[v + 1] as usize {
                 let i = e - e0;
                 if self.cn_bits[b0 + i / 64] >> (i % 64) & 1 == 1 {
                     let r = g.adj_to[e] as usize - s;
-                    self.pool.push((g.rn_dx[r], g.rn_dy[r], g.rn_tph[r]));
+                    self.pool.push((g.rn_dx[r], g.rn_dy[r], self.sh[j]));
+                    j += 1;
                 }
             }
         }
@@ -2117,20 +2659,281 @@ impl Search<'_> {
     }
 }
 
-/// A line with `f` departures an hour and cost `d` from boarding joins a station's strategy if it
-/// lowers the expected cost there below `cur`: the new cost, with the station's pooled frequency
-/// and frequency-weighted cost updated.
+/// T-4041: how far a wait for a line with `f` departures an hour spreads, perceived minutes: its
+/// headway times the station's wait factor, or with `planned` the headway whose half is the
+/// planned first wait (`planned_board_cost`), so one line costs what `board_cost` or
+/// `planned_board_cost` says.
 #[inline(always)]
+pub fn wait_spread(f: f32, wait_f: f32, planned: bool) -> f32 {
+    let h = 60.0 / f;
+    wait_f * if planned { h.min(2.0 * PLANNED_EARLY_MIN + h / 3.0).min(2.0 * PLANNED_WAIT_CAP_MIN) } else { h }
+}
+
+/// T-4041 (Anita 11-22: "some people would probably just take the first train that comes ... take
+/// us like 75% of the way"): the riders at a station who take the line that gets them to their
+/// stop first; the rest board the first train that comes among the lines that can be first,
+/// unless it is sure to arrive after the latest the best line would (`pool_cost`).
+pub const FIRST_ARRIVAL_SHARE: f32 = 0.75;
+
+/// Gauss-Legendre nodes and weights on [-1, 1], 1 to 6 points (exact to degree 11).
+const GAUSS: [&[(f64, f64)]; 6] = [
+    &[(0.0, 2.0)],
+    &[(-0.577_350_269_189_625_8, 1.0), (0.577_350_269_189_625_8, 1.0)],
+    &[(-0.774_596_669_241_483_4, 0.555_555_555_555_555_6), (0.0, 0.888_888_888_888_888_9), (0.774_596_669_241_483_4, 0.555_555_555_555_555_6)],
+    &[(-0.861_136_311_594_052_6, 0.347_854_845_137_453_9), (-0.339_981_043_584_856_3, 0.652_145_154_862_546_1), (0.339_981_043_584_856_3, 0.652_145_154_862_546_1), (0.861_136_311_594_052_6, 0.347_854_845_137_453_9)],
+    &[(-0.906_179_845_938_664, 0.236_926_885_056_189_1), (-0.538_469_310_105_683_1, 0.478_628_670_499_366_5), (0.0, 0.568_888_888_888_888_9), (0.538_469_310_105_683_1, 0.478_628_670_499_366_5), (0.906_179_845_938_664, 0.236_926_885_056_189_1)],
+    &[(-0.932_469_514_203_152, 0.171_324_492_379_170_3), (-0.661_209_386_466_264_5, 0.360_761_573_048_138_6), (-0.238_619_186_083_196_9, 0.467_913_934_572_691), (0.238_619_186_083_196_9, 0.467_913_934_572_691), (0.661_209_386_466_264_5, 0.360_761_573_048_138_6), (0.932_469_514_203_152, 0.171_324_492_379_170_3)],
+];
+
+/// Scratch for `pool_cost`: per line, (earliest arrival, latest, 1 / spread, place in `lines`).
+#[derive(Default)]
+pub(super) struct PoolWork {
+    v: Vec<(f64, f64, f64, usize)>,
+    acc: Vec<f64>,
+    /// the first-train riders' part: per line how far into the wait its departure counts, the
+    /// same sorted, and each line's chance
+    ej: Vec<f64>,
+    e: Vec<(f64, usize)>,
+    lz: Vec<f64>,
+}
+
+/// T-4041 (Anita 11-22: "evenly distribute the passengers by when they arrive"): a rider who turns
+/// up at a station at a random time takes whichever of its accepted `lines` gets them to their stop
+/// first. Each line, (cost from boarding, departures an hour), has its wait uniform over its spread
+/// (`wait_spread`) and independent of the others'. A line whose cost from boarding is at least
+/// another's plus that one's spread is never first and is left out (share 0); the least such sum
+/// is the latest anyone arrives. `FIRST_ARRIVAL_SHARE` of the riders take the line that arrives
+/// first, E[min(d_i + U(0, spread_i))]; the others board the first departure that can still
+/// arrive by that latest time. The cost is the two groups' expected arrival, weighed, plus the
+/// change's fixed minutes, so it can rise when a slow line joins; with `share` (as long as
+/// `lines`) each line's share of the riders, and then also the expected perceived wait (else 0),
+/// so the cost is the shares' rides plus the wait. One line costs `board_cost` (or
+/// `planned_board_cost`) exactly. The result does not depend on the order of `lines`.
 #[allow(clippy::too_many_arguments)]
-pub(super) fn join_line(frequency: &mut f32, weighted: &mut f32, cur: f32, f: f32, d: f32, wait_f: f32, change_f: f32, p: &Params) -> Option<f32> {
-    let sum = *frequency + f;
-    let cost = (*weighted + f * d) / sum + board_cost(60.0 / sum, wait_f, change_f, p);
-    if cost >= cur {
-        return None;
+pub(super) fn pool_cost(lines: &[(f32, f32)], wait_f: f32, change_f: f32, planned: bool, p: &Params, w: &mut PoolWork, share: Option<&mut [f32]>) -> (f32, f32) {
+    if lines.len() == 1 {
+        let (d, f) = lines[0];
+        let h = 60.0 / f;
+        let c = if planned { planned_board_cost(h, wait_f, change_f, p) } else { board_cost(h, wait_f, change_f, p) };
+        if let Some(sh) = share {
+            sh[0] = 1.0;
+        }
+        return (d + c, c - p.change_at(change_f));
     }
-    *frequency = sum;
-    *weighted += f * d;
-    Some(cost)
+    if lines.len() == 2 {
+        return pool_two(lines, wait_f, change_f, planned, p, share);
+    }
+    w.v.clear();
+    for (i, &(d, f)) in lines.iter().enumerate() {
+        let sp = (wait_spread(f, wait_f, planned) as f64).max(1e-9);
+        w.v.push((d as f64, d as f64 + sp, 1.0 / sp, i));
+    }
+    // by cost from boarding, then spread, then place, so equal lines come out equal whatever order
+    w.v.sort_unstable_by(|x, y| x.0.total_cmp(&y.0).then(y.2.total_cmp(&x.2)).then(x.3.cmp(&y.3)));
+    let last = w.v.iter().map(|x| x.1).fold(f64::INFINITY, f64::min);
+    let m = w.v.iter().take_while(|x| x.0 < last).count();
+    let want = share.is_some();
+    w.acc.clear();
+    w.acc.resize(if want { m } else { 0 }, 0.0);
+    let mut tail = 0.0f64;
+    // between one line's earliest arrival and the next's, the first k + 1 lines can be first
+    for k in 0..m {
+        let t0 = w.v[k].0;
+        let t1 = if k + 1 < m { w.v[k + 1].0 } else { last };
+        let len = t1 - t0;
+        if len <= 0.0 {
+            continue;
+        }
+        let nodes = GAUSS[((k + 1) / 2).min(GAUSS.len() - 1)];
+        for &(x, wt) in nodes {
+            let t = t0 + (x + 1.0) * len / 2.0;
+            let q = wt * len / 2.0;
+            let mut surv = 1.0;
+            for l in &w.v[..=k] {
+                surv *= (l.1 - t) * l.2;
+            }
+            tail += q * surv;
+            if want {
+                for (j, l) in w.v[..=k].iter().enumerate() {
+                    let own = (l.1 - t) * l.2;
+                    if own > 0.0 {
+                        w.acc[j] += q * surv / own * l.2;
+                    }
+                }
+            }
+        }
+    }
+    let first = w.v[0].0 + tail;
+    // the riders who board the first train that comes (`FIRST_ARRIVAL_SHARE`): line j's
+    // departure counts while it can still arrive by `last`, so up to e_j = min(spread, last - d_j)
+    // into the wait; the first such departure wins. Between the e_j's, the lines whose e_j is
+    // still ahead are uniform factors, the others constant.
+    w.ej.clear();
+    w.ej.extend(w.v[..m].iter().map(|l| (1.0 / l.2).min(last - l.0)));
+    w.e.clear();
+    w.e.extend(w.ej.iter().enumerate().map(|(j, &e)| (e, j)));
+    w.e.sort_unstable_by(|x, y| x.0.total_cmp(&y.0).then(x.1.cmp(&y.1)));
+    w.lz.clear();
+    w.lz.resize(m, 0.0);
+    let mut lazy_wait = 0.0f64;
+    let mut t0 = 0.0f64;
+    for k in 0..m {
+        let t1 = w.e[k].0;
+        let len = t1 - t0;
+        if len > 0.0 {
+            // m - k uniform factors: a polynomial of that degree
+            let nodes = GAUSS[((m - k + 1) / 2).min(GAUSS.len() - 1)];
+            for &(x, wt) in nodes {
+                let t = t0 + (x + 1.0) * len / 2.0;
+                let q = wt * len / 2.0;
+                let mut surv = 1.0;
+                for (j, l) in w.v[..m].iter().enumerate() {
+                    surv *= 1.0 - t.min(w.ej[j]) * l.2;
+                }
+                lazy_wait += q * surv;
+                for &(_, j) in &w.e[k..] {
+                    let l = w.v[j];
+                    w.lz[j] += q * surv / (1.0 - t * l.2) * l.2;
+                }
+            }
+        }
+        t0 = t1;
+        // a line whose whole spread counts ends every wait
+        if w.e[k].0 * w.v[w.e[k].1].2 >= 1.0 - 1e-12 {
+            break;
+        }
+    }
+    let a = FIRST_ARRIVAL_SHARE as f64;
+    let lz_total: f64 = w.lz.iter().sum();
+    let lazy_ride: f64 = w.v[..m].iter().enumerate().map(|(j, l)| w.lz[j] / lz_total * l.0).sum();
+    let cost = a * first + (1.0 - a) * (lazy_ride + lazy_wait);
+    let mut wait = 0.0f64;
+    if let Some(sh) = share {
+        let total: f64 = w.acc.iter().sum();
+        let mut ride = 0.0f64;
+        sh.fill(0.0);
+        for (j, l) in w.v[..m].iter().enumerate() {
+            ride += w.acc[j] / total * l.0;
+            sh[l.3] = (a * w.acc[j] / total + (1.0 - a) * w.lz[j] / lz_total) as f32;
+        }
+        wait = (a * (first - ride) + (1.0 - a) * lazy_wait).max(0.0);
+    }
+    (cost as f32 + p.change_at(change_f), wait as f32)
+}
+
+/// `pool_cost` for two lines, in closed form (most stations and change nodes that take more than
+/// one): the earlier line alone until the later's earliest arrival, then both.
+fn pool_two(lines: &[(f32, f32)], wait_f: f32, change_f: f32, planned: bool, p: &Params, share: Option<&mut [f32]>) -> (f32, f32) {
+    let line = |i: usize| {
+        let (d, f) = lines[i];
+        (d as f64, (wait_spread(f, wait_f, planned) as f64).max(1e-9))
+    };
+    let (x, y) = (line(0), line(1));
+    // by cost from boarding, then spread, then place, as `pool_cost` sorts them
+    let swap = y.0 < x.0 || (y.0 == x.0 && y.1 < x.1);
+    let ((a1, h1), (a2, h2)) = if swap { (y, x) } else { (x, y) };
+    let (b1, b2) = (a1 + h1, a2 + h2);
+    let a = FIRST_ARRIVAL_SHARE as f64;
+    let (cost, later, wait) = if a2 >= b1 {
+        (a1 + h1 / 2.0, 0.0, h1 / 2.0)
+    } else {
+        let end = b1.min(b2);
+        // to a2 the earlier line alone: its survival (b1 - t) / h1; then both, (b1 - t)(b2 - t) / h1 h2
+        let alone = ((b1 - a1) * (b1 - a1) - (b1 - a2) * (b1 - a2)) / (2.0 * h1);
+        let (u0, u1) = (b1 - a2, b1 - end);
+        let k = b2 - b1;
+        // ∫ u (u + k) du over u from b1 - end to b1 - a2
+        let both = ((u0 * u0 * u0 - u1 * u1 * u1) / 3.0 + k * (u0 * u0 - u1 * u1) / 2.0) / (h1 * h2);
+        let first = a1 + alone + both;
+        let s2 = (u0 * u0 - u1 * u1) / (2.0 * h1 * h2);
+        // the first-train riders: line i's departure counts up to e_i = end - a_i into the wait
+        // (e2 <= e1), so the later line is taken when it comes first within e2
+        let (e1, e2) = (end - a1, end - a2);
+        let l2 = (e2 - e2 * e2 / (2.0 * h1)) / h2;
+        let lw = e2 - e2 * e2 * (1.0 / h1 + 1.0 / h2) / 2.0 + e2 * e2 * e2 / (3.0 * h1 * h2) + (1.0 - e2 / h2) * ((e1 - e2) - (e1 * e1 - e2 * e2) / (2.0 * h1));
+        let lazy = (1.0 - l2) * a1 + l2 * a2 + lw;
+        let later = a * s2 + (1.0 - a) * l2;
+        let wait = a * (first - (1.0 - s2) * a1 - s2 * a2) + (1.0 - a) * lw;
+        (a * first + (1.0 - a) * lazy, later, wait)
+    };
+    let mut out_wait = 0.0f64;
+    if let Some(sh) = share {
+        let (i1, i2) = if swap { (1, 0) } else { (0, 1) };
+        sh[i1] = (1.0 - later) as f32;
+        sh[i2] = later as f32;
+        out_wait = wait.max(0.0);
+    }
+    (cost as f32 + p.change_at(change_f), out_wait as f32)
+}
+
+/// T-4041: the departures' shares at the nodes of a destination's strategy that accept two or
+/// more (stations; change nodes from `Graph::n`): each node's first value in `val`, by node,
+/// ascending. There the real expected wait (minutes), then each accepted departure's share in edge
+/// order. A node accepting one departure is not listed: its share is 1, its wait half its headway.
+#[derive(Clone, Default, PartialEq, Debug)]
+pub struct Shares {
+    pub at: Box<[(u32, u32)]>,
+    pub val: Box<[f32]>,
+}
+
+impl Shares {
+    #[inline]
+    pub fn find(&self, v: usize) -> Option<usize> {
+        self.at.binary_search_by_key(&(v as u32), |x| x.0).ok().map(|i| self.at[i].1 as usize)
+    }
+    pub fn bytes(&self) -> usize {
+        8 * self.at.len() + 4 * self.val.len()
+    }
+    /// The real expected wait at node `v`, its accepted departures `dep` (`departures`).
+    #[inline]
+    pub fn wait(&self, g: &Graph, v: usize, dep: &[(u32, f32)]) -> f32 {
+        match dep {
+            [] => f32::INFINITY,
+            [(e, _)] => 30.0 / g.rn_tph[g.adj_to[*e as usize] as usize - g.n_st],
+            _ => self.find(v).map_or_else(|| 30.0 / dep.iter().map(|&(e, _)| g.rn_tph[g.adj_to[e as usize] as usize - g.n_st]).sum::<f32>(), |i| self.val[i]),
+        }
+    }
+}
+
+/// `Shares` as a search puts them together, in settle order (a node again after its late lines).
+#[derive(Default)]
+pub(super) struct SharesBuild {
+    at: Vec<(u32, u32)>,
+    val: Vec<f32>,
+}
+
+impl SharesBuild {
+    pub(super) fn clear(&mut self) {
+        self.at.clear();
+        self.val.clear();
+    }
+    pub(super) fn push(&mut self, v: usize, wait: f32, share: &[f32]) {
+        self.at.push((v as u32, self.val.len() as u32));
+        self.val.push(wait);
+        self.val.extend_from_slice(share);
+    }
+    pub(super) fn finish(&mut self) -> Shares {
+        if self.at.windows(2).all(|x| x[0].0 < x[1].0) {
+            return Shares { at: self.at.as_slice().into(), val: self.val.as_slice().into() };
+        }
+        // each entry's values run to the next entry's, in push order; a node noted again (its late
+        // lines, `Search::late_fix`) keeps its last
+        let n = self.at.len();
+        let mut by: Vec<usize> = (0..n).collect();
+        by.sort_unstable_by_key(|&k| (self.at[k].0, std::cmp::Reverse(k)));
+        by.dedup_by_key(|k| self.at[*k].0);
+        let mut val = Vec::with_capacity(self.val.len());
+        let out = by
+            .iter()
+            .map(|&k| {
+                let (i, end) = (self.at[k].1 as usize, if k + 1 < n { self.at[k + 1].1 as usize } else { self.val.len() });
+                let o = val.len() as u32;
+                val.extend_from_slice(&self.val[i..end]);
+                (self.at[k].0, o)
+            })
+            .collect::<Vec<_>>();
+        Shares { at: out.into(), val: val.into() }
+    }
 }
 
 /// Where a rider coming in by edge from route node `from` stands at station `v`, relative to its
@@ -2292,3 +3095,4 @@ pub fn skims_cached(g: &Graph, p: &Params) -> bool {
 pub fn clear_skim_cache() {
     SKIM_CACHE.with(|c| c.borrow_mut().clear());
 }
+

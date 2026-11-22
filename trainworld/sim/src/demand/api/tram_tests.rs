@@ -89,9 +89,9 @@ fn a_tram_carries_at_least_the_bus_it_replaces() {
             api.base.train_in_min = 0.0;
             api.base.train_out_min = 0.0;
         }
-        // (T-3888: its stops on the street, at grade, as a bus's; the metro's below)
-        let grade: Vec<u8> = (0..stops.len()).map(|k| (k >= stops.len() - 8) as u8).collect();
-        api.set_stairs(&[], &grade);
+        // (T-4041: its stops on the street, as a bus's, pay no boarding cost; the metro's do)
+        let street: Vec<u8> = (0..stops.len()).map(|k| (k >= stops.len() - 8) as u8).collect();
+        api.set_stairs(&[], &street);
         api.set_network(&xy, &counts, &stops, &times, &tph, &c).unwrap();
         assert!(api.solve(0));
         // the third line's route nodes are the last 16
@@ -101,7 +101,7 @@ fn a_tram_carries_at_least_the_bus_it_replaces() {
     // boarding alike (none): the tram carries at least the bus
     let (bus, tram) = (load(false, false), load(true, false));
     assert!(tram >= bus * 0.9999, "no boarding cost: tram {tram} against bus {bus}");
-    // with the boarding cost on the tram only: less than the bus, not by more than half
+    // with the boarding cost on (T-4041: paid at the metro's stops, not at the tram's on the street): not by more than half less
     let (bus, tram) = (load(false, true), load(true, true));
     assert!(tram >= bus * 0.5, "boarding cost: tram {tram} against bus {bus}");
 }

@@ -40,8 +40,8 @@ impl IntercityApi {
         self.back_in = back.to_vec();
     }
     /// `DemandApi::set_stairs` (T-3888).
-    pub fn set_stairs(&mut self, ferry_lines: &[u8], grade_stops: &[u8]) {
-        self.pier_in = (ferry_lines.to_vec(), grade_stops.to_vec());
+    pub fn set_stairs(&mut self, ferry_lines: &[u8], street_stops: &[u8]) {
+        self.pier_in = (ferry_lines.to_vec(), street_stops.to_vec());
     }
     /// `DemandApi::set_tram_lines` (T-2926, T-3919).
     pub fn set_tram_lines(&mut self, flags: &[u8]) {

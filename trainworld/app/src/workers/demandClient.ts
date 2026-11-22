@@ -287,8 +287,8 @@ interface Service {
   frame: FrameSpec;
   fare: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number>; byCity?: boolean; cityScales?: Record<string, number>; hsr?: number; ferry?: number; ferrySmall?: number; ferryLarge?: number; bus?: number; brt?: number; transfer?: number; lines?: Record<string, number>; zones?: FareArea[] };
   /** `complex`: the station's complex (T-161); absent = a complex of its own; `fare`: its fare zone's code (T-3740) */
-  /** `level`: T-3888, the station's level where not at grade (0) */
-  stations: { id: string; x: number; y: number; level?: number; complex?: number; upgrades?: number; fare?: number }[];
+  /** `level`: T-3888, the station's level where not at grade (0); `street`: T-4041, a tram stop on the street */
+  stations: { id: string; x: number; y: number; level?: number; complex?: number; upgrades?: number; fare?: number; street?: boolean }[];
   /** `wrapS`: a circle's stand at its first stop, riding on round (T-798); `back`: run 1's stations
    * where a stop's way back is at a platform beside it (T-3348, `SnapshotLine.backStops`) */
   lines: { id: string; stops: string[]; back?: string[]; tph: number[]; hopS: number[][][]; hopKm?: number[][]; fast?: boolean; ferry?: boolean; boat?: 0 | 2; brt?: boolean; tram?: boolean; fareDist?: boolean; passFares?: number[][][]; dwellS: number[][][]; wrapS?: number; cars: number; span?: number[]; catches?: number[][] }[];
@@ -697,7 +697,7 @@ function serviceFromSnapshot(s: NetworkSnapshot): Service {
   return {
     frame: s.frame ?? LEGACY_FRAME,
     fare: s.fare ?? { base: 2, perKm: 0 }, // legacy fixed 6 perceived minutes
-    stations: s.stations.filter((st) => used.has(String(st.id))).map((st) => ({ id: String(st.id), x: st.x, y: st.y, complex: st.complex, ...(st.level ? { level: st.level } : {}), ...(st.upgrades ? { upgrades: st.upgrades } : {}), ...(st.fare ? { fare: st.fare } : {}) })),
+    stations: s.stations.filter((st) => used.has(String(st.id))).map((st) => ({ id: String(st.id), x: st.x, y: st.y, complex: st.complex, ...(st.level ? { level: st.level } : {}), ...(st.upgrades ? { upgrades: st.upgrades } : {}), ...(st.fare ? { fare: st.fare } : {}), ...(st.street ? { street: true } : {}) })),
     lines: s.lines.map((l) => ({ id: String(l.id), stops: l.stops.map(String), ...(l.backStops?.length === l.stops.length ? { back: l.backStops.map(String) } : {}), tph: l.tph, hopS: l.hopS, hopKm: l.hopKm, ...(l.fast ? { fast: true } : {}), ...(l.ferry ? { ferry: true } : {}), ...(l.boat !== undefined ? { boat: l.boat } : {}), ...(l.brt ? { brt: true } : {}), ...(l.tram ? { tram: true } : {}), ...(l.fareDist ? { fareDist: true } : {}), ...(l.passFares ? { passFares: l.passFares } : {}), dwellS: l.dwellS, ...(l.wrapS ? { wrapS: l.wrapS } : {}), cars: l.cars, ...(l.span ?{ span: l.span } : {}), ...(l.catches ? { catches: l.catches } : {}) })),
     ...(passages.length ? { passages: passages.map(([a, b]) => [String(a), String(b)] as [string, string]) } : {}),
     ...(alone.length ? { alone } : {}),
@@ -725,7 +725,7 @@ const RESTART_SHARE = 0.4;
 /** Pack a service for the workers; lines naming a station that is not in the list are left out. */
 function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"]; ids: { lines: string[]; stations: string[] } } {
   const index = new Map(svc.stations.map((s, i) => [s.id, i]));
-  const level = new Map(svc.stations.map((s) => [s.id, s.level ?? 0]));
+  const street = new Set(svc.stations.filter((s) => s.street).map((s) => s.id));
   const lines = svc.lines.filter((l) => l.stops.length >= 2 && l.stops.every((s) => index.has(s)));
   const nStops = lines.reduce((a, l) => a + l.stops.length, 0);
   const net: DemandNetwork = {
@@ -749,9 +749,9 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
     ...(lines.some((l) => l.ferry) && !perfOff("fans") ? { ferry: Uint8Array.from(lines, (l) => (l.ferry ? 1 : 0)) } : {}),
     // T-2926: tram lines, only where there are any (`DemandApi.set_tram_lines`)
     ...(lines.some((l) => l.tram) ? { tram: Uint8Array.from(lines, (l) => (l.tram ? 1 : 0)) } : {}),
-    // T-3888: the stairs (`set_stairs`): ferry lines never pay, nor stops whose platform is at grade
+    // T-3888: the boarding cost (`set_stairs`): ferry lines never pay, nor trams at a stop on the street (T-4041)
     ...(lines.some((l) => l.ferry) ? { pierLines: Uint8Array.from(lines, (l) => (l.ferry ? 1 : 0)) } : {}),
-    gradeStops: Uint8Array.from(lines.flatMap((l) => l.stops.map((s) => ((level.get(s) ?? 0) === 0 ? 1 : 0)))),
+    ...(street.size ? { streetStops: Uint8Array.from(lines.flatMap((l) => l.stops.map((s) => (street.has(s) ? 1 : 0)))) } : {}),
   };
   // T-3348: run 1's stations, only where a line has a platform beside for its way back
   const backOf = (l: (typeof lines)[number]) => (l.back?.length === l.stops.length && l.back.every((s) => index.has(s)) ? l.back : null);

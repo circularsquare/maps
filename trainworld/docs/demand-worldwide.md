@@ -657,8 +657,9 @@ notes/T-420.md has the tables.
   (people 65+ are 29% of Japan, 3% of Nigeria). Check: a country's travel survey walk shares by
   distance (NHTS, England's NTS, France's EMP, Japan's person-trip surveys) and its census
   walk-to-work share.
-- **The boarding cost** (T-3888, T-3910). A trip pays 2 perceived minutes at its first boarding and 2 at
-  its last alighting, on a train or a tram at any level; nothing on a bus or ferry, or at a change.
+- **The boarding cost** (T-3888, T-3910, T-4041). A trip pays 2 perceived minutes at its first boarding and 2 at
+  its last alighting, on a train or a tram at any level, but not at a tram stop on the street;
+  nothing on a bus or ferry, or at a change.
   One number for every place. Why it may not carry over: the depth of stations (Moscow's or Kyiv's
   deep stations take minutes of escalator, a street-level light rail none), lifts and escalators. Check: station access times from a travel survey or an
   operator's published entrance-to-platform times.
@@ -745,6 +746,15 @@ notes/T-420.md has the tables.
   are richer than the countryside), survey years differ by decades, and the trip rate by income
   within a country is taken from the one between countries. Check: a country's long-distance
   travel survey by income band.
+- **Which line riders take** (Anita 2026-11-22, T-4041). Where several lines go towards a
+  rider's stop, riders turn up at random; three quarters take whichever gets them there first
+  and a quarter the first train that comes (unless it is sure to arrive after the others would),
+  each line's wait uniform over its headway and independent of the others' (docs/demand-kernel.md
+  4). One rule for every place. Why it may not carry over: where lines sharing a trunk are timetabled to
+  alternate evenly the wait is shorter than independence gives (two lines every 10 minutes: 2.5
+  minutes, not 3.3), and where riders check a live departure board or an app they know the next
+  train, which this rule assumes they act on. Check: the split between an express and a local on
+  a corridor with published line counts.
 - **Waiting and crowding penalties.** A wait counts as plain minutes, half the headway, with no
   weight (Anita, T-585), where the literature (mostly US and European) weighs a platform wait
   1.5-2.5 times a minute aboard and a long wait at home before a known departure less. The

@@ -376,7 +376,7 @@ export const SLICED = {
   ferry: "line", // T-2196
   tram: "line", // T-2926
   pierLines: "line", // T-3888
-  gradeStops: "stop",
+  streetStops: "stop",
 } as const satisfies Partial<Record<keyof DemandNetwork, "line" | "stop" | "station">>;
 
 /** The whole network's `SLICED` fields for a view's `lines`, stops `at` (whole-network stop indices, in the view's
@@ -449,7 +449,7 @@ function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], ma
   const net: DemandNetwork = { frame: n.frame, stXY, complex, ...passagesOf(n, stLocal), ...slicedOf(n, lines, at, stations), lineN, stops, ...backOf(back, stops), times, tph, cars, fare: n.fare, hopKm, ...fareWOf(n, nodeGlobal), ...fzLinesOf(n, nodeGlobal, hopKm), span, ...catchesOf(n, at) };
   const head = `${cities.join(",")}|${market}|${marketKey}|${rounds}|${n.fare.base}|${n.fare.perKm}|${frameKey}${curveKnots(n.fare).join(",")}|${JSON.stringify(n.fare.scales ?? {})}${n.fare.byCity ? `|c${JSON.stringify(n.fare.cityScales ?? {})}` : ""}${transferFare(n.fare) ? `|x${transferFare(n.fare)}` : ""}${net.fz && n.fare.zones?.length ? `|z${JSON.stringify(n.fare.zones.map((a) => [a.id, chargedPrices(n.fare, a)]))}` : ""}`;
   // station upgrades and passages (T-1281) only where there are any, so other networks keep their signatures
-  const ups = [...(net.ups ? [net.ups] : []), ...(net.passages ? [net.passages] : []), ...(net.catchN ? [net.catchN, net.catchXY!] : []), ...(net.fareW ? [net.fareW] : []), ...(net.baseW ? [net.baseW] : []), ...(net.ferry ? [net.ferry] : []), ...(net.tram ? [net.tram] : []), ...(net.pierLines ? [net.pierLines] : []), ...(net.gradeStops ? [net.gradeStops] : []), ...(net.back ? [net.back] : []), ...(net.fz ? [net.fz] : []), ...(net.fzDist ? [net.fzDist] : []), ...(net.fzPass ? [net.fzPassOff!, net.fzPass] : [])];
+  const ups = [...(net.ups ? [net.ups] : []), ...(net.passages ? [net.passages] : []), ...(net.catchN ? [net.catchN, net.catchXY!] : []), ...(net.fareW ? [net.fareW] : []), ...(net.baseW ? [net.baseW] : []), ...(net.ferry ? [net.ferry] : []), ...(net.tram ? [net.tram] : []), ...(net.pierLines ? [net.pierLines] : []), ...(net.streetStops ? [net.streetStops] : []), ...(net.back ? [net.back] : []), ...(net.fz ? [net.fz] : []), ...(net.fzDist ? [net.fzDist] : []), ...(net.fzPass ? [net.fzPassOff!, net.fzPass] : [])];
   const sig = hashOf([head, stXY, complex, ...ups, lineN, stops, times, tph, cars, hopKm, span]);
   const shape = hashOf([head, stXY, complex, ...ups, lineN, stops, cars, hopKm]);
   // T-3542: each period's own run times and trains an hour

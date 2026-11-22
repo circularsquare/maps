@@ -69,7 +69,7 @@ pub struct Params {
     pub transfer_min: f32,
     /// Anita, 2026-11-20 (T-3888, T-3910): perceived minutes a trip pays where its first boarding
     /// (`train_in_min`) and where its last ride leaves (`train_out_min`): a general boarding cost on a
-    /// train or tram at any level (`network::STAIRS_AT_GRADE`). Never
+    /// train or tram at any level but a tram stop on the street (T-4041, `Network::pays_ends`). Never
     /// at a change; buses and ferries pay neither (`Graph::rn_in`). In the
     /// station pair's cost (`DestSearch::run_by`), not in its real minutes (`Skims::walk`).
     pub train_in_min: f32,

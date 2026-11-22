@@ -122,7 +122,7 @@ impl ZoneWork {
                 continue;
             }
             if id < s || id >= n {
-                departures(g, st.board, st.change, id, dep);
+                departures(g, st.board, st.change, st.share, id, dep);
                 let (ride, zs) = (&self.ride, &self.zs);
                 self.br.clear();
                 let mut f = 0f32;
@@ -235,7 +235,7 @@ impl ZoneWork {
                 if v == [0.0; 2] && riders == 0.0 {
                     continue;
                 }
-                departures(g, st.board, st.change, id, dep);
+                departures(g, st.board, st.change, st.share, id, dep);
                 let sum: f32 = dep.iter().map(|d| d.1).sum();
                 if !(sum > 0.0) {
                     continue;

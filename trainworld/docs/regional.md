@@ -230,8 +230,12 @@ air by hours on the train: notes/T-712.md.
   plus a sixth of the headway, and 30 minutes, with no tolerance penalty (T-1430; the same as the
   local wait up to a train every 15 minutes, 15 at an hourly train, 25 at one every 2 hours). A
   change of trains on the way waits half the headway as in the local layers, and commutes and
-  everyday outings between zones wait as they do. The search costs each station as a trip's start
-  both ways (`Skims::entry_r`); the riders' loads follow the station's ordinary strategy.
+  everyday outings between zones wait as they do. With several lines, each line's planned wait is
+  uniform over twice its planned wait and lines are taken as in a local trip (T-4041: three quarters
+  the first to arrive, a quarter the first train that can still get there in time). The search costs
+  each station as a trip's start both ways (`Skims::entry_r`), and the longer trips' riders board
+  their first train by those planned shares (`EntryDeps`, `DestAssign::take_entry`); the commutes
+  and outings between zones board by the ordinary ones.
 
 The car's and the plane's costs are by place (the car's at the places' centres and their mean
 parking), so a pair's split of its trips not by rail between car and plane is the same whoever

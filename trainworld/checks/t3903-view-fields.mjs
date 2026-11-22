@@ -25,7 +25,7 @@ const SHAPE = {
   stXY: ['station', 2], complex: ['station', 1], ups: ['station', 1], fz: ['station', 1],
   passages: 'part',
   lineN: ['line', 1], tph: ['line', 3], cars: ['line', 1], ferry: ['line', 1], tram: ['line', 1], pierLines: ['line', 1],
-  stops: ['stop', 1], back: ['stop', 1], gradeStops: ['stop', 1], catchN: ['stop', 1], catchXY: 'part', times: ['stop', 6],
+  stops: ['stop', 1], back: ['stop', 1], streetStops: ['stop', 1], catchN: ['stop', 1], catchXY: 'part', times: ['stop', 6],
   hopKm: ['node', 1], fareW: ['node', 1], baseW: ['node', 1], fzDist: ['node', 1], span: ['node', 3], fzPassOff: 'part', fzPass: 'part',
   fareS: 'skip', baseS: 'skip',
 };
@@ -59,7 +59,7 @@ try {
     span: new Float32Array(PERIODS.length * nodes).fill(0.5),
     fareW: new Float32Array(nodes).fill(1.5), baseW: new Float32Array(nodes).fill(1.25),
     catchN: set(Uint32Array, nStops, [3, 4], 2), catchXY: Float32Array.from([6000, 0, 6100, 0, 6000, 10, 6100, 10]),
-    ferry: set(Uint8Array, 3, [1]), tram: set(Uint8Array, 3, [1]), pierLines: set(Uint8Array, 3, [1]), gradeStops: set(Uint8Array, nStops, [3, 4]),
+    ferry: set(Uint8Array, 3, [1]), tram: set(Uint8Array, 3, [1]), pierLines: set(Uint8Array, 3, [1]), streetStops: set(Uint8Array, nStops, [3, 4]),
     fzDist: set(Uint8Array, nodes, [6, 7, 8]),
     fzPassOff: Uint32Array.from({ length: nodes + 1 }, (_, r) => (r <= 6 ? 0 : Math.min(2, r - 6))), fzPass: Uint32Array.from([7, 7]),
     fareS: new Float32Array(nodes).fill(1), baseS: new Float32Array(nodes).fill(1),

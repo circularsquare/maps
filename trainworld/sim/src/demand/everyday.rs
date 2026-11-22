@@ -777,7 +777,7 @@ fn assign_lanes(g: &Graph, sk: &Skims, cols: &Columns, ix: &XferIndex, xfer: &mu
                     board_base(g, st, dst, |src| flow[src].iter().sum(), &km, &mb, &mut dep, &mut fxq, &mut l.rn_base_x);
                 }
             }
-            let mut w = LaneWalk { g, s, n, dst, bits: &sk.board[slot][..], cn: &sk.change[slot], flow: &mut flow, l: &mut l, head: &mut head, rec: &mut rec, use_k: &mut use_k, dep: &mut dep, xfer: if counting { Some((ix, &mut *xfer)) } else { None } };
+            let mut w = LaneWalk { g, s, n, dst, bits: &sk.board[slot][..], cn: &sk.change[slot], sh: &sk.share[slot], flow: &mut flow, l: &mut l, head: &mut head, rec: &mut rec, use_k: &mut use_k, dep: &mut dep, xfer: if counting { Some((ix, &mut *xfer)) } else { None } };
             match (&sk.next[slot], &sk.order[slot]) {
                 (NodeIds::Short(next), NodeIds::Short(order)) => w.run(next, order),
                 (NodeIds::Long(next), NodeIds::Long(order)) => w.run(next, order),
@@ -803,6 +803,7 @@ struct LaneWalk<'a> {
     dst: usize,
     bits: &'a [u64],
     cn: &'a ChangeNodes,
+    sh: &'a Shares,
     flow: &'a mut [Lanes],
     l: &'a mut LaneLoads,
     head: &'a mut [u32],
@@ -815,7 +816,7 @@ struct LaneWalk<'a> {
 impl LaneWalk<'_> {
     #[inline(always)]
     fn run<I: NodeIx>(&mut self, next: &[I], order: &[I]) {
-        let LaneWalk { g, s, n, dst, bits, cn, ref mut flow, ref mut l, ref mut head, ref mut rec, ref mut use_k, ref mut dep, ref mut xfer } = *self;
+        let LaneWalk { g, s, n, dst, bits, cn, sh, ref mut flow, ref mut l, ref mut head, ref mut rec, ref mut use_k, ref mut dep, ref mut xfer } = *self;
         let end = n + cn.len();
         for &v in order.iter().skip(1).rev() {
             let v = v.ix();
@@ -825,7 +826,7 @@ impl LaneWalk<'_> {
             }
             flow[v] = ZERO;
             if v < s || v >= n {
-                let st = departures(g, bits, cn, v, dep);
+                let st = departures(g, bits, cn, sh, v, dep);
                 let hx = if v < s { v } else { s + v - n };
                 let sum: f32 = dep.iter().map(|x| x.1).sum();
                 if sum == 0.0 {
@@ -2160,8 +2161,8 @@ impl EverydayApi {
         self.engine.set_back_stops(back);
     }
     /// `DemandApi::set_stairs` (T-3888).
-    pub fn set_stairs(&mut self, ferry_lines: &[u8], grade_stops: &[u8]) {
-        self.engine.set_stairs(ferry_lines, grade_stops);
+    pub fn set_stairs(&mut self, ferry_lines: &[u8], street_stops: &[u8]) {
+        self.engine.set_stairs(ferry_lines, street_stops);
     }
     /// `DemandApi::set_tram_lines` (T-2926, T-3909).
     pub fn set_tram_lines(&mut self, flags: &[u8]) {

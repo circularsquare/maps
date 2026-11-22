@@ -185,6 +185,9 @@ pub(super) fn assign_inner(g: &Graph, sk: &Skims, od: &[f32], mut xf: Option<(&X
 pub struct DestAssign {
     pub l: Loads,
     pub(super) flow: Vec<f32>,
+    /// T-4041: per station, the riders of the column taken whose first boarding is an inter-city
+    /// trip's (`take_entry`), boarded by `Strategy::entry_dep`; empty while none is taken.
+    pub(super) eflow: Vec<f32>,
     // T-176: riders arriving at each station towards this destination, as a list per station
     // and change node (first record, then each record's next): the arriving edge's first slot and
     // the riders. A station is walked after every node that feeds it, so its list is whole by then.
@@ -212,6 +215,7 @@ impl DestAssign {
         DestAssign {
             l: Loads::zero(s, n - s),
             flow: vec![0f32; n + change_nodes],
+            eflow: vec![],
             head: if counting { vec![NONE; s + change_nodes] } else { vec![] },
             rec: vec![],
             use_k: vec![],
@@ -235,6 +239,7 @@ impl DestAssign {
     pub fn take(&mut self, dst: usize, col: impl Fn(usize) -> f32) -> bool {
         let s = self.l.entry.len();
         self.flow.fill(0.0);
+        self.eflow.clear();
         let mut total = 0.0;
         for src in 0..s {
             let v = col(src);
@@ -244,6 +249,22 @@ impl DestAssign {
         }
         self.l.exit[dst] += total;
         self.taken = total as f64;
+        total != 0.0
+    }
+    /// T-4041: add to the column `take` took towards `dst` the inter-city trips `col(src)`, whose
+    /// first boarding is at the planned waits (`Strategy::entry_dep`); false when it adds none.
+    pub fn take_entry(&mut self, dst: usize, col: impl Fn(usize) -> f32) -> bool {
+        let s = self.l.entry.len();
+        self.eflow.resize(s, 0.0);
+        let mut total = 0.0;
+        for src in 0..s {
+            let v = col(src);
+            self.eflow[src] += v;
+            self.l.entry[src] += v;
+            total += v;
+        }
+        self.l.exit[dst] += total;
+        self.taken += total as f64;
         total != 0.0
     }
     /// Walk the column taken towards `dst` along its strategy.
@@ -263,6 +284,15 @@ impl DestAssign {
         // T-3718: riders whose trip starts with a walk board at the station walked to (their entry
         // stays where the trip starts, as an exit after a walk is counted where it ends)
         st.fold_start(&mut self.flow);
+        let entering = !self.eflow.is_empty();
+        if entering {
+            st.fold_start(&mut self.eflow);
+            // (the fares below spread an inter-city start's along the plain strategy: a lie in where
+            // income lands, not in what a trip pays)
+            for (f, e) in self.flow.iter_mut().zip(self.eflow.iter_mut()) {
+                *f += *e;
+            }
+        }
         let (bent, based) = (!g.fare_curve.flat(), !g.rn_base_mul.is_empty());
         if self.fares && (bent || based) {
             // the column taken is still in the stations' flows: the walk below adds the changes
@@ -284,12 +314,50 @@ impl DestAssign {
                 board_base(g, st, dst, |src| flow[src], &self.km, &self.mb, &mut self.dep, &mut self.fx, &mut self.l.rn_base_x);
             }
         }
-        let mut w = DestWalk { g, s, n, dst, bits: st.board, cn: st.change, flow: &mut self.flow, l: &mut self.l, head: &mut self.head, rec: &mut self.rec, use_k: &mut self.use_k, dep: &mut self.dep, xf };
+        if entering {
+            self.board_entries(g, st);
+        }
+        let mut w = DestWalk { g, s, n, dst, bits: st.board, cn: st.change, sh: st.share, flow: &mut self.flow, l: &mut self.l, head: &mut self.head, rec: &mut self.rec, use_k: &mut self.use_k, dep: &mut self.dep, xf };
         match (st.next, st.order) {
             (NodeIds::Short(next), NodeIds::Short(order)) => w.run(next, order),
             (NodeIds::Long(next), NodeIds::Long(order)) => w.run(next, order),
             _ => unreachable!("a destination's ids in two widths"),
         }
+    }
+}
+
+impl DestAssign {
+    /// T-4041: the inter-city starts in `eflow` (also in `flow`) boarded where the strategy's
+    /// planned-wait departures differ from its own, as the walk boards a station's riders.
+    fn board_entries(&mut self, g: &Graph, st: Strategy) {
+        let s = g.n_st;
+        let next = |v: usize| match st.next {
+            NodeIds::Short(x) => x[v].ix(),
+            NodeIds::Long(x) => x[v].ix(),
+        };
+        for &(v, _) in st.entry_dep.at.iter() {
+            let v = v as usize;
+            let f = std::mem::take(&mut self.eflow[v]);
+            if f == 0.0 {
+                continue;
+            }
+            self.flow[v] -= f;
+            self.l.board[v] += f;
+            for &(r, sh) in st.entry_dep.of(v).unwrap() {
+                let (r, x) = (r as usize, f * sh);
+                self.l.rn_board[r] += x;
+                let nx = next(s + r);
+                if nx >= s && nx < g.n {
+                    self.flow[s + r] += x;
+                } else {
+                    // a boarding rides a stop first (T-1055)
+                    self.flow[g.rn_next[r] as usize] += x;
+                    self.l.seg[r] += x;
+                    self.l.pax_min += (x * g.rn_ride[r]) as f64;
+                }
+            }
+        }
+        self.eflow.clear();
     }
 }
 
@@ -301,6 +369,7 @@ pub(super) struct DestWalk<'a> {
     pub(super) dst: usize,
     pub(super) bits: &'a [u64],
     pub(super) cn: &'a ChangeNodes,
+    pub(super) sh: &'a Shares,
     pub(super) flow: &'a mut [f32],
     pub(super) l: &'a mut Loads,
     pub(super) head: &'a mut [u32],
@@ -311,22 +380,18 @@ pub(super) struct DestWalk<'a> {
     pub(super) xf: Option<(&'a XferIndex, &'a mut [f32])>,
 }
 
-/// The departures station or change node `v` accepts towards a destination, (boarding edge, trains
-/// an hour) in edge order, into `dep`; returns the station. The other edges' shares are 0 and add
-/// nothing, so these alone give the sums over every edge, to the bit (T-581).
+/// The departures station or change node `v` accepts towards a destination, (boarding edge, the
+/// share of its riders that take it, T-4041) in edge order, into `dep`; returns the station. The
+/// other edges' shares are 0 and add nothing, so these alone give the sums over every edge, to the
+/// bit (T-581).
 #[inline(always)]
-pub(crate) fn departures(g: &Graph, bits: &[u64], cn: &ChangeNodes, v: usize, dep: &mut Vec<(u32, f32)>) -> usize {
+pub(crate) fn departures(g: &Graph, bits: &[u64], cn: &ChangeNodes, sh: &Shares, v: usize, dep: &mut Vec<(u32, f32)>) -> usize {
     let s = g.n_st;
-    dep.clear();
     if v < s {
-        for e in g.adj_off[v] as usize..g.adj_off[v + 1] as usize {
-            let a = accepted(bits, g, g.adj_to[e] as usize - s);
-            if a != 0.0 {
-                dep.push((e as u32, a));
-            }
-        }
+        station_departures(g, bits, sh, v, dep);
         v
     } else {
+        dep.clear();
         let k = v - g.n;
         let st = cn.st[k] as usize;
         let e0 = g.adj_off[st] as usize;
@@ -335,17 +400,55 @@ pub(crate) fn departures(g: &Graph, bits: &[u64], cn: &ChangeNodes, v: usize, de
             while b != 0 {
                 let e = e0 + 64 * w + b.trailing_zeros() as usize;
                 b &= b - 1;
-                dep.push((e as u32, g.rn_tph[g.adj_to[e] as usize - s]));
+                dep.push((e as u32, 1.0));
             }
         }
+        put_shares(g, sh, v, dep);
         st
+    }
+}
+
+/// `departures` at station `v`.
+#[inline(always)]
+pub(crate) fn station_departures(g: &Graph, bits: &[u64], sh: &Shares, v: usize, dep: &mut Vec<(u32, f32)>) {
+    let s = g.n_st;
+    dep.clear();
+    for e in g.adj_off[v] as usize..g.adj_off[v + 1] as usize {
+        if accepted(bits, g, g.adj_to[e] as usize - s) != 0.0 {
+            dep.push((e as u32, 1.0));
+        }
+    }
+    put_shares(g, sh, v, dep);
+}
+
+/// Node `v`'s departures in `dep` given their shares, where it accepts more than one; a share of 0
+/// (a line never first) is left out.
+#[inline(always)]
+fn put_shares(g: &Graph, sh: &Shares, v: usize, dep: &mut Vec<(u32, f32)>) {
+    if dep.len() < 2 {
+        return;
+    }
+    match sh.find(v) {
+        Some(i) => {
+            for (j, x) in dep.iter_mut().enumerate() {
+                x.1 = sh.val[i + 1 + j];
+            }
+            dep.retain(|x| x.1 > 0.0);
+        }
+        None => {
+            // a strategy made with no shares: by trains an hour
+            debug_assert!(sh.at.is_empty(), "T-4041: node {v} accepts {} departures and has no shares", dep.len());
+            for x in dep.iter_mut() {
+                x.1 = g.rn_tph[g.adj_to[x.0 as usize] as usize - g.n_st];
+            }
+        }
     }
 }
 
 impl DestWalk<'_> {
     #[inline(always)]
     pub(super) fn run<I: Id>(&mut self, next: &[I], order: &[I]) {
-        let DestWalk { g, s, n, dst, bits, cn, ref mut flow, ref mut l, ref mut head, ref mut rec, ref mut use_k, ref mut dep, ref mut xf } = *self;
+        let DestWalk { g, s, n, dst, bits, cn, sh, ref mut flow, ref mut l, ref mut head, ref mut rec, ref mut use_k, ref mut dep, ref mut xf } = *self;
         let end = n + cn.len();
         for &v in order.iter().skip(1).rev() {
             let v = v.ix();
@@ -353,7 +456,7 @@ impl DestWalk<'_> {
             if f == 0.0 { continue; }
             if v < s || v >= n {
                 // a station, or a change node boarding at its station (head slot s + k)
-                let st = departures(g, bits, cn, v, dep);
+                let st = departures(g, bits, cn, sh, v, dep);
                 let hx = if v < s { v } else { s + v - n };
                 let sum: f32 = dep.iter().map(|x| x.1).sum();
                 if sum == 0.0 { continue; }

@@ -14,8 +14,8 @@ Per OD pair and period, rail, driving and walking the whole way (below) compete 
 there is no car ownership in demand (Anita, 2026-10-21, T-854), and "car" in every view stands for
 the car and every other way of getting about (bus, taxi, bike).
 
-- rail = walk to a station + the boarding cost (below) + wait (half the
-  headway, capped) + ride + walks between platforms + walk from station + fare / value of time (a
+- rail = walk to a station + the boarding cost (below) + wait (for the first
+  train that gets the rider there first, docs/demand-kernel.md 4) + ride + walks between platforms + walk from station + fare / value of time (a
   change costs a fixed 2 perceived minutes, its wait
   and the walk between the two platforms' centres: T-717; onto the line just left only where it
   passes the station again towards other stops, as at a lollipop's junction, T-1268, or after a
@@ -108,9 +108,10 @@ those are rebuilt.
 **The boarding cost** (Anita, 2026-11-20, T-3888; every level 2026-11-20, T-3910): a trip pays 2
 perceived minutes at its first boarding (`train_in_min`) and 2 where its last ride leaves
 (`train_out_min`), on a train or a tram, whatever the station's level; never at a change (which keeps
-its fixed 2), never on a bus or ferry. `network::STAIRS_AT_GRADE = false` exempts platforms at
-grade again (the level plumbing stays). The minutes are each
-station pair's expected over the departures its strategy takes by frequency
+its fixed 2), never on a bus or ferry, and not at a tram stop on the street (Anita 2026-11-22, T-4041:
+"we can also drop 2+2 boarding cost for street stops"; `Network::pays_ends`, the snapshot's
+`SnapshotStation.street`: a stop on street tram track at ground). The minutes are each
+station pair's expected over the departures its strategy takes, by their shares
 (`search::trip_ends`), added after the route search as the fare curve is, so the choice among a
 station's lines does not see them; they are not in the walking rule's real minutes. The trip
 explorer shows them as "boarding".

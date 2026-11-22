@@ -79,9 +79,9 @@ pub struct Network {
     /// T-3888: per line, whether it is a ferry, whose trips pay no stairs (`Params::train_in_min`).
     /// Empty: none is.
     pub line_pier: Vec<bool>,
-    /// T-3888: per stop (parallel to `line_stops`), whether its platform is at grade, so the stairs
-    /// are not paid there (both runs take the listed stop's). Empty: none is.
-    pub stop_grade: Vec<bool>,
+    /// T-4041: per stop (parallel to `line_stops`), whether it is a tram stop on the street, where a
+    /// trip pays no boarding cost (both runs take the listed stop's). Empty: none is.
+    pub stop_street: Vec<bool>,
 }
 
 /// A bus stop's stretch of route (T-1464): its demand station and the stretch as points in the
@@ -132,25 +132,22 @@ impl Network {
     pub fn stairs_line(&self, l: usize) -> bool {
         !self.line_pier.get(l).copied().unwrap_or(false) && !self.bus_line(l)
     }
-    /// T-3888: whether stop `k` (an index into `line_stops`) is at grade (`stop_grade`).
+    /// T-4041: whether stop `k` (an index into `line_stops`) is a tram stop on the street (`stop_street`).
     #[inline]
-    pub fn at_grade(&self, k: usize) -> bool {
-        self.stop_grade.get(k).copied().unwrap_or(false)
+    pub fn street_stop(&self, k: usize) -> bool {
+        self.stop_street.get(k).copied().unwrap_or(false)
     }
-    /// T-3910: whether a train or tram trip pays its end costs at stop `k`: every stop while
-    /// `STAIRS_AT_GRADE`, else only those below or above ground.
+    /// T-3910, T-4041: whether a train or tram trip pays its boarding cost at stop `k`: every stop
+    /// but a tram stop on the street (Anita 11-22: "we can also drop 2+2 boarding cost for street stops").
     #[inline]
     pub fn pays_ends(&self, k: usize) -> bool {
-        STAIRS_AT_GRADE || !self.at_grade(k)
+        !self.street_stop(k)
     }
 }
 
 /// `Network::span`'s marks (T-3332, T-4013), written by the clock worker's `track::span::line_span`.
 pub use crate::track::span::{span_clamped, stop_span};
 
-/// T-3910: a train or tram trip pays the boarding cost at a stop at grade too. Set false to exempt
-/// stops at grade again (the T-3888 level rule).
-pub const STAIRS_AT_GRADE: bool = true;
 
 #[derive(Clone, Copy)]
 enum Kind {
@@ -262,7 +259,7 @@ pub fn synth_network() -> Network {
         st_tram: vec![],
         back_stops: vec![],
         line_pier: vec![],
-        stop_grade: vec![],
+        stop_street: vec![],
     };
     for &(name, kind, pts) in LINES {
         let mut stops: Vec<u32> = vec![];

@@ -380,9 +380,9 @@ pub(crate) struct Service {
     /// `Network::back_stops` (`set_back_stops`, T-3348), demand stations; empty where every
     /// reverse stop is the listed stop's.
     pub(crate) back: Vec<u32>,
-    /// `Network::line_pier` and `Network::stop_grade` (`set_stairs`, T-3888).
+    /// `Network::line_pier` and `Network::stop_street` (`set_stairs`, T-3888, T-4041).
     pub(crate) pier: Vec<bool>,
-    pub(crate) grade: Vec<bool>,
+    pub(crate) street: Vec<bool>,
 }
 
 /// The per-station, per-line and per-stop inputs of a `set_network` (`set_complexes`, `set_upgrades`,
@@ -458,7 +458,7 @@ impl Service {
             && self.st_tram == o.st_tram
             && self.back == o.back
             && self.pier == o.pier
-            && self.grade == o.grade
+            && self.street == o.street
     }
     /// T-124: the periods (bit q) whose inputs are the same in `o`: the same layout, and the run
     /// times and trains an hour of the period. A period reads no other period's.
@@ -840,7 +840,7 @@ impl DemandApi {
             st_tram: svc.st_tram.clone(),
             back_stops: svc.back.clone(),
             line_pier: svc.pier.clone(),
-            stop_grade: svc.grade.clone(),
+            stop_street: svc.street.clone(),
         };
         for l in 0..nl {
             let (a, b) = (svc.line_off[l] as usize, svc.line_off[l + 1] as usize);
@@ -1396,8 +1396,8 @@ impl DemandApi {
     /// `Params::train_in_min`): per line, 1 for a ferry, which never does; per stop (parallel to
     /// `stops`), 1 where its platform is at grade, which doesn't. Either empty or of another length:
     /// none. A bus never pays.
-    pub fn set_stairs(&mut self, ferry_lines: &[u8], grade_stops: &[u8]) {
-        self.pier_in = (ferry_lines.to_vec(), grade_stops.to_vec());
+    pub fn set_stairs(&mut self, ferry_lines: &[u8], street_stops: &[u8]) {
+        self.pier_in = (ferry_lines.to_vec(), street_stops.to_vec());
     }
 
     /// T-3892: which lines are ferries, a byte a line in `set_network`'s order (1 a ferry), after
@@ -1476,7 +1476,7 @@ impl DemandApi {
             st_tram,
             back: demand_back(&st_map, stops, &self.back_in),
             pier: pier_lines(&self.pier_in.0, nl),
-            grade: pier_lines(&self.pier_in.1, nstops),
+            street: pier_lines(&self.pier_in.1, nstops),
             st_x,
             st_y,
             st_map: st_map.clone(),

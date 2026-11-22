@@ -705,8 +705,9 @@ impl IntercityApi {
                 let ecol: &[f32] = if kinds.is_empty() { &zero } else { &ecol };
                 let od = &odc[k];
                 let c = com.take(dst, |x| ccol[x]);
-                let a = all.take(dst, |x| od[x] + ccol[x] + ecol[x]);
-                let r = lean.as_mut().is_some_and(|l| l.take(dst, |x| odrc[k][x]));
+                // T-4041: the longer trips board first at the planned waits, as their costs have them
+                let a = all.take(dst, |x| ccol[x] + ecol[x]) | all.take_entry(dst, |x| od[x]);
+                let r = lean.as_mut().is_some_and(|l| l.take(dst, |_| 0.0) | l.take_entry(dst, |x| odrc[k][x]));
                 for (i, ea) in ev.iter_mut().enumerate() {
                     took[i] = ea.as_mut().is_some_and(|ea| ea.take(dst, |x| ec[i][k][x]));
                 }

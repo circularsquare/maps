@@ -128,6 +128,14 @@ only reach stations on it. The city panel counts these trips as "No route" until
 - Wait on the platform: half the time between trains, in plain minutes; at a station with a
   waiting room (a station upgrade the player buys) or inside a station building the player drew,
   each of those minutes counts 0.8, so a few more people take the train there.
+- Several lines to the same place (Anita, 2026-11-22): people turn up at a random time, each
+  line's next train somewhere in its own gap between trains. Three in four take whichever line gets
+  them to their stop first; the other one in four take the first train that comes, unless it is
+  sure to get there after the other line's latest. So an express every 36 minutes beside a local
+  every 23 that is 10 minutes slower takes 52% of the riders (59% of the first group). An express
+  every 40 beside a local every 10 that is 25 minutes slower leaves the local 41% (25% and 88%);
+  the local's share fades to nothing as it nears 40 minutes slower. Two lines every 10 minutes with the same ride mean waiting a third of
+  10 minutes, not a quarter, since their trains aren't spread out evenly.
 - No train for hours: people differ in how long they would wait for the next train rather than go
   another way, from half an hour to 6 hours (half of them up to about 1 hour 45). At each stop and
   time of day the game works out what share of that period's riders have a train coming within
@@ -140,7 +148,8 @@ only reach stations on it. The city panel counts these trips as "No route" until
   at 120% 5.4, at 150% (240 a car, as packed as a train gets) 10.8. Below 70% nobody minds the
   crowd.
 - Boarding: 2 minutes at the first train or tram of a trip, and 2 at the last one, at any station
-  (Anita, 2026-11-20). Nothing on a bus or ferry, or at a change (which has its own 2 below).
+  (Anita, 2026-11-20), but not at a tram stop on the street (Anita, 2026-11-22). Nothing on a bus
+  or ferry, or at a change (which has its own 2 below).
 - Changing trains: a fixed 2 minutes, plus the walk from the platform you arrive at to the one you
   leave from (centre to centre, at an easy walking pace, each minute counted 1.39), plus the wait
   for the next train. Platforms 80 m apart add 2 minutes; across one platform, nothing. Between
@@ -258,7 +267,10 @@ only reach stations on it. The city panel counts these trips as "No route" until
 - Train: a trip between cities is planned, so its first train's wait is half the time between
   trains, but at most 5 minutes plus a sixth of it, and at most 30 minutes, and the "no train for
   hours" extra does not apply: 5 at a train every 10 minutes, 15 at an hourly train, 25 at one
-  every 2 hours, 30 at anything sparser. A change of trains on the way waits as on any trip, and
+  every 2 hours, 30 at anything sparser. Where several lines go, the train taken is again
+  chosen as on a local trip (three in four the one that gets there first), each line's wait spread
+  over twice its planned wait, and the riders
+  are put on the trains that way too. A change of trains on the way waits as on any trip, and
   commutes and outings between cities wait as local trips do.
 
 ### Walking the whole way

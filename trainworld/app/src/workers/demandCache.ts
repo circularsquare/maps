@@ -97,7 +97,7 @@ function withoutEras(track: Uint8Array): Uint8Array {
 interface Svc {
   frame: unknown;
   fare: unknown;
-  stations: { id: string; x: number; y: number; level?: number; complex?: number; upgrades?: number; fare?: number }[];
+  stations: { id: string; x: number; y: number; level?: number; complex?: number; upgrades?: number; fare?: number; street?: boolean }[];
   lines: { id: string; stops: string[]; back?: string[]; tph: unknown; hopS: unknown; hopKm?: unknown; fast?: boolean; ferry?: boolean; boat?: number; brt?: boolean; catches?: unknown; tram?: boolean; fareDist?: boolean; passFares?: unknown; dwellS: unknown; wrapS?: number; cars: number; span?: unknown }[];
   passages?: [string, string][];
 }
