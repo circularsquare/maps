@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4040 [P2] {L:route-choice} Line panel's fare multiple names the high-speed one (2026-11-22): The line panel's Fare multiple row shows the kind's multiple (High speed 1.25x) with a hover giving what riders pay in all. notes/T-4040.md.
 - T-4019 [P3] {L:route-choice} Players see riders skip the express (2026-11-22): Explained: an express serves few station pairs, riders take the first train worth taking (a slower one counts within half the express headway), and the fare only matters when the express costs more; route choice change proposed as T-4041, the panel's fare multiple fix as T-4040. notes/T-4019.md.
 - T-4036 [P2] {L:track-rework} Routing to stop points (2026-11-22): Routing to stop points: lines reach and end at anchors, twin tests equal the split station, parity identical on gates A and B, smoke 30/30; turning back at an anchor mid-line left for stage g. notes/T-4036.md.
 - T-4028 [P3] {L:census-totals} China's populations look out of date (2026-11-22): China uses the 2020 census (ASPECT grid by township); fast-growing cities are 2-7% above it at 2024 year end, so no data error; a pop_update.csv scaling hook proposed (top-20 metros 2-3 h, all China 8-12 h), not built. notes/T-4028.md.

@@ -167,10 +167,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Other: notes/T-3659.md
 
 ## Demand
-- T-4040 [P2] {L:route-choice} Line panel's fare multiple names the high-speed one (taking, 2026-11-22, agent faremult)
-  - Context: From T-4019: a high-speed express's line panel reads "Fare multiple 1.00x" and names no surcharge, though the default high-speed 1.25 halves its end-to-end riders.
-  - Goal: The panel shows the multiple the riders pay, high-speed included; strings listed.
-  - Other: notes/T-4019.md
 - T-4041 [P2] {L:route-choice} {waits:Anita} Riders take the train that arrives first
   - Need from Anita: Build it (prototype 3-4 h, then 4-6 h to land)? I'd say yes: it is the players' complaint, and Newark to Trenton goes from 39% to about 59% on the express.
   - Context: From T-4019: riders take the first train worth taking, and a slower train counts if it is slower by less than half the express's headway, so Newark to Trenton (41 vs 31 min, same fare) goes 61% local. With riders knowing when each train leaves, they board the one that reaches the stop first. Also: long trips are costed at the planned first wait but loaded on the plain half-headway rule (2-3 h to align, part of this). Riders rows move less, since an express serves few station pairs.
@@ -883,7 +879,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your TODO.md, 11-20, from player suggestions: "station logo?? paint it?" Design for you first.
 
 ## Track and trains
-- T-3691 [P3] {L:track-rework} {after:tw/track branch cut} Track levels -5 to +5
+- T-3691 [P3] {L:track-rework} {after:tw/track branch cut} Track levels -5 to +5 (taking, 2026-11-22, agent levels)
   - Context: Your old TODO: "-5 to +5 for track level, in advanced mode only? maybe -4 maroon, -5 dark magenta, and lighten +3 to like periwinkle, +4 light purple, +5 light violet". You, 11-21: the extra levels "should come with the track rework, toggleable in settings whether you show them".
   - Goal: Levels -5 to +5 with those colours, built with the track rework, and a Settings toggle for whether the extra levels show.
 - T-3692 [P3] {L:track-drawing} Bezier track as a setting

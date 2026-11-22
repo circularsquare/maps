@@ -9,17 +9,16 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
 0. LIVE v0.4.5. Cap is 16 (overnight rule); her daytime number is 8 ("for a while", 11-21): asked her at ~09:00
    local whether to set it back, no answer yet. Cores 0-1 hers (`reserve_cores.ps1 -Loop 30` at takeover). No
    publish yet. Before one: fresh freeze, translations (T-3986, T-3991, T-3999, T-4003, T-4010, T-2264, T-3933,
-   T-3378 s4, T-4013, T-4005, and the new zones' names: place_names.mjs --zones), smoke on a quiet machine. Batch 13
+   T-3378 s4, T-4013, T-4005, T-4040, and the new zones' names: place_names.mjs --zones), smoke on a quiet machine. Batch 13
    + the night's data passed a checker on 547389c2 (11-22). Server deployed 3b14158. Save level 38 on master.
 1. master and 8800 = 547389c2 plus bookkeeping (Muzaffarpur, Manila, GE AM AZ AF, T-4029 bubbles, T-4027 Geofabrik
    resolver; changelog c047 c048 c049).
 2. TRACK (her top priority): tw/track b19961f2 has stages 1-3g, 4a1, 4a2, 4c, T-4030 a-f, T-4038. Running, all
    landing --into tw/track: platpic (4e T-3964, from 09c90ccd), convert (4b T-3961, save converter: own checker
-   before landing), addtrack (T-4024). g (T-4037) waits her two calls; then 4d (T-3963), 4f, 5a/5b. Pre-merge: T-4026,
+   before landing), addtrack (T-4024), levels (T-3691). g (T-4037) waits her two calls; then 4d (T-3963), 4f, 5a/5b. Pre-merge: T-4026,
    T-3958, a checker (save format, sim core). Plan: notes/T-4030.md. A finish can stop on a docs conflict: resolve in
    the tree (CRLF), rebase --continue, rerun tests, finish.
-3. Master agents: split6 (T-3373 B stage 6, edits on split workers), packorder (T-1354), faremult (T-4040, Sonnet),
-   hokkaido (T-3688: her 4 regions, Dochuo one zone with Sapporo; writes data/packs: hold other data runs).
+3. Master agents: split6 (T-3373 B stage 6, edits on split workers), packorder (T-1354), hokkaido (T-3688: her 4 regions, Dochuo one zone with Sapporo; writes data/packs: hold other data runs).
 4. Waiting on her: T-4025 perf ledger go; T-4041 route choice; China top-up (ask). Wiki on the website on hold.
 
 ## Her words
