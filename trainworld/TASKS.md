@@ -400,11 +400,11 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-4026 [P2] {L:track-rework} {after:the first tw/track release} TWT7 outside the game before the merge
   - Context: From T-3953 (tracksave): before tw/track merges into master, shonei-server's save check must walk TWT7 (body levels 1-2) and levels 39-40 (deploy on your yes), `pipeline/readsave.py` must read TWT7 (realauto's keep and service take player saves), and 07-saves still says "body level 36". Master's next save level is renumbered past tw/track's 40 at that merge.
   - Goal: A TWT7 save passes the server check and readsave.py on a real save; the docs say level 40.
-- T-3958 [P2] {L:track-rework} {after:T-3953} Sandbox starts on the new format (taking, 2026-11-21, agent trackstarts)
-  - Context: `realsave` builds today's edges directly, so it changes with the format; the starts must keep loading settled (London 0.6 s, not 43 s).
-  - Goal: Every start rebuilt and loading settled.
-  - Other: Files: sim/src/bin/realsave.rs, pipeline realshared.py. 2-3 h. stage 3g
-- T-3959 [P2] {L:track-rework} {after:T-3957} Stations as platform records
+- T-3958 [P2] {L:track-rework} {after:the first tw/track release} Ship the re-saved sandbox starts at the merge
+  - Context: Stage 3g landed on tw/track 11-22: `realnet.py resave` re-saves all 41 starts as TWT7 with bundles (same fingerprints, London 256 ms), but data/packs/real keeps today's TWT6 files since master can't read TWT7.
+  - Goal: At the merge, in an empty `REALNET_OUT`, `realnet.py resave` exits 0 with 41 lines, then `realnet.py ship` (never ship without it: it falls back to stale October files); steps in notes/T-3958.md.
+  - Other: notes/T-3958.md (on tw/track).
+- T-3959 [P2] {L:track-rework} {after:T-3957} Stations as platform records (taking, 2026-11-22, agent trackplat)
   - Context: Platforms and stations as records (level 37); stations stop cutting track; stop points compiled; the station fields on nodes go.
   - Goal: Parity where nothing new is used.
   - Other: Files: net/stations.rs, service.rs, the compile module. 4-6 h. stage 4a1
@@ -971,9 +971,9 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Not reproduced 2026-11-16 (bug-a): a station node's heading stays put when dragged, so the fixed axis never flips in the sim. Needs the exact drag that shows it.
   - Other: About 1 h. notes/T-3332.md.
 - T-3353 [P3] {L:single-track} {after:the track rework design} Second single from a double's end refused
-  - Context: When the first single came in at an angle, a second single to a close target gets RadiusTooSmall.
+  - Context: When the first single came in at an angle, a second single to a close target gets RadiusTooSmall. Stage 3e (T-3956) did not fix it: the node's heading, set by the first single, is the cause, not the joins; a double's two tracks extended from a straight end work.
   - Goal: A route leaves a node anywhere in the cone between the ends' headings.
-  - Other: A design call, 4-6 h. notes/T-3344.md.
+  - Other: A design call, 4-6 h. notes/T-3344.md, notes/T-3956.md.
 - T-3453 [P3] {L:schematic} Finer schematic grid near dense cities
   - Context: Option B of T-3448, queued by you 2026-11-16 for later: make the sheet's grid finer wherever stations are dense, whatever the map's size; would also help cities squished too much. A redesign of the sheet's land and water grid, a day or more.
   - Other: notes/T-3448.md

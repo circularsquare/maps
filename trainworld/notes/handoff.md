@@ -10,20 +10,19 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
    (`reserve_cores.ps1 -Loop 30` at takeover). No publish yet. Before one: fresh freeze, translations (T-3986, T-3991,
    T-3999, T-4003, T-4010, T-2264, T-3933, T-3378 s4, T-4013, T-4005), smoke on a quiet machine, and one batch
    checker for batch 13 (T-3502 airports, T-3655 edit speed, T-4022, T-2264, T-3373 s4-5 flagged). Server deployed
-   3b14158 (11-22 01:26 UTC). Standby tab: maps-17.
-1. master 7788f682; 8800 = b0647110 (save level 38).
-2. TRACK (her top priority): stages 1-3d landed; tw/track 554a83b8 (TWT7 body level 2, save level 40). Quad call
-   done in the design (T-4023: any single tracks, Add a track T-4024 with her refusal wording). Next 3e T-3956, 3g
-   T-3958: asked her whether to start them at ~19% usage (I'd wait). Pre-merge items: T-4026. A finish onto
+   3b14158 (11-22 01:26 UTC). Standby tab: maps-17. 8800 = b0647110 (save level 38).
+2. TRACK (her top priority): stages 1-3d, 3g landed, master merged in; tw/track e9c63fce (save level 40). Pre-merge
+   items: T-4026, T-3958 (ship the re-saved starts). 3f after 3e; 4+/4a2 after 4a1. A finish onto
    tw/track can stop on a docs conflict: resolve in the tree (CRLF files), rebase --continue, rerun tests, finish.
 3. T-3373 B: stages 3-5 landed under ?split=1; stage 6 (edits) next, not started (usage).
 4. Overnight: Muzaffarpur rebuild (haj into haj, hjp, sxp; uji retired), restarted 22:46 local after a Geofabrik 404
    (T-4027), PID 23872, log artifacts/trainworld/redraws-run.log, checks in notes/T-3688.md; 8800 keeps the old zones.
-   Manila: kit\redraws-ph.cmd ready, start after IN's DONE. Hokkaido: her 4 regions, Dochuo one zone with Sapporo
+   Muzaffarpur DONE 00:00 local (haj, hjp, sxp shipped; uji place-name, changelog, smoke and game-json commit
+   after Manila). Manila running since 00:01, PID 3972, log artifacts/trainworld/redraws-ph-run.log. Hokkaido: her 4 regions, Dochuo one zone with Sapporo
    (spk refit), day session (notes/T-3688.md).
 5. Waiting on her: T-4025 perf ledger go, Hokkaido image. Wiki on the website on hold (pages in
-   artifacts/trainworld/wikisite/site-hold). Agents: trackedit (T-3956), trackstarts (T-3958), caucasus (T-3764),
-   popstuck (T-4029, master). Track order: 3e -> 3f -> 4a1 -> 4+/4a2 -> 4b-4e -> 4f.
+   artifacts/trainworld/wikisite/site-hold). Agents: trackedit (T-3956), trackplat (T-3959, beside 3e), caucasus (T-3764),
+   popstuck (T-4029) done in its tree: land after Manila's gates (they serve the main app/; changelog popstuck-1). Track order: 3e -> 3f -> 4a1 -> 4+/4a2 -> 4b-4e -> 4f.
 ## Her words
 - 11-22 ~04:30 UTC: last day of the usage week, a decent chunk left: aim to finish track stage 4 overnight ("if we run
   out, we run out"); compute-heavy, token-light tasks too: Caucasus and Afghanistan (caucasus agent); China
@@ -41,8 +40,8 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
   blueprints hidden, no leave confirm (T-4002); bookmarks maybe (T-4005); raise limits (T-4006, deployed).
 - 11-21 ~12:50 UTC: BRT stations for BRT lines only; T-3373 B go, the memory limit rises (players set it: T-3932; a
   load out of memory retries lower: T-3933). Never ask again whether big saves get more workers.
-- 11-19: "player complaints take precedent over other new features"; full playtest list before every publish.
-- When she plays games: no uploads until she says she's done; she may ask for a lower core cap.
+- 11-19: "player complaints take precedent over other new features"; full playtest list before every publish. When
+  she plays: no uploads until she's done; she may ask for a lower core cap.
 - Standing: lean testing, smoke per batch; long jobs in the background, answer her first; every publish, deploy and
   push to the website needs her yes in this tab, none overnight; advisor trial (log calls in handoff-log).
 
