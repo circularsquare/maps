@@ -6,6 +6,11 @@ Updated: 2026-11-22 16:00 UTC
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5.
 
 ## Next
+U. USAGE (her 11-22 ~16:20 UTC): "we're low on remaining tokens for the week so lets keep the track work wound down
+   actually. lets keep the rest for bug fixes for now. i'd consider pax not taking express as the major bug fix."
+   Keep: firsttrain (T-4041), clockmem (T-3939, phone crashes), hokkaido (finishing its join). Paused at a clean
+   point with notes, trees kept, nothing landed: addtrack, stationids, timetables, coreslider, perfledger, split6.
+   Start only bug fixes, few at a time. The 8800 track preview still goes up after hokkaido (no agent needed).
 0. LIVE v0.4.5. Cap 14 (her daytime pick 11-22). Cores 0-1 hers (`reserve_cores.ps1 -Loop 30` at takeover). No
    publish yet. Before one: fresh freeze, translations (T-3986, T-3991, T-3999, T-4003, T-4010, T-2264, T-3933,
    T-3378 s4, T-4013, T-4005, T-4040, and the new zones' names: place_names.mjs --zones), smoke on a quiet machine. Batch 13
