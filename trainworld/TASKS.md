@@ -167,9 +167,14 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Other: notes/T-3659.md
 
 ## Demand
-- T-4019 [P3] {L:route-choice} Players see riders skip the express (taking, 2026-11-22, agent express)
-  - Context: You, 11-21: "the complaint people have is actually that people are not taking the express route. which kinda confuses me. it might just be cuz they have high speed fare mult set high." T-4008 measured 55.7% taking the express on New York's direct pairs at default fares. Not started while usage is high.
-  - Goal: The reported saves' express share explained (fare multiplier or something else), and a fix proposed if it isn't the fare.
+- T-4040 [P2] {L:route-choice} Line panel's fare multiple names the high-speed one (taking, 2026-11-22, agent faremult)
+  - Context: From T-4019: a high-speed express's line panel reads "Fare multiple 1.00x" and names no surcharge, though the default high-speed 1.25 halves its end-to-end riders.
+  - Goal: The panel shows the multiple the riders pay, high-speed included; strings listed.
+  - Other: notes/T-4019.md
+- T-4041 [P2] {L:route-choice} {waits:Anita} Riders take the train that arrives first
+  - Need from Anita: Build it (prototype 3-4 h, then 4-6 h to land)? I'd say yes: it is the players' complaint, and Newark to Trenton goes from 39% to about 59% on the express.
+  - Context: From T-4019: riders take the first train worth taking, and a slower train counts if it is slower by less than half the express's headway, so Newark to Trenton (41 vs 31 min, same fare) goes 61% local. With riders knowing when each train leaves, they board the one that reaches the stop first. Also: long trips are costed at the planned first wait but loaded on the plain half-headway rule (2-3 h to align, part of this). Riders rows move less, since an express serves few station pairs.
+  - Other: notes/T-4019.md
 - T-3936 [P3] {L:route-choice} Intercity effective time for the route shown
   - Context: From T-3632, 11-21: the intercity panel's "Effective time" is the average over the whole place, not the route shown (Nagoya - Osaka: the route's own 136 min, the panel 237, the car 174), so a click beside a station reads as the train losing.
   - Goal: The panel shows the shown route's own effective time beside the car's.
@@ -384,7 +389,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Stage 3g landed on tw/track 11-22: `realnet.py resave` re-saves all 41 starts as TWT7 with bundles (same fingerprints, London 256 ms), but data/packs/real keeps today's TWT6 files since master can't read TWT7.
   - Goal: At the merge, in an empty `REALNET_OUT`, `realnet.py resave` exits 0 with 41 lines, then `realnet.py ship` (never ship without it: it falls back to stale October files); steps in notes/T-3958.md.
   - Other: notes/T-3958.md (on tw/track).
-- T-4024 [P2] {L:track-rework} {after:T-4036} Add a track
+- T-4024 [P2] {L:track-rework} Add a track (taking, 2026-11-22, agent addtrack)
   - Context: Your 11-21 calls: Add a track replaces Double up and 2b's "4 tracks" button, on the Select bar and as a + on each side of the track picture; the new track runs the other way from its neighbour (a double becomes 4 tracks in two clicks), with no crossovers and loose at both ends: connections are manual only, though two tracks added at once connect to each other. Refusals give the reason, else "Additional track cannot fit here."; "You can have at most 16 tracks in a bundle"; "You cannot add track to a crossover track", firing only where adding really can't work (check the crossover definition so a legitimate add is never refused). "Segments" in player text, never "runs" (every track string that says run, including "Added a track on {done} of {total} segments. {why}"). The quad help answer is dropped. Per-track price.
   - Goal: A double made 4 tracks in two clicks, then connected manually, runs a line on the new tracks; each refusal names its reason; no "run" left in player text; strings listed.
   - Other: After 4a1 so the new track runs past stations without a platform. From T-4031: making a track end loose where a line runs through is accepted by a plain edit and breaks the line, so this edit must reroute that line or refuse it by name. Files: Blueprint.tsx, wasm/crossings.rs, cost.rs. 3-5 h. notes/T-4023.md
@@ -396,15 +401,12 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-4038: a single joined to a double whose tracks run ways of their own still takes its way from the running side (`join_away`, `join_for`), not from the joined track. Only meets a flip whose segment ends at a junction with a joined single. Reach: few players until they flip tracks.
   - Goal: The single reads the joined track's real way, with `way_lines` checking lines in the same edit.
   - Other: notes/T-4038.md
-- T-4036 [P2] {L:track-rework} {after:T-4035} Routing to stop points (taking, 2026-11-22, agent trackroute)
-  - Context: T-4030 stage f: searches start and end at stop points mid-track; a terminus mid-piece turns there. Also T-3952's Vienna 12/600 first-stop turn, not confirmed in T-4033 (the search's first-stop turn is still a side test). From T-4035: routing to an anchor and a terminus there; the loop tools (`branch_end`, `every_pass`) and related lines' `route_of` still match stops on piece nodes.
-  - Goal: Stop insertion, reroute and a mid-piece terminus each equal to the split twin.
+- T-4037 [P2] {L:track-rework} {waits:Anita} Stations placed without splitting track
+  - Need from Anita: Dragging a station or platform end slides it along its track, with bending by the track's own points (recommended yes); and a train turning back at a middle stop that sits inside a piece gets a form in the path here, so lines that reverse at a middle stop keep working once every new station is an anchor (recommended yes).
+  - Context: T-4030 stage g. From T-4036: the app still draws a line ending at an anchor to its piece's end; paths of whole pieces can't say where inside a piece a train turned. From T-4035: the app draws an anchor station east-west with no track count (network.ts); stations the tool places still name tracks by the node's axis, and the flip (T-4038) refuses them until their platforms are pinned to slots.
   - Other: 4-5 h. notes/T-4030.md
-- T-4037 [P2] {L:track-rework} {after:T-4036} Stations placed without splitting track
-  - Context: T-4030 stage g. Needs your call first: dragging a station or platform end slides it along its track (recommended), with bending done by dragging the track's own points. From T-4035: the app draws an anchor station east-west with no track count (network.ts); stations the tool places still name tracks by the node's axis, and the flip (T-4038) refuses them until their platforms are pinned to slots.
-  - Other: 4-5 h. notes/T-4030.md
-- T-3961 [P2] {L:track-rework} {after:T-4036} Old stations converted
-  - Context: Each old station node becomes a station with its platforms; each stop keeps the way picks today's rule makes. From 4c (notes/T-3962.md): demand's way out at a one-track station from an old save still boards at the listed station, not where trains stop (Vienna line 25 stop 8: 2443 instead of 2385, +40 rail trips a day when fixed); a one-line change in `line_fwd_stops`, applied here.
+- T-3961 [P2] {L:track-rework} Old stations converted (taking, 2026-11-22, agent convert)
+  - Context: Each old station node becomes a station with its platforms; each stop keeps the way picks today's rule makes. From T-4036: one-way legs as anchors (a split with its leg stations off the track) are not routed as one-way stations yet; done here. From 4c (notes/T-3962.md): demand's way out at a one-track station from an old save still boards at the listed station, not where trains stop (Vienna line 25 stop 8: 2443 instead of 2385, +40 rail trips a day when fixed); a one-line change in `line_fwd_stops`, applied here.
   - Goal: The three reference saves' figures equal to master, apart from that named fix.
   - Other: Side by side with 4c, 4d, 4e. Files: save.rs converter. 3-4 h. stage 4b
 - T-3963 [P2] {L:track-rework} {after:T-4037} Station tool templates and preview

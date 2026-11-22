@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 360c2881-9196-44fd-8596-05db148a51cb, name maps-17 [098830], since 2026-11-22 14:16 UTC
-Updated: 2026-11-22 14:20 UTC
+Updated: 2026-11-22 15:10 UTC
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5.
 
@@ -13,18 +13,14 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
    + the night's data passed a checker on 547389c2 (11-22). Server deployed 3b14158. Save level 38 on master.
 1. master and 8800 = 547389c2 plus bookkeeping (Muzaffarpur, Manila, GE AM AZ AF, T-4029 bubbles, T-4027 Geofabrik
    resolver; changelog c047 c048 c049).
-2. TRACK (her top priority; she asked for stage 4 overnight 11-22): tw/track 09c90ccd has stages 1-3g, 4a1, 4a2,
-   4c, T-4030 stages a-e and T-4038, master merged in. Running: trackroute (T-4036, stage f), a subagent of maps-5a's
-   tab; its report reaches the inbox. Then g (T-4037: needs her answer, asked 11-22 ~13:10 UTC: dragging a station
-   slides it along its track? recommended yes), then 4b (T-3961), 4d (T-3963), Add a track (T-4024), 4f, 5a/5b.
-   4e (T-3964) running: platpic (tree platpic from tw/track 09c90ccd, lands --into tw/track). Pre-merge: T-4026 (server save check: TWT7 body levels 1-4, levels 39-41+), T-3958 (ship re-saved
-   starts), and a checker (save format, sim core). Plan for the gap: notes/T-4030.md. A finish onto tw/track can stop
-   on a docs conflict: resolve in the tree (CRLF files), rebase --continue, rerun tests, finish.
-3. T-3373 B: stages 3-5 landed under ?split=1; stage 6 (edits) running: split6 (tree split6).
-4. Hokkaido (T-3688): her 4 regions, Dochuo one zone with Sapporo (spk refit); running: hokkaido (tree hokkaido,
-   writes data/packs: hold other data runs). Also running from 14:20 UTC: packorder (T-1354, tree packorder),
-   express (T-4019, read-only investigation, Vite 6126). T-4028 done (2020 census, 2-7% gap; ask open).
-5. Waiting on her: T-4025 perf ledger go (now or later). Wiki on the website on hold.
+2. TRACK (her top priority): tw/track b19961f2 has stages 1-3g, 4a1, 4a2, 4c, T-4030 a-f, T-4038. Running, all
+   landing --into tw/track: platpic (4e T-3964, from 09c90ccd), convert (4b T-3961, save converter: own checker
+   before landing), addtrack (T-4024). g (T-4037) waits her two calls; then 4d (T-3963), 4f, 5a/5b. Pre-merge: T-4026,
+   T-3958, a checker (save format, sim core). Plan: notes/T-4030.md. A finish can stop on a docs conflict: resolve in
+   the tree (CRLF), rebase --continue, rerun tests, finish.
+3. Master agents: split6 (T-3373 B stage 6, edits on split workers), packorder (T-1354), faremult (T-4040, Sonnet),
+   hokkaido (T-3688: her 4 regions, Dochuo one zone with Sapporo; writes data/packs: hold other data runs).
+4. Waiting on her: T-4025 perf ledger go; T-4041 route choice; China top-up (ask). Wiki on the website on hold.
 
 ## Her words
 - 11-22 ~04:30 UTC: last day of the usage week, a decent chunk left: aim to finish track stage 4 overnight ("if we run
