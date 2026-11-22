@@ -8,8 +8,9 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
 ## Next
 T. TODAY (her 11-22 ~16:50 UTC): "we're still sitting at 97% usage so we only have 3% for the rest of the day. main
    priority is just looking into T4041, and also would like to continue with 4045 for a bit to see if theres an easy
-   fix there. everything else can pause". Running only: firsttrain2 (opus, T-4041, tree firsttrain) and onewaylag2
-   (sonnet, T-4045, tree onewaylag). Do not top up to 4 agents today. Paused: clockmem T-3939 (nothing written),
+   fix there. everything else can pause". Both reported; no agents running, none to start today. T-4041 waits on her
+   (asks a-2026-11-22-4/5; tree removed). T-4045's memo fix sits uncommitted in tree onewaylag (wants a checker before
+   landing; page profile left). Paused: clockmem T-3939 (nothing written),
    hokkaido T-3688 (join done 11:29 local; after-steps left, see its task; data/packs lacks sor/ibr/okh/ksr until it lands).
 U. USAGE (her 11-22 ~16:20 UTC): "we're low on remaining tokens for the week so lets keep the track work wound down
    actually. lets keep the rest for bug fixes for now. i'd consider pax not taking express as the major bug fix."
