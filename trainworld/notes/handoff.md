@@ -18,7 +18,8 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
    Her quad call (T-4023): N single tracks, free pairing, "Add a track"; quaddesign (Opus) rewriting the design and
    open stages; tracksave and trackdraw were told. 2b strings: "4 tracks" OK, refusals to be redrafted.
 3. T-3373 B: stages 3-5 landed under ?split=1; stage 6 (edits) next, not started (usage).
-4. Running: trackdraw, trackpaths (Opus). T-2264 help panel on 8800, waits on her look. T-4025 perf ledger
+4. Running: trackdraw, trackpaths (Opus); redraws T-3688 (Opus: Hokkaido 4, Manila, Muzaffarpur; designs then a
+   detached overnight rebuild, log artifacts/trainworld/redraws-run.log). Her 11-21: no new countries tonight. T-2264 help panel on 8800, waits on her look. T-4025 perf ledger
    waits on her go (asked).
 5. Wiki on the website on hold (fan wiki exists; link reverted, pages in artifacts/trainworld/wikisite/site-hold).
    Later: T-3937 quiet machine; T-3931 held for T-3231; T-3939 B's 140 MB.

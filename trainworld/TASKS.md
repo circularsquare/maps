@@ -28,8 +28,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-930 (regate): cross_everyday rewrites `everyday_kept_*` in every joint solve and the rates read them, but no gate checks rates after a join (before T-930 too).
   - Goal: A join's re-gate checks the rates a solve can change, or the reason it needn't is recorded.
   - Other: notes/T-930.md
-- T-3688 [P3] {L:region-redraws} {after:next world rebuild} Hokkaido, Manila and Muzaffarpur redraws
-  - Context: Your old TODO, from Discord suggestions: "generally prioritize compactness more ... hokkaido into 4; manila looks weird, make a bit smaller and surrounding regions more compact; muzafarapur, huge rural region prob should be split". Nearest: T-1878.
+- T-3688 [P2] {L:region-redraws} Hokkaido, Manila and Muzaffarpur redraws (taking, 2026-11-21, agent redraws)
+  - Context: Your old TODO, from Discord suggestions: "generally prioritize compactness more ... hokkaido into 4; manila looks weird, make a bit smaller and surrounding regions more compact; muzafarapur, huge rural region prob should be split". You, 11-21: do the rearrangements tonight rather than new countries ("we added a lot last time"). Nearest: T-1878.
+  - Goal: The three redrawn and rebuilt overnight as unit-list edits (no full replan), old saves keeping their zones through zone_successors, before/after maps for you.
 - T-2578 [P3] {L:borders} Mexico-US border factor too low
   - Context: Every border pair gets the national factor 0.05, but Tijuana-San Diego and Juarez-El Paso are very busy crossings.
   - Goal: A pair factor in borders.json, checked against published crossing counts.
