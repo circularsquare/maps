@@ -52,7 +52,8 @@ changelog (T-3424):
 
 ## Wiki pages for the website (T-3447)
 
-After each game publish: `venv\Scripts\python.exe trainworld/tools/wiki_site.py` rebuilds the player wiki into the website clone (`projects/trainsworld/wiki/`, the wiki as of the newest release's changelog commit), then tell her it waits in ..\website for her push. Notes: notes/T-3447.md.
+**On hold** (her 11-21: a player made a fan wiki; the link and pages are out of the website until she decides; the
+last build sits in artifacts/trainworld/wikisite/site-hold). When she picks it up: `venv\Scripts\python.exe trainworld/tools/wiki_site.py` rebuilds the player wiki into the website clone (`projects/trainsworld/wiki/`, the wiki as of the newest release's changelog commit), then tell her it waits in ..\website for her push. Notes: notes/T-3447.md.
 
 ## Open-source copy (T-2913, notes/T-2913.md)
 

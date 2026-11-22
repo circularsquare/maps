@@ -375,6 +375,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Design agreed 11-21 (notes/T-3444-design/, her answers in answers-2026-11-21.md; three small calls still open in review/track-rework-design.md). Built in 38 stages, T-3948 to T-3985, in four releases, on a long-lived branch tw/track merged into master at each release. Stage 1 (T-3948) is done on master; next is stage 2a (T-3949) on tw/track once the branch is cut. Your weekend notes (2026-11-16) are the heart of it.
   - Goal: Closes with the last of its stages.
   - Other: Your notes verbatim: notes/T-3444.md; sizes in notes/code-tour.md. Requirements folded in 11-20: a station placed on track that leaves its shape alone redraws no neighbours (T-2767, 0.2-0.9 s today); the drawn network rebuilds only near a change (T-2701); the Penn Station to Emeryville snapped preview (3 s, T-763) as a check case. notes/review-edit-speed-2026-11-20.md
+- T-4023 [P2] {L:track-rework} Any number of single tracks, Add a track (taking, 2026-11-21, agent quaddesign)
+  - Context: You, 11-21: "4 tracks" yes; quad is just 4 single tracks side by side, two doubles (AB AB) is only one way to pair them (ABBA or any other works), legacy saves convert to two doubles; "Add a track" instead of Double up; refusals name the reason ("Additional track cannot fit here", or more specific).
+  - Goal: The design docs (notes/T-3444-design/) and the open stages' tasks rewritten for it, what landed in 2a/2b that changes named, and the refusal reasons drafted for you.
 - T-3953 [P2] {L:track-rework} {after:T-3952} New save format and old saves (taking, 2026-11-21, agent tracksave)
   - Context: TWT7 at level 36; old saves converted on load with the old bytes kept.
   - Goal: Amsterdam "test", Vienna and North America day 383 load to parity, Amsterdam first.
@@ -697,10 +700,13 @@ Anita's playtest with a friend, filed 2026-11-03 evening (verbatim, grouped, in 
   - Context: Only if your tutorial playtest asks for more: the demand bubble hover, Train length, and the top bar's split.
   - Goal: Longer tutorial-only hovers for those three, if the playtest wants them.
   - Other: Uses `guideVerbose` from T-2263.
-- T-2264 [P2] {L:help-tutorial} Help panels for demand and effective time
-  - Context: Help panels ("?") explaining demand and effective time, drafted from docs/demand-plain.md. The wording needs your OK.
-  - Goal: Two help panels in game, with wording you have acknowledged.
+- T-2264 [P2] {L:help-tutorial} One trip help panel with your wording and a graph (taking, 2026-11-21, agent helptrip)
+  - Context: You, 11-21: drop the city help panel; the trip panel's ? keeps "train and car the same: half each" as a graph (car and train), and takes your effective time text word for word (notes/T-2264.md "Her wording 11-21").
+  - Goal: The city ? gone; the trip ? shows your text and the train-against-car graph.
   - Other: notes/todo-2026-11-03h.md
+- T-4022 [P2] {L:stops} Boarding-only marks easier to see, bookmark only when opened (taking, 2026-11-21, agent stopmarks)
+  - Context: You, 11-21: less space either side of the stop row's x; the plain both-ways mark a circle, lighter grey, closer to the background; the marks 20% bigger; outside stop editing, a grey arrow right of the station name in the line diagram for boarding-only (pointing left, at the station) and getting-off-only (pointing right). Community: the bookmark button only on the opened save's pane, not the cards.
+  - Goal: Both on 8800 as described.
 - T-2268 [P2] {L:station-placement} Easier station placement over a ramp
   - Context: Give a station more room when auto-ramping over a line, and snap it to the nearest viable spot.
   - Other: notes/todo-2026-11-03h.md.

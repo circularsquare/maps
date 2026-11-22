@@ -9,20 +9,22 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
 0. LIVE v0.4.5. Cap 14. Cores 0-1 hers (`reserve_cores.ps1 -Loop 30` at takeover). No publish yet ("no rush").
    Before the next publish: fresh freeze (place index), translations (T-3986, T-3991, T-3999, T-4003, T-4010,
    T-2264, T-3933, T-3378 s4, T-4013, T-4005 keys), smoke on a quiet machine (batchchk11's real-save final timed
-   out at cap), one shonei-server deploy (asked, a-..-20; go test passes): 04369d6, f16278a, 3b14158; push it
-   after. Standby tabs left: maps-5a, maps-17 (notes/standby.txt).
+   out at cap). shonei-server deployed and pushed 3b14158 (11-22 01:26 UTC). Standby tabs left: maps-5a, maps-17.
 1. master 0a041a75; 8800 = 88721523 (save level 38). Batch 13 (T-3502 airports, T-3655 edit speed, bmtab,
    T-3373 s4-5 flagged) landed, unchecked: one batch checker before any publish (held for usage until then).
 2. TRACK (her top priority): stages 1, 2a, 2b, 3a1, 3a2 landed; tw/track 9d1fa229 (save level 39). Side by side
    from it: tracksave 3b T-3953 (save format), trackdraw 3d T-3955 (drawing; sheet to review/track-3d.png). Land
    each with `finish ... --into tw/track`; 3c T-3954 (line paths) after 3b.
-   2b strings sent to her for text ack (Quad track -> 4 tracks, Double up -> 4 tracks, ...: notes/T-3950.md).
+   Her quad call (T-4023): N single tracks, free pairing, "Add a track"; quaddesign (Opus) rewriting the design and
+   open stages; tracksave and trackdraw were told. 2b strings: "4 tracks" OK, refusals to be redrafted.
 3. T-3373 B: stages 3-5 landed under ?split=1; stage 6 (edits) next, not started (usage).
-4. Running: tracksave, trackdraw (Opus). Successors only for track or pressing bugs (usage). She's home 11-21 ~19:50
-   local; sent her the look-at list (deploy, wiki, help panels, 2b text).
-5. Deferred by her until home: server deploy (a-..-20), wiki push (a-..-18). Waiting: T-2264 help panels (she'll
-   look). Later: T-3937 quiet machine; T-3931 held for T-3231; T-3939 B's 140 MB.
+4. Running: tracksave, trackdraw, quaddesign (Opus); helptrip T-2264, stopmarks T-4022 (Sonnet; her UI asks).
+5. Wiki on the website on hold (fan wiki exists; link reverted, pages in artifacts/trainworld/wikisite/site-hold).
+   Later: T-3937 quiet machine; T-3931 held for T-3231; T-3939 B's 140 MB.
 ## Her words
+- 11-21 ~20:00 local: deploy yes (done); wiki link off the site; drop the city help panel, trip panel takes her
+  text (notes/T-2264.md) and a graph; stop-mark and bookmark tweaks (T-4022); quad = any single tracks (T-4023).
+  Asked how fast walking is: 6 km/h on 1.3x the straight line (about 4.6 km/h as the crow flies).
 - 11-21 ~22:40 UTC: deploy and wiki deferred till home; T-3376 yes; T-3742 planned, start later; T-4008 no soft
   rule, drop income groups (players say riders skip the express: T-4019); busways any bus; hide empty Bookmarked
   tab; text ack (bookmarks, boarding-only); help panels not seen yet.
