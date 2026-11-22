@@ -12,7 +12,7 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
    + the night's data passed a checker on 547389c2 (11-22). Server deployed 3b14158. Save level 38 on master.
 1. 8800 = 547389c2. master since: T-4040 (UI), T-1354 (demand worker). Once hokkaido's join ends (it owns
    data/packs): sync-track, then 8800 = tw/track tip as her preview (her yes 11-22; saves made there won't load on
-   master or live: told her), and a batch checker on master. Strings to ack: review/strings-to-ack.md.
+   master or live: told her), and a batch checker on master. All strings to 11-22 16:10 UTC acknowledged ("Part of a bundle of # tracks", her wording).
 2. TRACK (her top priority): tw/track has 1-3g, 4a1, 4a2, 4c, 4e picture, T-4030 a-f, T-4038, levels (T-3691), 4b's
    two fixes. T-3961's merge waits for g; T-3964 Join waits T-4043. Running: stationids (T-4043, own checker before
    landing), addtrack (T-4024). g (T-4037) waits her two calls; then 4d (T-3963), 4f, 5a/5b. Pre-merge: T-4026,
@@ -44,7 +44,8 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
 
 ## Waiting on her (asks.py list has the open ones)
 - All re-asked in the 11-22 ~16:00 UTC catch-up (maps-17), plus the 4-track sheet track-4034.png to look at.
-- She sends the T-3635 player reply and the T-3945 reply herself (draft in notes/T-3945.md).
+- She sends the T-3635 player reply herself (sent her the text 11-22). T-3945 never had a reply draft. Quote text in
+  the message, never send her a notes file (her 11-22).
 
 ## Only a person knows
 - Uncommitted on purpose: TODO.md (hers), notes/T-3397.md, jordan-save-investigation-2026-11-15.md,
