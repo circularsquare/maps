@@ -379,11 +379,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Design agreed 11-21 (notes/T-3444-design/, her answers in answers-2026-11-21.md; three small calls still open in review/track-rework-design.md). Built in 39 stages, T-3948 to T-3985 and T-4024 (Add a track, your 11-21 call, T-4023), in four releases, on a long-lived branch tw/track merged into master at each release. Stage 1 (T-3948) is done on master; next is stage 2a (T-3949) on tw/track once the branch is cut. Your weekend notes (2026-11-16) are the heart of it.
   - Goal: Closes with the last of its stages.
   - Other: Your notes verbatim: notes/T-3444.md; sizes in notes/code-tour.md. Requirements folded in 11-20: a station placed on track that leaves its shape alone redraws no neighbours (T-2767, 0.2-0.9 s today); the drawn network rebuilds only near a change (T-2701); the Penn Station to Emeryville snapped preview (3 s, T-763) as a check case. notes/review-edit-speed-2026-11-20.md
-- T-3953 [P2] {L:track-rework} {after:T-3952} New save format and old saves (taking, 2026-11-21, agent tracksave)
-  - Context: TWT7 at level 36; each track saved on its own with its way and an optional partner, any count, no pairs assumed (your 11-21 call); old saves converted on load with the old bytes kept, old quad (2a's bundle of two pairs) as 4 tracks paired as two doubles.
-  - Goal: Amsterdam "test", Vienna and North America day 383 load to parity, Amsterdam first.
-  - Other: Side by side with 3c and 3d. Files: save.rs, saveFile.ts. 3-5 h. stage 3b
-- T-3954 [P2] {L:track-rework} {after:T-3952} Line paths in track spans
+- T-3954 [P2] {L:track-rework} {after:T-3952} Line paths in track spans (taking, 2026-11-21, agent trackpaths)
   - Context: Lines store paths as (track, direction) spans; the return run by partner lookup; routed returns stored, so `back_lines` stops rebuilding lines every edit; routing searches authored tracks.
   - Goal: Parity A and B; the perdir and t3565 checks pass.
   - Other: Side by side with 3b and 3d. Files: net/paths.rs, perdir.rs, wasm/lines.rs, LineData. 4-6 h. stage 3c
@@ -399,6 +395,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Your decision 10: a way set on a track spreads to the nearest branch points; a double click traces one track to the next branch points and Shift+click extends it; a selection's way is set in one edit, and the game re-pairs tracks over the same stretch, so ABBA or AABB is two way changes on 4 tracks.
   - Goal: A long one-way leg set in one edit; T-3662's kerbside case keeps its lines.
   - Other: Closes T-3662. Files: blueprintBox.ts, pick.ts, wasm/oneway.rs, TrackInspector.tsx. 3-4 h. stage 3f
+- T-4026 [P2] {L:track-rework} {after:the first tw/track release} TWT7 outside the game before the merge
+  - Context: From T-3953 (tracksave): before tw/track merges into master, shonei-server's save check must walk TWT7 and levels 39-40 (deploy on your yes), `pipeline/readsave.py` must read TWT7 (realauto's keep and service take player saves), and 07-saves still says "body level 36". Master's next save level is renumbered past tw/track's 40 at that merge.
+  - Goal: A TWT7 save passes the server check and readsave.py on a real save; the docs say level 40.
 - T-3958 [P2] {L:track-rework} {after:T-3953} Sandbox starts on the new format
   - Context: `realsave` builds today's edges directly, so it changes with the format; the starts must keep loading settled (London 0.6 s, not 43 s).
   - Goal: Every start rebuilt and loading settled.

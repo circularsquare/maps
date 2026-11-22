@@ -12,13 +12,14 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
    out at cap). shonei-server deployed and pushed 3b14158 (11-22 01:26 UTC). Standby tabs left: maps-5a, maps-17.
 1. master 0a041a75; 8800 = 88721523 (save level 38). Batch 13 (T-3502 airports, T-3655 edit speed, bmtab,
    T-3373 s4-5 flagged) landed, unchecked: one batch checker before any publish (held for usage until then).
-2. TRACK (her top priority): stages 1, 2a, 2b, 3a1, 3a2 landed; tw/track 9d1fa229 (save level 39). Side by side
-   from it: tracksave 3b T-3953 (save format), trackdraw 3d T-3955 (drawing; sheet to review/track-3d.png). Land
-   each with `finish ... --into tw/track`; 3c T-3954 (line paths) after 3b.
+2. TRACK (her top priority): stages 1, 2a, 2b, 3a1, 3a2, 3b landed; tw/track 641d9154 (TWT7, save level 40).
+   Running: trackdraw 3d T-3955 (from 9d1fa229; sheet to review/track-3d.png), trackpaths 3c T-3954. Land each
+   with `finish ... --into tw/track`. 3g T-3958 unblocked. Pre-merge items filed as T-4026.
    Her quad call (T-4023): N single tracks, free pairing, "Add a track"; quaddesign (Opus) rewriting the design and
    open stages; tracksave and trackdraw were told. 2b strings: "4 tracks" OK, refusals to be redrafted.
 3. T-3373 B: stages 3-5 landed under ?split=1; stage 6 (edits) next, not started (usage).
-4. Running: tracksave, trackdraw, quaddesign (Opus); helptrip T-2264, stopmarks T-4022 (Sonnet; her UI asks).
+4. Running: trackdraw, trackpaths (Opus). T-2264 help panel on 8800, waits on her look. T-4025 perf ledger
+   waits on her go (asked).
 5. Wiki on the website on hold (fan wiki exists; link reverted, pages in artifacts/trainworld/wikisite/site-hold).
    Later: T-3937 quiet machine; T-3931 held for T-3231; T-3939 B's 140 MB.
 ## Her words
