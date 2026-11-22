@@ -61,6 +61,7 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
 - **Not reviewed**: the wiki, zone/region/realm names, docs, commit messages, text copied word for word from her
   own message, and text reused word for word from a string already in the game; still list it in the report, marked as reused.
 - "Manually", never "by hand" ("by hand is a bit weird").
+- "Segment" for a stretch of track, never "run" (her 11-21: "i dont like the terminology runs in general").
 - American wording: "turn around", never the British "turn round" or "round" for "around" (a pet peeve
   of hers).
 - Watch for an object or colour as the subject ("grey fills"), dropped words ("from street zooms"), and hovers that

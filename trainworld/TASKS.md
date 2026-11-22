@@ -404,9 +404,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: Parity where nothing new is used.
   - Other: Files: net/stations.rs, service.rs, the compile module. 4-6 h. stage 4a1
 - T-4024 [P2] {L:track-rework} {after:T-3959} Add a track
-  - Context: Your 11-21 call: Add a track replaces Double up and 2b's "4 tracks" button, on the Select bar and as a + on each side of the track picture; the new track runs the other way from its neighbour (a double becomes 4 tracks in two clicks), has no crossovers along the run and joins the junctions at its ends (recommended; your call in notes/T-4023.md); refusals give the reason, else "Additional track cannot fit here."; up to 16; the per-track price.
-  - Goal: A double made 4 tracks in two clicks runs a line on the new tracks; each refusal names its reason; strings listed.
-  - Other: After 4a1 so the new track runs past stations without a platform. Files: Blueprint.tsx, wasm/crossings.rs, cost.rs, the help answer. 3-5 h. notes/T-4023.md
+  - Context: Your 11-21 calls: Add a track replaces Double up and 2b's "4 tracks" button, on the Select bar and as a + on each side of the track picture; the new track runs the other way from its neighbour (a double becomes 4 tracks in two clicks), with no crossovers and loose at both ends: connections are manual only, though two tracks added at once connect to each other. Refusals give the reason, else "Additional track cannot fit here."; "You can have at most 16 tracks in a bundle"; "You cannot add track to a crossover track", firing only where adding really can't work (check the crossover definition so a legitimate add is never refused). "Segments" in player text, never "runs" (every track string that says run, including "Added a track on {done} of {total} segments. {why}"). The quad help answer is dropped. Per-track price.
+  - Goal: A double made 4 tracks in two clicks, then connected manually, runs a line on the new tracks; each refusal names its reason; no "run" left in player text; strings listed.
+  - Other: After 4a1 so the new track runs past stations without a platform. Files: Blueprint.tsx, wasm/crossings.rs, cost.rs. 3-5 h. notes/T-4023.md
 - T-3960 [P2] {L:track-rework} {after:T-3959} Smart stop allocation
   - Context: Your decision 3: one click makes a two-way stop, each way's stop point picked at the click and stored (the return preferring the outward track's partner), re-picked only when it goes; the "trains can't pass here" flag; `perdir` way stations and `station_beside` go.
   - Goal: Your split legs get a two-way stop in one click; the T-3605 and T-3711 cases are unchanged.
@@ -701,7 +701,7 @@ Anita's playtest with a friend, filed 2026-11-03 evening (verbatim, grouped, in 
   - Context: Only if your tutorial playtest asks for more: the demand bubble hover, Train length, and the top bar's split.
   - Goal: Longer tutorial-only hovers for those three, if the playtest wants them.
   - Other: Uses `guideVerbose` from T-2263.
-- T-2264 [P2] {L:help-tutorial} {waits:Anita} One trip help panel with your wording and a graph
+- T-2264 [P2] {L:help-tutorial} {waits:Anita} One trip help panel with your wording and a graph (taking, 2026-11-21, agent tripdot)
   - Need from Anita: Look at the trip panel's ? on 8800 (b399147d) and say OK or what to change, including the graph's labels "train", "car", "half each", "train time compared with car time", "share of trips".
   - Context: You, 11-21: drop the city help panel; the trip panel's ? keeps "train and car the same: half each" as a graph (car and train), and takes your effective time text word for word (notes/T-2264.md "Her wording 11-21").
   - Goal: The city ? gone; the trip ? shows your text and the train-against-car graph.
