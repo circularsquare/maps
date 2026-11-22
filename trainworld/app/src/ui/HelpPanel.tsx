@@ -8,6 +8,8 @@ import { t, type MessageKey } from "../i18n";
 import { TripSplitGraph } from "./TripSplitGraph";
 import { mobileDevice } from "../workers/deviceMemory";
 import { marketOff } from "../game/ui";
+import { tripView } from "../game/trip";
+import { shownPeriod } from "../map/tripView";
 import { ACTION_KEYS, BUS_KEY, DEMAND_KEY, HELP_KEY, HIDE_UI_KEY, SWITCH_PICK_KEY, TAB_KEYS, TOOL_KEYS, TOOLS, TRIP_KEY } from "./toolKeys";
 import { Icon } from "./widgets";
 
@@ -166,6 +168,13 @@ export function HelpTopicButton({ topic }: { topic: HelpTopic }) {
   );
 }
 
+/** The selected trip's train effective time over its car's, as the trip panel shows them; null without both options */
+function selectedRatio(): number | null {
+  const x = tripView.value?.trip?.periods[shownPeriod.value];
+  if (!x || !x.railOffered || x.apart || !(x.railPerceived > 0) || !(x.roadPerceived > 0)) return null;
+  return x.railPerceived / x.roadPerceived;
+}
+
 export function HelpTopicPanel() {
   const topic = helpTopic.value;
   const ref = useRef<HTMLDivElement>(null);
@@ -192,6 +201,7 @@ export function HelpTopicPanel() {
   const helpIsOpen = helpOpen.value;
   useEffect(() => { if (helpIsOpen) helpTopic.value = null; }, [helpIsOpen]);
   if (!topic) return null;
+  const ratio = selectedRatio();
   const list = (keys: MessageKey[]) => <ul>{keys.map((k) => <li key={k}>{t(k)}</li>)}</ul>;
   return (
     <div class="help-panel help-topic" ref={ref} role="dialog" aria-label={t("helpTopic.timeTitle")}>
@@ -202,7 +212,8 @@ export function HelpTopicPanel() {
       {list(CAR)}
       <p>{t("helpTopic.timeWalking")}</p>
       <p>{t("helpTopic.timeChoose")}</p>
-      <TripSplitGraph />
+      <TripSplitGraph q={ratio} />
+      {ratio !== null && <p class="muted small">{t("helpTopic.graphDot")}</p>}
     </div>
   );
 }

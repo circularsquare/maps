@@ -227,7 +227,6 @@ svg .stroke2 { stroke-width: 2; }
 .split-graph { display: block; width: 100%; height: auto; margin-top: 6px; }
 .split-graph text { stroke: none; }
 .sg-in { fill: #fff; font-size: 12px; }
-.sg-equal { font-size: 11px; }
 .sg-guide { stroke: #fff; stroke-width: 1; stroke-dasharray: 3 3; stroke-opacity: .8; }
 .sg-dot { fill: #fff; stroke: var(--text); stroke-width: 1.5; }
 /* T-2603: the timetable chart (MareyChart.tsx) under the schedule panel's timetable; T-3817: its trains on a canvas,

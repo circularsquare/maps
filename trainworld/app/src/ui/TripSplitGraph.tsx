@@ -20,8 +20,10 @@ const W = 402, H = 168, X0 = 46, X1 = 396, Y0 = 8, Y1 = 128, Q_MAX = 4.5;
 const sx = (q: number) => X0 + (q / Q_MAX) * (X1 - X0);
 const sy = (share: number) => Y1 - share * (Y1 - Y0);
 
-export function TripSplitGraph() {
+/** q: the selected trip's train over car effective time; no dot without it. Clamped to the axis. */
+export function TripSplitGraph({ q }: { q: number | null }) {
   const c = modeColours();
+  const dotQ = q === null || !isFinite(q) ? null : Math.min(Math.max(q, 0), Q_MAX);
   const qs: number[] = [];
   for (let q = 0; q <= Q_MAX + 1e-9; q += 0.025) qs.push(q);
   const top = qs.map((q) => `${sx(q).toFixed(1)},${sy(ratioShare(q)).toFixed(1)}`).join(" L");
@@ -40,9 +42,12 @@ export function TripSplitGraph() {
         <text class="tg-label" x={sx(q)} y={Y1 + 14} text-anchor="middle">{q}x</text>
       ))}
       <line class="tg-axis" x1={X0} y1={Y1} x2={X1} y2={Y1} />
-      <line class="sg-guide" x1={sx(1)} y1={sy(0.5)} x2={sx(1)} y2={Y1} />
-      <circle class="sg-dot" cx={sx(1)} cy={sy(0.5)} r="4" />
-      <text class="sg-in sg-equal" x={sx(1) + 9} y={sy(0.5) - 6}>{t("helpTopic.graphEqual")}</text>
+      {dotQ !== null && (
+        <>
+          <line class="sg-guide" x1={sx(dotQ)} y1={sy(ratioShare(dotQ))} x2={sx(dotQ)} y2={Y1} />
+          <circle class="sg-dot" cx={sx(dotQ)} cy={sy(ratioShare(dotQ))} r="4" />
+        </>
+      )}
       <text class="tg-label" x={(X0 + X1) / 2} y={H - 4} text-anchor="middle">{t("helpTopic.graphX")}</text>
       <text class="tg-label" transform={`rotate(-90 12 ${(Y0 + Y1) / 2})`} x="12" y={(Y0 + Y1) / 2 + 4} text-anchor="middle">{t("helpTopic.graphY")}</text>
     </svg>
