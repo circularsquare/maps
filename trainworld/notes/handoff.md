@@ -11,18 +11,17 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
    T-3999, T-4003, T-4010, T-2264, T-3933, T-3378 s4, T-4013, T-4005), smoke on a quiet machine, and one batch
    checker for batch 13 (T-3502 airports, T-3655 edit speed, T-4022, T-2264, T-3373 s4-5 flagged). Server deployed
    3b14158 (11-22 01:26 UTC). Standby tab: maps-17. 8800 = b0647110 (save level 38).
-2. TRACK (her top priority): stages 1-3d, 3g landed, master merged in; tw/track e9c63fce (save level 40). Pre-merge
-   items: T-4026, T-3958 (ship the re-saved starts). 3f after 3e; 4+/4a2 after 4a1. A finish onto
+2. TRACK (her top priority): stages 1-3g, 4a1 landed; tw/track 9926974f (save level 41). Pre-merge: T-4026, T-3958;
+   a checker before the first merge (save format, sim core). T-4030 (tracks as records in memory, the gap 3a1-4a1
+   deferred) gates 4b, Add a track, 5a: plan note first, after 3f answers. A finish onto
    tw/track can stop on a docs conflict: resolve in the tree (CRLF files), rebase --continue, rerun tests, finish.
 3. T-3373 B: stages 3-5 landed under ?split=1; stage 6 (edits) next, not started (usage).
-4. Overnight: Muzaffarpur rebuild (haj into haj, hjp, sxp; uji retired), restarted 22:46 local after a Geofabrik 404
-   (T-4027), PID 23872, log artifacts/trainworld/redraws-run.log, checks in notes/T-3688.md; 8800 keeps the old zones.
-   Muzaffarpur DONE 00:00 local (haj, hjp, sxp shipped; uji place-name, changelog, smoke and game-json commit
-   after Manila). Manila running since 00:01, PID 3972, log artifacts/trainworld/redraws-ph-run.log. Hokkaido: her 4 regions, Dochuo one zone with Sapporo
-   (spk refit), day session (notes/T-3688.md).
-5. Waiting on her: T-4025 perf ledger go, Hokkaido image. Wiki on the website on hold (pages in
-   artifacts/trainworld/wikisite/site-hold). Agents: trackedit (T-3956), trackplat (T-3959, beside 3e), caucasus (T-3764),
-   popstuck (T-4029) done in its tree: land after Manila's gates (they serve the main app/; changelog popstuck-1). Track order: 3e -> 3f -> 4a1 -> 4+/4a2 -> 4b-4e -> 4f.
+4. Muzaffarpur and Manila rebuilt (all shipped, split_zones clean, changelog c047; notes/T-3688.md). After
+   caucasus's gates end (they serve the main app/): place-names-zones.json drops uji and mri, land popstuck (T-4029,
+   changelog popstuck-1), smoke, commit game json, 8800. caucasus reused id `mri` (retired Mariveles) for an Afghan
+   zone, so mri -> ctg never landed: told it to rename. Hokkaido: Dochuo one zone with Sapporo, day session.
+5. Waiting on her: T-4025 perf ledger go. Wiki on the website on hold (artifacts/trainworld/wikisite/site-hold).
+   Agents: tracksel (T-3957), trackstop (T-3960), caucasus (T-3764).
 ## Her words
 - 11-22 ~04:30 UTC: last day of the usage week, a decent chunk left: aim to finish track stage 4 overnight ("if we run
   out, we run out"); compute-heavy, token-light tasks too: Caucasus and Afghanistan (caucasus agent); China
@@ -55,6 +54,5 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
   tools/ops/archive_bad_saves.py, changelog/roadmap.json, changelog/next.json, notes/asks-log.jsonl,
   notes/board-live.json; maps .claude/settings.json. Not mine: notes/T-2380.md, notes/T-3382.md.
 - A yes she gives in another session's tab doesn't pass the permission check here: ask again in this tab.
-- Never delete a tree folder by hand (its app/node_modules junction deletes the main tree's).
 - Commit messages through PowerShell: single quotes, or "$2M" becomes empty (49fa812e lost "US$2M").
 - A task with stages left: `agent-tree.mjs land` + `remove`, not `finish` (it archives); swap the taking mark by hand.
