@@ -11,15 +11,13 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
    T-2264, T-3933, T-3378 s4, T-4013, T-4005 keys), smoke on a quiet machine (batchchk11's real-save final timed
    out at cap), one shonei-server deploy (asked, a-..-20; go test passes): 04369d6, f16278a, 3b14158; push it
    after. Standby tabs left: maps-5a, maps-17 (notes/standby.txt).
-1. master 7964bcf2 = 8800 3f917ba3 (save level 38). Batch 12 (T-4005, T-4013, T-3373 s3 flagged, T-4017, T-4014
-   with its own checker) landed; smoke on 8800 PASS. No batch checker: each risky one had its own or is flagged.
-2. TRACK (her top priority): stages 1, 2a, 2b landed; tw/track a7818245 (save level 39, LBN1). trackedges (Opus)
-   on 3a1 T-3951 from tw/track; land with `finish trackedges ... --into tw/track`; then 3a2 T-3952 (parity gates).
+1. master 0a041a75; 8800 = 88721523 (save level 38). Batch 13 (T-3502 airports, T-3655 edit speed, bmtab,
+   T-3373 s4-5 flagged) landed, unchecked: one batch checker before any publish (held for usage until then).
+2. TRACK (her top priority): stages 1, 2a, 2b, 3a1 landed; tw/track 5af6e0d7 (save level 39). trackparity (Opus)
+   on 3a2 T-3952 (parity gates A and B) from tw/track; land with `finish ... --into tw/track`; then 3b T-3953.
    2b strings sent to her for text ack (Quad track -> 4 tracks, Double up -> 4 tracks, ...: notes/T-3950.md).
-   Batch 13 on master for one checker before publish: T-3502 airports (demand), bmtab, then fullspeed/splitb5.
-3. BRT: all landed. Bookmarked tab hidden until something is bookmarked landed 8b65274c; 8800 rebuild waits for
-   the next landings (one rebuild for the lot).
-4. Running: splitb5 T-3373 B s5, fullspeed T-3655, trackedges T-3951 (Opus). Successors only for track (usage).
+3. T-3373 B: stages 3-5 landed under ?split=1; stage 6 (edits) next, not started (usage).
+4. Running: trackparity only. Successors only for track or pressing bugs (usage).
 5. Deferred by her until home: server deploy (a-..-20), wiki push (a-..-18). Waiting: T-2264 help panels (she'll
    look). Later: T-3937 quiet machine; T-3931 held for T-3231; T-3939 B's 140 MB.
 ## Her words

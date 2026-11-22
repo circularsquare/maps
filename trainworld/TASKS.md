@@ -375,11 +375,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Design agreed 11-21 (notes/T-3444-design/, her answers in answers-2026-11-21.md; three small calls still open in review/track-rework-design.md). Built in 38 stages, T-3948 to T-3985, in four releases, on a long-lived branch tw/track merged into master at each release. Stage 1 (T-3948) is done on master; next is stage 2a (T-3949) on tw/track once the branch is cut. Your weekend notes (2026-11-16) are the heart of it.
   - Goal: Closes with the last of its stages.
   - Other: Your notes verbatim: notes/T-3444.md; sizes in notes/code-tour.md. Requirements folded in 11-20: a station placed on track that leaves its shape alone redraws no neighbours (T-2767, 0.2-0.9 s today); the drawn network rebuilds only near a change (T-2701); the Penn Station to Emeryville snapped preview (3 s, T-763) as a check case. notes/review-edit-speed-2026-11-20.md
-- T-3951 [P2] {L:track-rework} {after:T-3950} Every track its own edge (taking, 2026-11-21, agent trackedges)
-  - Context: The compile from bundles with tracks to the derived graph, one track per edge, with stable ids, the node pitch and capacity's keys; the two-lane cap and the inferred-way code go. Stations are still nodes in this stage.
-  - Goal: The sim tests pass on the small saves.
-  - Other: Files: net/*.rs, lanes.rs, capacity.rs keys, a new compile module. 4-6 h. stage 3a1
-- T-3952 [P2] {L:track-rework} {after:T-3951} Track partners, turns and parity
+- T-3952 [P2] {L:track-rework} {after:T-3951} Track partners, turns and parity (taking, 2026-11-21, agent trackparity)
   - Context: Each track's partner stored (the loader pairs each old double); turn moves at stop nodes and bare ends; routing and capacity on the new keys checked whole.
   - Goal: Parity gates A (real NYC) and B (the small saves and the Amsterdam "test" save) equal to master: paths, capacity and rides.
   - Other: Files: the compile module, net/paths.rs, capacity.rs. 3-4 h. stage 3a2
@@ -916,7 +912,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Several parts of a line's panel still show only its own pair: timetable, held trains, delays, riders, boardings.
   - Goal: Each part folds in the twin line, as `foldTwins` does.
   - Other: About 2-3 h. notes/T-3333.md "As built".
-- T-3373 [P2] {L:memory} Split zones and the market between workers, stage B (taking, 2026-11-21, agent splitb5)
+- T-3373 [P2] {L:memory} Split zones and the market between workers, stage B
   - Context (B): You, 11-21: "that 3373 stage B sounds good. we can pursue it. and yes we can raise memory limit, though as mentioned players should be able to set it" (T-3932, T-3933). Design: notes/T-3373-B-plan.md, 9 stages, 24-40 h. Stages 1-3 are built: under `?split=1` each zone and the market open on one worker, which trade line loads every round. Figures equal the unsplit ones with exact sums to the bit, on NYC and all-China. Solving memory: all-China 2.5 to 1.3 GB at 2 workers, NYC 0.67 to 0.40 GB. Stage 4 passed its stop rule: all-China loads in 100 s on 2 workers against 147 s on 1 (32% less) for 0.07-0.18 GB more, and under the flag the limit is 2 GB on 8 GB machines, so all-China gets 2 workers and NYC 3. Stage 5 is built too: every panel's question (stations, transfers, trips, bubbles, the market's) goes to the worker holding what it asks about, and the answers equal 1 worker's to the bit on NYC and North America. Next is stage 6: edits, solved on the workers holding what changed. Then pool rules and copies (stages 7-8).
   - Context: Each solving worker holds its own copy of the zones (250-550 MB a big city, 1.3 GB all-China); you saw 7.4 GB in Firefox after 43 minutes. You, 2026-11-16: do A (fewer, faster workers capped by memory on big saves) then B (split zones and the market between workers, T-1560, 25-40 h); queue C (one shared memory, threaded WASM, 60-100 h, Cloudflare header) only if it would help noticeably. A landed 2026-11-16 (b3d2ea95): NYC runs 2 workers (-0.5 GB, load about 15 s slower), all-China 1 (-2.9 GB, 30-50 s slower), figures identical.
   - Goal: B built, with memory and solve time measured before and after on NYC and all-China.
