@@ -422,13 +422,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: T-4030 stage g. Needs your call first: dragging a station or platform end slides it along its track (recommended), with bending done by dragging the track's own points.
   - Other: 4-5 h. notes/T-4030.md
 - T-3961 [P2] {L:track-rework} {after:T-4036} Old stations converted
-  - Context: Each old station node becomes a station with its platforms; each stop keeps the way picks today's rule makes.
-  - Goal: The three reference saves' figures equal to master.
+  - Context: Each old station node becomes a station with its platforms; each stop keeps the way picks today's rule makes. From 4c (notes/T-3962.md): demand's way out at a one-track station from an old save still boards at the listed station, not where trains stop (Vienna line 25 stop 8: 2443 instead of 2385, +40 rail trips a day when fixed); a one-line change in `line_fwd_stops`, applied here.
+  - Goal: The three reference saves' figures equal to master, apart from that named fix.
   - Other: Side by side with 4c, 4d, 4e. Files: save.rs converter. 3-4 h. stage 4b
-- T-3962 [P2] {L:track-rework} {after:T-3960} Demand from stop points and the track chip (taking, 2026-11-22, agent trackdemand)
-  - Context: Demand's snapshot rows come from stop points; one complex rule, in the sim; the stop list gets its track chip.
-  - Goal: Packed demand arrays byte for byte on NYC, then the same rail trips a day.
-  - Other: Side by side with 4b, 4d, 4e. Files: demandClient.ts, demand/network.rs, complexes.ts, the line panel's stop list. 4-6 h. stage 4c
 - T-3963 [P2] {L:track-rework} {after:T-4037} Station tool templates and preview
   - Context: Your decision 2: Side platforms, Island (zero width for now) and Single platform; the pointer picks the tracks (on more tracks, side platforms take the track under the pointer and its neighbour nearer the pointer, never by pairing); a platform placed overlapping a station joins it; the ghost shows the covered tracks and their ways.
   - Goal: All three templates on single, double and 4 tracks; strings listed.

@@ -20,8 +20,8 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
    caucasus's gates end (they serve the main app/): place-names-zones.json drops uji and mri, land popstuck (T-4029,
    changelog popstuck-1), smoke, commit game json, 8800. caucasus reused id `mri` (retired Mariveles) for an Afghan
    zone, so mri -> ctg never landed: told it to rename. Hokkaido: Dochuo one zone with Sapporo, day session.
-5. Waiting on her: T-4025 perf ledger go. Wiki on the website on hold (artifacts/trainworld/wikisite/site-hold).
-   Agents: trackmodel (fresh, T-4033 stage c), trackdemand (T-3962 4c), geofab (T-4027, master), caucasus (T-3764).
+5. Waiting on her: T-4025 perf ledger go. Wiki on the website on hold. Agents: trackmodel (fresh, T-4033 stage c), caucasus (T-3764); 4c landing. geofab (T-4027) done in
+   its tree: land on master with popstuck after caucasus's runs (it changes the pipeline they use).
    T-4030 planned as T-4031-T-4037 (+T-4038 flip); stages a, b landed (tw/track b3529ede). 4e's Join waits on 4b. 3e/3f strings to her (notes).
 ## Her words
 - 11-22 ~04:30 UTC: last day of the usage week, a decent chunk left: aim to finish track stage 4 overnight ("if we run
@@ -46,8 +46,8 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
   push to the website needs her yes in this tab, none overnight; advisor trial (log calls in handoff-log).
 
 ## Waiting on her (asks.py list has the open ones)
-- Text ack for 3e's strings (notes/T-3956.md: "Eastbound track" ... "Two way track", "Part of double track" /
-  "Part of {n} tracks", "Tracks"); morning summary.
+- Text ack (morning summary) for tw/track strings: 3e (T-3956.md), 3f (T-3957.md: "... out to the junctions."),
+  4c (T-3962.md: "{way} trains stop at {station}" etc.). Her call at T-4037: drag slides a station along its track?
 - She sends the T-3635 player reply and the T-3945 reply herself (draft in notes/T-3945.md).
 
 ## Only a person knows
