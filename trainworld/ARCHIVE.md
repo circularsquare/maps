@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4041 [P1] {L:route-choice} Riders take the train that arrives first (2026-11-22): Built: first-arrival rule with 0.75 softening, late joins, street-tram stops at ground without boarding cost; Newark-Trenton 52% express; +45% solve time, +14% memory on the real save. notes/T-4041.md.
 - T-3691 [P3] {L:track-rework} Track levels -5 to +5 (2026-11-22): Levels -5 to +5 behind 'Use levels -5 to +5' in Settings > Game; new levels priced on from the old tables; +3 periwinkle; saves unchanged; smoke 30/30. notes/T-3691.md.
 - T-1354 [P2] {L:solve-consistency} Market corridor figures depend on pack order (2026-11-22): the table rows were already order-free; the worker's corridor book (shares flying, on two lands, its key) froze at the first composition, now made per composition: late-pack loads equal normal ones on NYC and Amsterdam, with and without ?split=1; rail unchanged; on tw/packorder.
 - T-4040 [P2] {L:route-choice} Line panel's fare multiple names the high-speed one (2026-11-22): The line panel's Fare multiple row shows the kind's multiple (High speed 1.25x) with a hover giving what riders pay in all. notes/T-4040.md.
