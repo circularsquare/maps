@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3662 [P3] {L:single-track} Switching one kerbside piece breaks lines quietly (2026-11-22): Ways spread to the branch points in one edit and undo, double-click tracing with Shift+click, refusals name the line; T-3662's kerbside case keeps its lines. One track of a double flipped moved to T-4030. notes/T-3957.md.
+- T-3957 [P2] {L:track-rework} Long track selections and ways (2026-11-22): Ways spread to the branch points in one edit and undo, double-click tracing with Shift+click, refusals name the line; T-3662's kerbside case keeps its lines. One track of a double flipped moved to T-4030. notes/T-3957.md.
 - T-3959 [P2] {L:track-rework} Stations as platform records (2026-11-22): Stations and platforms are records with stop points from the platforms, save level 41, figures byte identical on gates A and B; stations still split pieces, which moved to T-4030. notes/T-3959.md.
 - T-3956 [P2] {L:track-rework} Extend and edit one track (2026-11-22): Built on tw/track: extend each track of a double, manual merges as one-way legs, one track of 4 picked in one click, one side removed; flipping one track of an intact double moved to 3f (T-3957); T-3353's radius case stays open. notes/T-3956.md.
 - T-2264 [P2] {L:help-tutorial} One trip help panel with your wording and a graph (2026-11-21): The city help panel is gone; the trip panel's ? has her text and the train-against-car graph with the dot at the selected trip; she OK'd it on 8800 11-22. notes/T-2264.md.

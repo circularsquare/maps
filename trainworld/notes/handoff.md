@@ -11,7 +11,7 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
    T-3999, T-4003, T-4010, T-2264, T-3933, T-3378 s4, T-4013, T-4005), smoke on a quiet machine, and one batch
    checker for batch 13 (T-3502 airports, T-3655 edit speed, T-4022, T-2264, T-3373 s4-5 flagged). Server deployed
    3b14158 (11-22 01:26 UTC). Standby tab: maps-17. 8800 = b0647110 (save level 38).
-2. TRACK (her top priority): stages 1-3g, 4a1 landed; tw/track 9926974f (save level 41). Pre-merge: T-4026, T-3958;
+2. TRACK (her top priority): stages 1-3g, 4a1 landed (3f landing); save level 41. Pre-merge: T-4026, T-3958;
    a checker before the first merge (save format, sim core). T-4030 (tracks as records in memory, the gap 3a1-4a1
    deferred) gates 4b, Add a track, 5a: plan note first, after 3f answers. A finish onto
    tw/track can stop on a docs conflict: resolve in the tree (CRLF files), rebase --continue, rerun tests, finish.
@@ -21,7 +21,7 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
    changelog popstuck-1), smoke, commit game json, 8800. caucasus reused id `mri` (retired Mariveles) for an Afghan
    zone, so mri -> ctg never landed: told it to rename. Hokkaido: Dochuo one zone with Sapporo, day session.
 5. Waiting on her: T-4025 perf ledger go. Wiki on the website on hold (artifacts/trainworld/wikisite/site-hold).
-   Agents: tracksel (T-3957), trackstop (T-3960), caucasus (T-3764).
+   Agents: trackstop (T-3960), trackmodel (T-4030 plan only), caucasus (T-3764). 3e/3f strings to her (notes).
 ## Her words
 - 11-22 ~04:30 UTC: last day of the usage week, a decent chunk left: aim to finish track stage 4 overnight ("if we run
   out, we run out"); compute-heavy, token-light tasks too: Caucasus and Afghanistan (caucasus agent); China

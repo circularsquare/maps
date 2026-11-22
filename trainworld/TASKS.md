@@ -166,10 +166,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Found by T-3623: Purwokerto's registry centre sits on Banjarnegara and Kozhikode's on Manjeri; an OSM area with no node inside it still sits at its box centre (New Cairo City).
   - Goal: Each zone's centre is on its named town; areas without a node get a centre inside them.
   - Other: notes/T-3623.md
-- T-3662 [P3] {L:single-track} {after:the track rework design} Switching one kerbside piece breaks lines quietly
-  - Context: Found checking T-3647: on a kerbside pair of one-way legs, switching one piece of a leg to both ways is accepted (no refusal) but breaks the lines using that leg (A1, A3, A4 in the test scene); master does the same. Switching every piece of the leg together works.
-  - Goal: The switch either takes the whole leg with it or is refused with a message naming the line it would break.
-  - Other: notes/T-3647.md
 - T-3659 [P3] {L:solve-speed} Contributors' speed-up pull requests
   - Context: You, 2026-11-18: "there are some new PRs from caelum418 that have to do with speedups that we should look at the next time we look at this area of performance. they might help." PR 24 ported 11-20 (7f02678e, credited; layout about twice as fast on our saves); its reply is drafted in notes/T-3659.md, to post after the next sync once you've seen it. Left: caelum418's 23 (intercity assignment, 3% of a whole calculation, 25% of its intercity part), needs a port by hand. CinnamonVII's 18 and 19 were closed by their author (no gain), 20 is in via 12.
   - Goal: PR 23 measured on our saves, then ported with credit or closed with a reply you've seen; PR 24's reply posted.
@@ -389,10 +385,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Design agreed 11-21 (notes/T-3444-design/, her answers in answers-2026-11-21.md; three small calls still open in review/track-rework-design.md). Built in 39 stages, T-3948 to T-3985 and T-4024 (Add a track, your 11-21 call, T-4023), in four releases, on a long-lived branch tw/track merged into master at each release. Stage 1 (T-3948) is done on master; next is stage 2a (T-3949) on tw/track once the branch is cut. Your weekend notes (2026-11-16) are the heart of it.
   - Goal: Closes with the last of its stages.
   - Other: Your notes verbatim: notes/T-3444.md; sizes in notes/code-tour.md. Requirements folded in 11-20: a station placed on track that leaves its shape alone redraws no neighbours (T-2767, 0.2-0.9 s today); the drawn network rebuilds only near a change (T-2701); the Penn Station to Emeryville snapped preview (3 s, T-763) as a check case. notes/review-edit-speed-2026-11-20.md
-- T-3957 [P2] {L:track-rework} {after:T-3956} Long track selections and ways (taking, 2026-11-22, agent tracksel)
-  - Context: Your decision 10: a way set on a track spreads to the nearest branch points; a double click traces one track to the next branch points and Shift+click extends it; a selection's way is set in one edit, and the game re-pairs tracks over the same stretch, so ABBA or AABB is two way changes on 4 tracks. From 3e: flipping one track of an intact double (or making it two-way) waits for these spans, since a piece holds only one track each way today.
-  - Goal: A long one-way leg set in one edit; one track of a double flipped; T-3662's kerbside case keeps its lines.
-  - Other: Closes T-3662. Files: blueprintBox.ts, pick.ts, wasm/oneway.rs, TrackInspector.tsx. 3-4 h. stage 3f
 - T-4026 [P2] {L:track-rework} {after:the first tw/track release} TWT7 outside the game before the merge
   - Context: From T-3953 (tracksave): before tw/track merges into master, shonei-server's save check must walk TWT7 (body levels 1-3) and levels 39-41 (deploy on your yes), `pipeline/readsave.py` must read TWT7 (realauto's keep and service take player saves), and 07-saves still says "body level 36". Master's next save level is renumbered past tw/track's 40 at that merge.
   - Goal: A TWT7 save passes the server check and readsave.py on a real save; the docs say level 40.
@@ -408,8 +400,8 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Your decision 3: one click makes a two-way stop, each way's stop point picked at the click and stored (the return preferring the outward track's partner), re-picked only when it goes; the "trains can't pass here" flag; `perdir` way stations and `station_beside` go.
   - Goal: Your split legs get a two-way stop in one click; the T-3605 and T-3711 cases are unchanged.
   - Other: Files: perdir.rs, twin.rs, wasm/lines.rs. 3-4 h. stage 4a2
-- T-4030 [P2] {L:track-rework} {after:T-3959} Tracks held as their own records in memory
-  - Context: Stages 3a1, 3c, 3e and 4a1 each kept today's in-memory model, where a piece is the derived edge and holds at most one track each way (tracks read from `EdgeData`: count, oneway, join); 3b saves each track on its own but loads back into that model. So stations still split pieces, one track of a double can't be flipped, and a third track can't pass a station. 01-model.md's authored bundles with tracks, compiled to the derived graph, is the design; no stage owned building it.
+- T-4030 [P2] {L:track-rework} {after:T-3959} Tracks held as their own records in memory (taking, 2026-11-22, agent trackmodel)
+  - Context: Stages 3a1, 3c, 3e and 4a1 each kept today's in-memory model, where a piece is the derived edge and holds at most one track each way (tracks read from `EdgeData`: count, oneway, join); 3b saves each track on its own but loads back into that model. So stations still split pieces, one track of a double can't be flipped, and a third track can't pass a station. 01-model.md's authored bundles with tracks, compiled to the derived graph, is the design; no stage owned building it. 3f's part B (one track of a double flipped) stopped on it too: paths must name tracks (spans in memory, routing on track ends), ways stored per track, re-pairing across a bundle, trains and line strokes placed per track (notes/T-3957.md has the scope).
   - Goal: Bundles and their tracks as stored records in memory, compiled to the derived edges, with stations no longer cutting pieces; parity gates A and B byte identical. A short plan note (files, order, gates) before the build.
   - Other: 4b (T-3961), Add a track (T-4024) and stage 5a wait on it. Found by maps-5a with the advisor, 11-22.
 - T-3961 [P2] {L:track-rework} {after:T-4030} Old stations converted
