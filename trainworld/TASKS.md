@@ -386,7 +386,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: Closes with the last of its stages.
   - Other: Your notes verbatim: notes/T-3444.md; sizes in notes/code-tour.md. Requirements folded in 11-20: a station placed on track that leaves its shape alone redraws no neighbours (T-2767, 0.2-0.9 s today); the drawn network rebuilds only near a change (T-2701); the Penn Station to Emeryville snapped preview (3 s, T-763) as a check case. notes/review-edit-speed-2026-11-20.md
 - T-4026 [P2] {L:track-rework} {after:the first tw/track release} TWT7 outside the game before the merge
-  - Context: From T-3953 (tracksave): before tw/track merges into master, shonei-server's save check must walk TWT7 (body levels 1-3, with 4a2's per-stop picks varint) and levels 39-41 (deploy on your yes), `pipeline/readsave.py` must read TWT7 (realauto's keep and service take player saves), and 07-saves still says "body level 36". Master's next save level is renumbered past tw/track's 40 at that merge.
+  - Context: From T-3953 (tracksave): before tw/track merges into master, shonei-server's save check must walk TWT7 (body levels 1-4, with 4a2's per-stop picks varint and T-4031's joins per track) and levels 39-41 (deploy on your yes), `pipeline/readsave.py` must read TWT7 (realauto's keep and service take player saves), and 07-saves still says "body level 36". Master's next save level is renumbered past tw/track's 40 at that merge.
   - Goal: A TWT7 save passes the server check and readsave.py on a real save; the docs say level 40.
 - T-3958 [P2] {L:track-rework} {after:the first tw/track release} Ship the re-saved sandbox starts at the merge
   - Context: Stage 3g landed on tw/track 11-22: `realnet.py resave` re-saves all 41 starts as TWT7 with bundles (same fingerprints, London 256 ms), but data/packs/real keeps today's TWT6 files since master can't read TWT7.
@@ -395,20 +395,16 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-4024 [P2] {L:track-rework} {after:T-4034} Add a track
   - Context: Your 11-21 calls: Add a track replaces Double up and 2b's "4 tracks" button, on the Select bar and as a + on each side of the track picture; the new track runs the other way from its neighbour (a double becomes 4 tracks in two clicks), with no crossovers and loose at both ends: connections are manual only, though two tracks added at once connect to each other. Refusals give the reason, else "Additional track cannot fit here."; "You can have at most 16 tracks in a bundle"; "You cannot add track to a crossover track", firing only where adding really can't work (check the crossover definition so a legitimate add is never refused). "Segments" in player text, never "runs" (every track string that says run, including "Added a track on {done} of {total} segments. {why}"). The quad help answer is dropped. Per-track price.
   - Goal: A double made 4 tracks in two clicks, then connected manually, runs a line on the new tracks; each refusal names its reason; no "run" left in player text; strings listed.
-  - Other: After 4a1 so the new track runs past stations without a platform. Files: Blueprint.tsx, wasm/crossings.rs, cost.rs. 3-5 h. notes/T-4023.md
+  - Other: After 4a1 so the new track runs past stations without a platform. From T-4031: making a track end loose where a line runs through is accepted by a plain edit and breaks the line, so this edit must reroute that line or refuse it by name. Files: Blueprint.tsx, wasm/crossings.rs, cost.rs. 3-5 h. notes/T-4023.md
 - T-4030 [P2] {L:track-rework} {after:T-3959} Tracks held as their own records in memory (taking, 2026-11-22, agent trackmodel)
   - Context: Stages 3a1, 3c, 3e and 4a1 each kept today's in-memory model, where a piece is the derived edge and holds at most one track each way (tracks read from `EdgeData`: count, oneway, join); 3b saves each track on its own but loads back into that model. So stations still split pieces, one track of a double can't be flipped, and a third track can't pass a station. 01-model.md's authored bundles with tracks, compiled to the derived graph, is the design; no stage owned building it. 3f's part B (one track of a double flipped) stopped on it too: paths must name tracks (spans in memory, routing on track ends), ways stored per track, re-pairing across a bundle, trains and line strokes placed per track (notes/T-3957.md has the scope).
   - Goal: Bundles and their tracks as stored records in memory, compiled to the derived edges, with stations no longer cutting pieces; parity gates A and B byte identical. Planned (notes/T-4030.md, about 30-37 h) as stages T-4031 to T-4037; closes when T-4037 lands.
   - Other: 4b (T-3961), Add a track (T-4024), 4d (T-3963) and 5a (T-3966) wait on its stages. Found by maps-5a with the advisor, 11-22. notes/T-4030.md
-- T-4031 [P2] {L:track-rework} Track records on pieces (taking, 2026-11-22, agent trackmodel)
-  - Context: T-4030 stage a: each track stored with a key, its way, partner and a join at each end (Auto, Loose or To).
-  - Goal: Parity gates A and B byte identical; the stage's own capability test in notes/T-4030.md.
-  - Other: 4-5 h. Lands after 4a2 (T-3960). notes/T-4030.md
 - T-4032 [P2] {L:track-rework} Runs read the derived edges (taking, 2026-11-22, agent trackruns)
   - Context: T-4030 stage b: a pure refactor, the same as today on every existing piece.
   - Goal: Parity gates A and B byte identical.
   - Other: 5-6 h. Lands after 4a2 (T-3960). notes/T-4030.md
-- T-4033 [P2] {L:track-rework} {after:T-4031} Paths name tracks
+- T-4033 [P2] {L:track-rework} {after:T-4031} Paths name tracks (taking, 2026-11-22, agent trackmodel)
   - Context: T-4030 stage c: path entries become (piece, key, dir), routing works on track ends, and a piece can hold 1-16 tracks with any ways.
   - Goal: Parity where nothing new is used; a piece with tracks of any ways routes.
   - Other: 5-6 h. Also after 4a2 (perdir.rs, wasm/lines.rs). notes/T-4030.md
