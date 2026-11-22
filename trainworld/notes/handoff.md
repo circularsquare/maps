@@ -8,8 +8,9 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
 ## Next
 T. TODAY (her 11-22 ~16:50 UTC): "we're still sitting at 97% usage so we only have 3% for the rest of the day. main
    priority is just looking into T4041, and also would like to continue with 4045 for a bit to see if theres an easy
-   fix there. everything else can pause". Both reported; no agents running, none to start today. T-4041 waits on her
-   (asks a-2026-11-22-4/5; tree removed). T-4045's memo fix sits uncommitted in tree onewaylag (wants a checker before
+   fix there. everything else can pause". Both reported; no agents running, none to start today. T-4041: her yes 11-22
+   (even arrivals, first to arrive; street trams lose 2+2 at street stops); first start once usage allows (Opus, measure
+   solve time and memory on the real save). T-4045's memo fix sits uncommitted in tree onewaylag (wants a checker before
    landing; page profile left). Paused: clockmem T-3939 (nothing written),
    hokkaido T-3688 (join done 11:29 local; after-steps left, see its task; data/packs lacks sor/ibr/okh/ksr until it lands).
 U. USAGE (her 11-22 ~16:20 UTC): "we're low on remaining tokens for the week so lets keep the track work wound down
