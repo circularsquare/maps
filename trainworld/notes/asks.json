@@ -1,15 +1,8 @@
 [
   {
-    "id": "a-2026-11-22-1",
-    "title": "China population top-up",
-    "text": "T-4028: China uses the 2020 census; the fast-growing cities are 2-7% above it at 2024 year end (Hefei +6.7%, Hangzhou +5.8%, Changsha +5.7%, Shenzhen +2.4%). Scale the top 20 metros to newer totals (2-3 h), all of China (8-12 h), or nothing? I'd do nothing for now. And where did the player complain (it isn't in the feedback inbox)?",
-    "since": "2026-11-22",
-    "by": "maps-17"
-  },
-  {
-    "id": "a-2026-11-22-2",
-    "title": "Riders take the first-arriving train",
-    "text": "T-4041 (from T-4019, the express complaint): riders now take the first train worth taking, so Newark to Trenton goes 61% on the local even though the express is 10 min faster at the same fare. Should riders know when each train leaves and board the one that arrives first? About 3-4 h to prototype, 4-6 h more to land; Newark to Trenton would go to about 59% express. I'd say yes.",
+    "id": "a-2026-11-22-3",
+    "title": "Station drag and mid-line turns (stage g)",
+    "text": "T-4037, track stage g: (1) dragging a station or platform end slides it along its track, with bending done by dragging the track's own points? I'd say yes. (2) Once g lands every new station sits inside a piece, and a train can't turn back at such a stop between a line's ends today; give that turn a form in the path in stage g so lines that reverse at a middle stop keep working? I'd say yes.",
     "since": "2026-11-22",
     "by": "maps-17"
   }

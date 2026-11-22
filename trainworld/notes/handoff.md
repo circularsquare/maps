@@ -1,32 +1,31 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 360c2881-9196-44fd-8596-05db148a51cb, name maps-17 [098830], since 2026-11-22 14:16 UTC
-Updated: 2026-11-22 15:10 UTC
+Updated: 2026-11-22 16:00 UTC
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5.
 
 ## Next
-W. Back to normal (her "can keep going", 11-22 ~15:50 UTC, after a short wind-down). Running from 15:45: clockmem
-   (T-3939), timetables (T-3346 stage 3). master has T-4040 (UI) and T-1354 (demand worker): 8800 rebuild and the
-   batch checker wait for hokkaido's join to finish (it owns data/packs). Strings to ack collected in
-   artifacts/trainworld/review/strings-to-ack.md.
-0. LIVE v0.4.5. Cap is 16 (overnight rule); her daytime number is 8 ("for a while", 11-21): asked her at ~09:00
-   local whether to set it back, no answer yet. Cores 0-1 hers (`reserve_cores.ps1 -Loop 30` at takeover). No
+0. LIVE v0.4.5. Cap 14 (her daytime pick 11-22). Cores 0-1 hers (`reserve_cores.ps1 -Loop 30` at takeover). No
    publish yet. Before one: fresh freeze, translations (T-3986, T-3991, T-3999, T-4003, T-4010, T-2264, T-3933,
    T-3378 s4, T-4013, T-4005, T-4040, and the new zones' names: place_names.mjs --zones), smoke on a quiet machine. Batch 13
    + the night's data passed a checker on 547389c2 (11-22). Server deployed 3b14158. Save level 38 on master.
-1. master and 8800 = 547389c2 plus bookkeeping (Muzaffarpur, Manila, GE AM AZ AF, T-4029 bubbles, T-4027 Geofabrik
-   resolver; changelog c047 c048 c049).
-2. TRACK (her top priority): tw/track b19961f2 has stages 1-3g, 4a1, 4a2, 4c, T-4030 a-f, T-4038. 4e's picture landed
-   (T-3964 left: Join/Separate after 4b). Running, all landing --into tw/track: convert (4b T-3961, save converter: own checker
-   before landing), addtrack (T-4024), levels (T-3691). g (T-4037) waits her two calls; then 4d (T-3963), 4f, 5a/5b. Pre-merge: T-4026,
+1. 8800 = 547389c2. master since: T-4040 (UI), T-1354 (demand worker). Once hokkaido's join ends (it owns
+   data/packs): sync-track, then 8800 = tw/track tip as her preview (her yes 11-22; saves made there won't load on
+   master or live: told her), and a batch checker on master. Strings to ack: review/strings-to-ack.md.
+2. TRACK (her top priority): tw/track has 1-3g, 4a1, 4a2, 4c, 4e picture, T-4030 a-f, T-4038, levels (T-3691), 4b's
+   two fixes. T-3961's merge waits for g; T-3964 Join waits T-4043. Running: stationids (T-4043, own checker before
+   landing), addtrack (T-4024). g (T-4037) waits her two calls; then 4d (T-3963), 4f, 5a/5b. Pre-merge: T-4026,
    T-3958, a checker (save format, sim core). Plan: notes/T-4030.md. A finish can stop on a docs conflict: resolve in
    the tree (CRLF), rebase --continue, rerun tests, finish.
-3. Master agents: split6 (T-3373 B stage 6, edits on split workers), packorder (T-1354), hokkaido (T-3688: her 4 regions, Dochuo one zone with Sapporo; writes data/packs: hold other data runs).
-4. Waiting on her: T-4025 perf ledger go; T-4041 route choice; China top-up (ask). Wiki on the website on hold.
+3. Master agents: split6 (T-3373 B6), hokkaido (T-3688, writes data/packs), clockmem (T-3939), timetables (T-3346
+   stage 3), coreslider (T-3932), firsttrain (T-4041, P1), perfledger (T-4025).
+4. Waiting on her: g's two calls (re-explained 11-22 ~16:10 UTC). Wiki on the website on hold.
 
 ## Her words
-- 11-22 ~15:20 UTC: "lets wind down"; ~15:50 "got it ok, can keep going". Hokkaido via the old Japan tool: fine.
+- 11-22 ~16:05 UTC: cap 14 (daytime); T-4041 yes, high prio (and buses beating parallel trams; tram boarding
+  penalty maybe undone for street trams); China shape fix next week (T-4044); Georgia fine; T-4025 start; tw/track
+  preview on 8800 yes. Earlier: "lets wind down", then "can keep going". Hokkaido via the old Japan tool: fine.
 - 11-22 ~04:30 UTC: last day of the usage week, a decent chunk left: aim to finish track stage 4 overnight ("if we run
   out, we run out"); compute-heavy, token-light tasks too (the Caucasus and Afghanistan, done). China populations look
   old: T-4028. Overnight cap 16; back to 8 when she's up (ask).
@@ -44,9 +43,7 @@ W. Back to normal (her "can keep going", 11-22 ~15:50 UTC, after a short wind-do
   push to the website needs her yes in this tab, none overnight; advisor trial (log calls in handoff-log).
 
 ## Waiting on her (asks.py list has the open ones)
-- In the 11-22 morning summary, not yet answered: core cap back to 8; Georgia without Abkhazia and South Ossetia,
-  Northern Cyprus with Cyprus (T-3764); text ack for tw/track strings (notes T-3956, T-3957, T-3962, T-4038); the
-  4-track sheet artifacts/trainworld/review/track-4034.png; a tw/track preview on 8800 once 3e/3g landed (asked 11-22).
+- All re-asked in the 11-22 ~16:00 UTC catch-up (maps-17), plus the 4-track sheet track-4034.png to look at.
 - She sends the T-3635 player reply and the T-3945 reply herself (draft in notes/T-3945.md).
 
 ## Only a person knows

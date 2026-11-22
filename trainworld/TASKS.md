@@ -24,6 +24,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-3671: the new zone clt (Chimaltenango, with Antigua Guatemala) has no ja or zh names; `place_names.mjs --zones` stalled for 13 minutes and wrote nothing.
   - Goal: clt has its names in every language that has zone names, and the stall's cause is found or recorded.
   - Other: notes/T-3671.md
+- T-4044 [P3] {L:census-totals} {after:next week} China's populations brought to the newest figures
+  - Context: From T-4028: China uses the 2020 census by township; the fast-growing cities are 2-7% above it at 2024 year end, and growth inside new districts (Hangzhou's Qiantang, Hefei's Binhu, Chengdu's Tianfu) is likely larger. You, 11-22: "would like to correct the shape if its not too hard, but like next week."
+  - Goal: Newer resident totals by district where published (prefecture where not) scale the township counts inside each, so both the totals and where growth happened inside a city follow the newest figures; the same hook fits any country with an old census.
+  - Other: notes/T-4028.md
 - T-3682 [P3] {L:world-tooling} Rates unchecked after a join
   - Context: From T-930 (regate): cross_everyday rewrites `everyday_kept_*` in every joint solve and the rates read them, but no gate checks rates after a join (before T-930 too).
   - Goal: A join's re-gate checks the rates a solve can change, or the reason it needn't is recorded.
@@ -105,9 +109,8 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: A cold run takes 4.4-5.1 min at 4 jobs, against the 3 min aimed for; most of it is zone_water's 368 windows.
   - Goal: A cold run is near 3 min.
   - Other: See notes/T-1992.md.
-- T-4025 [P2] {L:loading} {waits:Anita} Load time and memory ledger per publish
-  - Need from Anita: Start it now despite the usage stance, or after? About 4-6 h of agent time; I'd start it now, since it guards the track rework too.
-  - Context: You, 11-21: "over the past few updates we've kinda been doing some performance improvements blind and in some cases load times actually have gone up a lot, then we hammer them down, then something else pushes them back up. possibly the same for memory." No standing record exists; each task measured its own way.
+- T-4025 [P2] {L:loading} Load time and memory ledger per publish (taking, 2026-11-22, agent perfledger)
+  - Context: You, 11-22: "ok can start now". You, 11-21: You, 11-21: "over the past few updates we've kinda been doing some performance improvements blind and in some cases load times actually have gone up a lot, then we hammer them down, then something else pushes them back up. possibly the same for memory." No standing record exists; each task measured its own way.
   - Goal: A fixed bench of saves (new NYC, real NYC, London, all-China, a phone Tokyo start) measured the same way each time: load time (median of 3 on claimed cores), each worker's CPU time and WASM peak, page heap, bytes downloaded, plus counts of work done (zones solved, rounds, rows) that don't depend on machine load; one script runs it on any build and appends to a ledger with the build id, and flags anything 10% worse than the last publish. Run on v0.4.3-v0.4.5 and master to start the history, then at every publish (a publish skill step).
 - T-3781 [P1] {L:loading} {after:a report with the new diagnosis} Demand data not loading within 10 minutes
   - Context: Two anonymous reports on v0.4.2 (feedback 1795092485-688b2e15, 1795083347-52a31102), plus a third, "crashes every time it opens" (1795097335-fa20c413), all Japanese, 11-19 (board group g115). Their saves load normally on master. A stuck load now restarts once, and the report names the stuck worker and period (tree demandload). Also cities not loading on Safari and iPad (feedback 1794957009, 1794891212; found by T-3632). The five iPhone crash reports of 11-19 to 11-20 (3 accounts, read 11-21 on your yes) were all out-of-memory screens loading Tokyo-start games of 1,156-2,090 stations; their tab peaks 1,254-1,705 MB on an emulated iPhone against iOS's 1.4-2 GB limit (T-3160, T-3939, T-3940; notes/T-3781.md "The iPhone crash reports").
@@ -167,9 +170,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Other: notes/T-3659.md
 
 ## Demand
-- T-4041 [P2] {L:route-choice} {waits:Anita} Riders take the train that arrives first
-  - Need from Anita: Build it (prototype 3-4 h, then 4-6 h to land)? I'd say yes: it is the players' complaint, and Newark to Trenton goes from 39% to about 59% on the express.
-  - Context: From T-4019: riders take the first train worth taking, and a slower train counts if it is slower by less than half the express's headway, so Newark to Trenton (41 vs 31 min, same fare) goes 61% local. With riders knowing when each train leaves, they board the one that reaches the stop first. Also: long trips are costed at the planned first wait but loaded on the plain half-headway rule (2-3 h to align, part of this). Riders rows move less, since an express serves few station pairs.
+- T-4041 [P1] {L:route-choice} Riders take the train that arrives first (taking, 2026-11-22, agent firsttrain)
+  - Context: You, 11-22: "yes ... that seems high prio to look into. i thought they took the best route that got them to destination the fastest ? that should be the case"; and "this probably also is part of why people are finding that buses are too strong now, people have buses and trams on parallel routes and are finding that people are only really taking the bus, and piling up waiting for the bus. probably cuz its way more frequent (and also cuz of the 2m boarding penalty for trams which we might wanna undo for steret trams but i think the higher bus frequency might be draggint it way further)". From T-4019: riders take the first train worth taking, and a slower train counts if it is slower by less than half the express's headway, so Newark to Trenton (41 vs 31 min, same fare) goes 61% local. With riders knowing when each train leaves, they board the one that reaches the stop first. Also: long trips are costed at the planned first wait but loaded on the plain half-headway rule (2-3 h to align, part of this). Riders rows move less, since an express serves few station pairs.
+  - Goal: Riders between two stops board whichever train or bus gets them there first, so Newark to Trenton goes to about 59% express and a tram beside a more frequent bus keeps the riders it gets there first; the street-tram boarding penalty's share of the bus pull measured.
   - Other: notes/T-4019.md
 - T-3936 [P3] {L:route-choice} Intercity effective time for the route shown
   - Context: From T-3632, 11-21: the intercity panel's "Effective time" is the average over the whole place, not the route shown (Nagoya - Osaka: the route's own 136 min, the panel 237, the car 174), so a click beside a station reads as the train losing.
@@ -397,15 +400,19 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Need from Anita: Dragging a station or platform end slides it along its track, with bending by the track's own points (recommended yes); and a train turning back at a middle stop that sits inside a piece gets a form in the path here, so lines that reverse at a middle stop keep working once every new station is an anchor (recommended yes).
   - Context: T-4030 stage g. From T-4036: the app still draws a line ending at an anchor to its piece's end; paths of whole pieces can't say where inside a piece a train turned. From T-4035: the app draws an anchor station east-west with no track count (network.ts); stations the tool places still name tracks by the node's axis, and the flip (T-4038) refuses them until their platforms are pinned to slots.
   - Other: 4-5 h. notes/T-4030.md
-- T-3961 [P2] {L:track-rework} Old stations converted (taking, 2026-11-22, agent convert)
-  - Context: Each old station node becomes a station with its platforms; each stop keeps the way picks today's rule makes. From T-4036: one-way legs as anchors (a split with its leg stations off the track) are not routed as one-way stations yet; done here. From 4c (notes/T-3962.md): demand's way out at a one-track station from an old save still boards at the listed station, not where trains stop (Vienna line 25 stop 8: 2443 instead of 2385, +40 rail trips a day when fixed); a one-line change in `line_fwd_stops`, applied here.
-  - Goal: The three reference saves' figures equal to master, apart from that named fix.
-  - Other: Side by side with 4c, 4d, 4e. Files: save.rs converter. 3-4 h. stage 4b
+- T-3961 [P2] {L:track-rework} {after:T-4037} Old station nodes merged into anchors
+  - Context: Stage 4b's two named fixes landed on tw/track 11-22 (the Vienna one-track pick, +40 rail trips a day; one-way legs as anchors routed as one-way stations). The merge itself waits: the design's rule (the joined piece's length equal to its two pieces' to the bit) merges only 22 of 4,581 reference stations, 2,790 within 1 mm, and an anchor's piece can't take a station or a branch until stage g, so merging at load would take building options away. Within 1 mm, lengths and run times move by up to 1 mm: invisible, so that tolerance is the plan unless g changes the picture.
+  - Goal: Old saves' station nodes become stations on anchors, figures equal to before within the tolerance.
+  - Other: Prototype and counts in notes/T-3961-merge.patch (applies to b19961f2). notes/T-3961.md
 - T-3963 [P2] {L:track-rework} {after:T-4037} Station tool templates and preview
   - Context: Your decision 2: Side platforms, Island (zero width for now) and Single platform; the pointer picks the tracks (on more tracks, side platforms take the track under the pointer and its neighbour nearer the pointer, never by pairing); a platform placed overlapping a station joins it; the ghost shows the covered tracks and their ways.
   - Goal: All three templates on single, double and 4 tracks; strings listed.
   - Other: Side by side with 4b, 4c, 4e. Closes T-3354. Files: stationTool.ts, stationSnap.ts, ToolBar.tsx. 5-6 h. stage 4d
-- T-3964 [P2] {L:track-rework} {after:T-3961} Join to station and Make a separate station
+- T-4043 [P2] {L:track-rework} Station ids apart from node ids (taking, 2026-11-22, agent stationids)
+  - Context: From T-3961: stations are still known by their node's id, so a station can't take in platforms on another node or be split off. Join to station and Make a separate station (T-3964) wait on this. About 5-8 h.
+  - Goal: Stations carry their own ids, saved and loaded, with old saves mapping each node station to one id and figures unchanged.
+  - Other: notes/T-3961.md
+- T-3964 [P2] {L:track-rework} {after:T-4043} Join to station and Make a separate station
   - Context: Stage 4e's platform picture landed on tw/track 11-22 (platforms added and removed from the station panel, a line refused for want of a platform named). Join to station and Make a separate station need a station's membership stored apart from its node, which 4b (T-3961) brings; stand-ins on passages were dropped, since a passage is priced, reaches 1000 m and moves demand. Also found: the docs say a one-track station's twin must serve the same way, but the sim accepted an eastbound-only station beside a westbound-only twin.
   - Goal: Both buttons on the platform picture, joining by the name within 300 m as the design says.
   - Other: StationInspector.tsx, PlatformPicture.tsx. notes/T-3964.md
@@ -875,9 +882,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your TODO.md, 11-20, from player suggestions: "station logo?? paint it?" Design for you first.
 
 ## Track and trains
-- T-3691 [P3] {L:track-rework} {after:tw/track branch cut} Track levels -5 to +5 (taking, 2026-11-22, agent levels)
-  - Context: Your old TODO: "-5 to +5 for track level, in advanced mode only? maybe -4 maroon, -5 dark magenta, and lighten +3 to like periwinkle, +4 light purple, +5 light violet". You, 11-21: the extra levels "should come with the track rework, toggleable in settings whether you show them".
-  - Goal: Levels -5 to +5 with those colours, built with the track rework, and a Settings toggle for whether the extra levels show.
 - T-3692 [P3] {L:track-drawing} Bezier track as a setting
   - Context: Your old TODO: "bezier track placement, toggleable". You, 2026-11-18: "bezier track should be toggleable in settings yes".
   - Goal: A design to you first (how a curve is drawn and edited, what speed rules apply), then a settings toggle for bezier placement.
@@ -895,7 +899,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Each solving worker holds its own copy of the zones (250-550 MB a big city, 1.3 GB all-China); you saw 7.4 GB in Firefox after 43 minutes. You, 2026-11-16: do A (fewer, faster workers capped by memory on big saves) then B (split zones and the market between workers, T-1560, 25-40 h); queue C (one shared memory, threaded WASM, 60-100 h, Cloudflare header) only if it would help noticeably. A landed 2026-11-16 (b3d2ea95): NYC runs 2 workers (-0.5 GB, load about 15 s slower), all-China 1 (-2.9 GB, 30-50 s slower), figures identical.
   - Goal: B built, with memory and solve time measured before and after on NYC and all-China.
   - Other: notes/pr-survey-2026-11-16.md "T-3373 options"; notes/T-3329.md and notes/T-3071.md.
-- T-3932 [P2] {L:memory} A cores slider with its memory and speed
+- T-3932 [P2] {L:memory} A cores slider with its memory and speed (taking, 2026-11-22, agent coreslider)
   - Context: You, 11-21, on whether big saves should run two workers: "if we dont have a way of telling how much memory a person actually has this question is meaningless and its on the player to decide. i thinkthe only actionable item here is to like maybe rework "use more cores" to have an actual slider where people can select how many cores and it estimates the resulting memory usage right below and the estimated speed gain or loss." Today Settings has a "Use more cores" switch; stage A (T-3373) caps workers by memory on big saves.
   - Goal: Settings has a slider for the number of solving workers, with the estimated memory and the estimated load and edit time for the open game shown below it, and the player's pick overrides stage A's memory cap.
 - T-4042 [P3] {L:solve-consistency} Drop the compose-afresh on a replaced worker
