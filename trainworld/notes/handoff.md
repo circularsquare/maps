@@ -10,6 +10,10 @@ T. T-4041 LANDED ac526280 (her top priority; "use the rest of our usage toward t
    first-arrival rule, 0.75 softening, late joins, street trams no 2+2. +45% solve / +14% heap (she said "probably
    worth it" to +13%: asked again; T-4054 filed to cut it). Running: batchcheck14 (sonnet, master, port 6141) and
    evenspaced (opus, T-4050, tree evenspaced). Both in the next update, "probably tomorrow evening" (11-23).
+   batchcheck14: T-4041 PASS; T-1354 possible order dependence -> T-4055 (ordercheck, sonnet, holds the publish);
+   bar never ended full -> fixed 0c336c7f. Her 11-22 ~23:30 UTC: keep the cliff fix, try the cheaper one (T-4054,
+   P1, after T-4050: same search code; give it to evenspaced when it reports); first-train quarter stays agnostic
+   about changes (the deadline already keeps them no later than direct). 8800 = 5edb2e77.
    Leftover folder .tw-trees/arrivefirst (not a worktree; node_modules junction inside: don't delete by hand).
    Her hope: "buses get more reasonable values relative to trams ... more uniform ... cuz everything is parallel".
 U. Everything else paused for usage, trees kept, {after:next week's usage}: T-4024, T-4043, T-3346, T-3932, T-4025,
