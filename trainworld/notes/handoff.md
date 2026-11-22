@@ -13,11 +13,13 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
    after. Standby tabs left: maps-5a, maps-17 (notes/standby.txt).
 1. master 0a041a75; 8800 = 88721523 (save level 38). Batch 13 (T-3502 airports, T-3655 edit speed, bmtab,
    T-3373 s4-5 flagged) landed, unchecked: one batch checker before any publish (held for usage until then).
-2. TRACK (her top priority): stages 1, 2a, 2b, 3a1 landed; tw/track 5af6e0d7 (save level 39). trackparity (Opus)
-   on 3a2 T-3952 (parity gates A and B) from tw/track; land with `finish ... --into tw/track`; then 3b T-3953.
+2. TRACK (her top priority): stages 1, 2a, 2b, 3a1, 3a2 landed; tw/track 9d1fa229 (save level 39). Side by side
+   from it: tracksave 3b T-3953 (save format), trackdraw 3d T-3955 (drawing; sheet to review/track-3d.png). Land
+   each with `finish ... --into tw/track`; 3c T-3954 (line paths) after 3b.
    2b strings sent to her for text ack (Quad track -> 4 tracks, Double up -> 4 tracks, ...: notes/T-3950.md).
 3. T-3373 B: stages 3-5 landed under ?split=1; stage 6 (edits) next, not started (usage).
-4. Running: trackparity only. Successors only for track or pressing bugs (usage).
+4. Running: tracksave, trackdraw (Opus). Successors only for track or pressing bugs (usage). She's home 11-21 ~19:50
+   local; sent her the look-at list (deploy, wiki, help panels, 2b text).
 5. Deferred by her until home: server deploy (a-..-20), wiki push (a-..-18). Waiting: T-2264 help panels (she'll
    look). Later: T-3937 quiet machine; T-3931 held for T-3231; T-3939 B's 140 MB.
 ## Her words

@@ -375,11 +375,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Design agreed 11-21 (notes/T-3444-design/, her answers in answers-2026-11-21.md; three small calls still open in review/track-rework-design.md). Built in 38 stages, T-3948 to T-3985, in four releases, on a long-lived branch tw/track merged into master at each release. Stage 1 (T-3948) is done on master; next is stage 2a (T-3949) on tw/track once the branch is cut. Your weekend notes (2026-11-16) are the heart of it.
   - Goal: Closes with the last of its stages.
   - Other: Your notes verbatim: notes/T-3444.md; sizes in notes/code-tour.md. Requirements folded in 11-20: a station placed on track that leaves its shape alone redraws no neighbours (T-2767, 0.2-0.9 s today); the drawn network rebuilds only near a change (T-2701); the Penn Station to Emeryville snapped preview (3 s, T-763) as a check case. notes/review-edit-speed-2026-11-20.md
-- T-3952 [P2] {L:track-rework} {after:T-3951} Track partners, turns and parity (taking, 2026-11-21, agent trackparity)
-  - Context: Each track's partner stored (the loader pairs each old double); turn moves at stop nodes and bare ends; routing and capacity on the new keys checked whole.
-  - Goal: Parity gates A (real NYC) and B (the small saves and the Amsterdam "test" save) equal to master: paths, capacity and rides.
-  - Other: Files: the compile module, net/paths.rs, capacity.rs. 3-4 h. stage 3a2
-- T-3953 [P2] {L:track-rework} {after:T-3952} New save format and old saves
+- T-3953 [P2] {L:track-rework} {after:T-3952} New save format and old saves (taking, 2026-11-21, agent tracksave)
   - Context: TWT7 at level 36; old saves converted on load with the old bytes kept.
   - Goal: Amsterdam "test", Vienna and North America day 383 load to parity, Amsterdam first.
   - Other: Side by side with 3c and 3d. Files: save.rs, saveFile.ts. 3-5 h. stage 3b
@@ -387,7 +383,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Lines store paths as (track, direction) spans; the return run by partner lookup; routed returns stored, so `back_lines` stops rebuilding lines every edit; routing searches authored tracks.
   - Goal: Parity A and B; the perdir and t3565 checks pass.
   - Other: Side by side with 3b and 3d. Files: net/paths.rs, perdir.rs, wasm/lines.rs, LineData. 4-6 h. stage 3c
-- T-3955 [P2] {L:track-rework} {after:T-3952} Draw each track at its own offset
+- T-3955 [P2] {L:track-rework} {after:T-3952} Draw each track at its own offset (taking, 2026-11-21, agent trackdraw)
   - Context: Per-track rows to the app; `legShifts`, the double-to-single taper and `singleLeadStrokes` go; the wiki gets a "Tracks" page.
   - Goal: Joins, branches and flyovers look right on both running sides.
   - Other: Side by side with 3b and 3c. Files: wasm/snapshot.rs, stateRows.ts, network.ts, renderer and shaders. 5-6 h. stage 3d
