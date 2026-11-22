@@ -20,18 +20,18 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
 4. Overnight: Muzaffarpur rebuild (haj into haj, hjp, sxp; uji retired), restarted 22:46 local after a Geofabrik 404
    (T-4027), PID 23872, log artifacts/trainworld/redraws-run.log, checks in notes/T-3688.md; 8800 keeps the old zones.
    Manila designed, not applied (a-..-22); Hokkaido designed, needs a day session (a-..-23).
-5. Waiting on her: T-2264 help panel text (graph labels), T-4025 perf ledger go, 3d sheet look. Wiki on the website
-   on hold (fan wiki; pages in artifacts/trainworld/wikisite/site-hold). No agents running.
+5. Waiting on her: T-4025 perf ledger go, Hokkaido image. Wiki on the website on hold (pages in
+   artifacts/trainworld/wikisite/site-hold). Agents: trackedit (T-3956), trackstarts (T-3958), manilaspec (T-3688
+   Manila), caucasus (T-3764). Track order: 3e -> 3f -> 4a1 -> 4+/4a2 -> 4b-4e -> 4f.
 ## Her words
-- 11-21 ~20:00 local: deploy yes (done); wiki link off the site; drop the city help panel, trip panel takes her
-  text (notes/T-2264.md) and a graph; stop-mark and bookmark tweaks (T-4022); quad = any single tracks (T-4023).
-  Asked how fast walking is: 6 km/h on 1.3x the straight line (about 4.6 km/h as the crow flies).
+- 11-22 ~04:30 UTC: last day of the usage week, a decent chunk left: aim to finish track stage 4 overnight ("if we run
+  out, we run out"); compute-heavy, token-light tasks too: Caucasus and Afghanistan (caucasus agent); China
+  populations look old, filed T-4028. Cap 16 overnight per the rule; back to 8 when she's up (ask).
+- 11-22 ~04:10 UTC: start 3e (trackedit, Opus, syncs master into tw/track first); 3d sheet fine; Manila: keep Malolos
+  with Manila (manilaspec revising, run after the IN join); Hokkaido: Hidaka and Shiribeshi with Sapporo? (image to come); trip ? good.
 - 11-21 ~22:40 UTC: deploy and wiki deferred till home; T-3376 yes; T-3742 planned, start later; T-4008 no soft
-  rule, drop income groups (players say riders skip the express: T-4019); busways any bus; hide empty Bookmarked
-  tab; text ack (bookmarks, boarding-only); help panels not seen yet.
-- 11-21 ~22:20 UTC (outside): "running high on usage so i think we can wind down starting new tasks, except we
-  should keep working on anything related to track rework, or any pressing bugs". Running agents finish; no
-  replacements unless track rework or a pressing bug (overrides 4-12 agents for now).
+  rule, drop income groups (players say riders skip the express: T-4019); busways any bus. (Her 22:20 usage
+  wind-down is replaced by the 11-22 04:30 line.)
 - 11-21 ~18:45 UTC: main priorities now: keep the track rework moving, finish and polish BRT. She's out with remote
   control on this session; standby orchestrator tabs (notes/standby.txt, docs/orchestrator.md "Your own cycling").
 - 11-21 ~17:50 UTC: "text ack" for everything listed to then (viewonly, BRT stations, modeldown, brtblueprint,

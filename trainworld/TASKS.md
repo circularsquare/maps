@@ -24,6 +24,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-3671: the new zone clt (Chimaltenango, with Antigua Guatemala) has no ja or zh names; `place_names.mjs --zones` stalled for 13 minutes and wrote nothing.
   - Goal: clt has its names in every language that has zone names, and the stall's cause is found or recorded.
   - Other: notes/T-3671.md
+- T-4028 [P3] {L:census-totals} China's populations look out of date
+  - Context: You, 11-22: "one person complained about china population data being outdated and not reflecting recent growth, so we can file this as something to look into." Not started; which year China's zones use and where the player saw it is the first thing to find.
+  - Goal: The year and source of China's zone populations stated, compared with any newer published figures for the fastest-growing cities; a fix proposed to you if the gap is large.
 - T-4027 [P2] {L:world-tooling} Downloads break on Geofabrik's India move
   - Context: 11-22 Geofabrik moved India into its own folder: `asia/india/eastern-zone-latest.osm.pbf` redirects to `india/eastern-zone/...` (no `asia/`, 404), and the index's new `asia/india/eastern-zone/eastern-zone-latest.osm.pbf` redirected to an unpublished `-261121` file (404). The two-level `asia/india` path still redirected correctly. T-3688's wave 1 parked haj on it; the 20 Nov file was put in data/raw/osm by hand. The URL is formatted from the extract id in world_run.py:84, routes.py:53, osm_water.py:165 and japan_zones.py:72; world_plan.py:1599 turns index URLs back into ids, which the new three-level layout would change (and the cache names with it).
   - Goal: A fresh download of any India zone works without a hand step, with extract ids and cache names unchanged; other three-level extracts checked for the same fault. Look again first: Geofabrik may finish the move by itself.
@@ -127,7 +130,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Myanmar (59 of 60 rows), Laos (11) and Timor-Leste (4) shipped 2026-11-20. Bhamo (0.44M) is parked: its busiest square sits on a GHSL pile-up of 23,697 people in one village square in Mansi, not on a town.
   - Goal: Bhamo built with its people spread off that square (or held), then gated and joined.
   - Other: notes/T-1738.md section 16
-- T-3764 [P3] {L:new-countries} Fill the gaps, Central Asia, Afghanistan and the Caucasus
+- T-3764 [P3] {L:new-countries} Fill the gaps, Central Asia, Afghanistan and the Caucasus (taking, 2026-11-21, agent caucasus)
   - Context: You, 2026-11-19: "after that i guess we fill in the gaps (pakistan/bangladesh, central asia, etc)". Pakistan and Bangladesh were the first batch. The list of what is still missing, in batches, is in the notes: Central Asia with Mongolia (77M), Afghanistan (38M), the Caucasus (17M), the Levant and Yemen (63M), Nepal, Bhutan and Sri Lanka (52M), Africa beside built countries, then Papua New Guinea and the Pacific.
   - Goal: Each batch built and joined, next Central Asia.
   - Other: notes/T-3764.md
@@ -383,7 +386,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Design agreed 11-21 (notes/T-3444-design/, her answers in answers-2026-11-21.md; three small calls still open in review/track-rework-design.md). Built in 39 stages, T-3948 to T-3985 and T-4024 (Add a track, your 11-21 call, T-4023), in four releases, on a long-lived branch tw/track merged into master at each release. Stage 1 (T-3948) is done on master; next is stage 2a (T-3949) on tw/track once the branch is cut. Your weekend notes (2026-11-16) are the heart of it.
   - Goal: Closes with the last of its stages.
   - Other: Your notes verbatim: notes/T-3444.md; sizes in notes/code-tour.md. Requirements folded in 11-20: a station placed on track that leaves its shape alone redraws no neighbours (T-2767, 0.2-0.9 s today); the drawn network rebuilds only near a change (T-2701); the Penn Station to Emeryville snapped preview (3 s, T-763) as a check case. notes/review-edit-speed-2026-11-20.md
-- T-3956 [P2] {L:track-rework} {after:T-3955} Extend and edit one track
+- T-3956 [P2] {L:track-rework} {after:T-3955} Extend and edit one track (taking, 2026-11-21, agent trackedit)
   - Context: A single drawn from a double's end extends the track under the pointer, with no automatic merge (your note: merging is manual); joins come from the pointer's pick; the second click goes straight to one track on any count (2b's step to one double goes, your 11-21 call), shown in the bar's track picture, and that track can be deleted or flipped; the Delete tool takes the whole run.
   - Goal: Extending each track of a double, merging two singles manually, deleting one side and picking one track of 4 in one click all work; lines are rerouted or refused by name.
   - Other: Closes T-3353 with it. Files: tools.ts, wasm/draw.rs, wasm/edits.rs, toolDelete.ts. 4-5 h. stage 3e
@@ -394,7 +397,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-4026 [P2] {L:track-rework} {after:the first tw/track release} TWT7 outside the game before the merge
   - Context: From T-3953 (tracksave): before tw/track merges into master, shonei-server's save check must walk TWT7 (body levels 1-2) and levels 39-40 (deploy on your yes), `pipeline/readsave.py` must read TWT7 (realauto's keep and service take player saves), and 07-saves still says "body level 36". Master's next save level is renumbered past tw/track's 40 at that merge.
   - Goal: A TWT7 save passes the server check and readsave.py on a real save; the docs say level 40.
-- T-3958 [P2] {L:track-rework} {after:T-3953} Sandbox starts on the new format
+- T-3958 [P2] {L:track-rework} {after:T-3953} Sandbox starts on the new format (taking, 2026-11-21, agent trackstarts)
   - Context: `realsave` builds today's edges directly, so it changes with the format; the starts must keep loading settled (London 0.6 s, not 43 s).
   - Goal: Every start rebuilt and loading settled.
   - Other: Files: sim/src/bin/realsave.rs, pipeline realshared.py. 2-3 h. stage 3g
@@ -700,11 +703,6 @@ Anita's playtest with a friend, filed 2026-11-03 evening (verbatim, grouped, in 
   - Context: Only if your tutorial playtest asks for more: the demand bubble hover, Train length, and the top bar's split.
   - Goal: Longer tutorial-only hovers for those three, if the playtest wants them.
   - Other: Uses `guideVerbose` from T-2263.
-- T-2264 [P2] {L:help-tutorial} {waits:Anita} One trip help panel with your wording and a graph
-  - Need from Anita: Look at the trip panel's ? on 8800 (b0647110, the dot at the selected trip) and say OK or what to change, including the labels "train", "car", "train time compared with car time", "share of trips" and "The dot is this trip, for the purpose and time of day under By transit."
-  - Context: You, 11-21: drop the city help panel; the trip panel's ? keeps "train and car the same: half each" as a graph (car and train), and takes your effective time text word for word (notes/T-2264.md "Her wording 11-21").
-  - Goal: The city ? gone; the trip ? shows your text and the train-against-car graph.
-  - Other: notes/todo-2026-11-03h.md
 - T-2268 [P2] {L:station-placement} Easier station placement over a ramp
   - Context: Give a station more room when auto-ramping over a line, and snap it to the nearest viable spot.
   - Other: notes/todo-2026-11-03h.md.
