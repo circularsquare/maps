@@ -52,7 +52,7 @@ Take the first that holds; never take a source from memory.
    people before and after. A count older than about 2015 takes mode "shares" (GHSL's people per state
    or province, spread by the census shares). A config may cover part of a country (`only`, a code regex: Cambodia's
    north-west) or a file with no parent rows (`parent` None, `national_total` the published figure and how near the
-   units must come: New Zealand's SA2s). Configs: ID, PH, KH, NZ, IN, TR, CO, EG, LA, IR. Switch a country on with `"module": "admin_totals"`
+   units must come: New Zealand's SA2s). Configs: ID, PH, KH, NZ, IN, TR, CO, EG, LA, IR, PK, AZ. Switch a country on with `"module": "admin_totals"`
    in its `ZONE_RULES` row and ARCHETYPE C; a built row takes it only when rebuilt (status planned, which clears its
    signal cache), and its `pop_vs_plan` is relaxed with the census figure. Where GHSL is so wrong that the plan itself
    zones on phantoms (Iran: counties split off a city given the city's whole count, a 1.17M "metro" on one), add
@@ -131,7 +131,18 @@ with a task, the rest of the country built. GHSL can be as wrong the other way (
 census): a row under about a third of its census is held too, the rest shipped low with a task. Compare by zone where
 the census has small areas (the Philippines' barangays, T-1738 13), else by province. Hold them on the live plan before
 the run: a row held after its gate is still registered, the join solves it with its group, and the market step then
-fails on it (Indonesia's yai).
+fails on it (Indonesia's yai). Where the wrong units share a zone with right ones, holding the row holds those too: give
+the country census totals with `plan_people` instead (section 1.3), so the plan zones on the census as well. A census
+with a permanent (de jure) and an existing (de facto) column takes the existing one: Azerbaijan's permanent column
+counts the people displaced round Karabakh at home, and GHS-POP had spread them over the ruins (Kalbajar 104,510 against
+0 existing, T-3764). Phantom pixels inside districts whose totals hold (Afghanistan's 20,000-84,000 a pixel in district
+centres, against COD-PS 0.6-1.8) are left.
+
+**Land another side holds.** De facto lines are `world_plan.DE_FACTO` (real lines of control) and `LEFT_OUT` (a polygon
+file; units mostly inside it are not zoned): occupied Ukraine, Abkhazia and South Ossetia (Natural Earth 4.1.0's
+breakaway polygons, T-3764). List each unit's share inside the polygons before the dry run: a unit the file fills a
+missing city into can pass a share of 0.5 (Gori, 51% with Tskhinvali, so Georgia's share is 0.8). Say in the report that
+this is Anita's to overturn.
 
 Done when: the dry plan's rows look like the country's towns and countryside, with about the people they have.
 
@@ -203,7 +214,9 @@ The live rows must match the dry run's (ids may differ if another country took s
 (`--countries MA,DZ,TN,EG`): dry runs made one country at a time each pick the same free ids (T-2897), so patches and
 names drafted on them are keyed by unit or name, not id. Apply item 1-4
 patches if they were made on the dry plan. `world_run.py plan --countries XX --limit 300` lists the
-runner's regions and extracts. Then `<tc>\backup.py T### pre XX,<neighbours>` (`--dry` counts first; it refuses a country with no packs, so with no
+runner's regions and extracts. A row given a whole continent (`europe`) lies a little outside its country's extract
+(Georgia's covered 99.1-99.4% of two rows, border slivers): set its extracts to the country's by hand under the plan
+lock (T-3764). Then `<tc>\backup.py T### pre XX,<neighbours>` (`--dry` counts first; it refuses a country with no packs, so with no
 built neighbour either there is nothing to back up before the join).
 
 Done when: the plan holds the rows and the backup exists.
@@ -229,7 +242,9 @@ later, its children (the cmd's own python.exe child is venv's launcher, alive as
 
 **Before waiting**, write in the notes: batch id (the log's first lines), log path, cmd and python PIDs,
 liveness (`Get-Process -Id <pid>`, `world_run.py status`), restart (the same command: built rows are taken
-up, not rebuilt), stop (`<tw>\data\work\world_run\STOP`).
+up, not rebuilt; a `--countries` run takes planned and built rows only, so after parks restart with `--rows`), stop
+(`<tw>\data\work\world_run\STOP`). Run `setup_sim.py <kit> check` before every start: the kit's junctions once vanished
+minutes after a start, and every build then failed compiling the sim (T-3764).
 
 **Wait** with one background command, `powershell -File <tc>\waitany.ps1 <python pid>`
 (Bash with `run_in_background`), then end your turn or do this task's desk work (register row, names

@@ -1691,6 +1691,16 @@
    "release": "gbOpen, built Dec 12, 2023",
    "licence": "Creative Commons Attribution 3.0 Intergovernmental Organisations (CC BY 3.0 IGO)",
    "count": 65
+  },
+  "GEO": {
+   "kind": "geoBoundaries",
+   "level": "ADM2",
+   "urls": {
+    "ADM2": "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/GEO/ADM2/geoBoundaries-GEO-ADM2_simplified.geojson"
+   },
+   "release": "gbOpen, built Dec 12, 2023",
+   "licence": "Public Domain",
+   "count": 68
   }
  },
  "metros": [
@@ -8506,7 +8516,7 @@
     "PHL"
    ],
    "iso2": "PH",
-   "people": 29927276,
+   "people": 26121103,
    "origin": [
     120.9836,
     14.599
@@ -8550,7 +8560,6 @@
      "30758251B50871741269469",
      "30758251B69828994242652",
      "30758251B17137737947399",
-     "30758251B11674695503139",
      "30758251B27786389641785",
      "30758251B61200223936905",
      "30758251B80677147871069",
@@ -8563,32 +8572,20 @@
      "30758251B35007836972970",
      "30758251B84945919751232",
      "30758251B93181595327102",
-     "30758251B25010155253639",
      "30758251B11566455240441",
-     "30758251B7856900683747",
-     "30758251B70394947759752",
-     "30758251B28396415682182",
      "30758251B34403699619291",
-     "30758251B4793511613736",
      "30758251B75610884117479",
      "30758251B84355932760435",
      "30758251B39966399473469",
      "30758251B69399459557735",
-     "30758251B26373043106772",
-     "30758251B96236511516175",
      "30758251B94770277751528",
-     "30758251B19069500410191",
-     "30758251B86762521234938",
      "30758251B72252115450997",
      "30758251B89453678850457",
      "30758251B21872245709611",
-     "30758251B9712922067328",
      "30758251B49056939189974",
-     "30758251B641829746077",
      "30758251B30954744476099",
      "30758251B33555947912261",
      "30758251B76506512725367",
-     "30758251B84649155212336",
      "30758251B57572048623065",
      "30758251B42806803343696",
      "30758251B13765165414384",
@@ -8599,61 +8596,28 @@
      "30758251B92766896635284",
      "30758251B17311985979646",
      "30758251B88250453342652",
-     "30758251B62709822601123",
-     "30758251B33118282824163",
      "30758251B6653564464331",
      "30758251B96342431093437",
      "30758251B10181127311894",
-     "30758251B58026034412685",
-     "30758251B54075680975044",
      "30758251B45670091737840",
-     "30758251B95762646893125",
-     "30758251B86715159474326",
-     "30758251B55651779812419",
      "30758251B549341994031",
-     "30758251B18586490451466",
-     "30758251B11802167700274",
      "30758251B26560222225231",
-     "30758251B62240018312192",
-     "30758251B49530658943400",
-     "30758251B93953059217751",
      "30758251B28604379202623",
      "30758251B22134644718406",
-     "30758251B22922317245242",
      "30758251B86089983795598",
-     "30758251B96921420214384",
-     "30758251B85886628165841",
-     "30758251B29832257254847",
      "30758251B65416136656933",
      "30758251B41438074837585",
-     "30758251B80500535312528",
      "30758251B17999592905510",
      "30758251B47474969400955",
      "30758251B5946986755811",
-     "30758251B97625371583583",
-     "30758251B60553088936825",
-     "30758251B40270166730947",
-     "30758251B50173683620188",
-     "30758251B55553660747763",
-     "30758251B83345334824937",
-     "30758251B37438092207200",
-     "30758251B80791162648573",
-     "30758251B72127248939453",
-     "30758251B18917837863618",
-     "30758251B37787171987907",
-     "30758251B30231322331435",
-     "30758251B1630286055776",
-     "30758251B77759274087167",
-     "30758251B75041728100669",
-     "30758251B44778470140505",
-     "30758251B8254101193317"
+     "30758251B97625371583583"
     ]
    },
    "bbox": [
-    120.248,
-    13.763,
-    121.676,
-    15.041
+    120.562,
+    14.077,
+    121.336,
+    15.017
    ],
    "source": {
     "ucdb": [
@@ -8688,30 +8652,32 @@
     "origin_was": [
      121.1754,
      14.5819
-    ]
+    ],
+    "hand_edit": {
+     "task": "T-3688",
+     "why": "Manila's metro row (29.9M, 127 units, its hull 0.51) reached into Bataan, Pampanga, north Bulacan, southeast Laguna and north Batangas, with pockets inside Tanay's zone; those fringes go to Balanga, San Miguel (with San Rafael), Tanay, Lemery and Nasugbu, Pampanga's delta towns Minalin, Sasmuan, Macabebe and Masantol to Angeles, or form San Pablo and Lipa zones; Malolos and south Bulacan stay in Manila (Anita, 11-22); Mariveles (0.13M, under the floor) joins Balanga"
+    }
    },
    "run": {
-    "run_batch": "20261103-000641",
+    "run_batch": "20261122-000442",
+    "built": "2026-11-22T00:20:47",
+    "gated": "2026-11-22T00:22:50",
+    "shipped": "2026-11-22T01:11:19",
     "steps": {
-     "build": 259.7,
-     "stations": 1.4,
-     "places": 9.2,
-     "routes": 286.3,
-     "merge": 1.2,
-     "nocar": 2.3,
-     "everyday": 1.3
+     "build": 109.9,
+     "stations": 1.1,
+     "places": 6.9,
+     "routes": 151.8,
+     "merge": 0.9,
+     "nocar": 1.5,
+     "everyday": 1.1
     },
-    "built": "2026-11-03T00:36:05",
     "gate": {
      "warn": [
-      "top_cell_jobs 55982.32421875",
-      "top_school_cell_pupils 6000.0",
-      "fleet_range 1"
+      "top_cell_jobs 52437.06640625",
+      "top_school_cell_pupils 6000.00048828125"
      ]
-    },
-    "parked": "2026-11-03T01:00:41",
-    "gated": "2026-11-03T01:10:48",
-    "shipped": "2026-11-03T01:41:56"
+    }
    },
    "gate_relax": {
     "top_cell_jobs": "Makati's business district (56,000 jobs in its densest cell), real"
@@ -11507,17 +11473,17 @@
   {
    "order": 117,
    "id": "haj",
-   "name": "Hajipur",
+   "name": "Muzaffarpur",
    "status": "shipped",
    "region": "world",
    "countries": [
     "IND"
    ],
    "iso2": "IN",
-   "people": 11706636,
+   "people": 3274615,
    "origin": [
-    85.4822,
-    25.6066
+    85.3647,
+    26.1209
    ],
    "tz": "Asia/Kolkata",
    "utc_offset": 5,
@@ -11528,50 +11494,19 @@
    "module": "india",
    "units": {
     "IND": [
-     "45978901B42790720672442",
-     "45978901B40649040394815",
      "45978901B71150815885193",
      "45978901B12573885125470",
      "45978901B46107185493082",
-     "45978901B92336527726888",
-     "45978901B85882161461977",
      "45978901B35455582781462",
      "45978901B62399370133536",
-     "45978901B59756597347061",
-     "45978901B24390456494226",
-     "45978901B99930868408911",
-     "45978901B1019203321683",
-     "45978901B35486118115040",
-     "45978901B11039347271435",
-     "45978901B40907767103755",
-     "45978901B49350566416270",
-     "45978901B77739795470375",
-     "45978901B61306423391906",
      "45978901B60840958499476",
-     "45978901B57175678793939",
-     "45978901B72994510556463",
-     "45978901B16596610934414",
-     "45978901B89656861581733",
-     "45978901B77281254344736",
-     "45978901B65396079069965",
-     "45978901B53094783202015",
-     "45978901B53040821085007",
-     "45978901B11363665788691",
-     "45978901B22289963006225",
-     "45978901B20472469282187",
-     "45978901B97745391937009",
-     "45978901B7536863142205",
-     "45978901B61765709280675",
-     "45978901B54507503643079",
-     "45978901B42888913449308",
-     "45978901B6256422982070",
-     "45978901B42709429812924"
+     "45978901B61765709280675"
     ]
    },
    "bbox": [
     85.0,
-    25.463,
-    86.12,
+    25.901,
+    85.637,
     26.267
    ],
    "source": {
@@ -11593,31 +11528,33 @@
      10760,
      10774,
      10784
-    ]
+    ],
+    "hand_edit": {
+     "task": "T-3688",
+     "why": "Muzaffarpur's zone (row haj, 11.7M people in 38 sub-districts over 5,078 km2: GHS-UCDB's Ganges-plain urban centre, Hajipur in the plan, Muzaffarpur in the game) held three districts' towns as one zone; split by district: haj keeps Muzaffarpur's 7 sub-districts (its origin moves to Muzaffarpur town), new hjp Hajipur takes Vaishali's 15, new sxp Samastipur Samastipur's 14 with Begusarai's Bachhwara and Mansurchak; Ujiarpur (uji, 0.21M, one sub-district inside Samastipur district, under the 0.5M floor) is retired into Samastipur"
+    }
    },
    "solve_region": "bihar",
    "run": {
-    "run_batch": "20261103-055139",
+    "run_batch": "20261121-224700",
+    "built": "2026-11-21T22:50:36",
+    "gated": "2026-11-21T22:52:30",
+    "shipped": "2026-11-21T23:47:36",
     "steps": {
-     "build": 145.5,
-     "stations": 1.1,
-     "places": 2.3,
-     "routes": 133.2,
-     "merge": 1.3,
-     "nocar": 1.7,
-     "everyday": 1.1
+     "build": 18.5,
+     "stations": 0.8,
+     "places": 1.4,
+     "routes": 33.7,
+     "merge": 0.6,
+     "nocar": 1.2,
+     "everyday": 0.9
     },
-    "built": "2026-11-03T07:16:02",
     "gate": {
      "warn": [
-      "pop_vs_fua 3.2489166600530233",
-      "top_school_cell_pupils 6610.6787109375",
-      "fleet_range 1"
+      "pop_vs_fua 1.5759135152402635",
+      "top_school_cell_pupils 6056.9365234375"
      ]
-    },
-    "parked": "2026-11-03T07:18:52",
-    "gated": "2026-11-03T11:17:14",
-    "shipped": "2026-11-03T16:17:18"
+    }
    },
    "gate_relax": {
     "pop_vs_fua": "T-2111: GHS-UCDB counts the continuous village settlement of the Ganges plain or Kerala's coast as one urban centre, whose FUA holds only its towns; the plan's whole sub-districts hold several times the FUA"
@@ -14389,13 +14326,13 @@
    "order": 150,
    "id": "kab",
    "name": "Kabul",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "AFG"
    ],
    "iso2": "AF",
-   "people": 6567710,
+   "people": 6911180,
    "origin": [
     69.1361,
     34.5492
@@ -14414,14 +14351,20 @@
      "17698898B46017522577675",
      "17698898B53195345217503",
      "17698898B21871678766535",
-     "17698898B20052578515720"
+     "17698898B20052578515720",
+     "17698898B74617180198500",
+     "17698898B32779649275791",
+     "17698898B96190613421572",
+     "17698898B76183581414632",
+     "17698898B8299812932572",
+     "17698898B40293713134027"
     ]
    },
    "bbox": [
-    68.833,
-    34.304,
-    69.467,
-    34.797
+    68.295,
+    34.145,
+    69.623,
+    34.949
    ],
    "source": {
     "ucdb": [
@@ -14429,7 +14372,45 @@
     ],
     "fua": [
      2352
-    ]
+    ],
+    "remnants": {
+     "task": "T-1191",
+     "units": [
+      "17698898B74617180198500",
+      "17698898B32779649275791",
+      "17698898B96190613421572",
+      "17698898B76183581414632",
+      "17698898B8299812932572",
+      "17698898B40293713134027"
+     ]
+    }
+   },
+   "run": {
+    "run_batch": "20261122-004905",
+    "steps": {
+     "build": 18.9,
+     "stations": 0.9,
+     "places": 1.8,
+     "routes": 20.5,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-11-22T00:52:56",
+    "gate": {
+     "warn": [
+      "pop_vs_plan 0.8394080030398837",
+      "pop_vs_ghsl 0.8396489204822476",
+      "jobs_per_resident 0.18643000868175535",
+      "top_school_cell_pupils 7451.00927734375",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-22T02:24:02",
+    "shipped": "2026-11-22T03:15:34"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
    }
   },
   {
@@ -23326,36 +23307,37 @@
    "order": 260,
    "id": "bak",
    "name": "Baku",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "AZE"
    ],
    "iso2": "AZ",
-   "people": 3143462,
+   "people": 3180947,
    "origin": [
-    49.6595,
-    40.5385
+    49.8671,
+    40.4093
    ],
    "tz": "Asia/Baku",
    "utc_offset": 4,
    "extracts": [
     "asia/azerbaijan"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "AZE": [
      "54616110B88432173472444",
      "54616110B75219613739908",
-     "54616110B61947743987915"
+     "54616110B61947743987915",
+     "54616110B43271825035432"
     ]
    },
    "bbox": [
-    48.87,
+    48.687,
     39.677,
     50.62,
-    40.657
+    40.78
    ],
    "source": {
     "ucdb": [
@@ -23363,7 +23345,43 @@
     ],
     "fua": [
      1744
-    ]
+    ],
+    "remnants": {
+     "task": "T-1191",
+     "units": [
+      "54616110B43271825035432"
+     ]
+    },
+    "origin_was": [
+     49.6595,
+     40.5385
+    ],
+    "origin_by_hand": "T-3764: the zone's main town (Baku's centre, not Ceyranbatan; Nakhchivan city, not Sharur; Lankaran, not Masally)",
+    "module_by_hand": "T-3764: planned before Azerbaijan had its ARCHETYPE entry, so built on GHSL alone (3.03M against the census's 3.75M)"
+   },
+   "run": {
+    "run_batch": "20261122-035412",
+    "built": "2026-11-22T04:03:47",
+    "gated": "2026-11-22T04:07:26",
+    "shipped": "2026-11-22T04:42:39",
+    "steps": {
+     "build": 47.6,
+     "stations": 0.9,
+     "places": 2.3,
+     "routes": 41.5,
+     "merge": 0.7,
+     "nocar": 1.9,
+     "everyday": 0.9
+    },
+    "gate": {
+     "warn": [
+      "pop_vs_fua 1.367284421531839",
+      "top_school_cell_pupils 5356.8681640625"
+     ]
+    }
+   },
+   "gate_relax": {
+    "pop_vs_plan": "the 2019 census's existing population puts 3.75M in Baku, Absheron and Sumqayit (the plan's 3.18M is GHSL's; T-3764)"
    }
   },
   {
@@ -26809,7 +26827,7 @@
     "PHL"
    ],
    "iso2": "PH",
-   "people": 2843263,
+   "people": 3132078,
    "origin": [
     120.5887,
     15.145
@@ -26842,7 +26860,11 @@
      "30758251B30766672962304",
      "30758251B57632773357139",
      "30758251B2790468349785",
-     "30758251B91835064861119"
+     "30758251B91835064861119",
+     "30758251B70394947759752",
+     "30758251B19069500410191",
+     "30758251B25010155253639",
+     "30758251B7856900683747"
     ]
    },
    "bbox": [
@@ -26868,29 +26890,32 @@
     "origin_was": [
      120.6242,
      15.1964
-    ]
+    ],
+    "hand_edit": {
+     "task": "T-3688",
+     "why": "Manila's metro row (29.9M, 127 units, its hull 0.51) reached into Bataan, Pampanga, north Bulacan, southeast Laguna and north Batangas, with pockets inside Tanay's zone; those fringes go to Balanga, San Miguel (with San Rafael), Tanay, Lemery and Nasugbu, Pampanga's delta towns Minalin, Sasmuan, Macabebe and Masantol to Angeles, or form San Pablo and Lipa zones; Malolos and south Bulacan stay in Manila (Anita, 11-22); Mariveles (0.13M, under the floor) joins Balanga"
+    }
    },
    "run": {
-    "run_batch": "20261103-000641",
+    "run_batch": "20261122-002252",
+    "built": "2026-11-22T00:26:49",
+    "gated": "2026-11-22T00:30:01",
+    "shipped": "2026-11-22T01:11:20",
     "steps": {
-     "build": 209.8,
+     "build": 36.2,
      "stations": 1.1,
-     "places": 2.9,
-     "routes": 51.2,
-     "merge": 1.1,
-     "nocar": 1.8,
-     "everyday": 1.4
+     "places": 3.2,
+     "routes": 50.6,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 0.9
     },
-    "built": "2026-11-03T00:31:13",
     "gate": {
      "warn": [
-      "pop_vs_fua 1.3271909715124046",
-      "top_school_cell_pupils 5079.4755859375"
+      "pop_vs_fua 1.4608518908685504",
+      "top_school_cell_pupils 5070.9013671875"
      ]
-    },
-    "parked": "2026-11-03T01:00:42",
-    "gated": "2026-11-03T01:10:49",
-    "shipped": "2026-11-03T01:41:57"
+    }
    }
   },
   {
@@ -36469,7 +36494,7 @@
    "order": 426,
    "id": "her",
    "name": "Herat",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "AFG"
@@ -36510,6 +36535,37 @@
     "satellites": [
      889
     ]
+   },
+   "run": {
+    "run_batch": "20261122-004905",
+    "steps": {
+     "build": 15.6,
+     "stations": 0.8,
+     "places": 1.6,
+     "routes": 8.8,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-11-22T00:52:40",
+    "gate": {
+     "warn": [
+      "pop_vs_plan 0.7997605875515321",
+      "pop_vs_fua 1.6973535278029044",
+      "pop_vs_ghsl 0.8001268558859315",
+      "jobs_per_resident 0.18643000852322822",
+      "top_zone_jobs_share 0.12487703418752943",
+      "top_school_cell_pupils 7241.08203125",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-11-22T01:20:06",
+    "gated": "2026-11-22T02:24:03",
+    "shipped": "2026-11-22T03:15:35"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)",
+    "pop_vs_fua": "Herat's GHS-FUA is of 2015, the zone's people 2025's (1.70), as Pakistan's metro rows (T-3764)"
    }
   },
   {
@@ -42327,13 +42383,13 @@
    "order": 513,
    "id": "yer",
    "name": "Yerevan",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "ARM"
    ],
    "iso2": "AM",
-   "people": 1087364,
+   "people": 1228785,
    "origin": [
     44.501,
     40.1978
@@ -42348,14 +42404,16 @@
    "units": {
     "ARM": [
      "60910142B16508502425174",
-     "60910142B27028379066482"
+     "60910142B27028379066482",
+     "60910142B7641071119746",
+     "60910142B55787107844216"
     ]
    },
    "bbox": [
     44.32,
-    39.999,
-    44.621,
-    40.254
+    39.901,
+    44.917,
+    40.515
    ],
    "source": {
     "ucdb": [
@@ -42363,7 +42421,34 @@
     ],
     "fua": [
      359
-    ]
+    ],
+    "remnants": {
+     "task": "T-1191",
+     "units": [
+      "60910142B7641071119746",
+      "60910142B55787107844216"
+     ]
+    }
+   },
+   "run": {
+    "run_batch": "20261122-004248",
+    "steps": {
+     "build": 28.7,
+     "stations": 0.9,
+     "places": 2.3,
+     "routes": 12.4,
+     "merge": 1.2,
+     "nocar": 2.2,
+     "everyday": 1.6
+    },
+    "built": "2026-11-22T00:50:26",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10581967794773955"
+     ]
+    },
+    "gated": "2026-11-22T01:29:18",
+    "shipped": "2026-11-22T02:06:19"
    }
   },
   {
@@ -140774,7 +140859,7 @@
     "PHL"
    ],
    "iso2": "PH",
-   "people": 1064982,
+   "people": 1392907,
    "origin": [
     121.0745,
     15.1718
@@ -140800,7 +140885,10 @@
      "30758251B70332273238946",
      "30758251B17193566856457",
      "30758251B80195971051308",
-     "30758251B91173779963117"
+     "30758251B91173779963117",
+     "30758251B28396415682182",
+     "30758251B11674695503139",
+     "30758251B96236511516175"
     ]
    },
    "bbox": [
@@ -140824,26 +140912,183 @@
      "Gabaldon",
      "Peñaranda",
      "General Nakar",
-     "Dingalan"
+     "Dingalan",
+     "Norzagaray",
+     "Angat",
+     "San Rafael"
+    ],
+    "hand_edit": {
+     "task": "T-3688",
+     "why": "Manila's metro row (29.9M, 127 units, its hull 0.51) reached into Bataan, Pampanga, north Bulacan, southeast Laguna and north Batangas, with pockets inside Tanay's zone; those fringes go to Balanga, San Miguel (with San Rafael), Tanay, Lemery and Nasugbu, Pampanga's delta towns Minalin, Sasmuan, Macabebe and Masantol to Angeles, or form San Pablo and Lipa zones; Malolos and south Bulacan stay in Manila (Anita, 11-22); Mariveles (0.13M, under the floor) joins Balanga"
+    }
+   },
+   "run": {
+    "run_batch": "20261122-002252",
+    "built": "2026-11-22T00:27:09",
+    "gated": "2026-11-22T00:30:01",
+    "shipped": "2026-11-22T01:11:20",
+    "steps": {
+     "build": 61.0,
+     "stations": 0.9,
+     "places": 4.7,
+     "routes": 44.2,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 1.0
+    },
+    "gate": {
+     "warn": []
+    }
+   }
+  },
+  {
+   "order": 6335,
+   "id": "lpa",
+   "name": "Lipa City",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "PHL"
+   ],
+   "iso2": "PH",
+   "people": 1325577,
+   "origin": [
+    121.1631,
+    13.9411
+   ],
+   "tz": "Asia/Manila",
+   "utc_offset": 8,
+   "extracts": [
+    "asia/philippines"
+   ],
+   "archetype": "D",
+   "module": null,
+   "bbox": [
+    120.957,
+    13.763,
+    121.32,
+    14.156
+   ],
+   "source": {
+    "split_from": "smg",
+    "task": "T-3688",
+    "hand_edit": {
+     "task": "T-3688",
+     "why": "Manila's metro row (29.9M, 127 units, its hull 0.51) reached into Bataan, Pampanga, north Bulacan, southeast Laguna and north Batangas, with pockets inside Tanay's zone; those fringes go to Balanga, San Miguel (with San Rafael), Tanay, Lemery and Nasugbu, Pampanga's delta towns Minalin, Sasmuan, Macabebe and Masantol to Angeles, or form San Pablo and Lipa zones; Malolos and south Bulacan stay in Manila (Anita, 11-22); Mariveles (0.13M, under the floor) joins Balanga"
+    }
+   },
+   "units": {
+    "PHL": [
+     "30758251B54075680975044",
+     "30758251B62709822601123",
+     "30758251B29832257254847",
+     "30758251B86715159474326",
+     "30758251B9712922067328",
+     "30758251B55651779812419",
+     "30758251B33118282824163",
+     "30758251B22922317245242",
+     "30758251B75041728100669",
+     "30758251B8254101193317",
+     "30758251B37438092207200",
+     "30758251B80500535312528"
     ]
    },
    "run": {
-    "run_batch": "20261103-000641",
+    "run_batch": "20261122-002252",
     "steps": {
-     "build": 74.1,
-     "stations": 1.0,
-     "places": 4.3,
-     "routes": 45.0,
-     "merge": 0.9,
-     "nocar": 1.6,
-     "everyday": 1.2
+     "build": 18.7,
+     "stations": 0.8,
+     "places": 2.1,
+     "routes": 21.2,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 1.0
     },
-    "built": "2026-11-03T00:35:00",
+    "built": "2026-11-22T00:26:37",
     "gate": {
      "warn": []
     },
-    "gated": "2026-11-03T01:02:05",
-    "shipped": "2026-11-03T01:42:04"
+    "gated": "2026-11-22T00:30:06",
+    "shipped": "2026-11-22T01:11:21"
+   }
+  },
+  {
+   "order": 6334,
+   "id": "spb",
+   "name": "San Pablo City",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "PHL"
+   ],
+   "iso2": "PH",
+   "people": 1347407,
+   "origin": [
+    121.3253,
+    14.0683
+   ],
+   "tz": "Asia/Manila",
+   "utc_offset": 8,
+   "extracts": [
+    "asia/philippines"
+   ],
+   "archetype": "D",
+   "module": null,
+   "bbox": [
+    121.206,
+    13.963,
+    121.676,
+    14.306
+   ],
+   "source": {
+    "split_from": "smg",
+    "task": "T-3688",
+    "hand_edit": {
+     "task": "T-3688",
+     "why": "Manila's metro row (29.9M, 127 units, its hull 0.51) reached into Bataan, Pampanga, north Bulacan, southeast Laguna and north Batangas, with pockets inside Tanay's zone; those fringes go to Balanga, San Miguel (with San Rafael), Tanay, Lemery and Nasugbu, Pampanga's delta towns Minalin, Sasmuan, Macabebe and Masantol to Angeles, or form San Pablo and Lipa zones; Malolos and south Bulacan stay in Manila (Anita, 11-22); Mariveles (0.13M, under the floor) joins Balanga"
+    }
+   },
+   "units": {
+    "PHL": [
+     "30758251B96921420214384",
+     "30758251B85886628165841",
+     "30758251B62240018312192",
+     "30758251B49530658943400",
+     "30758251B60553088936825",
+     "30758251B37787171987907",
+     "30758251B80791162648573",
+     "30758251B58026034412685",
+     "30758251B95762646893125",
+     "30758251B18586490451466",
+     "30758251B93953059217751",
+     "30758251B44778470140505",
+     "30758251B18917837863618",
+     "30758251B86762521234938",
+     "30758251B84649155212336",
+     "30758251B641829746077"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-002252",
+    "steps": {
+     "build": 15.4,
+     "stations": 0.9,
+     "places": 2.3,
+     "routes": 17.0,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-11-22T00:26:27",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1641294792974046"
+     ]
+    },
+    "gated": "2026-11-22T00:30:05",
+    "shipped": "2026-11-22T01:11:21"
    }
   },
   {
@@ -142044,7 +142289,7 @@
     "PHL"
    ],
    "iso2": "PH",
-   "people": 893699,
+   "people": 1060107,
    "origin": [
     120.6326,
     14.0825
@@ -142069,7 +142314,9 @@
      "30758251B81633231484096",
      "30758251B56327904281600",
      "30758251B48484598892391",
-     "30758251B7170785123118"
+     "30758251B7170785123118",
+     "30758251B11802167700274",
+     "30758251B1630286055776"
     ]
    },
    "bbox": [
@@ -142092,28 +142339,32 @@
      "Lian",
      "Mendez",
      "Magallanes",
-     "General Emilio Aguinaldo"
-    ]
+     "General Emilio Aguinaldo",
+     "Naic",
+     "Maragondon"
+    ],
+    "hand_edit": {
+     "task": "T-3688",
+     "why": "Manila's metro row (29.9M, 127 units, its hull 0.51) reached into Bataan, Pampanga, north Bulacan, southeast Laguna and north Batangas, with pockets inside Tanay's zone; those fringes go to Balanga, San Miguel (with San Rafael), Tanay, Lemery and Nasugbu, Pampanga's delta towns Minalin, Sasmuan, Macabebe and Masantol to Angeles, or form San Pablo and Lipa zones; Malolos and south Bulacan stay in Manila (Anita, 11-22); Mariveles (0.13M, under the floor) joins Balanga"
+    }
    },
    "run": {
-    "run_batch": "20261103-000641",
+    "run_batch": "20261122-002252",
+    "built": "2026-11-22T00:26:06",
+    "gated": "2026-11-22T00:30:02",
+    "shipped": "2026-11-22T01:11:22",
     "steps": {
-     "build": 20.0,
-     "stations": 1.0,
-     "places": 1.7,
-     "routes": 20.6,
-     "merge": 0.8,
+     "build": 21.9,
+     "stations": 0.9,
+     "places": 2.3,
+     "routes": 24.6,
+     "merge": 0.7,
      "nocar": 1.4,
-     "everyday": 1.2
+     "everyday": 0.9
     },
-    "built": "2026-11-03T00:35:10",
     "gate": {
-     "warn": [
-      "pop_vs_plan 0.8386071905200994"
-     ]
-    },
-    "gated": "2026-11-03T01:02:10",
-    "shipped": "2026-11-03T01:42:08"
+     "warn": []
+    }
    }
   },
   {
@@ -143925,7 +144176,7 @@
     "PHL"
    ],
    "iso2": "PH",
-   "people": 661052,
+   "people": 707324,
    "origin": [
     121.3753,
     14.5409
@@ -143952,7 +144203,9 @@
      "30758251B82709121735753",
      "30758251B7830805264743",
      "30758251B75261766623391",
-     "30758251B60406679280817"
+     "30758251B60406679280817",
+     "30758251B55553660747763",
+     "30758251B40270166730947"
     ]
    },
    "bbox": [
@@ -143977,29 +144230,34 @@
      "Cavinti",
      "Kalayaan",
      "Famy",
-     "Sampaloc"
-    ]
+     "Sampaloc",
+     "Paete",
+     "Mabitac"
+    ],
+    "hand_edit": {
+     "task": "T-3688",
+     "why": "Manila's metro row (29.9M, 127 units, its hull 0.51) reached into Bataan, Pampanga, north Bulacan, southeast Laguna and north Batangas, with pockets inside Tanay's zone; those fringes go to Balanga, San Miguel (with San Rafael), Tanay, Lemery and Nasugbu, Pampanga's delta towns Minalin, Sasmuan, Macabebe and Masantol to Angeles, or form San Pablo and Lipa zones; Malolos and south Bulacan stay in Manila (Anita, 11-22); Mariveles (0.13M, under the floor) joins Balanga"
+    }
    },
    "run": {
-    "run_batch": "20261103-000641",
+    "run_batch": "20261122-002252",
+    "built": "2026-11-22T00:26:02",
+    "gated": "2026-11-22T00:30:03",
+    "shipped": "2026-11-22T01:11:23",
     "steps": {
-     "build": 22.4,
-     "stations": 1.2,
-     "places": 1.8,
-     "routes": 14.2,
-     "merge": 1.1,
-     "nocar": 1.6,
-     "everyday": 1.3
+     "build": 21.1,
+     "stations": 1.0,
+     "places": 2.6,
+     "routes": 17.0,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 1.0
     },
-    "built": "2026-11-03T00:36:56",
     "gate": {
      "warn": [
       "drive_factor_median 2.0200555277086965"
      ]
-    },
-    "parked": "2026-11-03T01:01:08",
-    "gated": "2026-11-03T01:10:57",
-    "shipped": "2026-11-03T01:42:14"
+    }
    }
   },
   {
@@ -146551,7 +146809,7 @@
     "PHL"
    ],
    "iso2": "PH",
-   "people": 389647,
+   "people": 513638,
    "origin": [
     120.9119,
     13.878
@@ -146571,14 +146829,17 @@
      "30758251B64129218321366",
      "30758251B60634471978235",
      "30758251B65020041021646",
-     "30758251B31190272548393"
+     "30758251B31190272548393",
+     "30758251B30231322331435",
+     "30758251B83345334824937",
+     "30758251B77759274087167"
     ]
    },
    "bbox": [
     120.827,
     13.624,
     121.021,
-    14.035
+    14.095
    ],
    "source": {
     "zone": "T-723",
@@ -146589,29 +146850,36 @@
      "Mabini",
      "San Luis",
      "Santa Teresita",
-     "Tingloy"
-    ]
+     "Tingloy",
+     "Agoncillo",
+     "San Nicolas",
+     "Laurel"
+    ],
+    "hand_edit": {
+     "task": "T-3688",
+     "why": "Manila's metro row (29.9M, 127 units, its hull 0.51) reached into Bataan, Pampanga, north Bulacan, southeast Laguna and north Batangas, with pockets inside Tanay's zone; those fringes go to Balanga, San Miguel (with San Rafael), Tanay, Lemery and Nasugbu, Pampanga's delta towns Minalin, Sasmuan, Macabebe and Masantol to Angeles, or form San Pablo and Lipa zones; Malolos and south Bulacan stay in Manila (Anita, 11-22); Mariveles (0.13M, under the floor) joins Balanga"
+    }
    },
    "run": {
-    "run_batch": "20261103-000641",
+    "run_batch": "20261122-002252",
+    "built": "2026-11-22T00:25:46",
+    "gated": "2026-11-22T00:30:03",
+    "shipped": "2026-11-22T01:11:23",
     "steps": {
-     "build": 10.7,
-     "stations": 1.3,
-     "places": 2.7,
-     "routes": 8.3,
-     "merge": 1.1,
-     "nocar": 1.9,
-     "everyday": 1.3
+     "build": 12.7,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 13.7,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.1
     },
-    "built": "2026-11-03T00:39:05",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.1416699878973572",
+      "top_zone_jobs_share 0.12687916376559275",
       "fleet_range 1"
      ]
-    },
-    "gated": "2026-11-03T01:02:24",
-    "shipped": "2026-11-03T01:42:23"
+    }
    }
   },
   {
@@ -146625,7 +146893,7 @@
     "PHL"
    ],
    "iso2": "PH",
-   "people": 309411,
+   "people": 621492,
    "origin": [
     120.5442,
     14.6719
@@ -146643,14 +146911,19 @@
      "30758251B34995051512109",
      "30758251B25905682576781",
      "30758251B7851333843517",
-     "30758251B46343582936162"
+     "30758251B46343582936162",
+     "30758251B4793511613736",
+     "30758251B26373043106772",
+     "30758251B50173683620188",
+     "30758251B72127248939453",
+     "30758251B81885646660603"
     ]
    },
    "bbox": [
-    120.4,
-    14.501,
-    120.615,
-    14.758
+    120.248,
+    14.408,
+    120.618,
+    14.832
    ],
    "source": {
     "zone": "T-723",
@@ -146659,30 +146932,35 @@
      "Limay",
      "Orion",
      "Pilar",
-     "Abucay"
-    ]
+     "Abucay",
+     "Orani",
+     "Samal",
+     "Morong",
+     "Bagac",
+     "Mariveles"
+    ],
+    "hand_edit": {
+     "task": "T-3688",
+     "why": "Manila's metro row (29.9M, 127 units, its hull 0.51) reached into Bataan, Pampanga, north Bulacan, southeast Laguna and north Batangas, with pockets inside Tanay's zone; those fringes go to Balanga, San Miguel (with San Rafael), Tanay, Lemery and Nasugbu, Pampanga's delta towns Minalin, Sasmuan, Macabebe and Masantol to Angeles, or form San Pablo and Lipa zones; Malolos and south Bulacan stay in Manila (Anita, 11-22); Mariveles (0.13M, under the floor) joins Balanga"
+    }
    },
    "run": {
-    "run_batch": "20261103-000641",
+    "run_batch": "20261122-002252",
+    "built": "2026-11-22T00:25:49",
+    "gated": "2026-11-22T00:30:04",
+    "shipped": "2026-11-22T01:11:24",
     "steps": {
-     "build": 9.5,
-     "stations": 1.3,
-     "places": 2.4,
-     "routes": 6.2,
+     "build": 15.2,
+     "stations": 1.1,
+     "places": 2.0,
+     "routes": 11.1,
      "merge": 0.9,
-     "nocar": 1.8,
-     "everyday": 2.0
+     "nocar": 1.5,
+     "everyday": 1.0
     },
-    "built": "2026-11-03T00:39:03",
     "gate": {
-     "warn": [
-      "top_zone_jobs_share 0.2191864002684928",
-      "fleet_range 1"
-     ]
-    },
-    "parked": "2026-11-03T01:01:21",
-    "gated": "2026-11-03T01:10:58",
-    "shipped": "2026-11-03T01:42:24"
+     "warn": []
+    }
    },
    "gate_relax": {
     "top_zone_jobs_share": "one-town zone whose town holds a fifth to a quarter of its jobs (0.20-0.29), as Indonesia's"
@@ -146904,73 +147182,6 @@
     },
     "gated": "2026-11-03T01:02:25",
     "shipped": "2026-11-03T01:42:25"
-   }
-  },
-  {
-   "order": 3491,
-   "id": "mri",
-   "name": "Mariveles",
-   "kind": "zone",
-   "status": "shipped",
-   "region": "world",
-   "countries": [
-    "PHL"
-   ],
-   "iso2": "PH",
-   "people": 132304,
-   "origin": [
-    120.4844,
-    14.4345
-   ],
-   "tz": "Asia/Manila",
-   "utc_offset": 8,
-   "extracts": [
-    "asia/philippines"
-   ],
-   "archetype": "D",
-   "module": null,
-   "units": {
-    "PHL": [
-     "30758251B81885646660603"
-    ]
-   },
-   "bbox": [
-    120.389,
-    14.408,
-    120.618,
-    14.539
-   ],
-   "source": {
-    "zone": "T-723",
-    "unit_names": [
-     "Mariveles"
-    ]
-   },
-   "run": {
-    "run_batch": "20261103-000641",
-    "steps": {
-     "build": 9.3,
-     "stations": 1.1,
-     "places": 2.2,
-     "routes": 5.4,
-     "merge": 0.8,
-     "nocar": 1.6,
-     "everyday": 1.1
-    },
-    "built": "2026-11-03T00:39:28",
-    "gate": {
-     "warn": [
-      "top_zone_jobs_share 0.29290485620895856",
-      "drive_factor_median 2.0841789734955687",
-      "fleet_range 2"
-     ]
-    },
-    "parked": "2026-11-03T01:01:23",
-    "gated": "2026-11-03T01:10:59",
-    "shipped": "2026-11-03T01:42:25"
-   },
-   "gate_relax": {
-    "top_zone_jobs_share": "one-town zone whose town holds a fifth to a quarter of its jobs (0.20-0.29), as Indonesia's"
    }
   },
   {
@@ -201999,6 +202210,165 @@
    }
   },
   {
+   "order": 6333,
+   "id": "sxp",
+   "name": "Samastipur",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "IND"
+   ],
+   "iso2": "IN",
+   "people": 4213888,
+   "origin": [
+    85.7811,
+    25.8629
+   ],
+   "tz": "Asia/Kolkata",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/india/eastern-zone"
+   ],
+   "archetype": "C",
+   "module": "india",
+   "bbox": [
+    85.526,
+    25.463,
+    86.12,
+    26.09
+   ],
+   "source": {
+    "split_from": "gih",
+    "task": "T-3688",
+    "hand_edit": {
+     "task": "T-3688",
+     "why": "Muzaffarpur's zone (row haj, 11.7M people in 38 sub-districts over 5,078 km2: GHS-UCDB's Ganges-plain urban centre, Hajipur in the plan, Muzaffarpur in the game) held three districts' towns as one zone; split by district: haj keeps Muzaffarpur's 7 sub-districts (its origin moves to Muzaffarpur town), new hjp Hajipur takes Vaishali's 15, new sxp Samastipur Samastipur's 14 with Begusarai's Bachhwara and Mansurchak; Ujiarpur (uji, 0.21M, one sub-district inside Samastipur district, under the 0.5M floor) is retired into Samastipur"
+    }
+   },
+   "solve_region": "bihar",
+   "units": {
+    "IND": [
+     "45978901B1019203321683",
+     "45978901B42790720672442",
+     "45978901B40649040394815",
+     "45978901B53040821085007",
+     "45978901B20472469282187",
+     "45978901B65396079069965",
+     "45978901B97745391937009",
+     "45978901B35486118115040",
+     "45978901B42888913449308",
+     "45978901B61306423391906",
+     "45978901B85882161461977",
+     "45978901B92336527726888",
+     "45978901B54507503643079",
+     "45978901B53094783202015",
+     "45978901B11039347271435",
+     "45978901B40907767103755",
+     "45978901B65231024383591"
+    ]
+   },
+   "run": {
+    "run_batch": "20261121-225233",
+    "steps": {
+     "build": 10.8,
+     "stations": 0.8,
+     "places": 1.5,
+     "routes": 28.3,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-11-21T22:53:29",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-21T22:55:42",
+    "shipped": "2026-11-21T23:47:37"
+   }
+  },
+  {
+   "order": 6332,
+   "id": "hjp",
+   "name": "Hajipur",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "IND"
+   ],
+   "iso2": "IN",
+   "people": 4423209,
+   "origin": [
+    85.2105,
+    25.6858
+   ],
+   "tz": "Asia/Kolkata",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/india/eastern-zone"
+   ],
+   "archetype": "C",
+   "module": "india",
+   "bbox": [
+    85.07,
+    25.533,
+    85.638,
+    26.015
+   ],
+   "source": {
+    "split_from": "gih",
+    "task": "T-3688",
+    "hand_edit": {
+     "task": "T-3688",
+     "why": "Muzaffarpur's zone (row haj, 11.7M people in 38 sub-districts over 5,078 km2: GHS-UCDB's Ganges-plain urban centre, Hajipur in the plan, Muzaffarpur in the game) held three districts' towns as one zone; split by district: haj keeps Muzaffarpur's 7 sub-districts (its origin moves to Muzaffarpur town), new hjp Hajipur takes Vaishali's 15, new sxp Samastipur Samastipur's 14 with Begusarai's Bachhwara and Mansurchak; Ujiarpur (uji, 0.21M, one sub-district inside Samastipur district, under the 0.5M floor) is retired into Samastipur"
+    }
+   },
+   "solve_region": "bihar",
+   "units": {
+    "IND": [
+     "45978901B11363665788691",
+     "45978901B7536863142205",
+     "45978901B77739795470375",
+     "45978901B57175678793939",
+     "45978901B72994510556463",
+     "45978901B59756597347061",
+     "45978901B99930868408911",
+     "45978901B6256422982070",
+     "45978901B77281254344736",
+     "45978901B42709429812924",
+     "45978901B16596610934414",
+     "45978901B22289963006225",
+     "45978901B89656861581733",
+     "45978901B24390456494226",
+     "45978901B49350566416270"
+    ]
+   },
+   "run": {
+    "run_batch": "20261121-225233",
+    "steps": {
+     "build": 10.8,
+     "stations": 0.8,
+     "places": 1.5,
+     "routes": 38.4,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-11-21T22:53:39",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6607.24560546875"
+     ]
+    },
+    "gated": "2026-11-21T22:55:41",
+    "shipped": "2026-11-21T23:47:38"
+   }
+  },
+  {
    "order": 4176,
    "id": "aak",
    "name": "Anakapalle",
@@ -203490,71 +203860,6 @@
    "gate_relax": {
     "top_cell_jobs_vs_size": "T-2111: a one-town zone whose town centre is its peak job cell (600-760 against 600), as Indonesia's",
     "top_zone_jobs_share": "T-2111: one town holds most of the zone's jobs (0.20-0.40), as Indonesia's and the Philippines' one-town zones"
-   }
-  },
-  {
-   "order": 4199,
-   "id": "uji",
-   "name": "Ujiarpur",
-   "kind": "zone",
-   "status": "shipped",
-   "region": "world",
-   "countries": [
-    "IND"
-   ],
-   "iso2": "IN",
-   "people": 205076,
-   "origin": [
-    85.9168,
-    25.817
-   ],
-   "tz": "Asia/Kolkata",
-   "utc_offset": 5,
-   "extracts": [
-    "asia/india/eastern-zone"
-   ],
-   "archetype": "C",
-   "module": "india",
-   "units": {
-    "IND": [
-     "45978901B65231024383591"
-    ]
-   },
-   "bbox": [
-    85.745,
-    25.672,
-    85.94,
-    25.837
-   ],
-   "source": {
-    "zone": "T-723",
-    "unit_names": [
-     "Ujiarpur"
-    ]
-   },
-   "solve_region": "bihar",
-   "run": {
-    "run_batch": "20261103-084339",
-    "steps": {
-     "build": 7.4,
-     "stations": 1.0,
-     "places": 1.5,
-     "routes": 7.1,
-     "merge": 1.0,
-     "nocar": 2.0,
-     "everyday": 1.4
-    },
-    "built": "2026-11-03T09:49:58",
-    "gate": {
-     "warn": [
-      "university_rate 0.0",
-      "pop_vs_plan 0.752968505975615",
-      "road_snap_median_m 457.8",
-      "fleet_range 6"
-     ]
-    },
-    "gated": "2026-11-03T10:02:32",
-    "shipped": "2026-11-03T16:22:21"
    }
   },
   {
@@ -424311,6 +424616,5177 @@
     "gated": "2026-11-20T07:36:57",
     "shipped": "2026-11-20T10:24:19"
    }
+  },
+  {
+   "order": 6336,
+   "id": "tbl",
+   "name": "Tbilisi",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "GEO"
+   ],
+   "iso2": "GE",
+   "people": 1402925,
+   "origin": [
+    44.7684,
+    41.7269
+   ],
+   "tz": "Asia/Tbilisi",
+   "utc_offset": 4,
+   "extracts": [
+    "europe/georgia"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GEO": [
+     "92138335B42186772492502",
+     "92138335B27063767093254",
+     "92138335B37128228826405",
+     "92138335B38539666487560",
+     "92138335B8569651640453",
+     "92138335B54966066678196",
+     "92138335B55198090861777",
+     "92138335B62270915316276",
+     "92138335B12721672848691",
+     "92138335B37038597196331",
+     "92138335B21532266641065",
+     "92138335B14041872176832",
+     "92138335B62221031654939",
+     "92138335B46195092344531"
+    ]
+   },
+   "bbox": [
+    44.145,
+    41.044,
+    46.731,
+    42.753
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Tbilisi",
+     "Telavi",
+     "Gurjaani",
+     "Sagarejo",
+     "Kaspi",
+     "Lagodekhi",
+     "Akhmeta",
+     "Qvareli",
+     "Mtskheta",
+     "Dedoplis Tskaro",
+     "Sighnaghi",
+     "Dusheti",
+     "Tianeti",
+     "Kazbegi"
+    ],
+    "extracts_was": [
+     "europe"
+    ],
+    "extracts_by_hand": "T-3764: Georgia's extract covers 99.4% and 99.1% of the extents (border slivers), so world_plan.extracts fell back to all of Europe"
+   },
+   "run": {
+    "run_batch": "20261122-004248",
+    "steps": {
+     "build": 42.4,
+     "stations": 1.0,
+     "places": 3.0,
+     "routes": 42.1,
+     "merge": 1.3,
+     "nocar": 2.1,
+     "everyday": 0.9
+    },
+    "built": "2026-11-22T00:53:24",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-22T01:29:20",
+    "shipped": "2026-11-22T02:06:20"
+   }
+  },
+  {
+   "order": 6337,
+   "id": "tej",
+   "name": "Terjola",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "GEO"
+   ],
+   "iso2": "GE",
+   "people": 971733,
+   "origin": [
+    42.7101,
+    42.2698
+   ],
+   "tz": "Asia/Tbilisi",
+   "utc_offset": 4,
+   "extracts": [
+    "europe/georgia"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GEO": [
+     "92138335B93308463809472",
+     "92138335B56355921545740",
+     "92138335B29553909486986",
+     "92138335B27287539996765",
+     "92138335B61287460098363",
+     "92138335B39490393091716",
+     "92138335B50579342077052",
+     "92138335B39519556094978",
+     "92138335B76220270182366",
+     "92138335B15578291241997",
+     "92138335B21082735865828",
+     "92138335B50184353982041",
+     "92138335B81565536454444",
+     "92138335B24401992491818",
+     "92138335B7804846431662",
+     "92138335B87948858644910",
+     "92138335B7587308725021",
+     "92138335B12693512772054",
+     "92138335B26356280366694",
+     "92138335B11752515436938",
+     "92138335B64138373774111",
+     "92138335B48416461405502",
+     "92138335B98712033744581",
+     "92138335B69008319732164",
+     "92138335B41220356267483",
+     "92138335B53609413281794",
+     "92138335B78683832010722",
+     "92138335B2863477847968",
+     "92138335B16539680317834",
+     "92138335B42170823144897",
+     "92138335B53804357852579"
+    ]
+   },
+   "bbox": [
+    41.536,
+    41.105,
+    44.031,
+    43.243
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Terjola",
+     "Zugdidi",
+     "Tsqaltubo",
+     "Zestaponi",
+     "Khashuri",
+     "Samtredia",
+     "Akhalkalaki",
+     "Khobi",
+     "Senaki",
+     "Kareli",
+     "Akhaltsikhe",
+     "Sachkhere",
+     "Chiatura",
+     "Vani",
+     "Martvili",
+     "Borjomi",
+     "Ninotsminda",
+     "Abasha",
+     "Baghdati",
+     "Kharagauli",
+     "Khoni",
+     "Chkhorotsku",
+     "Tsalenjikha",
+     "Adigeni",
+     "Tkibuli",
+     "Aspindza",
+     "Ambrolauri",
+     "Mestia",
+     "Tsageri",
+     "Oni",
+     "Lentekhi"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-004248",
+    "steps": {
+     "build": 47.9,
+     "stations": 1.0,
+     "places": 2.9,
+     "routes": 51.0,
+     "merge": 1.7,
+     "nocar": 2.1,
+     "everyday": 0.9
+    },
+    "built": "2026-11-22T00:53:38",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10959972664059046"
+     ]
+    },
+    "gated": "2026-11-22T01:29:21",
+    "shipped": "2026-11-22T02:06:21"
+   }
+  },
+  {
+   "order": 6338,
+   "id": "kev",
+   "name": "Khelvachauri",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "GEO"
+   ],
+   "iso2": "GE",
+   "people": 473410,
+   "origin": [
+    41.6236,
+    41.6457
+   ],
+   "tz": "Asia/Tbilisi",
+   "utc_offset": 4,
+   "extracts": [
+    "europe/georgia"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GEO": [
+     "92138335B5338969449548",
+     "92138335B26955769626154",
+     "92138335B33048390881049",
+     "92138335B47110763385386",
+     "92138335B65831597067457",
+     "92138335B42742975246173",
+     "92138335B2821497080336",
+     "92138335B10016985210345"
+    ]
+   },
+   "bbox": [
+    41.527,
+    41.431,
+    42.663,
+    42.218
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Khelvachauri",
+     "Kobuleti",
+     "Ozurgeti",
+     "Lanchkhuti",
+     "Khulo",
+     "Chokhatauri",
+     "Keda",
+     "Shuakhevi"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-004248",
+    "steps": {
+     "build": 24.6,
+     "stations": 0.8,
+     "places": 2.0,
+     "routes": 15.1,
+     "merge": 0.8,
+     "nocar": 2.0,
+     "everyday": 1.0
+    },
+    "built": "2026-11-22T00:52:38",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1955062590167644"
+     ]
+    },
+    "gated": "2026-11-22T01:29:22",
+    "shipped": "2026-11-22T02:06:21"
+   }
+  },
+  {
+   "order": 6339,
+   "id": "gdb",
+   "name": "Gardabani",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "GEO"
+   ],
+   "iso2": "GE",
+   "people": 432418,
+   "origin": [
+    44.9845,
+    41.5644
+   ],
+   "tz": "Asia/Tbilisi",
+   "utc_offset": 4,
+   "extracts": [
+    "europe/georgia"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GEO": [
+     "92138335B7743259611047",
+     "92138335B51279478619931",
+     "92138335B67119502314916",
+     "92138335B81831500200346",
+     "92138335B43211443172937",
+     "92138335B97195929624765"
+    ]
+   },
+   "bbox": [
+    43.692,
+    41.157,
+    45.333,
+    41.864
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Gardabani",
+     "Marneuli",
+     "Bolnisi",
+     "Dmanisi",
+     "Tsalka",
+     "Tetri Sqaro"
+    ],
+    "extracts_was": [
+     "europe"
+    ],
+    "extracts_by_hand": "T-3764: Georgia's extract covers 99.4% and 99.1% of the extents (border slivers), so world_plan.extracts fell back to all of Europe"
+   },
+   "run": {
+    "run_batch": "20261122-004248",
+    "steps": {
+     "build": 28.2,
+     "stations": 0.8,
+     "places": 3.0,
+     "routes": 21.7,
+     "merge": 0.9,
+     "nocar": 1.9,
+     "everyday": 1.0
+    },
+    "built": "2026-11-22T00:52:51",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-22T01:29:22",
+    "shipped": "2026-11-22T02:06:22"
+   }
+  },
+  {
+   "order": 6340,
+   "id": "akr",
+   "name": "Akhuryan",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "ARM"
+   ],
+   "iso2": "AM",
+   "people": 789470,
+   "origin": [
+    43.846,
+    40.7899
+   ],
+   "tz": "Asia/Yerevan",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/armenia"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ARM": [
+     "60910142B74255853155978",
+     "60910142B65902605375404",
+     "60910142B52468279407156",
+     "60910142B83182140550987",
+     "60910142B60496138313868",
+     "60910142B49287471238977",
+     "60910142B72545422404248",
+     "60910142B61749773094319",
+     "60910142B11544314699708",
+     "60910142B63366479111492",
+     "60910142B88969695120828",
+     "60910142B36326069456860",
+     "60910142B63179365684578",
+     "60910142B8230197687251",
+     "60910142B59809350478166",
+     "60910142B89278047993376",
+     "60910142B49896327156791",
+     "60910142B45158711902694",
+     "60910142B34664375079844"
+    ]
+   },
+   "bbox": [
+    43.448,
+    40.097,
+    45.609,
+    41.302
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Akhuryan",
+     "Kotayk",
+     "Gugark",
+     "Hrazdan",
+     "Ashtarak",
+     "Artik",
+     "Idjevan",
+     "Tumanian",
+     "Spitak",
+     "Noyemberyan",
+     "Stepanavan",
+     "Tavush",
+     "Aparan",
+     "Dilidjan",
+     "Ani",
+     "Tashir",
+     "Aragats",
+     "Ashotck",
+     "Amasia"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-004248",
+    "steps": {
+     "build": 38.9,
+     "stations": 1.4,
+     "places": 5.2,
+     "routes": 27.2,
+     "merge": 0.9,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-11-22T00:50:52",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10700947621483031"
+     ]
+    },
+    "gated": "2026-11-22T01:29:18",
+    "shipped": "2026-11-22T02:06:23"
+   }
+  },
+  {
+   "order": 6341,
+   "id": "aat",
+   "name": "Ararat",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "ARM"
+   ],
+   "iso2": "AM",
+   "people": 453648,
+   "origin": [
+    44.6999,
+    39.8489
+   ],
+   "tz": "Asia/Yerevan",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/armenia"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ARM": [
+     "60910142B40679447151714",
+     "60910142B51830261443364",
+     "60910142B84133064151767",
+     "60910142B29805693167255",
+     "60910142B47699978592235",
+     "60910142B15035126722219",
+     "60910142B47365915654778",
+     "60910142B44226366137907",
+     "60910142B80201990300088",
+     "60910142B94475548001671",
+     "60910142B15108555986017",
+     "60910142B11471935685487"
+    ]
+   },
+   "bbox": [
+    44.551,
+    38.865,
+    46.635,
+    40.743
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Ararat",
+     "Martuni",
+     "Gavar",
+     "Kapan",
+     "Vardenis",
+     "Sevan",
+     "Goris",
+     "Yeghegnadzor",
+     "Sisian",
+     "Vayk",
+     "Karmir",
+     "Meghri"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-004248",
+    "steps": {
+     "build": 31.8,
+     "stations": 1.0,
+     "places": 2.9,
+     "routes": 20.2,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-11-22T00:50:38",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-22T01:29:19",
+    "shipped": "2026-11-22T02:06:23"
+   }
+  },
+  {
+   "order": 6342,
+   "id": "vgh",
+   "name": "Vagharshapat",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "ARM"
+   ],
+   "iso2": "AM",
+   "people": 300429,
+   "origin": [
+    44.2977,
+    40.162
+   ],
+   "tz": "Asia/Yerevan",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/armenia"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "ARM": [
+     "60910142B22907916528063",
+     "60910142B93001765228002",
+     "60910142B71936783282931",
+     "60910142B71267049635208"
+    ]
+   },
+   "bbox": [
+    43.591,
+    40.019,
+    44.413,
+    40.522
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Vagharshapat",
+     "Armavir",
+     "Talin",
+     "Baghramyan"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-004248",
+    "steps": {
+     "build": 21.1,
+     "stations": 0.9,
+     "places": 1.7,
+     "routes": 10.5,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.2
+    },
+    "built": "2026-11-22T00:50:15",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-22T01:29:20",
+    "shipped": "2026-11-22T02:06:24"
+   }
+  },
+  {
+   "order": 6343,
+   "id": "msd",
+   "name": "Masally District",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AZE"
+   ],
+   "iso2": "AZ",
+   "people": 1435452,
+   "origin": [
+    48.851,
+    38.754
+   ],
+   "tz": "Asia/Baku",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/azerbaijan"
+   ],
+   "archetype": "C",
+   "module": "admin_totals",
+   "units": {
+    "AZE": [
+     "54616110B86237771899826",
+     "54616110B78302808254353",
+     "54616110B55207089168458",
+     "54616110B2076465815790",
+     "54616110B16304773097912",
+     "54616110B5213879595332",
+     "54616110B40961788089107",
+     "54616110B59366301344355",
+     "54616110B92317303093203",
+     "54616110B45272408011177",
+     "54616110B63590673188827",
+     "54616110B48173541517146",
+     "54616110B17009633679109"
+    ]
+   },
+   "bbox": [
+    47.958,
+    38.393,
+    49.453,
+    40.361
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Masally District",
+     "Jalilabad District",
+     "Salyan District",
+     "Lankaran District",
+     "Bilasuvar District",
+     "Astara District",
+     "Neftchala District",
+     "Lerik District",
+     "Lankaran City",
+     "Shirvan City",
+     "Yardymli District",
+     "Hajigabul District",
+     "Lankaran District"
+    ],
+    "origin_was": [
+     48.6788,
+     39.0283
+    ],
+    "origin_by_hand": "T-3764: the zone's main town (Baku's centre, not Ceyranbatan; Nakhchivan city, not Sharur; Lankaran, not Masally)"
+   },
+   "run": {
+    "run_batch": "20261122-004248",
+    "steps": {
+     "build": 274.3,
+     "stations": 1.0,
+     "places": 2.0,
+     "routes": 45.8,
+     "merge": 1.4,
+     "nocar": 2.3,
+     "everyday": 1.0
+    },
+    "built": "2026-11-22T00:48:33",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.12294556507334928"
+     ]
+    },
+    "gated": "2026-11-22T01:29:11",
+    "shipped": "2026-11-22T02:06:25"
+   }
+  },
+  {
+   "order": 6344,
+   "id": "bds",
+   "name": "Barda District",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AZE"
+   ],
+   "iso2": "AZ",
+   "people": 841616,
+   "origin": [
+    47.1232,
+    40.3681
+   ],
+   "tz": "Asia/Baku",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/azerbaijan"
+   ],
+   "archetype": "C",
+   "module": "admin_totals",
+   "units": {
+    "AZE": [
+     "54616110B76249555634218",
+     "54616110B16521863868797",
+     "54616110B25010354244926",
+     "54616110B75141866412524",
+     "54616110B79809370995070",
+     "54616110B52362464060400",
+     "54616110B24616396985677",
+     "54616110B78344971255813",
+     "54616110B37358032697149",
+     "54616110B32389340464615"
+    ]
+   },
+   "bbox": [
+    45.598,
+    39.795,
+    47.615,
+    41.449
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Barda District",
+     "Mingachevir City",
+     "Shaki District",
+     "Goranboy District",
+     "Tartar District",
+     "Yevlakh District",
+     "Shaki City",
+     "Yevlakh City",
+     "Kalbajar District",
+     "Naftalan City"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-004248",
+    "steps": {
+     "build": 278.6,
+     "stations": 0.9,
+     "places": 2.2,
+     "routes": 41.0,
+     "merge": 1.1,
+     "nocar": 2.4,
+     "everyday": 1.2
+    },
+    "built": "2026-11-22T00:48:29",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-22T01:29:12",
+    "shipped": "2026-11-22T02:06:25"
+   }
+  },
+  {
+   "order": 6345,
+   "id": "gnj",
+   "name": "Ganja City",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AZE"
+   ],
+   "iso2": "AZ",
+   "people": 825652,
+   "origin": [
+    46.3453,
+    40.6731
+   ],
+   "tz": "Asia/Baku",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/azerbaijan"
+   ],
+   "archetype": "C",
+   "module": "admin_totals",
+   "units": {
+    "AZE": [
+     "54616110B84154267491992",
+     "54616110B13615645655589",
+     "54616110B4759617374649",
+     "54616110B63924922129682",
+     "54616110B49356278605879",
+     "54616110B88384638285498",
+     "54616110B65018719015844"
+    ]
+   },
+   "bbox": [
+    45.837,
+    40.283,
+    47.21,
+    41.921
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Ganja City",
+     "Goygol District",
+     "Zaqatala District",
+     "Balakan District",
+     "Qakh District",
+     "Dashkasan District",
+     "Samukh District"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-004248",
+    "steps": {
+     "build": 275.3,
+     "stations": 1.0,
+     "places": 3.5,
+     "routes": 28.4,
+     "merge": 0.8,
+     "nocar": 2.5,
+     "everyday": 1.1
+    },
+    "built": "2026-11-22T00:48:16",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-22T01:29:13",
+    "shipped": "2026-11-22T02:06:26"
+   }
+  },
+  {
+   "order": 6346,
+   "id": "ssc",
+   "name": "Sabirabad District",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AZE"
+   ],
+   "iso2": "AZ",
+   "people": 748377,
+   "origin": [
+    48.475,
+    40.0098
+   ],
+   "tz": "Asia/Baku",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/azerbaijan"
+   ],
+   "archetype": "C",
+   "module": "admin_totals",
+   "units": {
+    "AZE": [
+     "54616110B21396185337631",
+     "54616110B939777630101",
+     "54616110B82810927503709",
+     "54616110B47039748407948",
+     "54616110B16651088424667",
+     "54616110B12323901372431",
+     "54616110B97026515433008"
+    ]
+   },
+   "bbox": [
+    47.77,
+    39.596,
+    49.544,
+    40.981
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Sabirabad District",
+     "Saatly District",
+     "Kurdamir District",
+     "Imishli District",
+     "Shamakhi District",
+     "Agsu District",
+     "Khizi District"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-004248",
+    "steps": {
+     "build": 275.6,
+     "stations": 1.0,
+     "places": 2.0,
+     "routes": 37.7,
+     "merge": 0.9,
+     "nocar": 2.1,
+     "everyday": 1.1
+    },
+    "built": "2026-11-22T00:48:24",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-22T01:29:14",
+    "shipped": "2026-11-22T02:06:27"
+   }
+  },
+  {
+   "order": 6347,
+   "id": "smk",
+   "name": "Shamkir District",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AZE"
+   ],
+   "iso2": "AZ",
+   "people": 685879,
+   "origin": [
+    46.0164,
+    40.8438
+   ],
+   "tz": "Asia/Baku",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/azerbaijan"
+   ],
+   "archetype": "C",
+   "module": "admin_totals",
+   "units": {
+    "AZE": [
+     "54616110B57585842497805",
+     "54616110B84187356839814",
+     "54616110B36354954300290",
+     "54616110B46799199998097",
+     "54616110B43488292017990"
+    ]
+   },
+   "bbox": [
+    44.981,
+    40.312,
+    46.342,
+    41.47
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Shamkir District",
+     "Tovuz District",
+     "Agstafa District",
+     "Gadabay District",
+     "Qazakh District"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-004248",
+    "steps": {
+     "build": 276.9,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 31.5,
+     "merge": 0.9,
+     "nocar": 2.4,
+     "everyday": 1.1
+    },
+    "built": "2026-11-22T00:48:16",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10436453356298132"
+     ]
+    },
+    "gated": "2026-11-22T01:29:14",
+    "shipped": "2026-11-22T02:06:27"
+   }
+  },
+  {
+   "order": 6348,
+   "id": "qus",
+   "name": "Qusar District",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AZE"
+   ],
+   "iso2": "AZ",
+   "people": 538564,
+   "origin": [
+    48.4181,
+    41.4201
+   ],
+   "tz": "Asia/Baku",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/azerbaijan"
+   ],
+   "archetype": "C",
+   "module": "admin_totals",
+   "units": {
+    "AZE": [
+     "54616110B21517829058101",
+     "54616110B89497242950609",
+     "54616110B77048085748362",
+     "54616110B33183266084070",
+     "54616110B9592293002412"
+    ]
+   },
+   "bbox": [
+    47.851,
+    40.868,
+    49.363,
+    41.843
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Qusar District",
+     "Khachmaz District",
+     "Quba District",
+     "Shabran District",
+     "Siazan District"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-004248",
+    "steps": {
+     "build": 18.0,
+     "stations": 0.9,
+     "places": 1.8,
+     "routes": 18.7,
+     "merge": 1.0,
+     "nocar": 2.8,
+     "everyday": 1.3
+    },
+    "built": "2026-11-22T00:49:11",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-22T01:29:15",
+    "shipped": "2026-11-22T02:06:28"
+   }
+  },
+  {
+   "order": 6349,
+   "id": "agh",
+   "name": "Agdash District",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AZE"
+   ],
+   "iso2": "AZ",
+   "people": 534924,
+   "origin": [
+    47.4826,
+    40.6462
+   ],
+   "tz": "Asia/Baku",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/azerbaijan"
+   ],
+   "archetype": "C",
+   "module": "admin_totals",
+   "units": {
+    "AZE": [
+     "54616110B75800990015815",
+     "54616110B8701125158325",
+     "54616110B88730523237575",
+     "54616110B33746839775993",
+     "54616110B45290451128830",
+     "54616110B99657283459996"
+    ]
+   },
+   "bbox": [
+    47.224,
+    40.312,
+    48.543,
+    41.273
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Agdash District",
+     "Ujar District",
+     "Goychay District",
+     "Qabala District",
+     "Ismailli District",
+     "Oghuz District"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-004248",
+    "steps": {
+     "build": 20.2,
+     "stations": 0.9,
+     "places": 2.0,
+     "routes": 34.5,
+     "merge": 2.3,
+     "nocar": 4.4,
+     "everyday": 1.8
+    },
+    "built": "2026-11-22T00:49:31",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-22T01:29:15",
+    "shipped": "2026-11-22T02:06:29"
+   }
+  },
+  {
+   "order": 6350,
+   "id": "agj",
+   "name": "Aghjabadi District",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AZE"
+   ],
+   "iso2": "AZ",
+   "people": 505112,
+   "origin": [
+    47.4543,
+    40.0456
+   ],
+   "tz": "Asia/Baku",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/azerbaijan"
+   ],
+   "archetype": "C",
+   "module": "admin_totals",
+   "units": {
+    "AZE": [
+     "54616110B84161876100413",
+     "54616110B20470092766685",
+     "54616110B71765796178707",
+     "54616110B29637726057754",
+     "54616110B34042895235078",
+     "54616110B64107713492867",
+     "54616110B66639423042347",
+     "54616110B38461317640181",
+     "54616110B87325868620163",
+     "54616110B46945931752574"
+    ]
+   },
+   "bbox": [
+    45.926,
+    38.873,
+    47.975,
+    40.399
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Aghjabadi District",
+     "Beylagan District",
+     "Agdam District",
+     "Fuzuli District",
+     "Zardab District",
+     "Zangilan District",
+     "Qubadli District",
+     "Khojavend District",
+     "Khojaly District",
+     "Lachin District"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-004248",
+    "steps": {
+     "build": 24.1,
+     "stations": 1.0,
+     "places": 3.6,
+     "routes": 25.7,
+     "merge": 2.0,
+     "nocar": 4.4,
+     "everyday": 1.8
+    },
+    "built": "2026-11-22T00:49:32",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1304283658677379"
+     ]
+    },
+    "gated": "2026-11-22T01:29:16",
+    "shipped": "2026-11-22T02:06:29"
+   }
+  },
+  {
+   "order": 6351,
+   "id": "sgv",
+   "name": "Sharur District",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AZE"
+   ],
+   "iso2": "AZ",
+   "people": 448681,
+   "origin": [
+    45.412,
+    39.209
+   ],
+   "tz": "Asia/Baku",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/azerbaijan"
+   ],
+   "archetype": "C",
+   "module": "admin_totals",
+   "units": {
+    "AZE": [
+     "54616110B53436270368491",
+     "54616110B53070579367508",
+     "54616110B79262118902245",
+     "54616110B53393721771174",
+     "54616110B24607032839399",
+     "54616110B75082210580506",
+     "54616110B68105682916253",
+     "54616110B79964383852369"
+    ]
+   },
+   "bbox": [
+    44.765,
+    38.863,
+    46.141,
+    39.804
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Sharur District",
+     "Babek District",
+     "Nakhchivan City",
+     "Julfa District",
+     "Ordubad District",
+     "Kangarli District",
+     "Shahbuz District",
+     "Sadarak District"
+    ],
+    "origin_was": [
+     44.9983,
+     39.572
+    ],
+    "origin_by_hand": "T-3764: the zone's main town (Baku's centre, not Ceyranbatan; Nakhchivan city, not Sharur; Lankaran, not Masally)"
+   },
+   "run": {
+    "run_batch": "20261122-004248",
+    "steps": {
+     "build": 18.2,
+     "stations": 1.0,
+     "places": 2.1,
+     "routes": 8.4,
+     "merge": 0.8,
+     "nocar": 2.6,
+     "everyday": 1.3
+    },
+    "built": "2026-11-22T00:49:06",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6023.40234375"
+     ]
+    },
+    "gated": "2026-11-22T01:29:17",
+    "shipped": "2026-11-22T02:06:30"
+   }
+  },
+  {
+   "order": 6352,
+   "id": "kdr",
+   "name": "Kandahar",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 1370193,
+   "origin": [
+    65.7048,
+    31.6081
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B3536630965398",
+     "17698898B64879556076818",
+     "17698898B75395514710531",
+     "17698898B71321154096819",
+     "17698898B69048224790287",
+     "17698898B10294811949528",
+     "17698898B6361113189303"
+    ]
+   },
+   "bbox": [
+    65.354,
+    30.599,
+    67.797,
+    32.587
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Kandahar",
+     "Arghandab",
+     "Daman",
+     "Shah Wali Kot",
+     "Arghistan",
+     "Maruf",
+     "Nesh"
+    ],
+    "id_was": "kna"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 23.3,
+     "stations": 0.9,
+     "places": 1.9,
+     "routes": 16.0,
+     "merge": 1.0,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-11-22T01:31:49",
+    "gate": {
+     "warn": [
+      "jobs_per_resident 0.18643000848731148",
+      "top_zone_jobs_share 0.18438972611131949",
+      "top_school_cell_pupils 7064.28662109375",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-22T02:24:12",
+    "shipped": "2026-11-22T03:15:35"
+   }
+  },
+  {
+   "order": 6353,
+   "id": "pkh",
+   "name": "Puli Khumri",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 1353363,
+   "origin": [
+    68.7117,
+    35.9467
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B34012534665236",
+     "17698898B32644110556911",
+     "17698898B22383427297645",
+     "17698898B27904956690533",
+     "17698898B6565197896692",
+     "17698898B98707545256283",
+     "17698898B87088675092373",
+     "17698898B284678917294",
+     "17698898B17409379319517",
+     "17698898B52947947135359",
+     "17698898B10942587519321",
+     "17698898B69264511161666",
+     "17698898B633920692247",
+     "17698898B99069409178709",
+     "17698898B59041256807288"
+    ]
+   },
+   "bbox": [
+    68.004,
+    35.004,
+    69.969,
+    36.574
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Puli Khumri",
+     "Baghlani Jadid",
+     "Nahrin",
+     "Dushi",
+     "Khost Wa Firing",
+     "Dahana-I- Ghuri",
+     "Burka",
+     "Dih Salah",
+     "Khinjan",
+     "Tala Wa Barfak",
+     "Puli Hisar",
+     "Andarab",
+     "Khwaja Hijran (Jilga Nahrin)",
+     "Farang Wa Gharu",
+     "Guzargahi Nur"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-004905",
+    "steps": {
+     "build": 17.7,
+     "stations": 0.8,
+     "places": 1.5,
+     "routes": 12.3,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-11-22T00:53:33",
+    "gate": {
+     "warn": [
+      "jobs_per_resident 0.18643000856034464",
+      "top_school_cell_pupils 6052.93017578125",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-22T02:24:03",
+    "shipped": "2026-11-22T03:15:36"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6354,
+   "id": "psu",
+   "name": "Pashtun Kot",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 1289249,
+   "origin": [
+    64.782,
+    35.918
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B54717162176823",
+     "17698898B12348234721190",
+     "17698898B62547569841807",
+     "17698898B36180835815829",
+     "17698898B15834343688253",
+     "17698898B67216790829009",
+     "17698898B99148698827275",
+     "17698898B86175881575923"
+    ]
+   },
+   "bbox": [
+    63.889,
+    35.163,
+    65.813,
+    36.223
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Pashtun Kot",
+     "Qaysar",
+     "Maymana",
+     "Gurziwan",
+     "Almar",
+     "Kohistan",
+     "Bilchiragh",
+     "Khwaja Sabz Posh"
+    ],
+    "origin_was": [
+     64.6659,
+     36.0431
+    ],
+    "origin_by_hand": "T-3764: the zone's provincial town (GeoNames), where the origin was a district's densest pixel off it (Bamyan and Ghoryan: preflight's off-town FLAG on a phantom pixel)"
+   },
+   "run": {
+    "run_batch": "20261122-004905",
+    "steps": {
+     "build": 15.1,
+     "stations": 0.8,
+     "places": 1.5,
+     "routes": 6.7,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 1.0
+    },
+    "built": "2026-11-22T00:53:53",
+    "gate": {
+     "warn": [
+      "jobs_per_resident 0.1864300095020203",
+      "top_school_cell_pupils 6224.18408203125",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-22T02:24:04",
+    "shipped": "2026-11-22T03:15:37"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6355,
+   "id": "kmt",
+   "name": "Khost(Matun)",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 1274887,
+   "origin": [
+    69.9222,
+    33.3423
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B7218373032226",
+     "17698898B69525481970606",
+     "17698898B67472405327916",
+     "17698898B31116405926030",
+     "17698898B13286214983571",
+     "17698898B35159094518715",
+     "17698898B51729905625670",
+     "17698898B16660327351788",
+     "17698898B38396690303170",
+     "17698898B23350919974293",
+     "17698898B16828551038730",
+     "17698898B50021728189298"
+    ]
+   },
+   "bbox": [
+    69.346,
+    33.016,
+    70.328,
+    33.738
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Khost(Matun)",
+     "Sabri",
+     "Tani",
+     "Mando Zayi",
+     "Tere Zayi",
+     "Nadir Shah Kot",
+     "Gurbuz",
+     "Spira",
+     "Jaji Maidan",
+     "Bak",
+     "Shamal",
+     "Qalandar"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-004905",
+    "steps": {
+     "build": 16.5,
+     "stations": 0.8,
+     "places": 1.6,
+     "routes": 8.2,
+     "merge": 0.8,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-11-22T00:54:06",
+    "gate": {
+     "warn": [
+      "pop_vs_plan 0.7800924028109906",
+      "pop_vs_ghsl 0.7806948158288279",
+      "jobs_per_resident 0.18643000934147436",
+      "top_zone_jobs_share 0.16753808911225243",
+      "top_school_cell_pupils 6023.8486328125",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-22T02:24:04",
+    "shipped": "2026-11-22T03:15:38"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6356,
+   "id": "knz",
+   "name": "Kunduz",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 1182214,
+   "origin": [
+    68.8685,
+    36.7281
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B60886536033067",
+     "17698898B57330379329878",
+     "17698898B4103502183848",
+     "17698898B21333678660273",
+     "17698898B50082095746100",
+     "17698898B46441820846756",
+     "17698898B86734293398191"
+    ]
+   },
+   "bbox": [
+    68.021,
+    36.304,
+    69.348,
+    37.335
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Kunduz",
+     "Imam Sahib",
+     "Khanabad",
+     "Dashte Archi",
+     "Chahar Dara",
+     "Qalay-I- Zal",
+     "Aliabad"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-004905",
+    "steps": {
+     "build": 18.8,
+     "stations": 0.9,
+     "places": 1.5,
+     "routes": 11.7,
+     "merge": 0.8,
+     "nocar": 1.2,
+     "everyday": 1.0
+    },
+    "built": "2026-11-22T00:54:31",
+    "gate": {
+     "warn": [
+      "jobs_per_resident 0.18643000920096217",
+      "top_zone_jobs_share 0.12087927832712395",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-22T02:24:05",
+    "shipped": "2026-11-22T03:15:38"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6357,
+   "id": "mzi",
+   "name": "Mazari Sharif",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 1157634,
+   "origin": [
+    67.1075,
+    36.7105
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B70189679586713",
+     "17698898B77931863880594",
+     "17698898B55936753676845",
+     "17698898B12921472973415",
+     "17698898B92770889491620",
+     "17698898B61408580089249",
+     "17698898B88855258477888"
+    ]
+   },
+   "bbox": [
+    66.74,
+    36.271,
+    68.205,
+    37.09
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mazari Sharif",
+     "Balkh",
+     "Khulm",
+     "Dihdadi",
+     "Nahri Shahi",
+     "Feroz Nakhchir",
+     "Marmul"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-004905",
+    "steps": {
+     "build": 18.7,
+     "stations": 0.9,
+     "places": 1.5,
+     "routes": 8.5,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.9
+    },
+    "built": "2026-11-22T00:54:40",
+    "gate": {
+     "warn": [
+      "jobs_per_resident 0.18643000908622026",
+      "top_school_cell_pupils 6951.4365234375",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-22T02:24:06",
+    "shipped": "2026-11-22T03:15:39"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6358,
+   "id": "ghn",
+   "name": "Jaghuri",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 1103188,
+   "origin": [
+    68.421,
+    33.554
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B41383596061136",
+     "17698898B66989319468531",
+     "17698898B40546749525056",
+     "17698898B15836335276490",
+     "17698898B88117199286775",
+     "17698898B93105470278005",
+     "17698898B54445118426490",
+     "17698898B95721518303168",
+     "17698898B49767340950773",
+     "17698898B43522428587975",
+     "17698898B94947419719141",
+     "17698898B34806360196917",
+     "17698898B69450200493830",
+     "17698898B48639262347956",
+     "17698898B13684385115275",
+     "17698898B56570025970807",
+     "17698898B68993560499599",
+     "17698898B91768416079756",
+     "17698898B1377495574710",
+     "17698898B58745317907141",
+     "17698898B21749307466841"
+    ]
+   },
+   "bbox": [
+    66.82,
+    31.924,
+    68.828,
+    34.233
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Jaghuri",
+     "Ghazni",
+     "Qarabagh",
+     "Andar",
+     "Jaghatu",
+     "Nawur",
+     "Malistan",
+     "Gelan",
+     "Muqur",
+     "Dih Yak",
+     "Waghaz",
+     "Giro",
+     "Naw Bahar",
+     "Bahrami Shahid (Jaghatu)",
+     "Nawa",
+     "Ajristan",
+     "Ab Band",
+     "Khwaja Umari",
+     "Wali Muhammadi Shahid",
+     "Rashidan",
+     "Zana Khan"
+    ],
+    "origin_was": [
+     67.5438,
+     33.1519
+    ],
+    "origin_by_hand": "T-3764: the zone's provincial town (GeoNames), where the origin was a district's densest pixel off it (Bamyan and Ghoryan: preflight's off-town FLAG on a phantom pixel)",
+    "id_was": "jgu"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 23.2,
+     "stations": 1.1,
+     "places": 2.3,
+     "routes": 16.2,
+     "merge": 1.0,
+     "nocar": 1.5,
+     "everyday": 1.0
+    },
+    "built": "2026-11-22T01:31:53",
+    "gate": {
+     "warn": [
+      "jobs_per_resident 0.1864300087971347",
+      "top_school_cell_pupils 6143.4033203125",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-22T02:24:13",
+    "shipped": "2026-11-22T03:15:40"
+   }
+  },
+  {
+   "order": 6359,
+   "id": "bmy",
+   "name": "Markazi Bihsud",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 1024243,
+   "origin": [
+    67.827,
+    34.822
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B62516533587531",
+     "17698898B34980340314796",
+     "17698898B2066778831749",
+     "17698898B60484555786592",
+     "17698898B8527713612096",
+     "17698898B39012202863622",
+     "17698898B38280205315717",
+     "17698898B92886105415602",
+     "17698898B65207327485001"
+    ]
+   },
+   "bbox": [
+    66.277,
+    33.909,
+    68.435,
+    35.481
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Markazi Bihsud",
+     "Waras",
+     "Yakawlang",
+     "Bamyan",
+     "Panjab",
+     "Hisa-I- Awali Bihsud",
+     "Kahmard",
+     "Shibar",
+     "Sayghan"
+    ],
+    "origin_was": [
+     67.8959,
+     34.1665
+    ],
+    "origin_by_hand": "T-3764: the zone's provincial town (GeoNames), where the origin was a district's densest pixel off it (Bamyan and Ghoryan: preflight's off-town FLAG on a phantom pixel)",
+    "id_was": "mri"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 19.3,
+     "stations": 0.9,
+     "places": 1.8,
+     "routes": 10.4,
+     "merge": 0.7,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-11-22T01:31:41",
+    "gate": {
+     "warn": [
+      "jobs_per_resident 0.18643000764928036",
+      "top_school_cell_pupils 8449.1162109375",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-22T02:24:13",
+    "shipped": "2026-11-22T03:15:40"
+   }
+  },
+  {
+   "order": 6360,
+   "id": "qal",
+   "name": "Bala Murghab",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 1021654,
+   "origin": [
+    63.123,
+    34.988
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B57091539838302",
+     "17698898B6337453827047",
+     "17698898B43817755523450",
+     "17698898B11614254206376",
+     "17698898B73770643817409",
+     "17698898B84996327477794",
+     "17698898B64553162233341"
+    ]
+   },
+   "bbox": [
+    62.667,
+    34.513,
+    65.07,
+    36.037
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Bala Murghab",
+     "Qadis",
+     "Jawand",
+     "Qala-I- Naw",
+     "Ab Kamari",
+     "Ghormach",
+     "Muqur"
+    ],
+    "origin_was": [
+     63.3346,
+     35.5877
+    ],
+    "origin_by_hand": "T-3764: the zone's provincial town (GeoNames), where the origin was a district's densest pixel off it (Bamyan and Ghoryan: preflight's off-town FLAG on a phantom pixel)",
+    "id_was": "blg"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 20.1,
+     "stations": 1.0,
+     "places": 1.8,
+     "routes": 10.4,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 1.0
+    },
+    "built": "2026-11-22T01:31:42",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "pop_vs_plan 0.8221106797514336",
+      "pop_vs_ghsl 0.8226698136185073",
+      "jobs_per_resident 0.18643000883058652",
+      "top_zone_jobs_share 0.1050001884020587",
+      "fleet_range 4"
+     ]
+    },
+    "gated": "2026-11-22T02:24:14",
+    "shipped": "2026-11-22T03:15:41"
+   }
+  },
+  {
+   "order": 6361,
+   "id": "drp",
+   "name": "Dara-I-Pech",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 1016002,
+   "origin": [
+    71.147,
+    34.873
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B49910454876794",
+     "17698898B74946320403220",
+     "17698898B13238252869015",
+     "17698898B97188555075093",
+     "17698898B50805537510816",
+     "17698898B43925637284130",
+     "17698898B7537232997430",
+     "17698898B49094759287106",
+     "17698898B95618579984997",
+     "17698898B10413991082827",
+     "17698898B12728543796406",
+     "17698898B16169279194462",
+     "17698898B78521415915100",
+     "17698898B82085678459106",
+     "17698898B49694139697201",
+     "17698898B41954644585299",
+     "17698898B53177499733328",
+     "17698898B77023916462062",
+     "17698898B27007301103583",
+     "17698898B91812370370798",
+     "17698898B98242564837272",
+     "17698898B43074061200029",
+     "17698898B72528920014944"
+    ]
+   },
+   "bbox": [
+    69.914,
+    34.525,
+    71.681,
+    36.039
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Dara-I-Pech",
+     "Asadabad",
+     "Chawkay",
+     "Khas Kunar",
+     "Nurgal",
+     "Chapa Dara",
+     "Nurgaram",
+     "Narang",
+     "Shaygal wa shital",
+     "Wata Pur",
+     "Sarkani",
+     "Kamdesh",
+     "Nari",
+     "Bar Kunar",
+     "Ghaziabad",
+     "Mandol",
+     "Waygal",
+     "Marawara",
+     "Dangam",
+     "Bargi Matal",
+     "Parun",
+     "Wama",
+     "Du Ab"
+    ],
+    "origin_was": [
+     70.955,
+     34.9414
+    ],
+    "origin_by_hand": "T-3764: the zone's provincial town (GeoNames), where the origin was a district's densest pixel off it (Bamyan and Ghoryan: preflight's off-town FLAG on a phantom pixel)"
+   },
+   "run": {
+    "run_batch": "20261122-004905",
+    "steps": {
+     "build": 18.1,
+     "stations": 0.9,
+     "places": 1.6,
+     "routes": 10.9,
+     "merge": 0.7,
+     "nocar": 1.1,
+     "everyday": 0.8
+    },
+    "built": "2026-11-22T00:55:50",
+    "gate": {
+     "warn": [
+      "jobs_per_resident 0.18643000918416985",
+      "drive_factor_median 2.2535347872132085",
+      "road_snap_median_m 647.2",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-22T02:24:06",
+    "shipped": "2026-11-22T03:15:42"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6362,
+   "id": "zum",
+   "name": "Zurmat",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 1014220,
+   "origin": [
+    69.226,
+    33.597
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B98040886120926",
+     "17698898B10808081288517",
+     "17698898B14177024461677",
+     "17698898B66498358059232",
+     "17698898B48544319080592",
+     "17698898B82499644290934",
+     "17698898B63154587164483",
+     "17698898B94993264286601",
+     "17698898B50071469520952",
+     "17698898B88187802806148",
+     "17698898B13869186183429",
+     "17698898B57803424859740"
+    ]
+   },
+   "bbox": [
+    68.767,
+    33.151,
+    70.011,
+    34.087
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Zurmat",
+     "Gardiz",
+     "Ali Khail (Jaji)",
+     "Sayed Karam",
+     "Mosa Khail",
+     "Chamkani",
+     "Laja Ahmad Khail",
+     "Zadran",
+     "Jani Khail",
+     "Ahmad Abad",
+     "Dand Patan",
+     "Shawak"
+    ],
+    "origin_was": [
+     69.0323,
+     33.4376
+    ],
+    "origin_by_hand": "T-3764: the zone's provincial town (GeoNames), where the origin was a district's densest pixel off it (Bamyan and Ghoryan: preflight's off-town FLAG on a phantom pixel)"
+   },
+   "run": {
+    "run_batch": "20261122-004905",
+    "steps": {
+     "build": 15.8,
+     "stations": 0.8,
+     "places": 1.7,
+     "routes": 7.0,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-11-22T01:22:08",
+    "gate": {
+     "warn": [
+      "jobs_per_resident 0.1864300081191761",
+      "top_zone_jobs_share 0.10890213267607578",
+      "top_school_cell_pupils 6000.0",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-22T02:24:07",
+    "shipped": "2026-11-22T03:15:42"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6363,
+   "id": "frh",
+   "name": "Farah",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 943762,
+   "origin": [
+    62.1144,
+    32.3744
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B12847742424468",
+     "17698898B60738219309416",
+     "17698898B41043106697334",
+     "17698898B61842936481586",
+     "17698898B71599149457148",
+     "17698898B63900733266218",
+     "17698898B70788174101538",
+     "17698898B43056583417710",
+     "17698898B12487072568653",
+     "17698898B63284847438017",
+     "17698898B4337459540017"
+    ]
+   },
+   "bbox": [
+    60.583,
+    31.389,
+    64.747,
+    33.585
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Farah",
+     "Bala Buluk",
+     "Pur Chaman",
+     "Gulistan",
+     "Pusht Rod",
+     "Bakwa",
+     "Qala Ka",
+     "Khaki Safed",
+     "Lash Wa Juwayn",
+     "Anar Dara",
+     "Shib Koh"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-004905",
+    "steps": {
+     "build": 20.8,
+     "stations": 0.8,
+     "places": 1.6,
+     "routes": 11.0,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-11-22T01:22:16",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "pop_vs_plan 0.8475335766252163",
+      "pop_vs_ghsl 0.8475340256441564",
+      "area_km2 49669.40194383817",
+      "jobs_per_resident 0.18643000974588184",
+      "fleet_range 4"
+     ]
+    },
+    "gated": "2026-11-22T02:24:08",
+    "shipped": "2026-11-22T03:15:43"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6364,
+   "id": "acx",
+   "name": "Acheen",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 935242,
+   "origin": [
+    70.7169,
+    34.1317
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B14779938213850",
+     "17698898B34842389530316",
+     "17698898B37452568308908",
+     "17698898B70414548234356",
+     "17698898B10658108836681",
+     "17698898B11775537329403",
+     "17698898B67359070524975",
+     "17698898B80655497564577",
+     "17698898B83279878098942",
+     "17698898B89300652708023",
+     "17698898B65772173467801"
+    ]
+   },
+   "bbox": [
+    70.328,
+    33.944,
+    71.176,
+    34.563
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Acheen",
+     "Bati Kot",
+     "Rodat",
+     "Shinwar",
+     "Kot",
+     "Muhmand Dara",
+     "Deh Bala",
+     "Goshta",
+     "Dur Baba",
+     "Lal Por",
+     "Nazyan"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-004905",
+    "steps": {
+     "build": 15.6,
+     "stations": 1.0,
+     "places": 1.5,
+     "routes": 10.1,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 1.0
+    },
+    "built": "2026-11-22T01:22:41",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "jobs_per_resident 0.18643000867144985",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-22T02:24:08",
+    "shipped": "2026-11-22T03:15:44"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6365,
+   "id": "nhi",
+   "name": "Nahri Sarraj",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 917873,
+   "origin": [
+    64.358,
+    31.587
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B22352554505248",
+     "17698898B93501902948280",
+     "17698898B167183806480",
+     "17698898B23236612264479",
+     "17698898B34482796057231",
+     "17698898B86762050859643",
+     "17698898B2508287101636",
+     "17698898B25309519003719"
+    ]
+   },
+   "bbox": [
+    62.554,
+    29.377,
+    64.921,
+    32.528
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Nahri Sarraj",
+     "Nad Ali",
+     "Lashkar Gah",
+     "Nawa-I- Barak Zayi",
+     "Garmser",
+     "Washer",
+     "Reg(Khanshin)",
+     "Dishu"
+    ],
+    "origin_was": [
+     64.5636,
+     31.8231
+    ],
+    "origin_by_hand": "T-3764: the zone's provincial town (GeoNames), where the origin was a district's densest pixel off it (Bamyan and Ghoryan: preflight's off-town FLAG on a phantom pixel)"
+   },
+   "run": {
+    "run_batch": "20261122-004905",
+    "steps": {
+     "build": 26.2,
+     "stations": 0.9,
+     "places": 1.6,
+     "routes": 16.4,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 1.0
+    },
+    "built": "2026-11-22T01:23:06",
+    "gate": {
+     "warn": [
+      "area_km2 46792.24942775631",
+      "jobs_per_resident 0.1864300074918788",
+      "top_zone_jobs_share 0.13439367167714691",
+      "top_school_cell_pupils 6198.435546875",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-22T02:24:09",
+    "shipped": "2026-11-22T03:15:44"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6366,
+   "id": "kbv",
+   "name": "Koshk",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 916777,
+   "origin": [
+    61.496,
+    34.343
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B82675281335003",
+     "17698898B98443198567384",
+     "17698898B30811011988841",
+     "17698898B40667895693210",
+     "17698898B88962028797570",
+     "17698898B84066352785355"
+    ]
+   },
+   "bbox": [
+    60.518,
+    33.748,
+    62.868,
+    35.625
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Koshk",
+     "Gulran",
+     "Ghoryan",
+     "Zanda  Jan\n",
+     "Kohsan",
+     "Koshki Kohna"
+    ],
+    "origin_was": [
+     62.2853,
+     35.2468
+    ],
+    "origin_by_hand": "T-3764: the zone's provincial town (GeoNames), where the origin was a district's densest pixel off it (Bamyan and Ghoryan: preflight's off-town FLAG on a phantom pixel)"
+   },
+   "run": {
+    "run_batch": "20261122-004905",
+    "steps": {
+     "build": 20.0,
+     "stations": 0.9,
+     "places": 1.7,
+     "routes": 10.3,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-11-22T01:23:19",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "pop_vs_plan 0.8359069370798708",
+      "pop_vs_ghsl 0.8357682542315065",
+      "jobs_per_resident 0.18643000837342805",
+      "top_zone_jobs_share 0.16523960341818394",
+      "top_school_cell_pupils 7413.9775390625",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-22T02:24:10",
+    "shipped": "2026-11-22T03:15:45"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6367,
+   "id": "taq",
+   "name": "Taluqan",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 916501,
+   "origin": [
+    69.5259,
+    36.7369
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B41592630019355",
+     "17698898B29888456693038",
+     "17698898B42329311601444",
+     "17698898B63901396703969",
+     "17698898B6578659675582",
+     "17698898B76311187018184",
+     "17698898B80624423467641",
+     "17698898B10542195200094",
+     "17698898B54825742015716"
+    ]
+   },
+   "bbox": [
+    69.176,
+    35.787,
+    70.502,
+    36.928
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Taluqan",
+     "Ishkamish",
+     "Farkhar",
+     "Warsaj",
+     "Kalfagan",
+     "Bangi",
+     "Baharak",
+     "Chal",
+     "Namak Ab"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-004905",
+    "steps": {
+     "build": 15.9,
+     "stations": 0.8,
+     "places": 1.5,
+     "routes": 8.6,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 1.0
+    },
+    "built": "2026-11-22T01:23:38",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "jobs_per_resident 0.18643000878067872",
+      "top_zone_jobs_share 0.17452906188026754",
+      "top_school_cell_pupils 6367.6982421875",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-22T02:24:11",
+    "shipped": "2026-11-22T03:15:46"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6368,
+   "id": "kbx",
+   "name": "Kishim",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 889779,
+   "origin": [
+    70.0977,
+    36.8161
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B32376525007973",
+     "17698898B6814893485448",
+     "17698898B8170759231465",
+     "17698898B98024385511002",
+     "17698898B86453350447825",
+     "17698898B22921587278202",
+     "17698898B92283953739248",
+     "17698898B12331044799427",
+     "17698898B77372347309342",
+     "17698898B39229335816242",
+     "17698898B90987170586720",
+     "17698898B72396469505647",
+     "17698898B50007129326451",
+     "17698898B62998583061214"
+    ]
+   },
+   "bbox": [
+    69.99,
+    35.441,
+    74.889,
+    37.475
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Kishim",
+     "Darayim",
+     "Khash",
+     "Jurm",
+     "Shahada",
+     "Tashkan",
+     "Baharak",
+     "Tagab (Kishmi Bala)",
+     "Yamgan (Girwan)",
+     "Warduj\n",
+     "Wakhan",
+     "Ishkashiem",
+     "Kuran Wa Munjan",
+     "Zebak"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-004905",
+    "steps": {
+     "build": 24.9,
+     "stations": 0.8,
+     "places": 1.6,
+     "routes": 9.1,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-11-22T01:24:00",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "pop_vs_plan 0.8281855698450385",
+      "pop_vs_ghsl 0.8276173717172475",
+      "jobs_per_resident 0.18643000923578307",
+      "top_school_cell_pupils 6025.83984375",
+      "fleet_range 4"
+     ]
+    },
+    "gated": "2026-11-22T02:24:11",
+    "shipped": "2026-11-22T03:15:46"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6369,
+   "id": "jlb",
+   "name": "Jalalabad",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 885345,
+   "origin": [
+    70.4694,
+    34.41
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B55913331863660",
+     "17698898B49352656840522",
+     "17698898B68978504686864",
+     "17698898B40651827730083",
+     "17698898B3395044113732"
+    ]
+   },
+   "bbox": [
+    70.362,
+    34.332,
+    70.761,
+    34.806
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Jalalabad",
+     "Bihsud",
+     "Kama",
+     "Kuz Kunar",
+     "Dara-I-Nur"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-004905",
+    "steps": {
+     "build": 13.3,
+     "stations": 0.7,
+     "places": 1.3,
+     "routes": 7.0,
+     "merge": 0.6,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-11-22T01:24:06",
+    "gate": {
+     "warn": [
+      "pop_vs_plan 0.8419624063185217",
+      "jobs_per_resident 0.18643000914686678",
+      "top_zone_jobs_share 0.22636965094547523",
+      "top_school_cell_pupils 6549.44970703125",
+      "fleet_range 3"
+     ]
+    },
+    "parked": "2026-11-22T02:14:54",
+    "gated": "2026-11-22T02:27:04",
+    "shipped": "2026-11-22T03:15:47"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)",
+    "top_zone_jobs_share": "one-town zone, its top cell the town's centre (Jalalabad 0.23, Aybak 0.30, Fayzabad 0.21, Zaranj 0.21) (T-3764)"
+   }
+  },
+  {
+   "order": 6370,
+   "id": "sgy",
+   "name": "Sari Pul",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 834329,
+   "origin": [
+    65.9303,
+    36.2185
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B87621417384436",
+     "17698898B35985361203914",
+     "17698898B60638950590338",
+     "17698898B49472031583936",
+     "17698898B83091698293220",
+     "17698898B73489110800958",
+     "17698898B50201186809314"
+    ]
+   },
+   "bbox": [
+    65.384,
+    34.872,
+    67.031,
+    36.565
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Sari Pul",
+     "Sangcharak",
+     "Kohistanat",
+     "Gosfandi",
+     "Sayyad",
+     "Balkhab",
+     "Sozma Qala"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 17.6,
+     "stations": 0.9,
+     "places": 1.8,
+     "routes": 9.9,
+     "merge": 0.7,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-11-22T01:31:39",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "jobs_per_resident 0.1864300081736588",
+      "fleet_range 4"
+     ]
+    },
+    "gated": "2026-11-22T02:24:14",
+    "shipped": "2026-11-22T03:15:48"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6371,
+   "id": "ruq",
+   "name": "Rustaq",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 808003,
+   "origin": [
+    69.8029,
+    37.1419
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B56243841682349",
+     "17698898B49058624531399",
+     "17698898B17227259683371",
+     "17698898B77381605069236",
+     "17698898B88978758104399",
+     "17698898B31964799049136",
+     "17698898B60646731922830",
+     "17698898B42975993540698"
+    ]
+   },
+   "bbox": [
+    69.307,
+    36.812,
+    70.131,
+    37.62
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Rustaq",
+     "Chah Ab",
+     "Khwaja Ghar",
+     "Yangi Qala",
+     "Dashti Qala",
+     "Darqad",
+     "Khwaja Bahawuddin",
+     "Hazar Sumuch"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 18.7,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 10.1,
+     "merge": 0.9,
+     "nocar": 1.7,
+     "everyday": 1.3
+    },
+    "built": "2026-11-22T01:31:45",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "jobs_per_resident 0.1864300095921736",
+      "top_school_cell_pupils 7260.45166015625",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-22T02:24:15",
+    "shipped": "2026-11-22T03:15:48"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6372,
+   "id": "mht",
+   "name": "Mihtarlam",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 806564,
+   "origin": [
+    70.2065,
+    34.6799
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B85427598305070",
+     "17698898B92687367018667",
+     "17698898B28188212808936",
+     "17698898B23262153912138",
+     "17698898B80278762085258"
+    ]
+   },
+   "bbox": [
+    69.806,
+    34.396,
+    70.626,
+    35.219
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Mihtarlam",
+     "Qarghayi",
+     "Alingar",
+     "Alishing",
+     "Daulatshahi"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 16.9,
+     "stations": 1.0,
+     "places": 1.7,
+     "routes": 9.0,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-11-22T01:34:41",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "jobs_per_resident 0.18643000835050585",
+      "drive_factor_median 2.0841789734955687",
+      "fleet_range 4"
+     ]
+    },
+    "gated": "2026-11-22T02:24:15",
+    "shipped": "2026-11-22T03:15:49"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6373,
+   "id": "kgy",
+   "name": "Khogayani",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 736363,
+   "origin": [
+    70.1966,
+    34.2534
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B58246966451205",
+     "17698898B62584690937693",
+     "17698898B9118080572878",
+     "17698898B74585757664988",
+     "17698898B31168234973124"
+    ]
+   },
+   "bbox": [
+    69.877,
+    33.961,
+    70.484,
+    34.485
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Khogayani",
+     "Surkh Rod",
+     "Shirzad",
+     "Chaparhar",
+     "Pachier Agam"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 16.8,
+     "stations": 0.9,
+     "places": 1.7,
+     "routes": 8.4,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-11-22T01:34:35",
+    "gate": {
+     "warn": [
+      "jobs_per_resident 0.1864300088692636",
+      "top_school_cell_pupils 6166.9775390625",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-22T02:24:16",
+    "shipped": "2026-11-22T03:15:50"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6374,
+   "id": "gza",
+   "name": "Gizab",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 731514,
+   "origin": [
+    66.2465,
+    33.377
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B77867409932082",
+     "17698898B15040398145446",
+     "17698898B99775155489299",
+     "17698898B86995719870790",
+     "17698898B83390857552519",
+     "17698898B85896963055106",
+     "17698898B71478968309259",
+     "17698898B11793530317199",
+     "17698898B68976671585509"
+    ]
+   },
+   "bbox": [
+    65.228,
+    32.924,
+    67.419,
+    34.37
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Gizab",
+     "Shahristan",
+     "Miramor",
+     "Sangi Takht",
+     "Ishtarlay",
+     "Khadir",
+     "Nili",
+     "Kajran",
+     "Gaiti"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 21.1,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 10.6,
+     "merge": 0.9,
+     "nocar": 1.7,
+     "everyday": 1.2
+    },
+    "built": "2026-11-22T01:32:21",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "jobs_per_resident 0.186430008422159",
+      "top_zone_jobs_share 0.15800786432429784",
+      "top_school_cell_pupils 8219.7109375",
+      "fleet_range 4"
+     ]
+    },
+    "gated": "2026-11-22T02:24:17",
+    "shipped": "2026-11-22T03:15:50"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6375,
+   "id": "bdp",
+   "name": "Bagram",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 725376,
+   "origin": [
+    69.2733,
+    34.9414
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B76580774118735",
+     "17698898B22800261216411",
+     "17698898B39893624636258",
+     "17698898B88854070197950",
+     "17698898B90427677065575",
+     "17698898B57544196063492",
+     "17698898B92627850730576",
+     "17698898B71703822686681",
+     "17698898B51750891516418",
+     "17698898B32986423945251",
+     "17698898B86893454332633",
+     "17698898B9822156796156"
+    ]
+   },
+   "bbox": [
+    69.164,
+    34.855,
+    70.305,
+    35.903
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Bagram",
+     "Hisa-i-Awali Kohistan",
+     "Mahmudi Raqi",
+     "Sayd Khel",
+     "Hisa-i-Duwumi Kohistan",
+     "Khenj (Hese- Awal)",
+     "Koh Band",
+     "Dara",
+     "Rukha",
+     "Bazarak",
+     "Unaba",
+     "Paryan"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 17.1,
+     "stations": 1.0,
+     "places": 2.3,
+     "routes": 7.5,
+     "merge": 0.7,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-11-22T01:32:15",
+    "gate": {
+     "warn": [
+      "jobs_per_resident 0.18643000968417686",
+      "top_school_cell_pupils 6016.1337890625",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-22T02:24:17",
+    "shipped": "2026-11-22T03:15:51"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6376,
+   "id": "pmx",
+   "name": "Puli Alam",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 714991,
+   "origin": [
+    69.0604,
+    33.9406
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B11646874618159",
+     "17698898B34606037215802",
+     "17698898B22210022467973",
+     "17698898B52143357969212",
+     "17698898B26698492431192",
+     "17698898B82701186075668",
+     "17698898B48695657788361",
+     "17698898B91002428816885"
+    ]
+   },
+   "bbox": [
+    68.713,
+    33.596,
+    69.958,
+    34.421
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Puli Alam",
+     "Baraki Barak",
+     "Mohammad Agha",
+     "Charkh",
+     "Hesarak",
+     "Kharwar",
+     "Khoshi",
+     "Azra"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 16.4,
+     "stations": 1.0,
+     "places": 1.8,
+     "routes": 10.7,
+     "merge": 0.8,
+     "nocar": 1.6,
+     "everyday": 1.2
+    },
+    "built": "2026-11-22T01:32:19",
+    "gate": {
+     "warn": [
+      "jobs_per_resident 0.18643000842919852",
+      "top_zone_jobs_share 0.17615056506779783",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-22T02:24:18",
+    "shipped": "2026-11-22T03:15:52"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6377,
+   "id": "sgz",
+   "name": "Shibirghan",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 707293,
+   "origin": [
+    65.7564,
+    36.6665
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B53467877879512",
+     "17698898B46917889525806",
+     "17698898B18601855151181",
+     "17698898B33311091031062",
+     "17698898B33300576741298",
+     "17698898B3221081044108",
+     "17698898B10243065088514",
+     "17698898B16843161206497",
+     "17698898B9912817102687",
+     "17698898B63288108708260",
+     "17698898B49127881316954"
+    ]
+   },
+   "bbox": [
+    65.161,
+    35.906,
+    66.576,
+    37.551
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Shibirghan",
+     "Aqcha",
+     "Darzab",
+     "Mangajek",
+     "Fayzabad",
+     "Khaniqa",
+     "Mardyan",
+     "Khwaja Du Koh",
+     "Qarqin",
+     "Qush Tepa",
+     "Kham Ab"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 18.2,
+     "stations": 1.0,
+     "places": 2.1,
+     "routes": 8.5,
+     "merge": 0.9,
+     "nocar": 1.7,
+     "everyday": 1.3
+    },
+    "built": "2026-11-22T01:32:23",
+    "gate": {
+     "warn": [
+      "jobs_per_resident 0.18643000868596823",
+      "top_zone_jobs_share 0.1170916826643799",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-22T02:24:19",
+    "shipped": "2026-11-22T03:15:52"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6378,
+   "id": "urn",
+   "name": "Urgun",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 667525,
+   "origin": [
+    69.1799,
+    32.9443
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B81639948392076",
+     "17698898B15919803433958",
+     "17698898B31718885342690",
+     "17698898B35828896947271",
+     "17698898B30671190728626",
+     "17698898B75574585660656",
+     "17698898B85546935814968",
+     "17698898B70029244120792",
+     "17698898B73657459588515",
+     "17698898B79363414793444",
+     "17698898B70025799678944",
+     "17698898B76739008753314",
+     "17698898B3457791350599",
+     "17698898B39301080815863",
+     "17698898B76017578354726",
+     "17698898B71465249447941",
+     "17698898B48845645829739",
+     "17698898B36453114297847",
+     "17698898B92535545180031"
+    ]
+   },
+   "bbox": [
+    67.811,
+    31.594,
+    69.547,
+    33.417
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Urgun",
+     "Sharan",
+     "Gayan",
+     "Barmal",
+     "Zarghun Shahr",
+     "Dila",
+     "Jani Khel",
+     "Mata Khan",
+     "Sar Hawza",
+     "Waza Khwa",
+     "Ziruk",
+     "Yahya Khel",
+     "Yosuf Khel",
+     "Sarobi",
+     "Nika",
+     "Omna",
+     "Gomal",
+     "Wor Mayi",
+     "Turwo"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 21.9,
+     "stations": 1.1,
+     "places": 1.9,
+     "routes": 12.4,
+     "merge": 1.0,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-11-22T01:32:32",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "jobs_per_resident 0.18643000870082124",
+      "drive_factor_median 2.0841789734955687",
+      "road_snap_median_m 311.8",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-22T02:24:19",
+    "shipped": "2026-11-22T03:15:53"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6379,
+   "id": "pjw",
+   "name": "Panjwayi",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 638347,
+   "origin": [
+    65.4581,
+    31.5479
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B87789129076781",
+     "17698898B43026433871983",
+     "17698898B16178473007687",
+     "17698898B71155129152352",
+     "17698898B19619181561833",
+     "17698898B62386399242941",
+     "17698898B45857053631158",
+     "17698898B86043618783876"
+    ]
+   },
+   "bbox": [
+    64.503,
+    29.535,
+    66.729,
+    32.321
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Panjwayi",
+     "Zhari",
+     "Spin Boldak",
+     "Maywand",
+     "Khakrez",
+     "Shorabak",
+     "Ghorak",
+     "Registan"
+    ],
+    "id_was": "pny"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 25.8,
+     "stations": 1.1,
+     "places": 1.9,
+     "routes": 16.2,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 1.2
+    },
+    "built": "2026-11-22T01:32:44",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "jobs_per_resident 0.18643000817197342",
+      "top_zone_jobs_share 0.16185826823270866",
+      "top_school_cell_pupils 5382.9365234375",
+      "road_snap_median_m 359.1",
+      "fleet_range 4"
+     ]
+    },
+    "gated": "2026-11-22T02:24:20",
+    "shipped": "2026-11-22T03:15:54"
+   }
+  },
+  {
+   "order": 6380,
+   "id": "crk",
+   "name": "Chaharikar",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 633009,
+   "origin": [
+    69.1679,
+    35.0199
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B78020451669057",
+     "17698898B53460503432272",
+     "17698898B46371415071663",
+     "17698898B52761168478652",
+     "17698898B71956168117358",
+     "17698898B85596304948243",
+     "17698898B27579571424346"
+    ]
+   },
+   "bbox": [
+    68.19,
+    34.796,
+    69.386,
+    35.427
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Chaharikar",
+     "Sia Gird ( Ghorbund)",
+     "Jabalussaraj",
+     "Shinwari",
+     "Shekh  Ali",
+     "Salang",
+     "Shutul"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 16.3,
+     "stations": 1.0,
+     "places": 1.8,
+     "routes": 6.6,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-11-22T01:32:47",
+    "gate": {
+     "warn": [
+      "jobs_per_resident 0.18643001015998534",
+      "top_zone_jobs_share 0.11202211178546681",
+      "top_school_cell_pupils 6241.2373046875",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-22T02:24:21",
+    "shipped": "2026-11-22T03:15:54"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6381,
+   "id": "cgc",
+   "name": "Chaghcharan",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 624389,
+   "origin": [
+    65.2521,
+    34.5231
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B78061514041898",
+     "17698898B32541112128206",
+     "17698898B44512241751427",
+     "17698898B51753935446001",
+     "17698898B8940895568860"
+    ]
+   },
+   "bbox": [
+    64.451,
+    33.75,
+    66.735,
+    35.281
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Chaghcharan",
+     "Lal Wa Sarjangal",
+     "Du Layna",
+     "Dawlat Yar",
+     "Charsada"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 20.3,
+     "stations": 1.0,
+     "places": 2.0,
+     "routes": 9.7,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-11-22T01:32:57",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "jobs_per_resident 0.1864300093601675",
+      "top_cell_jobs_vs_size 608.5527293551116",
+      "top_zone_jobs_share 0.18821370764029052",
+      "top_school_cell_pupils 7312.044921875",
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-11-22T02:22:40",
+    "gated": "2026-11-22T02:27:04",
+    "shipped": "2026-11-22T03:15:55"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)",
+    "top_cell_jobs_vs_size": "Chaghcharan's top cell is the town's centre, the only town in Ghor (608) (T-3764)"
+   }
+  },
+  {
+   "order": 6382,
+   "id": "psb",
+   "name": "Pasaband",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 603489,
+   "origin": [
+    64.8524,
+    33.689
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B90993953751325",
+     "17698898B99964188527696",
+     "17698898B24017508247144",
+     "17698898B19883224301342",
+     "17698898B17817856005515"
+    ]
+   },
+   "bbox": [
+    63.192,
+    33.123,
+    65.649,
+    34.525
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Pasaband",
+     "Taywara",
+     "Shahrak",
+     "Tulak",
+     "Saghar"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 19.5,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 8.8,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 1.2
+    },
+    "built": "2026-11-22T01:32:59",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "jobs_per_resident 0.18643000998421266",
+      "top_zone_jobs_share 0.11559602388895547",
+      "top_school_cell_pupils 10310.1962890625",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-22T02:24:21",
+    "shipped": "2026-11-22T03:15:56"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6383,
+   "id": "ayb",
+   "name": "Aybak",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 595147,
+   "origin": [
+    68.0175,
+    36.2624
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B9034512008121",
+     "17698898B17027001788279",
+     "17698898B79609876731743",
+     "17698898B6996072822964",
+     "17698898B97300978442775",
+     "17698898B56476132623567"
+    ]
+   },
+   "bbox": [
+    66.875,
+    35.347,
+    68.569,
+    36.586
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Aybak",
+     "Dara-I-Sufi Payin",
+     "Dara-I-Sufi Bala",
+     "Ruyi Du Ab",
+     "Hazrati Sultan",
+     "Khuram Wa Sarbagh"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 18.1,
+     "stations": 1.1,
+     "places": 1.9,
+     "routes": 9.3,
+     "merge": 0.7,
+     "nocar": 1.5,
+     "everyday": 1.3
+    },
+    "built": "2026-11-22T01:33:00",
+    "gate": {
+     "warn": [
+      "jobs_per_resident 0.18643000892065634",
+      "top_zone_jobs_share 0.3044768636303994",
+      "top_school_cell_pupils 6000.0",
+      "fleet_range 3"
+     ]
+    },
+    "parked": "2026-11-22T02:22:41",
+    "gated": "2026-11-22T02:27:05",
+    "shipped": "2026-11-22T03:15:56"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)",
+    "top_zone_jobs_share": "one-town zone, its top cell the town's centre (Jalalabad 0.23, Aybak 0.30, Fayzabad 0.21, Zaranj 0.21) (T-3764)"
+   }
+  },
+  {
+   "order": 6384,
+   "id": "tko",
+   "name": "Tirin Kot",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 556392,
+   "origin": [
+    65.8734,
+    32.6246
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B6220132089386",
+     "17698898B30857026979621",
+     "17698898B28778258305736",
+     "17698898B7154367860778",
+     "17698898B34778403037326"
+    ]
+   },
+   "bbox": [
+    65.171,
+    32.272,
+    67.026,
+    33.329
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Tirin Kot",
+     "Chora",
+     "Dihrawud",
+     "Shahidi Hassas",
+     "Khas Uruzgan"
+    ],
+    "id_was": "trk"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 19.7,
+     "stations": 1.0,
+     "places": 1.8,
+     "routes": 8.3,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-11-22T01:33:08",
+    "gate": {
+     "warn": [
+      "jobs_per_resident 0.18643000836899976",
+      "top_school_cell_pupils 5455.150390625",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-22T02:24:22",
+    "shipped": "2026-11-22T03:15:57"
+   }
+  },
+  {
+   "order": 6385,
+   "id": "psn",
+   "name": "Pashtun Zarghun",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 533002,
+   "origin": [
+    62.6837,
+    34.2273
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B48568225140824",
+     "17698898B82424005626981",
+     "17698898B76505255120202",
+     "17698898B84127122841675"
+    ]
+   },
+   "bbox": [
+    62.297,
+    33.975,
+    64.483,
+    34.69
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Pashtun Zarghun",
+     "Obe",
+     "Karukh",
+     "Chishti Sharif"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 17.3,
+     "stations": 1.0,
+     "places": 1.8,
+     "routes": 8.1,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-11-22T01:33:18",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "pop_vs_plan 0.8336406305490638",
+      "pop_vs_ghsl 0.8336404350431288",
+      "jobs_per_resident 0.1864300081831256",
+      "top_school_cell_pupils 6130.0830078125",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-22T02:24:22",
+    "shipped": "2026-11-22T03:15:58"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6386,
+   "id": "yft",
+   "name": "Yaftal Sufla",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 532941,
+   "origin": [
+    70.3115,
+    37.3447
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B6830111316734",
+     "17698898B83014236154214",
+     "17698898B15363372694269",
+     "17698898B9112322205672",
+     "17698898B19581778816483",
+     "17698898B52906026797315",
+     "17698898B757957454065",
+     "17698898B28919940592911"
+    ]
+   },
+   "bbox": [
+    69.992,
+    37.046,
+    71.135,
+    38.491
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Yaftal Sufla",
+     "Shahri Buzurg",
+     "Raghistan",
+     "Yawan",
+     "Shaki",
+     "Kuf Ab",
+     "Darwaz",
+     "Khwahan"
+    ],
+    "id_was": "yat"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 18.2,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 7.5,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-11-22T01:33:21",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "jobs_per_resident 0.18643000795224873",
+      "top_school_cell_pupils 8846.3515625",
+      "drive_factor_median 2.398875293967098",
+      "fleet_range 4"
+     ]
+    },
+    "gated": "2026-11-22T02:24:23",
+    "shipped": "2026-11-22T03:15:59"
+   }
+  },
+  {
+   "order": 6387,
+   "id": "sjj",
+   "name": "Shindand",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 532644,
+   "origin": [
+    62.1544,
+    33.3077
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B23157226416647",
+     "17698898B23166050371692",
+     "17698898B70680099642368"
+    ]
+   },
+   "bbox": [
+    60.547,
+    32.85,
+    63.58,
+    34.154
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Shindand",
+     "Adraskan",
+     "Farsi"
+    ],
+    "id_was": "shq"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 19.1,
+     "stations": 1.1,
+     "places": 1.9,
+     "routes": 9.1,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 1.2
+    },
+    "built": "2026-11-22T01:33:35",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "pop_vs_plan 0.8365231860851232",
+      "pop_vs_ghsl 0.8365232842420635",
+      "jobs_per_resident 0.18643000822653538",
+      "top_school_cell_pupils 8771.6669921875",
+      "fleet_range 4"
+     ]
+    },
+    "gated": "2026-11-22T02:24:24",
+    "shipped": "2026-11-22T03:15:59"
+   }
+  },
+  {
+   "order": 6388,
+   "id": "syb",
+   "name": "Saydabad",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 531620,
+   "origin": [
+    68.8137,
+    34.1839
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B83186885490435",
+     "17698898B26925173869114",
+     "17698898B73569132273389",
+     "17698898B95952614940522"
+    ]
+   },
+   "bbox": [
+    68.077,
+    33.684,
+    68.97,
+    34.443
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Saydabad",
+     "Chaki Wardak",
+     "Nirkh",
+     "Day Mirdad"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 15.4,
+     "stations": 1.0,
+     "places": 1.8,
+     "routes": 8.1,
+     "merge": 0.7,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-11-22T01:33:32",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "jobs_per_resident 0.18643000855353187",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-22T02:24:24",
+    "shipped": "2026-11-22T03:16:00"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6389,
+   "id": "bdq",
+   "name": "Baghran",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 507882,
+   "origin": [
+    65.0906,
+    33.074
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B34489246879191",
+     "17698898B29414773205721",
+     "17698898B14674073600616",
+     "17698898B63216716382211",
+     "17698898B96274707297205"
+    ]
+   },
+   "bbox": [
+    63.985,
+    31.899,
+    65.376,
+    33.374
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Baghran",
+     "Kajaki",
+     "Musa Qala",
+     "Sangin",
+     "Naw Zad"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 19.3,
+     "stations": 1.2,
+     "places": 1.8,
+     "routes": 9.5,
+     "merge": 0.9,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-11-22T01:33:39",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "jobs_per_resident 0.18643000903206788",
+      "top_zone_jobs_share 0.16113463999472408",
+      "top_school_cell_pupils 6043.18505859375",
+      "fleet_range 4"
+     ]
+    },
+    "gated": "2026-11-22T02:24:25",
+    "shipped": "2026-11-22T03:16:01"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6390,
+   "id": "dwl",
+   "name": "Dawlatabad",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 475102,
+   "origin": [
+    66.8213,
+    36.9833
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B77647475536898",
+     "17698898B2431624392014",
+     "17698898B81421616745366",
+     "17698898B96349450413345",
+     "17698898B94329436911274"
+    ]
+   },
+   "bbox": [
+    66.252,
+    36.264,
+    67.803,
+    37.399
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Dawlatabad",
+     "Chimtal",
+     "Chahar Bolak",
+     "Shortepa",
+     "Kaldar"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 19.1,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 11.2,
+     "merge": 0.8,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-11-22T01:33:47",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "jobs_per_resident 0.18643000908334037",
+      "top_zone_jobs_share 0.10497729129594784",
+      "top_school_cell_pupils 6042.521484375",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-22T02:24:26",
+    "shipped": "2026-11-22T03:16:01"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6391,
+   "id": "sjf",
+   "name": "Shirin Tagab",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 472620,
+   "origin": [
+    64.8723,
+    36.2887
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B36085950129723",
+     "17698898B78823885330812",
+     "17698898B36636403911710",
+     "17698898B72434564939727",
+     "17698898B58243827416032",
+     "17698898B29599265384553"
+    ]
+   },
+   "bbox": [
+    64.279,
+    36.086,
+    65.493,
+    37.251
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Shirin Tagab",
+     "Dawlatabad",
+     "Qurghan",
+     "Andkhoy",
+     "Khani Chahar Bagh",
+     "Qaramqol"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 16.9,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 6.6,
+     "merge": 0.9,
+     "nocar": 1.8,
+     "everyday": 1.2
+    },
+    "built": "2026-11-22T01:33:51",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "jobs_per_resident 0.18643000928260908",
+      "top_zone_jobs_share 0.11086366063940645",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-22T02:24:26",
+    "shipped": "2026-11-22T03:16:02"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6392,
+   "id": "sjy",
+   "name": "Shahjoy",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 463421,
+   "origin": [
+    66.908,
+    32.106
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B33097773516332",
+     "17698898B96504361187718",
+     "17698898B215404734211",
+     "17698898B65639983209731",
+     "17698898B12488155068203",
+     "17698898B55948983877195",
+     "17698898B65527099858560",
+     "17698898B61039964161642",
+     "17698898B54317495727224",
+     "17698898B26335447462058",
+     "17698898B30924552115619"
+    ]
+   },
+   "bbox": [
+    66.101,
+    31.498,
+    68.113,
+    33.076
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Shahjoy",
+     "Daychopan",
+     "Qalat",
+     "Arghandab",
+     "Shamulzayi",
+     "Shinkay",
+     "Kakar",
+     "Tarnak Wa Jaldak",
+     "Miya Nishin",
+     "Mizan",
+     "Atghar"
+    ],
+    "origin_was": [
+     67.4119,
+     32.5211
+    ],
+    "origin_by_hand": "T-3764: the zone's provincial town (GeoNames), where the origin was a district's densest pixel off it (Bamyan and Ghoryan: preflight's off-town FLAG on a phantom pixel)"
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 21.3,
+     "stations": 1.1,
+     "places": 1.7,
+     "routes": 10.7,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.2
+    },
+    "built": "2026-11-22T01:34:02",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "jobs_per_resident 0.1864300075797709",
+      "top_zone_jobs_share 0.1403138049426506",
+      "top_school_cell_pupils 6581.87158203125",
+      "drive_factor_median 2.0200555277086965",
+      "road_snap_median_m 339.8",
+      "fleet_range 4"
+     ]
+    },
+    "gated": "2026-11-22T02:24:27",
+    "shipped": "2026-11-22T03:16:03"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6393,
+   "id": "njr",
+   "name": "Nijrab",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 460153,
+   "origin": [
+    69.615,
+    35.0111
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B41631519248900",
+     "17698898B88758953841617",
+     "17698898B2615744519366",
+     "17698898B62190249131225"
+    ]
+   },
+   "bbox": [
+    69.447,
+    34.204,
+    69.945,
+    35.17
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Nijrab",
+     "Tagab",
+     "Surobi",
+     "Alasay"
+    ],
+    "id_was": "nij"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 17.1,
+     "stations": 1.2,
+     "places": 2.4,
+     "routes": 7.3,
+     "merge": 0.9,
+     "nocar": 1.6,
+     "everyday": 1.2
+    },
+    "built": "2026-11-22T01:34:07",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "jobs_per_resident 0.18643000722759295",
+      "drive_factor_median 2.117000016612675",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-22T02:24:28",
+    "shipped": "2026-11-22T03:16:03"
+   }
+  },
+  {
+   "order": 6394,
+   "id": "fyz",
+   "name": "Fayzabad",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 450183,
+   "origin": [
+    70.5468,
+    37.0978
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B13673571865374",
+     "17698898B44605407424991",
+     "17698898B95650823120892",
+     "17698898B26989253690642",
+     "17698898B25739808204727",
+     "17698898B60025751668674"
+    ]
+   },
+   "bbox": [
+    70.106,
+    36.875,
+    71.598,
+    38.49
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Fayzabad",
+     "Argo",
+     "Shighnan",
+     "Kohistan",
+     "Darwazbala",
+     "Arghanj Khaw"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 22.5,
+     "stations": 1.0,
+     "places": 2.4,
+     "routes": 9.7,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-11-22T01:34:16",
+    "gate": {
+     "warn": [
+      "jobs_per_resident 0.18643000957534756",
+      "top_zone_jobs_share 0.21445124019987655",
+      "top_school_cell_pupils 6076.93310546875",
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-11-22T02:22:49",
+    "gated": "2026-11-22T02:27:06",
+    "shipped": "2026-11-22T03:16:04"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)",
+    "top_zone_jobs_share": "one-town zone, its top cell the town's centre (Jalalabad 0.23, Aybak 0.30, Fayzabad 0.21, Zaranj 0.21) (T-3764)"
+   }
+  },
+  {
+   "order": 6395,
+   "id": "qar",
+   "name": "Qarabagh",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 416160,
+   "origin": [
+    69.1552,
+    34.8454
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B97748995377228",
+     "17698898B60289592793683",
+     "17698898B12916528031123",
+     "17698898B48331598249069",
+     "17698898B71756880207327",
+     "17698898B80217603644600"
+    ]
+   },
+   "bbox": [
+    68.898,
+    34.674,
+    69.333,
+    34.906
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Qarabagh",
+     "Mir Bacha Kot",
+     "Istalif",
+     "Kalakan",
+     "Guldara",
+     "Farza"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 15.6,
+     "stations": 1.0,
+     "places": 1.8,
+     "routes": 8.2,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.2
+    },
+    "built": "2026-11-22T01:34:12",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "jobs_per_resident 0.186430008770092",
+      "top_school_cell_pupils 6000.0",
+      "fleet_range 4"
+     ]
+    },
+    "gated": "2026-11-22T02:24:28",
+    "shipped": "2026-11-22T03:16:05"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6396,
+   "id": "sji",
+   "name": "Sholgara",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 352084,
+   "origin": [
+    66.8872,
+    36.3239
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "17698898B55574996468051",
+     "17698898B65056922872965",
+     "17698898B85275633227328",
+     "17698898B37192900102961"
+    ]
+   },
+   "bbox": [
+    66.474,
+    35.669,
+    67.451,
+    36.596
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Sholgara",
+     "Kishindih",
+     "Chahar Kint",
+     "Zari"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 16.6,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 6.7,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 1.1
+    },
+    "built": "2026-11-22T01:34:19",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "jobs_per_resident 0.18643000830321196",
+      "drive_factor_median 2.0200555277086965",
+      "fleet_range 4"
+     ]
+    },
+    "gated": "2026-11-22T02:24:29",
+    "shipped": "2026-11-22T03:16:06"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)"
+   }
+  },
+  {
+   "order": 6397,
+   "id": "nmr",
+   "name": "Nimruz",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "AFG"
+   ],
+   "iso2": "AF",
+   "people": 226536,
+   "origin": [
+    61.87,
+    30.954
+   ],
+   "tz": "Asia/Kabul",
+   "utc_offset": 4,
+   "extracts": [
+    "asia/afghanistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "AFG": [
+     "12653393B2934199951965"
+    ]
+   },
+   "bbox": [
+    60.883,
+    29.39,
+    63.51,
+    32.246
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Nimruz"
+    ],
+    "origin_was": [
+     61.7959,
+     31.1872
+    ],
+    "origin_by_hand": "T-3764: the zone's provincial town (GeoNames), where the origin was a district's densest pixel off it (Bamyan and Ghoryan: preflight's off-town FLAG on a phantom pixel)"
+   },
+   "run": {
+    "run_batch": "20261122-012958",
+    "steps": {
+     "build": 28.0,
+     "stations": 0.9,
+     "places": 1.7,
+     "routes": 12.9,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-11-22T01:34:40",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "area_km2 41554.13822437166",
+      "jobs_per_resident 0.18643000763816603",
+      "top_zone_jobs_share 0.20554721709623322",
+      "road_snap_median_m 317.2",
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-11-22T02:22:51",
+    "gated": "2026-11-22T02:27:06",
+    "shipped": "2026-11-22T03:16:06"
+   },
+   "gate_relax": {
+    "jobs_per_resident": "the World Bank's employment figure for Afghanistan is 0.186 workers a person (2025), below the check's floor on every row, as Iraq's 0.225 (T-3764)",
+    "top_zone_jobs_share": "one-town zone, its top cell the town's centre (Jalalabad 0.23, Aybak 0.30, Fayzabad 0.21, Zaranj 0.21) (T-3764)"
+   }
+  },
+  {
+   "order": 6398,
+   "id": "gaq",
+   "name": "Gori",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "GEO"
+   ],
+   "iso2": "GE",
+   "people": 113245,
+   "origin": [
+    44.1117,
+    41.9801
+   ],
+   "tz": "Asia/Tbilisi",
+   "utc_offset": 4,
+   "extracts": [
+    "europe/georgia"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "GEO": [
+     "92138335B26122981425536"
+    ]
+   },
+   "bbox": [
+    43.799,
+    41.746,
+    44.35,
+    42.464
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Gori"
+    ]
+   },
+   "run": {
+    "run_batch": "20261122-035412",
+    "steps": {
+     "build": 13.0,
+     "stations": 0.9,
+     "places": 1.7,
+     "routes": 7.6,
+     "merge": 0.7,
+     "nocar": 1.9,
+     "everyday": 1.0
+    },
+    "built": "2026-11-22T04:04:16",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1497210020804247"
+     ]
+    },
+    "gated": "2026-11-22T04:07:27",
+    "shipped": "2026-11-22T04:42:40"
+   }
   }
  ],
  "dropped": [
@@ -480496,6 +485972,560 @@
      "29066614B94466452079054",
      "29066614B52949751819121",
      "29066614B2864299480085"
+    ]
+   }
+  },
+  "GEO": {
+   "built": "2026-11-22",
+   "task": "T-3764",
+   "rule": "free units at or over 0 people a km2 (or holding 400,000), grouped in their region until each zone holds 500,000 (or 100,000 over 100,000 km2): under 100,000 into the zone it travels with most, then a neighbour keeping both within 1,500,000 that is a travel partner (50% of its biggest partner's travel), else one making a compact zone (75% of its convex hull, or within 0.05 of the bigger part's) unless both hold an urban centre of 100,000 (T-1191), partners first, each by nearest people centre, whose union wraps no zone, metro or pack (T-1140, T-1087); under 400,000 another region's passing neighbour when its own region has none; nothing passing, it stays; islands the most populous zone within 150 km (10 km from 100,000); then each zone still wrapping one cut across it and its halves regrouped; travel by gravity on GHSL people (20 km cells, within 200 km)",
+   "kept": [
+    "tbl",
+    "tej",
+    "kev",
+    "gdb"
+   ],
+   "dead": [],
+   "merges": [
+    "Gori (113,245) stays as it is: no zone beside it"
+   ],
+   "left_out": {
+    "source": "ne_breakaway_geo.geojson",
+    "share": 0.8,
+    "task": "T-2344",
+    "units": [
+     {
+      "unit": "92138335B94061680814673",
+      "name": "Gagra",
+      "people": 69937
+     },
+     {
+      "unit": "92138335B93375493400178",
+      "name": "Gudauta",
+      "people": 44841
+     },
+     {
+      "unit": "92138335B38650724309521",
+      "name": "Sokhumi",
+      "people": 90562
+     },
+     {
+      "unit": "92138335B11061478695929",
+      "name": "Gulripshi",
+      "people": 33053
+     },
+     {
+      "unit": "92138335B91265178482349",
+      "name": "Ochamchire",
+      "people": 32450
+     },
+     {
+      "unit": "92138335B69927081755421",
+      "name": "Gali",
+      "people": 49502
+     },
+     {
+      "unit": "92138335B31006280553532",
+      "name": "Akhalgori",
+      "people": 4092
+     },
+     {
+      "unit": "92138335B29628733887030",
+      "name": "Java",
+      "people": 1670
+     }
+    ]
+   }
+  },
+  "ARM": {
+   "built": "2026-11-22",
+   "task": "T-3764",
+   "rule": "free units at or over 0 people a km2 (or holding 400,000), grouped in their region until each zone holds 500,000 (or 100,000 over 100,000 km2): under 100,000 into the zone it travels with most, then a neighbour keeping both within 1,500,000 that is a travel partner (50% of its biggest partner's travel), else one making a compact zone (75% of its convex hull, or within 0.05 of the bigger part's) unless both hold an urban centre of 100,000 (T-1191), partners first, each by nearest people centre, whose union wraps no zone, metro or pack (T-1140, T-1087); under 400,000 another region's passing neighbour when its own region has none; nothing passing, it stays; islands the most populous zone within 150 km (10 km from 100,000); then each zone still wrapping one cut across it and its halves regrouped; travel by gravity on GHSL people (20 km cells, within 200 km); unbuilt metros first take touching units under 100,000 whose biggest partner they are, when the grown metro wraps nothing new (T-1191)",
+   "kept": [],
+   "dead": [],
+   "merges": [
+    "Amasia (4,827) joins Akhuryan (biggest partner, shared border 18 km)",
+    "Meghri (5,087) joins Kapan (biggest partner, shared border 55 km)",
+    "Ashotck (8,091) joins Akhuryan (biggest partner, shared border 67 km)",
+    "Aragats (12,337) joins Aparan (biggest partner, shared border 39 km)",
+    "Karmir (13,010) joins Sevan (biggest partner, shared border 8 km)",
+    "Vayk (15,135) joins Yeghegnadzor (biggest partner, shared border 69 km)",
+    "Tashir (15,580) joins Stepanavan (biggest partner, shared border 57 km)",
+    "Ani (15,631) joins Artik (biggest partner, shared border 39 km)",
+    "Dilidjan (17,988) joins Idjevan (biggest partner, shared border 40 km)",
+    "Sisian (22,356) joins Goris (biggest partner, shared border 37 km)",
+    "Tavush (22,690) joins Idjevan (biggest partner, shared border 46 km)",
+    "Noyemberyan (24,882) joins Idjevan (biggest partner, shared border 24 km)",
+    "Baghramyan (24,922) joins Armavir (biggest partner, shared border 27 km)",
+    "Spitak (28,085) joins Gugark (biggest partner, shared border 28 km)",
+    "Tumanian (32,967) joins Gugark (biggest partner, shared border 43 km)",
+    "Talin (34,697) joins Ashtarak (biggest partner, shared border 42 km)",
+    "Aparan (34,713) joins Ashtarak (biggest partner, shared border 43 km)",
+    "Stepanavan (38,480) joins Gugark (biggest partner, shared border 101 km)",
+    "Vardenis (39,021) joins Martuni (biggest partner, shared border 22 km)",
+    "Yeghegnadzor (43,671) joins Martuni (biggest partner, shared border 55 km, another region)",
+    "Gavar (45,786) joins Martuni (biggest partner, shared border 22 km)",
+    "Sevan (49,016) joins Martuni (biggest partner, shared border 29 km)",
+    "Kapan (50,576) joins Goris (biggest partner, shared border 59 km)",
+    "Artik (66,139) joins Akhuryan (biggest partner, shared border 43 km)",
+    "Hrazdan (78,077) joins Kotayk (biggest partner, shared border 33 km)",
+    "Ararat (86,690) joins Martuni (biggest partner that wraps nothing, shared border 58 km, another region)",
+    "Goris (104,979) joins Martuni (nearest centre, partner 1.00, another region)",
+    "Idjevan (107,926) joins Gugark (nearest centre, partner 0.75, another region)",
+    "Vagharshapat (128,057) joins Armavir (nearest centre, compact 0.77)",
+    "Ashtarak (137,047) joins Armavir (nearest centre, compact 0.82, another region)",
+    "Kotayk (187,551) joins Armavir (every join wraps; left to the ring cut, another region)",
+    "Akhuryan (208,282) joins Gugark (nearest centre, partner 0.92, another region)",
+    "Martuni (453,648) stays as it is: no zone beside it",
+    "Gugark (499,570) stays as it is: no zone beside it",
+    "ring cut 1: Armavir wraps Yerevan, cut into Kotayk (5 units) and Talin (4)",
+    "Kotayk (289,901) joins Gugark (nearest centre that wraps nothing, compact 0.70, another region)",
+    "Talin (300,429) stays as it is: every join would wrap"
+   ],
+   "remnants": {
+    "yer": [
+     "60910142B7641071119746",
+     "60910142B55787107844216"
+    ]
+   }
+  },
+  "AZE": {
+   "built": "2026-11-22",
+   "task": "T-3764",
+   "rule": "free units at or over 0 people a km2 (or holding 400,000), grouped in their region until each zone holds 500,000 (or 100,000 over 100,000 km2): under 100,000 into the zone it travels with most, then a neighbour keeping both within 1,500,000 that is a travel partner (50% of its biggest partner's travel), else one making a compact zone (75% of its convex hull, or within 0.05 of the bigger part's) unless both hold an urban centre of 100,000 (T-1191), partners first, each by nearest people centre, whose union wraps no zone, metro or pack (T-1140, T-1087); under 400,000 another region's passing neighbour when its own region has none; nothing passing, it stays; islands the most populous zone within 150 km (10 km from 100,000); then each zone still wrapping one cut across it and its halves regrouped; travel by gravity on GHSL people (20 km cells, within 200 km); unbuilt metros first take touching units under 100,000 whose biggest partner they are, when the grown metro wraps nothing new (T-1191)",
+   "kept": [],
+   "dead": [],
+   "merges": [
+    "Naftalan City (8) joins Goranboy District (biggest partner, shared border 14 km)",
+    "Lachin District (146) joins Qubadli District (biggest partner, shared border 22 km)",
+    "Khojaly District (309) joins Agdam District (biggest partner, shared border 46 km)",
+    "Khojavend District (402) joins Aghjabadi District (biggest partner, shared border 23 km)",
+    "Qubadli District (976) joins Zangilan District (biggest partner, shared border 50 km)",
+    "Kalbajar District (2,576) joins Tartar District (biggest partner, shared border 51 km)",
+    "Lankaran District (2,640) joins Masally District (biggest partner, shared border 27 km)",
+    "Zangilan District (13,406) joins Agdam District (biggest partner that wraps nothing, shared border 29 km)",
+    "Khizi District (19,528) joins Shamakhi District (biggest partner, shared border 14 km)",
+    "Sadarak District (22,440) joins Sharur District (biggest partner, shared border 25 km)",
+    "Shahbuz District (25,863) joins Julfa District (biggest partner that wraps nothing, shared border 26 km)",
+    "Samukh District (29,832) joins Ganja City (biggest partner, shared border 9 km)",
+    "Kangarli District (31,305) joins Sharur District (biggest partner, shared border 33 km)",
+    "Yevlakh City (32,775) joins Yevlakh District (biggest partner, shared border 18 km)",
+    "Ordubad District (33,241) joins Julfa District (biggest partner, shared border 50 km)",
+    "Dashkasan District (35,398) joins Goygol District (biggest partner, shared border 54 km)",
+    "Siazan District (42,661) joins Shabran District (biggest partner, shared border 51 km)",
+    "Oghuz District (44,020) joins Qabala District (biggest partner that wraps nothing, shared border 44 km)",
+    "Hajigabul District (48,146) joins Shirvan City (biggest partner, shared border 17 km)",
+    "Shaki City (51,504) joins Shaki District (biggest partner, shared border 19 km)",
+    "Qakh District (52,243) joins Zaqatala District (biggest partner, shared border 44 km)",
+    "Yardymli District (62,488) joins Masally District (biggest partner, shared border 14 km)",
+    "Zardab District (64,667) joins Aghjabadi District (biggest partner, shared border 43 km)",
+    "Fuzuli District (72,256) joins Beylagan District (biggest partner, shared border 39 km)",
+    "Lankaran City (75,962) joins Lankaran District (biggest partner, shared border 15 km)",
+    "Ismailli District (79,488) joins Goychay District (biggest partner, shared border 45 km)",
+    "Lerik District (84,218) joins Lankaran District (biggest partner that wraps nothing, shared border 44 km)",
+    "Agsu District (85,733) joins Shamakhi District (biggest partner, shared border 76 km)",
+    "Qazakh District (87,242) joins Agstafa District (biggest partner, shared border 58 km)",
+    "Nakhchivan City (88,061) joins Babek District (biggest partner, shared border 20 km)",
+    "Julfa District (92,362) joins Babek District (biggest partner, shared border 85 km)",
+    "Shabran District (97,933) joins Khachmaz District (biggest partner, shared border 28 km)",
+    "Gadabay District (99,451) joins Shamkir District (biggest partner, shared border 38 km)",
+    "Ujar District (100,044) joins Goychay District (nearest centre, partner 1.00)",
+    "Neftchala District (101,919) joins Salyan District (nearest centre, partner 1.00)",
+    "Balakan District (103,042) joins Zaqatala District (nearest centre, partner 1.00)",
+    "Astara District (103,566) joins Lankaran District (nearest centre, partner 1.00)",
+    "Tartar District (109,494) joins Barda District (nearest centre, partner 1.00)",
+    "Yevlakh District (111,967) joins Mingachevir City (nearest centre, partner 1.00)",
+    "Shirvan City (112,097) joins Salyan District (nearest centre, partner 1.00)",
+    "Imishli District (112,208) joins Saatly District (nearest centre, partner 1.00)",
+    "Agdash District (112,272) joins Goychay District (nearest centre, partner 1.00)",
+    "Agdam District (113,410) joins Aghjabadi District (nearest centre, partner 0.82)",
+    "Goranboy District (115,052) joins Mingachevir City (nearest centre, partner 1.00)",
+    "Kurdamir District (115,433) joins Shamakhi District (nearest centre, partner 1.00)",
+    "Bilasuvar District (126,029) joins Jalilabad District (nearest centre, partner 1.00)",
+    "Qabala District (143,367) joins Goychay District (nearest centre, partner 1.00)",
+    "Quba District (144,220) joins Qusar District (nearest centre that wraps nothing, partner 0.84)",
+    "Sharur District (171,591) joins Babek District (nearest centre, partner 1.00)",
+    "Sabirabad District (172,738) joins Saatly District (nearest centre, partner 1.00)",
+    "Beylagan District (177,361) joins Aghjabadi District (nearest centre, partner 0.76)",
+    "Tovuz District (180,975) joins Shamkir District (nearest centre, partner 1.00)",
+    "Shaki District (187,254) joins Mingachevir City (nearest centre, partner 1.00)",
+    "Agstafa District (188,992) joins Shamkir District (nearest centre, partner 1.00)",
+    "Goygol District (193,715) joins Ganja City (nearest centre, partner 1.00)",
+    "Khachmaz District (245,849) joins Qusar District (nearest centre, partner 1.00)",
+    "Barda District (274,723) joins Mingachevir City (nearest centre that wraps nothing, partner 1.00)",
+    "Zaqatala District (288,055) joins Ganja City (nearest centre, partner 0.53)",
+    "Masally District (302,409) joins Lankaran District (nearest centre, partner 1.00)",
+    "Jalilabad District (323,443) joins Lankaran District (nearest centre, partner 1.00)",
+    "Shamakhi District (330,491) joins Saatly District (nearest centre, partner 0.54)",
+    "Salyan District (382,989) joins Lankaran District (nearest centre, partner 0.67)",
+    "Babek District (448,681) stays as it is: an island with no zone within reach"
+   ],
+   "remnants": {
+    "bak": [
+     "54616110B43271825035432"
+    ]
+   }
+  },
+  "AFG": {
+   "built": "2026-11-22",
+   "task": "T-3764",
+   "rule": "free units at or over 0 people a km2 (or holding 400,000) with 100,000 people within 150 km of their centre (T-1191), grouped in their region until each zone holds 500,000 (or 100,000 over 100,000 km2): under 100,000 into the zone it travels with most, then a neighbour keeping both within 1,500,000 that is a travel partner (50% of its biggest partner's travel), else one making a compact zone (75% of its convex hull, or within 0.05 of the bigger part's) unless both hold an urban centre of 100,000 (T-1191), never between people centres over 150 km apart, partners first, each by nearest people centre, whose union wraps no zone, metro or pack (T-1140, T-1087); under 400,000 another region's passing neighbour when its own region has none; nothing passing, it stays; islands the most populous zone within 150 km (10 km from 100,000); then each zone still wrapping one cut across it and its halves regrouped; travel by gravity on GHSL people (20 km cells, within 200 km); unbuilt metros first take touching units under 100,000 whose biggest partner they are, when the grown metro wraps nothing new (T-1191)",
+   "kept": [],
+   "dead": [],
+   "merges": [
+    "Turwo (3,506) joins Waza Khwa (biggest partner, shared border 37 km)",
+    "Wor Mayi (5,603) joins Waza Khwa (biggest partner, shared border 67 km)",
+    "Shawak (9,509) joins Zadran (biggest partner, shared border 27 km)",
+    "Zana Khan (10,329) joins Ghazni (biggest partner, shared border 12 km)",
+    "Gomal (12,280) joins Sarobi (biggest partner that wraps nothing, shared border 42 km)",
+    "Du Ab (13,266) joins Nurgaram (biggest partner, shared border 46 km)",
+    "Atghar (13,282) joins Shamulzayi (biggest partner, shared border 36 km)",
+    "Rashidan (14,634) joins Jaghatu (biggest partner, shared border 27 km)",
+    "Guzargahi Nur (15,490) joins Farang Wa Gharu (biggest partner that wraps nothing, shared border 20 km)",
+    "Shutul (15,755) joins Jabalussaraj (biggest partner, shared border 6 km)",
+    "Registan (15,906) joins Shorabak (biggest partner, shared border 109 km)",
+    "Zebak (16,086) joins Warduj\n (biggest partner, shared border 41 km)",
+    "Marmul (16,123) joins Khulm (biggest partner that wraps nothing, shared border 35 km)",
+    "Wali Muhammadi Shahid (16,448) joins Ghazni (biggest partner, shared border 23 km)",
+    "Khwaja Umari (16,588) joins Ghazni (biggest partner, shared border 42 km)",
+    "Ghorak (17,190) joins Maywand (biggest partner, shared border 39 km)",
+    "Kham Ab (17,935) joins Qarqin (biggest partner, shared border 32 km)",
+    "Wama (18,750) joins Waygal (biggest partner, shared border 28 km)",
+    "Omna (19,116) joins Sar Hawza (biggest partner, shared border 21 km)",
+    "Nika (19,609) joins Ziruk (biggest partner, shared border 17 km)",
+    "Kuran Wa Munjan (20,542) joins Yamgan (Girwan) (biggest partner, shared border 78 km)",
+    "Yosuf Khel (20,876) joins Sharan (biggest partner, shared border 39 km)",
+    "Paryan (21,307) joins Khenj (Hese- Awal) (biggest partner, shared border 39 km)",
+    "Mizan (21,507) joins Qalat (biggest partner, shared border 21 km)",
+    "Namak Ab (21,808) joins Taluqan (biggest partner, shared border 20 km)",
+    "Feroz Nakhchir (21,816) joins Khulm (biggest partner, shared border 56 km)",
+    "Ab Band (22,518) joins Qarabagh (biggest partner, shared border 24 km)",
+    "Parun (22,878) joins Waygal (biggest partner, shared border 57 km)",
+    "Ajristan (23,757) joins Malistan (biggest partner, shared border 82 km)",
+    "Nesh (23,836) joins Shah Wali Kot (biggest partner, shared border 50 km)",
+    "Bargi Matal (24,533) joins Kamdesh (biggest partner that wraps nothing, shared border 59 km)",
+    "Miya Nishin (25,066) joins Daychopan (biggest partner, shared border 52 km)",
+    "Nawa (25,206) joins Naw Bahar (biggest partner, shared border 72 km)",
+    "Qalandar (25,665) joins Nadir Shah Kot (biggest partner, shared border 24 km)",
+    "Unaba (25,809) joins Hisa-i-Awali Kohistan (biggest partner, shared border 14 km)",
+    "Nazyan (25,981) joins Acheen (biggest partner, shared border 24 km)",
+    "Bahrami Shahid (Jaghatu) (26,053) joins Ghazni (biggest partner, shared border 35 km)",
+    "Hazar Sumuch (26,255) joins Rustaq (biggest partner, shared border 38 km)",
+    "Tarnak Wa Jaldak (26,551) joins Qalat (biggest partner, shared border 84 km)",
+    "Bazarak (26,747) joins Khenj (Hese- Awal) (biggest partner, shared border 19 km)",
+    "Yahya Khel (27,742) joins Sharan (biggest partner, shared border 24 km)",
+    "Ishkashiem (28,073) joins Shahada (biggest partner that wraps nothing, shared border 61 km)",
+    "Dangam (29,387) joins Bar Kunar (biggest partner, shared border 23 km)",
+    "Kaldar (29,915) joins Shortepa (biggest partner, shared border 18 km)",
+    "Giro (30,395) joins Andar (biggest partner, shared border 33 km)",
+    "Arghanj Khaw (30,942) joins Fayzabad (biggest partner, shared border 32 km)",
+    "Waghaz (30,989) joins Ghazni (biggest partner, shared border 46 km)",
+    "Wakhan (31,624) joins Shahada (biggest partner, shared border 35 km)",
+    "Qush Tepa (31,730) joins Shibirghan (biggest partner, shared border 18 km)",
+    "Marawara (31,910) joins Asadabad (biggest partner, shared border 16 km)",
+    "Sarobi (32,097) joins Barmal (biggest partner that wraps nothing, shared border 66 km)",
+    "Dishu (32,243) joins Reg(Khanshin) (biggest partner, shared border 179 km)",
+    "Khwahan (32,387) joins Kuf Ab (biggest partner, shared border 57 km)",
+    "Darwazbala (32,526) joins Shighnan (biggest partner that wraps nothing, shared border 39 km)",
+    "Rukha (32,973) joins Hisa-i-Awali Kohistan (biggest partner, shared border 27 km)",
+    "Salang (33,010) joins Jabalussaraj (biggest partner, shared border 56 km)",
+    "Mandol (33,431) joins Nurgaram (biggest partner, shared border 63 km)",
+    "Shamal (33,707) joins Nadir Shah Kot (biggest partner, shared border 23 km)",
+    "Kohistan (33,888) joins Fayzabad (biggest partner, shared border 63 km)",
+    "Ghaziabad (34,370) joins Bar Kunar (biggest partner, shared border 24 km)",
+    "Azra (34,833) joins Hesarak (biggest partner, shared border 55 km)",
+    "Shekh  Ali (35,408) joins Sia Gird ( Ghorbund) (biggest partner, shared border 19 km)",
+    "Dara (35,712) joins Hisa-i-Awali Kohistan (biggest partner, shared border 15 km)",
+    "Shorabak (35,756) joins Spin Boldak (biggest partner, shared border 54 km)",
+    "Kakar (35,805) joins Daychopan (biggest partner, shared border 20 km)",
+    "Lal Por (35,863) joins Muhmand Dara (biggest partner, shared border 31 km)",
+    "Khwaja Du Koh (35,939) joins Shibirghan (biggest partner, shared border 55 km)",
+    "Khwaja Hijran (Jilga Nahrin) (36,409) joins Nahrin (biggest partner, shared border 33 km)",
+    "Koh Band (36,648) joins Hisa-i-Awali Kohistan (biggest partner, shared border 23 km)",
+    "Shinkay (36,939) joins Qalat (biggest partner, shared border 87 km)",
+    "Andarab (37,398) joins Dih Salah (biggest partner, shared border 32 km)",
+    "Dih Yak (37,830) joins Ghazni (biggest partner, shared border 51 km)",
+    "Farza (38,182) joins Istalif (biggest partner that wraps nothing, shared border 21 km)",
+    "Mata Khan (38,476) joins Sharan (biggest partner, shared border 36 km)",
+    "Jani Khel (38,681) joins Dila (biggest partner, shared border 36 km)",
+    "Qaramqol (38,924) joins Qurghan (biggest partner, shared border 36 km)",
+    "Washer (39,421) joins Nad Ali (biggest partner, shared border 85 km)",
+    "Nari (39,896) joins Bar Kunar (biggest partner, shared border 54 km)",
+    "Sayghan (40,250) joins Kahmard (biggest partner, shared border 62 km)",
+    "Khoshi (40,567) joins Puli Alam (biggest partner, shared border 46 km)",
+    "Khakrez (40,732) joins Zhari (biggest partner, shared border 24 km)",
+    "Guldara (40,805) joins Mir Bacha Kot (biggest partner, shared border 8 km)",
+    "Farang Wa Gharu (40,880) joins Khost Wa Firing (biggest partner, shared border 47 km)",
+    "Dur Baba (41,325) joins Muhmand Dara (biggest partner, shared border 18 km)",
+    "Muqur (41,505) joins Gelan (biggest partner, shared border 38 km)",
+    "Khani Chahar Bagh (41,815) joins Andkhoy (biggest partner that wraps nothing, shared border 28 km)",
+    "Dand Patan (41,903) joins Chamkani (biggest partner, shared border 34 km)",
+    "Puli Hisar (42,158) joins Dih Salah (biggest partner, shared border 57 km)",
+    "Khwaja Bahawuddin (42,461) joins Yangi Qala (biggest partner, shared border 21 km)",
+    "Darwaz (44,190) joins Shaki (biggest partner, shared border 55 km)",
+    "Sarkani (44,534) joins Narang (biggest partner, shared border 13 km)",
+    "Shib Koh (44,968) joins Qala Ka (biggest partner, shared border 105 km)",
+    "Tala Wa Barfak (45,279) joins Dushi (biggest partner, shared border 78 km)",
+    "Kharwar (45,317) joins Charkh (biggest partner, shared border 30 km)",
+    "Waza Khwa (45,493) joins Dila (biggest partner, shared border 92 km)",
+    "Zarghun Shahr (46,884) joins Sharan (biggest partner, shared border 45 km)",
+    "Khinjan (46,930) joins Dushi (biggest partner, shared border 64 km)",
+    "Chishti Sharif (48,066) joins Obe (biggest partner, shared border 49 km)",
+    "Darqad (48,530) joins Yangi Qala (biggest partner, shared border 34 km)",
+    "Ahmad Abad (48,741) joins Sayed Karam (biggest partner, shared border 37 km)",
+    "Anar Dara (48,832) joins Qala Ka (biggest partner, shared border 112 km)",
+    "Goshta (49,030) joins Bati Kot (biggest partner, shared border 20 km)",
+    "Shibar (49,565) joins Bamyan (biggest partner, shared border 73 km)",
+    "Wata Pur (49,737) joins Asadabad (biggest partner, shared border 12 km)",
+    "Charsada (49,768) joins Chaghcharan (biggest partner, shared border 62 km)",
+    "Ziruk (49,908) joins Urgun (biggest partner, shared border 27 km)",
+    "Muqur (49,976) joins Qala-I- Naw (biggest partner, shared border 28 km)",
+    "Chal (50,536) joins Taluqan (biggest partner, shared border 62 km)",
+    "Qarqin (51,069) joins Mangajek (biggest partner that wraps nothing, shared border 57 km)",
+    "Shaygal wa shital (51,262) joins Asadabad (biggest partner, shared border 51 km)",
+    "Lash Wa Juwayn (51,268) joins Qala Ka (biggest partner, shared border 87 km)",
+    "Arghandab (51,500) joins Daychopan (biggest partner, shared border 102 km)",
+    "Mardyan (51,824) joins Aqcha (biggest partner, shared border 23 km)",
+    "Khaniqa (52,702) joins Aqcha (biggest partner, shared border 25 km)",
+    "Kalakan (52,722) joins Mir Bacha Kot (biggest partner, shared border 16 km)",
+    "Shamulzayi (53,530) joins Qalat (biggest partner, shared border 59 km)",
+    "Naw Bahar (53,985) joins Gelan (biggest partner, shared border 37 km)",
+    "Gaiti (54,274) joins Kajran (biggest partner, shared border 63 km)",
+    "Bak (54,415) joins Sabri (biggest partner, shared border 25 km)",
+    "Gayan (54,517) joins Urgun (biggest partner, shared border 20 km)",
+    "Baharak (54,636) joins Taluqan (biggest partner, shared border 34 km)",
+    "Fayzabad (55,289) joins Aqcha (biggest partner, shared border 63 km)",
+    "Chapa Dara (55,372) joins Dara-I-Pech (biggest partner, shared border 39 km)",
+    "Sar Hawza (55,698) joins Urgun (biggest partner, shared border 54 km)",
+    "Jaji Maidan (55,707) joins Sabri (biggest partner, shared border 41 km)",
+    "Nurgal (55,878) joins Chawkay (biggest partner that wraps nothing, shared border 27 km)",
+    "Tagab (Kishmi Bala) (57,343) joins Kishim (biggest partner, shared border 29 km)",
+    "Day Mirdad (57,665) joins Chaki Wardak (biggest partner, shared border 55 km)",
+    "Khaki Safed (58,108) joins Pusht Rod (biggest partner that wraps nothing, shared border 30 km)",
+    "Dashti Qala (58,234) joins Khwaja Ghar (biggest partner, shared border 20 km)",
+    "Spira (58,360) joins Nadir Shah Kot (biggest partner, shared border 29 km)",
+    "Alasay (58,938) joins Tagab (biggest partner, shared border 33 km)",
+    "Baharak (58,970) joins Khash (biggest partner, shared border 12 km)",
+    "Aliabad (59,011) joins Kunduz (biggest partner, shared border 14 km)",
+    "Shinwari (59,114) joins Chaharikar (biggest partner, shared border 29 km)",
+    "Dawlat Yar (59,266) joins Chaghcharan (biggest partner, shared border 107 km)",
+    "Jani Khail (59,336) joins Chamkani (biggest partner, shared border 27 km)",
+    "Maruf (59,721) joins Arghistan (biggest partner, shared border 86 km)",
+    "Hisa-i-Duwumi Kohistan (60,367) joins Sayd Khel (biggest partner, shared border 8 km)",
+    "Tashkan (60,764) joins Kishim (biggest partner, shared border 99 km)",
+    "Warduj\n (60,913) joins Shahada (biggest partner, shared border 120 km)",
+    "Daulatshahi (61,256) joins Alishing (biggest partner, shared border 32 km)",
+    "Zari (61,691) joins Kishindih (biggest partner, shared border 73 km)",
+    "Farsi (62,253) joins Adraskan (biggest partner that wraps nothing, shared border 54 km)",
+    "Bangi (62,361) joins Taluqan (biggest partner, shared border 70 km)",
+    "Chahar Kint (62,429) joins Sholgara (biggest partner, shared border 64 km)",
+    "Khas Kunar (62,547) joins Chawkay (biggest partner, shared border 28 km)",
+    "Saghar (63,065) joins Tulak (biggest partner, shared border 60 km)",
+    "Kalfagan (63,254) joins Taluqan (biggest partner, shared border 30 km)",
+    "Khuram Wa Sarbagh (64,829) joins Aybak (biggest partner, shared border 81 km)",
+    "Hazrati Sultan (65,381) joins Aybak (biggest partner, shared border 52 km)",
+    "Du Layna (65,535) joins Chaghcharan (biggest partner, shared border 173 km)",
+    "Gurbuz (65,645) joins Khost(Matun) (biggest partner, shared border 31 km)",
+    "Darzab (65,998) joins Shibirghan (biggest partner, shared border 36 km)",
+    "Nili (66,147) joins Shahristan (biggest partner, shared border 42 km)",
+    "Kamdesh (67,161) joins Waygal (biggest partner, shared border 67 km)",
+    "Yawan (67,173) joins Shahri Buzurg (biggest partner, shared border 30 km)",
+    "Hisa-I- Awali Bihsud (67,922) joins Markazi Bihsud (biggest partner, shared border 67 km)",
+    "Bakwa (67,934) joins Gulistan (biggest partner, shared border 38 km)",
+    "Reg(Khanshin) (68,126) joins Garmser (biggest partner, shared border 194 km)",
+    "Warsaj (68,221) joins Farkhar (biggest partner that wraps nothing, shared border 45 km)",
+    "Zadran (69,384) joins Mosa Khail (biggest partner, shared border 11 km)",
+    "Deh Bala (70,100) joins Rodat (biggest partner, shared border 21 km)",
+    "Dara-I-Nur (70,413) joins Kuz Kunar (biggest partner, shared border 19 km)",
+    "Laja Ahmad Khail (70,511) joins Ali Khail (Jaji) (biggest partner, shared border 31 km)",
+    "Sozma Qala (72,383) joins Sangcharak (biggest partner, shared border 62 km)",
+    "Yamgan (Girwan) (73,304) joins Jurm (biggest partner that wraps nothing, shared border 61 km)",
+    "Ruyi Du Ab (74,206) joins Aybak (biggest partner, shared border 60 km)",
+    "Pachier Agam (74,962) joins Khogayani (biggest partner, shared border 32 km)",
+    "Khadir (75,645) joins Shahristan (biggest partner, shared border 15 km)",
+    "Balkhab (76,730) joins Sangcharak (biggest partner, shared border 17 km)",
+    "Ishtarlay (77,171) joins Shahristan (biggest partner, shared border 91 km)",
+    "Nawur (77,898) joins Malistan (biggest partner, shared border 87 km)",
+    "Kuf Ab (78,405) joins Shaki (biggest partner, shared border 73 km)",
+    "Burka (79,604) joins Baghlani Jadid (biggest partner, shared border 39 km)",
+    "Naw Zad (79,962) joins Musa Qala (biggest partner, shared border 118 km)",
+    "Raghistan (80,415) joins Shahri Buzurg (biggest partner, shared border 42 km)",
+    "Sangi Takht (82,090) joins Shahristan (biggest partner, shared border 112 km)",
+    "Sayyad (83,271) joins Sari Pul (biggest partner, shared border 66 km)",
+    "Shortepa (83,532) joins Dawlatabad (biggest partner, shared border 80 km)",
+    "Qalay-I- Zal (83,681) joins Imam Sahib (biggest partner, shared border 48 km)",
+    "Barmal (84,059) joins Urgun (biggest partner, shared border 112 km)",
+    "Gosfandi (86,323) joins Sangcharak (biggest partner, shared border 89 km)",
+    "Nahri Shahi (87,432) joins Mazari Sharif (biggest partner, shared border 20 km)",
+    "Daman (88,044) joins Kandahar (biggest partner, shared border 74 km)",
+    "Chahar Dara (88,503) joins Kunduz (biggest partner, shared border 80 km)",
+    "Dawlatabad (88,697) joins Shirin Tagab (biggest partner, shared border 86 km)",
+    "Shighnan (89,374) joins Fayzabad (biggest partner, shared border 39 km)",
+    "Dahana-I- Ghuri (89,877) joins Puli Khumri (biggest partner, shared border 45 km)",
+    "Hesarak (90,558) joins Puli Alam (biggest partner, shared border 20 km)",
+    "Shahjoy (91,740) joins Daychopan (biggest partner, shared border 70 km)",
+    "Khas Uruzgan (91,757) joins Chora (biggest partner, shared border 96 km)",
+    "Khwaja Sabz Posh (92,354) joins Maymana (biggest partner that wraps nothing, shared border 6 km)",
+    "Koshki Kohna (92,533) joins Koshk (biggest partner, shared border 78 km)",
+    "Sangin (92,727) joins Musa Qala (biggest partner, shared border 16 km)",
+    "Kot (92,935) joins Acheen (biggest partner, shared border 30 km)",
+    "Dihdadi (94,142) joins Mazari Sharif (biggest partner, shared border 35 km)",
+    "Bilchiragh (95,054) joins Gurziwan (biggest partner, shared border 69 km)",
+    "Shahidi Hassas (95,828) joins Dihrawud (biggest partner, shared border 69 km)",
+    "Kohsan (96,196) joins Gulran (biggest partner, shared border 55 km)",
+    "Istalif (96,984) joins Qarabagh (biggest partner, shared border 23 km)",
+    "Jaghatu (98,162) joins Ghazni (biggest partner, shared border 60 km)",
+    "Surobi (98,421) joins Tagab (biggest partner, shared border 48 km, another region)",
+    "Narang (98,440) joins Asadabad (biggest partner, shared border 46 km)",
+    "Kohistan (99,244) joins Gurziwan (biggest partner, shared border 58 km)",
+    "Mahmudi Raqi (100,213) joins Sayd Khel (nearest centre, partner 0.61)",
+    "Shah Wali Kot (101,190) joins Kandahar (every join wraps; left to the ring cut)",
+    "Pur Chaman (101,565) joins Bala Buluk (nearest centre, compact 0.58)",
+    "Miramor (101,594) joins Shahristan (nearest centre, partner 0.85)",
+    "Dashte Archi (101,733) joins Imam Sahib (nearest centre, partner 0.80)",
+    "Nurgaram (101,858) joins Waygal (nearest centre, compact 0.74)",
+    "Kahmard (102,244) joins Bamyan (nearest centre, partner 0.69)",
+    "Nirkh (104,162) joins Chaki Wardak (nearest centre, compact 0.77)",
+    "Dara-I-Sufi Bala (105,351) joins Dara-I-Sufi Payin (nearest centre, partner 1.00)",
+    "Khenj (Hese- Awal) (105,374) joins Hisa-i-Awali Kohistan (nearest centre, partner 1.00, another region)",
+    "Shinwar (105,581) joins Acheen (nearest centre, partner 1.00)",
+    "Ishkamish (105,970) joins Taluqan (nearest centre, partner 1.00)",
+    "Tere Zayi (107,154) joins Khost(Matun) (nearest centre, partner 1.00)",
+    "Yaftal Sufla (108,231) joins Shahri Buzurg (nearest centre, partner 1.00)",
+    "Mangajek (108,616) joins Aqcha (nearest centre, partner 1.00)",
+    "Shahrak (108,655) joins Tulak (nearest centre, partner 1.00)",
+    "Gizab (110,200) joins Shahristan (nearest centre, partner 1.00)",
+    "Kajran (111,092) joins Shahristan (nearest centre, partner 1.00)",
+    "Kajaki (112,900) joins Musa Qala (nearest centre, partner 1.00)",
+    "Chaparhar (113,577) joins Bihsud (every join wraps; left to the ring cut)",
+    "Shirzad (114,335) joins Khogayani (nearest centre, partner 1.00)",
+    "Panjab (114,598) joins Waras (nearest centre, partner 1.00)",
+    "Zanda  Jan\n (114,653) joins Ghoryan (nearest centre, compact 0.81)",
+    "Ghormach (116,001) joins Bala Murghab (nearest centre, partner 1.00)",
+    "Chahar Bolak (116,333) joins Chimtal (nearest centre, partner 0.86)",
+    "Andkhoy (116,885) joins Qurghan (nearest centre, partner 1.00)",
+    "Arghandab (119,027) joins Kandahar (nearest centre, partner 1.00)",
+    "Arghistan (121,207) joins Kandahar (nearest centre, partner 1.00)",
+    "Charkh (121,380) joins Baraki Barak (nearest centre, partner 0.81)",
+    "Maywand (121,432) joins Zhari (nearest centre, partner 0.60)",
+    "Kohistanat (121,918) joins Sangcharak (nearest centre, partner 1.00)",
+    "Dila (123,028) joins Sharan (every join wraps; left to the ring cut)",
+    "Darayim (126,330) joins Kishim (nearest centre, partner 1.00)",
+    "Almar (128,464) joins Qaysar (nearest centre that wraps nothing, partner 0.55)",
+    "Karukh (129,063) joins Pashtun Zarghun (nearest centre, compact 0.74)",
+    "Baghran (129,331) joins Musa Qala (nearest centre, partner 0.85)",
+    "Dih Salah (129,827) joins Khost Wa Firing (nearest centre, partner 0.89)",
+    "Kishindih (130,017) joins Sholgara (nearest centre, partner 0.54)",
+    "Mohammad Agha (130,420) joins Puli Alam (nearest centre, compact 0.73)",
+    "Andar (132,457) joins Ghazni (nearest centre, partner 1.00)",
+    "Pusht Rod (134,440) joins Farah (nearest centre, partner 1.00)",
+    "Kama (135,819) joins Bihsud (every join wraps; left to the ring cut)",
+    "Argo (135,962) joins Fayzabad (every join wraps; left to the ring cut)",
+    "Khulm (136,907) joins Mazari Sharif (nearest centre, partner 1.00)",
+    "Khash (137,207) joins Kishim (nearest centre that wraps nothing, partner 0.60)",
+    "Bar Kunar (138,628) joins Asadabad (nearest centre, partner 1.00)",
+    "Qarabagh (140,063) joins Ghazni (nearest centre, partner 1.00)",
+    "Mando Zayi (140,612) joins Khost(Matun) (nearest centre, partner 1.00)",
+    "Chah Ab (141,189) joins Yangi Qala (nearest centre, partner 0.78)",
+    "Ab Kamari (141,260) joins Qala-I- Naw (nearest centre, partner 1.00)",
+    "Nahrin (141,819) joins Puli Khumri (nearest centre, partner 1.00)",
+    "Gardiz (142,848) joins Sayed Karam (nearest centre, partner 1.00)",
+    "Gelan (143,019) joins Jaghuri (nearest centre, partner 0.57)",
+    "Nawa-I- Barak Zayi (143,927) joins Lashkar Gah (nearest centre, partner 1.00)",
+    "Tani (144,806) joins Khost(Matun) (nearest centre, partner 1.00)",
+    "Jabalussaraj (145,834) joins Chaharikar (nearest centre, partner 0.92)",
+    "Yakawlang (146,745) joins Waras (nearest centre, partner 0.87)",
+    "Bagram (149,929) joins Sayd Khel (nearest centre, compact 0.76)",
+    "Jurm (150,440) joins Kishim (nearest centre, partner 1.00)",
+    "Gulistan (150,853) joins Bala Buluk (nearest centre, partner 1.00)",
+    "Farkhar (152,343) joins Taluqan (nearest centre, partner 1.00)",
+    "Dara-I-Pech (153,105) joins Asadabad (nearest centre, partner 1.00)",
+    "Panjwayi (154,386) joins Zhari (nearest centre, compact 0.90)",
+    "Muhmand Dara (157,500) joins Acheen (nearest centre, partner 1.00)",
+    "Jawand (166,000) joins Qadis (nearest centre, compact 0.82)",
+    "Tirin Kot (166,463) joins Chora (nearest centre, partner 1.00)",
+    "Balkh (167,483) joins Mazari Sharif (nearest centre, partner 1.00)",
+    "Spin Boldak (168,174) joins Zhari (nearest centre, compact 0.77)",
+    "Taywara (168,556) joins Pasaband (nearest centre, partner 0.88)",
+    "Mosa Khail (168,600) joins Chamkani (nearest centre, compact 0.59)",
+    "Malistan (169,138) joins Ghazni (nearest centre, partner 0.75)",
+    "Kuz Kunar (169,379) joins Bihsud (every join wraps; left to the ring cut)",
+    "Shaki (169,984) joins Shahri Buzurg (nearest centre, partner 1.00)",
+    "Adraskan (170,771) joins Shindand (nearest centre, partner 1.00)",
+    "Sia Gird ( Ghorbund) (174,434) joins Chaharikar (nearest centre, partner 0.57)",
+    "Nijrab (175,936) joins Tagab (nearest centre, compact 0.73)",
+    "Khwaja Ghar (177,625) joins Rustaq (nearest centre, partner 0.91)",
+    "Ali Khail (Jaji) (177,657) joins Sayed Karam (nearest centre, partner 0.74)",
+    "Alingar (177,976) joins Mihtarlam (nearest centre, partner 1.00)",
+    "Qarghayi (180,312) joins Mihtarlam (nearest centre, partner 0.84)",
+    "Zurmat (182,729) joins Sayed Karam (nearest centre, partner 1.00)",
+    "Chawkay (183,005) joins Asadabad (nearest centre, partner 0.85)",
+    "Mir Bacha Kot (183,735) joins Qarabagh (nearest centre, compact 0.85)",
+    "Bati Kot (183,990) joins Acheen (nearest centre, partner 1.00)",
+    "Nahri Sarraj (188,766) joins Nad Ali (nearest centre, partner 0.73)",
+    "Shahada (191,468) joins Kishim (nearest centre, partner 1.00)",
+    "Alishing (192,577) joins Mihtarlam (nearest centre, partner 1.00)",
+    "Rodat (192,855) joins Acheen (nearest centre, partner 1.00)",
+    "Khanabad (193,532) joins Kunduz (nearest centre, partner 1.00)",
+    "Qalat (193,898) joins Daychopan (nearest centre, compact 0.74)",
+    "Dushi (194,084) joins Puli Khumri (nearest centre, partner 1.00)",
+    "Dihrawud (194,539) joins Chora (nearest centre, partner 1.00)",
+    "Nadir Shah Kot (195,712) joins Khost(Matun) (nearest centre, partner 1.00)",
+    "Obe (201,530) joins Pashtun Zarghun (nearest centre, partner 1.00)",
+    "Surkh Rod (202,329) joins Jalalabad (nearest centre, partner 1.00)",
+    "Lal Wa Sarjangal (203,637) joins Chaghcharan (nearest centre, compact 0.77)",
+    "Qala Ka (204,140) joins Farah (nearest centre, partner 1.00)",
+    "Garmser (207,326) joins Lashkar Gah (nearest centre, partner 1.00)",
+    "Saydabad (214,115) joins Chaki Wardak (nearest centre, compact 0.74)",
+    "Dara-I-Sufi Payin (221,346) joins Aybak (nearest centre, partner 1.00)",
+    "Nimruz (226,536) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Dawlatabad (230,799) joins Chimtal (nearest centre, partner 0.50)",
+    "Qurghan (235,441) joins Shirin Tagab (nearest centre, partner 1.00)",
+    "Waygal (243,901) joins Asadabad (nearest centre, partner 0.63, another region)",
+    "Tulak (265,178) joins Pasaband (nearest centre, partner 1.00)",
+    "Maymana (265,373) joins Pashtun Kot (nearest centre, partner 1.00)",
+    "Khost Wa Firing (267,000) joins Puli Khumri (nearest centre, partner 1.00)",
+    "Baraki Barak (271,072) joins Puli Alam (nearest centre, partner 0.95)",
+    "Gulran (283,944) joins Ghoryan (nearest centre, partner 0.63)",
+    "Sabri (284,588) joins Khost(Matun) (nearest centre, partner 1.00)",
+    "Markazi Bihsud (288,038) joins Bamyan (nearest centre, none of its region passing, compact 0.84, another region)",
+    "Jaghuri (288,310) joins Ghazni (nearest centre, partner 0.90)",
+    "Yangi Qala (311,014) joins Rustaq (nearest centre, partner 1.00)",
+    "Sari Pul (320,280) joins Sangcharak (nearest centre, partner 1.00)",
+    "Bala Murghab (320,445) joins Qala-I- Naw (nearest centre, partner 0.55)",
+    "Urgun (331,284) joins Sharan (nearest centre, compact 0.79)",
+    "Gurziwan (332,402) joins Pashtun Kot (nearest centre, partner 1.00)",
+    "Koshk (339,550) joins Ghoryan (nearest centre, compact 0.77)",
+    "Hisa-i-Awali Kohistan (339,595) joins Sayd Khel (nearest centre, none of its region passing, partner 0.84, another region)",
+    "Baghlani Jadid (341,997) joins Puli Khumri (nearest centre, partner 1.00)",
+    "Aqcha (349,692) joins Shibirghan (nearest centre, partner 0.67)",
+    "Sholgara (352,084) joins Chimtal (every join wraps; left to the ring cut)",
+    "Chamkani (355,485) joins Sayed Karam (nearest centre, compact 0.76)",
+    "Qadis (357,539) joins Qala-I- Naw (nearest centre, partner 1.00)",
+    "Qaysar (388,025) joins Pashtun Kot (nearest centre, partner 1.00)",
+    "Bala Buluk (390,359) joins Farah (nearest centre, partner 1.00)",
+    "Nad Ali (399,206) joins Lashkar Gah (nearest centre, partner 1.00)",
+    "Qarabagh (416,160) stays as it is: no zone beside it",
+    "Khogayani (420,457) joins Jalalabad (nearest centre, partner 1.00)",
+    "Waras (444,664) joins Bamyan (nearest centre, partner 0.57)",
+    "Fayzabad (450,183) stays as it is: every join would wrap",
+    "Tagab (460,153) stays as it is: no zone beside it",
+    "Daychopan (463,421) stays as it is: no zone beside it",
+    "Imam Sahib (465,625) joins Kunduz (nearest centre, partner 0.85)",
+    "Shirin Tagab (472,620) stays as it is: no neighbour within the cap",
+    "ring cut 1: Chimtal wraps Mazari Sharif, cut into Kaldar (5 units) and Sholgara (4)",
+    "Sholgara (352,084) stays as it is: every join would wrap",
+    "Kaldar (475,102) stays as it is: every join would wrap",
+    "Jalalabad's functional urban area: the 2 zones its centre was split between made one, 885,345 people; Khogayani (736,363) outside it stays a zone"
+   ],
+   "remnants": {
+    "kab": [
+     "17698898B74617180198500",
+     "17698898B32779649275791",
+     "17698898B96190613421572",
+     "17698898B76183581414632",
+     "17698898B8299812932572",
+     "17698898B40293713134027"
     ]
    }
   }

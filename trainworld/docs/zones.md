@@ -121,7 +121,8 @@ first wave (Germany, the UK, Ireland and the Benelux at 0.1-1.2M); rows built be
 (every country zoned by 2026-10-24) keep their groups until Anita asks for their replan (T-1189):
 `zones --countries CN --replan` regroups a country's built zone rows too (never a `held` one, T-774), their
 packs then counted as free land; a new zone with an old row's exact units keeps its id, order, status and gate
-relaxations. Any other new zone (in any zones rerun, not only `--replan`) inherits each relaxation of a
+relaxations. Any other new row takes an id no save can name: not in the plan, the registry, data/packs, the committed
+registry or zone-successors.json's keys (`world_plan.retired_ids`, T-3764), else old saves would open in it. Any other new zone (in any zones rerun, not only `--replan`) inherits each relaxation of a
 check about the ground or the country's data (`world_plan.CARRY_RELAX`: drive_factor_median,
 water_points_in_water, university_rate, and mean_commute_km when the new zone has at least as many units
 as the old row) that an old row sharing at least one of its units held, with the reason of the old row

@@ -215,6 +215,22 @@ CONFIGS = {
         "mode": "shares",
         "hold": r"^(IR)\d+$",
     },
+    # T-3764: GHS-POP puts the people displaced from the districts round Karabakh, whom the census counts at home (de
+    # jure), on those districts' ruins (Kalbajar 104,510, Lachin 103,344, Jabrayil 69,154; 0, 0 and 420 found there in
+    # 2019), so the 2019 census's existing (de facto) people by rayon and city, as religiondots joined them to COD-AB
+    # AZE (religiondots/sources/az_geo.py); shares of GHSL's national total, as IR
+    "AZ": {
+        "source": "State Statistical Committee of Azerbaijan, 2019 census Volume A Table 3, existing population by rayon "
+                  "and city, on COD-AB AZE (HDX, CC BY-IGO)",
+        "polygons": {"file": "AZ/az_units.gpkg", "mirror": "religiondots/data/geo/az/az_units.gpkg",
+                     "layer": "units", "code": "unit", "name": "name"},
+        "totals": {"file": "AZ/az_units.gpkg", "mirror": "religiondots/data/geo/az/az_units.gpkg",
+                   "layer": "units", "code": "unit", "pop": "pop"},
+        "parent": None,
+        "national_total": (9_943_958, 0.0001),  # Table 3's existing population
+        "mode": "shares",
+        "hold": r"^(AZ)\d+$",
+    },
     # T-3764: GHS-POP holds 0.41-0.59 of every Balochistan district's 2023 count (Quetta 1.11M against 2.27M; the
     # province 8.24M against 14.56M), the rest of Pakistan 0.82-1.06 of it by province, so Balochistan only. The census
     # districts as religiondots drew them (COD-AB PAK districts, Lehri's tehsils returned to Sibi and Kachhi;

@@ -131,7 +131,12 @@ DE_FACTO_TAKE = {"RUS": ["UKR"]}
 # contested areas"): a unit of the country with over the share of its area inside the file's polygons is left out
 # whole, one with less stays whole. ISW and AEI's assessed Russian-controlled Ukraine of 2026-09-29: its terms are not
 # an open licence, so it only picks whole units; none of its edges is drawn or shipped
-LEFT_OUT = {"UKR": (RAW / "isw_ukr_control_2026-09-29.geojson", 0.5)}
+LEFT_OUT = {"UKR": (RAW / "isw_ukr_control_2026-09-29.geojson", 0.5),
+            # T-3764, on the same words: Abkhazia and South Ossetia, held by their own governments since 1992-93 and
+            # 2008, left out of Georgia's zones; Natural Earth 4.1.0's breakaway polygons (public domain), cut from
+            # religiondots/data/raw/az/ne_v410_disputed_areas.geojson; share 0.8, since at 0.5 Gori (0.51 inside: geoBoundaries
+            # fills Tskhinvali's missing city unit into it) went too, Gori town with it
+            "GEO": (RAW / "ne_breakaway_geo.geojson", 0.8)}
 # T-2964: a line drawn from a file, which a country's built outlines keep to (osm_units.line_cut): "out" loses the file's
 # land, "in" keeps only it, the row's own plan units added first. The Green Line as COD-AB PSE draws it, East Jerusalem in
 # the West Bank (Anita, 2026-11-10); OSM's relations there are Israel's (its Jerusalem District holds East Jerusalem,
@@ -193,6 +198,21 @@ ZONE_RULES = {"CHN": {"floor": 1_000_000, "cap": 2_500_000, "min_density": 0.0, 
               # "Paurashava" (a town's municipality) and after villages; no `plan_units`, as Iran: the plan state lost 213 of
               # the file's 5,160 unions (2.27M people, Noakhali's and Cox's Bazar's coasts) (T-3764)
               "BGD": {"floor": 500_000, "cap": 1_500_000, "contiguous": True, "group_level": 2, "task": "T-3764"},
+              # Afghanistan on Pakistan's desert rule: at the default 20 a km2 the south's and the Wakhan's districts were
+              # dead space, Zaranj's Nimruz among them; `fua_whole` 0.3M: at 0.5M Jalalabad's city district and Behsud,
+              # which wraps it, were two zones (T-3764)
+              "AFG": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True, "reach": (150.0, 100_000),
+                      "reach_from_people": True, "join_km": 150.0, "fua_whole": 300_000, "plan_units": True,
+                      "task": "T-3764"},
+              # the Caucasus's municipalities and rayons with no density floor, as Belarus: at the default 20 a km2 Georgia
+              # left 22 of 68 dead (Borjomi, Sighnaghi, Akhmeta, Dusheti, Oni, Mestia) and Armenia 6 of 39 (Sisian, Meghri,
+              # Vayk); Georgia has no metro row, so no `plan_units` (as Oman). Azerbaijan's people spread by the 2019
+              # census's existing population by rayon in the plan and the builds: GHS-POP put the displaced people of the
+              # districts round Karabakh, whom the census counts at home, on those districts' ruins (T-3764)
+              "GEO": {"min_density": 0.0, "contiguous": True, "task": "T-3764"},
+              "ARM": {"min_density": 0.0, "contiguous": True, "plan_units": True, "task": "T-3764"},
+              "AZE": {"min_density": 0.0, "contiguous": True, "plan_units": True, "module": "admin_totals",
+                      "plan_people": "AZ", "task": "T-3764"},
               # Turkey's ilce with a density floor of 10 a km2: at the default 20, 232 of 973 were dead space and the
               # interior's provincial towns (Erzincan, Cankiri, Kirsehir, Sivas) were zones of 0.1-0.5M in a hole (T-2294);
               # people scaled to the 2022 register by ilce with the Syrians under temporary protection (T-2079);
@@ -368,7 +388,7 @@ ZONE_ALONE_MIN = 50_000
 # so a player can go island to island down the Lesser Antilles (T-3762)
 ALONE_MIN = {"MSR": 1_000, "BES": 1_000}
 # the lon/lat box of each `plan_people` config's units: a 1 km tile touching it takes the config's factors (T-3763)
-PLAN_PEOPLE_BOX = {"IR": (44.0, 25.0, 63.4, 39.8)}
+PLAN_PEOPLE_BOX = {"IR": (44.0, 25.0, 63.4, 39.8), "AZ": (44.7, 38.3, 51.0, 42.0)}
 # T-1999: an island or exclave with no land neighbour in its region can merge with nothing, so it stays a zone down to
 # this (Vieques with Culebra 10,600, Nantucket, Aland, Ceuta, Gorazde shipped); islets below it stay dead space (T-897)
 CUT_OFF_MIN = 10_000
@@ -430,7 +450,7 @@ ARCHETYPE = {"GBR": ("A", "england"), "FRA": ("A", "france"), "DEU": ("A", "germ
              "LAO": ("C", "admin_totals"), "NZL": ("C", "admin_totals"), "IRN": ("C", "admin_totals"),
              "TUR": ("C", "admin_totals"), "MEX": ("C", "mexico"), "COL": ("C", "admin_totals"),
              "EGY": ("C", "admin_totals"), "ISR": ("C", "admin_totals"), "PSE": ("C", "admin_totals"),
-             "PAK": ("C", "admin_totals")}
+             "PAK": ("C", "admin_totals"), "AZE": ("C", "admin_totals")}
 NE_FIX = {"KOS": "XKX", "SOL": "SOM", "CYN": "CYP", "SAH": "ESH"}
 # T-3762: territories geoBoundaries lists apart that Natural Earth's countries file folds into another (France's
 # Guadeloupe, Martinique and French Guiana, the Netherlands' Bonaire, Saba and Sint Eustatius): (that country, own alpha-2).
@@ -585,10 +605,13 @@ class Pop:
         return x[m], y[m], p[m]
 
 
-def plan_factors(pop, iso2):
+def plan_factors(pop, iso2, clip=True):
     """[(Mollweide unit polygon, factor)] for an `admin_totals` config: each unit's census share of the country
     times GHSL's people over all its units, over GHSL's people in the unit (the 1 km grid's, unscaled), so the
-    plan zones on the census's spread and GHSL's total; a unit GHSL leaves empty keeps factor 1."""
+    plan zones on the census's spread and GHSL's total; a unit GHSL leaves empty keeps factor 1. The factors are
+    worked out on the census polygons as they are, then the polygons are cut to the country's own Natural Earth land
+    (`clip`), so a county drawn over the border scales no neighbour's pixels (T-3764: Iran's moved 136 one-km pixels
+    in Afghanistan and 141 in Azerbaijan)."""
     import admin_totals
     u = admin_totals.units(iso2)
     geoms = [polygonal(to_moll(g)) for g in u.geometry]
@@ -600,6 +623,12 @@ def plan_factors(pop, iso2):
     f = np.where(ghsl > 0, want / np.where(ghsl > 0, ghsl, 1.0), 1.0)
     log(f"  {iso2} plan people (T-3763): {len(geoms)} units, GHSL {ghsl.sum():,.0f}; factors {np.percentile(f, 10):.2f}-"
         f"{np.percentile(f, 90):.2f} (10-90%), {int((f < 0.5).sum())} under 0.5")
+    if clip:
+        iso3 = next(k for k, r in ZONE_RULES.items() if r.get("plan_people") == iso2)
+        land = territory_whole(iso3)
+        geoms = [polygonal(g.intersection(land)) if not land.contains(g) else g for g in geoms]
+        for g in geoms:
+            shapely.prepare(g)
     return list(zip(geoms, f.tolist()))
 
 
@@ -1567,6 +1596,25 @@ def piece_name(us):
     return max(us, key=lambda u: u.pop).name
 
 
+def retired_ids():
+    """Ids saves may still name though no row, pack or registry entry has them now (T-3764: Afghanistan's zones took
+    Mariveles' `mri` an hour after a redraw retired it, and eight ids zone-successors.json maps on): the committed
+    registry's, and zone-successors.json's keys. A new row never takes one."""
+    import subprocess
+    out = set()
+    try:
+        head = subprocess.run(["git", "show", "HEAD:trainworld/app/src/game/registry.json"], cwd=ROOT.parent,
+                              capture_output=True, text=True, encoding="utf-8", check=True,
+                              creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)).stdout
+        out |= {c["id"] for c in json.loads(head)["cities"]}
+    except (subprocess.CalledProcessError, OSError, ValueError, KeyError) as x:
+        log(f"  the committed registry could not be read ({type(x).__name__}); its ids are not kept from new rows")
+    succ = REGISTRY.parent / "zone-successors.json"
+    if succ.exists():
+        out |= set(json.loads(succ.read_text(encoding="utf-8")))
+    return out
+
+
 def make_id(name, used):
     s = "".join(c for c in ascii_name(name).lower() if c.isalpha()) or "xxx"
     s = s + "xxx"
@@ -1813,6 +1861,7 @@ def finish(st, rows, taken=None, prev=(), others=()):
     keep.sort()
     used = set(st["packs"]) | {c["id"] for c in json.loads(REGISTRY.read_text(encoding="utf-8"))["cities"]}
     used |= {o["id"] for o in prev} | {o["id"] for o in others}
+    used |= retired_ids()
     out, feats, before = [], [], []
     for (n, cid), r in zip(keep, rows):
         m = r["metro"]
@@ -3029,7 +3078,7 @@ def plan_zones(isos3, out_path=None, replan=False):
     ex, kids = geofabrik()
     a2 = iso2s()
     used = set(pk) | {c["id"] for c in json.loads(REGISTRY.read_text(encoding="utf-8"))["cities"]}
-    used |= {r["id"] for r in rows}
+    used |= {r["id"] for r in rows} | retired_ids()
     order = max(r.get("order", 0) for r in rows)
     changes = []
     took_all = {iso: taken_units(st, iso) for iso in isos3}  # before the loop sets the state's units on the de facto lines

@@ -34,9 +34,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-930 (regate): cross_everyday rewrites `everyday_kept_*` in every joint solve and the rates read them, but no gate checks rates after a join (before T-930 too).
   - Goal: A join's re-gate checks the rates a solve can change, or the reason it needn't is recorded.
   - Other: notes/T-930.md
-- T-3688 [P2] {L:region-redraws} Hokkaido, Manila and Muzaffarpur redraws (taking, 2026-11-21, agent redraws)
-  - Context: Your old TODO, from Discord suggestions: "generally prioritize compactness more ... hokkaido into 4; manila looks weird, make a bit smaller and surrounding regions more compact; muzafarapur, huge rural region prob should be split". You, 11-21: do the rearrangements tonight rather than new countries ("we added a lot last time"). Nearest: T-1878.
-  - Goal: The three redrawn and rebuilt overnight as unit-list edits (no full replan), old saves keeping their zones through zone_successors, before/after maps for you.
+- T-3688 [P2] {L:region-redraws} Hokkaido as four regions
+  - Context: Your old TODO: "hokkaido into 4". Muzaffarpur (split into Muzaffarpur, Hajipur, Samastipur) and Manila (smaller, keeping Malolos; San Pablo City and Lipa City new) were rebuilt 11-22. Hokkaido is your 4 regions from the picture you sent, with Dochuo one big zone with Sapporo (you, 11-22: "i'd rather do one big dochuo zone"); Japan's zones need a day session (japan_zones.py, Sapporo's pack refitted).
+  - Goal: Donan, Dohoku, Doto and Dochuo built and joined, old saves keeping their zones through zone_successors.
+  - Other: notes/T-3688.md
 - T-2578 [P3] {L:borders} Mexico-US border factor too low
   - Context: Every border pair gets the national factor 0.05, but Tijuana-San Diego and Juarez-El Paso are very busy crossings.
   - Goal: A pair factor in borders.json, checked against published crossing counts.
@@ -130,7 +131,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Myanmar (59 of 60 rows), Laos (11) and Timor-Leste (4) shipped 2026-11-20. Bhamo (0.44M) is parked: its busiest square sits on a GHSL pile-up of 23,697 people in one village square in Mansi, not on a town.
   - Goal: Bhamo built with its people spread off that square (or held), then gated and joined.
   - Other: notes/T-1738.md section 16
-- T-3764 [P3] {L:new-countries} Fill the gaps, Central Asia and beyond (taking, 2026-11-21, agent caucasus)
+- T-3764 [P3] {L:new-countries} Fill the gaps, Central Asia and beyond
   - Context: You, 2026-11-19: "after that i guess we fill in the gaps (pakistan/bangladesh, central asia, etc)"; 11-22, hesitant about more: "maybe we can try doing georgia/armenia/azerbaijan and afghanistan". Done: Pakistan and Bangladesh (11-20), Georgia, Armenia, Azerbaijan and Afghanistan (11-22). Still missing, in batches, in the notes: Central Asia with Mongolia (77M), the Levant and Yemen (63M), Nepal, Bhutan and Sri Lanka (52M), Africa beside built countries, then Papua New Guinea and the Pacific.
   - Goal: Each batch built and joined, next Central Asia.
   - Other: notes/T-3764.md
