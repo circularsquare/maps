@@ -20,10 +20,8 @@ U. USAGE (her 11-22 ~16:20 UTC): "we're low on remaining tokens for the week so 
    data/packs): sync-track, then 8800 = tw/track tip as her preview (her yes 11-22; saves made there won't load on
    master or live: told her), and a batch checker on master. All strings to 11-22 16:10 UTC acknowledged ("Part of a bundle of # tracks", her wording).
 2. TRACK (her top priority): tw/track has 1-3g, 4a1, 4a2, 4c, 4e picture, T-4030 a-f, T-4038, levels (T-3691), 4b's
-   two fixes. T-3961's merge waits for g; T-3964 Join waits T-4043 (needs its own checker). g (T-4037) waits her two
-   calls (re-explained 11-22 ~16:10 UTC); then 4d (T-3963), 4f, 5a/5b. Pre-merge: T-4026, T-3958, a checker. Plan:
-   notes/T-4030.md. A finish can stop on a docs conflict: resolve in the tree (CRLF), rebase --continue, finish.
-   Wiki on the website on hold.
+   two fixes. T-3961's merge waits for g; T-3964 Join waits T-4043. g (T-4037): her calls in the task (compare her
+   cut-at-stations idea first); then 4d, 4f, 5a/5b. Pre-merge: T-4026, T-3958, a checker. Plan: notes/T-4030.md.
 
 ## Her words
 - 11-22 ~16:05 UTC: cap 14 (daytime); T-4041 yes, high prio (and buses beating parallel trams; tram boarding
