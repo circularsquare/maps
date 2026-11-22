@@ -1,28 +1,27 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 427323a8-53ce-483c-9c28-8f1452e36f9f, name maps-6a [a48b3e], since 2026-11-21 20:45 UTC
-Updated: 2026-11-21 21:15 UTC
+Updated: 2026-11-22 03:40 UTC (cycling at 500k to standby maps-5a)
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5.
 
 ## Next
-0. LIVE v0.4.5. Cap 8 (her ask 11-21 evening, "for a while"). Cores 0-1 hers (`reserve_cores.ps1 -Loop 30` at takeover). No publish yet ("no rush").
-   Before the next publish: fresh freeze (place index), translations (T-3986, T-3991, T-3999, T-4003, T-4010,
-   T-2264, T-3933, T-3378 s4, T-4013, T-4005 keys), smoke on a quiet machine (batchchk11's real-save final timed
-   out at cap). shonei-server deployed and pushed 3b14158 (11-22 01:26 UTC). Standby tabs left: maps-5a, maps-17.
-1. master 0a041a75; 8800 = 88721523 (save level 38). Batch 13 (T-3502 airports, T-3655 edit speed, bmtab,
-   T-3373 s4-5 flagged) landed, unchecked: one batch checker before any publish (held for usage until then).
-2. TRACK: stages 1-3d landed; tw/track 554a83b8 (TWT7 body level 2, save level 40). No agent running. Next 3e
-   T-3956, 3g T-3958: asked her whether to start them at ~19% usage (I'd wait). Pre-merge items: T-4026.
-   Her quad call (T-4023): N single tracks, free pairing, "Add a track"; quaddesign (Opus) rewriting the design and
-   open stages; tracksave and trackdraw were told. 2b strings: "4 tracks" OK, refusals to be redrafted.
+0. LIVE v0.4.5. Cap 8 (her ask 11-21 evening, "for a while"; asked whether 16 overnight, no answer). Cores 0-1 hers
+   (`reserve_cores.ps1 -Loop 30` at takeover). No publish yet. Before one: fresh freeze, translations (T-3986, T-3991,
+   T-3999, T-4003, T-4010, T-2264, T-3933, T-3378 s4, T-4013, T-4005), smoke on a quiet machine, and one batch
+   checker for batch 13 (T-3502 airports, T-3655 edit speed, T-4022, T-2264, T-3373 s4-5 flagged). Server deployed
+   3b14158 (11-22 01:26 UTC). Standby tabs: maps-5a, maps-17.
+1. master 7788f682; 8800 = b0647110 (save level 38).
+2. TRACK (her top priority): stages 1-3d landed; tw/track 554a83b8 (TWT7 body level 2, save level 40). Quad call
+   done in the design (T-4023: any single tracks, Add a track T-4024 with her refusal wording). Next 3e T-3956, 3g
+   T-3958: asked her whether to start them at ~19% usage (I'd wait). Pre-merge items: T-4026. A finish onto
+   tw/track can stop on a docs conflict: resolve in the tree (CRLF files), rebase --continue, rerun tests, finish.
 3. T-3373 B: stages 3-5 landed under ?split=1; stage 6 (edits) next, not started (usage).
 4. Overnight: Muzaffarpur rebuild job PID 35592 (haj split into haj, hjp, sxp; uji retired), log
    artifacts/trainworld/redraws-run.log; morning check and hand steps in notes/T-3688.md. Manila designed, not
-   applied (asked); Hokkaido designed, needs a day session via japan_zones.py (asked). No new countries. T-2264 help panel on 8800, waits on her look. T-4025 perf ledger
-   waits on her go (asked).
-5. Wiki on the website on hold (fan wiki exists; link reverted, pages in artifacts/trainworld/wikisite/site-hold).
-   Later: T-3937 quiet machine; T-3931 held for T-3231; T-3939 B's 140 MB.
+   applied (a-..-22); Hokkaido designed, needs a day session via japan_zones.py (a-..-23).
+5. Waiting on her: T-2264 help panel text (graph labels), T-4025 perf ledger go, 3d sheet look. Wiki on the website
+   on hold (fan wiki; pages in artifacts/trainworld/wikisite/site-hold). No agents running.
 ## Her words
 - 11-21 ~20:00 local: deploy yes (done); wiki link off the site; drop the city help panel, trip panel takes her
   text (notes/T-2264.md) and a graph; stop-mark and bookmark tweaks (T-4022); quad = any single tracks (T-4023).
@@ -40,7 +39,6 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
 - 11-21 ~17:00 UTC: closed T-3365; levels -5 to +5 with the track rework, Settings toggle (T-3691). Station totals by
   mode with station timetables (T-3780). Exact sums OK ("<0.5% is never that much"). Community: open paused,
   blueprints hidden, no leave confirm (T-4002); bookmarks maybe (T-4005); raise limits (T-4006, deployed).
-- 11-21 ~14:05 UTC: keep 4-12 agents (paused by the usage stance).
 - 11-21 ~12:50 UTC: BRT stations for BRT lines only; T-3373 B go, the memory limit rises (players set it: T-3932; a
   load out of memory retries lower: T-3933). Never ask again whether big saves get more workers.
 - 11-19: "player complaints take precedent over other new features"; full playtest list before every publish.
