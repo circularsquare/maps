@@ -38,9 +38,6 @@ U. Everything else paused for usage, trees kept, {after:next week's usage}: T-40
   rule, drop income groups (T-4019); busways any bus.
 - 11-21 ~18:45 UTC: main priorities: keep the track rework moving, finish and polish BRT. Standby orchestrator tabs
   (notes/standby.txt, docs/orchestrator.md "Your own cycling").
-- 11-21 ~17:00 UTC: levels -5 to +5 with the track rework, Settings toggle (T-3691). Station totals by mode with
-  station timetables (T-3780). Exact sums OK ("<0.5% is never that much").
-- 11-21 ~12:50 UTC: BRT stations for BRT lines only; never ask again whether big saves get more workers.
 - 11-19: "player complaints take precedent over other new features"; full playtest list before every publish. When
   she plays: no uploads until she's done; she may ask for a lower core cap.
 - Standing: lean testing, smoke per batch; long jobs in the background, answer her first; every publish, deploy and
