@@ -6,17 +6,16 @@ Updated: 2026-11-22 16:55 UTC (maps-17's process was gone at takeover; its four 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5.
 
 ## Next
-T. TODAY (her 11-22 ~16:50 UTC): "we're still sitting at 97% usage so we only have 3% for the rest of the day. main
-   priority is just looking into T4041, and also would like to continue with 4045 for a bit to see if theres an easy
-   fix there. everything else can pause". Both reported; no agents running, none to start today. T-4041: her yes 11-22
-   (even arrivals, first to arrive; street trams lose 2+2 at street stops); first start once usage allows (Opus, measure
-   solve time and memory on the real save). T-4045's memo fix sits uncommitted in tree onewaylag (wants a checker before
-   landing; page profile left). Paused: clockmem T-3939 (nothing written),
-   hokkaido T-3688 (join done 11:29 local; after-steps left, see its task; data/packs lacks sor/ibr/okh/ksr until it lands).
-U. USAGE (her 11-22 ~16:20 UTC): "we're low on remaining tokens for the week so lets keep the track work wound down
-   actually. lets keep the rest for bug fixes for now. i'd consider pax not taking express as the major bug fix."
-   Paused, trees kept, tagged {after:next week's usage}: T-4024, T-4043, T-3346, T-3932, T-4025, T-3373, T-3688, T-3939.
-   The 8800 track preview still goes up after hokkaido lands.
+T. T-4041 is the absolute top priority (her 11-22 ~17:45 UTC: "use the rest of our usage toward this end"; weekly
+   reset ~11-23 10:00 UTC). Built by arrivefirst in tree arrivefirst (uncommitted; its DECISIONS line uncommitted in
+   main). arrivefirst2 (opus, same tree) on: express riders row didn't rise; the half-headway cliff ("clearly not
+   right"); her softening, 25% board the first train that comes, 75% first to arrive; rail trips -1.4% split by cause.
+   Perf +13% solve / +11% heap: "probably worth it". Lines stay independent; T-4050 (same track + stops, no passing:
+   evenly spaced) after it, both in the next update, "probably tomorrow evening" (11-23). Master smoke PASS 983da84a.
+   Her hope: "buses get more reasonable values relative to trams ... more uniform ... cuz everything is parallel".
+U. Everything else paused for usage, trees kept, {after:next week's usage}: T-4024, T-4043, T-3346, T-3932, T-4025,
+   T-3373, T-3688 (hokkaido: join done, after-steps left; data/packs lacks sor/ibr/okh/ksr until it lands), T-3939,
+   T-4045 (memo fix uncommitted in tree onewaylag, wants a checker; page profile left). Track preview after hokkaido.
 0. LIVE v0.4.5. Cap 14 (her daytime pick 11-22). Cores 0-1 hers (`reserve_cores.ps1 -Loop 30` at takeover). No
    publish yet. Before one: fresh freeze, translations (T-3986, T-3991, T-3999, T-4003, T-4010, T-2264, T-3933,
    T-3378 s4, T-4013, T-4005, T-4040, and the new zones' names: place_names.mjs --zones), smoke on a quiet machine. Batch 13
