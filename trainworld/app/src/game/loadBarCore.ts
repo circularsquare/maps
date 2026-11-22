@@ -183,7 +183,13 @@ export function keepPlace(bar: BarPlace, fraction: number): number {
  * at 20% of the time the bar stood at 29-42%, at 50% at 66-68%, and its last 5% took 10% of the time). The bar
  * shows the model's fraction to this power, so early work fills less of it and the end moves faster. */
 export const BAR_POWER = 1.7;
-export const shownShare = (f: number) => (f <= 0 ? 0 : f >= 1 ? 1 : Math.pow(f, BAR_POWER));
+/** Anita, 11-22: what that power showed as 90% is shown as half the bar, so a long last stretch doesn't sit
+ * "tantalizingly close"; the rest of the bar is the last stretch */
+export const SHOWN_AT_90 = 0.5;
+export function shownShare(f: number): number {
+  const p = f <= 0 ? 0 : f >= 1 ? 1 : Math.pow(f, BAR_POWER);
+  return p < 0.9 ? p * SHOWN_AT_90 / 0.9 : SHOWN_AT_90 + (p - 0.9) * (1 - SHOWN_AT_90) / 0.1;
+}
 
 /** T-343, T-2552: the bar of a zone loading outside the load in hand: its download, its opening and the solve that
  * covers it (none for a zone opened bare), each by its share done and weighted by its expected ms */

@@ -3,7 +3,7 @@
 // round, the last one's quick converged period included, and a zone's own bar keeps moving through its opening and
 // the solve that covers it.
 //   node --experimental-strip-types trainworld/checks/t2552-load-bar.mjs
-import { keepPlace, solveStage, zoneShare, FEW_MS, nextLeft, shownShare } from '../app/src/game/loadBarCore.ts';
+import { keepPlace, solveStage, zoneShare, FEW_MS, nextLeft, shownShare, SHOWN_AT_90 } from '../app/src/game/loadBarCore.ts';
 
 const results = [];
 const report = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}  ${detail}`); };
@@ -66,18 +66,21 @@ for (const [name, prior, later] of [['remembered (a reload)', 143, 0.6], ['model
 }
 
 // T-2638: the bar shown against the clock on two measured loads (the model's fraction at each tenth of the load's
-// time; notes/T-2638.md): within 12 points of the time from 30% to 90%, and a model's 30% shown at about 15%
+// time; notes/T-2638.md): within 12 points of the time from 30% to 80%, the time skewed so its 90% is the bar's
+// half (Anita, 11-22), and a model's 30% shown at about 7%
 {
   const MEASURED = {
     'North America import': [0.29, 0.29, 0.45, 0.60, 0.68, 0.76, 0.83, 0.90, 0.97],
     'New York real save import': [0.34, 0.42, 0.52, 0.60, 0.66, 0.75, 0.84, 0.89, 0.95],
   };
+  const skew = (x) => (x < 0.9 ? x * SHOWN_AT_90 / 0.9 : SHOWN_AT_90 + (x - 0.9) * (1 - SHOWN_AT_90) / 0.1);
   for (const [name, model] of Object.entries(MEASURED)) {
-    const off = model.map((m, i) => shownShare(m) - (i + 1) / 10).slice(2);
+    // (to 80%: past it the skew's steep end turns a few points of the model into many of the bar)
+    const off = model.map((m, i) => shownShare(m) - skew((i + 1) / 10)).slice(2, 8);
     const worst = Math.max(...off.map(Math.abs));
-    report(`${name}: the bar within 12 points of the time from 30% to 90%`, worst <= 0.12, `worst ${(100 * worst).toFixed(0)} points`);
+    report(`${name}: the bar within 12 points of the skewed time from 30% to 80%`, worst <= 0.12, `worst ${(100 * worst).toFixed(0)} points`);
   }
-  report('a model\'s 30% is shown at 10-18%', shownShare(0.3) >= 0.1 && shownShare(0.3) <= 0.18, shownShare(0.3).toFixed(3));
+  report('a model\'s 30% is shown at 5-10%', shownShare(0.3) >= 0.05 && shownShare(0.3) <= 0.1, shownShare(0.3).toFixed(3));
 }
 
 console.log(results.every(Boolean) ? 'T-2552 PASSED' : 'T-2552 FAILED');
