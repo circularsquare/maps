@@ -24,7 +24,6 @@ import { builtCities } from "../../game/worldTotals";
 import { GoalTicks } from "../GoalTicks";
 import { CityFigures, CityNetwork } from "./CityDetails";
 import { HomeButton } from "./HomeButton";
-import { HelpTopicButton } from "../HelpPanel";
 import { TripGraph } from "./TripGraph";
 
 /** `note`: a second line for the part's hover */
@@ -99,7 +98,6 @@ export function CityInspector({ id }: { id: string }) {
         <i class="mk" style={{ background: `rgba(${mix[0]}, ${mix[1]}, ${mix[2]}, ${BUBBLE_ALPHA})` }} />
         <span class="name">{shownName}</span>
         <HomeButton place={city.id} />
-        <HelpTopicButton topic="demand" />
         <button class="btn icon" data-tip={t("cityInspector.goTo", { city: shownName })} aria-label={t("cityInspector.goTo", { city: shownName })} onClick={() => goTo({ kind: "city", name: city.name, city })}>
           <Icon.locate />
         </button>

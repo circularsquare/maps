@@ -5,6 +5,7 @@
 import { signal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { t, type MessageKey } from "../i18n";
+import { TripSplitGraph } from "./TripSplitGraph";
 import { mobileDevice } from "../workers/deviceMemory";
 import { marketOff } from "../game/ui";
 import { ACTION_KEYS, BUS_KEY, DEMAND_KEY, HELP_KEY, HIDE_UI_KEY, SWITCH_PICK_KEY, TAB_KEYS, TOOL_KEYS, TOOLS, TRIP_KEY } from "./toolKeys";
@@ -145,28 +146,18 @@ function sections(): [string, [string, string][]][] {
   ];
 }
 
-/** T-2264: a short explainer opened by a "?" beside the figure it explains (the city panel's trips, the trip
- * panel's effective time). It sits where the help panel does; one is open at a time, and opening the help
- * panel closes it. */
-export type HelpTopic = "demand" | "time";
+/** T-2264: the explainer opened by the trip panel's "?" beside the effective time. It sits where the help panel
+ * does; opening the help panel closes it. */
+export type HelpTopic = "time";
 export const helpTopic = signal<HelpTopic | null>(null);
 
-const TOPICS: Record<HelpTopic, { title: MessageKey; intro: MessageKey; head: MessageKey; list: MessageKey[]; outro: MessageKey }> = {
-  demand: {
-    title: "helpTopic.demandTitle", intro: "helpTopic.demandIntro", head: "helpTopic.demandHead",
-    list: ["helpTopic.demandEqual", "helpTopic.demandTwice", "helpTopic.demandFour"], outro: "helpTopic.demandOutro",
-  },
-  time: {
-    title: "helpTopic.timeTitle", intro: "helpTopic.timeIntro", head: "helpTopic.timeHead",
-    list: ["helpTopic.timeWalk", "helpTopic.timeWait", "helpTopic.timeRide", "helpTopic.timeBoard", "helpTopic.timeChange", "helpTopic.timeFare"],
-    outro: "helpTopic.timeOutro",
-  },
-};
+const TRAIN: MessageKey[] = ["helpTopic.timeWalk", "helpTopic.timeWait", "helpTopic.timeRide", "helpTopic.timeBoard", "helpTopic.timeChange", "helpTopic.timeFare"];
+const CAR: MessageKey[] = ["helpTopic.timeDrive", "helpTopic.timePark", "helpTopic.timeParkPrice", "helpTopic.timeOwn"];
 
 /** The "?" that opens a topic, or closes it again */
 export function HelpTopicButton({ topic }: { topic: HelpTopic }) {
   const on = helpTopic.value === topic;
-  const name = t(TOPICS[topic].title);
+  const name = t("helpTopic.timeTitle");
   return (
     <button class={"btn icon help-topic-open" + (on ? " on" : "")} data-tip={name} aria-label={name} aria-pressed={on}
       onClick={() => { helpTopic.value = on ? null : topic; helpOpen.value = false; }}>
@@ -201,14 +192,17 @@ export function HelpTopicPanel() {
   const helpIsOpen = helpOpen.value;
   useEffect(() => { if (helpIsOpen) helpTopic.value = null; }, [helpIsOpen]);
   if (!topic) return null;
-  const x = TOPICS[topic];
+  const list = (keys: MessageKey[]) => <ul>{keys.map((k) => <li key={k}>{t(k)}</li>)}</ul>;
   return (
-    <div class="help-panel help-topic" ref={ref} role="dialog" aria-label={t(x.title)}>
-      <h3>{t(x.title)}</h3>
-      <p>{t(x.intro)}</p>
-      <p class="help-head">{t(x.head)}</p>
-      <ul>{x.list.map((k) => <li key={k}>{t(k)}</li>)}</ul>
-      <p>{t(x.outro)}</p>
+    <div class="help-panel help-topic" ref={ref} role="dialog" aria-label={t("helpTopic.timeTitle")}>
+      <p>{t("helpTopic.timeIntro")}</p>
+      <h3>{t("helpTopic.timeTrain")}</h3>
+      {list(TRAIN)}
+      <h3>{t("helpTopic.timeCar")}</h3>
+      {list(CAR)}
+      <p>{t("helpTopic.timeWalking")}</p>
+      <p>{t("helpTopic.timeChoose")}</p>
+      <TripSplitGraph />
     </div>
   );
 }

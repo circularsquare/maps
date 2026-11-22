@@ -219,11 +219,17 @@ svg .stroke2 { stroke-width: 2; }
 .help-q.open svg { transform: rotate(90deg); }
 .help-a { margin: 0 0 6px 16px; }
 .help-ctl { color: var(--accent); }
-/* T-2264: the explainers opened by a "?" beside the trips figures and the effective time */
+/* T-2264: the explainer opened by the "?" beside the effective time */
 .help-topic p { margin: 0 0 6px; }
-.help-topic .help-head { margin-bottom: 2px; color: var(--muted); }
 .help-topic ul { margin: 0 0 8px; padding-left: 18px; }
 .help-topic li { margin-bottom: 2px; }
+.help-topic h3 { margin: 8px 0 2px; color: var(--muted); }
+.split-graph { display: block; width: 100%; height: auto; margin-top: 6px; }
+.split-graph text { stroke: none; }
+.sg-in { fill: #fff; font-size: 12px; }
+.sg-equal { font-size: 11px; }
+.sg-guide { stroke: #fff; stroke-width: 1; stroke-dasharray: 3 3; stroke-opacity: .8; }
+.sg-dot { fill: #fff; stroke: var(--text); stroke-width: 1.5; }
 /* T-2603: the timetable chart (MareyChart.tsx) under the schedule panel's timetable; T-3817: its trains on a canvas,
    redrawn as the table zooms and scrolls; the rules, labels and now line in SVG over and under it */
 .marey-chart { position: relative; }
