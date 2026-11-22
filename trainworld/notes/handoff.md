@@ -6,12 +6,11 @@ Updated: 2026-11-22 16:55 UTC (maps-17's process was gone at takeover; its four 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5.
 
 ## Next
-T. T-4041 is the absolute top priority (her 11-22 ~17:45 UTC: "use the rest of our usage toward this end"; weekly
-   reset ~11-23 10:00 UTC). Built by arrivefirst in tree arrivefirst (uncommitted; its DECISIONS line uncommitted in
-   main). arrivefirst2 (opus, same tree) on: express riders row didn't rise; the half-headway cliff ("clearly not
-   right"); her softening, 25% board the first train that comes, 75% first to arrive; rail trips -1.4% split by cause.
-   Perf +13% solve / +11% heap: "probably worth it". Lines stay independent; T-4050 (same track + stops, no passing:
-   evenly spaced) after it, both in the next update, "probably tomorrow evening" (11-23). Master smoke PASS 983da84a.
+T. T-4041 LANDED ac526280 (her top priority; "use the rest of our usage toward this end"; reset ~11-23 10:00 UTC):
+   first-arrival rule, 0.75 softening, late joins, street trams no 2+2. +45% solve / +14% heap (she said "probably
+   worth it" to +13%: asked again; T-4054 filed to cut it). Running: batchcheck14 (sonnet, master, port 6141) and
+   evenspaced (opus, T-4050, tree evenspaced). Both in the next update, "probably tomorrow evening" (11-23).
+   Leftover folder .tw-trees/arrivefirst (not a worktree; node_modules junction inside: don't delete by hand).
    Her hope: "buses get more reasonable values relative to trams ... more uniform ... cuz everything is parallel".
 U. Everything else paused for usage, trees kept, {after:next week's usage}: T-4024, T-4043, T-3346, T-3932, T-4025,
    T-3373, T-3688 (hokkaido: join done, after-steps left; data/packs lacks sor/ibr/okh/ksr until it lands), T-3939,
