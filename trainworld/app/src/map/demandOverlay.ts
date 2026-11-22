@@ -533,7 +533,6 @@ export class DemandOverlay {
   private draw() {
     const cam = this.overlay.cam;
     const gl = this.gl;
-    if (!cam || gl.isContextLost()) return;
     const zoom = this.map.getZoom(), dpr = this.map.getPixelRatio();
     const level = bubbleLevel(zoom);
     if (level !== this.lastLevel) {
@@ -552,13 +551,15 @@ export class DemandOverlay {
       if (s) list.push(s);
     }
     if (!list.length && !this.lines.size) {
-      // nothing drawn: no backing store either
+      // nothing drawn: no backing store either. This needs no GL, so it also runs with the context lost or
+      // no camera yet: a lost canvas can go on showing its last frame (T-4029)
       if (!this.blank) {
         fitSparse(this.canvas, this.map, false);
         this.blank = true;
       }
       return;
     }
+    if (!cam || gl.isContextLost()) return;
     const t0 = performance.now();
     this.blank = false;
     fitSparse(this.canvas, this.map, true);
