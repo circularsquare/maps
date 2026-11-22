@@ -395,9 +395,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Stages 3a1, 3c, 3e and 4a1 each kept today's in-memory model, where a piece is the derived edge and holds at most one track each way (tracks read from `EdgeData`: count, oneway, join); 3b saves each track on its own but loads back into that model. So stations still split pieces, one track of a double can't be flipped, and a third track can't pass a station. 01-model.md's authored bundles with tracks, compiled to the derived graph, is the design; no stage owned building it. 3f's part B (one track of a double flipped) stopped on it too: paths must name tracks (spans in memory, routing on track ends), ways stored per track, re-pairing across a bundle, trains and line strokes placed per track (notes/T-3957.md has the scope).
   - Goal: Bundles and their tracks as stored records in memory, compiled to the derived edges, with stations no longer cutting pieces; parity gates A and B byte identical. Planned (notes/T-4030.md, about 30-37 h) as stages T-4031 to T-4037; closes when T-4037 lands.
   - Other: 4b (T-3961), Add a track (T-4024), 4d (T-3963) and 5a (T-3966) wait on its stages. Found by maps-5a with the advisor, 11-22. notes/T-4030.md
-- T-4038 [P2] {L:track-rework} {after:T-4034} Flip one track of a double (taking, 2026-11-22, agent trackflip)
-  - Context: 3f's part B (notes/T-3957.md): one track of an intact double reversed or made two-way, on T-4030's records and paths. From T-4033: the edit goes through `set_edge` (it re-pairs) and reroutes or refuses the lines on it as `way_lines` does; `track_delete_plan` must keep a track by key, not by slot. From T-4034: A A doubles still draw with the lane stroke and keeping side; widen one condition in the sim and one in the app (notes/T-4034.md).
-  - Other: 2-3 h. notes/T-4033.md
+- T-4039 [P3] {L:track-rework} Singles joined to a double with its own ways
+  - Context: From T-4038: a single joined to a double whose tracks run ways of their own still takes its way from the running side (`join_away`, `join_for`), not from the joined track. Only meets a flip whose segment ends at a junction with a joined single. Reach: few players until they flip tracks.
+  - Goal: The single reads the joined track's real way, with `way_lines` checking lines in the same edit.
+  - Other: notes/T-4038.md
 - T-4035 [P2] {L:track-rework} {after:T-4034} Platforms placed on tracks (taking, 2026-11-22, agent trackplat2)
   - Context: T-4030 stage e: the compile cuts tracks at stop points; a station off the track takes an anchor node with no ports.
   - Other: 5-6 h. notes/T-4030.md

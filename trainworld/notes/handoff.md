@@ -20,8 +20,8 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
    landed; smoke 30/30 on 547389c2; 8800 = 547389c2 (swapped ~05:20 local); batchchk PASSED all five on 547389c2
    (batch 13 + tonight; undo of +5 trains doesn't refund: likely by design, unchecked vs parent).
    Left for her: Abkhazia/South Ossetia left out, Northern Cyprus with Cyprus (T-3764). Hokkaido: day session.
-5. Waiting on her: T-4025 perf ledger go. Wiki on the website on hold. Agents: trackplat2 (T-4035 stage e), trackflip (T-4038). Stages a-d landed, master
-   merged in (tw/track c6732422).
+5. Waiting on her: T-4025 perf ledger go. Wiki on the website on hold. Agents: trackplat2 (T-4035 stage e). Stages a-d and T-4038 landed, master
+   merged in (tw/track b0d17824).
    T-4030 planned as T-4031-T-4037 (+T-4038 flip); stages a, b landed (tw/track b3529ede). 4e's Join waits on 4b. 3e/3f strings to her (notes).
 ## Her words
 - 11-22 ~04:30 UTC: last day of the usage week, a decent chunk left: aim to finish track stage 4 overnight ("if we run
@@ -47,7 +47,7 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
 
 ## Waiting on her (asks.py list has the open ones)
 - Text ack (morning summary) for tw/track strings: 3e (T-3956.md), 3f (T-3957.md: "... out to the junctions."),
-  4c (T-3962.md: "{way} trains stop at {station}" etc.). Her call at T-4037: drag slides a station along its track?
+  4c (T-3962.md: "{way} trains stop at {station}" etc.), T-4038 ("Stations can't have two tracks running the same way yet."). Her call at T-4037: drag slides a station along its track?
 - She sends the T-3635 player reply and the T-3945 reply herself (draft in notes/T-3945.md).
 
 ## Only a person knows

@@ -345,3 +345,4 @@
 {"t":"2026-11-22T09:47Z","n":275,"area":{"demand":98,"interface":16,"ops":15,"performance":34,"schedule":15,"track":61,"community":17,"schematic":19},"pri":{"P3":219,"P2":54,"P1":2},"opened":0,"closed":1}
 {"t":"2026-11-22T10:37Z","n":272,"area":{"demand":98,"interface":15,"ops":14,"performance":34,"schedule":15,"track":60,"community":17,"schematic":19},"pri":{"P3":219,"P2":51,"P1":2},"opened":0,"closed":3}
 {"t":"2026-11-22T11:27Z","n":272,"area":{"demand":98,"interface":15,"ops":14,"performance":34,"schedule":15,"track":60,"community":17,"schematic":19},"pri":{"P3":219,"P2":51,"P1":2},"opened":0,"closed":0}
+{"t":"2026-11-22T12:17Z","n":271,"area":{"demand":98,"interface":15,"ops":14,"performance":34,"schedule":15,"track":59,"community":17,"schematic":19},"pri":{"P3":219,"P2":50,"P1":2},"opened":0,"closed":1}
