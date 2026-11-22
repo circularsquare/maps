@@ -1,1 +1,16 @@
-[]
+[
+  {
+    "id": "a-2026-11-21-22",
+    "title": "Manila redraw: yes?",
+    "text": "T-3688: Manila goes from 29.9M people in 4 pieces to 24.5M in one; its fringes go to Balanga (Mariveles folded in), San Miguel, Tanay, Lemery, Nasugbu and three new zones, City of Malolos, San Pablo City and Lipa City. Image: artifacts/trainworld/review/manila-redraw.png. Designed, not applied; rebuild steps in notes/T-3688.md.",
+    "since": "2026-11-21",
+    "by": "maps-6a"
+  },
+  {
+    "id": "a-2026-11-21-23",
+    "title": "Hokkaido: Hidaka where?",
+    "text": "T-3688: Hokkaido as Sapporo plus 4 zones: Oshima (with Hiyama and the rest of Shiribeshi), Iburi with Hidaka, Kamikawa (with Sorachi, Rumoi, Soya), Tokachi (with Kushiro, Okhotsk, Nemuro). Iburi with Hidaka is a long coastal strip; Hidaka could go into Tokachi instead. Japan's zones need a day session to rebuild (not world-plan rows). Image: artifacts/trainworld/review/redraws-before-after.png.",
+    "since": "2026-11-21",
+    "by": "maps-6a"
+  }
+]
