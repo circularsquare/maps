@@ -41,9 +41,10 @@ Shift click still makes a one-way stop (one stop point). Her split one-way legs 
 joining: the click on either leg takes the other leg for the other way. Joining stations is only for the name. T-3605
 holds: two one-way stations listed as separate stops stay separate stops.
 
-On a double each way has one stop point, so the picks are what today gives. On 4 tracks a line drawn along one double
-stays on it: an express added on the inner double stops there, a local on the outer. On A A B B each way takes its
-own track of the double the line is on.
+On a double each way has one stop point, so the picks are what today gives. On 4 tracks a line stays on the track it
+runs on (no crossing move) and comes back by default on that track's partner: on A B A B an express on the inner
+tracks stops there, a local on the outer; on A A B B and A B B A the same, by the pairing rule (01). A line meant to
+come back on another track has that track picked with the chip, and its return is routed.
 
 ### The track chip in the stop list (stage 4c)
 

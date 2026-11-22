@@ -38,10 +38,7 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
 - 11-21 ~17:00 UTC: closed T-3365; levels -5 to +5 with the track rework, Settings toggle (T-3691). Station totals by
   mode with station timetables (T-3780). Exact sums OK ("<0.5% is never that much"). Community: open paused,
   blueprints hidden, no leave confirm (T-4002); bookmarks maybe (T-4005); raise limits (T-4006, deployed).
-- 11-21 ~16:10-16:40 UTC: bus reach 1 km; no borrowed-search bus stops ("a lie"); itch.io $0-or-donate, $5
-  suggested (T-3988).
-- 11-21 ~14:05 UTC: keep 4-12 agents. Count every Auto stop ("if people are seeing bus stops the bus stops have to
-  be real").
+- 11-21 ~14:05 UTC: keep 4-12 agents (paused by the usage stance).
 - 11-21 ~12:50 UTC: BRT stations for BRT lines only; T-3373 B go, the memory limit rises (players set it: T-3932; a
   load out of memory retries lower: T-3933). Never ask again whether big saves get more workers.
 - 11-19: "player complaints take precedent over other new features"; full playtest list before every publish.

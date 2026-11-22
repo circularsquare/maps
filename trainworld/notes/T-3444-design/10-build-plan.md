@@ -43,16 +43,17 @@ answers added long selections, track purpose, the crossover offer, station templ
 |---|---|---|---|---|
 | 1 | Prep, on master. **Done 2026-11-21** (T-3948, notes/T-3948.md: the guard, the baselines, the saves) | T-1183 (the fixed-rate line path out of 69 tests); the save guard for the new magic; part 8's seven baseline timings, when cores are free; the Vienna save fetched | cargo suites; timings in notes | 4-6 |
 | 2a | Bundles as saved records | A bundle id and slot on today's edges (`LBN1`, level 35), set by drawing quad and doubling up, found once on old saves by today's twin rule; `twin_at`, `quad_beside`, `quadPairs.ts`, `Alongside` read it and go | real save figures unchanged; t3333 and t3348 checks | 3-4 |
-| 2b | The three cases in the tools | Track bar 1, 2 and More (4 for now); 4 tracks picked whole, a second click picks one double; Select bar's 4 replaces Double up; one shared pointer pick for every tool; titles "Single track", "Double track", "4 tracks" | play check on 4 tracks and double | 3-4 |
+| 2b | The three cases in the tools. **Done 2026-11-21** (T-3950); her 11-21 call changes two parts: the second click to one double becomes one track (3e), the Select bar's "4 tracks" becomes Add a track (T-4024) | Track bar 1, 2 and More (4 for now); 4 tracks picked whole, a second click picks one double; Select bar's 4 replaces Double up; one shared pointer pick for every tool; titles "Single track", "Double track", "4 tracks" | play check on 4 tracks and double | 3-4 |
 | 3a1 | Tracks as their own edges: the compile | Authored bundles with tracks, nodes with joins; the compile to the derived graph, one track per edge, stable ids, the node pitch, capacity's keys; lanes' cap and the inferred-way code out. Stations still nodes here | sim tests on the small saves | 4-6 |
 | 3a2 | Partners, turns and parity | Partners stored (the loader pairs each old double), turn moves at stop nodes and bare ends, routing and capacity on derived keys checked whole | **parity gates A and B** (part 5) | 3-4 |
 | 3b | The new save and old saves | TWT7 (level 36) reader and writer; old saves converted on load, old bytes kept | the three reference saves load to parity, Amsterdam first | 3-5 |
 | 3c | Paths in track spans | Paths as (track, direction) spans; return by partner; routed returns stored; routing on authored tracks; `back_lines` out | parity A and B; perdir and t3565 checks | 4-6 |
 | 3d | Drawing each track | Per-track rows to the app; each track at its own offset; `legShifts`, the taper and `singleLeadStrokes` out; wiki "Tracks" page | screenshots: joins, branches, flyovers, both running sides | 5-6 |
-| 3e | Tools on tracks | A single from a double's end extends the track under the pointer, no automatic merge; joins stored from the pointer's pick; second click to one track; delete or flip one track | play check: extend each track of a double, merge two singles manually, delete one side | 4-5 |
+| 3e | Tools on tracks | A single from a double's end extends the track under the pointer, no automatic merge; joins stored from the pointer's pick; second click straight to one track on any count (2b's one-double step goes); the track picture; delete or flip one track; the Delete tool takes the whole run | play check: extend each track of a double, merge two singles manually, delete one side, one track of 4 picked in one click | 4-5 |
 | 3f | Long selections and ways | A track's way spreads to the nearest branch points (T-3662); double click traces one track to the next branch points, Shift+click extends; set a selection's way in one edit | play check on a long one-way leg | 3-4 |
 | 3g | Starts on the new format | `realsave` writes bundles; the sandbox starts rebuilt, loading settled as today | each start loads settled | 2-3 |
 | 4a1 | Platforms and stations: sim | Platform and station records (level 37); stations stop splitting track; stop points compiled; the station-as-node fields out | parity where nothing new is used | 4-6 |
+| 4+ | Add a track (T-4024, after 4a1) | The Select bar's Add a track and the track picture's + replace 2b's "4 tracks" (Double up's op goes); the new track's way, partner, ends joined at the run's nodes, no crossovers along it; the per-track price; the refusal reasons; up to 16 | play check: a double to 4 tracks in two clicks runs a line on the new pair; a refusal names its reason | 3-5 |
 | 4a2 | Smart allocation | Each way's stop point picked at the click and stored, re-picked only when it goes; the "trains can't pass here" flag; `perdir` way stations and `station_beside` out | her split legs get a two-way stop in one click; T-3605 and T-3711 cases unchanged | 3-4 |
 | 4b | Old stations converted | Station nodes to stations and platforms; each stop's way picks stored as today's rule makes them | the reference saves, figures equal | 3-4 |
 | 4c | Demand and the stop list | Demand snapshot rows from stop points (part 6); the one complex rule in the sim; the stop list's track chip | packed arrays byte for byte on NYC, then rail trips a day | 4-6 |
@@ -61,8 +62,8 @@ answers added long selections, track purpose, the crossover offer, station templ
 | 4f | Starts with stations | The starts rebuilt with stations as records, keeping today's stations | each start loads settled, rides within 2% | 2-3 |
 | 5a | Drawn network per bundle | Drawn records keyed by bundle chunk and chainage; rebuild only what an edit touched | **T-2767**: a station on built track redraws no other bundle, worker 30 ms or less, shows up in 400 ms median or less on the 2,647-station save (1,925 ms today); **T-2701** | 4-6 |
 | 5b | Line ribbons per track | Lines side by side on one track laid out from paths, `besideSamples` out; **T-763** timed | ribbons on midtown; the Penn Station to Emeryville preview | 3-4 |
-| 6a | More tracks | The More button's count up to 16 and layout; adding tracks to a selection, unconnected; removing one; the price per track | play check: add a fifth track, a line refused until crossovers | 4-6 |
-| 6b | By direction | AA/BB and ABBA; drawing by direction, peel-off and the flying split (T-3348's stages 2-3) | locals and expresses on AA/BB, no flat crossing at the split | 5-6 |
+| 6a | More tracks | The More button's count stepper 3 to 16 and its two layouts (presets of ways and pairs), drawn in one stroke | play check: 6 tracks drawn by direction | 3-4 |
+| 6b | By direction | Drawing by direction, peel-off and the flying split (T-3348's stages 2-3); AA/BB and ABBA themselves are only ways, settable from 3f | locals and expresses on AA/BB, no flat crossing at the split | 5-6 |
 | 6c | One line on several tracks | The hidden twin line out; a line runs as patterns over its tracks (part 5); panels read one line | the t3333 save gives the same trains and rides | 3-5 |
 | 7a | Single-track stations as real loops | The passing loop at a single-track station becomes real track | parity B with the reviewed diffs of part 5 | 3-5 |
 | 7b | Passing tracks as real track | The passing tracks button builds them, with the passing purpose; overtakes read the tracks; the `PASSING` bit out (the terminal bit stays) | T-2231's line: express and local times | 4-6 |
@@ -82,13 +83,13 @@ answers added long selections, track purpose, the crossover offer, station templ
 
 ## Releases (each a merge of tw/track into master)
 
-1. **Stages 1-5, the foundation** (about 70-97 h). Players see: single, double and more tracks; one track pickable,
-   deletable, flippable; a single extends one track of a double; long selections; the station tool with three
+1. **Stages 1-5 and T-4024, the foundation** (about 73-102 h). Players see: single, double and more tracks; one track pickable,
+   deletable, flippable; Add a track, up to 16; a single extends one track of a double; long selections; the station tool with three
    templates and a preview; stations placed on built track showing up in under half a second. The sandbox starts are
    rebuilt inside it. The causes of the single/double joining bugs (research/code.md classes A to E) are gone, so
    those reports should thin out once the fix tail is done.
-2. **Stages 6-8, more tracks** (about 31-46 h): any count, added tracks with the Build crossovers? offer, AA/BB and
-   ABBA, real passing loops and passing tracks, track purpose, crossovers as single track.
+2. **Stages 6-8, more tracks** (about 30-44 h): any count drawn in one stroke, the Build crossovers? offer, drawing
+   by direction, real passing loops and passing tracks, track purpose, crossovers as single track.
 3. **Stages 9-11 and 13, stations** (about 27-37 h): islands with spread, the Spanish solution, the island change
    minute, tapering and drawn platforms, exact stops, quick-place and copied layouts. Stage 11 needs only stage 4, so
    it can move up.

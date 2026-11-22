@@ -15,10 +15,12 @@ is a new feature's bug tail more than the usual rate.
 
 **The new model.**
 - Players think in three cases: single track (the base unit), double track (the easy one), and more tracks (3 to 16
-  laid together). The track bar is 1, 2 and More with a count. A second click narrows more tracks to one double, and
-  a double to one single.
+  single tracks side by side). The track bar is 1, 2 and More with a count. A second click narrows any pick to one
+  track. The Select bar's **Add a track** puts one more track beside a run (it replaces Double up).
 - Underneath, every track is its own single track with its own direction. A double is two of them sharing one line
-  on the map, saved together. Each track knows its partner, the track its trains come back on.
+  on the map, saved together. More tracks are singles too (your 11-21 call): two doubles side by side is one way to
+  set four up (old quad loads as that), ABBA or AABB others, made by setting each track's direction. The game pairs
+  tracks out of sight so a line comes back on the track beside it by default; a line's stops decide its tracks.
 - Where tracks meet, the game stores which track carries on into which, when you draw it. Nothing is guessed later.
   A single drawn from a double's end carries on one of its tracks, the one under the pointer; merging two tracks is
   something you do yourself.
@@ -43,9 +45,9 @@ is a new feature's bug tail more than the usual rate.
 **How it lands.** On its own branch, so the game keeps shipping and hotfixes go out while it is half done. It merges
 in four releases (hours of real agent time; past track work built in about half its first guess, then drew a week of
 fixes):
-1. The foundation, 70-97 h: the three cases, one track pickable, long selections, the station tool's templates,
-   stations on built track showing up in under half a second instead of about 2 s on the big save.
-2. More tracks, 31-46 h: any count, added tracks and the crossover offer, AA/BB and ABBA, real passing loops and
+1. The foundation, 73-102 h: the three cases, one track pickable, Add a track, long selections, the station tool's
+   templates, stations on built track showing up in under half a second instead of about 2 s on the big save.
+2. More tracks, 30-44 h: any count in one stroke, the crossover offer, drawing by direction, real passing loops and
    passing tracks, track purpose, crossovers as single track.
 3. Stations, 27-37 h: islands that spread the tracks, the Spanish solution, the 1-minute island change, tapering and
    drawn platforms, exact stops, quick-placed and copied station layouts.
@@ -94,6 +96,6 @@ as one row in the stop list, with the track chip.
 - [07-saves.md](07-saves.md): the save format and old saves
 - [08-performance.md](08-performance.md): eleven speed requirements with numbers, and the measurements to take first
 - [09-real-networks.md](09-real-networks.md): sandbox starts, OSM and GTFS
-- [10-build-plan.md](10-build-plan.md): the branch, 38 stages of 2-6 h, the releases, where each paused task goes
+- [10-build-plan.md](10-build-plan.md): the branch, 39 stages of 2-6 h, the releases, where each paused task goes
 - [tasks-to-file.md](tasks-to-file.md): one task per stage, ready to file
 - research/: the four research reports; saves/: the reference saves

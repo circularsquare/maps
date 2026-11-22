@@ -372,14 +372,11 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3630: the no-WebGL2 and graphics-lost screens have no button at all (T-3307's call), so a player stuck there can't report it.
   - Other: notes/T-3630.md "Follow-ups"
 - T-3444 [P2] {L:track-rework} Track, platform and station model rework
-  - Context: Design agreed 11-21 (notes/T-3444-design/, her answers in answers-2026-11-21.md; three small calls still open in review/track-rework-design.md). Built in 38 stages, T-3948 to T-3985, in four releases, on a long-lived branch tw/track merged into master at each release. Stage 1 (T-3948) is done on master; next is stage 2a (T-3949) on tw/track once the branch is cut. Your weekend notes (2026-11-16) are the heart of it.
+  - Context: Design agreed 11-21 (notes/T-3444-design/, her answers in answers-2026-11-21.md; three small calls still open in review/track-rework-design.md). Built in 39 stages, T-3948 to T-3985 and T-4024 (Add a track, your 11-21 call, T-4023), in four releases, on a long-lived branch tw/track merged into master at each release. Stage 1 (T-3948) is done on master; next is stage 2a (T-3949) on tw/track once the branch is cut. Your weekend notes (2026-11-16) are the heart of it.
   - Goal: Closes with the last of its stages.
   - Other: Your notes verbatim: notes/T-3444.md; sizes in notes/code-tour.md. Requirements folded in 11-20: a station placed on track that leaves its shape alone redraws no neighbours (T-2767, 0.2-0.9 s today); the drawn network rebuilds only near a change (T-2701); the Penn Station to Emeryville snapped preview (3 s, T-763) as a check case. notes/review-edit-speed-2026-11-20.md
-- T-4023 [P2] {L:track-rework} Any number of single tracks, Add a track (taking, 2026-11-21, agent quaddesign)
-  - Context: You, 11-21: "4 tracks" yes; quad is just 4 single tracks side by side, two doubles (AB AB) is only one way to pair them (ABBA or any other works), legacy saves convert to two doubles; "Add a track" instead of Double up; refusals name the reason ("Additional track cannot fit here", or more specific).
-  - Goal: The design docs (notes/T-3444-design/) and the open stages' tasks rewritten for it, what landed in 2a/2b that changes named, and the refusal reasons drafted for you.
 - T-3953 [P2] {L:track-rework} {after:T-3952} New save format and old saves (taking, 2026-11-21, agent tracksave)
-  - Context: TWT7 at level 36; old saves converted on load with the old bytes kept.
+  - Context: TWT7 at level 36; each track saved on its own with its way and an optional partner, any count, no pairs assumed (your 11-21 call); old saves converted on load with the old bytes kept, old quad (2a's bundle of two pairs) as 4 tracks paired as two doubles.
   - Goal: Amsterdam "test", Vienna and North America day 383 load to parity, Amsterdam first.
   - Other: Side by side with 3c and 3d. Files: save.rs, saveFile.ts. 3-5 h. stage 3b
 - T-3954 [P2] {L:track-rework} {after:T-3952} Line paths in track spans
@@ -391,11 +388,11 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: Joins, branches and flyovers look right on both running sides.
   - Other: Side by side with 3b and 3c. Files: wasm/snapshot.rs, stateRows.ts, network.ts, renderer and shaders. 5-6 h. stage 3d
 - T-3956 [P2] {L:track-rework} {after:T-3955} Extend and edit one track
-  - Context: A single drawn from a double's end extends the track under the pointer, with no automatic merge (your note: merging is manual); joins come from the pointer's pick; the second click reaches one track, which can be deleted or flipped.
-  - Goal: Extending each track of a double, merging two singles manually and deleting one side all work; lines are rerouted or refused by name.
+  - Context: A single drawn from a double's end extends the track under the pointer, with no automatic merge (your note: merging is manual); joins come from the pointer's pick; the second click goes straight to one track on any count (2b's step to one double goes, your 11-21 call), shown in the bar's track picture, and that track can be deleted or flipped; the Delete tool takes the whole run.
+  - Goal: Extending each track of a double, merging two singles manually, deleting one side and picking one track of 4 in one click all work; lines are rerouted or refused by name.
   - Other: Closes T-3353 with it. Files: tools.ts, wasm/draw.rs, wasm/edits.rs, toolDelete.ts. 4-5 h. stage 3e
 - T-3957 [P2] {L:track-rework} {after:T-3956} Long track selections and ways
-  - Context: Your decision 10: a way set on a track spreads to the nearest branch points; a double click traces one track to the next branch points and Shift+click extends it; a selection's way is set in one edit.
+  - Context: Your decision 10: a way set on a track spreads to the nearest branch points; a double click traces one track to the next branch points and Shift+click extends it; a selection's way is set in one edit, and the game re-pairs tracks over the same stretch, so ABBA or AABB is two way changes on 4 tracks.
   - Goal: A long one-way leg set in one edit; T-3662's kerbside case keeps its lines.
   - Other: Closes T-3662. Files: blueprintBox.ts, pick.ts, wasm/oneway.rs, TrackInspector.tsx. 3-4 h. stage 3f
 - T-3958 [P2] {L:track-rework} {after:T-3953} Sandbox starts on the new format
@@ -406,8 +403,12 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Platforms and stations as records (level 37); stations stop cutting track; stop points compiled; the station fields on nodes go.
   - Goal: Parity where nothing new is used.
   - Other: Files: net/stations.rs, service.rs, the compile module. 4-6 h. stage 4a1
+- T-4024 [P2] {L:track-rework} {after:T-3959} Add a track
+  - Context: Your 11-21 call: Add a track replaces Double up and 2b's "4 tracks" button, on the Select bar and as a + on each side of the track picture; the new track runs the other way from its neighbour (a double becomes 4 tracks in two clicks), has no crossovers along the run and joins the junctions at its ends (recommended; your call in notes/T-4023.md); refusals give the reason, else "Additional track cannot fit here."; up to 16; the per-track price.
+  - Goal: A double made 4 tracks in two clicks runs a line on the new tracks; each refusal names its reason; strings listed.
+  - Other: After 4a1 so the new track runs past stations without a platform. Files: Blueprint.tsx, wasm/crossings.rs, cost.rs, the help answer. 3-5 h. notes/T-4023.md
 - T-3960 [P2] {L:track-rework} {after:T-3959} Smart stop allocation
-  - Context: Your decision 3: one click makes a two-way stop, each way's stop point picked at the click and stored, re-picked only when it goes; the "trains can't pass here" flag; `perdir` way stations and `station_beside` go.
+  - Context: Your decision 3: one click makes a two-way stop, each way's stop point picked at the click and stored (the return preferring the outward track's partner), re-picked only when it goes; the "trains can't pass here" flag; `perdir` way stations and `station_beside` go.
   - Goal: Your split legs get a two-way stop in one click; the T-3605 and T-3711 cases are unchanged.
   - Other: Files: perdir.rs, twin.rs, wasm/lines.rs. 3-4 h. stage 4a2
 - T-3961 [P2] {L:track-rework} {after:T-3960} Old stations converted
@@ -419,7 +420,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: Packed demand arrays byte for byte on NYC, then the same rail trips a day.
   - Other: Side by side with 4b, 4d, 4e. Files: demandClient.ts, demand/network.rs, complexes.ts, the line panel's stop list. 4-6 h. stage 4c
 - T-3963 [P2] {L:track-rework} {after:T-3960} Station tool templates and preview
-  - Context: Your decision 2: Side platforms, Island (zero width for now) and Single platform; the pointer and count pick the tracks; a platform placed overlapping a station joins it; the ghost shows the covered tracks and their ways.
+  - Context: Your decision 2: Side platforms, Island (zero width for now) and Single platform; the pointer picks the tracks (on more tracks, side platforms take the track under the pointer and its neighbour nearer the pointer, never by pairing); a platform placed overlapping a station joins it; the ghost shows the covered tracks and their ways.
   - Goal: All three templates on single, double and 4 tracks; strings listed.
   - Other: Side by side with 4b, 4c, 4e. Closes T-3354. Files: stationTool.ts, stationSnap.ts, ToolBar.tsx. 5-6 h. stage 4d
 - T-3964 [P2] {L:track-rework} {after:T-3960} Station panel platform picture
@@ -438,12 +439,12 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Lines side by side on one track laid out from their paths; `besideSamples` goes.
   - Goal: Midtown's ribbons look as today; the Penn Station to Emeryville preview timed (3 s on 10-19).
   - Other: Closes T-763. Files: lineBands.ts, corridors.ts. 3-4 h. stage 5b
-- T-3968 [P3] {L:track-rework} {after:T-3967} More tracks up to sixteen
-  - Context: The More button's count and layout; tracks added to a selection run unconnected until crossovers are built (your follow-up on decision 8); one track removed; the price per track (half a double beside an other-way track, else 0.6).
-  - Goal: A fifth track added and priced; a line set on it is refused until crossovers are built.
-  - Other: Files: ToolBar.tsx, Blueprint.tsx, wasm/draw.rs, cost.rs. 4-6 h. stage 6a
+- T-3968 [P3] {L:track-rework} {after:T-3967} Draw up to sixteen tracks in one stroke
+  - Context: The More button's count stepper (3 to 16) and its two layouts, Side by side and By direction, which only preset the tracks' ways. Adding one track, its price and removing one moved to T-4024 and 3e.
+  - Goal: 6 tracks drawn by direction in one stroke, priced by the per-track rule.
+  - Other: Files: ToolBar.tsx, wasm/draw.rs. 3-4 h. stage 6a
 - T-3969 [P3] {L:quad-track} {after:T-3968} Tracks by direction
-  - Context: AA/BB and ABBA layouts; drawing by direction, the peel-off and the flying split (T-3348's stages 2-3); crossing flat with ramps off.
+  - Context: Drawing by direction, the peel-off and the flying split (T-3348's stages 2-3); crossing flat with ramps off. AA/BB and ABBA themselves are just ways set per track (from 3f).
   - Goal: Locals and expresses on AA/BB with no flat crossing at the split.
   - Other: Closes T-3348 and T-340 with 6c. Files: wasm/draw.rs, flyover.rs, tools.ts. 5-6 h. stage 6b
 - T-3970 [P3] {L:quad-track} {after:T-3967} One line over several tracks
@@ -468,7 +469,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: An old double-track diagonal loads as a double, so the derived graph stays as today; the sandbox starts are rebuilt with their crossovers. Files: tools.ts, wasm/draw.rs, wasm/crossings.rs, capacity.rs turns, network.ts. 4-6 h. stage 8a
 - T-3975 [P3] {L:track-rework} {after:T-3974} Build crossovers offer
   - Context: Your follow-up on decision 8: when a line can't reach a track for lack of crossovers, the refusal offers to build them in sensible spots, as a blueprint with its cost, in one click.
-  - Goal: The fifth track's line and a stop on a quad's far pair each work in one click.
+  - Goal: The fifth track's line and a stop on the far tracks of 4 each work in one click.
   - Other: Files: a crossover placer in the sim, issues.ts, the stop and chip UI. 4-6 h. stage 8b
 - T-3976 [P3] {L:track-rework} {after:T-3975} Island platforms that spread the tracks
   - Context: The Island template spreads the tracks for a 6 m island, the S laid for the target max speed (flyover speed where room is short); built track gets a blueprint reconstruct.
@@ -700,13 +701,11 @@ Anita's playtest with a friend, filed 2026-11-03 evening (verbatim, grouped, in 
   - Context: Only if your tutorial playtest asks for more: the demand bubble hover, Train length, and the top bar's split.
   - Goal: Longer tutorial-only hovers for those three, if the playtest wants them.
   - Other: Uses `guideVerbose` from T-2263.
-- T-2264 [P2] {L:help-tutorial} One trip help panel with your wording and a graph (taking, 2026-11-21, agent helptrip)
+- T-2264 [P2] {L:help-tutorial} {waits:Anita} One trip help panel with your wording and a graph
+  - Need from Anita: Look at the trip panel's ? on 8800 (b399147d) and say OK or what to change, including the graph's labels "train", "car", "half each", "train time compared with car time", "share of trips".
   - Context: You, 11-21: drop the city help panel; the trip panel's ? keeps "train and car the same: half each" as a graph (car and train), and takes your effective time text word for word (notes/T-2264.md "Her wording 11-21").
   - Goal: The city ? gone; the trip ? shows your text and the train-against-car graph.
   - Other: notes/todo-2026-11-03h.md
-- T-4022 [P2] {L:stops} Boarding-only marks easier to see, bookmark only when opened (taking, 2026-11-21, agent stopmarks)
-  - Context: You, 11-21: less space either side of the stop row's x; the plain both-ways mark a circle, lighter grey, closer to the background; the marks 20% bigger; outside stop editing, a grey arrow right of the station name in the line diagram for boarding-only (pointing left, at the station) and getting-off-only (pointing right). Community: the bookmark button only on the opened save's pane, not the cards.
-  - Goal: Both on 8800 as described.
 - T-2268 [P2] {L:station-placement} Easier station placement over a ramp
   - Context: Give a station more room when auto-ramping over a line, and snap it to the nearest viable spot.
   - Other: notes/todo-2026-11-03h.md.

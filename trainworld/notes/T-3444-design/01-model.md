@@ -12,11 +12,13 @@ A player thinks in three cases, and the tools and words show exactly these (her 
 - **Single track**: the base unit. One track, one way or both ways.
 - **Double track**: the easy, supported unit for anyone who doesn't want to think about complex track. Two tracks,
   one each way, drawn, picked, priced and deleted as one.
-- **More tracks**: 3 to 16 tracks laid together, for grouping many tracks. Inside it the units are doubles (a track
-  and its partner) and singles.
+- **More tracks**: 3 to 16 single tracks side by side, for grouping many tracks. Each is a single track with its own
+  way, so a player can treat every one as a single (her 11-21 call: "theres no longer anything special about the
+  configuration of 4 tracks as 2 doubles, it could just as easily be like ABBA or whatever"). Two doubles side by
+  side (A B A B) is one way to set them up, and what old quad loads as.
 
-Underneath, all three are one record, the bundle. A second click narrows a pick: more tracks to one double to one
-single; a double to one single. "Bundle" is our word, not a player's.
+Underneath, all three are one record, the bundle. A second click narrows a pick to one track, whatever the count.
+"Bundle" is our word, not a player's.
 
 ## Vocabulary (fixed for every part of this design)
 
@@ -24,7 +26,7 @@ single; a double to one single. "Bundle" is our word, not a player's.
 |---|---|---|
 | **track** | One rail track: the thing a train runs on. Has a way (one way, or both ways) and a purpose. | "track", "eastbound track" |
 | **bundle** | Tracks laid together on one shared alignment, from node to node. Saved as one record. A single is a bundle of one, a double of two, more tracks of 3 to 16. | "single track", "double track", "{n} tracks" |
-| **partner** | The track a return run uses: a double's other track. Stored. | "double track" (a track and its partner, inside more tracks) |
+| **partner** | The track of the same bundle running the other way that a return run uses by default: a double's other track. Optional, stored, set by the game. | never |
 | **slot** | A track's place across its bundle, counted 0, 1, 2 ... from the left looking from the bundle's start to its end. | never |
 | **offset** | How far a track's centre line sits left (+) or right (-) of the bundle's alignment, in metres. Varies along the bundle where tracks spread. | never |
 | **node** | A cross-section where bundles end and meet: a junction, a track end, a place where the track count changes. Every track of a bundle ends at the same node. | "junction", "track end" |
@@ -61,11 +63,19 @@ bundles it touched. Drawing reads the authored records, keyed by ids a platform 
   built), and its **partner**. Default offsets: 4 m between neighbouring tracks (today's double is ±2 m, quad's pairs
   8 m apart centre to centre, so a 4-track bundle's default slots are -6, -2, +2, +6). Offsets are stored per track,
   so an imported real network keeps its own spacing (NYC's pairs 6 m apart) and figures do not move on load.
-- **Partner** (stored, set by the tool or template that made the track): on a double, the other track; on 4 tracks
-  side by side, the other track of its pair (A B | A B); by direction, the outer tracks partner each other and the
-  inner tracks each other (A A B B: 0 with 3, 1 with 2); on ABBA, 0 with 3 and 1 with 2. A one-way track with no
-  partner (a lone leg, or an added track) has its return routed. A geometric "nearest other-way track" rule was
-  rejected: it ties on default quad and picks the express track for a local on AA/BB.
+- **Partner** (optional, stored per track, set by the game, never by the player): a track of the same bundle running
+  the other way, both naming each other; a two-way track is its own. It is a **default, never a restriction**: it
+  gives a line's return run by lookup (below) and, until stage 8, the turn at a bare track end. Which tracks a line
+  may use is set by its stops (each way's stop point, the stop list's track chip, exact stops); turns at stations
+  (any arriving track to any leaving track on that side, T-3952) and crossovers ignore it.
+  - **How it is set.** Whenever tracks are laid or ways change, pairs that still run opposite ways are kept; a pair
+    left running the same way loses its partners; then the bundle's unpaired one-way tracks pair in slot order, each
+    with the nearest unpaired track before it running the other way (a bracket match). So A B A B pairs 0-1 and 2-3,
+    A A B B 1-2 and 0-3, A B B A 0-1 and 2-3, and NYC's imported tracks at -5, -1, +1, +5 0-1 and 2-3. A track
+    left over (A B A) has no partner and its line's return is routed. The re-pairing runs over the same stretch a way
+    change spreads to, so pairs match along a trace.
+  - A geometric "nearest other-way track" rule was rejected: it ties on default quad and picks the express track
+    for a local on AA/BB. An explicit "pair with" control is not needed (a line's stops already pick its tracks).
 - **Way per track**: any track's way can be set. A way set on a piece spreads along that track through its continues
   to the nearest branch points (junction nodes) both ways, so a one-way leg never ends up half one way (T-3662).
 - **Purpose per track**: **Any line** (default); **Passing track** (a train stopping at a station there waits on it
@@ -76,8 +86,9 @@ bundles it touched. Drawing reads the authored records, keyed by ids a platform 
   in track count or kind, and a level change point the player made a node.
 
 A **double drawn in one stroke is one bundle with two tracks**, way by the running side. A single is a bundle of one
-track, two-way unless set. Today's two pairs of quad 8 m apart become **one bundle of four**: "quad as one remembered
-thing" (her 11-12 answer) by construction, not by a geometry rule.
+track, two-way unless set. Today's two pairs of quad 8 m apart become **one bundle of four single tracks**, ways
+A B A B, paired 0-1 and 2-3: "quad as one remembered thing" (her 11-12 answer) by construction, not by a geometry
+rule, with nothing special about that layout once loaded.
 
 ### Lateral offset: one rule (her island case and tapers)
 
@@ -149,12 +160,15 @@ What edits do to connections:
 - **Join** two bundle ends end to end: same count, continue; different count, the tool stores joins by the tracks
   picked, shown in the ghost before the click.
 - **Delete one track** of a bundle (second click, her 11-12 answer): its slot goes, joins naming it go, the other
-  tracks keep their offsets (no shift), lines on it are rerouted through the same stops or the edit is refused naming
+  tracks keep their offsets (no shift), its partner is left unpaired (or re-paired by the rule), lines on it are rerouted through the same stops or the edit is refused naming
   the line (as a way change does today, `way_reroutes`).
-- **Add tracks** to a bundle selection: new slots at the chosen side, 4 m past the outermost, running the same way
-  as their neighbour, with **no connection** to the other tracks: an island of track until crossovers are built (her
-  follow-up on decision 8). Where the selection ends, the added tracks end loose. A line that later needs them gets
-  the Build crossovers? offer. Part 3.
+- **Add a track** to a selection of runs (her 11-21 call, replacing Double up): one new slot on one side, 4 m past
+  the outermost, running the other way from its neighbour (beside a two-way track, the run becomes a double, both
+  taking their ways by the running side), paired by the rule above. Along the run it has **no connection** to the
+  other tracks: no crossovers until they are built (her follow-up on decision 8). At the run's end nodes it joins
+  like a track drawn into them (recommended, her call: Double up joins its new pair there today; loose ends would
+  leave track no line can reach before stage 8b). A line that needs it part way gets the Build crossovers? offer.
+  Up to 16 tracks. Part 3.
 
 ### How this answers T-3137's reasons for rejecting "two objects"
 
@@ -234,7 +248,7 @@ way to put a two-way stop with a single click").
 
 > **One click on a station makes a two-way stop.** For each way, the game picks a stop point of the clicked station
 > that the run reaches going its way: the one on the track it is already on (no crossing move), else the fewest
-> crossing moves, else the one nearest the pointer. If the station has none for a way, it takes the stop point of the
+> crossing moves (for the return, then the partner of the outward pick), else the one nearest the pointer. If the station has none for a way, it takes the stop point of the
 > nearest station within 300 m (its complex first) that the run passes on its own track going that way. Both picks
 > are stored on the stop and never re-derived.
 
@@ -285,9 +299,9 @@ way to put a two-way stop with a single click").
 | Plain double, side platforms (today's default) | Bundle of 2 tracks; one station with two zero-width platforms (one outside each track) | Draw double; station tool, side platforms (as today) | 3-4 |
 | Single track, station with passing loop (today's "single-track station split") | Single bundle with a node each side of the station; between them a 2-track bundle (spread from 0 to ±2 m over the S); a platform outside each track | Station on single track builds the loop (as it is drawn today, now real) | 7 |
 | One-track station (T-3332) | One platform on one track | Station tool, single platform, pointer on the track | 4 |
-| 4 tracks side by side (two pairs) | Bundle of 4: ways A B A B by running side | Draw with More (4), or Select bar 4 on a double | 3 |
-| AA/BB (by direction, locals outside) | Bundle of 4: ways A A B B; two islands between slots 0-1 and 2-3, or side platforms | More (4), by direction; station on all four | 6 |
-| ABBA | Bundle of 4: ways A B B A; one island between slots 1-2 (or two side platforms outside) | Select 4 tracks and set two tracks' ways | 6 |
+| 4 tracks side by side (two doubles, old quad) | Bundle of 4 singles: ways A B A B by running side, paired 0-1, 2-3 | Draw with More (4), or Add a track twice on a double | 3, T-4024 |
+| AA/BB (by direction, locals outside) | Bundle of 4 singles: ways A A B B, paired 1-2, 0-3; two islands between slots 0-1 and 2-3, or side platforms | More (4), by direction; or set two tracks' ways; station on all four | 6 (drawn), 3f (ways) |
+| ABBA | Bundle of 4 singles: ways A B B A, paired 0-1, 2-3; one island between slots 1-2 (or two side platforms outside) | Pick one track and set its way, for two tracks | 3f |
 | Island platform on double | Bundle of 2 with a spread zone at the station (each track 3 m out) and one 6 m platform between them | Station tool, island; S from target speed | 4 (zero width), 9 (spread) |
 | Spanish solution | One track with a platform each side; faces getting on / getting off | Platforms on both sides, then set faces in the station panel | 9 |
 | AA above BB (stacked, 125th St Lexington) | Two bundles at different levels on the same plan line (overlap allowed across levels); one station whose platforms are at both levels; circles tinted by level | Draw two doubles at two levels; one station click per level, joined as one station by overlap | 4 |
@@ -301,9 +315,9 @@ way to put a two-way stop with a single click").
 | Terminal (today's upgrade) | Stays the upgrade bit: 30 an hour, no stub track drawn (T-3107) | Station panel button, as today | kept |
 | Turnback crossover | A short single track between the two tracks before the platforms | Laid with the stop edit that makes a line turn there | 8 |
 | Scissors terminal built manually | Stub bundle of 2 ending at buffer stops; two crossover singles crossing short of the platforms | Draw two singles between the tracks | 8 |
-| An added fifth track | A new slot with no connection to the others until crossovers are built | Select, add a track; Build crossovers? when a line needs it | 6 |
+| An added fifth track | A new slot with no crossover to the others until crossovers are built; joined at the run's end nodes | Select, Add a track; Build crossovers? when a line needs it part way | T-4024, 8b |
 | Quad tram | Bundle of 4 of kind tram, off street (as today's quad tram) | More (4) with Tram | 3 |
-| 6, 8 and more | Bundle of 6, 8 ... (cap 16) | More with its count, or add tracks | 6 |
+| 3, 5, 6, 8 and more | Bundle of 3, 5, 6, 8 ... singles (cap 16) | Add a track; More with its count | T-4024, 6a |
 
 Where the table is thin: stacking (AA above BB) relies on two bundles at different levels overlapping in plan, which
 today's drawing allows across levels; a one-stroke "quad by level" would need a bundle whose slots carry different
@@ -324,7 +338,7 @@ code (so the two models never live side by side for long). Stage numbers are par
 | `add_crossover` and its 6-15 m search (wasm/crossings.rs) | builds a crossover between parallel edges | crossovers are single track drawn with the track tool | 8 |
 | `quadPairs.ts` | "Quad" tag, 8 ± 3 m | bundle track count | 2 |
 | `orderOverlapping` (stationSnap.ts) | which pair gets the station | pointer picks tracks of one bundle | 4 |
-| doubling up's `Alongside` (wasm/crossings.rs) | refuses a pair beside | Select bar 4 adds slots to the bundle | 2 |
+| doubling up's `Alongside` (wasm/crossings.rs) | refuses a pair beside | Add a track adds one slot to the bundle (any count to 16) | 2 (refusal from the bundle), T-4024 (Double up's op goes) |
 | `besideSamples` / corridors (corridors.ts) | parallel edges within 20 m for line ribbons | lines on a track are known from paths; ribbons per track | 5 |
 | the complex rule written twice (twin.rs, game/complexes.ts) | complexes | one copy, in the sim, sent to the app | 4 |
 | `legShifts` / `shiftedEnds` (network.ts) | draws a single end on the joined track | each track drawn at its own offset | 3 |

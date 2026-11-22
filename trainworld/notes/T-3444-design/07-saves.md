@@ -11,7 +11,7 @@ The authored records and nothing derived, as today ("inputs only, ids renumbered
 | Record | Saved | Not saved (compiled on load) |
 |---|---|---|
 | Node | x, y, level, flying; its stored joins (track end to track end) | continues, turnouts' lateral positions, moves |
-| Bundle | its two nodes, alignment (PIs, radii, levels, thru points), kind, built/off, sep; per track its way, purpose and offset profile (base offset, spread zones) | pieces, lengths, limits, ramps' shapes, derived edges |
+| Bundle | its two nodes, alignment (PIs, radii, levels, thru points), kind, built/off, sep; per track (any count, 1 to 16, no pairing assumed) its way, partner (a slot or none), purpose and offset profile (base offset, spread zones) | pieces, lengths, limits, ramps' shapes, derived edges |
 | Platform | its station, the track at its start and the chainage there, length, edge tracks (left, right, either may be none), width, faces | stop points, derived stop nodes |
 | Station | name, named, built/off, upgrades, fare zone, own name, berth | complex (derived as today) |
 | Line | as today, but the path as track spans; per stop its station and two stop points, out and back (either may be none for a one-way stop); the return path only where it is not the partner mapping | derived path, keyframes |
@@ -43,7 +43,8 @@ nodes      count; per node: x, y (mm deltas), level, flags (flying, has joins);
            then, if flagged, joins: track end -> track end (each as bundle end at this node + slot)
 line sets  count; per set its line indexes (for "Only for {lines}")
 bundles    count; per bundle: a, b (node deltas), flags (built, off, kind, HSR, sep, has thru, all default offsets),
-           track count; per track: way (2 bits), purpose (2 bits, + set index), and unless default: base offset
+           track count; per track: way (2 bits), partner (slot + 1, 0 none; a two-way track its own), purpose
+           (2 bits, + set index), and unless default: base offset
            (cm), spread zones (start and end chainage in mm, extra offset in cm, target speed); PIs and thru points
            as today's edges
 stations   count; per station: flags (built, off, named, upgrades), name
@@ -118,7 +119,8 @@ console, the rest plays. The converter lives in a load-only module (`track/legac
 and **frozen copies of `twin_at` and `way_station`**; stages 2 and 4 delete those rules from live code, and only the
 converter keeps them, with no other callers. Steps:
 
-1. **Edges to bundles** (3b). A double edge becomes a bundle of two, ways by running side. A single becomes a bundle
+1. **Edges to bundles** (3b). A double edge becomes a bundle of two, ways by running side, each the other's partner
+   (old quad's pairs thus load as two doubles, A B A B paired 0-1 and 2-3, step 3). A single becomes a bundle
    of one; its way is `edge_way` at load (the inferred way included, after the `OLD_STATION_WAYS` pinning), since the
    new model infers nothing.
 2. **Crossovers** (3b). A T-338 crossover edge becomes a single-track bundle with a join to the track it meets at

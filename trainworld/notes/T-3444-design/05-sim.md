@@ -210,10 +210,13 @@ fails it is routed and stored with the line.
 does not work: on default 4-track offsets (-6, -2, +2, +6) with ways A B A B, the B track at -2 has A tracks at -6
 and +2, both 4 m off; on the real NYC save, where imported lines sit 6 m apart (`realsave.rs`), two doubles bundled
 together have tracks at -5, -1, +1, +5, and the -1 track's nearest A track is the other double's; by direction
-(A A B B) both A tracks pick slot 2. So the partner is set by whatever lays the tracks: a double stroke pairs its two;
-presets pair by their pattern (ABAB 0-1, 2-3; AABB 0-3, 1-2; ABBA 0-1, 2-3); the loader pairs each old double's two
-tracks; a two-way track is its own partner; partners never cross bundles. A track added alone takes, when its way is
-set, the nearest other-way track without a partner (ties to the lower slot).
+(A A B B) both A tracks pick slot 2. So the partner is stored, set by the game whenever tracks are laid or ways
+change, by 01's rule: pairs still running opposite ways are kept, a pair left running the same way is broken, and
+unpaired one-way tracks pair in slot order with the nearest unpaired track before them running the other way (ABAB
+0-1, 2-3; AABB 1-2, 0-3; ABBA 0-1, 2-3). The loader pairs each old double's two tracks, so old quad loads as two
+doubles; a two-way track is its own partner; partners never cross bundles. The partner is only a default: which
+tracks a line uses comes from its stored stop points, and a return that must use other tracks is routed and stored
+(below). Until stage 8 a bare track end turns a train onto its partner only; a track with none cannot turn there.
 
 The lookup holds where every forward span's partner exists, each pair of consecutive partner spans has a connection
 at their node going the return's way, and the result passes the stop points stored for the return (section 8).
@@ -247,7 +250,7 @@ figures are summed in the sim).
 
 **Smart allocation (simple stops).** One click on a station makes a two-way stop. At the click the sim picks a stop
 point for each run and stores both on the stop: a stop point of the clicked station the run reaches going its way
-(fewest crossing moves, then nearest the pointer); if the station has none for that way, the stop point of the nearest
+(fewest crossing moves, then for the return the partner of the outward pick, then nearest the pointer); if the station has none for that way, the stop point of the nearest
 station within 300 m (its complex first) that the run passes on its own track going that way; if none, the run passes
 (`Run::pass`). Stored, never re-derived. An edit re-picks a stop only when:
 - its stored stop point is removed (that stop only);

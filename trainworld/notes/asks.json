@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "id": "a-2026-11-21-21",
+    "title": "Added track: connect at junctions?",
+    "text": "T-4024 Add a track: should a new track connect at the junctions at the ends of the run (as Double up's pair does today), or end loose until Build crossovers lands (stage 8b, two releases later)? Along the run it gets no crossovers either way. I'd connect it, else no line can use it until 8b.",
+    "since": "2026-11-21",
+    "by": "maps-6a"
+  }
+]

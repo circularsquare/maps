@@ -1,7 +1,8 @@
 # T-3444 design, part 3: drawing and editing tools
 
 Agent tdtools, 2026-11-21. Design for T-3444, revised the same day after Anita's answers
-(`answers-2026-11-21.md`); nothing is built. Words as in `01-model.md` (track, bundle, slot, offset, node,
+(`answers-2026-11-21.md`), and for her 11-21 call on single tracks and Add a track (agent quaddesign, T-4023); stages
+2a-3a2 are built. Words as in `01-model.md` (track, bundle, slot, offset, node,
 connection, platform, stop point, station, preset). Stage numbers are `10-build-plan.md`'s. Today's tools:
 `docs/ui-building.md` "The track and station bars", "Drawing track", "Placing stations", "The Select tool".
 
@@ -15,12 +16,12 @@ grouping together ltos of tracks."
 |---|---|---|
 | Single track | one track, the base unit | "Single track" |
 | Double track | a track and its partner running the other way | "Double track" |
-| More | 3 to 16 tracks laid together, made of doubles and singles | "{n} tracks" ("4 tracks") |
+| More | 3 to 16 single tracks side by side, each with its own way | "{n} tracks" ("4 tracks") |
 
-Every tool and string uses these three. "Bundle", "slot", "pair" and "offset" are ours and never appear in a string.
-Inside "more" the units are doubles (a track and its partner) and singles; the bundle stores each track's partner,
-set by its layout (side by side: neighbours; by direction: nested, middle pair inside, outer pair outside). An odd
-count has a two-way middle track with no partner: a single.
+Every tool and string uses these three. "Bundle", "slot", "pair", "partner" and "offset" are ours and never appear in
+a string. Inside "more" every track is a single (her 11-21 call: "if people are building quad tracks they probably
+want the flexibility of treating them as single tracks"); two doubles side by side is one layout, ABBA or AABB
+others, all made by setting ways. The game pairs tracks for default return runs by 01's rule, out of sight.
 
 A casual player meets nothing new: she draws a double with the Double track icon, click, click, and gets one bundle
 of two tracks, ways by the running side. Nothing new shows on ordinary double: no chip, no picture choice, no new
@@ -34,12 +35,12 @@ halfway to its neighbours):
 | Asked for | Tracks picked |
 |---|---|
 | a single | the track under the pointer |
-| a double | the double holding the track under the pointer (a two-way middle track goes alone) |
-| more, k tracks | the double under the pointer, then the doubles next to it nearer the middle, until k; an odd k adds the two-way middle track, else the unpicked track nearest the pointer |
+| k tracks, fewer than the bundle has | the track under the pointer, then its neighbours, the nearer the pointer first, until k |
 | the bundle's own count | all of them |
 
-On A A B B a double on a side is the outer double, on the middle the inner one. Zoomed out, where the bundle draws
-under 8 px wide, a single is the track on the pointer's side of the centre line, a double the one nearest the middle.
+Partners never decide a pick: a partner need not be a neighbour (A A B B pairs 0-3). Zoomed out, where the bundle
+draws under 8 px wide, a single is the track on the pointer's side of the centre line, k tracks the k nearest the
+middle.
 One sim function behind both the preview and the click (as `preview_station` is today), so the ghost and the click
 cannot disagree. The extension, the station tool and the island tool all call it.
 
@@ -48,7 +49,7 @@ cannot disagree. The extension, the station tool and the island tool all call it
 | Control | What it does |
 |---|---|
 | 1, 2 icons | Single track, Double track, as today |
-| **More** | a button showing its count (4 at first). A click picks it; its chevron opens a small panel: a count stepper, 3 to 16, and **Side by side** / **By direction**. Both remembered per browser |
+| **More** | a button showing its count ("4 tracks", landed in 2b at 4 only). From 6a its chevron opens a small panel: a count stepper, 3 to 16, and **Side by side** / **By direction**, presets of the tracks' ways. Both remembered per browser |
 | Advanced row | the two target speeds, as today. No track counts and no crossover icons |
 
 The More button replaces today's Quad track icon. With Tram picked More has side by side only.
@@ -58,7 +59,7 @@ Ways laid by each layout, slot 0 first (A and B are the two ways; which is which
 | Count | Side by side | By direction |
 |---|---|---|
 | 3 | A, both, B | A, both, B |
-| 4 | A B A B | A A B B (outer double outside, inner double inside) |
+| 4 | A B A B (paired 0-1, 2-3) | A A B B (paired 1-2, 0-3) |
 | 6 | A B A B A B | A A A B B B |
 
 **Price**: a track with a track beside it running the other way (a two-way track counts as the other way) costs half
@@ -113,8 +114,9 @@ the tracks). Part 4 has the stop-editing side.
 
 ## The second click and long selections (stages 3e, 3f)
 
-- **Mouse**: click track that is already the whole pick again (a separate click). The pick narrows at once: more,
-  then the double under the pointer, then the single under the pointer, then back. On a double: double, then single.
+- **Mouse**: click track that is already the whole pick again (a separate click). The pick narrows at once to the
+  single under the pointer, then back to the whole, on any count (her 11-21 call; 2b's "4 tracks, then one double"
+  changes at 3e).
 - **Touch and everywhere**: the selection bar holds a small **track picture**, one short stroke per track, red one
   way and blue the other, grey for two-way, the picked ones bold. A click or tap on a stroke picks that single. On the
   phone's one row bar it is one 36 px button that opens it larger above the bar.
@@ -122,9 +124,10 @@ the tracks). Part 4 has the stop-editing side.
   click, it **traces that track** along its continues out to the next branch points (junction nodes) both ways.
   Shift+click on track further along extends the trace there. A double click's first click narrows like any click,
   so nothing waits on a timer.
-- The track panel only informs (T-3746); its title is the case picked: "4 tracks"; "Double track" with "Part of 4
-  tracks" under it; for a single, "Eastbound track" (or "Two way track") with "Part of double track" or "Part of 4
-  tracks" under it.
+- The track panel only informs (T-3746); its title is the case picked: "4 tracks"; for a single, "Eastbound track"
+  (or "Two way track") with "Part of double track" or "Part of 4 tracks" under it.
+- The Delete tool takes what a first click picks: the whole run, all its tracks. One track goes by picking it with
+  the second click and the bar's Remove.
 
 What the selection bar does with one track or a traced track picked:
 
@@ -138,19 +141,48 @@ What the selection bar does with one track or a traced track picked:
 nearest branch points both ways, so a one-way leg never turns two-way part way. The notice says how far: "Set one way
 for 3.2 km, out to the junctions."
 
-## Adding tracks (stage 6a)
+## Add a track (T-4024, after stage 4a1)
 
-- **Select bar**: the bar shows 1, 2 and More, as the track bar. More replaces Double up (its button and four strings
-  go). Going up adds tracks by the layout: side by side adds a double on the left (as Double up did), by direction an
-  outer track each side. Going down keeps the tracks lines run on; a line that cannot move is named and the edit
-  refused ("{line} has no other way between its stations.", reused). Platforms on removed tracks go; stops re-pick
-  (part 4) or the edit is refused: "{line} has no platform on its track here."
-- **The track picture's +**: with the whole bundle picked, a + at each edge adds one track on that side, 4 m past the
-  outermost, running the same way as its neighbour.
-- **Added tracks are not connected** to the tracks beside them: they run alongside with no turnout or crossover until
-  crossovers are built (her follow-up on decision 8). A line needing them gets the Build crossovers offer.
-- No platforms are added. Blueprint changes at once and free; built is a Rebuild choice that pays for the new tracks
-  only, which stay blueprint beside the built ones until Construct (built state per track).
+Her 11-21 call: "we basically maybe dont want a specific "double up" but rather we just want like "add a track"
+instead". It replaces Double up (master) and the Select bar's "4 tracks" (2b, tw/track only).
+
+- **Select bar**: 1 and 2 stay as today for runs of one or two tracks (greyed on more). **Add a track** sits beside
+  them on any pick of runs, of any count up to 16: one undoable edit, one new track per run. It goes on the side with
+  more room (away from the nearest other track), else the other side.
+- **The track picture's +** (3e's picture): with the whole run picked, a + at each edge adds one track on exactly
+  that side.
+- **Its way**: the other way from the track beside it, so a double becomes A B A, then A B A B (two doubles, as
+  Double up made). Beside a two-way track the run becomes a double, both tracks taking their ways by the running
+  side; lines on the old track are rerouted or the edit is refused naming them, as a way change is. Any way can be
+  set afterwards (3e, 3f). Its partner comes from 01's rule (A B A leaves the new track unpaired until a fourth).
+- **Connections**: none along the run, no crossovers (her follow-up on decision 8: "this should mostly leave it an
+  island unless they actually build crossovers"). At the run's end nodes it joins like a track drawn into them, to
+  the nearest track running its way (recommended, her call: Double up joins its new pair there today, and loose ends
+  would leave track no line can reach before 8b). A line that needs it part way gets the Build crossovers offer.
+- **Stations**: it runs past them with no platform (platforms stop splitting track at 4a1); a platform is added in
+  the station panel picture (4e).
+- **Price** (the per-track rule above): the run's price after minus before, so a single to double costs 0.4 of a
+  double, a double to three tracks 0.5. Blueprint changes at once; on built track it is new blueprint beside the
+  built tracks (built state per track) until Construct pays for it.
+- **Going down**: pick one track (second click) and Remove (3e); there is no "remove a track" button.
+
+**Refusals.** Each names the reason the edit already knows; the general one is her own words.
+
+| Why | Raised by | Text (draft) |
+|---|---|---|
+| The new track's curve is under the minimum radius (the inside of a curve) | `GeomIssue::RadiusTooSmall` on the new track (Double up's `tight` list) | "The curve is too tight for another track here." |
+| Other track lies where the new one would run | `crossingOverlap` from the trial | "Other track is in the way." |
+| Ground-level track would run into water | `groundOverWater` from the trial | "Water is in the way." |
+| A track crosses the run on a ramp less than a level apart | `crossing` from the trial | "Tracks cannot cross on a ramp unless they are a full level apart." (reused) |
+| A platform with width lies on that side (from 9a) | new check, 9a | "A platform is in the way." |
+| The run has 16 tracks | new check, T-4024 | "16 tracks side by side is the most." |
+| The pick is a crossover | `Issue::Crossover` | "A crossover stays a single track." |
+| Anything else the trial refuses | the rest | "Additional track cannot fit here." (her words) |
+
+A bridge, a tunnel or a level change gives no reason of its own: the new track takes the run's levels and ramps,
+and the game has no structure width. `Alongside` ("This track is part of 4 tracks already.") and `Tracks` ("Track has
+to be single or double.") go: any count may take another track. `tooManyPorts` is never raised by it (a node counts
+bundle ends). With several runs picked and some refused: "Added a track on {done} of {total} runs. {why}".
 
 ## Track purpose (stage 7c)
 
@@ -173,7 +205,7 @@ The station bar keeps Platform length and offers three **templates**:
 
 | Template | Over single track | Over double or more |
 |---|---|---|
-| **Side platforms** (default) | a passing loop with a platform outside each track (today's two way station; real track from 7a) | a platform outside each track of the double under the pointer |
+| **Side platforms** (default) | a passing loop with a platform outside each track (today's two way station; real track from 7a) | a platform outside each of the two tracks the shared pick gives (the track under the pointer and its neighbour nearer the pointer); all of a double |
 | **Island** | refused: "An island platform goes between two tracks." | one platform in the gap under the pointer, serving the tracks either side: zero width at 4d, with the tracks spread for a 6 m island from 9a |
 | **Single platform** | one platform; trains can't pass | one platform on the track under the pointer, on its side nearest the pointer |
 
@@ -242,7 +274,8 @@ Her words: "if we insert an island platform we should blueprint a reconstruct th
 | Tracing a track, Shift+click to extend, way spreading to branch points | 3f | 4-6 |
 | Station templates, the tag's preview, join by overlap | 4d | 6-8 |
 | Station panel picture, add and remove, join and separate | 4e | 6-8 |
-| More button and panel, price rule, Select bar More, the + to add a track | 6a | 5-7 |
+| Add a track (Select bar and the picture's +), its way, ends and refusals, the price rule | T-4024 | 3-5 |
+| More button's count and layouts | 6a | 3-4 |
 | By direction drawing, peel-off, flying split | 6b | 6-8 |
 | Track purpose (sim rules and the Purpose choice) | 7c | 6-9 |
 | Crossover S between parallel tracks, turnback crossovers, Build crossovers offer | 8 | 7-10 |
@@ -255,11 +288,13 @@ Her words: "if we insert an island platform we should blueprint a reconstruct th
 
 | Where | Old -> new |
 |---|---|
-| Track bar quad icon (`toolBar.quadTrack`, `quadTrackTip`) | "Quad track", "Quad track (two parallel double tracks)" -> "More", hover "{n} tracks" |
-| More panel | new: "Tracks", "Side by side", "By direction" |
-| Help answer (`help.aFourTracks`) | "Quad tracks are actually just two double-tracks side by side. For trains to run on both pairs ..." -> "More tracks are doubles and singles laid together. Lines use any of them, and the game offers to build crossovers where a line needs to change tracks." |
-| Select bar Double up (four `blueprint.doubleUp*` strings) | "Double up", "Double up to quad track for {price} (blueprint)" ... -> removed |
-| Track panel titles (`trackInspector.name`) | "Crossover" -> removed; new: "{n} tracks", "Eastbound track" (westbound, northbound, southbound), "Two way track", "Part of double track", "Part of {n} tracks" |
+| Track bar quad icon (`toolBar.quadTrack`, `quadTrackTip`) | "Quad track", "Quad track (two parallel double tracks)" -> "4 tracks" (landed in 2b), then "{n} tracks" (6a) |
+| More panel (6a) | new: "Tracks", "Side by side", "By direction" |
+| Help answer (`help.aFourTracks`) | master: "Quad tracks are actually just two double-tracks side by side. For trains to run on both pairs ..." (2b: "4 tracks are actually just two double tracks side by side. ...") -> "4 tracks are four single tracks side by side, each running one way or both ways. Lines use the tracks their stops are on." (T-4024; 8b adds "The game offers to build crossovers where a line needs to change tracks.") |
+| Select bar Double up (master; 2b's "4 tracks") | "Double up", hover "Double up to quad track for {price} (blueprint)" / "Double up to quad track on # runs for {price} (blueprint)" -> "Add a track", hover "Add a track for {price} (blueprint)" / "Add a track on # runs for {price} (blueprint)", then "Each run goes to the next junction or track end" and "Some cannot: {why}" (reused) |
+| Its notices | "This track cannot be doubled up." -> the reason (table above), else "Additional track cannot fit here."; "{done} of {total} runs doubled up. {why}" -> "Added a track on {done} of {total} runs. {why}" |
+| Its refusals | new: "The curve is too tight for another track here.", "Other track is in the way.", "Water is in the way.", "A platform is in the way." (9a), "16 tracks side by side is the most.", "A crossover stays a single track."; removed: "This track has a pair beside it already." (2b: "This track is part of 4 tracks already."), "Track has to be double or quad." (2b: "Track has to be single or double.") |
+| Track panel titles (`trackInspector.name`) | "Crossover" -> removed; new: "{n} tracks" ("4 tracks" landed in 2b), "Eastbound track" (westbound, northbound, southbound), "Two way track", "Part of double track", "Part of {n} tracks" |
 | Track picture + | new hover: "Add a track on this side", then the price |
 | Way notice | new: "Set one way for {length}, out to the junctions." |
 | Crossover refusal (`issues.singleCrossover`) | "A crossover needs double track." -> removed |
@@ -286,3 +321,6 @@ Her words: "if we insert an island platform we should blueprint a reconstruct th
    turnouts anyway, and a short crossover fits between stations)
 3. Turnback crossovers at a line's ends come with the stop edit and its cost, without the Build crossovers offer?
    (yes: every double-track line needs them)
+4. Add a track: does the new track join the junctions at the run's ends (as Double up's pair does today), or end
+   loose there, a full island until crossovers are built? (join at the ends: otherwise no line can use it before 8b,
+   and her "mostly leave it an island" still holds along the run)
