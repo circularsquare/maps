@@ -184,10 +184,14 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Your scratch pad, 11-22: "i think we might allow an unrealistic number of people to pile up at bus stops, should probably show a lower number more in line with other stations to not make players alarmed by big number".
 - T-4053 [P3] {L:borders} Common language border factor
   - Context: Your scratch pad, 11-22: "i think bogota-quito travel might be a bit small? relative to number of planes (liek 6 a day, maybe 2000 people a day vs our 800) i wonder if we should do a like "common language" border multiplier to make it so that people are more likely to travel between south american countries. and maybe also between like switzerland and france or switzerland and germany across the border." A new demand factor: the design goes to you before it is built.
-- T-4054 [P2] {L:solve-speed} Cheaper late joins in the first-arrival search
-  - Context: From T-4041, 11-22: riders taking whichever line gets them there first costs 45% more solve time and 14% more memory on the real save; most of it is letting a slow line join after its station left the search's queue (430k loop drops per all-destinations search). Ideas: a loop test before joining, or moving only the nodes a late line puts out of order; shares as u16.
+- T-4054 [P1] {L:solve-speed} {after:T-4050} Cheaper late joins in the first-arrival search
+  - Context: You, 11-22: "i do want the fix actually then. would like to try the cheaper version." After T-4050, which edits the same search code. From T-4041, 11-22: riders taking whichever line gets them there first costs 45% more solve time and 14% more memory on the real save; most of it is letting a slow line join after its station left the search's queue (430k loop drops per all-destinations search). Ideas: a loop test before joining, or moving only the nodes a late line puts out of order; shares as u16.
   - Goal: The solve back within about 15% of before T-4041, same answers.
   - Other: notes/T-4041.md
+- T-4055 [P2] {L:solve-consistency} Intercity riders depend on line creation order (taking, 2026-11-22, agent ordercheck)
+  - Context: Batch checker 11-22 on master 5edb2e77: a fresh NYC game with a Philadelphia line and a Providence line gives the Philadelphia line 63,996 riders made first and 68,341 made second (+6.8%); each order repeats exactly. Not yet known whether it is zone opening order (what T-1354 fixed), line or station numbering, or older than T-1354. Holds the next publish until settled.
+  - Goal: The cause named with a control (same creation order, different zone-open order; and a pre-T-1354 build); fixed if it is a T-1354 regression, else filed with its reach.
+  - Other: notes/batchcheck14.md
 - T-4046 [P3] {L:small-fixes} Pick a route among overlapping bus and tram routes
   - Context: Your scratch pad, 11-22: "if we have a bus route and tram route perfectly overlapping theres no way to select the bus route. same for multiiple bus routes. ideally we try to "side by side" these". Picture: artifacts/trainworld/board/20261122-114726-b705.png.
   - Goal: Every route on a shared street can be clicked, ideally drawn side by side.
