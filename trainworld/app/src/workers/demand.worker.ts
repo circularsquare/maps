@@ -1630,25 +1630,27 @@ function marketStationFlows(at: Version, c: JobCluster | undefined, m: Intercity
  * corridor with its two places and share flying (`railMemo`). It was 118 MB on the page and as much
  * again to make in a worker on the New York save (8.5M rows in 2026-11, growing with the square of the
  * places). T-1204: the parts and compositions of one world share their corridors (`corridors_id`),
- * so the book is made once for them all. T-2485: only the worker holding period 0's market sends it,
- * any worker once the page asks again (`corridorsAgain`).
+ * so its rows are worked out once for them all; T-1354: the book is made again for each composition
+ * (`composedOf`), since its shares flying and on two lands are the open packs', so it never depends on
+ * the order packs arrived in. T-2485: only the worker holding period 0's market sends it, any worker
+ * once the page asks again (`corridorsAgain`).
  */
-interface Book { id: number; key: string; n: number; totals: Float64Array; own: Float64Array; apart: Float64Array }
+interface Book { id: number; comp: string | undefined; key: string; n: number; totals: Float64Array; own: Float64Array; apart: Float64Array }
 let madeBook: Book | null = null;
 const sentTables = new Set<string>();
 /** the page asked for the books again (`corridorsAgain`): the next result with a market sends its own */
 let tableAsked = false;
 const sendsTable = (q: number) => tableAsked || (q === 0 && mkt.includes(0));
 function corridorBook(p: IntercityApi): Book {
-  const id = p.corridors_id();
-  if (madeBook?.id === id) return madeBook;
+  const id = p.corridors_id(), comp = composedOf.get(p);
+  if (madeBook?.id === id && madeBook.comp === comp) return madeBook;
   const np = REGISTRY.market.places.length;
   const s = p.table_summary(np);
   // (T-3509: the own rows' longer trips rounded to 32 bits, as the rows and the page's old table hold them)
   // (T-2216: each place's share of its own row between zones on two lands comes after, for the city view's No route)
   const own = s.slice(2 + 3 * np, 2 + 5 * np);
   for (let i = 0; i < own.length; i += 2) own[i] = Math.fround(own[i]);
-  madeBook = { id, key: `${s[0]}:${(s[1] >>> 0).toString(36)}`, n: s[0], totals: s.slice(2, 2 + 3 * np), own, apart: s.slice(2 + 5 * np, 2 + 6 * np) };
+  madeBook = { id, comp, key: `${s[0]}:${(s[1] >>> 0).toString(36)}`, n: s[0], totals: s.slice(2, 2 + 3 * np), own, apart: s.slice(2 + 5 * np, 2 + 6 * np) };
   railMemo.clear();
   return madeBook;
 }
@@ -1661,7 +1663,7 @@ const railMemo = new Map<number, [number, number, number] | null>();
 function rowsFor(key: string, place: number): CorridorRows | null {
   const b = madeBook;
   if (b?.key !== key) return null;
-  const p = [intercity, ...marketParts.values()].find((x) => x && x.corridors_id() === b.id);
+  const p = [intercity, ...marketParts.values()].find((x) => x && x.corridors_id() === b.id && composedOf.get(x) === b.comp);
   if (!p) return null;
   const v = p.place_rows(Uint32Array.of(place)), n = v.length / 7;
   const r: CorridorRows = { key, n, at: new Uint32Array(n), from: new Uint32Array(n), to: new Uint32Array(n), longer: new Float32Array(n), commute: new Float64Array(n), air: new Uint16Array(n), car: new Uint16Array(n) };

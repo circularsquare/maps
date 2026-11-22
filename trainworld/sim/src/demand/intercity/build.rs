@@ -704,8 +704,7 @@ impl MarketPacks {
         self.zones.keys().map(|&p| p as u32).collect()
     }
     /// T-1174: drop the corridors kept from the first composition, so the next composition works
-    /// them out from the packs held now, as a worker that opened them all at once does (they differ
-    /// with the packs open at the first composition: T-1354).
+    /// them out again (with rows they are the same whatever packs are held: T-1354).
     pub fn forget_corridors(&self) {
         *self.corridors.borrow_mut() = None;
     }

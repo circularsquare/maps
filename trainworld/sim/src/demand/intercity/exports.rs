@@ -608,7 +608,7 @@ impl IntercityApi {
     }
     /// T-2136: the table (`corridor_rows`) summed up for the page, which keeps no table: its row
     /// count, its key (FNV-1a over each row's corridor and the bits of its trips, commute legs and
-    /// shares, as u32 words), then three numbers per place below `limit` over the rows between it
+    /// shares, as u32 words, then each place's own-row share on two lands that is not 0), then three numbers per place below `limit` over the rows between it
     /// and another place below `limit` (game/demand.ts `CorridorBook`): the longer trips, the commute
     /// legs, and the longer trips times the share flying in steps of 1 / 65534 (game/corridorShares.ts
     /// `shareCode`), each added in row order as the page did; then (T-3509) two numbers per place
@@ -653,6 +653,15 @@ impl IntercityApi {
                 s[0] += t;
                 s[1] += c;
                 s[2] += f;
+            }
+        }
+        // (the own rows' shares on two lands are the composition's as the shares are, and no row's
+        // shares carry them, so the key holds them too: T-1354)
+        for p in 0..lim {
+            let v = out[2 + 5 * lim + p];
+            if v != 0. {
+                word(p as u32);
+                word((v as f32).to_bits());
             }
         }
         out[0] = n as f64;

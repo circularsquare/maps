@@ -31,8 +31,10 @@ table of the open places by the open places); any other pair's is worked out whe
 place pair's longer trips and commutes a day, kept for the pairs with any, the departures to places with no zone, the totals:
 `Corridors`) are worked out at a worker's first composition, about 0.3 s natively, and kept by
 `MarketPacks` for every later one, since with the world's rows they are the same whichever packs
-are open; the market's parts and compositions share them (`corridors_id`), so the worker sums the
-corridor table up once. The table is the corridors with longer trips or commutes (`table_rows`, 8.5M
+are open; the market's parts and compositions share them (`corridors_id`). The book the worker sums the
+corridor table up into is made once per composition (T-1354), since its shares flying and on two lands are
+the open packs' (a pair of open places from the table, `apart` from the open zones): so it depends on the
+packs open, never on the order they arrived in (about 3.6 s a book on the real save, 8,523 places). The table is the corridors with longer trips or commutes (`table_rows`, 8.5M
 of the world's place pairs on 2026-11-18), never made whole (T-2136): `table_summary` walks it once for the
 page's book, `place_rows` gives a few places' rows when the page asks, `rows_at` the rows with rail; its
 split by plane and car included, worked out for those rows alone: what a pair's two ways share (the car,
