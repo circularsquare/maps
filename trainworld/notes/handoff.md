@@ -1,16 +1,17 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 360c2881-9196-44fd-8596-05db148a51cb, name maps-17 [098830], since 2026-11-22 14:16 UTC
-Updated: 2026-11-22 16:00 UTC
+Updated: 2026-11-22 16:30 UTC
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5.
 
 ## Next
 U. USAGE (her 11-22 ~16:20 UTC): "we're low on remaining tokens for the week so lets keep the track work wound down
    actually. lets keep the rest for bug fixes for now. i'd consider pax not taking express as the major bug fix."
-   Keep: firsttrain (T-4041), clockmem (T-3939, phone crashes), hokkaido (finishing its join). Paused at a clean
-   point with notes, trees kept, nothing landed: addtrack, stationids, timetables, coreslider, perfledger, split6.
-   Start only bug fixes, few at a time. The 8800 track preview still goes up after hokkaido (no agent needed).
+   Running: firsttrain (T-4041, P1), clockmem (T-3939, phone crashes), hokkaido (T-3688, in its join, owns
+   data/packs). Paused 11-22, trees kept (plans in each tree's notes), nothing landed, tasks tagged {after:next
+   week's usage}: addtrack T-4024, stationids T-4043, timetables T-3346, coreslider T-3932, perfledger T-4025, split6
+   T-3373. Start only bug fixes, few at a time. The 8800 track preview still goes up after hokkaido (no agent).
 0. LIVE v0.4.5. Cap 14 (her daytime pick 11-22). Cores 0-1 hers (`reserve_cores.ps1 -Loop 30` at takeover). No
    publish yet. Before one: fresh freeze, translations (T-3986, T-3991, T-3999, T-4003, T-4010, T-2264, T-3933,
    T-3378 s4, T-4013, T-4005, T-4040, and the new zones' names: place_names.mjs --zones), smoke on a quiet machine. Batch 13
@@ -19,13 +20,10 @@ U. USAGE (her 11-22 ~16:20 UTC): "we're low on remaining tokens for the week so 
    data/packs): sync-track, then 8800 = tw/track tip as her preview (her yes 11-22; saves made there won't load on
    master or live: told her), and a batch checker on master. All strings to 11-22 16:10 UTC acknowledged ("Part of a bundle of # tracks", her wording).
 2. TRACK (her top priority): tw/track has 1-3g, 4a1, 4a2, 4c, 4e picture, T-4030 a-f, T-4038, levels (T-3691), 4b's
-   two fixes. T-3961's merge waits for g; T-3964 Join waits T-4043. Running: stationids (T-4043, own checker before
-   landing), addtrack (T-4024). g (T-4037) waits her two calls; then 4d (T-3963), 4f, 5a/5b. Pre-merge: T-4026,
-   T-3958, a checker (save format, sim core). Plan: notes/T-4030.md. A finish can stop on a docs conflict: resolve in
-   the tree (CRLF), rebase --continue, rerun tests, finish.
-3. Master agents: split6 (T-3373 B6), hokkaido (T-3688, writes data/packs), clockmem (T-3939), timetables (T-3346
-   stage 3), coreslider (T-3932), firsttrain (T-4041, P1), perfledger (T-4025).
-4. Waiting on her: g's two calls (re-explained 11-22 ~16:10 UTC). Wiki on the website on hold.
+   two fixes. T-3961's merge waits for g; T-3964 Join waits T-4043 (needs its own checker). g (T-4037) waits her two
+   calls (re-explained 11-22 ~16:10 UTC); then 4d (T-3963), 4f, 5a/5b. Pre-merge: T-4026, T-3958, a checker. Plan:
+   notes/T-4030.md. A finish can stop on a docs conflict: resolve in the tree (CRLF), rebase --continue, finish.
+   Wiki on the website on hold.
 
 ## Her words
 - 11-22 ~16:05 UTC: cap 14 (daytime); T-4041 yes, high prio (and buses beating parallel trams; tram boarding
