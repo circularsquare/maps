@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session 427323a8-53ce-483c-9c28-8f1452e36f9f, name maps-6a [a48b3e], since 2026-11-21 20:45 UTC
-Updated: 2026-11-22 03:40 UTC (cycling at 500k to standby maps-5a)
+Orchestrator: session 4f09b9f6-62ab-4330-bda8-3c96eb7a5896, name maps-5a [ac8bba], since 2026-11-22 03:42 UTC
+Updated: 2026-11-22 03:42 UTC
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5.
 
@@ -10,16 +10,16 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
    (`reserve_cores.ps1 -Loop 30` at takeover). No publish yet. Before one: fresh freeze, translations (T-3986, T-3991,
    T-3999, T-4003, T-4010, T-2264, T-3933, T-3378 s4, T-4013, T-4005), smoke on a quiet machine, and one batch
    checker for batch 13 (T-3502 airports, T-3655 edit speed, T-4022, T-2264, T-3373 s4-5 flagged). Server deployed
-   3b14158 (11-22 01:26 UTC). Standby tabs: maps-5a, maps-17.
+   3b14158 (11-22 01:26 UTC). Standby tab: maps-17.
 1. master 7788f682; 8800 = b0647110 (save level 38).
 2. TRACK (her top priority): stages 1-3d landed; tw/track 554a83b8 (TWT7 body level 2, save level 40). Quad call
    done in the design (T-4023: any single tracks, Add a track T-4024 with her refusal wording). Next 3e T-3956, 3g
    T-3958: asked her whether to start them at ~19% usage (I'd wait). Pre-merge items: T-4026. A finish onto
    tw/track can stop on a docs conflict: resolve in the tree (CRLF files), rebase --continue, rerun tests, finish.
 3. T-3373 B: stages 3-5 landed under ?split=1; stage 6 (edits) next, not started (usage).
-4. Overnight: Muzaffarpur rebuild job PID 35592 (haj split into haj, hjp, sxp; uji retired), log
-   artifacts/trainworld/redraws-run.log; morning check and hand steps in notes/T-3688.md. Manila designed, not
-   applied (a-..-22); Hokkaido designed, needs a day session via japan_zones.py (a-..-23).
+4. Overnight: Muzaffarpur rebuild (haj into haj, hjp, sxp; uji retired), restarted 22:46 local after a Geofabrik 404
+   (T-4027), PID 23872, log artifacts/trainworld/redraws-run.log, checks in notes/T-3688.md; 8800 keeps the old zones.
+   Manila designed, not applied (a-..-22); Hokkaido designed, needs a day session (a-..-23).
 5. Waiting on her: T-2264 help panel text (graph labels), T-4025 perf ledger go, 3d sheet look. Wiki on the website
    on hold (fan wiki; pages in artifacts/trainworld/wikisite/site-hold). No agents running.
 ## Her words

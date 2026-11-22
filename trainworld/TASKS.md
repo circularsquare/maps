@@ -24,6 +24,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-3671: the new zone clt (Chimaltenango, with Antigua Guatemala) has no ja or zh names; `place_names.mjs --zones` stalled for 13 minutes and wrote nothing.
   - Goal: clt has its names in every language that has zone names, and the stall's cause is found or recorded.
   - Other: notes/T-3671.md
+- T-4027 [P2] {L:world-tooling} Downloads break on Geofabrik's India move
+  - Context: 11-22 Geofabrik moved India into its own folder: `asia/india/eastern-zone-latest.osm.pbf` redirects to `india/eastern-zone/...` (no `asia/`, 404), and the index's new `asia/india/eastern-zone/eastern-zone-latest.osm.pbf` redirected to an unpublished `-261121` file (404). The two-level `asia/india` path still redirected correctly. T-3688's wave 1 parked haj on it; the 20 Nov file was put in data/raw/osm by hand. The URL is formatted from the extract id in world_run.py:84, routes.py:53, osm_water.py:165 and japan_zones.py:72; world_plan.py:1599 turns index URLs back into ids, which the new three-level layout would change (and the cache names with it).
+  - Goal: A fresh download of any India zone works without a hand step, with extract ids and cache names unchanged; other three-level extracts checked for the same fault. Look again first: Geofabrik may finish the move by itself.
 - T-3682 [P3] {L:world-tooling} Rates unchecked after a join
   - Context: From T-930 (regate): cross_everyday rewrites `everyday_kept_*` in every joint solve and the rates read them, but no gate checks rates after a join (before T-930 too).
   - Goal: A join's re-gate checks the rates a solve can change, or the reason it needn't is recorded.
