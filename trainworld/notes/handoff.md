@@ -6,7 +6,7 @@ Updated: 2026-11-21 21:15 UTC
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5.
 
 ## Next
-0. LIVE v0.4.5. Cap 14. Cores 0-1 hers (`reserve_cores.ps1 -Loop 30` at takeover). No publish yet ("no rush").
+0. LIVE v0.4.5. Cap 8 (her ask 11-21 evening, "for a while"). Cores 0-1 hers (`reserve_cores.ps1 -Loop 30` at takeover). No publish yet ("no rush").
    Before the next publish: fresh freeze (place index), translations (T-3986, T-3991, T-3999, T-4003, T-4010,
    T-2264, T-3933, T-3378 s4, T-4013, T-4005 keys), smoke on a quiet machine (batchchk11's real-save final timed
    out at cap). shonei-server deployed and pushed 3b14158 (11-22 01:26 UTC). Standby tabs left: maps-5a, maps-17.

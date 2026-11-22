@@ -705,8 +705,8 @@ Anita's playtest with a friend, filed 2026-11-03 evening (verbatim, grouped, in 
   - Context: Only if your tutorial playtest asks for more: the demand bubble hover, Train length, and the top bar's split.
   - Goal: Longer tutorial-only hovers for those three, if the playtest wants them.
   - Other: Uses `guideVerbose` from T-2263.
-- T-2264 [P2] {L:help-tutorial} {waits:Anita} One trip help panel with your wording and a graph (taking, 2026-11-21, agent tripdot)
-  - Need from Anita: Look at the trip panel's ? on 8800 (b399147d) and say OK or what to change, including the graph's labels "train", "car", "half each", "train time compared with car time", "share of trips".
+- T-2264 [P2] {L:help-tutorial} {waits:Anita} One trip help panel with your wording and a graph
+  - Need from Anita: Look at the trip panel's ? on 8800 (b0647110, the dot at the selected trip) and say OK or what to change, including the labels "train", "car", "train time compared with car time", "share of trips" and "The dot is this trip, for the purpose and time of day under By transit."
   - Context: You, 11-21: drop the city help panel; the trip panel's ? keeps "train and car the same: half each" as a graph (car and train), and takes your effective time text word for word (notes/T-2264.md "Her wording 11-21").
   - Goal: The city ? gone; the trip ? shows your text and the train-against-car graph.
   - Other: notes/todo-2026-11-03h.md
