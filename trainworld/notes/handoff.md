@@ -46,6 +46,8 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
   push to the website needs her yes in this tab, none overnight; advisor trial (log calls in handoff-log).
 
 ## Waiting on her (asks.py list has the open ones)
+- Text ack for 3e's strings (notes/T-3956.md: "Eastbound track" ... "Two way track", "Part of double track" /
+  "Part of {n} tracks", "Tracks"); morning summary.
 - She sends the T-3635 player reply and the T-3945 reply herself (draft in notes/T-3945.md).
 
 ## Only a person knows
