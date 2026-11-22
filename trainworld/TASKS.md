@@ -392,7 +392,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Stage 3g landed on tw/track 11-22: `realnet.py resave` re-saves all 41 starts as TWT7 with bundles (same fingerprints, London 256 ms), but data/packs/real keeps today's TWT6 files since master can't read TWT7.
   - Goal: At the merge, in an empty `REALNET_OUT`, `realnet.py resave` exits 0 with 41 lines, then `realnet.py ship` (never ship without it: it falls back to stale October files); steps in notes/T-3958.md.
   - Other: notes/T-3958.md (on tw/track).
-- T-4024 [P2] {L:track-rework} {after:T-4030} Add a track
+- T-4024 [P2] {L:track-rework} {after:T-4034} Add a track
   - Context: Your 11-21 calls: Add a track replaces Double up and 2b's "4 tracks" button, on the Select bar and as a + on each side of the track picture; the new track runs the other way from its neighbour (a double becomes 4 tracks in two clicks), with no crossovers and loose at both ends: connections are manual only, though two tracks added at once connect to each other. Refusals give the reason, else "Additional track cannot fit here."; "You can have at most 16 tracks in a bundle"; "You cannot add track to a crossover track", firing only where adding really can't work (check the crossover definition so a legitimate add is never refused). "Segments" in player text, never "runs" (every track string that says run, including "Added a track on {done} of {total} segments. {why}"). The quad help answer is dropped. Per-track price.
   - Goal: A double made 4 tracks in two clicks, then connected manually, runs a line on the new tracks; each refusal names its reason; no "run" left in player text; strings listed.
   - Other: After 4a1 so the new track runs past stations without a platform. Files: Blueprint.tsx, wasm/crossings.rs, cost.rs. 3-5 h. notes/T-4023.md
@@ -402,9 +402,38 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: Files: perdir.rs, twin.rs, wasm/lines.rs. 3-4 h. stage 4a2
 - T-4030 [P2] {L:track-rework} {after:T-3959} Tracks held as their own records in memory (taking, 2026-11-22, agent trackmodel)
   - Context: Stages 3a1, 3c, 3e and 4a1 each kept today's in-memory model, where a piece is the derived edge and holds at most one track each way (tracks read from `EdgeData`: count, oneway, join); 3b saves each track on its own but loads back into that model. So stations still split pieces, one track of a double can't be flipped, and a third track can't pass a station. 01-model.md's authored bundles with tracks, compiled to the derived graph, is the design; no stage owned building it. 3f's part B (one track of a double flipped) stopped on it too: paths must name tracks (spans in memory, routing on track ends), ways stored per track, re-pairing across a bundle, trains and line strokes placed per track (notes/T-3957.md has the scope).
-  - Goal: Bundles and their tracks as stored records in memory, compiled to the derived edges, with stations no longer cutting pieces; parity gates A and B byte identical. A short plan note (files, order, gates) before the build.
-  - Other: 4b (T-3961), Add a track (T-4024) and stage 5a wait on it. Found by maps-5a with the advisor, 11-22.
-- T-3961 [P2] {L:track-rework} {after:T-4030} Old stations converted
+  - Goal: Bundles and their tracks as stored records in memory, compiled to the derived edges, with stations no longer cutting pieces; parity gates A and B byte identical. Planned (notes/T-4030.md, about 30-37 h) as stages T-4031 to T-4037; closes when T-4037 lands.
+  - Other: 4b (T-3961), Add a track (T-4024), 4d (T-3963) and 5a (T-3966) wait on its stages. Found by maps-5a with the advisor, 11-22. notes/T-4030.md
+- T-4031 [P2] {L:track-rework} Track records on pieces (taking, 2026-11-22, agent trackmodel)
+  - Context: T-4030 stage a: each track stored with a key, its way, partner and a join at each end (Auto, Loose or To).
+  - Goal: Parity gates A and B byte identical; the stage's own capability test in notes/T-4030.md.
+  - Other: 4-5 h. Lands after 4a2 (T-3960). notes/T-4030.md
+- T-4032 [P2] {L:track-rework} Runs read the derived edges (taking, 2026-11-22, agent trackruns)
+  - Context: T-4030 stage b: a pure refactor, the same as today on every existing piece.
+  - Goal: Parity gates A and B byte identical.
+  - Other: 5-6 h. Lands after 4a2 (T-3960). notes/T-4030.md
+- T-4033 [P2] {L:track-rework} {after:T-4031} Paths name tracks
+  - Context: T-4030 stage c: path entries become (piece, key, dir), routing works on track ends, and a piece can hold 1-16 tracks with any ways.
+  - Goal: Parity where nothing new is used; a piece with tracks of any ways routes.
+  - Other: 5-6 h. Also after 4a2 (perdir.rs, wasm/lines.rs). notes/T-4030.md
+- T-4034 [P2] {L:track-rework} {after:T-4033} Trains and line ribbons drawn per track
+  - Context: T-4030 stage d.
+  - Goal: A 4-track piece with a line per track draws trains and ribbons on their own tracks; worker no slower than 1.2x master.
+  - Other: 3-4 h. notes/T-4030.md
+- T-4038 [P2] {L:track-rework} {after:T-4034} Flip one track of a double
+  - Context: 3f's part B (notes/T-3957.md): one track of an intact double reversed or made two-way, on T-4030's records and paths.
+  - Other: 2-3 h.
+- T-4035 [P2] {L:track-rework} {after:T-4034} Platforms placed on tracks
+  - Context: T-4030 stage e: the compile cuts tracks at stop points; a station off the track takes an anchor node with no ports.
+  - Other: 5-6 h. notes/T-4030.md
+- T-4036 [P2] {L:track-rework} {after:T-4035} Routing to stop points
+  - Context: T-4030 stage f: searches start and end at stop points mid-track; a terminus mid-piece turns there.
+  - Goal: Stop insertion, reroute and a mid-piece terminus each equal to the split twin.
+  - Other: 4-5 h. notes/T-4030.md
+- T-4037 [P2] {L:track-rework} {after:T-4036} Stations placed without splitting track
+  - Context: T-4030 stage g. Needs your call first: dragging a station or platform end slides it along its track (recommended), with bending done by dragging the track's own points.
+  - Other: 4-5 h. notes/T-4030.md
+- T-3961 [P2] {L:track-rework} {after:T-4036} Old stations converted
   - Context: Each old station node becomes a station with its platforms; each stop keeps the way picks today's rule makes.
   - Goal: The three reference saves' figures equal to master.
   - Other: Side by side with 4c, 4d, 4e. Files: save.rs converter. 3-4 h. stage 4b
@@ -412,7 +441,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Demand's snapshot rows come from stop points; one complex rule, in the sim; the stop list gets its track chip.
   - Goal: Packed demand arrays byte for byte on NYC, then the same rail trips a day.
   - Other: Side by side with 4b, 4d, 4e. Files: demandClient.ts, demand/network.rs, complexes.ts, the line panel's stop list. 4-6 h. stage 4c
-- T-3963 [P2] {L:track-rework} {after:T-3960} Station tool templates and preview
+- T-3963 [P2] {L:track-rework} {after:T-4037} Station tool templates and preview
   - Context: Your decision 2: Side platforms, Island (zero width for now) and Single platform; the pointer picks the tracks (on more tracks, side platforms take the track under the pointer and its neighbour nearer the pointer, never by pairing); a platform placed overlapping a station joins it; the ghost shows the covered tracks and their ways.
   - Goal: All three templates on single, double and 4 tracks; strings listed.
   - Other: Side by side with 4b, 4c, 4e. Closes T-3354. Files: stationTool.ts, stationSnap.ts, ToolBar.tsx. 5-6 h. stage 4d
@@ -424,7 +453,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: The starts rebuilt with stations as records, keeping today's stations.
   - Goal: Every start loads settled; rides within 2% of today's.
   - Other: Files: realsave.rs, realshared.py. 2-3 h. stage 4f
-- T-3966 [P2] {L:track-rework} {after:T-3964} Drawn network rebuilt per bundle
+- T-3966 [P2] {L:track-rework} {after:T-4037} Drawn network rebuilt per bundle
   - Context: Drawn records keyed by bundle chunk and chainage, so an edit redraws only what it touched (T-2767, T-2701).
   - Goal: A station on built track redraws no other bundle: worker 30 ms or less, shows up in 400 ms median or less on the 2,647-station save (1,925 ms today).
   - Other: Closes T-2767 and T-2701. Files: network.ts, strokeCache.ts, clockPost.ts. 4-6 h. stage 5a

@@ -21,7 +21,8 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
    changelog popstuck-1), smoke, commit game json, 8800. caucasus reused id `mri` (retired Mariveles) for an Afghan
    zone, so mri -> ctg never landed: told it to rename. Hokkaido: Dochuo one zone with Sapporo, day session.
 5. Waiting on her: T-4025 perf ledger go. Wiki on the website on hold (artifacts/trainworld/wikisite/site-hold).
-   Agents: trackstop (T-3960), trackmodel (T-4030 plan only), caucasus (T-3764). 3e/3f strings to her (notes).
+   Agents: trackstop (T-3960, 4a2), trackmodel (T-4031 stage a), trackruns (T-4032 stage b), caucasus (T-3764).
+   T-4030 planned as T-4031-T-4037 (+T-4038 flip); a and b land after 4a2; 4c/4e may start after 4a2. 3e/3f strings to her (notes).
 ## Her words
 - 11-22 ~04:30 UTC: last day of the usage week, a decent chunk left: aim to finish track stage 4 overnight ("if we run
   out, we run out"); compute-heavy, token-light tasks too: Caucasus and Afghanistan (caucasus agent); China
