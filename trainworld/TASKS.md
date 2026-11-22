@@ -27,7 +27,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4028 [P3] {L:census-totals} China's populations look out of date
   - Context: You, 11-22: "one person complained about china population data being outdated and not reflecting recent growth, so we can file this as something to look into." Not started; which year China's zones use and where the player saw it is the first thing to find.
   - Goal: The year and source of China's zone populations stated, compared with any newer published figures for the fastest-growing cities; a fix proposed to you if the gap is large.
-- T-4027 [P2] {L:world-tooling} Downloads break on Geofabrik's India move
+- T-4027 [P2] {L:world-tooling} Downloads break on Geofabrik's India move (taking, 2026-11-22, agent geofab)
   - Context: 11-22 Geofabrik moved India into its own folder: `asia/india/eastern-zone-latest.osm.pbf` redirects to `india/eastern-zone/...` (no `asia/`, 404), and the index's new `asia/india/eastern-zone/eastern-zone-latest.osm.pbf` redirected to an unpublished `-261121` file (404). The two-level `asia/philippines` path fails too (redirects through `asia/philippines/` to an unpublished 261121 file), so it is not only India; manilaspec put the 20 Nov Philippines file in by hand. Azerbaijan, Armenia, Georgia and Afghanistan the same way (each in its own folder now, `-latest` to a missing 261121 file; caucasus put the 20 Nov files in by hand, T-3764). T-3688's wave 1 parked haj on it; the 20 Nov file was put in data/raw/osm by hand. The URL is formatted from the extract id in world_run.py:84, routes.py:53, osm_water.py:165 and japan_zones.py:72; world_plan.py:1599 turns index URLs back into ids, which the new three-level layout would change (and the cache names with it).
   - Goal: A fresh download of any India zone works without a hand step, with extract ids and cache names unchanged; other three-level extracts checked for the same fault. Look again first: Geofabrik may finish the move by itself.
 - T-3682 [P3] {L:world-tooling} Rates unchecked after a join
@@ -130,8 +130,8 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Myanmar (59 of 60 rows), Laos (11) and Timor-Leste (4) shipped 2026-11-20. Bhamo (0.44M) is parked: its busiest square sits on a GHSL pile-up of 23,697 people in one village square in Mansi, not on a town.
   - Goal: Bhamo built with its people spread off that square (or held), then gated and joined.
   - Other: notes/T-1738.md section 16
-- T-3764 [P3] {L:new-countries} Fill the gaps, Central Asia, Afghanistan and the Caucasus (taking, 2026-11-21, agent caucasus)
-  - Context: You, 2026-11-19: "after that i guess we fill in the gaps (pakistan/bangladesh, central asia, etc)". Pakistan and Bangladesh were the first batch. The list of what is still missing, in batches, is in the notes: Central Asia with Mongolia (77M), Afghanistan (38M), the Caucasus (17M), the Levant and Yemen (63M), Nepal, Bhutan and Sri Lanka (52M), Africa beside built countries, then Papua New Guinea and the Pacific.
+- T-3764 [P3] {L:new-countries} Fill the gaps, Central Asia and beyond (taking, 2026-11-21, agent caucasus)
+  - Context: You, 2026-11-19: "after that i guess we fill in the gaps (pakistan/bangladesh, central asia, etc)"; 11-22, hesitant about more: "maybe we can try doing georgia/armenia/azerbaijan and afghanistan". Done: Pakistan and Bangladesh (11-20), Georgia, Armenia, Azerbaijan and Afghanistan (11-22). Still missing, in batches, in the notes: Central Asia with Mongolia (77M), the Levant and Yemen (63M), Nepal, Bhutan and Sri Lanka (52M), Africa beside built countries, then Papua New Guinea and the Pacific.
   - Goal: Each batch built and joined, next Central Asia.
   - Other: notes/T-3764.md
 - T-1765 [P3] {L:region-redraws} Origins on the densest pixel, far from town
@@ -400,10 +400,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Stages 3a1, 3c, 3e and 4a1 each kept today's in-memory model, where a piece is the derived edge and holds at most one track each way (tracks read from `EdgeData`: count, oneway, join); 3b saves each track on its own but loads back into that model. So stations still split pieces, one track of a double can't be flipped, and a third track can't pass a station. 01-model.md's authored bundles with tracks, compiled to the derived graph, is the design; no stage owned building it. 3f's part B (one track of a double flipped) stopped on it too: paths must name tracks (spans in memory, routing on track ends), ways stored per track, re-pairing across a bundle, trains and line strokes placed per track (notes/T-3957.md has the scope).
   - Goal: Bundles and their tracks as stored records in memory, compiled to the derived edges, with stations no longer cutting pieces; parity gates A and B byte identical. Planned (notes/T-4030.md, about 30-37 h) as stages T-4031 to T-4037; closes when T-4037 lands.
   - Other: 4b (T-3961), Add a track (T-4024), 4d (T-3963) and 5a (T-3966) wait on its stages. Found by maps-5a with the advisor, 11-22. notes/T-4030.md
-- T-4032 [P2] {L:track-rework} Runs read the derived edges (taking, 2026-11-22, agent trackruns)
-  - Context: T-4030 stage b: a pure refactor, the same as today on every existing piece.
-  - Goal: Parity gates A and B byte identical.
-  - Other: 5-6 h. Lands after 4a2 (T-3960). notes/T-4030.md
 - T-4033 [P2] {L:track-rework} {after:T-4031} Paths name tracks (taking, 2026-11-22, agent trackmodel)
   - Context: T-4030 stage c: path entries become (piece, key, dir), routing works on track ends, and a piece can hold 1-16 tracks with any ways.
   - Goal: Parity where nothing new is used; a piece with tracks of any ways routes.

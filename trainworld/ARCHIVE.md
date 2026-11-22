@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4032 [P2] {L:track-rework} Runs read the derived edges (2026-11-22): Runs read derived edges (derived.rs, DEntry), gates A and B byte identical plus run tables and an undo check; North America load about 6% slower, cause unconfirmed. notes/T-4032.md.
 - T-4031 [P2] {L:track-rework} Track records on pieces (2026-11-22): Track records on pieces read by the compile; loose track ends; TWT7 body level 4; gates A and B byte identical three ways; smoke 30/30. notes/T-4031.md.
 - T-3960 [P2] {L:track-rework} Smart stop allocation (2026-11-22): Picks stored per stop at the click; her split legs get a two-way stop in one click; T-3605 and T-3711 unchanged; gates A and B byte identical (36 of 36); smoke 30/30. notes/T-3960.md.
 - T-3662 [P3] {L:single-track} Switching one kerbside piece breaks lines quietly (2026-11-22): Ways spread to the branch points in one edit and undo, double-click tracing with Shift+click, refusals name the line; T-3662's kerbside case keeps its lines. One track of a double flipped moved to T-4030. notes/T-3957.md.
