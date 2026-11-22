@@ -166,7 +166,7 @@ If stage 1 finds it nearer all-China's 30%, 2 workers come out about 15% faster 
 | 2 | **Exact sums.** Whole-number sums in every cross-population sum in the worker and in `addParts`; per-city totals re-added on the page. | 2-4 | off by default (`?exactSum=1`) until stage 4 passes and she has OK'd the rounding change | Same bits at 1, 2 and 3 workers and with `?perfOff=share`; against master, the largest change of any figure reported (expected about 1e-6). |
 | 3 | **Who opens what, behind `?split=1`.** The plan on the page; every rule that now means "open in every worker" made to mean "open in its holders": a solve sent once every city is open (the per-item opened sets, about line 889 and 1299 of `demandClient.ts`), the `open` posts (about 1811), the first-station prefetch (`prefetchViewed`), the warm-up hold (`held`), the reopen at another level (`releveling`), closes (`sweep`, `closeStrays`), the pack hashes, the loading card's progress by worker acks, a replacement worker's `reopen`, the watchdog's replace-all (T-3781), `shrink`. Boxes for the clusters sent with the plan. | 3-5 | off by default | With `?split=1` and the plan forced to "everything everywhere", everything as today (figures equal); with a real plan, each pack opened on its holders only (load log), the load reaches its solve. |
 | 4 | **B for whole solves.** Done (splitb4, below): the rough solve on the zone in view's holder, `capAhead` and `capPool` counting the plan at a 25% share, so all-China gets 2 workers and New York 3 without `demandWorkers`. The ports were measured and not built: the page's relay cost 4 ms of waiting in a 97 s load. | 2-4 | under the flag | Passed: figures equal to the bit on New York and all-China; all-China at 2 workers loads 32% faster than 1 worker for 0.07 GB more. |
-| 5 | **Questions.** 20 query kinds and `rows`, sorted into four groups (provisional: this plan read about half the handlers, the stage reads each). A zone's own questions go to its holders (subSums, cellModes, purposes, flowRail, flows, purposeModes, trip, tripLengths, cells). The station-wide ones go to every worker, whose answers add (station, transfers). The market's go to its holder (icStation, icTrip, airLegs, regLegs, rows, zoneSquares), and icSel gets the zone's squares from the zone's holder, as bare zones do now (`bareSquares`). The aux worker's (bare, bareFlows, bareSquares) stay as they are. Answers record which populations they cover; today they record a period mask. | 3-5 | under the flag | Each kind answered equal (to rounding) split against not, on New York and North America: a station, a bubble selection, a trip, transfers. |
+| 5 | **Questions.** Done (splitb5, below): a zone's own questions go to its solving holder (subSums, station, flowRail, purposes, flows, purposeModes, trip, tripLengths, and the squares of a selection); transfers to every solving worker, their answers adding; the market's to its holder (icSel, icStation, icTrip, airLegs, regLegs, rows), with the zone's squares from the zone's holder. The aux worker's (cells, cellModes, bare, bareFlows, bareSquares of a bare zone, zoneSquares) are unchanged. Answers list the populations they cover, and the page takes a set of answers only when they cover what was asked once. | 3-5 | under the flag | Passed: 23 answers covering 18 of the 20 kinds and rows, equal to the bit split against 1 worker with exact sums, on New York (2 and 3 workers) and North America (2), after the final. |
 | 6 | **Edits.** Kept periods: holders agree a cluster's period is kept (every population kept it). The local solve runs on the holders of the touched populations only, crowding on the last whole solve's total minus their own (exact), so other workers stay free. The market window runs on the market's holder. Then the local refine and T-3925's restart, and T-2624's per-period results arriving as one part per holder. | 4-6 | under the flag | North America Line 6 +1 and a station: local result within today's local's spread, final equal to the bit; paired runs on and off for timing. |
 | 7 | **Pool size and memory rules.** `workersFor`, `capAhead`, `capPool` and `growTo` count the plan's per-worker needs. Memory restarts (T-1205) and running out of memory (T-3072) deal the plan again. A grown worker opens only its share. The detail budget (`demandLod`) stays a total for all zones; the 3.5 GB refusal applies to the largest worker; the saves card and `memoryNeed` follow the plan. The pool is decided before packs open, since WASM never shrinks and a late re-deal leaves the old high water. | 2-4 | under the flag | all-China and North America on a reported 8 GB pick 2 workers at the new limit, New York 3. A forced out-of-memory still finishes with the same figures. |
 | 8 | **Copies and re-dealing.** A dominant city held by several workers with its periods split; the market copied when over 1/n of the work. A zone opened later goes to the least loaded worker. A re-deal happens only between solves, when the busiest worker is 25% over the even share. Per-population costs are saved in the save header. | 2-4 | under the flag | New York at 2 and 3 workers no slower than `?split=0` in paired runs; a save reloaded plans from its saved costs. |
@@ -537,6 +537,107 @@ sums.
 - `growTo` stays off under the split (stage 7).
 - `memoryNeed`'s estimate is above what was measured, which keeps all-China at 2 where 3 ran faster; see
   "3 workers" above (stage 7).
+
+## Stage 5 results (agent splitb5, tree splitb5, 2026-11-21)
+
+**Built, under `?split=1`; flag off the questions go as before.** Before this stage, by the code (not run), most questions about a
+split solve came back empty. Every question was asked of every solving worker, and a worker not holding the zone answered
+"not solved", so the page dropped the whole answer. `flows` went to worker 0 whatever held the zone, and the market's
+holder never answered for a zone it did not hold.
+
+**The groups, as the handlers read** (each handler read; four corrections to the plan's provisional list):
+- **A zone's solving holder:** subSums (and the sums sent with each round, now counted against the zone's holders,
+  not every worker), station, flowRail, purposes, flows, purposeModes, trip, tripLengths, and `bareSquares` for a
+  zone it solves.
+  - `station` is a zone's question: it is the zone in view's own riders at the station (`stationRiders` reads that
+    zone's commutes), not a station-wide one.
+  - `flows` went to worker 0; it goes to the holder.
+  - `regLegs` from a worker without the market comes back empty, which the bubbles read as "keep the last regional
+    legs": asked of every worker it would have shown stale legs, so it goes to the market's holder alone.
+- **Every solving worker, answers adding:** transfers alone (`platformTransfers` too, which the clock's platform
+  crowds read). A worker answers for every population it holds, whether or not it holds the zone in view: it is
+  gated on the version and round alone (`netLive`), and each cluster answers only if it holds that round.
+- **The market's holder:** icSel, icStation, icTrip, airLegs, regLegs, rows. icStation and icTrip's no-cluster case
+  no longer need the zone in view on that worker. icSel and icTrip get a selection's squares from the zone's holder
+  first (`bareSquares`, answered at the round asked about, as its airport legs come from the solve).
+  - zoneSquares is not the market's: it is static per pack and goes to worker 0, then the aux worker, as before.
+- **Unchanged:** cells, cellModes, bare, bareFlows and bareSquares of a bare zone (the aux worker's), zoneSquares
+  (worker 0, then the aux worker).
+
+**How** (`demandClient.ts` `splitRoute`, `covered`; `demand.worker.ts` `query`; `demandProtocol.ts` `ZONE_QUERIES`):
+- Each solve keeps the plan it was sent with (`Solve.plan`). A question goes by that plan, so a shrink since does not
+  send it to a worker that never solved it. A question about a solve with no plan (a cached result's) goes nowhere
+  and is not answered. Focus-pool questions go as before.
+- Answers about a split solve list the populations they cover (`pops`: zone ids, `market`), each over the periods of
+  their `mask`.
+- `covered`: the page takes a set of answers only when between them they cover every population asked about over
+  every period, none twice. Else none, which every asker already reads as not answered. So a panel never shows one
+  worker's part of a figure. Taken answers are ordered by the populations they cover, so sums never depend on which
+  worker answered first.
+- Transfers at a station come only from the populations of the station's cluster. So each worker lists the
+  populations it added (`pops`) and every population of the clusters holding a route node asked about (`of`, a
+  cluster's market part as `market:<k>`; the clusters split alike in every worker), and the page needs every one of
+  those covered. A first version needed every zone of the plan. On North America, putting a zone of its own cluster
+  in view (Tehran, `teh`, open with no rail) sent a new solve with that cluster ahead (T-392), and every transfers
+  question came back empty until the whole solve's final. A second listed only the clusters a worker had added, and
+  would have shown a busy station's transfers as none while its cluster was being solved again.
+- **Transfers in whole steps with exact sums.** Each worker's pairs are stepped (2^-20 of a rider) and sent as f64,
+  and `platformTransfers` lists its pairs by route node pair. Before this, a split run's transfers differed from 1
+  worker's by up to 1e-3 riders and came in another order, so the clock's platform crowds would have depended on the
+  plan. Without `exactSum` (flag off) they are f32 in the workers' order, as before.
+
+**Checks** (my Vite 6182; NYC real save and North America `na-day-491`, imported into `?new=1`; Chrome on 3 cores
+from the ledger; scratchpad `splitb5/ask.mjs` asks the questions after the final, `compare.mjs` and `platform.mjs`
+compare two runs number by number). With each zone in view, and after any solve that putting it in view started had
+reached its final, 23 answers were asked for: two stations' riders (the busiest of the 40 busiest for the zone, and
+the station on the most lines), their market riders (icStation) and transfers, platformTransfers, a commute and a
+shopping trip, flows and icSel from 300 of its cells at both ends, icTrip to the top far place at both ends, the
+bubbles (cellModes, and work alone), three purposes' bubbles, trip lengths, subSums asked outright (the bubbles take
+the sums sent with each round instead), corridor rows. Between them they send 18 of the 20 kinds and `rows`; not
+bare or bareFlows, which only a zone open bare asks, of the aux worker as before.
+
+| Run, against 1 worker with `exactSum=1` | Zones in view | Answers |
+|---|---|---|
+| NYC `split=1`, 2 workers | New York City (held apart from the market), Hartford (with it) | all 23 equal to the bit, none missing |
+| NYC `split=1`, 3 workers (the market alone on worker 2) | the same | all equal to the bit |
+| North America `split=1`, 2 workers | New York (worker 0), Philadelphia (the market's worker's biggest zone), Tehran (worker 0, open with no rail, a cluster of its own) | all equal to the bit |
+
+- The routes, from the page's question log: a zone's own questions went to its holder (New York City and Tehran
+  worker 0, Hartford and Philadelphia worker 1), the market's to its holder (1, or 2 at 3 workers), transfers to
+  every solving worker, the bubbles' cellModes to the aux worker.
+- Against flag off at 2 workers (periods dealt, f32 sums): every answer equal to rounding, the largest 3e-6 of a
+  bubble's largest value (0.52 of 166,800) and 4e-7 at a station; platform transfers by at most 0.374 riders, stage
+  2's jump from exact sums (the split and 1-worker exact runs agree to the bit).
+- Putting Tehran in view started a new solve with its cluster ahead. Under the split it took 161 s to its final, at 1
+  worker 6 s. The likely cause is stage 3's rule that every split solve is whole (every cluster solved again, none
+  kept); not measured further. Meanwhile, in two runs on earlier versions of the transfers code, the split answered
+  Tehran's own questions and not the market's (their cluster being solved again); 1 worker's answers varied, all
+  answered in one run and 12 of 23 empty in another. With the final code, the busy stations' transfers are refused then
+  too, by the code; that mid-solve state was not run on it, nor compared number by number.
+- Not shown with content: a station's riders from a zone on the market's worker. Hartford, Philadelphia and Tehran
+  have no riders at the 40 busiest stations, so those answers were equal but zero.
+- Not covered: questions mid-rounds during a load, and after an edit (stage 6 changes the edits' solve); a weekend
+  day.
+- Figures (`splitb4`'s `measure.mjs`, NYC at 2 workers): flag off 5657f014, `split=1` 7c35251f, both as stage 4 left them.
+- `npm run check` clean; `checks/t3373-plan.mjs` and `t3373-sums.mjs` pass. No Rust change. Smoke with the flag off
+  on the final state: 30 of 30.
+
+**For the later stages:**
+- Stage 6: under the flag, putting another zone in view can start a solve that re-solves every cluster (161 s on North
+  America against 6 s at 1 worker), and the main cluster's station and market answers are refused meanwhile. Stage 6's
+  kept clusters have to cover view changes, not only edits.
+- Stage 9: exact sums now cover the transfers answers too (the same 2^-20 step), so `?exactSum=1` alone also sends
+  them as f64 in pair order; part of stage 9's DECISIONS line.
+- Stage 6: a close (`closeFull`) trims a solve's `cities` but not its `plan`, so after a zone closes its questions
+  still go by the plan of the solve shown, until the next solve. Harmless for transfers now (their need comes from
+  the clusters), but stage 6's edits should keep the plan and the solve's zones together.
+- Stage 8's copies: `covered` already takes a population answered by several holders, each for some periods, and
+  refuses one counted twice. `splitRoute` sends a zone's questions to its one holder (`plan.cities[].by`); with copies
+  it sends them to every holder.
+- `rows` goes to the market's holder as the page places it now, not by a solve's plan (rows depend on the market
+  composition, not the network).
+- The aux worker's commute copies of reached zones could answer subSums, trips and the rest instead of the holders
+  (the plan's later idea); not needed for this stage.
 
 ## Risks
 

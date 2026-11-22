@@ -103,7 +103,7 @@ import { stopsById, world } from "../game/world";
 import { stopFareScales } from "../game/money";
 import { trackZones } from "../game/trackZones";
 import { viewCentre } from "../game/listScope";
-import { ALL_PERIODS, isQuery, type SplitPlan, type SelSquares, type BareFigures, type DemandNetwork, type FromDemand, type Heap, type OpenRejected, type QueryKind, type ToDemand } from "./demandProtocol";
+import { ALL_PERIODS, MARKET_POP, MARKET_QUERIES, ZONE_QUERIES, isQuery, type Answer, type SplitPlan, type SelSquares, type BareFigures, type DemandNetwork, type FromDemand, type Heap, type OpenRejected, type QueryKind, type ToDemand } from "./demandProtocol";
 import { addParts, dayFactor, dayResultOf, dayViews, flowsBody, selectionFlows, signature, stationFlows, summaryOnDay, sumParts, unpackDays, type CorridorRail, type DayInput, type DayViews, type FlowsAnswer, type FromSums, type PackedDays, type PurposePart, type SumsAsk, type SumsCtx, type ToSums } from "./demandSums";
 import { SPLIT, SUM_FLAGS } from "./exactSum";
 import { Holding, MARKET_UNIT } from "./demandPlan";
@@ -366,6 +366,26 @@ function byMask(parts: Reply[]): Reply[] {
   const m = (r: Reply) => ("mask" in r ? r.mask : 0);
   return [...parts].sort((a, b) => m(a) - m(b));
 }
+/** T-3373 B: the answers about a split solve when between them they cover every population of `need` over every
+ * period, none twice, in the order of the populations they cover (so `byMask`, all masks alike, keeps one order
+ * whichever worker answered first); else none, which every asker reads as not answered. So a panel never shows
+ * one worker's part of a figure. `need` null (transfers): every population of the clusters holding a route node asked
+ * about (`of`), so a station's transfers wait for its own cluster alone (T-392: a cluster solved ahead). */
+function covered(replies: Reply[], need: string[] | null): Reply[] {
+  const got = new Map<string, number>();
+  need ??= [...new Set((replies as Answer[]).flatMap((r) => r.of ?? []))];
+  for (const r of replies as Answer[]) {
+    const m = "mask" in r ? r.mask : ALL_PERIODS;
+    for (const p of r.pops ?? []) {
+      const had = got.get(p) ?? 0;
+      if (had & m) return [];
+      got.set(p, had | m);
+    }
+  }
+  if (!need.every((p) => got.get(p) === ALL_PERIODS)) return [];
+  const key = (r: Reply) => ((r as Answer).pops ?? []).join(",");
+  return [...replies].sort((a, b) => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0));
+}
 /** `CellModes` from the workers' eight blocks a cell (demand.worker.ts `withNone`): rail, walk and
  * drive at the home end, the same at the activity end, then No route at each (T-2215). `copy`
  * slices, else the arrays view `data`. */
@@ -469,6 +489,8 @@ interface Solve {
   rough?: boolean;
   /** T-3373 B: the solving worker whose `plan` names what is solved (a rough solve's holder under `?split=1`), else 0 */
   lead?: number;
+  /** T-3373 B: the holding plan it was sent with (`?split=1`), which its questions go by */
+  plan?: Omit<SplitPlan, "me">;
   /** T-326: the last worker's clusters kept and solved */
   clusters?: [number, number];
   /** T-124: per solving worker, its periods kept and solved in the clusters it solved */
@@ -4324,8 +4346,9 @@ class DemandClient {
     if (plan) {
       // (a rough solve: its zone's holder alone solves it, and says what it solves; the other solving workers leave
       // what they were solving and wait, never ready for it, until the whole solve supersedes it)
-      const s = msg.only && this.log.find((x) => x.version === msg.version);
-      if (s) s.lead = plan.active[0];
+      const s = this.log.find((x) => x.version === msg.version);
+      if (s) s.plan = plan;
+      if (s && msg.only) s.lead = plan.active[0];
       return this.workers.forEach((w, i) => w.postMessage(i < n ? { ...msg, split: { ...plan, me: i } } : msg));
     }
     this.workers.forEach((w, i) => w.postMessage(n > 1 && i < n ? { ...msg, part: [i, n] } : msg));
@@ -4363,15 +4386,40 @@ class DemandClient {
     // (one solving worker asked by name stays one: `flows`, its sums transferred, went to both of two focus
     // workers, the second post threw on the detached buffer and the far end never came, T-2531)
     if (pool) which = which.includes(this.computeN) ? [pool.auxAt] : only?.length === 1 ? [Math.min(only[0], pool.n - 1)] : pool.workers.slice(0, pool.n).map((_, i) => i);
+    // T-3373 B: about a split solve, to the workers holding what it asks about
+    const route = pool ? null : this.splitRoute(q, city, only, t);
+    if (route) {
+      if (!route.to.length) return Promise.resolve([]);
+      which = route.to;
+    }
     const workers = pool?.workers ?? this.workers;
     return new Promise((done) => {
-      this.pendingQueries.set(id, { left: which.length, replies: [], done: replies => done(zone !== undefined || epoch === this.focusEpoch ? replies : []), focus: !!pool });
+      this.pendingQueries.set(id, { left: which.length, replies: [], done: replies => done(zone !== undefined || epoch === this.focusEpoch ? (route ? covered(replies, route.need) : replies) : []), focus: !!pool });
       this.qlog.push({ id, kind: q.kind, sent: performance.timeOrigin + performance.now(), replies: [] });
       if (this.qlog.length > 200) this.qlog.shift();
       // T-260: the kind of day shown; each answer weighs its periods by it
       const round = t?.round ?? demandView.peek()?.round ?? -1;
       for (const i of which) workers[i].postMessage({...q, city, round, day: shownDay.peek(), ...(t?.wait ? { wait: true } : {})}, transfer);
     });
+  }
+
+  /**
+   * T-3373 B (`?split=1`): the workers a question about a split solve goes to, by its plan (demandProtocol
+   * `ZONE_QUERIES`), and the populations their answers must cover between them; null as without the split (no
+   * split, the aux worker named, or a question of another kind). Each zone and the market have one solving holder.
+   */
+  private splitRoute(q: Query, city: CityId, only: number[] | undefined, t?: Target): { to: number[]; need: string[] | null } | null {
+    if (!this.holding || only?.includes(this.computeN)) return null;
+    const zoneQ = ZONE_QUERIES.has(q.kind), marketQ = MARKET_QUERIES.has(q.kind);
+    if (!zoneQ && !marketQ && q.kind !== "transfers") return null;
+    const version = (q as { version?: number }).version;
+    const plan = (t?.solve?.version === version ? t?.solve : this.log.find((x) => x.version === version))?.plan;
+    // (a question about a solve with no plan here, a cached result's, goes nowhere and is not answered)
+    if (!plan) return { to: [], need: [] };
+    const n = this.computeN, at = (w: number | null | undefined) => (w !== null && w !== undefined && w < n ? [w] : []);
+    if (zoneQ) return { to: at(plan.cities.find((c) => c.id === city)?.by), need: [city] };
+    if (marketQ) return { to: at(plan.market), need: [MARKET_POP] };
+    return { to: plan.active.filter((w) => w < n), need: null };
   }
 
   /**
@@ -4824,7 +4872,10 @@ class DemandClient {
       // round); asked for only when one is missing. Another day than a weekday's only for the
       // zones on screen when the round was solved (T-1904)
       // (T-2532: an edit's local result's, until its whole solve's are all in)
-      const full = (k: string) => { const l = (f ? this.fpushed : this.pushed).get(k); return l && l.length === (f ? this.fpool!.n : this.computeN) ? l : undefined; };
+      // (T-3373 B: under the split, the zone's solving holders alone send theirs)
+      const plan = f ? undefined : this.log.find((x) => x.version === at.version)?.plan;
+      const senders = f ? this.fpool!.n : plan ? plan.cities.filter((c) => c.id === city).length : this.computeN;
+      const full = (k: string) => { const l = (f ? this.fpushed : this.pushed).get(k); return l && l.length === senders ? l : undefined; };
       const sent = full(`${at.version}:${at.round}:${city}:${day}`) ?? full(`${at.version}:${at.round}:${city}:${day}:local`);
       const parts: { mask: number; sums: Float32Array | null; everyday: Float32Array | null }[] = sent ? sent : (await this.ask((id) => ({ kind: "subSums", id, version: at.version }), undefined, [], other, other === undefined ? this.liveAt(at) : at)).map((r) => (r.kind === "subSums" ? r : { mask: 0, sums: null, everyday: null }));
       // in worker (period) order, not arrival order, so the same result gives the same bubbles to
@@ -4974,8 +5025,8 @@ class DemandClient {
 
   /** Every solving worker's transfers with either end at one of `nodes` (`transfers`' answer), in
    * worker (period) order; null unless every period answered. */
-  private async transferParts(t: Target, nodes: number[]): Promise<Float32Array[] | null> {
-    const ids = Uint32Array.from(nodes), parts: Float32Array[] = [];
+  private async transferParts(t: Target, nodes: number[]): Promise<(Float32Array | Float64Array)[] | null> {
+    const ids = Uint32Array.from(nodes), parts: (Float32Array | Float64Array)[] = [];
     let mask = 0;
     // T-1816: a zone the network's solve does not cover (panned away) answers nothing, and any zone it covers
     // answers for every line, so a covered one is asked then
@@ -5016,7 +5067,8 @@ class DemandClient {
     if (!this.still(t)) return null;
     const out = new Float32Array(sum.size * 7);
     let i = 0;
-    for (const [key, riders] of sum) {
+    // (T-3373 B: with exact sums in the pair order, whichever worker added which pair first)
+    for (const [key, riders] of SUM_FLAGS.exactSum ? [...sum].sort((x, y) => x[0] - y[0]) : sum) {
       out.set(at[Math.floor(key / at.length)], i);
       out.set(at[key % at.length], i + 3);
       out[i + 6] = riders;
@@ -5070,7 +5122,7 @@ class DemandClient {
     const solve = t.solve;
     if (!solve) return null;
     const e = end === "home" ? 0 : 1;
-    const sq = !near && this.isBare(activeCity.peek()) ? await this.bareSquares(t.view, e, cells) : undefined;
+    const sq = near ? undefined : await this.selSquares(t, e, cells);
     if (sq === null) return null;
     const at = routeNodes(solve.layout);
     const periods: (MarketPeriod | null)[] = PERIODS.map(() => null);
@@ -5140,6 +5192,8 @@ class DemandClient {
       if (r?.kind !== "flows" || !r.packed) return null;
       p = r.packed;
       purposeParts = [];
+      // (none: a pool change, or T-3373 B, not every population answered)
+      if (!purposeReplies.length) return null;
       for (const reply of purposeReplies) {
         if (reply.kind !== "purposes") return null;
         purposeParts.push(reply);
@@ -5227,10 +5281,13 @@ class DemandClient {
     const n = this.computeN;
     if (!n || this.status !== "ready") return Promise.resolve(null);
     const id = this.rowsNext++;
+    // (T-3373 B: under the split, the market's holder alone holds it)
+    const m = this.holding?.placed(MARKET_UNIT);
+    const to = m !== undefined && m < n ? [m] : Array.from({ length: n }, (_, i) => i);
     return new Promise((done) => {
       const t = window.setTimeout(() => this.rowsAnswered(id, null, true), ROWS_WAIT_MS);
-      this.rowsAsked.set(id, { left: n, done: (r) => { clearTimeout(t); done(r); } });
-      for (let i = 0; i < n; i++) this.workers[i].postMessage({ kind: "rows", id, key, place } satisfies ToDemand);
+      this.rowsAsked.set(id, { left: to.length, done: (r) => { clearTimeout(t); done(r); } });
+      for (const i of to) this.workers[i].postMessage({ kind: "rows", id, key, place } satisfies ToDemand);
     });
   }
   private rowsAnswered(id: number, rows: CorridorRows | null, timedOut = false) {
@@ -5248,6 +5305,15 @@ class DemandClient {
     const [r] = await this.ask((id) => ({ kind: "bareSquares", id, version, end, cells }), [this.computeN]);
     return r?.kind === "bareSquares" && r.xy && r.share ? { xy: r.xy, share: r.share, ...(r.air ? { air: r.air } : {}) } : null;
   }
+  /** A selection of the zone in view as the regional market's squares, for a market question at `t`: a zone open
+   * bare's from the aux worker; T-3373 B: under the split, from the zone's solving holder at `t`'s round (the
+   * market's holder may not hold the zone); undefined: the worker asked holds the zone, null: none */
+  private async selSquares(t: Target, end: number, cells: Uint32Array): Promise<SelSquares | null | undefined> {
+    if (this.isBare(activeCity.peek())) return this.bareSquares(t.view, end, cells);
+    if (!this.holding || this.fversions.has(t.version)) return undefined;
+    const [r] = await this.ask((id) => ({ kind: "bareSquares", id, version: t.version, end, cells }), undefined, [], undefined, t);
+    return r?.kind === "bareSquares" && r.xy && r.share ? { xy: r.xy, share: r.share, ...(r.air ? { air: r.air } : {}) } : null;
+  }
 
   /** The longer trips of a bubble selection (game/demand.ts `IntercitySelection`, T-118). */
   /** `still`: whether the selection is still wanted; asked once the far end is on its way, so a
@@ -5259,7 +5325,7 @@ class DemandClient {
   private async intercitySelectionAt(t: Target, end: "home" | "work", cells: Uint32Array, still?: () => boolean): Promise<IntercitySelection | null> {
     const version = t.view;
     const e = end === "home" ? 0 : 1;
-    const sq = this.isBare(activeCity.peek()) ? await this.bareSquares(version, e, cells) : undefined;
+    const sq = await this.selSquares(t, e, cells);
     if (sq === null) return null;
     // T-2746: after the far end's `flows` is posted, never before it in worker 0's queue; while a solve
     // runs that can wait for a round, hence the shorter cap then

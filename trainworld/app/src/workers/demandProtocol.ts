@@ -150,6 +150,17 @@ const QUERY_KIND_LIST = ["cells", "subSums", "cellModes", "station", "flowRail",
 export type QueryKind = (typeof QUERY_KIND_LIST)[number];
 const QUERY_KINDS: ReadonlySet<string> = new Set(QUERY_KIND_LIST);
 export const isQuery = <T extends { kind: string }>(m: T): m is Extract<T, { kind: QueryKind }> => QUERY_KINDS.has(m.kind);
+/**
+ * T-3373 B (`solve.split`): who answers a question about a split solve. A zone's own questions go to its solving
+ * holder (`bareSquares` there: the squares of a selection of a zone it solves, at the round asked about); the
+ * market's to the market's holder; `transfers` to every solving worker, whose answers add. The rest, and any
+ * question the page names a worker for (the aux worker's), go as without the split.
+ */
+export const ZONE_QUERIES: ReadonlySet<QueryKind> = new Set<QueryKind>(["subSums", "station", "flowRail", "purposes", "flows", "purposeModes", "trip", "tripLengths", "bareSquares"]);
+export const MARKET_QUERIES: ReadonlySet<QueryKind> = new Set<QueryKind>(["icSel", "icStation", "icTrip", "airLegs", "regLegs"]);
+/** T-3373 B: an answer about a split solve lists the populations it covers (`pops`): zone ids, and this for the
+ * market (every cluster's part), each over the periods of the answer's `mask` */
+export const MARKET_POP = "market";
 
 export type ToDemand =
   /** start the WASM with the periods this worker solves; city packs (header text and .bin) and
@@ -524,8 +535,8 @@ export type FromDemand =
    * purpose; null: no network, or not `version` and `round` */
   | { kind: "purposeModes"; id: number; city: CityId; version: number; mask: number; modes: Float32Array | null }
   /** triples (route node arriving, route node leaving, riders), each pair once, summed over this
-   * worker's periods; null: no network, or not `version` and `round` */
-  | { kind: "transfers"; id: number; city: CityId; version: number; mask: number; pairs: Float32Array | null }
+   * worker's periods (f64 in whole steps with `exactSum`); null: no network, or not `version` and `round` */
+  | { kind: "transfers"; id: number; city: CityId; version: number; mask: number; pairs: Float32Array | Float64Array | null }
   /** one `DemandApi.trip` answer per period in `periods` (the cells' x, y turned into world
    * metres); null: no network, or not `version` and `round` */
   | { kind: "trip"; id: number; city: CityId; version: number; mask: number; periods: number[]; answers: Float64Array[] | null }
@@ -556,3 +567,7 @@ export type FromDemand =
   /** T-2365: eight blocks of `trip_length_edges` bins each (trips, rail, walking, no way, then their
    * km); null: not `version` and `round` (or not held here); `everyday` null for a zone without the layer */
   | { kind: "tripLengths"; id: number; city: CityId; version: number; mask: number; edges: Float32Array; commute: Float64Array | null; everyday: Float64Array | null; kinds: Float64Array | null };
+/** T-3373 B: a question's answer as it arrives, with the populations it covers when the solve asked about was split
+ * (`MARKET_POP`); transfers' also every population of the clusters holding a route node asked about (`of`), a cluster's
+ * market part as `market:<cluster>` */
+export type Answer = Extract<FromDemand, { kind: QueryKind }> & { pops?: string[]; of?: string[] };

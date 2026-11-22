@@ -32,7 +32,7 @@ import { countryFareScales, faresIn, marketFareFactors, roundedDefault } from ".
 import { demandZones } from "../game/fareZones";
 import { fareFactors, fareScale, fareWeight, marketFareWeight } from "../game/income";
 import type { CorridorBook, CorridorRows } from "../game/demand";
-import { ALL_PERIODS, arriveOf, comeMax, MARKET_TRIP_LAYOUT, TRIP_LAYOUT, type BareFigures, type ExactParts, type SelSquares, type DemandNetwork, type FromDemand, type Heap, type MarketPack, type MarketRows, type OpenRejected, type ToDemand } from "./demandProtocol";
+import { ALL_PERIODS, arriveOf, comeMax, MARKET_POP, MARKET_QUERIES, MARKET_TRIP_LAYOUT, TRIP_LAYOUT, type QueryKind, type BareFigures, type ExactParts, type SelSquares, type DemandNetwork, type FromDemand, type Heap, type MarketPack, type MarketRows, type OpenRejected, type ToDemand } from "./demandProtocol";
 import { addIntercity } from "./demandSums";
 import { CRUSH_SCALE, FARE_SCALE, LOAD_SCALE, addInto, stepOf, toF32 } from "./exactSum";
 import { VIEW_TOLERANCE, sameView } from "./demandView";
@@ -496,8 +496,9 @@ function boxesOf(cityInfo: Record<CityId, number[]>): { boxes: Record<CityId, Bo
 /** T-392: the clusters of the last few networks, so a question about a shown result whose cluster
  * this worker still holds is answered at once, whatever else is being solved. `railed`: the network
  * has stations and lines (a population set on it then has subzones). */
-/** `markets` (T-1607): the periods whose market this worker solved for it */
-interface Version { clusters: JobCluster[]; stations: number; railed: boolean; nodes: number; rounds: number; markets: number[] }
+/** `markets` (T-1607): the periods whose market this worker solved for it; `split` (T-3373 B): solved under a
+ * holding plan, `market` whether this worker held the market in it */
+interface Version { clusters: JobCluster[]; stations: number; railed: boolean; nodes: number; rounds: number; markets: number[]; split?: { market: boolean } }
 const maskOf = (qs: number[]) => qs.reduce((m, q) => m | (1 << q), 0);
 const versions = new Map<number, Version>();
 const KEEP_VERSIONS = 6;
@@ -1255,7 +1256,8 @@ const CITY_ORDER = new Map(CITIES.map((c, i) => [c.id, i]));
 /** The demand views' queries (T-078). They run between periods, never inside a solve. */
 function query(msg: Query) {
   // (T-1533: and the bubbles' sums read from the live state: a weekend's, one purpose's)
-  const byRound = BY_ROUND.has(msg.kind) || msg.kind === "purposeModes" || (msg.kind === "subSums" && ((msg as { day?: number }).day ?? 0) !== 0);
+  // (T-3373 B: and the squares of a selection of a zone this worker solves, `bareSquares` from a solving worker)
+  const byRound = BY_ROUND.has(msg.kind) || msg.kind === "purposeModes" || (msg.kind === "subSums" && ((msg as { day?: number }).day ?? 0) !== 0) || (msg.kind === "bareSquares" && !bare.has(msg.city));
   if ((msg as { wait?: boolean }).wait && msg.kind !== "cells" && byRound && !aux) {
     const { version, round } = msg;
     // T-402: a zone in a later group of the solve in hand waits for that group's round
@@ -1275,11 +1277,27 @@ function query(msg: Query) {
   // T-285: when the question was taken up (epoch ms) and how long it took, for ?debug=1's timings
   const qStart = performance.timeOrigin + performance.now();
   const sendMessage = (reply: WithoutCity<FromDemand>, transfer: Transferable[] = []) => {
-    postMessage({ ...reply, city: msg.city, qStart, qMs: performance.timeOrigin + performance.now() - qStart }, { transfer });
+    postMessage({ ...reply, city: msg.city, qStart, qMs: performance.timeOrigin + performance.now() - qStart, ...(split ? { pops: popsOf(reply), ...(reply.kind === "transfers" ? { of: [...covers.of] } : {}) } : {}) }, { transfer });
+  };
+  // T-3373 B: about a split solve, the populations the answer covers (demandProtocol `MARKET_POP`): the zone asked
+  // about or the market, once answered; transfers' every one this worker added, and every one of the clusters
+  // holding a route node asked about (`covers`, `of`)
+  const split = at?.split;
+  const covers = { pops: new Set<string>(), of: new Set<string>(), mask: ALL_PERIODS };
+  const popsOf = (r: WithoutCity<FromDemand>): string[] => {
+    if (r.kind === "transfers") return r.pairs ? [...covers.pops] : [];
+    const answered = "mask" in r ? r.mask !== 0 : r.kind === "flows" ? !!r.packed : r.kind === "bareSquares" ? !!r.xy : false;
+    if (!answered) return [];
+    if (MARKET_QUERIES.has(r.kind as QueryKind)) return split?.market ? [MARKET_POP] : [];
+    return cities.has(msg.city) ? [msg.city] : [];
   };
   // T-402: the rounds this worker holds are its group's; a cluster of another group has none of them
   const atRound = (c: JobCluster | undefined) => msg.kind !== "cells" && msg.version === current && (!c || (groupOf.get(c) ?? stageGroup) === stageGroup) && units.every(q => roundsHeld[q] === msg.round);
   const live = !!a && msg.kind !== "cells" && (atRound(cl) || (kept && msg.round === at!.rounds));
+  // (T-3373 B: under the split, for a worker that may hold nothing of the zone asked about's cluster, the market's
+  // holder or a worker adding its own populations' transfers: the version's last round, or the round in hand; each
+  // cluster then answers only if it holds that round, `transfersAt`, `clusterLive`)
+  const netLive = !!at?.split && msg.kind !== "cells" && (msg.round === at.rounds || (msg.version === current && units.every((q) => roundsHeld[q] === msg.round)));
   // the network's subzones, whatever round (cellModes, flows)
   const sameNet = msg.kind !== "cells" && ((msg.version === current && (!cl || !groupOf.has(cl) || ready.has(cl))) || kept);
   // the regional market's state at the round asked about (its clusters may not be the city's):
@@ -1359,7 +1377,7 @@ function query(msg: Query) {
       sendMessage({ kind: "icSel", id: msg.id, version: msg.version, mask, packed }, packed ? [packed.buffer] : []);
     } else if (msg.kind === "icStation") {
       const sc = mcs.find((c) => (c.stLocal[msg.station] ?? -1) >= 0);
-      const ok = live && (!sc || clusterLive(sc)) && !!intercity;
+      const ok = (live || netLive) && (!sc || clusterLive(sc)) && !!intercity;
       const packed = ok ? (marketStationFlows(at!, sc, intercity!, msg.station, day)) : null;
       sendMessage({ kind: "icStation", id: msg.id, version: msg.version, mask: ok ? (sc?.part ?? intercity!).solved_mask() : 0, packed: packed && packed.length ? packed : null }, packed ? [packed.buffer] : []);
     } else if (msg.kind === "purposeModes") {
@@ -1368,8 +1386,14 @@ function query(msg: Query) {
       const modes = !live ? null : layer && msg.purpose < layer.purpose_count() ? withNone(layer.cell_modes_of_day(msg.purpose, day), layer.cell_unreach_day(msg.purpose, day)) : new Float32Array(0);
       sendMessage({ kind: "purposeModes", id: msg.id, version: msg.version, mask: live ? a!.solved_mask() : 0, modes }, modes ? [modes.buffer] : []);
     } else if (msg.kind === "transfers") {
-      const pairs = live ? transfersAt(at!, msg.version === current && units.every(q => roundsHeld[q] === msg.round), msg.nodes, day) : null;
-      sendMessage({ kind: "transfers", id: msg.id, version: msg.version, mask: live ? a!.solved_mask() : 0, pairs }, pairs ? [pairs.buffer] : []);
+      if (split) {
+        // T-3373 B: every population this worker holds, whether or not it holds the zone asked about
+        const pairs = netLive ? transfersAt(at!, msg.version === current && units.every(q => roundsHeld[q] === msg.round), msg.nodes, day, covers) : null;
+        sendMessage({ kind: "transfers", id: msg.id, version: msg.version, mask: pairs ? covers.mask : 0, pairs }, pairs ? [pairs.buffer] : []);
+      } else {
+        const pairs = live ? transfersAt(at!, msg.version === current && units.every(q => roundsHeld[q] === msg.round), msg.nodes, day) : null;
+        sendMessage({ kind: "transfers", id: msg.id, version: msg.version, mask: live ? a!.solved_mask() : 0, pairs }, pairs ? [pairs.buffer] : []);
+      }
     } else if (msg.kind === "trip") {
       // T-195: the trip as a commute, or as an everyday purpose (T-586), each period this worker
       // holds; the cells back in world metres
@@ -1397,7 +1421,7 @@ function query(msg: Query) {
       // T-866: each period from the market part with the most rail (each part's rail is its own
       // network's); with no part, an answer with no rail (T-3632: why 6), and with parts but none
       // that solved the period, one the client reads as not answered (7)
-      const ok = marketLive || (mcs.length === 0 && !!intercity && live);
+      const ok = marketLive || (mcs.length === 0 && !!intercity && (live || netLive));
       // T-885: a near place or 6 km zone instead of cells
       const near = ok ? msg.near : undefined;
       const sq = !ok || near ? null : msg.sq ?? (a ? selectionSquares(msg.city, a, msg.end, msg.cells) : null);
@@ -1443,8 +1467,10 @@ function query(msg: Query) {
       sendMessage({ kind: "bareFlows", id: msg.id, packed: out, masks: b ? groupMasks : [], work, everyday: extra, names }, [...(out ? [out.buffer] : []), ...work.map((v) => v.buffer), ...extra.map((v) => v.buffer)]);
     } else if (msg.kind === "bareSquares") {
       // T-336: the solving workers hold the market but not the zone: its squares come from here
+      // (T-3373 B: under the split, a zone this worker solves, for the market's holder: at the round asked about, as
+      // its everyday layer's airport legs come from it)
       const b = bare.get(msg.city);
-      const sq = b ? selectionSquares(msg.city, b.a, msg.end, msg.cells, b.e ?? undefined, day) : null;
+      const sq = b ? selectionSquares(msg.city, b.a, msg.end, msg.cells, b.e ?? undefined, day) : split && live ? selectionSquares(msg.city, a!, msg.end, msg.cells, everyday.get(msg.city), day) : null;
       sendMessage({ kind: "bareSquares", id: msg.id, xy: sq?.xy ?? null, share: sq?.share ?? null, ...(sq?.air ? { air: sq.air } : {}) });
     } else if (msg.kind === "airLegs") {
       // T-3500: as `icSel`: the all-mode legs from the market of every open pack over this worker's
@@ -1531,13 +1557,27 @@ function answerWaiting() {
 /**
  * Transfers with either end at one of `nodes` (T-176): every population of the job, every period
  * this worker holds, each (arriving, leaving) route node pair once. Asked for one station complex
- * on selection, so the answer is a few thousand numbers, never the whole network's.
+ * on selection, so the answer is a few thousand numbers, never the whole network's. T-3373 B, with `exactSums`:
+ * in whole steps in an f64, by route node pair, so the page's sum over workers is the same however they hold the
+ * populations (the clock's platform crowds read it).
  */
-function transfersAt(at: Version, allLive: boolean, nodes: Uint32Array, day: number): Float32Array {
+function transfersAt(at: Version, allLive: boolean, nodes: Uint32Array, day: number, covers?: { pops: Set<string>; of: Set<string>; mask: number }): Float32Array | Float64Array {
   const sum = new Map<number, number>(), jobNodes = at.nodes;
-  for (const c of at.clusters) {
+  // (T-3373 B `covers`: the populations added here, and every one of the clusters holding an asked node, added here
+  // or not; a cluster's market part as `market:k`, the clusters split alike in every worker)
+  const asked = covers ? new Set(nodes) : null;
+  at.clusters.forEach((c, k) => {
+    if (covers && c.nodeGlobal.some((g) => asked!.has(g))) {
+      for (const id of c.cities) covers.of.add(id);
+      if (c.market) covers.of.add(`${MARKET_POP}:${k}`);
+    }
     // T-392: a cluster mid-solve has no figures for this network yet (T-402: nor one of a later group)
-    if (!isHeld(c) && !(allLive && (groupOf.get(c) ?? stageGroup) === stageGroup)) continue;
+    if (!isHeld(c) && !(allLive && (groupOf.get(c) ?? stageGroup) === stageGroup)) return;
+    if (covers) {
+      for (const id of c.cities) { const p = cities.get(id); if (p && c.pops.includes(p)) covers.pops.add(id); }
+      if (c.part && c.pops.includes(c.part)) covers.pops.add(`${MARKET_POP}:${k}`);
+      for (const p of c.pops) covers.mask &= p.solved_mask();
+    }
     for (const p of c.pops) {
       const view = viewOf(c, p), local = nodeLocal(view, jobNodes);
       const sel = new Uint8Array(view.nodeGlobal.length);
@@ -1550,13 +1590,13 @@ function transfersAt(at: Version, allLive: boolean, nodes: Uint32Array, day: num
       const v = p.transfers_day(sel, day);
       for (let k = 0; k + 2 < v.length; k += 3) {
         const key = view.nodeGlobal[v[k]] * jobNodes + view.nodeGlobal[v[k + 1]];
-        sum.set(key, (sum.get(key) ?? 0) + v[k + 2]);
+        sum.set(key, (sum.get(key) ?? 0) + (exactSums ? stepOf(v[k + 2]) : v[k + 2]));
       }
     }
-  }
-  const out = new Float32Array(3 * sum.size);
+  });
+  const out = exactSums ? new Float64Array(3 * sum.size) : new Float32Array(3 * sum.size);
   let o = 0;
-  for (const [key, riders] of sum) {
+  for (const [key, riders] of exactSums ? [...sum].sort((x, y) => x[0] - y[0]) : sum) {
     out[o++] = Math.floor(key / jobNodes); out[o++] = key % jobNodes; out[o++] = riders;
   }
   return out;
@@ -2223,7 +2263,7 @@ async function run() {
         if (sharing && c.part) sharedParts.add(c.part);
       };
       jobNodes = 2 * n.stops.length;
-      versions.set(job.version, { clusters: jobClusters, stations: n.stXY.length / 2, railed: n.stXY.length > 0 && n.lineN.length > 0, nodes: jobNodes, rounds: job.rounds, markets: marketQs });
+      versions.set(job.version, { clusters: jobClusters, stations: n.stXY.length / 2, railed: n.stXY.length > 0 && n.lineN.length > 0, nodes: jobNodes, rounds: job.rounds, markets: marketQs, ...(sp ? { split: { market: !!regional } } : {}) });
       for (const v of versions.keys()) if (versions.size > KEEP_VERSIONS && v !== job.version) versions.delete(v);
       const citiesOf = (c: JobCluster, f: Population[]) => c.cities.filter((id) => f.includes(cities.get(id)!) || (everyday.has(id) && f.includes(everyday.get(id)!)));
       const freshCities = (c: JobCluster) => citiesOf(c, localOf.get(c)!);
