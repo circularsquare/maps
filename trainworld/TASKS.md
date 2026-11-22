@@ -327,10 +327,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-1560 [P3] {L:solve-speed} Deal city zones between solving workers
   - Context: Design only: zones dealt to workers instead of periods, the route to the whole world (T-1169 stage 5).
   - Other: notes/T-1560.md
-- T-1354 [P2] {L:solve-consistency} Market corridor figures depend on pack order (taking, 2026-11-22, agent packorder)
-  - Context: Which market packs were open at a worker start changes its corridor table; on the real save two tables were ten rows apart.
-  - Goal: Longer trips depend only on the world rows, whatever order packs arrive.
-  - Other: notes/T-1354.md, notes/T-1174.md
 - T-1367 [P3] {L:memory} Demand worker heap keeps closed zones
   - Context: After zones or a market close, a worker's heap still holds them until its next solve (all-China: 2,041 MB at rest).
   - Goal: A worker frees closed zones promptly so the restart need not wait for a solve.
@@ -389,7 +385,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Your 11-21 calls: Add a track replaces Double up and 2b's "4 tracks" button, on the Select bar and as a + on each side of the track picture; the new track runs the other way from its neighbour (a double becomes 4 tracks in two clicks), with no crossovers and loose at both ends: connections are manual only, though two tracks added at once connect to each other. Refusals give the reason, else "Additional track cannot fit here."; "You can have at most 16 tracks in a bundle"; "You cannot add track to a crossover track", firing only where adding really can't work (check the crossover definition so a legitimate add is never refused). "Segments" in player text, never "runs" (every track string that says run, including "Added a track on {done} of {total} segments. {why}"). The quad help answer is dropped. Per-track price.
   - Goal: A double made 4 tracks in two clicks, then connected manually, runs a line on the new tracks; each refusal names its reason; no "run" left in player text; strings listed.
   - Other: After 4a1 so the new track runs past stations without a platform. From T-4031: making a track end loose where a line runs through is accepted by a plain edit and breaks the line, so this edit must reroute that line or refuse it by name. Files: Blueprint.tsx, wasm/crossings.rs, cost.rs. 3-5 h. notes/T-4023.md
-- T-4030 [P2] {L:track-rework} {after:T-3959} Tracks held as their own records in memory (taking, 2026-11-22, agent trackmodel)
+- T-4030 [P2] {L:track-rework} {after:T-3959} Tracks held as their own records in memory
   - Context: Stages 3a1, 3c, 3e and 4a1 each kept today's in-memory model, where a piece is the derived edge and holds at most one track each way (tracks read from `EdgeData`: count, oneway, join); 3b saves each track on its own but loads back into that model. So stations still split pieces, one track of a double can't be flipped, and a third track can't pass a station. 01-model.md's authored bundles with tracks, compiled to the derived graph, is the design; no stage owned building it. 3f's part B (one track of a double flipped) stopped on it too: paths must name tracks (spans in memory, routing on track ends), ways stored per track, re-pairing across a bundle, trains and line strokes placed per track (notes/T-3957.md has the scope).
   - Goal: Bundles and their tracks as stored records in memory, compiled to the derived edges, with stations no longer cutting pieces; parity gates A and B byte identical. Planned (notes/T-4030.md, about 30-37 h) as stages T-4031 to T-4037; closes when T-4037 lands.
   - Other: 4b (T-3961), Add a track (T-4024), 4d (T-3963) and 5a (T-3966) wait on its stages. Found by maps-5a with the advisor, 11-22. notes/T-4030.md
@@ -902,6 +898,10 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3932 [P2] {L:memory} A cores slider with its memory and speed
   - Context: You, 11-21, on whether big saves should run two workers: "if we dont have a way of telling how much memory a person actually has this question is meaningless and its on the player to decide. i thinkthe only actionable item here is to like maybe rework "use more cores" to have an actual slider where people can select how many cores and it estimates the resulting memory usage right below and the estimated speed gain or loss." Today Settings has a "Use more cores" switch; stage A (T-3373) caps workers by memory on big saves.
   - Goal: Settings has a slider for the number of solving workers, with the estimated memory and the estimated load and edit time for the open game shown below it, and the player's pick overrides stage A's memory cap.
+- T-4042 [P3] {L:solve-consistency} Drop the compose-afresh on a replaced worker
+  - Context: From T-1354: each worker now rebuilds its corridor book whenever the open market packs change, so T-1174's compose-afresh on a replaced worker is no longer needed.
+  - Goal: The compose-afresh removed, with a late-pack load still equal to a normal one.
+  - Other: notes/T-1354.md
 - T-3939 [P2] {L:memory} Clock worker memory on many-zone phone saves
   - Context: From T-3781, 11-21: on an iPhone reporter's 13-zone Tokyo-start save the clock worker held 15-30% of the tab, 359 MB settled and up to 493 MB before a collection; the tab peaked at 1,628-1,705 MB.
   - Goal: The clock worker's share on that save named piece by piece, and its biggest piece cut, measured on a production build as T-3160 measures.

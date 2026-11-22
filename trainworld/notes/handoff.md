@@ -6,6 +6,9 @@ Updated: 2026-11-22 15:10 UTC
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5.
 
 ## Next
+W. WINDING DOWN (her "lets wind down", 11-22 ~15:20 UTC): start no new agents; land the six running as they report.
+   master eeaa433f has T-4040 (UI) and T-1354 (demand worker: needs the batch checker before 8800 or a publish).
+   T-3939 was started and stopped at once (nothing done, tree removed). Stale trackmodel dropped from the board.
 0. LIVE v0.4.5. Cap is 16 (overnight rule); her daytime number is 8 ("for a while", 11-21): asked her at ~09:00
    local whether to set it back, no answer yet. Cores 0-1 hers (`reserve_cores.ps1 -Loop 30` at takeover). No
    publish yet. Before one: fresh freeze, translations (T-3986, T-3991, T-3999, T-4003, T-4010, T-2264, T-3933,
@@ -22,6 +25,7 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
 4. Waiting on her: T-4025 perf ledger go; T-4041 route choice; China top-up (ask). Wiki on the website on hold.
 
 ## Her words
+- 11-22 ~15:20 UTC: "lets wind down".
 - 11-22 ~04:30 UTC: last day of the usage week, a decent chunk left: aim to finish track stage 4 overnight ("if we run
   out, we run out"); compute-heavy, token-light tasks too (the Caucasus and Afghanistan, done). China populations look
   old: T-4028. Overnight cap 16; back to 8 when she's up (ask).
@@ -52,5 +56,4 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
 - notes/T-3688/kit and notes/T-3444-design/tasks-to-file.md are untracked working files (kit: the redraw scripts).
 - Undo of +5 trains doesn't refund (batch checker 11-22): likely by design, not checked against the parent.
 - A yes she gives in another session's tab doesn't pass the permission check here: ask again in this tab.
-- Commit messages through PowerShell: single quotes, or "$2M" becomes empty (49fa812e lost "US$2M").
 - A task with stages left: `agent-tree.mjs land` + `remove`, not `finish` (it archives); swap the taking mark by hand.
