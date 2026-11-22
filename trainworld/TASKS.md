@@ -386,7 +386,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: Closes with the last of its stages.
   - Other: Your notes verbatim: notes/T-3444.md; sizes in notes/code-tour.md. Requirements folded in 11-20: a station placed on track that leaves its shape alone redraws no neighbours (T-2767, 0.2-0.9 s today); the drawn network rebuilds only near a change (T-2701); the Penn Station to Emeryville snapped preview (3 s, T-763) as a check case. notes/review-edit-speed-2026-11-20.md
 - T-4026 [P2] {L:track-rework} {after:the first tw/track release} TWT7 outside the game before the merge
-  - Context: From T-3953 (tracksave): before tw/track merges into master, shonei-server's save check must walk TWT7 (body levels 1-3) and levels 39-41 (deploy on your yes), `pipeline/readsave.py` must read TWT7 (realauto's keep and service take player saves), and 07-saves still says "body level 36". Master's next save level is renumbered past tw/track's 40 at that merge.
+  - Context: From T-3953 (tracksave): before tw/track merges into master, shonei-server's save check must walk TWT7 (body levels 1-3, with 4a2's per-stop picks varint) and levels 39-41 (deploy on your yes), `pipeline/readsave.py` must read TWT7 (realauto's keep and service take player saves), and 07-saves still says "body level 36". Master's next save level is renumbered past tw/track's 40 at that merge.
   - Goal: A TWT7 save passes the server check and readsave.py on a real save; the docs say level 40.
 - T-3958 [P2] {L:track-rework} {after:the first tw/track release} Ship the re-saved sandbox starts at the merge
   - Context: Stage 3g landed on tw/track 11-22: `realnet.py resave` re-saves all 41 starts as TWT7 with bundles (same fingerprints, London 256 ms), but data/packs/real keeps today's TWT6 files since master can't read TWT7.
@@ -396,10 +396,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Your 11-21 calls: Add a track replaces Double up and 2b's "4 tracks" button, on the Select bar and as a + on each side of the track picture; the new track runs the other way from its neighbour (a double becomes 4 tracks in two clicks), with no crossovers and loose at both ends: connections are manual only, though two tracks added at once connect to each other. Refusals give the reason, else "Additional track cannot fit here."; "You can have at most 16 tracks in a bundle"; "You cannot add track to a crossover track", firing only where adding really can't work (check the crossover definition so a legitimate add is never refused). "Segments" in player text, never "runs" (every track string that says run, including "Added a track on {done} of {total} segments. {why}"). The quad help answer is dropped. Per-track price.
   - Goal: A double made 4 tracks in two clicks, then connected manually, runs a line on the new tracks; each refusal names its reason; no "run" left in player text; strings listed.
   - Other: After 4a1 so the new track runs past stations without a platform. Files: Blueprint.tsx, wasm/crossings.rs, cost.rs. 3-5 h. notes/T-4023.md
-- T-3960 [P2] {L:track-rework} {after:T-3959} Smart stop allocation (taking, 2026-11-22, agent trackstop)
-  - Context: Your decision 3: one click makes a two-way stop, each way's stop point picked at the click and stored (the return preferring the outward track's partner), re-picked only when it goes; the "trains can't pass here" flag; `perdir` way stations and `station_beside` go.
-  - Goal: Your split legs get a two-way stop in one click; the T-3605 and T-3711 cases are unchanged.
-  - Other: Files: perdir.rs, twin.rs, wasm/lines.rs. 3-4 h. stage 4a2
 - T-4030 [P2] {L:track-rework} {after:T-3959} Tracks held as their own records in memory (taking, 2026-11-22, agent trackmodel)
   - Context: Stages 3a1, 3c, 3e and 4a1 each kept today's in-memory model, where a piece is the derived edge and holds at most one track each way (tracks read from `EdgeData`: count, oneway, join); 3b saves each track on its own but loads back into that model. So stations still split pieces, one track of a double can't be flipped, and a third track can't pass a station. 01-model.md's authored bundles with tracks, compiled to the derived graph, is the design; no stage owned building it. 3f's part B (one track of a double flipped) stopped on it too: paths must name tracks (spans in memory, routing on track ends), ways stored per track, re-pairing across a bundle, trains and line strokes placed per track (notes/T-3957.md has the scope).
   - Goal: Bundles and their tracks as stored records in memory, compiled to the derived edges, with stations no longer cutting pieces; parity gates A and B byte identical. Planned (notes/T-4030.md, about 30-37 h) as stages T-4031 to T-4037; closes when T-4037 lands.
@@ -437,7 +433,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Each old station node becomes a station with its platforms; each stop keeps the way picks today's rule makes.
   - Goal: The three reference saves' figures equal to master.
   - Other: Side by side with 4c, 4d, 4e. Files: save.rs converter. 3-4 h. stage 4b
-- T-3962 [P2] {L:track-rework} {after:T-3960} Demand from stop points and the track chip
+- T-3962 [P2] {L:track-rework} {after:T-3960} Demand from stop points and the track chip (taking, 2026-11-22, agent trackdemand)
   - Context: Demand's snapshot rows come from stop points; one complex rule, in the sim; the stop list gets its track chip.
   - Goal: Packed demand arrays byte for byte on NYC, then the same rail trips a day.
   - Other: Side by side with 4b, 4d, 4e. Files: demandClient.ts, demand/network.rs, complexes.ts, the line panel's stop list. 4-6 h. stage 4c
