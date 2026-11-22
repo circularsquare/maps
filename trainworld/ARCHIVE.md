@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4027 [P2] {L:world-tooling} Downloads break on Geofabrik's India move (2026-11-22): pipeline/geofabrik.py resolves every download (world_run, routes, osm_water, japan_zones, world_plan); ids unchanged for old and new index URLs; HEAD 200 for India, Philippines, Hokkaido, Bavaria and European regions. notes/T-4027.md.
+- T-4029 [P2] {L:map-look} Population view stuck on after a load (2026-11-22): Cause: DemandOverlay.draw() returned on a lost context before hiding the canvas; it now empties and hides first. Shown with a forced context loss; likely but not proven to be the player's case. notes/T-4029.md.
 - T-3962 [P2] {L:track-rework} Demand from stop points and the track chip (2026-11-22): Demand rows and the one complex rule in the sim, packed demand byte for byte on Amsterdam, Vienna and real NYC; stop list track chip; the one-track Vienna fix moved to 4b (T-3961). notes/T-3962.md.
 - T-4032 [P2] {L:track-rework} Runs read the derived edges (2026-11-22): Runs read derived edges (derived.rs, DEntry), gates A and B byte identical plus run tables and an undo check; North America load about 6% slower, cause unconfirmed. notes/T-4032.md.
 - T-4031 [P2] {L:track-rework} Track records on pieces (2026-11-22): Track records on pieces read by the compile; loose track ends; TWT7 body level 4; gates A and B byte identical three ways; smoke 30/30. notes/T-4031.md.

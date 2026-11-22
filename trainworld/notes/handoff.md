@@ -16,12 +16,10 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
    deferred) gates 4b, Add a track, 5a: plan note first, after 3f answers. A finish onto
    tw/track can stop on a docs conflict: resolve in the tree (CRLF files), rebase --continue, rerun tests, finish.
 3. T-3373 B: stages 3-5 landed under ?split=1; stage 6 (edits) next, not started (usage).
-4. Muzaffarpur and Manila rebuilt (all shipped, split_zones clean, changelog c047; notes/T-3688.md). After
-   caucasus's gates end (they serve the main app/): place-names-zones.json drops uji and mri, land popstuck (T-4029,
-   changelog popstuck-1), smoke, commit game json, 8800. caucasus reused id `mri` (retired Mariveles) for an Afghan
-   zone, so mri -> ctg never landed: told it to rename. Hokkaido: Dochuo one zone with Sapporo, day session.
-5. Waiting on her: T-4025 perf ledger go. Wiki on the website on hold. Agents: trackmodel (fresh, T-4033 stage c), caucasus (T-3764); 4c landing. geofab (T-4027) done in
-   its tree: land on master with popstuck after caucasus's runs (it changes the pipeline they use).
+4. Night data committed (97b660d9: Muzaffarpur, Manila, GE AM AZ AF, changelog c047 c048); popstuck and geofab
+   landed; smoke 30/30 on 547389c2; 8800 rebuilding to it; batchchk (Sonnet) checks batch 13 + tonight on master.
+   Left for her: Abkhazia/South Ossetia left out, Northern Cyprus with Cyprus (T-3764). Hokkaido: day session.
+5. Waiting on her: T-4025 perf ledger go. Wiki on the website on hold. Agents: trackmodel (fresh, T-4033 stage c), batchchk (master checker).
    T-4030 planned as T-4031-T-4037 (+T-4038 flip); stages a, b landed (tw/track b3529ede). 4e's Join waits on 4b. 3e/3f strings to her (notes).
 ## Her words
 - 11-22 ~04:30 UTC: last day of the usage week, a decent chunk left: aim to finish track stage 4 overnight ("if we run
