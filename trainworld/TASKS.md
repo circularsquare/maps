@@ -902,7 +902,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: From T-1354: each worker now rebuilds its corridor book whenever the open market packs change, so T-1174's compose-afresh on a replaced worker is no longer needed.
   - Goal: The compose-afresh removed, with a late-pack load still equal to a normal one.
   - Other: notes/T-1354.md
-- T-3939 [P2] {L:memory} Clock worker memory on many-zone phone saves
+- T-3939 [P2] {L:memory} Clock worker memory on many-zone phone saves (taking, 2026-11-22, agent clockmem)
   - Context: From T-3781, 11-21: on an iPhone reporter's 13-zone Tokyo-start save the clock worker held 15-30% of the tab, 359 MB settled and up to 493 MB before a collection; the tab peaked at 1,628-1,705 MB.
   - Goal: The clock worker's share on that save named piece by piece, and its biggest piece cut, measured on a production build as T-3160 measures.
   - Other: notes/T-3781.md "The iPhone crash reports"
@@ -962,7 +962,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your umbrella for schematic work (2026-11-16). Both fixes you picked from mocks landed 2026-11-12: cities keep their turn on big maps, and bigger city centres.
   - Goal: Open while its parts are: buses and ferries (T-3360), the continent-scale view (T-2724), rivers (T-3358, paused). Nothing lands before you review it.
   - Other: notes/T-3345.md
-- T-3346 [P2] {L:timetables} Timetables, stage 3 onward
+- T-3346 [P2] {L:timetables} Timetables, stage 3 onward (taking, 2026-11-22, agent timetables)
   - Context: Design revised twice after your replies: Simple, Detailed and Exact modes, six stages. Stages 1 and 2 landed (ac72df8d; e40d878e on 11-19, locals wait for the express at passing stations); T-3542 covered part of 3-4. Left of 3-4: up to 6 freely split rows, weekend-only lines, weekend rows with their own hours, the board's weekday/weekend tabs. Old tree tt2's unported work is kept as artifacts/trainworld/tt2-unported-2026-11-19.patch. At 30/10 one direction still falls back to averaged waits (sizing round trips on real waits, 4-6 h, needs a design note).
   - Goal: The rest built in stages (about 40-60 h before Exact).
   - Other: Stage 4 reuses the sim parts of GabrielMoraez's PR 13 (per-line calendar, crowding and running cost per kind of day, fleets sized to the busiest day, tests), credited; the PR itself is not merged (notes/pr-survey-2026-11-16.md). notes/T-3346.md

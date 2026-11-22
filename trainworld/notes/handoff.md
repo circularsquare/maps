@@ -6,9 +6,10 @@ Updated: 2026-11-22 15:10 UTC
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5.
 
 ## Next
-W. WINDING DOWN (her "lets wind down", 11-22 ~15:20 UTC): start no new agents; land the five running as they report.
-   master eeaa433f has T-4040 (UI) and T-1354 (demand worker: needs the batch checker before 8800 or a publish).
-   T-3939 was started and stopped at once (nothing done, tree removed). Stale trackmodel dropped from the board.
+W. Back to normal (her "can keep going", 11-22 ~15:50 UTC, after a short wind-down). Running from 15:45: clockmem
+   (T-3939), timetables (T-3346 stage 3). master has T-4040 (UI) and T-1354 (demand worker): 8800 rebuild and the
+   batch checker wait for hokkaido's join to finish (it owns data/packs). Strings to ack collected in
+   artifacts/trainworld/review/strings-to-ack.md.
 0. LIVE v0.4.5. Cap is 16 (overnight rule); her daytime number is 8 ("for a while", 11-21): asked her at ~09:00
    local whether to set it back, no answer yet. Cores 0-1 hers (`reserve_cores.ps1 -Loop 30` at takeover). No
    publish yet. Before one: fresh freeze, translations (T-3986, T-3991, T-3999, T-4003, T-4010, T-2264, T-3933,
@@ -25,7 +26,7 @@ W. WINDING DOWN (her "lets wind down", 11-22 ~15:20 UTC): start no new agents; l
 4. Waiting on her: T-4025 perf ledger go; T-4041 route choice; China top-up (ask). Wiki on the website on hold.
 
 ## Her words
-- 11-22 ~15:20 UTC: "lets wind down".
+- 11-22 ~15:20 UTC: "lets wind down"; ~15:50 "got it ok, can keep going". Hokkaido via the old Japan tool: fine.
 - 11-22 ~04:30 UTC: last day of the usage week, a decent chunk left: aim to finish track stage 4 overnight ("if we run
   out, we run out"); compute-heavy, token-light tasks too (the Caucasus and Afghanistan, done). China populations look
   old: T-4028. Overnight cap 16; back to 8 when she's up (ask).
