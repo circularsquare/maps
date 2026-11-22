@@ -749,11 +749,12 @@ notes/T-420.md has the tables.
 - **Which line riders take** (Anita 2026-11-22, T-4041). Where several lines go towards a
   rider's stop, riders turn up at random; three quarters take whichever gets them there first
   and a quarter the first train that comes (unless it is sure to arrive after the others would),
-  each line's wait uniform over its headway and independent of the others' (docs/demand-kernel.md
-  4). One rule for every place. Why it may not carry over: where lines sharing a trunk are timetabled to
-  alternate evenly the wait is shorter than independence gives (two lines every 10 minutes: 2.5
-  minutes, not 3.3), and where riders check a live departure board or an app they know the next
-  train, which this rule assumes they act on. Check: the split between an express and a local on
+  each line's wait uniform over its headway and independent of the others'; lines on one track and
+  stops with nowhere to pass are one evenly spaced service where their riders get off alike (T-4050:
+  two lines every 10 minutes wait 2.5 minutes, not 3.3; docs/demand-kernel.md 4). One rule for every
+  place. Why it may not carry over: elsewhere real timetables also space lines that share only a
+  platform or meet at a junction, and where riders check a live departure board or an app they
+  know the next train, which this rule assumes they act on. Check: the split between an express and a local on
   a corridor with published line counts.
 - **Waiting and crowding penalties.** A wait counts as plain minutes, half the headway, with no
   weight (Anita, T-585), where the literature (mostly US and European) weighs a platform wait

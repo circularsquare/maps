@@ -29,6 +29,17 @@ fn common_test_net(lines: &[&[u32]], tph: &[f32], ride: &[f32]) -> Network {
     net
 }
 
+/// T-4050: `net` with line `l`'s `i`-th stop at a platform of its own, 8 m from its station, so
+/// lines on the same stops through it are no evenly spaced service there (both of its hops).
+fn platform_apart(mut net: Network, l: usize, i: usize) -> Network {
+    if net.stop_x.is_empty() {
+        net.stop_x = net.line_stops.iter().map(|&st| net.st_x[st as usize]).collect();
+        net.stop_y = net.line_stops.iter().map(|&st| net.st_y[st as usize]).collect();
+    }
+    net.stop_x[net.line_off[l] as usize + i] += 8.0;
+    net
+}
+
 fn common_test_params() -> Params {
     // (without a train's way in and out, which `a_train_trip_pays_its_way_in_and_out` tests)
     Params { xfer_walk_m: 0.0, train_in_min: 0.0, train_out_min: 0.0, ..Params::default() }
@@ -282,15 +293,16 @@ fn a_bent_fare_curve_charges_long_trips_and_counts_its_extra() {
     let total: f32 = l.rn_fare_x.iter().sum();
     let want = 10.0 * more * 10.0 + 5.0 * more * 30.0;
     assert!((total - want).abs() < 1e-3, "{total} against {want}");
-    // 0 -> 2 rides either line from 0, the same ride every 10 and every 5 minutes: whichever comes
-    // first, a quarter and three quarters (T-4041); 0 -> 3 line 0, or line 1 to 2 and a change
+    // 0 -> 2 rides either line from 0, the same track and stops every 10 and every 5 minutes: one
+    // evenly spaced service, a third and two thirds by trains an hour (T-4050); 0 -> 3 line 0, or
+    // line 1 to 2 and a change
     // when it comes first (24 and 31 from boarding). Each trip's extra is spread over the
     // stretches it rides by their km, all 20 km (T-1516)
     let (x02, x03) = (10.0 * more * 10.0, 5.0 * more * 30.0);
     let mut sh = [0f32; 2];
     pool_cost(&[(24.0, 6.0), (31.0, 12.0)], 1.0, 1.0, false, &p, &mut PoolWork::default(), Some(&mut sh));
     let (direct, change) = (x03 / 3.0 * sh[0], x03 / 3.0 * sh[1]);
-    for (r, want) in [(8, x02 * 0.75 / 2.0 + change), (9, x02 * 0.75 / 2.0 + change), (0, x02 / 4.0 / 2.0 + direct), (1, x02 / 4.0 / 2.0 + direct), (2, x03 / 3.0)] {
+    for (r, want) in [(8, x02 * 2.0 / 3.0 / 2.0 + change), (9, x02 * 2.0 / 3.0 / 2.0 + change), (0, x02 / 3.0 / 2.0 + direct), (1, x02 / 3.0 / 2.0 + direct), (2, x03 / 3.0)] {
         assert!((l.rn_fare_x[r] - want).abs() < 1e-3, "route node {r}: {:?}", l.rn_fare_x);
     }
     assert!(assign(&graph(&[]), &skims(&graph(&[]), &p), &od).rn_fare_x.iter().all(|&x| x == 0.0));
@@ -466,7 +478,8 @@ fn a_change_inside_a_zone_run_pays_no_transfer_fare() {
     let p0 = common_test_params();
     let px = Params { xfer_fare: xf, ..p0.clone() };
     // route nodes: A 0, 1 and back 2, 3; B 4-7; D 8-11
-    let net = common_test_net(&[&[0, 1], &[1, 3], &[1, 3]], &[12.0, 12.0, 6.0], &[6.0, 6.0, 6.0]);
+    // (D at a platform of its own at 3, so B and D are independent, T-4050)
+    let net = platform_apart(common_test_net(&[&[0, 1], &[1, 3], &[1, 3]], &[12.0, 12.0, 6.0], &[6.0, 6.0, 6.0]), 2, 1);
     let zones = |d_dist: bool| FareZones {
         st: vec![code(1, 1), code(1, 1), code(1, 1), code(1, 2)],
         off: vec![0, 3],
@@ -652,8 +665,9 @@ fn a_lines_own_multiplier_scales_the_base_by_the_largest_on_the_trip() {
         let xf: f32 = lf.rn_base_x.iter().sum();
         assert!((xf + 4.0 * base).abs() < 1e-3, "bent {bent}: only 0 -> 1 rides the free line alone: {xf}");
     }
-    // two lines side by side from 0 to 2, 6 and 12 trains an hour: riders split a quarter and three
-    // quarters, whichever comes first (T-4041), and so does the base's multiplier
+    // two lines on one track and stops from 0 to 2, 6 and 12 trains an hour: one evenly spaced
+    // service, riders split a third and two thirds by trains an hour (T-4050), and so does the base's
+    // multiplier
     let net = common_test_net(&[&[0, 1, 2], &[0, 1, 2]], &[6.0, 12.0], &[2.0, 2.0]);
     let mut g = build_graph(&net, &p);
     let plain = skims(&g, &p);
@@ -661,7 +675,7 @@ fn a_lines_own_multiplier_scales_the_base_by_the_largest_on_the_trip() {
     g.base_min = base;
     g.rn_km = vec![1.0; g.rn_line.len()];
     let sk = skims(&g, &p);
-    let want = base * ((3.0 + 3.0 * 1.5) / 4.0 - 1.0);
+    let want = base * ((3.0 + 2.0 * 1.5) / 3.0 - 1.0);
     assert!((at(&sk.r, 0, 2) - at(&plain.r, 0, 2) - want).abs() < 1e-4, "{} against {want}", at(&sk.r, 0, 2) - at(&plain.r, 0, 2));
 }
 
@@ -1018,12 +1032,13 @@ fn walk_constant_is_in_minutes_and_the_walk_cost_is_flat() {
     assert_eq!(p.walk_trip_cost(WALK_REACH_KM + 0.1), NO_WALK);
 }
 
-/// T-4041: the same ride every 10 and every 5 minutes: riders take whichever comes first, a
-/// quarter and three quarters, and wait on average 5 - 3.75 + 125/150 minutes for it.
+/// T-4041: the same ride every 10 and every 5 minutes, from platforms of their own (T-4050): riders
+/// take whichever comes first, a quarter and three quarters, and wait on average 5 - 3.75 + 125/150
+/// minutes for it.
 #[test]
 fn common_lines_pool_wait_and_split_by_first_arrival() {
     let p = common_test_params();
-    let net = common_test_net(&[&[0, 1], &[0, 1]], &[6.0, 12.0], &[2.0, 2.0]);
+    let net = platform_apart(common_test_net(&[&[0, 1], &[0, 1]], &[6.0, 12.0], &[2.0, 2.0]), 1, 1);
     let g = build_graph(&net, &p);
     let sk = skims(&g, &p);
     assert!((sk.r[1] - (2.0 + 5.0 - 3.75 + 125.0 / 150.0)).abs() < 1e-4, "{}", sk.r[1]);
@@ -1037,11 +1052,64 @@ fn common_lines_pool_wait_and_split_by_first_arrival() {
     assert_eq!(loads.alight.iter().sum::<f32>(), 120.0);
     assert!((loads.rn_board.iter().sum::<f32>() - 120.0).abs() < 1e-3);
     assert!((loads.rn_alight.iter().sum::<f32>() - 120.0).abs() < 1e-3);
-    // Two identical 6-tph lines wait a third of their headway, independent of each other; one
-    // 12-tph line half its own.
+    // Two identical 6-tph lines at platforms of their own wait a third of their headway, independent
+    // of each other (on one platform, a quarter: T-4050); one 12-tph line half its own.
     let one = skims(&build_graph(&common_test_net(&[&[0, 1]], &[12.0], &[2.0]), &p), &p);
-    let two = skims(&build_graph(&common_test_net(&[&[0, 1], &[0, 1]], &[6.0, 6.0], &[2.0, 2.0]), &p), &p);
+    let two = skims(&build_graph(&platform_apart(common_test_net(&[&[0, 1], &[0, 1]], &[6.0, 6.0], &[2.0, 2.0]), 1, 1), &p), &p);
     assert!((one.r[1] - 4.5).abs() < 1e-5 && (two.r[1] - (2.0 + 10.0 / 3.0)).abs() < 1e-4, "{} {}", one.r[1], two.r[1]);
+}
+
+/// T-4050: lines leaving one platform for one platform at the next stop are one evenly spaced
+/// service where their riders get off alike: a trunk of two lines every 10 minutes waits 2.5, not
+/// 3.3, and its riders split by trains an hour; past the split each branch's riders wait for their
+/// own as before. A line skipping the stop (the 4 beside the 6), another platform, or a bus stays
+/// independent.
+#[test]
+fn lines_on_one_track_and_stops_are_evenly_spaced() {
+    let p = common_test_params();
+    let net = common_test_net(&[&[0, 1, 2], &[0, 1, 3]], &[6.0, 6.0], &[2.0, 2.0]);
+    let g = build_graph(&net, &p);
+    assert_eq!(g.rn_even.iter().filter(|&&c| c != NONE).count(), 4, "the trunk hops both ways, nothing else: {:?}", g.rn_even);
+    let sk = skims(&g, &p);
+    assert!((sk.r[1] - 4.5).abs() < 1e-5, "trunk: half of a 5 minute combined headway, {}", sk.r[1]);
+    let mut w = PoolWork::default();
+    let mut sh = [0f32; 2];
+    let branch = pool_cost(&[(4.0, 6.0), (11.0, 6.0)], 1.0, 1.0, false, &p, &mut w, Some(&mut sh)).0 - p.change_at(1.0);
+    assert!((sk.r[2] - branch).abs() < 1e-4, "branch, independent: {} against {branch}", sk.r[2]);
+    let mut od = vec![0.0; 16];
+    od[1] = 90.0;
+    od[2] = 100.0;
+    let loads = assign(&g, &sk, &od);
+    // route node 0 is line 0 out of 0, 6 line 1 out of 0
+    assert!((loads.rn_board[0] - 45.0 - 100.0 * sh[0]).abs() < 1e-3 && (loads.rn_board[6] - 45.0 - 100.0 * sh[1]).abs() < 1e-3, "{:?}", loads.rn_board);
+    // unequal: every 10 and every 5, 18 an hour, riders a third and two thirds
+    let g = build_graph(&common_test_net(&[&[0, 1], &[0, 1]], &[6.0, 12.0], &[2.0, 2.0]), &p);
+    let sk = skims(&g, &p);
+    assert!((sk.r[1] - (2.0 + 30.0 / 18.0)).abs() < 1e-5, "{}", sk.r[1]);
+    let mut od = vec![0.0; 16];
+    od[1] = 90.0;
+    let loads = assign(&g, &sk, &od);
+    assert!((loads.rn_board[0] - 30.0).abs() < 1e-3 && (loads.rn_board[4] - 60.0).abs() < 1e-3, "{:?}", loads.rn_board);
+    // one line dearer by a fare: taken while dearer by less than the other's half headway (5),
+    // else never (its trains come between the cheaper one's)
+    for (extra, want) in [(3.0, 2.0 + 1.5 + 2.5), (6.0, 2.0 + 5.0)] {
+        let mut g = build_graph(&common_test_net(&[&[0, 1], &[0, 1]], &[6.0, 6.0], &[2.0, 2.0]), &p);
+        g.rn_fare[4] = extra;
+        let ones = vec![1.0; g.rn_ride.len()];
+        set_crowding(&mut g, &ones);
+        let r = skims(&g, &p).r[1];
+        assert!((r - want).abs() < 1e-4, "dearer by {extra}: {r} against {want}");
+    }
+    // the 4 and the 6: an express to 2 as fast as the local through 1, both every 10 minutes
+    let six = skims(&build_graph(&common_test_net(&[&[0, 1, 2], &[0, 2]], &[6.0, 6.0], &[2.0, 4.0]), &p), &p);
+    assert!((six.r[2] - (4.0 + 10.0 / 3.0)).abs() < 1e-4, "{}", six.r[2]);
+    // the same stops at platforms of their own, and a bus on the train's stops
+    let mut own = common_test_net(&[&[0, 1], &[0, 1]], &[6.0, 6.0], &[2.0, 2.0]);
+    (own.stop_x, own.stop_y) = (vec![0.0, 2000.0, 8.0, 2008.0], vec![0.0; 4]);
+    assert!(build_graph(&own, &p).rn_even.is_empty());
+    let mut bus = common_test_net(&[&[0, 1], &[0, 1]], &[6.0, 6.0], &[2.0, 2.0]);
+    bus.line_crush[1] = network::BUS_CARS * crate::demand::api::CRUSH_PER_CAR;
+    assert!(build_graph(&bus, &p).rn_even.is_empty());
 }
 
 /// T-1281: a wait in a waiting room counts at 0.8 of its minutes, and changing there too; a park
@@ -1125,7 +1193,7 @@ fn common_lines_are_destination_specific_and_ignore_unhelpful_service() {
     let p = common_test_params();
     let net = common_test_net(&[&[0, 1, 2], &[0, 1, 3]], &[6.0, 6.0], &[2.0, 2.0]);
     let g = build_graph(&net, &p); let sk = skims(&g, &p);
-    assert!((sk.r[1] - (2.0 + 10.0 / 3.0)).abs() < 1e-4, "shared trunk: whichever of two lines every 10 minutes comes first");
+    assert!((sk.r[1] - 4.5).abs() < 1e-4, "shared trunk, the same track and stops: one service every 5 minutes (T-4050)");
     // T-4041: to the branch, its own line (4 from boarding) or, when the other comes first by more
     // than 7 minutes, that one to 1 and a change there (11 from boarding): offered after station 0
     // left the queue, it joins all the same (`late_fix`)

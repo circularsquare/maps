@@ -130,10 +130,33 @@ levels:
    cost is the two groups' expected arrival, weighed, plus the change's fixed cost
    (`search::pool_cost`, integrated exactly; it can rise when a slow line joins), and each line's
    share of the riders is the two groups' chances weighed. One line costs half its headway, as
-   before; two lines every 10 minutes with the same ride wait a third of the headway, not a quarter
-   (they are not spread evenly); the same ride every 10 and every 5 splits a quarter and three
+   before; two lines every 10 minutes with the same ride, from platforms of their own or with
+   different stops, wait a third of the headway, not a quarter (they are not spread evenly; on one
+   track and stops, below, a quarter); the same ride every 10 and every 5 splits a quarter and three
    quarters; Newark to Trenton (41.2 minutes every 22.6 against 31.2 every 35.9) goes 52% express;
    an express every 40 against a local every 10 that is 25 minutes slower: the local 41%.
+   **Lines on one track and stops are one service** (Anita 2026-11-22, T-4050: "lines like the 4
+   and 5 trains that are on the same track and same stops, no passing rails ... assumed as evenly
+   spaced. but the 4 and 6 should be independent"). Departures of two or more lines whose trains
+   leave one platform (station and platform position) for one platform at the next stop, rides
+   within 0.5 minutes (`EVEN_RIDE_MIN`, the track side's one pattern), neither a bus nor a ferry
+   (`Graph::rn_even`), share that track with no stop between to pass at, and the timetable spaces
+   such lines evenly ([track-and-service.md](track-and-service.md) "Spaced from other lines"). Where
+   their riders get off at the same stop after the same number of stops (`Search::alight`), they
+   are one line in the pool (`Search::merge_even`, as riders take evenly spaced trains): from the
+   cheapest, each joins while its cost from boarding is below the service's so far (the lines'
+   mean by trains an hour plus half their combined headway times the wait weight); trains an hour
+   are summed and riders split by them; a line that does not join is never taken there. So two
+   lines every 10 minutes on one track and stops wait 2.5 minutes, every 10 and every 5 split a
+   third and two thirds. A line skipping a stop has another next stop and stays independent (the 4
+   beside the 6), as do lines at platforms of their own, and coupled lines whose riders get off
+   elsewhere (bound past the split, each branch's riders board their own as above). **The lie**
+   (DECISIONS 2026-11-22): lines at different rates cannot be spread exactly evenly (every 10 and
+   every 5 really wait about 1.9 minutes, not 1.67); the cost is continuous but a line's share is
+   not: one dearer (a fare, crowding) by less than half the other's headway keeps its trains-an-hour
+   share, by more it gets none, so crowding can move a line of a pair in and out between rounds;
+   a line of the service taken to the split and a change there sometimes beats waiting, though its
+   train runs just ahead of the one it changes to.
    **The service span** (T-842, Anita 2026-10-21: "demand should know the schedule, roughly").
    Riders differ in how long they would wait for the next train rather than go another way: the
    tolerance is spread log-uniformly from 30 minutes to 6 hours (half of riders take up to 1.7 h;

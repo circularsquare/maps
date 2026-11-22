@@ -134,8 +134,15 @@ only reach stations on it. The city panel counts these trips as "No route" until
   sure to get there after the other line's latest. So an express every 36 minutes beside a local
   every 23 that is 10 minutes slower takes 52% of the riders (59% of the first group). An express
   every 40 beside a local every 10 that is 25 minutes slower leaves the local 41% (25% and 88%);
-  the local's share fades to nothing as it nears 40 minutes slower. Two lines every 10 minutes with the same ride mean waiting a third of
-  10 minutes, not a quarter, since their trains aren't spread out evenly.
+  the local's share fades to nothing as it nears 40 minutes slower. Two lines every 10 minutes with the same ride but different stops or
+  platforms mean waiting a third of 10 minutes, not a quarter, since their trains aren't spread out
+  evenly.
+- Lines on the same track and the same stops (Anita, 2026-11-22, the 4 and 5 trains): the
+  timetable spaces them evenly, so for people getting off at the same stop they are one line,
+  and two lines every 10 minutes mean waiting 2.5 minutes, people splitting by trains an hour. Where
+  one line skips a stop (the 4 beside the 6), stops at its own platform, or is a bus, they stay
+  separate as above. On a shared trunk that splits into branches, people going past the split
+  wait for their own branch's train as above.
 - No train for hours: people differ in how long they would wait for the next train rather than go
   another way, from half an hour to 6 hours (half of them up to about 1 hour 45). At each stop and
   time of day the game works out what share of that period's riders have a train coming within

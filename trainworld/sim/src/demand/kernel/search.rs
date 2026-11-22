@@ -75,6 +75,9 @@ pub struct Graph {
     /// T-3784: the transfer fare in the boarding edges' costs (`Params::xfer_fare`), which a change
     /// inside a fare zone run does not pay (`ZoneWork`)
     pub xfer_fare: f32,
+    /// T-4050: per route node, its class of departures run as one evenly spaced service
+    /// (`even_classes`): the least route node of the class, `NONE` in none. Empty when none is.
+    pub rn_even: Vec<u32>,
 }
 
 impl Graph {
@@ -217,6 +220,56 @@ pub const PLANNED_EARLY_MIN: f32 = 5.0;
 pub const PLANNED_WAIT_CAP_MIN: f32 = 30.0;
 pub fn planned_board_cost(headway_min: f32, wait_f: f32, change_f: f32, p: &Params) -> f32 {
     wait_f * (headway_min / 2.0).min(PLANNED_EARLY_MIN + headway_min / 6.0).min(PLANNED_WAIT_CAP_MIN) + p.change_at(change_f)
+}
+
+/// T-4050: how much two lines' rides to the next stop may differ and still be one service there:
+/// the track side's "one pattern" (`capacity::FOLLOW_TIMED_MIN_S`, 30 s).
+pub const EVEN_RIDE_MIN: f32 = 0.5;
+
+/// T-4050 (Anita 11-22: "lines like the 4 and 5 trains that are on the same track and same stops,
+/// no passing rails ... assumed as evenly spaced. but the 4 and 6 should be independent"): departures
+/// whose trains leave one platform (station and `rn_dx`, `rn_dy`) for one platform at the next stop
+/// in about the same time (`EVEN_RIDE_MIN`) share that track with no stop between to pass at, and
+/// the timetable spaces such lines evenly (track-and-service.md "Spaced from other lines"). A line
+/// skipping a stop has another next stop. Buses and ferries can pass, so are in no class. Per route
+/// node, the least route node of its class of two or more lines, else `NONE`; empty when no class is.
+#[allow(clippy::too_many_arguments)]
+fn even_classes(net: &Network, s: usize, rn_station: &[u32], rn_line: &[u32], rn_next: &[u32], rn_ride: &[f32], rn_dx: &[f32], rn_dy: &[f32], rn_wrap: &[bool], rn_tph: &[f32]) -> Vec<u32> {
+    let nr = rn_line.len();
+    let track: Vec<bool> = (0..net.n_lines()).map(|l| net.stairs_line(l)).collect();
+    // (station, next station, platform here, platform there, ride, route node)
+    let mut by: Vec<([u32; 6], u32, u32)> = vec![];
+    for r in 0..nr {
+        if rn_tph[r] <= 0.0 || rn_wrap[r] || rn_next[r] == NONE || !track[rn_line[r] as usize] {
+            continue;
+        }
+        let x = rn_next[r] as usize - s;
+        by.push(([rn_station[r], rn_station[x], rn_dx[r].to_bits(), rn_dy[r].to_bits(), rn_dx[x].to_bits(), rn_dy[x].to_bits()], rn_ride[r].to_bits(), r as u32));
+    }
+    if by.len() < 2 {
+        return vec![];
+    }
+    // (rides are positive, so their bits sort as they do)
+    by.sort_unstable();
+    let mut out = vec![NONE; nr];
+    let mut any = false;
+    let mut i = 0;
+    while i < by.len() {
+        let mut j = i + 1;
+        while j < by.len() && by[j].0 == by[i].0 && f32::from_bits(by[j].1) - f32::from_bits(by[i].1) <= EVEN_RIDE_MIN {
+            j += 1;
+        }
+        // (one line's two runs, as a balloon's down its trunk, are not spaced against each other)
+        if by[i..j].iter().any(|x| rn_line[x.2 as usize] != rn_line[by[i].2 as usize]) {
+            let least = by[i..j].iter().map(|x| x.2).min().unwrap();
+            for x in &by[i..j] {
+                out[x.2 as usize] = least;
+            }
+            any = true;
+        }
+        i = j;
+    }
+    if any { out } else { vec![] }
 }
 
 pub fn build_graph(net: &Network, p: &Params) -> Graph {
@@ -362,10 +415,11 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
     for x in &incoming { rev_off[x.0 as usize + 1] += 1; }
     for i in 0..n { rev_off[i + 1] += rev_off[i]; }
     // a share that rounds to 0 is no service at that stop (T-842)
-    let rn_tph = rn_line.iter().enumerate().map(|(r, &l)| {
+    let rn_tph: Vec<f32> = rn_line.iter().enumerate().map(|(r, &l)| {
         let h = net.line_headway_min[l as usize][p.period];
         if h > 0.0 && h.is_finite() && phi(r) > 0.0 && boards(r) { 60.0 / h } else { 0.0 }
     }).collect();
+    let rn_even = even_classes(net, s, &rn_station, &rn_line, &rn_next, &rn_ride, &rn_dx, &rn_dy, &rn_wrap, &rn_tph);
     let rn_span: Vec<f32> = (0..nr).map(|r| { let f = phi(r); if f > 0.0 && f < 1.0 { -f.ln() / p.beta } else { 0.0 } }).collect();
     // T-3888, T-3910: the boarding cost at a train's or tram's stop (`pays_ends`); only where any stop pays
     let stairs: Vec<bool> = (0..net.n_lines()).map(|l| net.stairs_line(l)).collect();
@@ -377,6 +431,7 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
         (vec![], vec![])
     };
     Graph {
+        rn_even,
         rn_in,
         rn_out,
         rn_left: rn_span.clone(),
@@ -1435,7 +1490,7 @@ pub(super) struct Search<'a> {
     /// Per station, its joined lines' list in `lines_at`, as `Change::head`.
     pub(super) st_head: Vec<u32>,
     pub(super) lines_at: Vec<(f32, f32, u32, u32)>,
-    pub(super) by_edge: Vec<(u32, f32, f32)>,
+    pub(super) by_edge: Vec<(u32, f32, f32, u32)>,
     pub(super) heap: IdHeap,
     pub(super) next: Vec<u32>,
     pub(super) order: Vec<u32>,
@@ -1475,6 +1530,16 @@ pub(super) struct Search<'a> {
     pub(super) sh: Vec<f32>,
     pub(super) pw: PoolWork,
     pub(super) shares: SharesBuild,
+    /// T-4050: each line in `pl`'s route node; `pl` with the evenly spaced services taken as one
+    /// (`merge_even`), each line's place there, and their shares
+    pub(super) pk: Vec<u32>,
+    pub(super) pm: Vec<(f32, f32)>,
+    pub(super) pmap: Vec<u32>,
+    pub(super) shm: Vec<f32>,
+    pub(super) pord: Vec<u32>,
+    /// T-4050: per route node settled, where a rider on its train gets off, (station, stops ridden
+    /// on first); empty while nothing is evenly spaced (`Graph::rn_even`).
+    pub(super) alight: Vec<(u32, u32)>,
     /// After `run`, the departures' shares towards its destination.
     pub(super) share: Shares,
     /// T-4041: the lines that joined a node already settled, (station, or change node from `n`,
@@ -1718,6 +1783,12 @@ impl Search<'_> {
             pool: vec![],
             entry: vec![],
             pl: vec![],
+            pk: vec![],
+            pm: vec![],
+            pmap: vec![],
+            shm: vec![],
+            pord: vec![],
+            alight: if g.rn_even.is_empty() { vec![] } else { vec![(NONE, 0); nr] },
             sh: vec![],
             pw: PoolWork::default(),
             shares: SharesBuild::default(),
@@ -1763,6 +1834,7 @@ impl Search<'_> {
             self.cand.sort_unstable_by(|a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)));
             // T-4041: every line that can be first, at the planned waits
             self.pl.clear();
+            self.pk.clear();
             let mut cut = f32::INFINITY;
             for &(d, r) in &self.cand {
                 if !(d < cut) {
@@ -1771,13 +1843,14 @@ impl Search<'_> {
                 let f = g.rn_tph[r as usize];
                 cut = cut.min(d + wait_spread(f, g.st_wait[v], true));
                 self.pl.push((d, f));
+                self.pk.push(r);
             }
             if self.pl.is_empty() {
                 continue;
             }
             self.sh.clear();
             self.sh.resize(self.pl.len(), 1.0);
-            self.entry[v] = pool_cost(&self.pl, g.st_wait[v], g.change_f(v), true, self.p, &mut self.pw, Some(&mut self.sh)).0;
+            self.entry[v] = self.pool_lines(v, true, true).0;
             // kept where the planned waits cost less (else the trip is costed, so loaded, as any)
             // and the first boarding is not the plain strategy's one departure
             if !(self.entry[v] < self.dist[v] - 1e-4) {
@@ -1888,6 +1961,7 @@ impl Search<'_> {
                 self.settle_station(v);
                 continue;
             }
+            self.note_alight(v - s);
             if self.chain[v - s] {
                 self.chain_step(v - s, d);
                 continue;
@@ -1937,11 +2011,122 @@ impl Search<'_> {
         self.share = self.shares.finish();
     }
 
+    /// T-4050: route node `r` settled: where a rider on its train gets off (`alight`).
+    #[inline]
+    fn note_alight(&mut self, r: usize) {
+        if self.alight.is_empty() {
+            return;
+        }
+        let (s, n) = (self.s, self.n);
+        let x = self.next[s + r] as usize;
+        self.alight[r] = if x == NONE as usize {
+            (NONE, 0)
+        } else if x < s {
+            (x as u32, 0)
+        } else if x < n {
+            let (st, k) = self.alight[x - s];
+            (st, k + 1)
+        } else {
+            (self.cn[x - n].st, 0)
+        };
+    }
+
     /// The cost at station `v` (the wait's and change's factors) of the lines in `pl`.
     #[inline]
     fn pool_at(&mut self, v: usize) -> f32 {
+        self.pool_lines(v, false, false).0
+    }
+
+    /// `pool_cost` of the lines in `pl` at station `v`, with each evenly spaced service taken as
+    /// one (`merge_even`); with `want`, the lines' shares into `sh` (as long as `pl`).
+    fn pool_lines(&mut self, v: usize, planned: bool, want: bool) -> (f32, f32) {
         let g = self.g;
-        pool_cost(&self.pl, g.st_wait[v], g.change_f(v), false, self.p, &mut self.pw, None).0
+        let (wf, cf) = (g.st_wait[v], g.change_f(v));
+        if !self.merge_even(wf, planned) {
+            return pool_cost(&self.pl, wf, cf, planned, self.p, &mut self.pw, if want { Some(&mut self.sh) } else { None });
+        }
+        let out = pool_cost(&self.pm, wf, cf, planned, self.p, &mut self.pw, if want { Some(&mut self.shm) } else { None });
+        if want {
+            for i in 0..self.pl.len() {
+                let m = self.pmap[i];
+                self.sh[i] = if m == NONE { 0.0 } else { self.shm[m as usize] * self.pl[i].1 / self.pm[m as usize].1 };
+            }
+        }
+        out
+    }
+
+    /// T-4050: the lines in `pl` whose departures are one evenly spaced service (`Graph::rn_even`)
+    /// for riders who get off where they would (`alight`: the trip the lines serve alike) into one
+    /// entry of `pm`, as riders take evenly spaced trains (the common-lines rule): from the cheapest,
+    /// each next joins while its cost from boarding is below the service's so far (the mean of its
+    /// lines' by trains an hour, plus half their combined headway times `wait_f`); trains an hour
+    /// summed, so riders split by trains an hour. A line that does not join is never taken there
+    /// (`pmap` `NONE`): its trains come between the service's. Coupled lines whose riders get off
+    /// elsewhere (a stop on one branch) stay apart, as any. False, `pm` untouched, when no two lines
+    /// are one service.
+    fn merge_even(&mut self, wait_f: f32, planned: bool) -> bool {
+        let (g, s) = (self.g, self.s);
+        let k = self.pl.len();
+        if g.rn_even.is_empty() || k < 2 {
+            return false;
+        }
+        let key = |q: &Search, i: usize| {
+            let r = q.pk[i] as usize;
+            let c = g.rn_even[r];
+            if c == NONE { None } else { Some((c, q.alight[g.rn_next[r] as usize - s])) }
+        };
+        let mut any = false;
+        'find: for i in 0..k {
+            if let Some(a) = key(self, i) {
+                for j in i + 1..k {
+                    if key(self, j) == Some(a) {
+                        any = true;
+                        break 'find;
+                    }
+                }
+            }
+        }
+        if !any {
+            return false;
+        }
+        self.pm.clear();
+        // each line's first line with its key, then its entry in `pm`
+        self.pmap.clear();
+        for i in 0..k {
+            let ki = key(self, i);
+            let lead = ki.and_then(|a| (0..i).find(|&j| key(self, j) == Some(a))).unwrap_or(i);
+            self.pmap.push(lead as u32);
+        }
+        let mut ord = std::mem::take(&mut self.pord);
+        for i in 0..k {
+            if self.pmap[i] as usize != i {
+                continue;
+            }
+            let at = self.pm.len() as u32;
+            ord.clear();
+            ord.extend((i..k).filter(|&j| self.pmap[j] as usize == i).map(|j| j as u32));
+            if ord.len() == 1 {
+                self.pm.push(self.pl[i]);
+                self.pmap[i] = at;
+                continue;
+            }
+            ord.sort_unstable_by(|&a, &b| self.pl[a as usize].0.total_cmp(&self.pl[b as usize].0).then(a.cmp(&b)));
+            // (sums of cost x trains an hour, then the mean)
+            let (mut df, mut sf) = (0f64, 0f64);
+            for &j in ord.iter() {
+                let (d, f) = (self.pl[j as usize].0 as f64, self.pl[j as usize].1 as f64);
+                let joins = sf == 0.0 || d < df / sf + wait_spread(sf as f32, wait_f, planned) as f64 / 2.0;
+                if joins {
+                    (df, sf) = (df + d * f, sf + f);
+                }
+                self.pmap[j as usize] = if joins { at } else { NONE };
+            }
+            self.pm.push(((df / sf) as f32, sf as f32));
+        }
+        self.pord = ord;
+        self.shm.clear();
+        self.shm.resize(self.pm.len(), 1.0);
+        true
     }
 
     /// Node `id` (a station, or change node `id - n`) at station `v` settled with the lines in `pl`:
@@ -1954,7 +2139,7 @@ impl Search<'_> {
             return f32::INFINITY;
         }
         // (`pool_cost` gives the same to the bit whatever the lines' order)
-        let (cost, wait) = pool_cost(&self.pl, g.st_wait[v], g.change_f(v), false, self.p, &mut self.pw, Some(&mut self.sh));
+        let (cost, wait) = self.pool_lines(v, false, true);
         if self.pl.len() > 1 {
             self.shares.push(id, wait / g.st_wait[v], &self.sh);
         }
@@ -1997,22 +2182,31 @@ impl Search<'_> {
         let mut i = head;
         while i != NONE {
             let (d, f, r, nx) = self.lines_at[i as usize];
-            self.by_edge.push((self.edge_ix[r as usize], d, f));
+            self.by_edge.push((self.edge_ix[r as usize], d, f, r));
             i = nx;
         }
+        self.by_edge_into_pl();
+    }
+
+    /// `by_edge` sorted into `pl` and `pk`.
+    fn by_edge_into_pl(&mut self) {
         self.by_edge.sort_unstable_by_key(|x| x.0);
         self.pl.clear();
         self.pl.extend(self.by_edge.iter().map(|x| (x.1, x.2)));
+        self.pk.clear();
+        self.pk.extend(self.by_edge.iter().map(|x| x.3));
     }
 
     /// The lines of the list from `head` into `pl` (in no particular order: `pool_cost` sorts them).
     #[inline]
     fn list_lines(&mut self, head: u32) {
         self.pl.clear();
+        self.pk.clear();
         let mut i = head;
         while i != NONE {
-            let (d, f, _, nx) = self.lines_at[i as usize];
+            let (d, f, r, nx) = self.lines_at[i as usize];
             self.pl.push((d, f));
+            self.pk.push(r);
             i = nx;
         }
     }
@@ -2049,6 +2243,7 @@ impl Search<'_> {
                 self.next[s + p] = (s + r) as u32;
                 self.done[s + p] = true;
                 self.order.push((s + p) as u32);
+                self.note_alight(p);
                 (r, d) = (p, pd);
                 continue;
             }
@@ -2383,13 +2578,11 @@ impl Search<'_> {
         while i != NONE {
             let (d, f, r, nx) = self.lines_at[i as usize];
             if keep(self, r as usize) {
-                self.by_edge.push((self.edge_ix[r as usize], d, f));
+                self.by_edge.push((self.edge_ix[r as usize], d, f, r));
             }
             i = nx;
         }
-        self.by_edge.sort_unstable_by_key(|x| x.0);
-        self.pl.clear();
-        self.pl.extend(self.by_edge.iter().map(|x| (x.1, x.2)));
+        self.by_edge_into_pl();
     }
 
     /// `late_fix`'s settle order: each node after every node it sends riders to (a route node its
@@ -2587,6 +2780,7 @@ impl Search<'_> {
                 let mut c = Change { st: v as u32, line, ban, cut: f32::INFINITY, n: 0, head: NONE, dist: f32::INFINITY, done: false, feed: (f0 as u32, self.cn_feed.len() as u32), bits: b0 as u32 };
                 // (the cost does not depend on the lines' order: `pool_cost`)
                 self.pl.clear();
+                self.pk.clear();
                 for &(od, r) in &self.cand {
                     if !(od < c.cut) {
                         break;
@@ -2596,6 +2790,7 @@ impl Search<'_> {
                     let i = self.edge_ix[r as usize] as usize;
                     self.cn_bits[b0 + i / 64] |= 1 << (i % 64);
                     self.pl.push((od, f));
+                    self.pk.push(r);
                     self.lines_at.push((od, f, r, c.head));
                     c.head = (self.lines_at.len() - 1) as u32;
                 }
@@ -3006,11 +3201,12 @@ pub(super) struct SkimKey {
     pub(super) st_walk_min: Vec<f32>,
     pub(super) rn_in: Vec<f32>,
     pub(super) rn_out: Vec<f32>,
+    pub(super) rn_even: Vec<u32>,
 }
 
 impl SkimKey {
     pub(super) fn of(g: &Graph, p: &Params) -> SkimKey {
-        SkimKey { n_st: g.n_st, n: g.n, adj_off: g.adj_off.clone(), adj_to: g.adj_to.clone(), adj_cost: g.adj_cost.clone(), rn_tph: g.rn_tph.clone(), rn_left: g.rn_left.clone(), rn_dx: g.rn_dx.clone(), rn_dy: g.rn_dy.clone(), transfer_min: p.change_min(), xfer_fare: g.xfer_fare, st_wait: g.st_wait.clone(), st_bld: g.st_bld.clone(), fare_curve: g.fare_curve.clone(), rn_km: g.rn_km.clone(), rn_kmw: g.rn_kmw.clone(), rn_base_mul: g.rn_base_mul.clone(), base_min: g.base_min, st_walk_to: g.st_walk_to.clone(), st_walk_min: g.st_walk_min.clone(), rn_in: g.rn_in.clone(), rn_out: g.rn_out.clone() }
+        SkimKey { n_st: g.n_st, n: g.n, adj_off: g.adj_off.clone(), adj_to: g.adj_to.clone(), adj_cost: g.adj_cost.clone(), rn_tph: g.rn_tph.clone(), rn_left: g.rn_left.clone(), rn_dx: g.rn_dx.clone(), rn_dy: g.rn_dy.clone(), transfer_min: p.change_min(), xfer_fare: g.xfer_fare, st_wait: g.st_wait.clone(), st_bld: g.st_bld.clone(), fare_curve: g.fare_curve.clone(), rn_km: g.rn_km.clone(), rn_kmw: g.rn_kmw.clone(), rn_base_mul: g.rn_base_mul.clone(), base_min: g.base_min, st_walk_to: g.st_walk_to.clone(), st_walk_min: g.st_walk_min.clone(), rn_in: g.rn_in.clone(), rn_out: g.rn_out.clone(), rn_even: g.rn_even.clone() }
     }
     pub(super) fn same(&self, g: &Graph, p: &Params) -> bool {
         self.n_st == g.n_st
@@ -3035,6 +3231,7 @@ impl SkimKey {
             && self.rn_left == g.rn_left
             && self.rn_in == g.rn_in
             && self.rn_out == g.rn_out
+            && self.rn_even == g.rn_even
     }
 }
 
