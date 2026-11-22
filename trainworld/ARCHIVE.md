@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4035 [P2] {L:track-rework} Platforms placed on tracks (2026-11-22): PlatformAt by slot or at a chainage (anchors), compile cuts at anchors, stop points by arriving track; twin test split vs anchor equal; parity byte identical three ways; smoke 30/30. App drawing of anchors moved to g, loop tools to f. notes/T-4035.md.
 - T-4038 [P2] {L:track-rework} Flip one track of a double (2026-11-22): Reverse, one way and two-way act on one picked track of a double; lines rerouted or refused; drawn per track; remove by slot; stations still refuse two tracks one way until T-4035; parity byte identical; smoke 30/30. notes/T-4038.md.
 - T-4034 [P2] {L:track-rework} Trains and line ribbons drawn per track (2026-11-22): line_path_tracks/line_back_tracks exports, ribbons and trains per track on 3+ track pieces (fixture: 4 tracks, 3 lines, all on their own tracks); existing saves pixel-identical (Vienna 6 of 40 views differ run to run); edits no slower; smoke 30/30. notes/T-4034.md.
 - T-4033 [P2] {L:track-rework} Paths name tracks (2026-11-22): Paths as (piece, key, dir), routing by track id, 1-16 tracks of any ways with the bracket rule; parity byte identical three ways; station-pair search slower (Vienna 86 to 126 ms). Third track past a station left to T-4035; Add a track now after T-4036. notes/T-4033.md.

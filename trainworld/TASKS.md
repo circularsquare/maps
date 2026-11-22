@@ -399,15 +399,12 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-4038: a single joined to a double whose tracks run ways of their own still takes its way from the running side (`join_away`, `join_for`), not from the joined track. Only meets a flip whose segment ends at a junction with a joined single. Reach: few players until they flip tracks.
   - Goal: The single reads the joined track's real way, with `way_lines` checking lines in the same edit.
   - Other: notes/T-4038.md
-- T-4035 [P2] {L:track-rework} {after:T-4034} Platforms placed on tracks (taking, 2026-11-22, agent trackplat2)
-  - Context: T-4030 stage e: the compile cuts tracks at stop points; a station off the track takes an anchor node with no ports.
-  - Other: 5-6 h. notes/T-4030.md
-- T-4036 [P2] {L:track-rework} {after:T-4035} Routing to stop points
-  - Context: T-4030 stage f: searches start and end at stop points mid-track; a terminus mid-piece turns there. Also T-3952's Vienna 12/600 first-stop turn, not confirmed in T-4033 (the search's first-stop turn is still a side test).
+- T-4036 [P2] {L:track-rework} {after:T-4035} Routing to stop points (taking, 2026-11-22, agent trackroute)
+  - Context: T-4030 stage f: searches start and end at stop points mid-track; a terminus mid-piece turns there. Also T-3952's Vienna 12/600 first-stop turn, not confirmed in T-4033 (the search's first-stop turn is still a side test). From T-4035: routing to an anchor and a terminus there; the loop tools (`branch_end`, `every_pass`) and related lines' `route_of` still match stops on piece nodes.
   - Goal: Stop insertion, reroute and a mid-piece terminus each equal to the split twin.
   - Other: 4-5 h. notes/T-4030.md
 - T-4037 [P2] {L:track-rework} {after:T-4036} Stations placed without splitting track
-  - Context: T-4030 stage g. Needs your call first: dragging a station or platform end slides it along its track (recommended), with bending done by dragging the track's own points.
+  - Context: T-4030 stage g. Needs your call first: dragging a station or platform end slides it along its track (recommended), with bending done by dragging the track's own points. From T-4035: the app draws an anchor station east-west with no track count (network.ts); stations the tool places still name tracks by the node's axis, and the flip (T-4038) refuses them until their platforms are pinned to slots.
   - Other: 4-5 h. notes/T-4030.md
 - T-3961 [P2] {L:track-rework} {after:T-4036} Old stations converted
   - Context: Each old station node becomes a station with its platforms; each stop keeps the way picks today's rule makes. From 4c (notes/T-3962.md): demand's way out at a one-track station from an old save still boards at the listed station, not where trains stop (Vienna line 25 stop 8: 2443 instead of 2385, +40 rail trips a day when fixed); a one-line change in `line_fwd_stops`, applied here.
