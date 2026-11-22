@@ -1,17 +1,20 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session 360c2881-9196-44fd-8596-05db148a51cb, name maps-17 [098830], since 2026-11-22 14:16 UTC
-Updated: 2026-11-22 16:30 UTC
+Orchestrator: session 9036b094-ff61-4bec-9dce-e9d9c5d30c00, name maps-cb [60eeab], since 2026-11-22 16:42 UTC
+Updated: 2026-11-22 16:55 UTC (maps-17's process was gone at takeover; its four agents died with it)
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5.
 
 ## Next
+T. TODAY (her 11-22 ~16:50 UTC): "we're still sitting at 97% usage so we only have 3% for the rest of the day. main
+   priority is just looking into T4041, and also would like to continue with 4045 for a bit to see if theres an easy
+   fix there. everything else can pause". Running only: firsttrain2 (opus, T-4041, tree firsttrain) and onewaylag2
+   (sonnet, T-4045, tree onewaylag). Do not top up to 4 agents today. Paused: clockmem T-3939 (nothing written),
+   hokkaido T-3688 (join done 11:29 local; after-steps left, see its task; data/packs lacks sor/ibr/okh/ksr until it lands).
 U. USAGE (her 11-22 ~16:20 UTC): "we're low on remaining tokens for the week so lets keep the track work wound down
    actually. lets keep the rest for bug fixes for now. i'd consider pax not taking express as the major bug fix."
-   Running: firsttrain (T-4041, P1), clockmem (T-3939, phone crashes), hokkaido (T-3688, in its join, owns
-   data/packs). Paused 11-22, trees kept (plans in each tree's notes), nothing landed, tasks tagged {after:next
-   week's usage}: addtrack T-4024, stationids T-4043, timetables T-3346, coreslider T-3932, perfledger T-4025, split6
-   T-3373. Start only bug fixes, few at a time. The 8800 track preview still goes up after hokkaido (no agent).
+   Paused, trees kept, tagged {after:next week's usage}: T-4024, T-4043, T-3346, T-3932, T-4025, T-3373, T-3688, T-3939.
+   The 8800 track preview still goes up after hokkaido lands.
 0. LIVE v0.4.5. Cap 14 (her daytime pick 11-22). Cores 0-1 hers (`reserve_cores.ps1 -Loop 30` at takeover). No
    publish yet. Before one: fresh freeze, translations (T-3986, T-3991, T-3999, T-4003, T-4010, T-2264, T-3933,
    T-3378 s4, T-4013, T-4005, T-4040, and the new zones' names: place_names.mjs --zones), smoke on a quiet machine. Batch 13
@@ -27,10 +30,6 @@ U. USAGE (her 11-22 ~16:20 UTC): "we're low on remaining tokens for the week so 
 - 11-22 ~16:05 UTC: cap 14 (daytime); T-4041 yes, high prio (and buses beating parallel trams; tram boarding
   penalty maybe undone for street trams); China shape fix next week (T-4044); Georgia fine; T-4025 start; tw/track
   preview on 8800 yes. Earlier: "lets wind down", then "can keep going". Hokkaido via the old Japan tool: fine.
-- 11-22 ~04:30 UTC: last day of the usage week, a decent chunk left: aim to finish track stage 4 overnight ("if we run
-  out, we run out"); compute-heavy, token-light tasks too (the Caucasus and Afghanistan, done). China populations look
-  old: T-4028. Overnight cap 16; back to 8 when she's up (ask).
-- 11-22 ~04:10 UTC: 3d sheet fine; Manila keeps Malolos; Hokkaido "i'd rather do one big dochuo zone"; trip ? good.
 - 11-21 ~22:40 UTC: deploy and wiki deferred till home; T-3376 yes; T-3742 planned, start later; T-4008 no soft
   rule, drop income groups (T-4019); busways any bus.
 - 11-21 ~18:45 UTC: main priorities: keep the track rework moving, finish and polish BRT. Standby orchestrator tabs

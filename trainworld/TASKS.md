@@ -32,8 +32,8 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-930 (regate): cross_everyday rewrites `everyday_kept_*` in every joint solve and the rates read them, but no gate checks rates after a join (before T-930 too).
   - Goal: A join's re-gate checks the rates a solve can change, or the reason it needn't is recorded.
   - Other: notes/T-930.md
-- T-3688 [P2] {L:region-redraws} Hokkaido as four regions (taking, 2026-11-22, agent hokkaido)
-  - Context: Your old TODO: "hokkaido into 4". Muzaffarpur (split into Muzaffarpur, Hajipur, Samastipur) and Manila (smaller, keeping Malolos; San Pablo City and Lipa City new) were rebuilt 11-22. Hokkaido is your 4 regions from the picture you sent, with Dochuo one big zone with Sapporo (you, 11-22: "i'd rather do one big dochuo zone"); Japan's zones need a day session (japan_zones.py, Sapporo's pack refitted).
+- T-3688 [P2] {L:region-redraws} {after:next week's usage} Hokkaido as four regions
+  - Context: Paused 11-22 for usage, mid-run: retire, tkc and spk builds, gate and the JP join done (11:29 local); left: zone_successors, zone_terrain, start tiers, build_inputs, split_zones, place names, then land the tree. Until then data/packs lacks sor, ibr, okh, ksr while the main registry still lists them. Your old TODO: "hokkaido into 4". Muzaffarpur (split into Muzaffarpur, Hajipur, Samastipur) and Manila (smaller, keeping Malolos; San Pablo City and Lipa City new) were rebuilt 11-22. Hokkaido is your 4 regions from the picture you sent, with Dochuo one big zone with Sapporo (you, 11-22: "i'd rather do one big dochuo zone"); Japan's zones need a day session (japan_zones.py, Sapporo's pack refitted).
   - Goal: Donan, Dohoku, Doto and Dochuo built and joined, old saves keeping their zones through zone_successors.
   - Other: notes/T-3688.md
 - T-2578 [P3] {L:borders} Mexico-US border factor too low
@@ -170,11 +170,21 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Other: notes/T-3659.md
 
 ## Demand
-- T-4045 [P2] {L:small-fixes} Adding stops to a line with many one-way stations is very slow (taking, 2026-11-22, agent onewaylag)
-  - Context: A player's report, 11-22 (pasted by you): building a line with many one-way stops (a 10 km line of 16 stations, 21 counting each one-way platform; a 70 km line of 28, 39) gets "extremely laggy", once 40 minutes for the stops to register, with "numbers stopped updating"; editing or removing the line then says the edit failed and was undone. Two-way stretches were fine. The edit-failed part matches T-3945, fixed 11-21 but not yet live. You: "dont have to spend a lot of time looking into this since we're doing a track rework but if we see an easy fix, would be interested". Reach: players who build one-way platforms, growing with the track rework.
+- T-4045 [P2] {L:small-fixes} Adding stops to a line with many one-way stations is very slow (taking, 2026-11-22, agent onewaylag2)
+  - Context: Restarted 11-22 (its first agent stopped with the old orchestrator). A player's report, 11-22 (pasted by you): building a line with many one-way stops (a 10 km line of 16 stations, 21 counting each one-way platform; a 70 km line of 28, 39) gets "extremely laggy", once 40 minutes for the stops to register, with "numbers stopped updating"; editing or removing the line then says the edit failed and was undone. Two-way stretches were fine. The edit-failed part matches T-3945, fixed 11-21 but not yet live. You: "dont have to spend a lot of time looking into this since we're doing a track rework but if we see an easy fix, would be interested". Reach: players who build one-way platforms, growing with the track rework.
   - Goal: The cause of the slow stop adding named; fixed if the fix is small, else a note of what it would take.
-- T-4041 [P1] {L:route-choice} Riders take the train that arrives first (taking, 2026-11-22, agent firsttrain)
-  - Context: You, 11-22: "yes ... that seems high prio to look into. i thought they took the best route that got them to destination the fastest ? that should be the case"; and "this probably also is part of why people are finding that buses are too strong now, people have buses and trams on parallel routes and are finding that people are only really taking the bus, and piling up waiting for the bus. probably cuz its way more frequent (and also cuz of the 2m boarding penalty for trams which we might wanna undo for steret trams but i think the higher bus frequency might be draggint it way further)". From T-4019: riders take the first train worth taking, and a slower train counts if it is slower by less than half the express's headway, so Newark to Trenton (41 vs 31 min, same fare) goes 61% local. With riders knowing when each train leaves, they board the one that reaches the stop first. Also: long trips are costed at the planned first wait but loaded on the plain half-headway rule (2-3 h to align, part of this). Riders rows move less, since an express serves few station pairs.
+- T-4046 [P3] {L:small-fixes} Pick a route among overlapping bus and tram routes
+  - Context: Your scratch pad, 11-22: "if we have a bus route and tram route perfectly overlapping theres no way to select the bus route. same for multiiple bus routes. ideally we try to "side by side" these". Picture: artifacts/trainworld/board/20261122-114726-b705.png.
+  - Goal: Every route on a shared street can be clicked, ideally drawn side by side.
+- T-4047 [P3] {L:buses} Name bus stations
+  - Context: Your scratch pad, 11-22: "allow naming bus stations".
+- T-4048 [P3] {L:route-choice} Remove station connections and passageways
+  - Context: Your scratch pad, 11-22: "add a way to remove the autogenerated (or constructed) station connections / passageways (maybe a "manage connections" or something and then you can click the connections to x them out)".
+- T-4049 [P3] {L:achievements} Cities served counts only busy cities
+  - Context: Your scratch pad, 11-22: "for "cities served" count for like achievements, lets only coutn cities with like >1000 rides or something".
+  - Goal: A city counts as served once it has about 1,000 rides.
+- T-4041 [P1] {L:route-choice} Riders take the train that arrives first (taking, 2026-11-22, agent firsttrain2)
+  - Context: Restarted 11-22 (its first agent stopped with the old orchestrator). You, 11-22: "yes ... that seems high prio to look into. i thought they took the best route that got them to destination the fastest ? that should be the case"; and "this probably also is part of why people are finding that buses are too strong now, people have buses and trams on parallel routes and are finding that people are only really taking the bus, and piling up waiting for the bus. probably cuz its way more frequent (and also cuz of the 2m boarding penalty for trams which we might wanna undo for steret trams but i think the higher bus frequency might be draggint it way further)". From T-4019: riders take the first train worth taking, and a slower train counts if it is slower by less than half the express's headway, so Newark to Trenton (41 vs 31 min, same fare) goes 61% local. With riders knowing when each train leaves, they board the one that reaches the stop first. Also: long trips are costed at the planned first wait but loaded on the plain half-headway rule (2-3 h to align, part of this). Riders rows move less, since an express serves few station pairs.
   - Goal: Riders between two stops board whichever train or bus gets them there first, so Newark to Trenton goes to about 59% express and a tram beside a more frequent bus keeps the riders it gets there first; the street-tram boarding penalty's share of the bus pull measured.
   - Other: notes/T-4019.md
 - T-3936 [P3] {L:route-choice} Intercity effective time for the route shown
@@ -908,8 +918,8 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: From T-1354: each worker now rebuilds its corridor book whenever the open market packs change, so T-1174's compose-afresh on a replaced worker is no longer needed.
   - Goal: The compose-afresh removed, with a late-pack load still equal to a normal one.
   - Other: notes/T-1354.md
-- T-3939 [P2] {L:memory} Clock worker memory on many-zone phone saves (taking, 2026-11-22, agent clockmem)
-  - Context: From T-3781, 11-21: on an iPhone reporter's 13-zone Tokyo-start save the clock worker held 15-30% of the tab, 359 MB settled and up to 493 MB before a collection; the tab peaked at 1,628-1,705 MB.
+- T-3939 [P2] {L:memory} {after:next week's usage} Clock worker memory on many-zone phone saves
+  - Context: Paused 11-22 for usage; its agent stopped before writing anything. From T-3781, 11-21: on an iPhone reporter's 13-zone Tokyo-start save the clock worker held 15-30% of the tab, 359 MB settled and up to 493 MB before a collection; the tab peaked at 1,628-1,705 MB.
   - Goal: The clock worker's share on that save named piece by piece, and its biggest piece cut, measured on a production build as T-3160 measures.
   - Other: notes/T-3781.md "The iPhone crash reports"
 - T-3940 [P3] {L:memory} A warning before a big load on Safari
