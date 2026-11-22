@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session 4f09b9f6-62ab-4330-bda8-3c96eb7a5896, name maps-5a [ac8bba], since 2026-11-22 03:42 UTC
-Updated: 2026-11-22 14:14 UTC (cycling at 500k to standby maps-17)
+Orchestrator: session 360c2881-9196-44fd-8596-05db148a51cb, name maps-17 [098830], since 2026-11-22 14:16 UTC
+Updated: 2026-11-22 14:20 UTC
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5.
 
@@ -16,12 +16,14 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
 2. TRACK (her top priority; she asked for stage 4 overnight 11-22): tw/track 09c90ccd has stages 1-3g, 4a1, 4a2,
    4c, T-4030 stages a-e and T-4038, master merged in. Running: trackroute (T-4036, stage f), a subagent of maps-5a's
    tab; its report reaches the inbox. Then g (T-4037: needs her answer, asked 11-22 ~13:10 UTC: dragging a station
-   slides it along its track? recommended yes), then 4b (T-3961), 4d (T-3963), 4e (T-3964), Add a track (T-4024),
-   4f, 5a/5b. Pre-merge: T-4026 (server save check: TWT7 body levels 1-4, levels 39-41+), T-3958 (ship re-saved
+   slides it along its track? recommended yes), then 4b (T-3961), 4d (T-3963), Add a track (T-4024), 4f, 5a/5b.
+   4e (T-3964) running: platpic (tree platpic from tw/track 09c90ccd, lands --into tw/track). Pre-merge: T-4026 (server save check: TWT7 body levels 1-4, levels 39-41+), T-3958 (ship re-saved
    starts), and a checker (save format, sim core). Plan for the gap: notes/T-4030.md. A finish onto tw/track can stop
    on a docs conflict: resolve in the tree (CRLF files), rebase --continue, rerun tests, finish.
-3. T-3373 B: stages 3-5 landed under ?split=1; stage 6 (edits) next, not started.
-4. Hokkaido (T-3688): her 4 regions, Dochuo one zone with Sapporo (spk refit), a day session; notes/T-3688.md.
+3. T-3373 B: stages 3-5 landed under ?split=1; stage 6 (edits) running: split6 (tree split6).
+4. Hokkaido (T-3688): her 4 regions, Dochuo one zone with Sapporo (spk refit); running: hokkaido (tree hokkaido,
+   writes data/packs: hold other data runs). Also running from 14:20 UTC: packorder (T-1354, tree packorder),
+   chinapop (T-4028, read-only research).
 5. Waiting on her: T-4025 perf ledger go (now or later). Wiki on the website on hold.
 
 ## Her words

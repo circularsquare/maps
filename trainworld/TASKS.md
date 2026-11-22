@@ -24,14 +24,14 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-3671: the new zone clt (Chimaltenango, with Antigua Guatemala) has no ja or zh names; `place_names.mjs --zones` stalled for 13 minutes and wrote nothing.
   - Goal: clt has its names in every language that has zone names, and the stall's cause is found or recorded.
   - Other: notes/T-3671.md
-- T-4028 [P3] {L:census-totals} China's populations look out of date
+- T-4028 [P3] {L:census-totals} China's populations look out of date (taking, 2026-11-22, agent chinapop)
   - Context: You, 11-22: "one person complained about china population data being outdated and not reflecting recent growth, so we can file this as something to look into." Not started; which year China's zones use and where the player saw it is the first thing to find.
   - Goal: The year and source of China's zone populations stated, compared with any newer published figures for the fastest-growing cities; a fix proposed to you if the gap is large.
 - T-3682 [P3] {L:world-tooling} Rates unchecked after a join
   - Context: From T-930 (regate): cross_everyday rewrites `everyday_kept_*` in every joint solve and the rates read them, but no gate checks rates after a join (before T-930 too).
   - Goal: A join's re-gate checks the rates a solve can change, or the reason it needn't is recorded.
   - Other: notes/T-930.md
-- T-3688 [P2] {L:region-redraws} Hokkaido as four regions
+- T-3688 [P2] {L:region-redraws} Hokkaido as four regions (taking, 2026-11-22, agent hokkaido)
   - Context: Your old TODO: "hokkaido into 4". Muzaffarpur (split into Muzaffarpur, Hajipur, Samastipur) and Manila (smaller, keeping Malolos; San Pablo City and Lipa City new) were rebuilt 11-22. Hokkaido is your 4 regions from the picture you sent, with Dochuo one big zone with Sapporo (you, 11-22: "i'd rather do one big dochuo zone"); Japan's zones need a day session (japan_zones.py, Sapporo's pack refitted).
   - Goal: Donan, Dohoku, Doto and Dochuo built and joined, old saves keeping their zones through zone_successors.
   - Other: notes/T-3688.md
@@ -329,7 +329,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-1560 [P3] {L:solve-speed} Deal city zones between solving workers
   - Context: Design only: zones dealt to workers instead of periods, the route to the whole world (T-1169 stage 5).
   - Other: notes/T-1560.md
-- T-1354 [P2] {L:solve-consistency} Market corridor figures depend on pack order
+- T-1354 [P2] {L:solve-consistency} Market corridor figures depend on pack order (taking, 2026-11-22, agent packorder)
   - Context: Which market packs were open at a worker start changes its corridor table; on the real save two tables were ten rows apart.
   - Goal: Longer trips depend only on the world rows, whatever order packs arrive.
   - Other: notes/T-1354.md, notes/T-1174.md
@@ -414,7 +414,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Your decision 2: Side platforms, Island (zero width for now) and Single platform; the pointer picks the tracks (on more tracks, side platforms take the track under the pointer and its neighbour nearer the pointer, never by pairing); a platform placed overlapping a station joins it; the ghost shows the covered tracks and their ways.
   - Goal: All three templates on single, double and 4 tracks; strings listed.
   - Other: Side by side with 4b, 4c, 4e. Closes T-3354. Files: stationTool.ts, stationSnap.ts, ToolBar.tsx. 5-6 h. stage 4d
-- T-3964 [P2] {L:track-rework} {after:T-3960} Station panel platform picture
+- T-3964 [P2] {L:track-rework} {after:T-3960} Station panel platform picture (taking, 2026-11-22, agent platpic)
   - Context: A picture of the station's tracks (one way red, the other blue, two-way grey) with platforms to add and remove; Join to station and Make a separate station.
   - Goal: Platforms added and removed from the panel; lines that need a platform are named when refused.
   - Other: Side by side with 4b, 4c, 4d. Files: StationInspector.tsx, StationSides.tsx. 4-5 h. stage 4e
@@ -899,7 +899,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Several parts of a line's panel still show only its own pair: timetable, held trains, delays, riders, boardings.
   - Goal: Each part folds in the twin line, as `foldTwins` does.
   - Other: About 2-3 h. notes/T-3333.md "As built".
-- T-3373 [P2] {L:memory} Split zones and the market between workers, stage B
+- T-3373 [P2] {L:memory} Split zones and the market between workers, stage B (taking, 2026-11-22, agent split6)
   - Context (B): You, 11-21: "that 3373 stage B sounds good. we can pursue it. and yes we can raise memory limit, though as mentioned players should be able to set it" (T-3932, T-3933). Design: notes/T-3373-B-plan.md, 9 stages, 24-40 h. Stages 1-3 are built: under `?split=1` each zone and the market open on one worker, which trade line loads every round. Figures equal the unsplit ones with exact sums to the bit, on NYC and all-China. Solving memory: all-China 2.5 to 1.3 GB at 2 workers, NYC 0.67 to 0.40 GB. Stage 4 passed its stop rule: all-China loads in 100 s on 2 workers against 147 s on 1 (32% less) for 0.07-0.18 GB more, and under the flag the limit is 2 GB on 8 GB machines, so all-China gets 2 workers and NYC 3. Stage 5 is built too: every panel's question (stations, transfers, trips, bubbles, the market's) goes to the worker holding what it asks about, and the answers equal 1 worker's to the bit on NYC and North America. Next is stage 6: edits, solved on the workers holding what changed. Then pool rules and copies (stages 7-8).
   - Context: Each solving worker holds its own copy of the zones (250-550 MB a big city, 1.3 GB all-China); you saw 7.4 GB in Firefox after 43 minutes. You, 2026-11-16: do A (fewer, faster workers capped by memory on big saves) then B (split zones and the market between workers, T-1560, 25-40 h); queue C (one shared memory, threaded WASM, 60-100 h, Cloudflare header) only if it would help noticeably. A landed 2026-11-16 (b3d2ea95): NYC runs 2 workers (-0.5 GB, load about 15 s slower), all-China 1 (-2.9 GB, 30-50 s slower), figures identical.
   - Goal: B built, with memory and solve time measured before and after on NYC and all-China.
