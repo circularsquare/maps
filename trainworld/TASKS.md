@@ -188,10 +188,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-22: "i do want the fix actually then. would like to try the cheaper version." After T-4050, which edits the same search code. From T-4041, 11-22: riders taking whichever line gets them there first costs 45% more solve time and 14% more memory on the real save; most of it is letting a slow line join after its station left the search's queue (430k loop drops per all-destinations search). Ideas: a loop test before joining, or moving only the nodes a late line puts out of order; shares as u16.
   - Goal: The solve back within about 15% of before T-4041, same answers.
   - Other: notes/T-4041.md
-- T-4055 [P2] {L:solve-consistency} Intercity riders depend on line creation order (taking, 2026-11-22, agent ordercheck)
-  - Context: Batch checker 11-22 on master 5edb2e77: a fresh NYC game with a Philadelphia line and a Providence line gives the Philadelphia line 63,996 riders made first and 68,341 made second (+6.8%); each order repeats exactly. Not yet known whether it is zone opening order (what T-1354 fixed), line or station numbering, or older than T-1354. Holds the next publish until settled.
-  - Goal: The cause named with a control (same creation order, different zone-open order; and a pre-T-1354 build); fixed if it is a T-1354 regression, else filed with its reach.
-  - Other: notes/batchcheck14.md
+- T-4055 [P2] {L:solve-consistency} {after:next week's usage} An edit reaching two new zones shows a stale final
+  - Context: Found 11-22 by the batch checker and ordercheck (notes/T-4055.md): one edit reaching two new zones (a Philadelphia and a Providence line from NYC) gives the Philadelphia line 63,996 riders; separate edits or a reload give 68,341. The first solve is declared final on a market missing a pack that lands during it, and nothing re-solves; the next edit heals it. Older than T-1354; does not hold the publish. Reach: lines in newly reached zones show up to 6% too few riders until the next edit.
+  - Goal: A pack opening that lands mid-solve makes that solve stale, so batch and separate edits give the same figure (about 1-2 h).
+  - Other: notes/batchcheck14.md, notes/T-4055.md
 - T-4046 [P3] {L:small-fixes} Pick a route among overlapping bus and tram routes
   - Context: Your scratch pad, 11-22: "if we have a bus route and tram route perfectly overlapping theres no way to select the bus route. same for multiiple bus routes. ideally we try to "side by side" these". Picture: artifacts/trainworld/board/20261122-114726-b705.png.
   - Goal: Every route on a shared street can be clicked, ideally drawn side by side.
