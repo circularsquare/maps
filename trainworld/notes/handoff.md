@@ -19,16 +19,16 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
 3. T-3373 B: stages 3-5 landed under ?split=1; stage 6 (edits) next, not started (usage).
 4. Overnight: Muzaffarpur rebuild (haj into haj, hjp, sxp; uji retired), restarted 22:46 local after a Geofabrik 404
    (T-4027), PID 23872, log artifacts/trainworld/redraws-run.log, checks in notes/T-3688.md; 8800 keeps the old zones.
-   Manila designed, not applied (a-..-22); Hokkaido designed, needs a day session (a-..-23).
+   Manila: kit\redraws-ph.cmd ready, start after IN's DONE. Hokkaido: her 4 regions, Dochuo one zone with Sapporo
+   (spk refit), day session (notes/T-3688.md).
 5. Waiting on her: T-4025 perf ledger go, Hokkaido image. Wiki on the website on hold (pages in
-   artifacts/trainworld/wikisite/site-hold). Agents: trackedit (T-3956), trackstarts (T-3958), manilaspec (T-3688
-   Manila), caucasus (T-3764). Track order: 3e -> 3f -> 4a1 -> 4+/4a2 -> 4b-4e -> 4f.
+   artifacts/trainworld/wikisite/site-hold). Agents: trackedit (T-3956), trackstarts (T-3958), caucasus (T-3764),
+   popstuck (T-4029, master). Track order: 3e -> 3f -> 4a1 -> 4+/4a2 -> 4b-4e -> 4f.
 ## Her words
 - 11-22 ~04:30 UTC: last day of the usage week, a decent chunk left: aim to finish track stage 4 overnight ("if we run
   out, we run out"); compute-heavy, token-light tasks too: Caucasus and Afghanistan (caucasus agent); China
   populations look old, filed T-4028. Cap 16 overnight per the rule; back to 8 when she's up (ask).
-- 11-22 ~04:10 UTC: start 3e (trackedit, Opus, syncs master into tw/track first); 3d sheet fine; Manila: keep Malolos
-  with Manila (manilaspec revising, run after the IN join); Hokkaido: Hidaka and Shiribeshi with Sapporo? (image to come); trip ? good.
+- 11-22 ~04:10 UTC: start 3e; 3d sheet fine; Manila keeps Malolos; Hokkaido one big Dochuo zone; trip ? good.
 - 11-21 ~22:40 UTC: deploy and wiki deferred till home; T-3376 yes; T-3742 planned, start later; T-4008 no soft
   rule, drop income groups (players say riders skip the express: T-4019); busways any bus. (Her 22:20 usage
   wind-down is replaced by the 11-22 04:30 line.)

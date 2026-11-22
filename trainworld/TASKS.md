@@ -28,7 +28,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-22: "one person complained about china population data being outdated and not reflecting recent growth, so we can file this as something to look into." Not started; which year China's zones use and where the player saw it is the first thing to find.
   - Goal: The year and source of China's zone populations stated, compared with any newer published figures for the fastest-growing cities; a fix proposed to you if the gap is large.
 - T-4027 [P2] {L:world-tooling} Downloads break on Geofabrik's India move
-  - Context: 11-22 Geofabrik moved India into its own folder: `asia/india/eastern-zone-latest.osm.pbf` redirects to `india/eastern-zone/...` (no `asia/`, 404), and the index's new `asia/india/eastern-zone/eastern-zone-latest.osm.pbf` redirected to an unpublished `-261121` file (404). The two-level `asia/india` path still redirected correctly. T-3688's wave 1 parked haj on it; the 20 Nov file was put in data/raw/osm by hand. The URL is formatted from the extract id in world_run.py:84, routes.py:53, osm_water.py:165 and japan_zones.py:72; world_plan.py:1599 turns index URLs back into ids, which the new three-level layout would change (and the cache names with it).
+  - Context: 11-22 Geofabrik moved India into its own folder: `asia/india/eastern-zone-latest.osm.pbf` redirects to `india/eastern-zone/...` (no `asia/`, 404), and the index's new `asia/india/eastern-zone/eastern-zone-latest.osm.pbf` redirected to an unpublished `-261121` file (404). The two-level `asia/philippines` path fails too (redirects through `asia/philippines/` to an unpublished 261121 file), so it is not only India; manilaspec put the 20 Nov Philippines file in by hand. T-3688's wave 1 parked haj on it; the 20 Nov file was put in data/raw/osm by hand. The URL is formatted from the extract id in world_run.py:84, routes.py:53, osm_water.py:165 and japan_zones.py:72; world_plan.py:1599 turns index URLs back into ids, which the new three-level layout would change (and the cache names with it).
   - Goal: A fresh download of any India zone works without a hand step, with extract ids and cache names unchanged; other three-level extracts checked for the same fault. Look again first: Geofabrik may finish the move by itself.
 - T-3682 [P3] {L:world-tooling} Rates unchecked after a join
   - Context: From T-930 (regate): cross_everyday rewrites `everyday_kept_*` in every joint solve and the rates read them, but no gate checks rates after a join (before T-930 too).
@@ -353,6 +353,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: Measured in notes/T-909.md option 1.
 
 ## Interface
+- T-4029 [P2] {L:map-look} Population view stuck on after a load (taking, 2026-11-21, agent popstuck)
+  - Context: A player on Twitter, 11-21 (you passed it on 11-22): sometimes, loading with the population map open, once the load is done the screen stays stuck on the population circles even after turning that view off. Reach: anyone who loads with that view on.
+  - Goal: Turning the view off after such a load hides it every time; cause found.
 - T-3744 [P3] {L:fares} Fare per stop made
   - Context: You, 2026-11-19, from players: a fare for each stop the train makes, so set below zero an express that stops less costs more; "i guess you'd probably always make this negative so maybe we flip the sign but then idk how we'd describe it"; floor the fare at the base fare. Unknown whether other games do it.
   - Goal: A short design (wording, sign, how a ride's stops are counted, other games) for you, then built in the advanced fares panel.
