@@ -31,7 +31,7 @@ import { live } from "../../map/live";
 import { setListHot } from "../../map/hovered";
 import { Alert, Check, Chip, Icon, Row, Segmented, shakeEl, Stepper, SwapLabel } from "../widgets";
 import { PurposeSplit } from "./PurposeSplit";
-import { ONLY_NEXT, ONLY_TIP, OnlyIcon } from "./stopOnly";
+import { ONLY_NEXT, ONLY_TIP, OnlyArrow, OnlyIcon } from "./stopOnly";
 import { RelatedStops, useTightTimes } from "./RelatedStops";
 import { ROUND_MAX, TALL_MAX } from "../../game/relatedLayout";
 import { BusInspector } from "./BusInspector";
@@ -953,7 +953,7 @@ function RailLineInspector({ id }: { id: string }) {
               <Icon.uturn />
             </span>
           )}
-          {only && !editingStops && <span class="stop-only" data-tip={tr(ONLY_TIP[only])}><OnlyIcon kind={only} /></span>}
+          {only && !editingStops && <span class="stop-only" data-tip={tr(ONLY_TIP[only])}><OnlyArrow kind={only} /></span>}
         </span>
         <StopTransfers l={l} i={i} drawn={drawn} extra={bullets} tall={tall} noSelf={!!row} />
         <StopToday line={l.id} i={row ? row.occ : i} />

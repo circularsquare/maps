@@ -25,7 +25,6 @@
 .cm-facts .save-sandbox { margin-left: 0; }
 .cm-facts { display: flex; flex-wrap: wrap; gap: 0 10px; }
 .cm-card { position: relative; }
-.cm-card > .cm-bm { position: absolute; top: 6px; right: 6px; background: var(--bg); }
 .cm-bm { color: var(--muted); }
 .cm-bm.on { color: var(--accent); }
 .cm-bm.on svg path { fill: currentColor; }

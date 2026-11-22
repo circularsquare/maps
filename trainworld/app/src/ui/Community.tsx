@@ -163,7 +163,6 @@ function Card({ row, onOpen }: { row: ShareRow; onOpen: () => void }) {
         <div class="small muted num">{t("savesPanel.lines", { count: row.lines })} · {t("savesPanel.stations", { count: row.stations })}</div>
       </div>
     </button>
-    <BookmarkButton id={row.id} />
   </li>;
 }
 

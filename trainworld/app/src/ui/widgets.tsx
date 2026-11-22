@@ -89,7 +89,7 @@ export const Icon = {
   // trains reverse at this stop
   uturn: () => <svg viewBox="0 0 16 16"><path d="M5 13.5V7a3.25 3.25 0 0 1 6.5 0v4.5M8.8 9.2l2.7 2.8 2.7-2.8" /></svg>,
   // T-4013: riders at a stop, the train's side on the right: on and off, on only, off only
-  boardBoth: () => <svg viewBox="0 0 16 16"><rect x="11" y="2.5" width="3.5" height="11" rx="1" /><path d="M1.5 8H9M4 5.5L1.5 8 4 10.5M6.5 5.5L9 8l-2.5 2.5" /></svg>,
+  boardBoth: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5" /></svg>,
   boardOnly: () => <svg viewBox="0 0 16 16"><rect x="11" y="2.5" width="3.5" height="11" rx="1" /><path d="M1.5 8H9M6.5 5.5L9 8l-2.5 2.5" /></svg>,
   alightOnly: () => <svg viewBox="0 0 16 16"><rect x="11" y="2.5" width="3.5" height="11" rx="1" /><path d="M9 8H1.5M4 5.5L1.5 8 4 10.5" /></svg>,
   // the line panel's related lines (T-1168), as its diagram looks (T-1860, Anita's sketch): two lines side by side, a station pill across both, the right one curving away at the bottom

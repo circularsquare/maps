@@ -1030,8 +1030,11 @@ rect.now { fill-opacity: .45; }
 .stops .rev-stop svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 /* T-4013: a stop riders only board or only get off at; while stops are edited, its switch (dim while both) */
 .stops .stop-only:not(.btn) { display: inline-flex; vertical-align: -3px; margin-left: 6px; width: 16px; height: 16px; color: var(--muted); }
-.stops .stop-only:not(.btn) svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-.stops .btn.stop-only:not(.on) { opacity: 0.45; }
+.stops .stop-only:not(.btn) svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.stops .btn.icon.mini.stop-only { width: 24px; min-width: 24px; height: 24px; }
+.stops .btn.icon.mini.stop-only svg { width: 14.4px; height: 14.4px; }
+.stops .btn.icon.mini.danger { width: 14px; min-width: 14px; margin: 0 -2px 0 -3px; }
+.stops .btn.stop-only:not(.on) { opacity: 0.3; }
 .stops .btn.stop-only:not(.on):hover { opacity: 1; }
 .stops .stop-more { flex: none; width: 10px; font-size: 12px; text-align: center; color: var(--muted); }
 .stops .n { width: 40px; text-align: right; }
