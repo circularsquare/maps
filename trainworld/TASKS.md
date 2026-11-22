@@ -180,7 +180,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Your scratch pad, 11-22: "i think we might allow an unrealistic number of people to pile up at bus stops, should probably show a lower number more in line with other stations to not make players alarmed by big number".
 - T-4053 [P3] {L:borders} Common language border factor
   - Context: Your scratch pad, 11-22: "i think bogota-quito travel might be a bit small? relative to number of planes (liek 6 a day, maybe 2000 people a day vs our 800) i wonder if we should do a like "common language" border multiplier to make it so that people are more likely to travel between south american countries. and maybe also between like switzerland and france or switzerland and germany across the border." A new demand factor: the design goes to you before it is built.
-- T-4054 [P1] {L:solve-speed} {after:T-4050} Cheaper late joins in the first-arrival search
+- T-4054 [P1] {L:solve-speed} {after:T-4050} Cheaper late joins in the first-arrival search (taking, 2026-11-22, agent latejoin)
   - Context: You, 11-22: "i do want the fix actually then. would like to try the cheaper version." After T-4050, which edits the same search code. From T-4041, 11-22: riders taking whichever line gets them there first costs 45% more solve time and 14% more memory on the real save; most of it is letting a slow line join after its station left the search's queue (430k loop drops per all-destinations search). Ideas: a loop test before joining, or moving only the nodes a late line puts out of order; shares as u16.
   - Goal: The solve back within about 15% of before T-4041, same answers.
   - Other: notes/T-4041.md
