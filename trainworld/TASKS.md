@@ -24,9 +24,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-3671: the new zone clt (Chimaltenango, with Antigua Guatemala) has no ja or zh names; `place_names.mjs --zones` stalled for 13 minutes and wrote nothing.
   - Goal: clt has its names in every language that has zone names, and the stall's cause is found or recorded.
   - Other: notes/T-3671.md
-- T-4028 [P3] {L:census-totals} China's populations look out of date (taking, 2026-11-22, agent chinapop)
-  - Context: You, 11-22: "one person complained about china population data being outdated and not reflecting recent growth, so we can file this as something to look into." Not started; which year China's zones use and where the player saw it is the first thing to find.
-  - Goal: The year and source of China's zone populations stated, compared with any newer published figures for the fastest-growing cities; a fix proposed to you if the gap is large.
 - T-3682 [P3] {L:world-tooling} Rates unchecked after a join
   - Context: From T-930 (regate): cross_everyday rewrites `everyday_kept_*` in every joint solve and the rates read them, but no gate checks rates after a join (before T-930 too).
   - Goal: A join's re-gate checks the rates a solve can change, or the reason it needn't is recorded.
@@ -170,7 +167,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Other: notes/T-3659.md
 
 ## Demand
-- T-4019 [P3] {L:route-choice} Players see riders skip the express
+- T-4019 [P3] {L:route-choice} Players see riders skip the express (taking, 2026-11-22, agent express)
   - Context: You, 11-21: "the complaint people have is actually that people are not taking the express route. which kinda confuses me. it might just be cuz they have high speed fare mult set high." T-4008 measured 55.7% taking the express on New York's direct pairs at default fares. Not started while usage is high.
   - Goal: The reported saves' express share explained (fare multiplier or something else), and a fix proposed if it isn't the fare.
 - T-3936 [P3] {L:route-choice} Intercity effective time for the route shown

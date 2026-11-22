@@ -23,7 +23,7 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
 3. T-3373 B: stages 3-5 landed under ?split=1; stage 6 (edits) running: split6 (tree split6).
 4. Hokkaido (T-3688): her 4 regions, Dochuo one zone with Sapporo (spk refit); running: hokkaido (tree hokkaido,
    writes data/packs: hold other data runs). Also running from 14:20 UTC: packorder (T-1354, tree packorder),
-   chinapop (T-4028, read-only research).
+   express (T-4019, read-only investigation, Vite 6126). T-4028 done (2020 census, 2-7% gap; ask open).
 5. Waiting on her: T-4025 perf ledger go (now or later). Wiki on the website on hold.
 
 ## Her words
