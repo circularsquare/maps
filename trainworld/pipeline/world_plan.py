@@ -1639,12 +1639,13 @@ def std_offset(tz):
 # ---------------------------------------------------------------- Geofabrik
 
 def geofabrik():
+    import geofabrik as gf
     gj = json.loads(fetch(*GEOFABRIK).read_text(encoding="utf-8"))
     ex = {}
     for f in gj["features"]:
         pr = f["properties"]
         url = pr["urls"]["pbf"]
-        path = url.split("download.geofabrik.de/")[1].replace("-latest.osm.pbf", "")
+        path = gf.extract_id(url)
         g = polygonal(shape(f["geometry"]))
         ex[pr["id"]] = {"id": pr["id"], "parent": pr.get("parent"), "path": path, "geom": g,
                         "multi": len(pr.get("iso3166-1:alpha2", [])) > 1}

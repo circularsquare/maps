@@ -81,7 +81,6 @@ HERE = Path(os.path.dirname(os.path.abspath(__file__)))
 REAL = HERE.parent
 MAPS = REAL.parent
 OSM = REAL / "data/raw/osm"
-GEOFABRIK = "https://download.geofabrik.de/{}-latest.osm.pbf"
 UA = {"User-Agent": "trainworld-pipeline/0.1 (rail game data build; python-requests)"}
 BUILD_STEPS = ["build", "stations", "places", "routes", "merge", "nocar", "everyday"]
 VITE_FILES = (".json", ".bin", ".boundary.geojson", ".places.json", ".market.json")  # vite.config.ts copies these
@@ -1097,16 +1096,18 @@ class Run:
     def downloads(self, exs, admin):
         """Each extract whose caches are not all on disk, unless its .osm.pbf is: four tries."""
         import requests
+        import geofabrik
         failed = {}
         for e in exs:
             stem = str(OSM / e.replace("/", "_"))
             need = CACHES + ((".admin.fgb",) if e in admin else ())
             if all(Path(stem + c).exists() for c in need) or Path(stem + ".osm.pbf").exists():
                 continue
-            path, url = Path(stem + ".osm.pbf"), GEOFABRIK.format(e)
+            path = Path(stem + ".osm.pbf")
             for attempt in range(4):
                 t = time.time()
                 try:
+                    url = geofabrik.url(e)
                     with requests.get(url, headers=UA, timeout=600, stream=True) as r:
                         r.raise_for_status()
                         with open(str(path) + ".part", "wb") as f:
@@ -1115,7 +1116,7 @@ class Run:
                     os.replace(str(path) + ".part", path)
                     print(f"    downloaded {e}: {path.stat().st_size / 1e6:.0f} MB in {time.time() - t:.0f} s", flush=True)
                     break
-                except (requests.RequestException, OSError) as x:
+                except (requests.RequestException, OSError, RuntimeError) as x:
                     print(f"    download {e} try {attempt + 1}: {type(x).__name__} {x}", flush=True)
                     if attempt == 3:
                         failed[e] = f"download failed: {type(x).__name__} {x}"

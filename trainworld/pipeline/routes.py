@@ -50,7 +50,6 @@ RAW = os.path.join(ROOT, "data", "raw")
 OSM = os.path.join(RAW, "osm")
 PACKS = os.environ.get("TW_PACKS", os.path.join(ROOT, "data", "packs"))  # TW_PACKS: work on copies
 UA = {"User-Agent": "trainworld-pipeline/0.1 (rail game data build; python-requests)"}
-GEOFABRIK = "https://download.geofabrik.de/{}-latest.osm.pbf"
 
 # A pack's first-level region id (header `regions.ids`) -> Geofabrik extract. US: state FIPS.
 EXTRACTS = {
@@ -91,11 +90,12 @@ def npz_path(extract):
 
 
 def download(extract):
+    import geofabrik
     import requests
     path = pbf_path(extract)
     if os.path.exists(path):
         return path
-    url = GEOFABRIK.format(extract)
+    url = geofabrik.url(extract)
     print(f"  downloading {url}", flush=True)
     t0 = time.time()
     tmp = path + ".part"

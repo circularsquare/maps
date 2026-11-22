@@ -32,6 +32,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build_city as b  # noqa: E402
+import geofabrik  # noqa: E402
 import japan  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -69,7 +70,7 @@ def _poly(region):
     """A Geofabrik region's .poly as a shapely geometry."""
     from shapely.geometry import Polygon
     from shapely import union_all
-    path = japan._get(f"https://download.geofabrik.de/asia/japan/{region}.poly", os.path.join(b.RAW, "osm", f"asia_japan_{region}.poly"))
+    path = japan._get(geofabrik.url(f"asia/japan/{region}", ".poly"), os.path.join(b.RAW, "osm", f"asia_japan_{region}.poly"))
     rings, cur, hole = [], None, False
     for line in open(path, encoding="utf-8").read().splitlines()[1:]:
         t = line.strip()

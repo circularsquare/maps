@@ -158,11 +158,12 @@ def _tag(other, key):
 
 def read_inland(extract):
     """The extract's inland water areas as a GeoDataFrame (kind, name), cached as .water.fgb."""
+    import geofabrik
     import pyogrio
     out = water_path(extract)
     if os.path.exists(out):
         return pyogrio.read_dataframe(out)
-    path = _download(f"https://download.geofabrik.de/{extract}-latest.osm.pbf", pbf_path(extract))
+    path = _download(geofabrik.url(extract), pbf_path(extract))
     t0 = time.time()
     df = pyogrio.read_dataframe(path, layer="multipolygons", where=INLAND_WHERE,
                                 columns=["name", "natural", "landuse", "waterway", "water", "other_tags"],
