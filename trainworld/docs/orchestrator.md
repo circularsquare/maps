@@ -95,9 +95,9 @@ incidents behind the rules here are in `notes/rule-history.md`.
 - **Triage player reports** (tw-feedback): a literal bug that would touch a decent number of
   players may be looked into; a design question (a new feature, a change to numbers or what can be built) goes to
   her for a call, however many asked; something few players would meet is filed, usually P3, and not started while
-  the task list is long (Sendai's Senzan Line). Say the reach guess in the task line. A brief for a complaint
-  ("riders skip the express") starts by rebuilding the player's own case and naming the rule that made it, before
-  any average: three looks at the express complaint measured shares and missed the boarding rule (T-4019).
+  the task list is long (Sendai's Senzan Line). Say the reach guess in the task line. When a complaint is
+  confusing, rebuilding the player's own case can help (it found the express boarding rule in T-4019, where averages
+  had looked fine).
 - **Asks.** Every open ask goes in through
   `venv\Scripts\python.exe trainworld/tools/asks.py add --title "<few words, like a task name>" --text "<the whole question>" --by <you>`.
   The title keeps the board's cards short.
