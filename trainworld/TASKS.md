@@ -395,14 +395,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Stages 3a1, 3c, 3e and 4a1 each kept today's in-memory model, where a piece is the derived edge and holds at most one track each way (tracks read from `EdgeData`: count, oneway, join); 3b saves each track on its own but loads back into that model. So stations still split pieces, one track of a double can't be flipped, and a third track can't pass a station. 01-model.md's authored bundles with tracks, compiled to the derived graph, is the design; no stage owned building it. 3f's part B (one track of a double flipped) stopped on it too: paths must name tracks (spans in memory, routing on track ends), ways stored per track, re-pairing across a bundle, trains and line strokes placed per track (notes/T-3957.md has the scope).
   - Goal: Bundles and their tracks as stored records in memory, compiled to the derived edges, with stations no longer cutting pieces; parity gates A and B byte identical. Planned (notes/T-4030.md, about 30-37 h) as stages T-4031 to T-4037; closes when T-4037 lands.
   - Other: 4b (T-3961), Add a track (T-4024), 4d (T-3963) and 5a (T-3966) wait on its stages. Found by maps-5a with the advisor, 11-22. notes/T-4030.md
-- T-4034 [P2] {L:track-rework} {after:T-4033} Trains and line ribbons drawn per track (taking, 2026-11-22, agent trackdraw)
-  - Context: T-4030 stage d.
-  - Goal: A 4-track piece with a line per track draws trains and ribbons on their own tracks; worker no slower than 1.2x master.
-  - Other: 3-4 h. notes/T-4030.md
-- T-4038 [P2] {L:track-rework} {after:T-4034} Flip one track of a double
-  - Context: 3f's part B (notes/T-3957.md): one track of an intact double reversed or made two-way, on T-4030's records and paths. From T-4033: the edit goes through `set_edge` (it re-pairs) and reroutes or refuses the lines on it as `way_lines` does; `track_delete_plan` must keep a track by key, not by slot.
+- T-4038 [P2] {L:track-rework} {after:T-4034} Flip one track of a double (taking, 2026-11-22, agent trackflip)
+  - Context: 3f's part B (notes/T-3957.md): one track of an intact double reversed or made two-way, on T-4030's records and paths. From T-4033: the edit goes through `set_edge` (it re-pairs) and reroutes or refuses the lines on it as `way_lines` does; `track_delete_plan` must keep a track by key, not by slot. From T-4034: A A doubles still draw with the lane stroke and keeping side; widen one condition in the sim and one in the app (notes/T-4034.md).
   - Other: 2-3 h. notes/T-4033.md
-- T-4035 [P2] {L:track-rework} {after:T-4034} Platforms placed on tracks
+- T-4035 [P2] {L:track-rework} {after:T-4034} Platforms placed on tracks (taking, 2026-11-22, agent trackplat2)
   - Context: T-4030 stage e: the compile cuts tracks at stop points; a station off the track takes an anchor node with no ports.
   - Other: 5-6 h. notes/T-4030.md
 - T-4036 [P2] {L:track-rework} {after:T-4035} Routing to stop points
@@ -433,7 +429,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: A station on built track redraws no other bundle: worker 30 ms or less, shows up in 400 ms median or less on the 2,647-station save (1,925 ms today).
   - Other: Closes T-2767 and T-2701. Files: network.ts, strokeCache.ts, clockPost.ts. 4-6 h. stage 5a
 - T-3967 [P2] {L:track-rework} {after:T-3966} Line ribbons per track
-  - Context: Lines side by side on one track laid out from their paths; `besideSamples` goes.
+  - Context: Lines side by side on one track laid out from their paths; `besideSamples` goes. Left by T-4034 (notes/T-4034.md): in the Traffic view, trains on a 3+ track piece sit off their band by the track's offset while bands are on; ribbons from a double cross into track order where 4 tracks begin; a line with its own way back over a 3+ track piece never ran.
   - Goal: Midtown's ribbons look as today; the Penn Station to Emeryville preview timed (3 s on 10-19).
   - Other: Closes T-763. Files: lineBands.ts, corridors.ts. 3-4 h. stage 5b
 - T-3968 [P3] {L:track-rework} {after:T-3967} Draw up to sixteen tracks in one stroke

@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4034 [P2] {L:track-rework} Trains and line ribbons drawn per track (2026-11-22): line_path_tracks/line_back_tracks exports, ribbons and trains per track on 3+ track pieces (fixture: 4 tracks, 3 lines, all on their own tracks); existing saves pixel-identical (Vienna 6 of 40 views differ run to run); edits no slower; smoke 30/30. notes/T-4034.md.
 - T-4033 [P2] {L:track-rework} Paths name tracks (2026-11-22): Paths as (piece, key, dir), routing by track id, 1-16 tracks of any ways with the bracket rule; parity byte identical three ways; station-pair search slower (Vienna 86 to 126 ms). Third track past a station left to T-4035; Add a track now after T-4036. notes/T-4033.md.
 - T-4027 [P2] {L:world-tooling} Downloads break on Geofabrik's India move (2026-11-22): pipeline/geofabrik.py resolves every download (world_run, routes, osm_water, japan_zones, world_plan); ids unchanged for old and new index URLs; HEAD 200 for India, Philippines, Hokkaido, Bavaria and European regions. notes/T-4027.md.
 - T-4029 [P2] {L:map-look} Population view stuck on after a load (2026-11-22): Cause: DemandOverlay.draw() returned on a lost context before hiding the canvas; it now empties and hides first. Shown with a forced context loss; likely but not proven to be the player's case. notes/T-4029.md.

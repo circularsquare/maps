@@ -20,7 +20,8 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary 
    landed; smoke 30/30 on 547389c2; 8800 = 547389c2 (swapped ~05:20 local); batchchk PASSED all five on 547389c2
    (batch 13 + tonight; undo of +5 trains doesn't refund: likely by design, unchecked vs parent).
    Left for her: Abkhazia/South Ossetia left out, Northern Cyprus with Cyprus (T-3764). Hokkaido: day session.
-5. Waiting on her: T-4025 perf ledger go. Wiki on the website on hold. Agents: trackdraw (T-4034 stage d). Stages a-c landed (tw/track 929a2be5).
+5. Waiting on her: T-4025 perf ledger go. Wiki on the website on hold. Agents: trackplat2 (T-4035 stage e), trackflip (T-4038). Stages a-d landed, master
+   merged in (tw/track c6732422).
    T-4030 planned as T-4031-T-4037 (+T-4038 flip); stages a, b landed (tw/track b3529ede). 4e's Join waits on 4b. 3e/3f strings to her (notes).
 ## Her words
 - 11-22 ~04:30 UTC: last day of the usage week, a decent chunk left: aim to finish track stage 4 overnight ("if we run
