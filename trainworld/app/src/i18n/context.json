@@ -1353,6 +1353,8 @@
   "lineMoney.fare": "Row label in a line's view, beside a stepper showing a number like \"1.20x\": this line's own fare multiple, on top of the fares set in the Money tab.",
   "lineMoney.fareBack": "Hover and screen reader name of the undo button beside a line's fare multiple. value: the multiple it returns to, e.g. \"1.00x\".",
   "lineMoney.fareLabel": "Screen reader name of the stepper that sets a line's fare multiple; it follows \"Less\" or \"More\" and can start lowercase.",
+  "lineMoney.fareKind": "Small grey text in a line's Fare multiple row, before the stepper, shown when the line's kind has its own fare multiple set in the Money tab. kind: hsr, ferry, bus or brt. value: that multiple, e.g. \"1.25x\".",
+  "lineMoney.farePaid": "Hover on the kind's multiple in a line's Fare multiple row. value: what rides pay in all, the kind's multiple times the line's own, e.g. \"1.25x\".",
   "lineMoney.fareMode": "Row label in a line's view, shown only once the game has a fare area, beside a two-button choice (Zones | Distance): how rides on this line are charged.",
   "lineMoney.fareZones": "Button in a line's Fares row: rides on this line pay the fare zone prices (the zones counted from the lowest to the highest the trip passes in one fare area).",
   "lineMoney.fareDistance": "Button in a line's Fares row: rides on this line pay by distance (the fare curve by km), outside the fare zones, as a metro left out of a commuter zone scheme.",

@@ -4,9 +4,10 @@
 // not in them, it is not kept per line per day. Days the line did not run have no bars.
 
 import { dateName, shortDate } from "../../game/days";
-import { LINE_FARE_MAX, ownLineFare, tidyLineFare } from "../../game/fareCurve";
+import { LINE_FARE_MAX, lineFareMul, ownLineFare, tidyLineFare } from "../../game/fareCurve";
 import { money } from "../../game/format";
 import { liveMoney, moneyState } from "../../game/money";
+import { boatOf } from "../../game/boats";
 import { edit, setLineFare, world } from "../../game/world";
 import type { LineInput } from "../../game/types";
 import { t, tNumber, tRich } from "../../i18n";
@@ -24,7 +25,11 @@ export function LineFare({ l }: { l: LineInput }) {
   const mul = ownLineFare(m.fares, l.id);
   const text = (v: number) => `${tNumber(v, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}x`;
   const set = (v: number) => void setLineFare(l.num, tidyLineFare(v));
-  const dist = !!world.value?.lineStats[l.id]?.fareDist;
+  const st = world.value?.lineStats[l.id];
+  const dist = !!st?.fareDist;
+  // the kind's multiple from the fares, read by the same function the fare uses; the line's own is the stepper
+  const kindMul = st ? lineFareMul({ id: l.id, fast: st.fast, ferry: !!st.bus?.ferry, boat: boatOf(st.bus), bus: !!st.bus && !st.bus.ferry, brt: !!st.bus?.brt }, { ...m.fares, lines: undefined }) : 1;
+  const kind = st?.bus?.ferry ? "ferry" : st?.bus?.brt ? "brt" : st?.bus ? "bus" : "hsr";
   return (
     <ul class="rows">
       {!!m.fares.zones?.length && (
@@ -36,6 +41,7 @@ export function LineFare({ l }: { l: LineInput }) {
       )}
       <li>
         <span class="grow" data-tip={t("lineMoney.fareTip")}>{t("lineMoney.fare")}</span>
+        {kindMul !== 1 && <span class="muted small" data-tip={t("lineMoney.farePaid", { value: text(kindMul * mul) })}>{t("lineMoney.fareKind", { kind, value: text(kindMul) })}</span>}
         {mul !== 1 && <button class="btn icon" aria-label={t("lineMoney.fareBack", { value: text(1) })} data-tip={t("lineMoney.fareBack", { value: text(1) })} onClick={() => set(1)}><Icon.undo /></button>}
         <Stepper value={text(mul)} wide label={t("lineMoney.fareLabel")} onStep={(d) => { if (d < 0 ? mul <= 0 : mul >= LINE_FARE_MAX) return false; set(Math.round(mul * 100) / 100 + d * 0.05); return true; }}
           type={{ text: mul.toFixed(2), set, tip: t("lineMoney.fareTip") }} />
