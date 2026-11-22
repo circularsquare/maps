@@ -6,7 +6,7 @@ Updated: 2026-11-22 15:10 UTC
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5.
 
 ## Next
-W. WINDING DOWN (her "lets wind down", 11-22 ~15:20 UTC): start no new agents; land the six running as they report.
+W. WINDING DOWN (her "lets wind down", 11-22 ~15:20 UTC): start no new agents; land the five running as they report.
    master eeaa433f has T-4040 (UI) and T-1354 (demand worker: needs the batch checker before 8800 or a publish).
    T-3939 was started and stopped at once (nothing done, tree removed). Stale trackmodel dropped from the board.
 0. LIVE v0.4.5. Cap is 16 (overnight rule); her daytime number is 8 ("for a while", 11-21): asked her at ~09:00
@@ -16,8 +16,8 @@ W. WINDING DOWN (her "lets wind down", 11-22 ~15:20 UTC): start no new agents; l
    + the night's data passed a checker on 547389c2 (11-22). Server deployed 3b14158. Save level 38 on master.
 1. master and 8800 = 547389c2 plus bookkeeping (Muzaffarpur, Manila, GE AM AZ AF, T-4029 bubbles, T-4027 Geofabrik
    resolver; changelog c047 c048 c049).
-2. TRACK (her top priority): tw/track b19961f2 has stages 1-3g, 4a1, 4a2, 4c, T-4030 a-f, T-4038. Running, all
-   landing --into tw/track: platpic (4e T-3964, from 09c90ccd), convert (4b T-3961, save converter: own checker
+2. TRACK (her top priority): tw/track b19961f2 has stages 1-3g, 4a1, 4a2, 4c, T-4030 a-f, T-4038. 4e's picture landed
+   (T-3964 left: Join/Separate after 4b). Running, all landing --into tw/track: convert (4b T-3961, save converter: own checker
    before landing), addtrack (T-4024), levels (T-3691). g (T-4037) waits her two calls; then 4d (T-3963), 4f, 5a/5b. Pre-merge: T-4026,
    T-3958, a checker (save format, sim core). Plan: notes/T-4030.md. A finish can stop on a docs conflict: resolve in
    the tree (CRLF), rebase --continue, rerun tests, finish.

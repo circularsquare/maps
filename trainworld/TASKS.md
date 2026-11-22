@@ -405,10 +405,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Your decision 2: Side platforms, Island (zero width for now) and Single platform; the pointer picks the tracks (on more tracks, side platforms take the track under the pointer and its neighbour nearer the pointer, never by pairing); a platform placed overlapping a station joins it; the ghost shows the covered tracks and their ways.
   - Goal: All three templates on single, double and 4 tracks; strings listed.
   - Other: Side by side with 4b, 4c, 4e. Closes T-3354. Files: stationTool.ts, stationSnap.ts, ToolBar.tsx. 5-6 h. stage 4d
-- T-3964 [P2] {L:track-rework} {after:T-3960} Station panel platform picture (taking, 2026-11-22, agent platpic)
-  - Context: A picture of the station's tracks (one way red, the other blue, two-way grey) with platforms to add and remove; Join to station and Make a separate station.
-  - Goal: Platforms added and removed from the panel; lines that need a platform are named when refused.
-  - Other: Side by side with 4b, 4c, 4d. Files: StationInspector.tsx, StationSides.tsx. 4-5 h. stage 4e
+- T-3964 [P2] {L:track-rework} {after:T-3961} Join to station and Make a separate station
+  - Context: Stage 4e's platform picture landed on tw/track 11-22 (platforms added and removed from the station panel, a line refused for want of a platform named). Join to station and Make a separate station need a station's membership stored apart from its node, which 4b (T-3961) brings; stand-ins on passages were dropped, since a passage is priced, reaches 1000 m and moves demand. Also found: the docs say a one-track station's twin must serve the same way, but the sim accepted an eastbound-only station beside a westbound-only twin.
+  - Goal: Both buttons on the platform picture, joining by the name within 300 m as the design says.
+  - Other: StationInspector.tsx, PlatformPicture.tsx. notes/T-3964.md
 - T-3965 [P2] {L:track-rework} {after:T-3961} Sandbox starts with station records
   - Context: The starts rebuilt with stations as records, keeping today's stations.
   - Goal: Every start loads settled; rides within 2% of today's.
