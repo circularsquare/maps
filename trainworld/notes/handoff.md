@@ -56,6 +56,6 @@ U. USAGE (her 11-22 ~16:20 UTC): "we're low on remaining tokens for the week so 
   notes/board-live.json; maps .claude/settings.json. Not mine: notes/T-2380.md, notes/T-3382.md,
   tools/feedback-inbox/builds.json, tools/release/new_zones_map.py, notes/T-3821.md, notes/T-3896-report.png.
 - notes/T-3688/kit and notes/T-3444-design/tasks-to-file.md are untracked working files (kit: the redraw scripts).
-- Undo of +5 trains doesn't refund (batch checker 11-22): likely by design, not checked against the parent.
-- A yes she gives in another session's tab doesn't pass the permission check here: ask again in this tab.
+- A yes she gives in another session's tab doesn't pass the permission check here; undo of +5 trains doesn't
+  refund (batch checker 11-22, likely by design).
 - A task with stages left: `agent-tree.mjs land` + `remove`, not `finish` (it archives); swap the taking mark by hand.
