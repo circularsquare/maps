@@ -171,16 +171,22 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4093 [P1] {L:solve-speed} Stop crowding rounds once loads move under 3% (taking, 2026-11-23, agent settled)
   - Context: You, 11-23: "can stop crowding roudns once loads move under 3%, yeah lets do it." From T-4057: SETTLED 1% -> 3% skips about 1 of 15 period-rounds, about 10% off an edit's wait (11 of about 105 s on the real NYC save), lines within 4%, rail trips +0.001%. Fewer rounds (2) is refused, final (DECISIONS 2026-11-23).
   - Goal: Landed with the real-save numbers (percent of the wait, line moves).
-- T-4094 [P1] {L:solve-speed} Merge bus stops within 300 m into one stop for demand
+- T-4094 [P1] {L:solve-speed} Merge bus stops within 300 m into one stop for demand (taking, 2026-11-23, agent busmerge)
   - Context: You, 11-23: "ok can merge bus stops within a few hundred meters. i guess 300 meters should be okay." From T-4057: the bus-heavy Detroit save (7,382 bus stops, community share iemjwzum) takes 28 minutes to calculate trips at about 4 GB per worker, 82% in the search; merging should more than halve both. Stops are still drawn and run as before.
   - Goal: Detroit's time and memory measured before and after (percent), Belgrade's too; riders on bus lines compared; rail-only saves unchanged. The merge doesn't show: every per-stop figure the player can see (a stop's riders and boardings, a line's load along its stops, transfers, origins and destinations, connectors) is split back over the real stops, by each stop's own catchment, so every stop looks used.
   - Other: You, 11-23: "ideally the bus stop merging ... should not be super visible. like if you click on a bus stop and see how many people use it ... we should distribute the ridership so it looks like all the stops are being used, and its not obvious that theyre getting merged."
+- T-4095 [P3] {L:checks} Agent worktrees with only trainworld checked out
+  - Context: From T-4088: each tree is a full 1.4 GB copy of maps/, of which about 0.2 GB is trainworld; a sparse checkout in agent-tree.mjs would save 10-15 GB with 10 trees.
+  - Goal: New trees hold only trainworld (and what its builds need); land and remove still work.
+- T-4096 [P3] {L:checks} A daily sweep of old session scratch
+  - Context: From T-4088: session scratch in Temp\claude was 78 GB, the biggest single user of the disk, and nothing clears it. The standing rule already lets agents delete finished sessions' scratch 2+ days old.
+  - Goal: Scratch folders untouched for 2+ days deleted daily, sessions still running skipped.
+- T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
+  - Context: You, 11-23: "edit speed is actually still kind of a problem. i made the call to P4 these until we got more complaints, but it's noticeable on my end for big worlds so lets bring these back up. i feel like there was a point at which we had edit speed almost instant, but then might have regressed, in exchange for accuracy or something. my intuition is that it should be possible to get edit speed feeling pretty instant? like just batching up changes should be pretty light / responsive, and we just have to make sure that they're applied eventually without dropping anything, right? to be specific, the edit speed im talking about is mostly like placing track and constructing and like editing stops." The older edit-speed tasks (T-3550, T-1211, T-3804, T-1031) are back at P2 under this one.
+  - Goal: Placing track, constructing and editing stops on a big world measured step by step (when it last felt instant, and what made it slower); the map showing an edit within about 100 ms, with the sim's work queued and never dropped; anything that changes what's shown goes to you as a design first.
 - T-4086 [P1] {L:memory} Design a lighter load for phones (taking, 2026-11-23, agent phonedesign)
   - Context: You, 11-23: "yeah lets design this. also if it might be better with use of the PWA "app" lets point mobile users, instruct them howto download as app, with like a banner alert or something. ideally we dothis once they've logged like at least 2 hours of playtime and if they dismiss it, it goes away forever". 4 of the 7 out-of-memory crash reports since v0.4.4 are iPhones with 1,100-2,100-station Tokyo games (1.25-1.7 GB against iOS's kill at 1.4-2 GB). The idea: full demand detail only near the view, coarser further out.
   - Goal: A design for you (no code): what a phone loads, the memory it saves on a big Tokyo game, what a player would see differ; and whether an installed home-screen app gets more memory on iOS and Android, so the install banner is worth building.
-- T-4088 [P1] {L:checks} {waits:Anita} Disk space, what could still go (taking, 2026-11-23, agent diskspace)
-  - Need from Anita: OK to delete data/raw/osm (9.1 GB, fetched again at each country's next rebuild) and the world runs older than 2 weeks except their reports (about 8 GB)? I'd say yes to both.
-  - Context: You, 11-23: C: ran out (0 bytes free) and "we should set up alert when we're super close for the future." Done 11-23: about 81 GB of old builds, backups, Chrome profiles and finished sessions' scratch deleted; a "disk:" line and your chime at 30 GB and 10 GB free (board watch, tools/ops/disk.py). Only C: exists, so moving means an external drive. The full list with sizes and costs: notes/T-4088.md.
 - T-4051 [P2] {L:loading} Opening a zone on a big save sits at 90% (taking, 2026-11-23, agent zoneopen)
   - Context: You, 11-22, playing live v0.4.5 on your large North America save: opening Medellin sat on "loading data" with the bar stuck at 90% for about 2 minutes, then loaded; the tab was at 4 GB and one core was busy the whole time. "really not good for player experience". Reach: anyone with a big save opening a new zone. Done 11-22: every load bar now shows what used to read 90% as half full (your idea), so the wait itself is what is left. Later that evening: "loading basically anylargeish new city makes me wait for like 3 minutes. even with "use more cores" enabled im using like 4700mb", Managua the same; but "its not super consistent tbh. puebla actually loaded quite fast. im guessing its something where we're failing and retrying." After T-4041.
   - Goal: What the last 10% waits on named and timed on a big save; the wait cut, and the bar showing progress through it.
@@ -259,7 +265,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-2136's checker (by reading the code): a request for one place's rows lost in a demand worker restart times out after 20 s and is asked again only with the next result, so that zone's panel can wait that long.
   - Goal: A request lost in a restart is asked again once the worker is back; probed with a forced restart.
   - Other: notes/T-2136.md
-- T-3550 [P4] {L:edit-speed} Shared-track edits still over 0.5 s on the windrush save
+- T-3550 [P2] {L:edit-speed} Shared-track edits still over 0.5 s on the windrush save
   - Context: Stage 1 landed 11-20: the crawl speeds are solved by a secant, so London's typical train-count edit went 0.95 to 0.23 s natively, but 22 of 143 lines still pass 0.5 s at every level, windrush edits take 1.2-2.3 s in the browser, and a follow-up gap of 0.4-1.9 s outside the timed parts (once 5 s) is in both builds, cause not measured. Folds in T-1794 and T-1936.
   - Goal: London and windrush train-count and headway edits under 0.5 s in the browser, the gap explained or gone; figures within the pacing's own noise (T-3388's tolerance).
   - Other: notes/T-3388.md, notes/T-1779.md "T-1787", notes/T-1936.md, notes/review-edit-speed-2026-11-20.md
@@ -383,7 +389,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: After zones or a market close, a worker's heap still holds them until its next solve (all-China: 2,041 MB at rest).
   - Goal: A worker frees closed zones promptly so the restart need not wait for a solve.
   - Other: notes/T-1367.md
-- T-1211 [P4] {L:edit-speed} Page DOM makes layouts slow
+- T-1211 [P2] {L:edit-speed} Page DOM makes layouts slow
   - Context: The page has 2,200 elements; a forced layout takes 22-37 ms, and the Lines, saves and Stations panels open in 0.4-0.7 s. All figures are from 2026-10-24 at 4-6x CPU slowdown; T-1505 took the forced layout out of station name placement since.
   - Goal: Measure once at normal CPU on the 2,647-station save (about 20 minutes): under 200 ms closes it, over keeps it with the new figures.
   - Other: notes/T-1200.md and notes/T-1211.md.
@@ -553,7 +559,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Your TODO.md, 11-20, from player suggestions: "custom drawable platforms like station boxes? for tapered platforms might be cool". Design for you first; may fold into T-3444.
 - T-3434 [P3] {L:region-redraws} Sabang Island missing from the Banda Aceh zone
   - Context: Player report 2026-11-16. Reach: few.
-- T-3804 [P4] {L:edit-speed} Other worker work that holds edits up
+- T-3804 [P2] {L:edit-speed} Other worker work that holds edits up
   - Context: The hour turn is done (stage 1, T-3804 notes: the most an edit waited for it went from 0.24-0.54 s to 0.19-0.25 s on the 2,647-station save, a few runs of 32 edits). Left from T-3801's audit: one today answer, now most of what an edit waits behind at a turn (70-250 ms, 0.5-0.8 s under load: `Boarding::past_day` tallies every line's whole day on each ask; running sums per departure would avoid splitting it; folds in T-1842), the snapshot timer and a boarding step (three lines, up to 0.35 s); also from stage 1, a rename leaves 12-57 lines' boarding accounts out of date, and `sendMoney` takes 15-100 ms each game hour. Not measured: undo of a rename, unbind all, the junction panel.
   - Goal: Each is under 0.2 s or yields to edits, per docs/architecture.md "Edits never queue behind polling". In stages, the today answer next.
   - Other: notes/T-3801.md, notes/review-edit-speed-2026-11-20.md, notes/T-3804.md
@@ -1367,7 +1373,7 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
   - Context: Opening a city pack is the floor of a big load, 7 s a worker for Japan.
   - Goal: Pack opening takes much less than 7 s a worker on Japan.
   - Other: notes/someday.md
-- T-1031 [P4] {L:edit-speed} First ghost of a run takes 0.5-0.7 s
+- T-1031 [P2] {L:edit-speed} First ghost of a run takes 0.5-0.7 s
   - Context: The first ghost of each run takes 0.5-0.7 s.
   - Goal: The first ghost appears as fast as later ones.
   - Other: notes/someday.md

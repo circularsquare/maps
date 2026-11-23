@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4088 [P1] {L:checks} Disk space for trainworld, and a low-disk alert (2026-11-23): about 90 GB of old builds, backups, Chrome profiles, finished sessions' scratch, OSM build caches and old world-run folders deleted; C: 97.7 GB free; watch.py prints a disk: line and chimes under 30 GB and 10 GB free (tools/ops/disk.py), check_resources.py has the drive row.
 - T-4092 [P2] {L:buses} Bus connectors drawn above bus lines, and the passage hover wording (2026-11-23): Dashed bus connectors drawn after bus lines incl. the selected line's redraw; passage hover string reworded.
 - T-3937 [P2] {L:solve-speed} High-demand edits a third slower since 11-17 (2026-11-23): closed without code: Superseded: the 11-17 to 11-21 comparison was on a busy machine with rail trips up 4.5%, and the solve has since changed under T-4041/T-4054; T-4057 profiles the whole solve now and T-4025 catches drift per publish.
 - T-1230 [P4] {L:loading} Clock worker first boarding hour is slow (2026-11-23): closed without code: Folded into T-3804: stage 1 works out an out-of-date boarding account in steps between edits; the 1.3 s figure is from 2026-10-24.

@@ -4,7 +4,11 @@
 # so the orchestrator runs it with -Loop in the background at takeover.
 #   powershell -File trainworld/tools/ops/reserve_cores.ps1 [-Loop 30]        the claude.exe this shell runs under
 #   powershell -File trainworld/tools/ops/reserve_cores.ps1 -Root 1234        another session's claude.exe
-param([int]$Root = 0, [int]$Reserved = 2, [int]$Loop = 0)
+# Never touched, and never walked below: terminal hosts (a tab opened from this session makes WindowsTerminal.exe a
+# descendant, and it hosts all her tabs), explorer, and any claude.exe (another session's loop decides for its own children).
+#   -WhatIf lists what would be pinned and changes nothing.
+param([int]$Root = 0, [int]$Reserved = 2, [int]$Loop = 0, [switch]$WhatIf)
+$Skip = @('windowsterminal.exe','openconsole.exe','conhost.exe','wt.exe','explorer.exe','claude.exe')
 
 function Get-Tree {
   $all = Get-CimInstance Win32_Process | Select-Object ProcessId, ParentProcessId, Name
@@ -31,14 +35,18 @@ $mask = $all - (([int64]1 -shl $Reserved) - 1)
 
 while ($true) {
   try { $r = Get-Process -Id $Root -ErrorAction Stop } catch { Write-Output "root $Root gone"; exit 0 }
-  try { $r.ProcessorAffinity = [IntPtr]$all; $r.PriorityClass = 'Normal' } catch {}
+  if (-not $WhatIf) { try { $r.ProcessorAffinity = [IntPtr]$all; $r.PriorityClass = 'Normal' } catch {} }
   $done = 0; $failed = 0
   $queue = New-Object System.Collections.Queue
   if ($t.kids.ContainsKey($Root)) { foreach ($k in $t.kids[$Root]) { $queue.Enqueue($k) } }
   while ($queue.Count) {
     $id = $queue.Dequeue()
+    $nm = if ($t.byId.ContainsKey($id)) { [string]$t.byId[$id].Name } else { '' }
+    if ($Skip -contains $nm.ToLower()) { continue }
+    if ($WhatIf) { Write-Output ("would pin {0} {1}" -f $id, $nm) }
     try {
       $pr = Get-Process -Id $id -ErrorAction Stop
+      if ($WhatIf) { $done++; continue }
       if ([int64]$pr.ProcessorAffinity -band 3) { $pr.ProcessorAffinity = [IntPtr]$mask }
       if ($pr.PriorityClass -ne 'BelowNormal' -and $pr.PriorityClass -ne 'Idle') { $pr.PriorityClass = 'BelowNormal' }
       $done++
