@@ -1,14 +1,14 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session dc375617-affd-42c6-aac0-505e37685277, name maps-44 [b23630], since 2026-11-23 12:41 UTC
-Updated: 2026-11-23 14:50 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary
+Updated: 2026-11-23 14:00 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary
 notes/handoff-log.md. Her time UTC-5.
 
-## Running (8 agents): solvespeed T-4054 (then T-4064; shifting candidates asked a-2026-11-23-6), solveprof T-4057
-(+T-4082 Detroit), hokkaido T-3688, trackg1 T-4037 g1 (rebase over addtrack; g2 next), crashes T-4072/T-4073,
-busconn T-4079, addbp T-4085 (tw/track), checkbns (checker of busnosnap's level-39 save change; tree busnosnap
-waits, land on PASS). Landed: T-4056, T-4068, T-4076, community 378e3fe9 (shonei-server 4f71a2f needs a deploy on
-her yes); T-4024 onto tw/track 3c62751b.
+## Running (8 agents): solvespeed T-4054 (then T-4064; land shifting (1)/(2) on her yes, a-2026-11-23-7), solveprof
+T-4057 (+T-4082 Detroit), hokkaido T-3688, trackg1 T-4037 g1, busconn T-4079, addbp T-4085 (tw/track), checkbns
+(checker of busnosnap's level-39 save; tree busnosnap waits, land on PASS; the server's save check reads level 38:
+update it before a publish), safariwarn T-3940, community (resumed: sandbox in place search, tree community2).
+Landed: T-4056, T-4068, T-4076, T-4077/78/81, T-4072/73 840bfa8f; T-4024 onto tw/track. Server 4f71a2f deployed.
 
 ## Next (11-23)
 0. Her goals, 11-23: compute speedups for T-4041 (main); loading consistency and crashes (main, short/medium term:
@@ -28,7 +28,7 @@ her yes); T-4024 onto tw/track 3c62751b.
 4. TRACK (all week): on her (b), g1-g4 (notes/T-4037-design.md; g3, g4 side by side), then 4d, 4f, 5a/5b.
 
 LIVE v0.4.5. 8800 = 73299e61. Cap 14 (her daytime pick). Cores 0-1 hers (`reserve_cores.ps1 -Loop 30` at
-takeover). Server 3b14158. Save level 38. Pad 11-22, not started: T-4046-49, T-4052, T-4053 (design to her first).
+takeover). Server 4f71a2f. Save level 38. Pad 11-22, not started: T-4046-49, T-4052, T-4053 (design to her first).
 
 ## Her words
 - 11-22 evening, T-4041: lines independent ("every line running at its own random times is probably correct");

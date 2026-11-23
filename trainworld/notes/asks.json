@@ -14,9 +14,9 @@
     "by": "maps-44"
   },
   {
-    "id": "a-2026-11-23-6",
-    "title": "Test shapes for two shifting speedups",
-    "text": "Two speedups that shift riders slightly (T-4054). (1) No late joins at change stations: about 3-4% off the solve; real NYC save +0.002% rail trips, 0.075% of boardings move. Worst shape: a feeder line meeting a trunk at a change station, where on the trunk an express every 20 min and a local every 5 min both reach the same stop and the local's ride is longer than the express's by more than half the express headway but less than all of it (e.g. express 10 min ride, local 22 min). Riders who changed onto the trunk would all wait for the express. (2) Fewer points in the shared-platform math: about 2.5% off the solve; real save +0.005% rail trips. Worst shape: one platform with 4 or more lines to the same stop, similar ride times, mixed headways (every 5/10/15/30 min). Build either shape, download the save, and we'll compare versions on it?",
+    "id": "a-2026-11-23-7",
+    "title": "Land two small shifting speedups",
+    "text": "On the real NYC save: (1) no late joins at change stations saves about 3-4% of the solve and moves rail trips +0.002% (0.075% of boardings; biggest single line +3.3%, Newark Light Rail); (2) fewer points in the shared-platform math saves about 2.5% and moves rail trips +0.005% (0.056% of boardings; biggest +0.9%, LIRR West Hempstead). A gentler (2), at 3 points, saves about 1% with essentially no change. Land (1) and (2)? I'd land both: no player could tell.",
     "since": "2026-11-23",
     "by": "maps-44"
   }

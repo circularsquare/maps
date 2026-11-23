@@ -143,11 +143,11 @@ Concise checkers: the brief names the 3-5 riskiest cases per change, reuses exis
 building new ones, and caps the round at about 45 minutes plus 15 per change past three; the report lists what it
 skipped.
 
-**Speedups that shift riders** (on trial since 11-23, her idea; keep it if it works): a speedup may change the
-figures if the agent measures the saving and the shift on the real save (total rail trips, the lines that move most),
-and predicts in 2-3 lines the network shape that would show the shift worst. You pass that shape to her; she builds
-it in the game and downloads the save; an agent compares the two versions on it, and she decides with those numbers.
-Speedups that keep every figure the same land as before.
+**Speedups that shift riders** (her 11-23): a speedup may change the figures if the agent measures the saving and
+the shift on a big real-world save (the real NYC save; total rail trips, the lines that move most), and names the
+network shape that would show the shift worst. She decides with those numbers. Speed is measured on real saves only:
+a hand-built save is too small to show a saving against the noise ("not feasible for me to build it"); hand-built
+saves are for correctness checks. Speedups that keep every figure the same land as before.
 
 `node trainworld/checks/smoke.mjs [url]` from the maps root runs Node checks, then a new game and the real save in
 headless Chrome, about 3 minutes; `$env:TW_CORES='4'` for a light run on your own Vite.
