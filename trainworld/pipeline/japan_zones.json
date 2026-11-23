@@ -1,6 +1,6 @@
 {
  "task": "T-420 stage 3",
- "rule": "Every prefecture outside the seven metro packs is one zone; Hokkaido's subprefectures\noutside Sapporo's pack (Ishikari and Otaru) are units of which any under 100,000 people joins the\nneighbouring zone it shares the longest border with (docs/zones.md 2), smallest first. A zone is\nnamed after its most populous unit; its origin is the centre of its most populous 500 m mesh.",
+ "rule": "Every prefecture outside the seven metro packs is one zone. Hokkaido is its four\nstandard regions (T-3688): Dochuo is Sapporo's pack (Ishikari, Shiribeshi, Sorachi, Iburi, Hidaka),\nand Dohoku, Doto and Donan are zones of their subprefectures (`HOKKAIDO_ZONES`). A prefecture zone\nis named after its prefecture, a Hokkaido zone after its region; its origin is the centre of its\nmost populous 500 m mesh.",
  "unit_population": {
   "02": 1225822,
   "03": 1207754,
@@ -34,18 +34,14 @@
   "46": 1562240,
   "47": 1445707,
   "01-kamikawa": 481939,
-  "01-sorachi": 281950,
-  "01-iburi": 379338,
   "01-rumoi": 41593,
   "01-soya": 59072,
-  "01-okhotsk": 272343,
   "01-tokachi": 332608,
+  "01-okhotsk": 272343,
   "01-kushiro": 221130,
   "01-nemuro": 69064,
-  "01-hidaka": 60888,
   "01-oshima": 370541,
-  "01-hiyama": 32269,
-  "01-shiribeshi~01203": 85274
+  "01-hiyama": 32269
  },
  "zones": {
   "aom": {
@@ -1101,7 +1097,7 @@
    }
   },
   "kmk": {
-   "name": "Kamikawa",
+   "name": "Dohoku",
    "units": [
     "01-kamikawa",
     "01-soya",
@@ -1109,12 +1105,12 @@
    ],
    "population": 582604,
    "neighbours": [
+    "01-tokachi",
+    "01-okhotsk",
+    "01-ishikari",
     "01-sorachi",
     "01-iburi",
-    "01-okhotsk",
-    "01-tokachi",
-    "01-hidaka",
-    "01-ishikari"
+    "01-hidaka"
    ],
    "origin": [
     142.3844,
@@ -1138,127 +1134,19 @@
     "task": "T-463"
    }
   },
-  "sor": {
-   "name": "Sorachi",
+  "tkc": {
+   "name": "Doto",
    "units": [
-    "01-sorachi"
-   ],
-   "population": 281950,
-   "neighbours": [
-    "01-kamikawa",
-    "01-iburi",
-    "01-rumoi",
-    "01-ishikari"
-   ],
-   "origin": [
-    141.7844,
-    43.0521
-   ],
-   "extract": "asia/japan/hokkaido",
-   "water_extracts": [
-    "asia/japan/hokkaido"
-   ],
-   "water_cell_m": 25.0,
-   "census_at_home": 0.1629,
-   "wfh": 0.219,
-   "decay_pow": 1.6,
-   "decay_km": 16.0,
-   "curve_fit": {
-    "misplaced": 0.0737,
-    "own": 0.7719,
-    "own_census": 0.768,
-    "commuters": 95142,
-    "mean_km": null,
-    "task": "T-463"
-   }
-  },
-  "ibr": {
-   "name": "Iburi",
-   "units": [
-    "01-iburi",
-    "01-shiribeshi~01203"
-   ],
-   "population": 464612,
-   "neighbours": [
-    "01-kamikawa",
-    "01-sorachi",
-    "01-hidaka",
-    "01-oshima",
-    "01-hiyama",
-    "01-ishikari",
-    "01-01203"
-   ],
-   "origin": [
-    141.5781,
-    42.6271
-   ],
-   "extract": "asia/japan/hokkaido",
-   "water_extracts": [
-    "asia/japan/hokkaido"
-   ],
-   "water_cell_m": 25.0,
-   "census_at_home": 0.1014,
-   "wfh": 0.162,
-   "decay_pow": 1.8,
-   "decay_km": 80.0,
-   "curve_fit": {
-    "misplaced": 0.0551,
-    "own": 0.8211,
-    "own_census": 0.8251,
-    "commuters": 180054,
-    "mean_km": null,
-    "task": "T-463"
-   }
-  },
-  "okh": {
-   "name": "Okhotsk",
-   "units": [
+    "01-tokachi",
     "01-okhotsk",
+    "01-kushiro",
     "01-nemuro"
    ],
-   "population": 341407,
+   "population": 895145,
    "neighbours": [
     "01-kamikawa",
     "01-soya",
-    "01-tokachi",
-    "01-kushiro"
-   ],
-   "origin": [
-    143.8719,
-    43.8062
-   ],
-   "extract": [
-    "asia/japan/hokkaido"
-   ],
-   "water_extracts": [
-    "asia/japan/hokkaido"
-   ],
-   "water_cell_m": 25.0,
-   "census_at_home": 0.1752,
-   "wfh": 0.231,
-   "decay_pow": 1.6,
-   "decay_km": 16.0,
-   "curve_fit": {
-    "misplaced": 0.0495,
-    "own": 0.9056,
-    "own_census": 0.9061,
-    "commuters": 133547,
-    "mean_km": null,
-    "task": "T-463"
-   }
-  },
-  "tkc": {
-   "name": "Tokachi",
-   "units": [
-    "01-tokachi",
     "01-hidaka"
-   ],
-   "population": 393496,
-   "neighbours": [
-    "01-kamikawa",
-    "01-iburi",
-    "01-okhotsk",
-    "01-kushiro"
    ],
    "origin": [
     143.1781,
@@ -1269,62 +1157,29 @@
     "asia/japan/hokkaido"
    ],
    "water_cell_m": 25.0,
-   "census_at_home": 0.1638,
-   "wfh": 0.22,
-   "decay_pow": 1.8,
-   "decay_km": 50.0,
+   "census_at_home": 0.1524,
+   "wfh": 0.209,
+   "decay_pow": 2.0,
+   "decay_km": 80.0,
    "curve_fit": {
-    "misplaced": 0.0429,
-    "own": 0.7568,
-    "own_census": 0.7618,
-    "commuters": 154180,
-    "mean_km": null,
-    "task": "T-463"
-   }
-  },
-  "ksr": {
-   "name": "Kushiro",
-   "units": [
-    "01-kushiro"
-   ],
-   "population": 221130,
-   "neighbours": [
-    "01-okhotsk",
-    "01-tokachi",
-    "01-nemuro"
-   ],
-   "origin": [
-    144.3969,
-    43.0146
-   ],
-   "extract": "asia/japan/hokkaido",
-   "water_extracts": [
-    "asia/japan/hokkaido"
-   ],
-   "water_cell_m": 25.0,
-   "census_at_home": 0.1168,
-   "wfh": 0.176,
-   "decay_pow": 2.2,
-   "decay_km": 50.0,
-   "curve_fit": {
-    "misplaced": 0.0356,
-    "own": 0.8753,
-    "own_census": 0.8747,
-    "commuters": 84713,
-    "mean_km": null,
-    "task": "T-463"
+    "misplaced": 0.0514,
+    "own": 0.8349,
+    "own_census": 0.8336,
+    "commuters": 348502,
+    "mean_km": 5.3012,
+    "task": "T-3688"
    }
   },
   "osh": {
-   "name": "Oshima",
+   "name": "Donan",
    "units": [
     "01-oshima",
     "01-hiyama"
    ],
    "population": 402810,
    "neighbours": [
-    "01-iburi",
-    "01-shiribeshi~01203"
+    "01-shiribeshi",
+    "01-iburi"
    ],
    "origin": [
     140.7469,

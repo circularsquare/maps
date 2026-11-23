@@ -691,7 +691,7 @@ centre's (its own pack's; T-3621), else the registry centre; each pack the circl
 own trips, and trips between packs are left out. The well-known starts (every metro built as a city,
 the suggested starts and zones with over 1.5M people in the circle, 465) are cut 26.7% easy, 60% medium and
 13.3% hard (thirds with medium widened by 80% of its count, a fifth of that taken from easy and three fifths
-from hard: Anita, 2026-11-07, T-2748): easy from 12,175, medium from 3,998 (2026-11-18). The new game sheet's search names each result's tier, and the
+from hard: Anita, 2026-11-07, T-2748): easy from 12,178, medium from 4,140 (2026-11-23). The new game sheet's search names each result's tier, and the
 zoomed-out map colours unopened zones' dots by it until the first line is set up
 (ui-panels.md "The new game sheet", ui-demand-views.md "Zoomed far out"). Rerun the script after
 packs change; `--tiers` re-cuts in seconds.

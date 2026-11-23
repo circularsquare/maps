@@ -5,10 +5,11 @@
     python pipeline/japan_zones.py run [<id> ...] [--jobs 3]    build zones in parallel, one process each
     python pipeline/japan_zones.py fold               the fitted curves into japan_zones.json
 
-**Zones.** Every prefecture outside the seven metro packs is one zone; Hokkaido's subprefectures
-outside Sapporo's pack (Ishikari and Otaru) are units of which any under 100,000 people joins the
-neighbouring zone it shares the longest border with (docs/zones.md 2), smallest first. A zone is
-named after its most populous unit; its origin is the centre of its most populous 500 m mesh.
+**Zones.** Every prefecture outside the seven metro packs is one zone. Hokkaido is its four
+standard regions (T-3688): Dochuo is Sapporo's pack (Ishikari, Shiribeshi, Sorachi, Iburi, Hidaka),
+and Dohoku, Doto and Donan are zones of their subprefectures (`HOKKAIDO_ZONES`). A prefecture zone
+is named after its prefecture, a Hokkaido zone after its region; its origin is the centre of its
+most populous 500 m mesh.
 
 **Per zone.** As the metro packs (notes/T-420.md): census mesh population, economic census jobs
 scaled to the census's workers by place of work, P29 schools, OSM from the Geofabrik region
@@ -51,17 +52,17 @@ IDS = {"02": "aom", "03": "iwt", "05": "akt", "06": "ygt", "07": "fks", "09": "t
        "16": "tym", "17": "isk", "18": "fki", "19": "yns", "20": "ngn", "22": "szo", "25": "shg", "30": "wky",
        "31": "ttr", "32": "smn", "33": "oky", "35": "ymg", "36": "tks", "37": "kgw", "38": "ehm", "39": "kch",
        "41": "sag", "42": "ngs", "43": "kmm", "44": "oit", "45": "mzk", "46": "kgs", "47": "oka",
-       "01-kamikawa": "kmk", "01-sorachi": "sor", "01-iburi": "ibr", "01-rumoi": "rmi", "01-soya": "soy",
-       "01-okhotsk": "okh", "01-tokachi": "tkc", "01-kushiro": "ksr", "01-nemuro": "nmr", "01-hidaka": "hdk",
-       "01-oshima": "osh", "01-hiyama": "hym", "01-shiribeshi~01203": "shb"}
-HOKKAIDO = {"01-kamikawa": "Kamikawa", "01-sorachi": "Sorachi", "01-iburi": "Iburi", "01-rumoi": "Rumoi",
-            "01-soya": "Soya", "01-okhotsk": "Okhotsk", "01-tokachi": "Tokachi", "01-kushiro": "Kushiro",
-            "01-nemuro": "Nemuro", "01-hidaka": "Hidaka", "01-oshima": "Oshima", "01-hiyama": "Hiyama",
-            "01-shiribeshi~01203": "Shiribeshi"}
-# the metro packs' units: neighbours only
-METRO = ["08", "11", "12", "13", "14", "26", "27", "28", "29", "21", "23", "24", "40", "04", "34", "01-ishikari", "01-01203"]
+       "01-kamikawa": "kmk", "01-tokachi": "tkc", "01-oshima": "osh"}
+# Hokkaido's regions outside Sapporo's pack (T-3688, Anita's map of 2026-11-21): zone units by their
+# most populous one, which gives the id; the zone takes the region's name
+HOKKAIDO_ZONES = {"01-kamikawa": ("Dohoku", ["01-kamikawa", "01-rumoi", "01-soya"]),
+                  "01-tokachi": ("Doto", ["01-tokachi", "01-okhotsk", "01-kushiro", "01-nemuro"]),
+                  "01-oshima": ("Donan", ["01-oshima", "01-hiyama"])}
+HOKKAIDO = [u for _, us in HOKKAIDO_ZONES.values() for u in us]
+# the metro packs' units (Sapporo's is Dochuo, T-3688): neighbours only
+METRO = ["08", "11", "12", "13", "14", "26", "27", "28", "29", "21", "23", "24", "40", "04", "34",
+         "01-ishikari", "01-shiribeshi", "01-sorachi", "01-iburi", "01-hidaka"]
 REGIONS = ["hokkaido", "tohoku", "kanto", "chubu", "kansai", "chugoku", "shikoku", "kyushu"]
-MIN_POP = 100_000
 TELEWORK = b.TELEWORK_JP
 GRID = [(pw, km) for pw in (1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4) for km in (16.0, 32.0, 50.0, 80.0, 160.0)]
 
@@ -119,22 +120,7 @@ def plan():
         top[u] = (float(people[i]), round(float(clon[i]), 4), round(float(clat[i]), 4))
         print(f"{u}: {pop[u]:,.0f} people (mesh centres); top mesh {top[u][0]:,.0f}", flush=True)
 
-    def border(a, c):
-        ga = union_all([simple[x] for x in a])
-        gc = union_all([simple[x] for x in c])
-        return ga.boundary.intersection(gc.buffer(0.01)).length
-
-    zones = {u: [u] for u in units}
-    while True:
-        small = sorted((sum(pop[x] for x in us), z) for z, us in zones.items() if z in HOKKAIDO and sum(pop[x] for x in us) < MIN_POP)
-        if not small:
-            break
-        _, z = small[0]
-        cands = [(border(zones[z], zones[o]), o) for o in zones if o != z and o in HOKKAIDO]
-        length, into = max(cands)
-        assert length > 0, f"{z} touches no Hokkaido zone"
-        print(f"merge {z} ({sum(pop[x] for x in zones[z]):,.0f}) into {into} (shared border {length:.3f} deg)", flush=True)
-        zones[into] += zones.pop(z)
+    zones = {**{u: [u] for u in PREFS}, **{lead: list(us) for lead, (_, us) in HOKKAIDO_ZONES.items()}}
     polys = {r: _poly(r) for r in REGIONS}
     out = {}
     for z, us in zones.items():
@@ -143,7 +129,7 @@ def plan():
         gs = union_all([simple[x] for x in us])
         lead = us[0]
         zid = IDS[lead]
-        name = PREFS.get(lead) or HOKKAIDO[lead]
+        name = PREFS.get(lead) or HOKKAIDO_ZONES[lead][0]
         best = max(us, key=lambda x: top[x][0])
         nb = [x for x in units + METRO if x not in us and simple[x].distance(gs) < 0.02]
         inside = [r for r in REGIONS if polys[r].buffer(0.01).contains(gs)]

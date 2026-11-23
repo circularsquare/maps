@@ -34531,7 +34531,7 @@
         140.904,
         36.964
       ],
-      "localTrips": 70314310.0,
+      "localTrips": 70274113.0,
       "place": 20,
       "country": "JP",
       "realm": "japan"
@@ -34551,13 +34551,13 @@
       "utcOffset": 9,
       "market": -1,
       "box": [
-        140.819,
-        42.663,
-        141.895,
-        43.757
+        139.798,
+        41.906,
+        143.351,
+        44.068
       ],
       "place": 21,
-      "localTrips": 4587759.0,
+      "localTrips": 6053627.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -34582,7 +34582,7 @@
         34.269
       ],
       "place": 22,
-      "localTrips": 9364357.0,
+      "localTrips": 9344741.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -34607,7 +34607,7 @@
         36.484
       ],
       "place": 23,
-      "localTrips": 21385348.0,
+      "localTrips": 21365141.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -34632,7 +34632,7 @@
         35.798
       ],
       "place": 24,
-      "localTrips": 32500606.0,
+      "localTrips": 32471340.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -34657,7 +34657,7 @@
         35.124
       ],
       "place": 25,
-      "localTrips": 5262254.0,
+      "localTrips": 5253988.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -34682,7 +34682,7 @@
         39.021
       ],
       "place": 26,
-      "localTrips": 4269908.0,
+      "localTrips": 4264825.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -34809,7 +34809,7 @@
         41.575
       ],
       "place": 30,
-      "localTrips": 2235301.0,
+      "localTrips": 2233709.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -34835,7 +34835,7 @@
         40.469
       ],
       "place": 31,
-      "localTrips": 2209431.0,
+      "localTrips": 2206009.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -34861,7 +34861,7 @@
         40.53
       ],
       "place": 32,
-      "localTrips": 1686736.0,
+      "localTrips": 1684800.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -34887,7 +34887,7 @@
         39.227
       ],
       "place": 33,
-      "localTrips": 1972079.0,
+      "localTrips": 1969093.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -34913,7 +34913,7 @@
         37.995
       ],
       "place": 34,
-      "localTrips": 3352756.0,
+      "localTrips": 3348635.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -34939,7 +34939,7 @@
         37.174
       ],
       "place": 35,
-      "localTrips": 3391261.0,
+      "localTrips": 3372194.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -34965,7 +34965,7 @@
         37.077
       ],
       "place": 36,
-      "localTrips": 3429980.0,
+      "localTrips": 3403951.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -34991,7 +34991,7 @@
         38.572
       ],
       "place": 37,
-      "localTrips": 4120396.0,
+      "localTrips": 4118283.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -35017,7 +35017,7 @@
         36.998
       ],
       "place": 38,
-      "localTrips": 1969452.0,
+      "localTrips": 1964499.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -35043,7 +35043,7 @@
         37.874
       ],
       "place": 39,
-      "localTrips": 2133234.0,
+      "localTrips": 2126787.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -35069,7 +35069,7 @@
         36.314
       ],
       "place": 40,
-      "localTrips": 1462670.0,
+      "localTrips": 1457172.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -35095,7 +35095,7 @@
         35.99
       ],
       "place": 41,
-      "localTrips": 1434061.0,
+      "localTrips": 1426841.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -35121,7 +35121,7 @@
         37.049
       ],
       "place": 42,
-      "localTrips": 3821377.0,
+      "localTrips": 3816232.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -35147,7 +35147,7 @@
         35.665
       ],
       "place": 43,
-      "localTrips": 6875641.0,
+      "localTrips": 6859883.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -35173,7 +35173,7 @@
         35.722
       ],
       "place": 44,
-      "localTrips": 2446261.0,
+      "localTrips": 2425565.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -35199,7 +35199,7 @@
         34.403
       ],
       "place": 45,
-      "localTrips": 1568037.0,
+      "localTrips": 1559760.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -35225,7 +35225,7 @@
         35.633
       ],
       "place": 46,
-      "localTrips": 1006991.0,
+      "localTrips": 1002432.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -35251,7 +35251,7 @@
         36.375
       ],
       "place": 47,
-      "localTrips": 1231109.0,
+      "localTrips": 1227459.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -35277,7 +35277,7 @@
         35.371
       ],
       "place": 48,
-      "localTrips": 3418019.0,
+      "localTrips": 3406552.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -35303,7 +35303,7 @@
         34.817
       ],
       "place": 49,
-      "localTrips": 2390155.0,
+      "localTrips": 2382007.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -35329,7 +35329,7 @@
         34.271
       ],
       "place": 50,
-      "localTrips": 1244886.0,
+      "localTrips": 1239268.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -35355,7 +35355,7 @@
         34.583
       ],
       "place": 51,
-      "localTrips": 1722476.0,
+      "localTrips": 1714287.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -35381,7 +35381,7 @@
         34.32
       ],
       "place": 52,
-      "localTrips": 2379446.0,
+      "localTrips": 2375082.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -35407,7 +35407,7 @@
         33.902
       ],
       "place": 53,
-      "localTrips": 1205487.0,
+      "localTrips": 1203180.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -35433,7 +35433,7 @@
         33.637
       ],
       "place": 54,
-      "localTrips": 1392753.0,
+      "localTrips": 1379663.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -35459,7 +35459,7 @@
         34.727
       ],
       "place": 55,
-      "localTrips": 2398960.0,
+      "localTrips": 2394422.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -35485,7 +35485,7 @@
         33.214
       ],
       "place": 56,
-      "localTrips": 3165645.0,
+      "localTrips": 3160066.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -35511,7 +35511,7 @@
         33.759
       ],
       "place": 57,
-      "localTrips": 2049674.0,
+      "localTrips": 2046420.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -35537,7 +35537,7 @@
         32.857
       ],
       "place": 58,
-      "localTrips": 1957379.0,
+      "localTrips": 1954741.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -35563,7 +35563,7 @@
         32.327
       ],
       "place": 59,
-      "localTrips": 2912333.0,
+      "localTrips": 2909696.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -35589,7 +35589,7 @@
         27.114
       ],
       "place": 60,
-      "localTrips": 2695704.0,
+      "localTrips": 2695701.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -35615,85 +35615,7 @@
         45.542
       ],
       "place": 61,
-      "localTrips": 1055954.0,
-      "country": "JP",
-      "realm": "japan"
-    },
-    {
-      "id": "sor",
-      "name": "Sorachi",
-      "kind": "zone",
-      "origin": {
-        "lon": 141.7844,
-        "lat": 43.0521
-      },
-      "center": [
-        141.7844,
-        43.0521
-      ],
-      "zoom": 10.5,
-      "utcOffset": 9,
-      "market": -1,
-      "box": [
-        141.465,
-        42.818,
-        142.393,
-        44.068
-      ],
-      "place": 62,
-      "localTrips": 453979.0,
-      "country": "JP",
-      "realm": "japan"
-    },
-    {
-      "id": "ibr",
-      "name": "Iburi",
-      "kind": "zone",
-      "origin": {
-        "lon": 141.5781,
-        "lat": 42.6271
-      },
-      "center": [
-        141.5781,
-        42.6271
-      ],
-      "zoom": 10.5,
-      "utcOffset": 9,
-      "market": -1,
-      "box": [
-        139.798,
-        42.282,
-        142.359,
-        43.394
-      ],
-      "place": 63,
-      "localTrips": 828477.0,
-      "country": "JP",
-      "realm": "japan"
-    },
-    {
-      "id": "okh",
-      "name": "Okhotsk",
-      "kind": "zone",
-      "origin": {
-        "lon": 143.8719,
-        "lat": 43.8062
-      },
-      "center": [
-        143.8719,
-        43.8062
-      ],
-      "zoom": 10.5,
-      "utcOffset": 9,
-      "market": -1,
-      "box": [
-        142.558,
-        43.14,
-        146.462,
-        44.706
-      ],
-      "place": 64,
-      "localTrips": 607945.0,
+      "localTrips": 1054246.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -35713,39 +35635,13 @@
       "utcOffset": 9,
       "market": -1,
       "box": [
-        141.942,
-        41.906,
-        144.055,
-        43.659
+        142.559,
+        42.141,
+        146.461,
+        44.706
       ],
       "place": 65,
-      "localTrips": 696595.0,
-      "country": "JP",
-      "realm": "japan"
-    },
-    {
-      "id": "ksr",
-      "name": "Kushiro",
-      "kind": "zone",
-      "origin": {
-        "lon": 144.3969,
-        "lat": 43.0146
-      },
-      "center": [
-        144.3969,
-        43.0146
-      ],
-      "zoom": 10.5,
-      "utcOffset": 9,
-      "market": -1,
-      "box": [
-        143.677,
-        42.824,
-        145.352,
-        43.724
-      ],
-      "place": 66,
-      "localTrips": 392841.0,
+      "localTrips": 1605608.0,
       "country": "JP",
       "realm": "japan"
     },
@@ -35771,7 +35667,7 @@
         42.651
       ],
       "place": 67,
-      "localTrips": 725677.0,
+      "localTrips": 725550.0,
       "country": "JP",
       "realm": "japan"
     },

@@ -20,6 +20,11 @@ export const PINNED = { pue: "Q125293", pud: "Q639421", maj: "Q2234098" };
  * Keihanshin, four prefectures, shown as Kansai; Hyogo's players read 大阪 as another prefecture). Wins over Wikidata. */
 export const HAND_LABELS = {
   osa: { ja: "関西", "zh-Hans": "关西", "zh-TW": "關西" },
+  // T-3688: Hokkaido's four regions, which Wikidata's search for the romanised names does not reliably find
+  spk: { ja: "道央", "zh-Hans": "道央", "zh-TW": "道央" },
+  kmk: { ja: "道北", "zh-Hans": "道北", "zh-TW": "道北" },
+  tkc: { ja: "道東", "zh-Hans": "道东", "zh-TW": "道東" },
+  osh: { ja: "道南", "zh-Hans": "道南", "zh-TW": "道南" },
   dor: { ja: "ルール地方", "zh-Hans": "鲁尔区", "zh-TW": "魯爾區" },
   luo: { ja: "漯河", "zh-Hans": "漯河", "zh-TW": "漯河" }, // place_names_check.py cannot read 漯 (Luo), T-3324
   ram: { ja: "東エルサレム" }, // Wikidata's ja label came out as エルサレム, which reads as all of Jerusalem, T-3450
