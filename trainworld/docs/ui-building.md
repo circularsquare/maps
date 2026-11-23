@@ -534,6 +534,12 @@ lighter; at most 16 of each.
   Away from stations, within 100 m of where the route passes nearest another bus line's stop that is within
   100 m of the route (`BUS_XFER_M`, demand's station merge; T-2992), the marker snaps there and the tag names
   that line, so the stop is one place with the other line's.
+  Holding Ctrl (Cmd on a Mac) while placing (T-4069) turns both snaps off: the marker, and the stop, go where the
+  route is nearest the pointer, within 8 px of it, and the stop is never a station's (`BusRoute::exact`, saved in
+  `LBE1`; the Ctrl-placed point keeps that through a redraw). It still needs the route's road and stays 50 m
+  from any other stop; demand still joins it to another line's stop within 100 m, and the tag names that line.
+  The marker always sits where the stop will land, with or without Ctrl; where it is snapped the tag has a
+  last row, "Ctrl+click to place without snapping", and holding or letting go of Ctrl moves the marker at once.
   A click on the route adds a stop, a click on a stop takes it out, each one edit and one undo; the
   two ends stay. On a loop (T-3123) the closing stop is the end, and the last stop between offers no removal
   (it has no tag and takes no click); on a route that loops back a stop on the way out is drawn on both passes,

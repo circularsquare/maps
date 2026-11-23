@@ -87,6 +87,9 @@ pub struct BusRoute {
     /// T-2939: the hand-placed stops of the last time this line was by hand, given back when it is chosen
     /// again. Not saved: it lasts as long as the session.
     pub hand_kept: Vec<[f64; 2]>,
+    /// T-4069: the points of `hand` placed exactly where the player clicked (Ctrl+click): they never become a
+    /// station's stop. Saved, in its own block.
+    pub exact: Vec<[f64; 2]>,
     /// T-3907: bus lanes along the whole route (BRT): its buses never run under `streets::lane_kmh(true)`, and
     /// the route costs `BRT_COST_PER_KM` more a road-km and its upkeep is `UPKEEP_BRT_KM` a road-km.
     pub brt: bool,
@@ -99,7 +102,7 @@ impl BusRoute {
     /// A route with `kinds` cut or padded (with plain corners) to its points.
     pub fn new(points: Vec<[f64; 2]>, mut kinds: Vec<u8>, built: bool) -> BusRoute {
         kinds.resize(points.len(), K_CORNER);
-        BusRoute { points, kinds, built, spacing: 0, hand: None, hand_kept: vec![], brt: false, brt_bp: false }
+        BusRoute { points, kinds, built, spacing: 0, hand: None, hand_kept: vec![], exact: vec![], brt: false, brt_bp: false }
     }
     /// T-3944: BRT asked for, built or in the blueprint: the lanes `Network::brt_order(false)` counts.
     pub fn brt_any(&self) -> bool {
@@ -111,7 +114,7 @@ impl BusRoute {
     }
     pub fn rule(&self) -> StopRule<'_> {
         match &self.hand {
-            Some(h) => StopRule::Hand(h),
+            Some(h) => StopRule::Hand(h, &self.exact),
             None if self.spacing > 0 => StopRule::Spaced(self.spacing),
             None => StopRule::Auto,
         }
@@ -124,8 +127,9 @@ pub enum StopRule<'a> {
     Auto,
     /// About this many metres apart (T-2885).
     Spaced(u32),
-    /// At these points between the route's ends (T-2891).
-    Hand(&'a [[f64; 2]]),
+    /// At these points between the route's ends (T-2891); the second list is those of them kept off the
+    /// stations (T-4069).
+    Hand(&'a [[f64; 2]], &'a [[f64; 2]]),
 }
 
 /// `m` as a line's stop spacing: the least spacing, `SPACING_MIN_M`, is the automatic rule and stored
@@ -483,14 +487,17 @@ fn spaced_stops(fixed: &[(f64, u8, Option<u32>)], sp: f64) -> Vec<(f64, u8, Opti
 
 /// The route's ends (`first`, `last`) and the stops at `points` between them (T-2891), in road order:
 /// a point within `STATION_REACH_M` along the road of a station the route reaches (`kept`) is that
-/// station's stop, and a stop on top of an end or the stop before it is dropped.
-fn hand_stops(poly: &Poly, net: &Network, kept: &[(f64, u32, f64)], first: (f64, u8, Option<u32>), last: (f64, u8, Option<u32>), points: &[[f64; 2]]) -> Vec<(f64, u8, Option<u32>)> {
+/// station's stop (unless `exact` has the point, T-4069), and a stop on top of an end or the stop before it is dropped.
+fn hand_stops(poly: &Poly, net: &Network, kept: &[(f64, u32, f64)], first: (f64, u8, Option<u32>), last: (f64, u8, Option<u32>), points: &[[f64; 2]], exact: &[[f64; 2]]) -> Vec<(f64, u8, Option<u32>)> {
     // a point on the way out and back of a route that loops back is a stop on both passes (T-3109)
     let mut inner: Vec<(f64, u8, Option<u32>)> = points
         .iter()
-        .flat_map(|p| on_route_at(poly, net, p[0], p[1]))
-        .map(|s| {
-            let station = kept.iter().filter(|k| (k.0 - s).abs() <= STATION_REACH_M).min_by(|a, b| (a.0 - s).abs().total_cmp(&(b.0 - s).abs()));
+        .flat_map(|p| {
+            let pinned = exact.contains(p);
+            on_route_at(poly, net, p[0], p[1]).into_iter().map(move |s| (s, pinned))
+        })
+        .map(|(s, pinned)| {
+            let station = kept.iter().filter(|k| !pinned && (k.0 - s).abs() <= STATION_REACH_M).min_by(|a, b| (a.0 - s).abs().total_cmp(&(b.0 - s).abs()));
             station.map_or((s, KIND_MIDDLE, None), |k| (k.0, KIND_STATION, Some(k.1)))
         })
         .collect();
@@ -564,7 +571,7 @@ pub fn plan_by(net: &Network, l: u32, pts: &[[f64; 2]], kinds: &[u8], built_only
     // neither stops at the crossing; else each stops at it unless a stop of its own is within CROSS_NEAR_M.
     let mut cross: Vec<f64> = vec![];
     for o in 0..net.line_count() as u32 {
-        if o == l || !net.line_ok(o) || matches!(rule, StopRule::Hand(_)) {
+        if o == l || !net.line_ok(o) || matches!(rule, StopRule::Hand(..)) {
             continue;
         }
         let Some(r) = net.line_bus[o as usize].as_ref() else { continue };
@@ -612,7 +619,7 @@ pub fn plan_by(net: &Network, l: u32, pts: &[[f64; 2]], kinds: &[u8], built_only
     let spaced = rule != StopRule::Auto;
     match rule {
         StopRule::Spaced(sp) => fixed = spaced_stops(&fixed, (sp as f64).max(len / SPACED_MAX_STOPS)),
-        StopRule::Hand(points) => fixed = hand_stops(&poly, net, &kept, fixed[0], fixed[fixed.len() - 1], points),
+        StopRule::Hand(points, exact) => fixed = hand_stops(&poly, net, &kept, fixed[0], fixed[fixed.len() - 1], points, exact),
         StopRule::Auto => {}
     }
     // T-3924: on Auto every stop of the street grid is one demand sees, as stops placed that far apart are; a long

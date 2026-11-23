@@ -971,3 +971,38 @@ fn a_busway_costs_runs_buses_at_its_speed_and_saves() {
     assert_eq!(a.delete_pieces(&ways, &[]), 0, "{}", a.issues());
     assert!((time(&a, plain) - before).abs() < 1e-6, "{}", time(&a, plain));
 }
+
+/// T-4069: Ctrl+click puts a by-hand stop where the pointer is, beside a station too; a plain click there is the station's.
+#[test]
+fn an_exact_stop_beside_a_station_stays_a_plain_stop_through_a_redraw_and_a_save() {
+    let mut a = api();
+    let (_, _st) = rail(&mut a, 20, 2000.0);
+    let b = a.new_line_id();
+    let route = [-500.0, 100.0, 1.0, 20_500.0, 100.0, 3.0];
+    assert_eq!(a.set_bus_line(b, &route, 480, 600, 1200, 30.0, 120.0, 0, "Hand".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_bus_hand(b), 0);
+    assert!(!a.save().windows(4).any(|w| w == b"LBE1"), "none placed exactly: no block");
+    // 120 m off the station at 6000: plain, it is the station's; exact, it stays where it was
+    assert_eq!(a.set_bus_stop_exact(b, 6120.0, 90.0), 0, "{}", a.issues());
+    let s = stops(&a, b);
+    assert_eq!(s.iter().map(|c| c[4] as u8).collect::<Vec<_>>(), vec![KIND_END, KIND_MIDDLE, KIND_END], "{s:?}");
+    assert!((s[1][1] - 6120.0).abs() < 1e-6, "{s:?}");
+    assert_eq!(a.set_bus_stop(b, 9000.0, 50.0, true), 0);
+    assert_eq!(a.set_bus_stop(b, 12_120.0, 50.0, true), 0);
+    let s = stops(&a, b);
+    assert_eq!(s.iter().map(|c| c[4] as u8).collect::<Vec<_>>(), vec![KIND_END, KIND_MIDDLE, KIND_MIDDLE, KIND_STATION, KIND_END], "{s:?}");
+    // a redraw keeps it exact
+    let again = [-500.0, 100.0, 1.0, 20_600.0, 100.0, 3.0];
+    assert_eq!(a.set_bus_route(b, &again), 0, "{}", a.issues());
+    assert_eq!(stops(&a, b)[1][4] as u8, KIND_MIDDLE);
+    // so does a save
+    let bytes = a.save();
+    assert!(bytes.windows(4).any(|w| w == b"LBE1"));
+    let mut c = api();
+    assert!(c.load(&bytes));
+    assert_eq!(stops(&c, b)[1][4] as u8, KIND_MIDDLE);
+    // taking it out takes it from the list too
+    let at = stops(&a, b)[1].clone();
+    assert_eq!(a.set_bus_stop(b, at[1], at[2], false), 0);
+    assert!(!a.save().windows(4).any(|w| w == b"LBE1"));
+}

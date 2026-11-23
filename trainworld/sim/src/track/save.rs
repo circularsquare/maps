@@ -98,6 +98,9 @@ use super::twin::Twin;
 /// (`BusRoute::brt_bp`): count, then line indexes; without it none is, and `LBR1`'s lines have theirs built.
 /// Level 37 (T-3378) adds no block: an edge's kind 4 in its flag bits 8-10 is a busway. An older build refuses the
 /// save by its level (T-4014; builds before that played it without writing it, T-1826).
+/// A trailing `LBE1` block (T-4069, level 39, after `LBO1`) gives the by-hand bus stops placed exactly
+/// (Ctrl+click, `BusRoute::exact`) that no station takes: count, then per line its index and those stops as
+/// `LBH1` has them; without it every stop near a station is that station's.
 /// A trailing `LBO1` block (T-4013, level 38) gives the lines with boarding-only or getting-off-only stops
 /// (`LineData::only`): count, then per line its index, its count and per stop its place in the line's stops and
 /// its kind (1 boarding only, 2 getting off only); without it every stop lets riders on and off.
@@ -113,13 +116,13 @@ const MAGIC_TWT6: &[u8; 4] = b"TWT6";
 
 /// T-1826: the trailing blocks this build reads, in the order they are written. A block it does not
 /// know stops the decoder, which then reports the bytes left over (`decode_read`).
-pub const BLOCKS: [&[u8; 4]; 41] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1", b"LPS1", b"LWE1", b"LOS1", b"LPD1", b"LHR1", b"LFZ1", b"LSN1", b"LFD1", b"LGN1", b"LRA1", b"LWP1", b"LFB1", b"LBR1", b"LBT1", b"LBQ1", b"LBO1"];
+pub const BLOCKS: [&[u8; 4]; 42] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1", b"LPS1", b"LWE1", b"LOS1", b"LPD1", b"LHR1", b"LFZ1", b"LSN1", b"LFD1", b"LGN1", b"LRA1", b"LWP1", b"LFB1", b"LBR1", b"LBT1", b"LBQ1", b"LBO1", b"LBE1"];
 /// T-1826: the save level this build writes into the game header (`level`) and reads up to. Raised
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over, and refuses to open it (T-4014). Saves from before it have none, read
 /// as 0. The app keeps a copy (`SAVE_LEVEL`, app/src/workers/saveFile.ts; `the_app_knows_this_level`).
-pub const LEVEL: u32 = 38;
+pub const LEVEL: u32 = 39;
 /// T-3759: the last level from before stations could be unbound from their complex's name; a typed
 /// station there showed its own name, so loading one makes such a station unbound (the app's pass).
 pub const OLD_BOUND_NAMES: u32 = 26;
@@ -846,6 +849,22 @@ pub fn encode(net: &Network) -> Vec<u8> {
             }
         }
     }
+    // T-4069: after LBO1, only where a by-hand bus line has stops placed exactly: the by-hand stops placed exactly (Ctrl+click), which no station takes
+    let pinned: Vec<(usize, &[[f64; 2]])> = lines.iter().enumerate().filter_map(|(i, &l)| net.line_bus[l as usize].as_ref().filter(|r| r.hand.is_some() && !r.exact.is_empty()).map(|r| (i, r.exact.as_slice()))).collect();
+    if !pinned.is_empty() {
+        w.0.extend_from_slice(b"LBE1");
+        w.u(pinned.len() as u64);
+        for (i, stops) in pinned {
+            w.u(i as u64);
+            w.u(stops.len() as u64);
+            let (mut px, mut py) = (0.0, 0.0);
+            for p in stops {
+                w.mm(p[0] - px);
+                w.mm(p[1] - py);
+                (px, py) = (p[0], p[1]);
+            }
+        }
+    }
     w.0
 }
 
@@ -1540,6 +1559,20 @@ fn decode_read_at(bytes: &[u8], level: u32) -> Result<(Network, usize), String> 
             }
         }
     }
+    if r.0.get(r.1..r.1 + 4) == Some(b"LBE1") {
+        r.1 += 4;
+        for _ in 0..r.u()? {
+            let i = r.u()? as usize;
+            let mut stops = vec![];
+            let (mut px, mut py) = (0.0, 0.0);
+            for _ in 0..r.u()? {
+                let (x, y) = (quant(px + r.mm()?), quant(py + r.mm()?));
+                (px, py) = (x, y);
+                stops.push([x, y]);
+            }
+            if let Some(Some(b)) = net.line_bus.get_mut(i) { b.exact = stops; }
+        }
+    }
     for l in manual {
         fold_manual(&mut net, l);
     }
@@ -1798,7 +1831,7 @@ mod tests {
         for tag in &written {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
-        assert_eq!((LEVEL, BLOCKS.len()), (38, 41), "a new block raises LEVEL: raise it, then update this pin");
+        assert_eq!((LEVEL, BLOCKS.len()), (39, 42), "a new block raises LEVEL: raise it, then update this pin");
     }
 
     /// T-4014: the app refuses a save above its level without the track model, from its own copy of LEVEL.

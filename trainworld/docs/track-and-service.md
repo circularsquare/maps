@@ -2375,7 +2375,7 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   length (below) stands, the first stop placed makes that one a placed stop too, and the last placed one cannot be
   taken out. An edit that leaves the stops as they were (compared stop by stop) is no edit. In all other ways it is a line with its own spacing: 400 m of
   `cover` each way, `bus::spaced_profile`. A redraw keeps the stops within 200 m of the new route, moved onto
-  it. Leaving to a spacing keeps the stops in `BusRoute::hand_kept` for the session (not saved); choosing hand again gives them back (T-2939). The Save keeps them (`LBH1`).
+  it. Leaving to a spacing keeps the stops in `BusRoute::hand_kept` for the session (not saved); choosing hand again gives them back (T-2939). The Save keeps them (`LBH1`). A stop placed with Ctrl+click (T-4069) is never a station's: `BusRoute::exact` lists those points, `StopRule::Hand` takes them beside the hand points, and the Save keeps them in a trailing `LBE1` block after `LBO1` (level 39).
 - **Run** (T-2904, `streets.rs`, `bus::Pace`): a hop between two stops takes the car's time over its road
   at the bus's moving speed, plus 28 s for the stop (`BUS_STOP_S`: 20 standing, 8 speeding up and slowing
   down). The moving speed is 85% of the car's (`BUS_SHARE`, 90% until T-3856), never under 25 km/h (`BUS_LANE_KMH`, its own

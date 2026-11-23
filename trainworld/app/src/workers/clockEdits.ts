@@ -224,7 +224,7 @@ function applyInner(op: EditOp): Applied {
     case "busHand":
       return { r: a.set_bus_hand(op.line) };
     case "busHandStop":
-      return { r: a.set_bus_stop(op.line, op.x, op.y, op.on) };
+      return { r: op.exact && op.on ? a.set_bus_stop_exact(op.line, op.x, op.y) : a.set_bus_stop(op.line, op.x, op.y, op.on) };
     case "addFerryLine": {
       const ports = addPorts(a, op.ports);
       if (!ports) return { r: 1 };

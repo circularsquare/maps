@@ -41,7 +41,7 @@ impl TrackApi {
         if !bus::route_ok(&self.w.net, &pts, &kinds) {
             return self.refuse(Issue::LinePath { line: id });
         }
-        let (built, spacing, brt, brt_bp, hand, kept) = (r.built, r.spacing, r.brt, r.brt_bp, r.hand.take(), std::mem::take(&mut r.hand_kept));
+        let (built, spacing, brt, brt_bp, hand, kept, exact) = (r.built, r.spacing, r.brt, r.brt_bp, r.hand.take(), std::mem::take(&mut r.hand_kept), std::mem::take(&mut r.exact));
         *r = BusRoute::new(pts, kinds, built);
         r.spacing = spacing;
         (r.brt, r.brt_bp) = (brt, brt_bp);
@@ -54,6 +54,8 @@ impl TrackApi {
         };
         r.hand = hand.map(|h| h.iter().filter_map(onto).collect());
         r.hand_kept = kept.iter().filter_map(onto).collect();
+        // T-4069: a pinned stop stays pinned if the stop it was moves onto the new route
+        r.exact = exact.iter().filter_map(onto).collect();
         if built { self.run_charged(Op::Line { id, data: Some(d) }) } else { self.run(Op::Line { id, data: Some(d) }) }
     }
     /// Set how far apart a bus line's stops are, m (T-2885); 0 leaves them to place themselves. Free,
@@ -137,6 +139,14 @@ impl TrackApi {
     /// the stop nearest (x, y). The ends stay, a loop keeps one stop between (T-3123), and a click that
     /// changes no stop is no edit.
     pub fn set_bus_stop(&mut self, id: u32, x: f64, y: f64, on: bool) -> u32 {
+        self.bus_stop_edit(id, x, y, on, false)
+    }
+    /// T-4069: as `set_bus_stop` putting a stop on, but exactly where the route is nearest (x, y), never
+    /// as a station's stop (`BusRoute::exact`).
+    pub fn set_bus_stop_exact(&mut self, id: u32, x: f64, y: f64) -> u32 {
+        self.bus_stop_edit(id, x, y, true, true)
+    }
+    fn bus_stop_edit(&mut self, id: u32, x: f64, y: f64, on: bool, exact: bool) -> u32 {
         let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
         let Some(r) = d.bus.as_mut().filter(|r| r.hand.is_some()) else { return self.refuse(Issue::LinePath { line: id }) };
         let net = &self.w.net;
@@ -155,6 +165,8 @@ impl TrackApi {
             }
             let (px, py) = poly.at_road(poly.project(net, x, y).0);
             hand.push([quant(px), quant(py)]);
+            // T-4069: Ctrl+click puts the stop where it is, not on a station near it
+            if exact { r.exact.push([quant(px), quant(py)]) }
         } else {
             let n = plan.stops.len();
             let far = |k: usize| (plan.stops[k].x - x).hypot(plan.stops[k].y - y);
@@ -169,6 +181,7 @@ impl TrackApi {
                 return 0;
             }
         }
+        r.exact.retain(|p| hand.contains(p));
         r.hand = Some(hand);
         // T-3123: compared stop by stop, as a loop's first placed stop takes the place of its stop at half its length
         let same = |a: &bus::Plan, b: &bus::Plan| a.stops.len() == b.stops.len() && a.stops.iter().zip(&b.stops).all(|(p, q)| p.s == q.s && p.station == q.station);

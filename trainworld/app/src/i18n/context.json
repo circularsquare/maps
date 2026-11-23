@@ -2262,6 +2262,7 @@
   "stopMarkers.rightStopLooping": "Hover tag row over that stop on a line that loops back there, under the click's row. A right click (or holding a finger on it) makes the line end there again, turning back instead of going around the loop.",
   "stopMarkers.noLoop": "Shown for a few seconds under a station's name after a right click (or a finger held) on a station where the line has no loop to close, open or turn around.",
   "stopMarkers.add": "Hover tag row over a station the line can add as a stop.",
+  "stopMarkers.addExact": "Hover tag row under the click's row while placing a stop manually on a bus line, shown only where the stop would snap to a station or to another line's stop. Holding Ctrl (Cmd on a Mac) while clicking puts the stop exactly where the pointer is, and the hollow marker moves there while it is held.",
   "stopMarkers.addReroute": "Hover tag row over a station the line can reach only by a different route.",
   "stopMarkers.shiftAddOneWay": "Hover tag row over a station that can be added to the line being edited, under the click's row (not on touch). Clicking with Shift held adds it as a stop where trains stop going one way only, the way that makes sense for the line; trains going the other way pass through without stopping.",
   "stopMarkers.shiftOneWay": "Hover tag row over a stop between the ends of the line being edited, under the click's row (not on touch). Clicking it with Shift held makes trains stop there going one way only; trains going the other way pass through without stopping.",

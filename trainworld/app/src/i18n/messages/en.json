@@ -2261,6 +2261,7 @@
   "stopMarkers.rightStopLooping": "Right click to stop looping back here",
   "stopMarkers.noLoop": "Can't loop back here",
   "stopMarkers.add": "Click to add a stop",
+  "stopMarkers.addExact": "Ctrl+click to place without snapping",
   "stopMarkers.addReroute": "Click to add a stop and change the route",
   "stopMarkers.shiftAddOneWay": "Shift click to add a one way stop",
   "stopMarkers.shiftOneWay": "Shift click to stop one way only",

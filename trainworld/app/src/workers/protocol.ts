@@ -141,7 +141,7 @@ export type EditOp =
   /** T-3907: a bus line on BRT or off it; switching on a constructed line is paid at once */
   | { op: "busBrt"; line: number; on: boolean }
   /** T-2891: a stop on a by-hand bus line put where the route is nearest (x, y), or (`on` false) the stop there taken out */
-  | { op: "busHandStop"; line: number; x: number; y: number; on: boolean }
+  | { op: "busHandStop"; line: number; x: number; y: number; on: boolean; exact?: boolean }
   /** T-2194: a planned ferry line over its ports in route order (a port's node, or a new one added
    * first) and its route (world metres, x, y, kind, m/s per point, flat: notes/T-2177.md "F2 -> F3");
    * answered with its `line` */

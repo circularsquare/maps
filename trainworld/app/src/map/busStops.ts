@@ -17,6 +17,7 @@ import { BUS_XFER_M } from "../game/busLinks";
 import { tagLines } from "./labelLayout";
 import type { Overlay } from "./overlay";
 import { sizeAt } from "./stopMarkers";
+import { touchInput } from "./touch";
 import { halfFill, headingAtPlane } from "./halfDot";
 
 /** The route takes a click this near, CSS px. */
@@ -30,7 +31,7 @@ const HAND_GAP_M = 50;
 type Hit =
   | { kind: "end" }
   | { kind: "stop"; x: number; y: number; name: string | undefined; oneWay?: boolean }
-  | { kind: "route"; x: number; y: number; mx: number; my: number; name?: string };
+  | { kind: "route"; x: number; y: number; mx: number; my: number; name?: string; snapped: boolean };
 
 /** A mark on the map: where it is and what a click on it does. */
 interface Item {
@@ -220,7 +221,9 @@ export class BusStopMarkers {
     return at;
   }
 
-  private pick(px: number, py: number): Hit | null {
+  /** `exact` (T-4069, Ctrl or Cmd held): the stop goes where the route is nearest the pointer, taking no station's
+   * place and no other line's. */
+  private pick(px: number, py: number, exact = false): Hit | null {
     const bus = this.bus;
     if (!bus) return null;
     let best: Item | null = null, bestD = Infinity;
@@ -234,8 +237,13 @@ export class BusStopMarkers {
     const at = this.routeAt(px, py);
     if (!at) return null;
     const here = routePoint(bus, ...at);
-    // on top of a stop a click adds nothing, and near a station's stop it is that stop
-    if (bus.stops.some((s) => metres(s, here) < (s.station >= 0 ? STATION_REACH_M : HAND_GAP_M))) return null;
+    // on top of a stop a click adds nothing, and near a station's stop it is that stop (exact: only the gap)
+    if (bus.stops.some((s) => metres(s, here) < (s.station >= 0 && !exact ? STATION_REACH_M : HAND_GAP_M))) return null;
+    if (exact) {
+      // demand still joins a stop within `BUS_XFER_M` of another line's, so the tag says so
+      const join = this.meetOn.filter((s) => metres(s.p, here) <= BUS_XFER_M).sort((a, b) => metres(a.p, here) - metres(b.p, here))[0];
+      return { kind: "route", x: here.x, y: here.y, mx: toMerc01(here.lng, here.lat)[0], my: toMerc01(here.lng, here.lat)[1], ...(join?.name ? { name: join.name } : {}), snapped: false };
+    }
     // T-2982: near a station, the station's stop, where the route passes nearest the station
     let reach = STATION_REACH_M, near: { p: RoutePoint; node: number } | null = null;
     for (const s of this.reachOn) {
@@ -253,18 +261,18 @@ export class BusStopMarkers {
     }
     const p = near?.p ?? meet?.p ?? here, [mx, my] = toMerc01(p.lng, p.lat);
     const name = near ? this.names.get(String(near.node)) ?? t("stopMarkers.station") : meet?.name || undefined;
-    return { kind: "route", x: p.x, y: p.y, mx, my, ...(name ? { name } : {}) };
+    return { kind: "route", x: p.x, y: p.y, mx, my, ...(name ? { name } : {}), snapped: p !== here };
   }
 
   /** The pointer moved over the map: the follower along the route, the tag and the cursor. */
-  hover(px: number, py: number) {
-    const hit = this.pick(px, py);
+  hover(px: number, py: number, exact = false) {
+    const hit = this.pick(px, py, exact);
     this.ghostAt = hit?.kind === "route" ? [hit.mx, hit.my] : null;
     this.ghost.style.display = this.ghostAt ? "" : "none";
     this.map.getCanvas().style.cursor = hit && hit.kind !== "end" ? "pointer" : "crosshair";
     if (!hit || hit.kind === "end") return this.hideTag();
     const lines = hit.kind === "stop" ? [...(hit.name ? [hit.name] : []), ...(hit.oneWay ? [t("stopMarkers.oneWay")] : []), t("stopMarkers.remove")]
-      : [...(hit.name ? [hit.name] : []), t("stopMarkers.add")];
+      : [...(hit.name ? [hit.name] : []), t("stopMarkers.add"), ...(hit.snapped && !touchInput.peek() ? [t("stopMarkers.addExact")] : [])];
     tagLines(this.tag, lines);
     this.tag.style.display = "";
     this.tag.style.transform = `translate(${Math.round(px + 14)}px, ${Math.round(py + 12)}px)`;
@@ -272,11 +280,11 @@ export class BusStopMarkers {
   }
 
   /** A click on the map. */
-  click(px: number, py: number) {
-    const hit = this.pick(px, py);
+  click(px: number, py: number, exact = false) {
+    const hit = this.pick(px, py, exact);
     if (this.line === null || !hit || hit.kind === "end") return;
     this.hideTag();
-    void edit({ op: "busHandStop", line: this.line, x: hit.x, y: hit.y, on: hit.kind !== "stop" });
+    void edit({ op: "busHandStop", line: this.line, x: hit.x, y: hit.y, on: hit.kind !== "stop", ...(exact && hit.kind === "route" ? { exact: true } : {}) });
   }
 
   private hideTag() {

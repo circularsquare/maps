@@ -307,6 +307,7 @@ export class Tools {
     this.noSnap = on;
     this.streetSwitch();
     const p = this.pointer;
+    if (tool.peek() === "line" && this.busStops?.active && p) this.busStops.hover(p.px, p.py, on); // T-4069
     if (tool.peek() === "track" && p) this.move({ point: { x: p.px, y: p.py }, lngLat: { lng: p.lng, lat: p.lat }, originalEvent: e } as unknown as MapMouseEvent);
   }
 
@@ -642,8 +643,8 @@ export class Tools {
     if (t === "bus") return this.bus.move(e);
     if (t === "ferry") return this.ferry.move(e);
     if (t === "building") return this.building.move(e);
-    if (t === "line") (this.busStops?.active ? this.busStops : this.stops)?.hover(e.point.x, e.point.y); // T-233: the toggle markers' tag
     if (e.originalEvent) this.noSnap = e.originalEvent.ctrlKey || e.originalEvent.metaKey;
+    if (t === "line") (this.busStops?.active ? this.busStops.hover(e.point.x, e.point.y, this.noSnap) : this.stops?.hover(e.point.x, e.point.y)); // T-233: the toggle markers' tag
     this.streetSwitch();
     this.ghostSpent = false;
     this.pointer = { px: e.point.x, py: e.point.y, lng: e.lngLat.lng, lat: e.lngLat.lat };
@@ -1159,7 +1160,7 @@ export class Tools {
   // ---------------------------------------------------------------- lines
 
   lineClick(e: MapMouseEvent) {
-    if (this.busStops?.active) return this.busStops.click(e.point.x, e.point.y);
+    if (this.busStops?.active) return this.busStops.click(e.point.x, e.point.y, e.originalEvent.ctrlKey || e.originalEvent.metaKey);
     const n = this.overlay.renderer.net;
     if (!n) return;
     // a toggle marker (T-233, map/stopMarkers.ts) is on top of the station
