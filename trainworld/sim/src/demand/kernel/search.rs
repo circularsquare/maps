@@ -1543,11 +1543,13 @@ pub(super) struct Search<'a> {
     /// After `run`, the departures' shares towards its destination.
     pub(super) share: Shares,
     /// T-4041: the lines that joined a node already settled, (station, or change node from `n`,
-    /// route node), and `late_fix`'s scratch: per node its state in the walk for the settle order,
-    /// the walk's stack and the departures it has yet to go through, (node, late line or `NONE`).
+    /// route node), and `late_fix`'s scratch: per node its state in the walk for the settle order
+    /// and its first entry in `late` (`NONE` for none), the walk's stack and the departures it has
+    /// yet to go through, (node, late line or `NONE`).
     pub(super) late: Vec<(u32, u32)>,
     pub(super) late_out: Vec<bool>,
     pub(super) mark: Vec<u8>,
+    pub(super) late_at: Vec<u32>,
     pub(super) stack: Vec<(u32, u32, u32, u32, u32)>,
     pub(super) succ: Vec<(u32, u32)>,
     pub(super) reorder: Vec<u32>,
@@ -1798,6 +1800,7 @@ impl Search<'_> {
             late: vec![],
             late_out: vec![],
             mark: vec![],
+            late_at: vec![],
             stack: vec![],
             succ: vec![],
             reorder: vec![],
@@ -2445,6 +2448,7 @@ impl Search<'_> {
             return;
         }
         let (s, n) = (self.s, self.n);
+        let cn0 = self.cn.len();
         // the late lines' own riders: per station, those that came off a line late there
         self.late.sort_unstable();
         let mut i = 0;
@@ -2461,14 +2465,18 @@ impl Search<'_> {
         self.late_out.clear();
         self.late_out.resize(self.late.len(), false);
         self.settle_order(dst);
-        // costs and shares where lines joined late, without those left out
-        let mut last = NONE;
-        for k in 0..self.late.len() {
+        // costs and shares where lines joined late, without those left out (a node made before
+        // whose late lines were all left out keeps the costs and shares it was settled with)
+        let mut k = 0;
+        while k < self.late.len() {
             let x = self.late[k].0;
-            if x == last {
+            let k0 = k;
+            while k < self.late.len() && self.late[k].0 == x {
+                k += 1;
+            }
+            if (x as usize) < n + cn0 && self.late_out[k0..k].iter().all(|&o| o) {
                 continue;
             }
-            last = x;
             let x = x as usize;
             if x < s {
                 self.list_by_edge_kept(self.st_head[x], |q, r| q.board[r >> 6] >> (r & 63) & 1 == 1);
@@ -2589,18 +2597,31 @@ impl Search<'_> {
     /// next; a station or change node its departures, and where a boarding rides a stop first,
     /// that stop), by a depth-first walk from the nodes in the order they were settled. A late
     /// line found on a loop is left out (`late_out`, its departure's bit cleared), and the walk
-    /// goes back to before it.
+    /// goes back to before it. A node is placed at once where nothing it sends riders to is left
+    /// to place (T-4054): a route node whose next is placed, and between walks, a station or change
+    /// node no line joined late (it sends riders only to nodes settled before it, placed by then).
     fn settle_order(&mut self, dst: usize) {
-        let n = self.n;
+        let (s, n) = (self.s, self.n);
         let ids = n + self.cn.len();
         self.mark.clear();
         self.mark.resize(ids, 0);
+        self.late_at.clear();
+        self.late_at.resize(ids, NONE);
+        for k in (0..self.late.len()).rev() {
+            self.late_at[self.late[k].0 as usize] = k as u32;
+        }
         self.reorder.clear();
         self.stack.clear();
         self.succ.clear();
         for o in 0..self.order.len() {
             let root = self.order[o] as usize;
             if self.mark[root] != 0 {
+                continue;
+            }
+            let at_once = if s <= root && root < n { self.placed_next(root) } else { self.late_at[root] == NONE };
+            if at_once {
+                self.mark[root] = 2;
+                self.reorder.push(root as u32);
                 continue;
             }
             self.enter(root, NONE, dst);
@@ -2618,6 +2639,10 @@ impl Search<'_> {
                     continue;
                 }
                 match self.mark[y as usize] {
+                    0 if self.placed_next(y as usize) => {
+                        self.mark[y as usize] = 2;
+                        self.reorder.push(y);
+                    }
                     0 => self.enter(y as usize, li, dst),
                     2 => {}
                     _ => {
@@ -2645,6 +2670,16 @@ impl Search<'_> {
         std::mem::swap(&mut self.order, &mut self.reorder);
     }
 
+    /// `settle_order`: whether `x` is a route node whose next node is placed (or that has none).
+    #[inline]
+    fn placed_next(&self, x: usize) -> bool {
+        if x < self.s || x >= self.n {
+            return false;
+        }
+        let nx = self.next[x];
+        nx == NONE || self.mark[nx as usize] == 2
+    }
+
     /// `settle_order`: node `x`, reached by late line `li` (or `NONE`), onto the walk's stack with
     /// the nodes it sends riders to.
     fn enter(&mut self, x: usize, li: u32, dst: usize) {
@@ -2659,16 +2694,31 @@ impl Search<'_> {
         } else if x != dst {
             let (v, b0) = if x < s { (x, NONE) } else { (self.cn[x - n].st as usize, self.cn[x - n].bits) };
             let e0 = g.adj_off[v] as usize;
+            let l0 = self.late_at[x];
             for e in e0..g.adj_off[v + 1] as usize {
                 let r = g.adj_to[e] as usize - s;
                 let on = if b0 == NONE { self.board[r >> 6] >> (r & 63) & 1 == 1 } else { self.cn_bits[b0 as usize + (e - e0) / 64] >> ((e - e0) % 64) & 1 == 1 };
                 if !on {
                     continue;
                 }
-                let li = self.late.binary_search(&(x as u32, r as u32)).map_or(NONE, |k| k as u32);
-                self.succ.push(((s + r) as u32, li));
+                // (`x`'s late lines run from `late_at[x]` in `late`, sorted; a node placed already
+                // is passed over whatever line leads to it, so it is left off)
+                let mut li = NONE;
+                if l0 != NONE {
+                    let mut k = l0 as usize;
+                    while k < self.late.len() && self.late[k].0 as usize == x {
+                        if self.late[k].1 as usize == r {
+                            li = k as u32;
+                            break;
+                        }
+                        k += 1;
+                    }
+                }
+                if self.mark[s + r] != 2 {
+                    self.succ.push(((s + r) as u32, li));
+                }
                 let nx = self.next[s + r] as usize;
-                if !(nx >= s && nx < n) {
+                if !(nx >= s && nx < n) && self.mark[g.rn_next[r] as usize] != 2 {
                     self.succ.push((g.rn_next[r], li));
                 }
             }
@@ -2696,6 +2746,7 @@ impl Search<'_> {
         } else {
             let (b0, e) = (self.cn[x - n].bits as usize, self.edge_ix[r] as usize);
             self.cn_bits[b0 + e / 64] &= !(1 << (e % 64));
+            self.cn[x - n].n -= 1;
         }
     }
 
