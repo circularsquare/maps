@@ -200,6 +200,15 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4046 [P3] {L:small-fixes} Pick a route among overlapping bus and tram routes
   - Context: Your scratch pad, 11-22: "if we have a bus route and tram route perfectly overlapping theres no way to select the bus route. same for multiiple bus routes. ideally we try to "side by side" these". Picture: artifacts/trainworld/board/20261122-114726-b705.png.
   - Goal: Every route on a shared street can be clicked, ideally drawn side by side.
+- T-4068 [P2] {L:small-fixes} Shift click deletes without asking (taking, 2026-11-23, agent shiftdel)
+  - Context: Your scratch pad, 11-23: "some people want to remove / delete stuff without confirmation: maybe lets do shift click to do this (say in tooltip too in gray text (shift click to remove without confirmation))".
+  - Goal: Every delete or remove that asks first skips the question on Shift+click, and its hover says so in grey.
+- T-4069 [P2] {L:buses} Ctrl click places a bus stop without snapping
+  - Context: Your scratch pad, 11-23: "someone dislikes how when even in manual bus stop placement mode, they get snapped sometimes to nearby stations and such. we can maybe ctrl click to override snapping? and show ghost to where it woudl actualyl be placed so theres no surprises after we click."
+  - Goal: Ctrl+click puts a manual bus stop exactly where clicked, and the ghost always shows where the stop will land, snapped or not.
+- T-4070 [P2] {L:station-placement} {after:T-4037} Ctrl click draws a station box without snapping
+  - Context: Your scratch pad, 11-23: "some people also dislike the snapping when drawing station boxes, we can also ctrl click to override here." Same gesture as T-4069; the track rework's station tool (T-4037 g3/g4) is changing placement now, so after that lands.
+  - Goal: Ctrl+click draws the station box where the pointer is, no snapping.
 - T-4047 [P3] {L:buses} Name bus stations
   - Context: Your scratch pad, 11-22: "allow naming bus stations".
 - T-4048 [P3] {L:route-choice} Remove station connections and passageways
