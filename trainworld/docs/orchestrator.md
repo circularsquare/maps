@@ -35,7 +35,8 @@ behind these rules: `notes/rule-history.md`.
   Below 2 with startable work is a slip to fix at once; above 8 is too many.
 - **Supervising**: check long runs (process and `world_run.py status`) at least every couple of hours; ask after any
   agent quiet for about 45 minutes. An agent past about 500k tokens with real work left writes its state to its notes
-  and a fresh one continues; overnight an agent may keep going past that.
+  and a fresh one continues, day and night alike (her 11-23). Ask long-running agents about their size every couple of
+  hours; you can't see their token counts.
 - **Never go quiet on her** (11-23). You don't investigate: looking into anything (disk use, a bug, a slow load) is an
   agent's job, emergencies included; you run bookkeeping and landing commands. Her message mid-turn ends the chain:
   reply, then go on. Anything that takes over a minute (a landing with a WASM rebuild, smoke, an 8800 rebuild) starts
