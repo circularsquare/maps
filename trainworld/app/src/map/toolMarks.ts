@@ -5,7 +5,7 @@ import { t as tr } from "../i18n";
 import { Icon } from "../ui/widgets";
 import { distance } from "../game/format";
 import { metresBetween } from "../game/walks";
-import { buildLevel, besideOn, buswayTrack, stationChoice, stationKind, tool, tramTrack } from "../game/ui";
+import { buildLevel, besideOn, buswayTrack, stationKind, tool, tramTrack } from "../game/ui";
 import { describeRemovable } from "../game/remove";
 import { realStationUnder } from "./realStations";
 import { world } from "../game/world";
@@ -170,7 +170,9 @@ export function placeMarks(tk: Tools) {
     if (b) {
       boxGhost(tk, b.lx, b.ly, b.ways, b.perM, false, null, BRT_STATION_PLATFORM, false, null, true);
       stationRings(tk, { ...here, lx: b.lx, ly: b.ly });
-      showTag(tk, helpLines(tk, { ...here, lx: b.lx, ly: b.ly }, tr("stationInspector.brtStation")), false, p.px, p.py);
+      const lines = helpLines(tk, { ...here, lx: b.lx, ly: b.ly }, null);
+      if (lines.length) showTag(tk, lines, false, p.px, p.py);
+      else tk.tag.style.display = "none";
     } else if (b === null) showTag(tk, ...withName(real, tr("tools.notBesideRoad")), p.px, p.py);
     else tk.tag.style.display = "none";
     return;
@@ -274,13 +276,11 @@ export function helpLines(tk: Tools, h: Snap, first: string | null): HTMLDivElem
     fill.style.width = `${(100 * logShare(trips.legs, NEAR_BAR_LO, NEAR_BAR_HI)).toFixed(1)}%`;
     bar.append(fill);
     const text = row(trips.text);
-    // T-4105, T-4135: with Auto picked, the row starts with the icon of the kind a click would place
-    if (stationChoice.peek() === "auto") {
-      const icon = Object.assign(document.createElement("span"), { className: "kind-icon" });
-      render(KIND_ICON[stationKind.peek()](), icon);
-      text.prepend(icon);
-      text.className = "near-row";
-    }
+    // T-4105, T-4135: the row starts with the icon of the kind a click would place; no row names the kind
+    const icon = Object.assign(document.createElement("span"), { className: "kind-icon" });
+    render(KIND_ICON[stationKind.peek()](), icon);
+    text.prepend(icon);
+    text.className = "near-row";
     lines.push(text, bar);
   }
   return lines;

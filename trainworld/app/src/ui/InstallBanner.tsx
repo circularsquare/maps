@@ -1,13 +1,11 @@
 // T-4106 (notes/T-4106.md): on a phone or tablet, after 2 hours of play in this browser (game/hoursPlayed.ts, which
 // counts across visits), a note at the bottom of the map on how to install the game as an app. Installing gives no
-// more memory (notes/T-4086.md); on iOS it keeps saves past Safari's 7-day clearing, and the app starts with storage of
-// its own, so a player not signed in is told the app's saves are separate. The close button hides it for good; left
+// more memory (notes/T-4086.md); on iOS it keeps saves past Safari's 7-day clearing. The close button hides it for good; left
 // alone it goes after a minute and comes back on a later visit. Never in the installed app, never while a notice or a
 // question is up, never beside the device or retry note that share its place.
 
 import { computed, effect, signal } from "@preact/signals";
 import { t } from "../i18n";
-import { accountState, session } from "../game/account";
 import { playedSeconds } from "../game/hoursPlayed";
 import { demandStopped, gameReady, loadFailure } from "../game/loading";
 import { figuresStopped } from "../game/figuresStopped";
@@ -75,13 +73,11 @@ export function InstallBanner() {
   const android = where === "android", p = android && prompt.value;
   const how = android ? (p ? t("installBanner.android") : t("installBanner.androidMenu"))
     : where === "iosSafari" ? t("installBanner.iosSafari") : t("installBanner.ios");
-  // (Android shares the browser's storage; iOS gives the app its own)
-  const apart = android || session.value ? "" : " " + t("installBanner.separate") + (accountState.value === "on" ? " " + t("installBanner.signIn") : "");
   return <div class="no-market-note install-banner" role="status">
-    <span>{how}{apart}</span>
+    <span>{how}</span>
     <span class="install-acts">
       {p && <button class="btn text" onClick={() => void install()}>{t("installBanner.install")}</button>}
-      <button class="btn icon" aria-label={t("installBanner.close")} onClick={dismiss}><Icon.cross /></button>
+      <button class="btn icon" aria-label={t("modal.close")} onClick={dismiss}><Icon.cross /></button>
     </span>
   </div>;
 }
