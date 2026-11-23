@@ -11,10 +11,8 @@ diary notes/handoff-log.md. Her time UTC-5.
   ring, Nunito A, same tree.
 - ghostlag T-4136 (opus, P1): her 21:14 "the rail placement ghost lags behind the cursor ... most important to feel
   responsive"; measure then fix, page-side; retime owns the preview retime.
-- textfix (not on the board: its tasks T-4135/T-4106 are archived): her 21:1x text: drop the kind-name row in the
-  station hover; install note in her exact words, no saves/sign-in lines, x only.
 - regionfix T-4137 (opus): batchcheck2 found Asia rows seed 9 regions drift (T-4113 code); batchcheck2 PASSED T-4104,
-  T-4109, T-4130, T-4111 and smoke. 8800 = ccbe5076 (21:08).
+  T-4109, T-4130, T-4111 and smoke. 8800 rebuilding to d4eabb5c6 (21:26: textfix landed).
 - Her 11-23 20:5x: edit speed on 8800 still slow (new line, delete line, line length after stop edits): T-4114 now P1,
   lines first. Cores at the cap (14/14) at 20:57: no more starts until claims free.
 
