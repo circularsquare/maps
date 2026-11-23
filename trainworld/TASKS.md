@@ -186,10 +186,37 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
   - Context: You, 11-23: "edit speed is actually still kind of a problem... noticeable on my end for big worlds... i feel like there was a point at which we had edit speed almost instant, but then might have regressed". Mostly placing track and editing stops. T-3550, T-1211, T-3804, T-1031 are back at P2 under this.
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
-- T-4144 [P1] {L:edit-speed} Every kind of edit shows at once, planned together (taking, 2026-11-23, agent editplan)
-  - Context: You, 11-23: "shouldnt we know ahead of time what sort of things we might want to account for, and do them all? ... we should do these in parallel if possible rather than me having to bring up everyone individually".
-  - Goal: Every edit and hover listed with its wait on the Asia save, one shared way to show edits at once, and the work split into parallel streams.
-  - Other: notes/T-4097.md section 3
+- T-4152 [P1] {L:track-drawing} "Track has to leave a junction along the existing track" refuses sensible joins (taking, 2026-11-23, agent junctionmsg)
+  - Context: You, 11-23, scratch pad: a player joining two blueprint tracks end to end got "Track has to leave a junction along the existing track"; you have met it too: "not an interpretable message ... feels like it shouldnt apply in most cases it shows up". Screenshot artifacts/trainworld/board/20261123-182708-5c6d.png.
+  - Goal: The check fires only where a join really can't be built, and its message says what to do.
+- T-4145 [P1] {L:edit-speed} Show-at-click base for every edit (taking, 2026-11-23, agent editbase)
+  - Context: From T-4144: one worker message after every edit, one list of edits waiting to show, per-line and per-edge renderer textures; lineclick's version tracks lines only.
+  - Goal: The base the streams build on, then undo by it; 3-4 h plus 2-3 h.
+  - Other: notes/T-4144.md
+- T-4146 [P1] {L:edit-speed} Stations and deletes show at the click (taking, 2026-11-23, agent editstations)
+  - Context: From T-4144 stream B: on the Asia save a station takes 0.8-1.5 s, deleting a station 0.7-1.5 s, deleting built track 0.65-1.2 s.
+  - Goal: Each drawn at the click, station panel edits too; 6-8 h.
+  - Other: notes/T-4144.md
+- T-4147 [P1] {L:edit-speed} Lines and the line panel show at the click (taking, 2026-11-23, agent editlines)
+  - Context: From T-4144 stream A: new line 0.6-2.2 s, copy line 1.1-1.9 s, colour and settings 0.55-1.0 s on the Asia save.
+  - Goal: New line, copy, an added stop's path, colour and line settings at the click; 6-8 h.
+  - Other: notes/T-4144.md
+- T-4148 [P1] {L:edit-speed} Construct and the select tool show at the click
+  - Context: From T-4144 stream C: Construct 0.7-0.9 s, select tool edits 0.7-1.0 s, piece limit 0.75-1.1 s on the Asia save.
+  - Goal: Drawn as built at the click, cash from the quote; 4-6 h.
+  - Other: notes/T-4144.md
+- T-4149 [P1] {L:edit-speed} The checked version sooner, worker side (taking, 2026-11-23, agent editworker)
+  - Context: From T-4144 stream D: nearly every edit takes the worker's whole-save path, 0.5-1.5 s on Asia (T-4097 section 4 parts A, B, E).
+  - Goal: Rows, posting, trips and boarding redone for what an edit touched; estimated 0.2-0.35 s an edit; 10-14 h in stages.
+  - Other: notes/T-4144.md
+- T-4150 [P2] {L:edit-speed} The checked version sooner, page side
+  - Context: From T-4144 stream D: every panel redraws on each state (T-4097 part C); T-3804 today answers 125-445 ms.
+  - Goal: Panels redraw only their own records, issues list and totals patched; 6-10 h.
+  - Other: notes/T-4144.md
+- T-4151 [P2] {L:edit-speed} The edit bench calculates trips in its loaded pass
+  - Context: From T-4144: both saves load final from the cache and a paused clock never calculates again, so the bench's while-calculating pass measures nothing.
+  - Goal: That pass runs during a real calculation.
+  - Other: notes/T-4144.md
 - T-4143 [P1] {L:edit-speed} The first click of a track takes seconds to register (taking, 2026-11-23, agent firstclick)
   - Context: You, 11-23 on 8800 after T-4136: "feels a lot better! for the initial click it can take a couple seconds to register sometimes, but after the initial click the ghost feels significantly better."
   - Goal: The first click shows its start at once on the Asia and NYC saves, also while trips calculate; the cause measured.
