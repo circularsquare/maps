@@ -13,8 +13,9 @@ T. T-4041 LANDED ac526280 (her top priority; "use the rest of our usage toward t
    batchcheck14: T-4041 PASS; bar never ended full -> fixed 0c336c7f; T-4055 a stale final after a two-zone edit,
    older than T-1354, queued (P2), not holding the publish. Her 11-22 ~23:30 UTC: keep the cliff fix, try the cheaper one (T-4054,
    P1); first-train quarter stays agnostic about changes (the deadline keeps them no later than direct).
-   T-4050 LANDED bc5d4f39 (real save unchanged: its lines have their own stations). latejoin (opus, T-4054, tree
-   evenspaced) running. 8800 rebuilding at 270d1edf. Both T-4050 and T-4054 then want a batch checker.
+   T-4050 LANDED bc5d4f39 (real save unchanged: its lines have their own stations). T-4054 stage 1 landed 4a78edcc
+   (search 10% faster, solve ~2%, same answers; solve still ~+40%: rest waits on her). batchcheck15 (sonnet) on
+   T-4050 + T-4054; 8800 rebuilding at 5e4ac09f. Then the publish skill for her update (11-23 evening).
    Leftover folder .tw-trees/arrivefirst (not a worktree; node_modules junction inside: don't delete by hand).
    Her hope: "buses get more reasonable values relative to trams ... more uniform ... cuz everything is parallel".
 U. Everything else paused for usage, trees kept, {after:next week's usage}: T-4024, T-4043, T-3346, T-3932, T-4025,
