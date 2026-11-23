@@ -186,9 +186,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
   - Context: You, 11-23: "edit speed is actually still kind of a problem... noticeable on my end for big worlds... i feel like there was a point at which we had edit speed almost instant, but then might have regressed". Mostly placing track and editing stops. T-3550, T-1211, T-3804, T-1031 are back at P2 under this.
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
-- T-4139 [P1] {L:edit-speed} One edit-wait bench for every edit-speed task (taking, 2026-11-23, agent editbench)
-  - Context: 11-23: each edit-speed agent re-measures with its own scripts on a loaded machine (2-5x swing), so gains are slow to show; perf_bench's fixed edit places no station.
-  - Goal: One command timing ghost trail, station, stop click, Construct, line delete and undo on Asia and NYC on quiet cores, logged per build.
 - T-4144 [P1] {L:edit-speed} Every kind of edit shows at once, planned together (taking, 2026-11-23, agent editplan)
   - Context: You, 11-23: "shouldnt we know ahead of time what sort of things we might want to account for, and do them all? ... we should do these in parallel if possible rather than me having to bring up everyone individually".
   - Goal: Every edit and hover listed with its wait on the Asia save, one shared way to show edits at once, and the work split into parallel streams.
