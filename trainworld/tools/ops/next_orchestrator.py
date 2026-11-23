@@ -22,6 +22,8 @@ def main():
     ap.add_argument("--advisor", help="advisor model for that session only, e.g. fable (Anita 2026-11-16 trial)")
     ap.add_argument("--standby", action="store_true",
                     help="open a standby tab that lists itself in <project>/notes/standby.txt and waits (Anita 2026-11-21)")
+    ap.add_argument("--no-code-mode", action="store_true",
+                    help="start without Code Mode (on by default, Anita 2026-11-23: 'that is usual procedure now')")
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()
     prompt = f"/takeover {a.project}"
@@ -44,6 +46,8 @@ def main():
         env = {k: v for k, v in os.environ.items()
                if not (k.upper().startswith("CLAUDE") or k.upper() == "AI_AGENT")}
         env["CLAUDE_CODE_FORCE_SESSION_PERSISTENCE"] = "1"  # Anita 2026-11-16: keep transcripts
+        if not a.no_code_mode:  # the filter above drops it with the rest; it is read at startup, terminal tabs only
+            env["CLAUDE_CODE_EXPERIMENTAL_CODE_MODE"] = "1"
         subprocess.Popen(cmd, cwd=str(MAPS), env=env)
         print("started")
 

@@ -45,8 +45,8 @@ takeover). Server 79777f5. Save level 38. Pad 11-22, not started: T-4046-49, T-4
   stations for BRT lines only; never ask again whether big saves get more workers (11-21).
 
 ## Waiting on her
-- `asks.py list`: lighter phone load (a-2026-11-23-3), Spain block (-4). String to ack: busnosnap's "Ctrl+click to
-  place without snapping". T-3635 reply is hers.
+- `asks.py list`: lighter phone load (a-2026-11-23-3), Spain block (-4). All strings so far acknowledged (11-23,
+  busnosnap's included). T-3635 reply is hers.
 
 ## Only a person knows
 - Uncommitted on purpose: TODO.md (hers), notes/T-3397.md, jordan-save-investigation-2026-11-15.md,

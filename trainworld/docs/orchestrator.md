@@ -44,7 +44,8 @@ incidents behind the rules here are in `notes/rule-history.md`.
   directly), check it in `ListAgents`, SendMessage it "Please run /takeover trainworld now (Skill takeover, args
   trainworld).", and delete its line from standby.txt once it answers. Otherwise run
   `venv\Scripts\python.exe trainworld/tools/ops/next_orchestrator.py trainworld --advisor fable` (a new Windows
-  Terminal tab running /takeover), day or night. Keep starting agents until then. The rest of the steps (what to finish,
+  Terminal tab running /takeover, in Code Mode: her usual procedure since 11-23), day or night. The same when she
+  asks for a handover: she wants the orchestrator in Windows Terminal, not the VS Code panel. Keep starting agents until then. The rest of the steps (what to finish,
   what to tell her and the new orchestrator, your agents still running) are in the `handoff` skill, "After
   another session takes over".
 - **Never go quiet on her** (she once waited 25 minutes for an answer): anything you run that takes over a
