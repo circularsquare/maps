@@ -6,19 +6,21 @@ Updated: 2026-11-23 12:41 UTC
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5.
 
 ## Running (11-23 13:00 UTC): solvespeed T-4054, solveprof T-4057, ridecheck T-4058, busreach T-4056 (Sonnet),
-hokkaido T-3688, trackg T-4037 design. Trees bigload/stalefinal made and removed (T-4051, T-4055 not started).
+hokkaido T-3688, trackg T-4037 design, resendcap T-4066 (Sonnet, read-only). Trees bigload/stalefinal made and removed (T-4051, T-4055 not started).
 
 ## Next (11-23)
 0. Her goals today, 11-23: compute speedups for T-4041 (main), polish/check first-arrival riding, bus reach back to
-   600 m, track rework all week. 2-8 agents this week ("more focused work"), not 4-12. Publish timing asked.
-1. PUBLISH her update "probably tomorrow evening" (said 11-22): can ship on freeze 20261122-044711 (has Manila,
+   600 m, track rework all week. 2-8 agents this week ("more focused work"), not 4-12. Speedups may shift riders
+   (orchestrator.md, trial). Resend mails past the cap: T-4066 (resendcap). Publish: "we will see", don't ask.
+1. PUBLISH when ready (never ask her when): can ship on freeze 20261122-044711 (has Manila,
    Muzaffarpur and the old Hokkaido; data/packs lacks old Hokkaido until hokkaido lands). Landed since
    v0.4.5 and checked (batch 13 on 547389c2; batch 14 and 15 on master 5e4ac09f): T-4041 riders take the line that
    arrives first (0.75 softening, late joins), T-4050 evenly spaced shared platforms, T-4054 stage 1, T-1354, T-4040,
    load bars (skew + fill at end). Before it: fresh freeze, translations (T-3986, T-3991, T-3999, T-4003, T-4010,
    T-2264, T-3933, T-3378 s4, T-4013, T-4005, T-4040, the new zones' names: place_names.mjs --zones), smoke8800 on a
    quiet machine, the changelog review (46 unpublished; c051 is T-4041's). Then her text OK and her yes, in this tab.
-2. Speed (T-4054 search, T-4057 elsewhere; same answers): land each win as it reports; batch checker after.
+2. Speed (T-4054 search, T-4057 elsewhere): same-answer wins land as they report; shifting ones bring a test shape
+   for her to build (orchestrator.md "Speedups that shift riders"); batch checker after.
 3. Next as slots free: T-4051 (big save sits at 90% ~3 min), T-4055 (stale two-zone final, 1-2 h), then the paused
    trees (plans in each tree's notes): addtrack T-4024, onewaylag T-4045 (after T-4054: same search area), clockmem
    T-3939, stationids T-4043 (after trackg's pick), timetables T-3346, coreslider T-3932, perfledger T-4025, split6.
