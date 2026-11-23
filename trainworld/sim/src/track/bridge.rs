@@ -222,7 +222,7 @@ fn lay(f: &Fit, verts: &[Pi], scaled: bool, zones: &[[f64; 2]], wet: &[[f64; 2]]
             None => return None,
         }
     }
-    let (nv, g) = build(f, verts, scaled, &ramps, start_up)?;
+    let (nv, g) = build(f, verts, scaled, &ramps, &|k| level_after(k, start_up), true)?;
     water_held(&g, wet).then_some(nv)
 }
 
@@ -248,12 +248,67 @@ fn one_ramp(f: &Fit, verts: &[Pi], scaled: bool, ramps: &[Ramp], up: bool, c: f6
         }
         tried.push(d);
         with.push(Ramp { c, d });
-        if build(f, verts, scaled, &with, up).is_some_and(|(_, g)| ramp_in_place(&g, c, level_after(with.len(), up) == 0)) {
+        if build(f, verts, scaled, &with, &|k| level_after(k, up), true).is_some_and(|(_, g)| ramp_in_place(&g, c, level_after(with.len(), up) == 0)) {
             return Some(Ramp { c, d });
         }
         with.pop();
     }
     None
+}
+
+/// T-4112: `verts` with its ramps laid where the height profile `want` has them (`Fit::vert`, along
+/// `verts`), as the same alignment: what a piece cut in two needs where the cut moved a vertex that held a
+/// ramp (an arc cut in two gives each part a PI at the middle of its own part of the arc). A ramp still where
+/// it was keeps its vertices; one that moved is held by a vertex either side of it, as a bridge's are. None
+/// where they cannot all be held where they were.
+pub fn hold_ramps(verts: &[Pi], scaled: bool, want: &[[f64; 2]]) -> Option<Vec<Pi>> {
+    let n = verts.len();
+    // the shape alone: the levels the cut left may be ones no ramp fits between
+    let flat: Vec<Pi> = verts.iter().map(|p| Pi { level: 0, ..*p }).collect();
+    let f = fit_here(&flat, scaled);
+    if n < 2 || !f.issues.is_empty() || f.pieces.is_empty() {
+        return None;
+    }
+    let level = |z: f64| (z / LEVEL_H).round() as i8;
+    let spans = geom::profile_ramps(want);
+    let mut levels = vec![level(want.first()?[1])];
+    levels.extend(spans.iter().map(|r| level(r[3])));
+    if verts[0].level != levels[0] || verts[n - 1].level != levels[spans.len()] {
+        return None;
+    }
+    // no ramp: every vertex at the one level (a cut beside a ramp gives the PIs of the arc it cut the arc's level)
+    if spans.is_empty() {
+        return Some(verts.iter().map(|p| Pi { level: levels[0], ..*p }).collect());
+    }
+    let after = |k: usize| levels[k.min(spans.len())];
+    // the ramps `verts` lay now, each with its pair of vertices (in order, one pair per change of level)
+    let pairs: Vec<usize> = (0..n - 1).filter(|&k| verts[k].level != verts[k + 1].level).collect();
+    let now = geom::profile_ramps(&fit_here(verts, scaled).vert);
+    let same = |p: &[f64; 4], q: &[f64; 4]| (p[0] - q[0]).abs() < 1.0 && (p[1] - q[1]).abs() < 1.0 && p[2] == q[2] && p[3] == q[3];
+    let mut ramps: Vec<Ramp> = vec![];
+    for (k, w) in spans.iter().enumerate() {
+        let (a, b) = (w[0], w[1]);
+        // unmoved: its own vertices again, which also keep a ramp its neighbours squeeze short as it was
+        if let Some(j) = (pairs.len() == now.len()).then(|| now.iter().position(|r| same(r, w))).flatten() {
+            let (u, v) = (f.vert_s[pairs[j]], f.vert_s[pairs[j] + 1]);
+            ramps.push(Ramp { c: (u + v) / 2.0, d: (v - u) / 2.0 });
+            continue;
+        }
+        let (c, half) = ((a + b) / 2.0, (b - a) / 2.0);
+        let cap = c.min(f.len - c);
+        // as `one_ramp`: the nearest vertices that hold it, those the alignment has among them
+        let mut ds: Vec<f64> = HALF_SPANS.iter().copied().chain([half + 0.01, cap]).chain((1..n - 1).map(|i| (f.vert_s[i] - c).abs())).map(|d| if d > cap - 0.5 { cap } else { d }).filter(|&d| d >= half - 1e-9).collect();
+        ds.sort_by(f64::total_cmp);
+        ds.dedup_by(|p, q| (*p - *q).abs() < 1e-6);
+        let d = ds.into_iter().find(|&d| {
+            let mut with = ramps.clone();
+            with.push(Ramp { c, d });
+            build(&f, verts, scaled, &with, &after, false).is_some_and(|(_, g)| geom::same_profile(&g.vert[..g.vert.len().min(2 * k + 3)], &want[..(2 * k + 3).min(want.len())], 1.0))
+        })?;
+        ramps.push(Ramp { c, d });
+    }
+    let (nv, g) = build(&f, verts, scaled, &ramps, &after, false)?;
+    geom::same_profile(&g.vert, want, 1.0).then_some(nv)
 }
 
 /// Corners further than this along the alignment from water (fit units) are left as they are by
@@ -438,9 +493,9 @@ fn floor_mm(v: f64) -> f64 {
 }
 
 /// The alignment with the ramps `ramps` (in order along it) and no others, fitted.
-fn build(f: &Fit, verts: &[Pi], scaled: bool, ramps: &[Ramp], up: bool) -> Option<(Vec<Pi>, Fit)> {
+/// `after(k)`: the level after the first k ramps; `along` as for `settle`.
+fn build(f: &Fit, verts: &[Pi], scaled: bool, ramps: &[Ramp], after: &dyn Fn(usize) -> i8, along: bool) -> Option<(Vec<Pi>, Fit)> {
     let n = verts.len();
-    let after = |k: usize| level_after(k, up);
     let mut reqs: Vec<Req> = vec![];
     for (k, r) in ramps.iter().enumerate() {
         let (u, v) = (r.c - r.d, r.c + r.d);
@@ -491,7 +546,7 @@ fn build(f: &Fit, verts: &[Pi], scaled: bool, ramps: &[Ramp], up: bool) -> Optio
         }
     }
     nv.push(Pi::new(verts[n - 1].x, verts[n - 1].y, 0.0, after(ramps.len())));
-    let g = settle(f, &mut nv, scaled)?;
+    let g = settle(f, &mut nv, scaled, along)?;
     Some((nv, g))
 }
 
@@ -550,9 +605,9 @@ fn slice(piece: &Piece, scaled: bool, reqs: &[Req]) -> Option<Vec<V>> {
     }).collect())
 }
 
-/// The new alignment fits and is the old one. Radii that the millimetre grid left a hair too big
-/// are eased.
-fn settle(f: &Fit, nv: &mut [Pi], scaled: bool) -> Option<Fit> {
+/// The new alignment fits and is the old one, each chainage at the same place where `along`. Radii that
+/// the millimetre grid left a hair too big are eased.
+fn settle(f: &Fit, nv: &mut [Pi], scaled: bool, along: bool) -> Option<Fit> {
     let mut g = fit_here(nv, scaled);
     for _ in 0..10 {
         let bad = g.clamped.clone();
@@ -569,8 +624,17 @@ fn settle(f: &Fit, nv: &mut [Pi], scaled: bool) -> Option<Fit> {
     }
     let mut s = 0.0;
     while s < f.len {
-        let (a, b) = (geom::pos_at(&f.pieces, s), geom::pos_at(&g.pieces, s));
-        if (a.0 - b.0).hypot(a.1 - b.1) > 0.25 {
+        let b = geom::pos_at(&g.pieces, s);
+        // T-4112: in the world frame an arc's chainage runs at one scale over the whole arc, so an arc cut into
+        // several puts the same chainage up to about half a metre further along on a long one; `along` false
+        // asks only that the new alignment lie on the old
+        let off = if along {
+            let a = geom::pos_at(&f.pieces, s);
+            (a.0 - b.0).hypot(a.1 - b.1)
+        } else {
+            geom::project(&f.pieces, b.0, b.1).1
+        };
+        if off > 0.25 {
             return None;
         }
         s += 25.0;

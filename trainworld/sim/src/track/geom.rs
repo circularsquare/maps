@@ -644,6 +644,27 @@ pub fn height_at(vert: &[[f64; 2]], s: f64) -> f64 {
     a[1] + (b[1] - a[1]) * (s - a[0]) / (b[0] - a[0])
 }
 
+/// The height breakpoints of `vert` between chainages `s0` and `s1`, from 0 along that stretch.
+pub fn profile_between(vert: &[[f64; 2]], s0: f64, s1: f64) -> Vec<[f64; 2]> {
+    let mut out = vec![[0.0, height_at(vert, s0)]];
+    out.extend(vert.iter().filter(|p| p[0] > s0 + 1e-6 && p[0] < s1 - 1e-6).map(|p| [p[0] - s0, p[1]]));
+    out.push([s1 - s0, height_at(vert, s1)]);
+    out
+}
+
+/// The ramps of a height profile, in order: start and end chainage, height before and after.
+pub fn profile_ramps(vert: &[[f64; 2]]) -> Vec<[f64; 4]> {
+    vert.windows(2).filter(|w| w[0][1] != w[1][1]).map(|w| [w[0][0], w[1][0], w[0][1], w[1][1]]).collect()
+}
+
+/// Two height profiles with the same ramps, each end within `tol` m along.
+pub fn same_profile(a: &[[f64; 2]], b: &[[f64; 2]], tol: f64) -> bool {
+    let (ra, rb) = (profile_ramps(a), profile_ramps(b));
+    ra.len() == rb.len()
+        && a.first().map(|p| p[1]) == b.first().map(|p| p[1])
+        && ra.iter().zip(&rb).all(|(p, q)| (p[0] - q[0]).abs() < tol && (p[1] - q[1]).abs() < tol && (p[2] - q[2]).abs() < 1e-6 && (p[3] - q[3]).abs() < 1e-6)
+}
+
 /// True if any part of `[s0, s1]` is on a ramp.
 pub fn on_ramp(vert: &[[f64; 2]], s0: f64, s1: f64) -> bool {
     vert.windows(2).any(|w| w[0][1] != w[1][1] && w[1][0] > s0 + 1e-6 && w[0][0] < s1 - 1e-6)

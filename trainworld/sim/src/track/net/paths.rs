@@ -581,6 +581,19 @@ impl Network {
                 }
             }
         }
+        // T-4112: a ramp is centred between its two vertices, and a cut moves any vertex it changes: cut inside an arc,
+        // each part's PI sits at the middle of its own part of the arc, so a ramp that PI held slides along (225 m, onto
+        // water, for a station 5 km away). A ramp the cut moved is held where it was, as a bridge holds its ramps.
+        let scaled = self.frame.scaled();
+        for (part, s0, s1) in [(&mut p1, 0.0, s), (&mut p2, s, f.len)] {
+            let want = geom::profile_between(&f.vert, s0, s1);
+            if !geom::same_profile(&self.fit(part).vert, &want, 1.0) {
+                let held = crate::track::bridge::with_min_radius(self.edge_kind[e as usize].spec().min_radius, || crate::track::bridge::hold_ramps(part, scaled, &want));
+                if let Some(v) = held {
+                    *part = v;
+                }
+            }
+        }
         let i = e as usize;
         let (tracks, built, off, kind, sep, oneway) = (self.edge_tracks[i], self.edge_built[i], self.edge_off[i], self.edge_kind[i], self.edge_sep[i], self.edge_oneway[i]);
         // A T-079 edge's clicked points go with the half they lie on; one at the split is the

@@ -2426,3 +2426,6 @@ mod built_day_tests;
 mod lane_preview_tests;
 #[cfg(test)]
 mod twin_tests;
+/// T-4112: stations placed away from a piece's ramps leave them where they were.
+#[cfg(test)]
+mod t4112_tests;

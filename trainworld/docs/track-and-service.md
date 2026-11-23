@@ -98,7 +98,10 @@ Full design, numbers and sources: `notes/T-008.md`.
   between the corners either side, moving the track there by at most that, and otherwise stays as
   a corner (T-1964). A joint between two different levels stays as a corner on the joined edge, since a
   ramp is centred between corners; a cut through a leg whose ramp lies on a straight puts a corner
-  at each end of the ramp on its side (T-622), so a station there does not move the ramp. Two
+  at each end of the ramp on its side (T-622), and any other ramp a cut would move (a curve's PI that held
+  it given the middle of its own part of the curve) is held by a corner either side of it, the curve cut
+  into curves of the same radius as a bridge's ramps are (T-4112), so a station does not move a ramp. Where
+  no corners can hold it (a cut within about a ramp's length of it on the same curve) it moves as before. Two
   constructed pieces join as two blueprint ones do (T-624): the joined edge stays constructed, with
   no charge and no refund, and lines, trains, levels and curve radii carry over unchanged. Joints that cannot be joined
   (a different track count, high speed beside ordinary, constructed beside blueprint, blueprint switched on beside off) stay, and a platform that
