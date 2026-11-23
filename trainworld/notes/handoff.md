@@ -8,7 +8,10 @@ notes/handoff-log.md. Her time UTC-5.
 T-4057 (+T-4082 Detroit), hokkaido T-3688, trackg1 T-4037 g1, busconn T-4079, addbp T-4085 (tw/track), checkbns
 (checker of busnosnap's level-39 save; tree busnosnap waits, land on PASS; the server's save check reads level 38:
 update it before a publish), safariwarn T-3940, community (resumed: sandbox in place search, tree community2).
-Landed: T-4056, T-4068, T-4076, T-4077/78/81, T-4072/73 840bfa8f; T-4024 onto tw/track. Server 4f71a2f deployed.
+Landed: T-4056, T-4068, T-4076, T-4077/78/81, T-4072/73, T-3688 522862ff; T-4024 onto tw/track. Server 4f71a2f
+deployed (79777f5 sandbox search waits her yes; her 11-23: deploying before the follow-up check was wasteful).
+tracksync resolving master -> tw/track merge in _track (3 conflicts); then 8800 = tw/track tip, batch checker master.
+Fresh freeze before the publish (Hokkaido is in data/packs now).
 
 ## Next (11-23)
 0. Her goals, 11-23: compute speedups for T-4041 (main); loading consistency and crashes (main, short/medium term:
