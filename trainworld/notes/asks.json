@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "id": "a-2026-11-23-1",
+    "title": "Track stage g: routes on the cut track",
+    "text": "For lines that turn back at a middle stop, go with (b), your idea: a line's route is written on the track as the game cuts it at stations, while the track you draw stays one piece? Recommended yes. (a), whole stretches plus a 'turn back here' note, is about an hour less now (about 5 h against 6 h) but leaves a hidden note later work could quietly lose; with (b) a mistake shows as a broken line. Players see no difference either way; old saves load the same; the trip calculation is untouched. Agent's call to tell you: a dragged station slides only between its neighbours (next station, junction or end), never past another station.",
+    "since": "2026-11-23",
+    "by": "maps-44"
+  }
+]

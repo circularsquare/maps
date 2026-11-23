@@ -5,8 +5,8 @@ Updated: 2026-11-23 12:41 UTC
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5.
 
-## Running (11-23 13:00 UTC): solvespeed T-4054, solveprof T-4057, ridecheck T-4058, busreach T-4056 (Sonnet),
-hokkaido T-3688, trackg T-4037 design.
+## Running (11-23 13:15 UTC): solvespeed T-4054, solveprof T-4057, ridecheck T-4058, busreach T-4056 (Sonnet),
+hokkaido T-3688, addtrack T-4024. T-4037 design done, (b) asked (a-2026-11-23-1).
 
 ## Next (11-23)
 0. Her goals today, 11-23: compute speedups for T-4041 (main), polish/check first-arrival riding, bus reach back to
@@ -22,14 +22,12 @@ hokkaido T-3688, trackg T-4037 design.
 2. Speed (T-4054 search, T-4057 elsewhere): same-answer wins land as they report; shifting ones bring a test shape
    for her to build (orchestrator.md "Speedups that shift riders"); batch checker after.
 3. Next as slots free: T-4051 (big save sits at 90% ~3 min), T-4055 (stale two-zone final, 1-2 h), then the paused
-   trees (plans in each tree's notes): addtrack T-4024, onewaylag T-4045 (after T-4054: same search area), clockmem
-   T-3939, stationids T-4043 (after trackg's pick), timetables T-3346, coreslider T-3932, perfledger T-4025, split6.
-6. After hokkaido lands: sync-track, 8800 = tw/track tip as her preview (her yes 11-22), a batch checker on master.
-7. TRACK (her top priority): plan notes/T-4030.md; g (T-4037) next with her calls in the task, then 4d, 4f, 5a/5b.
+   trees (each tree's notes): onewaylag T-4045 (after T-4054), clockmem T-3939, stationids T-4043, timetables
+   T-3346, coreslider T-3932, perfledger T-4025, split6. After hokkaido: sync-track, 8800 = tw/track tip, checker.
+4. TRACK (all week): on her (b), g1-g4 (notes/T-4037-design.md; g3, g4 side by side), then 4d, 4f, 5a/5b.
 
 LIVE v0.4.5. 8800 = fa196b91. Cap 14 (her daytime pick). Cores 0-1 hers (`reserve_cores.ps1 -Loop 30` at
-takeover). Server deployed 3b14158. Save level 38 on master. Filed 11-22 from her pad, not started: T-4046-T-4049,
-T-4052, T-4053 (a new demand factor: design to her first).
+takeover). Server 3b14158. Save level 38. Pad 11-22, not started: T-4046-49, T-4052, T-4053 (design to her first).
 
 ## Her words
 - 11-22 evening, T-4041: lines independent ("every line running at its own random times is probably correct");

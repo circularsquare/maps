@@ -6,6 +6,7 @@
     python serve.py list
     python serve.py add noritetsu noritetsu/dist "Global rail map and ridden-lines tracker"
     python serve.py remove noritetsu
+    python serve.py hide twnotes       # still served, left off the front page (show undoes it)
 
 The front page links to each registered map.  The register is served.json beside this file:
 the path a map is served under, the folder holding its index.html (relative to maps/), and a
@@ -217,8 +218,17 @@ class Locked:
         self.path.unlink(missing_ok=True)
 
 
-def save(maps):
-    rows = [{"name": n, "folder": f, "about": a} for n, f, a in maps]
+def hidden_names():
+    """Names served but left off the front page (another page fetches from them, like twnotes for the board)."""
+    try:
+        return {r["name"] for r in json.loads(REGISTER.read_text(encoding="utf-8")) if r.get("hidden")}
+    except (OSError, ValueError, KeyError, TypeError):
+        return set()
+
+
+def save(maps, hidden=None):
+    hidden = hidden_names() if hidden is None else hidden
+    rows = [{"name": n, "folder": f, "about": a, **({"hidden": True} if n in hidden else {})} for n, f, a in maps]
     tmp = REGISTER.with_suffix(".json.tmp")
     tmp.write_text(json.dumps(rows, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     for _ in range(20):
@@ -231,7 +241,10 @@ def save(maps):
 
 def front_page():
     rows = []
+    hidden = hidden_names()
     for name, folder, desc in load():
+        if name in hidden:
+            continue
         missing = "" if (HERE / folder / "index.html").exists() else \
             f' <span class="miss">(no {html.escape(folder)}/index.html)</span>'
         rows.append(f'<li><a href="/{name}/">{html.escape(name)}</a>'
@@ -657,6 +670,17 @@ def cmd_remove(name):
     print(f"removed {name}")
 
 
+def cmd_hide(name, hide=True):
+    with Locked():
+        maps = load()
+        if name not in {m[0] for m in maps}:
+            sys.exit(f"{name} is not registered")
+        hidden = hidden_names()
+        hidden = hidden | {name} if hide else hidden - {name}
+        save(maps, hidden)
+    print(f"{name} {'left off' if hide else 'back on'} the front page (still served)")
+
+
 def serve(port):
     try:
         httpd = Server(("127.0.0.1", port), Handler)
@@ -688,6 +712,8 @@ def main():
         return cmd_add(*args[1:])
     if args[0] == "remove" and len(args) == 2:
         return cmd_remove(args[1])
+    if args[0] in ("hide", "show") and len(args) == 2:
+        return cmd_hide(args[1], args[0] == "hide")
     sys.exit(__doc__)
 
 
