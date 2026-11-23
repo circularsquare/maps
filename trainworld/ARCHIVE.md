@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4025 [P1] {L:loading} Load time and memory ledger per publish (2026-11-23): tools/perf_bench.mjs build/run/compare/published; ledger notes/perf-ledger.jsonl; first lines v0.4.5 vs master: NYC CPU +22%, Belgrade CPU +83% and memory +51%. notes/T-4025.md.
 - T-4115 [P1] {L:cleanup} Trim the orchestrator procedures and the agents' rules (2026-11-23): orchestrator.md 253 -> 178 lines (35% fewer characters), CLAUDE.md 210 -> 181 (14% fewer); history to notes/rule-history.md; no rule lost; ledger in notes/T-4115.md. notes/T-4115.md.
 - T-4110 [P1] {L:loading} The big loading card shows up mid-game (2026-11-23): Only first opens show the centred card; panic rebuild and flip sides use the top bar; her mid-game Loading card was most likely a track model panic rebuild on 8800.
 - T-4098 [P1] {L:single-track} Every edit fails after deleting a terminus past a one-way station (2026-11-23): Confirmed T-3945, fixed on master, not live; reloading clears a stuck v0.4.5 game; regression test added. notes/T-4098.md.

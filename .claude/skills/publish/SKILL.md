@@ -35,6 +35,10 @@ says yes to that action. Commands run from the maps root.
    live game's zones with data/packs) and give her `artifacts/trainworld/review/<version>-new-zones.png`. Nothing
    new, no image.
 8. `checks/smoke8800.cmd` (light then dark; logs `artifacts/trainworld/smoke8800-*.log`).
+9. **The bench, all three saves** (T-4025, about 40 minutes with the build): `node trainworld/tools/perf_bench.mjs build
+   <hash> --label <version>`, then `run artifacts/trainworld/perfbench/dist/<version> --label <version>`. Anything it
+   flags (more than 10% worse than the last publish on CPU, memory, bytes or solver time) goes to her as a trade-off
+   with the numbers, before the yes. After the publish: `perf_bench.mjs published <version> <version>`.
 
 ## Publishing the game
 
