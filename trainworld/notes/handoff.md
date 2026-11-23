@@ -6,11 +6,15 @@ diary notes/handoff-log.md. Her time UTC-5.
 
 ## In flight (adopt from the board)
 - onegraph T-4124 (opus; measures only, landing needs her yes on the shift); stationwater T-4112 (opus, tree off
-  tw/track, also checks master); installbanner T-4106 (opus, strings); zonerefine T-1610 (re-check first, may close);
-  retime T-4132 (opus); lineclick T-4114 stage 1 (opus: measure her three slow cases, then line path and line delete
+  tw/track, also checks master); installbanner T-4106 (opus, strings); retime T-4132 (opus); lineclick T-4114 stage 1 (opus: measure her three slow cases, then line path and line delete
   at the click); stationdefault (agent ade808e3): Train station default done in tree, now T-4135 hover icon, bus 600 m
   ring, Nunito A, same tree.
-- batchcheck2 on master: T-4104, T-4109, T-4130, T-4111 plus smoke. 8800 = ccbe5076 (21:08).
+- ghostlag T-4136 (opus, P1): her 21:14 "the rail placement ghost lags behind the cursor ... most important to feel
+  responsive"; measure then fix, page-side; retime owns the preview retime.
+- textfix (not on the board: its tasks T-4135/T-4106 are archived): her 21:1x text: drop the kind-name row in the
+  station hover; install note in her exact words, no saves/sign-in lines, x only.
+- regionfix T-4137 (opus): batchcheck2 found Asia rows seed 9 regions drift (T-4113 code); batchcheck2 PASSED T-4104,
+  T-4109, T-4130, T-4111 and smoke. 8800 = ccbe5076 (21:08).
 - Her 11-23 20:5x: edit speed on 8800 still slow (new line, delete line, line length after stop edits): T-4114 now P1,
   lines first. Cores at the cap (14/14) at 20:57: no more starts until claims free.
 

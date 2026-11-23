@@ -186,6 +186,13 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
   - Context: You, 11-23: "edit speed is actually still kind of a problem... noticeable on my end for big worlds... i feel like there was a point at which we had edit speed almost instant, but then might have regressed". Mostly placing track and editing stops. T-3550, T-1211, T-3804, T-1031 are back at P2 under this.
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
+- T-4136 [P1] {L:edit-speed} The track ghost lags behind the cursor (taking, 2026-11-23, agent ghostlag)
+  - Context: You, 11-23: "a major complaint is just that the rail placement ghost lags behind the cursor ... its like one of the things thats most important to feel responsive". T-1779 and T-3263 fixed earlier causes.
+  - Goal: The ghost follows the pointer every frame on the Asia and NYC saves, also while trips calculate; the checked shape catches up after.
+- T-4137 [P1] {L:edit-speed} Regions drift from a fresh build after an edge delete (taking, 2026-11-23, agent regionfix)
+  - Context: Batch check 11-23: t1382-rows on Asia, 10 seeds of 40 steps, fails at seed 9 step 15 (deleteEdge): "the regions differ from a fresh build (217 leaves against 217)", in T-4113's workers/regions.ts. Part A is on master, so it ships in 0.4.6.
+  - Goal: Regions equal a fresh build at every step on Asia and NYC over 20+ seeds, or the drift shown harmless to rows; seed 9 kept in the standing check.
+  - Other: notes/batchcheck-2026-11-23b.md
 - T-4114 [P1] {L:edit-speed} Edits show at the click, lines first (taking, 2026-11-23, agent lineclick)
   - Context: You, 11-23 on 8800: still slow are "creating a new line, or deleting a line, or seeing the line visually change its length after adding or removing some stops". Design: notes/T-4097.md section 3, 9-13 h in parts.
   - Goal: Stage 1: a line's new path after stop clicks, and a deleted line, show at the click on the Asia save; then Construct, track, undo as later stages.
@@ -198,9 +205,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Goal: Reproduced with the fuzzer or your save under ?track, and fixed with a test, when the track rework resumes.
 - T-4124 [P2] {L:solve-speed} {after:T-4123} One graph for all zones in a calculation (taking, 2026-11-23, agent onegraph)
   - Context: From T-4057: each zone has its own graph, so most of Tokyo's 41% one-off searches repeat; building one graph for the zones in a calculation removes most of it but shifts walks by 1-2% of walk minutes, so it comes to you with the real-save numbers first.
-- T-4135 [P2] {L:station-placement} Station hover with a kind icon and the bus radius (taking, 2026-11-23, agent stationdefault)
-  - Context: You, 11-23: drop "Auto: bus station" from the hover and show the kind's icon left of "n trips within 1 km"; a bus stop gets one 600 m guide circle instead of 1 km and 2 km, and says "trips within 600 m"; the Auto "A" from Nunito, centred (it sits low).
-  - Goal: Those four, on desktop and phone.
 - T-4051 [P2] {L:loading} Opening a zone on a big save sits at 90%
   - Context: You, 11-22, on live v0.4.5: opening Medellin sat at 90% for about 2 minutes, Managua the same, "not super consistent". Measured 11-23 (notes/T-4051.md): a zone opens by a short path (Medellin 82 s) or a long one about 3x the work, by a race between its first quick figures and the whole calculation. Tree zoneopen has two unmeasured fixes.
   - Goal: Both fixes measured on 4+ cores before they land; then a zone with figures already in takes the short path (about 100 s off on your save).
@@ -379,9 +383,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Two cases from T-1609 were never checked in the browser. They need a new browser driver; the 723-zone save takes a 50 s whole solve.
   - Goal: An edit right after a local refine solves the cluster whole, and a zone going coarse is refined locally.
   - Other: notes/T-1609.md
-- T-1610 [P2] {L:solve-speed} Clicked zone waits for its refine (taking, 2026-11-23, agent zonerefine)
-  - Context: A clicked station or bubble in a rough zone waits for refinement instead of reading coarse samples (T-1206 leftover).
-  - Other: notes/T-1223.md
 - T-1629 [P2] {L:solve-speed} Measure coarse zone bias with the fine set moving
   - Context: Left over from T-1206 stage 5, split from T-1611.
   - Goal: The coarse zones bias is measured on the Paris and Shanghai save.
