@@ -253,3 +253,64 @@ fn a_stop_with_no_way_back_says_so() {
     let l = a.new_line_id();
     assert_eq!(a.set_line_with_trains(l, &[n[2], n[0]], 4, 2, 0, 30.0, 180.0, 0, 0, "Line".into()), 0, "{}", a.issue_kinds());
 }
+
+/// T-4098: a double line splitting into a one-way loop (J to Pa to K out, K to Pb to J back) and joining
+/// again before a terminus T; nodes S0, J, Pa, Pb, K, T, stations at S0, Pa, Pb and T.
+fn loop_past(a: &mut TrackApi) -> [u32; 6] {
+    let w = &mut a.w;
+    let n = [node(w, 0.0, 0.0, 0), node(w, 2000.0, 0.0, 0), node(w, 5000.0, 600.0, 0), node(w, 5000.0, -600.0, 0), node(w, 8000.0, 0.0, 0), node(w, 10000.0, 0.0, 0)];
+    let [s0, j, pa, pb, k, t] = n;
+    edge(w, s0, j, &[], 0).unwrap();
+    let one = [
+        edge(w, j, pa, &[(2300.0, 0.0), (2900.0, 600.0)], 0).unwrap(),
+        edge(w, pa, k, &[(7100.0, 600.0), (7700.0, 0.0)], 0).unwrap(),
+        edge(w, k, pb, &[(7700.0, 0.0), (7100.0, -600.0)], 0).unwrap(),
+        edge(w, pb, j, &[(2900.0, -600.0), (2300.0, 0.0)], 0).unwrap(),
+    ];
+    edge(w, k, t, &[], 0).unwrap();
+    for &x in &one {
+        let mut d = w.net.edge_data(x).unwrap();
+        d.tracks = 1;
+        w.apply(Op::Edge { id: x, data: Some(d) }).unwrap();
+    }
+    for x in [s0, pa, pb, t] {
+        station(w, x, 200);
+    }
+    for &x in &one {
+        assert_eq!(a.set_edge_oneway(x, 1), 0, "{}", a.issues());
+    }
+    n
+}
+
+/// T-4098, a player's path: a line out over the one-way loop to stations past it, its way back stopping at
+/// the loop's other leg, played from a load; each terminus deleted in turn, a train count set after each.
+/// The capacity stays what a fresh build gives (v0.4.5 kept the way back's old platform users, T-3945).
+#[test]
+fn deleting_termini_past_one_way_stations_keeps_capacity_whole() {
+    let mut a = api();
+    let [s0, _, pa, pb, _, t] = loop_past(&mut a);
+    let x1 = node(&mut a.w, 12000.0, 0.0, 0);
+    let x2 = node(&mut a.w, 14000.0, 0.0, 0);
+    edge(&mut a.w, t, x1, &[], 0).unwrap();
+    edge(&mut a.w, x1, x2, &[], 0).unwrap();
+    station(&mut a.w, x1, 200);
+    station(&mut a.w, x2, 200);
+    let l = line(&mut a.w, &[s0, pa, pb, t, x1, x2], [8.0, 4.0, 2.0]);
+    let bytes = a.save();
+    let mut a = api();
+    assert!(a.load(&bytes));
+    let fresh = |a: &TrackApi| {
+        let mut g = crate::track::service::Service::default();
+        g.update_all(&a.w.net);
+        a.w.svc.cap.canonical() == g.cap.canonical()
+    };
+    for s in [x2, x1] {
+        assert_eq!(a.remove_station(s), 0, "{}", a.issue_kinds());
+        assert!(fresh(&a), "after removing {s}");
+        let d = a.w.net.line_data(l).unwrap();
+        assert_eq!(a.set_line_with_trains(l, &d.stops, 3, 2, 1, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issue_kinds());
+        assert!(fresh(&a), "after the train count");
+    }
+    assert_eq!(a.w.net.line_data(l).unwrap().stops, vec![s0, pa, pb, t]);
+    assert!(a.w.svc.lines[l as usize].running);
+}
