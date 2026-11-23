@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session dc375617-affd-42c6-aac0-505e37685277, name maps-44 [b23630], since 2026-11-23 12:41 UTC
-Updated: 2026-11-23 14:10 UTC (handing over at her ask). Live state: `venv\Scripts\python.exe
+Orchestrator: session 437c6600-7ce7-4abc-98f9-fc664146729b, name maps-65 [c4fa02], since 2026-11-23 14:09 UTC
+Updated: 2026-11-23 14:15 UTC. Live state: `venv\Scripts\python.exe
 trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5.
 
 ## In flight (adopt from the board; reports arrive through the watch)
@@ -18,8 +18,7 @@ trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5.
 - Landed 11-23: T-4056, T-4068, T-4076, T-4077/78/81, T-4072/73, T-3688; T-4024 on tw/track. Server 79777f5 live.
 
 ## Next (11-23)
-0. Her goals 11-23: solve speedups (main); loading and crashes (main, T-4071); track rework all week. 2-8 agents
-   this week. Resend over its cap is fine. Publish: don't ask when.
+0. Her goals 11-23: solve speedups (main); loading and crashes (main; T-4071 triage closed 11-23, T-3940 next, phone load is her ask); track rework all week. Resend over its cap is fine. Publish: don't ask when.
 1. PUBLISH when ready (never ask her when; `publish` skill). Before it: a batch checker on everything since 11-22,
    fresh freeze, translations of every new key (`i18n.mjs`; zone names place_names.mjs --zones), the server's level-39
    save check, smoke8800, the changelog review. Then her text OK and her yes, in this tab.

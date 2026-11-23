@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4071 [P1] {L:loading} Crashes and loads that never finish (2026-11-23): Triage of 15 crash and stuck-load reports since v0.4.4 in 5 groups; T-4072 (mask wait cap, load diagnostics) and T-4073 (graphics lost at start) landed, T-3940 Safari warning in flight, T-4074 Spain filed, lighter phone load is ask a-2026-11-23-3. notes/T-4071.md.
 - T-3688 [P2] {L:region-redraws} Hokkaido as four regions (2026-11-23): spk Dochuo, kmk Dohoku, tkc Doto, osh Donan built and joined; sor/ibr -> spk, okh/ksr -> tkc for old saves; start tiers unchanged; place names caught up (594 zones, 40 cities); smoke 30/30. notes/T-3688.md.
 - T-4073 [P3] {L:small-fixes} Graphics lost at startup reads as a page stop (2026-11-23): Load step in reports and the timeout reason; mask wait capped at 20 s and never twice, late masks installed when they land; worker start timeout 60 s retry then failure screen; graphics lost during setup reloads once. Smoke 30/30. notes/T-4071.md.
 - T-4072 [P2] {L:loading} Loads stuck before the game appears on Mac Safari (2026-11-23): Load step in reports and the timeout reason; mask wait capped at 20 s and never twice, late masks installed when they land; worker start timeout 60 s retry then failure screen; graphics lost during setup reloads once. Smoke 30/30. notes/T-4071.md.

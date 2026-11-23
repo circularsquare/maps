@@ -57,11 +57,11 @@ incidents behind the rules here are in `notes/rule-history.md`.
   continues. Overnight, while she sleeps, an agent may keep going past that; the orchestrator still cycles.
 - **Supervising**: check long runs (process and `world_run.py status`) at least every couple of hours; ask after any
   agent quiet for about 45 minutes.
-- **Keep 4-12 agents running** (her rule, 11-21: "we basically always want to have 4-12 agents running"), within the
-  ledger's core cap, unless nothing in TASKS can go ahead without her. When an agent reports, start its replacement
-  in the same turn, before replying to anything else. A file collision rules out only the tasks that share files with
-  a running agent; name them, and start something else. Below 4 with startable work is a slip to fix at once, not
-  a judgement call.
+- **Keep 2-8 agents running** (her rule, 11-23, down from 4-12 on 11-21), within the ledger's core cap, unless
+  nothing in TASKS can go ahead without her. When an agent reports, start its replacement in the same turn, before
+  replying to anything else. A file collision rules out only the tasks that share files with a running agent; name
+  them, and start something else. Below 2 with startable work is a slip to fix at once, not a judgement call; above 8
+  is too many.
 - **Cores 0-1 are hers** (her ask, 11-21): at takeover start, in the background,
   `powershell -NoProfile -ExecutionPolicy Bypass -File trainworld/tools/ops/reserve_cores.ps1 -Loop 30`. Every 30 s
   it pins everything under this session's claude.exe to the other cores at below-normal priority, and keeps
@@ -115,7 +115,7 @@ incidents behind the rules here are in `notes/rule-history.md`.
   acknowledged, comments) land in `notes/board-inbox.jsonl`; her scratch pad arrives there as one `pad-send` (all her
   rough thoughts), reported at once: split it, merge duplicates, file the rest (notes/T-3391.md "Scratch pad"). At takeover start the watch with Monitor
   (longest timeout, re-arm): `venv\Scripts\python.exe -u trainworld/board/watch.py --session <your session id>`; it prints a line when a batch is
-  ready (her Send now, or 3 idle minutes), and an `idle:` line hourly (and after an agent report) when fewer than 4 agents run or 4+ cores sit free, naming tasks to start. `watch.py pending` lists them; apply each in TASKS.md / LINES.md (a reorder
+  ready (her Send now, or 3 idle minutes), and an `idle:` line hourly (and after an agent report) when fewer than 2 agents run, or fewer than 8 with 4+ cores free, naming tasks to start. `watch.py pending` lists them; apply each in TASKS.md / LINES.md (a reorder
   moves the line in LINES.md: that order is the area's queue), then `watch.py handled <ids> --by <you> --note "..."`.
   Line format and how each type applies: notes/T-3391.md "Stage 2".
 - **Player requests on the board**: once a day (and when she pastes reports), `venv\Scripts\python.exe

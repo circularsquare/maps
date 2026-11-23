@@ -90,11 +90,11 @@ def agent_reports(box, session, told):
 ROOT = TW.parent
 HEAD = re.compile(r"^- (T-\d+) \[(P\d)\] (.*)$")
 IDLE_EVERY = 3600
-MIN_AGENTS, MIN_FREE = 4, 4
+MIN_AGENTS, MAX_AGENTS, MIN_FREE = 2, 8, 4  # her 2-8 agents (docs/orchestrator.md)
 
 
 def idle_line():
-    """The idle nudge, or None when 4+ agents run and under 4 cores are free. Reads files only when called."""
+    """The idle nudge, or None when 8+ agents run, or 2+ run and under 4 cores are free. Reads files only when called."""
     try:
         live = json.loads((TW / "notes" / "board-live.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -109,7 +109,7 @@ def idle_line():
             cap, free = int(m.group(1)), int(m.group(2))
     except (OSError, subprocess.SubprocessError):
         pass
-    if len(agents) >= MIN_AGENTS and (free is None or free < MIN_FREE):
+    if len(agents) >= MAX_AGENTS or (len(agents) >= MIN_AGENTS and (free is None or free < MIN_FREE)):
         return None
     onboard = {a.get("task") for a in agents}
     try:
