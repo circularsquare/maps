@@ -5,13 +5,12 @@ Updated: 2026-11-23 20:08 UTC. Live state: `venv\Scripts\python.exe trainworld/t
 diary notes/handoff-log.md. Her time UTC-5.
 
 ## In flight (adopt from the board)
-- crossfix T-4130 (P1, master): stale flat crossing in bounded rows after an edge delete; part A is on master, fix before 0.4.6.
-- onewayret T-4127: master check for the one-way return run panic (fix on tw/track from T-4116); port if master panics.
-- hoverends T-4107, headways T-4104, autostation T-4105 (UI; strings to her). board3 T-4100/4101/4102: edits
-  board/, serve.py, tools/tasks.py, CLAUDE.md and board/watch.py in the main tree (I committed watch.py at 20:07 while
-  it may have been mid-edit: check its diff on landing).
-- Mine (maps-6b): quadcheck T-4111, tmprofile T-4131 (new: re-measure click-to-map, profile the track model), tutcard T-4099. hoverends T-4107 reported done (tip.ts, screenshot fine): land once maps-65 is done. board3 T-4100/4101/4102 done and archived; its main-tree edits (board/, tools/tasks.py, watch.py, CLAUDE.md, TASKS.md, .gitignore) wait to be committed once maps-65 is done.
-- lasttable T-4123 landing on master at handover (finish running from my tab; check git log for T-4123).
+- Adopted from maps-65 (its tab still runs them; reports reach the inbox): crossfix T-4130 (P1, master, fix before 0.4.6),
+  onewayret T-4127 (master check for the one-way return panic; port the tw/track fix if master panics), headways T-4104,
+  autostation T-4105 (UI; strings to her).
+- Mine: quadcheck T-4111, tmprofile T-4131 (re-measure click-to-map, profile the track model), onegraph T-4124 (opus;
+  builds and measures only, landing needs her yes on the shift). Queued for after autostation lands (en.json): T-4109, T-4106.
+- Landed 20:15: board3 (ba8be28f), hoverends T-4107 (0d8e7cb2), tutcard T-4099 (4dc0fde1). 8800 rebuild waits for the next landings.
 
 ## Next
 1. No publish decided ("i didn't say we want to publish"); don't prep one unless she says. 0.4.6 would wait for most
