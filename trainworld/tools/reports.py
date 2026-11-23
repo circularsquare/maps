@@ -12,7 +12,10 @@ The hook (registered in .claude/settings.json) fires when any subagent of any ma
 top-level agents of a session that orchestrates trainworld: one registered by `watch.py --session`, or named on
 notes/handoff.md's Orchestrator or Previous line. The reports are the agent's successful SubagentHandback
 messages and SendMessages to "main"; a spawned agent (one with a .meta.json) without a SubagentHandback tool reports by its last text, unless that is a compaction summary. It always
-exits 0 and prints nothing, so it can never hold an agent back.
+exits 0. It prints nothing, except once per agent stop: a final-text report of more than 18 non-empty lines
+(REPORT_MAX_LINES) is answered with {"decision":"block","reason":...}, which makes the agent rewrite it in 15 or
+fewer. The second stop (stop_hook_active, or an agent already in notes/agent-reports/blocked/) always passes, so
+nothing loops. Reports delivered by SubagentHandback are already sent, so they are not measured.
 
 Files: notes/agent-reports/<id>.json unread, read/<id>.json once marked; one file per report, written by temp file
 and os.replace, so agents finishing together never clash and a repeat stop writes nothing new.
@@ -294,6 +297,38 @@ def from_stop(box, data):
     return [record(box, sid, agent_id, meta, es, k, ts, t) for k, ts, t, _ in sent]
 
 
+REPORT_MAX_LINES = 18
+REPORT_TARGET = 15
+
+
+def too_long(box, data):
+    """The block reason if this stop's final-text report is over the limit and the agent hasn't been blocked yet."""
+    sid = data.get("session_id") or ""
+    path = data.get("agent_transcript_path") or ""
+    if data.get("stop_hook_active") or not sid or not box.accepts(sid):
+        return None
+    meta = meta_for(path)
+    if not meta or int(meta.get("spawnDepth") or 1) > 1:
+        return None
+    text = (data.get("last_assistant_message") or "").strip()
+    if not text or is_compaction_summary(text):
+        return None
+    if deliveries(entries(path))[0] or mentions_handback(path):
+        return None                              # it reports through SubagentHandback: already sent, can't be held
+    n = sum(1 for l in text.splitlines() if l.strip())
+    if n <= REPORT_MAX_LINES:
+        return None
+    agent_id = data.get("agent_id") or os.path.basename(path)[6:-6]
+    mark = os.path.join(box.dir, "blocked", re.sub(r"[^\w.-]", "_", agent_id) + ".txt")
+    if os.path.exists(mark):
+        return None
+    os.makedirs(os.path.dirname(mark), exist_ok=True)
+    with open(mark, "w", encoding="utf-8") as f:
+        f.write(f"{now_iso()} {n} lines\n")
+    return (f"Your report is {n} lines; the orchestrator's limit is {REPORT_TARGET}. Rewrite it in {REPORT_TARGET} lines "
+            "or fewer: what changed and where, check results, strings, anything for Anita. Detail goes in your notes file.")
+
+
 def projects_dir():
     return os.path.join(os.path.expanduser("~"), ".claude", "projects")
 
@@ -352,6 +387,10 @@ def main():
     if a.cmd == "hook":
         try:
             data = json.loads(sys.stdin.buffer.read().decode("utf-8", errors="replace") or "{}")
+            reason = too_long(box, data)
+            if reason:
+                print(json.dumps({"decision": "block", "reason": reason}))
+                return 0                         # the rewrite reaches us on the next stop
             for rec in from_stop(box, data):
                 box.write(rec)
         except Exception as ex:                  # never block or disturb an agent's stop

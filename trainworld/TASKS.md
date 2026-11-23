@@ -215,9 +215,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4121 [P1] {L:checks} A shared Rust build cache for agent trees (taking, 2026-11-23, agent buildcache)
   - Context: You, 11-23: "ok can do shared rust build cache." Each new tree builds sim/ from nothing (several minutes before an agent starts) and each landing rebuilds the WASM (3-4 min); about 15 trees today.
   - Goal: A new tree's first cargo test and WASM build reuse earlier builds (sccache or a shared target per branch), measured before and after, with no wrong artifacts across branches.
-- T-4122 [P1] {L:checks} Agent reports kept to 15 lines (taking, 2026-11-23, agent reportlen)
-  - Context: You, 11-23: "agent reports are still long: ok.... why? can you just refuse if they're too long?" Most reports today ran 25-40 lines against the brief's 15, and each stays in the orchestrator's context.
-  - Goal: The SubagentStop hook (tools/reports.py) sends a report over about 18 lines back to the agent to shorten before it reaches the orchestrator; detail stays in notes.
 - T-4104 [P2] {L:timetables} A new line's headways follow its kind's defaults
   - Context: You, 11-23: "when making a new line, it assumes its a normal train. if i then put it on high speed tracks it updates to say oh this is actually a high speed train, but the default headways are already taken from the normal train's defaults. could we have the headways also update to use the high speed line defaults, if they are set and the player hasnt yet already adjusted the headways? same for tram lines."
   - Goal: When a line's kind changes and its headways are still the old kind's defaults, they switch to the new kind's defaults; headways the player set stay.

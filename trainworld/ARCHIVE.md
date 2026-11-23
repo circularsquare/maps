@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4122 [P1] {L:checks} Agent reports kept to 15 lines (2026-11-23): SubagentStop hook blocks a final report over 18 lines once, asking for 15; tested on fake inputs; may not catch agents that hand back through a tool.
 - T-4117 [P1] {L:memory} Coarse demand as a setting, on by default on phones (2026-11-23): Setting on every device, default on for phones; desktop Tokyo load-to-final about 23% faster, an edit about 18%; stars and goals count coarse figures. notes/T-4117.md.
 - T-4082 [P1] {L:solve-speed} A bus-heavy Detroit save calculates trips for 20 minutes (2026-11-23): closed without code: Detroit bus save: T-4057 profile plus T-4094 bus stop merging (time to final -35%, memory per worker 3.6-3.9 -> 2.0-2.2 GB)
 - T-4094 [P1] {L:solve-speed} Merge bus stops within 300 m into one stop for demand (2026-11-23): Bus stops along a line within 300 m that the same lines serve are one demand station (runs folded, figures split back over the real stops by catchment); Detroit 40% less CPU and 41% less memory, Belgrade 20% and 22%; lines' riders median change about 1.3%, rail trips +0.6-0.9%; NYC identical. notes/T-4094.md.
