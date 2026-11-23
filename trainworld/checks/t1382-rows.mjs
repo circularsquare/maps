@@ -8,8 +8,15 @@
 // each time, so one model read twice is not the same twice); one is read with rows kept from the steps
 // before, the other whole with a new `StateRows()`, and after each edit, applied or refused, the two must
 // be equal field for field.
-//   node trainworld/checks/t1382-rows.mjs [seeds] [steps] [nyc|japan|tokyo] (from the maps root; 4 seeds of 30 steps, about 30 s; 60 of 60 for a long run;
-//     tokyo: lines timed train by train, T-3896, 12 seeds of 10 steps)
+//   node trainworld/checks/t1382-rows.mjs [seeds] [steps] [nyc|japan|tokyo|asia] (from the maps root; 4 seeds of 30 steps, about 30 s; 60 of 60 for a long run;
+//     tokyo: lines timed train by train, T-3896, 12 seeds of 10 steps; asia: the 2,647-station Asia save, T-4113)
+// T-4113: the incremental read is the bounded one (workers/regions.ts): only records in the regions an edit dirtied,
+// the records it touched and those whose bulk numbers moved are read again, with the worker's platform lines and
+// complexes as the env, so their neighbour effects are covered. Every few steps a read with a focus (a rows state's)
+// comes first and leaves regions dirty, which the read after must take. After each read the regions must be the
+// ones a fresh build from the same nodes and edges makes. CAP=n sets the regions' station cap, BUDGET=n the focus
+// budget (low here, so focus reads defer); the work line reports the records read again against the whole.
+//   --self-test-touched holds back the model's touched records: the check must fail.
 //   node trainworld/checks/t1382-rows.mjs --self-test                      the check must fail with the
 //     model's list of changed lines held back, and --self-test-names with its list of changed names
 //     (they prove the check can tell); --self-test-phases holds the same list back and compares only the
@@ -24,17 +31,34 @@ import { gunzipSync } from 'node:zlib';
 import init, { TrackApi } from '../app/src/wasm/track/sim.js';
 import { loadApp, REAL_SAVE, ARTIFACTS } from './lib.mjs';
 
-const { StateRows, upgradesOf } = await loadApp("export { StateRows, upgradesOf } from '@app/src/workers/stateRows.ts';");
+const { StateRows, upgradesOf, Regions, PlatformLines, buildComplexes } = await loadApp("export { StateRows, upgradesOf } from '@app/src/workers/stateRows.ts'; export { Regions } from '@app/src/workers/regions.ts'; export { PlatformLines } from '@app/src/workers/platformLines.ts'; export { buildComplexes } from '@app/src/game/complexes.ts';");
 await init({ module_or_path: readFileSync(new URL('../app/src/wasm/track/sim_bg.wasm', import.meta.url)) });
 
-const SELF = process.argv.includes('--self-test') ? 'lines' : process.argv.includes('--self-test-names') ? 'names' : process.argv.includes('--self-test-phases') ? 'phases' : process.argv.includes('--self-test-trials') ? 'trials' : null;
+const SELF = process.argv.includes('--self-test-touched') ? 'touched' : process.argv.includes('--self-test') ? 'lines' : process.argv.includes('--self-test-names') ? 'names' : process.argv.includes('--self-test-phases') ? 'phases' : process.argv.includes('--self-test-trials') ? 'trials' : null;
 const args = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const SEEDS = Number(args[0] ?? 4), STEPS = Number(args[1] ?? 30), SETUP = args[2] ?? 'nyc';
 // T-3896: Tokyo's has lines timed train by train (T-3346), which New York's has none of
-const SAVE = SETUP === 'japan' ? ARTIFACTS + 't737-japan-trains.save' : SETUP === 'tokyo' ? fileURLToPath(new URL('fixtures/t3302-tokyo-day77.save', import.meta.url)) : REAL_SAVE;
+const SAVE = SETUP === 'asia' ? ARTIFACTS + 't3600-asianita-1852.save' : SETUP === 'japan' ? ARTIFACTS + 't737-japan-trains.save' : SETUP === 'tokyo' ? fileURLToPath(new URL('fixtures/t3302-tokyo-day77.save', import.meta.url)) : REAL_SAVE;
 const raw = gunzipSync(readFileSync(SAVE));
 const saveBytes = raw.subarray(8 + raw.readUInt32LE(4));
 
+if (process.env.CAP) StateRows.regionCap = Number(process.env.CAP);
+StateRows.focusBudget = Number(process.env.BUDGET ?? 200);
+/** T-4113: the worker's platform lines (one per model, as the worker keeps one) and complexes, beside the env */
+function envFor(api) {
+  const pl = new PlatformLines();
+  return {
+    ...env,
+    pl,
+    platformLine: (a, id, x, y, platform) => pl.of(a, id, x, y, platform, 1),
+    complexKey: (a) => a.station_links().join(),
+    complexes: (rows) => {
+      const fl = api.station_links(), links = [];
+      for (let k = 0; k + 1 < fl.length; k += 2) links.push([String(fl[k]), String(fl[k + 1])]);
+      return buildComplexes(rows.map((r) => ({ id: String(r.id), x: r.x, y: r.y, heading: r.heading, length: r.platform, ...(r.line ? { line: r.line } : {}) })), links);
+    },
+  };
+}
 const env = {
   lngLat: (x, y) => [x / 1000, y / 1000],
   periodHours: new Float64Array([4, 6, 4, 4, 6]),
@@ -58,7 +82,17 @@ function rng(seed) {
   return () => ((s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 2 ** 32);
 }
 
-const read = (rows, api) => rows.read(api, env, FRAME, upgradesOf(api));
+/** a read as the worker's `buildState` makes it: the platform lines told the edges and then the lines */
+const read = (rows, api, e = env, focus) => {
+  rows.bind(api, FRAME);
+  rows.begin(api, focus);
+  const edges = rows.edges(api);
+  e.pl?.sync(edges);
+  const nodes = rows.nodes(api, e, upgradesOf(api));
+  const lines = rows.lines(api, e, nodes);
+  e.pl?.setLines(lines);
+  return { edges, nodes, lines };
+};
 /** the first row where two reads differ, for the message */
 function firstDifference(a, b) {
   for (const k of ['edges', 'nodes', 'lines']) {
@@ -82,6 +116,8 @@ function phaseDifference(a, b) {
 }
 
 let failures = 0, reads = 0, rowsKept = 0, rowsTotal = 0, phasesSame = 0;
+let focusReads = 0, focusDeferred = 0, workDone = 0, workWhole = 0, leavesTaken = 0, msBounded = 0, msFull = 0, leavesEnd = 0;
+const pick2 = (r, a) => a[Math.floor(r() * a.length)];
 const applied = {}, refused = {};
 
 /** a model with the save loaded, and the random edits to make to it (the same seed gives the same edits to the same model) */
@@ -95,7 +131,8 @@ function makeModel(seed) {
   // wide over the nodes' extent; `water(k)` adds one shifted by k (a second mask, as zones load one by one)
   const ext = (() => { const ni = api.nodes_info(); const b = [Infinity, Infinity, -Infinity, -Infinity]; for (let i = 0; i < ni.length; i += 10) { b[0] = Math.min(b[0], ni[i + 1]); b[1] = Math.min(b[1], ni[i + 2]); b[2] = Math.max(b[2], ni[i + 1]); b[3] = Math.max(b[3], ni[i + 2]); } return b; })();
   const water = (k) => {
-    const cell = 150, w = Math.min(60000, Math.ceil((ext[2] - ext[0]) / cell) + 4), h = Math.min(60000, Math.ceil((ext[3] - ext[1]) / cell) + 4);
+    // (a cell that keeps the mask a few thousand cells across on a save as wide as the Asia one)
+    const cell = Math.max(150, Math.ceil(Math.max(ext[2] - ext[0], ext[3] - ext[1]) / 3000)), w = Math.min(60000, Math.ceil((ext[2] - ext[0]) / cell) + 4), h = Math.min(60000, Math.ceil((ext[3] - ext[1]) / cell) + 4);
     const row = new Uint32Array(h + 1), xs = [];
     for (let r = 0; r < h; r++) {
       row[r] = xs.length;
@@ -110,7 +147,7 @@ function makeModel(seed) {
     const ni = api.nodes_info(), ei = api.edges_info(), li = api.lines_info();
     const nodes = [], stations = [], edges = [], lines = [];
     for (let i = 0; i < ni.length; i += 10) { nodes.push({ id: ni[i], x: ni[i + 1], y: ni[i + 2], platform: ni[i + 7], built: ni[i + 8] === 1, ports: ni[i + 4], builtPorts: ni[i + 5] }); if (ni[i + 7] > 0) stations.push(nodes[nodes.length - 1]); }
-    for (let i = 0; i < ei.length; i += 10) edges.push({ id: ei[i], a: ei[i + 1], b: ei[i + 2], built: ei[i + 4] === 1 });
+    for (let i = 0; i < ei.length; i += 10) edges.push({ id: ei[i], a: ei[i + 1], b: ei[i + 2], tracks: ei[i + 3], built: ei[i + 4] === 1 });
     for (let i = 0; i < li.length; i += 22) lines.push({ id: li[i], running: li[i + 3] === 1, ok: li[i + 2] === 1, bus: api.is_bus(li[i]) });
     return { nodes, stations, edges, lines };
   };
@@ -161,25 +198,30 @@ function makeModel(seed) {
     busLine: (m) => { const [x, y] = nearby(m); const ang = rnd() * 2 * Math.PI; return api.set_bus_line(api.new_line_id(), Float64Array.from([x, y, 1, x + Math.cos(ang) * 2500, y + Math.sin(ang) * 2500, 1]), 480, 600, 1200, 30, 120, 0x2d7dd2, 'Bus ' + Math.floor(rnd() * 99)); },
     busRoute: (m) => { const l = m.lines.filter((x) => x.bus); if (!l.length) return -1; const [x, y] = nearby(m); return api.set_bus_route(pick(l).id, Float64Array.from([x, y, 1, x + 2200, y - 900, 1])); },
     fleet: () => { api.set_fleet(Math.floor(rnd() * 400)); return 0; },
+    // T-4113: what only an edge's own calls answer (its one-way setting, its kind)
+    oneWay: (m) => { const es = m.edges.filter((e) => e.tracks === 1); return es.length ? api.set_edge_oneway(pick(es).id, pick([0, 1, 2, 3])) : -1; },
+    edgeKind: (m) => { const es = m.edges.filter((e) => !e.built); return es.length ? api.set_edges_kind(Uint32Array.from([pick(es).id, pick(es).id]), pick([1, 2, 3])) : -1; },
   };
   return { api, model, water, edit: (kind) => ops[kind](model()) };
 }
 
-const kinds = ['routeFree', 'routeFromNode', 'stationAtNode', 'stationOnEdge', 'removeStation', 'rename', 'setStops', 'addLine', 'copyLine', 'removeLine', 'trains', 'headway', 'lineFast', 'lineCars', 'lineLook', 'construct', 'constructLine', 'constructAll', 'blueprintOff', 'doubleUp', 'deleteEdge', 'flying', 'moveNode', 'link', 'upgrade', 'undo', 'redo', 'preview', 'busLine', 'busRoute', 'fleet'];
-const weights = { busLine: 2, busRoute: 2, undo: 3, redo: 2, trains: 3, headway: 2, rename: 3, setStops: 3, routeFree: 2, routeFromNode: 2, stationAtNode: 3, removeStation: 2, construct: 3 };
+const kinds = ['routeFree', 'routeFromNode', 'stationAtNode', 'stationOnEdge', 'removeStation', 'rename', 'setStops', 'addLine', 'copyLine', 'removeLine', 'trains', 'headway', 'lineFast', 'lineCars', 'lineLook', 'construct', 'constructLine', 'constructAll', 'blueprintOff', 'doubleUp', 'deleteEdge', 'flying', 'moveNode', 'link', 'upgrade', 'undo', 'redo', 'preview', 'busLine', 'busRoute', 'fleet', 'oneWay', 'edgeKind'];
+const weights = { oneWay: 2, edgeKind: 2, busLine: 2, busRoute: 2, undo: 3, redo: 2, trains: 3, headway: 2, rename: 3, setStops: 3, routeFree: 2, routeFromNode: 2, stationAtNode: 3, removeStation: 2, construct: 3 };
 const kindPool = kinds.flatMap((k) => Array(weights[k] ?? 1).fill(k));
 
 for (let seed = 1; seed <= SEEDS; seed++) {
   const A = makeModel(seed), B = makeModel(seed);
   B.api.set_wet_cache(false);
+  const eA = envFor(A.api), eB = envFor(B.api);
+  if (SELF === 'touched') A.api.take_touched = () => Uint32Array.of(0);
   if (SELF === 'lines' || SELF === 'phases') A.api.take_changed_lines = () => [];
   if (SELF === 'names') A.api.take_name_changes = () => [];
   if (SELF === 'trials' || SELF === 'phases') A.api.peek_changed_lines = () => [];
   const choose = rng(seed * 7919);
   const rows = new StateRows();
-  let before = read(rows, A.api);
+  let before = read(rows, A.api, eA);
   let lastPhases = rows.phases(A.api);
-  const d0 = firstDifference(before, read(new StateRows(), B.api));
+  const d0 = firstDifference(before, read(new StateRows(), B.api, eB));
   if (d0) { console.log(`FAIL  seed ${seed}: the first read differs from a fresh one: ${d0}`); failures++; continue; }
 
   for (let step = 0; step < STEPS; step++) {
@@ -192,9 +234,30 @@ for (let seed = 1; seed <= SEEDS; seed++) {
     if (r !== rB) { console.log(`FAIL  seed ${seed} step ${step} ${kind}: the two models answered ${r} and ${rB}`); failures++; break; }
     if (process.env.VERBOSE) console.log('seed', seed, 'step', step, kind, r === 0 ? 'applied' : 'refused ' + r);
     (r === 0 ? applied : refused)[kind] = ((r === 0 ? applied : refused)[kind] ?? 0) + 1;
-    const now = read(rows, A.api);
-    const full = read(new StateRows(), B.api);
+    // T-4113: a rows state's read first now and then (the view about a station), its regions left dirty taken by the next
+    if (choose() < 0.3) {
+      const st = pick2(choose, m.stations), rect = [st.x - 3000, st.y - 3000, st.x + 3000, st.y + 3000];
+      // half of them after an "everything" (as a load's), which a focus does first and leaves the rest for after
+      if (choose() < 0.5) rows.regions.markAll();
+      read(rows, A.api, eA, { rect });
+      if (rows.work.left > 0) focusDeferred++;
+      focusReads++;
+      read(new StateRows(), B.api, eB);
+    }
+    const tA0 = performance.now();
+    const now = read(rows, A.api, eA);
+    const tA1 = performance.now();
+    const w = rows.work;
+    workDone += w.edges + w.nodes + w.lines + w.buses;
+    leavesTaken += w.leaves;
+    const full = read(new StateRows(), B.api, eB);
+    msBounded += tA1 - tA0; msFull += performance.now() - tA1;
     reads++;
+    workWhole += full.edges.length + full.nodes.length + full.lines.length;
+    // the regions are what a fresh build from the same nodes and edges makes (so an undo gives the same ones back)
+    const fresh = new Regions(rows.regions.cap);
+    fresh.sync(A.api.nodes_info(), A.api.edges_info());
+    if (fresh.shape() !== rows.regions.shape()) { failures++; console.log(`FAIL  seed ${seed} step ${step} ${kind}: the regions differ from a fresh build (${rows.regions.size} leaves against ${fresh.size})`); break; }
     rowsTotal += now.edges.length + now.nodes.length + now.lines.length;
     const old = new Set([...before.edges, ...before.nodes, ...before.lines]);
     for (const k of ['edges', 'nodes', 'lines']) for (const r of now[k]) if (old.has(r)) rowsKept++;
@@ -217,6 +280,7 @@ for (let seed = 1; seed <= SEEDS; seed++) {
     }
     before = now;
   }
+  leavesEnd = rows.regions.size;
 }
 
 const total = (o) => Object.values(o).reduce((a, b) => a + b, 0);
@@ -227,5 +291,6 @@ if (SELF) {
 }
 const keptShare = rowsKept / Math.max(1, rowsTotal);
 const bad = failures || keptShare < 0.9 || phasesSame === 0;
+console.log(`T-4113 work: ${workDone} records read again of ${workWhole} (${(100 * workDone / Math.max(1, workWhole)).toFixed(1)}%), regions of at most ${StateRows.regionCap} stations (${leavesEnd} at the end, ${(leavesTaken / Math.max(1, reads)).toFixed(1)} read again per read); a bounded read ${(msBounded / Math.max(1, reads)).toFixed(1)} ms against a fresh full one's ${(msFull / Math.max(1, reads)).toFixed(1)} ms (the check's env); ${focusReads} focus reads, ${focusDeferred} of them left regions for the next read`);
 console.log(`${bad ? 'FAIL' : 'PASS'}  t1382 rows (${SETUP}): ${reads} incremental reads equal a full read; ${(100 * keptShare).toFixed(1)}% of the rows were the kept ones (the cache is used); the phase tables equal the whole ones and were the kept array in ${phasesSame} of ${reads}`);
 process.exit(bad ? 1 : 0);

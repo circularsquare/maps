@@ -49,12 +49,18 @@ fn changes_are_listed_once_and_only_what_an_edit_touched() {
     assert!(lines.contains(&l0) && lines.contains(&l1));
     assert!(a.take_name_changes().is_empty() && a.take_changed_lines().is_empty());
 
-    // a rename is one name; the lines through the station are the line's alone
+    // a rename is one name; T-4113: no line's rows hold a station's name, so no line is listed (the line through it is
+    // noted, and left out as its stamp is unchanged)
     assert_eq!(a.set_station_props(first[1], 120, "Renamed".into()), 0, "{}", a.issues());
     assert_eq!(a.take_name_changes(), vec![first[1]]);
     let lines = a.take_changed_lines();
-    assert!(lines.contains(&l0), "{lines:?}");
-    assert!(!lines.contains(&l1), "the other line's service is not rebuilt: {lines:?}");
+    assert!(!lines.contains(&l0) && !lines.contains(&l1), "{lines:?}");
+    // a stop dropped moves the line's rows: it is listed, the other line not
+    assert_eq!(a.set_stops(l0, &first[..2]), 0, "{}", a.issues());
+    let lines = a.take_changed_lines();
+    assert!(lines.contains(&l0) && !lines.contains(&l1), "{lines:?}");
+    assert_eq!(a.undo(), 0);
+    a.take_changed_lines();
 
     // a line's look touches only that line and no names
     assert_eq!(a.set_line_look(l1, "B2".into(), 0x123456), 0, "{}", a.issues());

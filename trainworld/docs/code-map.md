@@ -331,7 +331,9 @@ writes, and it reaches the game through the `SlotHost` the worker binds; `letGoS
 whose record is game/openFailures.ts, T-3773), `valuePatch.ts` (a value posted as its changes from the last one: the
 money record, T-3803), `stateRows.ts` (`StateRows`: the state's edge, node and line rows
 kept between edits and read from the track model again only where `take_changed_lines` and
-`take_name_changes` say they changed; station names kept by node, phase tables per line; T-1382, T-1540), `platformLines.ts` (each
+`take_name_changes` say they changed; station names kept by node, phase tables per line; T-1382, T-1540; edges and nodes
+looked at only where `take_touched` and the dirty regions say, T-4113), `regions.ts` (the world in regions of at most
+`REGION_CAP` stations, dirty from edits, taken focus first; T-4113), `platformLines.ts` (each
 station's drawn platform line in world units, on its node row, for the complexes; T-1859), `saveFile.ts` (the save format
 and IndexedDB, T-029; slots' backups, T-744; a closed connection opened again and demand caches dropped on a full disk, T-1829; removed zone ids taken as their successors on load, T-1053; each slot's tie to the account, T-988; a failed read tried again, then thrown, never taken as an empty slot, T-2703, the slot list too, T-2705, check `checks/t2703-storeread.mjs`), `cloud.ts` (games on the account, T-988: uploads, claims, settling, conflicts split off as versions; used by the clock worker and the main thread), `versions.ts` (T-2037: a save's origin and latest player change, the origin rule for older saves, saves grouped into one card per game), `clockClient.ts`, `demand.worker.ts`, `demandClient.ts`, `demandCache.ts`
 (the last final demand result kept beside the save, T-328),

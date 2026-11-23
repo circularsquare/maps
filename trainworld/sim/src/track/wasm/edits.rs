@@ -13,6 +13,7 @@ impl TrackApi {
         self.money_short = None;
         match r {
             Ok(r) => {
+                self.touched.note(&r.dirty);
                 self.last = Some(r);
                 self.issues.clear();
                 0

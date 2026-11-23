@@ -39,6 +39,11 @@ fn built_days(days: &[u32]) -> Vec<i32> {
 pub struct TrackApi {
     w: TrackWorld,
     last: Option<EditResult>,
+    /// T-4113: what the edits since `take_touched` touched
+    touched: touched::Touched,
+    /// T-4113: each line's stamp as `take_changed_lines` last took it (`TrackApi::stamped`)
+    stamps: Vec<Option<u64>>,
+    stamps_off: bool,
     issues: Vec<Issue>,
     /// Set when the last refusal was for money: (need, have).
     money_short: Option<(f64, f64)>,
@@ -391,6 +396,9 @@ impl TrackApi {
         TrackApi {
             w: TrackWorld::new(Network::new(origin_lon, origin_lat, right_hand)),
             last: None,
+            touched: Default::default(),
+            stamps: vec![],
+            stamps_off: false,
             issues: vec![],
             money_short: None,
             cash: 6000.0,
@@ -558,6 +566,7 @@ impl TrackApi {
         net.roads = self.w.net.roads.clone();
         net.streets = self.w.net.streets.clone();
         self.w = TrackWorld::new(net);
+        self.touched.everything();
         self.rebuild_water();
         true
     }
@@ -810,6 +819,7 @@ impl TrackApi {
                     }
                 }
                 self.w = TrackWorld::new(net);
+                self.touched.everything();
                 self.old_names = level <= save::OLD_BOUND_NAMES;
                 if level <= save::OLD_STATION_WAYS && self.w.net.pin_station_runs() {
                     self.w.reload();
@@ -942,6 +952,7 @@ mod buildings;
 mod twin;
 mod onetrack;
 mod legs;
+mod touched;
 
 /// What buying the cars the running lines need beyond `fleet` costs, US$M.
 fn trains_to_buy(w: &TrackWorld, fleet: [u32; FLEETS]) -> f64 {

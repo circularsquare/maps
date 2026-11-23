@@ -20,13 +20,16 @@ impl TrackApi {
     /// `[u32::MAX]` for all of them: a line the service rebuilt, rescheduled or recomputed, or that
     /// the net was changed under (every edit's, undo's, preview's, refused edit's and settle's,
     /// however many calls ago), or all after a load, a reload or edge prices worked out again for
-    /// water or terrain. The caller keeps the other lines' rows.
+    /// water or terrain. The caller keeps the other lines' rows. T-4113: a noted line whose stamp (everything the
+    /// rows read of it) is as at the last take is left out: a settle notes every line it scheduled, most unmoved.
     pub fn take_changed_lines(&mut self) -> Vec<u32> {
         let mut v = self.w.svc.take_changed();
         if self.w.net.take_repriced() && v.first() != Some(&u32::MAX) {
             v = vec![u32::MAX];
         }
-        v
+        let (out, now) = self.stamped(v);
+        self.keep_stamps(now);
+        out
     }
     /// `take_changed_lines` without taking: what has changed since, for the phase tables to be read
     /// after the trials that pricing a planned line runs (T-1540).
@@ -34,7 +37,7 @@ impl TrackApi {
         if self.w.net.repriced() {
             return vec![u32::MAX];
         }
-        self.w.svc.peek_changed()
+        self.stamped(self.w.svc.peek_changed()).0
     }
     /// T-1382: the nodes whose station name was set or cleared since the last call, ascending, or
     /// `[u32::MAX]` when the caller knows none of them (a new network).

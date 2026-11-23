@@ -118,7 +118,8 @@ function rowComplexes(rows: readonly ClockNode[]): Complexes {
   for (let k = 0; k + 1 < fl.length; k += 2) links.push([String(fl[k]), String(fl[k + 1])]);
   return complexesOf(nodeComplexes, geo, links);
 }
-export const rowEnv: RowEnv = { lngLat: packLngLat, periodHours: PERIOD_HOURS, busRow, platformLine: platformLineOf, complexes: rowComplexes };
+export const rowEnv: RowEnv = { lngLat: packLngLat, periodHours: PERIOD_HOURS, busRow, platformLine: platformLineOf, complexes: rowComplexes,
+  complexKey: (a) => a.station_links().join() + "|" + a.buildings_info().join() };
 /** the rows of the last states, read again only where the track model says something changed (T-1382);
  * `?patch=0` reads them whole */
 export const stateRows = new StateRows();
@@ -182,15 +183,32 @@ function drawnBack(a: TrackApi, id: number, back: readonly number[]): Float32Arr
   return c.d;
 }
 
-function buildState(): ClockState {
+/** T-4113: the view's bounds, west, south, east, north, from the page's "view"; a rows state reads the regions there
+ * first */
+let view: [number, number, number, number] | undefined;
+export function putView(w: number, s: number, e: number, n: number) { view = [w, s, e, n]; }
+function viewRect(): [number, number, number, number] | undefined {
+  if (!view) return undefined;
+  const [x0, y0] = frame.fromLonLat(view[0], view[1]), [x1, y1] = frame.fromLonLat(view[2], view[3]);
+  return [Math.min(x0, x1), Math.min(y0, y1), Math.max(x0, x1), Math.max(y0, y1)];
+}
+
+/** `rowsOnly`: for a rows state (`sendRows`), which carries no drawn pieces: none are made, and the rows read the
+ * regions in view and the edit's own first when many are dirty (T-4113) */
+function buildState(rowsOnly = false): ClockState {
   const tq0 = performance.now();
   const a = api!;
   if (patchMode === "0") stateRows.reset();
   stateRows.bind(a, frame);
+  // T-4113: `?patch=walk` makes every record's own calls on every read, as before regions (for timing against)
+  StateRows.bounded = patchMode !== "walk";
+  // (with `?patch=walk` a rows state is built as a full one, as before)
+  rowsOnly &&= StateRows.bounded;
+  stateRows.begin(a, rowsOnly ? { rect: viewRect() } : undefined);
   const edges = stateRows.edges(a);
   const drawn: Float32Array[] = [];
-  for (const { id } of edges) drawn.push(drawnEdge(a, id));
-  const speedParts = edges.map((e) => edgeSpeedDrawn.get(e.id));
+  if (!rowsOnly) for (const { id } of edges) drawn.push(drawnEdge(a, id));
+  const speedParts = rowsOnly ? [] : edges.map((e) => edgeSpeedDrawn.get(e.id));
   const tq1 = performance.now(); timing.sEdges = tq1 - tq0;
   const ups = upgradesOf(a);
   platformLines.sync(edges);
@@ -209,6 +227,8 @@ function buildState(): ClockState {
   const lines = stateRows.lines(a, rowEnv, nodes);
   platformLines.setLines(lines);
   const tq3 = performance.now(); timing.sLines = tq3 - tq2;
+  const w = stateRows.work;
+  timing.nEdges = w.edges; timing.nNodes = w.nodes; timing.nLines = w.lines; timing.nBuses = w.buses; timing.nRegions = w.leaves; timing.nLeft = w.left;
   if (patchMode === "check") checkRows({ edges, nodes, lines }, a, ups);
   // a bus line's stops that are no station were added to the nodes by its row
   const busNodes = new Map(nodes.slice(stationCount).map((n) => [n.id, n]));
@@ -234,14 +254,14 @@ function buildState(): ClockState {
   const lineTable = new Float32Array(Math.max(1, nLines) * (backs.length ? 8 : 4));
   const runs: Float32Array[] = [];
   let nSamples = 0;
-  for (const l of lines) {
+  if (!rowsOnly) for (const l of lines) {
     if (!l.ok) continue;
     const d = drawnLine(a, l.id);
     runs.push(d);
     lineTable.set([nSamples, d.length / 2, l.lengthM, SAMPLE_STEP], l.id * 4);
     nSamples += d.length / 2;
   }
-  for (const l of backs) {
+  if (!rowsOnly) for (const l of backs) {
     const d = drawnBack(a, l.id, l.back!);
     if (d.length < 4) continue;
     runs.push(d);
@@ -280,9 +300,10 @@ function buildState(): ClockState {
   const [totalCost, builtCost] = a.costs();
   const blueprintCost = Math.max(totalCost - builtCost, 0);
   const tq5 = performance.now(); timing.sSums = tq5 - tq4a; timing.sCosts = tq5 - tq4;
-  const phases = stateRows.phases(a, meta);
-  timing.sPhases = performance.now() - tq5; timing.nPhaseLines = stateRows.phaseReads;
-  if (patchMode === "check" && !sameBytes(phases, a.phases())) console.error("T-1540 check: the phase tables read per line differ from a whole read");
+  // (a rows state carries none: the tables changed stay pending for the next full one)
+  const phases = rowsOnly ? NO_PHASES : stateRows.phases(a, meta);
+  timing.sPhases = performance.now() - tq5; timing.nPhaseLines = rowsOnly ? 0 : stateRows.phaseReads;
+  if (patchMode === "check" && !rowsOnly && !sameBytes(phases, a.phases())) console.error("T-1540 check: the phase tables read per line differ from a whole read");
   return {
     version: ++version,
     markers,
@@ -385,7 +406,7 @@ export function sendRows(built?: ClockState): boolean {
   if (!posted.net || shiftFrom) return false;
   const t0 = performance.now();
   // T-3803: rows a follow-up built before an edit came between its pieces, with the money as it is now
-  const s: ClockState = built ? { ...built, ...nowMoney(), effectiveAt: undefined, ghostFirst: undefined } : buildState();
+  const s: ClockState = built ? { ...built, ...nowMoney(), effectiveAt: undefined, ghostFirst: undefined } : buildState(true);
   s.rows = true;
   s.noTrips = true;
   s.render = { phases: NO_PHASES, meta: NO_PHASES, samples: NO_PHASES, lineTable: NO_PHASES };
