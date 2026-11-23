@@ -179,6 +179,7 @@ new standing process.
   loading change reports all of `node trainworld/tools/perf_bench.mjs`'s numbers (CPU, memory, bytes, solver time),
   not only the one it targets: one save for a small expected change, all three (nyc, tokyo, belgrade) for a risky one
   or a release; worse by more than 10% on any goes to her as a trade-off. How to read it: notes/T-4025.md.
+  Edit-speed tasks report `node trainworld/tools/edit_bench.mjs` numbers before and after (`--compare <hash>`; notes/T-4139.md).
 - **Simple prices**: fares and costs the player reasons about follow a simple rule (a base plus per km).
 - **Buses are settled**; no more bus tuning unless she asks.
 - **Saves are hers**: keeping old ones loading is a nicety, no real migration effort.

@@ -5,6 +5,7 @@ Columns: name | kind | smoke | runs since 2026-11-01 (transcript scan) | last co
 Kinds: check (proves a task's fix), tool (standing script), helper (imported by checks), fixture (data), lib (shared code).
 BROKEN means it fails or cannot finish as it stands. `old/` holds 46 retired checks and is not listed.
 Generated 2026-11-23; 382 files; 19 in smoke.
+Edit speed is timed by `tools/edit_bench.mjs` (T-4139: ghost trail, track, station, stop click, Construct, delete, undo, on the Asia and NYC saves), not by a check here.
 
 admin_totals_check.py | tool | - | 8 | 2026-11-03 | tier 0's admin totals (tier0.scale_to_units) and the generic reader (pipeline/admin_totals.py),...
 agent-tree.mjs | tool | - | 1733 | 2026-11-21 | Agent worktrees (T-792): a git worktree on its own branch for a code agent whose edits would...

@@ -122,6 +122,7 @@ Columns: name | kind | smoke | runs since {SINCE} (transcript scan) | last commi
 Kinds: check (proves a task's fix), tool (standing script), helper (imported by checks), fixture (data), lib (shared code).
 BROKEN means it fails or cannot finish as it stands. `old/` holds {n_old} retired checks and is not listed.
 Generated {datetime.now():%Y-%m-%d}; {len(rows)} files; {sum(1 for f in files if f in in_smoke)} in smoke.
+Edit speed is timed by `tools/edit_bench.mjs` (T-4139: ghost trail, track, station, stop click, Construct, delete, undo, on the Asia and NYC saves), not by a check here.
 
 """
 open(os.path.join(CH, 'INDEX.md'), 'w', encoding='utf-8', newline='\n').write(head + '\n'.join(rows) + '\n' + ('\nRetired (in old/):\n' + '\n'.join(f'- {k}: {v}' for k, v in RETIRED.items()) + '\n' if RETIRED else ''))
