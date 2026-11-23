@@ -1,6 +1,8 @@
 // The tools' marks on the map: the curve circle and tangent, the band, the marks and the tag (T-2374, moved out of tools.ts).
 
+import { render } from "preact";
 import { t as tr } from "../i18n";
+import { Icon } from "../ui/widgets";
 import { distance } from "../game/format";
 import { metresBetween } from "../game/walks";
 import { buildLevel, besideOn, buswayTrack, stationChoice, stationKind, tool, tramTrack } from "../game/ui";
@@ -95,7 +97,7 @@ export function drawBand(tk: Tools) {
   g.stroke();
 }
 
-function placeMarksInner(tk: Tools) {
+export function placeMarks(tk: Tools) {
   let k = 0;
   const put = (m: HTMLDivElement, lx: number, ly: number, dx = 0, dy = 0) => {
     const [x, y] = tk.screen(lx, ly);
@@ -247,16 +249,7 @@ function placeMarksInner(tk: Tools) {
   } else tk.tag.style.display = "none";
 }
 
-/** T-4105: with Auto picked, the tag's first row names what a click here would place */
-export function placeMarks(tk: Tools) {
-  placeMarksInner(tk);
-  if (tool.peek() !== "station" || stationChoice.peek() !== "auto" || tk.tag.style.display === "none") return;
-  const k = stationKind.peek(), key = k === "rail" ? "toolBar.kindRail" : k === "tram" ? "toolBar.kindTram" : k === "bus" ? "stationInspector.brtStation" : "stationInspector.port";
-  const label = tr(key), text = tr("tools.autoKind", { kind: label }), first = tk.tag.firstElementChild;
-  // the BRT tag already starts with its kind's name: that row becomes the Auto one
-  if (first && first.textContent === label) return void Object.assign(first, { className: "auto-kind", textContent: text });
-  tk.tag.prepend(Object.assign(document.createElement("div"), { className: "auto-kind", textContent: text }));
-}
+const KIND_ICON = { rail: Icon.train, tram: Icon.tram, bus: Icon.brt, port: Icon.anchor };
 
 /** The cursor tag with `content`, red when `bad`, by the screen point (x, y). */
 export function showTag(tk: Tools, content: string | (string | Node)[], bad: boolean, x: number, y: number) {
@@ -280,7 +273,15 @@ export function helpLines(tk: Tools, h: Snap, first: string | null): HTMLDivElem
     const fill = document.createElement("i");
     fill.style.width = `${(100 * logShare(trips.legs, NEAR_BAR_LO, NEAR_BAR_HI)).toFixed(1)}%`;
     bar.append(fill);
-    lines.push(row(trips.text), bar);
+    const text = row(trips.text);
+    // T-4105, T-4135: with Auto picked, the row starts with the icon of the kind a click would place
+    if (stationChoice.peek() === "auto") {
+      const icon = Object.assign(document.createElement("span"), { className: "kind-icon" });
+      render(KIND_ICON[stationKind.peek()](), icon);
+      text.prepend(icon);
+      text.className = "near-row";
+    }
+    lines.push(text, bar);
   }
   return lines;
 }

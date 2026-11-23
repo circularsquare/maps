@@ -750,7 +750,7 @@ switch on, the track tool follows the real network the layer draws.
 - **Placement help** [T-312, T-412]: with the pointer snapped to track the tag says how far the
   spot is, in a straight line, from the station placed last in this session ("1.2 km from W 46th
   St"; nothing before the first), then roughly how many local trips there are within 1 km
-  (1 mile in US units): "12k trips within 1km", two significant figures, "Under 50" below that,
+  (1 mile in US units; within 600 m, 1,970 ft, for a BRT station, the bus corridor `CORRIDOR_M`, T-4135): "12k trips within 1km", two significant figures, "Under 50" below that,
   over a thin bar of its size on a log scale, empty at 1,000 and full at 1M, ticks at 10k and 100k
   (`NEAR_BAR_*` in `map/tools.ts`) [T-2271]. The count is the day shown. It is the Homes and Destinations bubbles' legs (all purposes) over the cells whose centres
   are inside the circle, from the zone in view only; a trip with both ends inside counts twice.
@@ -758,7 +758,7 @@ switch on, the track tool follows the real network the layer draws.
   changes, so the count is there when the pointer reaches track; while a newer solve's legs are
   on their way the last ones received stay in use, and a failed ask is repeated 2 s later [T-2430].
   A refused spot shows only the reason. Two thin rings at 1 km and
-  2 km of ground distance (0.5 and 1 km for a tram stop, T-3001), each labelled at its top, follow the spot under the ghost
+  2 km of ground distance (0.5 and 1 km for a tram stop, T-3001; one at 600 m for a BRT station), each labelled at its top, follow the spot under the ghost
   (`stationRings` in `map/tools.ts`, an SVG layer, fixed grey ink at 35%).
 - **On open ground** [T-794, T-907; taken out by T-1820, back with T-3999 at players' asking; `map/stationFree.ts`]:
   with the pointer further than the snap radii from track and nodes, a ring marks the spot and the tag says "Click to
@@ -776,12 +776,11 @@ switch on, the track tool follows the real network the layer draws.
   ferry line"): the same ghost, tags and refusals, and a pointer on a port the network has, or a landing within 30 m of
   one, says its name over "There is already a station here." A click or tap places a blueprint port (US$10M,
   `TrackApi::add_port`), which a ferry line drawn later stops at as at any port.
-- **Auto** [T-4105; `map/stationAuto.ts`]: the first button of the kind group, the default for a browser that never picked
-  (the pick is remembered, as the others are). The kind comes from what is under the pointer, first match wins: track
+- **Auto** [T-4105; `map/stationAuto.ts`]: the first button of the kind group; a browser that never picked starts on Train station
+  (the pick, Auto included, is remembered). The kind comes from what is under the pointer, first match wins: track
   (a train station, or a tram stop where no train track is within 4 px of the nearest), a road a bus may use or a bus
   route within 12 px (at least 8 m, at most 50 m), a ferry route, water or a shore a port could take (a port), else a
-  train station on open ground. The ghost is that kind's, and the tag's first row is "Auto: <kind>" (the BRT tag's own
-  first row becomes it). The kind holds while a free station's first end is down.
+  train station on open ground. The ghost is that kind's, and the tag's trips row starts with that kind's toolbar icon (T-4135). The kind holds while a free station's first end is down.
 - How a new station is named: [track-and-service.md](track-and-service.md) 6.1. A double click on
   the name in its inspector renames it.
 

@@ -176,7 +176,7 @@ function TrackBar() {
 }
 
 /** T-3999, T-4010: what the station tool places, a train station, a tram stop, a BRT station or a port. */
-const stationKinds = (): [StationChoice, string, () => JSX.Element][] => [["auto", t("toolBar.kindAuto"), () => <svg viewBox="0 0 16 16"><path d="M3.2 13.5 8 2.5l4.8 11M5 9.6h6" /></svg>], ["rail", t("toolBar.kindRail"), Icon.train], ["tram", t("toolBar.kindTram"), Icon.tram], ["bus", t("stationInspector.brtStation"), Icon.brt], ["port", t("stationInspector.port"), Icon.anchor]];
+const stationKinds = (): [StationChoice, string, () => JSX.Element][] => [["auto", t("toolBar.kindAuto"), Icon.auto], ["rail", t("toolBar.kindRail"), Icon.train], ["tram", t("toolBar.kindTram"), Icon.tram], ["bus", t("stationInspector.brtStation"), Icon.brt], ["port", t("stationInspector.port"), Icon.anchor]];
 
 function StationBar() {
   const tram = stationOnTram.value;

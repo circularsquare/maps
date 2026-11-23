@@ -20,7 +20,11 @@ import { mobileDevice } from "../workers/deviceMemory";
 /** the snap switches' magnet, its two pole tips apart from its body (T-3069) */
 const SNAP_MAGNET = "M1.75 1.5v1.2M6.75 1.5v1.2M1.75 4.2v1.3a2.5 2.5 0 005 0V4.2";
 
+/** T-4135: the station tool's Auto, the A of Nunito (700) outlined, its ink centred in the 16 box */
+const AUTO_A = "M3.58 13.5Q3.22 13.5 3 13.33Q2.77 13.16 2.73 12.88Q2.68 12.6 2.84 12.25L6.86 3.32Q7.06 2.88 7.34 2.69Q7.63 2.5 7.99 2.5Q8.34 2.5 8.63 2.69Q8.91 2.88 9.11 3.32L13.15 12.25Q13.32 12.6 13.27 12.89Q13.23 13.18 13.01 13.34Q12.8 13.5 12.45 13.5Q12.02 13.5 11.78 13.29Q11.55 13.09 11.36 12.66L10.37 10.36L11.2 10.89H4.76L5.58 10.36L4.61 12.66Q4.41 13.1 4.19 13.3Q3.98 13.5 3.58 13.5ZM7.96 4.74 5.83 9.82 5.43 9.33H10.53L10.14 9.82L7.99 4.74Z";
+
 export const Icon = {
+  auto: () => <svg viewBox="0 0 16 16"><path class="solid" stroke="none" d={AUTO_A} /></svg>,
   minus: () => <svg viewBox="0 0 16 16"><path d="M4 8h8" /></svg>,
   plus: () => <svg viewBox="0 0 16 16"><path d="M4 8h8M8 4v8" /></svg>,
   pencil: () => <svg viewBox="0 0 16 16"><path d="M10.5 3l2.5 2.5L6 12.5H3.5V10z" /></svg>,

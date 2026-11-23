@@ -365,9 +365,9 @@ export const stationOneTrack = signal(saved.build?.oneTrack === true);
 /** T-3999: what the station tool places: a train station or a tram stop (on its own kind of track, or on open ground with its own
  * piece), a BRT station beside a road, or a port with no ferry line yet; remembered in the browser. */
 export type StationKind = "rail" | "tram" | "bus" | "port";
-/** T-4105: what the player picked: a kind, or "auto", which takes the kind from what is under the pointer (the default for a browser that never picked). */
+/** T-4105: what the player picked: a kind, or "auto", which takes the kind from what is under the pointer (a browser that never picked starts on "rail"). */
 export type StationChoice = StationKind | "auto";
-export const stationChoice = signal<StationChoice>(["rail", "tram", "bus", "port"].includes(saved.build?.stationKind as string) ? (saved.build!.stationKind as StationKind) : "auto");
+export const stationChoice = signal<StationChoice>(["rail", "tram", "bus", "port"].includes(saved.build?.stationKind as string) ? (saved.build!.stationKind as StationKind) : saved.build?.stationKind === "auto" ? "auto" : "rail");
 /** T-4105: the kind "auto" has found under the pointer (map/stationAuto.ts) */
 export const autoKind = signal<StationKind>("rail");
 /** the kind the station tool places now: the pick, or under "auto" what the pointer is over */

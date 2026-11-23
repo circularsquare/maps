@@ -4,11 +4,12 @@ import { t as tr, tNumber } from "../i18n";
 import { type MapMouseEvent } from "maplibre-gl";
 import { EARTH_R } from "../game/frame";
 import { describeIssues } from "../game/issues";
-import { count, unitMetres, unitShort } from "../game/format";
+import { count, length, unitMetres, unitShort } from "../game/format";
 import { activeCity, getWorldFrame, worldFrameEpoch } from "../game/cities";
 import { cellModes, cityCells, demandView } from "../game/demand";
 import { metresBetween } from "../game/walks";
 import { stationKind, stationOnTram, tool } from "../game/ui";
+import { CORRIDOR_M } from "./busLayer";
 import { newStationName, trackDirection } from "./stationNames";
 import { edit, rightHand, say, stationNames, world } from "../game/world";
 import { type ClockEdge, type ClockNode } from "../workers/protocol";
@@ -209,7 +210,7 @@ export function askLegs(tk: Tools) {
   });
 }
 
-/** "12k trips within 1km" of the spot (T-412, T-1058; 1 mile in US units), from the cells behind
+/** "12k trips within 1km" of the spot (T-412, T-1058; 1 mile in US units; a BRT station counts within the bus corridor, T-4135), from the cells behind
  * the Homes and Destinations bubbles; null until they are in. A trip with both ends inside counts
  * twice, and a spot near a zone's edge counts the viewed zone's cells only. */
 export function tripsNear(tk: Tools, lng: number, lat: number): { text: string; legs: number } | null {
@@ -217,14 +218,14 @@ export function tripsNear(tk: Tools, lng: number, lat: number): { text: string; 
   const L = tk.legs;
   if (!L) return null;
   // the same answer until the pointer, the unit or the legs change: tk runs on every place()
-  const r = unitMetres(), kept = tk.nearKept;
+  const bus = stationKind.peek() === "bus", r = bus ? CORRIDOR_M : unitMetres(), kept = tk.nearKept;
   if (kept && kept.legs === L && kept.lng === lng && kept.lat === lat && kept.r === r) return kept.out;
-  const out = sumTripsNear(tk, L, lng, lat, r);
+  const out = sumTripsNear(tk, L, lng, lat, r, bus);
   tk.nearKept = { legs: L, lng, lat, r, out };
   return out;
 }
 
-export function sumTripsNear(_tk: Tools, L: NonNullable<Tools["legs"]>, lng: number, lat: number, r: number): { text: string; legs: number } | null {
+export function sumTripsNear(_tk: Tools, L: NonNullable<Tools["legs"]>, lng: number, lat: number, r: number, bus = false): { text: string; legs: number } | null {
   // the radius in world metres each way, so any frame's scale is right here
   const f = getWorldFrame();
   const [x, y] = f.fromLonLat(lng, lat);
@@ -240,7 +241,8 @@ export function sumTripsNear(_tk: Tools, L: NonNullable<Tools["legs"]>, lng: num
   // two significant figures: the figure is rough by nature
   const p = 10 ** Math.max(0, Math.floor(Math.log10(Math.max(sum, 1))) - 1), r2 = Math.round(sum / p) * p;
   const n = sum < 50 ? null : r2 >= 10000 ? count(r2) : tNumber(r2);
-  return { text: n === null ? tr("tools.nearUnder", { unit: unitShort() }) : tr("tools.near", { n, unit: unitShort() }), legs: sum };
+  const text = bus ? (n === null ? tr("tools.nearBusUnder", { distance: length(r) }) : tr("tools.nearBus", { n, distance: length(r) })) : n === null ? tr("tools.nearUnder", { unit: unitShort() }) : tr("tools.near", { n, unit: unitShort() });
+  return { text, legs: sum };
 }
 
 /** The station placed last in tk session (T-312), found by its position so a rename shows. */
@@ -423,22 +425,24 @@ export function boxGhost(tk: Tools, lx: number, ly: number, ways: ArrayLike<numb
 }
 
 export function stationRings(tk: Tools, h: Snap) {
-  const step = stationOnTram.peek() ? 0.5 : 1;
+  // T-4135: a BRT station has one ring, at the bus corridor's width
+  const bus = stationKind.peek() === "bus", step = stationOnTram.peek() ? 0.5 : 1;
   if (!tk.rings) {
     tk.rings=svgMark(tk, ["circle","text","circle","text"],true);
     tk.rings.setAttribute("class","station-rings");
   }
-  const unit=circleOnScreen([h.lx,h.ly,unitMetres()],(x,y)=>tk.screen(x,y),toLngLat,toLocal);
+  const unit=circleOnScreen([h.lx,h.ly,bus?CORRIDOR_M:unitMetres()],(x,y)=>tk.screen(x,y),toLngLat,toLocal);
   if (!unit) return;
   const {x:cx,y:cy,r:km1}=unit;
   tk.rings.style.display="";
   placeAt(tk.rings,cx,cy,0,0,false);
   const kids=tk.rings.children;
   for (let i=0;i<2;i++) {
-    const r=km1*step*(i+1), c=kids[i*2], t=kids[i*2+1];
+    const r=km1*(bus?1:step*(i+1)), c=kids[i*2], t=kids[i*2+1];
+    (c as SVGElement).style.display=(t as SVGElement).style.display=bus&&i?"none":"";
     c.setAttribute("r",String(r));
     t.setAttribute("y",String(-r-3));
-    t.textContent=`${tNumber(step*(i+1))} ${unitShort()}`;
+    t.textContent=bus?length(CORRIDOR_M):`${tNumber(step*(i+1))} ${unitShort()}`;
   }
 }
 
