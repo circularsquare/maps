@@ -1,6 +1,10 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3246 [P2] {L:wealth-split} Income groups for local trips (2026-11-23): closed without code: Anita 11-23: no, can re-drop it and maybe come back if we find lots of time savings.
+- T-4068 [P2] {L:small-fixes} Shift click deletes without asking (2026-11-23): Shift+click skips confirmation on six delete/remove controls, undo unchanged; irreversible deletes still ask; hover line Shift+click to skip confirmation (her wording). notes/T-4068.md.
+- T-4056 [P1] {L:buses} Bus walking reach back to 600 m (2026-11-23): BUS_REACH_M and the corridor outline back to 600 m, docs with it; tests 955 pass, smoke 30/30; c032 hidden. notes/T-4056.md.
+- T-4058 [P1] {L:route-choice} Check that first-arrival riding is what we want (2026-11-23): Seven setups played on master plus the real save: fine except branches on a shared trunk (riders change onto the train behind them, up to 57%); proposals filed as T-4064 for her; T-4063 filed (trip explorer error after a change). notes/T-4058.md.
 - T-4066 [P1] {L:accounts-server} Emails still sent past Resend's daily cap (2026-11-23): closed without code: Anita, 11-23: dont worry about resend its fine. Stopped before any finding.
 - T-4050 [P1] {L:route-choice} Lines on the same track and stops evenly spaced (2026-11-22): Built: lines on the same platforms and stops, rides within 0.5 min, not bus or ferry, pool as one evenly spaced service per stretch; 4/6, own platforms and riders past a split stay independent; real save unchanged (its lines have their own stations), stops-merged NYC +1.38% rail trips. notes/T-4050.md.
 - T-4041 [P1] {L:route-choice} Riders take the train that arrives first (2026-11-22): Built: first-arrival rule with 0.75 softening, late joins, street-tram stops at ground without boarding cost; Newark-Trenton 52% express; +45% solve time, +14% memory on the real save. notes/T-4041.md.

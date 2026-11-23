@@ -191,20 +191,16 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Found 11-22 by the batch checker and ordercheck (notes/T-4055.md): one edit reaching two new zones (a Philadelphia and a Providence line from NYC) gives the Philadelphia line 63,996 riders; separate edits or a reload give 68,341. The first solve is declared final on a market missing a pack that lands during it, and nothing re-solves; the next edit heals it. Older than T-1354; does not hold the publish. Reach: lines in newly reached zones show up to 6% too few riders until the next edit.
   - Goal: A pack opening that lands mid-solve makes that solve stale, so batch and separate edits give the same figure (about 1-2 h).
   - Other: notes/batchcheck14.md, notes/T-4055.md
-- T-4056 [P1] {L:buses} Bus walking reach back to 600 m (taking, 2026-11-23, agent busreach)
-  - Context: You, 11-23: "if we raised bus radius to 1km, lets lower it back to 600km as people are requesting we lower it back to 400m (which i dont want to do, but yeah it seems like a lot of people like the lower bus traffics)". T-3995 raised it 600 m -> 1 km on 11-21; not yet published, so live players never saw 1 km.
-  - Goal: BUS_REACH_M 600 again with its outline, docs and wiki; changelog item c032 hidden.
 - T-4057 [P1] {L:solve-speed} Solve speedups outside the first-arrival search (taking, 2026-11-23, agent solveprof)
   - Context: You, 11-23: "main goal for today is to hopefully find some compute time improvements to compensate for the better pathfinding that takes into account that express routes are faster." T-4054 works on the search and `pool_cost`; this one profiles the whole solve on the real save and other big cities and takes the biggest costs elsewhere.
   - Goal: The top costs of a full solve named with their share, and the biggest ones cut with the same answers.
-- T-4064 [P2] {L:route-choice} {waits:Anita} Riders stop changing onto a branch they could board at their station
-  - Need from Anita: Should riders bound for a branch stop riding the other branch's line to the split (or one stop back) to change onto their own? Recommended yes.
-  - Context: Found by T-4058: on two branches sharing a trunk, riders bound for one branch take the other line to the split and change to their own branch's train, which is the one right behind them: 10% with both every 10 min, 43% at 5 and 20, 57% at 4 and 60, and at 4/60 44% from the last trunk station ride one stop back to catch their branch there. The frequent line's riders come out too high, the rare branch's too low. Proposed: at a change, no line whose next stop is the station the rider just came from, and no line that was one evenly spaced service with the one they rode (T-4050). Same file as T-4054 (search.rs).
+- T-4064 [P1] {L:route-choice} Riders stop changing onto a branch they could board at their station
+  - Context: You, 11-23: "yes probably, makes more sense to just wait for a train that they can take all the way". Found by T-4058: on two branches sharing a trunk, riders bound for one branch take the other line to the split and change to their own branch's train, which is the one right behind them: 10% with both every 10 min, 43% at 5 and 20, 57% at 4 and 60, and at 4/60 44% from the last trunk station ride one stop back to catch their branch there. The frequent line's riders come out too high, the rare branch's too low. Proposed: at a change, no line whose next stop is the station the rider just came from, and no line that was one evenly spaced service with the one they rode (T-4050). Same file as T-4054 (search.rs).
   - Other: notes/T-4058.md
 - T-4075 [P2] {L:trains-drawn} Trams drawn off their track
   - Context: Your scratch pad, 11-23: "people also complain about trams sometimes visually drifting off the track. it looks pretty noticeable in some cases, it does not look aligned with the track and could be better." Picture: artifacts/trainworld/board/20261123-080850-1792.png (Nottingham, trams at Old Market Square and Lace Market sit beside the track). A player report 11-22 asks the same ("Make Trains/Tram accurately stay on track").
   - Goal: Trams and trains drawn on their track's line at every zoom, curves and stations included.
-- T-4076 [P2] {L:small-fixes} Track can't be placed on a tablet
+- T-4076 [P2] {L:small-fixes} Track can't be placed on a tablet (taking, 2026-11-23, agent touchtrack)
   - Context: Your scratch pad, 11-23, a Discord report: "I can't place any tracks on mobile (Firefox on an Android tablet). I can select the start point and even the end point (like in the screenshot), but the track is never actually placed down in the blueprint". Picture: artifacts/trainworld/board/20261123-081229-cce9.png. Reach: touch players on Firefox, maybe all touch.
   - Goal: Drawing track by touch puts it in the blueprint on Firefox Android and Chrome Android.
 - T-4063 [P3] {L:small-fixes} Trip explorer fails just after a change
@@ -214,9 +210,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4046 [P3] {L:small-fixes} Pick a route among overlapping bus and tram routes
   - Context: Your scratch pad, 11-22: "if we have a bus route and tram route perfectly overlapping theres no way to select the bus route. same for multiiple bus routes. ideally we try to "side by side" these". Picture: artifacts/trainworld/board/20261122-114726-b705.png.
   - Goal: Every route on a shared street can be clicked, ideally drawn side by side.
-- T-4068 [P2] {L:small-fixes} Shift click deletes without asking (taking, 2026-11-23, agent shiftdel)
-  - Context: Your scratch pad, 11-23: "some people want to remove / delete stuff without confirmation: maybe lets do shift click to do this (say in tooltip too in gray text (shift click to remove without confirmation))".
-  - Goal: Every delete or remove that asks first skips the question on Shift+click, and its hover says so in grey.
 - T-4069 [P2] {L:buses} Ctrl click places a bus stop without snapping (taking, 2026-11-23, agent busnosnap)
   - Context: Your scratch pad, 11-23: "someone dislikes how when even in manual bus stop placement mode, they get snapped sometimes to nearby stations and such. we can maybe ctrl click to override snapping? and show ghost to where it woudl actualyl be placed so theres no surprises after we click."
   - Goal: Ctrl+click puts a manual bus stop exactly where clicked, and the ghost always shows where the stop will land, snapped or not.
@@ -233,11 +226,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-3936 [P3] {L:route-choice} Intercity effective time for the route shown
   - Context: From T-3632, 11-21: the intercity panel's "Effective time" is the average over the whole place, not the route shown (Nagoya - Osaka: the route's own 136 min, the panel 237, the car 174), so a click beside a station reads as the train losing.
   - Goal: The panel shows the shown route's own effective time beside the car's.
-- T-3246 [P2] {L:wealth-split} {waits:Anita} Income groups for local trips
-  - Need from Anita: Build option A2 (poorest fifth, middle three fifths at today's weight, richest fifth; +8-10% solve time on Tokyo, +15-24% on New York, no memory) with rail riders by income shown in the city panel, or keep groups out? My pick: A2, but only if you want the split shown, since totals move under 1% and nobody changes trains.
-  - Context: The proposal is in the notes (your TODO 2026-11-15: "maybe actually we do add the wealth split ... perhaps we can even display this to the player"). With groups the poorest fifth ride 8% more than average and the richest 10% less, since the car's money weighs more on the poor. Fifths, not your 20/70/10, because the income table comes in fifths. The express-or-local split needs each group's own route choice (option C), about 3x the solve and +200 MB on Tokyo.
-  - Goal: Your pick of an option, then built with both ceiling tests still met.
-  - Other: Folds in T-1519. notes/T-3246.md
 - T-3247 [P2] {L:attractions} {after:next world rebuild} Beach towns and attractions
   - Context: Your 2026-11-11 note: "we can sorta do that. capri included i guess. perhaps on a local scale we should also maybe add beaches as attractions if they are not there?"
   - Goal: Beach and resort towns get long-trip pull (with T-3240), beaches are local attractions where missing, and attraction sources are surveyed.

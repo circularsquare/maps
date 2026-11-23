@@ -33,7 +33,7 @@ line through its `{L:<slug>}` tag. Areas are the board's rows. Format and the bo
 
 - airports | Airport demand | How many trips airports make and where their jobs sit; players say several airports are too low.
 - attractions | Attractions and beaches | Where attractions come from and filling the gaps outside Europe, Japan, Korea and the US, beaches included.
-- wealth-split | Wealth split | Rich and poor riders choosing differently, so some take the express and some the local.
+- wealth-split | Wealth split | Rich and poor riders choosing differently, so some take the express and some the local. | done:2026-11-23
 - jobs-places | Jobs, schools and hospitals | Where people work and study, by country: census job sources, industrial areas, campuses, hospitals.
 - census-totals | Census population | Putting each country's people on its own census totals instead of the satellite estimate.
 - region-redraws | Region redraws | Region shapes and names: split or odd regions, regions in pieces, empty units, coasts and islands.
