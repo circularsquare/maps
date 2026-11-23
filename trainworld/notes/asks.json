@@ -12,12 +12,5 @@
     "text": "Spanish internet providers block Cloudflare's shared addresses during football matches, and both the game and its data sit on them, so Spanish players on those providers can't load the game then (one report; the account server isn't on Cloudflare). A fallback host off Cloudflare would be 4-6 h plus an extra upload every publish. Leave it (T-4074)? I'd leave it.",
     "since": "2026-11-23",
     "by": "maps-44"
-  },
-  {
-    "id": "a-2026-11-23-7",
-    "title": "Land two small shifting speedups",
-    "text": "On the real NYC save: (1) no late joins at change stations saves about 3-4% of the solve and moves rail trips +0.002% (0.075% of boardings; biggest single line +3.3%, Newark Light Rail); (2) fewer points in the shared-platform math saves about 2.5% and moves rail trips +0.005% (0.056% of boardings; biggest +0.9%, LIRR West Hempstead). A gentler (2), at 3 points, saves about 1% with essentially no change. Land (1) and (2)? I'd land both: no player could tell.",
-    "since": "2026-11-23",
-    "by": "maps-44"
   }
 ]
