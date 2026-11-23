@@ -6,12 +6,12 @@ Updated: 2026-11-23 12:41 UTC
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5.
 
 ## Running (11-23 13:00 UTC): solvespeed T-4054, solveprof T-4057, ridecheck T-4058, busreach T-4056 (Sonnet),
-hokkaido T-3688, trackg T-4037 design, resendcap T-4066 (Sonnet, read-only). Trees bigload/stalefinal made and removed (T-4051, T-4055 not started).
+hokkaido T-3688, trackg T-4037 design.
 
 ## Next (11-23)
 0. Her goals today, 11-23: compute speedups for T-4041 (main), polish/check first-arrival riding, bus reach back to
    600 m, track rework all week. 2-8 agents this week ("more focused work"), not 4-12. Speedups may shift riders
-   (orchestrator.md, trial). Resend mails past the cap: T-4066 (resendcap). Publish: "we will see", don't ask.
+   (orchestrator.md, trial). Resend over its cap is fine (her 11-23). Publish: "we will see", don't ask.
 1. PUBLISH when ready (never ask her when): can ship on freeze 20261122-044711 (has Manila,
    Muzaffarpur and the old Hokkaido; data/packs lacks old Hokkaido until hokkaido lands). Landed since
    v0.4.5 and checked (batch 13 on 547389c2; batch 14 and 15 on master 5e4ac09f): T-4041 riders take the line that

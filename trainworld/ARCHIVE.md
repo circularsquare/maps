@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4066 [P1] {L:accounts-server} Emails still sent past Resend's daily cap (2026-11-23): closed without code: Anita, 11-23: dont worry about resend its fine. Stopped before any finding.
 - T-4050 [P1] {L:route-choice} Lines on the same track and stops evenly spaced (2026-11-22): Built: lines on the same platforms and stops, rides within 0.5 min, not bus or ferry, pool as one evenly spaced service per stretch; 4/6, own platforms and riders past a split stay independent; real save unchanged (its lines have their own stations), stops-merged NYC +1.38% rail trips. notes/T-4050.md.
 - T-4041 [P1] {L:route-choice} Riders take the train that arrives first (2026-11-22): Built: first-arrival rule with 0.75 softening, late joins, street-tram stops at ground without boarding cost; Newark-Trenton 52% express; +45% solve time, +14% memory on the real save. notes/T-4041.md.
 - T-3691 [P3] {L:track-rework} Track levels -5 to +5 (2026-11-22): Levels -5 to +5 behind 'Use levels -5 to +5' in Settings > Game; new levels priced on from the old tables; +3 periwinkle; saves unchanged; smoke 30/30. notes/T-3691.md.
