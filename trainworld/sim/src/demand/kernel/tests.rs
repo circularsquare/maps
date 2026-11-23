@@ -1,15 +1,15 @@
 use super::*;
 use crate::demand::{network, synth};
 
-/// T-434: the first round always runs; a later one is skipped once the loads move under 1%.
+/// T-434: the first round always runs; a later one is skipped once the loads move under 3%.
 #[test]
 fn crowding_rounds_stop_once_settled() {
     let mut seen = vec![];
     assert!(!settled(&mut seen, &[100.0, 100.0]));
-    assert!(!settled(&mut seen, &[100.0, 98.0]));
-    assert!(settled(&mut seen, &[100.0, 96.5]));
-    assert!(seen == [100.0, 98.0]);
-    assert!(!settled(&mut seen, &[100.0, 95.0]));
+    assert!(!settled(&mut seen, &[100.0, 90.0]));
+    assert!(settled(&mut seen, &[100.0, 87.0]));
+    assert!(seen == [100.0, 90.0]);
+    assert!(!settled(&mut seen, &[100.0, 80.0]));
 }
 
 fn common_test_net(lines: &[&[u32]], tph: &[f32], ride: &[f32]) -> Network {

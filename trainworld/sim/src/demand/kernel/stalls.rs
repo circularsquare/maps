@@ -150,7 +150,7 @@ pub fn round_costs(g: &Graph, net: &Network, p: &Params, total: &[f32]) -> Optio
 
 /// A period's crowding rounds stop once one moves its summed segment loads by under this share,
 /// rider weighted (T-434); the driver caps them at three.
-pub const SETTLED: f64 = 0.01;
+pub const SETTLED: f64 = 0.03;
 
 /// Whether a period's next crowding round is skipped (T-434): `seg`, the segment loads it would be
 /// priced on, is within `SETTLED` of those the round before was priced on, kept in `seen`. The first

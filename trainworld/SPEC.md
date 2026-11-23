@@ -138,7 +138,7 @@ institutions** (prisons, nursing homes and the like, T-234).
   centres [T-717]; a train's or tram's first boarding and last alighting, 2
   each, at any level [T-3888, T-3910]), fare-sensitive choice between rail and driving, and up to three crowding
   rounds that price crowded trains and riders left behind by full ones [T-188]; a period stops
-  once a round moves its loads under 1% [T-434]. Riders choose among station pairs by how much
+  once a round moves its loads under 3% [T-434, T-4093]. Riders choose among station pairs by how much
   slower an option is relative to the trip's length: the scale is 20 over the trip's rough length
   in perceived minutes (25 + 3 a straight km), in four distance bands, the regional layer's trips
   too [T-718]; past 60 minutes it softens further, times sqrt(60 / T) (T the car's perceived
