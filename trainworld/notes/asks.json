@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "id": "a-2026-11-23-2",
+    "title": "Branch riders change onto their own line",
+    "text": "Riders bound for a branch on a shared trunk ride the other branch's line to the split and change onto the train right behind them: 10% when both run every 10 min, 43% at every 5 / every 20, 57% at every 4 / every 60, and at that last one 44% from the last trunk station ride one stop back to catch their branch. Fix: at a change, a rider never boards a line whose next stop is where they just came from, or a line that ran as one evenly spaced service with the line they just left. Doesn't change the real NYC save. Go ahead? Recommended yes (T-4064).",
+    "since": "2026-11-23",
+    "by": "maps-44"
+  }
+]
