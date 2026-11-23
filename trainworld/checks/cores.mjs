@@ -3,6 +3,9 @@
 //   TW_CORES=n          use n cores, no ledger claim (the caller owns the budget)
 //   TW_CORE_MASK=0xC000 which cores (hex mask); default: the top cores down, skipping those a live check holds
 //   TW_CORES_WANT=n     cores to ask the ledger for when TW_CORES is unset (default 3)
+//   TW_CORES_MIN=n      take fewer than asked, down to n (default 2); the claim waits until n are free, up to
+//                       TW_CORES_TIMEOUT seconds (default 1800), then the check stops: it never runs over the cap
+// A process that holds its own claim and starts checks (perf_bench) sets TW_CORES for them, or they would wait for it.
 //   TW_NOPIN=1          no pinning and no ?demandWorkers (timing runs against a quiet machine)
 // With TW_CORES unset it claims from the ledger (`python cores.py claim`, at the maps root) and
 // releases at exit. The page gets ?demandWorkers = cores - 1 (at least 1), added by an init script.
@@ -47,9 +50,10 @@ export function corePlan() {
   else {
     const name = `check-${basename(process.argv[1] ?? 'node').replace(/\.mjs$/, '')}-${process.pid}`;
     const want = Number(process.env.TW_CORES_WANT ?? 3);
-    const r = spawnSync('python', [MAPS + 'cores.py', 'claim', String(want), name, '--pid', String(process.pid), 'Playwright check'], { encoding: 'utf8', windowsHide: true });
+    const min = Math.min(want, Number(process.env.TW_CORES_MIN ?? 2));
+    const r = spawnSync('python', [MAPS + 'cores.py', 'claim', String(want), name, '--pid', String(process.pid), '--min', String(min), '--timeout', String(process.env.TW_CORES_TIMEOUT ?? 1800), 'Playwright check'], { encoding: 'utf8', windowsHide: true, stdio: ['ignore', 'pipe', 'inherit'] });
     n = Number(r.stdout?.trim().split('\n').at(-1));
-    if (!(n >= 1)) n = 1;
+    if (r.status !== 0 || !(n >= 1)) { console.error('no cores from the ledger (see above); not running'); process.exit(2); }
     claimed = name;
   }
   const reg = readRegistry();

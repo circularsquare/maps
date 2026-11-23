@@ -220,8 +220,9 @@ class Run:
     def go(self, start):
         sys.path.insert(0, str(HERE))
         import shared_lock
+        # waits until all jobs are free (a claim is never granted past the cap); exits if none come
         subprocess.run([PY, MAPS / "cores.py", "claim", str(self.jobs), "light-pass", "--pid", str(os.getpid()),
-                        f"T-3244 light pass {self.batch}"], cwd=str(MAPS))
+                        f"T-3244 light pass {self.batch}"], cwd=str(MAPS), check=True)
         print(f"light pass {self.batch}: {len(self.air)} packs with airports, {len(self.rest)} without; jobs {self.jobs}; "
               f"logs {self.logs}", flush=True)
         t0 = time.time()

@@ -24,8 +24,10 @@ WANT = 3
 
 
 def claim(name):
-    r = subprocess.run([sys.executable, MAPS_CORES, "claim", str(WANT), name, "--pid", str(os.getpid()), "Rust build"],
-                       capture_output=True, text=True)
+    r = subprocess.run([sys.executable, MAPS_CORES, "claim", str(WANT), name, "--pid", str(os.getpid()),
+                        "--min", "2", "Rust build"], stdout=subprocess.PIPE, text=True)   # stderr: the waiting line
+    if r.returncode:
+        sys.exit("no cores from the ledger (see above); not building")
     last = (r.stdout.strip().splitlines() or ["1"])[-1]
     try:
         return max(1, min(WANT, int(last.split()[0])))

@@ -5,21 +5,37 @@
     python cores.py release religiondots-build
     python cores.py cap          # show the cap
     python cores.py cap 12       # set it (1-16); default 10
+    python cores.py total        # exit 3 when over the cap
 
 The machine has 16 cores.  Anita's cap is about 10 in all, every agent together, while she is
 using it, and 12-15 overnight or while she is away.  Set the cap when that changes.
 
-A claim never blocks or fails.  It grants min(n, free cores), at least 1, and prints that number
-as its last line, so a script can read it:
+A claim is never granted past the cap.  If fewer than n cores are free it prints one line
+("waiting for 8 cores: cap 14, claimed 14") and re-checks every few seconds until they are, then
+prints the number granted as its last line (the waiting line goes to stderr), so a script can read it:
 
     jobs=$(python cores.py claim 8 mybuild --pid $$ | tail -n 1)
 
-Size --jobs or workers to the number printed.  Nothing is enforced on any process; this is a
-promise between agents.  A claim whose PID is no longer running is dropped on the next call, so
+    --min m        take fewer than asked: granted once at least m are free (then min(n, free)).
+                   Default m = n.  Size --jobs or workers to the number printed.
+    --timeout s    give up after s seconds (default 1800): prints why on stderr, exits 2, claims
+                   nothing.  Always check the exit code.
+    --timeout 0    do not wait: grant or fail at once.
+
+A claim never waits on itself: the claim being replaced (same name) counts as free.  A process
+that holds a claim and starts a child that claims again must give the child no claim of its own
+(checks/cores.mjs honours TW_CORES), or the child waits for the parent's cores until its timeout.
+
+    python cores.py total [--since EPOCH]   exit 0 if claimed <= cap (and, with --since, the ledger
+                   was never seen over the cap since then), else exit 3: a timing run calls it
+                   before and after and refuses to record a time when it fails.
+
+Nothing is enforced on any process; this is a promise between agents.  A claim whose PID is no longer running is dropped on the next call, so
 a job that dies releases its cores without anyone remembering to.  A claim made without --pid
 is dropped after 6 hours instead.  Claiming a name that already exists replaces that claim.
 
-The ledger is cores.json beside this file.  Standard library only.
+The ledger is cores.json beside this file (CORES_LEDGER=<path> overrides it, for tests).  Standard
+library only.
 """
 import json
 import os
@@ -28,7 +44,7 @@ import sys
 import time
 
 HERE = pathlib.Path(__file__).resolve().parent
-LEDGER = HERE / "cores.json"
+LEDGER = pathlib.Path(os.environ["CORES_LEDGER"]).resolve() if os.environ.get("CORES_LEDGER") else HERE / "cores.json"
 MACHINE = 16
 DEFAULT_CAP = 10
 NO_PID_HOURS = 6
@@ -66,7 +82,7 @@ def alive(pid):
 
 class Locked:
     """Agents in different sessions claim at once; without this one write can undo another."""
-    path = HERE / "cores.json.lock"
+    path = LEDGER.with_name(LEDGER.name + ".lock")
 
     def __enter__(self):
         for _ in range(100):
@@ -88,18 +104,26 @@ class Locked:
 
 def load():
     """(cap, claims) from cores.json; defaults if it is missing or half-written."""
+    global OVER
     try:
         data = json.loads(LEDGER.read_text(encoding="utf-8"))
         cap = int(data.get("cap", DEFAULT_CAP))
         claims = [c for c in data.get("claims", []) if isinstance(c, dict) and "name" in c]
+        OVER = float(data.get("over", 0))
         return cap, claims
     except (OSError, ValueError, TypeError, AttributeError):
         return DEFAULT_CAP, []
 
 
+OVER = 0.0      # when a call last saw the ledger over its cap (epoch seconds); see "total --since"
+
+
 def save(cap, claims):
+    global OVER
+    if claimed(claims) > cap:
+        OVER = time.time()
     tmp = LEDGER.with_suffix(".json.tmp")
-    tmp.write_text(json.dumps({"cap": cap, "claims": claims}, indent=2, ensure_ascii=False) + "\n",
+    tmp.write_text(json.dumps({"cap": cap, "claims": claims, "over": OVER}, indent=2, ensure_ascii=False) + "\n",
                    encoding="utf-8")
     for _ in range(20):
         try:
@@ -163,18 +187,47 @@ def cmd_list():
     update(change)
 
 
-def cmd_claim(n, name, pid, note):
+def cmd_claim(n, name, pid, note, low, timeout):
     def change(cap, claims):
-        others = [c for c in claims if c["name"] != name]
-        free = max(0, cap - claimed(others))
-        granted = max(1, min(n, free))
+        want = min(n, cap)          # asking for more than the cap could never be granted
+        need = min(low, want)
+        others = [c for c in claims if c["name"] != name]     # a claim never waits on its own
+        held = claimed(others)
+        free = max(0, cap - held)
+        if free < need:
+            return None, f"waiting for {need} cores: cap {cap}, claimed {held}"
+        granted = min(want, free)
         claims[:] = others + [{"name": name, "cores": granted, "pid": pid, "note": note,
                                "t": int(time.time())}]
         if granted < n:
-            print(f"asked for {n}, cap is {cap} and others hold {claimed(others)}: "
-                  f"granted {granted}")
-        return granted
-    print(update(change))
+            print(f"asked for {n}, cap is {cap} and others hold {held}: granted {granted}")
+        return granted, None
+    start = last_said = time.time()
+    said = None
+    while True:
+        granted, why = update(change)
+        if granted is not None:
+            print(granted)
+            return
+        if why != said or time.time() - last_said > 300:
+            print(why, file=sys.stderr, flush=True)       # stdout stays the number alone
+            said, last_said = why, time.time()
+        if time.time() - start >= timeout:
+            print(f"cores.py: {name} gave up after {int(time.time() - start)} s, {why}; nothing claimed",
+                  file=sys.stderr)
+            sys.exit(2)
+        time.sleep(min(3, max(0.1, timeout - (time.time() - start))))
+
+
+def cmd_total(since):
+    def change(cap, claims):
+        total = claimed(claims)
+        over = total > cap or (since is not None and OVER and OVER >= since)
+        print(f"claimed {total} of cap {cap}" + (" (over)" if total > cap else "")
+              + (f", ledger was over the cap at {int(OVER)}" if since is not None and OVER and OVER >= since else ""))
+        return over
+    if update(change):
+        sys.exit(3)
 
 
 def cmd_release(name):
@@ -220,13 +273,26 @@ def main():
             sys.exit("--pid needs a process id")
         pid = number(args[i + 1], "--pid")
         del args[i:i + 2]
+    opts = {}
+    for flag in ("--min", "--timeout", "--since"):
+        if flag in args:
+            i = args.index(flag)
+            if i + 1 >= len(args):
+                sys.exit(f"{flag} needs a number")
+            opts[flag] = number(args[i + 1], flag)
+            del args[i:i + 2]
     if args == ["list"] and pid is None:
         return cmd_list()
+    if args == ["total"]:
+        return cmd_total(opts.get("--since"))
     if args[:1] == ["claim"] and len(args) in (3, 4):
         n = number(args[1], "cores")
         if n < 1:
             sys.exit("claim at least 1 core")
-        return cmd_claim(n, args[2], pid, args[3] if len(args) == 4 else "")
+        low = opts.get("--min", n)
+        if low < 1:
+            sys.exit("--min is at least 1")
+        return cmd_claim(n, args[2], pid, args[3] if len(args) == 4 else "", low, opts.get("--timeout", 1800))
     if args[:1] == ["release"] and len(args) == 2:
         return cmd_release(args[1])
     if args[:1] == ["cap"] and len(args) in (1, 2):
