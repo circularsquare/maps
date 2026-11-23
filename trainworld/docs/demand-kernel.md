@@ -156,8 +156,8 @@ levels:
    every 5 really wait about 1.9 minutes, not 1.67); the cost is continuous but a line's share is
    not: one dearer (a fare, crowding) by less than half the other's headway keeps its trains-an-hour
    share, by more it gets none, so crowding can move a line of a pair in and out between rounds;
-   a line of the service taken to the split and a change there sometimes beats waiting, though its
-   train runs just ahead of the one it changes to.
+   riders past the split wait for their own line at their own station (no change onto the line
+   right behind their train, below).
    **The service span** (T-842, Anita 2026-10-21: "demand should know the schedule, roughly").
    Riders differ in how long they would wait for the next train rather than go another way: the
    tolerance is spread log-uniformly from 30 minutes to 6 hours (half of riders take up to 1.7 h;
@@ -212,7 +212,11 @@ levels:
    queue (a slower line that could still come first; T-4054, Anita 11-23); and lines being independent, a frequent line to a junction is sometimes taken to
    change there, its train not timed with the other line's. **A rider
    never changes onto the line they left towards the stop they came from** (Anita, T-575), **nor
-   towards the one their train goes on to**: where full trains leave riders behind they wait at
+   towards the one their train goes on to**, **nor onto any line towards the stop they came from,
+   nor onto a line that ran one evenly spaced service with theirs on the stop they just rode**
+   (`Graph::rn_even`, above: its train is right behind theirs; T-4064, Anita 2026-11-23: "makes
+   more sense to just wait for a train that they can take all the way"), so riders bound past a
+   split wait for their own branch where they start: where full trains leave riders behind they wait at
    their station, and the trip explorer shows that wait in the boarding, rather than ride the
    other way to board upstream. Where the line passes the station again (a lollipop's junction, a
    line turning back at a stop it passed before) its departures towards other stops are open, at
@@ -225,7 +229,7 @@ levels:
    walk over and ride on, or back around the bend from the far side, where that beats riding
    round; a walk to the next stop or the last one never rides the line back. A station whose
    strategy boards a departure barred to some arrival has a change node for those arrivals (one
-   per line and the barred departures' next stops, at most two, else the whole line), with its own strategy over the
+   per line and the barred departures' next stops, at most two, else the whole line, and the T-4064 bars, `Bar`), with its own strategy over the
    departures left; one with no other departure has none, and the alighting there leads nowhere
    for this destination. A rider may still ride out on one line and back on another (another line
    from the stop upstream, or one parallel to the full line), as any change is allowed. A rider leaving

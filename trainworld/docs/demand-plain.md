@@ -142,7 +142,8 @@ only reach stations on it. The city panel counts these trips as "No route" until
   and two lines every 10 minutes mean waiting 2.5 minutes, people splitting by trains an hour. Where
   one line skips a stop (the 4 beside the 6), stops at its own platform, or is a bus, they stay
   separate as above. On a shared trunk that splits into branches, people going past the split
-  wait for their own branch's train as above.
+  wait for their own branch's train at their own station (Anita, 2026-11-23): nobody rides the
+  other branch's train to the split to change there, since their own runs right behind it.
 - No train for hours: people differ in how long they would wait for the next train rather than go
   another way, from half an hour to 6 hours (half of them up to about 1 hour 45). At each stop and
   time of day the game works out what share of that period's riders have a train coming within
@@ -163,8 +164,8 @@ only reach stations on it. The city panel counts these trips as "No route" until
   two stations the player joined by a passage the walk is the straight line at 2 m/s, moving
   walkways: 300 m takes 2.5 minutes rather than 5.4. A bus stop changes on foot only within 150 m, and a
   walk at a bus stop or BRT station with no passage takes a minute more (T-4079). Inside a station building the player drew,
-  the fixed 2 minutes count 1, and the wait counts as in a waiting room; the walk is as anywhere. Nobody changes back onto the line they just
-  left to go back the way they came: on a full line people wait at their station. Where a line
+  the fixed 2 minutes count 1, and the wait counts as in a waiting room; the walk is as anywhere. Nobody changes onto a line going back the
+  way they came: on a full line people wait at their station. Where a line
   comes back through a station (a loop on a stalk), people may change there onto the same line
   heading somewhere else, like any change.
 - A trip can start or end with a walk from its station to another within 300 m (or anywhere in

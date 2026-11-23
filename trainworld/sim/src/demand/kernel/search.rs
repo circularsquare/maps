@@ -1255,7 +1255,7 @@ impl<'a> DestSearch<'a> {
         assert_eq!(a.board, b.board, "T-2652: accepted departures towards {dst}");
         assert_eq!(bits(&a.offer), bits(&b.offer), "T-2652: offers towards {dst}");
         assert_eq!(sorted(&a.order), sorted(&b.order), "T-2652: settled nodes towards {dst}");
-        let cn = |q: &Search| q.cn.iter().map(|c| (c.st, c.line, c.ban, c.cut.to_bits(), c.n, c.dist.to_bits(), c.done, c.feed, c.bits)).collect::<Vec<_>>();
+        let cn = |q: &Search| q.cn.iter().map(|c| (c.st, c.line, c.ban, c.back, c.even, c.cut.to_bits(), c.n, c.dist.to_bits(), c.done, c.feed, c.bits)).collect::<Vec<_>>();
         assert_eq!(cn(a), cn(b), "T-2652: change nodes towards {dst}");
         assert_eq!((&a.cn_bits, &a.cn_feed), (&b.cn_bits, &b.cn_feed), "T-2652: change nodes' departures towards {dst}");
         assert_eq!(a.share, b.share, "T-2652: departures' shares towards {dst}");
@@ -1463,6 +1463,10 @@ pub(super) struct Change {
     pub(super) st: u32,
     pub(super) line: u32,
     pub(super) ban: [u32; 2],
+    /// T-4064: the station whose way every departure is barred, and the evenly spaced service whose
+    /// departures are (`Search::xbar`); `NONE` for none
+    pub(super) back: u32,
+    pub(super) even: u32,
     pub(super) cut: f32,
     /// How many lines it accepts, and their list in `Search::lines_at` (cost from boarding,
     /// departures an hour, route node, next; `NONE` ends it).
@@ -1511,7 +1515,7 @@ pub(super) struct Search<'a> {
     pub(super) lines: Vec<u32>,
     /// A settling station's change nodes to be, (line, `ban`), and (index in `keys`, incoming
     /// edge) for its arrivals that need one.
-    pub(super) keys: Vec<(u32, [u32; 2])>,
+    pub(super) keys: Vec<Bar>,
     pub(super) feed: Vec<(u32, u32)>,
     /// Each route node's next and previous stop, past a circle's stand at its own station.
     pub(super) nst: Vec<u32>,
@@ -1566,6 +1570,11 @@ pub(super) struct Search<'a> {
     pub(super) banned_off: Vec<u32>,
     pub(super) banned: Vec<u32>,
     pub(super) banned_all: Vec<bool>,
+    /// T-4064: per route node, what an arrival off it at its own station is barred beyond its own
+    /// line's departures (`Bar`'s `back` and `even`, `NONE` where nothing there is), and per route
+    /// node the evenly spaced service of the route node riding into it (empty while none is)
+    pub(super) xbar: Vec<(u32, u32)>,
+    pub(super) prev_even: Vec<u32>,
     /// T-3295: per route node, its stop's place in its line's list, its way along it (1 out, -1
     /// back) and, for a circle, its number of stops (0 otherwise), for `walk_ban`.
     pub(super) at: Vec<(i32, i32, i32)>,
@@ -1636,6 +1645,26 @@ pub(super) fn barred(g: &Graph, nst: &[u32], r: usize, line: u32, ban: [u32; 2])
     g.rn_line[r] == line && (ban == WHOLE || ban.contains(&nst[r]))
 }
 
+/// What a change node bars: its line's departures (`line`, `ban`: `barred`) and, T-4064 (Anita
+/// 11-23: "makes more sense to just wait for a train that they can take all the way"), any line's
+/// towards the station the rider came from (`back`), and the departures of the evenly spaced service
+/// they rode in on (`even`, T-4050: that train is right behind theirs). `NONE` bars nothing.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub(super) struct Bar {
+    pub(super) line: u32,
+    pub(super) ban: [u32; 2],
+    pub(super) back: u32,
+    pub(super) even: u32,
+}
+
+impl Search<'_> {
+    /// Whether `b` bars route node `r`.
+    #[inline(always)]
+    pub(super) fn bars(&self, r: usize, b: Bar) -> bool {
+        barred(self.g, &self.nst, r, b.line, b.ban) || (b.back != NONE && self.nst[r] == b.back) || (b.even != NONE && self.prev_even[r] == b.even)
+    }
+}
+
 impl Search<'_> {
     pub(super) fn new<'a>(g: &'a Graph, p: &'a Params) -> Search<'a> {
         let (s, n) = (g.n_st, g.n);
@@ -1687,6 +1716,23 @@ impl Search<'_> {
             }
             banned_off[a + 1] = banned.len() as u32;
         }
+        // T-4064: per arrival at its own station, the bars beyond its own line's departures that
+        // some other line's departure there meets
+        let prev_even: Vec<u32> = if g.rn_even.is_empty() { vec![] } else { back.iter().map(|&b| if b == NONE { NONE } else { g.rn_even[b as usize] }).collect() };
+        let xbar: Vec<(u32, u32)> = (0..nr)
+            .map(|a| {
+                let (v, line, from) = (g.rn_station[a] as usize, g.rn_line[a], pst[a]);
+                let even = if prev_even.is_empty() { NONE } else { prev_even[a] };
+                let (mut xb, mut xe) = (NONE, NONE);
+                for e in g.adj_off[v] as usize..g.adj_off[v + 1] as usize {
+                    let r = g.adj_to[e] as usize - s;
+                    if g.rn_line[r] == line || g.rn_tph[r] == 0.0 { continue; }
+                    if from != NONE && nst[r] == from { xb = from; }
+                    if even != NONE && prev_even[r] == even { xe = even; }
+                }
+                (xb, xe)
+            })
+            .collect();
         // a line's route nodes are its stops out, then back in reverse (`build_graph`)
         let mut at = vec![(0, 1, 0); nr];
         let mut r0 = 0;
@@ -1810,6 +1856,8 @@ impl Search<'_> {
             banned_off,
             banned,
             banned_all,
+            xbar,
+            prev_even,
             at,
         }
     }
@@ -2351,8 +2399,9 @@ impl Search<'_> {
         let (a, b) = self.cn_of[from];
         let i = self.edge_ix[r] as usize;
         for k in a as usize..b as usize {
+            let c = &self.cn[k];
+            if c.done || !(d < c.cut) || self.bars(r, Bar { line: c.line, ban: c.ban, back: c.back, even: c.even }) { continue; }
             let c = &mut self.cn[k];
-            if c.done || !(d < c.cut) || barred(g, &self.nst, r, c.line, c.ban) { continue; }
             c.cut = c.cut.min(d + spread);
             c.n += 1;
             self.cn_bits[c.bits as usize + i / 64] |= 1 << (i % 64);
@@ -2378,19 +2427,26 @@ impl Search<'_> {
     /// the one their train goes on to; a line passing `v` again leaves it for other stops, so a rider
     /// off a lollipop's loop may change at its junction onto the line on round (T-1268). A walk from
     /// another station takes the line only away from where they rode (`walk_ban`, T-3295).
-    pub(super) fn ban(&self, a: usize, v: usize) -> Option<(u32, [u32; 2])> {
+    pub(super) fn ban(&self, a: usize, v: usize) -> Option<Bar> {
         let g = self.g;
         let line = g.rn_line[a];
-        if !self.lines.contains(&line) { return None; }
-        if g.rn_station[a] as usize != v { return self.walk_ban(a, v, line); }
-        let boarded = self.banned[self.banned_off[a] as usize..self.banned_off[a + 1] as usize].iter().any(|&r| self.board[r as usize >> 6] >> (r & 63) & 1 == 1);
-        if !boarded {
-            None
-        } else if self.banned_all[a] {
-            Some((line, WHOLE))
-        } else {
-            Some((line, ban_of(&self.pst, &self.nst, a)))
+        let own = g.rn_station[a] as usize == v;
+        let (back, even) = if own { self.xbar[a] } else { (NONE, NONE) };
+        let lb = if self.banned_all[a] { WHOLE } else { ban_of(&self.pst, &self.nst, a) };
+        if back != NONE || even != NONE {
+            // T-4064: barred beyond its own line's departures, where the strategy boards one
+            let b = Bar { line, ban: lb, back, even };
+            let s = self.s;
+            let hit = (g.adj_off[v] as usize..g.adj_off[v + 1] as usize).any(|e| {
+                let r = g.adj_to[e] as usize - s;
+                self.board[r >> 6] >> (r & 63) & 1 == 1 && self.bars(r, b)
+            });
+            return hit.then_some(b);
         }
+        if !self.lines.contains(&line) { return None; }
+        if !own { return self.walk_ban(a, v, line).map(|(line, ban)| Bar { line, ban, back: NONE, even: NONE }); }
+        let boarded = self.banned[self.banned_off[a] as usize..self.banned_off[a + 1] as usize].iter().any(|&r| self.board[r as usize >> 6] >> (r & 63) & 1 == 1);
+        boarded.then_some(Bar { line, ban: lb, back: NONE, even: NONE })
     }
 
     /// `ban` for a rider walking to `v` off route node `a` of `line` (T-3295): barred are the
@@ -2518,7 +2574,7 @@ impl Search<'_> {
                 continue;
             }
             match self.ban(from - s, v) {
-                Some((l, WHOLE)) if l == self.lone[v] => {}
+                Some(Bar { line: l, ban: WHOLE, .. }) if l == self.lone[v] => {}
                 Some(key) => {
                     let k = self.keys.iter().position(|&x| x == key).unwrap_or_else(|| {
                         self.keys.push(key);
@@ -2530,17 +2586,17 @@ impl Search<'_> {
             }
         }
         for ki in 0..self.keys.len() {
-            let (line, ban) = self.keys[ki];
+            let bar = self.keys[ki];
             let k = self.cn.len();
             let b0 = self.cn_bits.len();
             self.cn_bits.resize(b0 + (e1 - e0).div_ceil(64), 0);
-            let mut c = Change { st: v as u32, line, ban, cut: f32::INFINITY, n: 0, head: NONE, dist: f32::INFINITY, done: true, feed: (0, 0), bits: b0 as u32 };
+            let mut c = Change { st: v as u32, line: bar.line, ban: bar.ban, back: bar.back, even: bar.even, cut: f32::INFINITY, n: 0, head: NONE, dist: f32::INFINITY, done: true, feed: (0, 0), bits: b0 as u32 };
             let mut at = self.st_head[v];
             while at != NONE {
                 let (d, f, r, nx) = self.lines_at[at as usize];
                 at = nx;
                 let ru = r as usize;
-                if self.board[ru >> 6] >> (ru & 63) & 1 == 0 || barred(g, &self.nst, ru, line, ban) {
+                if self.board[ru >> 6] >> (ru & 63) & 1 == 0 || self.bars(ru, bar) {
                     continue;
                 }
                 let e = self.edge_ix[ru] as usize;
@@ -2791,7 +2847,7 @@ impl Search<'_> {
             let from = g.rev_from[j] as usize;
             if self.done[from] { continue; }
             match self.ban(from - s, v) {
-                Some((line, WHOLE)) if line == lone => {}
+                Some(Bar { line, ban: WHOLE, .. }) if line == lone => {}
                 Some(key) => {
                     let k = self.keys.iter().position(|&x| x == key).unwrap_or_else(|| {
                         self.keys.push(key);
@@ -2808,14 +2864,14 @@ impl Search<'_> {
         let first = self.cn.len() as u32;
         if !self.feed.is_empty() && lone != NONE {
             for ki in 0..self.keys.len() {
-                let (line, ban) = self.keys[ki];
+                let bar = self.keys[ki];
                 let f0 = self.cn_feed.len();
                 self.cn_feed.extend(self.feed.iter().filter(|f| f.0 == ki as u32).map(|f| f.1));
                 if self.cn_feed.len() == f0 { continue; }
                 self.cand.clear();
                 for e in e0..e1 {
                     let r = g.adj_to[e] as usize - s;
-                    if !barred(g, &self.nst, r, line, ban) && self.offer[r].is_finite() {
+                    if !self.bars(r, bar) && self.offer[r].is_finite() {
                         self.cand.push((self.offer[r], r as u32));
                     }
                 }
@@ -2826,7 +2882,7 @@ impl Search<'_> {
                 let b0 = self.cn_bits.len();
                 self.cn_bits.resize(b0 + (e1 - e0).div_ceil(64), 0);
                 // T-4041: every line offered so far that can be first (all settled already)
-                let mut c = Change { st: v as u32, line, ban, cut: f32::INFINITY, n: 0, head: NONE, dist: f32::INFINITY, done: false, feed: (f0 as u32, self.cn_feed.len() as u32), bits: b0 as u32 };
+                let mut c = Change { st: v as u32, line: bar.line, ban: bar.ban, back: bar.back, even: bar.even, cut: f32::INFINITY, n: 0, head: NONE, dist: f32::INFINITY, done: false, feed: (f0 as u32, self.cn_feed.len() as u32), bits: b0 as u32 };
                 // (the cost does not depend on the lines' order: `pool_cost`)
                 self.pl.clear();
                 self.pk.clear();

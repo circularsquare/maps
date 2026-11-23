@@ -785,8 +785,8 @@ notes/T-420.md has the tables.
   average extra wait for full trains, worked out per period with the boarding account's rule:
   arrivals peaking mid-period at the US busiest-hour factors, trains taking riders up to crush
   (240 a 20 m car, 150% of its rated 160, T-2186; a bus a third of a car, 80, T-2919), the extra wait in plain minutes like any wait (T-585) and
-  capped at 60 minutes. Riders left behind wait at their station: nobody changes onto the line
-  they left back towards the stop they came from, so nobody rides a full line the other way to
+  capped at 60 minutes. Riders left behind wait at their station: nobody changes onto a line
+  back towards the stop they came from (T-575, T-4064), so nobody rides a full line the other way to
   board upstream (Anita, T-575; a line passing a station twice may be changed onto there towards
   other stops, T-1268, and one looping back near itself across the bend, never back towards the
   stop walked from, T-3295), though

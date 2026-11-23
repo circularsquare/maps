@@ -294,15 +294,11 @@ fn a_bent_fare_curve_charges_long_trips_and_counts_its_extra() {
     let want = 10.0 * more * 10.0 + 5.0 * more * 30.0;
     assert!((total - want).abs() < 1e-3, "{total} against {want}");
     // 0 -> 2 rides either line from 0, the same track and stops every 10 and every 5 minutes: one
-    // evenly spaced service, a third and two thirds by trains an hour (T-4050); 0 -> 3 line 0, or
-    // line 1 to 2 and a change
-    // when it comes first (24 and 31 from boarding). Each trip's extra is spread over the
-    // stretches it rides by their km, all 20 km (T-1516)
+    // evenly spaced service, a third and two thirds by trains an hour (T-4050); 0 -> 3 waits for
+    // line 0, since line 1's riders may not change at 2 onto the line right behind them (T-4064).
+    // Each trip's extra is spread over the stretches it rides by their km, all 20 km (T-1516)
     let (x02, x03) = (10.0 * more * 10.0, 5.0 * more * 30.0);
-    let mut sh = [0f32; 2];
-    pool_cost(&[(24.0, 6.0), (31.0, 12.0)], 1.0, 1.0, false, &p, &mut PoolWork::default(), Some(&mut sh));
-    let (direct, change) = (x03 / 3.0 * sh[0], x03 / 3.0 * sh[1]);
-    for (r, want) in [(8, x02 * 2.0 / 3.0 / 2.0 + change), (9, x02 * 2.0 / 3.0 / 2.0 + change), (0, x02 / 3.0 / 2.0 + direct), (1, x02 / 3.0 / 2.0 + direct), (2, x03 / 3.0)] {
+    for (r, want) in [(8, x02 * 2.0 / 3.0 / 2.0), (9, x02 * 2.0 / 3.0 / 2.0), (0, x02 / 3.0 / 2.0 + x03 / 3.0), (1, x02 / 3.0 / 2.0 + x03 / 3.0), (2, x03 / 3.0)] {
         assert!((l.rn_fare_x[r] - want).abs() < 1e-3, "route node {r}: {:?}", l.rn_fare_x);
     }
     assert!(assign(&graph(&[]), &skims(&graph(&[]), &p), &od).rn_fare_x.iter().all(|&x| x == 0.0));
@@ -1061,8 +1057,8 @@ fn common_lines_pool_wait_and_split_by_first_arrival() {
 
 /// T-4050: lines leaving one platform for one platform at the next stop are one evenly spaced
 /// service where their riders get off alike: a trunk of two lines every 10 minutes waits 2.5, not
-/// 3.3, and its riders split by trains an hour; past the split each branch's riders wait for their
-/// own as before. A line skipping the stop (the 4 beside the 6), another platform, or a bus stays
+/// 3.3, and its riders split by trains an hour; riders for a branch wait for their own line, since
+/// the other's riders may not change onto it at the split, right behind them (T-4064). A line skipping the stop (the 4 beside the 6), another platform, or a bus stays
 /// independent.
 #[test]
 fn lines_on_one_track_and_stops_are_evenly_spaced() {
@@ -1072,16 +1068,17 @@ fn lines_on_one_track_and_stops_are_evenly_spaced() {
     assert_eq!(g.rn_even.iter().filter(|&&c| c != NONE).count(), 4, "the trunk hops both ways, nothing else: {:?}", g.rn_even);
     let sk = skims(&g, &p);
     assert!((sk.r[1] - 4.5).abs() < 1e-5, "trunk: half of a 5 minute combined headway, {}", sk.r[1]);
-    let mut w = PoolWork::default();
-    let mut sh = [0f32; 2];
-    let branch = pool_cost(&[(4.0, 6.0), (11.0, 6.0)], 1.0, 1.0, false, &p, &mut w, Some(&mut sh)).0 - p.change_at(1.0);
-    assert!((sk.r[2] - branch).abs() < 1e-4, "branch, independent: {} against {branch}", sk.r[2]);
+    assert!((sk.r[2] - (4.0 + 5.0)).abs() < 1e-4, "branch: its own line's ride and half headway, {}", sk.r[2]);
     let mut od = vec![0.0; 16];
     od[1] = 90.0;
     od[2] = 100.0;
     let loads = assign(&g, &sk, &od);
     // route node 0 is line 0 out of 0, 6 line 1 out of 0
-    assert!((loads.rn_board[0] - 45.0 - 100.0 * sh[0]).abs() < 1e-3 && (loads.rn_board[6] - 45.0 - 100.0 * sh[1]).abs() < 1e-3, "{:?}", loads.rn_board);
+    assert!((loads.rn_board[0] - 145.0).abs() < 1e-3 && (loads.rn_board[6] - 45.0).abs() < 1e-3, "{:?}", loads.rn_board);
+    // a branch every 60 minutes beside one every 4: its riders wait for it at their own station, from
+    // the last trunk station too (not riding the other back a stop to catch it there)
+    let sk = skims(&build_graph(&common_test_net(&[&[0, 1, 2], &[0, 1, 3]], &[15.0, 1.0], &[2.0, 2.0]), &p), &p);
+    assert!((sk.r[3] - (4.0 + 30.0)).abs() < 1e-4 && (sk.r[7] - (2.0 + 30.0)).abs() < 1e-4, "{} {}", sk.r[3], sk.r[7]);
     // unequal: every 10 and every 5, 18 an hour, riders a third and two thirds
     let g = build_graph(&common_test_net(&[&[0, 1], &[0, 1]], &[6.0, 12.0], &[2.0, 2.0]), &p);
     let sk = skims(&g, &p);
@@ -1219,16 +1216,12 @@ fn common_lines_are_destination_specific_and_ignore_unhelpful_service() {
     let net = common_test_net(&[&[0, 1, 2], &[0, 1, 3]], &[6.0, 6.0], &[2.0, 2.0]);
     let g = build_graph(&net, &p); let sk = skims(&g, &p);
     assert!((sk.r[1] - 4.5).abs() < 1e-4, "shared trunk, the same track and stops: one service every 5 minutes (T-4050)");
-    // T-4041: to the branch, its own line (4 from boarding) or, when the other comes first by more
-    // than 7 minutes, that one to 1 and a change there (11 from boarding): offered after station 0
-    // left the queue, it joins all the same (`late_fix`)
-    let mut w = PoolWork::default();
-    let mut sh = [0f32; 2];
-    let want = pool_cost(&[(4.0, 6.0), (11.0, 6.0)], 1.0, 1.0, false, &p, &mut w, Some(&mut sh)).0 - p.change_at(1.0);
-    assert!((sk.r[2] - want).abs() < 1e-4 && sh[1] > 0.05 && sh[1] < 0.15, "branch: {} against {want}, {sh:?}", sk.r[2]);
+    // T-4064: to the branch, its own line only: the other's riders may not change onto it at 1,
+    // where it runs right behind them
+    assert!((sk.r[2] - (4.0 + 5.0)).abs() < 1e-4, "branch: {}", sk.r[2]);
     let mut od = vec![0.0; 16]; od[2] = 100.0;
     let loads = assign(&g, &sk, &od);
-    assert!((loads.rn_board[0] - 100.0 * sh[0]).abs() < 1e-3 && (loads.rn_board[6] - 100.0 * sh[1]).abs() < 1e-3, "{:?}", loads.rn_board);
+    assert!((loads.rn_board[0] - 100.0).abs() < 1e-3 && loads.rn_board[6] == 0.0, "{:?}", loads.rn_board);
     // A train that is off, or too slow, adds no attractive departures.
     for (frequency, slow) in [(0.0, 2.0), (6.0, 100.0)] {
         let g = build_graph(&common_test_net(&[&[0, 1], &[0, 1]], &[6.0, frequency], &[2.0, slow]), &p);
