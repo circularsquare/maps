@@ -5,18 +5,15 @@ Updated: 2026-11-23 20:08 UTC. Live state: `venv\Scripts\python.exe trainworld/t
 diary notes/handoff-log.md. Her time UTC-5.
 
 ## In flight (adopt from the board)
-- retime T-4132 (opus); editbench T-4139 (sonnet, tools/edit_bench.mjs; reuse perf_bench's core
-  claim, pin and over-cap refusal); rampport T-4112 (sonnet: port tw/track 269568c2 ramp fix
-  to master; master has the bug).
-- stationwater landed on tw/track 269568c2 (22:26), tree removed; its changelog item is parked in next-track.json, so hide the duplicate the port adds at the release merge. Track build not rebuilt: snaptrack needs sync-track first, which still conflicts (waits for the rework resume); she sees the fix on 8800 once rampport lands. T-4124 closed,
-  measured not landed (no in-game gain, memory +13-15%); code on branch tw/onegraph-measured. 8800 = d4eabb5c6;
-  master has T-4138 since. Landed 22:42: madison T-4140 (far ends in own zone; ask a-2026-11-23-17 on a minimum bubble size), regionfix T-4137
-  (rows never wrong). ghostlag T-4136 landed 22:52 (ghost on the cursor; T-4142 filed for frame drops while calculating, after lineclick).
-  8800 = 32fcea080 (22:54). Her: ghost "feels a lot better", first click can take seconds: firstclick T-4143 (opus).
-  Her 23:0x: plan all edit types together and run them in parallel: editplan T-4144 (opus, plan only, ~90 min); then
-  launch its 3-5 streams at once. lineclick T-4114 landed 23:09 (ef99d979, about 95% off stop-click path); 8800 rebuild
-  started. Batch check due: rampport + regionfix + lineclick (toggleStop edit) once rampport lands. searchleft T-4054 started (entry_costs, u16 shares). Batch check
-  due for rampport (track split) + regionfix when rampport lands.
+- editplan T-4144 (opus, plan only, agent a831c085): every edit and hover listed with its Asia wait, one shared
+  show-at-click base (lineclick's, now on master), 3-5 parallel streams. When it reports, launch all streams at once.
+- firstclick T-4143 (opus, first track click takes seconds), retime T-4132 (opus, bounded retime), rampport T-4112
+  (sonnet, port tw/track 269568c2 ramp fix to master), searchleft T-4054 (sonnet, entry_costs and u16 shares).
+- Batch check due once rampport lands: rampport (track split), regionfix 8e1eb7ba, lineclick ef99d979 (toggleStop).
+- 8800 = ef99d979 (23:11). Landed after takeover, latest: madison T-4140, regionfix T-4137, ghostlag T-4136, lineclick
+  T-4114 stage 1, editbench T-4139 (tools/edit_bench.mjs; trust changes over about 25%). T-4124 closed (code on branch
+  tw/onegraph-measured). T-4112's tw/track changelog item is parked in next-track.json: hide the port's duplicate at
+  the release merge. Track build can't be rebuilt until sync-track (conflicts, waits for the rework resume).
 
 ## Next
 1. No publish decided ("i didn't say we want to publish"); don't prep one unless she says. 0.4.6 would wait for most
@@ -37,6 +34,8 @@ Cap 14 daytime; cores 0-1 hers (reserve_cores.ps1 -Loop 30, now never touches te
 ledger notes/perf-ledger.jsonl.
 
 ## Her words
+- 11-23 23:1x: edit speed: "just do all of the changes and i can test, no need for many rounds of implement-test. lemme
+  know when everything is done". Run every T-4144 stream, land all, then one message to her; no interim test asks.
 - 11-23: your two top priorities are answering her and never letting agents overbook or collide; agents 2-8 run by
   load; size tasks to about an hour; you don't investigate, agents do; cycle at 500k day and night; no drafted player
   replies; report times as percent of the wait; she has no Apple devices.
