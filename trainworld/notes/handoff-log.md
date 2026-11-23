@@ -2,6 +2,11 @@
 
 Older entries moved out of handoff.md on 2026-11-16 (T-3451 recommendation 4). New entries go at the top.
 
+## 2026-11-22, maps-cb (16:42 UTC - 11-23 02:50 UTC)
+- Took over from maps-17, whose process was already gone (its four agents died with it; nothing landed). Usage at 97%: paused all but T-4041 and T-4045, then spent the rest on T-4041 at her word.
+- Landed T-4041 (first arrival, 0.75 softening, late joins), T-4050 (evenly spaced shared platforms), T-4054 stage 1, load bar skew and fill at end; batch checkers 14 and 15 passed; 8800 fa196b91; pushed. Found T-4055 (stale final, older bug). Filed T-4046-T-4055 from her pad and reports.
+- Advisor: not called by me this session (agents called it about 10 times in all).
+
 ## 2026-11-17, maps-58 (16:41-18:14 UTC)
 - Took over from maps-60 (handed its agents over un-landed). Landed 14 pieces of work (list in handoff Agents), 8800 rebuilt once (dc1be574), master pushed. Built the finish command (T-3554), the checks/lib playtest harness (T-3556 stage 1), short ask titles on the board.
 - Her calls: report length 15 lines and only new asks in final messages ("catch me up" reads asks.json); 3/4/5 periods game-wide by default (T-3542); trains-drawn-apart postponed past v0.4.0 (keep train shape); passing stations get both platforms back; one-way pair stops one-way each (T-3565); trams path like rail; shoreline swap + OSM water for TIGER packs on a later night; currency in save P4; harness stages 2-3 P4.
