@@ -23,15 +23,22 @@ function near(levels: CellLevels, x: number, y: number, reach: number): number[]
   return out;
 }
 
-const nodeGrids = new WeakMap<Map<number, Node>, { anchor: number; nodes: Node[]; levels: CellLevels }>();
+/** which nodes a grid holds: track nodes (no bus stop, port or BRT station), or junctions (three tracks or more) */
+type NodeSet = "track" | "junction";
+const KEEP: Record<NodeSet, (n: Node) => boolean> = {
+  // T-1464: a bus stop that is no station is no place to snap to
+  track: (n) => !n.bus && !n.port && !n.brtStation,
+  junction: (n) => n.ports >= 3,
+};
+const nodeGrids: Record<NodeSet, WeakMap<Map<number, Node>, { anchor: number; nodes: Node[]; levels: CellLevels }>> = { track: new WeakMap(), junction: new WeakMap() };
 
 /** The world's nodes within `reach` local units of (lx, ly), perhaps with others, in the world's
  * order; null to scan them all. */
-export function nodesNear(w: WorldView, lx: number, ly: number, reach: number): Node[] | null {
-  let g = nodeGrids.get(w.nodes);
+export function nodesNear(w: WorldView, lx: number, ly: number, reach: number, set: NodeSet = "track"): Node[] | null {
+  const grids = nodeGrids[set];
+  let g = grids.get(w.nodes);
   if (!g || g.anchor !== anchor().version) {
-    // T-1464: a bus stop that is no station is no place to snap to
-    const nodes = [...w.nodes.values()].filter((n) => !n.bus && !n.port && !n.brtStation), a = anchor();
+    const nodes = [...w.nodes.values()].filter(KEEP[set]), a = anchor();
     const box = () => {
       const b = new Float64Array(nodes.length * 4);
       nodes.forEach((n, i) => {
@@ -41,10 +48,34 @@ export function nodesNear(w: WorldView, lx: number, ly: number, reach: number): 
       });
       return b;
     };
-    nodeGrids.set(w.nodes, (g = { anchor: a.version, nodes, levels: new CellLevels(box, nodes.length) }));
+    grids.set(w.nodes, (g = { anchor: a.version, nodes, levels: new CellLevels(box, nodes.length) }));
   }
   const idx = near(g.levels, lx, ly, reach);
   return idx && idx.map((i) => g!.nodes[i]);
+}
+
+/** T-4125: the node of `set` nearest (lx, ly) in local units, the first in the world's order on a tie (as a scan of
+ * every node finds it), from the grid's cells near the point; null with none. */
+export function nearestNode(w: WorldView, lx: number, ly: number, set: NodeSet): Node | null {
+  const keep = KEEP[set];
+  const nearest = (nodes: Iterable<Node>, all: boolean) => {
+    let best = Infinity, hit: Node | null = null;
+    for (const n of nodes) {
+      if (all && !keep(n)) continue;
+      const [x, y] = toLocal(n.lng, n.lat);
+      const d = (x - lx) ** 2 + (y - ly) ** 2;
+      if (d < best) { best = d; hit = n; }
+    }
+    return { best, hit };
+  };
+  // every node within the reach is among those near, in the world's order: a nearest one within it is the nearest
+  for (let reach = 256; reach <= 65536; reach *= 4) {
+    const near = nodesNear(w, lx, ly, reach, set);
+    if (!near) break;
+    const { best, hit } = nearest(near, false);
+    if (hit && best <= reach * reach) return hit;
+  }
+  return nearest(w.nodes.values(), true).hit;
 }
 
 /** An edge with the track points it has near a place: `ks` the offsets into `pts` (x, y, z triples)

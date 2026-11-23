@@ -16,7 +16,7 @@ import type { Selection, WorldView } from "../game/types";
 import { selection, tool } from "../game/ui";
 import { hoverAt } from "./demandHover";
 import { hoverHeld } from "../ui/blurHold";
-import { toLocal } from "./geo";
+import { nearestNode } from "./snapIndex";
 import type { Overlay } from "./overlay";
 import { perfOff } from "../perfFlags";
 import type { Map as MlMap } from "maplibre-gl";
@@ -225,30 +225,11 @@ export class CapacityMarkers {
 /** The junction a marker at (x, y) (local units) belongs to: the nearest node where three or
  * more tracks meet. */
 export function nearestJunction(w: WorldView, x: number, y: number): number | null {
-  let best = Infinity, id: number | null = null;
-  for (const n of w.nodes.values()) {
-    if (n.ports < 3) continue;
-    const [lx, ly] = toLocal(n.lng, n.lat);
-    const d = (lx - x) ** 2 + (ly - y) ** 2;
-    if (d < best) {
-      best = d;
-      id = n.id;
-    }
-  }
-  return id;
+  return nearestNode(w, x, y, "junction")?.id ?? null;
 }
 
 /** Whether a capacity spot is on tram track (T-3067): the nearest track node is a tram's. */
 export function tramSpot(w: WorldView, x: number, y: number): boolean {
-  let best = Infinity, tram = false;
-  for (const n of w.nodes.values()) {
-    if (n.bus || n.port || n.brtStation) continue;
-    const [lx, ly] = toLocal(n.lng, n.lat);
-    const d = (lx - x) ** 2 + (ly - y) ** 2;
-    if (d < best) {
-      best = d;
-      tram = n.kind === 2 || n.kind === 3;
-    }
-  }
-  return tram;
+  const n = nearestNode(w, x, y, "track");
+  return !!n && (n.kind === 2 || n.kind === 3);
 }

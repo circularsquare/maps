@@ -25,6 +25,8 @@
 // T-1540: after every step the phase tables the rows lay out line by line (`StateRows.phases`) must equal
 // the model's whole `phases()` byte for byte, and be the same array object as last time when no line's
 // tables changed.
+// T-4125: after every step the page's nearest track node and junction to the capacity tags and to points near nodes
+// (map/snapIndex.ts `nearestNode`, from its grids) must be the ones a scan of every node finds.
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { gunzipSync } from 'node:zlib';
@@ -33,6 +35,7 @@ import { loadApp, REAL_SAVE, ARTIFACTS } from './lib.mjs';
 
 const { StateRows, upgradesOf, Regions, PlatformLines, buildComplexes } = await loadApp("export { StateRows, upgradesOf } from '@app/src/workers/stateRows.ts'; export { Regions } from '@app/src/workers/regions.ts'; export { PlatformLines } from '@app/src/workers/platformLines.ts'; export { buildComplexes } from '@app/src/game/complexes.ts';");
 await init({ module_or_path: readFileSync(new URL('../app/src/wasm/track/sim_bg.wasm', import.meta.url)) });
+const { nearestNode, toLocal } = await loadApp("export { nearestNode } from '@app/src/map/snapIndex.ts'; export { toLocal } from '@app/src/map/geo.ts';");
 
 const SELF = process.argv.includes('--self-test-touched') ? 'touched' : process.argv.includes('--self-test') ? 'lines' : process.argv.includes('--self-test-names') ? 'names' : process.argv.includes('--self-test-phases') ? 'phases' : process.argv.includes('--self-test-trials') ? 'trials' : null;
 const args = process.argv.slice(2).filter((a) => !a.startsWith('--'));
@@ -114,6 +117,31 @@ function phaseDifference(a, b) {
   for (let i = 0; i < a.length; i++) if (!Object.is(a[i], b[i])) return `float ${i} (phase ${Math.floor(i / 4)}) is ${a[i]} against ${b[i]}`;
   return null;
 }
+
+/** T-4125: the page's nearest track node and junction to a capacity tag (map/snapIndex.ts `nearestNode`, from its
+ * grids; the tram labels and the junction links) against a scan of every node, on the nodes as the read left them */
+async function nearDifference(rows, api, rnd) {
+  const ll = (x, y) => [x / 111320, Math.max(-80, Math.min(80, y / 111320))];
+  const all = rows.nodes.map((n) => { const [lng, lat] = ll(n.x, n.y); return { id: n.id, lng, lat, ports: n.ports ?? 0, ...(n.bus ? { bus: true } : {}), ...(n.port ? { port: true } : {}), ...(n.brtStation ? { brtStation: true } : {}), ...(n.kind ? { kind: n.kind } : {}) }; });
+  const w = { nodes: new Map(all.map((n) => [n.id, n])) }, at = all.map((n) => toLocal(n.lng, n.lat));
+  const pts = [], m = api.markers_in(0);
+  for (let k = 0; k < m.length && pts.length < 150; k += 7) pts.push(toLocal(...ll(m[k], m[k + 1])));
+  for (let k = 0; k < 40; k++) { const [x, y] = at[Math.floor(rnd() * at.length)]; pts.push([x + (rnd() - 0.5) * 4000, y + (rnd() - 0.5) * 4000]); }
+  const sets = { track: (n) => !n.bus && !n.port && !n.brtStation, junction: (n) => n.ports >= 3 };
+  // a small set's grid is built when the thread is next idle
+  for (const set in sets) nearestNode(w, 0, 0, set);
+  await new Promise((r) => setTimeout(r, 60));
+  for (const [set, keep] of Object.entries(sets))
+    for (const [x, y] of pts) {
+      let best = Infinity, hit = null;
+      all.forEach((n, i) => { if (!keep(n)) return; const d = (at[i][0] - x) ** 2 + (at[i][1] - y) ** 2; if (d < best) { best = d; hit = n; } });
+      const got = nearestNode(w, x, y, set);
+      if ((got?.id ?? null) !== (hit?.id ?? null)) return `the nearest ${set} node to (${x.toFixed(0)}, ${y.toFixed(0)}) is ${got?.id} from the grid against ${hit?.id} from a scan`;
+    }
+  nearChecks += pts.length * 2;
+  return null;
+}
+let nearChecks = 0;
 
 let failures = 0, reads = 0, rowsKept = 0, rowsTotal = 0, phasesSame = 0;
 let focusReads = 0, focusDeferred = 0, workDone = 0, workWhole = 0, leavesTaken = 0, msBounded = 0, msFull = 0, leavesEnd = 0;
@@ -278,6 +306,9 @@ for (let seed = 1; seed <= SEEDS; seed++) {
       console.log(`${SELF ? 'detected' : 'FAIL'}  seed ${seed} step ${step} ${kind} (${r === 0 ? 'applied' : 'refused'}): ${d}`);
       break;
     }
+    // (its own random points: the edits stay the ones each seed always made)
+    const dn = SELF ? null : await nearDifference(now, A.api, rng(seed * 7907 + step));
+    if (dn) { failures++; console.log(`FAIL  seed ${seed} step ${step} ${kind}: ${dn}`); break; }
     before = now;
   }
   leavesEnd = rows.regions.size;
@@ -292,5 +323,5 @@ if (SELF) {
 const keptShare = rowsKept / Math.max(1, rowsTotal);
 const bad = failures || keptShare < 0.9 || phasesSame === 0;
 console.log(`T-4113 work: ${workDone} records read again of ${workWhole} (${(100 * workDone / Math.max(1, workWhole)).toFixed(1)}%), regions of at most ${StateRows.regionCap} stations (${leavesEnd} at the end, ${(leavesTaken / Math.max(1, reads)).toFixed(1)} read again per read); a bounded read ${(msBounded / Math.max(1, reads)).toFixed(1)} ms against a fresh full one's ${(msFull / Math.max(1, reads)).toFixed(1)} ms (the check's env); ${focusReads} focus reads, ${focusDeferred} of them left regions for the next read`);
-console.log(`${bad ? 'FAIL' : 'PASS'}  t1382 rows (${SETUP}): ${reads} incremental reads equal a full read; ${(100 * keptShare).toFixed(1)}% of the rows were the kept ones (the cache is used); the phase tables equal the whole ones and were the kept array in ${phasesSame} of ${reads}`);
+console.log(`${bad ? 'FAIL' : 'PASS'}  t1382 rows (${SETUP}): ${reads} incremental reads equal a full read; ${(100 * keptShare).toFixed(1)}% of the rows were the kept ones (the cache is used); the phase tables equal the whole ones and were the kept array in ${phasesSame} of ${reads}; ${nearChecks} nearest nodes from the page's grids equal a scan's`);
 process.exit(bad ? 1 : 0);

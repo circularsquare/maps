@@ -25,7 +25,7 @@ import { toggleEditStops } from "../../game/lineActions";
 import { repeatedEdge } from "../../game/repeatTrack";
 import { runsAgainstOneWay } from "../../game/oneWay";
 import { gameStamp } from "../../workers/clockClient";
-import { noteHeadwayLimits, edit, linesAt, say, stationNames, stationsById, stationsByNum, stepLineCars, pendingCars, world, linesById, linesByNum, pairStats, queueStopEdit, rowCount, fleetOf } from "../../game/world";
+import { noteHeadwayLimits, edit, linesAt, say, stationNames, stationsById, stationsByNum, stepLineCars, pendingCars, world, linesById, linesByNum, pairStats, queueStopEdit, rowCount, fleetOf, lineIndicesAt } from "../../game/world";
 import { CUTS_DEFAULT, periodAt, rowAt } from "../../game/periods";
 import { live } from "../../map/live";
 import { setListHot } from "../../map/hovered";
@@ -253,7 +253,14 @@ function transferLines(l: LineInput, i: number, drawn?: ReadonlySet<number>, noS
   const members = new Set(complexOf(l.stops[i]));
   const d = today.value;
   const riders = (o: LineInput) => o.stops.reduce((n, s, k) => n + (members.has(s) ? (d.get(o.id)?.stops[k] ?? 0) : 0), 0);
-  return (w?.save.lines ?? []).filter((o) => !drawn?.has(o.num) && (o.id === l.id ? !noSelf && selfTransfer(l, i) : o.stops.some((s) => members.has(s))))
+  if (!w) return [];
+  // T-4125: the lines stopping in the complex from the stations' index, in the save's order (as a scan of every line)
+  const at = lineIndicesAt(w), idx = new Set<number>();
+  for (const s of members) for (const k of at.get(s) ?? []) idx.add(k);
+  const self = w.save.lines.findIndex((o) => o.id === l.id);
+  if (self >= 0) idx.add(self);
+  return [...idx].sort((a, b) => a - b).map((k) => w.save.lines[k])
+    .filter((o) => !drawn?.has(o.num) && (o.id === l.id ? !noSelf && selfTransfer(l, i) : o.stops.some((s) => members.has(s))))
     .map((o) => ({ o, n: riders(o) })).sort((a, b) => b.n - a.n).map((x) => x.o);
 }
 
