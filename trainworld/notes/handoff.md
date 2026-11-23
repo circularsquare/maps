@@ -31,7 +31,7 @@ takeover). Server 79777f5. Save level 38. Pad 11-22, not started: T-4046-49, T-4
 
 ## Her words
 - 11-23: 2 crowding rounds refused, final (DECISIONS); stop rounds under 3% yes; merge bus stops within 300 m for
-  demand yes; times as percent of the wait. Speed tests on real saves only ("manually built saves for correctness testing"); bus passages save no time,
+  demand yes; times as percent of the wait; she has no Apple devices (Safari-only fixes get WebKit checks only). Speed tests on real saves only ("manually built saves for correctness testing"); bus passages save no time,
   connections without one +1 min ("say that building a passage saves one minute"); Add a track as a blueprint, no
   track limit; hold a server deploy while a follow-up to it is running ("we should have just waited for that check").
 - 11-22, T-4041: lines independent; softening "75% of the way"; keep the cliff fix; slowdown "okay"; T-4050 evenly

@@ -210,9 +210,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4112 [P1] {L:station-placement} Station on a blueprint refused for water at a ramp far away
   - Context: You, 11-23, on 8800 (tw/track build f382ee54): placing a station on a high speed track blueprint "kinda near water that it ramps over", the blocking alert "track at ground level can't cross water", which "doesnt seem like it should be relevant given that im placing a station, not a track, and also this is pretty far from the ramp."
   - Goal: Rebuilt; a station on a blueprint is checked only against its own platform stretch; placing it works there, and a real refusal names the station's problem.
-- T-4115 [P1] {L:cleanup} Trim the orchestrator procedures and the agents' rules (taking, 2026-11-23, agent trim)
-  - Context: You, 11-23: "please trim yes." docs/orchestrator.md is 253 lines, read whole at every takeover; trainworld/CLAUDE.md is 210, read by every agent.
-  - Goal: orchestrator.md about 150 lines and CLAUDE.md about a third shorter, no rule lost; a list of what moved or was cut for you.
 - T-4116 [P1] {L:track-rework} Track model panics on 8800 during play (taking, 2026-11-23, agent panics)
   - Context: From T-4110: the centred "Loading" card you saw mid-game on 8800 (tw/track build f382ee54) is most likely the track model rebuilding after a panic (clockPanic.ts rebuildModel); each panic also pops a "model restored" notice. The track rework changed the model a lot this week.
   - Goal: The panics on tw/track found by replaying ordinary play on it (random edits and undos on big saves, watching for "Rust panic in"), and fixed with a test. You don't know whether a "model restored" notice showed.

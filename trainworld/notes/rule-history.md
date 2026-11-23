@@ -1,7 +1,8 @@
 # Where some rules came from
 
 The rules themselves live in `trainworld/CLAUDE.md`, `docs/orchestrator.md` and the maps skills. This file keeps the
-dates and the incidents behind them, moved out of those files on 2026-11-20 so the rules read shorter. Grep it;
+dates and the incidents behind them, moved out of those files on 2026-11-20 and 2026-11-23 (T-4115) so the rules
+read shorter. Grep it;
 don't read it whole. Add a line when a rule is added for a reason worth remembering.
 
 ## trainworld/CLAUDE.md
@@ -23,6 +24,21 @@ don't read it whole. Add a line when a rule is added for a reason worth remember
   terminals, 2026-11-18.
 - Lean testing ("a bit too test heavy"): Anita, 2026-11-17.
 - Local demand factors allowed again where published figures show a gap: Anita, 2026-11-11.
+- Estimates checked against similar past tasks: T-3137 C1 was guessed at days and took about 45 minutes.
+- A time saving as a percent of the whole wait, since seconds alone don't say much: Anita, 2026-11-23.
+- "Segment", never "run" ("i dont like the terminology runs in general"): Anita, 2026-11-21.
+- Advisor only for big design decisions ("more sparing ... only for like big design decisions"): Anita, 2026-11-23.
+- Git worktrees only through agent-tree.mjs: 2026-11-23; a tree's junctions mean a forced remove or a deleted folder
+  deletes the shared node_modules and data.
+- Core claims wait at the cap instead of going over: T-4108, 2026-11-23.
+- The agent cargo profile: about 70 s warm against 180 s for `cargo test --release` (T-3664).
+- Speedups that shift riders are measured on a big real save, and she decides: Anita, 2026-11-23. Hand-built saves are
+  too small to show a saving against the noise ("not feasible for me to build it"). Moved here from orchestrator.md
+  on 2026-11-23, since the agent measuring needs it.
+- No `cmd /c start ... /b` through Git Bash: /b becomes B:/ and the quotes are stripped, so Windows error dialogs
+  popped up on her screen.
+- Never edit docs with PowerShell Get-Content/Set-Content: moved from orchestrator.md on 2026-11-23, since every agent
+  edits docs.
 
 ## docs/orchestrator.md
 
@@ -67,3 +83,27 @@ don't read it whole. Add a line when a rule is added for a reason worth remember
 - One line to her when winding down: on 2026-11-17 she was getting the same news from two tabs.
 - Keep the work moving ("there are times when we have lots of stuff to potentially work on but we're only doing a
   bit at a time, or stopping"): Anita, 2026-11-03.
+- Advisor calls logged in notes/handoff-log.md; more sparing from 2026-11-23 ("only for like big design decisions").
+- A TODO.md short-term item goes into the brief verbatim: a paraphrase lost her formula tooltip (T-1839).
+- Agent reports inbox (`notes/agent-reports/`, SubagentStop hook): T-3668.
+- Standby session for the next orchestrator: her idea, 2026-11-21. next_orchestrator.py in Code Mode is her usual
+  procedure since 2026-11-23; she wants the orchestrator in Windows Terminal, not the VS Code panel.
+- Never go quiet, second time: on 2026-11-23 she waited 25 minutes again while the orchestrator dug into a full disk
+  itself; since then the orchestrator doesn't investigate. A reply-nudge hook followed (T-4090).
+- Agents 2-8: 2026-11-23, down from 4-12 on 2026-11-21. Briefly "usually 3-5, 8 a ceiling" ("why do we have 8 agents
+  running? we dont need to do that right?"), then run by load the same day.
+- Cores 0-1 hers: Anita, 2026-11-21. claude.exe itself stays on all cores: pinned, her typing lagged 4 s.
+- Overnight core cap at the machine's max ("we should have been running with max core cap cuz it was overnight"):
+  Anita, 2026-11-21.
+- One worktree per code agent: T-792. Bookkeeping by command: T-3451. finish in one command: T-3554.
+- Disk alert in the watch (30 GB, then 10 GB): T-4088, 2026-11-23, after the disk filled.
+- Batch checking of risky changes: Anita, 2026-11-20, T-3902. 8800 rebuilt without waiting for the checker:
+  2026-11-21.
+- Check the staged diff of shared docs before committing: an agent's half-written paragraph rode along once.
+- Triage: Sendai's Senzan Line is the example of a report few players would meet; rebuilding the player's own case
+  found the express boarding rule in T-4019, where averages had looked fine.
+- Don't ask her when to publish ("it just depends on what we get done, which neither of us really knows"): Anita,
+  2026-11-23.
+- Nobody drafts a reply to a player unless she asks: Anita, 2026-11-23.
+- Deleted games restore: T-3789. Resources check once a day since 2026-11-11 (T-3243).
+- Task sweeps leave a dated notes file: 2026-11-23, when she asked when the last sweep was and no record said.
