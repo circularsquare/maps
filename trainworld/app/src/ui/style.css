@@ -1255,14 +1255,14 @@ button.status-tag:hover { background: var(--shade); color: var(--text); }
 .map-find { display: flex; align-items: center; gap: 6px; max-width: 100%; }
 .demand-selector { display: flex; flex-wrap: wrap; max-width: 100%; }
 /* T-2657: demand stopped for good, top centre above the other bars; the error is the small line under it */
-.demand-stopped-note { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); z-index: 6; zoom: var(--ui, 1);
+.demand-stopped-note { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); z-index: 8; zoom: var(--ui, 1);
   width: max-content; max-width: calc(100% - 20px); padding: 8px 10px; background: var(--bg); border: 1px solid var(--bad);
   color: var(--text); font-size: 13px; }
 @container map-column (max-width: 1350px) { .demand-stopped-note { top: 46px; } }
 @container map-column (max-width: 1000px) { .demand-stopped-note { top: 80px; } }
 @container map-column (max-width: 680px) { .demand-stopped-note { top: 148px; } }
 /* T-2802: low on the map and clear of the tutorial's card; taps go through the words, only the close button takes them */
-.no-market-note { position: absolute; left: 8px; right: 8px; bottom: 26px; z-index: 5; zoom: var(--ui, 1); display: flex; align-items: center; justify-content: space-between; gap: 8px;
+.no-market-note { position: absolute; left: 8px; right: 8px; bottom: 26px; z-index: 8; zoom: var(--ui, 1); display: flex; align-items: center; justify-content: space-between; gap: 8px;
   padding: 4px 4px 4px 10px; background: var(--bg); border: 1px solid var(--accent); color: var(--text); font-size: 13px; pointer-events: none; }
 .no-market-note .btn { flex: none; pointer-events: auto; }
 .dsn-row { display: flex; align-items: center; gap: 10px; }
@@ -2084,9 +2084,10 @@ html.no-blueprints .stn-label.plan { display: none; }
 .search-mark { width: 10px; height: 10px; margin: 0 3px; flex: none; border-radius: 50%; background: #fff; border: 2px solid var(--net-ink); }
 .search-mark.city { border-radius: 0; background: var(--muted); border-color: var(--muted); }
 .search-mark.place { background: none; border-color: var(--muted); }
-/* T-1822: the tutorial card, a flat post-it under the search button. Under the search results (z-index 4)
-   when they open. */
-.guide { position: absolute; right: 10px; top: 46px; z-index: 3; width: 240px; max-width: calc(100% - 20px);
+/* T-1822: the tutorial card, a flat post-it under the search button. In front of everything drawn on the map
+   (labels, marks, hover tags; the highest of those is 6), under the search results when they open (T-4099). */
+.map-top-left:has(.map-search:not(.closed)) { z-index: 8; }
+.guide { position: absolute; right: 10px; top: 46px; z-index: 7; width: 240px; max-width: calc(100% - 20px);
   padding: 8px 10px 10px; background: color-mix(in srgb, var(--yellow) 24%, var(--bg)); color: var(--text);
   zoom: var(--ui, 1); }
 :root[data-shade="dark"] .guide { background: color-mix(in srgb, var(--yellow) 14%, var(--bg)); }
