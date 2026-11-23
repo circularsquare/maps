@@ -1619,8 +1619,17 @@ fn partial_skims_equal_full_skims_where_searched() {
         assert_eq!(sk.slot.iter().filter(|&&v| v != NONE).count(), 1);
         assert_eq!((0..s).map(|src| sk.r[src * s + 1]).collect::<Vec<_>>(), (0..s).map(|src| full3.r[src * s + 1]).collect::<Vec<_>>());
     });
+    // T-4123: that table is the spare, carried on by the next caller with the same graph
+    with_skims(&g3, &p, &[false, false, false, true], |sk| {
+        assert_eq!(sk.slot.iter().filter(|&&v| v != NONE).count(), 2);
+        for dst in [1, 3] {
+            assert_eq!((0..s).map(|src| sk.r[src * s + dst]).collect::<Vec<_>>(), (0..s).map(|src| full3.r[src * s + dst]).collect::<Vec<_>>());
+        }
+    });
     with_skims(&g2, &p, &[false; 4], |sk| assert_eq!(sk.r, full2.r));
     with_skims(&g, &p, &[false; 4], |sk| assert_eq!(sk.r, full.r));
+    // and any other caller drops it
+    with_skims(&g3, &p, &[false, false, false, true], |sk| assert_eq!(sk.slot.iter().filter(|&&v| v != NONE).count(), 1));
     clear_skim_cache();
 }
 

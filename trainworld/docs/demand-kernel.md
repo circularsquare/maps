@@ -295,7 +295,9 @@ levels:
    graph each. A worker keeps two tables; when a third graph comes, the table with the fewest
    searched destinations gives way, and only to one with at least as many to search (a cheaper one
    is searched for that call alone), so the order populations are solved in does not change what
-   is searched (T-405). A table is stations² costs and stations² real minutes (u16, as metres walked at walking's pace, T-1059, T-2265) plus, per searched destination, each node's next
+   is searched (T-405). That call-alone table is kept as a spare until the next caller: if it brings
+   the same graph (a smaller zone's everyday layer right after its commutes) it carries on from it,
+   any other caller drops it before searching, so it never sits beside a new table (T-4123). A table is stations² costs and stations² real minutes (u16, as metres walked at walking's pace, T-1059, T-2265) plus, per searched destination, each node's next
    node and the settle order (u16 ids below 65,535 nodes, change nodes included), one bit per
    boarding route node for the departures accepted there, each change node's station and a bit per
    boarding edge of that station for the departures it accepts: about 4 bytes a node and 16 a

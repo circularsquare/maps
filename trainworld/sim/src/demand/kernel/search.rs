@@ -3382,9 +3382,17 @@ impl SkimKey {
 /// York's table (T-398).
 pub(super) const SKIM_TABLES: usize = 2;
 
+/// A thread's skims (`with_skims`): `kept`, the graphs solved most recently, newest last (T-119);
+/// `spare`, the last table searched for one call alone, for the next caller if it brings the same
+/// graph (a zone's everyday right after its commutes), dropped by any other caller before it
+/// searches, so it never sits beside a new table (T-4123).
+struct SkimCache {
+    kept: Vec<(SkimKey, Skims)>,
+    spare: Option<(SkimKey, Skims)>,
+}
+
 thread_local! {
-    /// Skims of the graphs a worker solved most recently, newest last (T-119).
-    static SKIM_CACHE: std::cell::RefCell<Vec<(SkimKey, Skims)>> = const { std::cell::RefCell::new(Vec::new()) };
+    static SKIM_CACHE: std::cell::RefCell<SkimCache> = const { std::cell::RefCell::new(SkimCache { kept: Vec::new(), spare: None }) };
 }
 
 /// Run `f` on the skims of `g` towards the stations in `want`, searching only what no earlier
@@ -3395,30 +3403,36 @@ thread_local! {
 /// are, so a period can bring a graph per city: `SKIM_TABLES` are kept, and which go is chosen by
 /// what they cost to search again, so the order the populations come in does not decide (T-405).
 pub fn with_skims<R>(g: &Graph, p: &Params, want: &[bool], f: impl FnOnce(&Skims) -> R) -> R {
-    SKIM_CACHE.with(|c| {
-        let mut c = c.borrow_mut();
-        match c.iter().position(|(k, _)| k.same(g, p)) {
+    SKIM_CACHE.with(|cell| {
+        let mut c = cell.borrow_mut();
+        let spare = c.spare.take().filter(|(k, _)| k.same(g, p));
+        match c.kept.iter().position(|(k, _)| k.same(g, p)) {
             Some(i) => {
-                let e = c.remove(i);
-                c.push(e);
+                let e = c.kept.remove(i);
+                c.kept.push(e);
             }
             None => {
-                if c.len() >= SKIM_TABLES {
+                if c.kept.len() >= SKIM_TABLES {
                     // the table cheapest to search again (fewest destinations, the oldest of
                     // equals) gives way, and only to one that will cost at least as much: a
-                    // cheaper one is searched for this call alone
+                    // cheaper one is searched for this call alone (and kept as the spare)
                     let todo = (0..g.n_st).filter(|&d| want.get(d).copied().unwrap_or(false)).count();
-                    let (i, kept) = c.iter().enumerate().map(|(i, e)| (i, e.1.next.len())).min_by_key(|e| e.1).unwrap();
+                    let (i, kept) = c.kept.iter().enumerate().map(|(i, e)| (i, e.1.next.len())).min_by_key(|e| e.1).unwrap();
                     if todo < kept {
                         drop(c);
-                        return f(&skims_for(g, p, want));
+                        let (k, mut sk) = spare.unwrap_or_else(|| (SkimKey::of(g, p), Skims::empty(g)));
+                        skims_extend(&mut sk, g, p, want);
+                        let r = f(&sk);
+                        cell.borrow_mut().spare = Some((k, sk));
+                        return r;
                     }
-                    c.remove(i);
+                    c.kept.remove(i);
                 }
-                c.push((SkimKey::of(g, p), Skims::empty(g)));
+                let e = spare.unwrap_or_else(|| (SkimKey::of(g, p), Skims::empty(g)));
+                c.kept.push(e);
             }
         }
-        let sk = &mut c.last_mut().unwrap().1;
+        let sk = &mut c.kept.last_mut().unwrap().1;
         skims_extend(sk, g, p, want);
         f(sk)
     })
@@ -3426,12 +3440,16 @@ pub fn with_skims<R>(g: &Graph, p: &Params, want: &[bool], f: impl FnOnce(&Skims
 
 /// Whether this thread holds skims of `g` (`with_skims`).
 pub fn skims_cached(g: &Graph, p: &Params) -> bool {
-    SKIM_CACHE.with(|c| c.borrow().iter().any(|(k, _)| k.same(g, p)))
+    SKIM_CACHE.with(|c| c.borrow().kept.iter().any(|(k, _)| k.same(g, p)))
 }
 
 /// Forget the cached skims (a worker calls this when it has finished a period's stage, so the
 /// tables do not sit in memory while it waits).
 pub fn clear_skim_cache() {
-    SKIM_CACHE.with(|c| c.borrow_mut().clear());
+    SKIM_CACHE.with(|c| {
+        let mut c = c.borrow_mut();
+        c.kept.clear();
+        c.spare = None;
+    });
 }
 
