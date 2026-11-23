@@ -200,14 +200,20 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-23 on 8800: still slow are "creating a new line, or deleting a line, or seeing the line visually change its length after adding or removing some stops". Design: notes/T-4097.md section 3, 9-13 h in parts.
   - Goal: Stage 1: a line's new path after stop clicks, and a deleted line, show at the click on the Asia save; then Construct, track, undo as later stages.
   - Other: notes/T-4097.md
-- T-4112 [P1] {L:station-placement} Station on a blueprint refused for water at a ramp far away (taking, 2026-11-23, agent stationwater)
-  - Context: You, 11-23, on 8800 (tw/track build f382ee54): placing a station on a high speed track blueprint "kinda near water that it ramps over", the blocking alert "track at ground level can't cross water", which "doesnt seem like it should be relevant given that im placing a station, not a track, and also this is pretty far from the ramp."
-  - Goal: Rebuilt; a station on a blueprint is checked only against its own platform stretch; placing it works there, and a real refusal names the station's problem.
+- T-4112 [P1] {L:station-placement} Station on a curve refused for water at a far ramp, on master (taking, 2026-11-23, agent rampport)
+  - Context: You, 11-23, on the track build: a station on a high speed blueprint refused "track at ground level can't cross water" far from the ramp. Cause: splitting a curve moved its ramp. Fixed on tw/track (269568c2); master has the same bug.
+  - Goal: The same fix ported to master, with its test; 0 water refusals in the probe.
+  - Other: notes/T-4112.md
+- T-4141 [P3] {L:station-placement} Track placed by an edit call crossed the Hudson at ground level
+  - Context: Seen by T-4112: a route entered through the game's edit call crossed the Hudson at ground level without a refusal, while pointer-drawn track nearby was bridged. Water may not have been loaded under part of it.
+  - Other: notes/T-4112.md
 - T-4116 [P2] {L:track-rework} {after:the 0.4.6 publish} Track model panic after a route edit on the track branch
   - Context: Your panic on 8800 (track branch build f382ee54): store.rs:851 under nodes_info, after a route edit and line colour changes. Not reproduced by 1,800 random edits each on NYC and your North America save; likely a line's service still naming track an edit removed. A second panic (run_polyline on a one-way return run) is fixed on tw/track. Notes/T-4116.md.
   - Goal: Reproduced with the fuzzer or your save under ?track, and fixed with a test, when the track rework resumes.
-- T-4124 [P2] {L:solve-speed} {after:T-4123} One graph for all zones in a calculation (taking, 2026-11-23, agent onegraph)
-  - Context: From T-4057: each zone has its own graph, so most of Tokyo's 41% one-off searches repeat; building one graph for the zones in a calculation removes most of it but shifts walks by 1-2% of walk minutes, so it comes to you with the real-save numbers first.
+- T-4140 [P2] {L:demand-ideas} A bubble's far ends inside its own zone (taking, 2026-11-23, agent madison)
+  - Context: A player in Madison saw no trips to La Crosse, in the same zone. They exist (about 160 a day each way) but a selected bubble leaves out the zone's own far parts (T-139 rule).
+  - Goal: Far ends in the player's own zone drawn for a selected bubble, the trip explorer opening for them.
+  - Other: notes/T-4140.md
 - T-4051 [P2] {L:loading} Opening a zone on a big save sits at 90%
   - Context: You, 11-22, on live v0.4.5: opening Medellin sat at 90% for about 2 minutes, Managua the same, "not super consistent". Measured 11-23 (notes/T-4051.md): a zone opens by a short path (Medellin 82 s) or a long one about 3x the work, by a race between its first quick figures and the whole calculation. Tree zoneopen has two unmeasured fixes.
   - Goal: Both fixes measured on 4+ cores before they land; then a zone with figures already in takes the short path (about 100 s off on your save).

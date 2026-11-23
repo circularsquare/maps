@@ -5,18 +5,15 @@ Updated: 2026-11-23 20:08 UTC. Live state: `venv\Scripts\python.exe trainworld/t
 diary notes/handoff-log.md. Her time UTC-5.
 
 ## In flight (adopt from the board)
-- onegraph T-4124 (opus; measures only, landing needs her yes on the shift); stationwater T-4112 (opus, tree off
-  tw/track, also checks master); installbanner T-4106 (opus, strings); retime T-4132 (opus); lineclick T-4114 stage 1 (opus: measure her three slow cases, then line path and line delete
-  at the click); stationdefault (agent ade808e3): Train station default done in tree, now T-4135 hover icon, bus 600 m
-  ring, Nunito A, same tree.
-- ghostlag T-4136 (opus, P1): her 21:14 "the rail placement ghost lags behind the cursor ... most important to feel
-  responsive"; measure then fix, page-side; retime owns the preview retime.
-- editbench T-4139 (sonnet): one edit-wait bench (tools/edit_bench.mjs, notes/edit-ledger.jsonl), her 21:3x "edit speed
-  work has been a bit slow to land": also put show-at-click first. T-4138 zoom default landed (af967488).
-- regionfix T-4137 (opus): batchcheck2 found Asia rows seed 9 regions drift (T-4113 code); batchcheck2 PASSED T-4104,
-  T-4109, T-4130, T-4111 and smoke. 8800 rebuilding to d4eabb5c6 (21:26: textfix landed).
-- Her 11-23 20:5x: edit speed on 8800 still slow (new line, delete line, line length after stop edits): T-4114 now P1,
-  lines first. Cores at the cap (14/14) at 20:57: no more starts until claims free.
+- lineclick T-4114 stage 1 (opus: her slow cases, line path and line delete at the click); ghostlag T-4136 (opus, P1,
+  "the rail placement ghost lags behind the cursor"); retime T-4132 (opus); regionfix T-4137 (opus, Asia rows seed 9
+  regions drift, ships in 0.4.6 otherwise); editbench T-4139 (sonnet, tools/edit_bench.mjs; reuse perf_bench's core
+  claim, pin and over-cap refusal); madison T-4140 (opus, agent af85cda5: draw the own zone's far ends for a bubble;
+  trips Madison-La Crosse exist, about 160/day each way); rampport T-4112 (sonnet: port tw/track 269568c2 ramp fix
+  to master; master has the bug).
+- stationwater landed on tw/track 269568c2 (22:26), tree kept until the port lands, then remove. T-4124 closed,
+  measured not landed (no in-game gain, memory +13-15%); code on branch tw/onegraph-measured. 8800 = d4eabb5c6;
+  master has T-4138 since. Batch check due for rampport (track split) when it lands.
 
 ## Next
 1. No publish decided ("i didn't say we want to publish"); don't prep one unless she says. 0.4.6 would wait for most
