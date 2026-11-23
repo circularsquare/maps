@@ -677,7 +677,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   apart into one complex by a **passage** and remove it (T-197, T-1281; saved with the network as
   `Network::links`, not in the undo history; links from older saves are passages, never charged).
   Riders change between any two stations of a complex on foot, however far apart (4.4, T-161),
-  through a passage along the straight line at 2 m/s. A **station building** joins stations too
+  through a passage along the straight line at 2 m/s. A bus stop takes no passage (its stops place themselves again with every edit); a BRT station does, and there it saves the minute a change on foot without one takes (T-4079, demand-worldwide.md "Bus connections without a passage"). A **station building** joins stations too
   (below).
 - **One-track stations** (T-3332, notes/T-3332.md; `StationData::one`, `wasm/onetrack.rs`): a station's
   platform on one track only (a **one way station**; both tracks is a **two way station**), picked with the two icons in the station bar (remembered in
@@ -2353,7 +2353,7 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   train there as at the station itself: the walk from the route to the station is not counted.
   Two stops of different bus lines within demand's 100 m station merge of each other (a station's stop
   from the station's place) are one demand station, so riders change there with no walk, whoever placed
-  them (T-2992; further apart, up to 300 m, they change on foot as between any stations, `xfer_walk_m`);
+  them (T-2992; further apart they change on foot, up to 150 m from a bus stop and 300 m between stations, T-4079, `walk_reach_m`, with a minute added where no passage joins them, `connection_min`);
   the map draws such a pair, and a pair a walk apart, a connector (ui-map.md "Bus lines", T-3890), and
   Manual editing snaps to the other line's stop.
 - **A line's own stop spacing** (T-2885; `BusRoute::spacing`, m; 0, the default, is the placing above).

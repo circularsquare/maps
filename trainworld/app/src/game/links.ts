@@ -48,6 +48,11 @@ export function linkRefusal(a: StationId, b: StationId): string | null {
 export async function linkPicked(picked: Selection): Promise<void> {
   const from = linking.peek();
   if (from === null) return;
+  // T-4079: a bus stop is no station (its line's stops move with every edit), so it takes no passage
+  if (picked?.kind === "busStop") {
+    say(t("links.busStop"), true);
+    return; // still picking
+  }
   if (picked?.kind !== "station") {
     linking.value = null;
     return;

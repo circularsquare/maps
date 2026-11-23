@@ -3,6 +3,7 @@
 import { rgbf } from "../game/palette";
 import { ANNEX_ROOM, ST_ROOM, BOX_WIDTH_ZOOM, boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, connectorHalfPx, dotRing, spanningPairs, PLATFORM_HALF_M, SEL_GLOW_PX, SEL_OUTLINE_PX, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, TRAINS_ZOOM, stationRadii, stationRing, stationShape, type Project, type StationShape } from "./stationGeometry";
 import { shadeColours } from "../game/shades";
+import { world } from "../game/world";
 import { MOVING_PLACE_MS } from "./moving";
 import { anchor, anchorPsi, EARTH_C, kAtY, localToMercMatrix, mul4, pxPerUnitAt, unitPerPxAt, type Anchor } from "./geo";
 import { clipToCss, interp, localCamera, mercToCss, setCamera, viewCentreMerc, type Camera, type LocalCamera } from "./gl";
@@ -106,7 +107,7 @@ function beginStrokes(rnd: NetworkRenderer, c: Ctx1) {
   // bus lines have no strokes: their own pass, under the track (T-1464, busLayer.ts)
   if (redraw && buses) {
     const sh = shadeColours();
-    rnd.buses.draw(lc, a, vp, zoom, dpr, { wLine, casing, wSel, rail: BP_RAIL_RGB, railShare: BP_RAIL_SHARE, sel: opt.selLine, hot: opt.hotLine ?? -1, lit: opt.hotBuses ?? [], litStops: opt.hotStops ?? [], stationInk: rgbf(sh.stationInk), dim: opt.dimOthers ?? 1, shades: sh, fill: rgbf(sh.casing), casingRgb: rgbf(sh.casing),
+    rnd.buses.draw(lc, a, vp, zoom, dpr, { wLine, casing, wSel, rail: BP_RAIL_RGB, railShare: BP_RAIL_SHARE, sel: opt.selLine, hot: opt.hotLine ?? -1, lit: opt.hotBuses ?? [], litStops: opt.hotStops ?? [], dim: opt.dimOthers ?? 1, shades: sh, fill: rgbf(sh.casing), casingRgb: rgbf(sh.casing),
       paint: opt.byLevel ? "level" : opt.bySpeed ? "speed" : opt.byProfit ? "profit" : null, phases: n.phases, meta: n.meta, trackRgb: TRACK_RGB });
   }
 }
@@ -782,18 +783,21 @@ export function syncGroups(rnd: NetworkRenderer, n: NetworkBuffers, groups: Stat
   const mid = (i: number): [number, number] => [S[i * 3] + (sh?.[i * 4] ?? 0), S[i * 3 + 1] + (sh?.[i * 4 + 1] ?? 0)];
   const pairs: number[] = [];
   const groupOf = new Int32Array(Math.max(1, n.stationCount)).fill(-1);
+  let brt = new Set<string>();
   if (groups) {
     const index = new Map(n.stationIds.map((id, i) => [id, i]));
+    // T-4079: a BRT station's joins with no passage are the bus layer's dashed lines (`brtJoins`)
+    brt = new Set((world.peek()?.save.stations ?? []).filter((s) => s.brt).map((s) => s.id));
     groups.members.forEach((ids, k) => {
       const m = ids.map((id) => index.get(id)).filter((i): i is number => i !== undefined);
       for (const i of m) groupOf[i] = k;
-      for (const [a, b] of spanningPairs(m.map(mid))) pairs.push(m[a], m[b]);
+      for (const [a, b] of spanningPairs(m.map(mid))) if (!brt.has(n.stationIds[m[a]]) && !brt.has(n.stationIds[m[b]])) pairs.push(m[a], m[b]);
     });
   }
   const idx = n.stationLinkIdx;
   for (let k = 0; idx && k < idx.length / 2; k++) {
     const i = idx[k * 2], j = idx[k * 2 + 1];
-    if (groupOf[i] < 0 || groupOf[i] !== groupOf[j]) pairs.push(i, j);
+    if (groupOf[i] < 0 || groupOf[i] !== groupOf[j] || brt.has(n.stationIds[i]) || brt.has(n.stationIds[j])) pairs.push(i, j);
   }
   rnd.connPairs = Int32Array.from(pairs);
   const count = pairs.length / 2;

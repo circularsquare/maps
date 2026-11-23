@@ -9,7 +9,7 @@
 // (T-2948); a thin dashed line in the map's ink, faint, runs from it to the station from zoom 13, the
 // transfer, and the same from a plain stop to another line's stop at a station within demand's merge (T-2992,
 // game/busLinks.ts). Two plain stops that connect but are drawn apart (one place for demand, or a walk apart)
-// get a connector made like a station complex's (T-3890), over the routes and under the stops; the hovered
+// get the same dashed line (T-3890, T-4079), as does a BRT station's join with no passage; the hovered
 // and the selected stop's places are lit. A loop that runs one way has small arrowheads in its colour along it from zoom 12, sticking
 // out on both sides of the route (T-2991, oneWayMarks.ts).
 //
@@ -44,7 +44,8 @@ import { rightHand } from "../game/world";
 import { factRow, headingChevron, lineBullet } from "./trackTagRows";
 import type { TipLine } from "./networkTips";
 import { ARROW_SPREAD, ARROW_ZOOM, ONE_WAY_STEP_M, oneWayEvery } from "./oneWayMarks";
-import { busPlaceOf, busPlaces, busStopLinks } from "../game/busLinks";
+import { brtJoins, busPlaceOf, busPlaces, busStopLinks } from "../game/busLinks";
+import { dotGroups } from "../game/complexView";
 import { ROW_SLOT, profileOf } from "./profiles";
 
 /** Street stops are drawn from this zoom, ends from `END_ZOOM` (T-2950). */
@@ -81,16 +82,12 @@ const FLAG_MUTE = 16;
 const MUTE_ALPHA = 0.4;
 const MUTE_GREY = "0.3";
 const TRANSFER_PX = 1.5, TRANSFER_DASH_WIDTHS = 4.5, TRANSFER_ALPHA = 0.5;
-/** T-3890: a connector between two bus stops that connect but are drawn apart, made like the
- * connector between a station complex's dots: white with the stations' rim along both sides (blue as
- * a blueprint station's while either line is planned). Its white is this share of a stop ring's
- * radius, its rim as thick as a stop's; at most `LIT_LINKS` lit at once with their stops. */
-const FLAG_LINK = 32;
-const LINK_SHARE = 0.75, LIT_LINKS = 16;
+/** T-3890: a connector between two bus stops that connect but are drawn apart, dashed as a transfer line
+ * (T-4079: a white connector is a built passage's alone); at most `LIT_LINKS` lit at once with their stops,
+ * in the map's ink at full strength. */
+const LIT_LINKS = 16;
 /** T-3890: the most stop marks lit at once (a place's stops, hovered or selected) */
 const LIT_STOPS = 32;
-/** as the stations' hovered rim (rendererShaders.ts `HOT_RIM_MIX`) */
-const HOT_RIM_MIX = 0.6;
 /** a blueprint station's fill (rendererShaders.ts `BP_FILL`) */
 const BP_FILL = "vec3(0.663, 0.804, 0.953)";
 /** T-2991: an arrow's direction is taken over this many ground metres either side, so one at a
@@ -223,9 +220,7 @@ uniform float u_xfer;        // T-2982: 1 draws the transfer lines (colour pass 
 uniform float u_xfer_w;      // their width, device px
 uniform vec3 u_xfer_rgb;
 uniform float u_xfer_alpha;
-uniform vec2 u_link;         // T-3890: a connector's white width and rim, device px (passes 3 rim, 4 white)
-uniform vec3 u_link_ink;
-uniform int u_lit_links[${LIT_LINKS}];
+uniform int u_lit_links[${LIT_LINKS}]; // T-3890: the connectors lit (a transfer line's place in linkStops, its a_info.z)
 uniform int u_lit_links_n;
 uniform int u_no_bp;         // 1: blueprint pieces are not drawn (Settings' Show blueprints)
 uniform int u_lane_kind;     // T-3944: pass 5 draws the blueprint's new lanes (0), the constructed ones (1) or the blueprint's free ones (2)
@@ -249,17 +244,16 @@ void main() {
   bool lit = false;
   for (int k = 0; k < ${LIT_MAX}; k++) if (k < u_lit_n && u_lit[k] == id) lit = true;
   bool xfer = (flags & ${FLAG_TRANSFER}) != 0;
-  bool link = (flags & ${FLAG_LINK}) != 0;
   bool lane = (flags & ${FLAG_LANE}) != 0;
-  if ((u_only >= 0 && id != u_only) || (u_only == -2 && (!sel || xfer)) || (u_pass == 2 && (flags & ${FLAG_FERRY | FLAG_SPUR | FLAG_TRANSFER | FLAG_MUTE | FLAG_LINK}) != 0)
-      || (xfer && (u_pass != 1 || u_xfer < 0.5)) || (link != (u_pass == 3 || u_pass == 4)) || (u_no_bp == 1 && bp) || (lane != (u_pass == 5)) || (lane && u_lane_kind != (!bp ? 1 : (flags & ${FLAG_LANE_FREE}) != 0 ? 2 : 0))) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  if ((u_only >= 0 && id != u_only) || (u_only == -2 && (!sel || xfer)) || (u_pass == 2 && (flags & ${FLAG_FERRY | FLAG_SPUR | FLAG_TRANSFER | FLAG_MUTE}) != 0)
+      || (xfer && (u_pass != 1 || u_xfer < 0.5)) || (u_no_bp == 1 && bp) || (lane != (u_pass == 5)) || (lane && u_lane_kind != (!bp ? 1 : (flags & ${FLAG_LANE_FREE}) != 0 ? 2 : 0))) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   bool hotLink = false;
-  if (link) for (int k = 0; k < ${LIT_LINKS}; k++) if (k < u_lit_links_n && u_lit_links[k] == int(a_info.z + 0.5)) hotLink = true;
+  if (xfer && a_info.z >= 0.0) for (int k = 0; k < ${LIT_LINKS}; k++) if (k < u_lit_links_n && u_lit_links[k] == int(a_info.z + 0.5)) hotLink = true;
   bool paint = u_pass == 1 && !bp && !xfer && !mute;
   float p = paint && a_col >= 0.0 ? a_col : a_info.z;
   vec3 own = vec3(floor(p / 65536.0), mod(floor(p / 256.0), 256.0), mod(p, 256.0)) / 255.0;
   vec3 col = mute ? mix(own, u_xfer_rgb, ${MUTE_GREY}) : paint && a_col < -1.5 ? u_track_rgb : own;
-  float w = link ? u_link.x + (u_pass == 3 ? 2.0 * u_link.y : 0.0) : xfer ? u_xfer_w : u_pass < 2 ? u_width * a_w + (u_pass == 0 ? u_add : 0.0) + (sel || lit ? u_extra : 0.0)
+  float w = xfer ? u_xfer_w : u_pass < 2 ? u_width * a_w + (u_pass == 0 ? u_add : 0.0) + (sel || lit ? u_extra : 0.0)
     : lane ? u_width * a_w + u_add + (sel || lit ? u_extra : 0.0) : u_width;
   if (u_pass == 0 && bp) w += 2.0 * u_rail;
   float faint = 1.0;
@@ -288,10 +282,9 @@ void main() {
   v_in = lane && u_lane_in > -1e5 ? 0.5 * (u_width * a_w + u_lane_in + (sel || lit ? u_extra : 0.0)) : -1.0;
   v_period = lane ? u_lane_period : xfer ? max(${TRANSFER_DASH_WIDTHS.toFixed(1)} * w, 5.0) : max(${DASH_WIDTHS.toFixed(1)} * w, 6.0);
   v_dash = (u_pass == 1 && (flags & ${FLAG_FERRY | FLAG_TRANSFER}) != 0) || (lane && (!bp || (flags & ${FLAG_LANE_FREE}) != 0)) ? a_info.w * u_px_per_unit + ua : -1.0;
-  v_alpha = link ? faint : faint * (u_pass == 2 ? u_alpha : (sel ? 1.0 : mute ? ${MUTE_ALPHA} : u_dim)) * (xfer ? u_xfer_alpha : 1.0);
+  v_alpha = faint * (u_pass == 2 ? u_alpha : (sel ? 1.0 : mute ? ${MUTE_ALPHA} : u_dim)) * (xfer ? (hotLink ? 1.0 : u_xfer_alpha) : 1.0);
   v_edge = lane && u_lane_kind == 0 ? u_lane_edge : 0.0;
   if (lane) v_color = u_lane_kind == 0 ? ${BP_FILL} : u_lane_kind == 2 ? u_rail_rgb : u_lane_rgb;
-  else if (link) v_color = u_pass == 3 ? mix(bp ? u_rail_rgb : u_link_ink, vec3(1.0), hotLink ? ${HOT_RIM_MIX} : 0.0) : bp ? ${BP_FILL} : vec3(1.0);
   else if (u_pass == 0) v_color = bp ? u_rail_rgb : u_casing_rgb;
   else if (xfer) v_color = u_xfer_rgb;
   else {
@@ -487,8 +480,6 @@ export interface BusStyle {
   lit: readonly number[];
   /** T-3890: bus stops lit (ids): the hovered and the selected stop's places */
   litStops: readonly number[];
-  /** the stations' rim (`stationInk`), for the connectors */
-  stationInk: Float32Array;
   dim: number;
   shades: ShadeColours;
   fill: Float32Array;
@@ -538,7 +529,7 @@ export class BusLayer {
     this.gl = gl;
     this.segProg = compile(gl, SEG_VS, SEG_FS);
     this.stopProg = compile(gl, STOP_VS, STOP_FS);
-    this.su = uniforms(gl, this.segProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_add", "u_extra", "u_pass", "u_sel", "u_hot", "u_lit", "u_lit_n", "u_only", "u_dim", "u_alpha", "u_casing_rgb", "u_rail_rgb", "u_rail", "u_px_per_unit", "u_track_rgb", "u_xfer", "u_xfer_w", "u_xfer_rgb", "u_xfer_alpha", "u_link", "u_link_ink", "u_lit_links", "u_lit_links_n", "u_lane_kind", "u_lane_rgb", "u_lane_period", "u_lane_in", "u_lane_edge", "u_no_bp"]);
+    this.su = uniforms(gl, this.segProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_add", "u_extra", "u_pass", "u_sel", "u_hot", "u_lit", "u_lit_n", "u_only", "u_dim", "u_alpha", "u_casing_rgb", "u_rail_rgb", "u_rail", "u_px_per_unit", "u_track_rgb", "u_xfer", "u_xfer_w", "u_xfer_rgb", "u_xfer_alpha", "u_lit_links", "u_lit_links_n", "u_lane_kind", "u_lane_rgb", "u_lane_period", "u_lane_in", "u_lane_edge", "u_no_bp"]);
     this.pu = uniforms(gl, this.stopProg, [...PROJECT_UNIFORMS, "u_viewport", "u_r", "u_rail_rgb", "u_rings", "u_fill", "u_rim", "u_keep", "u_lit_stops", "u_lit_stops_n", "u_base", "u_no_bp"]);
     this.arrowProg = compile(gl, ARROW_VS, ARROW_FS);
     this.au = uniforms(gl, this.arrowProg, [...PROJECT_UNIFORMS, "u_viewport", "u_size", "u_every", "u_m_px", "u_clear", "u_sel", "u_hot", "u_dim", "u_casing_rgb", "u_no_bp"]);
@@ -592,6 +583,8 @@ export class BusLayer {
         const la = byNum.get(k.a.line), lb = byNum.get(k.b.line);
         if (la && lb) nextLinks.push({ at: [k.a.lng, k.a.lat, k.b.lng, k.b.lat], lines: [k.a.line, k.b.line], stops: [k.a.id, k.b.id], bp: !la.built || !lb.built, walk: k.walk });
       }
+      // T-4079: a BRT station's joins with no passage, lit with the station's stop (its id the station's node)
+      for (const [a, b] of brtJoins(w, dotGroups.peek()?.members ?? [])) nextLinks.push({ at: [a.lng, a.lat, b.lng, b.lat], lines: [-2, -2], stops: [a.num, b.num], bp: !a.built || !b.built, walk: true });
     }
     const was = this.lines;
     const sameS = (a: number[][] | null, b: number[][] | null) => a === b || (!!a && !!b && a.length === b.length && a.every((s, k) => sameNums(s, b[k])));
@@ -686,7 +679,7 @@ export class BusLayer {
       for (let i = 0; l.id !== this.muted && i + 3 < l.transfers.length; i += 4) {
         const [x0, y0] = toLocal(l.transfers[i], l.transfers[i + 1], a), [x1, y1] = toLocal(l.transfers[i + 2], l.transfers[i + 3], a);
         seg.set([x0, y0, x1, y1], at * 4);
-        info.set([l.id, FLAG_TRANSFER, 0, 0], at * 4);
+        info.set([l.id, FLAG_TRANSFER, -1, 0], at * 4);
         at++;
       }
     }
@@ -696,7 +689,7 @@ export class BusLayer {
       if (k.lines.includes(this.muted)) continue;
       const [x0, y0] = toLocal(k.at[0], k.at[1], a), [x1, y1] = toLocal(k.at[2], k.at[3], a);
       seg.set([x0, y0, x1, y1], at * 4);
-      info.set([-5, FLAG_LINK | (k.bp ? FLAG_BLUEPRINT : 0), linkStops.length / 2, 0], at * 4);
+      info.set([-5, FLAG_TRANSFER | (k.bp ? FLAG_BLUEPRINT : 0), linkStops.length / 2, 0], at * 4);
       linkStops.push(k.stops[0], k.stops[1]);
       at++;
     }
@@ -858,6 +851,13 @@ export class BusLayer {
     gl.uniform1f(u.u_xfer_w, TRANSFER_PX * dpr);
     gl.uniform3fv(u.u_xfer_rgb, rgbf(s.shades.mapInk));
     gl.uniform1f(u.u_xfer_alpha, TRANSFER_ALPHA);
+    // T-3890: the connectors of the hovered and the selected stop's places, lit
+    const lit = new Set(s.litStops), on: number[] = [];
+    for (let i = 0; i < b.linkStops.length && on.length < LIT_LINKS; i += 2) if (lit.has(b.linkStops[i]) || lit.has(b.linkStops[i + 1])) on.push(i / 2);
+    const litLinks = new Int32Array(LIT_LINKS).fill(-1);
+    litLinks.set(on);
+    gl.uniform1iv(u.u_lit_links, litLinks);
+    gl.uniform1i(u.u_lit_links_n, on.length);
     gl.bindVertexArray(this.segVao);
     // The selected line's corridor as an outline of its union (T-1490): the stencil gets 1 inside the
     // corridor widened by half the outline and 0 inside it narrowed by half, so what stays 1 is a ring
@@ -902,23 +902,6 @@ export class BusLayer {
     // T-3944: the BRT lanes round their lines, in the line view and the Speed and Profit ones, from where the ends show
     if (b.laneFirst < b.count && !this.traffic && s.paint !== "level" && zoom >= BUS_END_ZOOM) this.drawLanes(b, s, bus, dpr, zoom);
     const ringR = Math.max(MIN_RING_PX * dpr, bus * RING_SHARE), endR = Math.max(MIN_RING_PX * 1.25 * dpr, bus * END_SHARE);
-    const rim = Math.max(1, 0.45 * bus);
-    // T-3890: the connectors over the routes and under the stops, from where the stop rings show
-    if (b.linkStops.length && zoom >= BUS_RING_ZOOM) {
-      const lit = new Set(s.litStops), on: number[] = [];
-      for (let i = 0; i < b.linkStops.length && on.length < LIT_LINKS; i += 2) if (lit.has(b.linkStops[i]) || lit.has(b.linkStops[i + 1])) on.push(i / 2);
-      const list = new Int32Array(LIT_LINKS).fill(-1);
-      list.set(on);
-      gl.uniform1iv(u.u_lit_links, list);
-      gl.uniform1i(u.u_lit_links_n, on.length);
-      gl.uniform2f(u.u_link, Math.max(1.5 * dpr, 2 * LINK_SHARE * (ringR - rim)), rim);
-      gl.uniform3fv(u.u_link_ink, s.stationInk);
-      gl.uniform1i(u.u_only, -1);
-      for (const pass of [3, 4]) {
-        gl.uniform1i(u.u_pass, pass);
-        gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, b.count);
-      }
-    }
     gl.bindVertexArray(null);
     // T-2991: one-way arrows, in the line view only
     this.arrows = b.arrows.length / ARROW_STRIDE;

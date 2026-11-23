@@ -1948,7 +1948,8 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
     const auto = complexPassages(st, stations, stationLine, s.complexOf, linkIdx, st.map((n) => stationsSeen.get(n.id)!), cache.passages);
     for (let k = 0; k + 1 < auto.length; k += 2) {
       const i = auto[k], j = auto[k + 1];
-      if (oneFloor(i, j)) continue;
+      // T-4079: a BRT station's join with no passage is the bus layer's dashed line (`brtJoins`)
+      if (oneFloor(i, j) || st[i].brtStation || st[j].brtStation) continue;
       linkIdx.push(i, j);
       linkEnds.push(...bridgeEnds(stations[i * 3], stations[i * 3 + 1], shapeAt(i), stations[j * 3], stations[j * 3 + 1], shapeAt(j)));
     }

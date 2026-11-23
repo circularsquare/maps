@@ -354,14 +354,15 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
     // walking transfers: from each route node (having ridden) to the stations nearby, and to every
     // other station of its complex however far (T-161), from its platform to the other station's
     // position
-    let cut2 = p.xfer_walk_m * p.xfer_walk_m;
+    // T-4079: a bus stop's walks reach less far
+    let cut2 = |a: usize, b: usize| net.walk_reach_m(a, b, p.xfer_walk_m).powi(2);
     let d2 = |a: usize, b: usize| (net.st_x[b] - net.st_x[a]).powi(2) + (net.st_y[b] - net.st_y[a]).powi(2);
     let mut near: Vec<Vec<u32>> = vec![vec![]; s];
     if p.xfer_walk_m > 0.0 && s > 1 {
         let grid = StationGrid::new(net, p.xfer_walk_m, p.xfer_walk_m);
         for a in 0..s {
             grid.near(net.st_x[a], net.st_y[a], |b| {
-                if b as usize != a && d2(a, b as usize) <= cut2 {
+                if b as usize != a && d2(a, b as usize) <= cut2(a, b as usize) {
                     near[a].push(b);
                 }
             });
@@ -372,7 +373,7 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
             for &a in &members {
                 for &b in &members {
                     // within the walk limit the edge is there already
-                    if a != b && (p.xfer_walk_m <= 0.0 || d2(a as usize, b as usize) > cut2) {
+                    if a != b && (p.xfer_walk_m <= 0.0 || d2(a as usize, b as usize) > cut2(a as usize, b as usize)) {
                         near[a as usize].push(b);
                     }
                 }
@@ -381,7 +382,7 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
     }
     // a passage (T-1281) walks the straight line, on moving walkways
     let passage = |a: u32, b: u32| !net.st_passage.is_empty() && net.st_passage.binary_search(&[a.min(b), a.max(b)]).is_ok();
-    let walk_min = |a: u32, b: u32, d: f32| if passage(a, b) { d / upgrades::PASSAGE_MPS / 60.0 } else { p.xfer_min(d) };
+    let walk_min = |a: u32, b: u32, d: f32| if passage(a, b) { d / upgrades::PASSAGE_MPS / 60.0 } else { p.xfer_min(d) + net.connection_min(a as usize, b as usize) };
     let (mut st_walk_off, mut st_walk_to, mut st_walk_min) = (vec![0u32], vec![], vec![]);
     for (a, list) in near.iter().enumerate() {
         for &b in list {

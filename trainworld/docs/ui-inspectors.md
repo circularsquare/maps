@@ -740,8 +740,8 @@ is the stop's name (the nearest station within 1 km, "Bus stop near X", else "Bu
 here" when more than one line stops at the place, and "At X", a button opening the train station there, when
 one is. Blueprint while its line is planned. Lines: every bus and train line stopping at the place, each with
 its boardings there today, a click selecting the line; then the station panel's boardings today with the
-purpose split and its riders waiting now. Change on foot: the places and train stations within demand's 300 m
-change walk (`xfer_walk_m`) with a line this place has not, nearest first, at most 8, each its name, its
+purpose split and its riders waiting now. Change on foot: the places and train stations within demand's change
+walk (150 m from a place with no train station, else 300 m, T-4079; `walk_reach_m`) with a line this place has not, nearest first, at most 8, each its name, its
 lines' badges and the straight distance ("150 m"); a click opens it. Last, "Build a station here" picks the
 Station tool, opens the Build tab and moves the map to the stop; a station still goes only on track. The
 stop's place is lit on the map while selected (below), and the selection follows the stop when an edit
@@ -978,7 +978,7 @@ order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the rider
 passage. After a click on it the next station clicked is joined to the selected one (the pointer a
 crosshair, a hand over a station); a click on anything else, Esc, the icon again, another
 selection or a tool stops it. Refused with a notice, still picking: the same station, one already
-in this complex, or one more than 1 km away centre to centre. Between two constructed stations it
+in this complex, one more than 1 km away centre to centre, or a bus stop ("Bus stops can't have passages.", T-4079). At a BRT station the icon's hover has "Saves one minute on each transfer through it" under what it does. Between two constructed stations it
 is paid at once (US$10M plus US$90M a km, a notice), else it is built with the second of them.
 "Passages", after the closest stations, lists each passage touching the complex with its two stations,
 their chips, its length and Remove (nothing refunded once built). Only the player's passages can be

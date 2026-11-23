@@ -18,6 +18,12 @@ pub const BUS_CARS: f32 = 1.0 / 3.0;
 pub const BUS_CROWD_START: f32 = 0.85;
 /// A tram section's share of a rail car's riders (T-2926; `track::params` `riders_scale` of the tram kinds).
 pub const TRAM_CARS: f32 = 0.75;
+/// T-4079: a bus stop's walks to change reach this far, m, against `Params::xfer_walk_m` (300) between
+/// stations: at 300 m a dense bus network's stops all joined (notes/T-4079.md).
+pub const BUS_WALK_M: f32 = 150.0;
+/// T-4079 (Anita 2026-11-23): a change on foot with no passage at a bus stop or BRT station takes this many real
+/// minutes more than its walk, so a passage there saves one minute.
+pub const CONNECTION_MIN: f32 = 1.0;
 
 #[derive(Clone)]
 pub struct Network {
@@ -107,6 +113,19 @@ impl Network {
     #[inline]
     pub fn bus_only(&self, s: usize) -> bool {
         self.st_bus.get(s).copied().unwrap_or(false)
+    }
+    /// T-4079: how far riders walk to change between stations `a` and `b` outside a complex: `xfer_walk_m`,
+    /// or `BUS_WALK_M` where either is a bus stop only.
+    #[inline]
+    pub fn walk_reach_m(&self, a: usize, b: usize, xfer_walk_m: f32) -> f32 {
+        if self.bus_only(a) || self.bus_only(b) { xfer_walk_m.min(BUS_WALK_M) } else { xfer_walk_m }
+    }
+    /// T-4079: the real minutes a change on foot between `a` and `b` with no passage adds to its walk:
+    /// `CONNECTION_MIN` where either is a bus stop only or a BRT station, else none.
+    #[inline]
+    pub fn connection_min(&self, a: usize, b: usize) -> f32 {
+        let bus = |s: usize| self.bus_only(s) || self.ups(s) & crate::track::upgrades::BRT_STATION != 0;
+        if bus(a) || bus(b) { CONNECTION_MIN } else { 0.0 }
     }
     /// Whether station `s` is served by tram lines only (T-2926).
     #[inline]

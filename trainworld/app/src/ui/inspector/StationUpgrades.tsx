@@ -189,7 +189,10 @@ function PassageButton({ s }: { s: StationInput }) {
   const most = Math.round(PASSAGE_BASE + PASSAGE_PER_KM * LINK_MAX_M / 1000), m = moneyState.value;
   // T-3922: a range as `millionsRange` writes one
   const upkeep = `${money(upgradeUpkeep(PASSAGE_BASE, m))}-${money(upgradeUpkeep(most, m))}`; // i18n-ignore
-  const tip = t("stationUpgrades.passageTip", { distance: roughDistance(LINK_MAX_M), range: millionsRange(PASSAGE_BASE, most), upkeep, picking });
+  const lines = t("stationUpgrades.passageTip", { distance: roughDistance(LINK_MAX_M), range: millionsRange(PASSAGE_BASE, most), upkeep, picking }).split("\n");
+  // T-4079: at a BRT station a transfer with no passage takes a minute more (sim demand `CONNECTION_MIN`), said after what it does
+  if (s.brt) lines.splice(2, 0, t("stationUpgrades.passageSaves"));
+  const tip = lines.join("\n");
   return (
     <button class={"btn icon upgrade" + state} aria-label={t("stationUpgrades.passage")} aria-pressed={picking} data-tip={tip}
       onClick={() => (picking ? cancelLink() : startLink(s.id))}>

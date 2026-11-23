@@ -12,7 +12,7 @@ A station has four things you can add, from the row of icons in its panel. You b
 
 **Complexes.** Linked stations share park and ride and the waiting room. Building one in the complex view builds it at every station of the complex, at one price each. A station that joins later has none until you build it there.
 
-**Passage.** A walkway between two stations so riders can change between them on foot. It costs US$10M plus US$90M a km of the straight line between them, and can be at most 1,000 m long. Its upkeep is the same share of its price, half at each end. Riders cross it at 2 m/s. A drawn [station building](station-buildings.md) does a similar job for a whole cluster.
+**Passage.** A walkway between two stations so riders can change between them on foot. It costs US$10M plus US$90M a km of the straight line between them, and can be at most 1,000 m long. Its upkeep is the same share of its price, half at each end. Riders cross it at 2 m/s, and at a BRT station it saves them 1 minute on each change. Bus stops can't have one. A drawn [station building](station-buildings.md) does a similar job for a whole cluster.
 
 Exact rule: `docs/track-and-service.md` "Station upgrades"; for what riders feel, `docs/demand-kernel.md` "Access and station-to-station times".
-In the code: **main** `sim/src/track/upgrades.rs` `price`, also `passage_price`, `upkeep`, `pooled_turn_s`, `PARK_RIDE_MIN`, `WAITING_ROOM_WAIT`
+In the code: **main** `sim/src/track/upgrades.rs` `price`, also `passage_price`, `upkeep`, `pooled_turn_s`, `PARK_RIDE_MIN`, `WAITING_ROOM_WAIT` `sim/src/demand/network.rs` `CONNECTION_MIN`

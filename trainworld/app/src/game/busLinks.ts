@@ -7,7 +7,7 @@
 
 import { DEMAND_MERGE_M } from "./complexes";
 import type { ClockBus } from "../workers/protocol";
-import type { WorldView } from "./types";
+import type { StationInput, WorldView } from "./types";
 
 /** Two bus stops of different lines this near each other (ground m) are one place. */
 export const BUS_XFER_M = DEMAND_MERGE_M;
@@ -60,6 +60,8 @@ export function busStopLinks(lines: readonly { line: number; stops: readonly Sto
 
 /** Demand's change walk between stations (`Params::xfer_walk_m`), ground m. */
 export const BUS_WALK_M = 300;
+/** T-4079: and from a place with no train station in it (sim demand `BUS_WALK_M`), ground m. */
+export const BUS_STOP_WALK_M = 150;
 
 /** A bus line's stop, as the bus stop panel and the connectors read it. */
 export interface PlaceStop {
@@ -83,7 +85,7 @@ export interface BusPlace {
   stations: string[];
   /** every line stopping here, bus and train (ids) */
   lines: string[];
-  /** the places and train stations a walk away (`BUS_WALK_M`) with a line this place has not:
+  /** the places and train stations a walk away (`BUS_STOP_WALK_M` where either has no train station, else `BUS_WALK_M`) with a line this place has not:
    * another place (its index, -1 for train stations no bus stops at), those stations, the shortest
    * walk between the two, ground m; nearest first */
   walks: { place: number; stations: string[]; m: number }[];
@@ -175,6 +177,7 @@ export function busPlaces(w: WorldView): BusPlaces {
   for (const [i, j, d] of pairs) {
     const ri = find(i), rj = find(j);
     if (ri === rj || (!placeAt.has(ri) && !placeAt.has(rj))) continue;
+    if (d > (groups.get(ri)!.stations.length && groups.get(rj)!.stations.length ? BUS_WALK_M : BUS_STOP_WALK_M)) continue;
     const k = ri < rj ? `${ri},${rj}` : `${rj},${ri}`;
     const e = near.get(k) ?? near.set(k, { m: Infinity }).get(k)!;
     e.m = Math.min(e.m, d);
@@ -216,6 +219,33 @@ export function busPlaces(w: WorldView): BusPlaces {
       if (d >= 1) out.links.push({ a: nodes[i].stop!, b: nodes[j].stop!, walk: false });
     }
   });
+  return out;
+}
+
+/** T-4079: a BRT station's joins with no passage, which the map draws dashed (a built passage keeps the white
+ * connector): in each group of `groups` (the stations the complex distance rule groups, `dotGroups`) holding a
+ * BRT station, the shortest joins linking its stations that have a BRT station at either end and no passage
+ * between them. */
+export function brtJoins(w: WorldView, groups: readonly (readonly string[])[]): [StationInput, StationInput][] {
+  const byId = new Map(w.save.stations.map((s) => [s.id, s]));
+  const passage = new Set(w.save.links.map(([a, b]) => (a < b ? `${a}|${b}` : `${b}|${a}`)));
+  const out: [StationInput, StationInput][] = [];
+  for (const ids of groups) {
+    const m = ids.map((id) => byId.get(id)).filter((s) => s !== undefined);
+    if (m.length < 2 || !m.some((s) => s.brt)) continue;
+    const joins: [number, number, number][] = [];
+    for (let a = 0; a < m.length; a++) for (let b = a + 1; b < m.length; b++) joins.push([groundM([m[a].lng, m[a].lat], [m[b].lng, m[b].lat]), a, b]);
+    joins.sort((p, q) => p[0] - q[0]);
+    const up = m.map((_, i) => i);
+    const top = (i: number): number => (up[i] === i ? i : (up[i] = top(up[i])));
+    for (const [, a, b] of joins) {
+      const ta = top(a), tb = top(b);
+      if (ta === tb) continue;
+      up[ta] = tb;
+      const [x, y] = [m[a], m[b]];
+      if ((x.brt || y.brt) && !passage.has(x.id < y.id ? `${x.id}|${y.id}` : `${y.id}|${x.id}`)) out.push([x, y]);
+    }
+  }
   return out;
 }
 

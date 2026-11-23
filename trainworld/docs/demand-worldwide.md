@@ -1046,6 +1046,8 @@ notes/T-420.md has the tables.
 
 - **Station merge and walking transfer distances** (100 m merge, 300 m walks). Fine for US
   stations; very large hubs (Shinjuku, Châtelet) have transfers over much longer underground walks.
+  A bus stop's walks reach 150 m (`network::BUS_WALK_M`, T-4079, Anita 2026-11-23: at 300 m a dense
+  bus network's connections looked "kinda silly / web-like"), against 300 m between stations.
   A trip may start with the same walk it may end with (to a station within 300 m or of its
   complex, at a walking transfer's cost, no change minutes or transfer fare; T-3718, Anita
   2026-11-18: "let trips start with walk"), so a commute's way home (its station pair reversed)
@@ -1071,6 +1073,13 @@ notes/T-420.md has the tables.
   (Paris's Chatelet, Tokyo's Otemachi, Hong Kong's Central-Hong Kong walkway) have stairs, gates
   and crowds that slow them below 2 m/s, and riders dislike them more than their minutes say.
   Check: a few published passage times against the rule.
+- **Bus connections without a passage** (T-4079, Anita 2026-11-23: "raw connections lose 1
+  minute"). A change on foot touching a bus stop or a BRT station, through no passage, takes 1 real
+  minute more than its walk (`network::CONNECTION_MIN`, in the walk edge, so the walking rule counts it
+  too), so a passage there saves that minute; train-to-train walks are unchanged. A judgement figure,
+  the size of a station building's saving. Why it may not carry over: a kerbside change between two
+  bus stops can be quicker than a station's, with no stairs or gates. Check: none needed; it is the
+  player's to buy away.
 - **Changes inside a station building** (T-2220, Anita's yes, 2026-11-03: "changes inside it a
   little faster"; T-2276, 2026-11-03: "reduce to 1 minute instead of 2. also it should count as a
   waiting room"). At a station the player has drawn a building round, a change's fixed 2 perceived

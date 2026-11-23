@@ -14,7 +14,7 @@ A boarding costs the wait for the first train worth taking, times the station's 
 
 **Changing trains** costs 2 minutes for the bother, plus the walk from one platform to the other, plus the wait for the next train. Inside a [station building](station-buildings.md) the bother is 50% of that. The walk counts extra, as in [perceived minutes](perceived-minutes.md).
 
-Stations within 300 m of each other are close enough to change on foot. A passage you build works over a longer distance, along a straight line at 2 m/s. A trip can also start or end with that walk, with no bother and no transfer fare, so the way home is the way out reversed.
+Stations within 300 m of each other are close enough to change on foot. A bus stop reaches only 150 m. A passage you build works over a longer distance, along a straight line at 2 m/s. Changing on foot at a bus stop or a BRT station takes 1 minute more than the walk, unless a passage joins the two. A trip can also start or end with that walk, with no bother and no transfer fare, so the way home is the way out reversed.
 
 **Boarding only and getting off only.** A stop of a line can be kept to one or the other. At a boarding-only stop people get on and never off, so nobody rides the line to it, in either direction, and nobody changes off the line there. At a getting-off-only stop it's the other way around. Trains still stop and wait the usual time. Other lines at the same station aren't affected.
 
@@ -25,4 +25,4 @@ A line that bends back close to itself can be changed onto across the bend. Peop
 If the train that arrives is full, the wait gets longer: see [full trains](full-trains.md).
 
 Exact rule: `docs/demand-kernel.md` "Access and station-to-station times". A longer trip between cities is planned, so its first wait is shorter, at most 30 minutes, and it has no extra for long gaps; with several lines it takes whichever gets there first in the same way. Commutes and outings between cities wait as local trips do.
-In the code: **main** `sim/src/demand/kernel/search.rs` `board_cost`, `pool_cost`, `build_graph`, also `planned_board_cost`, `wait_spread`, `even_classes`, `merge_even`, `change_f`, `trip_ends`, `walk_ban` `sim/src/demand/kernel/subzones.rs` `wait_factor` `sim/src/track/upgrades.rs` `WAITING_ROOM_WAIT`, `PASSAGE_MPS` `sim/src/track/span.rs` `line_span`, `stop_span`
+In the code: **main** `sim/src/demand/kernel/search.rs` `board_cost`, `pool_cost`, `build_graph`, also `planned_board_cost`, `wait_spread`, `even_classes`, `merge_even`, `change_f`, `trip_ends`, `walk_ban` `sim/src/demand/kernel/subzones.rs` `wait_factor` `sim/src/track/upgrades.rs` `WAITING_ROOM_WAIT`, `PASSAGE_MPS` `sim/src/track/span.rs` `line_span`, `stop_span` `sim/src/demand/network.rs` `walk_reach_m`, `connection_min`, `BUS_WALK_M`, `CONNECTION_MIN`

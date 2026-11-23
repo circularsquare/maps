@@ -1188,6 +1188,31 @@ fn a_passage_walks_the_straight_line_faster() {
     assert!((walk(&net) - 2000.0 / 2.0 / 60.0 * p.w_xfer).abs() < 1e-4, "{}", walk(&net));
 }
 
+/// T-4079: a bus stop's walks reach `BUS_WALK_M`, not `xfer_walk_m`; a walk with no passage at a bus stop or a
+/// BRT station takes `CONNECTION_MIN` more; a passage there walks as any passage; between stations, as before.
+#[test]
+fn a_bus_stops_walks_are_shorter_and_slower_without_a_passage() {
+    use crate::demand::network::{BUS_WALK_M, CONNECTION_MIN};
+    let p = Params { xfer_walk_m: 300.0, ..common_test_params() };
+    let walk = |d: f32, bus: bool, brt: bool, passage: bool| {
+        let mut net = common_test_net(&[&[0, 2]], &[6.0], &[2.0]);
+        net.st_x[1] = d;
+        if bus { net.st_bus = vec![false, true, false, false] }
+        if brt { net.st_ups = vec![upgrades::BRT_STATION, 0, 0, 0] }
+        if passage { net.st_passage = vec![[0, 1]] }
+        let g = build_graph(&net, &p);
+        let rn = g.rn_station.iter().position(|&s| s == 0).unwrap() + g.n_st;
+        (g.adj_off[rn] as usize..g.adj_off[rn + 1] as usize).find(|&e| g.adj_to[e] == 1).map(|e| g.adj_cost[e] / p.w_xfer)
+    };
+    let near = BUS_WALK_M - 20.0;
+    assert_eq!(walk(BUS_WALK_M + 50.0, true, false, false), None, "a bus stop past its reach");
+    assert!((walk(BUS_WALK_M + 50.0, false, false, false).unwrap() - p.xfer_min(BUS_WALK_M + 50.0)).abs() < 1e-4, "stations walk as before");
+    for (bus, brt) in [(true, false), (false, true)] {
+        assert!((walk(near, bus, brt, false).unwrap() - p.xfer_min(near) - CONNECTION_MIN).abs() < 1e-4, "{bus} {brt}");
+        assert!((walk(near, bus, brt, true).unwrap() - near / 2.0 / 60.0).abs() < 1e-4, "{bus} {brt}: a passage");
+    }
+}
+
 #[test]
 fn common_lines_are_destination_specific_and_ignore_unhelpful_service() {
     let p = common_test_params();
