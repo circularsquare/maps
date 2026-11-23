@@ -6,19 +6,11 @@ Updated: 2026-11-22 16:55 UTC (maps-17's process was gone at takeover; its four 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5.
 
 ## Next
-T. T-4041 LANDED ac526280 (her top priority; "use the rest of our usage toward this end"; reset ~11-23 10:00 UTC):
-   first-arrival rule, 0.75 softening, late joins, street trams no 2+2. +45% solve / +14% heap (she said "probably
-   worth it" to +13%: asked again; T-4054 filed to cut it). Running: batchcheck14 (sonnet, master, port 6141) and
-   evenspaced (opus, T-4050, tree evenspaced). Both in the next update, "probably tomorrow evening" (11-23).
-   batchcheck14: T-4041 PASS; bar never ended full -> fixed 0c336c7f; T-4055 a stale final after a two-zone edit,
-   older than T-1354, queued (P2), not holding the publish. Her 11-22 ~23:30 UTC: keep the cliff fix, try the cheaper one (T-4054,
-   P1); first-train quarter stays agnostic about changes (the deadline keeps them no later than direct).
-   T-4050 LANDED bc5d4f39 (real save unchanged: its lines have their own stations). T-4054 stage 1 landed 4a78edcc
-   (search 10% faster, solve ~2%, same answers; solve still ~+40%: rest waits on her). batchcheck15 PASS on T-4050
-   + T-4054 (bar-end FAIL fixed fa196b91, smoke PASS). 8800 -> fa196b91. Pushed. Next: the publish skill for her
-   update (11-23 evening) after the usage reset: freeze, translations, smoke8800, changelog review, her text OK.
-   Slowdown accepted (her 11-23 ~02:00 UTC: "thats okay. we can look for further speedups elsewhere, tomorrow"):
-   T-4054 P1 for 11-23, speedups anywhere in the solve.
+T. Landed 11-22, both batch checkers passed: T-4041 (first arrival, 0.75 softening, late joins kept by her, street
+   trams no 2+2), T-4050 (evenly spaced shared platforms), T-4054 stage 1, load bar skew + fills at end. 8800 =
+   fa196b91, master pushed. Solve ~+40%, accepted (her 11-23 ~02:00 UTC: "we can look for further speedups
+   elsewhere, tomorrow"): T-4054 P1. NEXT after the usage reset (~10:00 UTC): the publish skill for her update
+   "probably tomorrow evening" (freeze, translations, smoke8800, changelog review, her text OK). T-4055 P2 queued.
    Leftover folder .tw-trees/arrivefirst (not a worktree; node_modules junction inside: don't delete by hand).
    Her hope: "buses get more reasonable values relative to trams ... more uniform ... cuz everything is parallel".
 U. Everything else paused for usage, trees kept, {after:next week's usage}: T-4024, T-4043, T-3346, T-3932, T-4025,
@@ -28,8 +20,7 @@ U. Everything else paused for usage, trees kept, {after:next week's usage}: T-40
    publish yet. Before one: fresh freeze, translations (T-3986, T-3991, T-3999, T-4003, T-4010, T-2264, T-3933,
    T-3378 s4, T-4013, T-4005, T-4040, and the new zones' names: place_names.mjs --zones), smoke on a quiet machine. Batch 13
    + the night's data passed a checker on 547389c2 (11-22). Server deployed 3b14158. Save level 38 on master.
-1. 8800 = 547389c2. master since: T-4040 (UI), T-1354 (demand worker). Once hokkaido's join ends (it owns
-   data/packs): sync-track, then 8800 = tw/track tip as her preview (her yes 11-22; saves made there won't load on
+1. Once hokkaido lands (it owns data/packs): sync-track, then 8800 = tw/track tip as her preview (her yes 11-22; saves made there won't load on
    master or live: told her), and a batch checker on master. All strings to 11-22 16:10 UTC acknowledged ("Part of a bundle of # tracks", her wording).
 2. TRACK (her top priority): tw/track has 1-3g, 4a1, 4a2, 4c, 4e picture, T-4030 a-f, T-4038, levels (T-3691), 4b's
    two fixes. T-3961's merge waits for g; T-3964 Join waits T-4043. g (T-4037): her calls in the task (compare her
