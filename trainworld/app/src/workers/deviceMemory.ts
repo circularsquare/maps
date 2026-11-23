@@ -56,6 +56,10 @@ export const budgetKnown = (): boolean => addressLimited() || (navigator as Navi
  * the phone holds (notes/T-3781.md), and the budget above is only a guess there. */
 export const tabLimited = (): boolean => mobileDevice() && (navigator as Navigator & { deviceMemory?: number }).deviceMemory === undefined;
 
+/** T-4103: a phone or tablet loads lighter, figures unchanged: its one solving worker is the aux worker too, and
+ * a coarse zone is not refined for being looked at (notes/T-4103.md) */
+export const phoneLoad = (): boolean => mobileDevice();
+
 /** A phone or tablet, or a device of 4 GB or less: one solving worker and no focus pool, and the map's lean
  * ways (T-2794: its pixel ratio capped, the outlines kept compact) */
 export function smallDevice(): boolean {

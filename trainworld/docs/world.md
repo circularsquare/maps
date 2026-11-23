@@ -157,7 +157,9 @@ arrives) changes, and every answer names its anchor. Disc sizes use k at the dis
   units) and re-expresses the points from the float64 mercator it keeps per edge and line; the
   stroke pieces built from them are shifted by the anchor's move in float32 (within a few cm near the
   view; laid exactly after a move over 2^22 local units and every 8th move), and the network is posted
-  whole (T-1170). Every main-thread Float32 cache in view units (demand discs,
+  whole (T-1170). On such a shift the lines' bands and the corridors beside each edge (metres along and across
+  edges) carry over to the moved points rather than being worked out again (`shiftKept`, T-4103), so their line
+  strokes are shifted copies too, off a fresh build by the same float32 rounding. Every main-thread Float32 cache in view units (demand discs,
   bubbles, the trip view, labels' positions, station shapes) rebuilds on the anchor's version,
   the way they already rebuild when the frame or the focused city changes (T-125). Workers never
   send anchored units; they send world positions or pack positions, and the main thread anchors

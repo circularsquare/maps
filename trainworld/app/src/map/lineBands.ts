@@ -13,7 +13,7 @@
 // lasts less than CORRIDOR_MIN_M is smoothed away, so edges cut at different places on two tracks do
 // not make a line step sideways.
 
-import { besideSamples, type Beside, type EdgeSamples } from "./corridors";
+import { besideSamples, shiftBeside, type Beside, type EdgeSamples } from "./corridors";
 import { kAtY } from "./geo";
 
 /** T-1821: the Line view's line width as a multiple of the width the Traffic view's scale is set
@@ -154,16 +154,17 @@ export function lineBands(lines: readonly BandLine[], edges: readonly BandEdge[]
   let sig = `${opts?.corridors ?? CORRIDORS},${opts?.within ?? ""},${bandMode};`;
   for (const l of rail) sig += `${l.id}:${l.path.join(",")};`;
   const used = [...on.keys()].map((e) => [pts.get(e), ends.get(e)?.a, ends.get(e)?.b] as const);
-  if (!opts?.debug && last && last.sig === sig && last.used.length === used.length && used.every((u, i) => u[0] === last!.used[i][0] && u[1] === last!.used[i][1] && u[2] === last!.used[i][2])) return { ...last.out, corridor: last.corridor.slice() };
+  // (T-3939: `rule` is asked of a kept result by one whole pass, on this call's points)
+  let whole: LineBands | null = null;
+  const rule = (edge: number, x: number, y: number) => (whole ??= bands(rail, on, ends, pts, { ...opts, fresh: true })).rule(edge, x, y);
+  if (!opts?.debug && last && last.sig === sig && last.used.length === used.length && used.every((u, i) => u[0] === last!.used[i][0] && u[1] === last!.used[i][1] && u[2] === last!.used[i][2])) return { ...last.out, rule, corridor: last.corridor.slice() };
   const out = bands(rail, on, ends, pts, opts);
   if (bandCheck && !opts?.debug) {
     const bad = bandsDiffer(out, bands(rail, on, ends, pts, { ...opts, fresh: true }));
     if (bad) console.error(`T-2238 check: bands worked out again for an edit differ from a whole pass: ${bad}`);
   }
   // (a copy: the clock worker transfers the array it posts.) T-3939: kept without `rule`, whose closure holds the
-  // whole of `bands`' working set (18 MB on a 13-zone Tokyo game); asked of a kept result, one whole pass answers
-  let whole: LineBands | null = null;
-  const rule = (edge: number, x: number, y: number) => (whole ??= bands(rail, on, ends, pts, { ...opts, fresh: true })).rule(edge, x, y);
+  // whole of `bands`' working set (18 MB on a 13-zone Tokyo game)
   last = { sig, used, out: { of: out.of, order: out.order, rule, corridor: out.corridor }, corridor: out.corridor.slice() };
   return out;
 }
@@ -214,6 +215,13 @@ function bandsDiffer(a: LineBands, b: LineBands): string {
 }
 
 let last: { sig: string; used: (readonly [Float32Array | undefined, number | undefined, number | undefined])[]; out: LineBands; corridor: Float32Array } | null = null;
+
+/** T-4103: the view's anchor moved (`shiftNetCache`): the kept bands (by line and edge, in metres) and corridors carry
+ * over to each edge's points in the moved frame (`moved`, old array to new), as if worked out on them. */
+export function shiftKept(moved: ReadonlyMap<Float32Array, Float32Array>) {
+  if (last) last = { ...last, used: last.used.map(([p, a, b]) => [p && (moved.get(p) ?? p), a, b] as const) };
+  shiftBeside(moved);
+}
 
 /** a recipe of a line's own: its ribbon (`rk` its lines and edges as text, `rib` them interleaved), slot and sign */
 interface OwnRecipe { key: string; rk: string; rib: number[]; slot: number; sgn: number }

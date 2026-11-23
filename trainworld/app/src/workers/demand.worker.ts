@@ -14,7 +14,8 @@
 //
 // T-325: the aux worker also holds the zones no station reaches, opened `bare`: their commute and
 // everyday layers on an empty network, solved once for every period with no rail. Their bubbles
-// and city figures come from there; no solve covers them, and no solving worker opens them.
+// and city figures come from there; no solve covers them, and no solving worker opens them, except
+// on a phone (T-4103, `bareToo`), whose one solving worker is the aux worker too and answers between populations.
 //
 // T-301: `close` frees packs (and the market) the page no longer needs; one the solve in hand
 // covers goes when that solve ends.
@@ -43,6 +44,8 @@ let started = false;
 /** init and open in arrival order, each after the one before (T-149: packs arrive one by one) */
 let opening: Promise<void> = Promise.resolve();
 let aux = false;
+/** T-4103: a solving worker that is the aux worker too (a phone's pool): it holds the zones open bare */
+let bareToo = false;
 let warmed = false;
 const cities = new Map<CityId, DemandApi>();
 /** the cities the network in hand was set on (`current`'s job): only these answer queries */
@@ -980,7 +983,7 @@ function openQueued(epoch: number): Promise<void> {
       if (j < 0) j = openQueue.findIndex((q) => q.epoch === epoch && q.msg.packs.length > 0);
       if (j > 0) { openQueue.unshift(...openQueue.splice(j, 1)); first = openQueue[0]; }
     }
-    const isBare = !!first.msg.bare && aux;
+    const isBare = !!first.msg.bare && (aux || bareToo);
     // T-1533: only market packs open together (one composition for them all); a city pack opens on
     // its own, so the zone in view's, moved ahead (`first`), waits for one pack at most
     let n = 1;
@@ -1036,6 +1039,7 @@ onmessage = (e: MessageEvent<ToDemand>) => {
         if (msg.heapStep) set_heap_step(msg.heapStep);
         const t1 = performance.now();
         aux = !!msg.aux;
+        bareToo = !!msg.bareToo;
         mine = msg.periods;
         mkt = msg.markets ?? mine;
         shareMarkets = !!msg.share;
@@ -1398,7 +1402,8 @@ function query(msg: Query) {
       // T-195: the trip as a commute, or as an everyday purpose (T-586), each period this worker
       // holds; the cells back in world metres
       // (T-979: a zone open bare is answered by the aux worker's copy, every period solved on no network)
-      const b = aux ? bare.get(msg.city) : undefined;
+      // (T-4103: in a solving worker that is the aux worker too, a zone it does not solve)
+      const b = aux || (bareToo && !live) ? bare.get(msg.city) : undefined;
       const api = b ? b.a : live ? a! : null;
       const answers: Float64Array[] = [], periods: number[] = [];
       if (api) {

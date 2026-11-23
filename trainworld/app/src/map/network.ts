@@ -16,7 +16,7 @@ import { M_BAD, M_CONVERGE, M_CROSSING, M_DIVERGE, M_JUNCTION, M_RAMPEND, M_REPE
 import { repeatedEdge } from "../game/repeatTrack";
 import { newFacilityCache, placeFacilities, type FacilityCache } from "./facilityPlace";
 import { buildingsDrawn, type BuildingDraw } from "./buildingNet";
-import { BAND_M_RANGE, BAND_RANGE, BAND_STRIDE, bandKnots, KNOT, lineBands, profileAt, type BandProfile } from "./lineBands";
+import { BAND_M_RANGE, BAND_RANGE, BAND_STRIDE, bandKnots, KNOT, lineBands, profileAt, shiftKept, type BandProfile } from "./lineBands";
 import { BOX_TOUCH_M, DEMAND_MERGE_M, offsetsReach, polylineGap } from "../game/complexes";
 import { acrossAt, endClear, singleSplitEnds, splitValue, TURNBACK_M, type SplitEnd } from "./terminalBays";
 import { bridgeEnds, PASS_LEAD_M, passBow, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, platformShape, reversed, ST_BUFFER, ST_BUILDING, ST_PARK, ST_ONE, ST_ONE_MID, ST_ONE_NEG, ST_PASSING, ST_SINGLE, ST_ROOM, ST_TERMINAL, ST_TRAM, type PlatformShape } from "./stationGeometry";
@@ -1433,10 +1433,12 @@ export function shiftNetCache(cache: NetCache, was: ReadonlyMap<number, Float32A
     }
     return t;
   };
+  const movedPts = new Map<Float32Array, Float32Array>();
   for (const [id, c] of cache.edges) {
     const g = given.get(id);
     if (!g || g.length !== c.pts.length || c.given !== was.get(id)) { cache.edges.delete(id); continue; }
     const pts = g.slice();
+    movedPts.set(c.pts, pts);
     let lpts = pts;
     if (c.lpts !== c.pts) {
       lpts = new Float32Array(c.lpts.length);
@@ -1459,6 +1461,7 @@ export function shiftNetCache(cache: NetCache, was: ReadonlyMap<number, Float32A
   }
   for (const [id, sp] of cache.speeds) cache.speeds.set(id, { ...sp, strokes: sp.strokes.map((s) => (s ? moved.get(s) ?? s : s)) });
   cache.last = null;
+  shiftKept(movedPts);
 }
 
 /**

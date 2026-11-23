@@ -80,7 +80,7 @@ import {
   demandHeld,
 } from "../game/demand";
 import { FOCUS_WORKERS, FocusPool } from "./demandFocus";
-import { addressLimited, deviceGB, heapStep, memBudget, mobileDevice, smallDevice } from "./deviceMemory";
+import { addressLimited, deviceGB, heapStep, memBudget, mobileDevice, phoneLoad, smallDevice } from "./deviceMemory";
 import { outsideWasmBytes } from "./liveMemory";
 import { isMemoryFailure } from "../game/loadText";
 import { makeFrame } from "../game/frame";
@@ -854,9 +854,14 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
 }
 
 class DemandClient {
-  /** The pool's workers that solve periods, then one more with none (`aux`, demand.worker.ts). */
+  /** The pool's workers that solve periods, then one more with none (`aux`, demand.worker.ts), except on a phone. */
   private workers: Worker[] = [];
   private computeN = 0;
+  /** T-4103: a phone's pool of one solving worker has no aux worker: worker 0 holds the zones open bare and answers
+   * the aux worker's questions between its populations (65-80 MB less; never with `?split=1`) */
+  private auxShared = false;
+  /** the worker that holds the zones open bare and answers the aux worker's questions */
+  private get auxAt(): number { return this.auxShared ? 0 : this.computeN; }
   private periodsOf: number[][] = [];
   /** T-1607: the periods whose market each solving worker solves in a solve with the barrier */
   private marketsOf: number[][] = [];
@@ -889,10 +894,10 @@ class DemandClient {
   /** the workers an item is posted to and must be acknowledged by: its solving holders and the aux worker (a
    * market pack's as empty bytes) */
   private holdersOf(item: string): number[] {
-    return [...this.solvingHolders(item), this.computeN];
+    return [...new Set([...this.solvingHolders(item), this.auxAt])];
   }
   private holds(i: number, item: string): boolean {
-    return i === this.computeN || this.solvingHolders(item).includes(i);
+    return i === this.auxAt || this.solvingHolders(item).includes(i);
   }
   /** every worker's sums for a round of the newest solve, sent unasked (T-119): `version:round:city` */
   private pushed = new Map<string, { mask: number; sums: Float32Array; everyday: Float32Array | null }[]>();
@@ -1044,7 +1049,9 @@ class DemandClient {
     if (new URLSearchParams(location.search).has("debug")) console.info(`demand workers: ${n} (threads ${navigator.hardwareConcurrency}, memory ${(navigator as { deviceMemory?: number }).deviceMemory ?? "not reported"})`);
     if (this.holding) this.holding = new Holding(n);
     this.dealPeriods(n);
-    for (let i = 0; i <= n; i++) this.workers.push(this.spawn(i, i === 0 && n > 1));
+    // (a pool of one stays one: `growTo` grows to `poolN` at most)
+    this.auxShared = n === 1 && phoneLoad() && !this.holding;
+    for (let i = 0; i < n + (this.auxShared ? 0 : 1); i++) this.workers.push(this.spawn(i, i === 0 && n > 1));
     if (this.viewHeld) setTimeout(() => this.releaseView(), 10_000);
     // the viewed city loads when it changes (a pan, the city buttons)
     effect(() => { activeCity.value; viewedZone.value; zonesLoadForView.value; this.ensure(); });
@@ -1117,7 +1124,7 @@ class DemandClient {
     };
     w.onmessageerror = () => { const j = at(); if (j >= 0) this.fail(`worker ${j}: a message could not be read`); }; // i18n-ignore
     // T-325: the aux worker is told every solving worker's periods, for the zones it holds bare
-    const msg: ToDemand = { kind: "init", packs: [], periods: this.periodsOf[i], ...(i < n ? this.marketsMsg(i) : {}), aux: i === n, warmEveryday, ...(i === n ? { groups: this.auxGroups() } : {}), heapStep: heapStep(), ...SUM_FLAGS };
+    const msg: ToDemand = { kind: "init", packs: [], periods: this.periodsOf[i], ...(i < n ? this.marketsMsg(i) : {}), aux: i === n, warmEveryday, ...(i === n ? { groups: this.auxGroups() } : {}), ...(this.auxShared && i === 0 ? { bareToo: true, groups: this.auxGroups() } : {}), heapStep: heapStep(), ...SUM_FLAGS };
     w.postMessage(msg);
     // T-3781, dev server only: `?debugStall=i` has worker i's first solve wait forever (a replacement does not)
     if (import.meta.env.DEV && Number(new URLSearchParams(location.search).get("debugStall") ?? -1) === i && !this.stallSent) {
@@ -1472,7 +1479,9 @@ class DemandClient {
     const out: CityId[] = [];
     const add = (id: CityId | null | undefined) => { if (id && !out.includes(id)) out.push(id); };
     const v = this.viewedSet().has(activeCity.peek()) ? activeCity.peek() : null;
-    if (v && this.viewAt.id === v && now - this.viewAt.at >= VIEW_SETTLE_MS) add(v);
+    // (T-4103: on a phone the view keeps a fine zone fine but never refines a coarse one: about 140 MB for a minute
+    // after a pan, for a few MB of detail)
+    if (v && this.viewAt.id === v && now - this.viewAt.at >= VIEW_SETTLE_MS && (!phoneLoad() || this.fine.has(v))) add(v);
     const sel = selection.peek();
     const at = (x: number, y: number) => zoneAt(...packToLngLat(x, y));
     if (sel?.kind === "city") add(sel.city as CityId);
@@ -1681,7 +1690,7 @@ class DemandClient {
 
   /** Close zones open bare in the aux worker; their figures stay shown. */
   private closeBare(ids: CityId[]) {
-    this.workers[this.computeN].postMessage({ kind: "close", ids, bare: true } satisfies ToDemand);
+    this.workers[this.auxAt].postMessage({ kind: "close", ids, bare: true } satisfies ToDemand);
     for (const id of ids) {
       this.bareKept.set(id, this.bareOpen.get(id)!);
       this.bareOpen.delete(id);
@@ -1966,7 +1975,7 @@ class DemandClient {
         return this.postMarkets();
       }
       const msg: ToDemand = { kind: "open", packs: [pack], bare: true, ...(this.firstZones().includes(id) ? { first: true } : {}) };
-      this.workers[this.computeN].postMessage(msg, [own]);
+      this.workers[this.auxAt].postMessage(msg, [own]);
     // i18n-ignore: a stored name or a developer diagnostic
     }).catch((err) => { this.unreachable(id, id, `city pack ${id}: ${String(err)}`); this.postMarkets(); });
   }
@@ -3109,7 +3118,7 @@ class DemandClient {
   private async reopen(i: number) {
     const r = this.respawn.get(i)!, aux = i === this.computeN;
     const items = [...this.fetching].filter((x) => (!aux || !isMarket(x)) && this.holds(i, x));
-    const bare = aux ? [...this.fetchingBare] : [];
+    const bare = i === this.auxAt ? [...this.fetchingBare] : [];
     // the downloads of every replacement share REOPEN_FETCHES places (T-3604: all of them at once, in three
     // workers, ran the browser out of connections: ERR_INSUFFICIENT_RESOURCES, and the replacements never opened)
     const stale = () => this.respawn.get(i) !== r || this.failed;
@@ -4521,7 +4530,7 @@ class DemandClient {
     const viaFocus = (id: CityId) => !this.opened.has(id) && !!this.fpool?.open.includes(id);
     const load = (id: CityId) => (viaFocus(id) ? Promise.resolve(true) : this.whenOpen(id)).then(async (ok): Promise<CityCells | null> => {
       if (!ok) return null;
-      const [r] = viaFocus(id) ? await this.askFocusAux((q) => ({ kind: "cells", id: q, frame: frameOf() }), other) : await this.ask((q) => ({ kind: "cells", id: q, frame: frameOf() }), [this.computeN], [], other);
+      const [r] = viaFocus(id) ? await this.askFocusAux((q) => ({ kind: "cells", id: q, frame: frameOf() }), other) : await this.ask((q) => ({ kind: "cells", id: q, frame: frameOf() }), [this.auxAt], [], other);
       if (r?.kind !== "cells" || r.xy.length === 0) return null;
       return { n: r.xy.length / 2, xy: r.xy, h3: r.h3, zone: r.zone, zoneM: r.zoneXY[0], zoneXY: r.zoneXY.subarray(1) };
     });
@@ -4589,7 +4598,7 @@ class DemandClient {
       for (const kind of kinds) {
         if (bare) {
           // T-325: the aux worker's no-rail pass, one part per solving worker's periods
-          const [r] = await this.ask((id) => ({ kind: "bare", id, version, purpose: kind }), [this.computeN], [], other);
+          const [r] = await this.ask((id) => ({ kind: "bare", id, version, purpose: kind }), [this.auxAt], [], other);
           if (r?.kind !== "bare" || !r.commute) return null;
           for (const p of bareParts(r)) if (p.length === modes.length) addInto(modes, p);
           continue;
@@ -4683,7 +4692,7 @@ class DemandClient {
         const [r] = await this.ask((id) => ({ kind: "zoneSquares", id, version }), [w], [], other);
         return r?.kind === "zoneSquares" && r.xy && r.sq && r.share ? { xy: r.xy, sq: r.sq, share: r.share } : null;
       };
-      const q: Promise<ZoneSq | null> = (async () => (await ask(this.isBare(city) ? this.computeN : 0)) ?? (await ask(this.isBare(city) ? 0 : this.computeN)))();
+      const q: Promise<ZoneSq | null> = (async () => (await ask(this.isBare(city) ? this.auxAt : 0)) ?? (await ask(this.isBare(city) ? 0 : this.auxAt)))();
       this.zsq.set(city, (p = q));
       q.then((v) => { if (!v && this.zsq.get(city) === q) this.zsq.delete(city); });
     }
@@ -4787,7 +4796,7 @@ class DemandClient {
       // (T-2453: a zone open bare whose figures shown are of no solve, while a solve with it runs: that solve's)
       const bare = this.isBare(city) && !at.solve?.cities.includes(city);
       const replies = bare
-        ? await this.ask((id) => ({ kind: "tripLengths", id, version: 0, bare: true }), [this.computeN], [], city)
+        ? await this.ask((id) => ({ kind: "tripLengths", id, version: 0, bare: true }), [this.auxAt], [], city)
         : byMask(await this.ask((id) => ({ kind: "tripLengths", id, version: at.version }), undefined, [], city, at));
       let mask = 0, sum: Float64Array | null = null, edges: Float32Array | null = null, work: Float64Array | null = null, kinds: Float64Array | null = null;
       for (const r of replies) {
@@ -4891,7 +4900,7 @@ class DemandClient {
         }
       }
       if (!sums || mask !== ALL_PERIODS) return null;
-      const [r] = await this.ask((id) => ({ kind: "cellModes", id, version: at.version, sums: sums! }), [this.computeN], [sums.buffer], other, at);
+      const [r] = await this.ask((id) => ({ kind: "cellModes", id, version: at.version, sums: sums! }), [this.auxAt], [sums.buffer], other, at);
       if (r?.kind !== "cellModes" || !r.modes) return null;
       // (T-1533: a later round of the same solve published meanwhile still takes these: its bubbles ask
       // again, and an older round's beat none while a slow answer chases the rounds)
@@ -4916,7 +4925,7 @@ class DemandClient {
    * mode (no rail) and each solving worker's periods' everyday legs, added up as `cellModes` adds
    * the workers' answers for a solved city. */
   private async bareModes(city: CityId, everydayToo: boolean, version: number, round: number, day: DemandDay, other: CityId | undefined, solve: number, t: Target): Promise<CellModes | null> {
-    const [r] = await this.ask((id) => ({ kind: "bare", id, version, purpose: everydayToo ? -1 : -2 }), [this.computeN], [], other);
+    const [r] = await this.ask((id) => ({ kind: "bare", id, version, purpose: everydayToo ? -1 : -2 }), [this.auxAt], [], other);
     if (r?.kind !== "bare" || !r.commute || !r.commute.length) return null;
     let extra: Float32Array | null = null;
     for (const p of bareParts(r)) {
@@ -5098,7 +5107,7 @@ class DemandClient {
     const at = routeNodes(solve?.layout ?? []);
     const periods: Trip["periods"] = PERIODS.map(() => null);
     let mask = 0, outside = false;
-    for (const r of await this.ask((id) => ({ kind: "trip", id, version: t.version, from, to, ...(purpose >= 0 ? { purpose } : {}) }), bare ? [this.computeN] : undefined, [], undefined, t)) {
+    for (const r of await this.ask((id) => ({ kind: "trip", id, version: t.version, from, to, ...(purpose >= 0 ? { purpose } : {}) }), bare ? [this.auxAt] : undefined, [], undefined, t)) {
       if (r.kind !== "trip" || !r.answers) return null;
       mask |= r.mask;
       r.periods.forEach((q, i) => {
@@ -5167,7 +5176,7 @@ class DemandClient {
     let purposeParts: PurposePart[];
     if (this.isBare(city)) {
       // T-336: a zone open bare: the aux worker's no-rail pass, one part per solving worker's periods
-      const [r] = await this.ask((id) => ({ kind: "bareFlows", id, version, end: e, cells }), [this.computeN]);
+      const [r] = await this.ask((id) => ({ kind: "bareFlows", id, version, end: e, cells }), [this.auxAt]);
       if (r?.kind !== "bareFlows" || !r.packed) return null;
       p = r.packed;
       purposeParts = r.masks.map((mask, i) => ({ mask, work: r.work[i], everyday: r.everyday[i] ?? null, names: r.names }));
@@ -5302,7 +5311,7 @@ class DemandClient {
   /** T-336: a selection of the zone in view, open bare, as the regional market's squares, from the
    * aux worker (the solving workers hold the market but not the zone); null when it has none. */
   private async bareSquares(version: number, end: number, cells: Uint32Array): Promise<SelSquares | null> {
-    const [r] = await this.ask((id) => ({ kind: "bareSquares", id, version, end, cells }), [this.computeN]);
+    const [r] = await this.ask((id) => ({ kind: "bareSquares", id, version, end, cells }), [this.auxAt]);
     return r?.kind === "bareSquares" && r.xy && r.share ? { xy: r.xy, share: r.share, ...(r.air ? { air: r.air } : {}) } : null;
   }
   /** A selection of the zone in view as the regional market's squares, for a market question at `t`: a zone open

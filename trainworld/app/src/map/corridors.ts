@@ -73,6 +73,24 @@ const made = new Map<number, { samples: EdgeSamples; sums: Map<number, [number, 
 /** per edge, the edges whose own records see it */
 let seenBy = new Map<number, Set<number>>();
 
+/** T-4103: the view's anchor moved (`shiftNetCache`): each edge in `moved` is the same track in the moved frame, so its
+ * records (metres along and across edges) carry over to its new points, and a next call that finds them unchanged
+ * gives what it gave before. Without this a far jump of the view worked every edge out again. */
+export function shiftBeside(moved: ReadonlyMap<Float32Array, Float32Array>) {
+  for (const [id, r] of cache) {
+    const p = moved.get(r.prep.p);
+    if (!p || p.length !== r.prep.p.length) continue;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (let i = 0; i < p.length; i += 3) {
+      if (p[i] < x0) x0 = p[i];
+      if (p[i] > x1) x1 = p[i];
+      if (p[i + 1] < y0) y0 = p[i + 1];
+      if (p[i + 1] > y1) y1 = p[i + 1];
+    }
+    cache.set(id, { prep: { ...r.prep, p, k: kAtY((y0 + y1) / 2), box: [x0, y0, x1, y1] }, rec: r.rec });
+  }
+}
+
 function prepOf(id: number, p: Float32Array, a: number, b: number): Prep | null {
   const m = p.length / 3;
   if (m < 2) return null;

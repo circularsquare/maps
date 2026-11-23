@@ -173,6 +173,9 @@ export type ToDemand =
       /** T-325, the aux worker: each solving worker's periods, in worker order, so a zone it holds
        * alone answers period group by period group as the solving workers would */
       groups?: number[][];
+      /** T-4103: a solving worker that also holds the zones open bare and answers the aux worker's questions (a phone's
+       * pool has no aux worker, `phoneLoad`); `groups` as for the aux worker */
+      bareToo?: boolean;
       /** T-1607: the periods whose market this worker solves in a solve with the barrier (`share`
        * true in every solving worker when any market sits apart from its period's cities) */
       markets?: number[]; share?: boolean;

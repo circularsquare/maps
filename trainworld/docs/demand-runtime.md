@@ -70,7 +70,7 @@ throughout). Startup timings: notes/T-172.md, notes/T-174.md.
 ## Bare zones
 
 **Bare zones** (T-325, T-336). A zone viewed or on screen beside the view (above zoom 7.5, T-871)
-that no built station reaches opens **bare**: its pack goes to the auxiliary worker alone, which sets its commute and
+that no built station reaches opens **bare**: its pack goes to the auxiliary worker alone (on a phone, the solving worker), which sets its commute and
 everyday layers on an empty network and solves every period once. With no station in reach every
 trip walks or drives, so these are exactly the figures any solve gives it. No solving worker opens
 it and no solve is started or waited for, so a pan never re-solves. The `opened` reply carries
@@ -114,7 +114,9 @@ solved with no station in it.
 cover is open fine or coarse in the solving workers (the aux worker opens every zone fine; its
 commute copies only map sums to cells). The page keeps a fine set, checked when the view settles,
 on a click, on an edit, when a load's card goes and every 30 s:
-1. the zone in view, once in view 2 s (a pan refines nothing);
+1. the zone in view, once in view 2 s (a pan refines nothing); on a phone or tablet (`phoneLoad`, T-4103) only a
+   zone already fine: looking at a coarse zone leaves it coarse (a selection or an edit there still refines it), since
+   that refine cost about 140 MB for a minute after a far jump for a few MB of detail;
 2. the selected zones: a zone, a bubble selection (the zone in view), a station's zone, a trip's two ends;
 3. zones edited in the last 15 minutes of wall time (stations added, removed or moved; a line's
    stops added or dropped, or its trains or cars changed: the zone in view if the line stops there);
@@ -166,7 +168,11 @@ page's workers, so they all open on optimised code. Timings in
 notes/T-174.md and notes/demand-measurements.md.
 
 **The pool and the bubbles' chain** (T-119). The pool is half the logical cores less one, at most
-5, at least 1 workers that solve, and one more that holds no period ([architecture.md](architecture.md) 7). A solving worker that runs out of memory
+5, at least 1 workers that solve, and one more that holds no period ([architecture.md](architecture.md) 7). On a phone or
+tablet (`phoneLoad`, T-4103), whose pool is one solving worker, there is no such aux worker: the solving worker opens
+the bare zones too (`bareToo`) and answers the aux worker's questions between its populations, as the focus pool's
+does (65-80 MB less; a bare zone's figures and the bubbles wait behind a population there; identical to the bit,
+`t325-bare-check.mjs` with one shared worker, notes/T-4103.md). A solving worker that runs out of memory
 (a failed WASM grow; `memoryShort`) halves the pool, the focus pool ends, and the same solve is sent again to the rest with
 no figure changed; the smaller count is kept for the tab's session (`sessionStorage`, so the reload of "Play without
 intercity trips" keeps it) and caps every later pool unless `?demandWorkers` says (T-2867, T-3072). Only the last solving
