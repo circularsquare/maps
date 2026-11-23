@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4106 [P2] {L:memory} An install-as-app banner on phones (2026-11-23): InstallBanner.tsx with hoursPlayed.ts; iOS Safari 7-day sentence plus Share steps, Android Install button or menu steps; hidden on desktop, in the app, in in-app browsers, beside notices and the open tutorial; dismissed forever. notes/T-4106.md.
 - T-4131 [P1] {L:edit-speed} Profile the track model's part of an edit (2026-11-23): No felt drop since T-4125 except reorder and undo 20-50% shorter; the track model's apply is 10-30% of an edit's wait; T-4097's five named scans under 5% of apply and designed out by the rework; four line/train walks (retime, before_edit/note_changes, utc_offset_at, cars_needed) filed as T-4132-T-4134. notes/T-4131.md.
 - T-4130 [P1] {L:edit-speed} Bounded rows keep a stale flat crossing after an edge is deleted (2026-11-23): Fixed: a line that stops or starts counting has its whole track read again, and records outside the read are kept only while their bulk numbers are unchanged; the crossing case is in t1382-rows (notes/T-4130.md)
 - T-4109 [P2] {L:single-track} Tell the player to reload when the track model stops (2026-11-23): Banner with clockWorker.modelDown and a Reload page button (both reused strings); edits and previews refused silently after the stop; download works; t1007-panic B1/B2 updated (not rerun) notes/T-4109.md.

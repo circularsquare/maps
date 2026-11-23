@@ -36,7 +36,7 @@ artifacts/trainworld/T-4120/.
 
 ## Stations
 
-- 2026-11-23 (T-4105): The Station tool's Auto is the default for a browser that never picked; it takes track, then a road or bus route within 12 px, a ferry route, water or shore, else a train station. Open ground near a street gives BRT (asked a-2026-11-23-16).
+- 2026-11-23 (Anita, T-4105): Train station stays the Station tool's default; Auto is one click away. Auto takes track, then a road or bus route within 12 px, a ferry route, water or shore, else a train station, so open ground near a street gives BRT.
 - 2026-11-21 (Anita, T-3999): A train or tram station can go on open ground again (reversing T-1820, at players' asking): first click one platform end, second its direction. The Station tool picks its kind, so open ground by a road never places BRT. notes/T-3999.md
 - 2026-11-19 (Anita, T-3814): Each station is bound to its complex's name or keeps its own; renaming a bound one renames the complex, reversing T-3288's rename of that station alone. New players default to independent naming. notes/T-3759.md
 - 2026-11-18 (Anita, T-3711): A station on one-way track is a one-way stop served once a round trip, placed in the stop list by the track, never paired across legs (T-3605 dropped T-3565's 50 m pairing). Shift-clicked ones take the way with fewer turn-backs. notes/T-3565.md
@@ -162,6 +162,7 @@ artifacts/trainworld/T-4120/.
 
 ## Map and UI
 
+- 2026-11-23 (T-4106): The install note shows on phones and tablets after 2 hours of play, a minute each visit until closed with its x, then never; on Android a no to Chrome's own install question also counts as closed. Hidden while the tutorial card is fully out. notes/T-4106.md
 - 2026-11-21 (, T-4004): The map search finds towns anywhere through a world name index (about 135 MB gzipped on R2 a release; a search fetches about 30 KB a shard). Lie: substrings and nicknames match only near the view. notes/T-4004.md
 - 2026-11-20 (Anita, T-2528): The diagram's distortion dial defaults to 0.5 (Anita: "i kidna like 0.5", was 0.8). It stops zooming out where the network's larger side is half the view's, raised from 1/10 after a city's drawing went off screen. notes/T-2556.md
 - 2026-11-20 (Anita, T-3833): Diagram water keeps to 0, 45 and 90 degrees (Anita). Only rivers a line crosses are drawn, whole to the sea and never with a gap, each one band slightly straightened (Anita picked E), replacing the paused raw-course prototype.

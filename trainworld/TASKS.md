@@ -186,8 +186,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
   - Context: You, 11-23: "edit speed is actually still kind of a problem... noticeable on my end for big worlds... i feel like there was a point at which we had edit speed almost instant, but then might have regressed". Mostly placing track and editing stops. T-3550, T-1211, T-3804, T-1031 are back at P2 under this.
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
-- T-4114 [P2] {L:edit-speed} {after:T-4113} Edits show at the click, track first
-  - Context: You, 11-23: the T-4097 improvements "are not bad ideas, i just think they will not be enough by themselves." Design: notes/T-4097.md section 3, 9-13 h in three parts, track first (4-6 h).
+- T-4114 [P1] {L:edit-speed} Edits show at the click, lines first (taking, 2026-11-23, agent lineclick)
+  - Context: You, 11-23 on 8800: still slow are "creating a new line, or deleting a line, or seeing the line visually change its length after adding or removing some stops". Design: notes/T-4097.md section 3, 9-13 h in parts.
+  - Goal: Stage 1: a line's new path after stop clicks, and a deleted line, show at the click on the Asia save; then Construct, track, undo as later stages.
+  - Other: notes/T-4097.md
 - T-4112 [P1] {L:station-placement} Station on a blueprint refused for water at a ramp far away (taking, 2026-11-23, agent stationwater)
   - Context: You, 11-23, on 8800 (tw/track build f382ee54): placing a station on a high speed track blueprint "kinda near water that it ramps over", the blocking alert "track at ground level can't cross water", which "doesnt seem like it should be relevant given that im placing a station, not a track, and also this is pretty far from the ramp."
   - Goal: Rebuilt; a station on a blueprint is checked only against its own platform stretch; placing it works there, and a real refusal names the station's problem.
@@ -196,9 +198,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Goal: Reproduced with the fuzzer or your save under ?track, and fixed with a test, when the track rework resumes.
 - T-4124 [P2] {L:solve-speed} {after:T-4123} One graph for all zones in a calculation (taking, 2026-11-23, agent onegraph)
   - Context: From T-4057: each zone has its own graph, so most of Tokyo's 41% one-off searches repeat; building one graph for the zones in a calculation removes most of it but shifts walks by 1-2% of walk minutes, so it comes to you with the real-save numbers first.
-- T-4106 [P2] {L:memory} An install-as-app banner on phones (taking, 2026-11-23, agent installbanner)
-  - Context: You, 11-23: "i think we can still do the install as app banner. people can dismiss it... and we should just remember that they have dismissed it". Logged-out players are told saves will be separate from Safari's. Earlier: shown after 2 hours of play. T-4086 found installing gives no more memory; installed apps keep saves past Safari's 7-day clearing.
-  - Goal: On phones after 2 hours of play, a banner with how to install (per platform), the separate-saves note when not signed in, dismissed forever.
+- T-4135 [P2] {L:station-placement} Station hover with a kind icon and the bus radius (taking, 2026-11-23, agent stationdefault)
+  - Context: You, 11-23: drop "Auto: bus station" from the hover and show the kind's icon left of "n trips within 1 km"; a bus stop gets one 600 m guide circle instead of 1 km and 2 km, and says "trips within 600 m"; the Auto "A" from Nunito, centred (it sits low).
+  - Goal: Those four, on desktop and phone.
 - T-4051 [P2] {L:loading} Opening a zone on a big save sits at 90%
   - Context: You, 11-22, on live v0.4.5: opening Medellin sat at 90% for about 2 minutes, Managua the same, "not super consistent". Measured 11-23 (notes/T-4051.md): a zone opens by a short path (Medellin 82 s) or a long one about 3x the work, by a race between its first quick figures and the whole calculation. Tree zoneopen has two unmeasured fixes.
   - Goal: Both fixes measured on 4+ cores before they land; then a zone with figures already in takes the short path (about 100 s off on your save).
