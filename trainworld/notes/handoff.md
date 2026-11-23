@@ -20,7 +20,8 @@ T-4069 (Sonnet), crashes T-4071 (triage, stage 1 report first). Landed: T-4056 4
    quiet machine, the changelog review (46 unpublished; c051 is T-4041's). Then her text OK and her yes, in this tab.
 2. Speed (T-4054 search, T-4057 elsewhere): same-answer wins land as they report; shifting ones bring a test shape
    for her to build (orchestrator.md "Speedups that shift riders"); batch checker after.
-3. Next as slots free: T-4075 (trams off their track), T-4064 on her
+3. Next as slots free: community trio T-4077/4078/4081 (one Sonnet), T-4080 bus stop names, T-4079 after her
+   timing answer (a-2026-11-23-5); T-4082 Detroit save sent to solveprof; T-4075 (trams off their track), T-4064 on her
    yes (branch riders; search.rs: solvespeed's file, so after it or to it), T-4051 (big save sits at 90% ~3 min), T-4055 (stale two-zone final, 1-2 h), then the paused
    trees (each tree's notes): onewaylag T-4045 (after T-4054), clockmem T-3939, stationids T-4043, timetables
    T-3346, coreslider T-3932, perfledger T-4025, split6. After hokkaido: sync-track, 8800 = tw/track tip, checker.
