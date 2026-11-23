@@ -204,7 +204,7 @@ uniform int u_sel;
 uniform int u_hot;
 uniform int u_lit[${LIT_MAX}];   // T-2993: lines the bus tool's route will change with, u_lit_n of them
 uniform int u_lit_n;
-uniform int u_only;          // -1 every line, -2 the selected line, else that line only
+uniform int u_only;          // -1 every line, -2 the selected line, -3 the dashed transfer lines and connectors alone (drawn last, over the lines), else that line only
 uniform float u_dim;
 uniform float u_alpha;       // the corridor's
 uniform vec3 u_casing_rgb;
@@ -245,7 +245,7 @@ void main() {
   for (int k = 0; k < ${LIT_MAX}; k++) if (k < u_lit_n && u_lit[k] == id) lit = true;
   bool xfer = (flags & ${FLAG_TRANSFER}) != 0;
   bool lane = (flags & ${FLAG_LANE}) != 0;
-  if ((u_only >= 0 && id != u_only) || (u_only == -2 && (!sel || xfer)) || (u_pass == 2 && (flags & ${FLAG_FERRY | FLAG_SPUR | FLAG_TRANSFER | FLAG_MUTE}) != 0)
+  if ((u_only >= 0 && id != u_only) || (u_only == -2 && (!sel || xfer)) || (u_only == -3 && !xfer) || (xfer && u_only != -3) || (u_pass == 2 && (flags & ${FLAG_FERRY | FLAG_SPUR | FLAG_TRANSFER | FLAG_MUTE}) != 0)
       || (xfer && (u_pass != 1 || u_xfer < 0.5)) || (u_no_bp == 1 && bp) || (lane != (u_pass == 5)) || (lane && u_lane_kind != (!bp ? 1 : (flags & ${FLAG_LANE_FREE}) != 0 ? 2 : 0))) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   bool hotLink = false;
   if (xfer && a_info.z >= 0.0) for (int k = 0; k < ${LIT_LINKS}; k++) if (k < u_lit_links_n && u_lit_links[k] == int(a_info.z + 0.5)) hotLink = true;
@@ -901,6 +901,13 @@ export class BusLayer {
     if (this.byId.has(s.sel)) body(-2);
     // T-3944: the BRT lanes round their lines, in the line view and the Speed and Profit ones, from where the ends show
     if (b.laneFirst < b.count && !this.traffic && s.paint !== "level" && zoom >= BUS_END_ZOOM) this.drawLanes(b, s, bus, dpr, zoom);
+    // the dashed transfer lines and connectors over the lines and lanes, so they show where they lie along a line; the stops are drawn after
+    if (zoom >= BUS_RING_ZOOM) {
+      gl.uniform1i(u.u_only, -3);
+      gl.uniform1f(u.u_width, bus);
+      gl.uniform1i(u.u_pass, 1);
+      gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, b.count);
+    }
     const ringR = Math.max(MIN_RING_PX * dpr, bus * RING_SHARE), endR = Math.max(MIN_RING_PX * 1.25 * dpr, bus * END_SHARE);
     gl.bindVertexArray(null);
     // T-2991: one-way arrows, in the line view only

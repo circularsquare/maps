@@ -978,7 +978,7 @@ order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the rider
 passage. After a click on it the next station clicked is joined to the selected one (the pointer a
 crosshair, a hand over a station); a click on anything else, Esc, the icon again, another
 selection or a tool stops it. Refused with a notice, still picking: the same station, one already
-in this complex, one more than 1 km away centre to centre, or a bus stop ("Bus stops can't have passages.", T-4079). At a BRT station the icon's hover has "Saves one minute on each transfer through it" under what it does. Between two constructed stations it
+in this complex, one more than 1 km away centre to centre, or a bus stop ("Bus stops can't have passages.", T-4079). At a BRT station the icon's hover has "Saves one minute for transfers" under what it does. Between two constructed stations it
 is paid at once (US$10M plus US$90M a km, a notice), else it is built with the second of them.
 "Passages", after the closest stations, lists each passage touching the complex with its two stations,
 their chips, its length and Remove (nothing refunded once built). Only the player's passages can be

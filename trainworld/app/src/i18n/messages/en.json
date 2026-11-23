@@ -2226,7 +2226,7 @@
   "stationUpgrades.housed": "The station building already counts as a waiting room.",
   "stationUpgrades.passage": "Passage",
   "stationUpgrades.passageTip": "Passage\nJoins two stations up to {distance} apart into one complex so that people can transfer.\nCosts {range} depending on length\nUpkeep {upkeep} per day\n{picking, select, true {Click another station on the map, or here to stop.} other {Click, then click the other station on the map.}}",
-  "stationUpgrades.passageSaves": "Saves one minute on each transfer through it",
+  "stationUpgrades.passageSaves": "Saves one minute for transfers",
   "stationUpgrades.removed": "{name} removed from {station}. Nothing is refunded.",
   "stationUpgrades.someAct": "{some, select, true {{have} of {count, plural, one {# station} other {# stations}} have one. Click to build it at the other {missing}{blueprint, select, true { in the blueprint} other {}}} other {Click to build it for all {count, plural, one {# station} other {# stations}}{blueprint, select, true { in the blueprint} other {}}}}",
   "statusTag.behind": "{count, plural, one {Calculation # day behind} other {Calculation # days behind}}",
