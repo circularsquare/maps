@@ -11,7 +11,7 @@ flagged line (docs/orchestrator.md, Tools). Measurements and how the figures wer
 
 - **OVER** at or past 100%; **HIGH** 50% or more; **SOON** reaches 80% within 30 days at its growth;
   **MISSING** something that should exist or be on is not (a backup timer, a certificate, Google sign-in, the
-  service, refusals in the journal).
+  service, refusals in the journal). **LOW** and **URGENT** are this PC's drive only: under 30 and 10 GB free.
 - **Growth** comes from the run history (`artifacts/trainworld/ops/history.jsonl`, the oldest run 1-7 days back);
   before there is any, from timestamps in the stores (account `created`, play days, share times, the games size
   the server logs at each start). A store growing in bursts gives a rough figure; read the trend over a few days.
@@ -24,6 +24,7 @@ flagged line (docs/orchestrator.md, Tools). Measurements and how the figures wer
 | Line | Limit and where it is set | When flagged |
 |---|---|---|
 | box / disk, inodes | Hetzner CPX11, 38 GB disk | Grows with the games store. Lower the games cap or add a Hetzner volume; a resize to CPX21 doubles disk. |
+| home / drive C: | This PC's drive (C: hit 0 free on 2026-11-23) | Free space left, not %. `board/watch.py` prints the same "disk:" line during a session and chimes. What can go: notes/T-4088.md. |
 | box / memory | 2 GB, no swap | Grows with accounts and opted-in stats, not players. Over 70%: a resize to CPX21 (4 GB), a few minutes with a reboot, her call. |
 | box / load | 2 vCPU | Sustained over 1.5: look at the journal for a loop; then a resize. |
 | box / traffic out | 1 TB a month included outside the EU (Hetzner price list for US locations; EU is 20 TB). Incoming is free. | Over 50%: check the Cloud Console's traffic graph; overage is billed per TB. |

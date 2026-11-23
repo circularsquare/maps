@@ -11,6 +11,8 @@ her for --idle seconds (180). The watch prints only then,
 for the Monitor tool. The line format and the action types (reorder, area, priority, move-task, answer,
 ask-answer, text-ack, add, comment, ...) are in notes/T-3391.md.
 
+It also prints a "disk:" line when free space on the drive falls under 30 GB, again under 10 GB, and once it is
+back (checked every 5 minutes; tools/ops/disk.py), chiming for Anita with a Windows notification as it falls.
 It also prints a line for each unread agent report (tools/reports.py, T-3668) that another session's agent
 sent: the current orchestrator's own agents already reach it directly. --session registers this session for
 the reports hook, and the watch stops once notes/handoff.md names another orchestrator.
@@ -27,7 +29,9 @@ from pathlib import Path
 TW = Path(__file__).resolve().parents[1]
 INBOX = TW / "notes" / "board-inbox.jsonl"
 sys.path.insert(0, str(TW / "tools"))
+sys.path.insert(0, str(TW / "tools" / "ops"))
 import reports  # noqa: E402
+import disk  # noqa: E402
 
 sys.stdout.reconfigure(encoding="utf-8")   # her text has CJK; Windows consoles default to cp1252
 
@@ -90,6 +94,7 @@ def agent_reports(box, session, told):
 ROOT = TW.parent
 HEAD = re.compile(r"^- (T-\d+) \[(P\d)\] (.*)$")
 IDLE_EVERY = 3600
+DISK_EVERY = 300
 MIN_AGENTS, MAX_AGENTS, MIN_FREE = 2, 8, 4  # her 2-8 agents (docs/orchestrator.md)
 
 
@@ -137,14 +142,34 @@ def idle_line():
     return f"idle: running {len(agents)} agents, {cores}, startable: {', '.join(start) or 'none found'}"
 
 
-def watch(path, idle, poll, box=None, session=None):
+def disk_check(dw):
+    """The disk line, if free space crossed a level since the last check; chimes for Anita as it falls."""
+    try:
+        r = dw.check()
+    except OSError:
+        return None
+    if not r:
+        return None
+    text, falling, free = r
+    if falling:
+        disk.notify(free, falling)
+    return text
+
+
+def watch(path, idle, poll, box=None, session=None, dw=None):
     # At start, leftovers from before count as ready at once if she had pressed Send now.
     # The orchestrator handling part of a batch is not news; only actions not yet reported are.
     reported, seen_sent = set(), None
     told, next_reports = set(), 0.0
     next_idle, last_idle = time.time() + IDLE_EVERY, None
+    next_disk = 0.0
     while True:
         nudge = False
+        if dw is not None and time.time() >= next_disk:
+            next_disk = time.time() + DISK_EVERY
+            l = disk_check(dw)
+            if l:
+                print(l, flush=True)
         if box is not None and time.time() >= next_reports:
             next_reports = time.time() + 10
             lines = agent_reports(box, session, told)
@@ -195,6 +220,8 @@ def main():
     ap.add_argument("--inbox", default=str(INBOX))
     ap.add_argument("--session", help="this orchestrator's session id: registers it for agent reports")
     ap.add_argument("--root", default=str(TW), help="the trainworld/ whose agent reports to watch (for testing)")
+    ap.add_argument("--disk-warn-gb", type=float, default=disk.WARN_GB, help="free space that prints the low line")
+    ap.add_argument("--disk-urgent-gb", type=float, default=disk.URGENT_GB, help="free space that prints the urgent line")
     a = ap.parse_args()
     path = Path(a.inbox)
     if a.cmd == "watch":
@@ -203,7 +230,7 @@ def main():
         if a.session:
             box.register(a.session)
         try:
-            watch(path, a.idle, a.poll, box, session)
+            watch(path, a.idle, a.poll, box, session, disk.Watch(a.disk_warn_gb, a.disk_urgent_gb))
         except KeyboardInterrupt:
             pass
     elif a.cmd == "idle":

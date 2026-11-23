@@ -118,7 +118,7 @@ incidents behind the rules here are in `notes/rule-history.md`.
   acknowledged, comments) land in `notes/board-inbox.jsonl`; her scratch pad arrives there as one `pad-send` (all her
   rough thoughts), reported at once: split it, merge duplicates, file the rest (notes/T-3391.md "Scratch pad"). At takeover start the watch with Monitor
   (longest timeout, re-arm): `venv\Scripts\python.exe -u trainworld/board/watch.py --session <your session id>`; it prints a line when a batch is
-  ready (her Send now, or 3 idle minutes), and an `idle:` line hourly (and after an agent report) when fewer than 2 agents run, or fewer than 8 with 4+ cores free, naming tasks to start. `watch.py pending` lists them; apply each in TASKS.md / LINES.md (a reorder
+  ready (her Send now, or 3 idle minutes), a `disk:` line (with a chime for Anita) when free space falls under 30 GB, then 10 GB (T-4088), and an `idle:` line hourly (and after an agent report) when fewer than 2 agents run, or fewer than 8 with 4+ cores free, naming tasks to start. `watch.py pending` lists them; apply each in TASKS.md / LINES.md (a reorder
   moves the line in LINES.md: that order is the area's queue), then `watch.py handled <ids> --by <you> --note "..."`.
   Line format and how each type applies: notes/T-3391.md "Stage 2".
 - **Player requests on the board**: once a day (and when she pastes reports), `venv\Scripts\python.exe

@@ -431,6 +431,15 @@ class Row:
         return ""
 
 
+class FreeRow(Row):
+    def __init__(self, *a, level=0, **k):
+        super().__init__(*a, **k)
+        self.level = level
+
+    def flag(self):
+        return ("", "LOW", "URGENT")[self.level]
+
+
 def fmt(v, unit):
     if v is None:
         return "?"
@@ -675,6 +684,19 @@ def main():
     except Exception as e:
         errors.append(f"domain: {e}")
 
+    # this PC's drive, flagged by free space left since a big drive is always mostly full (T-4088)
+    try:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import disk
+        import shutil
+        du = shutil.disk_usage(MAPS)
+        free = du.free / disk.GB
+        lvl = disk.level(free)
+        rows.append(FreeRow("home", f"drive {os.path.splitdrive(MAPS)[0] or '/'}", du.used, None, "B", None,
+                            f"{free:.1f} GB free; LOW under {disk.WARN_GB} GB, URGENT under {disk.URGENT_GB} GB", level=lvl))
+    except Exception as e:
+        errors.append(f"local disk: {e}")
+
     # history-based growth for the rows that have none yet
     history = []
     try:
@@ -688,7 +710,7 @@ def main():
 
     # print
     w = max(len(f"{r.group} / {r.name}") for r in rows) if rows else 30
-    print(f"resources at {dt.datetime.utcnow():%Y-%m-%d %H:%M} UTC  (flags: OVER >=100%, HIGH >=50%, SOON = 80% within 30 days, MISSING)")
+    print(f"resources at {dt.datetime.utcnow():%Y-%m-%d %H:%M} UTC  (flags: OVER >=100%, HIGH >=50%, SOON = 80% within 30 days, MISSING; LOW/URGENT for this PC's free space)")
     for r in rows:
         p, d80 = r.pct(), r.days80()
         use = f"{fmt(r.used, r.unit)} / {fmt(r.limit, r.unit)}" if r.limit else (fmt(r.used, r.unit) if r.used is not None else "")

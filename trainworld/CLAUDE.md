@@ -21,6 +21,8 @@ The orchestrator also reads `docs/orchestrator.md`.
 - **Estimates in hours of real agent time**, checked against similar past tasks (T-3137 C1, guessed at days, took
   about 45 minutes). Never "agent-days". Don't call something impossible by a time: our guesses run pessimistic, and
   work often lands sooner. No deadlines unless she gives one; aim for the next release and see.
+- **A time saving as a percent** of the whole wait it belongs to, seconds after ("about 10% off an edit's wait, 11 of
+  105 s"); seconds alone don't say much (her 11-23).
 - **Ask when the answer is needed next**, not ahead. Test items only once the change is on 8800.
 
 ## What waits for her word

@@ -105,7 +105,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: A cold run takes 4.4-5.1 min at 4 jobs, against the 3 min aimed for; most of it is zone_water's 368 windows.
   - Goal: A cold run is near 3 min.
   - Other: See notes/T-1992.md.
-- T-4025 [P2] {L:loading} {after:next week's usage} Load time and memory ledger per publish
+- T-4025 [P1] {L:loading} Load time and memory ledger per publish (taking, 2026-11-23, agent perfledger)
   - Context: Paused 11-22 for the week's usage, a draft bench script in tree perfledger (doesn't run yet; what's left and the v0.4.3-v0.4.5 commits in the tree's notes/T-4025.md). You, 11-22: "ok can start now". You, 11-21: You, 11-21: "over the past few updates we've kinda been doing some performance improvements blind and in some cases load times actually have gone up a lot, then we hammer them down, then something else pushes them back up. possibly the same for memory." No standing record exists; each task measured its own way.
   - Goal: A fixed bench of saves (new NYC, real NYC, London, all-China, a phone Tokyo start) measured the same way each time: load time (median of 3 on claimed cores), each worker's CPU time and WASM peak, page heap, bytes downloaded, plus counts of work done (zones solved, rounds, rows) that don't depend on machine load; one script runs it on any build and appends to a ledger with the build id, and flags anything 10% worse than the last publish. Run on v0.4.3-v0.4.5 and master to start the history, then at every publish (a publish skill step).
 - T-3780 [P2] {L:timetables} {after:T-3346 stage 2 landing} Station and complex timetables
@@ -165,16 +165,23 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4045 [P2] {L:small-fixes} {after:next week's usage} Adding stops to a line with many one-way stations is very slow
   - Context: 11-22: a path-search memo in tree onewaylag (uncommitted, tests pass, not landed: an edit-path change wants a checker first) makes stop_tiers 2.3x faster where faster track runs beside the legs; the player's 40 minutes is not reproduced (the real NYC net is 0.1 ms a line). Left: profile the page on a 21-platform line (the line rebuild after each edit, app-side work). Notes in the tree's notes/T-4045.md. Restarted 11-22 (its first agent stopped with the old orchestrator). A player's report, 11-22 (pasted by you): building a line with many one-way stops (a 10 km line of 16 stations, 21 counting each one-way platform; a 70 km line of 28, 39) gets "extremely laggy", once 40 minutes for the stops to register, with "numbers stopped updating"; editing or removing the line then says the edit failed and was undone. Two-way stretches were fine. The edit-failed part matches T-3945, fixed 11-21 but not yet live. You: "dont have to spend a lot of time looking into this since we're doing a track rework but if we see an easy fix, would be interested". Reach: players who build one-way platforms, growing with the track rework.
   - Goal: The cause of the slow stop adding named; fixed if the fix is small, else a note of what it would take.
-- T-4089 [P1] {L:memory} Remove "Open without calculating trips" (taking, 2026-11-23, agent nolight)
-  - Context: You, 11-23: "i dont think we really need an option to open without calculating trips. its a bit pointless to play the game without trips." Landed today in T-3940 (7445f379) on the out-of-memory screen and the start menu's question before reopening a game that died.
-  - Goal: Both places offer only Open anyway and Cancel (or Try again); the warning before a big load on a phone stays.
+- T-4091 [P3] {L:buses} Undoing a bus reroute leaves its stops where the reroute put them
+  - Context: Seen by the T-4069 checker (notes/checkbns.md, case 3), not compared with master: undoing a busRoute reroute put the route back to 2 points but left stop 105 moved (-73.99374 to -73.99385). Reach: players who reroute a manual bus line and undo, a few metres off.
+  - Goal: Undo puts the stops back where they were, or the cause named if it's older than T-4069.
+- T-4093 [P1] {L:solve-speed} Stop crowding rounds once loads move under 3% (taking, 2026-11-23, agent settled)
+  - Context: You, 11-23: "can stop crowding roudns once loads move under 3%, yeah lets do it." From T-4057: SETTLED 1% -> 3% skips about 1 of 15 period-rounds, about 10% off an edit's wait (11 of about 105 s on the real NYC save), lines within 4%, rail trips +0.001%. Fewer rounds (2) is refused, final (DECISIONS 2026-11-23).
+  - Goal: Landed with the real-save numbers (percent of the wait, line moves).
+- T-4094 [P1] {L:solve-speed} Merge bus stops within 300 m into one stop for demand
+  - Context: You, 11-23: "ok can merge bus stops within a few hundred meters. i guess 300 meters should be okay." From T-4057: the bus-heavy Detroit save (7,382 bus stops, community share iemjwzum) takes 28 minutes to calculate trips at about 4 GB per worker, 82% in the search; merging should more than halve both. Stops are still drawn and run as before.
+  - Goal: Detroit's time and memory measured before and after (percent), Belgrade's too; riders on bus lines compared; rail-only saves unchanged. The merge doesn't show: every per-stop figure the player can see (a stop's riders and boardings, a line's load along its stops, transfers, origins and destinations, connectors) is split back over the real stops, by each stop's own catchment, so every stop looks used.
+  - Other: You, 11-23: "ideally the bus stop merging ... should not be super visible. like if you click on a bus stop and see how many people use it ... we should distribute the ridership so it looks like all the stops are being used, and its not obvious that theyre getting merged."
 - T-4086 [P1] {L:memory} Design a lighter load for phones (taking, 2026-11-23, agent phonedesign)
   - Context: You, 11-23: "yeah lets design this. also if it might be better with use of the PWA "app" lets point mobile users, instruct them howto download as app, with like a banner alert or something. ideally we dothis once they've logged like at least 2 hours of playtime and if they dismiss it, it goes away forever". 4 of the 7 out-of-memory crash reports since v0.4.4 are iPhones with 1,100-2,100-station Tokyo games (1.25-1.7 GB against iOS's kill at 1.4-2 GB). The idea: full demand detail only near the view, coarser further out.
   - Goal: A design for you (no code): what a phone loads, the memory it saves on a big Tokyo game, what a player would see differ; and whether an installed home-screen app gets more memory on iOS and Android, so the install banner is worth building.
-- T-4088 [P1] {L:checks} Disk space for trainworld, and a low-disk alert (taking, 2026-11-23, agent diskspace)
-  - Context: You, 11-23: C: ran out of space (0 bytes free; builds and a smoke failed), and trainworld uses about 200 GB. "is there some of this that could be moved elsewhere / deleted and recoverable?" "we should set up alert when we're super close for the future."
-  - Goal: What takes the 200 GB, what was deleted (rebuildable only), what could move or go with your yes and how much each frees; an alert well before the disk is full.
-- T-4051 [P2] {L:loading} Opening a zone on a big save sits at 90%
+- T-4088 [P1] {L:checks} {waits:Anita} Disk space, what could still go (taking, 2026-11-23, agent diskspace)
+  - Need from Anita: OK to delete data/raw/osm (9.1 GB, fetched again at each country's next rebuild) and the world runs older than 2 weeks except their reports (about 8 GB)? I'd say yes to both.
+  - Context: You, 11-23: C: ran out (0 bytes free) and "we should set up alert when we're super close for the future." Done 11-23: about 81 GB of old builds, backups, Chrome profiles and finished sessions' scratch deleted; a "disk:" line and your chime at 30 GB and 10 GB free (board watch, tools/ops/disk.py). Only C: exists, so moving means an external drive. The full list with sizes and costs: notes/T-4088.md.
+- T-4051 [P2] {L:loading} Opening a zone on a big save sits at 90% (taking, 2026-11-23, agent zoneopen)
   - Context: You, 11-22, playing live v0.4.5 on your large North America save: opening Medellin sat on "loading data" with the bar stuck at 90% for about 2 minutes, then loaded; the tab was at 4 GB and one core was busy the whole time. "really not good for player experience". Reach: anyone with a big save opening a new zone. Done 11-22: every load bar now shows what used to read 90% as half full (your idea), so the wait itself is what is left. Later that evening: "loading basically anylargeish new city makes me wait for like 3 minutes. even with "use more cores" enabled im using like 4700mb", Managua the same; but "its not super consistent tbh. puebla actually loaded quite fast. im guessing its something where we're failing and retrying." After T-4041.
   - Goal: What the last 10% waits on named and timed on a big save; the wait cut, and the bar showing progress through it.
 - T-4074 [P4] {L:loading} Spain blocks the game during football matches
@@ -184,18 +191,18 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Your scratch pad, 11-22: "i think we might allow an unrealistic number of people to pile up at bus stops, should probably show a lower number more in line with other stations to not make players alarmed by big number".
 - T-4053 [P3] {L:borders} Common language border factor
   - Context: Your scratch pad, 11-22: "i think bogota-quito travel might be a bit small? relative to number of planes (liek 6 a day, maybe 2000 people a day vs our 800) i wonder if we should do a like "common language" border multiplier to make it so that people are more likely to travel between south american countries. and maybe also between like switzerland and france or switzerland and germany across the border." A new demand factor: the design goes to you before it is built.
-- T-4054 [P1] {L:solve-speed} Faster first-arrival search (taking, 2026-11-23, agent solvespeed)
-  - Context: You, 11-22: "soy eah there will be a slowodwn. thats okay. we can look for further speedups elsewhere, tomorrow." The update ships at about +40%. T-4041 made the real save's solve about 41 s -> 58 s. Stage 1 landed 11-22 (4a78edcc): the search 10% faster, same answers, the solve only about 2% faster. Measured: with no late joins at all it would still be +23%, so the late joins (your "cliff fix") are about 8 s of the 17 s; pools of 3+ lines cost about 600 ms of each search, mostly their two integrals. Left: a faster `pool_cost`; shares as u16 (about 10 MB); fewer late joins (none at change nodes) would change answers and is your call.
-  - Goal: The solve within about 15% of before T-4041 with the same answers, or the best that keeps them.
+- T-4054 [P1] {L:solve-speed} Faster first-arrival search
+  - Context: You, 11-22: "soy eah there will be a slowodwn. thats okay. we can look for further speedups elsewhere, tomorrow." T-4041 made the real save's solve about 41 s -> 58 s. Stage 1 landed 11-22 (search -10%, same answers). Stage 2 (11-23, tree solvespeed): small same-answer speedups, plus your two yeses (no late lines at change nodes, pools on two points; rail trips +0.007%), search -18%, solve about 58 -> 54 s. The search is about a third of the solve, so the rest is T-4057's. Left here: the change nodes' and stations' settling, `entry_costs`; shares as u16 (about 10 MB).
+  - Goal: The solve within about 15% of before T-4041, or the best the search can give.
   - Other: notes/T-4054.md, notes/T-4041.md
 - T-4055 [P2] {L:solve-consistency} An edit reaching two new zones shows a stale final
   - Context: Found 11-22 by the batch checker and ordercheck (notes/T-4055.md): one edit reaching two new zones (a Philadelphia and a Providence line from NYC) gives the Philadelphia line 63,996 riders; separate edits or a reload give 68,341. The first solve is declared final on a market missing a pack that lands during it, and nothing re-solves; the next edit heals it. Older than T-1354; does not hold the publish. Reach: lines in newly reached zones show up to 6% too few riders until the next edit.
   - Goal: A pack opening that lands mid-solve makes that solve stale, so batch and separate edits give the same figure (about 1-2 h).
   - Other: notes/batchcheck14.md, notes/T-4055.md
-- T-4057 [P1] {L:solve-speed} Solve speedups outside the first-arrival search (taking, 2026-11-23, agent solveprof)
+- T-4057 [P1] {L:solve-speed} Solve speedups outside the first-arrival search
   - Context: You, 11-23: "main goal for today is to hopefully find some compute time improvements to compensate for the better pathfinding that takes into account that express routes are faster." T-4054 works on the search and `pool_cost`; this one profiles the whole solve on the real save and other big cities and takes the biggest costs elsewhere.
   - Goal: The top costs of a full solve named with their share, and the biggest ones cut with the same answers.
-- T-4064 [P1] {L:route-choice} Riders stop changing onto a branch they could board at their station (taking, 2026-11-23, agent solvespeed)
+- T-4064 [P1] {L:route-choice} Riders stop changing onto a branch they could board at their station (taking, 2026-11-23, agent branchriders)
   - Context: You, 11-23: "yes probably, makes more sense to just wait for a train that they can take all the way". Found by T-4058: on two branches sharing a trunk, riders bound for one branch take the other line to the split and change to their own branch's train, which is the one right behind them: 10% with both every 10 min, 43% at 5 and 20, 57% at 4 and 60, and at 4/60 44% from the last trunk station ride one stop back to catch their branch there. The frequent line's riders come out too high, the rare branch's too low. Proposed: at a change, no line whose next stop is the station the rider just came from, and no line that was one evenly spaced service with the one they rode (T-4050). Same file as T-4054 (search.rs).
   - Other: notes/T-4058.md
 - T-4075 [P2] {L:trains-drawn} Trams drawn off their track
@@ -208,17 +215,11 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4046 [P3] {L:small-fixes} Pick a route among overlapping bus and tram routes
   - Context: Your scratch pad, 11-22: "if we have a bus route and tram route perfectly overlapping theres no way to select the bus route. same for multiiple bus routes. ideally we try to "side by side" these". Picture: artifacts/trainworld/board/20261122-114726-b705.png.
   - Goal: Every route on a shared street can be clicked, ideally drawn side by side.
-- T-4069 [P2] {L:buses} Ctrl click places a bus stop without snapping (taking, 2026-11-23, agent busnosnap)
-  - Context: Your scratch pad, 11-23: "someone dislikes how when even in manual bus stop placement mode, they get snapped sometimes to nearby stations and such. we can maybe ctrl click to override snapping? and show ghost to where it woudl actualyl be placed so theres no surprises after we click."
-  - Goal: Ctrl+click puts a manual bus stop exactly where clicked, and the ghost always shows where the stop will land, snapped or not.
 - T-4070 [P2] {L:station-placement} {after:T-4037} Ctrl click draws a station box without snapping
   - Context: Your scratch pad, 11-23: "some people also dislike the snapping when drawing station boxes, we can also ctrl click to override here." Same gesture as T-4069; the track rework's station tool (T-4037 g3/g4) is changing placement now, so after that lands.
   - Goal: Ctrl+click draws the station box where the pointer is, no snapping.
 - T-4047 [P3] {L:buses} Name bus stations
   - Context: Your scratch pad, 11-22: "allow naming bus stations".
-- T-4079 [P2] {L:buses} Bus stop connections drawn and timed by kind (taking, 2026-11-23, agent busconn)
-  - Context: Your scratch pad, 11-23: "dense bus network auto-connections look kinda silly / web-like sometimes. could we have bus stops have a smaller autoconnect radius? and allow making manual connections between bus stops and other stations. also i think the connection style doesnt look that good. ... maybe we revert to the "dashed line" look if its a bus "stop" connection. the dashed line does not save any time and its as if the person is just walking the whole way. for bus "stations" we can have dashed line look for autoconnections and then an actual white connector "passage" for manually placed passages. the passage can be slightly better, not sure if itd be more consistent to make the passage save 2 minutes or for the non-passage connection to lose 2 minutes or something. i think bus stops cannot have passages, bus stations can have passages." Removing them is T-4048. Timing, you 11-23: "train station passages odnt save any time which is why it feels a bit weird to make bus passages save time. so lets actually make bus passages save no time, and raw connections lose 1 minute. (1 minute is what weg ive for station buildings, so 2 minutes is a bit strong actually.) we dont have to mention the 1 minute loss for connections, lets just say that building a passage (for bus stations) saves one minute."
-  - Goal: Bus stops connect within a smaller radius, drawn dashed; connections without a passage take today's walk plus 1 minute, a passage today's walk; BRT stations get dashed auto connections and white passages built manually, bus stops no passages; manual connections between a bus stop and a station possible; player text says a passage saves one minute.
 - T-4083 [P2] {L:buses} Manual connections between bus stops and stations
   - Context: Your scratch pad, 11-23: "allow making manual connections between bus stops and other stations." Split from T-4079, which landed the 150 m radius, the minute and the dashed look. A bus stop is not saved and gets a new id whenever an edit places the stops again, so a connection needs a stop that keeps its identity across edits and saves; T-4080 (naming bus stops) needs the same thing, so the two should share one design rather than each adding its own save block. A design: store an end as a station node or (bus line, point on its route), resolved to that line's stop nearest the point within 60 m (the bus stop panel's follow rule); one trailing save block and level; made from the bus stop panel or by picking a bus stop with the passage tool, free, drawn dashed; demand takes it as a complex walk (the bus stop gets its station's complex number in the snapshot).
   - Goal: A player connects a bus stop to a station or another stop up to 1 km away; riders change there on foot as within a complex, and the connection survives edits and a save.
@@ -226,7 +227,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4080 [P2] {L:buses} Name and rename bus stops
   - Context: Your scratch pad, 11-23: "people keep requesting to be able to rename / name bus stops. we should add that." Also a player 11-20: "バスの停留所も名前を変えれるようにしたい" (want to rename bus stops too).
   - Goal: A bus stop's name can be set in its panel like a station's, saved, and shown wherever the stop's name shows.
-- T-4082 [P1] {L:solve-speed} A bus-heavy Detroit save calculates trips for 20 minutes (taking, 2026-11-23, agent solveprof)
+- T-4082 [P1] {L:solve-speed} A bus-heavy Detroit save calculates trips for 20 minutes
   - Context: Your scratch pad, 11-23: "this bus heavy detroit save takes like 20 minutes to caalculate trips. seems like its 20 minutes on live too so its not something we intoduced recently but yeah lol. its notable." The community save mostly in Detroit that T-4081's search misses (started near Ann Arbor, maybe).
   - Goal: Where the 20 minutes go named, and the biggest cost cut.
 - T-4048 [P3] {L:route-choice} Remove station connections and passageways
@@ -351,10 +352,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: On North America a bubble answer still takes about 300 ms per worker (NYC 60 ms) after T-2747.
   - Goal: Bring the North America answer close to NYC.
   - Other: Plan: a rail-only pass per part and a cache of zone rows. notes/T-2747.md
-- T-3937 [P2] {L:solve-speed} High-demand edits a third slower since 11-17
-  - Context: From T-3513, 11-21: the same high-demand edit on the NYC save took 74/62 s and 82/79 s (edit/undo) against T-3512's 47-51 s on 11-17. Machine load and the data (rail trips 12.68M then, 13.25M now) are both candidates; not traced.
-  - Goal: The cause named on a quiet machine (bisect if needed), and fixed if it is a regression.
-  - Other: notes/T-3513.md
 - T-3938 [P3] {L:solve-speed} Warm-start crowding prototype behind a flag
   - Context: From T-3513, 11-21: a high-demand NYC edit can't reach 20 s exactly (6-8 crowding passes a worker at 4-6 s each). Starting each population's crowding rounds from its last solve's loads would cut passes, but figures would then depend on edit history; time and drift unmeasured. Changing convergence is your call once measured.
   - Goal: Behind a dev flag, measured against the cold solve on NYC and NA: time saved and how far figures drift.
@@ -382,9 +379,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Every all-China load closes about 40 reached zones at about 13 s and reopens them a second later, wasting downloads.
   - Goal: Reached zones stay open while the reach is worked out.
   - Other: notes/T-1605.md
-- T-1560 [P3] {L:solve-speed} Deal city zones between solving workers
-  - Context: Design only: zones dealt to workers instead of periods, the route to the whole world (T-1169 stage 5).
-  - Other: notes/T-1560.md
 - T-1367 [P3] {L:memory} Demand worker heap keeps closed zones
   - Context: After zones or a market close, a worker's heap still holds them until its next solve (all-China: 2,041 MB at rest).
   - Goal: A worker frees closed zones promptly so the restart need not wait for a solve.
@@ -439,7 +433,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Stage 3g landed on tw/track 11-22: `realnet.py resave` re-saves all 41 starts as TWT7 with bundles (same fingerprints, London 256 ms), but data/packs/real keeps today's TWT6 files since master can't read TWT7.
   - Goal: At the merge, in an empty `REALNET_OUT`, `realnet.py resave` exits 0 with 41 lines, then `realnet.py ship` (never ship without it: it falls back to stale October files); steps in notes/T-3958.md.
   - Other: notes/T-3958.md (on tw/track).
-- T-4085 [P2] {L:track-rework} Add a track as a blueprint, with no track limit (taking, 2026-11-23, agent addbp)
+- T-4085 [P2] {L:track-rework} Add a track as a blueprint, with no track limit (taking, 2026-11-23, agent trackfix)
   - Context: You, 11-23, after T-4024 landed on tw/track: "im actually not really certain we should have any limit to number of tracks in a bundle. we said 16 but yeah could we just not have an explicit limit? also we should probably make it so adding a track is done as a blueprint, that just makes more sense than instant construction / instant payment." Today on built track it asks, pays at once and can't be undone; the blueprint way needs per-track built state (notes/T-4024.md). Text acknowledged 11-23.
   - Goal: Adding a track to built track puts the new track in the blueprint, paid on Construct and undoable before; no bundle limit and no "at most" string.
 - T-4067 [P2] {L:track-rework} Connect an added track manually
@@ -1286,10 +1280,6 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
   - Context: Each measurement script builds its own cell-to-unit table.
   - Goal: One cached table per pack is shared.
   - Other: See notes/T-383.md.
-- T-060 [P4] {L:loading} City packs on R2, compressed copy
-  - Context: City packs on R2 still lack a compressed .bin copy and the header in JS.
-  - Goal: City packs load a compressed copy.
-  - Other: notes/someday.md
 - T-321 [P4] {L:demand-ideas} Local time across offsets
   - Context: Ledger days and market trips ignore time zone offsets.
   - Goal: They handle offsets.
@@ -1320,10 +1310,6 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
   - Context: Destinations are fixed. Parked by you.
   - Goal: Destinations shift as the network grows.
   - Other: Notes: notes/someday.md
-- T-427 [P4] {L:solve-speed} Longer-trip answers only for zones with trips
-  - Context: Someday: send longer-trip answers only for zones that have trips.
-  - Goal: Answers are sent only for zones with trips.
-  - Other: notes/T-377.md
 - T-390 [P4] {L:route-choice} Walked and drove split per station
   - Context: Everyday and regional trips have no per-station walked/drove split.
   - Goal: Each station shows its split.
@@ -1377,10 +1363,6 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
 - T-1173 [P4] {L:loading} Clock worker loads for 5.7 s on China
   - Context: The clock worker takes 5.7 s to load on the China save.
   - Goal: The clock worker loads the China save faster.
-- T-1230 [P4] {L:loading} Clock worker first boarding hour is slow
-  - Context: The clock worker's first boarding hour after a result takes 1.3 s.
-  - Goal: That first hour takes much less than 1.3 s.
-  - Other: notes/someday.md
 - T-898 [P4] {L:loading} City pack opening is slow for big loads
   - Context: Opening a city pack is the floor of a big load, 7 s a worker for Japan.
   - Goal: Pack opening takes much less than 7 s a worker on Japan.
@@ -1425,10 +1407,6 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
   - Context: There are two demand engines per city. T-3373 now covers sharing zone data between workers.
   - Goal: One demand engine per city.
   - Other: notes/T-361.md
-- T-354 [P4] {L:memory} {after:T-3373} Pack copies per worker
-  - Context: Each worker holds its own pack copies, and the final publish spreads them. T-3373 shares the zone data; the pack copy may go with it.
-  - Goal: Pack copies are shared and the publish is trimmed.
-  - Other: notes/T-354.md
 - T-344 [P4] {L:loading} Zone loading bar sticks near 99%
   - Context: Rare, and not reproduced on a Tokyo save 2026-11-16. Likely cause: a zone opened but never solved when the view jumps to dead space first.
   - Goal: The bar finishes when loading does.

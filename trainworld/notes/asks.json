@@ -1,16 +1,1 @@
-[
-  {
-    "id": "a-2026-11-23-3",
-    "title": "Lighter load on phones",
-    "text": "Phones die loading big games (4 of the 7 out-of-memory crash reports since v0.4.4 are iPhones with 1,100-2,100-station Tokyo games, using 1.25-1.7 GB against iOS's kill at 1.4-2 GB). A lighter phone load, with full demand detail only near the view and coarser further out, would take about 4-8 h. Want it designed? It changes demand on phones, so the design comes to you first. Meanwhile we're adding a warning before a big load on Safari and a way out of the crash loop.",
-    "since": "2026-11-23",
-    "by": "maps-44"
-  },
-  {
-    "id": "a-2026-11-23-4",
-    "title": "Spain blocks during football",
-    "text": "Spanish internet providers block Cloudflare's shared addresses during football matches, and both the game and its data sit on them, so Spanish players on those providers can't load the game then (one report; the account server isn't on Cloudflare). A fallback host off Cloudflare would be 4-6 h plus an extra upload every publish. Leave it (T-4074)? I'd leave it.",
-    "since": "2026-11-23",
-    "by": "maps-44"
-  }
-]
+[]

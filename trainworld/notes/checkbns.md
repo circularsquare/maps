@@ -1,0 +1,13 @@
+# checkbns: T-4069 (busnosnap tree, level 39, LBE1)
+
+Scratch (scripts, saves): C:\Users\anita\AppData\Local\Temp\claude\dce1fefcc1d43aef\dc375617-affd-42c6-aac0-505e37685277\scratchpad\checkbns
+Fixture: real save, sandbox, bus line 109 ("Check bus") 90 m beside a station pair 1.7 km apart, made Manual with 4 plain stops (2 snapped to stations 105/106, 2 middle). Master build exported it as master.save.
+
+1. Old save on tree: PASS. Stops identical (6 stops, kinds 1,1,2,2,1,0, same stations 541/105/106, same lng/lat to 6 places). Trips after final: 899319939/day, rail 12661850, identical to master's final for the same game.
+2. Round trip: PASS. Two Ctrl-exact stops placed 130 m and 140 m from the station stops come out as kind 2 (middle), not station. Export, reload from file: all 8 stops same. Undo removes the last exact stop, redo brings it back at the same place. Not run: slot reload (page reload), second export of the reloaded file.
+3. Edits: PASS. busRoute reroute (4 m and 60 m bend): exact stops stay middle stops, projected with the others. Delete a plain stop, add a plain one: exact stay. removeStation 105: the stop turns into the neighbouring station 53's stop, exact stops unchanged; undo restores 105. Auto then Manual (busSpacing then busHand): exact stops restored as middle stops.
+   Seen, not tied to this change: undo of a busRoute reroute left the stops where the reroute put them (105 moved from -73.99374 to -73.99385) while the route was back to 2 points. Not compared with master.
+4. Ghost honesty: PASS. Real pointer, Playwright, stop editing on line 109 (set through the tool and lineDraft signals, not the panel button). Six trials (near a station that is not yet a stop, beside another line's stop, open street; each without and with Ctrl): ghost to landed stop 0.03-0.05 m in all six. With Ctrl the stop lands 0.2 m from the pointer; without Ctrl near the station it lands on station 637's stop 7.3 m from the pointer with the ghost there; beside the other line's stop it lands 30 m off with the ghost there. Tags: snapped hover shows "Ctrl+click to place without snapping", Ctrl hover drops it. Pressing Ctrl with the pointer still moves the ghost (7.4 m) and releasing moves it back.
+5. Real save: PASS with a caveat. Tree: 899319939 trips/day, rail 12660073, 109 lines, final round 3. Master: 899564070, rail 12660081 (0.03% apart, rail 8 apart). Master ran on 1 core, tree on 2; master on 2 cores earlier gave 899319939 for the same total, so the gap follows the demand worker count, not the build.
+
+Skipped: smoke, Rust tests, Safari, a hand-made old save older than level 38, touch input, Mac Cmd.
