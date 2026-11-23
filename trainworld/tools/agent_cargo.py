@@ -14,8 +14,10 @@ import sys
 
 TREE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # the tree's root
 MAPS_CORES = None
-for up in (TREE, os.path.dirname(os.path.dirname(TREE))):  # a worktree is <maps>/.tw-trees/<name>
-    if os.path.exists(os.path.join(up, "cores.py")):
+# A worktree is <maps>/.tw-trees/<name> and carries its own tracked cores.py, whose ledger (cores.json beside it) nobody
+# else reads: claim through the maps root's, so the cap counts agents' Rust builds (they were invisible before T-4121).
+for up in (os.path.dirname(os.path.dirname(TREE)), TREE):
+    if os.path.exists(os.path.join(up, "cores.py")) and (up == TREE or os.path.basename(os.path.dirname(TREE)) == ".tw-trees"):
         MAPS_CORES = os.path.join(up, "cores.py")
         break
 SIM = os.path.join(TREE, "trainworld", "sim")

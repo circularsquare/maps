@@ -63,6 +63,36 @@ const gitLoud = (cwd, ...args) => run('git', ['-C', cwd, ...args]);
 const fail = (msg) => { if (LOG) throw new Error(msg); console.error(msg); process.exit(1); };
 const isLink = (p) => { try { return fs.lstatSync(p).isSymbolicLink(); } catch { return false; } };
 
+// T-4121: a new tree starts from a warm copy of an earlier tree's trainworld/sim/target (agent profile, native and wasm32),
+// so its first test and wasm build recompile only the sim crate, incrementally. A copy, never a link or a shared
+// CARGO_TARGET_DIR: trees on different branches overwrite each other's artifacts, and cargo itself refuses to share
+// one target between parallel builds. Cargo fingerprints source mtimes, so stale artifacts only cost a rebuild.
+// The seed is the target of the last tree removed that had built both (renamed, so it costs no copy and no disk).
+const seedDir = path.join(trees, '_seed', 'target');
+const stamp = path.join(trees, '_seed', 'stamp');
+const SEED_MAX_AGE_H = 12;
+function seedTarget(dir) {
+  if (!fs.existsSync(seedDir) || process.env.TW_NO_SEED) return false;
+  const t0 = Date.now();
+  const r = spawnSync('robocopy', [seedDir, path.join(dir, 'trainworld', 'sim', 'target'), '/E', '/MT:8', '/NFL', '/NDL', '/NJH', '/NJS', '/NP', '/NC', '/NS'], { stdio: 'ignore', windowsHide: true });
+  if (r.status === null || r.status >= 8) { warn('the warm Rust cache could not be copied; the first build starts from nothing'); return false; }
+  say(`warm Rust cache copied in ${Math.round((Date.now() - t0) / 1000)} s`);
+  return true;
+}
+function keepSeed(dir) {
+  const tgt = path.join(dir, 'trainworld', 'sim', 'target');
+  const built = ['agent', path.join('wasm32-unknown-unknown', 'agent')].every((d) => fs.existsSync(path.join(tgt, d)));
+  if (!built) return;
+  try {
+    if (fs.existsSync(seedDir) && fs.existsSync(stamp) && Date.now() - fs.statSync(stamp).mtimeMs < SEED_MAX_AGE_H * 3600e3) return;
+    fs.rmSync(seedDir, { recursive: true, force: true });
+    fs.mkdirSync(path.dirname(seedDir), { recursive: true });
+    fs.renameSync(tgt, seedDir);
+    fs.writeFileSync(stamp, dir);
+    say(`kept ${path.basename(dir)}'s Rust target as the warm cache for new trees`);
+  } catch (e) { warn(`could not keep the Rust cache: ${e.message.split('\n')[0]}`); }
+}
+
 function treeOf(name) {
   if (!/^[a-z0-9][a-z0-9-]{0,30}$/.test(name ?? '')) fail(`a name is lowercase letters, digits and dashes: "${name ?? ''}"`);
   return { dir: path.join(trees, name), branch: `tw/${name}` };
@@ -250,6 +280,7 @@ function removeTree(dir, branch) {
     }
     gitLoud(maps, 'worktree', 'prune');
   }
+  if (fs.existsSync(path.join(dir, '.git'))) keepSeed(dir);
   if (fs.existsSync(dir)) {
     unlinkJunctions(dir);
     try { gitLoud(maps, 'worktree', 'remove', '--force', dir); } catch (e) {
@@ -625,7 +656,8 @@ if (cmd === 'new') {
   const wasm = path.join(maps, 'trainworld', 'app', 'src', 'wasm');
   if (fs.existsSync(wasm)) fs.cpSync(wasm, path.join(dir, 'trainworld', 'app', 'src', 'wasm'), { recursive: true });
   console.log(`\n${dir}\nbranch ${branch} from ${git(dir, 'rev-parse', '--short', 'HEAD')}`);
-  console.log(`Rust builds into the tree's own trainworld/sim/target (first wasm build a few minutes).`);
+  const warm = seedTarget(dir);
+  console.log(`Rust builds into the tree's own trainworld/sim/target (${warm ? 'started from a warm copy' : 'first build from nothing, several minutes'}).`);
   const copied = copyGameJson(dir);
   warnGameJson(dir, 'new', copied);
 } else if (cmd === 'list') {

@@ -206,6 +206,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-10 (Anita, T-087): A train's fill is a gauge: half full when seats are taken, full at crush, red rim over, showing the busiest hour by default. Fill in proportion to crush and colouring trains by load were rejected.
 
 ## Saves and performance
+- 2026-11-23 (Anita, T-4126): 8800 serves master only; the track branch is behind ?track with its own saves storage and no account, so a newer-format save never reaches master or her account.
 
 - 2026-11-23 (Anita, T-3940, T-4089): Community View opens without calculating trips, money frozen (Anita, 11-21; running costs drained about $5B a game day). Phones reporting no memory warn at 1,600+ stations; a game that died loading gets a warning, never open-without-trips (her 11-23). notes/T-3940.md
 - 2026-11-23 (Anita, T-4117): "Calculate trips in less detail" holds every zone coarse, on by default on phones and tablets (Anita: "add coarse demand as a setting"); stars and goals count coarse figures everywhere. Lie: lines within about 7%, small stations up to 20%. notes/T-4117.md

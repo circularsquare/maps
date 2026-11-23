@@ -177,56 +177,44 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4099 [P2] {L:help-tutorial} City labels drawn over the tutorial card
   - Context: Your pad, 11-23: "city label text (like Sapporo 0.0M trips) displays over tutorial card, but tutorial card should be in front"
   - Goal: The tutorial card in front of every map label.
-- T-4100 [P2] {L:board} Short task summaries on the board
+- T-4100 [P2] {L:board} Short task summaries on the board (taking, 2026-11-23, agent board3)
   - Context: Your pad, 11-23: "the twboard summaries are getting too long. i thought we had a hard limit on the length of these? lets add that or follow it. T4079, for instance, way too long"
   - Goal: A word limit on each task field that tasks.py check enforces, written in trainworld/CLAUDE.md's Tasks rules, and today's open tasks over it shortened.
-- T-4101 [P2] {L:board} Split Ready into lines with P2 tasks and the rest
+- T-4101 [P2] {L:board} Split Ready into lines with P2 tasks and the rest (taking, 2026-11-23, agent board3)
   - Context: Your pad, 11-23: "lets actually brring back splitting "ready" into two columns on twboard, one lines with P2 tasks in them and one for not. its just that most tasks are "ready" and so this column is too big relative to other ones"
   - Goal: Two Ready columns on the board: lines holding a P2 task, and the others.
-- T-4102 [P2] {L:board} The board watch doesn't reprint reports after a restart
+- T-4102 [P2] {L:board} The board watch doesn't reprint reports after a restart (taking, 2026-11-23, agent board3)
   - Context: You, 11-23: "ok can fix board watch so doesnt reprint reports." After each 30-minute restart the watch printed reports the orchestrator had already acted on.
   - Goal: A report line printed once per session, across restarts.
-- T-4107 [P2] {L:small-fixes} Crowding bubble hover end station names run together
+- T-4107 [P2] {L:small-fixes} Crowding bubble hover end station names run together (taking, 2026-11-23, agent hoverends)
   - Context: You, 11-23: "when we mouse over a crowding bubble, we have like the leftmost station displayed below the chain of stations, and the rightmost station. these used to be like one string left aligned and the other right aligned. but now it just looks like theres a not found character in between." Your screenshot: artifacts/trainworld/board/20261123-120505-98ee.png.
   - Goal: The two end names left and right aligned again under the chain, with no stray character.
 - T-4109 [P2] {L:single-track} Tell the player to reload when the track model stops
   - Context: From T-4098: after four edit panics a minute the track model stops and every edit says "That edit failed and was undone", with nothing telling the player that reloading the page gets the game back (a save rebuilds the model). T-3945 proposed this wording; it was never built.
   - Goal: Once the model has stopped, one message saying the game needs a reload, with a reload button, instead of a failed-edit alert per edit.
-- T-4113 [P1] {L:edit-speed} Bounded edits part A, touched set and regions (taking, 2026-11-23, agent bounded)
-  - Context: You, 11-23: "i think the problem is that every edit redoes work for the whole save ... im thinking we could probably partition into regions that only have so many stations in them, and any reconciliation between partitions can happen slightly later, but we definitely want to prioritize just the area that the player is focusing on / actively drawing near. ok we can start work on bounded edits." Design: notes/T-4097.md section 4 (parts A-F; D waits for the track rework's stage 5).
-  - Goal: Every edit carries the set it touched; the world split into regions capped by station count; the region being edited or in view redone first, the rest reconciled after; a full rebuild compared in tests.
-- T-4125 [P1] {L:edit-speed} Bounded edits next stage, the biggest whole-save step left (taking, 2026-11-23, agent bounded2)
-  - Context: T-4113 (part A) landed: edits carry what they touched, regions of 64 stations, the worker's rows redone per region; on the Asia save a stop reorder is about 16% faster and a station about 9%. Now the floor is whole-network bulk reads (reads by id from Rust; noting only lines that moved in service.rs) and the page panels (part C, notes/T-4097.md section 4).
-  - Goal: The next biggest per-edit whole-save cost moved onto regions in one stage of about two hours, with the Asia save's click-to-map waits before and after.
 - T-4114 [P2] {L:edit-speed} {after:T-4113} Edits show at the click, track first
   - Context: You, 11-23: the T-4097 improvements "are not bad ideas, i just think they will not be enough by themselves." Design: notes/T-4097.md section 3, 9-13 h in three parts, track first (4-6 h).
-- T-4111 [P1] {L:edit-speed} Two same-answer cuts on the page after an edit
+- T-4111 [P1] {L:edit-speed} The quad check after every network rebuild
   - Context: From T-4097 (notes/T-4097.md): tramSpot (map/capacityMarkers.ts, from ui/TroubleList.tsx) scans every node for each capacity spot on every world, about 0.13 s, a third of a stop click's page cost; the track hover's quad check (map/quadTwin.ts) rebuilds over all edges after every network, 0.46-0.77 s on the main thread after a station on a 2,647-station save.
   - Goal: Both indexed or cached so the cost scales with what changed; the same output; times on the big Asia save as a percent of the click-to-map wait.
 - T-4112 [P1] {L:station-placement} Station on a blueprint refused for water at a ramp far away
   - Context: You, 11-23, on 8800 (tw/track build f382ee54): placing a station on a high speed track blueprint "kinda near water that it ramps over", the blocking alert "track at ground level can't cross water", which "doesnt seem like it should be relevant given that im placing a station, not a track, and also this is pretty far from the ramp."
   - Goal: Rebuilt; a station on a blueprint is checked only against its own platform stretch; placing it works there, and a real refusal names the station's problem.
-- T-4116 [P1] {L:track-rework} Track model panics on 8800 during play (taking, 2026-11-23, agent panics)
-  - Context: From T-4110: the centred "Loading" card you saw mid-game on 8800 (tw/track build f382ee54) is most likely the track model rebuilding after a panic (clockPanic.ts rebuildModel); each panic also pops a "model restored" notice. The track rework changed the model a lot this week.
-  - Goal: The panics on tw/track found by replaying ordinary play on it (random edits and undos on big saves, watching for "Rust panic in"), and fixed with a test. You don't know whether a "model restored" notice showed.
-- T-4118 [P2] {L:loading} Every water mask late on 8800 (taking, 2026-11-23, agent panics)
-  - Context: Your console on 8800, 11-23: "clock worker: water masks: 292 of 292 not in after 20 s; the game opens without them". T-4072 caps the wait at 20 s and installs late masks when they land; all 292 late on localhost suggests they aren't arriving at all, or are queued behind something.
-  - Goal: Why every mask was late named; masks arriving within the cap on a normal load.
-- T-4120 [P1] {L:cleanup} Cut DECISIONS down to the decisions worth keeping (taking, 2026-11-23, agent decisions)
-  - Context: You, 11-23: "i think the fact that we have a thousand entries is kinda insane ... maybe sort them, merge ones that are the same, drop ones that are not helpful." 1,546 entries since 10-20 plus the older file; median 82 words against the one-or-two-sentence rule. Archiving was ruled out as meaningless.
-  - Goal: One DECISIONS.md of about 200 entries, sorted by area, each one or two sentences: choices someone might revisit, with what they replaced. tasks.py check flags entries over 50 words, and CLAUDE.md says what counts as a decision.
-- T-4121 [P1] {L:checks} A shared Rust build cache for agent trees (taking, 2026-11-23, agent buildcache)
-  - Context: You, 11-23: "ok can do shared rust build cache." Each new tree builds sim/ from nothing (several minutes before an agent starts) and each landing rebuilds the WASM (3-4 min); about 15 trees today.
-  - Goal: A new tree's first cargo test and WASM build reuse earlier builds (sccache or a shared target per branch), measured before and after, with no wrong artifacts across branches.
-- T-4123 [P1] {L:solve-speed} Keep the last one-off search table for the next caller (taking, 2026-11-23, agent lasttable)
-  - Context: From T-4057 (notes/T-4057.md): on a 5-zone Tokyo game 41% of a period is one-off searches; a zone's commutes and everyday each search again on the same graph. Keeping the last table for the next caller with the same graph gives the same answers, about 18% of Tokyo's period natively. First in the solve triage (notes/solve-triage-2026-11-23.md).
-  - Goal: Identical figures; Tokyo measured with the bench before and after (CPU and memory, percent).
+- T-4116 [P2] {L:track-rework} {after:the 0.4.6 publish} Track model panic after a route edit on the track branch
+  - Context: Your panic on 8800 (track branch build f382ee54): store.rs:851 under nodes_info, after a route edit and line colour changes that kept reverting. Not reproduced by 1,800 random edits each on NYC and your North America save; likely a line's service still naming track an edit removed. One other panic (run_polyline on a one-way line's return run) fixed on tw/track, with an edit fuzzer (sim/src/bin/edit_fuzz.rs). Notes: notes/T-4116.md.
+  - Goal: Reproduced with the fuzzer or your save under ?track, and fixed with a test, when the track rework resumes.
+- T-4127 [P1] {L:single-track} Check master for the one-way return run panic (taking, 2026-11-23, agent onewayret)
+  - Context: From T-4116: on tw/track, removing a station could panic in run_polyline because a one-way line's unused return run named removed track; master has the same unchecked code, untried. The app asks for that run only on lines with a routed return.
+  - Goal: Tried on master with the edit fuzzer; if it panics, the same guard and test land on master before 0.4.6.
 - T-4124 [P2] {L:solve-speed} {after:T-4123} One graph for all zones in a calculation
   - Context: From T-4057: each zone has its own graph, so most of Tokyo's 41% one-off searches repeat; building one graph for the zones in a calculation removes most of it but shifts walks by 1-2% of walk minutes, so it comes to you with the real-save numbers first.
-- T-4104 [P2] {L:timetables} A new line's headways follow its kind's defaults
+- T-4130 [P1] {L:edit-speed} Bounded rows keep a stale flat crossing after an edge is deleted (taking, 2026-11-23, agent crossfix)
+  - Context: Found by T-4125: with another edit sequence the Asia fuzz in t1382-rows fails at seed 2 step 8: after an edge is deleted, node 718's row keeps crosses: true that a full read doesn't have. Part A (T-4113) is on master, so this would ship in 0.4.6. Repro: t1382-rows-crosses-repro.mjs in the bounded2 scratch folder.
+  - Goal: The bounded rows equal a full read after every step of the fuzz on New York and Asia, several seeds, with the crossing case in the standing check.
+- T-4104 [P2] {L:timetables} A new line's headways follow its kind's defaults (taking, 2026-11-23, agent headways)
   - Context: You, 11-23: "when making a new line, it assumes its a normal train. if i then put it on high speed tracks it updates to say oh this is actually a high speed train, but the default headways are already taken from the normal train's defaults. could we have the headways also update to use the high speed line defaults, if they are set and the player hasnt yet already adjusted the headways? same for tram lines."
   - Goal: When a line's kind changes and its headways are still the old kind's defaults, they switch to the new kind's defaults; headways the player set stay.
-- T-4105 [P2] {L:station-placement} An Auto choice for the station tool
+- T-4105 [P2] {L:station-placement} An Auto choice for the station tool (taking, 2026-11-23, agent autostation)
   - Context: You, 11-23: "when placing stations we now have to specify train/tram/bus/ferry. would be nice if we had an "auto" setting (can just use an "A" as icon) that autopicked based on whatever we're actually hovering over."
   - Goal: An "A" button beside train, tram, bus and ferry, picking the kind from what's under the pointer.
 - T-4106 [P2] {L:memory} An install-as-app banner on phones

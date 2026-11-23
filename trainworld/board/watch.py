@@ -15,7 +15,8 @@ It also prints a "disk:" line when free space on the drive falls under 30 GB, ag
 back (checked every 5 minutes; tools/ops/disk.py), chiming for Anita with a Windows notification as it falls.
 It also prints a line for each unread agent report (tools/reports.py, T-3668) that another session's agent
 sent: the current orchestrator's own agents already reach it directly. --session registers this session for
-the reports hook, and the watch stops once notes/handoff.md names another orchestrator.
+the reports hook (ids already printed are kept per session in notes/watch-told-<session>.json, so the 30-minute
+restarts don't reprint them), and the watch stops once notes/handoff.md names another orchestrator.
 """
 import argparse
 import datetime as dt
@@ -77,6 +78,17 @@ def state(path):
     return pending, last, sent
 
 
+def told_file(session):
+    return TW / "notes" / f"watch-told-{(session or 'none')[:8]}.json"
+
+
+def load_told(session):
+    try:
+        return set(json.loads(told_file(session).read_text(encoding="utf-8")))
+    except (OSError, ValueError):
+        return set()
+
+
 def agent_reports(box, session, told):
     """Lines for unread agent reports not yet printed; None once another session orchestrates."""
     cur = box.current()
@@ -87,6 +99,10 @@ def agent_reports(box, session, told):
         if r["id"] in told or (session and str(r.get("session", "")).startswith(session[:8])):
             continue
         told.add(r["id"])
+        try:
+            told_file(session).write_text(json.dumps(sorted(told)), encoding="utf-8")
+        except OSError:
+            pass
         out.append(f"agent report {reports.line(r)} (reports.py show {r['id']})")
     return out
 
@@ -160,7 +176,7 @@ def watch(path, idle, poll, box=None, session=None, dw=None):
     # At start, leftovers from before count as ready at once if she had pressed Send now.
     # The orchestrator handling part of a batch is not news; only actions not yet reported are.
     reported, seen_sent = set(), None
-    told, next_reports = set(), 0.0
+    told, next_reports = load_told(session), 0.0   # kept on disk so a restart doesn't reprint reports
     next_idle, last_idle = time.time() + IDLE_EVERY, None
     next_disk = 0.0
     while True:
