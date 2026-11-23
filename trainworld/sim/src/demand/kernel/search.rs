@@ -2314,7 +2314,8 @@ impl Search<'_> {
     }
 
     /// Route node `r`'s departures, at cost `d` from boarding, offered to its station's strategy,
-    /// or once that is settled, to the station's change nodes that do not bar it.
+    /// or once that is settled, to the station's change nodes that do not bar it and are still in
+    /// the queue (a change node takes no late lines: T-4054, DECISIONS 2026-11-23).
     pub(super) fn offer_line(&mut self, r: usize, d: f32) {
         let g = self.g;
         let (from, f) = (g.rn_station[r] as usize, g.rn_tph[r]);
@@ -2350,16 +2351,12 @@ impl Search<'_> {
         let i = self.edge_ix[r] as usize;
         for k in a as usize..b as usize {
             let c = &mut self.cn[k];
-            if !(d < c.cut) || barred(g, &self.nst, r, c.line, c.ban) { continue; }
+            if c.done || !(d < c.cut) || barred(g, &self.nst, r, c.line, c.ban) { continue; }
             c.cut = c.cut.min(d + spread);
             c.n += 1;
             self.cn_bits[c.bits as usize + i / 64] |= 1 << (i % 64);
             let head = self.cn[k].head;
             self.cn[k].head = self.add_line(head, d, r);
-            if self.cn[k].done {
-                self.late.push(((self.n + k) as u32, r as u32));
-                continue;
-            }
             let cost = if self.cn[k].n == 1 {
                 self.one_cost(from, r, d)
             } else {
@@ -2921,14 +2918,12 @@ pub fn wait_spread(f: f32, wait_f: f32, planned: bool) -> f32 {
 /// unless it is sure to arrive after the latest the best line would (`pool_cost`).
 pub const FIRST_ARRIVAL_SHARE: f32 = 0.75;
 
-/// Gauss-Legendre nodes and weights on [-1, 1], 1 to 6 points (exact to degree 11).
-const GAUSS: [&[(f64, f64)]; 6] = [
+/// Gauss-Legendre nodes and weights on [-1, 1], 1 and 2 points (exact to degree 3). Two at most
+/// (T-4054, DECISIONS 2026-11-23): pools of up to three lines that can be first are integrated
+/// exactly, larger ones nearly.
+const GAUSS: [&[(f64, f64)]; 2] = [
     &[(0.0, 2.0)],
     &[(-0.577_350_269_189_625_8, 1.0), (0.577_350_269_189_625_8, 1.0)],
-    &[(-0.774_596_669_241_483_4, 0.555_555_555_555_555_6), (0.0, 0.888_888_888_888_888_9), (0.774_596_669_241_483_4, 0.555_555_555_555_555_6)],
-    &[(-0.861_136_311_594_052_6, 0.347_854_845_137_453_9), (-0.339_981_043_584_856_3, 0.652_145_154_862_546_1), (0.339_981_043_584_856_3, 0.652_145_154_862_546_1), (0.861_136_311_594_052_6, 0.347_854_845_137_453_9)],
-    &[(-0.906_179_845_938_664, 0.236_926_885_056_189_1), (-0.538_469_310_105_683_1, 0.478_628_670_499_366_5), (0.0, 0.568_888_888_888_888_9), (0.538_469_310_105_683_1, 0.478_628_670_499_366_5), (0.906_179_845_938_664, 0.236_926_885_056_189_1)],
-    &[(-0.932_469_514_203_152, 0.171_324_492_379_170_3), (-0.661_209_386_466_264_5, 0.360_761_573_048_138_6), (-0.238_619_186_083_196_9, 0.467_913_934_572_691), (0.238_619_186_083_196_9, 0.467_913_934_572_691), (0.661_209_386_466_264_5, 0.360_761_573_048_138_6), (0.932_469_514_203_152, 0.171_324_492_379_170_3)],
 ];
 
 /// Scratch for `pool_cost`: per line, (earliest arrival, latest, 1 / spread, place in `lines`).
@@ -2982,6 +2977,9 @@ pub(super) fn pool_cost(lines: &[(f32, f32)], wait_f: f32, change_f: f32, planne
     w.acc.clear();
     w.acc.resize(if want { m } else { 0 }, 0.0);
     let mut tail = 0.0f64;
+    // each quadrature's nodes and weights on its stretch: the nodes are gone through together,
+    // line by line, so their products run side by side
+    let (mut nt, mut nq) = ([0f64; 2], [0f64; 2]);
     // between one line's earliest arrival and the next's, the first k + 1 lines can be first
     for k in 0..m {
         let t0 = w.v[k].0;
@@ -2990,22 +2988,27 @@ pub(super) fn pool_cost(lines: &[(f32, f32)], wait_f: f32, change_f: f32, planne
         if len <= 0.0 {
             continue;
         }
-        let nodes = GAUSS[((k + 1) / 2).min(GAUSS.len() - 1)];
-        for &(x, wt) in nodes {
-            let t = t0 + (x + 1.0) * len / 2.0;
-            let q = wt * len / 2.0;
-            let mut surv = 1.0;
-            for l in &w.v[..=k] {
-                surv *= (l.1 - t) * l.2;
+        let nn = nodes_on(GAUSS[((k + 1) / 2).min(GAUSS.len() - 1)], t0, len, &mut nt, &mut nq);
+        let mut surv = [1.0f64; 2];
+        for l in &w.v[..=k] {
+            for i in 0..nn {
+                surv[i] *= (l.1 - nt[i]) * l.2;
             }
-            tail += q * surv;
-            if want {
-                for (j, l) in w.v[..=k].iter().enumerate() {
-                    let own = (l.1 - t) * l.2;
+        }
+        for i in 0..nn {
+            surv[i] *= nq[i];
+            tail += surv[i];
+        }
+        if want {
+            for (j, l) in w.v[..=k].iter().enumerate() {
+                let mut a = w.acc[j];
+                for i in 0..nn {
+                    let own = (l.1 - nt[i]) * l.2;
                     if own > 0.0 {
-                        w.acc[j] += q * surv / own * l.2;
+                        a += surv[i] / own * l.2;
                     }
                 }
+                w.acc[j] = a;
             }
         }
     }
@@ -3027,20 +3030,24 @@ pub(super) fn pool_cost(lines: &[(f32, f32)], wait_f: f32, change_f: f32, planne
         let t1 = w.e[k].0;
         let len = t1 - t0;
         if len > 0.0 {
-            // m - k uniform factors: a polynomial of that degree
-            let nodes = GAUSS[((m - k + 1) / 2).min(GAUSS.len() - 1)];
-            for &(x, wt) in nodes {
-                let t = t0 + (x + 1.0) * len / 2.0;
-                let q = wt * len / 2.0;
-                let mut surv = 1.0;
-                for (j, l) in w.v[..m].iter().enumerate() {
-                    surv *= 1.0 - t.min(w.ej[j]) * l.2;
+            let nn = nodes_on(GAUSS[((m - k + 1) / 2).min(GAUSS.len() - 1)], t0, len, &mut nt, &mut nq);
+            let mut surv = [1.0f64; 2];
+            for (j, l) in w.v[..m].iter().enumerate() {
+                for i in 0..nn {
+                    surv[i] *= 1.0 - nt[i].min(w.ej[j]) * l.2;
                 }
-                lazy_wait += q * surv;
-                for &(_, j) in &w.e[k..] {
-                    let l = w.v[j];
-                    w.lz[j] += q * surv / (1.0 - t * l.2) * l.2;
+            }
+            for i in 0..nn {
+                surv[i] *= nq[i];
+                lazy_wait += surv[i];
+            }
+            for &(_, j) in &w.e[k..] {
+                let l = w.v[j];
+                let mut a = w.lz[j];
+                for i in 0..nn {
+                    a += surv[i] / (1.0 - nt[i] * l.2) * l.2;
                 }
+                w.lz[j] = a;
             }
         }
         t0 = t1;
@@ -3065,6 +3072,16 @@ pub(super) fn pool_cost(lines: &[(f32, f32)], wait_f: f32, change_f: f32, planne
         wait = (a * (first - ride) + (1.0 - a) * lazy_wait).max(0.0);
     }
     (cost as f32 + p.change_at(change_f), wait as f32)
+}
+
+/// `pool_cost`'s quadrature on [t0, t0 + len]: its nodes into `t` and weights into `q`; how many.
+#[inline(always)]
+fn nodes_on(nodes: &[(f64, f64)], t0: f64, len: f64, t: &mut [f64; 2], q: &mut [f64; 2]) -> usize {
+    for (i, &(x, wt)) in nodes.iter().enumerate() {
+        t[i] = t0 + (x + 1.0) * len / 2.0;
+        q[i] = wt * len / 2.0;
+    }
+    nodes.len()
 }
 
 /// `pool_cost` for two lines, in closed form (most stations and change nodes that take more than
@@ -3146,6 +3163,8 @@ impl Shares {
 pub(super) struct SharesBuild {
     at: Vec<(u32, u32)>,
     val: Vec<f32>,
+    /// `finish`'s scratch: per node its last entry in `at`
+    last: Vec<u32>,
 }
 
 impl SharesBuild {
@@ -3165,19 +3184,23 @@ impl SharesBuild {
         // each entry's values run to the next entry's, in push order; a node noted again (its late
         // lines, `Search::late_fix`) keeps its last
         let n = self.at.len();
-        let mut by: Vec<usize> = (0..n).collect();
-        by.sort_unstable_by_key(|&k| (self.at[k].0, std::cmp::Reverse(k)));
-        by.dedup_by_key(|k| self.at[*k].0);
+        let ids = self.at.iter().map(|x| x.0 as usize + 1).max().unwrap_or(0);
+        self.last.clear();
+        self.last.resize(ids, NONE);
+        for (k, x) in self.at.iter().enumerate() {
+            self.last[x.0 as usize] = k as u32;
+        }
         let mut val = Vec::with_capacity(self.val.len());
-        let out = by
-            .iter()
-            .map(|&k| {
-                let (i, end) = (self.at[k].1 as usize, if k + 1 < n { self.at[k + 1].1 as usize } else { self.val.len() });
-                let o = val.len() as u32;
-                val.extend_from_slice(&self.val[i..end]);
-                (self.at[k].0, o)
-            })
-            .collect::<Vec<_>>();
+        let mut out = Vec::with_capacity(n);
+        for (v, &k) in self.last.iter().enumerate() {
+            if k == NONE {
+                continue;
+            }
+            let k = k as usize;
+            let (i, end) = (self.at[k].1 as usize, if k + 1 < n { self.at[k + 1].1 as usize } else { self.val.len() });
+            out.push((v as u32, val.len() as u32));
+            val.extend_from_slice(&self.val[i..end]);
+        }
         Shares { at: out.into(), val: val.into() }
     }
 }

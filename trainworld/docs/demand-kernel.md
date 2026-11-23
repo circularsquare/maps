@@ -128,7 +128,8 @@ levels:
    plus cost from boarding is least; the rest board the first departure that can still get them
    there by cut, so their share of a slow line fades to nothing as it nears cut. The station's
    cost is the two groups' expected arrival, weighed, plus the change's fixed cost
-   (`search::pool_cost`, integrated exactly; it can rise when a slow line joins), and each line's
+   (`search::pool_cost`, integrated on two Gauss points a stretch: exactly up to three lines that
+   can be first, nearly for more, T-4054; it can rise when a slow line joins), and each line's
    share of the riders is the two groups' chances weighed. One line costs half its headway, as
    before; two lines every 10 minutes with the same ride, from platforms of their own or with
    different stops, wait a third of the headway, not a quarter (they are not spread evenly; on one
@@ -198,8 +199,8 @@ levels:
    and the walk between the two platforms' centres (below); the first boarding pays neither the
    fixed cost nor a platform walk. A line joins only if it can be first (its cost from boarding
    is under every joined line's plus that line's whole headway); wrong branches add nothing. A line
-   offered after its station (or change node) has left the search's queue joins too
-   (`Search::late_fix`, T-4041): riders who came straight in off that line get a change node that
+   offered after its station has left the search's queue joins too (`Search::late_fix`, T-4041; a
+   change node takes no late line, T-4054): riders who came straight in off that line get a change node that
    bars it, the settle order is made again so every node comes after the nodes it sends riders to,
    and a late line whose riders would come back round to the station is left out. Lines are offered to a station cheapest
    first by their cost from boarding, which includes the extra wait where full trains leave riders
@@ -207,7 +208,8 @@ levels:
    (T-552). **The lie** (T-4041): a late line lowers its station's cost, but not the costs of the
    nodes settled before it (those keep a slightly higher cost); riders who came off a line into a
    station where it joined late are barred it, as at any change, though some would rather have
-   stayed on; and lines being independent, a frequent line to a junction is sometimes taken to
+   stayed on; riders changing trains never take a line offered after their change node left the
+   queue (a slower line that could still come first; T-4054, Anita 11-23); and lines being independent, a frequent line to a junction is sometimes taken to
    change there, its train not timed with the other line's. **A rider
    never changes onto the line they left towards the stop they came from** (Anita, T-575), **nor
    towards the one their train goes on to**: where full trains leave riders behind they wait at
