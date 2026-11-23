@@ -38,7 +38,7 @@ import { putLoadMaskWait } from "./clockGround";
 import { blocksIn, blueprintPolylines, ensureBlocks, ensureMasks, ensureStreets, fetchWater, groundForBlueprint, masksComplete, masksIn, nodePoints, openNetwork, pumpBlocks, putPackBase, putTerrainBase, putViewBlocks, putViewZones, retryGroundNow, roadFeed, roadsUnder, routePoints, terrainIndexIntoModel, tintSent, VIEW_MARGIN_M, VIEW_SPAN_M, viewBlocks, viewZones, wakeStale, WaterRaster, withMasks, worldWaterIntoModel, zonesOfPoints } from "./clockGround";
 import { anchorMoves, drawnEdge, drawnLine, edgeDrawn, forget, game, hex, lineDrawn, previewMarkRows, putAnchorMoves, putConvertedOnLoad, putShiftFrom, putShiftWas, putView, restart, sendHome, sendOpened, sendRows, sendState, SHIFT_REACH, shiftFrom, SHIFTS_EXACT } from "./clockMain";
 import { gameNow, lineDays, linesPeriods, loadLineDays, loadRegions, mergeLedger, putTodayGen, putTodayLast, regionEntries, regions, rounded, savedLineDays, savedRegions, sendCash, sendMoney, serviceLeadS, settle, today, todayGen, unsettleAfter } from "./clockMoney";
-import { afterLoadPanic, EDIT_UNDONE, isPanic, keep, MODEL_DOWN, MODEL_RESTORED, modelDown, newModel, openFailReason, panicAfterEdit, panicLater, panicNow, panicOnLoad, panicWhy, putModelDown, putPanicAfterEdit, putPanicOnLoad, recover, SAVE_PANIC } from "./clockPanic";
+import { afterLoadPanic, downTold, EDIT_UNDONE, kept, putDownTold, isPanic, keep, MODEL_DOWN, MODEL_RESTORED, modelDown, newModel, openFailReason, panicAfterEdit, panicLater, panicNow, panicOnLoad, panicWhy, putModelDown, putPanicAfterEdit, putPanicOnLoad, recover, SAVE_PANIC } from "./clockPanic";
 import { diagramOn, patchMode, postDiagram, posted, postWhole, putDiagramOn, putDiagramWhole, putPatchMode, sender } from "./clockPost";
 import { achievements, api, applyRunFactors, AUTOSAVE_MS, city, clk, copyOf, dayPinned, dayShift, demandBuilt, demandFine, diagramCities, emptyTrack, epoch, failInPlace, fares, frameSpec, freezeCheckpoint, freezePort, freezeTimer, goals, guide, guideWanted, heldCharges, home, hourLedger, initIncoming, ledger, ledgerDay, lineNotes, lineShapes, loadHolidays, loan, loanOp, messages, modded, mode, newLineCars, newLineHeadway, newLineWeekendShare, opened, outlinesGot, outlinesIn, outlinesRead, packLngLat, packLocal, pageModded, peakC, placeLineCountries, pricesOf, putAchievements, putClk, putCopyOf, putDemandBuilt, putDemandFine, putDiagramCities, putDiagramInside, putEmptyTrack, putEpoch, putFares, putFreezeMemory, putFreezePort, putFreezeTimer, putGoals, putGuide, putGuideWanted, putHiddenLines, putHome, putHourLedger, putIncomePerHour, putInitIncoming, putLedger, putLineIncome, putLineNotes, putLinePoints, putLineRides, putLineShapes, putLineShares, putLoan, putMessages, putMidLoad, putModded, putMoneyFrozen, putNewLineCars, putNewLineHeadway, putNewLineWeekendShare, putOpened, putOutlinesRead, putPageModded, putPrices, putRidesPerHour, putRowsSent, putStars, putTiming, putTrackVersion, putUpkeepRegions, send, setMode, setStartZone, stars, startZone, syncHolidays, timing, trackVersion, withModded } from "./clockState";
 
@@ -58,8 +58,10 @@ addEventListener("unhandledrejection", (e) => {
 
 // ---------------------------------------------------------------- saves (T-029)
 
-function header(): SaveHeader {
-  return { game: "anitabuilder", format: SAVE_FORMAT, level: TrackApi.save_level(), city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), ...loanToSave(loan), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), ...(api!.fleet_ferry() ? { fleetFerry: api!.fleet_ferry() } : {}), ...(api!.fleet_ferry_small() ? { fleetFerrySmall: api!.fleet_ferry_small() } : {}), ...(api!.fleet_ferry_large() ? { fleetFerryLarge: api!.fleet_ferry_large() } : {}), ...(api!.fleet_tram() ? { fleetTram: api!.fleet_tram() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), ...(lineDays.size ? { lineDays: savedLineDays(true) } : {}), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), ...savedShapes(), ...savedHidden(), ...(diagramCities.length ? { schematic: [...diagramCities] } : {}), mode, start: startZone, ...(dayPinned ? { dayShift } : {}), opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), ...(demandBuilt?.length ? { demandBuilt } : {}), newCars: newLineCars, ...(Object.keys(newLineHeadway).length ? { newHeadway: newLineHeadway } : {}), ...(newLineWeekendShare !== null ? { newWeekendShare: newLineWeekendShare } : {}), ...(guide ? { guide } : {}), ...(achievements ? { achievements: Object.fromEntries(achievements) } : {}), ...(home ? { home } : {}), ...(copyOf ? { copy: copyOf } : {}), ...(modded ? { modded } : {}) };
+/** `m`: the network and counts kept after the last edit, for a model that has stopped (a download still works) */
+function header(m: typeof kept = null): SaveHeader {
+  const fleetBus = m ? m.fleetBus : api!.fleet_bus(), fleetFerry = m ? m.fleetFerry : api!.fleet_ferry(), fleetFerrySmall = m ? m.fleetFerrySmall : api!.fleet_ferry_small(), fleetFerryLarge = m ? m.fleetFerryLarge : api!.fleet_ferry_large(), fleetTram = m ? m.fleetTram : api!.fleet_tram();
+  return { game: "anitabuilder", format: SAVE_FORMAT, level: TrackApi.save_level(), city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: m?.cash ?? api!.cash(), ...loanToSave(loan), fleet: m?.fleet ?? api!.fleet(), fleetFast: m?.fleetFast ?? api!.fleet_fast(), ...(fleetBus ? { fleetBus } : {}), ...(fleetFerry ? { fleetFerry } : {}), ...(fleetFerrySmall ? { fleetFerrySmall } : {}), ...(fleetFerryLarge ? { fleetFerryLarge } : {}), ...(fleetTram ? { fleetTram } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), ...(lineDays.size ? { lineDays: savedLineDays(true) } : {}), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), ...savedShapes(), ...savedHidden(), ...(diagramCities.length ? { schematic: [...diagramCities] } : {}), mode, start: startZone, ...(dayPinned ? { dayShift } : {}), opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), ...(demandBuilt?.length ? { demandBuilt } : {}), newCars: newLineCars, ...(Object.keys(newLineHeadway).length ? { newHeadway: newLineHeadway } : {}), ...(newLineWeekendShare !== null ? { newWeekendShare: newLineWeekendShare } : {}), ...(guide ? { guide } : {}), ...(achievements ? { achievements: Object.fromEntries(achievements) } : {}), ...(home ? { home } : {}), ...(copyOf ? { copy: copyOf } : {}), ...(modded ? { modded } : {}) };
 }
 
 /** The game as file bytes. The network and header are taken at once, before anything awaits. */
@@ -69,6 +71,10 @@ function saveBytes(): Promise<Uint8Array> {
 }
 /** T-3869: the same in parts of at most 64 KB, never joined (a download) */
 function saveParts(): Uint8Array[] {
+  if (modelDown) {
+    if (!kept) throw new Error("no network was kept");
+    return encodeSaveParts(header(kept), kept.net);
+  }
   settle();
   return encodeSaveParts(header(), api!.save());
 }
@@ -703,10 +709,11 @@ async function processMessage(msg: ToClock) {
   if (!api) return;
   if (modelDown) {
     const asked = msg.kind === "edit" || msg.kind === "saveSlot" || msg.kind === "import" || msg.kind === "export" || msg.kind === "newGame";
-    if (asked) send({ kind: "refused", notice: MODEL_DOWN });
-    // the notice says it, so the edit is refused with nothing more to say
+    // T-4109: the page's notice says it; a download still works, from the network kept after the last edit
+    if (msg.kind === "export" && !msg.share && kept) return await whole(msg);
+    if (asked && !(msg.kind === "edit" && downTold)) { putDownTold(true); send({ kind: "refused", notice: MODEL_DOWN }); }
     if (msg.kind === "edit") send({ kind: "edited", seq: msg.seq, ok: false, issues: [], charge: 0 });
-    else failAnswer(msg);
+    else failAnswer(msg, []);
     return;
   }
   // T-3734: a message made in a game no longer in hand (T-715's clock, a queued stop edit) is dropped here; an edit is
@@ -746,11 +753,11 @@ let maskedRoute = "";
 const routeKey = (r: RouteAsk) => `${trackVersion}|${JSON.stringify([r.from, r.to, r.pis, !!r.single, !!r.quad, !!r.through, designOf(r), r.flyover ?? null, !!r.hsr, !!r.tram, !!r.street, r.street ? r.streetLine ?? null : null, !!r.ramp, r.beside ?? null])}`;
 
 /** An answer for a message the track model could not work out, so nothing waits on it for ever. */
-function failAnswer(msg: ToClock) { // i18n-ignore
-  if (msg.kind === "edit") send({ kind: "edited", seq: msg.seq, ok: false, issues: ["Internal"], charge: 0 }); // i18n-ignore
-  if (msg.kind === "previewStation") send({ kind: "stationCheck", seq: msg.seq, ok: false, issues: ["Internal"], cost: 0 }); // i18n-ignore
-  if (msg.kind === "previewCrossover") send({ kind: "crossoverCheck", seq: msg.seq, ok: false, issues: ["Internal"], cost: 0, parts: [] }); // i18n-ignore
-  if (isPreview(msg)) send({ kind: "preview", seq: msg.seq, ok: false, cost: 0, lengthM: 0, mult: 0, issues: ["Internal"], verts: new Float64Array(0), pts: new Float32Array(0) });
+function failAnswer(msg: ToClock, issues: string[] = ["Internal"]) { // i18n-ignore
+  if (msg.kind === "edit") send({ kind: "edited", seq: msg.seq, ok: false, issues, charge: 0 }); // i18n-ignore
+  if (msg.kind === "previewStation") send({ kind: "stationCheck", seq: msg.seq, ok: false, issues, cost: 0 }); // i18n-ignore
+  if (msg.kind === "previewCrossover") send({ kind: "crossoverCheck", seq: msg.seq, ok: false, issues, cost: 0, parts: [] }); // i18n-ignore
+  if (isPreview(msg)) send({ kind: "preview", seq: msg.seq, ok: false, cost: 0, lengthM: 0, mult: 0, issues, verts: new Float64Array(0), pts: new Float32Array(0) });
   if (msg.kind === "query" || msg.kind === "flipSide") send({ kind: "answer", seq: msg.seq, data: new Float64Array(0) });
 }
 

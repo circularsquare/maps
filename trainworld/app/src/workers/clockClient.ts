@@ -29,6 +29,7 @@ import { demandByDay, demandView, marketIn, platformTransfers, zoneViews } from 
 import { linesPending } from "../game/lineFigures";
 import { accountVersion, packArrivals, packRiders } from "../game/boarding";
 import { ask, designSpeed, guideFinished, lineDraft, marketOff, selection, tool } from "../game/ui";
+import { modelStopped } from "../game/modelStopped";
 import { afterStopEdits, flipSites, rightHand, say, setEditSink, stopsQueued, world, worldIsRows } from "../game/world";
 import type { LineInput, LineStats, RowFigs, StationInput, StopOnly, TrackEdge, TrackNode, WorldView } from "../game/types";
 import type { ClockLine, ClockState, EditOp, FromClock, MoneyPatch, MoneyState, NetworkSnapshot, PaidFor, PiInput, RouteAsk, StationAt, ToClock } from "./protocol";
@@ -1300,11 +1301,15 @@ export class ClockClient {
       case "recovered":
         console.error("clock worker:", msg.detail);
         this.lastTrouble = msg.detail;
-        if (msg.down) clockWorkerStatus.value = "track model down after a panic"; // i18n-ignore
-        say(workerText(msg.notice), true);
+        if (msg.down) {
+          clockWorkerStatus.value = "track model down after a panic"; // i18n-ignore
+          modelStopped.value = true; // T-4109: its notice says it
+        } else say(workerText(msg.notice), true);
         break;
       case "refused":
-        say(workerText(msg.notice), true);
+        // T-4109: the first refusal puts the stopped notice up; a later one (a save the player asked for) answers with its text
+        if (!modelStopped.value) modelStopped.value = true;
+        else say(workerText(msg.notice), true);
         break;
       case "failed":
         console.error("clock worker:", msg.error);

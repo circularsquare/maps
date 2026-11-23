@@ -65,9 +65,11 @@ try {
   // ---- the fourth panic in a minute leaves the model down, with a reload notice
   await page.evaluate(() => window.tw.client.debugPanic('now'));
   await settle();
-  check('B1 down notice', /Reload the page/.test(String(await noticeText())), String(await noticeText()));
+  // T-4109: the stopped notice is a banner with Reload, not a toast, and an edit after it adds no toast
+  const banner = await page.locator('.demand-stopped-note').allInnerTexts();
+  check('B1 down notice', banner.length === 1 && /Reload the page/.test(banner[0]), JSON.stringify(banner));
   const a4 = await route(-74.0, 40.58, -73.95, 40.58);
-  check('B2 edits are refused cleanly when down', !a4.ok, JSON.stringify(a4));
+  check('B2 edits are refused cleanly when down', !a4.ok && a4.issues.length === 0, JSON.stringify(a4));
   // ---- phase C: the real save, after a reload (own page state)
   await page.goto(`${BASE}?debug=1&new=1&paused=1&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });

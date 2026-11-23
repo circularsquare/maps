@@ -98,6 +98,7 @@ import { DemandStopped } from "./ui/DemandStopped";
 import { NewVersion } from "./ui/NewVersion";
 import { FiguresStopped } from "./ui/FiguresStopped";
 import { figuresPeaks, figuresStopped, watchFigures } from "./game/figuresStopped";
+import { ModelStopped } from "./ui/ModelStopped";
 import { DeviceNote, deviceNoteApplies } from "./ui/DeviceNote";
 import { RetryNote } from "./ui/RetryNote";
 import { retryDiedLoad, retryLoadsInPage } from "./game/oomRetry";
@@ -230,6 +231,10 @@ render(h(NewVersion, { save: saveGame }), newVersionRoot);
 const figuresStoppedRoot = document.createElement("div");
 map.getContainer().appendChild(figuresStoppedRoot);
 render(h(FiguresStopped, { save: saveGame }), figuresStoppedRoot);
+// T-4109: the track model stopped: a notice with Reload
+const modelStoppedRoot = document.createElement("div");
+map.getContainer().appendChild(modelStoppedRoot);
+render(h(ModelStopped, null), modelStoppedRoot);
 // T-2802, T-2839: a phone has no trips between cities, and a device reporting 4 GB or less may not run well; said once per game load
 if (deviceNoteApplies()) {
   const noMarketRoot = document.createElement("div");
