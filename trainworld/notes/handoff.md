@@ -15,11 +15,11 @@ trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5.
   report: commit the merge in that tree, `git -C .tw-trees/_track merge --ff-only tw/tracksync`, remove the tree;
   then 8800 = tw/track tip (her yes 11-22), and a batch checker on master (crash fixes 840bfa8f, Hokkaido
   522862ff, touch d0a09297, community). The permission check refused editing and committing in _track itself.
-- Landed 11-23: T-4056, T-4068, T-4076, T-4077/78/81, T-4072/73, T-3688; T-4024 on tw/track. Server 79777f5 live.
+- tracksync2 (queued, next slot): merging master into tw/track conflicts in saveFile.ts, save.rs (busnosnap level 39 / LBE1 vs track blocks) and checks/INDEX.md; aborted in _track. Same route as before: a tree copy of tw/track, agent resolves, I commit and ff _track, then snap8800 tw/track.
 
 ## Next (11-23)
 0. Her goals 11-23: solve speedups (main); loading and crashes (main; T-4071 triage closed 11-23, T-3940 next, phone load is her ask); track rework all week. Resend over its cap is fine. Publish: don't ask when.
-1. PUBLISH when ready (never ask her when; `publish` skill). Before it: a batch checker on everything since 11-22,
+1. 0.4.6 plan (her 11-23: "we're not in a huge rush"): wait for T-4064, T-4093, T-4051's master-vs-v0.4.5 zone-open timing (T-1354 corridor book: a blocker if worse), and most of busmerge T-4094, edit speed T-4097 and the lighter phone load T-4086; not the track rework (stays on tw/track). Then 8800 = master for her playtest list, T-4025 bench v0.4.5 vs candidate as the net check. PUBLISH when ready (never ask her when; `publish` skill). Before it: a batch checker on everything since 11-22,
    fresh freeze, translations of every new key (`i18n.mjs`; zone names place_names.mjs --zones), the server's level-39
    save check, smoke8800, the changelog review. Then her text OK and her yes, in this tab.
 2. Speed: wins land as they report (real-save numbers; orchestrator.md "Speedups that shift riders"); checker after.

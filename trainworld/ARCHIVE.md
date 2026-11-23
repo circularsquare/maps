@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4110 [P1] {L:loading} The big loading card shows up mid-game (2026-11-23): Only first opens show the centred card; panic rebuild and flip sides use the top bar; her mid-game Loading card was most likely a track model panic rebuild on 8800.
+- T-4098 [P1] {L:single-track} Every edit fails after deleting a terminus past a one-way station (2026-11-23): Confirmed T-3945, fixed on master, not live; reloading clears a stuck v0.4.5 game; regression test added. notes/T-4098.md.
 - T-4108 [P1] {L:checks} Core claims wait at the cap instead of going over (2026-11-23): cores.py claims wait at the cap (--min, --timeout), never granted past it; cores.mjs, agent_cargo.py, light_pass.py follow; cores.py total [--since] guards timing runs.
 - T-4086 [P1] {L:memory} Design a lighter load for phones (2026-11-23): Design in notes/T-4086.md: coarse-far already exists (far zones 2 MB); build the no-figure cuts (T-4103); Tokyo coarse on phones and an install banner asked. notes/T-4086.md.
 - T-4064 [P1] {L:route-choice} Riders stop changing onto a branch they could board at their station (2026-11-23): Riders wait for their own branch at their start station; branch fixture 0% change-at-split (was up to 57%); real NYC rail trips +0.059%, Z -10%, J -6%, New Haven -10%. notes/T-4064.md.
