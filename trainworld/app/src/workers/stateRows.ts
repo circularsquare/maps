@@ -392,7 +392,10 @@ export class StateRows {
       fresh.add(id);
       const h = this.heavy(a, id, ok);
       heavies.set(id, h);
-      if (!isBus) { moved(prev?.heavy.path, h.path); moved(prev?.heavy.planPath, h.planPath); moved(prev?.heavy.back, h.back); }
+      // (a line that stops or starts counting, ok or running, moves what its track derives from the lines, such as a
+      // junction's crossing moves, with no entry of its path moving: its whole track is read again)
+      const flip = !!prev && (prev.row.ok !== ok || prev.row.running !== running);
+      if (!isBus) for (const k of ["path", "planPath", "back"] as const) if (flip) { moved(prev.heavy[k], []); moved([], h[k]); } else moved(prev?.heavy[k], h[k]);
     }
     // a line gone: its track too
     if (this.lineKept.size) {
@@ -445,7 +448,7 @@ export class StateRows {
       const id = ei[i];
       if (patch && !sc.edges.has(id)) {
         const r = kept.get(id);
-        if (r) { seen.add(id); out.push(r); continue; }
+        if (r && StateRows.edgeBulkSame(r, ei, i)) { seen.add(id); out.push(r); continue; }
       }
       const off = offEdges.has(id), hsr = hsrEdges.has(id), crossover = crossovers.has(id), partner = crossovers.get(id) ?? -1;
       const tracks = ei[i + 3] as 1 | 2, built = ei[i + 4] === 1, oneWay = oneWays.get(id) ?? 0, join = joins.get(id) ?? 0, limit = limits.get(id) ?? 0, ramp = ramps.get(id) ?? 0;
@@ -497,7 +500,7 @@ export class StateRows {
       const id = ni[i];
       if (patch && !sc.nodes.has(id)) {
         const r = kept.get(id);
-        if (r) { seen.add(id); out.push(r); continue; }
+        if (r && StateRows.nodeBulkSame(r, ni, i)) { seen.add(id); out.push(r); continue; }
       }
       const was0 = kept.get(id);
       const platform = ni[i + 7];
@@ -747,6 +750,18 @@ export class StateRows {
     for (let k = 1; k <= ne; k++) edges.add(t[k]);
     for (let k = 1 + ne; k < t.length; k++) nodes.add(t[k]);
     return { nodes, edges };
+  }
+
+  /** T-4130: whether a kept row still holds what `edges_info` (`nodes_info`) gives it at offset `i`. Some of those numbers
+   * derive from every line (a junction's crossing moves), so a record outside the read's scope can still move. */
+  private static edgeBulkSame(r: ClockEdge, ei: ArrayLike<number>, i: number): boolean {
+    return r.a === ei[i + 1] && r.b === ei[i + 2] && r.tracks === ei[i + 3] && r.built === (ei[i + 4] === 1) && Object.is(r.lengthM, ei[i + 5]) && Object.is(r.cost, ei[i + 6])
+      && Object.is(r.vminKmh, ei[i + 7]) && r.levelMin === ei[i + 8] && r.levelMax === ei[i + 9];
+  }
+  private static nodeBulkSame(r: ClockNode, ni: ArrayLike<number>, i: number): boolean {
+    const f = ni[i + 6];
+    return r.x === ni[i + 1] && r.y === ni[i + 2] && r.level === ni[i + 3] && r.ports === ni[i + 4] && r.builtPorts === ni[i + 5] && r.flying === ((f & 1) === 1)
+      && !!r.crosses === ((f & 2) === 2) && (r.unusable ?? 0) === ((f >> 2) & 3) && r.platform === ni[i + 7] && r.stationBuilt === (ni[i + 8] === 1) && Object.is(r.heading, ni[i + 9]);
   }
 
   /** T-4113: a set or map from a bulk call against the last read's: the ids whose membership or value moved */

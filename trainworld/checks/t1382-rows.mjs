@@ -25,6 +25,9 @@
 // T-1540: after every step the phase tables the rows lay out line by line (`StateRows.phases`) must equal
 // the model's whole `phases()` byte for byte, and be the same array object as last time when no line's
 // tables changed.
+// T-4130: each seed first clears a built junction's crossing from far away (a line through it broken where no station
+// is, with its path kept, so only the line's no longer counting moves the junction's row; `crossDone`), and the random
+// edits break lines too (breakLine). New York's save has no built junction with a crossing, so the case runs on Asia's.
 // T-4125: after every step the page's nearest track node and junction to the capacity tags and to points near nodes
 // (map/snapIndex.ts `nearestNode`, from its grids) must be the ones a scan of every node finds.
 import { readFileSync } from 'node:fs';
@@ -143,7 +146,7 @@ async function nearDifference(rows, api, rnd) {
 }
 let nearChecks = 0;
 
-let failures = 0, reads = 0, rowsKept = 0, rowsTotal = 0, phasesSame = 0;
+let crossCleared = 0, crossJunctions = 0, failures = 0, reads = 0, rowsKept = 0, rowsTotal = 0, phasesSame = 0;
 let focusReads = 0, focusDeferred = 0, workDone = 0, workWhole = 0, leavesTaken = 0, msBounded = 0, msFull = 0, leavesEnd = 0;
 const pick2 = (r, a) => a[Math.floor(r() * a.length)];
 const applied = {}, refused = {};
@@ -229,12 +232,14 @@ function makeModel(seed) {
     // T-4113: what only an edge's own calls answer (its one-way setting, its kind)
     oneWay: (m) => { const es = m.edges.filter((e) => e.tracks === 1); return es.length ? api.set_edge_oneway(pick(es).id, pick([0, 1, 2, 3])) : -1; },
     edgeKind: (m) => { const es = m.edges.filter((e) => !e.built); return es.length ? api.set_edges_kind(Uint32Array.from([pick(es).id, pick(es).id]), pick([1, 2, 3])) : -1; },
+    // T-4130: a piece of some train line's track, built or not, deleted (the line stops counting, with its path kept)
+    breakLine: (m) => { const ls = m.lines.filter((l) => l.ok && !l.bus && api.line_path(l.id).length); if (!ls.length) return -1; const p = api.line_path(pick(ls).id); return api.delete_edge(p[Math.floor(rnd() * p.length)] >> 1); },
   };
   return { api, model, water, edit: (kind) => ops[kind](model()) };
 }
 
-const kinds = ['routeFree', 'routeFromNode', 'stationAtNode', 'stationOnEdge', 'removeStation', 'rename', 'setStops', 'addLine', 'copyLine', 'removeLine', 'trains', 'headway', 'lineFast', 'lineCars', 'lineLook', 'construct', 'constructLine', 'constructAll', 'blueprintOff', 'doubleUp', 'deleteEdge', 'flying', 'moveNode', 'link', 'upgrade', 'undo', 'redo', 'preview', 'busLine', 'busRoute', 'fleet', 'oneWay', 'edgeKind'];
-const weights = { oneWay: 2, edgeKind: 2, busLine: 2, busRoute: 2, undo: 3, redo: 2, trains: 3, headway: 2, rename: 3, setStops: 3, routeFree: 2, routeFromNode: 2, stationAtNode: 3, removeStation: 2, construct: 3 };
+const kinds = ['routeFree', 'routeFromNode', 'stationAtNode', 'stationOnEdge', 'removeStation', 'rename', 'setStops', 'addLine', 'copyLine', 'removeLine', 'trains', 'headway', 'lineFast', 'lineCars', 'lineLook', 'construct', 'constructLine', 'constructAll', 'blueprintOff', 'doubleUp', 'deleteEdge', 'flying', 'moveNode', 'link', 'upgrade', 'undo', 'redo', 'preview', 'busLine', 'busRoute', 'fleet', 'oneWay', 'edgeKind', 'breakLine'];
+const weights = { breakLine: 2, oneWay: 2, edgeKind: 2, busLine: 2, busRoute: 2, undo: 3, redo: 2, trains: 3, headway: 2, rename: 3, setStops: 3, routeFree: 2, routeFromNode: 2, stationAtNode: 3, removeStation: 2, construct: 3 };
 const kindPool = kinds.flatMap((k) => Array(weights[k] ?? 1).fill(k));
 
 for (let seed = 1; seed <= SEEDS; seed++) {
@@ -252,6 +257,8 @@ for (let seed = 1; seed <= SEEDS; seed++) {
   const d0 = firstDifference(before, read(new StateRows(), B.api, eB));
   if (d0) { console.log(`FAIL  seed ${seed}: the first read differs from a fresh one: ${d0}`); failures++; continue; }
 
+  // T-4130: a junction's crossing cleared from far away (crossDone)
+  if (!SELF) { const b = crossDone(seed, rows, A, B, eA, eB, before); if (!b) continue; before = b; }
   for (let step = 0; step < STEPS; step++) {
     const kind = kindPool[Math.floor(choose() * kindPool.length)];
     const m = A.model();
@@ -314,6 +321,49 @@ for (let seed = 1; seed <= SEEDS; seed++) {
   leavesEnd = rows.regions.size;
 }
 
+/** T-4130's case, for the seed's models: the last read, or null on a failure. A built junction's crossing taken away
+ * far from it: a line through it is broken by deleting its track farthest from the junction, so no edit touches the
+ * junction or its region and only the line's no longer counting (its path kept) clears the crossing. An attempt that
+ * reroutes the line, or leaves the crossing, is undone and the next junction tried. */
+function crossDone(seed, rows, A, B, eA, eB, before) {
+  // (a read with no edit first: the one after a load carries every line's track into the next)
+  let last = read(rows, A.api, eA);
+  const at = new Map(before.nodes.map((n) => [n.id, n]));
+  const ends = new Map(before.edges.map((e) => [e.id, e]));
+  const lines = before.lines.filter((l) => l.ok && !A.api.is_bus(l.id) && !A.api.is_ferry(l.id)).map((l) => ({ id: l.id, edges: [...A.api.line_path(l.id)].map((v) => v >> 1) }));
+  const through = (n) => lines.filter((l) => l.edges.some((e) => ends.get(e)?.a === n || ends.get(e)?.b === n));
+  // (a blueprint junction shows its crossing with no line); the fewest lines first
+  const cands = before.nodes.filter((n) => n.crosses && n.builtPorts >= 3).map((n) => ({ n, ls: through(n.id) })).filter((c) => c.ls.length).sort((p, q) => p.ls.length - q.ls.length || p.n.id - q.n.id);
+  crossJunctions += cands.length ? 1 : 0;
+  const compare = (what) => {
+    const now = read(rows, A.api, eA), full = read(new StateRows(), B.api, eB);
+    reads++;
+    const d = firstDifference(now, full);
+    if (d) { console.log(`FAIL  seed ${seed} crossing case, ${what}: ${d}`); failures++; return null; }
+    last = now;
+    return full;
+  };
+  for (const { n, ls } of cands.slice(0, 8)) {
+    const l = ls[(seed - 1) % ls.length];
+    const far = (e) => { const r = ends.get(e), a = at.get(r.a), b = at.get(r.b); return Math.hypot((a.x + b.x) / 2 - n.x, (a.y + b.y) / 2 - n.y); };
+    // (track with no station at either end: a station's would be trimmed and the path move with it)
+    const plain = l.edges.filter((x) => { const r = ends.get(x); return at.get(r.a).platform === 0 && at.get(r.b).platform === 0; });
+    if (!plain.length) continue;
+    const e = plain.reduce((p, q) => (far(q) > far(p) ? q : p));
+    const r = A.api.delete_edge(e), rB = B.api.delete_edge(e);
+    if (r !== rB) { console.log(`FAIL  seed ${seed} crossing case: the two models answered ${r} and ${rB}`); failures++; return null; }
+    if (r !== 0) continue;
+    const full = compare(`junction ${n.id}, line ${l.id} broken at edge ${e} ${far(e).toFixed(0)} m away`);
+    if (!full) return null;
+    const broken = !full.lines.find((x) => x.id === l.id)?.ok, cleared = !full.nodes.find((x) => x.id === n.id)?.crosses;
+    if (process.env.VERBOSE) console.log('crossing case: junction', n.id, 'of', cands.length, 'line', l.id, 'edge', e, Math.round(far(e)), 'm away; line broken', broken, 'crossing cleared', cleared);
+    if (broken && cleared) { crossCleared++; return last; }
+    A.api.undo(); B.api.undo();
+    if (!compare('undone')) return null;
+  }
+  return last;
+}
+
 const total = (o) => Object.values(o).reduce((a, b) => a + b, 0);
 console.log(`${reads} reads over ${SEEDS} seeds; edits applied ${total(applied)} (${Object.entries(applied).map(([k, v]) => `${k} ${v}`).join(', ')}); refused ${total(refused)}`);
 if (SELF) {
@@ -321,7 +371,8 @@ if (SELF) {
   process.exit(failures ? 0 : 1);
 }
 const keptShare = rowsKept / Math.max(1, rowsTotal);
-const bad = failures || keptShare < 0.9 || phasesSame === 0;
+// (the crossing case must have happened where the save has a built junction with a crossing: Asia's has, New York's none)
+const bad = failures || keptShare < 0.9 || phasesSame === 0 || (crossJunctions > 0 && crossCleared === 0);
 console.log(`T-4113 work: ${workDone} records read again of ${workWhole} (${(100 * workDone / Math.max(1, workWhole)).toFixed(1)}%), regions of at most ${StateRows.regionCap} stations (${leavesEnd} at the end, ${(leavesTaken / Math.max(1, reads)).toFixed(1)} read again per read); a bounded read ${(msBounded / Math.max(1, reads)).toFixed(1)} ms against a fresh full one's ${(msFull / Math.max(1, reads)).toFixed(1)} ms (the check's env); ${focusReads} focus reads, ${focusDeferred} of them left regions for the next read`);
-console.log(`${bad ? 'FAIL' : 'PASS'}  t1382 rows (${SETUP}): ${reads} incremental reads equal a full read; ${(100 * keptShare).toFixed(1)}% of the rows were the kept ones (the cache is used); the phase tables equal the whole ones and were the kept array in ${phasesSame} of ${reads}; ${nearChecks} nearest nodes from the page's grids equal a scan's`);
+console.log(`${bad ? 'FAIL' : 'PASS'}  t1382 rows (${SETUP}): ${reads} incremental reads equal a full read; ${crossCleared} of ${SEEDS} seeds cleared a junction's crossing from far away${crossJunctions ? '' : ' (the save has no built junction with a crossing)'}; ${(100 * keptShare).toFixed(1)}% of the rows were the kept ones (the cache is used); the phase tables equal the whole ones and were the kept array in ${phasesSame} of ${reads}; ${nearChecks} nearest nodes from the page's grids equal a scan's`);
 process.exit(bad ? 1 : 0);
