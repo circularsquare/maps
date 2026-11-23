@@ -5,12 +5,12 @@ Updated: 2026-11-23 20:08 UTC. Live state: `venv\Scripts\python.exe trainworld/t
 diary notes/handoff-log.md. Her time UTC-5.
 
 ## In flight (adopt from the board)
-- Adopted from maps-65 (its tab still runs them; reports reach the inbox): crossfix T-4130 (P1, master, fix before 0.4.6),
-  onewayret T-4127 (master check for the one-way return panic; port the tw/track fix if master panics), headways T-4104,
-  autostation T-4105 (UI; strings to her).
-- Mine: quadcheck T-4111, tmprofile T-4131 (re-measure click-to-map, profile the track model), onegraph T-4124 (opus;
-  builds and measures only, landing needs her yes on the shift). Queued for after autostation lands (en.json): T-4109, T-4106.
-- Landed 20:15: board3 (ba8be28f), hoverends T-4107 (0d8e7cb2), tutcard T-4099 (4dc0fde1). 8800 rebuild waits for the next landings.
+- Adopted from maps-65 (reports reach the inbox): crossfix T-4130 (P1, master, fix before 0.4.6), headways T-4104 (UI; strings).
+- Mine: quadcheck T-4111; tmprofile T-4131 (stalled once 20:24, resumed); onegraph T-4124 (opus; measures only, landing
+  needs her yes on the shift); stationwater T-4112 (opus, tree off tw/track, also checks master); reloadmsg T-4109.
+  Queued: T-4106 install banner once reloadmsg lands (both add en.json strings).
+- Landed today after takeover: board3, hoverends T-4107, tutcard T-4099, onewayret T-4127 (fuzzer only, master clean),
+  autostation T-4105. 8800 rebuild to eb3e9d3c started 20:25. Ask a-2026-11-23-16 (Auto as default) open.
 
 ## Next
 1. No publish decided ("i didn't say we want to publish"); don't prep one unless she says. 0.4.6 would wait for most
