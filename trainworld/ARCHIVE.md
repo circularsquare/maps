@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4140 [P2] {L:demand-ideas} A bubble's far ends inside its own zone (2026-11-23): Own-zone 6 km parts 50 km+ from the selection's busiest cell drawn as far ends (T-139's overlap kept out by the 50 km floor); La Crosse 35 trips/day per part, explorer opens; bubbles 1-2 px at the T-1246 scale. notes/T-4140.md.
 - T-4124 [P2] {L:solve-speed} One graph for all zones in a calculation (2026-11-23): closed without code: Measured, not landed: in game no save got faster beyond noise (NYC -4.5%, Tokyo +2%, Belgrade +0.6% CPU) and demand-worker memory rose 13-15%; zones already solve only stations within 30 km (T-756). Riders moved under 0.12%. Code on branch tw/onegraph-measured. notes/T-4124.md.
 - T-4138 [P2] {L:small-fixes} Zoom buttons off by default on phones (2026-11-23): display.zoomButtons defaults to !mobileDevice(); settings v16 drops phones' stored value once (a phone that chose on must turn it on again) notes/T-4138.md.
 - T-1610 [P2] {L:solve-speed} Clicked zone waits for its refine (2026-11-23): Already gone on master: on Tokyo a click in a coarse zone answers from coarse samples in 1.0-1.4 s (station panel 44 ms) while the refine takes about 100 s; no code change. notes/T-1610.md.

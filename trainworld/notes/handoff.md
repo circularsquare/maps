@@ -11,7 +11,7 @@ diary notes/handoff-log.md. Her time UTC-5.
   claim, pin and over-cap refusal); madison T-4140 (opus, agent af85cda5: draw the own zone's far ends for a bubble;
   trips Madison-La Crosse exist, about 160/day each way); rampport T-4112 (sonnet: port tw/track 269568c2 ramp fix
   to master; master has the bug).
-- stationwater landed on tw/track 269568c2 (22:26), tree kept until the port lands, then remove. T-4124 closed,
+- stationwater landed on tw/track 269568c2 (22:26), tree removed; its changelog item is parked in next-track.json, so hide the duplicate the port adds at the release merge. Track build not rebuilt: snaptrack needs sync-track first, which still conflicts (waits for the rework resume); she sees the fix on 8800 once rampport lands. T-4124 closed,
   measured not landed (no in-game gain, memory +13-15%); code on branch tw/onegraph-measured. 8800 = d4eabb5c6;
   master has T-4138 since. Batch check due for rampport (track split) when it lands.
 
