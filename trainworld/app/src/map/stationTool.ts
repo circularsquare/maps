@@ -74,14 +74,14 @@ export function metresPerPx(tk: Tools, lat: number): number {
 
 /** T-3999: the nearest point within `m` ground metres on a bus line's route (no ferry's), a point 10 m along it and
  * how far off it is; null where none is. */
-function busRouteNear(lng: number, lat: number, m: number): { at: { lng: number; lat: number }; along: { lng: number; lat: number }; d: number } | null {
+function busRouteNear(lng: number, lat: number, m: number, ferry = false): { at: { lng: number; lat: number }; along: { lng: number; lat: number }; d: number } | null {
   const w = world.peek();
   if (!w) return null;
   const kx = M_PER_DEG * Math.cos((lat * Math.PI) / 180), ky = M_PER_DEG;
   let best = m, out: ReturnType<typeof busRouteNear> = null;
   for (const st of Object.values(w.lineStats)) {
     const b = st.bus;
-    if (!b || b.ferry) continue;
+    if (!b || !!b.ferry !== ferry) continue;
     const r = b.routeLL;
     for (let i = 0; i + 3 < r.length; i += 2) {
       const ax = (r[i] - lng) * kx, ay = (r[i + 1] - lat) * ky, dx = (r[i + 2] - r[i]) * kx, dy = (r[i + 3] - r[i + 1]) * ky, l2 = dx * dx + dy * dy;
@@ -94,6 +94,17 @@ function busRouteNear(lng: number, lat: number, m: number): { at: { lng: number;
     }
   }
   return out;
+}
+
+/** T-4105: Auto takes the bus kind when a road a bus may use or a bus route is within this many screen pixels of the
+ * pointer (at least 8 m, at most `BRT_REACH_M`): a wider reach would cover most of a city's open ground */
+const AUTO_ROAD_PX = 12;
+
+/** T-4105: whether a road or bus route is at the pointer (`ferry`: a ferry route is) */
+export function roadUnder(tk: Tools, lng: number, lat: number, ferry = false): boolean {
+  const m = Math.max(8, Math.min(BRT_REACH_M, AUTO_ROAD_PX * metresPerPx(tk, lat)));
+  if (busRouteNear(lng, lat, m, ferry)) return true;
+  return !ferry && !!tk.street.busRoads.kerb({ lng, lat }, m);
 }
 
 /** T-3378: where a click at `lng, lat` places a BRT station: T-3999: beside the nearest bus route within

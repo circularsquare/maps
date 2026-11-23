@@ -776,6 +776,12 @@ switch on, the track tool follows the real network the layer draws.
   ferry line"): the same ghost, tags and refusals, and a pointer on a port the network has, or a landing within 30 m of
   one, says its name over "There is already a station here." A click or tap places a blueprint port (US$10M,
   `TrackApi::add_port`), which a ferry line drawn later stops at as at any port.
+- **Auto** [T-4105; `map/stationAuto.ts`]: the first button of the kind group, the default for a browser that never picked
+  (the pick is remembered, as the others are). The kind comes from what is under the pointer, first match wins: track
+  (a train station, or a tram stop where no train track is within 4 px of the nearest), a road a bus may use or a bus
+  route within 12 px (at least 8 m, at most 50 m), a ferry route, water or a shore a port could take (a port), else a
+  train station on open ground. The ghost is that kind's, and the tag's first row is "Auto: <kind>" (the BRT tag's own
+  first row becomes it). The kind holds while a free station's first end is down.
 - How a new station is named: [track-and-service.md](track-and-service.md) 6.1. A double click on
   the name in its inspector renames it.
 

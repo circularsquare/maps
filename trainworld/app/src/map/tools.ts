@@ -67,6 +67,7 @@ import { perfOff } from "../perfFlags";
 import { guessRow, settleRow } from "../ui/inspector/stopRowGuess";
 import { type LngLatish, SNAP_EDGE_PX, TRACK_NODE_PX, TRACK_EDGE_PX, DEAD_PX, DOT_MIN_PX, HELD_NEAR_PX, HELD_START_PX, BESIDE_PX, OVERLAP_PX, type Snap, type Spot, type Verdict, BESIDE_SPACING_M, LANE_HALF_M, type Placed, MAX_PIECE_KM, WAIT_MS, tooFarText, placedAt } from "./toolParts";
 import { nearTouch, touchConfirm, touchBack, touchStop, dragHandle, placeTouch } from "./toolTouch";
+import { autoPick } from "./stationAuto";
 import { nameAhead, stationClick, askLegs, placePending, layout } from "./stationTool";
 import { freeCancel, freeStarted } from "./stationFree";
 import { clearDelHover, deleteHover, deleteClick } from "./toolDelete";
@@ -392,7 +393,7 @@ export class Tools {
     const offEdges = hidden.levels ? new Set(w.edges.filter((e) => levelHidden(e.levelMin) && levelHidden(e.levelMax)).map((e) => e.id)) : null;
     // each edge's nearest point within reach, px squared
     const near: { d: number; hit: Snap }[] = [];
-    const tramOnly = station ? stationOnTram.peek() : null, tramOf = station ? this.tramEdgeSet(w) : null;
+    const tramOnly = station && !this.autoProbe ? stationOnTram.peek() : null, tramOf = station ? this.tramEdgeSet(w) : null;
     for (const { edge, pts, ks } of nearEdges ?? [...n.edgePts].map(([edge, pts]) => ({ edge, pts, ks: null }))) {
       if (offEdges?.has(edge)) continue;
       // T-4010: a train station goes on train track only and a tram stop on tram track only
@@ -514,6 +515,12 @@ export class Tools {
       this.doubleIndex = { edges: w.edges, ids, byNode, loose, singles };
     }
     return this.doubleIndex;
+  }
+
+  /** T-4105: set while Auto's probe snaps, so the nearest track of either kind answers */
+  autoProbe = false;
+  autoPick(at?: { px: number; py: number; lng: number; lat: number }) {
+    autoPick(this, at);
   }
 
   tramEdges: { edges: unknown; set: Set<number> } | null = null;
@@ -648,6 +655,7 @@ export class Tools {
     this.streetSwitch();
     this.ghostSpent = false;
     this.pointer = { px: e.point.x, py: e.point.y, lng: e.lngLat.lng, lat: e.lngLat.lat };
+    if (t === "station") this.autoPick();
     this.hover = t === "line" ? null : this.snap(e.point.x, e.point.y, e.lngLat);
     if (t === "track" && this.hover) this.hover = this.straight(this.hover);
     if (t === "track") this.streetMove(e.point.x, e.point.y);
@@ -666,7 +674,10 @@ export class Tools {
       this.noSnap = e.originalEvent.ctrlKey || e.originalEvent.metaKey;
       this.streetSwitch();
       this.trackClick(e);
-    } else if (t === "station") void stationClick(this, e);
+    } else if (t === "station") {
+      this.autoPick({ px: e.point.x, py: e.point.y, lng: e.lngLat.lng, lat: e.lngLat.lat });
+      void stationClick(this, e);
+    }
     else if (t === "line") this.lineClick(e);
     else if (t === "delete") deleteClick(this, e);
     else if (t === "bus") this.bus.click(e);
@@ -700,6 +711,7 @@ export class Tools {
       this.touchAt = ll;
       this.move(e);
     } else if (t === "station") {
+      this.autoPick({ px: e.point.x, py: e.point.y, lng: e.lngLat.lng, lat: e.lngLat.lat });
       if (stationKind.peek() === "bus" || stationKind.peek() === "port" || freeStarted() || this.snap(e.point.x, e.point.y, e.lngLat).kind === "free") {
         this.touchAt = null;
         this.move(e);

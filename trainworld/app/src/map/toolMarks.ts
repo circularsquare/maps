@@ -3,7 +3,7 @@
 import { t as tr } from "../i18n";
 import { distance } from "../game/format";
 import { metresBetween } from "../game/walks";
-import { buildLevel, besideOn, buswayTrack, stationKind, tool, tramTrack } from "../game/ui";
+import { buildLevel, besideOn, buswayTrack, stationChoice, stationKind, tool, tramTrack } from "../game/ui";
 import { describeRemovable } from "../game/remove";
 import { realStationUnder } from "./realStations";
 import { world } from "../game/world";
@@ -95,7 +95,7 @@ export function drawBand(tk: Tools) {
   g.stroke();
 }
 
-export function placeMarks(tk: Tools) {
+function placeMarksInner(tk: Tools) {
   let k = 0;
   const put = (m: HTMLDivElement, lx: number, ly: number, dx = 0, dy = 0) => {
     const [x, y] = tk.screen(lx, ly);
@@ -245,6 +245,17 @@ export function placeMarks(tk: Tools) {
     if (lines.length) showTag(tk, lines, false, ...at!);
     else tk.tag.style.display = "none";
   } else tk.tag.style.display = "none";
+}
+
+/** T-4105: with Auto picked, the tag's first row names what a click here would place */
+export function placeMarks(tk: Tools) {
+  placeMarksInner(tk);
+  if (tool.peek() !== "station" || stationChoice.peek() !== "auto" || tk.tag.style.display === "none") return;
+  const k = stationKind.peek(), key = k === "rail" ? "toolBar.kindRail" : k === "tram" ? "toolBar.kindTram" : k === "bus" ? "stationInspector.brtStation" : "stationInspector.port";
+  const label = tr(key), text = tr("tools.autoKind", { kind: label }), first = tk.tag.firstElementChild;
+  // the BRT tag already starts with its kind's name: that row becomes the Auto one
+  if (first && first.textContent === label) return void Object.assign(first, { className: "auto-kind", textContent: text });
+  tk.tag.prepend(Object.assign(document.createElement("div"), { className: "auto-kind", textContent: text }));
 }
 
 /** The cursor tag with `content`, red when `bad`, by the screen point (x, y). */
