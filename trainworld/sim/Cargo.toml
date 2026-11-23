@@ -41,6 +41,11 @@ path = "src/bin/track_bench.rs"
 name = "edit_bench"
 path = "src/bin/edit_bench.rs"
 
+# T-4116: random edits, undos and previews on a real save, each panic kept to replay and shrink.
+[[bin]]
+name = "edit_fuzz"
+path = "src/bin/edit_fuzz.rs"
+
 # T-3137: what the lanes and move tables decide, fingerprinted to compare two builds.
 [[bin]]
 name = "lanes_parity"

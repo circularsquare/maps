@@ -631,3 +631,34 @@ impl TrackApi {
 fn profile_index(t: &crate::track::service::Trip) -> u32 {
     ((t.line * 2 + t.run as u32) * SLOTS as u32 + t.level as u32) * PROFILE_VARS as u32 + t.var as u32
 }
+
+/// T-4116: what bin/edit_fuzz checks after every edit (native builds only, not in the WASM interface).
+#[cfg(not(target_arch = "wasm32"))]
+impl TrackApi {
+    /// Per running line whose live runs name a derived edge on no live piece: the line, the run and the entry's index.
+    pub fn stale_runs(&self) -> Vec<(u32, usize, usize)> {
+        let n = &self.w.net;
+        let mut out = vec![];
+        for (l, ls) in self.w.svc.lines.iter().enumerate() {
+            if !ls.ok || ls.is_bus() {
+                continue;
+            }
+            for (r, run) in ls.runs.iter().take(ls.live_runs()).enumerate() {
+                if let Some(k) = run.segs.iter().position(|x| !n.edge_ok(*x >> 1)) {
+                    out.push((l as u32, r, k));
+                }
+            }
+        }
+        out
+    }
+
+    /// Per line the network has (not broken) whose path names a track or part its piece does not have: the line, 9 and
+    /// the entry's index (a colour change re-checks the path and is refused then).
+    pub fn bad_paths(&self) -> Vec<(u32, usize, usize)> {
+        let n = &self.w.net;
+        (0..n.line_count() as u32)
+            .filter(|&l| n.line_ok(l) && !n.line_broken[l as usize] && !n.is_bus(l) && !n.is_ferry(l))
+            .filter_map(|l| n.line_path(l).iter().position(|&p| !n.edge_ok(p >> 1)).map(|k| (l, 9, k)))
+            .collect()
+    }
+}
