@@ -1148,7 +1148,13 @@ station count (1.64 GB plus 0.8 GB per 1,000 stations plus, per solving worker p
 stations, as many as the pool's memory rule lets run and, past the first, only while they fit in the budget, T-3373,
 T-3757; within about 20% on the real-network saves and players' 53-64 city games). Where the browser reports the device's memory (Chrome, Edge) or is 32-bit, a game over the budget
 shows it in red and its Open (saves panel and start menu, not the versions list) first asks "This game needs about 5 GB of
-memory and this device has about 4. It may not load." with Open anyway and Cancel. Elsewhere the line is plain and nothing asks.
+memory and this device has about 4. It may not load." with Open anyway and Cancel. On a phone or tablet whose browser reports no
+memory (every iPhone and iPad browser, iPadOS Safari told by its Mac user agent with touch; Firefox on Android) a game of 1,600
+stations or more is red and asks "This game is big for a phone or tablet and may run out of memory while loading." [T-3940;
+the shipped Tokyo start, 1,454 stations, loads; players' games of 1,646-2,090 died on iPhones, notes/T-3940.md]. Elsewhere (desktop
+Safari and Firefox) the line is plain and nothing asks. On the start menu the saved game whose load last died in this browser
+asks too, whatever its size: "This game ran out of memory the last time it loaded." (until it loads with its trips), and the
+start menu's question has a third button, Open without calculating trips (the light load below, on a saved game, paused).
 This is separate from the refusal [T-1197], which judges a save by its zones and still blocks a game no worker can hold.
 
 ### Card actions
@@ -1774,7 +1780,9 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   memory, so it loaded again with fewer cores." from the start of that load until 45 s after it [T-3933;
   `game/oomRetry.ts`, notes/T-3933.md]. A load whose last solving worker fails for memory in the page's sight is
   saved and reloaded into the same retry. Otherwise, or when the retry runs out too, it starts no game and shows the
-  memory sentence with Try again (whose load then has the lower cap). A browser with no WebGL2 at all (no `WebGL2RenderingContext`;
+  memory sentence with Try again (whose load then has the lower cap) and, when the game was in a slot and was not
+  already opened so, Open without calculating trips: the slot opens paused with no demand pool (`?slot=<key>&trips=off`,
+  the light load of T-3851; a died light load gets no retry with fewer workers) [T-3940]. A browser with no WebGL2 at all (no `WebGL2RenderingContext`;
   MapLibre cannot start; `webgl2State`, `map/webgl2.ts`, asked at the top of main.ts) gets its own screen
   before anything else starts: one sentence saying to turn on hardware acceleration or update the browser,
   and no button, since a retry or a way on cannot help [T-3307]. A browser that has WebGL2 but refuses the

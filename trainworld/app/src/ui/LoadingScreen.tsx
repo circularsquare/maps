@@ -9,7 +9,8 @@
 import { h, render } from "preact";
 import { clock } from "../game/clock";
 import { world } from "../game/world";
-import { cardEnding, choosing, clockStepNow, continueWithoutDemand, demandIdle, gameFailed, graphicsGone, lastAlive, loadCannotFinish, loadFailure, loadGraphicsGone, loadStepNow, loadStuck, loadProgress, noSimd, noWebgl2, startup } from "../game/loading";
+import { cardEnding, choosing, clockStepNow, continueWithoutDemand, demandIdle, gameFailed, graphicsGone, lastAlive, lightRescue, loadCannotFinish, loadFailure, loadGraphicsGone, loadStepNow, loadStuck, loadProgress, noSimd, noWebgl2, startup } from "../game/loading";
+import { openWithoutTrips } from "../workers/clockClient";
 import { contextsLost, freshContextWorks } from "../map/graphicsInfo";
 import { GL_LOST } from "../map/gl";
 import { leftText, STAGE_TEXT } from "../game/loadBar";
@@ -39,13 +40,17 @@ function LoadingScreen() {
   const text = loadFailText(why);
   // a reload of an address that names a game loads that game again; without the choice it is the start menu
   const named = location.search !== "";
+  // T-3940: the game whose load died, out of memory, can open without its trips, the lightest load (a Try again
+  // reaches the start menu, where it asks before opening it whole)
+  const light = isMemoryFailure(why) ? lightRescue() : null;
   return <div class="loading-screen" role="alertdialog" aria-label={text}>
     <div class="loading-box failed">
       <p class="big">{text}</p>
       {/* the reason as the failure gave it (also in the console), so a rare one can be told apart */}
-      {why && <p class="small muted load-why">{why}</p>}
+      {why && why !== text && <p class="small muted load-why">{why}</p>}
       <div class="loading-actions">
         <button class="btn" onClick={() => location.reload()}>{t("loadingScreen.tryAgain")}</button>
+        {light && <button class="btn load-light" onClick={() => openWithoutTrips(light)}>{t("common.openWithoutTrips")}</button>}
         {/* T-3630: where a failed load leaves the player; the report carries the failure's text */}
         <FeedbackOpen class="btn" />
         {named && <button class="btn" onClick={() => location.assign(location.pathname)}>{t("loadingScreen.backToStart")}</button>}

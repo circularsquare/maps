@@ -51,6 +51,11 @@ export function memBudget(): number {
  * another reason (a 32-bit browser). Elsewhere the budget is a guess and nothing warns against it. */
 export const budgetKnown = (): boolean => addressLimited() || (navigator as Navigator & { deviceMemory?: number }).deviceMemory !== undefined;
 
+/** T-3940: a phone or tablet whose browser does not report memory: every iPhone and iPad browser (all WebKit; iPadOS
+ * Safari by its Mac user agent with touch) and Firefox on Android. An iPhone's tab is killed near 1.4-2 GB whatever
+ * the phone holds (notes/T-3781.md), and the budget above is only a guess there. */
+export const tabLimited = (): boolean => mobileDevice() && (navigator as Navigator & { deviceMemory?: number }).deviceMemory === undefined;
+
 /** A phone or tablet, or a device of 4 GB or less: one solving worker and no focus pool, and the map's lean
  * ways (T-2794: its pixel ratio capped, the outlines kept compact) */
 export function smallDevice(): boolean {

@@ -594,6 +594,7 @@ body.resizing, body.resizing * { user-select: none; }
 .shape-grid .slider > span { min-width: 56px; }
 .shape-grid .slider + .slider .group > .btn { margin-top: -1px; }
 .memory-warn { margin: 6px 0 0; }
+.memory-warn .pane-foot { flex-wrap: wrap; }
 .slider:has(> .group) { flex-wrap: wrap; }
 .slider span { min-width: 3.6em; }
 .slider .stepper span { min-width: 0; }

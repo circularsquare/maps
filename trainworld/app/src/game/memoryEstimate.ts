@@ -6,7 +6,7 @@
 // memoryCheck.ts judges a save before it loads from its zones and must stay cautious; this is the plain figure.
 
 import { workersFor, demandWorkersWasmMB } from "../workers/demandClient";
-import { addressLimited, budgetKnown, deviceGB, memBudget } from "../workers/deviceMemory";
+import { addressLimited, budgetKnown, deviceGB, memBudget, tabLimited } from "../workers/deviceMemory";
 import { liveBytes } from "../workers/liveMemory";
 import { t } from "../i18n";
 
@@ -36,9 +36,17 @@ export function liveGB(): number | null {
 /** GB the game may take here: Settings' limit, and what a saved game is compared with. */
 export const budgetGB = () => memBudget() / GB;
 
+/** T-3940: the stations from which a saved game is big for a phone or tablet that reports no memory (`tabLimited`).
+ * On an emulated iPhone the shipped Tokyo start (1,454 stations) peaks at 1.36 GB in the tab; every crashed player game
+ * whose count is known had 1,646-2,090, peaking 1.27-1.71 GB against iOS's kill at 1.4-2 GB (notes/T-3940.md). */
+const TAB_LIMITED_STATIONS = 1600;
+/** T-3940: a saved game of `stations` is big for this phone or tablet (one that reports no memory) */
+export const bigForTab = (stations: number | undefined): boolean => tabLimited() && !!stations && stations >= TAB_LIMITED_STATIONS;
+
 /** True when a saved game of `stations` is more than this device can give, where the browser says what the
- * device has; elsewhere never, as the budget is a guess there. */
-export const overBudget = (stations: number | undefined): boolean => budgetKnown() && !!stations && estimateGB(stations) > budgetGB();
+ * device has, or (T-3940) big for a phone or tablet that does not; elsewhere never, as the budget is a guess there. */
+export const overBudget = (stations: number | undefined): boolean =>
+  tabLimited() ? bigForTab(stations) : budgetKnown() && !!stations && estimateGB(stations) > budgetGB();
 
 /** GB the device has, for the warning: the browser's own figure, else the budget (a 32-bit browser). */
 export const deviceGBOrBudget = (): number => (deviceGB() !== undefined && budgetKnown() ? deviceGB()! : budgetGB());

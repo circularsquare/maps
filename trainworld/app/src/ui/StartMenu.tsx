@@ -7,12 +7,12 @@
 import { h, render, type ComponentChildren } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { HOME_CITY, isCity } from "../game/cities";
-import { choosing } from "../game/loading";
+import { choosing, diedSlot } from "../game/loading";
 import { display, dropMarket } from "../game/ui";
 import { FeedbackOpen } from "./FeedbackPanel";
 import { IntercityCheck, MoreCoresCheck, UiScaleStepper } from "./SettingsTab";
 import { failLists, listSlots, newGameName, StorageReadError, type SaveSlot } from "../workers/saveFile";
-import { backupChoice, CHOICE_PARAMS, fileChoice, type GameChoice } from "../workers/clockClient";
+import { backupChoice, CHOICE_PARAMS, fileChoice, openWithoutTrips, type GameChoice } from "../workers/clockClient";
 import { groupHeads, groupVersions, type GameGroup, type Version } from "../workers/versions";
 import { saveRefusal } from "../game/memoryCheck";
 import { overBudget } from "../game/memoryEstimate";
@@ -41,7 +41,8 @@ const VERSION = typeof __TW_VERSION__ === "string" ? __TW_VERSION__ : "dev";
  * normal in New York unless `&mode=sandbox` or `&city=<zone id>` say otherwise (T-728), `&side=left|right` its
  * running side (T-3297);
  * `?synth=1`, `?demandTest=1`, `?paused=1` and `?continue=1` the game opened last; `?slot=<key>` and
- * `?load=file|restore|new` the game the saves panel picked (T-1196); `?next=new` the menu, which starts the
+ * `?load=file|restore|new` the game the saves panel picked (T-1196), with `&trips=off` without calculating trips
+ * (T-3851; a slot's, T-3940); `?next=new` the menu, which starts the
  * saves panel's new game (T-3478). */
 export function choiceFromUrl(): GameChoice | null {
   const q = new URLSearchParams(location.search);
@@ -57,11 +58,11 @@ export function choiceFromUrl(): GameChoice | null {
   if (slot || load || next) {
     const u = new URL(location.href);
     for (const k of CHOICE_PARAMS) u.searchParams.delete(k);
-    // T-4002: a viewed network's pause is for its opening only (main.ts read it already)
-    if (load) u.searchParams.delete("paused");
+    // T-4002: a viewed network's pause is for its opening only (main.ts read it already); T-3940: a slot's without trips too
+    if (load || q.get("trips") === "off") u.searchParams.delete("paused");
     history.replaceState(history.state, "", u.href);
   }
-  if (slot) return { slot };
+  if (slot) return { slot, ...(q.get("trips") === "off" ? { noTrips: true } : {}) };
   if (load === "new") {
     const city = q.get("city");
     return { pending: true, newGame: !on("real"), game: { mode: q.get("mode") === "sandbox" ? "sandbox" : "normal", ...(isCity(city) ? { start: city! } : {}) } };
@@ -189,6 +190,8 @@ function Menu({ slots: first0, unread: unread0, pick: pickGame, settling }: { sl
   const [warned, setWarned] = useState<{ text: string; go: (lite?: boolean) => void } | null>(null);
   // T-3329: a game bigger than the device can give asks before it opens
   const [memWarn, setMemWarn] = useState<{ key: string; stations: number } | null>(null);
+  // T-3940: the saved game whose load last died here asks before it opens, whatever its size
+  const [died] = useState(diedSlot);
   const open = async (key: string) => {
     await Promise.race([settling, new Promise((r) => setTimeout(r, SETTLE_WAIT_MS))]);
     // T-988: an account game is downloaded into a new slot first
@@ -269,13 +272,14 @@ function Menu({ slots: first0, unread: unread0, pick: pickGame, settling }: { sl
             const s = g.top.kind === "slot" ? g.top.slot : cardOf(g.top.game);
             return <li key={g.origin} data-origin={g.origin} class={g.others.length ? "has-versions" : undefined}>
               <div class="start-slot">
-                <button class="start-save" data-slot={s.key} onClick={() => { if (overBudget(s.stations)) setMemWarn({ key: s.key, stations: s.stations! }); else void open(s.key); }}>
+                <button class="start-save" data-slot={s.key} onClick={() => { if (overBudget(s.stations) || s.key === died) setMemWarn({ key: s.key, stations: s.stations ?? 0 }); else void open(s.key); }}>
                   <SlotThumb slot={s} />
                   <span class="save-info"><SlotTitle slot={s} /><SlotFacts slot={s} now={now} /></span>
                 </button>
                 <button class="btn icon start-delete" data-tip={t("startMenu.delete")} aria-label={t("startMenu.deleteGame", { name: s.name })} onClick={() => setRemoving(g.origin)}><Icon.bin /></button>
               </div>
-              {memWarn?.key === s.key && <MemoryWarn stations={memWarn.stations} onGo={() => { setMemWarn(null); void open(s.key); }} onCancel={() => setMemWarn(null)} />}
+              {memWarn?.key === s.key && <MemoryWarn stations={memWarn.stations} died={s.key === died} onGo={() => { setMemWarn(null); void open(s.key); }} onCancel={() => setMemWarn(null)}
+                onLight={s.key.startsWith("account:") ? undefined : () => openWithoutTrips(s.key)} />}
               <VersionsLine group={g} now={now} act={actions(g)} />
               {removing === g.origin && <div class="callout bad">
                 <DeleteAsk group={g} yesLabel={t("startMenu.deleteSave")} keepLabel={t("startMenu.keepIt")} yesClass="start-delete-yes" onYes={() => void remove(groupHeads(g))} onKeep={() => setRemoving(null)} />
