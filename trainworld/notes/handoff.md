@@ -6,7 +6,7 @@ Updated: 2026-11-23 12:41 UTC
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5.
 
 ## Running (11-23 13:15 UTC): solvespeed T-4054, solveprof T-4057, ridecheck T-4058, busreach T-4056 (Sonnet),
-hokkaido T-3688, addtrack T-4024. T-4037 design done, (b) asked (a-2026-11-23-1).
+hokkaido T-3688, addtrack T-4024, trackg1 T-4037 g1 (her yes to (b) 11-23; g2 to the same agent next).
 
 ## Next (11-23)
 0. Her goals today, 11-23: compute speedups for T-4041 (main), polish/check first-arrival riding, bus reach back to
