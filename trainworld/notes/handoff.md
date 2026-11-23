@@ -1,18 +1,17 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session dc375617-affd-42c6-aac0-505e37685277, name maps-44 [b23630], since 2026-11-23 12:41 UTC
-Updated: 2026-11-23 12:41 UTC
+Updated: 2026-11-23 13:50 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary
+notes/handoff-log.md. Her time UTC-5.
 
-Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5.
-
-## Running (11-23 13:15 UTC): solvespeed T-4054, solveprof T-4057, ridecheck T-4058, busreach T-4056 (Sonnet),
-hokkaido T-3688, addtrack T-4024, trackg1 T-4037 g1 (her yes to (b) 11-23; g2 to the same agent next), shiftdel T-4068 (Sonnet). Pad 11-23 filed:
-T-4068-T-4070; T-4069 (bus stop ctrl click) next free slot.
+## Running (13:50 UTC, 9 agents, one over her 8: don't refill ridecheck's slot): solvespeed T-4054, solveprof T-4057,
+ridecheck T-4058, hokkaido T-3688, addtrack T-4024, trackg1 T-4037 g1 (g2 to it next), shiftdel T-4068, busnosnap
+T-4069 (both Sonnet), crashes T-4071 (triage, stage 1 report first). T-4056 landed 4169b78a.
 
 ## Next (11-23)
-0. Her goals today, 11-23: compute speedups for T-4041 (main), polish/check first-arrival riding, bus reach back to
-   600 m, track rework all week. 2-8 agents this week ("more focused work"), not 4-12. Speedups may shift riders
-   (orchestrator.md, trial). Resend over its cap is fine (her 11-23). Publish: "we will see", don't ask.
+0. Her goals, 11-23: compute speedups for T-4041 (main); loading consistency and crashes (main, short/medium term:
+   T-4071); polish first-arrival riding; track rework all week. 2-8 agents this week ("more focused work"). Speedups
+   may shift riders (orchestrator.md, trial). Resend over its cap is fine. Publish: "we will see", don't ask.
 1. PUBLISH when ready (never ask her when): can ship on freeze 20261122-044711 (has Manila,
    Muzaffarpur and the old Hokkaido; data/packs lacks old Hokkaido until hokkaido lands). Landed since
    v0.4.5 and checked (batch 13 on 547389c2; batch 14 and 15 on master 5e4ac09f): T-4041 riders take the line that
