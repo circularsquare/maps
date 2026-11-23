@@ -10,24 +10,22 @@ T-4057 (+T-4082 Detroit), hokkaido T-3688, trackg1 T-4037 g1, busconn T-4079, ad
 update it before a publish), safariwarn T-3940, community (resumed: sandbox in place search, tree community2).
 Landed: T-4056, T-4068, T-4076, T-4077/78/81, T-4072/73, T-3688 522862ff; T-4024 onto tw/track. Server 4f71a2f
 deployed (79777f5 sandbox search waits her yes; her 11-23: deploying before the follow-up check was wasteful).
-tracksync resolving master -> tw/track merge in _track (3 conflicts); then 8800 = tw/track tip, batch checker master.
-Fresh freeze before the publish (Hokkaido is in data/packs now).
+tracksync merging master into a copy of tw/track (tree tracksync, 3 conflicts; I commit, then ff tw/track in _track);
+then 8800 = tw/track tip, batch checker on master. Fresh freeze before a publish (Hokkaido now in data/packs).
 
 ## Next (11-23)
 0. Her goals, 11-23: compute speedups for T-4041 (main); loading consistency and crashes (main, short/medium term:
    T-4071); polish first-arrival riding; track rework all week. 2-8 agents this week ("more focused work"). Speedups
    may shift riders (orchestrator.md, trial). Resend over its cap is fine. Publish: "we will see", don't ask.
-1. PUBLISH when ready (never ask her when): freeze 20261122-044711 works (old Hokkaido) until hokkaido lands. Since
-   v0.4.5 and checked (batch 13 on 547389c2; batch 14 and 15 on master 5e4ac09f): T-4041 riders take the line that
+1. PUBLISH when ready (never ask her when). Since v0.4.5 and checked (batch 13 on 547389c2; batch 14 and 15 on master 5e4ac09f): T-4041 riders take the line that
    arrives first (0.75 softening, late joins), T-4050 evenly spaced shared platforms, T-4054 stage 1, T-1354, T-4040,
    load bars (skew + fill at end). Before it: fresh freeze, translations (T-3986, T-3991, T-3999, T-4003, T-4010,
    T-2264, T-3933, T-3378 s4, T-4013, T-4005, T-4040, the new zones' names: place_names.mjs --zones), smoke8800 on a
    quiet machine, the changelog review (46 unpublished; c051 is T-4041's). Then her text OK and her yes, in this tab.
-2. Speed (T-4054 search, T-4057 elsewhere): same-answer wins land as they report; shifting ones bring a test shape
-   for her to build (orchestrator.md "Speedups that shift riders"); batch checker after.
+2. Speed: wins land as they report (real-save numbers; orchestrator.md "Speedups that shift riders"); checker after.
 3. Next: T-4080 + T-4083 (one design: bus stops keeping identity across edits/saves; after busnosnap lands),
-   T-4075, T-3940, T-4051, T-4055, paused trees (onewaylag after T-4054, clockmem, stationids, timetables,
-   coreslider, perfledger, split6). After hokkaido: sync-track, 8800 = tw/track tip, checker.
+   T-4075, T-4051, T-4055, paused trees (onewaylag after T-4054, clockmem, stationids, timetables, coreslider,
+   perfledger, split6).
 4. TRACK (all week): on her (b), g1-g4 (notes/T-4037-design.md; g3, g4 side by side), then 4d, 4f, 5a/5b.
 
 LIVE v0.4.5. 8800 = 73299e61. Cap 14 (her daytime pick). Cores 0-1 hers (`reserve_cores.ps1 -Loop 30` at
