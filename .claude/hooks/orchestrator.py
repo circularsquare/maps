@@ -3,6 +3,8 @@
     session-start  prints this session's id and where each project's handoff stands
     stop           warns once per 100k tokens past 500k that it is time for a fresh session
     agent-guard    stops a handed-over orchestrator from starting new agents
+    reply-nudge    (PostToolUse) once per message: if her latest message has gone REPLY_AFTER seconds
+                   with no reply text from this orchestrator, add a reminder to the tool result
 
 The skills that use this are .claude/skills/takeover and .claude/skills/handoff.
 """
@@ -108,6 +110,101 @@ def stop(data):
     }))
 
 
+REPLY_AFTER = 180   # Anita 2026-11-23: she should get a reply within a couple of minutes
+NUDGE_TAIL = 3_000_000
+
+
+def _ts(s):
+    from datetime import datetime
+    try:
+        return datetime.fromisoformat(s.replace("Z", "+00:00")).timestamp()
+    except (ValueError, AttributeError):
+        return 0.0
+
+
+def _prompt_text(prompt):
+    if isinstance(prompt, list):
+        return "".join(b.get("text", "") for b in prompt if isinstance(b, dict))
+    return prompt if isinstance(prompt, str) else ""
+
+
+def waiting_message(transcript):
+    """(time sent, key) of her latest message if no main-thread reply text follows it, else None.
+    Reads the transcript backwards: the first reply or message found decides. A mid-turn message is a
+    queued_command attachment (origin human); its enqueue entry holds the time she sent it."""
+    try:
+        with open(transcript, "rb") as f:
+            f.seek(0, 2)
+            f.seek(max(0, f.tell() - NUDGE_TAIL))
+            lines = f.read().decode("utf-8", errors="replace").splitlines()
+    except OSError:
+        return None
+    for i in range(len(lines) - 1, -1, -1):
+        line = lines[i]
+        human = '"kind":"human"' in line
+        if not human and '"type":"assistant"' not in line:
+            continue
+        try:
+            e = json.loads(line)
+        except ValueError:
+            continue
+        if e.get("type") == "assistant":
+            if e.get("isSidechain"):
+                continue
+            content = (e.get("message") or {}).get("content")
+            if isinstance(content, list) and any(
+                    isinstance(b, dict) and b.get("type") == "text" and (b.get("text") or "").strip() for b in content):
+                return None
+            continue
+        att = e.get("attachment")
+        if e.get("type") == "user" and (e.get("origin") or {}).get("kind") == "human":
+            return _ts(e.get("timestamp")), e.get("uuid") or e.get("timestamp")
+        if e.get("type") == "attachment" and att and att.get("type") == "queued_command" \
+                and (att.get("origin") or {}).get("kind") == "human":
+            sent = _ts(e.get("timestamp"))
+            want = _prompt_text(att.get("prompt")).strip()
+            for j in range(i - 1, max(-1, i - 400), -1):
+                if '"enqueue"' in lines[j] and want[:40] and want[:40] in lines[j]:
+                    try:
+                        q = json.loads(lines[j])
+                    except ValueError:
+                        continue
+                    if q.get("operation") == "enqueue" and (q.get("content") or "").strip() == want:
+                        sent = _ts(q.get("timestamp")) or sent
+                        break
+            return sent, e.get("uuid") or e.get("timestamp")
+    return None
+
+
+def reply_nudge(data):
+    import time
+    if data.get("agent_id"):          # a subagent's tool call, not the orchestrator
+        return
+    sid = data.get("session_id", "")
+    found = waiting_message(data.get("transcript_path", ""))
+    if not sid or not found:
+        return
+    sent, key = found
+    waited = time.time() - sent
+    if waited < REPLY_AFTER:
+        return
+    if not any(sid in orch for _, _, orch, _, _ in handoffs()):
+        return
+    state = STATE_DIR / f"{sid}.nudge"
+    try:
+        if state.read_text() == str(key):
+            return
+    except OSError:
+        pass
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    state.write_text(str(key))
+    print(json.dumps({"hookSpecificOutput": {
+        "hookEventName": "PostToolUse",
+        "additionalContext": f"Anita's message has waited {int(waited // 60)} min with no reply: reply to her "
+                             "now (a short text message, even mid-task), then go on.",
+    }}))
+
+
 def agent_guard(data):
     sid = data.get("session_id", "")
     desc = ((data.get("tool_input") or {}).get("description") or "").strip().lower()
@@ -132,7 +229,8 @@ def main():
         data = json.loads(sys.stdin.buffer.read().decode("utf-8", errors="replace"))
     except ValueError:
         data = {}
-    {"session-start": session_start, "stop": stop, "agent-guard": agent_guard}[sys.argv[1]](data)
+    {"session-start": session_start, "stop": stop, "agent-guard": agent_guard,
+     "reply-nudge": reply_nudge}[sys.argv[1]](data)
 
 
 if __name__ == "__main__":

@@ -48,7 +48,10 @@ incidents behind the rules here are in `notes/rule-history.md`.
   asks for a handover: she wants the orchestrator in Windows Terminal, not the VS Code panel. Keep starting agents until then. The rest of the steps (what to finish,
   what to tell her and the new orchestrator, your agents still running) are in the `handoff` skill, "After
   another session takes over".
-- **Never go quiet on her** (she once waited 25 minutes for an answer): anything you run that takes over a
+- **Never go quiet on her** (she once waited 25 minutes for an answer, twice: the second time, 11-23, the orchestrator
+  dug into a full disk itself). You don't investigate: looking into anything (disk use, a bug, a slow load) is an
+  agent's job, emergencies included; you run bookkeeping and landing commands. Her message mid-turn ends the chain:
+  reply, then go on. Anything you run that takes over a
   minute (a landing with a WebAssembly rebuild, smoke, a 8800 rebuild) starts in the background, and you answer her
   message first. The board keeps itself current from the tools: `tasks.py start` writes an agent's start time,
   `snap8800.py` writes the 8800 build id when it swaps, and the takeover sets the orchestrator's name
