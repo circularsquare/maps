@@ -38,8 +38,7 @@ takeover). Server 3b14158. Save level 38. Pad 11-22, not started: T-4046-49, T-4
   manually space out lines"). Load bars: what read 90% now reads half full (her idea). Her hope: "buses get more
   reasonable values relative to trams ... more uniform ... cuz everything is parallel".
 - 11-22: China shape fix next week (T-4044); Hokkaido via the old Japan tool; a yes in another tab doesn't count here.
-- 11-21: main priorities the track rework, finish and polish BRT; T-3742 planned, start later. Standby
-  orchestrator tabs (notes/standby.txt).
+- 11-21: track rework, finish and polish BRT; T-3742 planned, later. Standby tabs: notes/standby.txt.
 - 11-19: "player complaints take precedent over other new features"; full playtest list before every publish. When
   she plays: no uploads until she's done; she may ask for a lower core cap.
 - Standing: lean testing, smoke per batch; long jobs in the background, answer her first; every publish, deploy and
@@ -47,7 +46,7 @@ takeover). Server 3b14158. Save level 38. Pad 11-22, not started: T-4046-49, T-4
   stations for BRT lines only; never ask again whether big saves get more workers (11-21).
 
 ## Waiting on her
-- No open asks. She sends the T-3635 player reply herself. Quote text in the message, never send her a notes file.
+- Asks: `asks.py list` (phone load, Spain, bus connection timing; strings shiftdel/busnosnap). T-3635 reply is hers.
 
 ## Only a person knows
 - Uncommitted on purpose: TODO.md (hers), notes/T-3397.md, jordan-save-investigation-2026-11-15.md,
