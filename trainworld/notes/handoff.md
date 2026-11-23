@@ -10,7 +10,7 @@ diary notes/handoff-log.md. Her time UTC-5.
   retime T-4132 (opus); lineclick T-4114 stage 1 (opus: measure her three slow cases, then line path and line delete
   at the click); stationdefault (agent ade808e3): Train station default done in tree, now T-4135 hover icon, bus 600 m
   ring, Nunito A, same tree.
-- batchcheck2 on master: T-4104, T-4109, T-4130, T-4111 plus smoke. 8800 = 1fa5d175.
+- batchcheck2 on master: T-4104, T-4109, T-4130, T-4111 plus smoke. 8800 = ccbe5076 (21:08).
 - Her 11-23 20:5x: edit speed on 8800 still slow (new line, delete line, line length after stop edits): T-4114 now P1,
   lines first. Cores at the cap (14/14) at 20:57: no more starts until claims free.
 
