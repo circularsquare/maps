@@ -399,7 +399,7 @@ T-1826]. A damaged save (cut short, or unreadable) is never uploaded, written ov
 backup; its card offers its last undamaged copy, from this browser or the account, opened as a new slot
 [T-3395]. A game that fails to open (damaged, a crash or running out of memory while loading) goes back to
 the start menu with the reason on its card, its slot and account copy untouched and nothing new saved
-[T-3773]. A save that fails for a full disk frees the demand caches and tries again, and a
+[T-3773]; every card, one that does not open too, downloads its save as stored [T-4126]. A save that fails for a full disk frees the demand caches and tries again, and a
 database cleared under a running game is made again with the game in it [T-1829]. A game saved by a newer build (a higher save level,
 or anything else this one cannot read) does not open, says it was saved on a newer version, and stays in its slot as
 it is, never marked damaged; nor does this build upload over an account copy a newer build saved, which the server

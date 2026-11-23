@@ -474,7 +474,7 @@ export function leaveViewed(): Promise<boolean> {
 }
 /** A save's bytes, in parts (T-3869: put in the file one by one, never joined here), downloaded as
  * "trainsworld-<name>-day-<day>.save". */
-function downloadSave(parts: Uint8Array[], name: string, day: number, slot?: string) {
+export function downloadSave(parts: Uint8Array[], name: string, day: number, slot?: string) {
   markDownloaded(slot); // T-1832: the "saved in this browser only" card has nothing more to say
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob(parts as BlobPart[], { type: "application/octet-stream" }));

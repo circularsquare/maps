@@ -7,6 +7,8 @@
 //
 // URL parameters: docs/code-map.md, "URL switches".
 
+// T-4126: before anything reads storage
+import "./game/trackStorage";
 import "./ui/style.css";
 import "./ui/zenmaru.css";
 // each language's font faces (T-2636); here, not in i18n/index.ts, which the workers import and where CSS injection throws

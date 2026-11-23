@@ -11,6 +11,7 @@ import type { FromClock, ToClock } from "./protocol";
 import { claim, editedHere, editedThere, fetchGame, GAP_MS, lastListFailure, listGames, newGameId, onTokenGone, removeSlot, sendDeletes, settle as settleCloud, splitOff, tieNew, tiedTo, upload, writeFetched, type CloudContext } from "./cloud";
 import { editOf, syncedEditOf } from "./versions";
 import { modelDown } from "./clockPanic";
+import { SAVE_DB } from "../game/trackBuild";
 
 /** What this module needs of the clock worker: the game in hand, its model and its message queue. */
 export interface SlotHost {
@@ -128,7 +129,7 @@ export function letGoSlot() {
   saves.newSlotName = null;
 }
 
-const slotChanges = typeof BroadcastChannel === "undefined" ? null : new BroadcastChannel("anitabuilder-save-slots");
+const slotChanges = typeof BroadcastChannel === "undefined" ? null : new BroadcastChannel(`${SAVE_DB}-save-slots`);
 slotChanges?.addEventListener("message", () => { if (host.api()) void publishSlots(); });
 /** T-3869: a save or download that found no memory even after the demand workers were replaced */
 export const NO_MEMORY_TO_SAVE: MessageKey = "clockWorker.noMemoryToSave";

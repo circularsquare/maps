@@ -12,7 +12,7 @@
 //                          T-1146; a line saved with no trains is given them on load)
 //
 // Nothing in it depends on wall time, so saving the same game twice gives the same bytes.
-// Autosaves live in IndexedDB (database "anitabuilder", store "saves", one key per slot; the original game keeps key "autosave";
+// Autosaves live in IndexedDB (database "anitabuilder", the track build's "anitabuilder-track" (T-4126), store "saves", one key per slot; the original game keeps key "autosave";
 // beside each slot its demand cache and backups under keys the saves list does not show).
 
 import registry from "../game/registry.json";
@@ -22,6 +22,7 @@ import { compressGzip, decompressGzip } from "./gzip";
 import { compressGzipParts, GZIP_DAMAGED } from "./gzipCore";
 import { editOf } from "./versions";
 import type { LineShape } from "../game/lineShape";
+import { MAIN_SAVE_DB, SAVE_DB, TRACK_BUILD } from "../game/trackBuild";
 
 export const SAVE_MAGIC = "TWG1";
 export const SAVE_FORMAT = 1;
@@ -469,7 +470,7 @@ export async function checkSave(bytes: Uint8Array): Promise<SaveCheck> {
 
 // ---------------------------------------------------------------- IndexedDB
 
-const DB = "anitabuilder";
+const DB = SAVE_DB;
 const STORE = "saves";
 
 /** What the saves list shows of a slot without opening it (T-241), made by the clock worker each
@@ -703,11 +704,54 @@ async function readApart<T>(key: string): Promise<T | undefined | typeof UNREADA
   }
 }
 
+/** T-4126: the track build's first list copies in, once, the games the main build's database holds in the track model
+ * (network bytes "TWT7"): those saved on 8800 while it ran the track branch, which the main build does not open. Each
+ * gets a new key here; the main database is only read, so its copy stays as it is. The number copied. */
+let trackCopy: Promise<number | void> | null = null;
+const TRACK_COPIED = "track-copied";
+export async function copyTrackGames(): Promise<number> {
+  const copy = async (): Promise<number> => {
+    if (await req((await store("readonly")).get(TRACK_COPIED))) return 0;
+    const main = await new Promise<IDBDatabase | null>((res) => {
+      const r = indexedDB.open(MAIN_SAVE_DB);
+      r.onupgradeneeded = () => r.transaction?.abort(); // no main database: none is made
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => res(null);
+    });
+    const found: StoredSave[] = [];
+    if (main) {
+      try {
+        if (main.objectStoreNames.contains(STORE)) {
+          const s = main.transaction(STORE, "readonly").objectStore(STORE);
+          const keys = (await req(s.getAllKeys())).filter((k): k is string => typeof k === "string" && (k === ORIGINAL_SLOT || k.startsWith("slot-")));
+          const saves = await Promise.all(keys.map((k) => req<StoredSave | undefined>(s.get(k))));
+          for (const v of saves) {
+            if (!v?.bytes) continue;
+            try {
+              const { track } = await decodeSave(v.bytes);
+              if (new TextDecoder().decode(track.subarray(0, 4)) === "TWT7") found.push(v);
+            } catch { /* not one this build reads either */ }
+          }
+        }
+      } finally { main.close(); }
+    }
+    const s = await store("readwrite");
+    const done = committed(s.transaction);
+    for (const v of found) s.put(v, "slot-" + crypto.randomUUID());
+    s.put(Date.now(), TRACK_COPIED);
+    await done;
+    return found.length;
+  };
+  // one copier at a time across this build's tabs and threads, so a game is never copied twice
+  return navigator.locks ? navigator.locks.request(`${DB}-copy`, copy) : copy();
+}
+
 /** Metadata only leaves the worker; unreadable-save recovery copies are kept out of the list. Only
  * the slots are read, not the demand caches beside them (several MB each, T-328). Also read by the
  * start menu on the main thread (T-677). Throws a blocked storage's error as it is, and a
  * StorageReadError when the reads keep failing (T-2705). */
 export async function listSlots(): Promise<SaveSlot[]> {
+  if (TRACK_BUILD) await (trackCopy ??= copyTrackGames().catch((err) => { console.error("T-4126: the track games were not copied:", err); })); // i18n-ignore: console text
   const [keys, saves, syncs] = await retried("the slot list", "list", async () => { // i18n-ignore: console text
     const keys = (await req((await store("readonly")).getAllKeys())).filter((k): k is string => typeof k === "string" && (k === ORIGINAL_SLOT || k.startsWith("slot-")));
     const saves = await Promise.all(keys.map((k) => readApart<StoredSave>(k)));
@@ -1152,7 +1196,7 @@ export async function leaseSlot(key: string, steal = false): Promise<SlotLease |
   const lost = new Promise<void>((r) => { lose = r; });
   let granted = false;
   return new Promise((resolve, reject) => {
-    void navigator.locks.request("anitabuilder-save-" + key, steal ? { steal: true } : { ifAvailable: true }, (lock) => {
+    void navigator.locks.request(`${DB}-save-${key}`, steal ? { steal: true } : { ifAvailable: true }, (lock) => {
       if (!lock) { resolve(null); return; }
       granted = true;
       return new Promise<void>((release) => resolve({ release, lost }));

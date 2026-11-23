@@ -12,7 +12,7 @@ import { display, dropMarket } from "../game/ui";
 import { FeedbackOpen } from "./FeedbackPanel";
 import { CoarseDemandCheck, IntercityCheck, MoreCoresCheck, UiScaleStepper } from "./SettingsTab";
 import { failLists, listSlots, newGameName, StorageReadError, type SaveSlot } from "../workers/saveFile";
-import { backupChoice, CHOICE_PARAMS, fileChoice, type GameChoice } from "../workers/clockClient";
+import { backupChoice, CHOICE_PARAMS, exportSlot, fileChoice, type GameChoice } from "../workers/clockClient";
 import { groupHeads, groupVersions, type GameGroup, type Version } from "../workers/versions";
 import { saveRefusal } from "../game/memoryCheck";
 import { overBudget } from "../game/memoryEstimate";
@@ -29,7 +29,7 @@ import { Icon } from "./widgets";
 import { Changelog } from "./Changelog";
 import { CommunityButton } from "./Community";
 import { dismissUpdate, updateToShow } from "./updates";
-import { accountBackupFile, accountList, accountOnly, cardOf, damagedAccount, deleteOwed, deleteVersions, downloadAccountGame, downloadFailure, pinnedFile, settleOnStart, slotsChanged, stopStartSettle } from "../game/accountGames";
+import { accountBackupFile, accountList, accountOnly, cardOf, damagedAccount, deleteOwed, deleteVersions, downloadAccountGame, downloadFailure, exportAccountGame, pinnedFile, settleOnStart, slotsChanged, stopStartSettle } from "../game/accountGames";
 import { t } from "../i18n";
 import { takeOpenFailNotice } from "../game/openFailures";
 
@@ -276,6 +276,11 @@ function Menu({ slots: first0, unread: unread0, pick: pickGame, settling }: { sl
                   <SlotThumb slot={s} />
                   <span class="save-info"><SlotTitle slot={s} /><SlotFacts slot={s} now={now} /></span>
                 </button>
+                {/* T-4126: a game that does not open (damaged, or from a newer version) too, to send in */}
+                <button class="btn icon start-download" data-tip={t("savesPanel.download")} aria-label={t("savesPanel.download")} onClick={async () => {
+                  setRefused(null);
+                  if (!(g.top.kind === "slot" ? await exportSlot(g.top.slot) : await exportAccountGame(g.top.game))) setRefused(t(g.top.kind === "slot" ? "savesPanel.readFailed" : "savesPanel.downloadFailed"));
+                }}><Icon.download /></button>
                 <button class="btn icon start-delete" data-tip={t("startMenu.delete")} aria-label={t("startMenu.deleteGame", { name: s.name })} onClick={() => setRemoving(g.origin)}><Icon.bin /></button>
               </div>
               {memWarn?.key === s.key && <MemoryWarn stations={memWarn.stations} died={s.key === died} onGo={() => { setMemWarn(null); void open(s.key); }} onCancel={() => setMemWarn(null)} />}

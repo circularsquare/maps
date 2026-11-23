@@ -127,6 +127,11 @@ and sim-core changes others build on (undo, the solve, edits). Labels, text, doc
 3. Rebuild 8800: `venv\Scripts\python.exe trainworld/tools/ops/snap8800.py <hash> [<freeze>] --log
    <scratch>\snapbuild.log` from the maps root (allowed without a prompt), with the freeze while a country run owns
    `data/packs`. Never two at once; no smoke needed; one after a round of landings, not one per landing.
+   The track branch's build (her 11-23: only on purpose, http://localhost:8800/trainworld/?track): `venv\Scripts\python.exe
+   trainworld/tools/ops/snaptrack.py --log <scratch>\snaptrack.log` builds tw/track's tip in `.tw-trees/tracksnap` and
+   serves it at `/trainworld-track/` (about 3 minutes, more after sim/ changes). Its saves, settings and sign-in are its own
+   (`app/src/game/trackBuild.ts`); a game saved there never reaches 8800's main build or the account. Rebuild it after
+   landings into tw/track or a sync-track, not with every 8800 rebuild.
 4. Land and archive a tree in one command: `node trainworld/checks/agent-tree.mjs finish <name> "<sentence>" --task
    T-1,T-2 --outcome "..." [--notes notes/T-1.md]`, `--dry-run` first when unsure (its top comment has the options
    and the conflict rules; for a contributor's PR, `--coauthor` in the form earlier commits use). Quote the final

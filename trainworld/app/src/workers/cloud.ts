@@ -213,6 +213,13 @@ export async function fetchPinned(ctx: CloudContext, id: string): Promise<Uint8A
   return a.bytes;
 }
 
+/** T-4126: game `id`'s current copy on the account as stored, unchecked (a damaged or newer one too, for a player to
+ * send in); null if it cannot be downloaded. */
+export async function fetchGameBytes(ctx: CloudContext, id: string): Promise<Uint8Array | null> {
+  const a = await call(ctx, "GET", `trainworld/games/${id}`, undefined, "bytes");
+  return a.status === 200 && a.bytes ? a.bytes : null;
+}
+
 /** Delete a game from the account (its backups and figures go too); true once it is gone. */
 export async function deleteGame(ctx: CloudContext, id: string): Promise<boolean> {
   const a = await call(ctx, "DELETE", `trainworld/games/${id}`);

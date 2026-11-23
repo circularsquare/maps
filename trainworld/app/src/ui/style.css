@@ -1399,8 +1399,10 @@ section + section > .changelog-head { margin-top: 16px; }
 /* T-1612: the bin sits on the card's bottom right, where the saves panel's buttons are */
 .start-slot { position: relative; }
 .start-delete { position: absolute; right: 8px; bottom: 8px; }
-/* T-3395: the damaged line is the card's last, beside the bin */
-.start-save .save-damaged { padding-right: 36px; }
+/* T-4126: Download beside the bin */
+.start-download { position: absolute; right: 42px; bottom: 8px; }
+/* T-3395: the damaged line is the card's last, beside the buttons */
+.start-save .save-damaged { padding-right: 70px; }
 .start-saves .pane-foot { justify-content: flex-start; margin-top: 6px; }
 .start-save .save-info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; overflow-wrap: anywhere; }
 /* T-728: the new game sheet, in the start menu's box or the saves panel */

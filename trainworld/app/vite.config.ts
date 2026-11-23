@@ -270,7 +270,8 @@ export default defineConfig({
   // Served under /trainworld/ by maps/serve.py, so every URL in the build must be relative.
   base: "./",
   worker: { format: "es", plugins: () => [demandWorkerGraph()] },
-  define: { __TW_BUILD__: JSON.stringify(BUILD), __TW_VERSION__: JSON.stringify(VERSION), __TW_UNOFFICIAL__: JSON.stringify(UNOFFICIAL) },
+  // TW_CHANNEL=track: the track branch's build on 8800 (T-4126, game/trackBuild.ts, tools/ops/snaptrack.py)
+  define: { __TW_BUILD__: JSON.stringify(BUILD), __TW_VERSION__: JSON.stringify(VERSION), __TW_UNOFFICIAL__: JSON.stringify(UNOFFICIAL), __TW_TRACK__: JSON.stringify(process.env.TW_CHANNEL === "track") },
   build: { outDir: "dist", target: "es2022" },
   // T-682: the real-network layer reads noritetsu's tiles beside the game (map/realNetwork.ts); 8800 serves them
   // at /noritetsu/ and sends no CORS headers, so the dev server passes the path through

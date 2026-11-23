@@ -1132,7 +1132,7 @@ keeps what it had and earns no more.
     autosave writing it again, and reloads the page to the start menu as a page opened with no game
     chosen (`ClockClient.leave`, worker `deletePlaying`).
   - **Every other card in this browser**: download (its last save in this browser, read from
-    storage) and bin (hover "Delete", asked first), then Open (accent border; closes the panel and
+    storage as it is, so also one that is damaged or from a newer version [T-4126]) and bin (hover "Delete", asked first), then Open (accent border; closes the panel and
     loads it).
   - **A card's bin deletes the game**: every version, after `Delete "Tokyo" and its 3 other
     versions from this browser and your account?` (or "from this browser", "from your account" as
@@ -1188,7 +1188,8 @@ This is separate from the refusal [T-1197], which judges a save by its zones and
   add it to your account.") that adds the game, which goes up at once [T-988 stage 3; the start
   menu's cloud is not a button]. A game whose versions are all on the account and none in this
   browser is a card of the server's picture and facts, a cloud after the name (hover "On your
-  account. Open downloads it here."), bin (hover "Delete", asked first: "Delete "Tokyo" from your
+  account. Open downloads it here."), download (hover "Download as a file": the account's copy as stored, also one
+  that does not open; "This game could not be downloaded." on a failure, T-4126), bin (hover "Delete", asked first: "Delete "Tokyo" from your
   account?") and Open (downloads it into a new slot and opens it as Open does). Deleting a tied
   slot asks "Delete "Tokyo" from this browser and your account?".
 - **Other versions** [T-2037, replacing T-1395's Earlier versions icon; `VersionsLine`]: a card
@@ -1587,8 +1588,9 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   game in a new slot, so no saved game is replaced. The slot is first written once the network has
   something in it (a real network at once): a new game left empty leaves no card.
 - **Delete and Load from file** [T-1612; the same code as the saves panel's: `deleteVersions`,
-  `deleteGroupQuestion`, `pickSaveFile`]. Every card has the panel's bin at its bottom right (hover
-  "Delete"); it asks under the card, `Delete "Tokyo" from this browser?` (from this browser and your
+  `deleteGroupQuestion`, `pickSaveFile`]. Every card has the panel's download and bin at its bottom right (hovers
+  "Download as a file" and "Delete"). Download saves the card's top version as stored, from this browser or the
+  account, also one that does not open (damaged, or from a newer version), for a player to send in [T-4126]. The bin asks under the card, `Delete "Tokyo" from this browser?` (from this browser and your
   account when the slot is tied to it; `Delete "Tokyo" from your account?` for an account-only card;
   `Delete "Tokyo" and its 3 other versions from ...` with more than one version, T-2037), with
   Delete (red) and Keep, and the card goes at once with every version, the account's copies with

@@ -18,7 +18,7 @@ import { choosing } from "../game/loading";
 import { exportGame, exportSlot, importGame, leaveToMenu, newGame, manageSaveSlot, savedByHand, saveSlotsState } from "../workers/clockClient";
 import { listBackups, WHOLE_PANEL, type SaveSlot, type SlotBackup } from "../workers/saveFile";
 import { accountConfig, accountOpen, accountState, cloudContext, session } from "../game/account";
-import { accountList, accountOnly, addToAccount, cardOf, damagedAccount, deleteVersions, downloadAccountGame, downloadFailure, elsewhereAt, refreshAccountGames, restoreAccountBackup, restorePinned } from "../game/accountGames";
+import { accountList, accountOnly, addToAccount, cardOf, damagedAccount, deleteVersions, downloadAccountGame, downloadFailure, exportAccountGame, elsewhereAt, refreshAccountGames, restoreAccountBackup, restorePinned } from "../game/accountGames";
 import { estimateGB, gbText, overBudget } from "../game/memoryEstimate";
 import { useMemoryGuard } from "./MemoryWarn";
 import { tiedTo, whyText, WHY_DAMAGED, WHY_NEWER, type CloudContext } from "../workers/cloud";
@@ -527,6 +527,9 @@ function AccountActions({ slot, onDelete }: { slot: SaveSlot; onDelete: () => vo
   return (<>
     <div class="save-actions">
       {msg && <span class="small bad">{msg}</span>}
+      {/* T-4126: also a copy that does not open (damaged, or from a newer version), to send in */}
+      <button class="btn icon save-download" data-tip={t("savesPanel.download")} aria-label={t("savesPanel.download")}
+        onClick={async () => { setMsg(""); if (!g || !await exportAccountGame(g)) setMsg(t("savesPanel.downloadFailed")); }}><Icon.download /></button>
       <button class="btn icon save-delete" data-tip={t("savesPanel.delete")} aria-label={t("savesPanel.delete")} onClick={onDelete}><Icon.bin /></button>
       <button class="btn text save-open" data-tip={openTip()} onClick={() => guard.ask(async () => {
         if (!g) return;

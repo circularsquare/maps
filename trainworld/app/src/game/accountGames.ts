@@ -5,11 +5,12 @@
 
 import { effect, signal } from "@preact/signals";
 import { accountOpen, accountState, cloudContext, deviceId, forgetScoreSlots, session, signOut } from "./account";
-import { answerMerge, changedHere, damagedGames, downloadGame, ELSEWHERE_MS, fetchBackup, fetchPinned, gamePicture, listGames, onDamagedGame, owe, owedDeletes, removeSlot, sendDeletes, settle, stampAll, tiedTo, untied, type AccountBackup, type AccountGame, type AccountList } from "../workers/cloud";
+import { answerMerge, changedHere, damagedGames, downloadGame, ELSEWHERE_MS, fetchBackup, fetchGameBytes, fetchPinned, gamePicture, listGames, onDamagedGame, owe, owedDeletes, removeSlot, sendDeletes, settle, stampAll, tiedTo, untied, type AccountBackup, type AccountGame, type AccountList } from "../workers/cloud";
 import { deleteSlot, leaseSlot, listSlots, readStored, readSync, type SaveSlot } from "../workers/saveFile";
 import type { Version } from "../workers/versions";
 import { t } from "../i18n";
-import { clockRunning, importGame, leaveToMenu, postAccount, saveSlotsState } from "../workers/clockClient";
+import { clockRunning, downloadSave, importGame, leaveToMenu, postAccount, saveSlotsState } from "../workers/clockClient";
+import { SAVE_DB } from "./trackBuild";
 
 /** The account's games and tombstones, as last listed; null signed out or unreachable. */
 export const accountList = signal<AccountList | null>(null);
@@ -164,7 +165,7 @@ export async function deleteVersions(versions: Version[], playing = ""): Promise
   return why || (owed.some((id) => gone.has(id)) ? t("cloud.deleteOwed") : "");
 }
 
-const slotChannel = typeof BroadcastChannel === "undefined" ? null : new BroadcastChannel("anitabuilder-save-slots");
+const slotChannel = typeof BroadcastChannel === "undefined" ? null : new BroadcastChannel(`${SAVE_DB}-save-slots`);
 /** Slots changed from this thread: the start menu lists them again, and every clock worker (this
  * page's and other tabs') publishes them again. */
 function slotsAltered() {
@@ -220,6 +221,16 @@ export async function pinnedFile(id: string, name: string): Promise<File | null>
   if (!ctx?.on) return null;
   const bytes = await fetchPinned(ctx, id);
   return bytes ? new File([bytes as BlobPart], `${name}.save`) : null;
+}
+
+/** T-4126: account game `g`'s current copy downloaded as a file, as stored (one that does not open too); false if it
+ * could not be downloaded. */
+export async function exportAccountGame(g: AccountGame): Promise<boolean> {
+  const ctx = cloudContext();
+  const bytes = ctx?.on ? await fetchGameBytes(ctx, g.id).catch(() => null) : null;
+  if (!bytes) return false;
+  downloadSave([bytes], g.name, g.facts?.day ?? 0);
+  return true;
 }
 
 /** T-3395: the pinned copy opened as a new version of game `origin` (as an account backup is), saved

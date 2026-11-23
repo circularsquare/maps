@@ -28,6 +28,7 @@ import { onAccountGone, postAccount, saveSlotsState } from "../workers/clockClie
 import { listGames, newGameId, onTokenGone, type CloudContext } from "../workers/cloud";
 import { listSlots, writeSync } from "../workers/saveFile";
 import { t } from "../i18n";
+import { TRACK_BUILD } from "./trackBuild";
 import { patientFetch, CLOUD_STALL_MS } from "../workers/patientFetch";
 
 export interface AccountView {
@@ -59,6 +60,7 @@ const GAMES_ON_KEY = "trainworld.games-on.v1";
 const LOCAL = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 
 function apiChoice(): "live" | "local" | null {
+  if (TRACK_BUILD) return null; // T-4126: the track build has no account
   const q = new URLSearchParams(location.search).get("acct");
   try {
     if (q === "off") localStorage.removeItem(API_KEY);
