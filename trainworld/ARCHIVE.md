@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4138 [P2] {L:small-fixes} Zoom buttons off by default on phones (2026-11-23): display.zoomButtons defaults to !mobileDevice(); settings v16 drops phones' stored value once (a phone that chose on must turn it on again) notes/T-4138.md.
 - T-1610 [P2] {L:solve-speed} Clicked zone waits for its refine (2026-11-23): Already gone on master: on Tokyo a click in a coarse zone answers from coarse samples in 1.0-1.4 s (station panel 44 ms) while the refine takes about 100 s; no code change. notes/T-1610.md.
 - T-4135 [P2] {L:station-placement} Station hover with a kind icon and the bus radius (2026-11-23): Default rail for a browser that never picked; Auto row dropped for the kind's icon on the trips row; BRT one ring at the 600 m bus reach (CORRIDOR_M, matching BUS_REACH_M) and trips within 600 m; Nunito A centred.
 - T-4106 [P2] {L:memory} An install-as-app banner on phones (2026-11-23): InstallBanner.tsx with hoursPlayed.ts; iOS Safari 7-day sentence plus Share steps, Android Install button or menu steps; hidden on desktop, in the app, in in-app browsers, beside notices and the open tutorial; dismissed forever. notes/T-4106.md.

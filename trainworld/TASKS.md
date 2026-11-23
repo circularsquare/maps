@@ -193,6 +193,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Batch check 11-23: t1382-rows on Asia, 10 seeds of 40 steps, fails at seed 9 step 15 (deleteEdge): "the regions differ from a fresh build (217 leaves against 217)", in T-4113's workers/regions.ts. Part A is on master, so it ships in 0.4.6.
   - Goal: Regions equal a fresh build at every step on Asia and NYC over 20+ seeds, or the drift shown harmless to rows; seed 9 kept in the standing check.
   - Other: notes/batchcheck-2026-11-23b.md
+- T-4139 [P1] {L:edit-speed} One edit-wait bench for every edit-speed task (taking, 2026-11-23, agent editbench)
+  - Context: 11-23: each edit-speed agent re-measures with its own scripts on a loaded machine (2-5x swing), so gains are slow to show; perf_bench's fixed edit places no station.
+  - Goal: One command timing ghost trail, station, stop click, Construct, line delete and undo on Asia and NYC on quiet cores, logged per build.
 - T-4114 [P1] {L:edit-speed} Edits show at the click, lines first (taking, 2026-11-23, agent lineclick)
   - Context: You, 11-23 on 8800: still slow are "creating a new line, or deleting a line, or seeing the line visually change its length after adding or removing some stops". Design: notes/T-4097.md section 3, 9-13 h in parts.
   - Goal: Stage 1: a line's new path after stop clicks, and a deleted line, show at the click on the Asia save; then Construct, track, undo as later stages.

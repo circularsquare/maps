@@ -11,6 +11,8 @@ diary notes/handoff-log.md. Her time UTC-5.
   ring, Nunito A, same tree.
 - ghostlag T-4136 (opus, P1): her 21:14 "the rail placement ghost lags behind the cursor ... most important to feel
   responsive"; measure then fix, page-side; retime owns the preview retime.
+- editbench T-4139 (sonnet): one edit-wait bench (tools/edit_bench.mjs, notes/edit-ledger.jsonl), her 21:3x "edit speed
+  work has been a bit slow to land": also put show-at-click first. T-4138 zoom default landed (af967488).
 - regionfix T-4137 (opus): batchcheck2 found Asia rows seed 9 regions drift (T-4113 code); batchcheck2 PASSED T-4104,
   T-4109, T-4130, T-4111 and smoke. 8800 rebuilding to d4eabb5c6 (21:26: textfix landed).
 - Her 11-23 20:5x: edit speed on 8800 still slow (new line, delete line, line length after stop edits): T-4114 now P1,
