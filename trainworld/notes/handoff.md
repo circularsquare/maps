@@ -5,12 +5,14 @@ Updated: 2026-11-23 20:08 UTC. Live state: `venv\Scripts\python.exe trainworld/t
 diary notes/handoff-log.md. Her time UTC-5.
 
 ## In flight (adopt from the board)
-- Adopted from maps-65 (reports reach the inbox): crossfix T-4130 (P1, master, fix before 0.4.6), headways T-4104 (UI; strings).
-- Mine: quadcheck T-4111; tmprofile T-4131 (stalled once 20:24, resumed); onegraph T-4124 (opus; measures only, landing
-  needs her yes on the shift); stationwater T-4112 (opus, tree off tw/track, also checks master); reloadmsg T-4109.
-  Queued: T-4106 install banner once reloadmsg lands (both add en.json strings).
-- Landed today after takeover: board3, hoverends T-4107, tutcard T-4099, onewayret T-4127 (fuzzer only, master clean),
-  autostation T-4105. 8800 rebuild to eb3e9d3c started 20:25. Ask a-2026-11-23-16 (Auto as default) open.
+- onegraph T-4124 (opus; measures only, landing needs her yes on the shift); stationwater T-4112 (opus, tree off
+  tw/track, also checks master); installbanner T-4106 (opus, strings); zonerefine T-1610 (re-check first, may close);
+  retime T-4132 (opus, bounded retime with a full-retime comparison).
+- batchcheck2 on master: T-4104 b3756860, T-4109 a7e867de, T-4130 1fa5d175, T-4111 a841fb14, plus smoke. No publish
+  prep until it passes (and none unless she says).
+- 8800 rebuild to 1fa5d175 started 20:39. Ask a-2026-11-23-16 (Auto as station default) open.
+- T-4131 found the track model is 10-30% of an edit's wait; the rest is T-4097 parts B-E. Filed T-4132-T-4134 from it;
+  part C remainder and part E (trips, boarding, demand snapshot per touched line) still need filing as tasks.
 
 ## Next
 1. No publish decided ("i didn't say we want to publish"); don't prep one unless she says. 0.4.6 would wait for most

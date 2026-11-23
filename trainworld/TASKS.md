@@ -171,47 +171,32 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4096 [P3] {L:checks} A daily sweep of old session scratch
   - Context: From T-4088: session scratch in Temp\claude was 78 GB, the biggest single user of the disk, and nothing clears it. The standing rule already lets agents delete finished sessions' scratch 2+ days old.
   - Goal: Scratch folders untouched for 2+ days deleted daily, sessions still running skipped.
+- T-4132 [P1] {L:edit-speed} Re-time only the lines whose timing moved (taking, 2026-11-23, agent retime)
+  - Context: From T-4131: `timing::retime` walks every line on each edit, 18-343 ms, plus 321-587 ms in each station-tool preview on the Asia save; the track model's apply is 10-30% of an edit's wait.
+  - Goal: Retime redoes only the lines (and their capacity cluster) an edit touched, same figures as a full retime; about 6-9 h, stage 1 the edit, stage 2 the preview.
+  - Other: notes/T-4131.md
+- T-4133 [P2] {L:edit-speed} Edits move only the trains they can change
+  - Context: From T-4131: `before_edit` and `note_changes` walk every train, 306-374 ms of a 717-823 ms apply on the Asia save.
+  - Goal: Only trains on touched lines are snapshotted and compared; same result; about 3-4 h.
+  - Other: notes/T-4131.md
+- T-4134 [P3] {L:edit-speed} A line's time zone and fleet kind looked up once
+  - Context: From T-4131: `utc_offset_at` per line costs 75-120 ms an edit and `cars_needed` 95 ms once on the Asia save.
+  - Goal: Both kept per line and refreshed only when the line moves; about 2-3.5 h.
+  - Other: notes/T-4131.md
 - T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
   - Context: You, 11-23: "edit speed is actually still kind of a problem... noticeable on my end for big worlds... i feel like there was a point at which we had edit speed almost instant, but then might have regressed". Mostly placing track and editing stops. T-3550, T-1211, T-3804, T-1031 are back at P2 under this.
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
-- T-4099 [P2] {L:help-tutorial} City labels drawn over the tutorial card (taking, 2026-11-23, agent tutcard)
-  - Context: Your pad, 11-23: "city label text (like Sapporo 0.0M trips) displays over tutorial card, but tutorial card should be in front"
-  - Goal: The tutorial card in front of every map label.
-- T-4107 [P2] {L:small-fixes} Crowding bubble hover end station names run together (taking, 2026-11-23, agent hoverends)
-  - Context: You, 11-23: "when we mouse over a crowding bubble, we have like the leftmost station displayed below the chain of stations, and the rightmost station. these used to be like one string left aligned and the other right aligned. but now it just looks like theres a not found character in between." Your screenshot: artifacts/trainworld/board/20261123-120505-98ee.png.
-  - Goal: The two end names left and right aligned again under the chain, with no stray character.
-- T-4109 [P2] {L:single-track} Tell the player to reload when the track model stops
-  - Context: From T-4098: after four edit panics a minute the track model stops and every edit says "That edit failed and was undone", with nothing telling the player that reloading the page gets the game back (a save rebuilds the model). T-3945 proposed this wording; it was never built.
-  - Goal: Once the model has stopped, one message saying the game needs a reload, with a reload button, instead of a failed-edit alert per edit.
 - T-4114 [P2] {L:edit-speed} {after:T-4113} Edits show at the click, track first
   - Context: You, 11-23: the T-4097 improvements "are not bad ideas, i just think they will not be enough by themselves." Design: notes/T-4097.md section 3, 9-13 h in three parts, track first (4-6 h).
-- T-4111 [P1] {L:edit-speed} The quad check after every network rebuild (taking, 2026-11-23, agent quadcheck)
-  - Context: From T-4097 (notes/T-4097.md): tramSpot (map/capacityMarkers.ts, from ui/TroubleList.tsx) scans every node for each capacity spot on every world, about 0.13 s, a third of a stop click's page cost; the track hover's quad check (map/quadTwin.ts) rebuilds over all edges after every network, 0.46-0.77 s on the main thread after a station on a 2,647-station save.
-  - Goal: Both indexed or cached so the cost scales with what changed; the same output; times on the big Asia save as a percent of the click-to-map wait.
-- T-4131 [P1] {L:edit-speed} Profile the track model's part of an edit (taking, 2026-11-23, agent tmprofile)
-  - Context: From T-4097 (notes/T-4097.md section 4, part F): the track model applies an edit in 0.06-0.33 s on the Asia save, and once the rest is bounded it is a third to a half of what is left; the shipped WASM has no function names in profiles. Felt waits haven't been measured since bounded edits stage 2 (T-4125) landed.
-  - Goal: Click-to-map on the Asia save re-measured on master; the track model's share of an edit profiled by function, and each whole-network scan timed and filed as a fix.
-- T-4112 [P1] {L:station-placement} Station on a blueprint refused for water at a ramp far away
+- T-4112 [P1] {L:station-placement} Station on a blueprint refused for water at a ramp far away (taking, 2026-11-23, agent stationwater)
   - Context: You, 11-23, on 8800 (tw/track build f382ee54): placing a station on a high speed track blueprint "kinda near water that it ramps over", the blocking alert "track at ground level can't cross water", which "doesnt seem like it should be relevant given that im placing a station, not a track, and also this is pretty far from the ramp."
   - Goal: Rebuilt; a station on a blueprint is checked only against its own platform stretch; placing it works there, and a real refusal names the station's problem.
 - T-4116 [P2] {L:track-rework} {after:the 0.4.6 publish} Track model panic after a route edit on the track branch
   - Context: Your panic on 8800 (track branch build f382ee54): store.rs:851 under nodes_info, after a route edit and line colour changes. Not reproduced by 1,800 random edits each on NYC and your North America save; likely a line's service still naming track an edit removed. A second panic (run_polyline on a one-way return run) is fixed on tw/track. Notes/T-4116.md.
   - Goal: Reproduced with the fuzzer or your save under ?track, and fixed with a test, when the track rework resumes.
-- T-4127 [P1] {L:single-track} Check master for the one-way return run panic (taking, 2026-11-23, agent onewayret)
-  - Context: From T-4116: on tw/track, removing a station could panic in run_polyline because a one-way line's unused return run named removed track; master has the same unchecked code, untried. The app asks for that run only on lines with a routed return.
-  - Goal: Tried on master with the edit fuzzer; if it panics, the same guard and test land on master before 0.4.6.
-- T-4124 [P2] {L:solve-speed} {after:T-4123} One graph for all zones in a calculation
+- T-4124 [P2] {L:solve-speed} {after:T-4123} One graph for all zones in a calculation (taking, 2026-11-23, agent onegraph)
   - Context: From T-4057: each zone has its own graph, so most of Tokyo's 41% one-off searches repeat; building one graph for the zones in a calculation removes most of it but shifts walks by 1-2% of walk minutes, so it comes to you with the real-save numbers first.
-- T-4130 [P1] {L:edit-speed} Bounded rows keep a stale flat crossing after an edge is deleted (taking, 2026-11-23, agent crossfix)
-  - Context: Found by T-4125: with another edit sequence the Asia fuzz in t1382-rows fails at seed 2 step 8: after an edge is deleted, node 718's row keeps crosses: true that a full read doesn't have. Part A (T-4113) is on master, so this would ship in 0.4.6. Repro: t1382-rows-crosses-repro.mjs in the bounded2 scratch folder.
-  - Goal: The bounded rows equal a full read after every step of the fuzz on New York and Asia, several seeds, with the crossing case in the standing check.
-- T-4104 [P2] {L:timetables} A new line's headways follow its kind's defaults (taking, 2026-11-23, agent headways)
-  - Context: You, 11-23: "when making a new line, it assumes its a normal train. if i then put it on high speed tracks it updates to say oh this is actually a high speed train, but the default headways are already taken from the normal train's defaults. could we have the headways also update... if the player hasnt yet..."
-  - Goal: When a line's kind changes and its headways are still the old kind's defaults, they switch to the new kind's defaults; headways the player set stay.
-- T-4105 [P2] {L:station-placement} An Auto choice for the station tool (taking, 2026-11-23, agent autostation)
-  - Context: You, 11-23: "when placing stations we now have to specify train/tram/bus/ferry. would be nice if we had an "auto" setting (can just use an "A" as icon) that autopicked based on whatever we're actually hovering over."
-  - Goal: An "A" button beside train, tram, bus and ferry, picking the kind from what's under the pointer.
-- T-4106 [P2] {L:memory} An install-as-app banner on phones
+- T-4106 [P2] {L:memory} An install-as-app banner on phones (taking, 2026-11-23, agent installbanner)
   - Context: You, 11-23: "i think we can still do the install as app banner. people can dismiss it... and we should just remember that they have dismissed it". Logged-out players are told saves will be separate from Safari's. Earlier: shown after 2 hours of play. T-4086 found installing gives no more memory; installed apps keep saves past Safari's 7-day clearing.
   - Goal: On phones after 2 hours of play, a banner with how to install (per platform), the separate-saves note when not signed in, dismissed forever.
 - T-4051 [P2] {L:loading} Opening a zone on a big save sits at 90%
@@ -392,7 +377,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Two cases from T-1609 were never checked in the browser. They need a new browser driver; the 723-zone save takes a 50 s whole solve.
   - Goal: An edit right after a local refine solves the cluster whole, and a zone going coarse is refined locally.
   - Other: notes/T-1609.md
-- T-1610 [P2] {L:solve-speed} Clicked zone waits for its refine
+- T-1610 [P2] {L:solve-speed} Clicked zone waits for its refine (taking, 2026-11-23, agent zonerefine)
   - Context: A clicked station or bubble in a rough zone waits for refinement instead of reading coarse samples (T-1206 leftover).
   - Other: notes/T-1223.md
 - T-1629 [P2] {L:solve-speed} Measure coarse zone bias with the fine set moving

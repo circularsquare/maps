@@ -36,7 +36,7 @@ artifacts/trainworld/T-4120/.
 
 ## Stations
 
-- 2026-11-23 (T-4105): The Station tool's Auto is the default for a browser that never picked; it takes track first, then a road or bus route within 12 px, a ferry route, water or shore, else a train station. Open ground near a street is a BRT station, not a free train station: pick Train station for that.
+- 2026-11-23 (T-4105): The Station tool's Auto is the default for a browser that never picked; it takes track, then a road or bus route within 12 px, a ferry route, water or shore, else a train station. Open ground near a street gives BRT (asked a-2026-11-23-16).
 - 2026-11-21 (Anita, T-3999): A train or tram station can go on open ground again (reversing T-1820, at players' asking): first click one platform end, second its direction. The Station tool picks its kind, so open ground by a road never places BRT. notes/T-3999.md
 - 2026-11-19 (Anita, T-3814): Each station is bound to its complex's name or keeps its own; renaming a bound one renames the complex, reversing T-3288's rename of that station alone. New players default to independent naming. notes/T-3759.md
 - 2026-11-18 (Anita, T-3711): A station on one-way track is a one-way stop served once a round trip, placed in the stop list by the track, never paired across legs (T-3605 dropped T-3565's 50 m pairing). Shift-clicked ones take the way with fewer turn-backs. notes/T-3565.md
