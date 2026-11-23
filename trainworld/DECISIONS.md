@@ -124,6 +124,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-09 (Anita, T-054): Commute demand leaves out people who work at home: the home end is LODES jobs by home block times (1 - tract work-from-home share), the work end each sector's jobs times its industry's share, so Midtown loses more than the Bronx. notes/T-054.md
 
 ## Fares and money
+- 2026-11-23 (Anita): A new game starts with $10B (older entries said $6B; the code's $10B is right).
 
 - 2026-11-21 (Anita, T-3922): Station upgrades, passages and buildings pay 0.1% of their price a game day (Anita's call), replacing no upkeep. On a 2,647-station save that is US$3.6M a day against US$22,000M fares; kept at the game's own ratio rather than raised.
 - 2026-11-20 (Anita, T-3885): The profit leaderboard ranks forecast weekday fares minus running costs and upkeep, leaving out new trains, construction and the loan. It has cities and countries like the points boards; losses get no row ("yes can not list loss games").
@@ -184,7 +185,7 @@ artifacts/trainworld/T-4120/.
 - 2026-11-05 (Anita, T-2520): The diagram holds a crossing at its ground place only where under 12 stations lie within 2.5 km (Anita). Ruled out: turning a city onto an octilinear direction, merging an express into the local's stations, re-solving every hop on rebuild. notes/T-2520.md
 - 2026-11-04 (Anita, T-2364): A city's goals are train shares of trips, 10% (the star), 20, 30 and 40%, each kept once reached; the km share is only in hovers (Anita). Zoomed out, the top bar shows trips/day in every city with a station.
 - 2026-11-04 (Anita, T-2440): The Profit view colours a stretch by fares over costs as a ratio (Anita's ask), red at 0 to blue at 3x. The Drives view is removed (Anita: "i cant see a way to make it look nic"). notes/T-2411.md
-- 2026-11-03 (Anita, T-2058): Lines sharing track draw side by side, bands 80% of a line width, one stroke under about 1.5 px; a Settings checkbox, on by default (agent's call, T-2346) after Anita's off. A selection mutes other lines thin (45%) and faded. notes/T-1799.md
+- 2026-11-03 (Anita, T-2058): Lines sharing track draw side by side, bands 80% of a line width, one stroke under about 1.5 px; a Settings checkbox, on by default (Anita confirmed 11-23). A selection mutes other lines thin (45%) and faded. notes/T-1799.md
 - 2026-11-03 (Anita, T-446): Panels count what has happened, never a whole-day forecast (Anita), the past 24 hours exactly, replacing "today so far". The edit note shows the change in rail trips a day, not line boardings, which a new line can lower.
 - 2026-11-03 (Anita, T-2226): Player text says "trips" for demand and "rides" or "riders" for use of the player's system, "level" for track's seven steps (reversing "elevation"), "interval" between stops, "construct" for paying for blueprint and "built" for the state.
 - 2026-11-03 (Anita, T-2142): Every new game starts paused, sandboxes included, and the first tutorial card ends with "Unpause the game" (Anita: "we should prob have new games start paused yeah").
