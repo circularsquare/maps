@@ -2,6 +2,11 @@
 
 Older entries moved out of handoff.md on 2026-11-16 (T-3451 recommendation 4). New entries go at the top.
 
+## 2026-11-23, maps-44 (12:41-14:15 UTC, VS Code panel; handed over at her ask, likely to a Code Mode terminal tab)
+- Her goals: solve speedups, loading/crashes, track rework; 2-8 agents; speed judged on real saves only; advisor only for big design calls; never ask when to publish.
+- Landed T-4056 (bus reach 600 m), T-4068 (Shift+click skips confirmation), T-4076 (touch track on Firefox Android), T-4077/78/81 (community), T-4072/73 (stuck loads, lost graphics), T-3688 (Hokkaido four regions); T-4024 Add a track on tw/track. Server 4f71a2f then 79777f5 deployed: the first was premature (her: should have waited for the sandbox follow-up). Triage T-4071 (15 crash reports, 5 groups). Ridecheck T-4058 found the branch-rider flaw (T-4064, her yes).
+- Advisor: not available in this session; none called.
+
 ## 2026-11-22, maps-cb (16:42 UTC - 11-23 02:50 UTC)
 - Took over from maps-17, whose process was already gone (its four agents died with it; nothing landed). Usage at 97%: paused all but T-4041 and T-4045, then spent the rest on T-4041 at her word.
 - Landed T-4041 (first arrival, 0.75 softening, late joins), T-4050 (evenly spaced shared platforms), T-4054 stage 1, load bar skew and fill at end; batch checkers 14 and 15 passed; 8800 fa196b91; pushed. Found T-4055 (stale final, older bug). Filed T-4046-T-4055 from her pad and reports.

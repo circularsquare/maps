@@ -217,7 +217,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4080 [P2] {L:buses} Name and rename bus stops
   - Context: Your scratch pad, 11-23: "people keep requesting to be able to rename / name bus stops. we should add that." Also a player 11-20: "バスの停留所も名前を変えれるようにしたい" (want to rename bus stops too).
   - Goal: A bus stop's name can be set in its panel like a station's, saved, and shown wherever the stop's name shows.
-- T-4082 [P1] {L:solve-speed} A bus-heavy Detroit save calculates trips for 20 minutes
+- T-4082 [P1] {L:solve-speed} A bus-heavy Detroit save calculates trips for 20 minutes (taking, 2026-11-23, agent solveprof)
   - Context: Your scratch pad, 11-23: "this bus heavy detroit save takes like 20 minutes to caalculate trips. seems like its 20 minutes on live too so its not something we intoduced recently but yeah lol. its notable." The community save mostly in Detroit that T-4081's search misses (started near Ann Arbor, maybe).
   - Goal: Where the 20 minutes go named, and the biggest cost cut.
 - T-4048 [P3] {L:route-choice} Remove station connections and passageways
