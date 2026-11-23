@@ -283,8 +283,15 @@ export class GradeMarks {
     this.drawing = this.upload(this.drawing, keep);
   }
 
-  draw(lc: LocalCamera, vp: readonly [number, number], zoom: number, dpr: number, levelColours: Float32Array, flat = true, ramps = true, ends: { w: readonly number[]; thick: number } | null = null) {
-    if ((!this.built && !this.drawing) || NO_MARKS) return;
+  /** whether the drawing tool has marks */
+  get previewing() {
+    return !!this.drawing;
+  }
+
+  /** `which`: the built network's marks or the drawing tool's (T-4136: those are drawn over the strokes' cache) */
+  draw(lc: LocalCamera, vp: readonly [number, number], zoom: number, dpr: number, levelColours: Float32Array, flat: boolean, ramps: boolean, ends: { w: readonly number[]; thick: number } | null, which: "built" | "drawing") {
+    const s = which === "built" ? this.built : this.drawing;
+    if (!s || NO_MARKS) return;
     const [loud, quiet, ramp] = markRadii(zoom);
     if (!loud && !quiet && !ramp) return;
     const gl = this.gl, u = this.u, shades = shadeColours();
@@ -305,12 +312,9 @@ export class GradeMarks {
     gl.uniform1f(u.u_ends, ends && ramp > 0 ? 1 : 0);
     if (ends) gl.uniform1fv(u.u_rw, ends.w);
     gl.uniform1f(u.u_thick, ends ? ends.thick : 0);
-    for (const s of [this.built, this.drawing]) {
-      if (!s) continue;
-      gl.uniform1i(u.u_no_bp, s === this.built && hidden.blueprints ? 1 : 0);
-      gl.bindVertexArray(s.vao);
-      gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, s.count);
-    }
+    gl.uniform1i(u.u_no_bp, which === "built" && hidden.blueprints ? 1 : 0);
+    gl.bindVertexArray(s.vao);
+    gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, s.count);
     gl.bindVertexArray(null);
   }
 }

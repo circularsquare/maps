@@ -283,7 +283,7 @@ function rampEndSizes(c: Ctx3) {
 }
 
 function strokesPass(rnd: NetworkRenderer, c: Ctx3) {
-  const { zoom, dpr, opt, gl, lc, vp, wLine, wTrack, pass, through, trackCap, cache, redraw, u, mute, lanes, bandOn, shades, bpMid, bpRail, G, modes, stroke, trackStrokes } = c;
+  const { zoom, dpr, opt, gl, lc, vp, wLine, wTrack, pass, through, trackCap, cache, redraw, u, mute, lanes, bandOn, shades, bpMid, bpRail, G, stroke, trackStrokes } = c;
   if (redraw) {
   if (rnd.highlight) {
     // T-1679: picked track gets a selected station's look, an ink outline (2 px) apart from the
@@ -315,8 +315,39 @@ function strokesPass(rnd: NetworkRenderer, c: Ctx3) {
   trackStrokes();
   // where lines turn back, over their tracks (T-658d), and passing stations' outer tracks (T-2233)
   if (lanes.t > 0 || pass) stroke(rnd.turnback, 0, wTrack, false);
+  rnd.marks.draw(lc, vp, zoom, dpr, rnd.levelColours, opt.flatMarks !== false, opt.rampMarks !== false, opt.byLevel ? rampEndSizes(c) : null, "built");
+  // T-2991: one-way loops' chevrons on the Line view's strokes (the Traffic view's bands move apart)
+  if (!opt.byLevel && !opt.bySpeed && !opt.byProfit && !rnd.trafficWidths)
+    rnd.oneWay.draw(lc, vp, zoom, dpr, { wLine, band: bandOn, mPx: pxPerUnitAt(zoom) * kAtY(0) * dpr, sel: mute ? opt.selLine : -1 });
+  rnd.oneWayTrack.draw(lc, vp, zoom, dpr, { wLine: wLine * 1.8, band: 0, mPx: pxPerUnitAt(zoom) * kAtY(0) * dpr, sel: -1, rgb: rgbf(shadeColours().mapInk) });
+  }
+  if (cache) {
+    if (redraw) {
+      cache.end(0, vp);
+      if (through) {
+        cache.begin(1);
+        gl.useProgram(rnd.strokeProg);
+        trackStrokes(trackCap);
+        gl.uniform1f(u.u_cap, 0);
+        cache.end(1, vp);
+      }
+    }
+    cache.draw(0);
+  }
+  ghostPass(rnd, c);
+}
+
+/** The ghost, and a placed segment's stand-in until its network is drawn (T-1407), over the strokes' cached layer
+ * (T-4136): a ghost that follows the pointer every frame redraws only itself, never the network under it. */
+function ghostPass(rnd: NetworkRenderer, c: Ctx3) {
+  const { zoom, dpr, opt, gl, lc, vp, wLine, u, modes, stroke } = c;
+  if (!rnd.placed.length && !rnd.preview?.count && !rnd.marks.previewing) return;
+  gl.useProgram(rnd.strokeProg);
+  // (the cache's layer was drawn from the profit view's texture unit)
+  gl.activeTexture(gl.TEXTURE12);
+  gl.bindTexture(gl.TEXTURE_2D, rnd.profitTex);
+  gl.activeTexture(gl.TEXTURE0);
   gl.uniform1i(u.u_ghost, 1);
-  // the ghost, and a placed segment's stand-in until its network is drawn (T-1407)
   for (const g of [...rnd.placed, rnd.preview]) {
     stroke(g, 2, wLine, false);
     if (!g?.count) continue;
@@ -337,26 +368,8 @@ function strokesPass(rnd: NetworkRenderer, c: Ctx3) {
     gl.uniform1i(u.u_lane_mode, 0);
   }
   gl.uniform1i(u.u_ghost, 0);
-  rnd.marks.draw(lc, vp, zoom, dpr, rnd.levelColours, opt.flatMarks !== false, opt.rampMarks !== false, opt.byLevel ? rampEndSizes(c) : null);
-  // T-2991: one-way loops' chevrons on the Line view's strokes (the Traffic view's bands move apart)
-  if (!opt.byLevel && !opt.bySpeed && !opt.byProfit && !rnd.trafficWidths)
-    rnd.oneWay.draw(lc, vp, zoom, dpr, { wLine, band: bandOn, mPx: pxPerUnitAt(zoom) * kAtY(0) * dpr, sel: mute ? opt.selLine : -1 });
-  rnd.oneWayTrack.draw(lc, vp, zoom, dpr, { wLine: wLine * 1.8, band: 0, mPx: pxPerUnitAt(zoom) * kAtY(0) * dpr, sel: -1, rgb: rgbf(shadeColours().mapInk) });
+  rnd.marks.draw(lc, vp, zoom, dpr, rnd.levelColours, opt.flatMarks !== false, opt.rampMarks !== false, opt.byLevel ? rampEndSizes(c) : null, "drawing");
   if (rnd.preview) rnd.oneWayGhost.draw(lc, vp, zoom, dpr, { wLine: wLine * 1.8, band: 0, mPx: pxPerUnitAt(zoom) * kAtY(0) * dpr, sel: -1, rgb: rgbf(shadeColours().mapInk) });
-  }
-  if (cache) {
-    if (redraw) {
-      cache.end(0, vp);
-      if (through) {
-        cache.begin(1);
-        gl.useProgram(rnd.strokeProg);
-        trackStrokes(trackCap);
-        gl.uniform1f(u.u_cap, 0);
-        cache.end(1, vp);
-      }
-    }
-    cache.draw(0);
-  }
 }
 
 function stationsPass(rnd: NetworkRenderer, c: Ctx3) {

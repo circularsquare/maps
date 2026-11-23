@@ -207,16 +207,17 @@ Web first, so it can be shared as a link.
   it, drawn only on MapLibre's frames and after their data changes, never by the clock; bubbles and
   a selection's far end are summed in their own worker (`workers/commuters.worker.ts`).
 - **The stroke cache** [T-1638; `map/strokeCache.ts`, notes/T-1618.md]: everything the renderer
-  draws before the stations (car parks, bus lines, the track and line strokes, highlight, ghost and
+  draws before the stations (car parks, bus lines, the track and line strokes, highlight and
   crossing marks) is drawn into an offscreen target with the canvas's own MSAA and stencil, resolved
   into a texture, and copied onto the canvas each frame with the strokes' premultiplied blend; the
-  stations, crowds, bubbles and trains draw over it every frame as before. The track through the
+  stations, crowds, bubbles and trains draw over it every frame as before, and so do the track tool's ghost, its marks and
+  a placed segment's stand-in (T-4136: a ghost that follows the pointer never redraws the network). The track through the
   station boxes is a second texture, copied through the stencil where it was drawn. Both are drawn
   again only when the key changes: the camera (matrices, zoom, pixel ratio, canvas size), the
   selected line and edge, the hovered line and edge, the colour view (height, speed), line width,
   dimming, crossing marks, the shade, the bus lines, and any GL upload or deletion made outside the
-  per-frame passes (counted on the context: a network, preview, highlight, demand view or traffic
-  view change). The complex map's snapshot has a cache of its own. `?perfOff=strokeCache` (or
+  per-frame passes (counted on the context: a network, highlight, demand view or traffic view change;
+  not the ghost's). The complex map's snapshot has a cache of its own. `?perfOff=strokeCache` (or
   `renderer.strokeCache = false`) draws the strokes every frame.
 - **Fewer stroke instances** [T-1639; `map/strokeLod.ts`, notes/T-1618.md]: below zoom 15 (plus log2
   of the pixel ratio) the network's track and line strokes are drawn from a simplified copy per

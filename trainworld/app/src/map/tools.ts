@@ -93,6 +93,13 @@ export class Tools {
   delHover: (Removable & { lx: number; ly: number }) | null = null;
   delAt: [number, number] = [0, 0];
   lastPreview: PreviewAnswer | null = null;
+  /** T-4136: while the pointer has moved on from the spot `lastPreview` answers, the ghost drawn is that answer bent
+   * so its end is at the pointer (`bend`), `from` the answer it was made from */
+  bent: { from: PreviewAnswer; a: PreviewAnswer } | null = null;
+  /** the preview the ghost, its marks and its tag show: the bent one while it stands in */
+  get shownPreview(): PreviewAnswer | null {
+    return this.bent && this.bent.from === this.lastPreview ? this.bent.a : this.lastPreview;
+  }
   /** snapping to the real network (T-727d) */
   readonly real: RealSnap;
   /** snapping tram track to streets (T-2927) */
@@ -109,7 +116,7 @@ export class Tools {
   readonly building: BuildingDraw;
   /** the request `lastPreview` answers, as JSON */
   previewKey = "";
-  /** the newest request asked for; an older one's answer landing late is dropped (T-830) */
+  /** the newest request asked for (T-830: a click takes only the answer for its own spot) */
   wantKey = "";
   /** where the last station of this session was placed (lng, lat), T-312 */
   lastPlaced: [number, number] | null = null;
@@ -664,6 +671,8 @@ export class Tools {
     if (t === "track") this.real.move(e.point.x, e.point.y);
     if (t === "track" && this.held.length) this.releaseNear(e.point.x, e.point.y);
     if (t === "track" && this.start) this.requestPreview();
+    // T-4136: the ghost follows the pointer at once, its checked shape after
+    if (t === "track" && this.start && this.lastPreview && this.previewKey !== this.wantKey) this.drawGhost();
     if (t === "station") nameAhead(this, e.point.x, e.point.y);
     this.place();
   }
@@ -893,7 +902,12 @@ export class Tools {
     // T-1407: until the state lands, the ghost just placed stands in for the blueprint it made
     if (a.ok && a.early) {
       // T-2404: its state held while the pointer moves, its edges stand in where no ghost of it can
-      if (p) this.overlay.renderer.keepPreviewAsPlaced();
+      // (the ghost as this very answer drew it, not bent to a pointer that moved on meanwhile)
+      if (p) {
+        this.overlay.renderer.setPreview(p.pts.length >= 6 ? this.ghostStrokes(p) : null);
+        this.bent = null;
+        this.overlay.renderer.keepPreviewAsPlaced();
+      }
       else for (const pts of a.held ?? []) this.overlay.renderer.addPlaced(strokesFromPreview(pts, false, undefined, true, undefined, singleTrack.peek() ? 0 : 255, highSpeed.peek(), tramTrack.peek()));
       if (a.held) this.held.push(...a.held);
       if (a.node !== undefined) this.earlyNode = a.node;
@@ -1023,7 +1037,10 @@ export class Tools {
         const ux = a.verts[4] - a.verts[0], uy = a.verts[5] - a.verts[1], l = Math.hypot(ux, uy);
         if (l > 1e-9) from.dir = [ux / l, uy / l];
       }
-      if (this.start && !this.snapped && this.wantKey === key) this.showPreview(a, key);
+      // T-4136: an answer for this run is newer than the one shown (one in flight, answered in order), so it is shown
+      // even when the pointer has moved on since it was asked, bent to the pointer until the newest lands (T-830's
+      // click still takes only the answer for its own spot)
+      if (this.start === from && !this.snapped && this.wantKey) this.showPreview(a, key, this.wantKey === key);
     });
     return true;
   }
@@ -1103,17 +1120,66 @@ export class Tools {
   }
 
   clearPreview() {
+    this.bent = null;
     this.overlay.renderer.setPreview(null);
     this.overlay.invalidate();
   }
 
-  showPreview(a: PreviewAnswer, key: string) {
+  /** `newest`: the answer for the newest request (a real or street route's always is); an older one is shown too, and
+   * the wait for the newest counts again from it */
+  showPreview(a: PreviewAnswer, key: string, newest = true) {
     this.lastPreview = a;
+    this.previewKey = key;
     // a real route's preview (T-727d) answers what the ghost waits for too
-    this.previewKey = this.wantKey = key;
-    this.overlay.renderer.setPreview(a.pts.length >= 6 ? this.ghostStrokes(a) : null);
-    this.overlay.invalidate();
+    if (newest) this.wantKey = key;
+    else this.waitFrom(false);
+    this.drawGhost();
     this.place();
+  }
+
+  /** T-4136: the ghost drawn: the answer held, bent to the pointer while the pointer has moved on from its spot */
+  drawGhost() {
+    const a = this.lastPreview;
+    if (!a) return;
+    const b = this.previewKey !== this.wantKey && !this.snapped ? this.bend(a) : null;
+    this.bent = b ? { from: a, a: b } : null;
+    const g = b ?? a;
+    this.overlay.renderer.setPreview(g.pts.length >= 6 ? this.ghostStrokes(g) : null);
+    this.overlay.invalidate();
+  }
+
+  /** T-4136: answer `a` moved so its end is at the pointer's spot: everything in it turned and scaled about the
+   * start, a point by its distance from the start eased from none to all of it when the start has a heading (so the
+   * ghost still leaves along it, and the part near the start stays as checked), all of it from a free start (whose
+   * segment is straight). The figures are the answer's. Null with nothing to move or the pointer on the start. */
+  bend(a: PreviewAnswer): PreviewAnswer | null {
+    const h = this.hover, st = this.start, nv = a.verts.length;
+    if (!h || !st || nv < 8) return null;
+    const [sx, sy] = toLocal(st.lng, st.lat);
+    const qx = a.verts[nv - 4] - sx, qy = a.verts[nv - 3] - sy, q2 = qx * qx + qy * qy;
+    const [ax, ay] = this.screen(sx, sy), [bx, by] = this.screen(h.lx, h.ly);
+    if (q2 < 1e-6 || Math.hypot(ax - bx, ay - by) < 3) return null;
+    // the factor (a complex number) that takes the answer's end to the pointer about the start
+    const px = h.lx - sx, py = h.ly - sy, kr = (px * qx + py * qy) / q2, ki = (py * qx - px * qy) / q2;
+    const reach = Math.sqrt(q2), eased = !!st.dir || st.end.kind !== "free";
+    const moved = <T extends Float32Array | Float64Array>(src: T | undefined, stride: number): T | undefined => {
+      if (!src) return src;
+      const out = src.slice() as T;
+      for (let k = 0; k + 1 < out.length; k += stride) {
+        const dx = out[k] - sx, dy = out[k + 1] - sy;
+        let w = 1;
+        if (eased) {
+          const t = Math.min(1, Math.hypot(dx, dy) / reach);
+          w = t * t * (3 - 2 * t);
+        }
+        out[k] += w * (kr * dx - ki * dy - dx);
+        out[k + 1] += w * (ki * dx + kr * dy - dy);
+      }
+      return out;
+    };
+    const arc = moved(a.arc, 4);
+    if (arc) arc[2] *= Math.hypot(kr, ki);
+    return { ...a, pts: moved(a.pts, 3)!, verts: moved(a.verts, 4)!, arc, marks: moved(a.marks, 3), legs: moved(a.legs, 4), ramps: moved(a.ramps, 3) };
   }
 
   /** A route preview's ghost: single track as one track close in, double and quad as two each (T-658), as the sim

@@ -372,8 +372,13 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   shows in full zoomed out [T-1038]. The same holds
   for every placement ghost: a dragged corner or node, a moved pick, a crossover, a station's own
   piece of track.
-- **Waiting** [T-1039]: when a click or the newest ghost has waited on the clock worker more than
-  300 ms, a small spinner leads the tag.
+- **Following the pointer** [T-4136]: the ghost's end is at the pointer every frame. Until the clock worker's answer for
+  the pointer's own spot lands, the last answer is shown bent to it: turned and scaled about the start, eased in from the
+  start when the start has a heading (so the ghost still leaves along the track), whole from a free start; its labels,
+  circle and tag move with it and keep that answer's figures. Every answer for the run is shown as it lands, also one the
+  pointer has since left; a click takes only the answer for its own spot (T-830).
+- **Waiting** [T-1039]: when a click has waited on the clock worker more than 300 ms, or no answer has come for the
+  ghost for 300 ms, a small spinner leads the tag.
 - **Placed blueprint track** is drawn as blue rails ([ui-map.md](ui-map.md) "Lines and track").
 - Nothing outside the track tool reads its settings [T-3153]: the delete and select tools, drag edits and the station tool
   pick and describe any track whatever type, count, level, ramp or speed the track bar holds (only the track tool

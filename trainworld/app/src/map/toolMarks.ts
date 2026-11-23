@@ -105,7 +105,7 @@ export function placeMarks(tk: Tools) {
   };
   const t = tool.peek();
   if (t === "track" && tk.start) {
-    const pv = tk.lastPreview;
+    const pv = tk.shownPreview;
     // where the segment starts, which from a station is past its platform (T-1155)
     if (pv && pv.verts.length >= 2) put(el(tk, k++, "pi-mark"), pv.verts[0], pv.verts[1]);
     else put(el(tk, k++, "pi-mark"), ...toLocal(tk.start.lng, tk.start.lat));
@@ -115,8 +115,8 @@ export function placeMarks(tk: Tools) {
     }
   }
   for (let i = k; i < tk.marks.length; i++) tk.marks[i].style.display = "none";
-  curveCircle(tk, t === "track" && tk.start ? tk.lastPreview : null);
-  curveTangent(tk, t === "track" && tk.start ? tk.lastPreview : null);
+  curveCircle(tk, t === "track" && tk.start ? tk.shownPreview : null);
+  curveTangent(tk, t === "track" && tk.start ? tk.shownPreview : null);
 
   // the platform ghost shows only while the station tool snaps (below)
   if (tk.ghost) tk.ghost.style.display = "none";
@@ -225,7 +225,7 @@ export function placeMarks(tk: Tools) {
     tk.ring.style.display = "";
     put(tk.ring, ...toLocal(...tk.street.ringAt));
   } else tk.ring.style.display = "none";
-  const pv = tk.lastPreview, rt = t === "track" && tk.start && h ? tk.real.tag() ?? tk.street.tag() : null;
+  const pv = tk.shownPreview, rt = t === "track" && tk.start && h ? tk.real.tag() ?? tk.street.tag() : null;
   const at = h ? tk.screen(h.lx, h.ly) : null;
   if (rt) {
     // T-727d: a real route still being found (the spinner once it takes a while), or none

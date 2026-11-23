@@ -808,11 +808,21 @@ export class NetworkRenderer {
   /** The drawing tool's alignment, or null. */
   setPreview(s: Strokes | null) {
     this.previewSrc = s;
-    for (const r of this.previewRes) r.del();
-    this.previewRes = [];
-    this.preview = s && s.count ? strokes(this, s, this.previewRes) : null;
-    this.marks.setPreview(s?.marks);
-    this.oneWayGhost.setNetwork(s?.chevrons);
+    this.uncached(() => {
+      for (const r of this.previewRes) r.del();
+      this.previewRes = [];
+      this.preview = s && s.count ? strokes(this, s, this.previewRes) : null;
+      this.marks.setPreview(s?.marks);
+      this.oneWayGhost.setNetwork(s?.chevrons);
+    });
+  }
+
+  /** T-4136: the ghost and the placed stand-ins are drawn over the strokes' cache (rendererDraw's `ghostPass`), so their
+   * GL work is not counted as a change the cache must be drawn again for */
+  private uncached(f: () => void) {
+    const q = this.quiet;
+    this.quiet = true;
+    try { f(); } finally { this.quiet = q; }
   }
 
   /** T-1407: the ghost becomes the stand-in for the blueprint segment it was placed as, drawn
@@ -824,13 +834,15 @@ export class NetworkRenderer {
     this.preview = null;
     this.previewRes = [];
     this.previewSrc = null;
-    this.marks.setPreview(undefined);
-    this.oneWayGhost.setNetwork(undefined);
+    this.uncached(() => {
+      this.marks.setPreview(undefined);
+      this.oneWayGhost.setNetwork(undefined);
+    });
   }
   /** T-2404: a placed segment with no ghost of it (the pointer moved on before the click's own was
    * answered), drawn as a stand-in from its edges */
   addPlaced(s: Strokes) {
-    if (s.count) this.placed.push(strokes(this, s, this.placedRes));
+    if (s.count) this.uncached(() => this.placed.push(strokes(this, s, this.placedRes)));
   }
   /** T-3420: the network and the `vis.v` the line colours' alphas, the station flags and the picks' skips were set for */
   hiddenFor: NetworkBuffers | null = null;
@@ -905,7 +917,7 @@ export class NetworkRenderer {
     this.uploads++;
   }
   dropPlaced() {
-    for (const r of this.placedRes) r.del();
+    this.uncached(() => { for (const r of this.placedRes) r.del(); });
     this.placedRes = [];
     this.placed = [];
   }
