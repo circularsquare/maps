@@ -95,7 +95,7 @@ ROOT = TW.parent
 HEAD = re.compile(r"^- (T-\d+) \[(P\d)\] (.*)$")
 IDLE_EVERY = 3600
 DISK_EVERY = 300
-MIN_AGENTS, MAX_AGENTS, MIN_FREE = 2, 8, 4  # her 2-8 agents (docs/orchestrator.md)
+MIN_AGENTS, MAX_AGENTS, MIN_FREE = 3, 8, 4  # nudge only below 3 running; 8 is her ceiling, not a target (docs/orchestrator.md)
 
 
 def idle_line():
@@ -114,7 +114,7 @@ def idle_line():
             cap, free = int(m.group(1)), int(m.group(2))
     except (OSError, subprocess.SubprocessError):
         pass
-    if len(agents) >= MAX_AGENTS or (len(agents) >= MIN_AGENTS and (free is None or free < MIN_FREE)):
+    if len(agents) >= MIN_AGENTS:
         return None
     onboard = {a.get("task") for a in agents}
     try:
