@@ -182,7 +182,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   basemapContrast: 1,
   hillshade: true,
   rotateMap: false,
-  zoomButtons: true,
+  zoomButtons: !mobileDevice(),
   legacyTime: false,
   transitModes: false,
   busOneWay: false,
@@ -209,7 +209,7 @@ export interface DockLayout {
 /** The stored settings' version: 2 since complex view became the default (T-192), 3 since Nunito and
  * 90% did (T-703), 4 since the real network did (T-727), 5 since the ramp went red to blue (T-812), 6 since Train share became the bubble colouring (T-833), 7 since keep placing is on by default (T-942), 8 since unopened zones' dots are light grey (T-976). Settings stored before a version had
  * saved the old default with everything else, so that setting is dropped once and the new default applies; 9 since the ramp's ends are lighter (T-1138); 10 since the track display starts on Line (T-1244); 11 since the station circles start off (T-1585); 12 since lines side by side are on (T-2346); 13 since everyone starts on High map detail (T-2840); 14 since the currency starts from the browser's region (T-2860). */
-const VERSION = 15;
+const VERSION = 16;
 
 function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; ramp: boolean; tracks: 1 | 2 | 4; hsr: boolean; tram: boolean; busway: boolean; keep: boolean; snap: boolean; tramSnap: boolean; streets: boolean; roads: boolean; beside: boolean; design: number; fly: number; advanced: boolean; platform: number; tramPlatform: number; oneTrack: boolean; stationKind: StationChoice }>; guide: boolean; v: number }> {
   try {
@@ -253,6 +253,8 @@ if ((saved.v ?? 1) < 12) delete migratedDisplay.lineBands;
 if ((saved.v ?? 1) < 14 && migratedDisplay.currency === "USD") delete migratedDisplay.currency;
 // Terrain shading became the default (Anita, 2026-11-17); the old default (off) was stored, so it is dropped once
 if ((saved.v ?? 1) < 15) delete migratedDisplay.hillshade;
+// T-4138: zoom buttons went off by default on phones; the old default (on) was stored with everything else, so a phone's is dropped once
+if ((saved.v ?? 1) < 16 && mobileDevice()) delete migratedDisplay.zoomButtons;
 // T-3814: binding new stations went off by default; a player with anything stored and no choice of their own had it
 // on (the default from T-3759 until then), so they keep it
 if (Object.keys(saved).length && migratedDisplay.bindNew === undefined) migratedDisplay.bindNew = true;
