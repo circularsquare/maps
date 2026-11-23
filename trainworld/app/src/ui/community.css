@@ -39,7 +39,8 @@
 .cm-detail-who { flex: 1; min-width: 0; }
 .cm-detail-who strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cm-detail-acts { display: flex; align-items: center; gap: 6px; flex: none; }
-.cm-like.on { color: var(--accent); }
+.cm-like.on, .cm-likes.on { color: var(--accent); }
+.cm-like.on svg path, .cm-likes.on svg path { fill: currentColor; }
 .cm-trips-tick { margin-right: 4px; white-space: nowrap; }
 .cm-reasons { display: grid; gap: 8px; margin: 0 0 18px; }
 .cm-reasons .check input, .cm-reasons .check input::after { border-radius: 50%; }

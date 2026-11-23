@@ -256,7 +256,7 @@ export async function shareGame(name: string, copy: boolean, title: string): Pro
     // T-3144: the title is the game's name unless the player typed another
     const sent = (title.trim() || slot?.name || "").slice(0, TITLE_MAX);
     const form = new FormData();
-    form.append("meta", JSON.stringify({ game, ...(name ? { name } : {}), copy, ...counts, ...(sent ? { title: sent } : {}) }));
+    form.append("meta", JSON.stringify({ game, ...(name ? { name } : {}), copy, ...counts, ...(slot?.cities?.length ? { zones: slot.cities.slice(0, 64) } : {}), ...(sent ? { title: sent } : {}) }));
     form.append("drawing", blob, "drawing.json.gz");
     if (save) form.append("save", new Blob([save as BlobPart]), "game.save");
     await api("POST", "trainworld/community", undefined, { form });

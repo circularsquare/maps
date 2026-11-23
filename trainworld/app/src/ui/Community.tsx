@@ -19,7 +19,6 @@ import { fitView, type DecodedShare } from "../diagram/shared";
 import { t } from "../i18n";
 import { tPlace } from "../i18n/places";
 import { CityPick, WORLD, type MorePlaces } from "./Leaderboard";
-import { DISCORD_URL } from "./FeedbackPanel";
 import { Named } from "./Flag";
 import { LoadBar } from "./LoadingScreen";
 import { Modal, useModalDialog } from "./Modal";
@@ -127,7 +126,7 @@ function BookmarkButton({ id }: { id: string }) {
 }
 
 function Likes({ row }: { row: ShareRow }) {
-  return <span class="cm-likes small num" data-tip={t("community.likes", { count: row.likes })}><Icon.heart />{row.likes}</span>;
+  return <span class={"cm-likes small num" + (row.liked || row.mine ? " on" : "")} data-tip={t("community.likes", { count: row.likes })}><Icon.heart />{row.likes}</span>;
 }
 
 /** T-3144: the title in bold, then the sharer's name in grey; a share from before titles has the name alone */
@@ -376,11 +375,10 @@ export function Community() {
   </Modal>;
 }
 
-/** T-3990: the leaderboards and the Discord server, in Community's head beside Share (the leaderboards' head has Community's people). */
+/** T-3990: the leaderboards, in Community's head beside Share (the leaderboards' head has Community's people). */
 function CommunityLinks() {
   return <>
     {accountState.value === "on" && <button type="button" class="btn icon save-head-mark" data-tip={t("leaderboard.title")} aria-label={t("leaderboard.title")} onClick={() => (boardsOpen.value = true)}><Icon.trophy /></button>}
-    <a class="btn icon save-head-mark" href={DISCORD_URL} target="_blank" rel="noopener noreferrer" data-tip={t("settingsTab.discord")} aria-label={t("settingsTab.discord")}><Icon.discord /></a>
   </>;
 }
 
