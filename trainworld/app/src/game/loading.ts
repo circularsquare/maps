@@ -302,6 +302,19 @@ export function noteLoadSlot(slot: string) {
 }
 /** T-3927: the unfinished load found at this start, as a line for the report; empty when none or an old flag. */
 export let diedLoadReport = "";
+/** T-4072: the load in hand's last step and when, for a report or the reason of a load that never ends; "" when none */
+export function loadStepNow(): string {
+  if (!mark) return "";
+  return `${mark.step}, ${Math.round(mark.ms / 1000)} s after the pick, ${Math.round((Date.now() - mark.t0 - mark.ms) / 1000)} s ago`; // i18n-ignore
+}
+/** T-4072: the clock worker's own last step toward its game (the demand pool's steps follow in `noteLoad` and replace it
+ * there), and when (performance.now()) */
+let clockStep: { step: string; at: number } | null = null;
+export function noteClockStep(step: string) {
+  clockStep = { step, at: performance.now() };
+  noteLoad("clock: " + step); // i18n-ignore
+}
+export const clockStepNow = () => (clockStep ? `${clockStep.step}, ${Math.round((performance.now() - clockStep.at) / 1000)} s ago` : ""); // i18n-ignore
 /** T-3933: what a retry of the died load needs (null when none died, or an old flag) */
 let died: Pick<LoadMark, "workers" | "slot" | "retry"> | null = null;
 export const diedLoad = () => died;

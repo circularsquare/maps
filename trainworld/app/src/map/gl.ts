@@ -3,18 +3,23 @@
 
 import { EARTH_C, localToMercMatrix, mul4, type Anchor } from "./geo";
 
+/** T-4073: the error a program compiled on a lost context throws (every WebGL answer is then null, so a shader would
+ * read as failing to compile); the page's setup takes it as its graphics' failure (ui/LoadingScreen.tsx) */
+export const GL_LOST = "the graphics context was lost";
+
 export function compile(gl: WebGL2RenderingContext, vs: string, fs: string, feedback?: string[]): WebGLProgram {
+  if (gl.isContextLost()) throw new Error(GL_LOST);
   const prog = gl.createProgram()!;
   for (const [type, src] of [[gl.VERTEX_SHADER, vs], [gl.FRAGMENT_SHADER, fs]] as const) {
     const sh = gl.createShader(type)!;
     gl.shaderSource(sh, src);
     gl.compileShader(sh);
-    if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error("shader: " + gl.getShaderInfoLog(sh));
+    if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error(gl.isContextLost() ? GL_LOST : "shader: " + gl.getShaderInfoLog(sh));
     gl.attachShader(prog, sh);
   }
   if (feedback) gl.transformFeedbackVaryings(prog, feedback, gl.INTERLEAVED_ATTRIBS);
   gl.linkProgram(prog);
-  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error("link: " + gl.getProgramInfoLog(prog));
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.isContextLost() ? GL_LOST : "link: " + gl.getProgramInfoLog(prog));
   return prog;
 }
 

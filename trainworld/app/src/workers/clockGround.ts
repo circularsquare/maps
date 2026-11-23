@@ -1,4 +1,4 @@
-// The ground the model needs, fetched on demand: water masks, terrain classes, street speeds, the world's water, road crossings, and the masks an edit or a load waits for (T-2374).
+﻿// The ground the model needs, fetched on demand: water masks, terrain classes, street speeds, the world's water, road crossings, and the masks an edit or a load waits for (T-2374).
 
 import { TrackApi } from "../wasm/track/sim"; // the track model only (T-051)
 import { NEW_GAME_FRAME, zoneBox, zonesTouching } from "../game/cities";
@@ -9,7 +9,7 @@ import { trackFrameKind, SAVE_DAMAGED } from "./saveFile";
 import { RoadFeed } from "./roadFeed";
 import { scheduleSnapshot } from "./clockDemand";
 import { sendStateOutside, stale } from "./clockFollowUp";
-import { api, emptyTrack, frame, putFrame, send, syncFrame } from "./clockState";
+import { api, emptyTrack, frame, midLoad, putFrame, send, syncFrame } from "./clockState";
 
 // ---------------------------------------------------------------- water masks on demand (T-302)
 //
@@ -84,19 +84,21 @@ export function fetchWater(id: string): Promise<WaterRaster | null> {
  * raster is laid out in the pack's own frame; the track model puts it in the game's (T-125). `streets`: the zones'
  * street speeds come too (T-3686: not for a load's masks, which are every zone the track meets, hundreds on a
  * continent at 8 fetches each beside the packs; the loaded network's buses take theirs in `masksForLoaded`). */
-export async function ensureMasks(ids: Iterable<string>, streets = true): Promise<void> {
+export async function ensureMasks(ids: Iterable<string>, streets = true): Promise<number> {
   const all = [...new Set(ids)];
   if (streets) void ensureStreets(all);
   const todo = all.filter((id) => !masksIn.has(id));
-  if (!todo.length) return;
+  if (!todo.length) return 0;
   const got = await Promise.all(todo.map((id) => fetchWater(id).then((r) => ({ r }), () => null)));
+  let added = 0;
   todo.forEach((id, k) => {
     const g = got[k];
     if (!g || masksIn.has(id)) return;
     masksIn.add(id);
     const r = g.r;
-    if (r) api!.add_pack_water(r.cell, r.x0, r.y0, r.w, r.h, r.rows, r.runs, r.lon, r.lat);
+    if (r) { api!.add_pack_water(r.cell, r.x0, r.y0, r.w, r.h, r.rows, r.runs, r.lon, r.lat); added++; }
   });
+  return added;
 }
 
 // ---------------------------------------------------------------- terrain classes (T-1270, T-2901)
@@ -300,7 +302,8 @@ function retryGroundLater() {
 /** Fetch again what failed and is still needed; the rest is forgotten until something needs it. */
 function retryGround() {
   if (!api) return;
-  const wantedZones = new Set([...viewZones, ...zonesOfPoints(blueprintPolylines().flat())]);
+  // (T-4072: and the loaded track's, whose masks a load no longer waits on for long)
+  const wantedZones = new Set([...viewZones, ...loadZones, ...zonesOfPoints(blueprintPolylines().flat())]);
   // a block under any live edge is still needed, not just the blueprint's: its Built figure waits for it
   const wantedBlocks = new Set<number>([...viewBlocks, ...api.terrain_blocks_under(false)]);
   const needed = (k: string) => (k[0] === "t" ? wantedBlocks.has(Number(k.slice(2))) : k[0] === "w" && k[1] === ":" ? wantedZones.has(k.slice(2)) : true);
@@ -312,7 +315,8 @@ function retryGround() {
   const failedBlocks = [...groundFailed].filter((k) => k[0] === "t").map((k) => Number(k.slice(2)));
   if (failedBlocks.length) void ensureBlocks(failedBlocks);
   const zones = [...new Set([...groundFailed].filter((k) => k[0] === "w" && k[1] === ":").map((k) => k.slice(2)))];
-  if (zones.length) void ensureMasks(zones);
+  // (a mask under loaded track reprices it: the state follows)
+  if (zones.length) void ensureMasks(zones).then((added) => { if (added && api && !midLoad && zones.some((id) => loadZones.has(id))) sendStateOutside(); });
 }
 
 // ---------------------------------------------------------------- street speeds (T-1577)
@@ -569,10 +573,39 @@ export function nodePoints(out: Float64Array): number[] {
   return xy;
 }
 
+/** T-4072: a game opens without waiting longer than this for its water masks (a stalled connection held a load
+ * for over 10 minutes: each mask is up to four reads of 60 s, tried twice, 32 at a time). A mask that lands later
+ * is installed then, reworking only the track in its box (`add_water`), and the state follows; until then that
+ * track is priced as on land (DECISIONS 2026-11-23). */
+let loadMaskWaitMs = 20_000;
+export function putLoadMaskWait(ms: number) { loadMaskWaitMs = ms; }
+/** T-4072: the zones the loaded network's track meets; a failed mask among them is fetched again (`retryGround`) */
+let loadZones = new Set<string>();
+/** T-4072: the zones whose masks this load has asked for already: `masksForLoaded` does not wait on them twice */
+let askedAtLoad = new Set<string>();
+
+/** T-4072: the load's step, for a report on a load that never ends */
+const loadStep = (step: string) => send({ kind: "loadStep", step });
+
+/** The masks of `ids`, waited for at most loadMaskWaitMs; those later are installed when they land. */
+async function loadMasks(ids: string[]) {
+  loadStep(`water masks for ${ids.length} zones`); // i18n-ignore
+  const p = ensureMasks(ids, false);
+  let done = false;
+  await within(p.then(() => { done = true; }), performance.now() + loadMaskWaitMs);
+  if (done) return;
+  const late = ids.filter((id) => !masksIn.has(id)).length;
+  loadStep(`water masks: ${late} of ${ids.length} late, the load goes on`); // i18n-ignore
+  send({ kind: "error", message: `water masks: ${late} of ${ids.length} not in after ${loadMaskWaitMs / 1000} s; the game opens without them` }); // i18n-ignore
+  // installed on the loaded network when they land (a load still under way sends its own state)
+  void p.then((added) => { if (added && api && !midLoad) sendStateOutside(); });
+}
+
 /** Before a load (T-737): the masks of the zones the save's nodes and curve points fall in, so the
  * network is derived once (a load is about 3 s in WASM for Japan's 709 lines). `masksForLoaded`
  * still catches a zone only the drawn curves reach. */
 async function masksBeforeLoad(net: Uint8Array) {
+  askedAtLoad = new Set();
   if (trackFrameKind(net) !== NEW_GAME_FRAME.kind) return;
   const pts = TrackApi.save_points(net);
   if (!pts.length) return; // undecodable: the load says so
@@ -581,27 +614,34 @@ async function masksBeforeLoad(net: Uint8Array) {
   const missing = zonesOfPoints(pts).filter((id) => !masksIn.has(id));
   putFrame(shown);
   if (!missing.length) return;
+  for (const id of missing) askedAtLoad.add(id);
   api!.load(emptyTrack!);
-  await ensureMasks(missing, false);
+  await loadMasks(missing);
 }
 
 /** Put a network (in the world frame) in the track model, with the masks of the zones it meets. `level`: the
  * save level a player's game was written at (T-3647, `TrackApi.set_load_level`), absent for this build's. */
 export async function openNetwork(net: Uint8Array, level?: number) {
+  loadStep("world water"); // i18n-ignore
   await worldWaterIntoModel();
   // T-3478: a stalled index holds the open no longer than its blocks may; the blocks follow when it lands
+  loadStep("terrain index"); // i18n-ignore
   await Promise.race([terrainIndexIntoModel(), new Promise((r) => setTimeout(r, LOAD_TERRAIN_WAIT_MS))]);
   await masksBeforeLoad(net);
+  loadStep("network into the track model"); // i18n-ignore
   if (level !== undefined) api!.set_load_level(level);
   if (!api!.load(net)) throw new Error(SAVE_DAMAGED);
   await masksForLoaded(net, level);
+  loadStep("terrain under the network"); // i18n-ignore
   await terrainForLoaded();
   // T-1929: the roads under the blueprint, so its quote has them before Construct waits for them
   void roadsUnder(...blueprintPolylines());
+  loadStep("network open"); // i18n-ignore
 }
 
 /** After a network is loaded: the masks of every zone its track meets, then the network opened again
- * over them if any was missing (each mask installed on a loaded network would rework all of it). */
+ * over them if any was missing that the load had not asked for yet (T-4072: a mask asked before the load and still
+ * on its way, or failed, is not waited for again: it is installed when it lands, or fetched again by `retryGround`). */
 async function masksForLoaded(net: Uint8Array, level?: number) {
   const a = api!;
   syncFrame();
@@ -620,11 +660,17 @@ async function masksForLoaded(net: Uint8Array, level?: number) {
     const r = a.bus_route(id);
     for (let k = 1; k + 2 < r.length; k += 3) bus.push(r[k], r[k + 1]);
   }
-  if (bus.length) await ensureStreets(zonesOfPoints(bus));
-  const missing = zonesOfPoints(xy).filter((id) => !masksIn.has(id));
+  if (bus.length) {
+    const busZones = zonesOfPoints(bus);
+    loadStep(`street speeds for ${busZones.length} zones`); // i18n-ignore
+    await ensureStreets(busZones);
+  }
+  const zones = zonesOfPoints(xy);
+  loadZones = new Set(zones);
+  const missing = zones.filter((id) => !masksIn.has(id) && !askedAtLoad.has(id));
   if (!missing.length) return;
   a.load(emptyTrack!);
-  await ensureMasks(missing, false);
+  await loadMasks(missing);
   if (level !== undefined) a.set_load_level(level);
   if (!a.load(net)) throw new Error(SAVE_DAMAGED);
 }

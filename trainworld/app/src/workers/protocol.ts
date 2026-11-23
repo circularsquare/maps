@@ -278,6 +278,8 @@ export type ToClock =
       guide?: boolean;
       /** T-2703: reads of the saved game to fail on purpose, for checks (`?debug=1&readFails=N`) */
       readFails?: number;
+      /** T-4072 (`?debug=1&maskWaitMs=N`): the load's wait for its water masks, ms, so a check sees them land late */
+      maskWaitMs?: number;
       /** T-3773: the next game opened panics after its decode, for checks (dev server, `?debug=1&loadPanic=1`); "late": the first load after the game has opened (T-3788) */
       loadPanic?: boolean | "late";
       /** T-3869, checks (dev server, `?debug=1&saveRoom=`): the buffers a save asks for refused as a browser short of
@@ -1107,7 +1109,9 @@ export type FromClock =
    * the saved game could not be read, and was left as it is */
   | { kind: "failed"; error: string; storage?: boolean }
   /** T-2710: the worker's script has loaded, its first message */
-  | { kind: "booted" };
+  | { kind: "booted" }
+  /** T-4072: the game load's step in the worker (a wait, by name), for a report on a load that never ends */
+  | { kind: "loadStep"; step: string };
 
 // ---------- the network as demand sees it (T-025 -> T-026) ----------
 

@@ -635,7 +635,9 @@ is known without its files (T-302, T-400):
   (only the zone under the centre when the view is over 400 km wide), and for every zone whose box,
   widened by 2 km, a loaded network's track meets; the network then opens over those masks (read from
   the save's nodes and curve points before the load, so it is derived once; a zone only the drawn
-  curves reach still costs a second opening; T-737). A
+  curves reach still costs a second opening; T-737). A load waits at most 20 s for its masks, and never twice for
+  one (T-4072): a mask later than that is installed when it lands, reworking only the track in its box, and until
+  then that track is priced as on land; a failed one under loaded track is fetched again (2 s, doubling to 30 s). A
   preview or an edit that makes track (a route, new PIs, a node moved) is first worked out, and if
   its geometry comes within 2 km of a zone whose mask is not in, it waits for the mask and is worked
   out again, so ground over water is never accepted because a mask was late. A mask that cannot be

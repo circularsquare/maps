@@ -534,6 +534,7 @@
   "clockClient.noStorage": "Error shown when opening a file or backup fails because the browser gives no storage.",
   "clockClient.reopenFailed": "Error shown when Calculate trips cannot take the viewed network along to open it again (the game could not write it out).",
   "clockClient.cannotStart": "Shown on the failure screen when the simulation's worker did not start. why: the browser's error text, in English.",
+  "clockClient.startTimeout": "Shown on the failure screen, under the failure sentence, when the simulation's code had not arrived or started after minutes of waiting (a slow or blocked connection). An English reason in brackets follows it, for bug reports.",
   "clockClient.storageUnreadable": "Shown on the failure screen, under the failure sentence, when the browser's storage kept failing to read the game being opened; the game was not opened, so its save is untouched. why: the browser's error text, in English (\"UnknownError: Internal error\").",
   "clockClient.drawing": "Status tag while a game's network is drawn after a load.",
   "clockClient.updating": "Status tag while the network is updated after an edit that takes long.",

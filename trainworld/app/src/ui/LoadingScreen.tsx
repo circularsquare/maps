@@ -9,7 +9,9 @@
 import { h, render } from "preact";
 import { clock } from "../game/clock";
 import { world } from "../game/world";
-import { cardEnding, choosing, continueWithoutDemand, demandIdle, gameFailed, graphicsGone, lastAlive, loadCannotFinish, loadFailure, loadStuck, loadProgress, noSimd, noWebgl2, startup } from "../game/loading";
+import { cardEnding, choosing, clockStepNow, continueWithoutDemand, demandIdle, gameFailed, graphicsGone, lastAlive, loadCannotFinish, loadFailure, loadGraphicsGone, loadStepNow, loadStuck, loadProgress, noSimd, noWebgl2, startup } from "../game/loading";
+import { contextsLost, freshContextWorks } from "../map/graphicsInfo";
+import { GL_LOST } from "../map/gl";
 import { leftText, STAGE_TEXT } from "../game/loadBar";
 import { isMemoryFailure, loadFailText } from "../game/loadText";
 import { marketOff } from "../game/ui";
@@ -103,7 +105,10 @@ function LoadingCard() {
 const QUIET_MS = 180_000, QUIET_BAR_MS = 600_000, WATCH_MS = 5_000;
 /** T-950: main.ts's setup ran to its end; an uncaught error before then means no game will start */
 let setupFinished = false;
-export function setupDone() { setupFinished = true; }
+export function setupDone() {
+  setupFinished = true;
+  try { sessionStorage.removeItem(GL_RELOAD_KEY); } catch { /* storage unavailable */ } // T-4073: a later loss may reload once again
+}
 
 function startWatchdog() {
   const q = Number(new URLSearchParams(location.search).get("quietMs"));
@@ -120,11 +125,46 @@ function startWatchdog() {
     // T-3781: a stuck demand load is restarted once before the failure screen
     if (started && loadStuck()) return;
     const m = Math.round(limit / 60_000), mins = m >= 1 ? t("loadingScreen.minutes", { count: m }) : t("loadingScreen.seconds", { count: Math.round(limit / 1000) });
-    loadCannotFinish(t(started ? "loadingScreen.demandTimeout" : "loadingScreen.simTimeout", { time: mins }), !started);
+    // T-4072: where it stuck, for the report (the clock worker's step before its game is in, else the load's last)
+    const step = started ? loadStepNow() : clockStepNow();
+    loadCannotFinish(t(started ? "loadingScreen.demandTimeout" : "loadingScreen.simTimeout", { time: mins }) + (step ? ` (${step})` : ""), !started); // i18n-ignore: the step is for the report
   }, WATCH_MS);
   window.addEventListener("error", (e) => {
-    if (!setupFinished) loadCannotFinish(t("loadingScreen.pageStopped", { reason: e.error instanceof Error ? e.error.message : e.message }), true);
+    if (setupFinished || startupFailed) return;
+    startupFailed = true;
+    const reason = e.error instanceof Error ? e.error.message : e.message;
+    // T-4073: the graphics were lost while the page started (Safari after its GPU process went down: every WebGL
+    // answer is null, so a shader "fails"): the graphics' failure, not the page's
+    if (reason?.includes(GL_LOST) || contextsLost() || !freshContextWorks()) graphicsLostAtStart(reason);
+    else loadCannotFinish(t("loadingScreen.pageStopped", { reason }), true);
   });
+}
+/** the page's setup already failed (only its first error is the cause) */
+let startupFailed = false;
+
+/** T-4073: how long a page whose graphics were lost as it started waits for them to come back, and how often it asks */
+const GRAPHICS_BACK_MS = 8_000, GRAPHICS_ASK_MS = 500;
+const GL_RELOAD_KEY = "tw-gl-reload";
+/** T-4073: the setup stopped on lost graphics. Once they work again the page starts afresh, once per tab session (a
+ * page set up halfway cannot rebuild what it skipped); if they do not, or it happened again after that reload, the
+ * graphics screen says to restart the browser (T-3582). Nothing was loaded yet, so nothing is lost by the reload. */
+function graphicsLostAtStart(reason: string) {
+  console.warn("graphics lost while the page started:", reason); // i18n-ignore
+  let reloaded = false;
+  try { reloaded = sessionStorage.getItem(GL_RELOAD_KEY) === "1"; } catch { /* storage unavailable */ }
+  const giveUp = () => loadGraphicsGone(`lost while the page started: ${reason}`); // i18n-ignore
+  if (reloaded) return giveUp();
+  const until = performance.now() + GRAPHICS_BACK_MS;
+  const timer = setInterval(() => {
+    if (freshContextWorks()) {
+      clearInterval(timer);
+      try { sessionStorage.setItem(GL_RELOAD_KEY, "1"); } catch { /* storage unavailable: no second try either way */ }
+      location.reload();
+    } else if (performance.now() > until) {
+      clearInterval(timer);
+      giveUp();
+    }
+  }, GRAPHICS_ASK_MS);
 }
 
 /** Hold the clock until the first game's demand has its first estimate; say so if it fails. */

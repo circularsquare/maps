@@ -18,7 +18,7 @@ import { setHiddenLinesSink, takeHiddenLines } from "../game/lineVisibility";
 import { takeDiagramCities } from "../game/diagramCities";
 import { hiddenZones, setGameStart } from "../game/realms";
 import { home } from "../game/home";
-import { fitView, holdForGameLoad, loadCannotFinish, markAlive, networkInWithoutTrips, noteLoad, noteLoadSlot, tripsOff } from "../game/loading";
+import { clockStepNow, fitView, holdForGameLoad, loadCannotFinish, markAlive, networkInWithoutTrips, noteClockStep, noteLoad, noteLoadSlot, tripsOff } from "../game/loading";
 import { incomeByDay, lastSaved, liveMoney, moneyState, moneyTerms, moneyWorld, setMoneyState } from "../game/money";
 import { zonesLoaded } from "../game/zones";
 import { chargeShares, lineShares, upkeepShares } from "../game/regionMoney";
@@ -650,6 +650,9 @@ class Newest<Q, A extends unknown[]> {
 
 /** T-2710: the waits before each new start of a clock worker whose script did not download (as wasmInit.ts's) */
 const BOOT_WAITS_MS = [1_000, 4_000];
+/** T-4072: how long a clock worker's script may take to come (twice), and its WASM to run once it has, while the
+ * page is visible: the script is a few hundred KB and the WASM 2.5 MB, so these allow a very slow connection */
+const BOOT_LIMIT_MS = 60_000, READY_LIMIT_MS = 180_000, START_WATCH_MS = 5_000;
 
 export class ClockClient {
   private worker: Worker | null = null;
@@ -667,10 +670,15 @@ export class ClockClient {
    * behind it, the last trips' age, the last error (seconds) */
   diagnosis(): string {
     const now = performance.now(), first = this.sent.values().next().value;
+    const ground = groundNet.peek();
     return [
       first ? `oldest unanswered ${first.what} ${Math.round((now - first.at) / 1000)}s, ${this.sent.size} waiting` : "nothing unanswered", // i18n-ignore
       `trips ${Number.isNaN(this.tripsAt) ? "none yet" : Math.round((now - this.tripsAt) / 1000) + "s ago"}`, // i18n-ignore
       `status ${clockWorkerStatus.peek()}`,
+      // T-4072: whether the worker started and its script came, and its game load's last step until the game is in
+      !this.worker ? "worker not started" : !this.booted ? `worker script not in after ${Math.round((now - this.spawnAt) / 1000)}s${this.respawned ? " (started again)" : ""}` : "", // i18n-ignore
+      !world.peek() && clockStepNow() ? `load step ${clockStepNow()}` : "", // i18n-ignore
+      ground.pending ? `ground pending ${ground.pending}` : "", // i18n-ignore
       this.groundWhy.length ? `ground failed ${this.groundWhy.join(", ")}` : "", // i18n-ignore
       this.lastTrouble ? `last error ${this.lastTrouble.slice(0, 200)}` : "", // i18n-ignore
     ].filter(Boolean).join("; ");
@@ -756,6 +764,7 @@ export class ClockClient {
   start(choice: GameChoice) {
     if (this.worker) return;
     this.spawnWorker();
+    this.watchStart();
     noteLoad("clock worker started");
     const q = new URLSearchParams(location.search);
     const fresh = !!choice.fresh;
@@ -765,12 +774,13 @@ export class ClockClient {
     if (!choice.slot) try { slot = localStorage.getItem("anitabuilder-save-slot") || slot; } catch { /* storage unavailable */ }
     const backupMs = Number(q.get("backupMs")) || undefined;
     const readFails = q.get("debug") === "1" ? Number(q.get("readFails")) || undefined : undefined;
+    const maskWaitMs = q.get("debug") === "1" && q.has("maskWaitMs") ? Number(q.get("maskWaitMs")) : undefined;
     const loadPanic = q.get("debug") !== "1" ? undefined : q.get("loadPanic") === "1" ? true : q.get("loadPanic") === "late" ? "late" as const : undefined;
     const room = q.get("debug") === "1" ? q.get("saveRoom") : null;
     const saveRoom = room === "big" || room === "all" ? room : undefined;
     this.patchMode = q.get("patch") ?? "1";
     // (first, before any message posted ahead of the start)
-    this.waiting.unshift([{ kind: "init", pack: dataUrl(this.cityId), terrain: TERRAIN_BASE, fresh, testPage: this.testPage, slot, newSlot: choice.newSlot, backupMs, game: choice.game, pending: choice.pending, patch: this.patchMode, guide: !guideFinished.peek(), bandMode: bandTry(), readFails, loadPanic, saveRoom, heapStep: heapStep() } satisfies ToClock, choice.game?.real ? [choice.game.real] : []]);
+    this.waiting.unshift([{ kind: "init", pack: dataUrl(this.cityId), terrain: TERRAIN_BASE, fresh, testPage: this.testPage, slot, newSlot: choice.newSlot, backupMs, game: choice.game, pending: choice.pending, patch: this.patchMode, guide: !guideFinished.peek(), bandMode: bandTry(), readFails, maskWaitMs, loadPanic, saveRoom, heapStep: heapStep() } satisfies ToClock, choice.game?.real ? [choice.game.real] : []]);
     // T-2802: the page's parse of the outlines, copied, in place of the worker's own fetch and parse
     void packedOutlines().then((packed) => this.post({ kind: "outlines", packed }));
   }
@@ -779,9 +789,49 @@ export class ClockClient {
    * transfers whole, so a worker whose script did not download is started again with all of them */
   private booted = false;
   private bootTries = 0;
+  /** T-4072: when the worker in hand was made, whether its start was tried again, its WASM running ("ready") */
+  private spawnAt = 0;
+  private respawned = false;
+  private wasmReady = false;
+  /** T-4072: the worker's start watched while the page is visible: a script not in after BOOT_LIMIT_MS starts it once
+   * more; not in again, or its WASM not running READY_LIMIT_MS after the script, the load fails saying the game's
+   * files did not finish downloading (Safari 17.6 players sat 13 minutes on silent workers). `?startMs=N` sets both
+   * (checks); `?debug=1&clockStall=boot` drops the worker's `booted` (dev). */
+  private watchStart() {
+    const q = new URLSearchParams(location.search), n = Number(q.get("startMs"));
+    const bootLimit = n > 0 ? n : BOOT_LIMIT_MS, readyLimit = n > 0 ? n : READY_LIMIT_MS;
+    let waited = 0, last = performance.now();
+    const firstSpawn = this.spawnAt;
+    const timer = setInterval(() => {
+      const now = performance.now(), step = now - last;
+      last = now;
+      if (this.wasmReady || world.peek() || clockWorkerStatus.peek().startsWith("failed")) return clearInterval(timer);
+      // a hidden or frozen page counts no wait (its downloads may be held)
+      if (document.visibilityState !== "visible" || step > 3 * START_WATCH_MS) return;
+      waited += step;
+      if (!this.booted && waited >= bootLimit) {
+        if (!this.respawned) {
+          console.warn(`clock worker: its script not in after ${Math.round(waited / 1000)} s; starting it again`); // i18n-ignore
+          this.respawned = true;
+          waited = 0;
+          this.worker?.terminate();
+          this.spawnWorker();
+          return;
+        }
+        clearInterval(timer);
+        this.failed(`its script did not arrive, started twice, ${Math.round((now - firstSpawn) / 1000)} s`, "timeout"); // i18n-ignore
+      } else if (this.booted && waited >= readyLimit) {
+        clearInterval(timer);
+        this.failed(`its WebAssembly did not start, ${Math.round(waited / 1000)} s after its script`, "timeout"); // i18n-ignore
+      }
+    }, n > 0 ? Math.min(START_WATCH_MS, Math.max(100, n / 4)) : START_WATCH_MS);
+    this.startWaitReset = () => { waited = 0; };
+  }
+  private startWaitReset = () => {};
   private spawnWorker() {
     const w = new Worker(new URL("./clock.worker.ts", import.meta.url), { type: "module" });
     this.worker = w;
+    this.spawnAt = performance.now();
     attachClockTrace(w);
     this.booted = false;
     w.onmessage = (e: MessageEvent<FromClock>) => this.arrive(e.data);
@@ -799,16 +849,24 @@ export class ClockClient {
     w.onmessageerror = () => this.failed("a message could not be read"); // i18n-ignore
   }
   private onBooted() {
+    // (dev, T-4072: `?debug=1&clockStall=boot` the script never comes; `=ready` it comes and its WASM never starts)
+    const stall = import.meta.env.DEV && new URLSearchParams(location.search).get("debug") === "1" ? new URLSearchParams(location.search).get("clockStall") : null;
+    if (stall === "boot") return;
     this.booted = true;
+    this.startWaitReset();
+    noteClockStep("script in"); // i18n-ignore
+    if (stall === "ready") return;
     for (const [msg, transfer] of this.waiting) this.worker!.postMessage(msg, transfer);
     this.waiting = [];
   }
 
   /** T-950: the worker failed; before its first game no game will come, so the card gives way to the
-   * failure screen */
-  private failed(why: string, storage = false) {
+   * failure screen. `storage`: the saved game could not be read; `timeout` (T-4072): its start never finished. */
+  private failed(why: string, kind: "error" | "storage" | "timeout" = "error") {
     clockWorkerStatus.value = "failed to load: " + why; // i18n-ignore
-    if (!world.peek()) loadCannotFinish(t(storage ? "clockClient.storageUnreadable" : "clockClient.cannotStart", { why }), true);
+    if (world.peek()) return;
+    if (kind === "timeout") loadCannotFinish(`${t("clockClient.startTimeout")} (${why})`, true); // i18n-ignore: the reason is for the report
+    else loadCannotFinish(t(kind === "storage" ? "clockClient.storageUnreadable" : "clockClient.cannotStart", { why }), true);
   }
 
   constructor(cityId = HOME_CITY) {
@@ -1224,16 +1282,21 @@ export class ClockClient {
     // on the new run profiles (trains jumped, or stayed a frame on a line that had lost its service),
     // and the demand views build once. Not when the draw anchor moves (its listeners need the network
     // at once), and never past HOLD_MS.
-    if (this.held && !(msg.kind === "trips" && msg.version < this.held.state.version) && msg.kind !== "cash") this.release();
+    if (this.held && !(msg.kind === "trips" && msg.version < this.held.state.version) && msg.kind !== "cash" && msg.kind !== "loadStep") this.release();
     // T-950: the steps toward a loading card's game (not the money ticks, which come regardless)
-    if (msg.kind === "ready" || msg.kind === "loaded" || msg.kind === "state" || msg.kind === "snapshot" || msg.kind === "stationsAhead") markAlive();
+    if (msg.kind === "ready" || msg.kind === "loaded" || msg.kind === "state" || msg.kind === "snapshot" || msg.kind === "stationsAhead" || msg.kind === "loadStep") markAlive();
     switch (msg.kind) {
       case "booted":
         this.onBooted();
         break;
       case "ready":
         clockWorkerStatus.value = `ready in ${msg.initMs.toFixed(0)} ms`; // i18n-ignore
+        this.wasmReady = true;
+        noteClockStep("track model ready"); // i18n-ignore
         setWorldFrame(msg.frame);
+        break;
+      case "loadStep":
+        noteClockStep(msg.step);
         break;
       case "error":
         console.warn("clock worker:", msg.message);
@@ -1250,7 +1313,7 @@ export class ClockClient {
         break;
       case "failed":
         console.error("clock worker:", msg.error);
-        this.failed(msg.error, msg.storage);
+        this.failed(msg.error, msg.storage ? "storage" : "error");
         break;
       case "state": {
         const st = msg.state;

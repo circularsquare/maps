@@ -34,6 +34,7 @@ import { bookCharge, buildSnapshot, busQuoteLL, complexOfNodes, editSteps, nameO
 import { apply, buildingQuoteAnswer, designOf, doubleUpAnswer, DROP_REFUSED, freeEnds, INSERT_REFUSED, issues, newLineShape, ORDER_REFUSED, paidFor, pisArr, rebuildQuoteAnswer, routeArgs, savedHidden, savedShapes } from "./clockEdits";
 import { goneLineFares, loadFares, newLineFare, pinFareRef, startFares, tidyLineFares, tidyStationFares } from "./clockFares";
 import { EARLY_WAIT_MS, followTimer, followUp, goesAhead, guardedFollowUp, heldEdges, HOLD_MS, holdOn, isPreview, isServiceOp, jumpsAhead, later, passesHeld, previewStaleSeq, putPreviewStaleSeq, sendStale, stale, standAside, startNow, stepThenRun, Waiting } from "./clockFollowUp";
+import { putLoadMaskWait } from "./clockGround";
 import { blocksIn, blueprintPolylines, ensureBlocks, ensureMasks, ensureStreets, fetchWater, groundForBlueprint, masksComplete, masksIn, nodePoints, openNetwork, pumpBlocks, putPackBase, putTerrainBase, putViewBlocks, putViewZones, retryGroundNow, roadFeed, roadsUnder, routePoints, terrainIndexIntoModel, tintSent, VIEW_MARGIN_M, VIEW_SPAN_M, viewBlocks, viewZones, wakeStale, WaterRaster, withMasks, worldWaterIntoModel, zonesOfPoints } from "./clockGround";
 import { anchorMoves, drawnEdge, drawnLine, edgeDrawn, forget, game, hex, lineDrawn, previewMarkRows, putAnchorMoves, putConvertedOnLoad, putShiftFrom, putShiftWas, restart, sendHome, sendOpened, sendRows, sendState, SHIFT_REACH, shiftFrom, SHIFTS_EXACT } from "./clockMain";
 import { gameNow, lineDays, linesPeriods, loadLineDays, loadRegions, mergeLedger, putTodayGen, putTodayLast, regionEntries, regions, rounded, savedLineDays, savedRegions, sendCash, sendMoney, serviceLeadS, settle, today, todayGen, unsettleAfter } from "./clockMoney";
@@ -295,6 +296,7 @@ async function openSave(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   putTodayGen(todayGen + 1);
   putTodayLast(null);
   putRowsSent(""); // a load's service starts with no line calendars (`TrackApi.set_line_rows`)
+  send({ kind: "loadStep", step: "decoding the save" }); // i18n-ignore (T-4072)
   const decoded = await decodeSave(bytes);
   const { track } = decoded;
   const h: SaveHeader = currentZones(fresh
@@ -318,7 +320,10 @@ async function openSave(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   if (st.length > 3) send({ kind: "stationsAhead", frame: { kind: frameKindName(st[0]), lon: st[1], lat: st[2] }, xy: st.slice(3), fine: demandFine ?? null, built: demandBuilt ?? null, home: h.home });
   // T-1539: the demand result kept for this save's network can show while the network is worked out
   // (China's 17-42 s); awaited here, since the load below holds the worker
-  if (st.length > 3) await saveNetKey(net, h).then((key) => send({ kind: "netAhead", key }), () => {});
+  if (st.length > 3) {
+    send({ kind: "loadStep", step: "kept trips' key" }); // i18n-ignore
+    await saveNetKey(net, h).then((key) => send({ kind: "netAhead", key }), () => {});
+  }
   // T-3647: a player's game saved before 0.4 keeps the way its single track ran then
   if (import.meta.env.DEV && panicOnLoad) { putPanicOnLoad(false); panicNow(); }
   await openNetwork(net, fresh ? undefined : decoded.header.level ?? 0);
@@ -434,7 +439,7 @@ let ready: Promise<void> | null = null;
 
 function viewMasks(): Promise<void> {
   if (api && viewBlocks.size) void ensureBlocks(viewBlocks);
-  return api && viewZones.length ? ensureMasks(viewZones) : Promise.resolve();
+  return api && viewZones.length ? ensureMasks(viewZones).then(() => {}) : Promise.resolve();
 }
 
 /** T-3196: above 0 while the queue waits on a download with the track model at rest (an edit's or a
@@ -552,10 +557,12 @@ async function processMessage(msg: ToClock) {
       putGuideWanted(msg.guide === true);
       if (msg.backupMs && msg.backupMs > 0) saves.backupSteps = BACKUP_STEPS.map((s) => s / BACKUP_STEPS[0] * msg.backupMs!);
       if (msg.readFails) failReads(msg.readFails);
+      if (msg.maskWaitMs !== undefined) putLoadMaskWait(msg.maskWaitMs);
       if (import.meta.env.DEV && msg.loadPanic === true) putPanicOnLoad(true);
       if (import.meta.env.DEV && msg.saveRoom) { const all = msg.saveRoom === "all"; refuseSaveBuffers((n) => !roomMade && (all || n >= 1 << 20)); }
       // T-1196: the game picked in the saves panel before the page reloaded; a file or backup goes
       // into a slot of its own below, the slot it was picked from held until then (one that fails goes to the start menu, T-3773)
+      send({ kind: "loadStep", step: "saves in the browser" }); // i18n-ignore (T-4072)
       const pending = msg.pending ? await takePending() : null;
       await sweepDeleted(); // T-1827's leftovers, if any
       let incoming: Awaited<ReturnType<typeof pendingGame>> = null;
@@ -601,6 +608,7 @@ async function processMessage(msg: ToClock) {
         }
       }
       if (!msg.fresh && !msg.newSlot) await stampAll(null).catch(() => {}); // T-2037
+      send({ kind: "loadStep", step: "reading the save" }); // i18n-ignore
       const stored = msg.fresh || msg.newSlot ? null : await readStored(saves.activeSlot);
       if (!stored && saves.activeSlot) saves.unwritten = saves.activeSlot;
       if (stored) heldFrom(stored); else heldNew();

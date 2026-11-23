@@ -527,6 +527,7 @@
   "clockClient.noStorage": "Browser storage is unavailable.",
   "clockClient.reopenFailed": "This network couldn't be opened again.",
   "clockClient.cannotStart": "The train simulation could not start ({why}).",
+  "clockClient.startTimeout": "The game's files did not finish downloading. Check your connection and try again.",
   "clockClient.storageUnreadable": "Could not read your saved game from browser storage ({why}). Nothing was written over it.",
   "clockClient.drawing": "Drawing the network",
   "clockClient.updating": "Updating the network",

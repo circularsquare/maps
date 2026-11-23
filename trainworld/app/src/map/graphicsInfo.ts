@@ -12,6 +12,23 @@ if (typeof document !== "undefined") {
   document.addEventListener("webglcontextcreationerror", (e) => { noteCreationError((e as WebGLContextEvent).statusMessage); }, true);
 }
 
+/** T-4073: a context of the page's is lost and not back (as far as the events have come) */
+export const contextsLost = () => lost > restored;
+
+/** T-4073: whether a fresh WebGL2 context works now: made, not lost, and answering (a browser whose GPU process went
+ * down hands out contexts that are lost from the start, whose every answer is null). Let go at once. */
+export function freshContextWorks(): boolean {
+  try {
+    const gl = document.createElement("canvas").getContext("webgl2");
+    if (!gl) return false;
+    const ok = !gl.isContextLost() && gl.getParameter(gl.RENDERER) != null;
+    gl.getExtension("WEBGL_lose_context")?.loseContext();
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
 /** The last context creation error (also fed by the start probe, whose canvas is never in the page). */
 export function noteCreationError(message: string | undefined) {
   if (message) creationError = message;

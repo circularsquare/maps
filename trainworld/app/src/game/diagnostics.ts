@@ -4,6 +4,7 @@
 // newest solve and downloads, and how long the page has been open. Plain English, for Anita and agents.
 
 import { demandDiagnosis } from "../workers/demandClient";
+import { loadStepNow } from "./loading";
 
 let clockLine: () => string = () => "";
 export function setClockDiagnosis(f: () => string) { clockLine = f; }
@@ -15,6 +16,8 @@ export function stateReport(max = 1500): string {
   };
   return [
     `page open ${Math.round(performance.now() / 60000)} min`, // i18n-ignore
+    // T-4072: a game load still in hand: its last step, so a load that never ends says where
+    part("load", loadStepNow),
     part("clock", clockLine),
     part("demand", demandDiagnosis),
   ].filter(Boolean).join("\n").slice(0, max);
