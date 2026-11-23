@@ -153,5 +153,5 @@ export function deleteClick(tk: Tools, e: MapMouseEvent) {
   const h = deletePick(tk, e.point.x, e.point.y);
   if (!h) return;
   // on touch nothing is shown until the next tap (T-1260)
-  void removeThing(h).then(() => touchInput.peek() ? touchStop(tk) : tool.peek() === "delete" && deleteHover(tk, e.point.x, e.point.y));
+  void removeThing(h, e.originalEvent.shiftKey).then(() => touchInput.peek() ? touchStop(tk) : tool.peek() === "delete" && deleteHover(tk, e.point.x, e.point.y));
 }

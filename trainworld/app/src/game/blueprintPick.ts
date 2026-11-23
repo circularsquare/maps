@@ -347,8 +347,8 @@ export async function tracksPicked(tracks: 1 | 2) {
 }
 
 /** T-829: remove every picked piece in one edit: blueprint at once (one undo), constructed or
- * changing a line after a yes, as for one piece (game/remove.ts). */
-export async function removePicked() {
+ * changing a line after a yes, as for one piece (game/remove.ts); `now` (Shift+click) skips the yes (T-4068). */
+export async function removePicked(now = false) {
   const p = bpPicked.peek(), s = pickedState.peek();
   if (!p.edges.length && !p.stations.length) return;
   const big = isBigDelete(s.lengthM);
@@ -362,6 +362,7 @@ export async function removePicked() {
     if (a.ok) say(t("remove.done", { what }));
     else if (!a.issues.length) say(t("remove.failed"), true);
   };
+  if (now) return void go();
   const lines = await lineEffects(p.edges, p.stations);
   if (!p.built && !lines.length && !big) return void go();
   ask.value = { ...removeQuestion(what, !!p.built, big), run: () => void go(), lines };

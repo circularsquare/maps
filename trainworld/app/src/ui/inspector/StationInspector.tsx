@@ -3,6 +3,7 @@
 import { useEffect, useState } from "preact/hooks";
 import { clock } from "../../game/clock";
 import { t as tr, tNumber } from "../../i18n";
+import { tipMutedLine } from "../tip";
 import { mobileDevice } from "../../workers/deviceMemory";
 import { lineDemand } from "../../game/demand";
 import { area, count, distance, duration, levelLabel, money, roughDistance } from "../../game/format";
@@ -228,7 +229,7 @@ export function StationInspector({ id }: { id: string }) {
     if (a.ok) say(tr("stationInspector.constructed", { name: (world.peek() && stationNames(world.peek()!).get(s.id)) || s.name, price: money(a.charge * 1e6) }));
   };
   // constructed: asks first above the bottom bar (T-096)
-  const remove = () => void removeThing({ kind: "station", node: s.num });
+  const remove = (e: MouseEvent) => void removeThing({ kind: "station", node: s.num }, e.shiftKey);
   return (
     <>
       <div class="title">
@@ -280,7 +281,7 @@ export function StationInspector({ id }: { id: string }) {
       <ClosestStations lng={s.lng} lat={s.lat} exclude={new Set(members)} own={s.name} />
       <StationLinks id={id} members={asComplex ? members : [id]} />
       {!s.port && !s.brt && <StationBuilding id={id} members={members} />}
-      {!asComplex && <Actions><button class="btn text danger" onClick={remove}>{tr(s.port ? "stationInspector.removePort" : "stationInspector.removeStation")}</button></Actions>}
+      {!asComplex && <Actions><button class="btn text danger" data-tip={tipMutedLine(tr("common.shiftSkip"))} onClick={remove}>{tr(s.port ? "stationInspector.removePort" : "stationInspector.removeStation")}</button></Actions>}
     </>
   );
 }
@@ -347,7 +348,7 @@ function StationBuilding({ id, members }: { id: string; members: string[] }) {
       </ul>
       <Actions>
         <button class="btn text" onClick={() => live.tools?.building.begin(b.corners, b.id, id)}>{tr("stationInspector.editOutline")}</button>
-        <button class="btn text danger" onClick={() => void removeThing({ kind: "building", id: b.id })}>{tr("stationInspector.removeBuilding")}</button>
+        <button class="btn text danger" data-tip={tipMutedLine(tr("common.shiftSkip"))} onClick={(e) => void removeThing({ kind: "building", id: b.id }, e.shiftKey)}>{tr("stationInspector.removeBuilding")}</button>
       </Actions>
     </>
   );

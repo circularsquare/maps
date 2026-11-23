@@ -18,6 +18,8 @@
 .key, .key.muted, .tip-key, .help-panel dt { color: var(--accent); }
 /* T-2157: a hint, not a figure: the keys on buttons and in hovers (brackets and all) at 0.7; the Help panel's list keeps full ink */
 .key, .tip-hint { opacity: 0.7; }
+/* T-4068: a grey side note line in a hover (tipMuted) */
+.tool-tag .tip-muted { opacity: 0.7; margin-top: 2px; }
 /* the top bar's demand band (ui/SkyBanner.tsx, T-861): high, medium and low demand; six-digit hex only */
 :root { --dl-high: #d64545; --dl-medium: #e5b22a; --dl-low: #3f7fd4; }
 :root[data-shade="dark"] { --dl-high: #ec6b6b; --dl-medium: #edc54c; --dl-low: #6aa2ea; }

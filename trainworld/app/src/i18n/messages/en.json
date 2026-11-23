@@ -568,6 +568,7 @@
   "colourPicker.hue": "Hue",
   "colourPicker.hex": "Color as hex",
   "common.aboutGame": "About this game",
+  "common.shiftSkip": "Shift+click to skip confirmation",
   "common.upkeepDay": "Upkeep {amount} per day",
   "commutersInspector.areas": "{count, plural, one {One area} other {# areas}}",
   "commutersInspector.driving": "Driving",

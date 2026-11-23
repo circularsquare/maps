@@ -22,6 +22,7 @@ import { setFareByCity, setFareRef, world } from "../game/world";
 import { currencySpec, fromShown, price, priceTyped, toShown, unitMetres, unitShort } from "../game/format";
 import { playBuild } from "../map/buildSound";
 import { t, tCountry, tNumber, tRich } from "../i18n";
+import { tipMuted } from "./tip";
 import type { StationInput } from "../game/types";
 import { useModalDialog } from "./Modal";
 import { advancedFares, fareAdding, FareButtons, FareGraph, FareNodeRows } from "./FareGraph";
@@ -93,7 +94,8 @@ function FareAreas({ f, scale }: { f: Fares; scale: number }) {
   const areas = f.zones ?? [];
   const sp = currencySpec();
   const paint = (id: number) => { advancedFares.value = null; startPainting(id); };
-  const remove = (a: FareArea) => {
+  const remove = (a: FareArea, now: boolean) => {
+    if (now) return removeArea(a.id);
     ask.value = { text: t("advancedFares.removeAreaAsk", { name: a.name }), yes: t("advancedFares.removeArea"), no: t("toolNotes.cancel"), run: () => removeArea(a.id) };
   };
   return (
@@ -114,7 +116,7 @@ function FareAreas({ f, scale }: { f: Fares; scale: number }) {
               <button class="btn text mini" onClick={() => paint(a.id)}><Icon.brush />{t("advancedFares.paint")}</button>
               <span class="group">
                 <Check checked={!a.off} onChange={(on) => setAreaOff(a.id, !on)} label={onOff} tip={onOff} />
-                <button class="btn icon mini" aria-label={t("advancedFares.removeArea")} data-tip={t("advancedFares.removeArea")} onClick={() => remove(a)}><Icon.cross /></button>
+                <button class="btn icon mini" aria-label={t("advancedFares.removeArea")} data-tip={t("advancedFares.removeArea") + tipMuted(t("common.shiftSkip"))} onClick={(e) => remove(a, e.shiftKey)}><Icon.cross /></button>
               </span>
             </li>
             {Array.from({ length: n }, (_, k) => {

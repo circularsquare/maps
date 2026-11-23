@@ -16,7 +16,7 @@ import { constructBlueprints } from "../game/lineActions";
 import { edit, say, world } from "../game/world";
 import { setOneWays } from "../game/oneWay";
 import { mapBearing } from "../map/live";
-import { tipGrid } from "./tip";
+import { tipGrid, tipMuted } from "./tip";
 import { useBlueprintPieces, useBlueprintQuote } from "../game/quotes";
 import { blueprintParts, bpHover, switchRow, type BpPart } from "../game/blueprintStretches";
 import { locateNodes } from "./locate";
@@ -383,7 +383,7 @@ export function BlueprintBar() {
       <PickDoubleUp />
       <PickOneWay />
       <PickLimit />
-      <button class="btn text" data-tip={t("blueprint.removeTip", { keyed: true })} onClick={() => void removePicked()}><Icon.bin /><span class="bp-label">{t("blueprint.remove")}</span></button>
+      <button class="btn text" data-tip={t("blueprint.removeTip", { keyed: true }) + tipMuted(t("common.shiftSkip"))} onClick={(e) => void removePicked(e.shiftKey)}><Icon.bin /><span class="bp-label">{t("blueprint.remove")}</span></button>
       <button class="btn text" data-tip={t("blueprint.clearTip")} onClick={() => (keys ? clearBpPicked() : dropPicked())}><Icon.cross /><span class="bp-label">{t("blueprint.clear")}</span></button>
       </div>
       {canLevel && levels && (

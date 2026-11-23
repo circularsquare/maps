@@ -15,6 +15,7 @@ import { count, distance, distUnit, duration, exact, metresFromShown, metresToSh
 import { moneyState } from "../../game/money";
 import { BOATS, boatOf, boatStock, type Boat } from "../../game/boats";
 import { t } from "../../i18n";
+import { tipMutedLine } from "../tip";
 import { useToday } from "../../game/today";
 import { DEMAND_INDEX, type LineInput, type LineStats } from "../../game/types";
 import { ask, display, lineDraft, selection, tool } from "../../game/ui";
@@ -443,10 +444,10 @@ export function BusInspector({ id }: { id: string }) {
     const selected = selection.peek();
     if (selected?.kind === "line" && selected.line === l.id) selection.value = null;
   });
-  const remove = () => {
+  const remove = (e: MouseEvent) => {
     // T-2919: asked only where it cannot be undone, a constructed bus route (final, nothing refunded);
     // a planned bus line or a ferry line (T-2194: its ports stay, its boats go to the depot) goes at once
-    if (ferry || !bus.built) return removeNow();
+    if (ferry || !bus.built || e.shiftKey) return removeNow();
     ask.value = { text: t("busInspector.deleteQuestion", { name: l.name, built: true }), yes: t("busInspector.deleteYes"), no: t("busInspector.deleteNo"), run: () => {
       ask.value = null;
       void edit({ op: "removeLine", line: l.num }).then((a) => {
@@ -506,7 +507,7 @@ export function BusInspector({ id }: { id: string }) {
         <button class={"btn text" + (drawing ? " on" : "")} data-tip={drawing ? t("busInspector.saveTip") : bus.built && !ferry ? t("busInspector.changeTipBuilt") : t("busInspector.changeTip")} onClick={() => (ferry ? editFerryRoute(l) : editBusRoute(l))}><Icon.pencil />{drawing ? t("busInspector.save") : t("busInspector.edit")}</button>
         {bus.hand && <button class={"btn text" + (editingStops ? " on" : "")} data-tip={editingStops ? t("lineInspector.finishTip") : t("busInspector.editStopsTip")} onClick={() => toggleEditStops(l)}><Icon.pencil /><SwapLabel on={editingStops} off={t("lineInspector.editStops")} onText={t("lineInspector.stopEditing")} /></button>}
         <button class="btn text" onClick={() => void copy()} disabled={copying}>{t("busInspector.copy")}</button>
-        <button class="btn text danger" onClick={remove}>{t("busInspector.deleteYes")}</button>
+        <button class="btn text danger" data-tip={tipMutedLine(t("common.shiftSkip"))} onClick={remove}>{t("busInspector.deleteYes")}</button>
       </div>
 
       <Schedule l={l} st={st} period={periodAt(lineSeconds(st))} limits={lanes?.limits ?? NO_LIMITS} crowd={periods} copy={<ScheduleButtons l={l} st={st} />} />

@@ -139,10 +139,11 @@ export function setTrackHider(h: typeof hider) {
   hider = h;
 }
 
-/** Remove it: at once if blueprint and no line changes, else after a modal confirmation. Blueprint
+/** Remove it: at once if blueprint and no line changes, else after a modal confirmation (`now`, a
+ * Shift+click, skips the question: T-4068). Blueprint
  * track no line runs over and no station touches goes from the screen at the click and from the
  * model when the worker answers (T-2763: that took 0.1 to 3 s on the real save). */
-export async function removeThing(r: Removable) {
+export async function removeThing(r: Removable, now = false) {
   const d = describeRemovable(r);
   if (!d) return;
   const go = async () => {
@@ -161,6 +162,7 @@ export async function removeThing(r: Removable) {
   };
   const e = r.kind === "track" ? world.peek()?.edges.find((x) => x.id === r.edge) : undefined;
   const [ka, kb] = r.kind === "track" ? stationTrim(r.edge) : [0, 0];
+  if (now) return go();
   const big = !!e && !e.crossover && isBigDelete(e.lengthM - ka - kb);
   // nothing a line or a station hangs on: no side effects to ask the worker about
   if (r.kind === "track" && e && !d.built && !big && !ka && !kb && hider && !hider.onLine(r.edge)) {
