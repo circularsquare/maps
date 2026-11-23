@@ -12,5 +12,12 @@
     "text": "Spanish internet providers block Cloudflare's shared addresses during football matches, and both the game and its data sit on them, so Spanish players on those providers can't load the game then (one report; the account server isn't on Cloudflare). A fallback host off Cloudflare would be 4-6 h plus an extra upload every publish. Leave it (T-4074)? I'd leave it.",
     "since": "2026-11-23",
     "by": "maps-44"
+  },
+  {
+    "id": "a-2026-11-23-6",
+    "title": "Test shapes for two shifting speedups",
+    "text": "Two speedups that shift riders slightly (T-4054). (1) No late joins at change stations: about 3-4% off the solve; real NYC save +0.002% rail trips, 0.075% of boardings move. Worst shape: a feeder line meeting a trunk at a change station, where on the trunk an express every 20 min and a local every 5 min both reach the same stop and the local's ride is longer than the express's by more than half the express headway but less than all of it (e.g. express 10 min ride, local 22 min). Riders who changed onto the trunk would all wait for the express. (2) Fewer points in the shared-platform math: about 2.5% off the solve; real save +0.005% rail trips. Worst shape: one platform with 4 or more lines to the same stop, similar ride times, mixed headways (every 5/10/15/30 min). Build either shape, download the save, and we'll compare versions on it?",
+    "since": "2026-11-23",
+    "by": "maps-44"
   }
 ]

@@ -4,10 +4,11 @@ Orchestrator: session dc375617-affd-42c6-aac0-505e37685277, name maps-44 [b23630
 Updated: 2026-11-23 14:50 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary
 notes/handoff-log.md. Her time UTC-5.
 
-## Running (8 agents): solvespeed T-4054 (then T-4064), solveprof T-4057 (+T-4082 Detroit), hokkaido T-3688, trackg1
-T-4037 g1 (rebase over addtrack; g2 next), busnosnap T-4069 (finishing checks; save level 39: own checker before
-landing), crashes T-4072/T-4073 (tree crashes), busconn T-4079, community T-4077/78/81 (Sonnet; may commit
-shonei-server, deploy needs her yes). Landed: T-4056, T-4068 (8800 73299e61), T-4076 d0a09297; T-4024 onto tw/track.
+## Running (8 agents): solvespeed T-4054 (then T-4064; shifting candidates asked a-2026-11-23-6), solveprof T-4057
+(+T-4082 Detroit), hokkaido T-3688, trackg1 T-4037 g1 (rebase over addtrack; g2 next), crashes T-4072/T-4073,
+busconn T-4079, addbp T-4085 (tw/track), checkbns (checker of busnosnap's level-39 save change; tree busnosnap
+waits, land on PASS). Landed: T-4056, T-4068, T-4076, community 378e3fe9 (shonei-server 4f71a2f needs a deploy on
+her yes); T-4024 onto tw/track 3c62751b.
 
 ## Next (11-23)
 0. Her goals, 11-23: compute speedups for T-4041 (main); loading consistency and crashes (main, short/medium term:
