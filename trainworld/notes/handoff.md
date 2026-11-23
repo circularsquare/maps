@@ -21,7 +21,7 @@ shonei-server, deploy needs her yes). Landed: T-4056, T-4068 (8800 73299e61), T-
    quiet machine, the changelog review (46 unpublished; c051 is T-4041's). Then her text OK and her yes, in this tab.
 2. Speed (T-4054 search, T-4057 elsewhere): same-answer wins land as they report; shifting ones bring a test shape
    for her to build (orchestrator.md "Speedups that shift riders"); batch checker after.
-3. Next as slots free: T-4080 bus stop names (after busnosnap lands: same panel/save), T-4075 (trams off their
+3. Next as slots free: T-4085 (Add a track as blueprint, no limit; tree from tw/track, Opus), T-4080 bus stop names (after busnosnap lands: same panel/save), T-4075 (trams off their
    track), T-3940 (crashes may take it), T-4051 (big save sits at 90% ~3 min), T-4055 (stale two-zone final, 1-2 h), then the paused
    trees (each tree's notes): onewaylag T-4045 (after T-4054), clockmem T-3939, stationids T-4043, timetables
    T-3346, coreslider T-3932, perfledger T-4025, split6. After hokkaido: sync-track, 8800 = tw/track tip, checker.
