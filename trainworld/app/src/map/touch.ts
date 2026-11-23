@@ -14,9 +14,22 @@ export function watchInput() {
     const t = e.pointerType === "touch";
     if (touchInput.peek() !== t) touchInput.value = t;
   }, true);
-  // a real mouse moving again (a laptop with a touch screen) takes the hover back
+  // A real mouse moving again (a laptop with a touch screen) takes the hover back. Only a move to a
+  // new spot counts: Firefox for Android follows a page change with a mouse move at the last mouse
+  // spot, the tap's own (T-4076), which took the hover back after every tap and dropped the end
+  // waiting to be placed.
+  let mx = NaN, my = NaN;
+  const still = (e: MouseEvent) => Math.abs(e.clientX - mx) < 1 && Math.abs(e.clientY - my) < 1;
   addEventListener("pointermove", (e) => {
-    if (e.pointerType === "mouse" && touchInput.peek()) touchInput.value = false;
+    if (e.pointerType !== "mouse") return;
+    if (touchInput.peek() && !still(e)) touchInput.value = false;
+    mx = e.clientX;
+    my = e.clientY;
+  }, { capture: true, passive: true });
+  // the mouse events a browser makes of a tap move the mouse spot there
+  for (const k of ["mousemove", "mousedown", "mouseup"] as const) addEventListener(k, (e) => {
+    mx = e.clientX;
+    my = e.clientY;
   }, { capture: true, passive: true });
 }
 
