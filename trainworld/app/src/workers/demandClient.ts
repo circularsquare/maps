@@ -2549,8 +2549,6 @@ class DemandClient {
         if (s.refinedAt === undefined) this.timeRest = { version: s.version, stops, finalMs };
       }
       this.endJob();
-      // (the bar is shown well short of full near the end: it fills before the card goes, as T-2574's does)
-      if (clock?.held.peek()) endCardFull(loadProgress.peek());
       loadProgress.value = null;
       return;
     }

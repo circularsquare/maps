@@ -44,6 +44,10 @@ export function endCardFull(p: LoadProgress | null) {
   cardEnding.value = p && { ...p, fraction: 1, leftMs: null };
   if (p) endingTimer = setTimeout(() => (cardEnding.value = null), END_BEAT_MS);
 }
+/** the card's last progress, so any load that ends with the card up shows its bar full first (the bar is drawn well
+ * short of full near the end, `shownShare`) */
+let lastCardLoad: LoadProgress | null = null;
+loadProgress.subscribe((p) => { if (p) lastCardLoad = p; });
 /** T-343: each zone being loaded whose figures have not arrived yet, with its share done (0-1).
  * A zone of the load above has that load's share; a zone opened for its bubbles only, its own. */
 export const zoneLoads = signal<ReadonlyMap<CityId, number>>(new Map());
@@ -146,6 +150,8 @@ export function loadComplete() {
   // T-742: the last game's hold ending after the next game loaded, before the demand client took
   // the next one's hold, ran the clock on the last game's demand (no fares) until the next final
   if (holdArmed) return;
+  if (clock?.held.peek() && lastCardLoad && !cardEnding.peek()) endCardFull(lastCardLoad);
+  lastCardLoad = null;
   clock?.setHeld(false);
   // T-1655: a chime for a wait over 30 s, once per game
   if (!gameReady.peek() && performance.now() - wait.since > LONG_LOAD_MS) onLoadChime?.();
