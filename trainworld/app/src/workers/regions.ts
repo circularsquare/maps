@@ -104,22 +104,28 @@ export class Regions {
   /** The nodes (`nodes_info`, 10 numbers each) and edges (`edges_info`) as the model has them now: each one new,
    * gone, moved, or a station or not anew marks its region (old and new) dirty. */
   sync(ni: ArrayLike<number>, ei: ArrayLike<number>, only?: { nodes: Set<number>; edges: Set<number> }) {
-    // `only`: the records an edit touched, the rest as they were unless the count of either moved
+    // `only`: the records an edit touched, the rest as they were unless the count of either moved. A touched record
+    // can be gone as well as new or moved, and one edit can remove some and add as many (the counts then hold).
     if (only && ni.length / 10 === this.at.size && ei.length / 10 === this.ends.size) {
+      const seenN = new Set<number>(), seenE = new Set<number>();
       for (let i = 0; i < ni.length; i += 10) {
         if (!only.nodes.has(ni[i])) continue;
         const id = ni[i], x = ni[i + 1], y = ni[i + 2], station = ni[i + 7] > 0, was = this.at.get(id);
+        seenN.add(id);
         if (was && was.x === x && was.y === y && was.station === station) continue;
         if (was) this.dropNode(id, was);
         this.addNode(id, x, y, station);
       }
+      for (const id of only.nodes) { const was = this.at.get(id); if (was && !seenN.has(id)) this.dropNode(id, was); }
       for (let i = 0; i < ei.length; i += 10) {
         if (!only.edges.has(ei[i])) continue;
         const id = ei[i], a = ei[i + 1], b = ei[i + 2], was = this.ends.get(id);
+        seenE.add(id);
         if (was && was[0] === a && was[1] === b) continue;
         if (was) this.dropEdge(id, was);
         this.addEdge(id, a, b);
       }
+      for (const id of only.edges) { const was = this.ends.get(id); if (was && !seenE.has(id)) this.dropEdge(id, was); }
       return;
     }
     const seen = new Set<number>();

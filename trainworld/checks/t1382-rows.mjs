@@ -28,6 +28,8 @@
 // T-4130: each seed first clears a built junction's crossing from far away (a line through it broken where no station
 // is, with its path kept, so only the line's no longer counting moves the junction's row; `crossDone`), and the random
 // edits break lines too (breakLine). New York's save has no built junction with a crossing, so the case runs on Asia's.
+// T-4137: a hand-made regions case first (an edit that removes as many records as it adds, so the counts hold); FROM=n
+// starts at seed n (FROM=9 node trainworld/checks/t1382-rows.mjs 9 40 asia: the batch check's seed 9, which found it).
 // T-4125: after every step the page's nearest track node and junction to the capacity tags and to points near nodes
 // (map/snapIndex.ts `nearestNode`, from its grids) must be the ones a scan of every node finds.
 import { readFileSync } from 'node:fs';
@@ -112,6 +114,20 @@ function firstDifference(a, b) {
     }
   }
   return null;
+}
+
+/** the first leaf where two regions' shapes differ: key, stations, and the nodes and edges one has and the other not */
+function shapeDifference(a, b) {
+  const parse = (s) => new Map(s.split('|').map((l) => { const [k, st, n, e] = l.split(':'); return [k, { st, n: new Set(n ? n.split(',') : []), e: new Set(e ? e.split(',') : []) }]; }));
+  const A = parse(a), B = parse(b), out = [];
+  for (const k of new Set([...A.keys(), ...B.keys()])) {
+    const x = A.get(k), y = B.get(k);
+    if (!x || !y) { out.push(`leaf ${k} only in the ${x ? 'kept' : 'fresh'} one`); continue; }
+    const less = (p, q) => [...p].filter((v) => !q.has(v));
+    const d = [x.st !== y.st ? `stations ${x.st} against ${y.st}` : '', less(x.n, y.n).length ? `nodes only kept ${less(x.n, y.n).slice(0, 8)}` : '', less(y.n, x.n).length ? `nodes only fresh ${less(y.n, x.n).slice(0, 8)}` : '', less(x.e, y.e).length ? `edges only kept ${less(x.e, y.e).slice(0, 8)}` : '', less(y.e, x.e).length ? `edges only fresh ${less(y.e, x.e).slice(0, 8)}` : ''].filter(Boolean);
+    if (d.length) out.push(`leaf ${k}: ${d.join(', ')}`);
+  }
+  return out.slice(0, 4).join('; ');
 }
 
 /** the first place two phase tables differ, or null */
@@ -242,7 +258,26 @@ const kinds = ['routeFree', 'routeFromNode', 'stationAtNode', 'stationOnEdge', '
 const weights = { breakLine: 2, oneWay: 2, edgeKind: 2, busLine: 2, busRoute: 2, undo: 3, redo: 2, trains: 3, headway: 2, rename: 3, setStops: 3, routeFree: 2, routeFromNode: 2, stationAtNode: 3, removeStation: 2, construct: 3 };
 const kindPool = kinds.flatMap((k) => Array(weights[k] ?? 1).fill(k));
 
-for (let seed = 1; seed <= SEEDS; seed++) {
+/** T-4137 (Asia, seed 9 step 15): one edit removes a node and an edge and adds as many, so the counts hold and the
+ * regions take the bounded sync, which must drop the touched records that are gone. Here on hand-made records. */
+function regionsCase() {
+  const N = (list) => Float64Array.from(list.flatMap(([id, x, y, st]) => [id, x, y, 0, 0, 0, 0, st, 0, 0]));
+  const E = (list) => Float64Array.from(list.flatMap(([id, a, b]) => [id, a, b, 1, 0, 0, 0, 0, 0, 0]));
+  const R = new Regions(1);
+  R.sync(N([[0, 0, 0, 1], [1, 5000, 0, 1], [2, 5000, 5000, 1], [3, -9000, 4000, 0]]), E([[0, 0, 1], [1, 1, 2], [2, 2, 3]]));
+  // node 2 and edge 1 gone, node 4 and edge 3 new
+  const ni = N([[0, 0, 0, 1], [1, 5000, 0, 1], [4, -5000, -5000, 1], [3, -9000, 4000, 0]]), ei = E([[0, 0, 1], [3, 1, 4], [2, 4, 3]]);
+  R.sync(ni, ei, { nodes: new Set([1, 2, 3, 4]), edges: new Set([1, 2, 3]) });
+  const fresh = new Regions(1);
+  fresh.sync(ni, ei);
+  if (fresh.shape() === R.shape()) return true;
+  console.log(`FAIL  regions case (T-4137): a node and an edge gone with as many new, counts the same: ${shapeDifference(R.shape(), fresh.shape())}`);
+  failures++;
+  return false;
+}
+if (!SELF) regionsCase();
+
+for (let seed = Number(process.env.FROM ?? 1); seed <= SEEDS; seed++) {
   const A = makeModel(seed), B = makeModel(seed);
   B.api.set_wet_cache(false);
   const eA = envFor(A.api), eB = envFor(B.api);
@@ -292,7 +327,7 @@ for (let seed = 1; seed <= SEEDS; seed++) {
     // the regions are what a fresh build from the same nodes and edges makes (so an undo gives the same ones back)
     const fresh = new Regions(rows.regions.cap);
     fresh.sync(A.api.nodes_info(), A.api.edges_info());
-    if (fresh.shape() !== rows.regions.shape()) { failures++; console.log(`FAIL  seed ${seed} step ${step} ${kind}: the regions differ from a fresh build (${rows.regions.size} leaves against ${fresh.size})`); break; }
+    if (fresh.shape() !== rows.regions.shape()) { failures++; console.log(`FAIL  seed ${seed} step ${step} ${kind}: the regions differ from a fresh build (${rows.regions.size} leaves against ${fresh.size}): ${shapeDifference(rows.regions.shape(), fresh.shape())}`); break; }
     rowsTotal += now.edges.length + now.nodes.length + now.lines.length;
     const old = new Set([...before.edges, ...before.nodes, ...before.lines]);
     for (const k of ['edges', 'nodes', 'lines']) for (const r of now[k]) if (old.has(r)) rowsKept++;
