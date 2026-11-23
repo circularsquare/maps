@@ -60,9 +60,9 @@ incidents behind the rules here are in `notes/rule-history.md`.
   continues. Overnight, while she sleeps, an agent may keep going past that; the orchestrator still cycles.
 - **Supervising**: check long runs (process and `world_run.py status`) at least every couple of hours; ask after any
   agent quiet for about 45 minutes.
-- **2-8 agents, usually 3-5** (her range 11-23; 8 is a ceiling, not a target: "why do we have 8 agents running? we
-  dont need to do that right?"), within the ledger's core cap. Start one when the work is ready and worth it, not to
-  fill a slot; fewer means fewer collisions, a quieter machine for measurements and less for her to review. A file collision rules out only the tasks that share files with a running agent; name
+- **2-8 agents, run by load** (her 11-23): when nothing is at a limit (cores, disk, files agents share, her review),
+  run more; when something is struggling or at a limit (claims waiting at the cap, smoke timing out, agents colliding,
+  timings that need a quiet machine), run fewer. Start one when its work is ready, not just to fill a slot. A file collision rules out only the tasks that share files with a running agent; name
   them, and start something else. Below 2 with startable work is a slip to fix at once, not a judgement call; above 8
   is too many.
 - **Cores 0-1 are hers** (her ask, 11-21): at takeover start, in the background,
@@ -118,7 +118,7 @@ incidents behind the rules here are in `notes/rule-history.md`.
   acknowledged, comments) land in `notes/board-inbox.jsonl`; her scratch pad arrives there as one `pad-send` (all her
   rough thoughts), reported at once: split it, merge duplicates, file the rest (notes/T-3391.md "Scratch pad"). At takeover start the watch with Monitor
   (longest timeout, re-arm): `venv\Scripts\python.exe -u trainworld/board/watch.py --session <your session id>`; it prints a line when a batch is
-  ready (her Send now, or 3 idle minutes), a `disk:` line (with a chime for Anita) when free space falls under 30 GB, then 10 GB (T-4088), and an `idle:` line hourly (and after an agent report) when fewer than 3 agents run, naming tasks to start. `watch.py pending` lists them; apply each in TASKS.md / LINES.md (a reorder
+  ready (her Send now, or 3 idle minutes), a `disk:` line (with a chime for Anita) when free space falls under 30 GB, then 10 GB (T-4088), and an `idle:` line hourly (and after an agent report) when fewer than 2 agents run, or fewer than 8 with 4+ cores free, naming tasks to start. `watch.py pending` lists them; apply each in TASKS.md / LINES.md (a reorder
   moves the line in LINES.md: that order is the area's queue), then `watch.py handled <ids> --by <you> --note "..."`.
   Line format and how each type applies: notes/T-3391.md "Stage 2".
 - **Player requests on the board**: once a day (and when she pastes reports), `venv\Scripts\python.exe
