@@ -338,6 +338,44 @@ def mark_no_line(region, feats, log):
         + (", ".join(f"{k} {v:,.0f} km" for k, v in km.most_common()) or "none") + ")")
 
 
+def mark_track_of_lines(region, ways, feats, log):
+    """`x` = 1 on track no line runs over (`n`) that carries the name of a rail line the model has
+    and is not tagged freight: the stretch of a named line the register left out because no
+    passenger station lies on it (T-3043: 南昆线 east of Pingguo, 87 km through Long'an). It stays
+    grey here (`n` is unchanged, this app ignores `x`); trainworld draws it, since it wants the
+    real track, not the lines. The ids go to dist/data/<region>/track_extra.json for its routing
+    graph. Lines of other kinds and short ones do not lend their names, so a metro's "Linea A"
+    does not claim a freight railway's."""
+    try:
+        with open(ROOT / "dist" / "data" / region / "lines.json", encoding="utf-8") as f:
+            lines = json.load(f)["lines"]
+    except FileNotFoundError:
+        return
+    names = set()
+    for l in lines:
+        if l.get("kind") == "rail" and not l.get("service") and l.get("km", 0) >= 20:
+            names.update(n for n in (l.get("name"), l.get("name_en")) if n)
+    ids, km = [], 0.0
+    for f in feats:
+        if not f.get("n") or f["kind"] != "rail":
+            continue
+        t = ways[f["wid"]][0]
+        if t.get("railway:traffic_mode") == "freight" or t.get("usage") == "freight":
+            continue
+        if (t.get("name") or t.get("name:en")) in names or t.get("name:en") in names:
+            f["x"] = 1
+            ids.append(f["wid"])
+            xy = f["xy"]
+            lat = math.degrees(math.atan(math.sinh(math.pi * (1 - 2 * xy[:, 1].mean()))))
+            km += float(np.hypot(*np.diff(xy, axis=0).T).sum()) * 40075.0 * math.cos(math.radians(lat))
+    out = ROOT / "dist" / "data" / region / "track_extra.json"
+    if ids:
+        out.write_text(json.dumps(sorted(ids)), encoding="utf-8")
+    elif out.exists():
+        out.unlink()
+    log(f"marked {len(ids)} ways (rail {km:,.0f} km) as track of a named line that no section covers")
+
+
 def drop_islands(region, feats, log):
     """Leave out every piece of track that touches no line: a set of ways joined to each other
     by shared nodes, none of which any line in the model runs over.
@@ -416,18 +454,18 @@ def merged_chains(feats, log):
         groups = {}
         for i, f in enumerate(feats):
             if f["minzoom"] <= z:
-                key = (f["kind"], f["rank"], f["pax"], f["c"], f.get("n", 0))
+                key = (f["kind"], f["rank"], f["pax"], f["c"], f.get("n", 0), f.get("x", 0))
                 groups.setdefault(key, []).append(i)
         chains = []
         for key in sorted(groups):
             idx = tuple(groups[key])
             if idx not in done:
-                kind, rank, pax, c, n = key
+                kind, rank, pax, c, n, x = key
                 group = [LineString(feats[i]["xy"]) for i in idx]
                 merged = linemerge(group) if len(group) > 1 else group[0]
                 parts = (list(merged.geoms) if merged.geom_type == "MultiLineString"
                          else [merged])
-                done[idx] = [{"kind": kind, "rank": rank, "pax": pax, "c": c, "n": n,
+                done[idx] = [{"kind": kind, "rank": rank, "pax": pax, "c": c, "n": n, "x": x,
                               "minzoom": z, "name": "", "wid": 0,
                               "xy": np.asarray(p.coords)} for p in parts]
             chains.extend(done[idx])
@@ -462,6 +500,8 @@ def tile_features(z, feats, chains, pts):
             p["c"] = f["c"]
         if f.get("n"):
             p["n"] = 1
+        if f.get("x"):
+            p["x"] = 1
         if z >= SPLIT:
             p["w"] = f["wid"]
             if f["name"]:
@@ -554,6 +594,7 @@ def main():
     for f in feats:
         f["c"] = colours.get(f["wid"], "")
     mark_no_line(args.region, feats, log)
+    mark_track_of_lines(args.region, ways, feats, log)
     if not args.no_long_lines:
         promote_long_lines(args.region, feats, log)
     chains = merged_chains(feats, log)
@@ -605,7 +646,7 @@ def main():
                     {"id": "track", "fields": {"k": "String", "r": "Number",
                                                "p": "Number", "w": "Number",
                                                "nm": "String", "c": "String",
-                                               "n": "Number"}},
+                                               "n": "Number", "x": "Number"}},
                 ],
             },
         )

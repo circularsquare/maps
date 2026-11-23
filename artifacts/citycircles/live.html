@@ -1,0 +1,2648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><!-- Owner opt-out: visit any page with ?notrack once per browser, ?track to undo. -->
+<script>
+  try {
+    if (/[?&]notrack\b/.test(location.search)) localStorage.setItem('notrack', '1');
+    if (/[?&]track\b/.test(location.search)) localStorage.removeItem('notrack');
+    if (localStorage.getItem('notrack')) window['ga-disable-G-RW5BF5TNQH'] = true;
+  } catch (e) {}
+</script>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-RW5BF5TNQH"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-RW5BF5TNQH');
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Proximity City Quiz</title>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css" integrity="sha384-uTttxo/aOKbdE5RlD/SPzSDoDmNvGlUYPjONi2MN/b7c9HPSvW07OIuyP7uL6jxK" crossorigin="anonymous"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#e3ffe0;--surface:#ffffff;--surface2:#e8f1e0;--border:#aacc9f;--border2:#648f5d;--text:#3a411e;--muted:#7f9363;--radius:2px;--fs-lg:16px;--fs-md:13px;--fs-sm:11px}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:Georgia,serif;font-size:var(--fs-md);overflow:hidden}
+/* dvh, not vh: on phones 100vh is the height with the browser toolbars hidden,
+   so the bottom of the sidebar (finish, new game) sat underneath them. */
+#app{display:grid;grid-template-columns:clamp(232px,25vw,290px) 1fr;height:100vh;height:100dvh}
+/* Scrolls rather than clips, so a short window (a phone on its side) can still
+   reach the buttons at the bottom. */
+#sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-x:hidden;overflow-y:auto}
+#header{padding:18px 18px 14px;border-top:4px solid var(--border2);border-bottom:1px solid var(--border)}
+#header h1{font-size:20px}
+#mode-section{padding:12px 18px 6px}
+.slabel{font-size:var(--fs-sm);color:var(--muted);margin-bottom:7px}
+.mode-tabs{display:flex;gap:5px}
+.mode-tab{flex:1;padding:6px 8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:Georgia,serif;font-size:var(--fs-sm);cursor:pointer;border-radius:var(--radius);transition:all .15s;text-align:center}
+.mode-tab:hover{color:var(--text);border-color:var(--border2)}
+.mode-tab.active{background:var(--text);border-color:var(--text);color:var(--surface)}
+#config-section{padding:6px 18px 11px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:9px}
+.config-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.config-row label{font-size:var(--fs-sm);color:var(--muted);white-space:nowrap}
+.config-row select{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:Georgia,serif;font-size:var(--fs-sm);border-radius:var(--radius);padding:3px 7px;cursor:pointer;outline:none;max-width:150px}
+.city-tip{pointer-events:none}
+.city-tip .maplibregl-popup-content{font-family:Georgia,serif;font-size:var(--fs-sm);background:#ffffff;border:1px solid var(--border2);color:var(--text);border-radius:2px;padding:3px 8px;box-shadow:0 1px 4px rgba(0,0,0,.1);white-space:nowrap}
+.city-tip .maplibregl-popup-tip{display:none}
+#chain-check{accent-color:var(--text);width:14px;height:14px;margin:0 2px;cursor:pointer}
+#chain-check:disabled{cursor:default}
+#input-section{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;gap:6px;position:relative}
+/* Brief note under the text box when a guess is a real city but not allowed. */
+#guess-msg{position:absolute;left:18px;top:calc(100% - 7px);z-index:5;background:var(--text);color:var(--surface);font-size:var(--fs-sm);padding:3px 8px;border-radius:var(--radius);pointer-events:none;opacity:0;transition:opacity .2s}
+#guess-msg.show{opacity:1}
+#city-input{flex:1;min-width:0;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:Georgia,serif;font-size:var(--fs-md);padding:8px 11px;border-radius:var(--radius);outline:none;transition:border-color .15s}
+/* Square: as wide as the text box is tall. */
+#guess-btn{flex:0 0 auto;align-self:stretch;aspect-ratio:1;padding:0;display:flex;align-items:center;justify-content:center}
+/* Phones only: a one-line summary that stands in for the settings once a game has started. */
+#settings-summary{display:none}
+#city-input::placeholder{color:var(--muted)}
+#city-input:focus{border-color:var(--border2)}
+#city-input.shake{animation:shake .3s ease;border-color:#c0392b}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+#stats{padding:12px 18px;display:grid;grid-template-columns:1fr 1fr;gap:7px;border-bottom:1px solid var(--border)}
+.stat{background:var(--surface2);border-radius:var(--radius);padding:9px 8px 7px;text-align:center}
+.stat-val{font-size:var(--fs-lg);color:var(--text);line-height:1;margin-bottom:3px}
+.stat-label{font-size:var(--fs-sm);color:var(--muted)}
+#found-section{flex:1;min-height:120px;overflow:hidden;display:flex;flex-direction:column}
+/* A button so it can open the list on mobile; on desktop it looks and acts like
+   a plain label. */
+#found-header{padding:10px 18px 7px;font-family:Georgia,serif;font-size:var(--fs-sm);color:var(--muted);border:none;border-bottom:1px solid var(--border);background:none;text-align:left;cursor:default}
+#found-header .chev{display:none}
+#found-list{flex:1;overflow-y:auto;padding:5px 18px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.found-item{display:flex;align-items:baseline;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);animation:fadein .2s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:translateY(0)}}
+.found-city{font-size:var(--fs-sm)}
+.found-item.done .found-city{color:var(--muted);text-decoration:line-through}
+.found-pop{color:var(--muted);font-size:var(--fs-sm)}
+#actions{padding:10px 18px;border-top:1px solid var(--border);display:flex;gap:7px}
+.btn{flex:1;padding:7px 4px;white-space:nowrap;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:Georgia,serif;font-size:var(--fs-sm);cursor:pointer;border-radius:var(--radius);transition:all .15s}
+.btn:hover{color:var(--text);border-color:var(--border2)}
+.btn.primary{border-color:var(--text);color:var(--text)}
+.btn.primary:hover{background:var(--text);color:var(--surface)}
+.btn:disabled{opacity:.4;cursor:default;pointer-events:none}
+#about-row{padding:8px 18px;border-top:1px solid var(--border);text-align:center}
+#about-row a,.about-m{font-family:Georgia,serif;font-size:var(--fs-sm);color:var(--muted);text-decoration:underline}
+#found-drop{flex:1;min-height:0;display:flex;flex-direction:column}
+.about-m{display:none}
+#map{width:100%;height:100%;min-height:0}
+#legend{position:absolute;bottom:28px;right:10px;z-index:500;background:rgba(245,250,240,.93);border:1px solid var(--border);border-radius:2px;padding:8px 11px;font-family:Georgia,serif;font-size:var(--fs-sm);color:var(--muted)}
+#legend .lr{display:flex;align-items:center;gap:7px;margin-bottom:3px}
+#legend .lr:last-child{margin-bottom:0}
+#legend .ld{border-radius:50%;flex-shrink:0;border:1px solid rgba(0,0,0,.15)}
+#win-overlay{display:none;position:fixed;top:16px;right:16px;z-index:1000;width:290px}
+#win-overlay.show{display:block}
+#win-box{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:20px 22px 18px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.12);position:relative}
+#win-close{position:absolute;top:7px;right:10px;background:none;border:none;color:var(--muted);cursor:pointer;padding:0;line-height:1;font-family:Georgia,serif}
+#win-close:hover{color:var(--text)}
+.win-num{font-size:var(--fs-lg);color:var(--text);line-height:1;margin-bottom:3px}
+.win-sub,.win-desc{color:var(--muted);font-size:var(--fs-sm);margin-bottom:3px}
+.win-desc{margin-bottom:16px}
+#win-lb-section{margin-top:16px;text-align:left;border-top:1px solid var(--border);padding-top:14px}
+#win-submit-row{display:flex;gap:6px;margin-bottom:6px;position:relative}
+/* Windows has no flag emoji of its own; this font is only fetched when a flag is on the page. */
+@font-face{font-family:"Twemoji Country Flags";unicode-range:U+1F1E6-1F1FF,U+1F3F4,U+E0062-E007F;src:url('https://cdn.jsdelivr.net/npm/country-flag-emoji-polyfill@0.1.8/dist/TwemojiCountryFlags.woff2') format('woff2');font-display:swap}
+.flag{font-family:"Twemoji Country Flags","Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif}
+#win-flag-btn{flex:0 0 auto;width:34px;display:flex;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0;font-size:16px;cursor:pointer}
+#win-flag-btn:hover{border-color:var(--border2)}
+.noflag{display:block}
+/* Non-flag emoji sit about 1px low in their line box; flags don't. */
+#win-flag-btn.em{padding-bottom:2px}
+#flag-pop .fl.em{padding:2px 0 4px}
+.lb-flag.em{position:relative;top:-1px}
+#flag-pop{display:none;position:absolute;top:100%;left:0;right:0;margin-top:4px;z-index:5;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 4px 12px rgba(0,0,0,.12);padding:6px;max-height:min(220px,40vh);overflow-y:auto}
+#flag-pop.show{display:block}
+#flag-pop .fl-grid{display:flex;flex-wrap:wrap}
+#flag-pop .fl{width:12.5%;min-width:28px;padding:3px 0;background:none;border:none;border-radius:var(--radius);font-size:17px;line-height:1.2;cursor:pointer}
+#flag-pop .fl:hover{background:var(--surface2)}
+#flag-pop .fl.fl-none{display:flex;align-items:center;justify-content:center;height:27px}
+#flag-pop [hidden]{display:none!important}
+#flag-search{display:block;width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:Georgia,serif;font-size:var(--fs-sm);padding:5px 8px;border-radius:var(--radius);outline:none;margin-bottom:6px}
+#flag-search:focus{border-color:var(--border2)}
+#flag-pop .fl-sep{border-top:1px solid var(--border);margin:6px 0}
+.lb-flag{display:inline-block;margin-right:4px}
+.lb-table td:first-child{padding-right:0}
+.lb-table td:nth-child(2){padding-left:0}
+#win-submit-btn{flex:0 0 auto;padding:7px 10px}
+#win-name-input{flex:1;min-width:0;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:Georgia,serif;font-size:var(--fs-sm);padding:6px 9px;border-radius:var(--radius);outline:none}
+#win-name-input:focus{border-color:var(--border2)}
+#win-submit-status{font-size:var(--fs-sm);color:var(--muted);min-height:16px;margin-bottom:6px;text-align:center}
+/* Twenty rows rather than ten, so give the box room to show a useful run of
+   them, but cap it against the viewport as well — the overlay is pinned to the
+   top of the screen and has no height limit of its own, so a fixed 20-row box
+   would run off the bottom on a short window. */
+#win-lb-entries{max-height:min(360px,45vh);overflow-y:auto;border:1px solid var(--border)}
+/* Desktop: no fixed cap. The overlay stops 16px above the bottom of the window
+   and the board takes whatever height is left, so a tall window shows all 20
+   rows plus your own row below them without scrolling, and a short board is
+   only as tall as its rows. Phones keep the cap above and scroll the overlay. */
+@media (min-width:641px){
+  #win-overlay.show{display:flex;flex-direction:column;max-height:calc(100vh - 32px)}
+  #win-box,#win-lb-section{display:flex;flex-direction:column;min-height:0}
+  #win-lb-entries{max-height:none;min-height:0;flex:0 1 auto}
+}
+.lb-table{width:100%;border-collapse:collapse;font-size:var(--fs-sm)}
+.lb-table td.r{text-align:right}
+.lb-table td{padding:5px 6px;border-bottom:1px solid var(--border);color:var(--text)}
+.lb-table tbody tr:last-child td{border-bottom:none}
+.lb-you td{background:var(--surface2)}
+.lb-gap td{color:var(--muted);text-align:center;padding:2px 6px}
+.lb-empty{font-size:var(--fs-sm);color:var(--muted);padding:10px 0;text-align:center}
+.win-lb-head{font-size:var(--fs-sm);color:var(--text)}
+#win-lb-label{font-size:var(--fs-sm);color:var(--muted);margin-bottom:8px}
+/* The leaderboard opened mid-game: just the board, nothing about the game. */
+#win-overlay.lb-only #win-found,#win-overlay.lb-only #win-sub,#win-overlay.lb-only #win-desc,
+#win-overlay.lb-only #win-play-again,#win-overlay.lb-only #win-submit-row,#win-overlay.lb-only #win-submit-status{display:none}
+#win-overlay.lb-only #win-lb-section{margin-top:0;border-top:none;padding-top:0}
+
+/* ── Phones: controls in a bar across the top, map below ──
+   The text box sits in that top bar rather than along the bottom, so the
+   on-screen keyboard (which comes up from the bottom) can never cover it.
+   iOS zooms the page into any input under 16px on focus; maximum-scale=1 in
+   the viewport tag stops that, and the map handles its own pinch zoom anyway. */
+@media (max-width:640px){
+  #app{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+  #sidebar{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"head actions" "mode mode" "config config" "sum sum" "input input" "found stats";
+    border-right:none;border-bottom:1px solid var(--border);overflow:visible;position:relative;z-index:600}
+  #header{grid-area:head;padding:10px 0 8px 16px;border-top-width:3px;border-bottom:none}
+  #header h1{font-size:15px;white-space:nowrap}
+  #actions{grid-area:actions;padding:7px 16px 6px 8px;border-top:3px solid var(--border2);justify-content:flex-end;flex-wrap:wrap;gap:5px}
+  #actions .btn{flex:0 0 auto;padding:5px 7px}
+  #mode-section{grid-area:mode;padding:2px 16px 6px}
+  #mode-section .slabel{display:none}
+  .mode-tab{padding:5px 8px;white-space:nowrap}
+  /* Settings get the full width under the mode tabs, so they fit on one line. */
+  #config-section{grid-area:config;flex-direction:row;flex-wrap:wrap;justify-content:flex-start;align-items:center;gap:6px 8px;padding:0 16px 8px;border-bottom:none}
+  .config-row{gap:5px}
+  .config-row .long{display:none}
+  /* The dropdowns say what they are ("Algeria", "20 cities", "500 km"), so
+     their labels go, which keeps the settings to two lines. */
+  #config-section .config-row>label:not([for="chain-check"]){display:none}
+  .config-row select{max-width:140px;padding:3px 3px}
+  #sidebar.playing:not(.settings-open) #mode-section,#sidebar.playing:not(.settings-open) #config-section{display:none}
+  #sidebar.playing #settings-summary{display:block;grid-area:sum;padding:0 16px 8px;background:none;border:none;text-align:left;font-family:Georgia,serif;font-size:var(--fs-sm);color:var(--muted);cursor:pointer}
+  #input-section{grid-area:input;padding:0 16px 8px;border-bottom:none}
+  #guess-msg{left:16px}
+  #city-input{font-size:14px;padding:7px 10px}
+  #found-section{grid-area:found;min-height:0;overflow:visible;display:block}
+  #found-header{cursor:pointer;padding:7px 0 7px 16px;border-bottom:none;border-top:1px solid var(--border);color:var(--text);width:100%}
+  #found-header .chev{display:inline}
+  #stats{grid-area:stats;display:flex;justify-content:flex-end;align-items:center;gap:12px;padding:0 16px;border-bottom:none;border-top:1px solid var(--border)}
+  .stat{display:flex;align-items:baseline;gap:4px;background:none;padding:0}
+  .stat-val{font-size:var(--fs-md);margin-bottom:0}
+  .stat-label .long{display:none}
+  /* The country list drops down over the map, so opening it never resizes the map. */
+  #found-drop{display:none;position:absolute;top:100%;left:0;right:0;max-height:25dvh;background:var(--surface);border-bottom:1px solid var(--border);box-shadow:0 4px 12px rgba(0,0,0,.1);padding:5px 16px 10px}
+  #sidebar.countries-open #found-drop{display:flex}
+  #found-list{padding:0;margin-bottom:8px}
+  #found-list:empty{display:none}
+  .about-m{display:block}
+  #about-row{display:none}
+  #legend{display:none}
+  #win-overlay{top:8px;left:8px;right:8px;width:auto;max-height:calc(100dvh - 16px);overflow-y:auto}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="sidebar">
+    <div id="header">
+      <h1>city circles quiz</h1>
+    </div>
+    <div id="mode-section">
+      <div class="slabel">mode</div>
+      <div class="mode-tabs" id="mode-tabs-wrap">
+        <button class="mode-tab active" data-mode="radius" onclick="setMode('radius')">radius</button>
+        <button class="mode-tab" data-mode="nearest" onclick="setMode('nearest')">nearest n</button>
+        <button class="mode-tab" data-mode="band" onclick="setMode('band')">band</button>
+      </div>
+    </div>
+    <div id="config-section">
+      <div class="config-row">
+        <label for="country-select">country</label>
+        <select id="country-select" onchange="onCountryChange()"><option value="">all countries</option></select>
+      </div>
+      <div class="config-row" id="radius-row">
+        <label>radius<span class="long"> per guess</span></label>
+        <select id="radius-select" onchange="onRadiusChange()"></select>
+      </div>
+      <div class="config-row" id="band-row" style="display:none">
+        <label>band<span class="long"> per guess</span></label>
+        <select id="band-select" onchange="onBandChange()"></select>
+      </div>
+      <div class="config-row" id="nearest-row" style="display:none">
+        <label>cities<span class="long"> per guess</span></label>
+        <select id="nearest-select" onchange="onNearestChange()"></select>
+      </div>
+      <div class="config-row" id="pop-row">
+        <label>min pop<span class="long">ulation</span></label>
+        <select id="pop-select" onchange="onPopChange()">
+          <option value="10000">10k+</option>
+          <option value="50000" selected>50k+</option>
+          <option value="100000">100k+</option>
+        </select>
+      </div>
+      <div class="config-row" id="chain-row">
+        <label for="chain-check">chain<span class="long"> mode</span></label>
+        <input type="checkbox" id="chain-check" onchange="onChainChange()"/>
+      </div>
+      </div>
+    <button id="settings-summary" onclick="toggleSettings()"></button>
+    <div id="input-section">
+      <input type="text" id="city-input" placeholder="type a city…" autocomplete="off" spellcheck="false" enterkeyhint="go"/>
+      <!-- mousedown is cancelled so tapping it doesn't take focus from the text box and drop the phone keyboard -->
+      <button class="btn primary" id="guess-btn" title="submit" aria-label="submit" onmousedown="event.preventDefault()" onclick="submitGuess()"><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path d="M2.5 8h10.5M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div id="guess-msg"></div>
+    </div>
+    <div id="stats">
+      <div class="stat"><div class="stat-val" id="stat-cities">0/—</div><div class="stat-label">cities</div></div>
+      <div class="stat"><div class="stat-val" id="stat-pop">—</div><div class="stat-label">pop<span class="long">ulation</span></div></div>
+    </div>
+    <div id="found-section">
+      <button id="found-header" onclick="toggleCountries()">countries<span class="chev" id="found-chev"> ▸</span></button>
+      <div id="found-drop">
+        <div id="found-list"></div>
+        <a class="about-m" href="/projects/citycircles">about this quiz</a>
+      </div>
+    </div>
+    <div id="actions">
+      <button class="btn primary" id="finish-btn" onclick="giveUp()" disabled>finish</button>
+      <button class="btn primary" onclick="newGame()">new game</button>
+      <button class="btn primary" id="lb-btn" onclick="showLeaderboard()">leaderboard</button>
+    </div>
+    <div id="about-row">
+      <a href="/projects/citycircles">about</a>
+    </div>
+  </div>
+  <div id="map"></div>
+</div>
+<div id="legend">
+  <div class="lr"><div class="ld" style="width:6px;height:6px;background:#4a90d9"></div> &gt;10k</div>
+  <div class="lr"><div class="ld" style="width:7px;height:7px;background:#2ab8b8"></div> &gt;30k</div>
+  <div class="lr"><div class="ld" style="width:9px;height:9px;background:#4caf50"></div> &gt;100k</div>
+  <div class="lr"><div class="ld" style="width:11px;height:11px;background:#d4c020"></div> &gt;300k</div>
+  <div class="lr"><div class="ld" style="width:13px;height:13px;background:#e07820"></div> &gt;1M</div>
+  <div class="lr"><div class="ld" style="width:15px;height:15px;background:#d03030"></div> &gt;3M</div>
+  <div class="lr"><div class="ld" style="width:17px;height:17px;background:#c040a0"></div> &gt;10M</div>
+</div>
+<div id="win-overlay">
+  <div id="win-box">
+    <button id="win-close" onclick="document.getElementById('win-overlay').classList.remove('show')" title="close">✕</button>
+    <div class="win-num" id="win-found">0</div>
+    <div class="win-sub" id="win-sub">cities revealed</div>
+    <div class="win-desc" id="win-desc"></div>
+    <button class="btn primary" id="win-play-again" style="width:100%" onclick="newGame()">play again</button>
+    <div id="win-lb-section">
+      <div id="win-submit-row">
+        <button type="button" id="win-flag-btn" onclick="toggleFlagPicker()"></button>
+        <div id="flag-pop"></div>
+        <input type="text" id="win-name-input" placeholder="your name" maxlength="24" autocomplete="off" spellcheck="false"/>
+        <button id="win-submit-btn" class="btn primary" onclick="winSubmitScore()">submit</button>
+      </div>
+      <div id="win-submit-status"></div>
+      <div class="win-lb-head">leaderboard</div>
+      <div id="win-lb-label"></div>
+      <div id="win-lb-entries"></div>
+    </div>
+  </div>
+</div>
+<script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js" integrity="sha384-5+cfbwT0iiub6VsQAdn6yz16nr6sDiQoHx6tm4O8OVYXHYOxcffFmCJBL0dgdvGp" crossorigin="anonymous"></script>
+<script src="/assets/games/cities_data.js"></script>
+<script>
+
+  // python -m http.server 8000
+let CITIES=[];
+let cityNameMap=new Map();
+let _filteredCache=null, _filteredMinPop=-1;
+
+// Letters NFD does NOT decompose into base+combining mark. Without folding them
+// first they fall through to the [^a-z0-9] strip and vanish, which affects 203
+// cities \u2014 Diyarbak\u0131r became "diyarbakr", \u0141\u00f3d\u017a became "odz", Wroc\u0142aw "wrocaw".
+const FOLD={'\u0131':'i','\u0142':'l','\u0111':'d','\u00f0':'d','\u00f8':'o','\u00df':'ss','\u00e6':'ae','\u0153':'oe','\u0259':'e','\u0127':'h','\u00fe':'th','\u014b':'n'};
+function norm(s){
+  return s.toLowerCase()
+    .replace(/[\u0131\u0142\u0111\u00f0\u00f8\u00df\u00e6\u0153\u0259\u0127\u00fe\u014b]/g,c=>FOLD[c])
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]/g,'');
+}
+
+// Generate alias variants: st<->saint, city optional, ciudad optional
+function getVariants(n){
+  const set=new Set([n]);
+  function expand(s){
+    if(s.startsWith('saint')) set.add('st'+s.slice(5));
+    if(s.startsWith('st')) set.add('saint'+s.slice(2));
+    if(s.endsWith('city')) set.add(s.slice(0,-4));
+    if(!s.endsWith('city')) set.add(s+'city');
+    // "Ciudad" is the Spanish "City of" — treat it like the English suffix.
+    // Length guard so names such as Ciudadela don't degrade to a 2-letter key.
+    if(s.startsWith('ciudad')&&s.length>9) set.add(s.slice(6));
+    if(!s.startsWith('ciudad')) set.add('ciudad'+s);
+  }
+  expand(n);
+  [...set].forEach(expand);
+  [...set].forEach(expand);
+  return set;
+}
+
+// Aliases: normalized alias → normalized canonical city name in CITIES_RAW.
+// Diacritics and spaces are already stripped by norm(), so only add aliases
+// that are genuinely different strings after normalization.
+const CITY_ALIASES={
+  'bombay':                    'mumbai',
+  'bangalore':                 'bengaluru',
+  'bengalore':                 'bengaluru',        // misspelling
+  'calcutta':                  'kolkata',
+  'madras':                    'chennai',
+  'poona':                     'pune',
+  'amdavad':                   'ahmedabad',
+  'peking':                    'beijing',
+  'canton':                    'guangzhou',
+  'chungking':                 'chongqing',
+  'nanking':                   'nanjing',
+  'nankin':                    'nanjing',
+  'tientsin':                  'tianjin',
+  'hangchow':                  'hangzhou',
+  'soochow':                   'suzhou',
+  'tsingtao':                  'qingdao',
+  'mukden':                    'shenyang',
+  'amoy':                      'xiamen',
+  'fatshan':                   'foshan',
+  'saigon':                    'hochiminhcity',
+  'ulaanbaatar':               'ulanbator',        // canonical in data is "Ulan Bator"
+  'ulaanbataar':               'ulanbator',
+  'ulanbaatar':                'ulanbator',
+  'ulaanbatar':                'ulanbator',
+  'kiev':                      'kyiv',
+  'rangoon':                   'yangon',
+  'angora':                    'ankara',
+  'constantinople':            'istanbul',
+  'mecca':                     'makkah',
+  'medina':                    'madinah',
+  'basra':                    'basrah',
+  'jidda':                     'jeddah',
+  'jedda':                     'jeddah',
+  'jiddah':                    'jeddah',
+  'teheran':                   'tehran',
+  'leopoldville':              'kinshasa',
+  'dacca':                     'dhaka',
+  'chittagong':                'chattogram',
+  'batavia':                   'jakarta',
+  'leningrad':                 'saintpetersburg',
+  'petrograd':                 'saintpetersburg',
+  'sanktpeterburg':           'saintpetersburg',
+  'petropavlovsk':             'petropavlovskkamchatsky',
+  'roma':                      'rome',
+  'milano':                    'milan',
+  'munchen':                   'munich',
+  'wien':                      'vienna',
+  'warszawa':                  'warsaw',
+  'praha':                     'prague',
+  'singapura':                 'singapore',
+  'krungthep':                 'bangkok',
+  'khartum':                   'khartoum',
+  'addisabeba':                'addisababa',
+  'alger':                     'algiers',
+  'katmandu':                  'kathmandu',
+  'kathmando':                 'kathmandu',        // misspelling
+  'kaapstad':                  'capetown',
+  // ── English exonyms (added after player feedback about Gothenburg) ──
+  'gothenburg':                'goteborg',
+  'gothenberg':                'goteborg',         // misspelling
+  'aarhus':                    'arhus',            // data has "Århus"
+  'kobenhavn':                 'copenhagen',       // data name is already English
+  'cologne':                   'koln',
+  'nuremberg':                 'nurnberg',
+  'ratisbon':                  'regensburg',
+  'treves':                    'trier',
+  'aixlachapelle':             'aachen',
+  'leghorn':                   'livorno',
+  'mantua':                    'mantova',
+  'oporto':                    'porto',
+  'seville':                   'sevilla',
+  'saragossa':                 'zaragoza',
+  'corunna':                   'acoruna',
+  'majorca':                   'palma',
+  'mallorca':                  'palma',
+  'salonica':                  'thessaloniki',
+  'salonika':                  'thessaloniki',
+  'heraklion':                 'irakleion',
+  'iraklion':                  'irakleion',
+  'patras':                    'patra',
+  'danzig':                    'gdansk',
+  'breslau':                   'wroclaw',
+  'stettin':                   'szczecin',
+  'posen':                     'poznan',
+  'basle':                     'basel',
+  'lucerne':                   'luzern',
+  'berne':                     'bern',
+  'antwerp':                   'antwerpen',
+  'ghent':                     'gent',
+  'bruges':                    'brugge',
+  'louvain':                   'leuven',
+  'flushing':                  'vlissingen',
+  'adrianople':                'edirne',
+  'smyrna':                    'izmir',
+  'fez':                       'fes',
+  'portelizabeth':             'gqeberha',         // renamed 2021
+  'pusan':                     'busan',
+  'taegu':                     'daegu',
+  'inchon':                    'incheon',
+  'kwangju':                   'gwangju',
+  'naypyidaw':                 'naypyitaw',
+  'johorbaru':                 'johorbahru',
+  // ── Player requests: Algerian and Somali spellings ──
+  'tamanrasset':               'tamanghasset',     // data has "Tamanghasset"
+  'tamanghest':                'tamanghasset',
+  'tamenghest':                'tamanghasset',
+  'wargla':                    'ouargla',
+  'galkayo':                   'gaalkacyo',        // data has "Gaalkacyo"
+  'galkacyo':                  'gaalkacyo',
+  'galcayo':                   'gaalkacyo',
+  'gaalcakyo':                 'gaalkacyo',        // misspelling
+  'galkaayo':                  'gaalkacyo',
+  'muqdisho':                  'mogadishu',
+  'kismaayo':                  'kismayo',
+  'baydhabo':                  'baidoa',
+  'boosaaso':                  'bosaso',
+  'burco':                     'burao',
+  'garowe':                    'garoowe',
+  // ── Player requests: Urgench and Aksu, and their neighbours ──
+  // The data spells Central Asia in the local Latin alphabets (Urganch, Tirmiz)
+  // and Xinjiang and Tibet in Uyghur or pinyin (Aqsu, Rikaze), where English
+  // usually has Russian-era or older spellings. Single letters that English
+  // writes as two (Uzbek x = kh) are handled by TRANSLIT below; these are the
+  // rest. Aksu itself is in CITY_ALSO, since two Kazakh towns already have it.
+  'urgench':                   'urganch',
+  'termez':                    'tirmiz',
+  'navoi':                     'navoiy',
+  'jizak':                     'jizzax',
+  'dzhizak':                   'jizzax',
+  'almalyk':                   'olmaliq',
+  'gulistan':                  'guliston',
+  'bekabad':                   'bekobod',
+  'kattakurgan':               'kattaqorgonshahri',
+  'denau':                     'denov',
+  'shakhrisabz':               'shahrisabz',
+  'kungrad':                   'qunghirot',
+  'khodjeyli':                 'xojaylishahri',
+  'khojeyli':                  'xojaylishahri',
+  'kagan':                     'kogonshahri',
+  'gijduvan':                  'gijduvonshahri',
+  'akhangaran':                'ohangaron',
+  'kuvasay':                   'quvasoy',
+  'kasansay':                  'kosonsoy',
+  'nurata':                    'nurota',
+  'turtkul':                   'novyyturtkul',
+  'beruni':                    'beruniy',
+  'toshkent':                  'tashkent',
+  'samarqand':                 'samarkand',
+  'buxoro':                    'bukhara',
+  'fargona':                   'fergana',
+  'uchkurgan':                 'uchqurghonshahri',
+  'chartak':                   'chortoq',
+  'shakhrikhan':               'shahrixon',
+  'kulyab':                    'kulob',
+  'khodjent':                  'khujand',
+  'khojand':                   'khujand',
+  'khodzhent':                 'khujand',
+  'leninabad':                 'khujand',
+  'kurgantyube':               'bokhtar',
+  'qurghonteppa':              'bokhtar',
+  'kurganteppa':               'bokhtar',
+  'uratyube':                  'istaravshan',
+  'penjikent':                 'panjakent',
+  'panjikent':                 'panjakent',
+  'khorog':                    'khorugh',
+  'kanibadam':                 'konibodom',
+  'kayrakkum':                 'qayroqqum',
+  'chkalovsk':                 'buston',
+  'tursunzade':                'tursunzoda',
+  'regar':                     'tursunzoda',
+  'dashowuz':                  'dasoguz',
+  'dashhowuz':                 'dasoguz',
+  'tashauz':                   'dasoguz',
+  'turkmenbashi':              'turkmenbasy',
+  'krasnovodsk':               'turkmenbasy',
+  'chardzhou':                 'turkmenabat',
+  'chardjou':                  'turkmenabat',
+  'bayramali':                 'bayramaly',
+  'nebitdag':                  'balkanabat',
+  'merv':                      'mary',
+  'geoktepe':                  'gokdepe',
+  'kunyaurgench':              'koneurgench',
+  'atamyrat':                  'kerki',
+  'frunze':                    'bishkek',
+  'przhevalsk':                'karakol',
+  'jalalabat':                 'jalalabad',
+  'dzhalalabad':               'jalalabad',
+  'ozgon':                     'uzgen',
+  'balykchi':                  'balykchy',
+  'rybachye':                  'balykchy',
+  'kyzylkiya':                 'kyzylkyya',
+  'tashkomur':                 'tashkumyr',
+  'sulukta':                   'suluktu',
+  'oskemen':                   'ustkamenogorsk',
+  'uralsk':                    'oral',
+  'chimkent':                  'shymkent',
+  'dzhambul':                  'taraz',
+  'zhambyl':                   'taraz',
+  'guryev':                    'atyrau',
+  'shevchenko':                'aktau',
+  'aqtau':                     'aktau',
+  'aqtobe':                    'aktobe',
+  'dzhezkazgan':               'zhezqazghan',
+  'zhezkazgan':                'zhezqazghan',
+  'jezkazgan':                 'zhezqazghan',
+  'balkhash':                  'balqash',
+  'kapchagay':                 'konayev',
+  'kapshagay':                 'konayev',
+  'qonaev':                    'konayev',
+  'baykonur':                  'baikonur',
+  'kokchetav':                 'kokshetau',
+  'turkistan':                 'turkestan',
+  'qyzylorda':                 'kyzylorda',
+  'taldykurgan':               'taldykorgan',
+  'sarkand':                   'sarqant',
+  'satbayev':                  'satpayev',
+  'novyyuzen':                 'zhanaozen',
+  'kulsary':                   'qulsary',
+  'akesu':                     'aqsu',
+  'kashi':                     'kashgar',
+  'kaxgar':                    'kashgar',
+  'khotan':                    'gujangbagh',
+  'hetian':                    'gujangbagh',
+  'kuerle':                    'korla',
+  'kulja':                     'ghulja',
+  'gulja':                     'ghulja',
+  'kumul':                     'hami',
+  'atush':                     'artux',
+  'atushi':                    'artux',
+  'yarkand':                   'shache',
+  'yarkant':                   'shache',
+  'chuguchak':                 'tacheng',
+  'qoqek':                     'tacheng',
+  'bortala':                   'bole',
+  'tulufan':                   'turpan',
+  'wulumuqi':                  'urumqi',
+  'shigatse':                  'rikaze',
+  'xigaze':                    'rikaze',
+  'chamdo':                    'qamdo',
+  'nakchu':                    'nagqu',
+  'zhongdian':                 'shangrila',
+  'gyalthang':                 'shangrila',
+  'tsetang':                   'lhoka',
+  'zedang':                    'lhoka',
+  'shannan':                   'lhoka',
+  'sumgait':                   'sumqayit',
+  'sumgayit':                  'sumqayit',
+  'gyandzha':                  'ganja',
+  'ganca':                     'ganja',
+  'lenkoran':                  'lankaran',
+  'nakhichevan':               'naxcivan',
+  'shaki':                     'sheki',
+  'mingechaur':                'mingachevir',
+  'yevlax':                    'yevlakh',
+  'agjabadi':                  'agdzhabedy',
+  'aghjabadi':                 'agdzhabedy',
+  'zakatala':                  'zaqatala',
+  'guba':                      'quba',
+  'shamkir':                   'shamkhor',
+  'samaxi':                    'shamakhi',
+  'ismailli':                  'ismayilli',
+  'fuzuli':                    'fizuli',
+  'hajigabul':                 'haciqabul',
+  'celilabad':                 'jalilabad',
+  'xirdalan':                  'khirdalan',
+  'darkhan':                   'darhan',
+  'hovd':                      'khovd',
+  'ulgii':                     'olgii',
+  'olgiy':                     'olgii',
+  'bayankhongor':              'bayanhongor',
+  'arvaikheer':                'arvayheer',
+  'sukhbaatar':                'suhbaatar',
+  'ondorkhaan':                'undurkhaan',
+  'undurkhan':                 'undurkhaan',
+  'murun':                     'moron',
+  'choybalsan':                'choibalsan',
+  'dalanzadgad':               'dalandzadgad',
+  'nalaikh':                   'nalayh',
+  // ── Player requests: Geneva, Cluj, and the same kinds of names ──
+  // GeoNames has since moved many cities to the English name (Geneva, Padua,
+  // Dunkirk) or a new spelling (Ukrainian y/i); the data still has the old one.
+  // The rest are English names from alternateNamesV2 picked by hand, and short
+  // forms people use (Cluj, Udon, Southend). Names that already belong to a
+  // smaller city (Geneva, Illinois) are in CITY_ALSO.
+  'cluj':                        'clujnapoca',
+  'ubon':                        'ubonratchathani',
+  'udon':                        'udonthani',
+  'southend':                    'southendonsea',
+  'komsomolsk':                  'komsomolskonamur',
+  'hafar':                       'hafaralbatin',
+  'makiyivka':                   'makiivka',
+  'qods':                        'shahreqods',
+  'puer':                        'simao',
+  'kropyvnytskyi':               'kropyvnytskyy',
+  'bogura':                      'bogra',
+  'travinh':                     'thanhphotravinh',
+  'slovyansk':                   'sloviansk',
+  'siverskodonetsk':             'sievierodonetsk',
+  'kamyanetspodilskyi':          'kamianetspodilskyi',
+  'yenakiyeve':                  'yenakiieve',
+  'dunkirk':                     'dunkerque',
+  'izmayil':                     'izmail',
+  'kostyantynivka':              'kostiantynivka',
+  'rhodes':                      'rodos',
+  'zvyahel':                     'zviahel',
+  'vaukavysk':                   'volkovysk',
+  'izyum':                       'izium',
+  'bryanka':                     'brianka',
+  'dzhankoy':                    'dzhankoi',
+  'aghdam':                      'agdam',
+  'chuhuyiv':                    'chuhuiv',
+  'avdiyivka':                   'avdiivka',
+  'shamkhir':                    'shamkhor',
+  'boyarka':                     'boiarka',
+  'bakhchysaray':                'bakhchysarai',
+  'kupyansk':                    'kupiansk',
+  'balakliya':                   'balakliia',
+  'kozyatyn':                    'koziatyn',
+  'dokuchayevsk':                'dokuchaievsk',
+  'gazakh':                      'qazax',
+  'shusha':                      'susa',
+  'tartar':                      'terter',
+  'khansar':                     'khvansar',
+  'koneurgenc':                  'koneurgench',
+  'rostovveliky':                'rostov',
+  'adama':                       'nazret',
+  'ajloun':                      'ajlun',
+  'akre':                        'acre',
+  'akyab':                       'sittwe',
+  'alarish':                     'arish',
+  'amara':                       'alamarah',
+  'apodaca':                     'ciudadapodaca',
+  'artemivsk':                   'bakhmut',
+  'ashqelon':                    'ashkelon',
+  'axum':                        'aksum',
+  'azaz':                        'izaz',
+  'bahraich':                    'bahraigh',
+  'beersheva':                   'beersheba',
+  'bizerta':                     'bizerte',
+  'bojnourd':                    'bojnurd',
+  'borga':                       'porvoo',
+  'borisov':                     'barysaw',
+  'bushire':                     'bushehr',
+  'bandarbushehr':               'bushehr',
+  'cannanore':                   'kannur',
+  'chalcis':                     'chalkida',
+  'chandrapur':                  'chanda',
+  'chervonohrad':                'sheptytskyi',
+  'chikkamagaluru':              'chikmagalur',
+  'daltonganj':                  'medininagar',
+  'darjeeling':                  'darjiling',
+  'daytona':                     'daytonabeach',
+  'debreberhan':                 'debrebirhan',
+  'deirelbalah':                 'dayralbalah',
+  'diegosuarez':                 'antsiranana',
+  'djerba':                      'houmtsouk',
+  'dolgoprudny':                 'dolgoprudnyy',
+  'donostia':                    'donostiasansebastian',
+  'douma':                       'duma',
+  'dumdum':                      'damdam',
+  'egorievsk':                   'yegoryevsk',
+  'elat':                        'eilat',
+  'elaaiun':                     'laayoune',
+  'englishbazar':                'malda',
+  'eupatoria':                   'yevpatoriya',
+  'yevpatoria':                  'yevpatoriya',
+  'faizabad':                    'fyzabad',
+  'fallujah':                    'alfallujah',
+  'jazan':                       'jizan',
+  'gizan':                       'jizan',
+  'gjakova':                     'gjakove',
+  'guaymas':                     'heroicaguaymas',
+  'haderah':                     'hadera',
+  'hadeyra':                     'hadera',
+  'hamelin':                     'hameln',
+  'henzada':                     'hinthada',
+  'herzliyah':                   'herzliya',
+  'herzliyya':                   'herzliya',
+  'illichivsk':                  'chornomorsk',
+  'jableh':                      'jablah',
+  'kadiivka':                    'kadiyivka',
+  'kafrsaba':                    'kfarsaba',
+  'kefarsaba':                   'kfarsaba',
+  'kampongsaom':                 'sihanoukville',
+  'kawthaung':                   'kawthoung',
+  'kiryatata':                   'qiryatata',
+  'qiryatgat':                   'kiryatgat',
+  'kirovakan':                   'vanadzor',
+  'leninakan':                   'gyumri',
+  'kumayri':                     'gyumri',
+  'mitrovica':                   'mitrovice',
+  'kosovskamitrovica':           'mitrovice',
+  'kotte':                       'srijayewardenepurakotte',
+  'krasnoarmiysk':               'pokrovsk',
+  'larissa':                     'larisa',
+  'larnaka':                     'larnaca',
+  'lasanod':                     'laascaanood',
+  'leamingtonspa':               'royalleamingtonspa',
+  'loubomo':                     'dolisie',
+  'lushunkou':                   'lushun',
+  'mahikeng':                    'mafikeng',
+  'makhanda':                    'grahamstown',
+  'mamoutzou':                   'mamoudzou',
+  'marburg':                     'marburganderlahn',
+  'mogador':                     'essaouira',
+  'mukacheve':                   'mukachevo',
+  'nahariya':                    'nahariyya',
+  'nelspruit':                   'mbombela',
+  'novgorod':                    'velikiynovgorod',
+  'novyurengoy':                 'novyyurengoy',
+  'osmanabad':                   'dharashiv',
+  'ozyorsk':                     'ozersk',
+  'palime':                      'kpalime',
+  'patrai':                      'patra',
+  'petergof':                    'peterhof',
+  'polatsk':                     'polotsk',
+  'prome':                       'pyay',
+  'puertolimon':                 'limon',
+  'raananah':                    'raanana',
+  'rousse':                      'ruse',
+  'ruhengeri':                   'musanze',
+  'sebastopol':                  'sevastopol',
+  'sienna':                      'siena',
+  'sukhumi':                     'sokhumi',
+  'stgallen':                    'sanktgallen',
+  'saintgallen':                 'sanktgallen',
+  'sweida':                      'assuwayda',
+  'suwayda':                     'assuwayda',
+  'thalassery':                  'tellicherry',
+  'tighina':                     'bender',
+  'tsarskoyeselo':               'pushkin',
+  'tunbridgewells':              'royaltunbridgewells',
+  'umtata':                      'mthatha',
+  'uzhgorod':                    'uzhhorod',
+  'vasco':                       'vascodagama',
+  'velikotarnovo':               'velikoturnovo',
+  'villacisneros':               'dakhla',
+  'zakho':                       'zaxo',
+  'zihuatanejo':                 'ixtapazihuatanejo',
+  'salihorsk':                   'soligorsk',
+  'svyetlahorsk':                'svetlogorsk',
+  'maladzyechna':                'maladziecna',
+  'navapolatsk':                 'novopolotsk',
+  'zhodzina':                    'horadzhodzina',
+  'ghimbi':                      'gimbi',
+  'irgalem':                     'yirgaalem',
+  'jirja':                       'girga',
+  'karaikudi':                   'karaikkudi',
+  'khartsyzsk':                  'khartsyzk',
+  'kiselyovsk':                  'kiselevsk',
+  'mineralnyyevody':             'mineralnyevody',
+  'oleksandriia':                'oleksandriya',
+  'pavlovskyposad':              'pavlovskiyposad',
+  'sosnovybor':                  'sosnovyybor',
+  'vyshnyvolochyok':             'vyshniyvolochek',
+  'stakhanov':                   'kadiyivka',
+
+  // ── Generated from GeoNames alternateNamesV2 (isolanguage="en") ──
+  // Same source the city list comes from, joined by geonames id. English-tagged
+  // only: the undifferentiated "alternatenames" column mixes every language and
+  // its abbreviations, which would let "sha" match Shanghai.
+  //
+  // Filtered to cities over 200k, dropping colloquial names, aliases under four
+  // characters, administrative wrappers ("cityof...", "...-si"), and any alias
+  // that names a real place ABSENT from cities_data.js. An alias clashing with a
+  // city that IS present needs no filtering -- loadCities() only registers an
+  // alias when the key is not already a real city name, so the city wins.
+  //
+  // Everything above this line is hand-curated and takes precedence.
+  'abughraib':                  'abughurayb',
+  'acapulco':                   'acapulcodejuarez',
+  'achiaman':                   'atsiaman',
+  'addiwaniyah':                'aldiwaniyah',
+  'adduayn':                    'eldaein',
+  'akmechet':                   'kyzylorda',
+  'akmolinsk':                  'astana',
+  'aktyubinsk':                 'aktobe',
+  'alashkala':                  'semey',
+  'alexandretta':               'iskenderun',
+  'alfashir':                   'elfasher',
+  'alhofuf':                    'alhufuf',
+  'aljubail':                   'aljubayl',
+  'allahabad':                  'prayagraj',
+  'almaata':                    'almaty',
+  'almadinahalmunawwarah':      'madinah',
+  'almukalla':                  'mukalla',
+  'alorstar':                   'alorsetar',
+  'alquds':                     'jerusalem',
+  'alrayyan':                   'arrayyan',
+  'alubayyid':                  'elobeid',
+  'amarah':                     'alamarah',
+  'andijan':                    'andijon',
+  'anking':                     'anqing',
+  'ansan':                      'ansansi',
+  'asafi':                      'safi',
+  'ashdodyam':                  'ashdod',
+  'ashkabad':                   'ashgabat',
+  'ashkhabad':                  'ashgabat',
+  'asyut':                      'assiut',
+  'babruysk':                   'bobruysk',
+  'bahri':                      'khartoumnorth',
+  'banciao':                    'banqiao',
+  'bardhaman':                  'barddhaman',
+  'bejawada':                   'vijayawada',
+  'belgaum':                    'belagavi',
+  'bellary':                    'ballari',
+  'benaiberaq':                 'bneibrak',
+  'beneberaq':                  'bneibrak',
+  'beneiberaq':                 'bneibrak',
+  'beneyberaq':                 'bneibrak',
+  'birgunj':                    'birganj',
+  'boorama':                    'borama',
+  'borivali':                   'borivli',
+  'brezhnev':                   'naberezhnyyechelny',
+  'bronx':                      'thebronx',
+  'bucheon':                    'bucheonsi',
+  'buraidah':                   'buraydah',
+  'burdwan':                    'barddhaman',
+  'byzantium':                  'istanbul',
+  'calicut':                    'kozhikode',
+  'cambarao':                   'bandarabbas',
+  'capesaintjames':             'vungtau',
+  'cartagenadeindias':          'cartagena',
+  'catherinoslav':              'dnipro',
+  'cawnporne':                  'kanpur',
+  'changteh':                   'changde',
+  'charjou':                    'turkmenabat',
+  'chefoo':                     'yantai',
+  'chemulpo':                   'incheon',
+  'cheongju':                   'cheongjusi',
+  'cherkassy':                  'cherkasy',
+  'chinchew':                   'quanzhou',
+  'chinchu':                    'quanzhou',
+  'chinkiang':                  'zhenjiang',
+  'chisimayu':                  'kismayo',
+  'cidadedenacala':             'nacala',
+  'coloradospgs':               'coloradosprings',
+  'conjevaram':                 'kanchipuram',
+  'cordaleo':                   'karsiyaka',
+  'cordelio':                   'karsiyaka',
+  'cotyora':                    'ordu',
+  'cracow':                     'krakow',
+  'cuzco':                      'cusco',
+  'danzhou':                    'nada',
+  'dayralzawr':                 'deirezzor',
+  'dayrazzawr':                 'deirezzor',
+  'deiralzour':                 'deirezzor',
+  'deirazzor':                  'deirezzor',
+  'derezzor':                   'deirezzor',
+  'dihua':                      'urumqi',
+  'districtofcolumbia':         'washington',
+  'diwaniya':                   'aldiwaniyah',
+  'djakarta':                   'jakarta',
+  'dniprodzerzhynsk':           'kamyanske',
+  'dnipropetrovsk':             'dnipro',
+  'dniproslav':                 'dnipro',
+  'duesseldorf':                'dusseldorf',
+  'duhok':                      'dihok',
+  'duran':                      'eloyalfaro',
+  'ecatepec':                   'ecatepecdemorelos',
+  'eddaein':                    'eldaein',
+  'eiko':                       'yingkou',
+  'ekaterinburg':               'yekaterinburg',
+  'elismalia':                  'ismailia',
+  'ernakulam':                  'kochi',
+  'fortperovsky':               'kyzylorda',
+  'freiburgimbreisgau':         'freiburg',
+  'ftworth':                    'fortworth',
+  'fuchow':                     'fuling',
+  'gaoxiong':                   'kaohsiung',
+  'gauhati':                    'guwahati',
+  'gedaref':                    'alqadarif',
+  'gensan':                     'wonsan',
+  'gimhae':                     'kimhae',
+  'gold':                       'goldcoast',
+  'gombroon':                   'bandarabbas',
+  'gondar':                     'gonder',
+  'goyang':                     'goyangsi',
+  'grodno':                     'hrodna',
+  'groznyy':                    'grozny',
+  'gulbarga':                   'kalaburagi',
+  'gumrun':                     'bandarabbas',
+  'gurgaon':                    'gurugram',
+  'gyeongsan':                  'gyeongsansi',
+  'haidong':                    'nianbo',
+  'hama':                       'hamah',
+  'hanyang':                    'seoul',
+  'hargeisa':                   'hargeysa',
+  'hasakah':                    'alhasakah',
+  'hawler':                     'erbil',
+  'helsingfors':                'helsinki',
+  'helwan':                     'halwan',
+  'hilla':                      'alhillah',
+  'hillah':                     'alhillah',
+  'hofuf':                      'alhufuf',
+  'hospet':                     'hosapete',
+  'hotan':                      'gujangbagh',
+  'huaiyin':                    'huaian',
+  'hubli':                      'hubballi',
+  'hums':                       'homs',
+  'hwangchau':                  'huanggang',
+  'hwangchow':                  'huanggang',
+  'hwaseong':                   'hwaseongsi',
+  'indhur':                     'indore',
+  'ismalia':                    'ismailia',
+  'jassy':                      'iasi',
+  'jhangsadar':                 'jhangsadr',
+  'jianning':                   'zhuzhou',
+  'jinju':                      'chinju',
+  'jubail':                     'aljubayl',
+  'justinianopolis':            'sanliurfa',
+  'kakogawa':                   'kakogawachohonmachi',
+  'kalaburgi':                  'kalaburagi',
+  'karaganda':                  'karagandy',
+  'karanchi':                   'karachi',
+  'katerynoslav':               'dnipro',
+  'kelamayi':                   'karamay',
+  'khadjibey':                  'odesa',
+  'khmelnytskyy':               'khmelnytskyi',
+  'kiangying':                  'jiangyin',
+  'kohtrol':                    'phuquoc',
+  'kokand':                     'qoqon',
+  'kongmoon':                   'jiangmen',
+  'kremenchug':                 'kremenchuk',
+  'kryvyirih':                  'kryvyyrih',
+  'kuibyschew':                 'samara',
+  'kuibyshev':                  'samara',
+  'kunsanpo':                   'gunsan',
+  'kustanay':                   'kostanay',
+  'kusti':                      'kosti',
+  'kweisui':                    'hohhot',
+  'kzylorda':                   'kyzylorda',
+  'liaoyuan':                   'longshan',
+  'lingling':                   'yongzhou',
+  'linxia':                     'linxiachengguanzhen',
+  'liuchow':                    'liuzhou',
+  'londonboroughofbexley':      'bexley',
+  'luda':                       'dalian',
+  'luta':                       'dalian',
+  'lyallpur':                   'faisalabad',
+  'macao':                      'macau',
+  'macelo':                     'maceio',
+  'magnesiaadsipylum':          'manisa',
+  'mahiliou':                   'mahilyow',
+  'makkahalmukarramah':         'makkah',
+  'mangalore':                  'mangaluru',
+  'marabu':                     'miri',
+  'maranham':                   'saoluis',
+  'margilan':                   'margilon',
+  'marrakech':                  'marrakesh',
+  'mashad':                     'mashhad',
+  'mazaghan':                   'eljadida',
+  'mazarisharif':               'mazaresharif',
+  'merca':                      'marka',
+  'methville':                  'albuquerque',
+  'mingaora':                   'mingora',
+  'mogilev':                    'mahilyow',
+  'mogpo':                      'mokpo',
+  'molotov':                    'perm',
+  'muartown':                   'muar',
+  'mueangsamutprakan':          'samutprakan',
+  'mulebbis':                   'petahtiqva',
+  'mykolaiv':                   'mykolayiv',
+  'mysore':                     'mysuru',
+  'naberezhnyechelny':          'naberezhnyyechelny',
+  'nacalaporto':                'nacala',
+  'namibe':                     'mossamedes',
+  'naucalpan':                  'naucalpandejuarez',
+  'newcastleontyne':            'newcastleupontyne',
+  'newchwang':                  'yingkou',
+  'newguatemala':               'guatemalacity',
+  'neworleanslouisiana':        'neworleans',
+  'nicosialefkosia':            'nicosia',
+  'ningteh':                    'ningde',
+  'nizhnynovgorod':             'nizhniynovgorod',
+  'nogornoluakot':              'nagarnaluakot',
+  'nonthaburi':                 'mueangnonthaburi',
+  'novonikolaevsk':             'novosibirsk',
+  'novonikolayevsk':            'novosibirsk',
+  'novorosiynsk':               'dnipro',
+  'novyykodak':                 'dnipro',
+  'nursultan':                  'astana',
+  'ootacamund':                 'ooty',
+  'oryol':                      'orel',
+  'pachuca':                    'pachucadesoto',
+  'paknam':                     'samutprakan',
+  'palmademallorca':            'palma',
+  'perovsk':                    'kyzylorda',
+  'petahtikva':                 'petahtiqva',
+  'petahtikwah':                'petahtiqva',
+  'petahtiqwa':                 'petahtiqva',
+  'pethahtiqva':                'petahtiqva',
+  'phanrang':                   'phanrangthapcham',
+  'pondicherri':                'puducherry',
+  'pondicherry':                'puducherry',
+  'portcomorao':                'bandarabbas',
+  'portmontt':                  'puertomontt',
+  'portnatal':                  'durban',
+  'portofmexico':               'coatzacoalcos',
+  'prishtina':                  'pristina',
+  'puertocruz':                 'puertolacruz',
+  'puertomexico':               'coatzacoalcos',
+  'qabilatalkhums':             'alkhums',
+  'qaraghandy':                 'karagandy',
+  'qostanay':                   'kostanay',
+  'quilon':                     'kollam',
+  'rajahmundry':                'rajamahendravaram',
+  'raqqa':                      'arraqqah',
+  'raselkheima':                'rasalkhaimah',
+  'rishonlesiyon':              'rishonletsiyyon',
+  'rishonletsiyon':             'rishonletsiyyon',
+  'rishonlezion':               'rishonletsiyyon',
+  'rishonleziyon':              'rishonletsiyyon',
+  'rishonleziyyon':             'rishonletsiyyon',
+  'rishonlsiyon':               'rishonletsiyyon',
+  'romanov':                    'murmansk',
+  'romanovonmurman':            'murmansk',
+  'sabzawar':                   'sabzevar',
+  'sagamu':                     'shagamu',
+  'saintpete':                  'stpetersburg',
+  'sanandij':                   'sanandaj',
+  'santacatherina':             'florianopolis',
+  'santiagodecali':             'cali',
+  'santiagodechile':            'santiago',
+  'sariwon':                    'sariwonsi',
+  'savarupazila':               'savar',
+  'scutari':                    'uskudar',
+  'semenova':                   'murmansk',
+  'semipalatinsk':              'semey',
+  'seongnam':                   'seongnamsi',
+  'serampore':                  'shrirampur',
+  'serrekunda':                 'serekunda',
+  'shadshahr':                  'eslamshahr',
+  'shimoga':                    'shivamogga',
+  'shiuhing':                   'zhaoqing',
+  'shunde':                     'daliang',
+  'sicheslav':                  'dnipro',
+  'sientaochen':                'xiantao',
+  'sining':                     'xining',
+  'skutari':                    'uskudar',
+  'slemani':                    'sulaymaniyah',
+  'solapur':                    'sholapur',
+  'sonarpur':                   'rajpursonarpur',
+  'sonarpurrajpur':             'rajpursonarpur',
+  'specialregionofyogyakarta':  'yogyakarta',
+  'ssupingkai':                 'siping',
+  'stalingrad':                 'volgograd',
+  'staryoskol':                 'staryyoskol',
+  'stjames':                    'vungtau',
+  'sundakelapa':                'jakarta',
+  'sundapura':                  'jakarta',
+  'taching':                    'daqing',
+  'tagum':                      'magugpopoblacion',
+  'takao':                      'kaohsiung',
+  'takoradze':                  'takoradi',
+  'tartous':                    'tartus',
+  'tawao':                      'tawau',
+  'telavivyaffo':               'telaviv',
+  'telavivyafo':                'telaviv',
+  'telukanson':                 'telukintan',
+  'temasek':                    'singapore',
+  'tenerife':                   'santacruzdetenerife',
+  'teopolis':                   'antakya',
+  'territoryofcolumbia':        'washington',
+  'thana':                      'thane',
+  'thegroyne':                  'acoruna',
+  'threecastles':               'khomeynishahr',
+  'tiruchchirappalli':          'tiruchirappalli',
+  'tiruchi':                    'tiruchirappalli',
+  'tirumalatirupati':           'tirupati',
+  'tirupur':                    'tiruppur',
+  'tongi':                      'tungi',
+  'trichinopoly':               'tiruchirappalli',
+  'trichur':                    'thrissur',
+  'trichy':                     'tiruchirappalli',
+  'trivandrum':                 'thiruvananthapuram',
+  'tsaritsyn':                  'volgograd',
+  'tselinograd':                'astana',
+  'tucuman':                    'sanmigueldetucuman',
+  'tuenmen':                    'tuenmun',
+  'tumakuru':                   'tumkur',
+  'turfan':                     'turpan',
+  'tuticorin':                  'thoothukudi',
+  'tuxtlagutierrez':            'tuxtla',
+  'udhagamandalam':             'ooty',
+  'uijeongbu':                  'uijeongbusi',
+  'uitenhage':                  'kariega',
+  'ujman':                      'ajman',
+  'urfa':                       'sanliurfa',
+  'urmia':                      'orumiyeh',
+  'urumchi':                    'urumqi',
+  'velikynovgorod':             'velikiynovgorod',
+  'vernoleninsk':               'mykolayiv',
+  'vinnytsia':                  'vinnytsya',
+  'virginianbch':               'virginiabeach',
+  'vitoriagasteiz':             'gasteizvitoria',
+  'vitsyebsk':                  'vitebsk',
+  'vizag':                      'visakhapatnam',
+  'voroshilovgrad':             'luhansk',
+  'wadmadani':                  'wadmedani',
+  'wangchau':                   'huanggang',
+  'wangchou':                   'huanggang',
+  'wanhsien':                   'wanxian',
+  'wanshien':                   'wanxian',
+  'washingtondc':               'washington',
+  'xalapa':                     'xalapadeenriquez',
+  'xiangfan':                   'xiangyang',
+  'yambo':                      'yanbu',
+  'yanbualbahr':                'yanbu',
+  'yenbo':                      'yanbu',
+  'yeongi':                     'sejong',
+  'yining':                     'ghulja',
+  'zaporizhzhia':               'zaporizhzhya',
+  'zaporozhye':                 'zaporizhzhya',
+  'zayton':                     'quanzhou',
+  'zumpangodeocampo':           'zumpango',
+
+  // ── Short forms of "X de Y" names, hand-picked ──
+  // The "de / do / da" pattern is too often part of the real name to strip
+  // automatically (Fort-de-France, Juiz de Fora), so these are listed one by one.
+  'hull':                       'kingstonuponhull',
+  'rostovondon':                'rostovnadonu',
+  'riyad':                      'riyadh',           // else Ar Riyad, Egypt, via NAME_QUALIFIERS
+  'queretaro':                  'santiagodequeretaro',
+  'jujuy':                      'sansalvadordejujuy',
+  'laspalmas':                  'laspalmasdegrancanaria',
+  'pozarica':                   'pozaricadehidalgo',
+  'iguala':                     'igualadelaindependencia',
+  'texcoco':                    'texcocodemora',
+  'torrejon':                   'torrejondeardoz',
+  'castello':                   'castellodelaplana',
+  'castellon':                  'castellodelaplana',
+  'jerez':                      'jerezdelafrontera',
+  'alcala':                     'alcaladehenares',
+  'campos':                     'camposdosgoytacazes',
+  'bariloche':                  'sancarlosdebariloche',
+  'mogi':                       'mogidascruzes',
+  'castellammare':              'castellammaredistabia',
+  'bassano':                    'bassanodelgrappa',
+  'sanlucar':                   'sanlucardebarrameda',
+  'chiclana':                   'chiclanadelafrontera',
+  'roquetas':                   'roquetasdemar',
+  'pozuelo':                    'pozuelodealarcon',
+  'lloret':                     'lloretdemar',
+  'cagayan':                    'cagayandeoro',
+  'elpuerto':                   'elpuertodesantamaria',
+};
+
+// Names that already belong to a smaller real city but are mostly meant for a
+// bigger one: "odessa" is Odessa, Texas in the data, "rostov" a town of 31k.
+// Unlike CITY_ALIASES these ADD the big city to the name instead of giving way,
+// so the guess counts for both (chain mode picks the bigger one as a start).
+const CITY_ALSO={
+  'odessa':                     'odesa',
+  'rostov':                     'rostovnadonu',
+  'halle':                      'hallesaale',
+  'newcastle':                  'newcastleupontyne',
+  'stoke':                      'stokeontrent',
+  'stockton':                   'stocktonontees',
+  'burton':                     'burtonupontrent',
+  'leon':                       'leondelosaldama',
+  'durango':                    'victoriadedurango',
+  'santacruz':                  'santacruzdelasierra',
+  'parral':                     'hidalgodelparral',
+  'caxias':                     'caxiasdosul',
+  'aksu':                       'aqsu',             // two Kazakh towns; Aqsu, China is 536k
+  'tokmak':                     'tokmok',           // Tokmak, Ukraine is 30k
+  'petropavlovsk':              'petropavl',        // with Petropavlovsk-Kamchatsky, via CITY_ALIASES
+  'geneva':                      'geneve',
+  'brunswick':                   'braunschweig',
+  'hanover':                     'hannover',
+  'matamoros':                   'heroicamatamoros',
+  'nara':                        'narashi',
+  'sudbury':                     'greatersudbury',
+  'lazarocardenas':              'ciudadlazarocardenas',
+  'padua':                       'padova',
+};
+
+// Letters the data's alphabets write as one where English writes two: Uzbek x
+// is "kh" (Xiva, Khiva) and q mostly "k"; Turkmen and Azerbaijani ş and ç are
+// "sh" and "ch", Azerbaijani ə mostly "a". Every combination of a name's rules
+// is accepted, each only where it is not already some city's name.
+const TRANSLIT={
+  UZ:[['x','kh'],['q','k']],
+  TM:[['ş','sh'],['ç','ch'],['ž','zh']],
+  AZ:[['ş','sh'],['ç','ch'],['x','kh'],['ə','a']],
+};
+
+// Patterns where the end (or start) of a name only says which one is meant,
+// so the main part alone is accepted: Frankfurt am Main, Halle (Saale),
+// Rostov-na-Donu, Stoke-on-Trent, Boulogne-sur-Mer, Velikiy Novgorod,
+// Al Mansurah. Each is limited to the countries where the words mean that.
+// A main part that is itself a city's name, or an alias, is left alone, and
+// one shared by several names (Frankfurt am Main, Frankfurt (Oder)) goes to
+// the biggest.
+const ccSet=s=>new Set(s.split(' '));
+const NAME_QUALIFIERS=[
+  {re:/^(.+?)\s+(?:am|an der|an|im|in der|in|ob der|bei|vor der)\s+\S/, cc:ccSet('DE AT CH IT GB')},
+  {re:/^(.+?)\s*\(.*\)$/},
+  {re:/^(.+?)-na-./, cc:ccSet('RU UA')},
+  {re:/^(.+?)(?:\s+upon\s+|-upon-|-on-|\s+on\s+)(?!the[\s-])/, cc:ccSet('GB IE RU CA')},
+  {re:/^(.+?)-(?:sur|en|sous|lès|les|le|la)-/, cc:ccSet('FR BE CH LU')},
+  {re:/^(?:Velikiy|Veliky|Velikiye)\s+(.+)$/},
+  {re:/^(.+?)\s+(?:Shahri|Shaharchasi)$/, cc:ccSet('UZ')},
+  {re:/^(?:Al|Ar|As|Ash|Az|Ad|An|At|El)[\s-](.+)$/,
+   cc:ccSet('EG SA IQ SY JO LB YE OM AE QA KW BH LY TN DZ MA SD SO MR PS')},
+];
+
+function loadCities(){
+  CITIES=window.CITIES_RAW.map(c=>({name:c[0],lat:c[1],lng:c[2],pop:c[3],cc:c[4]||'??'}));
+  cityNameMap.clear();
+  CITIES.forEach((c,i)=>{
+    const n=norm(c.name);
+    c._norm=n;
+    for(const v of getVariants(n)){
+      if(!cityNameMap.has(v)) cityNameMap.set(v,[]);
+      cityNameMap.get(v).push({c,i});
+    }
+  });
+  // Register aliases — point each alias key at the same entries as its canonical
+  for(const [alias,canonical] of Object.entries(CITY_ALIASES)){
+    const entries=cityNameMap.get(canonical);
+    if(entries&&!cityNameMap.has(alias)) cityNameMap.set(alias,entries);
+  }
+  CITIES.forEach((c,i)=>{
+    const rules=TRANSLIT[c.cc];
+    if(!rules) return;
+    const low=c.name.toLowerCase();
+    let forms=[low];
+    for(const [from,to] of rules) if(low.includes(from)) forms=forms.flatMap(f=>[f,f.split(from).join(to)]);
+    for(const f of forms.slice(1)){
+      const k=norm(f);
+      if(!cityNameMap.has(k)) cityNameMap.set(k,[{c,i}]);
+    }
+  });
+  // Main parts of qualified names, biggest city first wins a shared one.
+  const mainParts=new Map();
+  CITIES.forEach((c,i)=>{
+    for(const q of NAME_QUALIFIERS){
+      if(q.cc&&!q.cc.has(c.cc)) continue;
+      const m=c.name.match(q.re);
+      if(!m) continue;
+      const k=norm(m[1]);
+      if(k.length<4||k===c._norm||k.startsWith('saint')) continue;
+      const best=mainParts.get(k);
+      if(!best||c.pop>best.c.pop) mainParts.set(k,{c,i});
+    }
+  });
+  for(const [k,e] of mainParts) if(!cityNameMap.has(k)) cityNameMap.set(k,[e]);
+  // Shared names: add the big city alongside whatever the name already holds.
+  for(const [name,canonical] of Object.entries(CITY_ALSO)){
+    const extra=cityNameMap.get(canonical);
+    if(!extra) continue;
+    const have=cityNameMap.get(name)||[];
+    cityNameMap.set(name,[...have,...extra.filter(e=>!have.some(h=>h.i===e.i))]);
+  }
+}
+
+
+function lngGap(a,b){const d=Math.abs(a-b)%360;return d>180?360-d:d;}
+
+function hav(la1,lo1,la2,lo2){
+  const R=6371,r=Math.PI/180,dL=(la2-la1)*r,dG=(lo2-lo1)*r;
+  const a=Math.sin(dL/2)**2+Math.cos(la1*r)*Math.cos(la2*r)*Math.sin(dG/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+// Population tiers: > threshold
+const TIERS=[
+  {min:10000000,col:'#c040a0',r:8.5},
+  {min:3000000, col:'#d03030',r:7.5},
+  {min:1000000, col:'#e07820',r:6.5},
+  {min:300000,  col:'#d4c020',r:5.5},
+  {min:100000,  col:'#4caf50',r:4.5},
+  {min:30000,   col:'#2ab8b8',r:3.5},
+  {min:10000,   col:'#4a90d9',r:2.5},
+];
+
+function cityStyle(pop){
+  for(const t of TIERS) if(pop>=t.min) return t;
+  return TIERS[TIERS.length-1];
+}
+
+function formatPop(pop){
+  if(pop>=1000000) return (pop/1000000).toFixed(1).replace(/\.0$/,'')+'m';
+  if(pop>=1000) return Math.round(pop/1000)+'k';
+  return pop.toString();
+}
+
+// ── State ──
+let mode='radius', radKm=500, nearN=20, minPop=50000;
+let country='';  // ISO code of a country game, a CONTINENTS id, or '' for the whole world
+let bandAxis='lat', bandHalf=50;  // band mode; the half-width is in hundredths of a degree
+let chain=false;  // chain mode: guesses must be inside a circle, bar two free starts
+let chainStarts=new Set();  // regions ('am' / 'rest') whose free start is used
+
+// Countries offered as country games: more than 100 cities of 10k+. Area in
+// thousands of km², Natural Earth 10m admin-0 map units (metropolitan France).
+const COUNTRY_AREA={
+  AR:2783,BD:137,BE:31,BR:8473,CA:9946,CD:2325,CI:321,CL:737,CN:9375,CO:1135,CU:110,DE:358,DZ:2309,
+  EG:1001,ES:507,ET:1127,FR:548,GB:244,ID:1880,IN:3151,IR:1623,IT:301,JP:374,KE:586,KR:97,MA:592,
+  MG:593,MM:663,MX:1958,MY:328,NG:908,NL:37,PE:1290,PH:293,PK:873,PL:313,PT:91,RO:236,RU:16980,TH:514,
+  TN:157,TR:780,TZ:942,UA:572,UG:242,US:9464,UZ:448,VE:913,VN:329,ZA:1220,
+};
+
+// Continent games, in dropdown order. Countries go by Natural Earth's continent
+// (citycircles/continents.json, so Cyprus is Asia), but Russia is Europe west
+// of the Urals, Turkey is Europe in Thrace and Hawaii is Oceania. Indonesia is
+// all Asia and Papua New Guinea all Oceania. build_popgrid_cc.py and build_regions.py make the
+// same calls.
+const CONTINENTS=[
+  {id:'europe',code:'eu',name:'Europe'},
+  {id:'asia',code:'as',name:'Asia'},
+  {id:'africa',code:'af',name:'Africa'},
+  {id:'oceania',code:'oc',name:'Oceania'},
+  {id:'northamerica',code:'na',name:'North America'},
+  {id:'southamerica',code:'sa',name:'South America'},
+];
+const CONTINENT_CCS={
+  af:'AO BF BI BJ BW CD CF CG CI CM CV DJ DZ EG EH ER ET GA GH GM GN GQ GW KE KM LR LS LY MA MG ML MR MU MW MZ NA NE NG RE RW SC SD SH SL SN SO SS ST SZ TD TF TG TN TZ UG YT ZA ZM ZW',
+  as:'AE AF AM AZ BD BH BN BT CN CY GE HK ID IL IN IO IQ IR JO JP KG KH KP KR KW KZ LA LB LK MM MN MO MV MY NP OM PH PK PS QA SA SG SY TH TJ TL TM TR TW UZ VN XD YE',
+  eu:'AD AL AT AX BA BE BG BY CH CZ DE DK EE ES FI FO FR GB GG GI GR HR HU IE IM IS IT JE LI LT LU LV MC MD ME MK MT NL NO PL PT RO RS RU SE SI SJ SK SM UA VA XK',
+  na:'AG AI AW BB BL BM BQ BS BZ CA CR CU CW DM DO GD GL GP GT HN HT JM KN KY LC MF MQ MS MX NI PA PM PR SV SX TC TT US VC VG VI',
+  oc:'AS AU CC CK CX FJ FM GU HM KI MH MP NC NF NR NU NZ PF PG PN PW SB TK TO TV VU WF WS',
+  sa:'AR BO BR CL CO EC FK GF GY PE PY SR UY VE',
+};
+const CONTINENT_OF={};
+for(const [k,v] of Object.entries(CONTINENT_CCS)) for(const cc of v.split(' ')) CONTINENT_OF[cc]=k;
+// Same polygons as citycircles/regions_common.py, which says how they were drawn.
+// Russia west of the Urals: down the Kara Sea, along the crest of the Ural
+// Mountains to the Ural River, then down the river to Orsk and Kazakhstan.
+const EUROPEAN_RUSSIA=[[0,90],[68.5,90],[69.5,77],[63,71],[65,69.2],[66,68.4],[65.6,67.6],
+  [64.9,66.7],[63,66],[61,65.6],[59.9,65],[59.3,64],[59.3,62.5],[59,61],[59.4,60],[59,58.5],
+  [60,56.9],[59.9,56],[59.85,55.1],[59.5,54.6],[59.3,54],[59.05,53.4],[59,52.5],[58.8,51.8],
+  [58.6,51.2],[58.6,40],[0,40]];
+// Turkey's European part: west of a line down the middle of the Bosporus, the
+// Sea of Marmara and the Dardanelles.
+const THRACE=[[25,39.8],[26.19,40.03],[26.3,40.09],[26.392,40.152],[26.5,40.25],[26.62,40.33],
+  [26.7,40.39],[26.78,40.46],[27.5,40.72],[28.5,40.88],[28.997,41],[29.03,41.05],[29.06,41.1],
+  [29.07,41.15],[29.1,41.2],[29.13,41.23],[29.3,41.6],[28,42.6],[25,42.6]];
+function inPolygon(ring,x,y){
+  let inside=false;
+  for(let i=0,j=ring.length-1;i<ring.length;j=i++){
+    const [xi,yi]=ring[i],[xj,yj]=ring[j];
+    if((yi>y)!==(yj>y)&&x<(xj-xi)*(y-yi)/(yj-yi)+xi) inside=!inside;
+  }
+  return inside;
+}
+function continentOf(c){
+  if(c.cc==='RU') return inPolygon(EUROPEAN_RUSSIA,c.lng,c.lat)?'eu':'as';
+  if(c.cc==='TR') return inPolygon(THRACE,c.lng,c.lat)?'eu':'as';
+  if(c.cc==='US') return c.lng<-154&&c.lat>18&&c.lat<29.5?'oc':'na';  // Hawaii (HAWAII there)
+  return CONTINENT_OF[c.cc]||'';
+}
+const continentById=id=>CONTINENTS.find(x=>x.id===id);
+function areaName(a){return continentById(a)?.name||countryName(a);}
+function inArea(c){
+  if(!country) return true;
+  const ct=continentById(country);
+  return ct?continentOf(c)===ct.code:c.cc===country;
+}
+
+// The original world radius and nearest games keep their population choice
+// (and so their boards); every newer game counts cities of 10k and up.
+function isLegacy(){return !country&&mode!=='band';}
+function curMinPop(){return isLegacy()?minPop:10000;}
+
+// Choices per guess. The world and the continents share one set. A country
+// gets 30, 100 and 250 km circles (never under 20 km, about one city across),
+// leaving out any where one circle would cover over half the country; bands
+// are ±0.1°, ±0.25° and ±0.5°, leaving out any wider than half the spread of
+// the country's cities that way. A country's nearest choices are 20, 50 and
+// 100 cities, each kept only up to a quarter of the country's cities (20 always).
+// A continent's are the world's, each kept only up to a third of its cities,
+// which only trims Oceania (188 cities with Hawaii: 20 and 50).
+const WORLD_RADIUS={opts:[100,200,500,1000],def:500};
+const WORLD_BAND={opts:[10,20,50,100],def:50};
+function isCountry(){return !!country&&!continentById(country);}
+function radiusChoices(){
+  if(!isCountry()) return WORLD_RADIUS;
+  const opts=[30,100,250].filter(r=>r===30||Math.PI*r*r<=COUNTRY_AREA[country]*1000/2);
+  return {opts,def:opts.includes(100)?100:30};
+}
+function bandChoices(axis){
+  if(!isCountry()) return WORLD_BAND;
+  const [w,s,e,n]=areaBounds(), spread=axis==='lat'?n-s:e-w;
+  const opts=[10,25,50].filter(h=>h===10||2*h/100<=spread/2);
+  return {opts,def:opts.includes(25)?25:10};
+}
+function bandText(axis,half){return `${axis==='lat'?'latitude':'longitude'} ±${half/100}°`;}
+
+// Refills the per-guess lists for the current area and picks each one's default.
+function fillChoices(){
+  const r=radiusChoices();
+  document.getElementById('radius-select').innerHTML=r.opts.map(v=>`<option value="${v}">${v} km</option>`).join('');
+  document.getElementById('radius-select').value=String(r.def);
+  radKm=r.def;
+  const nOpts=isCountry()?[20,50,100].filter(v=>v===20||4*v<=totalCities())
+    :[20,50,100,200].filter(v=>!country||v===20||3*v<=totalCities());
+  document.getElementById('nearest-select').innerHTML=nOpts.map(v=>`<option value="${v}">${v} cities</option>`).join('');
+  nearN=20;
+  const b={lat:bandChoices('lat'),lng:bandChoices('lng')};
+  document.getElementById('band-select').innerHTML=['lat','lng'].map(a=>
+    b[a].opts.map(v=>`<option value="${a}:${v}">${bandText(a,v)}</option>`).join('')).join('');
+  bandHalf=b[bandAxis].def;
+  document.getElementById('band-select').value=`${bandAxis}:${bandHalf}`;
+}
+
+// The middle 96% of the area's cities each way, as [west, south, east, north],
+// so a few far islands (Hawaii, the Canaries) don't stretch it. Longitudes are
+// unwrapped around the median, so it can run past 180 (Russia, Oceania).
+let _bounds=null, _boundsKey=null;
+function areaBounds(){
+  if(_boundsKey===country) return _bounds;
+  const pts=filteredIndices().map(({c})=>c);
+  const mid=pts.map(c=>c.lng).sort((a,b)=>a-b)[pts.length>>1];
+  const lats=pts.map(c=>c.lat).sort((a,b)=>a-b);
+  const lngs=pts.map(c=>c.lng+(c.lng-mid>180?-360:mid-c.lng>180?360:0)).sort((a,b)=>a-b);
+  const q=(a,f)=>a[Math.min(a.length-1,Math.floor(f*a.length))];
+  _boundsKey=country;
+  return _bounds=[q(lngs,0.02),q(lats,0.02),q(lngs,0.98),q(lats,0.98)];
+}
+
+function fillCountries(){
+  const sel=document.getElementById('country-select');
+  for(const c of CONTINENTS) sel.insertAdjacentHTML('beforeend',`<option value="${c.id}">${c.name}</option>`);
+  // A thin rule between continents and countries (browsers that don't draw an
+  // <hr> in a dropdown just leave no gap).
+  sel.appendChild(document.createElement('hr'));
+  Object.keys(COUNTRY_AREA).sort((a,b)=>countryName(a).localeCompare(countryName(b)))
+    .forEach(cc=>sel.insertAdjacentHTML('beforeend',`<option value="${cc}">${countryName(cc)}</option>`));
+}
+
+// Country codes counted as the Americas for chain mode's two free starts.
+const AMERICAS=new Set(('US CA MX GT BZ SV HN NI CR PA CU JM HT DO PR BS TC KY BM '+
+  'AG KN DM LC VC BB GD TT AW CW BQ SX MF GP MQ VI VG AI MS BL '+
+  'CO VE GY SR GF EC PE BO BR PY UY AR CL FK GL PM').split(' '));
+function regionOf(c){
+  if(c.cc&&c.cc!=='??') return AMERICAS.has(c.cc)?'am':'rest';
+  return c.lng<-30?'am':'rest';
+}
+let gameFinished=false;
+let revealedSet=new Set();  // player-found, counted in Found
+let finishedSet=new Set();  // giveUp-revealed, not counted, have tooltips
+let guessCount=0;
+let mapReady=false;  // style loaded and our sources/layers are on the map
+// guessCircles: array of {lat, lng, radiusKm} — redrawn on map move
+let guessCircles=[];
+let guessedSet=new Set(); // indices already used as guess origins
+
+// ── Map ──
+//
+// MapLibre GL directly. This was Leaflet with maplibre-gl-leaflet layered on
+// top, which is the same thing Guess the City used to be. The basemap has not
+// changed: it is still OpenFreeMap Positron with the label layers stripped, so
+// the map looks exactly as it did — what left is the Leaflet shim around it.
+//
+// What the shim was costing here was not the basemap but the overlays. Every
+// city was an SVG path in the DOM, five of them per city so the dots would
+// still be there after a world wrap, and a grid decimation existed purely to
+// keep that number survivable: at the world view it threw away roughly twenty
+// thousand of the twenty-eight thousand cities. Drawn by GL from one GeoJSON
+// source, the whole board is a single layer, world wrap is native, and there is
+// nothing to decimate — the finish screen shows every city.
+//
+// ZOOM NUMBERING DIFFERS. MapLibre z == Leaflet z - 1, so the old Leaflet 3/12
+// range is 2/11 here, and the old default view of [20,10] @ z3 is [10,20] @ z2.
+// Longitude comes first in MapLibre and in GeoJSON, latitude first in Leaflet.
+let map=null;
+const EMPTY_FC={type:'FeatureCollection',features:[]};
+
+function startMap(){
+  fetch('https://tiles.openfreemap.org/styles/positron')
+    .then(r=>r.json())
+    .then(style=>{
+      style.layers=style.layers.filter(l=>l.type!=='symbol');
+      return style;
+    })
+    .catch(e=>{
+      // A dead basemap should cost the basemap, not the game. Fall back to an
+      // empty style so the dots and circles still draw on a blank background.
+      console.warn('basemap load failed:',e);
+      return {version:8,sources:{},layers:[]};
+    })
+    .then(buildMap);
+}
+
+function buildMap(style){
+  map=new maplibregl.Map({
+    container:'map',
+    style,
+    center:[10,20], zoom:2, minZoom:2, maxZoom:11,
+    dragRotate:false, pitchWithRotate:false, touchPitch:false,
+    attributionControl:false,
+  });
+  map.touchZoomRotate.disableRotation();
+  map.addControl(new maplibregl.NavigationControl({showCompass:false}),'top-left');
+  map.addControl(new maplibregl.AttributionControl({compact:true,customAttribution:'© OpenStreetMap'}),'bottom-right');
+
+  map.on('load',()=>{
+    map.addSource('region',{type:'geojson',data:EMPTY_FC});
+    map.addSource('guesses',{type:'geojson',data:EMPTY_FC});
+    map.addSource('cities',{type:'geojson',data:EMPTY_FC});
+
+    // A country or continent game lightly shades the land outside the area.
+    // The shade goes above the basemap's land cover, and a second copy of its
+    // water layer goes above the shade, so water looks the same everywhere and
+    // the shade's edge only shows along land borders. One mask polygon, so no
+    // overlaps stack up their opacity.
+    const under=map.getLayer('waterway')?'waterway':undefined;
+    map.addLayer({
+      id:'region-mask', type:'fill', source:'region',
+      paint:{'fill-color':'#3a411e','fill-opacity':0.06},
+    },under);
+    const water=map.getStyle().layers.find(l=>l.id==='water');
+    if(water) map.addLayer({...water,id:'water-over-region'},under);
+
+    // Guess circles go under the dots, matching the old pane order where the
+    // circle layer group sat below every city tier.
+    map.addLayer({
+      id:'guess-fill', type:'fill', source:'guesses',
+      filter:['==',['geometry-type'],'Polygon'],
+      paint:{'fill-color':'#648f5d','fill-opacity':0.13},
+    });
+    map.addLayer({
+      id:'guess-line', type:'line', source:'guesses',
+      filter:['==',['geometry-type'],'LineString'],
+      paint:{'line-color':'#648f5d','line-width':1,'line-dasharray':[5,4]},
+    });
+
+    map.addLayer({
+      id:'city-dots', type:'circle', source:'cities',
+      // Replaces the seven Leaflet panes that used to order the tiers by hand.
+      // Higher sort key draws on top, so keying on population puts the big
+      // cities above the small ones, which is what the panes were for.
+      layout:{'circle-sort-key':['get','pop']},
+      paint:{
+        // The old radius was tierRadius * 1.25^(leafletZoom - 5), recomputed in
+        // JS on every marker after every zoom. MapLibre's exponential
+        // interpolation between two stops IS that curve exactly when the stops
+        // are the endpoint values, so the whole resize pass becomes one
+        // expression the GPU evaluates. 0.64 is 1.25^-2 and 4.768 is 1.25^7,
+        // the multipliers at MapLibre z2 and z11.
+        'circle-radius':['interpolate',['exponential',1.25],['zoom'],
+          2, ['*',['get','r'],0.64],
+          11,['*',['get','r'],4.76837158203125]],
+        'circle-color':['get','col'],
+        'circle-opacity':0.6,
+        'circle-stroke-width':1,
+        'circle-stroke-color':'#ffffff',
+        'circle-stroke-opacity':0.75,
+      },
+    });
+
+    map.on('mousemove','city-dots',onDotHover);
+    map.on('mouseleave','city-dots',clearDotHover);
+
+    // The compact credits start open and only fold away on the first drag. On a
+    // phone the open box covers a strip of the map, so start it folded there;
+    // the (i) button still opens it.
+    if(matchMedia('(max-width:640px)').matches){
+      document.querySelector('.maplibregl-ctrl-attrib')?.classList.remove('maplibregl-compact-show');
+    }
+
+    mapReady=true;
+    if(country) showGameArea();  // a country game restored before the map was up
+    syncGuessCircles();
+    syncCityDots();
+  });
+}
+
+// ── Geodesic circle helpers ──
+// Returns [lat, lng] of a point distKm away at given bearing from (lat, lng).
+// Lat is clamped to ±85 so Mercator doesn't blow up at the poles.
+function geodesicPoint(lat, lng, distKm, bearingDeg){
+  const R=6371, d=distKm/R, b=bearingDeg*Math.PI/180;
+  const φ1=lat*Math.PI/180, λ1=lng*Math.PI/180;
+  const sinφ2=Math.sin(φ1)*Math.cos(d)+Math.cos(φ1)*Math.sin(d)*Math.cos(b);
+  const φ2=Math.asin(Math.max(-1,Math.min(1,sinφ2)));
+  const λ2=λ1+Math.atan2(Math.sin(b)*Math.sin(d)*Math.cos(φ1),Math.cos(d)-Math.sin(φ1)*Math.sin(φ2));
+  return [
+    Math.max(-85,Math.min(85, φ2*180/Math.PI)),
+    ((λ2*180/Math.PI)+540)%360-180
+  ];
+}
+
+// ── Circle drawing — geodesic rings as GeoJSON ──
+// Longitudes are kept continuous (no [-180,180] snapping) so the ring never
+// self-intersects when crossing the antimeridian. MapLibre reads a ring that
+// runs past ±180 the same way, so the continuity trick still does its job.
+//
+// The copies at ±360 and ±720 are gone. renderWorldCopies draws the wrapped
+// world for us, so one ring per guess is all that has to exist.
+//
+// For circles that enclose a pole the fill is drawn as two half-circle polygons
+// closed along the ±84° parallel, so no single polygon approaches a pole. The
+// outline is always its own LineString, in both cases, which is why the dashed
+// edge looks the same whether or not a pole is inside.
+function ringToGeoJSONRing(pts){
+  const first=pts[0], last=pts[pts.length-1];
+  return (first[0]===last[0]&&first[1]===last[1])?pts:pts.concat([first]);
+}
+
+function guessCirclesFC(){
+  const STEPS=144;
+  const features=[];
+  const feat=(geometry)=>({type:'Feature',properties:{},geometry});
+  for(const gc of guessCircles){
+    if(gc.band){
+      // A band is straight on this map either way: parallels and meridians are
+      // both straight lines in Mercator, so its four corners are enough.
+      const edges=gc.band==='lat'
+        ?[gc.lat-gc.half,gc.lat+gc.half].map(v=>Math.max(-85,Math.min(85,v))).map(v=>[[-180,v],[180,v]])
+        :[gc.lng-gc.half,gc.lng+gc.half].map(v=>[[v,-85],[v,85]]);
+      for(const e of edges) features.push(feat({type:'LineString',coordinates:e}));
+      features.push(feat({type:'Polygon',coordinates:[[...edges[0],edges[1][1],edges[1][0],edges[0][0]]]}));
+      continue;
+    }
+    const poleEnclosed=gc.radiusKm>=(90+gc.lat)*111.32||gc.radiusKm>=(90-gc.lat)*111.32;
+    // Arc points, [lng, lat] for GeoJSON. Used for the outline in both cases,
+    // and for the fill in the normal case.
+    const pts=[];
+    let prevLng=gc.lng;
+    for(let i=0;i<=STEPS;i++){
+      const [lat,rawLng]=geodesicPoint(gc.lat,gc.lng,gc.radiusKm,i/STEPS*360);
+      let lng=rawLng;
+      while(lng-prevLng> 180) lng-=360;
+      while(prevLng-lng> 180) lng+=360;
+      prevLng=lng;
+      pts.push([lng,Math.max(-85,Math.min(85,lat))]);
+    }
+    features.push(feat({type:'LineString',coordinates:pts}));
+    if(!poleEnclosed){
+      features.push(feat({type:'Polygon',coordinates:[ringToGeoJSONRing(pts)]}));
+    } else {
+      // East half follows bearings 0→180, west half 360→180. Each polygon's
+      // vertices lie on the actual circle arc (exact geodesic points) plus two
+      // closing vertices on the ±84° parallel.
+      const clampLat=(gc.radiusKm>=(90+gc.lat)*111.32)?-84:84;
+      const H=STEPS/2;
+      for(const dir of [1,-1]){ // +1 = east, -1 = west
+        const hPts=[];
+        let pl=gc.lng;
+        for(let i=0;i<=H;i++){
+          const [lat,rawLng]=geodesicPoint(gc.lat,gc.lng,gc.radiusKm,(dir>0?i:STEPS-i)/STEPS*360);
+          let lng=rawLng;
+          while(lng-pl>180) lng-=360;
+          while(pl-lng>180) lng+=360;
+          pl=lng;
+          hPts.push([lng,Math.max(-84,Math.min(84,lat))]);
+        }
+        // Close along the parallel back to the starting longitude
+        hPts.push([hPts[hPts.length-1][0],clampLat]);
+        hPts.push([hPts[0][0],clampLat]);
+        features.push(feat({type:'Polygon',coordinates:[ringToGeoJSONRing(hPts)]}));
+      }
+    }
+  }
+  return {type:'FeatureCollection',features};
+}
+
+function syncGuessCircles(){
+  if(!mapReady) return;
+  map.getSource('guesses').setData(guessCirclesFC());
+}
+
+// ── City dots ──
+//
+// One GeoJSON feature per revealed or finished city, handed to the map as a
+// single source. There is no per-city object, no world-wrap copy and no
+// viewport decimation: the layer's radius expression handles zoom, MapLibre
+// handles wrap, and the GPU does not care that there are twenty-eight thousand
+// of them. Everything the player has uncovered is on the map, all of it.
+//
+// Features are built once and reused, because the same city gets re-sent on
+// every guess and there is no reason to rebuild the object each time.
+let _cityFeatures=[];
+function cityFeature(idx){
+  let f=_cityFeatures[idx];
+  if(!f){
+    const c=CITIES[idx], st=cityStyle(c.pop);
+    f={type:'Feature',
+       geometry:{type:'Point',coordinates:[c.lng,c.lat]},
+       properties:{name:c.name,pop:c.pop,r:st.r,col:st.col}};
+    _cityFeatures[idx]=f;
+  }
+  return f;
+}
+
+function syncCityDots(){
+  if(!mapReady) return;
+  const features=[];
+  for(const i of revealedSet) features.push(cityFeature(i));
+  for(const i of finishedSet) features.push(cityFeature(i));
+  map.getSource('cities').setData({type:'FeatureCollection',features});
+}
+
+// ── Hover tooltip for finished cities ──
+const cityPopup=new maplibregl.Popup({closeButton:false,closeOnClick:false,className:'city-tip',offset:8});
+
+function onDotHover(e){
+  // Dots are on the map during play too, so this is where "only the finish
+  // screen has tooltips" is enforced.
+  if(!gameFinished||!e.features.length){clearDotHover();return;}
+  const f=e.features[0];
+  // The dot under the pointer may be a wrapped copy of the world, but the
+  // feature carries its source longitude. Walk the popup to the copy the
+  // pointer is actually over, or it lands a world away.
+  const coords=f.geometry.coordinates.slice();
+  while(Math.abs(e.lngLat.lng-coords[0])>180) coords[0]+=e.lngLat.lng>coords[0]?360:-360;
+  map.getCanvas().style.cursor='pointer';
+  cityPopup.setLngLat(coords)
+           .setText(`${f.properties.name} · ${formatPop(f.properties.pop)}`)
+           .addTo(map);
+}
+
+function clearDotHover(){
+  // newGame() calls this before the style has loaded, so there may be no map yet.
+  if(mapReady) map.getCanvas().style.cursor='';
+  cityPopup.remove();
+}
+
+// ── Game helpers ──
+function filteredIndices(){
+  const key=curMinPop()+'|'+country;
+  if(_filteredMinPop===key && _filteredCache) return _filteredCache;
+  const mp=curMinPop();
+  _filteredCache=CITIES.map((c,i)=>({c,i})).filter(({c})=>c.pop>=mp&&inArea(c));
+  _filteredMinPop=key;
+  return _filteredCache;
+}
+function totalCities(){return filteredIndices().length;}
+
+function formatPopLarge(n){
+  if(n>=1e9) return (n/1e9).toFixed(1).replace(/\.0$/,'')+'b';
+  if(n>=1e6) return (n/1e6).toFixed(1).replace(/\.0$/,'')+'m';
+  if(n>=1e3) return Math.round(n/1e3)+'k';
+  return n.toString();
+}
+// ── People inside the circles ──
+// popgrid.bin (build_popgrid.py in the citycircles folder) is GHS-POP 2025 on
+// a 0.25° grid. Each cell is split into 8×8 squares, and a square counts once
+// its middle is inside any circle or band, so overlaps never count anyone
+// twice. Testing whole cells by their centre missed most small circles and
+// thin bands (country games go down to a few km). Summing the cities instead
+// counted only city proper populations, and GeoNames double counts some
+// (New York City and Manhattan are both in it).
+let POPGRID=null, popCovered=null, popCount=0, popCircles=0;
+fetch('/assets/games/popgrid.bin').then(r=>r.ok?r.arrayBuffer():null).then(buf=>{
+  if(!buf) return;
+  const n=(buf.byteLength-721*4)/6;
+  POPGRID={pop:new Uint32Array(buf,0,n),
+           rowStart:new Uint32Array(buf,n*4,721),
+           col:new Uint16Array(buf,n*4+721*4,n)};
+  upStats();
+}).catch(()=>{});
+
+// popgrid_cc.bin (build_popgrid_cc.py) gives each cell a country and a
+// continent, so those games count only the people inside them. Fetched with
+// the first such game.
+const POPCC_CONTINENTS=['af','as','eu','na','oc','sa'];
+let POPCC=null, popccLoading=false;
+function loadPopCC(){
+  if(POPCC||popccLoading) return;
+  popccLoading=true;
+  fetch('/assets/games/popgrid_cc.bin').then(r=>r.ok?r.arrayBuffer():null).then(buf=>{
+    if(!buf) return;
+    const b=new Uint8Array(buf), k=b[0], codes={}, n=(b.length-1-2*k)/2;
+    for(let j=0;j<k;j++) codes[String.fromCharCode(b[1+2*j],b[2+2*j])]=j+1;
+    POPCC={codes,cell:b.subarray(1+2*k,1+2*k+n),cont:b.subarray(1+2*k+n)};
+    popCovered=null;
+    upStats();
+  }).catch(()=>{}).finally(()=>{popccLoading=false;});
+}
+
+function coveredPop(){
+  if(!POPGRID) return null;
+  let ccOnly=0, cells=null;
+  if(country){
+    if(!POPCC){loadPopCC();return null;}
+    const ct=continentById(country);
+    cells=ct?POPCC.cont:POPCC.cell;
+    ccOnly=(ct?POPCC_CONTINENTS.indexOf(ct.code)+1:POPCC.codes[country])||-1;
+  }
+  // Two 32-bit words per cell: which of its 64 squares are counted.
+  if(!popCovered||popCircles>guessCircles.length){
+    popCovered=new Uint32Array(POPGRID.pop.length*2); popCount=0; popCircles=0;
+  }
+  const {pop,rowStart,col}=POPGRID, S=0.25, Q=S/8, FULL=0xFFFFFFFF;
+  for(;popCircles<guessCircles.length;popCircles++){
+    const gc=guessCircles[popCircles], t=shapeTest(gc);
+    const reach=gc.band==='lng'?180:gc.band==='lat'?gc.half+S:gc.radiusKm/111.19+S;
+    const r0=Math.max(0,Math.floor((90-gc.lat-reach)/S));
+    const r1=Math.min(719,Math.floor((90-gc.lat+reach)/S));
+    for(let row=r0;row<=r1;row++){
+      const lat=90-(row+0.5)*S;
+      for(let k=rowStart[row];k<rowStart[row+1];k++){
+        const m0=popCovered[2*k], m1=popCovered[2*k+1];
+        if(m0===FULL&&m1===FULL) continue;
+        if(ccOnly&&cells[k]!==ccOnly) continue;
+        const lng=-180+(col[k]+0.5)*S, c=t.cell(lat,lng);
+        if(c===0) continue;
+        let n0=FULL, n1=FULL;
+        if(c===2){
+          n0=0; n1=0;
+          for(let b=0;b<64;b++){
+            if(!t.pt(lat+S/2-((b>>3)+0.5)*Q, lng-S/2+((b&7)+0.5)*Q)) continue;
+            if(b<32) n0|=1<<b; else n1|=1<<(b-32);
+          }
+        }
+        const added=bits32((n0&~m0)>>>0)+bits32((n1&~m1)>>>0);
+        if(!added) continue;
+        popCovered[2*k]=m0|n0; popCovered[2*k+1]=m1|n1;
+        popCount+=pop[k]*added/64;
+      }
+    }
+  }
+  return Math.round(popCount);
+}
+
+function bits32(x){
+  x-=(x>>>1)&0x55555555;
+  x=(x&0x33333333)+((x>>>2)&0x33333333);
+  return Math.imul((x+(x>>>4))&0x0F0F0F0F,0x01010101)>>>24;
+}
+
+// One circle or band as two tests: cell(lat, lng) of a cell's middle is 1 when
+// the whole cell is inside, 0 when none of it is, 2 when its squares need
+// checking one by one with pt(lat, lng).
+function shapeTest(gc){
+  const rad=Math.PI/180, H=0.125;
+  const edge=(d,r,h)=>d+h<=r?1:d-h>r?0:2;
+  if(gc.band==='lat') return {
+    cell:(lat)=>edge(Math.abs(lat-gc.lat),gc.half,H),
+    pt:(lat)=>Math.abs(lat-gc.lat)<=gc.half};
+  if(gc.band==='lng') return {
+    cell:(lat,lng)=>edge(lngGap(lng,gc.lng),gc.half,H),
+    pt:(lat,lng)=>lngGap(lng,gc.lng)<=gc.half};
+  // Spherical law of cosines: the angle from the centre, in radians. No
+  // wrapping needed at the antimeridian.
+  const sinA=Math.sin(gc.lat*rad), cosA=Math.cos(gc.lat*rad), R=gc.radiusKm/6371, lng0=gc.lng*rad;
+  const ang=(lat,lng)=>Math.acos(Math.max(-1,Math.min(1,
+    sinA*Math.sin(lat*rad)+cosA*Math.cos(lat*rad)*Math.cos(lng*rad-lng0))));
+  const HD=0.177*rad;  // half a cell's diagonal, at most
+  return {cell:(lat,lng)=>edge(ang(lat,lng),R,HD), pt:(lat,lng)=>ang(lat,lng)<=R};
+}
+
+function upStats(){
+  document.getElementById('stat-cities').textContent=revealedSet.size+'/'+totalCities();
+  const pop=coveredPop();
+  document.getElementById('stat-pop').textContent=guessCircles.length&&pop!==null?formatPopLarge(pop):'—';
+  // Nothing to finish before the first guess, and nothing left after a finish.
+  document.getElementById('finish-btn').disabled=gameFinished||guessCount===0;
+}
+
+function revealCity(idx){
+  if(revealedSet.has(idx)||finishedSet.has(idx))return false;
+  revealedSet.add(idx);
+  return true;
+}
+
+function findCityByName(input){
+  const n=norm(input);
+  for(const v of getVariants(n)){
+    const r=cityNameMap.get(v);
+    if(r&&r.length) return r;
+  }
+  return null;
+}
+
+// ── Country tracking ──
+const COUNTRY_NAMES={
+  AF:'Afghanistan',AL:'Albania',DZ:'Algeria',AO:'Angola',AR:'Argentina',AM:'Armenia',
+  AU:'Australia',AT:'Austria',AZ:'Azerbaijan',BS:'Bahamas',BD:'Bangladesh',BY:'Belarus',
+  BE:'Belgium',BG:'Bulgaria',BZ:'Belize',BJ:'Benin',BO:'Bolivia',BA:'Bosnia',BW:'Botswana',BR:'Brazil',
+  BN:'Brunei',BF:'Burkina Faso',BI:'Burundi',CM:'Cameroon',CA:'Canada',CV:'Cape Verde',
+  CF:'Central African Republic',TD:'Chad',CL:'Chile',CN:'China',CO:'Colombia',CG:'Congo',
+  CD:'DR Congo',CR:'Costa Rica',CI:"Cote d'Ivoire",HR:'Croatia',CU:'Cuba',CZ:'Czech Republic',
+  DK:'Denmark',DJ:'Djibouti',DO:'Dominican Republic',EC:'Ecuador',EG:'Egypt',SV:'El Salvador',
+  ER:'Eritrea',EE:'Estonia',ET:'Ethiopia',FJ:'Fiji',FI:'Finland',FR:'France',GA:'Gabon',
+  GM:'Gambia',GE:'Georgia',DE:'Germany',GH:'Ghana',GR:'Greece',GT:'Guatemala',GN:'Guinea',
+  GW:'Guinea-Bissau',GY:'Guyana',HT:'Haiti',HN:'Honduras',HK:'Hong Kong',HU:'Hungary',
+  IN:'India',ID:'Indonesia',IQ:'Iraq',IE:'Ireland',IL:'Israel',IT:'Italy',JM:'Jamaica',
+  JP:'Japan',JO:'Jordan',KZ:'Kazakhstan',KE:'Kenya',KP:'North Korea',KR:'South Korea',
+  KW:'Kuwait',KG:'Kyrgyzstan',LA:'Laos',LV:'Latvia',LB:'Lebanon',LR:'Liberia',LY:'Libya',
+  LT:'Lithuania',MG:'Madagascar',MW:'Malawi',MY:'Malaysia',ML:'Mali',MR:'Mauritania',
+  MX:'Mexico',MD:'Moldova',MN:'Mongolia',MA:'Morocco',MZ:'Mozambique',MM:'Myanmar',
+  NA:'Namibia',NP:'Nepal',NL:'Netherlands',NZ:'New Zealand',NI:'Nicaragua',NE:'Niger',
+  NG:'Nigeria',NO:'Norway',OM:'Oman',PK:'Pakistan',PA:'Panama',PG:'Papua New Guinea',
+  PY:'Paraguay',PE:'Peru',PH:'Philippines',PL:'Poland',PT:'Portugal',PR:'Puerto Rico',
+  QA:'Qatar',RO:'Romania',RU:'Russia',RW:'Rwanda',SA:'Saudi Arabia',SN:'Senegal',
+  RS:'Serbia',SL:'Sierra Leone',SG:'Singapore',SO:'Somalia',ZA:'South Africa',ES:'Spain',
+  LK:'Sri Lanka',SD:'Sudan',SE:'Sweden',CH:'Switzerland',SY:'Syria',TW:'Taiwan',
+  TJ:'Tajikistan',TZ:'Tanzania',TH:'Thailand',TG:'Togo',TT:'Trinidad',TN:'Tunisia',
+  TR:'Turkey',TM:'Turkmenistan',UG:'Uganda',UA:'Ukraine',AE:'UAE',GB:'United Kingdom',
+  US:'United States',UY:'Uruguay',UZ:'Uzbekistan',VE:'Venezuela',VN:'Vietnam',
+  YE:'Yemen',ZM:'Zambia',ZW:'Zimbabwe',XK:'Kosovo',ME:'Montenegro',MK:'North Macedonia',
+  SK:'Slovakia',SI:'Slovenia',CY:'Cyprus',LU:'Luxembourg',MT:'Malta',IS:'Iceland',
+  NC:'New Caledonia',GF:'French Guiana',TL:'Timor-Leste',
+  IM:'Isle of Man',JE:'Jersey',GG:'Guernsey',GI:'Gibraltar',
+  CC:'Cocos Islands',CX:'Christmas Island',FK:'Falkland Islands',
+  SH:'Saint Helena',TC:'Turks and Caicos',KY:'Cayman Islands',
+  BM:'Bermuda',AW:'Aruba',CW:'Curacao',
+  FO:'Faroe Islands',GL:'Greenland',SJ:'Svalbard',
+  MO:'Macau',PS:'Palestine',SS:'South Sudan',IR:'Iran',
+  EH:'Western Sahara',GP:'Guadeloupe',MQ:'Martinique',
+  RE:'Reunion',YT:'Mayotte',PF:'French Polynesia',
+  GQ:'Equatorial Guinea',SZ:'Eswatini',LS:'Lesotho',
+  KM:'Comoros',MU:'Mauritius',SC:'Seychelles',MV:'Maldives',
+  ST:'Sao Tome and Principe',PM:'Saint Pierre and Miquelon',
+  MF:'Saint Martin',SX:'Sint Maarten',WS:'Samoa',TO:'Tonga',
+  VU:'Vanuatu',SB:'Solomon Islands',PW:'Palau',
+  VI:'US Virgin Islands',VG:'British Virgin Islands',
+  GU:'Guam',SR:'Suriname',LC:'Saint Lucia',VC:'Saint Vincent',
+  BB:'Barbados',AG:'Antigua and Barbuda',MP:'Northern Mariana Islands',
+  KI:'Kiribati',MH:'Marshall Islands',DM:'Dominica',
+  CK:'Cook Islands',KN:'Saint Kitts and Nevis',
+  AS:'American Samoa',BQ:'Caribbean Netherlands',
+  KH:'Cambodia',BH:'Bahrain'
+};
+
+function countryName(cc){ return COUNTRY_NAMES[cc]||cc; }
+
+function updateCountryList(){
+  // Build country stats from revealedSet
+  const fi=filteredIndices();
+  // total per country (filtered)
+  const totals={};
+  for(const {c} of fi){
+    totals[c.cc]=(totals[c.cc]||0)+1;
+  }
+  // found per country
+  const found={};
+  for(const {c,i} of fi){
+    if(revealedSet.has(i)) found[c.cc]=(found[c.cc]||0)+1;
+  }
+  // Split into incomplete and complete
+  const allCountries=Object.keys(totals);
+  const incomplete=allCountries.filter(cc=>(found[cc]||0)<(totals[cc]||1));
+  const complete=allCountries.filter(cc=>(found[cc]||0)>=(totals[cc]||1)&&found[cc]);
+  // Show all countries (including 0-found) when <10 incomplete remain, otherwise only found ones
+  const showAll=incomplete.length<10;
+  const active=showAll?allCountries:Object.keys(found);
+  if(!showAll&&active.length===0){
+    document.getElementById('found-list').innerHTML='';
+    return;
+  }
+  // Sort incomplete by found desc, complete by size; filter to active set
+  const incShow=incomplete.filter(cc=>showAll||(found[cc]||0)>0);
+  incShow.sort((a,b)=>(found[b]||0)-(found[a]||0));
+  complete.sort((a,b)=>totals[b]-totals[a]);
+  const ordered=[...incShow,...complete];
+  const el=document.getElementById('found-list');
+  el.innerHTML='';
+  for(const cc of ordered){
+    const f=found[cc]||0;
+    const t=totals[cc]||0;
+    const done=f>=t;
+    const row=document.createElement('div');
+    row.className='found-item'+(done?' done':'');
+    row.innerHTML=`<span class="found-city">${countryName(cc)}</span><span class="found-pop">${f}/${t}</span>`;
+    el.appendChild(row);
+  }
+}
+
+function processGuessOrigin(idx){
+  const seed=CITIES[idx];
+  revealCity(idx);
+  const drawCircle=!guessedSet.has(idx);
+  guessedSet.add(idx);
+  if(mode==='radius'){
+    const latDeg=radKm/111;
+    const lngDeg=radKm/(111*Math.cos(seed.lat*Math.PI/180)||0.001);
+    if(drawCircle){
+      guessCircles.push({lat:seed.lat,lng:seed.lng,radiusKm:radKm});
+      syncGuessCircles();
+    }
+    const fi=filteredIndices();
+    for(const {c,i} of fi){
+      const dlat=Math.abs(c.lat-seed.lat);
+      const dlng=Math.min(Math.abs(c.lng-seed.lng),360-Math.abs(c.lng-seed.lng));
+      if(dlat>latDeg+1||dlng>lngDeg+1) continue;
+      const d=Math.min(hav(seed.lat,seed.lng,c.lat,c.lng),
+                       hav(seed.lat,seed.lng+360,c.lat,c.lng),
+                       hav(seed.lat,seed.lng-360,c.lat,c.lng));
+      if(d<=radKm) revealCity(i);
+    }
+  } else if(mode==='band'){
+    const h=bandHalf/100;
+    if(drawCircle){
+      guessCircles.push({band:bandAxis,lat:seed.lat,lng:seed.lng,half:h});
+      syncGuessCircles();
+    }
+    for(const {c,i} of filteredIndices()){
+      const d=bandAxis==='lat'?Math.abs(c.lat-seed.lat):lngGap(c.lng,seed.lng);
+      if(d<=h+1e-9) revealCity(i);
+    }
+  } else {
+    const fi=filteredIndices();
+    const withDist=fi.map(({c,i})=>({c,i,d:Math.min(
+      hav(seed.lat,seed.lng,c.lat,c.lng),
+      hav(seed.lat,seed.lng+360,c.lat,c.lng),
+      hav(seed.lat,seed.lng-360,c.lat,c.lng)
+    )})).sort((a,b)=>a.d-b.d);
+    const slice=withDist.slice(0,nearN);
+    const farthestDist=slice.length>0?slice[slice.length-1].d:radKm;
+    if(drawCircle){
+      guessCircles.push({lat:seed.lat,lng:seed.lng,radiusKm:farthestDist});
+      syncGuessCircles();
+    }
+    for(const {i} of slice) revealCity(i);
+  }
+}
+
+// Returns true for an accepted guess, 'outside' for a real city that chain
+// mode refuses, and false for anything else.
+function onGuess(raw){
+  const results=findCityByName(raw);
+  if(!results) return false;
+  const fiSet=new Set(filteredIndices().map(x=>x.i));
+  let valid=results.filter(r=>fiSet.has(r.i));
+  if(!valid.length) return false;
+  // Chain mode: a guess has to be inside a circle, except for two free starts,
+  // one in the Americas and one everywhere else, so both sides of the Atlantic
+  // are reachable. A start is one city, so a name shared by several (Madrid,
+  // Spain and Madrid, Colombia) takes only the biggest in an unused region.
+  if(chain){
+    const inside=valid.filter(r=>revealedSet.has(r.i));
+    if(inside.length){
+      valid=inside;
+    } else {
+      const free=valid.filter(r=>!chainStarts.has(regionOf(r.c)));
+      if(!free.length) return 'outside';
+      const start=free.reduce((a,b)=>b.c.pop>a.c.pop?b:a);
+      chainStarts.add(regionOf(start.c));
+      valid=[start];
+    }
+  }
+  if(valid.every(r=>guessedSet.has(r.i))) return false;
+  guessCount++;
+  if(guessCount===1) lockControls();
+  for(const {i} of valid) processGuessOrigin(i);
+  syncCityDots();
+  updateCountryList();
+  upStats();
+  saveState();
+  if(revealedSet.size>=totalCities()) setTimeout(showWin,500);
+  return true;
+}
+
+// ── Game control ──
+function newGame(){
+  document.getElementById('win-overlay').classList.remove('show');
+  gameFinished=false;
+  revealedSet.clear();
+  finishedSet.clear();
+  guessCount=0;
+  guessCircles=[];
+  popCovered=null;
+  guessedSet=new Set();
+  chainStarts.clear();
+  unlockControls();
+  clearDotHover();
+  syncCityDots();
+  syncGuessCircles();
+  document.getElementById('found-list').innerHTML='';
+  const inp=document.getElementById('city-input');
+  inp.value='';
+  inp.disabled=false;
+  inp.placeholder='type a city\u2026';
+  document.getElementById('guess-btn').disabled=false;
+  hideGuessMsg();
+  upStats();
+  saveState();
+  if(mapReady) showGameArea();
+}
+
+// The area's mask (build_regions.py), one small file per area, fetched when
+// its game is first picked.
+const regionCache=new Map();
+function syncRegion(){
+  if(!mapReady) return;
+  const want=country, src=map.getSource('region');
+  if(!want){src.setData(EMPTY_FC);return;}
+  if(!regionCache.has(want)){
+    regionCache.set(want,fetch(`/assets/games/regions/${want.toLowerCase()}.json`)
+      .then(r=>r.ok?r.json():EMPTY_FC).catch(()=>EMPTY_FC));
+  }
+  regionCache.get(want).then(fc=>{if(country===want) src.setData(fc);});
+}
+
+function showGameArea(){
+  syncRegion();
+  if(!country){map.easeTo({center:[10,20],zoom:2});return;}
+  const [w,s,e,n]=areaBounds();
+  map.fitBounds([[w,s],[e,n]],{padding:40,maxZoom:8,duration:700});
+}
+
+function giveUp(){
+  if(gameFinished) return;
+  gameFinished=true;
+  upStats();
+  saveState();
+  document.getElementById('guess-btn').disabled=true;
+  for(const {i} of filteredIndices()){
+    if(!revealedSet.has(i)) finishedSet.add(i);
+  }
+  // One setData with every city in it. This used to remove every marker on the
+  // map and rebuild the lot as SVG, which is what made the finish screen hitch.
+  syncCityDots();
+  const inp=document.getElementById('city-input');
+  inp.disabled=true;
+  inp.placeholder='';
+  setTimeout(()=>showFinishOverlay(false),300);
+}
+
+function showWin(){
+  giveUp();
+}
+
+
+// ── Config ──
+function setMode(m){
+  mode=m;
+  syncModeUI();
+  newGame();
+}
+function syncModeUI(){
+  document.querySelectorAll('.mode-tab').forEach(t=>t.classList.toggle('active',t.dataset.mode===mode));
+  document.getElementById('radius-row').style.display=mode==='radius'?'flex':'none';
+  document.getElementById('nearest-row').style.display=mode==='nearest'?'flex':'none';
+  document.getElementById('band-row').style.display=mode==='band'?'flex':'none';
+  document.getElementById('pop-row').style.display=isLegacy()?'flex':'none';
+  // A country is all one side of the Atlantic, so it has one free start.
+  document.getElementById('chain-row').title=`every city you type has to be inside one of your ${mode==='band'?'bands':'circles'}. `
+    +(country?'you get one free start':'you get one free start in the americas and one everywhere else');
+}
+const LOCKABLE=['country-select','radius-select','nearest-select','band-select','pop-select','chain-check'];
+// Phones only (the CSS ignores these classes on desktop): once a game starts
+// the locked settings fold into a one-line summary that can be tapped open.
+function toggleSettings(){
+  document.getElementById('sidebar').classList.toggle('settings-open');
+  syncSettingsSummary();
+}
+function syncSettingsSummary(){
+  const open=document.getElementById('sidebar').classList.contains('settings-open');
+  document.getElementById('settings-summary').textContent=lbLabel()+(open?' ▾':' ▸');
+}
+function lockControls(){
+  document.getElementById('sidebar').classList.add('playing');
+  syncSettingsSummary();
+  for(const id of LOCKABLE) document.getElementById(id).disabled=true;
+  document.getElementById('mode-tabs-wrap').style.pointerEvents='none';
+  document.getElementById('mode-tabs-wrap').style.opacity='0.45';
+}
+function unlockControls(){
+  document.getElementById('sidebar').classList.remove('playing','settings-open');
+  for(const id of LOCKABLE) document.getElementById(id).disabled=false;
+  document.getElementById('mode-tabs-wrap').style.pointerEvents='';
+  document.getElementById('mode-tabs-wrap').style.opacity='';
+}
+function onRadiusChange(){
+  if(guessCount>0)return;
+  radKm=+document.getElementById('radius-select').value;
+  saveState();
+}
+function onNearestChange(){
+  if(guessCount>0)return;
+  nearN=+document.getElementById('nearest-select').value;
+  saveState();
+}
+function onChainChange(){
+  if(guessCount>0)return;
+  chain=document.getElementById('chain-check').checked;
+  saveState();
+}
+function onPopChange(){
+  minPop=+document.getElementById('pop-select').value;
+  _filteredCache=null;
+  newGame();
+}
+function onBandChange(){
+  if(guessCount>0)return;
+  const [a,h]=document.getElementById('band-select').value.split(':');
+  bandAxis=a; bandHalf=+h;
+}
+function onCountryChange(){
+  country=document.getElementById('country-select').value;
+  fillChoices();
+  syncModeUI();
+  newGame();
+}
+
+// ── Input ──
+document.getElementById('city-input').addEventListener('keydown',e=>{
+  if(e.key==='Enter') submitGuess();
+});
+
+// Enter in the text box, or the → button beside it.
+function submitGuess(){
+  const inp=document.getElementById('city-input');
+  if(inp.disabled) return;
+  const v=inp.value.trim();
+  if(!v){inp.focus();return;}
+  const res=onGuess(v);
+  if(res===true){
+    inp.value='';
+    hideGuessMsg();
+  } else {
+    inp.value='';
+    inp.classList.add('shake');
+    inp.addEventListener('animationend',()=>inp.classList.remove('shake'),{once:true});
+    if(res==='outside') showGuessMsg(mode==='band'?'not inside your bands':'not inside your circles');
+  }
+  // Keep the keyboard up on phones for the next guess.
+  if(!inp.disabled) inp.focus();
+}
+
+let guessMsgTimer=null;
+function showGuessMsg(text){
+  const el=document.getElementById('guess-msg');
+  el.textContent=text;
+  el.classList.add('show');
+  clearTimeout(guessMsgTimer);
+  guessMsgTimer=setTimeout(hideGuessMsg,1800);
+}
+function hideGuessMsg(){
+  document.getElementById('guess-msg').classList.remove('show');
+}
+
+// Clicking anywhere outside the finish/leaderboard box closes it. A click that
+// ends a map drag doesn't count, so panning the map with the box open is fine.
+let downAt=null;
+document.addEventListener('pointerdown',e=>{downAt=[e.clientX,e.clientY];},true);
+document.addEventListener('click',e=>{
+  const ov=document.getElementById('win-overlay');
+  if(!ov.classList.contains('show')) return;
+  if(document.getElementById('win-box').contains(e.target)||e.target.closest('#lb-btn')) return;
+  if(downAt&&Math.hypot(e.clientX-downAt[0],e.clientY-downAt[1])>5) return;
+  ov.classList.remove('show');
+});
+
+// ── Saved progress ──
+// A game in progress is kept in this browser, with the settings it was started
+// with, so leaving for the about page (or closing the tab) doesn't lose a run.
+// Settings alone are not kept: with no game going, a fresh load starts on the
+// defaults (Anita, 2026-11-06). Only the guess origins are stored; replaying
+// them in order rebuilds everything else.
+const SAVE_KEY='citycircles-save';
+
+function saveState(){
+  try{
+    if(gameFinished||!guessCount){localStorage.removeItem(SAVE_KEY);return;}
+    localStorage.setItem(SAVE_KEY,JSON.stringify({
+      n:CITIES.length, mode, radKm, nearN, minPop, chain, country, bandAxis, bandHalf,
+      guesses:[...guessedSet], guessCount,
+    }));
+  }catch(e){}
+}
+
+// Sets a dropdown to a saved value, but only one it actually offers.
+function restoreSelect(id,val){
+  const sel=document.getElementById(id);
+  if([...sel.options].some(o=>+o.value===val)) sel.value=String(val);
+  return +sel.value;
+}
+
+function restoreState(){
+  let s=null;
+  try{s=JSON.parse(localStorage.getItem(SAVE_KEY));}catch(e){}
+  // A different city count means the data file changed and the saved indices
+  // no longer point at the same cities.
+  const guesses=(s&&s.n===CITIES.length?s.guesses||[]:[]).filter(i=>Number.isInteger(i)&&i>=0&&i<CITIES.length);
+  if(!guesses.length){fillChoices();syncModeUI();newGame();return;}
+  mode=['nearest','band'].includes(s.mode)?s.mode:'radius';
+  country=COUNTRY_AREA[s.country]||continentById(s.country)?s.country:'';
+  document.getElementById('country-select').value=country;
+  bandAxis=s.bandAxis==='lng'?'lng':'lat';
+  fillChoices();
+  radKm=restoreSelect('radius-select',s.radKm);
+  nearN=restoreSelect('nearest-select',s.nearN);
+  minPop=restoreSelect('pop-select',s.minPop);
+  const bandOpt=`${bandAxis}:${s.bandHalf}`;
+  const bandSel=document.getElementById('band-select');
+  if([...bandSel.options].some(o=>o.value===bandOpt)){bandSel.value=bandOpt;bandHalf=+s.bandHalf;}
+  chain=s.chain===true;
+  document.getElementById('chain-check').checked=chain;
+  _filteredCache=null;
+  syncModeUI();
+  newGame();
+  for(const i of guesses){
+    // A chain guess that wasn't already inside a circle was a free start.
+    if(chain&&!revealedSet.has(i)) chainStarts.add(regionOf(CITIES[i]));
+    processGuessOrigin(i);
+  }
+  guessCount=Math.max(1,s.guessCount|0);
+  lockControls();
+  syncCityDots();
+  updateCountryList();
+  upStats();
+  saveState();
+}
+
+document.addEventListener('keydown',e=>{
+  const inp=document.getElementById('city-input');
+  if(inp.disabled||document.activeElement===inp) return;
+  if(e.ctrlKey||e.altKey||e.metaKey) return;
+  if(e.key==='Tab'){e.preventDefault();inp.focus();return;}
+  if(e.key.length===1) inp.focus();
+});
+
+// No move or zoom handlers any more. Both existed to re-run the decimation and
+// to resize every marker by hand; the dot layer's radius expression covers zoom
+// and the source is viewport-independent, so panning costs nothing to maintain.
+startMap();
+loadCities();fillCountries();restoreState();
+
+// ── Leaderboard ──
+// Backed by shonei-server (circles.go). This replaced a jsonbin.io bin whose
+// master key was in this file — public source, so anyone could rewrite or delete
+// the whole store. Nothing secret lives here now; the server validates, filters
+// names, and keeps an append-only log of every submission.
+const LB_BASE='https://market.anita.garden/circles';
+
+// Country and chain games get their own boards (the server accepts a
+// two-letter country suffix and then _chain).
+function lbKey(){
+  const mp=curMinPop();
+  let base=mode==='radius'?`radius_${radKm}_${mp}`:mode==='nearest'?`nearest_${nearN}_${mp}`:`${bandAxis}_${bandHalf}_${mp}`;
+  if(country) base+='_'+country.toLowerCase();  // a continent's id is already lower case
+  return chain?base+'_chain':base;
+}
+
+function lbLabel(){
+  const mp=curMinPop();
+  const pop=mp>=1e6?(mp/1e6)+'m+':mp>=1e3?(mp/1e3)+'k+':mp+'+';
+  let base=mode==='radius'?`radius · ${radKm} km`:mode==='nearest'?`nearest ${nearN}`:bandText(bandAxis,bandHalf);
+  base+=` · pop ${pop}`;
+  if(country) base=areaName(country)+' · '+base;
+  return chain?base+' · chain':base;
+}
+
+// A random id this browser keeps for itself, so the board can mark this
+// player's own rows and their best. Shared with Guess the City (same origin).
+// Made on the first submitted score; '' when there is none or storage is
+// blocked. Rows are only marked with it, never merged.
+const LB_PLAYER_KEY='lbPlayer';
+function lbPlayer(make){
+  try{
+    let id=localStorage.getItem(LB_PLAYER_KEY);
+    if(!id&&make){
+      const b=new Uint8Array(16);
+      crypto.getRandomValues(b);
+      id=Array.from(b,x=>x.toString(16).padStart(2,'0')).join('');
+      localStorage.setItem(LB_PLAYER_KEY,id);
+    }
+    return id||'';
+  }catch(e){return '';}
+}
+
+// Returns the current board ({entries, you}), or null when the server can't be
+// reached. null renders as "unavailable" rather than as an empty board, so an
+// outage doesn't look like nobody has ever played.
+async function lbFetch(){
+  try{
+    const p=lbPlayer(false);
+    const r=await fetch(`${LB_BASE}/board?board=${encodeURIComponent(lbKey())}`+(p?`&player=${p}`:''));
+    if(!r.ok) return null;
+    return await r.json();
+  }catch(e){return null;}
+}
+
+// Anonymous record that a game reached the finish screen, sent whether or not a
+// name is submitted afterwards. Most players never type one, so submissions
+// alone badly undercount how much the game is played. Fire-and-forget: a failure
+// here must never interrupt the finish overlay.
+function lbRecordFinish(){
+  fetch(`${LB_BASE}/finish`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({board:lbKey(),found:revealedSet.size,total:totalCities()})
+  }).catch(()=>{});
+}
+
+// Submits one score and returns the updated board. Throws with the server's
+// own message so the caller can say why a name was refused.
+async function lbSubmit(name,found,total){
+  const r=await fetch(`${LB_BASE}/score`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({board:lbKey(),name,flag:lbFlag,found,total,player:lbPlayer(true)})
+  });
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(d.error||'could not reach the leaderboard');
+  return d;
+}
+
+// ── Flag beside the name ──
+// One emoji sent with the score. Starts as the country of the browser's
+// language setting when it names a country, then whatever this player last
+// picked (including none). Each emoji has a word or two so the search box finds it.
+const LB_FLAG_KEY='lbFlag';
+const EMOJI_EXTRA=[['🌍','globe africa europe'],['🌎','globe americas'],['🌏','globe asia australia'],['🗺️','map'],
+  ['🧭','compass'],['🏙️','city'],['🌆','city dusk'],['🌉','bridge night'],['🏔️','mountain'],['🌋','volcano'],
+  ['🏝️','island'],['🏜️','desert'],['🌊','wave sea'],['🚂','train'],['✈️','plane'],['🚢','ship boat'],
+  ['🚲','bike bicycle'],['🐱','cat'],['🐶','dog'],['🐰','bunny rabbit'],['🐻','bear'],['🦊','fox'],
+  ['🐼','panda'],['🐸','frog'],['🦉','owl'],['🐢','turtle'],['🐙','octopus'],['🦋','butterfly'],
+  ['🦄','unicorn'],['🌸','flower blossom'],['🌲','tree'],['🍜','noodles ramen'],['🍕','pizza'],['🍰','cake'],
+  ['☕','coffee tea'],['🎲','dice'],['🎯','target'],['🏆','trophy'],['⭐','star'],['🔥','fire'],
+  ['💎','gem diamond'],['👑','crown'],['😎','cool'],['🤓','nerd'],['🥳','party'],['🤔','thinking'],
+  ['👻','ghost'],['🤖','robot'],['👽','alien']];
+// Extra words for countries people search under another name.
+const FLAG_ALIASES={US:'usa america',GB:'uk britain england scotland wales',AE:'emirates',CZ:'czechia',
+  MK:'macedonia',KR:'korea',KP:'korea',CI:'ivory coast',MM:'burma',SZ:'swaziland',TR:'turkiye'};
+const NOFLAG_SVG='<svg class="noflag" width="18" height="13" viewBox="0 0 18 13"><rect x=".5" y=".5" width="17" height="12" rx="1" fill="#f0f0f0" stroke="#c8c8c8"/><path d="M6.5 3.5l5 6M11.5 3.5l-5 6" stroke="#b0b0b0" stroke-width="1.2" stroke-linecap="round"/></svg>';
+
+function flagEmoji(cc){
+  return String.fromCodePoint(...[...cc].map(c=>0x1F1E6+c.charCodeAt(0)-65));
+}
+
+function lbGuessFlag(){
+  try{
+    for(const l of (navigator.languages||[navigator.language])){
+      const r=new Intl.Locale(l).region;
+      if(r&&COUNTRY_NAMES[r]) return flagEmoji(r);
+    }
+  }catch(e){}
+  return '';
+}
+
+let lbFlag=(()=>{
+  try{
+    const s=localStorage.getItem(LB_FLAG_KEY);
+    if(s!==null) return s;
+  }catch(e){}
+  return lbGuessFlag();
+})();
+
+function flagBtnUpdate(){
+  const btn=document.getElementById('win-flag-btn');
+  btn.classList.toggle('em',!!lbFlag&&!isFlagEmoji(lbFlag));
+  if(lbFlag){btn.textContent=lbFlag;btn.classList.add('flag');}
+  else{btn.innerHTML=NOFLAG_SVG;btn.classList.remove('flag');}
+}
+
+// A country flag is two regional indicator letters; everything else is some other emoji.
+function isFlagEmoji(e){return /^[\u{1F1E6}-\u{1F1FF}]{2}$/u.test(e);}
+
+// Flags first, A to Z by country name, then the other emoji. The no-flag box
+// leads the flags.
+function flagPickerBuild(){
+  const item=(e,title,keys)=>`<button type="button" class="fl flag${isFlagEmoji(e)?'':' em'}" data-e="${e}" data-k="${esc(keys.toLowerCase())}"${title?` title="${esc(title)}"`:''}>${e}</button>`;
+  let h='<input type="text" id="flag-search" placeholder="search" autocomplete="off" spellcheck="false"/>'
+    +`<div class="fl-grid"><button type="button" class="fl fl-none" data-e="" title="No flag">${NOFLAG_SVG}</button>`;
+  Object.entries(COUNTRY_NAMES).sort((a,b)=>a[1].localeCompare(b[1]))
+    .forEach(([cc,n])=>{h+=item(flagEmoji(cc),n,n+' '+cc+' '+(FLAG_ALIASES[cc]||''));});
+  h+='</div><div class="fl-sep"></div><div class="fl-grid">';
+  EMOJI_EXTRA.forEach(([e,k])=>{h+=item(e,'',k);});
+  document.getElementById('flag-pop').innerHTML=h+'</div>';
+  document.getElementById('flag-search').addEventListener('input',flagPickerFilter);
+}
+
+function flagPickerFilter(){
+  const q=document.getElementById('flag-search').value.trim().toLowerCase();
+  const pop=document.getElementById('flag-pop');
+  pop.querySelector('.fl-none').hidden=!!q;
+  let flags=0,others=0;
+  pop.querySelectorAll('.fl[data-k]').forEach(b=>{
+    const hit=!q||b.dataset.k.includes(q);
+    b.hidden=!hit;
+    if(hit){if(COUNTRY_NAMES_BY_EMOJI.has(b.dataset.e)) flags++; else others++;}
+  });
+  pop.querySelector('.fl-sep').hidden=!(flags&&others);
+}
+const COUNTRY_NAMES_BY_EMOJI=new Set(Object.keys(COUNTRY_NAMES).map(flagEmoji));
+
+function closeFlagPicker(){document.getElementById('flag-pop').classList.remove('show');}
+
+function toggleFlagPicker(){
+  const pop=document.getElementById('flag-pop');
+  if(!pop.firstChild) flagPickerBuild();
+  const open=pop.classList.toggle('show');
+  if(!open) return;
+  const s=document.getElementById('flag-search');
+  s.value='';
+  flagPickerFilter();
+  pop.scrollTop=0;
+  // On a phone the keyboard would cover the list, so only focus with a mouse.
+  if(matchMedia('(pointer:fine)').matches) s.focus();
+}
+
+document.getElementById('flag-pop').addEventListener('click',e=>{
+  const t=e.target.closest('[data-e]');
+  if(!t) return;
+  lbFlag=t.dataset.e;
+  try{localStorage.setItem(LB_FLAG_KEY,lbFlag);}catch(err){}
+  flagBtnUpdate();
+  closeFlagPicker();
+});
+document.addEventListener('click',e=>{
+  if(e.target.closest('#flag-pop,#win-flag-btn')) return;
+  closeFlagPicker();
+});
+flagBtnUpdate();
+
+// Names are typed by strangers and go straight into innerHTML below, so they
+// must be escaped — otherwise a 20-character name like <img src=x onerror=…>
+// runs as script for every later visitor to the board.
+function esc(s){
+  return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// The server marks this browser's own rows (e.you). When their best is below
+// the rows shown, it goes on the end at its real rank.
+function lbRenderTable(data){
+  if(!data) return '<div class="lb-empty">leaderboard unavailable</div>';
+  const entries=data.entries||[];
+  if(!entries.length) return '<div class="lb-empty">no scores yet</div>';
+  const row=(rank,e)=>{
+    const score=e.total?`${e.found}/${e.total}`:e.found;
+    const fl=e.flag?`<span class="flag lb-flag${isFlagEmoji(e.flag)?'':' em'}">${esc(e.flag)}</span>`:'';
+    return `<tr${e.you?' class="lb-you"':''}><td>${rank}</td><td>${fl}${esc(e.name)}</td><td class="r">${esc(score)}</td></tr>`;
+  };
+  let html='<table class="lb-table"><tbody>';
+  entries.forEach((e,i)=>{html+=row(i+1,e);});
+  if(data.you&&data.you.rank>entries.length){
+    html+='<tr class="lb-gap"><td colspan="3">…</td></tr>'+row(data.you.rank,{...data.you.best,you:true});
+  }
+  html+='</tbody></table>';
+  return html;
+}
+
+async function winSubmitScore(){
+  const name=document.getElementById('win-name-input').value.trim();
+  if(!name) return;
+  const btn=document.getElementById('win-submit-btn');
+  const status=document.getElementById('win-submit-status');
+  btn.disabled=true;
+  status.textContent='submitting…';
+  try{
+    const board=await lbSubmit(name,revealedSet.size,totalCities());
+    status.textContent='submitted!';
+    document.getElementById('win-lb-entries').innerHTML=lbRenderTable(board);
+  }catch(e){
+    // Re-enable so a refused name (or a blip) can be corrected and retried,
+    // rather than leaving the player with a dead button.
+    status.textContent=e.message;
+    btn.disabled=false;
+  }
+}
+
+
+function showFinishOverlay(won){
+  const total=totalCities();
+  // Count the game itself, before anyone decides whether to submit a name.
+  lbRecordFinish();
+  document.getElementById('win-found').textContent=`${revealedSet.size}/${total}`;
+  document.getElementById('win-sub').textContent='cities found';
+  document.getElementById('win-desc').textContent=`${guessCount} guess${guessCount!==1?'es':''}`;
+  document.getElementById('win-overlay').classList.remove('lb-only');
+  document.getElementById('win-overlay').classList.add('show');
+  closeFlagPicker();
+  document.getElementById('win-submit-status').textContent='';
+  document.getElementById('win-submit-btn').disabled=false;
+  // keep name from previous submission
+  lbLoadInto();
+}
+
+function lbLoadInto(){
+  document.getElementById('win-lb-label').textContent=lbLabel();
+  const entries=document.getElementById('win-lb-entries');
+  entries.innerHTML='<div class="lb-empty">loading…</div>';
+  (async()=>{
+    entries.innerHTML=lbRenderTable(await lbFetch());
+  })();
+}
+
+// The leaderboard button. Mid-game it shows only the board, and doesn't count
+// as a finish: checking the board used to mean pressing finish, which logged an
+// empty game every time. After a finish it reopens the full finish box, so a
+// player who closed it can still submit their name.
+function showLeaderboard(){
+  const ov=document.getElementById('win-overlay');
+  ov.classList.toggle('lb-only',!gameFinished);
+  ov.classList.add('show');
+  lbLoadInto();
+}
+
+// Mobile only: the country list is a drop-down under the top bar. On desktop
+// the class has no effect and the list is always shown.
+function toggleCountries(){
+  const open=document.getElementById('sidebar').classList.toggle('countries-open');
+  document.getElementById('found-chev').textContent=open?' ▾':' ▸';
+}
+</script>
+</body>
+</html>

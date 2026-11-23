@@ -1,0 +1,236 @@
+{
+ "task": "T-3688",
+ "iso": "IND",
+ "label": "Muzaffarpur (shown as Muzaffarpur, row haj): split by district",
+ "view": [
+  84.9,
+  25.35,
+  86.25,
+  26.45
+ ],
+ "new": {
+  "hjp": {
+   "name": "Hajipur",
+   "like": "gih",
+   "origin": [
+    85.2105,
+    25.6858
+   ]
+  },
+  "sxp": {
+   "name": "Samastipur",
+   "like": "gih",
+   "origin": [
+    85.7811,
+    25.8629
+   ]
+  }
+ },
+ "moves": [
+  [
+   "45978901B1019203321683",
+   "Samastipur",
+   "haj",
+   "sxp"
+  ],
+  [
+   "45978901B42790720672442",
+   "Pusa",
+   "haj",
+   "sxp"
+  ],
+  [
+   "45978901B40649040394815",
+   "Tajpur",
+   "haj",
+   "sxp"
+  ],
+  [
+   "45978901B53040821085007",
+   "Kalyanpur",
+   "haj",
+   "sxp"
+  ],
+  [
+   "45978901B20472469282187",
+   "Warisnagar",
+   "haj",
+   "sxp"
+  ],
+  [
+   "45978901B65396079069965",
+   "Khanpur",
+   "haj",
+   "sxp"
+  ],
+  [
+   "45978901B97745391937009",
+   "Shivaji Nagar",
+   "haj",
+   "sxp"
+  ],
+  [
+   "45978901B35486118115040",
+   "Morwa",
+   "haj",
+   "sxp"
+  ],
+  [
+   "45978901B42888913449308",
+   "Sarairanjan",
+   "haj",
+   "sxp"
+  ],
+  [
+   "45978901B61306423391906",
+   "Dalsinghsarai",
+   "haj",
+   "sxp"
+  ],
+  [
+   "45978901B85882161461977",
+   "Vidyapati Nagar",
+   "haj",
+   "sxp"
+  ],
+  [
+   "45978901B92336527726888",
+   "Mohiuddinagar",
+   "haj",
+   "sxp"
+  ],
+  [
+   "45978901B54507503643079",
+   "Patori",
+   "haj",
+   "sxp"
+  ],
+  [
+   "45978901B53094783202015",
+   "Mohanpur",
+   "haj",
+   "sxp"
+  ],
+  [
+   "45978901B11039347271435",
+   "Bachhwara",
+   "haj",
+   "sxp"
+  ],
+  [
+   "45978901B40907767103755",
+   "Mansurchak",
+   "haj",
+   "sxp"
+  ],
+  [
+   "45978901B11363665788691",
+   "Hajipur",
+   "haj",
+   "hjp"
+  ],
+  [
+   "45978901B7536863142205",
+   "Lalganj",
+   "haj",
+   "hjp"
+  ],
+  [
+   "45978901B77739795470375",
+   "Bhagwanpur",
+   "haj",
+   "hjp"
+  ],
+  [
+   "45978901B57175678793939",
+   "Vaishali",
+   "haj",
+   "hjp"
+  ],
+  [
+   "45978901B72994510556463",
+   "Patedhi Belsar",
+   "haj",
+   "hjp"
+  ],
+  [
+   "45978901B59756597347061",
+   "Garaul",
+   "haj",
+   "hjp"
+  ],
+  [
+   "45978901B99930868408911",
+   "Mahua",
+   "haj",
+   "hjp"
+  ],
+  [
+   "45978901B6256422982070",
+   "Rajapakar",
+   "haj",
+   "hjp"
+  ],
+  [
+   "45978901B77281254344736",
+   "Bidupur",
+   "haj",
+   "hjp"
+  ],
+  [
+   "45978901B42709429812924",
+   "Desri",
+   "haj",
+   "hjp"
+  ],
+  [
+   "45978901B16596610934414",
+   "Sahdei Buzurg",
+   "haj",
+   "hjp"
+  ],
+  [
+   "45978901B22289963006225",
+   "Mahnar",
+   "haj",
+   "hjp"
+  ],
+  [
+   "45978901B89656861581733",
+   "Jandaha",
+   "haj",
+   "hjp"
+  ],
+  [
+   "45978901B24390456494226",
+   "Patepur",
+   "haj",
+   "hjp"
+  ],
+  [
+   "45978901B49350566416270",
+   "Chehrakala",
+   "haj",
+   "hjp"
+  ]
+ ],
+ "names": {
+  "drop": [
+   "haj",
+   "uji"
+  ]
+ },
+ "why": "Muzaffarpur's zone (row haj, 11.7M people in 38 sub-districts over 5,078 km2: GHS-UCDB's Ganges-plain urban centre, Hajipur in the plan, Muzaffarpur in the game) held three districts' towns as one zone; split by district: haj keeps Muzaffarpur's 7 sub-districts (its origin moves to Muzaffarpur town), new hjp Hajipur takes Vaishali's 15, new sxp Samastipur Samastipur's 14 with Begusarai's Bachhwara and Mansurchak; Ujiarpur (uji, 0.21M, one sub-district inside Samastipur district, under the 0.5M floor) is retired into Samastipur",
+ "set": {
+  "haj": {
+   "name": "Muzaffarpur",
+   "origin": [
+    85.3647,
+    26.1209
+   ]
+  }
+ },
+ "retire": {
+  "uji": "sxp"
+ }
+}

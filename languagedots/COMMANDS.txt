@@ -64,3 +64,11 @@ Design: spec.md. Agents: AGENT_BRIEF.md. Coverage of the world: coverage/COVERAG
   the tail, when an output is older than its inputs, or when a node in counts.json has no label in
   languages.json. rclone needs --s3-no-check-bucket (the script passes it); the error meanings, the
   token and the bucket name are in religiondots/COMMANDS.txt, DEPLOY.
+
+---- DATA DOWNLOAD (for people who ask for the data) ----
+
+  python tools/export_dots.py               every drawn dot and leftover mark -> data/export/languagedots_dots.zip
+                                            (dots.csv, languages.csv, countries.csv, README.txt from
+                                            tools/export_README.txt; ~5 min, 46 MB). Upload commands in its docstring.
+  Public: https://data.anita.garden/languagedots/download/languagedots_dots.zip  (+ README.txt beside it)
+  Rerun after a deploy that changed the dots; the README's country count and date are hand-written.

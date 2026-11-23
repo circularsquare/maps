@@ -1,0 +1,18 @@
+
+> wasm
+> npm run wasm:track && npm run wasm:demand
+
+
+> wasm:track
+> wasm-pack build ../sim --target web --profile wasm --out-dir ../app/src/wasm/track --out-name sim
+
+[INFO]: 🎯  Checking for the Wasm target...
+[INFO]: 🌀  Compiling to Wasm...
+    Blocking waiting for file lock on build directory
+    Finished `wasm` profile [optimized] target(s) in 1m 35s
+[INFO]: ⬇️  Installing wasm-bindgen...
+[INFO]: Optimizing wasm binaries with `wasm-opt`...
+Error: The system cannot find the file specified. (os error 2)
+To disable `wasm-opt`, add `wasm-opt = false` to your package metadata in your `Cargo.toml`.
+Caused by: The system cannot find the file specified. (os error 2)
+To disable `wasm-opt`, add `wasm-opt = false` to your package metadata in your `Cargo.toml`.

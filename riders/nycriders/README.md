@@ -36,7 +36,13 @@ python ../../serve.py
 
 # 4. copy to website
 cp /c/Users/anita/projects/maps/riders/nycriders/index.html /c/Users/anita/projects/website/nycriders/index.html
-# (and the trains*.json / stats*.json files when they change)
+# (stats*.json are small and still go in the website repo: copy them when they change)
+# trains*.json are 27-41 MB and live on R2, NOT in the website repo (T-2958). After a rebuild:
+for f in trains trains-saturday trains-sunday; do
+  rclone copyto /c/Users/anita/projects/maps/riders/nycriders/$f.json r2:anitamaps/nycriders/$f.json \
+    --s3-no-check-bucket --header-upload "Content-Type: application/json"
+done
+# the page fetches https://data.anita.garden/nycriders/trains*.json (localhost uses the local file)
 
 ```
 

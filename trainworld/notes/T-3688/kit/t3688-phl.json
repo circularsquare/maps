@@ -1,0 +1,316 @@
+{
+ "task": "T-3688",
+ "iso": "PHL",
+ "label": "Manila",
+ "view": [
+  120.2,
+  13.7,
+  121.9,
+  15.4
+ ],
+ "moves": [
+  [
+   "30758251B4793511613736",
+   "Orani",
+   "mai",
+   "ctg"
+  ],
+  [
+   "30758251B26373043106772",
+   "Samal",
+   "mai",
+   "ctg"
+  ],
+  [
+   "30758251B50173683620188",
+   "Morong",
+   "mai",
+   "ctg"
+  ],
+  [
+   "30758251B72127248939453",
+   "Bagac",
+   "mai",
+   "ctg"
+  ],
+  [
+   "30758251B28396415682182",
+   "Norzagaray",
+   "mai",
+   "smg"
+  ],
+  [
+   "30758251B11674695503139",
+   "Angat",
+   "mai",
+   "smg"
+  ],
+  [
+   "30758251B96236511516175",
+   "San Rafael",
+   "mai",
+   "smg"
+  ],
+  [
+   "30758251B70394947759752",
+   "Minalin",
+   "mai",
+   "ang"
+  ],
+  [
+   "30758251B19069500410191",
+   "Sasmuan",
+   "mai",
+   "ang"
+  ],
+  [
+   "30758251B25010155253639",
+   "Macabebe",
+   "mai",
+   "ang"
+  ],
+  [
+   "30758251B7856900683747",
+   "Masantol",
+   "mai",
+   "ang"
+  ],
+  [
+   "30758251B55553660747763",
+   "Paete",
+   "mai",
+   "tna"
+  ],
+  [
+   "30758251B40270166730947",
+   "Mabitac",
+   "mai",
+   "tna"
+  ],
+  [
+   "30758251B96921420214384",
+   "San Pablo City",
+   "mai",
+   "spb"
+  ],
+  [
+   "30758251B85886628165841",
+   "Santa Cruz",
+   "mai",
+   "spb"
+  ],
+  [
+   "30758251B62240018312192",
+   "Pagsanjan",
+   "mai",
+   "spb"
+  ],
+  [
+   "30758251B49530658943400",
+   "Pila",
+   "mai",
+   "spb"
+  ],
+  [
+   "30758251B60553088936825",
+   "Victoria",
+   "mai",
+   "spb"
+  ],
+  [
+   "30758251B37787171987907",
+   "Magdalena",
+   "mai",
+   "spb"
+  ],
+  [
+   "30758251B80791162648573",
+   "Luisiana",
+   "mai",
+   "spb"
+  ],
+  [
+   "30758251B58026034412685",
+   "Liliw",
+   "mai",
+   "spb"
+  ],
+  [
+   "30758251B95762646893125",
+   "Majayjay",
+   "mai",
+   "spb"
+  ],
+  [
+   "30758251B18586490451466",
+   "Nagcarlan",
+   "mai",
+   "spb"
+  ],
+  [
+   "30758251B93953059217751",
+   "Rizal",
+   "mai",
+   "spb"
+  ],
+  [
+   "30758251B44778470140505",
+   "Lucban",
+   "mai",
+   "spb"
+  ],
+  [
+   "30758251B18917837863618",
+   "Dolores",
+   "mai",
+   "spb"
+  ],
+  [
+   "30758251B86762521234938",
+   "Alaminos",
+   "mai",
+   "spb"
+  ],
+  [
+   "30758251B84649155212336",
+   "Calauan",
+   "mai",
+   "spb"
+  ],
+  [
+   "30758251B641829746077",
+   "Bay",
+   "mai",
+   "spb"
+  ],
+  [
+   "30758251B54075680975044",
+   "Lipa City",
+   "mai",
+   "lpa"
+  ],
+  [
+   "30758251B62709822601123",
+   "City of Tanauan",
+   "mai",
+   "lpa"
+  ],
+  [
+   "30758251B29832257254847",
+   "Santo Tomas",
+   "mai",
+   "lpa"
+  ],
+  [
+   "30758251B86715159474326",
+   "Malvar",
+   "mai",
+   "lpa"
+  ],
+  [
+   "30758251B9712922067328",
+   "Balete",
+   "mai",
+   "lpa"
+  ],
+  [
+   "30758251B55651779812419",
+   "Mataasnakahoy",
+   "mai",
+   "lpa"
+  ],
+  [
+   "30758251B33118282824163",
+   "Cuenca",
+   "mai",
+   "lpa"
+  ],
+  [
+   "30758251B22922317245242",
+   "San Jose",
+   "mai",
+   "lpa"
+  ],
+  [
+   "30758251B75041728100669",
+   "Padre Garcia",
+   "mai",
+   "lpa"
+  ],
+  [
+   "30758251B8254101193317",
+   "Ibaan",
+   "mai",
+   "lpa"
+  ],
+  [
+   "30758251B37438092207200",
+   "Alitagtag",
+   "mai",
+   "lpa"
+  ],
+  [
+   "30758251B80500535312528",
+   "Talisay",
+   "mai",
+   "lpa"
+  ],
+  [
+   "30758251B30231322331435",
+   "Agoncillo",
+   "mai",
+   "ler"
+  ],
+  [
+   "30758251B83345334824937",
+   "San Nicolas",
+   "mai",
+   "ler"
+  ],
+  [
+   "30758251B77759274087167",
+   "Laurel",
+   "mai",
+   "ler"
+  ],
+  [
+   "30758251B11802167700274",
+   "Naic",
+   "mai",
+   "nab"
+  ],
+  [
+   "30758251B1630286055776",
+   "Maragondon",
+   "mai",
+   "nab"
+  ]
+ ],
+ "new": {
+  "spb": {
+   "name": "San Pablo City",
+   "like": "smg",
+   "origin": [
+    121.3253,
+    14.0683
+   ]
+  },
+  "lpa": {
+   "name": "Lipa City",
+   "like": "smg",
+   "origin": [
+    121.1631,
+    13.9411
+   ]
+  }
+ },
+ "retire": {
+  "mri": "ctg"
+ },
+ "names": {
+  "drop": [
+   "mri"
+  ]
+ },
+ "why": "Manila's metro row (29.9M, 127 units, its hull 0.51) reached into Bataan, Pampanga, north Bulacan, southeast Laguna and north Batangas, with pockets inside Tanay's zone; those fringes go to Balanga, San Miguel (with San Rafael), Tanay, Lemery and Nasugbu, Pampanga's delta towns Minalin, Sasmuan, Macabebe and Masantol to Angeles, or form San Pablo and Lipa zones; Malolos and south Bulacan stay in Manila (Anita, 11-22); Mariveles (0.13M, under the floor) joins Balanga"
+}

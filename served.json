@@ -20,16 +20,6 @@
     "about": "World mother-tongue dot map (India, Nepal, Pakistan so far)"
   },
   {
-    "name": "trainworld-mock",
-    "folder": "trainworld/mock",
-    "about": "trainworld UI mock"
-  },
-  {
-    "name": "nycriders",
-    "folder": "riders/nycriders",
-    "about": "Animated NYC subway riders"
-  },
-  {
     "name": "trainworld",
     "folder": ".tw-snap/trainworld/app/dist",
     "about": "rail building game"
@@ -55,11 +45,6 @@
     "about": "asia1m region naming: candidates per batch"
   },
   {
-    "name": "statemetros",
-    "folder": "statemetros",
-    "about": "biggest metro area in each state, 1900-2020"
-  },
-  {
     "name": "liveddensity",
     "folder": "C:/Users/anita/projects/maps/liveddensity",
     "about": "population-weighted population density by country"
@@ -73,5 +58,35 @@
     "name": "transituniversalis",
     "folder": "../transituniversalis/.snap/app/dist",
     "about": "grand strategy transport game, 1500"
+  },
+  {
+    "name": "twstats",
+    "folder": "C:/Users/anita/projects/maps/trainworld/tools/analytics",
+    "about": "trainworld player numbers"
+  },
+  {
+    "name": "twfeedback",
+    "folder": "C:/Users/anita/projects/maps/trainworld/tools/feedback-inbox",
+    "about": "trainworld feedback inbox"
+  },
+  {
+    "name": "twwiki",
+    "folder": "trainworld/wiki/html",
+    "about": "trainworld wiki pilot"
+  },
+  {
+    "name": "twboard",
+    "folder": "trainworld/board",
+    "about": "trainworld board"
+  },
+  {
+    "name": "twnotes",
+    "folder": "trainworld/notes",
+    "about": "trainworld notes for the board"
+  },
+  {
+    "name": "twwikisite",
+    "folder": "artifacts/trainworld/wikisite/preview",
+    "about": "trainworld wiki preview (website build)"
   }
 ]

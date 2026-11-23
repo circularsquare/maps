@@ -1,0 +1,32 @@
+{
+  "versions": [
+    {
+      "id": "v02yt40r",
+      "name": "0.4",
+      "items": [
+        {
+          "id": "r8rfy560",
+          "text": "central america and venezuela"
+        },
+        {
+          "id": "r0p71gm1",
+          "text": "many single track bug fixes"
+        },
+        {
+          "id": "rinbl6vy",
+          "text": "load-time improvements"
+        }
+      ]
+    },
+    {
+      "id": "v2i2gofo",
+      "name": "0.5",
+      "items": [
+        {
+          "id": "r7058rwf",
+          "text": "track rework"
+        }
+      ]
+    }
+  ]
+}

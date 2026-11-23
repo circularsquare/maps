@@ -9,12 +9,14 @@ Run from the maps root. Writes artifacts/trainworld/review/<version>-new-zones.p
             website repo's trainsworld/index.html if offline) and its outlines.json is downloaded to
             trainworld/data/work/ (gitignored, one file per data version).
   --after   the outlines.json about to ship. Default trainworld/data/packs/outlines.json.
+  --title   the heading. Default "new zones in <version>".
+  --grid    four equal panels in a 2x2 grid (the biggest cluster and the next three), not one big map and insets.
   --out     the png. Default as above.
 
 A zone is new when its id is not in --before. A kept zone counts as grown when it gained more than
 0.002 square degrees. The new and grown places are grouped into clusters (single linkage, about 1000 km);
 the biggest cluster gets the main map and up to three more clusters, by new area, get insets named after
-their country or region. Each map is a Lambert azimuthal equal-area projection centred on its cluster.
+the countries holding their new area (largest first, up to 4). Each map is a Lambert azimuthal equal-area projection centred on its cluster.
 A cluster under 1.5% of the new area, or already inside the main map, gets no inset. With nothing new
 the script says so and writes nothing. Reads data only; nothing in data/packs or data/raw changes.
 """
@@ -57,6 +59,7 @@ SITE_INDEX = os.path.join(os.path.dirname(MAPS), "website", "trainsworld", "inde
 
 W, H = 2400, 1350
 BG, LAND, MUTED, NEW, EDGE, INK = "#dfe9f1", "#f3f0e8", "#a9bccf", "#ee4b2b", "#ffffff", "#3a4350"
+NEW_EDGE = "#c23a1e"
 GROWN_MIN = 0.002  # square degrees
 LINK_DEG = 9.0  # clusters join when their boxes are closer than this (about 1000 km)
 INSET_MIN_SHARE = 0.015
@@ -180,7 +183,8 @@ def frame_for(geoms, aspect, pad=0.10, min_m=30000):
     lat = float(np.average([c.y for c in cs], weights=w))
     crs = laea(lon, lat)
     pg = [project(g, crs) for g in geoms]
-    x0, y0, x1, y1 = unary_union(pg).bounds
+    b = np.array([g.bounds for g in pg])  # bounds only: a union fails on invalid outlines
+    x0, y0, x1, y1 = b[:, 0].min(), b[:, 1].min(), b[:, 2].max(), b[:, 3].max()
     cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
     bw, bh = max(x1 - x0, min_m), max(y1 - y0, min_m)
     bw, bh = bw * (1 + 2 * pad), bh * (1 + 2 * pad)
@@ -207,6 +211,8 @@ def main():
     ap.add_argument("--version", required=True, help="e.g. v0.4.0 (title and file name)")
     ap.add_argument("--before", help="outlines.json path or URL (default: the live game's)")
     ap.add_argument("--after", default=os.path.join(TW, "data", "packs", "outlines.json"))
+    ap.add_argument("--title", help='image title (default: "new zones in <version>")')
+    ap.add_argument("--grid", action="store_true", help="2x2 equal panels")
     ap.add_argument("--out")
     a = ap.parse_args()
     out = a.out or os.path.join(MAPS, "artifacts", "trainworld", "review", f"{a.version}-new-zones.png")
@@ -247,6 +253,7 @@ def main():
         return pos[2] * W / (pos[3] * H)
 
     cty = gpd.read_file("zip://" + os.path.join(RAW, "ne_10m_admin_0_countries.zip"))
+    parts = country_parts(cty)
     land = gpd.read_file("zip://" + os.path.join(RAW, "ne_10m_land.zip"))
 
     def pos_main(n_ins):
@@ -274,14 +281,25 @@ def main():
         c["pos"] = [0.69, 0.98 - (k + 1) * ih - k * gap, 0.295, ih]
         c["crs"], c["frame"] = frame_for(c["geoms"], axes_aspect(c["pos"]), pad=0.12)
         c["poly"] = frame_lonlat(c["crs"], c["frame"])
-        c["name"] = name_for(c, cty)
+        c["name"] = name_for(c, parts)
     main["pos"] = mpos
+    if a.grid:
+        insets = [c for c in clus[1:4] if c["area"] >= INSET_MIN_SHARE * total]
+        gw, gh, x0g, y0g = 0.0075, 0.02, 0.015, 0.02
+        pw, ph = (0.97 - gw) / 2, (0.86 - gh) / 2
+        panels = [main] + insets
+        for k, c in enumerate(panels):
+            col, row = k % 2, k // 2
+            c["pos"] = [x0g + col * (pw + gw), y0g + (1 - row) * (ph + gh), pw, ph]
+            c["crs"], c["frame"] = frame_for(c["geoms"], axes_aspect(c["pos"]), pad=0.12)
+            c["poly"] = frame_lonlat(c["crs"], c["frame"])
+            c["name"] = name_for(c, parts)
 
     shown = {id(main)} | {id(c) for c in insets}
     for c in clus:
         if id(c) not in shown:
             print(f"left out (small): {sum(1 for _ in c['idx'])} pieces, {100 * c['area'] / total:.1f}% of new area, "
-                  f"near {name_for(c, cty)}")
+                  f"near {name_for(c, parts)}")
 
     fontfile = next((f for f in FONTS if os.path.exists(f)), None)
     if fontfile:
@@ -312,11 +330,18 @@ def main():
         cb = cty[cty.intersects(poly)].geometry.boundary.intersection(poly)
         gpd.GeoSeries(cb.values, crs=4326).to_crs(crs).plot(ax=ax, color="#d6d1c4", lw=0.4)
         zs = zone_geoms(poly)
-        cols = [NEW if k in new_set else MUTED for k in zs]
-        gpd.GeoSeries(list(zs.values()), crs=4326).to_crs(crs).plot(ax=ax, color=cols, edgecolor=EDGE, lw=lw)
-        ad = [pieces[i] for i, lab in enumerate(labels) if lab in grown and pieces[i].intersects(poly)]
-        if ad:
-            gpd.GeoSeries(ad, crs=4326).to_crs(crs).plot(ax=ax, color=NEW, edgecolor=EDGE, lw=lw)
+        old = [g for k, g in zs.items() if k not in new_set]
+        if old:
+            gpd.GeoSeries(old, crs=4326).to_crs(crs).plot(ax=ax, color=MUTED, edgecolor=EDGE, lw=lw)
+        # new zones and grown bits: fill wins; edges between two new ones are a thin darker red, the outline
+        # against old zones stays white
+        nw = [g for k, g in zs.items() if k in new_set]
+        nw += [pieces[i] for i, lab in enumerate(labels) if lab in grown and pieces[i].intersects(poly)]
+        if nw:
+            pn = gpd.GeoSeries(nw, crs=4326).to_crs(crs)
+            pn.plot(ax=ax, color=NEW, edgecolor=NEW_EDGE, lw=0.2)
+            pu = unary_union([g.buffer(0) for g in pn.values])
+            gpd.GeoSeries([pu]).boundary.plot(ax=ax, color=EDGE, lw=lw)
         x0, y0, x1, y1 = spec["frame"]
         ax.set_xlim(x0, x1)
         ax.set_ylim(y0, y1)
@@ -328,42 +353,60 @@ def main():
         if "name" in spec:
             ax.text(0.03, 0.04, spec["name"], transform=ax.transAxes, fontsize=9, color=INK, ha="left", va="bottom",
                     bbox=dict(fc="white", ec="none", alpha=0.8, pad=2))
-    fig.text(0.02, 0.925, f"new zones in {a.version}", fontsize=24, color=INK, ha="left", va="center")
+    fig.text(0.02, 0.925, a.title or f"new zones in {a.version}", fontsize=24, color=INK, ha="left", va="center")
     for x, c, l in [(0.37, NEW, "new"), (0.44, MUTED, "already in the game")]:
         fig.patches.append(Rectangle((x, 0.913), 0.012, 0.024, transform=fig.transFigure, fc=c, ec="none"))
         fig.text(x + 0.017, 0.925, l, fontsize=12, color=INK, ha="left", va="center")
     os.makedirs(os.path.dirname(out), exist_ok=True)
     fig.savefig(out, dpi=200, facecolor="white")
     plt.close(fig)
-    print(f"main map: {name_for(main, cty)} ({len(main['idx'])} pieces)")
+    print(f"main map: {name_for(main, parts)} ({len(main['idx'])} pieces)")
     for c in insets:
         print(f"inset: {c['name']} ({len(c['idx'])} pieces)")
     print(out)
 
 
-def name_for(c, cty):
-    """Country holding most of the new area, or the shared subregion, lowercase."""
+COMMON = {"Lao PDR": "Laos", "Russian Federation": "Russia", "Republic of Korea": "South Korea",
+          "Dem. Rep. Korea": "North Korea", "Brunei Darussalam": "Brunei", "Syrian Arab Republic": "Syria",
+          "Viet Nam": "Vietnam", "Kyrgyz Republic": "Kyrgyzstan", "Slovak Republic": "Slovakia",
+          "Republic of the Congo": "Congo", "Democratic Republic of the Congo": "DR Congo", "Cabo Verde": "Cape Verde"}
+OVERSEAS = {"GF": "French Guiana", "MQ": "Martinique", "GP": "Guadeloupe", "RE": "Reunion", "YT": "Mayotte"}
+
+
+def country_parts(cty):
+    """One row per country part, with the common name (NAME_LONG: Dominican Republic). A part cut off from its
+    country inside a multipolygon (French Guiana in France) is named from the populated places inside it:
+    their own country row by ISO code, else OVERSEAS, else their region name."""
+    pp = gpd.read_file("zip://" + os.path.join(RAW, "ne_10m_populated_places_simple.zip"))
+    by_iso = dict(zip(cty["ISO_A2"], cty["NAME_LONG"]))
+    ex = cty[["NAME", "NAME_LONG", "geometry"]].explode(index_parts=False).reset_index(drop=True)
+    ex["name"] = ex["NAME_LONG"].replace(COMMON)
+    ex["a"] = ex.geometry.area
+    big = ex.groupby("NAME")["a"].transform("max")
+    far = ex[ex["a"] < big]
+    hit = gpd.sjoin(pp[["iso_a2", "adm1name", "geometry"]], far[["geometry"]], predicate="within")
+    for idx, grp in hit.groupby("index_right"):
+        iso = grp["iso_a2"].value_counts().index[0]
+        nm = by_iso.get(iso) or OVERSEAS.get(iso) or (grp["adm1name"].dropna().iloc[0] if grp["adm1name"].notna().any() else None)
+        if nm and nm != ex.at[idx, "NAME_LONG"]:
+            ex.at[idx, "name"] = COMMON.get(nm, nm)
+    return ex[["name", "geometry"]]
+
+
+def name_for(c, parts):
+    """Countries holding the new area of a cluster, largest first, up to 4, lowercase."""
     share = {}
+    sx = parts.sindex
     for g in c["geoms"]:
-        hit = cty[cty.intersects(g)]
-        for _, row in hit.iterrows():
+        for i in sx.query(g, predicate="intersects"):
+            row = parts.iloc[i]
             ar = cos_area(g.intersection(row.geometry))
             if ar > 0:
-                key = (row["NAME"], row["SUBREGION"])
-                share[key] = share.get(key, 0) + ar
+                share[row["name"]] = share.get(row["name"], 0) + ar
     if not share:
         return "new zones"
     tot = sum(share.values())
-    top = max(share, key=share.get)
-    if share[top] >= 0.6 * tot:
-        return top[0].lower()
-    subs = {}
-    for (nm, sub), v in share.items():
-        subs[sub] = subs.get(sub, 0) + v
-    sb = max(subs, key=subs.get)
-    if subs[sb] >= 0.6 * tot:
-        return sb.lower()
-    names = [k[0].lower() for k, v in sorted(share.items(), key=lambda kv: -kv[1])][:3]
+    names = [k.lower() for k, v in sorted(share.items(), key=lambda kv: -kv[1]) if v >= 0.03 * tot][:4]
     return ", ".join(names)
 
 
