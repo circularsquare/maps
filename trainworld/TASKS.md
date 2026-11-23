@@ -195,6 +195,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4113 [P1] {L:edit-speed} Bounded edits part A, touched set and regions (taking, 2026-11-23, agent bounded)
   - Context: You, 11-23: "i think the problem is that every edit redoes work for the whole save ... im thinking we could probably partition into regions that only have so many stations in them, and any reconciliation between partitions can happen slightly later, but we definitely want to prioritize just the area that the player is focusing on / actively drawing near. ok we can start work on bounded edits." Design: notes/T-4097.md section 4 (parts A-F; D waits for the track rework's stage 5).
   - Goal: Every edit carries the set it touched; the world split into regions capped by station count; the region being edited or in view redone first, the rest reconciled after; a full rebuild compared in tests.
+- T-4125 [P1] {L:edit-speed} Bounded edits next stage, the biggest whole-save step left (taking, 2026-11-23, agent bounded2)
+  - Context: T-4113 (part A) landed: edits carry what they touched, regions of 64 stations, the worker's rows redone per region; on the Asia save a stop reorder is about 16% faster and a station about 9%. Now the floor is whole-network bulk reads (reads by id from Rust; noting only lines that moved in service.rs) and the page panels (part C, notes/T-4097.md section 4).
+  - Goal: The next biggest per-edit whole-save cost moved onto regions in one stage of about two hours, with the Asia save's click-to-map waits before and after.
 - T-4114 [P2] {L:edit-speed} {after:T-4113} Edits show at the click, track first
   - Context: You, 11-23: the T-4097 improvements "are not bad ideas, i just think they will not be enough by themselves." Design: notes/T-4097.md section 3, 9-13 h in three parts, track first (4-6 h).
 - T-4111 [P1] {L:edit-speed} Two same-answer cuts on the page after an edit
@@ -215,6 +218,11 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4121 [P1] {L:checks} A shared Rust build cache for agent trees (taking, 2026-11-23, agent buildcache)
   - Context: You, 11-23: "ok can do shared rust build cache." Each new tree builds sim/ from nothing (several minutes before an agent starts) and each landing rebuilds the WASM (3-4 min); about 15 trees today.
   - Goal: A new tree's first cargo test and WASM build reuse earlier builds (sccache or a shared target per branch), measured before and after, with no wrong artifacts across branches.
+- T-4123 [P1] {L:solve-speed} Keep the last one-off search table for the next caller (taking, 2026-11-23, agent lasttable)
+  - Context: From T-4057 (notes/T-4057.md): on a 5-zone Tokyo game 41% of a period is one-off searches; a zone's commutes and everyday each search again on the same graph. Keeping the last table for the next caller with the same graph gives the same answers, about 18% of Tokyo's period natively. First in the solve triage (notes/solve-triage-2026-11-23.md).
+  - Goal: Identical figures; Tokyo measured with the bench before and after (CPU and memory, percent).
+- T-4124 [P2] {L:solve-speed} {after:T-4123} One graph for all zones in a calculation
+  - Context: From T-4057: each zone has its own graph, so most of Tokyo's 41% one-off searches repeat; building one graph for the zones in a calculation removes most of it but shifts walks by 1-2% of walk minutes, so it comes to you with the real-save numbers first.
 - T-4104 [P2] {L:timetables} A new line's headways follow its kind's defaults
   - Context: You, 11-23: "when making a new line, it assumes its a normal train. if i then put it on high speed tracks it updates to say oh this is actually a high speed train, but the default headways are already taken from the normal train's defaults. could we have the headways also update to use the high speed line defaults, if they are set and the player hasnt yet already adjusted the headways? same for tram lines."
   - Goal: When a line's kind changes and its headways are still the old kind's defaults, they switch to the new kind's defaults; headways the player set stay.
@@ -224,7 +232,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4106 [P2] {L:memory} An install-as-app banner on phones
   - Context: You, 11-23: "i think we can still do the install as app banner. people can dismiss it if they dont want to do it, and we should just remember that they have dismissed it and not show again. if they're not logged in we can mention that it will have separate local saves from safari so if they want saves to carry over they'll have to make an account". Earlier: shown once they've logged at least 2 hours of play. T-4086 found no evidence installing gives more memory; installed apps keep saves past Safari's 7-day clearing.
   - Goal: On phones after 2 hours of play, a banner with how to install (per platform), the separate-saves note when not signed in, dismissed forever.
-- T-4051 [P2] {L:loading} Opening a zone on a big save sits at 90% (taking, 2026-11-23, agent zoneopen)
+- T-4051 [P2] {L:loading} Opening a zone on a big save sits at 90%
   - Context: You, 11-22, on live v0.4.5 with your North America save: opening Medellin sat at 90% for about 2 minutes, Managua the same, "not super consistent". Measured 11-23 on your 11-20 save (notes/T-4051.md): opening a zone takes one of two paths in both v0.4.5 and master, a short one (Medellin 82 s, Managua 98 s at 5 workers) or a long one about 3x the work (Medellin 181 s on v0.4.5), and which one depends on a race between the zone's first quick figures and the whole calculation; that is likely the inconsistency. Master is not slower than v0.4.5 here; no failed downloads, no corridor book rebuild. On the long path the bar runs to 90% on a 30 s guess in the first minute and stays there. Tree zoneopen has two unmeasured fixes (the far zones' bubble sums after the results instead of before, 18 of 82 s; the bar held to a quarter of the calculation until the workers can time it).
   - Goal: The two fixes measured on 4+ cores before they land; then a zone with figures already in takes the short path (about 100 s off the long one on your save).
   - Other: notes/T-4051.md
@@ -483,7 +491,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-4038: a single joined to a double whose tracks run ways of their own still takes its way from the running side (`join_away`, `join_for`), not from the joined track. Only meets a flip whose segment ends at a junction with a joined single. Reach: few players until they flip tracks.
   - Goal: The single reads the joined track's real way, with `way_lines` checking lines in the same edit.
   - Other: notes/T-4038.md
-- T-4037 [P2] {L:track-rework} Stations placed without splitting track (taking, 2026-11-23, agent trackg1)
+- T-4037 [P2] {L:track-rework} {after:the 0.4.6 publish} Stations placed without splitting track
   - Context: You, 11-23, on (b), line routes written on the track as it is cut at stations: "yes, can keep going with track plan." Design by agent trackg (notes/T-4037-design.md): about 5.5-6.5 h in four steps g1-g4, g3 and g4 side by side. T-4030 stage g. Your calls, 11-22: dragging a station or platform end slides it along its track, bending by the track's own points ("yes"); lines that turn back at a middle stop must keep working ("yes, but uh, dont we already break up stretches at stations? that seems like another solution we should consider that might be more clean for other purposes"). So before building, compare two ways and bring you the pick: (a) paths keep naming whole pieces and get a turn marker; (b) line paths are written on the compiled track, which is already cut at every station (her idea), so a turn at a station is an ordinary piece end, while the bundle she draws stays unbroken. Say what each means for flips, Add a track and saves. From T-4036: the app still draws a line ending at an anchor to its piece's end; paths of whole pieces can't say where inside a piece a train turned. From T-4035: the app draws an anchor station east-west with no track count (network.ts); stations the tool places still name tracks by the node's axis, and the flip (T-4038) refuses them until their platforms are pinned to slots.
   - Other: 4-5 h. notes/T-4030.md
 - T-3961 [P2] {L:track-rework} {after:T-4037} Old station nodes merged into anchors
@@ -1433,10 +1441,6 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
 - T-168 [P4] {L:solve-speed} Add a viewed city without a whole re-solve
   - Context: Someday: adding a newly viewed city re-solves the whole network.
   - Goal: A new city is added without re-solving everything.
-  - Other: notes/someday.md
-- T-414 [P4] {L:solve-speed} First worker solve slower in the browser
-  - Context: Someday: each worker first solve is slower in the browser than native.
-  - Goal: Browser first solves match native.
   - Other: notes/someday.md
 - T-361 [P4] {L:memory} {after:T-3373} One demand engine per city
   - Context: There are two demand engines per city. T-3373 now covers sharing zone data between workers.

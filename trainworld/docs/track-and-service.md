@@ -2296,7 +2296,7 @@ per person and does not change who travels: demand still decides that (SPEC 4).
 - **Room on a platform** (T-219, `platformRoom` in `game/boarding.ts`): what counts as a full
   platform for drawing. Each direction's riders wait on one side, 2.5 m of usable width (half a
   6 m island platform less the edge strip kept clear) along the platform's length, at 0.3 m² a
-  rider (why: DECISIONS-to-2026-10-19, T-219). A 150 m platform holds 1,250 a side. Only the drawing uses it: the
+  rider (Anita, T-219). A 150 m platform holds 1,250 a side. Only the drawing uses it: the
   account lets a crowd grow past it, up to `WAITING_CAP` (above).
 - **Cost and how full trains get**: measured on the real New York save in notes/T-164.md,
   notes/T-554.md and notes/T-207.md.

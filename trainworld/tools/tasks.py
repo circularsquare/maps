@@ -11,7 +11,8 @@ done / close: moves the task block to the top of ARCHIVE.md, sets the line's don
 line's last open task, drops the agent from board-live.json when it has no other taken task, and marks the task's
 agent reports read (tools/reports.py).
 check: badly formed task lines, tags naming a line not in LINES.md, taking marks with no agent on the board, duplicate
-ids, board agents whose task is not marked, a long handoff.md. Exit 1 when it finds anything.
+ids, board agents whose task is not marked, a long handoff.md, a DECISIONS.md entry over 50 words. Exit 1 when it finds
+anything.
 --root <dir> runs on another copy of trainworld/ (for testing)."""
 import argparse
 import json
@@ -26,6 +27,7 @@ HEAD = re.compile(r"^- (T-\d+) \[(P\d)\] (.*)$")
 TAKING = re.compile(r" \(taking, [^,)]*, agent ([^)]+)\)")
 LTAG = re.compile(r"\{L:([^}]*)\}")
 ARCHIVE_ANCHOR = "New entries go at the top, under this line."
+DECISION_WORDS = 50  # a DECISIONS.md entry, counted after its "- " (T-4120)
 
 
 def read(path):
@@ -71,6 +73,7 @@ class Root:
         self.lines = os.path.join(root, "LINES.md")
         self.live = os.path.join(root, "notes", "board-live.json")
         self.handoff = os.path.join(root, "notes", "handoff.md")
+        self.decisions = os.path.join(root, "DECISIONS.md")
 
     def board(self):
         with open(self.live, encoding="utf-8") as f:
@@ -367,6 +370,11 @@ def cmd_check(r, a):
         n = len(read(r.handoff)[0].split("\n"))
         if n > 60:
             problems.append(f"notes/handoff.md is {n} lines (keep it under 60)")
+    if os.path.exists(r.decisions):
+        for n, l in enumerate(read(r.decisions)[0].split("\n"), 1):
+            words = len(l[2:].split())
+            if l.startswith("- ") and words > DECISION_WORDS:
+                problems.append(f"DECISIONS.md:{n}: {words} words (an entry is one or two sentences, at most {DECISION_WORDS})")
     for p in problems:
         print(p)
     print(f"{len(problems)} problem(s), {len(seen)} open tasks")

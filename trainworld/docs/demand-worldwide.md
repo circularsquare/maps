@@ -23,7 +23,7 @@ What Canada's data changed, rule by rule (sources in notes/T-277.md, the adapter
   counted at home): their jobs are put back at workplaces by employment income band, and "no
   fixed workplace" workers added in proportion. Downtown Toronto is probably still under its
   pre-pandemic job count; for today's commuting with 24.7% at home it is plausible. Not
-  reweighted by OSM offices (DECISIONS-to-2026-10-19 2026-10-13).
+  reweighted by OSM offices (T-277).
 - **Work from home** is one share for the whole pack (Labour Force Survey, May 2024, Toronto CMA
   24.7%), applied as "the same fraction of 2021's at-home workers commutes again" at both ends,
   Hamilton and Oshawa included (28.3% and 27.3% at home in 2021; their own current share is
@@ -511,7 +511,7 @@ notes/T-420.md has the tables.
   as the level is seen.
 - **Rail propensity** (T-636, docs/demand-mode.md 4.3). None: `asc_rail` is 0 everywhere, so rail
   and the car are judged on time and money alone, by the ratio curve; Anita chose a sensible and
-  clear model over fitting the real cities (DECISIONS-to-2026-10-19 2026-10-17). A rail constant for the
+  clear model over fitting the real cities (DECISIONS.md, T-621). A rail constant for the
   everyday layer exists as a parameter at 0 (`everyday_asc_rail`), and the country table
   (`api::COUNTRY_ASC_RAIL`) is empty. The real cities' station entries are the loose check
   (notes/T-636.md). Why it may not carry over: with no constant, habit, income, bus competition and what the car is

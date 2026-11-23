@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-414 [P4] {L:solve-speed} First worker solve slower in the browser (2026-11-23): closed without code: Superseded: T-4057 measured the browser's WASM pass at about twice native; nothing left to fix short of threaded WASM (T-3373 C), and the load/edit waits are tracked by T-4054, T-4057 and T-4025.
 - T-4122 [P1] {L:checks} Agent reports kept to 15 lines (2026-11-23): SubagentStop hook blocks a final report over 18 lines once, asking for 15; tested on fake inputs; may not catch agents that hand back through a tool.
 - T-4117 [P1] {L:memory} Coarse demand as a setting, on by default on phones (2026-11-23): Setting on every device, default on for phones; desktop Tokyo load-to-final about 23% faster, an edit about 18%; stars and goals count coarse figures. notes/T-4117.md.
 - T-4082 [P1] {L:solve-speed} A bus-heavy Detroit save calculates trips for 20 minutes (2026-11-23): closed without code: Detroit bus save: T-4057 profile plus T-4094 bus stop merging (time to final -35%, memory per worker 3.6-3.9 -> 2.0-2.2 GB)

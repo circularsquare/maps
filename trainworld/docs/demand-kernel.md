@@ -438,7 +438,7 @@ levels:
    the same trains, except that demand uses even headways, each period stands alone (no queue
    carried in from the period before) and nobody goes another way (the account's T-1067). Per period, not per hour; weekdays only, the weekend keeping
    the weekday's waits with its route and mode choices (4.2). Why, and the effect on the real New
-   York save: DECISIONS-to-2026-10-19 2026-10-13 (T-188), notes/T-188.md.
+   York save: notes/T-188.md.
 
    **The trains' room, as a queue** (Anita, T-1070, T-1255; `kernel::capacity_fit`,
    `cap_with_external`). The averaging keeps a share of the free-flow pass (a quarter after three

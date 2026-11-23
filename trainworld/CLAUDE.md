@@ -67,7 +67,7 @@ new standing process.
 | `wiki/` | Pages for a curious player; how to edit: `wiki/RULES.md` | agents |
 | `TASKS.md` | Open work, by priority | agents |
 | `LINES.md` | Anita's lines: the conceptual units tasks group into, by area | agents |
-| `DECISIONS.md`, `ARCHIVE.md` | Dated choices and why; finished tasks, newest first. Older: `*-to-2026-10-19.md` | agents, add only |
+| `DECISIONS.md`, `ARCHIVE.md` | Choices worth revisiting, by area; finished tasks, newest first. Older archive: `ARCHIVE-to-2026-10-19.md` | agents |
 | `notes/` | `T-###.md` task notes, `handoff.md` (orchestrator: plan, her words), `asks.json` (orchestrator, only through `tools/asks.py`) | agents |
 | `checks/` | Standing checks, `smoke.mjs` first | agents |
 | `research/` | Background reports with sources | agents |
@@ -84,8 +84,11 @@ new standing process.
   notes/; don't write down what the code says better.
 - **Comments** only for a why the code doesn't show (a non-obvious choice, a unit, an invariant); never what the code
   does, never history.
-- **DECISIONS.md and ARCHIVE.md are grepped, never read whole** (the `-to-2026-10-19` files too). A DECISIONS line:
-  date, one or two sentences, task id. An ARCHIVE entry: id, title, date, outcome, notes link.
+- **ARCHIVE.md is grepped, never read whole** (`ARCHIVE-to-2026-10-19.md` too). An entry: id, title, date, outcome, notes link.
+- **DECISIONS.md** holds choices someone might revisit: a rule, a number she picked, a trade-off, the lie an
+  approximation tells, something tried and ruled out; not a rule followed, how a feature works, or bookkeeping.
+  An entry is date, one or two sentences under 50 words, task id, at the top of its area's section; a later choice on
+  the same thing replaces the old entry.
 - **Tasks**: written to her and very short; leave out what you're unsure of. Examples: notes/T-3394.md.
   - Head line `- T-012 [P2] {L:slug} Title`: a 2-10 word title, no full stop or colon; `{L:<slug>}` from `LINES.md`
     right after the priority, plus `{waits:Anita}` or `{after:<task id or phrase>}` when it waits.
