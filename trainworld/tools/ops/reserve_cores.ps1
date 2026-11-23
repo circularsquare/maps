@@ -29,13 +29,28 @@ if ($Root -eq 0) {
   if (-not $id -or -not $t.byId.ContainsKey($id)) { Write-Output 'no claude.exe above this shell'; exit 1 }
   $Root = $id
 }
+# Her typing path: this session's claude.exe, the OpenConsole.exe above it, and WindowsTerminal.exe (draws every tab)
+# run at AboveNormal. Other sessions' claude.exe / OpenConsole stay as they are.
+$boost = New-Object System.Collections.ArrayList
+$a = $Root
+while ($a -and $t.byId.ContainsKey($a)) {
+  if (@('openconsole.exe','windowsterminal.exe') -contains ([string]$t.byId[$a].Name).ToLower()) { [void]$boost.Add($a) }
+  $a = [int]$t.byId[$a].ParentProcessId
+}
+if (-not ($boost | ? { $t.byId[$_].Name -eq 'WindowsTerminal.exe' })) {
+  foreach ($p in (Get-Process -Name WindowsTerminal -ErrorAction SilentlyContinue)) { [void]$boost.Add([int]$p.Id) }
+}
 $n = [Environment]::ProcessorCount
 $all = ([int64]1 -shl $n) - 1
 $mask = $all - (([int64]1 -shl $Reserved) - 1)
 
 while ($true) {
   try { $r = Get-Process -Id $Root -ErrorAction Stop } catch { Write-Output "root $Root gone"; exit 0 }
-  if (-not $WhatIf) { try { $r.ProcessorAffinity = [IntPtr]$all; $r.PriorityClass = 'Normal' } catch {} }
+  if (-not $WhatIf) { try { $r.ProcessorAffinity = [IntPtr]$all; $r.PriorityClass = 'AboveNormal' } catch {} }
+  foreach ($b in $boost) {
+    if ($WhatIf) { Write-Output ('would raise {0} {1} to AboveNormal' -f $b, $t.byId[$b].Name); continue }
+    try { $bp = Get-Process -Id $b -ErrorAction Stop; $bp.ProcessorAffinity = [IntPtr]$all; $bp.PriorityClass = 'AboveNormal' } catch {}
+  }
   $done = 0; $failed = 0
   $queue = New-Object System.Collections.Queue
   if ($t.kids.ContainsKey($Root)) { foreach ($k in $t.kids[$Root]) { $queue.Enqueue($k) } }
@@ -54,7 +69,7 @@ while ($true) {
     if ($t.kids.ContainsKey($id)) { foreach ($k in $t.kids[$id]) { if ($k -ne $id) { $queue.Enqueue($k) } } }
   }
   if ($Loop -le 0) {
-    Write-Output ("root {0} kept normal on all cores; {1} processes under it on cores {2}-{3} at below normal ({4} gone or refused)" -f $Root, $done, $Reserved, ($n - 1), $failed)
+    Write-Output ("root {0} above normal on all cores; {1} processes under it on cores {2}-{3} at below normal ({4} gone or refused)" -f $Root, $done, $Reserved, ($n - 1), $failed)
     break
   }
   Start-Sleep -Seconds $Loop
