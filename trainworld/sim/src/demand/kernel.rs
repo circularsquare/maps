@@ -208,6 +208,8 @@ pub struct Params {
     pub w_xfer: f32,
     /// Stations of the snapshot this close together are one demand station (`api::merge_stations`).
     pub station_merge_m: f32,
+    /// T-4094: a line's consecutive bus stops this close are one demand station (`busmerge`); 0 for none.
+    pub bus_merge_m: f32,
     /// Riders left behind by full trains wait longer (T-188, `left_behind`): each crowding round
     /// adds the average extra wait at each line, direction and stop to that boarding's cost.
     pub left_behind: bool,
@@ -399,6 +401,7 @@ impl Default for Params {
             xfer_mps: 1.2,
             w_xfer: 1.39,
             station_merge_m: 100.0,
+            bus_merge_m: super::busmerge::MERGE_M,
             left_behind: true,
             routes: None,
             parts: None,
@@ -461,6 +464,7 @@ impl Params {
             "xfer_walk_m" => self.xfer_walk_m = v,
             "walk_rule" => self.walk_rule = v,
             "station_merge_m" => self.station_merge_m = v,
+            "bus_merge_m" => self.bus_merge_m = v,
             // the gravity holds the walk's costs: `DemandApi::refresh_walk` after these
             "walk_trip_w" => self.walk_trip_w = v,
             "walk_bonus_min" => self.walk_bonus_min = v,

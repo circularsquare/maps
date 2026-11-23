@@ -18,6 +18,8 @@
 pub mod alloc;
 /// T-026: the demand workers' API (`DemandApi`), in the app's wasm build.
 pub mod api;
+/// T-4094: a line's consecutive bus stops within 300 m as one demand station, figures split back.
+pub(crate) mod busmerge;
 pub mod intercity;
 pub mod everyday;
 #[cfg(not(target_arch = "wasm32"))]

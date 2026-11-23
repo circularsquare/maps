@@ -873,16 +873,31 @@ impl DemandApi {
                 let fixed = if svc.ups.get(a).is_some_and(|&u| u & crate::track::upgrades::PARK_RIDE != 0) { (p.p_ride - crate::track::upgrades::PARK_RIDE_MIN).max(0.0) } else { p.p_ride };
                 parts = [extra, fixed, end, money, drop as u8 as f32, ride_home_park, extra - fixed - end - ride_home_park];
             }
-            body.extend([a as f64, t as f64, rep[a], rep[t], sz.acc_d[ka] as f64, sz.acc_w[ka] as f64, sz.acc_d[kt] as f64, sz.acc_w[kt] as f64, sk.r[a * s + t] as f64, share as f64, sz.acc_t[ka] as f64, sz.acc_t[kt] as f64, ride as u8 as f64]);
+            // T-4094: a merged group's route node at the stop nearest the trip's end
+            let (rep_a, rep_t) = match self.svc.as_ref().and_then(|s| s.fold.as_ref()) {
+                Some(f) => {
+                    let at = |r: f64, c: usize| if r < 0.0 { r } else { f.nearest(r as usize, city.x[c], city.y[c]) as f64 };
+                    (at(rep[a], o), at(rep[t], d))
+                }
+                None => (rep[a], rep[t]),
+            };
+            body.extend([a as f64, t as f64, rep_a, rep_t, sz.acc_d[ka] as f64, sz.acc_w[ka] as f64, sz.acc_d[kt] as f64, sz.acc_w[kt] as f64, sk.r[a * s + t] as f64, share as f64, sz.acc_t[ka] as f64, sz.acc_t[kt] as f64, ride as u8 as f64]);
             body.extend(parts.iter().map(|&x| x as f64));
         }
         // routes over the bigger pairs, by their share of the whole trip's rail riders; one is always
         // kept while any rail rides (T-3730, as the intercity panel's)
         let shares: Vec<f32> = pairs.iter().map(|p| p.2).collect();
-        let all = pick_routes(&shares, |pi, min| {
+        let mut all = pick_routes(&shares, |pi, min| {
             let (ka, kt, _) = pairs[pi];
             routes(g, &sk, p, sz.acc_st[ka] as usize, sz.acc_st[kt] as usize, min)
         });
+        // T-4094: each ride boards at its run's stop nearest where the rider is and leaves at the one nearest
+        // where they go next (the next boarding, or the trip's end)
+        if let Some(f) = self.svc.as_ref().and_then(|s| s.fold.as_ref()) {
+            for (_, _, legs) in all.iter_mut() {
+                f.map_legs(legs, (city.x[o], city.y[o]), (city.x[d], city.y[d]));
+            }
+        }
         h[24] = pairs.len() as f64;
         h[25] = all.len() as f64;
         h[31] = (1.0 - all.iter().map(|r| r.1 as f64).sum::<f64>()).max(0.0);

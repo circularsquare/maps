@@ -794,9 +794,11 @@ impl IntercityApi {
         // zone's that reaches it most
         let sign = lean_sign(day as usize);
         let here = if sign == 0. { None } else { self.station_zone(s as usize).map(|z| &m.zones[z]) };
+        // T-4094: a stop of a merged group answers for its share of the group's riders
+        let share = svc.fold.as_ref().map_or(1.0, |f| f.share(station as usize)) as f64;
         for q in 0..PERIODS {
             let Some(per) = self.per(q) else { continue };
-            let f = load_factor(day as usize, LONGER, q) as f64;
+            let f = load_factor(day as usize, LONGER, q) as f64 * share;
             let pat = &self.st_pat;
             if (s as usize) + 1 < pat.off.len() && per.st.len() == pat.col.len() {
                 for i in pat.row(s as usize) {
@@ -902,7 +904,7 @@ impl IntercityApi {
     }
     pub fn load_of_crush(&self, q: usize) -> Vec<f32> {
         self.per(q).map_or(vec![], |s| {
-            s.avg
+            let v: Vec<f32> = s.avg
                 .seg
                 .iter()
                 .enumerate()
@@ -915,7 +917,12 @@ impl IntercityApi {
                         0.
                     }
                 })
-                .collect()
+                .collect();
+            self.svc().out_load(v)
         })
+    }
+    /// The network solved on; a period's result implies one.
+    pub(crate) fn svc(&self) -> &crate::demand::api::Service {
+        self.svc.as_ref().expect("a solved period has a network")
     }
 }

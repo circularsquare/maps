@@ -553,33 +553,10 @@ impl IntercityApi {
             return Err("intercity network arrays disagree".into());
         };
         crate::demand::api::NetInputs { stations: st_xy.len() / 2, lines: line_n.len(), stops: stops.len(), complex: &self.complex_in, ups: &self.ups_in, bus_n: &self.bus_in.0, tram: &self.tram_in, pier: &self.pier_in, back: &self.back_in, span: &self.span_in }.check()?;
-        let (st_x, st_y, st_map) = merge_stations(st_xy, &off, stops, self.base.station_merge_m);
-        let group = demand_groups(&st_map, st_x.len(), &self.complex_in);
-        let ups = demand_ups(&st_map, st_x.len(), &self.ups_in);
-        let (catches, st_bus) = demand_catches(&st_map, st_x.len(), stops, &self.bus_in.0, &self.bus_in.1);
         let tram_line: Vec<bool> = if self.tram_in.len() == line_n.len() { self.tram_in.iter().map(|&f| f != 0).collect() } else { vec![] };
-        let st_tram = tram_stops(&st_map, st_x.len(), stops, &off, &tram_line, &self.ups_in);
-        let svc = Service {
-            catches,
-            st_bus,
-            st_tram,
-            back: demand_back(&st_map, stops, &self.back_in),
-            pier: pier_lines(&self.pier_in.0, line_n.len()),
-            street: pier_lines(&self.pier_in.1, stops.len()),
-            st_x,
-            st_y,
-            st_map: st_map.clone(),
-            line_off: off,
-            stops: stops.iter().map(|&s| st_map[s as usize]).collect(),
-            stop_xy: stops.iter().flat_map(|&s| [st_xy[2 * s as usize], st_xy[2 * s as usize + 1]]).collect(),
-            times,
-            tph,
-            cars: cars.iter().enumerate().map(|(l, &c)| if tram_line.get(l).copied().unwrap_or(false) { c * crate::demand::network::TRAM_CARS } else { c }).collect(),
-            group,
-            span: span_for(&self.span_in, stops.len()),
-            ups,
-            passages: demand_passages(&st_map, &self.passages_in),
-        };
+        let inp = crate::demand::api::SvcInputs { complex: &self.complex_in, ups: &self.ups_in, passages: &self.passages_in, bus: (&self.bus_in.0, &self.bus_in.1), tram: &tram_line, pier: &self.pier_in, back: &self.back_in, span: &self.span_in };
+        // T-4094: the market has no cells, so a run's stops share its figures equally
+        let svc = Service::build(st_xy, off, stops, times, tph, cars, &inp, (self.base.station_merge_m, self.base.bus_merge_m));
         // T-124: as `DemandApi::set_network`, access is kept with the layout and a period with
         // its level's inputs
         let old = self.svc.as_ref();

@@ -500,14 +500,27 @@ impl IntercityApi {
             rep[stn as usize] = r as f64;
         }
         let mut body = vec![];
+        // T-4094: a merged group's stops by its centre (a market trip has no cells of its own)
+        let fold = self.svc.as_ref().and_then(|v| v.fold.as_ref().map(|f| (f, v)));
+        let centre = |st: u32| fold.map_or((0., 0.), |(_, v)| (v.st_x[st as usize], v.st_y[st as usize]));
+        let real = |r: f64, st: u32| match fold {
+            Some((f, _)) if r >= 0. => f.nearest(r as usize, centre(st).0, centre(st).1) as f64,
+            _ => r,
+        };
         for &((sa, sb), (x, xa, xb)) in &pairs {
-            body.extend([rep[sa as usize], rep[sb as usize], xa / x, xb / x, sk.r[sa as usize * s + sb as usize] as f64, x / rail_all, 0.]);
+            body.extend([real(rep[sa as usize], sa), real(rep[sb as usize], sb), xa / x, xb / x, sk.r[sa as usize * s + sb as usize] as f64, x / rail_all, 0.]);
         }
         let shares: Vec<f32> = pairs.iter().map(|&(_, (x, _, _))| (x / rail_all) as f32).collect();
-        let all_routes = pick_routes(&shares, |pi, min| {
+        let mut all_routes = pick_routes(&shares, |pi, min| {
             let (sa, sb) = pairs[pi].0;
             routes(g, &sk, p, sa as usize, sb as usize, min)
         });
+        if let Some((f, _)) = fold {
+            for (pi, _, legs) in all_routes.iter_mut() {
+                let (sa, sb) = pairs[*pi].0;
+                f.map_legs(legs, centre(sa), centre(sb));
+            }
+        }
         h[11] = pairs.len() as f64;
         h[12] = all_routes.len() as f64;
         h[13] = (1. - all_routes.iter().map(|r| r.1 as f64).sum::<f64>()).max(0.);

@@ -249,7 +249,17 @@ levels:
    along that ride. So boarding only to walk to another station or platform, or to alight again,
    is never a strategy, and every rail trip rides a train.
    Snapshot stations within 100 m of each other are one demand station (side-by-side platforms of
-   two lines; never two neighbours on one line). **Station complexes are transfer points** (T-161):
+   two lines; never two neighbours on one line). **Bus stops along a line** (T-4094, `busmerge.rs`): a line's
+   consecutive bus-only places (no BRT, tram or train station there) served by the same lines are one more
+   demand station while all of them are within 300 m of each other, the lines visiting it once; lines are taken
+   in order and a run starts only at a place no earlier run took, so a crossing line's place stays apart, and no
+   line is left with one stop. A run's ride time goes half to the hop before and half to the hop after; a
+   group's platforms are at its centre (its lines share its stops), and walks to change at a group are measured
+   between the real stops. Only demand sees it: every figure
+   read out (boardings, alightings, transfers, purposes, a stop's riders, the trip explorer's stops) is split
+   back over the real stops, by each stop's catchment (the population and jobs of the cells nearest it, at
+   least a quarter of the run's mean), and the loads inside a run move with the split boardings and alightings.
+   **Station complexes are transfer points** (T-161):
    the clock worker sends each constructed station's complex with the snapshot (game/complexes.ts
    over constructed stations only, with the player's links, T-197; `DemandApi.set_complexes`), and
    a rider leaving a train at one may walk to any other demand station of the same complex however

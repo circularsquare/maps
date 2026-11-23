@@ -1077,11 +1077,13 @@ impl EverydayApi {
     }
     /// As `DemandApi::transfers` (T-176): every purpose's transfers over the periods held.
     pub fn transfers(&self, sel: &[u8]) -> Vec<f32> {
+        let Some(svc) = self.engine.svc.as_ref() else { return vec![] };
+        let dsel = svc.in_any(sel);
         let mut out = vec![];
         for st in self.per.iter().flatten() {
-            transfer_pairs(&st.g, &st.xi, &st.xfer, sel, &mut out);
+            transfer_pairs(&st.g, &st.xi, &st.xfer, &dsel, &mut out);
         }
-        out
+        svc.out_pairs(out, sel)
     }
     /// `cell_modes` for one purpose kind only (T-158's display filter).
     pub fn cell_modes_of(&self, kind: u32) -> Vec<f32> {
@@ -2405,6 +2407,9 @@ impl EverydayApi {
         }
     }
     pub fn crowd_with_external(&mut self, q: usize, total: &[f32]) -> bool {
+        // T-4094: the page's totals, on the snapshot's route nodes
+        let t = self.engine.svc.as_ref().and_then(|s| s.fold.as_ref()).map(|f| f.in_total(total));
+        let total = t.as_deref().unwrap_or(total);
         let Some(Some(st)) = self.per.get(q) else {
             return false;
         };
@@ -2459,6 +2464,8 @@ impl EverydayApi {
     /// entries at the end it sets out from that still fit, those stations weighed as its access
     /// costs weigh them.
     pub fn cap_with_external(&mut self, q: usize, total: &[f32]) -> bool {
+        let t = self.engine.svc.as_ref().and_then(|s| s.fold.as_ref()).map(|f| f.in_total(total));
+        let total = t.as_deref().unwrap_or(total);
         let Some(Some(st)) = self.per.get(q) else { return false };
         let Some(fit) = capacity_fit(&st.g, &st.net, &st.p, total) else { return false };
         if !fit.any || self.engine.sz.is_none() {
@@ -2579,43 +2586,45 @@ impl EverydayApi {
         self.per
             .get(q)
             .and_then(|v| v.as_ref())
-            .map_or(vec![], |s| s.loads.seg.clone())
+            .map_or(vec![], |s| self.engine.svc().out_load(s.loads.seg.clone()))
     }
     pub fn board(&self, q: usize) -> Vec<f32> {
         self.per
             .get(q)
             .and_then(|v| v.as_ref())
-            .map_or(vec![], |s| s.loads.rn_board.clone())
+            .map_or(vec![], |s| self.engine.svc().out_split(s.loads.rn_board.clone()))
     }
     pub fn alight(&self, q: usize) -> Vec<f32> {
         self.per
             .get(q)
             .and_then(|v| v.as_ref())
-            .map_or(vec![], |s| s.loads.rn_alight.clone())
+            .map_or(vec![], |s| self.engine.svc().out_split(s.loads.rn_alight.clone()))
     }
     /// As `DemandApi::base_extra`.
     pub fn base_extra(&self, q: usize) -> Vec<f32> {
-        self.per.get(q).and_then(|v| v.as_ref()).map_or(vec![], |s| fare_x_usd(&s.loads.rn_base_x, s.p.fare_w))
+        self.per.get(q).and_then(|v| v.as_ref()).map_or(vec![], |s| self.engine.svc().out_split(fare_x_usd(&s.loads.rn_base_x, s.p.fare_w)))
     }
     /// As `DemandApi::fare_extra`.
     pub fn fare_extra(&self, q: usize) -> Vec<f32> {
-        self.per.get(q).and_then(|v| v.as_ref()).map_or(vec![], |s| fare_extra_usd(&s.loads.rn_fare_x, &s.p, &s.g, &s.xi, &s.xfer))
+        self.per.get(q).and_then(|v| v.as_ref()).map_or(vec![], |s| self.engine.svc().out_split(fare_extra_usd(&s.loads.rn_fare_x, &s.p, &s.g, &s.xi, &s.xfer)))
     }
     pub fn load_of_crush(&self, q: usize) -> Vec<f32> {
         let Some(Some(st)) = self.per.get(q) else {
             return vec![];
         };
-        (0..st.loads.seg.len())
-            .map(|r| {
-                let l = st.g.rn_line[r] as usize;
-                let cap = 60.0 / st.net.line_headway_min[l][q] * st.net.line_crush[l];
-                if cap > 0.0 {
-                    st.loads.seg[r] / st.p.period_hours * st.p.peak_hour_factor / cap
-                } else {
-                    0.0
-                }
-            })
-            .collect()
+        self.engine.svc().out_load(
+            (0..st.loads.seg.len())
+                .map(|r| {
+                    let l = st.g.rn_line[r] as usize;
+                    let cap = 60.0 / st.net.line_headway_min[l][q] * st.net.line_crush[l];
+                    if cap > 0.0 {
+                        st.loads.seg[r] / st.p.period_hours * st.p.peak_hour_factor / cap
+                    } else {
+                        0.0
+                    }
+                })
+                .collect(),
+        )
     }
     pub fn solved_mask(&self) -> u32 {
         (0..5)
@@ -2635,7 +2644,7 @@ impl EverydayApi {
             out.extend_from_slice(&part.rn_board);
             out.extend_from_slice(&part.rn_alight);
         }
-        out
+        self.engine.svc().out_loads3(out)
     }
     /// Six mode-major cell blocks, home and activity ends, trip legs over solved periods.
     pub fn cell_modes(&self) -> Vec<f32> {
@@ -2754,16 +2763,18 @@ impl EverydayApi {
     /// Riders in period `q` boarding at each route node after changing lines, every purpose (T-1530).
     pub fn transfers_in(&self, q: usize) -> Vec<f32> {
         let Some(Some(st)) = self.per.get(q) else { return vec![] };
-        transfers_in(&st.g, &st.xi, &st.xfer)
+        self.engine.svc().out_split(transfers_in(&st.g, &st.xi, &st.xfer))
     }
     /// `transfers` on a kind of day (T-260). The purposes' transfers are kept together, so each
     /// period's are scaled by its rail riders' mean load factor that day.
     pub fn transfers_day(&self, sel: &[u8], day: u32) -> Vec<f32> {
+        let Some(svc) = self.engine.svc.as_ref() else { return vec![] };
+        let dsel = svc.in_any(sel);
         let mut out = vec![];
         for (q, st) in self.per.iter().enumerate() {
             let Some(st) = st else { continue };
             let at = out.len();
-            transfer_pairs(&st.g, &st.xi, &st.xfer, sel, &mut out);
+            transfer_pairs(&st.g, &st.xi, &st.xfer, &dsel, &mut out);
             if day as usize != WEEKDAY {
                 let k = self.kind_totals(q);
                 let (mut rail, mut weighted) = (0.0, 0.0);
@@ -2774,7 +2785,7 @@ impl EverydayApi {
                 scale_triples(&mut out[at..], if rail > 0.0 { (weighted / rail) as f32 } else { 0.0 });
             }
         }
-        out
+        svc.out_pairs(out, sel)
     }
 }
 

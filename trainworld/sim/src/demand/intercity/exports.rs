@@ -120,7 +120,7 @@ impl IntercityApi {
         }
         let nr = st.g.rn_line.len();
         if zones.is_empty() {
-            return vec![0.; 3 * nr];
+            return vec![0.; 3 * self.svc().real_rn()];
         }
         let pass = self.pass_searched_in(&st.g, &st.p, q, &st.xi, &win);
         let mut out = Vec::with_capacity(3 * nr * (2 + pass.e_loads.len()));
@@ -134,7 +134,7 @@ impl IntercityApi {
                 None => out.resize(out.len() + 3 * nr, 0.),
             }
         }
-        out
+        self.svc().out_loads3(out)
     }
 }
 impl IntercityApi {
@@ -269,9 +269,10 @@ impl IntercityApi {
         self.set_network_in(&xy, line_n, stops, times, tph, cars, part)
     }
     pub fn set_fares(&mut self, base: f32, per_km: f32, km: &[f32]) -> Result<(), String> {
-        if !base.is_finite() || base < 0. || !per_km.is_finite() || per_km < 0. || km.iter().any(|x| !x.is_finite() || *x < 0.) || km.len() != self.svc.as_ref().map_or(0, |s| 2 * s.stops.len()) {
+        if !base.is_finite() || base < 0. || !per_km.is_finite() || per_km < 0. || km.iter().any(|x| !x.is_finite() || *x < 0.) || km.len() != self.svc.as_ref().map_or(0, |s| s.real_rn()) {
             return Err("invalid intercity fare".into());
         }
+        let km = &self.svc.as_ref().map_or(km.to_vec(), |s| s.in_hop(km))[..];
         let w = self.base.fare_w;
         let (fare_min, per_km) = (base * w, per_km * w);
         if fare_min.to_bits() != self.base.fare_min.to_bits() || per_km.to_bits() != self.fare_per_km.to_bits() || !same_bits(km, &self.fare_km) {
@@ -284,8 +285,9 @@ impl IntercityApi {
     }
     /// T-1626: `DemandApi::set_fare_mul`.
     pub fn set_fare_mul(&mut self, mul: &[f32]) -> Result<(), String> {
-        check_fare_mul(mul, self.svc.as_ref().map_or(0, |s| 2 * s.stops.len()))?;
-        let mul = if mul.iter().all(|&v| v == 1.) { &[][..] } else { mul };
+        check_fare_mul(mul, self.svc.as_ref().map_or(0, |s| s.real_rn()))?;
+        let mul = self.svc.as_ref().map_or(mul.to_vec(), |s| s.in_first(mul));
+        let mul = if mul.iter().all(|&v| v == 1.) { &[][..] } else { &mul[..] };
         if !same_bits(mul, &self.fare_mul) {
             self.fare_mul = mul.to_vec();
             self.per.iter_mut().for_each(|p| *p = None);
@@ -294,8 +296,9 @@ impl IntercityApi {
     }
     /// T-3578: `DemandApi::set_base_mul`.
     pub fn set_base_mul(&mut self, mul: &[f32]) -> Result<(), String> {
-        check_fare_mul(mul, self.svc.as_ref().map_or(0, |s| 2 * s.stops.len()))?;
-        let mul = if mul.iter().all(|&v| v == 1.) { &[][..] } else { mul };
+        check_fare_mul(mul, self.svc.as_ref().map_or(0, |s| s.real_rn()))?;
+        let mul = self.svc.as_ref().map_or(mul.to_vec(), |s| s.in_first(mul));
+        let mul = if mul.iter().all(|&v| v == 1.) { &[][..] } else { &mul[..] };
         if !same_bits(mul, &self.base_mul) {
             self.base_mul = mul.to_vec();
             self.per.iter_mut().for_each(|p| *p = None);
@@ -305,8 +308,11 @@ impl IntercityApi {
     /// T-3740: `DemandApi::set_fare_zones`, at the curve's fares as set (as the market's curve).
     #[allow(clippy::too_many_arguments)]
     pub fn set_fare_zones(&mut self, st: &[u32], off: &[u32], usd: &[f32], dist: &[u8], pass_off: &[u32], pass: &[u32]) -> Result<(), String> {
-        crate::demand::api::check_fare_zones(st, off, usd, dist, pass_off, pass, self.svc.as_ref().map_or(0, |s| 2 * s.stops.len()))?;
-        let z = self.svc.as_ref().map_or_else(Default::default, |s| crate::demand::api::demand_fare_zones(&s.st_map, s.st_x.len(), st, off, usd, dist, pass_off, pass));
+        crate::demand::api::check_fare_zones(st, off, usd, dist, pass_off, pass, self.svc.as_ref().map_or(0, |s| s.real_rn()))?;
+        let z = self.svc.as_ref().map_or_else(Default::default, |s| {
+            let (pass_off, pass) = s.in_pass(pass_off, pass);
+            crate::demand::api::demand_fare_zones(&s.st_map, s.st_x.len(), st, off, usd, &s.in_any(dist), &pass_off, &pass)
+        });
         if z != self.fare_zones {
             self.fare_zones = z;
             self.per.iter_mut().for_each(|p| *p = None);
@@ -369,7 +375,8 @@ impl IntercityApi {
     /// `crowd_with_external` takes them), for a window's pairs solved beside a market frozen at its
     /// last round's crowding. False with no network.
     pub fn solve_crowded(&mut self, q: usize, total: &[f32]) -> bool {
-        self.solve_at(q, Some(total))
+        let t = self.svc.as_ref().and_then(|s| s.fold.as_ref()).map(|f| f.in_total(total));
+        self.solve_at(q, Some(t.as_deref().unwrap_or(total)))
     }
     /// T-1607: drop period `q`'s result, which another worker holds (`DemandApi::forget_period`).
     pub fn forget_period(&mut self, q: usize) {
@@ -378,6 +385,9 @@ impl IntercityApi {
         }
     }
     pub fn crowd_with_external(&mut self, q: usize, total: &[f32]) -> bool {
+        // T-4094: the page's totals, on the snapshot's route nodes
+        let t = self.svc.as_ref().and_then(|s| s.fold.as_ref()).map(|f| f.in_total(total));
+        let total = t.as_deref().unwrap_or(total);
         let Some(st) = self.per(q) else { return false };
         let Some((fac, left)) = round_costs(&st.g, &st.net, &st.p, total) else {
             return false;
@@ -446,6 +456,8 @@ impl IntercityApi {
     /// `DemandApi::cap_with_external` (T-1070). The longer trips' figures by pair, corridor and
     /// station fall by the share of all the market's rail trips that still fit.
     pub fn cap_with_external(&mut self, q: usize, total: &[f32]) -> bool {
+        let t = self.svc.as_ref().and_then(|s| s.fold.as_ref()).map(|f| f.in_total(total));
+        let total = t.as_deref().unwrap_or(total);
         let Some(st) = self.per.get_mut(q).and_then(|p| p.as_mut()) else { return false };
         let Some(fit) = capacity_fit(&st.g, &st.net, &st.p, total) else { return false };
         if !fit.any {
@@ -528,13 +540,13 @@ impl IntercityApi {
     }
     /// T-276: the commutes' segment loads, boardings and alightings per route node in period `q`.
     pub fn commute_loads(&self, q: usize) -> Vec<f32> {
-        self.per(q).filter(|_| !self.m.commutes.is_empty()).map_or(vec![], |s| [&s.c_avg.seg[..], &s.c_avg.rn_board[..], &s.c_avg.rn_alight[..]].concat())
+        self.per(q).filter(|_| !self.m.commutes.is_empty()).map_or(vec![], |s| self.svc().out_loads3([&s.c_avg.seg[..], &s.c_avg.rn_board[..], &s.c_avg.rn_alight[..]].concat()))
     }
     /// T-1373: the longer trips' segment loads, boardings and alightings per route node in period
     /// `q`, each times its pair's lean (`Market::lean`): a going-out day's longer trips are theirs
     /// plus these, a coming-back day's theirs less these, before the day's factor. Empty without.
     pub fn lean_loads(&self, q: usize) -> Vec<f32> {
-        self.per(q).and_then(|s| s.r_avg.as_ref()).map_or(vec![], |l| [&l.seg[..], &l.rn_board[..], &l.rn_alight[..]].concat())
+        self.per(q).and_then(|s| s.r_avg.as_ref()).map_or(vec![], |l| self.svc().out_loads3([&l.seg[..], &l.rn_board[..], &l.rn_alight[..]].concat()))
     }
     /// T-1175: the everyday outings across a zone line, as `commute_loads` per everyday purpose
     /// in `everyday` kind order (`KIND_COUNT` blocks of three, zeros for a purpose with none);
@@ -550,7 +562,7 @@ impl IntercityApi {
                 None => (0..3).for_each(|_| out.extend_from_slice(&zero)),
             }
         }
-        out
+        self.svc().out_loads3(out)
     }
     /// T-378: per corridor, the shares of its longer trips not by rail that fly and that drive
     /// (neither: near places on two landmasses). The same whatever the network.
@@ -751,36 +763,38 @@ impl IntercityApi {
         out
     }
     pub fn seg(&self, q: usize) -> Vec<f32> {
-        self.per(q).map_or(vec![], |s| s.avg.seg.clone())
+        self.per(q).map_or(vec![], |s| self.svc().out_load(s.avg.seg.clone()))
     }
     pub fn board(&self, q: usize) -> Vec<f32> {
-        self.per(q).map_or(vec![], |s| s.avg.rn_board.clone())
+        self.per(q).map_or(vec![], |s| self.svc().out_split(s.avg.rn_board.clone()))
     }
     pub fn alight(&self, q: usize) -> Vec<f32> {
-        self.per(q).map_or(vec![], |s| s.avg.rn_alight.clone())
+        self.per(q).map_or(vec![], |s| self.svc().out_split(s.avg.rn_alight.clone()))
     }
     /// As `DemandApi::base_extra`.
     pub fn base_extra(&self, q: usize) -> Vec<f32> {
-        self.per(q).map_or(vec![], |s| fare_x_usd(&s.avg.rn_base_x, self.base.fare_w))
+        self.per(q).map_or(vec![], |s| self.svc().out_split(fare_x_usd(&s.avg.rn_base_x, self.base.fare_w)))
     }
     /// As `DemandApi::fare_extra`.
     pub fn fare_extra(&self, q: usize) -> Vec<f32> {
-        self.per(q).map_or(vec![], |s| fare_x_usd(&s.avg.rn_fare_x, self.base.fare_w))
+        self.per(q).map_or(vec![], |s| self.svc().out_split(fare_x_usd(&s.avg.rn_fare_x, self.base.fare_w)))
     }
     /// As `DemandApi::transfers_in`.
     pub fn transfers_in(&self, q: usize) -> Vec<f32> {
-        self.per(q).map_or(vec![], |s| transfers_in(&s.g, &s.xi, &s.xfer))
+        self.per(q).map_or(vec![], |s| self.svc().out_split(transfers_in(&s.g, &s.xi, &s.xfer)))
     }
     /// `transfers` on a kind of day (T-260).
     pub fn transfers_day(&self, sel: &[u8], day: u32) -> Vec<f32> {
+        let Some(svc) = self.svc.as_ref() else { return vec![] };
+        let dsel = svc.in_any(sel);
         let mut out = vec![];
         for (q, st) in self.per.iter().enumerate() {
             let Some(st) = st else { continue };
             let at = out.len();
-            transfer_pairs(&st.g, &st.xi, &st.xfer, sel, &mut out);
+            transfer_pairs(&st.g, &st.xi, &st.xfer, &dsel, &mut out);
             scale_triples(&mut out[at..], load_factor(day as usize, LONGER, q));
         }
-        out
+        svc.out_pairs(out, sel)
     }
     /// T-3928: longer trips, commutes and outings in period `q` that went to a station with no strategy and so
     /// were walked nowhere (0 when none; they are still in the entries). 0 if `q` has no solve.

@@ -88,6 +88,9 @@ pub struct Network {
     /// T-4041: per stop (parallel to `line_stops`), whether it is a tram stop on the street, where a
     /// trip pays no boarding cost (both runs take the listed stop's). Empty: none is.
     pub stop_street: Vec<bool>,
+    /// T-4094: the walks of bus stops merged along lines (`busmerge::Walks`), measured between their real
+    /// stops; None with none merged.
+    pub bus_walks: Option<std::sync::Arc<super::busmerge::Walks>>,
 }
 
 /// A bus stop's stretch of route (T-1464): its demand station and the stretch as points in the
@@ -279,6 +282,7 @@ pub fn synth_network() -> Network {
         back_stops: vec![],
         line_pier: vec![],
         stop_street: vec![],
+        bus_walks: None,
     };
     for &(name, kind, pts) in LINES {
         let mut stops: Vec<u32> = vec![];

@@ -15,6 +15,7 @@
 //! station pairs reversed (riders go back the way they came, which is exact for park-and-ride),
 //! so a period's rail matrix is `to_work x OD + to_home x OD^T`, scaled from one solve.
 
+use super::busmerge::{self, Fold};
 use super::clock::now_ms;
 use super::network::Catch;
 use super::days::{day_rate, load_factor, share_out, share_ret, WEEKDAY, WORK};
@@ -383,6 +384,9 @@ pub(crate) struct Service {
     /// `Network::line_pier` and `Network::stop_street` (`set_stairs`, T-3888, T-4041).
     pub(crate) pier: Vec<bool>,
     pub(crate) street: Vec<bool>,
+    /// T-4094: the bus stops merged along lines (`busmerge`); None where nothing merged, and the demand
+    /// network is the snapshot's.
+    pub(crate) fold: Option<Fold>,
 }
 
 /// The per-station, per-line and per-stop inputs of a `set_network` (`set_complexes`, `set_upgrades`,
@@ -424,6 +428,71 @@ impl NetInputs<'_> {
 
 /// T-3888: one flag per item (line or stop) from `set_stairs`' input, or none where it has another
 /// length or no item is flagged.
+/// The per-station, per-line and per-stop inputs a `Service` is built from besides the network itself, as
+/// each population holds them (`set_complexes` and the rest); `tram` already one flag per line or empty.
+pub(crate) struct SvcInputs<'a> {
+    pub complex: &'a [u32],
+    pub ups: &'a [u8],
+    pub passages: &'a [u32],
+    pub bus: (&'a [u32], &'a [f32]),
+    pub tram: &'a [bool],
+    pub pier: &'a (Vec<u8>, Vec<u8>),
+    pub back: &'a [u32],
+    pub span: &'a [f32],
+}
+
+impl Service {
+    /// The demand network of a snapshot (checked): stations within `merge.0` one place, a line's runs of bus
+    /// places within `merge.1` one station (T-4094, `busmerge`; its stops weighed equally until `Fold::weigh`).
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn build(st_xy: &[f32], line_off: Vec<u32>, stops: &[u32], times: Vec<f32>, tph: Vec<[f32; PERIODS]>, cars: &[f32], i: &SvcInputs, merge: (f32, f32)) -> Service {
+        let nl = line_off.len() - 1;
+        let nstops = stops.len();
+        let (px, py, places) = merge_stations(st_xy, &line_off, stops, merge.0);
+        let ok = if merge.1 > 0.0 && !i.bus.0.is_empty() {
+            let n = px.len();
+            let (_, bus) = demand_catches(&places, n, stops, i.bus.0, i.bus.1);
+            let tram = tram_stops(&places, n, stops, &line_off, i.tram, i.ups);
+            busmerge::places_ok(&places, n, &line_off, stops, &bus, &tram, &demand_ups(&places, n, i.ups), i.back, i.span)
+        } else {
+            vec![]
+        };
+        let real = busmerge::Real { st_xy, off: &line_off, stops, times: &times, st_map: &places, px: &px, py: &py, place_ok: &ok };
+        let busmerge::Layout { st_x, st_y, st_map, line_off: d_off, stops: d_stops, times: d_times, stop_xy, fold } = busmerge::layout(&real, merge.1);
+        let n = st_x.len();
+        let back = demand_back(&st_map, stops, i.back);
+        let street = pier_lines(&i.pier.1, nstops);
+        let span = span_for(i.span, nstops);
+        let (back, street, span) = match &fold {
+            Some(f) => (f.in_stops(&back), f.in_stops(&street), f.in_max(&span)),
+            None => (back, street, span),
+        };
+        let (catches, st_bus) = demand_catches(&st_map, n, stops, i.bus.0, i.bus.1);
+        Service {
+            catches,
+            st_bus,
+            st_tram: tram_stops(&st_map, n, stops, &line_off, i.tram, i.ups),
+            back,
+            pier: pier_lines(&i.pier.0, nl),
+            street,
+            group: demand_groups(&st_map, n, i.complex),
+            ups: demand_ups(&st_map, n, i.ups),
+            passages: demand_passages(&st_map, i.passages),
+            st_x,
+            st_y,
+            st_map,
+            line_off: d_off,
+            stops: d_stops,
+            stop_xy,
+            times: d_times,
+            tph,
+            cars: cars.iter().enumerate().map(|(l, &c)| if i.tram.get(l).copied().unwrap_or(false) { c * TRAM_CARS } else { c }).collect(),
+            span,
+            fold,
+        }
+    }
+}
+
 pub(crate) fn pier_lines(flags: &[u8], n: usize) -> Vec<bool> {
     if flags.len() == n && flags.iter().any(|&f| f != 0) { flags.iter().map(|&f| f != 0).collect() } else { vec![] }
 }
@@ -459,6 +528,46 @@ impl Service {
             && self.back == o.back
             && self.pier == o.pier
             && self.street == o.street
+            && match (&self.fold, &o.fold) {
+                (None, None) => true,
+                (Some(a), Some(b)) => a.same(b),
+                _ => false,
+            }
+    }
+
+    // T-4094: the page's arrays per route node are the snapshot's (real); the kernel's are the demand
+    // network's. Identity with no fold.
+
+    /// Route nodes as the page lays them out.
+    pub(crate) fn real_rn(&self) -> usize {
+        self.fold.as_ref().map_or(2 * self.stops.len(), |f| f.sizes().0)
+    }
+    pub(crate) fn out_load(&self, v: Vec<f32>) -> Vec<f32> {
+        match &self.fold { Some(f) => f.out_load(&v), None => v }
+    }
+    pub(crate) fn out_split(&self, v: Vec<f32>) -> Vec<f32> {
+        match &self.fold { Some(f) => f.out_split(&v), None => v }
+    }
+    pub(crate) fn out_loads3(&self, v: Vec<f32>) -> Vec<f32> {
+        match &self.fold { Some(f) => f.out_loads3(&v), None => v }
+    }
+    pub(crate) fn out_pairs(&self, v: Vec<f32>, sel: &[u8]) -> Vec<f32> {
+        match &self.fold { Some(f) => f.out_pairs_in(&v, sel), None => v }
+    }
+    pub(crate) fn out_copy(&self, v: Vec<u32>) -> Vec<u32> {
+        match &self.fold { Some(f) => f.out_copy(&v), None => v }
+    }
+    pub(crate) fn in_hop(&self, v: &[f32]) -> Vec<f32> {
+        match &self.fold { Some(f) => f.in_hop(v), None => v.to_vec() }
+    }
+    pub(crate) fn in_first(&self, v: &[f32]) -> Vec<f32> {
+        match &self.fold { Some(f) if !v.is_empty() => f.in_first(v), _ => v.to_vec() }
+    }
+    pub(crate) fn in_any<'a>(&self, v: &'a [u8]) -> std::borrow::Cow<'a, [u8]> {
+        match &self.fold { Some(f) if !v.is_empty() => f.in_any(v).into(), _ => v.into() }
+    }
+    pub(crate) fn in_pass(&self, off: &[u32], pass: &[u32]) -> (Vec<u32>, Vec<u32>) {
+        match &self.fold { Some(f) if !pass.is_empty() => f.in_pass(off, pass), _ => (off.to_vec(), pass.to_vec()) }
     }
     /// T-124: the periods (bit q) whose inputs are the same in `o`: the same layout, and the run
     /// times and trains an hour of the period. A period reads no other period's.
@@ -841,6 +950,7 @@ impl DemandApi {
             back_stops: svc.back.clone(),
             line_pier: svc.pier.clone(),
             stop_street: svc.street.clone(),
+            bus_walks: svc.fold.as_ref().and_then(|f| f.walks.clone()),
         };
         for l in 0..nl {
             let (a, b) = (svc.line_off[l] as usize, svc.line_off[l + 1] as usize);
@@ -949,6 +1059,10 @@ impl DemandApi {
 
 /// Readers of a solved period for tests and the bins; not exported to the app.
 impl DemandApi {
+    /// The network solved on; a period's result implies one.
+    pub(crate) fn svc(&self) -> &Service {
+        self.svc.as_ref().expect("a solved period has a network")
+    }
     pub(crate) fn period(&self, q: usize) -> Option<&Period> {
         self.per.get(q).and_then(|p| p.as_ref())
     }
@@ -1100,7 +1214,7 @@ impl DemandApi {
     }
     /// The route-node layout: per route node, its station and line (kernel order).
     pub fn route_nodes(&self, q: usize) -> (Vec<u32>, Vec<u32>) {
-        self.period(q).map_or((vec![], vec![]), |st| (st.g.rn_station.clone(), st.g.rn_line.clone()))
+        self.period(q).map_or((vec![], vec![]), |st| (self.svc().out_copy(st.g.rn_station.clone()), self.svc().out_copy(st.g.rn_line.clone())))
     }
     /// Snapshot station -> demand station (stations within `station_merge_m` are one).
     pub fn station_map(&self) -> Vec<u32> {
@@ -1244,11 +1358,13 @@ impl DemandApi {
     /// first and boarding the second, walking between stations included; averaged over the
     /// crowding rounds like the loads.
     pub fn transfers(&self, sel: &[u8]) -> Vec<f32> {
+        let Some(svc) = self.svc.as_ref() else { return vec![] };
+        let dsel = svc.in_any(sel);
         let mut out = vec![];
         for st in self.per.iter().flatten() {
-            transfer_pairs(&st.g, &st.xi, &st.xfer, sel, &mut out);
+            transfer_pairs(&st.g, &st.xi, &st.xfer, &dsel, &mut out);
         }
-        out
+        svc.out_pairs(out, sel)
     }
     /// Step 1, every worker: the selected cells' rail trips over this worker's solved periods,
     /// three blocks of `n_subzones`: by subzone at the far end; and for the selected subzones at
@@ -1464,33 +1580,13 @@ impl DemandApi {
             return Err("a stop names a station that is not in the list".into());
         }
         NetInputs { stations: ns, lines: nl, stops: nstops, complex: &self.complex_in, ups: &self.ups_in, bus_n: &self.bus_in.0, tram: &self.tram_in, pier: &self.pier_in, back: &self.back_in, span: &self.span_in }.check()?;
-        let (st_x, st_y, st_map) = merge_stations(st_xy, &line_off, stops, self.base.station_merge_m);
-        let group = demand_groups(&st_map, st_x.len(), &self.complex_in);
-        let ups = demand_ups(&st_map, st_x.len(), &self.ups_in);
-        let (catches, st_bus) = demand_catches(&st_map, st_x.len(), stops, &self.bus_in.0, &self.bus_in.1);
         let tram_line: Vec<bool> = if self.tram_in.len() == nl { self.tram_in.iter().map(|&f| f != 0).collect() } else { vec![] };
-        let st_tram = tram_stops(&st_map, st_x.len(), stops, &line_off, &tram_line, &self.ups_in);
-        let svc = Service {
-            catches,
-            st_bus,
-            st_tram,
-            back: demand_back(&st_map, stops, &self.back_in),
-            pier: pier_lines(&self.pier_in.0, nl),
-            street: pier_lines(&self.pier_in.1, nstops),
-            st_x,
-            st_y,
-            st_map: st_map.clone(),
-            line_off,
-            stops: stops.iter().map(|&s| st_map[s as usize]).collect(),
-            stop_xy: stops.iter().flat_map(|&s| [st_xy[2 * s as usize], st_xy[2 * s as usize + 1]]).collect(),
-            times,
-            tph,
-            cars: cars.iter().enumerate().map(|(l, &c)| if tram_line.get(l).copied().unwrap_or(false) { c * TRAM_CARS } else { c }).collect(),
-            group,
-            span: span_for(&self.span_in, nstops),
-            ups,
-            passages: demand_passages(&st_map, &self.passages_in),
-        };
+        let inp = SvcInputs { complex: &self.complex_in, ups: &self.ups_in, passages: &self.passages_in, bus: (&self.bus_in.0, &self.bus_in.1), tram: &tram_line, pier: &self.pier_in, back: &self.back_in, span: &self.span_in };
+        let mut svc = Service::build(st_xy, line_off, stops, times, tph, cars, &inp, (self.base.station_merge_m, self.base.bus_merge_m));
+        if let Some(f) = svc.fold.as_mut() {
+            let mass: Vec<f32> = self.city.pop.iter().zip(&self.city.jobs).map(|(a, b)| a + b).collect();
+            f.weigh(&self.city.x, &self.city.y, &mass);
+        }
         let old = self.svc.as_ref().filter(|_| self.reusable);
         self.reusable = true;
         self.layout_same = old.is_some_and(|o| svc.same_layout(o));
@@ -1536,17 +1632,18 @@ impl DemandApi {
     /// charged on ride edges, so route choice and mode choice both see the actual route's fare.
     /// `hop_km` follows route nodes: each line's forward stops then reverse stops, 0 at ends.
     pub fn set_fares(&mut self, base_usd: f32, per_km_usd: f32, hop_km: &[f32]) -> Result<(), String> {
-        let count = self.svc.as_ref().map_or(0, |s| 2 * s.stops.len());
+        let count = self.svc.as_ref().map_or(0, |s| s.real_rn());
         if !base_usd.is_finite() || base_usd < 0.0 || !per_km_usd.is_finite() || per_km_usd < 0.0
             || hop_km.len() != count || hop_km.iter().any(|v| !v.is_finite() || *v < 0.0) {
             return Err("invalid fare or segment distances".into());
         }
         let w = self.base.fare_w;
         let (fare_min, per_km) = (base_usd * w, per_km_usd * w);
-        if fare_min.to_bits() != self.base.fare_min.to_bits() || per_km.to_bits() != self.fare_per_km.to_bits() || !same_bits(hop_km, &self.fare_km) {
+        let hop_km = self.svc.as_ref().map_or(hop_km.to_vec(), |s| s.in_hop(hop_km));
+        if fare_min.to_bits() != self.base.fare_min.to_bits() || per_km.to_bits() != self.fare_per_km.to_bits() || !same_bits(&hop_km, &self.fare_km) {
             self.base.fare_min = fare_min;
             self.fare_per_km = per_km;
-            self.fare_km = hop_km.to_vec();
+            self.fare_km = hop_km;
             self.per.iter_mut().for_each(|p| *p = None);
             self.same = 0;
         }
@@ -1556,8 +1653,9 @@ impl DemandApi {
     /// T-1626: each route node's fare multiplier, in `set_fares`' layout (a high-speed line's
     /// nodes its multiplier, the rest 1); empty when every one is 1.
     pub fn set_fare_mul(&mut self, mul: &[f32]) -> Result<(), String> {
-        check_fare_mul(mul, self.svc.as_ref().map_or(0, |s| 2 * s.stops.len()))?;
-        let mul = if mul.iter().all(|&v| v == 1.0) { &[][..] } else { mul };
+        check_fare_mul(mul, self.svc.as_ref().map_or(0, |s| s.real_rn()))?;
+        let mul = self.svc.as_ref().map_or(mul.to_vec(), |s| s.in_first(mul));
+        let mul = if mul.iter().all(|&v| v == 1.0) { &[][..] } else { &mul[..] };
         if !same_bits(mul, &self.fare_mul) {
             self.fare_mul = mul.to_vec();
             self.per.iter_mut().for_each(|p| *p = None);
@@ -1570,8 +1668,9 @@ impl DemandApi {
     /// multiplier, the high-speed, bus and ferry ones left out); empty when every one is 1. A trip
     /// pays the base times the largest of the lines it rides.
     pub fn set_base_mul(&mut self, mul: &[f32]) -> Result<(), String> {
-        check_fare_mul(mul, self.svc.as_ref().map_or(0, |s| 2 * s.stops.len()))?;
-        let mul = if mul.iter().all(|&v| v == 1.0) { &[][..] } else { mul };
+        check_fare_mul(mul, self.svc.as_ref().map_or(0, |s| s.real_rn()))?;
+        let mul = self.svc.as_ref().map_or(mul.to_vec(), |s| s.in_first(mul));
+        let mul = if mul.iter().all(|&v| v == 1.0) { &[][..] } else { &mul[..] };
         if !same_bits(mul, &self.base_mul) {
             self.base_mul = mul.to_vec();
             self.per.iter_mut().for_each(|p| *p = None);
@@ -1589,8 +1688,11 @@ impl DemandApi {
     /// price, for the zones from the lowest to the highest they touch (`kernel::ZoneWork`).
     #[allow(clippy::too_many_arguments)]
     pub fn set_fare_zones(&mut self, st: &[u32], off: &[u32], usd: &[f32], dist: &[u8], pass_off: &[u32], pass: &[u32]) -> Result<(), String> {
-        check_fare_zones(st, off, usd, dist, pass_off, pass, self.svc.as_ref().map_or(0, |s| 2 * s.stops.len()))?;
-        let z = self.svc.as_ref().map_or_else(FareZones::default, |s| demand_fare_zones(&s.st_map, s.st_x.len(), st, off, usd, dist, pass_off, pass));
+        check_fare_zones(st, off, usd, dist, pass_off, pass, self.svc.as_ref().map_or(0, |s| s.real_rn()))?;
+        let z = self.svc.as_ref().map_or_else(FareZones::default, |s| {
+            let (pass_off, pass) = s.in_pass(pass_off, pass);
+            demand_fare_zones(&s.st_map, s.st_x.len(), st, off, usd, &s.in_any(dist), &pass_off, &pass)
+        });
         if z != self.fare_zones {
             self.fare_zones = z;
             self.per.iter_mut().for_each(|p| *p = None);
@@ -1756,7 +1858,7 @@ impl DemandApi {
     pub fn crowd(&mut self, q: usize) -> bool {
         let Some(Some(st)) = self.per.get(q) else { return false };
         let total = [&st.avg.seg[..], &st.avg.rn_board[..], &st.avg.rn_alight[..]].concat();
-        self.crowd_with_external(q, &total)
+        self.crowd_in(q, &total)
     }
 
     /// One population's assignment under the complete shared-world loads. `total` includes this
@@ -1764,6 +1866,11 @@ impl DemandApi {
     /// per route node, then the boardings and then the alightings per route node (riders left
     /// behind, T-188, `kernel::round_costs`); the segment loads alone price crowding only.
     pub fn crowd_with_external(&mut self, q: usize, total: &[f32]) -> bool {
+        let t = self.svc.as_ref().and_then(|s| s.fold.as_ref()).map(|f| f.in_total(total));
+        self.crowd_in(q, t.as_deref().unwrap_or(total))
+    }
+    /// `crowd_with_external` on totals in the demand network's route nodes (T-4094).
+    pub(crate) fn crowd_in(&mut self, q: usize, total: &[f32]) -> bool {
         let Some(Some(st)) = self.per.get(q) else { return false };
         let Some((fac, left)) = round_costs(&st.g, &st.net, &st.p, total) else { return false };
         let t0 = now_ms();
@@ -1820,6 +1927,11 @@ impl DemandApi {
     /// the riders coming to each platform; those turned away go by car or on foot as the pair's
     /// other riders do. False if `q` has no solve or `total` another layout.
     pub fn cap_with_external(&mut self, q: usize, total: &[f32]) -> bool {
+        let t = self.svc.as_ref().and_then(|s| s.fold.as_ref()).map(|f| f.in_total(total));
+        self.cap_in(q, t.as_deref().unwrap_or(total))
+    }
+    /// `cap_with_external` on totals in the demand network's route nodes (T-4094).
+    pub(crate) fn cap_in(&mut self, q: usize, total: &[f32]) -> bool {
         let Some(Some(st)) = self.per.get_mut(q) else { return false };
         let Some(fit) = capacity_fit(&st.g, &st.net, &st.p, total) else { return false };
         let Some(sz) = self.sz.as_ref() else { return true };
@@ -1931,55 +2043,59 @@ impl DemandApi {
 
     /// Riders in period `q` on the segment leaving each route node (0 at a run's last stop).
     pub fn seg(&self, q: usize) -> Vec<f32> {
-        self.per.get(q).and_then(|p| p.as_ref()).map_or(vec![], |st| st.avg.seg.clone())
+        self.per.get(q).and_then(|p| p.as_ref()).map_or(vec![], |st| self.svc().out_load(st.avg.seg.clone()))
     }
     /// Riders in period `q` boarding at each route node.
     pub fn board(&self, q: usize) -> Vec<f32> {
-        self.per.get(q).and_then(|p| p.as_ref()).map_or(vec![], |st| st.avg.rn_board.clone())
+        self.per.get(q).and_then(|p| p.as_ref()).map_or(vec![], |st| self.svc().out_split(st.avg.rn_board.clone()))
     }
     /// Riders in period `q` leaving the train at each route node.
     pub fn alight(&self, q: usize) -> Vec<f32> {
-        self.per.get(q).and_then(|p| p.as_ref()).map_or(vec![], |st| st.avg.rn_alight.clone())
+        self.per.get(q).and_then(|p| p.as_ref()).map_or(vec![], |st| self.svc().out_split(st.avg.rn_alight.clone()))
     }
     /// The fare curve's extra in period `q` (T-1143), US$, at each route node where the trips paying
     /// it first board: what the trips pay beyond the base and the first stretch's rate per km; with
     /// the transfer fares (T-1801) at the route nodes riders board after changing.
     pub fn fare_extra(&self, q: usize) -> Vec<f32> {
-        self.per.get(q).and_then(|p| p.as_ref()).map_or(vec![], |st| fare_extra_usd(&st.avg.rn_fare_x, &st.p, &st.g, &st.xi, &st.xfer))
+        self.per.get(q).and_then(|p| p.as_ref()).map_or(vec![], |st| self.svc().out_split(fare_extra_usd(&st.avg.rn_fare_x, &st.p, &st.g, &st.xi, &st.xfer)))
     }
     /// T-3578: what the base's own multiples add past one base in period `q`, US$ (below 0 under 1), on the km
     /// ridden from each route node; all 0 while no line has one. Income adds it to the base fares it shares out.
     pub fn base_extra(&self, q: usize) -> Vec<f32> {
-        self.per.get(q).and_then(|p| p.as_ref()).map_or(vec![], |st| fare_x_usd(&st.avg.rn_base_x, st.p.fare_w))
+        self.per.get(q).and_then(|p| p.as_ref()).map_or(vec![], |st| self.svc().out_split(fare_x_usd(&st.avg.rn_base_x, st.p.fare_w)))
     }
     /// Riders in period `q` boarding at each route node after changing lines (T-1530); empty when
     /// the period has no result.
     pub fn transfers_in(&self, q: usize) -> Vec<f32> {
-        self.per.get(q).and_then(|p| p.as_ref()).map_or(vec![], |st| transfers_in(&st.g, &st.xi, &st.xfer))
+        self.per.get(q).and_then(|p| p.as_ref()).map_or(vec![], |st| self.svc().out_split(transfers_in(&st.g, &st.xi, &st.xfer)))
     }
     /// `transfers` on a kind of day (T-260): each period's riders times the commute's load factor.
     pub fn transfers_day(&self, sel: &[u8], day: u32) -> Vec<f32> {
+        let Some(svc) = self.svc.as_ref() else { return vec![] };
+        let dsel = svc.in_any(sel);
         let mut out = vec![];
         for (q, st) in self.per.iter().enumerate() {
             let Some(st) = st else { continue };
             let at = out.len();
-            transfer_pairs(&st.g, &st.xi, &st.xfer, sel, &mut out);
+            transfer_pairs(&st.g, &st.xi, &st.xfer, &dsel, &mut out);
             scale_triples(&mut out[at..], load_factor(day as usize, WORK, q));
         }
-        out
+        svc.out_pairs(out, sel)
     }
     /// Load at the period's busiest hour on the segment leaving each route node, as a share of
     /// the crush capacity of the trains running then (0 where none run).
     pub fn load_of_crush(&self, q: usize) -> Vec<f32> {
         let Some(Some(st)) = self.per.get(q) else { return vec![] };
-        (0..st.avg.seg.len())
-            .map(|r| {
-                let l = st.g.rn_line[r] as usize;
-                let tph = 60.0 / st.net.line_headway_min[l][q];
-                let crush = tph * st.net.line_crush[l];
-                if crush > 0.0 { st.avg.seg[r] / st.p.period_hours * st.p.peak_hour_factor / crush } else { 0.0 }
-            })
-            .collect()
+        self.svc().out_load(
+            (0..st.avg.seg.len())
+                .map(|r| {
+                    let l = st.g.rn_line[r] as usize;
+                    let tph = 60.0 / st.net.line_headway_min[l][q];
+                    let crush = tph * st.net.line_crush[l];
+                    if crush > 0.0 { st.avg.seg[r] / st.p.period_hours * st.p.peak_hour_factor / crush } else { 0.0 }
+                })
+                .collect(),
+        )
     }
 
     // --- Demand views (T-078 for T-084; notes/T-078.md). A worker holds only its own periods,
@@ -2274,8 +2390,29 @@ impl DemandApi {
             }
             (c, v)
         };
-        let (hc, hv) = cells(&home_r, &self.city.pop, &sz.pop);
-        let (wc, wv) = cells(&work_r, &self.city.jobs, &sz.jobs);
+        let (mut hc, mut hv) = cells(&home_r, &self.city.pop, &sz.pop);
+        let (mut wc, mut wv) = cells(&work_r, &self.city.jobs, &sz.jobs);
+        // T-4094: a stop of a merged group answers for the riders of the cells near it, each cell's
+        // shared among the group's stops by nearness (`Fold::near_share`)
+        let (mut kh, mut kw) = (1f32, 1f32);
+        if let Some(f) = svc.fold.as_ref().filter(|f| f.members(a).len() > 1) {
+            let m = f.members(a);
+            let keep = |cs: &[f32], vs: &mut [f32]| -> f32 {
+                let (mut all, mut kept) = (0f32, 0f32);
+                for (c, v) in cs.iter().zip(vs.iter_mut()) {
+                    all += *v;
+                    *v *= f.near_share(m, station, self.city.x[*c as usize], self.city.y[*c as usize]);
+                    kept += *v;
+                }
+                if all > 0.0 { kept / all } else { f.share(station as usize) }
+            };
+            kh = keep(&hc, &mut hv);
+            kw = keep(&wc, &mut wv);
+            let _ = (&mut hc, &mut wc);
+        }
+        let (walked, rode) = (walked * kh, rode * kh);
+        to_zone.iter_mut().for_each(|v| *v *= kh);
+        from_zone.iter_mut().for_each(|v| *v *= kw);
         let mut out = Vec::with_capacity(4 + 2 * (hc.len() + wc.len()) + 2 * nz);
         out.extend([hc.len() as f32, wc.len() as f32, walked / 2.0, rode / 2.0]);
         out.extend(hc);

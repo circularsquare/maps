@@ -356,16 +356,27 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
     // position
     // T-4079: a bus stop's walks reach less far
     let cut2 = |a: usize, b: usize| net.walk_reach_m(a, b, p.xfer_walk_m).powi(2);
-    let d2 = |a: usize, b: usize| (net.st_x[b] - net.st_x[a]).powi(2) + (net.st_y[b] - net.st_y[a]).powi(2);
+    // T-4094: a walk with a merged group of bus stops at either end is measured between the real stops
+    let bw = net.bus_walks.as_deref();
+    let merged = |a: usize| bw.is_some_and(|w| w.merged(a));
+    let d2 = |a: usize, b: usize| match bw.filter(|_| merged(a) || merged(b)) {
+        Some(w) => w.between(a as u32, b as u32).map_or(f32::INFINITY, |d| d * d),
+        None => (net.st_x[b] - net.st_x[a]).powi(2) + (net.st_y[b] - net.st_y[a]).powi(2),
+    };
     let mut near: Vec<Vec<u32>> = vec![vec![]; s];
     if p.xfer_walk_m > 0.0 && s > 1 {
         let grid = StationGrid::new(net, p.xfer_walk_m, p.xfer_walk_m);
         for a in 0..s {
             grid.near(net.st_x[a], net.st_y[a], |b| {
-                if b as usize != a && d2(a, b as usize) <= cut2(a, b as usize) {
+                if b as usize != a && !merged(a) && !merged(b as usize) && d2(a, b as usize) <= cut2(a, b as usize) {
                     near[a].push(b);
                 }
             });
+        }
+        for (a, b) in bw.into_iter().flat_map(|w| w.pairs()) {
+            if d2(a as usize, b as usize) <= cut2(a as usize, b as usize) {
+                near[a as usize].push(b);
+            }
         }
     }
     if net.st_group.len() == s {
@@ -398,7 +409,7 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
         }
         let (x, y) = (net.st_x[st as usize] + rn_dx[r], net.st_y[st as usize] + rn_dy[r]);
         for &b in &near[st as usize] {
-            let d = ((net.st_x[b as usize] - x).powi(2) + (net.st_y[b as usize] - y).powi(2)).sqrt();
+            let d = if merged(st as usize) || merged(b as usize) { d2(st as usize, b as usize).sqrt() } else { ((net.st_x[b as usize] - x).powi(2) + (net.st_y[b as usize] - y).powi(2)).sqrt() };
             edges.push(((s + r) as u32, b, walk_min(st, b, d) * p.w_xfer, NONE));
         }
     }
