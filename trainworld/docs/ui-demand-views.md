@@ -391,8 +391,10 @@ inspector lists no commuters or inter-city riders [T-1812].
 - On the map a bubble selection's are always drawn (no setting), except under a local purpose
   filter, which draws only that purpose's outings across a zone line [T-1229] (none under Work,
   Airport and Attractions): the far end of its own end (Homes: where the trips go; Destinations:
-  where they come from; Total: both summed by place and zone, hover "to and from" [T-1903]). Only zones other than the focused one are drawn;
-  same-zone counts stay in the inspector [T-139].
+  where they come from; Total: both summed by place and zone, hover "to and from" [T-1903]). The focused zone's own far 6 km zones
+  are drawn only from 50 km of the selection's busiest cell (`OWN_FAR_M`), past where its local everyday outings
+  end, so they don't sit among its local far end (T-139); zoomed out, the focused zone is never one of the
+  labelled bubbles [T-4140].
 - Above zoom 9.5 every far 6 km zone with trips is a disc at its position. At 9.5 and below they
   become one labelled bubble per other zone at its registry centre, names and
   daily totals as labels that avoid each other and stay on screen, at most eight at once, the biggest

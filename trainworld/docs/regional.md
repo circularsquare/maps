@@ -268,7 +268,7 @@ affiliation bypasses the player's local network.
 **Seeing them** [T-118, T-3503]: the bubbles count them at the end in the zone in view (a
 Philadelphia bubble's trips to New York at its homes; one between two parts of one zone at both
 its ends, and in its Trips within, T-3509), and a selected bubble set and a selected
-station list them by place and draw them by far zone ([ui-demand-views.md](ui-demand-views.md) "Inter-city trips"). A selection of
+station list them by place and draw them by far zone, a selection's own zone's from 50 km out ([ui-demand-views.md](ui-demand-views.md) "Inter-city trips", T-4140). A selection of
 local cells is mapped to the market through its 600 m squares: the sites were built from the same
 cells, so each selected cell falls in one site's square; a square counts the selected share of its
 people (homes) or attraction (destinations), and a site's share of its zone's departures is its

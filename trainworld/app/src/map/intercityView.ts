@@ -13,8 +13,8 @@
 //   selection): it is drawn outlined, with one bubble per other city for the trips between them.
 //   These come from the market's corridors (`intercityDemand`), each new result shown as it lands.
 //
-// Up close every far 6 km zone outside the focused market with a trip or more is shown. Same-city
-// longer trips of a selection remain in the inspector only (T-139). Regional zooms aggregate a
+// Up close every far 6 km zone outside the focused market with a trip or more is shown, and those of
+// the focused market from OWN_FAR_M out (T-4140). Regional zooms aggregate a
 // selection's trips to one labeled circle per other market (T-135, T-136). Both are drawn as the
 // selection's in-city far end is (T-1246): its area per trip, no outline, one colour by
 // `bubbleColour(rail, walk, everything else)`. Under a local purpose filter only that purpose's
@@ -30,7 +30,7 @@ import { mapBlank, zoneLoads } from "../game/loading";
 import type { Map as MlMap } from "maplibre-gl";
 import { activeCity, cityById, CITIES, type City } from "../game/cities";
 import { shownRealms, zoneShown } from "../game/realms";
-import { lngLatToPack, packToLngLat } from "../game/coords";
+import { groundScale, lngLatToPack, packToLngLat } from "../game/coords";
 import { openFarTrip, tripOpenedFrom } from "../game/trip";
 import { cityDemandViews, demandView, intercityDemand, INTERCITY_PLACES, intercitySelection, rowsLanded, rowsOf, type IntercitySelection, type PlaceFlows } from "../game/demand";
 import { builtCities } from "../game/worldTotals";
@@ -125,6 +125,9 @@ const UNBUILT_EDGE = 1.25;
 const UNBUILT_GROW = 1.25;
 /** Most place labels on screen at once, the biggest first (T-493). */
 const MAX_LABELS = 8;
+/** T-4140: a selection's far 6 km zones in its own zone are drawn from this far from its busiest cell, metres:
+ * where the local everyday outings have tapered out (the market's onset, twice ONSET_KM in sim intercity.rs). */
+const OWN_FAR_M = 50_000;
 /** The least space kept between two labels, CSS px sideways and up and down (T-1050). */
 const LABEL_GAP_X = 28;
 const LABEL_GAP_Y = 16;
@@ -446,11 +449,15 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     }
     const regional = map.getZoom() <= CITY_BUBBLE_ZOOM;
     const a = anchor();
+    // T-4140: the zone's own far parts are drawn too, but only past where its local far end reaches (T-139's overlap)
+    const sel = selection.peek();
+    const near = sel?.kind === "commuters" && nearPointOf ? nearPointOf(sel) : null;
+    const ownFar = (z: { x: number; y: number }) => !!near && Math.hypot(z.x - near[0], z.y - near[1]) / groundScale((z.y + near[1]) / 2) >= OWN_FAR_M;
     const points = regional ? flows.places.filter(p => shownCount(p.all) && p.place !== current!.own).map(p => {
       const city = CITIES.find(c => c.place === p.place);
       const ll = city?.center ?? packToLngLat(p.x, p.y);
       return { ...p, ll, name: INTERCITY_PLACES[p.place], gid: -1 };
-    }) : flows.zones.filter(z => shownCount(z.all) && z.place !== current!.own).map(z => ({...z, ll: packToLngLat(z.x, z.y), name: ""}));
+    }) : flows.zones.filter(z => shownCount(z.all) && (z.place !== current!.own || ownFar(z))).map(z => ({...z, ll: packToLngLat(z.x, z.y), name: ""}));
     points.sort((a, b) => b.all - a.all);
     const { verb } = current;
     const trips = shown ? tr("intercityView.interCityTrips") : tr("intercityView.purposeTrips", { purpose: purposeWords(filter as PurposeKey) });
