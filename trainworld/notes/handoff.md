@@ -5,7 +5,7 @@ Updated: 2026-11-23 13:50 UTC. Live state: `venv\Scripts\python.exe trainworld/t
 notes/handoff-log.md. Her time UTC-5.
 
 ## Running (14:20 UTC, 8 agents): touchtrack T-4076, solvespeed T-4054, solveprof T-4057, hokkaido T-3688, addtrack T-4024, trackg1 T-4037 g1 (g2 to it next), busnosnap
-T-4069 (Sonnet), crashes T-4071 (triage, stage 1 report first). Landed: T-4056 4169b78a, T-4068 73299e61 (8800 rebuild).
+T-4069 (Sonnet), crashes T-4071 (triage, stage 1 report first). Landed: T-4056 4169b78a, T-4068 73299e61 (on 8800). busnosnap T-4069 finishing checks (save level 39: own checker before landing).
 
 ## Next (11-23)
 0. Her goals, 11-23: compute speedups for T-4041 (main); loading consistency and crashes (main, short/medium term:
@@ -26,7 +26,7 @@ T-4069 (Sonnet), crashes T-4071 (triage, stage 1 report first). Landed: T-4056 4
    T-3346, coreslider T-3932, perfledger T-4025, split6. After hokkaido: sync-track, 8800 = tw/track tip, checker.
 4. TRACK (all week): on her (b), g1-g4 (notes/T-4037-design.md; g3, g4 side by side), then 4d, 4f, 5a/5b.
 
-LIVE v0.4.5. 8800 = fa196b91. Cap 14 (her daytime pick). Cores 0-1 hers (`reserve_cores.ps1 -Loop 30` at
+LIVE v0.4.5. 8800 = 73299e61. Cap 14 (her daytime pick). Cores 0-1 hers (`reserve_cores.ps1 -Loop 30` at
 takeover). Server 3b14158. Save level 38. Pad 11-22, not started: T-4046-49, T-4052, T-4053 (design to her first).
 
 ## Her words
