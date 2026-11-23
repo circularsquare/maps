@@ -22,11 +22,9 @@ her yes); T-4024 onto tw/track 3c62751b.
    quiet machine, the changelog review (46 unpublished; c051 is T-4041's). Then her text OK and her yes, in this tab.
 2. Speed (T-4054 search, T-4057 elsewhere): same-answer wins land as they report; shifting ones bring a test shape
    for her to build (orchestrator.md "Speedups that shift riders"); batch checker after.
-3. Next as slots free: T-4080 bus stop names + T-4083 manual bus-stop connections (one design: stops that keep
-   their identity across edits and saves) (after busnosnap lands: same panel/save), T-4075 (trams off their
-   track), T-3940 (crashes may take it), T-4051 (big save sits at 90% ~3 min), T-4055 (stale two-zone final, 1-2 h), then the paused
-   trees (each tree's notes): onewaylag T-4045 (after T-4054), clockmem T-3939, stationids T-4043, timetables
-   T-3346, coreslider T-3932, perfledger T-4025, split6. After hokkaido: sync-track, 8800 = tw/track tip, checker.
+3. Next: T-4080 + T-4083 (one design: bus stops keeping identity across edits/saves; after busnosnap lands),
+   T-4075, T-3940, T-4051, T-4055, paused trees (onewaylag after T-4054, clockmem, stationids, timetables,
+   coreslider, perfledger, split6). After hokkaido: sync-track, 8800 = tw/track tip, checker.
 4. TRACK (all week): on her (b), g1-g4 (notes/T-4037-design.md; g3, g4 side by side), then 4d, 4f, 5a/5b.
 
 LIVE v0.4.5. 8800 = 73299e61. Cap 14 (her daytime pick). Cores 0-1 hers (`reserve_cores.ps1 -Loop 30` at
