@@ -1,11 +1,13 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session dc375617-affd-42c6-aac0-505e37685277, name maps-44 [b23630], since 2026-11-23 12:41 UTC
-Updated: 2026-11-23 13:50 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary
+Updated: 2026-11-23 14:50 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`; diary
 notes/handoff-log.md. Her time UTC-5.
 
-## Running (14:20 UTC, 8 agents): touchtrack T-4076, solvespeed T-4054, solveprof T-4057, hokkaido T-3688, addtrack T-4024, trackg1 T-4037 g1 (g2 to it next), busnosnap
-T-4069 (Sonnet), crashes T-4071 (triage, stage 1 report first). Landed: T-4056 4169b78a, T-4068 73299e61 (on 8800). busnosnap T-4069 finishing checks (save level 39: own checker before landing).
+## Running (8 agents): solvespeed T-4054 (then T-4064), solveprof T-4057 (+T-4082 Detroit), hokkaido T-3688, trackg1
+T-4037 g1 (rebase over addtrack; g2 next), busnosnap T-4069 (finishing checks; save level 39: own checker before
+landing), crashes T-4072/T-4073 (tree crashes), busconn T-4079, community T-4077/78/81 (Sonnet; may commit
+shonei-server, deploy needs her yes). Landed: T-4056, T-4068 (8800 73299e61), T-4076 d0a09297; T-4024 onto tw/track.
 
 ## Next (11-23)
 0. Her goals, 11-23: compute speedups for T-4041 (main); loading consistency and crashes (main, short/medium term:
@@ -20,9 +22,8 @@ T-4069 (Sonnet), crashes T-4071 (triage, stage 1 report first). Landed: T-4056 4
    quiet machine, the changelog review (46 unpublished; c051 is T-4041's). Then her text OK and her yes, in this tab.
 2. Speed (T-4054 search, T-4057 elsewhere): same-answer wins land as they report; shifting ones bring a test shape
    for her to build (orchestrator.md "Speedups that shift riders"); batch checker after.
-3. Next as slots free: community trio T-4077/4078/4081 (one Sonnet), T-4080 bus stop names, T-4079 after her
-   timing answer (a-2026-11-23-5); T-4082 Detroit save sent to solveprof; T-4075 (trams off their track), T-4064 on her
-   yes (branch riders; search.rs: solvespeed's file, so after it or to it), T-4051 (big save sits at 90% ~3 min), T-4055 (stale two-zone final, 1-2 h), then the paused
+3. Next as slots free: T-4080 bus stop names (after busnosnap lands: same panel/save), T-4075 (trams off their
+   track), T-3940 (crashes may take it), T-4051 (big save sits at 90% ~3 min), T-4055 (stale two-zone final, 1-2 h), then the paused
    trees (each tree's notes): onewaylag T-4045 (after T-4054), clockmem T-3939, stationids T-4043, timetables
    T-3346, coreslider T-3932, perfledger T-4025, split6. After hokkaido: sync-track, 8800 = tw/track tip, checker.
 4. TRACK (all week): on her (b), g1-g4 (notes/T-4037-design.md; g3, g4 side by side), then 4d, 4f, 5a/5b.

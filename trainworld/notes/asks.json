@@ -12,12 +12,5 @@
     "text": "Spanish internet providers block Cloudflare's shared addresses during football matches, and both the game and its data sit on them, so Spanish players on those providers can't load the game then (one report; the account server isn't on Cloudflare). A fallback host off Cloudflare would be 4-6 h plus an extra upload every publish. Leave it (T-4074)? I'd leave it.",
     "since": "2026-11-23",
     "by": "maps-44"
-  },
-  {
-    "id": "a-2026-11-23-5",
-    "title": "Bus connections: timing and look",
-    "text": "For bus connections (T-4079): bus stops connect within a smaller radius, drawn dashed and timed as a plain walk; BRT stations get dashed auto connections plus white passages built manually; bus stops can't have passages. For the timing you weren't sure about: I'd make the built passage save 2 minutes and leave plain connections as today's walk, so nothing existing gets slower and a passage is a clear upgrade you paid for. OK, or the other way round (plain connections lose 2 minutes)?",
-    "since": "2026-11-23",
-    "by": "maps-44"
   }
 ]
