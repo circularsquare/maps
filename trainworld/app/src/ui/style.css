@@ -1265,6 +1265,13 @@ button.status-tag:hover { background: var(--shade); color: var(--text); }
 .no-market-note { position: absolute; left: 8px; right: 8px; bottom: 26px; z-index: 8; zoom: var(--ui, 1); display: flex; align-items: center; justify-content: space-between; gap: 8px;
   padding: 4px 4px 4px 10px; background: var(--bg); border: 1px solid var(--accent); color: var(--text); font-size: 13px; pointer-events: none; }
 .no-market-note .btn { flex: none; pointer-events: auto; }
+/* T-4106: the install note, clear of the map's attribution button under it, its Install and close buttons side by
+   side. Never over the tutorial card: hidden while the whole card is out, which is always except on a phone held
+   upright with the card folded (the card's rules below). */
+.install-banner { bottom: 40px; }
+.install-acts { flex: none; display: flex; align-items: center; gap: 4px; }
+body:has(.guide.open) .install-banner { display: none; }
+@media not ((max-width: 600px) and (min-height: 560px)) { body:has(.guide) .install-banner { display: none; } }
 .dsn-row { display: flex; align-items: center; gap: 10px; }
 .dsn-row span { min-width: 0; }
 .dsn-row .btn { flex: none; border-color: var(--bad); color: var(--bad); }

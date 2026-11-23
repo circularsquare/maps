@@ -101,6 +101,7 @@ import { figuresPeaks, figuresStopped, watchFigures } from "./game/figuresStoppe
 import { ModelStopped } from "./ui/ModelStopped";
 import { DeviceNote, deviceNoteApplies } from "./ui/DeviceNote";
 import { RetryNote } from "./ui/RetryNote";
+import { InstallBanner, installBannerApplies } from "./ui/InstallBanner";
 import { retryDiedLoad, retryLoadsInPage } from "./game/oomRetry";
 import { MapSky, TopBar } from "./ui/TopBar";
 import { cycleDemandEnd, MapTopLeft } from "./ui/DemandSelector";
@@ -240,6 +241,12 @@ if (deviceNoteApplies()) {
   const noMarketRoot = document.createElement("div");
   map.getContainer().appendChild(noMarketRoot);
   render(h(DeviceNote, null), noMarketRoot);
+}
+// T-4106: on a phone or tablet after 2 hours of play, how to install the game as an app
+if (installBannerApplies()) {
+  const installRoot = document.createElement("div");
+  map.getContainer().appendChild(installRoot);
+  render(h(InstallBanner, null), installRoot);
 }
 // T-3933: a load that ran out of memory opened again with fewer workers
 if (lastDied) {

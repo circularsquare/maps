@@ -12,7 +12,9 @@ import { mobileDevice } from "../workers/deviceMemory";
 import { Icon } from "./widgets";
 
 const SHOWN_MS = 45_000;
-const shown = signal(false);
+/** the note is on show (ui/InstallBanner.tsx waits for it: they share a place) */
+export const deviceNoteShown = signal(false);
+const shown = deviceNoteShown;
 let timer = 0;
 
 /** The browser says the device has 4 GB or less (never a guess: Firefox and Safari do not say). */

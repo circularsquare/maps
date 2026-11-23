@@ -388,7 +388,9 @@ The game installs as a phone app (T-3815): `app/public/manifest.webmanifest` (re
 the pink theme's background) and `icon-192.png`, `icon-512.png`, `icon-maskable-512.png` (the favicon glyph on that background),
 linked from `app/index.html` with the iOS tags; `deploy.py` copies them with the rest of dist. There is no service worker and no
 offline caching, on purpose: it can pin an old build after an update, and offline play is for the Steam release. Chrome
-offers Install without one (checked with `Page.getInstallabilityErrors`, Chrome 157).
+offers Install without one (checked with `Page.getInstallabilityErrors`, Chrome 157), and fires `beforeinstallprompt` too.
+After 2 hours of play in a browser (`game/hoursPlayed.ts`) a phone or tablet gets a note at the bottom of the map on how to
+install, closed for good with its x (T-4106, `ui/InstallBanner.tsx`).
 
 ## checks/: standing checks
 
