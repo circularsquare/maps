@@ -186,12 +186,13 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
   - Context: You, 11-23: "edit speed is actually still kind of a problem... noticeable on my end for big worlds... i feel like there was a point at which we had edit speed almost instant, but then might have regressed". Mostly placing track and editing stops. T-3550, T-1211, T-3804, T-1031 are back at P2 under this.
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
-- T-4136 [P1] {L:edit-speed} The track ghost lags behind the cursor (taking, 2026-11-23, agent ghostlag)
-  - Context: You, 11-23: "a major complaint is just that the rail placement ghost lags behind the cursor ... its like one of the things thats most important to feel responsive". T-1779 and T-3263 fixed earlier causes.
-  - Goal: The ghost follows the pointer every frame on the Asia and NYC saves, also while trips calculate; the checked shape catches up after.
 - T-4139 [P1] {L:edit-speed} One edit-wait bench for every edit-speed task (taking, 2026-11-23, agent editbench)
   - Context: 11-23: each edit-speed agent re-measures with its own scripts on a loaded machine (2-5x swing), so gains are slow to show; perf_bench's fixed edit places no station.
   - Goal: One command timing ghost trail, station, stop click, Construct, line delete and undo on Asia and NYC on quiet cores, logged per build.
+- T-4142 [P2] {L:edit-speed} {after:T-4114} Frames drop while drawing track during a calculation
+  - Context: From T-4136: on the Asia save while trips calculate, drawing track runs at 3-18 frames a second (55 with no track started); likely the worker running previews back to back beside trip workers on a busy machine.
+  - Goal: At most one preview per frame, or whatever the measurement shows; 30+ frames a second while drawing track on Asia during a calculation.
+  - Other: notes/T-4136.md
 - T-4114 [P1] {L:edit-speed} Edits show at the click, lines first (taking, 2026-11-23, agent lineclick)
   - Context: You, 11-23 on 8800: still slow are "creating a new line, or deleting a line, or seeing the line visually change its length after adding or removing some stops". Design: notes/T-4097.md section 3, 9-13 h in parts.
   - Goal: Stage 1: a line's new path after stop clicks, and a deleted line, show at the click on the Asia save; then Construct, track, undo as later stages.
