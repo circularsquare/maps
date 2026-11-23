@@ -20,6 +20,7 @@ serve a map, for her and for your own screenshots; don't start another server fo
     python serve.py list
     python serve.py add <name> <folder with index.html> "a few words"
     python serve.py remove <name>
+    python serve.py hide <name>      # still served, off the front page (twnotes, which the board reads); show undoes it
 
 - Register a map when you start real work on one that is not listed; remove one only when she says. Use the
   commands, not a hand edit (they lock the file). No restart needed.
