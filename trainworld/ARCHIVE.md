@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3781 [P1] {L:loading} Demand data not loading within 10 minutes (2026-11-23): closed without code: Folded into T-4072 (11-23): report 1795238894-92519822 is the new diagnosis it waited for; the stuck Safari load is T-4072's.
 - T-3246 [P2] {L:wealth-split} Income groups for local trips (2026-11-23): closed without code: Anita 11-23: no, can re-drop it and maybe come back if we find lots of time savings.
 - T-4068 [P2] {L:small-fixes} Shift click deletes without asking (2026-11-23): Shift+click skips confirmation on six delete/remove controls, undo unchanged; irreversible deletes still ask; hover line Shift+click to skip confirmation (her wording). notes/T-4068.md.
 - T-4056 [P1] {L:buses} Bus walking reach back to 600 m (2026-11-23): BUS_REACH_M and the corridor outline back to 600 m, docs with it; tests 955 pass, smoke 30/30; c032 hidden. notes/T-4056.md.

@@ -112,10 +112,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4025 [P2] {L:loading} {after:next week's usage} Load time and memory ledger per publish
   - Context: Paused 11-22 for the week's usage, a draft bench script in tree perfledger (doesn't run yet; what's left and the v0.4.3-v0.4.5 commits in the tree's notes/T-4025.md). You, 11-22: "ok can start now". You, 11-21: You, 11-21: "over the past few updates we've kinda been doing some performance improvements blind and in some cases load times actually have gone up a lot, then we hammer them down, then something else pushes them back up. possibly the same for memory." No standing record exists; each task measured its own way.
   - Goal: A fixed bench of saves (new NYC, real NYC, London, all-China, a phone Tokyo start) measured the same way each time: load time (median of 3 on claimed cores), each worker's CPU time and WASM peak, page heap, bytes downloaded, plus counts of work done (zones solved, rounds, rows) that don't depend on machine load; one script runs it on any build and appends to a ledger with the build id, and flags anything 10% worse than the last publish. Run on v0.4.3-v0.4.5 and master to start the history, then at every publish (a publish skill step).
-- T-3781 [P1] {L:loading} {after:a report with the new diagnosis} Demand data not loading within 10 minutes
-  - Context: Two anonymous reports on v0.4.2 (feedback 1795092485-688b2e15, 1795083347-52a31102), plus a third, "crashes every time it opens" (1795097335-fa20c413), all Japanese, 11-19 (board group g115). Their saves load normally on master. A stuck load now restarts once, and the report names the stuck worker and period (tree demandload). Also cities not loading on Safari and iPad (feedback 1794957009, 1794891212; found by T-3632). The five iPhone crash reports of 11-19 to 11-20 (3 accounts, read 11-21 on your yes) were all out-of-memory screens loading Tokyo-start games of 1,156-2,090 stations; their tab peaks 1,254-1,705 MB on an emulated iPhone against iOS's 1.4-2 GB limit (T-3160, T-3939, T-3940; notes/T-3781.md "The iPhone crash reports").
-  - Goal: The cause found from the next report's diagnosis, or closed if no report comes.
-  - Other: notes/T-3781.md
 - T-3780 [P2] {L:timetables} {after:T-3346 stage 2 landing} Station and complex timetables
   - Context: Your pad, 2026-11-19: players ask for per-station timetables, "could be cool and not so hard". Per station and per complex, every line in its line colour; for a complex, pick the direction most platforms roughly align with and show trains as that way or the opposite ("eastbound"), "people should mostly use the station timetables anyways"; line numbers show the bullet and line name on hover; opened by a timetable icon button on the station or complex view, like the line's schedule button. Waits for the timetables port so it reads the new departure times.
   - Goal: A timetable icon on the station and complex views opens departures by line in line colours, a complex's split into two directions, with bullet and line name on hover.
@@ -179,6 +175,18 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4051 [P2] {L:loading} Opening a zone on a big save sits at 90%
   - Context: You, 11-22, playing live v0.4.5 on your large North America save: opening Medellin sat on "loading data" with the bar stuck at 90% for about 2 minutes, then loaded; the tab was at 4 GB and one core was busy the whole time. "really not good for player experience". Reach: anyone with a big save opening a new zone. Done 11-22: every load bar now shows what used to read 90% as half full (your idea), so the wait itself is what is left. Later that evening: "loading basically anylargeish new city makes me wait for like 3 minutes. even with "use more cores" enabled im using like 4700mb", Managua the same; but "its not super consistent tbh. puebla actually loaded quite fast. im guessing its something where we're failing and retrying." After T-4041.
   - Goal: What the last 10% waits on named and timed on a big save; the wait cut, and the bar showing progress through it.
+- T-4072 [P2] {L:loading} Loads stuck before the game appears on Mac Safari (taking, 2026-11-23, agent crashes)
+  - Context: From T-4071: 3 reports on v0.4.5, 2 Macs (Safari 26.6.2 in Japan; Safari 17.6 in China, twice). On the first the clock worker took over 10 minutes between reading the save and its first state, likely waiting on water mask downloads (up to 6 minutes per 32 zones, twice over); on the second no worker ever started. Reports can't name the wait yet: the clock line has no step or pending downloads.
+  - Goal: The clock line and the timeout's reason name the stuck step (about 45 min); then the load stops waiting on late masks the way it already does for terrain, and a worker that never starts is restarted once before the failure screen.
+  - Other: notes/T-4071.md group 2
+- T-4073 [P3] {L:small-fixes} Graphics lost at startup reads as a page stop (taking, 2026-11-23, agent crashes)
+  - Context: From T-4071: a Mac Safari 27 player's page started with its graphics already lost and showed "the page stopped during startup (shader: null)" instead of the graphics screen. 1 report.
+  - Goal: A context lost while the page starts waits for its return, else shows the restart-the-browser screen (about 45 min).
+  - Other: notes/T-4071.md group 5
+- T-4074 [P4] {L:loading} {waits:Anita} Spain blocks the game during football matches
+  - Need from Anita: Whether to keep a copy of the game and its data off Cloudflare for players in Spain; I'd leave it (a VPN works, the blocks last hours).
+  - Context: From T-4071 (feedback 1795377906): Spanish ISPs block Cloudflare's shared addresses during LaLiga matches by court order. anita.garden and data.anita.garden both sit on them; the account server does not. A fallback would be a data mirror plus a page off Cloudflare, 4-6 h plus an upload at every publish.
+  - Other: notes/T-4071.md group 3
 - T-4052 [P3] {L:buses} Fewer riders shown waiting at bus stops
   - Context: Your scratch pad, 11-22: "i think we might allow an unrealistic number of people to pile up at bus stops, should probably show a lower number more in line with other stations to not make players alarmed by big number".
 - T-4053 [P3] {L:borders} Common language border factor
@@ -719,6 +727,10 @@ Anita's notes 2026-11-04 evening (verbatim in notes/todo-2026-11-04f.md; briefs 
   - Context: Tunnels should join land only at their two ends, not draw onto the water (T-2418 fix 2).
   - Goal: Tunnels fixed worldwide, with checks for Hong Kong Island, Haneda and Umihotaru.
   - Other: About 1h45 and 67 GB of re-read extracts. notes/T-2418.md
+- T-4065 [P3] {L:world-rebuild} Long-trip pull table out of date
+  - Context: Working `market_pull.json` out again on 11-22 gave different pulls in 923 zones (zones and countries added since it was written), so T-3688 wrote only Hokkaido's rows.
+  - Goal: The whole table rewritten with `market_pull.py`, and the market packs it changes rebuilt with the next world rebuild.
+  - Other: notes/T-3688.md
 - T-3519 [P3] {L:world-rebuild} {after:next data batch} Rural 4 km zones for the packs still without them
   - Context: You decided on 2026-10-21 (T-852) that existing countries take the 4 km rural blocks at their next routes rebuild, but thin packs such as Barrie, North Bay and Sol Plaatjie still have none (`world_run.py --coarse` is off by default). There farm cells of under one person, each alone in its 2 km zone, are 13-53% of cells; simulated, the blocks would about halve them and halve the zones.
   - Goal: Thin regions rebuilt with `--coarse 1000`, tiny cells about halved (Barrie 12.6% to about 7%), 1-2 MB less per demand worker in the thinnest packs.
