@@ -5,14 +5,17 @@ Updated: 2026-11-23 20:08 UTC. Live state: `venv\Scripts\python.exe trainworld/t
 diary notes/handoff-log.md. Her time UTC-5.
 
 ## In flight (adopt from the board)
-- lineclick T-4114 stage 1 (opus: her slow cases, line path and line delete at the click); retime T-4132 (opus); editbench T-4139 (sonnet, tools/edit_bench.mjs; reuse perf_bench's core
+- retime T-4132 (opus); editbench T-4139 (sonnet, tools/edit_bench.mjs; reuse perf_bench's core
   claim, pin and over-cap refusal); rampport T-4112 (sonnet: port tw/track 269568c2 ramp fix
   to master; master has the bug).
 - stationwater landed on tw/track 269568c2 (22:26), tree removed; its changelog item is parked in next-track.json, so hide the duplicate the port adds at the release merge. Track build not rebuilt: snaptrack needs sync-track first, which still conflicts (waits for the rework resume); she sees the fix on 8800 once rampport lands. T-4124 closed,
   measured not landed (no in-game gain, memory +13-15%); code on branch tw/onegraph-measured. 8800 = d4eabb5c6;
   master has T-4138 since. Landed 22:42: madison T-4140 (far ends in own zone; ask a-2026-11-23-17 on a minimum bubble size), regionfix T-4137
   (rows never wrong). ghostlag T-4136 landed 22:52 (ghost on the cursor; T-4142 filed for frame drops while calculating, after lineclick).
-  8800 rebuild to 32fcea080 22:53. searchleft T-4054 started (entry_costs, u16 shares). Batch check
+  8800 = 32fcea080 (22:54). Her: ghost "feels a lot better", first click can take seconds: firstclick T-4143 (opus).
+  Her 23:0x: plan all edit types together and run them in parallel: editplan T-4144 (opus, plan only, ~90 min); then
+  launch its 3-5 streams at once. lineclick T-4114 landed 23:09 (ef99d979, about 95% off stop-click path); 8800 rebuild
+  started. Batch check due: rampport + regionfix + lineclick (toggleStop edit) once rampport lands. searchleft T-4054 started (entry_costs, u16 shares). Batch check
   due for rampport (track split) + regionfix when rampport lands.
 
 ## Next

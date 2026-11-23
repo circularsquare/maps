@@ -189,14 +189,17 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4139 [P1] {L:edit-speed} One edit-wait bench for every edit-speed task (taking, 2026-11-23, agent editbench)
   - Context: 11-23: each edit-speed agent re-measures with its own scripts on a loaded machine (2-5x swing), so gains are slow to show; perf_bench's fixed edit places no station.
   - Goal: One command timing ghost trail, station, stop click, Construct, line delete and undo on Asia and NYC on quiet cores, logged per build.
+- T-4144 [P1] {L:edit-speed} Every kind of edit shows at once, planned together (taking, 2026-11-23, agent editplan)
+  - Context: You, 11-23: "shouldnt we know ahead of time what sort of things we might want to account for, and do them all? ... we should do these in parallel if possible rather than me having to bring up everyone individually".
+  - Goal: Every edit and hover listed with its wait on the Asia save, one shared way to show edits at once, and the work split into parallel streams.
+  - Other: notes/T-4097.md section 3
+- T-4143 [P1] {L:edit-speed} The first click of a track takes seconds to register (taking, 2026-11-23, agent firstclick)
+  - Context: You, 11-23 on 8800 after T-4136: "feels a lot better! for the initial click it can take a couple seconds to register sometimes, but after the initial click the ghost feels significantly better."
+  - Goal: The first click shows its start at once on the Asia and NYC saves, also while trips calculate; the cause measured.
 - T-4142 [P2] {L:edit-speed} {after:T-4114} Frames drop while drawing track during a calculation
   - Context: From T-4136: on the Asia save while trips calculate, drawing track runs at 3-18 frames a second (55 with no track started); likely the worker running previews back to back beside trip workers on a busy machine.
   - Goal: At most one preview per frame, or whatever the measurement shows; 30+ frames a second while drawing track on Asia during a calculation.
   - Other: notes/T-4136.md
-- T-4114 [P1] {L:edit-speed} Edits show at the click, lines first (taking, 2026-11-23, agent lineclick)
-  - Context: You, 11-23 on 8800: still slow are "creating a new line, or deleting a line, or seeing the line visually change its length after adding or removing some stops". Design: notes/T-4097.md section 3, 9-13 h in parts.
-  - Goal: Stage 1: a line's new path after stop clicks, and a deleted line, show at the click on the Asia save; then Construct, track, undo as later stages.
-  - Other: notes/T-4097.md
 - T-4112 [P1] {L:station-placement} Station on a curve refused for water at a far ramp, on master (taking, 2026-11-23, agent rampport)
   - Context: You, 11-23, on the track build: a station on a high speed blueprint refused "track at ground level can't cross water" far from the ramp. Cause: splitting a curve moved its ramp. Fixed on tw/track (269568c2); master has the same bug.
   - Goal: The same fix ported to master, with its test; 0 water refusals in the probe.

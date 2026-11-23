@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4114 [P1] {L:edit-speed} Edits show at the click, lines first (2026-11-23): Stage 1: Asia end stop added 2.7-3.5 s to 0.10-0.18 s (about 95% off), new line's second stop 1.7-2.8 s to 0.1 s, end stop out and line delete at the click; NYC about 95% off; New line button itself unchanged (rest folded into T-4144's plan) notes/T-4114.md.
 - T-4136 [P1] {L:edit-speed} The track ghost lags behind the cursor (2026-11-23): Trailing 40-86 px (up to 309) on Asia to 0 px at p50 and p90; 97-100% of moves drawn next frame; causes: stale answers dropped, preview cost 70% of the wait, full network redraw per update; frames still 3-18/s on Asia while calculating. notes/T-4136.md.
 - T-4137 [P1] {L:edit-speed} Regions drift from a fresh build after an edge delete (2026-11-23): Regions.sync's same-count path now removes gone touched records; rows were never wrong (drift only in how finely regions are cut); t1382-rows Asia 1-20 and NYC 1-24 pass, smoke passed. notes/T-4137.md.
 - T-4140 [P2] {L:demand-ideas} A bubble's far ends inside its own zone (2026-11-23): Own-zone 6 km parts 50 km+ from the selection's busiest cell drawn as far ends (T-139's overlap kept out by the 50 km floor); La Crosse 35 trips/day per part, explorer opens; bubbles 1-2 px at the T-1246 scale. notes/T-4140.md.
