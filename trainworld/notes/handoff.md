@@ -13,8 +13,7 @@ shonei-server, deploy needs her yes). Landed: T-4056, T-4068 (8800 73299e61), T-
 0. Her goals, 11-23: compute speedups for T-4041 (main); loading consistency and crashes (main, short/medium term:
    T-4071); polish first-arrival riding; track rework all week. 2-8 agents this week ("more focused work"). Speedups
    may shift riders (orchestrator.md, trial). Resend over its cap is fine. Publish: "we will see", don't ask.
-1. PUBLISH when ready (never ask her when): can ship on freeze 20261122-044711 (has Manila,
-   Muzaffarpur and the old Hokkaido; data/packs lacks old Hokkaido until hokkaido lands). Landed since
+1. PUBLISH when ready (never ask her when): freeze 20261122-044711 works (old Hokkaido) until hokkaido lands. Since
    v0.4.5 and checked (batch 13 on 547389c2; batch 14 and 15 on master 5e4ac09f): T-4041 riders take the line that
    arrives first (0.75 softening, late joins), T-4050 evenly spaced shared platforms, T-4054 stage 1, T-1354, T-4040,
    load bars (skew + fill at end). Before it: fresh freeze, translations (T-3986, T-3991, T-3999, T-4003, T-4010,
