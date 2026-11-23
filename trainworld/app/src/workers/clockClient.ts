@@ -461,11 +461,6 @@ export async function calculateTrips(): Promise<string> {
   if (!bytes) return t("clockClient.reopenFailed");
   return await openView(bytes, v.name, true, false) ?? "";
 }
-/** T-3940: saved game `key` opened without calculating trips and paused, from where no game is in hand (the start
- * menu, the failure screen after a load that died): its network loads with no demand pool, the lightest load there is. */
-export function openWithoutTrips(key: string) {
-  location.replace(pageWith({ slot: key, trips: "off", paused: "1" }));
-}
 /** T-3257: before a viewed network (never saved) gives way to another game or the start menu, the player is asked;
  * true to go on. True at once for any other game. */
 export function leaveViewed(): Promise<boolean> {

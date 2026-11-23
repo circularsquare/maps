@@ -4,8 +4,8 @@ import { bigForTab, deviceText, estimateGB, gbText, overBudget } from "../game/m
 import { t } from "../i18n";
 
 /** The warning for a game of `stations`, with Open anyway and Cancel. T-3940: `died`, the game's last load in this
- * browser never finished; `onLight`, a third button that opens it without calculating trips. */
-export function MemoryWarn({ stations, died, onGo, onLight, onCancel }: { stations: number; died?: boolean; onGo: () => void; onLight?: () => void; onCancel: () => void }) {
+ * browser never finished. */
+export function MemoryWarn({ stations, died, onGo, onCancel }: { stations: number; died?: boolean; onGo: () => void; onCancel: () => void }) {
   const text = died ? t("savesPanel.memoryWarnDied")
     : bigForTab(stations) ? t("savesPanel.memoryWarnPhone")
     : t("savesPanel.memoryWarn", { need: gbText(estimateGB(stations)), have: deviceText() });
@@ -13,7 +13,6 @@ export function MemoryWarn({ stations, died, onGo, onLight, onCancel }: { statio
     <p>{text}</p>
     <div class="pane-foot">
       <button class="btn text danger" onClick={onGo}>{t("savesPanel.openAnyway")}</button>
-      {onLight && <button class="btn text memory-warn-light" onClick={onLight}>{t("common.openWithoutTrips")}</button>}
       <button class="btn text" onClick={onCancel}>{t("savesPanel.openCancel")}</button>
     </div>
   </div>;

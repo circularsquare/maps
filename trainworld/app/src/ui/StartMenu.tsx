@@ -12,7 +12,7 @@ import { display, dropMarket } from "../game/ui";
 import { FeedbackOpen } from "./FeedbackPanel";
 import { IntercityCheck, MoreCoresCheck, UiScaleStepper } from "./SettingsTab";
 import { failLists, listSlots, newGameName, StorageReadError, type SaveSlot } from "../workers/saveFile";
-import { backupChoice, CHOICE_PARAMS, fileChoice, openWithoutTrips, type GameChoice } from "../workers/clockClient";
+import { backupChoice, CHOICE_PARAMS, fileChoice, type GameChoice } from "../workers/clockClient";
 import { groupHeads, groupVersions, type GameGroup, type Version } from "../workers/versions";
 import { saveRefusal } from "../game/memoryCheck";
 import { overBudget } from "../game/memoryEstimate";
@@ -41,8 +41,7 @@ const VERSION = typeof __TW_VERSION__ === "string" ? __TW_VERSION__ : "dev";
  * normal in New York unless `&mode=sandbox` or `&city=<zone id>` say otherwise (T-728), `&side=left|right` its
  * running side (T-3297);
  * `?synth=1`, `?demandTest=1`, `?paused=1` and `?continue=1` the game opened last; `?slot=<key>` and
- * `?load=file|restore|new` the game the saves panel picked (T-1196), with `&trips=off` without calculating trips
- * (T-3851; a slot's, T-3940); `?next=new` the menu, which starts the
+ * `?load=file|restore|new` the game the saves panel picked (T-1196); `?next=new` the menu, which starts the
  * saves panel's new game (T-3478). */
 export function choiceFromUrl(): GameChoice | null {
   const q = new URLSearchParams(location.search);
@@ -58,11 +57,11 @@ export function choiceFromUrl(): GameChoice | null {
   if (slot || load || next) {
     const u = new URL(location.href);
     for (const k of CHOICE_PARAMS) u.searchParams.delete(k);
-    // T-4002: a viewed network's pause is for its opening only (main.ts read it already); T-3940: a slot's without trips too
-    if (load || q.get("trips") === "off") u.searchParams.delete("paused");
+    // T-4002: a viewed network's pause is for its opening only (main.ts read it already)
+    if (load) u.searchParams.delete("paused");
     history.replaceState(history.state, "", u.href);
   }
-  if (slot) return { slot, ...(q.get("trips") === "off" ? { noTrips: true } : {}) };
+  if (slot) return { slot };
   if (load === "new") {
     const city = q.get("city");
     return { pending: true, newGame: !on("real"), game: { mode: q.get("mode") === "sandbox" ? "sandbox" : "normal", ...(isCity(city) ? { start: city! } : {}) } };
@@ -278,8 +277,7 @@ function Menu({ slots: first0, unread: unread0, pick: pickGame, settling }: { sl
                 </button>
                 <button class="btn icon start-delete" data-tip={t("startMenu.delete")} aria-label={t("startMenu.deleteGame", { name: s.name })} onClick={() => setRemoving(g.origin)}><Icon.bin /></button>
               </div>
-              {memWarn?.key === s.key && <MemoryWarn stations={memWarn.stations} died={s.key === died} onGo={() => { setMemWarn(null); void open(s.key); }} onCancel={() => setMemWarn(null)}
-                onLight={s.key.startsWith("account:") ? undefined : () => openWithoutTrips(s.key)} />}
+              {memWarn?.key === s.key && <MemoryWarn stations={memWarn.stations} died={s.key === died} onGo={() => { setMemWarn(null); void open(s.key); }} onCancel={() => setMemWarn(null)} />}
               <VersionsLine group={g} now={now} act={actions(g)} />
               {removing === g.origin && <div class="callout bad">
                 <DeleteAsk group={g} yesLabel={t("startMenu.deleteSave")} keepLabel={t("startMenu.keepIt")} yesClass="start-delete-yes" onYes={() => void remove(groupHeads(g))} onKeep={() => setRemoving(null)} />

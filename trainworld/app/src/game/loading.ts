@@ -107,10 +107,10 @@ export const gameWait = () => wait;
  * the last game's "last" */
 export const waitKey = (choice: { slot?: string; newGame?: boolean; pending?: boolean }) => choice.slot ?? (choice.newGame ? "new" : choice.pending ? "pending" : "last");
 /** The start menu's pick (main.ts): the startup wait begins. */
-export function startGameWait(key: string, choice?: { slot?: string; newGame?: boolean; pending?: boolean; noTrips?: boolean; game?: { real?: unknown; start?: string } }) {
+export function startGameWait(key: string, choice?: { slot?: string; newGame?: boolean; pending?: boolean; game?: { real?: unknown; start?: string } }) {
   // T-3927: the kind for a died-load report (the slot's name stays out of it)
   const kind = !choice ? "unknown" : choice.game?.real ? "real network" : choice.newGame ? "new game" : choice.pending ? "file, backup or shared game" : "saved slot";
-  setLoadFlag(true, kind, !!choice?.noTrips);
+  setLoadFlag(true, kind);
   if (choice?.game?.start) noteLoad("picked", { city: choice.game.start });
   wait ={ seq: wait.seq, since: performance.now(), key };
   gameReady.value = false;
@@ -254,8 +254,8 @@ const LOAD_FLAG = "tw-load-started";
  * T-3933: also what a retry needs, kept out of the report: the most solving workers the load ran (`workers`; a worker
  * that ran out of memory may have cut them before the tab died), the slot the game is in once the page knows it
  * (`slot`), whether this load is itself the retry of one that died (`retry`), and whether the page saw its failure and
- * reloaded for the retry (`caught`). T-3940: whether the load was without calculating trips (`light`). */
-interface LoadMark { kind: string; zones?: string; city?: string; stations?: number; lines?: number; step: string; ms: number; workers?: number; slot?: string; retry?: boolean; caught?: boolean; light?: boolean }
+ * reloaded for the retry (`caught`). */
+interface LoadMark { kind: string; zones?: string; city?: string; stations?: number; lines?: number; step: string; ms: number; workers?: number; slot?: string; retry?: boolean; caught?: boolean }
 let mark: (LoadMark & { t0: number }) | null = null;
 /** T-3933: the next load to start is the retry of one that died (main.ts) */
 let nextIsRetry = false;
@@ -266,8 +266,8 @@ function writeMark() {
     sessionStorage.setItem(LOAD_FLAG, JSON.stringify(out));
   } catch { /* storage unavailable */ }
 }
-function setLoadFlag(on: boolean, kind = "unknown", light = false) {
-  if (on) { mark = { kind, step: "picked", ms: 0, t0: Date.now(), ...(nextIsRetry ? { retry: true } : {}), ...(light ? { light } : {}) }; nextIsRetry = false; }
+function setLoadFlag(on: boolean, kind = "unknown") {
+  if (on) { mark = { kind, step: "picked", ms: 0, t0: Date.now(), ...(nextIsRetry ? { retry: true } : {}) }; nextIsRetry = false; }
   else mark = null;
   writeMark();
 }
@@ -325,7 +325,7 @@ export function noteClockStep(step: string) {
 }
 export const clockStepNow = () => (clockStep ? `${clockStep.step}, ${Math.round((performance.now() - clockStep.at) / 1000)} s ago` : ""); // i18n-ignore
 /** T-3933: what a retry of the died load needs (null when none died, or an old flag) */
-let died: Pick<LoadMark, "workers" | "slot" | "retry" | "light"> | null = null;
+let died: Pick<LoadMark, "workers" | "slot" | "retry"> | null = null;
 export const diedLoad = () => died;
 /** Whether the last load in this tab never ended; the flag is cleared. */
 export function lastLoadDied(): boolean {
@@ -345,14 +345,12 @@ export function lastLoadDied(): boolean {
           m.workers !== undefined ? `up to ${m.workers} solving workers` : "",
           m.retry ? "it was the retry with fewer workers" : "",
           m.caught ? "a worker ran out of memory and the page reloaded to load it again" : "",
-          m.light ? "opened without calculating trips" : "",
           `last step: ${String(m.step ?? "?").slice(0, 80)}, ${secs(m.ms)} s after the pick`,
         ].filter(Boolean).join("; ");
         died = {
           workers: Number.isInteger(m.workers) && m.workers! >= 1 ? m.workers : undefined,
           slot: typeof m.slot === "string" && m.slot ? m.slot : undefined,
           retry: m.retry === true,
-          light: m.light === true,
         };
         if (died.slot) setDiedSlot(died.slot);
       }
@@ -391,11 +389,9 @@ if (typeof addEventListener === "function") addEventListener("pagehide", () => {
 effect(() => {
   if (!(gameReady.value || demandIdle.value) || leavingForRetry) return;
   // T-3940: the slot that died loaded whole this time
-  if (mark?.slot && mark.slot === diedSlot() && !mark.light && !loadFailure.peek()) setDiedSlot(null);
+  if (mark?.slot && mark.slot === diedSlot() && !loadFailure.peek()) setDiedSlot(null);
   setLoadFlag(false);
 });
-/** T-3940: the slot of the load that died, to open without calculating trips; null when none, or it already was. */
-export const lightRescue = (): string | null => (died?.slot && !died.light ? died.slot : null);
 
 /** Demand could not load. At startup the loading screen says so and offers a way on; later the
  * clock is released at once, since there is no result to wait for. `retried`: T-3933's retry already passed on it. */

@@ -576,7 +576,6 @@
   "colourPicker.hue": "Screen-reader label of the colour picker's hue strip.",
   "colourPicker.hex": "Screen-reader label of the colour picker's text box holding a colour as a hex code such as #3366cc.",
   "common.aboutGame": "Link at the foot of the start menu and of Settings that opens the game's about page on Anita's site in a new tab (what the game is, who made it, its data sources).",
-  "common.openWithoutTrips": "Button in the memory warning under a saved game and on the out of memory screen: opens that game with its track, stations and trains but without working out anyone's trips (no riders or fares), which needs far less memory.",
   "common.shiftSkip": "Grey last line of the hover on a delete or remove button or tool (delete tool, Delete line, Remove station, Remove building, Remove fare area, Remove in the selection bar). Shift is the key; holding it while clicking skips the are-you-sure question.",
   "common.upkeepDay": "Line in the hovers of station upgrade buttons (station panel, line panel): what the thing bought costs every game day. amount: \"$5k\".",
   "commutersInspector.areas": "Small line under the title of the commuters view: how many map areas were picked. count: 1, 3.",

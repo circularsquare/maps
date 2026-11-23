@@ -31,8 +31,6 @@ function retryWorkers(d: Load): number | null {
 export function retryDiedLoad(): GameChoice | null {
   const d = diedLoad();
   if (!d) return no("an older flag");
-  // T-3940: no demand workers ran, so a retry with fewer would open it with its trips, a heavier load
-  if (d.light) return no("it was opened without calculating trips");
   const fewer = retryWorkers(d);
   if (fewer === null) return null;
   if (!d.slot) return no("its game was not in a slot yet");

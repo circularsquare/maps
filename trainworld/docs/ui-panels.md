@@ -1154,7 +1154,7 @@ stations or more is red and asks "This game is big for a phone or tablet and may
 the shipped Tokyo start, 1,454 stations, loads; players' games of 1,646-2,090 died on iPhones, notes/T-3940.md]. Elsewhere (desktop
 Safari and Firefox) the line is plain and nothing asks. On the start menu the saved game whose load last died in this browser
 asks too, whatever its size: "This game ran out of memory the last time it loaded." (until it loads with its trips), and the
-start menu's question has a third button, Open without calculating trips (the light load below, on a saved game, paused).
+start menu's question has Open anyway and Cancel.
 This is separate from the refusal [T-1197], which judges a save by its zones and still blocks a game no worker can hold.
 
 ### Card actions
@@ -1780,9 +1780,7 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   memory, so it loaded again with fewer cores." from the start of that load until 45 s after it [T-3933;
   `game/oomRetry.ts`, notes/T-3933.md]. A load whose last solving worker fails for memory in the page's sight is
   saved and reloaded into the same retry. Otherwise, or when the retry runs out too, it starts no game and shows the
-  memory sentence with Try again (whose load then has the lower cap) and, when the game was in a slot and was not
-  already opened so, Open without calculating trips: the slot opens paused with no demand pool (`?slot=<key>&trips=off`,
-  the light load of T-3851; a died light load gets no retry with fewer workers) [T-3940]. A browser with no WebGL2 at all (no `WebGL2RenderingContext`;
+  memory sentence with Try again (whose load then has the lower cap). A browser with no WebGL2 at all (no `WebGL2RenderingContext`;
   MapLibre cannot start; `webgl2State`, `map/webgl2.ts`, asked at the top of main.ts) gets its own screen
   before anything else starts: one sentence saying to turn on hardware acceleration or update the browser,
   and no button, since a retry or a way on cannot help [T-3307]. A browser that has WebGL2 but refuses the
