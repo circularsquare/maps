@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4112 [P1] {L:station-placement} Station on a curve refused for water at a far ramp, on master (2026-11-23): Ported to master (380d8fc7): 963 tests pass incl. t4112_tests; W 37th St and Jersey City stations on the Hudson route place; smoke passed. notes/T-4112.md.
 - T-4144 [P1] {L:edit-speed} Every kind of edit shows at once, planned together (2026-11-23): Plan in notes/T-4144.md: every edit and hover with its Asia wait; base T-4145, streams B T-4146, A T-4147, C T-4148, D T-4149/T-4150, E is T-4143 then T-4142 and T-1031; T-4151 for the bench's calc pass. notes/T-4144.md.
 - T-4139 [P1] {L:edit-speed} One edit-wait bench for every edit-speed task (2026-11-23): Bench runs both saves; long edits repeat within 1-2%, 100-200 ms edits, Construct a line and undo do not (6-12 of 22 actions within 10%); good for changes over about 25%, else --runs 5 on a quiet machine. notes/T-4139.md.
 - T-4114 [P1] {L:edit-speed} Edits show at the click, lines first (2026-11-23): Stage 1: Asia end stop added 2.7-3.5 s to 0.10-0.18 s (about 95% off), new line's second stop 1.7-2.8 s to 0.1 s, end stop out and line delete at the click; NYC about 95% off; New line button itself unchanged (rest folded into T-4144's plan) notes/T-4114.md.

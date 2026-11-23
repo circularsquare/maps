@@ -8,10 +8,15 @@ diary notes/handoff-log.md. Her time UTC-5.
 - Edit speed (her 23:1x: do all, land all, one message when done): plan notes/T-4144.md. Running: editbase T-4145
   (opus, base; when it lands tell editstations and editlines to merge master), editstations T-4146 (opus, stream B),
   editlines T-4147 (sonnet, A), editworker T-4149 (opus, D worker), firstclick T-4143 (opus, E: then T-4142, T-1031).
+  Base API: top of .tw-trees/editbase/trainworld/notes/T-4145.md (sent to B and A; put it in C's brief).
   Queued: C T-4148 (sonnet) and D page T-4150 when slots free; T-4133/4134 after retime; T-4151 bench calc pass.
-  Asked her: refusal takes a shown edit back, money at the click (both recommended yes; streams build that way).
-- retime T-4132 (opus), rampport T-4112 (sonnet, port ramp fix), searchleft T-4054 (sonnet), junctionmsg T-4152
+  Her yes to refusal taking a shown edit back and money at the click, plus "improve the response speed of refusals too"
+  (sent to base, stations, worker). Agent ids: editbase adf738eb, editstations a832c397, editlines a3199ea2, editworker
+  a0d0baab, junctionmsg a23cb70f.
+- retime T-4132 (opus), searchleft T-4054 (sonnet), junctionmsg T-4152
   (opus, her pad: "Track has to leave a junction along the existing track" misfires, reword).
+- rampport T-4112 landed on master 380d8fc7 (23:55); tree "rampport" still to remove (a shell held it). editbase
+  reported stage 0 and 0b landable; waiting on its bench and smoke, then land and tell editstations/editlines.
 - Batch check due once rampport lands: rampport (track split), regionfix 8e1eb7ba, lineclick ef99d979 (toggleStop).
 - 8800 = ef99d979 (23:11). Landed after takeover, latest: madison T-4140, regionfix T-4137, ghostlag T-4136, lineclick
   T-4114 stage 1, editbench T-4139 (tools/edit_bench.mjs; trust changes over about 25%). T-4124 closed (code on branch
@@ -33,7 +38,7 @@ diary notes/handoff-log.md. Her time UTC-5.
 
 LIVE v0.4.5. 8800 = master always (809a0d16); the track build only at /trainworld-track/ (?track), own saves, no
 account (snaptrack.py). Her North America save is level 42: opens only there; backups in artifacts/trainworld/savedl/.
-Cap 14 daytime; cores 0-1 hers (reserve_cores.ps1 -Loop 30, now never touches terminals). Bench: perf_bench.mjs,
+Cap 10 from 23:48 for a few hours (her ask), then back to 14 daytime; cores 0-1 hers (reserve_cores.ps1 -Loop 30, now never touches terminals). Bench: perf_bench.mjs,
 ledger notes/perf-ledger.jsonl.
 
 ## Her words
