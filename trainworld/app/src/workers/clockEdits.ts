@@ -101,10 +101,35 @@ export function newLineShape(op: EditOp, line: number) {
   send({ kind: "lineShapes", shapes: Object.fromEntries(lineShapes) });
 }
 
+type RailKind = "rail" | "fast" | "tram";
+function railKind(a: TrackApi, id: number): RailKind | null {
+  if (a.line_period_count(id) === 0 || a.is_bus(id) || a.is_ferry(id)) return null;
+  return a.line_tram(id) ? "tram" : a.line_fast(id) ? "fast" : "rail";
+}
+
+/** T-4104: an edit that changes a rail line's kind (high-speed, tram) moves its headways to the new kind's
+ * default when they are still the old kind's default; ones the player set stay. It is part of the edit for
+ * undo and redo (`set_line_row_headways_with_edit`). */
+function withKindHeadways(op: EditOp, run: () => Applied): Applied {
+  const a = api!;
+  const line = "line" in op && typeof op.line === "number" ? op.line : null;
+  const was = line === null ? null : railKind(a, line);
+  if (line === null || !was) return run();
+  const rowsWas = a.line_period_count(line), had = [...a.line_row_headways(line)];
+  const out = run();
+  if (out.r !== 0) return out;
+  const now = railKind(a, line), rows = a.line_period_count(line);  if (!now || now === was || rows !== rowsWas || !had.length) return out;
+  const old = headwaysFor(was, newLineHeadway, rows), wanted = headwaysFor(now, newLineHeadway, rows);
+  if (!old || !wanted || old.length !== had.length || old.some((s, i) => s !== had[i])) return out;
+  const charge = out.charge ?? a.last_charge(), trainCharge = out.trainCharge ?? a.last_train_charge();
+  if (a.set_line_row_headways_with_edit(line, Uint32Array.from(wanted)) !== 0) return out;
+  return { ...out, charge: charge + a.last_charge(), trainCharge: trainCharge + a.last_train_charge() };
+}
+
 export function apply(op: EditOp): Applied {
   freezeCheckpoint("apply-start", { op: op.op });
   const start = performance.now();
-  try { return applyInner(op); }
+  try { return withKindHeadways(op, () => applyInner(op)); }
   finally { freezeCheckpoint("apply-end", { op: op.op, ms: performance.now() - start }); }
 }
 function applyInner(op: EditOp): Applied {

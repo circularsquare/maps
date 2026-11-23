@@ -897,6 +897,14 @@ impl TrackApi {
     /// T-3542: line `id`'s trains follow a headway in seconds per row (`line_row_trains`'s order and
     /// count; 0 no service), as `set_auto_headway` does for three rows.
     pub fn set_line_row_headways(&mut self, id: u32, headways: Vec<u32>) -> u32 {
+        self.row_headways(id, headways, true)
+    }
+    /// T-4104: `set_line_row_headways` as part of the player's edit before it (a line's kind changed and its
+    /// headways follow): that edit's undo takes it back and its redo makes it again (`TrackWorld::apply_off_history`).
+    pub fn set_line_row_headways_with_edit(&mut self, id: u32, headways: Vec<u32>) -> u32 {
+        self.row_headways(id, headways, false)
+    }
+    fn row_headways(&mut self, id: u32, headways: Vec<u32>, recorded: bool) -> u32 {
         let Some(d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
         let (net, l) = (&self.w.net, id as usize);
         let rows = ROW_PLACES[net.rows(l) - ROWS_MIN];
@@ -915,7 +923,8 @@ impl TrackApi {
             }
         };
         let ((am, ax), (tm, tx)) = (unplace(a), unplace(trains));
-        self.run(Op::Batch(vec![Op::AutoTrains { id, auto: Some(am), trains: Some(tm) }, Op::Extra { id, x: Extra { auto: ax, trains: tx, ..d.x } }]))
+        let op = Op::Batch(vec![Op::AutoTrains { id, auto: Some(am), trains: Some(tm) }, Op::Extra { id, x: Extra { auto: ax, trains: tx, ..d.x } }]);
+        if recorded { self.run(op) } else { self.run_off_history(op, true) }
     }
     /// T-3542: line `id`'s settled trains an hour in each of the five periods (its slot's), on
     /// weekdays.
