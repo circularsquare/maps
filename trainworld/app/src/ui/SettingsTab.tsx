@@ -233,6 +233,7 @@ export function SettingsTab() {
           {t("settingsTab.recalcWhilePaused")}
         </Check>
         <IntercityCheck />
+        <CoarseDemandCheck />
       </div>
       <MemoryRow />
       <div class="h">{t("settingsTab.lineShapes")}</div>
@@ -405,6 +406,15 @@ export function MoreCoresCheck() {
   return (
     <Check checked={display.value.moreCores} onChange={(v) => setDisplay("moreCores", v)}>
       <span data-tip={t("settingsTab.moreCoresTip")}>{t("settingsTab.moreCores")}</span>
+    </Check>
+  );
+}
+
+/** T-4117: every zone coarse, on every device; here and in the start menu's settings. */
+export function CoarseDemandCheck() {
+  return (
+    <Check checked={display.value.coarseDemand} onChange={(v) => setDisplay("coarseDemand", v)}>
+      <span data-tip={t("settingsTab.coarseDemandTip")}>{t("settingsTab.coarseDemand")}</span>
     </Check>
   );
 }

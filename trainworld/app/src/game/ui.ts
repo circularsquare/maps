@@ -130,6 +130,9 @@ export interface DisplaySettings {
    * device: on by default on a computer, off on a phone or tablet. Read at each solve, so it applies from the next
    * one; the start menu's ticked box is what a game opened there gets. */
   intercityTrips: boolean;
+  /** T-4117: every zone held coarse (workers/demandLod.ts), the zone in view too; per browser, on by default on a
+   * phone or tablet. A change applies at once: each open zone opens again at its new level. */
+  coarseDemand: boolean;
   /** T-3319: the bullet shape of each mode's lines that have none of their own (game/lineShapeState.ts) */
   modeShapes: Record<Vehicle, LineShape>;
 }
@@ -187,6 +190,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   bindNew: false,
   chartOtherLines: true,
   intercityTrips: !mobileDevice(),
+  coarseDemand: mobileDevice(),
   modeShapes: { ...MODE_SHAPES },
 };
 
@@ -285,6 +289,8 @@ export const display = signal<DisplaySettings>({ ...DEFAULT_DISPLAY, ...migrated
 export const dropMarket = () => setDisplay("intercityTrips", false);
 /** T-2802, T-2838, T-3630: no market (no trips between cities) while the setting is off */
 export const marketOff = () => !display.peek().intercityTrips;
+/** T-4117: every zone coarse by the player's setting */
+export const coarseDemand = () => display.peek().coarseDemand;
 // bubble colours are module state in palette.ts (the bubble worker has its own); views that colour
 // bubbles read the setting and call this again before building, so the order of effects is moot
 effect(() => setBubbleColours(display.value.bubbleColours, display.value.rampFrom, display.value.rampTo));

@@ -4,7 +4,7 @@
 // when a worker would pass what one browser worker can hold, or, on a device that reports less than
 // 8 GB, when the whole game would take most of it. Thresholds: DECISIONS.md 2026-10-24 (T-1197).
 // T-1223: zones not looked at are held coarse (workers/demandLod.ts), so a game is judged at the least
-// it can take: its biggest zone fine and the rest coarse.
+// it can take: its biggest zone fine and the rest coarse (every zone coarse with the setting, T-4117).
 
 import { t } from "../i18n";
 import { cityById, isCity } from "./cities";
@@ -12,6 +12,7 @@ import { decodeSave, readStored, type SaveHeader } from "../workers/saveFile";
 import { poolBytes, workersFor } from "../workers/demandClient";
 import { deviceGB } from "../workers/deviceMemory";
 import { COARSE_SHARE, GB_PER_MTRIPS } from "../workers/demandLod";
+import { coarseDemand } from "./ui";
 
 
 /** GB a solving worker takes outside its WebAssembly memory: its JS heap (0.1) and the allocator and
@@ -32,11 +33,11 @@ const DEVICE_SHARE = 0.75;
 /** `wasmGB`: a solving worker's WebAssembly memory; `workerGB` with its JS heap */
 export interface MemoryNeed { zones: number; wasmGB: number; workerGB: number; workers: number; totalGB: number }
 
-/** The memory a game reaching `zones` will take, its biggest zone fine and the others coarse. */
+/** The memory a game reaching `zones` will take, its biggest zone fine (coarse with the setting) and the others coarse. */
 export function memoryNeed(zones: readonly string[]): MemoryNeed {
   let trips = 0, most = 0;
   for (const id of zones) if (isCity(id)) { const t = cityById(id).localTrips ?? 0; trips += t; most = Math.max(most, t); }
-  const wasmGB = WASM_BASE_GB + GB_PER_MTRIPS * (most + COARSE_SHARE * (trips - most)) / 1e6;
+  const wasmGB = WASM_BASE_GB + GB_PER_MTRIPS * ((coarseDemand() ? COARSE_SHARE : 1) * most + COARSE_SHARE * (trips - most)) / 1e6;
   const workerGB = WORKER_BASE_GB + wasmGB;
   const workers = workersFor(workerGB * 2 ** 30);
   return { zones: zones.length, wasmGB, workerGB, workers, totalGB: PAGE_GB + PAGE_GB_PER_ZONE * zones.length + poolBytes(workerGB * 2 ** 30, workers) / 2 ** 30 };

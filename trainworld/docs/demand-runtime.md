@@ -153,10 +153,22 @@ their figures, so lines carry the new zone's riders beside the others' as they w
 names only the refined zones; when every cluster solved is one, the other zones' bubbles' sums are
 the last solve's, sent again. Its periods are never kept as a whole solve's (T-124): the next edit
 that touches the cluster solves it whole. Every solve records which of its zones were coarse (`Solve.coarse`); the zones
-shown from a coarse solve are `roughZones` (no star or goal comes from them), and the zone in view
+shown from a coarse solve are `roughZones` (stars and goals count them as any other, T-4117: every region's
+share within 0.01 points of fine on the Tokyo saves, notes/T-4086.md), and the zone in view
 shown rough while fine is on its way is `refiningZone` (the status tag,
 [ui-demand-views.md](ui-demand-views.md)). The demand cache's key marks each coarse zone's pack. `?lod=fine` opens
 every zone fine and `?lod=coarse` every zone coarse, and neither changes them after.
+
+**Calculate trips in less detail** (T-4117, `display.coarseDemand`, [ui-panels.md](ui-panels.md) Performance): every
+zone coarse, the zone in view, the selected and the edited ones too, so none is ever refined. Per browser, on by
+default on a phone or tablet (`mobileDevice`), off on a computer. Trips are calculated a third to two thirds faster
+after a load or an edit on a phone's pool, about a fifth faster on a computer's four workers (notes/T-4117.md); totals move about 0.01%, lines up to about 7%, small stations up to about 20% (T-4086). The memory
+estimate before a load (`memoryNeed`) counts the biggest zone coarse too. Changed mid-game, it takes effect at the next
+check (at once, or once the edit note or a load's card is done): on, every open zone opens again coarse; off, the
+fine set is made afresh as a game's first (the save's `demandFine` while this game has made none) and those zones
+open again fine. Either way it is a level change as above: the figures shown stay until the solve covering it lands,
+the status tag counts the zones ("Calculating trips in 5 cities", or "Calculating trips here" while the zone in view
+is refined), and the figures change in one step.
 
 ## Warm-up and the worker pool
 

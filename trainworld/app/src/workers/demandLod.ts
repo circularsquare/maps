@@ -18,11 +18,13 @@ export const EDIT_KEEP_MS = 15 * 60_000;
 /** a zone made fine stays fine this long, so looking between two cities does not flap */
 export const FINE_HOLD_MS = 5 * 60_000;
 
-/** `?lod=fine` every zone fine, `?lod=coarse` every zone coarse (checks); else by the rules here */
+/** `?lod=fine` every zone fine, `?lod=coarse` every zone coarse (checks, fixed for the page); else `coarse`
+ * (T-4117: the player's setting, every zone coarse) or by the rules here */
 export type LodMode = "auto" | "fine" | "coarse";
-export function lodMode(): LodMode {
-  const q = new URLSearchParams(location.search).get("lod");
-  return q === "fine" || q === "coarse" ? q : "auto";
+let lodQuery: LodMode | null | undefined;
+export function lodMode(coarse: boolean): LodMode {
+  if (lodQuery === undefined) { const q = new URLSearchParams(location.search).get("lod"); lodQuery = q === "fine" || q === "coarse" ? q : null; }
+  return lodQuery ?? (coarse ? "coarse" : "auto");
 }
 
 /** T-1197's rate (memoryCheck.ts): a solving worker's GB per million local trips a day of the zones

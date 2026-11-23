@@ -10,7 +10,7 @@ import { CITIES, cityById, type CityId } from "./cities";
 import { complexes } from "./complexView";
 import { continentLabel, continentOf } from "./continents";
 import { AVERAGE_DAY, WEEKDAY_LONG } from "./days";
-import { demandByDay, demandUpdating, lineFiguresIn, marketIn, roughZones, zoneViews, type Corridors } from "./demand";
+import { demandByDay, demandUpdating, lineFiguresIn, marketIn, zoneViews, type Corridors } from "./demand";
 import { bigDistance, clockTime, dayOf, money, speed } from "./format";
 import { t, tCountry, tList, tNumber } from "../i18n";
 import { tPlace } from "../i18n/places";
@@ -307,7 +307,7 @@ function corridorSums(corr: Corridors, places: ReadonlyMap<number, CityId>): Map
   return sums;
 }
 
-/** The figures from demand: final results only, on the average day, never a rough zone's. */
+/** The figures from demand: final results only, on the average day, coarse zones' too (T-4117). */
 export const demandFigures = computed(() => {
   const w = achWorld.value;
   void zonesLoaded.value;
@@ -315,11 +315,10 @@ export const demandFigures = computed(() => {
   const v = d?.view;
   // (T-3509: the zones' trips within wait for the market's result while the game has one)
   if (!w || !v?.final || (!marketIn(d) && !marketOff())) return null;
-  const rough = roughZones.value, byId = w.byId;
+  const byId = w.byId;
   const run = w.running;
   const firsts = new Map<FirstId, Detail>();
-  // Trips a day: the Cities tab's World row, coarse zones included (a big game holds most zones
-  // coarse, and a total of millions is past the noise the star's rule guards against)
+  // Trips a day: the Cities tab's World row, coarse zones included
   const built = new Set<CityId>();
   for (const s of w.stations) if (s.built) { const z = stationZone(s); if (z) built.add(z); }
   // (T-3509: each zone's trips within it, its far-apart parts' longer trips included)
@@ -365,7 +364,7 @@ export const demandFigures = computed(() => {
     if (!c) continue;
     places.set(c.place, id);
     const cv = zones.get(id);
-    if (cv?.final && !rough.has(id) && cv.split.train >= CITY_SHARE && (!city || cv.split.train > city.v!)) city = { of: c.name, v: cv.split.train };
+    if (cv?.final && cv.split.train >= CITY_SHARE && (!city || cv.split.train > city.v!)) city = { of: c.name, v: cv.split.train };
   }
   const corr = d.intercity?.corridors;
   if (corr && places.size) {

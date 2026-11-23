@@ -2029,6 +2029,8 @@
   "settingsTab.moreCoresTip": "Hover on Use more cores, in Settings and in the start menu's settings. \"demand workers\": background threads that calculate trips; \"the next load\": the next time a game is opened or the page reloaded.",
   "settingsTab.mobileIntercity": "Settings, Performance, and the start menu's settings: checkbox to calculate trips between cities (on by default on a computer, off on a phone or tablet).",
   "settingsTab.mobileIntercityTip": "Hover on Calculate intercity trips (on every device, in Settings and the start menu's settings): what turning it off does.",
+  "settingsTab.coarseDemand": "Settings, Performance, and the start menu's settings: checkbox, on by default on a phone or tablet. On: the game works out trips from fewer sample points everywhere, which is faster and a little less exact.",
+  "settingsTab.coarseDemandTip": "Hover on Calculate trips in less detail (Settings and the start menu's settings): what turning it on does. \"Change\": compared with the same game calculated in full detail.",
   "settingsTab.normal": "Settings, Game: the game's mode when money counts (not a sandbox). A plain label.",
   "settingsTab.opacity": "Settings, Demand bubbles: label of the slider for the bubbles' opacity. Narrow label.",
   "settingsTab.pink": "Settings, Theme: the pink colour theme.",

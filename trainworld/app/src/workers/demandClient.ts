@@ -1070,6 +1070,9 @@ class DemandClient {
     });
     // T-2180: the level changes held while edits settled go at once after
     effect(() => { if (!editsSettling.value) this.lodSoon(); });
+    // T-4117: the player's setting changed: every open zone opens again at its new level
+    let coarse = display.peek().coarseDemand;
+    effect(() => { if (display.value.coarseDemand !== coarse) { coarse = display.peek().coarseDemand; this.lodSwitched(); } });
     // T-1047: zones built track crosses open bare for their figures
     effect(() => { trackZones.value; this.ensure(); });
     // T-351: a building tool picked in a game with no station readies the viewed zone for its solve
@@ -1442,7 +1445,7 @@ class DemandClient {
 
   // --- Level of detail (T-1223, notes/T-1206.md) -------------------------------------------------
 
-  private lod = lodMode();
+  private get lod() { return lodMode(display.peek().coarseDemand); }
   /** the zones wanted fine; `lodZones` the zones the last check decided for (a zone reached since
    * opens fine: a station was just built there) */
   private fine = new Set<CityId>();
@@ -1497,10 +1500,10 @@ class DemandClient {
 
   /** Check soon (a view settling, a click, an edit). */
   private lodSoon(ms = 0) {
-    if (this.lod !== "auto") return;
+    if (this.lod === "fine") return;
     clearTimeout(this.lodTimer);
     this.lodTimer = setTimeout(() => this.lodCheck(), ms) as unknown as number;
-    if (!this.lodTick) this.lodTick = setInterval(() => this.lodCheck(), 30_000) as unknown as number;
+    if (!this.lodTick && this.lod === "auto") this.lodTick = setInterval(() => this.lodCheck(), 30_000) as unknown as number;
   }
 
   /** The zones a solve covers, once their reach is known. */
@@ -1541,7 +1544,8 @@ class DemandClient {
     clearTimeout(this.lodTimer);
     this.lodTimer = 0;
     // (a game loading makes its first fine set from its own reach, in `ensure` or `stationsAhead`)
-    if (this.lod !== "auto" || this.failed || this.hold || this.cacheSolve || gameLoadArmed() || !this.lodZones || (this.ahead && !this.ahead.arrived)) return;
+    if (this.lod === "fine" || this.failed || this.hold || this.cacheSolve || gameLoadArmed() || (this.ahead && !this.ahead.arrived)) return;
+    if (this.lod === "auto" && !this.lodZones) return;
     const now = Date.now();
     // T-2180: no level changes while edits settle (the edit note's figures would mix them in), and
     // that time counts as looked at, so a fine zone's ten minutes left alone start after
@@ -1549,6 +1553,7 @@ class DemandClient {
       for (const id of this.fine) this.touched.set(id, now);
       return;
     }
+    if (this.lod === "coarse") return void this.lodApply();
     const zones = this.lodReach();
     if (!zones) return;
     const held = this.heldZones(now);
@@ -1565,6 +1570,18 @@ class DemandClient {
     this.lodZones = new Set(zones);
     reportDemandFine(zones.filter((id) => next.has(id)), keep);
     this.lodApply();
+  }
+
+  /** T-4117: the setting changed. Back to the rules, the fine set is made afresh as a game's first (the save's list
+   * while this game has not made one), then the next check opens each zone at its level; coarse, every zone goes
+   * coarse at that check. A loading game's card holds the change until it goes. */
+  private lodSwitched() {
+    if (this.lod === "auto") {
+      this.lodZones = null;
+      const zones = this.lodReach();
+      if (zones) this.initFine(zones);
+    }
+    this.lodSoon();
   }
 
   /** Open again, in every worker, each zone open at a level it should no longer have: zones that

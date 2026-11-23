@@ -22,9 +22,10 @@ import { clockStepNow, fitView, holdForGameLoad, loadCannotFinish, markAlive, ne
 import { incomeByDay, lastSaved, liveMoney, moneyState, moneyTerms, moneyWorld, setMoneyState } from "../game/money";
 import { zonesLoaded } from "../game/zones";
 import { chargeShares, lineShares, upkeepShares } from "../game/regionMoney";
-import { GOAL_SHARES, linePoints, STAR_SHARE } from "../game/points";
+import { linePoints } from "../game/points";
+import { goalsDue } from "../game/goalRules";
 import { AVERAGE_DAY, AWAY_DAY, awaySoon, BACK_DAY, DAY_KINDS, OUT_DAY, rushSoon } from "../game/days";
-import { demandByDay, demandView, marketIn, platformTransfers, roughZones, zoneViews } from "../game/demand";
+import { demandByDay, demandView, marketIn, platformTransfers, zoneViews } from "../game/demand";
 import { linesPending } from "../game/lineFigures";
 import { accountVersion, packArrivals, packRiders } from "../game/boarding";
 import { ask, designSpeed, guideFinished, lineDraft, marketOff, selection, tool } from "../game/ui";
@@ -978,13 +979,7 @@ export class ClockClient {
       // from figures before the market's result while the game has one)
       const d = demandByDay.value[AVERAGE_DAY];
       if (!marketIn(d) && !marketOff()) return;
-      for (const [id, v] of zoneViews(d)) {
-        // (T-1223: never from rough figures, whose noise could cross a mark)
-        if (!v.final || roughZones.value.has(id)) continue;
-        if (v.split.train >= STAR_SHARE && m.stars?.[id] === undefined) this.post({ kind: "star", zone: id });
-        // T-1437: the higher goals the same way
-        for (const g of GOAL_SHARES) if (g !== STAR_SHARE && v.split.train >= g && m.goals?.[id]?.[g] === undefined) this.post({ kind: "star", zone: id, share: g });
-      }
+      for (const g of goalsDue(zoneViews(d), m)) this.post({ kind: "star", ...g });
     });
     // Demand's riders for the boarding account (T-164): each new result, every kind of day's
     // (T-260); the trains and platforms of each hour read their own day's.
