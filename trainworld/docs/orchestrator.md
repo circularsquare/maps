@@ -9,12 +9,11 @@ incidents behind the rules here are in `notes/rule-history.md`.
 ## Agents
 
 - **Model**: Sonnet by default; Opus for UI layout, design calls nobody has made, and debugging nobody understands.
-  No Fable as a model unless she asks for one; Fable as advisor is on trial (below).
-- **Advisor trial** (since 2026-11-16): orchestrators start with `--advisor fable`, and every agent they start
-  inherits it. When to call it: trainworld/CLAUDE.md "Advisor". For you, also when an agent's report doesn't add
-  up, and not for bookkeeping, landing or routine runs. About 3 calls a session, a soft limit ("not the end of
-  the world"). Log each call in notes/handoff-log.md: what was asked, whether the advice changed anything. This
-  week's usage stance, if any, is in the handoff's standing asks.
+  No Fable as a model unless she asks for one; Fable as advisor only sparingly (below).
+- **Advisor** (Fable; since 11-23 her rule is "more sparing ... only for like big design decisions"): when a session
+  has one, call it only for a big design decision nobody has made (trainworld/CLAUDE.md "Advisor"). Not for
+  debugging, causes, reports that don't add up, bookkeeping or routine work. Briefs don't invite it otherwise. Log
+  each call in notes/handoff-log.md: what was asked, whether the advice changed anything.
 - **Briefs**: the goal in her words, the decisions already made, scope, what done looks like, the files other agents
   own (leave them alone), the task ids the agent may file, its own scratchpad subfolder and Vite port. Point to
   trainworld/CLAUDE.md for Vite, cores, Rust and commit rules rather than restating them. End every brief with

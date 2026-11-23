@@ -162,11 +162,9 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
   process you start from code gets `windowsHide: true` (Node) or `creationflags=subprocess.CREATE_NO_WINDOW`
   (Python), since a background process has no console and each child without it flashes a terminal.
 - **Screenshots** go in `../artifacts/trainworld/`. For UI work, judge your own screenshots before reporting.
-- **Advisor** (when your session has one): call it for a call nobody has made (design, a source choice, a demand
-  factor, a performance lie) before proposing or acting; when stuck (the same failure twice, or about 30 minutes
-  without progress) and before giving up; and before claiming a cause. About once a task, a soft limit. Not for
-  routine steps, wording, small UI, or a choice already going to Anita. Say in your report whether you called it
-  and what changed.
+- **Advisor** (when your session has one): sparingly, only for a big design decision nobody has made (her 11-23:
+  "only for like big design decisions"). Not when stuck, not to confirm a cause, not for routine steps, wording,
+  small UI, or a choice already going to Anita. Say in your report whether you called it and what changed.
 - **A refused permission check**: make the step safer and retry; don't wait for Anita.
 - **Stop at a clean point** if the work outgrows one context: finish the stage, file the rest, hand back.
 - **Waiting**: no `sleep`, no polling loops of your own: `node trainworld/checks/wait.mjs <file> <pattern>

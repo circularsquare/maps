@@ -42,7 +42,7 @@ takeover). Server 3b14158. Save level 38. Pad 11-22, not started: T-4046-49, T-4
 - 11-19: "player complaints take precedent over other new features"; full playtest list before every publish. When
   she plays: no uploads until she's done; she may ask for a lower core cap.
 - Standing: lean testing, smoke per batch; long jobs in the background, answer her first; every publish, deploy and
-  push to the website needs her yes in this tab, none overnight; advisor trial (log calls in handoff-log); BRT
+  push to the website needs her yes in this tab, none overnight; advisor only for big design decisions (11-23); BRT
   stations for BRT lines only; never ask again whether big saves get more workers (11-21).
 
 ## Waiting on her
