@@ -165,17 +165,13 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4091 [P3] {L:buses} Undoing a bus reroute leaves its stops where the reroute put them
   - Context: Seen by the T-4069 checker (notes/checkbns.md, case 3), not compared with master: undoing a busRoute reroute put the route back to 2 points but left stop 105 moved (-73.99374 to -73.99385). Reach: players who reroute a manual bus line and undo, a few metres off.
   - Goal: Undo puts the stops back where they were, or the cause named if it's older than T-4069.
-- T-4094 [P1] {L:solve-speed} Merge bus stops within 300 m into one stop for demand (taking, 2026-11-23, agent busmerge)
-  - Context: You, 11-23: "ok can merge bus stops within a few hundred meters. i guess 300 meters should be okay." From T-4057: the bus-heavy Detroit save (7,382 bus stops, community share iemjwzum) takes 28 minutes to calculate trips at about 4 GB per worker, 82% in the search; merging should more than halve both. Stops are still drawn and run as before.
-  - Goal: Detroit's time and memory measured before and after (percent), Belgrade's too; riders on bus lines compared; rail-only saves unchanged. The merge doesn't show: every per-stop figure the player can see (a stop's riders and boardings, a line's load along its stops, transfers, origins and destinations, connectors) is split back over the real stops, by each stop's own catchment, so every stop looks used.
-  - Other: You, 11-23: "ideally the bus stop merging ... should not be super visible. like if you click on a bus stop and see how many people use it ... we should distribute the ridership so it looks like all the stops are being used, and its not obvious that theyre getting merged."
 - T-4095 [P3] {L:checks} Agent worktrees with only trainworld checked out
   - Context: From T-4088: each tree is a full 1.4 GB copy of maps/, of which about 0.2 GB is trainworld; a sparse checkout in agent-tree.mjs would save 10-15 GB with 10 trees.
   - Goal: New trees hold only trainworld (and what its builds need); land and remove still work.
 - T-4096 [P3] {L:checks} A daily sweep of old session scratch
   - Context: From T-4088: session scratch in Temp\claude was 78 GB, the biggest single user of the disk, and nothing clears it. The standing rule already lets agents delete finished sessions' scratch 2+ days old.
   - Goal: Scratch folders untouched for 2+ days deleted daily, sessions still running skipped.
-- T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds (taking, 2026-11-23, agent editspeed)
+- T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
   - Context: You, 11-23: "edit speed is actually still kind of a problem. i made the call to P4 these until we got more complaints, but it's noticeable on my end for big worlds so lets bring these back up. i feel like there was a point at which we had edit speed almost instant, but then might have regressed, in exchange for accuracy or something. my intuition is that it should be possible to get edit speed feeling pretty instant? like just batching up changes should be pretty light / responsive, and we just have to make sure that they're applied eventually without dropping anything, right? to be specific, the edit speed im talking about is mostly like placing track and constructing and like editing stops." The older edit-speed tasks (T-3550, T-1211, T-3804, T-1031) are back at P2 under this one.
   - Goal: Placing track, constructing and editing stops on a big world measured step by step (when it last felt instant, and what made it slower); the map showing an edit within about 100 ms, with the sim's work queued and never dropped; anything that changes what's shown goes to you as a design first.
 - T-4099 [P2] {L:help-tutorial} City labels drawn over the tutorial card
@@ -210,13 +206,18 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4116 [P1] {L:track-rework} Track model panics on 8800 during play (taking, 2026-11-23, agent panics)
   - Context: From T-4110: the centred "Loading" card you saw mid-game on 8800 (tw/track build f382ee54) is most likely the track model rebuilding after a panic (clockPanic.ts rebuildModel); each panic also pops a "model restored" notice. The track rework changed the model a lot this week.
   - Goal: The panics on tw/track found by replaying ordinary play on it (random edits and undos on big saves, watching for "Rust panic in"), and fixed with a test. You don't know whether a "model restored" notice showed.
-- T-4117 [P1] {L:memory} Coarse demand as a setting, on by default on phones (taking, 2026-11-23, agent coarse)
-  - Context: You, 11-23: "awesome lets do coarse data." Measured (notes/T-4086.md): trips calculate 33-68% faster after a load or an edit; all trips move 0.01%; lines 90% within 3.5% (worst -6.6%); big stations within 7.3%; stars and goals the same on both Tokyo saves.
-  - Goal: A setting on every device that loads the home city coarse (on by default on phones, off on desktop); stars and goals count coarse data everywhere. A fine-against-coarse sheet at street zoom (bubbles, homes and destinations views) shows what a phone player sees differ.
-  - Other: You, 11-23: "wondering if we should just add coarse demand as a setting that we can enable on any device, optionally. it does seem like nice benefits."
-- T-4118 [P2] {L:loading} Every water mask late on 8800
+- T-4118 [P2] {L:loading} Every water mask late on 8800 (taking, 2026-11-23, agent panics)
   - Context: Your console on 8800, 11-23: "clock worker: water masks: 292 of 292 not in after 20 s; the game opens without them". T-4072 caps the wait at 20 s and installs late masks when they land; all 292 late on localhost suggests they aren't arriving at all, or are queued behind something.
   - Goal: Why every mask was late named; masks arriving within the cap on a normal load.
+- T-4120 [P1] {L:cleanup} Cut DECISIONS down to the decisions worth keeping (taking, 2026-11-23, agent decisions)
+  - Context: You, 11-23: "i think the fact that we have a thousand entries is kinda insane ... maybe sort them, merge ones that are the same, drop ones that are not helpful." 1,546 entries since 10-20 plus the older file; median 82 words against the one-or-two-sentence rule. Archiving was ruled out as meaningless.
+  - Goal: One DECISIONS.md of about 200 entries, sorted by area, each one or two sentences: choices someone might revisit, with what they replaced. tasks.py check flags entries over 50 words, and CLAUDE.md says what counts as a decision.
+- T-4121 [P1] {L:checks} A shared Rust build cache for agent trees (taking, 2026-11-23, agent buildcache)
+  - Context: You, 11-23: "ok can do shared rust build cache." Each new tree builds sim/ from nothing (several minutes before an agent starts) and each landing rebuilds the WASM (3-4 min); about 15 trees today.
+  - Goal: A new tree's first cargo test and WASM build reuse earlier builds (sccache or a shared target per branch), measured before and after, with no wrong artifacts across branches.
+- T-4122 [P1] {L:checks} Agent reports kept to 15 lines (taking, 2026-11-23, agent reportlen)
+  - Context: You, 11-23: "agent reports are still long: ok.... why? can you just refuse if they're too long?" Most reports today ran 25-40 lines against the brief's 15, and each stays in the orchestrator's context.
+  - Goal: The SubagentStop hook (tools/reports.py) sends a report over about 18 lines back to the agent to shorten before it reaches the orchestrator; detail stays in notes.
 - T-4104 [P2] {L:timetables} A new line's headways follow its kind's defaults
   - Context: You, 11-23: "when making a new line, it assumes its a normal train. if i then put it on high speed tracks it updates to say oh this is actually a high speed train, but the default headways are already taken from the normal train's defaults. could we have the headways also update to use the high speed line defaults, if they are set and the player hasnt yet already adjusted the headways? same for tram lines."
   - Goal: When a line's kind changes and its headways are still the old kind's defaults, they switch to the new kind's defaults; headways the player set stay.
@@ -226,9 +227,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4106 [P2] {L:memory} An install-as-app banner on phones
   - Context: You, 11-23: "i think we can still do the install as app banner. people can dismiss it if they dont want to do it, and we should just remember that they have dismissed it and not show again. if they're not logged in we can mention that it will have separate local saves from safari so if they want saves to carry over they'll have to make an account". Earlier: shown once they've logged at least 2 hours of play. T-4086 found no evidence installing gives more memory; installed apps keep saves past Safari's 7-day clearing.
   - Goal: On phones after 2 hours of play, a banner with how to install (per platform), the separate-saves note when not signed in, dismissed forever.
-- T-4103 [P1] {L:memory} Lighter phone load without changing figures (taking, 2026-11-23, agent phoneload)
-  - Context: From the T-4086 design (notes/T-4086.md): far zones already go coarse; on a big Tokyo game demand is 600-720 MB of a 1.25-1.4 GB tab, and a far jump of the view adds about 280 MB for a minute (420 MB with the refine), above every load peak. Crash saves need 250-300 MB off the peak.
-  - Goal: On phones, no aux worker (65-80 MB), the jump spike named and cut, no refine on a pan; peak measured before and after on an emulated iPhone with the T-3939 13-zone save, no figure changes.
 - T-4051 [P2] {L:loading} Opening a zone on a big save sits at 90% (taking, 2026-11-23, agent zoneopen)
   - Context: You, 11-22, on live v0.4.5 with your North America save: opening Medellin sat at 90% for about 2 minutes, Managua the same, "not super consistent". Measured 11-23 on your 11-20 save (notes/T-4051.md): opening a zone takes one of two paths in both v0.4.5 and master, a short one (Medellin 82 s, Managua 98 s at 5 workers) or a long one about 3x the work (Medellin 181 s on v0.4.5), and which one depends on a race between the zone's first quick figures and the whole calculation; that is likely the inconsistency. Master is not slower than v0.4.5 here; no failed downloads, no corridor book rebuild. On the long path the bar runs to 90% on a 30 s guess in the first minute and stays there. Tree zoneopen has two unmeasured fixes (the far zones' bubble sums after the results instead of before, 18 of 82 s; the bar held to a quarter of the calculation until the workers can time it).
   - Goal: The two fixes measured on 4+ cores before they land; then a zone with figures already in takes the short path (about 100 s off the long one on your save).
@@ -273,9 +271,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4080 [P2] {L:buses} Name and rename bus stops
   - Context: Your scratch pad, 11-23: "people keep requesting to be able to rename / name bus stops. we should add that." Also a player 11-20: "バスの停留所も名前を変えれるようにしたい" (want to rename bus stops too).
   - Goal: A bus stop's name can be set in its panel like a station's, saved, and shown wherever the stop's name shows.
-- T-4082 [P1] {L:solve-speed} A bus-heavy Detroit save calculates trips for 20 minutes
-  - Context: Your scratch pad, 11-23: "this bus heavy detroit save takes like 20 minutes to caalculate trips. seems like its 20 minutes on live too so its not something we intoduced recently but yeah lol. its notable." The community save mostly in Detroit that T-4081's search misses (started near Ann Arbor, maybe).
-  - Goal: Where the 20 minutes go named, and the biggest cost cut.
 - T-4048 [P3] {L:route-choice} Remove station connections and passageways
   - Context: Your scratch pad, 11-22: "add a way to remove the autogenerated (or constructed) station connections / passageways (maybe a "manage connections" or something and then you can click the connections to x them out)".
 - T-4049 [P3] {L:achievements} Cities served counts only busy cities

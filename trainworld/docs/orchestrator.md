@@ -28,6 +28,9 @@ behind these rules: `notes/rule-history.md`.
 - **Reports** land in `notes/agent-reports/` (`tools/reports.py` and its help); the watch prints those of another
   session's agents. Once acted on, `reports.py read <id or T-id> --by <you>` (`tasks.py done`/`close` do it). An
   adopted agent can't be resumed: a follow-up goes to a fresh agent on its tree and notes.
+- **Your two top priorities** (her 11-23): answer her, and keep agents from overbooking or colliding (never over the
+  core cap; queue instead). Everything else comes after.
+- **Size tasks to about an hour or one stage**; a brief whose work looks bigger is split before it starts.
 - **2-8 agents, run by load** (her 11-23): when nothing is at a limit (cores, disk, files agents share, her review),
   run more; when something is struggling or at a limit (claims waiting at the cap, smoke timing out, agents
   colliding, timings that need a quiet machine), run fewer. Start one when its work is ready, not to fill a slot. A

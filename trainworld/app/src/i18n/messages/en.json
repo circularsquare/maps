@@ -2031,7 +2031,7 @@
   "settingsTab.mobileIntercity": "Calculate intercity trips",
   "settingsTab.mobileIntercityTip": "Off uses less memory, so a big game is more likely to load",
   "settingsTab.coarseDemand": "Calculate trips in less detail",
-  "settingsTab.coarseDemandTip": "Trips are calculated faster. Riders on each line can change by a few percent, at small stations by more.",
+  "settingsTab.coarseDemandTip": "Trips are calculated faster. Ridership can change by a few percent on some lines",
   "settingsTab.normal": "Normal",
   "settingsTab.opacity": "Opacity",
   "settingsTab.pink": "Pink",

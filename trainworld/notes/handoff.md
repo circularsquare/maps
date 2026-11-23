@@ -18,7 +18,7 @@ trainworld/tools/handoff.py status`; diary notes/handoff-log.md. Her time UTC-5.
 - tracksync2 (queued, next slot): merging master into tw/track conflicts in saveFile.ts, save.rs (busnosnap level 39 / LBE1 vs track blocks) and checks/INDEX.md; aborted in _track. Same route as before: a tree copy of tw/track, agent resolves, I commit and ff _track, then snap8800 tw/track.
 
 ## Next (11-23)
-0. Her goals 11-23: solve speedups (main); loading and crashes (main; T-4071 triage closed 11-23, T-3940 next, phone load is her ask); track rework all week. Resend over its cap is fine. Publish: don't ask when.
+0. 11-23 late: track rework PAUSED until after the 0.4.6 publish (trackg3b and panics stopping at clean points; 8800 back to master). Idle trees (coreslider, onewaylag, split6, stationids, timetables): bring up after 0.4.6. Publish not decided ("i didn't say we want to publish"). Her goals 11-23: solve speedups (main); loading and crashes (main; T-4071 triage closed 11-23, T-3940 next, phone load is her ask); track rework all week. Resend over its cap is fine. Publish: don't ask when.
 1. 0.4.6 plan (her 11-23: "we're not in a huge rush"): wait for T-4064, T-4093, T-4051's master-vs-v0.4.5 zone-open timing (T-1354 corridor book: a blocker if worse), and most of busmerge T-4094, edit speed T-4097 and the lighter phone load T-4086; not the track rework (stays on tw/track). Then 8800 = master for her playtest list, T-4025 bench v0.4.5 vs candidate as the net check. PUBLISH when ready (never ask her when; `publish` skill). Before it: a batch checker on everything since 11-22,
    fresh freeze, translations of every new key (`i18n.mjs`; zone names place_names.mjs --zones), the server's level-39
    save check, smoke8800, the changelog review. Then her text OK and her yes, in this tab.
@@ -31,7 +31,7 @@ takeover). Server 79777f5. Save level 38. Pad 11-22, not started: T-4046-49, T-4
 
 ## Her words
 - 11-23: 2 crowding rounds refused, final (DECISIONS); stop rounds under 3% yes; merge bus stops within 300 m for
-  demand yes; times as percent of the wait; she has no Apple devices (Safari-only fixes get WebKit checks only). Speed tests on real saves only ("manually built saves for correctness testing"); bus passages save no time,
+  demand yes; times as percent of the wait; master heavier than v0.4.5 (NYC CPU +22%, Belgrade +83%) is expected from the express fix and bus changes, no hunt ("thats why i wanted to look for gains elsewhere"); she has no Apple devices (Safari-only fixes get WebKit checks only). Speed tests on real saves only ("manually built saves for correctness testing"); bus passages save no time,
   connections without one +1 min ("say that building a passage saves one minute"); Add a track as a blueprint, no
   track limit; hold a server deploy while a follow-up to it is running ("we should have just waited for that check").
 - 11-22, T-4041: lines independent; softening "75% of the way"; keep the cliff fix; slowdown "okay"; T-4050 evenly
