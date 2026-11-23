@@ -6,14 +6,14 @@ diary notes/handoff-log.md. Her time UTC-5.
 
 ## In flight (adopt from the board)
 - lineclick T-4114 stage 1 (opus: her slow cases, line path and line delete at the click); ghostlag T-4136 (opus, P1,
-  "the rail placement ghost lags behind the cursor"); retime T-4132 (opus); regionfix T-4137 (opus, Asia rows seed 9
-  regions drift, ships in 0.4.6 otherwise); editbench T-4139 (sonnet, tools/edit_bench.mjs; reuse perf_bench's core
-  claim, pin and over-cap refusal); madison T-4140 (opus, agent af85cda5: draw the own zone's far ends for a bubble;
-  trips Madison-La Crosse exist, about 160/day each way); rampport T-4112 (sonnet: port tw/track 269568c2 ramp fix
+  "the rail placement ghost lags behind the cursor"); retime T-4132 (opus); editbench T-4139 (sonnet, tools/edit_bench.mjs; reuse perf_bench's core
+  claim, pin and over-cap refusal); rampport T-4112 (sonnet: port tw/track 269568c2 ramp fix
   to master; master has the bug).
 - stationwater landed on tw/track 269568c2 (22:26), tree removed; its changelog item is parked in next-track.json, so hide the duplicate the port adds at the release merge. Track build not rebuilt: snaptrack needs sync-track first, which still conflicts (waits for the rework resume); she sees the fix on 8800 once rampport lands. T-4124 closed,
   measured not landed (no in-game gain, memory +13-15%); code on branch tw/onegraph-measured. 8800 = d4eabb5c6;
-  master has T-4138 since. Batch check due for rampport (track split) when it lands.
+  master has T-4138 since. Landed 22:42: madison T-4140 (far ends in own zone; ask a-2026-11-23-17 on a minimum bubble size), regionfix T-4137
+  (rows never wrong). 8800 rebuild to 8e1eb7ba 22:43. searchleft T-4054 started (entry_costs, u16 shares). Batch check
+  due for rampport (track split) + regionfix when rampport lands.
 
 ## Next
 1. No publish decided ("i didn't say we want to publish"); don't prep one unless she says. 0.4.6 would wait for most

@@ -189,10 +189,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4136 [P1] {L:edit-speed} The track ghost lags behind the cursor (taking, 2026-11-23, agent ghostlag)
   - Context: You, 11-23: "a major complaint is just that the rail placement ghost lags behind the cursor ... its like one of the things thats most important to feel responsive". T-1779 and T-3263 fixed earlier causes.
   - Goal: The ghost follows the pointer every frame on the Asia and NYC saves, also while trips calculate; the checked shape catches up after.
-- T-4137 [P1] {L:edit-speed} Regions drift from a fresh build after an edge delete (taking, 2026-11-23, agent regionfix)
-  - Context: Batch check 11-23: t1382-rows on Asia, 10 seeds of 40 steps, fails at seed 9 step 15 (deleteEdge): "the regions differ from a fresh build (217 leaves against 217)", in T-4113's workers/regions.ts. Part A is on master, so it ships in 0.4.6.
-  - Goal: Regions equal a fresh build at every step on Asia and NYC over 20+ seeds, or the drift shown harmless to rows; seed 9 kept in the standing check.
-  - Other: notes/batchcheck-2026-11-23b.md
 - T-4139 [P1] {L:edit-speed} One edit-wait bench for every edit-speed task (taking, 2026-11-23, agent editbench)
   - Context: 11-23: each edit-speed agent re-measures with its own scripts on a loaded machine (2-5x swing), so gains are slow to show; perf_bench's fixed edit places no station.
   - Goal: One command timing ghost trail, station, stop click, Construct, line delete and undo on Asia and NYC on quiet cores, logged per build.
@@ -221,7 +217,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Your scratch pad, 11-22: "i think we might allow an unrealistic number of people to pile up at bus stops, should probably show a lower number more in line with other stations to not make players alarmed by big number".
 - T-4053 [P3] {L:borders} Common language border factor
   - Context: Your scratch pad, 11-22: "i think bogota-quito travel might be a bit small? relative to number of planes (liek 6 a day, maybe 2000 people a day vs our 800) i wonder if we should do a like 'common language' border multiplier... and maybe also between like switzerland and france". A new demand factor: the design goes to you first.
-- T-4054 [P1] {L:solve-speed} Faster first-arrival search
+- T-4054 [P1] {L:solve-speed} Faster first-arrival search (taking, 2026-11-23, agent searchleft)
   - Context: You, 11-22: "there will be a slowodwn. thats okay. we can look for further speedups elsewhere". T-4041 made the real save's solve about 41 s -> 58 s. Stages 1 and 2 are in tree solvespeed: search -18%, solve about 54 s. The rest is T-4057's. Left here: change nodes' and stations' settling (entry_costs); shares as u16 (about 10 MB).
   - Goal: The solve within about 15% of before T-4041, or the best the search can give.
   - Other: notes/T-4054.md, notes/T-4041.md
