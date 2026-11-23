@@ -28,6 +28,7 @@ TAKING = re.compile(r" \(taking, [^,)]*, agent ([^)]+)\)")
 LTAG = re.compile(r"\{L:([^}]*)\}")
 ARCHIVE_ANCHOR = "New entries go at the top, under this line."
 DECISION_WORDS = 50  # a DECISIONS.md entry, counted after its "- " (T-4120)
+FIELD_WORDS = {"Need from Anita": 30, "Context": 60, "Goal": 30}   # CLAUDE.md Tasks rules
 
 
 def read(path):
@@ -350,6 +351,10 @@ def cmd_check(r, a):
             # Goal is optional when the title already says what done is (Anita, 2026-11-18)
             if "Context" not in names:
                 problems.append(f"{where}: missing Context field")
+            for x in lines[n:j]:
+                fm = re.match(r"^  - (Need from Anita|Context|Goal):(.*)$", x)
+                if fm and len(fm.group(2).split()) > FIELD_WORDS[fm.group(1)]:
+                    problems.append(f"{where}: {fm.group(1)} is {len(fm.group(2).split())} words (at most {FIELD_WORDS[fm.group(1)]})")
             bad = [x for x in names if x not in order]
             if bad:
                 problems.append(f"{where}: unknown field {bad[0]}")

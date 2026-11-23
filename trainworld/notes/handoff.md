@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session 437c6600-7ce7-4abc-98f9-fc664146729b, name maps-65 [c4fa02], since 2026-11-23 14:09 UTC
-Updated: 2026-11-23 20:07 UTC (cycling at 500k). Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Orchestrator: session 28722621-86b3-4444-8131-f3aee02b18dd, name maps-6b [d9ec47], since 2026-11-23 20:08 UTC
+Updated: 2026-11-23 20:08 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5.
 
 ## In flight (adopt from the board)
@@ -10,6 +10,7 @@ diary notes/handoff-log.md. Her time UTC-5.
 - hoverends T-4107, headways T-4104, autostation T-4105 (UI; strings to her). board3 T-4100/4101/4102: edits
   board/, serve.py, tools/tasks.py, CLAUDE.md and board/watch.py in the main tree (I committed watch.py at 20:07 while
   it may have been mid-edit: check its diff on landing).
+- Mine (maps-6b): quadcheck T-4111, tmprofile T-4131 (new: re-measure click-to-map, profile the track model), tutcard T-4099. hoverends T-4107 reported done (tip.ts, screenshot fine): land once maps-65 is done. board3 T-4100/4101/4102 done and archived; its main-tree edits (board/, tools/tasks.py, watch.py, CLAUDE.md, TASKS.md, .gitignore) wait to be committed once maps-65 is done.
 - lasttable T-4123 landing on master at handover (finish running from my tab; check git log for T-4123).
 
 ## Next

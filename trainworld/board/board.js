@@ -179,6 +179,18 @@ function bestReadyPri(line) {
   return best;
 }
 
+/** Ready is two columns: lines holding a P1 or P2 ready task, and the rest (T-4101). Tasks and counts keep status 'ready'. */
+const READY_SPLIT = 2;
+function gridColumns() {
+  return DATA.columns.flatMap((c) => (c.key === 'ready'
+    ? [{ ...c, id: 'ready-p2', name: 'Ready, P2 lines' }, { ...c, id: 'ready', name: 'Ready, other lines' }]
+    : [{ ...c, id: c.key }]));
+}
+/** the grid column a line sits in */
+function colId(line) {
+  return line.status === 'ready' && bestReadyPri(line) <= READY_SPLIT ? 'ready-p2' : line.status;
+}
+
 async function load(failed) {
   try {
     const r = await fetch(`data.json?t=${Date.now()}`, { cache: 'no-store' });
@@ -555,19 +567,20 @@ function renderGrid() {
   }
   const perCol = {};
   perCol.upnext = upnextTasks(q, update).length;
-  for (const line of VIEW) if (shown.has(line.slug)) perCol[line.status] = (perCol[line.status] || 0) + 1;
+  for (const line of VIEW) if (shown.has(line.slug)) { const k = colId(line); perCol[k] = (perCol[k] || 0) + 1; }
   const asks = (DATA.asks || []).filter((a) => !q || `${a.title || ''} ${a.text}`.toLowerCase().includes(q));
   if (asks.length && !update) perCol.you = (perCol.you || 0) + asks.length;
 
-  const last = DATA.columns.length;   // columns 0 (the area names) .. last; a drag edge on the right of all but the last
+  const cols = gridColumns();
+  const last = cols.length;   // columns 0 (the area names) .. last; a drag edge on the right of all but the last
   grid.append(el('div', { class: 'colhead', style: 'background: var(--bg)' }, colGrip(0)));
-  DATA.columns.forEach((col, i) => {
+  cols.forEach((col, i) => {
     grid.append(el('div', { class: 'colhead', style: colour(col.key) },
-      col.name, perCol[col.key] ? el('span', { class: 'n' }, ` ${perCol[col.key]}`) : null, i + 1 < last ? colGrip(i + 1) : null));
+      col.name, perCol[col.id] ? el('span', { class: 'n' }, ` ${perCol[col.id]}`) : null, i + 1 < last ? colGrip(i + 1) : null));
   });
   if (asks.length && !update) {
     grid.append(el('div', { class: 'rowhead' }, 'Asks, not tasks', colGrip(0)));
-    for (const [i, col] of DATA.columns.entries()) {
+    for (const [i, col] of cols.entries()) {
       const cell = el('div', { class: 'cell', 'data-area': 'asks', 'data-status': col.key }, i + 1 < last ? colGrip(i + 1) : null);
       if (col.key === 'you') for (const a of asks) cell.append(askCard(a));
       grid.append(cell);
@@ -575,14 +588,14 @@ function renderGrid() {
   }
   for (const area of DATA.areas) {
     grid.append(el('div', { class: 'rowhead' }, area.name, colGrip(0)));
-    for (const [i, col] of DATA.columns.entries()) {
+    for (const [i, col] of cols.entries()) {
       const cell = el('div', { class: 'cell', 'data-area': area.slug, 'data-status': col.key }, i + 1 < last ? colGrip(i + 1) : null);
       if (col.key === 'upnext') {
         for (const t of upnextTasks(q, update)) if (upnextArea(t) === area.slug) cell.append(taskCard(t));
         grid.append(cell);
         continue;
       }
-      const here = VIEW.filter((line) => line.area === area.slug && line.status === col.key && shown.has(line.slug));
+      const here = VIEW.filter((line) => line.area === area.slug && colId(line) === col.id && shown.has(line.slug));
       if (col.key === 'ready') here.sort((a, b) => bestReadyPri(a) - bestReadyPri(b));   // stable: ties keep her order
       for (const line of here) cell.append(card(line, shown.get(line.slug)));
       grid.append(cell);
@@ -598,7 +611,7 @@ let COLW = null;
 try { const w = JSON.parse(localStorage.getItem(COLW_KEY)); if (Array.isArray(w) && w.every((x) => x > 0)) COLW = w; } catch (e) { /* default widths */ }
 function applyColWidths() {
   const grid = $('#grid');
-  const ok = COLW && DATA && COLW.length === DATA.columns.length + 1;
+  const ok = COLW && DATA && COLW.length === gridColumns().length + 1;
   grid.style.gridTemplateColumns = ok ? COLW.map((w) => `minmax(0, ${w}fr)`).join(' ') : '';
 }
 function colGrip(i) {

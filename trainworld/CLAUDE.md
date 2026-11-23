@@ -101,6 +101,9 @@ new standing process.
   - Use only the ids your brief gives you. A new task joins an existing line or adds one.
   - `venv\Scripts\python.exe trainworld/tools/tasks.py start <ids> --agent <name>` before starting, `done <id>
     --outcome "..."` when done (it also sets the line's `done:`), `check` for malformed lines.
+  - Word limits per field, which `tasks.py check` flags: Need from Anita 30, Context 60, Goal 30. Anita reads these on
+    the board; the middle task's Context is 23 words and 90% of tasks fit 60, so the limit cuts only the sprawl.
+    Longer detail goes in `notes/T-###.md` (linked in Other). Keep her words where short; cut quotes to the part that asks.
   - Rewrite a task's fields, never append to the head line. When the main work is done but the task stays open, rewrite
     its title, Context and Goal to the part that's left.
 - **Done** means it runs, the spec matches, any decision is recorded, and the task is archived. Then grep TASKS.md for

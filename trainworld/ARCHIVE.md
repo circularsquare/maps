@@ -1,6 +1,9 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4102 [P2] {L:board} The board watch doesn't reprint reports after a restart (2026-11-23): watch.py remembers printed report ids per session across its restarts (notes/watch-told-<session>.json, gitignored)
+- T-4101 [P2] {L:board} Split Ready into lines with P2 tasks and the rest (2026-11-23): the board's Ready column split into Ready, P2 lines and Ready, other lines.
+- T-4100 [P2] {L:board} Short task summaries on the board (2026-11-23): tasks.py check flags Need from Anita over 30 words, Context over 60, Goal over 30; 67 fields shortened in TASKS.md.
 - T-4121 [P1] {L:checks} A shared Rust build cache for agent trees (2026-11-23): New trees copy a warm target seed (compile about 25% faster, first test barely); agent_cargo.py now claims in the root ledger, which it never did from trees.
 - T-4123 [P1] {L:solve-speed} Keep the last one-off search table for the next caller (2026-11-23): The last table searched for one call alone is kept as a spare for the next caller with the same graph; identical figures (NYC and Tokyo hashes), Tokyo community network -17% of the native solve, bench saves within noise, demand memory unchanged; notes/T-4123.md.
 - T-4125 [P1] {L:edit-speed} Bounded edits next stage, the biggest whole-save step left (2026-11-23): The page after an edit: capacity tag labels, bus stop names and transfer bullets from grids and indexes, same answers; a stop click's page work 286 to 108 ms on the Asia save (notes/T-4125.md).

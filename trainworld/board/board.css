@@ -134,7 +134,7 @@ a.task:hover, button.link:hover { text-decoration: underline; }
 #grid-wrap { overflow-x: auto; }
 #grid {
   display: grid;
-  grid-template-columns: 120px repeat(6, minmax(150px, 1fr));
+  grid-template-columns: 120px repeat(7, minmax(150px, 1fr));
   min-width: 1200px;
 }
 .colhead {
