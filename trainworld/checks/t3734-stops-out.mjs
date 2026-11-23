@@ -1,7 +1,8 @@
 // T-3734 stage 1: stop clicks still being sent when the player saves or leaves (T-3731). On the real New York save,
 // the longest rail line's stop editing gets five quick stop clicks and is ended at once, so the clicks are still
-// waiting at the exit (120 line reads are queued on the clock worker as in T-3731's probe, a stand-in for a slow
-// sim; on the code before T-3731 every click was lost without them too). Then:
+// out at the exit (since T-4114 a plain click is sent at once, by station: all may be sent, still unanswered)
+// (120 line reads are queued on the clock worker as in T-3731's probe, a stand-in for a slow sim; on the code
+// before T-3731 every click was lost without them too). Then:
 //   1. a manual save: every click is sent, and the save only after the last of them;
 //   2. Save and quit to main menu (the leave message recorded, not sent, so the page stays): the same for the leave.
 // Each line's stops afterwards are its stops before minus the five clicked.
@@ -43,7 +44,7 @@ try {
     for (let k = 0; k < 120; k++) void tw.client.query({ what: 'stopTiers', line: w.save.lines[k % w.save.lines.length].num });
     for (const st of clicked) tw.tools.toggleStop(st);
     tw.tools.exit();
-    const atExit = window.__posts.slice(from).filter((p) => p === 'setStops').length;
+    const atExit = window.__posts.slice(from).filter((p) => p === 'setStops' || p === 'toggleStop').length;
     if (then === 'save') void Promise.resolve(cc.manageSaveSlot('save')).catch(() => {});
     else cc.leaveToMenu(() => {});
     const t0 = performance.now();
@@ -58,8 +59,9 @@ try {
   for (const [nth, then] of [[0, 'save'], [1, 'leave']]) {
     const r = await run(nth, then);
     const k = r.posts.indexOf(then === 'save' ? 'saveSlot' : 'leave');
-    const before = r.posts.slice(0, k < 0 ? r.posts.length : k).filter((p) => p === 'setStops').length;
-    report(`${then}: every stop click is sent, and the ${then} after the last`, r.atExit < r.clicks && k >= 0 && before === r.clicks && r.stops === r.want,
+    const before = r.posts.slice(0, k < 0 ? r.posts.length : k).filter((p) => p === 'setStops' || p === 'toggleStop').length;
+    // (T-4114: a plain click goes at once, so all five may be sent by the exit; a queued kind still waits)
+    report(`${then}: every stop click is sent, and the ${then} after the last`, r.atExit <= r.clicks && k >= 0 && before === r.clicks && r.stops === r.want,
       `(line ${r.line}: ${r.clicks} clicks, ${r.atExit} sent at the exit; sent in order ${r.posts.join(' ')}; stops ${r.stops}, want ${r.want}; ${r.ms} ms)`);
   }
   const errs = g.pageErrors().filter((e) => !/WebGL|GPU/i.test(e));

@@ -74,6 +74,7 @@ function isQuiet(op: EditOp, w: WorldView): boolean {
     }
     case "setStops":
     case "insertStop":
+    case "toggleStop":
     case "oneWayStop":
     case "dropStop":
     case "endLineAt":

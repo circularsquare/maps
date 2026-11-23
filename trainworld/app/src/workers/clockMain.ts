@@ -417,6 +417,8 @@ export function sendRows(built?: ClockState): boolean {
   timing.rowsPost = performance.now() - t1;
   return true;
 }
+/** T-4114: whether a rows state can go now (`sendRows`'s own test) */
+export const rowsCanGo = () => !!posted.net && !shiftFrom;
 /** the parts of a state that can change between a follow-up's pieces without an edit: the cash and the money record
  * (the money tick, demand's money results) */
 const nowMoney = () => ({ cash: api!.cash(), money: moneyState() });

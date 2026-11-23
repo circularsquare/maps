@@ -30,6 +30,7 @@ import { BuildingFloors } from "./buildingFloors";
 import { TrainGuard } from "./trainGuard";
 import { LOT_STRIDE } from "./facilityPlace";
 import { F_BLUEPRINT, platformShapeAt, sampleValue, type NetworkBuffers, type Strokes } from "./network";
+import { aheadStrokes, drawnEdgesOf, type Ahead, type AheadLook } from "./lineAhead";
 import { BAY_STRIDE } from "./terminalBays";
 import { BAND_RANGE, TRAFFIC_PICK_DIV, type TrafficBands } from "./lineBands";
 import { BRIDGE_VS, HOT_STATIONS, LINES_W, PROBE_FS, PROBE_VS, SEL_FS, SEL_MAX, SEL_STRIDE, SEL_VS, STATION_FS, STATION_VS, STROKE_FS, STROKE_VS, TEX_W, TRAIN_FS, TRAIN_VS } from "./rendererShaders";
@@ -52,6 +53,10 @@ import { drawFrame, bindTrainTextures } from "./rendererDraw";
 // each hour's trips (and the next hour's, ahead); when the hour turns, only that buffer is
 // re-uploaded. Phase tables change only on edits.
 
+
+/** T-4114: a line drawn ahead whose network never comes (a worker that restarted) is dropped with the next network after this, ms */
+const AHEAD_MAX_MS = 15000;
+const sameSet = (a: ReadonlySet<number>, b: ReadonlySet<number>) => a.size === b.size && [...a].every((x) => b.has(x));
 
 export class NetworkRenderer {
   gl!: WebGL2RenderingContext;
@@ -490,7 +495,7 @@ export class NetworkRenderer {
     this.hasStencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
     // (Firefox with fingerprinting resistance says 2048 for both, under many a window's canvas)
     this.cacheMax = Math.min(gl.getParameter(gl.MAX_RENDERBUFFER_SIZE) ?? 0, gl.getParameter(gl.MAX_TEXTURE_SIZE) ?? 0);
-    this.strokeU = uniforms(gl, this.strokeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_n", "u_sel_set", "u_sel_edge", "u_hot", "u_hide", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_pass_off","u_dim", "u_by_level", "u_by_speed", "u_by_profit", "u_profit", "u_profit_n", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_out", "u_full_dash", "u_full_rgb", "u_full_inside", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr", "u_wire", "u_band", "u_band_traffic", "u_band_gap", "u_band_m", "u_mute", "u_level_hide"]);
+    this.strokeU = uniforms(gl, this.strokeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_n", "u_sel_set", "u_sel_edge", "u_hot", "u_hide", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_pass_off","u_dim", "u_by_level", "u_by_speed", "u_by_profit", "u_profit", "u_profit_n", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_out", "u_full_dash", "u_full_rgb", "u_full_inside", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr", "u_wire", "u_band", "u_band_traffic", "u_band_gap", "u_band_m", "u_mute", "u_level_hide", "u_hide_lines", "u_ahead"]);
     this.stationU = uniforms(gl, this.stationProg, [...PROJECT_UNIFORMS, "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass_half", "u_pass_in", "u_pass", "u_layer", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n", "u_room", "u_bld", "u_one", "u_one_mid", "u_no_bp"]);
     this.bridgeProg = compile(gl, BRIDGE_VS, STATION_FS);
     this.bridgeU = uniforms(gl, this.bridgeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_ink", "u_bad", "u_crowd_rgb", "u_mask", "u_hot_st", "u_hot_n", "u_no_bp"]);
@@ -644,6 +649,9 @@ export class NetworkRenderer {
   setNetwork(n: NetworkBuffers) {
     const gl = this.gl;
     this.dropPlaced(); // T-1407: the network drawn now has the segment its stand-in showed
+    // T-4114: a line drawn ahead goes once a network holding its edit is set; a guess not yet answered stays
+    const now = performance.now();
+    for (const [l, a] of this.ahead) if (a.armed || now - a.at > AHEAD_MAX_MS) this.ahead.delete(l);
     // T-1028: an edit's network posted as changes to the one drawn keeps the strokes' unchanged runs
     // on the GPU and the textures whose data is the same; anything else is uploaded whole
     const was = this.net, p = n.patch;
@@ -769,6 +777,51 @@ export class NetworkRenderer {
     attrib(this, this.trainProg, "a_bay", this.bayBuf!, 4, gl.FLOAT, 1);
     gl.bindVertexArray(null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    if (this.ahead.size || this.aheadVao) this.buildAhead();
+  }
+
+  /** T-4114: lines drawn ahead of the network, by line id (map/lineAhead.ts) */
+  ahead = new Map<number, Ahead>();
+  aheadVao: StrokeVao | null = null;
+  aheadRes: { del: () => void }[] = [];
+  /** the lines whose network strokes are not drawn meanwhile, -1 for none (the shader's `u_hide_lines`) */
+  aheadHide: [number, number, number, number] = [-1, -1, -1, -1];
+
+  /** T-4114: line `line`'s strokes now draw `edges` (null: the line is gone), drawn so until a network holding the edit is
+   * set: the next one when `armed` (the worker's word), else the first after the worker's. A guess at the click replaces
+   * the worker's word for an earlier click; the same edges as drawn drop it. */
+  lineAhead(line: number, edges: Iterable<number> | null, armed: boolean, look: AheadLook) {
+    const set = edges ? new Set(edges) : null, n = this.net;
+    const was = this.ahead.get(line);
+    if (set && n && sameSet(set, drawnEdgesOf(n, line))) {
+      // (an unanswered guess the worker's word replaces keeps nothing to draw)
+      if (!was) return;
+      this.ahead.delete(line);
+    } else this.ahead.set(line, { edges: set, armed, look, at: performance.now() });
+    this.buildAhead();
+  }
+
+  /** T-4114: a line's edit refused: a guess made at its click goes (the worker's word for an earlier click stays) */
+  dropAhead(line: number) {
+    if (this.ahead.get(line)?.armed === false && this.ahead.delete(line)) this.buildAhead();
+  }
+  /** T-4114: the version of the state the network drawn came in (main.ts), so a guess at a click knows whether it
+   * shows the stops the world holds */
+  netVersion = -1;
+
+  private buildAhead() {
+    for (const r of this.aheadRes) r.del();
+    this.aheadRes = [];
+    this.aheadVao = null;
+    const n = this.net, hide: number[] = [];
+    if (n && this.ahead.size) {
+      const s = aheadStrokes(n, this.ahead);
+      if (s.count) this.aheadVao = strokes(this, s, this.aheadRes);
+      for (const [l, a] of this.ahead) if (a.edges && hide.length < 4) hide.push(l);
+    }
+    this.aheadHide = [hide[0] ?? -1, hide[1] ?? -1, hide[2] ?? -1, hide[3] ?? -1];
+    if (n && this.tex.colours) this.putTexture("colours", this.shownColours(n), "rgba8", LINES_W);
+    this.uploads++;
   }
 
   /** Only the service changed (a train count, T-229): the run profiles' phase tables and meta are
@@ -851,9 +904,11 @@ export class NetworkRenderer {
   stationHid = new Uint8Array(0);
   /** T-3420: the line colours with a hidden line's alpha 0 (the stroke and train shaders read it) */
   shownColours(n: NetworkBuffers): Uint8Array {
-    if (!vis.lines.size) return n.lineColours;
+    // T-4114: a line deleted and not yet out of the network too
+    const gone = [...this.ahead].filter(([, a]) => !a.edges).map(([l]) => l);
+    if (!vis.lines.size && !gone.length) return n.lineColours;
     const c = n.lineColours.slice();
-    for (const l of vis.lines) if (l * 4 + 3 < c.length) c[l * 4 + 3] = 0;
+    for (const l of [...vis.lines, ...gone]) if (l * 4 + 3 < c.length) c[l * 4 + 3] = 0;
     return c;
   }
   /** Whether station `i` is on a hidden level (T-3420). */

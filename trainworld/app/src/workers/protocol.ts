@@ -165,6 +165,10 @@ export type EditOp =
   /** T-3711, a shift-click in the line tool: the station made a stop served one way only (added where insertStop
    * puts it if it is no stop yet), or such a stop served both ways again; refused as insertStop */
   | { op: "oneWayStop"; line: number; station: NodeId; autoFast?: boolean }
+  /** T-4114, the line tool's plain click: the station taken out of the line's plan, every visit of it (a loop that loses
+   * its first stop closes again on its new first stop, T-3050), when it is a stop then, else put in as `insertStop`. The
+   * worker reads the stops it holds, so a click is sent without waiting for the one before it. */
+  | { op: "toggleStop"; line: number; station: NodeId; autoFast?: boolean }
   /** T-4013: riders at the line's stop `station` only board (kind 1), only get off (2), or both (0) */
   | { op: "stopOnly"; line: number; station: NodeId; kind: 0 | 1 | 2 }
   /** T-1791, the group view's stop edits, all keeping the line's path: stop `index` out (an end's removal cuts the path back), the line ended at stop `index` (the stops past it toward the nearer end go), a station the line passes made a stop; refused with "LinePath" */
@@ -957,6 +961,9 @@ export type FromClock =
   | { kind: "ready"; initMs: number; frame: FrameSpec }
   /** an edit's answer; `issues` are the track model's problem kinds (`TrackApi.issue_kinds`);
    * `ms`: the worker's time on the edit by step (T-229, for `?debug=1`); `node` after addBuilding: the building's id */
+  /** T-4114: a line edit applied, sent before its rows: the edges the line's strokes now draw (its plan's path and
+   * its return run's), or null when the line is gone; the map draws them until the next network */
+  | { kind: "linePath"; line: number; edges: Uint32Array | null }
   | { kind: "edited"; seq: number; ok: boolean; issues: string[]; charge: number; line?: number; node?: number; paid?: PaidFor; skipped?: number; ms?: Record<string, number>; early?: boolean; held?: Float32Array[] }
   | {
       kind: "preview";

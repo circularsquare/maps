@@ -705,6 +705,8 @@ export class ClockClient {
   /** T-2159: the network diagram's graph, while the diagram is shown (diagram/view.ts) */
   /** T-3409: `cut`: the graphs are of the chosen cities alone; `whole`: the whole network's too, when a share asked */
   onDiagram: (graphs: DiagramGraph[], cut: boolean, whole?: DiagramGraph[]) => void = () => {};
+  /** T-4114: a line edit applied in the worker, before its rows: the edges the line's strokes draw now (null: gone) */
+  onLinePath: (line: number, edges: Uint32Array | null) => void = () => {};
   /** `board`: the boarding account's hour (T-164, game/boarding.ts), once demand has riders */
   onTrips: (epoch: number, version: number, trips: Float32Array, board?: Float32Array, ends?: Float32Array, nexts?: Float32Array, bays?: Float32Array) => void = () => {};
   /** the boarding account's last hours: ms in the worker for the hour, lines worked out again
@@ -1500,6 +1502,9 @@ export class ClockClient {
         }
         this.tripsAt = performance.now();
         this.onTrips(msg.epoch, msg.version, msg.trips, msg.board, msg.ends, msg.nexts, msg.bays);
+        break;
+      case "linePath":
+        this.onLinePath(msg.line, msg.edges);
         break;
       case "edited": {
         const f = this.pending.get(msg.seq);

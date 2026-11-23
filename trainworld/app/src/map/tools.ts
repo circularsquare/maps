@@ -39,14 +39,16 @@ import { loadRealStationsAt } from "./realStations";
 import { pointerLocal } from "./pick";
 import { edgesNear, nodesNear } from "./snapIndex";
 import { hidden, levelHidden } from "./visibility";
-import { afterStopEdits, edit, queueStopEdit, say, stopsQueued, world } from "../game/world";
+import { afterStopEdits, edit, queueStopEdit, say, sendStopEdit, stopsQueued, world } from "../game/world";
+import { dropAhead, showAhead } from "./aheadShow";
+import { edgesWithoutEnd } from "./lineAhead";
 import { hideBusy, showBusy } from "../game/busy";
 import { type RouteEnd } from "../workers/protocol";
 import { gameStamp, onRoadsLanded, type ClockClient, type PreviewAnswer } from "../workers/clockClient";
 import { roadTileTemplate } from "./busRoads";
 import { kAtY, toLngLat, toLocal } from "./geo";
 import { laneState } from "./renderer";
-import { planStopsOf, type Level } from "../game/types";
+import { planStopsOf, type Level, type LineInput } from "../game/types";
 import { endHeading } from "./curveCircle";
 import { ghostChevrons, joinedGhost, strokesFromPreview, TAPER_M } from "./network";
 import { type PlatformShape } from "./stationGeometry";
@@ -1282,7 +1284,9 @@ export class Tools {
       const on = !!line?.stops.includes(String(station));
       if (line && !line.planStops && !(oneWay && on)) guessRow(String(station), on, line.num);
     }
-    void queueStopEdit(() => this.toggle(station, id, game, tier, oneWay)).catch(() => {
+    // T-4114: a plain click goes at once (the worker reads the stops it holds then); a loop's or a shift-click waits its turn
+    const go = () => this.toggle(station, id, game, tier, oneWay);
+    void (!tier && !oneWay ? sendStopEdit(go) : queueStopEdit(go)).catch(() => {
       if (game === gameStamp.peek()) say(tr("tools.stopFailed"), true);
     }).finally(() => {
       if (tier) return;
@@ -1319,19 +1323,16 @@ export class Tools {
     } else if (oneWay) {
       // T-3711: served one way, the way that makes sense (the worker's), or both ways again
       change = { op: "oneWayStop", line: id, station, autoFast: this.autoFast(id) };
-    } else if (!before.includes(station)) {
-      // the worker fits it in among the stops it holds then (T-648), so a queued click never works
-      // from stops an earlier one changed
-      change = { op: "insertStop", line: id, station, autoFast: this.autoFast(id) };
     } else {
-      // taking a stop out, every visit of it: the route between its neighbours is the worker's, as the inspector's
-      // crosses; a loop that loses its first stop closes again on its new first stop (T-3050)
-      const stops = before.filter((s) => s !== station);
-      if (closedLoop && stops.length >= 2 && stops[0] !== stops[stops.length - 1]) stops.push(stops[0]);
-      change = { op: "setStops", line: id, stops, autoFast: this.autoFast(id) };
+      // T-4114: added where the worker fits it among the stops it holds then (T-648), or taken out, every visit of it
+      // (the route between its neighbours the worker's; a loop that loses its first stop closes again on its new
+      // first stop, T-3050): no click works from stops an earlier one changed, so none waits for the one before
+      change = { op: "toggleStop", line: id, station, autoFast: this.autoFast(id) };
+      this.guessPath(line, station);
     }
-    // T-2766: answered once the world holds it (the next click reads its stops), its network once the clicks stop
+    // T-2766: answered once the world holds it, its network once the clicks stop
     const a = await edit(change, false, false, "rows", game);
+    if (!a.ok && change.op === "toggleStop") dropAhead(id);
     if (!a.ok || game !== gameStamp.peek()) return;
     if (tool.peek() === "line" && lineDraft.peek().line === id) {
       const latest = world.peek()?.save.lines.find((l) => Number(l.id) === id);
@@ -1339,6 +1340,18 @@ export class Tools {
     }
     this.noteFast(id);
     void settleNewLineColour(id);
+  }
+
+  /** T-4114: a plain click that takes out the line's first or last stop cuts its strokes back at the click (the
+   * worker's own path follows a moment later); only with no other click out and the network drawn from the world's stops */
+  guessPath(line: LineInput, station: number) {
+    const r = this.overlay.renderer, n = r.net;
+    // (a network older than the world has an earlier click's stops: its stretches are not these stops')
+    if (!n || r.netVersion !== world.peek()?.version || line.planStops || stopsQueued.peek() > 1) return;
+    const stops = line.stops.map(Number), k = stops.indexOf(station);
+    if (k < 0 || stops[0] === stops[stops.length - 1] || stops.indexOf(station, k + 1) >= 0) return;
+    const edges = edgesWithoutEnd(n, Number(line.id), k, stops.length);
+    if (edges) showAhead(Number(line.id), edges, false);
   }
 
   /** T-1899: whether a stop edit on `id` picks its train type by the track: while it is the new line

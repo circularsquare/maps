@@ -31,6 +31,7 @@ import { hideUiKey } from "./ui/hideUi";
 import { helpKey } from "./ui/HelpPanel";
 import { followCapsLock, keyIsTheirs, releaseSelectsAfterMousePick } from "./ui/keys";
 import { stopsById, world } from "./game/world";
+import { showAhead } from "./map/aheadShow";
 import { hiddenLevels, hiddenLines, hideBlueprints, hideBlueprintsView, hideBuses, levelBits } from "./game/lineVisibility";
 import { setBlueprintsHidden, setHidden } from "./map/visibility";
 import "./game/capLoad";
@@ -384,6 +385,7 @@ if (SYNTH) {
       else if (s.net) {
         const was = renderer.net;
         renderer.setNetwork(s.net); // built in the worker (T-063)
+        renderer.netVersion = s.version;
         carryGrids(was, s.net, renderer.checkPatch); // T-1030
         carryEdgeGrid(was, s.net, renderer.checkPatch);
         // T-1047; T-1021: a task of its own right after, so a big network's first state is two tasks
@@ -405,6 +407,8 @@ if (SYNTH) {
     }
   };
   if (DEBUG) (window as any).twViews = { stats: viewStats, overlay: views.overlay, hover: views.hover, click: views.click };
+  // T-4114: a line's new strokes from the edit just applied, drawn until the network that holds it
+  client.onLinePath = (line, edges) => showAhead(line, edges, true);
   client.onTrips = (epoch, version, trips, board, ends, nexts, bays) => {
     renderer.setTrips(epoch, version, trips, board, ends, nexts, bays);
     overlay.invalidate();

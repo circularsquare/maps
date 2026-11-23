@@ -77,7 +77,8 @@ export function setAfterEdit(f: (op: EditOp, a: EditAnswer) => void) {
 }
 
 /** T-3731: the line tool's stop clicks, each sent once the one before is answered (it reads the stops that one
- * left). A click is kept when stop editing ends; only a game loaded since drops it. */
+ * left), but a plain click (`sendStopEdit`, T-4114). A click is kept when stop editing ends; only a game loaded since
+ * drops it. */
 let stopQueue: Promise<void> = Promise.resolve();
 /** stop clicks made and not yet answered */
 export const stopsQueued = signal(0);
@@ -89,8 +90,22 @@ const STOPS_GIVE_UP_MS = 10000;
 export function queueStopEdit(f: () => Promise<void>): Promise<void> {
   if (stopsQueued.peek() === 0) stopsMoved = performance.now();
   stopsQueued.value++;
-  const p = stopQueue.then(f).finally(() => { stopsQueued.value--; stopsMoved = performance.now(); });
+  chained++;
+  const p = stopQueue.then(f).finally(() => { chained--; stopsQueued.value--; stopsMoved = performance.now(); });
   stopQueue = p.catch(() => {});
+  return p;
+}
+/** queued stop edits not yet answered (`queueStopEdit`) */
+let chained = 0;
+/** T-4114: a plain stop click (`toggleStop`, which the worker reads against the stops it holds), sent at once, not after
+ * the clicks still out; edits queued after it wait for it as for the others. Behind a queued edit it keeps its place. */
+export function sendStopEdit(f: () => Promise<void>): Promise<void> {
+  if (chained > 0) return queueStopEdit(f);
+  if (stopsQueued.peek() === 0) stopsMoved = performance.now();
+  stopsQueued.value++;
+  const p = f().finally(() => { stopsQueued.value--; stopsMoved = performance.now(); });
+  const was = stopQueue;
+  stopQueue = Promise.all([was, p.catch(() => {})]).then(() => {});
   return p;
 }
 const stopsStuck = () => performance.now() - stopsMoved >= STOPS_GIVE_UP_MS;
@@ -127,7 +142,7 @@ export async function edit(op: EditOp, quiet = false, silent = false, early: boo
   return a;
 }
 
-const TRAIN_OPS = new Set(["setStops", "insertStop", "oneWayStop", "dropStop", "endLineAt", "stopPassed", "orderStops", "sortStops", "turnEnd", "openLoop", "setTrainCount", "setHeadway", "weekendShare", "weekendCounts", "weekendShareAll", "setPeriods", "setHours", "setRowTrains", "setRowHeadways", "rowWeekend", "lineCars", "copyLine", "undo", "redo"]);
+const TRAIN_OPS = new Set(["setStops", "insertStop", "toggleStop", "oneWayStop", "dropStop", "endLineAt", "stopPassed", "orderStops", "sortStops", "turnEnd", "openLoop", "setTrainCount", "setHeadway", "weekendShare", "weekendCounts", "weekendShareAll", "setPeriods", "setHours", "setRowTrains", "setRowHeadways", "rowWeekend", "lineCars", "copyLine", "undo", "redo"]);
 const BUILD_OPS = new Set(["route", "construct", "constructAll", "constructLine", "addStation", "addBrtStation", "addPort", "crossover", "doubleUp", "stationUpgrade", "rebuild"]);
 /** What a refused-for-money edit would have paid for: line edits cost trains only, track edits construction. */
 function buysOf(op: EditOp): Buys | undefined {

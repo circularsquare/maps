@@ -123,6 +123,8 @@ function strokeUniforms(rnd: NetworkRenderer, c: Ctx1) {
   gl.uniform1i(u.u_sel_edge, opt.selEdge);
   gl.uniform2i(u.u_hot, opt.hotLine ?? -1, opt.hotEdge ?? -1);
   gl.uniform2i(u.u_hide, rnd.hide[0], rnd.hide[1]);
+  gl.uniform4i(u.u_hide_lines, ...rnd.aheadHide);
+  gl.uniform1i(u.u_ahead, 0);
   gl.uniform1i(u.u_level_hide, vis.levels);
   // T-2058: the other lines thinner, faded and solid
   const mute = MUTE && (opt.dimOthers ?? 1) < 1 ? MUTE : null;
@@ -253,7 +255,15 @@ function strokeDraws(rnd: NetworkRenderer, c: Ctx2) {
       // through a station's box blueprint track is drawn whole (rails and middle) over a blueprint box
       const c = part === 2 ? 0 : cap;
       stroke(rnd.track, 0, opt.byLevel || opt.bySpeed || opt.byProfit ? wLine : wTrack, opt.selEdge >= 0, c);
-      if (!opt.byLevel && !opt.bySpeed && !opt.byProfit) stroke(rnd.lines, 1, wLine, opt.selLine >= 0 || !!opt.selLines?.length, c);
+      if (!opt.byLevel && !opt.bySpeed && !opt.byProfit) {
+        stroke(rnd.lines, 1, wLine, opt.selLine >= 0 || !!opt.selLines?.length, c);
+        // T-4114: lines drawn ahead of the network, over the others
+        if (rnd.aheadVao) {
+          gl.uniform1i(u.u_ahead, 1);
+          stroke(rnd.aheadVao, 1, wLine, opt.selLine >= 0 || !!opt.selLines?.length, c);
+          gl.uniform1i(u.u_ahead, 0);
+        }
+      }
     }
     gl.uniform1i(u.u_bp_part, 0);
     // passing stations' outer tracks along their platforms (T-2233)

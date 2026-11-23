@@ -28,6 +28,7 @@ import { gameStamp } from "../../workers/clockClient";
 import { noteHeadwayLimits, edit, linesAt, say, stationNames, stationsById, stationsByNum, stepLineCars, pendingCars, world, linesById, linesByNum, pairStats, queueStopEdit, rowCount, fleetOf, lineIndicesAt } from "../../game/world";
 import { CUTS_DEFAULT, periodAt, rowAt } from "../../game/periods";
 import { live } from "../../map/live";
+import { dropAhead, showAhead } from "../../map/aheadShow";
 import { setListHot } from "../../map/hovered";
 import { Alert, Check, Chip, Icon, Row, Segmented, shakeEl, Stepper, SwapLabel } from "../widgets";
 import { PurposeSplit } from "./PurposeSplit";
@@ -790,8 +791,10 @@ function RailLineInspector({ id }: { id: string }) {
   const stopEdit = (op: EditOp) => sendStops(() => op);
   // T-2919: no question, since an undo brings the line back (track and stations stay)
   const remove = () => {
+    // T-4114: gone from the map at the click, back if refused
+    showAhead(l.num, null, false);
     void edit({ op: "removeLine", line: l.num }).then(a => {
-      if (!a.ok) return;
+      if (!a.ok) return dropAhead(l.num);
       if (lineDraft.peek().line === l.num) live.tools?.exit();
       const selected = selection.peek();
       if (selected?.kind === "line" && selected.line === l.id) selection.value = null;

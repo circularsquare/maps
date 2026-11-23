@@ -36,7 +36,7 @@ import { goneLineFares, loadFares, newLineFare, pinFareRef, startFares, tidyLine
 import { EARLY_WAIT_MS, followTimer, followUp, goesAhead, guardedFollowUp, heldEdges, HOLD_MS, holdOn, isPreview, isServiceOp, jumpsAhead, later, passesHeld, previewStaleSeq, putPreviewStaleSeq, sendStale, stale, standAside, startNow, stepThenRun, Waiting } from "./clockFollowUp";
 import { putLoadMaskWait } from "./clockGround";
 import { blocksIn, blueprintPolylines, ensureBlocks, ensureMasks, ensureStreets, fetchWater, groundForBlueprint, masksComplete, masksIn, nodePoints, openNetwork, pumpBlocks, putPackBase, putTerrainBase, putViewBlocks, putViewZones, retryGroundNow, roadFeed, roadsUnder, routePoints, terrainIndexIntoModel, tintSent, VIEW_MARGIN_M, VIEW_SPAN_M, viewBlocks, viewZones, wakeStale, WaterRaster, withMasks, worldWaterIntoModel, zonesOfPoints } from "./clockGround";
-import { anchorMoves, drawnEdge, drawnLine, edgeDrawn, forget, game, hex, lineDrawn, previewMarkRows, putAnchorMoves, putConvertedOnLoad, putShiftFrom, putShiftWas, putView, restart, sendHome, sendOpened, sendRows, sendState, SHIFT_REACH, shiftFrom, SHIFTS_EXACT } from "./clockMain";
+import { anchorMoves, drawnEdge, drawnLine, edgeDrawn, forget, game, hex, lineDrawn, previewMarkRows, putAnchorMoves, putConvertedOnLoad, putShiftFrom, putShiftWas, putView, restart, rowsCanGo, sendHome, sendOpened, sendRows, sendState, SHIFT_REACH, shiftFrom, SHIFTS_EXACT } from "./clockMain";
 import { gameNow, lineDays, linesPeriods, loadLineDays, loadRegions, mergeLedger, putTodayGen, putTodayLast, regionEntries, regions, rounded, savedLineDays, savedRegions, sendCash, sendMoney, serviceLeadS, settle, today, todayGen, unsettleAfter } from "./clockMoney";
 import { afterLoadPanic, downTold, EDIT_UNDONE, kept, putDownTold, isPanic, keep, MODEL_DOWN, MODEL_RESTORED, modelDown, newModel, openFailReason, panicAfterEdit, panicLater, panicNow, panicOnLoad, panicWhy, putModelDown, putPanicAfterEdit, putPanicOnLoad, recover, SAVE_PANIC } from "./clockPanic";
 import { diagramOn, patchMode, postDiagram, posted, postWhole, putDiagramOn, putDiagramWhole, putPatchMode, sender } from "./clockPost";
@@ -464,6 +464,30 @@ function tripsNow(e: number) {
     if (isPanic(err)) panicLater(err, "the hour's trips"); // i18n-ignore
     else send({ kind: "error", message: String(err) });
   }
+}
+/** T-4114: edits that change which edges a line's strokes draw: stop edits from the line tool and the line panel, a line
+ * deleted */
+const LINE_PATH_OPS = new Set<EditOp["op"]>(["toggleStop", "insertStop", "oneWayStop", "setStops", "dropStop", "endLineAt", "stopPassed", "orderStops", "sortStops", "turnEnd", "openLoop", "removeLine"]);
+/** the edges a rail line's strokes draw: its plan's path and its return run's */
+function lineEdges(line: number): Uint32Array {
+  const out = new Set<number>();
+  for (const p of api!.line_path(line)) out.add(p >> 1);
+  for (const p of api!.line_back_path(line)) out.add(p >> 1);
+  return Uint32Array.from(out);
+}
+/** T-4114: the rows state stop clicks owe, a task later through the queue: clicks sent meanwhile are applied first and
+ * share it, and the newest click's own takes its place */
+let rowsGen = 0;
+function rowsSoon() {
+  const gen = ++rowsGen;
+  setTimeout(() => putMessages(messages.then(() => { if (gen === rowsGen) rowsOwed(); }).catch((err) => send({ kind: "error", message: String(err) }))), 0);
+}
+/** the rows for the edits of the follow-up still waiting for a world holding them, then their answers (none can go while
+ * the drawn pieces are to move: the full state answers them) */
+function rowsOwed() {
+  const f = followUp;
+  if (!api || modelDown || !f?.waiting.some((w) => w.owes()) || !sendRows()) return;
+  for (const w of f.waiting) w.worldSent();
 }
 onmessage = (e: MessageEvent<ToClock>) => {
   const msg = e.data;
@@ -963,6 +987,9 @@ async function handleMessage(msg: ToClock) {
       api.set_edit_lead(clk.rate * serviceLeadS());
     }
     const named = nameOnly(msg.op);
+    // T-4114: a rail line whose strokes the edit may change (a bus or ferry line has none)
+    const opLine = LINE_PATH_OPS.has(msg.op.op) ? (msg.op as { line?: number }).line : undefined;
+    const pathLine = opLine !== undefined && !api.is_bus(opLine) && !api.is_ferry(opLine) ? opLine : undefined;
     const { r, fault, line, node, skipped, charge: charged, trainCharge, why } = apply(msg.op);
     api.set_edit_lead(0); // a refused edit leaves it set
     if (import.meta.env.DEV && panicAfterEdit) { putPanicAfterEdit(false); panicNow(); }
@@ -973,6 +1000,8 @@ async function handleMessage(msg: ToClock) {
     const op = msg.op, seq = msg.seq;
     const answer = (early?: boolean, held?: Float32Array[]) => send({ kind: "edited", seq, ok: r === 0, issues: r === 0 ? why ?? [] : r === INSERT_REFUSED ? ["InsertStop"] : r === DROP_REFUSED ? ["DropStop"] : r === ORDER_REFUSED && fault ? [`StopOrder:${fault.join(":")}`] : issues(), charge, line, node, paid: paidFor(op), skipped, ms: { apply: tB - tA, ...timing, total: performance.now() - tA }, early, held }); // i18n-ignore
     if (r !== 0) return answer();
+    // T-4114: the line's strokes as the edit left them, before its rows and network, so the map shows them at once
+    if (pathLine !== undefined) send({ kind: "linePath", line: pathLine, edges: op.op === "removeLine" ? null : lineEdges(pathLine) });
     saves.dirty = saves.edited = true; saves.editAt = Date.now();
     if (line !== undefined) { newLineShape(op, line); newLineFare(op, line); }
     // T-3581: a line deleted or brought back by an undo or redo has its fare multiple dropped or given back in the
@@ -995,10 +1024,11 @@ async function handleMessage(msg: ToClock) {
     // charge's split off the next state)
     const hold = early && charge === 0;
     if (early) answer(true, hold ? heldEdges() : undefined);
-    // T-2766: a stop click's rows (the world, its money) now and its answer after them, so the next click reads the
-    // stops this one left; the network, trips and boarding wait for the clicks to stop
-    const stops = !!msg.rows && !early && !service && sendRows();
-    if (stops) answer();
+    // T-2766: a stop click's rows (the world, its money) and its answer after them, so the next click reads the stops
+    // this one left; the network, trips and boarding wait for the clicks to stop. T-4114: the rows a task later, after
+    // the clicks already queued, which share them (`rowsSoon`); the answers go with them (`Waiting.worldSent`)
+    const stops = !!msg.rows && !early && !service && rowsCanGo();
+    if (stops) rowsSoon();
     // T-3795: a change of periods redoes every line's boarding before the full state (about a second on New York's
     // real save), which the schedule window does not need: its rows go first. The answer stays after the full state,
     // and the follow-up is not held as a stop click's is.
@@ -1012,7 +1042,7 @@ async function handleMessage(msg: ToClock) {
     // date when it arrives) after the previews asked meanwhile
     // T-3803: answered already, or once a world holding it went (a rows state when an edit comes before its own state);
     // an early answer's money split waits for the next state the page takes
-    let answered = early || stops || renamed, shares = early && charge > 0;
+    let answered = early || renamed, shares = early && charge > 0;
     const rest = () => {
       // T-3758: a line's fare mode changes no train's run, yet demand reads it; T-3892: nor need a boat size (its riders, fares);
       // T-3915: nor BRT on a route with no road in town (its fares); T-3944: which a Construct turns on

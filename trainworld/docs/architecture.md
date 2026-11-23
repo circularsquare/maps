@@ -129,8 +129,14 @@ Web first, so it can be shared as a link.
   snaps. The client takes the state after the next paint (`ghostFirst`). **A stop click's rows go
   first** [T-2766]: the line tool's stop clicks ask `rows`; the worker applies the edit, posts a state
   of the rows alone (`rows`: world and money, no network, no trips; the renderer keeps its network)
-  and then answers, so the next click reads the stops this one left and a refusal for money comes at
-  its click. The network, trips, boarding hour and demand's snapshot follow once no stop click has
+  and then answers, so a refusal for money comes at its click. The rows go a task after the edit through the message
+  queue, so clicks already queued are applied first and share one rows state, their answers after it [T-4114].
+  **A line's strokes go first of all** [T-4114]: right after a stop edit or a line delete is applied the worker posts
+  `linePath` (the edges the line's strokes now draw, or none); the renderer draws the line so (`lineAhead`,
+  map/lineAhead.ts: its own segments on the edges it keeps, the track's in its colour on the edges it gained, a
+  deleted line's colour transparent) until the next network, which holds the edit. The line tool guesses a first or
+  last stop taken out at the click from the network's stretches when that network shows the world's stops, and the
+  line panel's Delete line hides the line at the click; a refusal drops a guess. The network, trips, boarding hour and demand's snapshot follow once no stop click has
   come for 500 ms (5 s at most); a stop click before then joins them (one full state for the run),
   and the line tool's reads of the lines (`stopTiers` and the like), demand's money results and the
   clock pass it, anything else runs it first. Meanwhile the client holds every other read until no
@@ -140,7 +146,9 @@ Web first, so it can be shared as a link.
   complex or line renamed, a station bound): rows, then the answer, then a state at once, unheld, with no trips and
   the renderer's network left as it is (a train count's kind, the schematic's graph sent again for its names), since
   the network drawn has no names and no train's run changed [T-3793, T-3803]. The clicks wait in the page in order (`queueStopEdit` in
-  game/world.ts), each holding its line and game stamp from the click: stop editing ending sends them all (the busy
+  game/world.ts), each holding its line and game stamp from the click; a plain click goes at once by station
+  (`toggleStop`, `sendStopEdit`: the worker takes the station out when it is a stop, else puts it in as
+  `insertStop`), still counted with the queue so what waits for clicks waits for it [T-4114]: stop editing ending sends them all (the busy
   tag says "Saving stops" meanwhile) and only a game loaded since drops one, on the page or, for one sent before the
   page heard of the load, in the worker (T-3734); an undo or redo, a save, leaving the game
   and a reload wait for them (closing the tab does not: Anita, 2026-11-18) [T-3731]. The line panel's own
