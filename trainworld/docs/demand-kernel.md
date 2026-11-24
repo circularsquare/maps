@@ -99,7 +99,7 @@ levels:
    searched once per position, every station once per worker on opening; an edit searches only
    its new or moved stations (timings: notes/T-275.md). **Bus corridors** (T-1464): a bus stop
    that is no station is never walked to straight; each of them serves a stretch of its route (the
-   route's points nearer it than any other such stop of the line), and a cell within 600 m (`BUS_REACH_M`; 300 until T-3856) of a
+   route's points nearer it than any other such stop of the line), and a cell within 500 m (`BUS_REACH_M`; 300 until T-3856, 600 until T-4224) of a
    stretch reaches that stop with a walk of its distance to the route plus 100 m (the mean walk
    along it to a street stop). A cell keeps its 6 stations and adds at most 2 such bus stops, the
    nearest, so a bus never hides a station.
@@ -183,8 +183,10 @@ levels:
    like one whose trains an hour did (T-124), and the cache key (T-328) includes it. The wait
    inside service stays half the period's headway.
    **Boarding a bus** costs what boarding a train does (T-3856; from T-1576 to then a bus boarding cost 6, later 4,
-   perceived minutes). A bus line (`Network::bus_line`: the snapshot's bus cars, or a bus-only stop) differs only in its
-   crowding (`BUS_CROWD_START`).
+   perceived minutes). A bus line (`Network::bus_line`: the snapshot's bus cars, or a bus-only stop, a BRT line too)
+   differs in its crowding (`BUS_CROWD_START`), in counting each minute aboard `BUS_RIDE_WEIGHT` (1.1) times, and in
+   a headway of at least twice `BUS_MIN_WAIT_MIN` (2 minutes) in `build_graph`, so its wait is at least 2 minutes and
+   its share of a stop's boardings is worked from that headway (T-4224); its real minutes and room are unchanged.
    **Ferries** (T-2195, design notes/T-2177.md 3.6): a ferry line is a line like any other in the
    snapshot (`SnapshotLine.ferry`), its stops its ports, which are stations: walked to as any station
    (a landing the pack's walk grid calls water starts its walks from the nearest land pixels, as any

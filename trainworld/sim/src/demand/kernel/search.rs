@@ -19,6 +19,8 @@ pub struct Graph {
     /// leave riders on the platform (T-188, `left_behind`), plus `rn_span`. Added to the
     /// boarding's cost.
     pub rn_left: Vec<f32>,
+    /// Perceived minutes per real minute of each route node's ride (a bus line's `BUS_RIDE_WEIGHT`); empty when none is a bus.
+    pub rn_busw: Vec<f32>,
     /// Perceived minutes added to boarding where only a share `phi` of the period's riders have a
     /// train due within their tolerance (T-842, `Network::span`): -ln(phi) / `Params::beta`, the
     /// logit's own form for an option open to that share. 0 with service all period.
@@ -337,15 +339,26 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
     let phi = |r: usize| at(r).0;
     let boards = |r: usize| at(r).1;
     let alights = |r: usize| at(r).2;
+    // T-4224: a bus line's headway counts as at least twice `BUS_MIN_WAIT_MIN`, and its rides weigh `BUS_RIDE_WEIGHT`
+    let is_bus: Vec<bool> = (0..net.n_lines()).map(|l| net.bus_line(l)).collect();
+    let headway = |l: usize| {
+        let h = net.line_headway_min[l][p.period];
+        if is_bus[l] { h.max(2.0 * super::super::network::BUS_MIN_WAIT_MIN) } else { h }
+    };
+    let rn_busw: Vec<f32> = if is_bus.iter().any(|&b| b) {
+        rn_line.iter().map(|&l| if is_bus[l as usize] { super::super::network::BUS_RIDE_WEIGHT } else { 1.0 }).collect()
+    } else {
+        vec![]
+    };
     let mut edges: Vec<(u32, u32, f32, u32)> = vec![];
     for (r, &st) in rn_station.iter().enumerate() {
         let node = (s + r) as u32;
         let l = rn_line[r] as usize;
         if rn_next[r] != NONE {
             if !rn_wrap[r] && boards(r) {
-                edges.push((st, node, board_cost(net.line_headway_min[l][p.period], st_wait[st as usize], change_f_of(&st_bld, st as usize), p), NONE));
+                edges.push((st, node, board_cost(headway(l), st_wait[st as usize], change_f_of(&st_bld, st as usize), p), NONE));
             }
-            edges.push((node, rn_next[r], rn_ride[r], node));
+            edges.push((node, rn_next[r], rn_ride[r] * rn_busw.get(r).copied().unwrap_or(1.0), node));
         }
         if alights(r) {
             edges.push((node, st, 0.0, NONE));
@@ -428,7 +441,7 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
     for i in 0..n { rev_off[i + 1] += rev_off[i]; }
     // a share that rounds to 0 is no service at that stop (T-842)
     let rn_tph: Vec<f32> = rn_line.iter().enumerate().map(|(r, &l)| {
-        let h = net.line_headway_min[l as usize][p.period];
+        let h = headway(l as usize);
         if h > 0.0 && h.is_finite() && phi(r) > 0.0 && boards(r) { 60.0 / h } else { 0.0 }
     }).collect();
     let rn_even = even_classes(net, s, &rn_station, &rn_line, &rn_next, &rn_ride, &rn_dx, &rn_dy, &rn_wrap, &rn_tph);
@@ -447,6 +460,7 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
         rn_in,
         rn_out,
         rn_left: rn_span.clone(),
+        rn_busw,
         rn_span,
         rn_dx,
         rn_dy,
@@ -498,7 +512,7 @@ pub fn set_crowding(g: &mut Graph, factor: &[f32]) {
         let seg = g.adj_seg[e];
         if seg != NONE {
             let r = seg as usize - g.n_st;
-            g.adj_cost[e] = g.rn_ride[r] * factor[r] + g.rn_fare[r];
+            g.adj_cost[e] = g.rn_ride[r] * factor[r] * g.rn_busw.get(r).copied().unwrap_or(1.0) + g.rn_fare[r];
         }
     }
 }

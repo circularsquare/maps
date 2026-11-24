@@ -12,6 +12,8 @@ A boarding costs the wait for the first train worth taking, times the station's 
 
 **Boarding.** Getting onto your first train costs 2 minutes and off your last one 2, trams included, at any level. A tram stop on the street costs nothing, and neither do buses and ferries. A change pays its own bother instead.
 
+**Buses.** A minute on a bus counts as 1.1 minutes. A bus wait counts at least 2 minutes, however often the buses come. People walk up to 500 m to a bus route.
+
 **Changing trains** costs 2 minutes for the bother, plus the walk from one platform to the other, plus the wait for the next train. Inside a [station building](station-buildings.md) the bother is 50% of that. The walk counts extra, as in [perceived minutes](perceived-minutes.md).
 
 Stations within 300 m of each other are close enough to change on foot. A bus stop reaches only 150 m. A passage you build works over a longer distance, along a straight line at 2 m/s. Changing on foot at a bus stop or a BRT station takes 1 minute more than the walk, unless a passage joins the two. A trip can also start or end with that walk, with no bother and no transfer fare, so the way home is the way out reversed.

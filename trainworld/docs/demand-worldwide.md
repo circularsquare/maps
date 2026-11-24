@@ -1131,21 +1131,25 @@ notes/T-420.md has the tables.
   extra minutes weigh less. Check: night and late-evening rail shares on a real network with
   service ending early (a commuter line without evening trains) against the model's.
 - **Bus corridors** (T-1464, Anita's yes to the design, 2026-10-26; docs/demand-kernel.md step 2).
-  A home within 600 m of a bus route walks its distance to the route plus 100 m to the nearest of its stops, every stop
+  A home within 500 m of a bus route walks its distance to the route plus 100 m to the nearest of its stops, every stop
   the line draws (T-3924, Anita: "if people are seeing bus stops the bus stops have to be real"; Auto's about every 400 m),
   and rides at the bus's run time (T-2904: a hop takes the
   car's time at 85% of its speed, never under 30 km/h for a bus lane, plus 28 s for the stop; about 19 km/h at
   400 m stops in a dense centre, 22 in open country), on the network's fare curve, bus kilometres included. Boarding a
   bus costs what boarding a train does, the wait alone (Anita, T-3856: buses should be viable for short trips; a
-  boarding cost of 6 perceived minutes from T-1576, 4 from T-3522, was dropped). Judgement
+  boarding cost of 6 perceived minutes from T-1576, 4 from T-3522, was dropped). Two things set a bus apart (Anita
+  2026-11-24, T-4224, to bring bus riders down a little): each minute aboard counts 1.1 perceived minutes against 1
+  on a train or tram (`network::BUS_RIDE_WEIGHT`, crowding on top), and its wait counts at least 2 minutes however
+  often it runs (`BUS_MIN_WAIT_MIN`; the line's headway counts as at least 4 minutes, buses bunch), BRT lines
+  included. Judgement
   figures, not fitted: 300 m and the boarding cost were first chosen so a drawn route's riders per route-km
   land in the range of busy real routes (notes/T-1466.md); T-3856 (Anita) dropped the boarding cost and doubled the
-  reach to 600 m so buses win short, thin trips (notes/T-3856.md). Why they may not carry over: bus speeds
+  reach to 600 m so buses win short, thin trips (notes/T-3856.md); T-4224 took it to 500 m (notes/T-4224.md). Why they may not carry over: bus speeds
   run from about 10 km/h in dense Asian and African centres to 25-30 in North American suburbs, and
   the model gives every dense centre a bus lane's speed (Seoul's median lanes, Anita 2026-11-09), so
   buses where traffic holds them up in reality are faster here than real ones;
   where buses are informal or fares flat and separate (minibus taxis, many Latin American cities),
-  the one fare curve and the free change to rail overstate the feeder; a 600 m corridor is long
+  the one fare curve and the free change to rail overstate the feeder; a 500 m corridor is long
   where people with cars will not walk that far to a bus, and short where blocks are huge. Check: a
   city's bus ridership per route-km against the model's on a similar drawn network.
 - **Ferries as lines** (T-2195, design notes/T-2177.md 3.6; docs/demand-kernel.md step 4). A ferry

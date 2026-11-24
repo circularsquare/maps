@@ -16,6 +16,12 @@ pub const BUS_CARS: f32 = 1.0 / 3.0;
 /// lines to the old bus, minded from 56 and full at 80. The penalty then rises over the same share
 /// of the rated load as a train's.
 pub const BUS_CROWD_START: f32 = 0.85;
+/// Perceived minutes per real minute in a bus's or BRT bus's seat, against 1 on a train or tram (Anita 2026-11-24,
+/// T-4224: "a 1.1x bus minute mult, can maybe adjust more later"). Crowding multiplies it.
+pub const BUS_RIDE_WEIGHT: f32 = 1.1;
+/// The least a bus line's expected wait counts, however often it runs (Anita 2026-11-24, T-4224: "waits at least 2
+/// minutes"). A line's headway counts as at least twice this, which is also what its boarding share is worked from.
+pub const BUS_MIN_WAIT_MIN: f32 = 2.0;
 /// A tram section's share of a rail car's riders (T-2926; `track::params` `riders_scale` of the tram kinds).
 pub const TRAM_CARS: f32 = 0.75;
 /// T-4079: a bus stop's walks to change reach this far, m, against `Params::xfer_walk_m` (300) between

@@ -58,7 +58,7 @@ const WIDTH_SHARE = 0.45;
 const BRT_WIDTH = 1.4;
 const CASING_SHARE = 0.6;
 /** Ground metres each side of the route that its riders walk from (demand's corridor, sim `BUS_REACH_M`). */
-export const CORRIDOR_M = 600;
+export const CORRIDOR_M = 500;
 /** The selected line's corridor outline: opacity of the line's colour, and thickness in CSS px (T-1490). */
 const OUTLINE_ALPHA = 0.75;
 const OUTLINE_PX = 1;
