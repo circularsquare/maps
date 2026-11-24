@@ -156,10 +156,23 @@ new standing process.
   something you need is running (a watch on a background process doesn't hold the turn open). Work that needs no
   result from you may run in the background, with at most one light check every 4-5 minutes. Final checks
   write a log: wait on it and read its result before you report.
-- **Testing, kept lean**: the checks near your change and one game run that shows it working (UI work: judge your own
-  screenshots before reporting); breadth is the batch checker's. No smoke in your tree (her 11-24): it runs on master
-  after a batch lands and before a publish; a change to how saves are written or loaded runs the save checks near it. A standing check only for a bug that really happened and could quietly come back, else
-  a scratch script; first grep `checks/INDEX.md` for a check that already proves it.
+- **Testing and measuring budget** (her 11-24, one table; your brief names your row and nothing adds to it):
+
+  | Kind of change | In your tree |
+  |---|---|
+  | UI, text, CSS | typecheck + 1 game run or screenshot (about 5 min); no benchmarks |
+  | App logic | typecheck + the nearest check + 1 game run proving it; no benchmarks |
+  | Edit speed | the above + 1 `edit_bench` run on NYC, new build only |
+  | Trip figures, sim | Rust tests + 1 figure diff on the real NYC save (total, lines that move most); a speedup adds 1 `perf_bench` NYC run |
+  | Loading, memory | the above + 1 `perf_bench` NYC run, judged on bytes and memory first |
+
+  At most 2 benchmark runs per tree, ever; never re-run to average out noise. Don't build the old version to compare:
+  compare against master's stored numbers. A run taken while more than 4 other cores are busy is noisy: report it as
+  noisy with the exact numbers (bytes, memory, riders) and stop. Big saves (her Asia save, Tokyo, Belgrade) only when
+  your brief names the save and why, 1 run. Breadth is the batch checker's and the release's (docs/orchestrator.md).
+  No smoke in your tree; a change to how saves are written or loaded runs the save checks near it. A standing check
+  only for a bug that really happened and could quietly come back; first grep `checks/INDEX.md`. End your report with
+  one line: benchmark runs and minutes of game checks used.
 
 ## Game principles (Anita's)
 
@@ -176,15 +189,13 @@ new standing process.
   other games and map makers solve it; write what you find in notes or research/.
 - **Performance**: quantify impact, do the big ones first. An approximation is welcome when a player couldn't tell;
   say what the lie is in DECISIONS.md. Speed is measured on real saves only (hand-built saves are for correctness). No
-  bit-exact rule (her 11-24): a speedup that changes figures at all says so to her, with the saving and the shift on
-  a big real-world save (the real NYC save: total rail trips, the lines that move most) and the network shape that
-  would show it worst. Aim to keep most lines' riders within 1% of before; no hard limit. A bigger shift is her call. Every speed, memory or
-  loading change reports all of `node trainworld/tools/perf_bench.mjs`'s numbers (CPU, memory, bytes, solver time),
-  not only the one it targets: one save for a small expected change, all three (nyc, tokyo, belgrade) for a risky one
-  or a release; worse by more than 10% on any goes to her as a trade-off. How to read it: notes/T-4025.md.
-  She plays with "Use more cores" off on purpose, as the median player with little memory (her 11-24): time big-save
-  waits that way too (one solving worker on an Asia-size world). Her own Asia save (`artifacts/trainworld/perfbench/saves/asianita-day568.save`) is a stress test only, when a big save
-  is really needed; not for general testing (her 11-24). Edit-speed tasks report `node trainworld/tools/edit_bench.mjs` numbers before and after (`--compare <hash>`; notes/T-4139.md).
+  bit-exact rule (her 11-24): a speedup that changes figures at all says so to her, with the shift on the real NYC save
+  (total rail trips, the lines that move most) and the network shape that would show it worst. Aim to keep most lines'
+  riders within 1% of before; no hard limit. A bigger shift is her call. Report all of `perf_bench`'s numbers from
+  the run your budget allows, not only the one you target; worse by more than 10% on any goes to her as a trade-off
+  (the release run on all three saves settles it). How to read it: notes/T-4025.md. She plays with "Use more cores"
+  off on purpose, as the median player with little memory: time big-save waits that way too. Her own Asia save
+  (`artifacts/trainworld/perfbench/saves/asianita-day568.save`) is a stress test only. `edit_bench`: notes/T-4139.md.
 - **Simple prices**: fares and costs the player reasons about follow a simple rule (a base plus per km).
 - **Buses are settled**; no more bus tuning unless she asks.
 - **Saves are hers**: keeping old ones loading is a nicety, no real migration effort.

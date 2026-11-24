@@ -37,7 +37,10 @@ These come before everything below; the first two are her two top priorities (11
 - **Model**: Sonnet by default; Opus for UI layout, design calls nobody has made, and debugging nobody understands;
   no Fable for agents unless she asks (the successor's advisor, "Your own cycling", is the one Fable use). Advisor: as trainworld/CLAUDE.md "Advisor", and briefs don't invite it otherwise; log each
   call in notes/handoff-log.md (what was asked, whether the advice changed anything).
-- **Briefs**: the goal in her words, the decisions already made, scope, what done looks like, the files other agents
+- **Briefs** start with two lines: the kind of change and its row of the measuring budget (trainworld/CLAUDE.md
+  "Testing and measuring budget"); add no measuring beyond it. Once per batch on master: smoke, plus 1 `perf_bench`
+  or `edit_bench` NYC run if the batch touched speed, loading or memory. At release: pause new agents, smoke and
+  `perf_bench` on all three saves, 1 run each. Then the goal in her words, the decisions already made, scope, what done looks like, the files other agents
   own (leave them alone), the task ids it may file, its own scratchpad subfolder and Vite port. Point to
   trainworld/CLAUDE.md for Vite, cores, Rust and commits rather than restating them. A TODO.md short-term item goes in
   verbatim, examples and all. End with "Report in at most 15 lines; detail goes in notes/T-xxxx.md" and "stop your
@@ -62,6 +65,11 @@ These come before everything below; the first two are her two top priorities (11
   next. Right after a publish, always (the `publish` skill's last step): a publish is no reason to go idle.
 - **Task sweeps**: each leaves `notes/task-sweep-<date>.md` (`perf-sweep-<date>.md` for one area), so the newest
   file's date is the last sweep; the last full one was `notes/task-sweep-2026-11-18.md`.
+
+## Disk
+
+- When the watch warns of low disk (under 30 GB), clear a decent chunk, to at least 60 GB free, not just back over the
+  line (her 11-24: otherwise "we will be in a perpetual state of clearing"). What can go: notes/T-4088.md.
 
 ## Cores
 
@@ -120,8 +128,7 @@ Risky changes (sim, saves, demand numbers, money) are checked in batches (11-20,
 own commit once its builder's tests and one in-game run pass. Then one checker per batch on master: a fresh Sonnet
 agent given each change's Goal and the batch's diff, not the builders' reports, that tries to break the changes in the
 running game, how they interact included; one round, pass or fail with evidence per change. Its brief names the 3-5
-riskiest cases per change, reuses existing checks and fixtures first, and caps the round at about 45 minutes plus 15
-per change past three; its report lists what it skipped. A failure is fixed on master by a fix agent, or that commit
+riskiest cases per change, reuses existing checks and fixtures first, and caps the round at 25 minutes of playing (no benchmarks; her 11-24); its report lists what it skipped. A failure is fixed on master by a fix agent, or that commit
 is reverted if the fix is big; publishing waits until the batch passes. 8800 is rebuilt right after the batch lands,
 without waiting for the checker (11-21); if the batch raises the save level, tell her a save made there may not load
 if a change is reverted. Own checker before landing: anything that could stop an existing save loading or lose data,
