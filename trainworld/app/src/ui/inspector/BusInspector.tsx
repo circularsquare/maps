@@ -9,6 +9,7 @@
 import { ConstructButton } from "./ConstructButton";
 import type { ComponentChildren } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
+import { shown } from "../../game/pending";
 import { demandAt, lineSeconds } from "../../game/clock";
 import { periodAt } from "../../game/periods";
 import { count, distance, distUnit, duration, exact, metresFromShown, metresToShown, millions, money, perDistance, shortDistance, speed } from "../../game/format";
@@ -219,18 +220,14 @@ const SPACING_STEPS = [400, 600, 800, 1000, 1500, 2000, 3000, 5000, 8000, 10_000
 /** T-2937: the Stops heading with its Auto and Manual buttons, and under Auto the Stop spacing row.
  * Manual (T-2891) opens the stop editing; any spacing, 0 included, leaves it. */
 function StopsHead({ l, bus }: { l: LineInput; bus: ClockBus }) {
-  // what was asked for, shown at once and counted from until the edit lands
-  const [asked, setAsked] = useState<{ hand: boolean; spacing: number } | null>(null);
-  const hand = asked?.hand ?? bus.hand;
-  const spacing = Math.max(SPACING_STEPS[0], asked ? asked.spacing : bus.spacing);
-  const send = (to: { hand: boolean; spacing: number }) => {
-    setAsked(to);
-    return edit(to.hand ? { op: "busHand", line: l.num } : { op: "busSpacing", line: l.num, spacing: to.spacing }).then((a) => {
-      setAsked(null);
+  // what was asked for shows at once, until the rows that hold it (game/busAhead.ts)
+  const hand = shown("line:" + l.num, "hand", bus.hand);
+  const spacing = Math.max(SPACING_STEPS[0], shown("line:" + l.num, "spacing", bus.spacing));
+  const send = (to: { hand: boolean; spacing: number }) =>
+    edit(to.hand ? { op: "busHand", line: l.num } : { op: "busSpacing", line: l.num, spacing: to.spacing }).then((a) => {
       if (a.ok && to.hand) toggleEditStops(l);
       return a.ok;
     });
-  };
   const choose = (manual: boolean) => { if (manual !== hand) void send({ hand: manual, spacing: 0 }); };
   const step = (d: number) => {
     const at = SPACING_STEPS.reduce((best, s, i) => (s <= spacing ? i : best), 0);
@@ -300,7 +297,7 @@ function ChangingToTrains({ l, bus }: { l: LineInput; bus: ClockBus }) {
 /** T-3892: a ferry line's boat size, where a train line has its train type: each hover its riders and speed, and on
  * a running line what the switch buys beyond that size's spare boats (the old ones stay in the depot). */
 function BoatSize({ l, st, bus }: { l: LineInput; st: LineStats; bus: ClockBus }) {
-  const m = moneyState.value, now = boatOf(bus);
+  const m = moneyState.value, now = shown("line:" + l.num, "boat", boatOf(bus));
   const tip = (b: Boat) => {
     let s = t("busInspector.boatTip", { riders: exact(BOATS[b].riders), speed: speed(BOATS[b].kmh) });
     const need = fleetOf(st);
@@ -329,7 +326,7 @@ function BoatSize({ l, st, bus }: { l: LineInput; st: LineStats; bus: ClockBus }
  * refunded); a constructed line's lanes in the blueprint are built by Construct beside it or the Build tab's. */
 function BrtRow({ l, bus }: { l: LineInput; bus: ClockBus }) {
   const m = moneyState.value;
-  const [asked, setAsked] = useState<boolean | null>(null);
+  const asked = shown<boolean | null>("line:" + l.num, "brt", null);
   const on = asked ?? (bus.brt || bus.brtBp);
   const built = on && asked === null && bus.brt && bus.built;
   // the Construct beside it: a constructed line whose lanes are in the blueprint
@@ -342,9 +339,7 @@ function BrtRow({ l, bus }: { l: LineInput; bus: ClockBus }) {
   const tip = m ? [t("busInspector.brt"), t("busInspector.brtTip", { speed: speed(m.brtKmh), price: millions(perDistance(m.brtRouteKm)), upkeep: money(perDistance(m.upkeepBrtKm * m.economy)), unit: distUnit(), town: distance(bus.townM) }),
     ...(shared >= 50 ? [t("busInspector.brtShared", { shared: distance(shared) })] : []), ...(built ? [] : [t("stationUpgrades.costs", { price: money(price) })]), act].join("\n") : undefined;
   const set = (to: boolean) => {
-    setAsked(to);
     void edit({ op: "busBrt", line: l.num, on: to }).then((a) => {
-      setAsked(null);
       if (!a.ok) return;
       if (to) say(t("stationUpgrades.added", { name: t("busInspector.brt") }));
       else if (built) say(t("stationUpgrades.removed", { name: t("busInspector.brt"), station: l.name }));

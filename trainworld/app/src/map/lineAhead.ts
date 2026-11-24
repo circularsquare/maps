@@ -113,6 +113,22 @@ export function edgesWithoutEnd(n: NetworkBuffers, line: number, stop: number, s
   return keep;
 }
 
+/** T-4147: the edges a line's strokes draw once its stops before `lo` or from `hi` on are cut away (`endLineAt`: the
+ * stretches lo..hi-1 stay), from network `n`; null where the network cannot tell (nothing cut, or nothing left). */
+export function edgesInStretches(n: NetworkBuffers, line: number, lo: number, hi: number): Set<number> | null {
+  const L = n.lines;
+  if (!L.stretch) return null;
+  const keep = new Set<number>();
+  let cut = false;
+  for (let i = 0; i < L.count; i++) {
+    if (L.colour[i] !== line) continue;
+    const s = L.stretch[i];
+    if (s >= lo && s < hi) keep.add(L.edge[i]);
+    else cut = true;
+  }
+  return cut && keep.size ? keep : null;
+}
+
 /** `levelCode`'s inverse halves: a segment's level code from its start and end levels */
 const levelCode = (a: number, b: number) => (a + 4) * 32 * 256 + (b + 4) * 32;
 

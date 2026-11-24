@@ -160,6 +160,8 @@ function INSTALL() {
     const pv = c.preview.bind(c);
     c.preview = (req, cb) => { const t = now(); return pv(req, (a) => { eb.answers.push({ t, ms: now() - t }); return cb(a); }); };
   }
+  // T-4147: an edit's guess drawn in a panel or the bus layer is a show too (game/pending.ts bumps its version for each)
+  import('/src/game/pending.ts').then((m) => { let first = true; m.pendingVersion.subscribe(() => { if (first) { first = false; return; } push('r.setAhead', { ms: 0 }); requestAnimationFrame(() => eb.ev.push({ t: now(), k: 'draw', ms: 0 })); }); }).catch(() => {});
   eb.trailStart = () => {
     eb.trail = []; eb.answers = []; eb.ghost = null; eb.ghostDrawn = null; eb.trailOn = true;
     const loop = () => {
@@ -201,7 +203,7 @@ function editsOf(ev) {
     const frameAfter = (k) => { if (k < 0) return null; const d = ev[after(k, (e) => e.k === 'draw')]; return d ? d.t + (d.ms ?? 0) - t0 : null; };
     const placed = after(i, (e) => e.k === 'r.keepPreviewAsPlaced' || e.k === 'r.addPlaced');
     // (an edit shown ahead is drawn at its click, before its message)
-    const aheadAt = after(inp ? ev.indexOf(inp) : i, (e) => e.k === 'r.setAhead');
+    const aheadAt = after(inp ? ev.indexOf(inp) : Math.max(0, i - 6), (e) => e.k === 'r.setAhead' && e.t >= t0 - 30);
     const take = after(i, (e) => e.k === 'take' && e.rows);
     const net = after(i, (e) => e.k === 'r.setNetwork' || e.k === 'r.setService' || e.k === 'r.staged');
     const ans = after(i, (e) => e.k === 'arrive' && e.kind === 'edited' && e.seq === p.seq);
@@ -430,6 +432,83 @@ async function play(g, runs, only, acc, note) {
         return edit({ op: 'setStops', line: num, stops: s });
       }, [C.line.num, i]), ['setStops'], { shows: 'stop reorder: shows', built: 'stop reorder: built' }, 'reorder ' + (k + 1));
       if (e) await sample(() => g.act.key('Control+Z'), ['undo'], { shows: 'undo: shows', built: 'undo: built' }, 'undo ' + (k + 1));
+    }
+  }
+
+  // T-4147: stop order and the group panel's stop edits, line groups, bus and ferry panels, on the save's own lines (each
+  // put back by an undo or the opposite edit)
+  const live = (fn, arg) => page.evaluate(fn, arg);
+  if (want('order') && C.line.n >= 8) {
+    const nOf = C.line.n;
+    await g.act.key('Escape');
+    await g.act.camera([C.mid.lng, C.mid.lat], 14);
+    const undo = async () => { await g.act.key('Control+Z'); await settle(); };
+    for (let k = 0; k < runs; k++) {
+      const i = C.swaps[k];
+      const swapped = () => live(([num, i]) => { const l = window.tw.world.value.save.lines.find((x) => x.num === num); const s = l.stops.map(Number); const t = s[i]; s[i] = s[i + 1]; s[i + 1] = t; return s; }, [C.line.num, i]);
+      const order = await swapped();
+      await sample(() => doEdit({ op: 'orderStops', line: C.line.num, stops: order }), ['orderStops'], { shows: 'stops: order changed, shows', built: 'stops: order changed, network' }, 'orderStops ' + (k + 1));
+      await undo();
+      await sample(() => doEdit({ op: 'dropStop', line: C.line.num, index: 0 }), ['dropStop'], { shows: 'group panel: drop an end stop, shows', built: 'group panel: drop an end stop, network' }, 'dropStop end ' + (k + 1));
+      await undo();
+      await sample(() => doEdit({ op: 'dropStop', line: C.line.num, index: (nOf >> 1) + k }), ['dropStop'], { shows: 'group panel: drop a middle stop, shows', built: 'group panel: drop a middle stop, network' }, 'dropStop middle ' + (k + 1));
+      await undo();
+      await sample(() => doEdit({ op: 'endLineAt', line: C.line.num, index: nOf - 4 - k }), ['endLineAt'], { shows: 'group panel: end line here, shows', built: 'group panel: end line here, network' }, 'endLineAt ' + (k + 1));
+      await undo();
+    }
+  }
+  if (want('groups')) {
+    const F = await live((num) => { const w = window.tw.world.value; const L = w.save.lines.filter((l) => l.num !== num && !w.lineStats[l.id]?.bus && !l.group); return L.slice(0, 2).map((l) => l.num); }, C.line.num);
+    if (F.length < 2) note('  groups: no two ungrouped rail lines');
+    else for (let k = 0; k < runs; k++) {
+      await g.act.key('Escape');
+      await sample(() => doEdit({ op: 'groupMembers', lines: F, groups: [], group: 'new', parent: 0 }), ['groupMembers'], { shows: 'groups: merge two lines, shows', rows: 'groups: merge two lines, rows' }, 'groupMembers ' + (k + 1));
+      await settle();
+      const gr = await live((n) => window.tw.world.value.save.lines.find((l) => l.num === n)?.group ?? 0, F[0]);
+      if (!gr) { note('  groups: the merge made no group'); break; }
+      await sample(() => doEdit({ op: 'groupName', group: gr, name: 'Group bench ' + k }), ['groupName'], { shows: 'groups: name, shows', rows: 'groups: name, rows' }, 'groupName ' + (k + 1));
+      await settle();
+      await sample(() => doEdit({ op: 'groupLook', group: gr, symbol: 'GB', colour: '#cc3300' }), ['groupLook'], { shows: 'groups: look, shows', rows: 'groups: look, rows' }, 'groupLook ' + (k + 1));
+      await settle();
+      await sample(() => doEdit({ op: 'groupMembers', lines: F, groups: [], group: 0, parent: 0 }), ['groupMembers'], { shows: 'groups: split, shows', rows: 'groups: split, rows' }, 'groupMembers split ' + (k + 1));
+      await settle();
+    }
+  }
+  for (const kind of ['bus', 'ferry'].filter(want)) {
+    const B = await live((kind) => {
+      const w = window.tw.world.value;
+      const l = w.save.lines.find((x) => { const b = w.lineStats[x.id]?.bus; return b && (kind === 'ferry' ? b.ferry : !b.ferry && !b.hand && !b.brt); });
+      if (!l) return null;
+      const b = w.lineStats[l.id].bus;
+      return { num: l.num, built: b.built, spacing: b.spacing, hand: b.hand, boat: b.ferry ? (b.ferry.boat ?? 0) : null, route: b.route, kinds: b.kinds, ports: b.ferry ? b.ferry.ports.map((p) => ({ node: p.node })) : null, x: b.stops[Math.max(1, b.stops.length >> 1)] };
+    }, kind);
+    if (!B) note('  ' + kind + ': no line on this save');
+    else {
+      await g.act.key('Escape');
+      const ll = await live((num) => { const b = window.tw.world.value.lineStats[window.tw.world.value.save.lines.find((l) => l.num === num).id].bus; const s = b.stops[b.stops.length >> 1] ?? b.stops[0]; return s ? [s.lng, s.lat] : null; }, B.num);
+      if (ll) await g.act.camera(ll, 14);
+      const undo = async () => { await g.act.key('Control+Z'); await settle(); };
+      const route3 = B.route.length && B.kinds ? Array.from({ length: B.kinds.length }, (_, i) => [B.route[2 * i], B.route[2 * i + 1], B.kinds[i]]).flat() : null;
+      for (let k = 0; k < runs; k++) {
+        if (kind === 'bus') {
+          await sample(() => doEdit({ op: 'busSpacing', line: B.num, spacing: 400 + 100 * k }), ['busSpacing'], { shows: 'bus: stop spacing, shows', rows: 'bus: stop spacing, rows', built: 'bus: stop spacing, network' }, 'busSpacing ' + (k + 1));
+          await settle();
+          if (route3) {
+            await sample(() => doEdit({ op: 'busRoute', line: B.num, route: route3 }), ['busRoute'], { shows: 'bus: route, shows', rows: 'bus: route, rows', built: 'bus: route, network' }, 'busRoute ' + (k + 1));
+            await settle();
+          }
+          await sample(() => doEdit({ op: 'busHand', line: B.num }), ['busHand'], { shows: 'bus: place stops manually, shows', rows: 'bus: place stops manually, rows', built: 'bus: place stops manually, network' }, 'busHand ' + (k + 1));
+          await settle();
+          await undo(); await undo();
+          await sample(() => doEdit({ op: 'copyLine', line: B.num }), ['copyLine'], { shows: 'bus: copy line, shows', rows: 'bus: copy line, rows', built: 'bus: copy line, network' }, 'bus copy ' + (k + 1));
+          await settle();
+          await undo(); await undo();
+        } else {
+          await sample(() => doEdit({ op: 'ferryBoat', line: B.num, boat: (B.boat + 1) % 3 }), ['ferryBoat'], { shows: 'ferry: boat size, shows', rows: 'ferry: boat size, rows', built: 'ferry: boat size, network' }, 'ferryBoat ' + (k + 1));
+          await settle();
+          await undo();
+        }
+      }
     }
   }
 

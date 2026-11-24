@@ -10,8 +10,10 @@ import { pieceGuess } from "./pieceAhead";
 import { linkGuess } from "./links";
 import { stationGuess } from "../map/stationAhead";
 import { lineGuess } from "../map/lineToolAhead";
+import { busGuess } from "../map/busAhead";
+import { groupGuess } from "./groupAhead";
 
-const KINDS: ((op: EditOp) => Show | null)[] = [lineGuess, stationGuess, pieceGuess, linkGuess];
+const KINDS: ((op: EditOp) => Show | null)[] = [lineGuess, stationGuess, pieceGuess, linkGuess, groupGuess, busGuess];
 
 /** Every kind's part for `op` joined, or null when none has anything (a kind that throws gives none, and says so). */
 export function editGuess(op: EditOp): Show | null {

@@ -4,11 +4,11 @@
 
 import { signal } from "@preact/signals";
 import type { LineInput, OuterGroup, Selection } from "./types";
+import { shown } from "./pending";
 
-/** A line's groups, its own first, then each one around it. */
+/** A line's groups, its own first, then each one around it (an edit waiting to show gives its own, game/groupAhead.ts). */
 export function groupChain(l: LineInput): OuterGroup[] {
-  if (!l.group) return [];
-  return [{ group: l.group, name: l.groupName ?? "", symbol: l.groupSymbol ?? "", colour: l.groupColour ?? "" }, ...(l.outer ?? [])];
+  return shown<OuterGroup[]>("line:" + l.num, "chain", l.group ? [{ group: l.group, name: l.groupName ?? "", symbol: l.groupSymbol ?? "", colour: l.groupColour ?? "" }, ...(l.outer ?? [])] : []);
 }
 
 /** Each group's lines at any depth, oldest (lowest number) first; only groups of two or more. */

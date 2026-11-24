@@ -12,6 +12,7 @@ import { signal } from "@preact/signals";
 import type { EdgeLook, EditOp, EditWord, StationBox } from "../workers/protocol";
 import { strokesFromPieces, type NetworkBuffers, type Strokes } from "../map/network";
 import type { RawStations } from "../map/lineAhead";
+import type { BusAhead } from "../map/busAhead";
 
 /** What an edit shows ahead of the worker: every part optional (notes/T-4145.md). */
 export interface Show {
@@ -39,6 +40,9 @@ export interface Show {
   lineStrokes?: Strokes[];
   hideLines?: Iterable<number>;
   rawStations?: RawStations[];
+  /** bus and ferry lines drawn on a new route in the bus layer (map/busAhead.ts), until the rows that hold them: a part
+   * of the panel's kind */
+  buses?: Map<number, BusAhead>;
 }
 
 /** The edits drawn ahead, composed: every entry's map part, later edits over earlier ones. */
@@ -53,6 +57,7 @@ export interface Composed {
   lineStrokes: Strokes[];
   hideLines: Set<number>;
   rawStations: RawStations[];
+  buses: Map<number, BusAhead>;
 }
 
 interface Entry {
@@ -116,11 +121,16 @@ let doubled = 0, swept = 0;
 
 /** (an empty list draws nothing, and an entry with only that would wait for a network that may never come) */
 const some = (x: Iterable<unknown> | undefined) => !!x && !x[Symbol.iterator]().next().done;
-const hasMap = (s: Show) => !!(s.lines?.size || some(s.hideEdges) || s.edges?.size || some(s.hideStations) || s.stations?.length || s.colours?.size || s.track?.length || s.lineStrokes?.length || some(s.hideLines) || s.rawStations?.length);
+/** what the network draws (an entry waits for the network that holds it) */
+const hasDrawn = (s: Show) => !!(s.lines?.size || some(s.hideEdges) || s.edges?.size || some(s.hideStations) || s.stations?.length || s.colours?.size || s.track?.length || s.lineStrokes?.length || some(s.hideLines) || s.rawStations?.length);
+/** anything drawn at the click: the network's, or the bus layer's */
+const hasMap = (s: Show) => hasDrawn(s) || !!s.buses?.size;
 
 function compose(): Composed {
-  const c: Composed = { lines: new Map(), hideEdges: new Set(), edges: new Map(), hideStations: new Set(), stations: [], colours: new Map(), track: [], lineStrokes: [], hideLines: new Set(), rawStations: [] };
+  const c: Composed = { lines: new Map(), hideEdges: new Set(), edges: new Map(), hideStations: new Set(), stations: [], colours: new Map(), track: [], lineStrokes: [], hideLines: new Set(), rawStations: [], buses: new Map() };
   for (const e of [...entries].sort((a, b) => a.t - b.t)) {
+    // (the bus layer's routes come from the world, so they go with the rows, not the network)
+    if (e.panel) for (const [l, b] of e.show.buses ?? []) c.buses.set(l, b);
     if (!e.map) continue;
     const s = e.show;
     for (const [l, edges] of s.lines ?? []) c.lines.set(l, edges ? new Set(edges) : null);
@@ -184,7 +194,7 @@ export function ahead(show: Show, opts: { tries?: boolean } = {}): Ahead {
 function drop(e: Entry) {
   const was = entries.length;
   entries = entries.filter((x) => x !== e);
-  if (entries.length !== was) changed(e.map && hasMap(e.show));
+  if (entries.length !== was) changed((e.map && hasDrawn(e.show)) || (e.panel && !!e.show.buses?.size));
 }
 
 // ---------------------------------------------------------------- from clockClient
@@ -192,7 +202,7 @@ function drop(e: Entry) {
 /** Two shows as one: `b`'s parts over `a`'s where both say something of the same record, lists joined. */
 export function mergeShow(a: Show, b: Show): Show {
   const out: Show = { ...a, ...b };
-  const maps = ["lines", "edges", "colours"] as const;
+  const maps = ["lines", "edges", "colours", "buses"] as const;
   for (const k of maps) if (a[k] && b[k]) (out as Record<string, unknown>)[k] = new Map<number, unknown>([...a[k]!, ...b[k]!]);
   if (a.fields && b.fields) {
     const f = new Map(a.fields);
@@ -263,8 +273,8 @@ function arm(e: Entry, order: number, noNet = false): boolean {
   e.armed = order;
   e.at = performance.now();
   // (no network follows a service edit or a rename: whatever it guessed on the map is not what the network will draw)
-  e.map = !noNet && hasMap(e.show);
-  e.panel = !!e.show.fields?.size;
+  e.map = !noNet && hasDrawn(e.show);
+  e.panel = !!(e.show.fields?.size || e.show.buses?.size);
   e.money = !!e.show.cost;
   return e.map || e.panel || e.money;
 }
@@ -371,7 +381,11 @@ export function pendingTaken(order: number, what: { net?: boolean; rows?: boolea
       map = any = true;
       for (const [l, edges] of e.show.lines ?? []) held.set(l, edges ? new Set(edges) : null);
     }
-    if (what.rows && e.panel) { e.panel = false; any = true; }
+    if (what.rows && e.panel) {
+      e.panel = false;
+      any = true;
+      if (e.show.buses?.size) map = true;
+    }
     if (what.money && e.money) { e.money = false; any = true; }
   }
   // a line drawn ahead looks as the world says (running or not, fast), which a new line gets with its rows

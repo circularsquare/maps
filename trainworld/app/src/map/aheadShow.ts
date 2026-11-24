@@ -16,6 +16,8 @@ function lookOf(line: number): AheadLook {
 function draw(c: Composed, build: boolean) {
   const o = live.overlay;
   if (!o) return;
+  // (the bus layer takes its routes from the world: they are drawn whether or not a network is about to come)
+  if (o.renderer.buses.setAhead(c.buses.size ? c.buses : null)) o.invalidate();
   const stats = world.peek()?.lineStats;
   const m: AheadModel = { ...c, lines: new Map() };
   // (a bus or ferry line has no strokes)

@@ -8,7 +8,7 @@ import { stopsQueued, world } from "../game/world";
 import { editsSentCount, type Show } from "../game/pending";
 import type { EditOp } from "../workers/protocol";
 import { gameStamp, queryClock } from "../workers/clockClient";
-import { edgesWithoutEnd } from "./lineAhead";
+import { edgesInStretches, edgesWithoutEnd } from "./lineAhead";
 import { live } from "./live";
 
 /** the last path read: the game and the count of edits sent when it was asked (the worker reads in message order, so it
@@ -40,6 +40,20 @@ function stopPath(lineNum: number, station: number): Iterable<number> | null {
   return edgesWithoutEnd(n, lineNum, k, stops.length);
 }
 
+/** T-4147: the group panel's stop edits, which keep the line's path: an end stop dropped (or the line ended at a stop) cuts the
+ * strokes back to the stretches left, from the network drawn; a stop dropped between two keeps every stroke (null). Only a
+ * network that holds the world's stops, as for a stop click. */
+function cutBack(lineNum: number, index: number, drop: boolean): Set<number> | null {
+  const r = live.overlay?.renderer, n = r?.net, w = world.peek();
+  const line = w?.save.lines.find((l) => Number(l.id) === lineNum);
+  if (!r || !n || !w || !line || r.netVersion !== w.version || line.planStops || stopsQueued.peek() > 1) return null;
+  const len = line.stops.length;
+  if (len < 3 || line.stops[0] === line.stops[len - 1] || index < 0 || index >= len) return null;
+  if (drop) return index === 0 || index === len - 1 ? edgesWithoutEnd(n, lineNum, index, len) : null;
+  // the stops past the new end, toward the nearer end of the line, go (at least two stops stay)
+  return index * 2 >= len - 1 ? (index >= 1 ? edgesInStretches(n, lineNum, 0, index) : null) : (index <= len - 2 ? edgesInStretches(n, lineNum, index, len - 1) : null);
+}
+
 const fields = (line: number, f: Record<string, unknown>): Show => ({ fields: new Map([[`line:${line}`, f]]) });
 
 /** What a line edit shows at its click (game/editGuess.ts), or null. */
@@ -49,6 +63,12 @@ export function lineGuess(op: EditOp): Show | null {
     case "toggleStop": {
       if (bus(op.line)) return null;
       const edges = stopPath(op.line, op.station);
+      return edges ? { lines: new Map([[op.line, edges]]) } : null;
+    }
+    case "dropStop":
+    case "endLineAt": {
+      if (bus(op.line)) return null;
+      const edges = cutBack(op.line, op.index, op.op === "dropStop");
       return edges ? { lines: new Map([[op.line, edges]]) } : null;
     }
     // (a bus or ferry line has no strokes)

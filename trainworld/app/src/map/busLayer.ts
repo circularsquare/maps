@@ -47,6 +47,7 @@ import { ARROW_SPREAD, ARROW_ZOOM, ONE_WAY_STEP_M, oneWayEvery } from "./oneWayM
 import { brtJoins, busPlaceOf, busPlaces, busStopLinks } from "../game/busLinks";
 import { dotGroups } from "../game/complexView";
 import { ROW_SLOT, profileOf } from "./profiles";
+import type { BusAhead } from "./busAhead";
 
 /** Street stops are drawn from this zoom, ends from `END_ZOOM` (T-2950). */
 export const BUS_RING_ZOOM = 13;
@@ -553,8 +554,23 @@ export class BusLayer {
     return true;
   }
 
+  /** T-4147: routes drawn ahead of the world (game/pending.ts), and the world last taken, to draw them over it */
+  private over: ReadonlyMap<number, BusAhead> | null = null;
+  private lastW: WorldView | null = null;
+  private lastHide: ReadonlySet<number> = new Set();
+
+  /** Draw these lines on their new routes until the next call (null: as the world has them); true when that changed
+   * what is drawn. */
+  setAhead(over: ReadonlyMap<number, BusAhead> | null): boolean {
+    if (!over && !this.over) return false;
+    this.over = over;
+    return this.set(this.lastW, this.lastHide);
+  }
+
   /** Take the world's bus lines; true when what is drawn changed. */
   set(w: WorldView | null, hide: ReadonlySet<number> = new Set()): boolean {
+    this.lastW = w;
+    this.lastHide = hide;
     const next: BusSource[] = [], nextLinks: LinkSource[] = [];
     if (w) {
       for (const l of w.save.lines) {
@@ -573,6 +589,14 @@ export class BusLayer {
         const st = w.lineStats[l.id], n = marks.length / 2;
         const runs = st.status === "running" && Math.max(l.tph.high, l.tph.medium, l.tph.low) > 0 && st.stopS.length === 2 && st.stopS.every((s) => s.length === n);
         next.push({ id: l.num, colour: l.colour, built: b.built, route: b.routeLL, street: b.streetLL, stops, stopIds, transfers, ferry: !!b.ferry, brt: !!b.brt, lanes: b.lanes ?? [], spurs, marks, stopS: runs ? st.stopS : null, oneWay: !!st.loop && st.oneWay, ways: st.oneWayAt ?? {} });
+      }
+      // T-4147: a route drawn ahead replaces the line's, with no stops (the sim places them) until the world holds it
+      for (const [num, o] of this.over ?? []) {
+        const i = next.findIndex((x) => x.id === num), had = i >= 0 ? next[i] : null;
+        if ((!had && o.colour === undefined) || hide.has(num)) continue;
+        const line: BusSource = { id: num, colour: o.colour ?? had!.colour, built: had?.built ?? false, route: o.route, street: [], stops: [], stopIds: [], transfers: [], ferry: !!o.ferry || !!had?.ferry, brt: had?.brt ?? false, lanes: [], spurs: o.ferry?.spurs ?? [], marks: o.ferry?.marks ?? [], stopS: null, oneWay: false, ways: {} };
+        if (i >= 0) next[i] = line;
+        else next.push(line);
       }
       // T-2992: a plain stop within demand's merge of another line's stop at a train station
       const links = busStopLinks(w.save.lines.flatMap((l) => { const b = w.lineStats[l.id]?.bus; return b && !b.ferry ? [{ line: l.num, stops: b.stops }] : []; }));
