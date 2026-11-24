@@ -25,6 +25,7 @@ import { toggleEditStops } from "../../game/lineActions";
 import { repeatedEdge } from "../../game/repeatTrack";
 import { runsAgainstOneWay } from "../../game/oneWay";
 import { gameStamp } from "../../workers/clockClient";
+import { ahead, shown as pendingShown } from "../../game/pending";
 import { noteHeadwayLimits, edit, linesAt, say, stationNames, stationsById, stationsByNum, stepLineCars, pendingCars, world, linesById, linesByNum, pairStats, queueStopEdit, rowCount, fleetOf, lineIndicesAt } from "../../game/world";
 import { CUTS_DEFAULT, periodAt, rowAt } from "../../game/periods";
 import { live } from "../../map/live";
@@ -211,11 +212,11 @@ export function RoundTrip({ num, st, lev, stops, spots: { spots: busy, behindSpo
             <span class="grow">{tr("lineInspector.direction")}</span>
             <Segmented<boolean>
               options={[[true, <span data-tip={tr("lineInspector.oneWayTip")}>{tr("lineInspector.oneWay")}</span>], [false, tr("lineInspector.bothWays")]]}
-              value={st.oneWay}
+              value={pendingShown(`line:${num}`, "oneWay", st.oneWay)}
               // T-3835: one-way track takes this loop round one way only
               disabled={(v) => !v && !!st.oneWayByTrack}
               tips={(v) => (!v && st.oneWayByTrack ? tr("lineInspector.oneWayTrack") : undefined)}
-              onChange={(oneWay) => { if (oneWay !== st.oneWay) void edit({ op: "lineOneWay", line: num, oneWay }); }}
+              onChange={(oneWay) => { if (oneWay !== st.oneWay) void ahead({ fields: new Map([[`line:${num}`, { oneWay }]]) }).send(() => edit({ op: "lineOneWay", line: num, oneWay })); }}
             />
           </li>
         )}
@@ -397,7 +398,7 @@ function LinePairs({ l, st }: { l: LineInput; st: LineStats }) {
     <>
       <ul class="rows">
         <li>
-          <Check checked={!!st.pairs} onChange={(on) => void edit({ op: "linePairs", line: l.num, on })}>{tr("lineInspector.pairs")}</Check>
+          <Check checked={!!pendingShown(`line:${l.num}`, "pairs", st.pairs)} onChange={(on) => void ahead({ fields: new Map([[`line:${l.num}`, { pairs: on ? 1 : 0 }]]) }).send(() => edit({ op: "linePairs", line: l.num, on }))}>{tr("lineInspector.pairs")}</Check>
         </li>
       </ul>
       {notice && <ul class="alerts"><Alert>{notice}</Alert></ul>}
@@ -633,8 +634,8 @@ function TrainType({ l, st, lev }: { l: LineInput; st: LineStats; lev: number })
               [false, <span data-tip={tip(false)}>{tr("lineInspector.normal")}</span>],
               [true, <span data-tip={tip(true)}>{tr("lineInspector.highSpeed")}</span>],
             ]}
-            value={st.fast}
-            onChange={(fast) => { if (fast !== st.fast) void edit({ op: "lineFast", line: l.num, fast }); }}
+            value={pendingShown(`line:${l.num}`, "fast", st.fast)}
+            onChange={(fast) => { if (fast !== st.fast) void ahead({ fields: new Map([[`line:${l.num}`, { fast }]]) }).send(() => edit({ op: "lineFast", line: l.num, fast })); }}
           />
         </li>
       )}

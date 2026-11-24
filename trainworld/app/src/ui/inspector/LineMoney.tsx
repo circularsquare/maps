@@ -9,6 +9,7 @@ import { money } from "../../game/format";
 import { liveMoney, moneyState } from "../../game/money";
 import { boatOf } from "../../game/boats";
 import { edit, setLineFare, world } from "../../game/world";
+import { ahead, shown as pendingShown } from "../../game/pending";
 import type { LineInput } from "../../game/types";
 import { t, tNumber, tRich } from "../../i18n";
 import { barTop, FareCostBars, type BarCol } from "../MoneyHistory";
@@ -26,7 +27,7 @@ export function LineFare({ l }: { l: LineInput }) {
   const text = (v: number) => `${tNumber(v, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}x`;
   const set = (v: number) => void setLineFare(l.num, tidyLineFare(v));
   const st = world.value?.lineStats[l.id];
-  const dist = !!st?.fareDist;
+  const dist = !!pendingShown(`line:${l.num}`, "fareDist", st?.fareDist);
   // the kind's multiple from the fares, read by the same function the fare uses; the line's own is the stepper
   const kindMul = st ? lineFareMul({ id: l.id, fast: st.fast, ferry: !!st.bus?.ferry, boat: boatOf(st.bus), bus: !!st.bus && !st.bus.ferry, brt: !!st.bus?.brt }, { ...m.fares, lines: undefined }) : 1;
   const kind = st?.bus?.ferry ? "ferry" : st?.bus?.brt ? "brt" : st?.bus ? "bus" : "hsr";
@@ -36,7 +37,7 @@ export function LineFare({ l }: { l: LineInput }) {
         <li>
           <span class="grow">{t("lineMoney.fareMode")}</span>
           <Segmented<boolean> options={[[false, t("lineMoney.fareZones")], [true, t("lineMoney.fareDistance")]]} value={dist}
-            onChange={(to) => { if (to !== dist) void edit({ op: "lineFareDist", line: l.num, dist: to }); }} />
+            onChange={(to) => { if (to !== dist) void ahead({ fields: new Map([[`line:${l.num}`, { fareDist: to }]]) }).send(() => edit({ op: "lineFareDist", line: l.num, dist: to })); }} />
         </li>
       )}
       <li>

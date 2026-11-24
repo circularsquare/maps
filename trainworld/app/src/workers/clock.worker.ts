@@ -30,6 +30,7 @@ import type { EditOp, RouteAsk, ToClock } from "./protocol";
 import { stampAll } from "./cloud";
 import { isMemoryFailure, loadFailKey } from "../game/loadText";
 import { autosave, bindSlots, CLOUD_RETRY_MS, cloudFlush, cloudKick, cloudUp, heldFrom, heldNew, hold, intoNewSlot, intoView, leave, letGoSlot, manageSlot, NO_MEMORY_TO_SAVE, noteUnsaved, pendingGame, publishSlots, saveConverted, saves } from "./slots";
+import { rowsFirst } from "./clockWordLines";
 import { bookCharge, buildSnapshot, busQuoteLL, complexOfNodes, editSteps, nameOnly, putPreviewAt, putXferSet, sameFloats, scheduleSnapshot, sendTrips, snapStations, stationsKey, stepBoarding, turnHour, xferSet } from "./clockDemand";
 import { apply, buildingQuoteAnswer, designOf, doubleUpAnswer, DROP_REFUSED, freeEnds, INSERT_REFUSED, issues, newLineShape, ORDER_REFUSED, paidFor, pisArr, rebuildQuoteAnswer, routeArgs, savedHidden, savedShapes } from "./clockEdits";
 import { goneLineFares, loadFares, newLineFare, pinFareRef, startFares, tidyLineFares, tidyStationFares } from "./clockFares";
@@ -1043,7 +1044,8 @@ async function handleMessage(msg: ToClock) {
     // T-3793: a name edit's rows (the world: labels, panels, lists) now and its answer after them; its state follows
     // unheld. T-3803: that state leaves the renderer's network as it is, as a train count's does (nothing drawn in it
     // has a name, and on a big save building it took most of a second, which the next edit waited behind)
-    const renamed = named && !early && !service && !msg.rows && sendRows();
+    // T-4147: and a line edit's list and panel entries (`rowsFirst`), its network still to come
+    const renamed = (named || rowsFirst(op)) && !early && !service && !msg.rows && sendRows();
     if (renamed) answer();
     // T-1407: the state, the trips and the boarding hour (and the answer, so the world is up to
     // date when it arrives) after the previews asked meanwhile
@@ -1061,7 +1063,7 @@ async function handleMessage(msg: ToClock) {
       if (charge > 0) void autosave();
     };
     const waiting: Waiting = { owes: () => !answered || shares, worldSent: () => { shares = false; if (!answered) { answered = true; answer(); } } };
-    later({ net: !service && !renamed, name: renamed, service, effectiveAt, trips, early, at: tA }, rest, () => { if (!answered) { answered = true; failAnswer(msg); } }, waiting, early ? EARLY_WAIT_MS : 0,
+    later({ net: !service && !(renamed && named), name: renamed && named, service, effectiveAt, trips, early, at: tA }, rest, () => { if (!answered) { answered = true; failAnswer(msg); } }, waiting, early ? EARLY_WAIT_MS : 0,
     // the boarding account's lines the edit moved (~1.5 ms a line; a train count on New York's
     // real save moves ~90 of them), a few a task, so a ghost asked meanwhile waits for one step;
     // a service edit's first step only before its state (T-3655)

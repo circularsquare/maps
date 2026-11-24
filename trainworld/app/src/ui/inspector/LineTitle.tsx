@@ -7,6 +7,7 @@ import { LINE_PALETTE } from "../../game/palette";
 import type { LineInput } from "../../game/types";
 import { renameLinePrompt } from "../../game/ui";
 import { edit, renameLine } from "../../game/world";
+import { ahead } from "../../game/pending";
 import { t as tr } from "../../i18n";
 import { ColourPicker } from "../ColourPicker";
 import { locateLine } from "../locate";
@@ -47,7 +48,8 @@ function useLiveColour(l: LineInput | undefined, setPreview: (hex: string | null
     live.current.timer = 0;
     live.current.hex = null;
     setPreview(hex);
-    void edit({ op: "lineLook", line: l.num, colour: hex }).then((a) => { if (!a.ok) setPreview(null); });
+    const n = parseInt(hex.slice(1), 16);
+    void ahead({ colours: new Map([[l.num, [(n >> 16) & 255, (n >> 8) & 255, n & 255]]]) }).send(() => edit({ op: "lineLook", line: l.num, colour: hex })).then((a) => { if (!a.ok) setPreview(null); });
   };
   return { dragColour, commitColour };
 }
