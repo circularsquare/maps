@@ -445,9 +445,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-1200.md and notes/T-1211.md.
 
 ## Interface
-- T-4226 [P2] {L:small-fixes} New line symbol in other languages (taking, 2026-11-24, agent linesym)
-  - Context: Player report 11-24 (board g138): with the game in German or Japanese a new line gets "L" or the first character of its name as its symbol instead of the line number, so new lines share one symbol. Reach: many, every non-English player making lines.
-  - Goal: A new line's symbol is its number in every interface language.
 - T-4228 [P3] {L:map-look} Profit view leaves some track uncoloured
   - Context: Player report 11-21 (board g150): in the profit view some areas show no profit with trains running. Reach: few, one report.
   - Goal: Every segment trains run on gets a profit colour.

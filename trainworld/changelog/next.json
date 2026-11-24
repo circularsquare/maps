@@ -3,6 +3,31 @@
   "line": "",
   "items": [
     {
+      "id": "c003",
+      "text": "fixed new lines' symbols in other languages: they now show the line number",
+      "edited": "fixed new lines showing a letter instead of their number in other languages",
+      "hidden": false,
+      "task": "T-4226",
+      "by": "linesym",
+      "at": "2026-11-24T20:39:23Z",
+      "rev": 2,
+      "area": "other",
+      "fix": true,
+      "changed": "2026-11-24T20:51:58Z"
+    },
+    {
+      "id": "c002",
+      "text": "stations and track show up faster on big networks",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4153",
+      "by": "netland",
+      "at": "2026-11-24T20:01:50Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
+    },
+    {
       "id": "c001",
       "text": "trips are calculated about 7% faster in big cities",
       "edited": null,
