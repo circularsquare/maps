@@ -251,8 +251,8 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4132: perf_bench builds of different trees share one Cargo target dir, so a tree whose sources are older than another tree's last build ships that tree's WASM (retime-head2 shipped the base track module byte for byte).
   - Goal: Each build's WASM always comes from its own tree's sources.
   - Other: notes/T-4132.md
-- T-4168 [P2] {L:solve-speed} {after:T-4158} Does the bus stop merge shift riders one way
-  - Context: You, 11-24: "if merging directionally biases things, would it make sense to undo that bias?" T-4158 saw lines move both ways (Belgrade 704 +34%, 66 -29%) but Auto bus lines lose 1.2% overall.
+- T-4168 [P4] {L:solve-speed} {after:T-4158} Does the bus stop merge shift riders one way
+  - Context: You, 11-24: "if merging directionally biases things, would it make sense to undo that bias?", then "if its mostly not one directional its fine ... p4". T-4158 saw lines move both ways (Belgrade 704 +34%, 66 -29%) but Auto bus lines lose 1.2% overall.
   - Goal: Net shift by kind of line and trip length on Detroit and Belgrade; a simple correction proposed to you only where it is clearly one way.
   - Other: notes/T-4158.md
 - T-4141 [P3] {L:station-placement} Track placed by an edit call crossed the Hudson at ground level
