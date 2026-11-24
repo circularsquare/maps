@@ -356,7 +356,8 @@ async function runOnce(save, base, srv, log) {
     const page = await chrome.ctx.newPage();
     collectErrors(page, errors, /favicon|openfreemap|AJAXError|ERR_NAME_NOT_RESOLVED|Failed to load resource/);
     srv.st.bytes = 0; srv.st.packs = 0; srv.st.requests = 0;
-    await page.goto(base + '?debug=1&new=1&demandWorkers=' + WORKERS + '&v=' + Date.now());
+    // PERF_QUERY: extra page flags for a one-off run (`lod=coarse`), never for a ledger line
+    await page.goto(base + '?debug=1&new=1&demandWorkers=' + WORKERS + (process.env.PERF_QUERY ? '&' + process.env.PERF_QUERY : '') + '&v=' + Date.now());
     await page.waitForFunction(() => { const d = window.twDemand, v = d?.view?.(); return window.tw?.world?.value && v?.final && !d.client.waiting && window.tw.clock?.held?.peek() === false; }, undefined, { timeout: 240000, polling: 100 });
     rec.boot = await page.evaluate(() => Math.round(performance.now()));
     rec.bootBytes = srv.st.bytes;
@@ -385,6 +386,8 @@ async function runOnce(save, base, srv, log) {
     rec.counts = await page.evaluate(COUNTS, t0);
     // T-4051: read again now, since a worker's last report can come after the final (its off-screen bubble sums)
     rec.demandWasm = await page.evaluate(() => { const w = window.__b.wasm; try { for (const m of window.twDemand.client.memory?.() ?? []) w[m.worker] = Math.max(w[m.worker] ?? 0, m.wasm); } catch { /* older build */ } return w; });
+    // T-4179: each worker's heap and its peaks too: the WASM figure moves in 32 MB steps
+    rec.demandHeap = await page.evaluate(() => { try { return window.twDemand.client.memory().map((m) => ({ wasm: m.wasm, heap: m.heap, peakNow: m.peakNow, solvePeak: m.solvePeak })); } catch { return null; } });
     rec.cpuLoad = { renderer: (cpu1.renderer ?? 0) - (cpu0.renderer ?? 0), gpu: (cpu1['gpu-process'] ?? 0) - (cpu0['gpu-process'] ?? 0),
       byContext: Object.fromEntries(Object.entries(ctx1).map(([k, v]) => [k, v.cpu !== null && ctx0[k]?.cpu != null ? v.cpu - ctx0[k].cpu : v.cpu])) };
     rec.ctxEnd = ctx1;

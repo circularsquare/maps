@@ -300,11 +300,13 @@ levels:
    any other caller drops it before searching, so it never sits beside a new table (T-4123). A table is stations² costs and stations² real minutes (u16, as metres walked at walking's pace, T-1059, T-2265) plus, per searched destination, each node's next
    node and the settle order (u16 ids below 65,535 nodes, change nodes included), one bit per
    boarding route node for the departures accepted there, each change node's station and a bit per
-   boarding edge of that station for the departures it accepts: about 4 bytes a node and 16 a
+   boarding edge of that station for the departures it accepts: about 4 bytes a node and 10 a
    change node (T-398, T-581; sizes in notes/T-581.md); and for the stations and change nodes
-   accepting more than one departure, the expected wait and each departure's share (`Shares`,
-   T-4041), and for the stations whose inter-city start boards otherwise, its departures and shares
-   at the planned waits (`EntryDeps`). The search's queue pops by cost, then id; a lower cost for a node already
+   accepting more than one departure, each departure's share (`Shares`, T-4041), and for the
+   stations whose inter-city start boards otherwise, its departures and shares at the planned waits
+   (`EntryDeps`). Station, node and offset lists are u16 where every value fits, and a table keeps
+   no expected waits (only a search's own walk and the trip explorer read them; the explorer
+   searches its destination again): the real New York save's table is 48 MB, not 62 (T-4179). The search's queue pops by cost, then id; a lower cost for a node already
    queued adds a copy, and the stale copy is skipped when it pops (T-1647).
    **Leaf stations stay out of the queue** (T-2652, design notes/T-2642.md). A station is a leaf
    when its departures are all one line's, no walk comes in or goes out, and every arrival there

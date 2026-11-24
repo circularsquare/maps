@@ -551,10 +551,11 @@ pub struct Skims {
 /// the station again, its departures towards other stops (T-1268). Change node k is node `n + k`;
 /// a route node of the line that leaves the train there, or walks there, has it as its next node. Each holds its station and a bit per
 /// boarding edge of the station for the departures it accepts, `bits[off[k]..off[k + 1]]` (bit i
-/// of word w is the station's edge 64 w + i).
-#[derive(Clone, Default)]
+/// of word w is the station's edge 64 w + i). `off` is empty where every change node has one word (T-4179: a
+/// station with more than 64 edges is rare, and the offsets were a quarter of the skims tables' change nodes).
+#[derive(Clone, Default, PartialEq, Debug)]
 pub struct ChangeNodes {
-    pub st: Box<[u32]>,
+    pub st: Ix,
     pub off: Box<[u32]>,
     pub bits: Box<[u64]>,
 }
@@ -563,14 +564,80 @@ impl ChangeNodes {
     pub fn len(&self) -> usize {
         self.st.len()
     }
+    /// Change node `k`'s station.
+    #[inline(always)]
+    pub fn station(&self, k: usize) -> usize {
+        self.st.get(k)
+    }
+    /// Change node `k`'s words of accepted departures.
+    #[inline(always)]
+    pub fn words(&self, k: usize) -> &[u64] {
+        if self.off.is_empty() { std::slice::from_ref(&self.bits[k]) } else { &self.bits[self.off[k] as usize..self.off[k + 1] as usize] }
+    }
+    pub fn bytes(&self) -> usize {
+        self.st.bytes() + 4 * self.off.len() + 8 * self.bits.len()
+    }
     /// Departures an hour change node `k` accepts at route node `r`.
     pub fn tph(&self, g: &Graph, k: usize, r: usize) -> f32 {
-        let st = self.st[k] as usize;
+        let st = self.station(k);
         let e0 = g.adj_off[st] as usize;
         match (e0..g.adj_off[st + 1] as usize).position(|e| g.adj_to[e] as usize == g.n_st + r) {
-            Some(i) if self.bits[self.off[k] as usize + i / 64] >> (i % 64) & 1 == 1 => g.rn_tph[r],
+            Some(i) if self.words(k)[i / 64] >> (i % 64) & 1 == 1 => g.rn_tph[r],
             _ => 0.0,
         }
+    }
+}
+
+/// T-4179: ascending or plain lists of station, node or offset numbers, as u16 where every value fits (most
+/// networks), else u32: the skims tables' change nodes, shares and inter-city starts hold them.
+#[derive(Clone, PartialEq, Debug)]
+pub enum Ix {
+    Short(Box<[u16]>),
+    Long(Box<[u32]>),
+}
+
+impl Default for Ix {
+    fn default() -> Self {
+        Ix::Short(Box::new([]))
+    }
+}
+
+impl Ix {
+    pub fn of(v: impl ExactSizeIterator<Item = u32> + Clone) -> Ix {
+        if v.clone().all(|x| x < u16::MAX as u32) { Ix::Short(v.map(|x| x as u16).collect()) } else { Ix::Long(v.collect()) }
+    }
+    #[inline(always)]
+    pub fn get(&self, i: usize) -> usize {
+        match self {
+            Ix::Short(v) => v[i] as usize,
+            Ix::Long(v) => v[i] as usize,
+        }
+    }
+    pub fn len(&self) -> usize {
+        match self {
+            Ix::Short(v) => v.len(),
+            Ix::Long(v) => v.len(),
+        }
+    }
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+    pub fn bytes(&self) -> usize {
+        match self {
+            Ix::Short(v) => 2 * v.len(),
+            Ix::Long(v) => 4 * v.len(),
+        }
+    }
+    /// Where `x` is in an ascending list.
+    #[inline(always)]
+    pub fn find(&self, x: usize) -> Option<usize> {
+        match self {
+            Ix::Short(v) => if x < u16::MAX as usize { v.binary_search(&(x as u16)).ok() } else { None },
+            Ix::Long(v) => v.binary_search(&(x as u32)).ok(),
+        }
+    }
+    pub fn iter(&self) -> impl Iterator<Item = usize> + '_ {
+        (0..self.len()).map(|i| self.get(i))
     }
 }
 
@@ -701,7 +768,7 @@ pub fn skims_extend(sk: &mut Skims, g: &Graph, p: &Params, want: &[bool]) {
         sk.change.push(d.change);
         sk.entry.push(d.entry);
         sk.start.push(d.start);
-        sk.share.push(d.share);
+        sk.share.push(d.share.without_waits());
         sk.entry_dep.push(d.entry_dep);
     }
 }
@@ -723,12 +790,12 @@ fn start_platform_min(g: &Graph, board: &[u64], share: &Shares, b: usize, p: &Pa
         return 0.0;
     }
     let s = g.n_st;
-    let at = share.find(b);
+    let at = share.first(b);
     let (mut f, mut w, mut j) = (0f32, 0f32, 0);
     for e in g.adj_off[b] as usize..g.adj_off[b + 1] as usize {
         let r = g.adj_to[e] as usize - s;
         if accepted(board, g, r) != 0.0 {
-            let a = at.map_or(1.0, |i| share.val[i + 1 + j]);
+            let a = at.map_or(1.0, |i| share.val[i + j]);
             j += 1;
             f += a;
             w += a * g.rn_dx[r].hypot(g.rn_dy[r]);
@@ -789,7 +856,7 @@ pub(super) fn walk_column_in<I: Id>(g: &Graph, p: &Params, st: Strategy, dst: us
             }
             let r = id - s;
             let here = g.rn_station[r] as usize;
-            let to = if nx < s { nx } else { st.change.st[nx - n] as usize };
+            let to = if nx < s { nx } else { st.change.station(nx - n) };
             let walk = if to != here {
                 (g.adj_off[id] as usize..g.adj_off[id + 1] as usize).find(|&e| g.adj_to[e] as usize == to).map_or(0.0, |e| g.adj_cost[e] * to_min)
             } else {
@@ -1103,22 +1170,27 @@ pub struct DestStrategy {
 }
 
 /// T-4041: per station, the departures a trip starting there boards at the planned waits, (route
-/// node, share), each station's from its first in `dep` to the next station's; stations ascending.
+/// node, share) in `rn` and `share`, station `st[i]`'s from `off[i]` to the next station's; stations ascending.
 #[derive(Clone, Default, PartialEq, Debug)]
 pub struct EntryDeps {
-    pub at: Box<[(u32, u32)]>,
-    pub dep: Box<[(u32, f32)]>,
+    pub st: Ix,
+    pub off: Ix,
+    pub rn: Ix,
+    pub share: Box<[f32]>,
 }
 
 impl EntryDeps {
-    pub fn bytes(&self) -> usize {
-        8 * self.at.len() + 8 * self.dep.len()
+    pub(super) fn of_lists(at: &[(u32, u32)], dep: &[(u32, f32)]) -> EntryDeps {
+        EntryDeps { st: Ix::of(at.iter().map(|x| x.0)), off: Ix::of(at.iter().map(|x| x.1)), rn: Ix::of(dep.iter().map(|x| x.0)), share: dep.iter().map(|x| x.1).collect() }
     }
-    /// Station `v`'s, or None where a trip starting there boards as the plain strategy does.
-    pub fn of(&self, v: usize) -> Option<&[(u32, f32)]> {
-        let i = self.at.binary_search_by_key(&(v as u32), |x| x.0).ok()?;
-        let end = self.at.get(i + 1).map_or(self.dep.len(), |x| x.1 as usize);
-        Some(&self.dep[self.at[i].1 as usize..end])
+    pub fn bytes(&self) -> usize {
+        self.st.bytes() + self.off.bytes() + self.rn.bytes() + 4 * self.share.len()
+    }
+    /// Station `v`'s, (route node, share), or None where a trip starting there boards as the plain strategy does.
+    pub fn of(&self, v: usize) -> Option<impl Iterator<Item = (usize, f32)> + '_> {
+        let i = self.st.find(v)?;
+        let end = if i + 1 < self.off.len() { self.off.get(i + 1) } else { self.share.len() };
+        Some((self.off.get(i)..end).map(|k| (self.rn.get(k), self.share[k])))
     }
 }
 
@@ -1171,7 +1243,7 @@ impl NodeIds {
 
 impl DestStrategy {
     pub fn bytes(&self) -> usize {
-        self.next.bytes() + self.order.bytes() + 8 * self.board.len() + 4 * (self.change.st.len() + self.change.off.len()) + 8 * self.change.bits.len() + 8 * self.entry.len() + 8 * self.start.len() + self.share.bytes() + self.entry_dep.bytes()
+        self.next.bytes() + self.order.bytes() + 8 * self.board.len() + self.change.bytes() + 8 * self.entry.len() + 8 * self.start.len() + self.share.bytes() + self.entry_dep.bytes()
     }
     pub fn view(&self) -> Strategy<'_> {
         Strategy { next: &self.next, board: &self.board, order: &self.order, change: &self.change, start: &self.start, share: &self.share, entry_dep: &self.entry_dep }
@@ -1321,7 +1393,7 @@ impl<'a> DestSearch<'a> {
         let ids = n + q.cn.len();
         let start = q.start_walks(dst).into_boxed_slice();
         q.entry_costs(dst);
-        let entry_dep = EntryDeps { at: q.entry_at.as_slice().into(), dep: q.entry_dep.as_slice().into() };
+        let entry_dep = EntryDeps::of_lists(&q.entry_at, &q.entry_dep);
         let mut d = DestStrategy { next: NodeIds::of(&q.next, ids), board: std::mem::take(&mut q.board), order: NodeIds::of(&q.order, ids), change: q.change_nodes(), entry: Box::new([]), start, share: std::mem::take(&mut q.share), entry_dep };
         if let Some(mut put) = put {
             let curve = &q.g.fare_curve;
@@ -1962,7 +2034,7 @@ impl Search<'_> {
                 continue;
             }
             let r0 = self.cand[0].1 as usize;
-            let plain_one = self.pl.len() == 1 && self.board[r0 >> 6] >> (r0 & 63) & 1 == 1 && self.share.find(v).is_none()
+            let plain_one = self.pl.len() == 1 && self.board[r0 >> 6] >> (r0 & 63) & 1 == 1 && self.share.first(v).is_none()
                 && (g.adj_off[v] as usize..g.adj_off[v + 1] as usize).filter(|&e| { let r = g.adj_to[e] as usize - s; self.board[r >> 6] >> (r & 63) & 1 == 1 }).count() == 1;
             if !plain_one {
                 self.entry_at.push((v as u32, self.entry_dep.len() as u32));
@@ -3038,9 +3110,10 @@ impl Search<'_> {
 
     /// This destination's change nodes, settled or not (an unsettled one is nobody's next node).
     pub(super) fn change_nodes(&self) -> ChangeNodes {
+        let one = self.cn.iter().enumerate().all(|(k, c)| c.bits as usize == k) && self.cn_bits.len() == self.cn.len();
         ChangeNodes {
-            st: self.cn.iter().map(|c| c.st).collect(),
-            off: self.cn.iter().map(|c| c.bits).chain([self.cn_bits.len() as u32]).collect(),
+            st: Ix::of(self.cn.iter().map(|c| c.st)),
+            off: if one { Box::new([]) } else { self.cn.iter().map(|c| c.bits).chain([self.cn_bits.len() as u32]).collect() },
             bits: self.cn_bits.as_slice().into(),
         }
     }
@@ -3283,19 +3356,45 @@ fn pool_two(lines: &[(f32, f32)], wait_f: f32, change_f: f32, planned: bool, p: 
 /// more (stations; change nodes from `Graph::n`): each node's first value in `val`, by node,
 /// ascending. There the real expected wait (minutes), then each accepted departure's share in edge
 /// order. A node accepting one departure is not listed: its share is 1, its wait half its headway.
+/// T-4179: the nodes in `node`, each's first share at `off` in `val` and its wait in `wait`. A skims table
+/// keeps no waits (`without_waits`, a ninth of the table on the real New York save): only a search's own
+/// readers (`walk_column`) and the trip explorer (`trip::routes`, which searches its destination again) read them.
 #[derive(Clone, Default, PartialEq, Debug)]
 pub struct Shares {
-    pub at: Box<[(u32, u32)]>,
+    pub node: Ix,
+    pub off: Ix,
     pub val: Box<[f32]>,
+    pub wait: Box<[f32]>,
 }
 
 impl Shares {
+    /// Where node `v`'s first share is in `val`, if it has shares.
     #[inline]
-    pub fn find(&self, v: usize) -> Option<usize> {
-        self.at.binary_search_by_key(&(v as u32), |x| x.0).ok().map(|i| self.at[i].1 as usize)
+    pub fn first(&self, v: usize) -> Option<usize> {
+        self.node.find(v).map(|i| self.off.get(i))
     }
     pub fn bytes(&self) -> usize {
-        8 * self.at.len() + 4 * self.val.len()
+        self.node.bytes() + self.off.bytes() + 4 * (self.val.len() + self.wait.len())
+    }
+    pub fn is_empty(&self) -> bool {
+        self.node.is_empty()
+    }
+    pub fn without_waits(mut self) -> Shares {
+        self.wait = Box::new([]);
+        self
+    }
+    /// From the entries as a search notes them (`SharesBuild`): node, then its wait and shares from that offset.
+    fn of(at: &[(u32, u32)], inline: &[f32]) -> Shares {
+        let mut val = Vec::with_capacity(inline.len() - at.len());
+        let mut off = Vec::with_capacity(at.len());
+        let mut wait = Vec::with_capacity(at.len());
+        for (k, &(_, i)) in at.iter().enumerate() {
+            let end = at.get(k + 1).map_or(inline.len(), |x| x.1 as usize);
+            wait.push(inline[i as usize]);
+            off.push(val.len() as u32);
+            val.extend_from_slice(&inline[i as usize + 1..end]);
+        }
+        Shares { node: Ix::of(at.iter().map(|x| x.0)), off: Ix::of(off.into_iter()), val: val.into(), wait: wait.into() }
     }
     /// The real expected wait at node `v`, its accepted departures `dep` (`departures`).
     #[inline]
@@ -3303,7 +3402,7 @@ impl Shares {
         match dep {
             [] => f32::INFINITY,
             [(e, _)] => 30.0 / g.rn_tph[g.adj_to[*e as usize] as usize - g.n_st],
-            _ => self.find(v).map_or_else(|| 30.0 / dep.iter().map(|&(e, _)| g.rn_tph[g.adj_to[e as usize] as usize - g.n_st]).sum::<f32>(), |i| self.val[i]),
+            _ => self.node.find(v).map_or_else(|| 30.0 / dep.iter().map(|&(e, _)| g.rn_tph[g.adj_to[e as usize] as usize - g.n_st]).sum::<f32>(), |i| self.wait[i]),
         }
     }
 }
@@ -3329,7 +3428,7 @@ impl SharesBuild {
     }
     pub(super) fn finish(&mut self) -> Shares {
         if self.at.windows(2).all(|x| x[0].0 < x[1].0) {
-            return Shares { at: self.at.as_slice().into(), val: self.val.as_slice().into() };
+            return Shares::of(&self.at, &self.val);
         }
         // each entry's values run to the next entry's, in push order; a node noted again (its late
         // lines, `Search::late_fix`) keeps its last
@@ -3351,7 +3450,7 @@ impl SharesBuild {
             out.push((v as u32, val.len() as u32));
             val.extend_from_slice(&self.val[i..end]);
         }
-        Shares { at: out.into(), val: val.into() }
+        Shares::of(&out, &val)
     }
 }
 
@@ -3459,9 +3558,9 @@ impl SkimKey {
     }
 }
 
-/// Skims tables a thread keeps (`with_skims`). Each holds stations² route costs plus about 4
-/// bytes a node per searched destination (u16 ids): on the real New York save 18 MB for New
-/// York's table (T-398).
+/// Skims tables a thread keeps (`with_skims`). Each holds stations² route costs plus about 11
+/// bytes a node per searched destination (u16 ids, change nodes, shares): on the real New York
+/// save 48 MB for New York's table (T-398, T-4179).
 pub(super) const SKIM_TABLES: usize = 2;
 
 /// A thread's skims (`with_skims`): `kept`, the graphs solved most recently, newest last (T-119);

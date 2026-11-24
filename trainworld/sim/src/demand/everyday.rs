@@ -883,7 +883,7 @@ impl LaneWalk<'_> {
                 } else {
                     add_lanes(&mut l.alight[g.rn_station[v - s] as usize], &f);
                     add_lanes(&mut l.rn_alight[v - s], &f);
-                    let (st, hx) = if to < s { (to, to) } else { (cn.st[to - n] as usize, s + to - n) };
+                    let (st, hx) = if to < s { (to, to) } else { (cn.station(to - n), s + to - n) };
                     if st != dst {
                         if let Some((ix, _)) = xfer.as_ref() {
                             let e = (g.adj_off[v] as usize..g.adj_off[v + 1] as usize).find(|&e| g.adj_to[e] as usize == st).unwrap();

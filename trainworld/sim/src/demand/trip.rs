@@ -447,7 +447,9 @@ pub(crate) fn routes(g: &Graph, sk: &Skims, p: &Params, a: usize, t: usize, min_
         rep[st as usize] = r as u32;
     }
     let mut legs = vec![];
-    let at = At { g, p, next, st: sk.strategy(slot as usize), rep: &rep, t, min_share };
+    // T-4179: a skims table keeps no waits; this destination's search again has them
+    let waits = DestSearch::new(g, p).run(t, None).share;
+    let at = At { g, p, next, st: sk.strategy(slot as usize), waits: &waits, rep: &rep, t, min_share };
     // T-3718: a trip that starts with a walk to a station nearby, as a walk leg first; the walk to
     // the platform there joins it, by the train taken
     match sk.start[slot as usize].iter().find(|x| x.0 as usize == a) {
@@ -509,6 +511,7 @@ struct At<'a> {
     p: &'a Params,
     next: &'a [u32],
     st: Strategy<'a>,
+    waits: &'a Shares,
     rep: &'a [u32],
     t: usize,
     min_share: f32,
@@ -518,7 +521,7 @@ struct At<'a> {
 /// node the rider left by an alighting or a walk to it, None at the trip's start; `walked` at a
 /// trip's start reached by its start walk (T-3718), the rider at the station's position.
 fn walk(at: &At, v: usize, came: Option<usize>, walked: bool, share: f32, legs: &mut Vec<Leg>, out: &mut Vec<(f32, Vec<Leg>)>) {
-    let At { g, p, next, st: strat, rep, t, min_share } = *at;
+    let At { g, p, next, st: strat, waits, rep, t, min_share } = *at;
     let cn = strat.change;
     if v == t {
         out.push((share, legs.clone()));
@@ -535,7 +538,7 @@ fn walk(at: &At, v: usize, came: Option<usize>, walked: bool, share: f32, legs: 
         return;
     }
     // the node's expected wait for whichever comes first (T-4041), the same on every leg from it
-    let wait_min = strat.share.wait(g, v, &dep);
+    let wait_min = waits.wait(g, v, &dep);
     let v = st;
     let arrived = came.map(|c| arrival_at(g, c, v)).or(walked.then_some((0.0, 0.0)));
     for &(e, a) in &dep {
@@ -589,7 +592,7 @@ fn walk(at: &At, v: usize, came: Option<usize>, walked: bool, share: f32, legs: 
         let change = if came.is_some() { p.transfer_min * g.change_f(v) } else { 0.0 };
         legs.push(Leg { kind: 1, rn_from: (r0 - s) as u32, rn_to: (r - s) as u32, st_from: v as u32, st_to: here, min, perc, fare, km, wait_min: wait_min + left - span, wait_perc: g.st_wait[v] * wait_min + left, full_wait: left - span, stops, change, base_mul: 1.0, free: false, ends: 0.0 });
         pushed += 1;
-        let to = if (nx as usize) < s { nx } else { cn.st[nx as usize - g.n] };
+        let to = if (nx as usize) < s { nx } else { cn.station(nx as usize - g.n) as u32 };
         if to != here {
             // a walking transfer from this route node to a station nearby
             let cost = (g.adj_off[r] as usize..g.adj_off[r + 1] as usize).find(|&k| g.adj_to[k] == to).map_or(0.0, |k| g.adj_cost[k]);

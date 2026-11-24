@@ -335,16 +335,15 @@ impl DestAssign {
             NodeIds::Short(x) => x[v].ix(),
             NodeIds::Long(x) => x[v].ix(),
         };
-        for &(v, _) in st.entry_dep.at.iter() {
-            let v = v as usize;
+        for v in st.entry_dep.st.iter() {
             let f = std::mem::take(&mut self.eflow[v]);
             if f == 0.0 {
                 continue;
             }
             self.flow[v] -= f;
             self.l.board[v] += f;
-            for &(r, sh) in st.entry_dep.of(v).unwrap() {
-                let (r, x) = (r as usize, f * sh);
+            for (r, sh) in st.entry_dep.of(v).unwrap() {
+                let x = f * sh;
                 self.l.rn_board[r] += x;
                 let nx = next(s + r);
                 if nx >= s && nx < g.n {
@@ -393,9 +392,9 @@ pub(crate) fn departures(g: &Graph, bits: &[u64], cn: &ChangeNodes, sh: &Shares,
     } else {
         dep.clear();
         let k = v - g.n;
-        let st = cn.st[k] as usize;
+        let st = cn.station(k);
         let e0 = g.adj_off[st] as usize;
-        for (w, &b) in cn.bits[cn.off[k] as usize..cn.off[k + 1] as usize].iter().enumerate() {
+        for (w, &b) in cn.words(k).iter().enumerate() {
             let mut b = b;
             while b != 0 {
                 let e = e0 + 64 * w + b.trailing_zeros() as usize;
@@ -428,16 +427,16 @@ fn put_shares(g: &Graph, sh: &Shares, v: usize, dep: &mut Vec<(u32, f32)>) {
     if dep.len() < 2 {
         return;
     }
-    match sh.find(v) {
+    match sh.first(v) {
         Some(i) => {
             for (j, x) in dep.iter_mut().enumerate() {
-                x.1 = sh.val[i + 1 + j];
+                x.1 = sh.val[i + j];
             }
             dep.retain(|x| x.1 > 0.0);
         }
         None => {
             // a strategy made with no shares: by trains an hour
-            debug_assert!(sh.at.is_empty(), "T-4041: node {v} accepts {} departures and has no shares", dep.len());
+            debug_assert!(sh.is_empty(), "T-4041: node {v} accepts {} departures and has no shares", dep.len());
             for x in dep.iter_mut() {
                 x.1 = g.rn_tph[g.adj_to[x.0 as usize] as usize - g.n_st];
             }
@@ -506,7 +505,7 @@ impl DestWalk<'_> {
                     // Walking transfers alight at the route node's station, not the walk's end.
                     l.alight[g.rn_station[v - s] as usize] += f;
                     l.rn_alight[v - s] += f;
-                    let (st, hx) = if to < s { (to, to) } else { (cn.st[to - n] as usize, s + to - n) };
+                    let (st, hx) = if to < s { (to, to) } else { (cn.station(to - n), s + to - n) };
                     if st != dst {
                         if let Some((ix, _)) = xf.as_ref() {
                             let e = (g.adj_off[v] as usize..g.adj_off[v + 1] as usize).find(|&e| g.adj_to[e] as usize == st).unwrap();
