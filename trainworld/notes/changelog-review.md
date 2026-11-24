@@ -65,3 +65,28 @@ Reworded (reword marks them edited):
 
 Sorted by area (track, demand, scheduling, fares, schematic, community, other), features before fixes, hidden last.
 Highlights: c037 (tram joins rail), c051 (plain buses), c014 (timetable zoom), c010 (schematic cities list), c022 (new countries), c048 (small and large ferries), c058 (BRT).
+
+
+## 2026-11-24, before v0.4.6 (agent clreview)
+
+Ids restarted after the v0.4.5 publish. Reviewed: all of c001-c088 (c056, c032, c021, c015, c013, c012, c007 were already hidden; Anita's "(edited)" items were kept unless folded into a merge).
+
+Hidden:
+- c070, c076, c078, c081, c083, c084, c085: single edit-speed lines, folded into c080
+- c086: folded into c064 (same bus-merge speedup, T-4158 builds on T-4094)
+- c068: folded into c035 (station tool)
+- c018: folded into c017 (brt lanes)
+- c031: overlaps c019 (memory on big networks)
+- c029 (credits folded), c028 (lines list money on narrow panel), c040 (hover staying up), c067 (labels over tutorial card): tiny
+- c025 (simulation stopped message), c042 (out-of-memory load retry), c049 (bubbles after graphics loss), c057 (startup after graphics crash), c071 (edits failing after model stop): rare failure paths
+- c054 (community search misses), c077 (curved-track station over water), c079 (track end almost in line): minor or obscure
+
+Reworded (old -> new):
+- c080: "edits on a big world show up faster, placing or deleting a station and deleting a line most of all" -> "edits on a big world show up at the click: placing or deleting a station, deleting track or a line, constructing, undoing, and changing a line's stops, colour or settings"
+- c064: "bus-heavy games calculate trips 20-40% faster and use 20-40% less memory" -> "bus-heavy games calculate trips 20-40% faster and use 20-40% less memory, and about 20% faster still on belgrade (16 min to 13 min)"
+- c035: "the station tool picks train station, tram stop, BRT station or port; BRT stations snap to bus routes, ports no longer need a ferry line, and stations can go on open ground again with two clicks" -> same plus "and its Auto choice picks from what is under the pointer" and "show trips within 600 m"
+- c017: "a brt lane takes 100 buses an hour each way, and lines sharing a full lane run fewer buses" -> "a brt lane takes 100 buses an hour each way, lines on the same road share its lanes, paid for once with the upkeep split, and lines sharing a full lane run fewer buses"
+- c027: "added the Discord and leaderboards links to Community, and report is now a flag icon that asks which problem before sending" -> "added the leaderboards link to Community, and report is now ..." (the discord link was removed by c056)
+
+Sorted by area, features before fixes, hidden last. 58 shown items.
+Highlights: c080 (edit speed), c064 (bus-heavy speedup), c088 (reversal capacity), c035 (station tool), c043 (busways), c022 (brt stations), c051 (plain buses and expresses).
