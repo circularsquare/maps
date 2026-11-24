@@ -36,6 +36,7 @@ artifacts/trainworld/T-4120/.
 
 ## Stations
 
+- 2026-11-24 (Anita's ask, T-4048): Removing a connection the distance rule draws splits the complex at that join: every pair the rule links across it is kept apart (saved, free, one Ctrl+Z step), and demand neither merges nor walks those pairs. Passages and buildings still join. notes/T-4048.md
 - 2026-11-23 (Anita, T-4105): Train station stays the Station tool's default; Auto is one click away. Auto takes track, then a road or bus route within 12 px, a ferry route, water or shore, else a train station, so open ground near a street gives BRT.
 - 2026-11-21 (Anita, T-3999): A train or tram station can go on open ground again (reversing T-1820, at players' asking): first click one platform end, second its direction. The Station tool picks its kind, so open ground by a road never places BRT. notes/T-3999.md
 - 2026-11-19 (Anita, T-3814): Each station is bound to its complex's name or keeps its own; renaming a bound one renames the complex, reversing T-3288's rename of that station alone. New players default to independent naming. notes/T-3759.md
@@ -43,12 +44,13 @@ artifacts/trainworld/T-4120/.
 - 2026-11-17 (Anita, T-3540, T-3332): A station with a platform on one track pays 0.6x station upkeep ("60% of a double platform station"): one-way stations and single-track stops without a passing loop. One track to both pays the difference; both to one is free.
 - 2026-11-10 (Anita, T-3107): Dead ends and through stations turn alike ("terminal = 30tph"): a turn holds one platform for max(turnaround + 60 s, 200 s), pooled over platforms with a terminal, one per pair without. Replaces the dead-end advantage and reversal limiter.
 - 2026-11-04 (Anita, T-2276): A change inside a station building discounts only its fixed change minutes, not its walk: discounting the walk too put the S shuttle up 83% via Times Sq (Anita: "yes only change minutes counting less sounds fine").
-- 2026-10-30 (Anita, T-1859): Platforms are one complex when drawn boxes come within 50 m or the old straight segment links them, so complexes only ever join. Changes within one are walks with no extra fixed penalty; merging same-named stations was rejected. notes/T-161.md
+- 2026-10-30 (Anita, T-1859): Platforms are one complex when drawn boxes come within 50 m or the old straight segment links them (no complex splits as platforms are redrawn). Changes within one are walks with no extra fixed penalty; merging same-named stations was rejected. notes/T-161.md
 - 2026-10-27 (Anita, T-1281): Upgrades: terminal (30 an hour), park and ride (10 perceived minutes off at both ends), waiting room (waits at 0.8), passage (US$10M + 90M a km). A station joining a complex later gets no park and ride or waiting room. notes/T-1528.md
 - 2026-10-25 (Anita, T-1267): A 200 m station costs US$50M plus a level part: 75 at grade, 90/105/120 above, 125/150/175 below. Elevated stays cheaper than underground, so stations use their own table, not track's multiplier.
 - 2026-10-16 (Anita, T-534): A neighbourhood can name a station if within 3.5 km of its nearest fellow (Anita, was 3 km), so Harlem, Williamsburg and Midtown qualify; Manhattan (12 km) does not.
 
 ## Lines and scheduling
+- 2026-11-24 (Anita, T-4220): Edits made during a whole re-solve get quick figures from a second worker that re-solves only the touched cities against the figures on screen (lie: up to about 4.5 min on Asia); off on phones and short memory. notes/T-4220.md
 - 2026-11-24 (Anita, T-4239): The train-count settle may stop once lines hold nearly still instead of running all 80 rounds on shared track; "we definitely dont need to do to bit exact". notes/T-4188.md
 - 2026-11-24 (, T-4227): A period two of a line's rows share (moved hours) runs each row's weekend trains there. A headway line's weekend percent counts the trains its headway takes; on full track the period's rate is cut and shared (the lie). notes/T-4227.md
 - 2026-11-24 (, T-4223): A loop's closing hop carries on round however long when the quickest way in turns back on the way (back over the line's own track, no loop); `CARRY_SLACK_S` (300 s) still keeps a balloon from running a long way round to avoid its turn. notes/T-4223.md
@@ -157,6 +159,7 @@ artifacts/trainworld/T-4120/.
 
 ## Buses
 
+- 2026-11-24 (T-4080): A kept bus stop no stop takes, or one left with no name and no connection that holds (its station removed), lasts the session, so an undo finds it again, and is forgotten at the next save and load. notes/T-4080.md
 - 2026-11-24 (Anita, T-4052): Riders left behind count once each, at the first train or bus to leave them; riders turned away from a full stop don't (they went another way). Rail counts drop too (NYC save 11%). Kept per departure with a queue, 4 bytes each. notes/T-4052.md
 - 2026-11-24 (T-4052): A bus stop holds at most 200 waiting each way (a bus's 12 m of sidewalk, 5 m deep at 0.3 m² a rider, as a platform's 5,000), a BRT station 667. Boarding account only, so trips and fares don't move. notes/T-4052.md
 - 2026-11-24 (Anita, T-4224): To lower bus ridership, a bus minute counts 1.1x a train's, a bus wait counts at least 2 minutes, and walking reach to a bus stop is 500 m (was 600; 1 km dropped 11-23). "can maybe adjust more later". notes/T-4224.md

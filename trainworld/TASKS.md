@@ -279,7 +279,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4052 (11-24): the line hover's "riders who wanted a bus" is carried plus left behind, so a rider who boards a later bus counts twice (rail too). Fix: count everyone who came to the stops; shifts the issues row's 3% threshold a little.
   - Goal: The hover's share left behind counts each rider once.
   - Other: notes/T-4052.md
-- T-4080 [P2] {L:buses} Name and rename bus stops (taking, 2026-11-24, agent busstops)
+- T-4080 [P2] {L:buses} Name and rename bus stops
   - Context: Design approved 11-24 (named stops stay put, connections free, labels at street zoom; DECISIONS). Stages 1-2 built 11-24: the game remembers, saves and holds named stops; the panel, riders using connections and labels are left. Your scratch pad, 11-23: "people keep requesting to be able to rename / name bus stops." Also a player 11-20: "バスの停留所も名前を変えれるようにしたい".
   - Goal: A bus stop's name can be set in its panel like a station's, saved, and shown wherever the stop's name shows.
   - Other: notes/T-4080-design.md (about 6 h in six stages, 4 left; also covers T-4083); notes/T-4080.md
@@ -348,6 +348,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3485: the airport's pack share counts people across a border at full weight, then the border factor drops what doesn't land: Hong Kong loses 54% of its ground trips, Luton 77%, Basel 71%, Geneva 42%; 0.6M a day worldwide.
   - Goal: Outside people weighed by the border factor in the pack share at the next world rebuild; Hong Kong near its published ground trips.
   - Other: notes/T-3485.md
+- T-4242 [P3] {L:timetables} Weekend riders follow weekend trains
+  - Context: A player, via tw-feedback (11-24): a short-turn copy with 0 weekday trains at midday and 2 on weekends runs, but almost nobody rides it; everyone stays on the full line. True to the rule: weekend riders are scaled from the weekday solve (T-2335, docs/demand-worldwide.md "Timing, weekends").
+  - Goal: A design for weekend riders that follow the weekend's own trains, with its cost in calculating time; to you before building.
 - T-4238 [P3] {L:timetables} Bus weekend rows run more often than weekdays on the same fleet
   - Context: Seen by the batch checker (11-24): a midtown bus line with 25 buses showed a 1 min headway on its weekend rows and 1.5 min on weekdays. May be right (shorter weekend trips) or a slip near T-4227's weekend share-out; not read yet.
   - Goal: The code says why, and it's fixed if it's a slip.
@@ -903,9 +906,8 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: You, 11-24: players' saves of about 900 stations "completely bricked", maybe from lots of interlining. T-4188 found on a Tokyo community save that 10-13 lines sharing full track trade rates every round and never hold still, so every load and edit runs all 80 settle rounds (edits 5-35 s natively), and each bus zone adds another settle.
   - Goal: The settle stops once lines hold nearly still; that save opens in under a minute; NYC lines within 1%.
   - Other: notes/T-4188.md
-- T-4220 [P2] {L:solve-speed} {waits:Anita} Quick figures for edits made during a whole re-solve
-  - Need from Anita: Build notes/T-4220.md's design (a second worker re-solves only touched cities; 12-14 h in 9 stages; 60-90 MB more memory while running, off on phones)? I'd say yes.
-  - Context: You, 11-24: "edits made during remaining full passes should ideally get fast numbers ... we need to do some sort of batching". On Asia an edit during the refresh or an intercity re-solve waits 100-250 s; the design gives lone-edit time (8-40 s). Gemini reviewed it.
+- T-4220 [P2] {L:solve-speed} Quick figures for edits made during a whole re-solve
+  - Context: Design approved 11-24 ("ok, we can build 4220"): 9 stages, 12-14 h. You, 11-24: "edits made during remaining full passes should ideally get fast numbers ... we need to do some sort of batching". On Asia an edit during the refresh or an intercity re-solve waits 100-250 s; the design gives lone-edit time (8-40 s). Gemini reviewed it.
   - Goal: Those edits show their lines in about the touched-cities time; edits arriving together share one quick calculation.
   - Other: notes/T-4220.md ("For Anita" first)
 - T-2198 [P3] {L:passing-tracks} {after:T-3456} Mark where faster trains lose time
