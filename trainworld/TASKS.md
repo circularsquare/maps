@@ -912,7 +912,7 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Goal: The settle stops once lines hold nearly still; that save opens in under a minute; NYC lines within 1%.
   - Other: notes/T-4188.md
 - T-4220 [P2] {L:solve-speed} {waits:Anita} Quick figures for edits made during a whole re-solve
-  - Need from Anita: Build the design in notes/T-4220.md (a second worker re-solves only the touched cities; about 12-14 h in 9 stages; 60-90 MB more memory while it runs, off on phones)? I'd say yes.
+  - Need from Anita: Build notes/T-4220.md's design (a second worker re-solves only touched cities; 12-14 h in 9 stages; 60-90 MB more memory while running, off on phones)? I'd say yes.
   - Context: You, 11-24: "edits made during remaining full passes should ideally get fast numbers ... we need to do some sort of batching". On Asia an edit during the refresh or an intercity re-solve waits 100-250 s; the design gives lone-edit time (8-40 s). Gemini reviewed it.
   - Goal: Those edits show their lines in about the touched-cities time; edits arriving together share one quick calculation.
   - Other: notes/T-4220.md ("For Anita" first)
