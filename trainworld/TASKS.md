@@ -224,10 +224,11 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4144: both saves load final from the cache and a paused clock never calculates again, so the bench's while-calculating pass measures nothing.
   - Goal: That pass runs during a real calculation.
   - Other: notes/T-4144.md
-- T-4143 [P1] {L:edit-speed} The first click of a track takes seconds to register (taking, 2026-11-23, agent firstclick)
-  - Context: You, 11-23 on 8800 after T-4136: "feels a lot better! for the initial click it can take a couple seconds to register sometimes, but after the initial click the ghost feels significantly better."
-  - Goal: The first click shows its start at once on the Asia and NYC saves, also while trips calculate; the cause measured.
-- T-4142 [P2] {L:edit-speed} {after:T-4114} Frames drop while drawing track during a calculation
+- T-4155 [P1] {L:edit-speed} Streets arriving after a pan hold the worker for seconds (taking, 2026-11-23, agent trackstream)
+  - Context: From T-4143: on the Asia save after a pan, street speeds land, every bus line is re-timed and the whole state is resent with two hours of boarding (3.9-4.4 s), holding every edit and preview, even where no bus runs.
+  - Goal: Streets landing redo only the bus lines they touch and no full state where none changed.
+  - Other: notes/T-4143.md
+- T-4142 [P2] {L:edit-speed} {after:T-4114} Frames drop while drawing track during a calculation (taking, 2026-11-23, agent trackstream)
   - Context: From T-4136: on the Asia save while trips calculate, drawing track runs at 3-18 frames a second (55 with no track started); likely the worker running previews back to back beside trip workers on a busy machine.
   - Goal: At most one preview per frame, or whatever the measurement shows; 30+ frames a second while drawing track on Asia during a calculation.
   - Other: notes/T-4136.md

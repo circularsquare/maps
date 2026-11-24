@@ -7,9 +7,9 @@ diary notes/handoff-log.md. Her time UTC-5.
 ## In flight (adopt from the board)
 - Edit speed, plan notes/T-4144.md; her 23:1x "do all, land all, one message when done". TOP: editnetwork T-4153 (opus,
   bounded drawn network on master: 50-70% of the wait; her 00:0x). editbase T-4145 (base landable; land after its
-  bench+smoke, then tell editstations/editlines to merge master), editstations T-4146 (B), editlines T-4147 (A; stage 1 rows-first done in tree, smoke unverified, hooks in clock.worker.ts and clockDemand.ts may
+  bench+smoke, then tell editstations/editlines to merge master), editstations T-4146 (B; written, untested, waits for base: delete its stub game/pending.ts before merging master), editlines T-4147 (A; stage 1 rows-first done in tree, smoke unverified, hooks in clock.worker.ts and clockDemand.ts may
   conflict with editbase/editworker at merge),
-  editworker T-4149 (D worker: bayTimes, posting, then A/B/E; rows-first waits for base+B), firstclick T-4143 (E).
+  editworker T-4149 (D worker: bayTimes, posting, then A/B/E; rows-first waits for base+B), trackstream (E, agent a2b95733 resumed: T-4155 streets resend, T-4142, T-1031); firstclick T-4143 landed de066376.
   Base API at the top of notes/T-4145.md: put it in C's brief. Queued: C T-4148, D page T-4150, T-4133/4134 after
   retime, T-4151. Her yes: refusals take a shown edit back, money at the click; refusals must answer fast too.
   Agent ids: editbase adf738eb, editstations a832c397, editlines a3199ea2, editworker a0d0baab, junctionmsg a23cb70f.
