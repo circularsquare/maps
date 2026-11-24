@@ -900,11 +900,15 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
 - T-2209 [P3] {L:buses} Ferry routes in narrow canals
   - Context: Amsterdam's grachten route is not found at 2.5 m cells, so it goes by the Amstel; 1-4% of Venice and Amsterdam routes under 5 m are affected.
   - Other: notes/T-2177.md "T-2192 results".
-- T-4222 [P3] {L:solve-speed} {after:T-2188} Chunk tiny everyday trip pairs like commutes
+- T-4222 [P3] {L:solve-speed} Chunk tiny everyday trip pairs like commutes
   - Context: T-921 deals commute pairs under 1 person a day in chunks (about 7% of New York's calculation); 2 a day gained nothing more. Everyday trips are solved from sampled destinations, so they may lack the same tail of tiny pairs. You, 11-24: file as P3.
   - Goal: Know whether everyday trips have a tail of tiny pairs; if so, chunk them the same tunable way.
   - Other: notes/T-921.md
-- T-4220 [P2] {L:solve-speed} {after:T-2188} Quick figures for edits made during a whole re-solve
+- T-4237 [P2] {L:solve-speed} Long-run stop edits taken as city edits
+  - Context: From T-2188's checker (11-24): dropping a middle stop on Greenport Service (73 km) ended at its local result as a city edit. The 20+ minute stop rule gets no data when the edited cluster has no market part, so it can't fire there. Drift was -0.006% until the refresh.
+  - Goal: A stop added or dropped on a 20+ minute run always takes the whole re-solve.
+  - Other: notes/T-2188.md
+- T-4220 [P2] {L:solve-speed} Quick figures for edits made during a whole re-solve
   - Context: You, 11-24: "edits made during remaining full passes should ideally get fast numbers ... if people are clicking a lot of times to add lots of stations ... we need to do some sort of batching". Today an edit during a whole re-solve waits for it (up to 226 s on Asia). Options: notes/T-4204-options.md.
   - Goal: An edit during a whole re-solve shows its lines in about the touched-cities time; edits arriving together share one quick calculation, never one each.
 - T-2198 [P3] {L:passing-tracks} {after:T-3456} Mark where faster trains lose time

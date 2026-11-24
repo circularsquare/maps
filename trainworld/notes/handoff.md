@@ -1,47 +1,39 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 3793ea75-3fa8-4643-b04d-bea05a94ef29, name maps-d9 [d2420d], since 2026-11-24 20:20 UTC
-Updated: 2026-11-24 21:09 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-24 22:48 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5. Core cap 14 (her 20:12, "take on more tasks at once if you have bandwidth").
 
 ## Next
-1. Running (briefs in my scratch <agent>/brief.md): cutstretch T-4153 s4 (Opus), loopcase T-4235 (Opus, her loop doubt),
-   busnum T-4236 (Sonnet), busdemand T-4224 (Sonnet, her bus call), qcheck (T-2188's checker, tree quickend; land after
-   it passes, she didn't object to the drift), mcheck (T-4214's checker, tree mapcfix), check12 (batch checker on master).
-2. mapcfix found T-4214's extra cost (the patch set world, so panels and layers ran twice per edit; now only the tools'
-   map) but its one bench left was noisy. After mcheck: a quiet window (hold starts) for the tree's last edit_bench, then
-   land. Baseline on master: artifacts/trainworld/editbench/baseline.json (b7b9e4ee; NYC track built 437 ms).
-   passx T-4048 (Opus; her 22:4x design: remove buttons on passageways in add passageway mode, red outline on hover).
-   busstops T-4080 stages 1-2 (Opus: kept stops, saves, undo; own checker before landing).
-3. Then T-4080 stages 3-6, T-4214 stages A, D, E,
-   T-4231, T-4193 (clock worker files after mapcfix lands), T-4220 (after quickend lands), T-4149/T-4150, T-4230, T-4187,
-   T-3160, T-4199, T-4233, T-4234, T-4222 P3. 8800 = f733d3bf, smoke PASS.
-4. After up next: her big three, T-3444 track rework, T-3742 schedule nudging, T-3694 bulk station improvements panel +
-   T-3456 crowding along the line.
+1. Running (briefs in my scratch <agent>/brief.md): cutstretch T-4153 s4, busdemand T-4224 (her bus call), passx T-4048
+   (her remove-button design), busstops T-4080 stages 1-2 (saves: own checker before landing), mcheck (T-4214's checker,
+   tree mapcfix), check12 (batch checker on master). T-2188 landed 9f4405ca5 after qcheck (T-4237 filed from it).
+2. T-4214: mapcfix fixed the extra cost (the patch set world: panels and layers ran twice per edit); its last bench was
+   noisy. After mcheck: hold starts for a quiet window, run the tree's last edit_bench, land. Master baseline:
+   artifacts/trainworld/editbench/baseline.json (b7b9e4ee; NYC track built 437 ms). 8800 = f733d3bf, smoke PASS.
+3. Waiting on her: the "read first, test to confirm" rules (proposal sent 22:47) and Gemini per risky batch (quota?).
+   Write new briefs that way meanwhile.
+4. Then T-4080 stages 3-6, T-4214 stages A, D, E, T-4237, T-4220, T-4231, T-4193 (clock worker files after T-4214
+   lands), T-4149/T-4150, T-4230, T-4187, T-3160, T-4199, T-4233, T-4234, T-4222 P3. After that, her big three: T-3444
+   track rework, T-3742 schedule nudging, T-3694 + T-3456.
 
 ## Her words
-- 11-24 22:3x: loop fix: "im not confident that this loop line fix catches most of the cases ... perfectly normal non
-  pathological cases that mostly look like a circle with lots of stops around it", don't claim fixed in the changelog
-  (c004 hidden; T-4235 P1). Rider counts once each: yes. Lines past 99 keep number symbols, "seems easy" (T-4236). Buses:
-  "1.1x bus minute mult, can maybe adjust more later, and do waits at least 2 minutes. and also 500m reach" (T-4224).
-  Bus stop naming design OK (T-4080/T-4083). All in DECISIONS.
-- 11-24 20:1x on buses: "bus ridership is just maybe a bit too high overall"; leaning away from changing speed ("in some
-  places buses do run fast ... balancing it with motorways seems quite hard"); a perceived cost should scale with ride
-  time ("the annoying part is being on the bus"); bunching ("schedules are super unreliable"); "people are running buses
-  at like 0.7min headways ... not sure if thats so realistic". busopts measures: bus time 1.2-1.3x, bunching waits,
-  a street cap like BRT's 100/h (60/h), 500 m reach, every-other-stop Auto, fare 1.0x. My lean: bus time + street cap.
-  Her pick decides; a demand factor waits for her word.
-- 11-24 18:5x: shipped 0.4.6 ("its good enough. i loaded up 0.4.5 and its definitely worse"); then "work at the root
-  cause / try something like a silo approach ... deprioritize the shorter term surface level fixes" (DECISIONS T-4097).
-  "i dont want to measure anything" was about holding the release; root-cause agents still measure their own change.
-- 11-24 19:2x: up next as set; T-4199 corridors kept; T-921 landed (she: dense-city gain is worth more).
+- 11-24 22:4x: "we're maybe relying a bit too much on testing ... you guys get a lot more mileage by thinking about actual
+  code than by trying to test. the ways in which you think to test don't really align super well with how people play.
+  how could we formalize this"; Gemini adversarial review "generally speaking". loopcase not needed (T-4235 closed).
+- 11-24 22:3x: loop fix not trusted for ordinary circles; don't claim it fixed (c004 hidden). Counts once each: yes.
+  Lines past 99 keep numbers (T-4236 landed). Buses: "1.1x bus minute mult, can maybe adjust more later, and do waits
+  at least 2 minutes. and also 500m reach". Bus stop naming design OK. All in DECISIONS.
+- 11-24 20:1x on buses: "bus ridership is just maybe a bit too high overall"; a perceived cost should scale with ride
+  time ("the annoying part is being on the bus"); 0.7-minute headways unrealistic. Answered by T-4224 above.
+- 11-24 18:5x: shipped 0.4.6; then "work at the root cause / try something like a silo approach ... deprioritize the
+  shorter term surface level fixes" (DECISIONS T-4097). Root-cause agents still measure their own change.
 - 11-24: no small fix per case for quick-edit sequences: general fixes, Gemini consulted on designs (she likes it).
 - 11-24 13:10-13:57: she says when to publish (never ask); asianita save is a stress test only; no "less memory"
-  changelog items when memory is up overall; changelog one line, she trims it on the board (start-menu line now
-  editable there); keep cores 0-1 free (reserve_cores -All loop).
+  changelog items when memory is up overall; changelog one line, she trims it on the board; keep cores 0-1 free.
 - 11-24: testing budget table in CLAUDE.md; don't reproduce her bugs unless the cause is unclear; disk low = clear to 60 GB.
-- 11-23: answer her first; never let agents overbook or collide; agents 2-8 by load (she now allows more); tasks about
-  an hour; you don't investigate, agents do; cycle at 500k; no drafted player replies; times as percent of the wait.
+- 11-23: answer her first; never let agents overbook or collide; agents 2-8 by load; tasks about an hour; you don't
+  investigate, agents do; cycle at 500k; no drafted player replies; times as percent of the wait.
 - 11-19: "player complaints take precedent over other new features"; full playtest list before every publish.
 - Standing: every publish, deploy and website push needs her yes, none overnight; advisor only for big design
   decisions; BRT stations for BRT lines only.

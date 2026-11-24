@@ -3,6 +3,30 @@
   "line": "",
   "items": [
     {
+      "id": "c009",
+      "text": "trips after an edit in one city are calculated in seconds on big worlds",
+      "edited": null,
+      "hidden": false,
+      "task": "T-2188",
+      "by": "quickend",
+      "at": "2026-11-24T22:47:51Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
+    },
+    {
+      "id": "c008",
+      "text": "fixed income jumping for a moment after a fare change",
+      "edited": null,
+      "hidden": false,
+      "task": "T-2188",
+      "by": "quickend",
+      "at": "2026-11-24T22:47:50Z",
+      "rev": 1,
+      "area": "fares",
+      "fix": true
+    },
+    {
       "id": "c007",
       "text": "fixed lines numbered past 99 getting a letter instead of their number",
       "edited": null,
