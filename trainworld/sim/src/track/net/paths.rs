@@ -294,7 +294,7 @@ impl Network {
             let carry = want.and_then(|_| self.find_path_side(w[0], w[1], side, want, tram));
             let plain = self.find_path_side(w[0], w[1], side, None, tram);
             let (p, s) = match (carry, plain) {
-                (Some(c), Some(p)) => if self.carry_worth(&c.0, &p.0) { c } else { p },
+                (Some(c), Some(p)) => if self.carry_worth(&path, &c.0, &p.0) { c } else { p },
                 (c, p) => c.or(p).ok_or(k)?,
             };
             path.extend(p);
@@ -339,11 +339,19 @@ impl Network {
     }
 
     /// Whether a loop's closing hop that carries on round (`carry`) is taken over the plain one,
-    /// which may turn back at the first stop (`plain`): when it is at most `CARRY_SLACK_S` slower,
-    /// so a closing never runs a long way round the network to avoid a turn (T-3021).
-    pub fn carry_worth(&self, carry: &[u32], plain: &[u32]) -> bool {
+    /// which may turn back at the first stop (`plain`), both leaving the end of `before`: when it is
+    /// at most `CARRY_SLACK_S` slower, so a closing never runs a long way round the network to avoid a
+    /// turn (T-3021). A plain hop that turns back on the way more often (where it leaves, or at a track
+    /// end) goes back over the line's own track and makes no loop at all: the carry is taken however
+    /// long, as a long stretch with no stops before the first stop would otherwise never close (T-4223).
+    pub fn carry_worth(&self, before: &[u32], carry: &[u32], plain: &[u32]) -> bool {
+        let turns = |hop: &[u32]| {
+            let mut p: Vec<u32> = before.last().copied().into_iter().collect();
+            p.extend_from_slice(hop);
+            self.path_reversals(&p).len()
+        };
         let t = |p: &[u32]| p.iter().map(|&x| self.edge_time[path_edge(x) as usize]).sum::<f64>();
-        t(carry) <= t(plain) + CARRY_SLACK_S
+        turns(plain) > turns(carry) || t(carry) <= t(plain) + CARRY_SLACK_S
     }
 
     /// T-3021: the quickest way on from a path's last node, round a loop of track and back onto the

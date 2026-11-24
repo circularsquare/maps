@@ -406,8 +406,8 @@ tag over a point states what these do there. Loops are described under each tool
 | Left click, a lone point | Nothing | Remove it | none |
 | Right click, the last point | Delete it | Nothing | Nothing |
 | Right click, a lone point | Delete it | none | none |
-| Right click, a middle point | Loop back to it and save | Turn the line around a loop of track if it offers one, else "Can't loop back here" | Nothing |
-| Right click, the first point | Close the loop and save | Close into a circle if it offers one | Nothing |
+| Right click, a middle point | Loop back to it and save | Turn the line around a loop of track if it offers one, else "Only the first or last stop closes a loop" | Nothing |
+| Right click, the first point | Close the loop and save | Close into a circle if it offers one, else "Trains would have to reverse to close a loop" | Nothing |
 | Right click, a point of a ring | Open the ring there | Open the ring there | none |
 | Right click, a point of a route that loops back | Stop looping back | Stop looping back (a turned line) | none |
 | Right click, empty ground | Take back the last point | Nothing | Nothing |
@@ -1130,7 +1130,7 @@ running line's trains stop at then wins over one they do; then the nearest.
   into the land, the unreachable ones dimmest (CSS tokens `--mk-*`, T-543). The tiers come from the clock worker trying each station with the same
   insertion search a click makes (`TrackApi::stop_tiers`), so a marker always says what its click
   does; until the answer lands an estimate from the track graph shows on entering, and after an edit
-  the last answer stands with only the stops changed (T-648). A click on a marker adds or removes a stop and
+  the last answer stands with only the stops changed (T-648), or whole while the stops are the ones it was for (T-4223). A click on a marker adds or removes a stop and
   nothing else (T-3109, trains and trams alike): on a station that is no stop it is one edit (`insertStop`): the
   worker fits the station in where `TrackApi::insert_stop` puts it, among the stops it holds then, and never turns
   the line around a loop (`TrackApi::add_stop`, T-3140, track-and-service.md "Only the right click turns an end"); on a stop it
@@ -1143,7 +1143,11 @@ running line's trains stop at then wins over one they do; then the nearest.
   ways" on one made one way.
   A **right click** (or a finger held 500 ms on the marker, moving up to 8 px; the lift adds nothing) closes, opens
   or turns a loop where the marker offers one (the loop items below); anywhere else it changes nothing and the tag
-  says "Can't loop back here" for four seconds. The strip at the bottom says "Click a circle to add or remove a
+  says why for four seconds: "Trains would have to reverse to close a loop" ("Trams" on a tram line) on the first
+  or last stop of an open line whose track does not lead round from its last stop to its first, "Only the first or
+  last stop closes a loop" on another station of an open line, "Can't loop back here" otherwise. It reads the
+  worker's tiers for the line's stops as they are: one made before those are in (just after a stop click or an
+  undo; many seconds on a big network) waits for them, as the estimate offers no loop (T-4223). The strip at the bottom says "Click a circle to add or remove a
   stop. Right click one to loop back there." ("Tap ... Hold one to loop back there." by touch). On touch it also has
   a Loop button (T-3118; "Loop back" in the bus tool above): pressed, the next tap on a marker is a right click.
 - Hover says "Click to add a stop", "Click to add a stop and change the route", "Click to add a

@@ -258,6 +258,40 @@ fn the_first_stop_closes_and_opens_a_loop() {
     assert_eq!(b.stop_tiers(id).chunks(3).find(|c| c[0] as u32 == ns[0]).unwrap()[1], 5.0, "the ring leads round");
 }
 
+/// T-4223: a line round part of a ring closes into a circle however long the stretch from its last
+/// stop round to its first, stop-less: going back over its own track is no way round.
+#[test]
+fn a_long_stretch_without_stops_still_closes() {
+    use super::super::super::tests::{edge, node, station, world};
+    for r in [3000.0, 30000.0] {
+        let mut w = world();
+        let ns: Vec<u32> = (0..6).map(|i| {
+            let a = i as f64 * std::f64::consts::PI / 3.0;
+            node(&mut w, r * a.cos(), r * a.sin(), 0)
+        }).collect();
+        let pi = r / (std::f64::consts::PI / 6.0).cos();
+        for i in 0..6 {
+            let a = (i as f64 + 0.5) * std::f64::consts::PI / 3.0;
+            edge(&mut w, ns[i], ns[(i + 1) % 6], &[(pi * a.cos(), pi * a.sin())], 0).unwrap();
+        }
+        for &n in &ns[..3] {
+            station(&mut w, n, 200);
+        }
+        let mut a = api();
+        a.w = w;
+        let id = a.new_line_id();
+        assert_eq!(a.set_line_with_trains(id, &ns[..3], 6, 4, 2, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+        let tier = |a: &TrackApi, n: u32| a.stop_tiers(id).chunks(3).find(|c| c[0] as u32 == n).unwrap()[1];
+        assert_eq!(tier(&a, ns[0]), 5.0, "radius {r}: the first stop closes");
+        assert_eq!(tier(&a, ns[2]), 5.0, "radius {r}: the last stop closes");
+        let mut stops = ns[..3].to_vec();
+        stops.push(ns[0]);
+        assert_eq!(a.set_stops(id, &stops), 0, "{}", a.issues());
+        assert_eq!(a.line_loop(id), 1, "radius {r}: a circle");
+        assert!(a.w.net.path_reversals(a.w.net.line_path(id)).is_empty(), "radius {r}: never turning back");
+    }
+}
+
 /// T-3042: a junction a looped route passes twice is one mark, at its first pass.
 #[test]
 fn a_junction_passed_twice_is_one_mark() {

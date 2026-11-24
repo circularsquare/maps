@@ -184,6 +184,10 @@ export class StopMarkers {
   private asked = 0;
   /** the clock worker's last tiers for the line being edited */
   private fromWorker: Map<string, StopTier> | null = null;
+  /** T-4223: the line's stops those tiers are for, joined */
+  private workerStops: string | null = null;
+  /** T-4223: a right click made before the worker's tiers for the line's stops were in, made once they are */
+  private loopWait: { line: number; id: string; px: number; py: number } | null = null;
   /** for a "reverse" station, the station trains would reverse at, "" for a bare track end */
   private revAt = new Map<string, string>();
   private tram = false;
@@ -244,6 +248,8 @@ export class StopMarkers {
         this.line = null;
         this.seenLine = null;
         this.fromWorker = null;
+        this.workerStops = null;
+        this.loopWait = null;
         this.tiers = new Map();
         this.hideTag();
         this.gapAsked++;
@@ -261,6 +267,7 @@ export class StopMarkers {
       // T-3123: with no line here, the last line's markers would stay up, unmoved by the camera
       this.box.style.display = this.line ? "" : "none";
       if (!this.line) {
+        this.loopWait = null;
         this.hideTag();
         return;
       }
@@ -272,15 +279,21 @@ export class StopMarkers {
       this.names = new Map(w.save.stations.map((s) => [s.id, s.name]));
       // After an edit to the same line the worker's last tiers stand until its new answer, with only
       // the stops changed; the estimate disagrees with them past the line's ends, and showing it in
-      // between made markers change and change back (T-648).
+      // between made markers change and change back (T-648). With the stops as they were (another
+      // state of the same edit, ground landing) they stand whole, loops included (T-4223).
       const estimate = stopTiers(w, this.line);
+      const stopsKey = planStopsOf(this.line).join();
       if (sameLine && this.fromWorker) {
+        const same = this.workerStops === stopsKey;
         const stops = new Set(planStopsOf(this.line));
         for (const s of estimate.keys()) {
           const was = this.fromWorker.get(s);
-          if (!stops.has(s) && was !== undefined && was !== "on") estimate.set(s, was);
+          if (was !== undefined && (same || (!stops.has(s) && was !== "on"))) estimate.set(s, was);
         }
-      } else this.fromWorker = null;
+      } else {
+        this.fromWorker = null;
+        this.workerStops = null;
+      }
       this.tiers = estimate;
       this.applyGuesses();
       // the clock worker's tiers, from the line tool's own search (T-237), replace this estimate
@@ -288,9 +301,11 @@ export class StopMarkers {
       void queryClock({ what: "stopTiers", line: id }).then((d) => {
         if (!d || asked !== this.asked || world.peek() !== w || !this.line) return;
         this.tiers = this.fromWorker = tiersFrom(d, w, this.revAt);
+        this.workerStops = stopsKey;
         this.applyGuesses();
         this.place();
         this.overlay.invalidate();
+        this.loopWaited();
       });
       this.place();
       // the network the renderer holds follows the world a moment later
@@ -329,6 +344,7 @@ export class StopMarkers {
     if (!g) return;
     if (--g.n > 0) return;
     this.guess.delete(gk);
+    this.loopWaited();
     if (this.line?.num !== line) return;
     const isStop = planStopsOf(this.line).includes(key), shownStop = this.tierOf(key) === "on";
     if (isStop === shownStop) return;
@@ -534,14 +550,46 @@ export class StopMarkers {
   /** T-3109: a right click (or a long press) on the marker of station `id`: the loop there closed, opened or
    * turned round, or a word that there is none. */
   private loopAt(id: string, px: number, py: number) {
+    if (!this.line) return;
+    // T-4223: the page's own estimate never offers a loop, so until the worker's tiers for the line's stops are in
+    // (a moment after each stop click; many seconds on a big network) the right click waits for them
+    if (!this.tiersFresh()) {
+      this.loopWait = { line: this.line.num, id, px, py };
+      return;
+    }
     const tier = this.tierOf(id);
     this.hideTag();
     if (LOOP_TIERS.has(tier)) return this.loop(Number(id), tier);
     // T-3118: any stop of a loop opens it there
     if (tier === "on" && this.closedLine()) return this.loop(Number(id), "open");
     this.reasonFor = id;
-    this.showTag([this.names.get(id) ?? t("stopMarkers.station"), t("stopMarkers.noLoop")], px, py, true);
+    this.showTag([this.names.get(id) ?? t("stopMarkers.station"), this.noLoopWhy(id)], px, py, true);
     this.reasonTimer = window.setTimeout(() => this.hideTag(), REASON_MS);
+  }
+
+  /** T-4223: why a right click on station `id` makes no loop: at an end of an open line the track would make its
+   * trains reverse (`close_path`), elsewhere only the ends close one */
+  private noLoopWhy(id: string): string {
+    const s = this.line ? planStopsOf(this.line) : [];
+    if (s.length < 2 || this.closedLine()) return t("stopMarkers.noLoop");
+    if (id === s[0] || id === s[s.length - 1]) return t("stopMarkers.noLoopEnd", { tram: this.tram });
+    return t("stopMarkers.noLoopMiddle");
+  }
+
+  /** T-4223: the tiers on hand are the worker's for the line's stops as they are, with no stop click of it still out */
+  private tiersFresh(): boolean {
+    if (!this.line) return false;
+    const head = `${this.line.num}:`;
+    for (const k of this.guess.keys()) if (k.startsWith(head)) return false;
+    return this.workerStops === planStopsOf(this.line).join();
+  }
+
+  /** T-4223: the right click that waited for the worker's tiers, made once they are in */
+  private loopWaited() {
+    const q = this.loopWait;
+    if (!q || !this.tiersFresh()) return;
+    this.loopWait = null;
+    if (this.line?.num === q.line) this.loopAt(q.id, q.px, q.py);
   }
 
   /** the line being edited is a loop: its last stop is its first */

@@ -160,7 +160,7 @@ try {
   await page.mouse.click(mk.x, mk.y, { button: 'right' });
   await page.waitForTimeout(1200);
   const t3 = await tagText();
-  check(/Can't loop back here/.test(t3) && JSON.stringify((await info('Line 1a')).stops) === JSON.stringify(l1aOpen.stops), 'a right click on Museumstraat (Line 1a, open) changes nothing and says why', t3.replace(/\n/g, ' / '));
+  check(/would have to reverse to close a loop|first or last stop to close a loop/.test(t3) && JSON.stringify((await info('Line 1a')).stops) === JSON.stringify(l1aOpen.stops), 'a right click on Museumstraat (Line 1a, open) changes nothing and says why', t3.replace(/\n/g, ' / '));
 
   // ---- T-3110: each line's related-lines strip, its stops edited and not: the other line's column runs beside it
   await page.evaluate(async () => { const ui = await import('/src/game/ui.ts'); ui.relatedLines.value = true; });

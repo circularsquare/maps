@@ -348,14 +348,14 @@ async function railStops() {
   await page.mouse.click(m.x, m.y, { button: 'right' });
   await wait(1200);
   let s = await tag();
-  check(/Can't loop back here/.test(s) && same(await stopsOf(), l.stops), 'rail: right click on the last stop changes nothing and says why', s);
+  check(/would have to reverse to close a loop/.test(s) && same(await stopsOf(), l.stops), 'rail: right click on the last stop changes nothing and says why', s);
   // a finger held does the same as a right click
   await page.mouse.move(5, 5);
   await wait(2500);
   await hold(m.x, m.y);
   await wait(800);
   s = await tag();
-  check(/Can't loop back here/.test(s) && same(await stopsOf(), l.stops), 'rail: a finger held on the last stop does the same as a right click', s);
+  check(/would have to reverse to close a loop/.test(s) && same(await stopsOf(), l.stops), 'rail: a finger held on the last stop does the same as a right click', s);
   // double click on a stop: it goes and comes back, or the reverse: the line is as it was
   await wait(2500);
   m = await markerOf(mid);
@@ -377,7 +377,7 @@ async function railStops() {
   await page.mouse.click(m.x, m.y);
   await wait(1200);
   s = await tag();
-  check(/Can't loop back here/.test(s) && same(await stopsOf(), l.stops), 'rail: Loop, then a tap on the last stop says it cannot loop', s);
+  check(/would have to reverse to close a loop/.test(s) && same(await stopsOf(), l.stops), 'rail: Loop, then a tap on the last stop says it cannot loop', s);
   await touch(false);
   // a tier that does something: the first stop of Line 1 closes or opens its loop (t3109 walks the rest)
   const l1 = await info('Line 1');

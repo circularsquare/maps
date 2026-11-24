@@ -1319,7 +1319,10 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   path entry and first are a through move); a **balloon** turns back there (e.g. out along a stem,
   around a loop, back down the stem). The route search's closing hop arrives on the side that carries
   on round when that takes at most `CARRY_SLACK_S` (300 s) more track time than the quickest way in,
-  else the quickest way (a balloon, T-3021); a reroute after a deletion never turns a circle into a
+  else the quickest way (a balloon, T-3021); but when the quickest way turns back on the way more often
+  (where it leaves the last stop, or at a track end: back over the line's own track, no loop at all) the
+  way round is taken however long, so a ring whose stretch from the last stop to the first has no stop
+  closes (`Network::carry_worth`, T-4223). A reroute after a deletion never turns a circle into a
   balloon (the closing turn counts as a reversal).
   **Turning around a loop at an end** (T-3021, notes/T-2988.md): where track leads on from an end
   stop, never turning back, round and onto the line's own path headed back toward the other end, the

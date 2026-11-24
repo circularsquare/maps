@@ -2268,6 +2268,8 @@
   "stopMarkers.rightLoopBack": "Right click to loop back here",
   "stopMarkers.rightStopLooping": "Right click to stop looping back here",
   "stopMarkers.noLoop": "Can't loop back here",
+  "stopMarkers.noLoopEnd": "{tram, select, true {Trams would have to reverse to close a loop} other {Trains would have to reverse to close a loop}}",
+  "stopMarkers.noLoopMiddle": "Right click the first or last stop to close a loop",
   "stopMarkers.add": "Click to add a stop",
   "stopMarkers.addExact": "Ctrl+click to place without snapping",
   "stopMarkers.addReroute": "Click to add a stop and change the route",

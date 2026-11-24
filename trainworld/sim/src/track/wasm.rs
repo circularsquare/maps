@@ -1079,7 +1079,7 @@ fn route_memo(net: &Network, stops: &[u32], memo: &mut HopMemo, ones: &[(u32, u8
         let want = if closes && k + 2 == stops.len() { net.carry_on_side(&path) } else { None };
         let key = |x: Option<u8>| (w[0], w[1], side.unwrap_or(2), x.unwrap_or(2), tram);
         let found = |memo: &mut HopMemo, x: Option<u8>| memo.hops.entry(key(x)).or_insert_with(|| net.find_path_side(w[0], w[1], side, x, tram)).is_some();
-        let x = if want.is_some() && found(memo, want) && (!found(memo, None) || net.carry_worth(&memo.hops[&key(want)].as_ref().unwrap().0, &memo.hops[&key(None)].as_ref().unwrap().0)) { want } else { None };
+        let x = if want.is_some() && found(memo, want) && (!found(memo, None) || net.carry_worth(&path, &memo.hops[&key(want)].as_ref().unwrap().0, &memo.hops[&key(None)].as_ref().unwrap().0)) { want } else { None };
         found(memo, x);
         let (p, s) = memo.hops[&key(x)].as_ref()?;
         path.extend_from_slice(p);

@@ -2,7 +2,8 @@
 // New York: an octagon of track with a station at five of its corners, a line over four-and-a-half sides whose two
 // ends are the open stations next to each other. At each end, in stop editing, the marker says "Right click to close loop"
 // and the right click closes the line into a circle (the first stop added at the end); undo opens it again.
-// Screenshots artifacts/trainworld/t3203-*.png.
+// T-4223: a right click made at the very moment the line changes (the world an undo brings, while the markers hold the
+// page's estimate, which offers no loop) still closes it, four times. Screenshots artifacts/trainworld/t3203-*.png.
 // From the maps root, on a Vite of your own:   node trainworld/checks/t3203-close-either-end.mjs [dev url]
 import { ARTIFACTS, collectErrors, launchChrome } from './lib.mjs';
 import { join } from 'node:path';
@@ -96,6 +97,29 @@ try {
     const s2 = await info();
     check(JSON.stringify(s2.stops) === JSON.stringify(s0.stops) && s2.loop === null, 'undo opens it again', JSON.stringify(s2));
   }
+  // T-4223: the right click waits for the worker's tiers of the line's new stops (`StopMarkers.loopAt` is what the
+  // map's contextmenu calls; a real click can't be timed to the world change)
+  const race = await page.evaluate(async ([num, first, last]) => {
+    const tw = window.tw, sm = tw.tools.stops, { world } = await import('/src/game/world.ts');
+    const st = () => { const l = tw.world.value.save.lines.find((x) => x.num === num); return { n: l.stops.length, loop: tw.world.value.lineStats[l.id].loop }; };
+    const pause = (ms) => new Promise((r) => setTimeout(r, ms));
+    const until = async (f, ms = 10000) => { const t0 = performance.now(); while (performance.now() - t0 < ms) { if (f()) return true; await pause(20); } return false; };
+    sm.loopAt(String(first), 0, 0);
+    if (!(await until(() => st().loop === 'circle'))) return ['the first close failed'];
+    const out = [];
+    for (let i = 0; i < 4; i++) {
+      const end = String(i % 2 ? last : first);
+      let skip = true, fired = false, tier = null, off = null;
+      off = world.subscribe(() => { if (skip) { skip = false; return; } off?.(); fired = true; tier = sm.tiers.get(end) ?? null; sm.loopAt(end, 0, 0); });
+      void tw.client.edit({ op: 'undo' });
+      await until(() => fired);
+      const ok = await until(() => st().loop === 'circle' && st().n === 6);
+      out.push(`${i % 2 ? 'last' : 'first'} (${tier} at the click): ${ok ? 'closed' : 'not closed'}`);
+    }
+    await tw.client.edit({ op: 'undo' });
+    return out;
+  }, [id, first, last]);
+  check(race.length === 4 && race.every((s) => s.endsWith(': closed')), 'T-4223: a right click as the line changes still closes it', race.join(' | '));
   check(errors.length === 0, 'no page errors', errors.slice(0, 2).join(' | '));
 } finally {
   await chrome.close();
