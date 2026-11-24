@@ -1,10 +1,12 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session 28722621-86b3-4444-8131-f3aee02b18dd, name maps-6b [d9ec47], since 2026-11-23 20:08 UTC
-Updated: 2026-11-24 01:56 UTC (cycling at 500k). Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Orchestrator: session 5cd3af11-2ab8-4788-8daf-1956104ead51, name maps-c0 [58120f], since 2026-11-24 01:57 UTC
+Updated: 2026-11-24 01:57 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5.
 
-## In flight (adopt from the board; agent ids for SendMessage while my tab lives)
+## In flight (adopt from the board)
+- All 13 agents run inside maps-6b's tab (left open): a follow-up or go goes to maps-6b as "relay to <agent>: <text>".
+- T-4160 filed (batch check 2's Asia seed 9 regions failure); start after editnetwork T-4153 lands, it shares region code.
 - Edit speed, plan notes/T-4144.md; her "do all, land all, one message when done". Landed: base T-4145, lines path
   T-4114, ghost T-4136, first click T-4143. Running: editnetwork T-4153 (TOP: bounded drawn network on master, her
   call), editstations T-4146 (a832c397), editlines T-4147 (a3199ea2), editpieces T-4148, editworker T-4149 (a0d0baab;
@@ -12,8 +14,7 @@ diary notes/handoff-log.md. Her time UTC-5.
   Before telling her: one Opus review of all show-at-click code, a smoke check that no pending entry outlives the final
   state, a batch check (refusals, undo after shown edits, charges) incl. rampport 380d8fc7, regionfix 8e1eb7ba,
   lineclick ef99d979, junctionmsg 9719e410, base 0c384f9e; then rebuild 8800 and one message to her.
-- volmove T-4159 (opus): saved games onto the new 50 GB Hetzner volume; her yes 01:5x covers the move and cap deploy.
-  It sends a phase-1 plan; read it, then tell it go (SendMessage to its agent id from the board/report).
+- T-4159 done (games on the volume). After the 03:23 UTC backup logs ok (~7.1 GB): T-4164's cleanup on the box. Server save level 39: T-4161.
 - Perf beyond edits: perfcompare T-4157 (master vs v0.4.5, all three saves, memory too), busmerge2 T-4158 (wider bus
   stop merges: her pick), commutechunks T-921 (shift: numbers to her), zoneopen T-4051, memwasm T-4156 (a17f9bab).
 - Her open asks in chat: AWS own account (guide notes/aws-own-account-setup.md; when she says "aws account ready,
@@ -35,6 +36,7 @@ overnight max. Reserve loop back to -Reserved 2; cores 0-1 hers (reserve_cores.p
 ledger notes/perf-ledger.jsonl.
 
 ## Her words
+- 11-24 02:0x: Resend Pro no; R2 purge yes; R2 reads known, stop mentioning; website repo only past 1.3 GB; R2 the games' only off-box backup is fine; install note and station hover strings acknowledged.
 - 11-23 00:0x: the drawn network rebuild is "the entire issue. this is what we should fix", not left to the track rework;
 - 11-23 23:1x: edit speed: "just do all of the changes and i can test, no need for many rounds of implement-test. lemme
   know when everything is done". Run every T-4144 stream, land all, then one message to her; no interim test asks.

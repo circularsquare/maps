@@ -225,6 +225,22 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4136: on the Asia save while trips calculate, drawing track runs at 3-18 frames a second (55 with no track started); likely the worker running previews back to back beside trip workers on a busy machine.
   - Goal: At most one preview per frame, or whatever the measurement shows; 30+ frames a second while drawing track on Asia during a calculation.
   - Other: notes/T-4136.md
+- T-4160 [P2] {L:edit-speed} Bounded rows' regions differ from a fresh build on one Asia seed
+  - Context: Batch check 2 (11-23): the Asia rows check at 10 seeds of 40 steps failed at seed 9, step 15, "regions differ from a fresh build", in the T-4113 region code; not rerun on the parent commit.
+  - Goal: Seed 9 reproduced and fixed, or shown to predate T-4130; the 10x40 Asia run passes.
+  - Other: notes/batchcheck-2026-11-23b.md
+- T-4162 [P1] {L:track-drawing} Line-up message and exact small trip counts
+  - Context: You, 11-24: the line-up refusal "doesn't really make any sense to me ... if we can find a situation where this error shows up, its mots likely a bug. so maybe lets say 'track alignment error'". Station hover: "can't we just say the exact number under 50?"
+  - Goal: The refusal reads "Track alignment error"; the hover shows the exact trip count under 50 and "Under 50 trips within" is gone.
+  - Other: notes/T-4152.md, notes/T-4135.md
+- T-4163 [P2] {L:track-drawing} {after:edit speed lands} Find drawing that still trips the alignment check
+  - Context: You, 11-24: a situation where the line-up refusal shows is most likely a bug, to prevent. T-4152 cut the end-to-end join sweep's refusals from 26 of 288 to 0.
+  - Goal: Ordinary drawing (joins, junctions, node drags, trams) never shows it; any case found is fixed or filed.
+  - Other: notes/T-4152.md
+- T-4164 [P2] {L:accounts-server} Volume row in the resource check, R2 purge, old games copy deleted
+  - Context: From T-4159: games now on the Hetzner volume; check_resources.py watches only the root disk. You said yes to purging R2's oldest data version (11-18). The old games copy on the root disk goes once the 03:23 UTC backup on 11-24 logs ok.
+  - Goal: A volume row (used of 49 GB) in check_resources.py; R2 down to three data versions; about 7.4 GB freed on the root disk.
+  - Other: notes/T-4159.md
 - T-4141 [P3] {L:station-placement} Track placed by an edit call crossed the Hudson at ground level
   - Context: Seen by T-4112: a route entered through the game's edit call crossed the Hudson at ground level without a refusal, while pointer-drawn track nearby was bridged. Water may not have been loaded under part of it.
   - Other: notes/T-4112.md
@@ -239,9 +255,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-24: "we could just try merging more aggressively for bus stop ... if we can merge in a way that doesnt just cancel everything out". T-4094 merges stops within 300 m served by the same lines (Detroit -40% CPU, Belgrade -20%).
   - Goal: Wider or looser merges measured as saving against shift on Belgrade, Detroit and NYC, for you to pick.
   - Other: notes/T-4094.md
-- T-4159 [P1] {L:accounts-server} Saved games onto the new Hetzner volume (taking, 2026-11-23, agent volmove)
-  - Context: You, 11-24: yes to a 50 GB volume ($3.84/month) on shonei-market and to moving the games now, with a plan ready first to keep downtime short. Games are 7.1 of 16 GB and growing 0.6 GB a day.
-  - Goal: Games on the volume, the off-site backup covering them, the games cap raised to fit; downtime about a minute.
 - T-4157 [P1] {L:loading} Master against v0.4.5 on the three bench saves (taking, 2026-11-23, agent perfcompare)
   - Context: You, 11-24: the goal was to claw back what the express change and the bus changes cost; "load times do feel kinda long". Last bench 18:08: trips ready NYC 95 to 126 s, Tokyo 157 to 175 s, Belgrade 618 to 1,285 s; NYC 105 s at 22:51.
   - Goal: Every perf_bench number for master against v0.4.5 on nyc, tokyo and belgrade, and where a load's time goes.
@@ -474,6 +487,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Design agreed 11-21 (notes/T-3444-design/; three small calls still open in review/track-rework-design.md). Built in 39 stages, T-3948 to T-3985 and T-4024, in four releases, on a long-lived branch tw/track merged into master at each release. Stage 1 (T-3948) is done on master; next is stage 2a (T-3949). Your weekend notes (2026-11-16) are the heart of it.
   - Goal: Closes with the last of its stages.
   - Other: Your notes verbatim: notes/T-3444.md; sizes in notes/code-tour.md. Requirements folded in 11-20: a station placed on track that leaves its shape alone redraws no neighbours (T-2767, 0.2-0.9 s today); the drawn network rebuilds only near a change (T-2701); the Penn Station to Emeryville snapped preview (3 s, T-763) as a check case. notes/review-edit-speed-2026-11-20.md
+- T-4161 [P1] {L:accounts-server} {after:T-4159} Server save check accepts master's save level 39
+  - Context: volmove (T-4159) found shonei-server's TestTwSaveCheckFollowsTheGame failing: master saves at level 39, the running server checks up to 38. Already true before the volume move.
+  - Goal: The server accepts level 39 before the next publish; the test passes. Deploy on your yes.
+  - Other: notes/T-4159.md
 - T-4026 [P2] {L:track-rework} {after:the first tw/track release} TWT7 outside the game before the merge
   - Context: From T-3953: before tw/track merges into master, shonei-server's save check must walk TWT7 (body levels 1-4) and levels 39-41 (deploy on your yes), `pipeline/readsave.py` must read TWT7, and 07-saves still says "body level 36". Master's next save level is renumbered past tw/track's 40 at that merge.
   - Goal: A TWT7 save passes the server check and readsave.py on a real save; the docs say level 40.
