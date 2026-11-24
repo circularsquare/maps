@@ -14,12 +14,14 @@ export type Posted = typeof posted;
 type Kind = { word: (api: TrackApi, op: EditOp, answer: Applied, posted: Posted, before?: unknown) => Partial<EditWord> | undefined; before?: (api: TrackApi, op: EditOp, posted: Posted) => unknown };
 /** (a kind file's optional `<name>Before` is read by name, so a stream adds one without touching this file) */
 const kind = (m: Record<string, unknown>, name: string): Kind => ({ word: m[name] as Kind["word"], before: m[name + "Before"] as Kind["before"] });
-const KINDS: Kind[] = [
+/** built on first use: clockWordLines imports this file, so in a built bundle `lines` is not ready while this file loads */
+let kinds: Kind[] | undefined;
+const KINDS = (): Kind[] => (kinds ??= [
   { word: pathWord, before: pathBefore },
   kind(stations, "stationWord"),
   kind(lines, "lineWord"),
   kind(pieces, "pieceWord"),
-];
+]);
 
 /** T-4114: the ops that can change which edges a line's strokes draw */
 const LINE_PATH_OPS = new Set<EditOp["op"]>(["toggleStop", "insertStop", "oneWayStop", "setStops", "dropStop", "endLineAt", "stopPassed", "orderStops", "sortStops", "turnEnd", "openLoop", "removeLine"]);
@@ -44,13 +46,13 @@ function pathWord(api: TrackApi, op: EditOp, _answer: Applied, _posted: Posted, 
 
 /** Each kind's read before the edit is applied, to hand to `wordAfter`. */
 export function wordBefore(api: TrackApi, op: EditOp, p: Posted): unknown[] {
-  return KINDS.map((k) => k.before?.(api, op, p));
+  return KINDS().map((k) => k.before?.(api, op, p));
 }
 
 /** The word for an accepted edit: every kind's part, arrays joined (a kind that throws gives none, and says so). */
 export function wordAfter(api: TrackApi, op: EditOp, answer: Applied, p: Posted, before: unknown[], charge: number): EditWord {
   const out: EditWord = charge > 0 ? { charge } : {};
-  KINDS.forEach((k, i) => {
+  KINDS().forEach((k, i) => {
     let part: Partial<EditWord> | undefined;
     try { part = k.word(api, op, answer, p, before[i]); } catch (err) { console.error("T-4145: an edit's word part failed", err); }
     if (!part) return;

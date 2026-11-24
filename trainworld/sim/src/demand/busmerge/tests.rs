@@ -25,7 +25,7 @@ fn lay(xy: &[f32], off: &[u32], stops: &[u32], times: &[f32], ok: bool) -> Layou
     let map: Vec<u32> = (0..n as u32).collect();
     let (px, py): (Vec<f32>, Vec<f32>) = (xy.iter().step_by(2).copied().collect(), xy.iter().skip(1).step_by(2).copied().collect());
     let place_ok = vec![ok; n];
-    layout(&Real { st_xy: xy, off, stops, times, st_map: &map, px: &px, py: &py, place_ok: &place_ok }, MERGE_M)
+    layout(&Real { st_xy: xy, off, stops, times, st_map: &map, px: &px, py: &py, place_ok: &place_ok }, 300.0)
 }
 
 /// T-4094: stops 200 m apart pair up (the third is 400 m from the first); times keep their sum but the

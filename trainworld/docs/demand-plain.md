@@ -164,8 +164,8 @@ only reach stations on it. The city panel counts these trips as "No route" until
   two stations the player joined by a passage the walk is the straight line at 2 m/s, moving
   walkways: 300 m takes 2.5 minutes rather than 5.4. A bus stop changes on foot only within 150 m, and a
   walk at a bus stop or BRT station with no passage takes a minute more (T-4079). To calculate faster, a bus
-  line's stops under 300 m apart that the same lines serve count as one stop for trips; every number shown is
-  shared back out over the real stops by the people and jobs near each (T-4094). Inside a station building the player drew,
+  line's stops under 500 m apart that the same lines serve count as one stop for trips; every number shown is
+  shared back out over the real stops by the people and jobs near each (T-4094, T-4158). Inside a station building the player drew,
   the fixed 2 minutes count 1, and the wait counts as in a waiting room; the walk is as anywhere. Nobody changes onto a line going back the
   way they came: on a full line people wait at their station. Where a line
   comes back through a station (a loop on a stalk), people may change there onto the same line

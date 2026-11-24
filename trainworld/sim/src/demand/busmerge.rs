@@ -11,7 +11,7 @@ use super::network::PERIODS;
 use std::collections::HashMap;
 
 /// Stops of one line this close (between their places' centres, metres) may be one demand station.
-pub(crate) const MERGE_M: f32 = 300.0;
+pub(crate) const MERGE_M: f32 = 500.0;
 /// A stop's catchment: the cells within this of it, nearer it than the other stops it is split with.
 const CATCH_M: f32 = 400.0;
 /// Every stop a figure is split over takes at least this share of their mean catchment, so none reads empty.

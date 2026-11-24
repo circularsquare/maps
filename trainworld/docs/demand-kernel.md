@@ -251,7 +251,7 @@ levels:
    Snapshot stations within 100 m of each other are one demand station (side-by-side platforms of
    two lines; never two neighbours on one line). **Bus stops along a line** (T-4094, `busmerge.rs`): a line's
    consecutive bus-only places (no BRT, tram or train station there) served by the same lines are one more
-   demand station while all of them are within 300 m of each other, the lines visiting it once; lines are taken
+   demand station while all of them are within 500 m of each other (`MERGE_M`, T-4158, Anita), the lines visiting it once; lines are taken
    in order and a run starts only at a place no earlier run took, so a crossing line's place stays apart, and no
    line is left with one stop. A run's ride time goes half to the hop before and half to the hop after; a
    group's platforms are at its centre (its lines share its stops), and walks to change at a group are measured

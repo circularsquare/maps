@@ -1048,6 +1048,10 @@ notes/T-420.md has the tables.
   stations; very large hubs (Shinjuku, Châtelet) have transfers over much longer underground walks.
   A bus stop's walks reach 150 m (`network::BUS_WALK_M`, T-4079, Anita 2026-11-23: at 300 m a dense
   bus network's connections looked "kinda silly / web-like"), against 300 m between stations.
+  A line's consecutive bus-only stops served by the same lines, within 500 m of each other, are one demand
+  station (`busmerge::MERGE_M`, T-4158, Anita 2026-11-24: "ok, lets do 500m"; 300 m in T-4094), for speed:
+  every figure is split back over the real stops. The lie: a ride between two stops of one group is lost, which
+  shows on short lines with close stops and on Auto lines (stops 400 m apart), about 1% of their riders.
   A trip may start with the same walk it may end with (to a station within 300 m or of its
   complex, at a walking transfer's cost, no change minutes or transfer fare; T-3718, Anita
   2026-11-18: "let trips start with walk"), so a commute's way home (its station pair reversed)
