@@ -512,6 +512,15 @@ interface Solve {
   localEndAt?: number;
   wholeAt?: number;
   wholeSent?: boolean;
+  /** T-2188: per solving worker, whether its local stage is a city edit's (`plan.final`); whether `endLocal` went, so
+   * the local results end the solve; per worker, whether it holds a local result no whole solve has replaced since
+   * (`done.localHeld`) */
+  ends?: boolean[];
+  endLocal?: boolean;
+  localHeld?: boolean[];
+  /** T-2188: the idle refresh, a whole solve of the network shown: quiet (no status, no clock cap) until an edit
+   * waits on it (`shown`); the zones its lead worker solves (`plan.solving`), for the status once shown */
+  refresh?: { shown: boolean; solving?: CityId[] };
   /** T-1790: local cluster results shown so far, and (T-1734) when the first was */
   localShown?: number;
   localShownAt?: number;
@@ -713,6 +722,12 @@ function serviceFromSnapshot(s: NetworkSnapshot): Service {
 /** T-1733: after an edit's local results are shown, how long the whole solve waits for the next edit
  * (stations built, then the line, a few seconds apart): until it starts, the next edit is solved locally too */
 const EDIT_SETTLE_MS = 8000;
+/** T-2188: a city edit's solve ends at its local result, so figures drift a little edit by edit (the untouched cities
+ * and the market keep their loads): this long after the last edit, with a city edit's result shown and no whole solve
+ * of it since, the network is solved whole again, quietly (`refresh`). Its whole solve takes 3-5 minutes on a big
+ * connected save, and an edit made during it waits as for any whole solve (T-3925), so it waits for a real pause in
+ * building rather than the next few seconds (notes/T-2188.md) */
+const REFRESH_IDLE_MS = 120_000;
 /** T-3616: an edit made during an edit's local solve goes as soon as that local result shows, while the first
  * edit since a whole solve last started was sent at most this long before; after that it waits for the whole
  * solve's final (T-1734), so a local solve slower than this (all of Japan's, about 2 minutes) never restarts */
@@ -2248,7 +2263,8 @@ class DemandClient {
           }
           return;
         }
-        if (editHeld.peek()?.sentAt !== s.sentAt) editHeld.value = { sentAt: s.sentAt };
+        if (s.refresh) this.showRefresh(s);
+        else if (editHeld.peek()?.sentAt !== s.sentAt) editHeld.value = { sentAt: s.sentAt };
       }
       this.refineAside();
       return;
@@ -3324,6 +3340,11 @@ class DemandClient {
   /** when the newest network arrived or a solve's final was published, performance.now() */
   private lastStir = 0;
   private memTimer = 0;
+  /** T-2188: when the player's last edit reached the pool (`submitNetwork`), performance.now(); city edits ended at
+   * their local result since the last solve that left no local result anywhere; the refresh's timer */
+  private editAt = 0;
+  private localEdits = 0;
+  private refreshTimer = 0;
   /** solving workers that have sent `done` for the solve in hand */
   private doneBy = new Set<number>();
   /** a solve after a worker change (`freshParts`) has not published its final yet: questions wait
@@ -4103,6 +4124,10 @@ class DemandClient {
       if (msg.clusters) s.clusters = msg.clusters; // ?debug=1's log: clusters kept and solved
       if (msg.periods) (s.periods ??= [])[i] = msg.periods;
       if (msg.local) s.local = msg.local;
+      if (i < this.computeN) {
+        (s.localHeld ??= [])[i] = !!msg.localHeld;
+        if (this.doneBy.size >= this.computeN) this.solveDone(s);
+      }
       return;
     }
     if (msg.kind === "work") {
@@ -4114,12 +4139,13 @@ class DemandClient {
       if (msg.busy && msg.stage === 1 && s.wholeAt === undefined) s.wholeAt = w[i].at;
       if (DEBUG_LOD) (s.workLog ??= []).push({ i, ...w[i] });
       for (let k = 0; k < this.computeN; k++) if (!w[k]) return;
-      if (s === this.cur) demandWork.value = w.slice(0, this.computeN);
+      if (s === this.cur && (!s.refresh || s.refresh.shown)) demandWork.value = w.slice(0, this.computeN);
       return;
     }
     if (msg.kind === "plan") {
       if (i === (s.lead ?? 0)) {
-        demandSolving.value = new Set(msg.solving.flat());
+        if (s.refresh) s.refresh.solving = msg.solving.flat();
+        if (!s.refresh || s.refresh.shown) demandSolving.value = new Set(msg.solving.flat());
         if (msg.ahead) s.ahead = { cities: msg.ahead, key: msg.ahead.join(",") };
         // (T-2459: the focus pool's final of the zone in view may already hold the clock's release)
         if (msg.ahead && s.focused) { this.progress(); this.checkHold(); }
@@ -4128,14 +4154,19 @@ class DemandClient {
       // local result can never be shown whole: the others go on too
       const plans = (s.localPlans ??= []);
       plans[i] = msg.local ?? 0;
+      (s.ends ??= [])[i] = !!msg.final;
       const n = this.computeN, all = plans.slice(0, n);
       // T-3616: a network held while the plans came in: now it is known whether it goes at the local result
       if (all.filter((v) => v !== undefined).length === n && this.waiting && s === this.cur) setTimeout(() => { if (this.cur === s) this.flush(); }, 0);
       if (all.filter((v) => v !== undefined).length === n && all.some((v) => v > 0)) {
         if (all.some((v) => !v)) this.wholeGo(s);
-        else if (s === this.cur && !s.barrier) {
-          demandStep.value = { done: 0, of: 2 };
-          demandScope.value = 0;
+        else {
+          // T-2188: a city edit in every worker: the local results end the solve
+          if (s.ends.slice(0, n).every(Boolean) && !perfOff("localEnd")) this.endLocal(s);
+          if (s === this.cur && !s.barrier) {
+            demandStep.value = { done: 0, of: 2 };
+            demandScope.value = 0;
+          }
         }
       }
       return;
@@ -4266,6 +4297,7 @@ class DemandClient {
     // T-2560: an edit after the cache's card went is an edit like any other
     this.cacheSolve = null;
     this.lastStir = performance.now();
+    if (!gameLoad) this.editAt = this.lastStir;
     if (gameLoad) this.uncovered = [];
     else this.uncovered.push({ svc, minute: clock.minute.peek() });
     if (this.uncovered.length > 50) this.uncovered.splice(1, 1); // (the oldest's minute is what counts)
@@ -4381,9 +4413,10 @@ class DemandClient {
     this.ensure();
   }
 
-  private dispatch(svc: Service, arrivedAt: number) {
+  private dispatch(svc: Service, arrivedAt: number, refresh = false) {
     this.capPool();
     this.doneBy.clear();
+    clearTimeout(this.refreshTimer);
     if (this.freshParts) this.refreshing = true;
     const { net, layout, ids } = packService(svc);
     const version = ++this.version;
@@ -4408,28 +4441,32 @@ class DemandClient {
     const markets = [...this.opened].filter(isMarket).map(marketZone);
     // T-3616: an edit's solve sent before the one in hand started its whole solve follows on from it
     const prev = this.cur;
-    const chainFrom = !barrier && prev && prev.barrier === false && !prev.rough && !prev.wholeSent && prev.published < ROUNDS ? prev.chainFrom ?? prev.sentAt : undefined;
+    // (T-2188: an edit stopping the refresh begins its own)
+    const chainFrom = !barrier && prev && prev.barrier === false && !prev.rough && !prev.refresh && !prev.wholeSent && prev.published < ROUNDS ? prev.chainFrom ?? prev.sentAt : undefined;
     // T-3925: and one sent before the one in hand's final, whose whole solve it stops (`restarts`)
-    const unfinished = !barrier && prev && prev.barrier === false && !prev.rough && prev.published < ROUNDS;
+    const unfinished = !barrier && prev && prev.barrier === false && !prev.rough && !prev.refresh && prev.published < ROUNDS;
     const restartFrom = unfinished ? prev.restartFrom ?? prev.chainFrom ?? prev.sentAt : undefined;
     if (unfinished && this.wholeRuns(prev)) {
       prev.cutAfter = Math.round(performance.now() - prev.sentAt);
       solveRestarted.value++;
     }
-    this.cur = { ...(chainFrom !== undefined ? { chainFrom } : {}), ...(restartFrom !== undefined ? { restartFrom } : {}), version, svc, layout, results: PERIODS.map(() => null), byRound: Array.from({length: ROUNDS + 1}, () => PERIODS.map(() => null)), published: -1, arrivedAt, sentAt: performance.now(), periodMs: [], setupMs: [], memBytes: [], cities, markets, coarse: this.coarseOf(cities), sent: { cities: [...cities], markets: [...markets] }, showEstimates, newZones, barrier };
+    this.cur = { ...(chainFrom !== undefined ? { chainFrom } : {}), ...(restartFrom !== undefined ? { restartFrom } : {}), version, svc, layout, results: PERIODS.map(() => null), byRound: Array.from({length: ROUNDS + 1}, () => PERIODS.map(() => null)), published: -1, arrivedAt, sentAt: performance.now(), periodMs: [], setupMs: [], memBytes: [], cities, markets, coarse: this.coarseOf(cities), sent: { cities: [...cities], markets: [...markets] }, showEstimates, newZones, barrier, ...(refresh ? { refresh: { shown: false } } : {}) };
     this.log.push(this.cur);
     if (this.log.length > 50) this.log.shift();
     if (this.cacheShown()) this.retireFocus(); // (T-2533)
-    demandUpdating.value = true;
-    // T-1790: after an edit the rounds all land at the end, so the steps are the local solve and the
-    // whole one (`plan` says whether there is a local one), not rounds
-    demandStep.value = { done: 0, of: barrier ? ROUNDS + 1 : 1 };
-    demandWork.value = null;
-    editHeld.value = null;
-    demandScope.value = cities.length;
-    // T-327: rounds in step only where clicks are answered by round (`target`): it costs the final
-    // about 0.7 s on the real save
-    demandSolving.value = null;
+    // (T-2188: the refresh shows nothing unless an edit waits for it, `showRefresh`)
+    if (!refresh) {
+      demandUpdating.value = true;
+      // T-1790: after an edit the rounds all land at the end, so the steps are the local solve and the
+      // whole one (`plan` says whether there is a local one), not rounds
+      demandStep.value = { done: 0, of: barrier ? ROUNDS + 1 : 1 };
+      demandWork.value = null;
+      editHeld.value = null;
+      demandScope.value = cities.length;
+      // T-327: rounds in step only where clicks are answered by round (`target`): it costs the final
+      // about 0.7 s on the real save
+      demandSolving.value = null;
+    }
     const next = this.firstZones().slice(1);
     // T-2624: after an edit the free-flow preview only gives new lines and lines with other stops their first
     // figures (`publishNewLines`); with every line as the shown figures' solve had it, its parts are work for nothing
@@ -4441,7 +4478,7 @@ class DemandClient {
     // cluster goes ahead of it
     const focused = barrier && next.length > 0 && !perfOff("focusAhead") && this.focusSolves(svc, activeCity.peek());
     if (focused) this.cur.focused = true;
-    const msg: ToDemand = { kind: "solve", version, net, ids, rounds: ROUNDS, barrier, first: activeCity.peek(), ...(next.length ? { next } : {}), ...(focused ? { focused } : {}), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("farChunks") ? { nearChunks: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), ...(perfOff("estimate") ? { exact0: true } : {}), ...(this.freshParts ? { freshParts: true } : {}), ...(perfOff("noise") ? { exactKeep: true } : {}), ...(perfOff("steps") ? { oneSend: true } : {}), ...(perfOff("wholeSteps") ? { roundFirst: true } : {}), ...(noPreview ? { noPreview } : {}),...(LOCAL_SHARE ? { localShare: LOCAL_SHARE } : {}) };
+    const msg: ToDemand = { kind: "solve", version, net, ids, rounds: ROUNDS, barrier, first: activeCity.peek(), ...(next.length ? { next } : {}), ...(focused ? { focused } : {}), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("farChunks") ? { nearChunks: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), ...(perfOff("estimate") ? { exact0: true } : {}), ...(this.freshParts ? { freshParts: true } : {}), ...(perfOff("noise") ? { exactKeep: true } : {}), ...(perfOff("steps") ? { oneSend: true } : {}), ...(perfOff("wholeSteps") ? { roundFirst: true } : {}), ...(noPreview ? { noPreview } : {}),...(LOCAL_SHARE ? { localShare: LOCAL_SHARE } : {}), ...(refresh ? { refresh } : {}) };
     this.freshParts = false;
     this.postSolve(msg);
     if (barrier) this.askTurn();
@@ -5583,7 +5620,7 @@ class DemandClient {
       if (final) {
         s.refinedAt = performance.now();
         // T-3599: the next edit's time left starts from this one's pace and tail
-        if (!s.barrier && s.work && s.lastUnitAt !== undefined) noteEditSolve(s.work, s.refinedAt - s.lastUnitAt, s.localEndAt !== undefined && s.wholeAt !== undefined && s.wholeAt > s.localEndAt ? s.wholeAt - s.localEndAt : null);
+        if (!s.barrier && !s.refresh && s.work && s.lastUnitAt !== undefined) noteEditSolve(s.work, s.refinedAt - s.lastUnitAt, s.localEndAt !== undefined && s.wholeAt !== undefined && s.wholeAt > s.localEndAt ? s.wholeAt - s.localEndAt : null);
         const k = this.uncovered.findIndex((u) => u.svc === s.svc);
         if (k >= 0) {
           this.uncovered.splice(0, k + 1);
@@ -5700,9 +5737,53 @@ class DemandClient {
 
   /** T-1733: the whole solve after an edit's local results may start (once a version) */
   private wholeGo(s: Solve) {
-    if (s !== this.cur || s.wholeSent) return;
+    if (s !== this.cur || s.wholeSent || s.endLocal) return;
     s.wholeSent = true;
     for (const w of this.workers.slice(0, this.computeN)) w.postMessage({ kind: "whole", version: s.version } satisfies ToDemand);
+  }
+
+  /** T-2188: a city edit's solve ends at its local results (once a version, never after `whole`) */
+  private endLocal(s: Solve) {
+    if (s !== this.cur || s.wholeSent || s.endLocal) return;
+    s.endLocal = true;
+    for (const w of this.workers.slice(0, this.computeN)) w.postMessage({ kind: "endLocal", version: s.version } satisfies ToDemand);
+  }
+
+  /** T-2188: every solving worker has sent `done` for `s`: a city edit that ended at its local result counts
+   * towards the refresh, a solve leaving no local result anywhere (a whole one, the refresh) clears it */
+  private solveDone(s: Solve) {
+    if (s !== this.cur) return;
+    if (!s.localHeld?.slice(0, this.computeN).some(Boolean)) this.localEdits = 0;
+    else if (s.endLocal) this.localEdits++;
+    this.refreshSoon();
+  }
+
+  /** T-2188: the refresh's timer, from the last edit (`REFRESH_IDLE_MS`); any solve sent clears it */
+  private refreshSoon() {
+    clearTimeout(this.refreshTimer);
+    if (!this.localEdits || perfOff("refresh")) return;
+    this.refreshTimer = setTimeout(() => this.refreshNow(), Math.max(0, this.editAt + REFRESH_IDLE_MS - performance.now()));
+  }
+
+  /** T-2188: the network shown solved whole again, quietly, while nothing else waits; a game paused with "Recalculate
+   * trips while paused" off waits for it to run, as an edit does (T-3427) */
+  private refreshNow() {
+    const s = this.cur;
+    if (!s || s.published < ROUNDS || s.rough || this.waiting || this.hold || this.failed || !this.localEdits) return;
+    if (!display.peek().recalcWhilePaused && !clock.running.peek()) { this.refreshTimer = setTimeout(() => this.refreshNow(), REFRESH_IDLE_MS); return; }
+    this.dispatch(s.svc, performance.now(), true);
+  }
+
+  /** T-2188: an edit waits for the refresh (T-3925: past 40% of it), which then shows as an edit's whole solve does */
+  private showRefresh(s: Solve) {
+    if (!s.refresh || s.refresh.shown) return;
+    s.refresh.shown = true;
+    demandUpdating.value = true;
+    demandStep.value = { done: 0, of: 1 };
+    demandScope.value = s.cities.length;
+    demandSolving.value = s.refresh.solving ? new Set(s.refresh.solving) : null;
+    const w = s.work;
+    demandWork.value = w && Array.from({ length: this.computeN }, (_, k) => w[k]).every(Boolean) ? w.slice(0, this.computeN) : null;
   }
 
   /** T-2453: views ask their questions again (`demandAskTurn`) */
@@ -5761,7 +5842,7 @@ class DemandClient {
    * each period's final as it lands; the cluster's or the solve's final replaces them.
    */
   private publishStep(s: Solve, e: { published: number; steps?: Step }, res: (Result | null)[], c: { cities: CityId[]; lines: Uint32Array; market: boolean; local?: boolean }) {
-    if (s !== this.cur || s.barrier !== false || s.rough || e.published >= ROUNDS) return;
+    if (s !== this.cur || s.barrier !== false || s.rough || s.refresh || e.published >= ROUNDS) return;
     const local = !!c.local, n = this.computeN;
     const off = () => (local ? s.wholeSent : s.localShownAt !== undefined);
     if (local ? perfOff("steps") : perfOff("wholeSteps")) return;
@@ -5784,8 +5865,9 @@ class DemandClient {
       const was = this.log.find((x) => x.version === base[0].view?.version)?.layout ?? [];
       const layoutWas = new Map(was.map((l) => [l.id, l])), layoutNow = new Map(fresh.map((l) => [l.id, l]));
       const levels = PERIODS.map((p) => p.demand), ids = fresh.map((l) => l.id);
-      // (the fares rule once: every kind of day's figures of a solve are at its fares; a whole solve's carry the market)
-      const held = new Set((local || !c.market ? ids : []).filter((id) => { const g = ests[0].view?.lines.get(id); return !!g && !takesMarketless(base[0].view?.lines.get(id), g); }));
+      // (the fares rule once: every kind of day's figures of a solve are at its fares; T-2188: a step of a whole solve too,
+      // whose unsolved periods keep the shown riders, which would then pay the new fares: a fare edit in a one-city game)
+      const held = new Set(ids.filter((id) => { const g = ests[0].view?.lines.get(id); return !!g && !takesMarketless(base[0].view?.lines.get(id), g); }));
       const keep = (id: string) => !held.has(id);
       // (kinds of day standing in for another share its views: merged once)
       const made = new Map<DayDemand, [DayDemand, DayDemand, DayDemand]>();
@@ -5882,18 +5964,21 @@ class DemandClient {
         if (c.local) {
           const first = s.localShownAt === undefined;
           s.localShownAt ??= performance.now();
-          setTimeout(() => this.wholeGo(s), EDIT_SETTLE_MS);
+          if (!s.endLocal) setTimeout(() => this.wholeGo(s), EDIT_SETTLE_MS);
           // T-3616: a network held through a quick local solve goes now
           if (first && this.waiting) setTimeout(() => { if (this.cur === s) this.flush(); }, 0);
         }
         // T-1790: an edit's step 2 (the whole solve) once every local result is in
-        if (c.local && s === this.cur && (s.localShown = (s.localShown ?? 0) + 1) >= Math.max(...(s.localPlans ?? [0])) && demandStep.peek().of === 2) {
+        if (c.local && s === this.cur && (s.localShown = (s.localShown ?? 0) + 1) >= Math.max(...(s.localPlans ?? [0])) && demandStep.peek().of === 2 && !s.endLocal) {
           demandStep.value = { done: 1, of: 2 };
           demandScope.value = s.cities.length;
         }
-        const left = new Set(demandSolving.peek() ?? []);
-        for (const id of c.cities) { left.delete(id); this.unsettled?.delete(id); }
-        demandSolving.value = left;
+        for (const id of c.cities) this.unsettled?.delete(id);
+        if (!s.refresh || s.refresh.shown) {
+          const left = new Set(demandSolving.peek() ?? []);
+          for (const id of c.cities) left.delete(id);
+          demandSolving.value = left;
+        }
       }
       this.progress();
       this.checkHold();

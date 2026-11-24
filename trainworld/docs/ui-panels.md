@@ -200,7 +200,7 @@ wide so a longer date moves nothing [T-1868].
   (the find button's row included). **"Trips here being recomputed…"** shows whenever the trips of the zone in view are rough,
   early, from before an edit or from the last session's cache, or while its detailed solve is on the
   way [T-1851, T-1223, T-328, T-421]; when the solve doing it is a whole one over several zones (a
-  game's load, an edit's whole solve after its local one) it says **"Trips in 171 cities being
+  game's load, an intercity edit's whole solve after its local one) it says **"Trips in 171 cities being
   recomputed…"** instead, the zones that solve has still to finish (`demandScope`, `demandSolving`),
   since that takes much longer on a big game than the zone in view alone [T-1904], except while a
   game's load solves the zone in view on its own first, which says "Trips here being recomputed…"
@@ -208,9 +208,10 @@ wide so a longer date moves nothing [T-1868].
   [T-392], and a zone solved on its own first counts as final at its last round [T-2045]. The tag
   shows all the while the clock is capped (below): when the zone in view is final and the cap still
   holds for an edit, it says **"Calculating trips after your change…"** [T-2622]. It says the same
-  while an edit's whole solve runs after its local result showed, until that solve's final: the
+  while an intercity edit's whole solve runs after its local result showed, until that solve's final: the
   local result keeps the longer trips and other zones' riders as they were before the edit (a line
-  with no trains left can read tens of thousands) [T-3601]. While capped, the
+  with no trains left can read tens of thousands) [T-3601]. A city edit's solve ends at its local result, and the
+  tag with it; the idle refresh after it shows nothing unless an edit waits for it [T-2188, docs/demand-runtime.md]. While capped, the
   tag's hover says "Time capped at 4x while updating demand". After an edit the hover's first line is
   the time left [T-3599]: on "Calculating trips after your change…" to the edit's final, on the
   recomputing tag to the zone in view's figures; "About 5 min left" in whole minutes, "Less than a

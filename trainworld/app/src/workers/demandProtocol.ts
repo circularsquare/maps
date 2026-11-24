@@ -252,7 +252,10 @@ export type ToDemand =
       ids?: { lines: string[]; stations: string[] };
       /** T-3373 B stage 3 (`?split=1`): this worker solves only the zones and market it holds, every period, and
        * trades each round's loads with the other holders of a cluster through the page */
-      split?: SplitPlan }
+      split?: SplitPlan;
+      /** T-2188: the idle refresh, a whole solve of the network solved last: the clusters holding a period from a
+       * local solve (an edit's that ended there, a T-1609 refine) are solved whole in those periods */
+      refresh?: boolean }
   /** T-327: every worker has finished `round - 1` of `version`, so this worker may start `round`.
    * A worker ahead waits at the boundary holding its last round, so every worker holds the round
    * after the published one at some moment, and a question about it can be answered (the final
@@ -261,6 +264,9 @@ export type ToDemand =
   | { kind: "go"; version: number; round: number; group?: number }
   /** T-1733: every worker's local result after an edit is shown and a moment has passed: the whole solve of `version` may start */
   | { kind: "whole"; version: number }
+  /** T-2188: every solving worker's local stage of `version` opens no market window (`plan.final`): each ends the
+   * solve at its local results, its edited clusters left holding them, with no whole solve after */
+  | { kind: "endLocal"; version: number }
   /** T-1533: the zone in view changed: its pack, if still waiting to open, goes ahead of the others */
   | { kind: "first"; id: CityId }
   /** T-1904: the kind of day shown (`day` as a query's) and the zones whose bubbles are drawn (the
@@ -496,7 +502,9 @@ export type FromDemand =
    * through its rounds alone (group 0) before the other clusters together (group 1) */
   | { kind: "plan"; version: number; solving: CityId[][]; kept: CityId[]; ahead?: CityId[];
       /** T-1733: how many clusters this worker solves locally first, after an edit */
-      local?: number }
+      local?: number;
+      /** T-2188: none of those opens a market window (T-1735: a city edit), so its local result may be final */
+      final?: boolean }
   /** `clusters` (T-326): how many kept their result, and how many were solved; `periods` (T-124):
    * of this worker's periods in the clusters solved, how many were kept and how many solved */
   /** T-2729: an edit's solve's units on this worker, done and planned by stage (0 its local solve, 1
@@ -511,7 +519,8 @@ export type FromDemand =
    * diagnosis names the period a quiet worker is in */
   | { kind: "unit"; version: number; round: number; period: number }
   | { kind: "work"; version: number; stage: 0 | 1; busy: boolean; done: [number, number]; of: [number, number]; unitMs: [number, number]; left: [number, number]; blind: [number, number]; cur: number | null; curSize: number; sizeMs: [number, number]; ran: [number, number]; ranExp: [number, number]; ranN: [number, number]; viewLeft: [number, number]; viewBlind: [number, number]; curView: boolean; leftQ: number[]; ranQ: number[]; expQ: number[]; nQ: number[]; curQ: number }
-  | { kind: "done"; version: number; memBytes: number; heap?: Heap; clusters?: [number, number]; periods?: [number, number]; local?: CityId[] }
+  /** `localHeld` (T-2188): a cluster here holds a period from a local solve no whole solve has replaced since */
+  | { kind: "done"; version: number; memBytes: number; heap?: Heap; clusters?: [number, number]; periods?: [number, number]; local?: CityId[]; localHeld?: boolean }
   /** a worker's `sub_sums` for one city once all its periods have `round` (sent unasked, T-119);
    * `local` (T-2532): an edit's local result's, which its whole solve's of the same round replace */
   | { kind: "sums"; version: number; round: number; city: CityId; mask: number; sums: Float32Array; everyday: Float32Array | null; day?: number; local?: true }

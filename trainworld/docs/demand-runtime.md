@@ -376,7 +376,7 @@ zone in view's first (T-393), then the city view's zone's (T-2453), each to its 
 period after period, each through all its rounds (T-2624, `?perfOff=wholeSteps` off: round after round; periods
 share no rider, so the figures are the same), each period's final sent as it lands (`cluster.step`); where no local
 result of the solve was shown (none solved, or a solve restarted by T-3925) the page shows them as the local
-result's steps (below). Each cluster but the last is sent as soon as it is
+result's steps (below), a line priced at other fares than shown (a fare edit) keeping its shown figures until the final (T-3303). Each cluster but the last is sent as soon as it is
 done, as one result per period with that cluster's figures alone (`result.cluster`), and the page
 puts its lines, their stations, its zones' views and, if the market is in it, the regional market's
 into the shown result at once. The network-wide totals wait for the solve's final: once every
@@ -396,13 +396,13 @@ untouched cities still hold what they last solved: only the city populations who
 station or stop of theirs added, removed or moved, their lines' trains changed; run times within 1%,
 trains an hour within 5% and a stop's service span (the share of riders with a train due) within 0.06,
 one train a day more or less, count as unchanged), through their rounds and the capacity fit. A
-period every population of the cluster holds from its last whole solve on the same inputs (setUp's
-test, T-124) is not solved locally: it keeps its figures and its `trail`, and the whole solve after
-keeps it too, so a train change at one level costs that level's periods twice at most, not all five
-(T-3512). A worker whose touched populations took 35% or more of its changed periods' passes in the
-cluster's last whole solve (`passMs`, `LOCAL_SHARE_MAX`) skips the local solve and goes straight to
-the whole one: a one-city game's city is most of its cluster, and the local solve then only put the
-final later (`?perfOff=localSkip`, `?perfOff=localKeep` off). The page then sends `whole` at once, and
+period every population of the cluster holds from its last solve on the same inputs (setUp's test, T-124, or held
+from a local solve, T-2188) is not solved locally: it keeps its figures and its `trail`, and the whole solve after
+keeps it too when it was a whole solve's, so a train change at one level costs that level's periods twice at most, not all five
+(T-3512). For an intercity edit (below, T-2188), a worker whose touched populations took 35% or more of its changed
+periods' passes in the cluster's last whole solve (`passMs`, `LOCAL_SHARE_MAX`) skips the local solve and goes straight
+to the whole one: a one-city game's city is most of its cluster, and the local solve then only put the final later; a
+city edit keeps its local solve, which is its final (`?perfOff=localSkip`, `?perfOff=localKeep` off). The page then sends `whole` at once, and
 a worker still solving locally stops at its next pass, since its local result can no longer be shown
 (dev `?localShare=a,b` sets each solving worker's share, to make two disagree). A population opened
 again at another level has no timed passes until its next whole solve, so the edit after a re-level
@@ -427,6 +427,27 @@ summed from the periods and the lines' stations move by their change. Zones, pur
 label wait for the last step, which is the local result above to the bit. A worker then waits for the page's `whole`, sent 8 s after the
 local results are shown, or at once when a worker solves nothing locally, so an edit following
 within that time is solved locally too; the whole solves follow as above and replace everything.
+**A city edit ends at its local result** (T-2188, notes/T-2188.md, `?perfOff=localEnd` off): an edit is an
+intercity one when, against the network the market part last solved on, it changes what the market's trips pay (the
+fares, a line's own multiple or distance fare, a station's fare zone), switches a line on or off at some level, adds or
+drops a stop on a run of 20 minutes or more, or moves a line's run time end to end by 3 minutes or more in some period (`RUN_SHIFT_MIN`; a train-count edit's dwell
+and shared-track changes stay under it); any other edit is a city edit. One that touches no population past the views' tolerance (more trains on a line at its most trains
+an hour) ends at once with nothing solved. A worker whose edited clusters are all a city edit's says so in its
+`plan` (`final`), and its local solve opens no window (below: the market stays frozen). Once every solving worker has
+said so, the page sends `endLocal` instead of `whole`: each edited cluster keeps its local result as solved on the new
+network (every population's periods solved locally marked `LOCAL`, the market read through the route nodes it last
+solved on), the solve's final goes at once, and the zones it did not touch keep their bubbles' sums. A worker that
+solves nothing locally makes it `whole` as before. So a city edit's "calculating trips" ends with its local result. The lie: until a whole solve, the zones
+the edit did not touch and the market keep the loads they last solved, so they do not react to the edit's crowding,
+and the market keeps its routes. A later local solve takes a period held from a local solve as it is when its inputs
+are unchanged (`keptOf`); the whole solve's period keeping (T-124) never does.
+**The idle refresh** (T-2188, `?perfOff=refresh` off): 2 minutes after the last edit (`REFRESH_IDLE_MS`), with a city
+edit's result shown since the last solve that left no local result anywhere, nothing waiting and the game running (or
+"Recalculate trips while paused" on), the page solves the same network again (`refresh`): each cluster holding a
+period from a local solve (a city edit's, a T-1609 refine) is solved whole in those periods. It is quiet: no status, no
+clock cap, its figures replacing the shown ones when it lands. An edit during it goes as during an edit's whole solve
+(T-3925 below: under 40% done it stops it, and its own solve is then whole, with no local stage; past that it waits
+for the refresh, which then shows as a whole solve does).
 **Stations on no line** (T-2410, `?perfOff=alone` off) are left out of the network demand solves
 (`serviceFromSnapshot`; passages with an end among them too), so building stations ahead of their
 line changes no key and starts no solve; their positions still reach zones, whose packs open ahead
@@ -449,7 +470,7 @@ in one pass a period at the crowding the touched cities' last round ended on, th
 trains' room with them; the old market part gives the same pairs' old loads in one pass at its last
 crowding (`window_loads`), and the result's loads are the frozen market's less those plus the
 window's, each purpose to its own. A shorter edit (a city line, a train count) leaves the whole
-market frozen. The
+market frozen, and so does a city edit (above), whose result is final. The
 window's pairs are taken from the market part's own tables when the new network serves the same
 zones and joins them by track the same way (`set_network_ll_beside`, T-2878), else dealt from
 nothing.
