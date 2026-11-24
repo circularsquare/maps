@@ -16,7 +16,8 @@ import { M_BAD, M_CONVERGE, M_CROSSING, M_DIVERGE, M_JUNCTION, M_RAMPEND, M_REPE
 import { repeatedEdge } from "../game/repeatTrack";
 import { newFacilityCache, placeFacilities, type FacilityCache } from "./facilityPlace";
 import { buildingsDrawn, type BuildingDraw } from "./buildingNet";
-import { BAND_M_RANGE, BAND_RANGE, BAND_STRIDE, bandKnots, KNOT, lineBands, profileAt, shiftKept, type BandProfile } from "./lineBands";
+import { BAND_M_RANGE, BAND_RANGE, BAND_STRIDE, bandKnots, bandWork, KNOT, lineBands, newBandState, profileAt, shiftKept, type BandProfile, type BandState } from "./lineBands";
+export { bandWork };
 import { BOX_TOUCH_M, DEMAND_MERGE_M, offsetsReach, polylineGap } from "../game/complexes";
 import { acrossAt, endClear, singleSplitEnds, splitValue, TURNBACK_M, type SplitEnd } from "./terminalBays";
 import { bridgeEnds, PASS_LEAD_M, passBow, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, platformShape, reversed, ST_BUFFER, ST_BUILDING, ST_PARK, ST_ONE, ST_ONE_MID, ST_ONE_NEG, ST_PASSING, ST_SINGLE, ST_ROOM, ST_TERMINAL, ST_TRAM, type PlatformShape } from "./stationGeometry";
@@ -619,6 +620,9 @@ function legShifts(edges: readonly ClockEdge[], parts: readonly ArrayLike<number
   if (!edges.some((e) => e.tracks === 1 && (e.oneWay || e.join))) return out;
   // per node, each end there: its edge's index, whether it starts at a, and the way it leaves (unit x, y)
   const at = new Map<number, { i: number; fromA: boolean; dx: number; dy: number }[]>();
+  // (T-4153: only the nodes such a leg ends at are read, so only their ends are laid out)
+  const wanted = new Set<number>();
+  for (const e of edges) if (e.tracks === 1 && (e.oneWay || e.join)) wanted.add(e.a).add(e.b);
   const dir = (pts: ArrayLike<number>, fromA: boolean) => {
     const n = pts.length / 3;
     if (n < 2) return null;
@@ -634,7 +638,9 @@ function legShifts(edges: readonly ClockEdge[], parts: readonly ArrayLike<number
     return d > 1e-9 ? { dx: (x1 - x0) / d, dy: (y1 - y0) / d } : null;
   };
   edges.forEach((e, i) => {
+    if (!wanted.has(e.a) && !wanted.has(e.b)) return;
     for (const [node, fromA] of [[e.a, true], [e.b, false]] as const) {
+      if (!wanted.has(node)) continue;
       const d = dir(parts[i], fromA);
       if (!d) continue;
       const v = at.get(node) ?? [];
@@ -1084,6 +1090,22 @@ function lineTrainSpeeds(l: ClockState["lines"][number], r: ClockState["render"]
 }
 
 /** The phase tables `lineTrainSpeeds` reads for a line, one after the other with each run's length. */
+/** T-4153: the profile meta `speedPhases` reads of a line (first phase, count, seconds and length of each run) */
+function metaOf(id: number, r: ClockState["render"]): Float64Array {
+  const out = new Float64Array(8);
+  for (const run of [0, 1]) {
+    const m = profileOf(id, run, ROW_SLOT[SPEED_LEVEL]) * 4;
+    for (let j = 0; j < 4; j++) out[run * 4 + j] = r.meta[m + j];
+  }
+  return out;
+}
+const sameMetaOf = (kept: Float64Array, id: number, r: ClockState["render"]) => {
+  for (const run of [0, 1]) {
+    const m = profileOf(id, run, ROW_SLOT[SPEED_LEVEL]) * 4;
+    for (let j = 0; j < 4; j++) if (!Object.is(kept[run * 4 + j], r.meta[m + j])) return false;
+  }
+  return true;
+};
 function speedPhases(id: number, r: ClockState["render"]): Float32Array {
   const parts: number[] = [];
   let n = 0;
@@ -1372,6 +1394,10 @@ interface LineEntry {
 }
 /** A line's `lineTrainSpeeds` and what they were worked out from. */
 interface LineSpeeds {
+  /** T-4153: the line's row, the phase tables and its own profile meta (`metaOf`) these were worked out with */
+  row: ClockState["lines"][number];
+  phases: Float32Array;
+  meta: Float64Array;
   path: number[];
   lens: number[];
   ph: Float32Array | null;
@@ -1402,16 +1428,20 @@ export interface NetCache {
   lines: Map<number, LineEntry>;
   stations: Map<number, { platform: number; lat: number; first: number; ways: number[]; ax: number; ay: number; shape: [number, number, number, number]; line: ArrayLike<number> }>;
   speeds: Map<number, LineSpeeds>;
+  /** T-4153: per piece of track, the fastest train over each of its segments (`EdgeEntry.train`) where any runs */
+  trains: Map<number, Float32Array>;
   samples: Map<number, LineSamples>;
   /** each complex's drawn passages, by its first member's id (`complexPassages`) */
   passages: Map<number, PassageEntry>;
   /** T-3803: the waiting rooms' and car parks' placement, per complex */
   facilities: FacilityCache;
+  /** T-4153: the bands' own kept work (map/lineBands.ts), this cache's alone */
+  bands: BandState;
   serial: number;
   last: { serial: number; track: EdgeEntry[]; lines: LineEntry[]; trackCount: number; lineCount: number; pts: Map<number, Float32Array> } | null;
 }
 
-export const newNetCache = (): NetCache => ({ edges: new Map(), lines: new Map(), stations: new Map(), speeds: new Map(), samples: new Map(), passages: new Map(), facilities: newFacilityCache(), serial: 0, last: null });
+export const newNetCache = (): NetCache => ({ edges: new Map(), lines: new Map(), stations: new Map(), speeds: new Map(), trains: new Map(), samples: new Map(), passages: new Map(), facilities: newFacilityCache(), bands: newBandState(), serial: 0, last: null });
 
 /**
  * T-1170: the cache's pieces moved to a new draw anchor, so the next build reuses them rather than
@@ -1461,7 +1491,7 @@ export function shiftNetCache(cache: NetCache, was: ReadonlyMap<number, Float32A
   }
   for (const [id, sp] of cache.speeds) cache.speeds.set(id, { ...sp, strokes: sp.strokes.map((s) => (s ? moved.get(s) ?? s : s)) });
   cache.last = null;
-  shiftKept(movedPts);
+  shiftKept(movedPts, cache.bands);
 }
 
 /**
@@ -1552,7 +1582,16 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
 /** `networkFromState` in pieces (T-3803): the clock worker runs one a task, so an edit can come between them. The
  * cache is written only in the last piece, so one dropped at a yield leaves it as the last finished build left it
  * (the waiting rooms' placement and the passages, kept against their own last inputs, are in the last piece too). */
+/** T-4153: per part of the last build, ms (for measuring the parts an edit's build still pays for) */
+export const netLaps: Record<string, number> = {};
+/** T-4153: per build, the pieces of track, lines, line samples, stations and line speeds worked out again (counts) */
+export const netWork = { edges: 0, lines: 0, samples: 0, stations: 0, speeds: 0 };
+let lapT = 0;
+const lap = (k: string) => { const t = performance.now(); netLaps[k] = (netLaps[k] ?? 0) + t - lapT; lapT = t; };
 export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), deferStrokes = false): Generator<void, NetworkBuffers, void> {
+  for (const k in netLaps) delete netLaps[k];
+  netWork.edges = netWork.lines = netWork.samples = netWork.stations = netWork.speeds = 0;
+  lapT = performance.now();
   const r = s.render;
   const edgePts = new Map<number, Float32Array>();
   const builtEdge = new Map<number, boolean>();
@@ -1577,10 +1616,13 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
   for (const e of s.edges) if (e.tracks === 1) { if (e.join & 3) joinedAt.add(e.a); if ((e.join >> 2) & 3) joinedAt.add(e.b); }
   // T-3212: single track splits into two through a station; where it does, double track meets two
   const splits = singleSplitEnds(s.edges, s.nodes);
+  lap("pre.counts+splits");
   // T-3171: also where double track is the only double at a junction of single track (a double branching off single)
   const taperAt = (node: number) => singleAt.has(node) && (endCount.get(node) === 2 || doublesAt.get(node) === 1) && !joinedAt.has(node) && !splits.stations.has(node) && !splits.full.has(node);
   const shifts = legShifts(s.edges, r.edgeParts!);
+  lap("pre.legShifts");
   yield;
+  lapT = performance.now();
   /** per edge id: the points and lanes its track and lines are drawn with */
   const drawn = new Map<number, LanePoints>();
   /** T-3212: single-track edges drawn splitting at a station (`F_SPLIT`) */
@@ -1588,6 +1630,7 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
   // blueprint track after built, so drawn over it and picked first where they overlap, as the
   // station tool prefers it (T-695)
   const order = s.edges.map((_, i) => i).sort((i, j) => Number(!s.edges[i].built) - Number(!s.edges[j].built) || i - j);
+  lap("edges.sort");
   for (const i of order) {
     const e = s.edges[i];
     const given = r.edgeParts![i];
@@ -1605,6 +1648,7 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
       kept.add(e.id);
       if (c.given !== given) c = { ...c, given };
     } else {
+      netWork.edges++;
       const own = given.slice();
       const sh = shift ? shiftedEnds(own, shift) : null;
       const lp = split ? splitPoints(sh ? sh.pts : own, split, e.lengthM) : lanePoints(sh ? sh.pts : own, lanes);
@@ -1632,7 +1676,9 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
     trackOrder.push(e.id);
     for (const v of c.ramps) marks.push(v);
   }
+  lap("edges.loop");
   yield;
+  lapT = performance.now();
   const maxLine = s.lines.reduce((m, l) => Math.max(m, l.id), -1);
   const lineColours = new Uint8Array(Math.max(1, maxLine + 1) * 4);
   const lineCars = new Float32Array(r.lineTable.length / 4).fill(8);
@@ -1651,10 +1697,11 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
   const passingAt = new Map<number, ClockState["nodes"][number]>();
   for (const n of s.nodes) if (n.platform > 0 && hasUpgrade(n.upgrades, UPGRADE.passing) && doubleAt.has(n.id)) passingAt.set(n.id, n);
   const innerAt = passingAt.size ? innerStops(s.lines, passingAt, edgeEnds) : null;
+  lap("lines.setup");
   // T-2248: a passing station's way out along an edge, carried on through plain nodes (two edges) until
   // its outer track's lead fits, and the lead it has room for
   const edgesAt = new Map<number, number[]>();
-  if (passingAt.size) for (const e of s.edges) for (const x of [e.a, e.b]) edgesAt.set(x, [...(edgesAt.get(x) ?? []), e.id]);
+  if (passingAt.size) for (const e of s.edges) for (const x of [e.a, e.b]) { const v = edgesAt.get(x); if (v) v.push(e.id); else edgesAt.set(x, [e.id]); }
   const passWays = new Map<number, { edges: number[]; lead: number }>();
   const passWay = (node: number, edge: number) => {
     const key = node * 2 ** 26 + edge;
@@ -1685,8 +1732,10 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
   const sampleBand = new Float32Array(nSamples * 2);
   const sampleStretch = new Float32Array(Math.max(1, nSamples)).fill(-1);
   for (const l of s.lines) lineColours.set([...rgb(l.colour), 255], l.id * 4);
+  lap("lines.arrays");
   // lines sharing track side by side (T-1799)
-  const bands = lineBands(s.lines, s.edges, edgePts);
+  const bands = lineBands(s.lines, s.edges, edgePts, { state: cache.bands });
+  lap("lines.bands");
   for (const l of lineDrawOrder(s.lines)) {
     if (!l.ok) continue;
     lineIds.push(String(l.id));
@@ -1696,6 +1745,7 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
     const planPath = l.planPath ?? l.path, planStops = l.planStops ?? l.stops;
     const runStart = l.pathStart ?? 0, runEnd = runStart + l.path.length, stopStart = l.stopStart ?? 0;
     if (!c || c.running !== l.running || c.fast !== l.fast || c.tram !== l.tram || c.pathStart !== runStart || c.stopStart !== stopStart || !sameArray(c.path, planPath) || !sameArray(c.back, l.back ?? []) || !sameArray(c.stops, planStops) || !planPath.every((p) => kept.has(p >> 1)) || !(l.back ?? []).every((p) => kept.has(p >> 1)) || (c.band === null ? band !== null : band === null || (c.band !== band && !sameBand(c.band, band)))) {
+      netWork.lines++;
       const lines = new StrokeBuilder(true, MIN_SEG_M);
       let d = 0;
       // the first stroke segment of each path entry (in this line's strokes), and the stop-to-stop
@@ -1765,6 +1815,7 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
       const lens = path.map((p) => edgeLen.get(p >> 1) ?? 0);
       let sm = cache.samples.get(slot);
       if (!sm || sm.c !== c || sm.count !== count || sm.step !== step || !sameArray(sm.lens, lens)) {
+        netWork.samples++;
         // a bus has one centre line, not two tracks (T-1464)
         const rel = new Int32Array(count), lane = new Float32Array(count).fill(l.bus ? 0 : 1), bandOf = new Float32Array(c!.band ? count * 2 : 0);
         let j = 0, end = lens[0] ?? 0;
@@ -1816,36 +1867,67 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
     const slot = backSlotOf(r.lineTable, r.meta, l.id);
     if (slot >= 0 && l.back?.length) runSamples(slot, l.back, c.backStroke ?? [], true);
   }
+  lap("lines.loop");
   yield;
-  // the fastest train over each built segment (T-1271), from each line's speeds, kept per line
+  lapT = performance.now();
+  // the fastest train over each built segment (T-1271), from each line's speeds, kept per line; T-4153: a line is looked
+  // at again only when its row, its timing or a piece of its path changed, and a piece's fastest train is folded
+  // again only from the lines on a piece whose lines' speeds changed
   const speedsSeen: NetCache["speeds"] = new Map();
-  const trainOf = new Map<number, Float32Array>();
+  /** pieces whose fastest train may differ from the kept one */
+  const trainDirty = new Set<number>();
+  const pathDirty = (path: readonly number[]) => { for (const p of path) trainDirty.add(p >> 1); };
   for (const l of s.lines) {
+    let sp = cache.speeds.get(l.id);
+    if (sp && sp.row === l && sp.phases === r.phases && sameMetaOf(sp.meta, l.id, r) && sp.path.every((p, k) => { const e = p >> 1; return edgesSeen.get(e)?.strokes === sp!.strokes[k] && (builtEdge.get(e) === true) === sp!.built[k] && (edgeLen.get(e) ?? 0) === sp!.lens[k]; })) {
+      speedsSeen.set(l.id, sp);
+      continue;
+    }
     const lens = l.path.map((p) => edgeLen.get(p >> 1) ?? 0);
     const ph = l.ok && l.running && Math.max(...l.trains) > 0 ? speedPhases(l.id, r) : null;
     const strokes = l.path.map((p) => edgesSeen.get(p >> 1)?.strokes), built = l.path.map((p) => builtEdge.get(p >> 1) === true);
-    let sp = cache.speeds.get(l.id);
-    if (!sp || (sp.ph === null) !== (ph === null) || (ph && !sameFloats(sp.ph!, ph)) || !sameArray(sp.path, l.path) || !sameArray(sp.lens, lens) || strokes.some((x, k) => x !== sp!.strokes[k]) || built.some((x, k) => x !== sp!.built[k]))
-      sp = { path: l.path.slice(), lens, ph, strokes, built, out: ph ? lineTrainSpeeds(l, r, (e) => edgesSeen.get(e)?.strokes, lens, (e) => builtEdge.get(e) === true) : null };
+    const meta = metaOf(l.id, r);
+    if (!sp || (sp.ph === null) !== (ph === null) || (ph && !sameFloats(sp.ph!, ph)) || !sameArray(sp.path, l.path) || !sameArray(sp.lens, lens) || strokes.some((x, k) => x !== sp!.strokes[k]) || built.some((x, k) => x !== sp!.built[k])) {
+      netWork.speeds++;
+      if (sp) pathDirty(sp.path);
+      sp = { row: l, phases: r.phases, meta, path: l.path.slice(), lens, ph, strokes, built, out: ph ? lineTrainSpeeds(l, r, (e) => edgesSeen.get(e)?.strokes, lens, (e) => builtEdge.get(e) === true) : null };
+      pathDirty(sp.path);
+    } else sp = { ...sp, row: l, phases: r.phases, meta };
     speedsSeen.set(l.id, sp);
-    sp.out?.forEach((v, k) => {
-      if (!v) return;
-      const e = l.path[k] >> 1;
-      let t = trainOf.get(e);
-      if (!t) trainOf.set(e, (t = new Float32Array(v.length).fill(-1)));
-      for (let j = 0; j < v.length; j++) if (v[j] > t[j]) t[j] = v[j];
-    });
   }
+  for (const [id, sp] of cache.speeds) if (!speedsSeen.has(id)) pathDirty(sp.path);
+  // (each dirty piece's fastest train folded from every line on it, in the lines' order, as a whole fold would)
+  const trainNew = new Map<number, Float32Array | null>();
+  if (trainDirty.size) {
+    for (const e of trainDirty) trainNew.set(e, null);
+    for (const l of s.lines) {
+      const out = speedsSeen.get(l.id)!.out;
+      if (!out) continue;
+      out.forEach((v, k) => {
+        const e = l.path[k] >> 1;
+        if (!v || !trainDirty.has(e)) return;
+        let t = trainNew.get(e);
+        if (!t) trainNew.set(e, (t = new Float32Array(v.length).fill(-1)));
+        for (let j = 0; j < v.length; j++) if (v[j] > t[j]) t[j] = v[j];
+      });
+    }
+  }
+  const trainOf = (id: number) => (trainNew.has(id) ? trainNew.get(id) ?? undefined : cache.trains.get(id));
   const trackParts: EdgeEntry[] = [];
   let trackCount = 0;
   for (const id of trackOrder) {
     let c = edgesSeen.get(id)!;
-    const t = trainOf.get(id);
-    if (t ? !sameFloats(t, c.train) : c.train.some((v) => v !== -1)) edgesSeen.set(id, (c = { ...c, train: t ?? new Float32Array(c.strokes.count).fill(-1) }));
+    // (a piece kept as it was, whose lines' speeds are as they were, has its fastest train already)
+    if (!kept.has(id) || trainNew.has(id)) {
+      const t = trainOf(id);
+      if (t ? !sameFloats(t, c.train) : c.train.some((v) => v !== -1)) edgesSeen.set(id, (c = { ...c, train: t ?? new Float32Array(c.strokes.count).fill(-1) }));
+    }
     trackParts.push(c);
     trackCount += c.strokes.count;
   }
+  lap("speeds");
   yield;
+  lapT = performance.now();
   const served = new Map<number, number>();
   for (const l of s.lines) for (const st of new Set([...l.stops, ...(l.backStops ?? [])])) served.set(st, (served.get(st) ?? 0) + 1);
   // whether a line runs through each node, so a station's box covers it (one line width since T-190)
@@ -1856,16 +1938,19 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
   const stationAxis = new Float32Array(st.length * 2);
   const stationShape = new Float32Array(st.length * 4);
   const stationLine = new Float32Array(st.length * 2 * PLATFORM_POINTS);
-  // Most lines first, then edge id: junction platform direction is stable across rebuilds.
-  const platformEdge = new Map<number, number>();
+  // Most lines first, then edge id: junction platform direction is stable across rebuilds. (T-4153: each node's own
+  // edges sorted, the same order as one sort of every edge, without it)
   const waysAt = new Map<number, number[]>();
-  for (const e of [...s.edges].sort((a,b) => (onEdge.get(b.id)?.length ?? 0)-(onEdge.get(a.id)?.length ?? 0) || a.id-b.id))
-    for (const node of [e.a,e.b]) {
-      if (!platformEdge.has(node)) platformEdge.set(node,e.id);
-      const v = waysAt.get(node) ?? [];
-      v.push(e.id);
-      waysAt.set(node, v);
+  for (const e of s.edges)
+    for (const node of [e.a, e.b]) {
+      const v = waysAt.get(node);
+      if (v) v.push(e.id);
+      else waysAt.set(node, [e.id]);
     }
+  const linesAt = (id: number) => onEdge.get(id)?.length ?? 0;
+  for (const v of waysAt.values()) if (v.length > 1) v.sort((a, b) => linesAt(b) - linesAt(a) || a - b);
+  const platformEdge = { get: (node: number) => waysAt.get(node)?.[0] };
+  lap("stations.ways");
   /** the track leaving `node` along edge `id`, starting at the node */
   const way = (node: number, id: number) => {
     const p = edgePts.get(id), e = edgeEnds.get(id);
@@ -1888,14 +1973,18 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
     passingTracks(b, [...passingAt.values()], waysOut, leadOf);
     singleLeadStrokes(b, s.edges, way);
   });
+  lap("stations.turnbacks");
   // The station dot sits on the track: its node position, from the local polyline of an edge
   // that ends there (exact), else converted from lng/lat by the label code.
-  const nodeLocal = new Map<number, [number, number]>();
-  for (const e of s.edges) {
+  // (T-4153: the last edge in order to end at a node gives its place, as when each wrote over the one before; kept as
+  // numbers, a pair made only when asked for)
+  const nodeAt = new Map<number, number>(), nodeXY = new Float64Array(s.edges.length * 4);
+  s.edges.forEach((e, i) => {
     const p = edgePts.get(e.id)!, b = p.length / 3 - 1;
-    nodeLocal.set(e.a, [p[0], p[1]]);
-    nodeLocal.set(e.b, [p[b * 3], p[b * 3 + 1]]);
-  }
+    nodeXY[i * 4] = p[0]; nodeXY[i * 4 + 1] = p[1]; nodeXY[i * 4 + 2] = p[b * 3]; nodeXY[i * 4 + 3] = p[b * 3 + 1];
+    nodeAt.set(e.a, i * 4).set(e.b, i * 4 + 2);
+  });
+  const nodeLocal = { get: (id: number): [number, number] | undefined => { const k = nodeAt.get(id); return k === undefined ? undefined : [nodeXY[k], nodeXY[k + 1]]; } };
   const edgesOf = (node: number) => (waysAt.get(node) ?? []).map((id) => edgeEnds.get(id)!);
   const stationsSeen: NetCache["stations"] = new Map();
   st.forEach((n, i) => {
@@ -1904,6 +1993,7 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
     const first = Math.max(0, ids.indexOf(platformEdge.get(n.id) ?? -1));
     let c = cache.stations.get(n.id);
     if (!c || n.brtStation || c.platform !== n.platform || c.lat !== n.lat || c.first !== first || !sameArray(c.ways, ids) || !ids.every((id) => kept.has(id))) {
+      netWork.stations++;
       // the platform along its track, curved as it is (T-189); local units are metres / cos(lat)
       const perM = 1 / Math.cos(n.lat * Math.PI / 180);
       const sh: PlatformShape = ids.length
@@ -1926,15 +2016,20 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
     stationLine.set(c.line, i * 2 * PLATFORM_POINTS);
     stations.set([p[0], p[1], ((served.get(n.id) ?? 0) > 1 ? 1 : 0) | (n.stationBuilt ? 0 : 2) | (lined.has(n.id) ? 4 : 0) | (n.stationOff ? 8 : 0) | ((pe?.tracks === 2 && !oneSide) || split ? 16 : 0) | (side ? ST_ONE | (side < 0 ? ST_ONE_NEG : 0) : 0) | (single ? ST_SINGLE | ST_ONE_MID : 0) | (n.kind || n.brtStation ? ST_TRAM : 0) | (hasUpgrade(n.upgrades, UPGRADE.waitingRoom) ? ST_ROOM : 0) | (hasUpgrade(n.upgrades, UPGRADE.parkRide) ? ST_PARK : 0) | (hasUpgrade(n.upgrades, UPGRADE.terminal) ? ST_TERMINAL | (ids.length === 1 ? ST_BUFFER : 0) : 0) | (passingAt.has(n.id) ? ST_PASSING : 0)], i * 3);
   });
+  lap("stations.loop");
   yield;
+  lapT = performance.now();
   // T-2219: the station buildings' members as drawn (their boxes join the floor), which car parks stay out of
   const outlines = buildingsDrawn(s.buildings, s.buildingLL, st, stations, stationLine, edgePts, false);
+  lap("rest.buildings1");
   for (let i = 0; i < st.length; i++) if (outlines.memberOf[i] >= 0) stations[i * 3 + 2] += ST_BUILDING;
   // T-1528: one waiting room and one car park per complex
   // (T-3803: kept per complex between the clock worker's builds)
   const lots = placeFacilities(st, stations, stationLine, stationShape, edgePts, waysAt, s.complexOf, outlines.draw, cache.facilities);
+  lap("rest.facilities");
   // their insides, which leave room for the waiting rooms just placed
   const bld = outlines.draw.length ? buildingsDrawn(s.buildings, s.buildingLL, st, stations, stationLine, edgePts) : outlines;
+  lap("rest.buildings2");
   // the player's links as bridges between the two platforms' nearest points (T-217)
   const stationIndex = new Map(st.map((n, i) => [n.id, i]));
   const shapeAt = (i: number) => platformShapeAt({ stationShape, stationAxis, stationLine }, i);
@@ -1957,6 +2052,7 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
       linkEnds.push(...bridgeEnds(stations[i * 3], stations[i * 3 + 1], shapeAt(i), stations[j * 3], stations[j * 3 + 1], shapeAt(j)));
     }
   }
+  lap("rest.links");
   // T-2991: a one-way loop's chevrons, on the edges it runs once
   const oneWay: number[] = [];
   for (const l of s.lines) {
@@ -1967,6 +2063,7 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
     const at = l.stops.map((id) => nodeLocal.get(id)).filter((p) => p !== undefined);
     trainChevrons(c.strokes, l.id, uses, at, l.tram ? 0.75 : 1, F_BLUEPRINT, oneWay);
   }
+  lap("rest.oneWayLoops");
   const jn = s.nodes.filter((n) => n.ports >= 3 && n.platform === 0);
   const junctions = new Float32Array(jn.length * 2);
   jn.forEach((n, i) => junctions.set(nodeLocal.get(n.id) ?? toLocal(n.lng, n.lat), i * 2));
@@ -1992,6 +2089,7 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
     const z = pts[k + 2] + f * (pts[k + 5] - pts[k + 2]);
     marks.push(pts[k] + f * (pts[k + 3] - pts[k]), pts[k + 1] + f * (pts[k + 4] - pts[k + 1]), M_REPEAT, 0, builtEdge.get(id!) === false ? 1 : 0, Math.max(-3, Math.min(3, Math.round(z / 8))));
   }
+  lap("rest.marks");
   // T-3094: chevrons along one-way single track, clear of stations
   const oneWayTrack: number[] = [];
   if (s.edges.some((e) => e.oneWay)) {
@@ -2020,6 +2118,7 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
     }
     oneWayTrackRuns(runs, clear, oneWayTrack);
   }
+  lap("rest.oneWayTrack");
   // per line its path, and per return run on its own way back (T-3250) that way, at its `backSlot`
   const runPaths: [number, number[]][] = [];
   for (const l of s.lines) {
@@ -2045,10 +2144,12 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
       d += len;
     }
   }
+  lap("rest.pathTable");
   cache.edges = edgesSeen;
   cache.lines = linesSeen;
   cache.samples = samplesSeen;
   cache.speeds = speedsSeen;
+  for (const [e, t] of trainNew) if (t) cache.trains.set(e, t); else cache.trains.delete(e);
   cache.stations = stationsSeen;
   const serial = ++cache.serial, last = cache.last;
   const patch: NetPatch | undefined = last ? {

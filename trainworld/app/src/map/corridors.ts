@@ -69,14 +69,27 @@ let cacheWithin = 0;
 /** what the last call gave, handed back while nothing has changed */
 let lastOut: Beside | null = null;
 /** per edge, its samples as last given (the same object while unchanged) and its pair sums */
-const made = new Map<number, { samples: EdgeSamples; sums: Map<number, [number, number, number]> }>();
+let made = new Map<number, { samples: EdgeSamples; sums: Map<number, [number, number, number]> }>();
 /** per edge, the edges whose own records see it */
 let seenBy = new Map<number, Set<number>>();
 
 /** T-4103: the view's anchor moved (`shiftNetCache`): each edge in `moved` is the same track in the moved frame, so its
  * records (metres along and across edges) carry over to its new points, and a next call that finds them unchanged
  * gives what it gave before. Without this a far jump of the view worked every edge out again. */
-export function shiftBeside(moved: ReadonlyMap<Float32Array, Float32Array>) {
+/** T-4153: what `besideSamples` keeps between calls, one per network cache (map/network.ts), so a build from scratch
+ * beside the kept one (`?patch=check`) neither reads nor moves it; the module's variables hold the one in use */
+export interface BesideState { cache: Map<number, Raw>; within: number; lastOut: Beside | null; made: typeof made; seenBy: Map<number, Set<number>> }
+export const newBesideState = (): BesideState => ({ cache: new Map(), within: 0, lastOut: null, made: new Map(), seenBy: new Map() });
+const sharedBeside: BesideState = { cache, within: cacheWithin, lastOut, made, seenBy };
+let inUse = sharedBeside;
+function useBeside(st: BesideState) {
+  if (st === inUse) return;
+  Object.assign(inUse, { cache, within: cacheWithin, lastOut, made, seenBy });
+  ({ cache, within: cacheWithin, lastOut, made, seenBy } = st);
+  inUse = st;
+}
+export function shiftBeside(moved: ReadonlyMap<Float32Array, Float32Array>, st: BesideState = sharedBeside) {
+  useBeside(st);
   for (const [id, r] of cache) {
     const p = moved.get(r.prep.p);
     if (!p || p.length !== r.prep.p.length) continue;
@@ -141,7 +154,8 @@ const overlaps = (a: Prep["box"], b: Prep["box"], pad: number) => !(a[2] + pad <
  * edge's local polyline (x, y, z triples, a to b); `ends` its nodes. `within`: CORRIDOR_M unless a
  * check asks otherwise.
  */
-export function besideSamples(ids: readonly number[], pts: ReadonlyMap<number, Float32Array>, ends: ReadonlyMap<number, { a: number; b: number }>, within = CORRIDOR_M): Beside {
+export function besideSamples(ids: readonly number[], pts: ReadonlyMap<number, Float32Array>, ends: ReadonlyMap<number, { a: number; b: number }>, within = CORRIDOR_M, st: BesideState = sharedBeside): Beside {
+  useBeside(st);
   if (within !== cacheWithin) (cache = new Map()), (lastOut = null);
   cacheWithin = within;
   const list: Prep[] = [];

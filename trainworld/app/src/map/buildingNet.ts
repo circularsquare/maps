@@ -36,7 +36,9 @@ export interface BuildingDraw {
 
 export const SHOP_STRIDE = 6, CELL_STRIDE = 4;
 
-interface Kept { key: string; draw: BuildingDraw }
+/** (T-4153: keyed by station ids, so a station added or removed elsewhere, which moves every index after it, keeps the
+ * layouts; `ids` the station id of each index its draw holds) */
+interface Kept { key: string; draw: BuildingDraw; ids: Map<number, number> }
 const kept = new Map<number, Kept>();
 
 /** The buildings as drawn, and per station the building it is in (an index into them, -1 none). `ll`:
@@ -44,7 +46,7 @@ const kept = new Map<number, Kept>();
 export function buildingsDrawn(
   buildings: readonly BuildingInput[] | undefined,
   ll: readonly ArrayLike<number>[] | undefined,
-  st: readonly { lat: number; platform: number }[],
+  st: readonly { id: number; lat: number; platform: number }[],
   stations: Float32Array,
   stationLine: Float32Array,
   edgePts: Map<number, Float32Array>,
@@ -118,11 +120,11 @@ export function buildingsDrawn(
       return { line: abs, member: members.includes(i) ? i : -1 };
     });
     const clear: Rect[] = near.filter((i) => Math.round(stations[i * 3 + 2]) & ST_ROOM).map((i) => roomRect(i, stations, stationLine, perM));
-    const key = [b.id, Array.from(corners, (v) => v.toFixed(2)).join(","), plats.map((p) => `${p.member}:${p.line.map((v) => v.toFixed(1)).join(",")}`).join("|"), tracks.map((t) => `${t.id}:${t.pts.length}:${t.pts[0]?.toFixed(1)},${t.pts[1]?.toFixed(1)},${t.pts.at(-2)?.toFixed(1)},${t.pts.at(-1)?.toFixed(1)}`).join("|"), clear.map((r) => `${r.x.toFixed(1)},${r.y.toFixed(1)}`).join("|")].join("/");
+    const key = [b.id, Array.from(corners, (v) => v.toFixed(2)).join(","), plats.map((p) => `${p.member < 0 ? -1 : st[p.member].id}:${p.line.map((v) => v.toFixed(1)).join(",")}`).join("|"), tracks.map((t) => `${t.id}:${t.pts.length}:${t.pts[0]?.toFixed(1)},${t.pts[1]?.toFixed(1)},${t.pts.at(-2)?.toFixed(1)},${t.pts.at(-1)?.toFixed(1)}`).join("|"), clear.map((r) => `${r.x.toFixed(1)},${r.y.toFixed(1)}`).join("|")].join("/");
     seen.add(b.id);
     const old = kept.get(b.id);
     if (old && old.key === key) {
-      draw.push(old.draw);
+      draw.push(reindexed(old, st));
       return;
     }
     const lay = layoutBuilding({ corners, perM, platforms: plats, tracks: tracks.map((t) => t.pts), clear, seed: b.id, shops: members.length > 0 });
@@ -131,9 +133,31 @@ export function buildingsDrawn(
       shops: new Float32Array(lay.shops), cells: new Float32Array(lay.cells),
       hall: lay.hall, shortM: lay.shortM, room: lay.room, perM,
     };
-    kept.set(b.id, { key, draw: d });
+    kept.set(b.id, { key, draw: d, ids: new Map(near.map((i) => [i, st[i].id])) });
     draw.push(d);
   });
   if (inside) for (const id of [...kept.keys()]) if (!seen.has(id)) kept.delete(id);
   return { draw, memberOf };
+}
+
+/** A kept building's draw with its station indices (members, each floor cell's nearest member) moved to where those
+ * stations are in `st` now: the same object when none moved. */
+function reindexed(k: Kept, st: readonly { id: number }[]): BuildingDraw {
+  let moved = false;
+  for (const [i, id] of k.ids) if (st[i]?.id !== id) { moved = true; break; }
+  if (!moved) return k.draw;
+  const now = new Map<number, number>();
+  for (const [i, id] of k.ids) {
+    // (the kept key holds every one of these ids, so each is in `st`)
+    let j = i;
+    while (j < st.length && st[j].id !== id) j++;
+    if (j === st.length) for (j = 0; j < st.length && st[j].id !== id; j++);
+    now.set(i, j);
+  }
+  const d = k.draw, cells = d.cells.slice();
+  for (let c = 2; c < cells.length; c += CELL_STRIDE) cells[c] = now.get(cells[c]) ?? cells[c];
+  const draw = { ...d, members: d.members.map((i) => now.get(i)!), cells };
+  k.draw = draw;
+  k.ids = new Map([...k.ids].map(([i, id]) => [now.get(i)!, id]));
+  return draw;
 }

@@ -93,7 +93,8 @@ export interface OneWayEdge { a: number; b: number; way: 1 | 2; strokes: Strokes
  * the pieces (a street-snapped run is many short ones): a run goes on through a node where exactly one
  * one-way edge comes in and one leaves, and starts afresh anywhere else. Marks sit in the middle of each
  * step, so no piece forces one of its own. */
-export function oneWayTrackRuns(edges: readonly OneWayEdge[], stops: readonly (readonly [number, number])[], out: number[]) {
+export function oneWayTrackRuns(edges: readonly OneWayEdge[], stopList: readonly (readonly [number, number])[], out: number[]) {
+  const stops = stopGrid(stopList);
   const from = (e: OneWayEdge) => (e.way === 1 ? e.a : e.b), to = (e: OneWayEdge) => (e.way === 1 ? e.b : e.a);
   const outs = new Map<number, OneWayEdge[]>(), ins = new Map<number, OneWayEdge[]>();
   for (const e of edges) {
@@ -150,7 +151,7 @@ function locate(run: readonly [OneWayEdge, number][], d: number): [OneWayEdge, n
 }
 
 /** One mark `travel` local units along an edge in its running direction; `keep` gives it no stop clearance. */
-function edgeMarkAt(e: OneWayEdge, travel: number, m: number, stops: readonly (readonly [number, number])[], out: number[], keep = false) {
+function edgeMarkAt(e: OneWayEdge, travel: number, m: number, stops: StopGrid, out: number[], keep = false) {
   const s = e.strokes, n = s.count, k = kAtY(s.seg[1]), sign = e.way === 2 ? -1 : 1;
   const L = edgeLength(e), q = e.way === 1 ? travel : L - travel;
   let lo = 0, hi = n - 1;
@@ -159,13 +160,12 @@ function edgeMarkAt(e: OneWayEdge, travel: number, m: number, stops: readonly (r
   if (!(len > 0)) return;
   const t = Math.min(1, Math.max(0, (q - s.dist[lo]) / len));
   const x = x0 + t * dx, y = y0 + t * dy;
-  let near = Infinity;
-  for (const p of stops) near = Math.min(near, Math.hypot(p[0] - x, p[1] - y));
+  const near = stops.nearest(x, y);
   out.push(x, y, sign * dx / len, sign * dy / len, 0, 0, 0, -1, m, keep ? 1e9 : near / k, 1);
 }
 
 /** The marks on one edge of a run that starts `off` local units before it; returns the edge's length. */
-function edgeMarks(e: OneWayEdge, off: number, stops: readonly (readonly [number, number])[], out: number[]): number {
+function edgeMarks(e: OneWayEdge, off: number, stops: StopGrid, out: number[]): number {
   const L = edgeLength(e);
   if (!L) return 0;
   const step = CHEVRON_STEP_M * kAtY(e.strokes.seg[1]);
@@ -322,4 +322,40 @@ export class OneWayChevrons {
     gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, this.count);
     gl.bindVertexArray(null);
   }
+}
+
+/** T-4153: the stops in square cells, for the distance from a mark to the nearest (exactly as a scan of every stop
+ * finds it, Infinity for none) without a scan of every stop for every mark */
+interface StopGrid { nearest(x: number, y: number): number }
+const STOP_CELL = 2000;
+function stopGrid(stops: readonly (readonly [number, number])[]): StopGrid {
+  const cells = new Map<number, number[]>();
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  const key = (cx: number, cy: number) => cx * 65536 + cy;
+  for (const [x, y] of stops) {
+    const cx = Math.floor(x / STOP_CELL), cy = Math.floor(y / STOP_CELL), k = key(cx, cy);
+    let c = cells.get(k);
+    if (!c) cells.set(k, (c = []));
+    c.push(x, y);
+    x0 = Math.min(x0, cx); y0 = Math.min(y0, cy); x1 = Math.max(x1, cx); y1 = Math.max(y1, cy);
+  }
+  return {
+    nearest(x: number, y: number) {
+      if (!cells.size) return Infinity;
+      const cx = Math.floor(x / STOP_CELL), cy = Math.floor(y / STOP_CELL);
+      // (rings of cells round the mark's, until the next ring is farther than the nearest found, or past every stop)
+      const far = Math.max(Math.abs(cx - x0), Math.abs(cx - x1), Math.abs(cy - y0), Math.abs(cy - y1));
+      let near = Infinity;
+      for (let r = 0; r <= far; r++) {
+        for (let i = -r; i <= r; i++)
+          for (let j = -r; j <= r; j++) {
+            if (Math.max(Math.abs(i), Math.abs(j)) !== r) continue;
+            const c = cells.get(key(cx + i, cy + j));
+            if (c) for (let q = 0; q < c.length; q += 2) near = Math.min(near, Math.hypot(c[q] - x, c[q + 1] - y));
+          }
+        if (near <= r * STOP_CELL) break;
+      }
+      return near;
+    },
+  };
 }
