@@ -182,10 +182,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
   - Context: You, 11-23: "edit speed is actually still kind of a problem... noticeable on my end for big worlds... i feel like there was a point at which we had edit speed almost instant, but then might have regressed". Mostly placing track and editing stops. T-3550, T-1211, T-3804, T-1031 are back at P2 under this.
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
-- T-4153 [P1] {L:edit-speed} Rebuild only the touched part of the drawn network, stage 2 (taking, 2026-11-23, agent editnetwork2)
-  - Context: You, 11-23: "this is the entire issue". Stage 1 landed 11-24 (e7fa38bd): Asia edits 12-37% faster. Left: a 230-290 ms floor in Node (0.6-1 s in the page for a station edit) spread over about ten passes over every edge, node or line.
-  - Goal: Those passes redone only for the records an edit touched, byte-equal to a full build; station edits on Asia under 0.2 s.
-  - Other: tree editnetwork kept; plan in notes/T-4153.md "What is left"
+- T-4153 [P1] {L:edit-speed} Rebuild only the touched part of the drawn network, stage 3 (taking, 2026-11-23, agent editnetwork2)
+  - Context: You, 11-23: "this is the entire issue". Stage 2 (tree editnetwork, not landed): a station's network build on Asia 333 to 124 ms in the page, track 212 to 180, construct 283 to 176, same output as a full build. Left: a station on a line's track or a line copy redoes 220-490 band orders (85-340 ms).
+  - Goal: Band orders redone only where a changed path can change them; a station on a line's track on Asia under 0.2 s of network build.
+  - Other: tree editnetwork kept; notes/T-4153.md "What is left"
 - T-4146 [P2] {L:edit-speed} Ports, flyovers and station looks show at the click
   - Context: Stage 1 landed 11-24 (e94813b8): placing a station on Asia 878 to 30 ms, deleting one 2,142 to 18 ms, deleting track 811 to 14 ms. Not yet at the click: ports, the flyover toggle, passage line, a box's look after track, way or upgrade changes.
   - Goal: Those drawn at the click through the base. Tree editstations kept.
@@ -254,7 +254,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: SPEC.md section 3 still says "about 800 zones" (the code tour says over 4,000). docs/interface.md's redirect table lists "Zen Maru Gothic ... no transitions" as if current. handoff.md gives two 8800 commits and warns about .tw-trees/arrivefirst, which is gone. reserve_cores.ps1's top comment says claude.exe stays at normal priority; the code raises it.
   - Goal: Each line says what is true now; TASKS.md's header says P4 tasks anywhere are parked; the two untracked .stackdump files deleted. About 0.5 h.
   - Other: notes/gemini-review-triage-2026-11-24.md
-- T-4176 [P3] {L:checks} Remove finished worktrees and old tw branches
+- T-4176 [P3] {L:checks} Remove finished worktrees and old tw branches (taking, 2026-11-24, agent diskfree)
   - Context: 19 worktrees at about 1.2 GB each, a leftover empty .tw-trees/rampport folder, and 34 tw/* branches, 14 with no tree. handoff.md keeps coreslider, onewaylag, split6, stationids and timetables on purpose until after 0.4.6; others may be done.
   - Goal: Every tree whose agent is done and whose work landed is removed with agent-tree.mjs; merged branches with no tree deleted. About 0.5 h.
   - Other: notes/gemini-review-triage-2026-11-24.md
@@ -273,6 +273,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-921 (11-24): a western Montana save with 4 lines and 22 stations loads in 10-20 s, nearly all opening the zone; the trip calculation is under 1 s. Saved as perfbench/saves/t921-montana-4lines.save.
   - Goal: That load profiled piece by piece and its biggest piece cut.
   - Other: notes/T-921.md
+- T-4183 [P2] {L:checks} play.mjs can't load a game on a production build
+  - Context: From batch check 11-24: on 8800, play.mjs start timed out four times waiting for the game to load (window.tw.client.lastLoad stays null; window.twDemand may be dev-only), so no check can load the real save on the shipped build.
+  - Goal: play.mjs opens a new game and loads a save on 8800's production build.
+  - Other: notes/batchcheck-2026-11-24-checksim.md
 - T-4141 [P3] {L:station-placement} Track placed by an edit call crossed the Hudson at ground level
   - Context: Seen by T-4112: a route entered through the game's edit call crossed the Hudson at ground level without a refusal, while pointer-drawn track nearby was bridged. Water may not have been loaded under part of it.
   - Other: notes/T-4112.md
@@ -1044,7 +1048,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: From T-1354: each worker now rebuilds its corridor book whenever the open market packs change, so T-1174's compose-afresh on a replaced worker is no longer needed.
   - Goal: The compose-afresh removed, with a late-pack load still equal to a normal one.
   - Other: notes/T-1354.md
-- T-3939 [P2] {L:memory} Clock worker memory on many-zone phone saves
+- T-3939 [P2] {L:memory} Clock worker memory on many-zone phone saves (taking, 2026-11-24, agent phonemem)
   - Context: Paused 11-22 for usage; its agent stopped before writing anything. From T-3781, 11-21: on an iPhone reporter's 13-zone Tokyo-start save the clock worker held 15-30% of the tab, 359 MB settled and up to 493 MB before a collection; the tab peaked at 1,628-1,705 MB.
   - Goal: The clock worker's share on that save named piece by piece, and its biggest piece cut, measured on a production build as T-3160 measures.
   - Other: notes/T-3781.md "The iPhone crash reports"
