@@ -175,7 +175,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4131: `utc_offset_at` per line costs 75-120 ms an edit and `cars_needed` 95 ms once on the Asia save.
   - Goal: Both kept per line and refreshed only when the line moves; about 2-3.5 h.
   - Other: notes/T-4131.md
-- T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
+- T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds (taking, 2026-11-24, agent stopclick)
   - Context: You, 11-23: "edit speed is actually still kind of a problem... noticeable on my end for big worlds... i feel like there was a point at which we had edit speed almost instant, but then might have regressed". Mostly placing track and editing stops. T-3550, T-1211, T-3804, T-1031 are back at P2 under this.
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
 - T-4153 [P1] {L:edit-speed} Rebuild only the touched part of the drawn network, stage 3
@@ -209,7 +209,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Batch check 3 (11-24): a base build of d991f7ab6 had track WASM byte-identical to the head's although T-4184 changed boarding.rs; base and head share perfbench/target-track and target-demand, and a parallel pair got the head's WASM in both. Any compare across a sim change may be measuring one build twice, the 0.4.6 compare against v0.4.5 included.
   - Goal: Every perf_bench build's WASM comes from its own source (checked by hash), parallel builds included; the T-4184 clock memory cut shows in a base vs head compare.
   - Other: notes/batchcheck-2026-11-24-check3.md
-- T-4190 [P2] {L:checks} t2682-editnote fails two steps on master
+- T-4190 [P2] {L:checks} t2682-editnote fails two steps on master (taking, 2026-11-24, agent t2682)
   - Context: Found by stalefinal (T-4055, 11-24): checks/t2682-editnote.mjs fails the same two steps with and without its change, so it is broken on master; cause not looked at.
   - Goal: The check passes on master, or the game bug it catches is filed and the check marked broken in checks_index.py.
   - Other: notes/T-4055.md
