@@ -9,7 +9,7 @@ diary notes/handoff-log.md. Her time UTC-5.
   smoke on master PASSED 10:19 (30 checks; real save 13,035,408 in smoke's own count, the usual 1.0286x play.mjs's
   12,672,465); 8800 = 20d3a002 (master minus bookkeeping).
 - Landed 10:26-10:35: trams T-4075 9fc02c858 (c091), zoneslow T-4051 96ad90da4 (c089 reworded); checker check4 on both;
-  8800 rebuilding at 96ad90da. stalefinal T-4055 (Opus, tree stalefinal). maps-c0 closed out.
+  8800 = 96ad90da (10:40). stalefinal T-4055 (Opus, tree stalefinal). maps-c0 closed out.
 - phonedemand T-3160 (Opus, tree phonedemand), solvereuse T-4057 (Opus, tree solvereuse: reuse one-off search tables).
 - T-4161 done in shonei-server 7bdd559 (level 39 + LBE1 block), unpushed, not deployed: deploy.ps1 on her yes before 0.4.6, then push shonei-server.
 - editbench landed (2d8f5e3f9): its stop-click rows on Asia show the line path 1.4-1.9 s after a stop click (T-4097's 100 ms goal): next edit-speed round.
