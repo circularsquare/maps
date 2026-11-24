@@ -287,7 +287,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4052 (11-24): the line hover's "riders who wanted a bus" is carried plus left behind, so a rider who boards a later bus counts twice (rail too). Fix: count everyone who came to the stops; shifts the issues row's 3% threshold a little.
   - Goal: The hover's share left behind counts each rider once.
   - Other: notes/T-4052.md
-- T-4080 [P2] {L:buses} Name and rename bus stops
+- T-4080 [P2] {L:buses} Name and rename bus stops (taking, 2026-11-24, agent busstops)
   - Context: Design approved 11-24 (named stops stay put, connections free, labels at street zoom; DECISIONS). Your scratch pad, 11-23: "people keep requesting to be able to rename / name bus stops. we should add that." Also a player 11-20: "バスの停留所も名前を変えれるようにしたい" (want to rename bus stops too).
   - Goal: A bus stop's name can be set in its panel like a station's, saved, and shown wherever the stop's name shows.
   - Other: notes/T-4080-design.md (about 6 h in six stages; also covers T-4083)
@@ -588,10 +588,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Platforms between two bundles' tracks where they split; the drawn platform from T-3859.
   - Goal: A wedge station at a Y works.
   - Other: Closes T-3859. 4-6 h. stage 10
-- T-4235 [P1] {L:stops} Loop close refused on ordinary circle lines (taking, 2026-11-24, agent loopcase)
-  - Context: You, 11-24, after T-4223: "im not confident that this loop line fix catches most of the cases ... some of the cases they were sending me looked like perfectly normal non pathological cases that mostly look like a circle with lots of stops around it". T-4223 fixed a long stop-less stretch and right clicks before the answer.
-  - Goal: Ordinary circle lines with many stops close with a right click every time, in the shapes players build.
-  - Other: notes/T-4223.md; board groups g143, g009
 - T-3980 [P3] {L:stops} {after:T-3962} Exact stops in running order
   - Context: A line's stops as stop points in running order, out and back; switching between simple and exact both ways with a notice.
   - Goal: A line listed exactly as its simple stops gives the same runs and demand arrays.
