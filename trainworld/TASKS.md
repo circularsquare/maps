@@ -449,9 +449,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: The page has 2,200 elements; a forced layout takes 22-37 ms, and the Lines, saves and Stations panels open in 0.4-0.7 s. All figures are from 2026-10-24 at 4-6x CPU slowdown; T-1505 took the forced layout out of station name placement since.
   - Goal: Measure once at normal CPU on the 2,647-station save (about 20 minutes): under 200 ms closes it, over keeps it with the new figures.
   - Other: notes/T-1200.md and notes/T-1211.md.
-- T-921 [P3] {L:solve-speed} {waits:Anita} Deal tiny commute pairs in chunks
-  - Need from Anita: Land it at 1 a day (about 7% off New York's calculation, nothing on Tokyo or Belgrade)? I'd leave it for now.
-  - Context: Built in tree commutechunks (11-24): NYC rail trips move 21 of 13.1M; stations under 1,000 a day up to 3.5%, about one random redraw; in-game figures unexplainedly identical. notes/T-921.md.
+- T-921 [P2] {L:solve-speed} Deal tiny commute pairs in chunks (taking, 2026-11-23, agent commutechunks2)
+  - Context: You, 11-24: "might help substantially for some players who build in sparsely populated areas"; build it so it is easy to tune more or less aggressive later. Tree commutechunks: NYC about 7% faster, rail trips move 21 of 13.1M; in-game figures unexplainedly identical.
+  - Goal: One tunable threshold, measured on a sparse-area save, the in-game mystery explained, then landed.
   - Goal: The chunked deal is in, with ceilings unchanged.
   - Other: Measured in notes/T-909.md option 1.
 
