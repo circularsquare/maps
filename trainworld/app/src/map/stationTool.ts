@@ -249,10 +249,12 @@ export function sumTripsNear(_tk: Tools, L: NonNullable<Tools["legs"]>, lng: num
     if (dx * dx + dy * dy <= 1) (sum += L.legs[i]), cells++;
   }
   if (!cells) return null;
-  // two significant figures: the figure is rough by nature
+  // from 50 up, two significant figures: the figure is rough by nature
   const p = 10 ** Math.max(0, Math.floor(Math.log10(Math.max(sum, 1))) - 1), r2 = Math.round(sum / p) * p;
-  const n = sum < 50 ? null : r2 >= 10000 ? count(r2) : tNumber(r2);
-  const text = bus ? (n === null ? tr("tools.nearBusUnder", { distance: length(r) }) : tr("tools.nearBus", { n, distance: length(r) })) : n === null ? tr("tools.nearUnder", { unit: unitShort() }) : tr("tools.near", { n, unit: unitShort() });
+  // under 50 the exact count; a lone trip has its own singular rows
+  const exact = Math.round(sum), n = sum < 50 ? tNumber(exact) : r2 >= 10000 ? count(r2) : tNumber(r2);
+  const one = sum < 50 && exact === 1;
+  const text = bus ? (one ? tr("tools.nearBusOne", { distance: length(r) }) : tr("tools.nearBus", { n, distance: length(r) })) : one ? tr("tools.nearOne", { unit: unitShort() }) : tr("tools.near", { n, unit: unitShort() });
   return { text, legs: sum };
 }
 

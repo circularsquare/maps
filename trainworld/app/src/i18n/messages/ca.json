@@ -2424,7 +2424,6 @@
   "tools.fromLast": "{distance} fins a l’estació {name}",
   "tools.lineHelp": "Fes clic en un cercle per afegir o treure una parada. Fes clic dret en un per fer-hi un bucle. Prem Retorn quan acabis.",
   "tools.near": "{n} desplaçaments en un radi d’1 {unit}",
-  "tools.nearUnder": "Menys de 50 desplaçaments en un radi d’1 {unit}",
   "tools.noRealTrack": "No hi ha cap via real que uneixi aquests punts.",
   "tools.placeStation": "Col·loca l’estació",
   "tools.placeTrack": "Col·loca la via",

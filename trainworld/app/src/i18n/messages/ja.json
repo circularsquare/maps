@@ -2424,7 +2424,6 @@
   "tools.fromLast": "{name}から{distance}",
   "tools.lineHelp": "円をクリックして停車駅を追加・削除します。右クリックすると、そこでループして折り返します。終わったらEnterを押してください。",
   "tools.near": "半径1{unit}以内で発着する移動：{n}回",
-  "tools.nearUnder": "半径1{unit}以内で発着する移動：50回未満",
   "tools.noRealTrack": "これらの点を結ぶ実在の線路がありません。",
   "tools.placeStation": "駅を置く",
   "tools.placeTrack": "この線路を置く",

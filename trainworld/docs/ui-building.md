@@ -759,7 +759,7 @@ switch on, the track tool follows the real network the layer draws.
 - **Placement help** [T-312, T-412]: with the pointer snapped to track the tag says how far the
   spot is, in a straight line, from the station placed last in this session ("1.2 km from W 46th
   St"; nothing before the first), then roughly how many local trips there are within 1 km
-  (1 mile in US units; within 600 m, 1,970 ft, for a BRT station, the bus corridor `CORRIDOR_M`, T-4135): "12k trips within 1km", two significant figures, "Under 50" below that,
+  (1 mile in US units; within 600 m, 1,970 ft, for a BRT station, the bus corridor `CORRIDOR_M`, T-4135): "12k trips within 1km", two significant figures from 50 up, the exact count below that ("1 trip", "0 trips"),
   over a thin bar of its size on a log scale, empty at 1,000 and full at 1M, ticks at 10k and 100k
   (`NEAR_BAR_*` in `map/tools.ts`) [T-2271]. The count is the day shown. It is the Homes and Destinations bubbles' legs (all purposes) over the cells whose centres
   are inside the circle, from the zone in view only; a trip with both ends inside counts twice.

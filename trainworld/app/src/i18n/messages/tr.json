@@ -2424,7 +2424,6 @@
   "tools.fromLast": "{name} istasyonundan {distance}",
   "tools.lineHelp": "Durak eklemek ya da çıkarmak için bir daireye tıkla. Orada döngüyle geri dönmek için birine sağ tıkla. Bitince Enter tuşuna bas.",
   "tools.near": "1{unit} içinde {n} yolculuk",
-  "tools.nearUnder": "1{unit} içinde 50 yolculuktan az",
   "tools.noRealTrack": "Bu noktalar arasında gerçek ray yok.",
   "tools.placeStation": "İstasyonu yerleştir",
   "tools.placeTrack": "Bu rayı yerleştir",

@@ -2424,7 +2424,6 @@
   "tools.fromLast": "{name}에서 {distance}",
   "tools.lineHelp": "동그라미를 클릭해서 정차역을 추가하거나 없애세요. 우클릭하면 거기서 루프를 돌아 회차해요. 다 끝나면 Enter를 누르세요.",
   "tools.near": "1{unit} 이내 이동 {n}회",
-  "tools.nearUnder": "1{unit} 이내 이동 50회 미만",
   "tools.noRealTrack": "이 지점들을 잇는 실제 선로가 없어요.",
   "tools.placeStation": "역 놓기",
   "tools.placeTrack": "이 선로 놓기",

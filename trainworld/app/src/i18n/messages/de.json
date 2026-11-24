@@ -2424,7 +2424,6 @@
   "tools.fromLast": "{distance} von {name}",
   "tools.lineHelp": "Klicke auf einen Kreis, um eine Haltestelle zu setzen oder zu entfernen. Rechtsklicke auf einen, um dort per Schleife zu wenden. Drücke Enter, wenn du fertig bist.",
   "tools.near": "{n} Reisen im Umkreis von 1 {unit}",
-  "tools.nearUnder": "Unter 50 Reisen im Umkreis von 1 {unit}",
   "tools.noRealTrack": "Kein echtes Gleis verbindet diese Punkte.",
   "tools.placeStation": "Station setzen",
   "tools.placeTrack": "Dieses Gleis legen",

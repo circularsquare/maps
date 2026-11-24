@@ -2424,7 +2424,6 @@
   "tools.fromLast": "{distance} de {name}",
   "tools.lineHelp": "Clique em um círculo para adicionar ou remover uma parada. Clique com o botão direito em um para voltar por um circuito ali. Pressione Enter ao terminar.",
   "tools.near": "{n} deslocamentos em até 1{unit}",
-  "tools.nearUnder": "Menos de 50 deslocamentos em até 1{unit}",
   "tools.noRealTrack": "Nenhuma via real liga esses pontos.",
   "tools.placeStation": "Colocar a estação",
   "tools.placeTrack": "Colocar esta via",

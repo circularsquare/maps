@@ -2424,7 +2424,6 @@
   "tools.fromLast": "{distance} dari {name}",
   "tools.lineHelp": "Klik lingkaran untuk menambah atau menghapus perhentian. Klik kanan salah satunya untuk membuat putaran di sana. Tekan Enter jika sudah selesai.",
   "tools.near": "{n} perjalanan dalam radius 1{unit}",
-  "tools.nearUnder": "Kurang dari 50 perjalanan dalam radius 1{unit}",
   "tools.noRealTrack": "Tidak ada rel nyata yang menghubungkan titik-titik ini.",
   "tools.placeStation": "Taruh stasiun",
   "tools.placeTrack": "Taruh rel ini",

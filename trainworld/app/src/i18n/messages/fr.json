@@ -2424,7 +2424,6 @@
   "tools.fromLast": "{distance} depuis {name}",
   "tools.lineHelp": "Cliquez sur un cercle pour ajouter ou retirer un arrêt. Faites un clic droit sur l’un d’eux pour y faire demi-tour par une boucle. Appuyez sur Entrée pour terminer.",
   "tools.near": "{n} déplacements à moins de 1 {unit}",
-  "tools.nearUnder": "Moins de 50 déplacements à moins de 1 {unit}",
   "tools.noRealTrack": "Aucune voie réelle ne relie ces points.",
   "tools.placeStation": "Placer la station",
   "tools.placeTrack": "Poser cette voie",

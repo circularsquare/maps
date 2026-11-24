@@ -2424,7 +2424,6 @@
   "tools.fromLast": "距{name}{distance}",
   "tools.lineHelp": "点击圆圈添加或移除停靠站。右键点击圆圈可在那里绕环折返。完成后按Enter。",
   "tools.near": "1{unit}内的出行{n}人次",
-  "tools.nearUnder": "1{unit}内的出行不到50人次",
   "tools.noRealTrack": "没有真实轨道连接这几个点。",
   "tools.placeStation": "放置车站",
   "tools.placeTrack": "放置这段轨道",

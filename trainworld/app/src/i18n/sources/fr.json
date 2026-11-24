@@ -2424,7 +2424,6 @@
   "tools.fromLast": "{distance} from {name}",
   "tools.lineHelp": "Click a circle to add or remove a stop. Right click one to loop back there. Press Enter when done.",
   "tools.near": "{n} trips within 1{unit}",
-  "tools.nearUnder": "Under 50 trips within 1{unit}",
   "tools.noRealTrack": "No real track joins these points.",
   "tools.placeStation": "Place the station",
   "tools.placeTrack": "Place this track",
