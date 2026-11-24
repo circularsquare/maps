@@ -34,7 +34,8 @@ new standing process.
 
 - **Voice**: her global CLAUDE.md "User-facing text", the wiki included. "Trips" for what people want to take
   (demand); "rides" and "riders" only for what happens on the player's system. "Manually", never "by hand". "Disembark", never "get off".
-  "Segment" for a stretch of track, never "run". American "turn around", never "turn round" or "round" for "around".
+  "Segment" for a stretch of track, never "run". "Reverse" for a train or tram changing direction partway (her
+  11-24: normal train terminology). American "turn around", never "turn round" or "round" for "around".
 - **Speed and waiting**, game text and changelog alike, one phrase per wait: a game or city "loads"; the map catching
   up to an edit "shows up" ("deleting a station shows up faster"); the numbers updating after a change are
   "calculating trips" ("trips are calculated 10x faster"), never "settle", "demand" or "rides"; memory "uses N MB
@@ -181,7 +182,8 @@ new standing process.
   loading change reports all of `node trainworld/tools/perf_bench.mjs`'s numbers (CPU, memory, bytes, solver time),
   not only the one it targets: one save for a small expected change, all three (nyc, tokyo, belgrade) for a risky one
   or a release; worse by more than 10% on any goes to her as a trade-off. How to read it: notes/T-4025.md.
-  Edit-speed tasks report `node trainworld/tools/edit_bench.mjs` numbers before and after (`--compare <hash>`; notes/T-4139.md).
+  Her own Asia save (`artifacts/trainworld/perfbench/saves/asianita-day568.save`) is a stress test only, when a big save
+  is really needed; not for general testing (her 11-24). Edit-speed tasks report `node trainworld/tools/edit_bench.mjs` numbers before and after (`--compare <hash>`; notes/T-4139.md).
 - **Simple prices**: fares and costs the player reasons about follow a simple rule (a base plus per km).
 - **Buses are settled**; no more bus tuning unless she asks.
 - **Saves are hers**: keeping old ones loading is a nicety, no real migration effort.

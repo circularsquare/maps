@@ -1002,7 +1002,7 @@ those who got on, less the load carried on.
   switching at once. It hides with the stations below zoom 9 (`STATIONS_ZOOM`), never for names,
   and shows during stop editing too. Hover
   (a game tag) names the station ("Track end" at a bare end) and for each line the most trains it lets
-  the line run ("Turning around here limits <line> to 15 trains per hour"). With select, a click selects the first of those lines (not
+  the line run ("Reversing here limits <line> to 15 trains per hour"). With select, a click selects the first of those lines (not
   while stops are edited); with another tool it takes no pointer events.
 
 ## Hover tags on the network
