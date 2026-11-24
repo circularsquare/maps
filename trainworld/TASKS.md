@@ -244,10 +244,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Tree memwasm (11-24): restart at a 192 MB gap gives back 290-340 MB per worker on all-China; then edits wait 3-8 min while workers reopen, final trips drift 0.11%. NYC never restarts.
   - Goal: Memory given back with no edit waiting on the restart: restart only when the tab is hidden or memory is tight (Gemini, 11-24). You, 11-24: not high priority, later.
   - Other: notes/T-4156.md in tree memwasm
-- T-4051 [P2] {L:loading} Opening a zone on a big save sits at 90% (taking, 2026-11-24, agent zoneslow)
-  - Context: You, 11-22: Medellin sat at 90% about 2 minutes. Tree zoneopen (ready to land, 11-24): opening a zone about 12% faster on your North America save (36 to 32 s), perf_bench nyc unchanged. The slow path reproduced on that save: 125 s against 35, when the new zone has no figures yet as its solve is sent.
-  - Goal: Opening Medellin on your North America save takes the short path every time, same figures.
-  - Other: notes/T-4051.md
 - T-4074 [P4] {L:loading} Spain blocks the game during football matches
   - Context: You, 11-23: "ok can leave as p4". From T-4071 (feedback 1795377906): Spanish ISPs block Cloudflare's shared addresses during LaLiga matches by court order. anita.garden and data.anita.garden both sit on them; the account server does not. A fallback would be a data mirror plus a page off Cloudflare, 4-6 h plus an upload at every publish.
   - Other: notes/T-4071.md group 3
@@ -255,16 +251,13 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Your scratch pad, 11-22: "i think we might allow an unrealistic number of people to pile up at bus stops, should probably show a lower number more in line with other stations to not make players alarmed by big number".
 - T-4053 [P3] {L:borders} Common language border factor
   - Context: Your scratch pad, 11-22: "i think bogota-quito travel might be a bit small? relative to number of planes (liek 6 a day, maybe 2000 people a day vs our 800) i wonder if we should do a like 'common language' border multiplier... and maybe also between like switzerland and france". A new demand factor: the design goes to you first.
-- T-4055 [P2] {L:solve-consistency} An edit reaching two new zones shows a stale final
+- T-4055 [P2] {L:solve-consistency} An edit reaching two new zones shows a stale final (taking, 2026-11-24, agent stalefinal)
   - Context: Found 11-22 (notes/T-4055.md): one edit reaching two new zones (Philadelphia and Providence from NYC) gives the Philadelphia line 63,996 riders; separate edits or a reload give 68,341. The first solve is declared final on a market missing a pack that lands during it. New-zone lines show up to 6% too few riders until the next edit.
   - Goal: A pack opening that lands mid-solve makes that solve stale, so batch and separate edits give the same figure (about 1-2 h).
   - Other: notes/batchcheck14.md, notes/T-4055.md
 - T-4057 [P1] {L:solve-speed} Solve speedups outside the first-arrival search (taking, 2026-11-24, agent solvereuse)
   - Context: You, 11-23: "main goal for today is to hopefully find some compute time improvements to compensate for the better pathfinding that takes into account that express routes are faster." T-4054 works on the search and `pool_cost`; this one profiles the whole solve on the real save and other big cities and takes the biggest costs elsewhere.
   - Goal: The top costs of a full solve named with their share, and the biggest ones cut with the same answers.
-- T-4075 [P2] {L:trains-drawn} Trams drawn off their track (taking, 2026-11-24, agent trams)
-  - Context: Your scratch pad, 11-23: "people also complain about trams sometimes visually drifting off the track... it does not look aligned with the track". Picture: artifacts/trainworld/board/20261123-080850-1792.png (Nottingham, trams at Old Market Square and Lace Market sit beside the track). A player report 11-22 asks the same.
-  - Goal: Trams and trains drawn on their track's line at every zoom, curves and stations included.
 - T-4063 [P3] {L:small-fixes} Trip explorer fails just after a change
   - Context: Found by T-4050 and T-4058: right after a final, explorer questions fail in the demand worker ("reading 'nodeGlobal'") and answer nothing; asked again seconds later they work. The question is about the last network while the worker has reopened the zone at another level (demand.worker.ts query, `viewOf(cl, a)`). Every query kind reading `viewOf(cl, a)` can hit it.
   - Goal: An older version's question answered from that cluster's own population for the zone, or answered as not ready, never an error.
