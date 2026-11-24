@@ -1669,18 +1669,19 @@ fn a_line_reversing_at_a_bare_track_end_runs() {
     }
     let rt = ls.round_trip[HIGH];
     assert!((rt - (ls.runs[0].prof[HIGH].duration + ls.runs[1].prof[HIGH].duration + 360.0)).abs() < 1e-9);
-    // X is a one-track terminus: 15 turns an hour at 240 s, both directions counted
+    // X is a one-track terminus: 15 turns an hour at 240 s, half a turn each way (T-4178)
     let cap = &w.svc.cap;
     let lim: Vec<usize> = (0..cap.res.len()).filter(|&r| cap.res[r].node == x && cap.res[r].kind == ResKind::Terminus).collect();
     assert_eq!(lim.len(), 1);
     let r = lim[0];
     assert_eq!((cap.wire_kind(r), cap.users_of(r).len()), (3, 2));
-    assert!((cap.fill(&w.net, &[(l, 10.0)], HIGH)[0] - 7.5).abs() < 1e-9);
+    assert!((cap.fill(&w.net, &[(l, 10.0)], HIGH)[0] - 10.0).abs() < 1e-9);
+    assert!(cap.fill(&w.net, &[(l, 20.0)], HIGH)[0] <= 15.0 + 1e-9);
     assert!((0..cap.res.len()).any(|r| cap.res[r].node == x && cap.res[r].kind == ResKind::Terminus && cap.wire_kind(r) == ResKind::Terminus as u8));
     assert!(!(0..cap.res.len()).any(|r| cap.res[r].node == t && cap.res[r].kind == ResKind::Platform && cap.users_of(r).iter().any(|u| u.stop >= 0)));
     // more trains than the end takes are held at the ends of the line
     set_counts(&mut w, l, [40, 3, 0]);
-    assert!(w.net.line_tph[l as usize][HIGH] <= 7.5 + 1e-6, "{:?}", w.net.line_tph[l as usize]);
+    assert!(w.net.line_tph[l as usize][HIGH] <= 15.0 + 1e-6, "{:?}", w.net.line_tph[l as usize]);
     // saves round trip
     let bytes = super::save::encode(&w.net);
     let back = TrackWorld::new(super::save::decode(&bytes).unwrap());

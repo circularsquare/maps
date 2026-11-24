@@ -883,11 +883,16 @@ lines is plain track for capacity: a branch no train uses yet does not cut the s
   of each pair: 15 an hour at the default 3 minutes. With a **terminal** it is every platform track:
   30 an hour a pair at 3 minutes and at 2 (never counted quicker than 240 s, so no turnaround
   setting beats 30). A quad station has two pairs, so it takes twice as many. The turn holds no platform and
-  crosses no other track: through trains' platform holds and junction moves are unchanged, and no
-  limiter caps reversing partway. A track end with no station has one place. A reversing line's
-  two directions are two streams; no track section joins across the turn. Unused blueprint
-  extensions add no active platform capacity. All of it is wire kind 3, so the hint is "build a
-  terminal" without one and "turn some trains at another station" with one.
+  crosses no other track: through trains' platform holds and junction moves are unchanged. A track end with
+  no station has one place. Unused blueprint extensions add no active platform capacity. All of it is wire
+  kind 3, so the hint is "build a terminal" without one and "turn some trains at another station" with one.
+  **A reversal partway turns like a line's end** (T-4178, Anita 2026-11-24): a line holds a place no
+  longer a round trip than one turn, so a reversal, turned by each direction, counts half a turn each
+  way (15 an hour at 3 minutes, 30 with a terminal, as at its ends). No track section joins across the
+  turn; the stretch a switchback runs out and back over carries each train twice each way, so at 160 km/h it
+  takes 12.5 an hour, fewer than the turn's 15. A line's own trains at the turn and on that stretch are one
+  stream (Delay, below), with no wait until it is full, as at its end. The map's reversal icon shows only where the turn limits its line (`Capacity::turn_limits`,
+  docs/ui-map.md "Reversal icons").
 - a loop line (T-798): a circle's first stop is a stop on the way around (dwell + 60 s on its arrival
   platform, the move from its last path entry into its first a junction move, sections joined across
   it); the hold there to the headway is not counted. A balloon's first stop turns as any
@@ -902,7 +907,7 @@ lines is plain track for capacity: a branch no train uses yet does not cut the s
 **Delay per train** (seconds), Kingman's queueing formula with a small variability term because
 trains are timetabled:
 
-    mix = 1 - sum over (line, direction) streams of (share of trains)²   (a line on two-way single track: one stream)
+    mix = 1 - sum over (line, direction) streams of (share of trains)²   (a line on two-way single track, at a turn or on double track: one stream, T-4178)
     W   = 0.2 x mix x s x rho / (1 - rho)        rho <= 0.9; straight-line continuation above
         + 1800 x (1 - 1/rho)                     when rho > 1 (the queue builds for an hour)
 

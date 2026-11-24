@@ -310,6 +310,7 @@ function buildState(rowsOnly = false): ClockState {
     version: ++version,
     markers,
     fullTrack,
+    turnLimits: a.turn_limits(),
     periods: a.game_periods(),
     hours: Array.from(a.game_hours()),
     crossings,

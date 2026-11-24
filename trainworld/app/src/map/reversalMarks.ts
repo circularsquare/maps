@@ -1,10 +1,11 @@
-// Reversal icons (T-797, docs/ui-map.md): a U-turn sign over every station or bare track end
-// where a line's trains reverse partway, in the built flat junction badge's style and size (T-1772),
+// Reversal icons (T-797, docs/ui-map.md): a U-turn sign over a station or bare track end where a
+// line's trains reverse partway and that turn limits the line (T-4178, `WorldView.turnLimits`), in the
+// built flat junction badge's style and size (T-1772),
 // larger with a placing tool on. It floats just above the station, clear of the stop editing
-// marker on it, and hides with the stations below STATIONS_ZOOM. Hovering it names the lines that
-// reverse there; a click selects the first of them (not while stops are edited).
+// marker on it, and hides with the stations below STATIONS_ZOOM. Hovering it names the lines it
+// limits; a click selects the first of them (not while stops are edited).
 
-import { t } from "../i18n";
+import { t, tNumber } from "../i18n";
 import { effect } from "@preact/signals";
 import type { Map as MlMap } from "maplibre-gl";
 import type { WorldView } from "../game/types";
@@ -31,29 +32,30 @@ interface Item {
   transform: string;
 }
 
-type Reversal = { station: string; name: string; lng: number; lat: number; lines: { id: string; name: string }[] };
+type Reversal = { station: string; name: string; lng: number; lat: number; lines: { id: string; name: string; tph: number; tram: boolean }[] };
 
-/** Where lines reverse: per station or bare track end (T-797 B3, keyed `end:<node>`), its name,
- * place and the lines (id, name), from the world. */
+/** Where a line's turn partway limits it (T-4178): per station or bare track end (T-797 B3, keyed
+ * `end:<node>`), its name, place and the lines it limits (id, name, the most trains an hour it lets
+ * the line run), from the world. */
 export function reversalsOf(w: WorldView): Reversal[] {
   const stations = new Map(w.save.stations.map((s) => [s.id, s]));
   const out = new Map<string, Reversal>();
-  const add = (key: string, name: string, lng: number, lat: number, l: { id: string; name: string }) => {
+  const add = (key: string, name: string, lng: number, lat: number, l: { id: string; name: string }, tph: number) => {
     const at = out.get(key) ?? { station: key, name, lng, lat, lines: [] };
-    if (!at.lines.some((x) => x.id === l.id)) at.lines.push({ id: l.id, name: l.name });
+    if (!at.lines.some((x) => x.id === l.id)) at.lines.push({ id: l.id, name: l.name, tph, tram: !!w.lineStats[l.id]?.tram });
     out.set(key, at);
   };
   for (const l of w.save.lines) {
+    const st = w.lineStats[l.id], limits = w.turnLimits.get(l.id);
     // a bus turns at its ends: no reversal to mark
-    if (w.lineStats[l.id]?.bus) continue;
-    const st = w.lineStats[l.id];
-    for (const k of st ? partwayReversals(st) : []) {
-      const s = stations.get(l.stops[k]);
-      if (s) add(s.id, s.name, s.lng, s.lat, l);
+    if (!st || st.bus || !limits) continue;
+    for (const k of partwayReversals(st)) {
+      const s = stations.get(l.stops[k]), tph = limits.get(Number(l.stops[k]));
+      if (s && tph !== undefined) add(s.id, s.name, s.lng, s.lat, l, tph);
     }
-    for (const n of w.lineStats[l.id]?.endTurns ?? []) {
-      const node = w.nodes.get(n);
-      if (node) add(`end:${n}`, "Track end", node.lng, node.lat, l);
+    for (const n of st.endTurns ?? []) {
+      const node = w.nodes.get(n), tph = limits.get(n);
+      if (node && tph !== undefined) add(`end:${n}`, "Track end", node.lng, node.lat, l, tph);
     }
   }
   return [...out.values()];
@@ -108,7 +110,7 @@ export class ReversalMarks {
       el.innerHTML = ICON;
       const words = [
         r.name,
-        ...r.lines.map((l) => t("reversalMarks.reverses", { name: l.name })),
+        ...r.lines.map((l) => t("reversalMarks.reverses", { name: l.name, n: tNumber(Math.floor(l.tph * 10) / 10), vehicle: l.tram ? "tram" : "train" })),
       ];
       el.onmouseenter = el.onmousemove = () => tipBeside(this.tip, el, this.map.getContainer(), words, "right");
       el.onmouseleave = () => (this.tip.style.display = "none");

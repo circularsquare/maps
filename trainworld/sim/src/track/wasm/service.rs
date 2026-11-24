@@ -486,6 +486,14 @@ impl TrackApi {
     pub fn markers_in(&self, period: usize) -> Vec<f32> {
         self.markers_at(self.w.net.period_slot()[period.min(4)])
     }
+    /// T-4178: the turns partway that limit their line (`Capacity::turn_limits`): `[line, node, the most trains an
+    /// hour the turn lets the line run]` for each.
+    pub fn turn_limits(&self) -> Vec<f64> {
+        let lines = &self.w.svc.lines;
+        // a line's own end is the last node of the run turning there; any other turn is partway
+        let partway = |l: u32, r: u8, n: u32| lines.get(l as usize).and_then(|ls| ls.runs.get(r as usize)).is_some_and(|run| run.nodes.last() != Some(&n));
+        self.w.svc.cap.turn_limits(&self.w.net, partway).into_iter().flat_map(|(l, n, t)| [l as f64, n as f64, t]).collect()
+    }
     /// T-3542: `full_track` in demand period `period` (0-4).
     pub fn full_track_in(&self, period: usize) -> Vec<f64> {
         self.full_track_at(self.w.net.period_slot()[period.min(4)])

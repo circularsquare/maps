@@ -979,9 +979,14 @@ those who got on, less the load carried on.
   than select is on they take no pointer events, so a press reaches what is under them. With
   select, a dot that opens nothing of its own (not a junction) selects what is under it, its station
   first.
-- **Reversal icons** [T-797, T-1581; `map/reversalMarks.ts`]: over every station where a line's trains
-  reverse partway (`LineStats.reversals`, from `TrackApi::line_reversals`) and every bare track end
-  they reverse at (`LineStats.endTurns`, `TrackApi::line_end_turns`); a loop that turns back at its
+- **Reversal icons** [T-797, T-1581, T-4178; `map/reversalMarks.ts`]: over a station where a line's trains
+  reverse partway (`LineStats.reversals`, from `TrackApi::line_reversals`) or a bare track end
+  they reverse at (`LineStats.endTurns`, `TrackApi::line_end_turns`), only where that turn limits the line
+  (Anita 2026-11-24: "not show the little yellow icon if its not the limiting factor"): at some demand
+  level the turn is 90% full or more and the line's tightest spot by 0.1 trains an hour or more, so a tie
+  with its ends, or a stretch it runs out and back over, keeps it off (`WorldView.turnLimits`, from
+  `TrackApi::turn_limits`, `Capacity::turn_limits`). The line panel's stop list marks those stops alike, and the
+  issues list lists only those places. A loop that turns back at its
   first stop and at one other stop, nowhere else, runs out and back between them (over a one-way pair,
   say), so both are its ends and neither is marked, nor given the stop list's turn icon
   (`partwayReversals` in `game/turnedLine.ts`, T-3538). The icon is a badge in the built flat
@@ -993,8 +998,8 @@ those who got on, less the load carried on.
   4.5 and 9.5), 1.6 times that while a placing tool is on (track, station, line, blueprint or bus),
   switching at once. It hides with the stations below zoom 9 (`STATIONS_ZOOM`), never for names,
   and shows during stop editing too. Hover
-  (a game tag) names the station ("Track end" at a bare end), each line "<line> reverses here", and
-  that 12 trains an hour at most reverse there (from each side, at a station). With select, a click selects the first of those lines (not
+  (a game tag) names the station ("Track end" at a bare end) and for each line the most trains it lets
+  the line run ("Reversing here limits <line> to 15 trains per hour"). With select, a click selects the first of those lines (not
   while stops are edited); with another tool it takes no pointer events.
 
 ## Hover tags on the network

@@ -378,7 +378,7 @@ the window), and the button shows as on. Open or shut is remembered per browser
 the button is gone.
 
 - **Rows, worst first** (12 px type, one row each, the whole row's hover giving the figures):
-  lines whose track is gone (its chip, a red alert mark); places where lines reverse partway (an
+  lines whose track is gone (its chip, a red alert mark); places where a line's reversal partway limits it (T-4178, as the map's reversal icons; an
   amber U-turn disc, the station or "Track end", up to three of the lines' chips); orange and red
   capacity tags, the map's tags at 90% and up (`NEAR_RHO`) in the demand period in force (T-3542; the hover's wait names
   it, "Each train waits 1m20s here in the morning peak") that are over capacity or

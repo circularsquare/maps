@@ -924,6 +924,8 @@ function RailLineInspector({ id }: { id: string }) {
   // there, `bullets` those of them whose bullet shows here
   const stopRow = (i: number, drawn?: ReadonlySet<number>, bullets?: LineInput[], row?: TurnRow) => {
     const s = l.stops[i];
+    // T-4178: a turn partway is marked only where it limits the line, with the trains an hour it lets it run
+    const revTph = partwayReversals(st).includes(i) ? world.value?.turnLimits.get(l.id)?.get(Number(s)) : undefined;
     const xfer = complexOf(s).some((m) => linesAt(m).some((o) => o.id !== l.id)) || (!row && selfTransfer(l, i));
     const tall = !!drawn && transferLines(l, i, drawn).length > ROUND_MAX;
     // the stretches above and below the row, and the time from the stop on top
@@ -957,8 +959,8 @@ function RailLineInspector({ id }: { id: string }) {
             {name.get(s)}
           </span>
           {t !== undefined && <span class="t muted num" data-tip={stretchTip(st.stretches[above], st.tram)}>{duration(t)}</span>}
-          {partwayReversals(st).includes(i) && (
-            <span class="rev-stop" data-tip={tr("lineInspector.reverseTip", { time: duration(st.turnaroundS), vehicle: vehicleOf(st) })}>
+          {revTph !== undefined && (
+            <span class="rev-stop" data-tip={tr("lineInspector.reverseTip", { time: duration(st.turnaroundS), vehicle: vehicleOf(st), n: tNumber(Math.floor(revTph * 10) / 10) })}>
               <Icon.uturn />
             </span>
           )}

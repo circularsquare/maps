@@ -882,6 +882,8 @@ export interface ClockState {
   /** T-819: per demand period, track sections at capacity, `TrackApi.full_track_in`: per edge on one
    * edge id, utilisation, trains an hour */
   fullTrack: Float64Array[];
+  /** T-4178: `TrackApi.turn_limits`: `[line, node, most trains an hour]` for each turn partway that limits its line */
+  turnLimits: Float64Array;
   /** T-3542: the rows (3, 4 or 5) lines following the game's set their trains in (`TrackApi.game_periods`) */
   periods: number;
   /** T-3542: the hours lines following the game's split their day at (`TrackApi.game_hours`) */

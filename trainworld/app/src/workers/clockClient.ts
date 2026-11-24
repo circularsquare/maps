@@ -289,6 +289,17 @@ function edgesOf(s: ClockState): TrackEdge[] {
   return out;
 }
 /** The UI's world view from the worker's state. */
+/** T-4178: `ClockState.turnLimits` by line id, then node. */
+function turnLimitsOf(v: Float64Array | undefined): Map<string, Map<number, number>> {
+  const out = new Map<string, Map<number, number>>();
+  for (let k = 0; v && k + 2 < v.length; k += 3) {
+    const id = String(v[k]);
+    const m = out.get(id) ?? new Map<number, number>();
+    out.set(id, m.set(v[k + 1], v[k + 2]));
+  }
+  return out;
+}
+
 function toWorld(s: ClockState): WorldView {
   let stations: StationInput[] = s.nodes
     .filter((n) => n.platform > 0)
@@ -398,6 +409,7 @@ function toWorld(s: ClockState): WorldView {
       for (let k = 0; k + 2 < v.length; k += 3) m.set(v[k], { rho: v[k + 1], tph: v[k + 2] });
       return m;
     }),
+    turnLimits: turnLimitsOf(s.turnLimits),
     save: { cash: s.cash * 1e6, stations, lines, links: pairsOf(s.links ?? []), ...(s.buildings?.length ? { buildings: s.buildings } : {}) },
     lineStats,
     twins,

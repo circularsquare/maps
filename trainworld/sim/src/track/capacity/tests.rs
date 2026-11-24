@@ -515,7 +515,8 @@ fn incremental_equals_global() {
     assert!(applied > 200 && counts > 50, "too few edits applied: {applied}, {counts} of them train counts");
 }
 
-/// T-797, T-3107: a line reversing at T turns as a line's end does, in the station's one turn pool.
+/// T-797, T-3107, T-4178: a line reversing at T turns as a line's end does, in the station's one turn
+/// pool, and holds it no longer a round trip: half a turn each way.
 #[test]
 fn reversing_partway_turns_like_a_line_end() {
     use super::super::tests::{line, reversal_fixture};
@@ -523,7 +524,19 @@ fn reversing_partway_turns_like_a_line_end() {
     let l = line(&mut w, &[br, t, m], [3.0, 6.0, 8.0]);
     let (r, occ) = turn_pool(&w, t);
     let cap = &w.svc.cap;
-    assert_eq!(occ, 180.0 + TERMINUS_MARGIN_S);
+    assert_eq!(occ, (180.0 + TERMINUS_MARGIN_S) / 2.0);
+    // the same 15 an hour as its ends at M and BR, plain stations at the default 3-minute turnaround
+    let most = |n: u32| {
+        let r = cap.res.iter().position(|x| x.node == n && x.kind == ResKind::Terminus).unwrap();
+        let mut at = f64::INFINITY;
+        cap.each_limit(&w.net, true, |ll, lev, most, rr| if ll == l && rr == r && lev == HIGH { at = most });
+        at
+    };
+    for n in [t, m, br] {
+        assert!((most(n) - 15.0).abs() < 1e-9, "{n}: {}", most(n));
+    }
+    // one stream: the line alone waits for nothing at its turn until it is full
+    assert_eq!(cap.delay[r][HIGH], 0.0);
     assert_eq!(cap.res[r].node, t);
     assert_eq!(cap.users_of(r).len(), 2);
     let tph: f64 = cap.users_of(r).iter().map(|u| w.net.line_tph[u.line as usize][HIGH] as f64).sum();
@@ -547,6 +560,40 @@ fn reversing_partway_turns_like_a_line_end() {
     same_as_global(&w, "two reversing");
     let (r, _) = turn_pool(&w, t);
     assert_eq!(w.svc.cap.users_of(r).len(), 4);
+}
+
+/// T-4178: the turns partway that limit their line (`Capacity::turn_limits`), as the map's icon shows them.
+fn partway_limits(w: &TrackWorld) -> Vec<(u32, u32, f64)> {
+    let lines = &w.svc.lines;
+    w.svc.cap.turn_limits(&w.net, |l, r, n| lines[l as usize].runs[r as usize].nodes.last() != Some(&n))
+}
+
+/// T-4178 (Anita: the reversal icon only where it is the limiting factor): a reversal at a plain station
+/// between plain ends ties with them and limits nothing of its own; with terminals at the ends it is the
+/// line's limit once near full, and a terminal there too takes it off again. A 5-minute turnaround (360 s
+/// a turn, 10 an hour) makes the turn tighter than the stem T - J, which every train runs twice each way
+/// (288 s a train at 160 km/h, 12.5 an hour).
+#[test]
+fn a_reversal_limits_its_line_only_when_tighter_than_its_ends() {
+    use super::super::tests::{reversal_fixture, set_rate};
+    let (mut w, [_, t, _, m, br]) = reversal_fixture();
+    let l = super::super::tests::line(&mut w, &[br, t, m], [3.0, 0.0, 0.0]);
+    let mut d = w.net.line_data(l).unwrap();
+    d.turnaround_s = 300.0;
+    w.apply(Op::Line { id: l, data: Some(d) }).unwrap();
+    // more than fits: cut to the turn's 10 an hour
+    set_rate(&mut w, l, [12.0, 6.0, 3.0]);
+    assert!(partway_limits(&w).is_empty(), "a tie with its plain ends");
+    for n in [m, br] { set_terminal(&mut w, n, true); }
+    let got = partway_limits(&w);
+    assert_eq!(got.len(), 1, "{got:?}");
+    assert_eq!((got[0].0, got[0].1), (l, t));
+    assert!((got[0].2 - 10.0).abs() < 1e-9, "{got:?}");
+    set_rate(&mut w, l, [6.0, 6.0, 3.0]);
+    assert!(partway_limits(&w).is_empty(), "6 an hour is far from full");
+    set_rate(&mut w, l, [12.0, 6.0, 3.0]);
+    set_terminal(&mut w, t, true);
+    assert!(partway_limits(&w).is_empty(), "a terminal at T: 20 an hour, as at its ends, and the stem is tighter");
 }
 
 /// Give station `n` a terminal (T-1281), or take it away.

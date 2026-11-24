@@ -539,6 +539,10 @@ pub const RHO_KNEE: f64 = 0.9;
 pub const OVERLOAD_WINDOW_S: f64 = 3600.0;
 /// A resource at this utilisation counts as full: count schedules are cut to fit (T-517).
 pub const FULL_RHO: f64 = 0.9999;
+/// T-4178: a turn partway this full, the map's "near full" orange, limits its line when it is the line's
+/// tightest spot by `TURN_LIMIT_MARGIN_TPH` trains an hour (`Capacity::turn_limits`).
+pub const TURN_LIMIT_RHO: f64 = 0.9;
+pub const TURN_LIMIT_MARGIN_TPH: f64 = 0.1;
 /// Delays are rounded to whole seconds; under this they are dropped.
 pub const HOLD_MIN_S: f64 = 2.0;
 /// A hold point closer than this to the previous stop becomes extra dwell there.

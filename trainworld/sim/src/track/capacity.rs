@@ -33,7 +33,7 @@ pub enum ResKind {
     SingleTrack,
     /// One platform track at a station: stopping and passing trains.
     Platform,
-    /// Reversing trains at a line's end.
+    /// Reversing trains at a line's end or partway (T-797).
     Terminus,
     /// A junction move, loaded by the moves that cross it at the same level.
     Junction,
@@ -213,6 +213,31 @@ impl Capacity {
     /// (T-3526): the limit a second train would meet, which a line's train count is capped by.
     pub fn line_limits_lone(&self, net: &Network, lone: bool) -> Vec<[(f64, u32); SLOTS]> {
         let mut out = vec![[(f64::INFINITY, u32::MAX); SLOTS]; net.line_count()];
+        self.each_limit(net, lone, |l, lev, most, r| {
+            let b = &mut out[l as usize][lev];
+            if most < b.0 {
+                *b = (most, r as u32);
+            }
+        });
+        // T-3378: a BRT lane's way, as track (`LANE_RES`)
+        for w in &net.brt_room().ways {
+            for lev in net.slots() {
+                let load: f64 = w.lines.iter().map(|&l| net.line_tph[l as usize][lev] as f64).sum();
+                for &l in &w.lines {
+                    let most = (net.line_tph[l as usize][lev] as f64 + super::bus::lanes::LANE_BUSES_H - load).max(0.0);
+                    let b = &mut out[l as usize][lev];
+                    if most < b.0 {
+                        *b = (most, LANE_RES);
+                    }
+                }
+            }
+        }
+        out
+    }
+
+    /// Each limiting resource `r`, for each line it can hold back and each level: `at(line, level, the most
+    /// trains an hour it lets the line run with every other rate as it stands, r)`.
+    fn each_limit(&self, net: &Network, lone: bool, mut at: impl FnMut(u32, usize, f64, usize)) {
         let mut own: Vec<(u32, f64, bool)> = vec![];
         for r in (0..self.res.len()).filter(|&r| self.limits(r)) {
             let single = self.res[r].kind == ResKind::SingleTrack;
@@ -227,27 +252,60 @@ impl Capacity {
                 }
                 let load: f64 = own.iter().map(|&(l, a, _)| net.line_tph[l as usize][lev] as f64 * a).sum();
                 for &(l, a, _) in own.iter().filter(|o| o.1 > 0.0 && o.2) {
-                    let most = (net.line_tph[l as usize][lev] as f64 + (1.0 - load) / a).max(0.0);
-                    let b = &mut out[l as usize][lev];
-                    if most < b.0 {
-                        *b = (most, r as u32);
+                    at(l, lev, (net.line_tph[l as usize][lev] as f64 + (1.0 - load) / a).max(0.0), r);
+                }
+            }
+        }
+    }
+
+    /// T-4178 (Anita 2026-11-24: the reversal icon only where it is the limiting factor): the turns partway
+    /// (`partway(line, run, node)`) that limit a line, as (line, node, the most trains an hour the turn lets it
+    /// run, the fewest over the levels): at some worked level the turn is `TURN_LIMIT_RHO` full and tighter
+    /// than every other spot the line uses by `TURN_LIMIT_MARGIN_TPH`, so a tie with another turn (its end's,
+    /// say) is no limit of the reversal's own. In line order, then node.
+    pub fn turn_limits(&self, net: &Network, partway: impl Fn(u32, u8, u32) -> bool) -> Vec<(u32, u32, f64)> {
+        // the near-full partway turns: (line, level, resource)
+        let mut cand: Vec<(u32, usize, usize)> = vec![];
+        for r in (0..self.res.len()).filter(|&r| self.res[r].kind == ResKind::Terminus) {
+            for lev in net.slots().filter(|&s| self.worked[s] && self.rho[r][s] >= TURN_LIMIT_RHO) {
+                for u in self.users_of(r).iter().filter(|u| partway(u.line, u.run, self.res[r].node)) {
+                    if !cand.contains(&(u.line, lev, r)) {
+                        cand.push((u.line, lev, r));
                     }
                 }
             }
         }
-        // T-3378: a BRT lane's way, as track (`LANE_RES`)
-        for w in &net.brt_room().ways {
-            for lev in net.slots() {
-                let load: f64 = w.lines.iter().map(|&l| net.line_tph[l as usize][lev] as f64).sum();
-                for &l in &w.lines {
-                    let most = (net.line_tph[l as usize][lev] as f64 + super::bus::lanes::LANE_BUSES_H - load).max(0.0);
-                    let b = &mut out[l as usize][lev];
-                    if most < b.0 {
-                        *b = (most, LANE_RES);
-                    }
+        if cand.is_empty() {
+            return vec![];
+        }
+        // per candidate line and level, its two tightest spots: (most, resource)
+        let mut two: Vec<((u32, usize), [(f64, usize); 2])> = cand.iter().map(|c| ((c.0, c.1), [(f64::INFINITY, usize::MAX); 2])).collect();
+        two.sort_by_key(|x| x.0);
+        two.dedup_by_key(|x| x.0);
+        self.each_limit(net, true, |l, lev, most, r| {
+            if let Ok(k) = two.binary_search_by_key(&(l, lev), |x| x.0) {
+                let t = &mut two[k].1;
+                if most < t[0].0 {
+                    t[1] = t[0];
+                    t[0] = (most, r);
+                } else if most < t[1].0 {
+                    t[1] = (most, r);
                 }
             }
+        });
+        let mut out: Vec<(u32, u32, f64)> = vec![];
+        for &(l, lev, r) in &cand {
+            let t = two[two.binary_search_by_key(&(l, lev), |x| x.0).unwrap()].1;
+            if t[0].1 != r || t[1].0 - t[0].0 < TURN_LIMIT_MARGIN_TPH {
+                continue;
+            }
+            let n = self.res[r].node;
+            match out.iter_mut().find(|o| (o.0, o.1) == (l, n)) {
+                Some(o) => o.2 = o.2.min(t[0].0),
+                None => out.push((l, n, t[0].0)),
+            }
         }
+        out.sort_by_key(|o| (o.0, o.1));
         out
     }
 
@@ -669,6 +727,15 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
         i = end;
     }
     term.sort_by(|a, b| (a.0, a.1, a.2).cmp(&(b.0, b.1, b.2)));
+    // T-4178 (Anita 2026-11-24): a line holds a turn no longer a round trip than a turn at its end, so
+    // a reversal partway, turned by each direction, counts half a turn each way
+    let mut i = 0;
+    while i < term.len() {
+        let end = term[i..].partition_point(|x| (x.0, x.1) == (term[i].0, term[i].1)) + i;
+        let k = (end - i) as f64;
+        term[i..end].iter_mut().for_each(|x| x.4 /= k);
+        i = end;
+    }
     let mut i = 0;
     while i < term.len() {
         let end = term[i..].partition_point(|x| x.0 == term[i].0) + i;
@@ -1194,8 +1261,13 @@ fn occ_at(net: &Network, us: &[User], single: bool, u: &User, lev: usize) -> f64
     if lone { (u.occ - SINGLE_TRACK_MARGIN_S).max(0.0) } else { u.occ }
 }
 
-fn solve_one(us: &[User], net: &Network, streams: &mut Vec<((u32, u8), f64)>, tag: Tag, single: bool, plans: &[Arc<Plan>]) -> ([f64; SLOTS], [f64; SLOTS]) {
+fn solve_one(us: &[User], net: &Network, streams: &mut Vec<((u32, u8), f64)>, tag: Tag, kind: ResKind, plans: &[Arc<Plan>]) -> ([f64; SLOTS], [f64; SLOTS]) {
     let (mut rho_r, mut delay_r) = ([0.0; SLOTS], [0.0; SLOTS]);
+    let single = kind == ResKind::SingleTrack;
+    // T-4178: a line's own trains over one place are timetabled to it, so they are one stream (as T-3526's
+    // two-way single track): both ways of a reversal partway at its turn, and on the stretch a switchback
+    // runs out and back over, both runs on each direction, as one line alone at its end waits for nothing
+    let one_stream = matches!(kind, ResKind::SingleTrack | ResKind::Terminus | ResKind::Section);
     if matches!(tag, Tag::Follow { .. } | Tag::Wait { .. }) {
         // T-1924: no utilisation, so no map dot; only the faster line's loss, or (T-2231) the
         // slower line's wait at a passing station
@@ -1221,7 +1293,7 @@ fn solve_one(us: &[User], net: &Network, streams: &mut Vec<((u32, u8), f64)>, ta
             // T-3526: on two-way single track a line's two directions are timetabled to meet (the
             // margin is the meeting), so they are one stream: one line alone waits for nothing until
             // the track is full, as on any other resource. Different lines still queue.
-            let key = (u.line, if single { 0 } else { u.run });
+            let key = (u.line, if one_stream { 0 } else { u.run });
             match streams.iter_mut().find(|s| s.0 == key) {
                 Some(s) => s.1 = s.1.max(tph),
                 None => streams.push((key, tph)),
@@ -1246,7 +1318,7 @@ pub fn solve(cap: &mut Capacity, net: &Network) {
     cap.rho.resize(n, [0.0; SLOTS]);
     cap.delay.resize(n, [0.0; SLOTS]);
     for r in 0..n {
-        let (rho, delay) = solve_one(cap.users_of(r), net, &mut streams, cap.tag[r], cap.res[r].kind == ResKind::SingleTrack, &cap.plans[r]);
+        let (rho, delay) = solve_one(cap.users_of(r), net, &mut streams, cap.tag[r], cap.res[r].kind, &cap.plans[r]);
         cap.rho[r] = rho;
         cap.delay[r] = delay;
     }
@@ -1384,7 +1456,7 @@ impl Capacity {
         // ---- solve the new ones, and the old ones a rescheduled line uses
         let mut streams = vec![];
         for r in first_new..self.res.len() {
-            let (rho, delay) = solve_one(self.users_of(r), net, &mut streams, self.tag[r], self.res[r].kind == ResKind::SingleTrack, &self.plans[r]);
+            let (rho, delay) = solve_one(self.users_of(r), net, &mut streams, self.tag[r], self.res[r].kind, &self.plans[r]);
             self.rho[r] = rho;
             self.delay[r] = delay;
             for u in self.users_of(r) {
@@ -1404,7 +1476,7 @@ impl Capacity {
                 if !self.users_of(r).iter().any(|u| rs[u.line as usize]) {
                     continue;
                 }
-                let (rho, delay) = solve_one(self.users_of(r), net, &mut streams, self.tag[r], self.res[r].kind == ResKind::SingleTrack, &self.plans[r]);
+                let (rho, delay) = solve_one(self.users_of(r), net, &mut streams, self.tag[r], self.res[r].kind, &self.plans[r]);
                 self.rho[r] = rho;
                 if delay != self.delay[r] {
                     self.delay[r] = delay;
@@ -1440,7 +1512,7 @@ impl Capacity {
             let new = if dead {
                 [0.0; SLOTS]
             } else if !rescheduled.is_empty() && self.users_of(r).iter().any(|u| rs[u.line as usize]) {
-                solve_one(self.users_of(r), net, &mut streams, self.tag[r], self.res[r].kind == ResKind::SingleTrack, &self.plans[r]).1
+                solve_one(self.users_of(r), net, &mut streams, self.tag[r], self.res[r].kind, &self.plans[r]).1
             } else {
                 continue;
             };

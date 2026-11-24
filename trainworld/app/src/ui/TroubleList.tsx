@@ -1,7 +1,7 @@
 // The Issues list (T-1433, docs/ui-panels.md "Trouble list"): one list of what is wrong on the
 // network, at the map's lower right. Collapsed it is a red alert icon with a count (T-2932); open, a short list, worst first, each row a click from the place.
-// It reads what the map and the line panel already have: the world's capacity tags and reversals
-// (redrawn with the world) and the past 24 hours' counts, asked once a game hour.
+// It reads what the map and the line panel already have: the world's capacity tags and the reversals
+// that limit their line (redrawn with the world) and the past 24 hours' counts, asked once a game hour.
 
 import { h, render, type ComponentChildren } from "preact";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
@@ -93,7 +93,7 @@ function itemsOf(w: WorldView, level: number, day: Map<string, LineToday>): Item
     const ls = r.lines.map((x) => lines.get(x.id)).filter((x): x is LineInput => !!x);
     out.push({ key: "r" + r.station, tier: 1, size: ls.length, lead: <i class="trouble-rev"><Icon.uturn /></i>, label: r.name,
       value: <span class="trouble-chips">{ls.slice(0, 3).map((l) => <Chip line={l} size="sm" plain />)}</span>,
-      tip: [...r.lines.map((x) => t("troubleList.reverses", { name: x.name })), capacityKind(3, lineVehicle(w, r.lines[0]?.id), hasTerminal(w, r.station)).fix].join("\n"),
+      tip: [...r.lines.map((x) => t("troubleList.reverses", { name: x.name, n: tNumber(Math.floor(x.tph * 10) / 10), vehicle: x.tram ? "tram" : "train" })), capacityKind(3, lineVehicle(w, r.lines[0]?.id), hasTerminal(w, r.station)).fix].join("\n"),
       go: () => { locateStation(r.lng, r.lat); if (r.lines[0]) pick({ kind: "line", line: r.lines[0].id }); } });
   }
   // the orange and red tags only (90% and up) that are over capacity or make trains wait; a kind's tags by one station are one row, the worst

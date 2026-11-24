@@ -374,6 +374,9 @@ export interface WorldView {
   /** T-819: per demand period, the edges whose track is at capacity, with the fuller direction's
    * utilisation and trains an hour */
   fullTrack: Map<EdgeId, { rho: number; tph: number }>[];
+  /** T-4178: per line, the nodes where its trains reverse partway and that turn limits it (`TrackApi.turn_limits`),
+   * with the most trains an hour it lets the line run */
+  turnLimits: Map<LineId, Map<number, number>>;
   /** T-3542: the rows (3, 4 or 5) lines following the game's set their trains in */
   periods: number;
   /** T-3542: the hours lines following the game's split their day at (five, `Cuts`) */
