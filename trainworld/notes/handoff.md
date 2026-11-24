@@ -5,30 +5,21 @@ Updated: 2026-11-24 13:58 UTC. Live state: `venv\Scripts\python.exe trainworld/t
 diary notes/handoff-log.md. Her time UTC-5.
 
 ## In flight (all maps-06's)
-- 0.4.6: no publish ask, she says when. Candidate = master; 8800 = 61cbe801 (13:51: T-4196 rewording, T-4200,
-  T-4203 Hokkaido names, reverse kept, sparseload). Smoke PASSED 13:28 at 0cca357a; rerun before publish. perf_bench
-  rc046-f63b105b in ledger (belgrade CPU +24%, tokyo demand +11%; ask a-2026-11-24-3). Lists: notes/release-0.4.6.md
-  (uncommitted); rewording review artifacts/trainworld/review/text-rewording-0.4.6.md.
-- 8800 = 4c096347 (14:41): + sparseload, stopclick stage (check8 PASS), routecycle T-4046, mode colours T-4205/T-4207
-  (her pick B). Smoke on master before the publish.
-- Running (15:12): stalefigs T-4202 s2 (Opus 6163), ghostjump T-4208 (Opus 6164), editstops T-4147 (Sonnet 6165),
-  corridors2 T-4199 s2 (Opus, tree corridors, 6155; also NYC gain, her question), settle1 T-4194 opt 1 (Sonnet, tree
-  settle, 6144), restartkeep T-4204 s2 (Opus 6161, + 2 "updating demand" strings), timinglog T-4206 (Sonnet 6166).
-- Asks open: settle option 2 (T-4194), T-4204 next step, strings 0.4.6, speed trade-offs, T-4161 deploy, T-4153 s2.
-- T-4146 after editstops (same files). Rule 11-24: no bit-exact; report shifts, most riders within 1% (CLAUDE.md).
+- 0.4.6: she says when to publish. 8800 = 4c096347. Landed since: T-4148, T-4206 timing log, T-4208 ghost, T-4204 s2
+  (restart only when memory short; check NYC map +2.5 s in the release perf_bench), T-4209 time-left display.
+  0.4.6 waits for (her word): settle1 T-4194 opt 1+2 (Sonnet, tree settle, 6144; measure stop adds on headway lines),
+  stalefigs T-4202 s2 (Opus 6163), editstops T-4147 (Sonnet 6165). Then: batch checker (T-4194 + T-4202 + T-4204 +
+  keepSet a3a084b87), smoke, perf_bench all three, changelog review, 8800 rebuild, publish skill on her word.
+  Strings acked 15:3x (sections 2+4 of notes/release-0.4.6.md); new strings since: list at publish.
+- Not for 0.4.6: corridors2 T-4199 s2 (Opus, tree corridors, 6155; NYC gain asked), ghostspeed T-4210 (Opus 6164).
+- After 0.4.6: T-2188 (city edits end at the quick result, her yes), T-4146 (after editstops), T-4211, T-4193.
 - Held for her word: T-4153 s2 (tree editnetwork; add mm.ribbons.delete(e) at lineBands.ts:571 if landed); T-921 (tree
-  commutechunks); T-4156 P3; T-4124 numbers first. T-4161 shonei-server 7bdd559 unpushed, deploy on her yes, then push.
+  commutechunks); T-4156 P3. T-4161 shonei-server 7bdd559 unpushed: deploy on her yes, then push.
 - T-4112's tw/track changelog item is parked in next-track.json: hide the port's duplicate at release.
-- Uncommitted SPEC.md, DECISIONS.md, docs, checks/old moves, tools/asks.py etc. are partly not ours (likely Gemini in
-  Antigravity): patch out to land if a landing touches them. Ours in them: TASKS.md task lines, DECISIONS Hokkaido entry.
-- Core cap 14. reserve_cores.ps1 -All -Loop 30 runs in maps-06's background. Gemini: her ask or our suggestion.
-
-## Next
-- T-4208 (track ghost jumps before the last click lands; her pad 14:33) after editpieces T-4148 (same click path).
-- T-4206 (her timing log: extend ?diagnostics=1 to the demand side + save in one download + summary tool) after
-  slowshow T-4204 reports (same clock worker files; its dig says which steps matter).
-1. Her answers: strings ack (a-2026-11-24-1), speed trade-offs (a-2026-11-24-3), T-4161 deploy, T-4153 s2 timing.
-2. Land check8's batch; then T-4146/T-4147 (after T-4148, same files), T-4193. Track rework after 0.4.6.
+- Uncommitted SPEC.md, DECISIONS.md, docs, checks/old moves, tools/asks.py etc. partly not ours (likely Gemini in
+  Antigravity): patch out to land if a landing touches them. Ours: TASKS lines, DECISIONS entries (Hokkaido, T-4202,
+  T-2188, T-4199 rule, T-4204's). A tree on modecolors2 may linger (held by a shell): agent-tree.mjs remove modecolors2.
+- Core cap 14. reserve_cores.ps1 -All -Loop 30 in maps-06's background. Gemini: her ask or our suggestion.
 
 ## Her words
 - 11-24 13:3x-13:57 playtest: she says when to publish; asianita save is a stress test only; "disembarking"; bus town tint
