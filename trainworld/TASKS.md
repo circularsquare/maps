@@ -245,7 +245,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-24, yes to: a top section of about ten lines of your standing calls (answer you first; 2-8 agents, core cap only on your word, asking is not a start, count before each start; ask before going outside them; what is yours; biggest cost first), each an action at a moment; procedures below or in the tools' help.
   - Goal: No rule lost or added except one: your direction calls go into DECISIONS.md when you say them; duplicates with trainworld/CLAUDE.md trimmed.
 - T-4166 [P2] {L:checks} Bench machine on your own AWS account
-  - Context: You, 11-24: account made (not free tier), $20 monthly budget alarm, both quota raises refused (5 vCPUs: one 4-core machine), CLI profile anita-own; she wants $20 a month to really cut off. Setup guide: notes/aws-own-account-setup.md.
+  - Context: You, 11-24: account made (not free tier), $20 monthly budget alarm, both quota raises refused (5 vCPUs: one 4-core machine), CLI profile anita-own; she wants $20 a month to really cut off. You, 11-24: this PC first, AWS only for spillover. Setup guide: notes/aws-own-account-setup.md.
   - Goal: One script runs the benches and smoke on a commit and shuts the machine down; anita-own in docs/aws.md; a $20 budget action stopping machines, with click steps for her.
 - T-4141 [P3] {L:station-placement} Track placed by an edit call crossed the Hudson at ground level
   - Context: Seen by T-4112: a route entered through the game's edit call crossed the Hudson at ground level without a refusal, while pointer-drawn track nearby was bridged. Water may not have been loaded under part of it.
@@ -264,9 +264,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4157 [P1] {L:loading} Master against v0.4.5 on the three bench saves (taking, 2026-11-23, agent perfcompare)
   - Context: You, 11-24: the goal was to claw back what the express change and the bus changes cost; "load times do feel kinda long". Last bench 18:08: trips ready NYC 95 to 126 s, Tokyo 157 to 175 s, Belgrade 618 to 1,285 s; NYC 105 s at 22:51.
   - Goal: Every perf_bench number for master against v0.4.5 on nyc, tokyo and belgrade, and where a load's time goes.
-- T-4051 [P2] {L:loading} Opening a zone on a big save sits at 90% (taking, 2026-11-23, agent zoneopen)
-  - Context: You, 11-22, on live v0.4.5: opening Medellin sat at 90% for about 2 minutes, Managua the same, "not super consistent". Measured 11-23 (notes/T-4051.md): a zone opens by a short path (Medellin 82 s) or a long one about 3x the work, by a race between its first quick figures and the whole calculation. Tree zoneopen has two unmeasured fixes.
-  - Goal: Both fixes measured on 4+ cores before they land; then a zone with figures already in takes the short path (about 100 s off on your save).
+- T-4051 [P2] {L:loading} Opening a zone on a big save sits at 90%
+  - Context: You, 11-22: Medellin sat at 90% about 2 minutes. Tree zoneopen (11-24): a zone opens about a third faster on your North America save (median 68 to 45 s); lands after its perf_bench. The slow path (once in 9 opens) is not fixed and needs your newer save.
+  - Goal: A zone with figures already in takes the short path on your newer save.
   - Other: notes/T-4051.md
 - T-4074 [P4] {L:loading} Spain blocks the game during football matches
   - Context: You, 11-23: "ok can leave as p4". From T-4071 (feedback 1795377906): Spanish ISPs block Cloudflare's shared addresses during LaLiga matches by court order. anita.garden and data.anita.garden both sit on them; the account server does not. A fallback would be a data mirror plus a page off Cloudflare, 4-6 h plus an upload at every publish.
