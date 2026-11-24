@@ -17,9 +17,9 @@
 // however busy the machine is; the cores claimed in cores.py only decide how fast it goes.
 import { spawn, spawnSync } from 'node:child_process';
 import { createServer } from 'node:http';
-import { createReadStream, existsSync, statSync, readFileSync, writeFileSync, appendFileSync, mkdirSync, rmSync, cpSync } from 'node:fs';
+import { createReadStream, existsSync, statSync, readFileSync, readdirSync, writeFileSync, appendFileSync, mkdirSync, rmSync, cpSync } from 'node:fs';
 import { cpus } from 'node:os';
-import { join, resolve, extname, basename } from 'node:path';
+import { join, resolve, extname, basename, delimiter } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = fileURLToPath(new URL('.', import.meta.url));
@@ -103,7 +103,7 @@ function build(src, label) {
   if (!existsSync(tt) && existsSync(join(MAPS, '.tw-snap-target'))) cpSync(join(MAPS, '.tw-snap-target'), tt, { recursive: true });
   const name = 'perfbench-build-' + label;
   if (!claim(4, name, 'perf_bench build ' + label)) throw new Error('no 4 free cores within 30 minutes: not built');
-  const env = { ...process.env, CARGO_BUILD_JOBS: '2', TW_LINK_PACKS: '1', PATH: join(process.env.USERPROFILE ?? '', '.cargo', 'bin') + ';' + process.env.PATH };
+  const env = { ...process.env, CARGO_BUILD_JOBS: '2', TW_LINK_PACKS: '1', PATH: join(process.env.USERPROFILE ?? process.env.HOME ?? '', '.cargo', 'bin') + delimiter + process.env.PATH };
   const t = Date.now();
   try {
     const app = join(tree, 'trainworld', 'app');
@@ -122,13 +122,16 @@ function build(src, label) {
 // ---------------------------------------------------------------------------------------------- server
 
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.geojson': 'application/geo+json', '.wasm': 'application/wasm', '.png': 'image/png', '.svg': 'image/svg+xml', '.pbf': 'application/x-protobuf', '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.webmanifest': 'application/manifest+json' };
-/** checks/static-serve.mjs (Range, no-store) with the bytes it sent counted, packs apart */
+/** checks/static-serve.mjs (Range, no-store) with the bytes it sent counted, packs apart. PERF_REQLOG=<file>: each
+ * request's status and path appended to it (tools/aws/bench.py lists the missing packs of a machine's partial data). */
 function serve(dist) {
   const st = { bytes: 0, packs: 0, requests: 0 };
+  const reqlog = process.env.PERF_REQLOG;
   const server = createServer((req, res) => {
     let p = decodeURIComponent((req.url ?? '/').split('?')[0]);
     if (p.endsWith('/')) p += 'index.html';
     const f = join(dist, p);
+    if (reqlog) res.on('finish', () => { try { appendFileSync(reqlog, res.statusCode + ' ' + p + '\n'); } catch { /* best effort */ } });
     if (!f.startsWith(dist) || !existsSync(f) || statSync(f).isDirectory()) { res.statusCode = 404; return res.end(); }
     const size = statSync(f).size;
     res.setHeader('Accept-Ranges', 'bytes');
@@ -148,48 +151,84 @@ function serve(dist) {
 
 // ---------------------------------------------------------------------------------------------- measuring
 
-/** One PowerShell for the whole run: every second, the private bytes and CPU seconds of each process of the Chrome
- * whose command line holds \`profile\`, by process type. Peaks kept; \`cpu()\` reads the latest CPU seconds by type. */
+/** Every second, the private bytes and CPU seconds of each process of the Chrome whose command line holds `profile`, by
+ * process type: one PowerShell for the whole run on Windows, /proc on Linux (the AWS bench machine, tools/aws/bench.py).
+ * Peaks kept; `cpu()` reads the latest CPU seconds by type. */
 function procWatch(profile) {
-  const needle = profile.replace(/\//g, '\\').replace(/'/g, "''");
-  const ps = "while ($true) { $o = @(); Get-CimInstance Win32_Process -Filter \"Name='chrome.exe'\" | Where-Object { $_.CommandLine -and $_.CommandLine.Contains('" + needle + "') } | ForEach-Object { $t = if ($_.CommandLine -match '--type=(\\S+)') { $matches[1] } else { 'browser' }; if ($t -eq 'renderer' -and $_.CommandLine -match '--extension-process') { $t = 'ext' }; $o += ('{0}:{1}:{2}:{3}' -f $t, $_.PrivatePageCount, ($_.KernelModeTime + $_.UserModeTime), $_.ProcessId) }; [Console]::Out.WriteLine('S ' + ($o -join ' ')); [Console]::Out.Flush(); Start-Sleep -Milliseconds 1000 }";
-  const p = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', ps], { windowsHide: true });
   const w = { peak: { renderer: 0, total: 0, gpu: 0 }, last: null, samples: 0 };
-  let buf = '';
-  p.stdout.on('data', (d) => {
-    buf += d;
-    let i;
-    while ((i = buf.indexOf('\n')) >= 0) {
-      const line = buf.slice(0, i).trim(); buf = buf.slice(i + 1);
-      if (!line.startsWith('S')) continue;
-      const by = {}, cpu = {};
-      let total = 0, big = 0, pid = null;
-      for (const part of line.slice(1).trim().split(' ').filter(Boolean)) {
-        const [t, priv, c, id] = part.split(':');
-        by[t] = (by[t] ?? 0) + Number(priv) / MB; cpu[t] = (cpu[t] ?? 0) + Number(c) / 1e7; total += Number(priv) / MB;
-        if (t === 'renderer' && Number(priv) > big) { big = Number(priv); pid = Number(id); }
-      }
-      w.last = { by, cpu, total, pid, at: Date.now() };
-      w.samples++;
-      w.peak.renderer = Math.max(w.peak.renderer, by.renderer ?? 0);
-      w.peak.gpu = Math.max(w.peak.gpu, by['gpu-process'] ?? 0);
-      w.peak.total = Math.max(w.peak.total, total);
+  /** one sample: [type, private bytes, CPU seconds, pid] a process */
+  const take = (procs) => {
+    const by = {}, cpu = {};
+    let total = 0, big = 0, pid = null;
+    for (const [t, priv, c, id] of procs) {
+      by[t] = (by[t] ?? 0) + priv / MB; cpu[t] = (cpu[t] ?? 0) + c; total += priv / MB;
+      if (t === 'renderer' && priv > big) { big = priv; pid = id; }
     }
-  });
+    w.last = { by, cpu, total, pid, at: Date.now() };
+    w.samples++;
+    w.peak.renderer = Math.max(w.peak.renderer, by.renderer ?? 0);
+    w.peak.gpu = Math.max(w.peak.gpu, by['gpu-process'] ?? 0);
+    w.peak.total = Math.max(w.peak.total, total);
+  };
+  let stop;
+  if (process.platform === 'win32') {
+    const needle = profile.replace(/\//g, '\\').replace(/'/g, "''");
+    const ps = "while ($true) { $o = @(); Get-CimInstance Win32_Process -Filter \"Name='chrome.exe'\" | Where-Object { $_.CommandLine -and $_.CommandLine.Contains('" + needle + "') } | ForEach-Object { $t = if ($_.CommandLine -match '--type=(\\S+)') { $matches[1] } else { 'browser' }; if ($t -eq 'renderer' -and $_.CommandLine -match '--extension-process') { $t = 'ext' }; $o += ('{0}:{1}:{2}:{3}' -f $t, $_.PrivatePageCount, ($_.KernelModeTime + $_.UserModeTime), $_.ProcessId) }; [Console]::Out.WriteLine('S ' + ($o -join ' ')); [Console]::Out.Flush(); Start-Sleep -Milliseconds 1000 }";
+    const p = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', ps], { windowsHide: true });
+    let buf = '';
+    p.stdout.on('data', (d) => {
+      buf += d;
+      let i;
+      while ((i = buf.indexOf('\n')) >= 0) {
+        const line = buf.slice(0, i).trim(); buf = buf.slice(i + 1);
+        if (!line.startsWith('S')) continue;
+        take(line.slice(1).trim().split(' ').filter(Boolean).map((part) => { const [t, priv, c, id] = part.split(':'); return [t, Number(priv), Number(c) / 1e7, Number(id)]; }));
+      }
+    });
+    stop = () => { try { p.kill(); } catch { /* gone */ } };
+  } else {
+    const id = setInterval(() => take(linuxChrome(profile)), 1000);
+    stop = () => clearInterval(id);
+  }
   return {
     w,
     /** the next sample's CPU seconds by type (waits for one taken after now) */
     async cpu() { const t = Date.now(); for (let k = 0; k < 100 && !(w.last && w.last.at > t); k++) await sleep(100); return w.last?.cpu ?? {}; },
-    stop: () => { try { p.kill(); } catch { /* gone */ } },
+    stop,
   };
 }
 
-/** CPU seconds of each thread of the tab's process (tools/perf_threads.ps1), by thread id. Chrome's workers are threads
- * of the renderer, and CDP gives a worker no CPU time, so a worker's CPU is its thread's. */
+/** Linux: [type, private bytes, CPU seconds, pid] of each process whose command line holds `profile` (Chrome's types as
+ * on Windows; private bytes are smaps_rollup's private pages, near Windows' private bytes). Clock ticks are 100 a second. */
+function linuxChrome(profile) {
+  const out = [];
+  for (const d of readdirSync('/proc')) {
+    if (!/^\d+$/.test(d)) continue;
+    try {
+      const cmd = readFileSync('/proc/' + d + '/cmdline', 'utf8').replace(/\0/g, ' ');
+      if (!cmd.includes(profile)) continue;
+      let t = /--type=(\S+)/.exec(cmd)?.[1] ?? 'browser';
+      if (t === 'renderer' && cmd.includes('--extension-process')) t = 'ext';
+      const roll = readFileSync('/proc/' + d + '/smaps_rollup', 'utf8');
+      const kb = (k) => Number(new RegExp('^' + k + ':\\s+(\\d+)', 'm').exec(roll)?.[1] ?? 0);
+      out.push([t, (kb('Private_Clean') + kb('Private_Dirty')) * 1024, statCpu('/proc/' + d + '/stat'), Number(d)]);
+    } catch { /* a process that just ended */ }
+  }
+  return out;
+}
+/** utime + stime of a /proc stat file, in seconds (the fields after the command name, which may hold spaces) */
+const statCpu = (f) => { const s = readFileSync(f, 'utf8'); const a = s.slice(s.lastIndexOf(')') + 2).split(' '); return (Number(a[11]) + Number(a[12])) / 100; };
+
+/** CPU seconds of each thread of the tab's process (tools/perf_threads.ps1 on Windows, /proc on Linux), by thread id.
+ * Chrome's workers are threads of the renderer, and CDP gives a worker no CPU time, so a worker's CPU is its thread's. */
 function threadCpu(pid) {
   if (!pid) return {};
-  const r = spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', join(HERE, 'perf_threads.ps1'), String(pid)], { encoding: 'utf8', windowsHide: true });
   const out = {};
+  if (process.platform !== 'win32') {
+    try { for (const t of readdirSync('/proc/' + pid + '/task')) { try { out[t] = statCpu('/proc/' + pid + '/task/' + t + '/stat'); } catch { /* ended */ } } } catch { /* gone */ }
+    return out;
+  }
+  const r = spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', join(HERE, 'perf_threads.ps1'), String(pid)], { encoding: 'utf8', windowsHide: true });
   for (const l of (r.stdout ?? '').split(/\r?\n/)) { const m = /^([\d.,]+) (\d+)/.exec(l.trim()); if (m) out[m[2]] = Number(m[1].replace(/,/g, '')); }
   return out;
 }

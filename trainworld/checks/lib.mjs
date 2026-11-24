@@ -19,9 +19,10 @@ export const ARTIFACTS = fileURLToPath(new URL('../../artifacts/trainworld/', im
 export const REAL_SAVE = fileURLToPath(new URL('../T-007-real-nyc.save', import.meta.url));
 /** smoke's figures by url (T-1135), for checks that compare against the current data */
 export const SMOKE_FIGURES = fileURLToPath(new URL('../../artifacts/trainworld/smoke-figures.json', import.meta.url));
-export const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
+/** Linux is the AWS bench machine (tools/aws/bench.py): Chrome from Google's .deb, WebGL on SwiftShader (no GPU there) */
+export const CHROME = process.platform === 'win32' ? 'C:/Program Files/Google/Chrome/Application/chrome.exe' : (process.env.TW_CHROME ?? '/usr/bin/google-chrome');
 /** Chrome flags that give the page a real GL context (`ANGLE` alone for the checks that never added the blocklist flag) */
-export const ANGLE = ['--use-angle=d3d11'];
+export const ANGLE = process.platform === 'win32' ? ['--use-angle=d3d11'] : ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'];
 export const GL = [...ANGLE, '--ignore-gpu-blocklist'];
 /** network noise that is not the game's: the basemap's tiles and fonts when offline, the favicon */
 export const NOISE = /favicon|openfreemap|AJAXError/;

@@ -1,7 +1,8 @@
 // Static server with HTTP Range and Cache-Control: no-store (like serve.py), for startup timing of
 // a scratch production build (checks/startup-timing.mjs). node trainworld/checks/static-serve.mjs <dir> <port>
+// REQLOG=<file>: each request's status and path appended to it (tools/aws/bench.py lists the packs a machine lacked).
 import { createServer } from 'node:http';
-import { createReadStream, existsSync, statSync } from 'node:fs';
+import { appendFileSync, createReadStream, existsSync, statSync } from 'node:fs';
 import { join, resolve, extname } from 'node:path';
 const root = resolve(process.argv[2]);
 const port = Number(process.argv[3] ?? 6101);
@@ -9,6 +10,7 @@ const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/ja
 createServer((req, res) => {
   let p = decodeURIComponent((req.url ?? '/').split('?')[0]);
   if (p.endsWith('/')) p += 'index.html';
+  if (process.env.REQLOG) res.on('finish', () => { try { appendFileSync(process.env.REQLOG, res.statusCode + ' ' + p + '\n'); } catch { /* best effort */ } });
   const file = join(root, p);
   if (!file.startsWith(root) || !existsSync(file) || statSync(file).isDirectory()) { res.statusCode = 404; return res.end(); }
   const size = statSync(file).size;
