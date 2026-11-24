@@ -503,6 +503,8 @@ pub enum Issue {
     Crossing { e1: u32, e2: u32, x: f64, y: f64, overlap: bool },
     NoSuchNode { node: u32 },
     NoSuchEdge { edge: u32 },
+    /// T-4080: no such kept bus stop, or one placed outside the world.
+    NoSuchKeep { keep: u32 },
     /// T-2797: the piece is only the track a station stands on; removing it would lay it back.
     StationTrack { edge: u32 },
     NoSuchLine { line: u32 },
@@ -617,6 +619,8 @@ pub struct Touch {
     pub paths_changed: bool,
     /// T-3378: a busway was added, changed or removed, so every bus line is timed again
     pub busways: bool,
+    /// T-4080: where kept bus stops were made, moved or removed: the bus lines passing near place their stops again
+    pub keeps: Vec<[f64; 2]>,
 }
 
 /// What `derive` rebuilt.
@@ -839,6 +843,13 @@ pub struct Network {
     /// The station buildings (T-2217, `building.rs`) by id, None where one was removed. Outside the
     /// undo history, like the links; saved in `BLD1`, renumbered densely.
     pub buildings: Vec<Option<super::building::Building>>,
+    /// T-4080: the kept bus stops (`bus::keep`) by id, None where one was removed; set only through `set_keep`.
+    /// Saved in `LBK1`, renumbered densely.
+    pub keeps: Vec<Option<super::bus::keep::KeptStop>>,
+    keep_free: Vec<u32>,
+    /// T-4080: counts the changes to the kept stops (names and connections too), for the clock worker to read
+    /// them again after an edit, undo or redo; not saved.
+    pub keep_epoch: u32,
 
     pub crossings: Vec<Crossing>,
     pub grid: Grid,
@@ -1005,3 +1016,4 @@ mod derive;
 mod validate;
 mod costs;
 mod paths;
+mod keeps;

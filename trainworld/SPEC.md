@@ -388,7 +388,9 @@ Rough on purpose: the bar is the right order (section 1).
 
 ## 11. Saves and accounts
 
-A save is the player's inputs only; everything else is recomputed from versioned packs. The clock
+A save is the player's inputs only; everything else is recomputed from versioned packs. Bus stops the player names or
+connects are kept as points with their names and connections, so they last through edits and saves; one no bus stop is
+near any more is forgotten at the next load [T-4080; docs/track-and-service.md 6.7]. The clock
 worker writes it to IndexedDB in named browser slots (one writing tab per slot) and to files. New
 game, Open a file and opening a backup as a copy each start a new slot; no slot is ever written over with
 another game [T-743]. A game is normal or a sandbox (nothing refused for money, the cash hidden;

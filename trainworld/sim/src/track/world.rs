@@ -36,6 +36,8 @@ pub enum Op {
     /// T-3542: the hours (`params::Cuts`) the game's lines split their day at (`line` None), or
     /// line `line`'s own (all 0: the game's).
     Hours { line: Option<u32>, cuts: Cuts },
+    /// T-4080: set a kept bus stop (`None` removes it).
+    Keep { id: u32, data: Option<super::bus::keep::KeptStop> },
     /// Split `edge` at chainage `s` with a new node `node`; the far part becomes `new_edge`.
     /// Line paths through it are rewritten. Geometry does not change.
     Split { edge: u32, s: f64, node: u32, new_edge: u32 },
@@ -2142,6 +2144,9 @@ impl TrackWorld {
         // T-3378: and a bus line's speed follows the constructed busways it runs on
         if !t.stations.is_empty() || !t.lines.is_empty() || t.busways {
             lines.extend(self.net.bus_lines());
+        } else {
+            // T-4080: and the kept stops near its route
+            lines.extend(self.net.bus_lines_near(&t.keeps));
         }
         lines.sort_unstable();
         lines.dedup();
@@ -2446,6 +2451,7 @@ impl TrackWorld {
             Op::Edge { id, data } => Op::Edge { id, data: n.set_edge(id, data)? },
             Op::Station { node, data } => Op::Station { node, data: n.set_station(node, data)? },
             Op::Line { id, data } => Op::Line { id, data: n.set_line(id, data)? },
+            Op::Keep { id, data } => Op::Keep { id, data: n.set_keep(id, data)? },
             Op::TrainCounts { id, trains, tph } => {
                 let old = n.line_data(id).ok_or(Issue::NoSuchLine { line: id })?;
                 n.set_tph(id, tph)?;
@@ -2610,6 +2616,7 @@ fn merge_derived(t: &mut super::net::Touch, der: &mut super::net::Derived, t2: s
         v.dedup();
     }
     t.paths_changed |= t2.paths_changed;
+    t.keeps.extend(t2.keeps);
     der.crossings.extend(der2.crossings);
 }
 

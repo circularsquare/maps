@@ -8,6 +8,7 @@ use super::geom::Pi;
 use super::net::{EdgeData, GroupLook, LineData, OuterGroup, Network, NodeData, StationData, Weekend, ALIGHT_ONLY, BOARD_ONLY, DAY_UNKNOWN};
 use super::params::*;
 use super::twin::Twin;
+use super::bus::keep::{KeepLink, KeptStop};
 
 /// TWT4 (T-104) is the oldest format read (TWT2 and TWT3 stopped loading, T-1146). A line carries
 /// its whole-line train allocation; derived frequencies are not saved for allocated lines. A line
@@ -101,6 +102,11 @@ use super::twin::Twin;
 /// A trailing `LBE1` block (T-4069, level 39, after `LBO1`) gives the by-hand bus stops placed exactly
 /// (Ctrl+click, `BusRoute::exact`) that no station takes: count, then per line its index and those stops as
 /// `LBH1` has them; without it every stop near a station is that station's.
+/// A trailing `LBK1` block (T-4080, level 40, after `LBE1`) gives the kept bus stops (`bus::keep`): count, then per
+/// kept stop with a name or a connection that holds its place (mm, from the last one's), its name and those connections
+/// (count, then per connection 0 and a node index for a station, 1 and a kept stop's index here for a kept stop);
+/// without it there are none.
+/// A load then drops those no bus stop took (`Network::drop_keeps_except`).
 /// A trailing `LBO1` block (T-4013, level 38) gives the lines with boarding-only or getting-off-only stops
 /// (`LineData::only`): count, then per line its index, its count and per stop its place in the line's stops and
 /// its kind (1 boarding only, 2 getting off only); without it every stop lets riders on and off.
@@ -116,13 +122,13 @@ const MAGIC_TWT6: &[u8; 4] = b"TWT6";
 
 /// T-1826: the trailing blocks this build reads, in the order they are written. A block it does not
 /// know stops the decoder, which then reports the bytes left over (`decode_read`).
-pub const BLOCKS: [&[u8; 4]; 42] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1", b"LPS1", b"LWE1", b"LOS1", b"LPD1", b"LHR1", b"LFZ1", b"LSN1", b"LFD1", b"LGN1", b"LRA1", b"LWP1", b"LFB1", b"LBR1", b"LBT1", b"LBQ1", b"LBO1", b"LBE1"];
+pub const BLOCKS: [&[u8; 4]; 43] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1", b"LPS1", b"LWE1", b"LOS1", b"LPD1", b"LHR1", b"LFZ1", b"LSN1", b"LFD1", b"LGN1", b"LRA1", b"LWP1", b"LFB1", b"LBR1", b"LBT1", b"LBQ1", b"LBO1", b"LBE1", b"LBK1"];
 /// T-1826: the save level this build writes into the game header (`level`) and reads up to. Raised
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over, and refuses to open it (T-4014). Saves from before it have none, read
 /// as 0. The app keeps a copy (`SAVE_LEVEL`, app/src/workers/saveFile.ts; `the_app_knows_this_level`).
-pub const LEVEL: u32 = 39;
+pub const LEVEL: u32 = 40;
 /// T-3759: the last level from before stations could be unbound from their complex's name; a typed
 /// station there showed its own name, so loading one makes such a station unbound (the app's pass).
 pub const OLD_BOUND_NAMES: u32 = 26;
@@ -865,6 +871,30 @@ pub fn encode(net: &Network) -> Vec<u8> {
             }
         }
     }
+    // T-4080: after LBE1, only where there are kept bus stops; one with no name and no connection that holds (its
+    // station removed) is not kept past the session
+    let keeps: Vec<u32> = net.keep_ids().filter(|&k| net.keep(k).is_some_and(|p| !p.name.trim().is_empty()) || !net.keep_links(k).is_empty()).collect();
+    if !keeps.is_empty() {
+        w.0.extend_from_slice(b"LBK1");
+        w.u(keeps.len() as u64);
+        let (mut px, mut py) = (0.0, 0.0);
+        for &k in &keeps {
+            let p = net.keep(k).unwrap();
+            w.mm(p.x - px);
+            w.mm(p.y - py);
+            (px, py) = (p.x, p.y);
+            w.s(&p.name);
+            let live: Vec<(u64, u64)> = p.links.iter().copied().filter(|&l| net.link_live(l)).filter_map(|l| match l {
+                KeepLink::Station(n) => Some((0, node_id[n as usize] as u64)),
+                KeepLink::Keep(o) => keeps.iter().position(|&x| x == o).filter(|_| o != k).map(|i| (1, i as u64)),
+            }).collect();
+            w.u(live.len() as u64);
+            for (kind, i) in live {
+                w.u(kind);
+                w.u(i);
+            }
+        }
+    }
     w.0
 }
 
@@ -951,6 +981,7 @@ pub fn convert_frame(bytes: &[u8], to: FrameKind) -> Result<Vec<u8>, String> {
     }
     out.next_line_number = net.next_line_number;
     out.links = net.links.clone();
+    out.keeps = net.keeps.iter().map(|k| k.as_ref().map(|k| { let (x, y) = at(k.x, k.y); KeptStop { x, y, ..k.clone() } })).collect();
     out.buildings = net.buildings.iter().map(|b| b.as_ref().map(|b| super::building::Building { name: b.name.clone(), corners: b.corners.iter().map(|p| { let (x, y) = at(p[0], p[1]); [x, y] }).collect() })).collect();
     Ok(encode(&out))
 }
@@ -1573,6 +1604,31 @@ fn decode_read_at(bytes: &[u8], level: u32) -> Result<(Network, usize), String> 
             if let Some(Some(b)) = net.line_bus.get_mut(i) { b.exact = stops; }
         }
     }
+    if r.0.get(r.1..r.1 + 4) == Some(b"LBK1") {
+        r.1 += 4;
+        let n = r.u()? as usize;
+        let (mut px, mut py) = (0.0, 0.0);
+        let mut keeps = Vec::with_capacity(n.min(1 << 16));
+        for j in 0..n as u64 {
+            let (x, y) = (quant(px + r.mm()?), quant(py + r.mm()?));
+            (px, py) = (x, y);
+            let name = r.s()?;
+            let mut links = vec![];
+            for _ in 0..r.u()? {
+                let (kind, i) = (r.u()?, r.u()?);
+                let l = match kind {
+                    0 if i < net.node_count() as u64 && net.is_station(i as u32) => KeepLink::Station(i as u32),
+                    1 if i < n as u64 && i != j => KeepLink::Keep(i as u32),
+                    _ => continue,
+                };
+                if !links.contains(&l) { links.push(l); }
+            }
+            keeps.push(KeptStop { x, y, name, links });
+        }
+        for (k, p) in keeps.into_iter().enumerate() {
+            net.set_keep(k as u32, Some(p)).map_err(|e| format!("{e:?}"))?;
+        }
+    }
     for l in manual {
         fold_manual(&mut net, l);
     }
@@ -1831,7 +1887,7 @@ mod tests {
         for tag in &written {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
-        assert_eq!((LEVEL, BLOCKS.len()), (39, 42), "a new block raises LEVEL: raise it, then update this pin");
+        assert_eq!((LEVEL, BLOCKS.len()), (40, 43), "a new block raises LEVEL: raise it, then update this pin");
     }
 
     /// T-4014: the app refuses a save above its level without the track model, from its own copy of LEVEL.

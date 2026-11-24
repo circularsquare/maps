@@ -547,7 +547,8 @@ Web first, so it can be shared as a link.
 A save is the player's inputs only: track, stations, lines, schedules, fares, each line's station
 note [T-706], money (cash, cars owned of each kind, the ledgers' every day [T-2143] and last 48 hours, for the network and for each region, which are the
 Money tab's history charts: fares, costs, net and train rides; T-447, T-531, T-565, T-567), clock,
-empty line drafts, custom badge symbols, the line-name counter, and the player's station links. Population, jobs and travel come from versioned packs;
+empty line drafts, custom badge symbols, the line-name counter, the player's station links, and the kept bus stops
+(named or connected bus stops' places, T-4080). Population, jobs and travel come from versioned packs;
 all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
 
 ### Format and compatibility

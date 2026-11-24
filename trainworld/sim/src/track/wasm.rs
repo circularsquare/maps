@@ -174,6 +174,8 @@ pub struct TrackApi {
     last_port: u32,
     /// T-3378: the node the last `add_brt_station` added, `u32::MAX` if it was refused.
     last_brt_station: u32,
+    /// T-4080: the kept stop the last `name_keep` or `connect_keep` left (`last_keep`).
+    last_keep: u32,
     /// T-2669: per line id, its running cost over the world price list (its countries' prices,
     /// `set_line_run_factors`); 1 for a line not listed. Never saved: the app sends it.
     run_factor: Vec<f64>,
@@ -461,6 +463,7 @@ impl TrackApi {
             link_charge: 0.0,
             last_port: u32::MAX,
             last_brt_station: u32::MAX,
+            last_keep: u32::MAX,
             run_factor: vec![],
             load_level: save::LEVEL,
             bind_new: true,
@@ -846,6 +849,11 @@ impl TrackApi {
                 if self.w.allocate_unallocated() && water {
                     self.w.reload();
                 }
+                // T-4080: the kept bus stops no bus stop took are forgotten; none holds a stop, so nothing moves
+                if self.w.net.keep_ids().next().is_some() {
+                    let taken: Vec<u32> = self.w.svc.lines.iter().filter_map(|l| l.bus.as_ref()).flat_map(|p| p.stops.iter().filter_map(|s| s.keep)).collect();
+                    self.w.net.drop_keeps_except(&taken);
+                }
                 // a save made while trains changed over loads with them where they were (T-1071)
                 if let Some((e, phases, wide, hours)) = eras {
                     if self.w.svc.decode_eras(e, phases, wide, hours).is_err() {
@@ -959,6 +967,7 @@ mod service;
 mod upgrades;
 mod related;
 mod bus;
+mod keeps;
 mod ferry;
 mod buildings;
 mod twin;
@@ -2396,6 +2405,8 @@ mod flip_tests;
 mod realwater_tests;
 #[cfg(test)]
 mod bus_tests;
+#[cfg(test)]
+mod keeps_tests;
 #[cfg(test)]
 mod loop_tests;
 #[cfg(test)]

@@ -2355,7 +2355,7 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   the route. Stops, crossings and each stop's stretch of route (`cover`) are in road metres.
 - **Stops place themselves** (`bus::plan`), never saved: every train station within 200 m of the
   route (two within 100 m of each other along it: the nearer to the route), both ends (an end within
-  200 m of a station is that station), a stop where it crosses another bus route, and a stop about
+  200 m of a station is that station), each kept stop near it (below), a stop where it crosses another bus route, and a stop about
   every 400 m of road between (each gap between those cut evenly, `STREET_STOP_M`; a route over 400 km
   long spaces them its length / 1,000, so its stop ids fit). Demand sees every one (T-3924). Each stop's `cover` runs half way to the stops
   either side. A constructed route stops at constructed stations and crosses constructed routes; a
@@ -2368,7 +2368,8 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   the same two lines within 200 m of each other along both are one, the first along the lower-numbered
   line. A line with its own spacing or stops by hand keeps its own stops (below); a line crossing it
   still stops at the crossing, where a hand stop placed at it is shared.
-  Any edit to a station or a line places every bus line's stops again. Every stop is on the route
+  Any edit to a station or a line places every bus line's stops again (a kept stop made, moved or removed: those of the
+  lines passing within 50 m of it). Every stop is on the route
   (T-2982): a station's stop where the route passes nearest the station, never on the station's
   centre (`BusStop::x`, `y`). Its id is still the station's node, so riders change between bus and
   train there as at the station itself: the walk from the route to the station is not counted.
@@ -2397,6 +2398,22 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   taken out. An edit that leaves the stops as they were (compared stop by stop) is no edit. In all other ways it is a line with its own spacing: 400 m of
   `cover` each way, `bus::spaced_profile`. A redraw keeps the stops within 200 m of the new route, moved onto
   it. Leaving to a spacing keeps the stops in `BusRoute::hand_kept` for the session (not saved); choosing hand again gives them back (T-2939). The Save keeps them (`LBH1`). A stop placed with Ctrl+click (T-4069) is never a station's: `BusRoute::exact` lists those points, `StopRule::Hand` takes them beside the hand points, and the Save keeps them in a trailing `LBE1` block after `LBO1` (level 39).
+- **Kept stops** (T-4080, `bus::keep`; design notes/T-4080-design.md). A plain stop's id lasts only until its line's
+  stops are placed again, so a name or a connection belongs to a point, the stop's place when it was made: a kept stop,
+  with its name (or none) and its connections (stations and other kept stops up to 1 km away, `LINK_MAX_M`; free, no
+  upkeep). Every plain stop within 50 m of it (`KEEP_M`, `CROSS_NEAR_M`) is that stop (of two in reach, a held stop
+  is its own and any other the nearer's); a station's stop never is. A line that places its own stops holds a stop at the route's point nearest each kept stop within 50 m,
+  once per pass, as at a station: between its first and last stops, and not where an end, a station's stop or another
+  held stop is within 50 m (an end then is that stop; a station's stop wins and the kept stop waits); a crossing within
+  50 m folds into it. So naming a stop moves no stop of its line (its gap's two parts round to the same steps), and
+  extending the line, a station built near it or a line crossing near it leave it where it is. On a line with its own
+  spacing a kept stop is a candidate with the stations' priority; by hand only the player's stops hold, and one within
+  50 m is that kept stop. Held stops count toward a line's 1,000. Edits are undoable (`Op::Keep`), and a kept stop left
+  with no name and no connection goes in that edit; a connection to a removed station no longer counts, as passages.
+  Making, moving or removing a kept stop places again the stops of the lines passing within 50 m of it; a name or a
+  connection alone moves no stop. One no stop takes waits for the session (an undo finds it again, and a line drawn past
+  it stops there) and is forgotten at the next load. Saved in a trailing `LBK1` block after `LBE1` (level 40). The
+  bus stop panel's naming and connections, riders changing over a connection and map labels come in later stages.
 - **Run** (T-2904, `streets.rs`, `bus::Pace`): a hop between two stops takes the car's time over its road
   at the bus's moving speed, plus 28 s for the stop (`BUS_STOP_S`: 20 standing, 8 speeding up and slowing
   down). The moving speed is 85% of the car's (`BUS_SHARE`, 90% until T-3856), never under 25 km/h (`BUS_LANE_KMH`, its own
