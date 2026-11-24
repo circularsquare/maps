@@ -11,7 +11,7 @@ diary notes/handoff-log.md. Her time UTC-5.
   after-playable memory re-read), then I run finish memgrowth (T-4179: demand memory -64 to -479 MB, same figures; checker look).
 - T-4161 done in shonei-server 7bdd559 (level 39 + LBE1 block), unpushed, not deployed: deploy.ps1 on her yes before 0.4.6, then push shonei-server.
 - trams T-4075 (Opus, tree trams): trams drawn off track (player complaint).
-- editbench T-4169 (Sonnet, tree editbench): edit bench stop clicks and --compare rows.
+- editbench landed (2d8f5e3f9): its stop-click rows on Asia show the line path 1.4-1.9 s after a stop click (T-4097's 100 ms goal): next edit-speed round.
 - 0.4.6 prep (from maps-c0): smoke on master PASSED, smoke8800 light+dark PASSED, two batch checkers PASS, changelog
   reviewed (58 shown, 7 highlights), perf_bench rel046-e936af30 vs v0.4.5: demand memory +13/+12/+17% (memgrowth brings
   it to +3/+8/+3%), Belgrade CPU +20%, rail -7.1% Belgrade (trade-off to her). Left: land memgrowth + its checker, smoke
