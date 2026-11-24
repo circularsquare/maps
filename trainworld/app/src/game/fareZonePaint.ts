@@ -17,7 +17,7 @@ import { live } from "../map/live";
 import { moneyState } from "./money";
 import type { StationId, StationInput } from "./types";
 import { stationZone } from "./listScope";
-import { ask, tool } from "./ui";
+import { ask, inClickOrder, tool } from "./ui";
 import { edit, stationsById, world } from "./world";
 
 /** The area the tool paints into; null until one is picked. */
@@ -42,9 +42,11 @@ export function currentArea(areas = fareAreas()): FareArea | null {
 
 /** Start the tool on area `id`. */
 export function startPainting(id: number) {
-  paintArea.value = id;
-  if (paintZone.peek() < 1) paintZone.value = 1;
-  tool.value = "fares";
+  inClickOrder(() => {
+    paintArea.value = id;
+    if (paintZone.peek() < 1) paintZone.value = 1;
+    tool.value = "fares";
+  });
 }
 
 function sendAreas(zones: FareArea[], zoneNext?: number) {

@@ -32,7 +32,7 @@ import { helpKey } from "./ui/HelpPanel";
 import { followCapsLock, keyIsTheirs, releaseSelectsAfterMousePick } from "./ui/keys";
 import { stopsById, world } from "./game/world";
 import "./map/aheadShow"; // T-4145: draws the edits waiting to show (game/pending.ts)
-import { pendingTaken } from "./game/pending";
+import { pendingNetIn, pendingTaken } from "./game/pending";
 import { drawnEdgesOf } from "./map/lineAhead";
 import type { NetworkBuffers } from "./map/network";
 import { hiddenLevels, hiddenLines, hideBlueprints, hideBlueprintsView, hideBuses, levelBits } from "./game/lineVisibility";
@@ -392,6 +392,8 @@ if (SYNTH) {
         renderer.netVersion = s.version;
         carryGrids(was, s.net, renderer.checkPatch); // T-1030
         carryEdgeGrid(was, s.net, renderer.checkPatch);
+        // T-4214: the map clicks pick on holds these edits now (a click waiting for them goes, map/toolWait.ts)
+        pendingNetIn(client.orderOf(s));
         // T-1047; T-1021: a task of its own right after, so a big network's first state is two tasks
         if (!trackSoon) { trackSoon = true; setTimeout(() => { trackSoon = false; followTrack(renderer.net, world.peek()); }, 0); }
         // the placers that follow the network (the select tool's squares) run on map frames, which a paused game has none of (T-1537)

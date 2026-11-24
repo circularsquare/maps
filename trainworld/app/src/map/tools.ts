@@ -31,7 +31,7 @@ import { activeCity, worldFrameEpoch } from "../game/cities";
 import { demandView } from "../game/demand";
 import { settleNewLineColour } from "../game/lineColour";
 import { metresBetween } from "../game/walks";
-import { ask, autoRamp, buildLevel, buildPlatform, buildTramPlatform, buswayTrack, designSpeed, flyoverSpeed, highSpeed, keepPlacing, lineDraft, newLine, quadTrack, selection, singleTrack, besideOn, snapping, snapMode, snapRealTram, snapRoads, snapStreets, stationKind, stationOnTram, stationOneTrack, tool, tramTrack } from "../game/ui";
+import { ask, autoRamp, buildLevel, buildPlatform, buildTramPlatform, buswayTrack, designSpeed, flyoverSpeed, highSpeed, inClickOrder, keepPlacing, lineDraft, newLine, quadTrack, selection, singleTrack, besideOn, snapping, snapMode, snapRealTram, snapRoads, snapStreets, stationKind, stationOnTram, stationOneTrack, tool, tramTrack } from "../game/ui";
 import { type Removable } from "../game/remove";
 import { loadPlacesAt } from "../game/placeList";
 import { warmStreetNames } from "./stationNames";
@@ -48,7 +48,7 @@ import { kAtY, toLngLat, toLocal } from "./geo";
 import { laneState } from "./renderer";
 import { planStopsOf, type Level } from "../game/types";
 import { endHeading } from "./curveCircle";
-import { ahead, type Ahead } from "../game/pending";
+import { ahead, asRun, type Ahead } from "../game/pending";
 import { ghostTangent, LOCAL_PX, sameLine, warmGhostLocal, type TangentSpec } from "./ghostLocal";
 import { ghostChevrons, joinedGhost, strokesFromPreview, TAPER_M, type Strokes } from "./network";
 import { type PlatformShape } from "./stationGeometry";
@@ -73,6 +73,7 @@ import { autoPick } from "./stationAuto";
 import { nameAhead, stationClick, askLegs, placePending, layout } from "./stationTool";
 import { freeCancel, freeStarted } from "./stationFree";
 import { clearDelHover, deleteHover, deleteClick } from "./toolDelete";
+import { clickWaiting, dropClicks, startClickWait, tryClicks, waitClick, waitSpin, type WaitingClick } from "./toolWait";
 import { drawBand, placeMarks } from "./toolMarks";
 
 export class Tools {
@@ -81,6 +82,13 @@ export class Tools {
   chain: Placed[] = [];
   /** a segment's edit in flight: clicks wait for it */
   placing = false;
+  /** T-4214: map clicks waiting for the map to hold every edit sent before them, in order (map/toolWait.ts) */
+  waitingClicks: WaitingClick[] = [];
+  waitTimer = 0;
+  /** T-4214: clicks being carried out whose tool has not finished sending (a station's name looked up first) */
+  clicksOut = 0;
+  /** T-4214: the track run being drawn, numbered from 1: its own segments hold none of its clicks */
+  run = 0;
   /** T-1407: the end node of a segment answered before its state, until `world` has it (-1: none) */
   earlyNode = -1;
   /** T-2404: the points (local x, y, z) of the segments placed early whose state the worker holds
@@ -279,7 +287,8 @@ export class Tools {
     document.body.appendChild(this.touchHost);
     map.getContainer().appendChild(this.handle);
     this.handle.addEventListener("pointerdown", (e) => dragHandle(this, e));
-    Object.assign(touchActions, { confirm: () => void touchConfirm(this), back: () => touchBack(this), stop: () => touchStop(this), drawn: () => placeTouch(this) });
+    Object.assign(touchActions, { confirm: () => { if (!waitClick(this, "confirm", null)) this.carrying(touchConfirm(this)); }, back: () => touchBack(this), stop: () => touchStop(this), drawn: () => placeTouch(this) });
+    startClickWait(this);
     effect(() => {
       tool.value;
       touchInput.value;
@@ -306,7 +315,7 @@ export class Tools {
       const bus = line && w.lineStats[line.id]?.bus;
       // T-2891: a bus line's stops are edited only while it is by hand
       if (!line || (bus && !bus.hand)) {
-        this.exit();
+        this.exitNow();
         return;
       }
       const stops = planStopsOf(line).map(Number);
@@ -709,7 +718,12 @@ export class Tools {
     this.place();
   }
 
+  /** A click with a tool: carried out now, or once the map holds every edit sent before it (T-4214). */
   click(e: MapMouseEvent) {
+    if (!waitClick(this, "click", e)) this.clickNow(e);
+  }
+
+  clickNow(e: MapMouseEvent) {
     const t = tool.peek();
     if (t === "track") {
       this.noSnap = e.originalEvent.ctrlKey || e.originalEvent.metaKey;
@@ -717,10 +731,10 @@ export class Tools {
       this.trackClick(e);
     } else if (t === "station") {
       this.autoPick({ px: e.point.x, py: e.point.y, lng: e.lngLat.lng, lat: e.lngLat.lat });
-      void stationClick(this, e);
+      this.carrying(stationClick(this, e));
     }
     else if (t === "line") this.lineClick(e);
-    else if (t === "delete") deleteClick(this, e);
+    else if (t === "delete") this.carrying(deleteClick(this, e));
     else if (t === "bus") this.bus.click(e);
     else if (t === "ferry") this.ferry.click(e);
     else if (t === "building") this.building.click(e);
@@ -732,12 +746,16 @@ export class Tools {
    * on the same spot or the bar's confirm carries out. The first point of a run of track is set at
    * once, as a click sets it; so is a tap on open ground with the station tool (it is refused). */
   tap(e: MapMouseEvent) {
+    if (!waitClick(this, "tap", e)) this.tapNow(e);
+  }
+
+  tapNow(e: MapMouseEvent) {
     const t = tool.peek();
-    if (t === "line") return this.click(e);
+    if (t === "line") return this.clickNow(e);
     if (t === "bus") return this.bus.tap(e);
     if (t === "ferry") return this.ferry.tap(e);
     if (t === "building") return this.building.tap(e);
-    if (this.touchAt && nearTouch(this, e.point.x, e.point.y)) return void touchConfirm(this);
+    if (this.touchAt && nearTouch(this, e.point.x, e.point.y)) return this.carrying(touchConfirm(this));
     const ll = { lng: e.lngLat.lng, lat: e.lngLat.lat };
     if (t === "track") {
       if (this.placing) return;
@@ -756,7 +774,7 @@ export class Tools {
       if (stationKind.peek() === "bus" || stationKind.peek() === "port" || freeStarted() || this.snap(e.point.x, e.point.y, e.lngLat).kind === "free") {
         this.touchAt = null;
         this.move(e);
-        void stationClick(this, e);
+        this.carrying(stationClick(this, e));
         return;
       }
       this.touchAt = ll;
@@ -767,6 +785,16 @@ export class Tools {
     }
   }
 
+  /** T-4214: a click is being carried out until `p` settles (its edit sent, or none): the clicks after it wait. */
+  carrying(p: Promise<unknown> | undefined) {
+    if (!p) return;
+    this.clicksOut++;
+    void p.finally(() => {
+      this.clicksOut--;
+      tryClicks(this);
+    });
+  }
+
   /** Keys while a tool is on; true if used. */
   key(e: KeyboardEvent): boolean {
     const t = tool.peek();
@@ -775,6 +803,7 @@ export class Tools {
     if (t === "ferry") return this.ferry.key(e);
     if (t === "building") return this.building.key(e);
     if (e.key === "Escape") {
+      dropClicks(this);
       if (t === "track" && this.start) this.reset();
       else if (t === "station" && freeStarted()) {
         freeCancel(this);
@@ -800,8 +829,12 @@ export class Tools {
     return false;
   }
 
-  /** Leave the current tool (back to selecting). */
+  /** Leave the current tool (back to selecting), in its turn after map clicks still waiting (T-4214). */
   exit() {
+    inClickOrder(() => this.exitNow());
+  }
+
+  exitNow() {
     const d = lineDraft.peek();
     if (tool.peek() === "line" && d.line !== null) selection.value = { kind: "line", line: String(d.line) };
     this.reset();
@@ -849,7 +882,7 @@ export class Tools {
     if (this.held.length && this.nearHeld(e.point.x, e.point.y)) {
       this.held = [];
       this.client.placedNow();
-      void this.heldLanded().then(() => this.trackClick(e));
+      this.carrying(this.heldLanded().then(() => this.trackClick(e)));
       return;
     }
     let s = this.snap(e.point.x, e.point.y, e.lngLat);
@@ -869,6 +902,7 @@ export class Tools {
       const by = !ring && s.kind === "free" && !this.street.isOn ? this.besideAt(e.point.x, e.point.y) : null;
       if (by) s = { kind: "free", lx: by.lx, ly: by.ly };
       this.start = placedAt(this.endOf(s), s.lx, s.ly, ring);
+      this.run++;
       this.start.beside = by?.edge ?? null;
       if (s.kind !== "free" && s.join) this.start.join = s.join;
       this.real.begin(ring);
@@ -895,6 +929,7 @@ export class Tools {
     // T-1811: a segment that joins track (a node, or mid-piece of track or blueprint) ends the run
     // under keep placing; Shift held still carries on from the join
     const chain = e.originalEvent.shiftKey || (keepPlacing.peek() && s.kind === "free");
+    const run = this.run;
     this.placing = true;
     this.waitFrom(true);
     this.endRun = false;
@@ -935,12 +970,14 @@ export class Tools {
         ow = this.clicked?.onward ?? null;
       }
       // T-1407: answered before its state, so the next ghost is asked at once
-      const go = () => edit({ op: "route", ...req }, false, true, true);
+      const go = () => asRun(run, () => edit({ op: "route", ...req }, false, true, true));
       a = await (mark ? mark.send(go) : go());
     } finally {
       this.placing = false;
       this.clicked = null;
       this.place();
+      // T-4214: a click waiting for this answer goes after the rest of this one (the run's new start)
+      queueMicrotask(() => tryClicks(this));
     }
     // T-4208: the stand-in kept at the click goes with a refusal. T-4210: otherwise it stays until the network holding the
     // segment is drawn (game/pending.ts takes it in that frame, never with an earlier edit's network); a click that beat
@@ -995,15 +1032,20 @@ export class Tools {
 
   /** Backspace while chaining: the last segment undone, drawing on from its start again. */
   async takeBackSegment() {
-    // a segment still being placed is not on the undo stack yet
-    if (this.placing) return;
+    // a segment still being placed is not on the undo stack yet, nor a click waiting (T-4214)
+    if (this.placing || this.waitingClicks.length) return;
     const prev = this.chain.pop();
     if (!prev) {
       this.reset();
       return;
     }
+    // (sent before `placing` is set: an undo waits while it is, game/world.ts)
+    const sent = asRun(this.run, () => edit({ op: "undo" }, true));
     this.placing = true;
-    const a = await edit({ op: "undo" }, true).finally(() => (this.placing = false));
+    const a = await sent.finally(() => {
+      this.placing = false;
+      queueMicrotask(() => tryClicks(this));
+    });
     if (!a.ok) return this.reset();
     // the undone segment's held state and early node are gone with it
     if (this.held.length) this.client.placedNow();
@@ -1310,7 +1352,7 @@ export class Tools {
   /** T-1039: a click or the ghost has waited on the worker more than WAIT_MS; the tag shows a spinner. */
   waiting(): boolean {
     const now = performance.now();
-    return (this.placing && now - this.placingAt > WAIT_MS) || (!!this.wantKey && this.wantKey !== this.previewKey && now - this.askedAt > WAIT_MS) || !!this.street?.slow || !!this.real?.slow;
+    return (this.placing && now - this.placingAt > WAIT_MS) || (!!this.wantKey && this.wantKey !== this.previewKey && now - this.askedAt > WAIT_MS) || !!this.street?.slow || !!this.real?.slow || clickWaiting(this);
   }
 
   /** Whether a free-drawn piece from the start to `s` would be longer than MAX_PIECE_KM. */
@@ -1630,6 +1672,7 @@ export class Tools {
       if (this.touchAt && tool.peek() === "delete") this.delAt = [s.x, s.y];
     }
     placeMarks(this);
+    waitSpin(this);
     if (this.pendingSt.length) placePending(this);
     placeTouch(this);
     drawBand(this);

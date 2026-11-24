@@ -1,6 +1,6 @@
 import { t } from "../i18n";
 import { edit, lineById, say, stationsById, world } from "./world";
-import { closeNetworkView, lineDraft, newLine, renameLinePrompt, selection, tool } from "./ui";
+import { closeNetworkView, inClickOrder, lineDraft, newLine, renameLinePrompt, selection, tool } from "./ui";
 import { live } from "../map/live";
 import { busDraft } from "../map/busDraw";
 import { ferryDraft } from "../map/ferryDraw";
@@ -101,14 +101,18 @@ export async function createLine(on?: Pick<TrackEdge, "a" | "b">) {
   let a = ends.length ? await edit({ op: "addLine", stops: ends, name, colour, autoFast: true }, true) : null;
   if (!a?.ok) { ends.length = 0; a = await edit({ op: "addLine", stops: [], name, colour }); }
   if (!a.ok || a.line === undefined) return;
-  live.tools?.exit();
-  lineDraft.value = { line: a.line, stops: ends };
-  renameLinePrompt.value = String(a.line);
-  selection.value = { kind: "line", line: String(a.line) };
-  tool.value = "line";
-  newLine.value = { line: a.line, fast: !!world.peek()?.lineStats[String(a.line)]?.fast };
-  rememberPicked(a.line, colour);
-  void settleNewLineColour(a.line);
+  const line = a.line;
+  // T-4214: the line tool comes in its turn after map clicks still waiting
+  inClickOrder(() => {
+    live.tools?.exit();
+    lineDraft.value = { line, stops: ends };
+    renameLinePrompt.value = String(line);
+    selection.value = { kind: "line", line: String(line) };
+    tool.value = "line";
+    newLine.value = { line, fast: !!world.peek()?.lineStats[String(line)]?.fast };
+    rememberPicked(line, colour);
+    void settleNewLineColour(line);
+  });
 }
 
 /** The N key: a new line, starting on the selected track when no line runs on it. */
@@ -121,54 +125,64 @@ export function newLineKey() {
 /** T-1464: draw a new bus line (the B key, the Lines tab's bus button, the Build tab's Bus tool):
  * click points, then finish (map/busDraw.ts). */
 export function newBusLine() {
-  const t = live.tools;
-  if (!t || !world.peek()) return;
-  t.exit();
-  closeNetworkView();
-  t.bus.begin(null);
+  inClickOrder(() => {
+    const t = live.tools;
+    if (!t || !world.peek()) return;
+    t.exit();
+    closeNetworkView();
+    t.bus.begin(null);
+  });
 }
 
 /** T-1464: the bus line's Edit route button: the tool opens with the line's route to redraw;
  * pressed again it saves the route, as the tool's other ways to finish do (T-1514). Nothing for a
  * line that is no bus line. */
 export function editBusRoute(l: Pick<LineInput, "id" | "num" | "colour">) {
-  const t = live.tools, bus = world.peek()?.lineStats[l.id]?.bus, route = bus?.routeLL;
-  if (!t || !route) return;
-  if (tool.peek() === "bus" && busDraft.peek()?.line === l.num) return void t.bus.finish();
-  t.exit();
-  selection.value = { kind: "line", line: l.id };
-  t.bus.begin(l.num, route, l.colour, bus.kinds);
+  inClickOrder(() => {
+    const t = live.tools, bus = world.peek()?.lineStats[l.id]?.bus, route = bus?.routeLL;
+    if (!t || !route) return;
+    if (tool.peek() === "bus" && busDraft.peek()?.line === l.num) return void t.bus.finish();
+    t.exit();
+    selection.value = { kind: "line", line: l.id };
+    t.bus.begin(l.num, route, l.colour, bus.kinds);
+  });
 }
 
 /** T-2194: draw a new ferry line (the O key, the Lines tab's ferry button, the Build tab's Ferry tool):
  * place ports, then finish (map/ferryDraw.ts). */
 export function newFerryLine() {
-  const t = live.tools;
-  if (!t || !world.peek()) return;
-  t.exit();
-  closeNetworkView();
-  t.ferry.begin(null);
+  inClickOrder(() => {
+    const t = live.tools;
+    if (!t || !world.peek()) return;
+    t.exit();
+    closeNetworkView();
+    t.ferry.begin(null);
+  });
 }
 
 /** T-2194: the ferry line's Edit route button, as the bus line's. */
 export function editFerryRoute(l: Pick<LineInput, "id" | "num" | "colour">) {
-  const t = live.tools, ferry = world.peek()?.lineStats[l.id]?.bus?.ferry;
-  if (!t || !ferry) return;
-  if (tool.peek() === "ferry" && ferryDraft.peek()?.line === l.num) return void t.ferry.finish();
-  t.exit();
-  selection.value = { kind: "line", line: l.id };
-  t.ferry.begin(l.num, l.colour);
+  inClickOrder(() => {
+    const t = live.tools, ferry = world.peek()?.lineStats[l.id]?.bus?.ferry;
+    if (!t || !ferry) return;
+    if (tool.peek() === "ferry" && ferryDraft.peek()?.line === l.num) return void t.ferry.finish();
+    t.exit();
+    selection.value = { kind: "line", line: l.id };
+    t.ferry.begin(l.num, l.colour);
+  });
 }
 
 /** The Edit stops button and its key: start adding and removing the line's stops, or finish. */
 export function toggleEditStops(l: LineInput) {
-  const bus = world.peek()?.lineStats[l.id]?.bus;
-  if (bus && !bus.hand) return;
-  if (tool.peek() === "line" && lineDraft.peek().line === l.num) { live.tools?.exit(); return; }
-  live.tools?.exit();
-  lineDraft.value = { line: l.num, stops: planStopsOf(l).map(Number) };
-  tool.value = "line";
-  selection.value = { kind: "line", line: l.id };
+  inClickOrder(() => {
+    const bus = world.peek()?.lineStats[l.id]?.bus;
+    if (bus && !bus.hand) return;
+    if (tool.peek() === "line" && lineDraft.peek().line === l.num) { live.tools?.exit(); return; }
+    live.tools?.exit();
+    lineDraft.value = { line: l.num, stops: planStopsOf(l).map(Number) };
+    tool.value = "line";
+    selection.value = { kind: "line", line: l.id };
+  });
 }
 
 /** Edit stops on the selected line (the S key); nothing when no line is selected. */

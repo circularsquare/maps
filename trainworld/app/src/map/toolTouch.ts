@@ -51,7 +51,7 @@ export async function touchConfirm(tk: Tools) {
     }
   } else if (t === "delete" && at) {
     tk.touchAt = null;
-    deleteClick(tk, evAt(tk, at));
+    await deleteClick(tk, evAt(tk, at));
   }
 }
 

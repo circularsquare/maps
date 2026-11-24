@@ -117,6 +117,23 @@ export async function afterStopEdits(): Promise<void> {
   }
 }
 
+/** T-4214: whether a map click waits for the map or is being carried out (map/toolWait.ts) */
+let clicksBusy: () => boolean = () => false;
+let clickWaiters: (() => void)[] = [];
+/** a waiter gives up on the clicks after this long, ms (a click waits for the map at most 5 s, then for its edit's answer) */
+const CLICKS_GIVE_UP_MS = 10000;
+export function setClicksBusy(f: () => boolean) { clicksBusy = f; }
+/** map/toolWait.ts: the clicks moved on */
+export function clicksMoved() {
+  if (!clickWaiters.length || clicksBusy()) return;
+  const w = clickWaiters;
+  clickWaiters = [];
+  for (const f of w) f();
+}
+function afterClicks(): Promise<unknown> {
+  return Promise.race([new Promise<void>((r) => clickWaiters.push(r)), new Promise((r) => setTimeout(r, CLICKS_GIVE_UP_MS))]);
+}
+
 /** Send an edit; a refusal is explained in `notice`. Resolves with the answer either way. `silent`:
  * its sound was played already (the click that sent it, or the one sound of a run of edits). `game`: the game stamp
  * (clockClient `gameStamp`) of an edit sent later than it was made, a queued stop edit's: refused under another. */
@@ -130,8 +147,10 @@ export async function edit(op: EditOp, quiet = false, silent = false, early: boo
   breakDeleteRun();
   if (!silent) beforeEdit?.(op);
   if (!sink) return { ok: false, issues: [], charge: 0 };
-  // T-3731: an undo or redo takes back the last stop click shown, so it waits for the clicks still out
+  // T-3731: an undo or redo takes back the last stop click shown, so it waits for the clicks still out; T-4214: and the
+  // last map click, waiting for the map or being carried out
   if ((op.op === "undo" || op.op === "redo") && stopsQueued.peek() > 0) await afterStopEdits();
+  if ((op.op === "undo" || op.op === "redo") && clicksBusy()) await afterClicks();
   noteEdit(op, world.peek());
   if (op.op !== "fares" && op.op !== "undo" && op.op !== "redo") editsSent.value++;
   // `early` (T-1407): the answer may come before `world` holds the edit (`a.early`); "rows" (T-2766, a stop click):

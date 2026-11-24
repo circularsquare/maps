@@ -149,9 +149,10 @@ export function deleteHover(tk: Tools, px: number, py: number) {
   tk.place();
 }
 
-export function deleteClick(tk: Tools, e: MapMouseEvent) {
+/** Resolves once its edit is sent and answered, or its question is up. */
+export function deleteClick(tk: Tools, e: MapMouseEvent): Promise<unknown> | undefined {
   const h = deletePick(tk, e.point.x, e.point.y);
   if (!h) return;
   // on touch nothing is shown until the next tap (T-1260)
-  void removeThing(h, e.originalEvent.shiftKey).then(() => touchInput.peek() ? touchStop(tk) : tool.peek() === "delete" && deleteHover(tk, e.point.x, e.point.y));
+  return removeThing(h, e.originalEvent.shiftKey).then(() => touchInput.peek() ? touchStop(tk) : tool.peek() === "delete" && deleteHover(tk, e.point.x, e.point.y));
 }

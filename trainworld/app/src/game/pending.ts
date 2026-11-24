@@ -7,6 +7,7 @@
 // T-4170, one path: an edit's entry is made in one place, when it is sent (`pendingSent`, which every edit passes), so an
 // edit has at most one. What it shows is read from its op (`setOpGuess`: game/editGuess.ts, or the undo's from the
 // networks), joined with what the caller drew at the click with `ahead()` (a ghost's box, a quoted price).
+// T-4214: the same messages say which edits the map the tools pick on lacks (`editsOut`), which map clicks wait for.
 
 import { signal } from "@preact/signals";
 import type { EdgeLook, EditOp, EditWord, StationBox } from "../workers/protocol";
@@ -227,10 +228,12 @@ export function setCashSource(f: () => { cash: number; sandbox: boolean } | null
 export function setOpGuess(f: (op: EditOp) => Show | null) { opGuess = f; }
 
 /** An edit went to the worker as `seq` (every edit passes here once): its one entry is made, from the `ahead` being sent
- * if there is one, with what its op says joined in. `quiet`: no other edit was unanswered. */
-export function pendingSent(seq: number, op: EditOp, quiet: boolean) {
+ * if there is one, with what its op says joined in. `quiet`: no other edit was unanswered. `stop`: a stop click's (T-2766),
+ * which no map click waits for. */
+export function pendingSent(seq: number, op: EditOp, quiet: boolean, stop = false) {
   const now = performance.now();
   sentAt.set(seq, now);
+  if (!stop) out.push({ seq, word: -1, run: runTag, at: now });
   if (sentAt.size > 256) sentAt.delete(sentAt.keys().next().value!);
   let guess: Show | null = null;
   if (op.op === "undo" || op.op === "redo") guess = undoGuess(op, quiet);
@@ -320,6 +323,9 @@ function noteEdit(seq: number, op: EditOp, quiet: boolean) {
 
 /** The worker's word for `seq`, the `order`th message to arrive; `noNet`: no network follows it. */
 export function pendingWord(seq: number, word: EditWord, order: number, noNet = false) {
+  const o = out.find((x) => x.seq === seq);
+  if (o && noNet) outGone((x) => x === o);
+  else if (o) o.word = order;
   // (an edit an undo would not take back whole: none is drawn at the undo's click)
   if (last?.seq === seq) { if (word.noUndo) last = null; else last.word = order; }
   let e = entries.find((x) => x.seq === seq);
@@ -355,6 +361,9 @@ function wordShow(w: EditWord): Show {
 /** `seq`'s answer: refused, its entry goes now (or, tried several ways, waits unkeyed for the next try); taken and with
  * no word yet (a worker that sent none), armed now. */
 export function pendingAnswer(seq: number, ok: boolean, order: number) {
+  const o = out.find((x) => x.seq === seq);
+  if (o && !ok) outGone((x) => x === o);
+  else if (o && o.word < 0) o.word = order;
   const e = entries.find((x) => x.seq === seq);
   sentAt.delete(seq);
   if (last?.seq === seq) { if (ok) last.ok = true; else last = null; }
@@ -400,6 +409,8 @@ export function pendingTaken(order: number, what: { net?: boolean; rows?: boolea
 export function pendingClear() {
   sentAt.clear();
   last = null;
+  out = [];
+  outListener?.(true);
   if (!entries.length) return;
   entries = [];
   changed(true);
@@ -408,7 +419,59 @@ export function pendingClear() {
 /** T-4170: the entries waiting now and how many times two shared a seq, for checks (checks/t4170-one-path.mjs). */
 export function pendingNow() {
   const now = performance.now();
-  return { doubled, swept, entries: entries.map((e) => ({ seq: e.seq, armed: e.armed, map: e.map, panel: e.panel, money: e.money, tries: e.tries, ageMs: Math.round(now - e.at) })), undo: last && { seq: last.seq, ok: last.ok, word: last.word, netIn: last.netIn, sameNet: last.was === netNow() }, undoMiss };
+  return { doubled, swept, out: out.map((o) => ({ seq: o.seq, word: o.word, run: o.run })), entries: entries.map((e) => ({ seq: e.seq, armed: e.armed, map: e.map, panel: e.panel, money: e.money, tries: e.tries, ageMs: Math.round(now - e.at) })), undo: last && { seq: last.seq, ok: last.ok, word: last.word, netIn: last.netIn, sameNet: last.was === netNow() }, undoMiss };
+}
+
+// ---------------------------------------------------------------- T-4214: edits out, which map clicks wait for
+
+/** An edit sent whose network the page has not yet set: the map the tools pick on (`renderer.net` and `world`) does not
+ * hold it. `word`: its word's arrival order, -1 before; `run`: the track tool's run that sent it (`asRun`), 0 for any other. */
+interface Out { seq: number; word: number; run: number; at: number }
+let out: Out[] = [];
+let runTag = 0;
+let outListener: ((dropped: boolean) => void) | null = null;
+/** An edit out longer than this holds no click, ms: a backstop (the word says when no network follows) */
+const OUT_MAX_MS = 30_000;
+
+/** map/toolWait.ts: told when edits leave the list (`dropped`: a new game or a worker started again, every click dropped) */
+export function setOutListener(f: (dropped: boolean) => void) { outListener = f; }
+
+/** `f` sends the edits of the track tool's run `run` (it must call `edit()` before it first awaits). */
+export function asRun<T>(run: number, f: () => T): T {
+  const was = runTag;
+  runTag = run;
+  try { return f(); } finally { runTag = was; }
+}
+
+/** How many edits are out, leaving out those of track run `run` (0: none left out). */
+export function editsOut(run = 0): number {
+  const now = performance.now();
+  if (out.some((o) => now - o.at > OUT_MAX_MS)) {
+    console.warn("T-4214: an edit's network never came; clicks no longer wait for it", out.filter((o) => now - o.at > OUT_MAX_MS).map((o) => o.seq));
+    out = out.filter((o) => now - o.at <= OUT_MAX_MS);
+  }
+  let n = 0;
+  for (const o of out) if (!run || o.run !== run) n++;
+  return n;
+}
+
+function outGone(f: (o: Out) => boolean) {
+  const was = out.length;
+  out = out.filter((o) => !f(o));
+  if (out.length !== was) outListener?.(false);
+}
+
+/** main.ts: a network that arrived as the `order`th message is set, with its snap grids: every edit whose word came
+ * before it is in the map now (message order, as `pendingTaken`). */
+export function pendingNetIn(order: number) {
+  outGone((o) => o.word >= 0 && o.word < order);
+}
+
+/** A click waited its longest: no edit out holds clicks any more (how many did). */
+export function outDrop(): number {
+  const n = out.length;
+  out = [];
+  return n;
 }
 
 // ---------------------------------------------------------------- what panels read

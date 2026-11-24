@@ -468,8 +468,9 @@ function tripsNow(e: number) {
   }
 }
 /** T-4145: an accepted edit's word with nothing to draw (the money-only, link, building and loan edits), so the page's
- * entry for it is armed and goes with the next state, as every other edit's */
-const plainWord = (seq: number) => send({ kind: "applied", seq, word: {} });
+ * entry for it is armed and goes with the next state, as every other edit's; `noNet` (T-4214): no network follows (a
+ * fare or loan edit), so no map click waits for one */
+const plainWord = (seq: number, noNet: boolean) => send({ kind: "applied", seq, word: {}, ...(noNet ? { noNet: true as const } : {}) });
 /** T-4145: the newest edit refused since the last one accepted, -1 for none: an undo asked while it was unanswered is
  * refused, so the step under it is not taken back instead */
 let refusedLast = -1;
@@ -908,10 +909,10 @@ async function handleMessage(msg: ToClock) {
       // T-3567: a line's own multiple for a line that is gone is refused
       const ok = apply(msg.op).r === 0 || msg.op.op !== "fareLine";
       if (ok) {
-        plainWord(msg.seq);
-        saves.dirty = saves.edited = true; saves.editAt = Date.now();
         // T-3740: a removed area's stations come out of it, which the map and panels show
         const tidied = msg.op.op === "fareZones" && tidyStationFares(api) > 0;
+        plainWord(msg.seq, !tidied);
+        saves.dirty = saves.edited = true; saves.editAt = Date.now();
         if (tidied) { forget(); sendState(); }
         sendMoney();
         scheduleSnapshot();
@@ -922,14 +923,14 @@ async function handleMessage(msg: ToClock) {
     if (msg.op.op === "fareRef") {
       // T-2679: no fare changes, so demand is not asked again
       const r = apply(msg.op).r;
-      if (r === 0) { plainWord(msg.seq); saves.dirty = saves.edited = true; saves.editAt = Date.now(); sendMoney(); }
+      if (r === 0) { plainWord(msg.seq, true); saves.dirty = saves.edited = true; saves.editAt = Date.now(); sendMoney(); }
       send({ kind: "edited", seq: msg.seq, ok: r === 0, issues: [], charge: 0 });
       return;
     }
     if (msg.op.op === "borrow" || msg.op.op === "repay") {
       const r = loanOp(msg.op);
       if (r === 0) {
-        plainWord(msg.seq);
+        plainWord(msg.seq, true);
         saves.dirty = saves.edited = true; saves.editAt = Date.now();
         sendMoney();
         keep();
@@ -944,7 +945,7 @@ async function handleMessage(msg: ToClock) {
       // T-1281: a passage between constructed stations is paid at once
       const charge = r === 0 && msg.op.on ? api.link_charge() : 0;
       if (r === 0) {
-        plainWord(msg.seq);
+        plainWord(msg.seq, false);
         saves.dirty = saves.edited = true; saves.editAt = Date.now();
         if (charge > 0) bookCharge(msg.seq, charge, 0);
         sendState();
@@ -961,7 +962,7 @@ async function handleMessage(msg: ToClock) {
       const charge = r === 0 && (msg.op.op === "addBuilding" || msg.op.op === "reshapeBuilding") ? api.building_charge() : 0;
       const node = r === 0 && msg.op.op === "addBuilding" ? api.last_building() : undefined;
       if (r === 0) {
-        plainWord(msg.seq);
+        plainWord(msg.seq, false);
         saves.dirty = saves.edited = true; saves.editAt = Date.now();
         if (charge > 0) bookCharge(msg.seq, charge, 0);
         sendState();

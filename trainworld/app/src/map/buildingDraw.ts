@@ -25,7 +25,7 @@ import { area, money } from "../game/format";
 import { t } from "../i18n";
 import { describeIssue, describeIssues } from "../game/issues";
 import { shadeColours } from "../game/shades";
-import { selection, tool } from "../game/ui";
+import { inClickOrder, selection, tool } from "../game/ui";
 import { edit, say, world } from "../game/world";
 import type { StationId } from "../game/types";
 import { queryClock } from "../workers/clockClient";
@@ -98,6 +98,10 @@ export class BuildingDraw {
   /** Start the tool on an outline (pack x, y pairs, flat): building `id`'s to reshape, or a new one's
    * offer (`id` null). `from`: the station whose complex it was started from. */
   begin(corners: number[] | null, id: number | null, from: StationId | null) {
+    inClickOrder(() => this.beginNow(corners, id, from));
+  }
+
+  private beginNow(corners: number[] | null, id: number | null, from: StationId | null) {
     this.pts = [];
     for (let i = 0; corners && i + 1 < corners.length; i += 2) this.pts.push({ x: corners[i], y: corners[i + 1] });
     this.closed = this.pts.length >= 3;

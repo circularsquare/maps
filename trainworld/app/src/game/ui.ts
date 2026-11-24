@@ -309,6 +309,13 @@ effect(() => setBubbleShade(mapShade.value));
  * remove what is clicked (T-096), pick a trip's two ends (T-195), give stations a fare zone (T-3740). */
 export type Tool = "select" | "track" | "station" | "line" | "delete" | "trip" | "blueprint" | "bus" | "ferry" | "building" | "fares";
 export const tool = signal<Tool>("select");
+/** T-4214: a tool switch the player makes while map clicks wait for the map goes after them, in order (map/toolWait.ts) */
+let switchGate: ((f: () => void) => boolean) | null = null;
+export function setSwitchGate(g: (f: () => void) => boolean) { switchGate = g; }
+/** Run `f`, a tool switch the player made, now or in its turn after the map clicks waiting. */
+export function inClickOrder(f: () => void) {
+  if (!switchGate?.(f)) f();
+}
 /** T-1207: the map's camera is moving (set by map/overlay.ts); live counts in panels wait for it. */
 export const cameraMoving = { now: false };
 /** The Build tab's tools: while one is on, the demand views draw beneath the network (T-526). The

@@ -150,7 +150,19 @@ Web first, so it can be shared as a link.
   posted after a word was built after that edit (`later` starts again behind an edit; a stop click's rows go before the
   next apply), so an entry's map part goes with the first network taken that *arrived* after its word, its panel part
   with the first rows or state, its cost with the first money, cash or state (a state held for its trips keeps its
-  arrival place). The renderer draws the list (map/lineAhead.ts): a line drawn ahead on its own segments it keeps and
+  arrival place). **Clicks wait for the map** [T-4214]: a click on the map with a tool (a tap, the touch bar's confirm)
+  made while an edit sent before it is not yet in the network the tools pick on waits, the tool's tag showing the
+  spinner after 0.3 s, and is carried out at the same map spot once every such edit's network is set (the same message
+  order; game/pending.ts `editsOut`, map/toolWait.ts); waiting clicks go in order, each after the edits the one before
+  sent. Every edit sent arms it (panels, drags and keys too, which never wait themselves); a click counts from the moment
+  it is made until its tool has sent (a station's name, a delete's question); a refusal ends the wait, and so does a
+  word saying no network follows (a service edit, a rename, a fare or loan edit). A waiting click asks the worker for a
+  network held for the pointer's rest. A track run's next segment waits only for the answer to the one before (it starts
+  from the node the worker answered), and stop clicks never count. A tool switch the player makes meanwhile (the
+  toolbar, its keys, a panel's tool button, leaving a tool) waits its turn behind the waiting clicks, so each click goes
+  with the tool it was made with (game/ui.ts `inClickOrder`). A waiting click is dropped when its spot has left the
+  screen, on Escape or a load, and carried out on the map as it is after 5 s. Undo and redo wait for it as
+  for stop clicks. Every edit carries the game stamp, so one made before a load or a restart is refused. The renderer draws the list (map/lineAhead.ts): a line drawn ahead on its own segments it keeps and
   the track's in its colour on the edges it gained, its network strokes off by a per-line texture; edges off by a
   per-edge texture, or redrawn with their new look; station boxes by a second draw of the station shader; a deleted
   line's colour transparent (a new line's colour drawn opaque past the network's ones). **Pieces** [T-4148]: a track type

@@ -1704,12 +1704,12 @@ export class ClockClient {
 
   /** Send an edit; the promise resolves with the worker's answer. `early` "rows": a stop click's (T-2766), answered
    * once the world holds it, its network a moment after the clicks stop. `game`: the `gameStamp` it was made under,
-   * for an edit sent later than made (T-3734). */
+   * for an edit sent later than made (T-3734); else the one now (T-4214: every edit is refused in a game it was not made in). */
   edit(op: EditOp, early: boolean | "rows" = false, game?: number): Promise<EditAnswer> {
-    const seq = ++this.seq, stamp = game === undefined ? {} : { game };
+    const seq = ++this.seq, stamp = { game: game ?? gameStamp.peek() };
     // T-4145: an undo names the newest edit still out, so it takes back nothing when that one is refused
     if ((op.op === "undo" || op.op === "redo") && op.after === undefined && this.pending.size) op = { ...op, after: Math.max(...this.pending.keys()) };
-    pendingSent(seq, op, this.pending.size === 0);
+    pendingSent(seq, op, this.pending.size === 0, early === "rows");
     if (early === "rows") {
       this.stopsOut++;
       this.lastStopSent = performance.now();
