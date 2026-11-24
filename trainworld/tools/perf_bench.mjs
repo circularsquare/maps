@@ -17,8 +17,9 @@
 // however busy the machine is; the cores claimed in cores.py only decide how fast it goes.
 import { spawn, spawnSync } from 'node:child_process';
 import { createServer } from 'node:http';
-import { createReadStream, existsSync, statSync, readFileSync, readdirSync, writeFileSync, appendFileSync, mkdirSync, rmSync, cpSync, utimesSync } from 'node:fs';
+import { createReadStream, existsSync, statSync, readFileSync, readdirSync, writeFileSync, appendFileSync, mkdirSync, rmSync, cpSync, utimesSync, mkdirSync as mkdirLock, rmdirSync, readdirSync as ls } from 'node:fs';
 import { cpus } from 'node:os';
+import { createHash } from 'node:crypto';
 import { join, resolve, extname, basename, delimiter } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -81,11 +82,48 @@ function busyPct(a, b) {
 /** agent-tree.mjs, which makes and removes trees with the shared junctions safely (it unlinks them first) */
 const agentTree = (...a) => { const r = spawnSync('node', [join(MAPS, 'trainworld', 'checks', 'agent-tree.mjs'), ...a], { stdio: 'inherit', windowsHide: true, cwd: MAPS }); if (r.status !== 0) throw new Error('agent-tree.mjs ' + a.join(' ') + ' failed (' + r.status + ')'); };
 
+const sha = (buf) => createHash('sha256').update(buf).digest('hex').slice(0, 16);
+
+/** Every file of the sim crate that cargo watches, with its path */
+function simFiles(tree) {
+  const root = join(tree, 'trainworld', 'sim'), out = [];
+  const walk = (d) => { for (const e of ls(d, { withFileTypes: true })) {
+    if (e.name === 'target' || e.name === 'pkg') continue;
+    const p = join(d, e.name);
+    if (e.isDirectory()) walk(p); else if (/\.(rs|toml|lock)$/.test(e.name)) out.push(p);
+  } };
+  walk(root);
+  return out.sort();
+}
+
+/** T-4189: the track and demand target dirs are shared by every build, and cargo takes a unit as fresh when its sources
+ * are older than the last build in the dir. A base tree's files (checked out before another build finished) were taken
+ * as built by that other build: the head's WASM came out of a base build. So one build at a time in the shared dirs, and
+ * every sim source touched inside the lock, so it is newer than whatever the last build left. */
+function withWasmLock(label, fn) {
+  const lock = join(HOME, 'wasm.lock');
+  const alive = (pid) => { try { process.kill(pid, 0); return true; } catch { return false; } };
+  const started = Date.now();
+  for (;;) {
+    try { mkdirLock(lock); writeFileSync(join(lock, 'owner'), process.pid + ' ' + label); break; } catch (e) {
+      if (e.code !== 'EEXIST') throw e;
+      let owner = '';
+      try { owner = readFileSync(join(lock, 'owner'), 'utf8'); } catch { /* being made or removed */ }
+      const pid = Number(owner.split(' ')[0]);
+      if (pid && !alive(pid)) { rmSync(lock, { recursive: true, force: true }); continue; }
+      if (Date.now() - started > 90 * 60000) throw new Error('waited 90 minutes for the WASM build lock held by ' + owner);
+      console.log('waiting for the WASM build lock held by ' + (owner || '?'));
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 20000);
+    }
+  }
+  try { return fn(); } finally { rmSync(lock, { recursive: true, force: true }); }
+}
+
 /** A production build (shipped WASM profile, Vite) of a commit or of a tree's working copy, into HOME/dist/<label>. */
 function build(src, label) {
   const out = join(HOME, 'dist', label);
   const sh = (c, a, o = {}) => { const r = spawnSync(c, a, { stdio: 'inherit', windowsHide: true, shell: process.platform === 'win32', ...o }); if (r.status !== 0) throw new Error(c + ' ' + a.join(' ') + ' failed (' + r.status + ')'); };
-  let tree, temp = null, commit;
+  let tree, temp = null, commit, wasm;
   if (existsSync(src) && statSync(src).isDirectory()) {
     tree = resolve(src);
     commit = git(tree, 'rev-parse', 'HEAD') + (git(tree, 'status', '--porcelain', '--', 'trainworld/app', 'trainworld/sim') ? '+changes' : '');
@@ -108,17 +146,21 @@ function build(src, label) {
   try {
     const app = join(tree, 'trainworld', 'app');
     if (existsSync(out)) rmSync(out, { recursive: true, force: true });
-    // T-3939: Cargo keeps a unit's source times relative to its package, so a tree whose edits are older than the shared
-    // target dir's last build (another tree's) was taken as built: its WASM was the other tree's. Touch to force it.
-    const lib = join(tree, 'trainworld', 'sim', 'src', 'lib.rs'), now = new Date();
-    utimesSync(lib, now, now);
-    sh('python', [join(tree, 'trainworld', 'tools', 'snap_wasm.py'), tt, td], { cwd: app, env });
+    wasm = withWasmLock(label, () => {
+      const now = new Date(), files = simFiles(tree);
+      for (const f of files) utimesSync(f, now, now);
+      sh('python', [join(tree, 'trainworld', 'tools', 'snap_wasm.py'), tt, td], { cwd: app, env });
+      const h = createHash('sha256');
+      for (const f of files) h.update(f.slice(tree.length)).update(readFileSync(f));
+      const w = (m) => sha(readFileSync(join(app, 'src', 'wasm', m, 'sim_bg.wasm')));
+      return { simSrc: h.digest('hex').slice(0, 16), track: w('track'), demand: w('demand') };
+    });
     sh('npx', ['vite', 'build', '--outDir', out, '--emptyOutDir'], { cwd: app, env });
   } finally {
     release(name);
     if (temp) agentTree('remove', temp, '--force');
   }
-  writeFileSync(join(out, 'perf-build.json'), JSON.stringify({ label, commit, src, builtAt: new Date().toISOString(), buildS: Math.round((Date.now() - t) / 1000) }) + '\n');
+  writeFileSync(join(out, 'perf-build.json'), JSON.stringify({ label, commit, src, wasm, builtAt: new Date().toISOString(), buildS: Math.round((Date.now() - t) / 1000) }) + '\n');
   console.log('built ' + commit.slice(0, 8) + ' into ' + out + ' in ' + Math.round((Date.now() - t) / 1000) + ' s');
   return out;
 }
@@ -502,7 +544,7 @@ function fetchSaves(names) {
 function buildInfo(dist) {
   const b = existsSync(join(dist, 'build.json')) ? JSON.parse(readFileSync(join(dist, 'build.json'), 'utf8')) : {};
   const p = existsSync(join(dist, 'perf-build.json')) ? JSON.parse(readFileSync(join(dist, 'perf-build.json'), 'utf8')) : {};
-  return { build: b.build ?? null, commit: p.commit ?? null };
+  return { build: b.build ?? null, commit: p.commit ?? null, wasm: p.wasm ?? null };
 }
 
 async function measure(dist, names, runs, name) {
@@ -570,6 +612,10 @@ async function main() {
     process.env.TW_CORES = String(cores);
     if (!withinCap()) throw new Error('the cores ledger is over its cap: not compared');
     const since = Math.floor(Date.now() / 1000);
+    for (const [k, d] of [['base', a], ['head', b]]) { const w = buildInfo(d).wasm; console.log(k + ' ' + d + ' wasm track ' + (w?.track ?? '?') + ' demand ' + (w?.demand ?? '?') + ' sim ' + (w?.simSrc ?? '?')); }
+    const wa = buildInfo(a).wasm, wb = buildInfo(b).wasm;
+    if (wa && wb && wa.simSrc !== wb.simSrc && wa.track === wb.track) console.log('WARNING: the sim source differs but the track WASM is the same: the compare may measure one build twice');
+    if (wa && wb && wa.demand === wb.demand && wa.simSrc !== wb.simSrc) console.log('note: the demand WASM is the same in both builds (the sim change did not reach the demand build, or it was reused)');
     const sa = await serve(resolve(a)), sb = await serve(resolve(b));
     const res = { base: {}, head: {} };
     try {
