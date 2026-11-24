@@ -337,8 +337,9 @@ function localOrder(lines: ArrayLike<number>, a: NetIds | null, b: NetIds | null
   const first = mine.filter((q) => moved[q]), rest = mine.filter((q) => !moved[q]);
   return first.length && rest.length ? { periods: [...first, ...rest], quiet: new Set(rest) } : none;
 }
-/** T-1735: per market part, the network (`lastNet`) it holds solved, untouched since */
-const marketNet = new Map<IntercityApi, NetIds>();
+/** T-1735, T-4237: per population (a market part or a city), the network (`lastNet`) it holds solved, untouched since:
+ * the baseline an edit's class is read against, whether or not its cluster has a market part */
+const marketNet = new Map<Population, NetIds>();
 /** T-2188: a network's fare settings the market prices by: the fares, and each line's own multiples and distance fare
  * and each station's fare zone, by id */
 type FareOf = { fare: string; lines: Map<string, string>; stations: Map<string, number> };
@@ -356,8 +357,8 @@ function faresMoved(a: FareOf, b: FareOf): boolean {
   for (const [id, v] of b.stations) { const w = a.stations.get(id); if (w !== undefined && w !== v) return true; }
   return false;
 }
-/** T-2188: per market part, the fare settings of the network it holds solved (`marketNet`'s) */
-const marketFare = new Map<IntercityApi, FareOf>();
+/** T-2188: per population, the fare settings of the network it holds solved (`marketNet`'s) */
+const marketFare = new Map<Population, FareOf>();
 /** T-1733: the view each city population holds every one of its periods solved on, untouched since
  * (a population set on a network again is dropped from it) */
 const cityOn = new Map<Population, PopView>();
@@ -524,7 +525,9 @@ function disturbed(p: Population) {
   cityOn.delete(p);
   heldOn.delete(p);
   trail.delete(p);
-  if (p instanceof IntercityApi) { marketOn.delete(p); sharedMkt.delete(p); sharedTrail.delete(p); marketNet.delete(p); marketFare.delete(p); }
+  marketNet.delete(p);
+  marketFare.delete(p);
+  if (p instanceof IntercityApi) { marketOn.delete(p); sharedMkt.delete(p); sharedTrail.delete(p); }
 }
 const boxes = new Map<CityId, Box>();
 /** T-3373 B: the boxes of the city packs in `cityInfo`, for the page to send to workers not holding them */
@@ -2178,9 +2181,10 @@ async function run() {
       // as usual. `market`: the part's route nodes on this network; `sig`: the cluster it last solved
       // (T-1735 `ed`, `reach`, `window`: the stations changed since the market part's last whole solve, the window's
       // reach, and whether the local solve opens one; T-2188 `intercity`: `RUN_SHIFT_MIN`; `whole`: T-3512's share)
-      const editOf = new Map<JobCluster, { fresh: Population[]; market: Uint32Array | null; sig: string | undefined; ed: ReturnType<typeof editedStations> | null; reach: number; window: boolean; intercity: boolean; whole: boolean }>();
+      const editOf = new Map<JobCluster, { fresh: Population[]; market: Uint32Array | null; sig: string | undefined; ed: ReturnType<typeof editedStations> | null; reach: number; window: boolean; intercity: boolean; fares: boolean; whole: boolean }>();
       // (T-2188: this network's fare settings, made once)
       let fareNow: FareOf | undefined;
+      const holdNet = (p: Population) => { const net = lastNet as NetIds | null; if (net) { marketNet.set(p, net); marketFare.set(p, fareNow ??= fareOf(n, net)); } };
       if (!job.barrier && !job.fresh && !job.refresh && !only && mine.length) {
         const all = maskOf(mine);
         for (const c of dirty) {
@@ -2199,14 +2203,16 @@ async function run() {
           if ((!fresh.length && c.pops.every((p) => held.get(p) === c.sig)) || (!c.part && fresh.length === c.pops.length)) continue;
           const share = freshShare(c, fresh), shareMax = job.localShare?.[job.part?.[0] ?? 0] ?? LOCAL_SHARE_MAX;
           const kept = c.part ?? c.pops.find((p) => !fresh.includes(p))!;
-          const base = c.part && market && lastNet ? marketNet.get(c.part) : undefined;
+          // T-4237: against the network what stays frozen last solved on: the market part's, else a kept city's
+          const base = lastNet ? marketNet.get(kept) : undefined;
           const ed = base ? editedStations(base, lastNet!, nodeMap(base, lastNet!)) : null;
           const reach = ed && ed.minutes >= WINDOW_EDIT_MIN ? ed.minutes : 0;
-          const intercity = (!!c.part && (!marketFare.has(c.part) || faresMoved(marketFare.get(c.part)!, fareNow ??= fareOf(n, lastNet!)))) || (!!ed && (ed.switched || ed.stopMinutes >= WINDOW_EDIT_MIN || ed.shift >= RUN_SHIFT_MIN));
+          const fares = !marketFare.has(kept) || faresMoved(marketFare.get(kept)!, fareNow ??= fareOf(n, lastNet!));
+          const intercity = fares || (!!ed && (ed.switched || ed.stopMinutes >= WINDOW_EDIT_MIN || ed.shift >= RUN_SHIFT_MIN));
           // (T-2188: a city edit's local result is its final, so it keeps its local solve however much of the cluster
           // it touches; an intercity edit's whole solve follows, so it goes there at once as T-3512 has it, below)
           if (import.meta.env.DEV) console.info(`T3512 v${job.version} periods ${mine.join(",")} kept ${keptOf(c).toString(2)}: ${fresh.length} of ${c.pops.length} populations touched, ${Math.round(100 * share)}% of the cluster's passes${share >= shareMax ? ", solved whole at once unless a city edit" : ""}`); // i18n-ignore
-          editOf.set(c, { fresh, market, sig: held.get(kept), ed, reach, window: !!ed && (reach > 0 || ed.switched), intercity, whole: share >= shareMax });
+          editOf.set(c, { fresh, market, sig: held.get(kept), ed, reach, window: !!ed && (reach > 0 || ed.switched), intercity, fares, whole: share >= shareMax });
         }
       }
       // T-2188: a city edit (no edited cluster here an intercity one) may end at its local result, the market left
@@ -2217,7 +2223,7 @@ async function run() {
       const ends = editOf.size > 0 && [...editOf].every(([c, e]) => !e.intercity && !(c.part && sharedParts.has(c.part)));
       if (!ends) for (const [c, e] of editOf) if (!e.fresh.length || e.whole) editOf.delete(c);
       // i18n-ignore
-      if (import.meta.env.DEV && editOf.size) console.info(`T2188 v${job.version} ${ends ? "a city edit" : "an intercity edit"}: ${[...editOf].map(([c, e]) => `fares ${!!c.part && (!marketFare.has(c.part) || faresMoved(marketFare.get(c.part)!, fareNow ??= fareOf(n, lastNet!)))}, switched ${!!e.ed?.switched}, stops ${Math.round(e.ed?.stopMinutes ?? 0)} min, shift ${(e.ed?.shift ?? 0).toFixed(2)} min${c.part && sharedParts.has(c.part) ? ", market set apart" : ""}`).join("; ")}`);
+      if (import.meta.env.DEV && editOf.size) console.info(`T2188 v${job.version} ${ends ? "a city edit" : "an intercity edit"}: ${[...editOf].map(([c, e]) => `fares ${e.fares}, switched ${!!e.ed?.switched}, stops ${Math.round(e.ed?.stopMinutes ?? 0)} min, shift ${(e.ed?.shift ?? 0).toFixed(2)} min${c.part && sharedParts.has(c.part) ? ", market set apart" : ""}`).join("; ")}`);
       const early = job.barrier ? [] : dirty;
       // T-2188: each edited cluster's periods the local solve kept (`keptOf` as it started)
       const localKeep = new Map<JobCluster, number>();
@@ -2338,8 +2344,9 @@ async function run() {
           const h = heldQ.get(p)!;
           for (const q of units) h[q] = c.psig[q];
           heldOn.set(p, { sig: c.sig, psig: c.psig, shape: c.shape, net: c.net });
-          if (p instanceof IntercityApi) { marketOn.set(p, viewOf(c, p).nodeGlobal); const net = lastNet as NetIds | null; if (net) { marketNet.set(p, net); marketFare.set(p, fareNow ??= fareOf(n, net)); } }
+          if (p instanceof IntercityApi) marketOn.set(p, viewOf(c, p).nodeGlobal);
           else cityOn.set(p, viewOf(c, p));
+          holdNet(p);
         }
         if (sharing && c.part) sharedParts.add(c.part);
       };
@@ -2931,7 +2938,7 @@ async function run() {
             break;
           }
           if (!ok) { stale = true; break; }
-          for (const p of e.fresh) cityOn.set(p, viewOf(c, p));
+          for (const p of e.fresh) { cityOn.set(p, viewOf(c, p)); holdNet(p); }
           // T-2532: the touched zones' bubbles from this result, ahead of it, as a round's go ahead of
           // its last result; the whole solve's of the same round replace them
           for (const id of touched) keepSums(job.version, [job.rounds], id, cities.get(id)!, undefined, true);
@@ -2988,6 +2995,7 @@ async function run() {
             held.set(p, c.sig);
             if (!fresh.includes(p)) continue;
             cityOn.set(p, viewOf(c, p));
+            holdNet(p);
             const h = heldQ.get(p)!;
             for (const q of mine) h[q] = c.psig[q] + LOCAL;
           }
