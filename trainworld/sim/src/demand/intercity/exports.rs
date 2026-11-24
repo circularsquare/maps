@@ -629,7 +629,7 @@ impl IntercityApi {
     /// zones on two lands, which have no car (`Market::apart`), 0 for most places.
     /// Nothing the size of the table is made.
     pub fn table_summary(&self, limit: u32) -> Vec<f64> {
-        let (m, cw, lim) = (&self.m, &*self.m.cw, limit as usize);
+        let (m, lim) = (&self.m, limit as usize);
         let directs = Directs::of(&m.places);
         let mut out = vec![0f64; 2 + 6 * lim];
         for (&p, &f) in &m.apart().own {
@@ -638,26 +638,25 @@ impl IntercityApi {
             }
         }
         let (mut h, mut n) = (0x811c9dc5u32, 0usize);
-        let mut word = |w: u32| h = (h ^ w).wrapping_mul(0x01000193);
-        for (i, a, b, t) in self.table_rows() {
+        let word = |h: &mut u32, w: u32| *h = (*h ^ w).wrapping_mul(0x01000193);
+        self.each_table_row(|i, a, b, t, c| {
             n += 1;
-            let c = cw.commute_of(i).0;
             let [air, car] = m.corridor_mode(&directs, a, b);
-            word(i as u32);
+            word(&mut h, i as u32);
             for x in [t, c] {
                 let v = x.to_bits();
-                word(v as u32);
-                word((v >> 32) as u32);
+                word(&mut h, v as u32);
+                word(&mut h, (v >> 32) as u32);
             }
-            word(air.to_bits());
-            word(car.to_bits());
+            word(&mut h, air.to_bits());
+            word(&mut h, car.to_bits());
             if a >= lim || b >= lim {
-                continue;
+                return;
             }
             if a == b {
                 out[2 + 3 * lim + 2 * a] = t;
                 out[2 + 3 * lim + 2 * a + 1] = c;
-                continue;
+                return;
             }
             let f = t * share_step(air);
             for p in [a, b] {
@@ -666,14 +665,14 @@ impl IntercityApi {
                 s[1] += c;
                 s[2] += f;
             }
-        }
+        });
         // (the own rows' shares on two lands are the composition's as the shares are, and no row's
         // shares carry them, so the key holds them too: T-1354)
         for p in 0..lim {
             let v = out[2 + 5 * lim + p];
             if v != 0. {
-                word(p as u32);
-                word((v as f32).to_bits());
+                word(&mut h, p as u32);
+                word(&mut h, (v as f32).to_bits());
             }
         }
         out[0] = n as f64;

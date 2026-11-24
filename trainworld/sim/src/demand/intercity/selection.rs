@@ -250,6 +250,47 @@ impl IntercityApi {
             }
         })
     }
+    /// `table_rows` with each row's commute legs a day (`Corridors::commute_of`'s): `f(corridor, a, b, trips,
+    /// commute)`, in the same order. A plain loop over the two sorted lists, for the passes over every row of a
+    /// load (`table_summary`, millions of rows), where the iterator and a search a row cost a tenth (T-4182).
+    pub(super) fn each_table_row(&self, mut f: impl FnMut(usize, usize, usize, f64, f64)) {
+        let cw = &*self.m.cw;
+        let np = self.m.places.len();
+        let commute: &[(u32, f64)] = if cw.commuters > 0. { &cw.commute } else { &[] };
+        // (a: the first place of the corridor last given)
+        let (mut kc, mut kt, mut a) = (0usize, 0usize, 0usize);
+        let mut row = |i: usize, t: f64, c: f64| {
+            if t > 0. || c > 0. {
+                while a + 1 < np && tri(np, a + 1, a + 1) <= i {
+                    a += 1;
+                }
+                f(i, a, a + i - tri(np, a, a), t, c);
+            }
+        };
+        for (k, &w) in cw.has_trips.iter().enumerate() {
+            let mut w = w;
+            while w != 0 {
+                let i = 64 * k + w.trailing_zeros() as usize;
+                w &= w - 1;
+                let t = cw.trips[kt] as f64;
+                kt += 1;
+                while kc < commute.len() && (commute[kc].0 as usize) < i {
+                    row(commute[kc].0 as usize, 0., commute[kc].1);
+                    kc += 1;
+                }
+                let c = if kc < commute.len() && commute[kc].0 as usize == i {
+                    kc += 1;
+                    commute[kc - 1].1
+                } else {
+                    0.
+                };
+                row(i, t, c);
+            }
+        }
+        for &(i, c) in &commute[kc..] {
+            row(i as usize, 0., c);
+        }
+    }
     /// `air`: four numbers per 600 m square holding airport terminals (T-3500): its x, y, its
     /// terminals' weight and the selected part of that weight. Airport trips from across a zone line
     /// end at the terminals, so a zone's share of them is its terminals' share selected, not its

@@ -337,6 +337,15 @@ impl Market {
         let tail = if t > 0. { t * self.rule.tail(d) * ta * rel } else { 0. };
         b * self.pull_w(pull, pull_near, d) * (ground + tail)
     }
+    /// `directed_by` with the ground and tail curves and the pull's phase-in at the pair's distance given
+    /// (`curves`): the same figure to the bit.
+    #[inline(always)]
+    pub(super) fn directed_with(b: f64, rel: f64, pull: f64, pull_near: f64, g: f64, t: f64, a: f64, ta: f64, (gc, tc, pc): (f64, f64, f64)) -> f64 {
+        let ground = if g > 0. { g * gc * a } else { 0. };
+        let tail = if t > 0. { t * tc * ta * rel } else { 0. };
+        let pw = if pull > 0. || pull_near > 0. { 1. + pull * pc + pull_near } else { 1. };
+        b * pw * (ground + tail)
+    }
     /// T-3240: a pair's pull at `d` km, from its full strength less 1, plus T-3254's unfaded local pull
     /// (exactly 1 with neither).
     #[inline(always)]
@@ -475,33 +484,45 @@ impl Market {
         let home_gamma: Vec<f64> = self.countries.iter().map(|c| rule.pull_gamma_of(c, c)).collect();
         let near_gamma: Vec<f64> = self.countries.iter().map(|c| rule.pull_near_gamma_of(c, c)).collect();
         let off: Vec<bool> = self.countries.iter().map(|c| rule.pull_off.contains(c)).collect();
+        // T-4182: what `factors` reads that depends on one place alone, worked out once a place rather than
+        // once a pair (the same operations on the same numbers, so the same figures to the bit): a place's
+        // pull as a destination from its own country and from abroad, and its unfaded local pull
+        let pull_of = |q: &Place, gamma: f64| if q.px > 0. { (gamma * q.px).exp_m1() } else { 0. };
+        let pull_home: Vec<f64> = self.places.iter().map(|q| if q.has { pull_of(q, home_gamma[q.country as usize]) } else { 0. }).collect();
+        let pull_abroad: Vec<f64> = self.places.iter().map(|q| if q.has { pull_of(q, rule.pull_gamma_x) } else { 0. }).collect();
+        let pull_near_home: Vec<f64> = self.places.iter().map(|q| if q.has && near_gamma[q.country as usize] > 0. { pull_of(q, near_gamma[q.country as usize]) } else { 0. }).collect();
+        // and the income ratio's power once a pair of incomes (a few hundred incomes, millions of pairs)
+        let mut incs: Vec<f64> = self.places.iter().filter(|p| p.has).map(|p| p.inc).collect();
+        incs.sort_by(f64::total_cmp);
+        incs.dedup_by(|a, b| a.to_bits() == b.to_bits());
+        let inc_id: Vec<u32> = self.places.iter().map(|p| if p.has { incs.binary_search_by(|x| x.total_cmp(&p.inc)).map_or(u32::MAX, |k| k as u32) } else { u32::MAX }).collect();
+        let ni = incs.len();
+        let rels: Vec<f64> = (0..ni * ni)
+            .map(|k| {
+                let (pi, qi) = (incs[k / ni], incs[k % ni]);
+                // a ratio of 1 or more is held at 1, and 1 to any power is 1
+                if pi > 0. {
+                    let x = (qi / pi).min(1.);
+                    if x == 1. { 1. } else { x.powf(rule.eps_t) }
+                } else {
+                    1.
+                }
+            })
+            .collect();
         let factors = |i: usize, j: usize| {
             let (p, q) = (&self.places[i], &self.places[j]);
-            let b = if p.country == q.country {
+            let same = p.country == q.country;
+            let b = if same {
                 1.
             } else if open_area[p.country as usize] && open_area[q.country as usize] {
                 OPEN_AREA_BORDER.max(general[i])
             } else {
                 general[i]
             };
-            // a ratio of 1 or more is held at 1, and 1 to any power is 1
-            let rel = if p.inc > 0. {
-                let x = (q.inc / p.inc).min(1.);
-                if x == 1. { 1. } else { x.powf(rule.eps_t) }
-            } else {
-                1.
-            };
+            let rel = rels[inc_id[i] as usize * ni + inc_id[j] as usize];
             // as `pair_trip_rule`'s
-            let pull = if q.px > 0. && !off[p.country as usize] {
-                ((if p.country == q.country { home_gamma[q.country as usize] } else { rule.pull_gamma_x }) * q.px).exp_m1()
-            } else {
-                0.
-            };
-            let pull_near = if q.px > 0. && p.country == q.country && near_gamma[q.country as usize] > 0. {
-                (near_gamma[q.country as usize] * q.px).exp_m1()
-            } else {
-                0.
-            };
+            let pull = if q.px > 0. && !off[p.country as usize] { if same { pull_home[j] } else { pull_abroad[j] } } else { 0. };
+            let pull_near = if same { pull_near_home[j] } else { 0. };
             (b, rel, pull, pull_near)
         };
         // (corridor order is this loop's order, so the lists come sorted; sized for every pair of places
@@ -533,7 +554,9 @@ impl Market {
                     self.near.get(&(i as u32, j as u32)).copied().unwrap_or(0.)
                 } else {
                     let ((bi, ri, ui, ni), (bj, rj, uj, nj)) = (factors(i, j), factors(j, i));
-                    (self.directed_by(bi, ri, ui, ni, p.g, p.t, q.a, q.ta, km) + self.directed_by(bj, rj, uj, nj, q.g, q.t, p.a, p.ta, km)) * 0.5
+                    // the curves at the pair's distance once for both directions (`directed_by`'s, to the bit)
+                    let curves = (rule.ground(km), rule.tail(km), rule.pull_on(km));
+                    (Self::directed_with(bi, ri, ui, ni, p.g, p.t, q.a, q.ta, curves) + Self::directed_with(bj, rj, uj, nj, q.g, q.t, p.a, p.ta, curves)) * 0.5
                 };
                 if t > 0. {
                     let c = tri(np, i, j);

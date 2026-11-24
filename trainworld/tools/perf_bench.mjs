@@ -8,6 +8,7 @@
 //        [--published vX.Y.Z] [--no-ledger] [--edit-trips] [--min-cores 3]       measure, append to the ledger
 //   node trainworld/tools/perf_bench.mjs compare <base dist> <head dist> [--saves ...] [--runs 2]
 //                                                     base and head interleaved on the same cores: the only fair wall-clock
+//        (--saves also takes any <name> of artifacts/trainworld/perfbench/saves/<name>.save)
 //   node trainworld/tools/perf_bench.mjs check [--label L]                          flags of the ledger's lines for L (default the last)
 //   node trainworld/tools/perf_bench.mjs published <label> <vX.Y.Z>                 after a publish: its lines become the reference
 //
@@ -426,6 +427,10 @@ async function runOnce(save, base, srv, log) {
     rec.marks = await page.evaluate(() => window.__b.marks);
     rec.bytes = { all: srv.st.bytes, packs: srv.st.packs, requests: srv.st.requests };
     rec.counts = await page.evaluate(COUNTS, t0);
+    // T-4182: where the load went, ms from the import: each pack's request, download and open, and each solve's sending
+    rec.timeline = await page.evaluate((t0) => { const d = window.twDemand, r = (x) => (x == null ? null : Math.round(x - t0));
+      return { loads: (d.start?.loads ?? []).map((l) => ({ item: l.item, bare: !!l.bare, asked: r(l.requestedAt), got: r(l.downloadedAt), open: r(l.openedAt) })),
+        solves: (d.log ?? []).map((s) => ({ v: s.version, zones: s.cities?.length, markets: s.markets?.length, arrived: r(s.arrivedAt), sent: r(s.sentAt), setupMs: Math.round(Math.max(0, ...(s.setupMs ?? []).map((x) => x ?? 0))), periodMs: Math.round((s.periodMs ?? []).flat().reduce((a, b) => a + (b ?? 0), 0)) })) }; }, t0).catch(() => null);
     // T-4051: read again now, since a worker's last report can come after the final (its off-screen bubble sums)
     rec.demandWasm = await page.evaluate(() => { const w = window.__b.wasm; try { for (const m of window.twDemand.client.memory?.() ?? []) w[m.worker] = Math.max(w[m.worker] ?? 0, m.wasm); } catch { /* older build */ } return w; });
     // T-4179: each worker's heap and its peaks too: the WASM figure moves in 32 MB steps
@@ -532,8 +537,11 @@ function line(r) {
 function fetchSaves(names) {
   mkdirSync(join(HOME, 'saves'), { recursive: true });
   for (const n of names) {
+    // any other save kept in HOME/saves by its name (a task's own, not in the ledger's bench)
+    const own = join(HOME, 'saves', n + '.save');
+    if (!SAVES[n] && existsSync(own)) SAVES[n] = { file: own, what: 'saves/' + n + '.save' };
     const s = SAVES[n];
-    if (!s) throw new Error('no save ' + n + ' (' + Object.keys(SAVES).join(', ') + ')');
+    if (!s) throw new Error('no save ' + n + ' (' + Object.keys(SAVES).join(', ') + ', or a name in ' + join(HOME, 'saves') + ')');
     if (existsSync(s.file)) continue;
     if (s.from && existsSync(s.from)) { cpSync(s.from, s.file); continue; }
     if (s.url) { const r = spawnSync('curl', ['-s', '-f', '-m', '120', '-o', s.file, s.url], { windowsHide: true }); if (r.status === 0) continue; }
