@@ -226,10 +226,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: tools/aws/bench.py is ready (one machine per run: build, perf and edit benches, results home, machine terminated, about 5 cents) and docs/aws.md has the account. Every launch on 11-24 was refused by the limit. Your $20 cutoff steps: notes/aws-budget-action.md.
   - Goal: One real nyc run through bench.py, with its cost.
   - Other: notes/T-4166.md
-- T-4167 [P2] {L:checks} perf_bench tree builds can ship another tree's WASM
-  - Context: From T-4132: perf_bench builds of different trees share one Cargo target dir, so a tree whose sources are older than another tree's last build ships that tree's WASM (retime-head2 shipped the base track module byte for byte).
-  - Goal: Each build's WASM always comes from its own tree's sources.
-  - Other: notes/T-4132.md
 - T-4168 [P4] {L:solve-speed} {after:T-4158} Does the bus stop merge shift riders one way
   - Context: You, 11-24: "if merging directionally biases things, would it make sense to undo that bias?", then "if its mostly not one directional its fine ... p4". T-4158 saw lines move both ways (Belgrade 704 +34%, 66 -29%) but Auto bus lines lose 1.2% overall.
   - Goal: Net shift by kind of line and trip length on Detroit and Belgrade; a simple correction proposed to you only where it is clearly one way.
@@ -273,6 +269,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From batch check 11-24: on 8800, play.mjs start timed out four times waiting for the game to load (window.tw.client.lastLoad stays null; window.twDemand may be dev-only), so no check can load the real save on the shipped build.
   - Goal: play.mjs opens a new game and loads a save on 8800's production build.
   - Other: notes/batchcheck-2026-11-24-checksim.md
+- T-4184 [P2] {L:memory} The clock worker's next memory cuts on phones
+  - Context: From T-3939 (11-24): on a 13-zone phone save the clock worker is about 240 MB, WASM 93 MB after the boarding cut. The reporter's save had about 140 MB more JS and buffers, not yet named. Exact cuts found: stop order as 16-bit numbers (6.5 MB), the network draw cache (21 MB), the outlines copy (11.5 MB).
+  - Goal: The reporter's extra 140 MB named and the biggest exact cuts made, same figures.
+  - Other: notes/T-3939.md
 - T-4141 [P3] {L:station-placement} Track placed by an edit call crossed the Hudson at ground level
   - Context: Seen by T-4112: a route entered through the game's edit call crossed the Hudson at ground level without a refusal, while pointer-drawn track nearby was bridged. Water may not have been loaded under part of it.
   - Other: notes/T-4112.md
@@ -1044,10 +1044,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: From T-1354: each worker now rebuilds its corridor book whenever the open market packs change, so T-1174's compose-afresh on a replaced worker is no longer needed.
   - Goal: The compose-afresh removed, with a late-pack load still equal to a normal one.
   - Other: notes/T-1354.md
-- T-3939 [P2] {L:memory} Clock worker memory on many-zone phone saves (taking, 2026-11-24, agent phonemem)
-  - Context: Paused 11-22 for usage; its agent stopped before writing anything. From T-3781, 11-21: on an iPhone reporter's 13-zone Tokyo-start save the clock worker held 15-30% of the tab, 359 MB settled and up to 493 MB before a collection; the tab peaked at 1,628-1,705 MB.
-  - Goal: The clock worker's share on that save named piece by piece, and its biggest piece cut, measured on a production build as T-3160 measures.
-  - Other: notes/T-3781.md "The iPhone crash reports"
 - T-3523 [P3] {L:open-source} Make the public repo the real one
   - Context: Your pad, 2026-11-17: with many pull requests, applying them is clunky, and contributors can't see what we're already working on. You chose 2026-11-17: "lets work on making the public repo the real one. we can do it some time after 0.4 publish." About 1-2 days: private notes and tooling split out, every commit public.
   - Goal: The public repo is where trainworld is developed; pull requests merge there directly, and nothing private lands in it. The design goes to you before it is built.

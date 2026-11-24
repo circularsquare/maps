@@ -1,6 +1,9 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4167 [P2] {L:checks} perf_bench tree builds can ship another tree's WASM (2026-11-24): perf_bench build <tree> touches the tree's sim/src/lib.rs first, so cargo rebuilds that tree's WASM (fixed in T-3939).
+- T-3939 [P2] {L:memory} Clock worker memory on many-zone phone saves (2026-11-24): Clock worker on the 13-zone stand-in named piece by piece (WASM by structure, JS by holder, messages); biggest piece, the boarding account, cut 69 -> 45 MB by keeping queues only where not 0: WASM 117 -> 93 MB on a phone, 129 -> 97 desktop, figures identical. notes/T-3939.md.
+- T-4133 [P2] {L:edit-speed} Edits move only the trains they can change (2026-11-24): note_changes moves only trains of lines the edit noted whose profile or run changed: Asia native note_changes -91%, apply -24% (11.1 to 8.5 s over 480 ops); check mode equal over 3,600 fuzzed checks; notes/T-4133.md.
 - T-921 [P2] {L:solve-speed} Deal tiny commute pairs in chunks (2026-11-24): 1 a day is in (COMMUTE_CHUNK_DAY, one number to tune): NYC rail -6 of 12.67M in game, about 7% of the calculation natively; no gain on a sparse Montana save, whose calculation is under 1 s of the load.
 - T-4180 [P1] {L:checks} Landing a tree loses work left in an unfinished merge (2026-11-24): land and finish refuse a tree with a merge, rebase, cherry-pick or revert in progress; committed merges are squashed to the net diff before the rebase.
 - T-4158 [P1] {L:solve-speed} Merge bus stops more aggressively for demand (2026-11-24): 500 m same-lines bus stop merge: Belgrade trips ready 981 to 762 s, demand heap 4.9 to 4.2 GB, rail trips -0.04%; NYC unchanged. notes/T-4158.md.
