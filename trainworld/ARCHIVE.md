@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4223 [P1] {L:stops} Closing a loop line refused as can't loop back here (2026-11-24): two causes fixed: carry_worth preferred reversing over a long way around; right clicks during the quick estimate were refused; 40/40 and 20/20 closes in a game. notes/T-4223.md.
 - T-4226 [P2] {L:small-fixes} New line symbol in other languages (2026-11-24): letterOf also reads the number from the shown language's lineActions.defaultName; German, Japanese and all 13 languages' default names checked. notes/T-4226.md.
 - T-4047 [P3] {L:buses} Name bus stations (2026-11-24): closed without code: folded into T-4080 (the same ask: naming bus stops)
 - T-4225 [P2] {L:loading} New York's map shows about 2.5 s later than before (2026-11-24): No step grew: side by side on the stored dists 0.4.6 shows New York's map at 5.5 s against rc046's 6.5 s (medians of 3); the ledger's 9.7 s was one slow run. Notes: notes/T-4225.md.

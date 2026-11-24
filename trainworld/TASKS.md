@@ -202,7 +202,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: T-4209's display fix (11-24) shows no time left until the solve's own time is known, then only counts down (asianita: none until 138 s, then 7 min down; final at 523 s). You: "then do the actual underlying fix later."
   - Goal: An estimate from the start, within about 30% of the real wait on asianita and NYC.
   - Other: notes/T-4209.md
-- T-4214 [P1] {L:edit-speed} Clickable map patched with what each edit touched (taking, 2026-11-24, agent mapC)
+- T-4214 [P1] {L:edit-speed} Clickable map patched with what each edit touched (taking, 2026-11-24, agent mapcbench)
   - Context: Waiting clicks landed 11-24 (7ff71c929): quick clicks act on the right piece but wait. You, 11-24: work at the root cause, "something like a silo approach", and deprioritize surface fixes. Gemini: artifacts/trainworld/gemini/rootcause-plan-answer.md.
   - Goal: After each edit the clickable map takes only the touched pieces, so no click waits for the whole network; no name or placing wait for stations and track runs.
   - Other: notes/T-4214.md
@@ -258,15 +258,13 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4074 [P4] {L:loading} Spain blocks the game during football matches
   - Context: You, 11-23: "ok can leave as p4". From T-4071 (feedback 1795377906): Spanish ISPs block Cloudflare's shared addresses during LaLiga matches by court order. anita.garden and data.anita.garden both sit on them; the account server does not. A fallback would be a data mirror plus a page off Cloudflare, 4-6 h plus an upload at every publish.
   - Other: notes/T-4071.md group 3
-- T-4223 [P1] {L:stops} Closing a loop line refused as can't loop back here (taking, 2026-11-24, agent loopclose)
-  - Context: You, 11-24: right click to close a loop is refused with "Can't loop back here" about 10% of the time for you (a retry usually works); some players have tried for days without success. Player complaints keep coming.
-  - Goal: The cause found and fixed; a loop close that is valid always goes through, and a refused one says why.
 - T-4224 [P3] {L:buses} Bus walking reach 600 m to 500 m
   - Context: You, 11-24: bus trips went up in 0.4.6 mostly from Auto lines counting every stop (T-3924); "we can probably consider reducing to 500m later". Reach went 1 km back to 600 m on 11-23 (T-4056).
   - Goal: Your call with numbers: bus riders on NYC and a bus-heavy save at 500 m against 600 m.
-- T-4052 [P2] {L:buses} Fewer riders shown waiting at bus stops (taking, 2026-11-24, agent buswait)
-  - Context: Your scratch pad, 11-22: "i think we might allow an unrealistic number of people to pile up at bus stops, should probably show a lower number more in line with other stations to not make players alarmed by big number". You, 11-24: players still report alarming numbers waiting for buses in the issues tab.
-  - Goal: Bus stops follow the same waiting rule as stations, so the issues tab and stop panel show numbers in line with stations.
+- T-4052 [P2] {L:buses} Riders left behind counted once each (taking, 2026-11-24, agent buscount)
+  - Context: Your scratch pad, 11-22: bus stops show alarming numbers waiting. Stage 1 landed 11-24: a bus stop holds at most 200 waiting. The issues row still counts a rider again at every bus they miss, and those turned away from a full stop: an overloaded NYC bus line shows 23k a day.
+  - Goal: The issues row and line panel count each rider left behind once (that line near 4.3k); memory added under 2 MB on NYC.
+  - Other: notes/T-4052.md
 - T-4053 [P3] {L:borders} Common language border factor
   - Context: Your scratch pad, 11-22: "i think bogota-quito travel might be a bit small? relative to number of planes (liek 6 a day, maybe 2000 people a day vs our 800) i wonder if we should do a like 'common language' border multiplier... and maybe also between like switzerland and france". A new demand factor: the design goes to you first.
 - T-4063 [P3] {L:small-fixes} Trip explorer fails just after a change
@@ -353,7 +351,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3485: the airport's pack share counts people across a border at full weight, then the border factor drops what doesn't land: Hong Kong loses 54% of its ground trips, Luton 77%, Basel 71%, Geneva 42%; 0.6M a day worldwide.
   - Goal: Outside people weighed by the border factor in the pack share at the next world rebuild; Hong Kong near its published ground trips.
   - Other: notes/T-3485.md
-- T-4227 [P2] {L:timetables} Weekend periods with trains but no services
+- T-4227 [P2] {L:timetables} Weekend periods with trains but no services (taking, 2026-11-24, agent wkndsvc)
   - Context: Player report 11-22 (board g157), before 0.4.6: weekend periods with trains allocated (4 at midday) show no services, so nothing runs. Reach: some, players using weekend service.
   - Goal: A period with trains allocated runs services, or the panel says why not; first checked on 0.4.6.
 - T-3742 [P2] {L:timetables} {after:Anita asks} Nudge a line's departure times

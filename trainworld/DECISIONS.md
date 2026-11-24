@@ -49,6 +49,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-16 (Anita, T-534): A neighbourhood can name a station if within 3.5 km of its nearest fellow (Anita, was 3 km), so Harlem, Williamsburg and Midtown qualify; Manhattan (12 km) does not.
 
 ## Lines and scheduling
+- 2026-11-24 (, T-4223): A loop's closing hop carries on round however long when the quickest way in turns back on the way (back over the line's own track, no loop); `CARRY_SLACK_S` (300 s) still keeps a balloon from running a long way round to avoid its turn. notes/T-4223.md
 - 2026-11-24 (Anita, T-4178): A reversal mid-line limits capacity no more than a line's end: each way counts half a turn (the lie: trains turn there twice a round trip). The reversal icon shows only where the turn limits the line. notes/T-4178.md
 
 - 2026-11-21 (, T-3346): Round trips, fleets and demand use averaged passing waits at the best phase; drawn timetables work them per train (the lie). Budgeting on trains' own waits (Anita's call, T-3931) is held: locals stood about 850 s at a dead end. notes/T-3931.md
@@ -154,6 +155,7 @@ artifacts/trainworld/T-4120/.
 
 ## Buses
 
+- 2026-11-24 (T-4052): A bus stop holds at most 200 waiting each way (a bus's 12 m of sidewalk, 5 m deep at 0.3 m² a rider, as a platform's 5,000), a BRT station 667. Boarding account only, so trips and fares don't move. notes/T-4052.md
 - 2026-11-23 (Anita, T-4079, T-4056): Bus walking reach is 600 m: 1 km was dropped before publishing, as players liked lower bus ridership, and borrowing a neighbour stop's search was declined. A bus stop's change walks reach 150 m, stations' 300 m. notes/T-4079.md
 - 2026-11-23 (Anita, T-4094, T-3924): Every drawn bus stop is a demand stop ("if people are seeing bus stops the bus stops have to be real"), replacing one every 2 km; consecutive bus-only stops served by the same lines merge, within 500 m since T-4158. notes/T-4094.md
 - 2026-11-21 (Anita, T-3378, T-3907): BRT runs 10 km/h above the plain bus floor (25 km/h, was 30), its lanes paid only in town, 100 buses an hour a lane (was 60), its stations with a waiting room. Busways run any bus at 60 km/h. notes/T-3378.md
