@@ -182,10 +182,14 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
   - Context: You, 11-23: "edit speed is actually still kind of a problem... noticeable on my end for big worlds... i feel like there was a point at which we had edit speed almost instant, but then might have regressed". Mostly placing track and editing stops. T-3550, T-1211, T-3804, T-1031 are back at P2 under this.
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
-- T-4153 [P1] {L:edit-speed} Rebuild only the touched part of the drawn network, stage 2
+- T-4153 [P1] {L:edit-speed} Rebuild only the touched part of the drawn network, stage 2 (taking, 2026-11-23, agent editnetwork2)
   - Context: You, 11-23: "this is the entire issue". Stage 1 landed 11-24 (e7fa38bd): Asia edits 12-37% faster. Left: a 230-290 ms floor in Node (0.6-1 s in the page for a station edit) spread over about ten passes over every edge, node or line.
   - Goal: Those passes redone only for the records an edit touched, byte-equal to a full build; station edits on Asia under 0.2 s.
   - Other: tree editnetwork kept; plan in notes/T-4153.md "What is left"
+- T-4170 [P1] {L:edit-speed} Every edit shows at the click through one path (taking, 2026-11-23, agent editunify)
+  - Context: You, 11-24: "in parallel" meant the streams done the same way. T-4148 hooks game/world.ts edit() while lines and stations use the base's ahead().send(); each stream also special-cases parts.
+  - Goal: One hook point for every edit, exactly one pending entry per accepted edit, none left after the final state; landed speedups kept.
+  - Other: notes/T-4144.md "One path"
 - T-4146 [P2] {L:edit-speed} Ports, flyovers and station looks show at the click
   - Context: Stage 1 landed 11-24 (e94813b8): placing a station on Asia 878 to 30 ms, deleting one 2,142 to 18 ms, deleting track 811 to 14 ms. Not yet at the click: ports, the flyover toggle, passage line, a box's look after track, way or upgrade changes.
   - Goal: Those drawn at the click through the base. Tree editstations kept.
@@ -221,7 +225,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Batch check 2 (11-23): the Asia rows check at 10 seeds of 40 steps failed at seed 9, step 15, "regions differ from a fresh build", in the T-4113 region code; not rerun on the parent commit.
   - Goal: Seed 9 reproduced and fixed, or shown to predate T-4130; the 10x40 Asia run passes.
   - Other: notes/batchcheck-2026-11-23b.md
-- T-4162 [P1] {L:track-drawing} Line-up message and exact small trip counts
+- T-4162 [P1] {L:track-drawing} Line-up message and exact small trip counts (taking, 2026-11-23, agent textfix3)
   - Context: You, 11-24: the line-up refusal "doesn't really make any sense to me ... if we can find a situation where this error shows up, its mots likely a bug. so maybe lets say 'track alignment error'". Station hover: "can't we just say the exact number under 50?"
   - Goal: The refusal reads "Track alignment error"; the hover shows the exact trip count under 50 and "Under 50 trips within" is gone.
   - Other: notes/T-4152.md, notes/T-4135.md
@@ -229,11 +233,11 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-24: a situation where the line-up refusal shows is most likely a bug, to prevent. T-4152 cut the end-to-end join sweep's refusals from 26 of 288 to 0.
   - Goal: Ordinary drawing (joins, junctions, node drags, trams) never shows it; any case found is fixed or filed.
   - Other: notes/T-4152.md
-- T-4164 [P2] {L:accounts-server} Volume row in the resource check, R2 purge, old games copy deleted
+- T-4164 [P2] {L:accounts-server} Volume row in the resource check, R2 purge, old games copy deleted (taking, 2026-11-23, agent opsvol)
   - Context: From T-4159: games now on the Hetzner volume; check_resources.py watches only the root disk. You said yes to purging R2's oldest data version (11-18). The old games copy on the root disk goes once the 03:23 UTC backup on 11-24 logs ok.
   - Goal: A volume row (used of 49 GB) in check_resources.py; R2 down to three data versions; about 7.4 GB freed on the root disk.
   - Other: notes/T-4159.md
-- T-4165 [P1] {L:cleanup} Orchestrator notes with her standing calls on top
+- T-4165 [P1] {L:cleanup} Orchestrator notes with her standing calls on top (taking, 2026-11-23, agent orchnotes)
   - Context: You, 11-24, yes to: a top section of about ten lines of your standing calls (answer you first; 2-8 agents, core cap only on your word, asking is not a start, count before each start; ask before going outside them; what is yours; biggest cost first), each an action at a moment; procedures below or in the tools' help.
   - Goal: No rule lost or added except one: your direction calls go into DECISIONS.md when you say them; duplicates with trainworld/CLAUDE.md trimmed.
 - T-4166 [P2] {L:checks} Bench machine on your own AWS account
@@ -262,7 +266,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Tree memwasm (11-24): restart at a 192 MB gap gives back 290-340 MB per worker on all-China; then edits wait 3-8 min while workers reopen, final trips drift 0.11%. NYC never restarts.
   - Goal: Memory given back with no edit waiting on the restart.
   - Other: notes/T-4156.md in tree memwasm
-- T-4158 [P1] {L:solve-speed} Merge bus stops more aggressively for demand
+- T-4158 [P1] {L:solve-speed} Merge bus stops more aggressively for demand (taking, 2026-11-23, agent busland)
   - Context: You, 11-24: "ok, lets do 500m" (same-lines rule): Detroit's solve 29% lighter, Belgrade's 18%, median line moves about 2%. Built behind switches in tree busmerge2; default to 500 m, then perf_bench compare.
   - Goal: The picked merge landed, with its time to trips ready measured in game on Belgrade.
   - Other: notes/T-4094.md, notes/T-4158.md (in the busmerge2 tree until landing)

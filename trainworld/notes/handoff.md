@@ -1,25 +1,21 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 5cd3af11-2ab8-4788-8daf-1956104ead51, name maps-c0 [58120f], since 2026-11-24 01:57 UTC
-Updated: 2026-11-24 02:22 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-24 03:32 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5.
 
-## In flight (adopt from the board)
-- 11 agents, all inside maps-6b's tab (left open): a follow-up goes to maps-6b as "relay to <agent>: <text>". Over 8: start
-  nothing until under 8 (her 11-24). Queue (upnext): T-4153 stage 2 (fresh agent on tree editnetwork), T-4165, T-4162, T-4164.
-- Edit speed, plan notes/T-4144.md; her "do all, land all, one message when done". Landed: base T-4145, lines path
-  T-4114, ghost T-4136, first click T-4143, network stage 1 T-4153 (e7fa38bd). Running: editstations T-4146,
-  editlines T-4147, editpieces T-4148, editworker T-4149 (rows-first waits for B), trackstream T-4155/T-4142/T-1031,
-  retime T-4132. Queued: T-4150, T-4133/4134. Before telling her: one Opus review of all show-at-click code (each
-  stream uses the base the same way), a smoke check that no pending entry outlives the final state, a batch check
-  (refusals, undo after shown edits, charges) incl. rampport 380d8fc7, regionfix 8e1eb7ba, lineclick ef99d979,
-  junctionmsg 9719e410, base 0c384f9e, network e7fa38bd (perf_bench --saves nyc); then rebuild 8800, one message.
-- T-4159 done (games on the volume). After the 03:23 UTC backup logs ok (~7.1 GB): T-4164's cleanup on the box.
-  Server save level 39: T-4161. T-4160 after T-4153.
-- Perf beyond edits: perfcompare T-4157, busmerge2 T-4158 (her pick), commutechunks T-921 (shift: numbers to her),
-  zoneopen T-4051, memwasm T-4156.
-- Her open asks: hard 8-agent hook (my proposal, unanswered). AWS account done 11-24 (anita-own): T-4166 queued.
-  Edit speed memory budget about 10 MB total (DECISIONS); stage 1 network +6 MB.
+## In flight (agents in my tab: editunify ae95d5e2, editnetwork2 a935f09f, orchnotes a4868653, textfix3 ae363d84, busland aa2d2bf6, opsvol a78e91e6; commutechunks T-921 in maps-6b's tab)
+- Edit speed: landed tonight T-4153 s1 e7fa38bd, T-4147 2171510d+245735d7, T-4132 3656e5f7, T-4155 6dd59476, T-4146 e94813b8,
+  T-4148 dc9ea63a, T-4149 6d7c50c5 (plus base and T-4114/4136/4143). Now: editunify T-4170 (one hook path, her "same
+  way"), editnetwork2 T-4153 stage 2. Then: batch check on master (refusals, undo after shown edits, charges, the commits
+  above plus rampport 380d8fc7, regionfix 8e1eb7ba, lineclick ef99d979, junctionmsg 9719e410, base 0c384f9e), one smoke on
+  master, perf_bench all three saves (memory budget ~10 MB total, DECISIONS), rebuild 8800, one message to her.
+- Leftovers filed: T-4146/4147/4148/4149 rewritten to what's left (P2), T-4150, T-4142, T-1031, T-4133/4134.
+- zoneopen T-4051: perf compare nyc showed map 12.5->24.8 s, setupMs +70% (busy machine: two WASM builds). Rerun
+  `perf_bench.mjs compare artifacts/trainworld/perfbench/dist/zoneopen-base ...dist/zoneopen-head --saves nyc --runs 2`
+  when quiet before landing; real -> to her.
+- Others running: busland T-4158 (500 m, her pick), textfix3 T-4162, opsvol T-4164 (server cleanup after backup, R2 purge,
+  volume row), orchnotes T-4165. Waits on her: T-4156 (memory restart), hard 8-agent hook. Queued: T-4166 AWS bench (quota 5).
 - 8800 = ef99d979. T-4112's tw/track changelog item parked in next-track.json: hide the port's duplicate at release.
 
 ## Next
