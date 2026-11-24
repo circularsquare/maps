@@ -168,7 +168,7 @@ const onSide = (side: Side, a: Population) => side === "all" || side === "held" 
 /** T-326: the network in hand's clusters, each with its populations (cities, their everyday
  * layers, the market: the order their loads are added in), and the whole network's route nodes */
 /** `pops` in the order their figures are added up; `solveOrder` the same populations in the order
- * they are set up and solved (it changes no figure) */
+ * they are solved (it changes no figure; set up by kind, `setUpOrder`) */
 /** `reuse`: this worker's periods (bit q) kept from the last solve, set when it is set up (T-124) */
 /** `part`: the market's part for the cluster's network (T-409), among `pops` */
 /** `views`: the network each population is set on (T-756: a city's stations within its reach, the
@@ -1973,11 +1973,11 @@ async function run() {
         ...jobEveryday.filter(([id]) => c.cities.includes(id)).map(([, e]) => e),
         ...partOf(c),
       ], solveOrder: [
-        // the order the packs opened in (the viewed zone's first); the order changes no figure. Set
-        // up in registry order instead, the real save's first round-0 solve on each worker is ~1 s
-        // slower in WASM (T-405, notes/T-405.md; the skim cache no longer depends on the order)
-        ...[...cities.keys()].filter((id) => c.cities.includes(id) && jobCities.has(id)).map((id) => cities.get(id)!),
-        ...[...everyday.keys()].filter((id) => c.cities.includes(id) && jobCities.has(id)).map((id) => everyday.get(id)!),
+        // the order the packs opened in (the viewed zone's first; in registry order the real save's
+        // first solve on each worker is ~1 s slower in WASM, T-405), each zone's everyday layer right
+        // after its commutes: they share a graph, so the everyday searches only what the commutes'
+        // table lacks even when the skim cache keeps neither (`with_skims`' spare, T-4057)
+        ...[...cities.keys()].filter((id) => c.cities.includes(id) && jobCities.has(id)).flatMap((id) => [cities.get(id)!, ...(everyday.has(id) ? [everyday.get(id)!] : [])]),
         ...partOf(c),
       ], reuse: 0, views: new Map<Population, PopView>() }));
       // T-756: a city's layers solve on the stations within its reach (`?perfOff=reach`: on its
@@ -2161,6 +2161,9 @@ async function run() {
       groups.forEach((cs, g) => { for (const c of cs) groupOf.set(c, g); });
       stageGroup = 0;
       let periodsKept = 0, periodsSolved = 0;
+      // the cities' commutes, then their everyday layers, then the market, each in `solveOrder`'s order: the
+      // set-up order moves each worker's first solve in WASM by seconds (T-405, T-414), and this one was measured
+      const setUpOrder = (pops: Population[]) => [...pops.filter((p) => p instanceof DemandApi), ...pops.filter((p) => p instanceof EverydayApi), ...pops.filter((p) => !(p instanceof DemandApi) && !(p instanceof EverydayApi))];
       const setUpPops = (c: JobCluster, pops: Population[], beside?: { sub: IntercityApi; part: IntercityApi }) => {
         for (const p of pops) {
           const m = viewOf(c, p).net;
@@ -2229,7 +2232,7 @@ async function run() {
       };
       const setUp = (c: JobCluster) => {
         const trails = new Map(c.solveOrder.map((p) => [p, trail.get(p)]));
-        setUpPops(c, c.solveOrder);
+        setUpPops(c, setUpOrder(c.solveOrder));
         // T-124: a period is kept only if every population kept it (its inputs are unchanged: the
         // Rust side) and each holds it from a whole solve of this cluster's period (`psig`): the
         // crowding is the whole cluster's
@@ -2700,7 +2703,7 @@ async function run() {
       const localSolve = async (c: JobCluster, fresh: Population[], ratioSig = c.sig, shared?: (PartSum | undefined)[], win?: { sub: IntercityApi; less: (q: number) => Float32Array | null }, stage: 0 | 1 = 1, done?: (q: number, last: boolean) => void, periods = mine): Promise<boolean | null> => {
         const N = jobNodes, isFresh = (a: Population) => fresh.includes(a), order = c.solveOrder.filter(isFresh);
         const trails = new Map(order.map((p) => [p, trail.get(p)]));
-        setUpPops(c, win ? [...order, win.sub] : order, win && c.part ? { sub: win.sub, part: c.part } : undefined);
+        setUpPops(c, setUpOrder(win ? [...order, win.sub] : order), win && c.part ? { sub: win.sub, part: c.part } : undefined);
         const keep = keptOf(c);
         keepTrails(trails, keep);
         for (const p of win ? [...fresh, win.sub] : fresh) {
