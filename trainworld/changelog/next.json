@@ -3,16 +3,29 @@
   "line": "",
   "items": [
     {
+      "id": "c006",
+      "text": "fixed weekend trains sometimes not running after a period's hours were moved",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4227",
+      "by": "wkndsvc",
+      "at": "2026-11-24T21:58:29Z",
+      "rev": 1,
+      "area": "scheduling",
+      "fix": true
+    },
+    {
       "id": "c005",
       "text": "a bus stop holds at most 200 people waiting",
-      "edited": null,
+      "edited": "fixed busy bus lines showing huge numbers of riders left behind in the issues list",
       "hidden": false,
       "task": "T-4052",
       "by": "buswait",
       "at": "2026-11-24T21:01:49Z",
-      "rev": 1,
+      "rev": 2,
       "area": "track",
-      "fix": true
+      "fix": true,
+      "changed": "2026-11-24T21:52:15Z"
     },
     {
       "id": "c004",

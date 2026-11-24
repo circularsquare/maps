@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4227 [P2] {L:timetables} Weekend periods with trains but no services (2026-11-24): weekend share-out used weekday trains when two rows shared a period (since movable hours, 11-19); fixed in the sim's lattice; default hours unchanged to the bit. notes/T-4227.md.
+- T-4052 [P2] {L:buses} Riders left behind counted once each (2026-11-24): stage 1 capped a bus stop at 200 waiting (BRT 667); stage 2 counts each rider left behind once; an overloaded test bus line 28k -> 12k a day, rail unchanged. notes/T-4052.md.
 - T-4223 [P1] {L:stops} Closing a loop line refused as can't loop back here (2026-11-24): two causes fixed: carry_worth preferred reversing over a long way around; right clicks during the quick estimate were refused; 40/40 and 20/20 closes in a game. notes/T-4223.md.
 - T-4226 [P2] {L:small-fixes} New line symbol in other languages (2026-11-24): letterOf also reads the number from the shown language's lineActions.defaultName; German, Japanese and all 13 languages' default names checked. notes/T-4226.md.
 - T-4047 [P3] {L:buses} Name bus stations (2026-11-24): closed without code: folded into T-4080 (the same ask: naming bus stops)
