@@ -12,7 +12,9 @@ diary notes/handoff-log.md. Her time UTC-5.
   2026-11-24.md (the last of this round; after it Gemini only on her ask or my suggestion); batch checkers checkclick and
   checksim (notes/batchcheck-2026-11-24-*.md); editnetwork2 T-4153 s2; trainmove T-4133; commutechunks2 T-921 (to her);
   memgrowth T-4179; treefix T-4180 (finish lost busmerge2's unfinished merge; recovered).
-- Then: smoke on master once the checkers are done; perf_bench all three saves; land editnetwork2/trainmove into a second
+- Checkers done 05:58: both PASS what they ran; 8800's prod build boots; NOT checked: real NYC save on 8800 (play.mjs can't drive prod, T-4183: her playtest covers it), Belgrade figures after the bus merge (perf_bench belgrade will show rail trips).
+- editnetwork2 T-4153 s2 done in tree editnetwork (station network build on Asia 333 to 124 ms) but edit-speed memory reaches ~10.6 MB with it (her budget ~10 MB): hold landing for her word in the morning.
+- Then: smoke on master once editfix lands; perf_bench all three saves; land editnetwork2/trainmove into a second
   small batch; publish skill prep; morning message. Queue: T-3939, T-3160 (her yes overnight), T-4178, T-4051.
 - T-921 built in tree commutechunks (default 1 a day, tunable; no gain on sparse saves; NYC 6 trips in 12.7M move): land only on her word (morning). Its tree also has its own fix for the clockWord import loop: keep master's at landing. The main tree's app/src/wasm was rebuilt with the agent profile by that agent: the next sim landing (or npm run wasm) restores it.
 - 8800 = f4bcf26b (05:23). T-4112's tw/track changelog item parked in next-track.json: hide the port's duplicate at release.
