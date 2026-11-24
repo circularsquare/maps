@@ -11,13 +11,26 @@ diary notes/handoff-log.md. Her time UTC-5. Core cap 14 (her 20:12, "take on mor
 2. T-4214: mapcfix fixed the extra cost (the patch set world: panels and layers ran twice per edit); its last bench was
    noisy. After mcheck: hold starts for a quiet window, run the tree's last edit_bench, land. Master baseline:
    artifacts/trainworld/editbench/baseline.json (b7b9e4ee; NYC track built 437 ms). 8800 = f733d3bf, smoke PASS.
-3. Waiting on her: the "read first, test to confirm" rules (proposal sent 22:47) and Gemini per risky batch (quota?).
-   Write new briefs that way meanwhile.
+   Waiting on her: T-4220 design yes (notes/T-4220.md). Landed: T-4241 (review fixes), T-4234 (bench stop click; rewrite the
+   edit_bench baseline in the next quiet window: edit_bench --save asia,nyc --baseline on a master Vite).
+3. "Read before you run" rules written 22:50 at her OK (CLAUDE.md, orchestrator.md): briefs start from the code, batch
+   checkers are code reviews plus Gemini on every risky batch ("if we run out i'll likely upgrade the sub").
+   reswait: T-4220 design (read-only, Gemini review; to her before building).
+   settlestop T-4239 (her bricked interlined saves: the settle that never holds still), stationwait T-4240 (her Asia
+   station wait, step table first). 8800 = 4e8c50f3 (all landings incl. T-2188, T-4214 C, T-4224 bus costs), smoke PASS 23:27.
+   review13: batch code review + Gemini of T-2188, T-4237, T-4214 C, T-4153 s4, T-4224 (first under the new practice).
+   Started 23:30 at her "agents + cores/2 < 8" rule: keepreview (T-4080 s1-2 review + Gemini, before landing; save level
+   40, passx takes 41 if second), busload T-4193 (Opus), benchstop T-4234 (Sonnet), fixes13 T-4241 (review13's findings).
+   review13 passed all five landings by reading; findings in notes/T-4241.md. passx done (T-4048, save level 40 too):
+   passreview reviewing it; the second of busstops/passx to land takes level 41.
+   Next when the formula allows: corridors3 (T-4199 stage 2: merge master into tree corridors, its demand worker files
+   moved under T-2188/T-4237/T-4241; then NYC +13 MB), T-4238 (bus weekend headway, read first).
 4. Then T-4080 stages 3-6, T-4214 stages A, D, E, T-4237, T-4220, T-4231, T-4193 (clock worker files after T-4214
    lands), T-4149/T-4150, T-4230, T-4187, T-3160, T-4199, T-4233, T-4234, T-4222 P3. After that, her big three: T-3444
    track rework, T-3742 schedule nudging, T-3694 + T-3456.
 
 ## Her words
+- 11-24 23:35: "text ack" for T-4048's "Connection between {a} and {b} removed." (T-4223's two loop refusals not yet acked).
 - 11-24 22:4x: "we're maybe relying a bit too much on testing ... you guys get a lot more mileage by thinking about actual
   code than by trying to test. the ways in which you think to test don't really align super well with how people play.
   how could we formalize this"; Gemini adversarial review "generally speaking". loopcase not needed (T-4235 closed).
