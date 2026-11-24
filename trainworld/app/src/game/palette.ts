@@ -316,24 +316,25 @@ export const CLICK_MODE_COLOURS = {
 export const FARE_ZONE_COLOURS = ["#e8607a", "#f08a3c", "#e2bb2e", "#97c444", "#4fb07a", "#36b1ad", "#4a9be0", "#5b74d6", "#8a64d0", "#c160c0", "#a07858", "#7d8a96"] as const;
 export const fareZoneColour = (zone: number): string => FARE_ZONE_COLOURS[(Math.max(1, zone) - 1) % FARE_ZONE_COLOURS.length];
 
-/** T-3693, T-3714: each track type's colour for the track tool's aura and descriptor square and the track count
- * icon in its placing tag (game/buildMode.ts). Regular is the track tool's own colour. */
-export const TRACK_TYPE_COLOURS = {
-  rail: CLICK_MODE_COLOURS.track,
-  hsr: "#5a5fc8",
-  tram: "#c0603a",
+/** T-4205, T-4207: each mode's colour for the tools' own marks: the station tool (the kind choice, the placing tag's icon and
+ * its trips-near bar) and the track tool (aura, descriptor square, bar edge, track count icon, by `TRACK_TYPE_COLOURS`).
+ * The same in both themes, mid-lightness so it reads on the light and the dark bar. A BRT station is a step more
+ * magenta than the bus. */
+export const MODE_ICON_COLOURS = {
+  rail: "#3a66ac",
+  hsr: "#44519d",
+  tram: "#469bcb",
+  bus: "#7c55b0",
+  brt: "#9158ad",
+  ferry: "#1f736d",
 } as const;
 
-/** T-4205: each mode's icon colour where the station tool shows one (the kind choice, the placing tag's icon and its
- * trips-near bar); the same in both themes, mid-lightness so it reads on the light and the dark bar. A BRT station is a
- * step more magenta than the bus. */
-export const MODE_ICON_COLOURS = {
-  rail: "#2f6fd6",
-  hsr: "#3c4fc4",
-  tram: "#4aaee6",
-  bus: "#8a5cc8",
-  brt: "#a35fc4",
-  ferry: "#139d94",
+/** T-3693, T-3714: each track type's colour for the track tool's aura and descriptor square and the track count
+ * icon in its placing tag (game/buildMode.ts); T-4207: the mode table's, so both tools share one palette. */
+export const TRACK_TYPE_COLOURS = {
+  rail: MODE_ICON_COLOURS.rail,
+  hsr: MODE_ICON_COLOURS.hsr,
+  tram: MODE_ICON_COLOURS.tram,
 } as const;
 
 /** Letter colour on a line chip: dark on light lines (yellow), white on the rest. */

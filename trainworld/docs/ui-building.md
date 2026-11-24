@@ -169,7 +169,7 @@ the map's other controls', and the level buttons' numbers 15 px (also in the pho
 
 [T-2284; `MapToolBar` in `ui/ToolBar.tsx`, `ui/ToolNotes.tsx`, `CLICK_MODE_COLOURS` in
 `game/palette.ts`; design notes/T-2267.md 3.7] Each click mode but plain selecting has its own
-colour: track `#0a819d` (regular; high speed `#5a5fc8`, tram `#c0603a`, `TRACK_TYPE_COLOURS`, T-3693), station `#8d71b1`, delete `#d63f73`, select tool `#9c7b31`, bus `#a09e2d`,
+colour: track by type from `MODE_ICON_COLOURS` (rail `#3a66ac`, high speed `#44519d`, tram `#469bcb`; `TRACK_TYPE_COLOURS`, T-3693, T-4207), station `#8d71b1`, delete `#d63f73`, select tool `#9c7b31`, bus `#a09e2d`,
 ferry `#16716f`, line stops the edited line's own colour (kept legible on the shade, `legibleOn`; `#d777ed`
 while no line is picked yet), trip explorer `#268769`, station building `#a15b7b`, passage
 `#b0866a`, the same in both shades (chosen 11 or more CIEDE2000 from every colour the game draws).

@@ -97,7 +97,7 @@ function TrackBar() {
   const toggle = (k: "level" | "type" | "speed") => setOpen(open === k ? null : k);
   return (
     <>
-      <div class="tool-bar track-bar" role="group" aria-label={t("toolBar.track")} style={{ "--mode": CLICK_MODE_COLOURS.track }}>
+      <div class="tool-bar track-bar" role="group" aria-label={t("toolBar.track")} style={{ "--mode": clickColour("track") }}>
         <div class="tb-row">
           <span class="muted tb-wide">{t("toolBar.level")}</span>
           <div class="tb-wide"><LevelButtons value={lv} tip={(l) => levelTip(l, tt, m, q, one)} onPick={(l) => (buildLevel.value = l)} /></div>
