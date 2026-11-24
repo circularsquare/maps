@@ -383,7 +383,8 @@ async function runOnce(save, base, srv, log) {
     rec.marks = await page.evaluate(() => window.__b.marks);
     rec.bytes = { all: srv.st.bytes, packs: srv.st.packs, requests: srv.st.requests };
     rec.counts = await page.evaluate(COUNTS, t0);
-    rec.demandWasm = await page.evaluate(() => window.__b.wasm);
+    // T-4051: read again now, since a worker's last report can come after the final (its off-screen bubble sums)
+    rec.demandWasm = await page.evaluate(() => { const w = window.__b.wasm; try { for (const m of window.twDemand.client.memory?.() ?? []) w[m.worker] = Math.max(w[m.worker] ?? 0, m.wasm); } catch { /* older build */ } return w; });
     rec.cpuLoad = { renderer: (cpu1.renderer ?? 0) - (cpu0.renderer ?? 0), gpu: (cpu1['gpu-process'] ?? 0) - (cpu0['gpu-process'] ?? 0),
       byContext: Object.fromEntries(Object.entries(ctx1).map(([k, v]) => [k, v.cpu !== null && ctx0[k]?.cpu != null ? v.cpu - ctx0[k].cpu : v.cpu])) };
     rec.ctxEnd = ctx1;

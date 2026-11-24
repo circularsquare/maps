@@ -570,6 +570,10 @@ function unitsLeft(s: Solve, n: number, now: number, part: "all" | "view" = "all
   for (let k = 0; k < n; k++) if (!w[k]) return null;
   return editLeft(w.slice(0, n), now, editPrior, part);
 }
+/** T-4051: how far a zone's solve moves its bar by the model alone, while the workers can't time their units yet (a
+ * zone just opened has no passes to go by): on a big save the model expected 30 s of a 7-minute solve, ran the bar to
+ * 90% in a minute and held it there (`keepPlace`) for the rest */
+const BLIND_SOLVE = 0.25;
 /** T-1195: and each city pack 450 ms besides its size (China's 169 packs took three times what their
  * MB alone gave, New York's 5 and the world save's 21 matched it) */
 const OPEN_CITY_MS = 450;
@@ -2166,11 +2170,21 @@ class DemandClient {
   /** Every worker that should holds `item` (T-3373 B: its holders and the aux worker under `?split=1`). */
   private openEverywhere(item: string) {
     this.opened.add(item);
+    // T-4051: a market pack opened after the load, from its download to every worker holding it (on a big save
+    // the workers finish the unit in hand and compose the market first, far past OPEN_MARKET_MS), so the next
+    // zone's bar expects as long
+    if (isMarket(item) && !this.hold && startup.peek() !== "loading") {
+      const log = lastLoad(this.start.loads, (l) => l.item === item && !l.bare);
+      if (log?.downloadedAt !== undefined && log.openedAt === undefined) this.marketOpenMs = performance.now() - log.downloadedAt;
+    }
     if (this.releveling.delete(item as CityId)) this.lodShown();
     if (this.openFails.delete(item)) this.recovered(item);
     this.logLoad(item, false, "openedAt");
     this.settleWaiters();
   }
+
+  /** T-4051: the last market batch's time from its download to open in every worker, after the load (none before) */
+  private marketOpenMs = 0;
 
   /** T-325: the aux worker opened zones bare: their figures and city views. */
   private bareOpened(figures: Record<CityId, BareFigures>) {
@@ -2593,7 +2607,7 @@ class DemandClient {
         if (d) { got += Math.min(d.got, d.total || d.got); total += d.total || d.got; dlStart = Math.min(dlStart, d.at); dlEnd = Math.max(dlEnd, d.end ?? now); size += d.total || d.got; }
       }
       const mb = (this.bytes.get(item) ?? (size || GUESS_BYTES)) / 1e6;
-      const ms = isMarket(item) ? OPEN_MARKET_MS / markets + mb * OPEN_MS_PER_MB.market : OPEN_CITY_MS + mb * OPEN_MS_PER_MB.city;
+      const ms = isMarket(item) ? Math.max(OPEN_MARKET_MS, this.marketOpenMs) / markets + mb * OPEN_MS_PER_MB.market : OPEN_CITY_MS + mb * OPEN_MS_PER_MB.city;
       openMs += ms;
       // T-1195: by the packs in at the solving workers (the aux worker opens far faster); a market pack
       // in counts less, as the market is composed after a batch's last
@@ -2642,7 +2656,7 @@ class DemandClient {
         solveLeft = byUnits;
         solve = el / (el + byUnits);
         solveMs = el + byUnits;
-      }
+      } else if (!this.hold) solve = Math.min(solve, BLIND_SOLVE);
       job.solveRounds = { first: st.first, rest: st.rest, measured: published >= 1 };
     }
     // T-1195: each stage's share of the bar is its expected time: the slot's last load's, else, before

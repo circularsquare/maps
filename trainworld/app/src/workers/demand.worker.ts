@@ -3005,9 +3005,13 @@ async function run() {
         // since the shown result takes these at round 0 (T-324).
         stageRound = job.rounds;
         for (const q of mine) roundsHeld[q] = job.rounds;
+        // T-4051: the zones on screen's bubble sums go ahead of the results, the others after them, so the final
+        // does not wait for zones nobody is looking at (a big save's took a worker seconds; a query meanwhile is
+        // answered once they are kept, from the same state)
+        const rounds = Array.from({ length: job.rounds + 1 }, (_, r) => r);
+        const offScreen = mine.length ? jobLocal.filter(([id]) => !viewZones.has(id)) : [];
         if (mine.length) {
-          const rounds = Array.from({ length: job.rounds + 1 }, (_, r) => r);
-          for (const [id, a] of jobLocal) keepSums(job.version, rounds, id, a, keptSums.get(id));
+          for (const [id, a] of jobLocal) if (viewZones.has(id)) keepSums(job.version, rounds, id, a, keptSums.get(id));
         }
         answerWaiting();
         for (const q of [...mine, ...mq]) {
@@ -3023,6 +3027,7 @@ async function run() {
           }
         }
         setupMs = 0;
+        for (const [id, a] of offScreen) keepSums(job.version, rounds, id, a, keptSums.get(id));
       }
       // with the barrier only: without it the results were sent just above
       for (let g = 0; g < groups.length && !stale; g++) {
@@ -3076,12 +3081,16 @@ async function run() {
             if (stale) break;
             roundsHeld[q] = round;
             // (after the parts, round 0's sums are theirs: every worker's must be of the same kind)
+            let offScreen: typeof sumsFor = [];
             if (q === mine[mine.length - 1] && !parted) {
               // sent unasked, ahead of this round's last result: the client holds every worker's by
               // the time it publishes the round, and the bubbles need no query to a worker that is
               // busy with the next round
               // T-2596: before the last round only the zones on screen (82 zones' took a worker 4 s a round)
-              const kept = round < job.rounds ? sumsFor.filter(([id]) => viewZones.has(id)) : sumsFor;
+              // T-4051: at the last round, when no unit of it follows, the zones off screen go after the result
+              const after = round === job.rounds && q === units[units.length - 1] && !(sp && !sp.active.includes(sp.me));
+              const kept = round < job.rounds || after ? sumsFor.filter(([id]) => viewZones.has(id)) : sumsFor;
+              if (after) offScreen = sumsFor.filter(([id]) => !viewZones.has(id));
               for (const [id, a] of kept) keepSums(job.version, [round], id, a);
             }
             // (T-3373 B: under the split each worker holding anything sends its part, the page adds them)
@@ -3096,6 +3105,7 @@ async function run() {
               sendMessage({ kind: "result", ...msg, ...onlyLines() }, transfer);
               setupMs = 0;
             }
+            for (const [id, a] of offScreen) keepSums(job.version, [round], id, a);
           }
           // T-1533: a rough solve's estimate is out: the opens waiting go on between its populations
           if (only && round === 0) setRough(false);
