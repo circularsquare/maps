@@ -17,6 +17,7 @@ diary notes/handoff-log.md. Her time UTC-5.
   next from notes/perf-sweep-2026-11-23.md: T-921 (after searchleft; shifts riders: numbers to her), T-2589+T-2247.
 - commutechunks T-921 (measure only; shifts riders, numbers to her). searchleft T-4054 landed e71ffeae (search 4.6%
   faster, same figures; u16 shares diff not landed).
+- perfcompare T-4157 (master vs v0.4.5 on all three saves, load time breakdown; her 01:0x "have we succeeded"?).
 - retime T-4132, junctionmsg T-4152 (her pad: junction heading message misfires; strings to her).
 - Before telling her edit speed is done: one Opus review of all the show-at-click code together (one mechanism, no
   leftover per-feature stand-ins, editlines' no-stops special case, lineclick folded into the base), a smoke check
@@ -38,7 +39,6 @@ ledger notes/perf-ledger.jsonl.
 
 ## Her words
 - 11-23 00:0x: the drawn network rebuild is "the entire issue. this is what we should fix", not left to the track rework;
-  angry it was rediscovered and postponed. editnetwork T-4153 (opus) started; it is the top edit-speed priority.
 - 11-23 23:1x: edit speed: "just do all of the changes and i can test, no need for many rounds of implement-test. lemme
   know when everything is done". Run every T-4144 stream, land all, then one message to her; no interim test asks.
 - 11-23: your two top priorities are answering her and never letting agents overbook or collide; agents 2-8 run by
@@ -47,8 +47,8 @@ ledger notes/perf-ledger.jsonl.
 - 11-23: 2 crowding rounds refused, final; master heavier than v0.4.5 is expected (express fix, bus changes), look
   for gains elsewhere; coarse setting yes (on by default on phones); install banner yes after 2 h, dismiss forever;
   deleting track never deletes stations; lines side by side on and a $10B start are right.
-- 11-22, T-4041: lines independent; softening "75% of the way"; keep the cliff fix. China shape fix next week (T-4044).
-- 11-19: "player complaints take precedent over other new features"; full playtest list before every publish.
+- 11-19: "player complaints take precedent over other new features"; full playtest list before every publish. 11-22:
+  lines independent; softening "75% of the way"; China shape fix next week (T-4044).
 - Standing: every publish, deploy and website push needs her yes in this tab, none overnight; advisor only for big
   design decisions; BRT stations for BRT lines only.
 

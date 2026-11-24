@@ -242,6 +242,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-1367: on all-China each worker's WASM memory keeps its high-water mark, about 1,560 MB against 1,267 loaded; T-1205's restart waits for a 256 MB gap, so 228 MB never comes back.
   - Goal: About 290 MB per worker given back after zone churn, with the restart's cost in load time measured.
   - Other: notes/T-1367.md
+- T-4157 [P1] {L:loading} Master against v0.4.5 on the three bench saves (taking, 2026-11-23, agent perfcompare)
+  - Context: You, 11-24: the goal was to claw back what the express change and the bus changes cost; "load times do feel kinda long". Last bench 18:08: trips ready NYC 95 to 126 s, Tokyo 157 to 175 s, Belgrade 618 to 1,285 s; NYC 105 s at 22:51.
+  - Goal: Every perf_bench number for master against v0.4.5 on nyc, tokyo and belgrade, and where a load's time goes.
 - T-4051 [P2] {L:loading} Opening a zone on a big save sits at 90% (taking, 2026-11-23, agent zoneopen)
   - Context: You, 11-22, on live v0.4.5: opening Medellin sat at 90% for about 2 minutes, Managua the same, "not super consistent". Measured 11-23 (notes/T-4051.md): a zone opens by a short path (Medellin 82 s) or a long one about 3x the work, by a race between its first quick figures and the whole calculation. Tree zoneopen has two unmeasured fixes.
   - Goal: Both fixes measured on 4+ cores before they land; then a zone with figures already in takes the short path (about 100 s off on your save).
