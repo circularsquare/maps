@@ -20,6 +20,7 @@ import { lngLatToPack } from "../game/coords";
 import { describeIssues } from "../game/issues";
 import { designSpeed, selection, tool } from "../game/ui";
 import { edit, say, world } from "../game/world";
+import { dragAhead } from "../game/pieceAhead";
 import type { ClockClient, PreviewAnswer } from "../workers/clockClient";
 import { MARKS_ZOOM, NODE_HIT_PX, stationEnds } from "./dragHandles";
 import { drawTangent, endHeading } from "./curveCircle";
@@ -194,7 +195,9 @@ export class NodeDrag {
     this.map.dragPan.enable();
     if (!d) return;
     this.client.dropPreview();
-    const a = await edit({ op: "moveNode", node: d.node, x: d.x, y: d.y, design: designSpeed.peek() });
+    const pv = this.preview, touching = world.peek()?.edges.filter((x) => x.a === d.node || x.b === d.node) ?? [];
+    const strokes = pv?.ok ? previewStrokes(pv, touching.some((x) => x.hsr)) : null;
+    const a = await dragAhead(strokes, touching.map((x) => x.id), () => edit({ op: "moveNode", node: d.node, x: d.x, y: d.y, design: designSpeed.peek() }));
     if (!a.ok && !a.issues.length) say(t("nodeDrag.cannotMoveThis"), true);
     this.clear();
     if (a.ok) live.tools?.nodeMoved(d.node);

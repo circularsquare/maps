@@ -6,6 +6,7 @@ import { useEffect, useState } from "preact/hooks";
 import { speed } from "../../game/format";
 import { t } from "../../i18n";
 import { edit } from "../../game/world";
+import { withShown } from "../../game/pieceAhead";
 import { TRACK_SPECS } from "../../game/trackKinds";
 import type { TrackEdge } from "../../game/types";
 import { Row } from "../widgets";
@@ -59,7 +60,8 @@ export function usePieceLimit(edges: readonly TrackEdge[]) {
 }
 
 /** The track panel's top speed and the piece's limit, if any; T-3746: set in the selection bar. */
-export function PieceLimit({ e }: { e: TrackEdge }) {
+export function PieceLimit({ e: edge }: { e: TrackEdge }) {
+  const e = withShown([edge])[0];
   // the hover says what the kind of track allows; with a limit on, the row below says otherwise
   const tip = e.kind || e.limit ? undefined : t(e.hsr ? "trackInspector.speedHsr" : "trackInspector.speedNormal");
   return (

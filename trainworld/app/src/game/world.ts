@@ -15,6 +15,7 @@ import { vehicleOf, type Vehicle } from "./vehicle";
 import { tidyNodes, type FareNode } from "./fareCurve";
 import { groundDist, groundScale } from "./coords";
 import { noteEdit } from "./editCap";
+import { aheadEdit } from "./pieceAhead";
 import type { Demand, LineId, LineInput, LineStats, RowFigs, Save, StationInput, WorldView } from "./types";
 import { DEMAND_INDEX, DEMANDS, loopHalves } from "./types";
 
@@ -136,7 +137,7 @@ export async function edit(op: EditOp, quiet = false, silent = false, early: boo
   if (op.op !== "fares" && op.op !== "undo" && op.op !== "redo") editsSent.value++;
   // `early` (T-1407): the answer may come before `world` holds the edit (`a.early`); "rows" (T-2766, a stop click):
   // the answer comes with `world` holding the edit, its network a moment later
-  const a = await sink(op, early, game);
+  const a = await aheadEdit(op, () => sink!(op, early, game));
   if (!a.ok && !quiet && a.issues.length) say(describeIssues(a.issues, buysOf(op), lineVehicle((op as { line?: number }).line)), true);
   else if (a.ok && !silent) afterEdit?.(op, a);
   return a;

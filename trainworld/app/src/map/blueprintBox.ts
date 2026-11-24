@@ -22,6 +22,7 @@ import { lngLatToPack } from "../game/coords";
 import { describeIssues } from "../game/issues";
 import { touchInput } from "./touch";
 import { edit, say, world } from "../game/world";
+import { dragAhead } from "../game/pieceAhead";
 import type { ClockClient } from "../workers/clockClient";
 import { effect } from "@preact/signals";
 import { toLocal } from "./geo";
@@ -431,7 +432,9 @@ export class BlueprintBox {
         this.drag = { x0: m.x0, y0: m.y0, x: m.x0, y: m.y0, add, base: add ? bpPicked.peek() : { edges: [], stations: [] }, pan: false, moved: false };
       } else {
         this.client.dropPreview();
-        const a = await edit({ op: "moveNodes", nodes: m.nodes, dx: m.dx, dy: m.dy, design: designSpeed.peek() });
+        const touching = world.peek()?.edges.filter((x) => m.nodes.includes(x.a) || m.nodes.includes(x.b)) ?? [];
+        const strokes = m.preview?.ok ? previewStrokes(m.preview, touching.some((x) => x.hsr)) : null;
+        const a = await dragAhead(strokes, touching.map((x) => x.id), () => edit({ op: "moveNodes", nodes: m.nodes, dx: m.dx, dy: m.dy, design: designSpeed.peek() }));
         if (!a.ok && !a.issues.length) say(m.issues.length ? describeIssues(m.issues) : t("blueprintBox.cannotMoveThis"), true);
         this.endMove();
         return;

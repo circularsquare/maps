@@ -23,6 +23,7 @@ import { locateNodes } from "./locate";
 import { redo, undo } from "../game/fareUndo";
 import { Icon, LevelButtons, Stepper, TrackCountButtons } from "./widgets";
 import { usePieceLimit } from "./inspector/PieceLimit";
+import { withShown } from "../game/pieceAhead";
 import { SWITCH_PICK_KEY } from "./toolKeys";
 import { TERRAIN_NAMES, TERRAIN_SURCHARGES, WATER_SURCHARGE } from "../game/terrain";
 import { kindLevelMult, TRACK_SPECS } from "../game/trackKinds";
@@ -255,7 +256,7 @@ function WayArrow({ e }: { e: TrackEdge }) {
  * its way as an arrow, and Use automatic way (T-3137) for the pieces pinned against the way their run gives. */
 function PickOneWay() {
   const p = bpPicked.value, w = world.value;
-  const pieces = useMemo(() => oneWayPieces(p), [p, w]);
+  const pieces = withShown(useMemo(() => oneWayPieces(p), [p, w]));
   if (!pieces.length) return null;
   const all = pieces.every((e) => e.oneWay), some = pieces.some((e) => e.oneWay);
   const pinned = pieces.filter((e) => !!e.setWay && (e.setWay === 3 ? 0 : e.setWay) !== (e.autoWay ?? 0));
@@ -297,7 +298,7 @@ function PickOnePiece() {
  * selecting too, one piece included, since the track panel has no controls. */
 function PickLimit() {
   const p = bpPicked.value, w = world.value;
-  const pieces = useMemo(() => limitPieces(p), [p, w]);
+  const pieces = withShown(useMemo(() => limitPieces(p), [p, w]));
   const { value, on, toggle, step } = usePieceLimit(pieces);
   if (!pieces.length) return null;
   const label = t("blueprint.speedLimit");

@@ -15,6 +15,7 @@ import { lngLatToPack, packToLngLat } from "../game/coords";
 import { describeIssues } from "../game/issues";
 import { designSpeed, selection, tool } from "../game/ui";
 import { edit, world } from "../game/world";
+import { dragAhead } from "../game/pieceAhead";
 import type { ClockClient, PreviewAnswer } from "../workers/clockClient";
 import { queryClock } from "../workers/clockClient";
 import type { PiInput } from "../workers/protocol";
@@ -177,7 +178,11 @@ export class EdgeEditor {
     if (!d) return;
     this.drag = null;
     const edge = this.edge;
-    if (d.moved && edge >= 0) await edit({ op: "edgePis", edge, pis: this.shape.pis.map(toInput), design: designSpeed.peek() });
+    if (d.moved && edge >= 0) {
+      const pv = this.preview, e = world.peek()?.edges.find((x) => x.id === edge);
+      const strokes = pv?.ok && pv.pts.length >= 6 ? strokesFromPreview(pv.pts, false, undefined, false, pv.marks, pv.lanes ?? (e?.tracks === 1 ? 0 : 255), !!e?.hsr, !!e?.kind) : null;
+      await dragAhead(strokes, [edge], () => edit({ op: "edgePis", edge, pis: this.shape.pis.map(toInput), design: designSpeed.peek() }));
+    }
     this.endPreview();
   }
 
