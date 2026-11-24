@@ -294,7 +294,11 @@ async function play(g, runs, only, acc, note) {
     const seen = await page.evaluate((m) => window.__eb.ev.slice(m).filter((x) => x.k === 'post' || x.k === 'input').map((x) => x.k === 'post' ? x.kind + ':' + (x.op ?? '') : 'input:' + x.typ), m);
     const edits = (await since(m)).filter((e) => !ops || ops.includes(e.op));
     const e = edits[0];
-    if (!e || err) { note('  ' + label + ': no sample' + (err ? ' (' + err + ')' : ' (no edit message; saw ' + (seen.join(', ') || 'nothing') + ')')); return null; }
+    if (!e || err) {
+      const v = await page.evaluate(() => { const m = window.tw.map, c = m.getCenter(), s = window.tw.selection.value; return JSON.stringify({ center: [+c.lng.toFixed(4), +c.lat.toFixed(4)], zoom: +m.getZoom().toFixed(2), pitch: m.getPitch(), bearing: m.getBearing(), selection: s ? s.kind : null }); }).catch(() => '?');
+      note('  ' + label + ': no sample' + (err ? ' (' + err + ')' : ' (no edit message; saw ' + (seen.join(', ') || 'nothing') + ')') + ' view ' + v);
+      return null;
+    }
     if (e.ok === false) note('  ' + label + ': refused');
     if (opt('steps', false)) note('  ' + label + ': ' + JSON.stringify(e));
     for (const [k, name] of Object.entries(keys)) add(name, e[k]);
@@ -428,9 +432,13 @@ async function play(g, runs, only, acc, note) {
     await g.act.camera([C.mid.lng, C.mid.lat], 15);
     await sleep(1500);
     const stopOps = ['toggleStop', 'insertStop', 'dropStop', 'setStops', 'stopPassed'];
+    // T-4234: every click brings its station to the middle of the map first, as a player pans to a stop before clicking
+    // it. The camera was left where the line's stops had put it (Edit stops, the earlier lines' panels, a click's own
+    // selection) and the station sat outside the view for the second press.
+    const pressStop = async () => { await g.act.camera([C.mid.lng, C.mid.lat], 15); await sleep(300); return g.act.press([C.mid.lng, C.mid.lat]); };
     for (let k = 0; k < runs && want('stop'); k++) {
-      await sample(() => g.act.press([C.mid.lng, C.mid.lat]), stopOps, { shows: 'stop click, removed: shows', rows: 'stop click, removed: panel rows', built: 'stop click, removed: line path' }, 'stop remove ' + (k + 1));
-      await sample(() => g.act.press([C.mid.lng, C.mid.lat]), stopOps, { shows: 'stop click, added: shows', rows: 'stop click, added: panel rows', built: 'stop click, added: line path' }, 'stop add ' + (k + 1));
+      await sample(() => pressStop(), stopOps, { shows: 'stop click, removed: shows', rows: 'stop click, removed: panel rows', built: 'stop click, removed: line path' }, 'stop remove ' + (k + 1));
+      await sample(() => pressStop(), stopOps, { shows: 'stop click, added: shows', rows: 'stop click, added: panel rows', built: 'stop click, added: line path' }, 'stop add ' + (k + 1));
     }
     await g.act.click('Stop editing', { exact: false }).catch(() => {});
     await g.act.key('Escape');
