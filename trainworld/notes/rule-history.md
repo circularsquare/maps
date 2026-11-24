@@ -91,7 +91,8 @@ don't read it whole. Add a line when a rule is added for a reason worth remember
 - Never go quiet, second time: on 2026-11-23 she waited 25 minutes again while the orchestrator dug into a full disk
   itself; since then the orchestrator doesn't investigate. A reply-nudge hook followed (T-4090).
 - Agents 2-8: 2026-11-23, down from 4-12 on 2026-11-21. Briefly "usually 3-5, 8 a ceiling" ("why do we have 8 agents
-  running? we dont need to do that right?"), then run by load the same day.
+  running? we dont need to do that right?"), then run by load the same day. 11-24, 12 running: "why didn't you just ask for
+  clarification if we were going to exit the 2-8 range?" Now asked first.
 - Cores 0-1 hers: Anita, 2026-11-21. claude.exe itself stays on all cores: pinned, her typing lagged 4 s.
 - Overnight core cap at the machine's max ("we should have been running with max core cap cuz it was overnight"):
   Anita, 2026-11-21.

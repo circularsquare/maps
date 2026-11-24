@@ -35,7 +35,11 @@ behind these rules: `notes/rule-history.md`.
   run more; when something is struggling or at a limit (claims waiting at the cap, smoke timing out, agents
   colliding, timings that need a quiet machine), run fewer. Start one when its work is ready, not to fill a slot. A
   file collision rules out only the tasks that share files with a running agent: name them, start something else.
-  Below 2 with startable work is a slip to fix at once; above 8 is too many.
+  Below 2 with startable work is a slip to fix at once. Going above 8, or keeping more than 8 running, is asked of her first (her 11-24).
+- **Her asking for something is not a start** (her 11-24): it goes on the queue (a task, its place in the order) unless
+  there is room for it now. Keeping track of what the machine and the agents are already carrying, and not taking on
+  too much at once, is one of the orchestrator's main jobs: before each start, count what runs and what the cores are
+  doing; if it doesn't fit, tell her it is queued behind what, or offer what to pause for it.
 - **Supervising**: check long runs (process and `world_run.py status`) at least every couple of hours; ask after any
   agent quiet for about 45 minutes. An agent past about 500k tokens with real work left writes its state to its notes
   and a fresh one continues, day and night alike (her 11-23). Ask long-running agents about their size every couple of

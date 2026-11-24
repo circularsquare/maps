@@ -6,15 +6,14 @@ diary notes/handoff-log.md. Her time UTC-5.
 
 ## In flight (adopt from the board)
 - All 13 agents run inside maps-6b's tab (left open): a follow-up or go goes to maps-6b as "relay to <agent>: <text>".
-- T-4160 filed (batch check 2's Asia seed 9 regions failure); start after editnetwork T-4153 lands, it shares region code.
 - Edit speed, plan notes/T-4144.md; her "do all, land all, one message when done". Landed: base T-4145, lines path
   T-4114, ghost T-4136, first click T-4143. Running: editnetwork T-4153 (TOP: bounded drawn network on master, her
   call), editstations T-4146 (a832c397), editlines T-4147 (a3199ea2), editpieces T-4148, editworker T-4149 (a0d0baab;
   rows-first waits for B), trackstream T-4155/T-4142/T-1031 (a2b95733), retime T-4132. Queued: T-4150, T-4133/4134.
-  Before telling her: one Opus review of all show-at-click code, a smoke check that no pending entry outlives the final
+  Before telling her: one Opus review of all show-at-click code (each stream uses the base the same way), a smoke check that no pending entry outlives the final
   state, a batch check (refusals, undo after shown edits, charges) incl. rampport 380d8fc7, regionfix 8e1eb7ba,
   lineclick ef99d979, junctionmsg 9719e410, base 0c384f9e; then rebuild 8800 and one message to her.
-- T-4159 done (games on the volume). After the 03:23 UTC backup logs ok (~7.1 GB): T-4164's cleanup on the box. Server save level 39: T-4161.
+- T-4159 done (games on the volume). After the 03:23 UTC backup logs ok (~7.1 GB): T-4164's cleanup on the box. Server save level 39: T-4161. T-4160 after T-4153.
 - Perf beyond edits: perfcompare T-4157 (master vs v0.4.5, all three saves, memory too), busmerge2 T-4158 (wider bus
   stop merges: her pick), commutechunks T-921 (shift: numbers to her), zoneopen T-4051, memwasm T-4156 (a17f9bab).
 - Her open asks in chat: AWS own account (guide notes/aws-own-account-setup.md; when she says "aws account ready,
@@ -36,7 +35,8 @@ overnight max. Reserve loop back to -Reserved 2; cores 0-1 hers (reserve_cores.p
 ledger notes/perf-ledger.jsonl.
 
 ## Her words
-- 11-24 02:0x: Resend Pro no; R2 purge yes; R2 reads known, stop mentioning; website repo only past 1.3 GB; R2 the games' only off-box backup is fine; install note and station hover strings acknowledged.
+- 11-24 02:1x: edit-speed streams "in parallel" meant done the same way (similar changes), not independently; the Opus review checks every stream uses the base (T-4145) the same way. Ask before leaving 2-8 agents; the 12 run on, no pausing. 02:0x: Resend Pro no; R2 purge yes;
+  R2 reads and the website repo (till 1.3 GB) not reported (docs/ops-checks.md).
 - 11-23 00:0x: the drawn network rebuild is "the entire issue. this is what we should fix", not left to the track rework;
 - 11-23 23:1x: edit speed: "just do all of the changes and i can test, no need for many rounds of implement-test. lemme
   know when everything is done". Run every T-4144 stream, land all, then one message to her; no interim test asks.
