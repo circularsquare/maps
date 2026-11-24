@@ -186,10 +186,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-23: "this is the entire issue". Stage 1 landed 11-24 (e7fa38bd): Asia edits 12-37% faster. Left: a 230-290 ms floor in Node (0.6-1 s in the page for a station edit) spread over about ten passes over every edge, node or line.
   - Goal: Those passes redone only for the records an edit touched, byte-equal to a full build; station edits on Asia under 0.2 s.
   - Other: tree editnetwork kept; plan in notes/T-4153.md "What is left"
-- T-4170 [P1] {L:edit-speed} Every edit shows at the click through one path (taking, 2026-11-23, agent editunify)
-  - Context: You, 11-24: "in parallel" meant the streams done the same way. T-4148 hooks game/world.ts edit() while lines and stations use the base's ahead().send(); each stream also special-cases parts.
-  - Goal: One hook point for every edit, exactly one pending entry per accepted edit, none left after the final state; landed speedups kept.
-  - Other: notes/T-4144.md "One path"
 - T-4146 [P2] {L:edit-speed} Ports, flyovers and station looks show at the click
   - Context: Stage 1 landed 11-24 (e94813b8): placing a station on Asia 878 to 30 ms, deleting one 2,142 to 18 ms, deleting track 811 to 14 ms. Not yet at the click: ports, the flyover toggle, passage line, a box's look after track, way or upgrade changes.
   - Goal: Those drawn at the click through the base. Tree editstations kept.
@@ -265,6 +261,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4178 [P1] {L:line-rates} Reversals mid-line cost the same as at a line's end
   - Context: You, 11-24: players build switchbacks and are confused why they cut capacity; reversals mid-line cut it while ones at a line's end "kinda dont", which is inconsistent. Also: no yellow icon unless the reversal is what limits throughput, "which i think it should almost never be".
   - Goal: One rule for every reversal, measured on a switchback line; the icon only when a reversal is the limit.
+- T-4179 [P1] {L:memory} Win back demand memory lost since v0.4.5
+  - Context: T-4157 (11-24): master against v0.4.5, demand memory +13% NYC, +12% Tokyo, +35% Belgrade; tab peak +0.5/+5/+9%. Cause not traced. Tree zoneopen (T-4051) happened to show NYC demand memory 1,163 to 1,003 MB.
+  - Goal: Where the growth came from, and demand memory back to v0.4.5 or below on all three saves with the same figures.
+  - Other: notes/T-4157.md
 - T-4141 [P3] {L:station-placement} Track placed by an edit call crossed the Hudson at ground level
   - Context: Seen by T-4112: a route entered through the game's edit call crossed the Hudson at ground level without a refusal, while pointer-drawn track nearby was bridged. Water may not have been loaded under part of it.
   - Other: notes/T-4112.md
