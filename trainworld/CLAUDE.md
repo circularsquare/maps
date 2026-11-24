@@ -173,6 +173,10 @@ new standing process.
   No smoke in your tree; a change to how saves are written or loaded runs the save checks near it. A standing check
   only for a bug that really happened and could quietly come back; first grep `checks/INDEX.md`. End your report with
   one line: benchmark runs and minutes of game checks used.
+- **Reproducing a bug she reported** (her 11-24): don't rebuild her steps to find the cause when her description, her
+  diagnostics download (`node trainworld/tools/diag_report.mjs <file>`) or the code already shows it; read those first.
+  Reproduce only when the cause is still unclear after that, and then on the smallest case (a new game in one city,
+  not her big saves). Once you've fixed it, one short run of her sequence on a small case shows the fix works.
 
 ## Game principles (Anita's)
 
