@@ -169,6 +169,8 @@ skill, then ask her for the yes.
 
 ## Traps
 
+- `git stash` is one stack for all worktrees: agents merging master into their trees use `git stash push -m <name>` and pop
+  their own entry by index, never a bare pop (two did at once on 11-24 and swapped changes).
 - After "swapped", snapbuild deletes the old build (`dist-trash-*`) in a window that may run on for a minute.
 - `call snapbuild.cmd` inside another .cmd leaves the shell in `.tw-snap\trainworld\app`: `cd /d` back.
 - Master won't fast-forward over the main tree's uncommitted edits: commit them if yours and run finish again. If
