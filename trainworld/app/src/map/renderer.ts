@@ -53,7 +53,8 @@ import { drawFrame, bindTrainTextures } from "./rendererDraw";
 // each hour's trips (and the next hour's, ahead); when the hour turns, only that buffer is
 // re-uploaded. Phase tables change only on edits.
 
-
+/** where the placed stand-ins stood when one was kept (T-4208), to take it back */
+export type PlacedMark = { gen: number; n: number; res: number };
 
 export class NetworkRenderer {
   gl!: WebGL2RenderingContext;
@@ -930,7 +931,8 @@ export class NetworkRenderer {
   /** T-1407: the ghost becomes the stand-in for the blueprint segment it was placed as, drawn
    * until the next network (the one with that segment) is set; the tool's next ghost goes in its place.
    * T-2404: several while the pointer moves, their state held for its rest. */
-  keepPreviewAsPlaced() {
+  keepPreviewAsPlaced(): PlacedMark {
+    const m = { gen: this.placedGen, n: this.placed.length, res: this.placedRes.length };
     if (this.preview) this.placed.push(this.preview);
     this.placedRes.push(...this.previewRes);
     this.preview = null;
@@ -940,6 +942,13 @@ export class NetworkRenderer {
       this.marks.setPreview(undefined);
       this.oneWayGhost.setNetwork(undefined);
     });
+    return m;
+  }
+  /** T-4208: the stand-ins kept since `m` taken back (their click was refused), unless a network dropped them already */
+  dropPlacedSince(m: PlacedMark) {
+    if (m.gen !== this.placedGen) return;
+    this.uncached(() => { for (const r of this.placedRes.splice(m.res)) r.del(); });
+    this.placed.length = Math.min(this.placed.length, m.n);
   }
   /** T-2404: a placed segment with no ghost of it (the pointer moved on before the click's own was
    * answered), drawn as a stand-in from its edges */
@@ -1012,12 +1021,15 @@ export class NetworkRenderer {
     }
   }
   dropPlaced() {
+    this.placedGen++;
     this.uncached(() => { for (const r of this.placedRes) r.del(); });
     this.placedRes = [];
     this.placed = [];
   }
   placed: StrokeVao[] = [];
   placedRes: { del: () => void }[] = [];
+  /** counts the times every stand-in was dropped, so a `PlacedMark` from before one is stale */
+  private placedGen = 0;
 
   /** The blueprint track picked by a drag selection (T-333), drawn as an ink band under the track, or null. */
   setHighlight(s: Strokes | null) {
@@ -1052,6 +1064,7 @@ export class NetworkRenderer {
     this.previewRes = [];
     this.placedRes = []; // the stand-ins go with the old context; their state is on its way
     this.placed = [];
+    this.placedGen++;
     this.highlightRes = [];
     this.refusedRes = [];
     this.connRes = [];

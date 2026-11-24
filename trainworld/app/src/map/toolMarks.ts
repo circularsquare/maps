@@ -105,19 +105,20 @@ export function placeMarks(tk: Tools) {
     placeAt(m, x, y, dx, dy);
   };
   const t = tool.peek();
-  if (t === "track" && tk.start) {
+  const start = t === "track" ? tk.ghostStart : null;
+  if (start) {
     const pv = tk.shownPreview;
     // where the segment starts, which from a station is past its platform (T-1155)
     if (pv && pv.verts.length >= 2) put(el(tk, k++, "pi-mark"), pv.verts[0], pv.verts[1]);
-    else put(el(tk, k++, "pi-mark"), ...toLocal(tk.start.lng, tk.start.lat));
+    else put(el(tk, k++, "pi-mark"), ...toLocal(start.lng, start.lat));
     if (pv) {
       const from = k;
       k += placeCurveLabels([...legCurveLabels(pv.legs), ...rampLabels(pv.ramps), ...curveLabels(pv.verts)], (x, y) => tk.screen(x, y), tk.overlay.cssW, tk.overlay.cssH, (i) => el(tk, from + i, "pi-label"));
     }
   }
   for (let i = k; i < tk.marks.length; i++) tk.marks[i].style.display = "none";
-  curveCircle(tk, t === "track" && tk.start ? tk.shownPreview : null);
-  curveTangent(tk, t === "track" && tk.start ? tk.shownPreview : null);
+  curveCircle(tk, start ? tk.shownPreview : null);
+  curveTangent(tk, start ? tk.shownPreview : null);
 
   // the platform ghost shows only while the station tool snaps (below)
   if (tk.ghost) tk.ghost.style.display = "none";
@@ -235,9 +236,9 @@ export function placeMarks(tk: Tools) {
     if (rt.text) kids.push(rt.text);
     if (kids.length) showTag(tk, kids, rt.bad, ...at!);
     else tk.tag.style.display = "none";
-  } else if (t === "track" && tk.start && h && !tk.snapped && tk.tooFar(h)) {
+  } else if (t === "track" && tk.ghostStart && h && !tk.snapped && tk.tooFar(h, tk.ghostStart)) {
     showTag(tk, tooFarText(), true, ...at!);
-  } else if (t === "track" && tk.start && h && (pv || tk.waiting())) {
+  } else if (t === "track" && tk.ghostStart && h && (pv || tk.waiting())) {
     const rows: HTMLDivElement[] = pv ? placementTag(pv, buildLevel.peek(), !tramTrack.peek() ? TRACK_SPECS.regular : buswayTrack.peek() ? TRACK_SPECS.busway : tk.street.active ? TRACK_SPECS.streetTram : TRACK_SPECS.tram) : [document.createElement("div")];
     // T-1039: still working on the newest ghost or the click
     if (tk.waiting()) rows[0].prepend(Object.assign(document.createElement("i"), { className: "spin row-dot" }));

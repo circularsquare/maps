@@ -45,7 +45,7 @@ import { type RouteEnd } from "../workers/protocol";
 import { gameStamp, onRoadsLanded, type ClockClient, type PreviewAnswer } from "../workers/clockClient";
 import { roadTileTemplate } from "./busRoads";
 import { kAtY, toLngLat, toLocal } from "./geo";
-import { laneState } from "./renderer";
+import { laneState, type PlacedMark } from "./renderer";
 import { planStopsOf, type Level } from "../game/types";
 import { endHeading } from "./curveCircle";
 import { ghostChevrons, joinedGhost, strokesFromPreview, TAPER_M } from "./network";
@@ -96,9 +96,19 @@ export class Tools {
   /** T-4136: while the pointer has moved on from the spot `lastPreview` answers, the ghost drawn is that answer bent
    * so its end is at the pointer (`bend`), `from` the answer it was made from */
   bent: { from: PreviewAnswer; a: PreviewAnswer } | null = null;
+  /** T-4208: from a click's segment being sent until its answer: where the run goes on from (null when it ends at the
+   * click). The ghost is drawn from there meanwhile, never from the start being left, which the worker may take a
+   * second to answer behind a network it is building. */
+  clicked: { onward: { lx: number; ly: number; lng: number; lat: number; dir?: [number, number]; z: number } | null } | null = null;
   /** the preview the ghost, its marks and its tag show: the bent one while it stands in */
   get shownPreview(): PreviewAnswer | null {
+    if (this.clicked) return null; // T-4208: no answer yet for the ghost going on from the click
     return this.bent && this.bent.from === this.lastPreview ? this.bent.a : this.lastPreview;
+  }
+  /** where the ghost starts: the run's start, or from a click until its answer where the run goes on from (null: it
+   * ends there), T-4208 */
+  get ghostStart(): { lng: number; lat: number } | null {
+    return this.clicked ? this.clicked.onward : this.start;
   }
   /** snapping to the real network (T-727d) */
   readonly real: RealSnap;
@@ -186,6 +196,15 @@ export class Tools {
       const c = map.getCenter();
       void loadRealStationsAt(c.lng, c.lat);
     });
+    // T-4208: the camera moving under a still pointer (the keys, the zoom buttons, a fly to) left the ghost's end at the
+    // pointer's old place on the map, far off once zoomed: it is taken again at the pointer's screen point. A drag of the
+    // map moves the pointer too, so its screen point is kept up while a button is held (no hover then).
+    addEventListener("mousemove", (e) => {
+      if (!e.buttons || !this.pointer) return;
+      const r = map.getContainer().getBoundingClientRect();
+      [this.pointer.px, this.pointer.py] = [e.clientX - r.left, e.clientY - r.top];
+    }, { capture: true, passive: true });
+    map.on("move", () => this.cameraMoved());
     // T-1778: the snap ring and ghost are in local units, stale once the draw anchor moves: taken again where the pointer rests
     worldFrameEpoch.subscribe(() => {
       const p = this.pointer;
@@ -670,9 +689,12 @@ export class Tools {
     this.hoverBeside = t === "track" && this.hover?.kind === "free" && !this.snapped && !this.straightOn() ? this.besideAt(e.point.x, e.point.y) : null;
     if (t === "track") this.real.move(e.point.x, e.point.y);
     if (t === "track" && this.held.length) this.releaseNear(e.point.x, e.point.y);
-    if (t === "track" && this.start) this.requestPreview();
-    // T-4136: the ghost follows the pointer at once, its checked shape after
-    if (t === "track" && this.start && this.lastPreview && this.previewKey !== this.wantKey) this.drawGhost();
+    if (t === "track" && this.clicked) this.drawOnward();
+    else if (t === "track" && this.start) {
+      this.requestPreview();
+      // T-4136: the ghost follows the pointer at once, its checked shape after
+      if (this.lastPreview && this.previewKey !== this.wantKey) this.drawGhost();
+    }
     if (t === "station") nameAhead(this, e.point.x, e.point.y);
     this.place();
   }
@@ -786,6 +808,7 @@ export class Tools {
     if (this.held.length) this.client.placedNow();
     this.held = [];
     this.start = null;
+    this.clicked = null;
     this.chain = [];
     this.delHover = null;
     this.lastPreview = null;
@@ -865,7 +888,7 @@ export class Tools {
     this.placing = true;
     this.waitFrom(true);
     this.endRun = false;
-    let rc: RealClick, sc: StreetClick = null, p: PreviewAnswer | null, a: Awaited<ReturnType<typeof edit>>, by: { edge: number } | null = null;
+    let rc: RealClick, sc: StreetClick = null, p: PreviewAnswer | null, a: Awaited<ReturnType<typeof edit>>, by: { edge: number } | null = null, mark: PlacedMark | null = null;
     // T-1001: whatever happens to this click, later clicks are not ignored
     try {
       // T-727d: near real track at both clicks, the real route (waited for if still being found)
@@ -893,12 +916,18 @@ export class Tools {
       p = this.previewKey === JSON.stringify(req) ? this.lastPreview : null;
       // T-1474: heard at the click, not at the worker's answer; not when the ghost already shows a refusal
       if (p?.ok !== false) playBuild("snap");
+      // T-4208: shown placed at the click, the ghost going on from its end; a ghost already refused stays as it is
+      // (a real or street route's ghost is its snap's own, drawn from the start it leaves until the answer)
+      if (p?.ok !== false && !rc && !sc && !this.snapped) mark = this.clickAhead(p, s, chain);
       // T-1407: answered before its state, so the next ghost is asked at once
       a = await edit({ op: "route", ...req }, false, true, true);
     } finally {
       this.placing = false;
+      this.clicked = null;
       this.place();
     }
+    // T-4208: the stand-in kept at the click goes with a refusal; an early answer's is drawn again just below
+    if (mark && (!a.ok || a.early)) this.overlay.renderer.dropPlacedSince(mark);
     // T-1407: until the state lands, the ghost just placed stands in for the blueprint it made
     if (a.ok && a.early) {
       // T-2404: its state held while the pointer moves, its edges stand in where no ghost of it can
@@ -912,14 +941,21 @@ export class Tools {
       if (a.held) this.held.push(...a.held);
       if (a.node !== undefined) this.earlyNode = a.node;
     }
-    if (!a.ok || this.start !== from) return;
+    if (!a.ok || this.start !== from) {
+      // T-4208: a refused click's run goes on from where it was
+      if (mark && this.start === from) {
+        this.requestPreview();
+        this.drawGhost();
+      }
+      return;
+    }
     say(p ? tr("tools.blueprintCost", { distance: distance(p.lengthM), cost: money(p.cost * 1e6) }) : tr("tools.blueprint"));
     if (!chain || this.endRun || a.node === undefined) {
       this.reset();
       return;
     }
     this.chain.push(from);
-    const [ex, ey] = rc && s.kind === "free" ? toLocal(...rc.route.last) : sc && s.kind === "free" ? toLocal(...sc.route.last) : [s.lx, s.ly];
+    const [ex, ey] = this.clickEnd(s, rc, sc);
     this.start = placedAt({ kind: "node", node: a.node }, ex, ey, rc ? rc.route.last : snapping.peek() ? this.real.ring(e.point.x, e.point.y) : null);
     this.start.beside = by?.edge ?? null; // a run beside track carries on beside it
     const eh = p ? endHeading(p.verts, p.pts, p.arc, toLngLat, toLocal) : null;
@@ -1007,7 +1043,7 @@ export class Tools {
 
   /** Ask for the ghost of a segment from the start to the pointer; true if asked. */
   requestPreview(): boolean {
-    if (!this.start || this.snapped) return false;
+    if (!this.start || this.snapped || this.clicked) return false;
     const se = this.start.end;
     const nodes = world.peek()?.nodes;
     if (this.earlyNode >= 0 && nodes?.has(this.earlyNode)) this.earlyNode = -1;
@@ -1051,10 +1087,43 @@ export class Tools {
    * heading if it has one and the pointer, until the checked answer replaces it. A click still waits for its own. */
   drawStandIn(h: Snap) {
     const st = this.start!, [sx, sy] = toLocal(st.lng, st.lat);
-    const pts = standInPts(sx, sy, h.lx, h.ly, st.dir ?? this.trackHeading(st, sx, sy, h), this.heightOf(st.end, sx, sy), this.heightOf(this.endOf(h), h.lx, h.ly));
+    this.standIn(sx, sy, h, st.dir ?? this.trackHeading(st, sx, sy, h), this.heightOf(st.end, sx, sy));
+  }
+  /** the stand-in ghost from (sx, sy), leaving along `dir` when given, at height `z` (m), to the pointer's `h` */
+  standIn(sx: number, sy: number, h: Snap, dir: [number, number] | undefined, z: number) {
+    const pts = standInPts(sx, sy, h.lx, h.ly, dir, z, this.heightOf(this.endOf(h), h.lx, h.ly));
     this.bent = null;
     this.overlay.renderer.setPreview(strokesFromPreview(pts, false, undefined, true, undefined, singleTrack.peek() ? 0 : 255, highSpeed.peek(), tramTrack.peek()));
     this.overlay.invalidate();
+  }
+
+  /** where a click's segment ends (local units): a real or street route's last point on open ground, else the click's snap */
+  clickEnd(s: Snap, rc: RealClick, sc: StreetClick): [number, number] {
+    return rc?.kind === "route" && s.kind === "free" ? toLocal(...rc.route.last) : sc?.kind === "route" && s.kind === "free" ? toLocal(...sc.route.last) : [s.lx, s.ly];
+  }
+  /** T-4208: at a click, the ghost kept as the segment's stand-in (this request's own answer when it is in, else the
+   * ghost as shown), and the run's onward start set for the ghost until the answer */
+  clickAhead(p: PreviewAnswer | null, s: Snap, chain: boolean): PlacedMark {
+    const r = this.overlay.renderer;
+    if (p) r.setPreview(p.pts.length >= 6 ? this.ghostStrokes(p) : null);
+    this.bent = null;
+    const mark = r.keepPreviewAsPlaced();
+    // the heading the next start takes from this answer once it lands (segmentClick), so the ghost keeps its shape then
+    const eh = p ? endHeading(p.verts, p.pts, p.arc, toLngLat, toLocal) : null;
+    const { lx, ly } = s, [lng, lat] = toLngLat(lx, ly);
+    this.clicked = { onward: chain ? { lx, ly, lng, lat, dir: eh ? [eh.ux, eh.uy] : undefined, z: this.heightOf(this.endOf(s), lx, ly) } : null };
+    this.drawOnward();
+    this.place();
+    return mark;
+  }
+  /** T-4208: the ghost while a click's answer is awaited, from the click's end to the pointer; none when the run ends there */
+  drawOnward() {
+    const o = this.clicked?.onward, h = this.hover;
+    if (o && h && !this.endRun && !this.tooFar(h, o)) {
+      const [ax, ay] = this.screen(o.lx, o.ly), [bx, by] = this.screen(h.lx, h.ly);
+      if (Math.hypot(ax - bx, ay - by) >= 3) return this.standIn(o.lx, o.ly, h, o.dir, o.z);
+    }
+    this.clearPreview();
   }
   /** T-4143: the way track leaves a start on track before any answer says (local units, unit length): along the track
    * there, toward the pointer; none on open ground */
@@ -1143,6 +1212,15 @@ export class Tools {
     while (node >= 0 && !world.peek()?.nodes.has(node) && performance.now() < until) await new Promise((r) => setTimeout(r, 16));
   }
 
+  /** T-4208: the camera moved: a track or station ghost's end follows the still pointer to the map spot now under it */
+  cameraMoved() {
+    const p = this.pointer, t = tool.peek();
+    if (!p || touchInput.peek() || (t !== "track" && t !== "station") || (!this.hover && !this.hoverBeside)) return;
+    const q = this.map.project([p.lng, p.lat]);
+    if (Math.hypot(q.x - p.px, q.y - p.py) < 0.5) return;
+    this.move({ point: { x: p.px, y: p.py }, lngLat: this.map.unproject([p.px, p.py]) } as MapMouseEvent);
+  }
+
   /** since when the ghost has been behind the pointer, and since when a click has waited (ms) */
   askedAt = 0;
   placingAt = 0;
@@ -1160,10 +1238,10 @@ export class Tools {
   }
 
   /** Whether a free-drawn piece from the start to `s` would be longer than MAX_PIECE_KM. */
-  tooFar(s: Snap): boolean {
-    if (!this.start) return false;
+  tooFar(s: Snap, from: { lng: number; lat: number } | null = this.start): boolean {
+    if (!from) return false;
     const [lng, lat] = toLngLat(s.lx, s.ly);
-    return metresBetween(this.start.lng, this.start.lat, lng, lat) > MAX_PIECE_KM * 1000;
+    return metresBetween(from.lng, from.lat, lng, lat) > MAX_PIECE_KM * 1000;
   }
 
   clearPreview() {
@@ -1187,7 +1265,7 @@ export class Tools {
   /** T-4136: the ghost drawn: the answer held, bent to the pointer while the pointer has moved on from its spot */
   drawGhost() {
     const a = this.lastPreview;
-    if (!a) return;
+    if (!a || this.clicked) return;
     const b = this.previewKey !== this.wantKey && !this.snapped ? this.bend(a) : null;
     this.bent = b ? { from: a, a: b } : null;
     const g = b ?? a;
