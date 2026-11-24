@@ -1,40 +1,38 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session 14439093-662c-49fa-b3bc-84f716dcef40, name maps-20 [14f6c1], since 2026-11-24 12:58 UTC
-Updated: 2026-11-24 12:58 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Orchestrator: session 3a819365-cd3a-4850-a112-6396d17c97b4, name maps-06 [4d6442], since 2026-11-24 13:06 UTC
+Updated: 2026-11-24 13:27 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5.
 
-## In flight (all mine)
-- Landed today, all batch-checked PASS (check3-5) unless noted: T-4179 demand memory, T-4184 clock memory (c090), T-4075
-  trams (c091), T-4051 zone open (c089), T-4055 stale final (c092), T-4183/T-4169/T-4189/T-4190 tools, T-3160 stage 6
-  53ca4ef77 (c019 reworded; check6 running), T-4057 7289f0d07 (solve order; checker with stopclick). Smoke on master
-  PASSED 10:19 at 20d3a002. 8800 = 66bdd9f6 (11:51). Open follow-ups filed: T-4187, T-4188, T-4191, T-4192.
-- Running: check6 (T-3160 s6), stopclick T-4097 stage (Asia stop click line path 1.4-1.9 s to ~100 ms), phoneload
-  T-4188 (save jwxidghd never loads on an emulated phone), sparseload T-4182.
-- T-4161 done in shonei-server 7bdd559 (level 39 + LBE1), unpushed, not deployed: deploy.ps1 on her yes before 0.4.6,
-  then push shonei-server. Asked her in chat.
-- 0.4.6 prep (from maps-c0): smoke8800 light+dark PASSED, changelog reviewed (58 shown, 7 highlights), perf_bench
-  rel046-e936af30 vs v0.4.5 (valid, T-4189 checked): demand memory +13/+12/+17% (T-4179 brings it to +3/+8/+3%),
-  Belgrade CPU +20%, rail -7.1% Belgrade (trade-off to her). Left: check6, smoke on the final hash, perf_bench all three
-  on it, playtest list, strings ack, her changelog edit on the board, T-4153 s2 call, T-4161 deploy, her yes.
-- Held for her word: T-4153 s2 (tree editnetwork, station network build on Asia 333 to 124 ms, edit-speed memory ~10.6 MB vs
-  her ~10 MB; add mm.ribbons.delete(e) at lineBands.ts:571 if landed); T-921 (tree commutechunks, tunable, no sparse gain);
-  T-4156 parked P3 (ask a-2026-11-23-22); T-4124 (one graph per cluster) shifts answers: numbers to her first.
+## In flight (all maps-06's; maps-20 and maps-2c signed off 13:2x)
+- 0.4.6 candidate = master 0cca357a = 8800 (13:25; f63b105b + T-4196 rewording + tools). Smoke on it PASSED 13:28.
+  check7 PASS for T-4057 (notes/batchcheck-2026-11-24-check7.md; gaps edit vs reload, zone removal). perf_bench
+  rc046-f63b105b in ledger: belgrade CPU +24%, solver +25%, rail -7.1% (T-4041); tokyo demand WASM +11% (ask a-2026-11-24-3).
+  Playtest list + strings: notes/release-0.4.6.md (uncommitted). Rewording review: artifacts/trainworld/review/text-rewording-0.4.6.md.
+- Running: check-stopclick (checker, tree stopclick, T-4097 stop take-out 349 to 17 ms), settle T-4194 (Opus, options
+  only, tree settle, port 6144). Both started in maps-20's tab; reports come to the inbox.
+- Ready, held: sparseload T-4182 (Montana load 12.6 to 8.6 s, bit-identical, sim): land after the 0.4.6 publish so its
+  changelog item doesn't ride in 0.4.6; then batch checker; T-4199 (precompute corridors, my call) after it.
+- Held for her word: T-4153 s2 (tree editnetwork; add mm.ribbons.delete(e) at lineBands.ts:571 if landed); T-921 (tree
+  commutechunks); T-4156 P3 (ask a-2026-11-23-22); T-4124 shifts answers: numbers to her first. T-4161 shonei-server
+  7bdd559 unpushed, deploy on her yes, then push.
 - T-4112's tw/track changelog item is parked in next-track.json: hide the port's duplicate at release.
 - Uncommitted SPEC.md, docs, checks/old moves, tools/asks.py etc. are not ours (likely Gemini in Antigravity): leave;
-  patch out to land if a landing touches them (checks/INDEX.md was regenerated once, 10:34).
-- Core cap back to 14 at 12:58 (she's up; her 05:0x word). Gemini: only on her ask or our suggestion; Neon medium.
+  patch out to land if a landing touches them.
+- Core cap 14 (she's up). reserve_cores.ps1 -All -Loop 30 runs in maps-06's background. Gemini: her ask or our suggestion.
 
 ## Next (she aims to publish 0.4.6 after her playtest)
-1. check6 PASSED. 0.4.6 candidate = f63b105b3 (incl. T-4057; check7 running on it). Smoke on it PASSED 12:33. Changelog
-   review 2 done (c090, c092 hidden; c019 reworded). New zones image made (artifacts/trainworld/review/v0.4.6-new-zones.png).
-   8800 = f63b105b (12:35). Running in maps-2c's tab: smoke8800 (logs artifacts/trainworld/smoke8800-*.log), then perf_bench
-   build+run rc046-f63b105b all three (perf ledger; dist artifacts/trainworld/perfbench/dist/rc046-f63b105b). 12:53 Anita: her
-   terminal stopped responding (board pad); maps-2c opened a successor tab for her.
-2. Morning message: playtest list, strings, T-4153 s2 call, T-4161 deploy yes, publish yes (publish skill).
-3. Land stopclick/sparseload/phoneload as they report; a checker per batch. Track rework after 0.4.6.
+1. Her answers: strings ack (a-2026-11-24-1), speed trade-offs (a-2026-11-24-3), T-4161 deploy, T-4153 s2 timing,
+   publish yes (publish skill).
+2. Land stopclick after its checker; then T-4146/T-4147/T-4148 and T-4193 (share pending.ts / clock worker with it).
+   After the publish: land sparseload, T-4199. Track rework after 0.4.6.
 
 ## Her words
+- 11-24 13:10 (via maps-20): no "less memory" changelog items when overall memory is up (c019, c063 hidden; c064 memory
+  clause cut; rule in CLAUDE.md); changelog items one line, she trims them herself; computer froze: keep cores 0-1
+  free (T-4195 done 1474aeb4a: reserve_cores.ps1 -All -Loop 30 runs in maps-06's background, covers every session).
+- 11-24 13:12: Gemini Neon suggests rewordings for all changelog and player text; we reject incorrect or misleading ones,
+  accept the rest, and list what changed for her. Only the 0.4.6 text (T-4196), not the rest of the game.
 - 11-24 05:0x: core cap 15 "for the night" (back to 14 when she's up); start T-3939/T-3160 overnight as cores free; T-4156 later (P3).
 - 11-24 02:1x: edit-speed streams "in parallel" meant done the same way (similar changes), not independently; the Opus review checks every stream uses the base (T-4145) the same way. Ask before leaving 2-8 agents; the 12 run on, no pausing. 02:0x: Resend Pro no; R2 purge yes;
   R2 reads and the website repo (till 1.3 GB) not reported (docs/ops-checks.md).
