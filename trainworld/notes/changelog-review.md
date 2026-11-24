@@ -90,3 +90,14 @@ Reworded (old -> new):
 
 Sorted by area, features before fixes, hidden last. 58 shown items.
 Highlights: c080 (edit speed), c064 (bus-heavy speedup), c088 (reversal capacity), c035 (station tool), c043 (busways), c022 (brt stations), c051 (plain buses and expresses).
+
+## 2026-11-24, second pass (agent clreview2)
+
+Reviewed: c089, c090, c091, c092, c019 (reworded by its task). Kept: c089, c091, c019.
+
+Hidden:
+- c090: big games use 10-60 MB less memory (overlaps c019 and c063, memory items)
+- c092: riders on new lines changing again after trips were calculated (rare edge)
+
+Merged: none. Reworded: none. Sorted: c091 among track fixes, c089 after c065 in performance, hidden last.
+Highlights: unchanged (7).
