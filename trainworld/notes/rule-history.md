@@ -7,6 +7,9 @@ don't read it whole. Add a line when a rule is added for a reason worth remember
 
 ## trainworld/CLAUDE.md
 
+- Read before you run; a test confirms, never hunts; batch checkers became code reviews with Gemini: Anita, 2026-11-24, after
+  the T-4223 loop fix passed 40 of 40 invented shapes while players still hit refusals on ordinary circles, and a 22-minute
+  play round (check11) could not get trips to recalculate. "if it doesnt work, we can always go back later."
 - Estimates, no deadlines unless she gives one: Anita, 2026-11-17.
 - A player request alone is no reason to change what can be built (350 km/h high speed): Anita, 2026-11-12.
 - Speed and waiting wording ("loads", "shows up", "calculating trips"): Anita, 2026-11-17.

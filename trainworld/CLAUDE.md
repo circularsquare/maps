@@ -151,6 +151,10 @@ new standing process.
   your report whether you called it and what changed.
 - **A refused permission check**: make the step safer and retry; don't wait for Anita.
 - **Stop at a clean point** if the work outgrows one context: finish the stage, file the rest, hand back.
+- **Read before you run** (her 11-24: agents "get a lot more mileage by thinking about actual code than by trying to
+  test"): start from the code. Follow the player's action to what they see, list what can go wrong and which of it a
+  player could hit, and fix the cause so its cousins are covered too. The report leads with that reasoning. A test
+  confirms a specific claim; it never hunts (no trying 20 shapes to see what breaks).
 - **Waiting**: no `sleep` or polling loops of your own: `node trainworld/checks/wait.mjs` for a log or build (at most
   170 s a call; wait again if it times out), `play.mjs do 'wait.final()'` for the game. Never end your turn while
   something you need is running (a watch on a background process doesn't hold the turn open). Work that needs no
@@ -160,8 +164,8 @@ new standing process.
 
   | Kind of change | In your tree |
   |---|---|
-  | UI, text, CSS | typecheck + 1 game run or screenshot (about 5 min); no benchmarks |
-  | App logic | typecheck + the nearest check + 1 game run proving it; no benchmarks |
+  | UI, text, CSS | typecheck + 1 screenshot (about 5 min); no benchmarks |
+  | App logic | typecheck + 1 game run showing the fix; no benchmarks |
   | Edit speed | the above + 1 `edit_bench` run on NYC, new build only |
   | Trip figures, sim | Rust tests + 1 figure diff on the real NYC save (total, lines that move most); a speedup adds 1 `perf_bench` NYC run |
   | Loading, memory | the above + 1 `perf_bench` NYC run, judged on bytes and memory first |
@@ -169,8 +173,8 @@ new standing process.
   At most 2 benchmark runs per tree, ever; never re-run to average out noise. Don't build the old version to compare:
   compare against master's stored numbers. A run taken while more than 4 other cores are busy is noisy: report it as
   noisy with the exact numbers (bytes, memory, riders) and stop. Big saves (her Asia save, Tokyo, Belgrade) only when
-  your brief names the save and why, 1 run. Breadth is the batch checker's and the release's (docs/orchestrator.md).
-  No smoke in your tree; a change to how saves are written or loaded runs the save checks near it. A standing check
+  your brief names the save and why, 1 run. Breadth is the batch review's and the release's (docs/orchestrator.md).
+  No smoke or standing checks in your tree, except the save checks near a change to how saves are written or loaded. A standing check
   only for a bug that really happened and could quietly come back; first grep `checks/INDEX.md`. End your report with
   one line: benchmark runs and minutes of game checks used.
 - **Reproducing a bug she reported** (her 11-24): don't rebuild her steps to find the cause when her description, her
