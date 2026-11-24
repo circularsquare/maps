@@ -287,9 +287,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Design approved 11-24 (named stops stay put, connections free, labels at street zoom; DECISIONS). Stages 1-2 built 11-24: the game remembers, saves and holds named stops; the panel, riders using connections and labels are left. Your scratch pad, 11-23: "people keep requesting to be able to rename / name bus stops." Also a player 11-20: "バスの停留所も名前を変えれるようにしたい".
   - Goal: A bus stop's name can be set in its panel like a station's, saved, and shown wherever the stop's name shows.
   - Other: notes/T-4080-design.md (about 6 h in six stages, 4 left; also covers T-4083); notes/T-4080.md
-- T-4048 [P3] {L:route-choice} Remove station connections and passageways (taking, 2026-11-24, agent passx)
-  - Context: You, 11-24: "when entering "add passageway" mode, each existing passageway gets a little button it that you can click to remove. the buttons should be nonoverlapping. on hover, the button should get a red outline ilke for a station we're about to remove when using remove tool." Scratch pad 11-22: built and automatic ones alike.
-  - Goal: In add passageway mode every passageway and connection has a remove button, none overlapping; a removed automatic one stays removed; undo and saves keep it.
 - T-4049 [P3] {L:achievements} Cities served counts only busy cities
   - Context: Your scratch pad, 11-22: "for "cities served" count for like achievements, lets only coutn cities with like >1000 rides or something".
   - Goal: A city counts as served once it has about 1,000 rides.
@@ -903,7 +900,7 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: T-921 deals commute pairs under 1 person a day in chunks (about 7% of New York's calculation); 2 a day gained nothing more. Everyday trips are solved from sampled destinations, so they may lack the same tail of tiny pairs. You, 11-24: file as P3.
   - Goal: Know whether everyday trips have a tail of tiny pairs; if so, chunk them the same tunable way.
   - Other: notes/T-921.md
-- T-4241 [P2] {L:edit-speed} Review findings on the 11-24 edit-speed landings
+- T-4241 [P2] {L:edit-speed} Review findings on the 11-24 edit-speed landings (taking, 2026-11-24, agent fixes13)
   - Context: Batch review (review13 + Gemini, 11-24) passed all five changes and found four small slips: the 120 s refresh not re-armed when held; city baselines drifting in clusters without a market part; a just-placed station's box not deletable until the network lands; copied samples not checking line id.
   - Goal: Those four fixed at their cause, and a save made during a local result refreshed after load.
   - Other: review13 notes in notes/T-4241.md
@@ -914,9 +911,11 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: You, 11-24: players' saves of about 900 stations "completely bricked", maybe from lots of interlining. T-4188 found on a Tokyo community save that 10-13 lines sharing full track trade rates every round and never hold still, so every load and edit runs all 80 settle rounds (edits 5-35 s natively), and each bus zone adds another settle.
   - Goal: The settle stops once lines hold nearly still; that save opens in under a minute; NYC lines within 1%.
   - Other: notes/T-4188.md
-- T-4220 [P2] {L:solve-speed} Quick figures for edits made during a whole re-solve
-  - Context: You, 11-24: "edits made during remaining full passes should ideally get fast numbers ... if people are clicking a lot of times to add lots of stations ... we need to do some sort of batching". Today an edit during a whole re-solve waits for it (up to 226 s on Asia). Options: notes/T-4204-options.md.
-  - Goal: An edit during a whole re-solve shows its lines in about the touched-cities time; edits arriving together share one quick calculation, never one each.
+- T-4220 [P2] {L:solve-speed} {waits:Anita} Quick figures for edits made during a whole re-solve
+  - Need from Anita: Build the design in notes/T-4220.md (a second worker re-solves only the touched cities; about 12-14 h in 9 stages; 60-90 MB more memory while it runs, off on phones)? I'd say yes.
+  - Context: You, 11-24: "edits made during remaining full passes should ideally get fast numbers ... we need to do some sort of batching". On Asia an edit during the refresh or an intercity re-solve waits 100-250 s; the design gives lone-edit time (8-40 s). Gemini reviewed it.
+  - Goal: Those edits show their lines in about the touched-cities time; edits arriving together share one quick calculation.
+  - Other: notes/T-4220.md ("For Anita" first)
 - T-2198 [P3] {L:passing-tracks} {after:T-3456} Mark where faster trains lose time
   - Context: A train can lose minutes behind slower ones, but it shows only in the line panel, never on the map or trouble list. You 2026-11-16: this goes in the detailed crowding panel when it is built.
   - Goal: The loss shows in the detailed crowding panel.
