@@ -217,6 +217,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4144 stream D: every panel redraws on each state (T-4097 part C); T-3804 today answers 125-445 ms.
   - Goal: Panels redraw only their own records, issues list and totals patched; 6-10 h.
   - Other: notes/T-4144.md
+- T-4154 [P2] {L:checks} Agent browsers run past their core claim
+  - Context: 11-24 at cap 10: three agent games (play.mjs on 6151 and 6168, a smoke) ran on 14 cores with no claim in the ledger, and the edit bench's renderer used 8 cores on a 4-core claim.
+  - Goal: Every agent browser stays on its claimed cores for its whole life, or stops when its claim ends.
 - T-4151 [P2] {L:edit-speed} The edit bench calculates trips in its loaded pass
   - Context: From T-4144: both saves load final from the cache and a paused clock never calculates again, so the bench's while-calculating pass measures nothing.
   - Goal: That pass runs during a real calculation.

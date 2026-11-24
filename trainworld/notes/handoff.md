@@ -7,7 +7,8 @@ diary notes/handoff-log.md. Her time UTC-5.
 ## In flight (adopt from the board)
 - Edit speed, plan notes/T-4144.md; her 23:1x "do all, land all, one message when done". TOP: editnetwork T-4153 (opus,
   bounded drawn network on master: 50-70% of the wait; her 00:0x). editbase T-4145 (base landable; land after its
-  bench+smoke, then tell editstations/editlines to merge master), editstations T-4146 (B), editlines T-4147 (A),
+  bench+smoke, then tell editstations/editlines to merge master), editstations T-4146 (B), editlines T-4147 (A; stage 1 rows-first done in tree, smoke unverified, hooks in clock.worker.ts and clockDemand.ts may
+  conflict with editbase/editworker at merge),
   editworker T-4149 (D worker: bayTimes, posting, then A/B/E; rows-first waits for base+B), firstclick T-4143 (E).
   Base API at the top of notes/T-4145.md: put it in C's brief. Queued: C T-4148, D page T-4150, T-4133/4134 after
   retime, T-4151. Her yes: refusals take a shown edit back, money at the click; refusals must answer fast too.
@@ -24,7 +25,8 @@ diary notes/handoff-log.md. Her time UTC-5.
 
 LIVE v0.4.5. 8800 = master always (809a0d16); the track build only at /trainworld-track/ (?track), own saves, no
 account (snaptrack.py). Her North America save is level 42: opens only there; backups in artifacts/trainworld/savedl/.
-Cap 10 from 23:48 for a few hours (her ask), then back to 14 daytime; cores 0-1 hers (reserve_cores.ps1 -Loop 30, now never touches terminals). Bench: perf_bench.mjs,
+Cap 10 from 23:48 for a few hours (her ask, she is gaming), then back to 14 daytime; while at 10 the reserve loop runs
+-Reserved 6 (agents on cores 6-15; task bjeex4bpp): restart it with -Reserved 2 when the cap goes back; cores 0-1 hers (reserve_cores.ps1 -Loop 30, now never touches terminals). Bench: perf_bench.mjs,
 ledger notes/perf-ledger.jsonl.
 
 ## Her words

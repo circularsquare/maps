@@ -62,7 +62,7 @@ while ($true) {
     try {
       $pr = Get-Process -Id $id -ErrorAction Stop
       if ($WhatIf) { $done++; continue }
-      if ([int64]$pr.ProcessorAffinity -band 3) { $pr.ProcessorAffinity = [IntPtr]$mask }
+      if ([int64]$pr.ProcessorAffinity -band (([int64]1 -shl $Reserved) - 1)) { $pr.ProcessorAffinity = [IntPtr]$mask }
       if ($pr.PriorityClass -ne 'BelowNormal' -and $pr.PriorityClass -ne 'Idle') { $pr.PriorityClass = 'BelowNormal' }
       $done++
     } catch { $failed++ }
