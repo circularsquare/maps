@@ -234,10 +234,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-921 (11-24): a western Montana save with 4 lines and 22 stations loads in 10-20 s, nearly all opening the zone; the trip calculation is under 1 s. Saved as perfbench/saves/t921-montana-4lines.save.
   - Goal: That load profiled piece by piece and its biggest piece cut.
   - Other: notes/T-921.md
-- T-4184 [P2] {L:memory} The clock worker's next memory cuts on phones (taking, 2026-11-24, agent phonemem2)
-  - Context: From T-3939 (11-24): on a 13-zone phone save the clock worker is about 240 MB, WASM 93 MB after the boarding cut. The reporter's save had about 140 MB more JS and buffers, not yet named. Exact cuts found: stop order as 16-bit numbers (6.5 MB), the network draw cache (21 MB), the outlines copy (11.5 MB).
-  - Goal: The reporter's extra 140 MB named and the biggest exact cuts made, same figures.
-  - Other: notes/T-3939.md
 - T-4141 [P3] {L:station-placement} Track placed by an edit call crossed the Hudson at ground level
   - Context: Seen by T-4112: a route entered through the game's edit call crossed the Hudson at ground level without a refusal, while pointer-drawn track nearby was bridged. Water may not have been loaded under part of it.
   - Other: notes/T-4112.md
@@ -263,7 +259,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Found 11-22 (notes/T-4055.md): one edit reaching two new zones (Philadelphia and Providence from NYC) gives the Philadelphia line 63,996 riders; separate edits or a reload give 68,341. The first solve is declared final on a market missing a pack that lands during it. New-zone lines show up to 6% too few riders until the next edit.
   - Goal: A pack opening that lands mid-solve makes that solve stale, so batch and separate edits give the same figure (about 1-2 h).
   - Other: notes/batchcheck14.md, notes/T-4055.md
-- T-4057 [P1] {L:solve-speed} Solve speedups outside the first-arrival search
+- T-4057 [P1] {L:solve-speed} Solve speedups outside the first-arrival search (taking, 2026-11-24, agent solvereuse)
   - Context: You, 11-23: "main goal for today is to hopefully find some compute time improvements to compensate for the better pathfinding that takes into account that express routes are faster." T-4054 works on the search and `pool_cost`; this one profiles the whole solve on the real save and other big cities and takes the biggest costs elsewhere.
   - Goal: The top costs of a full solve named with their share, and the biggest ones cut with the same answers.
 - T-4075 [P2] {L:trains-drawn} Trams drawn off their track (taking, 2026-11-24, agent trams)
@@ -402,10 +398,18 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3875 [P3] {L:cleanup} {after:T-2374 and T-3873} Cut code-map.md to one line per file
   - Context: docs/code-map.md is 707 lines and about 100 KB with 700 task ids, over the Read tool's cap, so no agent can read it whole though CLAUDE.md sends every agent there.
   - Goal: One line per file saying what it holds, task ids dropped, about a third of today's size.
-- T-3160 [P2] {L:memory} Phone memory on real-network starts
+- T-3160 [P2] {L:memory} Phone memory on real-network starts (taking, 2026-11-24, agent phonedemand)
   - Context: The Tokyo real-network start on an emulated iPhone (production build) peaked at 1.6 GB in the tab, now 1.4. Safari also holds the solving worker's WASM (280 MB), the clock worker (260) and the page (about 200). You, 2026-11-16: "lots of people are unable to really play properly cuz tehy dont have enoguh ram. especially on phones."
   - Goal: The solving worker's peak down again, or the five periods' held results (157 MB in WASM) cut, rail trips unchanged, measured on a production build.
   - Other: Stage 4's exp rows (exact, about 7 MB in the game, maybe 6% slower) not landed, kept as notes/T-3160-exprows.patch. notes/T-3160.md, stage 5.
+- T-4187 [P2] {L:memory} {after:T-4153 stage 2 lands} The clock worker's drawing cache on big player networks
+  - Context: From T-4184: on a Community Tokyo save (t9gksxmu, 375 MB clock worker on a phone) the extra is the drawing state for the player's track: draw cache 46 MB, line bands' memo and orders 25, posted 14. The cuts (about 20-25 MB, exact) touch code editnetwork changes.
+  - Goal: Those cuts made with figures identical, measured on t9gksxmu on an emulated iPhone.
+  - Other: notes/T-4184.md
+- T-4188 [P2] {L:memory} A Community save that never loads on a phone
+  - Context: From T-4184: Community save jwxidghd did not finish loading in 10 minutes on an emulated iPhone. Not looked into; could be memory, a stall, or the emulation.
+  - Goal: The cause named; the save loads on the emulated phone, or the reason it can't is in the notes.
+  - Other: notes/T-4184.md
 - T-2762 [P3] {L:solve-speed} Faster longer-trips answer for a bubble
   - Context: On North America a bubble answer still takes about 300 ms per worker (NYC 60 ms) after T-2747.
   - Goal: Bring the North America answer close to NYC.

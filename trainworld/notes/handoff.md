@@ -5,10 +5,10 @@ Updated: 2026-11-24 09:03 UTC. Live state: `venv\Scripts\python.exe trainworld/t
 diary notes/handoff-log.md. Her time UTC-5.
 
 ## In flight (mine, maps-2c; phonemem2 and zoneslow run in maps-c0's tab: follow-ups via "relay to <agent>: <text>" to maps-c0, or a fresh agent on their tree)
-- phonemem2 T-4184: next clock-worker memory cuts on phones; avoids map/network.ts.
-- zoneslow T-4051: zone-open slow path (125 s vs 35 s on her NA save), helper worker opens the new zone first.
-- memland (Sonnet): merges master into tw/memgrowth (perf_bench.mjs conflict: tree's PERF_QUERY/demandHeap + master's
-  after-playable memory re-read), then I run finish memgrowth (T-4179: demand memory -64 to -479 MB, same figures; checker look).
+- zoneslow T-4051 (maps-c0 tab): zone-open slow path (125 s vs 35 s on her NA save), helper worker opens the new zone first.
+- Landed: memgrowth T-4179 c842cd599, phonemem2 T-4184 20d3a0029 (changelog c090). Batch checker check3 (Sonnet) on both;
+  smoke on master and snap8800 20d3a002 started 10:08 (logs in my scratch smoke/, snap/).
+- phonedemand T-3160 (Opus, tree phonedemand), solvereuse T-4057 (Opus, tree solvereuse: reuse one-off search tables).
 - T-4161 done in shonei-server 7bdd559 (level 39 + LBE1 block), unpushed, not deployed: deploy.ps1 on her yes before 0.4.6, then push shonei-server.
 - trams T-4075 (Opus, tree trams): trams drawn off track (player complaint).
 - editbench landed (2d8f5e3f9): its stop-click rows on Asia show the line path 1.4-1.9 s after a stop click (T-4097's 100 ms goal): next edit-speed round.

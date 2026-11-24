@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4184 [P2] {L:memory} The clock worker's next memory cuts on phones (2026-11-24): Three exact clock-worker cuts: stop order 16-bit (account 45.5 -> 39.0 MB natively), outlines copy as varints (11.5 -> 4.7 MB), corridor records as typed columns (NYC 36.8 -> about 10 MB); clock worker on an emulated iPhone 206-227 -> 188-190 MB on the stand-in, 225-244 -> 180-187 on NYC, same rail trips. The reporter's extra named on a real Community save of the same shape (t9gksxmu, 375 MB on B's build): netCache, the bands' closure (cut by T-3939), bands' memo and orders, posted, water rasters; netCache's cut described. notes/T-4184.md.
 - T-4169 [P2] {L:checks} Edit bench stop clicks and compare pick up the wrong rows (2026-11-24): stop clicks send toggleStop, now measured; ledger lines carry a run id and --compare/--show read one run. notes/T-4169.md.
 - T-4183 [P2] {L:checks} play.mjs can't load a game on a production build (2026-11-24): play.mjs opened the maps front page on 8800; start takes --base and defaults to trainworld there; the real NYC save loads in 19 s with the batch check figures. notes/T-4183.md.
 - T-4160 [P2] {L:edit-speed} Bounded rows' regions differ from a fresh build on one Asia seed (2026-11-24): Already fixed by T-4137 (same seed 9 step 15 failure; batch check 2 ran before it landed); Asia 10x40 passes on b02473811, no code change. notes/T-4160.md.
