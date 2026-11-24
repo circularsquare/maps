@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c011",
+      "text": "bus trips now count bus minutes a bit longer, waits of at least 2 minutes and a 500 m walk",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4224",
+      "by": "busdemand",
+      "at": "2026-11-24T23:14:01Z",
+      "rev": 1,
+      "area": "demand",
+      "fix": false
+    },
+    {
       "id": "c010",
       "text": "a click right after placing or deleting track no longer waits for it to show up",
       "edited": null,

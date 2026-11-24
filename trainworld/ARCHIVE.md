@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4224 [P3] {L:buses} Bus minutes 1.1x, bus waits at least 2 minutes, 500 m reach (2026-11-24): BUS_RIDE_WEIGHT 1.1, BUS_MIN_WAIT_MIN 2.0, BUS_REACH_M 500; NYC test buses -6.2%, Belgrade -8.0% (trams +7%) notes/T-4224.md.
 - T-4237 [P2] {L:solve-speed} Long-run stop edits taken as city edits (2026-11-24): baseline held per population (holdNet), not only per market part; all four intercity tests fire in clusters without one.
 - T-4235 [P1] {L:stops} Loop close refused on ordinary circle lines (2026-11-24): closed without code: her 11-24: not needed.
 - T-4236 [P2] {L:small-fixes} Number symbols for lines past 99 (2026-11-24): letterOf takes up to 4 characters of the number; the chip already widens to a pill. notes/T-4236.md.

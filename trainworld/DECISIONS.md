@@ -49,6 +49,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-16 (Anita, T-534): A neighbourhood can name a station if within 3.5 km of its nearest fellow (Anita, was 3 km), so Harlem, Williamsburg and Midtown qualify; Manhattan (12 km) does not.
 
 ## Lines and scheduling
+- 2026-11-24 (Anita, T-4239): The train-count settle may stop once lines hold nearly still instead of running all 80 rounds on shared track; "we definitely dont need to do to bit exact". notes/T-4188.md
 - 2026-11-24 (, T-4227): A period two of a line's rows share (moved hours) runs each row's weekend trains there. A headway line's weekend percent counts the trains its headway takes; on full track the period's rate is cut and shared (the lie). notes/T-4227.md
 - 2026-11-24 (, T-4223): A loop's closing hop carries on round however long when the quickest way in turns back on the way (back over the line's own track, no loop); `CARRY_SLACK_S` (300 s) still keeps a balloon from running a long way round to avoid its turn. notes/T-4223.md
 - 2026-11-24 (Anita, T-4178): A reversal mid-line limits capacity no more than a line's end: each way counts half a turn (the lie: trains turn there twice a round trip). The reversal icon shows only where the turn limits the line. notes/T-4178.md
