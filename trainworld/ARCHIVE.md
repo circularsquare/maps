@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4183 [P2] {L:checks} play.mjs can't load a game on a production build (2026-11-24): play.mjs opened the maps front page on 8800; start takes --base and defaults to trainworld there; the real NYC save loads in 19 s with the batch check figures. notes/T-4183.md.
 - T-4160 [P2] {L:edit-speed} Bounded rows' regions differ from a fresh build on one Asia seed (2026-11-24): Already fixed by T-4137 (same seed 9 step 15 failure; batch check 2 ran before it landed); Asia 10x40 passes on b02473811, no code change. notes/T-4160.md.
 - T-4175 [P3] {L:cleanup} Stale lines in SPEC, docs and handoff (2026-11-24): stale lines fixed: reserve_cores.ps1 comment, TASKS header, stackdumps deleted; SPEC and interface lines were already right (notes/T-4173.md)
 - T-4173 [P2] {L:checks} cores.py uses one ledger from any worktree (2026-11-24): cores.py resolves the main ledger from .tw-trees/<name>/ and .tw-snap/; agent_cargo.py and cores.mjs workarounds removed (notes/T-4173.md)
