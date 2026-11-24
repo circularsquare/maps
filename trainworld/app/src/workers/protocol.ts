@@ -969,7 +969,18 @@ export type PaidFor = { line?: number; nodes?: number[]; edges?: number[] };
  * single track (0 both), tram, a one-track station's box centred; built: drawn as built, else as blueprint */
 export interface StationBox { lx: number; ly: number; ways: ArrayLike<number>[]; perM: number; plat: number; side: number; tram: boolean; mid?: boolean; built?: boolean }
 /** T-4145: how an edge is drawn ahead: built (blueprint no more), switched off or on, its level at each end, its track count */
-export interface EdgeLook { built?: boolean; off?: boolean; level?: [number, number]; tracks?: 1 | 2 }
+export interface EdgeLook {
+  built?: boolean; off?: boolean; level?: [number, number]; tracks?: 1 | 2;
+  /** T-4148: the track type, as the track model numbers it (0 rail, 1 high speed, 2 street tram, 3 tram, 4 busway) */
+  kind?: 0 | 1 | 2 | 3 | 4;
+  /** T-4148: one-way single track's way, as the track model stores it (0 the run's own, 1 a to b, 2 b to a, 3 both) */
+  oneWay?: 0 | 1 | 2 | 3;
+  /** the edge's end nodes, a and b, with `oneWay` (its chevrons are laid in runs of joined pieces) */
+  ends?: [number, number];
+}
+/** T-4148: a new piece of track the edit made, drawn as blueprint until the network holds it: the edge's points in local
+ * units (x, y, z each) */
+export interface NewPiece { edge: number; pts: Float32Array; tracks: 1 | 2; kind: number }
 /** T-4145: what an applied edit changed, as the page draws it (ids are the ones drawn now unless said); every part optional */
 export interface EditWord {
   /** a rail line's strokes now draw these edges (its plan's path and its return run's); null: the line is gone */
@@ -981,6 +992,8 @@ export interface EditWord {
   /** station node ids not drawn */
   hideStations?: number[];
   stations?: StationBox[];
+  /** T-4148: track the edit added (Double up's pair), drawn as blueprint */
+  pieces?: NewPiece[];
   /** a line's colour, 0-255 */
   colours?: { line: number; rgb: [number, number, number] }[];
   /** what the edit cost, in the cash's units (0: nothing, in place of a price guessed at the click) */

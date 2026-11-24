@@ -30,7 +30,7 @@ import { BuildingFloors } from "./buildingFloors";
 import { TrainGuard } from "./trainGuard";
 import { LOT_STRIDE } from "./facilityPlace";
 import { F_BLUEPRINT, platformShapeAt, sampleValue, stationIndexOf, type NetworkBuffers, type Strokes } from "./network";
-import { aheadEmpty, aheadParts, joinStations, noAhead, standInStations, type AheadModel } from "./lineAhead";
+import { aheadChevrons, aheadEmpty, aheadParts, joinStations, noAhead, standInStations, type AheadModel } from "./lineAhead";
 import { BAY_STRIDE } from "./terminalBays";
 import { BAND_RANGE, TRAFFIC_PICK_DIV, type TrafficBands } from "./lineBands";
 import { BRIDGE_VS, HOT_STATIONS, LINES_W, PROBE_FS, PROBE_VS, SEL_FS, SEL_MAX, SEL_STRIDE, SEL_VS, STATION_FS, STATION_VS, STROKE_FS, STROKE_VS, TEX_W, TRAIN_FS, TRAIN_VS } from "./rendererShaders";
@@ -660,6 +660,7 @@ export class NetworkRenderer {
     this.marks.setNetwork(n.marks);
     this.oneWay.setNetwork(n.oneWay);
     this.oneWayTrack.setNetwork(n.oneWayTrack);
+    this.chevronsAhead = false;
     this.lots.setNetwork(n.lots);
     this.floors.setNetwork(n.buildings);
     const oldTrack = this.track, oldLines = this.lines;
@@ -793,6 +794,8 @@ export class NetworkRenderer {
   /** the last `buildAhead` drew something (textures, strokes, boxes or colours), which a network set must take away
    * even when what is drawn ahead is empty by then */
   aheadDrawn = false;
+  /** T-4148: the one-way track chevrons drawn are an edit's (`aheadChevrons`), not the network's */
+  private chevronsAhead = false;
 
   /** T-4145: draw `m` ahead of the network from now (until the next call). */
   setAhead(m: AheadModel, build = true) {
@@ -846,6 +849,9 @@ export class NetworkRenderer {
         this.standCount = s.count;
       }
     }
+    const chev = n && !aheadEmpty(m) ? aheadChevrons(n, m.edges) : null;
+    if (chev) { this.oneWayTrack.setNetwork(chev); this.chevronsAhead = true; }
+    else if (this.chevronsAhead) { this.oneWayTrack.setNetwork(n?.oneWayTrack); this.chevronsAhead = false; }
     if (n && this.tex.colours) this.putTexture("colours", this.shownColours(n), "rgba8", LINES_W);
     // stations hidden ahead, with those on a hidden level (the station flags are rebuilt from it)
     if (n && this.hiddenFor === n) this.hideStations(n);

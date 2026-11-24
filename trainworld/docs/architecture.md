@@ -153,7 +153,11 @@ Web first, so it can be shared as a link.
   arrival place). The renderer draws the list (map/lineAhead.ts): a line drawn ahead on its own segments it keeps and
   the track's in its colour on the edges it gained, its network strokes off by a per-line texture; edges off by a
   per-edge texture, or redrawn with their new look; station boxes by a second draw of the station shader; a deleted
-  line's colour transparent (a new line's colour drawn opaque past the network's ones). A guess sent waits for its
+  line's colour transparent (a new line's colour drawn opaque past the network's ones). **Pieces** [T-4148]: a track type
+  change or a rebuild gives an edge the new type's flags (`kind`); one way gives it a way (`oneWay`) and the one-way
+  chevrons are drawn again without those on the edges it names, with the new ones laid on the strokes of those it sets; a
+  switched off station is drawn from its flags changed; Double up's new pair comes with the word (`pieces`: the model's
+  own points, drawn as blueprint). A guess sent waits for its
   answer however long its ground takes (a 120 s backstop); one never sent goes after 15 s. The line tool draws a stop click's path at the click from
   a read of it taken while the pointer was over that station (`clickPath`: the path once taken out or added, the return
   run's too), valid while no edit has been sent since it was asked, and asked again behind each click, since the worker

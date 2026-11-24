@@ -6,7 +6,8 @@
 // segments with the look changed. Station boxes are drawn by the station shader from `standInStations`.
 
 import { BAND_STRIDE } from "./lineBands";
-import { F_BLUEPRINT, F_FADED, F_HSR, F_OFF, F_SPLIT, F_TRAM, type NetworkBuffers, type Strokes } from "./network";
+import { F_BLUEPRINT, F_BUSWAY, F_FADED, F_HSR, F_OFF, F_SPLIT, F_TRAM, type NetworkBuffers, type Strokes } from "./network";
+import { CHEVRON_STRIDE, oneWayTrackRuns, type OneWayEdge } from "./oneWayMarks";
 import { platformPoints, platformShape, PLATFORM_HALF_M, PLATFORM_POINTS, ST_ONE, ST_ONE_MID, ST_ONE_NEG, ST_TRAM } from "./stationGeometry";
 import type { EdgeLook, StationBox } from "../workers/protocol";
 
@@ -121,12 +122,55 @@ function withLook(out: Strokes, k: number, look: EdgeLook, line: boolean, at: nu
   if (look.built) f &= ~(F_BLUEPRINT | F_OFF | (line ? F_FADED : 0));
   if (look.off === true && f & F_BLUEPRINT) f |= F_OFF;
   if (look.off === false) f &= ~F_OFF;
+  // (a line over the edge takes a tram's look but not high speed's, which is the line's own setting)
+  if (look.kind !== undefined) {
+    f &= ~(F_HSR | F_TRAM | F_BUSWAY);
+    if (look.kind === 1 && !line) f |= F_HSR;
+    if (look.kind >= 2) f |= F_TRAM | (look.kind === 4 && !line ? F_BUSWAY : 0);
+  }
   out.flags[k] = f;
   if (look.level) {
     const [a, b] = look.level, t0 = of ? at / of : 0, t1 = of ? (at + 1) / of : 1;
     out.level[k] = levelCode(Math.round(a + (b - a) * t0), Math.round(a + (b - a) * t1));
   }
   if (look.tracks) out.lane![2 * k] = out.lane![2 * k + 1] = look.tracks === 2 ? 255 : 0;
+}
+
+/** T-4148: the one-way track chevrons drawn ahead of network `n`: its own without those on edges an edit sets one way
+ * or clears (a chevron lies on its edge's stroke), and the chevrons of the edges set to run one way, laid as the network
+ * lays them but clear only of stations and junctions. Null when no look changes a way. */
+export function aheadChevrons(n: NetworkBuffers, edges: ReadonlyMap<number, EdgeLook>): Float32Array | null {
+  const ways = new Map<number, 0 | 1 | 2 | 3>();
+  for (const [e, look] of edges) if (look.oneWay !== undefined) ways.set(e, look.oneWay);
+  if (!ways.size) return null;
+  const T = n.track, idx = new Map<number, number[]>();
+  for (let i = 0; i < T.count; i++) if (ways.has(T.edge[i])) (idx.get(T.edge[i]) ?? idx.set(T.edge[i], []).get(T.edge[i])!).push(i);
+  const base = n.oneWayTrack ?? new Float32Array(0), keep: number[] = [];
+  // a chevron is on a stroke when it is as near as the floats say
+  const on = (x: number, y: number) => {
+    for (const list of idx.values()) for (const i of list) {
+      const x0 = T.seg[4 * i], y0 = T.seg[4 * i + 1], dx = T.seg[4 * i + 2] - x0, dy = T.seg[4 * i + 3] - y0, l2 = dx * dx + dy * dy;
+      const t = l2 > 0 ? Math.max(0, Math.min(1, ((x - x0) * dx + (y - y0) * dy) / l2)) : 0;
+      if (Math.hypot(x0 + t * dx - x, y0 + t * dy - y) <= 1e-4 * Math.sqrt(l2 || 1) + 1e-9) return true;
+    }
+    return false;
+  };
+  for (let k = 0; k + CHEVRON_STRIDE <= base.length; k += CHEVRON_STRIDE) if (!on(base[k], base[k + 1])) keep.push(k);
+  const fresh: number[] = [], runs: OneWayEdge[] = [];
+  for (const [e, way] of ways) if (way === 1 || way === 2) {
+    const list = idx.get(e), ends = edges.get(e)?.ends;
+    if (list?.length && ends) runs.push({ a: ends[0], b: ends[1], way, strokes: pick(T, list) });
+  }
+  if (runs.length) {
+    const clear: [number, number][] = [];
+    for (let i = 0; i < n.stationCount; i++) clear.push([n.stations[i * 3], n.stations[i * 3 + 1]]);
+    for (let i = 0; i + 1 < n.junctions.length; i += 2) clear.push([n.junctions[i], n.junctions[i + 1]]);
+    oneWayTrackRuns(runs, clear, fresh);
+  }
+  const out = new Float32Array(keep.length * CHEVRON_STRIDE + fresh.length);
+  keep.forEach((k, j) => out.set(base.subarray(k, k + CHEVRON_STRIDE), j * CHEVRON_STRIDE));
+  out.set(fresh, keep.length * CHEVRON_STRIDE);
+  return out;
 }
 
 /** Strokes `idx` of `s` copied out (lane and band where it has them). */

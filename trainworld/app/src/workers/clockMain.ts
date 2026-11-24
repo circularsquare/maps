@@ -187,6 +187,13 @@ export function drawnEdge(a: TrackApi, id: number): Float32Array {
   }
   return d;
 }
+/** T-4148: an edge's points in local units, read from the track model again (the edit's word is built before the dirty
+ * edges' kept points are dropped) */
+export function drawnEdgeNow(a: TrackApi, id: number): Float32Array {
+  edgeDrawn.delete(id);
+  edgeMerc.delete(id);
+  return drawnEdge(a, id);
+}
 /** a line's first run, sampled, in local units (x, y each), made and kept if not yet */
 export function drawnLine(a: TrackApi, id: number): Float32Array {
   let d = lineDrawn.get(id);

@@ -351,6 +351,61 @@ async function play(g, runs, only, acc, note) {
     }
   }
 
+  // T-4148: the select tool's edits that change how track and stations look, on blueprint laid at the later sites
+  const doEdit = (op) => page.evaluate(async (op) => {
+    let edit;
+    try { edit = (await import('/src/game/world.ts')).edit; } catch { edit = (o) => window.tw.client.edit(o); }
+    return edit(op, true);
+  }, op);
+  const settle = async () => { await quiet(20000, 1000); };
+  // --shots <dir>: a picture before an edit, just after its message (before the network), and once it settled
+  const SHOTS = opt('shots', false) ? String(opt('shots')) : null;
+  const shot = async (name) => { if (SHOTS) await page.screenshot({ path: join(SHOTS, name + '.png'), clip: { x: 250, y: 150, width: 900, height: 600 } }); };
+  const shotEdit = async (op, name) => {
+    await shot(name + '-0');
+    const done = page.evaluate(async (op) => { const { edit } = await import('/src/game/world.ts'); return edit(op, true); }, op);
+    await sleep(Number(opt('shot-wait', 60)));
+    await shot(name + '-1');
+    const a = await done;
+    await quiet(20000, 1000);
+    await shot(name + '-2');
+    return a;
+  };
+  if (want('pieces')) for (let k = 0; k < runs; k++) {
+    const site = C.sites[runs + k];
+    if (!site) { note('  pieces: no site ' + (runs + k)); break; }
+    const [a, b, c] = site.pts;
+    await g.act.key('Escape');
+    await g.act.camera(site.pts[1], 14.5);
+    const was = await page.evaluate(() => { const w = window.tw.world.value; return { e: w.edges.map((x) => x.id), s: w.save.stations.map((x) => x.num) }; });
+    await setTrack();
+    await g.act.drawTrack([a, b]); await settle();
+    await g.act.drawTrack([b, c]); await settle();
+    await g.act.tool('station');
+    await g.act.placeStation(site.st[0]); await settle();
+    await g.act.placeStation(site.st[1]); await settle();
+    await g.act.key('Escape');
+    const F = await page.evaluate((was) => { const w = window.tw.world.value; return { edges: w.edges.filter((e) => !was.e.includes(e.id)).map((e) => e.id), stations: w.save.stations.filter((s) => !was.s.includes(s.num)).map((s) => s.num) }; }, was);
+    if (!F.edges.length) { note('  pieces ' + (k + 1) + ': no new edges'); continue; }
+    const up = async () => { await g.act.key('Control+Z'); await settle(); };
+    const plain = async (op) => { await doEdit(op); await settle(); };
+    await plain({ op: 'edgesTracks', edges: F.edges, tracks: 2 });
+    await sample(() => (SHOTS && k === 0 ? shotEdit({ op: 'edgesKind', edges: F.edges, kind: 2 }, 'kind') : doEdit({ op: 'edgesKind', edges: F.edges, kind: 2 })), ['edgesKind'], { shows: 'track type: shows', built: 'track type: built' }, 'track type ' + (k + 1));
+    await plain({ op: 'edgesKind', edges: F.edges, kind: 1 });
+    await sample(() => (SHOTS && k === 0 ? shotEdit({ op: 'doubleUp', edge: F.edges[0] }, 'double') : doEdit({ op: 'doubleUp', edge: F.edges[0] })), ['doubleUp'], { shows: 'double up: shows', built: 'double up: built' }, 'double up ' + (k + 1));
+    await up();
+    await plain({ op: 'edgesTracks', edges: F.edges, tracks: 1 });
+    await sample(() => (SHOTS && k === 0 ? shotEdit({ op: 'oneWays', edges: F.edges, dirs: F.edges.map(() => 1) }, 'oneway') : doEdit({ op: 'oneWays', edges: F.edges, dirs: F.edges.map(() => 1) })), ['oneWays'], { shows: 'one way on: shows', built: 'one way on: built' }, 'one way on ' + (k + 1));
+    await sample(() => (SHOTS && k === 0 ? shotEdit({ op: 'oneWays', edges: F.edges, dirs: F.edges.map(() => 0) }, 'oneway-off') : doEdit({ op: 'oneWays', edges: F.edges, dirs: F.edges.map(() => 0) })), ['oneWays'], { shows: 'one way off: shows', built: 'one way off: built' }, 'one way off ' + (k + 1));
+    await plain({ op: 'edgesTracks', edges: F.edges, tracks: 2 });
+    if (F.stations.length) {
+      await sample(() => (SHOTS && k === 0 ? shotEdit({ op: 'blueprintOff', edges: [], stations: F.stations, off: true }, 'stationoff') : doEdit({ op: 'blueprintOff', edges: [], stations: F.stations, off: true })), ['blueprintOff'], { shows: 'station off: shows', built: 'station off: built' }, 'station off ' + (k + 1));
+      await plain({ op: 'blueprintOff', edges: [], stations: F.stations, off: false });
+    }
+    await plain({ op: 'construct', edges: F.edges, stations: F.stations });
+    await sample(() => (SHOTS && k === 0 ? shotEdit({ op: 'rebuild', edges: F.edges, stations: [], level: null, kind: 2, tracks: 0 }, 'rebuild') : doEdit({ op: 'rebuild', edges: F.edges, stations: [], level: null, kind: 2, tracks: 0 })), ['rebuild'], { shows: 'rebuild: shows', built: 'rebuild: built' }, 'rebuild ' + (k + 1));
+  }
+
   // stops, reorder, undo on the save's biggest line
   if (want('stop') || want('reorder') || want('undo')) {
     await g.act.key('Escape');

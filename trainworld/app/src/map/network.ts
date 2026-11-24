@@ -542,6 +542,18 @@ export function strokesFromParts(parts: Float32Array[], bad: boolean, placement 
   return b.build();
 }
 
+/** T-4148: edges the track model added, as the strokes the network will lay for them (blueprint, their kind's look, double
+ * track's lanes), for drawing them ahead of it; `pts` are local units, x, y, z each */
+export function strokesFromPieces(pieces: readonly { edge: number; pts: Float32Array; tracks: 1 | 2; kind: number }[]): Strokes {
+  const b = new StrokeBuilder(false, MIN_SEG_M);
+  for (const p of pieces) {
+    const lp = lanePoints(p.pts.slice(), p.tracks === 2 && p.kind !== 4 ? 1 : 0);
+    const flags = F_BLUEPRINT | (p.kind === 1 ? F_HSR : 0) | (p.kind >= 2 ? F_TRAM : 0) | (p.kind === 4 ? F_BUSWAY : 0);
+    b.add(lp.lpts, TRACK, p.edge, flags, false, 0, undefined, lp.lane);
+  }
+  return b.build();
+}
+
 /** Several edges' local polylines (x, y, z triples) as one stroke set, for the drag-selected
  * blueprint's highlight band (T-333). */
 export function strokesFromEdges(lines: Float32Array[]): Strokes {
@@ -830,7 +842,7 @@ interface LanePoints { lpts: Float32Array; lane: number | Uint8Array; src: numbe
  * `lanes`: 1 double track, 2 and 4 narrowing to single track over TAPER_M at the a and b end (half
  * the edge at most each). A point is added where a taper starts, so it never spans a long leg.
  */
-function lanePoints(pts: Float32Array, lanes: number): LanePoints {
+export function lanePoints(pts: Float32Array, lanes: number): LanePoints {
   const n = pts.length / 3;
   const tapA = (lanes & 2) !== 0, tapB = (lanes & 4) !== 0;
   if (!(lanes & 1) || (!tapA && !tapB) || n < 2) return { lpts: pts, lane: lanes & 1 ? 255 : 0, src: null };

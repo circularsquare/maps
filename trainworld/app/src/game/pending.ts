@@ -10,7 +10,7 @@
 
 import { signal } from "@preact/signals";
 import type { EdgeLook, EditOp, EditWord, StationBox } from "../workers/protocol";
-import type { NetworkBuffers, Strokes } from "../map/network";
+import { strokesFromPieces, type NetworkBuffers, type Strokes } from "../map/network";
 import type { RawStations } from "../map/lineAhead";
 
 /** What an edit shows ahead of the worker: every part optional (notes/T-4145.md). */
@@ -314,6 +314,8 @@ export function pendingWord(seq: number, word: EditWord, order: number, noNet = 
   if (last?.seq === seq) { if (word.noUndo) last = null; else last.word = order; }
   let e = entries.find((x) => x.seq === seq);
   const fromWord = wordShow(word);
+  // (a one-way word names no end nodes: the guess's are the same edges')
+  if (fromWord.edges && e?.show.edges) for (const [id, look] of fromWord.edges) { const ends = e.show.edges.get(id)?.ends; if (look.oneWay !== undefined && ends) look.ends = ends; }
   if (!e) {
     if (!hasMap(fromWord) && !fromWord.cost) return;
     const t = sentAt.get(seq) ?? performance.now();
@@ -334,6 +336,7 @@ function wordShow(w: EditWord): Show {
   if (w.edges?.length) s.edges = new Map(w.edges.map(({ edge, ...look }) => [edge, look]));
   if (w.hideStations?.length) s.hideStations = w.hideStations;
   if (w.stations?.length) s.stations = w.stations;
+  if (w.pieces?.length) s.track = [strokesFromPieces(w.pieces)];
   if (w.colours?.length) s.colours = new Map(w.colours.map((c) => [c.line, c.rgb]));
   if (w.charge !== undefined) s.cost = w.charge;
   return s;
