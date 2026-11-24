@@ -265,6 +265,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: T-4157 (11-24): master against v0.4.5, demand memory +13% NYC, +12% Tokyo, +35% Belgrade; tab peak +0.5/+5/+9%. Cause not traced. Tree zoneopen (T-4051) happened to show NYC demand memory 1,163 to 1,003 MB.
   - Goal: The growth traced, demand memory back to v0.4.5 on all three saves, same figures; and why coarse demand barely cuts memory (her question).
   - Other: notes/T-4157.md
+- T-4181 [P1] {L:edit-speed} Show-at-click fixes from the final review (taking, 2026-11-24, agent editfix)
+  - Context: Gemini's review of the final edit-speed state (11-24) rates 8+ findings high: stale ahead textures after a network, a copied line invisible at the click, the first station of a new game not drawn, wrong click-time cash for Construct and rebuild.
+  - Goal: Each finding reproduced and fixed or rejected with a reason; t4170-one-path covers the real ones.
+  - Other: notes/gemini-editspeed-final-2026-11-24.md
 - T-4141 [P3] {L:station-placement} Track placed by an edit call crossed the Hudson at ground level
   - Context: Seen by T-4112: a route entered through the game's edit call crossed the Hudson at ground level without a refusal, while pointer-drawn track nearby was bridged. Water may not have been loaded under part of it.
   - Other: notes/T-4112.md
