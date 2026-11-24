@@ -15,6 +15,10 @@ import time
 from datetime import date, datetime, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+if HERE not in sys.path:
+    sys.path.insert(0, HERE)
+from filelock import FileLock
+
 ID = re.compile(r"^a-(\d{4}-\d{2}-\d{2})-(\d+)$")
 
 
@@ -67,27 +71,8 @@ class Store:
         return f"a-{day}-{top + 1}"
 
 
-class locked:
-    """A lock file made with O_EXCL, so two sessions never read-modify-write at once."""
-    def __init__(self, path):
-        self.path = path
-
-    def __enter__(self):
-        end = time.time() + 10
-        while True:
-            try:
-                os.close(os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY))
-                return
-            except FileExistsError:
-                if time.time() > end:
-                    raise SystemExit(f"{self.path} is held; if no asks.py is running, delete it")
-                time.sleep(0.1)
-
-    def __exit__(self, *x):
-        try:
-            os.remove(self.path)
-        except OSError:
-            pass
+def locked(path):
+    return FileLock(path, err=SystemExit, message=f"{path} is held; if no asks.py is running, delete it")
 
 
 def now():

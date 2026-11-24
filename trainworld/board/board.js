@@ -2267,6 +2267,52 @@ function clItem(it) {
         el('button', { class: 'btn plain', type: 'button', onclick: () => { CL.conflict[id] = null; renderChangelog(); } }, 'Discard'))) : null);
 }
 
+const CL_LINE_MAX = 80; // changelog.py LINE_MAX
+
+/** the start-menu line, edited in place; saved like an item's text, refused over CL_LINE_MAX */
+function clLineRow() {
+  const key = 'cl:line';
+  const cur = () => (drafts[key] === undefined ? CL.data.line || '' : drafts[key]);
+  const count = el('span', { class: 'cl-line-count meta' });
+  const state = el('span', { class: 'cl-state' }, CL.status.line || '');
+  const paint = (v) => {
+    const n = [...v.split(/\s+/).filter(Boolean).join(' ')].length;
+    count.textContent = `${n}/${CL_LINE_MAX}`;
+    count.classList.toggle('over', n > CL_LINE_MAX);
+    return n;
+  };
+  const save = async () => {
+    clearTimeout(CL.timers.line);
+    const v = drafts[key];
+    if (v === undefined) return;
+    if (paint(v) > CL_LINE_MAX) { CL.status.line = 'Not saved: over the limit'; state.textContent = CL.status.line; return; }
+    try {
+      const r = await clPost({ op: 'line', line: v });
+      if (!r.ok) throw new Error(r.status);
+      CL.data.line = (await r.json()).line;
+      if (drafts[key] === v) delete drafts[key];
+      CL.status.line = drafts[key] === undefined ? 'Saved' : 'Saving';
+    } catch (e) {
+      CL.status.line = `Not saved: ${e.message === '503' ? 'busy, try again' : e.message === '400' ? 'over the limit' : 'server not reachable'}`;
+    }
+    if (view === 'changelog') renderChangelog();
+  };
+  const input = el('input', { class: 'input cl-line', type: 'text', 'data-key': key, spellcheck: 'true',
+    placeholder: 'update v0.4.6: ...', 'aria-label': 'Start-menu line',
+    oninput: (e) => {
+      drafts[key] = e.target.value;
+      const ok = paint(e.target.value) <= CL_LINE_MAX;
+      CL.status.line = ok ? 'Saving' : 'Not saved: over the limit';
+      state.textContent = CL.status.line;
+      clearTimeout(CL.timers.line);
+      if (ok) CL.timers.line = setTimeout(save, CL_IDLE_MS);
+    },
+    onblur: () => { if (drafts[key] !== undefined) save(); } });
+  input.value = cur();
+  paint(cur());
+  return el('div', { class: 'cl-line-row' }, el('span', { class: 'meta' }, 'Start-menu line'), input, count, state);
+}
+
 function drawChangelog() {
   const box = $('#changelog');
   if (!CL.data) {
@@ -2282,7 +2328,7 @@ function drawChangelog() {
     el('div', { class: 'cl-head' },
       el('h2', { class: 'section' }, 'Next update', el('span', { class: 'n' }, ` ${all.length - hid} shown, ${hid} hidden`)),
       el('button', { class: 'btn', type: 'button', onclick: clAddGroup }, 'Add group')),
-    el('p', { class: 'meta' }, CL.data.line ? `Start-menu line: ${CL.data.line}` : 'Start-menu line: not written yet'),
+    clLineRow(),
   ];
   if (!CL.ok) kids.push(el('p', { class: 'meta' }, 'Not saved: server not reachable'));
   if (!all.length) kids.push(el('p', { class: 'meta' }, 'Nothing here yet'));

@@ -35,6 +35,10 @@ import sys
 import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+if HERE not in sys.path:
+    sys.path.insert(0, HERE)
+from filelock import FileLock
+
 ROOT = os.path.dirname(HERE)                       # trainworld/
 DIR = os.path.join(ROOT, "changelog")
 NEXT = os.path.join(DIR, "next.json")
@@ -49,36 +53,9 @@ CURLY = chr(0x2019)
 AREAS = ("track", "demand", "scheduling", "fares", "schematic", "community", "performance", "other", "bug")
 
 
-class Locked:
+def Locked(path):
     """A lock file shared by the CLI and serve.py, so an agent's add and her save never overwrite each other."""
-
-    def __init__(self, path):
-        self.lock = path + ".lock"
-
-    def __enter__(self):
-        os.makedirs(os.path.dirname(self.lock), exist_ok=True)
-        end = time.time() + 10
-        while True:
-            try:
-                self.fd = os.open(self.lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-                return self
-            except FileExistsError:
-                try:
-                    if time.time() - os.path.getmtime(self.lock) > 30:   # left by a crash
-                        os.remove(self.lock)
-                        continue
-                except OSError:
-                    pass
-                if time.time() > end:
-                    raise RuntimeError("changelog is locked")
-                time.sleep(0.05)
-
-    def __exit__(self, *a):
-        os.close(self.fd)
-        try:
-            os.remove(self.lock)
-        except OSError:
-            pass
+    return FileLock(path + ".lock", err=RuntimeError, message="changelog is locked")
 
 
 def now():
@@ -264,6 +241,18 @@ def update_item(item_id, fields, rev, path=NEXT):
         item["changed"] = now()
         write_file(d, path)
     return 200, item
+
+
+def set_line(text, path=NEXT):
+    """The start-menu line: whitespace folded, at most LINE_MAX characters (ValueError over). Shared by the CLI and the board."""
+    line = " ".join(str(text).split())
+    if len(line) > LINE_MAX:
+        raise ValueError("the line is %d characters, the limit is %d" % (len(line), LINE_MAX))
+    with Locked(path):
+        d = read(path)
+        d["line"] = line
+        write_file(d, path)
+    return line
 
 
 def shown(item):
@@ -492,10 +481,10 @@ def main():
                 i.get("task") or "-", "  " if i.get("parent") else "", "[group] " if i.get("group") else "", shown(i))
                 + ("  (edited)" if i["edited"] else ""))
     elif r.cmd == "line":
-        with Locked(NEXT):
-            d = read()
-            d["line"] = " ".join(r.text.split())
-            write_file(d)
+        try:
+            set_line(r.text)
+        except ValueError as e:
+            raise SystemExit(str(e))
     elif r.cmd == "publish":
         publish(r.version, r.at, r.dry_run)
 

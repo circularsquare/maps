@@ -494,6 +494,9 @@ select.small {
 #changelog h2.section { font-size: 14px; font-weight: 700; margin: 4px 0 2px; }
 #changelog h2.section .n { color: var(--muted); font-weight: 400; font-size: 13px; }
 #changelog > .meta { margin-bottom: 6px; }
+.cl-line-row { display: flex; align-items: center; gap: 8px; margin: 2px 0 8px; }
+.cl-line-row .cl-line { flex: 1; min-width: 0; }
+.cl-line-count.over { color: var(--s-you); font-weight: 700; }
 .cl-item { border-bottom: 1px solid var(--line); padding: 3px 0; }
 .cl-row { display: grid; grid-template-columns: auto auto auto minmax(0, 1fr) auto auto auto auto auto; align-items: center; gap: 8px; }
 /* T-3466: the area icon (the game's colours), its menu, groups and their items, bug fixes lighter */

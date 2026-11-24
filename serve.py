@@ -428,6 +428,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             obj = json.loads(self.rfile.read(size).decode("utf-8"))
         except (ValueError, UnicodeDecodeError):
             return self.send_error(400, "not JSON")
+        if isinstance(obj, dict) and obj.get("op") == "line":
+            try:
+                return self.send_json(200, {"line": changelog.set_line(str(obj.get("line") or ""), str(path))})
+            except ValueError as e:
+                return self.send_error(400, str(e))
+            except RuntimeError:
+                return self.send_error(503, "changelog is locked")
         if isinstance(obj, dict) and obj.get("op") == "group":
             try:
                 item = changelog.add_item(str(obj.get("text") or ""), None, "Anita", str(path), area=obj.get("area"),
