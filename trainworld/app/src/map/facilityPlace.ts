@@ -77,6 +77,8 @@ export interface FacilityCache {
   free: number[];
   grid: Map<number, number[]>;
   edges: Map<number, { pts: Float32Array; segs: number[] }>;
+  /** the network's points map `edges` was made from (map/network.ts keeps it while no edge changed) */
+  edgePts: Map<number, Float32Array> | null;
   stations: Map<number, { line: number[]; segs: number[] }>;
   /** the station buildings as last read */
   outlines: number[];
@@ -95,7 +97,7 @@ interface Placed {
   lot: { rect: Rect; bays: number; flags: number; park0: number; parks: number } | null;
 }
 
-export const newFacilityCache = (): FacilityCache => ({ perM: NaN, nearOf: [], near: new Map(), seg: [], free: [], grid: new Map(), edges: new Map(), stations: new Map(), outlines: [], complexes: new Map() });
+export const newFacilityCache = (): FacilityCache => ({ perM: NaN, nearOf: [], near: new Map(), seg: [], free: [], grid: new Map(), edges: new Map(), edgePts: null, stations: new Map(), outlines: [], complexes: new Map() });
 
 const sameNums = (a: readonly number[], b: readonly number[]) => a.length === b.length && a.every((v, i) => Object.is(v, b[i]));
 const cellKey = (cx: number, cy: number) => cx * 1_000_003 + cy;
@@ -155,7 +157,7 @@ export function placeFacilities(
         }
       }
     }
-    Object.assign(cache, { perM, nearOf, near, seg: [], free: [], grid: new Map(), edges: new Map(), stations: new Map() });
+    Object.assign(cache, { perM, nearOf, near, seg: [], free: [], grid: new Map(), edges: new Map(), edgePts: null, stations: new Map() });
     cache.complexes.clear();
     allDirty = true;
   }
@@ -198,18 +200,22 @@ export function placeFacilities(
     }
   };
   // the edges: an unchanged one keeps its segments
-  const edgesNow = new Map<number, { pts: Float32Array; segs: number[] }>();
-  for (const [id, p] of edgePts) {
-    let e = cache.edges.get(id);
-    if (e?.pts !== p) {
-      if (e) drop(e.segs);
-      e = { pts: p, segs: [] };
-      for (let k = 0; k + 5 < p.length; k += 3) if (passesNear(p[k], p[k + 1], p[k + 3], p[k + 4])) add(p[k], p[k + 1], p[k + 3], p[k + 4], id, e.segs);
+  // (T-4153: none looked at while the network's points are the same map, the edges' own then)
+  if (cache.edgePts !== edgePts) {
+    const edgesNow = new Map<number, { pts: Float32Array; segs: number[] }>();
+    for (const [id, p] of edgePts) {
+      let e = cache.edges.get(id);
+      if (e?.pts !== p) {
+        if (e) drop(e.segs);
+        e = { pts: p, segs: [] };
+        for (let k = 0; k + 5 < p.length; k += 3) if (passesNear(p[k], p[k + 1], p[k + 3], p[k + 4])) add(p[k], p[k + 1], p[k + 3], p[k + 4], id, e.segs);
+      }
+      edgesNow.set(id, e);
     }
-    edgesNow.set(id, e);
+    for (const [id, e] of cache.edges) if (!edgesNow.has(id)) drop(e.segs);
+    cache.edges = edgesNow;
+    cache.edgePts = edgePts;
   }
-  for (const [id, e] of cache.edges) if (!edgesNow.has(id)) drop(e.segs);
-  cache.edges = edgesNow;
   // the platforms near a complex: one that kept its place and shape keeps its segments
   const stationsNow = new Map<number, { line: number[]; segs: number[] }>();
   for (let i = 0; i < st.length; i++) {

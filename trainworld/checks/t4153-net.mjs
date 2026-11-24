@@ -100,12 +100,26 @@ function ops(api, rnd) {
     link: (m) => { const a = pick(m.stations), b = m.stations.filter((s) => s !== a).sort((p, q) => Math.hypot(p.x - a.x, p.y - a.y) - Math.hypot(q.x - a.x, q.y - a.y))[0] ?? a; return rnd() < 0.7 ? api.link_stations(a.id, b.id) : api.unlink_stations(a.id, b.id); },
     upgrade: (m) => api.set_station_upgrade(Uint32Array.from([pick(m.stations).id]), pick([1, 2, 4]), rnd() < 0.7),
     oneWay: (m) => { const es = m.edges.filter((e) => e.tracks === 1); return es.length ? api.set_edge_oneway(pick(es).id, pick([0, 1, 2, 3])) : -1; },
+    // (the edit bench's: a piece of track off a node, then a station on it, which cuts it in two)
+    trackStation: (m) => {
+      const [x, y] = near(m), t = rnd() * 2 * Math.PI, x2 = x + Math.cos(t) * 1500, y2 = y + Math.sin(t) * 1500;
+      if (api.add_route(new Float64Array([...free(x, y), ...free(x2, y2)]), new Float64Array(), rnd() < 0.3 ? 1 : 2, false) !== 0) return -1;
+      const m2 = model(), at = new Map(m2.nodes.map((q) => [q.id, q]));
+      let best = null, bd = Infinity;
+      for (const e of m2.edges) {
+        const a = at.get(e.a), b = at.get(e.b);
+        if (!a || !b) continue;
+        const d = Math.hypot((a.x + b.x) / 2 - (x + x2) / 2, (a.y + b.y) / 2 - (y + y2) / 2);
+        if (d < bd) { bd = d; best = { e, a, b }; }
+      }
+      return best ? api.add_station(2, best.e.id, (best.a.x + best.b.x) / 2, (best.a.y + best.b.y) / 2, 160, 'Cedar') : -1;
+    },
     undo: () => (api.can_undo() ? api.undo() : -1),
     redo: () => api.redo(),
     model,
   };
 }
-const weights = { stationAtNode: 3, stationOnLine: 3, removeStation: 3, copyLine: 3, removeLine: 2, setStops: 2, undo: 4, redo: 2 };
+const weights = { stationAtNode: 3, stationOnLine: 3, removeStation: 3, copyLine: 3, removeLine: 2, setStops: 2, undo: 4, redo: 2, trackStation: 3, routeFromNode: 2, deleteEdge: 2, doubleUp: 2, moveNode: 2, construct: 2, oneWay: 2 };
 
 let builds = 0, dropped = 0, rowsStates = 0, moves = 0, failures = 0;
 const applied = {};

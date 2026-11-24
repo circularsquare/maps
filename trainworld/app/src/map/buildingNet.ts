@@ -40,6 +40,8 @@ export const SHOP_STRIDE = 6, CELL_STRIDE = 4;
  * layouts; `ids` the station id of each index its draw holds) */
 interface Kept { key: string; draw: BuildingDraw; ids: Map<number, number> }
 const kept = new Map<number, Kept>();
+/** each edge's id, points and box (x0, y0, x1, y1), by the network's points map */
+const boxesOf = new WeakMap<Map<number, Float32Array>, { ids: number[]; pts: Float32Array[]; box: Float64Array }>();
 
 /** The buildings as drawn, and per station the building it is in (an index into them, -1 none). `ll`:
  * each building's corners as lng, lat pairs (the worker's frame). */
@@ -60,15 +62,21 @@ export function buildingsDrawn(
   }
   const line = (i: number) => stationLine.subarray(i * 2 * PLATFORM_POINTS, (i + 1) * 2 * PLATFORM_POINTS);
   const seen = new Set<number>();
-  // each edge's box, once
-  const boxes: { id: number; p: Float32Array; x0: number; y0: number; x1: number; y1: number }[] = [];
-  if (inside) for (const [id, p] of edgePts) {
-    let a = Infinity, b = Infinity, c = -Infinity, d = -Infinity;
-    for (let j = 0; j + 2 < p.length; j += 3) {
-      a = Math.min(a, p[j]); c = Math.max(c, p[j]);
-      b = Math.min(b, p[j + 1]); d = Math.max(d, p[j + 1]);
+  // each edge's box, once (T-4153: kept while the network's points are the same map)
+  let boxes = inside ? boxesOf.get(edgePts) : undefined;
+  if (inside && !boxes) {
+    const ids: number[] = [], pts: Float32Array[] = [], box = new Float64Array(edgePts.size * 4);
+    for (const [id, p] of edgePts) {
+      let a = Infinity, b = Infinity, c = -Infinity, d = -Infinity;
+      for (let j = 0; j + 2 < p.length; j += 3) {
+        a = Math.min(a, p[j]); c = Math.max(c, p[j]);
+        b = Math.min(b, p[j + 1]); d = Math.max(d, p[j + 1]);
+      }
+      box.set([a, b, c, d], ids.length * 4);
+      ids.push(id);
+      pts.push(p);
     }
-    boxes.push({ id, p, x0: a, y0: b, x1: c, y1: d });
+    boxesOf.set(edgePts, (boxes = { ids, pts, box }));
   }
   buildings.forEach((b, k) => {
     const g = ll[k], n = g.length / 2;
@@ -104,9 +112,9 @@ export function buildingsDrawn(
     const tracks: { id: number; pts: number[] }[] = [];
     // (no `...rest` here: it made a copy of every edge's box for every building, most of a build's time with hundreds
     // of buildings, T-3659)
-    for (const e of boxes) {
-      const { id, p } = e;
-      if (e.x1 < x0 - pad || e.x0 > x1 + pad || e.y1 < y0 - pad || e.y0 > y1 + pad) continue;
+    for (let q = 0; boxes && q < boxes.ids.length; q++) {
+      const id = boxes.ids[q], p = boxes.pts[q], e = boxes.box;
+      if (e[q * 4 + 2] < x0 - pad || e[q * 4] > x1 + pad || e[q * 4 + 3] < y0 - pad || e[q * 4 + 1] > y1 + pad) continue;
       // the pieces of it near the floor, each segment on its own
       for (let j = 0; j + 5 < p.length; j += 3) {
         const ax = p[j], ay = p[j + 1], bx = p[j + 3], by = p[j + 4];

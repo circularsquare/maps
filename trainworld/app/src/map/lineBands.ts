@@ -137,17 +137,19 @@ interface Ribbon {
 }
 
 /** The bands of every line. `pts`: each edge's local polyline (x, y, z triples, a to b). */
-export function lineBands(lines: readonly BandLine[], edges: readonly BandEdge[], pts: ReadonlyMap<number, Float32Array>, opts?: { corridors?: boolean; within?: number; debug?: Map<number, unknown>; state?: BandState }): LineBands {
+export function lineBands(lines: readonly BandLine[], edges: readonly BandEdge[], pts: ReadonlyMap<number, Float32Array>, opts?: { corridors?: boolean; within?: number; debug?: Map<number, unknown>; state?: BandState; ends?: Map<number, BandEdge> }): LineBands {
   const beside = useBands(opts?.state).beside;
   const o = { ...opts, beside };
-  const ends = new Map(edges.map((e) => [e.id, e]));
+  const ends = opts?.ends ?? new Map(edges.map((e) => [e.id, e]));
   if (!opts?.debug) { bandWork.orders = 0; bandWork.lines = 0; bandWork.whole = 0; }
   const rail = lines.filter((l) => l.ok && !l.bus && l.path.length);
   // T-4153: the same line rows (so the same paths) and the same rows and points of every edge they use as last time:
   // the same bands, known without laying out every path again
-  if (!opts?.debug && last?.rail && last.mode === `${opts?.corridors ?? CORRIDORS},${opts?.within ?? ""},${bandMode}` && last.rail.length === rail.length && rail.every((l, i) => l === last!.rail![i]) && last.usedIds.every((e, i) => pts.get(e) === last!.used[i][0] && ends.get(e)?.a === last!.used[i][1] && ends.get(e)?.b === last!.used[i][2])) {
+  if (!opts?.debug && last?.rail && last.mode === `${opts?.corridors ?? CORRIDORS},${opts?.within ?? ""},${bandMode}` && last.rail.length === rail.length && rail.every((l, i) => sameBandLine(l, last!.rail![i])) && last.usedIds.every((e, i) => pts.get(e) === last!.used[i][0] && ends.get(e)?.a === last!.used[i][1] && ends.get(e)?.b === last!.used[i][2])) {
     let whole: LineBands | null = null;
     const rule = (edge: number, x: number, y: number) => (whole ??= bands(rail, linesOn(rail), ends, pts, { ...o, fresh: true })).rule(edge, x, y);
+    // (rows equal to the kept ones: the next call finds them by identity)
+    last.rail = rail;
     return { ...last.out, rule, corridor: last.corridor.slice() };
   }
   const on = linesOn(rail);
@@ -169,6 +171,9 @@ export function lineBands(lines: readonly BandLine[], edges: readonly BandEdge[]
   last = { sig, used, usedIds: [...on.keys()], rail, mode: `${opts?.corridors ?? CORRIDORS},${opts?.within ?? ""},${bandMode}`, out: { of: out.of, order: out.order, rule, corridor: out.corridor }, corridor: out.corridor.slice() };
   return out;
 }
+
+/** T-4153: two rail lines the bands read alike (their id, path and whether a bus) */
+const sameBandLine = (a: BandLine, b: BandLine) => a === b || (a.id === b.id && !a.bus === !b.bus && (a.path === b.path || (a.path.length === b.path.length && a.path.every((p, k) => p === b.path[k]))));
 
 /** `?patch=check` (T-2238): every build's bands also worked out whole and compared */
 let bandCheck = false;
@@ -568,7 +573,7 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
     f.ids = ids.slice();
     f.dirs = v.map((x) => x.line.path[x.k] & 1);
   }
-  for (const [e, f] of mm.fp) if (!on.has(e)) { changedEdges.add(e); oldPts.set(e, f.pts); mm.fp.delete(e); }
+  for (const [e, f] of mm.fp) if (!on.has(e)) { changedEdges.add(e); oldPts.set(e, f.pts); mm.fp.delete(e); mm.ribbons.delete(e); }
   // a pair rule that is new, gone or changed: only what read it is worked out again
   const relChanged = new Set<string>();
   for (const [k, v] of rel) if (mm.rel.get(k) !== v) relChanged.add(k);

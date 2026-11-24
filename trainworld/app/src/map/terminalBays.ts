@@ -48,16 +48,22 @@ export function splitValue(ends: readonly SplitEnd[], m: number, len: number): n
  * reaches double track first stays two tracks all the way to it, one that reaches a junction first
  * eases over what room there is.
  */
-export function singleSplitEnds(edges: readonly ClockEdge[], nodes: readonly ClockNode[]): { ends: Map<number, SplitEnd[]>; stations: Set<number>; full: Set<number> } {
+/** `endsAt`: each node's edges in `edges` order, when the caller has them */
+export function singleSplitEnds(edges: readonly ClockEdge[], nodes: readonly ClockNode[], endsAt?: { get(node: number): readonly ClockEdge[] | undefined }): { ends: Map<number, SplitEnd[]>; stations: Set<number>; full: Set<number> } {
   const ends = new Map<number, SplitEnd[]>(), stations = new Set<number>(), full = new Set<number>();
-  const at = new Map<number, ClockEdge[]>();
-  for (const e of edges) for (const n of [e.a, e.b]) {
-    const v = at.get(n);
-    if (v) v.push(e);
-    else at.set(n, [e]);
+  let at: { get(node: number): readonly ClockEdge[] | undefined } | undefined = endsAt;
+  if (!at) {
+    const m = new Map<number, ClockEdge[]>();
+    for (const e of edges) for (const n of [e.a, e.b]) {
+      const v = m.get(n);
+      if (v) v.push(e);
+      else m.set(n, [e]);
+    }
+    at = m;
   }
+  // (only stations are looked up)
   const nodeOf = new Map<number, ClockNode>();
-  for (const n of nodes) nodeOf.set(n.id, n);
+  for (const n of nodes) if (n.platform > 0) nodeOf.set(n.id, n);
   const plainSingle = (e: ClockEdge) => e.tracks === 1 && !e.oneWay && !e.crossover;
   const joinedAt = (e: ClockEdge, node: number) => ((e.a === node ? e.join : e.join >> 2) & 3) !== 0;
   for (const s of nodes) {
