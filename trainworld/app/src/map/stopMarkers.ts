@@ -69,6 +69,8 @@ const REASON_MS = 4000;
 /** T-3109: a finger held this long on a marker is a right click; it may move this far, CSS px */
 const LONG_PRESS_MS = 500;
 const PRESS_SLOP_PX = 8;
+/** the tiers a plain click refuses */
+const NO_CLICK_TIERS: ReadonlySet<StopTier> = new Set(["cut", "tram", "port"]);
 /** the tiers whose right click does something */
 const LOOP_TIERS: ReadonlySet<StopTier> = new Set(["close", "open", "turn", "unturn"]);
 
@@ -489,7 +491,8 @@ export class StopMarkers {
       if (this.reasonFor === null) this.hideTag();
       return;
     }
-    if (this.line && (this.tierOf(id) === "route" || this.tierOf(id) === "reroute" || this.tierOf(id) === "reverse")) hoverStop(this.line.num, Number(id));
+    // (a click there adds or takes out a stop: its path is read ahead, T-4147, T-4097)
+    if (this.line && !NO_CLICK_TIERS.has(this.tierOf(id))) hoverStop(this.line.num, Number(id));
     if (this.reasonFor !== null && this.reasonFor !== id) this.hideTag();
     if (this.reasonFor === null) this.showTag(this.words(id), px, py);
   }
@@ -524,6 +527,8 @@ export class StopMarkers {
     // a shift-click on a stop keeps it a stop
     if (!(shift && this.tierOf(id) === "on")) this.guessClick(id);
     this.toggle(Number(id), shift);
+    // T-4097: what a second click here would draw, read behind this one
+    if (this.line) hoverStop(this.line.num, Number(id));
   }
 
   /** T-3109: a right click (or a long press) on the marker of station `id`: the loop there closed, opened or

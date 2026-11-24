@@ -10,6 +10,7 @@
 //   --calculating    also a second pass in a fresh game with the edits made while trips are calculating
 //   --compare <hash or run id> the change per action against one run: the run id (printed at the end of a run, in the ledger's `run`) or the newest run of that build hash; only that run's lines are read
 //   --show [hash or run id]    print one run's table from the ledger, no run (the newest run without an argument)
+//   --steps          each edit's steps, ms from the input: posted, word, drawn ahead, rows, network in, taken, drawn (T-4097)
 //
 // Actions (times in ms, median of --runs repeats; shows = the first frame that changes, built = the frame that
 // draws the edit as built): ghost trail (px the drawn ghost trails the pointer at a steady speed, and the answer
@@ -113,6 +114,7 @@ function INSTALL() {
     const arrive = c.arrive.bind(c);
     c.arrive = (msg) => {
       if (msg.kind === 'edited') push('arrive', { kind: 'edited', seq: msg.seq, ok: msg.ok, ms: msg.ms });
+      else if (msg.kind === 'applied') push('arrive', { kind: 'applied', seq: msg.seq });
       else if (msg.kind === 'state') { const s = msg.state; push('arrive', { kind: 'state', rows: !!s.rows, net: !!s.net, service: !!s.service }); }
       return arrive(msg);
     };
@@ -203,10 +205,15 @@ function editsOf(ev) {
     const take = after(i, (e) => e.k === 'take' && e.rows);
     const net = after(i, (e) => e.k === 'r.setNetwork' || e.k === 'r.setService' || e.k === 'r.staged');
     const ans = after(i, (e) => e.k === 'arrive' && e.kind === 'edited' && e.seq === p.seq);
+    const word = after(i, (e) => e.k === 'arrive' && e.kind === 'applied' && e.seq === p.seq);
+    const netIn = after(i, (e) => e.k === 'arrive' && e.kind === 'state' && e.net);
+    const netTake = after(i, (e) => e.k === 'take' && e.net);
     const standIn = frameAfter(placed), rows = frameAfter(take), built = frameAfter(net), drawnAhead = aheadAt >= 0 && (net < 0 || aheadAt < net) ? frameAfter(aheadAt) : null;
     const shows = [standIn, rows, built, drawnAhead].filter((x) => x != null);
     out.push({ op: p.op, seq: p.seq, post: r0(p.t - t0), answer: ans >= 0 ? r0(ev[ans].t - t0) : null, ok: ans >= 0 ? ev[ans].ok : null,
-      standIn: r0(standIn), rows: r0(rows), built: r0(built), shows: shows.length ? r0(Math.min(...shows)) : null, work: ans >= 0 ? ev[ans].ms ?? null : null });
+      standIn: r0(standIn), rows: r0(rows), built: r0(built), shows: shows.length ? r0(Math.min(...shows)) : null, work: ans >= 0 ? ev[ans].ms ?? null : null,
+      // the steps between (T-4097): the edit's word in, the drawn-ahead frame, the network's state in and taken
+      word: word >= 0 ? r0(ev[word].t - t0) : null, ahead: r0(drawnAhead), netIn: netIn >= 0 ? r0(ev[netIn].t - t0) : null, netTake: netTake >= 0 ? r0(ev[netTake].t + (ev[netTake].ms ?? 0) - t0) : null });
   }
   return out;
 }
@@ -275,6 +282,7 @@ async function play(g, runs, only, acc, note) {
     const e = edits[0];
     if (!e || err) { note('  ' + label + ': no sample' + (err ? ' (' + err + ')' : ' (no edit message; saw ' + (seen.join(', ') || 'nothing') + ')')); return null; }
     if (e.ok === false) note('  ' + label + ': refused');
+    if (opt('steps', false)) note('  ' + label + ': ' + JSON.stringify(e));
     for (const [k, name] of Object.entries(keys)) add(name, e[k]);
     return e;
   };
@@ -352,8 +360,8 @@ async function play(g, runs, only, acc, note) {
     await sleep(1500);
     const stopOps = ['toggleStop', 'insertStop', 'dropStop', 'setStops', 'stopPassed'];
     for (let k = 0; k < runs && want('stop'); k++) {
-      await sample(() => g.act.press([C.mid.lng, C.mid.lat]), stopOps, { rows: 'stop click, removed: panel rows', built: 'stop click, removed: line path' }, 'stop remove ' + (k + 1));
-      await sample(() => g.act.press([C.mid.lng, C.mid.lat]), stopOps, { rows: 'stop click, added: panel rows', built: 'stop click, added: line path' }, 'stop add ' + (k + 1));
+      await sample(() => g.act.press([C.mid.lng, C.mid.lat]), stopOps, { shows: 'stop click, removed: shows', rows: 'stop click, removed: panel rows', built: 'stop click, removed: line path' }, 'stop remove ' + (k + 1));
+      await sample(() => g.act.press([C.mid.lng, C.mid.lat]), stopOps, { shows: 'stop click, added: shows', rows: 'stop click, added: panel rows', built: 'stop click, added: line path' }, 'stop add ' + (k + 1));
     }
     await g.act.click('Stop editing', { exact: false }).catch(() => {});
     await g.act.key('Escape');

@@ -204,6 +204,10 @@ export function mergeShow(a: Show, b: Show): Show {
   return out;
 }
 
+/** T-4097: edits sent so far: a read of the track model asked after the nth is of the model holding the first n */
+let sentCount = 0;
+export const editsSentCount = () => sentCount;
+
 let opGuess: ((op: EditOp) => Show | null) | null = null;
 /** the cash now and whether every price is paid (a sandbox), the cash's units */
 let cashNow: () => { cash: number; sandbox: boolean } | null = () => null;
@@ -237,6 +241,8 @@ export function pendingSent(seq: number, op: EditOp, quiet: boolean) {
     changed(hasMap(guess));
   }
   if (entries.filter((x) => x.seq === seq).length > 1) { doubled++; console.error("T-4170: two entries for one edit", seq, op.op); }
+  // (after the guess, which reads whether any edit went since its read)
+  sentCount++;
 }
 
 /** Whether an edit's show can stand, its price made right first: a price is shown only for an edit sent with no other

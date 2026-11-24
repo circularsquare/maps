@@ -116,16 +116,29 @@ fn stop_tiers_follow_the_line_tool() {
         if stops.is_empty() {
             continue;
         }
-        let guess: std::collections::BTreeSet<u32> = a.insert_path(id, n).iter().map(|&e| e as u32).collect();
+        let guess: std::collections::BTreeSet<u32> = a.click_path(id, n).iter().map(|&e| e as u32).collect();
         assert_eq!(a.set_stops(id, &stops), 0, "{}", a.issues());
         let grown = a.line_path(id);
         // T-4147: the path read at the hover is the one the click's edit takes
-        assert_eq!(guess, grown.iter().map(|&p| p >> 1).collect(), "station {}", a.w.net.node_name[n as usize]);
+        assert_eq!(guess, grown.iter().chain(&a.line_back_path(id)).map(|&p| p >> 1).collect(), "station {}", a.w.net.node_name[n as usize]);
         if t == 4.0 {
             assert_eq!(a.line_reversals(id), vec![1.0], "trains reverse at B, stop 1 of A, B, Z");
         } else {
             assert_eq!(grown.windows(path.len()).any(|w| w == path), t == 1.0, "station {}", a.w.net.node_name[n as usize]);
         }
+        assert_eq!(a.undo(), 0);
+    }
+    // T-4097: the path read over a stop is the one taking it out takes, round the bypass too
+    for via in [between, bypass] {
+        assert_eq!(a.set_stops(id, &[first, via, last]), 0, "{}", a.issues());
+        let guess: std::collections::BTreeSet<u32> = a.click_path(id, via).iter().map(|&e| e as u32).collect();
+        let was = a.line_path(id);
+        assert_eq!(a.take_stop(id, via), 0, "{}", a.issues());
+        assert_eq!(a.line_stops(id), vec![first, last]);
+        assert_eq!(guess, a.line_path(id).iter().chain(&a.line_back_path(id)).map(|&p| p >> 1).collect(), "station {}", a.w.net.node_name[via as usize]);
+        assert_eq!(was == a.line_path(id), via == between, "only the bypass moves the path");
+        assert!(a.take_path(id, via).is_empty(), "no stop now");
+        assert_eq!(a.undo(), 0);
         assert_eq!(a.undo(), 0);
     }
     // with no route yet, every station joined to the one stop counts as on it

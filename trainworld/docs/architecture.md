@@ -154,9 +154,11 @@ Web first, so it can be shared as a link.
   the track's in its colour on the edges it gained, its network strokes off by a per-line texture; edges off by a
   per-edge texture, or redrawn with their new look; station boxes by a second draw of the station shader; a deleted
   line's colour transparent (a new line's colour drawn opaque past the network's ones). A guess sent waits for its
-  answer however long its ground takes (a 120 s backstop); one never sent goes after 15 s. The line tool guesses a first or last stop taken
-  out at the click from the network's stretches when that network shows the world's stops, and the line panel's
-  Delete line hides the line at the click. The network, trips, boarding hour and demand's snapshot follow once no stop click has
+  answer however long its ground takes (a 120 s backstop); one never sent goes after 15 s. The line tool draws a stop click's path at the click from
+  a read of it taken while the pointer was over that station (`clickPath`: the path once taken out or added, the return
+  run's too), valid while no edit has been sent since it was asked, and asked again behind each click, since the worker
+  answers in message order [T-4147, T-4097]; failing that, a first or last stop taken out from the network's stretches
+  when that network shows the world's stops. The line panel's Delete line hides the line at the click. The network, trips, boarding hour and demand's snapshot follow once no stop click has
   come for 500 ms (5 s at most); a stop click before then joins them (one full state for the run),
   and the line tool's reads of the lines (`stopTiers` and the like), demand's money results and the
   clock pass it, anything else runs it first. Meanwhile the client holds every other read until no

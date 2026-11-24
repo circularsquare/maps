@@ -364,10 +364,8 @@ function applyInner(op: EditOp): Applied {
         const out = op.autoFast ? withAutoFast(a, op.line, set) : { r: set() };
         return out.r === 2 ? { ...out, r: INSERT_REFUSED } : out;
       }
-      const n = before.length, closedLoop = n >= 3 && before[0] === before[n - 1];
-      const stops = before.filter((s) => s !== op.station);
-      if (closedLoop && stops.length >= 2 && stops[0] !== stops[stops.length - 1]) stops.push(stops[0]);
-      const set = () => a.set_stops(op.line, new Uint32Array(stops));
+      // (every visit out, a loop closed again on its new first stop: `TrackApi.take_stop`, whose path `take_path` reads ahead)
+      const set = () => a.take_stop(op.line, op.station);
       return op.autoFast ? withAutoFast(a, op.line, set) : { r: set() };
     }
     case "oneWayStop": {

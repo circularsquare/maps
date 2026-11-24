@@ -342,11 +342,40 @@ impl TrackApi {
     pub fn insert_stop(&self, line: u32, station: u32) -> Vec<f64> {
         best_insert(&self.w.net, line, station, &mut HopMemo::new()).map_or(vec![], |(stops, _)| stops.iter().map(|&s| s as f64).collect())
     }
-    /// T-4147: the edges (path order, one entry a path step) the line's path would take once `insert_stop`'s stops
-    /// are set, read while the pointer is over the station so a click can draw them before the edit is applied.
+    /// T-4147: the edges (path order, one entry a path step, then the return run's, `drawn_edges`) the line's path would
+    /// take once `insert_stop`'s stops are set, read while the pointer is over the station so a click can draw them before the edit is applied.
     /// Empty where there is nowhere to put it.
     pub fn insert_path(&self, line: u32, station: u32) -> Vec<f64> {
-        best_insert(&self.w.net, line, station, &mut HopMemo::new()).map_or(vec![], |(_, path)| path.iter().map(|&p| (p >> 1) as f64).collect())
+        let net = &self.w.net;
+        best_insert(net, line, station, &mut HopMemo::new()).map_or(vec![], |(stops, path)| drawn_edges(net, line, &stops, &path, net.line_ones(line)))
+    }
+    /// T-4097: the edges a plain click on `station` leaves the line's strokes drawing: `take_path` on one of its stops,
+    /// else `insert_path`, as the worker's `toggleStop` tells them apart. Read in message order, so a read asked after a
+    /// stop click is of the line that click left.
+    pub fn click_path(&self, line: u32, station: u32) -> Vec<f64> {
+        if self.w.net.line_ok(line) && self.w.net.line_stops(line).contains(&station) { self.take_path(line, station) } else { self.insert_path(line, station) }
+    }
+    /// T-4097: the line tool's plain click on a stop: every visit of `station` out (`without_stop`), the path found
+    /// again as `set_stops` finds it.
+    pub fn take_stop(&mut self, id: u32, station: u32) -> u32 {
+        let stops = self.w.net.line_data(id).map_or(vec![], |d| without_stop(&d.stops, station));
+        self.set_stops(id, &stops)
+    }
+    /// T-4097: the edges (path order) the line's path would take once `take_stop` takes `station` out, read while the
+    /// pointer is over the stop so a click can draw them before the edit is applied (`insert_path`'s twin). Empty where
+    /// it is no stop of the line or the edit would be refused.
+    pub fn take_path(&self, line: u32, station: u32) -> Vec<f64> {
+        let net = &self.w.net;
+        let Some(mut d) = net.line_data(line) else { return vec![] };
+        if d.bus.is_some() || d.ferry.is_some() || !d.stops.contains(&station) {
+            return vec![];
+        }
+        let Some((stops, path)) = edited_stops(net, &without_stop(&d.stops, station), d.hand, &d.ones) else { return vec![] };
+        (d.stops, d.path) = (stops, path);
+        if !settle_ones(net, &mut d) {
+            return vec![];
+        }
+        drawn_edges(net, line, &d.stops, &d.path, &d.ones)
     }
     /// The line tool's click: `station` put in where `insert_stop` puts it, as `set_stops` takes those
     /// stops. A line never turns round a loop by itself; the right click does that (T-3140, `turn_end`).
@@ -1262,6 +1291,23 @@ fn dropped(net: &Network, d: &LineData, lo: usize, hi: usize) -> Option<(Vec<u32
     let path = d.path[at[first]..at[last]].to_vec();
     net.match_run(&path_node_list(net, &path), &stops, &net.stop_reversals(&path), &d.ones, &path)?;
     Some((stops, path))
+}
+
+/// T-4097: the edges line `line`'s strokes would draw run over `stops` and `path`: the path's, and its return run's where
+/// that takes a way of its own (`line_back_path`); one entry a path step, as the worker's word reads them.
+fn drawn_edges(net: &Network, line: u32, stops: &[u32], path: &[u32], ones: &[(u32, u8)]) -> Vec<f64> {
+    let back = if net.line_runs_once(line) { vec![] } else { net.back_path_of(stops, path, ones).unwrap_or_default() };
+    path.iter().chain(&back).map(|&p| (p >> 1) as f64).collect()
+}
+
+/// T-4097: `stops` with every visit of `station` out; a loop that loses its first stop closes again on its new first
+/// stop (T-3050).
+fn without_stop(stops: &[u32], station: u32) -> Vec<u32> {
+    let mut out: Vec<u32> = stops.iter().copied().filter(|&s| s != station).collect();
+    if closed(stops) && out.len() >= 2 && out[0] != out[out.len() - 1] {
+        out.push(out[0]);
+    }
+    out
 }
 
 /// T-1791: a line's stops with a station its path passes put in, the path untouched. None if it is

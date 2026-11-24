@@ -187,7 +187,7 @@ export function holdOn() {
 export const passesHeld = (m: ToClock, h: Held) => h.stops
   ? (m.kind === "edit" && !!m.rows) || (m.kind === "query" && STOP_QUERIES.has(m.q.what)) || STOP_KINDS.has(m.kind)
   : (m.kind === "edit" && !!m.early) || (m.kind === "query" && HELD_QUERIES.has(m.q.what)) || HELD_KINDS.has(m.kind);
-const STOP_QUERIES = new Set(["stopTiers", "stopGap", "insertStop", "passedStations"]);
+const STOP_QUERIES = new Set(["stopTiers", "stopGap", "insertStop", "clickPath", "passedStations"]);
 /** the page's money figures from the world each click's rows gave it, and the clock: none reads what the follow-up sends */
 const STOP_KINDS = new Set<ToClock["kind"]>(["income", "points", "regionShares", "chargeShares", "clock"]);
 /** demand's results and the clock: money, riders and trips, none of which a blueprint changes */

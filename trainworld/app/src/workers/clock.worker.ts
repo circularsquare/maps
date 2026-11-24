@@ -1188,7 +1188,7 @@ async function handleMessage(msg: ToClock) {
     const t0 = performance.now();
     const data =
       q.what === "insertStop" ? api.insert_stop(q.line, q.station)
-      : q.what === "insertPath" ? api.insert_path(q.line, q.station)
+      : q.what === "clickPath" ? api.click_path(q.line, q.station)
       : q.what === "stopTiers" ? api.stop_tiers(q.line)
       : q.what === "stopGap" ? api.stop_gap(q.line, q.station)
       : q.what === "passedStations" ? api.passed_stations(q.line)
