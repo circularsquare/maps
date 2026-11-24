@@ -9,11 +9,14 @@ diary notes/handoff-log.md. Her time UTC-5.
   T-4203 Hokkaido names, reverse kept, sparseload). Smoke PASSED 13:28 at 0cca357a; rerun before publish. perf_bench
   rc046-f63b105b in ledger (belgrade CPU +24%, tokyo demand +11%; ask a-2026-11-24-3). Lists: notes/release-0.4.6.md
   (uncommitted); rewording review artifacts/trainworld/review/text-rewording-0.4.6.md.
-- Landed since: sparseload dc48e20ef, stopclick 095480256 (T-4097 stays open). check8 (Sonnet, tree check8, port 6157)
-  batch-checks both. Next 8800 rebuild after check8 + the next landings.
+- 8800 = 4c096347 (14:41): + sparseload, stopclick stage (check8 PASS), routecycle T-4046, mode colours T-4205/T-4207
+  (her pick B). Smoke on master before the publish.
+- T-4202 s1 landed a3a084b87 (19 s off opening a save inside a game); waits on her: old figures while trips calculate.
 - Running: settle T-4194 (Opus, options, tree settle, 6144), corridors T-4199 s1 (Opus, tree corridors, 6155), bigload
   T-4202 s1 (Opus, tree bigload, 6156, asianita stress save; also times the less-detail setting), editpieces T-4148
-  (Sonnet, 6158), routecycle T-4046 (Sonnet, 6159, click again cycles all routes), check8.
+  (Sonnet, 6158), routecycle T-4046 (Sonnet, 6159, click again cycles all routes), check8, modecolors T-4205
+  (Sonnet, 6160), slowshow T-4204 (Opus, 6161, asianita-xuzhou.save: slow trips after edits; settle cause stays T-4194's).
+  8 agents, cores at cap 14: start no more until some finish.
 - Held for her word: T-4153 s2 (tree editnetwork; add mm.ribbons.delete(e) at lineBands.ts:571 if landed); T-921 (tree
   commutechunks); T-4156 P3; T-4124 numbers first. T-4161 shonei-server 7bdd559 unpushed, deploy on her yes, then push.
 - T-4112's tw/track changelog item is parked in next-track.json: hide the port's duplicate at release.
@@ -22,6 +25,9 @@ diary notes/handoff-log.md. Her time UTC-5.
 - Core cap 14. reserve_cores.ps1 -All -Loop 30 runs in maps-06's background. Gemini: her ask or our suggestion.
 
 ## Next
+- T-4208 (track ghost jumps before the last click lands; her pad 14:33) after editpieces T-4148 (same click path).
+- T-4206 (her timing log: extend ?diagnostics=1 to the demand side + save in one download + summary tool) after
+  slowshow T-4204 reports (same clock worker files; its dig says which steps matter).
 1. Her answers: strings ack (a-2026-11-24-1), speed trade-offs (a-2026-11-24-3), T-4161 deploy, T-4153 s2 timing.
 2. Land check8's batch; then T-4146/T-4147 (after T-4148, same files), T-4193. Track rework after 0.4.6.
 
@@ -33,12 +39,7 @@ diary notes/handoff-log.md. Her time UTC-5.
   free (T-4195 done 1474aeb4a: reserve_cores.ps1 -All -Loop 30 runs in maps-06's background, covers every session).
 - 11-24 13:12: Gemini Neon suggests rewordings for all changelog and player text; we reject incorrect or misleading ones,
   accept the rest, and list what changed for her. Only the 0.4.6 text (T-4196), not the rest of the game.
-- 11-24 05:0x: core cap 15 "for the night" (back to 14 when she's up); start T-3939/T-3160 overnight as cores free; T-4156 later (P3).
-- 11-24 02:1x: edit-speed streams "in parallel" meant done the same way (similar changes), not independently; the Opus review checks every stream uses the base (T-4145) the same way. Ask before leaving 2-8 agents; the 12 run on, no pausing. 02:0x: Resend Pro no; R2 purge yes;
-  R2 reads and the website repo (till 1.3 GB) not reported (docs/ops-checks.md).
 - 11-23 00:0x: the drawn network rebuild is "the entire issue. this is what we should fix", not left to the track rework;
-- 11-23 23:1x: edit speed: "just do all of the changes and i can test, no need for many rounds of implement-test. lemme
-  know when everything is done". Run every T-4144 stream, land all, then one message to her; no interim test asks.
 - 11-23: your two top priorities are answering her and never letting agents overbook or collide; agents 2-8 run by
   load; size tasks to about an hour; you don't investigate, agents do; cycle at 500k day and night; no drafted player
   replies; report times as percent of the wait; she has no Apple devices.
