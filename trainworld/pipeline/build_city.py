@@ -501,12 +501,12 @@ CITIES = {
     ),
     "spk": _japan_metro(
         "spk", (141.3508, 43.0687),  # Sapporo Station
-        # Dochuo (T-3688, Anita's 11-22: "one big dochuo zone" with Sapporo), japan.SUBPREFECTURES
+        # central Hokkaido (T-3688, Anita's 11-22: "one big dochuo zone" with Sapporo), japan.SUBPREFECTURES
         ["01-ishikari", "01-shiribeshi", "01-sorachi", "01-iburi", "01-hidaka"],
         ["01-kamikawa", "01-rumoi", "01-tokachi", "01-oshima", "01-hiyama"],
-        ["asia/japan/hokkaido"], "asia/japan/hokkaido", "notes/T-3688.md", "Dochuo",
+        ["asia/japan/hokkaido"], "asia/japan/hokkaido", "notes/T-3688.md", "Sapporo",
         telework=TELEWORK_JP,  # census at home 8.5%
-        # the zone rule (japan_zones.fit) on Dochuo's census flows: misplaced 10.2% (lowest 9.9%), own
+        # the zone rule (japan_zones.fit) on the pack's census flows: misplaced 10.2% (lowest 9.9%), own
         # municipality 56.5% against the census's 56.3% (notes/T-3688.md)
         decay=(2.2, 160.0),
     ),

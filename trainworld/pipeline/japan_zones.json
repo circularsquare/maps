@@ -1,6 +1,6 @@
 {
  "task": "T-420 stage 3",
- "rule": "Every prefecture outside the seven metro packs is one zone. Hokkaido is its four\nstandard regions (T-3688): Dochuo is Sapporo's pack (Ishikari, Shiribeshi, Sorachi, Iburi, Hidaka),\nand Dohoku, Doto and Donan are zones of their subprefectures (`HOKKAIDO_ZONES`). A prefecture zone\nis named after its prefecture, a Hokkaido zone after its region; its origin is the centre of its\nmost populous 500 m mesh.",
+ "rule": "Every prefecture outside the seven metro packs is one zone. Hokkaido is its four\nstandard regions (T-3688): Sapporo's pack takes Ishikari, Shiribeshi, Sorachi, Iburi and Hidaka,\nand Asahikawa, Obihiro and Hakodate are zones of Kamikawa, Tokachi and Oshima (`HOKKAIDO_ZONES`). A prefecture zone\nis named after its prefecture, a Hokkaido zone after its main city (T-4203); its origin is the centre of its\nmost populous 500 m mesh.",
  "unit_population": {
   "02": 1225822,
   "03": 1207754,
@@ -1097,7 +1097,7 @@
    }
   },
   "kmk": {
-   "name": "Dohoku",
+   "name": "Asahikawa",
    "units": [
     "01-kamikawa",
     "01-soya",
@@ -1135,7 +1135,7 @@
    }
   },
   "tkc": {
-   "name": "Doto",
+   "name": "Obihiro",
    "units": [
     "01-tokachi",
     "01-okhotsk",
@@ -1171,7 +1171,7 @@
    }
   },
   "osh": {
-   "name": "Donan",
+   "name": "Hakodate",
    "units": [
     "01-oshima",
     "01-hiyama"

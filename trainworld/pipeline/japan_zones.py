@@ -6,9 +6,9 @@
     python pipeline/japan_zones.py fold               the fitted curves into japan_zones.json
 
 **Zones.** Every prefecture outside the seven metro packs is one zone. Hokkaido is its four
-standard regions (T-3688): Dochuo is Sapporo's pack (Ishikari, Shiribeshi, Sorachi, Iburi, Hidaka),
-and Dohoku, Doto and Donan are zones of their subprefectures (`HOKKAIDO_ZONES`). A prefecture zone
-is named after its prefecture, a Hokkaido zone after its region; its origin is the centre of its
+standard regions (T-3688): Sapporo's pack takes Ishikari, Shiribeshi, Sorachi, Iburi and Hidaka,
+and Asahikawa, Obihiro and Hakodate are zones of Kamikawa, Tokachi and Oshima (`HOKKAIDO_ZONES`). A prefecture zone
+is named after its prefecture, a Hokkaido zone after its main city (T-4203); its origin is the centre of its
 most populous 500 m mesh.
 
 **Per zone.** As the metro packs (notes/T-420.md): census mesh population, economic census jobs
@@ -54,12 +54,12 @@ IDS = {"02": "aom", "03": "iwt", "05": "akt", "06": "ygt", "07": "fks", "09": "t
        "41": "sag", "42": "ngs", "43": "kmm", "44": "oit", "45": "mzk", "46": "kgs", "47": "oka",
        "01-kamikawa": "kmk", "01-tokachi": "tkc", "01-oshima": "osh"}
 # Hokkaido's regions outside Sapporo's pack (T-3688, Anita's map of 2026-11-21): zone units by their
-# most populous one, which gives the id; the zone takes the region's name
-HOKKAIDO_ZONES = {"01-kamikawa": ("Dohoku", ["01-kamikawa", "01-rumoi", "01-soya"]),
-                  "01-tokachi": ("Doto", ["01-tokachi", "01-okhotsk", "01-kushiro", "01-nemuro"]),
-                  "01-oshima": ("Donan", ["01-oshima", "01-hiyama"])}
+# most populous one, which gives the id; the zone takes its main city's name
+HOKKAIDO_ZONES = {"01-kamikawa": ("Asahikawa", ["01-kamikawa", "01-rumoi", "01-soya"]),
+                  "01-tokachi": ("Obihiro", ["01-tokachi", "01-okhotsk", "01-kushiro", "01-nemuro"]),
+                  "01-oshima": ("Hakodate", ["01-oshima", "01-hiyama"])}
 HOKKAIDO = [u for _, us in HOKKAIDO_ZONES.values() for u in us]
-# the metro packs' units (Sapporo's is Dochuo, T-3688): neighbours only
+# the metro packs' units (Sapporo's pack is the whole of central Hokkaido, T-3688): neighbours only
 METRO = ["08", "11", "12", "13", "14", "26", "27", "28", "29", "21", "23", "24", "40", "04", "34",
          "01-ishikari", "01-shiribeshi", "01-sorachi", "01-iburi", "01-hidaka"]
 REGIONS = ["hokkaido", "tohoku", "kanto", "chubu", "kansai", "chugoku", "shikoku", "kyushu"]
