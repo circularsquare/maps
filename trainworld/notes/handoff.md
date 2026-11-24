@@ -6,8 +6,7 @@ diary notes/handoff-log.md. Her time UTC-5.
 
 ## In flight (adopt from the board)
 - Edit speed, plan notes/T-4144.md; her 23:1x "do all, land all, one message when done". TOP: editnetwork T-4153 (opus,
-  bounded drawn network on master: 50-70% of the wait; her 00:0x). editbase T-4145 (base landable; land after its
-  bench+smoke, then tell editstations/editlines to merge master), editstations T-4146 (B; written, untested, waits for base: delete its stub game/pending.ts before merging master), editlines T-4147 (A; stage 1 rows-first done in tree, smoke unverified, hooks in clock.worker.ts and clockDemand.ts may
+  bounded drawn network on master: 50-70% of the wait; her 00:0x). base T-4145 landed 0c384f9e (01:19; streams told to merge), editstations T-4146 (B; written, untested, waits for base: delete its stub game/pending.ts before merging master), editlines T-4147 (A; stage 1 rows-first done in tree, smoke unverified, hooks in clock.worker.ts and clockDemand.ts may
   conflict with editbase/editworker at merge),
   editworker T-4149 (D worker: bayTimes, posting, then A/B/E; rows-first waits for base+B), trackstream (E, agent a2b95733 resumed: T-4155 streets resend, T-4142, T-1031); firstclick T-4143 landed de066376.
   Base API at the top of notes/T-4145.md: put it in C's brief. Queued: C T-4148, D page T-4150, T-4133/4134 after
@@ -18,6 +17,7 @@ diary notes/handoff-log.md. Her time UTC-5.
 - commutechunks T-921 (measure only; shifts riders, numbers to her). searchleft T-4054 landed e71ffeae (search 4.6%
   faster, same figures; u16 shares diff not landed).
 - perfcompare T-4157 (master vs v0.4.5 on all three saves, load time breakdown; her 01:0x "have we succeeded"?).
+- busmerge2 T-4158 (opus, measure wider bus stop merges; her pick).
 - retime T-4132, junctionmsg T-4152 (her pad: junction heading message misfires; strings to her).
 - Before telling her edit speed is done: one Opus review of all the show-at-click code together (one mechanism, no
   leftover per-feature stand-ins, editlines' no-stops special case, lineclick folded into the base), a smoke check

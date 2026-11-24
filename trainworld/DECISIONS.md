@@ -162,6 +162,7 @@ artifacts/trainworld/T-4120/.
 
 ## Map and UI
 
+- 2026-11-23 (T-4145): An undo is drawn at its click only for the newest edit with nothing else waiting; an undo of an edit that was then refused takes nothing back, without a notice.
 - 2026-11-23 (Anita, T-4153): The drawn network is bounded by what an edit touched on master now, not left to the track rework's stage 5: it is most of an edit's wait.
 - 2026-11-23 (T-4114): After a stop edit or line delete, the line's new strokes are drawn before the network: gained track centred without its side-by-side band, trains on the old path until the network arrives.
 - 2026-11-23 (T-4140): A selected bubble's far end draws its own zone's far 6 km zones again, reversing T-139, but only 50 km or more from its busiest cell, where local outings have ended, so they don't crowd the local far end. notes/T-4140.md

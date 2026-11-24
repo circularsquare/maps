@@ -193,10 +193,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-23: "this is the entire issue. this is what we should fix", not left to the track rework. The drawn network rebuild is 50-70% of an edit's worker wait on Asia: 0.15-0.38 s for line edits, 0.7-1.3 s for station, copy and delete (T-4149, T-4097 part D).
   - Goal: The drawn network redone for what an edit touched, byte-equal to a full build; station edits on Asia under 0.2 s.
   - Other: notes/T-4097.md section 4
-- T-4145 [P1] {L:edit-speed} Show-at-click base for every edit (taking, 2026-11-23, agent editbase)
-  - Context: From T-4144: one worker message after every edit, one list of edits waiting to show, per-line and per-edge renderer textures; lineclick's version tracks lines only.
-  - Goal: The base the streams build on, then undo by it; 3-4 h plus 2-3 h.
-  - Other: notes/T-4144.md
 - T-4146 [P1] {L:edit-speed} Stations and deletes show at the click (taking, 2026-11-23, agent editstations)
   - Context: From T-4144 stream B: on the Asia save a station takes 0.8-1.5 s, deleting a station 0.7-1.5 s, deleting built track 0.65-1.2 s.
   - Goal: Each drawn at the click, station panel edits too; 6-8 h.
@@ -242,6 +238,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-1367: on all-China each worker's WASM memory keeps its high-water mark, about 1,560 MB against 1,267 loaded; T-1205's restart waits for a 256 MB gap, so 228 MB never comes back.
   - Goal: About 290 MB per worker given back after zone churn, with the restart's cost in load time measured.
   - Other: notes/T-1367.md
+- T-4158 [P1] {L:solve-speed} Merge bus stops more aggressively for demand (taking, 2026-11-23, agent busmerge2)
+  - Context: You, 11-24: "we could just try merging more aggressively for bus stop ... if we can merge in a way that doesnt just cancel everything out". T-4094 merges stops within 300 m served by the same lines (Detroit -40% CPU, Belgrade -20%).
+  - Goal: Wider or looser merges measured as saving against shift on Belgrade, Detroit and NYC, for you to pick.
+  - Other: notes/T-4094.md
 - T-4157 [P1] {L:loading} Master against v0.4.5 on the three bench saves (taking, 2026-11-23, agent perfcompare)
   - Context: You, 11-24: the goal was to claw back what the express change and the bus changes cost; "load times do feel kinda long". Last bench 18:08: trips ready NYC 95 to 126 s, Tokyo 157 to 175 s, Belgrade 618 to 1,285 s; NYC 105 s at 22:51.
   - Goal: Every perf_bench number for master against v0.4.5 on nyc, tokyo and belgrade, and where a load's time goes.
