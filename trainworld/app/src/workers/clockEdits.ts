@@ -138,9 +138,12 @@ function joinAfter(a: TrackApi, r: number): number {
 export function apply(op: EditOp): Applied {
   freezeCheckpoint("apply-start", { op: op.op });
   const start = performance.now();
+  const rounds0 = api?.settle_rounds() ?? 0;
   try { return withKindHeadways(op, () => applyInner(op)); }
   finally {
     api?.join_edit(false);
+    const rounds = (api?.settle_rounds() ?? 0) - rounds0;
+    if (rounds > 0) freezeCheckpoint("settle", { op: op.op, rounds, ms: performance.now() - start }); // T-4194: ms is the whole edit's
     freezeCheckpoint("apply-end", { op: op.op, ms: performance.now() - start });
   }
 }

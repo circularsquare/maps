@@ -173,6 +173,41 @@ fn main() {
         eprintln!("hours check: {more} of {seen} lines leave more often in {}-{} than in 7-8", h[0], h[1]);
     }
     let mut all = vec![];
+    // T-4194: `TW_STOPS=1`: the line on headways (trains bought as its length changes), then a
+    // middle stop removed and put back, each timed with the settle rounds it ran
+    if std::env::var("TW_STOPS").is_ok() {
+        let rounds = || trainworld_sim::track::world::SETTLE_UPDATES.with(|c| c.get());
+        // T-4194: the line whose last stop comes off cleanly and has the most trains
+        let mut best = best;
+        let mut top = 0.0;
+        for &l in &lines {
+            let s = a.line_stops(l);
+            if s.len() < 4 { continue; }
+            let t = trains(&a, l)[1];
+            if t > top && a.set_stops(l, &s[..s.len() - 1]) == 0 { a.set_stops(l, &s); best = l; top = t; }
+        }
+        eprintln!("stop line {best}: {top} medium trains");
+        time(&mut a, "headways (not in the stop rows)", &|a| a.set_auto_headway(best, 300, 600, 1200));
+        let full = a.line_stops(best);
+        // a cut the track accepts: the last stop, else the first, else the one before the last
+        let mut cut = full.clone();
+        for k in [full.len() - 1, 0, full.len() - 2, full.len() / 2] {
+            let mut c = full.clone();
+            c.remove(k);
+            let r = a.set_stops(best, &c);
+            eprintln!("cut stop {k}: r={r}");
+            if r == 0 { cut = c; a.set_stops(best, &full); break; }
+        }
+        for i in 0..reps.max(2) {
+            for (what, stops) in [("remove stop", &cut), ("add stop", &full)] {
+                let r0 = rounds();
+                let rc = std::cell::Cell::new(0);
+                let ms = time(&mut a, &format!("{what} {i}"), &|a| { let r = a.set_stops(best, stops); rc.set(r); r });
+                eprintln!("STOPS {what} {i}: {ms:.1} ms, {} settle rounds, r={}, {} stops", rounds() - r0, rc.get(), stops.len());
+            }
+        }
+        return;
+    }
     all.push(time(&mut a, "headway 300/600/1200", &|a| a.set_auto_headway(best, 300, 600, 1200)));
     for i in 0..reps {
         let m = 600 - 60 * (i as u32 + 1);

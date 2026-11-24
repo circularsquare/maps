@@ -76,10 +76,23 @@ thread_local! {
     /// to count an edit's cost in rounds.
     pub static SETTLE_UPDATES: std::cell::Cell<u32> = const { std::cell::Cell::new(0) };
 }
-/// T-3233: the longest repeat a settle looks for.
-const CYCLE_MAX: usize = 4;
+/// T-3233, T-4194: the longest repeat a settle looks for, in rounds. Each sharing group of lines
+/// circles with a period of its own (2-5 in the Tokyo save), so the longer the look back the sooner
+/// a circling network is caught; 80 is the cap, so any repeat that can still end the settle early
+/// is seen. Each round compares against this many saved states, which costs far less than a round.
+const CYCLE_MAX: usize = SETTLE_ROUNDS;
+
+/// T-4194: the rounds back (1..=seen.len()) the state `now` last occurred, the nearest first.
+fn repeat_period<S: PartialEq>(seen: &std::collections::VecDeque<S>, now: &S) -> Option<usize> {
+    (1..=seen.len()).find(|&p| &seen[seen.len() - p] == now)
+}
 /// Within this many trains of its fleet, a line whose shortfall keeps turning is settled (T-1283).
 const SWING_NEAR: f64 = 0.05;
+/// T-4194: the same, in the settle's rounds. A line whose round trip jumps as its rate passes a
+/// threshold turns 0.05-0.19 trains from its fleet on big networks, so the closer bound never fired;
+/// a circling line on headways is kept up to this many trains under its fleet. A line on train
+/// counts keeps `SWING_NEAR`: a wider bound moved its timetable (T-3931's test). One constant to move.
+const SETTLE_SWING_NEAR: f64 = 0.25;
 /// Turns that do not shrink the shortfall by half before it counts as circling (T-1283).
 const SWING_TURNS: u8 = 3;
 
@@ -1218,12 +1231,13 @@ impl TrackWorld {
                 Some(s) if round >= s => break,
                 Some(_) => {}
                 None => {
-                    if let Some(p) = (1..=seen.len()).find(|&p| { let x = &seen[seen.len() - p]; x.0 == rates && x.1 == trips && x.2 == swings }) {
+                    let now = (rates.clone(), trips.clone(), swings.clone());
+                    if let Some(p) = repeat_period(&seen, &now) {
                         stop_at = Some(round + (SETTLE_ROUNDS - round) % p);
                         if (SETTLE_ROUNDS - round) % p == 0 { break; }
                     } else {
                         if seen.len() == CYCLE_MAX { seen.pop_front(); }
-                        seen.push_back((rates.clone(), trips.clone(), swings.clone()));
+                        seen.push_back(now);
                     }
                 }
             }
@@ -1251,7 +1265,7 @@ impl TrackWorld {
                     // keeps turning without shrinking is settled on its side with trains to spare.
                     let sign = if short >= SETTLED { 1 } else if short <= -SETTLED { -1 } else { 0 };
                     let sw = &mut swings[j][lev];
-                    if short.abs() >= SWING_NEAR {
+                    if short.abs() >= if self.net.line_auto[id as usize].is_some() { SETTLE_SWING_NEAR } else { SWING_NEAR } {
                         *sw = (0, 0, 0.0);
                     } else if sign != 0 && sw.0 != 0 && sign != sw.0 {
                         // counted only up to the test below, so a repeat is seen (T-3233)
@@ -2620,4 +2634,41 @@ fn same_issue(a: &Issue, b: &Issue) -> bool {
 
 fn lines_using(n: &Network, e: u32) -> Vec<u32> {
     (0..n.line_count() as u32).filter(|&l| n.line_ok(l) && n.line_path(l).iter().any(|&p| path_edge(p) == e)).collect()
+}
+
+#[cfg(test)]
+mod settle_repeat_tests {
+    use super::{repeat_period, CYCLE_MAX};
+    use std::collections::VecDeque;
+
+    /// T-4194: a circle that comes back every 5 rounds is caught (the window was 4 rounds once).
+    #[test]
+    fn a_circle_of_period_five_is_seen() {
+        assert!(CYCLE_MAX >= 5);
+        let mut seen: VecDeque<u32> = VecDeque::new();
+        let mut found = None;
+        for round in 0..40usize {
+            let state = (round % 5) as u32;
+            if let Some(p) = repeat_period(&seen, &state) { found = Some((round, p)); break; }
+            if seen.len() == CYCLE_MAX { seen.pop_front(); }
+            seen.push_back(state);
+        }
+        assert_eq!(found, Some((5, 5)));
+        // the old window of 4 never sees it
+        let mut old: VecDeque<u32> = VecDeque::new();
+        for round in 0..40usize {
+            let state = (round % 5) as u32;
+            assert_eq!(repeat_period(&old, &state), None);
+            if old.len() == 4 { old.pop_front(); }
+            old.push_back(state);
+        }
+    }
+
+    /// the nearest repeat wins when a state has come round at several distances
+    #[test]
+    fn the_nearest_repeat_is_the_period() {
+        let seen: VecDeque<u32> = [7, 1, 7, 2, 3].into_iter().collect();
+        assert_eq!(repeat_period(&seen, &7), Some(3));
+        assert_eq!(repeat_period(&seen, &9), None);
+    }
 }

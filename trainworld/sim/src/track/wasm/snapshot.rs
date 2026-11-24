@@ -185,6 +185,11 @@ impl TrackApi {
         }
         out
     }
+    /// T-4194: settle rounds (service updates) this thread has run so far; the clock reads the
+    /// difference around an edit to log how many it took.
+    pub fn settle_rounds(&self) -> u32 {
+        crate::track::world::SETTLE_UPDATES.with(|c| c.get())
+    }
     pub fn line_name(&self, id: u32) -> String {
         self.w.net.line_name.get(id as usize).cloned().unwrap_or_default()
     }
