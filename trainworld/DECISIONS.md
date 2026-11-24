@@ -279,7 +279,7 @@ artifacts/trainworld/T-4120/.
 
 ## Tooling and process
 - 2026-11-24 (T-4166): The AWS bench installs Node, Chrome and Rust on each machine instead of keeping an image (6-8 minutes, under a cent, against a snapshot billing every month) and ships only the files the save reads. Its numbers never go in the home ledgers (Linux, SwiftShader).
-- 2026-11-24 (Anita, T-4177): Stop using the friend's AWS account; agents lose access to it. AWS means her own account (anita-own) from now on. Gemini may take tasks in this repo, never AWS (GEMINI.md).
+- 2026-11-24 (Anita, T-4177): Stop using the friend's AWS account; agents lose access to it (profile removed, guard.py and awslib refuse it; its scripts kept as a record). AWS means her own account (anita-own) from now on. Gemini may take tasks in this repo, never AWS (GEMINI.md).
 
 - 2026-11-17 (Anita, T-3523): After v0.4.0 the public repo is the real one, PRs merged directly, replacing a synced export (T-2913). Its data is labelled ODbL; R2 answers CORS to any site so forks can read it, and big forks are asked to self-host.
 - 2026-11-17 (Anita, T-3480): Open-source PRs: buses keeping to one-way streets taken as a setting, off by default, reversing "not even as an option"; no single-ended trams (they turn on balloon loops); merge lane upgrade and WebGPU demand left out; PR 13 not merged. notes/T-3473.md

@@ -229,7 +229,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-24: a situation where the line-up refusal shows is most likely a bug, to prevent. T-4152 cut the end-to-end join sweep's refusals from 26 of 288 to 0.
   - Goal: Ordinary drawing (joins, junctions, node drags, trams) never shows it; any case found is fixed or filed.
   - Other: notes/T-4152.md
-- T-4166 [P2] {L:checks} {waits:Anita} First bench run on your own AWS account (taking, 2026-11-23, agent awsbench)
+- T-4166 [P2] {L:checks} {waits:Anita} First bench run on your own AWS account
   - Need from Anita: AWS lets your account run 1 vCPU, not 5, and no spot; a bench machine needs 4. Ask AWS Support once more for 4 on-demand vCPUs? I would.
   - Context: tools/aws/bench.py is ready (one machine per run: build, perf and edit benches, results home, machine terminated, about 5 cents) and docs/aws.md has the account. Every launch on 11-24 was refused by the limit. Your $20 cutoff steps: notes/aws-budget-action.md.
   - Goal: One real nyc run through bench.py, with its cost.
@@ -246,11 +246,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4149: edit_bench's stop-click rows say "no edit message" on both builds, and --compare picked up other agents' ledger lines.
   - Goal: Stop clicks measured, and --compare reads only the two runs it was given.
   - Other: notes/T-4149.md
-- T-4172 [P2] {L:world-tooling} {waits:Anita} AWS key limited to our bucket and machines
-  - Need from Anita: Ask your friend if you may make a second IAM user with only our rights in their account; the agent writes the policy.
-  - Context: User anita has AdministratorAccess on the friend's account. tools/aws/guard.py only sees commands typed into Claude's shell: a Python script file using boto3, or any non-Claude agent, goes straight past it. T-4166 (your own account) has 5 vCPUs, too few for builds.
-  - Goal: The key in ~/.aws/credentials can only use the anitabuilder bucket and tagged machines in us-east-2; tools/aws/ still works end to end; docs/aws.md says so. About 1 h agent time.
-  - Other: notes/gemini-review-triage-2026-11-24.md
 - T-4173 [P2] {L:checks} cores.py uses one ledger from any worktree
   - Context: cores.py keeps cores.json beside itself, so a claim made with a worktree's copy goes to a ledger nobody reads and can quietly go over the cap. cores.mjs, agent_cargo.py, perf_bench.mjs and edit_bench.mjs each work around it on their own.
   - Goal: cores.py resolves the main tree's cores.json (walk up past .tw-trees/ or git's common dir); the four workarounds removed. About 0.5 h.
@@ -267,10 +262,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: 19 worktrees at about 1.2 GB each, a leftover empty .tw-trees/rampport folder, and 34 tw/* branches, 14 with no tree. handoff.md keeps coreslider, onewaylag, split6, stationids and timetables on purpose until after 0.4.6; others may be done.
   - Goal: Every tree whose agent is done and whose work landed is removed with agent-tree.mjs; merged branches with no tree deleted. About 0.5 h.
   - Other: notes/gemini-review-triage-2026-11-24.md
-- T-4177 [P1] {L:world-tooling} Stop using the friend's AWS account (taking, 2026-11-23, agent awsoff)
-  - Context: You, 11-24: "we should stop using jean's account. lets remove access to it so that agents can't use it." Your own account (anita-own, T-4166) is the AWS from now on.
-  - Goal: Our resources there deleted, the friend's profile gone from this PC, guard.py refuses that account, docs say AWS means your own account; you or your friend delete the IAM user.
-  - Other: notes/T-4177.md
 - T-4178 [P1] {L:line-rates} Reversals mid-line cost the same as at a line's end
   - Context: You, 11-24: players build switchbacks and are confused why they cut capacity; reversals mid-line cut it while ones at a line's end "kinda dont", which is inconsistent. Also: no yellow icon unless the reversal is what limits throughput, "which i think it should almost never be".
   - Goal: One rule for every reversal, measured on a switchback line; the icon only when a reversal is the limit.

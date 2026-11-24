@@ -25,8 +25,8 @@ Logs, check outputs and images go in `../artifacts/trainworld/` (from the maps r
 - A pack rebuild backs up to `data/work/pre-T###/` first; the backup goes, without asking, once a later
   state is checked clean. `data/work/res9/` stays.
 - Cities added through the plan need no calibration beyond the gate (Anita, 2026-10-16).
-- AWS (a friend's account, long data builds only): read `docs/aws.md` first; create or destroy only
-  through `tools/aws/*.py`.
+- AWS means Anita's own account, for timing runs only (`docs/aws.md`); no data builds go on AWS. The friend's
+  builds account is retired (T-4177).
 
 ## Running the pipeline
 
@@ -94,7 +94,7 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
   its merge log in the plan's `zones.<ISO>.merges` before running the rows.
 - **A replan's order** (T-2302): the old rows are retired (unregistered, their files moved out of data/packs) before
   the new rows build, since a build cuts every boundary file in data/packs out of its outline (`osm_units.cut_packs`);
-  a new row built beside its old zones' packs comes out a sliver and parks. Building elsewhere first (AWS, T-2301) and
+  a new row built beside its old zones' packs comes out a sliver and parks. Building elsewhere first (T-2301) and
   landing after the retire avoids the gap.
 - **Zones removed** (T-1053): a replan, merge or re-split that takes zone ids out of the registry
   (a parked row of an earlier commit included) ends, once `zone_outlines.py` has rewritten the
@@ -131,14 +131,14 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
   `build_city`, `pack_gate stations` (the gate's station file, `docs/adding-a-city-by-hand.md` 8), `places`,
   with `--coarse T` `coarse_zones` (4 km blocks in thin country, T-852; off by default),
   `routes --keep-pbf`, `merge_cells` (which runs `read_pack`'s checks on its output before it
-  replaces the pack, and fails the step otherwise), `nocar`, `everyday_rates`, each its own process
+  replaces the pack, and fails the step otherwise), `everyday_rates`, each its own process
   and log; a failed step runs once more after a minute (a timed-out one does not), then the row
   parks. A step whose log has not grown for 20 minutes (`QUIET_S`; `TW_QUIET_S` to change it; a region's gate gets at least 30 s a row, and its
   browser check prints each row's result as it lands, T-1308) dumps
   every thread's stack into its log, again after each further 20 silent minutes, and the runner
   prints a line saying so. A build that leaves any file of its id's caches older than its own start (those above, any
   `*_<id>.*` in the per-city cache folders, `data/raw/<id>/`) parks, naming the files: it read an earlier row's
-  (`reused_caches`, T-2437). Status `built`. An AWS landing (`tools/aws/land.py`) clears the same caches first.
+  (`reused_caches`, T-2437). Status `built`.
 - **Gate**: the rates test the gate runs (`every_pack_everyday`) is built once at
   the run's start from the sim the gate reads (`TW_SIM_DIR`, else the tree's sim/) and copied to
   `data/work/world_run/everyday-<batch>.exe`, so a change to sim/ mid-run recompiles nothing
@@ -384,8 +384,7 @@ sources. Each field comes from the row or a rule:
   only (a typed-in table, a survey, a fitted curve, an airport's judgement) stays out. A module
   without `plan_hooks` stops the config: add one, `{}` if nothing carries. The keys join on the
   config's first lookup in `CITIES` (`build_city.Cities`), since the modules import build_city.
-  After the build, `nocar.py` and `everyday_rates.py` take a planned pack's country from its row
-  (England's LSOA car shares for an English row).
+  After the build, `everyday_rates.py` takes a planned pack's country from its row (via `nocar.country_of`).
 
   | Module | Keys | For |
   |---|---|---|

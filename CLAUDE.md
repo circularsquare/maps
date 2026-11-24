@@ -8,9 +8,10 @@ is better looked up in code or a ledger (core caps, ports, file lists).
 
 ## AWS
 
-A friend's account, shared free, for long data builds only. **Read `trainworld/docs/aws.md` before any `aws`
-command**; create and destroy only through `trainworld/tools/aws/`. A hook (`trainworld/tools/aws/guard.py`) refuses
-raw AWS calls that change anything.
+Anita's own account only (CLI profile `anita-own`), for trainworld's timing runs. **Read `trainworld/docs/aws.md`
+before any `aws` command**; create and destroy only through `trainworld/tools/aws/bench.py`. A hook
+(`trainworld/tools/aws/guard.py`) refuses raw AWS calls that change anything, and anything aimed at the friend's account,
+which is retired (2026-11-24).
 
 ## Serving maps locally
 

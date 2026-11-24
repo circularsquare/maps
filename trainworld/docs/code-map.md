@@ -498,7 +498,7 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   outing rates by purpose, T-509 stage 4; table `SURVEYS`, worldwide median otherwise; the
   distance scales are the sim's one worldwide set, `everyday::DECAY`, T-637) into the merged pack and its res-9 copy; rerun it after anything that rebuilds a pack
   header. `show` prints the table.
-- `terrain_fine.py` (T-1854): the fine terrain intermediate, built once on AWS (`--kind terrain`):
+- `terrain_fine.py` (T-1854): the fine terrain intermediate, built once on the friend's AWS account (retired, T-4177):
   per one-degree block, the mean slope of GEDTM30's 30 m pixels per 1/960 degree cell and the mean
   elevation per 1/240 cell, read by HTTP range from OpenGeoHub's 432 GB file (format in its docstring), with
   tower fields cut out first (`tower_ground`, GHSL's 1 km built volume, T-1881; `run` fetches it to
@@ -586,12 +586,14 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   ends with `freeze.py`.
 - `netget.py [ISO2...]`: a build's network requests retried in place (`request`, `cached_json`), and the
   national figures a run fetches once before its builds (`country_inputs`, T-1979).
-- `tools/aws/` (T-1064, rules and flow in docs/aws.md): long builds on a rented spot machine in a
-  friend's AWS account. `launch.py` (spot, one-time, tagged, a hard timer, presigned URLs into
+- `tools/aws/` (rules in docs/aws.md): `bench.py` (T-4166), timing runs on a machine in Anita's own account, and
+  `guard.py`, the PreToolUse hook that refuses raw changing `aws` calls and anything aimed at the friend's account.
+  Retired with that account (T-4177), kept as a record and refusing every call: the build flow (T-1064) that ran
+  long builds on a rented spot machine there. `launch.py` (spot, one-time, tagged, a hard timer, presigned URLs into
   `userdata/<kind>.sh`; `--az` when the cheapest zone has no spot capacity), `bucket.py` (our bucket
   only; `get` fetches objects over 100 MB with curl from a presigned URL, resuming), `status.py` (what of ours exists; `cost
-  <run>`), `teardown.py` (terminate and sweep by our tags, then list), `guard.py` (a PreToolUse hook
-  refusing raw changing `aws` calls); `awslib.py` holds the region, tags and checks. A wave (T-1065):
+  <run>`), `teardown.py` (terminate and sweep by our tags, then list); `awslib.py` holds the region, tags and
+  checks. A wave (T-1065):
   `bundle.py` (the code tar; `--head-sim` takes sim/ from HEAD), `seed.py` (home's world field and the box's
   sea polygons, unpacked first, T-2301), `userdata/wave.sh` (check row, go, `world_run.py run --build-only` by
   runner region) with `wavepack.py` (a region's result tar on the machine), `land.py` (results into

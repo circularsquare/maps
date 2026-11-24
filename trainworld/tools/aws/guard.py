@@ -5,17 +5,25 @@ docs/aws.md. Meant as a Claude Code PreToolUse hook on Bash and PowerShell:
     guard.py "<command>"     say ALLOW or REFUSE for one command line, and why
     guard.py --test          the built-in table of lines it must allow and refuse
 
-The AWS user has AdministratorAccess on a friend's whole account, so this and tools/aws/ are the
-only things between a hurried command and her machines and buckets. Read-only calls pass (describe,
-list, get, head, wait, `s3 ls`, `sts get-caller-identity`), and so does anything run through
-tools/aws/*.py, which check tags, region and ids themselves. Everything else that names the aws CLI,
-or boto3/botocore with a changing method, is refused with the script to use instead.
+AWS means Anita's own account only (profile anita-own). The friend's account is retired (Anita,
+2026-11-24, T-4177): anything aimed at it is refused outright, whatever it does: a raw aws call without
+`--profile anita-own`, `--profile default` or AWS_PROFILE=default, its account number next to an aws or
+boto call, inline boto3/botocore that doesn't name anita-own, and the friend-account scripts in tools/aws/
+(awslib refuses too). In her own account, read-only calls pass (describe, list, get, head, wait, `s3 ls`,
+`sts get-caller-identity`), and so does tools/aws/bench.py, which checks the account itself. Everything else
+that names the aws CLI, or boto3/botocore with a changing method, is refused with the script to use instead.
 """
 import json
 import re
 import sys
 
-OURS = "anitabuilder-builds-"  # bucket names of ours start so (awslib.BUCKET)
+OURS = "twbench-"  # bucket names of ours start so (bench.py BUCKET, her own account)
+OWN_PROFILE = "anita-own"
+FRIEND_ACCOUNT = "429583250612"  # retired, T-4177: never reached again
+FRIEND_SCRIPTS = re.compile(r"""(?<![\w.-])py(?:thon\d?)?(?:\.exe)?['"]?\s+(?:-\S+\s+)*['"]?[^\s'"]*aws[\\/]+"""
+                            r"""(?:awslib|status|bucket|launch|teardown|bundle|seed|wavepack|land)\.py\b|\b(?:import|from)\s+awslib\b""", re.I)
+FRIEND_PROFILE = re.compile(r"""--profile[\s=]+['"]?default\b|AWS_PROFILE['"]?\s*[:=]\s*['"]?default\b|profile(?:_name)?\s*=\s*['"]default['"]""", re.I)
+BOTO_USE = re.compile(r"\b(?:boto3|botocore)(?:\.session)?\s*\.\s*(?:client|resource|session|Session)\b|\bimport\s+(?:boto3|botocore)|\bfrom\s+(?:boto3|botocore)\b")
 READ_PREFIXES = ("describe-", "list-", "get-", "head-", "lookup-", "filter-log-events", "search-",
                  "batch-get-", "estimate-")
 SECRET_READS = ("get-secret-value", "get-password-data", "export-credentials", "get-session-token",
@@ -31,8 +39,8 @@ BOTO_CHANGE = re.compile(r"""\.(terminate|delete|run|request|create|put|modify|c
 SEARCHERS = re.compile(r"^\s*(grep|rg|findstr|Select-String|git\s+(-C\s+\S+\s+)?(log|grep|diff|show|status|commit)|type|cat|less|head|tail|Get-Content)\b", re.I)
 EXEC_PIPE = re.compile(r"\|\s*(sh|bash|pwsh|powershell|iex|Invoke-Expression|cmd)\b|\bInvoke-Expression\b|\biex\b", re.I)
 
-ADVICE = ("use the scripts in trainworld/tools/aws/ (launch.py, teardown.py, bucket.py, status.py), "
-          "which tag what they make and touch only ids tagged owner=anita project=anitabuilder; "
+ADVICE = ("AWS means Anita's own account only: use trainworld/tools/aws/bench.py, or read-only calls with "
+          "--profile anita-own; the friend's account and its scripts are retired (T-4177); "
           "read trainworld/docs/aws.md first")
 
 
@@ -45,11 +53,15 @@ def words(rest):
 
 def judge_aws(ws):
     """ALLOW or REFUSE for one aws invocation's words (after `aws`)."""
-    i, svc, op = 0, None, None
+    i, svc, op, profile = 0, None, None, None
     rest = []
     while i < len(ws):
         w = ws[i]
         if w.startswith("--"):
+            if w.startswith("--profile="):
+                profile = w.split("=", 1)[1]
+            elif w == "--profile" and i + 1 < len(ws):
+                profile = ws[i + 1]
             if w.split("=")[0] in VALUED and "=" not in w:
                 i += 1
         elif svc is None:
@@ -62,6 +74,11 @@ def judge_aws(ws):
     flat = " ".join(ws)
     if svc is None or svc in ("help", "--version") or op in (None, "help"):
         return True, "no operation"
+    if svc == "configure" and op in ("list", "list-profiles"):
+        return True, "reads the CLI's settings"
+    if profile != OWN_PROFILE:
+        return False, (f"`aws {svc} {op}` without --profile {OWN_PROFILE} would use the friend's account (retired, T-4177)"
+                       if profile in (None, "default") else f"profile {profile} is not {OWN_PROFILE}, the only AWS account in use")
     if "--with-decryption" in flat:
         return False, f"`{svc} {op} --with-decryption` reads a secret value"
     if svc == "configure":
@@ -101,6 +118,14 @@ def judge(cmd):
         first = cmd.strip().split()[0]
         if not re.search(r"[;&]|\$\(", cmd):
             return True, f"{first} only reads text"
+    if FRIEND_SCRIPTS.search(cmd):
+        return False, "the friend-account scripts in tools/aws/ (awslib and the wave flow) are retired with that account (T-4177)"
+    if FRIEND_PROFILE.search(cmd):
+        return False, "the default profile was the friend's account, retired (T-4177)"
+    if FRIEND_ACCOUNT in cmd and (AWS_AT.search(cmd) or BOTO.search(cmd)):
+        return False, f"the friend's account {FRIEND_ACCOUNT} is retired (T-4177)"
+    if BOTO_USE.search(cmd) and OWN_PROFILE not in cmd:
+        return False, f"inline boto3/botocore without profile {OWN_PROFILE} would use the friend's account's old default (retired, T-4177)"
     for m in AWS_AT.finditer(cmd):
         ok, why = judge_aws(words(cmd[m.end():]))
         if not ok:
@@ -114,23 +139,40 @@ def judge(cmd):
 
 TESTS = [
     # (command line, allowed?)
-    ("aws sts get-caller-identity", True),
+    ("aws sts get-caller-identity --profile anita-own", True),
     ("aws --version", True),
-    ("aws ec2 describe-instances --filters Name=tag:owner,Values=anita", True),
-    ("aws ec2 describe-spot-price-history --region us-east-2 --instance-types m7a.8xlarge", True),
-    ("aws ec2 wait instance-terminated --instance-ids i-0abc", True),
-    ("aws ec2 get-console-output --instance-id i-0abc --output text", True),
-    ("aws ssm get-parameter --name /aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id", True),
-    ("aws s3 ls", True),
-    ("aws s3 ls s3://anitabuilder-builds-use2-k7q4/proof1/", True),
-    ("aws s3api list-objects-v2 --bucket anitabuilder-builds-use2-k7q4", True),
+    ("aws ec2 describe-instances --profile anita-own --filters Name=tag:project,Values=twbench", True),
+    ("aws ec2 describe-spot-price-history --region us-east-2 --profile anita-own --instance-types m7a.8xlarge", True),
+    ("aws ec2 wait instance-terminated --profile=anita-own --instance-ids i-0abc", True),
+    ("aws ec2 get-console-output --profile anita-own --instance-id i-0abc --output text", True),
+    ("aws ssm get-parameter --profile anita-own --name /aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id", True),
+    ("aws s3 ls --profile anita-own", True),
+    ("aws s3 ls s3://twbench-use2-r7k2m9/runs/ --profile anita-own", True),
+    ("aws s3api list-objects-v2 --bucket twbench-use2-r7k2m9 --profile anita-own", True),
+    ("aws s3 ls s3://anitabuilder-builds-use2-k7q4/proof1/ --profile anita-own", False),
     ("aws configure list", True),
-    ("aws configure get region", True),
+    ("aws configure get region --profile anita-own", True),
     ('$env:PATH = "x"; aws --version', True),
-    ('& "C:\\Program Files\\Amazon\\AWSCLIV2\\aws.exe" ec2 describe-volumes --filters Name=tag:owner,Values=anita', True),
-    ("venv\\Scripts\\python.exe trainworld\\tools\\aws\\teardown.py proof1", True),
-    ("venv/Scripts/python.exe trainworld/tools/aws/launch.py w1 --kind wave --type m7a.8xlarge --hours 4", True),
-    ("python trainworld/tools/aws/bucket.py rm proof1", True),
+    ('& "C:\\Program Files\\Amazon\\AWSCLIV2\\aws.exe" ec2 describe-volumes --profile anita-own --filters Name=tag:project,Values=twbench', True),
+    # the friend's account, retired 2026-11-24 (T-4177): refused whatever the call does
+    ("venv\\Scripts\\python.exe trainworld\\tools\\aws\\teardown.py proof1", False),
+    ("venv/Scripts/python.exe trainworld/tools/aws/launch.py w1 --kind wave --type m7a.8xlarge --hours 4", False),
+    ("python trainworld/tools/aws/bucket.py rm proof1", False),
+    ("venv\\Scripts\\python.exe -I trainworld\\tools\\aws\\status.py --all-regions", False),
+    ('python -c "import awslib; awslib.preflight()"', False),
+    ("aws sts get-caller-identity", False),
+    ("aws ec2 describe-instances --profile default", False),
+    ("aws s3 ls --profile=default", False),
+    ("aws ec2 describe-instances --profile someoneelse", False),
+    ('$env:AWS_PROFILE = "default"; aws sts get-caller-identity --profile anita-own', False),
+    ("aws organizations describe-account --account-id 429583250612 --profile anita-own", False),
+    ('python -c "import boto3; print(boto3.client(\'sts\').get_caller_identity())"', False),
+    ('python -c "import boto3; s = boto3.Session(profile_name=\'anita-own\'); print(s.client(\'sts\').get_caller_identity())"', True),
+    ("git add trainworld/tools/aws/awslib.py trainworld/tools/aws/status.py", True),
+    ("python trainworld/tools/status.py", True),
+    ("pip show boto3", True),
+    ("aws configure list-profiles", True),
+    ('grep -rn "429583250612" trainworld/docs', True),
     ('grep -rn "aws ec2 terminate-instances" trainworld/docs', True),
     ("git log --oneline -5", True),
     ('git -C C:/x commit -q -m "anitabuilder: AWS build tooling (T-1064)." -m "trailer"', True),
@@ -171,10 +213,17 @@ TESTS = [
     ("aws --profile default --output json ec2 delete-security-group --group-id sg-1", False),
     ('python -c "import subprocess; subprocess.run([\'aws\', \'ec2\', \'terminate-instances\', \'--instance-ids\', \'i-1\'])"', False),
     ('python -c "import boto3; boto3.client(\'ec2\').terminate_instances(InstanceIds=[\'i-1\'])"', False),
-    ('python -c "import boto3; print(boto3.client(\'ec2\').describe_instances())"', True),
+    ('python -c "import boto3; print(boto3.client(\'ec2\').describe_instances())"', False),
     ('echo "aws ec2 terminate-instances --instance-ids i-1" | bash', False),
     ("aws cloudformation create-stack --stack-name x --template-body file://t.yaml", False),
     ("aws elbv2 create-load-balancer --name x", False),
+    # her own account (profile anita-own, T-4166): raw changing calls are refused there too; bench.py does them
+    ("aws sts get-caller-identity --profile anita-own", True),
+    ("aws ec2 describe-spot-price-history --profile anita-own --instance-types m8a.xlarge", True),
+    ("aws --profile anita-own ec2 run-instances --image-id ami-1 --instance-type m8a.xlarge", False),
+    ("aws ec2 terminate-instances --profile anita-own --instance-ids i-1", False),
+    ("aws iam attach-user-policy --profile anita-own --user-name bench --policy-arn arn:aws:iam::aws:policy/AdministratorAccess", False),
+    ("venv\\Scripts\\python.exe trainworld\\tools\\aws\\bench.py run --perf nyc --edit nyc", True),
 ]
 
 
@@ -201,8 +250,8 @@ def hook():
         ok, why = (not re.search(r"\baws\b|boto", cmd)), f"guard error {x!r}"
     if ok:
         return 0
-    sys.stderr.write(f"Blocked by trainworld/tools/aws/guard.py: {why}. Raw AWS calls that create, change or "
-                     f"destroy anything are refused in this project: {ADVICE}.\n")
+    sys.stderr.write(f"Blocked by trainworld/tools/aws/guard.py: {why}. Raw AWS calls that change anything, or reach "
+                     f"the friend's retired account, are refused in this project: {ADVICE}.\n")
     return 2
 
 

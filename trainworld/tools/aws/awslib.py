@@ -1,4 +1,7 @@
-"""T-1064: the one way this project talks to AWS (docs/aws.md). The account is a friend's, shared
+"""RETIRED 2026-11-24 (T-4177): the friend's account is no longer used and every call here refuses (retired()).
+Kept as a record; AWS means Anita's own account (profile anita-own, tools/aws/bench.py). docs/aws.md.
+
+T-1064: the one way this project talks to AWS (docs/aws.md). The account is a friend's, shared
 free, and the IAM user `anita` has AdministratorAccess on all of it, so nothing in AWS stops a call
 from touching her things: every guard is here. Every call goes to REGION with PROFILE, every
 resource made carries TAGS, and every change names ids that were first checked to carry TAGS.
@@ -44,6 +47,12 @@ class Refused(SystemExit):
         super().__init__("REFUSED: " + msg)
 
 
+def retired():
+    """Anita, 2026-11-24: stop using the friend's account (T-4177). Nothing here reaches it again."""
+    raise Refused(f"the friend's AWS account ({ACCOUNT}) is retired (T-4177, Anita 2026-11-24); "
+                  "AWS means her own account: tools/aws/bench.py, docs/aws.md")
+
+
 def aws_exe():
     exe = shutil.which("aws")
     if exe:
@@ -56,6 +65,7 @@ def aws_exe():
 
 def aws(*args, text=False, check=True):
     """One CLI call in REGION with PROFILE; JSON back (or text). Never prints credentials."""
+    retired()
     cmd = [aws_exe(), *[str(a) for a in args], "--region", REGION, "--profile", PROFILE, "--no-cli-pager"]
     if not text:
         cmd += ["--output", "json"]
@@ -74,6 +84,7 @@ _checked = False
 
 def preflight():
     """The credentials are anita's in the friend's account, or nothing happens."""
+    retired()
     global _checked
     if _checked:
         return
@@ -118,6 +129,7 @@ def instances(states=None, region=None):
 
 def _other_region(region, args):
     """A read-only lookup in another region (status --all-regions); never a change."""
+    retired()
     cmd = [aws_exe(), *args, "--region", region, "--profile", PROFILE, "--output", "json", "--no-cli-pager"]
     p = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8")
     if p.returncode != 0:
@@ -209,6 +221,7 @@ def presign(method, key, hours):
     """A presigned GET or PUT URL for one key of BUCKET, so the machine needs no credentials of its
     own (no IAM role made in the friend's account). The URL carries the access key id (not the
     secret) and a signature good for this key only, until it expires."""
+    retired()
     check_key(key)
     import botocore.session
     from botocore.config import Config
