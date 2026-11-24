@@ -324,6 +324,18 @@ export const TRACK_TYPE_COLOURS = {
   tram: "#c0603a",
 } as const;
 
+/** T-4205: each mode's icon colour where the station tool shows one (the kind choice, the placing tag's icon and its
+ * trips-near bar); the same in both themes, mid-lightness so it reads on the light and the dark bar. A BRT station is a
+ * step more magenta than the bus. */
+export const MODE_ICON_COLOURS = {
+  rail: "#2f6fd6",
+  hsr: "#3c4fc4",
+  tram: "#4aaee6",
+  bus: "#8a5cc8",
+  brt: "#a35fc4",
+  ferry: "#139d94",
+} as const;
+
 /** Letter colour on a line chip: dark on light lines (yellow), white on the rest. */
 export function inkOn(hex: string): string {
   const [r, g, b] = rgb(hex).map((v) => v / 255);

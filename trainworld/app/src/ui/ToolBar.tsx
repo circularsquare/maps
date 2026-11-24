@@ -8,7 +8,7 @@ import type { ComponentChildren, JSX } from "preact";
 import { distUnit, kmhFromShown, kmhToShown, levelLabel, levelName, millions, speed } from "../game/format";
 import { linking } from "../game/links";
 import { moneyState } from "../game/money";
-import { CLICK_MODE_COLOURS, inkOn, LEVEL_COLOURS, legibleOn, TRACK_TYPE_COLOURS } from "../game/palette";
+import { CLICK_MODE_COLOURS, inkOn, LEVEL_COLOURS, legibleOn, MODE_ICON_COLOURS, TRACK_TYPE_COLOURS } from "../game/palette";
 import { buildMode } from "../game/buildMode";
 import { linesByNum, world } from "../game/world";
 import { CAR_M, stepPlatform } from "../game/boarding";
@@ -177,6 +177,8 @@ function TrackBar() {
 
 /** T-3999, T-4010: what the station tool places, a train station, a tram stop, a BRT station or a port. */
 const stationKinds = (): [StationChoice, string, () => JSX.Element][] => [["auto", t("toolBar.kindAuto"), Icon.auto], ["rail", t("toolBar.kindRail"), Icon.train], ["tram", t("toolBar.kindTram"), Icon.tram], ["bus", t("stationInspector.brtStation"), Icon.brt], ["port", t("stationInspector.port"), Icon.anchor]];
+/** T-4205: the kind's mode colour for its icon; "auto" keeps the button's own. */
+const KIND_COLOUR: Partial<Record<StationChoice, string>> = { rail: MODE_ICON_COLOURS.rail, tram: MODE_ICON_COLOURS.tram, bus: MODE_ICON_COLOURS.brt, port: MODE_ICON_COLOURS.ferry };
 
 function StationBar() {
   const tram = stationOnTram.value;
@@ -187,7 +189,7 @@ function StationBar() {
   const kinds = (pick: (k: StationChoice) => void, cls = "") => (
     <div class={"group tb-kind" + cls} role="group" aria-label={t("toolBar.stationKind")}>
       {stationKinds().map(([k, label, I]) => (
-        <button class={"btn icon" + (kind === k ? " on" : "")} aria-label={label} aria-pressed={kind === k} data-tip={label} onClick={() => pick(k)}><I /></button>
+        <button class={"btn icon" + (kind === k ? " on" : "")} aria-label={label} aria-pressed={kind === k} data-tip={label} style={{ color: KIND_COLOUR[k] }} onClick={() => pick(k)}><I /></button>
       ))}
     </div>
   );
@@ -198,7 +200,7 @@ function StationBar() {
       <div class="tb-row">
         {kinds((k) => (stationChoice.value = k), " tb-wide")}
         {/* on a phone the kind is one button that opens the four above the bar, as the track type */}
-        <button class="btn icon tb-narrow" aria-label={kindLabel} aria-expanded={open} onClick={() => setOpen(!open)}><KindIcon /></button>
+        <button class="btn icon tb-narrow" aria-label={kindLabel} aria-expanded={open} style={{ color: KIND_COLOUR[kind] }} onClick={() => setOpen(!open)}><KindIcon /></button>
         {(shown === "rail" || shown === "tram") && <>
           <span class="tb-wide">{t("toolBar.platformLength")}</span>
           <Stepper value={carsText(Math.round(len.value / CAR_M))} wide label={t("toolBar.platformLengthLabel")} onStep={(s) => {

@@ -14,6 +14,7 @@ import { toLngLat, toLocal } from "./geo";
 import { circleOnScreen, drawTangent, endHeading } from "./curveCircle";
 import { placeAt } from "./screenPlace";
 import { curveLabels, legCurveLabels, placeCurveLabels, placementTag, rampLabels } from "./trackTagRows";
+import { MODE_ICON_COLOURS } from "../game/palette";
 import { TRACK_SPECS } from "../game/trackKinds";
 import { logShare } from "./modeBar";
 import { NEAR_BAR_LO, NEAR_BAR_HI, BESIDE_PX, type Snap, tooFarText, withName } from "./toolParts";
@@ -252,6 +253,7 @@ export function placeMarks(tk: Tools) {
 }
 
 const KIND_ICON = { rail: Icon.train, tram: Icon.tram, bus: Icon.brt, port: Icon.anchor };
+const KIND_COLOUR = { rail: MODE_ICON_COLOURS.rail, tram: MODE_ICON_COLOURS.tram, bus: MODE_ICON_COLOURS.brt, port: MODE_ICON_COLOURS.ferry };
 
 /** The cursor tag with `content`, red when `bad`, by the screen point (x, y). */
 export function showTag(tk: Tools, content: string | (string | Node)[], bad: boolean, x: number, y: number) {
@@ -271,13 +273,16 @@ export function helpLines(tk: Tools, h: Snap, first: string | null): HTMLDivElem
   if (last) lines.push(row(tr("tools.fromLast", { distance: distance(metresBetween(lng, lat, last.lng, last.lat)), name: last.name })));
   const trips = tripsNear(tk, lng, lat);
   if (trips) {
+    const colour = KIND_COLOUR[stationKind.peek()];
     const bar = Object.assign(document.createElement("div"), { className: "size-bar" });
+    bar.style.setProperty("--kind", colour);
     const fill = document.createElement("i");
     fill.style.width = `${(100 * logShare(trips.legs, NEAR_BAR_LO, NEAR_BAR_HI)).toFixed(1)}%`;
     bar.append(fill);
     const text = row(trips.text);
     // T-4105, T-4135: the row starts with the icon of the kind a click would place; no row names the kind
     const icon = Object.assign(document.createElement("span"), { className: "kind-icon" });
+    icon.style.color = colour;
     render(KIND_ICON[stationKind.peek()](), icon);
     text.prepend(icon);
     text.className = "near-row";
