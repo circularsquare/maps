@@ -2260,8 +2260,17 @@ class DemandClient {
     // a city opened since the newest solve (also one that finished loading after the view moved
     // away again: it is open, so solve it rather than leave its load unfinished)
     // (T-1223: or opened again at another level since)
+    if (!this.covers(s, need)) this.dispatch(s.svc, performance.now());
+  }
+
+  /** T-4055: `s` covers every pack a solve of its network would now (`need`, the markets open and wanted), each at
+   * the level it is open at, and none of them is opening (reached, wanted, or opening again at another level since
+   * `s` was sent). Else a solve follows once they are open (`flush`), and `s`'s final is not its network's. */
+  private covers(s: Solve, need: Set<CityId>): boolean {
     const coarse = new Set(s.coarse ?? []);
-    if ([...need].some((id) => !s.cities.includes(id) || coarse.has(id) !== (this.levelPosted.get(id) === LOD_COARSE)) || [...this.opened].some((item) => isMarket(item) && !s.markets.includes(marketZone(item)))) this.dispatch(s.svc, performance.now());
+    return [...need].every((id) => this.opened.has(id) && s.cities.includes(id) && coarse.has(id) === (this.levelPosted.get(id) === LOD_COARSE))
+      && this.marketWanted.every((id) => this.opened.has(marketItem(id)) || !this.fetching.has(marketItem(id)))
+      && [...this.opened].every((item) => !isMarket(item) || s.markets.includes(marketZone(item)));
   }
 
   /**
@@ -5537,12 +5546,17 @@ class DemandClient {
         this.aheadP.clear();
         this.cityVersion.clear();
         if (s === this.cur) {
-          demandUpdating.value = false;
+          // T-4055: a pack that began opening during the solve (a zone at another level, a market) makes it stale:
+          // its figures show, and its network waits to be solved again once the pack is open, that solve the final
+          const need = this.waiting ? null : this.solveNeed(s.svc);
+          const stale = !!need && !this.covers(s, need);
+          if (stale) this.waiting = { svc: s.svc, arrivedAt: performance.now() };
+          else demandUpdating.value = false;
           demandSolving.value = null;
           this.unsettled = null;
-          setTimeout(() => void this.writeCache(s), 0); // T-328; a task of its own (T-789)
+          if (!stale) setTimeout(() => void this.writeCache(s), 0); // T-328; a task of its own (T-789)
           // T-1734: what was held back meanwhile
-          if (s.barrier === false) this.flush();
+          if (s.barrier === false || stale) this.flush();
           // T-2560: the levels of detail waited for this solve as for a load's card (`checkHold`)
           if (s.svc === this.cacheSolve) {
             this.cacheSolve = null;

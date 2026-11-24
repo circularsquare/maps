@@ -332,7 +332,9 @@ Web first, so it can be shared as a link.
   auxiliary worker alone [T-325, [demand-runtime.md](demand-runtime.md) "Bare zones"], the viewed zone of a new game from the start [T-351]. Solving
   workers also open the regional market once a market zone is viewed or reached or a station lies
   within its reach [T-396]. A solve waits until every pack it needs is open in
-  every worker, so a published result never leaves out a constructed city. Each worker solves the
+  every worker, so a published result never leaves out a constructed city; a pack that starts opening
+  while a solve runs (a zone reached, a market, a zone at another level) leaves that solve's figures
+  shown but its network waiting, and the next solve's final is the final [T-4055]. Each worker solves the
   network's clusters (populations and the lines they reach, sharing no rider) apart, and after an
   edit only those it touched [T-326, [demand-runtime.md](demand-runtime.md) "Clusters"]; within a
   cluster each city's layers solve on the stations within its reach, the market on the whole
