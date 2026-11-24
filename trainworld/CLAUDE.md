@@ -49,8 +49,10 @@ new standing process.
 - **Changelog**: a change a player would notice (a new control, a changed number, a fixed bug they'd have met) gets
   one item before you report; when in doubt, none. List it with your strings.
   `venv\Scripts\python.exe trainworld/tools/changelog.py add "<line>" --area <area> [--fix] --task T-#### --by <you>`
-  - One plain line, lowercase: past tense for the change ("added ...", "fixed ..."), present for how things are now
-    ("the game uses 500 MB less memory").
+  - One plain line, lowercase, about 15 words at most (a bullet, minimally described; her 11-24): past tense for the
+    change ("added ...", "fixed ..."), present for how things are now ("trips are calculated 2x faster").
+  - No "uses less memory" item in a release whose overall memory goes up against the last publish (perf_bench); from
+    a player's side that isn't right (her 11-24).
   - Area: track, demand, scheduling, fares, schematic (the map and schematic), community (accounts and sharing),
     performance; other if none fits. A fix takes its area plus `--fix`; `bug` only when no area fits.
   - If the unpublished changelog (`changelog.py list`) already has an item for what you changed, the one that added
