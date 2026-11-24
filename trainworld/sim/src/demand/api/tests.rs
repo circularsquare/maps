@@ -1644,8 +1644,21 @@ fn commute_fans_are_the_mix_of_two_choices() {
         }
         let choice = |er: &[f32], fans: Option<&kernel::CommuteFans>| kernel::mode_choice_fans(&api.z, &api.gr, sz, er, &sk.walk, &sk.walk_max, s, &p, &api.nr, (0, 1), fans);
         let (mo, m0, m1) = (choice(&er, Some(&cf)), choice(&er, None), choice(&er_f, None));
+        // T-3160: only the rows of the origins' stations worked out, the same bits
+        for (fans, part) in [(Some(&cf), (0, 1)), (None, (0, 1)), (Some(&cf), (1, 2))] {
+            let full = kernel::mode_choice_fans(&api.z, &api.gr, sz, &er, &sk.walk, &sk.walk_max, s, &p, &api.nr, part, fans);
+            let bits = |v: &[f32]| v.iter().map(|x| x.to_bits()).collect::<Vec<_>>();
+            for src in [kernel::ExpSrc::Skims(&sk, &p), kernel::ExpSrc::Capped(&sk, &p, 3), kernel::ExpSrc::Capped(&sk, &p, 1)] {
+                let rows = kernel::mode_choice_rows(&api.z, &api.gr, sz, src, &sk.walk, &sk.walk_max, s, &p, &api.nr, part, fans);
+                assert_eq!(full.rail.to_bits(), rows.rail.to_bits());
+                assert!(full.rail > 0.0);
+                assert_eq!(bits(&full.od), bits(&rows.od), "rule {rule}, part {part:?}");
+                assert_eq!(bits(&full.od_fan), bits(&rows.od_fan));
+                assert_eq!(bits(&full.acc_home), bits(&rows.acc_home));
+            }
+        }
         let f = cf.share as f64;
-        let mix = |a: f64, b: f64| (1.0 - f) * a + f * b;
+        let mix =|a: f64, b: f64| (1.0 - f) * a + f * b;
         let tol = if rule { 2e-3 } else { 1e-4 };
         let close = |a: f64, b: f64| (a - b).abs() <= tol * a.abs().max(b.abs()).max(1.0);
         assert!(m1.rail > m0.rail * 1.001, "the fans' costs take more rail trips: {} against {}", m1.rail, m0.rail);

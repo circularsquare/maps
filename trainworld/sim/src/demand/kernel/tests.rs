@@ -1633,6 +1633,31 @@ fn partial_skims_equal_full_skims_where_searched() {
     clear_skim_cache();
 }
 
+/// T-3160: a cached table leaves out the inter-city starts while no market is live on the thread,
+/// with the same costs and loads; with a market live a table has them again.
+#[test]
+fn cached_skims_keep_inter_city_starts_only_for_a_market() {
+    let p = common_test_params();
+    let g = build_graph(&common_test_net(&[&[0, 1], &[0, 1]], &[1.0, 1.0], &[2.0, 20.0]), &p);
+    let full = skims(&g, &p);
+    assert!(full.entries && full.entry.iter().any(|e| !e.is_empty()) && full.entry_dep.iter().any(|e| *e != EntryDeps::default()));
+    let mut od = vec![0.0; g.n_st * g.n_st];
+    od[1] = 100.0;
+    let want = vec![true; g.n_st];
+    clear_skim_cache();
+    with_skims(&g, &p, &want, |sk| {
+        assert!(!sk.entries && sk.entry.iter().all(|e| e.is_empty()) && sk.entry_dep.iter().all(|e| *e == EntryDeps::default()));
+        assert_eq!((&sk.r, &sk.walk), (&full.r, &full.walk));
+        let (a, b) = (assign(&g, sk, &od), assign(&g, &full, &od));
+        assert_eq!((a.seg, a.rn_board, a.rn_alight), (b.seg, b.rn_board, b.rn_alight));
+    });
+    let live = MarketLive::hold();
+    assert!(!skims_cached(&g, &p), "a table without the starts is not a market's");
+    with_skims(&g, &p, &want, |sk| assert!(sk.entries && sk.entry == full.entry && sk.entry_dep == full.entry_dep));
+    drop(live);
+    clear_skim_cache();
+}
+
 /// T-176: transfers are counted platform to platform. A to C changes at B from line 0 to line 1
 /// (and back on the way home); riders who end at B do not transfer.
 #[test]

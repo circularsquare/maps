@@ -543,6 +543,9 @@ pub struct Skims {
     pub share: Vec<Shares>,
     /// Per searched destination, its inter-city starts' departures (`DestStrategy::entry_dep`).
     pub entry_dep: Vec<EntryDeps>,
+    /// Whether `entry` and `entry_dep` are filled (else empty per destination): only a market reads
+    /// them, and at night they were a third of Tokyo's table (T-3160, `with_skims`).
+    pub entries: bool,
 }
 
 /// A station as reached off one of the lines its own strategy boards (T-575): a rider never changes
@@ -689,10 +692,11 @@ pub(super) fn accepted(bits: &[u64], g: &Graph, r: usize) -> f32 {
 
 impl Skims {
     pub fn empty(g: &Graph) -> Skims {
-        Skims { s: g.n_st, n: g.n, r: vec![f32::INFINITY; g.n_st * g.n_st], walk: vec![u16::MAX; g.n_st * g.n_st], walk_max: vec![0; g.n_st], slot: vec![NONE; g.n_st], next: vec![], board: vec![], order: vec![], change: vec![], entry: vec![], start: vec![], share: vec![], entry_dep: vec![] }
+        Skims { s: g.n_st, n: g.n, r: vec![f32::INFINITY; g.n_st * g.n_st], walk: vec![u16::MAX; g.n_st * g.n_st], walk_max: vec![0; g.n_st], slot: vec![NONE; g.n_st], next: vec![], board: vec![], order: vec![], change: vec![], entry: vec![], start: vec![], share: vec![], entry_dep: vec![], entries: true }
     }
     /// `r` with the first boarding at the planned wait (T-1430), as the inter-city trips cost it.
     pub fn entry_r(&self) -> std::borrow::Cow<'_, [f32]> {
+        debug_assert!(self.entries, "a table without inter-city starts");
         if self.entry.iter().all(|e| e.is_empty()) {
             return std::borrow::Cow::Borrowed(&self.r);
         }
@@ -766,10 +770,10 @@ pub fn skims_extend(sk: &mut Skims, g: &Graph, p: &Params, want: &[bool]) {
         sk.board.push(d.board);
         sk.order.push(d.order);
         sk.change.push(d.change);
-        sk.entry.push(d.entry);
+        sk.entry.push(if sk.entries { d.entry } else { Box::default() });
         sk.start.push(d.start);
         sk.share.push(d.share.without_waits());
-        sk.entry_dep.push(d.entry_dep);
+        sk.entry_dep.push(if sk.entries { d.entry_dep } else { EntryDeps::default() });
     }
 }
 
@@ -3574,6 +3578,37 @@ struct SkimCache {
 
 thread_local! {
     static SKIM_CACHE: std::cell::RefCell<SkimCache> = const { std::cell::RefCell::new(SkimCache { kept: Vec::new(), spare: None }) };
+    static MARKETS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
+/// One live market (`IntercityApi`) on this thread, while held. A table `with_skims` makes with none
+/// live leaves out the inter-city starts (`Skims::entries`), which only a market reads.
+pub struct MarketLive(());
+
+impl MarketLive {
+    pub fn hold() -> MarketLive {
+        MARKETS.with(|m| m.set(m.get() + 1));
+        MarketLive(())
+    }
+}
+
+impl Drop for MarketLive {
+    fn drop(&mut self) {
+        MARKETS.with(|m| m.set(m.get() - 1));
+    }
+}
+
+/// Whether the cached table `sk` of a graph serves this thread's callers: it has the inter-city
+/// starts, or no market is live to read them.
+fn serves(sk: &Skims) -> bool {
+    sk.entries || MARKETS.with(|m| m.get()) == 0
+}
+
+/// A new table for `with_skims`, with the inter-city starts only while a market is live.
+fn cache_table(g: &Graph) -> Skims {
+    let mut sk = Skims::empty(g);
+    sk.entries = MARKETS.with(|m| m.get()) > 0;
+    sk
 }
 
 /// Run `f` on the skims of `g` towards the stations in `want`, searching only what no earlier
@@ -3586,7 +3621,9 @@ thread_local! {
 pub fn with_skims<R>(g: &Graph, p: &Params, want: &[bool], f: impl FnOnce(&Skims) -> R) -> R {
     SKIM_CACHE.with(|cell| {
         let mut c = cell.borrow_mut();
-        let spare = c.spare.take().filter(|(k, _)| k.same(g, p));
+        // a table without the inter-city starts goes once a market is live
+        c.kept.retain(|(_, sk)| serves(sk));
+        let spare = c.spare.take().filter(|(k, sk)| k.same(g, p) && serves(sk));
         match c.kept.iter().position(|(k, _)| k.same(g, p)) {
             Some(i) => {
                 let e = c.kept.remove(i);
@@ -3601,7 +3638,7 @@ pub fn with_skims<R>(g: &Graph, p: &Params, want: &[bool], f: impl FnOnce(&Skims
                     let (i, kept) = c.kept.iter().enumerate().map(|(i, e)| (i, e.1.next.len())).min_by_key(|e| e.1).unwrap();
                     if todo < kept {
                         drop(c);
-                        let (k, mut sk) = spare.unwrap_or_else(|| (SkimKey::of(g, p), Skims::empty(g)));
+                        let (k, mut sk) = spare.unwrap_or_else(|| (SkimKey::of(g, p), cache_table(g)));
                         skims_extend(&mut sk, g, p, want);
                         let r = f(&sk);
                         cell.borrow_mut().spare = Some((k, sk));
@@ -3609,7 +3646,7 @@ pub fn with_skims<R>(g: &Graph, p: &Params, want: &[bool], f: impl FnOnce(&Skims
                     }
                     c.kept.remove(i);
                 }
-                let e = spare.unwrap_or_else(|| (SkimKey::of(g, p), Skims::empty(g)));
+                let e = spare.unwrap_or_else(|| (SkimKey::of(g, p), cache_table(g)));
                 c.kept.push(e);
             }
         }
@@ -3621,7 +3658,7 @@ pub fn with_skims<R>(g: &Graph, p: &Params, want: &[bool], f: impl FnOnce(&Skims
 
 /// Whether this thread holds skims of `g` (`with_skims`).
 pub fn skims_cached(g: &Graph, p: &Params) -> bool {
-    SKIM_CACHE.with(|c| c.borrow().kept.iter().any(|(k, _)| k.same(g, p)))
+    SKIM_CACHE.with(|c| c.borrow().kept.iter().any(|(k, sk)| k.same(g, p) && serves(sk)))
 }
 
 /// Forget the cached skims (a worker calls this when it has finished a period's stage, so the

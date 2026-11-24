@@ -304,7 +304,9 @@ levels:
    change node (T-398, T-581; sizes in notes/T-581.md); and for the stations and change nodes
    accepting more than one departure, each departure's share (`Shares`, T-4041), and for the
    stations whose inter-city start boards otherwise, its departures and shares at the planned waits
-   (`EntryDeps`). Station, node and offset lists are u16 where every value fits, and a table keeps
+   (`EntryDeps`) and its start cost (`Skims::entry`). Only a market reads those two, so a cached table
+   leaves them out while no market (`IntercityApi`) is live on the thread, as on a phone: a third of
+   Tokyo's night table (T-3160). Station, node and offset lists are u16 where every value fits, and a table keeps
    no expected waits (only a search's own walk and the trip explorer read them; the explorer
    searches its destination again): the real New York save's table is 48 MB, not 62 (T-4179). The search's queue pops by cost, then id; a lower cost for a node already
    queued adds a copy, and the stale copy is skipped when it pops (T-1647).

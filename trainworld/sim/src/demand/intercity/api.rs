@@ -156,6 +156,8 @@ pub(super) fn access_list(weights: BTreeMap<usize, f32>, positive: bool, comp: &
 #[wasm_bindgen]
 pub struct IntercityApi {
     pub(super) m: Rc<Market>,
+    /// T-3160: keeps the inter-city starts in this thread's skims tables (`MarketLive`).
+    pub(super) _live: MarketLive,
     /// The zone pairs between zones some station serves (T-174), two by two: (lower zone, higher
     /// zone), then the same reversed, in the order of (lower, higher) (`pair_at` searches it).
     pub(super) pairs: Vec<Pair>,

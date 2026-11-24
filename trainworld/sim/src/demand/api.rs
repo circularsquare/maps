@@ -980,11 +980,10 @@ impl DemandApi {
         let sz = self.sz.as_ref().unwrap();
         // the strategies are shared with the other populations on the same service (T-119)
         let (mo, l, od_sub) = with_skims(g, p, &self.want, |sk| {
-            let er = station_exp(sk, p);
+            let er = ExpSrc::Skims(sk, p);
             // T-3892: the ferry fans' costs, only while any line is a ferry
             let fans = if self.ferry.is_empty() { None } else { CommuteFans::new(g, p, sk, &self.ferry) };
-            let mut mo = mode_choice_fans(&self.z, &self.gr, sz, &er, &sk.walk, &sk.walk_max, g.n_st, p, &self.nr, self.part, fans.as_ref());
-            drop(er);
+            let mut mo = mode_choice_rows(&self.z, &self.gr, sz, er, &sk.walk, &sk.walk_max, g.n_st, p, &self.nr, self.part, fans.as_ref());
             // the trips home: the same station pairs reversed
             let s = g.n_st;
             let (w, h) = (TO_WORK[q], TO_HOME[q]);

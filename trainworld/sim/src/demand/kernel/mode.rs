@@ -46,6 +46,97 @@ pub fn station_exp(sk: &Skims, p: &Params) -> Vec<f32> {
     er
 }
 
+/// Where `mode_choice_rows` takes its `station_exp` from: a whole table, or the skims it is
+/// worked out from.
+pub enum ExpSrc<'a> {
+    Table(&'a [f32]),
+    Skims(&'a Skims, &'a Params),
+    /// `Skims` with the cache held to at most that many rows (tests of the cache's reuse).
+    Capped(&'a Skims, &'a Params, usize),
+}
+
+/// `station_exp` as rows (`row(band, access station)`): the whole table, or a cache of rows each
+/// worked out as `station_exp` does, for the access stations the part's origins have. A row is
+/// kept until its slot is taken by a row the origins then at work need; an origin's own rows
+/// (`begin`, `ensure`) are never taken. The table is S x S per band for every population, and a
+/// zone with few stations of its own reads a few rows of it (T-3160).
+enum ExpRows<'a> {
+    Full { er: &'a [f32], s: usize },
+    Cache { sk: &'a Skims, p: &'a Params, slot: Vec<u32>, key: Vec<u32>, used: Vec<u32>, data: Vec<f32>, hand: usize, gen: u32 },
+}
+
+/// Rows a cache keeps at most (the rest of a table is worked out again when read after being taken).
+const EXP_CACHE_ROWS: usize = 1024;
+
+impl<'a> ExpRows<'a> {
+    fn new(src: ExpSrc<'a>, s: usize, want: usize) -> Self {
+        match src {
+            ExpSrc::Table(er) => ExpRows::Full { er, s },
+            ExpSrc::Skims(..) | ExpSrc::Capped(..) => {
+                let (sk, p, limit) = match src {
+                    ExpSrc::Skims(sk, p) => (sk, p, EXP_CACHE_ROWS.max(p.n_bands() * 64)),
+                    ExpSrc::Capped(sk, p, n) => (sk, p, n),
+                    ExpSrc::Table(_) => unreachable!(),
+                };
+                let nb = p.n_bands();
+                let cap = (want * nb).min(limit);
+                ExpRows::Cache { sk, p, slot: vec![u32::MAX; nb * s], key: vec![u32::MAX; cap], used: vec![0; cap], data: vec![0.0; cap * s], hand: 0, gen: 0 }
+            }
+        }
+    }
+
+    /// The next origin: the rows it `ensure`s stay until it is done.
+    #[inline]
+    fn begin(&mut self) {
+        if let ExpRows::Cache { gen, .. } = self {
+            *gen += 1;
+        }
+    }
+
+    /// Makes row `a` of band `b` readable for the origin at work.
+    fn ensure(&mut self, b: usize, a: usize) {
+        let ExpRows::Cache { sk, p, slot, key, used, data, hand, gen } = self else { return };
+        let s = sk.s;
+        let at = b * s + a;
+        if slot[at] != u32::MAX {
+            used[slot[at] as usize] = *gen;
+            return;
+        }
+        // the first slot past the hand no row of this origin holds; with every one held, a new slot
+        let n = key.len();
+        let victim = (0..n).map(|d| (*hand + d) % n).find(|&j| used[j] != *gen).unwrap_or_else(|| {
+            key.push(u32::MAX);
+            used.push(0);
+            data.resize(data.len() + s, 0.0);
+            key.len() - 1
+        });
+        *hand = victim + 1;
+        if key[victim] != u32::MAX {
+            slot[key[victim] as usize] = u32::MAX;
+        }
+        key[victim] = at as u32;
+        used[victim] = *gen;
+        slot[at] = victim as u32;
+        let (th, off) = p.band(b);
+        let row = &mut data[victim * s..(victim + 1) * s];
+        for (e, &r) in row.iter_mut().zip(&sk.r[a * s..(a + 1) * s]) {
+            *e = if r.is_finite() { fast_exp(-th * (r - off)) } else { 0.0 };
+        }
+        row[a] = 0.0;
+    }
+
+    #[inline]
+    fn row(&self, b: usize, a: usize) -> &[f32] {
+        match self {
+            ExpRows::Full { er, s } => &er[b * s * s + a * s..b * s * s + (a + 1) * s],
+            ExpRows::Cache { sk, slot, data, .. } => {
+                let at = slot[b * sk.s + a] as usize * sk.s;
+                &data[at..at + sk.s]
+            }
+        }
+    }
+}
+
 /// Distance bands (km, upper edges) for rail trips by how far home is from the boarding station.
 pub const DIST_BANDS_KM: [f32; N_BANDS] = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 6.0, 8.0, f32::INFINITY];
 pub const N_BANDS: usize = 13;
@@ -211,6 +302,12 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
 /// fans' exps); the fans' trips on a ferry go to `od_fan`.
 #[allow(clippy::too_many_arguments)]
 pub fn mode_choice_fans(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk_tab: &[u16], walk_max: &[u16], s: usize, p: &Params, nr: &NoRail, part: (u32, u32), fans: Option<&CommuteFans>) -> ModeOut {
+    mode_choice_rows(z, gr, sz, ExpSrc::Table(er), walk_tab, walk_max, s, p, nr, part, fans)
+}
+
+/// `mode_choice_fans` with only the rows of `station_exp` the origins reach worked out (`ExpSrc::Skims`).
+#[allow(clippy::too_many_arguments)]
+pub fn mode_choice_rows(z: &Zones, gr: &Gravity, sz: &Subzones, er: ExpSrc, walk_tab: &[u16], walk_max: &[u16], s: usize, p: &Params, nr: &NoRail, part: (u32, u32), fans: Option<&CommuteFans>) -> ModeOut {
     match fans {
         Some(_) => mode_choice_with::<true>(z, gr, sz, er, walk_tab, walk_max, s, p, nr, part, fans),
         None => mode_choice_with::<false>(z, gr, sz, er, walk_tab, walk_max, s, p, nr, part, None),
@@ -220,7 +317,7 @@ pub fn mode_choice_fans(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
 /// `mode_choice_fans`, compiled apart with fans and without, so the pair loop without them is
 /// the one before them (T-3892).
 #[allow(clippy::too_many_arguments)]
-fn mode_choice_with<const FANS: bool>(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk_tab: &[u16], walk_max: &[u16], s: usize, p: &Params, nr: &NoRail, (k, n): (u32, u32), fans: Option<&CommuteFans>) -> ModeOut {
+fn mode_choice_with<const FANS: bool>(z: &Zones, gr: &Gravity, sz: &Subzones, er: ExpSrc, walk_tab: &[u16], walk_max: &[u16], s: usize, p: &Params, nr: &NoRail, (k, n): (u32, u32), fans: Option<&CommuteFans>) -> ModeOut {
     let fans = if FANS { fans } else { None };
     let share = p.period_share as f64;
     // T-3888: the walk past which the walk tier never walks (`Params::tier_at`)
@@ -258,7 +355,7 @@ fn mode_choice_with<const FANS: bool>(z: &Zones, gr: &Gravity, sz: &Subzones, er
     // T-710: the station choice's scale and offset by distance band (`er` holds a table per band)
     let nb = p.n_bands();
     let bands: Vec<(f32, f32)> = (0..nb).map(|b| p.band(b)).collect();
-    let (ss, na) = (s * s, sz.acc_st.len());
+    let na = sz.acc_st.len();
     // T-2324: per station and band, `er` from each of the origin's access entries to it, for the
     // refused pairs' weights (filled as `till`, by band)
     let mut till_er = vec![0f32; nb * s * till_w];
@@ -325,6 +422,23 @@ fn mode_choice_with<const FANS: bool>(z: &Zones, gr: &Gravity, sz: &Subzones, er
         len: super::super::lengths::LenOut::zero(),
     };
     let ozones: Vec<usize> = (0..z.n).filter(|&i| sz.zo_off[i + 1] > sz.zo_off[i]).collect();
+    // the stations any of this part's origins reaches
+    let mut er = {
+        let mut want = vec![false; if !matches!(er, ExpSrc::Table(_)) { s } else { 0 }];
+        if !want.is_empty() {
+            for (oi, &i) in ozones.iter().enumerate() {
+                if n > 1 && oi as u32 % n != k {
+                    continue;
+                }
+                for &u in &sz.zo[sz.zo_off[i] as usize..sz.zo_off[i + 1] as usize] {
+                    for kk in sz.acc_off[u as usize] as usize..sz.acc_off[u as usize + 1] as usize {
+                        want[sz.acc_st[kk] as usize] = true;
+                    }
+                }
+            }
+        }
+        ExpRows::new(er, s, want.iter().filter(|&&w| w).count())
+    };
     // Destination zones by their cheapest walk (their first subzone: `build_subzones` sorts
     // them), so an origin visits only the prefix within `pair_walk_max` of its own walk: in
     // 10-minute steps of that walk, in zone order within a step (zone order keeps the decay
@@ -544,6 +658,7 @@ fn mode_choice_with<const FANS: bool>(z: &Zones, gr: &Gravity, sz: &Subzones, er
         for (ui, &u) in us.iter().enumerate() {
             let u = u as usize;
             let (walk, ride) = (sz.walk(u), sz.ride(u));
+            er.begin();
             let (m_u, m_r) = (acc_m[u], ride_m[u]);
             let rides = !ride.is_empty();
             // the walk entries' weight at the rides' offset, per band
@@ -608,15 +723,17 @@ fn mode_choice_with<const FANS: bool>(z: &Zones, gr: &Gravity, sz: &Subzones, er
                 if used >> b & 1 == 0 {
                     continue;
                 }
+                for k in walk.start..ride.end {
+                    er.ensure(b, sz.acc_st[k] as usize);
+                }
                 let at = 2 * b * h;
                 ab_y[at..at + 2 * h].fill(0.0);
-                let er_b = &er[b * ss..(b + 1) * ss];
                 let (a_row, b_row) = ab_row[at..at + 2 * h].split_at_mut(h);
                 let (a_row, b_row) = (&mut a_row[..s], &mut b_row[..s]);
                 a_row.fill(0.0);
                 for k in walk.clone() {
                     let (a, w) = (sz.acc_st[k] as usize, acc_e[b * na + k]);
-                    for (av, &e) in a_row.iter_mut().zip(&er_b[a * s..(a + 1) * s]) {
+                    for (av, &e) in a_row.iter_mut().zip(er.row(b, a)) {
                         *av += w * e;
                     }
                 }
@@ -627,7 +744,7 @@ fn mode_choice_with<const FANS: bool>(z: &Zones, gr: &Gravity, sz: &Subzones, er
                     }
                     for k in ride.clone() {
                         let (a, w) = (sz.acc_st[k] as usize, acc_e[b * na + k]);
-                        for (bv, &e) in b_row.iter_mut().zip(&er_b[a * s..(a + 1) * s]) {
+                        for (bv, &e) in b_row.iter_mut().zip(er.row(b, a)) {
                             *bv += w * e;
                         }
                     }
@@ -654,13 +771,13 @@ fn mode_choice_with<const FANS: bool>(z: &Zones, gr: &Gravity, sz: &Subzones, er
                     af_row[at..at + 2 * h].copy_from_slice(&ab_row[at..at + 2 * h]);
                     af_y[at..at + 2 * h].fill(0.0);
                     let (th, off) = bands[b];
-                    let er_b = &er[b * ss..(b + 1) * ss];
                     for k in walk.start..ride.end {
                         let (a, w) = (sz.acc_st[k] as usize, acc_e[b * na + k]);
                         let (ts, cs) = cf.of(a);
+                        let er_a = er.row(b, a);
                         for (&t, &c) in ts.iter().zip(cs) {
                             let t = t as usize;
-                            let d = w * (fast_exp(-th * (c - off)) - er_b[a * s + t]);
+                            let d = w * (fast_exp(-th * (c - off)) - er_a[t]);
                             if k < walk.end {
                                 af_row[at + t] += d;
                                 if rides {
@@ -808,7 +925,6 @@ fn mode_choice_with<const FANS: bool>(z: &Zones, gr: &Gravity, sz: &Subzones, er
                             continue;
                         }
                         let (b, c_b) = (bl[l], if all { c_u[bl[l]] } else { 1.0 });
-                        let er_b = &er[b * ss..(b + 1) * ss];
                         // T-2324: per egress station and band, its station pairs' weights from
                         // each access entry, filled as a lane first reads them
                         for kk in 0..ne {
@@ -817,7 +933,7 @@ fn mode_choice_with<const FANS: bool>(z: &Zones, gr: &Gravity, sz: &Subzones, er
                                 till_er_at[t * nb + b] = till_gen;
                                 let row = &mut till_er[(t * nb + b) * till_w..(t * nb + b) * till_w + n_all];
                                 for (e, k) in row.iter_mut().zip(walk.start..ride.end) {
-                                    *e = er_b[sz.acc_st[k] as usize * s + t];
+                                    *e = er.row(b, sz.acc_st[k] as usize)[t];
                                 }
                             }
                         }
@@ -1215,7 +1331,7 @@ fn mode_choice_with<const FANS: bool>(z: &Zones, gr: &Gravity, sz: &Subzones, er
                     let (a, w) = (sz.acc_st[k] as usize, acc_e[b * na + k]);
                     let row = &mut out.od[a * s..(a + 1) * s];
                     let mut tot = 0.0f32;
-                    let er_a = &er[b * ss + a * s..b * ss + (a + 1) * s];
+                    let er_a = er.row(b, a);
                     if k < walk.end {
                         if rides {
                             for (((o, &y), &yb), &e) in row.iter_mut().zip(y_row).zip(yb_row).zip(er_a) {

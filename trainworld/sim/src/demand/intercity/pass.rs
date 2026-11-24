@@ -7,6 +7,7 @@ impl IntercityApi {
     pub(super) fn on(m: Rc<Market>) -> Self {
         IntercityApi {
             m,
+            _live: MarketLive::hold(),
             pairs: vec![],
             served: vec![],
             served_at: vec![],
