@@ -17,6 +17,8 @@ diary notes/handoff-log.md. Her time UTC-5.
 - commutechunks T-921 (measure only; shifts riders, numbers to her). searchleft T-4054 landed e71ffeae (search 4.6%
   faster, same figures; u16 shares diff not landed).
 - perfcompare T-4157 (master vs v0.4.5 on all three saves, load time breakdown; her 01:0x "have we succeeded"?).
+- Machine at its limit at cap 10 (junctionmsg smoke: a new game took 3,189 s to load waiting on cores): start no more
+  agents until some finish. junctionmsg T-4152 landed 9719e410: add it to the batch check.
 - busmerge2 T-4158 (opus, measure wider bus stop merges; her pick).
 - retime T-4132, junctionmsg T-4152 (her pad: junction heading message misfires; strings to her).
 - Before telling her edit speed is done: one Opus review of all the show-at-click code together (one mechanism, no

@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4152 [P1] {L:track-drawing} "Track has to leave a junction along the existing track" refuses sensible joins (2026-11-23): end_leads in wasm.rs used by draw.rs, tram_ends and node drags; end-to-end join sweep 26 of 288 refused to 0; message now 'Track has to line up with the track it joins.'. notes/T-4152.md.
 - T-4145 [P1] {L:edit-speed} Show-at-click base for every edit (2026-11-23): Base landed with undo: undo shows on Asia 1,094 to 19 ms, NYC 245 to 29; delete a line 1,704 to 9; reorder path 1,040 to 123; refusals answer before any state work; edit_bench records setAhead. notes/T-4145.md.
 - T-4054 [P1] {L:solve-speed} Faster first-arrival search (2026-11-23): entry_costs -42%, search about 4.6% faster, native solve NYC 1.5-4.7% and Tokyo 6.5% faster, figures identical; u16 shares (-6.4 MB, rail trips -0.05) not landed, diff kept in notes; no further same-figure settling change found. notes/T-4054.md.
 - T-1367 [P3] {L:memory} Demand worker heap keeps closed zones (2026-11-23): closed without code: Gone on master: on all-China, closing Tokyo, Osaka and Seoul frees about 326 MB per worker at once, back to the load figure with no solve; a fresh all-China load is about 1.1 GB per worker, not October's 2,041 MB. notes/T-1367.md.
