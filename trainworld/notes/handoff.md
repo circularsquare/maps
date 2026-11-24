@@ -11,8 +11,8 @@ diary notes/handoff-log.md. Her time UTC-5.
   Playtest list + strings: notes/release-0.4.6.md (uncommitted). Rewording review: artifacts/trainworld/review/text-rewording-0.4.6.md.
 - Running: check-stopclick (checker, tree stopclick, T-4097 stop take-out 349 to 17 ms), settle T-4194 (Opus, options
   only, tree settle, port 6144). Both started in maps-20's tab; reports come to the inbox.
-- Ready, held: sparseload T-4182 (Montana load 12.6 to 8.6 s, bit-identical, sim): land after the 0.4.6 publish so its
-  changelog item doesn't ride in 0.4.6; then batch checker; T-4199 (precompute corridors, my call) after it.
+- Running: uitext T-4200 (Sonnet, tree uitext, port 6152), busvstram T-4201 (Opus, tree busvstram, port 6153).
+- sparseload T-4182 landing 13:32 (publish is a while off, so it rides 0.4.6); then a batch checker; T-4199 after it.
 - Held for her word: T-4153 s2 (tree editnetwork; add mm.ribbons.delete(e) at lineBands.ts:571 if landed); T-921 (tree
   commutechunks); T-4156 P3 (ask a-2026-11-23-22); T-4124 shifts answers: numbers to her first. T-4161 shonei-server
   7bdd559 unpushed, deploy on her yes, then push.
@@ -22,12 +22,15 @@ diary notes/handoff-log.md. Her time UTC-5.
 - Core cap 14 (she's up). reserve_cores.ps1 -All -Loop 30 runs in maps-06's background. Gemini: her ask or our suggestion.
 
 ## Next (she aims to publish 0.4.6 after her playtest)
-1. Her answers: strings ack (a-2026-11-24-1), speed trade-offs (a-2026-11-24-3), T-4161 deploy, T-4153 s2 timing,
-   publish yes (publish skill).
+1. Her answers: strings ack (a-2026-11-24-1), speed trade-offs (a-2026-11-24-3), T-4161 deploy, T-4153 s2 timing.
+   No publish ask: she says when. Candidate moves with her playtest fixes (T-4200 etc.); sparseload landing now.
 2. Land stopclick after its checker; then T-4146/T-4147/T-4148 and T-4193 (share pending.ts / clock worker with it).
    After the publish: land sparseload, T-4199. Track rework after 0.4.6.
 
 ## Her words
+- 11-24 13:3x playtest: don't ask when to publish, she'll say ("itll be a while"); Tokyo save slow to load (T-4202, needs
+  her file); bus urban highlight at 20% strength + "disembarking" not "getting off" (T-4200, uitext); "people are still
+  mostly preferring to take bus over tram ... crowding for buses?" (T-4201, busvstram, options only).
 - 11-24 13:10 (via maps-20): no "less memory" changelog items when overall memory is up (c019, c063 hidden; c064 memory
   clause cut; rule in CLAUDE.md); changelog items one line, she trims them herself; computer froze: keep cores 0-1
   free (T-4195 done 1474aeb4a: reserve_cores.ps1 -All -Loop 30 runs in maps-06's background, covers every session).

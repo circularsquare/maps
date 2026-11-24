@@ -154,8 +154,8 @@ and sim-core changes others build on (undo, the solve, edits). Labels, text, doc
 
 ## Publishing and servers (each only on her word, never overnight)
 
-The steps are in the `publish` skill. Don't ask her when to publish (11-23): once an update is about ready, run the
-skill, then ask her for the yes.
+The steps are in the `publish` skill. Don't ask her when to publish, or for the publish yes (11-24): she says when
+she thinks it's ready; then run the skill. Keep the checks it needs (smoke, perf_bench, strings) current meanwhile.
 
 - When landing agent work, check its changelog item exists and has an area. After a big batch of landings, run the
   skill's changelog review step.
