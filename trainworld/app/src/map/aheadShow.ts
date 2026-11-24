@@ -1,7 +1,8 @@
 // T-4114, T-4145: what is drawn ahead of the network (map/lineAhead.ts), from the edits waiting to show (game/pending.ts).
 
 import { world } from "../game/world";
-import { setAheadSink, setOpGuess, setUndoSource, type Composed } from "../game/pending";
+import { setAheadSink, setCashSource, setOpGuess, setUndoSource, type Composed } from "../game/pending";
+import { liveMoney, moneyState } from "../game/money";
 import { editGuess } from "../game/editGuess";
 import { undoAhead, warmUndo, type AheadLook, type AheadModel } from "./lineAhead";
 import { live } from "./live";
@@ -25,6 +26,8 @@ function draw(c: Composed, build: boolean) {
 setAheadSink(draw);
 // T-4170: every edit's guess at its click, from its op
 setOpGuess(editGuess);
+// T-4181: an edit the cash cannot pay is refused, so it shows nothing at its click
+setCashSource(() => { const m = moneyState.peek(); return m ? { cash: liveMoney.peek().cash, sandbox: m.mode === "sandbox" } : null; });
 // T-4145: an undo of the newest edit drawn at its click from the network before it
 setUndoSource(() => live.overlay?.renderer.net ?? null, (was, now) => {
   const u = undoAhead(was, now);

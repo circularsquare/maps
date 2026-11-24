@@ -142,14 +142,19 @@ Web first, so it can be shared as a link.
   a part it has nothing for is done at once, so a panel edit never waits for a network; the word says when no network
   follows, a service edit's or a rename's, and its map part is done then) and dropped in the frame a refusal lands. An
   armed entry no state clears goes after 30 s, with a warning (a backstop). An undo is not drawn ahead across a move of
-  the draw anchor. **Message order says what a state holds**: every state
+  the draw anchor, nor after an edit an undo would not take back whole (a construct, a new line or copy: the word says
+  `noUndo`). **Money at the click** [T-4181]: a price is shown only when it is the charge exactly (a worker quote for
+  the world drawn, with no other edit out: Construct all and Construct line from their quotes, Rebuild, upgrades and
+  passages from the panel's), else the cash moves with the word's charge (0 for a free edit); an edit the cash cannot
+  pay, by its price or the least it costs, shows nothing, since the worker refuses it. **Message order says what a state holds**: every state
   posted after a word was built after that edit (`later` starts again behind an edit; a stop click's rows go before the
   next apply), so an entry's map part goes with the first network taken that *arrived* after its word, its panel part
   with the first rows or state, its cost with the first money, cash or state (a state held for its trips keeps its
   arrival place). The renderer draws the list (map/lineAhead.ts): a line drawn ahead on its own segments it keeps and
   the track's in its colour on the edges it gained, its network strokes off by a per-line texture; edges off by a
   per-edge texture, or redrawn with their new look; station boxes by a second draw of the station shader; a deleted
-  line's colour transparent. A guess never answered goes after 15 s. The line tool guesses a first or last stop taken
+  line's colour transparent (a new line's colour drawn opaque past the network's ones). A guess sent waits for its
+  answer however long its ground takes (a 120 s backstop); one never sent goes after 15 s. The line tool guesses a first or last stop taken
   out at the click from the network's stretches when that network shows the world's stops, and the line panel's
   Delete line hides the line at the click. The network, trips, boarding hour and demand's snapshot follow once no stop click has
   come for 500 ms (5 s at most); a stop click before then joins them (one full state for the run),

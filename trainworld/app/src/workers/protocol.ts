@@ -978,8 +978,10 @@ export interface EditWord {
   stations?: StationBox[];
   /** a line's colour, 0-255 */
   colours?: { line: number; rgb: [number, number, number] }[];
-  /** what the edit cost, in the cash's units */
+  /** what the edit cost, in the cash's units (0: nothing, in place of a price guessed at the click) */
   charge?: number;
+  /** T-4181: an undo right after takes back less than this edit, or nothing: none is drawn at that undo's click */
+  noUndo?: true;
 }
 
 export type FromClock =

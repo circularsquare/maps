@@ -7,7 +7,7 @@ import type { EdgeLook, EditOp, EditWord } from "./protocol";
 import type { Posted } from "./clockWord";
 
 /** the ops this part reads the edge table for */
-const READS = new Set<EditOp["op"]>(["construct", "constructAll", "constructLine", "edgesLevel", "edgesTracks", "blueprintOff", "removePieces"]);
+const READS = new Set<EditOp["op"]>(["construct", "constructAll", "constructLine", "edgesLevel", "edgesTracks", "blueprintOff", "removePieces", "rebuild"]);
 
 /** `edges_info`: per edge id, tracks, constructed, lowest and highest level */
 type Row = [number, number, number, number];

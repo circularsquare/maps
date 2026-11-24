@@ -9,9 +9,10 @@ import { drawnEdgesOf, type RawStations } from "../map/lineAhead";
 import { PLATFORM_POINTS } from "../map/stationGeometry";
 import type { EditOp } from "../workers/protocol";
 import { ahead, shown, type Show } from "./pending";
+import { blueprintTotalNow, lineQuoteNow } from "./quotes";
 import { LIMIT_MIN } from "./pieceLimit";
 import { TRACK_SPECS } from "./trackKinds";
-import type { TrackEdge, WorldView } from "./types";
+import { planStopsOf, type TrackEdge, type WorldView } from "./types";
 import { linesByNum, stationsById, world } from "./world";
 
 /** the station buffers' blueprint flag (map/network.ts flags a station: 2 blueprint) */
@@ -53,13 +54,15 @@ function toBuild(w: WorldView, edges: Iterable<number> | null, stations: Iterabl
   }
   const byNum = new Map(w.save.stations.map((s) => [s.num, s]));
   for (const num of stations ?? w.save.stations.map((s) => s.num)) { const s = byNum.get(num); if (s && !s.built && !s.off) ss.add(num); }
-  return { es, ss, cost: [...es].reduce((a, id) => a + (byId.get(id)?.cost ?? 0), 0) };
+  return { es, ss, track: [...es].reduce((a, id) => a + (byId.get(id)?.cost ?? 0), 0) };
 }
 
-function constructShow(w: WorldView, edges: Iterable<number> | null, stations: Iterable<number> | null): Show | null {
-  const { es, ss, cost } = toBuild(w, edges, stations);
+/** `quote`: the worker's price for exactly this construct (US$), when the page has it; else only its track's is known,
+ * which the construct costs at least (stations, upgrades, junctions and trains come on top) */
+function constructShow(w: WorldView, edges: Iterable<number> | null, stations: Iterable<number> | null, quote?: number): Show | null {
+  const { es, ss, track } = toBuild(w, edges, stations);
   if (!es.size && !ss.size) return null;
-  const show: Show = { edges: new Map([...es].map((e) => [e, { built: true }])), cost: cost / 1e6 };
+  const show: Show = { edges: new Map([...es].map((e) => [e, { built: true }])), ...(quote !== undefined ? { cost: quote / 1e6 } : { least: track / 1e6 }) };
   const n = live.overlay?.renderer.net;
   const raw = n && ss.size ? builtStations(n, ss) : null;
   if (raw) { show.hideStations = [...ss]; show.rawStations = [raw]; }
@@ -73,12 +76,14 @@ export function pieceGuess(op: EditOp): Show | null {
   const byId = () => new Map(w.edges.map((e) => [e.id, e]));
   switch (op.op) {
     case "construct": return constructShow(w, op.edges, op.stations);
-    case "constructAll": return constructShow(w, null, null);
+    case "constructAll": return constructShow(w, null, null, blueprintTotalNow(w.version));
     case "constructLine": {
       const l = linesByNum(w).get(op.line), n = live.overlay?.renderer.net;
       if (!l || !n || w.lineStats[l.id]?.bus) return null;
-      const stops = new Set(l.stops), byStation = stationsById(w);
-      return constructShow(w, drawnEdgesOf(n, op.line), [...stops].map((s) => byStation.get(s)?.num).filter((x): x is number => x !== undefined));
+      // (its trains are bought once it runs: a quote with trains to buy is not what Construct charges alone)
+      const q = lineQuoteNow(op.line, w.version);
+      const stops = new Set(planStopsOf(l)), byStation = stationsById(w);
+      return constructShow(w, drawnEdgesOf(n, op.line), [...stops].map((s) => byStation.get(s)?.num).filter((x): x is number => x !== undefined), q && !q.trains ? q.build : undefined);
     }
     case "blueprintOff": {
       const b = byId(), edges = new Map<number, { off: boolean }>();
@@ -99,16 +104,6 @@ export function pieceGuess(op: EditOp): Show | null {
       const b = byId(), hide = new Set<number>();
       for (const id of op.edges) { const e = b.get(id); if (!e) continue; hide.add(id); if (e.crossover && e.partner !== undefined) hide.add(e.partner); }
       return hide.size || op.stations.length ? { hideEdges: hide, hideStations: op.stations } : null;
-    }
-    case "rebuild": {
-      const b = byId(), edges = new Map<number, { level?: [number, number]; tracks?: 1 | 2 }>();
-      for (const id of op.edges) {
-        const e = b.get(id);
-        if (!e || e.crossover) continue;
-        // (a track type alone has no look here: nothing drawn ahead)
-        if (op.level !== null || op.tracks) edges.set(id, { ...(op.level !== null ? { level: [op.level, op.level] as [number, number] } : {}), ...(op.tracks ? { tracks: op.tracks } : {}) });
-      }
-      return edges.size ? { edges } : null;
     }
     case "pieceLimit": {
       const b = byId(), fields = new Map<string, Record<string, unknown>>();

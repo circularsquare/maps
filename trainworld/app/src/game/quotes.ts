@@ -9,8 +9,8 @@ import { world } from "./world";
 import type { BlueprintItem } from "./types";
 
 /** one answer per world version, shared by every panel asking */
-let blueprint: { v: number; p: Promise<BlueprintItem[] | null> } | null = null;
-const lines = new Map<number, { v: number; p: Promise<{ build: number; trains: number } | null> }>();
+let blueprint: { v: number; p: Promise<BlueprintItem[] | null>; got?: BlueprintItem[] | null } | null = null;
+const lines = new Map<number, { v: number; p: Promise<{ build: number; trains: number } | null>; got?: { build: number; trains: number } | null }>();
 
 /** A panel's quote waits this long after an edit, so a run of clicks pays for one trial, not one each. */
 const SETTLE_MS = 250;
@@ -28,15 +28,27 @@ effect(() => { void world.value; changedAt = performance.now(); });
 export function blueprintQuote(v: number, now = false): Promise<BlueprintItem[] | null> {
   if (blueprint?.v !== v) {
     const ask = () => queryClock({ what: "blueprintQuote" });
-    blueprint = {
+    const q: NonNullable<typeof blueprint> = (blueprint = {
       v,
-      p: (now ? ask() : settled(v, ask)).then((d) => d && Array.from({ length: d.length / 7 }, (_, i) => {
+      p: (now ? ask() : settled(v, ask)).then((d) => (q.got = d && Array.from({ length: d.length / 7 }, (_, i) => {
         const r = d.subarray(i * 7, i * 7 + 7);
         return { kind: r[0], level: r[1] as BlueprintItem["level"], tracks: r[2], wet: !!r[3], ground: r[4], quantity: r[5], cost: r[6] * 1e6 };
-      })),
-    };
+      }))),
+    });
   }
   return blueprint.p;
+}
+
+/** T-4181: the construct-all quote's total at world version `v`, US$, when it has come; else undefined */
+export function blueprintTotalNow(v: number): number | undefined {
+  const got = blueprint?.v === v ? blueprint.got : undefined;
+  return got ? got.reduce((s, r) => s + r.cost, 0) : undefined;
+}
+
+/** T-4181: `lineQuote` at world version `v` when it has come; else undefined */
+export function lineQuoteNow(num: number, v: number): { build: number; trains: number } | undefined {
+  const q = lines.get(num);
+  return q?.v === v ? q.got ?? undefined : undefined;
 }
 
 /** What constructing a planned line (`num`) and the trains it needs would cost at world version
@@ -45,7 +57,8 @@ export function lineQuote(num: number, v: number): Promise<{ build: number; trai
   let q = lines.get(num);
   if (q?.v !== v) {
     if (lines.size > 50) lines.clear();
-    lines.set(num, (q = { v, p: settled(v, () => queryClock({ what: "lineCost", line: num })).then((d) => d && { build: d[0] * 1e6, trains: d[1] * 1e6 }) }));
+    const made: NonNullable<typeof q> = (q = { v, p: settled(v, () => queryClock({ what: "lineCost", line: num })).then((d) => (made.got = d && { build: d[0] * 1e6, trains: d[1] * 1e6 })) });
+    lines.set(num, made);
   }
   return q.p;
 }

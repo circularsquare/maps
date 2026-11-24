@@ -771,7 +771,7 @@ export class NetworkRenderer {
     attrib(this, this.trainProg, "a_bay", this.bayBuf!, 4, gl.FLOAT, 1);
     gl.bindVertexArray(null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
-    if (!aheadEmpty(this.ahead) || this.aheadVao || this.aheadTrackVao || this.standCount) this.buildAhead();
+    if (!aheadEmpty(this.ahead) || this.aheadDrawn) this.buildAhead();
   }
 
   /** T-4145: what is drawn ahead of the network (game/pending.ts makes it, map/lineAhead.ts) */
@@ -788,6 +788,9 @@ export class NetworkRenderer {
   standVao: WebGLVertexArrayObject | null = null;
   standLineTex: WebGLTexture | null = null;
   standCount = 0;
+  /** the last `buildAhead` drew something (textures, strokes, boxes or colours), which a network set must take away
+   * even when what is drawn ahead is empty by then */
+  aheadDrawn = false;
 
   /** T-4145: draw `m` ahead of the network from now (until the next call). */
   setAhead(m: AheadModel, build = true) {
@@ -806,6 +809,7 @@ export class NetworkRenderer {
     this.aheadN = [0, 0];
     this.standCount = 0;
     const n = this.net, m = this.ahead;
+    this.aheadDrawn = !!n && !aheadEmpty(m);
     if (n && !aheadEmpty(m)) {
       const p = aheadParts(n, m);
       if (p.lines) this.aheadVao = strokes(this, p.lines, this.aheadRes);
@@ -944,8 +948,15 @@ export class NetworkRenderer {
     // T-4114: a line deleted and not yet out of the network too; T-4145: a line's colour ahead of the network
     const gone = [...this.ahead.lines].filter(([, a]) => !a.edges).map(([l]) => l);
     if (!vis.lines.size && !gone.length && !this.ahead.colours.size) return n.lineColours;
-    const c = n.lineColours.slice();
-    for (const [l, rgb] of this.ahead.colours) if (l * 4 + 3 < c.length) c.set(rgb, l * 4);
+    // a new line (a copy) has an id past the network's colours, or a slot it left unused (alpha 0, not drawn)
+    let top = n.lineColours.length;
+    for (const l of this.ahead.colours.keys()) top = Math.max(top, l * 4 + 4);
+    const c = new Uint8Array(top);
+    c.set(n.lineColours);
+    for (const [l, rgb] of this.ahead.colours) {
+      c.set(rgb, l * 4);
+      if (!c[l * 4 + 3]) c[l * 4 + 3] = 255;
+    }
     for (const l of [...vis.lines, ...gone]) if (l * 4 + 3 < c.length) c[l * 4 + 3] = 0;
     return c;
   }

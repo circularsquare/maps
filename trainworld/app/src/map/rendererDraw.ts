@@ -400,7 +400,8 @@ function stationsPass(rnd: NetworkRenderer, c: Ctx3) {
   // the station buildings' hall crowds (T-2219), over the track and under the boxes
   if (!stationsOff) rnd.floors.drawHall(lc, vp, dpr, zoom, rnd.board && !hidden ? rnd.crowds.hall : null);
 
-  if (n.stationCount && !stationsOff) {
+  // (a game's first station is drawn ahead while the network has none)
+  if ((n.stationCount || rnd.standCount) && !stationsOff) {
     // Platforms along the track from STATION_BOX_ZOOM, each one shape at every zoom (T-204), dots
     // further out (T-189), one for a whole complex (T-217), and below STATIONS_ZOOM only the
     // selected ones (T-205).

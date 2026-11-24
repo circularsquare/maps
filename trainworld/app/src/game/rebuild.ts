@@ -12,6 +12,7 @@ import { heightRunLength, noteHeight } from "./deleteHint";
 import type { Level } from "./types";
 import { ask } from "./ui";
 import { edit, say, world } from "./world";
+import { ahead } from "./pending";
 import { describeIssues } from "./issues";
 import { t, tList } from "../i18n";
 
@@ -38,6 +39,9 @@ export interface RebuildQuote {
   /** T-3241: track outside the pick that the ramps of the stations at its ends take: the edge, the node the
    * change starts at, and how far along the edge it reaches, m */
   beyond: { edge: number; from: number; m: number }[];
+  /** T-4181: the world version and the pick and choices it was worked out for */
+  v: number;
+  for: string;
 }
 
 /** The quote for the pick and choices now; null with nothing chosen, or while it is being worked out. */
@@ -56,7 +60,8 @@ const opOf = (p: RebuildTarget, c: RebuildChoice) =>
 
 /** The track model's quote for rebuilding `p` to `c`; null when the clock has no answer. */
 export async function fetchRebuildQuote(p: RebuildTarget, c: RebuildChoice): Promise<RebuildQuote | null> {
-  const answer = await queryClock({ what: "rebuildQuote", ...opOf(p, c) });
+  const v = world.peek()?.version ?? -1, op = opOf(p, c);
+  const answer = await queryClock({ what: "rebuildQuote", ...op });
   if (!answer) return null;
   // the quote, then why pieces are refused (clock.worker.ts `rebuildQuoteAnswer`)
   const d = answer.subarray(1, 1 + answer[0]);
@@ -72,6 +77,8 @@ export async function fetchRebuildQuote(p: RebuildTarget, c: RebuildChoice): Pro
     why: describeIssues(kinds),
     red: Array.from(d.subarray(5, 5 + red), Number),
     beyond,
+    v,
+    for: JSON.stringify(op),
   };
 }
 
@@ -172,7 +179,13 @@ export function rebuildPieces(p: RebuildTarget, c: RebuildChoice, q: RebuildQuot
   const go = async () => {
     ask.value = null;
     const row = heightRunLength();
-    const a = await edit({ op: "rebuild", ...opOf(p, c) });
+    // T-4181: drawn and charged at the click as quoted, while the quote is for this pick and world (the pieces it
+    // refuses stay as they are)
+    const op = opOf(p, c), fresh = q.v === world.peek()?.version && q.for === JSON.stringify(op);
+    const look = { ...(level !== null ? { level: [level, level] as [number, number] } : {}), ...(tracks ? { tracks } : {}) };
+    const shown = fresh ? ahead({ cost: q.price, ...(Object.keys(look).length ? { edges: new Map(q.changed.map((id) => [id, look])) } : {}) }) : null;
+    const send = () => edit({ op: "rebuild", ...op });
+    const a = await (shown ? shown.send(send) : send());
     if (!a.ok) {
       if (!a.issues.length) say(t("rebuild.none"), true);
       return;

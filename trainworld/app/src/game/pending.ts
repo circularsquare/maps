@@ -28,8 +28,11 @@ export interface Show {
   colours?: Map<number, [number, number, number]>;
   /** panel fields by record ("line:12", "station:40", "edge:7") */
   fields?: Map<string, Record<string, unknown>>;
-  /** cash taken at the click (the quote), the cash's units */
+  /** cash taken at the click (the quote), the cash's units: only a figure the worker will charge exactly, else none */
   cost?: number;
+  /** what the edit costs at least, where its price is not known exactly (the cash's units): one the cash cannot pay is
+   * refused, so nothing is shown for it */
+  least?: number;
   /** strokes and stations drawn as they are, and lines whose network strokes are not drawn (an undo's, from the network
    * before the edit) */
   track?: Strokes[];
@@ -70,8 +73,11 @@ interface Entry {
   tries: boolean;
 }
 
-/** A guess never answered (a worker that restarted, an edit that never went) goes after this, ms */
+/** A guess never sent (a caller that never sent its edit) goes after this, ms */
 const GUESS_MAX_MS = 15_000;
+/** A guess sent and not yet answered goes after this, ms: a backstop (a worker that restarts clears every entry), far
+ * above an edit that waits on its ground or masks downloading */
+const ANSWER_MAX_MS = 120_000;
 /** An armed entry whose network, rows or money never came goes after this, ms: a backstop (the word says when no
  * network follows), so a slip shows the network as it is rather than a stand-in for ever. Far above the slowest
  * network after an edit seen on Asia (about 6 s). */
@@ -96,7 +102,7 @@ function changed(mapToo: boolean, build = true) {
     sweep = 0;
     const now = performance.now(), was = entries.length;
     entries = entries.filter((e) => {
-      const keep = now - e.at < (e.armed < 0 ? GUESS_MAX_MS : ARMED_MAX_MS);
+      const keep = now - e.at < (e.armed >= 0 ? ARMED_MAX_MS : e.seq >= 0 && sentAt.has(e.seq) ? ANSWER_MAX_MS : GUESS_MAX_MS);
       if (!keep && e.armed >= 0) { swept++; console.warn("T-4170: an edit's entry outlived its states", e.seq, { map: e.map, panel: e.panel, money: e.money }); }
       return keep;
     });
@@ -118,7 +124,12 @@ function compose(): Composed {
     if (!e.map) continue;
     const s = e.show;
     for (const [l, edges] of s.lines ?? []) c.lines.set(l, edges ? new Set(edges) : null);
-    for (const x of s.hideEdges ?? []) c.hideEdges.add(x);
+    // (an edge hidden by a later edit is not drawn by an earlier one's look or line)
+    for (const x of s.hideEdges ?? []) {
+      c.hideEdges.add(x);
+      c.edges.delete(x);
+      for (const edges of c.lines.values()) edges?.delete(x);
+    }
     for (const [x, look] of s.edges ?? []) c.edges.set(x, { ...c.edges.get(x), ...look });
     for (const x of s.hideStations ?? []) c.hideStations.add(x);
     c.stations.push(...(s.stations ?? []));
@@ -194,6 +205,10 @@ export function mergeShow(a: Show, b: Show): Show {
 }
 
 let opGuess: ((op: EditOp) => Show | null) | null = null;
+/** the cash now and whether every price is paid (a sandbox), the cash's units */
+let cashNow: () => { cash: number; sandbox: boolean } | null = () => null;
+/** map/aheadShow.ts: where the cash is read (game/money.ts) */
+export function setCashSource(f: () => { cash: number; sandbox: boolean } | null) { cashNow = f; }
 /** map/aheadShow.ts: what an edit shows at its click, read from its op (game/editGuess.ts) */
 export function setOpGuess(f: (op: EditOp) => Show | null) { opGuess = f; }
 
@@ -214,12 +229,26 @@ export function pendingSent(seq: number, op: EditOp, quiet: boolean) {
   if (e) {
     e.seq = seq;
     e.at = now;
-    if (guess) { e.show = mergeShow(guess, e.show); changed(hasMap(guess)); }
-  } else if (guess) {
+    if (guess) e.show = mergeShow(guess, e.show);
+    if (!priced(e.show, quiet, e)) { drop(e); return; }
+    if (guess) changed(hasMap(guess));
+  } else if (guess && priced(guess, quiet)) {
     entries.push({ seq, show: guess, armed: -1, map: true, panel: true, money: true, t: now, at: now, tries: false });
     changed(hasMap(guess));
   }
   if (entries.filter((x) => x.seq === seq).length > 1) { doubled++; console.error("T-4170: two entries for one edit", seq, op.op); }
+}
+
+/** Whether an edit's show can stand, its price made right first: a price is shown only for an edit sent with no other
+ * unanswered (another's could change it, and the worker's word gives the exact one a moment later), and an edit the cash
+ * cannot pay (the worker refuses it) shows nothing. */
+function priced(s: Show, quiet: boolean, self?: Entry): boolean {
+  if (!quiet) { delete s.cost; return true; }
+  const need = s.cost ?? s.least ?? 0, m = cashNow();
+  if (!(need > 0) || !m || m.sandbox) return true;
+  let cash = m.cash;
+  for (const x of entries) if (x !== self && x.money && x.show.cost) cash -= x.show.cost;
+  return need <= cash + 1e-6;
 }
 
 /** Armed by its word or its answer: a part it has nothing for is done already (a panel edit's map, a free edit's cost),
@@ -275,11 +304,12 @@ function noteEdit(seq: number, op: EditOp, quiet: boolean) {
 
 /** The worker's word for `seq`, the `order`th message to arrive; `noNet`: no network follows it. */
 export function pendingWord(seq: number, word: EditWord, order: number, noNet = false) {
-  if (last?.seq === seq) last.word = order;
+  // (an edit an undo would not take back whole: none is drawn at the undo's click)
+  if (last?.seq === seq) { if (word.noUndo) last = null; else last.word = order; }
   let e = entries.find((x) => x.seq === seq);
   const fromWord = wordShow(word);
   if (!e) {
-    if (!hasMap(fromWord) && fromWord.cost === undefined) return;
+    if (!hasMap(fromWord) && !fromWord.cost) return;
     const t = sentAt.get(seq) ?? performance.now();
     e = { seq, show: {}, armed: -1, map: true, panel: true, money: true, t, at: t, tries: false };
     entries.push(e);
