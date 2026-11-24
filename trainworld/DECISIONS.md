@@ -49,7 +49,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-16 (Anita, T-534): A neighbourhood can name a station if within 3.5 km of its nearest fellow (Anita, was 3 km), so Harlem, Williamsburg and Midtown qualify; Manhattan (12 km) does not.
 
 ## Lines and scheduling
-- 2026-11-24 (, T-4227): A period two of a line's rows share (moved hours) runs each row's weekend trains there. A headway line at a weekend percent counts the trains its headway takes, not what the track lets run (the lie: on full track the period's rate is cut and shared by those). notes/T-4227.md
+- 2026-11-24 (, T-4227): A period two of a line's rows share (moved hours) runs each row's weekend trains there. A headway line's weekend percent counts the trains its headway takes; on full track the period's rate is cut and shared (the lie). notes/T-4227.md
 - 2026-11-24 (, T-4223): A loop's closing hop carries on round however long when the quickest way in turns back on the way (back over the line's own track, no loop); `CARRY_SLACK_S` (300 s) still keeps a balloon from running a long way round to avoid its turn. notes/T-4223.md
 - 2026-11-24 (Anita, T-4178): A reversal mid-line limits capacity no more than a line's end: each way counts half a turn (the lie: trains turn there twice a round trip). The reversal icon shows only where the turn limits the line. notes/T-4178.md
 
@@ -84,7 +84,7 @@ artifacts/trainworld/T-4120/.
 - 2026-11-23 (Anita, T-4064): Lines leaving one platform for one platform at the next stop are one evenly spaced service for riders to that stop (her 4 and 5 trains). At a change riders take no line heading back or right behind theirs. notes/T-4050.md
 - 2026-11-21 (Anita, T-4008): Express against local gets no soft rule of its own, and income groups were dropped for it (T-4008). Industrial land jobs count a quarter (T-3376).
 - 2026-11-21 (Anita, T-2624): A recalculating line reads "calculating..." until the edit's whole final ("dont wanna hide if theres stuff we could show"). Its local result shows period by period as solved; the lie, for up to half a minute: unsolved periods take a solved period's change. notes/T-2624.md
-- 2026-11-24 (Anita, T-2188, T-4204): A city edit ends at its local re-solve; the whole re-solve runs for intercity edits (fares, a line switched, a stop on a 20+ minute run, a run moved 3+ minutes) and as a quiet refresh 2 minutes after the last edit. Lie: drift until then, 0.003% of rail trips, lines within 1.4%. notes/T-2188.md
+- 2026-11-24 (Anita, T-2188, T-4204): A city edit ends at its local re-solve; intercity edits (fares, a switched line, a stop on a 20+ minute run, a run moved 3+ minutes) re-solve whole, as does a quiet refresh 2 minutes after the last edit. Lie: drift meanwhile, 0.003% of trips. notes/T-2188.md
 - 2026-11-21 (Anita, T-3925): An edit made during a whole solve restarts it from the newer network while under 40% has run, else waits for the final, replacing T-1734's never-cancel; past 40% the held edit's local result shows its lines sooner. notes/T-3925.md
 - 2026-11-20 (Anita, T-3910): Every train and tram trip pays 2 + 2 minutes boarding at any level ("its simpler that way"), replacing stairs-only off grade, which favoured street level; street trams skip it at street stops (T-4041). Walking's 10-minute head start is gone. notes/T-3910.md
 - 2026-11-20 (Anita, T-2216): Trips between land parts with no road go by rail or the player's ferry: all of them up to 3 times a bridge-less car, none from 4 ("yeah we can do 3x"). Local trips treat car ferries as no road.
@@ -156,7 +156,7 @@ artifacts/trainworld/T-4120/.
 
 ## Buses
 
-- 2026-11-24 (T-4052): Riders left behind count each rider once, at the first train or bus to leave them; those turned away from a full stop are not (they went another way). Rail counts drop too (real NYC save 11% in all). Kept per departure where a queue is, 4 bytes each. notes/T-4052.md
+- 2026-11-24 (T-4052): Riders left behind count once each, at the first train or bus to leave them; riders turned away from a full stop don't (they went another way). Rail counts drop too (NYC save 11%). Kept per departure with a queue, 4 bytes each. notes/T-4052.md
 - 2026-11-24 (T-4052): A bus stop holds at most 200 waiting each way (a bus's 12 m of sidewalk, 5 m deep at 0.3 m² a rider, as a platform's 5,000), a BRT station 667. Boarding account only, so trips and fares don't move. notes/T-4052.md
 - 2026-11-23 (Anita, T-4079, T-4056): Bus walking reach is 600 m: 1 km was dropped before publishing, as players liked lower bus ridership, and borrowing a neighbour stop's search was declined. A bus stop's change walks reach 150 m, stations' 300 m. notes/T-4079.md
 - 2026-11-23 (Anita, T-4094, T-3924): Every drawn bus stop is a demand stop ("if people are seeing bus stops the bus stops have to be real"), replacing one every 2 km; consecutive bus-only stops served by the same lines merge, within 500 m since T-4158. notes/T-4094.md
