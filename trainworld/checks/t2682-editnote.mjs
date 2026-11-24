@@ -1,5 +1,6 @@
-// T-2682: the edit note settles in a new New York game whose zone in view is still shown rough (coarse)
-// when the player edits. Each step waits for the settled note (not the T-2626 estimate), LIMIT_S at most:
+// T-2682: the edit note settles in a new New York game whose zone in view is shown rough (coarse)
+// when the player edits. The page runs with the Calculate trips in less detail setting on (T-4117): without it a
+// computer's zone in view is final from the start and never rough. Each step waits for the settled note (not the T-2626 estimate), LIMIT_S at most:
 // a line built the moment the game opens (still loading), with more trains on it the moment New York shows
 // its first, coarse, figures (one note for both); more trains again once settled; a second line after.
 // Before T-2682's fix the first step gave no note (the edits came before any figures to compare against). A trace of the edit note's inputs every
@@ -84,7 +85,7 @@ const errors = [];
 try {
   const page = await ctx.newPage();
   collectErrors(page, errors, NOISE, /\/fonts\/[^/]+\/\d+-\d+\.pbf$/);
-  await page.addInitScript(() => { try { localStorage.setItem('trainworld-ui', JSON.stringify({ shade: 'light', display: { dayShown: 'weekday' }, v: 2 })); } catch {} });
+  await page.addInitScript(() => { try { localStorage.setItem('trainworld-ui', JSON.stringify({ shade: 'light', display: { dayShown: 'weekday', coarseDemand: true }, v: 2 })); } catch {} });
   await page.goto(`${BASE}?debug=1&new=1&paused=1&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
   await page.evaluate(() => void window.tw.map.jumpTo({ center: [-73.982, 40.752], zoom: 12.5 }));
