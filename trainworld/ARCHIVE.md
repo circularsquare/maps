@@ -1,6 +1,9 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4178 [P1] {L:line-rates} Reversals mid-line cost the same as at a line's end (2026-11-24): A reversal partway counts half a turn each way, so it limits a line no more than its ends; the reversal icon, stop-list icon and issues row show only where the turn is the line's limit. Player-path switchback 7.5 -> 12.5 trains/hour (now the out-and-back stretch). notes/T-4178.md.
+- T-4185 [P2] {L:edit-speed} Undo after Copy line removes only the copy's symbol (2026-11-24): One undo takes back a whole copy or new line: joined edits in the sim (join_edit), undo drawn at its click; t4170 check covers both.
+- T-4181 [P1] {L:edit-speed} Show-at-click fixes from the final review (2026-11-24): Gemini's final findings 1-8, 11 and the checker's cash and undo points fixed; 9, 12, 13 rejected; 10 goes with T-4153 stage 2; t4170-one-path covers them. notes/T-4144.md.
 - T-4167 [P2] {L:checks} perf_bench tree builds can ship another tree's WASM (2026-11-24): perf_bench build <tree> touches the tree's sim/src/lib.rs first, so cargo rebuilds that tree's WASM (fixed in T-3939).
 - T-3939 [P2] {L:memory} Clock worker memory on many-zone phone saves (2026-11-24): Clock worker on the 13-zone stand-in named piece by piece (WASM by structure, JS by holder, messages); biggest piece, the boarding account, cut 69 -> 45 MB by keeping queues only where not 0: WASM 117 -> 93 MB on a phone, 129 -> 97 desktop, figures identical. notes/T-3939.md.
 - T-4133 [P2] {L:edit-speed} Edits move only the trains they can change (2026-11-24): note_changes moves only trains of lines the edit noted whose profile or run changed: Asia native note_changes -91%, apply -24% (11.1 to 8.5 s over 480 ops); check mode equal over 3,600 fuzzed checks; notes/T-4133.md.

@@ -49,7 +49,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-16 (Anita, T-534): A neighbourhood can name a station if within 3.5 km of its nearest fellow (Anita, was 3 km), so Harlem, Williamsburg and Midtown qualify; Manhattan (12 km) does not.
 
 ## Lines and scheduling
-- 2026-11-24 (Anita, T-4178): A reversal mid-line limits capacity no more than a turnaround at a line's end; the reversal icon shows only when it is the limiting factor.
+- 2026-11-24 (Anita, T-4178): A reversal mid-line limits capacity no more than a line's end: each way counts half a turn (the lie: trains turn there twice a round trip). The reversal icon shows only where the turn limits the line. notes/T-4178.md
 
 - 2026-11-21 (, T-3346): Round trips, fleets and demand use averaged passing waits at the best phase; drawn timetables work them per train (the lie). Budgeting on trains' own waits (Anita's call, T-3931) is held: locals stood about 850 s at a dead end. notes/T-3931.md
 - 2026-11-21 (Anita, T-3921): Trams top out at 75 km/h, was 80 (Anita: "trams are kinda op"). A new tram line stands 30 s at a stop, was 15, and trams brake at 0.8 m/s², softer than real trams' 1.2-1.3. notes/T-3921.md
@@ -75,6 +75,7 @@ artifacts/trainworld/T-4120/.
 
 ## Demand
 
+- 2026-11-24 (Anita, T-921): Commute zone pairs under 1 person a day are dealt in chunks of about 1 (`COMMUTE_CHUNK_DAY`, the one number to tune), was 0.1 trips a period. The lie: a station under 1,000 a day can move up to about 3.5%, as much as redrawing. notes/T-921.md
 - 2026-11-24 (Anita, T-4158): A bus line's consecutive stops within 500 m on the same lines are one demand station ("ok, lets do 500m"), was 300 m. About 18-29% faster solves on bus-heavy saves; rides inside a group are lost, about 1% of Auto lines' riders. notes/T-4158.md
 - 2026-11-23 (Anita, T-4093): Crowding stays at 3 rounds; 2 rounds (24% faster) is refused for its line swings (NJT NEC +19%), "final unless the swing numbers get a lot lower". Don't ask again. Rounds stop early once loads move under 3%, was 1%. notes/T-4057.md
 - 2026-11-23 (Anita, T-4054): Riders turn up at random: 75% take the line that gets them there first, a quarter the first train still arriving by the best line's latest, replacing the split by trains an hour. Change nodes take no late lines. notes/T-4041.md
@@ -240,7 +241,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-29 (Anita, T-1803, T-1790): The clock is capped at 4x while any demand solve runs, with the status tag showing throughout (Anita: "i should be seeing something at all times if speed is being capped"); service edits moving a value under half don't cap.
 - 2026-10-28 (Anita, T-1609): Load-time approximations leaving lines 10-20% off are fine for about a 50% cut (Anita); T-782's -23% for up to 11% off was not worth it alone. The zone in view's rough figures show first, as she asked.
 - 2026-10-24 (, T-1216): A zone's market pack opens only when reached, within 30 km of a station, or selected, never for viewing or to hide a wait: viewing markets grew solving workers from 125 to 311 MB. notes/T-801.md
-- 2026-10-22 (, T-909): Commute zone pairs under 0.1 trips a period are dealt in chunks of about 0.1 (New York weekday 38.9 to 29.9 s). Far ends under 10 trips are grouped for display only; dealing demand at 10 moved small stations 5.5%. notes/T-874.md
+- 2026-10-22 (, T-909): Far ends under 10 trips are grouped for display only; dealing demand at 10 moved small stations 5.5%. notes/T-874.md
 - 2026-10-21 (Anita, T-073, T-015): The network draws on one overlay canvas in MapLibre's frame (17-21% of a core against 35% for a custom layer), trains above place names (Anita accepted). Unfocused runs 10 fps; hidden tabs pause, Run in background being off by default. notes/T-015.md
 - 2026-10-09 (Anita, T-051): Simulate flows, not agents: trains are functions of time, no signals for now, tangles discouraged by capacity; 10k trains is a simulation target, not a rendering one (Anita). Rust to WebAssembly at opt-level 3, since CPU outranks download size. notes/T-051.md
 

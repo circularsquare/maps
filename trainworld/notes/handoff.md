@@ -1,23 +1,18 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 5cd3af11-2ab8-4788-8daf-1956104ead51, name maps-c0 [58120f], since 2026-11-24 01:57 UTC
-Updated: 2026-11-24 05:16 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-24 07:33 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5.
 
-## In flight (agents in my tab; ids: editnetwork2 a935f09f, trainmove acca7982, commutechunks2 a7094f4a, memgrowth a84b996f, checkclick a9c53454, checksim a170c31b, treefix a4a15622)
-- Landed tonight (since 8800's ef99d979): T-4145 base, T-4153 s1, T-4147 s1-2, T-4132, T-4155, T-4146, T-4148, T-4149,
-  T-4170 (one path, Gemini-reviewed, fixes verified), T-4158 bus merge 500 m (+ fix for a prod-build boot crash: circular
-  import clockWord.ts/clockWordLines.ts), T-4162 text, T-4054, T-4143, T-4112, T-4152.
-- Running: snap8800 of f4bcf26b (log scratchpad/snapbuild.log); Gemini final batch review -> notes/gemini-editspeed-final-
-  2026-11-24.md (the last of this round; after it Gemini only on her ask or my suggestion); batch checkers checkclick and
-  checksim (notes/batchcheck-2026-11-24-*.md); editnetwork2 T-4153 s2; trainmove T-4133; commutechunks2 T-921 (to her);
-  memgrowth T-4179; treefix T-4180 (finish lost busmerge2's unfinished merge; recovered).
-- Checkers done 05:58: both PASS what they ran; 8800's prod build boots; NOT checked: real NYC save on 8800 (play.mjs can't drive prod, T-4183: her playtest covers it), Belgrade figures after the bus merge (perf_bench belgrade will show rail trips).
-- editnetwork2 T-4153 s2 done in tree editnetwork (station network build on Asia 333 to 124 ms) but edit-speed memory reaches ~10.6 MB with it (her budget ~10 MB): hold landing for her word in the morning. If she says yes, also add editfix's finding 10: mm.ribbons.delete(e) at lineBands.ts:571.
-- Then: smoke on master once editfix lands; perf_bench all three saves; land editnetwork2/trainmove into a second
-  small batch; publish skill prep; morning message. Queue: T-3939, T-3160 (her yes overnight), T-4178, T-4051.
-- T-921 built in tree commutechunks (default 1 a day, tunable; no gain on sparse saves; NYC 6 trips in 12.7M move): land only on her word (morning). Its tree also has its own fix for the clockWord import loop: keep master's at landing. The main tree's app/src/wasm was rebuilt with the agent profile by that agent: the next sim landing (or npm run wasm) restores it.
-- 8800 = f4bcf26b (05:23). T-4112's tw/track changelog item parked in next-track.json: hide the port's duplicate at release.
+## In flight (agents in my tab: memgrowth T-4179, check2 (second batch check), zoneopen2 T-4051, hookfix T-4174)
+- Landed overnight after the first checkers: T-4133 527a59e1, T-3939 fc4e5a14, T-4181 e2d72bf0 (Gemini final fixes),
+  T-4185 e20fa32b, T-4178 6b68241c (reversals; 2 new strings for her ack). Smoke on master e936af30 PASSED (30 checks).
+  perf_bench rel046-e936af30 vs v0.4.5: demand memory +13% nyc, +12% tokyo, +17% belgrade; belgrade CPU +20%, rail
+  trips -7.1% belgrade (to her as a trade-off; memgrowth working on memory). snap8800 of 6b68241c running.
+- Held for her word: T-4153 s2 (tree editnetwork; ~10.6 MB edit-speed memory; add lineBands.ts:571 ribbons.delete),
+  T-921 (tree commutechunks, tunable, no sparse gain).
+- Uncommitted SPEC.md "what is covered" rewrite is not mine (likely Gemini in Antigravity): leave it; patch it out to land.
+- 8800 = f4bcf26b until the snap swaps. T-4112's tw/track changelog item parked in next-track.json: hide the port's duplicate at release.
 
 ## Next (night of 11-24; she aims to publish 0.4.6 in the morning after her playtest)
 1. Land editunify T-4170 once its Gemini fixes are verified; then the one Gemini review of the whole edit-speed batch

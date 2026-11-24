@@ -3,6 +3,42 @@
   "line": "",
   "items": [
     {
+      "id": "c088",
+      "text": "a reversal partway along a line limits its trains no more than turning at its ends does, and its icon shows only where it is what limits the line",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4178",
+      "by": "reversals",
+      "at": "2026-11-24T07:27:37Z",
+      "rev": 1,
+      "area": "scheduling",
+      "fix": false
+    },
+    {
+      "id": "c087",
+      "text": "fixed undo after copying a line or making a new one leaving the line behind",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4185",
+      "by": "undocopy",
+      "at": "2026-11-24T07:23:36Z",
+      "rev": 1,
+      "area": "scheduling",
+      "fix": true
+    },
+    {
+      "id": "c086",
+      "text": "trips are calculated about 20% faster on bus-heavy maps (belgrade 16 min to 13 min)",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4158",
+      "by": "busland",
+      "at": "2026-11-24T05:07:38Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
+    },
+    {
       "id": "c085",
       "text": "the lines tab's figures update sooner after an edit on big games",
       "edited": null,
@@ -65,14 +101,15 @@
     {
       "id": "c080",
       "text": "edits on a big world show up faster, deleting a line or a station most of all",
-      "edited": null,
+      "edited": "edits on a big world show up faster, placing or deleting a station and deleting a line most of all",
       "hidden": false,
       "task": "T-4153",
       "by": "editnetwork",
       "at": "2026-11-24T02:20:53Z",
-      "rev": 1,
+      "rev": 2,
       "area": "performance",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-24T05:53:34Z"
     },
     {
       "id": "c079",
