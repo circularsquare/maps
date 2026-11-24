@@ -15,6 +15,7 @@ diary notes/handoff-log.md. Her time UTC-5.
 - stopclick T-4097 stage (Opus): Asia stop click line path 1.4-1.9 s to ~100 ms.
 - Landed 11:35-11:45: T-4190 check fix, T-3160 stage 6 53ca4ef77 (phone solving worker 330 -> 261 MB; check6 running), T-4189
   perf_bench WASM fix (rel046 vs v0.4.5 compare was NOT affected). 8800 = 66bdd9f6 (11:51).
+- phoneload T-4188 (Opus): Community save jwxidghd never loads on an emulated phone.
 - solvereuse T-4057 (Opus, tree solvereuse: reuse one-off search tables).
 - T-4161 done in shonei-server 7bdd559 (level 39 + LBE1 block), unpushed, not deployed: deploy.ps1 on her yes before 0.4.6, then push shonei-server.
 - editbench landed (2d8f5e3f9): its stop-click rows on Asia show the line path 1.4-1.9 s after a stop click (T-4097's 100 ms goal): next edit-speed round.

@@ -399,7 +399,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-4184: on a Community Tokyo save (t9gksxmu, 375 MB clock worker on a phone) the extra is the drawing state for the player's track: draw cache 46 MB, line bands' memo and orders 25, posted 14. The cuts (about 20-25 MB, exact) touch code editnetwork changes.
   - Goal: Those cuts made with figures identical, measured on t9gksxmu on an emulated iPhone.
   - Other: notes/T-4184.md
-- T-4188 [P2] {L:memory} A Community save that never loads on a phone
+- T-4188 [P2] {L:memory} A Community save that never loads on a phone (taking, 2026-11-24, agent phoneload)
   - Context: From T-4184: Community save jwxidghd did not finish loading in 10 minutes on an emulated iPhone. Not looked into; could be memory, a stall, or the emulation.
   - Goal: The cause named; the save loads on the emulated phone, or the reason it can't is in the notes.
   - Other: notes/T-4184.md
