@@ -245,7 +245,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-24, yes to: a top section of about ten lines of your standing calls (answer you first; 2-8 agents, core cap only on your word, asking is not a start, count before each start; ask before going outside them; what is yours; biggest cost first), each an action at a moment; procedures below or in the tools' help.
   - Goal: No rule lost or added except one: your direction calls go into DECISIONS.md when you say them; duplicates with trainworld/CLAUDE.md trimmed.
 - T-4166 [P2] {L:checks} Bench machine on your own AWS account
-  - Context: You, 11-24: account made (not free tier), $20 monthly budget alarm, on-demand and spot quotas 32 requested, CLI profile anita-own; she wants $20 a month to really cut off. Setup guide: notes/aws-own-account-setup.md.
+  - Context: You, 11-24: account made (not free tier), $20 monthly budget alarm, both quota raises refused (5 vCPUs: one 4-core machine), CLI profile anita-own; she wants $20 a month to really cut off. Setup guide: notes/aws-own-account-setup.md.
   - Goal: One script runs the benches and smoke on a commit and shuts the machine down; anita-own in docs/aws.md; a $20 budget action stopping machines, with click steps for her.
 - T-4141 [P3] {L:station-placement} Track placed by an edit call crossed the Hudson at ground level
   - Context: Seen by T-4112: a route entered through the game's edit call crossed the Hudson at ground level without a refusal, while pointer-drawn track nearby was bridged. Water may not have been loaded under part of it.
