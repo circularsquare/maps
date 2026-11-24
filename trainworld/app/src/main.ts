@@ -62,6 +62,7 @@ import { cityOverview } from "./map/intercityView";
 import { Overlay } from "./map/overlay";
 import { carryGrids, pick } from "./map/pick";
 import { carryEdgeGrid } from "./map/snapIndex";
+import { clickNetIn, clickPatched, clickWorld, patchClickNet } from "./map/clickMap";
 import { NetworkRenderer } from "./map/renderer";
 import { followTrain } from "./map/trainFollow";
 import { rebaseFollow, startFollow } from "./map/cameraFollow";
@@ -276,6 +277,8 @@ renderer.checkPatch = params.get("patch") === "check"; // T-1029
 // T-2763: whether a line is drawn over track the player removes
 setTrackHider({
   onLine: (edge) => {
+    // T-4214: track patched in since the network drawn (no line moved under a patch: the world's rows say it)
+    if (clickPatched(edge)) return !!clickWorld()?.edges.find((e) => e.id === edge)?.lines.length;
     const l = renderer.net?.lines;
     if (!l) return true;
     for (let i = 0; i < l.count; i++) if (l.edge[i] === edge) return true;
@@ -379,6 +382,13 @@ if (SYNTH) {
   demandClick = views.click;
   demandHover = views.hover;
   let trackSoon = false;
+  // T-4214: an edit's edges laid on the network the tools pick on, when it is drawn at the patch's anchor
+  client.onPatch = (set, gone, order, at) => {
+    const n = renderer.net;
+    if (!n || (n.anchor?.version ?? 0) !== at) return false;
+    patchClickNet(n, order, set, gone);
+    return true;
+  };
   client.onState = (s) => {
     const put = () => {
       // a train count: the same buffers with the new run profiles (T-229)
@@ -392,6 +402,8 @@ if (SYNTH) {
         renderer.netVersion = s.version;
         carryGrids(was, s.net, renderer.checkPatch); // T-1030
         carryEdgeGrid(was, s.net, renderer.checkPatch);
+        // T-4214: the patches of the edits it holds go from the map the tools pick on, later ones are laid on it again
+        clickNetIn(s.net, client.orderOf(s));
         // T-4214: the map clicks pick on holds these edits now (a click waiting for them goes, map/toolWait.ts)
         pendingNetIn(client.orderOf(s));
         // T-1047; T-1021: a task of its own right after, so a big network's first state is two tasks

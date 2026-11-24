@@ -327,7 +327,7 @@ export type ToClock =
    * network, trips and boarding once no stop click has come for a moment; a stop click before then joins them */
   /** `game` (T-3734): the game the edit was made in, `loaded`'s `game` when it was made; one of another game is refused
    * unapplied. Only edits queued behind others carry it (stop edits); an edit without one is the game in hand's. */
-  | { kind: "edit"; seq: number; op: EditOp; early?: boolean; rows?: boolean; game?: number }
+  | { kind: "edit"; seq: number; op: EditOp; early?: boolean; rows?: boolean; click?: boolean; game?: number }
   /** what a route would cost and whether it can be built; answered with "preview" */
   | ({ kind: "preview"; seq: number } & RouteAsk)
   /** what giving blueprint track new PIs would do (T-064); answered with "preview" */
@@ -981,6 +981,10 @@ export interface EdgeLook {
 /** T-4148: a new piece of track the edit made, drawn as blueprint until the network holds it: the edge's points in local
  * units (x, y, z each) */
 export interface NewPiece { edge: number; pts: Float32Array; tracks: 1 | 2; kind: number }
+/** T-4214 stage C: the records the edits since the last state read touched, as the model has them right after an edit
+ * (workers/clockPatch.ts): rows as the next state's, each live edge's points in local units at draw anchor `anchor`
+ * (its version), and the ids gone. The page patches the map its tools click on with it until the next state. */
+export interface MapPatch { edges: ClockEdge[]; nodes: ClockNode[]; goneEdges: number[]; goneNodes: number[]; pts: Float32Array[]; anchor: number }
 /** T-4145: what an applied edit changed, as the page draws it (ids are the ones drawn now unless said); every part optional */
 export interface EditWord {
   /** a rail line's strokes now draw these edges (its plan's path and its return run's); null: the line is gone */
@@ -1008,7 +1012,7 @@ export type FromClock =
    * `ms`: the worker's time on the edit by step (T-229, for `?debug=1`); `node` after addBuilding: the building's id */
   /** T-4145: an edit applied, sent before anything else it sends (rows, state, answer): what the map and panels can
    * show of it until the first network (or rows) after this message (notes/T-4145.md) */
-  | { kind: "applied"; seq: number; word: EditWord; /** T-4170: no network follows (a service edit, a rename, a fare or loan edit) */ noNet?: true }
+  | { kind: "applied"; seq: number; word: EditWord; /** T-4170: no network follows (a service edit, a rename, a fare or loan edit) */ noNet?: true; /** T-4214: the clickable map's patch, when the edit can be patched */ patch?: MapPatch }
   | { kind: "edited"; seq: number; ok: boolean; issues: string[]; charge: number; line?: number; node?: number; paid?: PaidFor; skipped?: number; ms?: Record<string, number>; early?: boolean; held?: Float32Array[] }
   | {
       kind: "preview";

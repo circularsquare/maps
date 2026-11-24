@@ -424,8 +424,8 @@ export function pendingNow() {
 
 // ---------------------------------------------------------------- T-4214: edits out, which map clicks wait for
 
-/** An edit sent whose network the page has not yet set: the map the tools pick on (`renderer.net` and `world`) does not
- * hold it. `word`: its word's arrival order, -1 before; `run`: the track tool's run that sent it (`asRun`), 0 for any other. */
+/** An edit sent whose network the page has not yet set and whose patch it has not taken (T-4214 stage C): the map the tools
+ * pick on (map/clickMap.ts `clickNet` and `clickWorld`) does not hold it. `word`: its word's arrival order, -1 before; `run`: the track tool's run that sent it (`asRun`), 0 for any other. */
 interface Out { seq: number; word: number; run: number; at: number }
 let out: Out[] = [];
 let runTag = 0;
@@ -465,6 +465,11 @@ function outGone(f: (o: Out) => boolean) {
  * before it is in the map now (message order, as `pendingTaken`). */
 export function pendingNetIn(order: number) {
   outGone((o) => o.word >= 0 && o.word < order);
+}
+
+/** T-4214: edit `seq`'s patch is laid on the map the tools pick on (workers/clockClient.ts `takePatch`): it holds no click. */
+export function pendingPatchIn(seq: number) {
+  outGone((o) => o.seq === seq);
 }
 
 /** A click waited its longest: no edit out holds clicks any more (how many did). */

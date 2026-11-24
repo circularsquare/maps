@@ -46,6 +46,8 @@ export interface RowEnv {
   busRow(a: TrackApi, id: number, nodes: ClockNode[]): NonNullable<ClockLine["bus"]>;
   /** a station's platform line, the same array while unchanged (T-1859, workers/platformLines.ts) */
   platformLine?(a: TrackApi, id: number, x: number, y: number, platform: number): Float32Array | undefined;
+  /** T-4214: the same right after an edit, with the edges it `changed` (their ends, null when gone), keeping nothing */
+  platformLineNow?(a: TrackApi, id: number, x: number, y: number, platform: number, changed: ReadonlyMap<number, readonly [number, number] | null>): Float32Array | undefined;
   /** the complexes of these station rows (T-3288), for the one name their untyped members show */
   complexes?(stations: readonly ClockNode[]): Complexes;
   /** T-4113: what else the complexes are made from (the player's links, the station buildings), as a key */
@@ -425,9 +427,8 @@ export class StateRows {
     return this.scope!;
   }
 
-  edges(a: TrackApi): ClockEdge[] {
-    const sc = this.scoped(a);
-    const ei = sc.ei;
+  /** the model's sets an edge row reads, each read whole */
+  private static edgeSets(a: TrackApi) {
     const offEdges = new Set<number>(a.off_edges());
     const hsrEdges = new Set<number>(a.hsr_edges());
     const crossoverIds = a.crossover_edges(), crossoverPartners = a.crossover_partners();
@@ -440,12 +441,31 @@ export class StateRows {
     for (let k = 0; k + 1 < lm.length; k += 2) limits.set(lm[k], lm[k + 1]);
     const rp = a.edge_ramps(), ramps = new Map<number, number>();
     for (let k = 0; k + 1 < rp.length; k += 2) ramps.set(rp[k], rp[k + 1]);
+    return { offEdges, hsrEdges, crossovers, oneWays, joins, limits, ramps };
+  }
+
+  /** an edge's row from its `edges_info` numbers at `ei[i]`, the sets and its own calls (T-4214: the one place a row is made) */
+  private static edgeRow(id: number, ei: ArrayLike<number>, i: number, s: ReturnType<typeof StateRows.edgeSets>, kind: number, setWay: 0 | 1 | 2 | 3, autoWay: 0 | 1 | 2): ClockEdge {
+    return { id, a: ei[i + 1], b: ei[i + 2], tracks: ei[i + 3] as 1 | 2, built: ei[i + 4] === 1, off: s.offEdges.has(id), hsr: s.hsrEdges.has(id), kind, oneWay: s.oneWays.get(id) ?? 0, join: s.joins.get(id) ?? 0, setWay, autoWay,
+      crossover: s.crossovers.has(id), partner: s.crossovers.get(id) ?? -1, lengthM: ei[i + 5], cost: ei[i + 6], vminKmh: ei[i + 7], limit: s.limits.get(id) ?? 0, ramp: s.ramps.get(id) ?? 0, levelMin: ei[i + 8], levelMax: ei[i + 9] };
+  }
+  /** an edge's own calls: its kind, and on single track its way as set and as worked out */
+  private static edgeOwn(a: TrackApi, id: number, tracks: number): { kind: number; setWay: 0 | 1 | 2 | 3; autoWay: 0 | 1 | 2 } {
+    const k = a.edge_kind(id);
+    // T-3078: 1 is high speed, which is rail
+    return { kind: k >= 2 ? k : 0, setWay: (tracks === 1 ? a.edge_oneway(id) : 0) as 0 | 1 | 2 | 3, autoWay: (tracks === 1 ? a.edge_infer(id) : 0) as 0 | 1 | 2 };
+  }
+
+  edges(a: TrackApi): ClockEdge[] {
+    const sc = this.scoped(a);
+    const ei = sc.ei;
+    const sets = StateRows.edgeSets(a);
+    const { offEdges, hsrEdges, crossovers, oneWays, joins, limits, ramps } = sets;
     const out: ClockEdge[] = [];
     const kept = this.edgeRows;
     const seen = new Set<number>();
     // T-4113: a record no edit touched whose sets are as last read is kept without a look
     const patch = !sc.walk;
-    const sets = { offEdges, hsrEdges, crossovers, oneWays, joins, limits, ramps };
     for (const [k, v] of Object.entries(sets)) { if (patch) StateRows.moved(this.lastSets.get("e" + k), v, sc.edges); this.lastSets.set("e" + k, v); }
     for (let i = 0; i < ei.length; i += 10) {
       const id = ei[i];
@@ -459,11 +479,10 @@ export class StateRows {
       // T-4113: the edge's own calls where the read takes it again, or anything bulk about it moved
       const deep = !r || sc.all || sc.edges.has(id) || (r.a !== ei[i + 1] || r.b !== ei[i + 2] || r.tracks !== tracks || r.built !== built || r.off !== off || r.hsr !== hsr || r.oneWay !== oneWay || r.join !== join || r.limit !== limit || r.ramp !== ramp || r.crossover !== crossover || r.partner !== partner);
       if (deep) this.work.edges++;
-      const kind = !deep ? r!.kind : a.edge_kind(id) >= 2 ? a.edge_kind(id) : 0 /* T-3078: 1 is high speed, which is rail */;
-      const setWay = (!deep ? r!.setWay : tracks === 1 ? a.edge_oneway(id) : 0) as 0 | 1 | 2 | 3, autoWay = (!deep ? r!.autoWay : tracks === 1 ? a.edge_infer(id) : 0) as 0 | 1 | 2;
+      const { kind, setWay, autoWay } = !deep ? r! : StateRows.edgeOwn(a, id, tracks);
       if (!r || r.a !== ei[i + 1] || r.b !== ei[i + 2] || r.tracks !== tracks || r.built !== built || r.off !== off || r.hsr !== hsr || r.kind !== kind || r.oneWay !== oneWay || r.join !== join || r.limit !== limit || r.ramp !== ramp || r.setWay !== setWay || r.autoWay !== autoWay || r.crossover !== crossover || r.partner !== partner
         || !Object.is(r.lengthM, ei[i + 5]) || !Object.is(r.cost, ei[i + 6]) || !Object.is(r.vminKmh, ei[i + 7]) || r.levelMin !== ei[i + 8] || r.levelMax !== ei[i + 9]) {
-        r = { id, a: ei[i + 1], b: ei[i + 2], tracks, built, off, hsr, kind, oneWay, join, setWay, autoWay, crossover, partner, lengthM: ei[i + 5], cost: ei[i + 6], vminKmh: ei[i + 7], limit, ramp, levelMin: ei[i + 8], levelMax: ei[i + 9] };
+        r = StateRows.edgeRow(id, ei, i, sets, kind, setWay, autoWay);
         kept.set(id, r);
       }
       seen.add(id);
@@ -473,10 +492,8 @@ export class StateRows {
     return out;
   }
 
-  nodes(a: TrackApi, env: RowEnv, ups: Map<number, number>): ClockNode[] {
-    const sc = this.scoped(a);
-    this.syncNames(a);
-    const ni = sc.ni;
+  /** the model's sets a node row reads, each read whole */
+  private static nodeSets(a: TrackApi, ups: Map<number, number>) {
     const offStations = new Set<number>(a.off_stations());
     const namedStations = new Set<number>(a.named_stations());
     const unbound = new Set<number>(a.unbound_stations());
@@ -490,11 +507,42 @@ export class StateRows {
     // T-3922: the upkeep of what is bought on each station, US$ a game day
     const uu = a.station_upgrade_upkeep(), upUpkeep = new Map<number, number>();
     for (let k = 0; k + 1 < uu.length; k += 2) upUpkeep.set(uu[k], uu[k + 1] * 1e6);
+    return { offStations, namedStations, unbound, ones, onePlatforms, fares, upUpkeep, ups };
+  }
+
+  /** a node's own calls (T-2194: a port has no track, so no platform line) */
+  private static nodeOwnOf(a: TrackApi, env: RowEnv, id: number, ni: ArrayLike<number>, i: number, one: number, changed?: ReadonlyMap<number, readonly [number, number] | null>) {
+    const platform = ni[i + 7];
+    const port = platform > 0 && a.is_port(id);
+    const brtStation = platform > 0 && !port && a.is_brt_station(id);
+    const kind = a.node_kind(id) >= 2 ? a.node_kind(id) : 0;
+    const oneHeading = one === 1 ? a.station_one_heading(id) : undefined;
+    const line = platform > 0 && !port ? (changed ? env.platformLineNow?.(a, id, ni[i + 1], ni[i + 2], platform, changed) : env.platformLine?.(a, id, ni[i + 1], ni[i + 2], platform)) : undefined;
+    return { port, brtStation, kind, oneHeading, line };
+  }
+
+  /** a node's row from its `nodes_info` numbers at `ni[i]`, before names are folded (T-4214: the one place a row is made) */
+  private static nodeRow(a: TrackApi, env: RowEnv, id: number, ni: ArrayLike<number>, i: number, f: { stationOff: boolean; upgrades: number; name: string; named: boolean; own: string; one: 0 | 1 | 2; onePlatform: boolean; fare: number; upgradeUpkeep: number },
+    o: { port: boolean; brtStation: boolean; kind: number; oneHeading: number | undefined; line: Float32Array | undefined }): ClockNode {
+    const flying = (ni[i + 6] & 1) === 1, crosses = (ni[i + 6] & 2) === 2, unusable = ((ni[i + 6] >> 2) & 3) as 0 | 1 | 2 | 3;
+    const { stationOff, upgrades, name, named, own, one, onePlatform, fare, upgradeUpkeep } = f, { port, brtStation, kind, oneHeading, line } = o;
+    const [lng, lat] = env.lngLat(ni[i + 1], ni[i + 2]);
+    const berth = port ? a.port_berth(id) : null;
+    return { id, x: ni[i + 1], y: ni[i + 2], lng, lat, level: ni[i + 3], ports: ni[i + 4], builtPorts: ni[i + 5], flying, ...(crosses ? { crosses: true as const } : {}), ...(unusable ? { unusable } : {}), platform: ni[i + 7], stationBuilt: ni[i + 8] === 1, stationOff, upgrades, ...(fare ? { fare } : {}), name, heading: ni[i + 9], ...(named ? { named: true as const } : {}), ...(own ? { own } : {}), ...(line ? { line } : {}), ...(kind ? { kind } : {}),
+      ...(one ? { one } : {}), ...(oneHeading !== undefined ? { oneHeading } : {}), ...(onePlatform ? { onePlatform: true as const } : {}), ...(upgradeUpkeep ? { upgradeUpkeep } : {}),
+      ...(berth && berth.length === 2 ? { port: env.lngLat(berth[0], berth[1]) } : {}), ...(brtStation ? { brtStation: true as const } : {}) };
+  }
+
+  nodes(a: TrackApi, env: RowEnv, ups: Map<number, number>): ClockNode[] {
+    const sc = this.scoped(a);
+    this.syncNames(a);
+    const ni = sc.ni;
+    const sets = StateRows.nodeSets(a, ups);
+    const { offStations, namedStations, unbound, ones, onePlatforms, fares, upUpkeep } = sets;
     const out: ClockNode[] = [];
     const kept = this.nodeRows;
     const seen = new Set<number>();
     const patch = !sc.walk;
-    const sets = { offStations, namedStations, unbound, ones, onePlatforms, fares, upUpkeep, ups };
     for (const [k, v] of Object.entries(sets)) { if (patch) StateRows.moved(this.lastSets.get("n" + k), v, sc.nodes); this.lastSets.set("n" + k, v); }
     for (const id of this.namesMoved) sc.nodes.add(id);
     this.namesMoved = [];
@@ -522,22 +570,13 @@ export class StateRows {
       let port: boolean, brtStation: boolean, kind: number, oneHeading: number | undefined, line: Float32Array | undefined;
       if (deep) {
         this.work.nodes++;
-        // T-2194: a port has no track, so no platform line
-        port = platform > 0 && a.is_port(id);
-        brtStation = platform > 0 && !port && a.is_brt_station(id);
-        kind = a.node_kind(id) >= 2 ? a.node_kind(id) : 0;
-        oneHeading = one === 1 ? a.station_one_heading(id) : undefined;
-        line = platform > 0 && !port ? env.platformLine?.(a, id, ni[i + 1], ni[i + 2], platform) : undefined;
+        ({ port, brtStation, kind, oneHeading, line } = StateRows.nodeOwnOf(a, env, id, ni, i, one));
         this.nodeOwn.set(id, { port, brtStation, kind, oneHeading, line });
       } else ({ port, brtStation, kind, oneHeading, line } = was!);
       if (!r || r.x !== ni[i + 1] || r.y !== ni[i + 2] || r.level !== ni[i + 3] || r.ports !== ni[i + 4] || r.builtPorts !== ni[i + 5] || r.flying !== flying || !!r.crosses !== crosses || (r.unusable ?? 0) !== unusable || r.platform !== platform
         || r.stationBuilt !== stationBuilt || r.stationOff !== stationOff || r.upgrades !== upgrades || r.name !== name || !!r.named !== named || (r.own ?? "") !== own || !Object.is(r.heading, ni[i + 9]) || r.line !== line || !!r.port !== port || !!r.brtStation !== brtStation || (r.kind ?? 0) !== kind
         || (r.one ?? 0) !== one || r.oneHeading !== oneHeading || !!r.onePlatform !== onePlatform || (r.fare ?? 0) !== fare || (r.upgradeUpkeep ?? 0) !== upgradeUpkeep) {
-        const [lng, lat] = env.lngLat(ni[i + 1], ni[i + 2]);
-        const berth = port ? a.port_berth(id) : null;
-        r = { id, x: ni[i + 1], y: ni[i + 2], lng, lat, level: ni[i + 3], ports: ni[i + 4], builtPorts: ni[i + 5], flying, ...(crosses ? { crosses: true as const } : {}), ...(unusable ? { unusable } : {}), platform, stationBuilt, stationOff, upgrades, ...(fare ? { fare } : {}), name, heading: ni[i + 9], ...(named ? { named: true as const } : {}), ...(own ? { own } : {}), ...(line ? { line } : {}), ...(kind ? { kind } : {}),
-          ...(one ? { one } : {}), ...(oneHeading !== undefined ? { oneHeading } : {}), ...(onePlatform ? { onePlatform: true as const } : {}), ...(upgradeUpkeep ? { upgradeUpkeep } : {}),
-          ...(berth && berth.length === 2 ? { port: env.lngLat(berth[0], berth[1]) } : {}), ...(brtStation ? { brtStation: true as const } : {}) };
+        r = StateRows.nodeRow(a, env, id, ni, i, { stationOff, upgrades, name, named, own, one, onePlatform, fare, upgradeUpkeep }, { port, brtStation, kind, oneHeading, line });
         kept.set(id, r);
       }
       seen.add(id);
@@ -610,6 +649,37 @@ export class StateRows {
       out[k] = f.row;
     }
     if (this.folded.size !== seen.size) for (const id of this.folded.keys()) if (!seen.has(id)) this.folded.delete(id);
+  }
+
+  /** T-4214: fresh rows for the live edges and nodes among `edgeIds` and `nodeIds` (workers/clockPatch.ts), made as `edges` and
+   * `nodes` make a record they read again, leaving everything this keeps for the next read as it is. A station shows the
+   * name the last read folded for it while its stored and own names are as then; a new one its own. */
+  touchedRows(a: TrackApi, env: RowEnv, edgeIds: Uint32Array, nodeIds: Uint32Array, ups: Map<number, number> = upgradesOf(a)): { edges: ClockEdge[]; nodes: ClockNode[] } {
+    const edges: ClockEdge[] = [], nodes: ClockNode[] = [];
+    /** the touched edges' ends now, null when gone (a platform line is laid along the edges at its node) */
+    const changed = new Map<number, readonly [number, number] | null>(Array.from(edgeIds, (id) => [id, null]));
+    if (edgeIds.length) {
+      const ei = a.edges_info_of(edgeIds), sets = StateRows.edgeSets(a);
+      for (let i = 0; i < ei.length; i += 10) {
+        const id = ei[i];
+        const { kind, setWay, autoWay } = StateRows.edgeOwn(a, id, ei[i + 3]);
+        edges.push(StateRows.edgeRow(id, ei, i, sets, kind, setWay, autoWay));
+        changed.set(id, [ei[i + 1], ei[i + 2]]);
+      }
+    }
+    if (nodeIds.length) {
+      const ni = a.nodes_info_of(nodeIds), s = StateRows.nodeSets(a, ups);
+      for (let i = 0; i < ni.length; i += 10) {
+        const id = ni[i], platform = ni[i + 7];
+        const name = platform > 0 ? a.node_name(id) : "", own = platform > 0 && s.unbound.has(id) ? a.station_own(id) : "";
+        const one: 0 | 1 | 2 = s.ones.get(id) ?? 0;
+        const f = { stationOff: s.offStations.has(id), upgrades: ups.get(id) ?? 0, name, named: platform > 0 && s.namedStations.has(id), own, one, onePlatform: s.onePlatforms.has(id), fare: s.fares.get(id) ?? 0, upgradeUpkeep: s.upUpkeep.get(id) ?? 0 };
+        const r = StateRows.nodeRow(a, env, id, ni, i, f, StateRows.nodeOwnOf(a, env, id, ni, i, one, changed));
+        const fold = platform > 0 && !r.port ? this.folded.get(id) : undefined;
+        nodes.push(fold && fold.from.name === name && (fold.from.own ?? "") === own ? { ...r, name: fold.name, ...(fold.hub !== undefined ? { hub: fold.hub } : {}) } : r);
+      }
+    }
+    return { edges, nodes };
   }
 
   /** The name a station shows when that is not its stored one (`foldNames`), if it does. */

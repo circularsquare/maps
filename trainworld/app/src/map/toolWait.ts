@@ -1,6 +1,6 @@
-// T-4214: a map click made while an edit sent before it has not reached the map the tools pick on (the renderer's network
-// and `world`, set together when that edit's network lands) waits, the tool's tag showing the spinner after WAIT_MS, and
-// is carried out at the same map spot once that map holds every edit sent before it. A tool switch the player makes
+// T-4214: a map click made while an edit sent before it has not reached the map the tools pick on (map/clickMap.ts and
+// `world`: patched with the edit's word, or set with its network when it came with no patch) waits, the tool's tag showing
+// the spinner after WAIT_MS, and is carried out at the same map spot once that map holds every edit sent before it. A tool switch the player makes
 // meanwhile waits its turn behind them (game/ui.ts `inClickOrder`), so each click goes with the tool it was made with.
 // Dropped if the spot has left the screen, on Escape or a load; after CLICK_WAIT_MAX_MS it is carried out on the map as it
 // is. The next

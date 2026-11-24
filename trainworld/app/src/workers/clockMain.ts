@@ -158,6 +158,7 @@ function rowComplexes(rows: readonly ClockNode[]): Complexes {
   return complexesOf(nodeComplexes, geo, links);
 }
 export const rowEnv: RowEnv = { lngLat: packLngLat, periodHours: PERIOD_HOURS, busRow, platformLine: platformLineOf, complexes: rowComplexes,
+  platformLineNow: (a, id, x, y, platform, changed) => platformLines.peekOf(a, id, x, y, platform, groundK(y), changed),
   complexKey: (a) => a.station_links().join() + "|" + a.buildings_info().join() };
 /** the rows of the last states, read again only where the track model says something changed (T-1382);
  * `?patch=0` reads them whole */

@@ -53,7 +53,9 @@ import { afterPaint, BUSY_MS, expectedMs, hideBusy, learnBusy, showBusy } from "
 import { addTerrainGrid, dropTerrainGrids, groundNet, setTerrainIndex } from "../game/terrain";
 import { addTownOutline, clearTownOutlines } from "../map/townArea";
 import { letterOf } from "../game/lineLetter";
-import { pendingAnswer, pendingClear, pendingSent, pendingTaken, pendingWord } from "../game/pending";
+import { pendingAnswer, pendingClear, pendingPatchIn, pendingSent, pendingTaken, pendingWord } from "../game/pending";
+import type { MapPatch } from "./protocol";
+import { clickNetClear, setClickWorld } from "../map/clickMap";
 
 /** Text from the clock worker: it sends message keys (docs/localization.md "Workers"), worded here; anything else as it is. */
 /** T-3542: a line of four or five rows' figures (`ClockLine.rows`) as the panels read them. */
@@ -239,11 +241,11 @@ let lastEdgeViews: TrackEdge[] = [];
 /** The UI's track edges from the state's rows and lines (T-2576): an edge row that was in the last state gives
  * its old view while the lines over it are the same, and the lists of lines are kept while every line
  * runs the same path (an edit of a line's trains changes its row, not its path). */
-function edgesOf(s: ClockState): TrackEdge[] {
+function edgesOf(s: ClockState, keep: boolean): TrackEdge[] {
   let edgeLines = lastEdgeLines;
   let linesSame = true;
   if (!sameObjects(s.lines, lastEdgeLineRows)) {
-    if (samePaths(s.lines, lastEdgeLineRows)) lastEdgeLineRows = s.lines;
+    if (samePaths(s.lines, lastEdgeLineRows)) { if (keep) lastEdgeLineRows = s.lines; }
     else {
       linesSame = false;
       edgeLines = new Map<number, string[]>();
@@ -258,8 +260,10 @@ function edgesOf(s: ClockState): TrackEdge[] {
           else edgeLines.set(p, [id]);
         }
       }
-      lastEdgeLineRows = s.lines;
-      lastEdgeLines = edgeLines;
+      if (keep) {
+        lastEdgeLineRows = s.lines;
+        lastEdgeLines = edgeLines;
+      }
     }
   }
   if (linesSame && s.edges === lastEdgeRows) return lastEdgeViews;
@@ -284,8 +288,10 @@ function edgesOf(s: ClockState): TrackEdge[] {
       levelMin: e.levelMin as any, levelMax: e.levelMax as any, lines: ls === none ? [] : ls,
     };
   });
-  lastEdgeRows = s.edges;
-  lastEdgeViews = out;
+  if (keep) {
+    lastEdgeRows = s.edges;
+    lastEdgeViews = out;
+  }
   return out;
 }
 /** The UI's world view from the worker's state. */
@@ -300,7 +306,31 @@ function turnLimitsOf(v: Float64Array | undefined): Map<string, Map<number, numb
   return out;
 }
 
-function toWorld(s: ClockState): WorldView {
+/** T-4214: `base` (a state's rows, in the model's order: by id, a bus line's stops that are no station last) with `rows` in
+ * place of theirs or added by id, and those `gone` left out; a new array. */
+function patchRows<T extends { id: number; bus?: boolean }>(base: readonly T[], rows: readonly T[], gone: readonly number[]): T[] {
+  const by = new Map(rows.map((r) => [r.id, r])), drop = new Set(gone), used = new Set<number>();
+  const out: T[] = [];
+  for (const r of base) {
+    if (drop.has(r.id)) continue;
+    const n = by.get(r.id);
+    if (n) used.add(r.id);
+    out.push(n ?? r);
+  }
+  let end = out.length;
+  while (end > 0 && out[end - 1].bus) end--;
+  for (const r of rows) {
+    if (used.has(r.id)) continue;
+    let lo = 0, hi = end;
+    while (lo < hi) { const m = (lo + hi) >> 1; if (out[m].id < r.id) lo = m + 1; else hi = m; }
+    out.splice(lo, 0, r);
+    end++;
+  }
+  return out;
+}
+
+/** `keep` false (T-4214, the tools' patched world): the views made are not kept for the next state's to reuse */
+function toWorld(s: ClockState, keep = true): WorldView {
   let stations: StationInput[] = s.nodes
     .filter((n) => n.platform > 0)
     .map((n) => {
@@ -313,7 +343,7 @@ function toWorld(s: ClockState): WorldView {
       return v;
     });
   if (sameObjects(stations, lastStations)) stations = lastStations;
-  else lastStations = stations;
+  else if (keep) lastStations = stations;
   // T-3333: a line run on both pairs and its hidden twin keep a row each, so every sum counts both; the twin
   // is marked for the lists to leave out, its line for its panel to add it in
   const twinOfLine = new Map<number, number>(), twins = new Map<string, string>();
@@ -331,7 +361,7 @@ function toWorld(s: ClockState): WorldView {
     return v;
   });
   if (sameObjects(lines, lastLines)) lines = lastLines;
-  else lastLines = lines;
+  else if (keep) lastLines = lines;
   const lineStats: Record<string, LineStats> = {};
   for (const l of s.lines) {
     const had = statsViews.get(l), twin = twinOfLine.has(l.id) ? String(twinOfLine.get(l.id)) : undefined;
@@ -389,15 +419,17 @@ function toWorld(s: ClockState): WorldView {
       ...(l.bus ? { bus: l.bus } : {}),
     };
   }
-  const edges = edgesOf(s);
+  const edges = edgesOf(s, keep);
   // the last map while the rows are the same, so the snap's node grid (map/snapIndex.ts) stays
   let nodes = lastNodeMap;
   if (!sameObjects(s.nodes, lastNodeRows)) {
     nodes = new Map<number, TrackNode>(
       s.nodes.map((n) => [n.id, { id: n.id, x: n.x, y: n.y, lng: n.lng, lat: n.lat, level: n.level as any, ports: n.ports, builtPorts: n.builtPorts, flying: n.flying, platform: n.platform, ...(n.bus ? { bus: true as const } : {}), ...(n.port ? { port: true as const } : {}), ...(n.brtStation ? { brtStation: true as const } : {}), ...(n.kind ? { kind: n.kind } : {}) }]),
     );
-    lastNodeRows = s.nodes;
-    lastNodeMap = nodes;
+    if (keep) {
+      lastNodeRows = s.nodes;
+      lastNodeMap = nodes;
+    }
   }
   return {
     version: s.version,
@@ -715,6 +747,9 @@ export class ClockClient {
   private loadedInto = "";
   /** the renderer's hooks, set by main.ts */
   onState: (s: ClockState) => void = () => {};
+  /** T-4214: lay an edit's edges on the network the tools pick on (map/clickMap.ts), the `order`th message to arrive; false
+   * when it cannot be (no network drawn, or drawn at another anchor) */
+  onPatch: (set: Map<number, Float32Array>, gone: number[], order: number, anchor: number) => boolean = () => false;
   /** T-2159: the network diagram's graph, while the diagram is shown (diagram/view.ts) */
   /** T-3409: `cut`: the graphs are of the chosen cities alone; `whole`: the whole network's too, when a share asked */
   onDiagram: (graphs: DiagramGraph[], cut: boolean, whole?: DiagramGraph[]) => void = () => {};
@@ -1061,6 +1096,13 @@ export class ClockClient {
   private cityId: string;
   /** the world before the last state, for the edit that state answers (T-531) */
   private worldBefore: WorldView | null = null;
+  /** T-4214: the last state taken, and its rows as patched since for the tools' world (map/clickMap.ts `clickWorld`;
+   * the client's delta base, `rows`, is left as the worker posted it) */
+  private taken: ClockState | null = null;
+  private patched: { edges: ClockState["edges"]; nodes: ClockState["nodes"]; n: number } | null = null;
+  /** the patches laid on since the last state taken, and the words that came with none (`p` null), by arrival order: a
+   * state taken drops those that came before it (it holds their edits) and lays the rest on its rows again */
+  private patchLog: { order: number; p: MapPatch | null }[] = [];
   /** `?new=1`, `?synth=1` or `?demandTest=1`: no autosave until a copy is saved (T-320) */
   private testPage = false;
   private forgetSent = () => {};
@@ -1166,6 +1208,56 @@ export class ClockClient {
     return true;
   }
 
+  /** T-4214: an edit's patch (workers/clockPatch.ts) laid on the map the tools click on: its edges on the drawn network
+   * (`onPatch`), its rows on the last state's for the tools' world (`clickWorld`), whose other parts (lines, money,
+   * marks) stay the state's. `world` waits for the state, so nothing subscribed to it runs for a patch. False when it
+   * cannot be, and the clicks waiting for the edit then wait for its network as before. */
+  private takePatch(p: MapPatch, order: number): boolean {
+    const st = this.taken;
+    if (!st || !world.peek() || p.anchor !== anchor().version) return false;
+    // nothing on the map moved (a group or look edit): the tools' map holds the edit as it is
+    if (!p.edges.length && !p.nodes.length && !p.goneEdges.length && !p.goneNodes.length) return true;
+    if (!this.onPatch(new Map(p.edges.map((e, i) => [e.id, p.pts[i]])), p.goneEdges, order, p.anchor)) return false;
+    this.patchLog.push({ order, p });
+    this.layPatch(p);
+    return true;
+  }
+  /** `p`'s rows laid on the tools' world (the last state's rows, as patched since) */
+  private layPatch(p: MapPatch) {
+    const st = this.taken!, base = this.patched ?? { edges: st.edges, nodes: st.nodes, n: 0 };
+    this.patched = { edges: patchRows(base.edges, p.edges, p.goneEdges), nodes: patchRows(base.nodes, p.nodes, p.goneNodes), n: base.n + 1 };
+    // (a version of its own: the tools' caches keyed on it are read again; the next state's is the next whole number)
+    setClickWorld(toWorld({ ...st, edges: this.patched.edges, nodes: this.patched.nodes, version: st.version + this.patched.n / 1000 }, false));
+  }
+
+  /** DEV (T-4214): the rows the patches that arrived before the state taken now (the `order`th message) gave, against that
+   * state's, when every edit whose word came before it came with a patch. A difference is a kind of edit not patched
+   * exactly (notes/T-4214.md "Stage C"). */
+  private checkPatched(st: ClockState, order: number) {
+    const before = this.patchLog.filter((x) => x.order < order);
+    if (before.length && before.every((x) => x.p)) {
+      const pr = { edges: new Map<number, object | null>(), nodes: new Map<number, object | null>() };
+      for (const { p } of before) {
+        for (const r of p!.edges) pr.edges.set(r.id, r);
+        for (const id of p!.goneEdges) pr.edges.set(id, null);
+        for (const r of p!.nodes) pr.nodes.set(r.id, r);
+        for (const id of p!.goneNodes) pr.nodes.set(id, null);
+      }
+      const bad: string[] = [];
+      for (const k of ["edges", "nodes"] as const) {
+        const now = new Map<number, object>((st[k] as { id: number }[]).map((r) => [r.id, r]));
+        for (const [id, r] of pr[k]) {
+          const s = now.get(id);
+          if (!r || !s) { if (!r !== !s) bad.push(`${k} ${id} ${r ? "patched in, not in the state" : "patched out, in the state"}`); continue; }
+          const x = r as unknown as Record<string, unknown>, y = s as Record<string, unknown>;
+          const fields = Object.keys({ ...x, ...y }).filter((f) => JSON.stringify(x[f]) !== JSON.stringify(y[f]));
+          if (fields.length) bad.push(`${k} ${id}: ${fields.join(", ")}`);
+        }
+      }
+      if (bad.length) console.error(`T-4214 check: the patched rows differ from the state's: ${bad.slice(0, 8).join("; ")}`);
+    }
+  }
+
   /** The state's network made whole from the last (`mergeNet`); false when it cannot be. */
   private takeNet(st: ClockState): boolean {
     if (st.service) {
@@ -1269,7 +1361,15 @@ export class ClockClient {
     this.worldBefore = world.value;
     worldIsRows.value = !!msg.state.rows;
     if (msg.state.rightHand !== undefined) rightHand.value = msg.state.rightHand;
+    const order = this.orderOf(msg);
+    if (import.meta.env.DEV) this.checkPatched(msg.state, order);
     world.value = toWorld(msg.state);
+    this.taken = msg.state;
+    this.patched = null;
+    setClickWorld(null);
+    // (a patch that arrived after this state, when it is taken late: laid on it again)
+    this.patchLog = this.patchLog.filter((x) => x.order > order);
+    for (const x of this.patchLog) if (x.p) this.layPatch(x.p);
     // T-4145: the panels and money of every edit whose word came before this state are in it
     pendingTaken(this.orderOf(msg), { rows: true, money: true });
     if (world.value && !msg.state.rows) noteLoad("network in the page", { stations: world.value.save.stations.length, lines: world.value.save.lines.length });
@@ -1312,6 +1412,9 @@ export class ClockClient {
         break;
       case "ready":
         pendingClear(); // a worker started again answers nothing it had
+        clickNetClear();
+        this.patched = null;
+        this.patchLog = [];
         clockWorkerStatus.value = `ready in ${msg.initMs.toFixed(0)} ms`; // i18n-ignore
         this.wasmReady = true;
         noteClockStep("track model ready"); // i18n-ignore
@@ -1532,6 +1635,9 @@ export class ClockClient {
         break;
       case "applied":
         pendingWord(msg.seq, msg.word, this.orderOf(msg), !!msg.noNet);
+        // T-4214: the map the tools click on holds the edit now, so the clicks waiting for it go
+        if (msg.patch && this.takePatch(msg.patch, this.orderOf(msg))) pendingPatchIn(msg.seq);
+        else if (!msg.noNet) this.patchLog.push({ order: this.orderOf(msg), p: null });
         break;
       case "edited": {
         // T-4145: what it showed ahead goes in the frame a refusal lands (before the notice, which waits for the promise)
@@ -1703,9 +1809,10 @@ export class ClockClient {
   }
 
   /** Send an edit; the promise resolves with the worker's answer. `early` "rows": a stop click's (T-2766), answered
-   * once the world holds it, its network a moment after the clicks stop. `game`: the `gameStamp` it was made under,
+   * once the world holds it, its network a moment after the clicks stop; "click" (T-4214): a station or delete clicked on
+   * the map, answered once the tools' map holds it (its patch), before `world` does. `game`: the `gameStamp` it was made under,
    * for an edit sent later than made (T-3734); else the one now (T-4214: every edit is refused in a game it was not made in). */
-  edit(op: EditOp, early: boolean | "rows" = false, game?: number): Promise<EditAnswer> {
+  edit(op: EditOp, early: boolean | "rows" | "click" = false, game?: number): Promise<EditAnswer> {
     const seq = ++this.seq, stamp = { game: game ?? gameStamp.peek() };
     // T-4145: an undo names the newest edit still out, so it takes back nothing when that one is refused
     if ((op.op === "undo" || op.op === "redo") && op.after === undefined && this.pending.size) op = { ...op, after: Math.max(...this.pending.keys()) };
@@ -1716,7 +1823,7 @@ export class ClockClient {
       this.post({ kind: "edit", seq, op, rows: true, ...stamp });
       return new Promise((res) => this.pending.set(seq, (a) => { this.stopsOut--; this.lastStopAt = performance.now(); res(a); }));
     }
-    this.post(early ? { kind: "edit", seq, op, early, ...stamp } : { kind: "edit", seq, op, ...stamp });
+    this.post(early === true ? { kind: "edit", seq, op, early, ...stamp } : early === "click" ? { kind: "edit", seq, op, click: true, ...stamp } : { kind: "edit", seq, op, ...stamp });
     this.sent.set(seq, { what: op.op, at: performance.now() });
     return new Promise((res) => this.pending.set(seq, res));
   }

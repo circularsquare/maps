@@ -38,6 +38,7 @@ import { warmStreetNames } from "./stationNames";
 import { loadRealStationsAt } from "./realStations";
 import { pointerLocal } from "./pick";
 import { edgesNear, nodesNear } from "./snapIndex";
+import { clickNet, clickWorld } from "./clickMap";
 import { hidden, levelHidden } from "./visibility";
 import { afterStopEdits, edit, queueStopEdit, say, sendStopEdit, stopsQueued, world } from "../game/world";
 import { hideBusy, showBusy } from "../game/busy";
@@ -89,7 +90,7 @@ export class Tools {
   clicksOut = 0;
   /** T-4214: the track run being drawn, numbered from 1: its own segments hold none of its clicks */
   run = 0;
-  /** T-1407: the end node of a segment answered before its state, until `world` has it (-1: none) */
+  /** T-1407: the end node of a segment answered before its state, until the tools' world has it (-1: none) */
   earlyNode = -1;
   /** T-2404: the points (local x, y, z) of the segments placed early whose state the worker holds
    * while the pointer moves; the snap cannot see them until it lands */
@@ -379,10 +380,15 @@ export class Tools {
     return this.overlay.toScreen(lx, ly);
   }
 
+  /** T-4214: the network the tools pick on: the drawn one with the edits patched in since (map/clickMap.ts) */
+  get pickNet() {
+    return clickNet(this.overlay.renderer.net);
+  }
+
   /** What is under the pointer for building: a node, a point on track, or open ground. */
   snap(px: number, py: number, lngLat: { lng: number; lat: number }, nodes = true): Snap {
-    const w = world.peek();
-    const n = this.overlay.renderer.net;
+    const w = clickWorld();
+    const n = this.pickNet;
     const [fx, fy] = toLocal(lngLat.lng, lngLat.lat);
     const station = tool.peek() === "station";
     if (station) this.alts = [];
@@ -488,7 +494,7 @@ export class Tools {
    */
   joinPoint(hit: Spot, px: number, py: number): { join?: [number, number]; dot?: [number, number]; merge?: boolean } | undefined {
     if (tool.peek() !== "track" || !singleTrack.peek()) return undefined;
-    const lanes = laneState(this.map.getZoom()), t = lanes.t, w = world.peek(), n = this.overlay.renderer.net;
+    const lanes = laneState(this.map.getZoom()), t = lanes.t, w = clickWorld(), n = this.pickNet;
     if (!w || !n) return undefined;
     const doubles = this.doubleEnds(w);
     const edges = hit.kind === "edge" ? (doubles.ids.has(hit.edge) ? [hit.edge] : []) : doubles.byNode.get(hit.node) ?? [];
@@ -577,7 +583,7 @@ export class Tools {
 
   /** whether a station spot is on tram track (T-2926) */
   tramSpot(s: Snap | null | undefined): boolean {
-    const w = world.peek();
+    const w = clickWorld();
     if (!s || !w) return false;
     if (s.kind === "free") return false;
     return s.kind === "node" ? [2, 3].includes(w.nodes.get(s.node)?.kind ?? 0) : this.tramEdgeSet(w).has(s.edge);
@@ -591,11 +597,11 @@ export class Tools {
   /** T-1685: with Snap beside on, open ground within BESIDE_PX of track: the nearest piece, and the
    * spot BESIDE_SPACING_M from it on the pointer's side (local units) */
   besideAt(px: number, py: number): { edge: number; lx: number; ly: number } | null {
-    const n = this.overlay.renderer.net;
+    const n = this.pickNet;
     const at = pointerLocal(this.overlay, px, py);
     if (!besideOn.peek() || !n || !at || this.freeClick) return null;
     let best = BESIDE_PX * BESIDE_PX, hit: { edge: number; lx: number; ly: number } | null = null;
-    const w = world.peek(), tramOf = w ? this.tramEdgeSet(w) : null, fam = tramTrack.peek();
+    const w = clickWorld(), tramOf = w ? this.tramEdgeSet(w) : null, fam = tramTrack.peek();
     for (const { edge, pts, ks } of edgesNear(n, at[0], at[1], BESIDE_PX * at[2]) ?? []) {
       if (tramOf && tramOf.has(edge) !== fam) continue;
       for (let j = 0, k = ks ? ks[0] : 0; ks ? j < ks.length : k + 5 < pts.length; j++, k = ks ? ks[j] : k + 3) {
@@ -623,7 +629,7 @@ export class Tools {
    * along the track both ways, through plain joints and stations, up to junctions. */
   lastStationTrack(): Set<number> {
     const out = new Set<number>();
-    const w = world.peek();
+    const w = clickWorld();
     const at = this.lastPlaced;
     if (!w || !at) return out;
     // kept per placement and network version: this runs per pointer move
@@ -1111,7 +1117,7 @@ export class Tools {
   requestPreview(): boolean {
     if (!this.start || this.snapped || this.clicked) return false;
     const se = this.start.end;
-    const nodes = world.peek()?.nodes;
+    const nodes = clickWorld()?.nodes;
     if (this.earlyNode >= 0 && nodes?.has(this.earlyNode)) this.earlyNode = -1;
     // undone meanwhile; a segment's end answered ahead of its state (T-1407) is not in yet
     if (se.kind === "node" && se.node !== this.earlyNode && !nodes?.has(se.node)) return this.reset(), false;
@@ -1246,7 +1252,7 @@ export class Tools {
   /** T-4143: the way track leaves a start on track before any answer says (local units, unit length): along the track
    * there, toward the pointer; none on open ground */
   trackHeading(st: Placed, sx: number, sy: number, h: Snap): [number, number] | undefined {
-    const n = this.overlay.renderer.net;
+    const n = this.pickNet;
     if (st.end.kind === "free" || !n) return undefined;
     let best = 5 * kAtY(sy), dir: [number, number] | undefined;
     for (const { pts } of edgesNear(n, sx, sy, best) ?? [])
@@ -1263,8 +1269,8 @@ export class Tools {
   }
   /** a route end's height as the page knows it, m: a node's level, the track's height at (lx, ly), the level picked */
   heightOf(e: RouteEnd, lx: number, ly: number): number {
-    if (e.kind === "node") return (world.peek()?.nodes.get(e.node)?.level ?? this.freeLevel()) * 8;
-    const n = this.overlay.renderer.net;
+    if (e.kind === "node") return (clickWorld()?.nodes.get(e.node)?.level ?? this.freeLevel()) * 8;
+    const n = this.pickNet;
     if (e.kind === "edge" && n) {
       let best = Infinity, z = this.freeLevel() * 8;
       for (const { edge, pts } of edgesNear(n, lx, ly, kAtY(ly)) ?? []) {
@@ -1306,7 +1312,7 @@ export class Tools {
   /** whether a held segment is within HELD_NEAR_PX of (px, py), away from the start (dropping the
    * held list once their state has landed) */
   nearHeld(px: number, py: number): boolean {
-    if (this.earlyNode < 0 || world.peek()?.nodes.has(this.earlyNode)) {
+    if (this.earlyNode < 0 || clickWorld()?.nodes.has(this.earlyNode)) {
       this.held = [];
       return false;
     }
@@ -1327,7 +1333,7 @@ export class Tools {
   /** T-2404: a click near a held segment waits for their state (at most 3 s), so its snap can find them */
   async heldLanded() {
     const node = this.earlyNode, until = performance.now() + 3000;
-    while (node >= 0 && !world.peek()?.nodes.has(node) && performance.now() < until) await new Promise((r) => setTimeout(r, 16));
+    while (node >= 0 && !clickWorld()?.nodes.has(node) && performance.now() < until) await new Promise((r) => setTimeout(r, 16));
   }
 
   /** T-4208: the camera moved: a track or station ghost's end follows the still pointer to the map spot now under it */
@@ -1433,7 +1439,7 @@ export class Tools {
    * are drawn, and chevrons where it would run one way. */
   ghostStrokes(a: PreviewAnswer) {
     let pts = a.pts, speeds = a.speeds, lanes: number | Uint8Array = a.lanes ?? 255;
-    const n = this.overlay.renderer.net, w = world.peek(), j = a.joins;
+    const n = this.pickNet, w = clickWorld(), j = a.joins;
     if (j && (j[0] || j[1]) && n && w && speeds && !speeds.some((v) => v < 0)) {
       const doubles = this.doubleEnds(w).ids, lines = new Map<number, Float32Array>();
       for (const k of [0, pts.length / 3 - 1]) {
@@ -1485,7 +1491,7 @@ export class Tools {
 
   lineClick(e: MapMouseEvent) {
     if (this.busStops?.active) return this.busStops.click(e.point.x, e.point.y, e.originalEvent.ctrlKey || e.originalEvent.metaKey);
-    const n = this.overlay.renderer.net;
+    const n = this.pickNet;
     if (!n) return;
     // a toggle marker (T-233, map/stopMarkers.ts) is on top of the station
     const marker = this.stops?.pick(e.point.x, e.point.y);
@@ -1522,7 +1528,7 @@ export class Tools {
     const id = lineDraft.peek().line, game = gameStamp.peek();
     if (id === null) return;
     if (!tier) {
-      const line = world.peek()?.save.lines.find((l) => Number(l.id) === id);
+      const line = clickWorld()?.save.lines.find((l) => Number(l.id) === id);
       // T-3474: the panel's rows are the stops its trains serve, which a guess matches only while they are the plan
       // (a shift-click on a stop keeps the row)
       const on = !!line?.stops.includes(String(station));
@@ -1535,14 +1541,14 @@ export class Tools {
     }).finally(() => {
       if (tier) return;
       this.stops?.settleClick(id, station);
-      const line = world.peek()?.save.lines.find((l) => Number(l.id) === id);
+      const line = clickWorld()?.save.lines.find((l) => Number(l.id) === id);
       settleRow(String(station), !!line && !line.planStops && line.stops.includes(String(station)), id);
     });
   }
 
   async toggle(station: number, id: number, game: number, tier?: StopTier, oneWay = false) {
     if (game !== gameStamp.peek()) return;
-    const line = world.peek()?.save.lines.find((l) => Number(l.id) === id);
+    const line = clickWorld()?.save.lines.find((l) => Number(l.id) === id);
     if (!line) return;
     const before = planStopsOf(line).map(Number);
     let change: Parameters<typeof edit>[0];
@@ -1577,7 +1583,7 @@ export class Tools {
     const a = await edit(change, false, false, "rows", game);
     if (!a.ok || game !== gameStamp.peek()) return;
     if (tool.peek() === "line" && lineDraft.peek().line === id) {
-      const latest = world.peek()?.save.lines.find((l) => Number(l.id) === id);
+      const latest = clickWorld()?.save.lines.find((l) => Number(l.id) === id);
       if (latest) lineDraft.value = { line: id, stops: planStopsOf(latest).map(Number) };
     }
     this.noteFast(id);
@@ -1589,7 +1595,7 @@ export class Tools {
   autoFast(id: number): boolean {
     const n = newLine.peek();
     if (n?.line !== id) return false;
-    const fast = world.peek()?.lineStats[String(id)]?.fast;
+    const fast = clickWorld()?.lineStats[String(id)]?.fast;
     if (fast !== undefined && fast !== n.fast) {
       newLine.value = null;
       return false;
@@ -1599,7 +1605,7 @@ export class Tools {
 
   /** T-1899: the type the new line's stops gave it, to tell a later change by hand. */
   noteFast(id: number) {
-    const fast = world.peek()?.lineStats[String(id)]?.fast;
+    const fast = clickWorld()?.lineStats[String(id)]?.fast;
     if (newLine.peek()?.line === id && fast !== undefined) newLine.value = { line: id, fast };
   }
 
@@ -1636,7 +1642,7 @@ export class Tools {
   /** the spots the pointer's candidates (`alts`) are tried at, and the world and platform they were tried in */
   altsKey(h: Spot | null = this.hover as Spot | null) {
     const spots=this.alts.length?this.alts:h?[h]:[];
-    return spots.map((h)=>`${h.kind==="node"?`n${h.node}`:`e${h.edge}`}:${h.lx.toFixed(1)}:${h.ly.toFixed(1)}`).join("|")+`:${buildPlatform.peek()}:${buildTramPlatform.peek()}:${stationOneTrack.peek()}:${world.peek()?.version}`;
+    return spots.map((h)=>`${h.kind==="node"?`n${h.node}`:`e${h.edge}`}:${h.lx.toFixed(1)}:${h.ly.toFixed(1)}`).join("|")+`:${buildPlatform.peek()}:${buildTramPlatform.peek()}:${stationOneTrack.peek()}:${clickWorld()?.version}`;
   }
 
   /** the worker's answer for the pointer's candidates, else the layout's guess */

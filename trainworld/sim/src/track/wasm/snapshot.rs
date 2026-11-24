@@ -53,18 +53,17 @@ impl TrackApi {
     /// Per live edge, 10 numbers: id, a, b, tracks, constructed (1/0), length m, cost US$M,
     /// lowest speed limit km/h, lowest and highest level.
     pub fn edges_info(&self) -> Vec<f64> {
-        let n = &self.w.net;
         let mut out = vec![];
-        for e in 0..n.edge_count() as u32 {
-            if !n.edge_ok(e) {
-                continue;
-            }
-            let i = e as usize;
-            // the track's own: the player's limit on it (T-3405) is not a curve
-            let vmin = n.edge_limits(e, n.v_kind_cap(e)).iter().map(|l| l.v).fold(n.v_kind_cap(e), f64::min);
-            let zs = n.edge_vert(e).iter().map(|v| v[1]);
-            let (lo, hi) = zs.fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), z| (a.min(z), b.max(z)));
-            out.extend([e as f64, n.edge_a[i] as f64, n.edge_b[i] as f64, n.edge_tracks[i] as f64, n.edge_built[i] as u8 as f64, n.edge_len[i], n.edge_cost[i], vmin * 3.6, (lo / LEVEL_H).round(), (hi / LEVEL_H).round()]);
+        for e in 0..self.w.net.edge_count() as u32 {
+            self.edge_info_into(e, &mut out);
+        }
+        out
+    }
+    /// T-4214: `edges_info`'s numbers for the live edges among `ids` (a gone one has none).
+    pub fn edges_info_of(&self, ids: &[u32]) -> Vec<f64> {
+        let mut out = vec![];
+        for &e in ids {
+            self.edge_info_into(e, &mut out);
         }
         out
     }
@@ -94,18 +93,20 @@ impl TrackApi {
     /// track runs out with no way in, T-3164), platform length (0 = no station), station
     /// constructed, heading (rad).
     pub fn nodes_info(&self) -> Vec<f64> {
-        let n = &self.w.net;
         let mut out = vec![];
-        let busy = crate::track::capacity::conflict_nodes(n, &self.w.svc.lines);
-        for k in 0..n.node_count() as u32 {
-            if !n.node_ok(k) {
-                continue;
-            }
-            let i = k as usize;
-            // T-3745: a built junction shows only where two moves some line runs cross; a blueprint one always
-            let crosses = crate::track::capacity::junction_crosses(n, k) && (n.built_ports(k) < 3 || busy.binary_search(&k).is_ok());
-            let flags = n.node_flying[i] as u8 | (crosses as u8) << 1 | n.node_unusable(k) << 2;
-            out.extend([k as f64, n.node_x[i], n.node_y[i], n.node_level[i] as f64, n.node_ports[i].n as f64, n.built_ports(k) as f64, flags as f64, n.node_platform[i] as f64, n.node_built[i] as u8 as f64, n.node_heading[i]]);
+        let busy = crate::track::capacity::conflict_nodes(&self.w.net, &self.w.svc.lines);
+        for k in 0..self.w.net.node_count() as u32 {
+            self.node_info_into(k, &mut |k| busy.binary_search(&k).is_ok(), &mut out);
+        }
+        out
+    }
+    /// T-4214: `nodes_info`'s numbers for the live nodes among `ids` (a gone one has none); the lines' conflict nodes
+    /// are worked out only for a built junction among them.
+    pub fn nodes_info_of(&self, ids: &[u32]) -> Vec<f64> {
+        let mut out = vec![];
+        let mut busy: Option<Vec<u32>> = None;
+        for &k in ids {
+            self.node_info_into(k, &mut |k| busy.get_or_insert_with(|| crate::track::capacity::conflict_nodes(&self.w.net, &self.w.svc.lines)).binary_search(&k).is_ok(), &mut out);
         }
         out
     }
@@ -288,4 +289,33 @@ impl TrackApi {
         out
     }
 
+}
+
+impl TrackApi {
+    /// `edges_info`'s 10 numbers for edge `e`, if it is live.
+    fn edge_info_into(&self, e: u32, out: &mut Vec<f64>) {
+        let n = &self.w.net;
+        if (e as usize) >= n.edge_count() || !n.edge_ok(e) {
+            return;
+        }
+        let i = e as usize;
+        // the track's own: the player's limit on it (T-3405) is not a curve
+        let vmin = n.edge_limits(e, n.v_kind_cap(e)).iter().map(|l| l.v).fold(n.v_kind_cap(e), f64::min);
+        let zs = n.edge_vert(e).iter().map(|v| v[1]);
+        let (lo, hi) = zs.fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), z| (a.min(z), b.max(z)));
+        out.extend([e as f64, n.edge_a[i] as f64, n.edge_b[i] as f64, n.edge_tracks[i] as f64, n.edge_built[i] as u8 as f64, n.edge_len[i], n.edge_cost[i], vmin * 3.6, (lo / LEVEL_H).round(), (hi / LEVEL_H).round()]);
+    }
+
+    /// `nodes_info`'s 10 numbers for node `k`, if it is live; `busy`: whether a line's moves conflict there.
+    fn node_info_into(&self, k: u32, busy: &mut dyn FnMut(u32) -> bool, out: &mut Vec<f64>) {
+        let n = &self.w.net;
+        if (k as usize) >= n.node_count() || !n.node_ok(k) {
+            return;
+        }
+        let i = k as usize;
+        // T-3745: a built junction shows only where two moves some line runs cross; a blueprint one always
+        let crosses = crate::track::capacity::junction_crosses(n, k) && (n.built_ports(k) < 3 || busy(k));
+        let flags = n.node_flying[i] as u8 | (crosses as u8) << 1 | n.node_unusable(k) << 2;
+        out.extend([k as f64, n.node_x[i], n.node_y[i], n.node_level[i] as f64, n.node_ports[i].n as f64, n.built_ports(k) as f64, flags as f64, n.node_platform[i] as f64, n.node_built[i] as u8 as f64, n.node_heading[i]]);
+    }
 }

@@ -74,6 +74,31 @@ export class PlatformLines {
     const kept = this.kept.get(node);
     if (kept && kept.platform === platform && kept.x === x && kept.y === y && kept.k === k
       && kept.ways.length === ways.length && kept.ways.every((w, i) => w === ways[i])) return kept.line;
+    const line = PlatformLines.lineOf(ways, x, y, platform, k);
+    if (line) this.kept.set(node, { platform, x, y, k, ways, line });
+    return line;
+  }
+
+  /** T-4214: `of` for the model as an edit just left it, before the next state's rows are synced: the edges `changed`
+   * since (their ends now, null when gone) in place of those kept. Nothing is kept from it (the edit's patch, clockPatch.ts). */
+  peekOf(a: TrackApi, node: number, x: number, y: number, platform: number, k: number, changed: ReadonlyMap<number, readonly [number, number] | null>): Float32Array | undefined {
+    if (platform <= 0) return undefined;
+    const ids = (this.at.get(node) ?? []).filter((id) => !changed.has(id));
+    for (const [id, ends] of changed) if (ends && (ends[0] === node || ends[1] === node)) ids.push(id);
+    if (!ids.length) return undefined;
+    const on = this.onEdge;
+    ids.sort((p, q) => (on.get(q) ?? 0) - (on.get(p) ?? 0) || p - q);
+    const ways = ids.map((id) => {
+      const ends = changed.get(id);
+      if (!ends) return this.way(a, node, id);
+      const [f, r] = PlatformLines.both(a, id);
+      return ends[0] === node ? f : r;
+    });
+    return PlatformLines.lineOf(ways, x, y, platform, k);
+  }
+
+  /** the platform line along `ways` (the first is the platform's track), as offsets from (x, y) */
+  private static lineOf(ways: Float64Array[], x: number, y: number, platform: number, k: number): Float32Array | undefined {
     const first = ways[0];
     if (first.length < 6) return undefined;
     const sh = platformShape(ways, 0, platform / 2 * k);
@@ -84,17 +109,19 @@ export class PlatformLines {
       line[o] = pts[i * 2] + ox;
       line[o + 1] = pts[i * 2 + 1] + oy;
     }
-    this.kept.set(node, { platform, x, y, k, ways, line });
     return line;
+  }
+
+  /** an edge's polyline from its a end and from its b end */
+  private static both(a: TrackApi, id: number): [Float64Array, Float64Array] {
+    const f = Float64Array.from(a.edge_render(id)), n = f.length / 3, r = new Float64Array(f.length);
+    for (let i = 0; i < n; i++) r.set(f.subarray((n - 1 - i) * 3, (n - i) * 3), i * 3);
+    return [f, r];
   }
 
   private way(a: TrackApi, node: number, id: number): Float64Array {
     let p = this.edgePts.get(id);
-    if (!p) {
-      const f = Float64Array.from(a.edge_render(id)), n = f.length / 3, r = new Float64Array(f.length);
-      for (let i = 0; i < n; i++) r.set(f.subarray((n - 1 - i) * 3, (n - i) * 3), i * 3);
-      this.edgePts.set(id, (p = [f, r]));
-    }
+    if (!p) this.edgePts.set(id, (p = PlatformLines.both(a, id)));
     return this.ends.get(id)?.[0] === node ? p[0] : p[1];
   }
 }

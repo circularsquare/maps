@@ -41,6 +41,7 @@ import { anchorMoves, drawnEdge, drawnLine, edgeDrawn, forget, game, hex, lineDr
 import { gameNow, lineDays, linesPeriods, loadLineDays, loadRegions, mergeLedger, putTodayGen, putTodayLast, regionEntries, regions, rounded, savedLineDays, savedRegions, sendCash, sendMoney, serviceLeadS, settle, today, todayGen, unsettleAfter } from "./clockMoney";
 import { afterLoadPanic, downTold, EDIT_UNDONE, kept, putDownTold, isPanic, keep, MODEL_DOWN, MODEL_RESTORED, modelDown, newModel, openFailReason, panicAfterEdit, panicLater, panicNow, panicOnLoad, panicWhy, putModelDown, putPanicAfterEdit, putPanicOnLoad, recover, SAVE_PANIC } from "./clockPanic";
 import { wordAfter, wordBefore } from "./clockWord";
+import { mapPatch, patchMiss } from "./clockPatch";
 import { diagramOn, patchMode, postDiagram, posted, postWhole, putDiagramOn, putDiagramWhole, putPatchMode, sender } from "./clockPost";
 import { achievements, api, applyRunFactors, AUTOSAVE_MS, city, clk, copyOf, dayPinned, dayShift, demandBuilt, demandFine, diagramCities, emptyTrack, epoch, failInPlace, fares, frameSpec, freezeCheckpoint, freezePort, freezeTimer, goals, guide, guideWanted, heldCharges, home, hourLedger, initIncoming, ledger, ledgerDay, lineNotes, lineShapes, loadHolidays, loan, loanOp, messages, modded, mode, newLineCars, newLineHeadway, newLineWeekendShare, opened, outlinesGot, outlinesIn, outlinesRead, packLngLat, packLocal, pageModded, peakC, placeLineCountries, pricesOf, putAchievements, putClk, putCopyOf, putDemandBuilt, putDemandFine, putDiagramCities, putDiagramInside, putEmptyTrack, putEpoch, putFares, putFreezeMemory, putFreezePort, putFreezeTimer, putGoals, putGuide, putGuideWanted, putHiddenLines, putHome, putHourLedger, putIncomePerHour, putInitIncoming, putLedger, putLineIncome, putLineNotes, putLinePoints, putLineRides, putLineShapes, putLineShares, putLoan, putMessages, putMidLoad, putModded, putMoneyFrozen, putNewLineCars, putNewLineHeadway, putNewLineWeekendShare, putOpened, putOutlinesRead, putPageModded, putPrices, putRidesPerHour, putRowsSent, putStars, putTiming, putTrackVersion, putUpkeepRegions, send, setMode, setStartZone, stars, startZone, syncHolidays, timing, trackVersion, withModded } from "./clockState";
 
@@ -1012,7 +1013,16 @@ async function handleMessage(msg: ToClock) {
     // T-4145: what the page can show of the edit, before its rows and network (a stop click's line path, T-4114)
     // T-4170: and whether a network follows (`later`'s `net` below: none for a service edit or a rename sent as rows)
     const noNet = service || (named && !msg.early && !msg.rows && rowsCanGo());
-    send({ kind: "applied", seq, word: wordAfter(api, op, applied, posted, before, charge), ...(noNet ? { noNet: true as const } : {}) });
+    const word = wordAfter(api, op, applied, posted, before, charge);
+    // T-4214: and the records it touched, which the page patches the map its tools click on with (none for an edit whose
+    // network is not drawn, a service edit's, a rename's or a stop click's: no click waits for a stop click, and its rows
+    // follow at once)
+    const tP = performance.now();
+    const patch = service || named || msg.rows ? undefined : mapPatch(api);
+    timing.patch = performance.now() - tP;
+    if (!patch) timing.noPatch = 1;
+    if (import.meta.env.DEV && !patch && !service && !named && !msg.rows) console.debug(`T-4214: no patch for ${op.op}: ${patchMiss}`);
+    send({ kind: "applied", seq, word, ...(noNet ? { noNet: true as const } : {}), ...(patch ? { patch } : {}) });
     saves.dirty = saves.edited = true; saves.editAt = Date.now();
     if (line !== undefined) { newLineShape(op, line); newLineFare(op, line); }
     // T-3581: a line deleted or brought back by an undo or redo has its fare multiple dropped or given back in the
@@ -1050,11 +1060,17 @@ async function handleMessage(msg: ToClock) {
     // T-4147: and a line edit's list and panel entries (`rowsFirst`), its network still to come
     const renamed = (named || rowsFirst(op)) && !early && !service && !msg.rows && sendRows();
     if (renamed) answer();
+    // T-4214: a map click's patched edit that cost nothing (`click`: a station, a delete) is answered now: the map the tools
+    // pick on holds it, so the tool waiting on the answer (a station's tries, a delete) lets the next click go. Any other
+    // edit is answered once `world` holds it, as before; a paid one waits for its state, whose world its money's split is
+    // read off (`chargeShares`).
+    const patched = !!patch && !!msg.click && !(charge > 0) && !early && !renamed && !stops;
+    if (patched) answer();
     // T-1407: the state, the trips and the boarding hour (and the answer, so the world is up to
     // date when it arrives) after the previews asked meanwhile
     // T-3803: answered already, or once a world holding it went (a rows state when an edit comes before its own state);
     // an early answer's money split waits for the next state the page takes
-    let answered = early || renamed, shares = early && charge > 0;
+    let answered = early || renamed || patched, shares = early && charge > 0;
     const rest = () => {
       // T-3758: a line's fare mode changes no train's run, yet demand reads it; T-3892: nor need a boat size (its riders, fares);
       // T-3915: nor BRT on a route with no road in town (its fares); T-3944: which a Construct turns on

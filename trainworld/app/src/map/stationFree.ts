@@ -149,7 +149,7 @@ export async function freeClick(tk: Tools, e: MapMouseEvent, nameFor: (px: numbe
   const shown = ahead(bad ? {} : { stations: [{ lx: p.mid.lx, ly: p.mid.ly, ways: p.ways, perM: p.perM, plat: p.plat, side: 0, tram: tram() }], track: [strokesFromParts(p.track, false, false)] });
   tk.place();
   const name = await nameFor(...tk.screen(p.mid.lx, p.mid.ly));
-  const r = await shown.send(() => edit({ op: "addStation", at: p.stationAt, platform: p.plat, name }, true, true));
+  const r = await shown.send(() => edit({ op: "addStation", at: p.stationAt, platform: p.plat, name }, true, true, "click"));
   if (r.ok) {
     tk.lastPlaced = toLngLat(p.mid.lx, p.mid.ly);
     say(tr("tools.blueprintStation", { name }));

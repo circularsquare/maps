@@ -11,7 +11,8 @@ import { t, tList } from "../i18n";
 import { bigDistance, distance } from "./format";
 import { deleteRun, noteDelete } from "./deleteHint";
 import { ask, selection } from "./ui";
-import { edit, linesByNum, say, stationsByNum, world } from "./world";
+import { edit, linesByNum, say, stationsByNum } from "./world";
+import { clickWorld } from "../map/clickMap";
 import { planStopsOf } from "./types";
 
 /** `bus`: a bus line by its number, route and line together; `building` a station building by its id (T-2218). */
@@ -21,7 +22,7 @@ export type Removable = { kind: "track"; edge: number } | { kind: "station"; nod
  * would leave at a bare end, half its platform and 4 m stay, so the station keeps its place; the
  * rule of the track model's `station_trim_ops` (sim/src/track/wasm/links.rs). */
 export function stationTrim(edge: number): [number, number] {
-  const w = world.peek();
+  const w = clickWorld();
   const e = w?.edges.find((x) => x.id === edge);
   if (!w || !e || e.crossover || e.a === e.b) return [0, 0];
   const keep = (id: number) => {
@@ -35,7 +36,7 @@ export function stationTrim(edge: number): [number, number] {
 /** T-2797: the station whose short end piece this is, or null: a piece from a station to a bare end
  * that a removal would only lay back. The track model's `holds_station` (links.rs) is the same rule. */
 export function stationStub(edge: number): number | null {
-  const w = world.peek();
+  const w = clickWorld();
   const e = w?.edges.find((x) => x.id === edge);
   if (!w || !e || e.crossover || e.a === e.b) return null;
   const bare = (id: number) => {
@@ -52,7 +53,7 @@ export function stationStub(edge: number): number | null {
 const BIG_DELETE_M = 50_000, BIG_DELETE_SHARE = 0.1, BIG_DELETE_FLOOR_M = 5_000;
 
 export function isBigDelete(lengthM: number): boolean {
-  const w = world.peek();
+  const w = clickWorld();
   if (!w || lengthM <= 0) return false;
   const total = w.edges.reduce((s, e) => s + e.lengthM, 0);
   return lengthM > Math.max(BIG_DELETE_FLOOR_M, Math.min(BIG_DELETE_M, total * BIG_DELETE_SHARE));
@@ -67,7 +68,7 @@ export function removeQuestion(what: string, built: boolean, big: boolean): { te
 /** What would go, in words ("1.2 km of track", "W 42nd St station", "the flyover"), and whether
  * it is constructed; null if it is not there any more. */
 export function describeRemovable(r: Removable): { what: string; built: boolean } | null {
-  const w = world.peek();
+  const w = clickWorld();
   if (!w) return null;
   if (r.kind === "track") {
     const e = w.edges.find((x) => x.id === r.edge);
@@ -98,7 +99,7 @@ export function describeRemovable(r: Removable): { what: string; built: boolean 
  * that loses a stop or stops running. */
 export async function lineEffects(edges: number[], stations: number[]): Promise<{ line: number; text: string }[]> {
   const d = await queryClock({ what: "removal", edges, stations });
-  const w = world.peek();
+  const w = clickWorld();
   if (!d || !w) return [];
   const gone = new Set(stations);
   const byNum = stationsByNum(w), lineOf = linesByNum(w);
@@ -128,7 +129,7 @@ function selected(r: Removable): boolean {
   const s = selection.peek();
   if (r.kind === "track") return s?.kind === "track" && s.edge === r.edge;
   if (r.kind === "station") return s?.kind === "station" && s.station === String(r.node);
-  if (r.kind === "bus") return (s?.kind === "line" || s?.kind === "train") && linesByNum(world.peek()!).get(r.line)?.id === s.line;
+  if (r.kind === "bus") return (s?.kind === "line" || s?.kind === "train") && linesByNum(clickWorld()!).get(r.line)?.id === s.line;
   return false;
 }
 
@@ -150,7 +151,7 @@ export async function removeThing(r: Removable, now = false) {
     const row = deleteRun();
     if (was) selection.value = null;
     // T-4146: track and stations gone at the click, the lines over them as the page can tell (map/stationAhead.ts)
-    const a = await edit(opOf(r));
+    const a = await edit(opOf(r), false, false, "click");
     if (!a.ok) {
       if (was && selection.peek() === null) selection.value = was;
       if (!a.issues.length) say(t("remove.failed"), true);
@@ -159,7 +160,7 @@ export async function removeThing(r: Removable, now = false) {
     noteDelete(row);
     say(t("remove.done", { what: d.what }));
   };
-  const e = r.kind === "track" ? world.peek()?.edges.find((x) => x.id === r.edge) : undefined;
+  const e = r.kind === "track" ? clickWorld()?.edges.find((x) => x.id === r.edge) : undefined;
   const [ka, kb] = r.kind === "track" ? stationTrim(r.edge) : [0, 0];
   if (now) return go();
   const big = !!e && !e.crossover && isBigDelete(e.lengthM - ka - kb);

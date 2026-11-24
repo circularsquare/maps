@@ -138,10 +138,22 @@ impl TrackApi {
     /// arrows, a station's platform line) is the caller's to find.
     pub fn take_touched(&mut self) -> Vec<u32> {
         let t = std::mem::replace(&mut self.touched, Touched { edges: vec![], nodes: vec![], all: false });
-        if t.all {
+        Self::touched_list(t.edges, t.nodes, t.all)
+    }
+
+    /// T-4214: `take_touched` without taking: what the edits since the last take touched, for the page's clickable map
+    /// patched right after an edit (workers/clockPatch.ts), while the next state still reads them.
+    pub fn peek_touched(&self) -> Vec<u32> {
+        let t = &self.touched;
+        Self::touched_list(t.edges.clone(), t.nodes.clone(), t.all)
+    }
+}
+
+impl TrackApi {
+    fn touched_list(mut e: Vec<u32>, mut n: Vec<u32>, all: bool) -> Vec<u32> {
+        if all {
             return vec![u32::MAX];
         }
-        let (mut e, mut n) = (t.edges, t.nodes);
         for v in [&mut e, &mut n] {
             v.sort_unstable();
             v.dedup();

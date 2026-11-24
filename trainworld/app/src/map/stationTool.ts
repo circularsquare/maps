@@ -12,6 +12,7 @@ import { stationKind, stationOnTram, tool } from "../game/ui";
 import { CORRIDOR_M } from "./busLayer";
 import { newStationName, trackDirection } from "./stationNames";
 import { edit, rightHand, say, stationNames, world } from "../game/world";
+import { clickWorld } from "./clickMap";
 import { type ClockEdge, type ClockNode } from "../workers/protocol";
 import { toLngLat, toLocal } from "./geo";
 import { type TrackEdge } from "../game/types";
@@ -31,7 +32,7 @@ import type { Tools } from "./tools";
 
 export function nameKey(tk: Tools, px: number, py: number) {
   const c = tk.map.getCenter();
-  return `${px},${py},${c.lng},${c.lat},${tk.map.getZoom()},${tk.map.getBearing()},${tk.map.getPitch()},${world.peek()?.version}`;
+  return `${px},${py},${c.lng},${c.lat},${tk.map.getZoom()},${tk.map.getBearing()},${tk.map.getPitch()},${clickWorld()?.version}`;
 }
 
 export function nameAhead(tk: Tools, px: number, py: number) {
@@ -45,7 +46,7 @@ export function nameAhead(tk: Tools, px: number, py: number) {
 
 /** T-3381: the name the station placed at `at` shows (a station joining a complex takes its name), not the one made for it */
 export function shownNameAt(_tk: Tools, lng: number, lat: number): string | undefined {
-  const w = world.peek();
+  const w = clickWorld();
   if (!w) return undefined;
   const k = Math.cos((lat * Math.PI) / 180);
   let best: string | undefined, bd = 4e-8;
@@ -77,7 +78,7 @@ export function metresPerPx(tk: Tools, lat: number): number {
 /** T-3999: the nearest point within `m` ground metres on a bus line's route (no ferry's), a point 10 m along it and
  * how far off it is; null where none is. */
 function busRouteNear(lng: number, lat: number, m: number, ferry = false): { at: { lng: number; lat: number }; along: { lng: number; lat: number }; d: number } | null {
-  const w = world.peek();
+  const w = clickWorld();
   if (!w) return null;
   const kx = M_PER_DEG * Math.cos((lat * Math.PI) / 180), ky = M_PER_DEG;
   let best = m, out: ReturnType<typeof busRouteNear> = null;
@@ -151,7 +152,7 @@ export async function stationClick(tk: Tools, e: MapMouseEvent) {
     const key = nameKey(tk, e.point.x, e.point.y), named = tk.named?.key === key && tk.map.areTilesLoaded() ? tk.named.name : null;
     tk.named = null;
     const name = await (named ?? nameFor(tk, e.point.x, e.point.y));
-    const r = await shown.send(() => edit({ op: "addBrtStation", x: b.x, y: b.y, heading: b.heading, name }, true, true));
+    const r = await shown.send(() => edit({ op: "addBrtStation", x: b.x, y: b.y, heading: b.heading, name }, true, true, "click"));
     if (r.ok) {
       tk.lastPlaced = toLngLat(b.lx, b.ly);
       say(tr("tools.blueprintStation", { name: shownNameAt(tk, tk.lastPlaced[0], tk.lastPlaced[1]) ?? name }));
@@ -181,7 +182,7 @@ export async function stationClick(tk: Tools, e: MapMouseEvent) {
   const stationAt1 = (p: Exclude<Snap, { kind: "free" }>) => { const o = stationAt(p); return { ...o, at: { ...o.at, ...one } }; };
   const r = await firstAccepted(tries, async (p) => {
     if (tried++ === 1) shown.set({});
-    const a = await shown.send(() => edit(stationAt1(p), true, true));
+    const a = await shown.send(() => edit(stationAt1(p), true, true, "click"));
     return a.ok ? null : a.issues;
   }, (p) => roomSnap(tk, p), () => false);
   if (!r.spot) shown.drop();
@@ -263,7 +264,7 @@ export function lastPlacedName(tk: Tools): { name: string; lng: number; lat: num
   const p = tk.lastPlaced;
   if (!p) return null;
   let best: { name: string; lng: number; lat: number } | null = null, bestD = 30;
-  for (const s of world.peek()?.save.stations ?? []) {
+  for (const s of clickWorld()?.save.stations ?? []) {
     const d = metresBetween(p[0], p[1], s.lng, s.lat);
     if (d < bestD) (bestD = d), (best = s);
   }
@@ -276,9 +277,9 @@ export function lastPlacedName(tk: Tools): { name: string; lng: number; lat: num
 export function nameFor(tk: Tools, px: number, py: number): Promise<string> {
   const s = tk.snap(px, py, tk.map.unproject([px, py]));
   const [lng, lat] = toLngLat(s.lx, s.ly);
-  const net = tk.overlay.renderer.net;
+  const net = tk.pickNet;
   const track = net ? trackDirection(net, ...toLocal(lng, lat, net.anchor)) : null;
-  return newStationName(tk.map, lng, lat, track, () => new Set(world.peek()?.save.stations.map((st) => st.name) ?? []));
+  return newStationName(tk.map, lng, lat, track, () => new Set(clickWorld()?.save.stations.map((st) => st.name) ?? []));
 }
 
 export function el(tk: Tools, i: number, cls: string): HTMLDivElement {
@@ -331,7 +332,7 @@ export function ghostPath(tk: Tools, el: SVGPathElement, shape: StationShape) {
 }
 
 export function stationGhost(tk: Tools, h: Exclude<Snap,{kind:"free"}>) {
-  const n=tk.overlay.renderer.net,w=world.peek();
+  const n=tk.pickNet,w=clickWorld();
   if (!n || !w) return;
   const candidates=h.kind==="edge"?[h.edge]:w.edges.filter(e=>e.a===h.node||e.b===h.node).map(e=>e.id);
   const usage=new Map<number,Set<number>>();
@@ -383,12 +384,12 @@ export function outsideSide(tk: Tools, h: Exclude<Snap,{kind:"free"}>, ends: Tra
   if (at.some((e)=>splitsAt(e, e.a===node?0:1, { platform: 1, one: 0 } as unknown as ClockNode))) return 0;
   const others=(n: number): readonly ClockEdge[] => {
     if (n===node) return at;
-    const w=world.peek();
+    const w=clickWorld();
     return (w?.edges ?? []).filter((e)=>(e.a===n||e.b===n)&&!(h.kind==="edge"&&e.id===h.edge)).map((e)=>clock(e));
   };
   return stationOutside(node, platformEdge, others, (n,id)=>{
     if (n===node) return way(n,id);
-    const e=world.peek()?.edges.find((x)=>x.id===id), p=tk.overlay.renderer.net?.edgePts.get(id);
+    const e=clickWorld()?.edges.find((x)=>x.id===id), p=tk.pickNet?.edgePts.get(id);
     return !e||!p?new Float32Array(0):e.a===n?p:reversed(p);
   }, sh.ax, sh.ay, rightHand.peek()===false);
 }
@@ -443,7 +444,7 @@ export function stationRings(tk: Tools, h: Snap) {
 }
 
 export function checkGhost(tk: Tools) {
-  const h=tk.hover, w=world.peek(), n=tk.overlay.renderer.net;
+  const h=tk.hover, w=clickWorld(), n=tk.pickNet;
   if (!h || h.kind==="free" || !w || !n) return;
   const key=tk.altsKey(h);
   if (key===tk.guess?.key) return;
@@ -503,7 +504,7 @@ export function checkGhost(tk: Tools) {
 
 export function layout(tk: Tools, w: NonNullable<ReturnType<typeof world.peek>>) {
   if (tk.lay?.version===w.version) return tk.lay;
-  const net=tk.overlay.renderer.net, marks=net?.marks, crossings=new Map<number, number[]>();
+  const net=tk.pickNet, marks=net?.marks, crossings=new Map<number, number[]>();
   const lay=layoutOf(w.edges,w.nodes,{
     crossingsOn:(e)=>{
       let out=crossings.get(e);
@@ -532,7 +533,7 @@ export function layout(tk: Tools, w: NonNullable<ReturnType<typeof world.peek>>)
 
 /** The spots near an edge spot where the platform may have room (`roomNear`, T-671, T-1870). */
 export function roomSnap(tk: Tools, h: Spot): Spot[] {
-  const w=world.peek(), net=tk.overlay.renderer.net, pts=h.kind==="edge"?net?.edgePts.get(h.edge):null;
+  const w=clickWorld(), net=tk.pickNet, pts=h.kind==="edge"?net?.edgePts.get(h.edge):null;
   if (!w || !net || !pts || pts.length<6 || h.kind!=="edge") return [];
   return roomNear({edge:h.edge,frac:fractionAlong(pts,h.lx,h.ly)},tk.platFor(h),layout(tk, w)).flatMap((c):Spot[]=>{
     if (c.kind==="node") {
