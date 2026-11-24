@@ -6,8 +6,10 @@ diary notes/handoff-log.md. Her time UTC-5.
 
 ## In flight (maps-06's agents; reports reach the inbox)
 - 0.4.6: she says when to publish; never ask. 8800 = c0d31916. On master since: T-4204 s2, T-4209, T-4213 bench gates.
-  0.4.6 waits for (her word, "yes want all"): settle T-4194 opt 1+2 (agent settle1, tree settle: widen to 0.25 for
-  headway lines only so T-3931's test passes; jwxidghd stop add 11-12 s to 2.3-2.7 s; Asia lines up to 3.5%);
+  0.4.6 waits for (her word, "yes want all"): settle T-4194 (tree settle, reported 17:10): headway-only 0.25 loses the
+  gain (jwxidghd circling lines are count lines: stop add 8.5-9.7 s, was 11-12; 0.25 on all lines gave 2.3-2.7 s but
+  moves T-3931's express timetable so its test fails). Decide: 0.25 on all lines + loosen T-3931 (agent's pick, ask
+  her: it changes a timetable), or ship option 1 only;
   T-4212 0 riders after "loaded" (agent zeroriders reported 17:10: not reproduced on fresh profile, old-build figures,
   Montana, Asia; suspects: no zone needed solving yet / packs failed; needs her diagnostics from such a load; notes in
   tree zeroriders, land them; decide whether it still blocks 0.4.6); stalefigs T-4202 s2 (done in
