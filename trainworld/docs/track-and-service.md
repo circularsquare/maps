@@ -2232,12 +2232,15 @@ per person and does not change who travels: demand still decides that (SPEC 4).
   staying aboard join the first stop's queue when their train arrives there, ahead of later
   arrivals, so they leave on that run's next departure, normally the same train after its hold (a
   second pass of the account). In the books they leave and board again there.
-- **Riders go another way** (T-1067, T-1255; `WAIT_FOR_ROOM_S`, `GIVE_UP_S`, `WAITING_CAP`): a
+- **Riders go another way** (T-1067, T-1255, T-4052; `WAIT_FOR_ROOM_S`, `GIVE_UP_S`, `LineSvc::waiting_cap`): a
   rider comes and waits only for a train with room within 30 minutes. As each train leaves, one
   platform side (a direction of a line at a stop) holds whoever this train and every train due in
   the next 30 minutes would take (this train's room each; the gap since the last train stands for
-  the headway), at most 5,000: whoever comes when it is full is turned away, the latest arrivals
-  first. Demand holds its riders to the same queue (docs/demand-kernel.md step 7), so on a line
+  the headway), at most what the stop holds, 5 m deep at 0.3 m² a rider: 5,000 on a station's or a port's
+  platform side (300 m, `WAITING_CAP`, whatever its platform), 200 at a bus stop, which has no platform (a
+  bus's 12 m, `BUS_STOP_WAITING`), 667 at a BRT station (its 40 m platform). Whoever comes when it is full is
+  turned away, the latest arrivals first. Demand holds its riders to the same queue, though not to what the
+  stop holds (docs/demand-kernel.md step 7), so on a line
   short of trains the platforms fill and every peak train leaves full, and the riders beyond those
   who ride (the free-flow pass's, at the stops where demand turned riders away) are the ones
   turned away. A rider whom full trains have still kept more
@@ -2413,7 +2416,8 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   (`K_TRUNK` in the point's kind, saved with it); a route from before T-2904 has no marks until it is redrawn.
 - **Riders**: a third of a train car (T-2919; Anita, 2026-11-09): 53 at the rated load, 80 at crush,
   15 seats, so crowding is counted and shown as a train's (`BUS_CRUSH`, demand's `BUS_CARS`); the
-  boarding account keeps no platform crowd at its stops that are no station.
+  boarding account keeps no platform crowd at its stops that are no station, and a stop holds at most 200
+  waiting each way, a BRT station 667 (6.6, T-4052).
 - **Street speeds**: a zone's pack gives its cells' people and jobs, the zone of each cell and the zones'
   squares and land, which the clock worker fetches as ranges of the `.bin` with the masks of the view and
   of edits (and for the zones a bus route is drawn or loaded in) and `TrackApi::add_pack_streets` turns into

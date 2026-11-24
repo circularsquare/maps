@@ -165,6 +165,16 @@ impl LineSvc {
         }
         r.nodes.get(*r.stop_idx.get(k)? as usize).copied()
     }
+    /// T-1067, T-4052: the most riders waiting at stop `k` of run `run`: a platform side's `WAITING_CAP` at a
+    /// station or a port; at a bus line's stop, which has no platform, `BUS_STOP_WAITING`, or `BRT_STATION_WAITING`
+    /// at a BRT station.
+    pub fn waiting_cap(&self, net: &Network, run: usize, k: usize) -> f64 {
+        use super::boarding::{BRT_STATION_WAITING, BUS_STOP_WAITING, WAITING_CAP};
+        let Some(plan) = self.bus.as_ref().filter(|_| !self.ferry) else { return WAITING_CAP };
+        let n = plan.stops.len();
+        let at = plan.stops.get(if run == 0 { k } else { n.wrapping_sub(1 + k) }).and_then(|s| s.station);
+        if at.is_some_and(|s| net.is_brt_station(s)) { BRT_STATION_WAITING } else { BUS_STOP_WAITING }
+    }
 }
 
 impl LineSvc {

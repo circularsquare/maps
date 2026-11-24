@@ -10,7 +10,9 @@ A ride counts one minute a minute until the train is 70% of the way to its rated
 
 People already on board keep their places, so the squeeze falls on the stops down the line.
 
+**How many can wait.** The crowd on a platform stops at 5,000 each way. A bus stop has no platform, only a bus's length of sidewalk, so its crowd stops at 200, and a BRT station's at 667.
+
 How busy it gets depends on the hour: see [rush hours](rush-hours.md). This all feeds into [perceived minutes](perceived-minutes.md).
 
-Exact rule: `docs/demand-kernel.md` "Loading and crowding". These are train cars. A bus or a boat holds its own number.
-In the code: **main** `sim/src/demand/kernel/assign.rs` `crowd_factors`; also `sim/src/demand/kernel/stalls.rs` `left_behind`, `capacity_fit` `sim/src/demand/api.rs` `RATED_PER_CAR`, `CRUSH_PER_CAR`
+Exact rule: `docs/demand-kernel.md` "Loading and crowding"; how many wait, `docs/track-and-service.md` "6.6 Boarding: each train's load, each platform's crowd". These are train cars. A bus or a boat holds its own number.
+In the code: **main** `sim/src/demand/kernel/assign.rs` `crowd_factors`; also `sim/src/demand/kernel/stalls.rs` `left_behind`, `capacity_fit` `sim/src/demand/api.rs` `RATED_PER_CAR`, `CRUSH_PER_CAR` `sim/src/track/service.rs` `waiting_cap`

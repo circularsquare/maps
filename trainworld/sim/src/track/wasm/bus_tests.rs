@@ -469,6 +469,39 @@ fn a_bus_lines_rate_follows_its_headway() {
     }
 }
 
+/// T-4052: a bus stop holds what a bus's length of pavement holds (`BUS_STOP_WAITING`), as a platform side holds
+/// `WAITING_CAP`: with a bus every 2 minutes and three times their room coming all morning, its queue stays within it,
+/// and the riders the day's buses left at the stop stay under 1.5 a rider carried, as a station's do.
+#[test]
+fn a_crowded_bus_stop_holds_a_bus_stops_crowd() {
+    use crate::track::boarding::{BUS_STOP_WAITING, DAY, PERIODS};
+    let (mut a, b) = a_built_bus();
+    assert_eq!(a.set_auto_headway(b, 120, 900, 1800), 0, "{}", a.issues());
+    let n = a.w.svc.lines[b as usize].runs[0].stop_s.len();
+    assert!(n >= 3 && (0..n).all(|k| a.w.svc.lines[b as usize].waiting_cap(&a.w.net, 0, k) == BUS_STOP_WAITING), "{n} stops");
+    // run 0's riders board at its first stop for its last: 30 buses an hour of 80 full all morning
+    let per_hour = [30.0 * BUS_CRUSH as f32, 100.0, 100.0, 100.0, 10.0];
+    let (mut riders, mut come) = (vec![1.0f32; PERIODS], vec![]);
+    riders.extend([b as f32, n as f32]);
+    come.extend([b as f32, n as f32]);
+    for (p, &(h0, h1)) in PERIOD_HOURS.iter().enumerate() {
+        let x = per_hour[p] * (h1 - h0) as f32;
+        let (mut on, mut off, mut came) = (vec![0.0f32; 2 * n], vec![0.0f32; 2 * n], vec![0.0f32; 2 * n]);
+        (on[0], off[n - 1], came[0]) = (x, x, if p == 0 { 3.0 * x } else { x });
+        riders.extend(on.into_iter().chain(off));
+        come.extend(came);
+    }
+    a.set_riders(riders, 0);
+    a.set_arrivals(come, 0);
+    a.boarding.ensure(&a.w.net, &a.w.svc);
+    let ra = &a.boarding.accounts[0][b as usize].as_ref().unwrap().runs[0];
+    let most = (0..ra.deps.len()).map(|j| ra.queues.q_after(j * n)).fold(0.0f32, f32::max) as f64;
+    assert!(most > 0.0 && most <= BUS_STOP_WAITING - BUS_CRUSH + 1e-3, "{most} waiting as a bus leaves");
+    let v = a.boarding.today(&a.w.svc, 2.0 * DAY + 23.999 * 3600.0);
+    let (carried, left) = (v[3], v[5]);
+    assert!(left > 0.0 && left <= 1.5 * carried, "{left} left behind, {carried} carried");
+}
+
 /// T-3767: a bus line sets five rows as a rail line does: made in a game of five, its midday and
 /// afternoon start at its high headway; a midday headway or count edit moves the midday's rate at once
 /// (T-3704), and only the midday's running cost.

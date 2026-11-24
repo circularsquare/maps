@@ -6,7 +6,7 @@
 //! period (a simple in-period shape, below), and each train of the line, in the order it reaches the
 //! stop, lets off the line's share alighting there and takes on whoever is waiting, up to its crush
 //! load. Whoever does not fit waits for the next train of the same line and direction, until full
-//! trains have kept them `GIVE_UP_S` or the platform holds `WAITING_CAP` (T-1067). Trains do
+//! trains have kept them `GIVE_UP_S` or the stop is full (`LineSvc::waiting_cap`, T-1067). Trains do
 //! not block each other (no signals, SPEC 2.1), so each direction of each line is one independent
 //! loop over its departures and stops.
 //!
@@ -40,6 +40,12 @@ pub const GIVE_UP_S: f64 = 5400.0;
 /// 300 m platform's side 5 m deep holds at 0.3 m² a rider; whoever comes when it is full goes
 /// another way. `WAITING_CAP` in app/src/game/boarding.ts.
 pub const WAITING_CAP: f64 = 5000.0;
+/// T-4052: the same at a bus stop, which has no platform: a bus's length of sidewalk (`BUS_LEN_M`) as deep,
+/// 200. A bus (80 at crush) never fills a platform's 5,000, so the stop would hold every rider the next
+/// 30 minutes' buses take, dozens of busloads on a frequent line.
+pub const BUS_STOP_WAITING: f64 = super::bus::BUS_LEN_M * 5.0 / 0.3;
+/// T-4052: the same at a BRT station, along its platform (`BRT_STATION_PLATFORM`), about 667.
+pub const BRT_STATION_WAITING: f64 = BRT_STATION_PLATFORM as f64 * 5.0 / 0.3;
 /// T-1255: a rider comes and waits for a train with room only when the riders ahead all get on
 /// within this long (DECISIONS 2026-10-25); demand's cap (`kernel::capacity_fit`) is the same queue.
 pub const WAIT_FOR_ROOM_S: f64 = 1800.0;
@@ -1890,6 +1896,7 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
         let arrs = &arrivals[k];
         let carried = |t: f64| if k > 0 { 0.0 } else { carry_in[..carry_in.partition_point(|x| x.0 <= t)].last().map_or(0.0, |x| x.1) };
         let arr = Cum(&|t| arrs.cum(t) + carried(t));
+        let most = ls.waiting_cap(net, r, k);
         let mut q = 0.0f64;
         let mut c_prev = f64::NAN;
         let mut t_prev = f64::NEG_INFINITY;
@@ -1924,12 +1931,12 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
             // T-1067: whoever was waiting when a train left more than GIVE_UP_S ago has been left
             // behind that long, and went (a second's slack: a train exactly GIVE_UP_S on is still
             // taken); then the platform holds whoever this train and the trains due in the next
-            // WAIT_FOR_ROOM_S take, each with this one's room (T-1255), at most WAITING_CAP: the
+            // WAIT_FOR_ROOM_S take, each with this one's room (T-1255), at most what the stop holds: the
             // latest arrivals are turned away
             let cut = hist.partition_point(|x| x.0 < t - GIVE_UP_S - 1.0);
             let gave = if cut > 0 { (hist[cut - 1].1 - (c_now - q - a)).clamp(0.0, q) } else { 0.0 };
             let gap = if t_prev.is_finite() { t - t_prev } else { trips[i].hw };
-            let hold = (room * (1.0 + (WAIT_FOR_ROOM_S / gap.max(1.0) + 1e-9).floor())).min(WAITING_CAP);
+            let hold = (room * (1.0 + (WAIT_FOR_ROOM_S / gap.max(1.0) + 1e-9).floor())).min(most);
             let over = (q - gave + a - hold).clamp(0.0, a);
             turned += over;
             c_now -= over;
