@@ -11,12 +11,11 @@ diary notes/handoff-log.md. Her time UTC-5.
   (uncommitted); rewording review artifacts/trainworld/review/text-rewording-0.4.6.md.
 - 8800 = 4c096347 (14:41): + sparseload, stopclick stage (check8 PASS), routecycle T-4046, mode colours T-4205/T-4207
   (her pick B). Smoke on master before the publish.
-- T-4202 s1 landed a3a084b87 (19 s off opening a save inside a game); waits on her: old figures while trips calculate.
-- Running: settle T-4194 (Opus, options, tree settle, 6144), corridors T-4199 s1 (Opus, tree corridors, 6155), bigload
-  T-4202 s1 (Opus, tree bigload, 6156, asianita stress save; also times the less-detail setting), editpieces T-4148
-  (Sonnet, 6158), routecycle T-4046 (Sonnet, 6159, click again cycles all routes), check8, modecolors T-4205
-  (Sonnet, 6160), slowshow T-4204 (Opus, 6161, asianita-xuzhou.save: slow trips after edits; settle cause stays T-4194's).
-  8 agents, cores at cap 14: start no more until some finish.
+- Running (15:12): stalefigs T-4202 s2 (Opus 6163), ghostjump T-4208 (Opus 6164), editstops T-4147 (Sonnet 6165),
+  corridors2 T-4199 s2 (Opus, tree corridors, 6155; also NYC gain, her question), settle1 T-4194 opt 1 (Sonnet, tree
+  settle, 6144), restartkeep T-4204 s2 (Opus 6161, + 2 "updating demand" strings), timinglog T-4206 (Sonnet 6166).
+- Asks open: settle option 2 (T-4194), T-4204 next step, strings 0.4.6, speed trade-offs, T-4161 deploy, T-4153 s2.
+- T-4146 after editstops (same files). Rule 11-24: no bit-exact; report shifts, most riders within 1% (CLAUDE.md).
 - Held for her word: T-4153 s2 (tree editnetwork; add mm.ribbons.delete(e) at lineBands.ts:571 if landed); T-921 (tree
   commutechunks); T-4156 P3; T-4124 numbers first. T-4161 shonei-server 7bdd559 unpushed, deploy on her yes, then push.
 - T-4112's tw/track changelog item is parked in next-track.json: hide the port's duplicate at release.
@@ -39,7 +38,6 @@ diary notes/handoff-log.md. Her time UTC-5.
   free (T-4195 done 1474aeb4a: reserve_cores.ps1 -All -Loop 30 runs in maps-06's background, covers every session).
 - 11-24 13:12: Gemini Neon suggests rewordings for all changelog and player text; we reject incorrect or misleading ones,
   accept the rest, and list what changed for her. Only the 0.4.6 text (T-4196), not the rest of the game.
-- 11-23 00:0x: the drawn network rebuild is "the entire issue. this is what we should fix", not left to the track rework;
 - 11-23: your two top priorities are answering her and never letting agents overbook or collide; agents 2-8 run by
   load; size tasks to about an hour; you don't investigate, agents do; cycle at 500k day and night; no drafted player
   replies; report times as percent of the wait; she has no Apple devices.
