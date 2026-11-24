@@ -247,8 +247,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Goal: Every tree whose agent is done and whose work landed is removed with agent-tree.mjs; merged branches with no tree deleted. About 0.5 h.
   - Other: notes/gemini-review-triage-2026-11-24.md
 - T-4179 [P1] {L:memory} Win back demand memory lost since v0.4.5 (taking, 2026-11-24, agent memgrowth)
-  - Context: T-4157 (11-24): master against v0.4.5, demand memory +13% NYC, +12% Tokyo, +35% Belgrade; tab peak +0.5/+5/+9%. Cause not traced. Tree zoneopen (T-4051) happened to show NYC demand memory 1,163 to 1,003 MB.
-  - Goal: The growth traced, demand memory back to v0.4.5 on all three saves, same figures; and why coarse demand barely cuts memory (her question).
+  - Context: T-4157 (11-24): master against v0.4.5, demand memory +13% NYC, +12% Tokyo, +35% Belgrade; tab peak +0.5/+5/+9%. Cause not traced.  - Goal: The growth traced, demand memory back to v0.4.5 on all three saves, same figures; and why coarse demand barely cuts memory (her question).
   - Other: notes/T-4157.md
 - T-4182 [P2] {L:loading} Where a sparse save's load goes
   - Context: From T-921 (11-24): a western Montana save with 4 lines and 22 stations loads in 10-20 s, nearly all opening the zone; the trip calculation is under 1 s. Saved as perfbench/saves/t921-montana-4lines.save.
@@ -258,14 +257,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From batch check 11-24: on 8800, play.mjs start timed out four times waiting for the game to load (window.tw.client.lastLoad stays null; window.twDemand may be dev-only), so no check can load the real save on the shipped build.
   - Goal: play.mjs opens a new game and loads a save on 8800's production build.
   - Other: notes/batchcheck-2026-11-24-checksim.md
-- T-4184 [P2] {L:memory} The clock worker's next memory cuts on phones
+- T-4184 [P2] {L:memory} The clock worker's next memory cuts on phones (taking, 2026-11-24, agent phonemem2)
   - Context: From T-3939 (11-24): on a 13-zone phone save the clock worker is about 240 MB, WASM 93 MB after the boarding cut. The reporter's save had about 140 MB more JS and buffers, not yet named. Exact cuts found: stop order as 16-bit numbers (6.5 MB), the network draw cache (21 MB), the outlines copy (11.5 MB).
   - Goal: The reporter's extra 140 MB named and the biggest exact cuts made, same figures.
   - Other: notes/T-3939.md
-- T-4186 [P3] {L:edit-speed} Copy line's word and network disagree by one edge; "1 trains per hour"
-  - Context: From batch check 2 (11-24): t4170 logged "network after line N's word draws other edges than the word (48 drawn, 49 in the word)" for lines 1, 109, 110 when copying; the check passed. The reversal hover would read "1 trains per hour" at a limit of 1.x.
-  - Goal: The copy's word draws the same edges as the network; the hover reads naturally at 1.
-  - Other: notes/batchcheck-2026-11-24-check2.md
 - T-4141 [P3] {L:station-placement} Track placed by an edit call crossed the Hudson at ground level
   - Context: Seen by T-4112: a route entered through the game's edit call crossed the Hudson at ground level without a refusal, while pointer-drawn track nearby was bridged. Water may not have been loaded under part of it.
   - Other: notes/T-4112.md
@@ -277,8 +272,8 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Goal: Memory given back with no edit waiting on the restart: restart only when the tab is hidden or memory is tight (Gemini, 11-24). You, 11-24: not high priority, later.
   - Other: notes/T-4156.md in tree memwasm
 - T-4051 [P2] {L:loading} Opening a zone on a big save sits at 90% (taking, 2026-11-24, agent zoneopen2)
-  - Context: You, 11-22: Medellin sat at 90% about 2 minutes. Tree zoneopen (11-24): a zone opens about a third faster on your North America save (median 68 to 45 s); perf_bench nyc twice: map 5.2 to 8.8 s, trips +6%; fix before landing. The slow path (once in 9 opens) needs your newer save.
-  - Goal: A zone with figures already in takes the short path on your newer save.
+  - Context: You, 11-22: Medellin sat at 90% about 2 minutes. Tree zoneopen (ready to land, 11-24): opening a zone about 12% faster on your North America save (36 to 32 s), perf_bench nyc unchanged. The slow path reproduced on that save: 125 s against 35, when the new zone has no figures yet as its solve is sent.
+  - Goal: Opening Medellin on your North America save takes the short path every time, same figures.
   - Other: notes/T-4051.md
 - T-4074 [P4] {L:loading} Spain blocks the game during football matches
   - Context: You, 11-23: "ok can leave as p4". From T-4071 (feedback 1795377906): Spanish ISPs block Cloudflare's shared addresses during LaLiga matches by court order. anita.garden and data.anita.garden both sit on them; the account server does not. A fallback would be a data mirror plus a page off Cloudflare, 4-6 h plus an upload at every publish.
