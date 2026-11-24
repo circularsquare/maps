@@ -1,6 +1,9 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4180 [P1] {L:checks} Landing a tree loses work left in an unfinished merge (2026-11-24): land and finish refuse a tree with a merge, rebase, cherry-pick or revert in progress; committed merges are squashed to the net diff before the rebase.
+- T-4158 [P1] {L:solve-speed} Merge bus stops more aggressively for demand (2026-11-24): 500 m same-lines bus stop merge: Belgrade trips ready 981 to 762 s, demand heap 4.9 to 4.2 GB, rail trips -0.04%; NYC unchanged. notes/T-4158.md.
+- T-4170 [P1] {L:edit-speed} Every edit shows at the click through one path (2026-11-23): Every edit's show-at-click entry is made at one place, its send (pending.ts pendingSent), guessed from its op (game/editGuess.ts, one part per kind) plus what a caller drew; world.ts hook and per-line guesses gone; check t4170-one-path.mjs passes on NYC and Asia; speedups kept.
 - T-4177 [P1] {L:world-tooling} Stop using the friend's AWS account (2026-11-23): Friend's AWS profile removed from ~/.aws (anita-own kept), guard.py and awslib refuse that account, docs and memory say AWS means her own account; our empty bucket there deleted. Console steps for the IAM user are hers, optional. notes/T-4177.md.
 - T-4172 [P2] {L:world-tooling} AWS key limited to our bucket and machines (2026-11-23): closed without code: Moot: the friend's AWS account is retired (T-4177), so there is no key there to narrow.
 - T-4171 [P2] {L:checks} Rules for Gemini agents in maps (2026-11-23): GEMINI.md at the maps root: read the CLAUDE.md files, no AWS, no commits, worktrees via agent-tree, no shared-stash pops, shared files left to the orchestrator.

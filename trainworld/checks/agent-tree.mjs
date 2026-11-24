@@ -18,6 +18,9 @@
 // conflict stops. If master will not fast-forward over the main tree's uncommitted edits, the message names the files
 // and the command. `remove` and `finish` name the processes that may hold a tree (never kill them), refuse when this
 // shell's cwd is inside it, and clean up an empty folder a failed removal left (T-3665).
+// T-4180: `land` and `finish` stop (before changing anything) when the tree has a merge, rebase, cherry-pick or revert in
+// progress. Merge commits already on the branch (master merged into the tree) are handled: the branch is squashed to its net
+// diff against the merge base first, because the rebase would drop them and their work.
 // `land` takes everything changed under trainworld/ in the tree (committed on the branch or not), rebases it
 // onto master, squashes it into one commit and fast-forwards master to it. Master's own uncommitted edits
 // stay; git stops the fast-forward if one of them is in a file the commit touches. A landing that
@@ -353,11 +356,24 @@ function writeTrackLog(dir, items) {
   return n;
 }
 
+// T-4180: a tree mid-merge, mid-rebase or mid-cherry-pick must not be landed: committing it would make a merge commit
+// that the rebase below drops (lost work, 2026-11-24). Returns the problem as a sentence, or '' when the tree is clean.
+function inProgress(dir) {
+  const has = (n) => fs.existsSync(path.resolve(dir, git(dir, 'rev-parse', '--git-path', n)));
+  const found = [['MERGE_HEAD', 'a merge'], ['CHERRY_PICK_HEAD', 'a cherry-pick'], ['REVERT_HEAD', 'a revert'], ['rebase-merge', 'a rebase'], ['rebase-apply', 'a rebase']].filter(([n]) => has(n)).map(([, w]) => w);
+  if (!found.length) return '';
+  return `${dir} has ${[...new Set(found)].join(' and ')} in progress, so nothing was landed. Finish it there (resolve and commit, or --abort), then land again`;
+}
+// Merge commits on the branch since it left the target (an agent merged master into its tree). Rebase drops merges, so landTree
+// first squashes the branch to its net diff against the merge base, which is the work without what the merge brought in.
+const mergesOnBranch = (dir, into) => Number(git(dir, 'rev-list', '--merges', '--count', `${git(dir, 'merge-base', into, 'HEAD')}..HEAD`));
+
 // Puts the tree's work on the target as one commit; returns the trainworld/ files it changed.
 function landTree(dir, branch, message, coauthors = [], t = intoOf('master')) {
   if (!message) fail('land needs a commit message');
   if (!fs.existsSync(dir)) fail(`no tree ${dir}`);
   if (t.track && !hasBranch(t.branch)) fail(`no branch ${t.branch}`);
+  { const p = inProgress(dir); if (p) fail(p); }
   restoreGameJson(dir);
   if (t.track) {
     // a plain `land` has no changelog step: take the items here (finish already did and parked them)
@@ -373,6 +389,12 @@ function landTree(dir, branch, message, coauthors = [], t = intoOf('master')) {
   // The links are untracked junctions; `add trainworld` must not see them as content.
   gitLoud(dir, 'add', '--all', '--', 'trainworld');
   if (git(dir, 'diff', '--cached', '--name-only')) gitLoud(dir, 'commit', '-q', '-m', 'agent-tree: work in progress');
+  if (mergesOnBranch(dir, t.branch)) {
+    const n = mergesOnBranch(dir, t.branch);
+    gitLoud(dir, 'reset', '-q', '--soft', git(dir, 'merge-base', t.branch, 'HEAD'));
+    gitLoud(dir, 'commit', '-q', '-m', 'agent-tree: work in progress');
+    say(`${n} merge commit(s) on the branch: squashed its net diff against ${t.branch} before the rebase`);
+  }
   rebaseOnto(dir, t.branch);
   if (pending.length) {
     say(`changelog: ${writeTrackLog(dir, pending)} item(s) added to ${TRACK_LOG}`);
@@ -495,6 +517,7 @@ function finishTree(args) {
     for (const t of tasks.filter((t) => !state.doneTasks.includes(t))) todo.push(`venv\\Scripts\\python.exe trainworld/tools/tasks.py done ${t} --outcome "..."`);
     return todo;
   };
+  { const p = inProgress(dir); if (p) { console.error(`finish stopped before changing anything: ${p}`); process.exit(1); } }
   try {
     // 1: changelog items an agent put in its own tree
     step = 1;
@@ -531,6 +554,8 @@ function finishTree(args) {
     // 2: land
     step = 2;
     if (o.dry) {
+      const pr = inProgress(dir);
+      if (pr) throw new Error(pr);
       const ch = changes(dir, into);
       const tw = ch.tw.filter((f) => !(f === CHANGELOG && cl.exists && cl.differs));
       if (ch.other.length) throw new Error(`changes outside trainworld/, land them by hand:\n  ${ch.other.join('\n  ')}`);
@@ -683,7 +708,10 @@ if (cmd === 'new') {
   if (dry) {
     if (!fs.existsSync(dir)) fail(`no tree ${dir}`);
     if (t.track && !hasBranch(t.branch)) fail(`no branch ${t.branch}`);
+    { const p = inProgress(dir); if (p) fail(p); }
     const ch = changes(dir, t.branch);
+    const nm = mergesOnBranch(dir, t.branch);
+    if (nm) console.log(`${nm} merge commit(s) on the branch: the real land squashes its net diff first`);
     console.log(`(dry run) land ${branch} onto ${t.branch}: ${ch.tw.length} trainworld file(s), ${git(dir, 'rev-list', '--count', `${t.branch}..HEAD`)} branch commit(s) plus any uncommitted work${ch.other.length ? `; ${ch.other.length} change(s) outside trainworld/ would stop it` : ''}`);
     if (t.track && fs.existsSync(path.join(t.dir, '.git')) && git(t.dir, 'status', '--porcelain', '--untracked-files=no')) console.log(`${t.dir} has uncommitted edits: the real land would stop`);
     process.exit(0);

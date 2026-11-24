@@ -265,9 +265,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: T-4157 (11-24): master against v0.4.5, demand memory +13% NYC, +12% Tokyo, +35% Belgrade; tab peak +0.5/+5/+9%. Cause not traced. Tree zoneopen (T-4051) happened to show NYC demand memory 1,163 to 1,003 MB.
   - Goal: The growth traced, demand memory back to v0.4.5 on all three saves, same figures; and why coarse demand barely cuts memory (her question).
   - Other: notes/T-4157.md
-- T-4180 [P1] {L:checks} Landing a tree loses work left in an unfinished merge
-  - Context: 11-24, busmerge2: its agent merged master with --no-commit; finish committed that as a merge commit, the rebase onto master dropped it, and the tree was reset to master. Recovered from the reflog.
-  - Goal: finish and land refuse (or commit properly) when the tree has MERGE_HEAD or a merge commit, so no work can vanish.
 - T-4141 [P3] {L:station-placement} Track placed by an edit call crossed the Hudson at ground level
   - Context: Seen by T-4112: a route entered through the game's edit call crossed the Hudson at ground level without a refusal, while pointer-drawn track nearby was bridged. Water may not have been loaded under part of it.
   - Other: notes/T-4112.md
