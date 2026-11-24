@@ -1,0 +1,133 @@
+--- search_clean.rs	2026-11-23 18:31:55.090657500 -0500
++++ search_b.rs	2026-11-23 18:52:08.914223600 -0500
+@@ -728,7 +728,7 @@
+     for e in g.adj_off[b] as usize..g.adj_off[b + 1] as usize {
+         let r = g.adj_to[e] as usize - s;
+         if accepted(board, g, r) != 0.0 {
+-            let a = at.map_or(1.0, |i| share.val[i + 1 + j]);
++            let a = at.map_or(1.0, |i| share.share(i, j));
+             j += 1;
+             f += a;
+             w += a * g.rn_dx[r].hypot(g.rn_dy[r]);
+@@ -3280,22 +3280,33 @@
+ }
+ 
+ /// T-4041: the departures' shares at the nodes of a destination's strategy that accept two or
+-/// more (stations; change nodes from `Graph::n`): each node's first value in `val`, by node,
+-/// ascending. There the real expected wait (minutes), then each accepted departure's share in edge
+-/// order. A node accepting one departure is not listed: its share is 1, its wait half its headway.
++/// more (stations; change nodes from `Graph::n`), by node, ascending: `at` is (node, its first
++/// share in `val`). `wait` is the node's real expected wait over the station's wait factor, then
++/// `val` each accepted departure's share in edge order, in 65535ths (the last place kept to make
++/// them add to 1). A node accepting one departure is not listed: its share is 1, its wait half its
++/// headway.
+ #[derive(Clone, Default, PartialEq, Debug)]
+ pub struct Shares {
+     pub at: Box<[(u32, u32)]>,
+-    pub val: Box<[f32]>,
++    pub wait: Box<[f32]>,
++    pub val: Box<[u16]>,
+ }
+ 
++const SHARE_ONE: f32 = 65535.0;
++
+ impl Shares {
++    /// The place of node `v` in the lists.
+     #[inline]
+     pub fn find(&self, v: usize) -> Option<usize> {
+-        self.at.binary_search_by_key(&(v as u32), |x| x.0).ok().map(|i| self.at[i].1 as usize)
++        self.at.binary_search_by_key(&(v as u32), |x| x.0).ok()
++    }
++    /// The share of the `j`th departure at the node `find` gave `i`.
++    #[inline]
++    pub fn share(&self, i: usize, j: usize) -> f32 {
++        self.val[self.at[i].1 as usize + j] as f32 / SHARE_ONE
+     }
+     pub fn bytes(&self) -> usize {
+-        8 * self.at.len() + 4 * self.val.len()
++        8 * self.at.len() + 4 * self.wait.len() + 2 * self.val.len()
+     }
+     /// The real expected wait at node `v`, its accepted departures `dep` (`departures`).
+     #[inline]
+@@ -3303,7 +3314,7 @@
+         match dep {
+             [] => f32::INFINITY,
+             [(e, _)] => 30.0 / g.rn_tph[g.adj_to[*e as usize] as usize - g.n_st],
+-            _ => self.find(v).map_or_else(|| 30.0 / dep.iter().map(|&(e, _)| g.rn_tph[g.adj_to[e as usize] as usize - g.n_st]).sum::<f32>(), |i| self.val[i]),
++            _ => self.find(v).map_or_else(|| 30.0 / dep.iter().map(|&(e, _)| g.rn_tph[g.adj_to[e as usize] as usize - g.n_st]).sum::<f32>(), |i| self.wait[i]),
+         }
+     }
+ }
+@@ -3312,7 +3323,8 @@
+ #[derive(Default)]
+ pub(super) struct SharesBuild {
+     at: Vec<(u32, u32)>,
+-    val: Vec<f32>,
++    wait: Vec<f32>,
++    val: Vec<u16>,
+     /// `finish`'s scratch: per node its last entry in `at`
+     last: Vec<u32>,
+ }
+@@ -3320,16 +3332,26 @@
+ impl SharesBuild {
+     pub(super) fn clear(&mut self) {
+         self.at.clear();
++        self.wait.clear();
+         self.val.clear();
+     }
+     pub(super) fn push(&mut self, v: usize, wait: f32, share: &[f32]) {
+         self.at.push((v as u32, self.val.len() as u32));
+-        self.val.push(wait);
+-        self.val.extend_from_slice(share);
++        self.wait.push(wait);
++        let k0 = self.val.len();
++        self.val.extend(share.iter().map(|&x| (x * SHARE_ONE).round().clamp(0.0, SHARE_ONE) as u16));
++        // the rounding's remainder goes to the largest share, so they add to 1
++        let sum: i32 = self.val[k0..].iter().map(|&x| x as i32).sum();
++        if sum != 0 && sum != SHARE_ONE as i32 {
++            if let Some((j, _)) = self.val[k0..].iter().enumerate().max_by_key(|x| (*x.1, std::cmp::Reverse(x.0))) {
++                let x = self.val[k0 + j] as i32 + SHARE_ONE as i32 - sum;
++                self.val[k0 + j] = x.clamp(0, SHARE_ONE as i32) as u16;
++            }
++        }
+     }
+     pub(super) fn finish(&mut self) -> Shares {
+         if self.at.windows(2).all(|x| x[0].0 < x[1].0) {
+-            return Shares { at: self.at.as_slice().into(), val: self.val.as_slice().into() };
++            return Shares { at: self.at.as_slice().into(), wait: self.wait.as_slice().into(), val: self.val.as_slice().into() };
+         }
+         // each entry's values run to the next entry's, in push order; a node noted again (its late
+         // lines, `Search::late_fix`) keeps its last
+@@ -3341,6 +3363,7 @@
+             self.last[x.0 as usize] = k as u32;
+         }
+         let mut val = Vec::with_capacity(self.val.len());
++        let mut wait = Vec::with_capacity(n);
+         let mut out = Vec::with_capacity(n);
+         for (v, &k) in self.last.iter().enumerate() {
+             if k == NONE {
+@@ -3349,9 +3372,10 @@
+             let k = k as usize;
+             let (i, end) = (self.at[k].1 as usize, if k + 1 < n { self.at[k + 1].1 as usize } else { self.val.len() });
+             out.push((v as u32, val.len() as u32));
++            wait.push(self.wait[k]);
+             val.extend_from_slice(&self.val[i..end]);
+         }
+-        Shares { at: out.into(), val: val.into() }
++        Shares { at: out.into(), wait: wait.into(), val: val.into() }
+     }
+ }
+ 
+diff --git a/trainworld/sim/src/demand/kernel/assign.rs b/trainworld/sim/src/demand/kernel/assign.rs
+index ca9e86a01..2ec52f6e8 100644
+--- a/trainworld/sim/src/demand/kernel/assign.rs
++++ b/trainworld/sim/src/demand/kernel/assign.rs
+@@ -431,7 +431,7 @@ fn put_shares(g: &Graph, sh: &Shares, v: usize, dep: &mut Vec<(u32, f32)>) {
+     match sh.find(v) {
+         Some(i) => {
+             for (j, x) in dep.iter_mut().enumerate() {
+-                x.1 = sh.val[i + 1 + j];
++                x.1 = sh.share(i, j);
+             }
+             dep.retain(|x| x.1 > 0.0);
+         }

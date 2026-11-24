@@ -269,6 +269,38 @@ fn main() {
         }
     }
     println!("loads hash {h:016x}, rail trips {rail:.4}");
+    // the market's loads too (it reads the inter-city starts that `loads hash` does not see)
+    if let Some(a) = ic.as_ref() {
+        let mut hm: u64 = 0xcbf2_9ce4_8422_2325;
+        for q in 0..PERIODS {
+            for x in [a.seg(q), a.board(q), a.alight(q)].iter().flatten() {
+                hm = (hm ^ x.to_bits() as u64).wrapping_mul(0x100_0000_01b3);
+            }
+        }
+        println!("market loads hash {hm:016x}");
+    }
+    // `--lines FILE`: boardings by line over the five periods, line,commutes and everyday,market
+    if let Some(path) = get("--lines") {
+        let mut of = vec![];
+        for (l, &k) in real.line_n.iter().enumerate() {
+            of.extend(std::iter::repeat(l).take(2 * k as usize));
+        }
+        let mut per = vec![[0f64; 2]; real.line_n.len()];
+        let mut add = |v: Vec<f32>, k: usize| {
+            for (r, x) in v.iter().enumerate() {
+                if let Some(&l) = of.get(r) { per[l][k] += *x as f64; }
+            }
+        };
+        for q in 0..PERIODS {
+            for (_, a, e) in pops.iter() {
+                add(a.board(q), 0);
+                if let Some(e) = e { add(e.board(q), 0); }
+            }
+            if let Some(a) = ic.as_ref() { add(a.board(q), 1); }
+        }
+        let s: String = per.iter().enumerate().map(|(l, x)| format!("{l},{:.3},{:.3}\n", x[0], x[1])).collect();
+        std::fs::write(path, s).unwrap();
+    }
     if parts {
         for (id, a, e) in pops.iter() {
             println!("\n{id} commutes:\n{}", a.mem_report());

@@ -1572,6 +1572,8 @@ pub(super) struct Search<'a> {
     /// After `entry_costs`, `EntryDeps`' two lists.
     pub(super) entry_at: Vec<(u32, u32)>,
     pub(super) entry_dep: Vec<(u32, f32)>,
+    /// The stations `entry_costs` goes through: a line there is slower than 15 minutes or left behind.
+    pub(super) entry_st: Vec<u32>,
     /// Each incoming edge's cost (`Graph::rev_edge`'s), read in edge order.
     pub(super) rev_cost: Vec<f32>,
     /// Per route node, what settling it reads, in one place (T-1647).
@@ -1758,6 +1760,16 @@ impl Search<'_> {
             r0 = r1;
         }
         let rev_cost: Vec<f32> = g.rev_edge.iter().map(|&e| g.adj_cost[e as usize]).collect();
+        // the stations where a planned pool can differ from the plain one (`entry_costs`)
+        let entry_st: Vec<u32> = (0..s as u32)
+            .filter(|&v| {
+                let v = v as usize;
+                (g.adj_off[v] as usize..g.adj_off[v + 1] as usize).any(|e| {
+                    let r = g.adj_to[e] as usize - s;
+                    g.rn_tph[r] > 0.0 && (g.rn_span[r] != 0.0 || !same_spread(g.rn_tph[r], g.st_wait[v]))
+                })
+            })
+            .collect();
         let boards = |r: usize| edge_ix[r] != NONE && g.rn_tph[r] > 0.0;
         let rn = (0..nr)
             .map(|r| {
@@ -1855,6 +1867,7 @@ impl Search<'_> {
             share: Shares::default(),
             entry_at: vec![],
             entry_dep: vec![],
+            entry_st,
             late: vec![],
             late_out: vec![],
             mark: vec![],
@@ -1883,32 +1896,61 @@ impl Search<'_> {
         self.entry.resize(s, f32::INFINITY);
         self.entry_at.clear();
         self.entry_dep.clear();
-        for v in 0..s {
+        #[cfg(test)]
+        {
+            let mut skipped = vec![true; s];
+            for &v in &self.entry_st {
+                skipped[v as usize] = false;
+            }
+            for v in 0..s {
+                if skipped[v] && v != dst && self.dist[v].is_finite() {
+                    self.check_not_kept(v);
+                }
+            }
+        }
+        for i in 0..self.entry_st.len() {
+            let v = self.entry_st[i] as usize;
             if v == dst || !self.dist[v].is_finite() {
                 continue;
             }
             self.cand.clear();
+            // where every line's planned spread is its plain one and none is left behind, the
+            // planned pool is the plain pool (the station's own cost), never kept
+            let mut same_all = true;
             for e in g.adj_off[v] as usize..g.adj_off[v + 1] as usize {
                 let r = g.adj_to[e] as usize - s;
                 if g.rn_tph[r] > 0.0 && self.offer[r].is_finite() {
                     self.cand.push((self.offer[r] - g.rn_span[r], r as u32));
+                    same_all &= g.rn_span[r] == 0.0 && same_spread(g.rn_tph[r], g.st_wait[v]);
                 }
+            }
+            #[cfg(test)]
+            if same_all { self.check_not_kept(v); }
+            if same_all {
+                continue;
             }
             self.cand.sort_unstable_by(|a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)));
             // T-4041: every line that can be first, at the planned waits
             self.pl.clear();
             self.pk.clear();
             let mut cut = f32::INFINITY;
+            let mut same = true;
             for &(d, r) in &self.cand {
                 if !(d < cut) {
                     break;
                 }
                 let f = g.rn_tph[r as usize];
+                same &= g.rn_span[r as usize] == 0.0 && same_spread(f, g.st_wait[v]);
                 cut = cut.min(d + wait_spread(f, g.st_wait[v], true));
                 self.pl.push((d, f));
                 self.pk.push(r);
             }
             if self.pl.is_empty() {
+                continue;
+            }
+            #[cfg(test)]
+            if same { self.check_not_kept(v); }
+            if same {
                 continue;
             }
             self.sh.clear();
@@ -1931,6 +1973,40 @@ impl Search<'_> {
                 }
             }
         }
+    }
+
+    /// Test only: the entry of a station skipped for having the same planned and plain pool is not kept.
+    #[cfg(test)]
+    fn check_not_kept(&mut self, v: usize) {
+        let (g, s) = (self.g, self.s);
+        let (pl, pk, sh) = (self.pl.clone(), self.pk.clone(), self.sh.clone());
+        self.cand.clear();
+        for e in g.adj_off[v] as usize..g.adj_off[v + 1] as usize {
+            let r = g.adj_to[e] as usize - s;
+            if g.rn_tph[r] > 0.0 && self.offer[r].is_finite() {
+                self.cand.push((self.offer[r] - g.rn_span[r], r as u32));
+            }
+        }
+        self.cand.sort_unstable_by(|a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)));
+        self.pl.clear();
+        self.pk.clear();
+        let mut cut = f32::INFINITY;
+        for &(d, r) in &self.cand {
+            if !(d < cut) {
+                break;
+            }
+            let f = g.rn_tph[r as usize];
+            cut = cut.min(d + wait_spread(f, g.st_wait[v], true));
+            self.pl.push((d, f));
+            self.pk.push(r);
+        }
+        if !self.pl.is_empty() {
+            self.sh.clear();
+            self.sh.resize(self.pl.len(), 1.0);
+            let e = self.pool_lines(v, true, false).0;
+            assert!(!(e < self.dist[v] - 1e-4), "entry kept at station {v}: {e} against {}", self.dist[v]);
+        }
+        (self.pl, self.pk, self.sh) = (pl, pk, sh);
     }
 
     /// T-3718: after `run`, the stations whose trips towards `dst` do better to walk first to a
@@ -2968,6 +3044,12 @@ impl Search<'_> {
             bits: self.cn_bits.as_slice().into(),
         }
     }
+}
+
+/// A line's planned spread is its plain one (a headway of 15 minutes or less).
+#[inline(always)]
+fn same_spread(f: f32, wait_f: f32) -> bool {
+    wait_spread(f, wait_f, true) == wait_spread(f, wait_f, false)
 }
 
 /// T-4041: how far a wait for a line with `f` departures an hour spreads, perceived minutes: its
