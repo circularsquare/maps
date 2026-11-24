@@ -2938,7 +2938,7 @@ async function run() {
             break;
           }
           if (!ok) { stale = true; break; }
-          for (const p of e.fresh) { cityOn.set(p, viewOf(c, p)); holdNet(p); }
+          for (const p of e.fresh) { cityOn.set(p, viewOf(c, p)); if (c.part) holdNet(p); } // (T-4237: with no market part the baseline stays at the last whole solve)
           // T-2532: the touched zones' bubbles from this result, ahead of it, as a round's go ahead of
           // its last result; the whole solve's of the same round replace them
           for (const id of touched) keepSums(job.version, [job.rounds], id, cities.get(id)!, undefined, true);

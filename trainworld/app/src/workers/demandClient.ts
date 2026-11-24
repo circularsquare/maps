@@ -1057,6 +1057,7 @@ class DemandClient {
   private cachedModes: StoredDemand["modes"] | null = null;
   /** T-4202: it is another demand code's result standing in, so the fresh final is written over it */
   private cachedStandIn = false;
+  private cachedLocal = false;
   /** what the last read and write did (window.twDemand.client.cacheLog with ?debug=1) */
   cacheLog: { at: number; ahead?: boolean; hash?: string; readMs?: number; miss?: string; standIn?: string; shownAt?: number; skip?: string; wrote?: { at: number; ms: number; bytes: number; ok: boolean; ahead?: boolean } } | null = null;
   /** every read's `cacheLog`, oldest first */
@@ -2879,6 +2880,8 @@ class DemandClient {
     seedRows(stored.rows ?? []);
     this.cachedAhead = stored.ahead?.save ?? null;
     this.cachedStandIn = standIn;
+    this.cachedLocal = !!stored.local;
+    if (stored.local) { this.localEdits = 1; this.editAt = performance.now(); this.refreshSoon(); }
     if (this.cur?.svc === svc) this.cur.showEstimates = false;
     // T-2045: every zone has its final figures; T-2533: the focus pool stays for the zone in view's questions
     this.hideFocus();
@@ -2909,6 +2912,7 @@ class DemandClient {
     if (!this.cacheOn || !this.cacheWrites || !slots.writable || !slots.active) return skip("off");
     const days = demandByDay.peek();
     if (days.some((d) => d.view?.version !== s.version)) return skip("days");
+    const local = !!s.endLocal && !!s.localHeld?.slice(0, this.computeN).some(Boolean);
     const t0 = performance.now();
     const canon = canonical(s.svc), sent = s.sent ?? s;
     const stored = toStored(days, sent.cities, canon);
@@ -2920,15 +2924,16 @@ class DemandClient {
     const lk = this.loadKey;
     const ahead = lk?.snapshot && lk.svcKey === keyOf(s.svc) ? { save: lk.key, snapshot: lk.snapshot } : null;
     // the result shown at load is the same one, unless it can now add its bubbles or its network, or it stood in (T-4202)
-    if (hash === this.cachedHash && !this.cachedStandIn && (this.cachedModes || !cm) && (!ahead || this.cachedAhead === ahead.save)) return skip("same");
+    if (hash === this.cachedHash && !this.cachedStandIn && (!this.cachedLocal || local) && (this.cachedModes || !cm) && (!ahead || this.cachedAhead === ahead.save)) return skip("same");
     const modes = cm && { city, data: concat([cm.homeRail, cm.homeWalk, cm.homeDrive, cm.workRail, cm.workWalk, cm.workDrive, cm.homeNone, cm.workNone]), ...(m!.day ? { day: m!.day } : {}) };
     const ms = performance.now() - t0;
     const bytes = storedSize(stored) + (modes?.data.byteLength ?? 0);
     // T-2136: with the zone in view's and the built zones' corridor rows, which no worker has at the next load until it holds the market
     const bookKey = days[0].intercity?.corridors.book.key;
     const rows = bookKey ? heldRows(bookKey, cityById(activeCity.peek())?.place ?? -1, CACHED_ROWS) : [];
-    const ok = await this.writeStored(slots.active, hash, { ...key, at: Date.now(), round: s.published, days: stored, ...(modes ? { modes } : {}), ...(ahead ? { ahead } : {}), ...(rows.length ? { rows } : {}) } satisfies StoredDemand);
+    const ok = await this.writeStored(slots.active, hash, { ...key, at: Date.now(), round: s.published, days: stored, ...(modes ? { modes } : {}), ...(ahead ? { ahead } : {}), ...(rows.length ? { rows } : {}), ...(local ? { local: true as const } : {}) } satisfies StoredDemand);
     this.cachedHash = hash;
+    this.cachedLocal = local;
     this.cachedAhead = ahead?.save ?? null;
     this.cachedStandIn = false;
     (this.cacheLog ??= { at: t0 }).wrote = { at: performance.now(), ms, bytes, ok, ...(ahead ? { ahead: true } : {}) };
@@ -4398,6 +4403,7 @@ class DemandClient {
     this.cachedHash = this.cachedAhead = null;
     this.cachedModes = null;
     this.cachedStandIn = false;
+    this.cachedLocal = false;
     demandByDay.value = DEMAND_DAYS.map(() => ({ view: null, cities: new Map(), intercity: null }));
   }
 
@@ -5769,8 +5775,9 @@ class DemandClient {
    * trips while paused" off waits for it to run, as an edit does (T-3427) */
   private refreshNow() {
     const s = this.cur;
-    if (!s || s.published < ROUNDS || s.rough || this.waiting || this.hold || this.failed || !this.localEdits) return;
-    if (!display.peek().recalcWhilePaused && !clock.running.peek()) { this.refreshTimer = setTimeout(() => this.refreshNow(), REFRESH_IDLE_MS); return; }
+    if (!this.localEdits) return;
+    // (a network held, the clock held or a failed solve passes: try again, as a pause below does)
+    if (!s || s.published < ROUNDS || s.rough || this.waiting || this.hold || this.failed || (!display.peek().recalcWhilePaused && !clock.running.peek())) { this.refreshTimer = setTimeout(() => this.refreshNow(), REFRESH_IDLE_MS); return; }
     this.dispatch(s.svc, performance.now(), true);
   }
 

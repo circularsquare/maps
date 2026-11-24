@@ -38,6 +38,14 @@ export function deletePick(tk: Tools, px: number, py: number): (Removable & { lx
     if (s.kind === "edge" && !w.edges.some((e) => e.id === s.edge && (e.a === node || e.b === node))) return { kind: "track", edge: s.edge, lx: s.lx, ly: s.ly };
     return {kind:"station",node,lx:n.stations[station*3],ly:n.stations[station*3+1]};
   }
+  // T-4214: a station placed since the drawn network was built has no box yet; the patched world has its node
+  for (const node of w.nodes.values()) {
+    if (!(node.platform > 0) || node.bus || node.port) continue;
+    const [lx, ly] = toLocal(node.lng, node.lat);
+    const d = near(lx, ly, 12);
+    if (d < best && !n.stationIds.some((id) => Number(id) === node.id)) [best, hit] = [d, { kind: "station", node: node.id, lx, ly }];
+  }
+  if (hit) return hit;
   for (const node of w.nodes.values()) {
     if (!node.flying || node.ports < 3) continue;
     const [lx, ly] = toLocal(node.lng, node.lat);

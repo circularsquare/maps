@@ -1594,6 +1594,8 @@ interface LineSamples {
   lane: Float32Array;
   /** `sampleBand`'s, empty for a line on no shared track */
   band: Float32Array;
+  /** a bus: its lane is the centre line, so a rail line never takes its samples */
+  bus: boolean;
 }
 
 /**
@@ -2299,7 +2301,7 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
      * track (so lengths and lanes), stroke and band knots */
     const alikeSamples = (sm: LineSamples, path: readonly number[]) => {
       const o = sm.c, n = Math.min(path.length, sm.path.length), band = c!.band;
-      if (!o.bits || !band !== !o.band) return 0;
+      if (!o.bits || !band !== !o.band || sm.bus !== !!l.bus) return 0;
       let j = 0;
       while (j < n && path[j] === sm.path[j] && sameEdge(path[j] >> 1) && c!.firstStroke[j + runStart] === o.firstStroke[j + o.pathStart] && (!band || sameKnots(o.band!, j, band, j))) j++;
       return j;
@@ -2345,7 +2347,7 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
             bandOf[k * 2 + 1] = flip ? -v[2] : v[2];
           }
         }
-        sm = { c: c!, path, count, step, lens, rel, lane, band: bandOf };
+        sm = { c: c!, path, count, step, lens, rel, lane, band: bandOf, bus: !!l.bus };
       }
       samplesSeen.set(slot, sm!);
       const stretchOf = c!.strokes.stretch!, rel = sm!.rel;

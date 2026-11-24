@@ -63,7 +63,9 @@ interface StoredDay { view: StoredView; cities: [CityId, CityFigures][]; interci
 export interface StoredDemand extends CacheKey { at: number; round: number; days: StoredDay[]; modes?: { city: CityId; data: Float32Array; day?: number }; ahead?: CacheAhead;
   /** T-2136: the corridor rows the page held of the result's market, one place each (the zone in view's
    * and the built zones'), so a cached result shows them before any worker holds the market */
-  rows?: { place: number; rows: CorridorRows }[] }
+  rows?: { place: number; rows: CorridorRows }[];
+  /** T-2188: the figures are a city edit's local results, not a whole solve's: a load schedules the quiet refresh */
+  local?: true }
 /** T-1539: the network a load of a save works out, when this result is that network's: `save` the
  * clock worker's key of the save's network inputs (`saveNetKey`), `snapshot` the network it sent */
 export interface CacheAhead { save: string; snapshot: NetworkSnapshot }
