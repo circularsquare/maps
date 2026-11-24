@@ -2668,6 +2668,10 @@ class DemandClient {
     if (netIn && stops !== null && sn) job.modelSolve ??= solveModelMs(stops, sn.size);
     const prior = !needsSolve ? 0 : was ? was.demand : sn?.size === 0 ? SOLVE_MS.base : gameLoad && job.modelSolve !== undefined ? job.modelSolve * job.pace.solve : solveEstimate(stops, gameLoad);
     let solveMs = prior, solve = 0, solveLeft = prior;
+    // T-4209: the card says a time left only once the solve's own time is known (remembered from this slot's last load, or
+    // told by the workers' units); before that `prior` is a guess, and a guess of seconds that turned into minutes
+    // (asianita: 3 min, 2 min, then 8 min at 135 s) is worse than no figure
+    let solveTold = !needsSolve || !!was;
     if (needsSolve && s && job.version !== undefined && s.version === job.version) {
       // T-793: a game load's zone in view is final with its cluster solved ahead (T-402): that cluster's rounds
       const a = this.hold && s.ahead && [...this.viewedSet()].every((id) => s.ahead!.cities.includes(id)) ? s.clusterRes?.get(s.ahead.key) : undefined;
@@ -2686,6 +2690,7 @@ class DemandClient {
       if (byUnits !== null) {
         const el = Math.max(1, now - s.sentAt);
         solveLeft = byUnits;
+        solveTold = true;
         solve = el / (el + byUnits);
         solveMs = el + byUnits;
       } else if (!this.hold) solve = Math.min(solve, BLIND_SOLVE);
@@ -2736,7 +2741,7 @@ class DemandClient {
       const dataLeft = job.dataAt !== undefined ? 0 : !netIn ? dataExp : Math.max(dataExp - sinceData, 0.3 * sinceData * (1 - dataPart));
       target = gameLeft + dataLeft + (needsSolve ? solveLeft : 0);
     }
-    if (target !== null) job.left = { ms: nextLeft(job.left?.ms ?? null, target, job.left ? now - job.left.at : 0), at: now };
+    if (target !== null && (solveTold || viaCache)) job.left = { ms: nextLeft(job.left?.ms ?? null, target, job.left ? now - job.left.at : 0), at: now };
     const cityMb =job.items.filter((i) => !isMarket(i)).reduce((n, i) => n + (this.bytes.get(i) ?? 0), 0) / 1e6;
     this.barParts = { dlMs, dl, openMs, open, openReal, dataPart, solveMs, solve, prior, stops: stops ?? -1, lines: svc?.lines.length ?? -1, zones: sn?.size ?? -1, items: job.items.length, cityMb, workers: this.computeN, netIn: netIn ? 1 : 0, sinceNet: job.netAt !== undefined ? now - job.netAt : -1, sinceData: job.dataAt !== undefined ? now - job.dataAt : -1, elapsed: now - job.since, published: s && job.version === s.version ? s.published : -2, sent: s && job.version === s.version ? now - s.sentAt : -1,...Object.fromEntries(Object.entries(shares).map(([k, v]) => [`share_${k}`, v])), ...Object.fromEntries(Object.entries(parts).map(([k, v]) => [`part_${k}`, v])), was: was ? 1 : 0, viaCache: viaCache ? 1 : 0, fraction, shown: job.best, leftTarget: target ?? -1, left: job.left?.ms ?? -1, modelSolve: job.modelSolve ?? -1, solveLeft }; // ?debug=1
     const cities = job.cities.filter((id) => !isMarket(id));
