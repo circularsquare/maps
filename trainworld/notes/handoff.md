@@ -9,6 +9,7 @@ diary notes/handoff-log.md. Her time UTC-5.
   T-4185 e20fa32b, T-4178 6b68241c (reversals; 2 new strings for her ack). Smoke on master e936af30 PASSED (30 checks).
   perf_bench rel046-e936af30 vs v0.4.5: demand memory +13% nyc, +12% tokyo, +17% belgrade; belgrade CPU +20%, rail
   trips -7.1% belgrade (to her as a trade-off; memgrowth working on memory). snap8800 of 6b68241c running.
+- Publish prep done 07:54: changelog reviewed (58 shown, 7 highlights; her edited c080, c035, c017 reworded), smoke8800 PASSED light and dark on 6b68241c. Left for the morning: her playtest, strings ack (reversal hovers), changelog edit on the board, T-4153 s2 call, rerun perf_bench on the final hash, then her yes.
 - Held for her word: T-4153 s2 (tree editnetwork; ~10.6 MB edit-speed memory; add lineBands.ts:571 ribbons.delete),
   T-921 (tree commutechunks, tunable, no sparse gain).
 - Uncommitted SPEC.md "what is covered" rewrite is not mine (likely Gemini in Antigravity): leave it; patch it out to land.
