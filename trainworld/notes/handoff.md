@@ -1,36 +1,33 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 3a819365-cd3a-4850-a112-6396d17c97b4, name maps-06 [4d6442], since 2026-11-24 13:06 UTC
-Updated: 2026-11-24 13:27 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-24 13:58 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5.
 
-## In flight (all maps-06's; maps-20 and maps-2c signed off 13:2x)
-- 0.4.6 candidate = master 0cca357a = 8800 (13:25; f63b105b + T-4196 rewording + tools). Smoke on it PASSED 13:28.
-  check7 PASS for T-4057 (notes/batchcheck-2026-11-24-check7.md; gaps edit vs reload, zone removal). perf_bench
-  rc046-f63b105b in ledger: belgrade CPU +24%, solver +25%, rail -7.1% (T-4041); tokyo demand WASM +11% (ask a-2026-11-24-3).
-  Playtest list + strings: notes/release-0.4.6.md (uncommitted). Rewording review: artifacts/trainworld/review/text-rewording-0.4.6.md.
-- Running: check-stopclick (checker, tree stopclick, T-4097 stop take-out 349 to 17 ms), settle T-4194 (Opus, options
-  only, tree settle, port 6144). Both started in maps-20's tab; reports come to the inbox.
-- Running: uitext T-4200 (Sonnet, tree uitext, port 6152), busvstram T-4201 (Opus, tree busvstram, port 6153).
-- sparseload T-4182 landing 13:32 (publish is a while off, so it rides 0.4.6); then a batch checker; T-4199 after it.
+## In flight (all maps-06's)
+- 0.4.6: no publish ask, she says when. Candidate = master; 8800 = 61cbe801 (13:51: T-4196 rewording, T-4200,
+  T-4203 Hokkaido names, reverse kept, sparseload). Smoke PASSED 13:28 at 0cca357a; rerun before publish. perf_bench
+  rc046-f63b105b in ledger (belgrade CPU +24%, tokyo demand +11%; ask a-2026-11-24-3). Lists: notes/release-0.4.6.md
+  (uncommitted); rewording review artifacts/trainworld/review/text-rewording-0.4.6.md.
+- Landed since: sparseload dc48e20ef, stopclick 095480256 (T-4097 stays open). check8 (Sonnet, tree check8, port 6157)
+  batch-checks both. Next 8800 rebuild after check8 + the next landings.
+- Running: settle T-4194 (Opus, options, tree settle, 6144), corridors T-4199 s1 (Opus, tree corridors, 6155), bigload
+  T-4202 s1 (Opus, tree bigload, 6156, asianita stress save; also times the less-detail setting), editpieces T-4148
+  (Sonnet, 6158), routecycle T-4046 (Sonnet, 6159, click again cycles all routes), check8.
 - Held for her word: T-4153 s2 (tree editnetwork; add mm.ribbons.delete(e) at lineBands.ts:571 if landed); T-921 (tree
-  commutechunks); T-4156 P3 (ask a-2026-11-23-22); T-4124 shifts answers: numbers to her first. T-4161 shonei-server
-  7bdd559 unpushed, deploy on her yes, then push.
+  commutechunks); T-4156 P3; T-4124 numbers first. T-4161 shonei-server 7bdd559 unpushed, deploy on her yes, then push.
 - T-4112's tw/track changelog item is parked in next-track.json: hide the port's duplicate at release.
-- Uncommitted SPEC.md, docs, checks/old moves, tools/asks.py etc. are not ours (likely Gemini in Antigravity): leave;
-  patch out to land if a landing touches them.
-- Core cap 14 (she's up). reserve_cores.ps1 -All -Loop 30 runs in maps-06's background. Gemini: her ask or our suggestion.
+- Uncommitted SPEC.md, DECISIONS.md, docs, checks/old moves, tools/asks.py etc. are partly not ours (likely Gemini in
+  Antigravity): patch out to land if a landing touches them. Ours in them: TASKS.md task lines, DECISIONS Hokkaido entry.
+- Core cap 14. reserve_cores.ps1 -All -Loop 30 runs in maps-06's background. Gemini: her ask or our suggestion.
 
-## Next (she aims to publish 0.4.6 after her playtest)
+## Next
 1. Her answers: strings ack (a-2026-11-24-1), speed trade-offs (a-2026-11-24-3), T-4161 deploy, T-4153 s2 timing.
-   No publish ask: she says when. Candidate moves with her playtest fixes (T-4200 etc.); sparseload landing now.
-2. Land stopclick after its checker; then T-4146/T-4147/T-4148 and T-4193 (share pending.ts / clock worker with it).
-   After the publish: land sparseload, T-4199. Track rework after 0.4.6.
+2. Land check8's batch; then T-4146/T-4147 (after T-4148, same files), T-4193. Track rework after 0.4.6.
 
 ## Her words
-- 11-24 13:3x playtest: don't ask when to publish, she'll say ("itll be a while"); Tokyo save slow to load (T-4202, needs
-  her file); bus urban highlight at 20% strength + "disembarking" not "getting off" (T-4200, uitext); "people are still
-  mostly preferring to take bus over tram ... crowding for buses?" (T-4201, busvstram, options only).
+- 11-24 13:3x-13:57 playtest: she says when to publish; asianita save is a stress test only; "disembarking"; bus town tint
+  20%; Hokkaido zones by city; keep "reverse"; leave bus vs tram (T-4201 closed); click again cycles all routes (T-4046).
 - 11-24 13:10 (via maps-20): no "less memory" changelog items when overall memory is up (c019, c063 hidden; c064 memory
   clause cut; rule in CLAUDE.md); changelog items one line, she trims them herself; computer froze: keep cores 0-1
   free (T-4195 done 1474aeb4a: reserve_cores.ps1 -All -Loop 30 runs in maps-06's background, covers every session).
