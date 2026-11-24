@@ -21,7 +21,9 @@ Full design, numbers and sources: `notes/T-008.md`.
   share in proportion to their own between two set corners), never a refusal. A curve under the
   minimum radius is refused ("The curve is too tight"). A route starting or ending
   on existing track gets a lead-in PI on that track's heading, so it leaves like a turnout and its
-  first curve starts at the node (it never runs on top of the main line). A split needs 5 m of
+  first curve starts at the node (it never runs on top of the main line); with no corner between the
+  ends, each aims at the other end's lead-in, so an end almost in line with the other still leaves along its
+  heading (T-4152). A split needs 5 m of
   track each side (`SPLIT_ROOM`), so a route end on track within 5 m of a piece's end goes where
   a click could put it (T-3690, `split_room`): on a plain joint (it becomes the junction), on a
   bare end the route carries on past, else 5 m in from the node (a junction, a station's node, a

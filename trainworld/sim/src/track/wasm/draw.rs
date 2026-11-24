@@ -242,7 +242,9 @@ impl TrackApi {
         };
         let mut verts: Vec<Pi> = vec![Pi::new(ra.x, ra.y, 0.0, ra.level)];
         let next_a = pis.first().map_or((rb.x, rb.y), |p| (p.x, p.y));
-        let prev_b = pis.last().map_or((ra.x, ra.y), |p| (p.x, p.y));
+        let beside_on = self.beside_on;
+        let plain = |r: &Resolved, toward| lead_in(r, toward, scaled, cap).filter(|_| !beside_on);
+        let (lead_a, lead_b) = tram_leads.unwrap_or_else(|| end_leads(|t| plain(&ra, t), |t| plain(&rb, t), (ra.x, ra.y), (rb.x, rb.y), &pis));
         let tangent = through && rb.dirs.is_empty() && (!quad || beside_a.is_some()) && !self.beside_on;
         if let (true, Some(dir)) = (tangent, nearer_dir(&ra, next_a)) {
             let (pi, circle) = tangent_arc(ra.x, ra.y, ra.level, rb.level, dir, next_a, scaled, cap);
@@ -256,12 +258,11 @@ impl TrackApi {
                     return Err(Issue::Geom { edge: u32::MAX, issue: GeomIssue::Reversal(1) });
                 }
             }
-        } else if let Some(p) = tram_leads.map_or_else(|| lead_in(&ra, next_a, scaled, cap).filter(|_| !self.beside_on), |l| l.0) {
+        } else if let Some(p) = lead_a {
             verts.push(p);
         }
         let first_click = verts.len();
         verts.extend_from_slice(&pis);
-        let lead_b = tram_leads.map_or_else(|| lead_in(&rb, prev_b, scaled, cap).filter(|_| !self.beside_on), |l| l.1);
         if let Some(p) = lead_b {
             verts.push(p);
         }

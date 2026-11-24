@@ -1956,6 +1956,21 @@ fn lead_in(r: &Resolved, toward: (f64, f64), scaled: bool, cap: f64) -> Option<P
     lead_in_capped(r.x, r.y, r.level, nearer_dir(r, toward)?, toward, scaled, cap)
 }
 
+/// The lead-ins at the two ends of a stretch, a and b (`at_a`, `at_b`: that end's lead-in toward a
+/// point), with the corners `between`. With none, an end the other lies straight ahead of gets no
+/// lead-in, and the other end's lead-in would then move its straight off the heading, a kink at the
+/// node (T-4152): such an end is aimed at the other's lead-in instead.
+fn end_leads(at_a: impl Fn((f64, f64)) -> Option<Pi>, at_b: impl Fn((f64, f64)) -> Option<Pi>, a: (f64, f64), b: (f64, f64), between: &[Pi]) -> (Option<Pi>, Option<Pi>) {
+    if let (Some(f), Some(l)) = (between.first(), between.last()) {
+        return (at_a((f.x, f.y)), at_b((l.x, l.y)));
+    }
+    match (at_a(b), at_b(a)) {
+        (None, Some(q)) => (at_a((q.x, q.y)), Some(q)),
+        (Some(p), None) => (Some(p), at_b((p.x, p.y))),
+        pair => pair,
+    }
+}
+
 /// Street corners `tram_ends` may drop at each end of a route.
 const TRAM_DROP: usize = 3;
 
@@ -1991,8 +2006,7 @@ fn tram_ends(ra: &Resolved, rb: &Resolved, pis: Vec<Pi>, scaled: bool, r_min: f6
                 continue;
             }
             let rest = &pis[da..n - db];
-            let la = lead(ra, rest.first().map_or((rb.x, rb.y), |p| (p.x, p.y)));
-            let lb = lead(rb, rest.last().map_or((ra.x, ra.y), |p| (p.x, p.y)));
+            let (la, lb) = end_leads(|t| lead(ra, t), |t| lead(rb, t), (ra.x, ra.y), (rb.x, rb.y), rest);
             let mut v = vec![Pi::new(ra.x, ra.y, 0.0, ra.level)];
             v.extend(la);
             v.extend_from_slice(rest);
@@ -2003,8 +2017,7 @@ fn tram_ends(ra: &Resolved, rb: &Resolved, pis: Vec<Pi>, scaled: bool, r_min: f6
             }
         }
     }
-    let la = lead_in(ra, pis.first().map_or((rb.x, rb.y), |p| (p.x, p.y)), scaled, cap);
-    let lb = lead_in(rb, pis.last().map_or((ra.x, ra.y), |p| (p.x, p.y)), scaled, cap);
+    let (la, lb) = end_leads(|t| lead_in(ra, t, scaled, cap), |t| lead_in(rb, t, scaled, cap), (ra.x, ra.y), (rb.x, rb.y), &pis);
     (pis, la, lb)
 }
 
@@ -2429,3 +2442,6 @@ mod twin_tests;
 /// T-4112: stations placed away from a piece's ramps leave them where they were.
 #[cfg(test)]
 mod t4112_tests;
+/// T-4152: joining onto the end of other track.
+#[cfg(test)]
+mod t4152_tests;

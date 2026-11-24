@@ -694,21 +694,20 @@ impl TrackApi {
                     v[0].y = quant(v[0].y + dy);
                     made[0] = true;
                 } else {
-                    if v.is_empty() && far_keep {
-                        let fp = &net.node_ports[fi];
-                        let side = fp.find(e, 1 - which).map_or(1, |q| fp.side[q]);
-                        let fdir = if side == 1 { net.node_heading[fi] } else { net.node_heading[fi] + PI };
-                        if let Some(p) = lead_in_capped(fx, fy, net.node_level[fi], fdir, (x, y), scaled, cap) {
-                            v.push(p);
-                            made.push(true);
-                        }
+                    // a far end keeping its heading gets a lead-in only where the edge has no PI
+                    let fp = &net.node_ports[fi];
+                    let side = fp.find(e, 1 - which).map_or(1, |q| fp.side[q]);
+                    let fdir = if side == 1 { net.node_heading[fi] } else { net.node_heading[fi] + PI };
+                    let far_lead = |t| if v.is_empty() && far_keep { lead_in_capped(fx, fy, net.node_level[fi], fdir, t, scaled, cap) } else { None };
+                    let near_lead = |t| if keep { lead_in_capped(x, y, net.node_level[i], leave, t, scaled, cap) } else { None };
+                    let (near, far) = end_leads(near_lead, far_lead, (x, y), (fx, fy), &v);
+                    if let Some(p) = far {
+                        v.push(p);
+                        made.push(true);
                     }
-                    if keep {
-                        let toward = v.first().map_or((fx, fy), |p| (p.x, p.y));
-                        if let Some(p) = lead_in_capped(x, y, net.node_level[i], leave, toward, scaled, cap) {
-                            v.insert(0, p);
-                            made.insert(0, true);
-                        }
+                    if let Some(p) = near {
+                        v.insert(0, p);
+                        made.insert(0, true);
                     }
                 }
                 if which == 1 {

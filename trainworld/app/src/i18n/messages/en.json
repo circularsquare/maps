@@ -1139,7 +1139,7 @@
   "issues.waterTooLong": "Viaducts and cut and cover tunnels cannot cross more than {distance} of open water. Use a bored tunnel.",
   "issues.crossing": "Tracks cannot cross on a ramp unless they are a full level apart.",
   "issues.crossingOverlap": "The new track would run on top of existing track.",
-  "issues.nodeHeading": "Track has to leave a junction along the existing track.",
+  "issues.nodeHeading": "Track has to line up with the track it joins.",
   "issues.nodeOneSided": "Track has to run through a station.",
   "issues.tooManyPorts": "Too many tracks meet here.",
   "issues.stationHere": "There is already a station here.",
