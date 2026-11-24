@@ -242,13 +242,11 @@ pub struct RunAccount {
     /// (`slot * PROFILE_VARS + var`; empty for a variant the run has not). T-3346 stage 2: `vars`,
     /// each departure's timetable variant (`Trip::var`).
     pub stop_dep: Vec<Vec<f64>>,
-    /// `[trip * n + stop]`: riders aboard leaving the stop (0 at the last); riders left on the
-    /// platform as it leaves; riders on the platform as it arrived.
+    /// `[trip * n + stop]`: riders aboard leaving the stop (0 at the last).
     pub load: Vec<f32>,
-    pub q_after: Vec<f32>,
-    /// `[trip * n + stop]`: riders who went another way as the train left (T-1067: `GIVE_UP_S`,
-    /// `WAITING_CAP`), never boarding.
-    pub gone: Vec<f32>,
+    /// `[trip * n + stop]`: riders left on the platform as the train leaves (`q_after`), and riders who went another
+    /// way then (T-1067: `GIVE_UP_S`, `WAITING_CAP`), never boarding (`gone`).
+    pub queues: Queues,
     /// Per stop, the trips in the order they leave it in a day (`stop * trips + k`); `stop_times`
     /// gives the time of day each leaves it.
     pub order: Vec<u32>,
@@ -281,6 +279,62 @@ pub struct RunAccount {
     /// mean riders aboard the trains leaving its first stop in that hour, 0 with none
     /// (`hour_loads`, T-2236).
     pub hour_load: Vec<f32>,
+}
+
+/// T-3939: `RunAccount::queues`, kept only where either number is not 0 (most trains of most lines leave nobody
+/// behind): a bit per trip and stop, the count of set bits before each word, and the pairs. Read back to the bit.
+#[derive(Clone, Debug, Default)]
+pub struct Queues {
+    bits: Vec<u64>,
+    rank: Vec<u32>,
+    pairs: Vec<[f32; 2]>,
+}
+
+impl Queues {
+    pub fn new(q_after: &[f32], gone: &[f32]) -> Queues {
+        let words = q_after.len().div_ceil(64);
+        let (mut bits, mut rank, mut pairs) = (vec![0u64; words], Vec::with_capacity(words), vec![]);
+        for (w, word) in bits.iter_mut().enumerate() {
+            rank.push(pairs.len() as u32);
+            for b in 0..64 {
+                let i = w * 64 + b;
+                let (Some(&q), Some(&g)) = (q_after.get(i), gone.get(i)) else { break };
+                if q.to_bits() != 0 || g.to_bits() != 0 {
+                    *word |= 1 << b;
+                    pairs.push([q, g]);
+                }
+            }
+        }
+        pairs.shrink_to_fit();
+        Queues { bits, rank, pairs }
+    }
+    #[inline]
+    fn pair(&self, i: usize) -> [f32; 2] {
+        let (w, b) = (i / 64, i % 64);
+        let word = self.bits.get(w).copied().unwrap_or(0);
+        if word >> b & 1 == 0 {
+            return [0.0; 2];
+        }
+        self.pairs[self.rank[w] as usize + (word & ((1u64 << b) - 1)).count_ones() as usize]
+    }
+    /// Riders left on the platform as trip and stop `i` (`trip * n + stop`) leaves.
+    #[inline]
+    pub fn q_after(&self, i: usize) -> f32 {
+        self.pair(i)[0]
+    }
+    /// Riders who went another way as it left.
+    #[inline]
+    pub fn gone(&self, i: usize) -> f32 {
+        self.pair(i)[1]
+    }
+    /// Heap bytes held.
+    pub fn heap_bytes(&self) -> usize {
+        self.bits.capacity() * 8 + self.rank.capacity() * 4 + self.pairs.capacity() * 8
+    }
+    /// Trip-and-stop pairs kept (benches).
+    pub fn kept(&self) -> usize {
+        self.pairs.len()
+    }
 }
 
 /// `x.rem_euclid(DAY)` to the bit, without the division's library call for a time above 0: `x - k * DAY` is
@@ -797,7 +851,7 @@ impl Boarding {
                     for j in first as isize - 1..=end as isize {
                         let (t, i) = at(j);
                         events.push(t as f32);
-                        events.push(ra.q_after[i * ra.n + k]);
+                        events.push(ra.queues.q_after(i * ra.n + k));
                         let stand = if k == 0 { close } else { Some(ls.prof_of(r, ra.levels[i] as usize, ra.vars[i])).and_then(|p| Some(p.dep.get(k)? - p.arr.get(k)?)).unwrap_or(0.0) };
                         arrive.push((t - stand.max(0.0)) as f32);
                     }
@@ -1163,8 +1217,8 @@ impl Boarding {
                 let t0 = if m > 0 { ts.at(0) } else { 0.0 };
                 let mut ti = t0;
                 for i in 0..m {
-                    let q = ra.q_after[ord[i] as usize * n + k] as f64;
-                    let gone = ra.gone[ord[i] as usize * n + k] as f64;
+                    let q = ra.queues.q_after(ord[i] as usize * n + k) as f64;
+                    let gone = ra.queues.gone(ord[i] as usize * n + k) as f64;
                     let next = if i + 1 < m { ts.at(i + 1) } else { t0 + DAY };
                     let gap = next - ti;
                     let w = q * gap.max(0.0) + gone * WAIT_FOR_ROOM_S;
@@ -1238,8 +1292,8 @@ impl Boarding {
                 let t0 = ts.at(0);
                 let mut ti = t0;
                 for i in 0..m {
-                    let q = ra.q_after[ord[i] as usize * n + k] as f64;
-                    let gone = ra.gone[ord[i] as usize * n + k] as f64;
+                    let q = ra.queues.q_after(ord[i] as usize * n + k) as f64;
+                    let gone = ra.queues.gone(ord[i] as usize * n + k) as f64;
                     let next = if i + 1 < m { ts.at(i + 1) } else { t0 + DAY };
                     let gap = next - ti;
                     let p = period_at(ti);
@@ -1380,7 +1434,7 @@ impl Boarding {
                 let arr = &ra.arrivals[k];
                 let ts = ra.stop_times(k);
                 let ord = ts.ord;
-                let q = |j: usize| ra.q_after[ord[j] as usize * n + k] as f64;
+                let q = |j: usize| ra.queues.q_after(ord[j] as usize * n + k) as f64;
                 let lo = ts.partition_point(|s| s <= from);
                 let done = ts.partition_point(|s| s <= to);
                 if done <= lo {
@@ -1403,7 +1457,7 @@ impl Boarding {
                     }
                     w.left += a.min(q(j));
                     // T-1067: those who went another way never boarded
-                    b -= ra.gone[ord[j] as usize * n + k] as f64;
+                    b -= ra.queues.gone(ord[j] as usize * n + k) as f64;
                     (prev, q_prev, c_prev) = (tj, q(j), c_j);
                 }
                 let b = b.max(0.0);
@@ -1458,7 +1512,8 @@ impl Boarding {
             for acc in self.accounts[d].iter().flatten() {
                 for ra in &acc.runs {
                     add("deps, levels, stop_dep", v(ra.deps.capacity(), 8) + 2 * ra.levels.capacity() + ra.stop_dep.iter().map(|x| x.capacity() * 8).sum::<usize>());
-                    add("load, q_after, gone", v(ra.load.capacity() + ra.q_after.capacity() + ra.gone.capacity(), 4));
+                    add("load", v(ra.load.capacity(), 4));
+                    add("queues", ra.queues.heap_bytes());
                     add("order, dep0", v(ra.order.capacity(), 4) + v(ra.dep0.capacity(), 8));
                     add("left_h, wait_h, hour_load", v(ra.left_h.capacity() + ra.wait_h.capacity() + ra.hour_load.capacity(), 4));
                     add("stop_open, ride_km", v(ra.stop_open.capacity() + ra.ride_km.capacity(), 8));
@@ -1728,8 +1783,7 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
         vars: keep.iter().map(|&i| trips[i].var).collect(),
         stop_dep: (0..SLOTS * PROFILE_VARS).map(|x| { let (lev, v) = (x / PROFILE_VARS, x % PROFILE_VARS); if v == 0 || v <= ls.runs[r].vars[lev].len() { ls.prof_of(r, lev, v as u8).dep.clone() } else { vec![] } }).collect(),
         load: vec![0.0; mk * n],
-        q_after: vec![0.0; mk * n],
-        gone: vec![0.0; mk * n],
+        queues: Queues::default(),
         order: vec![0; mk * n],
         dep0: keep.iter().map(|&i| trips[i].dep).collect(),
         left_h: vec![0.0; n * 24],
@@ -1745,6 +1799,7 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
         ride_km,
         hour_load: vec![],
     };
+    let (mut q_kept, mut gone_kept) = (vec![0.0f32; mk * n], vec![0.0f32; mk * n]);
     let mut carry = vec![0.0f64; m];
     let mut order: Vec<usize> = (0..m).collect();
     let mut hist: Vec<(f64, f64)> = Vec::with_capacity(m);
@@ -1826,8 +1881,8 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
             if kept(i) {
                 let j = slot[i] as usize;
                 acc.load[j * n + k] = if k + 1 < n { load as f32 } else { 0.0 };
-                acc.q_after[j * n + k] = q_after as f32;
-                acc.gone[j * n + k] = (gave + over) as f32;
+                q_kept[j * n + k] = q_after as f32;
+                gone_kept[j * n + k] = (gave + over) as f32;
                 let h = ((t.rem_euclid(DAY) / 3600.0).floor() as usize).min(23);
                 // the riders who came since the last train and did not get on this one (those
                 // waiting before them board first)
@@ -1857,6 +1912,7 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
         }
     }
     acc.arrivals = arrivals;
+    acc.queues = Queues::new(&q_kept, &gone_kept);
     acc
 }
 

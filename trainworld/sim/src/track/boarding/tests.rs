@@ -255,7 +255,7 @@ fn a_circle_carries_its_riders_round_through_the_first_stop() {
     }
     assert!(ra.load[i * n + 1] < 0.5 && ra.load[i * n + 2] < 0.5, "they leave at 1");
     assert_eq!(ra.load[i * n + 6], 0.0);
-    assert!(ra.q_after.iter().all(|&q| q < 1e-3), "nobody is left at the first stop");
+    assert!((0..ra.load.len()).all(|i| ra.queues.q_after(i) < 1e-3), "nobody is left at the first stop");
     assert!((ra.boarded - ra.alighted).abs() < 1e-6 * ra.boarded.max(1.0));
     // demand's riders board once at 4 and once more, staying aboard, at the first stop
     let day = 100.0 * 24.0;
@@ -273,7 +273,7 @@ fn a_line_with_room_carries_demands_load_and_leaves_no_one() {
         // every rider in the day boards and gets off
         assert!((ra.arrived - ra.boarded).abs() < 1e-6 * ra.arrived.max(1.0), "{} {}", ra.arrived, ra.boarded);
         assert!((ra.boarded - ra.alighted).abs() < 1e-6 * ra.boarded.max(1.0));
-        assert!(ra.q_after.iter().all(|&q| q < 1e-3));
+        assert!((0..ra.load.len()).all(|i| ra.queues.q_after(i) < 1e-3));
         // the day's arrivals are demand's
         assert!((ra.arrived - (500.0 * 8.0 + 200.0 * 10.0 + 50.0 * 6.0)).abs() < 1e-6);
     }
@@ -423,7 +423,7 @@ fn an_overloaded_line_leaves_people_behind_and_the_queue_clears() {
     let ra = &b.accounts[0][l as usize].as_ref().unwrap().runs[0];
     let m = ra.deps.len();
     // the queue at A, train by train through the day
-    let q: Vec<(f64, f32, f32)> = (0..m).map(|j| (ra.stop_times(0).at(j), ra.q_after[ra.order[j] as usize * 3], ra.load[ra.order[j] as usize * 3])).collect();
+    let q: Vec<(f64, f32, f32)> = (0..m).map(|j| (ra.stop_times(0).at(j), ra.queues.q_after(ra.order[j] as usize * 3), ra.load[ra.order[j] as usize * 3])).collect();
     let at = |h: f64| q.iter().filter(|e| e.0 < h * 3600.0).next_back().unwrap().1;
     assert!(at(7.0) > 0.0 && at(9.0) >= at(7.0), "{} {}", at(7.0), at(9.0));
     // T-1067: 600 more a train than it takes, until the platform holds WAITING_CAP as a train
@@ -462,10 +462,10 @@ fn riders_left_behind_too_long_go_another_way() {
     let ra = &b.accounts[0][l as usize].as_ref().unwrap().runs[0];
     let m = ra.deps.len();
     // the queue grows 600 a train through the morning and fills the platform before noon
-    let most = (0..m).map(|j| ra.q_after[j * 3]).fold(0.0f32, f32::max) as f64;
+    let most = (0..m).map(|j| ra.queues.q_after(j * 3)).fold(0.0f32, f32::max) as f64;
     assert!(most <= WAITING_CAP - cap + 1e-3, "{most}");
-    let gave_by_noon: f64 = (0..m).filter(|&j| ra.stop_times(0).at(j) < 12.5 * 3600.0).map(|j| ra.gone[ra.order[j] as usize * 3] as f64).sum();
-    let gave_after: f64 = (0..m).filter(|&j| ra.stop_times(0).at(j) > 12.5 * 3600.0).map(|j| ra.gone[ra.order[j] as usize * 3] as f64).sum();
+    let gave_by_noon: f64 = (0..m).filter(|&j| ra.stop_times(0).at(j) < 12.5 * 3600.0).map(|j| ra.queues.gone(ra.order[j] as usize * 3) as f64).sum();
+    let gave_after: f64 = (0..m).filter(|&j| ra.stop_times(0).at(j) > 12.5 * 3600.0).map(|j| ra.queues.gone(ra.order[j] as usize * 3) as f64).sum();
     assert!(gave_by_noon > 0.0 && gave_after > 0.0, "{gave_by_noon} {gave_after}");
     // whoever is left waits at most GIVE_UP_S past their first train (T-1255: on a train every 30
     // minutes or rarer, a rider joins only for a train with room)
@@ -473,7 +473,7 @@ fn riders_left_behind_too_long_go_another_way() {
     assert!(longest > 1800.0 && longest <= GIVE_UP_S + 1.0, "{longest}");
     assert!(ra.gave_up > 1000.0, "{}", ra.gave_up);
     assert!((ra.arrived - ra.boarded - ra.gave_up).abs() < 1e-6 * ra.arrived);
-    let gone: f64 = ra.gone.iter().map(|&g| g as f64).sum();
+    let gone: f64 = (0..ra.load.len()).map(|i| ra.queues.gone(i) as f64).sum();
     assert!((gone - ra.gave_up).abs() < 1e-3 * ra.gave_up);
 }
 
@@ -503,7 +503,7 @@ fn riders_come_and_wait_only_for_a_train_with_room_soon() {
     // every peak train leaves full and the platform holds at most the next 30 minutes' trains
     let peak: Vec<usize> = (0..m).filter(|&j| ra.stop_times(0).at(j) > 7.0 * 3600.0 && ra.stop_times(0).at(j) < 9.5 * 3600.0).map(|j| ra.order[j] as usize).collect();
     assert!(peak.iter().all(|&i| (ra.load[i * 3] as f64 - cap).abs() < 1e-3));
-    let most = (0..m).map(|i| ra.q_after[i * 3]).fold(0.0f32, f32::max) as f64;
+    let most = (0..m).map(|i| ra.queues.q_after(i * 3)).fold(0.0f32, f32::max) as f64;
     assert!(most <= 5.0 * cap + 1e-3, "{most}");
     // so nobody waits much beyond 30 minutes for a train with room (the head of the queue: a
     // headway more)
@@ -593,10 +593,10 @@ fn a_queue_that_lasts_the_night_carries_round_the_day() {
     assert!(quick.leftover > 1000.0, "{}", quick.leftover);
     // the kept account is the warm one: the first train after 03:00 already finds a queue
     let i = ra.deps.iter().position(|&d| d >= START_HOUR * 3600.0).unwrap();
-    assert!(ra.q_after[i * 3] > 1000.0, "{}", ra.q_after[i * 3]);
+    assert!(ra.queues.q_after(i * 3) > 1000.0, "{}", ra.queues.q_after(i * 3));
     let j = quick.deps.iter().position(|&d| d >= START_HOUR * 3600.0).unwrap();
     // (T-1255: a train's worth more, the platform holding only the next 30 minutes' trains)
-    assert!(ra.q_after[i * 3] > quick.q_after[j * 3] + 500.0, "{} {}", ra.q_after[i * 3], quick.q_after[j * 3]);
+    assert!(ra.queues.q_after(i * 3) > quick.queues.q_after(j * 3) + 500.0, "{} {}", ra.queues.q_after(i * 3), quick.queues.q_after(j * 3));
     // and every departure of the day is in it once, in time order
     assert_eq!(ra.deps.len(), quick.deps.len());
     assert!(ra.deps.windows(2).all(|p| p[0] < p[1]));
@@ -1030,3 +1030,19 @@ fn a_long_lines_opening_day_runs_as_full_as_the_next() {
     assert!(today[3] > 0.0 && today[3] < 2.0 * 3600.0 * rate as f64 * 2.0 * (n - 1) as f64 / 3600.0, "{} riders", today[3]);
 }
 
+
+/// T-3939: the sparse queues read back every trip and stop's two numbers to the bit.
+#[test]
+fn queues_read_back_to_the_bit() {
+    let n = 200;
+    let q: Vec<f32> = (0..n).map(|i| match i % 7 { 0 => 1.5 + i as f32, 3 => -0.0, 5 => 1e-30, _ => 0.0 }).collect();
+    let g: Vec<f32> = (0..n).map(|i| if i % 11 == 4 { 0.25 * i as f32 } else { 0.0 }).collect();
+    let s = Queues::new(&q, &g);
+    for i in 0..n {
+        assert_eq!(s.q_after(i).to_bits(), q[i].to_bits(), "q at {i}");
+        assert_eq!(s.gone(i).to_bits(), g[i].to_bits(), "gone at {i}");
+    }
+    assert_eq!(s.kept(), (0..n).filter(|&i| q[i].to_bits() != 0 || g[i].to_bits() != 0).count());
+    let empty = Queues::new(&[], &[]);
+    assert_eq!(empty.q_after(0), 0.0);
+}

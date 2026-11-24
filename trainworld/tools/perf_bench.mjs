@@ -17,7 +17,7 @@
 // however busy the machine is; the cores claimed in cores.py only decide how fast it goes.
 import { spawn, spawnSync } from 'node:child_process';
 import { createServer } from 'node:http';
-import { createReadStream, existsSync, statSync, readFileSync, readdirSync, writeFileSync, appendFileSync, mkdirSync, rmSync, cpSync } from 'node:fs';
+import { createReadStream, existsSync, statSync, readFileSync, readdirSync, writeFileSync, appendFileSync, mkdirSync, rmSync, cpSync, utimesSync } from 'node:fs';
 import { cpus } from 'node:os';
 import { join, resolve, extname, basename, delimiter } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -108,6 +108,10 @@ function build(src, label) {
   try {
     const app = join(tree, 'trainworld', 'app');
     if (existsSync(out)) rmSync(out, { recursive: true, force: true });
+    // T-3939: Cargo keeps a unit's source times relative to its package, so a tree whose edits are older than the shared
+    // target dir's last build (another tree's) was taken as built: its WASM was the other tree's. Touch to force it.
+    const lib = join(tree, 'trainworld', 'sim', 'src', 'lib.rs'), now = new Date();
+    utimesSync(lib, now, now);
     sh('python', [join(tree, 'trainworld', 'tools', 'snap_wasm.py'), tt, td], { cwd: app, env });
     sh('npx', ['vite', 'build', '--outDir', out, '--emptyOutDir'], { cwd: app, env });
   } finally {
