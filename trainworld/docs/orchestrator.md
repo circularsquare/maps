@@ -66,7 +66,7 @@ These come before everything below; the first two are her two top priorities (11
 ## Cores
 
 - **Cores 0-1 are hers** (11-21): at takeover start, in the background, `powershell -NoProfile -ExecutionPolicy Bypass
-  -File trainworld/tools/ops/reserve_cores.ps1 -Loop 30` (its top comment says what it pins and what it leaves alone).
+  -File trainworld/tools/ops/reserve_cores.ps1 -All -Loop 30` (one loop for every Claude session, later ones too; a second copy exits; its top comment says what it pins and what it leaves alone).
 - The cap: "Her standing calls" above.
 
 ## Your own cycling
