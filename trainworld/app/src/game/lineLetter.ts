@@ -9,11 +9,11 @@ let own: RegExp | null = null;
 export function setDefaultNameMessage(msg: string | undefined) {
   const parts = msg?.split("{n}");
   const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  own = parts?.length === 2 && !/[{}']/.test(parts.join("")) ? new RegExp(`^${esc(parts[0])}(\\S{1,2}?)${esc(parts[1])}$`) : null;
+  own = parts?.length === 2 && !/[{}']/.test(parts.join("")) ? new RegExp(`^${esc(parts[0])}(\\S{1,4}?)${esc(parts[1])}$`) : null;
 }
 
 export function letterOf(name: string): string {
-  const m = /^(?:Line|Bus) (\S{1,2})$/.exec(name) ?? own?.exec(name);
+  const m = /^(?:Line|Bus) (\S{1,4})$/.exec(name) ?? own?.exec(name);
   if (m) return m[1];
   const t = name.trim();
   if (/^[A-Z0-9]{1,5}$/.test(t) || /^(?=.*\d)[A-Za-z0-9]{1,5}$/.test(t)) return t;
