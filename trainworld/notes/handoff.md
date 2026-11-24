@@ -18,8 +18,8 @@ diary notes/handoff-log.md. Her time UTC-5.
   Server save level 39: T-4161. T-4160 after T-4153.
 - Perf beyond edits: perfcompare T-4157, busmerge2 T-4158 (her pick), commutechunks T-921 (shift: numbers to her),
   zoneopen T-4051, memwasm T-4156.
-- Her open asks: AWS own account (she hit "email in use"; told her a plus address; on "aws account ready, profile
-  anita-own", queue a bench-machine agent); hard 8-agent hook (my proposal, unanswered).
+- Her open asks: hard 8-agent hook (my proposal, unanswered). AWS account done 11-24 (anita-own): T-4166 queued.
+  Edit speed memory budget about 10 MB total (DECISIONS); stage 1 network +6 MB.
 - 8800 = ef99d979. T-4112's tw/track changelog item parked in next-track.json: hide the port's duplicate at release.
 
 ## Next

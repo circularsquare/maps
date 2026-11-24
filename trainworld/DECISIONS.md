@@ -213,6 +213,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-10 (Anita, T-087): A train's fill is a gauge: half full when seats are taken, full at crush, red rim over, showing the busiest hour by default. Fill in proportion to crush and colouring trains by load were rejected.
 
 ## Saves and performance
+- 2026-11-24 (Anita, T-4144): Edit speed may cost memory up to about 10 MB in total on a big save (the T-4144 work together); past that it goes to Anita. Stage 1 of T-4153 was +6 MB on Asia, fine by her.
 - 2026-11-23 (Anita, T-4126): 8800 serves master only; the track branch is behind ?track with its own saves storage and no account, so a newer-format save never reaches master or her account.
 
 - 2026-11-23 (Anita, T-3940, T-4089): Community View opens without calculating trips, money frozen (Anita, 11-21; running costs drained about $5B a game day). Phones reporting no memory warn at 1,600+ stations; a game that died loading gets a warning, never open-without-trips (her 11-23). notes/T-3940.md
