@@ -101,11 +101,11 @@ def stop(data):
             "hookEventName": "Stop",
             "additionalContext": f"Context is at {k}k tokens, past the ~500k cycling point. If you are "
                                  "orchestrating: finish anything mid-landing, bring notes/handoff.md current "
-                                 "(/handoff), then start your successor yourself with "
-                                 "`venv\\Scripts\\python.exe trainworld/tools/ops/next_orchestrator.py <project>` "
-                                 "from the maps root (a new Windows Terminal tab running /takeover), and wind down "
-                                 "per /handoff once it messages you (Anita 2026-11-16). After handing over, send her one line, "
-                                 "'talk to <new name> now', and nothing more.",
+                                 "(/handoff), then start your successor as your project's orchestrator doc "
+                                 "describes (trainworld: docs/orchestrator.md, \"Your own cycling\": standby "
+                                 "session first, else next_orchestrator.py with its flags), and wind down per "
+                                 "/handoff once it messages you (Anita 2026-11-16). After handing over, send her "
+                                 "one line, 'talk to <new name> now', and nothing more.",
         },
     }))
 

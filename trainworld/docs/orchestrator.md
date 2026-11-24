@@ -35,7 +35,7 @@ These come before everything below; the first two are her two top priorities (11
 - **Size tasks to about an hour or one stage**; a brief whose work looks bigger is split before it starts: stages,
   each its own id and report. An agent that compacts was given too much.
 - **Model**: Sonnet by default; Opus for UI layout, design calls nobody has made, and debugging nobody understands;
-  no Fable unless she asks. Advisor: as trainworld/CLAUDE.md "Advisor", and briefs don't invite it otherwise; log each
+  no Fable for agents unless she asks (the successor's advisor, "Your own cycling", is the one Fable use). Advisor: as trainworld/CLAUDE.md "Advisor", and briefs don't invite it otherwise; log each
   call in notes/handoff-log.md (what was asked, whether the advice changed anything).
 - **Briefs**: the goal in her words, the decisions already made, scope, what done looks like, the files other agents
   own (leave them alone), the task ids it may file, its own scratchpad subfolder and Vite port. Point to
