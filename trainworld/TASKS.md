@@ -247,6 +247,14 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4166 [P2] {L:checks} Bench machine on your own AWS account
   - Context: You, 11-24: account made (not free tier), $20 monthly budget alarm, both quota raises refused (5 vCPUs: one 4-core machine), CLI profile anita-own; she wants $20 a month to really cut off. You, 11-24: this PC first, AWS only for spillover. Setup guide: notes/aws-own-account-setup.md.
   - Goal: One script runs the benches and smoke on a commit and shuts the machine down; anita-own in docs/aws.md; a $20 budget action stopping machines, with click steps for her.
+- T-4167 [P2] {L:checks} perf_bench tree builds can ship another tree's WASM
+  - Context: From T-4132: perf_bench builds of different trees share one Cargo target dir, so a tree whose sources are older than another tree's last build ships that tree's WASM (retime-head2 shipped the base track module byte for byte).
+  - Goal: Each build's WASM always comes from its own tree's sources.
+  - Other: notes/T-4132.md
+- T-4168 [P2] {L:solve-speed} {after:T-4158} Does the bus stop merge shift riders one way
+  - Context: You, 11-24: "if merging directionally biases things, would it make sense to undo that bias?" T-4158 saw lines move both ways (Belgrade 704 +34%, 66 -29%) but Auto bus lines lose 1.2% overall.
+  - Goal: Net shift by kind of line and trip length on Detroit and Belgrade; a simple correction proposed to you only where it is clearly one way.
+  - Other: notes/T-4158.md
 - T-4141 [P3] {L:station-placement} Track placed by an edit call crossed the Hudson at ground level
   - Context: Seen by T-4112: a route entered through the game's edit call crossed the Hudson at ground level without a refusal, while pointer-drawn track nearby was bridged. Water may not have been loaded under part of it.
   - Other: notes/T-4112.md
@@ -257,10 +265,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-1367: on all-China each worker's WASM memory keeps its high-water mark, about 1,560 MB against 1,267 loaded; T-1205's restart waits for a 256 MB gap, so 228 MB never comes back.
   - Goal: About 290 MB per worker given back after zone churn, with the restart's cost in load time measured.
   - Other: notes/T-1367.md
-- T-4158 [P1] {L:solve-speed} Merge bus stops more aggressively for demand (taking, 2026-11-23, agent busmerge2)
-  - Context: You, 11-24: "we could just try merging more aggressively for bus stop ... if we can merge in a way that doesnt just cancel everything out". T-4094 merges stops within 300 m served by the same lines (Detroit -40% CPU, Belgrade -20%).
-  - Goal: Wider or looser merges measured as saving against shift on Belgrade, Detroit and NYC, for you to pick.
-  - Other: notes/T-4094.md
+- T-4158 [P1] {L:solve-speed} Merge bus stops more aggressively for demand
+  - Context: You, 11-24: "ok, lets do 500m" (same-lines rule): Detroit's solve 29% lighter, Belgrade's 18%, median line moves about 2%. Built behind switches in tree busmerge2; default to 500 m, then perf_bench compare.
+  - Goal: The picked merge landed, with its time to trips ready measured in game on Belgrade.
+  - Other: notes/T-4094.md, notes/T-4158.md (in the busmerge2 tree until landing)
 - T-4157 [P1] {L:loading} Master against v0.4.5 on the three bench saves (taking, 2026-11-23, agent perfcompare)
   - Context: You, 11-24: the goal was to claw back what the express change and the bus changes cost; "load times do feel kinda long". Last bench 18:08: trips ready NYC 95 to 126 s, Tokyo 157 to 175 s, Belgrade 618 to 1,285 s; NYC 105 s at 22:51.
   - Goal: Every perf_bench number for master against v0.4.5 on nyc, tokyo and belgrade, and where a load's time goes.
