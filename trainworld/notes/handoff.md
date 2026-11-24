@@ -5,39 +5,22 @@ Updated: 2026-11-23 20:08 UTC. Live state: `venv\Scripts\python.exe trainworld/t
 diary notes/handoff-log.md. Her time UTC-5.
 
 ## In flight (adopt from the board)
-- Edit speed (her 23:1x: do all, land all, one message when done): plan notes/T-4144.md. Running: editbase T-4145
-  (opus, base; when it lands tell editstations and editlines to merge master), editstations T-4146 (opus, stream B),
-  editlines T-4147 (sonnet, A), editworker T-4149 (opus, D worker), firstclick T-4143 (opus, E: then T-4142, T-1031).
-  Base API: top of .tw-trees/editbase/trainworld/notes/T-4145.md (sent to B and A; put it in C's brief).
-  Queued: C T-4148 (sonnet) and D page T-4150 when slots free; T-4133/4134 after retime; T-4151 bench calc pass.
-  Her yes to refusal taking a shown edit back and money at the click, plus "improve the response speed of refusals too"
-  (sent to base, stations, worker). Agent ids: editbase adf738eb, editstations a832c397, editlines a3199ea2, editworker
-  a0d0baab, junctionmsg a23cb70f.
-- retime T-4132 (opus), searchleft T-4054 (sonnet), junctionmsg T-4152
-  (opus, her pad: "Track has to leave a junction along the existing track" misfires, reword).
-- rampport T-4112 landed on master 380d8fc7 (23:55); tree "rampport" still to remove (a shell held it). editbase
-  reported stage 0 and 0b landable; waiting on its bench and smoke, then land and tell editstations/editlines.
-- editworker: network build (map/network.ts) is 50-70% of the worker wait (station/copy/delete 0.7-1.3 s); stream D
-  can't reach 0.2-0.35 s without it. Decide after the streams land: bound network on master vs wait for T-3444 st 5.
-  Rows-first waits for base + B. It took clockDemand.ts bayTimes (150-400 ms an edit).
-- Batch check due once rampport lands: rampport (track split), regionfix 8e1eb7ba, lineclick ef99d979 (toggleStop).
-- 8800 = ef99d979 (23:11). Landed after takeover, latest: madison T-4140, regionfix T-4137, ghostlag T-4136, lineclick
-  T-4114 stage 1, editbench T-4139 (tools/edit_bench.mjs; trust changes over about 25%). T-4124 closed (code on branch
-  tw/onegraph-measured). T-4112's tw/track changelog item is parked in next-track.json: hide the port's duplicate at
-  the release merge. Track build can't be rebuilt until sync-track (conflicts, waits for the rework resume).
+- Edit speed, plan notes/T-4144.md; her 23:1x "do all, land all, one message when done". TOP: editnetwork T-4153 (opus,
+  bounded drawn network on master: 50-70% of the wait; her 00:0x). editbase T-4145 (base landable; land after its
+  bench+smoke, then tell editstations/editlines to merge master), editstations T-4146 (B), editlines T-4147 (A),
+  editworker T-4149 (D worker: bayTimes, posting, then A/B/E; rows-first waits for base+B), firstclick T-4143 (E).
+  Base API at the top of notes/T-4145.md: put it in C's brief. Queued: C T-4148, D page T-4150, T-4133/4134 after
+  retime, T-4151. Her yes: refusals take a shown edit back, money at the click; refusals must answer fast too.
+  Agent ids: editbase adf738eb, editstations a832c397, editlines a3199ea2, editworker a0d0baab, junctionmsg a23cb70f.
+- retime T-4132, searchleft T-4054, junctionmsg T-4152 (her pad: junction heading message misfires; strings to her).
+- Batch check due: rampport 380d8fc7, regionfix 8e1eb7ba, lineclick ef99d979; tree "rampport" to remove. 8800 =
+  ef99d979. T-4112's tw/track changelog item parked in next-track.json: hide the duplicate at the release merge.
 
 ## Next
-1. No publish decided ("i didn't say we want to publish"); don't prep one unless she says. 0.4.6 would wait for most
-   of edit speed. Edit speed: bounded edits next stage (T-4097 notes section 4: page panels part C, E, F; T-4111 quad
-   check half), then T-4114 show at the click. Felt waits haven't dropped yet: measure click-to-map on the Asia save.
-2. T-4124 one graph for all zones (shifts walks 1-2%: numbers to her first). T-4051 zone-open: two untimed fixes in
-   tree zoneopen, need one quiet timing run. T-4109 reload message after the model stops. T-4106 install banner
-   (strings to her). Solve triage order: notes/solve-triage-2026-11-23.md.
-3. Track rework PAUSED until after the 0.4.6 publish (T-4037 g3b at a clean point, 79 tests left; T-4116 her panic).
-   tw/track's sync with master conflicts (stateRows.ts, t1382-rows.mjs, demand-kernel.md) and waits for the resume.
-   On resume ask her: once stations stop cutting track, single/double, rebuild, level and one-way act on the whole
-   piece; accept, or cut at stations? Idle trees (coreslider, onewaylag, split6, stationids, timetables): bring up
-   after 0.4.6, start one only if truly nearly done.
+1. Edit speed until done, then one message to her. No publish unless she says.
+2. T-4051 zone-open (two untimed fixes in tree zoneopen, one quiet timing run). Solve triage: notes/solve-triage-2026-11-23.md.
+3. Track rework paused until after 0.4.6 (T-4037 g3b; T-4116 her panic); tw/track sync with master conflicts. Idle
+   trees (coreslider, onewaylag, split6, stationids, timetables): bring up after 0.4.6.
 
 LIVE v0.4.5. 8800 = master always (809a0d16); the track build only at /trainworld-track/ (?track), own saves, no
 account (snaptrack.py). Her North America save is level 42: opens only there; backups in artifacts/trainworld/savedl/.
