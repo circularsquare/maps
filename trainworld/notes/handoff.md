@@ -8,8 +8,9 @@ diary notes/handoff-log.md. Her time UTC-5.
 - 0.4.6: she says when to publish; never ask. 8800 = c0d31916. On master since: T-4204 s2, T-4209, T-4213 bench gates.
   0.4.6 waits for (her word, "yes want all"): settle T-4194 opt 1+2 (agent settle1, tree settle: widen to 0.25 for
   headway lines only so T-3931's test passes; jwxidghd stop add 11-12 s to 2.3-2.7 s; Asia lines up to 3.5%);
-  zeroriders T-4212 (Opus, 6168: 0 riders after "loaded" on her first open of a new build, fine on reopen; smoke on a
-  fresh profile passes; suspect kept figures from the old build / keepSet a3a084b87); stalefigs T-4202 s2 (done in
+  T-4212 0 riders after "loaded" (agent zeroriders reported 17:10: not reproduced on fresh profile, old-build figures,
+  Montana, Asia; suspects: no zone needed solving yet / packs failed; needs her diagnostics from such a load; notes in
+  tree zeroriders, land them; decide whether it still blocks 0.4.6); stalefigs T-4202 s2 (done in
   tree stalefigs, held until T-4212's cause is known: may be the same path). T-4214's wrong deletion if a regression.
   Then: batch checker (T-4194, T-4202, T-4204, keepSet, t3084 ferry step base vs head; 25 min, no benchmarks), smoke,
   release perf_bench nyc/tokyo/belgrade 1 run each with --baseline (writes master baselines; check NYC map +2.5 s),
