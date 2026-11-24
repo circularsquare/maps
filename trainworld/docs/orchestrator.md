@@ -186,9 +186,6 @@ skill, then ask her for the yes.
 
 ## Traps
 
-- A tree with a merge in progress (MERGE_HEAD) or a merge commit loses its work in `finish`: the rebase drops merge commits
-  (11-24, busmerge2, recovered from the reflog; T-4180). Check `git -C <tree> status` first; commit the merge, or diff it
-  against its second parent and apply that on a fresh tree.
 
 - `git stash` is one stack for all worktrees: agents merging master into their trees use `git stash push -m <name>` and pop
   their own entry by index, never a bare pop (two did at once on 11-24 and swapped changes).
