@@ -162,9 +162,10 @@ artifacts/trainworld/T-4120/.
 
 ## Map and UI
 
+- 2026-11-23 (Anita, T-4153): The drawn network is bounded by what an edit touched on master now, not left to the track rework's stage 5: it is most of an edit's wait.
 - 2026-11-23 (T-4114): After a stop edit or a line delete the map draws the line's new strokes before the network: track it gained is drawn centred without its side-by-side band, and its trains keep the old path until the network arrives (0.5-3 s on big saves).
 - 2026-11-23 (T-4140): A selected bubble's far end draws its own zone's far 6 km zones again, reversing T-139, but only 50 km or more from its busiest cell, where local outings have ended, so they don't crowd the local far end. notes/T-4140.md
-- 2026-11-23 (T-4136): While the track tool's answer for the pointer's spot is on its way, the ghost is the last answer bent to the pointer. Lie: for 10-50 ms (up to 1 s from a busy station) its curves, speeds and price are the last spot's. notes/T-4136.md
+- 2026-11-23 (T-4136, T-4143): While the track tool's answer for the pointer's spot is on its way, the ghost is the last answer bent to the pointer; before a run's first answer, an unchecked arc along the track (or a straight line) to the pointer. Lie: for 10-50 ms, up to seconds while the worker is busy. notes/T-4143.md
 - 2026-11-23 (T-4106): The install note shows on phones and tablets after 2 hours of play, a minute each visit until closed with its x, then never; on Android a no to Chrome's own install question also counts as closed. Hidden while the tutorial card is fully out. notes/T-4106.md
 - 2026-11-21 (, T-4004): The map search finds towns anywhere through a world name index (about 135 MB gzipped on R2 a release; a search fetches about 30 KB a shard). Lie: substrings and nicknames match only near the view. notes/T-4004.md
 - 2026-11-20 (Anita, T-2528): The diagram's distortion dial defaults to 0.5 (Anita: "i kidna like 0.5", was 0.8). It stops zooming out where the network's larger side is half the view's, raised from 1/10 after a city's drawing went off screen. notes/T-2556.md

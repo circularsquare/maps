@@ -189,6 +189,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4152 [P1] {L:track-drawing} "Track has to leave a junction along the existing track" refuses sensible joins (taking, 2026-11-23, agent junctionmsg)
   - Context: You, 11-23, scratch pad: a player joining two blueprint tracks end to end got "Track has to leave a junction along the existing track"; you have met it too: "not an interpretable message ... feels like it shouldnt apply in most cases it shows up". Screenshot artifacts/trainworld/board/20261123-182708-5c6d.png.
   - Goal: The check fires only where a join really can't be built, and its message says what to do.
+- T-4153 [P1] {L:edit-speed} Rebuild only the touched part of the drawn network (taking, 2026-11-23, agent editnetwork)
+  - Context: You, 11-23: "this is the entire issue. this is what we should fix", not left to the track rework. The drawn network rebuild is 50-70% of an edit's worker wait on Asia: 0.15-0.38 s for line edits, 0.7-1.3 s for station, copy and delete (T-4149, T-4097 part D).
+  - Goal: The drawn network redone for what an edit touched, byte-equal to a full build; station edits on Asia under 0.2 s.
+  - Other: notes/T-4097.md section 4
 - T-4145 [P1] {L:edit-speed} Show-at-click base for every edit (taking, 2026-11-23, agent editbase)
   - Context: From T-4144: one worker message after every edit, one list of edits waiting to show, per-line and per-edge renderer textures; lineclick's version tracks lines only.
   - Goal: The base the streams build on, then undo by it; 3-4 h plus 2-3 h.

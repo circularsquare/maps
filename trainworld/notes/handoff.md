@@ -17,6 +17,9 @@ diary notes/handoff-log.md. Her time UTC-5.
   (opus, her pad: "Track has to leave a junction along the existing track" misfires, reword).
 - rampport T-4112 landed on master 380d8fc7 (23:55); tree "rampport" still to remove (a shell held it). editbase
   reported stage 0 and 0b landable; waiting on its bench and smoke, then land and tell editstations/editlines.
+- editworker: network build (map/network.ts) is 50-70% of the worker wait (station/copy/delete 0.7-1.3 s); stream D
+  can't reach 0.2-0.35 s without it. Decide after the streams land: bound network on master vs wait for T-3444 st 5.
+  Rows-first waits for base + B. It took clockDemand.ts bayTimes (150-400 ms an edit).
 - Batch check due once rampport lands: rampport (track split), regionfix 8e1eb7ba, lineclick ef99d979 (toggleStop).
 - 8800 = ef99d979 (23:11). Landed after takeover, latest: madison T-4140, regionfix T-4137, ghostlag T-4136, lineclick
   T-4114 stage 1, editbench T-4139 (tools/edit_bench.mjs; trust changes over about 25%). T-4124 closed (code on branch
@@ -42,6 +45,8 @@ Cap 10 from 23:48 for a few hours (her ask), then back to 14 daytime; cores 0-1 
 ledger notes/perf-ledger.jsonl.
 
 ## Her words
+- 11-23 00:0x: the drawn network rebuild is "the entire issue. this is what we should fix", not left to the track rework;
+  angry it was rediscovered and postponed. editnetwork T-4153 (opus) started; it is the top edit-speed priority.
 - 11-23 23:1x: edit speed: "just do all of the changes and i can test, no need for many rounds of implement-test. lemme
   know when everything is done". Run every T-4144 stream, land all, then one message to her; no interim test asks.
 - 11-23: your two top priorities are answering her and never letting agents overbook or collide; agents 2-8 run by
