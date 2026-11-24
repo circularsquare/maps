@@ -244,6 +244,32 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4149: edit_bench's stop-click rows say "no edit message" on both builds, and --compare picked up other agents' ledger lines.
   - Goal: Stop clicks measured, and --compare reads only the two runs it was given.
   - Other: notes/T-4149.md
+- T-4171 [P2] {L:checks} {waits:Anita} Rules for Gemini agents in maps
+  - Need from Anita: Will Gemini get tasks in maps, and if so may it ever touch AWS? I'd say tasks yes, AWS no.
+  - Context: None of the Claude hooks run for Gemini: the AWS guard, the refusal to edit TASKS/DECISIONS in a tree, the agent guard. It reads its own instructions file, not CLAUDE.md, unless told to. Its review was well behaved, but a working agent would need the same rules.
+  - Goal: Gemini's instructions point at the maps and trainworld CLAUDE.md files and say no AWS, no commits, worktrees only through agent-tree.mjs. About 1 h.
+  - Other: notes/gemini-review-triage-2026-11-24.md
+- T-4172 [P2] {L:world-tooling} {waits:Anita} AWS key limited to our bucket and machines
+  - Need from Anita: Ask your friend if you may make a second IAM user with only our rights in their account; the agent writes the policy.
+  - Context: User anita has AdministratorAccess on the friend's account. tools/aws/guard.py only sees commands typed into Claude's shell: a Python script file using boto3, or any non-Claude agent, goes straight past it. T-4166 (your own account) has 5 vCPUs, too few for builds.
+  - Goal: The key in ~/.aws/credentials can only use the anitabuilder bucket and tagged machines in us-east-2; tools/aws/ still works end to end; docs/aws.md says so. About 1 h agent time.
+  - Other: notes/gemini-review-triage-2026-11-24.md
+- T-4173 [P2] {L:checks} cores.py uses one ledger from any worktree
+  - Context: cores.py keeps cores.json beside itself, so a claim made with a worktree's copy goes to a ledger nobody reads and can quietly go over the cap. cores.mjs, agent_cargo.py, perf_bench.mjs and edit_bench.mjs each work around it on their own.
+  - Goal: cores.py resolves the main tree's cores.json (walk up past .tw-trees/ or git's common dir); the four workarounds removed. About 0.5 h.
+  - Other: notes/gemini-review-triage-2026-11-24.md
+- T-4174 [P2] {L:checks} Cycling hook text matches the orchestrator doc
+  - Context: The stop hook (.claude/hooks/orchestrator.py, the context message) tells the orchestrator to run next_orchestrator.py <project>, skipping the standby.txt check and --advisor fable that docs/orchestrator.md "Your own cycling" asks for. Its line 38 "no Fable unless she asks" is about agent models, which reads as a contradiction.
+  - Goal: The hook points at the project's "Your own cycling" section instead of repeating steps; line 38 says it is about agents. About 0.25 h.
+  - Other: notes/gemini-review-triage-2026-11-24.md
+- T-4175 [P3] {L:cleanup} Stale lines in SPEC, docs and handoff
+  - Context: SPEC.md section 3 still says "about 800 zones" (the code tour says over 4,000). docs/interface.md's redirect table lists "Zen Maru Gothic ... no transitions" as if current. handoff.md gives two 8800 commits and warns about .tw-trees/arrivefirst, which is gone. reserve_cores.ps1's top comment says claude.exe stays at normal priority; the code raises it.
+  - Goal: Each line says what is true now; TASKS.md's header says P4 tasks anywhere are parked; the two untracked .stackdump files deleted. About 0.5 h.
+  - Other: notes/gemini-review-triage-2026-11-24.md
+- T-4176 [P3] {L:checks} Remove finished worktrees and old tw branches
+  - Context: 19 worktrees at about 1.2 GB each, a leftover empty .tw-trees/rampport folder, and 34 tw/* branches, 14 with no tree. handoff.md keeps coreslider, onewaylag, split6, stationids and timetables on purpose until after 0.4.6; others may be done.
+  - Goal: Every tree whose agent is done and whose work landed is removed with agent-tree.mjs; merged branches with no tree deleted. About 0.5 h.
+  - Other: notes/gemini-review-triage-2026-11-24.md
 - T-4141 [P3] {L:station-placement} Track placed by an edit call crossed the Hudson at ground level
   - Context: Seen by T-4112: a route entered through the game's edit call crossed the Hudson at ground level without a refusal, while pointer-drawn track nearby was bridged. Water may not have been loaded under part of it.
   - Other: notes/T-4112.md
