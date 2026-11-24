@@ -206,6 +206,17 @@ struct Train {
 }
 
 impl Plan {
+    /// T-4132: what `timing` reads of the plan, as bits (its cluster's key).
+    pub fn key_into(&self, net: &Network, key: &mut Vec<u64>) {
+        key.extend([self.fast.0 as u64, self.fast.1 as u64, self.slow.0 as u64, self.slow.1 as u64, self.spacing.to_bits(), self.headway_cap(net).to_bits()]);
+        key.extend(self.start.iter().chain(&self.at).map(|x| x.to_bits()));
+        for p in &self.points {
+            key.extend(p.slow.iter().chain(&p.fast).chain([&p.at, &p.fat]).map(|x| x.to_bits()));
+            key.extend([p.passing as u64, p.stop as u64, p.node as u64]);
+        }
+        key.extend(self.next.iter().map(|&x| x as u64));
+    }
+
     /// The next passing point after point `p`, or the stretch's end.
     pub fn next_passing(&self, p: usize) -> usize {
         self.next[p]

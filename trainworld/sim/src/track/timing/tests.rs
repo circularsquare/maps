@@ -124,7 +124,7 @@ fn counted_expresses_never_run_through_locals() {
         let h = 3600.0 / w.net.line_tph[express as usize][0] as f64;
         for k in 0..24 {
             w.net.line_phase[express as usize][0] = (h * k as f64 / 24.0) as f32;
-            w.svc.timing_key.clear();
+            w.svc.forget_timing();
             w.retime();
             let (bad, _) = bad_passes(&w, local, express, &n, &n[1..6], t0, t0 + 4.0 * 3600.0, false);
             assert!(early(&bad).is_empty(), "{counts:?}, express phase {}/24: {:?}", k, &early(&bad)[..early(&bad).len().min(4)]);
@@ -433,13 +433,13 @@ fn a_line_timed_otherwise_is_noted_changed() {
     assert!(timed > 1);
     // the local's variants as if worked out otherwise before: the next retime puts them back
     w.svc.lines[local as usize].runs[0].vars[0].pop();
-    w.svc.timing_key.clear();
+    w.svc.forget_timing();
     w.svc.take_changed();
     w.retime();
     assert_eq!(w.svc.lines[local as usize].runs[0].vars[0].len(), timed);
     assert_eq!(w.svc.take_changed(), vec![local]);
     // timed the same: nothing noted
-    w.svc.timing_key.clear();
+    w.svc.forget_timing();
     w.retime();
     assert!(w.svc.take_changed().is_empty());
 }

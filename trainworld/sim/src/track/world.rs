@@ -1704,13 +1704,22 @@ impl TrackWorld {
     }
 
     /// Inspect the derived constructed state, then restore it without spending or undo edits.
+    /// T-4132: no line is timed train by train in between (what `inspect` reads keeps the means):
+    /// the variants are put back after, and worked out again only where the rollback left what
+    /// they read otherwise.
     pub fn trial_with<T>(&mut self, op: Op, inspect: impl FnOnce(&TrackWorld) -> T) -> Result<(EditResult, T), Vec<Issue>> {
         let phases = self.phases();
-        let (r, inv) = self.commit(op)?;
-        let value = inspect(self);
-        let _ = self.restore(inv);
-        self.set_phases(phases);
-        Ok((r, value))
+        self.svc.timing_held = Some(vec![]);
+        let out = self.commit(op).map(|(r, inv)| {
+            let value = inspect(self);
+            let _ = self.restore(inv);
+            self.set_phases(phases);
+            (r, value)
+        });
+        let held = self.svc.timing_held.take().unwrap_or_default();
+        super::timing::put_back(&mut self.svc, held);
+        self.retime();
+        out
     }
 
     /// Apply an edit with no services, undo or (unless `checked`) checks, to plan a follow-on edit

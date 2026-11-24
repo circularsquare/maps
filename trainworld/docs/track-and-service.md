@@ -996,7 +996,7 @@ headway line's return run leaves where its round trip leaves it, so the two dire
 both be at the best), and never, where another offset allows, where the slower train that waits
 longest would miss its next departure. These averages are the figures: round
 trips, trains needed and demand. **The drawn timetable is worked out train by train** (T-3346 stage 2,
-`track/timing.rs`): once an edit has settled and the departures are placed, each slower train's waits
+`track/timing.rs`): once an edit has settled and the departures are placed (redone only for the lines joined by such waits to what the edit moved, T-4132), each slower train's waits
 come from the faster trains as they really run (both lines' placed departures, each direction at the
 phase it gets, `overtake::train_waits`, which takes the two lines' departures as lists), by the same
 rule and caps, so a local waits for exactly the expresses that would catch it and leaves 60 s after

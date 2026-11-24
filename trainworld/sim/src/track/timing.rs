@@ -15,7 +15,7 @@
 //! only one of which has its own weekends is not timed. Demand, round trips and fleets keep the
 //! means; a train that waited longer stands less at its last stop (`LineSvc::trip_len_var`).
 //! Variants are derived, never saved, and worked out again after every edit has settled and its
-//! departures are placed (`retime`).
+//! departures are placed (`retime`), for the clusters of lines timed together whose inputs moved.
 
 use std::collections::{BTreeMap, HashMap};
 
@@ -90,46 +90,261 @@ fn weekday(lat: &Lattice) -> Lattice {
     Lattice { cal: Cal::all(DAY_REF, WEEKDAYS), ..*lat }
 }
 
-/// Work out every line's variants again (after an edit has settled and its phases are placed).
-pub fn retime(net: &Network, svc: &mut Service) {
-    let key = inputs(net, svc);
-    if key == svc.timing_key {
-        // nothing it reads moved: the variants stand (an update marks a line it touched untimed)
-        for l in 0..svc.lines.len() {
-            if svc.lines[l].runs.iter().any(|r| r.vars.iter().any(|v| !v.is_empty())) {
-                svc.lines[l].timed = svc.lattice(net, l).map(|x| x.timing_key());
-            }
-        }
-        return;
-    }
-    svc.timing_key = key;
-    // T-3896: the variants are in the line's phase tables, which the page reads again only for the
-    // lines noted as changed: any line timed otherwise than before is noted, edited or not
-    let before: Vec<Vec<Vec<Variant>>> = svc.lines.iter().map(|ls| ls.runs.iter().flat_map(|r| r.vars.iter().cloned()).collect()).collect();
-    clear(svc);
-    if !svc.timing_key.is_empty() {
-        let lats: Vec<Option<Lattice>> = (0..svc.lines.len()).map(|l| svc.lattice(net, l).map(|x| weekday(&x))).collect();
-        let mut built = Built { old: std::mem::take(&mut svc.timing_memo), new: HashMap::new() };
-        // (before the waits: a slower train waits for the faster ones as they run)
-        let lead = lead_in(net, svc, &lats, &mut built);
-        install(svc, lead, &lats);
-        let passing = passing_waits(net, svc, &lats, &mut built);
-        install(svc, passing, &lats);
-        // (before the following: a faster line timed behind a slower one reads its trains as they run)
-        floor(net, svc);
-        let follow = following(net, svc, &lats, &mut built);
-        install(svc, follow, &lats);
-        svc.timing_memo = built.new;
-    } else {
-        svc.timing_memo.clear();
-    }
-    let moved: Vec<u32> = (0..svc.lines.len()).filter(|&l| before.get(l).is_some_and(|b| svc.lines[l].runs.iter().flat_map(|r| r.vars.iter()).ne(b.iter()))).map(|l| l as u32).collect();
-    svc.note_changed(&moved);
+/// Lines `retime` times together: those joined through a wait at a passing station or a following
+/// loss (owners, users and the plan's lines), and those resources in their order. Each cluster's
+/// variants are worked out from its own lines alone.
+struct Cluster {
+    lines: Vec<u32>,
+    res: Vec<usize>,
 }
 
-/// Every run's variants and patterns dropped, and every line untimed.
-fn clear(svc: &mut Service) {
-    for ls in svc.lines.iter_mut() {
+fn clusters(svc: &Service) -> Vec<Cluster> {
+    let cap = &svc.cap;
+    let n = svc.lines.len();
+    let mut up: Vec<usize> = (0..n).collect();
+    fn root(up: &mut [usize], mut x: usize) -> usize {
+        while up[x] != x {
+            up[x] = up[up[x]];
+            x = up[x];
+        }
+        x
+    }
+    let mut res = vec![];
+    let mut on = vec![false; n];
+    for r in (0..cap.res.len()).filter(|&r| cap.wait_point(r).is_some() || cap.is_follow(r)) {
+        let mut ls: Vec<usize> = cap.users_of(r).iter().map(|u| u.line as usize).collect();
+        ls.extend(cap.wait_point(r).map(|(f, _)| f as usize));
+        ls.extend(cap.plans_of(r).iter().flat_map(|p| [p.fast.0 as usize, p.slow.0 as usize]));
+        ls.retain(|&l| l < n);
+        let Some(&a) = ls.first() else { continue };
+        for &b in &ls {
+            on[b] = true;
+            let (ra, rb) = (root(&mut up, a), root(&mut up, b));
+            up[ra.max(rb)] = ra.min(rb);
+        }
+        res.push((r, a));
+    }
+    let mut by: BTreeMap<usize, Cluster> = BTreeMap::new();
+    for l in (0..n).filter(|&l| on[l]) {
+        let r = root(&mut up, l);
+        by.entry(r).or_insert_with(|| Cluster { lines: vec![], res: vec![] }).lines.push(l as u32);
+    }
+    for (r, a) in res {
+        let k = root(&mut up, a);
+        by.get_mut(&k).unwrap().res.push(r);
+    }
+    by.into_values().collect()
+}
+
+/// Bits of every number in `xs`, folded (FNV-1a over the words).
+fn fold(xs: impl Iterator<Item = u64>) -> u64 {
+    xs.fold(0xcbf2_9ce4_8422_2325, |h, x| (h ^ x).wrapping_mul(0x100_0000_01b3))
+}
+
+fn fold_prof(p: &Profile) -> u64 {
+    fold(p.phases.iter().flat_map(|x| [x.t, x.s, x.v, x.a]).chain(p.arr.iter().copied()).chain(p.dep.iter().copied()).chain([p.duration, p.dwell, p.hold]).map(f64::to_bits))
+}
+
+/// Everything `retime` reads for one cluster, as bits: its waits and following losses with their
+/// users, delays and plans, and each line's pattern, dwell, turnaround, stands and timetables. The
+/// resources are put in the order of what they hold (`c.res` too, which the passes read in): an
+/// edit elsewhere renumbers them, and their order would otherwise move the key (and the last bits
+/// of a wait summed from two at one stop).
+fn cluster_key(net: &Network, svc: &Service, c: &mut Cluster, lats: &[Option<Lattice>]) -> Vec<u64> {
+    let mut chunks: Vec<(Vec<u64>, usize)> = c.res.iter().map(|&r| (res_key(net, svc, r), r)).collect();
+    if !check::index_order() {
+        chunks.sort();
+    }
+    c.res = chunks.iter().map(|x| x.1).collect();
+    let mut key: Vec<u64> = chunks.into_iter().flat_map(|x| x.0).collect();
+    key.push(u64::MAX - 1);
+    key.extend(net.period_slot().map(|s| s as u64));
+    key.extend(net.slots().map(|s| s as u64));
+    for &l in &c.lines {
+        let li = l as usize;
+        let ls = &svc.lines[li];
+        key.push(u64::MAX - 2 - l as u64);
+        if let Some(lat) = &lats[li] {
+            key.extend(lat.tph.iter().map(|x| x.to_bits() as u64));
+            key.extend(lat.off.iter().chain(&lat.phase).chain([&lat.lead, &lat.shift]).map(|x| x.to_bits()));
+            key.push(lat.rest_on as u64);
+            key.extend(lat.period_slot.map(|s| s as u64));
+            key.extend(lat.hours.words());
+        }
+        key.extend([net.line_dwell[li].to_bits() as u64, net.line_turn[li].to_bits() as u64, ls.close_stand(net, l).to_bits(), ls.is_loop() as u64, ls.one_way as u64]);
+        key.extend(net.line_split_of(l).iter().map(|x| x.to_bits() as u64));
+        key.extend(net.slots().map(|lev| svc.spare(net, li, lev).to_bits()));
+        for run in &ls.runs {
+            key.extend([run.free.duration.to_bits(), run.len.to_bits(), run.free.phases.len() as u64, fold_prof(&run.free)]);
+            key.extend([fold(run.segs.iter().map(|&x| x as u64)), fold(run.seg_off.iter().chain(&run.node_s).map(|x| x.to_bits()))]);
+            for lev in net.slots() {
+                key.extend([run.prof[lev].duration.to_bits(), fold_prof(&run.prof[lev])]);
+                key.extend(run.stop_holds[lev].iter().map(|x| x.to_bits()));
+                key.extend(run.holds[lev].iter().flat_map(|h| [h.s.to_bits(), h.delay.to_bits(), h.span.to_bits()]));
+            }
+        }
+    }
+    key
+}
+
+/// One wait or following loss as bits: its users, delays and plans.
+fn res_key(net: &Network, svc: &Service, r: usize) -> Vec<u64> {
+    let cap = &svc.cap;
+    let mut key = vec![];
+    for u in cap.users_of(r) {
+        key.extend([u.line as u64, u.run as u64, u.stop as u64, u.at.to_bits(), u.occ.to_bits(), u.owner as u64]);
+    }
+    key.extend(cap.delay[r].iter().map(|x| x.to_bits()));
+    match cap.wait_point(r) {
+        Some((f, k)) => key.extend([1, f as u64, k as u64]),
+        None => key.push(2),
+    }
+    for p in cap.plans_of(r) {
+        p.key_into(net, &mut key);
+    }
+    key
+}
+
+/// What a cluster's lines' variants are now: anything else that sets them (a rebuilt line starts
+/// with none) shows here, and its cluster is worked out again.
+fn state(svc: &Service, lines: &[u32]) -> Vec<u64> {
+    let mut out = vec![];
+    for &l in lines {
+        for run in &svc.lines[l as usize].runs {
+            for lev in 0..SLOTS {
+                out.extend([run.vars[lev].len() as u64, fold(run.pattern[lev].iter().map(|&(p, v)| (p as u64) << 8 | v as u64))]);
+                out.extend(run.vars[lev].iter().map(|v| v.prof.duration.to_bits()));
+            }
+        }
+    }
+    out
+}
+
+/// Work out the variants again (after an edit has settled and its phases are placed): only for
+/// the clusters whose inputs or variants moved since last time (T-4132), so an edit times the
+/// lines sharing waits with what it changed and keeps the rest.
+pub fn retime(net: &Network, svc: &mut Service) {
+    if svc.timing_held.is_some() {
+        return;
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    let t0 = std::time::Instant::now();
+    let n = svc.lines.len();
+    let mut cl = clusters(svc);
+    let lats: Vec<Option<Lattice>> = {
+        let mut on = vec![false; n];
+        cl.iter().flat_map(|c| &c.lines).for_each(|&l| on[l as usize] = true);
+        (0..n).map(|l| if on[l] { svc.lattice(net, l).map(|x| weekday(&x)) } else { None }).collect()
+    };
+    let keys: Vec<Vec<u64>> = cl.iter_mut().map(|c| cluster_key(net, svc, c, &lats)).collect();
+    let mut redo = vec![false; n];
+    let mut states: Vec<Vec<u64>> = cl.iter().map(|c| state(svc, &c.lines)).collect();
+    let mut stood: Vec<bool> = cl.iter().enumerate().map(|(i, c)| svc.timing_keys.get(&c.lines[0]).is_some_and(|(k, s)| *k == keys[i] && *s == states[i])).collect();
+    if check::full() && stood.contains(&false) {
+        stood.iter_mut().for_each(|s| *s = false);
+    }
+    if !svc.timing_keys.is_empty() {
+        check::skip_one(&mut stood);
+    }
+    for (c, _) in cl.iter().zip(&stood).filter(|x| !*x.1) {
+        c.lines.iter().for_each(|&l| redo[l as usize] = true);
+    }
+    // a line in no cluster has no variants
+    let mut in_cl = vec![false; n];
+    cl.iter().flat_map(|c| &c.lines).for_each(|&l| in_cl[l as usize] = true);
+    for l in (0..n).filter(|&l| !in_cl[l]) {
+        let ls = &svc.lines[l];
+        redo[l] |= ls.timed.is_some() || ls.runs.iter().any(|r| r.vars.iter().any(|v| !v.is_empty()) || r.pattern.iter().any(|p| !p.is_empty()));
+    }
+    // T-3896: the variants are in the line's phase tables, which the page reads again only for the
+    // lines noted as changed: any line timed otherwise than before is noted, edited or not
+    let redone: Vec<u32> = (0..n as u32).filter(|&l| redo[l as usize]).collect();
+    let before: Vec<Vec<Vec<Variant>>> = redone.iter().map(|&l| svc.lines[l as usize].runs.iter().flat_map(|r| r.vars.iter().cloned()).collect()).collect();
+    clear(svc, &redo);
+    // the profiles built last time for the lines worked out again, to take again; the rest stay
+    let mut memo = std::mem::take(&mut svc.timing_memo);
+    let mut old = HashMap::new();
+    memo.retain(|k, p| {
+        let l = k.0 as usize;
+        if l < n && in_cl[l] && !redo[l] {
+            return true;
+        }
+        if l < n && redo[l] {
+            old.insert(k.clone(), std::mem::take(p));
+        }
+        false
+    });
+    let mut built = Built { old, new: HashMap::new() };
+    // the waits and following losses of the clusters worked out again, each cluster's in its key's order
+    let res: Vec<usize> = cl.iter().zip(&stood).filter(|x| !*x.1).flat_map(|x| x.0.res.iter().copied()).collect();
+    if !res.is_empty() {
+        // (before the waits: a slower train waits for the faster ones as they run)
+        let lead = lead_in(net, svc, &lats, &mut built, &res);
+        install(svc, lead, &lats);
+        let passing = passing_waits(net, svc, &lats, &mut built, &res);
+        install(svc, passing, &lats);
+        // (before the following: a faster line timed behind a slower one reads its trains as they run)
+        floor(net, svc, &redo);
+        let follow = following(net, svc, &lats, &mut built, &res);
+        install(svc, follow, &lats);
+    }
+    memo.extend(built.new);
+    svc.timing_memo = memo;
+    // a cluster that stands: its lines timed again where they have variants (an update marks a line
+    // it touched untimed)
+    for l in (0..n).filter(|&l| in_cl[l] && !redo[l]) {
+        if svc.lines[l].runs.iter().any(|r| r.vars.iter().any(|v| !v.is_empty())) {
+            svc.lines[l].timed = lats[l].map(|x| x.timing_key());
+        }
+    }
+    for (i, c) in cl.iter().enumerate().filter(|x| !stood[x.0]) {
+        states[i] = state(svc, &c.lines);
+    }
+    svc.timing_keys = cl.iter().zip(keys).zip(states).map(|((c, k), s)| (c.lines[0], (k, s))).collect();
+    let moved: Vec<u32> = redone.iter().zip(&before).filter(|(&l, b)| svc.lines[l as usize].runs.iter().flat_map(|r| r.vars.iter()).ne(b.iter())).map(|x| *x.0).collect();
+    svc.note_changed(&moved);
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let has = |l: &u32| svc.lines[*l as usize].runs.iter().any(|r| r.vars.iter().any(|v| !v.is_empty()));
+        let mixed = stood.contains(&false) && cl.iter().zip(&stood).any(|(c, s)| *s && c.lines.iter().any(has));
+        check::after(net, svc, t0, cl.len(), stood.iter().filter(|s| !**s).count(), redone.len(), mixed);
+    }
+}
+
+/// A line's variants, patterns and timing, kept through a trial that times no train (`Service::timing_held`).
+#[derive(Clone, Debug)]
+pub struct Held {
+    runs: Vec<([Vec<Variant>; SLOTS], [Vec<(u32, u8)>; SLOTS])>,
+    timed: Option<Lattice>,
+}
+
+/// A line's variants taken off it, None for a line with none.
+pub fn take(ls: &mut super::service::LineSvc) -> Option<Held> {
+    if !ls.runs.iter().any(|r| r.vars.iter().any(|v| !v.is_empty())) {
+        return None;
+    }
+    let runs = ls.runs.iter_mut().map(|r| (std::mem::take(&mut r.vars), std::mem::take(&mut r.pattern))).collect();
+    Some(Held { runs, timed: ls.timed.take() })
+}
+
+/// The variants a trial's rebuilds took (`Service::timing_held`) back on lines that have none
+/// now; the next `retime` keeps them where what they read is as it was, and works the rest out.
+pub fn put_back(svc: &mut Service, held: Vec<(u32, Held)>) {
+    for (l, h) in held {
+        let Some(ls) = svc.lines.get_mut(l as usize) else { continue };
+        if ls.runs.iter().any(|r| r.vars.iter().any(|v| !v.is_empty())) {
+            continue;
+        }
+        for (r, (vars, pattern)) in ls.runs.iter_mut().zip(h.runs) {
+            (r.vars, r.pattern) = (vars, pattern);
+        }
+        ls.timed = h.timed;
+    }
+}
+
+/// Each line's variants and patterns dropped, and the line untimed, where `redo`.
+fn clear(svc: &mut Service, redo: &[bool]) {
+    for (ls, _) in svc.lines.iter_mut().zip(redo).filter(|x| *x.1) {
         for r in ls.runs.iter_mut() {
             for lev in 0..SLOTS {
                 r.vars[lev].clear();
@@ -163,8 +378,8 @@ fn stand_at_end(net: &Network, svc: &Service, l: usize, r: usize, lev: usize) ->
 /// are sized on the slot's (the averaged waits at the plan's best phase); where the trains really
 /// run at another phase, timing them train by train would leave them standing a whole headway at
 /// the end for their next departure, holding up the trains behind (t2233-passing-map's 30/10).
-fn floor(net: &Network, svc: &mut Service) {
-    for l in 0..svc.lines.len() {
+fn floor(net: &Network, svc: &mut Service, redo: &[bool]) {
+    for l in (0..svc.lines.len()).filter(|&l| redo[l]) {
         let need = TURN_MIN_S.min(svc.lines[l].close_stand(net, l as u32)) - 1.0;
         for lev in net.slots() {
             for r in 0..2 {
@@ -179,52 +394,6 @@ fn floor(net: &Network, svc: &mut Service) {
             svc.lines[l].timed = None;
         }
     }
-}
-
-/// Everything `retime` reads, as bits: the waits and following losses with their users and delays,
-/// and each line they name's pattern, dwell, turnaround and timetables. Empty where there is none
-/// (no line is timed).
-fn inputs(net: &Network, svc: &Service) -> Vec<u64> {
-    let cap = &svc.cap;
-    let mut key = vec![];
-    let mut lines: Vec<u32> = vec![];
-    for r in (0..cap.res.len()).filter(|&r| cap.wait_point(r).is_some() || cap.is_follow(r)) {
-        key.push(r as u64);
-        for u in cap.users_of(r) {
-            key.extend([u.line as u64, u.run as u64, u.stop as u64, u.at.to_bits(), u.occ.to_bits()]);
-            lines.push(u.line);
-        }
-        key.extend(cap.delay[r].iter().map(|x| x.to_bits()));
-        if let Some((_, k)) = cap.wait_point(r) {
-            key.push(k as u64);
-        }
-    }
-    if key.is_empty() {
-        return key;
-    }
-    key.extend(net.period_slot().map(|s| s as u64));
-    lines.sort_unstable();
-    lines.dedup();
-    for l in lines {
-        key.push(u64::MAX - l as u64);
-        if let Some(lat) = svc.lattice(net, l as usize) {
-            key.extend(lat.tph.iter().map(|x| x.to_bits() as u64));
-            key.extend(lat.off.iter().chain(&lat.phase).chain([&lat.lead, &lat.shift]).map(|x| x.to_bits()));
-            key.push(lat.rest_on as u64);
-            key.extend(lat.period_slot.map(|s| s as u64));
-            key.extend(lat.hours.words());
-        }
-        key.extend([net.line_dwell[l as usize].to_bits() as u64, net.line_turn[l as usize].to_bits() as u64]);
-        for run in &svc.lines[l as usize].runs {
-            key.push(run.free.duration.to_bits());
-            for lev in net.slots() {
-                key.push(run.prof[lev].duration.to_bits());
-                key.extend(run.stop_holds[lev].iter().map(|x| x.to_bits()));
-                key.extend(run.holds[lev].iter().flat_map(|h| [h.s.to_bits(), h.delay.to_bits(), h.span.to_bits()]));
-            }
-        }
-    }
-    key
 }
 
 fn install(svc: &mut Service, done: Vec<Timed>, lats: &[Option<Lattice>]) {
@@ -375,10 +544,10 @@ fn pattern_of(deps: &[(f64, f64, u32)], which: &[usize]) -> Vec<(u32, u8)> {
 }
 
 /// Slower runs at passing stations: each train waits for the faster trains that would catch it.
-fn passing_waits(net: &Network, svc: &Service, lats: &[Option<Lattice>], built: &mut Built) -> Vec<Timed> {
+fn passing_waits(net: &Network, svc: &Service, lats: &[Option<Lattice>], built: &mut Built, res: &[usize]) -> Vec<Timed> {
     let cap = &svc.cap;
     let mut by: BTreeMap<(u32, u8), Vec<usize>> = BTreeMap::new();
-    for r in 0..cap.res.len() {
+    for &r in res {
         if cap.wait_point(r).is_some() {
             if let Some(o) = cap.users_of(r).iter().find(|u| u.owner) {
                 by.entry((o.line, o.run)).or_default().push(r);
@@ -476,10 +645,10 @@ fn passing_waits(net: &Network, svc: &Service, lats: &[Option<Lattice>], built: 
 /// is timed behind it to that station (`follow_one`), reaching it `LEAD_IN_CLEAR_S` after the
 /// slower one: a loss on top of the slot's timetable, no more than its stand at the far end allows.
 /// The rest run the slot's timetable. A run with none to time is left alone.
-fn lead_in(net: &Network, svc: &Service, lats: &[Option<Lattice>], built: &mut Built) -> Vec<Timed> {
+fn lead_in(net: &Network, svc: &Service, lats: &[Option<Lattice>], built: &mut Built, res: &[usize]) -> Vec<Timed> {
     let cap = &svc.cap;
     let mut by: BTreeMap<(u32, u8), Vec<usize>> = BTreeMap::new();
-    for r in (0..cap.res.len()).filter(|&r| cap.is_follow(r)) {
+    for &r in res.iter().filter(|&&r| cap.is_follow(r)) {
         if let Some(o) = cap.users_of(r).iter().find(|u| u.owner) {
             by.entry((o.line, o.run)).or_default().push(r);
         }
@@ -628,11 +797,11 @@ fn follow_one(xs: &[f64], e: &[f64], s: &[f64], spacing: f64) -> (f64, f64, f64)
 
 /// Faster runs timetabled together with the one slower run on a stretch with no passing station
 /// (`FOLLOW_TIMED`, T-2419): each train timed behind the slower train ahead of it.
-fn following(net: &Network, svc: &Service, lats: &[Option<Lattice>], built: &mut Built) -> Vec<Timed> {
+fn following(net: &Network, svc: &Service, lats: &[Option<Lattice>], built: &mut Built, res: &[usize]) -> Vec<Timed> {
     let cap = &svc.cap;
     // per faster run, its following losses: only a run with one, behind one slower run, is timed
     let mut by: BTreeMap<(u32, u8), Vec<usize>> = BTreeMap::new();
-    for r in (0..cap.res.len()).filter(|&r| cap.is_follow(r)) {
+    for &r in res.iter().filter(|&&r| cap.is_follow(r)) {
         if let Some(o) = cap.users_of(r).iter().find(|u| u.owner) {
             by.entry((o.line, o.run)).or_default().push(r);
         }
@@ -778,6 +947,8 @@ fn cluster_follow(each: &[Vec<i64>]) -> (Vec<Vec<i64>>, Vec<usize>) {
     let (reps, which) = cluster(&flip, |_, _| true);
     (reps.into_iter().map(|k| vec![k[0], -k[1], k[2]]).collect(), which)
 }
+
+pub mod check;
 
 #[cfg(test)]
 mod tests;

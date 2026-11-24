@@ -727,8 +727,12 @@ pub struct Service {
     /// T-3346 stage 2: the profiles `timing::retime` built last time, by what they were built
     /// from, so an edit elsewhere builds none of them again.
     pub timing_memo: std::collections::HashMap<(u32, u8, Vec<u64>), Profile>,
-    /// T-3346 stage 2: what `timing::retime` read last time; the same again keeps its variants.
-    pub timing_key: Vec<u64>,
+    /// T-4132: per cluster of lines `timing::retime` times together, by its first line: what it read
+    /// last time and the state it left its lines' variants in; both the same again keep them.
+    pub timing_keys: std::collections::HashMap<u32, (Vec<u64>, Vec<u64>)>,
+    /// T-4132: while a trial times no train (`TrackWorld::trial_with`), the variants each line it
+    /// rebuilds had before it, to put back after (`timing::put_back`); None otherwise.
+    pub timing_held: Option<Vec<(u32, super::timing::Held)>>,
 }
 
 /// One run of the stops and path its trains run (`line`: the whole plan, or the part of it a
@@ -1149,15 +1153,15 @@ impl Service {
         for &l in rebuilt {
             add_path(&self.lines[l as usize]);
         }
-        // T-3346 stage 2: a rebuilt line has lost its variants, so the next retime works them out
-        // whatever else it reads
-        if !rebuilt.is_empty() {
-            self.timing_key.clear();
-        }
         for &l in rebuilt {
             let (old_ok, old_run) = (self.lines[l as usize].ok, self.lines[l as usize].running);
             let old_stops = std::mem::take(&mut self.lines[l as usize].stops);
             let old_only = std::mem::take(&mut self.lines[l as usize].only);
+            if let Some(held) = &mut self.timing_held {
+                if !held.iter().any(|h| h.0 == l) {
+                    held.extend(super::timing::take(&mut self.lines[l as usize]).map(|h| (l, h)));
+                }
+            }
             self.lines[l as usize] = build_line(net, l);
             let now = &self.lines[l as usize];
             if now.ok != old_ok || now.running != old_run || now.stops != old_stops || now.only != old_only {
@@ -1264,6 +1268,12 @@ impl Service {
         self.note_changed(rescheduled);
         self.note_changed(&d.recomputed);
         d
+    }
+
+    /// T-4132: the next `timing::retime` works every line out again, as from a load.
+    pub fn forget_timing(&mut self) {
+        self.timing_keys.clear();
+        self.timing_memo.clear();
     }
 
     pub fn note_changed(&mut self, lines: &[u32]) {
