@@ -165,6 +165,14 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4091 [P3] {L:buses} Undoing a bus reroute leaves its stops where the reroute put them
   - Context: Seen by the T-4069 checker (notes/checkbns.md, case 3), not compared with master: undoing a busRoute reroute put the route back to 2 points but left stop 105 moved (-73.99374 to -73.99385). Reach: players who reroute a manual bus line and undo, a few metres off.
   - Goal: Undo puts the stops back where they were, or the cause named if it's older than T-4069.
+- T-4233 [P2] {L:checks} Fare-edit income check after quick city edits
+  - Context: From T-2188 (11-24): checks/t3303 fails on master too: a fare edit's income spiked 278x for a moment (quickend fixes it in publishStep, now 1.16x), and the check still assumes a local stage that city edits no longer have.
+  - Goal: t3303 checks the income after a fare edit under the new rule and passes.
+  - Other: notes/T-2188.md
+- T-4234 [P2] {L:checks} Edit bench's stop click misses on New York
+  - Context: The first master baseline (11-24, b7b9e4ee) got no New York stop click: the station sits outside the view ("page px 33, -9475; move the camera or close the panel"). Asia's stop click ran.
+  - Goal: edit_bench measures New York's stop click; the baseline rewritten with it.
+  - Other: notes/T-4139.md
 - T-4095 [P3] {L:checks} Agent worktrees with only trainworld checked out
   - Context: From T-4088: each tree is a full 1.4 GB copy of maps/, of which about 0.2 GB is trainworld; a sparse checkout in agent-tree.mjs would save 10-15 GB with 10 trees.
   - Goal: New trees hold only trainworld (and what its builds need); land and remove still work.
@@ -894,10 +902,6 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
 - T-2209 [P3] {L:buses} Ferry routes in narrow canals
   - Context: Amsterdam's grachten route is not found at 2.5 m cells, so it goes by the Amstel; 1-4% of Venice and Amsterdam routes under 5 m are affected.
   - Other: notes/T-2177.md "T-2192 results".
-- T-2188 [P1] {L:solve-speed} {after:0.4.6} City edits end at the quick result (taking, 2026-11-24, agent quickend)
-  - Context: You, 11-24: "lets do B after 0.4.6. lets reverse the call. we will just have to measure what exactly gets messed up". On your Asia save each edit waits 165-300 s for the whole re-solve; the touched cities' re-solve takes 5-11 s.
-  - Goal: City edits finish at the touched cities' re-solve; whole re-solve only for intercity edits and as an idle refresh; drift over 15 edits measured and shown to you.
-  - Other: notes/T-2188.md
 - T-4222 [P3] {L:solve-speed} {after:T-2188} Chunk tiny everyday trip pairs like commutes
   - Context: T-921 deals commute pairs under 1 person a day in chunks (about 7% of New York's calculation); 2 a day gained nothing more. Everyday trips are solved from sampled destinations, so they may lack the same tail of tiny pairs. You, 11-24: file as P3.
   - Goal: Know whether everyday trips have a tail of tiny pairs; if so, chunk them the same tunable way.
