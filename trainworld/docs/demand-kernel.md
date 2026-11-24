@@ -174,7 +174,7 @@ levels:
    `phi` rounds to 0 has no departures in the search. The same numbers carry marks beside the share
    (`track::span::stop_span`, kept through demand's clamp to 0..1): -1 marks a stop the run passes on
    the other track from a one-track station's platform (T-3332): no boarding, alighting or walking
-   change there, the ride carrying on through it. A stop the player keeps to getting off only
+   change there, the ride carrying on through it. A stop the player keeps to disembarking only
    (T-4013, `LineData::only`) is -2: no boarding edge and no departures (`rn_tph` 0), alighting and
    walking on as usual. One kept to boarding only is 2 plus its share: boarding as usual, no
    alighting edge and no walk on from its route node, so nobody gets off there by train or on foot.

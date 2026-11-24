@@ -138,7 +138,7 @@ only reach stations on it. The city panel counts these trips as "No route" until
   platforms mean waiting a third of 10 minutes, not a quarter, since their trains aren't spread out
   evenly.
 - Lines on the same track and the same stops (Anita, 2026-11-22, the 4 and 5 trains): the
-  timetable spaces them evenly, so for people getting off at the same stop they are one line,
+  timetable spaces them evenly, so for people disembarking at the same stop they are one line,
   and two lines every 10 minutes mean waiting 2.5 minutes, people splitting by trains an hour. Where
   one line skips a stop (the 4 beside the 6), stops at its own platform, or is a bus, they stay
   separate as above. On a shared trunk that splits into branches, people going past the split

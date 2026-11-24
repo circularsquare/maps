@@ -33,7 +33,7 @@ new standing process.
 ## Player text
 
 - **Voice**: her global CLAUDE.md "User-facing text", the wiki included. "Trips" for what people want to take
-  (demand); "rides" and "riders" only for what happens on the player's system. "Manually", never "by hand".
+  (demand); "rides" and "riders" only for what happens on the player's system. "Manually", never "by hand". "Disembark", never "get off".
   "Segment" for a stretch of track, never "run". American "turn around", never "turn round" or "round" for "around".
 - **Speed and waiting**, game text and changelog alike, one phrase per wait: a game or city "loads"; the map catching
   up to an edit "shows up" ("deleting a station shows up faster"); the numbers updating after a change are

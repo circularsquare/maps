@@ -665,7 +665,7 @@ function hintPaint(kind: RoadHint, dark: 0 | 1): { colour: unknown; opacity: unk
  * colour), each light and dark. `?town=<letter>` picks one and keeps it in this browser. Streets keep their colours:
  * splitting the street layer by `within` miscoloured whole tiles (notes/T-3913.md). */
 interface Tint { colour: [string, string]; opacity: [number, number] }
-const TOWN_GREEN: Tint = { colour: ["#22a43c", "#5fd070"], opacity: [0.22, 0.17] };
+const TOWN_GREEN: Tint = { colour: ["#22a43c", "#5fd070"], opacity: [0.044, 0.034] };
 const TOWN_TEAL: Tint = { colour: ["#1a9e94", "#3fd0c4"], opacity: [0.14, 0.12] };
 const TOWN_VIOLET: Tint = { colour: ["#7a4fc0", "#a98cf0"], opacity: [0.14, 0.12] };
 const COUNTRY_KHAKI: Tint = { colour: ["#9a8a3a", "#c8b468"], opacity: [0.2, 0.14] };

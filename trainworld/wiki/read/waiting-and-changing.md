@@ -4,7 +4,7 @@
 
 **Several lines.** Where more than one line goes your way, people turn up at any time. Three in four take whichever gets them there first, and the rest take the first train that comes. A faster express that comes less often still gets its riders: the ones who turn up just before it, or who can wait a bit for it and still get there sooner. A slower local keeps the people it gets there first, and some who just take it because it came. A line so slow it gets there after the other line's worst case gets nobody. Two lines with the same gap going the same way, but with different stops or platforms, mean waiting a third of that gap, not a quarter, since their trains aren't spread out evenly.
 
-**Lines on the same track and stops.** The timetable spaces lines that share track, so two lines that run on the same track and stop at the same stations count as one line for people getting off at the same stop. Two lines every ten minutes mean waiting two and a half minutes, and people split between them by trains an hour. A line that skips a stop, or stops at a platform of its own, stays separate. Where the lines split into branches, people going past the split wait for their own branch at their own station. They don't ride the other branch's train to the split and change there, since their own train is right behind it.
+**Lines on the same track and stops.** The timetable spaces lines that share track, so two lines that run on the same track and stop at the same stations count as one line for people disembarking at the same stop. Two lines every ten minutes mean waiting two and a half minutes, and people split between them by trains an hour. A line that skips a stop, or stops at a platform of its own, stays separate. Where the lines split into branches, people going past the split wait for their own branch at their own station. They don't ride the other branch's train to the split and change there, since their own train is right behind it.
 
 **No train for hours.** People differ in how long they'd wait. On a line with long gaps, or at the end of the day when the last train has gone, only some people have a train coming soon enough. Boarding there counts extra, the fewer the people with a train coming, the more it counts. If nobody has one, nobody boards.
 
@@ -16,11 +16,11 @@ A boarding costs the wait for the first train worth taking, times the station's 
 
 Stations within 300 m of each other are close enough to change on foot. A bus stop reaches only 150 m. A passage you build works over a longer distance, along a straight line at 2 m/s. Changing on foot at a bus stop or a BRT station takes 1 minute more than the walk, unless a passage joins the two. A trip can also start or end with that walk, with no bother and no transfer fare, so the way home is the way out reversed.
 
-**Boarding only and getting off only.** A stop of a line can be kept to one or the other. At a boarding-only stop people get on and never off, so nobody rides the line to it, in either direction, and nobody changes off the line there. At a getting-off-only stop it's the other way around. Trains still stop and wait the usual time. Other lines at the same station aren't affected.
+**Boarding only and disembarking only.** A stop of a line can be kept to one or the other. At a boarding-only stop people get on and never off, so nobody rides the line to it, in either direction, and nobody changes off the line there. At a disembarking-only stop it's the other way around. Trains still stop and wait the usual time. Other lines at the same station aren't affected.
 
-People don't get off a line to catch any line back the way they came. On a full line they wait at their own station.
+People don't disembark from a line to catch any line back the way they came. On a full line they wait at their own station.
 
-A line that bends back close to itself can be changed onto across the bend. People get off, walk over to its other stop and ride on from there when that beats riding around. A passage between the two stops lets them do it from further apart. They never walk to another of its stops to ride back towards where they got off.
+A line that bends back close to itself can be changed onto across the bend. People disembark, walk over to its other stop and ride on from there when that beats riding around. A passage between the two stops lets them do it from further apart. They never walk to another of its stops to ride back towards where they disembarked.
 
 If the train that arrives is full, the wait gets longer: see [full trains](full-trains.md).
 

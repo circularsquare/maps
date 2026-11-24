@@ -442,9 +442,9 @@ The stops (above Schedule while being edited [T-670]),
   two, a loop's ends, where trains turn back), beside the remove button [T-1894]; **boarding only and getting off
   only** (T-4013, `ui/inspector/stopOnly.tsx`): while stops are edited every row has a small switch before the
   remove button, its icon the stop's setting (the train's side with an arrow in and out, in, or out; dim while
-  both), a click going both -> boarding only -> getting off only -> both (hovers "Set to boarding only", "Set to
-  getting off only", "Allow boarding and getting off"); otherwise a stop with a setting carries the icon after its
-  name and time, muted, hover "Boarding only" or "Getting off only". The schedule panel's timetable marks the
+  both), a click going both -> boarding only -> disembarking only -> both (hovers "Set to boarding only", "Set to
+  disembarking only", "Allow boarding and disembarking"); otherwise a stop with a setting carries the icon after its
+  name and time, muted, hover "Boarding only" or "Disembarking only". The schedule panel's timetable marks the
   station's row the same way, and the departures board names it beside the station picker; **flat junctions and
   flat crossings on the route** [T-629, `TrackApi.line_marks`] as small marks on the diagram's bar between the
   two stops they lie between, spread evenly in the gap (the diagram is not to scale): a white diamond for a
@@ -764,7 +764,7 @@ station's panel once it is a station's stop).
   it arrives ("<1 min" under one; hover "Arrives in 2m40s", from the train's own running profile)
   and the riders getting off there: its load arriving (the boarding account's) times the line's
   alighting share at that stop in the period it arrives in, as the account lets them off; everyone
-  at the end of the line. The row's hover: "61 of the 1,440 riders aboard get off at Grand St, and
+  at the end of the line. The row's hover: "61 of the 1,440 riders aboard disembark at Grand St, and
   40 get on". The list moves on at each stop and the minutes each game minute.
 - **Random rider** (heading) [T-1436, `ui/inspector/OneRider.tsx`, `game/riderSample.ts`]: under Next stops, while
   riders are aboard, one rider drawn from them, with two icon buttons in its heading (Pick another
