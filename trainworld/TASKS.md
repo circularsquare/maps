@@ -269,6 +269,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Gemini's review of the final edit-speed state (11-24) rates 8+ findings high: stale ahead textures after a network, a copied line invisible at the click, the first station of a new game not drawn, wrong click-time cash for Construct and rebuild.
   - Goal: Each finding reproduced and fixed or rejected with a reason; t4170-one-path covers the real ones.
   - Other: notes/gemini-editspeed-final-2026-11-24.md
+- T-4182 [P2] {L:loading} Where a sparse save's load goes
+  - Context: From T-921 (11-24): a western Montana save with 4 lines and 22 stations loads in 10-20 s, nearly all opening the zone; the trip calculation is under 1 s. Saved as perfbench/saves/t921-montana-4lines.save.
+  - Goal: That load profiled piece by piece and its biggest piece cut.
+  - Other: notes/T-921.md
 - T-4141 [P3] {L:station-placement} Track placed by an edit call crossed the Hudson at ground level
   - Context: Seen by T-4112: a route entered through the game's edit call crossed the Hudson at ground level without a refusal, while pointer-drawn track nearby was bridged. Water may not have been loaded under part of it.
   - Other: notes/T-4112.md
@@ -469,11 +473,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: The page has 2,200 elements; a forced layout takes 22-37 ms, and the Lines, saves and Stations panels open in 0.4-0.7 s. All figures are from 2026-10-24 at 4-6x CPU slowdown; T-1505 took the forced layout out of station name placement since.
   - Goal: Measure once at normal CPU on the 2,647-station save (about 20 minutes): under 200 ms closes it, over keeps it with the new figures.
   - Other: notes/T-1200.md and notes/T-1211.md.
-- T-921 [P2] {L:solve-speed} Deal tiny commute pairs in chunks (taking, 2026-11-23, agent commutechunks2)
-  - Context: You, 11-24: "might help substantially for some players who build in sparsely populated areas"; build it so it is easy to tune more or less aggressive later. Tree commutechunks: NYC about 7% faster, rail trips move 21 of 13.1M; in-game figures unexplainedly identical.
-  - Goal: One tunable threshold, measured on a sparse-area save, the in-game mystery explained, then landed.
-  - Goal: The chunked deal is in, with ceilings unchanged.
-  - Other: Measured in notes/T-909.md option 1.
 
 ## Interface
 - T-3744 [P3] {L:fares} Fare per stop made

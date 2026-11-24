@@ -14,7 +14,8 @@ diary notes/handoff-log.md. Her time UTC-5.
   memgrowth T-4179; treefix T-4180 (finish lost busmerge2's unfinished merge; recovered).
 - Then: smoke on master once the checkers are done; perf_bench all three saves; land editnetwork2/trainmove into a second
   small batch; publish skill prep; morning message. Queue: T-3939, T-3160 (her yes overnight), T-4178, T-4051.
-- 8800 = ef99d979 until the snap swaps. T-4112's tw/track changelog item parked in next-track.json: hide the port's duplicate at release.
+- T-921 built in tree commutechunks (default 1 a day, tunable; no gain on sparse saves; NYC 6 trips in 12.7M move): land only on her word (morning). Its tree also has its own fix for the clockWord import loop: keep master's at landing. The main tree's app/src/wasm was rebuilt with the agent profile by that agent: the next sim landing (or npm run wasm) restores it.
+- 8800 = f4bcf26b (05:23). T-4112's tw/track changelog item parked in next-track.json: hide the port's duplicate at release.
 
 ## Next (night of 11-24; she aims to publish 0.4.6 in the morning after her playtest)
 1. Land editunify T-4170 once its Gemini fixes are verified; then the one Gemini review of the whole edit-speed batch

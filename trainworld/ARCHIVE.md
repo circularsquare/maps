@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-921 [P2] {L:solve-speed} Deal tiny commute pairs in chunks (2026-11-24): 1 a day is in (COMMUTE_CHUNK_DAY, one number to tune): NYC rail -6 of 12.67M in game, about 7% of the calculation natively; no gain on a sparse Montana save, whose calculation is under 1 s of the load.
 - T-4180 [P1] {L:checks} Landing a tree loses work left in an unfinished merge (2026-11-24): land and finish refuse a tree with a merge, rebase, cherry-pick or revert in progress; committed merges are squashed to the net diff before the rebase.
 - T-4158 [P1] {L:solve-speed} Merge bus stops more aggressively for demand (2026-11-24): 500 m same-lines bus stop merge: Belgrade trips ready 981 to 762 s, demand heap 4.9 to 4.2 GB, rail trips -0.04%; NYC unchanged. notes/T-4158.md.
 - T-4170 [P1] {L:edit-speed} Every edit shows at the click through one path (2026-11-23): Every edit's show-at-click entry is made at one place, its send (pending.ts pendingSent), guessed from its op (game/editGuess.ts, one part per kind) plus what a caller drew; world.ts hook and per-line guesses gone; check t4170-one-path.mjs passes on NYC and Asia; speedups kept.
