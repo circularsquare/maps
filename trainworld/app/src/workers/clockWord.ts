@@ -23,10 +23,6 @@ const KINDS = (): Kind[] => (kinds ??= [
   kind(pieces, "pieceWord"),
 ]);
 
-/** T-4181: ops the track model takes as several undo steps (a new line and its badge, headways and weekend share): an undo
- * right after takes back only the last */
-const SEVERAL_STEPS = new Set<EditOp["op"]>(["copyLine", "addLine", "addBusLine", "addFerryLine"]);
-
 /** T-4114: the ops that can change which edges a line's strokes draw */
 const LINE_PATH_OPS = new Set<EditOp["op"]>(["toggleStop", "insertStop", "oneWayStop", "setStops", "dropStop", "endLineAt", "stopPassed", "orderStops", "sortStops", "turnEnd", "openLoop", "removeLine"]);
 
@@ -55,7 +51,7 @@ export function wordBefore(api: TrackApi, op: EditOp, p: Posted): unknown[] {
 
 /** The word for an accepted edit: every kind's part, arrays joined (a kind that throws gives none, and says so). */
 export function wordAfter(api: TrackApi, op: EditOp, answer: Applied, p: Posted, before: unknown[], charge: number): EditWord {
-  const out: EditWord = { charge: Math.max(0, charge), ...(SEVERAL_STEPS.has(op.op) || !api.can_undo() ? { noUndo: true as const } : {}) };
+  const out: EditWord = { charge: Math.max(0, charge), ...(!api.can_undo() ? { noUndo: true as const } : {}) };
   KINDS().forEach((k, i) => {
     let part: Partial<EditWord> | undefined;
     try { part = k.word(api, op, answer, p, before[i]); } catch (err) { console.error("T-4145: an edit's word part failed", err); }

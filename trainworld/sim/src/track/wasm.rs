@@ -100,6 +100,8 @@ pub struct TrackApi {
     /// T-3713: while a route is laid out again, a bare track end it would have to turn back to meet is
     /// met as a branch 5 m in instead (`route_op`).
     bare_slide: bool,
+    /// T-4185: while on, `run` makes each edit part of the player's edit before it (`join_edit`).
+    join: bool,
     /// T-3137: the points the next route's ends join double track nearest (`set_route_join`), and
     /// while one is laid out (`route_op`) the ones it uses; NaN for the nearer track.
     route_join: Option<[f64; 4]>,
@@ -425,6 +427,7 @@ impl TrackApi {
             route_ramp: false,
             route_beside: None,
             bare_slide: false,
+            join: false,
             route_join: None,
             station_one: None,
             join_at: [f64::NAN; 4],

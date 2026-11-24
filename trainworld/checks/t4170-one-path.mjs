@@ -6,7 +6,7 @@
 // along, no two entries share a seq; renames answered by their rows alone (no network follows) leave nothing; after the last answer, with the network the world's and a second for late states,
 // no entry is left. Then the final review's cases (notes/T-4144.md "Final review fixes"): a copy's colour drawn at its word,
 // the cash at the click exactly the charge or untouched (a free edit, Construct of a pick, Construct all quoted, Rebuild),
-// nothing shown for a Construct the cash cannot pay, no undo drawn after a copy or a Construct, an edit out 40 s keeping
+// nothing shown for a Construct the cash cannot pay, one undo takes back a copy or a new line whole and is drawn at its click, no undo drawn after a Construct, an edit out 40 s keeping
 // its guess, a piece's look then its delete composed, nothing left bound once a removal is in, and in a new game the
 // first station's box drawn at its click. A settle also fails while nothing is drawn ahead but its textures stay bound.
 //   node trainworld/checks/t4170-one-path.mjs [url] [nyc|asia]      (from the maps root; default http://localhost:6171/ nyc)
@@ -307,12 +307,33 @@ try {
       out.notes.copy = { id, alpha };
       if (!(alpha > 0)) bad('a copied line drawn at its word has no colour to draw with (alpha ' + alpha + ', line ' + id + ')');
       await idle();
-      // an undo right after takes back only its badge: nothing drawn at that undo's click
+      // T-4185: one undo takes the whole copy back (it was two steps: the badge, then the copy), drawn at its click
+      const lines = () => wm.world.peek().save.lines.length;
+      const before = lines() - 1;
       const u = wm.edit({ op: 'undo' });
       const m = R.ahead, drawn = m.hideEdges.size + m.hideLines.size + m.hideStations.size + m.track.length + m.lineStrokes.length + m.rawStations.length;
+      const miss = pm.pendingNow().undoMiss;
       await u;
-      if (drawn) bad('an undo right after a copy drew ' + drawn + ' parts at its click (it takes back only the copy\'s badge)');
       await idle();
+      out.notes.copyUndo = { drawn, miss, before, after: lines() };
+      if (lines() !== before) bad('one undo right after a copy left ' + lines() + ' lines, not ' + before);
+      if (!drawn) bad('an undo right after a copy drew nothing at its click (' + miss + ')');
+    }
+    // T-4185: a new line (headways and weekend share go with it) is one undo too
+    {
+      const w = wm.world.peek(), src = w.save.lines.find((l) => l.num === site.line), before = w.save.lines.length;
+      const a = await wm.edit({ op: 'addLine', stops: src.stops.slice(0, 3).map(Number), name: '', colour: '#336699' }, true);
+      await idle();
+      const made = wm.world.peek().save.lines.length;
+      const u = wm.edit({ op: 'undo' });
+      const m = R.ahead, drawn = m.hideEdges.size + m.hideLines.size + m.hideStations.size + m.track.length + m.lineStrokes.length + m.rawStations.length;
+      const miss = pm.pendingNow().undoMiss;
+      await u;
+      await idle();
+      out.notes.newLineUndo = { ok: a.ok, drawn, miss, before, made, after: wm.world.peek().save.lines.length };
+      if (!a.ok || made !== before + 1) bad('a new line was not made as set up: ' + JSON.stringify(out.notes.newLineUndo));
+      else if (wm.world.peek().save.lines.length !== before) bad('one undo right after a new line left ' + wm.world.peek().save.lines.length + ' lines, not ' + before);
+      if (!drawn) bad('an undo right after a new line drew nothing at its click (' + miss + ')');
     }
     // a quoted price on an edit the worker charges nothing for: gone with the word, before any money comes
     {

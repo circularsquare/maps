@@ -64,7 +64,9 @@ function withAutoFast(a: TrackApi, line: number, edit: () => number): Applied {
   back();
   if (a.set_line_fast(line, fast) !== 0) return { r: edit() };
   const charge = a.last_charge(), trainCharge = a.last_train_charge();
+  a.join_edit(true); // T-4185: the stops edit takes back with the type, one undo
   if (edit() !== 0) {
+    a.join_edit(false);
     back();
     return { r: edit() };
   }
@@ -126,11 +128,21 @@ function withKindHeadways(op: EditOp, run: () => Applied): Applied {
   return { ...out, charge: charge + a.last_charge(), trainCharge: trainCharge + a.last_train_charge() };
 }
 
+/** T-4185: the edits after a player action's first one (a new line's headways, a copy's badge) join it, so one undo takes
+ * back the action. Called with the first edit's answer; on only when that edit was made. */
+function joinAfter(a: TrackApi, r: number): number {
+  if (r === 0) a.join_edit(true);
+  return r;
+}
+
 export function apply(op: EditOp): Applied {
   freezeCheckpoint("apply-start", { op: op.op });
   const start = performance.now();
   try { return withKindHeadways(op, () => applyInner(op)); }
-  finally { freezeCheckpoint("apply-end", { op: op.op, ms: performance.now() - start }); }
+  finally {
+    api?.join_edit(false);
+    freezeCheckpoint("apply-end", { op: op.op, ms: performance.now() - start });
+  }
 }
 function applyInner(op: EditOp): Applied {
   const a = api!;
@@ -238,7 +250,7 @@ function applyInner(op: EditOp): Applied {
       const id = a.new_line_id();
       const { dwellS, turnaroundS } = NEW_LINE.bus;
       const [h, m, l] = headwaysFor("bus", newLineHeadway)!;
-      return newLineWeekends(a, newLineRows(a, a.set_bus_line(id, Float64Array.from(op.route), h, m, l, dwellS, turnaroundS, colourInt(op.colour), op.name || nextBusName(a)), id, "bus"));
+      return newLineWeekends(a, newLineRows(a, joinAfter(a, a.set_bus_line(id, Float64Array.from(op.route), h, m, l, dwellS, turnaroundS, colourInt(op.colour), op.name || nextBusName(a))), id, "bus"));
     }
     case "busRoute":
       return { r: a.set_bus_route(op.line, Float64Array.from(op.route)) };
@@ -258,7 +270,7 @@ function applyInner(op: EditOp): Applied {
       // T-3892: a long crossing starts at the long ferry's headways (its route's km, as the tool's quote has them)
       const route = Float64Array.from(op.route), km = a.ferry_quote(0xffffffff, ports, route, 0)[0] / 1000;
       const [h, m, l] = headwaysFor("ferry", newLineHeadway, 3, km)!;
-      return newLineWeekends(a, newLineRows(a, a.set_ferry_line(id, ports, route, h, m, l, dwellS, turnaroundS, colourInt(op.colour), op.name || nextBusName(a, "Ferry ")), id, "ferry", km)); // i18n-ignore: a line's saved name
+      return newLineWeekends(a, newLineRows(a, joinAfter(a, a.set_ferry_line(id, ports, route, h, m, l, dwellS, turnaroundS, colourInt(op.colour), op.name || nextBusName(a, "Ferry "))), id, "ferry", km)); // i18n-ignore: a line's saved name
     }
     case "ferryRoute": {
       const ports = addPorts(a, op.ports);
@@ -272,7 +284,7 @@ function applyInner(op: EditOp): Applied {
       // T-2926: a line on tram track starts with the tram's dwell and turnaround and 2 cars
       const tram = a.stops_tram(new Uint32Array(op.stops)); // T-3889: any tram stop
       const [tramDwell, tramTurn] = tram ? TrackApi.kind_defaults(3) : [dwellS, turnaroundS];
-      const r = a.set_line_with_trains(id, new Uint32Array(op.stops), h, m, l, tramDwell, tramTurn, tram ? TRAM_NEW_CARS : newLineCars, colourInt(op.colour), op.name || a.next_line_name());
+      const r = joinAfter(a, a.set_line_with_trains(id, new Uint32Array(op.stops), h, m, l, tramDwell, tramTurn, tram ? TRAM_NEW_CARS : newLineCars, colourInt(op.colour), op.name || a.next_line_name()));
       if (r !== 0) return { r, line: id };
       // T-1899: a line started on high-speed track (a track's New line) runs high-speed trains
       let charge = a.last_charge(), trainCharge = a.last_train_charge();
@@ -314,7 +326,7 @@ function applyInner(op: EditOp): Applied {
         name = base;
         for (let n = 2; existing.has(name); n++) name = `${base} ${n}`;
       }
-      const r = a.copy_line(op.line, id, name);
+      const r = joinAfter(a, a.copy_line(op.line, id, name));
       // T-1872: the copy always has a symbol of its own (the source's, or the one it shows, stepped on)
       // T-2791: a lettered name ("Line 1d") gives the symbol too ("1d") when that is free, so bullet and name agree
       const tail = /\d+[A-Za-z]$/.exec(name)?.[0];

@@ -9,6 +9,12 @@ impl TrackApi {
         self.w.net.alloc_line()
     }
 
+    /// T-4185: while on, every edit made takes back and makes again with the player's edit before it, so one
+    /// player action that is sent as several edits is one undo. Off at the start of each action.
+    pub fn join_edit(&mut self, on: bool) {
+        self.join = on;
+    }
+
     pub(super) fn done(&mut self, r: Result<EditResult, Vec<Issue>>) -> u32 {
         self.money_short = None;
         match r {
@@ -41,7 +47,12 @@ impl TrackApi {
         let at = self.edit_start();
         let before = self.w.svc.before_edit(&self.w.net, at);
         let cash = self.spendable();
-        let r = self.w.apply_paid(op, cash, false, &|w| trains_to_buy(w, fleet));
+        // T-4185: the second and later edits of one player action take back with the first
+        let r = if self.join {
+            self.w.apply_off_history(op, cash, &|w| trains_to_buy(w, fleet), true)
+        } else {
+            self.w.apply_paid(op, cash, false, &|w| trains_to_buy(w, fleet))
+        };
         self.settle(r, &before)
     }
 
