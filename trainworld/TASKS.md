@@ -260,7 +260,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Goal: The picked merge landed, with its time to trips ready measured in game on Belgrade.
   - Other: notes/T-4094.md, notes/T-4158.md (in the busmerge2 tree until landing)
 - T-4051 [P2] {L:loading} Opening a zone on a big save sits at 90%
-  - Context: You, 11-22: Medellin sat at 90% about 2 minutes. Tree zoneopen (11-24): a zone opens about a third faster on your North America save (median 68 to 45 s); perf_bench nyc twice: the map shows 3.6-12 s later (5.2 to 8.8 s), trips +6%, demand memory -14%; find and fix before landing. The slow path (once in 9 opens) needs your newer save.
+  - Context: You, 11-22: Medellin sat at 90% about 2 minutes. Tree zoneopen (11-24): a zone opens about a third faster on your North America save (median 68 to 45 s); perf_bench nyc twice: map 5.2 to 8.8 s, trips +6%; fix before landing. The slow path (once in 9 opens) needs your newer save.
   - Goal: A zone with figures already in takes the short path on your newer save.
   - Other: notes/T-4051.md
 - T-4074 [P4] {L:loading} Spain blocks the game during football matches
