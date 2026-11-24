@@ -230,7 +230,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: 19 worktrees at about 1.2 GB each, a leftover empty .tw-trees/rampport folder, and 34 tw/* branches, 14 with no tree. handoff.md keeps coreslider, onewaylag, split6, stationids and timetables on purpose until after 0.4.6; others may be done.
   - Goal: Every tree whose agent is done and whose work landed is removed with agent-tree.mjs; merged branches with no tree deleted. About 0.5 h.
   - Other: notes/gemini-review-triage-2026-11-24.md
-- T-4182 [P2] {L:loading} Where a sparse save's load goes
+- T-4182 [P2] {L:loading} Where a sparse save's load goes (taking, 2026-11-24, agent sparseload)
   - Context: From T-921 (11-24): a western Montana save with 4 lines and 22 stations loads in 10-20 s, nearly all opening the zone; the trip calculation is under 1 s. Saved as perfbench/saves/t921-montana-4lines.save.
   - Goal: That load profiled piece by piece and its biggest piece cut.
   - Other: notes/T-921.md
@@ -255,9 +255,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Your scratch pad, 11-22: "i think we might allow an unrealistic number of people to pile up at bus stops, should probably show a lower number more in line with other stations to not make players alarmed by big number".
 - T-4053 [P3] {L:borders} Common language border factor
   - Context: Your scratch pad, 11-22: "i think bogota-quito travel might be a bit small? relative to number of planes (liek 6 a day, maybe 2000 people a day vs our 800) i wonder if we should do a like 'common language' border multiplier... and maybe also between like switzerland and france". A new demand factor: the design goes to you first.
-- T-4057 [P1] {L:solve-speed} Solve speedups outside the first-arrival search (taking, 2026-11-24, agent solvereuse)
-  - Context: You, 11-23: "main goal for today is to hopefully find some compute time improvements to compensate for the better pathfinding that takes into account that express routes are faster." T-4054 works on the search and `pool_cost`; this one profiles the whole solve on the real save and other big cities and takes the biggest costs elsewhere.
-  - Goal: The top costs of a full solve named with their share, and the biggest ones cut with the same answers.
 - T-4063 [P3] {L:small-fixes} Trip explorer fails just after a change
   - Context: Found by T-4050 and T-4058: right after a final, explorer questions fail in the demand worker ("reading 'nodeGlobal'") and answer nothing; asked again seconds later they work. The question is about the last network while the worker has reopened the zone at another level (demand.worker.ts query, `viewOf(cl, a)`). Every query kind reading `viewOf(cl, a)` can hit it.
   - Goal: An older version's question answered from that cluster's own population for the zone, or answered as not ready, never an error.
