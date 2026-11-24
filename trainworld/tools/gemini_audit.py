@@ -39,7 +39,7 @@ def main():
     ap.add_argument("--out", help="Write full response to this file and print a short status line")
     ap.add_argument("--resume", help="Continue a previous agy conversation ID")
     ap.add_argument("--effort", default="medium", choices=("low", "medium", "high", "xhigh", "max"))
-    ap.add_argument("--model", help="Optional agy model override")
+    ap.add_argument("--model", default="gemini-4-neon-medium", help="agy model (default Gemini 4 Neon medium, her 11-24)")
     ap.add_argument("--timeout", default="15m", help="Print-mode timeout (default 15m)")
     ap.add_argument("--cwd", help="Working directory (defaults to current directory)")
     ap.add_argument("--json", action="store_true", help="Emit agy JSON output (includes conversation ID)")

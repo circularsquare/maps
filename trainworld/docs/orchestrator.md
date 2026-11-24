@@ -179,8 +179,8 @@ skill, then ask her for the yes.
 
 - **Gemini as adversarial reviewer**, sparingly (her 11-24: its quota runs out fast): only when she asks, or suggest it
   to her where a different model's look is worth it (a risky landing, a big design):
-  `venv\Scripts\python.exe trainworld/tools/gemini_audit.py --brief <file> --out <file>` (read-only, sandboxed; its top
-  comment). It can't run commands: write the diff to a file under artifacts/trainworld/gemini/ and name it in the
+  `venv\Scripts\python.exe trainworld/tools/gemini_audit.py --brief <file> --out <file>` (read-only, sandboxed, Gemini 4 Neon
+  medium by default, her pick; its top comment). It can't run commands: write the diff to a file under artifacts/trainworld/gemini/ and name it in the
   brief (diff plus the task's Goal, "try to break it"). A finding is checked by a Claude agent before anyone acts on it. It doesn't run the game
   or write code here; Gemini's own code tasks run in Antigravity and she passes them on to land.
 
