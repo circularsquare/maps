@@ -169,7 +169,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-2188 (11-24): checks/t3303 fails on master too: a fare edit's income spiked 278x for a moment (quickend fixes it in publishStep, now 1.16x), and the check still assumes a local stage that city edits no longer have.
   - Goal: t3303 checks the income after a fare edit under the new rule and passes.
   - Other: notes/T-2188.md
-- T-4234 [P2] {L:checks} Edit bench's stop click misses on New York
+- T-4234 [P2] {L:checks} Edit bench's stop click misses on New York (taking, 2026-11-24, agent benchstop)
   - Context: The first master baseline (11-24, b7b9e4ee) got no New York stop click: the station sits outside the view ("page px 33, -9475; move the camera or close the panel"). Asia's stop click ran.
   - Goal: edit_bench measures New York's stop click; the baseline rewritten with it.
   - Other: notes/T-4139.md
@@ -241,7 +241,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4225 (11-24): no regression in 0.4.6. On New York the clock worker's first full state is 3.7 of the map's 5.5 s, about 68% of the wait (2.9 s building the map's draw data), and runs while the demand workers open the pack on the same cores.
   - Goal: Measure that state with and without the pack opening beside it, then propose a cheaper first build or a later pack open; about 2 h.
   - Other: notes/T-4225.md
-- T-4193 [P2] {L:loading} Bus zones' streets before the network on load
+- T-4193 [P2] {L:loading} Bus zones' streets before the network on load (taking, 2026-11-24, agent busload)
   - Context: From T-4188 (11-24): Community save jwxidghd never loads on a phone because the clock worker re-solves train counts once per zone its 92 bus lines touch (20 passes, 34-58 s each). Loading those zones' streets first got the network in 17.7 s on an emulated iPhone. The prototype can change figures.
   - Goal: Only the bus routes' zones fetched (19, not 47), one pass; a bus-heavy real save's figures compared before and after.
   - Other: notes/T-4188.md; patch artifacts/trainworld/t4188/instrumented-and-prototype.patch
