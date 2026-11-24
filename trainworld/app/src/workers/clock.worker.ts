@@ -20,7 +20,7 @@ import { foldLedger } from "./ledgerFold";
 import { shiftAt } from "../game/localTime";
 import { strengths } from "../game/moneyTiming";
 import { setBandCheck, setBandMode } from "../map/lineBands";
-import { readOutlinesForPlaces } from "../map/coarseOutlines";
+import { placeOutlines, readOutlinesForPlaces } from "../map/coarseOutlines";
 import { canvasReadsTrue } from "../map/canvasRead";
 import { UPGRADE, UPGRADE_BITS } from "../game/upgrades";
 import { saveNetKey } from "./demandCache";
@@ -534,7 +534,7 @@ onmessage = (e: MessageEvent<ToClock>) => {
     return;
   }
   // T-2802: at once, not behind init's queue, which a save's summary can wait on
-  if (msg.kind === "outlines") return outlinesIn(msg.packed);
+  if (msg.kind === "outlines") return outlinesIn(msg.packed && placeOutlines(msg.packed));
   // T-3707: at once, so a game loading now is marked too; the queue below marks the game in hand
   if (msg.kind === "moneyFrozen") return putMoneyFrozen(true); // T-3851
   if (msg.kind === "modded") putPageModded([...new Set([...pageModded, ...msg.why.filter((x) => typeof x === "string")])].slice(0, 16));

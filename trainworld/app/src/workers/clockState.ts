@@ -13,7 +13,7 @@ import { DAY_KINDS, dayKindOf } from "../game/days";
 import { kindOfIn, rowOfDay, rowOfIn, type DayRow, type HolidayData } from "../game/holidayCalendar";
 import { shiftAt } from "../game/localTime";
 import { between, lagged, table, type KindOf, type PerHour } from "../game/moneyTiming";
-import { type PackedOutlines } from "../map/coarseOutlines";
+import { type PlaceOutlines } from "../map/coarseOutlines";
 import { NEW_LINE_CARS, START_CLOCK, type GameMode, type DayLedger, type HourLedger, type NewHeadways, type GuideSave, type Achieved } from "./saveFile";
 import type { FromClock } from "./protocol";
 import { loadFailKey } from "../game/loadText";
@@ -94,8 +94,8 @@ export function placeLineCountries() {
 }
 /** T-1265: the coarse outlines name each station's zone (game/cities.ts `cityWithin`); the page's copy, posted
  * once after init (T-2802), and the lines' countries placed again when they are in */
-export let outlinesIn: (p: PackedOutlines | null) => void = () => {};
-export const outlinesGot = new Promise<PackedOutlines | null>((got) => { outlinesIn = got; });
+export let outlinesIn: (p: PlaceOutlines | null) => void = () => {};
+export const outlinesGot = new Promise<PlaceOutlines | null>((got) => { outlinesIn = got; });
 export let outlinesRead: Promise<void> = Promise.resolve();
 export let holidaysSent = "", rowsSent = "";
 export const kindOfLine = (id: number): KindOf => kindOfIn(holidayData, lineCountries.get(id));

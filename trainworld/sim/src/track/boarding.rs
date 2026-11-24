@@ -249,7 +249,7 @@ pub struct RunAccount {
     pub queues: Queues,
     /// Per stop, the trips in the order they leave it in a day (`stop * trips + k`); `stop_times`
     /// gives the time of day each leaves it.
-    pub order: Vec<u32>,
+    pub order: TripOrder,
     /// Per departure, as `deps`, its time leaving the first stop not wrapped into the day: with
     /// `stop_dep_of` the time it leaves each stop (`leaves`). T-3939: worked out where read rather
     /// than kept per trip and stop, a third of the account's memory.
@@ -355,19 +355,94 @@ fn day_rem(x: f64) -> f64 {
     r
 }
 
+/// T-4184: `RunAccount::order`, each entry a departure's index in the account: 16 bits wide when the run has at most
+/// 65,536 departures a day (every line the game makes), else 32.
+#[derive(Clone, Debug)]
+pub enum TripOrder {
+    Short(Vec<u16>),
+    Wide(Vec<u32>),
+}
+
+impl Default for TripOrder {
+    fn default() -> Self {
+        TripOrder::Short(vec![])
+    }
+}
+
+impl TripOrder {
+    fn zeros(len: usize, trips: usize) -> TripOrder {
+        if trips <= 1 << 16 { TripOrder::Short(vec![0; len]) } else { TripOrder::Wide(vec![0; len]) }
+    }
+    #[inline]
+    pub fn get(&self, i: usize) -> usize {
+        match self {
+            TripOrder::Short(v) => v[i] as usize,
+            TripOrder::Wide(v) => v[i] as usize,
+        }
+    }
+    #[inline]
+    pub fn try_get(&self, i: usize) -> Option<usize> {
+        match self {
+            TripOrder::Short(v) => v.get(i).map(|&x| x as usize),
+            TripOrder::Wide(v) => v.get(i).map(|&x| x as usize),
+        }
+    }
+    fn set(&mut self, i: usize, s: u32) {
+        match self {
+            TripOrder::Short(v) => v[i] = s as u16,
+            TripOrder::Wide(v) => v[i] = s,
+        }
+    }
+    fn slice(&self, a: usize, b: usize) -> OrdSlice<'_> {
+        match self {
+            TripOrder::Short(v) => OrdSlice::Short(&v[a..b]),
+            TripOrder::Wide(v) => OrdSlice::Wide(&v[a..b]),
+        }
+    }
+    pub fn heap_bytes(&self) -> usize {
+        match self {
+            TripOrder::Short(v) => v.capacity() * 2,
+            TripOrder::Wide(v) => v.capacity() * 4,
+        }
+    }
+}
+
+/// One stop's part of a `TripOrder`.
+#[derive(Clone, Copy)]
+pub enum OrdSlice<'a> {
+    Short(&'a [u16]),
+    Wide(&'a [u32]),
+}
+
+impl OrdSlice<'_> {
+    #[inline]
+    pub fn get(&self, i: usize) -> usize {
+        match self {
+            OrdSlice::Short(v) => v[i] as usize,
+            OrdSlice::Wide(v) => v[i] as usize,
+        }
+    }
+    pub fn len(&self) -> usize {
+        match self {
+            OrdSlice::Short(v) => v.len(),
+            OrdSlice::Wide(v) => v.len(),
+        }
+    }
+}
+
 /// One stop's departures in the order they leave it in a day, sorted by time of day (`RunAccount::stop_times`).
 pub struct StopTimes<'a> {
     ra: &'a RunAccount,
     k: usize,
     /// the departures' account indices, in that order
-    pub ord: &'a [u32],
+    pub ord: OrdSlice<'a>,
 }
 
 impl StopTimes<'_> {
     /// The time of day the `i`th of them leaves.
     #[inline]
     pub fn at(&self, i: usize) -> f64 {
-        self.ra.leaves(self.ord[i] as usize, self.k)
+        self.ra.leaves(self.ord.get(i), self.k)
     }
     /// As `slice::partition_point` over the times.
     pub fn partition_point(&self, pred: impl Fn(f64) -> bool) -> usize {
@@ -841,7 +916,7 @@ impl Boarding {
                     let at = |j: isize| -> (f64, usize) {
                         let jj = j.rem_euclid(m as isize) as usize;
                         let wrap = j.div_euclid(m as isize) as f64 * DAY;
-                        (ts.at(jj) + wrap - h0, ts.ord[jj] as usize)
+                        (ts.at(jj) + wrap - h0, ts.ord.get(jj))
                     };
                     // T-1123: each train's arrival too, when its riders get off and on: its stand
                     // there before it leaves (the closing stand at a first stop), never before
@@ -1019,8 +1094,8 @@ impl Boarding {
                     let off = d as f64 * DAY;
                     let (i0, i1) = (ts.partition_point(|t| t + off < lo), ts.partition_point(|t| t + off < hi + most));
                     for j in i0..i1 {
-                        let reach = ts.at(j) + off - stand(ord[j] as usize) - h0 + walk;
-                        let w = ra.load[ord[j] as usize * n + kf - 1] as f64;
+                        let reach = ts.at(j) + off - stand(ord.get(j)) - h0 + walk;
+                        let w = ra.load[ord.get(j) * n + kf - 1] as f64;
                         if w > 0.0 && reach >= a && reach < a + 3600.0 {
                             trains.push((reach, w));
                         }
@@ -1217,8 +1292,8 @@ impl Boarding {
                 let t0 = if m > 0 { ts.at(0) } else { 0.0 };
                 let mut ti = t0;
                 for i in 0..m {
-                    let q = ra.queues.q_after(ord[i] as usize * n + k) as f64;
-                    let gone = ra.queues.gone(ord[i] as usize * n + k) as f64;
+                    let q = ra.queues.q_after(ord.get(i) * n + k) as f64;
+                    let gone = ra.queues.gone(ord.get(i) * n + k) as f64;
                     let next = if i + 1 < m { ts.at(i + 1) } else { t0 + DAY };
                     let gap = next - ti;
                     let w = q * gap.max(0.0) + gone * WAIT_FOR_ROOM_S;
@@ -1292,8 +1367,8 @@ impl Boarding {
                 let t0 = ts.at(0);
                 let mut ti = t0;
                 for i in 0..m {
-                    let q = ra.queues.q_after(ord[i] as usize * n + k) as f64;
-                    let gone = ra.queues.gone(ord[i] as usize * n + k) as f64;
+                    let q = ra.queues.q_after(ord.get(i) * n + k) as f64;
+                    let gone = ra.queues.gone(ord.get(i) * n + k) as f64;
                     let next = if i + 1 < m { ts.at(i + 1) } else { t0 + DAY };
                     let gap = next - ti;
                     let p = period_at(ti);
@@ -1434,7 +1509,7 @@ impl Boarding {
                 let arr = &ra.arrivals[k];
                 let ts = ra.stop_times(k);
                 let ord = ts.ord;
-                let q = |j: usize| ra.queues.q_after(ord[j] as usize * n + k) as f64;
+                let q = |j: usize| ra.queues.q_after(ord.get(j) * n + k) as f64;
                 let lo = ts.partition_point(|s| s <= from);
                 let done = ts.partition_point(|s| s <= to);
                 if done <= lo {
@@ -1457,7 +1532,7 @@ impl Boarding {
                     }
                     w.left += a.min(q(j));
                     // T-1067: those who went another way never boarded
-                    b -= ra.queues.gone(ord[j] as usize * n + k) as f64;
+                    b -= ra.queues.gone(ord.get(j) * n + k) as f64;
                     (prev, q_prev, c_prev) = (tj, q(j), c_j);
                 }
                 let b = b.max(0.0);
@@ -1514,7 +1589,7 @@ impl Boarding {
                     add("deps, levels, stop_dep", v(ra.deps.capacity(), 8) + 2 * ra.levels.capacity() + ra.stop_dep.iter().map(|x| x.capacity() * 8).sum::<usize>());
                     add("load", v(ra.load.capacity(), 4));
                     add("queues", ra.queues.heap_bytes());
-                    add("order, dep0", v(ra.order.capacity(), 4) + v(ra.dep0.capacity(), 8));
+                    add("order, dep0", ra.order.heap_bytes() + v(ra.dep0.capacity(), 8));
                     add("left_h, wait_h, hour_load", v(ra.left_h.capacity() + ra.wait_h.capacity() + ra.hour_load.capacity(), 4));
                     add("stop_open, ride_km", v(ra.stop_open.capacity() + ra.ride_km.capacity(), 8));
                     add("arrivals", v(ra.arrivals.capacity(), size_of::<Arrivals>()));
@@ -1571,7 +1646,7 @@ impl RunAccount {
     /// Stop `k`'s departures in the order they leave it in a day.
     pub fn stop_times(&self, k: usize) -> StopTimes<'_> {
         let m = self.deps.len();
-        StopTimes { ra: self, k, ord: &self.order[k * m..(k + 1) * m] }
+        StopTimes { ra: self, k, ord: self.order.slice(k * m, (k + 1) * m) }
     }
 
     /// The account's index of a trip leaving its first stop at game time `dep` (any day).
@@ -1598,7 +1673,7 @@ impl RunAccount {
         let (mut sum, mut trains) = (vec![0.0f64; s * 24], vec![0u32; s * 24]);
         for k in 0..s {
             for i in 0..m {
-                let Some(&j) = self.order.get(k * m + i) else { continue };
+                let Some(j) = self.order.try_get(k * m + i) else { continue };
                 let t = self.leaves(j as usize, k);
                 let h = ((t.rem_euclid(DAY) / 3600.0) as usize).min(23);
                 sum[k * 24 + h] += self.load.get(j as usize * n + k).copied().unwrap_or(0.0) as f64;
@@ -1784,7 +1859,7 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
         stop_dep: (0..SLOTS * PROFILE_VARS).map(|x| { let (lev, v) = (x / PROFILE_VARS, x % PROFILE_VARS); if v == 0 || v <= ls.runs[r].vars[lev].len() { ls.prof_of(r, lev, v as u8).dep.clone() } else { vec![] } }).collect(),
         load: vec![0.0; mk * n],
         queues: Queues::default(),
-        order: vec![0; mk * n],
+        order: TripOrder::zeros(mk * n, mk),
         dep0: keep.iter().map(|&i| trips[i].dep).collect(),
         left_h: vec![0.0; n * 24],
         wait_h: vec![0.0; n * 24],
@@ -1908,7 +1983,7 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
         let mut day: Vec<(f64, u32)> = order.iter().filter(|&&i| kept(i)).map(|&i| (time(i, k).rem_euclid(DAY), slot[i])).collect();
         day.sort_by(|a, b| a.0.total_cmp(&b.0));
         for (j, (_, s)) in day.into_iter().enumerate() {
-            acc.order[k * mk + j] = s;
+            acc.order.set(k * mk + j, s);
         }
     }
     acc.arrivals = arrivals;

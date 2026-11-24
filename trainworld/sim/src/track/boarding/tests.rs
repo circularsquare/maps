@@ -423,7 +423,7 @@ fn an_overloaded_line_leaves_people_behind_and_the_queue_clears() {
     let ra = &b.accounts[0][l as usize].as_ref().unwrap().runs[0];
     let m = ra.deps.len();
     // the queue at A, train by train through the day
-    let q: Vec<(f64, f32, f32)> = (0..m).map(|j| (ra.stop_times(0).at(j), ra.queues.q_after(ra.order[j] as usize * 3), ra.load[ra.order[j] as usize * 3])).collect();
+    let q: Vec<(f64, f32, f32)> = (0..m).map(|j| (ra.stop_times(0).at(j), ra.queues.q_after(ra.order.get(j) * 3), ra.load[ra.order.get(j) * 3])).collect();
     let at = |h: f64| q.iter().filter(|e| e.0 < h * 3600.0).next_back().unwrap().1;
     assert!(at(7.0) > 0.0 && at(9.0) >= at(7.0), "{} {}", at(7.0), at(9.0));
     // T-1067: 600 more a train than it takes, until the platform holds WAITING_CAP as a train
@@ -464,8 +464,8 @@ fn riders_left_behind_too_long_go_another_way() {
     // the queue grows 600 a train through the morning and fills the platform before noon
     let most = (0..m).map(|j| ra.queues.q_after(j * 3)).fold(0.0f32, f32::max) as f64;
     assert!(most <= WAITING_CAP - cap + 1e-3, "{most}");
-    let gave_by_noon: f64 = (0..m).filter(|&j| ra.stop_times(0).at(j) < 12.5 * 3600.0).map(|j| ra.queues.gone(ra.order[j] as usize * 3) as f64).sum();
-    let gave_after: f64 = (0..m).filter(|&j| ra.stop_times(0).at(j) > 12.5 * 3600.0).map(|j| ra.queues.gone(ra.order[j] as usize * 3) as f64).sum();
+    let gave_by_noon: f64 = (0..m).filter(|&j| ra.stop_times(0).at(j) < 12.5 * 3600.0).map(|j| ra.queues.gone(ra.order.get(j) * 3) as f64).sum();
+    let gave_after: f64 = (0..m).filter(|&j| ra.stop_times(0).at(j) > 12.5 * 3600.0).map(|j| ra.queues.gone(ra.order.get(j) * 3) as f64).sum();
     assert!(gave_by_noon > 0.0 && gave_after > 0.0, "{gave_by_noon} {gave_after}");
     // whoever is left waits at most GIVE_UP_S past their first train (T-1255: on a train every 30
     // minutes or rarer, a rider joins only for a train with room)
@@ -501,7 +501,7 @@ fn riders_come_and_wait_only_for_a_train_with_room_soon() {
     let ra = &b.accounts[0][l as usize].as_ref().unwrap().runs[0];
     let m = ra.deps.len();
     // every peak train leaves full and the platform holds at most the next 30 minutes' trains
-    let peak: Vec<usize> = (0..m).filter(|&j| ra.stop_times(0).at(j) > 7.0 * 3600.0 && ra.stop_times(0).at(j) < 9.5 * 3600.0).map(|j| ra.order[j] as usize).collect();
+    let peak: Vec<usize> = (0..m).filter(|&j| ra.stop_times(0).at(j) > 7.0 * 3600.0 && ra.stop_times(0).at(j) < 9.5 * 3600.0).map(|j| ra.order.get(j)).collect();
     assert!(peak.iter().all(|&i| (ra.load[i * 3] as f64 - cap).abs() < 1e-3));
     let most = (0..m).map(|i| ra.queues.q_after(i * 3)).fold(0.0f32, f32::max) as f64;
     assert!(most <= 5.0 * cap + 1e-3, "{most}");
@@ -1045,4 +1045,33 @@ fn queues_read_back_to_the_bit() {
     assert_eq!(s.kept(), (0..n).filter(|&i| q[i].to_bits() != 0 || g[i].to_bits() != 0).count());
     let empty = Queues::new(&[], &[]);
     assert_eq!(empty.q_after(0), 0.0);
+}
+
+/// T-4184: a run's stop order reads back the same in 16 and 32 bits, and takes the wide form only past 65,536 departures.
+#[test]
+fn trip_order_reads_back_in_both_widths() {
+    let (trips, stops) = (70_000usize, 2usize);
+    let mut short = TripOrder::zeros(stops * 1000, 1000);
+    let mut wide = TripOrder::zeros(stops * trips, trips);
+    assert!(matches!(short, TripOrder::Short(_)) && matches!(wide, TripOrder::Wide(_)));
+    assert!(matches!(TripOrder::zeros(4, 1 << 16), TripOrder::Short(_)));
+    for i in 0..stops * 1000 {
+        short.set(i, (i * 7 % 1000) as u32);
+    }
+    for i in 0..stops * trips {
+        wide.set(i, (i * 7 % trips) as u32);
+    }
+    for k in 0..stops {
+        let (s, w) = (short.slice(k * 1000, (k + 1) * 1000), wide.slice(k * trips, (k + 1) * trips));
+        assert_eq!((s.len(), w.len()), (1000, trips));
+        for i in 0..1000 {
+            assert_eq!(s.get(i), (k * 1000 + i) * 7 % 1000);
+            assert_eq!(short.try_get(k * 1000 + i), Some(s.get(i)));
+        }
+        for i in 0..trips {
+            assert_eq!(w.get(i), (k * trips + i) * 7 % trips);
+        }
+    }
+    assert_eq!(short.try_get(stops * 1000), None);
+    assert_eq!((short.heap_bytes(), wide.heap_bytes()), (stops * 1000 * 2, stops * trips * 4));
 }

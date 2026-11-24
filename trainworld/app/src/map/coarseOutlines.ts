@@ -193,11 +193,56 @@ function placeBy(rings: (id: string) => Float64Array[] | undefined) {
   });
 }
 
-/** The clock worker's copy (T-1265, T-2802): the page's packed rings, each zone decoded when a place near it is
- * first asked about. */
-export function readOutlinesForPlaces(p: PackedOutlines): void {
-  const rings = packedRings(p);
-  placeBy((id) => rings.get(id)?.map((flat) => decodeRing(flat, p.q)));
+/** T-4184: the clock worker's copy of `PackedOutlines`: the file's deltas as zigzag varints (one byte for a third of
+ * them, two for nearly all the rest: 4.7 MB where the Int32 copy took 11.5), ring `r` from byte `byteAt[r]` with
+ * `ringAt[r + 1] - ringAt[r]` numbers. Read back, the same integers. */
+export type PlaceOutlines = { q: number; ids: string[]; zoneRing: Uint32Array; ringAt: Uint32Array; byteAt: Uint32Array; bytes: Uint8Array };
+
+export function placeOutlines(p: PackedOutlines): PlaceOutlines {
+  const d = p.data, rings = p.ringAt.length - 1;
+  // zigzag: 0, -1, 1, -2 ... as 0, 1, 2, 3 ..., every Int32 an unsigned 32-bit number
+  let size = 0;
+  for (let i = 0; i < d.length; i++) {
+    const z = ((d[i] << 1) ^ (d[i] >> 31)) >>> 0;
+    size += z < 0x80 ? 1 : z < 0x4000 ? 2 : z < 0x200000 ? 3 : z < 0x10000000 ? 4 : 5;
+  }
+  const bytes = new Uint8Array(size), byteAt = new Uint32Array(rings + 1);
+  let o = 0;
+  for (let r = 0; r < rings; r++) {
+    byteAt[r] = o;
+    for (let i = p.ringAt[r]; i < p.ringAt[r + 1]; i++) {
+      let z = ((d[i] << 1) ^ (d[i] >> 31)) >>> 0;
+      while (z >= 0x80) (bytes[o++] = (z & 0x7f) | 0x80), (z >>>= 7);
+      bytes[o++] = z;
+    }
+  }
+  byteAt[rings] = o;
+  return { q: p.q, ids: p.ids, zoneRing: p.zoneRing, ringAt: p.ringAt, byteAt, bytes };
+}
+
+/** Ring `r` of `v` as `decodeRing` gives it from the packed deltas. */
+function decodePlaceRing(v: PlaceOutlines, r: number): Float64Array {
+  const out = new Float64Array(v.ringAt[r + 1] - v.ringAt[r]), b = v.bytes;
+  let o = v.byteAt[r], x = 0, y = 0;
+  for (let i = 0; i < out.length; i++) {
+    let z = 0, m = 1, c: number;
+    do (c = b[o++]), (z += (c & 127) * m), (m *= 128); while (c & 128);
+    const dv = z % 2 ? -(z + 1) / 2 : z / 2;
+    out[i] = i % 2 ? (y += dv) / v.q : (x += dv) / v.q;
+  }
+  return out;
+}
+
+/** The clock worker's outlines (T-1265, T-2802), each zone decoded when a place near it is first asked about. */
+export function readOutlinesForPlaces(v: PlaceOutlines): void {
+  const zone = new Map(v.ids.map((id, k) => [id, k]));
+  placeBy((id) => {
+    const k = zone.get(id);
+    if (k === undefined) return undefined;
+    const out: Float64Array[] = [];
+    for (let r = v.zoneRing[k]; r < v.zoneRing[k + 1]; r++) out.push(decodePlaceRing(v, r));
+    return out;
+  });
 }
 
 /** An outline's edges by band of latitude (x0, y0, x1, y1 each), so the crossing test reads only the
