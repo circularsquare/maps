@@ -213,10 +213,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4136: on the Asia save while trips calculate, drawing track runs at 3-18 frames a second (55 with no track started); likely the worker running previews back to back beside trip workers on a busy machine.
   - Goal: At most one preview per frame, or whatever the measurement shows; 30+ frames a second while drawing track on Asia during a calculation.
   - Other: notes/T-4136.md
-- T-4160 [P2] {L:edit-speed} Bounded rows' regions differ from a fresh build on one Asia seed
-  - Context: Batch check 2 (11-23): the Asia rows check at 10 seeds of 40 steps failed at seed 9, step 15, "regions differ from a fresh build", in the T-4113 region code; not rerun on the parent commit.
-  - Goal: Seed 9 reproduced and fixed, or shown to predate T-4130; the 10x40 Asia run passes.
-  - Other: notes/batchcheck-2026-11-23b.md
 - T-4163 [P2] {L:track-drawing} {after:edit speed lands} Find drawing that still trips the alignment check
   - Context: You, 11-24: a situation where the line-up refusal shows is most likely a bug, to prevent. T-4152 cut the end-to-end join sweep's refusals from 26 of 288 to 0.
   - Goal: Ordinary drawing (joins, junctions, node drags, trams) never shows it; any case found is fixed or filed.
@@ -230,7 +226,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-24: "if merging directionally biases things, would it make sense to undo that bias?", then "if its mostly not one directional its fine ... p4". T-4158 saw lines move both ways (Belgrade 704 +34%, 66 -29%) but Auto bus lines lose 1.2% overall.
   - Goal: Net shift by kind of line and trip length on Detroit and Belgrade; a simple correction proposed to you only where it is clearly one way.
   - Other: notes/T-4158.md
-- T-4169 [P2] {L:checks} Edit bench stop clicks and compare pick up the wrong rows
+- T-4169 [P2] {L:checks} Edit bench stop clicks and compare pick up the wrong rows (taking, 2026-11-24, agent editbench)
   - Context: From T-4149: edit_bench's stop-click rows say "no edit message" on both builds, and --compare picked up other agents' ledger lines.
   - Goal: Stop clicks measured, and --compare reads only the two runs it was given.
   - Other: notes/T-4149.md

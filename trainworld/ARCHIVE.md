@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4160 [P2] {L:edit-speed} Bounded rows' regions differ from a fresh build on one Asia seed (2026-11-24): Already fixed by T-4137 (same seed 9 step 15 failure; batch check 2 ran before it landed); Asia 10x40 passes on b02473811, no code change. notes/T-4160.md.
 - T-4175 [P3] {L:cleanup} Stale lines in SPEC, docs and handoff (2026-11-24): stale lines fixed: reserve_cores.ps1 comment, TASKS header, stackdumps deleted; SPEC and interface lines were already right (notes/T-4173.md)
 - T-4173 [P2] {L:checks} cores.py uses one ledger from any worktree (2026-11-24): cores.py resolves the main ledger from .tw-trees/<name>/ and .tw-snap/; agent_cargo.py and cores.mjs workarounds removed (notes/T-4173.md)
 - T-4179 [P1] {L:memory} Win back demand memory lost since v0.4.5 (2026-11-24): Traced to T-4041's per-destination shares in the search tables; tables packed losslessly (NYC 62 to 48 MB), demand memory 1163 to 1067 MB NYC, 1751 to 1687 Tokyo, 4189 to 3710 Belgrade, rail trips identical; rest is T-4041's rule. notes/T-4179.md.

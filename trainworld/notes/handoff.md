@@ -11,9 +11,8 @@ diary notes/handoff-log.md. Her time UTC-5.
   after-playable memory re-read), then I run finish memgrowth (T-4179: demand memory -64 to -479 MB, same figures; checker look).
 - T-4161 done in shonei-server 7bdd559 (level 39 + LBE1 block), unpushed, not deployed: deploy.ps1 on her yes before 0.4.6, then push shonei-server.
 - trams T-4075 (Opus, tree trams): trams drawn off track (player complaint).
-- cleanup T-4175+T-4173 (Sonnet, main tree): stale doc lines; cores.py one ledger (the uncommitted cores.py fix is from
-  an earlier session, it finishes it) and drops the four workarounds.
 - playprod T-4183 (Sonnet, tree playprod): play.mjs loads saves on production builds.
+- editbench T-4169 (Sonnet, tree editbench): edit bench stop clicks and --compare rows.
 - 0.4.6 prep (from maps-c0): smoke on master PASSED, smoke8800 light+dark PASSED, two batch checkers PASS, changelog
   reviewed (58 shown, 7 highlights), perf_bench rel046-e936af30 vs v0.4.5: demand memory +13/+12/+17% (memgrowth brings
   it to +3/+8/+3%), Belgrade CPU +20%, rail -7.1% Belgrade (trade-off to her). Left: land memgrowth + its checker, smoke
