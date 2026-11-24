@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4189 [P1] {L:checks} perf_bench base builds reuse the head's WASM (2026-11-24): shared cargo targets gave one build the other build WASM; a lock plus touching every sim file fixes it; rel046 vs v0.4.5 was not affected; t4179-head2 and older parallel pairs suspect. notes/T-4189.md.
 - T-4190 [P2] {L:checks} t2682-editnote fails two steps on master (2026-11-24): stale check, not a game bug: zones are coarse only with display.coarseDemand since T-4117; the check sets it and passes 5/5. notes/T-4190.md.
 - T-4055 [P2] {L:solve-consistency} An edit reaching two new zones shows a stale final (2026-11-24): A pack opening that begins during a solve (zone at another level, zone reached, market) leaves that final shown but its network waiting, so the next solve is the final; PHL/PVD batch, separate and reload all 68,341 / 11,728 (was 63,996 at the batch final). notes/T-4055.md.
 - T-4051 [P2] {L:loading} Opening a zone on a big save sits at 90% (2026-11-24): A zone opened by an edit now opens bare in the aux worker first, so its solve always takes the short path: Medellin on the North America save 118-133 s to about 32 s where master took the slow path (2 of 3), figures identical (tree zoneslow).

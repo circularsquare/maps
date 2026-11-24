@@ -205,10 +205,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4154 [P2] {L:checks} Agent browsers run past their core claim
   - Context: 11-24 at cap 10: three agent games (play.mjs on 6151 and 6168, a smoke) ran on 14 cores with no claim in the ledger, and the edit bench's renderer used 8 cores on a 4-core claim.
   - Goal: Every agent browser stays on its claimed cores for its whole life, or stops when its claim ends.
-- T-4189 [P1] {L:checks} perf_bench base builds reuse the head's WASM (taking, 2026-11-24, agent benchwasm)
-  - Context: Batch check 3 (11-24): a base build of d991f7ab6 had track WASM byte-identical to the head's although T-4184 changed boarding.rs; base and head share perfbench/target-track and target-demand, and a parallel pair got the head's WASM in both. Any compare across a sim change may be measuring one build twice, the 0.4.6 compare against v0.4.5 included.
-  - Goal: Every perf_bench build's WASM comes from its own source (checked by hash), parallel builds included; the T-4184 clock memory cut shows in a base vs head compare.
-  - Other: notes/batchcheck-2026-11-24-check3.md
 - T-4151 [P2] {L:edit-speed} The edit bench calculates trips in its loaded pass
   - Context: From T-4144: both saves load final from the cache and a paused clock never calculates again, so the bench's while-calculating pass measures nothing.
   - Goal: That pass runs during a real calculation.
@@ -395,10 +391,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3875 [P3] {L:cleanup} {after:T-2374 and T-3873} Cut code-map.md to one line per file
   - Context: docs/code-map.md is 707 lines and about 100 KB with 700 task ids, over the Read tool's cap, so no agent can read it whole though CLAUDE.md sends every agent there.
   - Goal: One line per file saying what it holds, task ids dropped, about a third of today's size.
-- T-3160 [P2] {L:memory} Phone memory on real-network starts (taking, 2026-11-24, agent phonedemand)
-  - Context: The Tokyo real-network start on an emulated iPhone (production build) peaked at 1.6 GB in the tab, now 1.4. Safari also holds the solving worker's WASM (280 MB), the clock worker (260) and the page (about 200). You, 2026-11-16: "lots of people are unable to really play properly cuz tehy dont have enoguh ram. especially on phones."
-  - Goal: The solving worker's peak down again, or the five periods' held results (157 MB in WASM) cut, rail trips unchanged, measured on a production build.
-  - Other: Stage 4's exp rows (exact, about 7 MB in the game, maybe 6% slower) not landed, kept as notes/T-3160-exprows.patch. notes/T-3160.md, stage 5.
+- T-3160 [P2] {L:memory} Phone memory on real-network starts
+  - Context: On the Tokyo real-network start on an emulated iPhone the solving worker's WASM is now 261 MB (330 before stage 6, figures identical). Left: the page (about 200), the clock worker (170) and the worker's held results (142). You, 2026-11-16: "lots of people are unable to really play properly cuz tehy dont have enoguh ram. especially on phones."
+  - Goal: The next biggest of those cut, rail trips unchanged, measured on a production build on an emulated iPhone.
+  - Other: notes/T-3160.md, stage 6.
 - T-4187 [P2] {L:memory} {after:T-4153 stage 2 lands} The clock worker's drawing cache on big player networks
   - Context: From T-4184: on a Community Tokyo save (t9gksxmu, 375 MB clock worker on a phone) the extra is the drawing state for the player's track: draw cache 46 MB, line bands' memo and orders 25, posted 14. The cuts (about 20-25 MB, exact) touch code editnetwork changes.
   - Goal: Those cuts made with figures identical, measured on t9gksxmu on an emulated iPhone.
