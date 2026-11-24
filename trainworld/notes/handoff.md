@@ -6,6 +6,7 @@ diary notes/handoff-log.md. Her time UTC-5.
 
 ## In flight (mine, maps-2c; phonemem2 and zoneslow run in maps-c0's tab: follow-ups via "relay to <agent>: <text>" to maps-c0, or a fresh agent on their tree)
 - Landed: memgrowth T-4179 c842cd599, phonemem2 T-4184 20d3a0029 (changelog c090). Batch checker check3 (Sonnet) on both;
+  check3 PASS both (T-4184's phone memory not confirmed: perf_bench bug T-4189);
   smoke on master PASSED 10:19 (30 checks; real save 13,035,408 in smoke's own count, the usual 1.0286x play.mjs's
   12,672,465); 8800 = 20d3a002 (master minus bookkeeping).
 - Landed 10:26-10:35: trams T-4075 9fc02c858 (c091), zoneslow T-4051 96ad90da4 (c089 reworded); check4 PASS both (caveat: NA save live vs reload

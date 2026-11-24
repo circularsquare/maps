@@ -205,6 +205,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4154 [P2] {L:checks} Agent browsers run past their core claim
   - Context: 11-24 at cap 10: three agent games (play.mjs on 6151 and 6168, a smoke) ran on 14 cores with no claim in the ledger, and the edit bench's renderer used 8 cores on a 4-core claim.
   - Goal: Every agent browser stays on its claimed cores for its whole life, or stops when its claim ends.
+- T-4189 [P1] {L:checks} perf_bench base builds reuse the head's WASM
+  - Context: Batch check 3 (11-24): a base build of d991f7ab6 had track WASM byte-identical to the head's although T-4184 changed boarding.rs; base and head share perfbench/target-track and target-demand, and a parallel pair got the head's WASM in both. Any compare across a sim change may be measuring one build twice, the 0.4.6 compare against v0.4.5 included.
+  - Goal: Every perf_bench build's WASM comes from its own source (checked by hash), parallel builds included; the T-4184 clock memory cut shows in a base vs head compare.
+  - Other: notes/batchcheck-2026-11-24-check3.md
 - T-4151 [P2] {L:edit-speed} The edit bench calculates trips in its loaded pass
   - Context: From T-4144: both saves load final from the cache and a paused clock never calculates again, so the bench's while-calculating pass measures nothing.
   - Goal: That pass runs during a real calculation.
