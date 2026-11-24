@@ -29,6 +29,14 @@ const same = (a, b) => a.length === b.length && a.every((v, i) => Math.abs(v - b
 
 const edit = (op) => page.evaluate((op) => window.tw.client.edit(op), op);
 
+// A new line shows at once, before the answer; its name box opens when the answer lands. Enter keeps the name once the box is
+// there: an Enter sent earlier is lost, and the open box (its Symbol and Shape pickers) collapses on the next press and moves the panel.
+async function keepName() {
+  await page.waitForSelector('input.name-edit', { timeout: 60000 });
+  await page.keyboard.press('Enter');
+  await page.waitForSelector('input.name-edit', { state: 'detached', timeout: 10000 });
+}
+
 async function run(shade) {
   await page.addInitScript((shade) => { try { localStorage.setItem('trainworld-ui', JSON.stringify({ shade, display: { dayShown: 'weekday' }, v: 2 })); } catch {} }, shade);
   await page.goto(`${BASE}?debug=1&new=1&paused=1&demandWorkers=2&v=${Date.now()}`);
@@ -49,7 +57,7 @@ async function run(shade) {
   // Enter finishes: makes the line
   await page.keyboard.press('Enter');
   await page.waitForFunction(() => window.tw.world.value.save.lines.length === 1 && !window.tw.tools.bus.active, undefined, { timeout: 60000 });
-  await page.keyboard.press('Enter'); // keeps the name
+  await keepName();
   await page.waitForTimeout(500);
   const before = await bus();
   check(!!before && before.route.length >= 6, 'a planned bus line is made', `${before?.route.length}`);
@@ -153,7 +161,7 @@ async function run(shade) {
   await page.waitForFunction(() => { const f = window.tw.tools.ferry; return f.route && f.routeKey === f.berthKey(); }, undefined, { timeout: 60000 }).catch(() => {});
   await page.keyboard.press('Enter');
   await page.waitForFunction(() => window.tw.world.value.save.lines.length === 2 && !window.tw.tools.ferry.active, undefined, { timeout: 90000 });
-  await page.keyboard.press('Enter');
+  await keepName();
   const fid = await page.evaluate(() => window.tw.world.value.save.lines.find((l) => window.tw.world.value.lineStats[l.id].bus.ferry).id);
   await page.evaluate((id) => { window.tw.selection.value = { kind: 'line', line: id }; }, fid);
   await page.waitForTimeout(600);
