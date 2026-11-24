@@ -45,6 +45,7 @@
 //   grow     a demand pool cut for memory never adds workers back (T-1366)
 //   keepSlack an idle demand worker well over its need restarts (and the network is solved again) with the pool not short of memory (T-4204)
 //   cacheAhead  a loading save's cached demand result waits for its network, and the camera for its first state
+//   standIn     T-4202: no other demand code's kept result stands in at a load (the full load, as before)
 //   cacheCard   a loaded game showing its cached demand result keeps its card and held clock until the fresh final (T-347)
 //   splitAhead  the station bubbles' origins and transfers wait for the transfer pairs asked of the workers
 //   zoneZoom zones load for viewing at any zoom, exact outlines from zoom 5, every outline redrawn on each change
@@ -84,6 +85,6 @@ const q = new URLSearchParams(location.search);
 const off = new Set((q.get("perfOff") ?? "").split(",").filter(Boolean));
 if (import.meta.env.DEV) (globalThis as { twPerfOff?: Set<string> }).twPerfOff = off;
 
-export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "clusters" | "periods" | "split" | "reach" | "chunks" | "farChunks" | "close" | "marks" | "fans" | "zoneZoom" | "moving" | "cap" | "grow" | "keepSlack" | "rough" | "cacheAhead" | "cacheCard" | "estimate" | "splitAhead" | "strokeCache" | "strokeCull" | "strokeLod" | "strokeGather" | "bands" | "follow" | "crossWait" | "singleWait" | "bays" | "stillThrottle" | "share" | "noise" | "firm" | "restart" | "alone" | "focus" | "muteThin" | "bandsSmooth" | "bandsOrder" | "bandsPlace" | "bandsHold" | "bandsAlign" | "bandGap" | "roads" | "selected" | "viewRound" | "lengths0" | "focusAhead" | "focusEnd" | "focusAux" | "carryWasm" | "overviewCache" | "fareHold" | "msaa" | "steps" | "wholeSteps" | "preview") => off.has(part);
+export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "clusters" | "periods" | "split" | "reach" | "chunks" | "farChunks" | "close" | "marks" | "fans" | "zoneZoom" | "moving" | "cap" | "grow" | "keepSlack" | "rough" | "cacheAhead" | "cacheCard" | "standIn" | "estimate" | "splitAhead" | "strokeCache" | "strokeCull" | "strokeLod" | "strokeGather" | "bands" | "follow" | "crossWait" | "singleWait" | "bays" | "stillThrottle" | "share" | "noise" | "firm" | "restart" | "alone" | "focus" | "muteThin" | "bandsSmooth" | "bandsOrder" | "bandsPlace" | "bandsHold" | "bandsAlign" | "bandGap" | "roads" | "selected" | "viewRound" | "lengths0" | "focusAhead" | "focusEnd" | "focusAux" | "carryWasm" | "overviewCache" | "fareHold" | "msaa" | "steps" | "wholeSteps" | "preview") => off.has(part);
 /** how lines side by side are worked out (map/lineBands.ts `setBandMode`) */
 export const bandTry = (): string => (perfOff("bandsSmooth") ? "" : (perfOff("bandsOrder") ? "smooth" : "smooth,order") + (perfOff("bandsPlace") ? "" : ",fit,snap") + (perfOff("bandsHold") ? "" : ",hold") + (perfOff("bandsAlign") ? "" : ",align"));

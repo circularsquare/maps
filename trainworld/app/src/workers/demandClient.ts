@@ -122,7 +122,7 @@ import { takesMarketless } from "../game/fareInEffect";
 import { localStep } from "./demandSteps";
 import { saveSlotsState } from "./clockClient";
 import { readDemandAhead, readDemandCache, writeDemandCache } from "./saveFile";
-import { DEMAND_KEY, CACHE_FORMAT, CACHE_VERSION, cacheAvailable, canonical, fromStored, sameKey, sha256, storedSize, toStored, type CacheKey, type StoredDemand } from "./demandCache";
+import { DEMAND_KEY, CACHE_FORMAT, CACHE_VERSION, cacheAvailable, canonical, fromStored, sameKey, sha256, standsIn, storedSize, toStored, type CacheKey, type StoredDemand } from "./demandCache";
 import { patientFetch } from "./patientFetch";
 import { binGzOf, isGzip, unpackBin } from "./packZip";
 
@@ -1040,8 +1040,10 @@ class DemandClient {
   private cachedHash: string | null = null;
   /** its bubbles, if it kept them */
   private cachedModes: StoredDemand["modes"] | null = null;
+  /** T-4202: it is another demand code's result standing in, so the fresh final is written over it */
+  private cachedStandIn = false;
   /** what the last read and write did (window.twDemand.client.cacheLog with ?debug=1) */
-  cacheLog: { at: number; ahead?: boolean; hash?: string; readMs?: number; miss?: string; shownAt?: number; wrote?: { at: number; ms: number; bytes: number; ok: boolean; ahead?: boolean } } | null = null;
+  cacheLog: { at: number; ahead?: boolean; hash?: string; readMs?: number; miss?: string; standIn?: string; shownAt?: number; skip?: string; wrote?: { at: number; ms: number; bytes: number; ok: boolean; ahead?: boolean } } | null = null;
   /** every read's `cacheLog`, oldest first */
   cacheLogs: NonNullable<DemandClient["cacheLog"]>[] = [];
 
@@ -2823,16 +2825,20 @@ class DemandClient {
       if (had.length !== markets.length || markets.some((id) => !had.includes(id))) return void (log.miss = "zones");
       // (T-2574: what can be checked before the packs are in)
       const pre = sameKey(stored, { ...this.keyBase(), packs: stored.packs ?? {} });
-      if (pre) return void (log.miss = pre);
+      // T-4202: after an update, the last build's result of this network stands in while this one solves it
+      const standIn = (pre === "demand" || pre === "workers") && !perfOff("standIn");
+      if (pre && !standIn) return void (log.miss = pre);
       if (!late()) this.expectCache(log, true);
       // (T-1223: the levels the solve will have; before the fine set is made, the save's list's)
       const saved = !this.lodZones && this.lod === "auto" ? this.savedFine : null;
       const coarse = cities.filter((id) => (saved ? !saved.includes(id) : this.levelFor(id) === LOD_COARSE));
-      const why = sameKey(stored, await this.keyFor(cities, markets, coarse));
+      const key = await this.keyFor(cities, markets, coarse);
+      const why = !standIn ? sameKey(stored, key) : standsIn(stored, key) ? null : sameKey({ ...stored, demand: key.demand, workers: key.workers }, key);
       if (why) return void (log.miss = why);
+      if (standIn) log.standIn = pre!;
       // (T-1533: a rough solve's estimate gives way to it)
       if (late() || this.failed) return void (log.miss = "late");
-      this.applyCache(svc, canon, stored, hash, cities);
+      this.applyCache(svc, canon, stored, hash, cities, standIn);
       if (ahead && this.early) this.early.shown = true;
       log.shownAt = performance.now();
     } catch (err) {
@@ -2843,8 +2849,8 @@ class DemandClient {
   }
 
   /** Show a cached result as a final one under CACHE_VERSION; the solve of the same network carries
-   * on, its estimates are not shown, and its final round replaces it whole. */
-  private applyCache(svc: Service, ids: ReturnType<typeof canonical>, stored: StoredDemand, hash: string, cities: CityId[]) {
+   * on, its estimates are not shown, and its final round replaces it whole (T-4202: a stand-in's too). */
+  private applyCache(svc: Service, ids: ReturnType<typeof canonical>, stored: StoredDemand, hash: string, cities: CityId[], standIn = false) {
     const days = fromStored(stored, ids);
     if (days.length !== DEMAND_DAYS.length) throw new Error("days");
     const now = performance.now();
@@ -2856,6 +2862,7 @@ class DemandClient {
     this.cachedModes = stored.modes ?? null;
     seedRows(stored.rows ?? []);
     this.cachedAhead = stored.ahead?.save ?? null;
+    this.cachedStandIn = standIn;
     if (this.cur?.svc === svc) this.cur.showEstimates = false;
     // T-2045: every zone has its final figures; T-2533: the focus pool stays for the zone in view's questions
     this.hideFocus();
@@ -2882,9 +2889,10 @@ class DemandClient {
   /** A final result landed: keep it beside the save (not from a test page or a tab without the slot). */
   private async writeCache(s: Solve) {
     const slots = saveSlotsState.peek();
-    if (!this.cacheOn || !this.cacheWrites || !slots.writable || !slots.active) return;
+    const skip = (why: string) => void ((this.cacheLog ??= { at: performance.now() }).skip = why);
+    if (!this.cacheOn || !this.cacheWrites || !slots.writable || !slots.active) return skip("off");
     const days = demandByDay.peek();
-    if (days.some((d) => d.view?.version !== s.version)) return;
+    if (days.some((d) => d.view?.version !== s.version)) return skip("days");
     const t0 = performance.now();
     const canon = canonical(s.svc), sent = s.sent ?? s;
     const stored = toStored(days, sent.cities, canon);
@@ -2895,8 +2903,8 @@ class DemandClient {
     // T-1539: the network the loaded save worked out, so the next load of it shows this at once
     const lk = this.loadKey;
     const ahead = lk?.snapshot && lk.svcKey === keyOf(s.svc) ? { save: lk.key, snapshot: lk.snapshot } : null;
-    // the result shown at load is the same one, unless it can now add its bubbles or its network
-    if (hash === this.cachedHash && (this.cachedModes || !cm) && (!ahead || this.cachedAhead === ahead.save)) return;
+    // the result shown at load is the same one, unless it can now add its bubbles or its network, or it stood in (T-4202)
+    if (hash === this.cachedHash && !this.cachedStandIn && (this.cachedModes || !cm) && (!ahead || this.cachedAhead === ahead.save)) return skip("same");
     const modes = cm && { city, data: concat([cm.homeRail, cm.homeWalk, cm.homeDrive, cm.workRail, cm.workWalk, cm.workDrive, cm.homeNone, cm.workNone]), ...(m!.day ? { day: m!.day } : {}) };
     const ms = performance.now() - t0;
     const bytes = storedSize(stored) + (modes?.data.byteLength ?? 0);
@@ -2906,6 +2914,7 @@ class DemandClient {
     const ok = await this.writeStored(slots.active, hash, { ...key, at: Date.now(), round: s.published, days: stored, ...(modes ? { modes } : {}), ...(ahead ? { ahead } : {}), ...(rows.length ? { rows } : {}) } satisfies StoredDemand);
     this.cachedHash = hash;
     this.cachedAhead = ahead?.save ?? null;
+    this.cachedStandIn = false;
     (this.cacheLog ??= { at: t0 }).wrote = { at: performance.now(), ms, bytes, ok, ...(ahead ? { ahead: true } : {}) };
   }
 
@@ -4356,6 +4365,7 @@ class DemandClient {
     this.cachedCities = new Set();
     this.cachedHash = this.cachedAhead = null;
     this.cachedModes = null;
+    this.cachedStandIn = false;
     demandByDay.value = DEMAND_DAYS.map(() => ({ view: null, cities: new Map(), intercity: null }));
   }
 

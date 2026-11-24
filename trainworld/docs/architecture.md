@@ -813,7 +813,12 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   renumbers ids. Its key is a SHA-256 of the network demand reads, of every pack the solve covered
   (the packs open as it was sent, one closed while it ran included, T-2579) and of the market, the demand code's
   version, the worker count and the perfOff flags; the zones must be the
-  ones the new solve covers. The demand code's version (T-3926, `vite.config.ts` `demandKey`) is a SHA-256, made
+  ones the new solve covers. **A stand-in** (T-4202, Anita 2026-11-24): a result whose key differs only in the
+  demand code's version or the worker count (an update; the same network, zones, packs and levels of detail) is
+  shown and ends the load exactly as a matching one does, its figures the last version's until the fresh
+  final replaces them; that final is written over it (the same key, so one result per slot still), and a stand-in
+  is never written itself (a write takes only a solve's own final). Packs that differ, a changed network form
+  (`canonical`) or `CACHE_FORMAT` mean no stand-in: a full load. `?perfOff=standIn` turns it off. The demand code's version (T-3926, `vite.config.ts` `demandKey`) is a SHA-256, made
   at build time, of the source of every module in the bundler's graph from `demandClient.ts` (static and dynamic
   imports, and every file loaded by `new URL`: the demand, sums and cache-write workers' whole graphs, the demand
   WASM, market-rows.json), so every build of the same demand code has the same one and a release that changes none
@@ -835,7 +840,7 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   solves that zone alone to its round 0, shown nowhere, and answers from it (`focusAsked`) until the workers' solve
   of the network is sent and what was asked of it is answered (`retireFocus`, [demand-runtime.md](demand-runtime.md)
   "The zone in view first"); from then a click is answered from the newest round the workers reach ("The pool", T-327),
-  and the fresh final replaces the cache in one step (it is bit for bit the same). A test page, `?new=1` and a tab without the slot never
+  and the fresh final replaces the cache in one step (bit for bit the same, a stand-in's aside). A test page, `?new=1` and a tab without the slot never
   write it. The write runs in a worker of its own (`workers/cacheWrite.worker.ts`, T-789), the
   market's corridor book (shared by the days) copied once and transferred to it, with the corridor rows the page
   holds of the zone in view and up to 15 more zones (T-2136: no worker has them at the next load until it holds

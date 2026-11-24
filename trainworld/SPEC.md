@@ -331,7 +331,8 @@ versioned snapshots. The page opens on a start menu (New game, then the saved ga
 start with the pick (T-677). A loaded game holds only its clock, behind a loading card, until its
 fresh demand solve's final result lands (T-347), or until its network is in when the last final
 result kept beside the save is for that very network (T-328, T-2560: the game plays on it while the
-same network is solved again); input is never blocked. Another game opened from the saves
+same network is solved again; T-4202: after an update, the last version's result stands in until the
+new figures are calculated); input is never blocked. Another game opened from the saves
 panel reloads the page into it, which frees the last game's memory (T-1196). City packs come from an offline Python pipeline. The simulation is a pure
 function of (save, pack versions, game time); a save made just after a service edit carries the
 change over [T-206, T-1071].
@@ -404,7 +405,7 @@ database cleared under a running game is made again with the game in it [T-1829]
 or anything else this one cannot read) does not open, says it was saved on a newer version, and stays in its slot as
 it is, never marked damaged; nor does this build upload over an account copy a newer build saved, which the server
 refuses too [T-3948, T-4014]. Closing the page asks first only while a change cannot be saved. Beside each slot the page keeps its last final demand result, shown at once
-on reload when the network, packs and build match [T-328].
+on reload when the network and packs match [T-328]; one from an older demand code stands in until the new solve's final replaces it [T-4202].
 Keeping old saves loading is a nicety: only Anita has saves. An optional account, noritetsu's on
 `shonei-server` (one sign-in for both pages), lists a signed-in player's normal games by points on
 a world leaderboard and one per city and country, and by weekday profit (fares minus running costs and upkeep) on the

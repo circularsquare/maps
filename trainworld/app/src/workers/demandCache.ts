@@ -9,8 +9,10 @@
 //
 // The key: a SHA-256 of the network demand reads (the canonical form below), the SHA-256 of every
 // pack the solve covered and the market's, the demand code's version (DEMAND_KEY, T-3926), the worker
-// count (sums are added in worker order) and the perfOff flags. Any difference means no cache, never a
-// wrong one.
+// count (sums are added in worker order) and the perfOff flags. Any other difference means no cache, never a
+// wrong one. T-4202: a result whose key differs only in the demand code's version or the worker count (an
+// update, the same network, zones and packs) stands in while this build solves: shown as the cache is, its
+// figures replaced by the fresh final (`standsIn`).
 
 import type { CityId } from "../game/cities";
 import type { CorridorRows, DayDemand, DemandView, IntercityDemand, LineDemand, PurposeDemand, StationDemand } from "../game/demand";
@@ -26,7 +28,7 @@ declare const __TW_DEMAND__: string | undefined;
 /** T-3926: the demand code's version, set by vite.config.ts: in a build a hash of every source and data file the
  * demand side runs (the same in every build of the same demand code), on the dev server new at each start. */
 export const DEMAND_KEY = typeof __TW_DEMAND__ === "string" ? __TW_DEMAND__ : "unknown";
-export const CACHE_FORMAT = 13; // raise when the cached result's layout changes
+export const CACHE_FORMAT = 13; // raise when the cached result's layout changes (T-4202: an older demand code's result is read as a stand-in)
 /** The view version a cached result is shown under: no solve has it, so the workers answer no
  * question about it (a click waits for the fresh solve). */
 export const CACHE_VERSION = 0;
@@ -155,6 +157,12 @@ export function sameKey(a: CacheKey, b: CacheKey): string | null {
   if (ka.join() !== kb.join()) return "zones";
   for (const k of ka) if (a.packs[k] !== b.packs[k]) return "pack " + k;
   return null;
+}
+
+/** T-4202: a kept result whose key `a` differs from this build's `b` only in the demand code's version or the
+ * worker count, so it can stand in (its layout, zones and packs the same) while this build solves the network. */
+export function standsIn(a: CacheKey, b: CacheKey): boolean {
+  return (a.demand !== b.demand || a.workers !== b.workers) && sameKey({ ...a, demand: b.demand, workers: b.workers }, b) === null;
 }
 
 /** A final result's days as stored: `cities` the zones the solve covered (bare zones are left out;

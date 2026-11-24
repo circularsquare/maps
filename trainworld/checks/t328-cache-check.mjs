@@ -1,18 +1,23 @@
 // T-328: the demand cache on reload (docs/architecture.md 11 "Demand cache"). Times and checks a
 // reload of the real New York save, with a persistent profile so the save and its cache stay.
-//   MODE=prepare | reload | stale | edit    BASE=http://localhost:6151/    OUT=<folder>    RUNS=3
-//   node trainworld/checks/t328-cache-check.mjs            (from the maps root)
+//   MODE=prepare | reload | stale | standin | edit    BASE=http://localhost:6151/    OUT=<folder>    RUNS=3
+//   node trainworld/checks/t328-cache-check.mjs            (from the maps root; TIMEOUT_S=600 a solve's wait)
 // prepare: imports T-007-real-nyc.save into the profile's autosave slot.
 // reload: RUNS page loads; each records when the network was drawn, when the clock was released
 //   (T-2560: as the cached view shows; without the cache, T-347, T-421: at the zone in view's final),
 //   every change of the shown view (version:round:final, version 0 = the cache) and a signature of
 //   every figure in the first final view shown and in the fresh solve's final. PASS when the
 //   fresh final's signature is the same on every run and the cached view's equals it.
-// stale: tampers with the stored cache (its demand code key, a pack's digest), reloads, and checks that the
-//   cache is not shown; then a changed network (one line's trains) must not show it either.
+// stale: tampers with the stored cache (a pack's digest), reloads, and checks that the cache is not shown; then a
+//   changed network (the fare) must not show it either.
+// standin (T-4202): the stored cache made another demand code's (its demand key changed, its lines' and rail
+//   figures x1.5), a reload: it stands in (shown, the clock running at it) until the fresh final, which must equal
+//   the fresh final of an unchanged reload; then it is written again under this build's key, so the next reload
+//   shows it as the cache. STANDIN=1 with MODE=edit makes the edit's reload a stand-in's.
 // edit (T-2560): a reload showing the cache, one line's trains +1 the moment the clock runs (its network
 //   still being solved again), that edit's final; then a reload missing the cache (perfOff=nocache)
 //   solves the edited network cold: the figures must be the same. The trains are put back after.
+// NOWRITE=1: reload writes no cache (a "before" run that leaves the kept result as it was).
 // Outputs OUT/t328-<MODE>-<LABEL>.json. Playwright from PLAYWRIGHT_MODULE, else the npx cache.
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -111,7 +116,42 @@ const page = await ctx.newPage();
 const errors = [];
 collectErrors(page, errors, null);
 
-const waitSolved = (timeout = 600000) => demandFinal(page, { timeout, polling: 100 });
+/** the stored cache entries changed as `field` says (IndexedDB "anitabuilder", store "saves", keys "demand:..."):
+ * 'pack' a pack's digest, 'standin' another demand code's (its key, and every day's lines' and rail figures x1.5,
+ * so a stand-in shows other figures than the fresh final), 'read' none (each entry's demand key); resolves the
+ * entries changed, or for 'read' [storage key, demand key] of each */
+const tamper = (field) => page.evaluate((field) => new Promise((res, rej) => {
+  const o = indexedDB.open('anitabuilder', 1);
+  o.onsuccess = () => {
+    const tx = o.result.transaction('saves', 'readwrite'), st = tx.objectStore('saves');
+    // resolved once committed: a reload right after a put's success could abort it (T-1539)
+    let n = 0;
+    const seen = [];
+    tx.oncomplete = () => res(field === 'read' ? seen : n);
+    const k = st.getAllKeys();
+    k.onsuccess = () => {
+      const keys = k.result.filter((x) => typeof x === 'string' && x.startsWith('demand:'));
+      for (const key of keys) {
+        const g = st.get(key);
+        g.onsuccess = () => {
+          const v = g.result;
+          if (field === 'read') return void seen.push([key, v.demand]);
+          if (field === 'standin') {
+            v.demand = 'x' + v.demand;
+            for (const d of v.days) {
+              d.view.railTripsPerDay *= 1.5;
+              for (const [, l] of d.view.lines) l.ridersPerDay *= 1.5;
+            }
+          } else v.packs[Object.keys(v.packs)[0]] = 'x';
+          st.put(v, key).onsuccess = () => { n++; };
+        };
+      }
+    };
+  };
+  o.onerror = () => rej(o.error);
+}), field);
+
+const waitSolved = (timeout = 1000 * Number(process.env.TIMEOUT_S ?? 600)) => demandFinal(page, { timeout, polling: 100 });
 
 let dumps = 0;
 /** DUMP=1: the shown figures as float64 in OUT/t328-dump-<n>.f64 (sections: the `marks` of the run's json), to diff two runs */
@@ -128,8 +168,11 @@ async function dump() {
 async function reload() {
   await page.goto(`${BASE}?debug=1&continue=1&v=${Date.now()}${QUERY}`);
   await page.waitForFunction(() => !!window.twDemand, undefined, { timeout: 60000 });
+  if (process.env.NOWRITE) await page.evaluate(() => { window.twDemand.client.cacheWrites = false; });
   await waitSolved();
   await page.waitForTimeout(1500); // the cache write after the final
+  // (T-4202: a stand-in's fresh final is written, which can take longer on a busy machine)
+  await page.waitForFunction(() => { const l = window.twDemand.client.cacheLog; return !l || !!l.wrote || !!l.skip; }, undefined, { timeout: 60000, polling: 200 }).catch(() => {});
   await dump();
   return page.evaluate(async () => {
     const c = window.twDemand.client;
@@ -157,7 +200,7 @@ try {
     const bytes = await readFile(process.env.SAVE ?? REAL_SAVE); // (SAVE: another save of over 100 lines)
     const before = await page.evaluate(() => window.tw.lastSaved.peek());
     await importSave(page, bytes);
-    await page.waitForFunction(() => (window.tw.world.value?.save?.lines?.length ?? 0) > 100, undefined, { timeout: 240000 });
+    await page.waitForFunction(() => (window.tw.world.value?.save?.lines?.length ?? 0) > 100, undefined, { timeout: 600000 });
     await page.evaluate(() => window.tw.client.post({ kind: 'flush' }));
     await page.waitForFunction((b) => window.tw.lastSaved.peek() > b, before, { timeout: 60000 });
     await waitSolved();
@@ -177,7 +220,8 @@ try {
       log(`run ${i}: bubbles ${s.bubbles} (modes cached ${s.firstModes?.hash ?? '-'} fresh ${s.freshModes?.hash ?? '-'}) world ${s.world} clock ${s.clock} first view ${s.firstView} first final ${s.firstFinal} (${s.firstFinalKey}) fresh final ${s.freshFinal} cached ${s.cached} | first ${r.first?.hash} fresh ${r.fresh.hash} n ${r.fresh.n} train ${r.fresh.train}% rail ${r.fresh.rail}`);
     }
     const fresh = new Set(out.runs.map((r) => Object.entries(r.fresh.sections).filter(([k]) => k !== 'cities').map(([, h]) => h).join('')));
-    const cachedSame = out.runs.filter((r) => r.cached).every((r) => sameFigures(r.first, r.fresh) && (!r.firstModes || r.firstModes.hash === r.freshModes?.hash));
+    // (T-4202: a stand-in's figures are another build's or worker count's: MODE=standin checks those)
+    const cachedSame = out.runs.filter((r) => r.cached && !r.cache?.standIn).every((r) => sameFigures(r.first, r.fresh) && (!r.firstModes || r.firstModes.hash === r.freshModes?.hash));
     ok = fresh.size === 1 && cachedSame;
     console.log(`${fresh.size === 1 ? 'PASS' : 'FAIL'}  fresh finals agree on every run, zones shown aside (${out.runs.map((r) => r.fresh.hash).join(', ')})`);
     if (fresh.size > 1) {
@@ -200,9 +244,10 @@ try {
     // ends at the figures a load of the edited network solves from cold (a reload that misses the cache)
     let r = await reload();
     if (!summary(r).cached) r = await reload(); // (the real save's first reload misses: T-2552's fare rounding)
+    if (process.env.STANDIN) await tamper('standin');
     await page.goto(`${BASE}?debug=1&continue=1&v=${Date.now()}${QUERY}`);
     await page.waitForFunction(() => window.tw?.clock?.held && window.tw.clock.held.peek() === false && window.twDemand?.view?.()?.version === 0, undefined, { timeout: 120000, polling: 50 });
-    const pre = await page.evaluate(() => { const c = window.twDemand.client; return { published: c.cur?.published ?? null, waiting: !!c.waiting, cacheSolve: !!c.cacheSolve }; });
+    const pre = await page.evaluate(() => { const c = window.twDemand.client; return { published: c.cur?.published ?? null, waiting: !!c.waiting, cacheSolve: !!c.cacheSolve, standIn: c.cacheLog?.standIn ?? null }; });
     const solving = pre.waiting || (pre.published ?? -1) < 3;
     const pick = await page.evaluate(() => {
       const w = window.tw.world.value;
@@ -226,7 +271,7 @@ try {
       const z1 = edited.sig.zones, z2 = cold.sig.zones;
       log(`edit and cold differ in ${Object.keys(cold.sig.sections).filter((k) => edited.sig.sections[k] !== cold.sig.sections[k]).join(', ')}; zones only after the edit ${Object.keys(z1).filter((k) => !(k in z2)).join(',') || '-'}, only cold ${Object.keys(z2).filter((k) => !(k in z1)).join(',') || '-'}, differing ${Object.keys(z1).filter((k) => k in z2 && z1[k] !== z2[k]).join(',') || '-'}`);
     }
-    const pass = solving && pre.cacheSolve && !cold.cached && sameFigures(edited.sig, cold.sig);
+    const pass = solving && pre.cacheSolve && !cold.cached && sameFigures(edited.sig, cold.sig) && (!process.env.STANDIN || pre.standIn === 'demand');
     ok &&= pass;
     out.runs.push({ pre, pick, edited, cold });
     console.log(`${pass ? 'PASS' : 'FAIL'}  an edit while the cache's network is solved again (clock running, solve ${pre.waiting ? 'waiting for packs' : 'at round ' + pre.published}) ends at the cold solve's figures (edit ${edited.sig.hash}, cold ${cold.sig.hash}${cold.cached ? ', but the cold load showed a cache' : ''}; views ${edited.views.join(' ')})`);
@@ -236,32 +281,37 @@ try {
     const saved = await page.evaluate(() => window.tw.lastSaved.peek());
     await page.evaluate(() => window.tw.client.post({ kind: 'flush' }));
     await page.waitForFunction((b) => window.tw.lastSaved.peek() > b, saved, { timeout: 60000 }).catch(() => {});
+  } else if (MODE === 'standin') {
+    // T-4202: an unchanged reload's fresh final, then a reload standing in another demand code's kept result
+    let r = await reload();
+    if (!summary(r).cached) r = await reload();
+    const base = r.fresh;
+    const n = await tamper('standin');
+    r = await reload();
+    const s = summary(r);
+    const kept = await tamper('read');
+    const shown = n > 0 && s.cached && r.cache?.standIn === 'demand' && !!r.first && r.first.hash !== r.fresh.hash;
+    const released = s.clock !== undefined && s.freshFinal !== undefined && s.firstFinalKey?.startsWith('0:') && s.clock <= Math.max(s.firstFinal, s.world) + 2000 && s.clock < s.freshFinal;
+    const same = sameFigures(r.fresh, base);
+    const mine = kept.filter(([k]) => k.endsWith(':' + r.cache?.hash)); // (another slot's entry keeps its own)
+    const rewritten = mine.length > 0 && mine.every(([, d]) => !String(d).startsWith('x'));
+    const r2 = await reload();
+    const s2 = summary(r2);
+    const after = s2.cached && !r2.cache?.standIn && sameFigures(r2.first, r2.fresh) && sameFigures(r2.fresh, base);
+    out.runs.push({ tampered: n, ...s, cache: r.cache, kept, next: { ...s2, cache: r2.cache } });
+    for (const [pass, what] of [
+      [shown, `another demand code's result stands in (${n} entries changed; first ${r.first?.hash}, fresh ${r.fresh.hash}; ${JSON.stringify(r.cache)})`],
+      [released, `the clock runs at the stand-in (world ${s.world}, stand-in ${s.firstFinal}, clock ${s.clock}, fresh final ${s.freshFinal})`],
+      [same, `the fresh final after the stand-in equals an unchanged reload's (${r.fresh.hash}, ${base.hash})`],
+      [rewritten, `the fresh final is kept under this build's key (${mine.map(([, d]) => String(d).slice(0, 9)).join(', ')} of ${kept.length} kept)`],
+      [after, `the next reload shows it as this build's cache (views ${s2.views})`],
+    ]) {
+      ok &&= pass;
+      console.log(`${pass ? 'PASS' : 'FAIL'}  ${what}`);
+    }
   } else if (MODE === 'stale') {
-    // the cache entry, as the page stores it (IndexedDB "anitabuilder", store "saves", keys "demand:...")
-    const tamper = (field) => page.evaluate((field) => new Promise((res, rej) => {
-      const o = indexedDB.open('anitabuilder', 1);
-      o.onsuccess = () => {
-        const tx = o.result.transaction('saves', 'readwrite'), st = tx.objectStore('saves');
-        // resolved once committed: a reload right after a put's success could abort it (T-1539)
-        let n = 0;
-        tx.oncomplete = () => res(n);
-        const k = st.getAllKeys();
-        k.onsuccess = () => {
-          const keys = k.result.filter((x) => typeof x === 'string' && x.startsWith('demand:'));
-          for (const key of keys) {
-            const g = st.get(key);
-            g.onsuccess = () => {
-              const v = g.result;
-              if (field === 'demand') v.demand = 'x' + v.demand;
-              else v.packs[Object.keys(v.packs)[0]] = 'x';
-              st.put(v, key).onsuccess = () => { n++; };
-            };
-          }
-        };
-      };
-      o.onerror = () => rej(o.error);
-    }), field);
-    for (const field of ['demand', 'pack']) {
+    // (T-4202: a changed demand key stands in: MODE=standin)
+    for (const field of ['pack']) {
       let r = await reload(); // writes a good cache again if the last run left none
       if (!summary(r).cached) r = await reload();
       const n = await tamper(field);
