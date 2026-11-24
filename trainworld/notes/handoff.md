@@ -7,15 +7,15 @@ diary notes/handoff-log.md. Her time UTC-5.
 ## In flight (mine, maps-2c; phonemem2 and zoneslow run in maps-c0's tab: follow-ups via "relay to <agent>: <text>" to maps-c0, or a fresh agent on their tree)
 - zoneslow T-4051 (maps-c0 tab): zone-open slow path (125 s vs 35 s on her NA save), helper worker opens the new zone first.
 - Landed: memgrowth T-4179 c842cd599, phonemem2 T-4184 20d3a0029 (changelog c090). Batch checker check3 (Sonnet) on both;
-  smoke on master and snap8800 20d3a002 started 10:08 (logs in my scratch smoke/, snap/).
+  smoke on master PASSED 10:19 (30 checks; real save 13,035,408 in smoke's own count, the usual 1.0286x play.mjs's
+  12,672,465); 8800 = 20d3a002 (master minus bookkeeping).
 - phonedemand T-3160 (Opus, tree phonedemand), solvereuse T-4057 (Opus, tree solvereuse: reuse one-off search tables).
 - T-4161 done in shonei-server 7bdd559 (level 39 + LBE1 block), unpushed, not deployed: deploy.ps1 on her yes before 0.4.6, then push shonei-server.
 - trams T-4075 (Opus, tree trams): trams drawn off track (player complaint).
 - editbench landed (2d8f5e3f9): its stop-click rows on Asia show the line path 1.4-1.9 s after a stop click (T-4097's 100 ms goal): next edit-speed round.
 - 0.4.6 prep (from maps-c0): smoke on master PASSED, smoke8800 light+dark PASSED, two batch checkers PASS, changelog
   reviewed (58 shown, 7 highlights), perf_bench rel046-e936af30 vs v0.4.5: demand memory +13/+12/+17% (memgrowth brings
-  it to +3/+8/+3%), Belgrade CPU +20%, rail -7.1% Belgrade (trade-off to her). Left: land memgrowth + its checker, smoke
-  on master, rebuild 8800 (6b68241c is 10 behind), perf_bench final hash, playtest list, strings ack, her changelog
+  it to +3/+8/+3%), Belgrade CPU +20%, rail -7.1% Belgrade (trade-off to her). Left: check3's verdict, perf_bench final hash, playtest list, strings ack, her changelog
   edit on the board, T-4153 s2 call, T-4161 deploy, her yes. Nothing published.
 - Held for her word: T-4153 s2 (tree editnetwork, station network build on Asia 333 to 124 ms, edit-speed memory ~10.6 MB vs
   her ~10 MB; add mm.ribbons.delete(e) at lineBands.ts:571 if landed); T-921 (tree commutechunks, tunable, no sparse gain);
