@@ -205,10 +205,14 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4154 [P2] {L:checks} Agent browsers run past their core claim
   - Context: 11-24 at cap 10: three agent games (play.mjs on 6151 and 6168, a smoke) ran on 14 cores with no claim in the ledger, and the edit bench's renderer used 8 cores on a 4-core claim.
   - Goal: Every agent browser stays on its claimed cores for its whole life, or stops when its claim ends.
-- T-4189 [P1] {L:checks} perf_bench base builds reuse the head's WASM
+- T-4189 [P1] {L:checks} perf_bench base builds reuse the head's WASM (taking, 2026-11-24, agent benchwasm)
   - Context: Batch check 3 (11-24): a base build of d991f7ab6 had track WASM byte-identical to the head's although T-4184 changed boarding.rs; base and head share perfbench/target-track and target-demand, and a parallel pair got the head's WASM in both. Any compare across a sim change may be measuring one build twice, the 0.4.6 compare against v0.4.5 included.
   - Goal: Every perf_bench build's WASM comes from its own source (checked by hash), parallel builds included; the T-4184 clock memory cut shows in a base vs head compare.
   - Other: notes/batchcheck-2026-11-24-check3.md
+- T-4190 [P2] {L:checks} t2682-editnote fails two steps on master
+  - Context: Found by stalefinal (T-4055, 11-24): checks/t2682-editnote.mjs fails the same two steps with and without its change, so it is broken on master; cause not looked at.
+  - Goal: The check passes on master, or the game bug it catches is filed and the check marked broken in checks_index.py.
+  - Other: notes/T-4055.md
 - T-4151 [P2] {L:edit-speed} The edit bench calculates trips in its loaded pass
   - Context: From T-4144: both saves load final from the cache and a paused clock never calculates again, so the bench's while-calculating pass measures nothing.
   - Goal: That pass runs during a real calculation.
@@ -238,6 +242,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-921 (11-24): a western Montana save with 4 lines and 22 stations loads in 10-20 s, nearly all opening the zone; the trip calculation is under 1 s. Saved as perfbench/saves/t921-montana-4lines.save.
   - Goal: That load profiled piece by piece and its biggest piece cut.
   - Other: notes/T-921.md
+- T-4191 [P3] {L:loading} Edits in a new game's first seconds open zones twice
+  - Context: From T-4055 (11-24): an edit made while a new game's load hold is on opens its zones coarse, then the level check reopens them fine: an extra download and solve for nothing.
+  - Goal: Those zones open once, at the level they end at.
+  - Other: notes/T-4055.md
 - T-4141 [P3] {L:station-placement} Track placed by an edit call crossed the Hudson at ground level
   - Context: Seen by T-4112: a route entered through the game's edit call crossed the Hudson at ground level without a refusal, while pointer-drawn track nearby was bridged. Water may not have been loaded under part of it.
   - Other: notes/T-4112.md
@@ -255,10 +263,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Your scratch pad, 11-22: "i think we might allow an unrealistic number of people to pile up at bus stops, should probably show a lower number more in line with other stations to not make players alarmed by big number".
 - T-4053 [P3] {L:borders} Common language border factor
   - Context: Your scratch pad, 11-22: "i think bogota-quito travel might be a bit small? relative to number of planes (liek 6 a day, maybe 2000 people a day vs our 800) i wonder if we should do a like 'common language' border multiplier... and maybe also between like switzerland and france". A new demand factor: the design goes to you first.
-- T-4055 [P2] {L:solve-consistency} An edit reaching two new zones shows a stale final (taking, 2026-11-24, agent stalefinal)
-  - Context: Found 11-22 (notes/T-4055.md): one edit reaching two new zones (Philadelphia and Providence from NYC) gives the Philadelphia line 63,996 riders; separate edits or a reload give 68,341. The first solve is declared final on a market missing a pack that lands during it. New-zone lines show up to 6% too few riders until the next edit.
-  - Goal: A pack opening that lands mid-solve makes that solve stale, so batch and separate edits give the same figure (about 1-2 h).
-  - Other: notes/batchcheck14.md, notes/T-4055.md
 - T-4057 [P1] {L:solve-speed} Solve speedups outside the first-arrival search (taking, 2026-11-24, agent solvereuse)
   - Context: You, 11-23: "main goal for today is to hopefully find some compute time improvements to compensate for the better pathfinding that takes into account that express routes are faster." T-4054 works on the search and `pool_cost`; this one profiles the whole solve on the real save and other big cities and takes the biggest costs elsewhere.
   - Goal: The top costs of a full solve named with their share, and the biggest ones cut with the same answers.
