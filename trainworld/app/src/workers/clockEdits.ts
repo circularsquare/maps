@@ -49,7 +49,7 @@ function hsrShare(a: TrackApi, line: number): number {
   return all > 0 ? fast / all : 0;
 }
 
-type Applied = { r: number; fault?: number[]; line?: number; node?: number; skipped?: number; charge?: number; trainCharge?: number; why?: string[] };
+export type Applied = { r: number; fault?: number[]; line?: number; node?: number; skipped?: number; charge?: number; trainCharge?: number; why?: string[] };
 
 /** T-1899: a new line's stop edit (`edit`), its trains then high-speed when more than half its
  * route's km is high-speed track and ordinary otherwise. The type is set before the stops in the undo

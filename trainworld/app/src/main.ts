@@ -31,7 +31,10 @@ import { hideUiKey } from "./ui/hideUi";
 import { helpKey } from "./ui/HelpPanel";
 import { followCapsLock, keyIsTheirs, releaseSelectsAfterMousePick } from "./ui/keys";
 import { stopsById, world } from "./game/world";
-import { showAhead } from "./map/aheadShow";
+import "./map/aheadShow"; // T-4145: draws the edits waiting to show (game/pending.ts)
+import { pendingTaken } from "./game/pending";
+import { drawnEdgesOf } from "./map/lineAhead";
+import type { NetworkBuffers } from "./map/network";
 import { hiddenLevels, hiddenLines, hideBlueprints, hideBlueprintsView, hideBuses, levelBits } from "./game/lineVisibility";
 import { setBlueprintsHidden, setHidden } from "./map/visibility";
 import "./game/capLoad";
@@ -384,7 +387,10 @@ if (SYNTH) {
       if (s.service && renderer.net) renderer.setService(s.render.phases, s.render.meta);
       else if (s.net) {
         const was = renderer.net;
+        // T-4145: what is drawn ahead of the edits this network holds goes with it (built once, by setNetwork)
+        const held = pendingTaken(client.orderOf(s), { net: true });
         renderer.setNetwork(s.net); // built in the worker (T-063)
+        if (import.meta.env.DEV) checkHeld(s.net, held);
         renderer.netVersion = s.version;
         carryGrids(was, s.net, renderer.checkPatch); // T-1030
         carryEdgeGrid(was, s.net, renderer.checkPatch);
@@ -407,8 +413,6 @@ if (SYNTH) {
     }
   };
   if (DEBUG) (window as any).twViews = { stats: viewStats, overlay: views.overlay, hover: views.hover, click: views.click };
-  // T-4114: a line's new strokes from the edit just applied, drawn until the network that holds it
-  client.onLinePath = (line, edges) => showAhead(line, edges, true);
   client.onTrips = (epoch, version, trips, board, ends, nexts, bays) => {
     renderer.setTrips(epoch, version, trips, board, ends, nexts, bays);
     overlay.invalidate();
@@ -1001,3 +1005,13 @@ if (DEBUG) {
   };
 }
 setupDone(); // T-950: an uncaught error before this line ends the loading card
+
+/** T-4145, dev builds: a network taken after an edit's word holds the line edges the word drew (message order). A line
+ * edited again before this network can differ, so this warns, never throws. */
+function checkHeld(n: NetworkBuffers, held: Map<number, Set<number> | null>) {
+  for (const [line, edges] of held) {
+    const drawn = drawnEdgesOf(n, line);
+    const same = edges ? edges.size === drawn.size && [...edges].every((e) => drawn.has(e)) : drawn.size === 0;
+    if (!same) console.warn(`T-4145: the network after line ${line}'s word draws other edges than the word (${drawn.size} drawn, ${edges?.size ?? 0} in the word)`);
+  }
+}

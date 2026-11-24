@@ -39,6 +39,7 @@ import { blocksIn, blueprintPolylines, ensureBlocks, ensureMasks, ensureStreets,
 import { anchorMoves, drawnEdge, drawnLine, edgeDrawn, forget, game, hex, lineDrawn, previewMarkRows, putAnchorMoves, putConvertedOnLoad, putShiftFrom, putShiftWas, putView, restart, rowsCanGo, sendHome, sendOpened, sendRows, sendState, SHIFT_REACH, shiftFrom, SHIFTS_EXACT } from "./clockMain";
 import { gameNow, lineDays, linesPeriods, loadLineDays, loadRegions, mergeLedger, putTodayGen, putTodayLast, regionEntries, regions, rounded, savedLineDays, savedRegions, sendCash, sendMoney, serviceLeadS, settle, today, todayGen, unsettleAfter } from "./clockMoney";
 import { afterLoadPanic, downTold, EDIT_UNDONE, kept, putDownTold, isPanic, keep, MODEL_DOWN, MODEL_RESTORED, modelDown, newModel, openFailReason, panicAfterEdit, panicLater, panicNow, panicOnLoad, panicWhy, putModelDown, putPanicAfterEdit, putPanicOnLoad, recover, SAVE_PANIC } from "./clockPanic";
+import { wordAfter, wordBefore } from "./clockWord";
 import { diagramOn, patchMode, postDiagram, posted, postWhole, putDiagramOn, putDiagramWhole, putPatchMode, sender } from "./clockPost";
 import { achievements, api, applyRunFactors, AUTOSAVE_MS, city, clk, copyOf, dayPinned, dayShift, demandBuilt, demandFine, diagramCities, emptyTrack, epoch, failInPlace, fares, frameSpec, freezeCheckpoint, freezePort, freezeTimer, goals, guide, guideWanted, heldCharges, home, hourLedger, initIncoming, ledger, ledgerDay, lineNotes, lineShapes, loadHolidays, loan, loanOp, messages, modded, mode, newLineCars, newLineHeadway, newLineWeekendShare, opened, outlinesGot, outlinesIn, outlinesRead, packLngLat, packLocal, pageModded, peakC, placeLineCountries, pricesOf, putAchievements, putClk, putCopyOf, putDemandBuilt, putDemandFine, putDiagramCities, putDiagramInside, putEmptyTrack, putEpoch, putFares, putFreezeMemory, putFreezePort, putFreezeTimer, putGoals, putGuide, putGuideWanted, putHiddenLines, putHome, putHourLedger, putIncomePerHour, putInitIncoming, putLedger, putLineIncome, putLineNotes, putLinePoints, putLineRides, putLineShapes, putLineShares, putLoan, putMessages, putMidLoad, putModded, putMoneyFrozen, putNewLineCars, putNewLineHeadway, putNewLineWeekendShare, putOpened, putOutlinesRead, putPageModded, putPrices, putRidesPerHour, putRowsSent, putStars, putTiming, putTrackVersion, putUpkeepRegions, send, setMode, setStartZone, stars, startZone, syncHolidays, timing, trackVersion, withModded } from "./clockState";
 
@@ -465,16 +466,12 @@ function tripsNow(e: number) {
     else send({ kind: "error", message: String(err) });
   }
 }
-/** T-4114: edits that change which edges a line's strokes draw: stop edits from the line tool and the line panel, a line
- * deleted */
-const LINE_PATH_OPS = new Set<EditOp["op"]>(["toggleStop", "insertStop", "oneWayStop", "setStops", "dropStop", "endLineAt", "stopPassed", "orderStops", "sortStops", "turnEnd", "openLoop", "removeLine"]);
-/** the edges a rail line's strokes draw: its plan's path and its return run's */
-function lineEdges(line: number): Uint32Array {
-  const out = new Set<number>();
-  for (const p of api!.line_path(line)) out.add(p >> 1);
-  for (const p of api!.line_back_path(line)) out.add(p >> 1);
-  return Uint32Array.from(out);
-}
+/** T-4145: an accepted edit's word with nothing to draw (the money-only, link, building and loan edits), so the page's
+ * entry for it is armed and goes with the next state, as every other edit's */
+const plainWord = (seq: number) => send({ kind: "applied", seq, word: {} });
+/** T-4145: the newest edit refused since the last one accepted, -1 for none: an undo asked while it was unanswered is
+ * refused, so the step under it is not taken back instead */
+let refusedLast = -1;
 /** T-4114: the rows state stop clicks owe, a task later through the queue: clicks sent meanwhile are applied first and
  * share it, and the newest click's own takes its place */
 let rowsGen = 0;
@@ -910,6 +907,7 @@ async function handleMessage(msg: ToClock) {
       // T-3567: a line's own multiple for a line that is gone is refused
       const ok = apply(msg.op).r === 0 || msg.op.op !== "fareLine";
       if (ok) {
+        plainWord(msg.seq);
         saves.dirty = saves.edited = true; saves.editAt = Date.now();
         // T-3740: a removed area's stations come out of it, which the map and panels show
         const tidied = msg.op.op === "fareZones" && tidyStationFares(api) > 0;
@@ -923,13 +921,14 @@ async function handleMessage(msg: ToClock) {
     if (msg.op.op === "fareRef") {
       // T-2679: no fare changes, so demand is not asked again
       const r = apply(msg.op).r;
-      if (r === 0) { saves.dirty = saves.edited = true; saves.editAt = Date.now(); sendMoney(); }
+      if (r === 0) { plainWord(msg.seq); saves.dirty = saves.edited = true; saves.editAt = Date.now(); sendMoney(); }
       send({ kind: "edited", seq: msg.seq, ok: r === 0, issues: [], charge: 0 });
       return;
     }
     if (msg.op.op === "borrow" || msg.op.op === "repay") {
       const r = loanOp(msg.op);
       if (r === 0) {
+        plainWord(msg.seq);
         saves.dirty = saves.edited = true; saves.editAt = Date.now();
         sendMoney();
         keep();
@@ -944,6 +943,7 @@ async function handleMessage(msg: ToClock) {
       // T-1281: a passage between constructed stations is paid at once
       const charge = r === 0 && msg.op.on ? api.link_charge() : 0;
       if (r === 0) {
+        plainWord(msg.seq);
         saves.dirty = saves.edited = true; saves.editAt = Date.now();
         if (charge > 0) bookCharge(msg.seq, charge, 0);
         sendState();
@@ -960,6 +960,7 @@ async function handleMessage(msg: ToClock) {
       const charge = r === 0 && (msg.op.op === "addBuilding" || msg.op.op === "reshapeBuilding") ? api.building_charge() : 0;
       const node = r === 0 && msg.op.op === "addBuilding" ? api.last_building() : undefined;
       if (r === 0) {
+        plainWord(msg.seq);
         saves.dirty = saves.edited = true; saves.editAt = Date.now();
         if (charge > 0) bookCharge(msg.seq, charge, 0);
         sendState();
@@ -987,10 +988,16 @@ async function handleMessage(msg: ToClock) {
       api.set_edit_lead(clk.rate * serviceLeadS());
     }
     const named = nameOnly(msg.op);
-    // T-4114: a rail line whose strokes the edit may change (a bus or ferry line has none)
-    const opLine = LINE_PATH_OPS.has(msg.op.op) ? (msg.op as { line?: number }).line : undefined;
-    const pathLine = opLine !== undefined && !api.is_bus(opLine) && !api.is_ferry(opLine) ? opLine : undefined;
-    const { r, fault, line, node, skipped, charge: charged, trainCharge, why } = apply(msg.op);
+    // T-4145: an undo asked while the edit it meant was out, and that edit refused: nothing taken back (no notice)
+    if ((msg.op.op === "undo" || msg.op.op === "redo") && msg.op.after !== undefined && refusedLast >= 0 && refusedLast <= msg.op.after) {
+      refusedLast = -1;
+      api.set_edit_lead(0);
+      return void send({ kind: "edited", seq: msg.seq, ok: false, issues: [], charge: 0 });
+    }
+    const before = wordBefore(api, msg.op, posted);
+    const applied = apply(msg.op);
+    const { r, fault, line, node, skipped, charge: charged, trainCharge, why } = applied;
+    refusedLast = r === 0 ? -1 : msg.seq;
     api.set_edit_lead(0); // a refused edit leaves it set
     if (import.meta.env.DEV && panicAfterEdit) { putPanicAfterEdit(false); panicNow(); }
     const tB = performance.now();
@@ -1000,8 +1007,8 @@ async function handleMessage(msg: ToClock) {
     const op = msg.op, seq = msg.seq;
     const answer = (early?: boolean, held?: Float32Array[]) => send({ kind: "edited", seq, ok: r === 0, issues: r === 0 ? why ?? [] : r === INSERT_REFUSED ? ["InsertStop"] : r === DROP_REFUSED ? ["DropStop"] : r === ORDER_REFUSED && fault ? [`StopOrder:${fault.join(":")}`] : issues(), charge, line, node, paid: paidFor(op), skipped, ms: { apply: tB - tA, ...timing, total: performance.now() - tA }, early, held }); // i18n-ignore
     if (r !== 0) return answer();
-    // T-4114: the line's strokes as the edit left them, before its rows and network, so the map shows them at once
-    if (pathLine !== undefined) send({ kind: "linePath", line: pathLine, edges: op.op === "removeLine" ? null : lineEdges(pathLine) });
+    // T-4145: what the page can show of the edit, before its rows and network (a stop click's line path, T-4114)
+    send({ kind: "applied", seq, word: wordAfter(api, op, applied, posted, before, charge) });
     saves.dirty = saves.edited = true; saves.editAt = Date.now();
     if (line !== undefined) { newLineShape(op, line); newLineFare(op, line); }
     // T-3581: a line deleted or brought back by an undo or redo has its fare multiple dropped or given back in the

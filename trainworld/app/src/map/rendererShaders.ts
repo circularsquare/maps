@@ -108,8 +108,10 @@ uniform int u_sel_set[${SEL_SET_MAX}];
 uniform int u_sel_edge;
 uniform ivec2 u_hot;         // the hovered line and bare track edge, -1 none (T-730)
 uniform ivec2 u_hide;        // T-2763: two edges just removed, not drawn before the state without them lands, -2 none
-uniform ivec4 u_hide_lines;  // T-4114: lines drawn ahead of the network (map/lineAhead.ts): their network strokes not drawn, -1 none
-uniform int u_ahead;         // T-4114: 1 for the pass drawing those lines' strokes
+uniform highp sampler2D u_ahead_lines; // T-4145: per line id (LINES_W wide), 1: drawn ahead of the network (map/lineAhead.ts), its network strokes not
+uniform highp sampler2D u_ahead_edges; // per edge id (TEX_W wide), 1: neither track nor lines on it drawn from the network
+uniform ivec2 u_ahead_n;     // how many line and edge ids those cover, 0 none
+uniform int u_ahead;         // T-4114: 1 for the passes drawing the strokes ahead
 uniform int u_only_sel;
 uniform int u_bp_part;       // T-695: 0 every stroke, 1 all but blueprint, 2 blueprint only
 uniform vec4 u_lanes;        // T-658: 4 m in px, how far the tracks have parted (0-1), how far the
@@ -197,7 +199,8 @@ void main() {
   if (int(a_edge) == u_hide.x || int(a_edge) == u_hide.y) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   // T-3420: a line the player hid, and track and lines on a hidden level, a ramp fading toward it
   if (u_kind == 1 && texelFetch(u_line_colours, ivec2(int(a_colour) % ${LINES_W}, int(a_colour) / ${LINES_W}), 0).a < 0.5) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
-  if (u_kind == 1 && u_ahead == 0 && any(equal(ivec4(int(a_colour)), u_hide_lines))) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  if (u_ahead == 0 && u_kind != 2 && int(a_edge) < u_ahead_n.y && texelFetch(u_ahead_edges, ivec2(int(a_edge) % ${TEX_W}, int(a_edge) / ${TEX_W}), 0).r > 0.5) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  if (u_kind == 1 && u_ahead == 0 && int(a_colour) < u_ahead_n.x && texelFetch(u_ahead_lines, ivec2(int(a_colour) % ${LINES_W}, int(a_colour) / ${LINES_W}), 0).r > 0.5) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   float shown0 = 1.0, shown1 = 1.0;
   if (u_level_hide != 0 && u_kind != 2) {
     float hq = floor(a_level / 256.0);

@@ -126,6 +126,13 @@ function INSTALL() {
     const f = r[m].bind(r);
     r[m] = (...a) => { const t = now(); try { return f(...a); } finally { push('r.' + m, { ms: now() - t }); } };
   }
+  // T-4145: an edit drawn ahead of the network (game/pending.ts); `build` false is a network clearing it, not a show
+  if (typeof r.setAhead === 'function') {
+    const sa = r.setAhead.bind(r);
+    // (only a model that draws something: one emptied by a refusal or a network is no show)
+    const drawsSome = (m) => m.lines.size || m.hideEdges.size || m.edges.size || m.hideStations.size || m.stations.length || m.colours.size || m.track.length || m.lineStrokes.length || m.hideLines?.size || m.rawStations?.length;
+    r.setAhead = (m, build = true) => { const t = now(); try { return sa(m, build); } finally { if (build && drawsSome(m)) push('r.setAhead', { ms: now() - t }); } };
+  }
   if (typeof r.stage === 'function') {
     const st = r.stage.bind(r);
     r.stage = (v, at, put, lf) => { push('r.stage', { v }); return st(v, at, () => { const t = now(); put(); push('r.staged', { ms: now() - t }); }, lf); };
@@ -191,11 +198,13 @@ function editsOf(ev) {
     const after = (j, pred) => { for (let k = j; k < ev.length; k++) if (pred(ev[k])) return k; return -1; };
     const frameAfter = (k) => { if (k < 0) return null; const d = ev[after(k, (e) => e.k === 'draw')]; return d ? d.t + (d.ms ?? 0) - t0 : null; };
     const placed = after(i, (e) => e.k === 'r.keepPreviewAsPlaced' || e.k === 'r.addPlaced');
+    // (an edit shown ahead is drawn at its click, before its message)
+    const aheadAt = after(inp ? ev.indexOf(inp) : i, (e) => e.k === 'r.setAhead');
     const take = after(i, (e) => e.k === 'take' && e.rows);
     const net = after(i, (e) => e.k === 'r.setNetwork' || e.k === 'r.setService' || e.k === 'r.staged');
     const ans = after(i, (e) => e.k === 'arrive' && e.kind === 'edited' && e.seq === p.seq);
-    const standIn = frameAfter(placed), rows = frameAfter(take), built = frameAfter(net);
-    const shows = [standIn, rows, built].filter((x) => x != null);
+    const standIn = frameAfter(placed), rows = frameAfter(take), built = frameAfter(net), drawnAhead = aheadAt >= 0 && (net < 0 || aheadAt < net) ? frameAfter(aheadAt) : null;
+    const shows = [standIn, rows, built, drawnAhead].filter((x) => x != null);
     out.push({ op: p.op, seq: p.seq, post: r0(p.t - t0), answer: ans >= 0 ? r0(ev[ans].t - t0) : null, ok: ans >= 0 ? ev[ans].ok : null,
       standIn: r0(standIn), rows: r0(rows), built: r0(built), shows: shows.length ? r0(Math.min(...shows)) : null, work: ans >= 0 ? ev[ans].ms ?? null : null });
   }

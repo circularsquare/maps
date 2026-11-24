@@ -53,6 +53,7 @@ import { afterPaint, BUSY_MS, expectedMs, hideBusy, learnBusy, showBusy } from "
 import { addTerrainGrid, dropTerrainGrids, groundNet, setTerrainIndex } from "../game/terrain";
 import { addTownOutline, clearTownOutlines } from "../map/townArea";
 import { letterOf } from "../game/lineLetter";
+import { pendingAnswer, pendingClear, pendingSent, pendingTaken, pendingWord } from "../game/pending";
 
 /** Text from the clock worker: it sends message keys (docs/localization.md "Workers"), worded here; anything else as it is. */
 /** T-3542: a line of four or five rows' figures (`ClockLine.rows`) as the panels read them. */
@@ -705,8 +706,6 @@ export class ClockClient {
   /** T-2159: the network diagram's graph, while the diagram is shown (diagram/view.ts) */
   /** T-3409: `cut`: the graphs are of the chosen cities alone; `whole`: the whole network's too, when a share asked */
   onDiagram: (graphs: DiagramGraph[], cut: boolean, whole?: DiagramGraph[]) => void = () => {};
-  /** T-4114: a line edit applied in the worker, before its rows: the edges the line's strokes draw now (null: gone) */
-  onLinePath: (line: number, edges: Uint32Array | null) => void = () => {};
   /** `board`: the boarding account's hour (T-164, game/boarding.ts), once demand has riders */
   onTrips: (epoch: number, version: number, trips: Float32Array, board?: Float32Array, ends?: Float32Array, nexts?: Float32Array, bays?: Float32Array) => void = () => {};
   /** the boarding account's last hours: ms in the worker for the hour, lines worked out again
@@ -1183,7 +1182,17 @@ export class ClockClient {
 
   /** A state expected to freeze the page past BUSY_MS here (a big network, or one redrawn at a new
    * draw anchor) waits a frame with the busy tag up; every message after it waits behind it. */
+  /** T-4145: messages in the order they arrived (game/pending.ts): a state held or deferred keeps its place */
+  private arrived = 0;
+  private orders = new WeakMap<object, number>();
+  /** the place in arrival order of a message, or of a state's `state` (main.ts, when its network is set) */
+  orderOf(m: object): number {
+    return this.orders.get(m) ?? this.arrived;
+  }
   private arrive(msg: FromClock) {
+    const order = ++this.arrived;
+    this.orders.set(msg, order);
+    if (msg.kind === "state") this.orders.set(msg.state, order);
     if (msg.kind === "edited") trace("clock-answer", { seq: msg.seq, ok: msg.ok, ms: msg.ms });
     if (msg.kind === "error") trace("clock-error", msg.message);
     if (this.deferred) { this.deferred.push(msg); return; }
@@ -1249,6 +1258,8 @@ export class ClockClient {
     worldIsRows.value = !!msg.state.rows;
     if (msg.state.rightHand !== undefined) rightHand.value = msg.state.rightHand;
     world.value = toWorld(msg.state);
+    // T-4145: the panels and money of every edit whose word came before this state are in it
+    pendingTaken(this.orderOf(msg), { rows: true, money: true });
     if (world.value && !msg.state.rows) noteLoad("network in the page", { stations: world.value.save.stations.length, lines: world.value.save.lines.length });
     const es = this.earlyShares;
     this.earlyShares = null;
@@ -1288,6 +1299,7 @@ export class ClockClient {
         this.onBooted();
         break;
       case "ready":
+        pendingClear(); // a worker started again answers nothing it had
         clockWorkerStatus.value = `ready in ${msg.initMs.toFixed(0)} ms`; // i18n-ignore
         this.wasmReady = true;
         noteClockStep("track model ready"); // i18n-ignore
@@ -1340,12 +1352,14 @@ export class ClockClient {
           break;
         }
         setMoneyState(msg.money!);
+        pendingTaken(this.orderOf(msg), { money: true });
         break;
       case "diagramGraph":
         this.onDiagram(msg.graphs, !!msg.cut, msg.whole);
         break;
       case "cash": // T-284: fares landing, running costs draining
         liveMoney.value = { cash: msg.cash, today: msg.today, hour: msg.hour, regions: msg.regions };
+        pendingTaken(this.orderOf(msg), { money: true });
         break;
       case "opened":
         // T-975: a save older than its start zone shows the realm it opens in
@@ -1425,6 +1439,7 @@ export class ClockClient {
         if (msg.reason === "rebuilt") this.resendFigures(); // T-2848: only here; a real load would send the last game's
         // T-715: the clock the hold above sent is the old game's, which the worker ignores
         gameStamp.value = msg.game;
+        pendingClear();
         clock.set(msg.clock);
         if (msg.from === "file") say(t("clockClient.loaded", { day: Math.floor(msg.clock / 86400) }));
         if (msg.from === "new" && !msg.error) say(t("clockClient.newGame"));
@@ -1503,10 +1518,12 @@ export class ClockClient {
         this.tripsAt = performance.now();
         this.onTrips(msg.epoch, msg.version, msg.trips, msg.board, msg.ends, msg.nexts, msg.bays);
         break;
-      case "linePath":
-        this.onLinePath(msg.line, msg.edges);
+      case "applied":
+        pendingWord(msg.seq, msg.word, this.orderOf(msg));
         break;
       case "edited": {
+        // T-4145: what it showed ahead goes in the frame a refusal lands (before the notice, which waits for the promise)
+        pendingAnswer(msg.seq, msg.ok, this.orderOf(msg));
         const f = this.pending.get(msg.seq);
         this.pending.delete(msg.seq);
         this.sent.delete(msg.seq);
@@ -1678,6 +1695,9 @@ export class ClockClient {
    * for an edit sent later than made (T-3734). */
   edit(op: EditOp, early: boolean | "rows" = false, game?: number): Promise<EditAnswer> {
     const seq = ++this.seq, stamp = game === undefined ? {} : { game };
+    // T-4145: an undo names the newest edit still out, so it takes back nothing when that one is refused
+    if ((op.op === "undo" || op.op === "redo") && op.after === undefined && this.pending.size) op = { ...op, after: Math.max(...this.pending.keys()) };
+    pendingSent(seq, op, this.pending.size === 0);
     if (early === "rows") {
       this.stopsOut++;
       this.lastStopSent = performance.now();

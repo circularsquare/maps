@@ -262,8 +262,10 @@ export type EditOp =
   | { op: "reshapeBuilding"; id: number; corners: number[] }
   | { op: "renameBuilding"; id: number; name: string }
   | { op: "removeBuilding"; id: number }
-  | { op: "undo" }
-  | { op: "redo" };
+  /** `after` (T-4145): the newest edit unanswered when the player asked; refused quietly when that edit was refused
+   * and nothing was accepted since, so the step under it is not taken back instead (clockClient fills it) */
+  | { op: "undo"; after?: number }
+  | { op: "redo"; after?: number };
 
 export type ToClock =
   | { kind: "freezeTrace"; port: MessagePort }
@@ -957,13 +959,36 @@ export interface ClockState {
  * (a stop click's new trains: the line; an upgrade on a built station: the station; a rebuilt piece: the edge) */
 export type PaidFor = { line?: number; nodes?: number[]; edges?: number[] };
 
+/** T-4145: a station's box drawn ahead of the network: the station tool's ghost (`tk.lastBox`): its node in local units,
+ * the track leaving it each way (local polylines from the node), local units a metre, platform metres, which side of
+ * single track (0 both), tram, a one-track station's box centred; built: drawn as built, else as blueprint */
+export interface StationBox { lx: number; ly: number; ways: ArrayLike<number>[]; perM: number; plat: number; side: number; tram: boolean; mid?: boolean; built?: boolean }
+/** T-4145: how an edge is drawn ahead: built (blueprint no more), switched off or on, its level at each end, its track count */
+export interface EdgeLook { built?: boolean; off?: boolean; level?: [number, number]; tracks?: 1 | 2 }
+/** T-4145: what an applied edit changed, as the page draws it (ids are the ones drawn now unless said); every part optional */
+export interface EditWord {
+  /** a rail line's strokes now draw these edges (its plan's path and its return run's); null: the line is gone */
+  lines?: { line: number; edges: Uint32Array | null }[];
+  /** edges not drawn (their track and the line strokes on them) until the next network */
+  hideEdges?: number[];
+  /** edges drawn with this look: their network strokes redrawn from the same segments, the look changed */
+  edges?: ({ edge: number } & EdgeLook)[];
+  /** station node ids not drawn */
+  hideStations?: number[];
+  stations?: StationBox[];
+  /** a line's colour, 0-255 */
+  colours?: { line: number; rgb: [number, number, number] }[];
+  /** what the edit cost, in the cash's units */
+  charge?: number;
+}
+
 export type FromClock =
   | { kind: "ready"; initMs: number; frame: FrameSpec }
   /** an edit's answer; `issues` are the track model's problem kinds (`TrackApi.issue_kinds`);
    * `ms`: the worker's time on the edit by step (T-229, for `?debug=1`); `node` after addBuilding: the building's id */
-  /** T-4114: a line edit applied, sent before its rows: the edges the line's strokes now draw (its plan's path and
-   * its return run's), or null when the line is gone; the map draws them until the next network */
-  | { kind: "linePath"; line: number; edges: Uint32Array | null }
+  /** T-4145: an edit applied, sent before anything else it sends (rows, state, answer): what the map and panels can
+   * show of it until the first network (or rows) after this message (notes/T-4145.md) */
+  | { kind: "applied"; seq: number; word: EditWord }
   | { kind: "edited"; seq: number; ok: boolean; issues: string[]; charge: number; line?: number; node?: number; paid?: PaidFor; skipped?: number; ms?: Record<string, number>; early?: boolean; held?: Float32Array[] }
   | {
       kind: "preview";

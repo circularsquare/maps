@@ -26,6 +26,7 @@ import { t, tList, tNumber, tSpaced } from "../i18n";
 import { tPlace } from "../i18n/places";
 import { say, world } from "../game/world";
 import { liveMoney, moneyState } from "../game/money";
+import { cashShown } from "../game/pending";
 import { pointsShort, pointsShown } from "../game/points";
 import { Icon, TransitSegs } from "./widgets";
 import { perfOff } from "../perfFlags";
@@ -210,7 +211,8 @@ function Cash() {
   // T-728: a sandbox shows no cash; the hover has the money since the start
   if (m?.mode === "sandbox") return <div class="cash sandbox" data-tip={[t("topBar.infiniteMoney"), t("topBar.sinceDay1", { amount: money((live.cash - START_CASH) * 1e6) }), ...(tip ? [tip] : []), t("moneyTab.scaleTip")].join("\n")}>{t("topBar.sandbox")}</div>;
   // T-1865: after the split, in a box of fixed width (style.css .cash), so nothing beside it moves
-  const shown = m ? moneyCash(live.cash * 1e6) : "";
+  // T-4145: less what edits not yet in the money cost
+  const shown = m ? moneyCash(cashShown(live.cash) * 1e6) : "";
   return <div class={"cash num" + (usingUsd() ? "" : " cash-wide") + (shown.startsWith("−") ? " money-neg" : "")} data-tip={m ? [...(tip ? [tip] : []), t("moneyTab.scaleTip")].join("\n") : undefined}>{shown}</div>;
 }
 

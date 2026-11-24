@@ -123,7 +123,15 @@ function strokeUniforms(rnd: NetworkRenderer, c: Ctx1) {
   gl.uniform1i(u.u_sel_edge, opt.selEdge);
   gl.uniform2i(u.u_hot, opt.hotLine ?? -1, opt.hotEdge ?? -1);
   gl.uniform2i(u.u_hide, rnd.hide[0], rnd.hide[1]);
-  gl.uniform4i(u.u_hide_lines, ...rnd.aheadHide);
+  // T-4145: what is drawn ahead of the network hides the network's own strokes (map/lineAhead.ts)
+  gl.uniform2i(u.u_ahead_n, rnd.aheadLinesTex ? rnd.aheadN[0] : 0, rnd.aheadEdgesTex ? rnd.aheadN[1] : 0);
+  gl.activeTexture(gl.TEXTURE14);
+  gl.bindTexture(gl.TEXTURE_2D, rnd.aheadLinesTex);
+  gl.uniform1i(u.u_ahead_lines, 14);
+  gl.activeTexture(gl.TEXTURE15);
+  gl.bindTexture(gl.TEXTURE_2D, rnd.aheadEdgesTex);
+  gl.uniform1i(u.u_ahead_edges, 15);
+  gl.activeTexture(gl.TEXTURE0);
   gl.uniform1i(u.u_ahead, 0);
   gl.uniform1i(u.u_level_hide, vis.levels);
   // T-2058: the other lines thinner, faded and solid
@@ -255,6 +263,12 @@ function strokeDraws(rnd: NetworkRenderer, c: Ctx2) {
       // through a station's box blueprint track is drawn whole (rails and middle) over a blueprint box
       const c = part === 2 ? 0 : cap;
       stroke(rnd.track, 0, opt.byLevel || opt.bySpeed || opt.byProfit ? wLine : wTrack, opt.selEdge >= 0, c);
+      // T-4145: track drawn ahead of the network
+      if (rnd.aheadTrackVao) {
+        gl.uniform1i(u.u_ahead, 1);
+        stroke(rnd.aheadTrackVao, 0, opt.byLevel || opt.bySpeed || opt.byProfit ? wLine : wTrack, opt.selEdge >= 0, c);
+        gl.uniform1i(u.u_ahead, 0);
+      }
       if (!opt.byLevel && !opt.bySpeed && !opt.byProfit) {
         stroke(rnd.lines, 1, wLine, opt.selLine >= 0 || !!opt.selLines?.length, c);
         // T-4114: lines drawn ahead of the network, over the others
@@ -501,6 +515,18 @@ function stationsPass(rnd: NetworkRenderer, c: Ctx3) {
       gl.uniform1i(su.u_layer, layer);
       gl.bindVertexArray(rnd.stationVao);
       gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, n.stationCount);
+      // T-4145: station boxes drawn ahead of the network, their centre lines from their own texture, never hovered
+      if (rnd.standCount && rnd.standVao && pass === 0) {
+        gl.uniform1i(su.u_hot_n, 0);
+        gl.activeTexture(gl.TEXTURE11);
+        gl.bindTexture(gl.TEXTURE_2D, rnd.standLineTex);
+        gl.bindVertexArray(rnd.standVao);
+        gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, rnd.standCount);
+        gl.bindTexture(gl.TEXTURE_2D, rnd.tex.stationLine);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.uniform1i(su.u_hot_n, Math.min(hotSt.length, HOT_STATIONS));
+        gl.bindVertexArray(rnd.stationVao);
+      }
       if (annexes && boxes && rnd.annexes) {
         for (const [kind, bit] of [[ANNEX_ROOM, ST_ROOM]]) {
           if (!(rnd.annexes & bit)) continue;

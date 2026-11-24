@@ -131,12 +131,20 @@ Web first, so it can be shared as a link.
   of the rows alone (`rows`: world and money, no network, no trips; the renderer keeps its network)
   and then answers, so a refusal for money comes at its click. The rows go a task after the edit through the message
   queue, so clicks already queued are applied first and share one rows state, their answers after it [T-4114].
-  **A line's strokes go first of all** [T-4114]: right after a stop edit or a line delete is applied the worker posts
-  `linePath` (the edges the line's strokes now draw, or none); the renderer draws the line so (`lineAhead`,
-  map/lineAhead.ts: its own segments on the edges it keeps, the track's in its colour on the edges it gained, a
-  deleted line's colour transparent) until the next network, which holds the edit. The line tool guesses a first or
-  last stop taken out at the click from the network's stretches when that network shows the world's stops, and the
-  line panel's Delete line hides the line at the click; a refusal drops a guess. The network, trips, boarding hour and demand's snapshot follow once no stop click has
+  **Every edit's word goes first of all** [T-4145, T-4114]: right after an edit is applied, before anything else it
+  sends, the worker posts `applied` (workers/clockWord.ts, one file per kind of edit: a line's new edges, edges and
+  stations hidden or with a new look, station boxes, colours, the charge). The page shows edits ahead of the network
+  from one list (game/pending.ts): an entry made at the click from what the page can tell, armed by its word (whose parts
+  replace the guess's), dropped in the frame a refusal lands. **Message order says what a state holds**: every state
+  posted after a word was built after that edit (`later` starts again behind an edit; a stop click's rows go before the
+  next apply), so an entry's map part goes with the first network taken that *arrived* after its word, its panel part
+  with the first rows or state, its cost with the first money, cash or state (a state held for its trips keeps its
+  arrival place). The renderer draws the list (map/lineAhead.ts): a line drawn ahead on its own segments it keeps and
+  the track's in its colour on the edges it gained, its network strokes off by a per-line texture; edges off by a
+  per-edge texture, or redrawn with their new look; station boxes by a second draw of the station shader; a deleted
+  line's colour transparent. A guess never answered goes after 15 s. The line tool guesses a first or last stop taken
+  out at the click from the network's stretches when that network shows the world's stops, and the line panel's
+  Delete line hides the line at the click. The network, trips, boarding hour and demand's snapshot follow once no stop click has
   come for 500 ms (5 s at most); a stop click before then joins them (one full state for the run),
   and the line tool's reads of the lines (`stopTiers` and the like), demand's money results and the
   clock pass it, anything else runs it first. Meanwhile the client holds every other read until no
