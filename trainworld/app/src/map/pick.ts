@@ -379,6 +379,33 @@ function rankLines(near: { num: number; i: number; d: number }[], size?: (num: n
 let cycle: { net: NetworkBuffers; x: number; y: number; order: { num: number; i: number }[]; edge: number } | null = null;
 const CYCLE_PX = 6;
 
+/** The click-again cycle over every route under the pointer: rail and tram lines (nearest first), then
+ * bus and ferry routes, then the track under the rail ones. Undefined where one route or none is there. */
+function cycleShared(ov: Overlay, n: NetworkBuffers, px: number, py: number, slop: number, current: Selection, size?: (num: number, seg: number) => number): Selection | undefined {
+  // a click by the last one, with one of its lines or its track selected, goes on round its order
+  const back = cycle && cycle.net === n ? ov.toScreen(cycle.x, cycle.y) : null;
+  const was = back && Math.hypot(px - back[0], py - back[1]) <= CYCLE_PX ? cycle : null;
+  const at = !was ? -1 : current?.kind === "line" ? was.order.findIndex((x) => String(x.num) === current.line)
+    : current?.kind === "track" && current.edge === was.edge ? was.order.length : -1;
+  if (was && at >= 0) {
+    const next = (at + 1) % (was.order.length + (was.edge >= 0 ? 1 : 0));
+    if (next === was.order.length) return { kind: "track", edge: was.edge };
+    return { kind: "line", line: String(was.order[next].num) };
+  }
+  const rail = rankLines(linesNear(ov, n, px, py, slop), size);
+  const order: { num: number; i: number }[] = rail.map(({ num, i }) => ({ num, i }));
+  // a bus route has no stroke in the buffers (i is -1)
+  if (ov.renderer.busesShown) for (const id of ov.renderer.buses.linesAt(ov, px, py, 16, (id) => order.some((x) => x.num === id))) order.push({ num: id, i: -1 });
+  if (order.length > 1) {
+    const here = ov.screenToLocal(px, py);
+    cycle = here ? { net: n, x: here[0], y: here[1], order, edge: rail.length ? n.lines.edge[rail[0].i] : -1 } : null;
+    const cur = current?.kind === "line" ? order.findIndex((x) => String(x.num) === current.line) : -1;
+    return { kind: "line", line: String(order[cur === 0 ? 1 : 0].num) };
+  }
+  cycle = null;
+  return undefined;
+}
+
 /** `chooseShared`: a click (not a hover). Where several lines are under the pointer it picks the
  * nearest, the larger by `size` (line number, segment) within 2 px, and a click with one of them
  * selected picks the next; after the last, the track, whose inspector lists them all (T-1907, which
@@ -468,25 +495,8 @@ export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, 
   if (li < 0 && ov.renderer.slotPx) [li] = topSeg(ov, n.lines.seg, n.lines.count, px, py, slop, B, bandPx, undefined, wide, widePx);
   const lineHit = li >= 0 ? String(n.lines.colour[li]) : null;
   if (lineHit && chooseShared) {
-    // a click by the last one, with one of its lines or its track selected, goes on round its order
-    const back = cycle && cycle.net === n ? ov.toScreen(cycle.x, cycle.y) : null;
-    const was = back && Math.hypot(px - back[0], py - back[1]) <= CYCLE_PX ? cycle : null;
-    const at = !was ? -1 : current?.kind === "line" ? was.order.findIndex((x) => String(x.num) === current.line)
-      : current?.kind === "track" && current.edge === was.edge ? was.order.length : -1;
-    if (was && at >= 0) {
-      const next = (at + 1) % (was.order.length + 1);
-      if (next === was.order.length) return { kind: "track", edge: was.edge };
-      return { kind: "line", line: String(was.order[next].num) };
-    }
-    const near = linesNear(ov, n, px, py, slop);
-    if (near.length > 1) {
-      const order = rankLines(near, size);
-      const here = ov.screenToLocal(px, py);
-      cycle = here ? { net: n, x: here[0], y: here[1], order, edge: n.lines.edge[order[0].i] } : null;
-      const cur = current?.kind === "line" ? order.findIndex((x) => String(x.num) === current.line) : -1;
-      return { kind: "line", line: String(order[cur === 0 ? 1 : 0].num) };
-    }
-    cycle = null;
+    const shared = cycleShared(ov, n, px, py, slop, current, size);
+    if (shared) return shared;
   }
   if (lineHit && !(current?.kind === "line" && current.line === lineHit)) return { kind: "line", line: lineHit };
 
@@ -508,7 +518,7 @@ export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, 
     const stop = busStopHit(ov, px, py);
     if (stop) return stop;
     const bus = ov.renderer.buses.lineAt(ov, px, py);
-    if (bus >= 0) return { kind: "line", line: String(bus) };
+    if (bus >= 0) return (chooseShared && cycleShared(ov, n, px, py, slop, current, size)) || { kind: "line", line: String(bus) };
   }
   if (lineHit) return { kind: "line", line: lineHit };
   // a car park, under everything (T-1528): the station its hover names, so its complex

@@ -1097,7 +1097,7 @@ pointer (drawn over each other, or side by side [T-1799]) a click selects the ne
 lines within 2 px of each other the one with more riders per day on that stretch (more trains an
 hour times cars before demand answers); a click with one of them selected selects the next in that
 order, and after the last the track, whose inspector lists them all [T-1907, `pick`'s
-`chooseShared` and `size`, `lineSizeAt` in `map/trackHover.ts`]. Clicking a selection's longer-trip discs keeps the
+`chooseShared` and `size`, `lineSizeAt` in `map/trackHover.ts`]. Bus, BRT and ferry routes join the same cycle [T-4046, `cycleShared`]: they come after the train and tram lines (in the order of `BusLayer.linesAt`, nearest first), so bus routes on one street, or under a tram line, are each reached by clicking again; with no train or tram line there the cycle goes round the routes with no track step. A bus stop under the pointer still takes the click first where no train or tram line is there. Clicking a selection's longer-trip discs keeps the
 parent selection. Selected editing handles stay draggable above the
 demand view.
 
