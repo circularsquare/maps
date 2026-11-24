@@ -172,6 +172,9 @@ const sameArr = (a: ArrayLike<number>, b: ArrayLike<number>) => {
   return true;
 };
 
+/** box tests past which every edge is worked out again (a few ms of tests; an edit that changes that much is mostly redone) */
+const MANY_TESTS = 4e6;
+
 const overlaps = (a: Prep["box"], b: Prep["box"], pad: number) => !(a[2] + pad < b[0] || b[2] + pad < a[0] || a[3] + pad < b[1] || b[3] + pad < a[1]);
 
 /**
@@ -184,11 +187,14 @@ export function besideSamples(ids: readonly number[], pts: ReadonlyMap<number, F
   if (within !== cacheWithin) (cache = new Map()), (lastOut = null);
   cacheWithin = within;
   const list: Prep[] = [];
-  const raw = new Map<number, Raw>();
+  let raw = new Map<number, Raw>();
   const changed: Prep["box"][] = [];
   const seen = new Set<number>();
   let kMax = 1;
-  for (const id of ids) {
+  // (T-4153: the edges in id order, which no edit moves, so the order of each sample's records, and the ribbons walked
+  // from them, is the same as from scratch whatever order the lines name the edges in)
+  const byId = [...ids].sort((a, b) => a - b);
+  for (const id of byId) {
     const p = pts.get(id), ed = ends.get(id);
     if (!p || !ed) continue;
     seen.add(id);
@@ -208,12 +214,15 @@ export function besideSamples(ids: readonly number[], pts: ReadonlyMap<number, F
   }
   for (const [id, old] of cache) if (!seen.has(id)) changed.push(old.prep.box);
   const reach = HOLD * within * kMax;
-  // edges to work out again: new or moved ones, and any near where something changed
+  // edges to work out again: new or moved ones, and any near where something changed (T-4153: each edge tested against
+  // every change, past MANY_TESTS all worked out again; a long line removed costs the edges near its track)
   const redo: Prep[] = [];
-  const many = changed.length > 64;
+  const many = changed.length * list.length > MANY_TESTS;
+  const all: Prep["box"] = [Infinity, Infinity, -Infinity, -Infinity];
+  for (const b of changed) (all[0] = Math.min(all[0], b[0])), (all[1] = Math.min(all[1], b[1])), (all[2] = Math.max(all[2], b[2])), (all[3] = Math.max(all[3], b[3]));
   for (const e of list) {
     const r = raw.get(e.id);
-    if (!r || many || (changed.length && changed.some((b) => overlaps(b, e.box, reach)))) redo.push(e);
+    if (!r || many || (changed.length && overlaps(all, e.box, reach) && changed.some((b) => overlaps(b, e.box, reach)))) redo.push(e);
   }
   if (!redo.length && !changed.length && lastOut && raw.size === cache.size) return lastOut;
   if (redo.length) {
@@ -348,6 +357,13 @@ export function besideSamples(ids: readonly number[], pts: ReadonlyMap<number, F
       });
       raw.set(e.id, packRaw(e, rec));
     }
+    // (those new since the last call came last)
+    const sorted = new Map<number, Raw>();
+    for (const id of byId) {
+      const r = raw.get(id);
+      if (r) sorted.set(id, r);
+    }
+    raw = sorted;
   }
   // T-2238: an edge's samples as given (its own records and the mirrors of others') are made again only
   // where its own records or those of an edge seeing it were, so an edit's call costs what it touched

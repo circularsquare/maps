@@ -16,7 +16,7 @@ import { loadApp, REAL_SAVE, ARTIFACTS } from './lib.mjs';
 globalThis.postMessage = () => {};
 globalThis.self ??= globalThis;
 globalThis.location ??= { search: '', hash: '', href: 'http://localhost/' };
-const app = await loadApp("export * from '@app/src/workers/clockMain.ts'; export { putApi, syncFrame, frame } from '@app/src/workers/clockState.ts'; export { putPatchMode, posted, sender } from '@app/src/workers/clockPost.ts'; export { setAnchor, makeAnchor, anchor } from '@app/src/map/geo.ts'; export { setBandCheck, bandSelfTest } from '@app/src/map/lineBands.ts'; export { default as initSim, TrackApi } from '@app/src/wasm/track/sim.js';");
+const app = await loadApp("export * from '@app/src/workers/clockMain.ts'; export { putApi, syncFrame, frame } from '@app/src/workers/clockState.ts'; export { putPatchMode, posted, sender } from '@app/src/workers/clockPost.ts'; export { setAnchor, makeAnchor, anchor } from '@app/src/map/geo.ts'; export { setBandCheck, bandSelfTest, bandWork } from '@app/src/map/lineBands.ts'; export { default as initSim, TrackApi } from '@app/src/wasm/track/sim.js';");
 await app.initSim({ module_or_path: readFileSync(new URL('../app/src/wasm/track/sim_bg.wasm', import.meta.url)) });
 
 const SELF = process.argv.includes('--self-test');
@@ -155,7 +155,7 @@ for (let seed = 1; seed <= SEEDS && !failures; seed++) {
     else if (process.env.VERBOSE) console.log('seed', seed, 'step', step, kind, r === 0 ? 'applied' : 'refused ' + r);
   }
 }
-console.log(`${builds} checked builds, ${dropped} dropped part way, ${rowsStates} rows states, ${moves} anchor moves; edits applied: ${Object.entries(applied).map(([k, v]) => k + ' ' + v).join(', ')}`);
+console.log(`${builds} checked builds, ${dropped} dropped part way, ${rowsStates} rows states, ${moves} anchor moves; edits applied: ${Object.entries(applied).map(([k, v]) => k + ' ' + v).join(', ')}; pairs of lines kept on edges where their paths changed: ${app.bandWork.passedAll}`);
 if (SELF) {
   console.log(`${failures ? 'PASS' : 'FAIL'}  t4153 net self-test: ${failures ? 'the check fails when the kept orders are trusted' : 'the check did not notice the trusted orders'}`);
   process.exit(failures ? 0 : 1);

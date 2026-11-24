@@ -141,7 +141,7 @@ export function lineBands(lines: readonly BandLine[], edges: readonly BandEdge[]
   const beside = useBands(opts?.state).beside;
   const o = { ...opts, beside };
   const ends = opts?.ends ?? new Map(edges.map((e) => [e.id, e]));
-  if (!opts?.debug) { bandWork.orders = 0; bandWork.lines = 0; bandWork.whole = 0; }
+  if (!opts?.debug) { bandWork.orders = 0; bandWork.pairs = 0; bandWork.passed = 0; bandWork.lines = 0; bandWork.whole = 0; }
   const rail = lines.filter((l) => l.ok && !l.bus && l.path.length);
   // T-4153: the same line rows (so the same paths) and the same rows and points of every edge they use as last time:
   // the same bands, known without laying out every path again
@@ -163,7 +163,8 @@ export function lineBands(lines: readonly BandLine[], edges: readonly BandEdge[]
   if (!opts?.debug && last && last.sig === sig && last.used.length === used.length && used.every((u, i) => u[0] === last!.used[i][0] && u[1] === last!.used[i][1] && u[2] === last!.used[i][2])) return { ...last.out, rule, corridor: last.corridor.slice() };
   const out = bands(rail, on, ends, pts, o);
   if (bandCheck && !opts?.debug) {
-    const bad = bandsDiffer(out, bands(rail, on, ends, pts, { ...o, fresh: true }));
+    // (T-4153: the corridors from scratch too, or a slip in their kept samples is in both)
+    const bad = bandsDiffer(out, bands(rail, on, ends, pts, { ...o, fresh: true, beside: newBesideState() }));
     if (bad) console.error(`T-2238 check: bands worked out again for an edit differ from a whole pass: ${bad}`);
   }
   // (a copy: the clock worker transfers the array it posts.) T-3939: kept without `rule`, whose closure holds the
@@ -327,36 +328,49 @@ interface BandMemo {
 }
 let memo: BandMemo | null = null;
 /** T-4153: one edge's order of its lines (`LineBands.order`), with what it was worked out from: its lines (each
- * with its first entry on it and its path), and the edges the comparisons read (their ends and points) */
-interface OrderMemo { lines: BandLine[]; ks: number[]; paths: number[][]; reads: Int32Array; order: number[] }
+ * with its first entry on it and its path), per pair of them the rule's answer and the steps its walks ended at, and
+ * the edges read where they ended (their ends and points) */
+interface OrderMemo {
+  lines: BandLine[];
+  ks: number[];
+  paths: number[][];
+  /** per pair of lines i < j, row by row: the rule's sign, and the step its walk ahead ended at and its walk back's (-1
+   * when not walked); 0 for a walk that cannot be kept */
+  sign: Int8Array;
+  walks: Int32Array;
+  reads: Int32Array;
+  order: number[];
+}
 /** the kept orders; per edge the orders that read it; each edge's row and points at the last call */
 /** (`readBy` only grows, so it can name an order that no longer reads an edge, which is then worked out again for
  * nothing; it is laid out again from the kept orders once it holds three times what they read, `live`) */
 const newOrders = () => ({ memo: new Map<number, OrderMemo>(), readBy: new Map<number, number[]>(), entries: 0, live: 0, rows: new Map<number, BandEdge>(), pts: new Map<number, Float32Array | undefined>() });
 let orders = newOrders();
-function setOrder(edge: number, m: OrderMemo | null) {
+/** (`added`: the reads `m` has that the edge's last order did not) */
+function setOrder(edge: number, m: OrderMemo | null, added: ArrayLike<number> = m?.reads ?? []) {
   const old = orders.memo.get(edge);
   if (old) orders.live -= old.reads.length;
   if (!m) { orders.memo.delete(edge); return; }
   orders.memo.set(edge, m);
   orders.live += m.reads.length;
-  addReads(edge, m.reads);
+  addReads(edge, added);
   if (orders.entries > 3 * orders.live + 1024) {
     orders.readBy.clear();
     orders.entries = 0;
     for (const [e, k] of orders.memo) addReads(e, k.reads);
   }
 }
-function addReads(edge: number, reads: Int32Array) {
-  for (const r of reads) {
-    const v = orders.readBy.get(r);
+function addReads(edge: number, reads: ArrayLike<number>) {
+  for (let i = 0; i < reads.length; i++) {
+    const r = reads[i], v = orders.readBy.get(r);
     if (v) v.push(edge);
     else orders.readBy.set(r, [edge]);
   }
   orders.entries += reads.length;
 }
-/** the edges whose kept order read an edge whose row or points changed since the last call */
-function staleOrders(ends: ReadonlyMap<number, BandEdge>, pts: ReadonlyMap<number, Float32Array>): Set<number> {
+/** the edges whose kept order read an edge whose row or points changed since the last call; `gone` gets the edges
+ * gone since */
+function staleOrders(ends: ReadonlyMap<number, BandEdge>, pts: ReadonlyMap<number, Float32Array>, gone: number[]): Set<number> {
   const out = new Set<number>();
   const moved = (e: number) => { for (const x of orders.readBy.get(e) ?? []) out.add(x); };
   for (const [e, row] of ends) {
@@ -366,31 +380,40 @@ function staleOrders(ends: ReadonlyMap<number, BandEdge>, pts: ReadonlyMap<numbe
     orders.rows.set(e, row);
     orders.pts.set(e, p);
   }
-  if (orders.rows.size > ends.size) for (const e of [...orders.rows.keys()]) if (!ends.has(e)) { moved(e); orders.rows.delete(e); orders.pts.delete(e); }
+  if (orders.rows.size > ends.size) for (const e of [...orders.rows.keys()]) if (!ends.has(e)) { moved(e); gone.push(e); orders.rows.delete(e); orders.pts.delete(e); }
   return out;
 }
 /** checks/t4153-net.mjs --self-test: every kept order trusted, which its check must catch */
 let selfTest = false;
 export function bandSelfTest(on: boolean) { selfTest = on; }
-/** T-4153: what the last call worked out again (counts, for the network build's work line) */
-export const bandWork = { orders: 0, lines: 0, whole: 0 };
-/** (`pathSame`: per path a memo was made from, whether its line's path is still the same, for this call) */
-function sameOrderLines(m: OrderMemo, v: readonly { line: BandLine; k: number }[], pathSame: Map<number[], boolean>): boolean {
+/** T-4153: what the last call worked out again (counts, for the network build's work line): orders with any pair of
+ * lines walked again, those pairs, and pairs kept whose lines' paths changed within their walks */
+export const bandWork = { orders: 0, pairs: 0, passed: 0, lines: 0, whole: 0, passedAll: 0 };
+function sameOrderLines(m: OrderMemo, v: readonly { line: BandLine; k: number }[], diffOf: (q: number[], p: number[]) => PathDiff | null): boolean {
   if (m.lines.length !== v.length) return false;
   for (let i = 0; i < v.length; i++) {
     const x = v[i];
-    if (x.line.id !== m.lines[i].id || x.k !== m.ks[i]) return false;
-    const p = x.line.path, q = m.paths[i];
-    if (p === q) continue;
-    let same = pathSame.get(q);
-    if (same === undefined) {
-      same = p.length === q.length;
-      for (let j = 0; same && j < p.length; j++) same = p[j] === q[j];
-      pathSame.set(q, same);
-    }
-    if (!same) return false;
+    if (x.line.id !== m.lines[i].id || x.k !== m.ks[i] || diffOf(m.paths[i], x.line.path)) return false;
   }
   return true;
+}
+/** T-4153: how a line's path changed since a kept order read it: old entries [pre, `was` - suf) became new entries
+ * [pre, p.length - suf), the rest alike; null when not at all */
+interface PathDiff { p: number[]; pre: number; suf: number; was: number }
+function pathDiff(q: number[], p: number[]): PathDiff | null {
+  if (q === p) return null;
+  const n = Math.min(q.length, p.length);
+  let pre = 0, suf = 0;
+  while (pre < n && q[pre] === p[pre]) pre++;
+  if (pre === n && q.length === p.length) return null;
+  while (suf < n - pre && q[q.length - 1 - suf] === p[p.length - 1 - suf]) suf++;
+  return { p, pre, suf, was: q.length };
+}
+/** the changed part of a line's path in the steps of a walk from its entry k (forwards or back in its path): the first
+ * step of it and the step past it, in the old path, and how many new entries took its place */
+function stepsOf(d: PathDiff, k: number, fwd: boolean): [number, number, number] {
+  const w0 = d.pre, w1 = d.was - d.suf, n = d.p.length - d.suf - d.pre;
+  return fwd ? [w0 - k, w1 - k, n] : [k - w1 + 1, k - w0 + 1, n];
 }
 /** past this many edges changed, every line is worked out again */
 const MEMO_EDGES = 400;
@@ -437,71 +460,166 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
     const i = fwd ? k + j : k - j;
     if (i < 0 || i >= l.path.length) return null;
     const p = l.path[i], e = ends.get(p >> 1);
-    orderReads?.push(p >> 1);
     if (!e) return null;
     // entered from a when run forwards a to b (low bit clear), or walked backwards b to a
     const fromA = ((p & 1) === 0) === fwd;
     return [p >> 1, fromA ? e.a : e.b];
   };
+  /** T-4153: the step the last walk of `part` ended at (where the two lines part or a path ends); 0 when it cannot be
+   * kept, having passed two entries that differ but read alike (both ways along an edge from a node to itself) */
+  let walkEnd = 0;
+  /** a line's entry `j` steps from entry k, as the way it is walked (forwards, or back with its direction turned) */
+  const entryAt = (x: { line: BandLine; k: number }, fwd: boolean, j: number) => (fwd ? x.line.path[x.k + j] : x.line.path[x.k - j] ^ 1);
   /** of two lines on `edge`, walking towards `toB` (its b end) or away: < 0 when `x` turns left of
    * `y` where they part, > 0 right, 0 if they never part */
   const part = (edge: number, x: { line: BandLine; k: number }, y: { line: BandLine; k: number }, toB: boolean): number => {
     // each line's own direction on this edge: walk its path forwards when it runs the way we walk
     const fx = ((x.line.path[x.k] & 1) === 0) === toB, fy = ((y.line.path[y.k] & 1) === 0) === toB;
-    let prev = edge;
+    let prev = edge, odd = false;
     const max = Math.min(x.line.path.length, y.line.path.length);
     for (let j = 1; j <= max; j++) {
       const a = step(x.line, x.k, fx, j), b = step(y.line, y.k, fy, j);
-      if (!a || !b) return 0;
-      if (a[0] !== b[0] || a[1] !== b[1]) {
-        if (a[1] !== b[1]) return 0;
+      if (!a || !b || a[0] !== b[0] || a[1] !== b[1]) {
+        walkEnd = odd ? 0 : j;
+        // (T-4153: what a kept walk depends on beyond the two paths: the rows and points of the edges where it ends,
+        // and of the one before, which `turn` reads)
+        if (orderReads) {
+          const ix = fx ? x.k + j : x.k - j, iy = fy ? y.k + j : y.k - j;
+          if (ix >= 0 && ix < x.line.path.length) orderReads.push(x.line.path[ix] >> 1);
+          if (iy >= 0 && iy < y.line.path.length) orderReads.push(y.line.path[iy] >> 1);
+        }
+        if (!a || !b || a[1] !== b[1]) return 0;
         const ta = turn(prev, a[0], a[1]), tb = turn(prev, b[0], b[1]);
         return ta > tb ? -1 : ta < tb ? 1 : 0;
       }
+      if (orderReads && entryAt(x, fx, j) !== entryAt(y, fy, j)) odd = true;
       prev = a[0];
     }
+    walkEnd = 0;
     return 0;
   };
   const order = new Map<number, number[]>();
+  /** T-4153: the steps the last `compare`'s walks ended at (`walkEnd`), the second -1 when not walked */
+  let walk1 = 0, walk2 = -1;
   /** < 0: `x` left of `y` in the edge's a to b direction. Looked at first ahead in the lower-id
    * line's own direction, so every edge of a stretch the two share asks the same parting node
    * whatever way each edge was drawn; a walk towards a sees left of travel as right of a to b. */
   const compare = (edge: number, x: { line: BandLine; k: number }, y: { line: BandLine; k: number }) => {
     const lead = x.line.id < y.line.id ? x : y;
     const toB = (lead.line.path[lead.k] & 1) === 0;
-    const first = part(edge, x, y, toB), second = first ? 0 : part(edge, x, y, !toB);
+    const first = part(edge, x, y, toB);
+    walk1 = walkEnd;
+    walk2 = -1;
+    const second = first ? 0 : part(edge, x, y, !toB);
+    if (!first) walk2 = walkEnd;
     // never parting: the lower id on the left of the lead line's travel
     return (toB ? first : -first) || (toB ? -second : second) || (toB ? 1 : -1) * (x.line.id - y.line.id);
   };
-  // T-4153: an edge's order kept while its lines, their paths and every edge the comparisons read are as last time
+  // T-4153: an edge's order kept while its lines, their paths and every edge the comparisons read are as last time;
+  // and where some changed, each pair's answer kept while its walks read the same of their paths (`walkNow`)
   const keepOrders = !opts?.debug && !opts?.fresh;
-  const stale = keepOrders ? staleOrders(ends, pts) : null;
-  const pathSame = new Map<number[], boolean>();
+  const gone: number[] = [];
+  const stale = keepOrders ? staleOrders(ends, pts, gone) : null;
+  // (the lines on an edge gone that their paths still name: a walk along it would now end there)
+  const broken = new Set<number>();
+  for (const e of gone) for (const x of on.get(e) ?? []) broken.add(x.line.id);
+  const diffs = new Map<number[], { p: number[]; d: PathDiff | null }>();
+  const diffOf = (q: number[], p: number[]) => {
+    let x = diffs.get(q);
+    if (!x || x.p !== p) diffs.set(q, (x = { p, d: pathDiff(q, p) }));
+    return x.d;
+  };
+  /** a kept walk of two lines (x the lead) that ended at step J, as their paths are now: the step it ends at, 0 when it
+   * is to be walked again. It is the same where neither path changed within it, and where both changed alike within the
+   * stretch they walk together (a piece of track they share cut in two), short of its last two steps (where they part,
+   * and the one before, whose way off the node the parting reads) */
+  const walkNow = (J: number, dx: PathDiff | null, kx: number, fx: boolean, dy: PathDiff | null, ky: number, fy: boolean): number => {
+    if (J < 1) return 0;
+    const wx = dx && stepsOf(dx, kx, fx), wy = dy && stepsOf(dy, ky, fy);
+    const ax = !!wx && wx[1] > 0 && wx[0] <= J, ay = !!wy && wy[1] > 0 && wy[0] <= J;
+    if (!ax && !ay) return J;
+    if (!ax || !ay || wx![0] !== wy![0] || wx![1] !== wy![1] || wx![2] !== wy![2] || wx![0] < 1 || wx![1] > J - 1) return 0;
+    const n = wx![2];
+    for (let t = 0; t < n; t++) {
+      const ex = fx ? dx!.p[dx!.pre + t] : dx!.p[dx!.pre + n - 1 - t] ^ 1, ey = fy ? dy!.p[dy!.pre + t] : dy!.p[dy!.pre + n - 1 - t] ^ 1;
+      if (ex !== ey || !ends.has(ex >> 1)) return 0;
+    }
+    return J + n - (wx![1] - wx![0]);
+  };
   const visited = new Set<number>();
   for (const [edge, v] of on) {
     if (v.length < 2) continue;
     visited.add(edge);
     const was = stale ? orders.memo.get(edge) : undefined;
-    if (was && (selfTest || (!stale!.has(edge) && sameOrderLines(was, v, pathSame)))) {
+    const fresh = !was || stale!.has(edge);
+    if (was && (selfTest || (!fresh && sameOrderLines(was, v, diffOf)))) {
       order.set(edge, was.order);
       continue;
     }
-    if (keepOrders) { bandWork.orders++; orderReads = []; }
+    if (keepOrders) orderReads = [];
+    const m = v.length, nPairs = (m * (m - 1)) / 2, sign = new Int8Array(nPairs), walks = new Int32Array(2 * nPairs);
+    // per line, where it is in the kept order (-1: not there, or its pairs walked again) and how its path changed
+    const from = new Int32Array(m).fill(-1), dif: (PathDiff | null)[] = new Array(m).fill(null);
+    if (!fresh) for (let i = 0, o = 0; i < m; i++) {
+      const id = v[i].line.id;
+      while (o < was!.lines.length && was!.lines[o].id < id) o++;
+      if (o === was!.lines.length || was!.lines[o].id !== id || broken.has(id)) continue;
+      const k = was!.ks[o], d = diffOf(was!.paths[o], v[i].line.path);
+      // (its entry on this edge where it was, moved by what changed before it)
+      if ((!d ? k : k < d.pre ? k : k >= d.was - d.suf ? k + d.p.length - d.was : -1) !== v[i].k) continue;
+      from[i] = o;
+      dif[i] = d;
+    }
+    const om = was?.lines.length ?? 0;
+    let walked = 0;
+    for (let i = 0, p = 0; i < m; i++) for (let j = i + 1; j < m; j++, p++) {
+      const oi = from[i], oj = from[j];
+      if (oi >= 0 && oj >= 0) {
+        const op = (oi * (2 * om - oi - 1)) / 2 + oj - oi - 1, J1 = was!.walks[2 * op], J2 = was!.walks[2 * op + 1];
+        let n1 = J1, n2 = J2;
+        if (dif[i] || dif[j]) {
+          // (the lead, the lower id, walks its own way first; the other the same way along the edge)
+          const ki = was!.ks[oi], kj = was!.ks[oj], fy = (was!.paths[oj][kj] & 1) === (was!.paths[oi][ki] & 1);
+          n1 = walkNow(J1, dif[i], ki, true, dif[j], kj, fy);
+          n2 = J2 < 0 || !n1 ? J2 : walkNow(J2, dif[i], ki, false, dif[j], kj, !fy);
+          if (n1 && n2 && keepOrders) bandWork.passed++, bandWork.passedAll++;
+        }
+        if (n1 && n2) {
+          sign[p] = was!.sign[op];
+          walks[2 * p] = n1;
+          walks[2 * p + 1] = n2;
+          continue;
+        }
+      }
+      walked++;
+      sign[p] = Math.sign(compare(edge, v[i], v[j]));
+      walks[2 * p] = walk1;
+      walks[2 * p + 1] = walk2;
+    }
+    if (keepOrders && walked) {
+      bandWork.orders++;
+      bandWork.pairs += walked;
+    }
     // by how many of the others each is left of: the rule's own order where it is one, and where
     // three or more lines' partings go round in a circle (some pair has to cross somewhere), a
     // fixed order rather than whatever a sort makes of a comparison that contradicts itself
-    const m = v.length, wins = new Int32Array(m), c = new Int8Array(m * m);
-    for (let i = 0; i < m; i++) for (let j = i + 1; j < m; j++) {
-      const r = Math.sign(compare(edge, v[i], v[j]));
+    const wins = new Int32Array(m), c = new Int8Array(m * m);
+    for (let i = 0, p = 0; i < m; i++) for (let j = i + 1; j < m; j++, p++) {
+      const r = sign[p];
       c[i * m + j] = r;
       c[j * m + i] = -r;
       if (r < 0) wins[i]++;
       else if (r > 0) wins[j]++;
     }
     const idx = v.map((_, i) => i).sort((i, j) => wins[j] - wins[i] || c[i * m + j] || v[i].line.id - v[j].line.id);
-    order.set(edge, idx.map((i) => v[i].line.id));
+    let ids = idx.map((i) => v[i].line.id);
+    if (was && ids.length === was.order.length && ids.every((x, k) => x === was.order[k])) ids = was.order;
+    order.set(edge, ids);
     if (orderReads) {
-      setOrder(edge, { lines: v.map((x) => x.line), ks: v.map((x) => x.k), paths: v.map((x) => x.line.path), reads: Int32Array.from(new Set(orderReads)), order: order.get(edge)! });
+      // (the edges where every walk kept ended were read by the kept order: those, with what the walks made now read)
+      const add = Int32Array.from(new Set(orderReads));
+      const reads = walked === nPairs ? add : add.length ? Int32Array.from(new Set([...was!.reads, ...add])) : was!.reads;
+      setOrder(edge, { lines: v.map((x) => x.line), ks: v.map((x) => x.k), paths: v.map((x) => x.line.path), sign, walks, reads, order: ids }, add);
       orderReads = null;
     }
   }
