@@ -1662,6 +1662,13 @@ class DemandClient {
     const keep = new Set<string>([...this.viewedSet(), ...nearbyZones.peek(), ...reached]);
     if (this.job) for (const id of this.job.items) keep.add(id);
     for (const id of this.marketZones(this.latest())) keep.add(marketItem(id));
+    // T-4202: while a save loaded in a running game has its network on the way, the reach above is the last game's: the
+    // packs opening ahead for the save (`stationsAhead`) stay, or each worker opens them twice
+    const a = this.ahead;
+    if (a && !a.arrived) {
+      for (const id of this.prefetched) keep.add(id);
+      for (const id of a.markets) keep.add(marketItem(id));
+    }
     return keep;
   }
 
