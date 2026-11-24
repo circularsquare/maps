@@ -907,7 +907,10 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: T-921 deals commute pairs under 1 person a day in chunks (about 7% of New York's calculation); 2 a day gained nothing more. Everyday trips are solved from sampled destinations, so they may lack the same tail of tiny pairs. You, 11-24: file as P3.
   - Goal: Know whether everyday trips have a tail of tiny pairs; if so, chunk them the same tunable way.
   - Other: notes/T-921.md
-- T-4239 [P1] {L:solve-speed} Train counts that never settle on shared track
+- T-4240 [P1] {L:edit-speed} Stations on her Asia save take seconds to show up
+  - Context: You, 11-24: "station placement currently also still feels kinda bad on my asia save, it takes a couple seconds for them to show up". The master baseline (b7b9e4ee, trips final, quiet machine) has a station built in 1.19 s on Asia; T-4153 and T-4214 cut parts of it since.
+  - Goal: Where a station's wait goes on Asia, step by step, and the biggest part cut at its cause.
+- T-4239 [P1] {L:solve-speed} Train counts that never settle on shared track (taking, 2026-11-24, agent settlestop)
   - Context: You, 11-24: players' saves of about 900 stations "completely bricked", maybe from lots of interlining. T-4188 found on a Tokyo community save that 10-13 lines sharing full track trade rates every round and never hold still, so every load and edit runs all 80 settle rounds (edits 5-35 s natively), and each bus zone adds another settle.
   - Goal: The settle stops once lines hold nearly still; that save opens in under a minute; NYC lines within 1%.
   - Other: notes/T-4188.md
