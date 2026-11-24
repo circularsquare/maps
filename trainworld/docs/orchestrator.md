@@ -177,6 +177,8 @@ skill, then ask her for the yes.
   read-only, about 2 minutes. Every flagged line (OVER, HIGH, SOON, MISSING) goes in that day's report to her with
   what docs/ops-checks.md says to do about it.
 
+- Gemini second opinion (read-only, sandboxed): `venv\Scripts\python.exe trainworld/tools/gemini_audit.py --brief <file> --out <file>` (its top comment). For reviews and audits; Gemini's own code tasks run in Antigravity, and she passes them on to land.
+
 ## Traps
 
 - `git stash` is one stack for all worktrees: agents merging master into their trees use `git stash push -m <name>` and pop

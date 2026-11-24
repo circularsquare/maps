@@ -99,4 +99,22 @@ The core game architecture (`SPEC.md`, `docs/code-tour.md`, dual-WASM + native R
   - Retiring the 5 `BROKEN` checks / migrating the 3 `sheetLines.ts` checks to WASM so the JS duplicate can be deleted
   - Doc drift cleanup (`SPEC.md`, `docs/interface.md`, trimming `docs/demand-worldwide.md`, or splitting `demandClient.ts` later)
 - **Anita (+ friend)**:
-  - AWS IAM scoping (manual, outside agent scope).
+  - AWS IAM scoping (already done for `anita-own` / `bench`; remove Jean's `[default]` key when ready).
+
+---
+
+## Pattern A: Calling Gemini (`agy`) directly from Claude's orchestrator
+
+Anita installed the Antigravity CLI (`C:\Users\anita\AppData\Local\agy\bin\agy.exe`, already on User PATH). A read-only wrapper is ready at `trainworld/tools/gemini_audit.py`:
+
+```powershell
+# One-shot read-only audit written to a file (keeps orchestrator context small):
+venv\Scripts\python.exe trainworld/tools/gemini_audit.py --brief <brief.md> --out trainworld/research/<out>.md
+
+# Inline prompt (prints to stdout) or JSON output (includes conversation ID for follow-ups):
+venv\Scripts\python.exe trainworld/tools/gemini_audit.py "Audit <area> for bugs or drift" --json
+venv\Scripts\python.exe trainworld/tools/gemini_audit.py --resume <conv-id> "Follow-up question"
+```
+
+- Runs `agy -p` with `--mode plan --sandbox --print-timeout 15m` and `CREATE_NO_WINDOW`, so it cannot edit files, open windows, or hang indefinitely.
+- Optional: add `trainworld/tools/gemini_audit.py` to `.claude/settings.json` allowlist if Claude should be able to invoke audits without prompting Anita.
