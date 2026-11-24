@@ -135,6 +135,14 @@ impl TrackApi {
             })
             .collect()
     }
+    /// T-4075: where the track bends between a run's samples (`run_polyline`'s, every `step` m), past
+    /// `tol` ground metres: per such interval its index, its inner points' count and the points (x, y),
+    /// as `service::bends::bends` gives them.
+    pub fn run_bends(&self, line: u32, run: usize, step: f64, tol: f64) -> Vec<f64> {
+        let Some(l) = self.w.svc.lines.get(line as usize).filter(|l| l.ok) else { return vec![] };
+        let len = l.runs[run].len;
+        crate::track::service::bends::bends(len, step, tol, |s| self.w.svc.position(&self.w.net, line, run, s.min(len)))
+    }
     /// T-3346: the departures board. Line `line`'s trains leaving station node `node` in
     /// `[t0, t1)`, game seconds: per departure its run, the stop's index in that run and the time
     /// it leaves (its trip's `draw` plus its profile's `dep` there), sorted by time. A run's last

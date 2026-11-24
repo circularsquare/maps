@@ -845,6 +845,9 @@ export interface ClockRender {
   meta: Float32Array;
   samples: Float32Array;
   lineTable: Float32Array;
+  /** T-4075, per sample and per bend point: `NetworkBuffers.sampleBend` and `bends` */
+  sampleBend?: Float32Array;
+  bends?: Float32Array;
 }
 
 /** A busy resource (SPEC 6.2: 75% and up), local units. `kind`: 0 track, 1 single track,

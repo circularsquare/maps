@@ -280,6 +280,15 @@ function buildBlocks(n: NetworkBuffers): LineBlocks {
         if (x > x1) x1 = x;
         if (y < y0) y0 = y;
         if (y > y1) y1 = y;
+        // (T-4075: and the points where the track bends before the next sample)
+        const code = j < count - 1 ? n.sampleBend?.[s0 + j] ?? 0 : 0, m = code % 32, start = (code - m) / 32;
+        for (let q = 1; q <= m && n.bends; q++) {
+          const f = q / (m + 1), bx = x + (S[(s0 + j + 1) * 2] - x) * f + n.bends[(start + q - 1) * 2], by = y + (S[(s0 + j + 1) * 2 + 1] - y) * f + n.bends[(start + q - 1) * 2 + 1];
+          if (bx < x0) x0 = bx;
+          if (bx > x1) x1 = bx;
+          if (by < y0) y0 = by;
+          if (by > y1) y1 = by;
+        }
       }
       box[at * 4] = x0, box[at * 4 + 1] = y0, box[at * 4 + 2] = x1, box[at * 4 + 3] = y1;
       at++;

@@ -4,7 +4,8 @@
 //
 // Trains: each trip is (profile, departure - epoch); profile p = (line * 2 + run) * SLOTS + slot has
 // a phase table (t, s, v, a) and meta (first phase, count, trip seconds, path length m); run 0 of
-// each line is resampled every 50 m into `samples`; run 1's offset s is `length - s` on run 0.
+// each line is resampled every 50 m into `samples`, with points between where its track bends (`bendAt`, T-4075);
+// run 1's offset s is `length - s` on run 0.
 
 import { rgb } from "../game/palette";
 import { boatOf } from "../game/boats";
@@ -155,6 +156,11 @@ export interface NetworkBuffers {
   meta: Float32Array;
   samples: Float32Array;
   lineTable: Float32Array;
+  /** T-4075: per sample, where the track bends between it and the next (`bendAt`): its first point in `bends` times
+   * 32 plus how many (0 none, else 1, 3, 7, 15 or 31, cutting the interval in equal parts); absent: none */
+  sampleBend?: Float32Array;
+  /** per bend point: its offset (x, y local units) from the straight between its interval's samples */
+  bends?: Float32Array;
   /** Actual 20 m cars per train, indexed by line id; absent in old synthetic fixtures. */
   lineCars?: Float32Array;
   /** per sample of `samples`: a line stroke segment of the same stretch of path, -1 if none
@@ -2181,6 +2187,7 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
     meta: r.meta,
     samples: r.samples,
     lineTable: r.lineTable,
+    ...(r.sampleBend ? { sampleBend: r.sampleBend, bends: r.bends } : {}),
     lineCars,
     stationShape,
     stationLine,
@@ -2264,7 +2271,20 @@ export function lineAt(n: NetworkBuffers, line: number, d: number): [number, num
   const first = n.lineTable[line * 4];
   if (n.lineTable[line * 4 + 1] < 2) return [n.samples[first * 2], n.samples[first * 2 + 1]];
   const [si, f] = sampleSegment(n, line, d);
-  return [n.samples[si * 2] + (n.samples[si * 2 + 2] - n.samples[si * 2]) * f, n.samples[si * 2 + 1] + (n.samples[si * 2 + 3] - n.samples[si * 2 + 1]) * f];
+  const [bx, by] = bendAt(n, si, f);
+  return [n.samples[si * 2] + (n.samples[si * 2 + 2] - n.samples[si * 2]) * f + bx, n.samples[si * 2 + 1] + (n.samples[si * 2 + 3] - n.samples[si * 2 + 1]) * f + by];
+}
+
+/** T-4075: how far the track at `f` (0-1) between sample `si` and the next lies off the straight between them, local
+ * units: between its bend points, the interval cut in equal parts (the train shader's `bendAt`). */
+export function bendAt(n: Pick<NetworkBuffers, "sampleBend" | "bends">, si: number, f: number): [number, number] {
+  const code = n.sampleBend?.[si] ?? 0, b = n.bends;
+  if (!code || !b) return [0, 0];
+  const m = code % 32, start = (code - m) / 32;
+  const u = f * (m + 1), j = Math.min(Math.floor(u), m), g = u - j;
+  const ax = j > 0 ? b[(start + j - 1) * 2] : 0, ay = j > 0 ? b[(start + j - 1) * 2 + 1] : 0;
+  const cx = j < m ? b[(start + j) * 2] : 0, cy = j < m ? b[(start + j) * 2 + 1] : 0;
+  return [ax + (cx - ax) * g, ay + (cy - ay) * g];
 }
 
 /** `lineAt`, carried on straight past either end (the train shader's `lineAtX`, T-2980). */

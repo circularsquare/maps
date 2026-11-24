@@ -903,6 +903,9 @@ export function bindTrainTextures(rnd: NetworkRenderer, u: Record<string, WebGLU
   bind(3, rnd.tex.phases, u.u_phases);
   bind(4, rnd.tex.meta, u.u_meta);
   bind(0, rnd.tex.samples, u.u_samples);
+  // (units the stroke and station passes bind for themselves before they draw)
+  bind(5, rnd.tex.bendAt, u.u_bend_at);
+  bind(14, rnd.tex.bends, u.u_bends);
   bind(1, rnd.tex.lines, u.u_lines);
   gl.uniform1i(u.u_back_base, rnd.net ? backBaseOf(rnd.net.lineTable, rnd.net.meta) : 0);
   gl.activeTexture(gl.TEXTURE2);

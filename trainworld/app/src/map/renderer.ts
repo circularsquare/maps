@@ -117,7 +117,7 @@ export class NetworkRenderer {
   profitTex: WebGLTexture | null = null;
   profitN = 0;
   profitData: Float32Array | null = null;
-  tex: Record<TexName, WebGLTexture | null> = { phases: null, meta: null, samples: null, lines: null, colours: null, fill: null, cars: null, stretch: null, stationLine: null, lane: null, slevel: null };
+  tex: Record<TexName, WebGLTexture | null> = { phases: null, meta: null, samples: null, bendAt: null, bends: null, lines: null, colours: null, fill: null, cars: null, stretch: null, stationLine: null, lane: null, slevel: null };
   /** The boarding account's hour the trip buffer holds (T-164), or null before demand has riders. */
   board: BoardHour | null = null;
   crowds = new PlatformCrowds(0);
@@ -502,7 +502,7 @@ export class NetworkRenderer {
     this.selProg = compile(gl, SEL_VS, SEL_FS);
     this.selU = uniforms(gl, this.selProg, ["u_bbox", "u_css", "u_shapes", "u_count", "u_dpr", "u_height", "u_ink", "u_outline", "u_glow"]);
     this.selTex = texture(this, this.selData, "rgba32f", SEL_MAX * SEL_STRIDE, []);
-    this.trainU = uniforms(gl, this.trainProg, [...PROJECT_UNIFORMS, "u_viewport", "u_time", "u_px_per_unit", "u_min_px", "u_phases", "u_meta", "u_samples", "u_lines", "u_back_base", "u_line_colours", "u_fill", "u_bad", "u_detail", "u_dpr", "u_cars", "u_loads", "u_stretch", "u_sel_line", "u_sel_n", "u_sel_set", "u_dim", "u_sel_trip", "u_pass", "u_ink", "u_band", "u_psi0", "u_lane_tex", "u_lane", "u_hollow", "u_bands", "u_bands_m", "u_passing", "u_keep", "u_level_hide", "u_slevel"]);
+    this.trainU = uniforms(gl, this.trainProg, [...PROJECT_UNIFORMS, "u_viewport", "u_time", "u_px_per_unit", "u_min_px", "u_phases", "u_meta", "u_samples", "u_bend_at", "u_bends", "u_lines", "u_back_base", "u_line_colours", "u_fill", "u_bad", "u_detail", "u_dpr", "u_cars", "u_loads", "u_stretch", "u_sel_line", "u_sel_n", "u_sel_set", "u_dim", "u_sel_trip", "u_pass", "u_ink", "u_band", "u_psi0", "u_lane_tex", "u_lane", "u_hollow", "u_bands", "u_bands_m", "u_passing", "u_keep", "u_level_hide", "u_slevel"]);
     this.timer = new GpuTimer(gl);
     this.tripBuf = gl.createBuffer();
     this.endBuf = gl.createBuffer();
@@ -691,6 +691,8 @@ export class NetworkRenderer {
     put("phases", "phases", () => [n.phases.length ? n.phases : new Float32Array(4), "rgba32f", TEX_W]);
     put("meta", "meta", () => [n.meta.length ? n.meta : new Float32Array(4), "rgba32f", TEX_W]);
     put("samples", "samples", () => [n.samples.length ? n.samples : new Float32Array(2), "rg32f", TEX_W]);
+    put("bendAt", ["samples", "sampleBend"], () => [n.sampleBend?.length ? n.sampleBend : new Float32Array(Math.max(1, n.samples.length / 2)), "r32f", TEX_W]);
+    put("bends", "bends", () => [n.bends?.length ? n.bends : new Float32Array(2), "rg32f", TEX_W]);
     // the Traffic view's bands were the last network's
     const hadTraffic = this.trafficBands !== null;
     this.trafficBands = null;
@@ -1224,7 +1226,7 @@ export class NetworkRenderer {
     const gl = this.gl;
     if (!this.probeProg) {
       this.probeProg = compile(gl, PROBE_VS, PROBE_FS, ["v_pos"]);
-      this.probeU = uniforms(gl, this.probeProg, ["u_time", "u_phases", "u_meta", "u_samples", "u_lines", "u_back_base"]);
+      this.probeU = uniforms(gl, this.probeProg, ["u_time", "u_phases", "u_meta", "u_samples", "u_bend_at", "u_bends", "u_lines", "u_back_base"]);
     }
     this.releaseStaged(time);
     const uTime = this.sync(time);

@@ -57,6 +57,44 @@ export const lineDrawn = new Map<number, Float32Array>();
  * changes, so a move re-expresses them without asking the track model */
 export const edgeMerc = new Map<number, Float64Array>();
 const lineMerc = new Map<number, Float64Array>();
+/** T-4075: each line's run 0 bends (`bendsOf`), made with its `lineMerc` */
+const lineBends = new Map<number, Float32Array>();
+/** How far (ground m) a train may be drawn off its track between two samples before the interval is cut (T-4075) */
+const BEND_TOL_M = 0.25;
+/** `run_bends`'s rows (interval, inner points, then the points in track units) as the same rows with each point
+ * given as its offset from the straight between the interval's samples (`merc`, a run's `drawnLine` points),
+ * local units, which no anchor move changes */
+function bendsOf(raw: ArrayLike<number>, merc: Float64Array): Float32Array {
+  const out: number[] = [];
+  for (let i = 0; i < raw.length; ) {
+    const k = raw[i], m = raw[i + 1];
+    const ax = merc[k * 2], ay = merc[k * 2 + 1], bx = merc[k * 2 + 2], by = merc[k * 2 + 3];
+    out.push(k, m);
+    i += 2;
+    for (let j = 1; j <= m; j++, i += 2) {
+      const [x, y] = toMerc01(...packLngLat(raw[i], raw[i + 1])), f = j / (m + 1);
+      out.push((x - ax - (bx - ax) * f) * EARTH_C, (y - ay - (by - ay) * f) * EARTH_C);
+    }
+  }
+  return new Float32Array(out);
+}
+/** The renderer's bend tables (T-4075) from each run's first sample and bends: per sample its interval's first point
+ * in `bends` times 32 plus its inner points' count (0 none), and the points' offsets (x, y each). */
+function bendTables(nSamples: number, runs: [number, Float32Array][]): { sampleBend: Float32Array; bends: Float32Array } {
+  let total = 0;
+  for (const [, b] of runs) for (let i = 0; i < b.length; i += 2 + 2 * b[i + 1]) total += b[i + 1];
+  const sampleBend = new Float32Array(nSamples), bends = new Float32Array(total * 2);
+  let at = 0;
+  for (const [first, b] of runs) for (let i = 0; i < b.length; i += 2 + 2 * b[i + 1]) {
+    const m = b[i + 1];
+    // (a float holds the packed index exactly below 2^24: past that, an interval is drawn straight)
+    if (at * 32 + m >= 1 << 24) break;
+    sampleBend[first + b[i]] = at * 32 + m;
+    bends.set(b.subarray(i + 2, i + 2 + 2 * m), at * 2);
+    at += m;
+  }
+  return { sampleBend, bends: at * 2 === bends.length ? bends : bends.slice(0, at * 2) };
+}
 /** mercator points (`stride` numbers each, x and y first) in the anchor's local units */
 export function localOf(m: Float64Array, stride: number): Float32Array {
   const a = anchor(), ax = a.merc[0], ay = a.merc[1], d = new Float32Array(m.length);
@@ -74,6 +112,7 @@ export function forget(all = false) {
     lineDrawn.clear();
     edgeMerc.clear();
     lineMerc.clear();
+    lineBends.clear();
     backDrawn.clear();
     shiftFrom = null;
     stateRows.reset();
@@ -83,7 +122,7 @@ export function forget(all = false) {
   }
   const edges = api!.dirty_edges();
   for (const e of edges) { edgeDrawn.delete(e); edgeSpeedDrawn.delete(e); edgeMerc.delete(e); platformLines.forgetEdge(e); }
-  for (const l of api!.dirty_lines()) { lineDrawn.delete(l); lineMerc.delete(l); backDrawn.delete(l); }
+  for (const l of api!.dirty_lines()) { lineDrawn.delete(l); lineMerc.delete(l); lineBends.delete(l); backDrawn.delete(l); }
   // (a way back is not on the edges' lines: any track edit may move one)
   if (edges.length) backDrawn.clear();
 }
@@ -158,6 +197,7 @@ export function drawnLine(a: TrackApi, id: number): Float32Array {
       m = new Float64Array(p.length);
       for (let k = 0; k < p.length; k += 2) m.set(toMerc01(...packLngLat(p[k], p[k + 1])), k);
       lineMerc.set(id, m);
+      lineBends.set(id, bendsOf(a.run_bends(id, 0, SAMPLE_STEP, BEND_TOL_M), m));
     }
     d = localOf(m, 2);
     lineDrawn.set(id, d);
@@ -166,7 +206,7 @@ export function drawnLine(a: TrackApi, id: number): Float32Array {
 }
 /** T-3250: a line's return run, sampled as `drawnLine`, where it takes its own way back (`back`, its
  * path; kept while that is unchanged) */
-const backDrawn = new Map<number, { key: string; merc: Float64Array; at: Anchor | null; d: Float32Array | null }>();
+const backDrawn = new Map<number, { key: string; merc: Float64Array; bends: Float32Array; at: Anchor | null; d: Float32Array | null }>();
 function drawnBack(a: TrackApi, id: number, back: readonly number[]): Float32Array {
   const key = back.join();
   let c = backDrawn.get(id);
@@ -174,7 +214,7 @@ function drawnBack(a: TrackApi, id: number, back: readonly number[]): Float32Arr
     const p = a.run_polyline(id, 1, SAMPLE_STEP);
     const m = new Float64Array(p.length);
     for (let k = 0; k < p.length; k += 2) m.set(toMerc01(...packLngLat(p[k], p[k + 1])), k);
-    backDrawn.set(id, (c = { key, merc: m, at: null, d: null }));
+    backDrawn.set(id, (c = { key, merc: m, bends: bendsOf(a.run_bends(id, 1, SAMPLE_STEP, BEND_TOL_M), m), at: null, d: null }));
   }
   if (!c.d || c.at !== anchor()) {
     c.d = localOf(c.merc, 2);
@@ -255,11 +295,14 @@ function buildState(rowsOnly = false): ClockState {
   const backs = lines.filter((l) => l.ok && l.back?.length && l.id < nLines);
   const lineTable = new Float32Array(Math.max(1, nLines) * (backs.length ? 8 : 4));
   const runs: Float32Array[] = [];
+  // (T-4075: each run's first sample and its bends)
+  const runBends: [number, Float32Array][] = [];
   let nSamples = 0;
   if (!rowsOnly) for (const l of lines) {
     if (!l.ok) continue;
     const d = drawnLine(a, l.id);
     runs.push(d);
+    runBends.push([nSamples, lineBends.get(l.id) ?? NO_PHASES]);
     lineTable.set([nSamples, d.length / 2, l.lengthM, SAMPLE_STEP], l.id * 4);
     nSamples += d.length / 2;
   }
@@ -267,11 +310,13 @@ function buildState(rowsOnly = false): ClockState {
     const d = drawnBack(a, l.id, l.back!);
     if (d.length < 4) continue;
     runs.push(d);
+    runBends.push([nSamples, backDrawn.get(l.id)!.bends]);
     lineTable.set([nSamples, d.length / 2, meta[profileOf(l.id, 1, 0) * 4 + 3] || l.lengthM, SAMPLE_STEP], (nLines + l.id) * 4);
     nSamples += d.length / 2;
   }
   const samples = new Float32Array(nSamples * 2);
   runs.reduce((o, d) => (samples.set(d, o), o + d.length), 0);
+  const { sampleBend, bends } = bendTables(nSamples, runBends);
   // T-3542: per period, read once per slot serving periods
   const slots = a.period_slots();
   const bySlot = new Map<number, ClockState["markers"][number]>();
@@ -334,6 +379,8 @@ function buildState(rowsOnly = false): ClockState {
       meta,
       samples,
       lineTable,
+      sampleBend,
+      bends,
     },
     money: moneyState(),
     anchor: anchorSpec(),

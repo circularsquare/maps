@@ -635,9 +635,12 @@ works out in the clock worker, the inside's geometry `game/buildingLayout.ts`; t
   Width 3 px at zoom 10, 5.25 at 11, 6 at 12, 9 at 15 (linear between, held outside; true width only from
   about zoom 19), shared by pills and cars so the switch never shrinks a train. A pill is never
   shorter than 11, 17.6 and 26.4 px at those zooms and bends with its track along the circle
-  through its ends and middle. Each car is turned along the chord between its ends, so the consist
-  snakes round curves and stays on the route at terminals (notes/T-047.md). One instanced draw for
-  all trains, positions from keyframes on the GPU, less each train's lag (below). A click on any car selects the train; one drawn
+  through its ends and middle. Each car is turned along the chord between its ends and bends along its own
+  circle the same way, so the consist snakes round curves (a tram's street corner too) and stays on the route
+  at terminals (notes/T-047.md, T-4075). One instanced draw for all trains, positions from keyframes on the
+  GPU, less each train's lag (below). A line's run is sampled every 50 m, and where its track strays more than
+  0.25 m from the straight between two samples the clock worker adds points between them (the interval cut
+  in 2-32 equal parts, `run_bends`), so trains, trams and buses are drawn on their track or road (T-4075). A click on any car selects the train; one drawn
   over a station selects the train.
 - **On its own track** [T-658b]: as double track parts into two (about zoom 17, "Lines and
   track"), a train moves from the centre line to the right-hand track of its direction of travel

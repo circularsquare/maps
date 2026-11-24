@@ -8,6 +8,7 @@ use super::net::{path_dir, path_edge, LoopKind, Network};
 use super::params::*;
 use super::profile::{self, Hold, Profile};
 
+pub mod bends;
 pub mod check;
 
 /// One direction of a line. Offsets are metres along this direction's path, from the first

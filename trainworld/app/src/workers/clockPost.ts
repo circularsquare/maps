@@ -156,7 +156,7 @@ const runKey = (l: { id: number; from?: number }): number | string => (l.from ==
  * from scratch and compares (the client compares the merged state too); otherwise changes only */
 export let patchMode = "1";
 /** the network's typed arrays that, when as last posted, are left out of the message (`NetPatch.same`) */
-export const SAME_FIELDS = ["phases", "meta", "samples", "lineTable", "lineCars", "lineColours", "sampleLane", "sampleBand", "samplePass", "passing", "corridor", "sampleStretch", "sampleStroke", "stations", "stationAxis", "stationShape", "stationLine", "stationLength", "stationLinkIdx", "stationLinks", "lots", "junctions", "marks"] as const;
+export const SAME_FIELDS = ["phases", "meta", "samples", "lineTable", "sampleBend", "bends", "lineCars", "lineColours", "sampleLane", "sampleBand", "samplePass", "passing", "corridor", "sampleStretch", "sampleStroke", "stations", "stationAxis", "stationShape", "stationLine", "stationLength", "stationLinkIdx", "stationLinks", "lots", "junctions", "marks"] as const;
 type SameField = (typeof SAME_FIELDS)[number];
 /** What the client holds: the last network posted (its serial, draw anchor, a copy of each
  * `SAME_FIELDS` array and its edges' points) and the rows of the last state, by id. Cleared to post

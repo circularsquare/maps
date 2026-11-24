@@ -909,6 +909,8 @@ uniform highp sampler2D u_phases;  // RGBA32F: t, s, v, a
 uniform highp sampler2D u_meta;    // RGBA32F per profile: first phase, count, trip s, length m
 uniform highp sampler2D u_samples; // RG32F: run 0 of each line, x/y local units
 uniform highp sampler2D u_lines;   // RGBA32F per line: first sample, count, length m, step m
+uniform highp sampler2D u_bend_at; // R32F per sample: its bend points' first times 32 plus their count (T-4075, network.ts bendAt)
+uniform highp sampler2D u_bends;   // RG32F per bend point: its offset from the straight between its samples
 uniform int u_back_base;           // T-3250: lines in the table (0 none); row base + line is that line's return run on its own way back, where it has one
 in vec2 a_trip;              // profile, departure - epoch (s)
 in float a_end;              // drawn until - epoch (s): standing at the terminal for its next departure (T-206)
@@ -931,7 +933,18 @@ vec2 lineAt(vec4 L, float d) {
   int si = int(first + i0);
   vec2 p0 = texelFetch(u_samples, tc(si, ${TEX_W}), 0).xy;
   vec2 p1 = texelFetch(u_samples, tc(si + 1, ${TEX_W}), 0).xy;
-  return mix(p0, p1, f);
+  vec2 p = mix(p0, p1, f);
+  // T-4075: where the track bends between the two, through its bend points
+  int code = int(texelFetch(u_bend_at, tc(si, ${TEX_W}), 0).x + 0.5);
+  if (code > 0) {
+    int m = code & 31, start = code >> 5;
+    float u = f * float(m + 1);
+    int j = min(int(floor(u)), m);
+    vec2 a = j > 0 ? texelFetch(u_bends, tc(start + j - 1, ${TEX_W}), 0).xy : vec2(0.0);
+    vec2 b = j < m ? texelFetch(u_bends, tc(start + j, ${TEX_W}), 0).xy : vec2(0.0);
+    p += mix(a, b, u - float(j));
+  }
+  return p;
 }
 
 /** The train's distance along run 0 of its line now; false if it is not on the track. */
@@ -1157,10 +1170,11 @@ void main() {
     fs -= nrm * shC0;
   }
   // A train as one pill bends with its track (T-189): along the circle through its two ends and
-  // its middle, as a station's platform does (SHAPE_GLSL); a car close up is short enough to stay
-  // straight. k: curvature, 1/px, towards +nrm; ends: where the ends lie across the frame.
+  // its middle, as a station's platform does (SHAPE_GLSL); a car close up bends along its own (a tram's
+  // street corner is tighter than a car is long, T-4075). k: curvature, 1/px, towards +nrm; ends: where
+  // the ends lie across the frame.
   float k = 0.0, ends = 0.0;
-  if (!u_detail && !bus && sl > 1e-3) {
+  if (!bus && sl > 1e-3) {
     float hc = 0.5 * sl, s = dot(c.xy / c.w * half_vp - 0.5 * (bs + fs), nrm);
     k = clamp(-2.0 * s / (hc * hc + s * s), -2.0 / px.x, 2.0 / px.x);
     ends = -s;
