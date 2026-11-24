@@ -198,7 +198,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4144 stream A: new line 0.6-2.2 s, copy line 1.1-1.9 s, colour and settings 0.55-1.0 s on the Asia save.
   - Goal: New line, copy, an added stop's path, colour and line settings at the click; 6-8 h.
   - Other: notes/T-4144.md
-- T-4148 [P1] {L:edit-speed} Construct and the select tool show at the click
+- T-4148 [P1] {L:edit-speed} Construct and the select tool show at the click (taking, 2026-11-23, agent editpieces)
   - Context: From T-4144 stream C: Construct 0.7-0.9 s, select tool edits 0.7-1.0 s, piece limit 0.75-1.1 s on the Asia save.
   - Goal: Drawn as built at the click, cash from the quote; 4-6 h.
   - Other: notes/T-4144.md

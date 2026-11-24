@@ -9,7 +9,7 @@ diary notes/handoff-log.md. Her time UTC-5.
   bounded drawn network on master: 50-70% of the wait; her 00:0x). base T-4145 landed 0c384f9e (01:19; streams told to merge), editstations T-4146 (B; written, untested, waits for base: delete its stub game/pending.ts before merging master), editlines T-4147 (A; stage 1 rows-first done in tree, smoke unverified, hooks in clock.worker.ts and clockDemand.ts may
   conflict with editbase/editworker at merge),
   editworker T-4149 (D worker: bayTimes, posting, then A/B/E; rows-first waits for base+B), trackstream (E, agent a2b95733 resumed: T-4155 streets resend, T-4142, T-1031); firstclick T-4143 landed de066376.
-  Base API at the top of notes/T-4145.md: put it in C's brief. Queued: C T-4148, D page T-4150, T-4133/4134 after
+  Base API at the top of notes/T-4145.md: put it in C's brief. C T-4148 editpieces (sonnet) started 01:4x. Queued: D page T-4150, T-4133/4134 after
   retime, T-4151. Her yes: refusals take a shown edit back, money at the click; refusals must answer fast too.
   Agent ids: editbase adf738eb, editstations a832c397, editlines a3199ea2, editworker a0d0baab, junctionmsg a23cb70f.
 - Non-edit perf (her 00:3x: "other performance fixes ... load time, memory usage"): zoneopen T-4051, memwasm T-4156 (agent a17f9bab; T-1367 closed, gone on master);
@@ -17,8 +17,6 @@ diary notes/handoff-log.md. Her time UTC-5.
 - commutechunks T-921 (measure only; shifts riders, numbers to her). searchleft T-4054 landed e71ffeae (search 4.6%
   faster, same figures; u16 shares diff not landed).
 - perfcompare T-4157 (master vs v0.4.5 on all three saves, load time breakdown; her 01:0x "have we succeeded"?).
-- Machine at its limit at cap 10 (junctionmsg smoke: a new game took 3,189 s to load waiting on cores): start no more
-  agents until some finish. junctionmsg T-4152 landed 9719e410: add it to the batch check.
 - busmerge2 T-4158 (opus, measure wider bus stop merges; her pick).
 - retime T-4132, junctionmsg T-4152 (her pad: junction heading message misfires; strings to her).
 - Before telling her edit speed is done: one Opus review of all the show-at-click code together (one mechanism, no
@@ -35,8 +33,8 @@ diary notes/handoff-log.md. Her time UTC-5.
 
 LIVE v0.4.5. 8800 = master always (809a0d16); the track build only at /trainworld-track/ (?track), own saves, no
 account (snaptrack.py). Her North America save is level 42: opens only there; backups in artifacts/trainworld/savedl/.
-Cap 10 from 23:48 (her ask). Never raise the cap without her explicit word (her 00:4x), not even back to 14 or the
-overnight max. While at 10 the reserve loop runs -Reserved 6 (agents on cores 6-15; task bjeex4bpp); cores 0-1 hers (reserve_cores.ps1 -Loop 30, now never touches terminals). Bench: perf_bench.mjs,
+Cap 14 again from 01:4x (her word). Never raise the cap without her explicit word (her 00:4x), not even back to 14 or the
+overnight max. Reserve loop back to -Reserved 2; cores 0-1 hers (reserve_cores.ps1 -Loop 30, now never touches terminals). Bench: perf_bench.mjs,
 ledger notes/perf-ledger.jsonl.
 
 ## Her words
