@@ -186,10 +186,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
   - Context: You, 11-23: "edit speed is actually still kind of a problem... noticeable on my end for big worlds... i feel like there was a point at which we had edit speed almost instant, but then might have regressed". Mostly placing track and editing stops. T-3550, T-1211, T-3804, T-1031 are back at P2 under this.
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
-- T-4153 [P1] {L:edit-speed} Rebuild only the touched part of the drawn network (taking, 2026-11-23, agent editnetwork)
-  - Context: You, 11-23: "this is the entire issue. this is what we should fix", not left to the track rework. The drawn network rebuild is 50-70% of an edit's worker wait on Asia: 0.15-0.38 s for line edits, 0.7-1.3 s for station, copy and delete (T-4149, T-4097 part D).
-  - Goal: The drawn network redone for what an edit touched, byte-equal to a full build; station edits on Asia under 0.2 s.
-  - Other: notes/T-4097.md section 4
+- T-4153 [P1] {L:edit-speed} Rebuild only the touched part of the drawn network, stage 2
+  - Context: You, 11-23: "this is the entire issue". Stage 1 landed 11-24 (e7fa38bd): Asia edits 12-37% faster. Left: a 230-290 ms floor in Node (0.6-1 s in the page for a station edit) spread over about ten passes over every edge, node or line.
+  - Goal: Those passes redone only for the records an edit touched, byte-equal to a full build; station edits on Asia under 0.2 s.
+  - Other: tree editnetwork kept; plan in notes/T-4153.md "What is left"
 - T-4146 [P1] {L:edit-speed} Stations and deletes show at the click (taking, 2026-11-23, agent editstations)
   - Context: From T-4144 stream B: on the Asia save a station takes 0.8-1.5 s, deleting a station 0.7-1.5 s, deleting built track 0.65-1.2 s.
   - Goal: Each drawn at the click, station panel edits too; 6-8 h.
@@ -242,7 +242,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Goal: A volume row (used of 49 GB) in check_resources.py; R2 down to three data versions; about 7.4 GB freed on the root disk.
   - Other: notes/T-4159.md
 - T-4165 [P1] {L:cleanup} Orchestrator notes with her standing calls on top
-  - Context: You, 11-24, yes to: a top section of about ten lines of your standing calls (answer you first; 2-8 agents, core cap only on your word, asking is not a start, count before each start; ask before going outside them; what is yours; biggest cost first), each phrased as an action at a moment; procedures below or moved into the tools' help.
+  - Context: You, 11-24, yes to: a top section of about ten lines of your standing calls (answer you first; 2-8 agents, core cap only on your word, asking is not a start, count before each start; ask before going outside them; what is yours; biggest cost first), each an action at a moment; procedures below or in the tools' help.
   - Goal: No rule lost or added except one: your direction calls go into DECISIONS.md when you say them; duplicates with trainworld/CLAUDE.md trimmed.
 - T-4141 [P3] {L:station-placement} Track placed by an edit call crossed the Hudson at ground level
   - Context: Seen by T-4112: a route entered through the game's edit call crossed the Hudson at ground level without a refusal, while pointer-drawn track nearby was bridged. Water may not have been loaded under part of it.

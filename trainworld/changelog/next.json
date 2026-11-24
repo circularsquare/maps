@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c080",
+      "text": "edits on a big world show up faster, deleting a line or a station most of all",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4153",
+      "by": "editnetwork",
+      "at": "2026-11-24T02:20:53Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
+    },
+    {
       "id": "c079",
       "text": "fixed track drawn onto the end of other track being refused when one end was almost in line with the other",
       "edited": null,
