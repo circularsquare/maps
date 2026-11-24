@@ -1,31 +1,28 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session efd2dd48-edce-4472-b6ce-2993de0c867f, name maps-1c [b74f21], since 2026-11-24 17:11 UTC
-Updated: 2026-11-24 17:57 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-24 19:56 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5.
 
 ## In flight
-- 0.4.6 (she says when to publish; never ask). Master ef9fb81f4 has T-4194, T-4202 s2, T-4210 ghost (f6e93c039).
-  8800 rebuild to f6e93c039 started 17:55 (scratch snapbuild2.log); tell her when it's up (she wants to test the ghost).
-  Checker check9 (notes/batchcheck-2026-11-24-check9.md): T-4202 s2 PASS; T-4194 partial (Rust test only); T-4202 s1
-  and T-4204 not tested; t3084 ferry "Edit route" step FAILS on head. Running for it (17:56): waitclick (Opus, tree
-  waitclick, 6173: T-4214 option B, her "ok we can continue with waiting clicks"), ferryfix (Sonnet, tree ferryfix,
-  6174). When both land: checker round 2 (waiting clicks, ghost, ferry, plus check9's untested T-4194 edits, T-4202 s1,
-  T-4204 hovers; Montana over NYC for time), 8800 rebuild, smoke, release perf_bench nyc/tokyo/belgrade, changelog
-  review, playtest list, her OK on strings.
-- Core cap 10 (her 17:52). She: "if we're doing core intensive work let me know, thats probably an indicator somethings
-  wrong since we only have like 2 things running right now."
-- shonei-server deployed 17:49 (T-4161, her yes) and pushed; SAVE_LEVEL 39. T-4212 closed (her: one-off).
-- After 0.4.6 (proposed, her answer pending): land corridors T-4199 s2 (fix NYC +13 MB first), editstations T-4146;
-  then T-4214 later stages (map patched after each edit = T-4097 stream D) beside T-2188, then T-4220.
-- Held for her word: T-4153 s2 (tree editnetwork; add mm.ribbons.delete(e) at lineBands.ts:571 if landed); T-921 (tree
-  commutechunks); T-4156 P3.
-- T-4112's tw/track changelog item is parked in next-track.json: hide the port's duplicate at release.
-- Uncommitted SPEC.md ("What is covered"), docs/code-tour.md, docs/interface.md, checks/old moves, tools/*.py are not
-  ours (likely Gemini in Antigravity): landings touching them use the patch dance (orchestrator.md Traps).
-  .tw-trees/modecolors2 is a leftover non-worktree folder: leave it. reserve_cores: my retry loop bvc27j9av.
+- 0.4.6 published 11-24 19:36 UTC (data 2026-11-24, website 50454ff, then changelog trimmed per her list, website
+  7f9ec77, build mwv3o291; open-source 3e9c056; master pushed e442d1ba1). perf_bench NYC marked published v0.4.6.
+  NYC bench vs rc046: map 6.8 -> 9.7 s (unexplained, also seen 11-24 earlier), trips +5%, cpu -14%, tab -6%; she
+  said ship. Since: T-921 commutechunks landed (3ae084a0d, sim; changelog c001), T-4221 closed (dup of T-4029).
+- Running (root cause, her 11-24 call; up next on the board): netland (Sonnet, tree editnetwork, 6182: T-4153 s2
+  merge master + checks + 1 edit_bench, then land), mapC (Opus, tree mappatch, 6183: T-4214 C1+C2 clickable map
+  patched from the edit's touched records; waiting clicks released on the patch), quickend (Opus, tree quickend,
+  6184: T-2188 city edits end at the touched cities' re-solve, idle refresh rule, drift on NYC). Briefs in scratch.
+- Next after those: T-4214 stages A (stations without nameFor wait) and D (track runs without placing lock), then
+  T-4149/T-4150, T-4220, T-4193, T-4187/T-3160, T-4080/T-4083, T-4199 (corridors kept, fix NYC +13 MB first),
+  T-4222 (P3). Batch checker once mapC + netland + quickend land (riskiest: edits, undo, waiting clicks, drift).
+- Core cap 10 (her 17:52; tell her if work goes core-heavy). reserve_cores: my retry loop bvc27j9av.
+- Uncommitted SPEC.md ("What is covered"), docs/code-tour.md, docs/interface.md, checks/old moves, checks INDEX,
+  tools/checks_index.py are not ours (an 11-23 checks reorganisation): leave them; landings touching them use the
+  patch dance (orchestrator.md Traps).
 
 ## Her words
+- 11-24 19:2x: up next set as proposed (board queue: T-4221, T-4153 s2, T-4214 stages, T-2188, T-4149/4150, T-4220, T-4193, T-4187, T-3160, T-4080/4083, T-4199 kept). "the next actual non-small features ... mostly track rework and also schedule nudging and bulk station improvement interface + crowding along the line panel. these are the big 3. but they can come after all this up next stuff" (T-3444, T-3742, T-3694, T-3456).
 - 11-24 18:5x: publish 0.4.6 now ("lets just push whatever we have now, its good enough. i loaded up 0.4.5 and its definitely worse"), one NYC bench; then "work at the root cause / try something like a silo approach ... once we start working at that we really should deprioritize the shorter term surface level fixes". Gemini asked to check the plan (artifacts/trainworld/gemini/rootcause-plan-*.md). No measuring rounds ("i dont want to measure anything").
 - 11-24 13:3x-13:57 playtest: she says when to publish; asianita save is a stress test only; "disembarking"; bus town tint
   20%; Hokkaido zones by city; keep "reverse"; leave bus vs tram (T-4201 closed); click again cycles all routes (T-4046).

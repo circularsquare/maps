@@ -1,0 +1,18 @@
+{
+  "release": "next",
+  "line": "",
+  "items": [
+    {
+      "id": "c001",
+      "text": "trips are calculated about 7% faster in big cities",
+      "edited": null,
+      "hidden": false,
+      "task": "T-921",
+      "by": "commutechunks3",
+      "at": "2026-11-24T19:29:33Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
+    }
+  ]
+}

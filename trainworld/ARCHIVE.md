@@ -1,6 +1,9 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4221 [P2] {L:map-look} Bubbles stay on screen after turning them off following a load (2026-11-24): closed without code: duplicate of T-4029 (lost WebGL context at load left the bubbles canvas drawn), fixed in 0.4.6, not in v0.4.5. notes/T-4221.md.
+- T-4146 [P2] {L:edit-speed} Ports, flyovers and station looks show at the click (2026-11-24): closed without code: her 11-24: root cause first, at-click pictures deprioritized; work saved as notes/archive/trees/editstations-2026-11-24.patch.
+- T-4176 [P3] {L:checks} Remove finished worktrees and old tw branches (2026-11-24): Removed worktree editstations (patch in notes/archive/trees/editstations-2026-11-24.patch), cleared leftover folders ferryfix, modecolors2, check5base, rampport (about 6.7 GB), deleted merged branches tw/check5base, tw/ferryfix, tw/modecolors2.
 - T-4161 [P1] {L:accounts-server} Server save check accepts master's save level 39 (2026-11-24): deployed 17:49 UTC 11-24 (7bdd559, her yes), service active, pushed. notes/T-4159.md.
 - T-4212 [P1] {L:loading} Game says loaded with every line at 0 riders (2026-11-24): closed without code: her 11-24: looks like a one-off; she will report if it happens again. notes/T-4212.md.
 - T-4210 [P2] {L:edit-speed} Track ghost answers slow while the pointer moves (2026-11-24): Ghost answers take 5-10 ms on NYC; the 1 s was a test page (--base on a dev Vite). A run's next segment is now laid on the page by the track model's code (0 px from the answer), the click's stamp stays until its network (0 gap frames).
