@@ -1007,8 +1007,15 @@ setupDone(); // T-950: an uncaught error before this line ends the loading card
 /** T-4145, dev builds: a network taken after an edit's word holds the line edges the word drew (message order). A line
  * edited again before this network can differ, so this warns, never throws. */
 function checkHeld(n: NetworkBuffers, held: Map<number, Set<number> | null>) {
-  for (const [line, edges] of held) {
+  let track: Set<number> | undefined;
+  for (const [line, word] of held) {
+    let edges = word;
     const drawn = drawnEdgesOf(n, line);
+    // a removed station's two halves are drawn ahead under both ids, and the joined piece keeps only one (clockWordStations `said`)
+    if (edges) {
+      track ??= new Set(n.track.edge.subarray(0, n.track.count));
+      for (const e of [...edges]) if (!drawn.has(e) && !track.has(e)) edges = new Set([...edges].filter((x) => x !== e));
+    }
     const same = edges ? edges.size === drawn.size && [...edges].every((e) => drawn.has(e)) : drawn.size === 0;
     if (!same) console.warn(`T-4145: the network after line ${line}'s word draws other edges than the word (${drawn.size} drawn, ${edges?.size ?? 0} in the word)`);
   }

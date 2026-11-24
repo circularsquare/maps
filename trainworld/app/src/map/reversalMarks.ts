@@ -5,7 +5,7 @@
 // marker on it, and hides with the stations below STATIONS_ZOOM. Hovering it names the lines it
 // limits; a click selects the first of them (not while stops are edited).
 
-import { t, tNumber } from "../i18n";
+import { t } from "../i18n";
 import { effect } from "@preact/signals";
 import type { Map as MlMap } from "maplibre-gl";
 import type { WorldView } from "../game/types";
@@ -110,7 +110,7 @@ export class ReversalMarks {
       el.innerHTML = ICON;
       const words = [
         r.name,
-        ...r.lines.map((l) => t("reversalMarks.reverses", { name: l.name, n: tNumber(Math.floor(l.tph * 10) / 10), vehicle: l.tram ? "tram" : "train" })),
+        ...r.lines.map((l) => t("reversalMarks.reverses", { name: l.name, n: Math.floor(l.tph * 10) / 10, vehicle: l.tram ? "tram" : "train" })),
       ];
       el.onmouseenter = el.onmousemove = () => tipBeside(this.tip, el, this.map.getContainer(), words, "right");
       el.onmouseleave = () => (this.tip.style.display = "none");

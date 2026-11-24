@@ -960,7 +960,7 @@ function RailLineInspector({ id }: { id: string }) {
           </span>
           {t !== undefined && <span class="t muted num" data-tip={stretchTip(st.stretches[above], st.tram)}>{duration(t)}</span>}
           {revTph !== undefined && (
-            <span class="rev-stop" data-tip={tr("lineInspector.reverseTip", { time: duration(st.turnaroundS), vehicle: vehicleOf(st), n: tNumber(Math.floor(revTph * 10) / 10) })}>
+            <span class="rev-stop" data-tip={tr("lineInspector.reverseTip", { time: duration(st.turnaroundS), vehicle: vehicleOf(st), n: Math.floor(revTph * 10) / 10 })}>
               <Icon.uturn />
             </span>
           )}
