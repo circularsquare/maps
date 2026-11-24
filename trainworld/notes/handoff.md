@@ -1,28 +1,32 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 3a819365-cd3a-4850-a112-6396d17c97b4, name maps-06 [4d6442], since 2026-11-24 13:06 UTC
-Updated: 2026-11-24 13:58 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-24 17:10 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5.
 
-## In flight (all maps-06's)
-- 0.4.6: she says when to publish. 8800 = 4c096347. Landed since: T-4148, T-4206 timing log, T-4208 ghost, T-4204 s2
-  (restart only when memory short; check NYC map +2.5 s in the release perf_bench), T-4209 time-left display.
-  0.4.6 waits for (her word): settle1 T-4194 opt 1+2 (Sonnet, tree settle, 6144; measure stop adds on headway lines),
-  stalefigs T-4202 s2 (Opus 6163). T-4147 landed (t3084 ferry step timeout unconfirmed vs base). Then: batch checker
-  (T-4194 + T-4202 + T-4204 + keepSet a3a084b87 + t3084 base vs head), smoke, perf_bench all three, changelog review, 8800 rebuild, publish skill on her word.
-  Strings acked 15:3x (sections 2+4 of notes/release-0.4.6.md); new strings since: list at publish.
-- Not for 0.4.6: T-4199 s2 paused in tree corridors (fix NYC +13 MB download first), T-4146 built in tree editstations
-  (checks after 0.4.6), ghostspeed T-4210 (Opus 6164; at-click ghost must follow the real curve, no blink), benchgate
-  T-4213 (Sonnet), editseq T-4214 (Opus 6169: edit sequences design + Gemini; goes to her), diskclean (to 60 GB free).
-- Testing budget adopted 17:01 (CLAUDE.md table; briefs start with kind + budget line).
-- After 0.4.6: T-2188 (city edits end at the quick result, her yes), T-4146 (after editstops), T-4211, T-4193.
+## In flight (maps-06's agents; reports reach the inbox)
+- 0.4.6: she says when to publish; never ask. 8800 = c0d31916. On master since: T-4204 s2, T-4209, T-4213 bench gates.
+  0.4.6 waits for (her word, "yes want all"): settle T-4194 opt 1+2 (agent settle1, tree settle: widen to 0.25 for
+  headway lines only so T-3931's test passes; jwxidghd stop add 11-12 s to 2.3-2.7 s; Asia lines up to 3.5%);
+  zeroriders T-4212 (Opus, 6168: 0 riders after "loaded" on her first open of a new build, fine on reopen; smoke on a
+  fresh profile passes; suspect kept figures from the old build / keepSet a3a084b87); stalefigs T-4202 s2 (done in
+  tree stalefigs, held until T-4212's cause is known: may be the same path). T-4214's wrong deletion if a regression.
+  Then: batch checker (T-4194, T-4202, T-4204, keepSet, t3084 ferry step base vs head; 25 min, no benchmarks), smoke,
+  release perf_bench nyc/tokyo/belgrade 1 run each with --baseline (writes master baselines; check NYC map +2.5 s),
+  changelog review (publish skill), 8800 rebuild, playtest note to her, publish skill on her word.
+- Also running: ghostspeed T-4210 (Opus 6164: at-click ghost must follow the real curve and not blink; her 8800 notes
+  sent), editseq T-4214 (Opus 6169: her three quick-edit sequences, design + Gemini, no repro per new rule; design goes
+  to her before building; a contained fix for station-then-delete may come), diskclean (Sonnet: C: to 60 GB free).
+- Parked in trees: corridors T-4199 s2 (fix NYC +13 MB download, then land; after 0.4.6), editstations T-4146 (run its
+  checks, fix one-frame outline, after 0.4.6). After 0.4.6: T-2188 (city edits end at the quick result, her yes).
 - Held for her word: T-4153 s2 (tree editnetwork; add mm.ribbons.delete(e) at lineBands.ts:571 if landed); T-921 (tree
   commutechunks); T-4156 P3. T-4161 shonei-server 7bdd559 unpushed: deploy on her yes, then push.
 - T-4112's tw/track changelog item is parked in next-track.json: hide the port's duplicate at release.
-- Uncommitted SPEC.md, DECISIONS.md, docs, checks/old moves, tools/asks.py etc. partly not ours (likely Gemini in
-  Antigravity): patch out to land if a landing touches them. Ours: TASKS lines, DECISIONS entries (Hokkaido, T-4202,
-  T-2188, T-4199 rule, T-4204's). A tree on modecolors2 may linger (held by a shell): agent-tree.mjs remove modecolors2.
-- Core cap 14. reserve_cores.ps1 -All -Loop 30 in maps-06's background. Gemini: her ask or our suggestion.
+- Uncommitted SPEC.md, DECISIONS.md, docs, checks/INDEX.md (regenerated 17:09), checks/old moves, tools/asks.py are
+  partly not ours (likely Gemini in Antigravity): patch out to land if a landing touches them (orchestrator.md Traps).
+  Ours in them: TASKS lines, DECISIONS entries (Hokkaido, T-4202, T-2188, T-4199 rule, T-4204). Tree modecolors2 may
+  linger (held by a shell of maps-06): agent-tree.mjs remove modecolors2.
+- Core cap 14. reserve_cores.ps1 -All -Loop 30 runs in maps-06's background: start one in yours (it exits if one runs).
 
 ## Her words
 - 11-24 13:3x-13:57 playtest: she says when to publish; asianita save is a stress test only; "disembarking"; bus town tint
@@ -30,8 +34,8 @@ diary notes/handoff-log.md. Her time UTC-5.
 - 11-24 13:10 (via maps-20): no "less memory" changelog items when overall memory is up (c019, c063 hidden; c064 memory
   clause cut; rule in CLAUDE.md); changelog items one line, she trims them herself; computer froze: keep cores 0-1
   free (T-4195 done 1474aeb4a: reserve_cores.ps1 -All -Loop 30 runs in maps-06's background, covers every session).
-- 11-24 13:12: Gemini Neon suggests rewordings for all changelog and player text; we reject incorrect or misleading ones,
-  accept the rest, and list what changed for her. Only the 0.4.6 text (T-4196), not the rest of the game.
+- 11-24 afternoon: testing budget adopted (CLAUDE.md table, tool-enforced); don't reproduce her bugs unless the cause is
+  unclear; disk low means clear to 60 GB free; she feels agents' edit-speed fixes are hacky: fixes, not hacks.
 - 11-23: your two top priorities are answering her and never letting agents overbook or collide; agents 2-8 run by
   load; size tasks to about an hour; you don't investigate, agents do; cycle at 500k day and night; no drafted player
   replies; report times as percent of the wait; she has no Apple devices.
