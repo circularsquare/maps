@@ -102,7 +102,11 @@ solved with no station in it.
   with no solve started for it, so a first line's solve need not wait. Timings: notes/T-351.md.
 - A station built within reach downloads the pack again (the page keeps no copy) and opens it in
   every worker; the solve waits for it and covers it from then on. Its bare figures serve until a
-  shown solve covers it. The auxiliary worker keeps its bare copy (WASM memory never shrinks).
+  shown solve covers it. A zone with no figures shown yet (reached before any bare opening of it)
+  opens bare in the auxiliary worker first, from the same download and ahead of its open in every
+  worker there (T-4051, `bareFirst`), so the solve covering it finds its figures and runs as any
+  edit's solve, not round by round with a barrier (`newZones`: 3.5x the wait on a big game). The
+  auxiliary worker keeps its bare copy (WASM memory never shrinks).
   Memory and timings of a pan with bare zones: notes/demand-measurements.md.
 - **Zones track crosses** (T-1047, `openCrossed`): a zone built track crosses (game/trackZones.ts)
   that no station reaches opens bare too, outside a load's card and only while no other bare

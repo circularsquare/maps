@@ -1989,6 +1989,15 @@ class DemandClient {
       // T-328: hashed before the bytes go to the workers (WebCrypto copies them at the call)
       if (!bare) this.hashPack(id, [header, bin]);
       if (!bare) {
+        // T-4051: a zone with no figures shown opens bare in the aux worker first, ahead of its full open there, so
+        // the solve that covers it, sent once every worker has it, finds its view and takes the short path
+        // (`newZones` made it round by round: 125 s against 35 for Medellin on a big save)
+        if (this.bareFirst(id)) {
+          const copy = own.slice(0);
+          this.fetchingBare.add(id);
+          this.start.loads.push({ item: id, requestedAt: log.requestedAt, downloadedAt: log.downloadedAt, bare: true });
+          this.workers[this.auxAt].postMessage({ kind: "open", packs: [{ ...pack, bin: copy }], bare: true } satisfies ToDemand, [copy]);
+        }
         // T-1223: at the level the fine set gives it now
         const level = this.levelFor(id);
         this.levelPosted.set(id, level);
@@ -1999,6 +2008,11 @@ class DemandClient {
       this.workers[this.auxAt].postMessage(msg, [own]);
     // i18n-ignore: a stored name or a developer diagnostic
     }).catch((err) => { this.unreachable(id, id, `city pack ${id}: ${String(err)}`); this.postMarkets(); });
+  }
+
+  /** A zone about to open in every worker that an edit's solve would find with no figures shown (`dispatch`). */
+  private bareFirst(id: CityId): boolean {
+    return !this.hold && !!demandView.peek()?.final && !cityDemandViews.peek().has(id) && !this.bareOpen.has(id) && !this.bareKept.has(id);
   }
 
   /** T-377: a zone's market pack, to every solving worker. */
