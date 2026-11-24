@@ -13,7 +13,12 @@ diary notes/handoff-log.md. Her time UTC-5.
   Base API at the top of notes/T-4145.md: put it in C's brief. Queued: C T-4148, D page T-4150, T-4133/4134 after
   retime, T-4151. Her yes: refusals take a shown edit back, money at the click; refusals must answer fast too.
   Agent ids: editbase adf738eb, editstations a832c397, editlines a3199ea2, editworker a0d0baab, junctionmsg a23cb70f.
+- Non-edit perf (her 00:3x: "other performance fixes ... load time, memory usage"): zoneopen T-4051, memheap T-1367;
+  next from notes/perf-sweep-2026-11-23.md: T-921 (after searchleft; shifts riders: numbers to her), T-2589+T-2247.
 - retime T-4132, searchleft T-4054, junctionmsg T-4152 (her pad: junction heading message misfires; strings to her).
+- Before telling her edit speed is done: one Opus review of all the show-at-click code together (one mechanism, no
+  leftover per-feature stand-ins, editlines' no-stops special case, lineclick folded into the base), a smoke check
+  that no pending entry outlives the final state, and a batch check of refusals, undo after shown edits, charges.
 - Batch check due: rampport 380d8fc7, regionfix 8e1eb7ba, lineclick ef99d979; tree "rampport" to remove. 8800 =
   ef99d979. T-4112's tw/track changelog item parked in next-track.json: hide the duplicate at the release merge.
 
@@ -25,8 +30,8 @@ diary notes/handoff-log.md. Her time UTC-5.
 
 LIVE v0.4.5. 8800 = master always (809a0d16); the track build only at /trainworld-track/ (?track), own saves, no
 account (snaptrack.py). Her North America save is level 42: opens only there; backups in artifacts/trainworld/savedl/.
-Cap 10 from 23:48 for a few hours (her ask, she is gaming), then back to 14 daytime; while at 10 the reserve loop runs
--Reserved 6 (agents on cores 6-15; task bjeex4bpp): restart it with -Reserved 2 when the cap goes back; cores 0-1 hers (reserve_cores.ps1 -Loop 30, now never touches terminals). Bench: perf_bench.mjs,
+Cap 10 from 23:48 (her ask). Never raise the cap without her explicit word (her 00:4x), not even back to 14 or the
+overnight max. While at 10 the reserve loop runs -Reserved 6 (agents on cores 6-15; task bjeex4bpp); cores 0-1 hers (reserve_cores.ps1 -Loop 30, now never touches terminals). Bench: perf_bench.mjs,
 ledger notes/perf-ledger.jsonl.
 
 ## Her words

@@ -70,8 +70,8 @@ the orchestrator in Windows Terminal, not the VS Code panel.
 - **Cores 0-1 are hers** (11-21): at takeover start, in the background, `powershell -NoProfile -ExecutionPolicy Bypass
   -File trainworld/tools/ops/reserve_cores.ps1 -Loop 30`. It pins everything under this session's claude.exe to the
   other cores at below-normal priority, and leaves claude.exe itself on all cores (it draws her terminal).
-- **Overnight, the core cap goes to the machine's max** (11-21): when she goes to bed, `python cores.py cap <machine
-  cores>` and fill it; set it back to her daytime number when she is up (ask if unsure).
+- **The core cap changes only on her explicit word** (11-24): never raise it on your own, not back to a daytime number
+  and not to the machine's max overnight. Agents stay within it; queue instead.
 
 ## TODO.md, asks and the board
 
