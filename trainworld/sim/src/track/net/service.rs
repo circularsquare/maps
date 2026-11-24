@@ -274,17 +274,31 @@ impl Network {
     pub fn running_trains(&self, l: usize, lev: usize, trip_s: f64) -> f64 {
         // T-3542: a slot whose hours several places run: each place's trains for its share of them
         if let Some(w) = self.mixed(l, lev) {
-            return (0..5).filter(|&k| w[k] > 0.0).map(|k| w[k] * self.running_borrowed(l, lev, k, trip_s)).sum();
+            let Some(f) = self.fleet(l) else { return 0.0 };
+            return (0..5).filter(|&k| w[k] > 0.0).map(|k| w[k] * self.running_borrowed(l, lev, k, trip_s, &f)).sum();
         }
         self.running_place(l, lev, self.trains_at(l, lev), self.auto_at(l, lev), trip_s)
+    }
+    /// T-4227: line `l`'s fleet as its fields stand: the weekdays', or the weekends' while a weekend
+    /// settle or placing swaps them in. None while it has no trains allocated.
+    pub fn fleet(&self, l: usize) -> Option<DayFleet> {
+        Some(DayFleet { trains: self.trains_of(l)?, auto: self.auto_of(l), tph: self.line_tph.get(l).copied().unwrap_or([0.0; SLOTS]), pace: self.line_pace_of(l as u32) })
     }
     /// T-3542: the trains an hour place `k` of line `l` runs in slot `s` where its hours mix places
     /// there (`mixed`): the slot's rate `tph` (the places' time-weighted mean, as settled) shared
     /// out by what each place's trains run over the round trip `trip_s`. `tph` itself elsewhere.
     pub fn place_tph(&self, l: usize, s: usize, k: usize, tph: f32, trip_s: f64) -> f32 {
-        let (Some(w), Some(t)) = (self.mixed(l, s), self.trains_of(l)) else { return tph };
-        let auto = self.auto_of(l);
-        let run = |k: usize| self.running_borrowed(l, s, k, trip_s);
+        match self.fleet(l) {
+            Some(f) => self.place_tph_in(l, s, k, tph, trip_s, &f),
+            None => tph,
+        }
+    }
+    /// `place_tph` shared out by fleet `f`: T-4227, a weekend rate by the weekend's trains
+    /// (`Service::rest_fleet`), or a row with no weekday trains there would run none on weekends.
+    pub fn place_tph_in(&self, l: usize, s: usize, k: usize, tph: f32, trip_s: f64, f: &DayFleet) -> f32 {
+        let Some(w) = self.mixed(l, s) else { return tph };
+        let (t, auto) = (f.trains, f.auto);
+        let run = |k: usize| self.running_borrowed(l, s, k, trip_s, f);
         let all: f64 = (0..5).filter(|&j| w[j] > 0.0).map(|j| w[j] * run(j)).sum();
         if !(all > 0.0 && w[k] > 0.0 && trip_s > 0.0) { return 0.0; }
         // where the slot runs what its trains would (no full track cut it, within the settle's
@@ -301,10 +315,9 @@ impl Network {
     /// (`running_place`), where its hours reach into a period other than its own no more than it
     /// runs in its own (the rate of a slot it runs alone, the least of them): the borrowed hour of a
     /// row on full track never leaves more often than the row does on that track.
-    pub fn running_borrowed(&self, l: usize, lev: usize, k: usize, trip_s: f64) -> f64 {
-        let (Some(t), auto) = (self.trains_of(l), self.auto_of(l)) else { return 0.0 };
-        let run = self.running_place(l, lev, t[k], auto.map(|a| a[k]), trip_s);
-        let own =self.slots().filter(|&s| s != lev && self.mixed(l, s).is_none() && self.place(l, s) == k).map(|s| self.line_tph[l][s] as f64).reduce(f64::min);
+    pub fn running_borrowed(&self, l: usize, lev: usize, k: usize, trip_s: f64, f: &DayFleet) -> f64 {
+        let run = running_paced(f.trains[k], f.auto.map(|a| a[k]), f.pace[lev], trip_s);
+        let own = self.slots().filter(|&s| s != lev && self.mixed(l, s).is_none() && self.place(l, s) == k).map(|s| f.tph[s] as f64).reduce(f64::min);
         match own {
             Some(r) if trip_s > 0.0 => run.min(r * trip_s / 3600.0),
             _ => run,
@@ -312,15 +325,7 @@ impl Network {
     }
     /// T-3542: `running_trains` of one place: `n` trains, headway `auto`, in slot `lev`.
     pub fn running_place(&self, l: usize, lev: usize, n: u32, auto: Option<u32>, trip_s: f64) -> f64 {
-        let n = n as f64;
-        match auto {
-            Some(a) if a > 0 && trip_s > 0.0 => n.min(trip_s / a as f64),
-            _ => {
-                // T-2973: a count line in step with others at a merge
-                let p = self.line_pace_of(l as u32)[lev];
-                if p > 0.0 && trip_s > 0.0 { n.min(trip_s / p as f64) } else { n }
-            }
-        }
+        running_paced(n, auto, self.line_pace_of(l as u32)[lev], trip_s)
     }
 
     /// T-3521: a line's trains an hour at level `lev` on kind of day `row` (`params::WEEKDAYS`,
@@ -385,6 +390,30 @@ impl Network {
             Weekend { share: p, .. } => Some(a.map(|h| weekend_headway(h, p))),
         }
     }
+    /// T-3521, T-3542: line `l`'s whole trains at its five places on weekends (`LineData::weekend`):
+    /// its counts set by hand, or its weekday trains at its percent, a count line's rounded up and a
+    /// headway line's those its weekend headway takes over each row's slots, `headway_trains(slots,
+    /// headway)` (from the service; None rounds them up as a count line's), under 100% never more
+    /// than the weekdays'. Its weekday trains at 100%; None while it has none.
+    pub fn weekend_places_by(&self, l: usize, mut headway_trains: impl FnMut(&[usize], u32) -> Option<u32>) -> Option<[u32; 5]> {
+        let t = self.trains_of(l)?;
+        let mut c = t;
+        match self.line_weekend.get(l).copied().unwrap_or_default() {
+            Weekend { counts: Some(m), .. } => c = places(m, self.line_x[l].weekend_counts),
+            Weekend { share: 100, .. } => {}
+            Weekend { share: p, .. } => {
+                let auto = self.auto_of(l);
+                for (k, slots) in self.row_slots(l) {
+                    c[k] = match auto.and_then(|a| headway_trains(&slots, weekend_headway(a[k], p))) {
+                        Some(n) if p <= 100 => n.min(t[k]),
+                        Some(n) => n,
+                        None => (t[k] as u64 * p as u64).div_ceil(100).min(u32::MAX as u64) as u32,
+                    };
+                }
+            }
+        }
+        Some(c)
+    }
     /// Seconds a line's local time runs ahead of the game clock (T-309): the region of its first
     /// stop's. 0 without a time zone table or stops.
     pub fn line_shift(&self, l: u32) -> f64 {
@@ -415,5 +444,16 @@ impl Network {
         } else {
             1.0
         }
+    }
+}
+
+/// `Network::running_place` at pace `pace` (`line_pace`, or a fleet's, `DayFleet::pace`).
+fn running_paced(n: u32, auto: Option<u32>, pace: f32, trip_s: f64) -> f64 {
+    let n = n as f64;
+    match auto {
+        Some(a) if a > 0 && trip_s > 0.0 => n.min(trip_s / a as f64),
+        // T-2973: a count line in step with others at a merge
+        _ if pace > 0.0 && trip_s > 0.0 => n.min(trip_s / pace as f64),
+        _ => n,
     }
 }

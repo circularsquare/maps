@@ -1,7 +1,7 @@
 //! T-3542 stage 2: the hours a line splits its day at (`params::Cuts`), rows crossing into another
 //! period averaged into its slot.
 
-use super::net::Mix;
+use super::net::{Extra, Mix, Weekend};
 use super::params::*;
 use super::service::lattice_deps_local;
 use super::slot_tests::{busy, kept, running};
@@ -182,4 +182,63 @@ fn t3542_hours_there_and_back() {
     assert!(a.net.mix(l).is_none());
     // (a settle from other rates ends within its tolerance, not to the bit)
     eprintln!("same after undo: {}", kept(&a) == was);
+}
+
+/// Line `l`'s trains per row of five, in the day's order (morning, midday, afternoon, evening,
+/// night), on weekdays and set by hand on weekends, as the schedule window sets them.
+fn five_rows(w: &mut TrackWorld, l: usize, week: [u32; 5], weekend: [u32; 5]) {
+    let p = |r: [u32; 5]| unplace([r[0], r[3], r[4], r[1], r[2]]);
+    let ((m, x), (wm, wx)) = (p(week), p(weekend));
+    let d = w.net.line_data(l as u32).unwrap();
+    w.apply(Op::Batch(vec![Op::TrainCounts { id: l as u32, trains: Some(m), tph: d.tph }, Op::Extra { id: l as u32, x: Extra { trains: x, ..d.x } }])).unwrap();
+    let d = w.net.line_data(l as u32).unwrap();
+    w.apply(Op::Batch(vec![Op::Weekend { id: l as u32, weekend: Weekend { counts: Some(wm), ..d.weekend } }, Op::Extra { id: l as u32, x: Extra { weekend_counts: wx, ..d.x } }])).unwrap();
+}
+
+/// Line `l`'s run 0 departures on local day `day` (day 6 a Saturday) from `from_h` to `to_h`,
+/// each hour moved by the pattern's lead, as `gaps`.
+fn deps_between(w: &TrackWorld, l: usize, day: f64, from_h: f64, to_h: f64) -> Vec<f64> {
+    let lat = w.svc.lattice(&w.net, l).unwrap();
+    let (a, b) = (day * DAY + from_h * 3600.0 - lat.lead, day * DAY + to_h * 3600.0 - lat.lead);
+    let mut out = vec![];
+    lattice_deps_local(&lat, 0, a - DAY, b + DAY, &mut out);
+    out.into_iter().map(|x| x.0).filter(|&t| t >= a && t < b).collect()
+}
+
+/// T-4227: where moved hours share a period between two rows (midday 11-15 inside the 10-16
+/// period), each row's weekend trains run at weekends: a row with none on weekdays runs its four
+/// weekend trains as four weekday trains would run there, at the rate the schedule window shows,
+/// and the row beside it no more often than its own two run (before, the midday ran nothing and the
+/// morning's hour ran the period's every train).
+#[test]
+fn t4227_a_shared_period_runs_each_rows_weekend_trains() {
+    let world = |week: [u32; 5], weekend: [u32; 5]| {
+        let (mut w, _, c) = corridor(5);
+        w.apply(Op::Hours { line: None, cuts: [6, 11, 15, 20, 24] }).unwrap();
+        five_rows(&mut w, c, week, weekend);
+        assert!(w.net.mix(c).is_some_and(|m| m.mixed[1]), "the midday period is shared");
+        (w, c)
+    };
+    let gaps_in = |w: &TrackWorld, c: usize, day: f64, a: f64, b: f64| -> Vec<f64> { deps_between(w, c, day, a, b).windows(2).map(|x| x[1] - x[0]).collect() };
+    let even = |g: &[f64], what: &str| -> f64 {
+        assert!(!g.is_empty() && g.iter().all(|x| (x - g[0]).abs() < 1e-3 * g[0]), "{what}: gaps {g:?}");
+        g[0]
+    };
+    // four weekday midday trains, the same every day: the reference
+    let (a, ca) = world([2, 4, 2, 1, 1], [2, 4, 2, 1, 1]);
+    let want = even(&gaps_in(&a, ca, 3.0, 11.25, 14.75), "Wednesday's midday, four weekday trains");
+    let (w, c) = world([2, 0, 2, 1, 1], [2, 4, 2, 1, 1]);
+    assert!(deps_between(&w, c, 3.0, 11.25, 14.75).is_empty(), "no weekday midday trains");
+    let got = even(&gaps_in(&w, c, 6.0, 11.25, 14.75), "Saturday's midday");
+    assert!((got - want).abs() < 0.03 * want, "Saturday's midday every {got:.1} s, four weekday trains every {want:.1} s");
+    let trip = w.svc.lines[c].round_trip[1];
+    let shown = w.svc.fleet_on(&w.net, c, WEEKEND).map(|f| w.net.place_tph_in(c, 1, 3, w.net.line_tph_on(c, WEEKEND, 1), trip, &f)).unwrap();
+    assert!((3600.0 / shown as f64 - got).abs() < 1e-3 * got, "the window's weekend midday every {:.1} s, run every {got:.1} s", 3600.0 / shown as f64);
+    let (own, borrowed) = (even(&gaps_in(&w, c, 6.0, 7.0, 9.0), "Saturday's morning"), even(&gaps_in(&w, c, 6.0, 10.0, 11.0), "Saturday's morning hour in the midday period"));
+    assert!(borrowed >= own * (1.0 - 1e-3), "the morning's hour in the midday every {borrowed:.1} s, its own hours every {own:.1} s");
+    // and the other way: weekday midday trains, none at weekends
+    let (w, c) = world([2, 4, 2, 1, 1], [2, 0, 2, 1, 1]);
+    assert!(deps_between(&w, c, 6.0, 11.25, 14.75).is_empty(), "no weekend midday trains");
+    let got = even(&gaps_in(&w, c, 3.0, 11.25, 14.75), "Wednesday's midday");
+    assert!((got - want).abs() < 1e-6 * want, "Wednesday's midday every {got:.1} s, {want:.1} s with the same weekend");
 }

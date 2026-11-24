@@ -367,6 +367,18 @@ impl Default for Weekend {
     }
 }
 
+/// T-4227: what a line runs on one kind of day, as a slot its hours share between rows shares its
+/// rate out by (`Network::place_tph_in`): its whole trains and headways at its five places, and its
+/// rates and pacing per slot. The weekdays' (or what a weekend settle swaps in) are
+/// `Network::fleet`, the weekends' `Service::rest_fleet`.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct DayFleet {
+    pub trains: [u32; 5],
+    pub auto: Option<[u32; 5]>,
+    pub tph: [f32; SLOTS],
+    pub pace: [f32; SLOTS],
+}
+
 /// T-3542: the slots `period_slot` uses, in order, and how many (`Network::slots`).
 fn slot_list(p: [usize; 5]) -> ([usize; SLOTS], usize) {
     let (mut l, mut n) = ([0; SLOTS], 0);

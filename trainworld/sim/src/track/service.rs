@@ -4,7 +4,7 @@
 
 use super::capacity::{self, Capacity};
 use super::geom;
-use super::net::{path_dir, path_edge, LoopKind, Network};
+use super::net::{path_dir, path_edge, DayFleet, LoopKind, Network};
 use super::params::*;
 use super::profile::{self, Hold, Profile};
 
@@ -1436,6 +1436,27 @@ impl Service {
         out
     }
 
+    /// T-4227: line `l`'s fleet on kind of day `row` (`params::WEEKDAYS`, `WEEKEND`), as its
+    /// departures share a slot its hours mix out by (`Network::place_tph_in`): on weekends the
+    /// weekend fleet where it runs weekend rates of its own (`rest_fleet`), else the weekdays'.
+    pub fn fleet_on(&self, net: &Network, l: usize, row: usize) -> Option<DayFleet> {
+        if row == WEEKEND && net.runs_own_weekend(l) { self.rest_fleet(net, l) } else { net.fleet(l) }
+    }
+
+    /// T-4227: line `l`'s weekend fleet: its weekend trains at each place (`Network::weekend_places_by`;
+    /// a headway line at a percent the trains its weekend headway takes over the round trip, not cut
+    /// to what the track lets run, which cuts the slot's rate instead), its weekend headways, and its
+    /// settled weekend rates and pacing.
+    pub fn rest_fleet(&self, net: &Network, l: usize) -> Option<DayFleet> {
+        let ls = self.lines.get(l);
+        let trains = net.weekend_places_by(l, |slots, h| {
+            let ls = ls?;
+            let each = if ls.paired() { 2 } else { 1 };
+            Some(slots.iter().map(|&s| each * super::world::auto_trains(ls.round_trip[s] / each as f64, h)).max().unwrap_or(0))
+        })?;
+        Some(DayFleet { trains, auto: net.weekend_auto(l), tph: std::array::from_fn(|s| net.line_tph_on(l, WEEKEND, s)), pace: net.line_pace_rest_of(l as u32) })
+    }
+
     /// A running line's departure pattern now (None when it is not running).
     pub fn lattice(&self, net: &Network, l: usize) -> Option<Lattice> {
         let ls = self.lines.get(l)?;
@@ -1480,6 +1501,9 @@ impl Service {
         } else {
             (split, p, net.auto_of(l), net.line_pace_of(l as u32))
         };
+        // T-4227: a slot its hours share between rows shares its weekend rate out by the weekend's
+        // trains (`fleet_on`), so a row with none there on weekdays runs its weekend ones
+        let fleet_r = net.mix(l).and_then(|_| self.fleet_on(net, l, WEEKEND));
         let spare_r = |lev: usize, t: f64| self.spare_paced(net, l, lev, t, auto_r.map(|a| a[net.place(l, lev)]), pace_r[lev]);
         // T-3542: pieces of a slot the line's hours share between rows run each row's own rate
         let hours_of = |rest: &[f32; SLOTS]| -> Hours {
@@ -1498,7 +1522,7 @@ impl Service {
                 let (a, ar) = (auto.map(|a| a[k]), auto_r.map(|a| a[k]));
                 let tk = net.place_tph(l, s, k, tph[s], ls.round_trip[s]);
                 h.own[i][WEEKDAYS] = (tk, off_at(sr, tk, &split, &|lev, t| self.spare_with(net, l, lev, t, a)), phase_in(&p, sr, tk));
-                let tk = net.place_tph(l, s, k, rest[s], ls.round_trip[s]);
+                let tk = fleet_r.as_ref().map_or(rest[s], |f| net.place_tph_in(l, s, k, rest[s], ls.round_trip[s], f));
                 h.own[i][WEEKEND] = (tk, off_at(sr, tk, &split_r, &|lev, t| self.spare_paced(net, l, lev, t, ar, pace_r[lev])), phase_in(&p_r, sr, tk));
             }
             h

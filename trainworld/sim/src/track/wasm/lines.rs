@@ -1,7 +1,7 @@
 //! Lines (stops, look, cars, trains, loops) and undo.
 
 use super::*;
-use crate::track::net::{Extra, ALIGHT_ONLY};
+use crate::track::net::{DayFleet, Extra, ALIGHT_ONLY};
 
 /// T-2987: the lowest speed limit a rail line can be given, km/h.
 const LINE_LIMIT_MIN: u32 = 40;
@@ -1031,6 +1031,10 @@ impl TrackApi {
         let svc = self.w.svc.lines.get(l).filter(|s| s.ok);
         let twin = net.twin_line(id);
         let placed = net.trains_of(l).unwrap_or([0; 5]);
+        // T-4227: a slot its hours share between rows shares a weekend rate out by the weekend's
+        // trains, as its weekend departures do
+        let rest_fleet = |m: usize| net.mix(m).and_then(|_| self.w.svc.fleet_on(net, m, WEEKEND));
+        let fleets = (rest_fleet(l), twin.and_then(|t| rest_fleet(t as usize)));
         let mut out = vec![];
         for (k, slots) in net.row_slots(l) {
             let most = |f: &dyn Fn(usize) -> f64| slots.iter().map(|&s| f(s)).fold(f64::NEG_INFINITY, f64::max).max(0.0);
@@ -1043,7 +1047,11 @@ impl TrackApi {
             // T-3542: in a slot its hours share between rows, the row's own rate there
             let trip = |x: usize| svc.map_or(0.0, |s| s.round_trip[x]);
             let tph = least(&|x| net.place_tph(l, x, k, net.line_tph[l][x], trip(x)) as f64);
-            let rest = least(&|x| (net.place_tph(l, x, k, net.line_tph_on(l, WEEKEND, x), trip(x)) + twin.map_or(0.0, |t| net.place_tph(t as usize, x, k, net.line_tph_on(t as usize, WEEKEND, x), trip(x)))) as f64);
+            let rest_in = |m: usize, f: Option<&DayFleet>, x: usize| {
+                let tph = net.line_tph_on(m, WEEKEND, x);
+                f.map_or(tph, |f| net.place_tph_in(m, x, k, tph, trip(x), f))
+            };
+            let rest = least(&|x| (rest_in(l, fleets.0.as_ref(), x) + twin.map_or(0.0, |t| rest_in(t as usize, fleets.1.as_ref(), x))) as f64);
             out.extend([if tph.is_finite() { tph } else { 0.0 }, if rest.is_finite() { rest } else { 0.0 }]);
         }
         out

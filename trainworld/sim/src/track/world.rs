@@ -3,7 +3,7 @@
 //! derived from it, and the undo history.
 
 use super::capacity::ResKind;
-use super::net::{path_edge, weekend_headway, EdgeData, Extra, Issue, LineData, Network, NodeData, StationData, Weekend};
+use super::net::{path_edge, EdgeData, Extra, Issue, LineData, Network, NodeData, StationData, Weekend};
 use super::params::*;
 use super::service::{Service, ServiceDirty};
 use super::twin::Twin;
@@ -1016,31 +1016,19 @@ impl TrackWorld {
             (Some(a), Some(b)) => !self.net.same_places(l, a, b),
             (a, b) => a.is_some() != b.is_some(),
         };
-        let x = self.net.line_x[l];
-        let mut c = t;
-        match self.net.line_weekend.get(l).copied().unwrap_or_default() {
-            Weekend { counts: Some(m), .. } => c = places(m, x.weekend_counts),
-            Weekend { share: 100, .. } => return None,
-            Weekend { share: p, .. } => match (self.net.auto_of(l), self.svc.lines.get(l)) {
-                (Some(auto), Some(ls)) => {
-                    // a loop's two directions each keep the headway with half its trains (T-798),
-                    // and no more than the track lets run, as the weekdays' (`auto_counts`)
-                    let each = if ls.paired() { 2 } else { 1 };
-                    let most = most.get_or_insert_with(|| self.svc.cap.line_limits(&self.net));
-                    // under 100% never more than the weekdays run (a full track trims those, T-625);
-                    // a row over several slots the most any of them needs (T-3542)
-                    for (k, slots) in self.net.row_slots(l) {
-                        let h = weekend_headway(auto[k], p);
-                        let n = slots.iter().map(|&lev| {
-                            let rt = ls.round_trip[lev] / each as f64;
-                            each * clamp_auto(auto_trains(rt, h), rt, h, most.get(l).map_or(f64::INFINITY, |m| m[lev].0))
-                        }).max().unwrap_or(0);
-                        c[k] = if p <= 100 { n.min(t[k]) } else { n };
-                    }
-                }
-                _ => for (k, _) in self.net.row_slots(l) { c[k] = (t[k] as u64 * p as u64).div_ceil(100).min(u32::MAX as u64) as u32 },
-            },
-        };
+        let ls = self.svc.lines.get(l);
+        let c = self.net.weekend_places_by(l, |slots, h| {
+            // a loop's two directions each keep the headway with half its trains (T-798), and no
+            // more than the track lets run, as the weekdays' (`auto_counts`); a row over several
+            // slots the most any of them needs (T-3542)
+            let ls = ls?;
+            let each = if ls.paired() { 2 } else { 1 };
+            let most = most.get_or_insert_with(|| self.svc.cap.line_limits(&self.net));
+            Some(slots.iter().map(|&lev| {
+                let rt = ls.round_trip[lev] / each as f64;
+                each * clamp_auto(auto_trains(rt, h), rt, h, most.get(l).map_or(f64::INFINITY, |m| m[lev].0))
+            }).max().unwrap_or(0))
+        })?;
         (!self.net.same_places(l, c, t) || own_headway).then_some(c)
     }
 
