@@ -186,7 +186,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
   - Context: You, 11-23: "edit speed is actually still kind of a problem... noticeable on my end for big worlds... i feel like there was a point at which we had edit speed almost instant, but then might have regressed". Mostly placing track and editing stops. T-3550, T-1211, T-3804, T-1031 are back at P2 under this.
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
-- T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line (taking, 2026-11-24, agent cutstretch)
+- T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line
   - Context: You, 11-23: "this is the entire issue". Stage 3 (tree bandorders): band orders kept through a cut path, and a removed line no longer redoes every corridor. Asia network build in Node: a station on its longest trunk 0.62-0.69 to 0.31-0.49 s, a line removed 0.82-0.85 to 0.28-0.36 s. Left: each line whose path is cut is redone whole.
   - Goal: A station on a line's track on Asia under 0.2 s of network build: a cut line's bands, strokes and speeds redone only near the cut.
   - Other: notes/T-4153.md stage 3 "What is left"
@@ -210,7 +210,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: T-4209's display fix (11-24) shows no time left until the solve's own time is known, then only counts down (asianita: none until 138 s, then 7 min down; final at 523 s). You: "then do the actual underlying fix later."
   - Goal: An estimate from the start, within about 30% of the real wait on asianita and NYC.
   - Other: notes/T-4209.md
-- T-4214 [P1] {L:edit-speed} Clickable map patched with what each edit touched (taking, 2026-11-24, agent mapcfix)
+- T-4214 [P1] {L:edit-speed} Clickable map patched with what each edit touched
   - Context: Waiting clicks landed 11-24 (7ff71c929). The clickable map patched with each edit's pieces (stage C, kept off the panels' world) is built in tree mapcfix, not landed. You, 11-24: work at the root cause, "something like a silo approach". Left: the station name wait, a track run's placing wait, drawings at the click. Gemini: artifacts/trainworld/gemini/rootcause-plan-answer.md.
   - Goal: After each edit the clickable map takes only the touched pieces, so no click waits for the whole network; no name or placing wait for stations and track runs.
   - Other: notes/T-4214.md
@@ -907,10 +907,6 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: T-921 deals commute pairs under 1 person a day in chunks (about 7% of New York's calculation); 2 a day gained nothing more. Everyday trips are solved from sampled destinations, so they may lack the same tail of tiny pairs. You, 11-24: file as P3.
   - Goal: Know whether everyday trips have a tail of tiny pairs; if so, chunk them the same tunable way.
   - Other: notes/T-921.md
-- T-4237 [P2] {L:solve-speed} Long-run stop edits taken as city edits (taking, 2026-11-24, agent longstop)
-  - Context: From T-2188's checker (11-24): dropping a middle stop on Greenport Service (73 km) ended at its local result as a city edit. The 20+ minute stop rule gets no data when the edited cluster has no market part, so it can't fire there. Drift was -0.006% until the refresh.
-  - Goal: A stop added or dropped on a 20+ minute run always takes the whole re-solve.
-  - Other: notes/T-2188.md
 - T-4220 [P2] {L:solve-speed} Quick figures for edits made during a whole re-solve
   - Context: You, 11-24: "edits made during remaining full passes should ideally get fast numbers ... if people are clicking a lot of times to add lots of stations ... we need to do some sort of batching". Today an edit during a whole re-solve waits for it (up to 226 s on Asia). Options: notes/T-4204-options.md.
   - Goal: An edit during a whole re-solve shows its lines in about the touched-cities time; edits arriving together share one quick calculation, never one each.

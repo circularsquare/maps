@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c010",
+      "text": "a click right after placing or deleting track no longer waits for it to show up",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4214",
+      "by": "mapcfix",
+      "at": "2026-11-24T22:54:58Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
+    },
+    {
       "id": "c009",
       "text": "trips after an edit in one city are calculated in seconds on big worlds",
       "edited": null,

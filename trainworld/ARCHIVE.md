@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4237 [P2] {L:solve-speed} Long-run stop edits taken as city edits (2026-11-24): baseline held per population (holdNet), not only per market part; all four intercity tests fire in clusters without one.
 - T-4235 [P1] {L:stops} Loop close refused on ordinary circle lines (2026-11-24): closed without code: her 11-24: not needed.
 - T-4236 [P2] {L:small-fixes} Number symbols for lines past 99 (2026-11-24): letterOf takes up to 4 characters of the number; the chip already widens to a pill. notes/T-4236.md.
 - T-2188 [P1] {L:solve-speed} City edits end at the quick result (2026-11-24): City edits end at their local result (Asia 8-41 s, was 165-300 s; NYC 12-53 s, was 60-65 s); intercity edits solve whole; a quiet refresh 2 min after the last edit. Drift after 15 NYC edits -0.002%, lines within 0.2%; Asia 6 edits +0.003%, lines within 1.4%. notes/T-2188.md.
