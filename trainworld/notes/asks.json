@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "id": "a-2026-11-23-22",
+    "title": "Demand worker memory restart (T-4156)",
+    "text": "On all-China, restarting an idle demand worker gives back about 290-340 MB each, but for 3-8 minutes afterwards a player's edit waits while workers reopen, and final trips drift 0.11%. NYC never restarts. Land only once the restart waits while the player is editing (one more agent step)? I'd say yes.",
+    "since": "2026-11-23",
+    "by": "maps-c0"
+  }
+]

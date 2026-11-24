@@ -93,6 +93,8 @@ don't read it whole. Add a line when a rule is added for a reason worth remember
 - Agents 2-8: 2026-11-23, down from 4-12 on 2026-11-21. Briefly "usually 3-5, 8 a ceiling" ("why do we have 8 agents
   running? we dont need to do that right?"), then run by load the same day. 11-24, 12 running: "why didn't you just ask for
   clarification if we were going to exit the 2-8 range?" Now asked first.
+- Smoke only on master after a batch and before a publish: Anita, 2026-11-24, after agents' tree smokes took 35+ min
+  each on a full machine.
 - Cores 0-1 hers: Anita, 2026-11-21. claude.exe itself stays on all cores: pinned, her typing lagged 4 s.
 - Overnight core cap at the machine's max ("we should have been running with max core cap cuz it was overnight"):
   Anita, 2026-11-21.

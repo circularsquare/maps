@@ -171,10 +171,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4096 [P3] {L:checks} A daily sweep of old session scratch
   - Context: From T-4088: session scratch in Temp\claude was 78 GB, the biggest single user of the disk, and nothing clears it. The standing rule already lets agents delete finished sessions' scratch 2+ days old.
   - Goal: Scratch folders untouched for 2+ days deleted daily, sessions still running skipped.
-- T-4132 [P1] {L:edit-speed} Re-time only the lines whose timing moved (taking, 2026-11-23, agent retime)
-  - Context: From T-4131: `timing::retime` walks every line on each edit, 18-343 ms, plus 321-587 ms in each station-tool preview on the Asia save; the track model's apply is 10-30% of an edit's wait.
-  - Goal: Retime redoes only the lines (and their capacity cluster) an edit touched, same figures as a full retime; about 6-9 h, stage 1 the edit, stage 2 the preview.
-  - Other: notes/T-4131.md
 - T-4133 [P2] {L:edit-speed} Edits move only the trains they can change
   - Context: From T-4131: `before_edit` and `note_changes` walk every train, 306-374 ms of a 717-823 ms apply on the Asia save.
   - Goal: Only trains on touched lines are snapshotted and compared; same result; about 3-4 h.
@@ -190,21 +186,21 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-23: "this is the entire issue". Stage 1 landed 11-24 (e7fa38bd): Asia edits 12-37% faster. Left: a 230-290 ms floor in Node (0.6-1 s in the page for a station edit) spread over about ten passes over every edge, node or line.
   - Goal: Those passes redone only for the records an edit touched, byte-equal to a full build; station edits on Asia under 0.2 s.
   - Other: tree editnetwork kept; plan in notes/T-4153.md "What is left"
-- T-4146 [P1] {L:edit-speed} Stations and deletes show at the click (taking, 2026-11-23, agent editstations)
-  - Context: From T-4144 stream B: on the Asia save a station takes 0.8-1.5 s, deleting a station 0.7-1.5 s, deleting built track 0.65-1.2 s.
-  - Goal: Each drawn at the click, station panel edits too; 6-8 h.
+- T-4146 [P2] {L:edit-speed} Ports, flyovers and station looks show at the click
+  - Context: Stage 1 landed 11-24 (e94813b8): placing a station on Asia 878 to 30 ms, deleting one 2,142 to 18 ms, deleting track 811 to 14 ms. Not yet at the click: ports, the flyover toggle, passage line, a box's look after track, way or upgrade changes.
+  - Goal: Those drawn at the click through the base. Tree editstations kept.
   - Other: notes/T-4144.md
-- T-4147 [P1] {L:edit-speed} Lines and the line panel show at the click (taking, 2026-11-23, agent editlines)
-  - Context: From T-4144 stream A: new line 0.6-2.2 s, copy line 1.1-1.9 s, colour and settings 0.55-1.0 s on the Asia save.
-  - Goal: New line, copy, an added stop's path, colour and line settings at the click; 6-8 h.
+- T-4147 [P2] {L:edit-speed} Stop order, groups, buses and ferries show at the click
+  - Context: Stages 1-2 landed 11-24 (2171510d, 245735d7): new line 1.70 to 0.42 s on Asia, copy 1.94 to 0.61 s, an added stop's path at the click. Stop order, groups, bus and ferry edits get rows first only; money at the click for copy is not done.
+  - Goal: Those at the click through the base.
   - Other: notes/T-4144.md
-- T-4148 [P1] {L:edit-speed} Construct and the select tool show at the click (taking, 2026-11-23, agent editpieces)
-  - Context: From T-4144 stream C: Construct 0.7-0.9 s, select tool edits 0.7-1.0 s, piece limit 0.75-1.1 s on the Asia save.
-  - Goal: Drawn as built at the click, cash from the quote; 4-6 h.
+- T-4148 [P2] {L:edit-speed} Track type, double up and one-way marks show at the click
+  - Context: Stage 1 landed 11-24 (dc9ea63a): Construct a line on Asia 730 to 36 ms, select tool edits at the click. Not yet: track type, double up, rebuild's new edges, one-way chevrons, a station's off look.
+  - Goal: Those at the click through the base. Tree editpieces kept.
   - Other: notes/T-4144.md
-- T-4149 [P1] {L:edit-speed} The checked version sooner, worker side (taking, 2026-11-23, agent editworker)
-  - Context: From T-4144 stream D: nearly every edit takes the worker's whole-save path, 0.5-1.5 s on Asia (T-4097 section 4 parts A, B, E).
-  - Goal: Rows, posting, trips and boarding redone for what an edit touched; estimated 0.2-0.35 s an edit; 10-14 h in stages.
+- T-4149 [P2] {L:edit-speed} The checked version sooner, worker side, stage 2
+  - Context: Stage 1 landed 11-24 (6d7c50c5): the day's figures -77% and line periods -58% on Asia, money posted in 1-2 ms. Left: rows first for every full-path edit, trips and boarding per touched line, demand snapshot per cluster.
+  - Goal: Those redone for what an edit touched. Tree editworker kept.
   - Other: notes/T-4144.md
 - T-4150 [P2] {L:edit-speed} The checked version sooner, page side
   - Context: From T-4144 stream D: every panel redraws on each state (T-4097 part C); T-3804 today answers 125-445 ms.
@@ -217,11 +213,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4144: both saves load final from the cache and a paused clock never calculates again, so the bench's while-calculating pass measures nothing.
   - Goal: That pass runs during a real calculation.
   - Other: notes/T-4144.md
-- T-4155 [P1] {L:edit-speed} Streets arriving after a pan hold the worker for seconds (taking, 2026-11-23, agent trackstream)
-  - Context: From T-4143: on the Asia save after a pan, street speeds land, every bus line is re-timed and the whole state is resent with two hours of boarding (3.9-4.4 s), holding every edit and preview, even where no bus runs.
-  - Goal: Streets landing redo only the bus lines they touch and no full state where none changed.
-  - Other: notes/T-4143.md
-- T-4142 [P2] {L:edit-speed} {after:T-4114} Frames drop while drawing track during a calculation (taking, 2026-11-23, agent trackstream)
+- T-4142 [P2] {L:edit-speed} {after:T-4114} Frames drop while drawing track during a calculation
   - Context: From T-4136: on the Asia save while trips calculate, drawing track runs at 3-18 frames a second (55 with no track started); likely the worker running previews back to back beside trip workers on a busy machine.
   - Goal: At most one preview per frame, or whatever the measurement shows; 30+ frames a second while drawing track on Asia during a calculation.
   - Other: notes/T-4136.md
@@ -255,23 +247,25 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-24: "if merging directionally biases things, would it make sense to undo that bias?", then "if its mostly not one directional its fine ... p4". T-4158 saw lines move both ways (Belgrade 704 +34%, 66 -29%) but Auto bus lines lose 1.2% overall.
   - Goal: Net shift by kind of line and trip length on Detroit and Belgrade; a simple correction proposed to you only where it is clearly one way.
   - Other: notes/T-4158.md
+- T-4169 [P2] {L:checks} Edit bench stop clicks and compare pick up the wrong rows
+  - Context: From T-4149: edit_bench's stop-click rows say "no edit message" on both builds, and --compare picked up other agents' ledger lines.
+  - Goal: Stop clicks measured, and --compare reads only the two runs it was given.
+  - Other: notes/T-4149.md
 - T-4141 [P3] {L:station-placement} Track placed by an edit call crossed the Hudson at ground level
   - Context: Seen by T-4112: a route entered through the game's edit call crossed the Hudson at ground level without a refusal, while pointer-drawn track nearby was bridged. Water may not have been loaded under part of it.
   - Other: notes/T-4112.md
 - T-4116 [P2] {L:track-rework} {after:the 0.4.6 publish} Track model panic after a route edit on the track branch
   - Context: Your panic on 8800 (track branch build f382ee54): store.rs:851 under nodes_info, after a route edit and line colour changes. Not reproduced by 1,800 random edits each on NYC and your North America save; likely a line's service still naming track an edit removed. A second panic (run_polyline on a one-way return run) is fixed on tw/track. Notes/T-4116.md.
   - Goal: Reproduced with the fuzzer or your save under ?track, and fixed with a test, when the track rework resumes.
-- T-4156 [P2] {L:memory} Demand workers keep WASM memory after zones close (taking, 2026-11-23, agent memwasm)
-  - Context: From T-1367: on all-China each worker's WASM memory keeps its high-water mark, about 1,560 MB against 1,267 loaded; T-1205's restart waits for a 256 MB gap, so 228 MB never comes back.
-  - Goal: About 290 MB per worker given back after zone churn, with the restart's cost in load time measured.
-  - Other: notes/T-1367.md
+- T-4156 [P2] {L:memory} {waits:Anita} Demand workers keep WASM memory after zones close
+  - Need from Anita: Land the restart only once it holds off while you're editing? I'd say yes.
+  - Context: Tree memwasm (11-24): restart at a 192 MB gap gives back 290-340 MB per worker on all-China; then edits wait 3-8 min while workers reopen, final trips drift 0.11%. NYC never restarts.
+  - Goal: Memory given back with no edit waiting on the restart.
+  - Other: notes/T-4156.md in tree memwasm
 - T-4158 [P1] {L:solve-speed} Merge bus stops more aggressively for demand
   - Context: You, 11-24: "ok, lets do 500m" (same-lines rule): Detroit's solve 29% lighter, Belgrade's 18%, median line moves about 2%. Built behind switches in tree busmerge2; default to 500 m, then perf_bench compare.
   - Goal: The picked merge landed, with its time to trips ready measured in game on Belgrade.
   - Other: notes/T-4094.md, notes/T-4158.md (in the busmerge2 tree until landing)
-- T-4157 [P1] {L:loading} Master against v0.4.5 on the three bench saves (taking, 2026-11-23, agent perfcompare)
-  - Context: You, 11-24: the goal was to claw back what the express change and the bus changes cost; "load times do feel kinda long". Last bench 18:08: trips ready NYC 95 to 126 s, Tokyo 157 to 175 s, Belgrade 618 to 1,285 s; NYC 105 s at 22:51.
-  - Goal: Every perf_bench number for master against v0.4.5 on nyc, tokyo and belgrade, and where a load's time goes.
 - T-4051 [P2] {L:loading} Opening a zone on a big save sits at 90%
   - Context: You, 11-22: Medellin sat at 90% about 2 minutes. Tree zoneopen (11-24): a zone opens about a third faster on your North America save (median 68 to 45 s); lands after its perf_bench. The slow path (once in 9 opens) is not fixed and needs your newer save.
   - Goal: A zone with figures already in takes the short path on your newer save.

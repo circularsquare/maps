@@ -1,6 +1,9 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4157 [P1] {L:loading} Master against v0.4.5 on the three bench saves (2026-11-23): Master vs v0.4.5: NYC load +2.6%, Tokyo -11%, Belgrade CPU +56% (bus-heavy); demand memory +12-35%; biggest remaining: bus merge T-4158, crowding and mode choice, coarse off on desktop. notes/T-4157.md.
+- T-4155 [P1] {L:edit-speed} Streets arriving after a pan hold the worker for seconds (2026-11-23): Bus lines re-timed only where a new street grid meets their route box; Asia worst ghost wait after a pan 2,072 to 40 ms median. notes/T-4155.md.
+- T-4132 [P1] {L:edit-speed} Re-time only the lines whose timing moved (2026-11-23): Bounded retime by line clusters with input keys; previews skip retime in trials; check mode 0 differences over 2,796 retimes; Asia edit retime 0-3 ms. notes/T-4132.md.
 - T-4159 [P1] {L:accounts-server} Saved games onto the new Hetzner volume (2026-11-23): Saved games moved onto the 50 GB Hetzner volume by a bind mount at the old path; 17 s down; cap 40 GiB, alert 32 GiB (shonei-server 7f528d9); old copy deleted after the 11-24 backup (T-4164). notes/T-4159.md.
 - T-4152 [P1] {L:track-drawing} "Track has to leave a junction along the existing track" refuses sensible joins (2026-11-23): end_leads in wasm.rs used by draw.rs, tram_ends and node drags; end-to-end join sweep 26 of 288 refused to 0; message now 'Track has to line up with the track it joins.'. notes/T-4152.md.
 - T-4145 [P1] {L:edit-speed} Show-at-click base for every edit (2026-11-23): Base landed with undo: undo shows on Asia 1,094 to 19 ms, NYC 245 to 29; delete a line 1,704 to 9; reorder path 1,040 to 123; refusals answer before any state work; edit_bench records setAhead. notes/T-4145.md.

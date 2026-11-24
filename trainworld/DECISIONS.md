@@ -213,6 +213,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-10 (Anita, T-087): A train's fill is a gauge: half full when seats are taken, full at crush, red rim over, showing the busiest hour by default. Fill in proportion to crush and colouring trains by load were rejected.
 
 ## Saves and performance
+- 2026-11-24 (Anita, T-4157): Coarse demand stays off by default on desktop for now, though it takes about 23% off a Tokyo load with trips moving about 0.006%; on by default on phones.
 - 2026-11-24 (Anita, T-4144): Edit speed may cost memory up to about 10 MB in total on a big save (the T-4144 work together); past that it goes to Anita. Stage 1 of T-4153 was +6 MB on Asia, fine by her.
 - 2026-11-23 (Anita, T-4126): 8800 serves master only; the track branch is behind ?track with its own saves storage and no account, so a newer-format save never reaches master or her account.
 

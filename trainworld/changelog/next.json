@@ -3,6 +3,54 @@
   "line": "",
   "items": [
     {
+      "id": "c085",
+      "text": "the lines tab's figures update sooner after an edit on big games",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4149",
+      "by": "editworker",
+      "at": "2026-11-24T03:24:51Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
+    },
+    {
+      "id": "c084",
+      "text": "constructing and editing selected track shows up at once",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4148",
+      "by": "editpieces",
+      "at": "2026-11-24T03:19:29Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
+    },
+    {
+      "id": "c083",
+      "text": "placing or deleting a station, deleting track and changing a station in its panel show up at the click",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4146",
+      "by": "editstations",
+      "at": "2026-11-24T03:19:17Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
+    },
+    {
+      "id": "c082",
+      "text": "drawing track and edits no longer stall for seconds after you pan to a new area of a big world",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4155",
+      "by": "trackstream",
+      "at": "2026-11-24T03:12:43Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
+    },
+    {
       "id": "c081",
       "text": "the Lines tab's New line button, copying a line and changing its colour or settings show up faster",
       "edited": null,

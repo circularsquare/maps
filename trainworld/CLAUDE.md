@@ -151,11 +151,11 @@ new standing process.
 - **Waiting**: no `sleep` or polling loops of your own: `node trainworld/checks/wait.mjs` for a log or build (at most
   170 s a call; wait again if it times out), `play.mjs do 'wait.final()'` for the game. Never end your turn while
   something you need is running (a watch on a background process doesn't hold the turn open). Work that needs no
-  result from you may run in the background, with at most one light check every 4-5 minutes. Final checks (smoke)
+  result from you may run in the background, with at most one light check every 4-5 minutes. Final checks
   write a log: wait on it and read its result before you report.
 - **Testing, kept lean**: the checks near your change and one game run that shows it working (UI work: judge your own
-  screenshots before reporting); breadth is the batch checker's. Smoke only when your brief asks or the change touches
-  sim, saves, demand or money. A standing check only for a bug that really happened and could quietly come back, else
+  screenshots before reporting); breadth is the batch checker's. No smoke in your tree (her 11-24): it runs on master
+  after a batch lands and before a publish; a change to how saves are written or loaded runs the save checks near it. A standing check only for a bug that really happened and could quietly come back, else
   a scratch script; first grep `checks/INDEX.md` for a check that already proves it.
 
 ## Game principles (Anita's)

@@ -122,8 +122,8 @@ and sim-core changes others build on (undo, the solve, edits). Labels, text, doc
 (the agent's screenshot plus your look).
 
 1. Smoke: `node trainworld/checks/smoke.mjs [url]` from the maps root, about 3 minutes; `$env:TW_CORES='4'` for a light
-   run on your own Vite. Landing a tree or a batch: skip your own when the agent's ran on the final state; one smoke
-   on master after a batch lands (a failure is fixed or reverted).
+   run on your own Vite. Smoke runs only on master: once after a batch lands (a failure is fixed or reverted) and once
+   before a publish; agents never run it in their trees, and briefs don't ask for it (her 11-24).
 2. Commit without asking: explicit `trainworld/` paths (and the root `serve.py` when the change is for the board), one
    plain sentence (`git commit -m "..." -- <paths>`; `git add` new files first). Check the staged diff of shared docs
    right before. Commit at the end of a round or when a snapshot build needs it, folding small changes together; push
