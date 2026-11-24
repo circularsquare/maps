@@ -9,6 +9,8 @@
 //     about 10 min; nyc about 2 min)
 //   --self-test (asia: New York's real save has no track two lines share): the kept band orders are trusted however
 //     their lines move, and a copy of the line sharing the most track must fail the check
+//   --self-test=strokes (asia): a line's strokes are copied entry by entry whatever their band's knots, and a station
+//     on shared track in the middle of the longest line (which moves the knots after it) must fail the check
 import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { loadApp, REAL_SAVE, ARTIFACTS } from './lib.mjs';
@@ -16,10 +18,10 @@ import { loadApp, REAL_SAVE, ARTIFACTS } from './lib.mjs';
 globalThis.postMessage = () => {};
 globalThis.self ??= globalThis;
 globalThis.location ??= { search: '', hash: '', href: 'http://localhost/' };
-const app = await loadApp("export * from '@app/src/workers/clockMain.ts'; export { putApi, syncFrame, frame } from '@app/src/workers/clockState.ts'; export { putPatchMode, posted, sender } from '@app/src/workers/clockPost.ts'; export { setAnchor, makeAnchor, anchor } from '@app/src/map/geo.ts'; export { setBandCheck, bandSelfTest, bandWork } from '@app/src/map/lineBands.ts'; export { default as initSim, TrackApi } from '@app/src/wasm/track/sim.js';");
+const app = await loadApp("export * from '@app/src/workers/clockMain.ts'; export { putApi, syncFrame, frame } from '@app/src/workers/clockState.ts'; export { putPatchMode, posted, sender } from '@app/src/workers/clockPost.ts'; export { setAnchor, makeAnchor, anchor } from '@app/src/map/geo.ts'; export { setBandCheck, bandSelfTest, bandWork } from '@app/src/map/lineBands.ts'; export { netWork, netSelfTest } from '@app/src/map/network.ts'; export { default as initSim, TrackApi } from '@app/src/wasm/track/sim.js';");
 await app.initSim({ module_or_path: readFileSync(new URL('../app/src/wasm/track/sim_bg.wasm', import.meta.url)) });
 
-const SELF = process.argv.includes('--self-test');
+const SELF = process.argv.includes('--self-test') ? 'orders' : process.argv.includes('--self-test=strokes') ? 'strokes' : '';
 const args = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const SEEDS = Number(args[0] ?? 2), STEPS = Number(args[1] ?? 12), SAVE = args[2] ?? 'asia';
 const raw = gunzipSync(readFileSync(SAVE === 'asia' ? ARTIFACTS + 't3600-asianita-1852.save' : REAL_SAVE));
@@ -28,7 +30,8 @@ const errors = [];
 console.error = (...a) => errors.push(a.join(' '));
 app.putPatchMode('check');
 app.setBandCheck(true);
-if (SELF) app.bandSelfTest(true);
+if (SELF === 'orders') app.bandSelfTest(true);
+if (SELF === 'strokes') app.netSelfTest(true);
 
 function rng(seed) {
   let s = seed >>> 0;
@@ -114,12 +117,24 @@ function ops(api, rnd) {
       }
       return best ? api.add_station(2, best.e.id, (best.a.x + best.b.x) / 2, (best.a.y + best.b.y) / 2, 160, 'Cedar') : -1;
     },
+    // (T-4153 stage 4: a station on track a long line shares, partway along it, so the strokes before it are copied)
+    trunkStation: (m) => {
+      const count = new Map();
+      for (const l of m.rail) for (const p of new Set(Array.from(api.line_path(l.id), (q) => q >> 1))) count.set(p, (count.get(p) ?? 0) + 1);
+      const long = [...m.rail].sort((a, b) => api.line_path(b.id).length - api.line_path(a.id).length).slice(0, 5), l = pick(long);
+      if (!l) return -1;
+      const path = Array.from(api.line_path(l.id)), shared = path.filter((q) => count.get(q >> 1) > 1);
+      const e = m.edges.find((x) => x.id === pick(shared.length ? shared : path) >> 1);
+      if (!e) return -1;
+      const a = m.nodes.find((n) => n.id === e.a), b = m.nodes.find((n) => n.id === e.b);
+      return api.add_station(2, e.id, (a.x + b.x) / 2, (a.y + b.y) / 2, 160, 'Fir');
+    },
     undo: () => (api.can_undo() ? api.undo() : -1),
     redo: () => api.redo(),
     model,
   };
 }
-const weights = { stationAtNode: 3, stationOnLine: 3, removeStation: 3, copyLine: 3, removeLine: 2, setStops: 2, undo: 4, redo: 2, trackStation: 3, routeFromNode: 2, deleteEdge: 2, doubleUp: 2, moveNode: 2, construct: 2, oneWay: 2 };
+const weights = { trunkStation: 3, stationAtNode: 3, stationOnLine: 3, removeStation: 3, copyLine: 3, removeLine: 2, setStops: 2, undo: 4, redo: 2, trackStation: 3, routeFromNode: 2, deleteEdge: 2, doubleUp: 2, moveNode: 2, construct: 2, oneWay: 2 };
 
 let builds = 0, dropped = 0, rowsStates = 0, moves = 0, failures = 0;
 const applied = {};
@@ -127,7 +142,19 @@ for (let seed = 1; seed <= SEEDS && !failures; seed++) {
   const api = load(), rnd = rng(seed * 7919), o = ops(api, rnd);
   const pool = Object.keys(o).filter((k) => k !== 'model').flatMap((k) => Array(weights[k] ?? 1).fill(k));
   state();
-  if (SELF) {
+  if (SELF === 'strokes') {
+    // (a station on track the longest line shares, in its middle: the knots of its band after it move a little)
+    const m = o.model(), count = new Map(), at = new Map(m.nodes.map((q) => [q.id, q]));
+    for (const l of m.rail) for (const p of new Set(Array.from(api.line_path(l.id), (q) => q >> 1))) count.set(p, (count.get(p) ?? 0) + 1);
+    const best = m.rail.reduce((a, b) => (api.line_path(b.id).length > api.line_path(a.id).length ? b : a)), path = Array.from(api.line_path(best.id));
+    const k = path.findIndex((q, i) => i >= path.length / 3 && count.get(q >> 1) > 1), e = m.edges.find((x) => x.id === path[k] >> 1);
+    const a = at.get(e.a), b = at.get(e.b);
+    api.add_station(2, e.id, (a.x + b.x) / 2, (a.y + b.y) / 2, 160, 'Birch');
+    app.forget();
+    state();
+    if (errors.length) { console.log(`detected  seed ${seed}, a station on edge ${e.id} of line ${best.id}: ${errors[0].slice(0, 300)}`); failures++; break; }
+  }
+  if (SELF === 'orders') {
     // (a copy of the line sharing the most track with others: every edge it shares gains a line its kept order lacks)
     const m = o.model(), count = new Map();
     for (const l of m.rail) for (const p of new Set(Array.from(api.line_path(l.id), (q) => q >> 1))) count.set(p, (count.get(p) ?? 0) + 1);
@@ -155,9 +182,10 @@ for (let seed = 1; seed <= SEEDS && !failures; seed++) {
     else if (process.env.VERBOSE) console.log('seed', seed, 'step', step, kind, r === 0 ? 'applied' : 'refused ' + r);
   }
 }
-console.log(`${builds} checked builds, ${dropped} dropped part way, ${rowsStates} rows states, ${moves} anchor moves; edits applied: ${Object.entries(applied).map(([k, v]) => k + ' ' + v).join(', ')}; pairs of lines kept on edges where their paths changed: ${app.bandWork.passedAll}`);
+console.log(`${builds} checked builds, ${dropped} dropped part way, ${rowsStates} rows states, ${moves} anchor moves; edits applied: ${Object.entries(applied).map(([k, v]) => k + ' ' + v).join(', ')}; pairs of lines kept on edges where their paths changed: ${app.bandWork.passedAll}; line entries' strokes copied: ${app.netWork.entriesAll}, line samples copied: ${app.netWork.keptAll}`);
 if (SELF) {
-  console.log(`${failures ? 'PASS' : 'FAIL'}  t4153 net self-test: ${failures ? 'the check fails when the kept orders are trusted' : 'the check did not notice the trusted orders'}`);
+  const what = SELF === 'strokes' ? "lines' entries are copied whatever their knots" : 'the kept orders are trusted';
+  console.log(`${failures ? 'PASS' : 'FAIL'}  t4153 net self-test (${SELF}): ${failures ? `the check fails when ${what}` : `the check did not notice when ${what}`}`);
   process.exit(failures ? 0 : 1);
 }
 console.log(`${failures ? 'FAIL' : 'PASS'}  t4153 net (${SAVE}): every build from the cache equals one from scratch`);

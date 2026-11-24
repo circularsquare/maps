@@ -267,8 +267,15 @@ class StrokeBuilder {
   lane = new Uint8Array(0);
   /** `Strokes.band`, only when built with `withStretch` (line strokes) */
   band = new Int16Array(0);
+  /** T-4153: whether the last `add` ended on a point near the last one kept, so its last segment took its distance
+   * along from `dist` (as float32) */
+  popped = false;
   /** `minSeg`: points closer than this (plane m) to the last one kept are dropped (`MIN_SEG_M`) */
   constructor(private withStretch = false, private minSeg = 0) {}
+  /** room for `n` segments in all */
+  reserve(n: number) {
+    this.grow(n);
+  }
   private grow(need: number) {
     if (need <= this.cap) return;
     // a fresh builder takes what it is asked for: most hold one edge, and a 1,024 floor made every
@@ -297,6 +304,7 @@ class StrokeBuilder {
   add(pts: ArrayLike<number>, colour: number, edge: number, flags: number, reverse = false, dist0 = 0, stretch?: number, lane: number | ArrayLike<number> = 255, band?: ArrayLike<number>, ease?: Uint8Array, from?: number[]): number {
     const n = pts.length / 3;
     let d = dist0;
+    this.popped = false;
     this.grow(this.count + Math.max(0, n - 1));
     if (stretch !== undefined && this.withStretch) this.stretch.fill(stretch, this.count, this.count + Math.max(0, n - 1));
     const first = this.count, ms = this.minSeg;
@@ -312,6 +320,7 @@ class StrokeBuilder {
         from?.pop();
         d = this.dist[this.count];
         i = s;
+        this.popped = true;
       }
       const x0 = pts[i * 3], y0 = pts[i * 3 + 1], x1 = pts[j * 3], y1 = pts[j * 3 + 1];
       const c = this.count++, lo = Math.min(i, j), hi = Math.max(i, j);
@@ -342,6 +351,31 @@ class StrokeBuilder {
       s = i;
       i = j;
     }
+    return d;
+  }
+  /** T-4153: segments `a0` to `a1` of `src`, which one `add` made (`popped` as it left it), added again from
+   * `dist0` on, on `stretch`, their distances along worked out as `add` works them out */
+  copy(src: Strokes, a0: number, a1: number, dist0: number, popped: boolean, stretch: number): number {
+    const c0 = this.count, m = a1 - a0;
+    this.grow(c0 + m);
+    this.seg.set(src.seg.subarray(a0 * 4, a1 * 4), c0 * 4);
+    this.colour.set(src.colour.subarray(a0, a1), c0);
+    this.edge.set(src.edge.subarray(a0, a1), c0);
+    this.level.set(src.level.subarray(a0, a1), c0);
+    this.flags.set(src.flags.subarray(a0, a1), c0);
+    this.lane.set(src.lane!.subarray(a0 * 2, a1 * 2), c0 * 2);
+    if (this.withStretch) {
+      this.stretch.fill(stretch, c0, c0 + m);
+      this.band.set(src.band!.subarray(a0 * BAND_STRIDE, a1 * BAND_STRIDE), c0 * BAND_STRIDE);
+    }
+    const seg = this.seg;
+    let d = dist0;
+    for (let c = c0; c < c0 + m; c++) {
+      if (popped && c === c0 + m - 1) d = Math.fround(d);
+      this.dist[c] = d;
+      d += Math.hypot(seg[c * 4 + 2] - seg[c * 4], seg[c * 4 + 3] - seg[c * 4 + 1]);
+    }
+    this.count = c0 + m;
     return d;
   }
   build(): Strokes {
@@ -1098,6 +1132,8 @@ function lineTrainSpeeds(l: ClockState["lines"][number], r: ClockState["render"]
     return { first: r.meta[m], count: r.meta[m + 1], len: r.meta[m + 3] };
   });
   if (runs.some((p) => !(p.count > 0))) return null;
+  // (T-4153: each run's phases found by stepping from the last one found, as `speedAt` finds them while they are in order)
+  const at0 = phaseFinder(r.phases, runs[0].first, runs[0].count), at1 = phaseFinder(r.phases, runs[1].first, runs[1].count);
   let off = 0;
   return l.path.map((p, k) => {
     const e = p >> 1, len = lens[k];
@@ -1111,12 +1147,29 @@ function lineTrainSpeeds(l: ClockState["lines"][number], r: ClockState["render"]
       for (let j = 0; j < n; j++) {
         const f = total > 0 ? (st.dist[j] + segLen(j) / 2) / total : 0.5;
         const x0 = off + ((p & 1) === 1 ? 1 - f : f) * len;
-        out[j] = Math.max(speedAt(r.phases, runs[0].first, runs[0].count, x0), speedAt(r.phases, runs[1].first, runs[1].count, runs[1].len - x0));
+        out[j] = Math.max(at0(x0), at1(runs[1].len - x0));
       }
     }
     off += len;
     return out;
   });
+}
+
+/** T-4153: `speedAt` of one run's phases, the phase found by stepping from the last one found where their starts are in
+ * order (the same phase the bisection finds), else by bisection */
+function phaseFinder(ph: Float32Array, first: number, count: number): (x: number) => number {
+  if (count <= 0) return () => 0;
+  const last = first + count - 1;
+  let sorted = true;
+  for (let i = first + 1; i <= last && sorted; i++) if (!(ph[i * 4 + 1] >= ph[i * 4 - 3])) sorted = false;
+  if (!sorted) return (x) => speedAt(ph, first, count, x);
+  let i = first;
+  return (x) => {
+    while (i < last && ph[(i + 1) * 4 + 1] <= x) i++;
+    while (i > first && !(ph[i * 4 + 1] <= x)) i--;
+    const s = ph[i * 4 + 1], v = ph[i * 4 + 2], a = ph[i * 4 + 3];
+    return Math.sqrt(Math.max(0, v * v + 2 * a * Math.max(0, x - s))) * 3.6;
+  };
 }
 
 /** The phase tables `lineTrainSpeeds` reads for a line, one after the other with each run's length. */
@@ -1298,19 +1351,25 @@ function innerStops(lines: ClockState["lines"], at: ReadonlyMap<number, unknown>
   return out;
 }
 
+/** T-4153: `bandPoints`' working arrays, grown as needed; what it returns lies in them until its next call */
+const bpScratch = { at: new Float64Array(64), pts: new Float32Array(192), lane: new Uint8Array(64), band: new Float32Array(192), ease: new Uint8Array(64), cuts: [] as number[], ms: [] as number[] };
 /**
  * An edge's drawn points for a line on it (T-1799): with a point added at each knot of its band
  * (`lineBands`), and per point its shift and `1 - width share` (`StrokeBuilder.add`'s `band`). `b`:
- * the line's band profile, `k` the path entry, in its travel direction (`reverse`: b to a).
+ * the line's band profile, `k` the path entry, in its travel direction (`reverse`: b to a). (T-4153: views of
+ * `bpScratch`, read before the next call.)
  */
 function bandPoints(dr: LanePoints, reverse: boolean, b: BandProfile, entry: number): { pts: Float32Array; lane: number | Uint8Array; band: Float32Array; ease: Uint8Array } {
-  const p = dr.lpts, n = p.length / 3;
-  const at = new Float64Array(n);
+  const p = dr.lpts, n = p.length / 3, S = bpScratch;
+  if (S.at.length < n) S.at = new Float64Array(n * 2);
+  const at = S.at;
+  at[0] = 0;
   for (let k = 1; k < n; k++) at[k] = at[k - 1] + Math.hypot(p[k * 3] - p[k * 3 - 3], p[k * 3 + 1] - p[k * 3 - 2]);
   const perM = kAtY(p[1]), len = at[n - 1] / perM;
   const [o, c] = bandKnots(b, entry);
   // the knots, m along the edge a to b
-  const cuts: number[] = [];
+  const cuts = S.cuts;
+  cuts.length = 0;
   for (let i = 0; i < c; i++) cuts.push((reverse ? 1 - b[o + i * KNOT] : b[o + i * KNOT]) * len);
   cuts.sort((x, y) => x - y);
   // the knots' places are in order, so the knot a place falls after is found by bisection (and a profile
@@ -1332,24 +1391,40 @@ function bandPoints(dr: LanePoints, reverse: boolean, b: BandProfile, entry: num
     }
     return lo;
   };
-  const out: number[] = [], lane: number[] = [], band: number[] = [], ms: number[] = [];
+  // (at most a point per point and per knot)
+  const cap = n + c;
+  if (S.lane.length < cap) {
+    S.pts = new Float32Array(cap * 6);
+    S.lane = new Uint8Array(cap * 2);
+    S.band = new Float32Array(cap * 6);
+    S.ease = new Uint8Array(cap * 2);
+  }
+  const out = S.pts, lane = S.lane, band = S.band, ms = S.ms;
+  ms.length = 0;
+  let np = 0;
   const laneAt = (k: number) => (typeof dr.lane === "number" ? dr.lane : dr.lane[k]);
   const push = (x: number, y: number, z: number, m: number, l: number) => {
-    out.push(x, y, z);
-    lane.push(l);
+    out[np * 3] = x;
+    out[np * 3 + 1] = y;
+    out[np * 3 + 2] = z;
+    lane[np] = l;
     ms.push(m);
+    const q3 = np * 3;
+    np++;
     // `profileAt(b, entry, f)`
     const f = len > 0 ? (reverse ? len - m : m) / len : 0;
-    if (c <= 0) band.push(0, 0, 0);
-    else if (f <= b[o]) band.push(b[o + 1], b[o + 2], b[o + 4]);
+    if (c <= 0) (band[q3] = 0), (band[q3 + 1] = 0), (band[q3 + 2] = 0);
+    else if (f <= b[o]) (band[q3] = b[o + 1]), (band[q3 + 1] = b[o + 2]), (band[q3 + 2] = b[o + 4]);
     else {
       const i = firstGE(f);
       if (i < c) {
         const x = o + i * KNOT, q = x - KNOT, d = b[x] - b[q], t = d > 0 ? (f - b[q]) / d : 1;
-        band.push(b[q + 1] + (b[x + 1] - b[q + 1]) * t, b[q + 2] + (b[x + 2] - b[q + 2]) * t, b[q + 4] + (b[x + 4] - b[q + 4]) * t);
+        band[q3] = b[q + 1] + (b[x + 1] - b[q + 1]) * t;
+        band[q3 + 1] = b[q + 2] + (b[x + 2] - b[q + 2]) * t;
+        band[q3 + 2] = b[q + 4] + (b[x + 4] - b[q + 4]) * t;
       } else {
         const x = o + (c - 1) * KNOT;
-        band.push(b[x + 1], b[x + 2], b[x + 4]);
+        (band[q3] = b[x + 1]), (band[q3 + 1] = b[x + 2]), (band[q3 + 2] = b[x + 4]);
       }
     }
   };
@@ -1367,33 +1442,42 @@ function bandPoints(dr: LanePoints, reverse: boolean, b: BandProfile, entry: num
     push(p[k * 3 + 3], p[k * 3 + 4], p[k * 3 + 5], m1, laneAt(k + 1));
   }
   // per segment, a to b: whether it lies between two knots that differ (in either view)
-  const ease = new Uint8Array(Math.max(0, ms.length - 1));
-  for (let i = 0; i < ease.length; i++) {
+  const ease = S.ease, ne = Math.max(0, np - 1);
+  for (let i = 0; i < ne; i++) {
     const f = len > 0 ? ((ms[i] + ms[i + 1]) / 2) / len : 0, t = reverse ? 1 - f : f;
     const j = c > 1 ? Math.min(firstGE(t), c - 1) : 1;
     const x = o + (j - 1) * KNOT, y = o + j * KNOT;
     ease[i] = c > 1 && (b[x + 1] !== b[y + 1] || b[x + 2] !== b[y + 2] || b[x + 3] !== b[y + 3] || b[x + 3] < 0 || b[x + 4] !== b[y + 4]) ? 1 : 0;
   }
-  return { pts: out.length === p.length ? p : new Float32Array(out), lane: typeof dr.lane === "number" && out.length === p.length ? dr.lane : Uint8Array.from(lane), band: new Float32Array(band), ease };
+  const same = np * 3 === p.length;
+  return { pts: same ? p : out.subarray(0, np * 3), lane: typeof dr.lane === "number" && same ? dr.lane : lane.subarray(0, np), band: band.subarray(0, np * 3), ease: ease.subarray(0, ne) };
 }
 
+/** T-4153: per drawn points of a piece of track whose lanes change along it, the points' distances along (`laneAlong`) */
+const laneCum = new WeakMap<Float32Array, Float64Array>();
 /** The lane value (0-1) a fraction `f` of the way along an edge's drawn points. */
 function laneAlong(dr: LanePoints, f: number): number {
   if (typeof dr.lane === "number") return dr.lane / 255;
   const p = dr.lpts, n = p.length / 3;
-  let total = 0;
-  for (let k = 1; k < n; k++) total += Math.hypot(p[k * 3] - p[k * 3 - 3], p[k * 3 + 1] - p[k * 3 - 2]);
-  let at = 0;
-  const want = f * total;
-  for (let k = 1; k < n; k++) {
-    const s = Math.hypot(p[k * 3] - p[k * 3 - 3], p[k * 3 + 1] - p[k * 3 - 2]);
-    if (at + s >= want || k === n - 1) {
-      const u = s > 0 ? Math.max(0, Math.min(1, (want - at) / s)) : 0;
-      return (dr.lane[k - 1] + (dr.lane[k] - dr.lane[k - 1]) * u) / 255;
-    }
-    at += s;
+  if (n < 2) return dr.lane[0] / 255;
+  let at = laneCum.get(p);
+  if (!at) {
+    at = new Float64Array(n);
+    for (let k = 1; k < n; k++) at[k] = at[k - 1] + Math.hypot(p[k * 3] - p[k * 3 - 3], p[k * 3 + 1] - p[k * 3 - 2]);
+    laneCum.set(p, at);
   }
-  return dr.lane[0] / 255;
+  const want = f * at[n - 1];
+  // the first point from the second on as far along as `want`, the last if none
+  let lo = 1, hi = n - 1;
+  if (!(at[n - 1] >= 0)) while (lo < hi && !(at[lo] >= want)) lo++;
+  else while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (at[mid] >= want) hi = mid;
+    else lo = mid + 1;
+  }
+  const k = lo, s = Math.hypot(p[k * 3] - p[k * 3 - 3], p[k * 3 + 1] - p[k * 3 - 2]);
+  const u = s > 0 ? Math.max(0, Math.min(1, (want - at[k - 1]) / s)) : 0;
+  return (dr.lane[k - 1] + (dr.lane[k] - dr.lane[k - 1]) * u) / 255;
 }
 
 /**
@@ -1437,6 +1521,8 @@ interface LineEntry {
   tram: boolean;
   /** its bands (`LineBands.of`), null on no shared track */
   band: Float32Array | null;
+  /** T-4153: `LineBands.own`'s profile it was drawn with (the same array: the same band but for recipes' numbers) */
+  bandOwn?: Float32Array;
   strokes: Strokes;
   /** per entry of `path`, its first stroke segment, -1 none */
   firstStroke: number[];
@@ -1444,6 +1530,44 @@ interface LineEntry {
   forwardCount: number;
   /** T-3250: per entry of `back`, its first stroke segment (the path's own on an edge both use), -1 none */
   backStroke: number[];
+  /** T-4153: per entry of `path` drawn, how: `BITS_POPPED`, `BITS_ZEROED`, `BITS_BANDED` */
+  bits?: Uint8Array;
+}
+/** (`LineEntry.bits`) its last segment came back a step (`StrokeBuilder.popped`); its band's width share zeroed (alone on
+ * single track); drawn in its band (`bandPoints`) */
+const BITS_POPPED = 1, BITS_ZEROED = 2, BITS_BANDED = 4;
+/** T-4153: per entry of `p`, the entry of `q` it stands for where the two are alike but for one stretch (-1 inside it) */
+function alikeEntries(q: readonly number[], p: readonly number[]): Int32Array {
+  const n = Math.min(q.length, p.length), out = new Int32Array(p.length).fill(-1);
+  let pre = 0, suf = 0;
+  while (pre < n && q[pre] === p[pre]) pre++;
+  while (suf < n - pre && q[q.length - 1 - suf] === p[p.length - 1 - suf]) suf++;
+  for (let k = 0; k < pre; k++) out[k] = k;
+  for (let k = p.length - suf; k < p.length; k++) out[k] = k - p.length + q.length;
+  return out;
+}
+/** T-4153: per entry of a line's path, the stroke segment its strokes end before */
+function strokeEnds(c: LineEntry): Int32Array {
+  const out = new Int32Array(c.path.length);
+  let end = c.forwardCount;
+  for (let k = c.path.length - 1; k >= 0; k--) {
+    out[k] = end;
+    if (c.firstStroke[k] >= 0) end = c.firstStroke[k];
+  }
+  return out;
+}
+/** T-4153: entry `ka` of band `a` and `kb` of `b` read alike by `bandPoints`: the same knots (bit for bit), their recipes
+ * alike where it reads them (whether one is none, whether two in a row differ) */
+function sameKnots(a: BandProfile, ka: number, b: BandProfile, kb: number): boolean {
+  const [oa, ca] = bandKnots(a, ka), [ob, cb] = bandKnots(b, kb);
+  if (ca !== cb) return false;
+  for (let i = 0; i < ca; i++) {
+    const x = oa + i * KNOT, y = ob + i * KNOT;
+    if (!Object.is(a[x], b[y]) || !Object.is(a[x + 1], b[y + 1]) || !Object.is(a[x + 2], b[y + 2]) || !Object.is(a[x + 4], b[y + 4])) return false;
+    if (a[x + 3] < 0 !== b[y + 3] < 0) return false;
+    if (i > 0 && (a[x + 3] !== a[x + 3 - KNOT]) !== (b[y + 3] !== b[y + 3 - KNOT])) return false;
+  }
+  return true;
 }
 /** A line's `lineTrainSpeeds` and what they were worked out from. */
 interface LineSpeeds {
@@ -1840,15 +1964,18 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
 /** `networkFromState` in pieces (T-3803): the clock worker runs one a task, so an edit can come between them. The
  * cache is written only in the last piece, so one dropped at a yield leaves it as the last finished build left it
  * (the waiting rooms' placement and the passages, kept against their own last inputs, are in the last piece too). */
+/** checks/t4153-net.mjs --self-test strokes: a line's entries copied whatever their band's knots, which its check must catch */
+let netTrust = false;
+export function netSelfTest(on: boolean) { netTrust = on; }
 /** T-4153: per part of the last build, ms (for measuring the parts an edit's build still pays for) */
 export const netLaps: Record<string, number> = {};
 /** T-4153: per build, the pieces of track, lines, line samples, stations and line speeds worked out again (counts) */
-export const netWork = { edges: 0, lines: 0, samples: 0, stations: 0, speeds: 0, side: "" };
+export const netWork = { edges: 0, lines: 0, entries: 0, samples: 0, kept: 0, stations: 0, speeds: 0, side: "", entriesAll: 0, keptAll: 0 };
 let lapT = 0;
 const lap = (k: string) => { const t = performance.now(); netLaps[k] = (netLaps[k] ?? 0) + t - lapT; lapT = t; };
 export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), deferStrokes = false): Generator<void, NetworkBuffers, void> {
   for (const k in netLaps) delete netLaps[k];
-  netWork.edges = netWork.lines = netWork.samples = netWork.stations = netWork.speeds = 0;
+  netWork.edges = netWork.lines = netWork.entries = netWork.samples = netWork.kept = netWork.stations = netWork.speeds = 0;
   lapT = performance.now();
   const r = s.render;
   const parts = r.edgeParts!, speedParts = r.edgeSpeedParts;
@@ -2075,13 +2202,19 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
     const runStart = l.pathStart ?? 0, runEnd = runStart + l.path.length, stopStart = l.stopStart ?? 0;
     // (T-4153: a line whose row is the one its piece was made for, over the same pieces of track, is as it was)
     const sameRow = cache.lineRows.get(l.id) === l;
-    if (!c || (!sameRow && (c.running !== l.running || c.fast !== l.fast || c.tram !== l.tram || c.pathStart !== runStart || c.stopStart !== stopStart || !sameArray(c.path, planPath) || !sameArray(c.back, l.back ?? []) || !sameArray(c.stops, planStops))) || (!loopSame && (!planPath.every((p) => keptEdge(p >> 1)) || !(l.back ?? []).every((p) => keptEdge(p >> 1)))) || (c.band === null ? band !== null : band === null || (c.band !== band && !sameBand(c.band, band)))) {
+    if (!c || (!sameRow && (c.running !== l.running || c.fast !== l.fast || c.tram !== l.tram || c.pathStart !== runStart || c.stopStart !== stopStart || !sameArray(c.path, planPath) || !sameArray(c.back, l.back ?? []) || !sameArray(c.stops, planStops))) || (!loopSame && (!planPath.every((p) => keptEdge(p >> 1)) || !(l.back ?? []).every((p) => keptEdge(p >> 1)))) || (c.band === null ? band !== null : band === null || (c.band !== band && c.bandOwn !== bands.own.get(l.id) && !sameBand(c.band, band)))) {
       netWork.lines++;
       const lines = new StrokeBuilder(true, MIN_SEG_M);
+      // (room for about as many segments as the line's last strokes, rather than doubling up to them)
+      if (c) lines.reserve(c.strokes.count + 64);
       let d = 0;
       // the first stroke segment of each path entry (in this line's strokes), and the stop-to-stop
       // stretch it is on (T-084), numbered as the part its trains run
       const firstStroke = planPath.map(() => -1);
+      // T-4153: an entry as the line's last strokes drew it (the same piece of track, knots of its band and flags) is copied
+      // from them, its stretch and distances along worked out again (`LineEntry.bits`)
+      const old = c, bits = new Uint8Array(planPath.length);
+      const was = old?.bits ? alikeEntries(old.path, planPath) : null, oldEnd = was ? strokeEnds(old!) : null;
       let stretch = 0, next = 1;
       planPath.forEach((p, k) => {
         const e = p >> 1;
@@ -2092,13 +2225,27 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
           const flags = (l.running && served ? 0 : F_FADED | (builtEdge.get(e) ? 0 : F_BLUEPRINT | (offEdge.has(e) ? F_OFF : 0))) | (l.fast && hsrEdge.has(e) ? F_HSR : 0) | (l.tram && tramEdge.has(e) ? F_TRAM : 0) | (splitEdge.has(e) ? F_SPLIT : 0);
           // (-1 off the part its trains run: no riders' stretch there)
           const stretchOf = served ? Math.max(0, Math.min(stretch - stopStart, Math.max(0, l.stops.length - 2))) : -1;
-          if (dr.lpts.length >= 6) firstStroke[k] = lines.count;
-          if (band && served && dr.lpts.length >= 6) {
-            const bp = bandPoints(dr, (p & 1) === 1, band, k - runStart);
+          if (dr.lpts.length >= 6) {
+            firstStroke[k] = lines.count;
+            const banded = !!band && served;
             // T-3158: a line alone on single track keeps a line's width; a ribbon beside it (a flyover's leg by
             // its main) only moves it sideways, as its return leg, which has no band, is drawn
-            if (ends?.tracks === 1 && (bands.order.get(e)?.length ?? 0) < 2) for (let q = 1; q < bp.band.length; q += 3) bp.band[q] = 0;
-            d = lines.add(bp.pts, l.id, e, flags, (p & 1) === 1, d, stretchOf, bp.lane, bp.band, bp.ease);
+            const zero = banded && ends?.tracks === 1 && (bands.order.get(e)?.length ?? 0) < 2;
+            const how = (banded ? BITS_BANDED : 0) | (zero ? BITS_ZEROED : 0), ko = was ? was[k] : -1;
+            const a0 = ko >= 0 ? old!.firstStroke[ko] : -1;
+            if (a0 >= 0 && (old!.bits![ko] & ~BITS_POPPED) === how && keptEdge(e) && (old!.strokes.flags[a0] & ~F_EASE) === flags && (!banded || netTrust || sameKnots(old!.band!, ko - old!.pathStart, band!, k - runStart))) {
+              d = lines.copy(old!.strokes, a0, oldEnd![ko], d, (old!.bits![ko] & BITS_POPPED) !== 0, stretchOf);
+              bits[k] = old!.bits![ko];
+              netWork.entries++;
+              netWork.entriesAll++;
+            } else {
+              if (banded) {
+                const bp = bandPoints(dr, (p & 1) === 1, band!, k - runStart);
+                if (zero) for (let q = 1; q < bp.band.length; q += 3) bp.band[q] = 0;
+                d = lines.add(bp.pts, l.id, e, flags, (p & 1) === 1, d, stretchOf, bp.lane, bp.band, bp.ease);
+              } else d = lines.add(dr.lpts, l.id, e, flags, (p & 1) === 1, d, stretchOf, dr.lane);
+              bits[k] = how | (lines.popped ? BITS_POPPED : 0);
+            }
           } else d = lines.add(dr.lpts, l.id, e, flags, (p & 1) === 1, d, stretchOf, dr.lane);
         }
         // a path entry runs a -> b, or b -> a when its low bit is set
@@ -2131,7 +2278,7 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
           }
         }
       }
-      c = { path: planPath.slice(), back: (l.back ?? []).slice(), stops: planStops.slice(), pathStart: runStart, stopStart, running: l.running, fast: l.fast, tram: l.tram, band, strokes: lines.build(), firstStroke, forwardCount, backStroke };
+      c = { path: planPath.slice(), back: (l.back ?? []).slice(), stops: planStops.slice(), pathStart: runStart, stopStart, running: l.running, fast: l.fast, tram: l.tram, band, strokes: lines.build(), firstStroke, forwardCount, backStroke, bits, bandOwn: bands.own.get(l.id) };
     }
     linesSeen.set(l.id, c);
     lineRows.set(l.id, l);
@@ -2148,6 +2295,15 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
       }
       return fwdAt.get(e);
     };
+    /** T-4153: how many entries of the run's `path` from its start are as `sm`'s were made from: the same entry and piece of
+     * track (so lengths and lanes), stroke and band knots */
+    const alikeSamples = (sm: LineSamples, path: readonly number[]) => {
+      const o = sm.c, n = Math.min(path.length, sm.path.length), band = c!.band;
+      if (!o.bits || !band !== !o.band) return 0;
+      let j = 0;
+      while (j < n && path[j] === sm.path[j] && sameEdge(path[j] >> 1) && c!.firstStroke[j + runStart] === o.firstStroke[j + o.pathStart] && (!band || sameKnots(o.band!, j, band, j))) j++;
+      return j;
+    };
     const runSamples = (slot: number, path: readonly number[], strokeOf: readonly number[], back: boolean) => {
       const first = r.lineTable[slot * 4], count = r.lineTable[slot * 4 + 1], step = r.lineTable[slot * 4 + 3];
       let sm = cache.samples.get(slot);
@@ -2159,10 +2315,20 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
         netWork.samples++;
         // a bus has one centre line, not two tracks (T-1464)
         const rel = new Int32Array(count), lane = new Float32Array(count).fill(l.bus ? 0 : 1), bandOf = new Float32Array(c!.band ? count * 2 : 0);
+        // T-4153: the samples on the entries before the first unlike those the last ones were made from are those
+        const upTo = sm && !back && sm.step === step ? alikeSamples(sm, path) : 0, was = sm;
         let j = 0, end = lens[0] ?? 0;
         for (let k = 0; k < count; k++) {
           const at = k * step;
           while (j < path.length - 1 && at > end) end += lens[++j];
+          if (j < upTo && k < was!.count) {
+            rel[k] = was!.rel[k];
+            lane[k] = was!.lane[k];
+            if (bandOf.length) (bandOf[k * 2] = was!.band[k * 2]), (bandOf[k * 2 + 1] = was!.band[k * 2 + 1]);
+            netWork.kept++;
+            netWork.keptAll++;
+            continue;
+          }
           rel[k] = strokeOf[j] ?? -1;
           // how far apart the tracks are there (T-658), along the edge's drawn points when it tapers or splits (T-3212)
           const p = path[j], dr = drawn.get(p >> 1), len = lens[j] ?? 0;
