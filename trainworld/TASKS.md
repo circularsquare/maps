@@ -907,6 +907,10 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: T-921 deals commute pairs under 1 person a day in chunks (about 7% of New York's calculation); 2 a day gained nothing more. Everyday trips are solved from sampled destinations, so they may lack the same tail of tiny pairs. You, 11-24: file as P3.
   - Goal: Know whether everyday trips have a tail of tiny pairs; if so, chunk them the same tunable way.
   - Other: notes/T-921.md
+- T-4239 [P1] {L:solve-speed} Train counts that never settle on shared track
+  - Context: You, 11-24: players' saves of about 900 stations "completely bricked", maybe from lots of interlining. T-4188 found on a Tokyo community save that 10-13 lines sharing full track trade rates every round and never hold still, so every load and edit runs all 80 settle rounds (edits 5-35 s natively), and each bus zone adds another settle.
+  - Goal: The settle stops once lines hold nearly still; that save opens in under a minute; NYC lines within 1%.
+  - Other: notes/T-4188.md
 - T-4220 [P2] {L:solve-speed} Quick figures for edits made during a whole re-solve
   - Context: You, 11-24: "edits made during remaining full passes should ideally get fast numbers ... if people are clicking a lot of times to add lots of stations ... we need to do some sort of batching". Today an edit during a whole re-solve waits for it (up to 226 s on Asia). Options: notes/T-4204-options.md.
   - Goal: An edit during a whole re-solve shows its lines in about the touched-cities time; edits arriving together share one quick calculation, never one each.
