@@ -376,7 +376,10 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   the pointer's own spot lands, the last answer is shown bent to it: turned and scaled about the start, eased in from the
   start when the start has a heading (so the ghost still leaves along the track), whole from a free start; its labels,
   circle and tag move with it and keep that answer's figures. Every answer for the run is shown as it lands, also one the
-  pointer has since left; a click takes only the answer for its own spot (T-830).
+  pointer has since left; a click takes only the answer for its own spot (T-830). Before the run's first answer there is
+  nothing to bend, so the ghost is a stand-in from what the page has [T-4143]: from a start on track, the circular arc
+  that leaves along the track toward the pointer and ends at it; else a straight line; no figures, its heights from the
+  start's level to the end's. The first answer replaces it.
 - **Waiting** [T-1039]: when a click has waited on the clock worker more than 300 ms, or no answer has come for the
   ghost for 300 ms, a small spinner leads the tag.
 - **Placed blueprint track** is drawn as blue rails ([ui-map.md](ui-map.md) "Lines and track").

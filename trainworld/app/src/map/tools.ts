@@ -67,7 +67,7 @@ import { startBuildingFloors } from "./buildingFloors";
 import { playBuild } from "./buildSound";
 import { perfOff } from "../perfFlags";
 import { guessRow, settleRow } from "../ui/inspector/stopRowGuess";
-import { type LngLatish, SNAP_EDGE_PX, TRACK_NODE_PX, TRACK_EDGE_PX, DEAD_PX, DOT_MIN_PX, HELD_NEAR_PX, HELD_START_PX, BESIDE_PX, OVERLAP_PX, type Snap, type Spot, type Verdict, BESIDE_SPACING_M, LANE_HALF_M, type Placed, MAX_PIECE_KM, WAIT_MS, tooFarText, placedAt } from "./toolParts";
+import { type LngLatish, SNAP_EDGE_PX, TRACK_NODE_PX, TRACK_EDGE_PX, DEAD_PX, DOT_MIN_PX, HELD_NEAR_PX, HELD_START_PX, BESIDE_PX, OVERLAP_PX, type Snap, type Spot, type Verdict, BESIDE_SPACING_M, LANE_HALF_M, type Placed, MAX_PIECE_KM, WAIT_MS, tooFarText, placedAt, standInPts } from "./toolParts";
 import { nearTouch, touchConfirm, touchBack, touchStop, dragHandle, placeTouch } from "./toolTouch";
 import { autoPick } from "./stationAuto";
 import { nameAhead, stationClick, askLegs, placePending, layout } from "./stationTool";
@@ -1044,7 +1044,54 @@ export class Tools {
       // click still takes only the answer for its own spot)
       if (this.start === from && !this.snapped && this.wantKey) this.showPreview(a, key, this.wantKey === key);
     });
+    if (!this.lastPreview) this.drawStandIn(h);
     return true;
+  }
+
+  /** T-4143: before the run's first answer there is nothing to bend, and the worker can be busy for seconds (a whole
+   * state after a pan's street speeds land, an hour's trips): the ghost is drawn from what the page has, the start, its
+   * heading if it has one and the pointer, until the checked answer replaces it. A click still waits for its own. */
+  drawStandIn(h: Snap) {
+    const st = this.start!, [sx, sy] = toLocal(st.lng, st.lat);
+    const pts = standInPts(sx, sy, h.lx, h.ly, st.dir ?? this.trackHeading(st, sx, sy, h), this.heightOf(st.end, sx, sy), this.heightOf(this.endOf(h), h.lx, h.ly));
+    this.bent = null;
+    this.overlay.renderer.setPreview(strokesFromPreview(pts, false, undefined, true, undefined, singleTrack.peek() ? 0 : 255, highSpeed.peek(), tramTrack.peek()));
+    this.overlay.invalidate();
+  }
+  /** T-4143: the way track leaves a start on track before any answer says (local units, unit length): along the track
+   * there, toward the pointer; none on open ground */
+  trackHeading(st: Placed, sx: number, sy: number, h: Snap): [number, number] | undefined {
+    const n = this.overlay.renderer.net;
+    if (st.end.kind === "free" || !n) return undefined;
+    let best = 5 * kAtY(sy), dir: [number, number] | undefined;
+    for (const { pts } of edgesNear(n, sx, sy, best) ?? [])
+      for (let k = 0; k + 5 < pts.length; k += 3) {
+        const x0 = pts[k], y0 = pts[k + 1], dx = pts[k + 3] - x0, dy = pts[k + 4] - y0, l2 = dx * dx + dy * dy;
+        if (!l2) continue;
+        const t = Math.max(0, Math.min(1, ((sx - x0) * dx + (sy - y0) * dy) / l2)), d = Math.hypot(x0 + t * dx - sx, y0 + t * dy - sy);
+        if (d >= best) continue;
+        const l = Math.sqrt(l2), sg = dx * (h.lx - sx) + dy * (h.ly - sy) < 0 ? -1 : 1;
+        best = d;
+        dir = [(sg * dx) / l, (sg * dy) / l];
+      }
+    return dir;
+  }
+  /** a route end's height as the page knows it, m: a node's level, the track's height at (lx, ly), the level picked */
+  heightOf(e: RouteEnd, lx: number, ly: number): number {
+    if (e.kind === "node") return (world.peek()?.nodes.get(e.node)?.level ?? this.freeLevel()) * 8;
+    const n = this.overlay.renderer.net;
+    if (e.kind === "edge" && n) {
+      let best = Infinity, z = this.freeLevel() * 8;
+      for (const { edge, pts } of edgesNear(n, lx, ly, kAtY(ly)) ?? []) {
+        if (edge !== e.edge) continue;
+        for (let k = 0; k + 2 < pts.length; k += 3) {
+          const d = Math.hypot(pts[k] - lx, pts[k + 1] - ly);
+          if (d < best) [best, z] = [d, pts[k + 2]];
+        }
+      }
+      return z;
+    }
+    return this.freeLevel() * 8;
   }
 
   /** T-3260: Ctrl held while a segment is drawn on from track: the segment runs straight on from its start.
