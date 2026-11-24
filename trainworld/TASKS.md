@@ -178,8 +178,8 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
   - Context: You, 11-23: "edit speed is actually still kind of a problem... noticeable on my end for big worlds... i feel like there was a point at which we had edit speed almost instant, but then might have regressed". Mostly placing track and editing stops. T-3550, T-1211, T-3804, T-1031 are back at P2 under this.
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
-- T-4153 [P1] {L:edit-speed} Rebuild only the touched part of the drawn network, stage 3
-  - Context: You, 11-23: "this is the entire issue". Stage 2 (tree editnetwork, not landed): a station's network build on Asia 333 to 124 ms in the page, track 212 to 180, construct 283 to 176, same output as a full build. Left: a station on a line's track or a line copy redoes 220-490 band orders (85-340 ms).
+- T-4153 [P1] {L:edit-speed} Redo band orders only where an edit can change them
+  - Context: You, 11-23: "this is the entire issue". Stage 2 landed (tree editnetwork): a station's network build on Asia 333 to 124 ms in the page, track 212 to 180, construct 283 to 176, same output as a full build. Left: a station on a line's track or a line copy redoes 220-490 band orders (85-340 ms).
   - Goal: Band orders redone only where a changed path can change them; a station on a line's track on Asia under 0.2 s of network build.
   - Other: tree editnetwork kept; notes/T-4153.md "What is left"
 - T-4149 [P2] {L:edit-speed} The checked version sooner, worker side, stage 2
@@ -254,8 +254,18 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4074 [P4] {L:loading} Spain blocks the game during football matches
   - Context: You, 11-23: "ok can leave as p4". From T-4071 (feedback 1795377906): Spanish ISPs block Cloudflare's shared addresses during LaLiga matches by court order. anita.garden and data.anita.garden both sit on them; the account server does not. A fallback would be a data mirror plus a page off Cloudflare, 4-6 h plus an upload at every publish.
   - Other: notes/T-4071.md group 3
-- T-4052 [P3] {L:buses} Fewer riders shown waiting at bus stops
-  - Context: Your scratch pad, 11-22: "i think we might allow an unrealistic number of people to pile up at bus stops, should probably show a lower number more in line with other stations to not make players alarmed by big number".
+- T-4225 [P2] {L:loading} New York's map shows about 2.5 s later than before (taking, 2026-11-24, agent mapslow)
+  - Context: perf_bench NYC: the map showed at 6.8 s in the 0.4.5 candidate (rc046), 9.7 s in 0.4.6; first seen 11-24 with T-4204 (+2.3-2.7 s), unexplained. Trips +5%, CPU -14%, memory -6% at the same time.
+  - Goal: The step that grew found and the map back near 6.8 s on NYC, other numbers no worse.
+- T-4223 [P1] {L:stops} Closing a loop line refused as can't loop back here (taking, 2026-11-24, agent loopclose)
+  - Context: You, 11-24: right click to close a loop is refused with "Can't loop back here" about 10% of the time for you (a retry usually works); some players have tried for days without success. Player complaints keep coming.
+  - Goal: The cause found and fixed; a loop close that is valid always goes through, and a refused one says why.
+- T-4224 [P3] {L:buses} Bus walking reach 600 m to 500 m
+  - Context: You, 11-24: bus trips went up in 0.4.6 mostly from Auto lines counting every stop (T-3924); "we can probably consider reducing to 500m later". Reach went 1 km back to 600 m on 11-23 (T-4056).
+  - Goal: Your call with numbers: bus riders on NYC and a bus-heavy save at 500 m against 600 m.
+- T-4052 [P2] {L:buses} Fewer riders shown waiting at bus stops (taking, 2026-11-24, agent buswait)
+  - Context: Your scratch pad, 11-22: "i think we might allow an unrealistic number of people to pile up at bus stops, should probably show a lower number more in line with other stations to not make players alarmed by big number". You, 11-24: players still report alarming numbers waiting for buses in the issues tab.
+  - Goal: Bus stops follow the same waiting rule as stations, so the issues tab and stop panel show numbers in line with stations.
 - T-4053 [P3] {L:borders} Common language border factor
   - Context: Your scratch pad, 11-22: "i think bogota-quito travel might be a bit small? relative to number of planes (liek 6 a day, maybe 2000 people a day vs our 800) i wonder if we should do a like 'common language' border multiplier... and maybe also between like switzerland and france". A new demand factor: the design goes to you first.
 - T-4063 [P3] {L:small-fixes} Trip explorer fails just after a change
@@ -267,11 +277,11 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Goal: Ctrl+click draws the station box where the pointer is, no snapping.
 - T-4047 [P3] {L:buses} Name bus stations
   - Context: Your scratch pad, 11-22: "allow naming bus stations".
-- T-4083 [P2] {L:buses} Manual connections between bus stops and stations
+- T-4083 [P2] {L:buses} Manual connections between bus stops and stations (taking, 2026-11-24, agent busstopid)
   - Context: Your scratch pad, 11-23: "allow making manual connections between bus stops and other stations." Split from T-4079. A bus stop gets a new id whenever an edit places the stops again, so a connection needs a stop that keeps its identity across edits and saves; T-4080 (naming bus stops) needs the same, so one design.
   - Goal: A player connects a bus stop to a station or stop up to 1 km away; riders change on foot as within a complex; it survives edits and a save.
   - Other: notes/T-4079.md
-- T-4080 [P2] {L:buses} Name and rename bus stops
+- T-4080 [P2] {L:buses} Name and rename bus stops (taking, 2026-11-24, agent busstopid)
   - Context: Your scratch pad, 11-23: "people keep requesting to be able to rename / name bus stops. we should add that." Also a player 11-20: "バスの停留所も名前を変えれるようにしたい" (want to rename bus stops too).
   - Goal: A bus stop's name can be set in its panel like a station's, saved, and shown wherever the stop's name shows.
 - T-4048 [P3] {L:route-choice} Remove station connections and passageways
