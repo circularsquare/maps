@@ -471,7 +471,10 @@ Web first, so it can be shared as a link.
   open, close or question, no replacement) and the network has been still for 20 s, every worker
   whose memory is at least 384 MB and 15% above its need is restarted through the panic path above,
   together and without counting as a panic; the network is solved once more, questions wait for that
-  final, and a worker is not restarted again until its memory or need has moved by 384 MB. Before
+  final, and a worker is not restarted again until its memory or need has moved by 384 MB. A replacement
+  holds nothing solved, so that solve is the whole game's (4-6 minutes on a 140-zone Asia save): such a
+  restart waits until the pool is short of memory, the workers' WASM with the rest of the page (guessed
+  from their needs, not their WASM) past 95% of the budget below, or the pool grows (T-4204). Before
   each solve the pool drops solving workers while the page outside the workers' WASM (at least 0.6 GB, and as
   the live memory reading counts it, `liveMemory.ts`: about 5 GB on a 7,000-station game, T-3757), each worker's need plus 0.15 GB
   for its JS heap (or, on a cross-origin isolated page, `measureUserAgentSpecificMemory`'s measure of

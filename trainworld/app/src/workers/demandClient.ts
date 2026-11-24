@@ -3356,6 +3356,21 @@ class DemandClient {
     return out;
   }
 
+  /** T-4204: what the workers hold now (their WASM, not their need) with the rest of the page passes GROW_ROOM of the
+   * budget, the line the pool grows to. The share of the solving workers (`SOLVING_SHARE`) is not asked: it sizes the
+   * pool by need, which a restart does not change. */
+  private memShort(): boolean {
+    const js = this.pageOther === null ? MEM_WORKER : 0;
+    // (the rest of the page grows with the network, which a worker's need stands for: its WASM over that is the
+    // allocator's high water, which `otherGuess` would count again outside)
+    const size = (i: number) => Math.min(this.mem[i]?.wasm ?? 0, this.needOf(i) ?? Infinity);
+    let first = 0;
+    for (let i = 0; i < this.computeN; i++) first = Math.max(first, size(i));
+    let held = this.pageOther ?? Math.max(MEM_OTHER, outsideWasmBytes(first, size(this.computeN)));
+    for (let i = 0; i < this.workers.length; i++) held += (this.mem[i]?.wasm ?? 0) + js;
+    return held > GROW_ROOM * memBudget();
+  }
+
   /** a solve's rounds are still out with the solving workers */
   private solving(): boolean {
     const s = this.cur;
@@ -3380,7 +3395,7 @@ class DemandClient {
   /** Restart the workers well above their need, together, once the pool is quiet, and add back the solving
    * workers that now fit (T-1366, `growTo`). The replacements and new workers open what the pool holds and the
    * network is solved again once (`workerDied`'s path); the figures shown stay until that solve's final, the
-   * same to the trip. */
+   * same to the trip. T-4204: a restart alone (no growth) waits until the pool is short of memory (`memShort`). */
   private memCheck() {
     this.memTimer = 0;
     if (this.failed) return;
@@ -3400,6 +3415,14 @@ class DemandClient {
     const wait = this.quietIn();
     if (wait > 0) return this.memSoon(wait);
     const gap = this.poolChangedAt + this.growGap - performance.now();
+    // T-4204: a replacement holds nothing solved, so the whole network is solved again (4-5 minutes of "calculating
+    // trips" on a 140-zone Asia save, for figures that do not change): a worker's slack above its need stays until the
+    // pool is short of memory, or a growth solves everything again anyway
+    if (!(n > n0 && gap <= 0) && !this.memShort() && !perfOff("keepSlack")) {
+      if (over.length) console.info(`demand: workers kept over their need, the pool not short of memory: ${over.map((o) => `${o.i} ${mb(o.wasm)} MB of WASM, about ${mb(o.need)} MB needed`).join("; ")}`); // i18n-ignore
+      if (n > n0) this.memSoon(gap);
+      return;
+    }
     if (n > n0 && gap > 0) this.memSoon(gap);
     else if (n > n0) this.grow(n, `about ${mb(this.growPer)} MB a solving worker, room for ${n} in ${mb(GROW_ROOM * this.solvingRoom())} MB`); // i18n-ignore
     // (the aux worker has moved to the end of the grown pool)

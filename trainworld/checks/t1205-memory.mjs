@@ -7,7 +7,8 @@
 // is well below that before, the rail trips a day after equal those of the undone network to the trip
 // (and the load's), a station is answered, and no console errors.
 // Usage (maps root): node trainworld/checks/t1205-memory.mjs [dev server url] [save]. QS adds URL
-// switches (QS=&perfOff=cap keeps every solving worker). The all-China save takes about 20 minutes.
+// switches (QS=&perfOff=cap keeps every solving worker). The all-China save takes about 20 minutes. Run with
+// perfOff=keepSlack (T-4204: otherwise a worker over its need restarts only once the pool is short of memory).
 // Writes ../artifacts/trainworld/t1205/memory-LABEL.json.
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -40,7 +41,8 @@ try {
   await page.addInitScript(() => { try { localStorage.setItem('trainworld-ui', JSON.stringify({ shade: 'light', display: { dayShown: 'weekday' }, v: 2 })); } catch {} });
   collectErrors(page, errors, NOISE, /glyphs/);
   page.on('console', (m) => { if (/restarted to give back memory|solving workers to|panicked/.test(m.text())) { infos.push(`${secs()} s ${m.text()}`); console.log(`      ${secs()} s: ${m.text().slice(0, 240)}`); } });
-  await page.goto(`${BASE}${BASE.includes('?') ? '&' : '?'}debug=1&new=1&paused=1${QS}&v=${Date.now()}`);
+  const qs = /perfOff=/.test(QS) ? QS.replace(/perfOff=([^&]*)/, 'perfOff=$1,keepSlack') : `${QS}&perfOff=keepSlack`;
+  await page.goto(`${BASE}${BASE.includes('?') ? '&' : '?'}debug=1&new=1&paused=1${qs}&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
   // a planned restart that begins while the solve in hand has not published its final, or one waits
   await page.evaluate(() => {
