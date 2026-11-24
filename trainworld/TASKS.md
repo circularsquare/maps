@@ -178,7 +178,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
   - Context: You, 11-23: "edit speed is actually still kind of a problem... noticeable on my end for big worlds... i feel like there was a point at which we had edit speed almost instant, but then might have regressed". Mostly placing track and editing stops. T-3550, T-1211, T-3804, T-1031 are back at P2 under this.
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
-- T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line
+- T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line (taking, 2026-11-24, agent cutstretch)
   - Context: You, 11-23: "this is the entire issue". Stage 3 (tree bandorders): band orders kept through a cut path, and a removed line no longer redoes every corridor. Asia network build in Node: a station on its longest trunk 0.62-0.69 to 0.31-0.49 s, a line removed 0.82-0.85 to 0.28-0.36 s. Left: each line whose path is cut is redone whole.
   - Goal: A station on a line's track on Asia under 0.2 s of network build: a cut line's bands, strokes and speeds redone only near the cut.
   - Other: notes/T-4153.md stage 3 "What is left"
@@ -258,9 +258,11 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4074 [P4] {L:loading} Spain blocks the game during football matches
   - Context: You, 11-23: "ok can leave as p4". From T-4071 (feedback 1795377906): Spanish ISPs block Cloudflare's shared addresses during LaLiga matches by court order. anita.garden and data.anita.garden both sit on them; the account server does not. A fallback would be a data mirror plus a page off Cloudflare, 4-6 h plus an upload at every publish.
   - Other: notes/T-4071.md group 3
-- T-4224 [P3] {L:buses} Bus walking reach 600 m to 500 m
-  - Context: You, 11-24: bus trips went up in 0.4.6 mostly from Auto lines counting every stop (T-3924); "we can probably consider reducing to 500m later". Reach went 1 km back to 600 m on 11-23 (T-4056).
-  - Goal: Your call with numbers: bus riders on NYC and a bus-heavy save at 500 m against 600 m.
+- T-4224 [P3] {L:buses} {waits:Anita} Lower bus ridership
+  - Need from Anita: Count bus minutes as 1.2x a train's and bus waits as if buses came at most every 4 minutes? I'd say yes to both; 500 m reach adds little.
+  - Context: You, 11-24: "bus ridership is just maybe a bit too high overall"; 0.7-minute headways unrealistic. Measured (NYC test / Belgrade): 1.2x bus minutes -5% / -14%; 4-minute wait rule -50% only on lines more often than that; 500 m reach -3.5% / -0.6%; street cap 60/h -11%. Your two tests unchanged.
+  - Goal: Your pick built; average NYC test bus line nearer a busy real route than today's 33,000 a day.
+  - Other: notes/T-4224.md ("For Anita" first)
 - T-4052 [P2] {L:buses} Riders left behind counted once each (taking, 2026-11-24, agent buscount)
   - Context: Your scratch pad, 11-22: bus stops show alarming numbers waiting. Stage 1 landed 11-24: a bus stop holds at most 200 waiting. The issues row still counts a rider again at every bus they miss, and those turned away from a full stop: an overloaded NYC bus line shows 23k a day.
   - Goal: The issues row and line panel count each rider left behind once (that line near 4.3k); memory added under 2 MB on NYC.
