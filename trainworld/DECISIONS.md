@@ -278,7 +278,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-09 (Anita, T-044, T-013): Blocks are spread over their polygon by land area on 50 m pixels, replacing all at the centroid (202k New York cells, recompute 12% slower). Grain matters most in centres; adaptive cells only if performance needs it (Anita). notes/archive/t0001-0499/T-013.md
 
 ## Tooling and process
-- 2026-11-24 (Anita): Gemini reviews adversarially, liberally: every risky landing, each batch diff, big designs, report claims; a Claude agent verifies a finding before action.
+- 2026-11-24 (Anita): Gemini reviews adversarially, sparingly (its quota runs out fast): when she asks, or when the orchestrator suggests it for a risky landing or big design; a Claude agent verifies a finding before action.
 - 2026-11-24 (T-4166): The AWS bench installs Node, Chrome and Rust on each machine instead of keeping an image (6-8 minutes, under a cent, against a snapshot billing every month) and ships only the files the save reads. Its numbers never go in the home ledgers (Linux, SwiftShader).
 - 2026-11-24 (Anita, T-4177): Stop using the friend's AWS account; agents lose access to it (profile removed, guard.py and awslib refuse it; its scripts kept as a record). AWS means her own account (anita-own) from now on. Gemini may take tasks in this repo, never AWS (GEMINI.md).
 

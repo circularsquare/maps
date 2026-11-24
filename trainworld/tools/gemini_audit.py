@@ -83,7 +83,8 @@ def main():
     if a.out:
         out_path = Path(a.out)
         out_path.parent.mkdir(parents=True, exist_ok=True)
-        out_path.write_text(p.stdout, encoding="utf-8", newline="\n")
+        with open(out_path, "w", encoding="utf-8", newline="\n") as f:  # Python 3.9: write_text has no newline=
+            f.write(p.stdout)
         lines = len(p.stdout.splitlines())
         print(f"wrote {out_path} ({lines} lines)")
     else:
