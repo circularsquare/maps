@@ -271,7 +271,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Tree memwasm (11-24): restart at a 192 MB gap gives back 290-340 MB per worker on all-China; then edits wait 3-8 min while workers reopen, final trips drift 0.11%. NYC never restarts.
   - Goal: Memory given back with no edit waiting on the restart: restart only when the tab is hidden or memory is tight (Gemini, 11-24). You, 11-24: not high priority, later.
   - Other: notes/T-4156.md in tree memwasm
-- T-4051 [P2] {L:loading} Opening a zone on a big save sits at 90% (taking, 2026-11-24, agent zoneopen2)
+- T-4051 [P2] {L:loading} Opening a zone on a big save sits at 90% (taking, 2026-11-24, agent zoneslow)
   - Context: You, 11-22: Medellin sat at 90% about 2 minutes. Tree zoneopen (ready to land, 11-24): opening a zone about 12% faster on your North America save (36 to 32 s), perf_bench nyc unchanged. The slow path reproduced on that save: 125 s against 35, when the new zone has no figures yet as its solve is sent.
   - Goal: Opening Medellin on your North America save takes the short path every time, same figures.
   - Other: notes/T-4051.md
