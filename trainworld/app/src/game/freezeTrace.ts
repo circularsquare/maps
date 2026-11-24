@@ -6,6 +6,9 @@ declare const __TW_BUILD__: string | undefined;
 let recorder: Worker | undefined;
 let recording = false;
 export const tracing = () => recording;
+/** T-4206: the demand pool's state at download time, set by workers/demandTrace.ts */
+let demandSnapshot: (() => unknown) | undefined;
+export const setDemandSnapshot = (fn: () => unknown) => { demandSnapshot = fn; };
 let phaseId = 0;
 export function tracePhase<T>(name: string, run: () => T): T {
   if (!recording) return run();
@@ -40,6 +43,12 @@ export function attachClockTrace(worker: Worker) {
   } catch { /* diagnostics must not affect startup */ }
 }
 
+function toBase64(bytes: Uint8Array) {
+  let out = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) out += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(out);
+}
+
 function start() {
   let enabled = false;
   try {
@@ -71,7 +80,13 @@ function start() {
   const download = document.createElement("button");
   download.textContent = "Download diagnostics"; // i18n-ignore: opt-in developer diagnostic
   download.disabled = true;
-  download.onclick = () => recorder?.postMessage({ download: true });
+  // T-4206: the save as it is now goes into the same file (null when the clock does not answer in a minute)
+  let saveBytes: Uint8Array | null = null;
+  download.onclick = async () => {
+    download.disabled = true;
+    try { saveBytes = await (await import("../workers/clockClient")).exportForShare(); } catch { saveBytes = null; }
+    recorder?.postMessage({ download: true });
+  };
   const stop = document.createElement("button");
   stop.textContent = "Stop recording"; // i18n-ignore: opt-in developer diagnostic
   stop.onclick = () => {
@@ -87,7 +102,12 @@ function start() {
     if (e.data.ready) { if (recording) status.textContent = "Diagnostics recording locally"; download.disabled = false; } // i18n-ignore
     if (e.data.error) { status.textContent = "Diagnostics storage unavailable; download before closing."; download.disabled = false; } // i18n-ignore
     if (e.data.report) {
-      const url = URL.createObjectURL(new Blob([JSON.stringify(e.data.report, null, 2)], { type: "application/json" }));
+      download.disabled = false;
+      const report = e.data.report;
+      try { report.demandNow = demandSnapshot?.() ?? null; } catch { report.demandNow = null; }
+      if (saveBytes) report.save = { bytes: saveBytes.length, base64: toBase64(saveBytes) };
+      saveBytes = null;
+      const url = URL.createObjectURL(new Blob([JSON.stringify(report)], { type: "application/json" }));
       const a = document.createElement("a"); a.href = url; a.download = "trainsworld-diagnostics.json"; a.click();
       setTimeout(() => URL.revokeObjectURL(url), 10000);
     }

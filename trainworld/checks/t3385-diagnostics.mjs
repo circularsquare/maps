@@ -79,10 +79,18 @@ try {
   assert(before.events.some((e) => e.source === 'page' && e.event === 'heartbeat-gap'), 'stall survived reload');
   await page.evaluate(async () => {
     const mod = await import('/src/game/freezeTrace.ts');
-    for (let i = 0; i < 600; i++) mod.trace('bounded-test', { i });
+    mod.trace('edit-click', { edit: { op: 'bounded', line: 7 } });
+    for (let i = 0; i < 5000; i++) mod.trace('bounded-test', { i });
+    for (let i = 0; i < 5000; i++) mod.trace('dm-bounded-test', { i, t: Date.now() - 5000 + i });
+    for (let i = 0; i < 300; i++) { mod.trace('receive-start', { kind: 'trips' }); mod.trace('receive-end', { kind: 'trips', ms: 1 }); }
   });
   r = await report();
-  assert.equal(r.current.events.length, 400, 'bounded log');
+  const ofKind = (re) => r.current.events.filter((e) => re.test(e.event)).length;
+  assert.equal(ofKind(/^bounded-test$/), 600, 'bounded log (other events)');
+  assert.equal(ofKind(/^dm-bounded-test$/), 4000, 'bounded log (demand events, kept by their own time)');
+  assert(r.current.events.some((e) => e.event === 'edit-click'), 'busy kinds do not push out edits');
+  assert.equal(r.current.counts['receive:trips'].n, 300, 'frequent calls are counted');
+  assert.equal(ofKind(/^receive-/), 0, 'and not logged one by one');
   assert(r.current.metadata.browser && r.current.metadata.build, 'metadata survives log rotation');
   assert.equal(typeof r.current.pageHealth.visible, 'boolean', 'last page health retained');
   await page.screenshot({ path: `${ARTIFACTS}/t3385-diagnostics.png` });

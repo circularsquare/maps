@@ -80,6 +80,8 @@ import {
   demandHeld,
 } from "../game/demand";
 import { FOCUS_WORKERS, FocusPool } from "./demandFocus";
+import { tracing } from "../game/freezeTrace";
+import { demandNote, startDemandTrace } from "./demandTrace";
 import { addressLimited, deviceGB, heapStep, memBudget, mobileDevice, phoneLoad, smallDevice } from "./deviceMemory";
 import { outsideWasmBytes } from "./liveMemory";
 import { isMemoryFailure } from "../game/loadText";
@@ -3098,6 +3100,7 @@ class DemandClient {
    * (T-1205): an idle worker restarted to give back its memory, which counts toward neither. */
   private workerDied(i: number, why: string, planned = false, download = false) {
     if (this.failed) return;
+    demandNote("worker-restart", { worker: i, planned, download, why }); // T-4206
     if (!planned) this.lastTrouble = `worker ${i}${download ? " download" : ""}: ${why}`; // i18n-ignore
     if (!planned && !download && this.computeN > 1 && isMemoryFailure(why)) return this.memoryShort(i, why);
     const panicked = [...this.respawn.values()].some((r) => !r.planned);
@@ -5938,6 +5941,7 @@ export function startDemand(city = HOME_CITY, newGame = false) {
   setRowsSource((key, place) => c.corridorRows(key, place)); // T-2136
   setDemandQueries({ transfers: (members) => c.transfers(members), platformTransfers: () => c.platformTransfers(), cityCells: (city) => c.cityCells(city), cellModes: (purpose, city) => c.purposeModes(purpose ?? "all", city), stationRiders: (id, top, members) => c.stationRiders(id, top, members), flows: (end, cells) => c.flows(end, cells), intercitySelection: (end, cells, still) => c.intercitySelection(end, cells, still), intercityStation: (id, members) => c.intercityStation(id, members), tripLengths: (zone) => c.tripLengths(zone), legsKey: (zone) => c.legsKey(zone) });
   if (TEST) c.submitNetwork(demandTestSnapshot());
+  if (tracing()) startDemandTrace(c); // T-4206
   if (new URLSearchParams(location.search).get("debug") === "1") (window as any).twDemand = { addressLimited, poolSize, marketOff, client: c, log: c.log, days: () => demandByDay.peek(), start: c.start, resubmit: () => c.resubmit(), view: () => demandView.peek(), cities: () => cityDemandViews.peek(), nearby: () => nearbyZones.peek(), intercity: () => intercityDemand.peek(), activeCity, cellModes: () => c.cellModes(), stationRiders: (id: string) => c.stationRiders(id), cityCells: () => c.cityCells(), flows: (end: "home" | "work", cells: Uint32Array) => c.flows(end, cells), intercitySelection: (end: "home" | "work", cells: Uint32Array) => c.intercitySelection(end, cells), intercityStation: (id: string) => c.intercityStation(id), transfers: (members: string[]) => c.transfers(members), trip: (from: [number, number], to: [number, number], purpose?: number) => c.trip(from, to, purpose), tripLengths: (zone?: CityId) => c.tripLengths(zone) };
   return c;
 }
