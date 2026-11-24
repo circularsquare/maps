@@ -6,6 +6,15 @@
 //   node trainworld/tools/perf_bench.mjs build <commit | tree folder> [--label L]   a production build, printed path
 //   node trainworld/tools/perf_bench.mjs run <dist> --label L [--saves nyc,tokyo,belgrade] [--runs 1]
 //        [--published vX.Y.Z] [--no-ledger] [--edit-trips] [--min-cores 3]       measure, append to the ledger
+//        [--baseline] [--heavy "<reason>"] [--dry-run]
+//
+// The budget (trainworld/CLAUDE.md, T-4213; tools/bench_gate.mjs). Inside .tw-trees/<name>/: 2 invocations in all
+// (counted in <tree>/.bench-runs.json), --runs 1, the default save is nyc, tokyo/belgrade/asia saves need --heavy
+// "<reason>" (still counted), and `compare` or a `build` of anything but this tree are refused: the run is diffed
+// against master's stored numbers (perfbench/baseline.json) by itself. --dry-run checks the gates and exits. On the
+// main tree nothing is refused; the orchestrator writes the baseline with `run <dist> --label L --baseline` (all
+// three saves, replaces those saves' lines). A run with more than 4 other cores claimed at its start or end is
+// stamped NOISY (n) in the output and its ledger line: report its numbers as noisy and stop.
 //   node trainworld/tools/perf_bench.mjs compare <base dist> <head dist> [--saves ...] [--runs 2]
 //                                                     base and head interleaved on the same cores: the only fair wall-clock
 //        (--saves also takes any <name> of artifacts/trainworld/perfbench/saves/<name>.save)
@@ -23,12 +32,15 @@ import { cpus } from 'node:os';
 import { createHash } from 'node:crypto';
 import { join, resolve, extname, basename, delimiter } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { TREE_NAME, refuse, gateRun, noiseWatch } from './bench_gate.mjs';
 
 const HERE = fileURLToPath(new URL('.', import.meta.url));
 const TREE = resolve(HERE, '../..');                                    // the tree this file is in
 const MAPS = TREE.replace(/[\\/]\.tw-trees[\\/][^\\/]+$/, '');          // the main tree: data, builds
 const HOME = join(MAPS, 'artifacts', 'trainworld', 'perfbench');
-const LEDGER = join(MAPS, 'trainworld', 'notes', 'perf-ledger.jsonl');   // the main tree's, from any tree
+const LEDGER = join(MAPS, 'trainworld', 'notes', 'perf-ledger.jsonl');
+const BASELINE = join(HOME, 'baseline.json');                            // master's numbers: { save: ledger line }
+const readBaseline = () => { try { return JSON.parse(readFileSync(BASELINE, 'utf8')); } catch { return {}; } };   // the main tree's, from any tree
 const MB = 1048576;
 const WORSE = 0.10;
 const WORKERS = 3;                                                     // demand workers in every run, whatever the cores
@@ -561,6 +573,8 @@ async function measure(dist, names, runs, name) {
   process.env.TW_CORES = String(cores);  // lib.mjs pins Chrome to them and claims no more
   const srv = await serve(resolve(dist));
   const out = {};
+  const noise = noiseWatch(cores);
+  noise.sample();
   try {
     for (let i = 0; i < runs; i++) for (const n of names) {
       const t = Date.now();
@@ -570,18 +584,23 @@ async function measure(dist, names, runs, name) {
       (out[n] ??= []).push(summarise(rec));
       console.log('  ' + n + ' run ' + (i + 1) + ': ' + Math.round((Date.now() - t) / 1000) + ' s' + (rec.failed ? ' FAILED ' + rec.failed : ''));
     }
+    noise.sample();
   } finally { srv.close(); release(name); }
-  return { cores, out };
+  return { cores, out, noisy: noise.stamp() };
 }
 
 async function main() {
+  if (TREE_NAME && cmd === 'build' && resolve(pos[0] ?? '.') !== TREE) refuse('building ' + pos[0] + ' is a base build: only this tree may be built; compare against master\'s stored numbers');
+  if (TREE_NAME && cmd === 'compare') refuse('compare needs a base build: compare against master\'s stored numbers (run diffs against them by itself)');
+  if (TREE_NAME && opt('baseline', false)) refuse('--baseline is the orchestrator\'s, on master');
   if (cmd === 'build') {
     if (!pos[0]) throw new Error('build <commit | tree folder> [--label L]');
     build(pos[0], opt('label', basename(pos[0]).replace(/[^\w.-]/g, '').slice(0, 20) || 'build'));
     return;
   }
   EDIT_TRIPS = !!opt('edit-trips', false);
-  const names = String(opt('saves', 'nyc,tokyo,belgrade')).split(',');
+  const names = String(opt('saves', TREE_NAME ? 'nyc' : 'nyc,tokyo,belgrade')).split(',');
+  if (cmd === 'run') gateRun({ tool: 'perf_bench', saves: names, runs: Number(opt('runs', 1)), compare: false, heavy: opt('heavy', false), dryRun: !!opt('dry-run', false) });
   fetchSaves(names);
   if (cmd === 'run') {
     const dist = pos[0];
@@ -593,17 +612,26 @@ async function main() {
     const t = Date.now();
     const since = Math.floor(Date.now() / 1000);
     if (!withinCap()) throw new Error('the cores ledger is over its cap: not measured (Anita: no measuring on an overbooked machine)');
-    const { cores, out } = await measure(dist, names, runs, 'perfbench-' + label);
+    const { cores, out, noisy } = await measure(dist, names, runs, 'perfbench-' + label);
+    if (noisy) console.log('NOISY: ' + noisy + ' other cores were claimed during the run (limit 4): report these numbers as noisy and stop');
     const fair = withinCap(since);
     if (!fair) console.log('THE CORES LEDGER WENT OVER ITS CAP DURING THE RUN: nothing appended to the ledger');
     const ledger = readLedger();
-    const rows = names.map((n) => ({ date: new Date().toISOString().slice(0, 16), label, ...info, published: published === true ? null : published, save: n, cores, workers: WORKERS, ...combine(out[n]) }));
+    const rows = names.map((n) => ({ date: new Date().toISOString().slice(0, 16), label, ...info, published: published === true ? null : published, save: n, cores, workers: WORKERS, ...combine(out[n]), ...(noisy ? { noisy } : {}), ...(TREE_NAME ? { tree: TREE_NAME } : {}) }));
+    if (opt('baseline', false)) {
+      const b = readBaseline();
+      for (const r of rows) if (!r.failed) b[r.save] = r;
+      if (fair && !noisy) { writeFileSync(BASELINE, JSON.stringify(b, null, 1)); console.log('baseline written for ' + rows.map((r) => r.save).join(', ') + ': ' + BASELINE); }
+      else console.log('BASELINE NOT WRITTEN: ' + (noisy ? 'the run was noisy' : 'the cores ledger went over its cap'));
+    }
+    const base = TREE_NAME ? readBaseline() : {};
     for (const r of rows) {
-      const ref = lastPublished(ledger, r.save, r);
+      const ref = base[r.save] ? { ...base[r.save], label: 'master baseline ' + base[r.save].label } : lastPublished(ledger, r.save, r);
       r.flags = flags(r, ref);
       r.vs = ref ? ref.label : null;
-      console.log(line(r));
-      if (!ref && !r.published) console.log('    NO PUBLISHED LINE FOR ' + r.save + ' IN ' + LEDGER + ': nothing to judge against');
+      console.log((r.noisy ? 'NOISY (' + r.noisy + ') ' : '') + line(r));
+      if (TREE_NAME && !base[r.save]) console.log('    NO MASTER BASELINE FOR ' + r.save + ' (' + BASELINE + '): ' + (ref ? 'judged against the last published line' : 'nothing to judge against'));
+      else if (!ref && !r.published) console.log('    NO PUBLISHED LINE FOR ' + r.save + ' IN ' + LEDGER + ': nothing to judge against');
       for (const f of r.flags) console.log('    ' + f + '  (vs ' + ref.label + ')');
       if (!opt('no-ledger', false) && fair) appendFileSync(LEDGER, JSON.stringify(r) + '\n');
     }

@@ -13,6 +13,8 @@ ask-answer, text-ack, add, comment, ...) are in notes/T-3391.md.
 
 It also prints a "disk:" line when free space on the drive falls under 30 GB, again under 10 GB, and once it is
 back (checked every 5 minutes; tools/ops/disk.py), chiming for Anita with a Windows notification as it falls.
+It also prints a "busy:" line when the core claims stay at 12 or more for over 20 minutes in a row (checked every
+minute, at most once an hour; T-4213), so the orchestrator holds back new agents and benchmark runs.
 It also prints a line for each unread agent report (tools/reports.py, T-3668) that another session's agent
 sent: the current orchestrator's own agents already reach it directly. --session registers this session for
 the reports hook (ids already printed are kept per session in notes/watch-told-<session>.json, so the 30-minute
@@ -111,6 +113,7 @@ ROOT = TW.parent
 HEAD = re.compile(r"^- (T-\d+) \[(P\d)\] (.*)$")
 IDLE_EVERY = 3600
 DISK_EVERY = 300
+BUSY_AT, BUSY_FOR, BUSY_EVERY, BUSY_POLL = 12, 1200, 3600, 60
 MIN_AGENTS, MAX_AGENTS, MIN_FREE = 2, 8, 4  # her 2-8, run by load (docs/orchestrator.md)
 
 
@@ -158,6 +161,34 @@ def idle_line():
     return f"idle: running {len(agents)} agents, {cores}, startable: {', '.join(start) or 'none found'}"
 
 
+def claims():
+    """(claimed, cap) from cores.py list, or None"""
+    try:
+        r = subprocess.run([sys.executable, str(ROOT / "cores.py"), "list"], cwd=str(ROOT), capture_output=True,
+                           text=True, timeout=20, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    except (OSError, subprocess.SubprocessError):
+        return None
+    m = re.search(r"claimed (\d+) of cap (\d+)", r.stdout)
+    return (int(m.group(1)), int(m.group(2))) if m else None
+
+
+def busy_line(state, now, read=claims):
+    """The busy line once claims have been at BUSY_AT+ for BUSY_FOR s in a row, at most once per BUSY_EVERY. state: a dict kept by the caller."""
+    c = read()
+    if c is None:
+        return None
+    if c[0] < BUSY_AT:
+        state["since"] = None
+        return None
+    state.setdefault("since", None)
+    if state["since"] is None:
+        state["since"] = now
+    if now - state["since"] > BUSY_FOR and now - state.get("told", -BUSY_EVERY) >= BUSY_EVERY:
+        state["told"] = now
+        return f"busy: {c[0]} of {c[1]} cores claimed for {int((now - state['since']) // 60)} min"
+    return None
+
+
 def disk_check(dw):
     """The disk line, if free space crossed a level since the last check; chimes for Anita as it falls."""
     try:
@@ -178,9 +209,15 @@ def watch(path, idle, poll, box=None, session=None, dw=None):
     reported, seen_sent = set(), None
     told, next_reports = load_told(session), 0.0   # kept on disk so a restart doesn't reprint reports
     next_idle, last_idle = time.time() + IDLE_EVERY, None
-    next_disk = 0.0
+    next_disk = next_busy = 0.0
+    busy = {}
     while True:
         nudge = False
+        if time.time() >= next_busy:
+            next_busy = time.time() + BUSY_POLL
+            l = busy_line(busy, time.time())
+            if l:
+                print(l, flush=True)
         if dw is not None and time.time() >= next_disk:
             next_disk = time.time() + DISK_EVERY
             l = disk_check(dw)

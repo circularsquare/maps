@@ -5,6 +5,14 @@
 //
 //   node trainworld/tools/edit_bench.mjs [--url http://localhost:6158/] [--save asia|nyc|<file>[,..]] [--runs 3]
 //        [--calculating] [--no-ledger] [--label L] [--compare <hash or run id>] [--only a,b] [--cores 4]
+//        [--baseline] [--heavy "<reason>"] [--dry-run]
+//
+//   The budget (trainworld/CLAUDE.md, T-4213; tools/bench_gate.mjs). Inside .tw-trees/<name>/: 2 invocations in all
+//   (counted in <tree>/.bench-runs.json), --runs 1 (the default there), the default save is nyc, the asia save (and
+//   any tokyo/belgrade file) needs --heavy "<reason>" (still counted), --compare is refused: the run is diffed against
+//   master's stored lines (editbench/baseline.json) by itself. --dry-run checks the gates and exits. On the main
+//   tree nothing is refused; the orchestrator writes the baseline with --baseline (replaces the file with this run's
+//   lines). A run with more than 4 other cores claimed at its start or end is stamped NOISY (n) on its lines.
 //
 //   (default)        paused clock, trips final first: the edits' own wait
 //   --calculating    also a second pass in a fresh game with the edits made while trips are calculating
@@ -24,6 +32,7 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync, unl
 import { cpus } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { TREE_NAME, refuse, gateRun, noiseWatch } from './bench_gate.mjs';
 
 const HERE = fileURLToPath(new URL('.', import.meta.url));
 const TREE = resolve(HERE, '../..');
@@ -31,6 +40,7 @@ const MAPS = TREE.replace(/[\\/]\.tw-trees[\\/][^\\/]+$/, '');
 const LEDGER = join(MAPS, 'trainworld', 'notes', 'edit-ledger.jsonl');
 const HOME = join(MAPS, 'artifacts', 'trainworld', 'editbench');
 const LOCK = join(HOME, 'bench.lock');
+const BASELINE = join(HOME, 'baseline.json');                           // master's lines of one run
 
 const SAVES = {
   asia: join(MAPS, 'artifacts', 'trainworld', 't3600-asianita-1852.save'),
@@ -567,8 +577,10 @@ async function main() {
     return;
   }
   const url = String(opt('url', 'http://localhost:6158/'));
-  const saveNames = String(opt('save', 'asia,nyc')).split(',');
-  const runs = Number(opt('runs', 3));
+  const saveNames = String(opt('save', TREE_NAME ? 'nyc' : 'asia,nyc')).split(',');
+  if (TREE_NAME && opt('baseline', false)) refuse('--baseline is the orchestrator\'s, on master');
+  const runs = Number(opt('runs', TREE_NAME ? 1 : 3));
+  gateRun({ tool: 'edit_bench', saves: saveNames.map((s) => (SAVES[s] ? s + ' ' + SAVES[s] : s)), runs, compare: !!opt('compare', false), heavy: opt('heavy', false), dryRun: !!opt('dry-run', false) });
   const only = opt('only', null) ? String(opt('only')).split(',') : null;
   const passes = opt('calculating', false) ? ['quiet', 'calc'] : ['quiet'];
   const hash = String(opt('build', hashNow()));
@@ -586,6 +598,8 @@ async function main() {
   const { openGame } = await import('../checks/lib/play.mjs');
   const { corePlan } = await import('../checks/cores.mjs');
   const plan = corePlan();
+  const noise = noiseWatch(cores);
+  noise.sample();
   const since = Math.floor(Date.now() / 1000);
   const RUN = hash + '@' + new Date().toISOString().slice(0, 19).replace(/[-:T]/g, '') + '-' + process.pid;
   const all = [];
@@ -623,10 +637,22 @@ async function main() {
         } finally { clearInterval(boosting); await g.close().catch(() => {}); }
       }
     }
+    noise.sample();
   } finally { release(name); drop(); }
+  const noisy = noise.stamp();
+  if (noisy) { log('\nNOISY: ' + noisy + ' other cores were claimed during the run (limit 4): report these numbers as noisy and stop'); for (const r of all) r.noisy = noisy; }
+  if (TREE_NAME) for (const r of all) r.tree = TREE_NAME;
   const fair = spawnSync('python', [join(MAPS, 'cores.py'), 'total', '--since', String(since)], { stdio: 'ignore', windowsHide: true, cwd: MAPS }).status === 0;
   if (!fair) log('\nTHE CORES LEDGER WENT OVER ITS CAP DURING THE RUN: nothing appended to the ledger');
   const prior = readLedger();
+  if (opt('baseline', false)) {
+    if (fair && !noisy) { writeFileSync(BASELINE, JSON.stringify(all)); log('\nbaseline written (' + all.length + ' lines): ' + BASELINE); }
+    else log('\nBASELINE NOT WRITTEN: ' + (noisy ? 'the run was noisy' : 'the cores ledger went over its cap'));
+  }
+  if (TREE_NAME && existsSync(BASELINE)) {
+    const bl = JSON.parse(readFileSync(BASELINE, 'utf8'));
+    if (bl.length) { log('\nagainst master\'s baseline (' + bl[0].hash + ', run ' + bl[0].run + '):'); for (const l of compare(bl, all, bl[0].run)) log('  ' + l); }
+  } else if (TREE_NAME) log('\nNO MASTER BASELINE (' + BASELINE + '): nothing to diff against');
   if (opt('compare', false)) { { const b = linesOf(prior, String(opt('compare'))); log('\nagainst ' + opt('compare') + (b.size ? ' (run ' + runOf([...b.values()][0]) + ')' : '') + ':'); } for (const l of compare(prior, all, String(opt('compare')))) log('  ' + l); }
   if (!opt('no-ledger', false) && fair) {
     mkdirSync(join(MAPS, 'trainworld', 'notes'), { recursive: true });
