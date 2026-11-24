@@ -5,5 +5,12 @@
     "text": "On all-China, restarting an idle demand worker gives back about 290-340 MB each, but for 3-8 minutes afterwards a player's edit waits while workers reopen, and final trips drift 0.11%. NYC never restarts. Land only once the restart waits while the player is editing (one more agent step)? I'd say yes.",
     "since": "2026-11-23",
     "by": "maps-c0"
+  },
+  {
+    "id": "a-2026-11-23-23",
+    "title": "Commute pairs in chunks (T-921)",
+    "text": "Dealing commute pairs under 1 a day in chunks takes about 7% off New York's trip calculation (8 s of 102), with rail trips moving 21 of 13.1M; Tokyo and Belgrade gain nothing. Stations under 1,000 a day move up to 3.5%, about as much as a different random draw. Land it? I'd leave it for now: small gain, and the in-game figures didn't move where the native ones did, which nobody has explained yet.",
+    "since": "2026-11-23",
+    "by": "maps-c0"
   }
 ]

@@ -147,6 +147,12 @@ if pid and pid != "0":
     svc["fd_max"] = int(m.group(1)) if m else None
     svc["started"] = os.stat("/proc/%s" % pid).st_mtime
 out["service"] = svc
+V = "/mnt/HC_Volume_107598115"
+if os.path.ismount(V):
+    vs = os.statvfs(V)
+    out["volume"] = {"used": (vs.f_blocks - vs.f_bfree) * vs.f_frsize, "size": vs.f_blocks * vs.f_frsize,
+                     "avail": vs.f_bavail * vs.f_frsize,
+                     "games_mounted": os.path.ismount(B + "trainworld/games")}
 out["journal_bytes"] = tree("/var/log/journal")[0]
 m = re.search(r"^SystemMaxUse=(\d+)([KMG]?)", run("cat /etc/systemd/journald.conf /etc/systemd/journald.conf.d/*.conf 2>/dev/null"), re.M)
 out["journal_max"] = int(m.group(1)) * {"": 1, "K": 1 << 10, "M": 1 << 20, "G": 1 << 30}[m.group(2)] if m else None
@@ -505,7 +511,16 @@ def main():
         if old:
             t0, b0 = max(old)
             games_growth = (games_used - b0) / ((now - t0) / 86400)
-        rows.append(Row("box", "disk", d["used"], d["size"], "B", games_growth, f"{fmt(d['avail'], 'B')} free; grows with the games store"))
+        rows.append(Row("box", "disk", d["used"], d["size"], "B", games_growth, f"{fmt(d['avail'], 'B')} free"))
+        vol = box.get("volume")
+        if vol:
+            warn = lim["twGamesWarnAt"]
+            rows.append(Row("box", "games volume", vol["used"], vol["size"], "B", games_growth,
+                            f"{fmt(vol['avail'], 'B')} free; games {fmt(games_used, 'B')}, server alerts at {fmt(warn, 'B')}, cap {fmt(lim['MaxTwGamesBytes'], 'B')}"
+                            + ("" if vol["games_mounted"] else "; games folder NOT on the volume"),
+                            missing=games_used >= warn or not vol["games_mounted"]))
+        else:
+            rows.append(Row("box", "games volume", None, None, "", None, "volume not mounted on the box", missing=True))
         rows.append(Row("box", "inodes", d["inodes"], d["inodes_max"]))
         rows.append(Row("box", "memory in use", m["total"] - m["avail"], m["total"], "B", None,
                         f"shonei process {fmt(box['service'].get('rss'), 'B')}, swap {fmt(m['swap'], 'B')}"))

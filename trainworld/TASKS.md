@@ -171,7 +171,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4096 [P3] {L:checks} A daily sweep of old session scratch
   - Context: From T-4088: session scratch in Temp\claude was 78 GB, the biggest single user of the disk, and nothing clears it. The standing rule already lets agents delete finished sessions' scratch 2+ days old.
   - Goal: Scratch folders untouched for 2+ days deleted daily, sessions still running skipped.
-- T-4133 [P2] {L:edit-speed} Edits move only the trains they can change
+- T-4133 [P2] {L:edit-speed} Edits move only the trains they can change (taking, 2026-11-23, agent trainmove)
   - Context: From T-4131: `before_edit` and `note_changes` walk every train, 306-374 ms of a 717-823 ms apply on the Asia save.
   - Goal: Only trains on touched lines are snapshotted and compared; same result; about 3-4 h.
   - Other: notes/T-4131.md
@@ -225,19 +225,11 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Batch check 2 (11-23): the Asia rows check at 10 seeds of 40 steps failed at seed 9, step 15, "regions differ from a fresh build", in the T-4113 region code; not rerun on the parent commit.
   - Goal: Seed 9 reproduced and fixed, or shown to predate T-4130; the 10x40 Asia run passes.
   - Other: notes/batchcheck-2026-11-23b.md
-- T-4162 [P1] {L:track-drawing} Line-up message and exact small trip counts (taking, 2026-11-23, agent textfix3)
-  - Context: You, 11-24: the line-up refusal "doesn't really make any sense to me ... if we can find a situation where this error shows up, its mots likely a bug. so maybe lets say 'track alignment error'". Station hover: "can't we just say the exact number under 50?"
-  - Goal: The refusal reads "Track alignment error"; the hover shows the exact trip count under 50 and "Under 50 trips within" is gone.
-  - Other: notes/T-4152.md, notes/T-4135.md
 - T-4163 [P2] {L:track-drawing} {after:edit speed lands} Find drawing that still trips the alignment check
   - Context: You, 11-24: a situation where the line-up refusal shows is most likely a bug, to prevent. T-4152 cut the end-to-end join sweep's refusals from 26 of 288 to 0.
   - Goal: Ordinary drawing (joins, junctions, node drags, trams) never shows it; any case found is fixed or filed.
   - Other: notes/T-4152.md
-- T-4164 [P2] {L:accounts-server} Volume row in the resource check, R2 purge, old games copy deleted (taking, 2026-11-23, agent opsvol)
-  - Context: From T-4159: games now on the Hetzner volume; check_resources.py watches only the root disk. You said yes to purging R2's oldest data version (11-18). The old games copy on the root disk goes once the 03:23 UTC backup on 11-24 logs ok.
-  - Goal: A volume row (used of 49 GB) in check_resources.py; R2 down to three data versions; about 7.4 GB freed on the root disk.
-  - Other: notes/T-4159.md
-- T-4166 [P2] {L:checks} Bench machine on your own AWS account
+- T-4166 [P2] {L:checks} Bench machine on your own AWS account (taking, 2026-11-23, agent awsbench)
   - Context: You, 11-24: account made (not free tier), $20 monthly budget alarm, both quota raises refused (5 vCPUs: one 4-core machine), CLI profile anita-own; she wants $20 a month to really cut off. You, 11-24: this PC first, AWS only for spillover. Setup guide: notes/aws-own-account-setup.md.
   - Goal: One script runs the benches and smoke on a commit and shuts the machine down; anita-own in docs/aws.md; a $20 budget action stopping machines, with click steps for her.
 - T-4167 [P2] {L:checks} perf_bench tree builds can ship another tree's WASM
@@ -457,8 +449,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: The page has 2,200 elements; a forced layout takes 22-37 ms, and the Lines, saves and Stations panels open in 0.4-0.7 s. All figures are from 2026-10-24 at 4-6x CPU slowdown; T-1505 took the forced layout out of station name placement since.
   - Goal: Measure once at normal CPU on the 2,647-station save (about 20 minutes): under 200 ms closes it, over keeps it with the new figures.
   - Other: notes/T-1200.md and notes/T-1211.md.
-- T-921 [P3] {L:solve-speed} Deal tiny commute pairs in chunks (taking, 2026-11-23, agent commutechunks)
-  - Context: Commute pairs under 1 person a day can be dealt in chunks; New York solve 34.3 to 29.6 s.
+- T-921 [P3] {L:solve-speed} {waits:Anita} Deal tiny commute pairs in chunks
+  - Need from Anita: Land it at 1 a day (about 7% off New York's calculation, nothing on Tokyo or Belgrade)? I'd leave it for now.
+  - Context: Built in tree commutechunks (11-24): NYC rail trips move 21 of 13.1M; stations under 1,000 a day up to 3.5%, about one random redraw; in-game figures unexplainedly identical. notes/T-921.md.
   - Goal: The chunked deal is in, with ceilings unchanged.
   - Other: Measured in notes/T-909.md option 1.
 

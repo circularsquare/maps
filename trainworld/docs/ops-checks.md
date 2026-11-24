@@ -23,7 +23,8 @@ flagged line (docs/orchestrator.md, Tools). Measurements and how the figures wer
 
 | Line | Limit and where it is set | When flagged |
 |---|---|---|
-| box / disk, inodes | Hetzner CPX11, 38 GB disk | Grows with the games store. Lower the games cap or add a Hetzner volume; a resize to CPX21 doubles disk. |
+| box / disk, inodes | Hetzner CPX11, 38 GB disk | The games store lives on the volume now, so the root disk grows slowly (journal, backups staging). Find what grew with `du -xh /opt/shonei /var --max-depth=2`; a resize to CPX21 doubles disk. |
+| box / games volume | Hetzner volume, 50 GB ext4 at `/mnt/HC_Volume_107598115`, bind-mounted over `/opt/shonei/trainworld/games` (T-4159); alert at `twGamesWarnAt` (32 GiB), cap `MaxTwGamesBytes` (40 GiB) | MISSING means games reached 32 GiB, or the volume or the bind mount is gone (shonei then does not start: it requires the mount). Reached 32 GiB: raise the volume in the Cloud Console (grow only, ext4 follows with `resize2fs /dev/sdb`), then raise the two constants in trainworld_games.go and deploy (her word). Mount gone: `findmnt /opt/shonei/trainworld/games`, then `systemctl start opt-shonei-trainworld-games.mount`. Notes/T-4159.md. |
 | home / drive C: | This PC's drive (C: hit 0 free on 2026-11-23) | Free space left, not %. `board/watch.py` prints the same "disk:" line during a session and chimes. What can go: notes/T-4088.md. |
 | box / memory | 2 GB, no swap | Grows with accounts and opted-in stats, not players. Over 70%: a resize to CPX21 (4 GB), a few minutes with a reboot, her call. |
 | box / load | 2 vCPU | Sustained over 1.5: look at the journal for a loop; then a resize. |
