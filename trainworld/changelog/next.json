@@ -42,14 +42,15 @@
     {
       "id": "c002",
       "text": "stations and track show up faster on big networks",
-      "edited": null,
+      "edited": "stations, track and deleting lines show up faster on big networks",
       "hidden": false,
       "task": "T-4153",
       "by": "netland",
       "at": "2026-11-24T20:01:50Z",
-      "rev": 1,
+      "rev": 2,
       "area": "performance",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-24T21:16:34Z"
     },
     {
       "id": "c001",

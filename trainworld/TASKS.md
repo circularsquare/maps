@@ -178,10 +178,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
   - Context: You, 11-23: "edit speed is actually still kind of a problem... noticeable on my end for big worlds... i feel like there was a point at which we had edit speed almost instant, but then might have regressed". Mostly placing track and editing stops. T-3550, T-1211, T-3804, T-1031 are back at P2 under this.
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
-- T-4153 [P1] {L:edit-speed} Redo band orders only where an edit can change them (taking, 2026-11-24, agent bandorders)
-  - Context: You, 11-23: "this is the entire issue". Stage 2 landed (tree editnetwork): a station's network build on Asia 333 to 124 ms in the page, track 212 to 180, construct 283 to 176, same output as a full build. Left: a station on a line's track or a line copy redoes 220-490 band orders (85-340 ms).
-  - Goal: Band orders redone only where a changed path can change them; a station on a line's track on Asia under 0.2 s of network build.
-  - Other: tree editnetwork kept; notes/T-4153.md "What is left"
+- T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line
+  - Context: You, 11-23: "this is the entire issue". Stage 3 (tree bandorders): band orders kept through a cut path, and a removed line no longer redoes every corridor. Asia network build in Node: a station on its longest trunk 0.62-0.69 to 0.31-0.49 s, a line removed 0.82-0.85 to 0.28-0.36 s. Left: each line whose path is cut is redone whole.
+  - Goal: A station on a line's track on Asia under 0.2 s of network build: a cut line's bands, strokes and speeds redone only near the cut.
+  - Other: notes/T-4153.md stage 3 "What is left"
 - T-4149 [P2] {L:edit-speed} The checked version sooner, worker side, stage 2
   - Context: Stage 1 landed 11-24 (6d7c50c5): the day's figures -77% and line periods -58% on Asia, money posted in 1-2 ms. Left: rows first for every full-path edit, trips and boarding per touched line, demand snapshot per cluster.
   - Goal: Those redone for what an edit touched. Tree editworker kept.
@@ -202,7 +202,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: T-4209's display fix (11-24) shows no time left until the solve's own time is known, then only counts down (asianita: none until 138 s, then 7 min down; final at 523 s). You: "then do the actual underlying fix later."
   - Goal: An estimate from the start, within about 30% of the real wait on asianita and NYC.
   - Other: notes/T-4209.md
-- T-4214 [P1] {L:edit-speed} Clickable map patched with what each edit touched (taking, 2026-11-24, agent mapcbench)
+- T-4214 [P1] {L:edit-speed} Clickable map patched with what each edit touched (taking, 2026-11-24, agent mapcfix)
   - Context: Waiting clicks landed 11-24 (7ff71c929): quick clicks act on the right piece but wait. You, 11-24: work at the root cause, "something like a silo approach", and deprioritize surface fixes. Gemini: artifacts/trainworld/gemini/rootcause-plan-answer.md.
   - Goal: After each edit the clickable map takes only the touched pieces, so no click waits for the whole network; no name or placing wait for stations and track runs.
   - Other: notes/T-4214.md
