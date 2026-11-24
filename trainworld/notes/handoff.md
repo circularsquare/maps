@@ -1,11 +1,12 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session 5cd3af11-2ab8-4788-8daf-1956104ead51, name maps-c0 [58120f], since 2026-11-24 01:57 UTC
-Updated: 2026-11-24 09:05 UTC (cycling at 500k). Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Orchestrator: session f51a9e36-f3e8-41ee-b3d9-e908c5e30b16, name maps-2c [36056b], since 2026-11-24 09:03 UTC
+Previous: session 5cd3af11-2ab8-4788-8daf-1956104ead51, name maps-c0 [58120f], handed over 2026-11-24 09:03 UTC, finishing in-flight work
+Updated: 2026-11-24 09:03 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5.
 
 ## In flight (agents in maps-c0's tab; adopt from the board; follow-ups to fresh agents on their trees/notes)
-- memgrowth T-4179 (a84b996f14a30f0fe): demand memory since v0.4.5 (+12-17%) and why coarse barely cuts memory.
+- memgrowth T-4179 DONE and landed (demand memory -64 to -479 MB per save, same figures; now +3/+8/+3% vs v0.4.5; needs a checker look with the next batch; coarse answer: Tokyo -6% memory, NYC flat, in notes/T-4179.md). T-3160 can start. Old id (a84b996f14a30f0fe): demand memory since v0.4.5 (+12-17%) and why coarse barely cuts memory.
 - phonemem2 T-4184 (a5ade11e64ee0b298): next clock-worker memory cuts on phones; avoids map/network.ts.
 - zoneslow T-4051 (abc6f5b3f51e4a673): zone-open slow path (125 s vs 35 s on her NA save), helper worker opens the new zone first.
 - Landed tonight since 8800's ef99d979: edit speed (T-4145, T-4153 s1, T-4147, T-4146, T-4148, T-4149, T-4170, T-4181, T-4185,
