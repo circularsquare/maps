@@ -175,10 +175,10 @@ new standing process.
   figures show it; a place that already looks right (the US intercity) keeps the worldwide rule. Look outward for how
   other games and map makers solve it; write what you find in notes or research/.
 - **Performance**: quantify impact, do the big ones first. An approximation is welcome when a player couldn't tell;
-  say what the lie is in DECISIONS.md. Speed is measured on real saves only (hand-built saves are for correctness). A
-  speedup that shifts riders measures the saving and the shift on a big real-world save (the real NYC save: total
-  rail trips, the lines that move most) and names the network shape that would show the shift worst; she decides
-  with those numbers (her 11-23). Speedups that keep every figure the same land as usual. Every speed, memory or
+  say what the lie is in DECISIONS.md. Speed is measured on real saves only (hand-built saves are for correctness). No
+  bit-exact rule (her 11-24): a speedup that changes figures at all says so to her, with the saving and the shift on
+  a big real-world save (the real NYC save: total rail trips, the lines that move most) and the network shape that
+  would show it worst. Aim to keep most lines' riders within 1% of before; no hard limit. A bigger shift is her call. Every speed, memory or
   loading change reports all of `node trainworld/tools/perf_bench.mjs`'s numbers (CPU, memory, bytes, solver time),
   not only the one it targets: one save for a small expected change, all three (nyc, tokyo, belgrade) for a risky one
   or a release; worse by more than 10% on any goes to her as a trade-off. How to read it: notes/T-4025.md.
