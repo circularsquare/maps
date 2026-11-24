@@ -261,10 +261,13 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4178 [P1] {L:line-rates} Reversals mid-line cost the same as at a line's end
   - Context: You, 11-24: players build switchbacks and are confused why they cut capacity; reversals mid-line cut it while ones at a line's end "kinda dont", which is inconsistent. Also: no yellow icon unless the reversal is what limits throughput, "which i think it should almost never be".
   - Goal: One rule for every reversal, measured on a switchback line; the icon only when a reversal is the limit.
-- T-4179 [P1] {L:memory} Win back demand memory lost since v0.4.5
+- T-4179 [P1] {L:memory} Win back demand memory lost since v0.4.5 (taking, 2026-11-24, agent memgrowth)
   - Context: T-4157 (11-24): master against v0.4.5, demand memory +13% NYC, +12% Tokyo, +35% Belgrade; tab peak +0.5/+5/+9%. Cause not traced. Tree zoneopen (T-4051) happened to show NYC demand memory 1,163 to 1,003 MB.
   - Goal: The growth traced, demand memory back to v0.4.5 on all three saves, same figures; and why coarse demand barely cuts memory (her question).
   - Other: notes/T-4157.md
+- T-4180 [P1] {L:checks} Landing a tree loses work left in an unfinished merge
+  - Context: 11-24, busmerge2: its agent merged master with --no-commit; finish committed that as a merge commit, the rebase onto master dropped it, and the tree was reset to master. Recovered from the reflog.
+  - Goal: finish and land refuse (or commit properly) when the tree has MERGE_HEAD or a merge commit, so no work can vanish.
 - T-4141 [P3] {L:station-placement} Track placed by an edit call crossed the Hudson at ground level
   - Context: Seen by T-4112: a route entered through the game's edit call crossed the Hudson at ground level without a refusal, while pointer-drawn track nearby was bridged. Water may not have been loaded under part of it.
   - Other: notes/T-4112.md
@@ -275,10 +278,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Tree memwasm (11-24): restart at a 192 MB gap gives back 290-340 MB per worker on all-China; then edits wait 3-8 min while workers reopen, final trips drift 0.11%. NYC never restarts.
   - Goal: Memory given back with no edit waiting on the restart: restart only when the tab is hidden or memory is tight (Gemini, 11-24). You, 11-24: not high priority, later.
   - Other: notes/T-4156.md in tree memwasm
-- T-4158 [P1] {L:solve-speed} Merge bus stops more aggressively for demand (taking, 2026-11-23, agent busland)
-  - Context: You, 11-24: "ok, lets do 500m" (same-lines rule): Detroit's solve 29% lighter, Belgrade's 18%, median line moves about 2%. Built behind switches in tree busmerge2; default to 500 m, then perf_bench compare.
-  - Goal: The picked merge landed, with its time to trips ready measured in game on Belgrade.
-  - Other: notes/T-4094.md, notes/T-4158.md (in the busmerge2 tree until landing)
 - T-4051 [P2] {L:loading} Opening a zone on a big save sits at 90%
   - Context: You, 11-22: Medellin sat at 90% about 2 minutes. Tree zoneopen (11-24): a zone opens about a third faster on your North America save (median 68 to 45 s); perf_bench nyc twice: map 5.2 to 8.8 s, trips +6%; fix before landing. The slow path (once in 9 opens) needs your newer save.
   - Goal: A zone with figures already in takes the short path on your newer save.
