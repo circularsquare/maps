@@ -6,6 +6,7 @@ import { signal } from "@preact/signals";
 import type { ComponentChild, ComponentChildren } from "preact";
 import IntlMessageFormat from "intl-messageformat";
 import en from "./messages/en.json";
+import { setDefaultNameMessage } from "../game/lineLetter";
 import { countryName, formatCompact, formatDate, formatDuration, formatList, formatNumber, formatSeries, formatSpaced, isLang, langOfBrowser, OFFERED, PICKER, type Lang } from "./intl";
 
 export { LANGS, LANG_NAMES, isLang, type Lang } from "./intl";
@@ -32,6 +33,7 @@ export async function setLanguage(lang: Lang): Promise<void> {
     catalogs.set(lang, await load());
   }
   language.value = lang;
+  setDefaultNameMessage(catalogs.get(lang)?.["lineActions.defaultName"]);
   if (typeof document !== "undefined") {
     document.documentElement.lang = lang;
     // the page font follows <html lang> (style.css), so canvas text measured in the old one is measured again
