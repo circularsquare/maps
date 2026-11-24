@@ -246,7 +246,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Goal: No rule lost or added except one: your direction calls go into DECISIONS.md when you say them; duplicates with trainworld/CLAUDE.md trimmed.
 - T-4166 [P2] {L:checks} Bench machine on your own AWS account
   - Context: You, 11-24: account made (not free tier), $20 monthly budget alarm, on-demand and spot quotas 32 requested, CLI profile anita-own; she wants $20 a month to really cut off. Setup guide: notes/aws-own-account-setup.md.
-  - Goal: One script starts a machine, runs edit_bench, perf_bench and smoke on a given commit, copies results back and shuts it down; anita-own added to docs/aws.md apart from the friend's account; a $20 budget action that blocks new machines and stops running ones, with click-by-click steps for her.
+  - Goal: One script runs the benches and smoke on a commit and shuts the machine down; anita-own in docs/aws.md; a $20 budget action stopping machines, with click steps for her.
 - T-4141 [P3] {L:station-placement} Track placed by an edit call crossed the Hudson at ground level
   - Context: Seen by T-4112: a route entered through the game's edit call crossed the Hudson at ground level without a refusal, while pointer-drawn track nearby was bridged. Water may not have been loaded under part of it.
   - Other: notes/T-4112.md
