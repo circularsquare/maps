@@ -139,27 +139,27 @@
       "id": "c105",
       "text": "fixed quick edits right after another acting on the old map, like deleting the wrong track",
       "edited": "fixed edits made right after another acting on the old map, like deleting the wrong track",
-      "hidden": false,
+      "hidden": true,
       "task": "T-4214",
       "by": "waitclick",
       "at": "2026-11-24T18:52:31Z",
-      "rev": 2,
+      "rev": 3,
       "area": "track",
       "fix": true,
-      "changed": "2026-11-24T18:58:46Z"
+      "changed": "2026-11-24T19:38:44Z"
     },
     {
       "id": "c023",
       "text": "fixed changing a line whose two directions use different stops or track, which could make every edit fail and stop saving until a reload",
       "edited": "fixed editing a line with different stops or track per direction breaking edits and saving",
-      "hidden": false,
+      "hidden": true,
       "task": "T-3945",
       "by": "editfail",
       "at": "2026-11-21T15:51:32Z",
-      "rev": 2,
+      "rev": 3,
       "area": "track",
       "fix": true,
-      "changed": "2026-11-24T13:19:53Z"
+      "changed": "2026-11-24T19:38:44Z"
     },
     {
       "id": "c026",
@@ -217,14 +217,14 @@
       "id": "c020",
       "text": "every stop on an auto bus line now counts for trips, so auto lines carry about a quarter more riders",
       "edited": "auto bus lines now count every stop for trips and carry about a quarter more riders",
-      "hidden": false,
+      "hidden": true,
       "task": "T-3924",
       "by": "autostops",
       "at": "2026-11-21T14:36:30Z",
-      "rev": 2,
+      "rev": 3,
       "area": "demand",
       "fix": false,
-      "changed": "2026-11-24T13:19:57Z"
+      "changed": "2026-11-24T19:38:44Z"
     },
     {
       "id": "c061",
@@ -242,14 +242,15 @@
     {
       "id": "c046",
       "text": "big airports draw ground trips from farther away, so more of incheon's trips come from seoul",
-      "edited": null,
+      "edited": "big airports draw ground trips from farther away",
       "hidden": false,
       "task": "T-3502",
       "by": "airfar",
       "at": "2026-11-21T22:30:10Z",
-      "rev": 1,
+      "rev": 2,
       "area": "demand",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-24T19:38:44Z"
     },
     {
       "id": "c016",
@@ -268,14 +269,14 @@
       "id": "c017",
       "text": "a brt lane takes 60 buses an hour each way, and lines sharing a full lane run fewer buses",
       "edited": "BRT lanes are constructible and sharable between BRT routes",
-      "hidden": false,
+      "hidden": true,
       "task": "T-3378",
       "by": "busway",
       "at": "2026-11-21T14:00:54Z",
-      "rev": 6,
+      "rev": 7,
       "area": "scheduling",
       "fix": false,
-      "changed": "2026-11-24T13:47:23Z"
+      "changed": "2026-11-24T19:38:44Z"
     },
     {
       "id": "c045",
@@ -320,14 +321,14 @@
       "id": "c033",
       "text": "fixed a line on full track keeping its old frequency after a new train count or headway",
       "edited": "fixed lines on full track keeping their old frequency after changing train count or headway",
-      "hidden": false,
+      "hidden": true,
       "task": "T-3655",
       "by": "fullrate",
       "at": "2026-11-21T17:23:31Z",
-      "rev": 2,
+      "rev": 3,
       "area": "scheduling",
       "fix": true,
-      "changed": "2026-11-24T13:20:03Z"
+      "changed": "2026-11-24T19:38:44Z"
     },
     {
       "id": "c001",
@@ -370,28 +371,28 @@
     {
       "id": "c074",
       "text": "fixed longer trips to far parts of the same zone, like Madison to La Crosse, not showing when a bubble is selected",
-      "edited": "fixed long same-zone trips (like Madison to La Crosse) not showing when you select a bubble",
+      "edited": "fixed long same-zone trips not showing when you select a bubble",
       "hidden": false,
       "task": "T-4140",
       "by": "madison",
       "at": "2026-11-23T22:42:33Z",
-      "rev": 2,
+      "rev": 3,
       "area": "schematic",
       "fix": true,
-      "changed": "2026-11-24T13:20:07Z"
+      "changed": "2026-11-24T19:38:44Z"
     },
     {
       "id": "c044",
       "text": "added bookmarks to Community: a bookmark button on each network and a Bookmarked tab, kept with your account when signed in",
-      "edited": "added bookmarks and a Bookmarked tab to Community, saved to your account when signed in",
+      "edited": "added bookmarks to community saves",
       "hidden": false,
       "task": "T-4005",
       "by": "bookmarks",
       "at": "2026-11-21T20:55:55Z",
-      "rev": 2,
+      "rev": 3,
       "area": "community",
       "fix": false,
-      "changed": "2026-11-24T13:20:08Z"
+      "changed": "2026-11-24T19:38:44Z"
     },
     {
       "id": "c038",
@@ -486,14 +487,15 @@
     {
       "id": "c002",
       "text": "each city downloads about 45% less data (new york 4.1 MB, was 7.6 MB)",
-      "edited": null,
+      "edited": "each city downloads about 45% less data",
       "hidden": false,
       "task": "T-2486",
       "by": "binzip",
       "at": "2026-11-21T04:43:12Z",
-      "rev": 1,
+      "rev": 2,
       "area": "performance",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-24T19:38:44Z"
     },
     {
       "id": "c102",
@@ -524,27 +526,27 @@
       "id": "c075",
       "text": "the track ghost keeps up with the cursor on big worlds",
       "edited": "more responsive track placement ghost",
-      "hidden": false,
+      "hidden": true,
       "task": "T-4136",
       "by": "ghostlag",
       "at": "2026-11-23T22:52:24Z",
-      "rev": 3,
+      "rev": 4,
       "area": "performance",
       "fix": false,
-      "changed": "2026-11-24T13:49:59Z"
+      "changed": "2026-11-24T19:38:44Z"
     },
     {
       "id": "c082",
       "text": "drawing track and edits no longer stall for seconds after you pan to a new area of a big world",
       "edited": "track drawing and edits no longer stall for seconds after panning on a big world",
-      "hidden": false,
+      "hidden": true,
       "task": "T-4155",
       "by": "trackstream",
       "at": "2026-11-24T03:12:43Z",
-      "rev": 2,
+      "rev": 3,
       "area": "performance",
       "fix": false,
-      "changed": "2026-11-24T13:20:14Z"
+      "changed": "2026-11-24T19:38:44Z"
     },
     {
       "id": "c059",
@@ -656,14 +658,14 @@
       "id": "c041",
       "text": "added help panels for demand and effective time",
       "edited": "added a help panel explaining effective time, in the trip panel",
-      "hidden": false,
+      "hidden": true,
       "task": "T-2264",
       "by": "helppanels",
       "at": "2026-11-21T19:39:28Z",
-      "rev": 5,
+      "rev": 6,
       "area": "other",
       "fix": false,
-      "changed": "2026-11-24T13:50:23Z"
+      "changed": "2026-11-24T19:38:44Z"
     },
     {
       "id": "c008",
