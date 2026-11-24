@@ -12,6 +12,8 @@ People already on board keep their places, so the squeeze falls on the stops dow
 
 **How many can wait.** The crowd on a platform stops at 5,000 each way. A bus stop has no platform, only a bus's length of sidewalk, so its crowd stops at 200, and a BRT station's at 667.
 
+**Riders left behind.** A line's Riders left at platform (at the stop, for a bus or tram), and its crowding row in the issues list, count each person a full train left behind once, however many more trains they had to let go by. People turned away from a full platform aren't in it: they went another way.
+
 How busy it gets depends on the hour: see [rush hours](rush-hours.md). This all feeds into [perceived minutes](perceived-minutes.md).
 
 Exact rule: `docs/demand-kernel.md` "Loading and crowding"; how many wait, `docs/track-and-service.md` "6.6 Boarding: each train's load, each platform's crowd". These are train cars. A bus or a boat holds its own number.

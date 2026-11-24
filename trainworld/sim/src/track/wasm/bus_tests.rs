@@ -502,6 +502,58 @@ fn a_crowded_bus_stop_holds_a_bus_stops_crowd() {
     assert!(left > 0.0 && left <= 1.5 * carried, "{left} left behind, {carried} carried");
 }
 
+/// T-4052 stage 2: the riders full buses leave at a stop count once each, however many buses they miss, and riders
+/// turned away by a full stop are not counted. A bus every 2 minutes takes 50 at its first stop for its last, leaving
+/// room for 30 at its second, where three times that come all morning: the stop holds 200, so a rider who joins waits
+/// through about six buses, and two in three who come are turned away. The past 24 hours' riders left at the stop are
+/// about the morning's boarders there (counting each bus's newcomers up to the queue it left, as before, made it 3x).
+#[test]
+fn riders_left_at_a_bus_stop_count_once_each() {
+    use crate::track::boarding::{BUS_STOP_WAITING, DAY, PERIODS};
+    let (mut a, b) = a_built_bus();
+    assert_eq!(a.set_auto_headway(b, 120, 900, 1800), 0, "{}", a.issues());
+    let n = a.w.svc.lines[b as usize].runs[0].stop_s.len();
+    assert!(n >= 3 && a.w.svc.lines[b as usize].waiting_cap(&a.w.net, 0, 1) == BUS_STOP_WAITING, "{n} stops");
+    let (mut riders, mut come) = (vec![1.0f32; PERIODS], vec![]);
+    riders.extend([b as f32, n as f32]);
+    come.extend([b as f32, n as f32]);
+    for (p, &(h0, h1)) in PERIOD_HOURS.iter().enumerate() {
+        let hours = (h1 - h0) as f32;
+        // the rest of the day, no more than the fewer buses then take
+        let calm = [0.0, 100.0, 100.0, 20.0, 10.0][p] * hours;
+        let (first, second) = if p == 0 { (30.0 * 50.0 * hours, 30.0 * 30.0 * hours) } else { (calm, calm) };
+        let (mut on, mut off, mut came) = (vec![0.0f32; 2 * n], vec![0.0f32; 2 * n], vec![0.0f32; 2 * n]);
+        (on[0], on[1], off[n - 1]) = (first, second, first + second);
+        (came[0], came[1]) = (first, if p == 0 { 3.0 * second } else { second });
+        riders.extend(on.into_iter().chain(off));
+        come.extend(came);
+    }
+    a.set_riders(riders, 0);
+    a.set_arrivals(come, 0);
+    a.boarding.ensure(&a.w.net, &a.w.svc);
+    let ra = &a.boarding.accounts[0][b as usize].as_ref().unwrap().runs[0];
+    // the second stop's boarders, those of buses leaving it in the morning
+    let morning: f64 = (0..ra.deps.len())
+        .filter(|&j| { let t = (ra.deps[j] + ra.stop_dep_of(j)[1]).rem_euclid(DAY); t >= 6.0 * 3600.0 && t < 10.0 * 3600.0 })
+        .map(|j| (ra.load[j * n + 1] - ra.load[j * n]) as f64)
+        .sum();
+    // nobody waits at the first stop; the second holds its 200, the next buses' room for 30 each
+    let most = |k: usize| (0..ra.deps.len()).map(|j| ra.queues.q_after(j * n + k)).fold(0.0f32, f32::max) as f64;
+    assert!(most(0) == 0.0 && (most(1) - (BUS_STOP_WAITING - 30.0)).abs() < 5.0, "{} {}", most(0), most(1));
+    assert!((morning - 4.0 * 900.0).abs() < 0.05 * 3600.0, "{morning} boarded in the morning");
+    let v = a.boarding.past_day(&a.w.svc, 2.0 * DAY + 12.0 * 3600.0);
+    let (carried, left) = (v[3], v[5]);
+    // each morning boarder there but the first bus's was left behind once, and those still waiting as the morning ends
+    // (the 170 its last bus leaves, and the first midday riders behind them) once too
+    assert!(left > morning && left < morning + 300.0, "{left} left behind against {morning} who boarded in the morning");
+    // the turned away (no one waits 90 minutes here), nearly twice as many, are not among them
+    assert!(ra.gave_up > 1.5 * left, "{} turned away, {left} left behind", ra.gave_up);
+    assert!(left < carried && left <= ra.arrived - ra.gave_up, "{left} {carried}");
+    // the day's count by hour (`line_summary`) and the past 24 hours' (the issues row and the line panel) agree
+    let day = a.boarding.line_summary_day(&a.w.svc, b as usize, 0)[2];
+    assert!((day - left).abs() < 1e-4 * left, "{day} in the day, {left} in the past 24 hours");
+}
+
 /// T-3767: a bus line sets five rows as a rail line does: made in a game of five, its midday and
 /// afternoon start at its high headway; a midday headway or count edit moves the midday's rate at once
 /// (T-3704), and only the midday's running cost.

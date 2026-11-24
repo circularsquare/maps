@@ -2323,7 +2323,10 @@ per person and does not change who travels: demand still decides that (SPEC 4).
   tab's train count and the schedule's crowding dots (the busiest hour's load past the rated load,
   `period_peaks`, T-2236) and the platforms. Demand's busiest-hour average train
   is not shown: riders arrive fastest mid-peak, so a line it puts under 100% can still leave riders
-  behind (notes/T-230.md).
+  behind (notes/T-230.md). Riders left behind, wherever shown (a day, the past 24 hours, a platform's hour),
+  are those who joined a queue and could not get on the first train to leave after they came, each counted once
+  at that train however many more they miss (`Queues::left`, T-4052); riders turned away by a full platform
+  never joined, and are not among them.
 
 Riders left behind feed back into demand (T-188): each crowding round runs this rule on the
 period's own trains and adds the average extra wait at each line, direction and stop to that
@@ -2417,7 +2420,9 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
 - **Riders**: a third of a train car (T-2919; Anita, 2026-11-09): 53 at the rated load, 80 at crush,
   15 seats, so crowding is counted and shown as a train's (`BUS_CRUSH`, demand's `BUS_CARS`); the
   boarding account keeps no platform crowd at its stops that are no station, and a stop holds at most 200
-  waiting each way, a BRT station 667 (6.6, T-4052).
+  waiting each way, a BRT station 667 (6.6, T-4052). The riders full buses leave at a stop (the line panel, the
+  issues list's crowding row) count once each, however many buses they miss, and not those turned away from a
+  full stop (6.6 "What the panels show").
 - **Street speeds**: a zone's pack gives its cells' people and jobs, the zone of each cell and the zones'
   squares and land, which the clock worker fetches as ranges of the `.bin` with the masks of the view and
   of edits (and for the zones a bus route is drawn or loaded in) and `TrackApi::add_pack_streets` turns into

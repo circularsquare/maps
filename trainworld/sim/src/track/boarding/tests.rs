@@ -1031,19 +1031,21 @@ fn a_long_lines_opening_day_runs_as_full_as_the_next() {
 }
 
 
-/// T-3939: the sparse queues read back every trip and stop's two numbers to the bit.
+/// T-3939: the sparse queues read back every trip and stop's numbers to the bit.
 #[test]
 fn queues_read_back_to_the_bit() {
     let n = 200;
     let q: Vec<f32> = (0..n).map(|i| match i % 7 { 0 => 1.5 + i as f32, 3 => -0.0, 5 => 1e-30, _ => 0.0 }).collect();
     let g: Vec<f32> = (0..n).map(|i| if i % 11 == 4 { 0.25 * i as f32 } else { 0.0 }).collect();
-    let s = Queues::new(&q, &g);
+    let l: Vec<f32> = (0..n).map(|i| if i % 13 == 6 { 0.5 * i as f32 } else { 0.0 }).collect();
+    let s = Queues::new(&q, &g, &l);
     for i in 0..n {
         assert_eq!(s.q_after(i).to_bits(), q[i].to_bits(), "q at {i}");
         assert_eq!(s.gone(i).to_bits(), g[i].to_bits(), "gone at {i}");
+        assert_eq!(s.left(i).to_bits(), l[i].to_bits(), "left at {i}");
     }
-    assert_eq!(s.kept(), (0..n).filter(|&i| q[i].to_bits() != 0 || g[i].to_bits() != 0).count());
-    let empty = Queues::new(&[], &[]);
+    assert_eq!(s.kept(), (0..n).filter(|&i| q[i].to_bits() != 0 || g[i].to_bits() != 0 || l[i].to_bits() != 0).count());
+    let empty = Queues::new(&[], &[], &[]);
     assert_eq!(empty.q_after(0), 0.0);
 }
 

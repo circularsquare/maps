@@ -250,8 +250,9 @@ pub struct RunAccount {
     pub stop_dep: Vec<Vec<f64>>,
     /// `[trip * n + stop]`: riders aboard leaving the stop (0 at the last).
     pub load: Vec<f32>,
-    /// `[trip * n + stop]`: riders left on the platform as the train leaves (`q_after`), and riders who went another
-    /// way then (T-1067: `GIVE_UP_S`, `WAITING_CAP`), never boarding (`gone`).
+    /// `[trip * n + stop]`: riders left on the platform as the train leaves (`q_after`), riders who went another
+    /// way then (T-1067: `GIVE_UP_S`, `WAITING_CAP`), never boarding (`gone`), and of those left, the ones who came
+    /// since the train before (`left`, T-4052: each rider left behind counted once, at the first train they miss).
     pub queues: Queues,
     /// Per stop, the trips in the order they leave it in a day (`stop * trips + k`); `stop_times`
     /// gives the time of day each leaves it.
@@ -260,8 +261,9 @@ pub struct RunAccount {
     /// `stop_dep_of` the time it leaves each stop (`leaves`). T-3939: worked out where read rather
     /// than kept per trip and stop, a third of the account's memory.
     pub dep0: Vec<f64>,
-    /// Per stop and hour of the day (`stop * 24 + hour`): riders who could not get on the first
-    /// train to leave after they arrived, and the longest anyone waited for a train leaving then.
+    /// Per stop and hour of the day (`stop * 24 + hour`): riders who joined the queue and could not get on the
+    /// first train to leave after they arrived (`Queues::left`; those turned away by a full platform never joined),
+    /// and the longest anyone waited for a train leaving then.
     pub left_h: Vec<f32>,
     pub wait_h: Vec<f32>,
     pub arrivals: Vec<Arrivals>,
@@ -287,27 +289,27 @@ pub struct RunAccount {
     pub hour_load: Vec<f32>,
 }
 
-/// T-3939: `RunAccount::queues`, kept only where either number is not 0 (most trains of most lines leave nobody
-/// behind): a bit per trip and stop, the count of set bits before each word, and the pairs. Read back to the bit.
+/// T-3939: `RunAccount::queues`, kept only where a number is not 0 (most trains of most lines leave nobody behind): a
+/// bit per trip and stop, the count of set bits before each word, and the numbers. Read back to the bit.
 #[derive(Clone, Debug, Default)]
 pub struct Queues {
     bits: Vec<u64>,
     rank: Vec<u32>,
-    pairs: Vec<[f32; 2]>,
+    pairs: Vec<[f32; 3]>,
 }
 
 impl Queues {
-    pub fn new(q_after: &[f32], gone: &[f32]) -> Queues {
+    pub fn new(q_after: &[f32], gone: &[f32], left: &[f32]) -> Queues {
         let words = q_after.len().div_ceil(64);
         let (mut bits, mut rank, mut pairs) = (vec![0u64; words], Vec::with_capacity(words), vec![]);
         for (w, word) in bits.iter_mut().enumerate() {
             rank.push(pairs.len() as u32);
             for b in 0..64 {
                 let i = w * 64 + b;
-                let (Some(&q), Some(&g)) = (q_after.get(i), gone.get(i)) else { break };
-                if q.to_bits() != 0 || g.to_bits() != 0 {
+                let (Some(&q), Some(&g), Some(&l)) = (q_after.get(i), gone.get(i), left.get(i)) else { break };
+                if q.to_bits() != 0 || g.to_bits() != 0 || l.to_bits() != 0 {
                     *word |= 1 << b;
-                    pairs.push([q, g]);
+                    pairs.push([q, g, l]);
                 }
             }
         }
@@ -315,11 +317,11 @@ impl Queues {
         Queues { bits, rank, pairs }
     }
     #[inline]
-    fn pair(&self, i: usize) -> [f32; 2] {
+    fn pair(&self, i: usize) -> [f32; 3] {
         let (w, b) = (i / 64, i % 64);
         let word = self.bits.get(w).copied().unwrap_or(0);
         if word >> b & 1 == 0 {
-            return [0.0; 2];
+            return [0.0; 3];
         }
         self.pairs[self.rank[w] as usize + (word & ((1u64 << b) - 1)).count_ones() as usize]
     }
@@ -333,9 +335,14 @@ impl Queues {
     pub fn gone(&self, i: usize) -> f32 {
         self.pair(i)[1]
     }
+    /// Of `q_after`, the riders who came since the train before: the riders it is the first to leave behind.
+    #[inline]
+    pub fn left(&self, i: usize) -> f32 {
+        self.pair(i)[2]
+    }
     /// Heap bytes held.
     pub fn heap_bytes(&self) -> usize {
-        self.bits.capacity() * 8 + self.rank.capacity() * 4 + self.pairs.capacity() * 8
+        self.bits.capacity() * 8 + self.rank.capacity() * 4 + self.pairs.capacity() * 12
     }
     /// Trip-and-stop pairs kept (benches).
     pub fn kept(&self) -> usize {
@@ -470,6 +477,7 @@ impl StopTimes<'_> {
 struct Tally {
     stops: Vec<f64>,
     boarded: f64,
+    /// riders full trains left behind, each once (T-4052: `Queues::left`)
     left: f64,
     fullest: f64,
     full: Vec<f64>,
@@ -1530,15 +1538,14 @@ impl Boarding {
                 for j in lo..done {
                     let tj = ts.at(j);
                     let c_j = arr.cum(tj);
-                    let mut a = (c_j - c_prev).max(0.0);
                     if prev < open && open <= tj {
                         // whoever was waiting then never was: the platform starts empty
                         b -= q_prev + arr.cum(open) - c_prev;
-                        a = (c_j - arr.cum(open)).max(0.0);
                     }
-                    w.left += a.min(q(j));
+                    let i = ord.get(j) * n + k;
+                    w.left += ra.queues.left(i) as f64;
                     // T-1067: those who went another way never boarded
-                    b -= ra.queues.gone(ord.get(j) * n + k) as f64;
+                    b -= ra.queues.gone(i) as f64;
                     (prev, q_prev, c_prev) = (tj, q(j), c_j);
                 }
                 let b = b.max(0.0);
@@ -1880,7 +1887,7 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
         ride_km,
         hour_load: vec![],
     };
-    let (mut q_kept, mut gone_kept) = (vec![0.0f32; mk * n], vec![0.0f32; mk * n]);
+    let (mut q_kept, mut gone_kept, mut left_kept) = (vec![0.0f32; mk * n], vec![0.0f32; mk * n], vec![0.0f32; mk * n]);
     let mut carry = vec![0.0f64; m];
     let mut order: Vec<usize> = (0..m).collect();
     let mut hist: Vec<(f64, f64)> = Vec::with_capacity(m);
@@ -1965,10 +1972,13 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
                 acc.load[j * n + k] = if k + 1 < n { load as f32 } else { 0.0 };
                 q_kept[j * n + k] = q_after as f32;
                 gone_kept[j * n + k] = (gave + over) as f32;
+                // the riders who joined the queue since the last train and did not get on this one (those waiting
+                // before them board first, so the queue left is the latest to join): this is the first train to
+                // leave them behind, so each rider left behind is counted once, however many trains they miss
+                let left = (a - over).min(q_after).max(0.0);
+                left_kept[j * n + k] = left as f32;
                 let h = ((t.rem_euclid(DAY) / 3600.0).floor() as usize).min(23);
-                // the riders who came since the last train and did not get on this one (those
-                // waiting before them board first)
-                acc.left_h[k * 24 + h] += (a - (b - (q - gave)).max(0.0)).max(0.0) as f32;
+                acc.left_h[k * 24 + h] += left as f32;
                 if b > 0.0 || q_before > 0.0 {
                     let w = (t - since).max(0.0) as f32;
                     if w > acc.wait_h[k * 24 + h] {
@@ -1994,7 +2004,7 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
         }
     }
     acc.arrivals = arrivals;
-    acc.queues = Queues::new(&q_kept, &gone_kept);
+    acc.queues = Queues::new(&q_kept, &gone_kept, &left_kept);
     acc
 }
 
