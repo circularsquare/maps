@@ -284,9 +284,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Goal: The hover's share left behind counts each rider once.
   - Other: notes/T-4052.md
 - T-4080 [P2] {L:buses} Name and rename bus stops (taking, 2026-11-24, agent busstops)
-  - Context: Design approved 11-24 (named stops stay put, connections free, labels at street zoom; DECISIONS). Your scratch pad, 11-23: "people keep requesting to be able to rename / name bus stops. we should add that." Also a player 11-20: "バスの停留所も名前を変えれるようにしたい" (want to rename bus stops too).
+  - Context: Design approved 11-24 (named stops stay put, connections free, labels at street zoom; DECISIONS). Stages 1-2 built 11-24: the game remembers, saves and holds named stops; the panel, riders using connections and labels are left. Your scratch pad, 11-23: "people keep requesting to be able to rename / name bus stops." Also a player 11-20: "バスの停留所も名前を変えれるようにしたい".
   - Goal: A bus stop's name can be set in its panel like a station's, saved, and shown wherever the stop's name shows.
-  - Other: notes/T-4080-design.md (about 6 h in six stages; also covers T-4083)
+  - Other: notes/T-4080-design.md (about 6 h in six stages, 4 left; also covers T-4083); notes/T-4080.md
 - T-4048 [P3] {L:route-choice} Remove station connections and passageways (taking, 2026-11-24, agent passx)
   - Context: You, 11-24: "when entering "add passageway" mode, each existing passageway gets a little button it that you can click to remove. the buttons should be nonoverlapping. on hover, the button should get a red outline ilke for a station we're about to remove when using remove tool." Scratch pad 11-22: built and automatic ones alike.
   - Goal: In add passageway mode every passageway and connection has a remove button, none overlapping; a removed automatic one stays removed; undo and saves keep it.
@@ -903,6 +903,10 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: T-921 deals commute pairs under 1 person a day in chunks (about 7% of New York's calculation); 2 a day gained nothing more. Everyday trips are solved from sampled destinations, so they may lack the same tail of tiny pairs. You, 11-24: file as P3.
   - Goal: Know whether everyday trips have a tail of tiny pairs; if so, chunk them the same tunable way.
   - Other: notes/T-921.md
+- T-4241 [P2] {L:edit-speed} Review findings on the 11-24 edit-speed landings
+  - Context: Batch review (review13 + Gemini, 11-24) passed all five changes and found four small slips: the 120 s refresh not re-armed when held; city baselines drifting in clusters without a market part; a just-placed station's box not deletable until the network lands; copied samples not checking line id.
+  - Goal: Those four fixed at their cause, and a save made during a local result refreshed after load.
+  - Other: review13 notes in notes/T-4241.md
 - T-4240 [P1] {L:edit-speed} Stations on her Asia save take seconds to show up (taking, 2026-11-24, agent stationwait)
   - Context: You, 11-24: "station placement currently also still feels kinda bad on my asia save, it takes a couple seconds for them to show up". The master baseline (b7b9e4ee, trips final, quiet machine) has a station built in 1.19 s on Asia; T-4153 and T-4214 cut parts of it since.
   - Goal: Where a station's wait goes on Asia, step by step, and the biggest part cut at its cause.

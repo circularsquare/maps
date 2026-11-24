@@ -28,6 +28,7 @@ These come before everything below; the first two are her two top priorities (11
 
 ## Running agents
 
+- **Start more** when agents + claimed cores / 2 is under 8 (her 11-24: "we should generally consider starting more work").
 - **By load** (her 11-23): when nothing is at a limit (cores, disk, files agents share, her review), run more; when
   something is struggling or at a limit (claims waiting at the cap, smoke timing out, agents colliding, timings that
   need a quiet machine), run fewer. Start one when its work is ready, not to fill a slot. A file collision rules out

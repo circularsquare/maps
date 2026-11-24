@@ -7,6 +7,7 @@ don't read it whole. Add a line when a rule is added for a reason worth remember
 
 ## trainworld/CLAUDE.md
 
+- Start more when agents + claimed cores / 2 is under 8: Anita, 2026-11-24, seeing 4 agents and 5 cores busy.
 - Read before you run; a test confirms, never hunts; batch checkers became code reviews with Gemini: Anita, 2026-11-24, after
   the T-4223 loop fix passed 40 of 40 invented shapes while players still hit refusals on ordinary circles, and a 22-minute
   play round (check11) could not get trips to recalculate. "if it doesnt work, we can always go back later."
