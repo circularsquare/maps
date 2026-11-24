@@ -82,6 +82,7 @@ artifacts/trainworld/T-4120/.
 - 2026-11-23 (Anita, T-4064): Lines leaving one platform for one platform at the next stop are one evenly spaced service for riders to that stop (her 4 and 5 trains). At a change riders take no line heading back or right behind theirs. notes/T-4050.md
 - 2026-11-21 (Anita, T-4008): Express against local gets no soft rule of its own, and income groups were dropped for it (T-4008). Industrial land jobs count a quarter (T-3376).
 - 2026-11-21 (Anita, T-2624): A recalculating line reads "calculating..." until the edit's whole final ("dont wanna hide if theres stuff we could show"). Its local result shows period by period as solved; the lie, for up to half a minute: unsolved periods take a solved period's change. notes/T-2624.md
+- 2026-11-24 (Anita, T-2188, T-4204): A city edit ends at its touched cities' re-solve; the whole re-solve runs only for intercity edits and as an idle refresh, reversing 10-29's full re-solve after every edit. Lie: figures drift slightly until a refresh (measured before landing). notes/T-4204-options.md
 - 2026-11-21 (Anita, T-3925): An edit made during a whole solve restarts it from the newer network while under 40% has run, else waits for the final, replacing T-1734's never-cancel; past 40% the held edit's local result shows its lines sooner. notes/T-3925.md
 - 2026-11-20 (Anita, T-3910): Every train and tram trip pays 2 + 2 minutes boarding at any level ("its simpler that way"), replacing stairs-only off grade, which favoured street level; street trams skip it at street stops (T-4041). Walking's 10-minute head start is gone. notes/T-3910.md
 - 2026-11-20 (Anita, T-2216): Trips between land parts with no road go by rail or the player's ferry: all of them up to 3 times a bridge-less car, none from 4 ("yeah we can do 3x"). Local trips treat car ferries as no road.
@@ -165,11 +166,14 @@ artifacts/trainworld/T-4120/.
 
 ## Map and UI
 
+- 2026-11-24 (Anita, T-4097): After 0.4.6, edit speed works at the root cause: an edit costs what it touched (drawn network, clickable map, trips), not the whole world; drawing results at the click is deprioritized once that starts. notes/T-4153.md
+- 2026-11-24 (T-4214): A map click made before an earlier edit reaches the clickable map waits (spinner, at most 5 s), then acts at its spot; a quick second click costs 0.3-1.1 s on big saves. Track run segments and stop clicks never wait. notes/T-4214.md
+- 2026-11-24 (T-4075): Trains, trams and buses are placed along 50 m samples plus points where the track bends between them (within 0.25 m, about 0.6 m at a right-angle corner); a finer step everywhere was ruled out (5x the samples on NYC). notes/T-4075.md
 - 2026-11-23 (T-4145): An undo is drawn at its click only for the newest edit with nothing else waiting; an undo of an edit that was then refused takes nothing back, without a notice.
 - 2026-11-23 (Anita, T-4153): The drawn network is bounded by what an edit touched on master now, not left to the track rework's stage 5: it is most of an edit's wait.
 - 2026-11-23 (T-4114): After a stop edit or line delete, the line's new strokes are drawn before the network: gained track centred without its side-by-side band, trains on the old path until the network arrives.
-- 2026-11-23 (T-4140): A selected bubble's far end draws its own zone's far 6 km zones again, reversing T-139, but only 50 km or more from its busiest cell, where local outings have ended, so they don't crowd the local far end. notes/T-4140.md
-- 2026-11-23 (T-4136, T-4143): While the track tool's answer is on its way, the ghost is the last answer bent to the pointer, or before a run's first answer an unchecked arc or line to it. Lie: 10-50 ms, seconds while the worker is busy. notes/T-4143.md
+- 2026-11-23 (T-4140): A selected bubble's far end draws its own zone's far 6 km zones again (reversing T-139), but only 50 km or more from its busiest cell, past where local outings end. notes/T-4140.md
+- 2026-11-24 (T-4136, T-4143, T-4210): A run's next segment onto open ground is laid on the page by the track model's own code while its answer is on the way; other ghosts bend the last answer to the pointer. Lie: 10-50 ms, seconds while busy. notes/T-4210.md
 - 2026-11-23 (T-4106): The install note shows on phones and tablets after 2 hours of play, a minute each visit until closed with its x, then never; on Android a no to Chrome's own install question also counts as closed. Hidden while the tutorial card is fully out. notes/T-4106.md
 - 2026-11-21 (, T-4004): The map search finds towns anywhere through a world name index (about 135 MB gzipped on R2 a release; a search fetches about 30 KB a shard). Lie: substrings and nicknames match only near the view. notes/T-4004.md
 - 2026-11-20 (Anita, T-2528): The diagram's distortion dial defaults to 0.5 (Anita: "i kidna like 0.5", was 0.8). It stops zooming out where the network's larger side is half the view's, raised from 1/10 after a city's drawing went off screen. notes/T-2556.md
@@ -216,6 +220,10 @@ artifacts/trainworld/T-4120/.
 - 2026-10-10 (Anita, T-087): A train's fill is a gauge: half full when seats are taken, full at crush, red rim over, showing the busiest hour by default. Fill in proportion to crush and colouring trains by load were rejected.
 
 ## Saves and performance
+- 2026-11-24 (, T-4199): Fare weights and income groups are fareBits.json's (Chrome's last bits) in every browser, so one corridor file serves all; New York's book is the file's plus its two-lands rows. Lie: other engines' last bits; no trip moved on New York or Montana. notes/T-4199.md
+- 2026-11-24 (T-4204): An idle demand worker over its need restarts only when the pool's memory passes 95% of the budget, since its restart recalculates the whole game (6 minutes on Asia); up to a few hundred MB a worker stay held meanwhile.
+- 2026-11-24 (Anita, T-4202): After an update, a save opens with the last version's kept trip figures while the new ones calculate; the lie is a few minutes of old figures, for opening at about map time.
+- 2026-11-24 (T-4202): A stand-in needs the same packs as the new build; a pack rebuilt in the update means a full load, since its cells or the market's places could be renumbered under the kept figures.
 - 2026-11-24 (Anita, T-4157): Coarse demand stays off by default on desktop for now, though it takes about 23% off a Tokyo load with trips moving about 0.006%; on by default on phones.
 - 2026-11-24 (Anita, T-4144): Edit speed may cost memory up to about 10 MB in total on a big save (the T-4144 work together); past that it goes to Anita. Stage 1 of T-4153 was +6 MB on Asia, fine by her.
 - 2026-11-23 (Anita, T-4126): 8800 serves master only; the track branch is behind ?track with its own saves storage and no account, so a newer-format save never reaches master or her account.
@@ -233,7 +241,7 @@ artifacts/trainworld/T-4120/.
 - 2026-11-16 (, T-2496): The corridor table reaches the page with 16-bit plane and car shares (156 to 94 MB); solving workers keep trips as f32 (94 to 34 MB). Lie: on New York's first line, world plane trips off 0.9 of 13.8 million. notes/T-2496.md
 - 2026-11-15 (Anita): Saves and Community uploads use bundled pako gzip with a full round-trip check before use, since Safari 16's native compression could silently write truncated saves; already-truncated files are not silently salvaged. notes/jordan-save-investigation-2026-11-15.md
 - 2026-11-10 (, T-3072, T-1197): A save is refused before loading when a solving worker would need over 3.5 GB (a browser worker fails past 4), with no override; the device-memory check only warns with Load anyway, since browsers report 8 GB laptops as 4.
-- 2026-11-09 (, T-2878, T-2652): Speedups keep demand figures bit-exact: the search's exit step (1.60x against 1.56x) and splitting a period's origins across workers were refused for float rounding. Accepted exception: the everyday layer's transfers (at most 4.1e-6 relative), feeding only the complex view. notes/T-2652.md
+- 2026-11-24 (Anita, T-4199): No bit-exact rule for speedups. Say whenever figures change at all; aim to keep most lines' riders within 1% of before; no hard limit. Replaces 2026-11-09's bit-exact rule (T-2878, T-2652).
 - 2026-11-05 (Anita, T-2560): A loaded game holds its card and clock until the zone in view's final solve (Anita, T-421), not the first estimate (T-172). A reload of its own cached result drops the card once loaded: about 25 s, not 130-210. notes/T-2560.md
 - 2026-11-03 (Anita, T-1222, T-1206): Every zone not looked at in a while solves coarsely, sparing the last two builds' zones (Anita; was a 10-minute window). Coarse must not bias ridership (Anita): a cell takes up to 8 samples, as 4 leaned metro rail +0.5%. notes/T-1206.md
 - 2026-11-03 (, T-2122): During a load a second pool of at most two workers solves the zone in view alone (+0.8-0.9 GB peak); lie: the whole final moves its rail trips 0.3-3.4%. Phones and 4 GB devices get none. notes/T-2122.md
@@ -247,6 +255,7 @@ artifacts/trainworld/T-4120/.
 
 ## World data and zones
 
+- 2026-11-24 (Anita, T-4203): Hokkaido's four zones are named after their main city (Sapporo, Asahikawa, Obihiro, Hakodate), as every other zone is, not their region; Obihiro over Kushiro by 1,459 people. notes/T-4203.md
 - 2026-11-22 (Anita, T-3688): Kept over the zoning rule: Hokkaido's four standard regions (Anita's map of 11-21), Sukabumi-Cianjur as one 5.56M zone Anita asked for, Sao Paulo's 39 RMSP municipios matching its survey, and cut-off zones of 10,000 or more. notes/T-3688.md
 - 2026-11-22 (Anita, T-2344): Occupied Ukraine is left out by whole councils over half inside the assessed line of control; Abkhazia and South Ossetia likewise, on Anita's words for Ukraine ("probably not draw the other contested areas"), hers to overturn. notes/T-2344.md
 - 2026-11-20 (, T-3763): Zones run on GHSL people, scaled to the census by unit only where the two disagree (Iran had 39 counties over 3x; also Laos, Balochistan, Indonesia, New Zealand); India and Iraq stay on GHSL. Lie: GHSL's spread within units stays. notes/T-3763.md

@@ -175,25 +175,17 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4131: `utc_offset_at` per line costs 75-120 ms an edit and `cars_needed` 95 ms once on the Asia save.
   - Goal: Both kept per line and refreshed only when the line moves; about 2-3.5 h.
   - Other: notes/T-4131.md
-- T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds (taking, 2026-11-24, agent stopclick)
+- T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
   - Context: You, 11-23: "edit speed is actually still kind of a problem... noticeable on my end for big worlds... i feel like there was a point at which we had edit speed almost instant, but then might have regressed". Mostly placing track and editing stops. T-3550, T-1211, T-3804, T-1031 are back at P2 under this.
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
 - T-4153 [P1] {L:edit-speed} Rebuild only the touched part of the drawn network, stage 3
   - Context: You, 11-23: "this is the entire issue". Stage 2 (tree editnetwork, not landed): a station's network build on Asia 333 to 124 ms in the page, track 212 to 180, construct 283 to 176, same output as a full build. Left: a station on a line's track or a line copy redoes 220-490 band orders (85-340 ms).
   - Goal: Band orders redone only where a changed path can change them; a station on a line's track on Asia under 0.2 s of network build.
   - Other: tree editnetwork kept; notes/T-4153.md "What is left"
-- T-4146 [P2] {L:edit-speed} Ports, flyovers and station looks show at the click
-  - Context: Stage 1 landed 11-24 (e94813b8): placing a station on Asia 878 to 30 ms, deleting one 2,142 to 18 ms, deleting track 811 to 14 ms. Not yet at the click: ports, the flyover toggle, passage line, a box's look after track, way or upgrade changes.
-  - Goal: Those drawn at the click through the base. Tree editstations kept.
-  - Other: notes/T-4144.md
-- T-4147 [P2] {L:edit-speed} Stop order, groups, buses and ferries show at the click
-  - Context: Stages 1-2 landed 11-24 (2171510d, 245735d7): new line 1.70 to 0.42 s on Asia, copy 1.94 to 0.61 s, an added stop's path at the click. Stop order, groups, bus and ferry edits get rows first only; money at the click for copy is not done.
-  - Goal: Those at the click through the base.
-  - Other: notes/T-4144.md
-- T-4148 [P2] {L:edit-speed} Track type, double up and one-way marks show at the click
-  - Context: Stage 1 landed 11-24 (dc9ea63a): Construct a line on Asia 730 to 36 ms, select tool edits at the click. Not yet: track type, double up, rebuild's new edges, one-way chevrons, a station's off look.
-  - Goal: Those at the click through the base. Tree editpieces kept.
-  - Other: notes/T-4144.md
+- T-4146 [P2] {L:edit-speed} {after:0.4.6} Ports, flyovers and station looks show at the click
+  - Context: Built in tree editstations (11-24), not landed: port, passage, way, both tracks and the flyover panel show at the click on Asia (about 600 ms to 1 ms). Its nearby checks haven't run; a faint old box outline shows for a frame at both tracks.
+  - Goal: Land after its checks; the one-frame outline gone.
+  - Other: notes/T-4146.md (in tree editstations)
 - T-4149 [P2] {L:edit-speed} The checked version sooner, worker side, stage 2
   - Context: Stage 1 landed 11-24 (6d7c50c5): the day's figures -77% and line periods -58% on Asia, money posted in 1-2 ms. Left: rows first for every full-path edit, trips and boarding per touched line, demand snapshot per cluster.
   - Goal: Those redone for what an edit touched. Tree editworker kept.
@@ -202,6 +194,25 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4144 stream D: every panel redraws on each state (T-4097 part C); T-3804 today answers 125-445 ms.
   - Goal: Panels redraw only their own records, issues list and totals patched; 6-10 h.
   - Other: notes/T-4144.md
+- T-4198 [P3] {L:checks} Changelog edited mark only for your edits
+  - Context: From T-4196: changelog.py reword sets the same "edited" mark as your board edits, so agents' rewords (26 today, and c014 earlier) show as yours and get left alone as your wording.
+  - Goal: The board marks only your edits; agents' rewords keep their own record.
+  - Other: notes/T-4196.md
+- T-4199 [P2] {L:loading} {after:0.4.6} Corridors and corridor book built with the packs
+  - Context: You, 11-24: no bit-exact rule, say when figures change, most riders within 1%. Stage 1 in tree corridors, not landed: Montana's trips wait 7.6 to 2.3 s; New York no gain; +32 MB demand memory on NYC unexplained.
+  - Goal: Small games' trips about 70% faster on load, no memory rise; stage 2 about 2-3 h.
+  - Other: notes/T-4199.md (in tree corridors)
+- T-4211 [P3] {L:loading} Loading time left right from the start
+  - Context: T-4209's display fix (11-24) shows no time left until the solve's own time is known, then only counts down (asianita: none until 138 s, then 7 min down; final at 523 s). You: "then do the actual underlying fix later."
+  - Goal: An estimate from the start, within about 30% of the real wait on asianita and NYC.
+  - Other: notes/T-4209.md
+- T-4221 [P2] {L:map-look} Bubbles stay on screen after turning them off following a load (taking, 2026-11-24, agent bubbles)
+  - Context: Player report (Chinese, forwarded by you 11-24): loading with the population bubbles on, then turning them off after the load, sometimes leaves the bubbles frozen on screen. Close to T-956 (Safari, fixed 11-19, real Safari unconfirmed); browser unknown.
+  - Goal: Bubbles turned off after a load always disappear; cause found, not a per-browser patch.
+- T-4214 [P1] {L:edit-speed} Clickable map patched with what each edit touched
+  - Context: Waiting clicks landed 11-24 (7ff71c929): quick clicks act on the right piece but wait. You, 11-24: work at the root cause, "something like a silo approach", and deprioritize surface fixes. Gemini: artifacts/trainworld/gemini/rootcause-plan-answer.md.
+  - Goal: After each edit the clickable map takes only the touched pieces, so no click waits for the whole network; no name or placing wait for stations and track runs.
+  - Other: notes/T-4214.md
 - T-4154 [P2] {L:checks} Agent browsers run past their core claim
   - Context: 11-24 at cap 10: three agent games (play.mjs on 6151 and 6168, a smoke) ran on 14 cores with no claim in the ledger, and the edit bench's renderer used 8 cores on a 4-core claim.
   - Goal: Every agent browser stays on its claimed cores for its whole life, or stops when its claim ends.
@@ -217,9 +228,8 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-24: a situation where the line-up refusal shows is most likely a bug, to prevent. T-4152 cut the end-to-end join sweep's refusals from 26 of 288 to 0.
   - Goal: Ordinary drawing (joins, junctions, node drags, trams) never shows it; any case found is fixed or filed.
   - Other: notes/T-4152.md
-- T-4166 [P2] {L:checks} {waits:Anita} First bench run on your own AWS account
-  - Need from Anita: AWS lets your account run 1 vCPU, not 5, and no spot; a bench machine needs 4. Ask AWS Support once more for 4 on-demand vCPUs? I would.
-  - Context: tools/aws/bench.py is ready (one machine per run: build, perf and edit benches, results home, machine terminated, about 5 cents) and docs/aws.md has the account. Every launch on 11-24 was refused by the limit. Your $20 cutoff steps: notes/aws-budget-action.md.
+- T-4166 [P2] {L:checks} {after:AWS Support reply} First bench run on your own AWS account
+  - Context: You asked AWS Support for 4 on-demand vCPUs (11-24: "we're waiting on response"); the account runs 1. tools/aws/bench.py is ready (one machine per run: build, perf and edit benches, results home, machine terminated, about 5 cents) and docs/aws.md has the account. Every launch on 11-24 was refused by the limit. Your $20 cutoff steps: notes/aws-budget-action.md.
   - Goal: One real nyc run through bench.py, with its cost.
   - Other: notes/T-4166.md
 - T-4168 [P4] {L:solve-speed} {after:T-4158} Does the bus stop merge shift riders one way
@@ -230,10 +240,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: 19 worktrees at about 1.2 GB each, a leftover empty .tw-trees/rampport folder, and 34 tw/* branches, 14 with no tree. handoff.md keeps coreslider, onewaylag, split6, stationids and timetables on purpose until after 0.4.6; others may be done.
   - Goal: Every tree whose agent is done and whose work landed is removed with agent-tree.mjs; merged branches with no tree deleted. About 0.5 h.
   - Other: notes/gemini-review-triage-2026-11-24.md
-- T-4182 [P2] {L:loading} Where a sparse save's load goes (taking, 2026-11-24, agent sparseload)
-  - Context: From T-921 (11-24): a western Montana save with 4 lines and 22 stations loads in 10-20 s, nearly all opening the zone; the trip calculation is under 1 s. Saved as perfbench/saves/t921-montana-4lines.save.
-  - Goal: That load profiled piece by piece and its biggest piece cut.
-  - Other: notes/T-921.md
+- T-4193 [P2] {L:loading} Bus zones' streets before the network on load
+  - Context: From T-4188 (11-24): Community save jwxidghd never loads on a phone because the clock worker re-solves train counts once per zone its 92 bus lines touch (20 passes, 34-58 s each). Loading those zones' streets first got the network in 17.7 s on an emulated iPhone. The prototype can change figures.
+  - Goal: Only the bus routes' zones fetched (19, not 47), one pass; a bus-heavy real save's figures compared before and after.
+  - Other: notes/T-4188.md; patch artifacts/trainworld/t4188/instrumented-and-prototype.patch
 - T-4191 [P3] {L:loading} Edits in a new game's first seconds open zones twice
   - Context: From T-4055 (11-24): an edit made while a new game's load hold is on opens its zones coarse, then the level check reopens them fine: an extra download and solve for nothing.
   - Goal: Those zones open once, at the level they end at.
@@ -263,9 +273,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Found by T-4050 and T-4058: right after a final, explorer questions fail in the demand worker ("reading 'nodeGlobal'") and answer nothing; asked again seconds later they work. The question is about the last network while the worker has reopened the zone at another level (demand.worker.ts query, `viewOf(cl, a)`). Every query kind reading `viewOf(cl, a)` can hit it.
   - Goal: An older version's question answered from that cluster's own population for the zone, or answered as not ready, never an error.
   - Other: notes/T-4058.md
-- T-4046 [P3] {L:small-fixes} Pick a route among overlapping bus and tram routes
-  - Context: Your scratch pad, 11-22: "if we have a bus route and tram route perfectly overlapping theres no way to select the bus route. same for multiiple bus routes. ideally we try to "side by side" these". Picture: artifacts/trainworld/board/20261122-114726-b705.png.
-  - Goal: Every route on a shared street can be clicked, ideally drawn side by side.
 - T-4070 [P2] {L:station-placement} {after:T-4037} Ctrl click draws a station box without snapping
   - Context: Your scratch pad, 11-23: "some people also dislike the snapping when drawing station boxes, we can also ctrl click to override here." Same gesture as T-4069; the track rework's station tool (T-4037 g3/g4) is changing placement now, so after that lands.
   - Goal: Ctrl+click draws the station box where the pointer is, no snapping.
@@ -400,10 +407,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-4184: on a Community Tokyo save (t9gksxmu, 375 MB clock worker on a phone) the extra is the drawing state for the player's track: draw cache 46 MB, line bands' memo and orders 25, posted 14. The cuts (about 20-25 MB, exact) touch code editnetwork changes.
   - Goal: Those cuts made with figures identical, measured on t9gksxmu on an emulated iPhone.
   - Other: notes/T-4184.md
-- T-4188 [P2] {L:memory} A Community save that never loads on a phone (taking, 2026-11-24, agent phoneload)
-  - Context: From T-4184: Community save jwxidghd did not finish loading in 10 minutes on an emulated iPhone. Not looked into; could be memory, a stall, or the emulation.
-  - Goal: The cause named; the save loads on the emulated phone, or the reason it can't is in the notes.
-  - Other: notes/T-4184.md
 - T-2762 [P3] {L:solve-speed} Faster longer-trips answer for a bubble
   - Context: On North America a bubble answer still takes about 300 ms per worker (NYC 60 ms) after T-2747.
   - Goal: Bring the North America answer close to NYC.
@@ -471,11 +474,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Design agreed 11-21 (notes/T-3444-design/; three small calls still open in review/track-rework-design.md). Built in 39 stages, T-3948 to T-3985 and T-4024, in four releases, on a long-lived branch tw/track merged into master at each release. Stage 1 (T-3948) is done on master; next is stage 2a (T-3949). Your weekend notes (2026-11-16) are the heart of it.
   - Goal: Closes with the last of its stages.
   - Other: Your notes verbatim: notes/T-3444.md; sizes in notes/code-tour.md. Requirements folded in 11-20: a station placed on track that leaves its shape alone redraws no neighbours (T-2767, 0.2-0.9 s today); the drawn network rebuilds only near a change (T-2701); the Penn Station to Emeryville snapped preview (3 s, T-763) as a check case. notes/review-edit-speed-2026-11-20.md
-- T-4161 [P1] {L:accounts-server} {waits:Anita} Server save check accepts master's save level 39
-  - Need from Anita: a yes to deploy shonei-server (deploy.ps1) in the daytime, before the 0.4.6 publish; I'd say yes.
-  - Context: Fixed and committed in shonei-server (7bdd559: level 39 and the new LBE1 block), tests pass, not deployed. Without it 0.4.6 saves upload fine but are stored "unverified" and never pinned as the recovery copy.
-  - Goal: The server accepts level 39 before the next publish; the test passes. Deploy on your yes.
-  - Other: notes/T-4159.md
 - T-4026 [P2] {L:track-rework} {after:the first tw/track release} TWT7 outside the game before the merge
   - Context: From T-3953: before tw/track merges into master, shonei-server's save check must walk TWT7 (body levels 1-4) and levels 39-41 (deploy on your yes), `pipeline/readsave.py` must read TWT7, and 07-saves still says "body level 36". Master's next save level is renumbered past tw/track's 40 at that merge.
   - Goal: A TWT7 save passes the server check and readsave.py on a real save; the docs say level 40.
@@ -885,10 +883,13 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
 - T-2209 [P3] {L:buses} Ferry routes in narrow canals
   - Context: Amsterdam's grachten route is not found at 2.5 m cells, so it goes by the Amstel; 1-4% of Venice and Amsterdam routes under 5 m are affected.
   - Other: notes/T-2177.md "T-2192 results".
-- T-2188 [P3] {L:solve-speed} City line edit ends with its local solve
-  - Context: The touch rule already re-solves only the line zone (Tokyo 0.1 s against 8 s whole), and the local result was within 83 riders of the whole.
-  - Goal: A city line edit ends with the local solve, no whole solve.
+- T-2188 [P1] {L:solve-speed} {after:0.4.6} City edits end at the quick result
+  - Context: You, 11-24: "lets do B after 0.4.6. lets reverse the call. we will just have to measure what exactly gets messed up". On your Asia save each edit waits 165-300 s for the whole re-solve; the touched cities' re-solve takes 5-11 s.
+  - Goal: City edits finish at the touched cities' re-solve; whole re-solve only for intercity edits and as an idle refresh; drift over 15 edits measured and shown to you.
   - Other: notes/T-2188.md
+- T-4220 [P2] {L:solve-speed} {after:T-2188} Quick figures for edits made during a whole re-solve
+  - Context: You, 11-24: "edits made during remaining full passes should ideally get fast numbers ... if people are clicking a lot of times to add lots of stations ... we need to do some sort of batching". Today an edit during a whole re-solve waits for it (up to 226 s on Asia). Options: notes/T-4204-options.md.
+  - Goal: An edit during a whole re-solve shows its lines in about the touched-cities time; edits arriving together share one quick calculation, never one each.
 - T-2198 [P3] {L:passing-tracks} {after:T-3456} Mark where faster trains lose time
   - Context: A train can lose minutes behind slower ones, but it shows only in the line panel, never on the map or trouble list. You 2026-11-16: this goes in the detailed crowding panel when it is built.
   - Goal: The loss shows in the detailed crowding panel.

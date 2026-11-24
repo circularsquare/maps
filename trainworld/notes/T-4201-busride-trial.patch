@@ -1,0 +1,25 @@
+diff --git a/trainworld/app/src/workers/demandClient.ts b/trainworld/app/src/workers/demandClient.ts
+index 5708d997e..d241fa127 100644
+--- a/trainworld/app/src/workers/demandClient.ts
++++ b/trainworld/app/src/workers/demandClient.ts
+@@ -800,6 +800,8 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
+   for (const l of lines) {
+     const n = l.stops.length;
+     const back = net.back ? backOf(l) : null;
++    // T-4201 trial: a bus minute counts `busRideW` (URL) times a rail one
++    const rw = l.catches && !l.ferry ? Number(new URLSearchParams(location.search).get("busRideW") ?? 1) : 1;
+     layout.push({ id: l.id, o: 2 * a, n, stops: l.stops, ...(back ? { back } : {}) });
+     l.stops.forEach((s, k) => (net.stops[a + k] = index.get(s)!));
+     if (net.back) (back ?? l.stops).forEach((s, k) => (net.back![a + k] = index.get(s)!));
+@@ -808,9 +810,9 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
+       const at = (run: number) => TIMES_PER_STOP * a + (run * PERIODS.length + q) * n;
+       const h0 = l.hopS[0]?.[q] ?? [], d0 = l.dwellS[0]?.[q] ?? [];
+       const h1 = l.hopS[1]?.[q] ?? [], d1 = l.dwellS[1]?.[q] ?? [];
+-      for (let k = 0; k < n - 1; k++) net.times[at(0) + k] = (h0[k] ?? 0) + (d0[k] ?? 0);
++      for (let k = 0; k < n - 1; k++) net.times[at(0) + k] = rw * ((h0[k] ?? 0) + (d0[k] ?? 0));
+       // run 1 travels the stops reversed: its j-th hop leaves stop n - 1 - j
+-      for (let j = 0; j < n - 1; j++) net.times[at(1) + n - 1 - j] = (h1[j] ?? 0) + (d1[j] ?? 0);
++      for (let j = 0; j < n - 1; j++) net.times[at(1) + n - 1 - j] = rw * ((h1[j] ?? 0) + (d1[j] ?? 0));
+       // T-798: a circle rides on round from its last stop to its first (`demand::Network::line_wrap`)
+       if (l.wrapS) net.times[at(0) + n - 1] = net.times[at(1)] = l.wrapS;
+     }

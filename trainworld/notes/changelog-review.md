@@ -101,3 +101,25 @@ Hidden:
 
 Merged: none. Reworded: none. Sorted: c091 among track fixes, c089 after c065 in performance, hidden last.
 Highlights: unchanged (7).
+
+## 2026-11-24, third pass (agent clreview3)
+
+Reviewed: c093-c105 (c094 was already hidden; c019 and c089-c092 were done in the second pass).
+
+Kept: c093, c095, c096, c097, c102, c103, c104, c105.
+
+Hidden:
+- c098: folded into c104 (track ghost fix)
+- c099: folded into c104 (track ghost fix)
+- c100: loading time left jumping, too minor
+- c101: grouping, ending a line at a stop and bus/ferry route edits showing up at once; same edit-speed theme as c080
+
+Merged: c098 + c099 + c104 into c104. c105 stays separate (it is about edits acting on the old map, not the ghost).
+
+Reworded (old -> new):
+- c104: "fixed the track ghost wiggling while drawing and vanishing for a moment after a click" -> "fixed the track ghost wiggling, jumping or pointing off while drawing, after a click or after zooming"
+- c105: "fixed quick edits right after another acting on the old map, like deleting the wrong track" -> "fixed edits made right after another acting on the old map, like deleting the wrong track"
+- c097: "big games no longer recalculate all their trips now and then to free memory" -> "big games no longer recalculate all their trips now and then" (memory claim dropped, overall memory went up)
+
+Sorted by area (track, demand, scheduling, fares, schematic, community, performance, other), features before fixes with highlights first, hidden last. 55 shown items.
+Highlights: unchanged (7): c043, c035, c051, c088, c080, c048, c072. (c022 and c064 still carry a highlight flag but are hidden.)
