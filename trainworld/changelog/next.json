@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c081",
+      "text": "the Lines tab's New line button, copying a line and changing its colour or settings show up faster",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4147",
+      "by": "editlines",
+      "at": "2026-11-24T02:26:30Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
+    },
+    {
       "id": "c080",
       "text": "edits on a big world show up faster, deleting a line or a station most of all",
       "edited": null,
