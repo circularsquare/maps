@@ -178,7 +178,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
   - Context: You, 11-23: "edit speed is actually still kind of a problem... noticeable on my end for big worlds... i feel like there was a point at which we had edit speed almost instant, but then might have regressed". Mostly placing track and editing stops. T-3550, T-1211, T-3804, T-1031 are back at P2 under this.
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
-- T-4153 [P1] {L:edit-speed} Redo band orders only where an edit can change them
+- T-4153 [P1] {L:edit-speed} Redo band orders only where an edit can change them (taking, 2026-11-24, agent bandorders)
   - Context: You, 11-23: "this is the entire issue". Stage 2 landed (tree editnetwork): a station's network build on Asia 333 to 124 ms in the page, track 212 to 180, construct 283 to 176, same output as a full build. Left: a station on a line's track or a line copy redoes 220-490 band orders (85-340 ms).
   - Goal: Band orders redone only where a changed path can change them; a station on a line's track on Asia under 0.2 s of network build.
   - Other: tree editnetwork kept; notes/T-4153.md "What is left"
@@ -229,6 +229,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-24: "if merging directionally biases things, would it make sense to undo that bias?", then "if its mostly not one directional its fine ... p4". T-4158 saw lines move both ways (Belgrade 704 +34%, 66 -29%) but Auto bus lines lose 1.2% overall.
   - Goal: Net shift by kind of line and trip length on Detroit and Belgrade; a simple correction proposed to you only where it is clearly one way.
   - Other: notes/T-4158.md
+- T-4230 [P2] {L:loading} The clock worker's first state sooner on load
+  - Context: From T-4225 (11-24): no regression in 0.4.6. On New York the clock worker's first full state is 3.7 of the map's 5.5 s, about 68% of the wait (2.9 s building the map's draw data), and runs while the demand workers open the pack on the same cores.
+  - Goal: Measure that state with and without the pack opening beside it, then propose a cheaper first build or a later pack open; about 2 h.
+  - Other: notes/T-4225.md
 - T-4193 [P2] {L:loading} Bus zones' streets before the network on load
   - Context: From T-4188 (11-24): Community save jwxidghd never loads on a phone because the clock worker re-solves train counts once per zone its 92 bus lines touch (20 passes, 34-58 s each). Loading those zones' streets first got the network in 17.7 s on an emulated iPhone. The prototype can change figures.
   - Goal: Only the bus routes' zones fetched (19, not 47), one pass; a bus-heavy real save's figures compared before and after.
@@ -254,9 +258,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4074 [P4] {L:loading} Spain blocks the game during football matches
   - Context: You, 11-23: "ok can leave as p4". From T-4071 (feedback 1795377906): Spanish ISPs block Cloudflare's shared addresses during LaLiga matches by court order. anita.garden and data.anita.garden both sit on them; the account server does not. A fallback would be a data mirror plus a page off Cloudflare, 4-6 h plus an upload at every publish.
   - Other: notes/T-4071.md group 3
-- T-4225 [P2] {L:loading} New York's map shows about 2.5 s later than before (taking, 2026-11-24, agent mapslow)
-  - Context: perf_bench NYC: the map showed at 6.8 s in the 0.4.5 candidate (rc046), 9.7 s in 0.4.6; first seen 11-24 with T-4204 (+2.3-2.7 s), unexplained. Trips +5%, CPU -14%, memory -6% at the same time.
-  - Goal: The step that grew found and the map back near 6.8 s on NYC, other numbers no worse.
 - T-4223 [P1] {L:stops} Closing a loop line refused as can't loop back here (taking, 2026-11-24, agent loopclose)
   - Context: You, 11-24: right click to close a loop is refused with "Can't loop back here" about 10% of the time for you (a retry usually works); some players have tried for days without success. Player complaints keep coming.
   - Goal: The cause found and fixed; a loop close that is valid always goes through, and a refused one says why.
@@ -275,15 +276,16 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4070 [P2] {L:station-placement} {after:T-4037} Ctrl click draws a station box without snapping
   - Context: Your scratch pad, 11-23: "some people also dislike the snapping when drawing station boxes, we can also ctrl click to override here." Same gesture as T-4069; the track rework's station tool (T-4037 g3/g4) is changing placement now, so after that lands.
   - Goal: Ctrl+click draws the station box where the pointer is, no snapping.
-- T-4047 [P3] {L:buses} Name bus stations
-  - Context: Your scratch pad, 11-22: "allow naming bus stations".
-- T-4083 [P2] {L:buses} Manual connections between bus stops and stations (taking, 2026-11-24, agent busstopid)
+- T-4083 [P2] {L:buses} {waits:Anita} Manual connections between bus stops and stations
+  - Need from Anita: Same design and picks as T-4080 (notes/T-4080-design.md); one answer covers both.
   - Context: Your scratch pad, 11-23: "allow making manual connections between bus stops and other stations." Split from T-4079. A bus stop gets a new id whenever an edit places the stops again, so a connection needs a stop that keeps its identity across edits and saves; T-4080 (naming bus stops) needs the same, so one design.
   - Goal: A player connects a bus stop to a station or stop up to 1 km away; riders change on foot as within a complex; it survives edits and a save.
   - Other: notes/T-4079.md
-- T-4080 [P2] {L:buses} Name and rename bus stops (taking, 2026-11-24, agent busstopid)
+- T-4080 [P2] {L:buses} {waits:Anita} Name and rename bus stops
+  - Need from Anita: Three picks in notes/T-4080-design.md: named stops stay put, connections free with no upkeep, labels for named stops at street zoom. All three as recommended?
   - Context: Your scratch pad, 11-23: "people keep requesting to be able to rename / name bus stops. we should add that." Also a player 11-20: "バスの停留所も名前を変えれるようにしたい" (want to rename bus stops too).
   - Goal: A bus stop's name can be set in its panel like a station's, saved, and shown wherever the stop's name shows.
+  - Other: notes/T-4080-design.md (about 6 h in six stages; also covers T-4083)
 - T-4048 [P3] {L:route-choice} Remove station connections and passageways
   - Context: Your scratch pad, 11-22: "add a way to remove the autogenerated (or constructed) station connections / passageways (maybe a "manage connections" or something and then you can click the connections to x them out)".
 - T-4049 [P3] {L:achievements} Cities served counts only busy cities
@@ -351,6 +353,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3485: the airport's pack share counts people across a border at full weight, then the border factor drops what doesn't land: Hong Kong loses 54% of its ground trips, Luton 77%, Basel 71%, Geneva 42%; 0.6M a day worldwide.
   - Goal: Outside people weighed by the border factor in the pack share at the next world rebuild; Hong Kong near its published ground trips.
   - Other: notes/T-3485.md
+- T-4227 [P2] {L:timetables} Weekend periods with trains but no services
+  - Context: Player report 11-22 (board g157), before 0.4.6: weekend periods with trains allocated (4 at midday) show no services, so nothing runs. Reach: some, players using weekend service.
+  - Goal: A period with trains allocated runs services, or the panel says why not; first checked on 0.4.6.
 - T-3742 [P2] {L:timetables} {after:Anita asks} Nudge a line's departure times
   - Context: You, 11-21: per-row Offset design approved, "we can leave it for now, but good that its planned! will start later". A player, 11-18: "the ability to offset departure times from whatever the game defaults to (like for example +4 minutes or -5 minutes)... to minimise conflicts between lines that share tracks". Design done (agent nudgedesign); strings drafted in the note.
   - Goal: Rail lines' rows take an offset from the game's timing that holds through later edits, shown at once on the board, chart and map.
@@ -440,6 +445,15 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-1200.md and notes/T-1211.md.
 
 ## Interface
+- T-4226 [P2] {L:small-fixes} New line symbol in other languages (taking, 2026-11-24, agent linesym)
+  - Context: Player report 11-24 (board g138): with the game in German or Japanese a new line gets "L" or the first character of its name as its symbol instead of the line number, so new lines share one symbol. Reach: many, every non-English player making lines.
+  - Goal: A new line's symbol is its number in every interface language.
+- T-4228 [P3] {L:map-look} Profit view leaves some track uncoloured
+  - Context: Player report 11-21 (board g150): in the profit view some areas show no profit with trains running. Reach: few, one report.
+  - Goal: Every segment trains run on gets a profit colour.
+- T-4229 [P3] {L:map-look} Station names stay after zooming in
+  - Context: Player report 11-20 (board g170): after zooming in once, station names stay on screen. Reach: few, one report.
+  - Goal: Station names follow the map at every zoom.
 - T-3744 [P3] {L:fares} Fare per stop made
   - Context: You, 2026-11-19, from players: a fare for each stop the train makes, so set below zero an express that stops less costs more; "i guess you'd probably always make this negative so maybe we flip the sign but then idk how we'd describe it"; floor the fare at the base fare. Unknown whether other games do it.
   - Goal: A short design (wording, sign, how a ride's stops are counted, other games) for you, then built in the advanced fares panel.

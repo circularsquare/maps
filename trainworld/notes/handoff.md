@@ -1,21 +1,23 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session efd2dd48-edce-4472-b6ce-2993de0c867f, name maps-1c [b74f21], since 2026-11-24 17:11 UTC
-Updated: 2026-11-24 20:21 UTC (cycling at 500k). Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Orchestrator: session 3793ea75-3fa8-4643-b04d-bea05a94ef29, name maps-d9 [d2420d], since 2026-11-24 20:20 UTC
+Updated: 2026-11-24 20:34 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5. Core cap 14 (her 20:12, "take on more tasks at once if you have bandwidth").
 
 ## Next
-1. Adopt the 7 agents running in maps-1c's tab (reports reach the inbox; briefs in maps-1c's scratch <agent>/brief.md):
-   mapC T-4214 C1+C2 (tree mappatch; clickable map patched from each edit's touched records, waiting clicks released on
-   the patch), quickend T-2188 (tree quickend; drift over 15 edits goes to her before landing), buswait T-4052 (tree
-   buswait), loopclose T-4223 (tree loopclose; her clue: one long stop-less segment sticking out refuses the loop,
-   stops along it fix it), mapslow T-4225 (tree mapslow; NYC map 6.8 -> 9.7 s since rc046), busstopid T-4080/T-4083
-   design (read-only, goes to her), busopts (read-only, notes/T-4224.md table for her bus pick).
+1. Running. Adopted from maps-1c 20:20 (reports reach the inbox; briefs in maps-1c's scratch <agent>/brief.md):
+   mapC T-4214 C1+C2 (tree mappatch; clickable map patched from each edit's touched records), quickend T-2188 (tree
+   quickend; drift over 15 edits goes to her before landing), buswait T-4052 (tree buswait), loopclose T-4223 (tree
+   loopclose), busopts (read-only, notes/T-4224.md table for her bus pick). Mine (briefs in my scratch <agent>/brief.md):
+   linesym T-4226 (Sonnet, tree linesym; line symbol in other languages, many players), bandorders T-4153 stage 3 (Opus,
+   tree bandorders; pass-through test for band orders). Done: mapslow (no regression, landed 4bd32c838, T-4230 filed
+   from it); busstopid (T-4080/T-4083 now {waits:Anita}, notes/T-4080-design.md; T-4047 folded); sortreq (93 player
+   reports, 171 groups; bugs filed T-4226 to T-4229).
 2. When mapC, quickend and buswait land: one batch checker on master (edits, undo, waiting clicks, figure drift),
    8800 rebuild, smoke. 0.4.6 is live (published 19:36 UTC, changelog trimmed and re-pushed 19:47).
-3. Then T-4214 stages A (stations sent without the nameFor wait) and D (track runs without the placing lock), then
-   T-4149/T-4150 (incremental state; Gemini: the next biggest per-edit cost after C), T-4220, T-4193, T-4187 then T-3160,
-   T-4080/T-4083 once she approves the design, T-4199 (fix NYC +13 MB first), T-4222 P3. Board up next holds this.
+3. Then T-4227 (weekend services bug; touches scheduling, maybe buswait's service.rs: after buswait lands), T-4214
+   stages A and D (after mapC), T-4149/T-4150, T-4220, T-4193, T-4230, T-4187 then T-3160, T-4080/T-4083 once she
+   picks, T-4199 (fix NYC +13 MB first), T-4222 P3. Board up next holds this.
 4. After up next: her big three, T-3444 track rework, T-3742 schedule nudging, T-3694 bulk station improvements panel +
    T-3456 crowding along the line.
 
@@ -49,4 +51,4 @@ diary notes/handoff-log.md. Her time UTC-5. Core cap 14 (her 20:12, "take on mor
 - Trees kept: _track (tw/track), tracksnap (snaptrack.py), _seed (Rust cache seed), corridors (T-4199 stage 1).
 - Unmerged branches with no tree, left on purpose: tw/hotfix-10d, tw/release-021, tw/release-031, tw/onegraph-measured.
 - A task with stages left: `agent-tree.mjs land` + `remove`, not `finish`; swap the taking mark by hand.
-- reserve_cores: maps-1c's retry loop (task bvc27j9av) dies with its tab; start one in yours.
+- reserve_cores: maps-d9's retry loop (task bpobbmf27) dies with its tab; start one in yours.

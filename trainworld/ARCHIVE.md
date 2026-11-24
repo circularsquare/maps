@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4047 [P3] {L:buses} Name bus stations (2026-11-24): closed without code: folded into T-4080 (the same ask: naming bus stops)
+- T-4225 [P2] {L:loading} New York's map shows about 2.5 s later than before (2026-11-24): No step grew: side by side on the stored dists 0.4.6 shows New York's map at 5.5 s against rc046's 6.5 s (medians of 3); the ledger's 9.7 s was one slow run. Notes: notes/T-4225.md.
 - T-4221 [P2] {L:map-look} Bubbles stay on screen after turning them off following a load (2026-11-24): closed without code: duplicate of T-4029 (lost WebGL context at load left the bubbles canvas drawn), fixed in 0.4.6, not in v0.4.5. notes/T-4221.md.
 - T-4146 [P2] {L:edit-speed} Ports, flyovers and station looks show at the click (2026-11-24): closed without code: her 11-24: root cause first, at-click pictures deprioritized; work saved as notes/archive/trees/editstations-2026-11-24.patch.
 - T-4176 [P3] {L:checks} Remove finished worktrees and old tw branches (2026-11-24): Removed worktree editstations (patch in notes/archive/trees/editstations-2026-11-24.patch), cleared leftover folders ferryfix, modecolors2, check5base, rampport (about 6.7 GB), deleted merged branches tw/check5base, tw/ferryfix, tw/modecolors2.
