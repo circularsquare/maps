@@ -1,19 +1,27 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 5cd3af11-2ab8-4788-8daf-1956104ead51, name maps-c0 [58120f], since 2026-11-24 01:57 UTC
-Updated: 2026-11-24 07:33 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-24 09:05 UTC (cycling at 500k). Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5.
 
-## In flight (agents in my tab: memgrowth T-4179, check2 (second batch check), zoneopen2 T-4051, hookfix T-4174)
-- Landed overnight after the first checkers: T-4133 527a59e1, T-3939 fc4e5a14, T-4181 e2d72bf0 (Gemini final fixes),
-  T-4185 e20fa32b, T-4178 6b68241c (reversals; 2 new strings for her ack). Smoke on master e936af30 PASSED (30 checks).
-  perf_bench rel046-e936af30 vs v0.4.5: demand memory +13% nyc, +12% tokyo, +17% belgrade; belgrade CPU +20%, rail
-  trips -7.1% belgrade (to her as a trade-off; memgrowth working on memory). snap8800 of 6b68241c running.
-- Publish prep done 07:54: changelog reviewed (58 shown, 7 highlights; her edited c080, c035, c017 reworded), smoke8800 PASSED light and dark on 6b68241c. Left for the morning: her playtest, strings ack (reversal hovers), changelog edit on the board, T-4153 s2 call, rerun perf_bench on the final hash, then her yes.
-- Held for her word: T-4153 s2 (tree editnetwork; ~10.6 MB edit-speed memory; add lineBands.ts:571 ribbons.delete),
-  T-921 (tree commutechunks, tunable, no sparse gain).
-- Uncommitted SPEC.md "what is covered" rewrite is not mine (likely Gemini in Antigravity): leave it; patch it out to land.
-- 8800 = f4bcf26b until the snap swaps. T-4112's tw/track changelog item parked in next-track.json: hide the port's duplicate at release.
+## In flight (agents in maps-c0's tab; adopt from the board; follow-ups to fresh agents on their trees/notes)
+- memgrowth T-4179 (a84b996f14a30f0fe): demand memory since v0.4.5 (+12-17%) and why coarse barely cuts memory.
+- phonemem2 T-4184 (a5ade11e64ee0b298): next clock-worker memory cuts on phones; avoids map/network.ts.
+- zoneslow T-4051 (abc6f5b3f51e4a673): zone-open slow path (125 s vs 35 s on her NA save), helper worker opens the new zone first.
+- Landed tonight since 8800's ef99d979: edit speed (T-4145, T-4153 s1, T-4147, T-4146, T-4148, T-4149, T-4170, T-4181, T-4185,
+  T-4132, T-4155, T-4133), T-4158 bus merge 500 m, T-3939, T-4178 reversals, T-4162/T-4186 text, T-4051 part (zone open
+  12%), T-4180 agent-tree merge safety, T-4174 hook. 8800 = 6b68241c (05:3x); master is ahead by T-4186 44990dd8 and
+  T-4051 3919ecb8: rebuild 8800 before her playtest.
+- 0.4.6 prep done: smoke on master PASSED, smoke8800 light+dark PASSED, two batch checkers PASS, changelog reviewed (58 shown,
+  7 highlights; her edited c080, c035, c017 reworded), perf_bench rel046-e936af30 vs v0.4.5: demand memory +13/+12/+17%,
+  Belgrade CPU +20%, rail -7.1% Belgrade (trade-off to her). Left: her playtest list (write it), strings ack, her
+  changelog edit on the board, T-4153 s2 call, perf_bench on the final hash, her yes. Nothing published.
+- Held for her word: T-4153 s2 (tree editnetwork, station network build on Asia 333 to 124 ms, edit-speed memory ~10.6 MB vs
+  her ~10 MB; add mm.ribbons.delete(e) at lineBands.ts:571 if landed); T-921 (tree commutechunks, tunable, no sparse gain);
+  T-4156 parked P3. T-3160 waits for memgrowth (demand code).
+- Uncommitted SPEC.md "what is covered" rewrite is not ours (likely Gemini in Antigravity): patch it out to land, re-apply.
+- Core cap 15 "for the night": back to 14 when she's up (her word). Gemini: only on her ask or our suggestion; Neon medium.
+- T-4112's tw/track changelog item parked in next-track.json: hide the port's duplicate at release.
 
 ## Next (night of 11-24; she aims to publish 0.4.6 in the morning after her playtest)
 1. Land editunify T-4170 once its Gemini fixes are verified; then the one Gemini review of the whole edit-speed batch

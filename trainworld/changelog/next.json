@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c089",
+      "text": "opening a new zone on a big game loads faster",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4051",
+      "by": "zoneopen",
+      "at": "2026-11-24T09:01:38Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
+    },
+    {
       "id": "c035",
       "text": "the station tool picks train or tram, BRT station or port; BRT stations snap to bus routes, ports no longer need a ferry line, and stations can go on open ground again with two clicks",
       "edited": "the station tool picks train station, tram stop, BRT station or port, and its Auto choice picks from what is under the pointer; BRT stations snap to bus routes and show trips within 600 m, ports no longer need a ferry line, and stations can go on open ground again with two clicks",
