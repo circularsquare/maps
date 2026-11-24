@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session f51a9e36-f3e8-41ee-b3d9-e908c5e30b16, name maps-2c [36056b], since 2026-11-24 09:03 UTC
-Updated: 2026-11-24 12:54 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Orchestrator: session 14439093-662c-49fa-b3bc-84f716dcef40, name maps-20 [14f6c1], since 2026-11-24 12:58 UTC
+Updated: 2026-11-24 12:58 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5.
 
 ## In flight (all mine)
@@ -23,7 +23,7 @@ diary notes/handoff-log.md. Her time UTC-5.
 - T-4112's tw/track changelog item is parked in next-track.json: hide the port's duplicate at release.
 - Uncommitted SPEC.md, docs, checks/old moves, tools/asks.py etc. are not ours (likely Gemini in Antigravity): leave;
   patch out to land if a landing touches them (checks/INDEX.md was regenerated once, 10:34).
-- Core cap 15 "for the night": back to 14 when she's up (her word). Gemini: only on her ask or our suggestion; Neon medium.
+- Core cap back to 14 at 12:58 (she's up; her 05:0x word). Gemini: only on her ask or our suggestion; Neon medium.
 
 ## Next (she aims to publish 0.4.6 after her playtest)
 1. check6 PASSED. 0.4.6 candidate = f63b105b3 (incl. T-4057; check7 running on it). Smoke on it PASSED 12:33. Changelog

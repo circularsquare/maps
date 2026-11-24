@@ -24,6 +24,8 @@ def main():
                     help="open a standby tab that lists itself in <project>/notes/standby.txt and waits (Anita 2026-11-21)")
     ap.add_argument("--no-code-mode", action="store_true",
                     help="start without Code Mode (on by default, Anita 2026-11-23: 'that is usual procedure now')")
+    ap.add_argument("--new-window", action="store_true",
+                    help="open it in a new Terminal window instead of a tab in the latest one (her 11-24: a frozen window)")
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()
     prompt = f"/takeover {a.project}"
@@ -37,7 +39,7 @@ def main():
     if not wt:
         raise SystemExit("Windows Terminal (wt.exe) not found")
     title = f"{a.project} standby" if a.standby else f"{a.project} orchestrator"
-    cmd = [wt, "-w", "0", "new-tab", "--title", title, "-d", str(MAPS),
+    cmd = [wt, "-w", "new" if a.new_window else "0", "new-tab", "--title", title, "-d", str(MAPS),
            "claude", "--model", a.model] + (["--advisor", a.advisor] if a.advisor else []) + [prompt]
     print(" ".join(cmd))
     if not a.dry_run:
