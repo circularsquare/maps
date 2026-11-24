@@ -238,6 +238,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4055 (11-24): an edit made while a new game's load hold is on opens its zones coarse, then the level check reopens them fine: an extra download and solve for nothing.
   - Goal: Those zones open once, at the level they end at.
   - Other: notes/T-4055.md
+- T-4192 [P3] {L:solve-consistency} Live and reloaded total trips differ after edits on the North America save
+  - Context: Batch checks 4 and 5 (11-24): after edits reaching new zones (Managua, Bogota, San Jose) then Ctrl+Z, total trips differ 0.06-0.08% between the live game and a reload of its save; rail trips equal. Same on the build before T-4055. Ctrl+Z also left the San Jose line in place, maybe the cause.
+  - Goal: The gap explained; live and reload equal, or the reason they can't be named.
+  - Other: notes/batchcheck-2026-11-24-check5.md
 - T-4141 [P3] {L:station-placement} Track placed by an edit call crossed the Hudson at ground level
   - Context: Seen by T-4112: a route entered through the game's edit call crossed the Hudson at ground level without a refusal, while pointer-drawn track nearby was bridged. Water may not have been loaded under part of it.
   - Other: notes/T-4112.md

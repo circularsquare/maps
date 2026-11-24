@@ -11,7 +11,7 @@ diary notes/handoff-log.md. Her time UTC-5.
   12,672,465); 8800 = 20d3a002 (master minus bookkeeping).
 - Landed 10:26-10:35: trams T-4075 9fc02c858 (c091), zoneslow T-4051 96ad90da4 (c089 reworded); check4 PASS both (caveat: NA save live vs reload
   total trips 0.08% apart, rail equal; old build not run: give to stalefinal when it reports);
-  8800 = 96ad90da (10:40). stalefinal T-4055 landed f3521af85 (c092), checker check5 running (also the 0.08% gap). maps-c0 closed out.
+  8800 = 96ad90da (10:40). stalefinal T-4055 landed f3521af85 (c092), check5 PASS (pack-failure hang untested; 0.08% gap is older: T-4192). maps-c0 closed out.
 - stopclick T-4097 stage (Opus): Asia stop click line path 1.4-1.9 s to ~100 ms.
 - Landed 11:35-11:45: T-4190 check fix, T-3160 stage 6 53ca4ef77 (phone solving worker 330 -> 261 MB; check6 running), T-4189
   perf_bench WASM fix (rel046 vs v0.4.5 compare was NOT affected). 8800 = 66bdd9f6 (11:51).
