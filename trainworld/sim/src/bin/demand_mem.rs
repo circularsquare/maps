@@ -149,6 +149,13 @@ fn main() {
             e.set_bus(&catch_n, &cxy);
         }
         a.set_chunked(true);
+        // T-921: `--set name=value,..` on the commutes' parameters (commute_chunk_day=0 is today's chunking)
+        if let Some(s) = get("--set") {
+            for kv in s.split(',').filter(|x| !x.is_empty()) {
+                let (k, v) = kv.split_once('=').expect("--set name=value");
+                a.params_mut().set_extra(k, v.parse().unwrap()).unwrap();
+            }
+        }
         a.set_network(&xy, &real.line_n, &real.stops, &real.times, &real.tph, &real.cars).unwrap();
         a.set_fares(1.5, 0.1, &hop_km).unwrap();
         st.mark(&format!("{id}: commutes set_network"));

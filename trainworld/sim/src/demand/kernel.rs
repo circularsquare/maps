@@ -153,6 +153,10 @@ pub struct Params {
     /// those trips in chunks of about this size, per block of `CHUNK_BLOCK` destination zones
     /// (`mode_choice`); 0 solves every pair.
     pub commute_chunk: f32,
+    /// T-921: the chunk in people a day, taking effect where it is larger than `commute_chunk`
+    /// (`day x period_share` trips in the period, so every period deals the same pairs); 0 leaves
+    /// `commute_chunk` alone. `commute_chunk` 0 still solves every pair.
+    pub commute_chunk_day: f32,
     /// Mixed into where the chunks start (0 in the game; the level test's other draws, T-1222).
     pub chunk_salt: u32,
     /// Subzone pairs whose cheapest walks at the two ends together cost more than this many
@@ -373,6 +377,7 @@ impl Default for Params {
             crowd_start: 0.7,
             prune_trips: 0.0,
             commute_chunk: COMMUTE_CHUNK,
+            commute_chunk_day: COMMUTE_CHUNK_DAY,
             chunk_salt: 0,
             // T-090: holds the pairs at what the 2.5 km edge had; on the real New York network
             // 0.3% of rail trips have walks of 70-80 perceived minutes together and 0.2% were
@@ -482,6 +487,8 @@ impl Params {
             "pair_walk_max" => self.pair_walk_max = v,
             "prune_trips" => self.prune_trips = v,
             "commute_chunk" => self.commute_chunk = v,
+            "commute_chunk_day" => self.commute_chunk_day = v,
+            "chunk_salt" => self.chunk_salt = v as u32,
             "road_detour" => self.road_detour = v,
             "road_routed_scale" => self.road_routed_scale = v,
             "road_local_km" => self.road_local_km = v,

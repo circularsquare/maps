@@ -142,6 +142,13 @@ pub const DIST_BANDS_KM: [f32; N_BANDS] = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.
 pub const N_BANDS: usize = 13;
 /// T-874: `Params::commute_chunk`'s value in the game (notes/T-874.md).
 pub const COMMUTE_CHUNK: f32 = 0.1;
+/// T-921: the one number to tune how coarsely commutes are dealt. In every period, the commute zone
+/// pairs with fewer than this many people a day (`x period_share` trips in the period) share their
+/// block's trips out in chunks of about that size (`Params::commute_chunk_day`) instead of each pair
+/// being solved. Raising it solves fewer pairs (faster; a small station's riders hang more on which
+/// pairs are drawn; past about 1.4 a day the coarse zones' peak periods are dealt coarser too);
+/// lowering it solves more; 0 leaves only `COMMUTE_CHUNK`'s 0.1 trips a period. notes/T-921.md.
+pub const COMMUTE_CHUNK_DAY: f32 = 1.0;
 /// T-874: the side of the blocks of destination zones (16 km for 2 km zones) within which an
 /// origin zone's small commute pairs are dealt their trips in chunks (`Params::commute_chunk`).
 pub(super) const CHUNK_BLOCK: i32 = 8;
@@ -623,7 +630,7 @@ fn mode_choice_with<const FANS: bool>(z: &Zones, gr: &Gravity, sz: &Subzones, er
         // crowding rounds and timetable edits deal the same chunks.
         fm[..nzi].fill(1.0);
         if p.commute_chunk > 0.0 {
-            let c = p.commute_chunk as f64;
+            let c = p.commute_chunk.max(p.commute_chunk_day * p.period_share) as f64;
             let mut g = 0;
             while g < dorder.len() {
                 let b = dorder[g].0;

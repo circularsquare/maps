@@ -51,7 +51,7 @@ tests natively.
   the pack, T-275), `trip.rs` (the trip explorer's query, T-195; its two cells' own trip, T-720, checked with the
   walk bands in `t720.rs`), `lanes.rs` (f32 lanes, wasm
   SIMD or SSE2, for the commute pair loop, T-036). The commute pair loop is `kernel::mode_choice`;
-  its small zone pairs are dealt in chunks there (`COMMUTE_CHUNK`, T-874; `DemandApi::set_chunked`).
+  its small zone pairs are dealt in chunks there (`COMMUTE_CHUNK_DAY`, T-921, and `COMMUTE_CHUNK`, T-874; `DemandApi::set_chunked`).
   `wasm.rs` (WASM only): the memory and heap figures, the last panic, and the counting allocator over
   `heap::Heap`, which grows the memory 32 MB at a time (T-1205, T-1174, T-1594, T-2716).
   `lod.rs`: a zone's level of detail (T-1222), the everyday sampling and commute chunk a zone opens
