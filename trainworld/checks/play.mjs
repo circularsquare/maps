@@ -3,7 +3,7 @@
 // answers with one line of JSON in a few seconds, waiting on conditions, never fixed times.
 //
 //   node trainworld/checks/play.mjs start <city|file.save> --port 6195 [--cores 3] [--mode sandbox] [--run]
-//        [--query 'opened=all&x=1'] [--size 1400x900] [--touch] [--via panel] [--idle 30] [--timeout 100]
+//        [--query 'opened=all&x=1'] [--size 1400x900] [--touch] [--via panel] [--idle 30] [--timeout 100] [--base trainworld] (default on :8800, the production build)
 //   node trainworld/checks/play.mjs do '<calls>' [--timeout 60] [--full]      or  do --file probe.js
 //   node trainworld/checks/play.mjs sim <read> ['<json arg>']                  or  sim '<page expression>'
 //   node trainworld/checks/play.mjs edits <file.json>
@@ -152,7 +152,9 @@ async function start({ pos, opt }) {
     if (old.tree !== TREE) fail(`:${port} has a game from another tree (${old.tree}); pick your own Vite port`);
     fail(`a game is already open on :${port} (${old.what}); play.mjs stop, or play.mjs reload <city|save>`);
   }
-  const url = `http://localhost:${port}/`;
+  // 8800 (serve.py) serves the game under /trainworld/; Git Bash rewrites a leading-slash argument into a Windows path, so --base is given as `trainworld`
+  const base = String(opt.base ?? (port === 8800 ? 'trainworld' : '')).replace(/^\/+|\/+$/g, '');
+  const url = `http://localhost:${port}/${base && base + '/'}`;
   try { await fetch(url, { signal: AbortSignal.timeout(5000) }); } catch { fail(`no Vite on :${port}: node trainworld/checks/dev-nowatch.mjs ${port}`); }
   mkdirSync(DIR, { recursive: true });
   rmSync(statePath(port), { force: true });
@@ -386,6 +388,7 @@ async function serve(conf) {
     lastUsed = Date.now();
   } catch (e) {
     log('failed:', e.message);
+    for (const p of gamesOf?.chrome?.ctx?.pages?.() ?? []) log('page', p.url(), JSON.stringify(await p.evaluate(() => ({ tw: !!window.tw, world: !!window.tw?.world?.value, tools: !!window.tw?.tools, demand: !!window.twDemand?.client, lastLoad: window.tw?.client?.lastLoad ?? null, lines: window.tw?.world?.value?.save?.lines?.length })).catch((x) => x.message)));
     save({ phase: 'failed', error: e.message.split('\n')[0] });
     await gamesOf?.close().catch(() => {});
     setTimeout(() => process.exit(1), 300);
