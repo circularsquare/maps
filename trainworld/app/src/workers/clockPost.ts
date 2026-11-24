@@ -12,7 +12,7 @@ import { StrokeSender, strokesOfPieces, type StrokeKind, type StrokeMode } from 
 import { NO_CITIES } from "./saveFile";
 import { StateRows } from "./stateRows";
 import type { ClockEdge, ClockLine, ClockNode, ClockState, MoneyPatch, MoneyState } from "./protocol";
-import { applyPatch, diffValue } from "./valuePatch";
+import { diffValue } from "./valuePatch";
 import { complexOfNodes } from "./clockDemand";
 import { diagramIn, edgeMerc, rowEnv } from "./clockMain";
 import { diagramCities, diagramInside, frame, send, timing } from "./clockState";
@@ -182,13 +182,25 @@ export function postWhole() {
  * 2 MB on a 2,647-station save (the regions' ledgers), 35-65 ms of structured clone a post there. */
 let moneyHeld: MoneyState | null = null;
 let moneySerial = 0;
+/** T-4149: the record as held for the next diff. Its ledgers (`ledger`, `hours`, `regions`, `lineDays`) are held as they
+ * are: arrays made anew for each record, of entries never changed once made (`moneyState`'s kept copies), so the
+ * next diff passes the unchanged ones by identity. The rest is copied: it can share parts the worker changes in place. */
+const HELD_AS_THEY_ARE = new Set(["ledger", "hours", "regions", "lineDays"]);
+function heldMoney(m: MoneyState): MoneyState {
+  const rest: Record<string, unknown> = {}, src = m as unknown as Record<string, unknown>;
+  for (const k of Object.keys(src)) if (!HELD_AS_THEY_ARE.has(k)) rest[k] = src[k];
+  const copy = structuredClone(rest), out: Record<string, unknown> = {};
+  // (in the record's own key order, so the next diff finds the same keys)
+  for (const k of Object.keys(src)) out[k] = HELD_AS_THEY_ARE.has(k) ? src[k] : copy[k];
+  return out as unknown as MoneyState;
+}
 export function moneyPost(m: MoneyState): { money: MoneyState; moneySerial: number; checkMoney?: undefined } | { money: undefined; moneyPatch: MoneyPatch; checkMoney?: MoneyState } {
   if (!moneyHeld || patchMode === "0") {
-    moneyHeld = structuredClone(m);
+    moneyHeld = heldMoney(m);
     return { money: m, moneySerial: ++moneySerial };
   }
   const patch = diffValue(moneyHeld, m);
-  if (patch) moneyHeld = applyPatch(moneyHeld, structuredClone(patch));
+  if (patch) moneyHeld = heldMoney(m);
   const base = moneySerial;
   return { money: undefined, moneyPatch: { base, serial: ++moneySerial, patch }, ...(patchMode === "check" ? { checkMoney: m } : {}) };
 }
@@ -259,6 +271,7 @@ export function netForPost(n: NetworkBuffers, scratch?: NetworkBuffers): Network
     for (const k of SAME_FIELDS) { const v = n[k]; if (v) keepPostedField(out, k, v); }
   } else {
     const patch = { ...n.patch!, same: [] as string[], modes, ranges, moves };
+    const ts0 = performance.now();
     for (const k of SAME_FIELDS) {
       const v = n[k];
       if (!v) continue;
@@ -268,6 +281,7 @@ export function netForPost(n: NetworkBuffers, scratch?: NetworkBuffers): Network
         (out as Record<SameField, unknown>)[k] = undefined;
       } else keepPostedField(out, k, v);
     }
+    timing.pSame = performance.now() - ts0;
     const changed = new Map<number, Float32Array>();
     const was = posted.net!.pts;
     for (const [id, p] of pts) if (was.get(id) !== p) changed.set(id, p.slice());
@@ -386,12 +400,16 @@ export function postState(s: ClockState, transfer: Transferable[]) {
     send({ kind: "state", state: { ...s, ...moneyPost(s.money!) } }, transfer);
     return;
   }
+  const t0 = performance.now();
   const de = rowsDelta(s.edges, posted.edges, posted.edgeIds), dn = rowsDelta(s.nodes, posted.nodes, posted.nodeIds), dl = rowsDelta(s.lines, posted.lines, posted.lineIds);
   if (de.ids) posted.edgeIds = de.ids;
   if (dn.ids) posted.nodeIds = dn.ids;
   if (dl.ids) posted.lineIds = dl.ids;
   const full = patchMode === "check" ? { edges: s.edges, nodes: s.nodes, lines: s.lines } : undefined;
-  send({ kind: "state", state: { ...s, ...moneyPost(s.money!), edges: [], nodes: [], lines: [], delta: { edges: de, nodes: dn, lines: dl }, ...(full ? { checkRows: full } : {}) } }, transfer);
+  const t1 = performance.now(), money = moneyPost(s.money!), t2 = performance.now();
+  send({ kind: "state", state: { ...s, ...money, edges: [], nodes: [], lines: [], delta: { edges: de, nodes: dn, lines: dl }, ...(full ? { checkRows: full } : {}) } }, transfer);
+  // T-4149: the post's parts, for the edit's answer
+  timing.pRows = t1 - t0; timing.pMoney = t2 - t1; timing.pSend = performance.now() - t2;
 }
 export function putDiagramOn(v: typeof diagramOn) { diagramOn = v; }
 export function putDiagramWhole(v: typeof diagramWhole) { diagramWhole = v; }

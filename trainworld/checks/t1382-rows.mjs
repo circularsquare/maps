@@ -30,6 +30,9 @@
 // edits break lines too (breakLine). New York's save has no built junction with a crossing, so the case runs on Asia's.
 // T-4137: a hand-made regions case first (an edit that removes as many records as it adds, so the counts hold); FROM=n
 // starts at seed n (FROM=9 node trainworld/checks/t1382-rows.mjs 9 40 asia: the batch check's seed 9, which found it).
+// T-4149: on odd steps every line's phase tables as the worker's terminal bays read them (`StateRows.phaseTablesNow`, the kept
+// tables brought up to date) must equal the model's `line_phases`: after the edit before its read, after a focus read, and
+// after the read and the construct-all quote's trials. --self-test-tables skips bringing them up to date: the check must fail.
 // T-4125: after every step the page's nearest track node and junction to the capacity tags and to points near nodes
 // (map/snapIndex.ts `nearestNode`, from its grids) must be the ones a scan of every node finds.
 import { readFileSync } from 'node:fs';
@@ -42,7 +45,7 @@ const { StateRows, upgradesOf, Regions, PlatformLines, buildComplexes } = await 
 await init({ module_or_path: readFileSync(new URL('../app/src/wasm/track/sim_bg.wasm', import.meta.url)) });
 const { nearestNode, toLocal } = await loadApp("export { nearestNode } from '@app/src/map/snapIndex.ts'; export { toLocal } from '@app/src/map/geo.ts';");
 
-const SELF = process.argv.includes('--self-test-touched') ? 'touched' : process.argv.includes('--self-test') ? 'lines' : process.argv.includes('--self-test-names') ? 'names' : process.argv.includes('--self-test-phases') ? 'phases' : process.argv.includes('--self-test-trials') ? 'trials' : null;
+const SELF = process.argv.includes('--self-test-tables') ? 'tables' : process.argv.includes('--self-test-touched') ? 'touched' : process.argv.includes('--self-test') ? 'lines' : process.argv.includes('--self-test-names') ? 'names' : process.argv.includes('--self-test-phases') ? 'phases' : process.argv.includes('--self-test-trials') ? 'trials' : null;
 const args = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const SEEDS = Number(args[0] ?? 4), STEPS = Number(args[1] ?? 30), SETUP = args[2] ?? 'nyc';
 // T-3896: Tokyo's has lines timed train by train (T-3346), which New York's has none of
@@ -136,6 +139,19 @@ function phaseDifference(a, b) {
   for (let i = 0; i < a.length; i++) if (!Object.is(a[i], b[i])) return `float ${i} (phase ${Math.floor(i / 4)}) is ${a[i]} against ${b[i]}`;
   return null;
 }
+
+/** T-4149: the phase tables the worker's terminal bays read (`StateRows.phaseTablesNow`) against the model's own
+ * `line_phases`, for every line; asked between an edit and its read, after a focus read and after a trial too */
+function tablesDifference(rows, api, where) {
+  const t = rows.phaseTablesNow(api), li = api.lines_info();
+  for (let i = 0; i < li.length; i += 22) {
+    const d = phaseDifference(t(li[i]), api.line_phases(li[i]));
+    tableChecks++;
+    if (d) return `${where}: line ${li[i]}'s kept phase tables differ from the model's: ${d}`;
+  }
+  return null;
+}
+let tableChecks = 0;
 
 /** T-4125: the page's nearest track node and junction to a capacity tag (map/snapIndex.ts `nearestNode`, from its
  * grids; the tram labels and the junction links) against a scan of every node, on the nodes as the read left them */
@@ -287,6 +303,8 @@ for (let seed = Number(process.env.FROM ?? 1); seed <= SEEDS; seed++) {
   if (SELF === 'trials' || SELF === 'phases') A.api.peek_changed_lines = () => [];
   const choose = rng(seed * 7919);
   const rows = new StateRows();
+  // (the kept tables as they are, not brought up to date first)
+  if (SELF === 'tables') rows.phaseTablesNow = function () { const seen = this.phaseSeen, t = this.phaseTables; return (id) => (seen.has(id) ? t.get(id) ?? new Float32Array(0) : A.api.line_phases(id)); };
   let before = read(rows, A.api, eA);
   let lastPhases = rows.phases(A.api);
   const d0 = firstDifference(before, read(new StateRows(), B.api, eB));
@@ -304,6 +322,10 @@ for (let seed = Number(process.env.FROM ?? 1); seed <= SEEDS; seed++) {
     if (r !== rB) { console.log(`FAIL  seed ${seed} step ${step} ${kind}: the two models answered ${r} and ${rB}`); failures++; break; }
     if (process.env.VERBOSE) console.log('seed', seed, 'step', step, kind, r === 0 ? 'applied' : 'refused ' + r);
     (r === 0 ? applied : refused)[kind] = ((r === 0 ? applied : refused)[kind] ?? 0) + 1;
+    // T-4149: on odd steps the kept phase tables are asked at each point, so even steps keep the reads' own path
+    const tables = (!SELF || SELF === 'tables') && step % 2 === 1;
+    const dt0 = tables ? tablesDifference(rows, A.api, 'after the edit, before its read') : null;
+    if (dt0) { failures++; console.log(`FAIL  seed ${seed} step ${step} ${kind}: ${dt0}`); break; }
     // T-4113: a rows state's read first now and then (the view about a station), its regions left dirty taken by the next
     if (choose() < 0.3) {
       const st = pick2(choose, m.stations), rect = [st.x - 3000, st.y - 3000, st.x + 3000, st.y + 3000];
@@ -312,6 +334,8 @@ for (let seed = Number(process.env.FROM ?? 1); seed <= SEEDS; seed++) {
       read(rows, A.api, eA, { rect });
       if (rows.work.left > 0) focusDeferred++;
       focusReads++;
+      const dt1 = tables ? tablesDifference(rows, A.api, 'after a focus read') : null;
+      if (dt1) { failures++; console.log(`FAIL  seed ${seed} step ${step} ${kind}: ${dt1}`); break; }
       read(new StateRows(), B.api, eB);
     }
     const tA0 = performance.now();
@@ -338,6 +362,9 @@ for (let seed = Number(process.env.FROM ?? 1); seed <= SEEDS; seed++) {
     const qA = A.api.blueprint_cost_items(), qB = B.api.blueprint_cost_items();
     const dc = !Object.is(cA[0], A.api.total_cost()) || !Object.is(cA[1], A.api.built_cost()) ? `costs() ${cA} against total_cost ${A.api.total_cost()} and built_cost ${A.api.built_cost()}` : !Object.is(cA[0], cB[0]) || !Object.is(cA[1], cB[1]) ? `the models' costs differ: ${cA} against ${cB}` : qA.length !== qB.length || qA.some((v, i) => !Object.is(v, qB[i])) ? `the models' construct-all quotes differ: ${Array.from(qA).slice(0, 14)} against ${Array.from(qB).slice(0, 14)}` : null;
     if (dc) { failures++; console.log(`FAIL  seed ${seed} step ${step} ${kind}: ${dc}`); break; }
+    // (the quotes above ran trials, which note the lines they recompute)
+    const dt2 = tables ? tablesDifference(rows, A.api, 'after the read and the quotes\' trials') : null;
+    if (dt2) { failures++; console.log(`FAIL  seed ${seed} step ${step} ${kind}: ${dt2}`); break; }
     const phasesNow = rows.phases(A.api);
     const dp = phaseDifference(phasesNow, B.api.phases());
     if (phasesNow === lastPhases) phasesSame++;
@@ -409,5 +436,5 @@ const keptShare = rowsKept / Math.max(1, rowsTotal);
 // (the crossing case must have happened where the save has a built junction with a crossing: Asia's has, New York's none)
 const bad = failures || keptShare < 0.9 || phasesSame === 0 || (crossJunctions > 0 && crossCleared === 0);
 console.log(`T-4113 work: ${workDone} records read again of ${workWhole} (${(100 * workDone / Math.max(1, workWhole)).toFixed(1)}%), regions of at most ${StateRows.regionCap} stations (${leavesEnd} at the end, ${(leavesTaken / Math.max(1, reads)).toFixed(1)} read again per read); a bounded read ${(msBounded / Math.max(1, reads)).toFixed(1)} ms against a fresh full one's ${(msFull / Math.max(1, reads)).toFixed(1)} ms (the check's env); ${focusReads} focus reads, ${focusDeferred} of them left regions for the next read`);
-console.log(`${bad ? 'FAIL' : 'PASS'}  t1382 rows (${SETUP}): ${reads} incremental reads equal a full read; ${crossCleared} of ${SEEDS} seeds cleared a junction's crossing from far away${crossJunctions ? '' : ' (the save has no built junction with a crossing)'}; ${(100 * keptShare).toFixed(1)}% of the rows were the kept ones (the cache is used); the phase tables equal the whole ones and were the kept array in ${phasesSame} of ${reads}; ${nearChecks} nearest nodes from the page's grids equal a scan's`);
+console.log(`${bad ? 'FAIL' : 'PASS'}  t1382 rows (${SETUP}): ${reads} incremental reads equal a full read; ${crossCleared} of ${SEEDS} seeds cleared a junction's crossing from far away${crossJunctions ? '' : ' (the save has no built junction with a crossing)'}; ${(100 * keptShare).toFixed(1)}% of the rows were the kept ones (the cache is used); the phase tables equal the whole ones and were the kept array in ${phasesSame} of ${reads}; ${tableChecks} kept line tables equal the model's; ${nearChecks} nearest nodes from the page's grids equal a scan's`);
 process.exit(bad ? 1 : 0);

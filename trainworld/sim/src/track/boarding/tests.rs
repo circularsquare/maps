@@ -327,6 +327,62 @@ fn past_day_holds_a_whole_day_at_any_hour() {
     }
 }
 
+/// T-4149: `past_day` with lines' blocks kept from earlier reads gives what a read with nothing kept gives, as time
+/// moves, the service changes ahead of its account, the account is worked out again and the riders change.
+#[test]
+fn past_day_kept_blocks_equal_a_fresh_read() {
+    fn fresh(b: &Boarding, svc: &Service, t: f64) -> Vec<f64> {
+        let c = b.clone();
+        *c.day_memo.borrow_mut() = Default::default();
+        c.past_day(svc, t)
+    }
+    fn same(b: &Boarding, svc: &Service, t: f64, what: &str) {
+        let (got, want) = (b.past_day(svc, t), fresh(b, svc, t));
+        assert_eq!(b.past_day_whole(svc, t).iter().map(|v| v.to_bits()).collect::<Vec<_>>(), want.iter().map(|v| v.to_bits()).collect::<Vec<_>>(), "{what}, whole");
+        assert_eq!(got.iter().map(|v| v.to_bits()).collect::<Vec<_>>(), want.iter().map(|v| v.to_bits()).collect::<Vec<_>>(), "{what}");
+    }
+    let (mut w, l) = setup(10.0);
+    let mut b = Boarding::default();
+    b.set_riders(&riders(l, [500.0, 200.0, 500.0, 200.0, 50.0]));
+    b.ensure(&w.net, &w.svc);
+    let t = 2.0 * DAY + 9.5 * 3600.0;
+    same(&b, &w.svc, t, "first read");
+    same(&b, &w.svc, t, "read again");
+    same(&b, &w.svc, t + 600.0, "ten minutes on");
+    set_headway(&mut w, l, [20.0, 10.0, 5.0]);
+    same(&b, &w.svc, t + 600.0, "the service changed, its account not yet");
+    b.ensure(&w.net, &w.svc);
+    same(&b, &w.svc, t + 600.0, "the account worked out again");
+    b.set_riders(&riders(l, [900.0, 300.0, 700.0, 300.0, 80.0]));
+    b.ensure(&w.net, &w.svc);
+    same(&b, &w.svc, t + 600.0, "new riders");
+    b.clear();
+    same(&b, &w.svc, t + 600.0, "cleared");
+}
+
+/// T-4149: `line_periods` read again, kept, gives what a whole read gives as the service and the riders change.
+#[test]
+fn line_periods_kept_equal_a_whole_read() {
+    fn same(b: &Boarding, svc: &Service, l: u32, what: &str) {
+        for day in 0..DAY_KINDS {
+            let (got, want) = (b.line_periods(svc, l as usize, day), b.line_periods_whole(svc, l as usize, day));
+            assert_eq!(got.iter().map(|v| v.to_bits()).collect::<Vec<_>>(), want.iter().map(|v| v.to_bits()).collect::<Vec<_>>(), "{what}, day {day}");
+        }
+    }
+    let (mut w, l) = setup(10.0);
+    let mut b = Boarding::default();
+    b.set_riders(&riders(l, [500.0, 200.0, 500.0, 200.0, 50.0]));
+    b.ensure(&w.net, &w.svc);
+    same(&b, &w.svc, l, "first read");
+    same(&b, &w.svc, l, "read again");
+    set_headway(&mut w, l, [20.0, 10.0, 5.0]);
+    b.ensure(&w.net, &w.svc);
+    same(&b, &w.svc, l, "the account worked out again");
+    b.set_riders(&riders(l, [900.0, 300.0, 700.0, 300.0, 80.0]));
+    b.ensure(&w.net, &w.svc);
+    same(&b, &w.svc, l, "new riders");
+}
+
 #[test]
 fn period_totals_match_demand_with_the_busiest_hour_shapes() {
     let (w, l) = setup(12.0);

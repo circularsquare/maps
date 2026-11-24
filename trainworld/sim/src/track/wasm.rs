@@ -519,6 +519,10 @@ impl TrackApi {
     pub fn line_periods(&self, line: u32, day: u32) -> Vec<f64> {
         self.boarding.line_periods(&self.w.svc, line as usize, day as usize)
     }
+    /// T-4149: `line_periods` worked out with nothing kept (`Boarding::line_periods_whole`), for `?patch=check`.
+    pub fn line_periods_whole(&self, line: u32, day: u32) -> Vec<f64> {
+        self.boarding.line_periods_whole(&self.w.svc, line as usize, day as usize)
+    }
     /// Every line's day so far at game time `t` (T-293, `Boarding::today` has the layout).
     pub fn today(&self, t: f64) -> Vec<f64> {
         self.boarding.today(&self.w.svc, t)
@@ -526,6 +530,10 @@ impl TrackApi {
     /// Every line's past 24 hours at game time `t` (T-446, `Boarding::past_day`).
     pub fn past_day(&self, t: f64) -> Vec<f64> {
         self.boarding.past_day(&self.w.svc, t)
+    }
+    /// T-4149: `past_day` with no line's block kept from an earlier read (`Boarding::past_day_whole`), for `?patch=check`.
+    pub fn past_day_whole(&self, t: f64) -> Vec<f64> {
+        self.boarding.past_day_whole(&self.w.svc, t)
     }
     /// Forget the riders (a game was loaded: its demand comes later).
     pub fn clear_riders(&mut self) {

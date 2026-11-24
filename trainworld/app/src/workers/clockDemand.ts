@@ -170,6 +170,7 @@ function tripsPrelude(): boolean {
   syncHolidays();
   timing.trips = 0;
   timing.board = 0;
+  timing.bays = 0;
   return true;
 }
 /** `TrackApi.trips` by hour, each asked once (T-2980: the hour before each one's too, for where trains stand at the
@@ -183,7 +184,18 @@ function rawTrips(): (e: number) => Float32Array {
   };
 }
 function bayTimes() {
-  return termEnds.size ? profileTimes(api!.profile_meta(), termEnds.keys(), (l) => api!.line_phases(l)) : null;
+  if (!termEnds.size) return null;
+  const a = api!, t0 = performance.now();
+  // T-4149: the phase tables the rows keep, brought up to date (reading every line's anew was 150-400 ms per edit and
+  // per hour on a 2,647-station game); `?patch=walk` reads them from the model, as before, for timing against
+  const tables = patchMode === "walk" ? (l: number) => a.line_phases(l) : stateRows.phaseTablesNow(a);
+  if (patchMode === "check") {
+    const bad = [...termEnds.keys()].filter((l) => !sameFloats(a.line_phases(l), tables(l)));
+    if (bad.length) console.error(`T-4149 check: the kept phase tables of lines ${bad.slice(0, 8).join(", ")} differ from the model's`);
+  }
+  const out = profileTimes(a.profile_meta(), termEnds.keys(), tables);
+  timing.bays = (timing.bays ?? 0) + performance.now() - t0;
+  return out;
 }
 /** an hour's drawn trips: per trip, profile, departure, end and the departure its train takes next, relative to the
  * epoch (the end, T-206, and the next, T-245, go apart), and their places at the ends (T-2980) */

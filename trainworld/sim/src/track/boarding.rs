@@ -22,6 +22,7 @@ use super::params::*;
 use super::service::{LineSvc, Service, Trip};
 use super::span::{self, Mask};
 use super::timing::PROFILE_VARS;
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -344,6 +345,9 @@ struct Tally {
 #[derive(Clone, Debug, Default)]
 pub struct LineAccount {
     key: u64,
+    /// T-4149: this account among every one this `Boarding` made (from 1), so a line's day read from it can be kept
+    /// while it stands (`Boarding::window`)
+    id: u64,
     /// The line's local time ahead of the game clock (T-309, `LineSvc::shift`): the account's
     /// times of day are its local times, so game time `t` is `t + shift` here.
     pub shift: f64,
@@ -364,6 +368,15 @@ pub struct Boarding {
     pub accounts: [Vec<Option<LineAccount>>; DAY_KINDS],
     /// lines worked out again since `take_redone`
     redone: usize,
+    /// T-4149: accounts made so far (`LineAccount::id`)
+    made: u64,
+    /// T-4149: per line, its last block of `window` (past day, then today so far) and what it was read from, given again
+    /// while all of that stands: after an edit only the lines it touched are read again (`past_day` over every line was
+    /// 125-445 ms on a 2,647-station game, asked twice an edit)
+    day_memo: RefCell<[Vec<Option<(Vec<u64>, Vec<f64>)>>; 2]>,
+    /// T-4149: per line and kind of day, its last `line_periods` and what it was read from (the panels ask every line's
+    /// after each edit, `linesPeriods`)
+    periods_memo: RefCell<HashMap<(usize, usize), ([u64; 3], Vec<f64>)>>,
     /// where `ensure_some` goes on from: day kind times lines plus line
     cursor: usize,
     /// T-2707: per line id, the service key (`key`) its arrival masks were made for, and per run
@@ -499,6 +512,8 @@ impl Boarding {
         }
         self.masks.clear();
         self.xfer.clear();
+        *self.day_memo.get_mut() = Default::default();
+        self.periods_memo.get_mut().clear();
     }
 
     pub fn has_riders(&self) -> bool {
@@ -683,7 +698,8 @@ impl Boarding {
                 let a = simulate_with(net, svc, l, r, lr, &self.peak, false, m, row);
                 if a.leftover > 0.5 { simulate_with(net, svc, l, r, lr, &self.peak, true, m, row) } else { a }
             });
-            self.accounts[day][l] = Some(LineAccount { key, shift: ls.shift, runs });
+            self.made += 1;
+            self.accounts[day][l] = Some(LineAccount { key, id: self.made, shift: ls.shift, runs });
             self.redone += 1;
         }
         // every line seen: no masks kept for a line without an account
@@ -1056,7 +1072,7 @@ impl Boarding {
     /// midnight, less those who went another way (`tally`). Riders left behind are counted per departure as in `simulate` (who arrived since
     /// the train before and is still waiting).
     pub fn today(&self, svc: &Service, t: f64) -> Vec<f64> {
-        self.window(svc, t, false)
+        self.window(svc, t, false, true)
     }
 
     /// Trains of a line on the move or turning at local time of day `tod`, and how many of them
@@ -1096,8 +1112,29 @@ impl Boarding {
     /// (T-1926), then per period the busiest hour's load on each stretch as a share of the rated
     /// load (`period_peaks`, T-2236: the line panel's crowding). Empty without an account.
     pub fn line_periods(&self, svc: &Service, l: usize, day: usize) -> Vec<f64> {
+        let kind = self.kind(day);
+        let Some(Some(acc)) = self.accounts[kind].get(l) else { return vec![] };
+        let Some(ls) = svc.lines.get(l) else { return vec![] };
+        // T-4149: kept while its account (made once, never changed) and the loads it is measured against stand
+        let key = [acc.id, ls.crush().to_bits(), ls.rated().to_bits()];
+        if let Some((k, v)) = self.periods_memo.borrow().get(&(l, kind)) {
+            if *k == key {
+                return v.clone();
+            }
+        }
+        let out = Self::line_periods_of(acc, ls);
+        self.periods_memo.borrow_mut().insert((l, kind), (key, out.clone()));
+        out
+    }
+
+    /// T-4149: `line_periods` worked out, nothing kept used (`?patch=check`).
+    pub fn line_periods_whole(&self, svc: &Service, l: usize, day: usize) -> Vec<f64> {
         let Some(Some(acc)) = self.accounts[self.kind(day)].get(l) else { return vec![] };
         let Some(ls) = svc.lines.get(l) else { return vec![] };
+        Self::line_periods_of(acc, ls)
+    }
+
+    fn line_periods_of(acc: &LineAccount, ls: &LineSvc) -> Vec<f64> {
         let mut out = Self::crowding(acc, ls).concat();
         let n = acc.runs[0].n;
         let mut stretch_here = vec![0.0f64; PERIODS * n.saturating_sub(1)];
@@ -1232,19 +1269,39 @@ impl Boarding {
     /// the time of day now, read from yesterday's kind of day, then today so far. Span times are s
     /// from today's local midnight, so yesterday's are negative.
     pub fn past_day(&self, svc: &Service, t: f64) -> Vec<f64> {
-        self.window(svc, t, true)
+        self.window(svc, t, true, true)
     }
 
-    fn window(&self, svc: &Service, t: f64, past: bool) -> Vec<f64> {
+    /// T-4149: `past_day` read whole, nothing kept used or kept: what the kept blocks must equal (`?patch=check`).
+    pub fn past_day_whole(&self, svc: &Service, t: f64) -> Vec<f64> {
+        self.window(svc, t, true, false)
+    }
+
+    fn window(&self, svc: &Service, t: f64, past: bool, keep: bool) -> Vec<f64> {
         let mut out = vec![0.0];
         let mut count = 0;
         let nl = self.accounts.iter().map(|a| a.len()).max().unwrap_or(0);
+        let mut memo = self.day_memo.borrow_mut();
+        let memo = &mut memo[past as usize];
+        memo.resize(nl, None);
         for l in 0..nl {
             let Some(ls) = svc.lines.get(l) else { continue };
             // the line's own day and time of day (T-309: its local time)
             let t = t + ls.shift;
             let tod = t.rem_euclid(DAY);
             let Some(Some(acc)) = self.accounts[self.kind_at(t, l)].get(l) else { continue };
+            // T-4149: what the block reads: the time, the accounts (each made once, never changed), and the service's
+            // parts read below
+            let ya_id = if past { self.accounts[self.kind_at(t - DAY, l)].get(l).and_then(|a| a.as_ref()).map_or(0, |a| a.id) } else { 0 };
+            let key = Self::day_key(ls, t, acc.id, ya_id);
+            if let Some((k, block)) = memo[l].as_ref().filter(|_| keep) {
+                if *k == key {
+                    out.extend_from_slice(block);
+                    count += 1;
+                    continue;
+                }
+            }
+            let start = out.len();
             let n = acc.runs[0].n;
             let mut w = Tally { stops: vec![0.0f64; n], ..Default::default() };
             if past {
@@ -1279,10 +1336,24 @@ impl Boarding {
             // T-1255: the crowding at the platforms where trains come full, every rider alike; T-2236:
             // the load past rated in the slot the km-weighted wait had
             out.extend([c[9], c[10], c[5], 0.0, peak]);
+            if keep {
+                memo[l] = Some((key, out[start..].to_vec()));
+            }
             count += 1;
         }
         out[0] = count as f64;
         out
+    }
+
+    /// T-4149: what line `ls`'s block of `window` at its local time `t` is read from besides its accounts: the service's
+    /// parts `tally`, `under_way`, `crowding` and `period_peaks` read, as their bits.
+    fn day_key(ls: &LineSvc, t: f64, acc: u64, ya: u64) -> Vec<u64> {
+        let mut k = vec![t.to_bits(), acc, ya, ls.shift.to_bits(), ls.crush().to_bits(), ls.rated().to_bits(), ls.is_loop() as u64, ls.live_runs() as u64];
+        k.extend(ls.round_trip.iter().map(|v| v.to_bits()));
+        for r in &ls.runs {
+            k.extend(r.prof.iter().map(|p| p.duration.to_bits()));
+        }
+        k
     }
 
     /// Add one account's departures with time of day in (`from`, `to`] to `w`; full trains' times

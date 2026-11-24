@@ -236,8 +236,10 @@ function buildState(rowsOnly = false): ClockState {
     const n = stateRows.nodeRow(l.stops[0]) ?? busNodes.get(l.stops[0]);
     return [l.id, n ? [n.lng, n.lat] : null];
   }));
+  const tq3a = performance.now();
   placeLineCountries();
   termEnds = terminalEnds(edges, nodes, lines);
+  timing.sEnds = performance.now() - tq3a;
   let first: ClockNode | null = null;
   for (let k = 0; k < stationCount; k++) if (nodes[k].stationBuilt && (!first || nodes[k].id < first.id)) first = nodes[k];
   firstBuiltAt = first ? [first.lng, first.lat] : null;
@@ -323,7 +325,7 @@ function buildState(rowsOnly = false): ClockState {
     nodes,
     lines,
     links: Array.from(a.station_links()),
-    buildings: shownBuildings(a, nodes),
+    buildings: timed("sBld", () => shownBuildings(a, nodes)),
     render: {
       edgeParts: drawn,
       edgeSpeedParts: speedParts,
@@ -335,6 +337,13 @@ function buildState(rowsOnly = false): ClockState {
     money: moneyState(),
     anchor: anchorSpec(),
   };
+}
+
+/** T-4149: `f`'s answer, its time in `timing[k]` (the edit's answer carries them) */
+function timed<T>(k: string, f: () => T): T {
+  const t0 = performance.now(), v = f();
+  timing[k] = performance.now() - t0;
+  return v;
 }
 
 /** whether the game just loaded was converted from an older frame (T-308), for the "loaded" message */
@@ -470,7 +479,7 @@ export function* stateSteps(service = false, effectiveAt?: number, trips = true,
   // The renderer's buffers are built here too, so the main thread only uploads them (T-063).
   // the complexes: a waiting room or car park is drawn once for one (T-1528), and members whose boxes
   // do not touch are drawn joined (T-1859)
-  const complexOf = complexOfNodes();
+  const complexOf = timed("cxOf", complexOfNodes);
   const shifted = !!shiftFrom;
   const pieces = !shifted && !!posted.net;
   if (shiftFrom) {
@@ -478,7 +487,9 @@ export function* stateSteps(service = false, effectiveAt?: number, trips = true,
     shiftFrom = null;
     shiftWas = new Map();
   }
+  const tb0 = performance.now();
   const buildingLL = s.buildings?.map((b) => b.corners.flatMap((_, i) => (i % 2 ? [] : frame.toLonLat(b.corners[i], b.corners[i + 1]))));
+  timing.bldLL = performance.now() - tb0;
   const steps = networkSteps({ ...s, render: r, complexOf, buildingLL }, netCache, true);
   let n: NetworkBuffers;
   /** the time between pieces, no part of the build's */

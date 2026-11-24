@@ -187,6 +187,9 @@ export function upgradesOf(a: TrackApi): Map<number, number> {
   return out;
 }
 
+/** a line with no phase tables (`TrackApi.line_phases` of a line with none) */
+const NO_TABLE = new Float32Array(0);
+
 const hex = (c: number) => "#" + c.toString(16).padStart(6, "0");
 
 /** `TrackApi.line_auto`: a headway in seconds per level, or null for a line with counts by hand */
@@ -809,6 +812,20 @@ export class StateRows {
     console.error(`T-3896: the phase tables laid out by line are ${out.length / 4} phases against the ${n} counted: read whole`);
     this.splitPhases(a);
     return this.phaseAll!;
+  }
+
+  /** T-4149: each line's phase tables as `TrackApi.line_phases` gives them now, from the kept ones: the lines `phases`
+   * would read again (pending from a rows read, or moved since the last take: an edit not yet read, a trial) are read
+   * first, as it reads them, and laid out by the next `phases`. A line the rows have not seen is asked of the model. The
+   * tables are the kept arrays: never to be changed. */
+  phaseTablesNow(a: TrackApi): (id: number) => Float32Array {
+    const moved = a.peek_changed_lines();
+    const ids = new Set(this.phasePending);
+    if (moved.length && moved[0] === ALL) for (const id of this.phaseSeen) ids.add(id);
+    else for (const id of moved) if (this.phaseSeen.has(id)) ids.add(id);
+    for (const id of ids) { this.readPhases(a, id); this.phasePending.delete(id); }
+    const seen = this.phaseSeen, tables = this.phaseTables;
+    return (id) => (seen.has(id) ? tables.get(id) ?? NO_TABLE : a.line_phases(id));
   }
 
   /** A line's phase tables, kept if they are the same. */

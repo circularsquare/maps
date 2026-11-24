@@ -12,7 +12,7 @@ import { saves } from "./slots";
 import { serviceEditMs } from "./clockFollowUp";
 import { game } from "./clockMain";
 import { kept } from "./clockPanic";
-import { moneyPost } from "./clockPost";
+import { moneyPost, patchMode } from "./clockPost";
 import { achievements, api, clk, copyOf, costHour, dayShift, fareHour, fares, goals, guide, heldCharges, holidayData, hourLedger, hourShape, incomePerHour, kindOfLine, ledger, LEDGER_DAYS, LEDGER_HOURS, ledgerDay, lineCountries, lineIncome, lineNotes, linePoints, lineRides, lineShares, loan, modded, mode, moneyFrozen, NP, partCost, partFare, partHour, prices, putHourLedger, putLedger, putLoan, putPartCost, putPartFare, putPartHour, putSettledT, rideHour, ridesPerHour, rowOfLine, runTail, send, settledT, stars, syncHolidays, TEN, upkeepRegions, wallNow } from "./clockState";
 
 /** T-531: each region's ledgers, kept as the network's (a zone id; "" outside every zone or not yet
@@ -271,6 +271,25 @@ function upkeepNow(): MoneyState["upkeep"] {
   return { track: u[1], stations: u[2], km: u[3], count: u[4], buses: u[5] ?? 0, busKm: u[6] ?? 0, ports: u[7] ?? 0, portCount: u[8] ?? 0, upgrades: u[9] ?? 0 };
 }
 
+/** T-4149: the last copy made of each ledger entry, given again while the entry is as it was: the money record's unchanged
+ * entries are then the same objects state after state, which the post's diff passes by identity (`moneyPost`), and
+ * which are never changed (the worker changes its own entries, and makes a new copy once one differs). */
+const entryCopies = new WeakMap<object, object>();
+function keptCopy<T extends object>(e: T): T {
+  const c = entryCopies.get(e) as T | undefined;
+  if (c && sameShallow(c, e)) return c;
+  const n = { ...e };
+  entryCopies.set(e, n);
+  return n;
+}
+const sameFloats64 = (a: Float64Array, b: Float64Array) => a.length === b.length && a.every((v, i) => Object.is(v, b[i]));
+function sameShallow(a: object, b: object): boolean {
+  const ka = Object.keys(a), kb = Object.keys(b);
+  if (ka.length !== kb.length) return false;
+  for (let i = 0; i < ka.length; i++) if (ka[i] !== kb[i] || !Object.is((a as Record<string, unknown>)[ka[i]], (b as Record<string, unknown>)[kb[i]])) return false;
+  return true;
+}
+
 export function moneyState(): MoneyState {
   const a = api!;
   dayEntry(ledgerDay(moneyNow()));
@@ -302,9 +321,9 @@ export function moneyState(): MoneyState {
     loan: loan && { ...loan },
     fares: { ...fares },
     runningPerHour: PERIODS.map((_, p) => a.running_cost_period(p)),
-    ledger: ledger.map((d) => ({ ...d })),
-    hours: hourLedger.map((d) => ({ ...d })),
-    regions: savedRegions(),
+    ledger: ledger.map(keptCopy),
+    hours: hourLedger.map(keptCopy),
+    regions: savedRegions(keptCopy),
     lineDays: savedLineDays(),
     stars: Object.fromEntries(stars),
     goals: Object.fromEntries(goals),
@@ -474,6 +493,8 @@ export function linesPeriods(a: TrackApi, lines: number[], day: number): Float64
   const P = PERIODS.length, block = P * 11;
   const per = lines.map((n) => {
     const v = a.line_periods(n, day);
+    // T-4149: kept in the track model per line while its account stands
+    if (patchMode === "check" && !sameFloats64(v, a.line_periods_whole(n, day))) console.error(`T-4149 check: line ${n}'s periods read from the kept ones differ from a whole read`);
     // per period: 11 numbers, 2 per stop, 3 per stretch (stops - 1): 5 * stops + 8
     const stops = (v.length / P - 8) / 5, tail = Number.isInteger(stops) && stops > 1 ? P * (stops - 1) : 0;
     if (v.length < block) return v;
@@ -522,6 +543,8 @@ function pastDays(now: number): LineDay[] {
   const a = api!;
   syncHolidays();
   const v = a.past_day(now), count = v[0], hNow = Math.floor(now / 3600);
+  // T-4149: each line's block is kept in the track model while what it reads stands
+  if (patchMode === "check" && !sameFloats64(v, a.past_day_whole(now))) console.error("T-4149 check: the past day read from kept lines differs from a whole read");
   const h0 = hNow - 24, wNow = hNow === partHour ? partFare : 0;
   const out: LineDay[] = [];
   let i = 1;
