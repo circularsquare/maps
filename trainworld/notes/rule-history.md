@@ -97,7 +97,8 @@ don't read it whole. Add a line when a rule is added for a reason worth remember
   each on a full machine.
 - Cores 0-1 hers: Anita, 2026-11-21. claude.exe itself stays on all cores: pinned, her typing lagged 4 s.
 - Overnight core cap at the machine's max ("we should have been running with max core cap cuz it was overnight"):
-  Anita, 2026-11-21.
+  Anita, 2026-11-21. Replaced 2026-11-24: the cap changes only on her explicit word, not even back to a daytime number
+  or to the overnight max.
 - One worktree per code agent: T-792. Bookkeeping by command: T-3451. finish in one command: T-3554.
 - Disk alert in the watch (30 GB, then 10 GB): T-4088, 2026-11-23, after the disk filled.
 - Batch checking of risky changes: Anita, 2026-11-20, T-3902. 8800 rebuilt without waiting for the checker:
@@ -110,3 +111,8 @@ don't read it whole. Add a line when a rule is added for a reason worth remember
 - Nobody drafts a reply to a player unless she asks: Anita, 2026-11-23.
 - Deleted games restore: T-3789. Resources check once a day since 2026-11-11 (T-3243).
 - Task sweeps leave a dated notes file: 2026-11-23, when she asked when the last sweep was and no record said.
+- Her asking for something is not a start; it is queued unless there is room: Anita, 2026-11-24.
+- Biggest cost first, not left to later work: Anita, 2026-11-23, on the drawn network rebuild during edit speed ("the
+  entire issue. this is what we should fix"), which had been left to the track rework.
+- Her standing calls moved to the top of orchestrator.md, and her direction calls go into DECISIONS.md when she says
+  them, not only the handoff: Anita, 2026-11-24 (T-4165).

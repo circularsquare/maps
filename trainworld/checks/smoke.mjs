@@ -1,4 +1,4 @@
-// The standing smoke check (T-329): run before every commit. Prints one PASS or FAIL line per check
+// The standing smoke check (T-329): run on master after a batch lands and before a publish, not in agent trees. Prints one PASS or FAIL line per check
 // and exits 1 if any failed. A few minutes.
 //   node trainworld/checks/smoke.mjs [url]       (from the maps root; SMOKE_SHADE=dark for the dark theme)
 // With no url it starts its own Vite (checks/dev-nowatch.mjs, port SMOKE_PORT or 6190) and stops it

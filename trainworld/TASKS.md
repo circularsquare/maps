@@ -237,9 +237,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4159: games now on the Hetzner volume; check_resources.py watches only the root disk. You said yes to purging R2's oldest data version (11-18). The old games copy on the root disk goes once the 03:23 UTC backup on 11-24 logs ok.
   - Goal: A volume row (used of 49 GB) in check_resources.py; R2 down to three data versions; about 7.4 GB freed on the root disk.
   - Other: notes/T-4159.md
-- T-4165 [P1] {L:cleanup} Orchestrator notes with her standing calls on top (taking, 2026-11-23, agent orchnotes)
-  - Context: You, 11-24, yes to: a top section of about ten lines of your standing calls (answer you first; 2-8 agents, core cap only on your word, asking is not a start, count before each start; ask before going outside them; what is yours; biggest cost first), each an action at a moment; procedures below or in the tools' help.
-  - Goal: No rule lost or added except one: your direction calls go into DECISIONS.md when you say them; duplicates with trainworld/CLAUDE.md trimmed.
 - T-4166 [P2] {L:checks} Bench machine on your own AWS account
   - Context: You, 11-24: account made (not free tier), $20 monthly budget alarm, both quota raises refused (5 vCPUs: one 4-core machine), CLI profile anita-own; she wants $20 a month to really cut off. You, 11-24: this PC first, AWS only for spillover. Setup guide: notes/aws-own-account-setup.md.
   - Goal: One script runs the benches and smoke on a commit and shuts the machine down; anita-own in docs/aws.md; a $20 budget action stopping machines, with click steps for her.

@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4165 [P1] {L:cleanup} Orchestrator notes with her standing calls on top (2026-11-23): orchestrator.md reordered: her standing calls on top as moments, procedures below, duplicates of CLAUDE.md and tool help trimmed, one new rule (her direction calls into DECISIONS.md) notes/T-4165.md.
 - T-4157 [P1] {L:loading} Master against v0.4.5 on the three bench saves (2026-11-23): Master vs v0.4.5: NYC load +2.6%, Tokyo -11%, Belgrade CPU +56% (bus-heavy); demand memory +12-35%; biggest remaining: bus merge T-4158, crowding and mode choice, coarse off on desktop. notes/T-4157.md.
 - T-4155 [P1] {L:edit-speed} Streets arriving after a pan hold the worker for seconds (2026-11-23): Bus lines re-timed only where a new street grid meets their route box; Asia worst ghost wait after a pan 2,072 to 40 ms median. notes/T-4155.md.
 - T-4132 [P1] {L:edit-speed} Re-time only the lines whose timing moved (2026-11-23): Bounded retime by line clusters with input keys; previews skip retime in trials; check mode 0 differences over 2,796 retimes; Asia edit retime 0-3 ms. notes/T-4132.md.
