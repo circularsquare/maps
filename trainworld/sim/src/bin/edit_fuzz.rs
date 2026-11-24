@@ -555,6 +555,7 @@ fn step(a: &mut TrackApi, op: &Op, now: f64, all: bool) -> Result<(), String> {
             eprintln!("  op {}", op.line());
         }
         let s0 = trainworld_sim::track::timing::check::stats();
+        let f0 = trainworld_sim::track::service::check::stats();
         let t = Instant::now();
         apply(a, op, now);
         let ta = t.elapsed().as_secs_f64() * 1e3;
@@ -563,6 +564,12 @@ fn step(a: &mut TrackApi, op: &Op, now: f64, all: bool) -> Result<(), String> {
             let s1 = trainworld_sim::track::timing::check::stats();
             let d: Vec<u64> = (0..8).map(|i| s1[i] - s0[i]).collect();
             println!("RT\t{}\t{:.2}\t{:.2}\t{}\t{}\t{}\t{}", op.k, ta, d[1] as f64 / 1e6, d[0], d[2], d[3], d[4]);
+        }
+        // T-4133: the trains the op moved again (TW_TRAINS_STATS): ms, before_edit ms, note_changes ms, trains running, walked
+        if std::env::var("TW_TRAINS_STATS").is_ok() {
+            let f1 = trainworld_sim::track::service::check::stats();
+            let d: Vec<u64> = (0..6).map(|i| f1[i] - f0[i]).collect();
+            println!("TR\t{}\t{:.2}\t{:.3}\t{:.3}\t{}\t{}", op.k, ta, d[1] as f64 / 1e6, d[4] as f64 / 1e6, d[2], d[5]);
         }
         LAST.with(|l| *l.borrow_mut() = "@reads".into());
         reads(a, now, all);
@@ -708,6 +715,9 @@ fn main() {
             println!("done: {episodes} episodes, {panics} panicked, {:.0} s", t0.elapsed().as_secs_f64());
             // T-4132: retime's calls, ns, clusters, clusters worked out, lines worked out, mixed calls, calls checked
             println!("retime stats {:?}", trainworld_sim::track::timing::check::stats());
+            // T-4133: before_edit calls, ns, trains; note_changes calls, ns, trains walked; lines off by rounding, most (f64 bits), calls checked
+            let f = trainworld_sim::track::service::check::stats();
+            println!("trains stats {:?} (most rounding {:e} s)", f, f64::from_bits(f[7]));
         }
         "replay" => {
             watchdog();

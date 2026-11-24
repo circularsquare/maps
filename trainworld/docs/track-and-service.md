@@ -1577,7 +1577,8 @@ Greedy on
   old pattern (an *era*, `Service::eras`), so every train already running carries on where it was;
   departures after it follow the new one. A train running when its profile changed is drawn from
   where it was (`Service::shifts`: at the same place, or at the same stop with the dwell it had
-  left). At each terminal trains are handed over (`Service::hand_over`): a train that has finished
+  left); only trains of lines the edit noted or whose pattern moved, and whose profile or path
+  then differs, are worked out again (T-4133). At each terminal trains are handed over (`Service::hand_over`): a train that has finished
   its run and turnaround takes the next departure from there if it comes within that departure's
   headway (an hour at most), standing at the platform until then; a departure no train waits for
   is a train entering service there; a train that finds another already waiting, or no departure
