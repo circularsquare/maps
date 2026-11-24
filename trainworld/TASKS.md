@@ -182,7 +182,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
   - Context: You, 11-23: "edit speed is actually still kind of a problem... noticeable on my end for big worlds... i feel like there was a point at which we had edit speed almost instant, but then might have regressed". Mostly placing track and editing stops. T-3550, T-1211, T-3804, T-1031 are back at P2 under this.
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
-- T-4153 [P1] {L:edit-speed} Rebuild only the touched part of the drawn network, stage 3 (taking, 2026-11-23, agent editnetwork2)
+- T-4153 [P1] {L:edit-speed} Rebuild only the touched part of the drawn network, stage 3
   - Context: You, 11-23: "this is the entire issue". Stage 2 (tree editnetwork, not landed): a station's network build on Asia 333 to 124 ms in the page, track 212 to 180, construct 283 to 176, same output as a full build. Left: a station on a line's track or a line copy redoes 220-490 band orders (85-340 ms).
   - Goal: Band orders redone only where a changed path can change them; a station on a line's track on Asia under 0.2 s of network build.
   - Other: tree editnetwork kept; notes/T-4153.md "What is left"
