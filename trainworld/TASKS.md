@@ -359,6 +359,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3485: the airport's pack share counts people across a border at full weight, then the border factor drops what doesn't land: Hong Kong loses 54% of its ground trips, Luton 77%, Basel 71%, Geneva 42%; 0.6M a day worldwide.
   - Goal: Outside people weighed by the border factor in the pack share at the next world rebuild; Hong Kong near its published ground trips.
   - Other: notes/T-3485.md
+- T-4238 [P3] {L:timetables} Bus weekend rows run more often than weekdays on the same fleet
+  - Context: Seen by the batch checker (11-24): a midtown bus line with 25 buses showed a 1 min headway on its weekend rows and 1.5 min on weekdays. May be right (shorter weekend trips) or a slip near T-4227's weekend share-out; not read yet.
+  - Goal: The code says why, and it's fixed if it's a slip.
 - T-4231 [P2] {L:timetables} Apply to all lines misses some lines' weekend percent
   - Context: Found by T-4227 (11-24): checks/t3521-weekends fails one step: after "Apply to all lines", only 48 of 109 lines on the NYC save report 70%. It last passed 11-19 (T-3827). Not caused by T-4227. Reach: some, players using Apply to all.
   - Goal: Apply to all lines sets every line's weekend percent; t3521-weekends passes.
@@ -904,7 +907,7 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: T-921 deals commute pairs under 1 person a day in chunks (about 7% of New York's calculation); 2 a day gained nothing more. Everyday trips are solved from sampled destinations, so they may lack the same tail of tiny pairs. You, 11-24: file as P3.
   - Goal: Know whether everyday trips have a tail of tiny pairs; if so, chunk them the same tunable way.
   - Other: notes/T-921.md
-- T-4237 [P2] {L:solve-speed} Long-run stop edits taken as city edits
+- T-4237 [P2] {L:solve-speed} Long-run stop edits taken as city edits (taking, 2026-11-24, agent longstop)
   - Context: From T-2188's checker (11-24): dropping a middle stop on Greenport Service (73 km) ended at its local result as a city edit. The 20+ minute stop rule gets no data when the edited cluster has no market part, so it can't fire there. Drift was -0.006% until the refresh.
   - Goal: A stop added or dropped on a 20+ minute run always takes the whole re-solve.
   - Other: notes/T-2188.md
