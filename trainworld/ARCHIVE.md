@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4234 [P2] {L:checks} Edit bench's stop click misses on New York (2026-11-24): each stop click pans to the station first; NYC stop click measured (noisy runs); baseline to rewrite in a quiet window.
+- T-4241 [P2] {L:edit-speed} Review findings on the 11-24 edit-speed landings (2026-11-24): all five findings fixed at their cause; typecheck clean; 1 game run. notes/T-4241.md.
 - T-4048 [P3] {L:route-choice} Remove station connections and passageways (2026-11-24): While placing a passage, each passage and connection drawn has a remove button; a removed automatic connection splits the complex there and stays apart through edits, undo and saves (Network::apart, LAP1). notes/T-4048.md.
 - T-4224 [P3] {L:buses} Bus minutes 1.1x, bus waits at least 2 minutes, 500 m reach (2026-11-24): BUS_RIDE_WEIGHT 1.1, BUS_MIN_WAIT_MIN 2.0, BUS_REACH_M 500; NYC test buses -6.2%, Belgrade -8.0% (trams +7%) notes/T-4224.md.
 - T-4237 [P2] {L:solve-speed} Long-run stop edits taken as city edits (2026-11-24): baseline held per population (holdNet), not only per market part; all four intercity tests fire in clusters without one.
