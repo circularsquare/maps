@@ -253,10 +253,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Your scratch pad, 11-22: "i think we might allow an unrealistic number of people to pile up at bus stops, should probably show a lower number more in line with other stations to not make players alarmed by big number".
 - T-4053 [P3] {L:borders} Common language border factor
   - Context: Your scratch pad, 11-22: "i think bogota-quito travel might be a bit small? relative to number of planes (liek 6 a day, maybe 2000 people a day vs our 800) i wonder if we should do a like 'common language' border multiplier... and maybe also between like switzerland and france". A new demand factor: the design goes to you first.
-- T-4054 [P1] {L:solve-speed} Faster first-arrival search (taking, 2026-11-23, agent searchleft)
-  - Context: You, 11-22: "there will be a slowodwn. thats okay. we can look for further speedups elsewhere". T-4041 made the real save's solve about 41 s -> 58 s. Stages 1 and 2 are in tree solvespeed: search -18%, solve about 54 s. The rest is T-4057's. Left here: change nodes' and stations' settling (entry_costs); shares as u16 (about 10 MB).
-  - Goal: The solve within about 15% of before T-4041, or the best the search can give.
-  - Other: notes/T-4054.md, notes/T-4041.md
 - T-4055 [P2] {L:solve-consistency} An edit reaching two new zones shows a stale final
   - Context: Found 11-22 (notes/T-4055.md): one edit reaching two new zones (Philadelphia and Providence from NYC) gives the Philadelphia line 63,996 riders; separate edits or a reload give 68,341. The first solve is declared final on a market missing a pack that lands during it. New-zone lines show up to 6% too few riders until the next edit.
   - Goal: A pack opening that lands mid-solve makes that solve stale, so batch and separate edits give the same figure (about 1-2 h).
@@ -436,7 +432,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: The page has 2,200 elements; a forced layout takes 22-37 ms, and the Lines, saves and Stations panels open in 0.4-0.7 s. All figures are from 2026-10-24 at 4-6x CPU slowdown; T-1505 took the forced layout out of station name placement since.
   - Goal: Measure once at normal CPU on the 2,647-station save (about 20 minutes): under 200 ms closes it, over keeps it with the new figures.
   - Other: notes/T-1200.md and notes/T-1211.md.
-- T-921 [P3] {L:solve-speed} Deal tiny commute pairs in chunks
+- T-921 [P3] {L:solve-speed} Deal tiny commute pairs in chunks (taking, 2026-11-23, agent commutechunks)
   - Context: Commute pairs under 1 person a day can be dealt in chunks; New York solve 34.3 to 29.6 s.
   - Goal: The chunked deal is in, with ceilings unchanged.
   - Other: Measured in notes/T-909.md option 1.

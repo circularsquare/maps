@@ -15,7 +15,9 @@ diary notes/handoff-log.md. Her time UTC-5.
   Agent ids: editbase adf738eb, editstations a832c397, editlines a3199ea2, editworker a0d0baab, junctionmsg a23cb70f.
 - Non-edit perf (her 00:3x: "other performance fixes ... load time, memory usage"): zoneopen T-4051, memwasm T-4156 (agent a17f9bab; T-1367 closed, gone on master);
   next from notes/perf-sweep-2026-11-23.md: T-921 (after searchleft; shifts riders: numbers to her), T-2589+T-2247.
-- retime T-4132, searchleft T-4054, junctionmsg T-4152 (her pad: junction heading message misfires; strings to her).
+- commutechunks T-921 (measure only; shifts riders, numbers to her). searchleft T-4054 landed e71ffeae (search 4.6%
+  faster, same figures; u16 shares diff not landed).
+- retime T-4132, junctionmsg T-4152 (her pad: junction heading message misfires; strings to her).
 - Before telling her edit speed is done: one Opus review of all the show-at-click code together (one mechanism, no
   leftover per-feature stand-ins, editlines' no-stops special case, lineclick folded into the base), a smoke check
   that no pending entry outlives the final state, and a batch check of refusals, undo after shown edits, charges.

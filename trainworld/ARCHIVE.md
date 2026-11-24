@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4054 [P1] {L:solve-speed} Faster first-arrival search (2026-11-23): entry_costs -42%, search about 4.6% faster, native solve NYC 1.5-4.7% and Tokyo 6.5% faster, figures identical; u16 shares (-6.4 MB, rail trips -0.05) not landed, diff kept in notes; no further same-figure settling change found. notes/T-4054.md.
 - T-1367 [P3] {L:memory} Demand worker heap keeps closed zones (2026-11-23): closed without code: Gone on master: on all-China, closing Tokyo, Osaka and Seoul frees about 326 MB per worker at once, back to the load figure with no solve; a fresh all-China load is about 1.1 GB per worker, not October's 2,041 MB. notes/T-1367.md.
 - T-4143 [P1] {L:edit-speed} The first click of a track takes seconds to register (2026-11-23): First ghost at the first pointer move (8-95 ms) instead of after the worker's first answer (up to 2-3.6 s on Asia after a pan, when streets, bus re-timing and a full state resend held the worker); 97-99% off. notes/T-4143.md.
 - T-4112 [P1] {L:station-placement} Station on a curve refused for water at a far ramp, on master (2026-11-23): Ported to master (380d8fc7): 963 tests pass incl. t4112_tests; W 37th St and Jersey City stations on the Hudson route place; smoke passed. notes/T-4112.md.
