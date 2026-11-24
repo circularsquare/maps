@@ -362,27 +362,29 @@ function fetchStreets(id: string): Promise<StreetData | null> {
 }
 
 /** Install the street speeds of `ids` (fetching those not fetched); resolves once each is in or failed.
- * Bus lines are timed again, so the state and the snapshot follow. */
+ * The bus lines whose route meets them are timed again, and only then do the state and the snapshot follow. */
 export async function ensureStreets(ids: Iterable<string>): Promise<void> {
   const todo = [...new Set(ids)].filter((id) => !streetsIn.has(id));
   if (!todo.length || !api) return;
   const got = await Promise.all(todo.map((id) => fetchStreets(id).then((d) => ({ d }), () => null)));
   const a = api;
   if (!a) return;
-  let added = false;
+  let retimed = false;
   todo.forEach((id, k) => {
     const g = got[k];
     if (!g || streetsIn.has(id)) return;
     streetsIn.add(id);
     const d = g.d;
-    if (d && a.add_pack_streets(d.zoneM, d.x0, d.y0, d.w, d.h, d.pop, d.jobs, d.zone, d.gx, d.gy, d.size, d.cells9, d.lon, d.lat)) {
-      added = true;
+    const lines = d ? a.add_pack_streets(d.zoneM, d.x0, d.y0, d.w, d.h, d.pop, d.jobs, d.zone, d.gx, d.gy, d.size, d.cells9, d.lon, d.lat) : -1;
+    if (lines >= 0) {
+      // T-4155: a state only when a bus line was timed again; speeds where no bus runs change nothing drawn or counted
+      if (lines > 0) retimed = true;
       // T-3913: where BRT runs faster, for the bus tool's road hint
       const outline = a.last_town_outline();
       if (outline.length > 1) send({ kind: "town", id, outline }, [outline.buffer]);
     }
   });
-  if (added && a.bus_lines().length) {
+  if (retimed) {
     sendStateOutside();
     scheduleSnapshot();
   }

@@ -422,8 +422,8 @@ fn a_bus_in_dense_streets_runs_slower_and_needs_more_buses() {
     // a pack at the same origin: one zone of 2 km squares from x = -1 km, three squares, the first
     // two dense (about 100,000 homes and jobs a km2), the third open
     let (pop, jobs) = ([30_000.0f32, 30_000.0, 50.0], [20_000.0f32, 20_000.0, 5.0]);
-    assert!(!a.add_pack_streets(2000.0, -1000.0, -1000.0, 3, 1, &pop, &jobs, &[0, 1], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758));
-    assert!(a.add_pack_streets(2000.0, -1000.0, -1000.0, 3, 1, &pop, &jobs, &[0, 1, 2], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758));
+    assert_eq!(a.add_pack_streets(2000.0, -1000.0, -1000.0, 3, 1, &pop, &jobs, &[0, 1], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758), -1);
+    assert!(a.add_pack_streets(2000.0, -1000.0, -1000.0, 3, 1, &pop, &jobs, &[0, 1, 2], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758) >= 0);
     let slow = *a.stop_times(b, 0, 0).last().unwrap();
     // the first 3 km of ground (3.6 km of road) in the bus lane, the rest at open country's bus speed, and 18 stops
     let want = 3600.0 / (crate::track::streets::BUS_LANE_KMH / 3.6) + 3600.0 / (crate::track::streets::bus_kmh(44.0) / 3.6) + 18.0 * 28.0;
@@ -563,7 +563,7 @@ fn a_brt_line_runs_at_its_floor_is_paid_for_saved_and_undone() {
     let road = 6000.0 * ROAD_FACTOR;
     // the first 3.6 km of road dense, the rest open country (as `a_bus_in_dense_streets_runs_slower_and_needs_more_buses`)
     let (pop, jobs) = ([30_000.0f32, 30_000.0, 50.0], [20_000.0f32, 20_000.0, 5.0]);
-    assert!(a.add_pack_streets(2000.0, -1000.0, -1000.0, 3, 1, &pop, &jobs, &[0, 1, 2], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758));
+    assert!(a.add_pack_streets(2000.0, -1000.0, -1000.0, 3, 1, &pop, &jobs, &[0, 1, 2], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758) >= 0);
     let time = |a: &TrackApi| *a.stop_times(b, 0, 0).last().unwrap();
     let plain = time(&a);
     let want_plain = 3600.0 / (crate::track::streets::BUS_LANE_KMH / 3.6) + 3600.0 / (bus_kmh(44.0) / 3.6) + 18.0 * 28.0;
@@ -651,7 +651,7 @@ fn brt_on(a: &mut TrackApi, l: u32) {
 fn brt_lines_on_one_road_share_its_lanes() {
     let mut a = api();
     let (pop, jobs) = ([30_000.0f32, 30_000.0, 50.0], [20_000.0f32, 20_000.0, 5.0]);
-    assert!(a.add_pack_streets(2000.0, -1000.0, -1000.0, 3, 1, &pop, &jobs, &[0, 1, 2], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758));
+    assert!(a.add_pack_streets(2000.0, -1000.0, -1000.0, 3, 1, &pop, &jobs, &[0, 1, 2], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758) >= 0);
     let line = |a: &mut TrackApi, pts: &[f64]| {
         let l = a.new_line_id();
         assert_eq!(a.set_bus_line(l, pts, 480, 600, 1200, 30.0, 120.0, 0, "B".into()), 0, "{}", a.issues());
@@ -722,7 +722,7 @@ fn a_full_brt_lane_cuts_its_lines_buses() {
     use crate::track::bus::lanes::LANE_BUSES_H;
     let mut a = api();
     let (pop, jobs) = ([30_000.0f32, 30_000.0, 50.0], [20_000.0f32, 20_000.0, 5.0]);
-    assert!(a.add_pack_streets(2000.0, -1000.0, -1000.0, 3, 1, &pop, &jobs, &[0, 1, 2], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758));
+    assert!(a.add_pack_streets(2000.0, -1000.0, -1000.0, 3, 1, &pop, &jobs, &[0, 1, 2], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758) >= 0);
     // a bus every 50 s each: 72 an hour each way, 144 on the shared road
     let line = |a: &mut TrackApi, pts: &[f64]| {
         let l = a.new_line_id();
@@ -854,7 +854,7 @@ fn a_full_brt_lane_cuts_weekend_buses_too() {
     use crate::track::bus::lanes::LANE_BUSES_H;
     let mut a = api();
     let (pop, jobs) = ([30_000.0f32, 30_000.0, 50.0], [20_000.0f32, 20_000.0, 5.0]);
-    assert!(a.add_pack_streets(2000.0, -1000.0, -1000.0, 3, 1, &pop, &jobs, &[0, 1, 2], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758));
+    assert!(a.add_pack_streets(2000.0, -1000.0, -1000.0, 3, 1, &pop, &jobs, &[0, 1, 2], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758) >= 0);
     let line = |a: &mut TrackApi, pts: &[f64]| {
         let l = a.new_line_id();
         assert_eq!(a.set_bus_line(l, pts, 50, 50, 50, 30.0, 120.0, 0, "B".into()), 0, "{}", a.issues());
@@ -883,7 +883,7 @@ fn a_full_brt_lane_cuts_weekend_buses_too() {
 fn a_busway_over_built_brt_lanes_quotes_what_construct_charges() {
     let mut a = api();
     let (pop, jobs) = ([30_000.0f32, 30_000.0, 50.0], [20_000.0f32, 20_000.0, 5.0]);
-    assert!(a.add_pack_streets(2000.0, -1000.0, -1000.0, 3, 1, &pop, &jobs, &[0, 1, 2], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758));
+    assert!(a.add_pack_streets(2000.0, -1000.0, -1000.0, 3, 1, &pop, &jobs, &[0, 1, 2], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758) >= 0);
     let l = a.new_line_id();
     assert_eq!(a.set_bus_line(l, &[0.0, 0.0, 1.0, 3000.0, 0.0, 1.0], 480, 600, 1200, 30.0, 120.0, 0, "B".into()), 0, "{}", a.issues());
     assert_eq!(a.construct_line(l), 0, "{}", a.issues());

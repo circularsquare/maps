@@ -657,7 +657,8 @@ is known without its files (T-302, T-400):
 - **Street speeds** (clock worker, T-1577): for a bus's speed, a zone's own pack is asked for ranges of its `.bin`
   (people and jobs per cell, the cell's zone, the zones' squares and land) whenever its mask is for the view or an
   edit, and where a bus route is drawn or loaded (a game's load: its bus routes' zones only, T-3686); nothing but a
-  load waits for it, and bus lines are timed again when it lands. A pack without those arrays
+  load waits for it. When it lands only the bus lines whose route meets its squares are timed again (all of them for the
+  first speeds of a game), and the clock worker sends a state only if one was [T-4155]. A pack without those arrays
   leaves its buses at the top speed (track-and-service.md 6.7).
 - **Outlines**: one source and line layer hold the outlines of the zones whose boxes meet the view,
   fetched as the view comes near them at zoom 5 to 10.5 (they fade out at 10.5); a zone's footprint

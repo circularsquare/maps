@@ -117,8 +117,7 @@ fn num(v: &Value, k: &str) -> f64 {
 /// headways. Returns the track model, the line and what building it and its fleet cost, US$M.
 fn build(city: &City, run: &Value, line_km: f64) -> Result<(TrackApi, u32, f64), String> {
     let mut a = TrackApi::new(city.lon, city.lat, true);
-    let ok = a.add_pack_streets(ZONE_M, city.x0, city.y0, city.zw, city.zh, &city.pop, &city.jobs, &city.zone, &city.gx, &city.gy, &[], &city.cells9, city.lon, city.lat);
-    if !ok {
+    if a.add_pack_streets(ZONE_M, city.x0, city.y0, city.zw, city.zh, &city.pop, &city.jobs, &city.zone, &city.gx, &city.gy, &[], &city.cells9, city.lon, city.lat) < 0 {
         return Err("street grid refused".into());
     }
     let cash0 = 1e9;

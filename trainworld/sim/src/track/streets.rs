@@ -142,6 +142,14 @@ impl StreetGrid {
         Some(StreetGrid { pack: Frame::equirect(lon, lat), zone_m, x0, y0, w, h, q })
     }
 
+    /// T-4155: the longitudes and latitudes its squares cover, [west, south, east, north] (its frame is
+    /// equirectangular, so the box is exact).
+    pub fn lonlat_box(&self) -> [f64; 4] {
+        let (w, s) = self.pack.to_lonlat(self.x0, self.y0);
+        let (e, n) = self.pack.to_lonlat(self.x0 + self.w as f64 * self.zone_m, self.y0 + self.h as f64 * self.zone_m);
+        [w, s, e, n]
+    }
+
     /// The car's street speed at a place, km/h, or None outside the zones.
     pub fn at(&self, lon: f64, lat: f64) -> Option<f64> {
         let (x, y) = self.pack.from_lonlat(lon, lat);

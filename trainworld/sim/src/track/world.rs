@@ -521,16 +521,43 @@ impl TrackWorld {
         self.svc.note_changed(&moved);
     }
 
-    /// The bus lines timed again (their street speeds changed, T-1577); nothing else is touched.
-    pub fn rework_buses(&mut self) {
-        let buses = self.net.bus_lines();
+    /// The bus lines timed again after street speeds were added (T-1577); nothing else is touched. With `area`, the
+    /// new speeds' lon/lat box (T-4155), only the lines whose route meets it, and every BRT line with one of them (their
+    /// lanes are worked out together): a grid only speaks where no earlier one does, and a bus samples the streets
+    /// along its route's points. None when no line meets it. Returns how many lines were timed again.
+    pub fn rework_buses(&mut self, area: Option<[f64; 4]>) -> usize {
+        let mut buses = self.net.bus_lines();
+        if let Some([w, s, e, n]) = area {
+            // degrees: a straight stretch of route bows this little off its ends' box in a conic frame
+            const SLACK: f64 = 0.02;
+            let frame = self.net.frame();
+            let meets = |l: u32| {
+                self.net.line_bus[l as usize].as_ref().is_some_and(|r| {
+                    let mut b = [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
+                    for p in &r.points {
+                        let (lon, lat) = frame.to_lonlat(p[0], p[1]);
+                        b = [b[0].min(lon), b[1].min(lat), b[2].max(lon), b[3].max(lat)];
+                    }
+                    b[0] - SLACK <= e && b[2] + SLACK >= w && b[1] - SLACK <= n && b[3] + SLACK >= s
+                })
+            };
+            let brt = |l: u32| self.net.line_bus[l as usize].as_ref().is_some_and(|r| r.brt_any());
+            let mut hit: Vec<u32> = buses.iter().copied().filter(|&l| meets(l)).collect();
+            if hit.iter().any(|&l| brt(l)) {
+                hit.extend(buses.iter().copied().filter(|&l| brt(l)));
+                hit.sort_unstable();
+                hit.dedup();
+            }
+            buses = hit;
+        }
         if buses.is_empty() {
-            return;
+            return 0;
         }
         self.svc.update(&self.net, &buses, &[], false);
         self.svc_rest = None;
         self.settle_train_counts(!self.net.rates_from_save);
         self.retime();
+        buses.len()
     }
 
     /// Solve headways from a fixed whole-line fleet and the capacity-adjusted round trip.

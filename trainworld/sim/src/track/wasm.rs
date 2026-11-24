@@ -717,13 +717,14 @@ impl TrackApi {
     /// share of the car's street speed where zones say so, and the bus lines are timed again. The
     /// arrays are the pack's (`pop`, `jobs`, `zone` per cell; `zone_gx`, `zone_gy`, `zone_size`
     /// (or none), `zone_cells9` per zone), its grid from `gravity` in the header, and its origin.
-    /// False if they do not fit each other.
+    /// -1 if they do not fit each other, else how many bus lines were timed again: T-4155, only those whose route
+    /// meets the new speeds (all of them with the first speeds, which every bus samples from then on).
     #[allow(clippy::too_many_arguments)]
-    pub fn add_pack_streets(&mut self, zone_m: f64, x0: f64, y0: f64, w: u32, h: u32, pop: &[f32], jobs: &[f32], zone: &[u32], gx: &[u16], gy: &[u16], size: &[u8], cells9: &[u32], pack_lon: f64, pack_lat: f64) -> bool {
-        let Some(g) = StreetGrid::from_zones(zone_m, x0, y0, w, h, pop, jobs, zone, gx, gy, size, cells9, pack_lon, pack_lat) else { return false };
+    pub fn add_pack_streets(&mut self, zone_m: f64, x0: f64, y0: f64, w: u32, h: u32, pop: &[f32], jobs: &[f32], zone: &[u32], gx: &[u16], gy: &[u16], size: &[u8], cells9: &[u32], pack_lon: f64, pack_lat: f64) -> i32 {
+        let Some(g) = StreetGrid::from_zones(zone_m, x0, y0, w, h, pop, jobs, zone, gx, gy, size, cells9, pack_lon, pack_lat) else { return -1 };
+        let area = (!self.w.net.streets.is_empty()).then(|| g.lonlat_box());
         self.w.net.streets.grids.push(Arc::new(g));
-        self.w.rework_buses();
-        true
+        self.w.rework_buses(area) as i32
     }
 
     /// T-3913: the in-town squares of the street speeds last added (`add_pack_streets`), as polygons for the bus tool's
@@ -2435,6 +2436,8 @@ mod gap_tests;
 mod water_gap_tests;
 #[cfg(test)]
 mod built_day_tests;
+#[cfg(test)]
+mod streets_rework_tests;
 #[cfg(test)]
 mod lane_preview_tests;
 #[cfg(test)]
