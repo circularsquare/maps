@@ -49,6 +49,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-16 (Anita, T-534): A neighbourhood can name a station if within 3.5 km of its nearest fellow (Anita, was 3 km), so Harlem, Williamsburg and Midtown qualify; Manhattan (12 km) does not.
 
 ## Lines and scheduling
+- 2026-11-24 (Anita, T-4178): A reversal mid-line limits capacity no more than a turnaround at a line's end; the reversal icon shows only when it is the limiting factor.
 
 - 2026-11-21 (, T-3346): Round trips, fleets and demand use averaged passing waits at the best phase; drawn timetables work them per train (the lie). Budgeting on trains' own waits (Anita's call, T-3931) is held: locals stood about 850 s at a dead end. notes/T-3931.md
 - 2026-11-21 (Anita, T-3921): Trams top out at 75 km/h, was 80 (Anita: "trams are kinda op"). A new tram line stands 30 s at a stop, was 15, and trams brake at 0.8 m/s², softer than real trams' 1.2-1.3. notes/T-3921.md
@@ -277,6 +278,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-09 (Anita, T-044, T-013): Blocks are spread over their polygon by land area on 50 m pixels, replacing all at the centroid (202k New York cells, recompute 12% slower). Grain matters most in centres; adaptive cells only if performance needs it (Anita). notes/archive/t0001-0499/T-013.md
 
 ## Tooling and process
+- 2026-11-24 (T-4166): The AWS bench installs Node, Chrome and Rust on each machine instead of keeping an image (6-8 minutes, under a cent, against a snapshot billing every month) and ships only the files the save reads. Its numbers never go in the home ledgers (Linux, SwiftShader).
 - 2026-11-24 (Anita, T-4177): Stop using the friend's AWS account; agents lose access to it. AWS means her own account (anita-own) from now on. Gemini may take tasks in this repo, never AWS (GEMINI.md).
 
 - 2026-11-17 (Anita, T-3523): After v0.4.0 the public repo is the real one, PRs merged directly, replacing a synced export (T-2913). Its data is labelled ODbL; R2 answers CORS to any site so forks can read it, and big forks are asked to self-host.

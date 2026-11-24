@@ -229,9 +229,11 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-24: a situation where the line-up refusal shows is most likely a bug, to prevent. T-4152 cut the end-to-end join sweep's refusals from 26 of 288 to 0.
   - Goal: Ordinary drawing (joins, junctions, node drags, trams) never shows it; any case found is fixed or filed.
   - Other: notes/T-4152.md
-- T-4166 [P2] {L:checks} Bench machine on your own AWS account (taking, 2026-11-23, agent awsbench)
-  - Context: You, 11-24: account made (not free tier), $20 monthly budget alarm, both quota raises refused (5 vCPUs: one 4-core machine), CLI profile anita-own; she wants $20 a month to really cut off. You, 11-24: this PC first, AWS only for spillover. Setup guide: notes/aws-own-account-setup.md.
-  - Goal: One script runs the benches and smoke on a commit and shuts the machine down; anita-own in docs/aws.md; a $20 budget action stopping machines, with click steps for her.
+- T-4166 [P2] {L:checks} {waits:Anita} First bench run on your own AWS account (taking, 2026-11-23, agent awsbench)
+  - Need from Anita: AWS lets your account run 1 vCPU, not 5, and no spot; a bench machine needs 4. Ask AWS Support once more for 4 on-demand vCPUs? I would.
+  - Context: tools/aws/bench.py is ready (one machine per run: build, perf and edit benches, results home, machine terminated, about 5 cents) and docs/aws.md has the account. Every launch on 11-24 was refused by the limit. Your $20 cutoff steps: notes/aws-budget-action.md.
+  - Goal: One real nyc run through bench.py, with its cost.
+  - Other: notes/T-4166.md
 - T-4167 [P2] {L:checks} perf_bench tree builds can ship another tree's WASM
   - Context: From T-4132: perf_bench builds of different trees share one Cargo target dir, so a tree whose sources are older than another tree's last build ships that tree's WASM (retime-head2 shipped the base track module byte for byte).
   - Goal: Each build's WASM always comes from its own tree's sources.
@@ -269,6 +271,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-24: "we should stop using jean's account. lets remove access to it so that agents can't use it." Your own account (anita-own, T-4166) is the AWS from now on.
   - Goal: Our resources there deleted, the friend's profile gone from this PC, guard.py refuses that account, docs say AWS means your own account; you or your friend delete the IAM user.
   - Other: notes/T-4177.md
+- T-4178 [P1] {L:line-rates} Reversals mid-line cost the same as at a line's end
+  - Context: You, 11-24: players build switchbacks and are confused why they cut capacity; reversals mid-line cut it while ones at a line's end "kinda dont", which is inconsistent. Also: no yellow icon unless the reversal is what limits throughput, "which i think it should almost never be".
+  - Goal: One rule for every reversal, measured on a switchback line; the icon only when a reversal is the limit.
 - T-4141 [P3] {L:station-placement} Track placed by an edit call crossed the Hudson at ground level
   - Context: Seen by T-4112: a route entered through the game's edit call crossed the Hudson at ground level without a refusal, while pointer-drawn track nearby was bridged. Water may not have been loaded under part of it.
   - Other: notes/T-4112.md
