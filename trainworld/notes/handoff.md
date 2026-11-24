@@ -8,10 +8,13 @@ diary notes/handoff-log.md. Her time UTC-5.
 - 0.4.6: she says when to publish. 8800 = 4c096347. Landed since: T-4148, T-4206 timing log, T-4208 ghost, T-4204 s2
   (restart only when memory short; check NYC map +2.5 s in the release perf_bench), T-4209 time-left display.
   0.4.6 waits for (her word): settle1 T-4194 opt 1+2 (Sonnet, tree settle, 6144; measure stop adds on headway lines),
-  stalefigs T-4202 s2 (Opus 6163), editstops T-4147 (Sonnet 6165). Then: batch checker (T-4194 + T-4202 + T-4204 +
-  keepSet a3a084b87), smoke, perf_bench all three, changelog review, 8800 rebuild, publish skill on her word.
+  stalefigs T-4202 s2 (Opus 6163). T-4147 landed (t3084 ferry step timeout unconfirmed vs base). Then: batch checker
+  (T-4194 + T-4202 + T-4204 + keepSet a3a084b87 + t3084 base vs head), smoke, perf_bench all three, changelog review, 8800 rebuild, publish skill on her word.
   Strings acked 15:3x (sections 2+4 of notes/release-0.4.6.md); new strings since: list at publish.
-- Not for 0.4.6: corridors2 T-4199 s2 (Opus, tree corridors, 6155; NYC gain asked), ghostspeed T-4210 (Opus 6164).
+- Not for 0.4.6: T-4199 s2 paused in tree corridors (fix NYC +13 MB download first), T-4146 built in tree editstations
+  (checks after 0.4.6), ghostspeed T-4210 (Opus 6164; at-click ghost must follow the real curve, no blink), benchgate
+  T-4213 (Sonnet), editseq T-4214 (Opus 6169: edit sequences design + Gemini; goes to her), diskclean (to 60 GB free).
+- Testing budget adopted 17:01 (CLAUDE.md table; briefs start with kind + budget line).
 - After 0.4.6: T-2188 (city edits end at the quick result, her yes), T-4146 (after editstops), T-4211, T-4193.
 - Held for her word: T-4153 s2 (tree editnetwork; add mm.ribbons.delete(e) at lineBands.ts:571 if landed); T-921 (tree
   commutechunks); T-4156 P3. T-4161 shonei-server 7bdd559 unpushed: deploy on her yes, then push.
