@@ -239,6 +239,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-24: "we could just try merging more aggressively for bus stop ... if we can merge in a way that doesnt just cancel everything out". T-4094 merges stops within 300 m served by the same lines (Detroit -40% CPU, Belgrade -20%).
   - Goal: Wider or looser merges measured as saving against shift on Belgrade, Detroit and NYC, for you to pick.
   - Other: notes/T-4094.md
+- T-4159 [P1] {L:accounts-server} Saved games onto the new Hetzner volume (taking, 2026-11-23, agent volmove)
+  - Context: You, 11-24: yes to a 50 GB volume ($3.84/month) on shonei-market and to moving the games now, with a plan ready first to keep downtime short. Games are 7.1 of 16 GB and growing 0.6 GB a day.
+  - Goal: Games on the volume, the off-site backup covering them, the games cap raised to fit; downtime about a minute.
 - T-4157 [P1] {L:loading} Master against v0.4.5 on the three bench saves (taking, 2026-11-23, agent perfcompare)
   - Context: You, 11-24: the goal was to claw back what the express change and the bus changes cost; "load times do feel kinda long". Last bench 18:08: trips ready NYC 95 to 126 s, Tokyo 157 to 175 s, Belgrade 618 to 1,285 s; NYC 105 s at 22:51.
   - Goal: Every perf_bench number for master against v0.4.5 on nyc, tokyo and belgrade, and where a load's time goes.

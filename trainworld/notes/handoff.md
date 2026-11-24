@@ -1,29 +1,26 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 28722621-86b3-4444-8131-f3aee02b18dd, name maps-6b [d9ec47], since 2026-11-23 20:08 UTC
-Updated: 2026-11-23 20:08 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-24 01:56 UTC (cycling at 500k). Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5.
 
-## In flight (adopt from the board)
-- Edit speed, plan notes/T-4144.md; her 23:1x "do all, land all, one message when done". TOP: editnetwork T-4153 (opus,
-  bounded drawn network on master: 50-70% of the wait; her 00:0x). base T-4145 landed 0c384f9e (01:19; streams told to merge), editstations T-4146 (B; written, untested, waits for base: delete its stub game/pending.ts before merging master), editlines T-4147 (A; stage 1 rows-first done in tree, smoke unverified, hooks in clock.worker.ts and clockDemand.ts may
-  conflict with editbase/editworker at merge),
-  editworker T-4149 (D worker: bayTimes, posting, then A/B/E; rows-first waits for base+B), trackstream (E, agent a2b95733 resumed: T-4155 streets resend, T-4142, T-1031); firstclick T-4143 landed de066376.
-  Base API at the top of notes/T-4145.md: put it in C's brief. C T-4148 editpieces (sonnet) started 01:4x. Queued: D page T-4150, T-4133/4134 after
-  retime, T-4151. Her yes: refusals take a shown edit back, money at the click; refusals must answer fast too.
-  Agent ids: editbase adf738eb, editstations a832c397, editlines a3199ea2, editworker a0d0baab, junctionmsg a23cb70f.
-- Non-edit perf (her 00:3x: "other performance fixes ... load time, memory usage"): zoneopen T-4051, memwasm T-4156 (agent a17f9bab; T-1367 closed, gone on master);
-  next from notes/perf-sweep-2026-11-23.md: T-921 (after searchleft; shifts riders: numbers to her), T-2589+T-2247.
-- commutechunks T-921 (measure only; shifts riders, numbers to her). searchleft T-4054 landed e71ffeae (search 4.6%
-  faster, same figures; u16 shares diff not landed).
-- perfcompare T-4157 (master vs v0.4.5 on all three saves, load time breakdown; her 01:0x "have we succeeded"?).
-- busmerge2 T-4158 (opus, measure wider bus stop merges; her pick).
-- retime T-4132, junctionmsg T-4152 (her pad: junction heading message misfires; strings to her).
-- Before telling her edit speed is done: one Opus review of all the show-at-click code together (one mechanism, no
-  leftover per-feature stand-ins, editlines' no-stops special case, lineclick folded into the base), a smoke check
-  that no pending entry outlives the final state, and a batch check of refusals, undo after shown edits, charges.
-- Batch check due: rampport 380d8fc7, regionfix 8e1eb7ba, lineclick ef99d979; tree "rampport" to remove. 8800 =
-  ef99d979. T-4112's tw/track changelog item parked in next-track.json: hide the duplicate at the release merge.
+## In flight (adopt from the board; agent ids for SendMessage while my tab lives)
+- Edit speed, plan notes/T-4144.md; her "do all, land all, one message when done". Landed: base T-4145, lines path
+  T-4114, ghost T-4136, first click T-4143. Running: editnetwork T-4153 (TOP: bounded drawn network on master, her
+  call), editstations T-4146 (a832c397), editlines T-4147 (a3199ea2), editpieces T-4148, editworker T-4149 (a0d0baab;
+  rows-first waits for B), trackstream T-4155/T-4142/T-1031 (a2b95733), retime T-4132. Queued: T-4150, T-4133/4134.
+  Before telling her: one Opus review of all show-at-click code, a smoke check that no pending entry outlives the final
+  state, a batch check (refusals, undo after shown edits, charges) incl. rampport 380d8fc7, regionfix 8e1eb7ba,
+  lineclick ef99d979, junctionmsg 9719e410, base 0c384f9e; then rebuild 8800 and one message to her.
+- volmove T-4159 (opus): saved games onto the new 50 GB Hetzner volume; her yes 01:5x covers the move and cap deploy.
+  It sends a phase-1 plan; read it, then tell it go (SendMessage to its agent id from the board/report).
+- Perf beyond edits: perfcompare T-4157 (master vs v0.4.5, all three saves, memory too), busmerge2 T-4158 (wider bus
+  stop merges: her pick), commutechunks T-921 (shift: numbers to her), zoneopen T-4051, memwasm T-4156 (a17f9bab).
+- Her open asks in chat: AWS own account (guide notes/aws-own-account-setup.md; when she says "aws account ready,
+  profile anita-own", brief an agent for a bench machine). Resend Pro and R2 purge asked, unanswered.
+- Strings she was shown (not yet acknowledged): T-4152 "Track has to line up with the track it joins.", install note
+  (her own words), station hover 600 m rows.
+- 8800 = ef99d979. T-4112's tw/track changelog item parked in next-track.json: hide the port's duplicate at release.
 
 ## Next
 1. Edit speed until done, then one message to her. No publish unless she says.
