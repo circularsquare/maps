@@ -1,25 +1,25 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 5cd3af11-2ab8-4788-8daf-1956104ead51, name maps-c0 [58120f], since 2026-11-24 01:57 UTC
-Updated: 2026-11-24 01:57 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-24 02:22 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5.
 
 ## In flight (adopt from the board)
-- All 13 agents run inside maps-6b's tab (left open): a follow-up or go goes to maps-6b as "relay to <agent>: <text>".
+- 11 agents, all inside maps-6b's tab (left open): a follow-up goes to maps-6b as "relay to <agent>: <text>". Over 8: start
+  nothing until under 8 (her 11-24). Queue (upnext): T-4153 stage 2 (fresh agent on tree editnetwork), T-4165, T-4162, T-4164.
 - Edit speed, plan notes/T-4144.md; her "do all, land all, one message when done". Landed: base T-4145, lines path
-  T-4114, ghost T-4136, first click T-4143. Running: editnetwork T-4153 (TOP: bounded drawn network on master, her
-  call), editstations T-4146 (a832c397), editlines T-4147 (a3199ea2), editpieces T-4148, editworker T-4149 (a0d0baab;
-  rows-first waits for B), trackstream T-4155/T-4142/T-1031 (a2b95733), retime T-4132. Queued: T-4150, T-4133/4134.
-  Before telling her: one Opus review of all show-at-click code (each stream uses the base the same way), a smoke check that no pending entry outlives the final
-  state, a batch check (refusals, undo after shown edits, charges) incl. rampport 380d8fc7, regionfix 8e1eb7ba,
-  lineclick ef99d979, junctionmsg 9719e410, base 0c384f9e; then rebuild 8800 and one message to her.
-- T-4159 done (games on the volume). After the 03:23 UTC backup logs ok (~7.1 GB): T-4164's cleanup on the box. Server save level 39: T-4161. T-4160 after T-4153.
-- Perf beyond edits: perfcompare T-4157 (master vs v0.4.5, all three saves, memory too), busmerge2 T-4158 (wider bus
-  stop merges: her pick), commutechunks T-921 (shift: numbers to her), zoneopen T-4051, memwasm T-4156 (a17f9bab).
-- Her open asks in chat: AWS own account (guide notes/aws-own-account-setup.md; when she says "aws account ready,
-  profile anita-own", brief an agent for a bench machine). Resend Pro and R2 purge asked, unanswered.
-- Strings she was shown (not yet acknowledged): T-4152 "Track has to line up with the track it joins.", install note
-  (her own words), station hover 600 m rows.
+  T-4114, ghost T-4136, first click T-4143, network stage 1 T-4153 (e7fa38bd). Running: editstations T-4146,
+  editlines T-4147, editpieces T-4148, editworker T-4149 (rows-first waits for B), trackstream T-4155/T-4142/T-1031,
+  retime T-4132. Queued: T-4150, T-4133/4134. Before telling her: one Opus review of all show-at-click code (each
+  stream uses the base the same way), a smoke check that no pending entry outlives the final state, a batch check
+  (refusals, undo after shown edits, charges) incl. rampport 380d8fc7, regionfix 8e1eb7ba, lineclick ef99d979,
+  junctionmsg 9719e410, base 0c384f9e, network e7fa38bd (perf_bench --saves nyc); then rebuild 8800, one message.
+- T-4159 done (games on the volume). After the 03:23 UTC backup logs ok (~7.1 GB): T-4164's cleanup on the box.
+  Server save level 39: T-4161. T-4160 after T-4153.
+- Perf beyond edits: perfcompare T-4157, busmerge2 T-4158 (her pick), commutechunks T-921 (shift: numbers to her),
+  zoneopen T-4051, memwasm T-4156.
+- Her open asks: AWS own account (she hit "email in use"; told her a plus address; on "aws account ready, profile
+  anita-own", queue a bench-machine agent); hard 8-agent hook (my proposal, unanswered).
 - 8800 = ef99d979. T-4112's tw/track changelog item parked in next-track.json: hide the port's duplicate at release.
 
 ## Next
