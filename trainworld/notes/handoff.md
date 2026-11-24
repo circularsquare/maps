@@ -13,7 +13,7 @@ diary notes/handoff-log.md. Her time UTC-5.
   Base API at the top of notes/T-4145.md: put it in C's brief. Queued: C T-4148, D page T-4150, T-4133/4134 after
   retime, T-4151. Her yes: refusals take a shown edit back, money at the click; refusals must answer fast too.
   Agent ids: editbase adf738eb, editstations a832c397, editlines a3199ea2, editworker a0d0baab, junctionmsg a23cb70f.
-- Non-edit perf (her 00:3x: "other performance fixes ... load time, memory usage"): zoneopen T-4051, memheap T-1367;
+- Non-edit perf (her 00:3x: "other performance fixes ... load time, memory usage"): zoneopen T-4051, memwasm T-4156 (agent a17f9bab; T-1367 closed, gone on master);
   next from notes/perf-sweep-2026-11-23.md: T-921 (after searchleft; shifts riders: numbers to her), T-2589+T-2247.
 - retime T-4132, searchleft T-4054, junctionmsg T-4152 (her pad: junction heading message misfires; strings to her).
 - Before telling her edit speed is done: one Opus review of all the show-at-click code together (one mechanism, no

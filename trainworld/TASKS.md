@@ -238,7 +238,11 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4116 [P2] {L:track-rework} {after:the 0.4.6 publish} Track model panic after a route edit on the track branch
   - Context: Your panic on 8800 (track branch build f382ee54): store.rs:851 under nodes_info, after a route edit and line colour changes. Not reproduced by 1,800 random edits each on NYC and your North America save; likely a line's service still naming track an edit removed. A second panic (run_polyline on a one-way return run) is fixed on tw/track. Notes/T-4116.md.
   - Goal: Reproduced with the fuzzer or your save under ?track, and fixed with a test, when the track rework resumes.
-- T-4051 [P2] {L:loading} Opening a zone on a big save sits at 90%
+- T-4156 [P2] {L:memory} Demand workers keep WASM memory after zones close (taking, 2026-11-23, agent memwasm)
+  - Context: From T-1367: on all-China each worker's WASM memory keeps its high-water mark, about 1,560 MB against 1,267 loaded; T-1205's restart waits for a 256 MB gap, so 228 MB never comes back.
+  - Goal: About 290 MB per worker given back after zone churn, with the restart's cost in load time measured.
+  - Other: notes/T-1367.md
+- T-4051 [P2] {L:loading} Opening a zone on a big save sits at 90% (taking, 2026-11-23, agent zoneopen)
   - Context: You, 11-22, on live v0.4.5: opening Medellin sat at 90% for about 2 minutes, Managua the same, "not super consistent". Measured 11-23 (notes/T-4051.md): a zone opens by a short path (Medellin 82 s) or a long one about 3x the work, by a race between its first quick figures and the whole calculation. Tree zoneopen has two unmeasured fixes.
   - Goal: Both fixes measured on 4+ cores before they land; then a zone with figures already in takes the short path (about 100 s off on your save).
   - Other: notes/T-4051.md
@@ -428,10 +432,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Every all-China load closes about 40 reached zones at about 13 s and reopens them a second later, wasting downloads.
   - Goal: Reached zones stay open while the reach is worked out.
   - Other: notes/T-1605.md
-- T-1367 [P3] {L:memory} Demand worker heap keeps closed zones
-  - Context: After zones or a market close, a worker's heap still holds them until its next solve (all-China: 2,041 MB at rest).
-  - Goal: A worker frees closed zones promptly so the restart need not wait for a solve.
-  - Other: notes/T-1367.md
 - T-1211 [P2] {L:edit-speed} Page DOM makes layouts slow
   - Context: The page has 2,200 elements; a forced layout takes 22-37 ms, and the Lines, saves and Stations panels open in 0.4-0.7 s. All figures are from 2026-10-24 at 4-6x CPU slowdown; T-1505 took the forced layout out of station name placement since.
   - Goal: Measure once at normal CPU on the 2,647-station save (about 20 minutes): under 200 ms closes it, over keeps it with the new figures.

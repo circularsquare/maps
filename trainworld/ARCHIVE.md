@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-1367 [P3] {L:memory} Demand worker heap keeps closed zones (2026-11-23): closed without code: Gone on master: on all-China, closing Tokyo, Osaka and Seoul frees about 326 MB per worker at once, back to the load figure with no solve; a fresh all-China load is about 1.1 GB per worker, not October's 2,041 MB. notes/T-1367.md.
 - T-4143 [P1] {L:edit-speed} The first click of a track takes seconds to register (2026-11-23): First ghost at the first pointer move (8-95 ms) instead of after the worker's first answer (up to 2-3.6 s on Asia after a pan, when streets, bus re-timing and a full state resend held the worker); 97-99% off. notes/T-4143.md.
 - T-4112 [P1] {L:station-placement} Station on a curve refused for water at a far ramp, on master (2026-11-23): Ported to master (380d8fc7): 963 tests pass incl. t4112_tests; W 37th St and Jersey City stations on the Hudson route place; smoke passed. notes/T-4112.md.
 - T-4144 [P1] {L:edit-speed} Every kind of edit shows at once, planned together (2026-11-23): Plan in notes/T-4144.md: every edit and hover with its Asia wait; base T-4145, streams B T-4146, A T-4147, C T-4148, D T-4149/T-4150, E is T-4143 then T-4142 and T-1031; T-4151 for the bench's calc pass. notes/T-4144.md.
