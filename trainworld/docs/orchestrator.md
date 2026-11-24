@@ -177,7 +177,12 @@ skill, then ask her for the yes.
   read-only, about 2 minutes. Every flagged line (OVER, HIGH, SOON, MISSING) goes in that day's report to her with
   what docs/ops-checks.md says to do about it.
 
-- Gemini second opinion (read-only, sandboxed): `venv\Scripts\python.exe trainworld/tools/gemini_audit.py --brief <file> --out <file>` (its top comment). For reviews and audits; Gemini's own code tasks run in Antigravity, and she passes them on to land.
+- **Gemini as adversarial reviewer** (her 11-24; use it liberally, running out before the week's end is fine):
+  `venv\Scripts\python.exe trainworld/tools/gemini_audit.py --brief <file> --out <file>` (read-only, sandboxed; its top
+  comment). Use it on every risky landing (sim, saves, demand, money: diff plus the task's Goal, "try to break it"),
+  on each batch's whole diff beside the Claude checker, on a big design before it goes to her, and on claims like
+  "same answers" in reports. A finding is checked by a Claude agent before anyone acts on it. It doesn't run the game
+  or write code here; Gemini's own code tasks run in Antigravity and she passes them on to land.
 
 ## Traps
 
