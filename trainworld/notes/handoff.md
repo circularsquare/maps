@@ -18,17 +18,15 @@ diary notes/handoff-log.md. Her time UTC-5.
   volume row), orchnotes T-4165. Waits on her: T-4156 (memory restart), hard 8-agent hook. Queued: T-4166 AWS bench (quota 5).
 - 8800 = ef99d979. T-4112's tw/track changelog item parked in next-track.json: hide the port's duplicate at release.
 
-## Next
-1. Edit speed until done, then one message to her. No publish unless she says.
-2. T-4051 zone-open (two untimed fixes in tree zoneopen, one quiet timing run). Solve triage: notes/solve-triage-2026-11-23.md.
-3. Track rework paused until after 0.4.6 (T-4037 g3b; T-4116 her panic); tw/track sync with master conflicts. Idle
-   trees (coreslider, onewaylag, split6, stationids, timetables): bring up after 0.4.6.
-
-LIVE v0.4.5. 8800 = master always (809a0d16); the track build only at /trainworld-track/ (?track), own saves, no
-account (snaptrack.py). Her North America save is level 42: opens only there; backups in artifacts/trainworld/savedl/.
-Cap 14 again from 01:4x (her word). Never raise the cap without her explicit word (her 00:4x), not even back to 14 or the
-overnight max. Reserve loop back to -Reserved 2; cores 0-1 hers (reserve_cores.ps1 -Loop 30, now never touches terminals). Bench: perf_bench.mjs,
-ledger notes/perf-ledger.jsonl.
+## Next (night of 11-24; she aims to publish 0.4.6 in the morning after her playtest)
+1. Land editunify T-4170 once its Gemini fixes are verified; then the one Gemini review of the whole edit-speed batch
+   (her OK for this round; after it Gemini only on her ask or my suggestion).
+2. Land busland T-4158, editnetwork2 T-4153 s2, trainmove T-4133 as they report (all risky: in the batch).
+3. Batch checker (fresh Sonnet) on master over everything since 8800's ef99d979, one smoke on master, perf_bench all three
+   saves (edit-speed memory budget ~10 MB); fix or revert failures; rebuild 8800; run the publish skill (no publish
+   without her yes, none overnight); morning message to her with the playtest list.
+4. Not in 0.4.6 unless done and checked: T-921 (commutechunks2, numbers to her), T-4178 reversals, T-4051 (map delay),
+   T-4156 (waits on her). Track rework after 0.4.6.
 
 ## Her words
 - 11-24 02:1x: edit-speed streams "in parallel" meant done the same way (similar changes), not independently; the Opus review checks every stream uses the base (T-4145) the same way. Ask before leaving 2-8 agents; the 12 run on, no pausing. 02:0x: Resend Pro no; R2 purge yes;
