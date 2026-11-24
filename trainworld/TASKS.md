@@ -171,10 +171,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4096 [P3] {L:checks} A daily sweep of old session scratch
   - Context: From T-4088: session scratch in Temp\claude was 78 GB, the biggest single user of the disk, and nothing clears it. The standing rule already lets agents delete finished sessions' scratch 2+ days old.
   - Goal: Scratch folders untouched for 2+ days deleted daily, sessions still running skipped.
-- T-4133 [P2] {L:edit-speed} Edits move only the trains they can change (taking, 2026-11-23, agent trainmove)
-  - Context: From T-4131: `before_edit` and `note_changes` walk every train, 306-374 ms of a 717-823 ms apply on the Asia save.
-  - Goal: Only trains on touched lines are snapshotted and compared; same result; about 3-4 h.
-  - Other: notes/T-4131.md
 - T-4134 [P3] {L:edit-speed} A line's time zone and fleet kind looked up once
   - Context: From T-4131: `utc_offset_at` per line costs 75-120 ms an edit and `cars_needed` 95 ms once on the Asia save.
   - Goal: Both kept per line and refreshed only when the line moves; about 2-3.5 h.
@@ -254,11 +250,11 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: SPEC.md section 3 still says "about 800 zones" (the code tour says over 4,000). docs/interface.md's redirect table lists "Zen Maru Gothic ... no transitions" as if current. handoff.md gives two 8800 commits and warns about .tw-trees/arrivefirst, which is gone. reserve_cores.ps1's top comment says claude.exe stays at normal priority; the code raises it.
   - Goal: Each line says what is true now; TASKS.md's header says P4 tasks anywhere are parked; the two untracked .stackdump files deleted. About 0.5 h.
   - Other: notes/gemini-review-triage-2026-11-24.md
-- T-4176 [P3] {L:checks} Remove finished worktrees and old tw branches (taking, 2026-11-24, agent diskfree)
+- T-4176 [P3] {L:checks} Remove finished worktrees and old tw branches
   - Context: 19 worktrees at about 1.2 GB each, a leftover empty .tw-trees/rampport folder, and 34 tw/* branches, 14 with no tree. handoff.md keeps coreslider, onewaylag, split6, stationids and timetables on purpose until after 0.4.6; others may be done.
   - Goal: Every tree whose agent is done and whose work landed is removed with agent-tree.mjs; merged branches with no tree deleted. About 0.5 h.
   - Other: notes/gemini-review-triage-2026-11-24.md
-- T-4178 [P1] {L:line-rates} Reversals mid-line cost the same as at a line's end
+- T-4178 [P1] {L:line-rates} Reversals mid-line cost the same as at a line's end (taking, 2026-11-24, agent reversals)
   - Context: You, 11-24: players build switchbacks and are confused why they cut capacity; reversals mid-line cut it while ones at a line's end "kinda dont", which is inconsistent. Also: no yellow icon unless the reversal is what limits throughput, "which i think it should almost never be".
   - Goal: One rule for every reversal, measured on a switchback line; the icon only when a reversal is the limit.
 - T-4179 [P1] {L:memory} Win back demand memory lost since v0.4.5 (taking, 2026-11-24, agent memgrowth)
