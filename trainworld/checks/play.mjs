@@ -155,6 +155,9 @@ async function start({ pos, opt }) {
   // 8800 (serve.py) serves the game under /trainworld/; Git Bash rewrites a leading-slash argument into a Windows path, so --base is given as `trainworld`
   const base = String(opt.base ?? (port === 8800 ? 'trainworld' : '')).replace(/^\/+|\/+$/g, '');
   const url = `http://localhost:${port}/${base && base + '/'}`;
+  // T-4210: a dev Vite serves the packs at /packs only: under a base every pack, water mask and boundary comes back as
+  // the page ("New York could not load", each ghost waiting on a mask that never comes)
+  if (base && port !== 8800) fail(`--base is for 8800's build; a Vite on :${port} serves the game at its root`);
   try { await fetch(url, { signal: AbortSignal.timeout(5000) }); } catch { fail(`no Vite on :${port}: node trainworld/checks/dev-nowatch.mjs ${port}`); }
   mkdirSync(DIR, { recursive: true });
   rmSync(statePath(port), { force: true });

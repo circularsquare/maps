@@ -833,7 +833,7 @@ impl TrackApi {
     /// Clamped to `DESIGN_MIN_KMH`..320 (T-3121: any speed, below 160 too, curves as tight as it
     /// allows); 160 is the drawing tool as before.
     pub fn set_design_speed(&mut self, kmh: f64) {
-        let kmh = if kmh.is_finite() { kmh.clamp(DESIGN_MIN_KMH, DESIGN_SPEEDS[DESIGN_SPEEDS.len() - 1]) } else { DESIGN_SPEEDS[0] };
+        let kmh = design_kmh(kmh);
         self.route_cap = design_radius(kmh);
         self.route_kmh = kmh;
     }

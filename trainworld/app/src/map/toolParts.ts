@@ -72,6 +72,9 @@ export interface Placed {
   /** T-3260: the way track leaves here (local units, unit length), for Ctrl's straight line: the end's heading
    * of the segment placed last, else the first leg of a ghost from here; none from a start on open ground */
   dir?: [number, number];
+  /** T-4210: the bare end of the segment this run placed last, on open ground, at this build level: a segment from here
+   * onto open ground is the tangent route, laid on the page (map/ghostLocal.ts) */
+  tangent?: { level: number };
 }
 
 /** The longest piece of free-drawn track one click lays, straight-line km between its ends (T-1020:

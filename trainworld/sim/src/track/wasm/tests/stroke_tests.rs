@@ -262,6 +262,39 @@ fn a_tangent_segment_is_one_arc_through_the_click() {
     assert!(f.radius[1] < 450.0, "old lead-in: {}", f.radius[1]);
 }
 
+/// T-4210: the page's ghost of a tangent segment (`ghost_tangent`) is the route the worker previews, point for point,
+/// at every design speed, either way round, past the cap and past a quarter turn; and it ends on the placed track's heading.
+#[test]
+fn the_ghost_tangent_is_the_previewed_route() {
+    let (mut a, east) = tangent_start();
+    for kmh in [160.0, 250.0, 60.0] {
+        a.set_design_speed(kmh);
+        for (d, deg) in [(500.0, 30.0), (800.0, -50.0), (300.0, 12.0), (2000.0, 70.0), (500.0, 2.0), (400.0, 120.0), (600.0, -160.0), (900.0, 0.0)] {
+            let off: f64 = (deg as f64).to_radians();
+            let (x, y) = (1000.0 + d * off.cos(), d * off.sin());
+            let pv = a.preview_route(&from_node(east, x, y), &[], 2, false);
+            assert_eq!(pv[0], 1.0, "{kmh} km/h, {d} m at {deg}: {}", a.issues());
+            let g = ghost_tangent(1000.0, 0.0, 0.0, x, y, 0, false, kmh, 0, false);
+            let n = g[4] as usize;
+            let block = &g[5 + n..];
+            assert_eq!(block.len(), pv.len(), "{kmh} km/h, {d} m at {deg}: same layout");
+            for (k, (p, q)) in pv.iter().zip(block).enumerate().skip(2).filter(|(k, _)| *k != 4) {
+                assert!((p - q).abs() < 1e-6, "{kmh} km/h, {d} m at {deg}: value {k} {p} against {q}");
+            }
+            assert_eq!(a.preview_render_speeds().iter().map(|&v| v as f64).collect::<Vec<_>>(), g[5..5 + n].to_vec(), "{kmh} km/h, {d} m at {deg}: speeds");
+            let f = a.w.net.fit(&a.route_vertices);
+            let (_, _, eh) = geom::pos_at(&f.pieces, f.len);
+            assert!(geom::wrap(g[0] - eh).abs() < 1e-6, "{kmh} km/h, {d} m at {deg}: end heading {} against {eh}", g[0]);
+            let arc = a.route_arc();
+            if arc.len() == 3 {
+                assert!((0..3).all(|i| (arc[i] - g[1 + i]).abs() < 1e-6), "{kmh} km/h, {d} m at {deg}: circle");
+            } else {
+                assert!(g[3].is_nan(), "{kmh} km/h, {d} m at {deg}: no circle");
+            }
+        }
+    }
+}
+
 /// T-817: the radius each design speed lays curves out for, and 160 is the old cap.
 #[test]
 fn design_radius_per_speed() {

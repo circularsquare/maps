@@ -220,10 +220,12 @@ function editsOf(ev) {
     const word = after(i, (e) => e.k === 'arrive' && e.kind === 'applied' && e.seq === p.seq);
     const netIn = after(i, (e) => e.k === 'arrive' && e.kind === 'state' && e.net);
     const netTake = after(i, (e) => e.k === 'take' && e.net);
-    const standIn = frameAfter(placed), rows = frameAfter(take), built = frameAfter(net), drawnAhead = aheadAt >= 0 && (net < 0 || aheadAt < net) ? frameAfter(aheadAt) : null;
-    const shows = [standIn, rows, built, drawnAhead].filter((x) => x != null);
+    const rows = frameAfter(take), built = frameAfter(net), drawnAhead = aheadAt >= 0 && (net < 0 || aheadAt < net) ? frameAfter(aheadAt) : null;
+    // (T-4210: the track tool's stand-in for a placed segment is drawn ahead too)
+    const standIn = [frameAfter(placed), drawnAhead].filter((x) => x != null).reduce((m, x) => Math.min(m, x), Infinity);
+    const shows = [standIn, rows, built, drawnAhead].filter((x) => x != null && Number.isFinite(x));
     out.push({ op: p.op, seq: p.seq, post: r0(p.t - t0), answer: ans >= 0 ? r0(ev[ans].t - t0) : null, ok: ans >= 0 ? ev[ans].ok : null,
-      standIn: r0(standIn), rows: r0(rows), built: r0(built), shows: shows.length ? r0(Math.min(...shows)) : null, work: ans >= 0 ? ev[ans].ms ?? null : null,
+      standIn: Number.isFinite(standIn) ? r0(standIn) : null, rows: r0(rows), built: r0(built), shows: shows.length ? r0(Math.min(...shows)) : null, work: ans >= 0 ? ev[ans].ms ?? null : null,
       // the steps between (T-4097): the edit's word in, the drawn-ahead frame, the network's state in and taken
       word: word >= 0 ? r0(ev[word].t - t0) : null, ahead: r0(drawnAhead), netIn: netIn >= 0 ? r0(ev[netIn].t - t0) : null, netTake: netTake >= 0 ? r0(ev[netTake].t + (ev[netTake].ms ?? 0) - t0) : null });
   }

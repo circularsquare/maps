@@ -45,10 +45,12 @@ import { type RouteEnd } from "../workers/protocol";
 import { gameStamp, onRoadsLanded, type ClockClient, type PreviewAnswer } from "../workers/clockClient";
 import { roadTileTemplate } from "./busRoads";
 import { kAtY, toLngLat, toLocal } from "./geo";
-import { laneState, type PlacedMark } from "./renderer";
+import { laneState } from "./renderer";
 import { planStopsOf, type Level } from "../game/types";
 import { endHeading } from "./curveCircle";
-import { ghostChevrons, joinedGhost, strokesFromPreview, TAPER_M } from "./network";
+import { ahead, type Ahead } from "../game/pending";
+import { ghostTangent, LOCAL_PX, sameLine, warmGhostLocal, type TangentSpec } from "./ghostLocal";
+import { ghostChevrons, joinedGhost, strokesFromPreview, TAPER_M, type Strokes } from "./network";
 import { type PlatformShape } from "./stationGeometry";
 import { type Overlay } from "./overlay";
 import { marksLayer } from "./screenPlace";
@@ -99,7 +101,14 @@ export class Tools {
   /** T-4208: from a click's segment being sent until its answer: where the run goes on from (null when it ends at the
    * click). The ghost is drawn from there meanwhile, never from the start being left, which the worker may take a
    * second to answer behind a network it is building. */
-  clicked: { onward: { lx: number; ly: number; lng: number; lat: number; dir?: [number, number]; z: number } | null } | null = null;
+  clicked: { onward: { lx: number; ly: number; lng: number; lat: number; dir?: [number, number]; z: number; tangent?: { level: number } } | null } | null = null;
+  /** T-4210: a start whose worker answer differed from the ghost laid on the page (water, a ramp): bent from there on */
+  localOff: Placed | null = null;
+  /** T-4210: the last click's stand-in is the segment as laid (its answer or the page's), not the ghost bent to it */
+  stampExact = false;
+  /** T-4210: the ghost laid on the page for the newest request, to hold its answer against; the last one laid */
+  localFor: { key: string; pts: Float32Array } | null = null;
+  private lastLocal: { st: object; h: Snap; g: ReturnType<typeof ghostTangent> } | null = null;
   /** the preview the ghost, its marks and its tag show: the bent one while it stands in */
   get shownPreview(): PreviewAnswer | null {
     if (this.clicked) return null; // T-4208: no answer yet for the ghost going on from the click
@@ -169,6 +178,7 @@ export class Tools {
     effect(() => { if (tool.value !== "ferry") this.ferry.clear(); });
     this.building = new BuildingDraw(map, this.box, this.tag, overlay, { exit: () => this.exit() });
     effect(() => { if (tool.value !== "building") this.building.clear(); });
+    effect(() => { if (tool.value === "track") warmGhostLocal(); });
     startBuildingFloors(overlay);
     overlay.afterMapFrame.push(() => this.place());
     // T-1777: a pointer gone off the map leaves no ghost, ring or tag where it was; T-3130: a segment being
@@ -888,7 +898,8 @@ export class Tools {
     this.placing = true;
     this.waitFrom(true);
     this.endRun = false;
-    let rc: RealClick, sc: StreetClick = null, p: PreviewAnswer | null, a: Awaited<ReturnType<typeof edit>>, by: { edge: number } | null = null, mark: PlacedMark | null = null;
+    let rc: RealClick, sc: StreetClick = null, p: PreviewAnswer | null, a: Awaited<ReturnType<typeof edit>>, by: { edge: number } | null = null, mark: Ahead | null = null;
+    let ow: NonNullable<Tools["clicked"]>["onward"] = null;
     // T-1001: whatever happens to this click, later clicks are not ignored
     try {
       // T-727d: near real track at both clicks, the real route (waited for if still being found)
@@ -918,21 +929,32 @@ export class Tools {
       if (p?.ok !== false) playBuild("snap");
       // T-4208: shown placed at the click, the ghost going on from its end; a ghost already refused stays as it is
       // (a real or street route's ghost is its snap's own, drawn from the start it leaves until the answer)
-      if (p?.ok !== false && !rc && !sc && !this.snapped) mark = this.clickAhead(p, s, chain);
+      if (p?.ok !== false && !rc && !sc && !this.snapped) {
+        const stamp = this.clickAhead(p, s, chain, s.kind === "free" && !by);
+        mark = stamp ? ahead({ track: [stamp] }) : null;
+        ow = this.clicked?.onward ?? null;
+      }
       // T-1407: answered before its state, so the next ghost is asked at once
-      a = await edit({ op: "route", ...req }, false, true, true);
+      const go = () => edit({ op: "route", ...req }, false, true, true);
+      a = await (mark ? mark.send(go) : go());
     } finally {
       this.placing = false;
       this.clicked = null;
       this.place();
     }
-    // T-4208: the stand-in kept at the click goes with a refusal; an early answer's is drawn again just below
-    if (mark && (!a.ok || a.early)) this.overlay.renderer.dropPlacedSince(mark);
+    // T-4208: the stand-in kept at the click goes with a refusal. T-4210: otherwise it stays until the network holding the
+    // segment is drawn (game/pending.ts takes it in that frame, never with an earlier edit's network); a click that beat
+    // its answer, with nothing laid on the page, has it swapped for the worker's own edges now (the ghost as shown was bent)
+    if (mark && !a.ok) mark.drop();
+    if (mark && a.ok && a.early && !this.stampExact && a.held?.length) {
+      mark.set({ track: a.held.map((pts) => strokesFromPreview(pts, false, undefined, true, undefined, singleTrack.peek() ? 0 : 255, highSpeed.peek(), tramTrack.peek())) });
+    }
     // T-1407: until the state lands, the ghost just placed stands in for the blueprint it made
     if (a.ok && a.early) {
       // T-2404: its state held while the pointer moves, its edges stand in where no ghost of it can
       // (the ghost as this very answer drew it, not bent to a pointer that moved on meanwhile)
-      if (p) {
+      if (mark) { /* the stand-in kept at the click stays (above) */ }
+      else if (p) {
         this.overlay.renderer.setPreview(p.pts.length >= 6 ? this.ghostStrokes(p) : null);
         this.bent = null;
         this.overlay.renderer.keepPreviewAsPlaced();
@@ -958,8 +980,10 @@ export class Tools {
     const [ex, ey] = this.clickEnd(s, rc, sc);
     this.start = placedAt({ kind: "node", node: a.node }, ex, ey, rc ? rc.route.last : snapping.peek() ? this.real.ring(e.point.x, e.point.y) : null);
     this.start.beside = by?.edge ?? null; // a run beside track carries on beside it
-    const eh = p ? endHeading(p.verts, p.pts, p.arc, toLngLat, toLocal) : null;
-    if (eh) this.start.dir = [eh.ux, eh.uy];
+    // T-4210: the heading (and bare end) the ghost from the click took, so nothing jumps as the answer lands
+    const eh = !ow?.dir && p ? endHeading(p.verts, p.pts, p.arc, toLngLat, toLocal) : null;
+    this.start.dir = ow?.dir ?? (eh ? [eh.ux, eh.uy] : undefined);
+    this.start.tangent = ow?.tangent;
     this.real.begin(this.start.ring);
     this.street.begin([this.start.lng, this.start.lat]);
     this.lastPreview = null;
@@ -1066,6 +1090,8 @@ export class Tools {
     const key = JSON.stringify(req);
     if (!this.wantKey || this.wantKey === this.previewKey) this.waitFrom(false);
     this.wantKey = key;
+    const g = this.startLocal(h);
+    this.localFor = g ? { key, pts: g.a.pts } : null;
     const from = this.start;
     this.client.preview(req, (a) => {
       // T-3260: a ghost from a start on track leaves along its heading (its lead-in or tangent corner)
@@ -1082,10 +1108,43 @@ export class Tools {
     return true;
   }
 
+  /** T-4210: the drawing tool's settings for a ghost laid on the page; null for the track it does not lay (quad, tram,
+   * busway) */
+  tangentSpec(): TangentSpec | null {
+    if (quadTrack.peek() || tramTrack.peek() || buswayTrack.peek()) return null;
+    return { level: this.freeLevel(), design: designSpeed.peek(), hsr: highSpeed.peek(), single: singleTrack.peek() };
+  }
+  /** T-4210: the tangent segment from a run's bare end `o` (local units, its heading and level) to open ground `h`, laid
+   * on the page; null where the worker lays another route (a snap, track or a beside spot under the pointer, another
+   * build level) or the code is not loaded yet */
+  localGhost(o: { lx: number; ly: number; dir?: [number, number]; tangent?: { level: number } }, h: Snap | null) {
+    const sp = this.tangentSpec();
+    if (!sp || !o.dir || !o.tangent || o.tangent.level !== sp.level || h?.kind !== "free" || this.snapped || this.real?.active || this.street?.isOn || this.hoverBeside) return null;
+    return ghostTangent(o.lx, o.ly, o.dir, h.lx, h.ly, sp);
+  }
+  /** `localGhost` from the start to `h` (once per pointer spot), unless an answer from this start differed from it */
+  startLocal(h: Snap | null = this.hover) {
+    const st = this.start;
+    if (!st?.tangent || this.localOff === st || !h) return null;
+    const l = this.lastLocal;
+    if (l?.st === st && l.h === h) return l.g;
+    const [lx, ly] = toLocal(st.lng, st.lat);
+    const g = this.localGhost({ lx, ly, dir: st.dir, tangent: st.tangent }, h);
+    this.lastLocal = { st, h, g };
+    return g;
+  }
+  /** T-4210: answer `a`'s figures on the shape laid on the page for the pointer's spot, in place of bending `a` */
+  localAs(a: PreviewAnswer): PreviewAnswer | null {
+    const g = this.startLocal();
+    return g ? { ...g.a, ok: a.ok, cost: a.cost, mult: a.mult, issues: a.issues, ground: a.ground, noFlyover: a.noFlyover } : null;
+  }
+
   /** T-4143: before the run's first answer there is nothing to bend, and the worker can be busy for seconds (a whole
    * state after a pan's street speeds land, an hour's trips): the ghost is drawn from what the page has, the start, its
    * heading if it has one and the pointer, until the checked answer replaces it. A click still waits for its own. */
   drawStandIn(h: Snap) {
+    const g = this.startLocal(h);
+    if (g) return this.drawLaid(g.a);
     const st = this.start!, [sx, sy] = toLocal(st.lng, st.lat);
     this.standIn(sx, sy, h, st.dir ?? this.trackHeading(st, sx, sy, h), this.heightOf(st.end, sx, sy));
   }
@@ -1097,31 +1156,48 @@ export class Tools {
     this.overlay.invalidate();
   }
 
+  /** T-4210: a ghost laid on the page, drawn as it is (no answer to bend yet) */
+  drawLaid(a: PreviewAnswer) {
+    this.bent = null;
+    this.overlay.renderer.setPreview(this.ghostStrokes(a));
+    this.overlay.invalidate();
+  }
+
   /** where a click's segment ends (local units): a real or street route's last point on open ground, else the click's snap */
   clickEnd(s: Snap, rc: RealClick, sc: StreetClick): [number, number] {
     return rc?.kind === "route" && s.kind === "free" ? toLocal(...rc.route.last) : sc?.kind === "route" && s.kind === "free" ? toLocal(...sc.route.last) : [s.lx, s.ly];
   }
-  /** T-4208: at a click, the ghost kept as the segment's stand-in (this request's own answer when it is in, else the
-   * ghost as shown), and the run's onward start set for the ghost until the answer */
-  clickAhead(p: PreviewAnswer | null, s: Snap, chain: boolean): PlacedMark {
+  /** T-4208: at a click, the segment's stand-in (T-4210: drawn ahead of the worker by the caller, game/pending.ts, until
+   * the network holding it is drawn): this request's own answer when it is in, else the segment laid on the page for
+   * the click's spot, else the ghost as shown; and the run's onward start set for the ghost until the answer */
+  clickAhead(p: PreviewAnswer | null, s: Snap, chain: boolean, bare: boolean): Strokes | null {
     const r = this.overlay.renderer;
-    if (p) r.setPreview(p.pts.length >= 6 ? this.ghostStrokes(p) : null);
+    const laid = this.startLocal(s), shown = this.bent?.a ?? this.lastPreview;
+    const q = p ?? laid?.a ?? null;
+    this.stampExact = !!q;
+    const st = q ? (q.pts.length >= 6 ? this.ghostStrokes(q) : null) : r.previewSrc;
+    const stamp = st?.count ? { ...st, marks: undefined, chevrons: undefined } : null;
     this.bent = null;
-    const mark = r.keepPreviewAsPlaced();
-    // the heading the next start takes from this answer once it lands (segmentClick), so the ghost keeps its shape then
-    const eh = p ? endHeading(p.verts, p.pts, p.arc, toLngLat, toLocal) : null;
+    // the heading the next start takes (segmentClick), so the ghost keeps its shape when the answer lands: the laid
+    // segment's end (the track model's own), else the answer's or the ghost's as shown
+    const eh = laid ? { ux: laid.end[0], uy: laid.end[1] } : (q ?? shown) ? endHeading((q ?? shown)!.verts, (q ?? shown)!.pts, (q ?? shown)!.arc, toLngLat, toLocal) : null;
     const { lx, ly } = s, [lng, lat] = toLngLat(lx, ly);
-    this.clicked = { onward: chain ? { lx, ly, lng, lat, dir: eh ? [eh.ux, eh.uy] : undefined, z: this.heightOf(this.endOf(s), lx, ly) } : null };
+    // the click on open ground is the new segment's bare end, so the next one from it is a tangent route too
+    const sp = bare ? this.tangentSpec() : null;
+    this.clicked = { onward: chain ? { lx, ly, lng, lat, dir: eh ? [eh.ux, eh.uy] : undefined, z: this.heightOf(this.endOf(s), lx, ly), tangent: sp ? { level: sp.level } : undefined } : null };
     this.drawOnward();
     this.place();
-    return mark;
+    return stamp;
   }
   /** T-4208: the ghost while a click's answer is awaited, from the click's end to the pointer; none when the run ends there */
   drawOnward() {
     const o = this.clicked?.onward, h = this.hover;
     if (o && h && !this.endRun && !this.tooFar(h, o)) {
       const [ax, ay] = this.screen(o.lx, o.ly), [bx, by] = this.screen(h.lx, h.ly);
-      if (Math.hypot(ax - bx, ay - by) >= 3) return this.standIn(o.lx, o.ly, h, o.dir, o.z);
+      if (Math.hypot(ax - bx, ay - by) >= 3) {
+        const g = this.localGhost(o, h);
+        return g ? this.drawLaid(g.a) : this.standIn(o.lx, o.ly, h, o.dir, o.z);
+      }
     }
     this.clearPreview();
   }
@@ -1253,6 +1329,9 @@ export class Tools {
   /** `newest`: the answer for the newest request (a real or street route's always is); an older one is shown too, and
    * the wait for the newest counts again from it */
   showPreview(a: PreviewAnswer, key: string, newest = true) {
+    // T-4210: an answer whose route is not the one laid on the page (water, a ramp, a refusal's) turns that off for the start
+    const lf = this.localFor;
+    if (lf?.key === key && this.start && a.pts.length >= 6 && !sameLine(lf.pts, a.pts, (x, y) => this.screen(x, y), LOCAL_PX)) this.localOff = this.start;
     this.lastPreview = a;
     this.previewKey = key;
     // a real route's preview (T-727d) answers what the ghost waits for too
@@ -1266,7 +1345,7 @@ export class Tools {
   drawGhost() {
     const a = this.lastPreview;
     if (!a || this.clicked) return;
-    const b = this.previewKey !== this.wantKey && !this.snapped ? this.bend(a) : null;
+    const b = this.previewKey !== this.wantKey && !this.snapped ? this.localAs(a) ?? this.bend(a) : null;
     this.bent = b ? { from: a, a: b } : null;
     const g = b ?? a;
     this.overlay.renderer.setPreview(g.pts.length >= 6 ? this.ghostStrokes(g) : null);

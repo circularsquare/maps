@@ -2100,6 +2100,45 @@ fn tangent_arc(x: f64, y: f64, level: i8, level_to: i8, dir: f64, to: (f64, f64)
     (Ok(pis), circle)
 }
 
+/// A design speed as the drawing tool takes it, km/h (`set_design_speed`).
+fn design_kmh(kmh: f64) -> f64 {
+    if kmh.is_finite() { kmh.clamp(DESIGN_MIN_KMH, DESIGN_SPEEDS[DESIGN_SPEEDS.len() - 1]) } else { DESIGN_SPEEDS[0] }
+}
+
+/// T-4210: the track tool's ghost of a tangent segment (`route_op_as` with tangent drawing, no corners clicked, a free
+/// end): from (x, y) at `level`, leaving on plane heading `dir` (rad), to (tx, ty) at the same level, laid as that
+/// route is (`tangent_arc`, `design_radii`, the fit) for the design speed `kmh` and track kind (`kind` as
+/// `set_route_kind`, `hsr` as `set_route_hsr`), and drawn as its preview is. Nothing of the network is read, so the
+/// page draws it at once while the clock worker checks and prices the same route; where the route meets water,
+/// a ramp or other track the worker's answer differs and replaces it. Returns [end heading (plane rad), the curve's
+/// circle (x, y, ground radius; NaN for a straight), speeds count n, n speeds (km/h per drawn step), then
+/// `preview_route`'s layout with ok 1 and no cost (NaN)]; empty where the route is refused (behind the heading).
+#[allow(clippy::too_many_arguments)]
+#[wasm_bindgen]
+pub fn ghost_tangent(x: f64, y: f64, dir: f64, tx: f64, ty: f64, level: i8, scaled: bool, kmh: f64, kind: u8, hsr: bool) -> Vec<f64> {
+    let kind = TrackKind::from_u8(kind).filter(|k| k.spec().family != 0).unwrap_or_else(|| TrackKind::from_hsr(hsr));
+    let cap = design_radius(design_kmh(kmh)).max(kind.spec().min_radius);
+    // a free end is placed on the millimetre grid (`resolve`)
+    let to = Pi::new(tx, ty, 0.0, level).quantised();
+    let (pis, circle) = tangent_arc(x, y, level, level, dir, (to.x, to.y), scaled, cap);
+    let Ok(pis) = pis else { return vec![] };
+    let mut verts = vec![Pi::new(x, y, 0.0, level)];
+    verts.extend(pis);
+    verts.push(to);
+    let made: Vec<usize> = (1..verts.len() - 1).collect();
+    design_radii(&mut verts, &made, cap, scaled);
+    let f = geom::fit_in(&verts, scaled);
+    let speeds = render_speeds(&f.pieces, &f.vert, kind.v_cap(), geom::ramps().old);
+    let end = f.pieces.last().map_or(dir, |p| p.th0 + p.k * p.plen);
+    let c = circle.unwrap_or([f64::NAN; 3]);
+    let mut out = vec![end, c[0], c[1], c[2], speeds.len() as f64];
+    out.extend(speeds.iter().map(|&v| v as f64));
+    out.extend([1.0, f64::NAN, f.len, verts.len() as f64, f64::NAN]);
+    vertex_rows(&f, &verts, &mut out, kind.v_cap());
+    render_samples(&f.pieces, &f.vert, &mut out);
+    out
+}
+
 /// A lead-in PI leaving (x, y) on heading `dir` towards `toward` (`lead_in`), or None when the
 /// way to `toward` is already within the node's tolerance of the heading.
 fn lead_in_along(x: f64, y: f64, level: i8, dir: f64, toward: (f64, f64), scaled: bool) -> Option<Pi> {
