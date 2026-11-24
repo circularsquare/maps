@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session f51a9e36-f3e8-41ee-b3d9-e908c5e30b16, name maps-2c [36056b], since 2026-11-24 09:03 UTC
-Updated: 2026-11-24 12:10 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-24 12:54 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5.
 
 ## In flight (all mine)
@@ -28,7 +28,9 @@ diary notes/handoff-log.md. Her time UTC-5.
 ## Next (she aims to publish 0.4.6 after her playtest)
 1. check6 PASSED. 0.4.6 candidate = f63b105b3 (incl. T-4057; check7 running on it). Smoke on it PASSED 12:33. Changelog
    review 2 done (c090, c092 hidden; c019 reworded). New zones image made (artifacts/trainworld/review/v0.4.6-new-zones.png).
-   Running chain: snap8800 f63b105b, smoke8800, perf_bench rc046-f63b105b all three.
+   8800 = f63b105b (12:35). Running in maps-2c's tab: smoke8800 (logs artifacts/trainworld/smoke8800-*.log), then perf_bench
+   build+run rc046-f63b105b all three (perf ledger; dist artifacts/trainworld/perfbench/dist/rc046-f63b105b). 12:53 Anita: her
+   terminal stopped responding (board pad); maps-2c opened a successor tab for her.
 2. Morning message: playtest list, strings, T-4153 s2 call, T-4161 deploy yes, publish yes (publish skill).
 3. Land stopclick/sparseload/phoneload as they report; a checker per batch. Track rework after 0.4.6.
 
