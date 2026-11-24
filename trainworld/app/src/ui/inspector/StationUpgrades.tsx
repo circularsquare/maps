@@ -19,7 +19,7 @@ import { moneyState } from "../../game/money";
 import { edit, say, stationsById, world } from "../../game/world";
 import { useClockQuery } from "../useClockQuery";
 import { ahead } from "../../game/pending";
-import { fieldsShow, shownStation } from "../../map/stationAhead";
+import { shownStation } from "../../map/stationAhead";
 
 /** T-3922: the hover's price line and, once the money has come, its upkeep line under it. */
 function priceLines(price: number): string {
@@ -94,7 +94,7 @@ ${t("stationUpgrades.brtBuiltIn")}`}>
   );
   const toggle = async () => {
     // T-4146: the button and the cash at the click, from the price shown
-    const a = await ahead(fieldsShow([[s.num, { upgrades: on ? (s.upgrades ?? 0) & ~u.bit : (s.upgrades ?? 0) | u.bit }]], !on && s.built ? price : 0)).send(() => edit({ op: "stationUpgrade", nodes: [s.num], bit: u.bit, on: !on }));
+    const a = await ahead({ cost: !on && s.built ? price : 0 }).send(() => edit({ op: "stationUpgrade", nodes: [s.num], bit: u.bit, on: !on }));
     if (!a.ok) return;
     if (!on) say(a.charge > 0 ? t("stationUpgrades.built", { name: u.name, station: s.name, price: money(a.charge * 1e6) }) : t("stationUpgrades.added", { name: u.name }));
     else if (s.built) say(t("stationUpgrades.removed", { name: u.name, station: s.name }));
@@ -170,8 +170,7 @@ function ComplexUpgrade({ u, members, price }: { u: UpgradeText; members: string
     : t("stationUpgrades.someAct", { some: have.length > 0, have: have.length, count: st.length, missing: missing.length, blueprint: !built });
   const click = async () => {
     const to = all ? st : missing;
-    const a = await ahead(fieldsShow(to.map((x) => [x.num, { upgrades: all ? (x.upgrades ?? 0) & ~u.bit : (x.upgrades ?? 0) | u.bit }]), all ? 0 : to.filter((x) => x.built).length * price))
-      .send(() => edit({ op: "stationUpgrade", nodes: to.map((x) => x.num), bit: u.bit, on: !all }));
+    const a = await ahead({ cost: all ? 0 : to.filter((x) => x.built).length * price }).send(() => edit({ op: "stationUpgrade", nodes: to.map((x) => x.num), bit: u.bit, on: !all }));
     if (!a.ok) return;
     if (!all) say(a.charge > 0 ? t("stationUpgrades.built", { name: u.name, station: name, price: money(a.charge * 1e6) }) : t("stationUpgrades.added", { name: u.name }));
     else if (built) say(t("stationUpgrades.removed", { name: u.name, station: name }));

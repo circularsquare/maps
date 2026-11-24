@@ -103,7 +103,7 @@ try {
         await settle();
         const e = w0().edges.find((x) => !before.has(x.id) && !x.built);
         if (!e) { out.push({ label: 'bp delete', err: 'no blueprint edge made ' + JSON.stringify(ans) }); continue; }
-        await measure('blueprint track removed', () => rm.removeThing({ kind: 'track', edge: e.id }), () => !w0().edges.some((x) => x.id === e.id), 20000, () => tw.renderer.hide.includes(e.id) || !w0().edges.some((x) => x.id === e.id));
+        await measure('blueprint track removed', () => rm.removeThing({ kind: 'track', edge: e.id }), () => !w0().edges.some((x) => x.id === e.id), 20000, () => tw.renderer.ahead.hideEdges.has(e.id) || !w0().edges.some((x) => x.id === e.id));
         await settle();
       }
     }

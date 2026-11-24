@@ -1519,7 +1519,7 @@ export class ClockClient {
         this.onTrips(msg.epoch, msg.version, msg.trips, msg.board, msg.ends, msg.nexts, msg.bays);
         break;
       case "applied":
-        pendingWord(msg.seq, msg.word, this.orderOf(msg));
+        pendingWord(msg.seq, msg.word, this.orderOf(msg), !!msg.noNet);
         break;
       case "edited": {
         // T-4145: what it showed ahead goes in the frame a refusal lands (before the notice, which waits for the promise)

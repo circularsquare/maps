@@ -273,10 +273,8 @@ mountGuide(map.getContainer()); // T-1822: the Getting started card under the da
 mountKeepDot(); // T-1832: counts the hour of play before the yellow dot by the search glass shows
 const renderer = new NetworkRenderer();
 renderer.checkPatch = params.get("patch") === "check"; // T-1029
-// T-2763: blueprint track the player removes leaves the screen at the click
+// T-2763: whether a line is drawn over track the player removes
 setTrackHider({
-  hide: (edge) => renderer.hideEdge(edge),
-  show: () => renderer.unhideEdges(),
   onLine: (edge) => {
     const l = renderer.net?.lines;
     if (!l) return true;

@@ -9,7 +9,7 @@ import { money } from "../../game/format";
 import { liveMoney, moneyState } from "../../game/money";
 import { boatOf } from "../../game/boats";
 import { edit, setLineFare, world } from "../../game/world";
-import { ahead, shown as pendingShown } from "../../game/pending";
+import { shown as pendingShown } from "../../game/pending";
 import type { LineInput } from "../../game/types";
 import { t, tNumber, tRich } from "../../i18n";
 import { barTop, FareCostBars, type BarCol } from "../MoneyHistory";
@@ -37,7 +37,7 @@ export function LineFare({ l }: { l: LineInput }) {
         <li>
           <span class="grow">{t("lineMoney.fareMode")}</span>
           <Segmented<boolean> options={[[false, t("lineMoney.fareZones")], [true, t("lineMoney.fareDistance")]]} value={dist}
-            onChange={(to) => { if (to !== dist) void ahead({ fields: new Map([[`line:${l.num}`, { fareDist: to }]]) }).send(() => edit({ op: "lineFareDist", line: l.num, dist: to })); }} />
+            onChange={(to) => { if (to !== dist) void edit({ op: "lineFareDist", line: l.num, dist: to }); }} />
         </li>
       )}
       <li>

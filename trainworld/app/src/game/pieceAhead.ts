@@ -1,6 +1,7 @@
 // T-4148: Construct and the select tool's edits drawn at the click (game/pending.ts): the pieces built, switched off,
-// raised, made single or double, or removed, and the track panel's speed limit and one way. Guessed from the world at
-// the click; the worker's word (workers/clockWordPieces.ts) replaces the guess with what the model did.
+// raised, made single or double, or removed, and the track panel's speed limit and one way. Guessed from the op and the
+// world when it is sent (game/editGuess.ts); the worker's word (workers/clockWordPieces.ts) replaces the guess with what
+// the model did.
 
 import { live } from "../map/live";
 import type { NetworkBuffers, Strokes } from "../map/network";
@@ -65,8 +66,8 @@ function constructShow(w: WorldView, edges: Iterable<number> | null, stations: I
   return show;
 }
 
-/** What an edit shows at its click, or null for an edit this does not draw ahead. */
-export function pieceShow(op: EditOp): Show | null {
+/** What an edit shows at its click (game/editGuess.ts), or null for an edit this does not draw ahead. */
+export function pieceGuess(op: EditOp): Show | null {
   const w = world.peek();
   if (!w) return null;
   const byId = () => new Map(w.edges.map((e) => [e.id, e]));
@@ -104,7 +105,8 @@ export function pieceShow(op: EditOp): Show | null {
       for (const id of op.edges) {
         const e = b.get(id);
         if (!e || e.crossover) continue;
-        edges.set(id, { ...(op.level !== null ? { level: [op.level, op.level] as [number, number] } : {}), ...(op.tracks ? { tracks: op.tracks } : {}) });
+        // (a track type alone has no look here: nothing drawn ahead)
+        if (op.level !== null || op.tracks) edges.set(id, { ...(op.level !== null ? { level: [op.level, op.level] as [number, number] } : {}), ...(op.tracks ? { tracks: op.tracks } : {}) });
       }
       return edges.size ? { edges } : null;
     }
@@ -121,13 +123,6 @@ export function pieceShow(op: EditOp): Show | null {
     }
     default: return null;
   }
-}
-
-/** Send an edit (`send` must call the edit before it first awaits), drawn at its click when it is one of these. */
-export function aheadEdit<T>(op: EditOp, send: () => Promise<T>): Promise<T> {
-  let show: Show | null = null;
-  try { show = pieceShow(op); } catch (err) { console.error("T-4148: an edit's guess failed", err); }
-  return show ? ahead(show).send(send) : send();
 }
 
 /** A blueprint drag let go: the track it previewed is drawn as it will be, and the track it moves hidden, until the

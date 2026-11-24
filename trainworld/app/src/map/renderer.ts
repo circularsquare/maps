@@ -492,7 +492,7 @@ export class NetworkRenderer {
     this.hasStencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
     // (Firefox with fingerprinting resistance says 2048 for both, under many a window's canvas)
     this.cacheMax = Math.min(gl.getParameter(gl.MAX_RENDERBUFFER_SIZE) ?? 0, gl.getParameter(gl.MAX_TEXTURE_SIZE) ?? 0);
-    this.strokeU = uniforms(gl, this.strokeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_n", "u_sel_set", "u_sel_edge", "u_hot", "u_hide", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_pass_off","u_dim", "u_by_level", "u_by_speed", "u_by_profit", "u_profit", "u_profit_n", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_out", "u_full_dash", "u_full_rgb", "u_full_inside", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr", "u_wire", "u_band", "u_band_traffic", "u_band_gap", "u_band_m", "u_mute", "u_level_hide", "u_ahead_lines", "u_ahead_edges", "u_ahead_n", "u_ahead"]);
+    this.strokeU = uniforms(gl, this.strokeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_n", "u_sel_set", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_pass_off","u_dim", "u_by_level", "u_by_speed", "u_by_profit", "u_profit", "u_profit_n", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_out", "u_full_dash", "u_full_rgb", "u_full_inside", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr", "u_wire", "u_band", "u_band_traffic", "u_band_gap", "u_band_m", "u_mute", "u_level_hide", "u_ahead_lines", "u_ahead_edges", "u_ahead_n", "u_ahead"]);
     this.stationU = uniforms(gl, this.stationProg, [...PROJECT_UNIFORMS, "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass_half", "u_pass_in", "u_pass", "u_layer", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n", "u_room", "u_bld", "u_one", "u_one_mid", "u_no_bp"]);
     this.bridgeProg = compile(gl, BRIDGE_VS, STATION_FS);
     this.bridgeU = uniforms(gl, this.bridgeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_ink", "u_bad", "u_crowd_rgb", "u_mask", "u_hot_st", "u_hot_n", "u_no_bp"]);
@@ -656,7 +656,6 @@ export class NetworkRenderer {
     this.res = [];
     this.probeVao = null;
     this.net = n;
-    this.hide = [n.edgePts.has(this.hide[0]) ? this.hide[0] : -2, n.edgePts.has(this.hide[1]) ? this.hide[1] : -2];
     this.guard.setNetwork(n);
     this.marks.setNetwork(n.marks);
     this.oneWay.setNetwork(n.oneWay);
@@ -992,17 +991,6 @@ export class NetworkRenderer {
       pickSkip.delete(L.seg);
       pickSkip.delete(T.seg);
     }
-  }
-  /** T-2763: edges the player just removed, not drawn until the network without them is set (or `unhideEdges`). */
-  hide: [number, number] = [-2, -2];
-  hideEdge(edge: number) {
-    this.hide = [edge, this.hide[0] === edge ? this.hide[1] : this.hide[0]];
-    this.uploads++;
-  }
-  unhideEdges() {
-    if (this.hide[0] === -2 && this.hide[1] === -2) return;
-    this.hide = [-2, -2];
-    this.uploads++;
   }
   dropPlaced() {
     this.uncached(() => { for (const r of this.placedRes) r.del(); });

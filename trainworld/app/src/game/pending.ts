@@ -4,6 +4,9 @@
 // (its follow-ups start again behind a new edit, and a stop click's rows go before the next edit's apply). So an armed
 // entry's map part goes with the first network taken that arrived after its word, its panel part with the first rows or
 // state, its cost with the first money, cash or state. A refused edit's entry goes in the frame its answer lands.
+// T-4170, one path: an edit's entry is made in one place, when it is sent (`pendingSent`, which every edit passes), so an
+// edit has at most one. What it shows is read from its op (`setOpGuess`: game/editGuess.ts, or the undo's from the
+// networks), joined with what the caller drew at the click with `ahead()` (a ghost's box, a quoted price).
 
 import { signal } from "@preact/signals";
 import type { EdgeLook, EditOp, EditWord, StationBox } from "../workers/protocol";
@@ -61,15 +64,18 @@ interface Entry {
   money: boolean;
   /** when its edit was clicked or sent: entries are drawn in this order */
   t: number;
-  /** when it was made or last sent, for a guess never answered */
+  /** when it was made or last sent, then when it was armed: a guess never answered, or an entry no state ever clears,
+   * goes after a while (`changed`) */
   at: number;
   tries: boolean;
-  /** T-4114's per-line guesses (map/aheadShow.ts `showAhead`) */
-  line?: number;
 }
 
 /** A guess never answered (a worker that restarted, an edit that never went) goes after this, ms */
 const GUESS_MAX_MS = 15_000;
+/** An armed entry whose network, rows or money never came goes after this, ms: a backstop (the word says when no
+ * network follows), so a slip shows the network as it is rather than a stand-in for ever. Far above the slowest
+ * network after an edit seen on Asia (about 6 s). */
+const ARMED_MAX_MS = 30_000;
 
 let entries: Entry[] = [];
 /** bumped on every change, so panels reading `shown` and `cashShown` redraw */
@@ -86,16 +92,25 @@ export function setAheadSink(f: (c: Composed, build: boolean) => void) { sink = 
 function changed(mapToo: boolean, build = true) {
   pendingVersion.value++;
   if (mapToo) sink?.(compose(), build);
-  if (!sweep && entries.some((e) => e.armed < 0)) sweep = window.setTimeout(() => {
+  if (!sweep && entries.length) sweep = window.setTimeout(() => {
     sweep = 0;
     const now = performance.now(), was = entries.length;
-    entries = entries.filter((e) => e.armed >= 0 || now - e.at < GUESS_MAX_MS);
+    entries = entries.filter((e) => {
+      const keep = now - e.at < (e.armed < 0 ? GUESS_MAX_MS : ARMED_MAX_MS);
+      if (!keep && e.armed >= 0) { swept++; console.warn("T-4170: an edit's entry outlived its states", e.seq, { map: e.map, panel: e.panel, money: e.money }); }
+      return keep;
+    });
     if (entries.length !== was) changed(true);
-    else if (entries.some((e) => e.armed < 0)) changed(false);
+    else if (entries.length) changed(false);
   }, GUESS_MAX_MS);
 }
 
-const hasMap = (s: Show) => !!(s.lines?.size || s.hideEdges || s.edges?.size || s.hideStations || s.stations?.length || s.colours?.size || s.track?.length || s.lineStrokes?.length || s.hideLines || s.rawStations?.length);
+/** T-4170: what a check reads: entries that ever shared a seq (none, by the one path), armed entries the backstop took */
+let doubled = 0, swept = 0;
+
+/** (an empty list draws nothing, and an entry with only that would wait for a network that may never come) */
+const some = (x: Iterable<unknown> | undefined) => !!x && !x[Symbol.iterator]().next().done;
+const hasMap = (s: Show) => !!(s.lines?.size || some(s.hideEdges) || s.edges?.size || some(s.hideStations) || s.stations?.length || s.colours?.size || s.track?.length || s.lineStrokes?.length || some(s.hideLines) || s.rawStations?.length);
 
 function compose(): Composed {
   const c: Composed = { lines: new Map(), hideEdges: new Set(), edges: new Map(), hideStations: new Set(), stations: [], colours: new Map(), track: [], lineStrokes: [], hideLines: new Set(), rawStations: [] };
@@ -137,6 +152,7 @@ export function ahead(show: Show, opts: { tries?: boolean } = {}): Ahead {
   return {
     send<T>(f: () => Promise<T>): Promise<T> {
       if (!entries.includes(e)) return f();
+      if (sending && import.meta.env.DEV) console.warn("T-4170: an edit shown ahead was sent inside another's send");
       sending = e;
       e.seq = -1;
       e.at = performance.now();
@@ -162,13 +178,60 @@ function drop(e: Entry) {
 
 // ---------------------------------------------------------------- from clockClient
 
-/** An edit went to the worker as `seq`: an `ahead` being sent takes it. `quiet`: no other edit was unanswered. */
+/** Two shows as one: `b`'s parts over `a`'s where both say something of the same record, lists joined. */
+export function mergeShow(a: Show, b: Show): Show {
+  const out: Show = { ...a, ...b };
+  const maps = ["lines", "edges", "colours"] as const;
+  for (const k of maps) if (a[k] && b[k]) (out as Record<string, unknown>)[k] = new Map<number, unknown>([...a[k]!, ...b[k]!]);
+  if (a.fields && b.fields) {
+    const f = new Map(a.fields);
+    for (const [r, v] of b.fields) f.set(r, { ...f.get(r), ...v });
+    out.fields = f;
+  }
+  const lists = ["hideEdges", "hideStations", "stations", "track", "lineStrokes", "hideLines", "rawStations"] as const;
+  for (const k of lists) if (a[k] && b[k]) (out as Record<string, unknown>)[k] = [...(a[k] as Iterable<unknown>), ...(b[k] as Iterable<unknown>)];
+  return out;
+}
+
+let opGuess: ((op: EditOp) => Show | null) | null = null;
+/** map/aheadShow.ts: what an edit shows at its click, read from its op (game/editGuess.ts) */
+export function setOpGuess(f: (op: EditOp) => Show | null) { opGuess = f; }
+
+/** An edit went to the worker as `seq` (every edit passes here once): its one entry is made, from the `ahead` being sent
+ * if there is one, with what its op says joined in. `quiet`: no other edit was unanswered. */
 export function pendingSent(seq: number, op: EditOp, quiet: boolean) {
   const now = performance.now();
   sentAt.set(seq, now);
   if (sentAt.size > 256) sentAt.delete(sentAt.keys().next().value!);
-  if (sending) { sending.seq = seq; sending.at = now; sending = null; }
-  undoSent(seq, op, quiet);
+  let guess: Show | null = null;
+  if (op.op === "undo" || op.op === "redo") guess = undoGuess(op, quiet);
+  else {
+    noteEdit(seq, op, quiet);
+    try { guess = opGuess?.(op) ?? null; } catch (err) { console.error("T-4170: an edit's guess failed", err); }
+  }
+  const e = sending;
+  sending = null;
+  if (e) {
+    e.seq = seq;
+    e.at = now;
+    if (guess) { e.show = mergeShow(guess, e.show); changed(hasMap(guess)); }
+  } else if (guess) {
+    entries.push({ seq, show: guess, armed: -1, map: true, panel: true, money: true, t: now, at: now, tries: false });
+    changed(hasMap(guess));
+  }
+  if (entries.filter((x) => x.seq === seq).length > 1) { doubled++; console.error("T-4170: two entries for one edit", seq, op.op); }
+}
+
+/** Armed by its word or its answer: a part it has nothing for is done already (a panel edit's map, a free edit's cost),
+ * so it waits only for the states that hold what it shows. False when nothing is left. */
+function arm(e: Entry, order: number, noNet = false): boolean {
+  e.armed = order;
+  e.at = performance.now();
+  // (no network follows a service edit or a rename: whatever it guessed on the map is not what the network will draw)
+  e.map = !noNet && hasMap(e.show);
+  e.panel = !!e.show.fields?.size;
+  e.money = !!e.show.cost;
+  return e.map || e.panel || e.money;
 }
 
 // ---------------------------------------------------------------- undo (stage 0b)
@@ -193,24 +256,25 @@ const offHistory = (op: EditOp) => op.op.startsWith("fare") || op.op === "statio
 /** edits outside that history that change what is drawn: an undo after one takes back an older edit than it shows */
 const drawnOffHistory = (op: EditOp) => op.op === "link" || op.op === "addBuilding" || op.op === "reshapeBuilding" || op.op === "renameBuilding" || op.op === "removeBuilding";
 
-function undoSent(seq: number, op: EditOp, quiet: boolean) {
-  if (op.op === "undo" || op.op === "redo") {
-    const l = last, now = netNow();
-    last = null;
-    if (op.op !== "undo" || !l || !l.ok || !l.netIn || !quiet || !now || now === l.was || !undoShow) return;
-    if (entries.some((e) => e.armed >= 0 && e.map)) return;
-    const t = performance.now();
-    entries.push({ seq, show: undoShow(l.was, now), armed: -1, map: true, panel: false, money: false, t, at: t, tries: false });
-    changed(true);
-    return;
-  }
+/** An undo's show at its click: what the newest edit changed, from the network before it (null when that cannot be told) */
+function undoGuess(op: EditOp, quiet: boolean): Show | null {
+  const l = last, now = netNow();
+  last = null;
+  undoMiss = op.op !== "undo" ? "redo" : !l ? "no edit kept" : !l.ok ? "not answered" : !l.netIn ? "its network not in" : !quiet ? "another edit out" : !now || now === l.was || !undoShow ? "no network" : now.anchor?.version !== l.was.anchor?.version ? "the draw anchor moved" : entries.some((e) => e.armed >= 0 && e.map) ? "another edit drawn ahead" : "";
+  return undoMiss ? null : undoShow!(l!.was, now!);
+}
+/** why the last undo was not drawn at its click, "" when it was (for checks) */
+let undoMiss = "";
+
+/** An edit on the undo history: kept with the network drawn before it, when nothing else is waiting. */
+function noteEdit(seq: number, op: EditOp, quiet: boolean) {
   if (offHistory(op)) return;
   const was = netNow();
   last = !drawnOffHistory(op) && quiet && was && !entries.some((e) => e.armed >= 0 && e.map) ? { seq, was, ok: false, word: -1, netIn: false } : null;
 }
 
-/** The worker's word for `seq`, the `order`th message to arrive. */
-export function pendingWord(seq: number, word: EditWord, order: number) {
+/** The worker's word for `seq`, the `order`th message to arrive; `noNet`: no network follows it. */
+export function pendingWord(seq: number, word: EditWord, order: number, noNet = false) {
   if (last?.seq === seq) last.word = order;
   let e = entries.find((x) => x.seq === seq);
   const fromWord = wordShow(word);
@@ -222,13 +286,7 @@ export function pendingWord(seq: number, word: EditWord, order: number) {
   }
   const drawn = hasMap(e.show) || hasMap(fromWord);
   e.show = { ...e.show, ...fromWord };
-  e.armed = order;
-  // T-4114: the line tool's guesses for a line the word speaks for, made before this edit went, are replaced by it
-  const sent = sentAt.get(seq) ?? e.t;
-  if (word.lines?.length) {
-    const ls = new Set(word.lines.map((l) => l.line));
-    entries = entries.filter((x) => !(x.line !== undefined && x.armed < 0 && ls.has(x.line) && x.t <= sent));
-  }
+  if (!arm(e, order, noNet)) drop(e);
   // (a word with nothing to draw, a cost alone, leaves the map as it is)
   changed(drawn);
 }
@@ -253,7 +311,7 @@ export function pendingAnswer(seq: number, ok: boolean, order: number) {
   if (last?.seq === seq) { if (ok) last.ok = true; else last = null; }
   if (!e) return;
   if (ok) {
-    if (e.armed < 0) { e.armed = order; changed(false); }
+    if (e.armed < 0) { if (arm(e, order)) changed(false); else drop(e); }
     return;
   }
   if (e.tries) { e.seq = -1; e.at = performance.now(); return; }
@@ -294,17 +352,10 @@ export function pendingClear() {
   changed(true);
 }
 
-/** T-4114: the line tool's and the line panel's guess for a line's strokes, one per line (map/aheadShow.ts). */
-export function guessLine(line: number, edges: Iterable<number> | null) {
-  entries = entries.filter((x) => !(x.line === line && x.armed < 0));
+/** T-4170: the entries waiting now and how many times two shared a seq, for checks (checks/t4170-one-path.mjs). */
+export function pendingNow() {
   const now = performance.now();
-  entries.push({ seq: -1, show: { lines: new Map([[line, edges]]) }, armed: -1, map: true, panel: false, money: false, t: now, at: now, tries: false, line });
-  changed(true);
-}
-/** T-4114: that line's edit refused: its guess goes. */
-export function dropLineGuess(line: number) {
-  const e = [...entries].reverse().find((x) => x.line === line && x.armed < 0);
-  if (e) drop(e);
+  return { doubled, swept, entries: entries.map((e) => ({ seq: e.seq, armed: e.armed, map: e.map, panel: e.panel, money: e.money, tries: e.tries, ageMs: Math.round(now - e.at) })), undo: last && { seq: last.seq, ok: last.ok, word: last.word, netIn: last.netIn, sameNet: last.was === netNow() }, undoMiss };
 }
 
 // ---------------------------------------------------------------- what panels read

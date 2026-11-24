@@ -25,11 +25,10 @@ import { toggleEditStops } from "../../game/lineActions";
 import { repeatedEdge } from "../../game/repeatTrack";
 import { runsAgainstOneWay } from "../../game/oneWay";
 import { gameStamp } from "../../workers/clockClient";
-import { ahead, shown as pendingShown } from "../../game/pending";
+import { shown as pendingShown } from "../../game/pending";
 import { noteHeadwayLimits, edit, linesAt, say, stationNames, stationsById, stationsByNum, stepLineCars, pendingCars, world, linesById, linesByNum, pairStats, queueStopEdit, rowCount, fleetOf, lineIndicesAt } from "../../game/world";
 import { CUTS_DEFAULT, periodAt, rowAt } from "../../game/periods";
 import { live } from "../../map/live";
-import { dropAhead, showAhead } from "../../map/aheadShow";
 import { setListHot } from "../../map/hovered";
 import { Alert, Check, Chip, Icon, Row, Segmented, shakeEl, Stepper, SwapLabel } from "../widgets";
 import { PurposeSplit } from "./PurposeSplit";
@@ -216,7 +215,7 @@ export function RoundTrip({ num, st, lev, stops, spots: { spots: busy, behindSpo
               // T-3835: one-way track takes this loop round one way only
               disabled={(v) => !v && !!st.oneWayByTrack}
               tips={(v) => (!v && st.oneWayByTrack ? tr("lineInspector.oneWayTrack") : undefined)}
-              onChange={(oneWay) => { if (oneWay !== st.oneWay) void ahead({ fields: new Map([[`line:${num}`, { oneWay }]]) }).send(() => edit({ op: "lineOneWay", line: num, oneWay })); }}
+              onChange={(oneWay) => { if (oneWay !== st.oneWay) void edit({ op: "lineOneWay", line: num, oneWay }); }}
             />
           </li>
         )}
@@ -398,7 +397,7 @@ function LinePairs({ l, st }: { l: LineInput; st: LineStats }) {
     <>
       <ul class="rows">
         <li>
-          <Check checked={!!pendingShown(`line:${l.num}`, "pairs", st.pairs)} onChange={(on) => void ahead({ fields: new Map([[`line:${l.num}`, { pairs: on ? 1 : 0 }]]) }).send(() => edit({ op: "linePairs", line: l.num, on }))}>{tr("lineInspector.pairs")}</Check>
+          <Check checked={!!pendingShown(`line:${l.num}`, "pairs", st.pairs)} onChange={(on) => void edit({ op: "linePairs", line: l.num, on })}>{tr("lineInspector.pairs")}</Check>
         </li>
       </ul>
       {notice && <ul class="alerts"><Alert>{notice}</Alert></ul>}
@@ -635,7 +634,7 @@ function TrainType({ l, st, lev }: { l: LineInput; st: LineStats; lev: number })
               [true, <span data-tip={tip(true)}>{tr("lineInspector.highSpeed")}</span>],
             ]}
             value={pendingShown(`line:${l.num}`, "fast", st.fast)}
-            onChange={(fast) => { if (fast !== st.fast) void ahead({ fields: new Map([[`line:${l.num}`, { fast }]]) }).send(() => edit({ op: "lineFast", line: l.num, fast })); }}
+            onChange={(fast) => { if (fast !== st.fast) void edit({ op: "lineFast", line: l.num, fast }); }}
           />
         </li>
       )}
@@ -792,10 +791,9 @@ function RailLineInspector({ id }: { id: string }) {
   const stopEdit = (op: EditOp) => sendStops(() => op);
   // T-2919: no question, since an undo brings the line back (track and stations stay)
   const remove = () => {
-    // T-4114: gone from the map at the click, back if refused
-    showAhead(l.num, null, false);
+    // T-4114: gone from the map at the click, back if refused (map/lineToolAhead.ts)
     void edit({ op: "removeLine", line: l.num }).then(a => {
-      if (!a.ok) return dropAhead(l.num);
+      if (!a.ok) return;
       if (lineDraft.peek().line === l.num) live.tools?.exit();
       const selected = selection.peek();
       if (selected?.kind === "line" && selected.line === l.id) selection.value = null;

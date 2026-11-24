@@ -93,7 +93,7 @@ function frameSetup(rnd: NetworkRenderer, cam: Camera, time: number, zoom: numbe
   if (!view) rnd.busesShown = buses;
   const stationsOff = opt.showStations === false;
   rnd.stationsOff = stationsOff;
-  const redraw = !cache || cache.stale(vp[0], vp[1], [zoom, dpr, ...lc.m, ...lc.globe, ...lc.plane, ...lc.at, k, opt.byLevel ? 1 : 0, opt.bySpeed ? 1 : 0, opt.byProfit ? 1 : 0, opt.selLine, (opt.selLines ?? []).reduce((h, v) => (h * 31 + v + 1) | 0, 7), opt.selEdge, opt.hotLine ?? -1, opt.hotEdge ?? -1, (opt.hotBuses ?? []).reduce((h, v) => (h * 31 + v + 1) | 0, 7), (opt.hotStops ?? []).reduce((h, v) => (h * 31 + v + 1) | 0, 7), rnd.hide[0], rnd.hide[1], opt.dimOthers ?? 1, opt.flatMarks !== false ? 1 : 0, opt.rampMarks !== false ? 1 : 0, buses ? rnd.buses.version : -1, through ? 1 : 0, rnd.uploads, rnd.strokeCull ? 1 : 0, rnd.strokeLod ? 1 : 0, rnd.strokeGather ? 1 : 0, rnd.lineBands ? 1 : 0, stationsOff ? 1 : 0, vis.v], shadeColours());
+  const redraw = !cache || cache.stale(vp[0], vp[1], [zoom, dpr, ...lc.m, ...lc.globe, ...lc.plane, ...lc.at, k, opt.byLevel ? 1 : 0, opt.bySpeed ? 1 : 0, opt.byProfit ? 1 : 0, opt.selLine, (opt.selLines ?? []).reduce((h, v) => (h * 31 + v + 1) | 0, 7), opt.selEdge, opt.hotLine ?? -1, opt.hotEdge ?? -1, (opt.hotBuses ?? []).reduce((h, v) => (h * 31 + v + 1) | 0, 7), (opt.hotStops ?? []).reduce((h, v) => (h * 31 + v + 1) | 0, 7), opt.dimOthers ?? 1, opt.flatMarks !== false ? 1 : 0, opt.rampMarks !== false ? 1 : 0, buses ? rnd.buses.version : -1, through ? 1 : 0, rnd.uploads, rnd.strokeCull ? 1 : 0, rnd.strokeLod ? 1 : 0, rnd.strokeGather ? 1 : 0, rnd.lineBands ? 1 : 0, stationsOff ? 1 : 0, vis.v], shadeColours());
   return { cam, time, zoom, dpr, opt, view, gl, n, uTime, a, lc, vp, pxPerUnit, k, wLine, wTrack, wSel, casing, boxes, hidden, ring, boxLinePx, boxRingPx, pass, project, midX, midY, through, boxWhite, trackCap, cache, buses, stationsOff, redraw };
 }
 
@@ -122,7 +122,6 @@ function strokeUniforms(rnd: NetworkRenderer, c: Ctx1) {
   setSelLines(gl, u, opt.selLines);
   gl.uniform1i(u.u_sel_edge, opt.selEdge);
   gl.uniform2i(u.u_hot, opt.hotLine ?? -1, opt.hotEdge ?? -1);
-  gl.uniform2i(u.u_hide, rnd.hide[0], rnd.hide[1]);
   // T-4145: what is drawn ahead of the network hides the network's own strokes (map/lineAhead.ts)
   gl.uniform2i(u.u_ahead_n, rnd.aheadLinesTex ? rnd.aheadN[0] : 0, rnd.aheadEdgesTex ? rnd.aheadN[1] : 0);
   gl.activeTexture(gl.TEXTURE14);

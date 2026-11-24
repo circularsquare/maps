@@ -988,7 +988,7 @@ export type FromClock =
    * `ms`: the worker's time on the edit by step (T-229, for `?debug=1`); `node` after addBuilding: the building's id */
   /** T-4145: an edit applied, sent before anything else it sends (rows, state, answer): what the map and panels can
    * show of it until the first network (or rows) after this message (notes/T-4145.md) */
-  | { kind: "applied"; seq: number; word: EditWord }
+  | { kind: "applied"; seq: number; word: EditWord; /** T-4170: no network follows (a service edit, a rename) */ noNet?: true }
   | { kind: "edited"; seq: number; ok: boolean; issues: string[]; charge: number; line?: number; node?: number; paid?: PaidFor; skipped?: number; ms?: Record<string, number>; early?: boolean; held?: Float32Array[] }
   | {
       kind: "preview";

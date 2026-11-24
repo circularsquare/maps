@@ -24,8 +24,7 @@ import { vehicleOf } from "../../game/vehicle";
 import { edit, linesAt, say, stationNames, stationsById, world } from "../../game/world";
 import { live } from "../../map/live";
 import { removeThing } from "../../game/remove";
-import { ahead } from "../../game/pending";
-import { fieldsShow, platformShow, shownStation } from "../../map/stationAhead";
+import { shownStation } from "../../map/stationAhead";
 import { CAR_M, nextLeavingAt, platformsAt, stepPlatform } from "../../game/boarding";
 import { carsText } from "./schedule";
 import { today, useToday, type LineToday } from "../../game/today";
@@ -208,8 +207,8 @@ export function StationInspector({ id }: { id: string }) {
   const members = complexOf(id);
   const asComplex = members.length > 1 && inComplexView(id);
   const lines = linesAt(id);
-  // T-4146: the platform drawn and shown at its new length at the click; what it costs comes off with the worker's word
-  const props = (platform: number, name = s.name) => ahead(platformShow(live.overlay?.renderer.net ?? null, s.num, platform, 0)).send(() => edit({ op: "stationProps", node: s.num, platform, name })).then((a) => a.ok);
+  // T-4146: the platform drawn and shown at its new length at the click (map/stationAhead.ts); what it costs comes off with the worker's word
+  const props = (platform: number, name = s.name) => edit({ op: "stationProps", node: s.num, platform, name }).then((a) => a.ok);
   // T-3759: the complex view names the complex (its unbound stations keep theirs); a station on its own
   // takes the name alone when unbound, else renames its complex (T-3750)
   const title = asComplex ? complexTitle(s) : s.name;
@@ -404,7 +403,7 @@ function StationDetails({ s, lines, props }: {
           {doubleHere
             ? <StationSides s={s} />
             : <PlatformTracks one={!!s.one} oneTip={tr("stationInspector.noLoop")} bothTip={tr("stationInspector.loop")}
-                onPick={(one) => void ahead(fieldsShow([[s.num, { one: one ? 2 : 0 }]])).send(() => edit({ op: "stationTracks", node: s.num, one }))} />}
+                onPick={(one) => void edit({ op: "stationTracks", node: s.num, one })} />}
         </li>}
         <FareZoneRow members={[s]} />
         {s.built && m && (

@@ -134,8 +134,15 @@ Web first, so it can be shared as a link.
   **Every edit's word goes first of all** [T-4145, T-4114]: right after an edit is applied, before anything else it
   sends, the worker posts `applied` (workers/clockWord.ts, one file per kind of edit: a line's new edges, edges and
   stations hidden or with a new look, station boxes, colours, the charge). The page shows edits ahead of the network
-  from one list (game/pending.ts): an entry made at the click from what the page can tell, armed by its word (whose parts
-  replace the guess's), dropped in the frame a refusal lands. **Message order says what a state holds**: every state
+  from one list (game/pending.ts). **One path** [T-4170]: an edit's entry is made in one place, as it is sent
+  (`pendingSent`, which every edit passes once), so no edit has two. Its guess is read from the op there
+  (game/editGuess.ts, one part per kind of edit as the word has; an undo's from the network before the edit it takes
+  back), joined with what the caller drew at the click with `ahead()` (only what the op cannot say: the station tool's
+  ghost, a drag's preview, a price the panel quoted). The entry is armed by its word (whose parts replace the guess's;
+  a part it has nothing for is done at once, so a panel edit never waits for a network; the word says when no network
+  follows, a service edit's or a rename's, and its map part is done then) and dropped in the frame a refusal lands. An
+  armed entry no state clears goes after 30 s, with a warning (a backstop). An undo is not drawn ahead across a move of
+  the draw anchor. **Message order says what a state holds**: every state
   posted after a word was built after that edit (`later` starts again behind an edit; a stop click's rows go before the
   next apply), so an entry's map part goes with the first network taken that *arrived* after its word, its panel part
   with the first rows or state, its cost with the first money, cash or state (a state held for its trips keeps its

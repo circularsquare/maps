@@ -1,7 +1,8 @@
 // T-4114, T-4145: what is drawn ahead of the network (map/lineAhead.ts), from the edits waiting to show (game/pending.ts).
 
 import { world } from "../game/world";
-import { dropLineGuess, guessLine, setAheadSink, setUndoSource, type Composed } from "../game/pending";
+import { setAheadSink, setOpGuess, setUndoSource, type Composed } from "../game/pending";
+import { editGuess } from "../game/editGuess";
 import { undoAhead, warmUndo, type AheadLook, type AheadModel } from "./lineAhead";
 import { live } from "./live";
 
@@ -22,20 +23,10 @@ function draw(c: Composed, build: boolean) {
   o.invalidate();
 }
 setAheadSink(draw);
+// T-4170: every edit's guess at its click, from its op
+setOpGuess(editGuess);
 // T-4145: an undo of the newest edit drawn at its click from the network before it
 setUndoSource(() => live.overlay?.renderer.net ?? null, (was, now) => {
   const u = undoAhead(was, now);
   return { hideEdges: u.hideEdges, hideLines: u.hideLines, hideStations: u.hideStations, track: u.track, lineStrokes: u.lineStrokes, rawStations: u.stations ? [u.stations] : [], colours: u.colours };
 }, warmUndo);
-
-/** T-4114: line `line`'s strokes on `edges` from now (null: the line is gone), a guess at the click, until the worker's
- * word for the edit replaces it or it is refused (`dropAhead`). */
-export function showAhead(line: number, edges: Iterable<number> | null, _armed = false) {
-  if (world.peek()?.lineStats[String(line)]?.bus) return;
-  guessLine(line, edges);
-}
-
-/** The line's edit was refused: its network strokes again. */
-export function dropAhead(line: number) {
-  dropLineGuess(line);
-}

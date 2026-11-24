@@ -5,6 +5,8 @@
 import { linesByNum, world } from "../game/world";
 import { shown, type Show } from "../game/pending";
 import { planStopsOf, type StationInput } from "../game/types";
+import type { EditOp } from "../workers/protocol";
+import { live } from "./live";
 import { edgesWithoutEnd } from "./lineAhead";
 import { stationIndexOf, type NetworkBuffers } from "./network";
 import { reversed, ST_ONE, ST_ONE_MID, ST_ONE_NEG, ST_TRAM } from "./stationGeometry";
@@ -71,4 +73,31 @@ export function shownStation(s: StationInput): StationInput {
   const r = stationRecord(s.num);
   const length = shown(r, "platform", s.length), one = shown(r, "one", s.one), oneHeading = shown(r, "oneHeading", s.oneHeading), upgrades = shown(r, "upgrades", s.upgrades);
   return length === s.length && one === s.one && oneHeading === s.oneHeading && upgrades === s.upgrades ? s : { ...s, length, one, oneHeading, upgrades };
+}
+
+/** What a station or delete edit shows at its click (game/editGuess.ts), or null. Its price, where the panel quoted one,
+ * is the caller's (`ahead({ cost })`); a platform's comes with the worker's word. */
+export function stationGuess(op: EditOp): Show | null {
+  const net = () => live.overlay?.renderer.net ?? null;
+  switch (op.op) {
+    case "removeStation": return stationGoneShow(net(), op.node);
+    case "removeEdge": return trackGoneShow(op.edge);
+    case "stationProps": {
+      // (a rename alone is answered with its rows and no network, which a box drawn ahead would wait for)
+      const nd = world.peek()?.nodes.get(op.node);
+      return nd && op.platform !== shown(stationRecord(op.node), "platform", nd.platform) ? platformShow(net(), op.node, op.platform, 0) : null;
+    }
+    case "stationTracks": return fieldsShow([[op.node, { one: op.one ? 2 : 0 }]]);
+    case "stationWay": return fieldsShow([[op.node, { one: 1, oneHeading: op.heading }]]);
+    case "stationUpgrade": {
+      const byNum = new Map((world.peek()?.save.stations ?? []).map((s) => [s.num, s]));
+      return fieldsShow(op.nodes.flatMap((num) => {
+        const s = byNum.get(num);
+        if (!s) return [];
+        const was = shown(stationRecord(num), "upgrades", s.upgrades) ?? 0;
+        return [[num, { upgrades: op.on ? was | op.bit : was & ~op.bit }]];
+      }));
+    }
+    default: return null;
+  }
 }

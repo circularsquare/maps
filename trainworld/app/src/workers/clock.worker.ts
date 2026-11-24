@@ -1009,7 +1009,9 @@ async function handleMessage(msg: ToClock) {
     const answer = (early?: boolean, held?: Float32Array[]) => send({ kind: "edited", seq, ok: r === 0, issues: r === 0 ? why ?? [] : r === INSERT_REFUSED ? ["InsertStop"] : r === DROP_REFUSED ? ["DropStop"] : r === ORDER_REFUSED && fault ? [`StopOrder:${fault.join(":")}`] : issues(), charge, line, node, paid: paidFor(op), skipped, ms: { apply: tB - tA, ...timing, total: performance.now() - tA }, early, held }); // i18n-ignore
     if (r !== 0) return answer();
     // T-4145: what the page can show of the edit, before its rows and network (a stop click's line path, T-4114)
-    send({ kind: "applied", seq, word: wordAfter(api, op, applied, posted, before, charge) });
+    // T-4170: and whether a network follows (`later`'s `net` below: none for a service edit or a rename sent as rows)
+    const noNet = service || (named && !msg.early && !msg.rows && rowsCanGo());
+    send({ kind: "applied", seq, word: wordAfter(api, op, applied, posted, before, charge), ...(noNet ? { noNet: true as const } : {}) });
     saves.dirty = saves.edited = true; saves.editAt = Date.now();
     if (line !== undefined) { newLineShape(op, line); newLineFare(op, line); }
     // T-3581: a line deleted or brought back by an undo or redo has its fare multiple dropped or given back in the

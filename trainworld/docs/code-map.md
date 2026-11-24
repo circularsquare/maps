@@ -85,7 +85,9 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 
 - `types.ts` (the save's inputs, worker results, `WorldView`, `Selection`), `world.ts` (the
   snapshot signal and the edit functions), `pending.ts` (the edits waiting to show, drawn and shown from the click until
-  the worker's state holds them: `ahead`, `shown`, `cashShown`, T-4145), `ui.ts` (tab, selection, display settings, theme),
+  the worker's state holds them: `ahead`, `shown`, `cashShown`, T-4145), `editGuess.ts` (what an edit shows at its
+  click read from its op, one part per kind: `map/lineToolAhead.ts`, `map/stationAhead.ts`, `pieceAhead.ts`,
+  `links.ts`, T-4170), `ui.ts` (tab, selection, display settings, theme),
   `cloneNames.ts` (a copied line's name and symbol, T-1872), `northUp.ts` (which end of a line its
   diagram puts on top, T-1894; `lineReversed`, which way around a left-to-right strip or chart of a line reads, west end first, T-2661).
 - Time: `clock.ts`, `lineFigures.ts` (the 4x clock cap while the player's edits are not in the figures, T-1665, T-2409, the same from every view, T-2622; `checks/t2622-cap-view.mjs`), `editCap.ts` (which edits cap it, T-1803; `checks/t1803-cap.mjs`), `localTime.ts` (each region's local time and the local time in view, T-309),

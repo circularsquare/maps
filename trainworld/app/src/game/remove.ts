@@ -13,9 +13,6 @@ import { deleteRun, noteDelete } from "./deleteHint";
 import { ask, selection } from "./ui";
 import { edit, linesByNum, say, stationsByNum, world } from "./world";
 import { planStopsOf } from "./types";
-import { ahead, type Show } from "./pending";
-import { live } from "../map/live";
-import { stationGoneShow, trackGoneShow } from "../map/stationAhead";
 
 /** `bus`: a bus line by its number, route and line together; `building` a station building by its id (T-2218). */
 export type Removable = { kind: "track"; edge: number } | { kind: "station"; node: number } | { kind: "flyover"; node: number } | { kind: "bus"; line: number } | { kind: "building"; id: number };
@@ -135,19 +132,10 @@ function selected(r: Removable): boolean {
   return false;
 }
 
-/** T-2763: what the page knows of drawn track, handed over by main.ts: hide an edge until the state
- * without it lands, show again after a refusal, and whether any line is drawn over an edge. */
-let hider: { hide: (edge: number) => void; show: () => void; onLine: (edge: number) => boolean } | null = null;
+/** T-2763: what the page knows of drawn track, handed over by main.ts: whether any line is drawn over an edge. */
+let hider: { onLine: (edge: number) => boolean } | null = null;
 export function setTrackHider(h: typeof hider) {
   hider = h;
-}
-
-/** T-4146: what a removal shows at the click (map/stationAhead.ts): track and stations gone, the lines over them as the
- * page can tell; null for a flyover, a bus line or a building, which show when the worker answers. */
-function shownGone(r: Removable): Show | null {
-  if (r.kind === "track") return trackGoneShow(r.edge);
-  if (r.kind === "station") return stationGoneShow(live.overlay?.renderer.net ?? null, r.node);
-  return null;
 }
 
 /** Remove it: at once if blueprint and no line changes, else after a modal confirmation (`now`, a
@@ -160,9 +148,9 @@ export async function removeThing(r: Removable, now = false) {
     ask.value = null;
     const was = selected(r) ? selection.peek() : null;
     const row = deleteRun();
-    const show = shownGone(r);
     if (was) selection.value = null;
-    const a = await (show ? ahead(show).send(() => edit(opOf(r))) : edit(opOf(r)));
+    // T-4146: track and stations gone at the click, the lines over them as the page can tell (map/stationAhead.ts)
+    const a = await edit(opOf(r));
     if (!a.ok) {
       if (was && selection.peek() === null) selection.value = was;
       if (!a.issues.length) say(t("remove.failed"), true);
