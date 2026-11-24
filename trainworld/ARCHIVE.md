@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4171 [P2] {L:checks} Rules for Gemini agents in maps (2026-11-23): GEMINI.md at the maps root: read the CLAUDE.md files, no AWS, no commits, worktrees via agent-tree, no shared-stash pops, shared files left to the orchestrator.
 - T-4164 [P2] {L:accounts-server} Volume row in the resource check, R2 purge, old games copy deleted (2026-11-23): Games volume row added to check_resources.py and ops-checks.md; old games copy, fstab copy and volmove deleted after the 03:30 backup logged ok (7.75 GB); R2 version 2026-11-18 purged.
 - T-4162 [P1] {L:track-drawing} Line-up message and exact small trip counts (2026-11-23): "Track alignment error"; exact trip counts under 50 with a singular "1 trip within" row; Under 50 strings removed in all languages. notes/T-4162.md.
 - T-4165 [P1] {L:cleanup} Orchestrator notes with her standing calls on top (2026-11-23): orchestrator.md reordered: her standing calls on top as moments, procedures below, duplicates of CLAUDE.md and tool help trimmed, one new rule (her direction calls into DECISIONS.md) notes/T-4165.md.

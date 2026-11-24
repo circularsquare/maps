@@ -244,11 +244,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4149: edit_bench's stop-click rows say "no edit message" on both builds, and --compare picked up other agents' ledger lines.
   - Goal: Stop clicks measured, and --compare reads only the two runs it was given.
   - Other: notes/T-4149.md
-- T-4171 [P2] {L:checks} {waits:Anita} Rules for Gemini agents in maps
-  - Need from Anita: Will Gemini get tasks in maps, and if so may it ever touch AWS? I'd say tasks yes, AWS no.
-  - Context: None of the Claude hooks run for Gemini: the AWS guard, the refusal to edit TASKS/DECISIONS in a tree, the agent guard. It reads its own instructions file, not CLAUDE.md, unless told to. Its review was well behaved, but a working agent would need the same rules.
-  - Goal: Gemini's instructions point at the maps and trainworld CLAUDE.md files and say no AWS, no commits, worktrees only through agent-tree.mjs. About 1 h.
-  - Other: notes/gemini-review-triage-2026-11-24.md
 - T-4172 [P2] {L:world-tooling} {waits:Anita} AWS key limited to our bucket and machines
   - Need from Anita: Ask your friend if you may make a second IAM user with only our rights in their account; the agent writes the policy.
   - Context: User anita has AdministratorAccess on the friend's account. tools/aws/guard.py only sees commands typed into Claude's shell: a Python script file using boto3, or any non-Claude agent, goes straight past it. T-4166 (your own account) has 5 vCPUs, too few for builds.
@@ -270,6 +265,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: 19 worktrees at about 1.2 GB each, a leftover empty .tw-trees/rampport folder, and 34 tw/* branches, 14 with no tree. handoff.md keeps coreslider, onewaylag, split6, stationids and timetables on purpose until after 0.4.6; others may be done.
   - Goal: Every tree whose agent is done and whose work landed is removed with agent-tree.mjs; merged branches with no tree deleted. About 0.5 h.
   - Other: notes/gemini-review-triage-2026-11-24.md
+- T-4177 [P1] {L:world-tooling} Stop using the friend's AWS account (taking, 2026-11-23, agent awsoff)
+  - Context: You, 11-24: "we should stop using jean's account. lets remove access to it so that agents can't use it." Your own account (anita-own, T-4166) is the AWS from now on.
+  - Goal: Our resources there deleted, the friend's profile gone from this PC, guard.py refuses that account, docs say AWS means your own account; you or your friend delete the IAM user.
+  - Other: notes/T-4177.md
 - T-4141 [P3] {L:station-placement} Track placed by an edit call crossed the Hudson at ground level
   - Context: Seen by T-4112: a route entered through the game's edit call crossed the Hudson at ground level without a refusal, while pointer-drawn track nearby was bridged. Water may not have been loaded under part of it.
   - Other: notes/T-4112.md

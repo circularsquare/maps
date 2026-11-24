@@ -74,6 +74,7 @@ artifacts/trainworld/T-4120/.
 
 ## Demand
 
+- 2026-11-24 (Anita, T-4158): A bus line's consecutive stops within 500 m on the same lines are one demand station ("ok, lets do 500m"), was 300 m. About 18-29% faster solves on bus-heavy saves; rides inside a group are lost, about 1% of Auto lines' riders. notes/T-4158.md
 - 2026-11-23 (Anita, T-4093): Crowding stays at 3 rounds; 2 rounds (24% faster) is refused for its line swings (NJT NEC +19%), "final unless the swing numbers get a lot lower". Don't ask again. Rounds stop early once loads move under 3%, was 1%. notes/T-4057.md
 - 2026-11-23 (Anita, T-4054): Riders turn up at random: 75% take the line that gets them there first, a quarter the first train still arriving by the best line's latest, replacing the split by trains an hour. Change nodes take no late lines. notes/T-4041.md
 - 2026-11-23 (Anita, T-4064): Lines leaving one platform for one platform at the next stop are one evenly spaced service for riders to that stop (her 4 and 5 trains). At a change riders take no line heading back or right behind theirs. notes/T-4050.md
@@ -151,7 +152,7 @@ artifacts/trainworld/T-4120/.
 ## Buses
 
 - 2026-11-23 (Anita, T-4079, T-4056): Bus walking reach is 600 m: 1 km was dropped before publishing, as players liked lower bus ridership, and borrowing a neighbour stop's search was declined. A bus stop's change walks reach 150 m, stations' 300 m. notes/T-4079.md
-- 2026-11-23 (Anita, T-4094, T-3924): Every drawn bus stop is a demand stop ("if people are seeing bus stops the bus stops have to be real"), replacing one every 2 km; consecutive bus-only stops within 300 m served by the same lines merge. notes/T-4094.md
+- 2026-11-23 (Anita, T-4094, T-3924): Every drawn bus stop is a demand stop ("if people are seeing bus stops the bus stops have to be real"), replacing one every 2 km; consecutive bus-only stops served by the same lines merge, within 500 m since T-4158. notes/T-4094.md
 - 2026-11-21 (Anita, T-3378, T-3907): BRT runs 10 km/h above the plain bus floor (25 km/h, was 30), its lanes paid only in town, 100 buses an hour a lane (was 60), its stations with a waiting room. Busways run any bus at 60 km/h. notes/T-3378.md
 - 2026-11-20 (Anita, T-3856): A plain bus moves at 85% of the car's speed (80% not taken) plus 28 s a stop, replacing 70% capped at 18 km/h. No boarding cost (was 6, then 4 minutes); $6 a bus-km, two thirds of real. notes/T-3856.md
 - 2026-11-11 (Anita, T-3172): Buses and trams may use any drivable road in the basemap data ("if we have it as data, its ok to go"), car parks included. Rail snaps only to tertiary roads and up, with no cost benefit yet. notes/T-3172.md
@@ -276,6 +277,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-09 (Anita, T-044, T-013): Blocks are spread over their polygon by land area on 50 m pixels, replacing all at the centroid (202k New York cells, recompute 12% slower). Grain matters most in centres; adaptive cells only if performance needs it (Anita). notes/archive/t0001-0499/T-013.md
 
 ## Tooling and process
+- 2026-11-24 (Anita, T-4177): Stop using the friend's AWS account; agents lose access to it. AWS means her own account (anita-own) from now on. Gemini may take tasks in this repo, never AWS (GEMINI.md).
 
 - 2026-11-17 (Anita, T-3523): After v0.4.0 the public repo is the real one, PRs merged directly, replacing a synced export (T-2913). Its data is labelled ODbL; R2 answers CORS to any site so forks can read it, and big forks are asked to self-host.
 - 2026-11-17 (Anita, T-3480): Open-source PRs: buses keeping to one-way streets taken as a setting, off by default, reversing "not even as an option"; no single-ended trams (they turn on balloon loops); merge lane upgrade and WebGPU demand left out; PR 13 not merged. notes/T-3473.md
