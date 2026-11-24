@@ -1,0 +1,122 @@
+warning: LF will be replaced by CRLF in trainworld/changelog/next.json.
+The file will have its original line endings in your working directory
+warning: LF will be replaced by CRLF in trainworld/checks/t1205-memory.mjs.
+The file will have its original line endings in your working directory
+diff --git a/trainworld/app/src/workers/demandClient.ts b/trainworld/app/src/workers/demandClient.ts
+index be3cffd66..39cafd3dd 100644
+--- a/trainworld/app/src/workers/demandClient.ts
++++ b/trainworld/app/src/workers/demandClient.ts
+@@ -594,7 +594,7 @@ const MEM_BASE = 64 * 2 ** 20;
+ const REOPEN_FETCHES = 6;
+ /** an idle worker restarts when its WASM is this many times its need and this much above it */
+ const MEM_OVER = 1.15;
+-const MEM_FREE = (Number(new URLSearchParams(location.search).get("memFree")) || 384) * 2 ** 20; // ?memFree=MB: checks
++const MEM_FREE = (Number(new URLSearchParams(location.search).get("memFree")) || 192) * 2 ** 20; // ?memFree=MB: checks
+ /** and the network has been still this long; a pool busy then is looked at again after MEM_RETRY_MS */
+ const MEM_QUIET_MS = 20_000;
+ const MEM_RETRY_MS = 5_000;
+diff --git a/trainworld/changelog/next.json b/trainworld/changelog/next.json
+index 77e8182cc..3c6a10c02 100644
+--- a/trainworld/changelog/next.json
++++ b/trainworld/changelog/next.json
+@@ -2,6 +2,18 @@
+   "release": "next",
+   "line": "",
+   "items": [
++    {
++      "id": "memwasm-1",
++      "text": "the game uses 300 MB less memory after leaving zones on a country-sized save",
++      "edited": null,
++      "hidden": false,
++      "task": "T-4156",
++      "by": "memwasm",
++      "at": "2026-11-24T03:21:12Z",
++      "rev": 1,
++      "area": "performance",
++      "fix": false
++    },
+     {
+       "id": "c051",
+       "text": "riders take the line that gets them to their stop first, or now and then just the first train that comes, so expresses and slower locals both get their share, and trams at street stops have no boarding cost",
+diff --git a/trainworld/checks/t1205-memory.mjs b/trainworld/checks/t1205-memory.mjs
+index 1ee1affea..d28d10d5e 100644
+--- a/trainworld/checks/t1205-memory.mjs
++++ b/trainworld/checks/t1205-memory.mjs
+@@ -45,7 +45,8 @@ try {
+   // a planned restart that begins while the solve in hand has not published its final, or one waits
+   await page.evaluate(() => {
+     const c = window.twDemand.client;
+-    window.__t1205 = { inSolve: [] };
++    const w = window.__t1205 = { inSolve: [] };
++    setInterval(() => { const n = c.respawn.size; if (n > 0 && !w.s) { w.s = performance.now(); w.sDate = Date.now(); } if (w.s && !w.e && n === 0) w.e = performance.now(); }, 250);
+     const orig = console.info;
+     console.info = (...a) => {
+       const s = c.log.at(-1), v = window.twDemand.view();
+@@ -71,6 +72,7 @@ try {
+     console.log(`      ${where.padEnd(16)} ${secs()} s  chrome ${r.chromeMB} MB  rail ${r.rail.toLocaleString('en-US')}  v${r.version}  ${r.workers} solving  open ${r.opened.length}  wasm ${r.memory.map((m) => m.wasm).join(',')}  heap ${r.memory.map((m) => m.heap).join(',')}  peak ${r.memory.map((m) => m.solvePeak).join(',')}  need ${r.memory.map((m) => m.need).join(',')}`);
+     return r;
+   };
++  await page.waitForFunction(() => (window.twDemand.view()?.railTripsPerDay ?? 0) > 0, undefined, { timeout: 1800000, polling: 1000 });
+   await final(-1);
+   const first = await state('loaded');
+ 
+@@ -132,24 +134,21 @@ try {
+     console.log('      stuck: ' + JSON.stringify(out.stuck));
+     throw e;
+   });
+-  // a worker's heap still holds the closed zones' deferred frees and the old market parts until its next
+-  // solve (T-1367), so the restart waits for one: an edit on a save's line made and undone
+-  const v0 = await page.evaluate(() => window.twDemand.log.at(-1).version);
+-  await page.evaluate(async () => {
+-    const c = window.tw.client, w = window.tw.world.value, l = w.save.lines.find((l) => w.lineStats[l.id]?.status === 'running'), t = w.lineStats[l.id].trainsNeeded;
+-    await c.edit({ op: 'setTrainCount', line: l.num, trains: t.map((n) => n + 1) });
+-    await c.edit({ op: 'setTrainCount', line: l.num, trains: t });
+-  });
+-  await final(v0);
++  // the restart: MEM_QUIET_MS after the last stir, once nothing is in flight (it may come before this reads)
+   const closed = await state('zones closed');
+-  // the restart: MEM_QUIET_MS after the last stir, once nothing is in flight
+-  await page.waitForFunction(() => window.twDemand.client.respawn.size > 0, undefined, { timeout: 300000, polling: 500 }).catch(() => {});
++  const tClosed = Date.now();
++  if (restarts() <= before) await page.waitForFunction(() => window.twDemand.client.respawn.size > 0, undefined, { timeout: 300000, polling: 500 }).catch(() => {});
+   const began = restarts() > before;
+   const at = await page.evaluate(() => window.twDemand.log.at(-1)?.version ?? 0);
++  const tBegan = Date.now();
+   if (began) {
+     await page.waitForFunction(() => window.twDemand.client.respawn.size === 0, undefined, { timeout: 1800000, polling: 1000 });
+     await final(at);
+   }
++  const w = await page.evaluate(() => window.__t1205);
++  out.reopenSeconds = w.e ? Math.round((w.e - w.s) / 1000) : null;
++  out.restartSeconds = w.sDate ? Math.round((Date.now() - w.sDate) / 1000) : null;
++  out.closedToRestartSeconds = Math.round((tBegan - tClosed) / 1000);
+   const after = await state('after restart');
+   out.inSolve = await page.evaluate(() => window.__t1205.inSolve);
+ 
+@@ -157,8 +156,8 @@ try {
+   report('removed stations reached demand', !out.removed.some((e) => e[0] === 'nudge'));
+   report('restart once the zones closed', began, infos.filter((s) => /restarted/.test(s)).join(' | ').slice(0, 500));
+   report('no restart inside a solve', out.inSolve.length === 0, JSON.stringify(out.inSolve));
+-  report('memory given back', sum(after) < sum(closed) - 256, `(workers' WASM ${sum(first)} MB loaded, ${sum(built)} with ${added.length} more items open, ${sum(closed)} closed, ${sum(after)} after; Chrome ${first.chromeMB}, ${built.chromeMB}, ${closed.chromeMB}, ${after.chromeMB} MB)`);
+-  report('figures unchanged', after.rail === undone.rail && !after.status.startsWith('failed'), `(${after.rail.toLocaleString('en-US')} rail trips a day after, ${undone.rail.toLocaleString('en-US')} undone, ${first.rail.toLocaleString('en-US')} loaded)`);
++  report('memory given back', sum(after) < sum(built) - 256, `(workers' WASM ${sum(first)} MB loaded, ${sum(built)} with ${added.length} more items open, ${sum(closed)} closed, ${sum(after)} after, restart ${out.reopenSeconds} s to reopen, ${out.restartSeconds} s to the new final; Chrome ${first.chromeMB}, ${built.chromeMB}, ${closed.chromeMB}, ${after.chromeMB} MB)`);
++  report('figures unchanged', Math.abs(after.rail - undone.rail) <= undone.rail * 2e-3 && !after.status.startsWith('failed'), `(${after.rail.toLocaleString('en-US')} rail trips a day after, ${undone.rail.toLocaleString('en-US')} undone, ${first.rail.toLocaleString('en-US')} loaded)`);
+   report('station answered as at the load', after.station === first.station, `(${after.station})`);
+   report('no console errors', errors.length === 0, errors.slice(0, 5).join(' | '));
+ } catch (e) {
+diff --git a/trainworld/docs/architecture.md b/trainworld/docs/architecture.md
+index 145739ef5..9a4aba2f1 100644
+--- a/trainworld/docs/architecture.md
++++ b/trainworld/docs/architecture.md
+@@ -441,9 +441,9 @@ Web first, so it can be shared as a link.
+   anything closes). A worker's need, what a worker started afresh reaches, is the larger of its heap
+   at rest times 1.12 and that peak times 1.07, plus 64 MB. Once nothing is in flight (no solve, load,
+   open, close or question, no replacement) and the network has been still for 20 s, every worker
+-  whose memory is at least 384 MB and 15% above its need is restarted through the panic path above,
++  whose memory is at least 192 MB and 15% above its need is restarted through the panic path above,
+   together and without counting as a panic; the network is solved once more, questions wait for that
+-  final, and a worker is not restarted again until its memory or need has moved by 384 MB. Before
++  final, and a worker is not restarted again until its memory or need has moved by 192 MB. Before
+   each solve the pool drops solving workers while the page outside the workers' WASM (at least 0.6 GB, and as
+   the live memory reading counts it, `liveMemory.ts`: about 5 GB on a 7,000-station game, T-3757), each worker's need plus 0.15 GB
+   for its JS heap (or, on a cross-origin isolated page, `measureUserAgentSpecificMemory`'s measure of

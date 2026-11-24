@@ -1,0 +1,121 @@
+warning: LF will be replaced by CRLF in trainworld/sim/src/track/net.rs.
+The file will have its original line endings in your working directory
+warning: LF will be replaced by CRLF in trainworld/sim/src/track/wasm.rs.
+The file will have its original line endings in your working directory
+diff --git a/trainworld/sim/src/track/net.rs b/trainworld/sim/src/track/net.rs
+index a50049cd1..b6d63390b 100644
+--- a/trainworld/sim/src/track/net.rs
++++ b/trainworld/sim/src/track/net.rs
+@@ -993,3 +993,4 @@ mod derive;
+ mod validate;
+ mod costs;
+ mod paths;
++pub use paths::SearchMemo;
+diff --git a/trainworld/sim/src/track/net/paths.rs b/trainworld/sim/src/track/net/paths.rs
+index 36f346294..c7b6bf3f6 100644
+--- a/trainworld/sim/src/track/net/paths.rs
++++ b/trainworld/sim/src/track/net/paths.rs
+@@ -2,6 +2,44 @@
+ 
+ use super::*;
+ 
++type SearchKey = (u32, u32, u8, u8, bool);
++#[derive(Default)]
++struct Searches {
++    depth: u32,
++    cache: Option<std::collections::HashMap<SearchKey, Option<(Vec<u32>, u8)>>>,
++}
++thread_local! {
++    static SEARCHES: std::cell::RefCell<Searches> = Default::default();
++}
++
++/// T-4045: while held, `find_path_side` keeps its answers, so a sweep that tries many stops and
++/// slots (`stop_tiers`, `insert_stop`) searches each hop once. Hold it only over reads of one
++/// unchanged network; the answers are dropped when the last guard goes.
++pub struct SearchMemo;
++
++impl SearchMemo {
++    pub fn hold() -> Self {
++        SEARCHES.with(|m| {
++            let mut m = m.borrow_mut();
++            m.depth += 1;
++            m.cache.get_or_insert_with(Default::default);
++        });
++        SearchMemo
++    }
++}
++
++impl Drop for SearchMemo {
++    fn drop(&mut self) {
++        SEARCHES.with(|m| {
++            let mut m = m.borrow_mut();
++            m.depth -= 1;
++            if m.depth == 0 {
++                m.cache = None;
++            }
++        });
++    }
++}
++
+ impl Network {
+     /// The constructed station or edge set is complete for a line: it can carry trains.
+     pub fn line_constructed(&self, l: u32) -> bool {
+@@ -203,6 +241,16 @@ impl Network {
+     /// arrives so the train carries on round). `tram`: the hop is a tram line's, which may run on
+     /// any track; else it keeps off tram track (T-3889).
+     pub fn find_path_side(&self, from: u32, to: u32, arrived: Option<u8>, want: Option<u8>, tram: bool) -> Option<(Vec<u32>, u8)> {
++        let key = (from, to, arrived.unwrap_or(2), want.unwrap_or(2), tram);
++        if let Some(hit) = SEARCHES.with(|m| m.borrow().cache.as_ref().and_then(|c| c.get(&key).cloned())) {
++            return hit;
++        }
++        let found = self.find_path_side_raw(from, to, arrived, want, tram);
++        SEARCHES.with(|m| if let Some(c) = m.borrow_mut().cache.as_mut() { c.insert(key, found.clone()); });
++        found
++    }
++
++    fn find_path_side_raw(&self, from: u32, to: u32, arrived: Option<u8>, want: Option<u8>, tram: bool) -> Option<(Vec<u32>, u8)> {
+         let barred = |e: u32| self.edge_barred(e, tram);
+         let ne = self.edge_count();
+         let mut dist = vec![f64::INFINITY; 2 * ne];
+diff --git a/trainworld/sim/src/track/wasm/lines.rs b/trainworld/sim/src/track/wasm/lines.rs
+index 24175fbd1..91faff239 100644
+--- a/trainworld/sim/src/track/wasm/lines.rs
++++ b/trainworld/sim/src/track/wasm/lines.rs
+@@ -1,7 +1,7 @@
+ //! Lines (stops, look, cars, trains, loops) and undo.
+ 
+ use super::*;
+-use crate::track::net::{Extra, ALIGHT_ONLY};
++use crate::track::net::{Extra, SearchMemo, ALIGHT_ONLY};
+ 
+ /// T-2987: the lowest speed limit a rail line can be given, km/h.
+ const LINE_LIMIT_MIN: u32 = 40;
+@@ -340,6 +340,7 @@ impl TrackApi {
+     }
+     /// Try every insertion slot using the same turn-valid route as set_stops.
+     pub fn insert_stop(&self, line: u32, station: u32) -> Vec<f64> {
++        let _memo = SearchMemo::hold();
+         best_insert(&self.w.net, line, station, &mut HopMemo::new()).map_or(vec![], |(stops, _)| stops.iter().map(|&s| s as f64).collect())
+     }
+     /// The line tool's click: `station` put in where `insert_stop` puts it, as `set_stops` takes those
+@@ -350,7 +351,11 @@ impl TrackApi {
+         if self.port_clash(&d, &[station]) {
+             return self.refuse(Issue::PortStop { line: id });
+         }
+-        let Some((stops, _)) = best_insert(&self.w.net, id, station, &mut HopMemo::new()) else {
++        let best = {
++            let _memo = SearchMemo::hold();
++            best_insert(&self.w.net, id, station, &mut HopMemo::new())
++        };
++        let Some((stops, _)) = best else {
+             if self.train_kept_off(&d.stops, station) {
+                 return self.refuse(Issue::TramTrack { line: id });
+             }
+@@ -476,6 +481,7 @@ impl TrackApi {
+     /// (`open_loop`, T-3021), 9 a train line reaches it only over tram track (T-3889), 10 a ferry port (T-3911). Worked out with
+     /// `insert_stop`'s own search, so the markers say what a click does. Empty if the line is not there.
+     pub fn stop_tiers(&self, line: u32) -> Vec<f64> {
++        let _memo = SearchMemo::hold();
+         let net = &self.w.net;
+         if !net.line_ok(line) {
+             return vec![];
