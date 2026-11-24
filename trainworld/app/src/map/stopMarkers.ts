@@ -25,6 +25,7 @@ import { headingOnScreen } from "./stopHeading";
 import { headingChevron } from "./trackTagRows";
 import { queryClock } from "../workers/clockClient";
 import { GapFlash } from "./gapFlash";
+import { hoverStop } from "./lineToolAhead";
 import { tagLines } from "./labelLayout";
 import type { Overlay } from "./overlay";
 import { hot, onHot } from "./hovered";
@@ -488,6 +489,7 @@ export class StopMarkers {
       if (this.reasonFor === null) this.hideTag();
       return;
     }
+    if (this.line && (this.tierOf(id) === "route" || this.tierOf(id) === "reroute" || this.tierOf(id) === "reverse")) hoverStop(this.line.num, Number(id));
     if (this.reasonFor !== null && this.reasonFor !== id) this.hideTag();
     if (this.reasonFor === null) this.showTag(this.words(id), px, py);
   }

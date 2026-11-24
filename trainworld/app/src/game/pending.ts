@@ -277,9 +277,11 @@ export function pendingTaken(order: number, what: { net?: boolean; rows?: boolea
     if (what.rows && e.panel) { e.panel = false; any = true; }
     if (what.money && e.money) { e.money = false; any = true; }
   }
-  if (!any) return held;
+  // a line drawn ahead looks as the world says (running or not, fast), which a new line gets with its rows
+  const redraw = !!what.rows && !what.net && entries.some((e) => e.map && e.show.lines?.size);
+  if (!any && !redraw) return held;
   entries = entries.filter((e) => e.map || e.panel || e.money);
-  changed(map, !what.net);
+  changed(map || redraw, !what.net);
   return held;
 }
 

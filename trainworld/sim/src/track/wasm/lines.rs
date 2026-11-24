@@ -342,6 +342,12 @@ impl TrackApi {
     pub fn insert_stop(&self, line: u32, station: u32) -> Vec<f64> {
         best_insert(&self.w.net, line, station, &mut HopMemo::new()).map_or(vec![], |(stops, _)| stops.iter().map(|&s| s as f64).collect())
     }
+    /// T-4147: the edges (path order, one entry a path step) the line's path would take once `insert_stop`'s stops
+    /// are set, read while the pointer is over the station so a click can draw them before the edit is applied.
+    /// Empty where there is nowhere to put it.
+    pub fn insert_path(&self, line: u32, station: u32) -> Vec<f64> {
+        best_insert(&self.w.net, line, station, &mut HopMemo::new()).map_or(vec![], |(_, path)| path.iter().map(|&p| (p >> 1) as f64).collect())
+    }
     /// The line tool's click: `station` put in where `insert_stop` puts it, as `set_stops` takes those
     /// stops. A line never turns round a loop by itself; the right click does that (T-3140, `turn_end`).
     /// 2 when there is nowhere to put it.

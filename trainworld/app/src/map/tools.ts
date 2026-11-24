@@ -42,6 +42,7 @@ import { hidden, levelHidden } from "./visibility";
 import { afterStopEdits, edit, queueStopEdit, say, sendStopEdit, stopsQueued, world } from "../game/world";
 import { dropAhead, showAhead } from "./aheadShow";
 import { edgesWithoutEnd } from "./lineAhead";
+import { guessAdded } from "./lineToolAhead";
 import { hideBusy, showBusy } from "../game/busy";
 import { type RouteEnd } from "../workers/protocol";
 import { gameStamp, onRoadsLanded, type ClockClient, type PreviewAnswer } from "../workers/clockClient";
@@ -1396,7 +1397,8 @@ export class Tools {
     // (a network older than the world has an earlier click's stops: its stretches are not these stops')
     if (!n || r.netVersion !== world.peek()?.version || line.planStops || stopsQueued.peek() > 1) return;
     const stops = line.stops.map(Number), k = stops.indexOf(station);
-    if (k < 0 || stops[0] === stops[stops.length - 1] || stops.indexOf(station, k + 1) >= 0) return;
+    if (k < 0) return guessAdded(line, station);
+    if (stops[0] === stops[stops.length - 1] || stops.indexOf(station, k + 1) >= 0) return;
     const edges = edgesWithoutEnd(n, Number(line.id), k, stops.length);
     if (edges) showAhead(Number(line.id), edges, false);
   }

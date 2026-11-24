@@ -76,7 +76,7 @@ export const savedByHand = signal<number | null>(null);
 const PANEL_READS = new Set(["today", "linesPeriods", "linePeriods", "lineAccount"]);
 const PANEL_HOLD_MS = 250;
 /** T-2766: the line tool's reads of the track model's lines, which a stop click has changed already */
-const STOP_READS = new Set(["stopTiers", "stopGap", "insertStop", "passedStations"]);
+const STOP_READS = new Set(["stopTiers", "stopGap", "insertStop", "insertPath", "passedStations"]);
 /** T-2766: every other read waits until no stop click has been answered for this long, ms (the worker holds a stop
  * click's network as long): the panels ask a dozen after each world, 0.2 to 0.7 s of the worker's on New York's real
  * save, and the next click waited behind them */

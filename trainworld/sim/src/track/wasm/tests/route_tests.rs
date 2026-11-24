@@ -116,8 +116,11 @@ fn stop_tiers_follow_the_line_tool() {
         if stops.is_empty() {
             continue;
         }
+        let guess: std::collections::BTreeSet<u32> = a.insert_path(id, n).iter().map(|&e| e as u32).collect();
         assert_eq!(a.set_stops(id, &stops), 0, "{}", a.issues());
         let grown = a.line_path(id);
+        // T-4147: the path read at the hover is the one the click's edit takes
+        assert_eq!(guess, grown.iter().map(|&p| p >> 1).collect(), "station {}", a.w.net.node_name[n as usize]);
         if t == 4.0 {
             assert_eq!(a.line_reversals(id), vec![1.0], "trains reverse at B, stop 1 of A, B, Z");
         } else {
