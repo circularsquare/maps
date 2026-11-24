@@ -26,7 +26,7 @@ diary notes/handoff-log.md. Her time UTC-5.
 - Core cap 15 "for the night": back to 14 when she's up (her word). Gemini: only on her ask or our suggestion; Neon medium.
 
 ## Next (she aims to publish 0.4.6 after her playtest)
-1. check6 passes: freeze the 0.4.6 candidate (master then), smoke on it, perf_bench all three, rebuild 8800.
+1. check6 PASSED. 0.4.6 candidate = f63b105b3 (incl. T-4057, check7 running on it); smoke started 12:3x; then perf_bench all three, rebuild 8800.
 2. Morning message: playtest list, strings, T-4153 s2 call, T-4161 deploy yes, publish yes (publish skill).
 3. Land stopclick/sparseload/phoneload as they report; a checker per batch. Track rework after 0.4.6.
 
