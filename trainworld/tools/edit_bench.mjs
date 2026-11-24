@@ -4,12 +4,12 @@
 // before and after. How to read it: notes/T-4139.md.
 //
 //   node trainworld/tools/edit_bench.mjs [--url http://localhost:6158/] [--save asia|nyc|<file>[,..]] [--runs 3]
-//        [--calculating] [--no-ledger] [--label L] [--compare <hash>] [--only a,b] [--cores 4]
+//        [--calculating] [--no-ledger] [--label L] [--compare <hash or run id>] [--only a,b] [--cores 4]
 //
 //   (default)        paused clock, trips final first: the edits' own wait
 //   --calculating    also a second pass in a fresh game with the edits made while trips are calculating
-//   --compare <hash> the change per action against the newest ledger lines of that build hash (a percent of the wait)
-//   --show [hash]    print a build's table from the ledger, no run
+//   --compare <hash or run id> the change per action against one run: the run id (printed at the end of a run, in the ledger's `run`) or the newest run of that build hash; only that run's lines are read
+//   --show [hash or run id]    print one run's table from the ledger, no run (the newest run without an argument)
 //
 // Actions (times in ms, median of --runs repeats; shows = the first frame that changes, built = the frame that
 // draws the edit as built): ghost trail (px the drawn ghost trails the pointer at a steady speed, and the answer
@@ -270,9 +270,10 @@ async function play(g, runs, only, acc, note) {
     let err = null;
     try { await fn(); } catch (e) { err = e.message.split('\n')[0]; }
     await quiet(40000, 1500);
+    const seen = await page.evaluate((m) => window.__eb.ev.slice(m).filter((x) => x.k === 'post' || x.k === 'input').map((x) => x.k === 'post' ? x.kind + ':' + (x.op ?? '') : 'input:' + x.typ), m);
     const edits = (await since(m)).filter((e) => !ops || ops.includes(e.op));
     const e = edits[0];
-    if (!e || err) { note('  ' + label + ': no sample' + (err ? ' (' + err + ')' : ' (no edit message)')); return null; }
+    if (!e || err) { note('  ' + label + ': no sample' + (err ? ' (' + err + ')' : ' (no edit message; saw ' + (seen.join(', ') || 'nothing') + ')')); return null; }
     if (e.ok === false) note('  ' + label + ': refused');
     for (const [k, name] of Object.entries(keys)) add(name, e[k]);
     return e;
@@ -349,7 +350,7 @@ async function play(g, runs, only, acc, note) {
     await g.act.click('Edit stops', { exact: false });
     await g.act.camera([C.mid.lng, C.mid.lat], 15);
     await sleep(1500);
-    const stopOps = ['insertStop', 'dropStop', 'setStops', 'stopPassed'];
+    const stopOps = ['toggleStop', 'insertStop', 'dropStop', 'setStops', 'stopPassed'];
     for (let k = 0; k < runs && want('stop'); k++) {
       await sample(() => g.act.press([C.mid.lng, C.mid.lat]), stopOps, { rows: 'stop click, removed: panel rows', built: 'stop click, removed: line path' }, 'stop remove ' + (k + 1));
       await sample(() => g.act.press([C.mid.lng, C.mid.lat]), stopOps, { rows: 'stop click, added: panel rows', built: 'stop click, added: line path' }, 'stop add ' + (k + 1));
@@ -391,10 +392,16 @@ function hashNow() {
   return git('rev-parse', '--short=8', 'HEAD') + (dirty ? '+changes' : '');
 }
 
-/** the newest ledger lines of a build hash (one per save, pass and action) */
-function linesOf(rows, hash) {
+/** a run's id: lines before the ids existed share their hash, label and core mask */
+const runOf = (r) => r.run ?? [r.hash, r.label ?? '', r.mask ?? ''].join('|');
+
+/** the lines of one run, found by its run id or else by a build hash (then the newest run of that hash); the ledger is
+ * shared with other agents, so lines of any other run are never read */
+function linesOf(rows, id) {
+  const hit = rows.filter((r) => r.run === id);
+  const run = hit.length ? id : rows.findLast((r) => r.hash === id || r.hash?.startsWith(id)) && runOf(rows.findLast((r) => r.hash === id || r.hash?.startsWith(id)));
   const m = new Map();
-  for (const r of rows) if (r.hash === hash || r.hash?.startsWith(hash)) m.set(r.save + '|' + r.pass + '|' + r.action, r);
+  if (run) for (const r of rows) if (runOf(r) === run) m.set(r.save + '|' + r.pass + '|' + r.action, r);
   return m;
 }
 
@@ -413,7 +420,7 @@ function compare(rows, cur, base) {
 async function main() {
   if (opt('show', false)) {
     const rows = readLedger();
-    const h = typeof opt('show') === 'string' ? opt('show') : rows.at(-1)?.hash;
+    const h = typeof opt('show') === 'string' ? opt('show') : runOf(rows.at(-1) ?? {});
     for (const [, r] of linesOf(rows, h)) log(r.save.padEnd(5), r.pass.padEnd(5), r.action.padEnd(36), String(r.median).padStart(7), 'p90', String(r.p90).padStart(7), 'n', r.n, r.loaded ? 'loaded' : '');
     return;
   }
@@ -438,6 +445,7 @@ async function main() {
   const { corePlan } = await import('../checks/cores.mjs');
   const plan = corePlan();
   const since = Math.floor(Date.now() / 1000);
+  const RUN = hash + '@' + new Date().toISOString().slice(0, 19).replace(/[-:T]/g, '') + '-' + process.pid;
   const all = [];
   try {
     for (const sn of saveNames) {
@@ -466,7 +474,7 @@ async function main() {
           await play(g, runs, only, acc, (s) => log(s));
           const busy = plan ? busyOn(c1, coreTimes(), plan.cores) : null;
           const rows = Object.entries(acc).map(([action, v]) => ({ action, median: r1(median(v), action.includes('px') ? 1 : 0), p90: r1(pct(v, 0.9), action.includes('px') ? 1 : 0), n: v.length, all: v.map((x) => r1(x, 1)) }));
-          const line = { date: new Date().toISOString().slice(0, 16), hash, label: opt('label', null), save: sn, pass, final, cores: plan?.n ?? null, mask: plan?.cores.join(',') ?? null, loaded: pre != null && pre >= 15, preBusy: pre, busy, workers: plan?.workers ?? null };
+          const line = { run: RUN, date: new Date().toISOString().slice(0, 16), hash, label: opt('label', null), save: sn, pass, final, cores: plan?.n ?? null, mask: plan?.cores.join(',') ?? null, loaded: pre != null && pre >= 15, preBusy: pre, busy, workers: plan?.workers ?? null };
           for (const r of rows) all.push({ ...line, ...r });
           log(tableFrom(rows));
           log('  ' + Math.round((Date.now() - t) / 1000) + ' s, those cores ' + busy + '% busy over the game' + (g.pageErrors().length ? ', ' + g.pageErrors().length + ' page errors: ' + String(g.pageErrors()[0]).slice(0, 120) : ''));
@@ -477,11 +485,11 @@ async function main() {
   const fair = spawnSync('python', [join(MAPS, 'cores.py'), 'total', '--since', String(since)], { stdio: 'ignore', windowsHide: true, cwd: MAPS }).status === 0;
   if (!fair) log('\nTHE CORES LEDGER WENT OVER ITS CAP DURING THE RUN: nothing appended to the ledger');
   const prior = readLedger();
-  if (opt('compare', false)) { log('\nagainst ' + opt('compare') + ':'); for (const l of compare(prior, all, String(opt('compare')))) log('  ' + l); }
+  if (opt('compare', false)) { { const b = linesOf(prior, String(opt('compare'))); log('\nagainst ' + opt('compare') + (b.size ? ' (run ' + runOf([...b.values()][0]) + ')' : '') + ':'); } for (const l of compare(prior, all, String(opt('compare')))) log('  ' + l); }
   if (!opt('no-ledger', false) && fair) {
     mkdirSync(join(MAPS, 'trainworld', 'notes'), { recursive: true });
     appendFileSync(LEDGER, all.map((r) => JSON.stringify(r)).join('\n') + '\n');
-    log('\n' + all.length + ' lines in notes/edit-ledger.jsonl for build ' + hash);
+    log('\n' + all.length + ' lines in notes/edit-ledger.jsonl for build ' + hash + ', run ' + RUN);
   }
 }
 
