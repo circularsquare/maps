@@ -13,6 +13,9 @@ import { deleteRun, noteDelete } from "./deleteHint";
 import { ask, selection } from "./ui";
 import { edit, linesByNum, say, stationsByNum, world } from "./world";
 import { planStopsOf } from "./types";
+import { ahead, type Show } from "./pending";
+import { live } from "../map/live";
+import { stationGoneShow, trackGoneShow } from "../map/stationAhead";
 
 /** `bus`: a bus line by its number, route and line together; `building` a station building by its id (T-2218). */
 export type Removable = { kind: "track"; edge: number } | { kind: "station"; node: number } | { kind: "flyover"; node: number } | { kind: "bus"; line: number } | { kind: "building"; id: number };
@@ -139,25 +142,33 @@ export function setTrackHider(h: typeof hider) {
   hider = h;
 }
 
+/** T-4146: what a removal shows at the click (map/stationAhead.ts): track and stations gone, the lines over them as the
+ * page can tell; null for a flyover, a bus line or a building, which show when the worker answers. */
+function shownGone(r: Removable): Show | null {
+  if (r.kind === "track") return trackGoneShow(r.edge);
+  if (r.kind === "station") return stationGoneShow(live.overlay?.renderer.net ?? null, r.node);
+  return null;
+}
+
 /** Remove it: at once if blueprint and no line changes, else after a modal confirmation (`now`, a
- * Shift+click, skips the question: T-4068). Blueprint
- * track no line runs over and no station touches goes from the screen at the click and from the
- * model when the worker answers (T-2763: that took 0.1 to 3 s on the real save). */
+ * Shift+click, skips the question: T-4068). Track and stations go from the screen at the click (or the confirmation)
+ * and from the model when the worker answers (T-2763, T-4146: 0.7-1.5 s on a big save); a refusal brings them back. */
 export async function removeThing(r: Removable, now = false) {
   const d = describeRemovable(r);
   if (!d) return;
   const go = async () => {
     ask.value = null;
-    const wasSelected = selected(r);
+    const was = selected(r) ? selection.peek() : null;
     const row = deleteRun();
-    const a = await edit(opOf(r));
+    const show = shownGone(r);
+    if (was) selection.value = null;
+    const a = await (show ? ahead(show).send(() => edit(opOf(r))) : edit(opOf(r)));
     if (!a.ok) {
-      hider?.show();
+      if (was && selection.peek() === null) selection.value = was;
       if (!a.issues.length) say(t("remove.failed"), true);
       return;
     }
     noteDelete(row);
-    if (wasSelected) selection.value = null;
     say(t("remove.done", { what: d.what }));
   };
   const e = r.kind === "track" ? world.peek()?.edges.find((x) => x.id === r.edge) : undefined;
@@ -165,10 +176,7 @@ export async function removeThing(r: Removable, now = false) {
   if (now) return go();
   const big = !!e && !e.crossover && isBigDelete(e.lengthM - ka - kb);
   // nothing a line or a station hangs on: no side effects to ask the worker about
-  if (r.kind === "track" && e && !d.built && !big && !ka && !kb && hider && !hider.onLine(r.edge)) {
-    hider.hide(r.edge);
-    return go();
-  }
+  if (r.kind === "track" && e && !d.built && !big && !ka && !kb && hider && !hider.onLine(r.edge)) return go();
   const lines = r.kind === "flyover" || r.kind === "bus" || r.kind === "building" ? [] : await lineEffects(r.kind === "track" ? [r.edge] : [], r.kind === "station" ? [r.node] : []);
   if (!d.built && !lines.length && !big) return go();
   ask.value = { ...removeQuestion(big ? t("remove.track", { length: bigDistance(e!.lengthM - ka - kb), built: d.built }) : d.what, d.built, big), run: () => void go(), lines };

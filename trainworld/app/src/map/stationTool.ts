@@ -25,6 +25,7 @@ import { M_CROSSING, MARK_STRIDE } from "./markData";
 import { playBuild } from "./buildSound";
 import { SNAP_EDGE_PX, type Snap, type Spot, type Verdict, HOLD_AT, KNOWN_PX, LAYOUT_ISSUES, lengthOf } from "./toolParts";
 import { portClick } from "./stationPort";
+import { ahead } from "../game/pending";
 import { freeClick, freeStart, freeStarted } from "./stationFree";
 import type { Tools } from "./tools";
 
@@ -145,10 +146,12 @@ export async function stationClick(tk: Tools, e: MapMouseEvent) {
       return;
     }
     playBuild("station");
-    const key = nameKey(tk, e.point.x, e.point.y), ahead = tk.named?.key === key && tk.map.areTilesLoaded() ? tk.named.name : null;
+    // T-4146: drawn at the click, gone again if refused
+    const shown = ahead({ stations: [{ lx: b.lx, ly: b.ly, ways: b.ways, perM: b.perM, plat: BRT_STATION_PLATFORM, side: 0, tram: false }] });
+    const key = nameKey(tk, e.point.x, e.point.y), named = tk.named?.key === key && tk.map.areTilesLoaded() ? tk.named.name : null;
     tk.named = null;
-    const name = await (ahead ?? nameFor(tk, e.point.x, e.point.y));
-    const r = await edit({ op: "addBrtStation", x: b.x, y: b.y, heading: b.heading, name }, true, true);
+    const name = await (named ?? nameFor(tk, e.point.x, e.point.y));
+    const r = await shown.send(() => edit({ op: "addBrtStation", x: b.x, y: b.y, heading: b.heading, name }, true, true));
     if (r.ok) {
       tk.lastPlaced = toLngLat(b.lx, b.ly);
       say(tr("tools.blueprintStation", { name: shownNameAt(tk, tk.lastPlaced[0], tk.lastPlaced[1]) ?? name }));
@@ -163,17 +166,25 @@ export async function stationClick(tk: Tools, e: MapMouseEvent) {
   const v = tk.verdict();
   // T-1474: heard at the click, not when the edit is answered; not when the ghost shows a refusal
   if (!(v && !v.ok && !v.held)) playBuild("station");
-  const pend = v?.ok && !v.held && tk.hover && tk.hover.kind !== "free" ? addPending(tk) : null;
+  // T-4146: the station drawn at the click from its ghost, through every spot tried, gone if none is taken; a spot other
+  // than the ghost's is drawn once the network has it
+  const box = v?.ok && !v.held && tk.hover && tk.hover.kind !== "free" ? tk.lastBox : null;
+  const shown = ahead(box ? { stations: [box] } : {}, { tries: true });
+  let tried = 0;
   const tries = [...(v?.ok && v.spot && !v.held ? [v.spot] : []), ...tk.alts];
   const key = nameKey(tk, e.point.x, e.point.y);
-  const ahead = tk.named?.key === key && tk.map.areTilesLoaded() ? tk.named.name : null;
+  const named = tk.named?.key === key && tk.map.areTilesLoaded() ? tk.named.name : null;
   tk.named = null;
-  const name = await (ahead ?? nameFor(tk, e.point.x, e.point.y));
+  const name = await (named ?? nameFor(tk, e.point.x, e.point.y));
   const stationAt = (p: Exclude<Snap, { kind: "free" }>) => ({ op: "addStation" as const, at: p.kind === "node" ? { kind: "node" as const, node: p.node } : { kind: "edge" as const, edge: p.edge, ...tk.pack(p.lx, p.ly) }, platform: tk.platFor(p), name });
   const one = tk.oneAt();
   const stationAt1 = (p: Exclude<Snap, { kind: "free" }>) => { const o = stationAt(p); return { ...o, at: { ...o.at, ...one } }; };
-  const r = await firstAccepted(tries, async (p) => { const a = await edit(stationAt1(p), true, true); return a.ok ? null : a.issues; }, (p) => roomSnap(tk, p), () => false);
-  dropPending(tk, pend);
+  const r = await firstAccepted(tries, async (p) => {
+    if (tried++ === 1) shown.set({});
+    const a = await shown.send(() => edit(stationAt1(p), true, true));
+    return a.ok ? null : a.issues;
+  }, (p) => roomSnap(tk, p), () => false);
+  if (!r.spot) shown.drop();
   if (r.spot) {
     tk.lastPlaced = toLngLat(r.spot.lx, r.spot.ly); // T-312: the hover tag's "km from" (found again by position)
     say(tr("tools.blueprintStation", { name: shownNameAt(tk, tk.lastPlaced[0], tk.lastPlaced[1]) ?? name }));
@@ -291,23 +302,6 @@ export function svgMark(tk: Tools, kids: string[], back: boolean): SVGSVGElement
   if (back) tk.box.insertBefore(svg, tk.box.firstChild);
   else tk.box.appendChild(svg);
   return svg;
-}
-
-export function addPending(tk: Tools) {
-  const b = tk.lastBox;
-  if (!b) return null;
-  const el = svgMark(tk, ["path"], false);
-  el.setAttribute("class", "station-ghost ok placed");
-  const p = { b, el };
-  tk.pendingSt.push(p);
-  placePending(tk);
-  return p;
-}
-
-export function dropPending(tk: Tools, p: { b: unknown; el: SVGSVGElement } | null) {
-  if (!p) return;
-  p.el.remove();
-  tk.pendingSt = tk.pendingSt.filter((x) => x !== p);
 }
 
 export function placePending(tk: Tools) {

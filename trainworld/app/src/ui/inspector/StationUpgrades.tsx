@@ -18,6 +18,8 @@ import { hasUpgrade, PASSAGE_BASE, PASSAGE_PER_KM, UPGRADE, UPGRADE_BITS, UPGRAD
 import { moneyState } from "../../game/money";
 import { edit, say, stationsById, world } from "../../game/world";
 import { useClockQuery } from "../useClockQuery";
+import { ahead } from "../../game/pending";
+import { fieldsShow, shownStation } from "../../map/stationAhead";
 
 /** T-3922: the hover's price line and, once the money has come, its upkeep line under it. */
 function priceLines(price: number): string {
@@ -91,7 +93,8 @@ ${t("stationUpgrades.brtBuiltIn")}`}>
     </button>
   );
   const toggle = async () => {
-    const a = await edit({ op: "stationUpgrade", nodes: [s.num], bit: u.bit, on: !on });
+    // T-4146: the button and the cash at the click, from the price shown
+    const a = await ahead(fieldsShow([[s.num, { upgrades: on ? (s.upgrades ?? 0) & ~u.bit : (s.upgrades ?? 0) | u.bit }]], !on && s.built ? price : 0)).send(() => edit({ op: "stationUpgrade", nodes: [s.num], bit: u.bit, on: !on }));
     if (!a.ok) return;
     if (!on) say(a.charge > 0 ? t("stationUpgrades.built", { name: u.name, station: s.name, price: money(a.charge * 1e6) }) : t("stationUpgrades.added", { name: u.name }));
     else if (s.built) say(t("stationUpgrades.removed", { name: u.name, station: s.name }));
@@ -151,7 +154,7 @@ function ComplexUpgrade({ u, members, price }: { u: UpgradeText; members: string
   const w = world.value;
   const byId = w ? stationsById(w) : new Map<string, StationInput>();
   // T-4012: a BRT station's waiting room is built in, so it is no part of the count
-  const st = members.map((id) => byId.get(id)).filter((x): x is StationInput => !!x && !(x.brt && u.bit === UPGRADE.waitingRoom));
+  const st = members.map((id) => byId.get(id)).filter((x): x is StationInput => !!x && !(x.brt && u.bit === UPGRADE.waitingRoom)).map(shownStation);
   const have = st.filter((x) => hasUpgrade(x.upgrades, u.bit)), missing = st.filter((x) => !hasUpgrade(x.upgrades, u.bit));
   const all = missing.length === 0, built = st.some((x) => x.built), name = st[0]?.name ?? "", allTram = st.length > 0 && st.every((x) => x.tram);
   const state = !all ? "" : have.some((x) => x.built) ? " on" : " planned";
@@ -166,7 +169,9 @@ function ComplexUpgrade({ u, members, price }: { u: UpgradeText; members: string
     ? built ? t("stationUpgrades.allBuilt", { count: st.length }) : t("stationUpgrades.actPlanned")
     : t("stationUpgrades.someAct", { some: have.length > 0, have: have.length, count: st.length, missing: missing.length, blueprint: !built });
   const click = async () => {
-    const a = await edit({ op: "stationUpgrade", nodes: (all ? st : missing).map((x) => x.num), bit: u.bit, on: !all });
+    const to = all ? st : missing;
+    const a = await ahead(fieldsShow(to.map((x) => [x.num, { upgrades: all ? (x.upgrades ?? 0) & ~u.bit : (x.upgrades ?? 0) | u.bit }]), all ? 0 : to.filter((x) => x.built).length * price))
+      .send(() => edit({ op: "stationUpgrade", nodes: to.map((x) => x.num), bit: u.bit, on: !all }));
     if (!a.ok) return;
     if (!all) say(a.charge > 0 ? t("stationUpgrades.built", { name: u.name, station: name, price: money(a.charge * 1e6) }) : t("stationUpgrades.added", { name: u.name }));
     else if (built) say(t("stationUpgrades.removed", { name: u.name, station: name }));

@@ -15,6 +15,13 @@ import { linkFarePlan } from "./fareZonePaint";
 import type { Selection, StationId } from "./types";
 import { ask } from "./ui";
 import { edit, say, world } from "./world";
+import { ahead, shown } from "./pending";
+import { passagePrice } from "./upgrades";
+
+/** T-4146: the player's links as the panels show them, one still on its way to the world included */
+const shownLinks = (): readonly [StationId, StationId][] => shown("links", "pairs", world.value?.save.links ?? []);
+/** what showing the links as `pairs` at the click is, for `cost` (US$M) */
+const linksShow = (pairs: [StationId, StationId][], cost = 0) => ({ fields: new Map([["links", { pairs }]]), cost });
 
 /** The station a link starts from while the player picks the other one; null otherwise. */
 export const linking = signal<StationId | null>(null);
@@ -70,7 +77,9 @@ export async function linkPicked(picked: Selection): Promise<void> {
   if (fares?.ask && !(await new Promise<boolean>((yes) => {
     ask.value = { text: t("fareZonePaint.moveAsk"), yes: t("fareZonePaint.move"), no: t("toolNotes.cancel"), run: () => yes(true), stay: () => yes(false) };
   }))) return;
-  const a = await edit({ op: "link", a: sa.num, b: sb.num, on: true });
+  // T-4146: listed and paid at the click; a passage between constructed stations is paid at once (T-1281)
+  const cost = sa.built && sb.built ? passagePrice(groundDist(sa.x, sa.y, sb.x, sb.y)) : 0;
+  const a = await ahead(linksShow([...shownLinks(), [sa.id, sb.id]], cost)).send(() => edit({ op: "link", a: sa.num, b: sb.num, on: true }));
   if (a.ok && fares) await fares.apply();
   if (a.ok) say(a.charge > 0 ? t("links.built", { a: sa.name, b: sb.name, cost: money(a.charge * 1e6) }) : t("links.added", { a: sa.name, b: sb.name }));
 }
@@ -80,12 +89,12 @@ export async function unlink(a: StationId, b: StationId) {
   const st = world.peek()?.save.stations ?? [];
   const sa = st.find((s) => s.id === a), sb = st.find((s) => s.id === b);
   if (!sa || !sb) return;
-  const r = await edit({ op: "link", a: sa.num, b: sb.num, on: false });
+  const r = await ahead(linksShow(shownLinks().filter(([x, y]) => !((x === a && y === b) || (x === b && y === a))))).send(() => edit({ op: "link", a: sa.num, b: sb.num, on: false }));
   if (r.ok) say(t("links.removed", { a: sa.name, b: sb.name }));
 }
 
 /** The player's links with an end in `members` (a station or a complex). */
 export function linksAmong(members: readonly StationId[]): [StationId, StationId][] {
   const inside = new Set(members);
-  return (world.value?.save.links ?? []).filter(([a, b]) => inside.has(a) || inside.has(b));
+  return shownLinks().filter(([a, b]) => inside.has(a) || inside.has(b));
 }

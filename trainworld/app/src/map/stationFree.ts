@@ -17,6 +17,7 @@ import { playBuild } from "./buildSound";
 import { touchInput } from "./touch";
 import type { Snap } from "./toolParts";
 import type { Tools } from "./tools";
+import { ahead } from "../game/pending";
 
 /** the piece runs this far past each platform end: the track model wants a metre clear, and room for a later route
  * to join without a short piece at the end */
@@ -139,14 +140,16 @@ export async function freeClick(tk: Tools, e: MapMouseEvent, nameFor: (px: numbe
   const h = firstAt();
   if (!h) return;
   tk.pointer = { px: e.point.x, py: e.point.y, lng: e.lngLat.lng, lat: e.lngLat.lat };
-  const phi = heading(tk, h), p = piece(h, phi);
-  if (!(ans?.key === p.key && ans.ok === false)) playBuild("station");
+  const phi = heading(tk, h), p = piece(h, phi), bad = ans?.key === p.key && ans.ok === false;
+  if (!bad) playBuild("station");
   first = null;
   lastHeading = phi;
   clearPreview(tk);
+  // T-4146: the station and its piece drawn at the click, gone again if refused
+  const shown = ahead(bad ? {} : { stations: [{ lx: p.mid.lx, ly: p.mid.ly, ways: p.ways, perM: p.perM, plat: p.plat, side: 0, tram: tram() }], track: [strokesFromParts(p.track, false, false)] });
   tk.place();
   const name = await nameFor(...tk.screen(p.mid.lx, p.mid.ly));
-  const r = await edit({ op: "addStation", at: p.stationAt, platform: p.plat, name }, true, true);
+  const r = await shown.send(() => edit({ op: "addStation", at: p.stationAt, platform: p.plat, name }, true, true));
   if (r.ok) {
     tk.lastPlaced = toLngLat(p.mid.lx, p.mid.ly);
     say(tr("tools.blueprintStation", { name }));

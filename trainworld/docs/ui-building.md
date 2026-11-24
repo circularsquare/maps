@@ -706,9 +706,10 @@ switch on, the track tool follows the real network the layer draws.
 
 [T-065, T-311, T-312]
 
-- **A click leaves the ghost standing** [T-2763; `addPending` in `map/tools.ts`] where it was clicked, until
-  the clock worker's answer puts the station in the world (0.3 to 3 s on the real save, the lines through a
-  split piece drawing again); a refusal takes it away.
+- **A click draws the station at once** [T-2763, T-4146; `map/stationAhead.ts`, `game/pending.ts`]: the ghost's box
+  is drawn as the placed station (BRT and open-ground stations too, an open-ground one with its piece of track) until
+  the network holding it is drawn, kept while other spots near are tried; a refusal takes it away with the notice.
+  Not when the ghost is red or held.
 - **The ghost** is the platform's full box at its true length at every zoom: blue (`#2f6fe0` fill,
   `#1c4fb8` outline) where a click would place it and red (`#e03c3c`, `#b91f1f`) where it would be
   refused, fixed colours with a thin white halo; a refused spot shows the reason in the tag. On
@@ -815,9 +816,11 @@ removing that piece would only lay it back; zoomed out, or from the selection ba
 Delete or Backspace is its Remove button; with nothing selected, Delete picks the delete tool; while drawing, Delete takes the last segment back like Backspace. A piece beside a through station is drawn red, and named by its
 length, only past the platform's end, which is all that goes ([track-and-service.md](track-and-service.md)
 6.1, T-1161; `stationTrim` in `game/remove.ts`). Blueprint is
-removed at once (undoable; [T-2763] a piece no line runs over and no station touches leaves the screen at the click, `hideEdge` in `map/renderer.ts`, and the line-effects question to the clock worker is skipped; the model follows when the worker answers); anything constructed only after a yes in the confirmation dialog
+removed at once (undoable; [T-2763] a piece no line runs over and no station touches skips the line-effects question to the clock worker); anything constructed only after a yes in the confirmation dialog
 ("Remove 1.2 km of built track? Nothing is refunded." with Remove and Keep; Esc is Keep). The
-inspectors' Remove buttons and the Select tool's Remove ask the same way. **A big delete asks
+inspectors' Remove buttons and the Select tool's Remove ask the same way. Track and stations leave the screen at the click (or
+the yes) [T-4146; `map/stationAhead.ts`]: a line the station ended loses that stretch at once, other lines' new
+ways follow when the worker has applied the removal, and a refusal brings it all back. **A big delete asks
 too** [T-1649; `isBigDelete`, `removeQuestion` in `game/remove.ts`]: more than 50 km of track, or a
 tenth of the network's, whichever is less (never under 5 km), blueprint or built, in the same
 dialog, worded "Delete 4,499 km of built track? Nothing is refunded." with "Delete track" and "Keep

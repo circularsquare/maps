@@ -6,6 +6,8 @@ import type { StationInput } from "../../game/types";
 import { money } from "../../game/format";
 import { edit, rightHand, say, world } from "../../game/world";
 import { useClockQuery } from "../useClockQuery";
+import { ahead } from "../../game/pending";
+import { fieldsShow } from "../../map/stationAhead";
 
 const TAU = 2 * Math.PI;
 
@@ -50,11 +52,12 @@ export function StationSides({ s }: { s: StationInput }) {
   const costLine = cost && cost > 0 ? t("stationUpgrades.costs", { price: money(cost * 1e6) }) : free;
   const pickOne = async (h: number) => {
     if (serves(h)) return;
-    await edit({ op: "stationWay", node: s.num, heading: h });
+    // T-4146: the panel shows the pick at the click
+    await ahead(fieldsShow([[s.num, { one: 1, oneHeading: h }]])).send(() => edit({ op: "stationWay", node: s.num, heading: h }));
   };
   const pickBoth = async () => {
     if (both) return;
-    const a = await edit({ op: "stationTracks", node: s.num, one: false });
+    const a = await ahead(fieldsShow([[s.num, { one: 0 }]], s.built ? cost ?? 0 : 0)).send(() => edit({ op: "stationTracks", node: s.num, one: false }));
     if (a.ok && a.charge > 0) say(t("stationInspector.twoWayBuilt", { station: s.name, price: money(a.charge * 1e6) }));
   };
   void world.value;
