@@ -3,6 +3,19 @@
   "line": "",
   "items": [
     {
+      "id": "c007",
+      "text": "fixed lines numbered past 99 getting a letter instead of their number",
+      "edited": null,
+      "hidden": true,
+      "task": "T-4236",
+      "by": "busnum",
+      "at": "2026-11-24T22:44:15Z",
+      "rev": 2,
+      "area": "schematic",
+      "fix": true,
+      "changed": "2026-11-24T22:44:34Z"
+    },
+    {
       "id": "c006",
       "text": "fixed weekend trains sometimes not running after a period's hours were moved",
       "edited": null,
@@ -43,15 +56,15 @@
     {
       "id": "c003",
       "text": "fixed new lines' symbols in other languages: they now show the line number",
-      "edited": "fixed new lines showing a letter instead of their number in other languages",
+      "edited": "fixed new lines showing a letter instead of their number, in other languages and past 99",
       "hidden": false,
       "task": "T-4226",
       "by": "linesym",
       "at": "2026-11-24T20:39:23Z",
-      "rev": 2,
+      "rev": 3,
       "area": "other",
       "fix": true,
-      "changed": "2026-11-24T20:51:58Z"
+      "changed": "2026-11-24T22:44:31Z"
     },
     {
       "id": "c002",

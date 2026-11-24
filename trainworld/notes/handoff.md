@@ -12,7 +12,8 @@ diary notes/handoff-log.md. Her time UTC-5. Core cap 14 (her 20:12, "take on mor
    map) but its one bench left was noisy. After mcheck: a quiet window (hold starts) for the tree's last edit_bench, then
    land. Baseline on master: artifacts/trainworld/editbench/baseline.json (b7b9e4ee; NYC track built 437 ms).
    passx T-4048 (Opus; her 22:4x design: remove buttons on passageways in add passageway mode, red outline on hover).
-3. Then T-4080 stage 1 (bus stop naming approved; six 1 h stages, saves change: own checker), T-4214 stages A, D, E,
+   busstops T-4080 stages 1-2 (Opus: kept stops, saves, undo; own checker before landing).
+3. Then T-4080 stages 3-6, T-4214 stages A, D, E,
    T-4231, T-4193 (clock worker files after mapcfix lands), T-4220 (after quickend lands), T-4149/T-4150, T-4230, T-4187,
    T-3160, T-4199, T-4233, T-4234, T-4222 P3. 8800 = f733d3bf, smoke PASS.
 4. After up next: her big three, T-3444 track rework, T-3742 schedule nudging, T-3694 bulk station improvements panel +

@@ -291,7 +291,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Design approved 11-24 (named stops stay put, connections free, labels at street zoom; DECISIONS). Your scratch pad, 11-23: "people keep requesting to be able to rename / name bus stops. we should add that." Also a player 11-20: "バスの停留所も名前を変えれるようにしたい" (want to rename bus stops too).
   - Goal: A bus stop's name can be set in its panel like a station's, saved, and shown wherever the stop's name shows.
   - Other: notes/T-4080-design.md (about 6 h in six stages; also covers T-4083)
-- T-4048 [P3] {L:route-choice} Remove station connections and passageways
+- T-4048 [P3] {L:route-choice} Remove station connections and passageways (taking, 2026-11-24, agent passx)
   - Context: You, 11-24: "when entering "add passageway" mode, each existing passageway gets a little button it that you can click to remove. the buttons should be nonoverlapping. on hover, the button should get a red outline ilke for a station we're about to remove when using remove tool." Scratch pad 11-22: built and automatic ones alike.
   - Goal: In add passageway mode every passageway and connection has a remove button, none overlapping; a removed automatic one stays removed; undo and saves keep it.
 - T-4049 [P3] {L:achievements} Cities served counts only busy cities
@@ -452,9 +452,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-1200.md and notes/T-1211.md.
 
 ## Interface
-- T-4236 [P2] {L:small-fixes} Number symbols for lines past 99 (taking, 2026-11-24, agent busnum)
-  - Context: A player made over a hundred buses: "Bus 101" gets the symbol "B" instead of 101 (the symbol takes at most two characters of the number). You, 11-24: "should do that, seems easy".
-  - Goal: Lines numbered 100 and up show their number as the symbol, fitting the chip.
 - T-4228 [P3] {L:map-look} Profit view leaves some track uncoloured
   - Context: Player report 11-21 (board g150): in the profit view some areas show no profit with trains running. Reach: few, one report.
   - Goal: Every segment trains run on gets a profit colour.
