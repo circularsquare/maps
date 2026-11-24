@@ -29,6 +29,7 @@ diary notes/handoff-log.md. Her time UTC-5.
    T-4156 (waits on her). Track rework after 0.4.6.
 
 ## Her words
+- 11-24 05:0x: core cap 15 "for the night" (back to 14 when she's up); start T-3939/T-3160 overnight as cores free; T-4156 later (P3).
 - 11-24 02:1x: edit-speed streams "in parallel" meant done the same way (similar changes), not independently; the Opus review checks every stream uses the base (T-4145) the same way. Ask before leaving 2-8 agents; the 12 run on, no pausing. 02:0x: Resend Pro no; R2 purge yes;
   R2 reads and the website repo (till 1.3 GB) not reported (docs/ops-checks.md).
 - 11-23 00:0x: the drawn network rebuild is "the entire issue. this is what we should fix", not left to the track rework;

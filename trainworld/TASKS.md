@@ -263,7 +263,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Goal: One rule for every reversal, measured on a switchback line; the icon only when a reversal is the limit.
 - T-4179 [P1] {L:memory} Win back demand memory lost since v0.4.5
   - Context: T-4157 (11-24): master against v0.4.5, demand memory +13% NYC, +12% Tokyo, +35% Belgrade; tab peak +0.5/+5/+9%. Cause not traced. Tree zoneopen (T-4051) happened to show NYC demand memory 1,163 to 1,003 MB.
-  - Goal: Where the growth came from, and demand memory back to v0.4.5 or below on all three saves with the same figures.
+  - Goal: Where the growth came from, and demand memory back to v0.4.5 or below on all three saves with the same figures. Also: why coarse demand (T-4117) barely cuts memory (her question, 11-24).
   - Other: notes/T-4157.md
 - T-4141 [P3] {L:station-placement} Track placed by an edit call crossed the Hudson at ground level
   - Context: Seen by T-4112: a route entered through the game's edit call crossed the Hudson at ground level without a refusal, while pointer-drawn track nearby was bridged. Water may not have been loaded under part of it.
@@ -271,10 +271,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4116 [P2] {L:track-rework} {after:the 0.4.6 publish} Track model panic after a route edit on the track branch
   - Context: Your panic on 8800 (track branch build f382ee54): store.rs:851 under nodes_info, after a route edit and line colour changes. Not reproduced by 1,800 random edits each on NYC and your North America save; likely a line's service still naming track an edit removed. A second panic (run_polyline on a one-way return run) is fixed on tw/track. Notes/T-4116.md.
   - Goal: Reproduced with the fuzzer or your save under ?track, and fixed with a test, when the track rework resumes.
-- T-4156 [P2] {L:memory} {waits:Anita} Demand workers keep WASM memory after zones close
-  - Need from Anita: Land the restart only once it holds off while you're editing? I'd say yes.
+- T-4156 [P3] {L:memory} Demand workers keep WASM memory after zones close
   - Context: Tree memwasm (11-24): restart at a 192 MB gap gives back 290-340 MB per worker on all-China; then edits wait 3-8 min while workers reopen, final trips drift 0.11%. NYC never restarts.
-  - Goal: Memory given back with no edit waiting on the restart.
+  - Goal: Memory given back with no edit waiting on the restart: restart only when the tab is hidden or memory is tight (Gemini, 11-24). You, 11-24: not high priority, later.
   - Other: notes/T-4156.md in tree memwasm
 - T-4158 [P1] {L:solve-speed} Merge bus stops more aggressively for demand (taking, 2026-11-23, agent busland)
   - Context: You, 11-24: "ok, lets do 500m" (same-lines rule): Detroit's solve 29% lighter, Belgrade's 18%, median line moves about 2%. Built behind switches in tree busmerge2; default to 500 m, then perf_bench compare.
@@ -1046,7 +1045,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: From T-1354: each worker now rebuilds its corridor book whenever the open market packs change, so T-1174's compose-afresh on a replaced worker is no longer needed.
   - Goal: The compose-afresh removed, with a late-pack load still equal to a normal one.
   - Other: notes/T-1354.md
-- T-3939 [P2] {L:memory} {after:next week's usage} Clock worker memory on many-zone phone saves
+- T-3939 [P2] {L:memory} Clock worker memory on many-zone phone saves
   - Context: Paused 11-22 for usage; its agent stopped before writing anything. From T-3781, 11-21: on an iPhone reporter's 13-zone Tokyo-start save the clock worker held 15-30% of the tab, 359 MB settled and up to 493 MB before a collection; the tab peaked at 1,628-1,705 MB.
   - Goal: The clock worker's share on that save named piece by piece, and its biggest piece cut, measured on a production build as T-3160 measures.
   - Other: notes/T-3781.md "The iPhone crash reports"
