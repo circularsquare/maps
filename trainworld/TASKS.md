@@ -241,6 +241,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4159: games now on the Hetzner volume; check_resources.py watches only the root disk. You said yes to purging R2's oldest data version (11-18). The old games copy on the root disk goes once the 03:23 UTC backup on 11-24 logs ok.
   - Goal: A volume row (used of 49 GB) in check_resources.py; R2 down to three data versions; about 7.4 GB freed on the root disk.
   - Other: notes/T-4159.md
+- T-4165 [P1] {L:cleanup} Orchestrator notes with her standing calls on top
+  - Context: You, 11-24, yes to: a top section of about ten lines of your standing calls (answer you first; 2-8 agents, core cap only on your word, asking is not a start, count before each start; ask before going outside them; what is yours; biggest cost first), each phrased as an action at a moment; procedures below or moved into the tools' help.
+  - Goal: No rule lost or added except one: your direction calls go into DECISIONS.md when you say them; duplicates with trainworld/CLAUDE.md trimmed.
 - T-4141 [P3] {L:station-placement} Track placed by an edit call crossed the Hudson at ground level
   - Context: Seen by T-4112: a route entered through the game's edit call crossed the Hudson at ground level without a refusal, while pointer-drawn track nearby was bridged. Water may not have been loaded under part of it.
   - Other: notes/T-4112.md
