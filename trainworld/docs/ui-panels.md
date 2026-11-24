@@ -1437,8 +1437,8 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   works, and the saved figures (the ledger, the Cities tab's profit) show as saved; riders, trips and points stay
   empty, with no loading rings or "Calculating" (a train's riders say "Not available"), and the map's demand
   bubble and station rows are hidden. The top bar says "Asia - kanocifer isn't saved.
-  Its trips aren't calculated." with Calculate trips and Save; saved from there, "This game's trips aren't
-  calculated." with Calculate trips. Calculate trips opens the same game again with its trips, the memory check
+  Trips aren't calculated." with Calculate trips and Save; saved from there, "Trips aren't calculated for
+  this game." with Calculate trips. Calculate trips opens the same game again with its trips, the memory check
   first: a viewed network goes along with any edits (still viewed, its heart kept), a saved game is saved and
   reopened.
 - **The viewed game's card** (saves panel, above the others): its picture and facts as any card, "Not saved" where

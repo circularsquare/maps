@@ -2475,7 +2475,7 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   an off-road road for buses only, the track tool's fourth type after Tram. Drawn and built as off-street tram track
   (`set_route_kind(4)`: tram's curves and leads, levels, bridges, blueprint and Construct, no street or real-network
   snap, always double, no ramp switch, 12 m smallest radius); its own family 2, so it joins only busways
-  (`BuswayJoin`: "A busway joins only other busways."), holds no station (`BuswayStation`: "Stations can't go on
+  (`BuswayJoin`: "Busways can only join other busways."), holds no station (`BuswayStation`: "Stations can't go on
   busways. Place a BRT station beside one."), takes no crossover and is never retyped (`BuswayTrack`: "Trains and
   trams can't run on busways."); every train and tram path search keeps off it (`Network::edge_barred`), and it
   crosses rail and tram flat, giving way as a tram does. Price: off-street tram track's level table times two thirds
