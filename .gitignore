@@ -48,3 +48,4 @@ cores.json.tmp
 
 # Personal Claude Code permissions
 .claude/settings.local.json
+.bench-runs.json
