@@ -24,7 +24,7 @@ import { fileURLToPath } from 'node:url';
 
 const HERE = fileURLToPath(new URL('.', import.meta.url));
 const TREE = resolve(HERE, '../..');                                    // the tree this file is in
-const MAPS = TREE.replace(/[\\/]\.tw-trees[\\/][^\\/]+$/, '');          // the main tree: ledger of cores, data, builds
+const MAPS = TREE.replace(/[\\/]\.tw-trees[\\/][^\\/]+$/, '');          // the main tree: data, builds
 const HOME = join(MAPS, 'artifacts', 'trainworld', 'perfbench');
 const LEDGER = join(MAPS, 'trainworld', 'notes', 'perf-ledger.jsonl');   // the main tree's, from any tree
 const MB = 1048576;

@@ -3,8 +3,8 @@
 Open agent work: a head line per task with short Need / Context / Goal / Other fields under it; detail in `notes/T-###.md`. Format and rules in `CLAUDE.md`. Each task's
 `{L:<slug>}` tag names its line in `LINES.md`, Anita's view of the work by area.
 P1 = now or blocking, P2 = this milestone, P3 = later. Finished or abandoned tasks move to `ARCHIVE.md`.
-Lower-priority tasks are under **Someday** at the end, with one-sentence fields. They are all P4: they don't
-count as open (Anita 2026-11-16); work on them when nothing above can go
+P4 tasks stay in their area, or sit under **Someday** at the end with one-sentence fields. P4 tasks anywhere don't
+count as open (Anita 2026-11-16); work on one when nothing above can go
 ahead; pull one back up when it becomes next. Notes of archived
 tasks (except those an open task or the handoff cites) live in `notes/archive/` by task id, in the folders `t0001-0499/`,
 `t0500-0999/`, `t1000-1499/`, `t1500-1999/` and `t2000-2499/` (older ARCHIVE.md and DECISIONS.md links say
@@ -234,26 +234,15 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4149: edit_bench's stop-click rows say "no edit message" on both builds, and --compare picked up other agents' ledger lines.
   - Goal: Stop clicks measured, and --compare reads only the two runs it was given.
   - Other: notes/T-4149.md
-- T-4173 [P2] {L:checks} cores.py uses one ledger from any worktree
-  - Context: cores.py keeps cores.json beside itself, so a claim made with a worktree's copy goes to a ledger nobody reads and can quietly go over the cap. cores.mjs, agent_cargo.py, perf_bench.mjs and edit_bench.mjs each work around it on their own.
-  - Goal: cores.py resolves the main tree's cores.json (walk up past .tw-trees/ or git's common dir); the four workarounds removed. About 0.5 h.
-  - Other: notes/gemini-review-triage-2026-11-24.md
-- T-4175 [P3] {L:cleanup} Stale lines in SPEC, docs and handoff
-  - Context: SPEC.md section 3 still says "about 800 zones" (the code tour says over 4,000). docs/interface.md's redirect table lists "Zen Maru Gothic ... no transitions" as if current. handoff.md gives two 8800 commits and warns about .tw-trees/arrivefirst, which is gone. reserve_cores.ps1's top comment says claude.exe stays at normal priority; the code raises it.
-  - Goal: Each line says what is true now; TASKS.md's header says P4 tasks anywhere are parked; the two untracked .stackdump files deleted. About 0.5 h.
-  - Other: notes/gemini-review-triage-2026-11-24.md
 - T-4176 [P3] {L:checks} Remove finished worktrees and old tw branches
   - Context: 19 worktrees at about 1.2 GB each, a leftover empty .tw-trees/rampport folder, and 34 tw/* branches, 14 with no tree. handoff.md keeps coreslider, onewaylag, split6, stationids and timetables on purpose until after 0.4.6; others may be done.
   - Goal: Every tree whose agent is done and whose work landed is removed with agent-tree.mjs; merged branches with no tree deleted. About 0.5 h.
   - Other: notes/gemini-review-triage-2026-11-24.md
-- T-4179 [P1] {L:memory} Win back demand memory lost since v0.4.5 (taking, 2026-11-24, agent memgrowth)
-  - Context: T-4157 (11-24): master against v0.4.5, demand memory +13% NYC, +12% Tokyo, +35% Belgrade; tab peak +0.5/+5/+9%. Cause not traced.  - Goal: The growth traced, demand memory back to v0.4.5 on all three saves, same figures; and why coarse demand barely cuts memory (her question).
-  - Other: notes/T-4157.md
 - T-4182 [P2] {L:loading} Where a sparse save's load goes
   - Context: From T-921 (11-24): a western Montana save with 4 lines and 22 stations loads in 10-20 s, nearly all opening the zone; the trip calculation is under 1 s. Saved as perfbench/saves/t921-montana-4lines.save.
   - Goal: That load profiled piece by piece and its biggest piece cut.
   - Other: notes/T-921.md
-- T-4183 [P2] {L:checks} play.mjs can't load a game on a production build
+- T-4183 [P2] {L:checks} play.mjs can't load a game on a production build (taking, 2026-11-24, agent playprod)
   - Context: From batch check 11-24: on 8800, play.mjs start timed out four times waiting for the game to load (window.tw.client.lastLoad stays null; window.twDemand may be dev-only), so no check can load the real save on the shipped build.
   - Goal: play.mjs opens a new game and loads a save on 8800's production build.
   - Other: notes/batchcheck-2026-11-24-checksim.md
@@ -289,7 +278,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4057 [P1] {L:solve-speed} Solve speedups outside the first-arrival search
   - Context: You, 11-23: "main goal for today is to hopefully find some compute time improvements to compensate for the better pathfinding that takes into account that express routes are faster." T-4054 works on the search and `pool_cost`; this one profiles the whole solve on the real save and other big cities and takes the biggest costs elsewhere.
   - Goal: The top costs of a full solve named with their share, and the biggest ones cut with the same answers.
-- T-4075 [P2] {L:trains-drawn} Trams drawn off their track
+- T-4075 [P2] {L:trains-drawn} Trams drawn off their track (taking, 2026-11-24, agent trams)
   - Context: Your scratch pad, 11-23: "people also complain about trams sometimes visually drifting off the track... it does not look aligned with the track". Picture: artifacts/trainworld/board/20261123-080850-1792.png (Nottingham, trams at Old Market Square and Lace Market sit beside the track). A player report 11-22 asks the same.
   - Goal: Trams and trains drawn on their track's line at every zoom, curves and stations included.
 - T-4063 [P3] {L:small-fixes} Trip explorer fails just after a change
@@ -496,8 +485,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Design agreed 11-21 (notes/T-3444-design/; three small calls still open in review/track-rework-design.md). Built in 39 stages, T-3948 to T-3985 and T-4024, in four releases, on a long-lived branch tw/track merged into master at each release. Stage 1 (T-3948) is done on master; next is stage 2a (T-3949). Your weekend notes (2026-11-16) are the heart of it.
   - Goal: Closes with the last of its stages.
   - Other: Your notes verbatim: notes/T-3444.md; sizes in notes/code-tour.md. Requirements folded in 11-20: a station placed on track that leaves its shape alone redraws no neighbours (T-2767, 0.2-0.9 s today); the drawn network rebuilds only near a change (T-2701); the Penn Station to Emeryville snapped preview (3 s, T-763) as a check case. notes/review-edit-speed-2026-11-20.md
-- T-4161 [P1] {L:accounts-server} {after:T-4159} Server save check accepts master's save level 39
-  - Context: volmove (T-4159) found shonei-server's TestTwSaveCheckFollowsTheGame failing: master saves at level 39, the running server checks up to 38. Already true before the volume move.
+- T-4161 [P1] {L:accounts-server} {waits:Anita} Server save check accepts master's save level 39
+  - Need from Anita: a yes to deploy shonei-server (deploy.ps1) in the daytime, before the 0.4.6 publish; I'd say yes.
+  - Context: Fixed and committed in shonei-server (7bdd559: level 39 and the new LBE1 block), tests pass, not deployed. Without it 0.4.6 saves upload fine but are stored "unverified" and never pinned as the recovery copy.
   - Goal: The server accepts level 39 before the next publish; the test passes. Deploy on your yes.
   - Other: notes/T-4159.md
 - T-4026 [P2] {L:track-rework} {after:the first tw/track release} TWT7 outside the game before the merge

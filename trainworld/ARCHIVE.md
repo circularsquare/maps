@@ -1,6 +1,10 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4175 [P3] {L:cleanup} Stale lines in SPEC, docs and handoff (2026-11-24): stale lines fixed: reserve_cores.ps1 comment, TASKS header, stackdumps deleted; SPEC and interface lines were already right (notes/T-4173.md)
+- T-4173 [P2] {L:checks} cores.py uses one ledger from any worktree (2026-11-24): cores.py resolves the main ledger from .tw-trees/<name>/ and .tw-snap/; agent_cargo.py and cores.mjs workarounds removed (notes/T-4173.md)
+- T-4179 [P1] {L:memory} Win back demand memory lost since v0.4.5 (2026-11-24): Traced to T-4041's per-destination shares in the search tables; tables packed losslessly (NYC 62 to 48 MB), demand memory 1163 to 1067 MB NYC, 1751 to 1687 Tokyo, 4189 to 3710 Belgrade, rail trips identical; rest is T-4041's rule. notes/T-4179.md.
+- T-4186 [P3] {L:edit-speed} Copy line's word and network disagree by one edge; "1 trains per hour" (2026-11-24): Plural on the three reversal hovers; the one-edge mismatch was a station removal's deliberate extra stroke, so the dev warning now ignores word edges with no track in the network. notes/T-4186.md.
 - T-4174 [P2] {L:checks} Cycling hook text matches the orchestrator doc (2026-11-24): Stop hook now points at docs/orchestrator.md Your own cycling instead of repeating steps; the Fable line is in orchestrator.md line 38, not the hook.
 - T-4178 [P1] {L:line-rates} Reversals mid-line cost the same as at a line's end (2026-11-24): A reversal partway counts half a turn each way, so it limits a line no more than its ends; the reversal icon, stop-list icon and issues row show only where the turn is the line's limit. Player-path switchback 7.5 -> 12.5 trains/hour (now the out-and-back stretch). notes/T-4178.md.
 - T-4185 [P2] {L:edit-speed} Undo after Copy line removes only the copy's symbol (2026-11-24): One undo takes back a whole copy or new line: joined edits in the sim (join_edit), undo drawn at its click; t4170 check covers both.

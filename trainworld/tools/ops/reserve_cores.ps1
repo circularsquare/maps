@@ -1,6 +1,6 @@
 # Keeps the lowest cores free for Anita's own work: everything a Claude session starts (agents' builds, browsers,
-# Vite, checks) is pinned to the other cores at below-normal priority. The session's own claude.exe stays at normal
-# priority on every core, since it draws her terminal (pinning it made typing lag 4 s). New children start unpinned,
+# Vite, checks) is pinned to the other cores at below-normal priority. The session's own claude.exe, the OpenConsole.exe
+# above it and WindowsTerminal.exe run at AboveNormal on every core, since they draw her terminal (pinning it made typing lag 4 s). New children start unpinned,
 # so the orchestrator runs it with -Loop in the background at takeover.
 #   powershell -File trainworld/tools/ops/reserve_cores.ps1 [-Loop 30]        the claude.exe this shell runs under
 #   powershell -File trainworld/tools/ops/reserve_cores.ps1 -Root 1234        another session's claude.exe

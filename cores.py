@@ -34,7 +34,7 @@ Nothing is enforced on any process; this is a promise between agents.  A claim w
 a job that dies releases its cores without anyone remembering to.  A claim made without --pid
 is dropped after 6 hours instead.  Claiming a name that already exists replaces that claim.
 
-The ledger is cores.json beside this file (CORES_LEDGER=<path> overrides it, for tests).  Standard
+The ledger is cores.json at the maps root, also from a worktree's copy of this file in .tw-trees/<name>/ or .tw-snap/ (CORES_LEDGER=<path> overrides it, for tests).  Standard
 library only.
 """
 import json
@@ -43,7 +43,17 @@ import pathlib
 import sys
 import time
 
-HERE = pathlib.Path(__file__).resolve().parent
+def _root_dir():
+    here = pathlib.Path(__file__).resolve().parent
+    # Inside an agent worktree (maps/.tw-trees/<name>/) or snapshot (.tw-snap/), share the main repo's ledger.
+    if here.parent.name == ".tw-trees":
+        return here.parent.parent
+    if here.name == ".tw-snap":
+        return here.parent
+    return here
+
+
+HERE = _root_dir()
 LEDGER = pathlib.Path(os.environ["CORES_LEDGER"]).resolve() if os.environ.get("CORES_LEDGER") else HERE / "cores.json"
 MACHINE = 16
 DEFAULT_CAP = 10

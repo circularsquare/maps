@@ -15,10 +15,10 @@ import { cpus } from 'node:os';
 import { basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// the shared ledger is the main tree's: from an agent's worktree (maps/.tw-trees/<name>/) a claim in the tree's own
-// copy of cores.py went to a cores.json nobody else reads
-const MAPS = fileURLToPath(new URL('../../', import.meta.url)).replace(/[\\/]\.tw-trees[\\/][^\\/]+[\\/]?$/, '/');
-const ARTIFACTS = MAPS + 'artifacts/trainworld/'; // and so is the registry of which cores each check holds
+// cores.py finds the shared ledger itself from a worktree; the registry of which cores each check holds is the main tree's
+const TREE = fileURLToPath(new URL('../../', import.meta.url));
+const MAPS = TREE.replace(/[\\/]\.tw-trees[\\/][^\\/]+[\\/]?$/, '/');
+const ARTIFACTS = MAPS + 'artifacts/trainworld/';
 
 const REGISTRY = ARTIFACTS + 'check-cores.json';
 let PLAN = null;
@@ -51,7 +51,7 @@ export function corePlan() {
     const name = `check-${basename(process.argv[1] ?? 'node').replace(/\.mjs$/, '')}-${process.pid}`;
     const want = Number(process.env.TW_CORES_WANT ?? 3);
     const min = Math.min(want, Number(process.env.TW_CORES_MIN ?? 2));
-    const r = spawnSync('python', [MAPS + 'cores.py', 'claim', String(want), name, '--pid', String(process.pid), '--min', String(min), '--timeout', String(process.env.TW_CORES_TIMEOUT ?? 1800), 'Playwright check'], { encoding: 'utf8', windowsHide: true, stdio: ['ignore', 'pipe', 'inherit'] });
+    const r = spawnSync('python', [TREE + 'cores.py', 'claim', String(want), name, '--pid', String(process.pid), '--min', String(min), '--timeout', String(process.env.TW_CORES_TIMEOUT ?? 1800), 'Playwright check'], { encoding: 'utf8', windowsHide: true, stdio: ['ignore', 'pipe', 'inherit'] });
     n = Number(r.stdout?.trim().split('\n').at(-1));
     if (r.status !== 0 || !(n >= 1)) { console.error('no cores from the ledger (see above); not running'); process.exit(2); }
     claimed = name;
@@ -68,7 +68,7 @@ export function corePlan() {
   PLAN = { n: cores.length, cores, mask, workers: Math.max(1, cores.length - 1), claimed };
   process.on('exit', () => {
     const r = readRegistry(); delete r[process.pid]; writeRegistry(r);
-    if (claimed) spawnSync('python', [MAPS + 'cores.py', 'release', claimed], { stdio: 'ignore', windowsHide: true });
+    if (claimed) spawnSync('python', [TREE + 'cores.py', 'release', claimed], { stdio: 'ignore', windowsHide: true });
   });
   console.log(`      cores: ${cores.length} (${cores.join(',')}, mask 0x${mask.toString(16).toUpperCase()})${claimed ? ', from the ledger' : ''}, demandWorkers ${PLAN.workers}`);
   return PLAN;
