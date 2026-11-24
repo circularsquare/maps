@@ -211,7 +211,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Goal: An estimate from the start, within about 30% of the real wait on asianita and NYC.
   - Other: notes/T-4209.md
 - T-4214 [P1] {L:edit-speed} Clickable map patched with what each edit touched (taking, 2026-11-24, agent mapcfix)
-  - Context: Waiting clicks landed 11-24 (7ff71c929): quick clicks act on the right piece but wait. You, 11-24: work at the root cause, "something like a silo approach", and deprioritize surface fixes. Gemini: artifacts/trainworld/gemini/rootcause-plan-answer.md.
+  - Context: Waiting clicks landed 11-24 (7ff71c929). The clickable map patched with each edit's pieces (stage C, kept off the panels' world) is built in tree mapcfix, not landed. You, 11-24: work at the root cause, "something like a silo approach". Left: the station name wait, a track run's placing wait, drawings at the click. Gemini: artifacts/trainworld/gemini/rootcause-plan-answer.md.
   - Goal: After each edit the clickable map takes only the touched pieces, so no click waits for the whole network; no name or placing wait for stations and track runs.
   - Other: notes/T-4214.md
 - T-4154 [P2] {L:checks} Agent browsers run past their core claim
@@ -266,11 +266,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4074 [P4] {L:loading} Spain blocks the game during football matches
   - Context: You, 11-23: "ok can leave as p4". From T-4071 (feedback 1795377906): Spanish ISPs block Cloudflare's shared addresses during LaLiga matches by court order. anita.garden and data.anita.garden both sit on them; the account server does not. A fallback would be a data mirror plus a page off Cloudflare, 4-6 h plus an upload at every publish.
   - Other: notes/T-4071.md group 3
-- T-4224 [P3] {L:buses} {waits:Anita} Lower bus ridership
-  - Need from Anita: Count bus minutes as 1.2x a train's and bus waits as if buses came at most every 4 minutes? I'd say yes to both; 500 m reach adds little.
-  - Context: You, 11-24: "bus ridership is just maybe a bit too high overall"; 0.7-minute headways unrealistic. Measured (NYC test / Belgrade): 1.2x bus minutes -5% / -14%; 4-minute wait rule -50% only on lines more often than that; 500 m reach -3.5% / -0.6%; street cap 60/h -11%. Your two tests unchanged.
-  - Goal: Your pick built; average NYC test bus line nearer a busy real route than today's 33,000 a day.
-  - Other: notes/T-4224.md ("For Anita" first)
+- T-4224 [P3] {L:buses} Bus minutes 1.1x, bus waits at least 2 minutes, 500 m reach (taking, 2026-11-24, agent busdemand)
+  - Context: You, 11-24: "yes i think we can do a 1.1x bus minute mult, can maybe adjust more later, and do waits at least 2 minutes. and also 500m reach". Today the NYC test's average bus line carries 33,000 a day, about New York's busiest real route.
+  - Goal: Those three built; bus riders before and after on the NYC test and Belgrade; your two ceiling tests still pass.
+  - Other: notes/T-4224.md
 - T-4053 [P3] {L:borders} Common language border factor
   - Context: Your scratch pad, 11-22: "i think bogota-quito travel might be a bit small? relative to number of planes (liek 6 a day, maybe 2000 people a day vs our 800) i wonder if we should do a like 'common language' border multiplier... and maybe also between like switzerland and france". A new demand factor: the design goes to you first.
 - T-4063 [P3] {L:small-fixes} Trip explorer fails just after a change
@@ -280,8 +279,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4070 [P2] {L:station-placement} {after:T-4037} Ctrl click draws a station box without snapping
   - Context: Your scratch pad, 11-23: "some people also dislike the snapping when drawing station boxes, we can also ctrl click to override here." Same gesture as T-4069; the track rework's station tool (T-4037 g3/g4) is changing placement now, so after that lands.
   - Goal: Ctrl+click draws the station box where the pointer is, no snapping.
-- T-4083 [P2] {L:buses} {waits:Anita} Manual connections between bus stops and stations
-  - Need from Anita: Same design and picks as T-4080 (notes/T-4080-design.md); one answer covers both.
+- T-4083 [P2] {L:buses} Manual connections between bus stops and stations
   - Context: Your scratch pad, 11-23: "allow making manual connections between bus stops and other stations." Split from T-4079. A bus stop gets a new id whenever an edit places the stops again, so a connection needs a stop that keeps its identity across edits and saves; T-4080 (naming bus stops) needs the same, so one design.
   - Goal: A player connects a bus stop to a station or stop up to 1 km away; riders change on foot as within a complex; it survives edits and a save.
   - Other: notes/T-4079.md
@@ -289,9 +287,8 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4052 (11-24): the line hover's "riders who wanted a bus" is carried plus left behind, so a rider who boards a later bus counts twice (rail too). Fix: count everyone who came to the stops; shifts the issues row's 3% threshold a little.
   - Goal: The hover's share left behind counts each rider once.
   - Other: notes/T-4052.md
-- T-4080 [P2] {L:buses} {waits:Anita} Name and rename bus stops
-  - Need from Anita: Three picks in notes/T-4080-design.md: named stops stay put, connections free with no upkeep, labels for named stops at street zoom. All three as recommended?
-  - Context: Your scratch pad, 11-23: "people keep requesting to be able to rename / name bus stops. we should add that." Also a player 11-20: "バスの停留所も名前を変えれるようにしたい" (want to rename bus stops too).
+- T-4080 [P2] {L:buses} Name and rename bus stops
+  - Context: Design approved 11-24 (named stops stay put, connections free, labels at street zoom; DECISIONS). Your scratch pad, 11-23: "people keep requesting to be able to rename / name bus stops. we should add that." Also a player 11-20: "バスの停留所も名前を変えれるようにしたい" (want to rename bus stops too).
   - Goal: A bus stop's name can be set in its panel like a station's, saved, and shown wherever the stop's name shows.
   - Other: notes/T-4080-design.md (about 6 h in six stages; also covers T-4083)
 - T-4048 [P3] {L:route-choice} Remove station connections and passageways
@@ -454,6 +451,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-1200.md and notes/T-1211.md.
 
 ## Interface
+- T-4236 [P2] {L:small-fixes} Number symbols for lines past 99 (taking, 2026-11-24, agent busnum)
+  - Context: A player made over a hundred buses: "Bus 101" gets the symbol "B" instead of 101 (the symbol takes at most two characters of the number). You, 11-24: "should do that, seems easy".
+  - Goal: Lines numbered 100 and up show their number as the symbol, fitting the chip.
 - T-4228 [P3] {L:map-look} Profit view leaves some track uncoloured
   - Context: Player report 11-21 (board g150): in the profit view some areas show no profit with trains running. Reach: few, one report.
   - Goal: Every segment trains run on gets a profit colour.
@@ -590,6 +590,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Platforms between two bundles' tracks where they split; the drawn platform from T-3859.
   - Goal: A wedge station at a Y works.
   - Other: Closes T-3859. 4-6 h. stage 10
+- T-4235 [P1] {L:stops} Loop close refused on ordinary circle lines (taking, 2026-11-24, agent loopcase)
+  - Context: You, 11-24, after T-4223: "im not confident that this loop line fix catches most of the cases ... some of the cases they were sending me looked like perfectly normal non pathological cases that mostly look like a circle with lots of stops around it". T-4223 fixed a long stop-less stretch and right clicks before the answer.
+  - Goal: Ordinary circle lines with many stops close with a right click every time, in the shapes players build.
+  - Other: notes/T-4223.md; board groups g143, g009
 - T-3980 [P3] {L:stops} {after:T-3962} Exact stops in running order
   - Context: A line's stops as stop points in running order, out and back; switching between simple and exact both ways with a notice.
   - Goal: A line listed exactly as its simple stops gives the same runs and demand arrays.

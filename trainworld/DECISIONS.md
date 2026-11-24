@@ -156,9 +156,11 @@ artifacts/trainworld/T-4120/.
 
 ## Buses
 
-- 2026-11-24 (T-4052): Riders left behind count once each, at the first train or bus to leave them; riders turned away from a full stop don't (they went another way). Rail counts drop too (NYC save 11%). Kept per departure with a queue, 4 bytes each. notes/T-4052.md
+- 2026-11-24 (Anita, T-4052): Riders left behind count once each, at the first train or bus to leave them; riders turned away from a full stop don't (they went another way). Rail counts drop too (NYC save 11%). Kept per departure with a queue, 4 bytes each. notes/T-4052.md
 - 2026-11-24 (T-4052): A bus stop holds at most 200 waiting each way (a bus's 12 m of sidewalk, 5 m deep at 0.3 m² a rider, as a platform's 5,000), a BRT station 667. Boarding account only, so trips and fares don't move. notes/T-4052.md
-- 2026-11-23 (Anita, T-4079, T-4056): Bus walking reach is 600 m: 1 km was dropped before publishing, as players liked lower bus ridership, and borrowing a neighbour stop's search was declined. A bus stop's change walks reach 150 m, stations' 300 m. notes/T-4079.md
+- 2026-11-24 (Anita, T-4224): To lower bus ridership, a bus minute counts 1.1x a train's, a bus wait counts at least 2 minutes, and walking reach to a bus stop is 500 m (was 600; 1 km dropped 11-23). "can maybe adjust more later". notes/T-4224.md
+- 2026-11-24 (Anita, T-4080, T-4083): Named bus stops stay where they are, connections between a bus stop and a station are free with no upkeep, and named stops get map labels at street zoom. notes/T-4080-design.md
+- 2026-11-23 (Anita, T-4079, T-4056): Borrowing a neighbour stop's search was declined. A bus stop's change walks reach 150 m, stations' 300 m. notes/T-4079.md
 - 2026-11-23 (Anita, T-4094, T-3924): Every drawn bus stop is a demand stop ("if people are seeing bus stops the bus stops have to be real"), replacing one every 2 km; consecutive bus-only stops served by the same lines merge, within 500 m since T-4158. notes/T-4094.md
 - 2026-11-21 (Anita, T-3378, T-3907): BRT runs 10 km/h above the plain bus floor (25 km/h, was 30), its lanes paid only in town, 100 buses an hour a lane (was 60), its stations with a waiting room. Busways run any bus at 60 km/h. notes/T-3378.md
 - 2026-11-20 (Anita, T-3856): A plain bus moves at 85% of the car's speed (80% not taken) plus 28 s a stop, replacing 70% capped at 18 km/h. No boarding cost (was 6, then 4 minutes); $6 a bus-km, two thirds of real. notes/T-3856.md
@@ -171,7 +173,8 @@ artifacts/trainworld/T-4120/.
 ## Map and UI
 
 - 2026-11-24 (Anita, T-4097): After 0.4.6, edit speed works at the root cause: an edit costs what it touched (drawn network, clickable map, trips), not the whole world; drawing results at the click is deprioritized once that starts. notes/T-4153.md
-- 2026-11-24 (T-4214): A map click made before an earlier edit reaches the clickable map waits (spinner, at most 5 s), then acts at its spot; a quick second click costs 0.3-1.1 s on big saves. Track run segments and stop clicks never wait. notes/T-4214.md
+- 2026-11-24 (T-4214): An edit's patch goes only to the map the tools pick on (`clickWorld`, `clickNet`); `world`, which panels, layers and money follow, waits for the state. Setting `world` per patch ran them all twice per edit (79 ms for a station on New York). notes/T-4214.md
+- 2026-11-24 (T-4214): A map click made before an earlier edit reaches the clickable map waits (spinner, at most 5 s), then acts at its spot; the map takes the edit's patch with its word, or its network when none is sent. Track run segments and stop clicks never wait. notes/T-4214.md
 - 2026-11-24 (T-4075): Trains, trams and buses are placed along 50 m samples plus points where the track bends between them (within 0.25 m, about 0.6 m at a right-angle corner); a finer step everywhere was ruled out (5x the samples on NYC). notes/T-4075.md
 - 2026-11-23 (T-4145): An undo is drawn at its click only for the newest edit with nothing else waiting; an undo of an edit that was then refused takes nothing back, without a notice.
 - 2026-11-23 (Anita, T-4153): The drawn network is bounded by what an edit touched on master now, not left to the track rework's stage 5: it is most of an edit's wait.

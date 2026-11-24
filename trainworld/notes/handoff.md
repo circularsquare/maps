@@ -1,27 +1,28 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 3793ea75-3fa8-4643-b04d-bea05a94ef29, name maps-d9 [d2420d], since 2026-11-24 20:20 UTC
-Updated: 2026-11-24 20:34 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-24 21:09 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5. Core cap 14 (her 20:12, "take on more tasks at once if you have bandwidth").
 
 ## Next
-1. Running. Adopted from maps-1c 20:20 (reports reach the inbox; briefs in maps-1c's scratch <agent>/brief.md):
-   mapC T-4214 C1+C2 (tree mappatch; clickable map patched from each edit's touched records), quickend T-2188 (tree
-   quickend; drift over 15 edits goes to her before landing), buswait T-4052 (tree buswait), loopclose T-4223 (tree
-   loopclose), busopts (read-only, notes/T-4224.md table for her bus pick). Mine (briefs in my scratch <agent>/brief.md):
-   linesym T-4226 (Sonnet, tree linesym; line symbol in other languages, many players), bandorders T-4153 stage 3 (Opus,
-   tree bandorders; pass-through test for band orders). Done: mapslow (no regression, landed 4bd32c838, T-4230 filed
-   from it); busstopid (T-4080/T-4083 now {waits:Anita}, notes/T-4080-design.md; T-4047 folded); sortreq (93 player
-   reports, 171 groups; bugs filed T-4226 to T-4229).
-2. When mapC, quickend and buswait land: one batch checker on master (edits, undo, waiting clicks, figure drift),
-   8800 rebuild, smoke. 0.4.6 is live (published 19:36 UTC, changelog trimmed and re-pushed 19:47).
-3. Then T-4227 (weekend services bug; touches scheduling, maybe buswait's service.rs: after buswait lands), T-4214
-   stages A and D (after mapC), T-4149/T-4150, T-4220, T-4193, T-4230, T-4187 then T-3160, T-4080/T-4083 once she
-   picks, T-4199 (fix NYC +13 MB first), T-4222 P3. Board up next holds this.
+1. Running (briefs in my scratch <agent>/brief.md): cutstretch T-4153 s4 (Opus), loopcase T-4235 (Opus, her loop doubt),
+   busnum T-4236 (Sonnet), busdemand T-4224 (Sonnet, her bus call), qcheck (T-2188's checker, tree quickend; land after
+   it passes, she didn't object to the drift), mcheck (T-4214's checker, tree mapcfix), check12 (batch checker on master).
+2. mapcfix found T-4214's extra cost (the patch set world, so panels and layers ran twice per edit; now only the tools'
+   map) but its one bench left was noisy. After mcheck: a quiet window (hold starts) for the tree's last edit_bench, then
+   land. Baseline on master: artifacts/trainworld/editbench/baseline.json (b7b9e4ee; NYC track built 437 ms).
+3. Then T-4080 stage 1 (bus stop naming approved; six 1 h stages, saves change: own checker), T-4214 stages A, D, E,
+   T-4231, T-4193 (clock worker files after mapcfix lands), T-4220 (after quickend lands), T-4149/T-4150, T-4230, T-4187,
+   T-3160, T-4199, T-4233, T-4234, T-4222 P3. 8800 = f733d3bf, smoke PASS.
 4. After up next: her big three, T-3444 track rework, T-3742 schedule nudging, T-3694 bulk station improvements panel +
    T-3456 crowding along the line.
 
 ## Her words
+- 11-24 22:3x: loop fix: "im not confident that this loop line fix catches most of the cases ... perfectly normal non
+  pathological cases that mostly look like a circle with lots of stops around it", don't claim fixed in the changelog
+  (c004 hidden; T-4235 P1). Rider counts once each: yes. Lines past 99 keep number symbols, "seems easy" (T-4236). Buses:
+  "1.1x bus minute mult, can maybe adjust more later, and do waits at least 2 minutes. and also 500m reach" (T-4224).
+  Bus stop naming design OK (T-4080/T-4083). All in DECISIONS.
 - 11-24 20:1x on buses: "bus ridership is just maybe a bit too high overall"; leaning away from changing speed ("in some
   places buses do run fast ... balancing it with motorways seems quite hard"); a perceived cost should scale with ride
   time ("the annoying part is being on the bus"); bunching ("schedules are super unreliable"); "people are running buses
