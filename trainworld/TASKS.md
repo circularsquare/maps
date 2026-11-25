@@ -201,7 +201,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4276 [P2] {L:timetables} Timetable for a whole line group
   - Context: A player (X, 11-24): "Currently, the timetable only displays one route at a time. I'd like to be able to display all the routes in a group together." You, 11-24: file it.
   - Goal: A line group's panel shows one timetable with every line of the group, each line's trains told apart.
-- T-4281 [P1] {L:edit-speed} Later clicks wait on the previous click's whole-save work
+- T-4282 [P1] {L:checks} Fix the review's findings on the edit-path landings (taking, 2026-11-25, agent fixes16a)
+  - Context: Gemini's review of T-4149, T-4239, T-4249, T-4153 stage 6, T-4262 stage 1, T-4271, T-4258 and T-4255 (artifacts/trainworld/gemini/batch16a/review.md). Each finding is checked against the code first; T-4262 was rewritten since.
+  - Goal: Every real finding a player could hit fixed at its cause; the rest answered with the reason.
+- T-4281 [P1] {L:edit-speed} Later clicks wait on the previous click's whole-save work (taking, 2026-11-25, agent followcut)
   - Context: Click run on your Asia save on 8800 (ff532d4e9, 11-25): first station confirmed 558 ms after the press, later ones 2.2 s (p90 2.9 s). Each waits for the click before it, whose follow-up redoes whole-save steps in blocks of 0.4-2.5 s (notes/T-4267-measure.md).
   - Goal: Every follow-up step costs what the edit touched, so later clicks are answered like the first; measured with edit_bench's click run.
 - T-4272 [P1] {L:edit-speed} {waits:Anita} A click confirmed from what it touches (taking, 2026-11-24, agent answerfirst)
@@ -217,14 +220,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: T-4209's display fix (11-24) shows no time left until the solve's own time is known, then only counts down (asianita: none until 138 s, then 7 min down; final at 523 s). You: "then do the actual underlying fix later."
   - Goal: An estimate from the start, within about 30% of the real wait on asianita and NYC.
   - Other: notes/T-4209.md
-- T-4274 [P1] {L:edit-speed} Line tables in slots of their own on the GPU (taking, 2026-11-25, agent trainslots)
-  - Context: From T-4262 stage 2 (11-25): the drawn track and lines no longer move on the GPU after an edit. The trains' tables (samples, phases, bends) are still in line order, so a line that changes length moves every line after it: on your Asia save 20 MB uploaded per deleted line.
-  - Goal: Deleting a line or editing a station uploads only the changed lines' rows of the trains' tables.
-  - Other: notes/T-4262.md
-- T-4280 [P2] {L:edit-speed} Edits name the lines they changed for the renderer (taking, 2026-11-25, agent linenames)
-  - Context: From T-4274 (11-25): the trains' tables now send only changed lines, but the renderer finds them by comparing every line's slice of each changed table (9-23 ms of an edit on your Asia save), and the zoomed-out copy in view is copied whole.
-  - Goal: The renderer's part of an edit grows with the lines it changed, not the save.
-  - Other: notes/T-4274.md
 - T-4261 [P2] {L:checks} Gemini agents can run play.mjs games
   - Context: From the second Gemini code run (11-25): play.mjs start's detached server is killed when agy's tool call ends (a Windows job), so play.mjs edits and do find no game; it fell back to a one-process check. Also a "|" inside a quoted git grep pattern is refused.
   - Goal: A Gemini agent can start a game with play.mjs and drive it across calls; grep with alternatives works or the brief says how.

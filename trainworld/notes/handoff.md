@@ -1,27 +1,25 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session caa91e48-7288-4753-9895-c2b79ad5e3d9, name maps-c5 [fde5f5], since 2026-11-25 02:20 UTC
-Updated: 2026-11-25 04:46 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-25 07:17 UTC (cycling at 500k). Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
-0. Usage: Claude runs out before Gemini; Gemini for reading and reviews (gemini_audit.py), small clear code to Gemini
-   agents. Gemini quota hit 03:43 UTC, resets about 04:57: then batch review (template gemini/batch15/brief.md) over
-   T-4149, T-4239, T-4243, T-4249, T-4251, T-4255-T-4259, T-4262-T-4265, T-4266, T-4270, T-4271; rerun gemini_agent
-   t3303fix (T-4233, tree kept); T-4242 design draft (gemini/t4242/brief.md). Stay light: briefs in files.
-1. Edit speed, her main focus: ROOT CAUSE ONLY (DECISIONS T-4097). Landed: T-4272 stage (answer from own checks for
-   edits that move no running line's trains). 8800 ff532d4e9 click run on Asia: first 558 ms, later 2.2 s (p90 2.9).
-   Running: followcut (Opus, T-4281: follow-up steps by record so later clicks don't wait), linenames (Opus, T-4280
-   in tree trainslots: renderer told what changed; then land trainslots T-4274+T-4280 together). Her answer pending:
-   buy trains after the confirm (a-2026-11-25-4); on yes, line-track stations confirm locally (T-4272 rest).
-1b. batch16a review (gemini/batch16a/review.md, unread): its Opus fix agent starts once answerfirst and trainslots land.
-2. Landed: roadsblock (Opus, T-4275 P1: roads and water missing behind tracker blockers since 0.4.6; the hotfix
-   publish waits for her morning, publish skill).
-3. 8800 = 93412fc20, smoke PASSED 05:43 UTC (has the T-4275 roads fix: tell her it's ready for the hotfix publish when
-   she's back; publish skill). Landed overnight: T-4262 s2, T-4273, T-4233, T-4277, T-4279, T-4275, T-4243 dial.
-   Next starts: T-4276 group timetable, T-4080 s3-6, T-4199 s2, T-3160, T-4187. Overnight: calm pace, 2-4 agents.
-   T-3742 after she asks; T-4250; T-4248. Commit bookkeeping and push now and then.
-5. reserve_cores: maps-3e's loop holds the mutex; start mine (`-All -Loop 30`) once its tab closes.
+0. Usage: Claude runs out before Gemini; Gemini for reviews (gemini_audit.py) and small clear code. Stay light: briefs
+   in files, report heads only, review findings go to fix agents unread. Overnight (her): calm pace, 2-4 agents.
+1. Edit speed, her main focus: ROOT CAUSE ONLY (DECISIONS T-4097, notes/repeats.md). Running: followcut (Opus, T-4281:
+   follow-up steps by record so later clicks don't wait; brief in maps-c5 scratch followcut/brief.md). Asia click run on
+   8800 ff532d4e9: first 558 ms, later 2.2 s (edit_bench --save asia --only clickrun). Landed tonight: T-4149, T-4249,
+   T-4153 s6, T-4262 s1-2, T-4274, T-4280, T-4272 stage. Her answer pending a-2026-11-25-4 (buy trains after the confirm):
+   on yes, line-track stations confirm locally (T-4272 rest). Then measure the click run again and report yes/no per edit.
+2. fixes16a (Opus, T-4282: batch16a review findings, avoiding followcut's files; findings there go under "For followcut"
+   in its notes: pass them on). Batch review due over T-4272, T-4274, T-4280, T-4281 when landed.
+3. 8800 = ff532d4e9, smoke passed 07:06 UTC; T-4274/T-4280 landed after (rebuild next round). T-4275 roads fix is on
+   8800: tell her it's ready for the hotfix publish when she's back (publish skill; her word).
+4. Waiting on her: asks.py list (weekend solve T-4242, OpenFreeMap proxy, buy trains after confirm, rename and
+   speedometer text, Asia load on fewer workers, PR #21/#24 comments). T-3742 after she asks; T-4250; T-4248.
+5. Next starts (not edit speed): T-4276 group timetable, T-4080 s3-6, T-4199 s2, T-3160, T-4187.
+6. reserve_cores: maps-3e's loop (its tab) holds the mutex; start one (`-All -Loop 30`) if it dies.
 
 ## Her words
 - 11-24 evening her time: edit speed's root cause is the main focus ("we should *only be targeting the root cause*",
