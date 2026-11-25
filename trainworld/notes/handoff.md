@@ -15,11 +15,12 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
    load was a mid-game load of Haeju waiting 4.7 min on an edit's re-solve, bar full; T-4361, T-4362), T-4153 s9
    (b6aa1b90f: bands 27 to 15 ms in Node; T-4153 open for 100 ms; T-4363 filed). netcut9's page bench was worse (NYC
    station built 147 -> 249 not noisy, n 1; Asia noisy): after today3 lands, on master quietly: edit_bench NYC --runs
-   3 --compare 65f0134b@20261125203108-11820 (running, scratchpad batchbench.log), smoke, 8800; then stop. T-4281
+   3 --compare 65f0134b@20261125203108-11820 done 11-25: no regression (station 76 -> 80 within its range; click
+   run later 122 -> 34, undo 143 -> 95, delete a line 254 -> 152). 8800 at 98aedf0d0, smoke passed. Wound down 11-25 22:40 UTC: no agents, nothing running. T-4281
    s3 landed (67426dfa8: `today` ~107 to 3-6 ms on Asia with the clock running; page click hold left as is, see
    notes). Before the next publish: a Claude batch review of d441fb19f, 914f564e6, b6aa1b90f, 67426dfa8. Then
    T-4153 s10, T-4309, T-4314/T-4315. Up next: T-3160, T-3838.
-5. Standby: maps-3a (notes/standby.txt). Gemini's quota is out until about 11-30: Claude reviewers meanwhile.
+5. Standby: maps-3a (notes/standby.txt). Gemini out until about 11-30: Claude reviewers meanwhile.
 6. Resources 11-25: Resend over (her: nothing); R2 11-18b, 11-19 purged (her yes); Class A 91% of the free million
    projected; Class B, repo size known to her. Cloudflare stats: her Configuration Rule leaves /trainsworld out (checked).
 
@@ -52,8 +53,7 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
   maps .claude/settings.json, notes/T-3397.md, tools/ops/archive_bad_saves.py.
 - Trees kept: _track (tw/track), tracksnap (snaptrack.py), _seed (Rust cache seed). hotfix461 removed 11-25 (branch on
   origin).
-- reserve_cores: maps-96's loop (task bqimpnxwn) still holds the mutex while its tab runs year44, so maps-d6's exited;
-  start it again once year44 reports and that tab closes.
+- reserve_cores: maps-96's loop holds the mutex while its tab stays open; a successor starts its own (a second exits).
 - notes/T-4214.md: stage A's section (stationclick, 11-25) sits uncommitted, not ours; keep it.
 - `land` (not `finish`) conflicts on changelog/next.json when the tree has items: use `finish` (it moves them).
   `finish` drops a tree's edits to existing changelog items: redo them in the main tree.
