@@ -8,13 +8,12 @@ import { runLag } from "../game/moneyTiming";
 import { networkFromState, networkSteps, newNetCache, runsTrains, shiftNetCache, type NetworkBuffers } from "../map/network";
 import { terminalEnds } from "../map/terminalBays";
 import { packCross } from "../map/markData";
-import { type Complexes } from "../game/complexes";
 import { alignList, StateRows, upgradesOf, type RowEnv } from "./stateRows";
 import { PlatformLines } from "./platformLines";
 import type { ClockEdge, ClockLine, ClockNode, ClockState } from "./protocol";
 import { publishSlots, saves } from "./slots";
 import { META_PER_LINE, profileOf } from "../map/profiles";
-import { buildSnapshot, busRow, complexesOf, complexOfNodes, forgetKeeps, groundK, loadsLater, namedKeeps, nodeComplexes, putXferSet, sendTrips, shownBuildings, snapTimer, StationGeo } from "./clockDemand";
+import { buildSnapshot, busRow, complexInputs, complexOfNodes, forgetKeeps, groundK, loadsLater, namedKeeps, putXferSet, sendTrips, shownBuildings, snapTimer } from "./clockDemand";
 import { pinFareRef } from "./clockFares";
 import { moneyState } from "./clockMoney";
 import { keep } from "./clockPanic";
@@ -302,16 +301,8 @@ export function previewMarkRows(rows: Float64Array): Float32Array {
 /** T-1859: each station's platform line, for the complexes */
 const platformLines = new PlatformLines();
 export const platformLineOf = (a: TrackApi, id: number, x: number, y: number, platform: number) => platformLines.of(a, id, x, y, platform, groundK(y));
-/** T-3288: the complexes of the station rows, for the one name their untyped members show */
-function rowComplexes(rows: readonly ClockNode[]): Complexes {
-  const geo: StationGeo[] = rows.map((r) => ({ id: String(r.id), x: r.x, y: r.y, heading: r.heading, length: r.platform, ...(r.line ? { line: r.line } : {}) }));
-  const fl = api!.station_links(), links: [string, string][] = [];
-  for (let k = 0; k + 1 < fl.length; k += 2) links.push([String(fl[k]), String(fl[k + 1])]);
-  return complexesOf(nodeComplexes, geo, links);
-}
-export const rowEnv: RowEnv = { lngLat: packLngLat, periodHours: PERIOD_HOURS, busRow, platformLine: platformLineOf, complexes: rowComplexes,
-  platformLineNow: (a, id, x, y, platform, changed) => platformLines.peekOf(a, id, x, y, platform, groundK(y), changed),
-  complexKey: (a) => a.station_links().join() + "|" + a.buildings_info().join() + "|" + a.station_apart().join() };
+export const rowEnv: RowEnv = { lngLat: packLngLat, periodHours: PERIOD_HOURS, busRow, platformLine: platformLineOf, complexInputs,
+  platformLineNow: (a, id, x, y, platform, changed) => platformLines.peekOf(a, id, x, y, platform, groundK(y), changed) };
 /** the rows of the last states, read again only where the track model says something changed (T-1382);
  * `?patch=0` reads them whole */
 export const stateRows = new StateRows();
@@ -577,7 +568,7 @@ function buildState(rowsOnly = false): ClockState {
     lines,
     links: Array.from(a.station_links()),
     apart: Array.from(a.station_apart()),
-    buildings: timed("sBld", () => shownBuildings(a, nodes)),
+    buildings: timed("sBld", () => shownBuildings(a)),
     keeps: namedKeeps(a),
     render: {
       edgeParts: drawn,

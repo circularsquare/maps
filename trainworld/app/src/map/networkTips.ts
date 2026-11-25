@@ -14,6 +14,7 @@ import { t, tNumber } from "../i18n";
 import { capacity, crowdAt, QUEUE_STRIDE, tripLoad } from "../game/boarding";
 import { clock } from "../game/clock";
 import { complexes } from "../game/complexView";
+import { membersOf } from "../game/complexes";
 import { demandView } from "../game/demand";
 import { exact, forecast } from "../game/format";
 import type { LineInput, WorldView } from "../game/types";
@@ -56,8 +57,7 @@ function part(colour: string, text: string): HTMLDivElement {
 function circleOf(ov: Overlay, w: WorldView, id: string): Circle | null {
   const net = ov.renderer.net, dv = demandView.peek(), mode = display.peek().stationUse;
   if (!net || !dv || mode === "none") return null;
-  const k = complexes.peek().of.get(id);
-  const members = new Set(k === undefined ? [id] : complexes.peek().members[k]);
+  const members = new Set(membersOf(complexes.peek(), id));
   return circleList(net, w, dv, mode).find((c) => members.has(c.station)) ?? null;
 }
 
@@ -191,7 +191,7 @@ export function upgradeTip(ov: Overlay, w: WorldView, i: number, bit: number): T
   const out: TipLine[] = [u.name, s.name];
   if (bit !== UPGRADE.terminal) {
     const byId = new Map(w.save.stations.map((x) => [x.id, x]));
-    const k = complexes.peek().of.get(id), members = k === undefined ? [id] : complexes.peek().members[k];
+    const members = membersOf(complexes.peek(), id);
     const sharing = members.filter((m) => hasUpgrade(byId.get(m)?.upgrades, bit)).length;
     if (sharing > 1) out.push(t("networkTips.shared", { count: sharing }));
   }

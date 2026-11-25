@@ -41,7 +41,8 @@ import { gunzipSync } from 'node:zlib';
 import init, { TrackApi } from '../app/src/wasm/track/sim.js';
 import { loadApp, REAL_SAVE, ARTIFACTS } from './lib.mjs';
 
-const { StateRows, upgradesOf, Regions, PlatformLines, buildComplexes } = await loadApp("export { StateRows, upgradesOf } from '@app/src/workers/stateRows.ts'; export { Regions } from '@app/src/workers/regions.ts'; export { PlatformLines } from '@app/src/workers/platformLines.ts'; export { buildComplexes } from '@app/src/game/complexes.ts';");
+const { StateRows, upgradesOf, Regions, PlatformLines } = await loadApp("export { StateRows, upgradesOf } from '@app/src/workers/stateRows.ts'; export { Regions } from '@app/src/workers/regions.ts'; export { PlatformLines } from '@app/src/workers/platformLines.ts';");
+const NO_APART = new Set();
 await init({ module_or_path: readFileSync(new URL('../app/src/wasm/track/sim_bg.wasm', import.meta.url)) });
 const { nearestNode, toLocal } = await loadApp("export { nearestNode } from '@app/src/map/snapIndex.ts'; export { toLocal } from '@app/src/map/geo.ts';");
 
@@ -62,11 +63,10 @@ function envFor(api) {
     ...env,
     pl,
     platformLine: (a, id, x, y, platform) => pl.of(a, id, x, y, platform, 1),
-    complexKey: (a) => a.station_links().join(),
-    complexes: (rows) => {
-      const fl = api.station_links(), links = [];
+    complexInputs: (a) => {
+      const fl = a.station_links(), links = [];
       for (let k = 0; k + 1 < fl.length; k += 2) links.push([String(fl[k]), String(fl[k + 1])]);
-      return buildComplexes(rows.map((r) => ({ id: String(r.id), x: r.x, y: r.y, heading: r.heading, length: r.platform, ...(r.line ? { line: r.line } : {}) })), links);
+      return { links, apart: NO_APART, buildings: [], kAt: () => 1, frame: 'flat' };
     },
   };
 }

@@ -624,7 +624,7 @@ export class BusLayer {
     const groups = dotGroups.peek();
     for (const [x, y] of d.stations.values()) {
       if (x?.brt || y?.brt) return true;
-      const g = groups?.of.get((y ?? x)!.id), members = g !== undefined ? groups!.members[g] : undefined;
+      const g = groups?.of.get((y ?? x)!.id), members = g !== undefined ? groups!.members.get(g) : undefined;
       // (T-4150 stage 2: the world's stations by id only for a group of more than the station itself)
       if (members && members.length > 1 && members.some((id) => stationsById(b).get(id)?.brt)) return true;
     }
@@ -663,7 +663,7 @@ export class BusLayer {
         if (la && lb) nextLinks.push({ at: [k.a.lng, k.a.lat, k.b.lng, k.b.lat], lines: [k.a.line, k.b.line], stops: [k.a.id, k.b.id], bp: !la.built || !lb.built, walk: k.walk });
       }
       // T-4079: a BRT station's joins with no passage, lit with the station's stop (its id the station's node)
-      for (const [a, b] of brtJoins(w, dotGroups.peek()?.members ?? [])) nextLinks.push({ at: [a.lng, a.lat, b.lng, b.lat], lines: [-2, -2], stops: [a.num, b.num], bp: !a.built || !b.built, walk: true });
+      for (const [a, b] of brtJoins(w, dotGroups.peek()?.members.values() ?? [])) nextLinks.push({ at: [a.lng, a.lat, b.lng, b.lat], lines: [-2, -2], stops: [a.num, b.num], bp: !a.built || !b.built, walk: true });
     }
     const was = this.lines;
     const sameS = (a: number[][] | null, b: number[][] | null) => a === b || (!!a && !!b && a.length === b.length && a.every((s, k) => sameNums(s, b[k])));

@@ -66,27 +66,36 @@ export function platformTouches(c: ArrayLike<number>, x: number, y: number, p: A
   return false;
 }
 
+/** A building's outline as a station is tested against it (`touchesShape`): its bounds, and its scale and touch distance
+ * at its mean y; null for an outline of fewer than 3 corners, which has no members. */
+export interface BuildingShape { c: readonly number[]; x0: number; y0: number; x1: number; y1: number; k: number; tol: number }
+export function buildingShape(b: BuildingInput, kAt: (y: number) => number): BuildingShape | null {
+  const c = b.corners, n = c.length / 2;
+  if (n < 3) return null;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity, my = 0;
+  for (let i = 0; i < n; i++) {
+    x0 = Math.min(x0, c[2 * i]); x1 = Math.max(x1, c[2 * i]);
+    y0 = Math.min(y0, c[2 * i + 1]); y1 = Math.max(y1, c[2 * i + 1]);
+    my += c[2 * i + 1] / n;
+  }
+  const k = kAt(my);
+  return { c, x0, y0, x1, y1, k, tol: BUILDING_TOUCH_M * k };
+}
+
+/** Whether station `s`, its platform as offsets `p` (`platformOffsets` at its own y), is a member of the building. */
+export function touchesShape(sh: BuildingShape, s: { x: number; y: number; length: number }, p: ArrayLike<number>): boolean {
+  // a platform reaches at most about its length from its node
+  const r = Math.max(0, s.length) * 1.5 * sh.k + sh.tol;
+  if (s.x < sh.x0 - r || s.x > sh.x1 + r || s.y < sh.y0 - r || s.y > sh.y1 + r) return false;
+  return platformTouches(sh.c, s.x, s.y, p, sh.tol);
+}
+
 /** Each building's members, in `stations`' order. `kAt`: world units per ground metre at a world y
  * (`groundScale`). */
 export function buildingMembers(buildings: readonly BuildingInput[], stations: readonly Geo[], kAt: (y: number) => number = () => 1): StationId[][] {
   return buildings.map((b) => {
-    const c = b.corners, n = c.length / 2;
-    if (n < 3) return [];
-    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity, my = 0;
-    for (let i = 0; i < n; i++) {
-      x0 = Math.min(x0, c[2 * i]); x1 = Math.max(x1, c[2 * i]);
-      y0 = Math.min(y0, c[2 * i + 1]); y1 = Math.max(y1, c[2 * i + 1]);
-      my += c[2 * i + 1] / n;
-    }
-    const k = kAt(my), tol = BUILDING_TOUCH_M * k;
-    const out: StationId[] = [];
-    for (const s of stations) {
-      // a platform reaches at most about its length from its node
-      const r = Math.max(0, s.length) * 1.5 * k + tol;
-      if (s.x < x0 - r || s.x > x1 + r || s.y < y0 - r || s.y > y1 + r) continue;
-      if (platformTouches(c, s.x, s.y, platformOffsets(s, kAt(s.y)), tol)) out.push(s.id);
-    }
-    return out;
+    const sh = buildingShape(b, kAt);
+    return sh ? stations.filter((s) => touchesShape(sh, s, platformOffsets(s, kAt(s.y)))).map((s) => s.id) : [];
   });
 }
 

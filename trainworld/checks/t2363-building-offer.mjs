@@ -82,7 +82,7 @@ const byId = new Map(all.map((s) => [s.id, s]));
 
 let moved = 0, total = 0;
 const rows = [];
-for (const m of cx.members) {
+for (const m of cx.members.values()) {
   const st = m.map((id) => byId.get(id)).filter(Boolean);
   const r = app.offeredRectangle(st, kAt);
   if (!r) continue;

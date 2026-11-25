@@ -5,26 +5,21 @@
 
 import { computed, effect, signal } from "@preact/signals";
 import { NO_PAIRS, apartKeys, buildComplexes, membersOf, type Complexes } from "./complexes";
-import { ComplexBuilder } from "./complexBuilder";
+import { ComplexBuilder, complexesDiffer } from "./complexBuilder";
 import { withBuildingLinks } from "./buildings";
 import { PATCH_MODE } from "./patchMode";
-import type { StationId, StationInput } from "./types";
+import type { BuildingInput, StationId, StationInput, WorldView } from "./types";
 import { selection } from "./ui";
 import { world } from "./world";
+import { worldDiff } from "./worldDiff";
 import { groundScale } from "./coords";
 import { getWorldFrame } from "./cities";
 
-/** The two builders keep their complexes up to date from the stations that changed (T-1380). */
-const builder = new ComplexBuilder();
-const nearBuilder = new ComplexBuilder();
-const same = (a: Complexes, b: Complexes) => a.members.length === b.members.length && a.of.size === b.of.size
-  && [...b.of].every(([id, c]) => a.of.get(id) === c) && b.members.every((m, i) => m.join() === a.members[i].join());
-
 /** `?patch=0`: built whole when the stations' key changes */
 let wholeKey = "";
-let whole: Complexes = { of: new Map(), members: [] };
+let whole: Complexes = { of: new Map(), members: new Map() };
 let nearWholeKey = "";
-let nearWhole: Complexes = { of: new Map(), members: [] };
+let nearWhole: Complexes = { of: new Map(), members: new Map() };
 const keyOf = (st: readonly StationInput[]) => getWorldFrame().kind + st.map((s) => `${s.id}:${s.x}:${s.y}:${s.heading}:${s.length}:${s.line ? Array.from(s.line).join(";") : ""}`).join("|");
 
 let apartKey = "", apartSet: ReadonlySet<string> = NO_PAIRS;
@@ -35,21 +30,44 @@ function apartNow(): ReadonlySet<string> {
   return apartSet;
 }
 
+const NO_LINKS: readonly (readonly [StationId, StationId])[] = [];
+const NO_BUILDINGS: readonly BuildingInput[] = [];
+
+/** T-1380, T-4300: a builder kept up to date from the world it last read: by the stations the world diff names when there
+ * is one (the steps' ids, else a walk of both lists), else from every station */
+class WorldComplexes {
+  private b = new ComplexBuilder();
+  private from: WorldView | null = null;
+  get(w: WorldView | null, links: readonly (readonly [StationId, StationId])[], apart: ReadonlySet<string>, buildings: readonly BuildingInput[]): Complexes {
+    const st = w?.save.stations ?? [], kind = getWorldFrame().kind;
+    const d = w && this.from && this.b.ready(kind) ? worldDiff(this.from, w) : null;
+    const out = d
+      ? this.b.patch(Array.from(d.stations, ([id, [, now]]) => [id, now ?? null] as const), links, groundScale, kind, apart, buildings)
+      : this.b.update(st, links, groundScale, kind, apart, buildings);
+    this.from = w;
+    if (PATCH_MODE === "check") {
+      const bad = complexesDiffer(out, st, links, groundScale, apart, buildings);
+      if (bad) console.error(`T-1380 check: the ${links.length || buildings.length ? "complexes" : "distance groups"} patched from changes differ from a whole build (${bad})`);
+    }
+    return out;
+  }
+}
+const built = new WorldComplexes(), near = new WorldComplexes();
+
 /** The world's complexes; the same object while no station moved, appeared or changed length and
- * no link (T-197) was made or undone, nor stations separated (T-4048). */
+ * no link (T-197) was made or undone, nor stations separated (T-4048), nor a station building (T-2217) drawn or moved. */
 export const complexes = computed<Complexes>(() => {
-  const st = world.value?.save.stations ?? [];
-  // T-2217: a station building joins its members as a link would
-  const links = withBuildingLinks(world.value?.save.links ?? [], world.value?.save.buildings, st, groundScale);
+  const w = world.value, st = w?.save.stations ?? [];
+  const links = w?.save.links ?? NO_LINKS, buildings = w?.save.buildings ?? NO_BUILDINGS;
   const apart = apartNow();
   if (PATCH_MODE === "0") {
-    const k = keyOf(st) + "/" + links.join("|") + "/" + apartKey;
-    if (k !== wholeKey) { wholeKey = k; whole = buildComplexes(st, links, groundScale, apart); }
+    // T-2217: a station building joins its members as a link would
+    const all = withBuildingLinks(links, buildings, st, groundScale);
+    const k = keyOf(st) + "/" + all.join("|") + "/" + apartKey;
+    if (k !== wholeKey) { wholeKey = k; whole = buildComplexes(st, all, groundScale, apart); }
     return whole;
   }
-  const out = builder.update(st, links, groundScale, getWorldFrame().kind, apart);
-  if (PATCH_MODE === "check" && !same(out, buildComplexes(st, links, groundScale, apart))) console.error("T-1380 check: the complexes patched from changes differ from a whole build");
-  return out;
+  return built.get(w, links, apart, buildings);
 });
 
 /** The stations the distance rule groups, the player's links and buildings left out: zoomed out each
@@ -66,9 +84,7 @@ export const dotGroups = computed(() => {
     if (k !== nearWholeKey) { nearWholeKey = k; nearWhole = buildComplexes(st, [], groundScale, apart); }
     return nearWhole;
   }
-  const out = nearBuilder.update(st, [], groundScale, getWorldFrame().kind, apart);
-  if (PATCH_MODE === "check" && !same(out, buildComplexes(st, [], groundScale, apart))) console.error("T-1380 check: the distance groups patched from changes differ from a whole build");
-  return out;
+  return near.get(world.value, NO_LINKS, apart, NO_BUILDINGS);
 });
 
 /** The stations in `id`'s complex, itself included (just [id] for a station on its own). */

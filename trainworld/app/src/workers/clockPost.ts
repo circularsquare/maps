@@ -353,11 +353,15 @@ function checkNet(n: NetworkBuffers, full: NetworkBuffers) {
  * line not running) runs a trial that moves headway lines a little, so with one the lines are not
  * compared here; checks/t1382-rows.mjs compares them with two models. */
 export function checkRows(got: { edges: ClockEdge[]; nodes: ClockNode[]; lines: ClockLine[] }, a: TrackApi, ups: Map<number, number>) {
-  const full = new StateRows().read(a, rowEnv, frame, ups);
+  const fresh = new StateRows(), full = fresh.read(a, rowEnv, frame, ups);
   const planned = got.lines.some((l) => l.ok && !l.running);
   const keys: ("edges" | "nodes" | "lines")[] = planned ? ["edges", "nodes"] : ["edges", "nodes", "lines"];
   const bad = keys.filter((k) => !sameValue(got[k], full[k]));
   if (bad.length) console.error(`T-1382 check: the ${bad.join(", ")} read from changes differ from a full read`);
+  // T-4300: the complexes the names were folded by, and what renames read of them, against the whole read's
+  const cx = stateRows.complexesDiffer(a, rowEnv), names = stateRows.namesDiffer(fresh);
+  if (cx) console.error(`T-4300 check: the station rows' complexes kept from changes differ from a whole build (${cx})`);
+  if (names) console.error(`T-4300 check: the complexes' names kept from changes differ from a full read's (${names})`);
   // T-4149: the weekends read for many lines at once, the track limits shared, against each line's own reads
   const ids = got.lines.map((l) => l.id), many = weekendsOf(a, ids);
   const off = ids.filter((id) => { const [w, r] = many.get(id)!; return !sameBytes(w, a.line_weekend(id)) || !sameBytes(r, a.line_row_weekend(id)); });

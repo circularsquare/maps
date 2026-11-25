@@ -124,7 +124,8 @@ export const TRACK_IN_BOX = 0.3;
 /** Stations as the complex rule's distances group them (game/complexView.ts `dotGroups`): zoomed out
  * each group's dots are joined by connectors, the shortest set that links them all (T-313). */
 export interface StationGroups {
-  members: string[][];
+  /** by group number (game/complexes.ts `Complexes`) */
+  members: ReadonlyMap<number, string[]>;
 }
 
 export interface DrawOptions {

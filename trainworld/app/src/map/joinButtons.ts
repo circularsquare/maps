@@ -82,7 +82,7 @@ export class JoinButtons {
       const i = idx[k * 2], j = idx[k * 2 + 1];
       add(net.stationIds[i], net.stationIds[j], rnd.stationHidden(i) || rnd.stationHidden(j), () => [ends[k * 4], ends[k * 4 + 1], ends[k * 4 + 2], ends[k * 4 + 3]]);
     }
-    const brt = brtJoins(w, groups.members);
+    const brt = brtJoins(w, groups.members.values());
     if (!brt.length) return;
     const at = new Map(net.stationIds.map((id, i) => [id, i]));
     const hidden = (id: StationId) => {

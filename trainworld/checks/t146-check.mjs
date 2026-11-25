@@ -16,7 +16,7 @@ near(segmentGap(0,0,0,0, 3,4,3,4),5,'two points');
 near(segmentGap(0,0,10,0, 5,3,5,3),3,'point over a segment');
 
 const S=(id,x,y,heading=0,length=200)=>({id,x,y,heading,length});
-const groups=c=>c.members.map(m=>m.join(',')).sort();
+const groups=c=>[...c.members.values()].map(m=>m.join(',')).sort();
 
 // side by side 40 m apart: one complex; 60 m apart: two (centres over 100 m apart along the track)
 assert.deepEqual(groups(buildComplexes([S('1',0,0),S('2',0,40)])),['1,2']);
@@ -38,8 +38,10 @@ assert.deepEqual(membersOf(chain,'missing'),['missing']);
 // across grid cell boundaries and negative coordinates
 assert.deepEqual(groups(buildComplexes([S('1',-1,-1),S('2',1,30)])),['1,2']);
 // many stations: each pair of a parallel row is linked, rows are far apart
-const many=[];for(let k=0;k<300;k++){many.push(S(`a${k}`,k*1000,0),S(`b${k}`,k*1000,35));}
-const mc=buildComplexes(many);assert.equal(mc.members.length,300);assert.ok(mc.members.every(m=>m.length===2));
+const many=[];for(let k=0;k<300;k++){many.push(S(`${2*k+1}`,k*1000,0),S(`${2*k+2}`,k*1000,35));}
+const mc=buildComplexes(many);assert.equal(mc.members.size,300);assert.ok([...mc.members.values()].every(m=>m.length===2));
+// T-4300: a complex is numbered by its first station's node number, whatever the list's order
+assert.deepEqual([...buildComplexes([S('7',0,0),S('3',0,40),S('5',5000,0)]).of],[['3',3],['5',5],['7',3]]);
 // T-1859: a drawn platform line counts, not the straight segment centred on the node: a dead end's
 // platform runs back from its node (130-330 m: 30 m from 1's end), a curved one bends towards 1
 const dead=[...Array(7)].map((_,i)=>[-200*i/6,0]).flat();

@@ -17,6 +17,9 @@
 // through the station along the track heading (the rule before T-1859, kept so no complex splits);
 // levels are ignored, so lines crossing over or under each other form a complex too.
 //
+// Stations are taken in node order (their ids are node numbers) and a complex is numbered by its first station's node
+// number (T-4300), so a complex keeps its number while no change touches it.
+//
 // Pure geometry, no signals (checks/t146-check.mjs runs it in node); the world's complexes and the
 // complex view are in game/complexView.ts. `buildComplexes` builds from nothing and is the reference;
 // the world and the clock worker keep the same result up to date with game/complexBuilder.ts (T-1380).
@@ -84,10 +87,10 @@ export function polylineGap(ax: number, ay: number, a: ArrayLike<number>, bx: nu
 }
 
 export interface Complexes {
-  /** station id -> complex index */
-  of: Map<StationId, number>;
-  /** per complex, its stations' ids in save order */
-  members: StationId[][];
+  /** station id -> its complex's number: the node number of its first station */
+  of: ReadonlyMap<StationId, number>;
+  /** per complex number, its stations' ids in node order (never changed once handed out) */
+  members: ReadonlyMap<number, StationId[]>;
 }
 
 /** Shortest distance between segments p0-p1 and q0-q1. */
@@ -121,7 +124,10 @@ export function apartKeys(apart: readonly (readonly [StationId, StationId])[]): 
  * `kAt` is the world frame's metres per ground metre at a world y
  * (`groundScale` in game/coords.ts; 1 outside the Mercator frame, T-306): platform lengths and
  * the distances above are ground metres. */
-export function buildComplexes(stations: readonly Geo[], links: readonly (readonly [StationId, StationId])[] = [], kAt: (y: number) => number = () => 1, apart: ReadonlySet<string> = NO_PAIRS): Complexes {
+export function buildComplexes(given: readonly Geo[], links: readonly (readonly [StationId, StationId])[] = [], kAt: (y: number) => number = () => 1, apart: ReadonlySet<string> = NO_PAIRS): Complexes {
+  // in node order, as `ComplexBuilder` takes them (the platform gap is not bit-for-bit symmetric)
+  let stations = given;
+  for (let i = 1; i < given.length; i++) if (Number(given[i].id) < Number(given[i - 1].id)) { stations = given.slice().sort((a, b) => Number(a.id) - Number(b.id)); break; }
   const n = stations.length;
   const parent = Array.from({ length: n }, (_, i) => i);
   const find = (i: number) => {
@@ -166,12 +172,12 @@ export function buildComplexes(stations: readonly Geo[], links: readonly (readon
       if (ra !== rb) parent[Math.max(ra, rb)] = Math.min(ra, rb);
     }
   }
-  const of = new Map<StationId, number>(), members: StationId[][] = [], index = new Map<number, number>();
+  // (a root is its set's first station: the union keeps the lower index)
+  const of = new Map<StationId, number>(), members = new Map<number, StationId[]>();
   for (let i = 0; i < n; i++) {
-    const r = find(i);
-    let c = index.get(r);
-    if (c === undefined) index.set(r, (c = members.push([]) - 1));
-    members[c].push(stations[i].id);
+    const c = Number(stations[find(i)].id), m = members.get(c);
+    if (m) m.push(stations[i].id);
+    else members.set(c, [stations[i].id]);
     of.set(stations[i].id, c);
   }
   return { of, members };
@@ -180,5 +186,5 @@ export function buildComplexes(stations: readonly Geo[], links: readonly (readon
 /** The stations in `id`'s complex, itself included (just [id] for a station on its own). */
 export function membersOf(c: Complexes, id: StationId): StationId[] {
   const k = c.of.get(id);
-  return k === undefined ? [id] : c.members[k];
+  return (k === undefined ? undefined : c.members.get(k)) ?? [id];
 }

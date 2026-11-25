@@ -2,7 +2,8 @@
 // full build (game/complexes.ts `buildComplexes`), after random series of edits: stations added
 // (at the end and in the middle of the list), removed, moved by metres or far, resized, links made
 // and undone, pairs kept apart and let go (T-4048), a second builder for the same list with no links,
-// a change of frame. Every step must give the same numbering, not only the same grouping.
+// a change of frame. Every step must give the same numbering, not only the same grouping. T-4300: a third builder is told
+// only the stations that changed (`patch`), as the clock worker and the page tell theirs.
 //   node trainworld/checks/t1380-complexes.mjs [seeds]      (from the maps root)
 import { loadApp } from './lib.mjs';
 
@@ -18,12 +19,18 @@ function rng(seed) {
 }
 
 function same(a, b) {
-  if (a.members.length !== b.members.length || a.of.size !== b.of.size) return 'sizes ' + a.members.length + '/' + b.members.length;
+  if (a.members.size !== b.members.size || a.of.size !== b.of.size) return 'sizes ' + a.members.size + '/' + b.members.size;
   for (const [id, c] of b.of) if (a.of.get(id) !== c) return `of ${id}: ${a.of.get(id)} vs ${c}`;
-  for (let c = 0; c < b.members.length; c++) if (a.members[c].join() !== b.members[c].join()) return `members ${c}`;
-  // the Map's order is part of what consumers see
-  if ([...a.of.keys()].join() !== [...b.of.keys()].join()) return 'of order';
+  for (const [c, m] of b.members) if (a.members.get(c)?.join() !== m.join()) return `members ${c}`;
   return null;
+}
+const sameGeo = (p, q) => p.x === q.x && p.y === q.y && p.heading === q.heading && p.length === q.length && (p.line === q.line || (!!p.line && !!q.line && p.line.length === q.line.length && p.line.every((v, i) => v === q.line[i])));
+/** the stations that differ from `was` to `now` (each as it is now, null where gone) */
+function changesOf(was, now) {
+  const before = new Map(was.map((s) => [s.id, s])), out = [];
+  for (const s of now) { const w = before.get(s.id); if (!w || !sameGeo(w, s)) out.push([s.id, s]); before.delete(s.id); }
+  for (const id of before.keys()) out.push([id, null]);
+  return out;
 }
 
 for (let seed = 1; seed <= SEEDS; seed++) {
@@ -49,7 +56,8 @@ for (let seed = 1; seed <= SEEDS; seed++) {
   };
   let st = Array.from({ length: 150 + Math.floor(rnd() * 400) }, make);
   let links = [], apart = [];
-  const full = new ComplexBuilder(), plain = new ComplexBuilder();
+  const full = new ComplexBuilder(), plain = new ComplexBuilder(), told = new ComplexBuilder();
+  let was = null;
   const stepsN = 120;
   for (let step = 0; step < stepsN; step++) {
     const r = rnd();
@@ -81,9 +89,11 @@ for (let seed = 1; seed <= SEEDS; seed++) {
     const input = st.map((s) => ({ ...s }));
     const got = full.update(input, links, kAt, key, ak), want = buildComplexes(input, links, kAt, ak);
     const got2 = plain.update(input, [], kAt, key, ak), want2 = buildComplexes(input, [], kAt, ak);
+    const got3 = was && told.ready(key) ? told.patch(changesOf(was, input), links, kAt, key, ak) : told.update(input, links, kAt, key, ak);
+    was = input;
     steps++;
     if (full.lastWorked >= 0) { worked += full.lastWorked; workedN++; }
-    for (const [g, w, name] of [[got, want, 'links'], [got2, want2, 'plain']]) {
+    for (const [g, w, name] of [[got, want, 'links'], [got2, want2, 'plain'], [got3, want, 'told']]) {
       const d = same(g, w);
       if (d) { fails++; if (fails < 10) console.log(`FAIL seed ${seed} step ${step} (${name}, ${input.length} stations, ${links.length} links): ${d}`); }
     }

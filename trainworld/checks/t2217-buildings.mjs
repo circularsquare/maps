@@ -70,11 +70,19 @@ for (const s of pick) assert.ok(simMembers.includes(s.id), `${s.name} is in`);
 const joined = [...links, ...app.buildingLinks(buildings, geo, kAt)];
 const after = app.buildComplexes(geo, joined, kAt);
 assert.equal(new Set(pick.map((s) => after.of.get(s.id))).size, 1, 'one complex');
-assert.ok(after.members.length <= before.members.length - (cBefore.size - 1));
+assert.ok(after.members.size <= before.members.size - (cBefore.size - 1));
+const groups = (c) => [...c.members].map(([k, m]) => k + ':' + m.join()).sort();
 const cb = new app.ComplexBuilder();
 cb.update(geo, links, kAt, 'merc');
 const patched = cb.update(geo, app.withBuildingLinks(links, buildings, geo, kAt), kAt, 'merc');
-assert.deepEqual(patched.members.map((m) => m.join()), after.members.map((m) => m.join()), 'patched as built whole');
+assert.deepEqual(groups(patched), groups(after), 'patched as built whole');
+// T-4300: the outline given to the builder, which finds its members itself, from the stations as before and as patched
+const cb2 = new app.ComplexBuilder();
+cb2.update(geo, links, kAt, 'merc');
+assert.deepEqual(groups(cb2.update(geo, links, kAt, 'merc', undefined, buildings)), groups(after), 'the building given whole');
+const cb3 = new app.ComplexBuilder();
+cb3.update(geo.filter((s) => s.id !== pick[0].id), links, kAt, 'merc', undefined, buildings);
+assert.deepEqual(groups(cb3.patch([[pick[0].id, pick[0]]], links, kAt, 'merc', undefined, buildings)), groups(after), 'a member patched in');
 
 // the save carries it; removing it leaves the save as it was
 const withHall = api.save();

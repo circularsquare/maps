@@ -213,7 +213,7 @@ function namesOf(g: DiagramGraph): DiagramNames {
   const thinOnly = g.lines.length > 0 && g.lines.every((l) => l.bus || l.ferry);
   const text = Array.from(g.key, (key) => {
     if (thinOnly) return "";
-    const id = String(key), c = cx.of.get(id), members = c === undefined ? [id] : cx.members[c];
+    const id = String(key), c = cx.of.get(id), members = (c === undefined ? undefined : cx.members.get(c)) ?? [id];
     return pickName(members.flatMap((m) => {
       const s = byId.get(m);
       return s ? [{ name: complexTitle(s), lines: (stops.get(m) ?? 0) + (s.named ? 1e6 : 0) }] : []; // T-2683: a typed name outranks any line count
@@ -298,7 +298,7 @@ function indexShown(graph: DiagramGraph, d: Drawing, names: NamePlan, x: Float64
   const nodeOf = new Map<string, number>(), cx = complexes.peek();
   graph.key.forEach((key, i) => {
     const id = String(key), c = cx.of.get(id);
-    for (const m of c === undefined ? [id] : cx.members[c]) nodeOf.set(m, i);
+    for (const m of (c === undefined ? undefined : cx.members.get(c)) ?? [id]) nodeOf.set(m, i);
   });
   const thinOf = new Map<number, number[]>();
   d.thin?.forEach((l, i) => thinOf.set(l.id, [...(thinOf.get(l.id) ?? []), i]));
@@ -352,7 +352,7 @@ function thinInputs(parts: readonly LaidOut[], inside: Inside | null): ThinIn[][
     const m = new Map<string, number>();
     p.graph.key.forEach((key, i) => {
       const id = String(key), c = cx.of.get(id);
-      for (const s of c === undefined ? [id] : cx.members[c]) m.set(s, i);
+      for (const s of (c === undefined ? undefined : cx.members.get(c)) ?? [id]) m.set(s, i);
     });
     return m;
   });
@@ -1144,7 +1144,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     if (ghost) lines = [t("diagramView.addCity", { name: tPlace(ghost.zone, cityById(ghost.zone).name) })];
     else if (s && w && hit && "station" in hit) {
       const id = stationOf(hit.station), c = complexes.peek().of.get(id), ov = live.overlay;
-      const ids = c === undefined ? [id] : complexes.peek().members[c];
+      const ids = (c === undefined ? undefined : complexes.peek().members.get(c)) ?? [id];
       lines = ov ? complexTip(ov, w, ids, s.names.text[hit.station]) : [s.names.text[hit.station]];
     } else if (s && w && hit && "line" in hit) {
       const num = s.graph.lines[s.d.lineOf[hit.line]].id, l = w.save.lines.find((x) => x.num === num);

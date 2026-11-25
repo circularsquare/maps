@@ -80,7 +80,7 @@ export function circleList(net: NonNullable<Overlay["renderer"]["net"]>, w: Worl
   for (const s of w.save.stations) {
     if (!s.built || seen.has(s.id)) continue;
     const k0 = cx.of.get(s.id);
-    const members = k0 !== undefined ? cx.members[k0].filter((m) => built.has(m)) : [s.id];
+    const members = k0 !== undefined ? (cx.members.get(k0) ?? [s.id]).filter((m) => built.has(m)) : [s.id];
     let riders = 0, transfers = 0, known = false, top = s.id, topV = -1;
     for (const m of members) {
       seen.add(m);

@@ -267,8 +267,8 @@ function corridorsMet(w: AchWorld, zl: number, cx: Complexes) {
   corridorParts.begin(w.w, zl === corridorZl);
   corridorZl = zl;
   // stations joined where they share a station or a complex: by complex number (a station of none by an own number after them)
-  const own = new Map<string, number>(), n = cx.members.length;
-  const keyOf = (id: string) => { const c = cx.of.get(id); return c !== undefined ? c : (own.get(id) ?? own.set(id, n + own.size).get(id)!); };
+  const own = new Map<string, number>();
+  const keyOf = (id: string) => { const c = cx.of.get(id); return c !== undefined ? c : (own.get(id) ?? own.set(id, -1 - own.size).get(id)!); };
   const parts = w.running.map(({ l }) => corridorParts.get(l.id, () => corridorPartOf(l, w.byId)));
   corridorParts.end();
   const out = new Map<FirstId, Detail>();
@@ -277,14 +277,15 @@ function corridorsMet(w: AchWorld, zl: number, cx: Complexes) {
   for (const p of parts) { from |= p.from; to |= p.to; }
   const live = from & to;
   if (!live) return { firsts: out };
-  const up: number[] = [];
-  const find = (k: number): number => { let r = k; while (up[r] !== r) r = up[r]; while (up[k] !== r) { const nx = up[k]; up[k] = r; k = nx; } return r; };
+  // (a complex's number is a node number, T-4300: kept in a map)
+  const up = new Map<number, number>();
+  const find = (k: number): number => { let r = k; while (up.get(r) !== r) r = up.get(r)!; while (up.get(k) !== r) { const nx = up.get(k)!; up.set(k, r); k = nx; } return r; };
   for (const p of parts) {
-    let first = -1;
+    let first: number | undefined;
     for (const id of p.ids) {
       const k = keyOf(id);
-      if (up[k] === undefined) up[k] = k;
-      if (first < 0) first = k; else { const a = find(k), b = find(first); if (a !== b) up[a] = b; }
+      if (!up.has(k)) up.set(k, k);
+      if (first === undefined) first = k; else { const a = find(k), b = find(first); if (a !== b) up.set(a, b); }
     }
   }
   const ends = new Map<number, { from?: string; to?: string }>();
@@ -401,8 +402,8 @@ function demandFiguresOf(w: AchWorld, d: DayDemand, v: DemandView, cx: Complexes
   const zones = zoneViewsOf(d);
   const views = [...built].map((id) => zones.get(id)).filter((x) => x?.final);
   const trips = sumModes(views)?.rides.train ?? 0;
-  // busiest station, by complex (each complex by its number, one of none after them, in the order first met)
-  const n = cx.members.length, own = new Map<string, number>();
+  // busiest station, by complex (each complex by a place of its own, one of none after them, in the order first met)
+  const n = cx.members.size, own = new Map<string, number>(), slot = new Map<number, number>();
   const sum = new Float64Array(n), top = new Float64Array(n).fill(-1), names: string[] = new Array(n), seen = new Uint8Array(n), met: number[] = [];
   const more: { n: number; top: number; name: string }[] = [];
   let transfers = 0;
@@ -410,8 +411,8 @@ function demandFiguresOf(w: AchWorld, d: DayDemand, v: DemandView, cx: Complexes
     const s = byId.get(sid);
     if (!s) continue;
     transfers += sd.transfers ?? 0;
-    const c = cx.of.get(sid);
-    if (c === undefined) {
+    const num = cx.of.get(sid);
+    if (num === undefined) {
       let k = own.get(sid);
       if (k === undefined) { own.set(sid, (k = more.length)); more.push({ n: 0, top: -1, name: s.name }); met.push(n + k); }
       const e = more[k];
@@ -419,6 +420,8 @@ function demandFiguresOf(w: AchWorld, d: DayDemand, v: DemandView, cx: Complexes
       if (sd.boardings > e.top) { e.top = sd.boardings; e.name = s.name; }
       continue;
     }
+    let c = slot.get(num);
+    if (c === undefined) slot.set(num, (c = slot.size));
     if (!seen[c]) { seen[c] = 1; names[c] = s.name; met.push(c); }
     sum[c] += sd.boardings;
     if (sd.boardings > top[c]) { top[c] = sd.boardings; names[c] = s.name; }

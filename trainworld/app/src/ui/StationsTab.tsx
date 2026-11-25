@@ -286,7 +286,7 @@ export function StationsTab() {
       )}
       {st.length > 0 && (
         <div class="pane-foot">
-          <span class="muted">{t("stationsTab.footer", { scoped: !!sc.zone, shown: st.length, count: st.length, total: complexes.value.members.length, what: ridersWhat })}</span>
+          <span class="muted">{t("stationsTab.footer", { scoped: !!sc.zone, shown: st.length, count: st.length, total: complexes.value.members.size, what: ridersWhat })}</span>
         </div>
       )}
     </>

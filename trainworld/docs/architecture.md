@@ -317,7 +317,13 @@ Web first, so it can be shared as a link.
   changed or went (`workers/rowLog.ts`): the post sends the rows the reads since the page's last state changed, and the
   lists, the platforms' tracks and line counts (`platformLines.ts`), the line ends and each edge's drawn points kept beside
   the edges' list are patched by those ids; a whole read among them, or a state built before a later read, compares every
-  row [T-4291]. A line's drawn runs are sampled again only where the
+  row [T-4291]. The station complexes go by the same ids [T-4300]: a complex is numbered by its first station's node
+  number, so one no change touched keeps its number, and `game/complexBuilder.ts` is told the stations that changed (a
+  read's rows, a patch's touched nodes, the page's `worldDiff`), works out again only the complexes they were or are in
+  and patches its maps with a new handle and a numbered log of what changed (`complexChanges`). The names folded by them
+  (`stateRows.ts`), each node's complex for the drawn network and line links (`complexOfNodes`, a new array laid on the
+  last), and the page's complexes and dot groups redo only those; the snapshot numbers its complexes 0, 1, ... for
+  demand as before. A line's drawn runs are sampled again only where the
   model says they lie anywhere new on the track (`take_moved_lines`: their entries, offsets or length
   moved, or an edge under either run was touched); a settle's new timing, or a rebuild onto the same track, keeps
   them, ways back included. Where a line's run 0 moved only in a stretch (`take_moved_spans`: the entries from the first unlike one to the

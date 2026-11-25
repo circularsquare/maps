@@ -124,8 +124,9 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   the outline, and the pairs that join them into one complex, T-2217; the tool's rectangle offered
   and snaps, T-2218, its direction T-2363, check `checks/t2363-building-offer.mjs`), `buildingView.ts` (the buildings as panels and the map read them: members by
   building, a complex's building, the one under a point, the tool's `buildingDraft`, T-2218), `complexBuilder.ts` (`ComplexBuilder`: the same complexes kept up to date from the
-  stations that changed, the world's in `complexView.ts` and the clock worker's snapshot in
-  `clock.worker.ts`, T-1380), `patchMode.ts` (`?patch=` on the main thread), `relatedLines.ts` (the clock query `lineRelated` decoded: the lines beside or
+  stations that changed or that a caller names, numbered by each one's first station's node number, T-1380, T-4300: the
+  world's in `complexView.ts`, the clock worker's in `workers/stateRows.ts` (the names) and `workers/clockDemand.ts`
+  (every node's, the snapshot's)), `patchMode.ts` (`?patch=` on the main thread), `relatedLines.ts` (the clock query `lineRelated` decoded: the lines beside or
   crossing a line, T-1168) and `relatedLayout.ts` (their diagram's rows, columns, turns, pills and
   the pills' hovers, drawn by `ui/inspector/RelatedStops.tsx`), `complexView.ts` (a click selecting the complex, a station opened alone, the
   zoomed-out dot groups; T-217, T-249), `complexLead.ts` (the member a complex goes by: a typed name, then

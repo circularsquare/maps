@@ -115,7 +115,7 @@ const REBUILD_SHARE = 8;
 
 const rootOf = (cx: Complexes, id: StationId): StationId => {
   const c = cx.of.get(id);
-  return c === undefined ? id : cx.members[c][0];
+  return (c === undefined ? undefined : cx.members.get(c)?.[0]) ?? id;
 };
 
 export class NameIndex {
