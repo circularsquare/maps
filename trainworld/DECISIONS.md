@@ -183,6 +183,7 @@ artifacts/trainworld/T-4120/.
 - 2026-11-04 (Anita, T-2450): Ferries run 32 km/h in open water (was 25), on Anita's "a little faster lol": harbour ferries a little faster than real slow ones, well under real fast ferries. Old saves' routes move to the new curve.
 
 ## Map and UI
+- 2026-11-25 (T-4311): An undo or redo during a track run that is not its own Backspace (Ctrl+Z, the blueprint panel's) ends the run at its send, as the run ended before stage D; it is not treated as Backspace. notes/T-4311.md
 - 2026-11-25 (T-4214): A track run's next segment is sent at its click from the previous one's end as the worker will have it, never after that one's answer; a refused segment refuses those clicked on from it, and the run draws on from its start. notes/T-4214.md
 - 2026-11-25 (T-4214): Track hidden at a click that the drawn network holds only inside a longer edge (a just-split far half) hides that whole edge and redraws what stays from the tools' map. Lie: lines on it vanish until the network. notes/T-4214.md
 - 2026-11-25 (T-4281): A cut on a line's track samples its trains' path again only around it; past it samples are kept, off by the cut's few mm, until those reach 5 cm and the line is sampled whole. Lie: a train up to 5 cm off along its track. notes/T-4281.md

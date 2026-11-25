@@ -178,10 +178,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
   - Context: You, 11-25: "the game reworking the whole network after each edit is really the target here and everything else is kinda just flavor". 11-25 landed: Asia later clicks 144-360 ms (were 618-2,156), page and clickable map by change (T-4150, T-4214 done). Parts left: T-4153 (drawn network), T-4291, T-4299, T-4300 (worker), T-4272 (your answer).
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
-- T-4311 [P1] {L:edit-speed} Fix the review's findings on track runs sent at their clicks (taking, 2026-11-25, agent fixes22)
-  - Context: T-4214 stages D-E (11-25) send a run's next segment at its click, from the end of the one before. Review22 (artifacts/trainworld/gemini/batch22/review.md) found four holes: a wait that never ends, touch taps that skip it, undo mid-run starting from a gone end, Backspace on a refused segment ending the run.
-  - Goal: Every real finding a player could hit fixed at its cause; the rest answered with the reason.
-  - Other: notes/T-4311.md
 - T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line
   - Context: You, 11-23: "this is the entire issue". Stage 7 (tree netcut): cut lines' samples and band samples kept by entry. Your Asia save, Node, a station on a three-line trunk: network build about 255 to 190 ms (first click 350 to 280), lines block 140 to 80. Left: cut lines' runs and steps, corridors, train speeds, whole-save passes.
   - Goal: A station on a line's track on Asia under 0.2 s of network build: a cut line's bands, strokes and speeds redone only near the cut.
@@ -935,7 +931,7 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: T-921 deals commute pairs under 1 person a day in chunks (about 7% of New York's calculation); 2 a day gained nothing more. Everyday trips are solved from sampled destinations, so they may lack the same tail of tiny pairs. You, 11-24: file as P3.
   - Goal: Know whether everyday trips have a tail of tiny pairs; if so, chunk them the same tunable way.
   - Other: notes/T-921.md
-- T-4220 [P2] {L:solve-speed} Quick figures for edits made during a whole re-solve
+- T-4220 [P2] {L:solve-speed} Quick figures for edits made during a whole re-solve (taking, 2026-11-25, agent aside8)
   - Context: Design approved 11-24: 9 stages. Stages 1-7 done 11-25: an edit during a whole re-solve gets a quick side calculation for its cities, shown until the whole result replaces it (NYC: an edited line's figures in 17 s instead of 53). Left: stage 8, "Use more cores" on; stage 9, measuring on your Asia save.
   - Goal: Those edits show their lines in about the touched-cities time; edits arriving together share one quick calculation.
   - Other: notes/T-4220.md ("For Anita" first)

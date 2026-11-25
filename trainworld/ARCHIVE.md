@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4311 [P1] {L:edit-speed} Fix the review's findings on track runs sent at their clicks (2026-11-25): All four findings real and fixed at their causes; Enter and the touch stop wait in line too; game run with answers held back clean. notes/T-4311.md.
 - T-4307 [P1] {L:solve-speed} Fix the review's findings on quick figures during a re-solve (2026-11-25): Findings 1-3 real and fixed at one shared cause (asideNothing) plus mainDemandByDay; 4-6 fixed where cheap; NYC figures identical, stage 5 check exact. notes/T-4307.md.
 - T-4294 [P2] {L:stops} Stop clicks in Edit stops that send no edit (2026-11-25): Bench fault, not the game: Lines rows re-sort under a press (filed T-4306 P3 for players); openLine and edit_bench fixed; both stop presses sampled. notes/T-4294.md.
 - T-4214 [P1] {L:edit-speed} Track runs chain without waiting, drawings from the patched map (2026-11-25): Stations sent at their click (A), patched clickable map (C), a run's segments sent at their clicks from the edit before (D), and drawings at the click from the patched map: a split far half, new or undone segment gone at its click (E). notes/T-4214.md.
