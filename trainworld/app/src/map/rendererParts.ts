@@ -271,4 +271,8 @@ export interface NetworkLayers {
   traffic?: boolean;
   /** the traffic view's bands side by side (T-1799 stage 2), null where no track is shared */
   bands?: TrafficBands | null;
+  /** T-4284: every width 1 and no bands (the plain drawing's widths) */
+  plain?: boolean;
+  /** T-4284: `fill` differs from `from` (the last layers' fill) only in the line table's rows `keys` (trainSlots.ts `rowKey`) */
+  fillChanged?: { from: Float32Array; keys: ReadonlySet<number> };
 }

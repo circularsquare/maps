@@ -62,6 +62,7 @@ import { cityOverview } from "./map/intercityView";
 import { Overlay } from "./map/overlay";
 import { carryGrids, pick } from "./map/pick";
 import { carryEdgeGrid } from "./map/snapIndex";
+import { timed } from "./game/stepTimes";
 import { clickNetIn, clickPatched, clickWorld, patchClickNet } from "./map/clickMap";
 import { NetworkRenderer } from "./map/renderer";
 import { followTrain } from "./map/trainFollow";
@@ -399,12 +400,11 @@ if (SYNTH) {
         // T-4145: what is drawn ahead of the edits this network holds goes with it (built once, by setNetwork)
         const held = pendingTaken(client.orderOf(s), { net: true });
         renderer.setNetwork(s.net, s.touched); // built in the worker (T-063)
-        if (import.meta.env.DEV) checkHeld(s.net, held);
+        if (import.meta.env.DEV) timed("dev.checkHeld", () => checkHeld(s.net!, held));
         renderer.netVersion = s.version;
-        carryGrids(was, s.net, renderer.checkPatch); // T-1030
-        carryEdgeGrid(was, s.net, renderer.checkPatch);
+        timed("net.grids", () => { carryGrids(was, s.net!, renderer.checkPatch); carryEdgeGrid(was, s.net!, renderer.checkPatch); }); // T-1030
         // T-4214: the patches of the edits it holds go from the map the tools pick on, later ones are laid on it again
-        clickNetIn(s.net, client.orderOf(s));
+        timed("net.clickNetIn", () => clickNetIn(s.net!, client.orderOf(s)));
         // T-4214: the map clicks pick on holds these edits now (a click waiting for them goes, map/toolWait.ts)
         pendingNetIn(client.orderOf(s));
         // T-1047; T-1021: a task of its own right after, so a big network's first state is two tasks

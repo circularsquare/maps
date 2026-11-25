@@ -14,6 +14,7 @@ import { ask, selection } from "./ui";
 import { edit, linesByNum, say, stationsByNum } from "./world";
 import { clickWorld } from "../map/clickMap";
 import { planStopsOf } from "./types";
+import { edgeOf } from "./worldDiff";
 
 /** `bus`: a bus line by its number, route and line together; `building` a station building by its id (T-2218). */
 export type Removable = { kind: "track"; edge: number } | { kind: "station"; node: number } | { kind: "flyover"; node: number } | { kind: "bus"; line: number } | { kind: "building"; id: number };
@@ -23,7 +24,7 @@ export type Removable = { kind: "track"; edge: number } | { kind: "station"; nod
  * rule of the track model's `station_trim_ops` (sim/src/track/wasm/links.rs). */
 export function stationTrim(edge: number): [number, number] {
   const w = clickWorld();
-  const e = w?.edges.find((x) => x.id === edge);
+  const e = w && edgeOf(w, edge);
   if (!w || !e || e.crossover || e.a === e.b) return [0, 0];
   const keep = (id: number) => {
     const n = w.nodes.get(id);
@@ -37,7 +38,7 @@ export function stationTrim(edge: number): [number, number] {
  * that a removal would only lay back. The track model's `holds_station` (links.rs) is the same rule. */
 export function stationStub(edge: number): number | null {
   const w = clickWorld();
-  const e = w?.edges.find((x) => x.id === edge);
+  const e = w && edgeOf(w, edge);
   if (!w || !e || e.crossover || e.a === e.b) return null;
   const bare = (id: number) => {
     const n = w.nodes.get(id);
@@ -71,7 +72,7 @@ export function describeRemovable(r: Removable): { what: string; built: boolean 
   const w = clickWorld();
   if (!w) return null;
   if (r.kind === "track") {
-    const e = w.edges.find((x) => x.id === r.edge);
+    const e = edgeOf(w, r.edge);
     // a crossover goes as a whole, both diagonals (T-338)
     if (e?.crossover) return { what: t("remove.crossover", { built: e.built }), built: e.built };
     const [ka, kb] = stationTrim(r.edge);

@@ -16,6 +16,7 @@ import { purposeName, type PurposeFilter } from "../game/purposes";
 import type { LineInput, WorldView } from "../game/types";
 import { ask, display, isBuildTool, purposeFilter, selection, shownDay, shownDayPhrase, tool } from "../game/ui";
 import { world } from "../game/world";
+import { timed } from "../game/stepTimes";
 import { hoverAt } from "./demandHover";
 import { restHolds } from "./hoverRest";
 import { markAt, markTip } from "./gradeMarks";
@@ -401,7 +402,7 @@ export function startTrackHover(map: MlMap, ov: Overlay) {
   };
   const update = () => {
     if (!at) return hide();
-    const t = tipAt(at[0], at[1]);
+    const t = timed("hover.track", () => tipAt(at![0], at![1]));
     if (t) show(t, at[0], at[1]);
     else hide();
   };

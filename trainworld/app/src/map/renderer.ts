@@ -15,6 +15,8 @@ import { ANNEX_ROOM, stationAnnexes, stationCoords, ST_BUFFER, ST_BUILDING, ST_O
 import { shadeColours } from "../game/shades";
 import { readBoardHour, trainStands, type BoardHour, type CrowdedStretch } from "../game/boarding";
 import { UPGRADE } from "../game/upgrades";
+import { stepSince, timed } from "../game/stepTimes";
+import { checkPatches } from "../game/worldDiff";
 import { PlatformCrowds } from "./platformCrowds";
 import { TransferBubbles } from "./transferBubbles";
 import { BusLayer } from "./busLayer";
@@ -269,16 +271,49 @@ export class NetworkRenderer {
    * for, a few ms where scanning every station's shape cost Japan's network 100 ms a move (T-1020). */
   stationReachNow(n: NetworkBuffers): { r: Float32Array; halfWidth: number } {
     if (this.reachOf?.net === n) return this.reachOf;
+    return timed("station.reach", () => this.reachNow(n));
+  }
+  private reachNow(n: NetworkBuffers): { r: Float32Array; halfWidth: number } {
     const r = new Float32Array(n.stationCount), s = n.stationShape;
     let halfWidth = 0;
+    // T-4284: a station whose platform is as it was in the network last asked keeps its reach there
+    const p = this.reachOf, P2 = 2 * PLATFORM_POINTS, was = p?.net;
+    const bits = (a?: Float32Array) => (a ? new Int32Array(a.buffer, a.byteOffset, a.length) : null);
+    const ws = bits(was?.stationShape), ns = bits(s), wa = bits(was?.stationAxis), na = bits(n.stationAxis), wl = bits(was?.stationLine), nl = bits(n.stationLine);
+    const sameRun = (x: Int32Array | null, y: Int32Array | null, j: number, i: number, k: number) => {
+      if (!x || !y) return x === y;
+      if ((j + 1) * k > x.length || (i + 1) * k > y.length) return false;
+      for (let c = 0; c < k; c++) if (x[j * k + c] !== y[i * k + c]) return false;
+      return true;
+    };
+    const sameAt = (j: number, i: number) => sameRun(ws, ns, j, i, 4) && sameRun(wa, na, j, i, 2) && sameRun(wl, nl, j, i, P2);
+    // (a station's place there: its own, one up or down from where the last one was, else by id)
+    let shift = 0;
+    const wIds = was?.stationIds;
+    const placeOf = (i: number) => {
+      const id = n.stationIds[i];
+      if (wIds![i + shift] === id) return i + shift;
+      if (wIds![i + shift + 1] === id) return i + ++shift;
+      if (wIds![i + shift - 1] === id) return i + --shift;
+      const j = stationIndexOf(was!, id);
+      if (j >= 0) shift = j - i;
+      return j;
+    };
     for (let i = 0; i < n.stationCount; i++) {
+      halfWidth = Math.max(halfWidth, s?.[i * 4 + 3] ?? 0);
+      const j = was ? placeOf(i) : -1;
+      if (j >= 0 && sameAt(j, i)) { r[i] = p!.r[j]; continue; }
       const sh = platformShapeAt(n, i);
       const q = platformPoints(sh);
       let m = Math.hypot(sh.mx, sh.my) + Math.hypot(sh.ax, sh.ay);
       for (let j = 0; j + 1 < q.length; j += 2) m = Math.max(m, Math.hypot(q[j], q[j + 1]));
       r[i] = m;
-      halfWidth = Math.max(halfWidth, s?.[i * 4 + 3] ?? 0);
     }
+    if (was && (this.checkPatch || checkPatches())) timed("dev.check.reach", () => {
+      this.reachOf = null;
+      const whole = this.reachNow(n).r;
+      if (!sameWords(whole, r)) console.error("T-4284 check: the stations' reach kept from the last network differs from a whole build");
+    });
     this.reachOf = { net: n, r, halfWidth };
     return this.reachOf;
   }
@@ -584,7 +619,9 @@ export class NetworkRenderer {
     const ok = !!l && l.lineWidth.length === lines.count;
     const tb = ok && l.bands && l.bands.seg.length === lines.count * 2 ? l.bands : null;
     let wm: Float32Array | null = null;
-    if (ok) {
+    let ts = import.meta.env.DEV ? performance.now() : 0;
+    // (T-4284: plain widths are known plain without a pass over them)
+    if (ok && !(l.plain && !tb && this.keepGl)) {
       wm = new Float32Array(lines.count * 3);
       for (let i = 0; i < lines.count; i++) {
         wm[i * 3] = l.lineWidth[i];
@@ -594,7 +631,9 @@ export class NetworkRenderer {
     // T-4262: widths all plain (the Line view's: every width 1, no band shift) are drawn as the plain widths, and
     // only the rows that differ from what the buffer holds are written
     if (wm && this.keepGl && isPlainWmul(wm)) wm = null;
+    ts = stepSince("layers.set.wm", ts);
     const wmulChanged = lines.count > 0 && (!this.keepGl || !!wm || !lines.wmulPlain) && writeWmul(this, lines, wm);
+    ts = stepSince("layers.set.write", ts);
     lines.wmulPlain = !wm;
     lines.wmulHeld = wm;
     this.lineWidths = ok ? l.lineWidth : null;
@@ -607,9 +646,13 @@ export class NetworkRenderer {
       if (tb) for (let i = 0; i < tb.sample.length; i += 2) this.trafficReach = Math.max(this.trafficReach, Math.abs(tb.sample[i]));
       this.putLane(n);
     }
+    ts = stepSince("layers.set.lane", ts);
     if (wmulChanged || !this.keepGl) this.perSegV++;
+    // T-4284: only the rows whose fill changed are written, when the last fill put is the one they changed from
+    const fc = l?.fillChanged, named = fc && this.fillSrc === fc.from ? { keys: fc.keys, from: [fc.from] } : null;
     this.fillSrc = l ? l.fill : null;
-    this.putTrain("fill", n);
+    this.putTrain("fill", n, named);
+    stepSince("layers.set.fill", ts);
     this.fillStale = false;
     if (this.checkPatch && this.keepGl) this.checkTrains(["fill", "lane"], n);
     this.layersMs = performance.now() - t0;

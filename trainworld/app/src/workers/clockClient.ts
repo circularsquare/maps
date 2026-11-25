@@ -31,7 +31,8 @@ import { accountVersion, packArrivals, packRiders } from "../game/boarding";
 import { ask, designSpeed, guideFinished, lineDraft, marketOff, selection, tool } from "../game/ui";
 import { modelStopped } from "../game/modelStopped";
 import { afterStopEdits, flipSites, rightHand, say, setEditSink, stopsQueued, world, worldIsRows } from "../game/world";
-import { ascendingBy, checkPatches, freshNow, noteStep, sameBuilt } from "../game/worldDiff";
+import { ascendingBy, checkPatches, freshNow, noteSide, noteStep, sameBuilt } from "../game/worldDiff";
+import { timed } from "../game/stepTimes";
 import type { LineInput, LineStats, RowFigs, StationInput, StopOnly, TrackEdge, TrackNode, WorldView } from "../game/types";
 import type { ClockLine, ClockState, EditOp, FromClock, MoneyPatch, MoneyState, NetworkSnapshot, PaidFor, PiInput, RouteAsk, StationAt, ToClock } from "./protocol";
 import { applyPatch, sameValueDeep } from "./valuePatch";
@@ -438,21 +439,82 @@ function fullTrackKept(v: Float64Array, p: number, keep: boolean): Map<number, {
   return m;
 }
 
-/** `keep` false (T-4214, the tools' patched world): the views made are not kept for the next state's to reuse */
-function toWorld(s: ClockState, keep = true): WorldView {
-  let stations: StationInput[] = s.nodes
-    .filter((n) => n.platform > 0)
-    .map((n) => {
-      let v = stationViews.get(n);
-      if (!v) stationViews.set(n, v = {
-        id: String(n.id), num: n.id, name: n.name, lng: n.lng, lat: n.lat, x: n.x, y: n.y, level: n.level as any, length: n.platform, built: n.stationBuilt, off: n.stationOff, upgrades: n.upgrades, heading: n.heading, ...(n.fare ? { fare: n.fare } : {}), ...(n.named ? { named: true as const } : {}), ...(n.own ? { unbound: true as const } : {}), ...(n.hub !== undefined ? { hub: n.hub } : {}), ...(n.line ? { line: n.line } : {}), ...(n.port ? { port: n.port } : {}), ...(n.brtStation ? { brt: true as const } : {}), ...(n.kind === 2 || n.kind === 3 ? { tram: true as const } : {}),
-        ...(n.one ? { one: n.one } : {}), ...(n.oneHeading !== undefined ? { oneHeading: n.oneHeading } : {}), ...(n.onePlatform ? { onePlatform: true as const } : {}),
-        ...(n.upgradeUpkeep ? { upgradeUpkeep: n.upgradeUpkeep } : {}),
-      });
-      return v;
-    });
+/** T-4284: the node rows a state or click world may differ by from the last kept world's (`lastNodeRows`), by id */
+type NodeStep = ReadonlySet<number>;
+type NodeRow = ClockState["nodes"][number];
+const stationOf = (n: NodeRow): StationInput => {
+  let v = stationViews.get(n);
+  if (!v) stationViews.set(n, v = {
+    id: String(n.id), num: n.id, name: n.name, lng: n.lng, lat: n.lat, x: n.x, y: n.y, level: n.level as any, length: n.platform, built: n.stationBuilt, off: n.stationOff, upgrades: n.upgrades, heading: n.heading, ...(n.fare ? { fare: n.fare } : {}), ...(n.named ? { named: true as const } : {}), ...(n.own ? { unbound: true as const } : {}), ...(n.hub !== undefined ? { hub: n.hub } : {}), ...(n.line ? { line: n.line } : {}), ...(n.port ? { port: n.port } : {}), ...(n.brtStation ? { brt: true as const } : {}), ...(n.kind === 2 || n.kind === 3 ? { tram: true as const } : {}),
+    ...(n.one ? { one: n.one } : {}), ...(n.oneHeading !== undefined ? { oneHeading: n.oneHeading } : {}), ...(n.onePlatform ? { onePlatform: true as const } : {}),
+    ...(n.upgradeUpkeep ? { upgradeUpkeep: n.upgradeUpkeep } : {}),
+  });
+  return v;
+};
+const nodeOf = (n: NodeRow): TrackNode => {
+  let v = nodeViews.get(n);
+  if (!v) nodeViews.set(n, v = { id: n.id, x: n.x, y: n.y, lng: n.lng, lat: n.lat, level: n.level as any, ports: n.ports, builtPorts: n.builtPorts, flying: n.flying, platform: n.platform, ...(n.bus ? { bus: true as const } : {}), ...(n.port ? { port: true as const } : {}), ...(n.brtStation ? { brtStation: true as const } : {}), ...(n.kind ? { kind: n.kind } : {}) });
+  return v;
+};
+/** whether `lastStations` ascend by number (a laid list does when the one it was laid on did) */
+let lastStationsUp = true;
+/** T-4284: the row of node `id` in `rows` (the model's order: by id, the bus stops that are no station last), where its
+ * bus stops start */
+function rowIn(rows: readonly NodeRow[], tail: number, id: number): NodeRow | undefined {
+  let lo = 0, hi = tail;
+  while (lo < hi) { const m = (lo + hi) >> 1; if (rows[m].id < id) lo = m + 1; else hi = m; }
+  if (lo < tail && rows[lo].id === id) return rows[lo];
+  for (let k = tail; k < rows.length; k++) if (rows[k].id === id) return rows[k];
+  return undefined;
+}
+const busTail = (rows: readonly NodeRow[]) => { let t = rows.length; while (t > 0 && rows[t - 1].bus) t--; return t; };
+/** T-4284: the last kept world's stations with the rows `ids` names laid in; null when the order cannot be kept so */
+function laidStations(rows: readonly NodeRow[], ids: NodeStep): StationInput[] | null {
+  if (!lastStationsUp) return null;
+  const out = lastStations.slice(), t = busTail(rows);
+  for (const id of [...ids].sort((a, b) => a - b)) {
+    const r = rowIn(rows, t, id);
+    if (r?.bus && r.platform > 0) return null;
+    const v = r && r.platform > 0 ? stationOf(r) : null;
+    let lo = 0, hi = out.length;
+    while (lo < hi) { const m = (lo + hi) >> 1; if (out[m].num < id) lo = m + 1; else hi = m; }
+    const has = lo < out.length && out[lo].num === id;
+    if (v) { if (has) out[lo] = v; else out.splice(lo, 0, v); }
+    else if (has) out.splice(lo, 1);
+  }
+  return out;
+}
+/** T-4284: the last kept world's nodes with the rows `ids` names laid in, in the rows' order; null when that order needs
+ * the map made again (a bus stop changed, or a new node not after the others by id) */
+function laidNodes(rows: readonly NodeRow[], ids: NodeStep): Map<number, TrackNode> | null {
+  const m = new Map(lastNodeMap), t = busTail(rows), added: number[] = [];
+  for (const id of ids) {
+    const r = rowIn(rows, t, id);
+    if (r?.bus || lastNodeMap.get(id)?.bus) return null;
+    if (!r) { m.delete(id); continue; }
+    if (!m.has(id)) added.push(id);
+    m.set(id, nodeOf(r));
+  }
+  if (added.length) {
+    added.sort((a, b) => a - b);
+    for (let k = 0; k < added.length; k++) if (rows[t - added.length + k]?.id !== added[k]) return null;
+    // (the bus stops stay last)
+    for (let k = t; k < rows.length; k++) { const id = rows[k].id, v = m.get(id)!; m.delete(id); m.set(id, v); }
+  }
+  return m;
+}
+
+/** `keep` false (T-4214, the tools' patched world): the views made are not kept for the next state's to reuse. `step`
+ * (T-4284): the node ids its rows may differ by from the last kept world's, whose stations and nodes it is then laid on */
+function toWorld(s: ClockState, keep = true, step?: NodeStep | null): WorldView {
+  const laidS = step ? laidStations(s.nodes, step) : null;
+  let stations: StationInput[] = laidS ?? s.nodes.filter((n) => n.platform > 0).map(stationOf);
+  if (import.meta.env.DEV && laidS && checkPatches() && !sameObjects(laidS, s.nodes.filter((n) => n.platform > 0).map(stationOf))) console.error("T-4284 check: the stations laid on the last world's differ from a whole build");
   if (sameObjects(stations, lastStations)) stations = lastStations;
-  else if (keep) lastStations = stations;
+  else if (keep) {
+    lastStationsUp = laidS ? lastStationsUp : ascendingBy(stations, (x) => x.num);
+    lastStations = stations;
+  }
   // T-3333: a line run on both pairs and its hidden twin keep a row each, so every sum counts both; the twin
   // is marked for the lists to leave out, its line for its panel to add it in
   const twinOfLine = new Map<number, number>(), twins = new Map<string, string>();
@@ -528,17 +590,16 @@ function toWorld(s: ClockState, keep = true): WorldView {
       ...(l.bus ? { bus: l.bus } : {}),
     };
   }
-  const edges = edgesOf(s, keep);
+  const edges = timed("world.edges", () => edgesOf(s, keep));
   // the last map while the rows are the same, so the snap's node grid (map/snapIndex.ts) stays
   let nodes = lastNodeMap;
   if (!sameObjects(s.nodes, lastNodeRows)) {
-    nodes = new Map<number, TrackNode>(
-      s.nodes.map((n) => {
-        let v = nodeViews.get(n);
-        if (!v) nodeViews.set(n, v = { id: n.id, x: n.x, y: n.y, lng: n.lng, lat: n.lat, level: n.level as any, ports: n.ports, builtPorts: n.builtPorts, flying: n.flying, platform: n.platform, ...(n.bus ? { bus: true as const } : {}), ...(n.port ? { port: true as const } : {}), ...(n.brtStation ? { brtStation: true as const } : {}), ...(n.kind ? { kind: n.kind } : {}) });
-        return [n.id, v];
-      }),
-    );
+    const laid = step ? laidNodes(s.nodes, step) : null;
+    nodes = laid ?? new Map<number, TrackNode>(s.nodes.map((n) => [n.id, nodeOf(n)]));
+    if (import.meta.env.DEV && laid && checkPatches()) {
+      const whole = [...s.nodes.map((n) => [n.id, nodeOf(n)] as const)], got = [...laid];
+      if (whole.length !== got.length || whole.some(([id, v], i) => got[i][0] !== id || got[i][1] !== v)) console.error("T-4284 check: the nodes laid on the last world's differ from a whole build");
+    }
     if (keep) {
       lastNodeRows = s.nodes;
       lastNodeMap = nodes;
@@ -1346,9 +1407,9 @@ export class ClockClient {
     // nothing on the map moved (a group or look edit): the tools' map holds the edit as it is
     if (!p.edges.length && !p.nodes.length && !p.goneEdges.length && !p.goneNodes.length && !p.lines?.length) return true;
     // (a station's name alone moves no edge: the drawn network's points stand)
-    if ((p.edges.length || p.goneEdges.length) && !this.onPatch(new Map(p.edges.map((e, i) => [e.id, p.pts[i]])), p.goneEdges, order, p.anchor)) return false;
+    if ((p.edges.length || p.goneEdges.length) && !timed("patch.onPatch", () => this.onPatch(new Map(p.edges.map((e, i) => [e.id, p.pts[i]])), p.goneEdges, order, p.anchor))) return false;
     this.patchLog.push({ order, p });
-    this.layPatch(p);
+    timed("patch.layPatch", () => this.layPatch(p));
     return true;
   }
   /** `p`'s rows laid on the tools' world (the last state's rows, as patched since) */
@@ -1357,9 +1418,21 @@ export class ClockClient {
     // (a line's paths in place of its row's, which say what runs on the touched track: its other figures wait for the state)
     const paths = new Map((p.lines ?? []).map((l) => [l.id, l]));
     const lines = paths.size ? base.lines.map((l) => { const q = paths.get(l.id); if (!q) return l; const { back: _b, ...rest } = l; return { ...rest, path: q.path, ...(q.planPath ? { planPath: q.planPath } : {}), ...(q.back ? { back: q.back } : {}) }; }) : base.lines;
-    this.patched = { edges: patchRows(base.edges, p.edges, p.goneEdges), nodes: patchRows(base.nodes, p.nodes, p.goneNodes), lines, n: base.n + 1 };
+    this.patched = timed("patch.rows", () => ({ edges: patchRows(base.edges, p.edges, p.goneEdges), nodes: patchRows(base.nodes, p.nodes, p.goneNodes), lines, n: base.n + 1 }));
     // (a version of its own: the tools' caches keyed on it are read again; the next state's is the next whole number)
-    setClickWorld(toWorld({ ...st, edges: this.patched.edges, nodes: this.patched.nodes, lines, version: st.version + this.patched.n / 1000 }, false));
+    // T-4284: the rows it may differ by from the state's world (the patches laid since), for its views, the readers' diffs
+    // and the grids
+    const ids = { edges: new Set<number>(), nodes: new Set<number>() };
+    for (const x of this.patchLog) if (x.p) {
+      for (const e of x.p.edges) ids.edges.add(e.id);
+      for (const id of x.p.goneEdges) ids.edges.add(id);
+      for (const n of x.p.nodes) ids.nodes.add(n.id);
+      for (const id of x.p.goneNodes) ids.nodes.add(id);
+    }
+    const w = toWorld({ ...st, edges: this.patched.edges, nodes: this.patched.nodes, lines, version: st.version + this.patched.n / 1000 }, false, ids.nodes);
+    const from = world.peek();
+    if (from) noteSide(from, w, ids);
+    setClickWorld(w);
   }
 
   /** DEV (T-4214): the rows the patches that arrived before the state taken now (the `order`th message) gave, against that
@@ -1501,9 +1574,9 @@ export class ClockClient {
     worldIsRows.value = !!msg.state.rows;
     if (msg.state.rightHand !== undefined) rightHand.value = msg.state.rightHand;
     const order = this.orderOf(msg);
-    if (import.meta.env.DEV) this.checkPatched(msg.state, order);
+    if (import.meta.env.DEV) timed("dev.checkPatched", () => this.checkPatched(msg.state, order));
     // T-4150 stage 2: the world says which of its records may differ from the last, for the readers' diffs
-    const ids = this.since, next = toWorld(msg.state);
+    const ids = this.since, next = timed("take.toWorld", () => toWorld(msg.state, true, ids?.nodes));
     this.since = { edges: new Set(), nodes: new Set() };
     if (ids && edgeLinesMoved) for (const p of edgeLinesMoved) ids.edges.add(p);
     noteStep(this.worldBefore, next, ids && { edges: edgeLinesMoved ? ids.edges : null, nodes: ids.nodes });

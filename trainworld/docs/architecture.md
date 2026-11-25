@@ -101,8 +101,11 @@ Web first, so it can be shared as a link.
   is compared line by line with them instead. The tables keep an eighth of room past the last slot, and
   at least the largest line's; past that, or 2^19 bend points, they are laid out afresh. The network's
   arrays stay packed for every reader on the CPU.
-  Other network textures are kept, written only in the rows whose data changed (T-4262); the pick and
-  snap grids are carried over through the same runs instead of built again (T-1030).
+  Other network textures are kept, written only in the rows whose data changed (T-4262); the pick grids are
+  carried over through the same runs instead of built again (T-1030), their old items renumbered by the runs
+  themselves, so a carry costs the runs, never a pass over every segment. The snap grids (`map/snapIndex.ts`) are the
+  last ones with the edges and nodes an edit changed laid over them, found from the network's changed edges
+  (`mergeNet`'s `edgeStep`, a patch's edges) and the worlds' diffs; past 4096 laid over, built whole [T-4284].
   Anything that cannot be taken as changes (a load, a new draw anchor, a mismatch) goes whole;
   `?patch=0` posts everything whole, `?patch=check` compares the changes with whole builds
   (notes/T-1029.md). Trains are instanced and positioned on the GPU from keyframes
@@ -272,7 +275,11 @@ Web first, so it can be shared as a link.
   redoes only the lines the diff `reading` names (lines whose row or figures changed, and lines stopping at a station that
   changed: `PerLine`, or `lineGeo`'s kept geos); `PerRecord` keeps a value per record while its inputs are the same
   objects. A reader of `world` that works per record or patches a total goes through these and checks against a whole
-  build under `?patch=check` [T-4150].
+  build under `?patch=check` [T-4150]. `toWorld` lays a world's stations and nodes on the last kept world's by the node
+  ids its rows changed, and the tools' click world (`clickMap.ts`) is noted as built from its state's world with the
+  patches' ids (`noteSide`), so its diff and grids go by those ids too. The demand layers keep each line's numbers per
+  demand view, and the trains' fill per line table row from the last layers where its line's numbers and samples'
+  stretches are the same; only the changed rows are written to the GPU [T-4284].
   The money record goes with each state and "money" message the same way, as its changes from the last one posted
   (`moneyPatch`, `workers/valuePatch.ts`: key by key, entry by entry; a patch made against a record the page does not
   hold asks for a whole state), since whole it was about 2 MB on the biggest saves, nearly all of it the regions'

@@ -215,6 +215,9 @@ export interface NetworkBuffers {
    * the build numbered `patch.base` (`NetPatch`) */
   serial?: number;
   patch?: NetPatch;
+  /** T-4284, the page only (`mergeNet`): the edges whose points differ from the build numbered `base`'s, moved or added
+   * (`set`) or taken out (`gone`), for the snap grid (map/snapIndex.ts); absent when not known */
+  edgeStep?: { base: number; set: number[]; gone: number[] };
   /** the clock worker only (`networkFromState`'s `deferStrokes`): what `track` and `lines` are made from */
   strokePieces?: Record<StrokeKind, StrokePiece[]>;
   /** `?patch=check` only: the strokes whole, which the merged ones are compared with (`mergeNet`) */
@@ -1874,11 +1877,20 @@ export function mergeNet(prev: NetworkBuffers | null, n: NetworkBuffers, service
   const from: Record<string, unknown> = { ...prev, ...(service ?? {}) };
   for (const k of p.same) if (from[k] === undefined) return false;
   const pts = new Map<number, Float32Array>();
+  // T-4284: the edges taken out, read off the last build's ids beside these (both ascend, the model's order)
+  const was = prev.edgePts.keys(), gone: number[] = [];
+  let w = was.next(), last = -Infinity, ordered = true;
   for (const id of p.edgeIds) {
     const v = n.edgePts.get(id) ?? prev.edgePts.get(id);
     if (!v) return false;
     pts.set(id, v);
+    if (!(id > last)) ordered = false;
+    last = id;
+    while (!w.done && w.value < id) { gone.push(w.value); w = was.next(); }
+    if (!w.done && w.value === id) w = was.next();
   }
+  for (; !w.done; w = was.next()) gone.push(w.value);
+  const set = [...n.edgePts.keys()];
   const track = planStrokes("track", prev.track, n.track, p.modes.track, p.ranges.track, p.moves?.track), lines = planStrokes("lines", prev.lines, n.lines, p.modes.lines, p.ranges.lines, p.moves?.lines);
   if (!track || !lines) return false;
   // nothing is written into the last network's arrays unless the whole network can be merged
@@ -1886,6 +1898,8 @@ export function mergeNet(prev: NetworkBuffers | null, n: NetworkBuffers, service
   lines.write();
   for (const k of p.same) (n as unknown as Record<string, unknown>)[k] = from[k];
   n.edgePts = pts;
+  // (the last build's ids out of order: not known, and `gone` cannot be trusted)
+  if (ordered && prev.serial !== undefined && gone.length + pts.size === prev.edgePts.size + set.filter((id) => !prev.edgePts.has(id)).length) n.edgeStep = { base: prev.serial, set, gone };
   n.track = track.strokes;
   n.lines = lines.strokes;
   if (n.checkStrokes) checkMergedStrokes(n, `${p.modes.track}/${p.modes.lines}`);

@@ -5,7 +5,9 @@ import { lngLatToPack } from "../game/coords";
 import { tool } from "../game/ui";
 import { removeThing, stationStub, stationTrim, type Removable } from "../game/remove";
 import { pointerLocal } from "./pick";
-import { edgesNear } from "./snapIndex";
+import { edgesNear, nodesNear } from "./snapIndex";
+import { edgeOf } from "../game/worldDiff";
+import { timed } from "../game/stepTimes";
 import { clickWorld } from "./clickMap";
 import { toLocal } from "./geo";
 import { strokesFromParts } from "./network";
@@ -29,24 +31,28 @@ export function deletePick(tk: Tools, px: number, py: number): (Removable & { lx
     return d < slop ? d : Infinity;
   };
   let best = Infinity, hit: (Removable & { lx: number; ly: number }) | null = null;
-  const station=tk.overlay.renderer.stationAt(px,py,(x,y)=>tk.screen(x,y),5);
+  const station = timed("hover.stationAt", () => tk.overlay.renderer.stationAt(px, py, (x, y) => tk.screen(x, y), 5));
   // (T-4214: a drawn station an edit since took out is not there to pick)
   if (station>=0 && (w.nodes.get(Number(n.stationIds[station]))?.platform ?? 0) > 0) {
     // T-3629: track under the box that is not the station's own platform stretch (a siding) is the pick
     const node = Number(n.stationIds[station]);
     const s = tk.snap(px, py, tk.map.unproject([px, py]));
-    if (s.kind === "edge" && !w.edges.some((e) => e.id === s.edge && (e.a === node || e.b === node))) return { kind: "track", edge: s.edge, lx: s.lx, ly: s.ly };
+    const e = s.kind === "edge" ? edgeOf(w, s.edge) : undefined;
+    if (s.kind === "edge" && !(e && (e.a === node || e.b === node))) return { kind: "track", edge: s.edge, lx: s.lx, ly: s.ly };
     return {kind:"station",node,lx:n.stations[station*3],ly:n.stations[station*3+1]};
   }
+  // T-4284: only the nodes near the pointer (12 px and more), in the world's order; every node with the map pitched
+  const at = pointerLocal(tk.overlay, px, py);
+  const picks = (at && nodesNear(w, at[0], at[1], 12 * at[2], "pick")) ?? [...w.nodes.values()];
   // T-4214: a station placed since the drawn network was built has no box yet; the patched world has its node
-  for (const node of w.nodes.values()) {
+  for (const node of picks) {
     if (!(node.platform > 0) || node.bus || node.port || tk.overlay.renderer.stationStyle.hidden) continue; // (hidden stations are never picked, T-205, T-4260)
     const [lx, ly] = toLocal(node.lng, node.lat);
     const d = near(lx, ly, 12);
     if (d < best && !n.stationIds.some((id) => Number(id) === node.id)) [best, hit] = [d, { kind: "station", node: node.id, lx, ly }];
   }
   if (hit) return hit;
-  for (const node of w.nodes.values()) {
+  for (const node of picks) {
     if (!node.flying || node.ports < 3) continue;
     const [lx, ly] = toLocal(node.lng, node.lat);
     const d = near(lx, ly, 10);
@@ -64,7 +70,7 @@ export function deletePick(tk: Tools, px: number, py: number): (Removable & { lx
       const d = near(pts[k], pts[k + 1], 14);
       if (d < bd) [bd, e] = [d, edge];
     };
-    const at = pointerLocal(tk.overlay, px, py), close = at ? edgesNear(n, at[0], at[1], 14 * at[2]) : null;
+    const close = at ? edgesNear(n, at[0], at[1], 14 * at[2]) : null;
     if (close) {
       for (const { edge, pts, ks } of close) for (const k of ks) tryPoint(edge, pts, k), tryPoint(edge, pts, k + 3);
     } else {
@@ -113,7 +119,7 @@ export function stationUnder(tk: Tools, s: Snap): (Removable & { lx: number; ly:
   }
   const held = stub(s.edge);
   if (held) return held;
-  const e = w.edges.find((x) => x.id === s.edge), pts = n.edgePts.get(s.edge);
+  const e = edgeOf(w, s.edge), pts = n.edgePts.get(s.edge);
   if (!e || !pts || e.crossover) return null;
   const along = fractionAlong(pts, s.lx, s.ly) * e.lengthM;
   const reach = (id: number, d: number) => {
@@ -133,7 +139,10 @@ export function clearDelHover(tk: Tools) {
 }
 
 export function deleteHover(tk: Tools, px: number, py: number) {
-  const h = deletePick(tk, px, py);
+  timed("hover.delete", () => deleteHoverNow(tk, px, py));
+}
+function deleteHoverNow(tk: Tools, px: number, py: number) {
+  const h = timed("hover.pick", () => deletePick(tk, px, py));
   const same = (a: Removable | null, b: Removable | null) => JSON.stringify(a && { ...a, lx: 0, ly: 0 }) === JSON.stringify(b && { ...b, lx: 0, ly: 0 });
   const changed = !same(h, tk.delHover);
   tk.delHover = h;
@@ -141,21 +150,21 @@ export function deleteHover(tk: Tools, px: number, py: number) {
   if (changed) {
     // the stretch that would go, drawn red over itself
     // a crossover goes whole: both diagonals (T-391)
-    const edgePts = tk.pickNet?.edgePts;
-    const partner = h?.kind === "track" ? clickWorld()?.edges.find((x) => x.id === h.edge)?.partner ?? -1 : -1;
+    const edgePts = tk.pickNet?.edgePts, cw = clickWorld(), he = h?.kind === "track" && cw ? edgeOf(cw, h.edge) : undefined;
+    const partner = he?.partner ?? -1;
     const parts = h?.kind === "track" && edgePts
       ? [h.edge, partner].map((id) => edgePts.get(id)).filter((p): p is Float32Array => !!p && p.length >= 6)
       : [];
     // T-1161: past a station, only what goes
     if (h?.kind === "track" && parts.length) {
-      const [ka, kb] = stationTrim(h.edge), len = clickWorld()?.edges.find((x) => x.id === h.edge)?.lengthM ?? 0;
+      const [ka, kb] = stationTrim(h.edge), len = he?.lengthM ?? 0;
       if ((ka || kb) && len > 0) parts[0] = trimPolyline(parts[0], ka / len, kb / len);
     }
-    tk.overlay.renderer.setPreview(parts.length ? strokesFromParts(parts, true, false, h?.kind === "track" && clickWorld()?.edges.find((x) => x.id === h.edge)?.tracks === 1 ? 0 : 255) : null);
+    timed("hover.preview", () => tk.overlay.renderer.setPreview(parts.length ? strokesFromParts(parts, true, false, he?.tracks === 1 ? 0 : 255) : null));
     tk.overlay.invalidate();
   }
   tk.map.getCanvas().style.cursor = h ? "pointer" : "crosshair";
-  tk.place();
+  timed("hover.place", () => tk.place());
 }
 
 /** Resolves once its edit is sent and answered, or its question is up. */

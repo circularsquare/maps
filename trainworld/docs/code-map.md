@@ -85,7 +85,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 
 - `types.ts` (the save's inputs, worker results, `WorldView`, `Selection`), `world.ts` (the
   snapshot signal and the edit functions), `worldDiff.ts` (what changed between two worlds by record, read off identity
-  or the states' row ids, and `PerRecord` and `PerLine`, values kept per record or line while their inputs are the same, T-4150), `pending.ts` (the edits waiting to show, drawn and shown from the click until
+  or the states' row ids, and `PerRecord` and `PerLine`, values kept per record or line while their inputs are the same, T-4150), `stepTimes.ts` (DEV: ms of named steps of the page's work after an edit, `twSteps()` in a DEV page, T-4284), `pending.ts` (the edits waiting to show, drawn and shown from the click until
   the worker's state holds them: `ahead`, `shown`, `cashShown`, T-4145; the edits whose network is not yet set, `editsOut`,
   which map clicks wait for, T-4214), `editGuess.ts` (what an edit shows at its
   click read from its op, one part per kind: `map/lineToolAhead.ts`, `map/stationAhead.ts`, `pieceAhead.ts`,

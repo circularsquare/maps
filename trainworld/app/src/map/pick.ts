@@ -20,6 +20,7 @@ import { floorAt } from "./buildingFloors";
 import { buildingMembersById } from "../game/buildingView";
 import { hidden, levelHidden, pickSkip } from "./visibility";
 import { profileLine } from "./profiles";
+import { timed } from "../game/stepTimes";
 
 export const SLOP_PX = 7;
 /** projected points, reused (topSeg runs over every segment on each pointer move) */
@@ -72,15 +73,15 @@ const widest = new WeakMap<Float32Array, number>();
 export function carryGrids(was: NetworkBuffers | null, n: NetworkBuffers, check = false) {
   const p = n.patch;
   if (!was || !p || was.serial !== p.base) return;
-  for (const [name, a, b, runs] of [["track", was.track, n.track, p.track], ["lines", was.lines, n.lines, p.lines]] as const) {
+  for (const [name, a, b, runs] of [["track", was.track, n.track, p.track], ["lines", was.lines, n.lines, p.lines]] as const) timed("net.grids." + name, () => {
     const g = grids.get(a.seg);
-    if (!g || g.count !== a.count || grids.has(b.seg)) continue;
+    if (!g || g.count !== a.count || grids.has(b.seg)) return;
     const seg = b.seg;
     const levels = CellLevels.carried(g.levels, runs, () => seg, b.count);
     grids.set(seg, { count: b.count, levels });
     const bad = check ? levels.verify() : [];
     if (bad.length) console.error(`T-1030 check: the ${name} pick grid carried over differs from one built anew at ${bad.join(", ")}`);
-  }
+  });
 }
 
 /** Every segment whose box comes within `reach` (local units) of (lx, ly), into NEAR highest index
@@ -94,7 +95,8 @@ function segsNear(seg: Float32Array, count: number, lx: number, ly: number, reac
   }
   let g = grids.get(seg);
   if (!g || g.count !== count) grids.set(seg, (g = { count, levels: new CellLevels(() => seg, count) }));
-  const grid = g.levels.for(reach);
+  const lv = g.levels;
+  const grid = timed("pick.level", () => lv.for(reach));
   if (!grid) return -1;
   let n = 0;
   grid.near(lx, ly, reach, (i) => {

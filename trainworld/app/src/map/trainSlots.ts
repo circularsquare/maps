@@ -124,7 +124,7 @@ function afresh(rows: readonly number[], width: number, room: number): SlotLayou
 
 /** Keys of a line table's rows: a line's own run 0 its id times 2, its return run's own way back (T-3250, the rows past
  * `base`) that plus 1. */
-const rowKey = (r: number, base: number) => (base > 0 && r >= base ? (r - base) * 2 + 1 : r * 2);
+export const rowKey = (r: number, base: number) => (base > 0 && r >= base ? (r - base) * 2 + 1 : r * 2);
 
 /** The per-sample tables' rows (key, first sample, count) of a line table (`base`: `backBaseOf`). */
 export function sampleRows(table: ArrayLike<number>, base: number): number[] {

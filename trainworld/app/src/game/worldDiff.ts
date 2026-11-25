@@ -94,8 +94,21 @@ export function noteStep(from: WorldView | null, to: WorldView, ids: StepIds | n
   serial.set(to, ++lastSerial);
   ring[lastSerial % MAX_STEPS] = chained ? ids : null;
 }
+/** T-4284: worlds built from another with a few rows patched (the tools' click world, workers/clockClient.ts `layPatch`),
+ * off the numbered chain: the world each was built from and the ids its rows may differ by */
+const sides = new WeakMap<WorldView, { from: WorldView; ids: StepIds }>();
+export function noteSide(from: WorldView, to: WorldView, ids: StepIds) {
+  sides.set(to, { from, ids });
+}
+/** the world a click world was built from (`noteSide`), else null */
+export const sideOf = (w: WorldView): WorldView | null => sides.get(w)?.from ?? null;
 /** The ids of kind `k` that may differ from `a` to `b` when `b` was built from `a` through a few steps, else null. */
 function stepIds(a: WorldView, b: WorldView, k: keyof StepIds): Set<number> | null {
+  const side = sides.get(b);
+  if (side) {
+    const ids = side.from === a ? side.ids[k] : null;
+    return ids ? new Set(ids) : null;
+  }
   const sa = serial.get(a), sb = serial.get(b);
   if (sa === undefined || sb === undefined || sb <= sa || sb - sa > MAX_STEPS - 1 || lastSerial - sa > MAX_STEPS - 1) return null;
   const out = new Set<number>();
@@ -130,6 +143,8 @@ function findIn<T>(list: readonly T[], id: number, key: (x: T) => number): T | u
   while (lo < hi) { const mid = (lo + hi) >> 1; if (key(list[mid]) < id) lo = mid + 1; else hi = mid; }
   return lo < list.length && key(list[lo]) === id ? list[lo] : undefined;
 }
+/** T-4284: the edge with id `id` of a world, without a pass over its edges (found as `worldDiff` finds them) */
+export const edgeOf = (w: WorldView, id: number): TrackEdge | undefined => findIn(w.edges, id, (e) => e.id);
 /** DEV: how the stations, edges and nodes that changed were found: by the steps' ids (and how many ids looked up), or by
  * walking both lists (and how many records); the lines are always walked (a few hundred pointers) */
 export const diffStats = { ids: 0, looked: 0, walks: 0, walked: 0 };
@@ -303,13 +318,15 @@ export class PerRecord<K, V> {
  * the lines it asked for. Inside `freshly` every value is made and nothing kept. */
 export class PerLine<V> {
   private w: WorldView | null = null;
+  /** the world the pass under way reads, kept as `w` once it ends (a pass that never ends leaves the last one's) */
+  private at: WorldView | null = null;
   private m = new Map<LineId, V>();
   private next = new Map<LineId, V>();
   private reading: ReadonlySet<LineId> | null = null;
   begin(w: WorldView, same = true) {
     if (fresh) return;
     this.reading = same && this.w ? worldDiff(this.w, w)?.reading ?? null : null;
-    this.w = w;
+    this.at = w;
     this.next = new Map();
   }
   get(id: LineId, make: () => V): V {
@@ -320,7 +337,9 @@ export class PerLine<V> {
     return v;
   }
   end() {
-    if (!fresh) this.m = this.next;
+    if (fresh) return;
+    this.m = this.next;
+    this.w = this.at;
   }
 }
 
@@ -338,5 +357,5 @@ export function sameBuilt(a: unknown, b: unknown): boolean {
   if (Array.isArray(a) !== Array.isArray(b)) return false;
   const ka = Object.keys(a), kb = Object.keys(b);
   if (ka.length !== kb.length) return false;
-  return ka.every((k) => sameBuilt((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k]));
+  return ka.every((k) => Object.prototype.hasOwnProperty.call(b, k) && sameBuilt((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k]));
 }

@@ -104,19 +104,52 @@ class CellIndex {
   }
 }
 
-/** A grid carried over an edit (T-1030): an older grid with its items renumbered (`map`, -1 where
- * the item went), and a small grid of the items added since (`extra`, their numbers in `ids`). */
+/** T-4284: a renumbering of items as runs, (from, count, to) triples ascending by `from`: item `from + k` is now
+ * `to + k`, an item in no run gone. An edit's costs its runs, never a pass over every item. */
+type RunMap = Int32Array;
+/** item `i`'s number through `m`, -1 when it went */
+function mapItem(m: RunMap, i: number): number {
+  let lo = 0, hi = m.length / 3;
+  while (lo < hi) { const mid = (lo + hi) >> 1; if (m[mid * 3] <= i) lo = mid + 1; else hi = mid; }
+  if (!lo) return -1;
+  const k = (lo - 1) * 3;
+  return i < m[k] + m[k + 1] ? m[k + 2] + (i - m[k]) : -1;
+}
+/** `a` then `b`: an item's number through both */
+function composeRuns(a: RunMap, b: RunMap): RunMap {
+  const out: number[] = [], nb = b.length / 3;
+  for (let k = 0; k < a.length; k += 3) {
+    const from = a[k], n = a[k + 1], mid = a[k + 2];
+    // the runs of `b` over [mid, mid + n): the first that ends past mid, then on while they start before its end
+    let lo = 0, hi = nb;
+    while (lo < hi) { const m = (lo + hi) >> 1; if (b[m * 3] + b[m * 3 + 1] <= mid) lo = m + 1; else hi = m; }
+    for (let j = lo; j < nb && b[j * 3] < mid + n; j++) {
+      const s = Math.max(mid, b[j * 3]), e = Math.min(mid + n, b[j * 3] + b[j * 3 + 1]);
+      if (s >= e) continue;
+      const f = from + (s - mid), t = b[j * 3 + 2] + (s - b[j * 3]), c = e - s, q = out.length - 3;
+      // (a run that goes on where the last ended, both ways, extends it)
+      if (q >= 0 && out[q] + out[q + 1] === f && out[q + 2] + out[q + 1] === t) out[q + 1] += c;
+      else out.push(f, c, t);
+    }
+  }
+  return Int32Array.from(out);
+}
+
+/** A grid carried over edits (T-1030): an older grid with its items renumbered (`map`, T-4284 as runs), and a small
+ * grid of the items added since (`extra`, their numbers in `ids`). */
 class PatchedIndex {
-  constructor(readonly base: CellIndex, readonly map: Int32Array, readonly extra: CellIndex | null, readonly ids: Int32Array) {}
+  constructor(readonly base: CellIndex, readonly map: RunMap, readonly extra: CellIndex | null, readonly ids: Int32Array) {}
   near(x: number, y: number, reach: number, take: (i: number) => void) {
     const m = this.map, ids = this.ids;
     this.base.near(x, y, reach, (i) => {
-      const j = m[i];
+      const j = mapItem(m, i);
       if (j >= 0) take(j);
     });
     this.extra?.near(x, y, reach, (k) => take(ids[k]));
   }
 }
+/** a grid carried past this many runs is built anew instead */
+const RUNS_MAX = 4096;
 type Grid = CellIndex | PatchedIndex;
 
 /** Runs `job` when the main thread is idle: a build takes 5-20 ms, which a pointer move never waits for. */
@@ -130,8 +163,8 @@ interface CarriedFrom {
   old: CellLevels;
   runs: Int32Array;
   itemBox?: (i: number, out: Float64Array, at: number) => void;
-  /** each old item's new number or -1, and the new items, worked out when first needed */
-  step?: Int32Array;
+  /** the old items' new numbers (`RunMap`), and the new items, worked out when first needed */
+  step?: RunMap;
   fresh?: number[];
 }
 
@@ -141,7 +174,8 @@ export class CellLevels {
   private levels: (Grid | "asked" | undefined)[] = [];
   private boxes: ArrayLike<number> | null = null;
   private from: CarriedFrom | null = null;
-  constructor(private box: () => ArrayLike<number>, readonly count: number) {}
+  /** `now`: each level wanted is built at once, whatever the count (a small set laid over a big one, map/snapIndex.ts) */
+  constructor(private box: () => ArrayLike<number>, readonly count: number, private now = false) {}
   /** The level for a query of this reach, or null to scan everything: when the reach is too wide
    * for any level, or the level is not built yet (it is then built when the thread is idle). */
   for(reach: number): Grid | null {
@@ -151,7 +185,7 @@ export class CellLevels {
     if (had) return had;
     // T-2404: a big set's scan costs about what building its grid does, and a pointer move scanning
     // it each time leaves the thread no idle time to build in (T-1861): built now
-    if (this.count >= BUILD_NOW) return (this.levels[L] = new CellIndex((this.boxes ??= this.box()), this.count, CELL_SIDES[L]));
+    if (this.count >= BUILD_NOW || this.now) return (this.levels[L] = new CellIndex((this.boxes ??= this.box()), this.count, CELL_SIDES[L]));
     if (!this.levels[L]) {
       this.levels[L] = "asked";
       whenIdle(() => (this.levels[L] = new CellIndex((this.boxes ??= this.box()), this.count, CELL_SIDES[L])));
@@ -192,27 +226,27 @@ export class CellLevels {
     const g = f.old.levels[L];
     if (!g || g === "asked") return null;
     if (!f.step) {
-      const step = new Int32Array(f.old.count).fill(-1), fresh: number[] = [], r = f.runs;
+      const kept: [number, number, number][] = [], fresh: number[] = [], r = f.runs;
+      let added = 0;
       for (let k = 0; k < r.length; k += 3) {
         const start = r[k], n = r[k + 1], from = r[k + 2];
-        if (from >= 0) for (let j = 0; j < n; j++) step[from + j] = start + j;
-        else for (let j = 0; j < n; j++) fresh.push(start + j);
+        if (from >= 0) kept.push([from, n, start]);
+        else if ((added += n) <= Math.max(4096, this.count / 8)) for (let j = 0; j < n; j++) fresh.push(start + j);
       }
-      f.step = step;
-      f.fresh = fresh;
+      kept.sort((a, b) => a[0] - b[0]);
+      f.step = Int32Array.from(kept.flat());
+      // (more new items than a carry takes: no level is carried)
+      f.fresh = added <= Math.max(4096, this.count / 8) ? fresh : undefined;
     }
-    const step = f.step;
+    const step = f.step, fresh = f.fresh;
+    if (!fresh) return null;
     const base = g instanceof PatchedIndex ? g.base : g;
-    const was = g instanceof PatchedIndex ? g.map : null;
     const ids: number[] = [];
-    if (g instanceof PatchedIndex) for (const i of g.ids) if (step[i] >= 0) ids.push(step[i]);
-    for (const i of f.fresh!) ids.push(i);
+    if (g instanceof PatchedIndex) for (const i of g.ids) { const j = mapItem(step, i); if (j >= 0) ids.push(j); }
+    for (const i of fresh) ids.push(i);
     if (ids.length > Math.max(4096, this.count / 8)) return null;
-    const map = new Int32Array(was ? was.length : f.old.count);
-    for (let i = 0; i < map.length; i++) {
-      const j = was ? was[i] : i;
-      map[i] = j >= 0 ? step[j] : -1;
-    }
+    const map = g instanceof PatchedIndex ? composeRuns(g.map, step) : step;
+    if (map.length / 3 > RUNS_MAX) return null;
     const all = f.itemBox ? null : (this.boxes ??= this.box());
     const b = new Float64Array(ids.length * 4);
     ids.forEach((i, k) => {
