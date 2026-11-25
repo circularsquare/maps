@@ -19,7 +19,7 @@ import { busRoadFilter, fastRoadExpr, railRoadFilter } from "./busRoads";
 import { townGeometry } from "./townArea";
 import { demBytes, flattenDem, onRedraw } from "./demFlat";
 import { canvasReadsTrue } from "./canvasRead";
-import { OPENFREEMAP, TILEJSON_PROTOCOL, openMapTiles, routedTileJson } from "./openMapTiles";
+import { OPENFREEMAP, TILEJSON_PROTOCOL, checkStyle, openMapTiles, routedTileJson } from "./openMapTiles";
 
 const POSITRON = `${OPENFREEMAP}styles/positron`;
 /** The one font stack every basemap label uses: Regular only, Zen Maru has no italic. */
@@ -302,6 +302,13 @@ export function loadBasemap(map: maplibregl.Map) {
   });
   map.on("idle", () => checkBasemapWait(map));
   map.on("error", () => checkBasemapWait(map));
+  // T-4275: an error before the style is in may be a blocker refusing OpenFreeMap's whole host (ui/BasemapNote.tsx)
+  let styleChecked = false;
+  map.on("error", () => {
+    if (styleChecked || styleUp(map)) return;
+    styleChecked = true;
+    void checkStyle(POSITRON);
+  });
   map.on("sourcedata", (e) => {
     if (e.sourceId !== VECTOR_SOURCE) return;
     checkBasemapWait(map);

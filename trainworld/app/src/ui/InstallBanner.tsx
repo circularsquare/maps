@@ -14,6 +14,7 @@ import { staleBuild } from "../game/staleBuild";
 import { ask } from "../game/ui";
 import { deviceNoteShown } from "./DeviceNote";
 import { retryNoteShown } from "./RetryNote";
+import { basemapNoteShown } from "./BasemapNote";
 import { Icon } from "./widgets";
 
 const AFTER_S = 2 * 3600;
@@ -69,7 +70,7 @@ export const installBannerApplies = () => !!where && !installed();
 export function InstallBanner() {
   if (!due.value || timedOut.value) return null;
   if (ask.value || demandStopped.value || loadFailure.value || staleBuild.value || figuresStopped.value || modelStopped.value) return null;
-  if (deviceNoteShown.value || retryNoteShown.value) return null;
+  if (deviceNoteShown.value || retryNoteShown.value || basemapNoteShown.value) return null;
   const android = where === "android", p = android && prompt.value;
   const how = android ? (p ? t("installBanner.android") : t("installBanner.androidMenu"))
     : where === "iosSafari" ? t("installBanner.iosSafari") : t("installBanner.ios");

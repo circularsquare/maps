@@ -4,6 +4,8 @@
 // TileJSON is read here, from the first route that answers it, and its tile addresses are put on that route.
 // Unblocked players stay on the first route, the one OpenFreeMap's cache holds.
 
+import { signal } from "@preact/signals";
+
 export const OPENFREEMAP = "https://tiles.openfreemap.org/";
 /** The same files by other addresses, in the order tried. "//planet" is served as "/planet" but is outside a rule
  * written for "/planet"; a proxy on a host of ours would go after it (notes/T-4275.md). */
@@ -17,6 +19,21 @@ export const routedTileJson = (url: string) => (url.startsWith(OPENFREEMAP) ? PR
 export const isRoutedTileJson = (url: string) => url.startsWith(PREFIX);
 
 export interface TileJson { tiles: string[]; [field: string]: unknown }
+
+/** Set for the rest of the load once OpenFreeMap's TileJSON (every route) or its style could not be read: the map has no
+ * roads, water or labels, and ui/BasemapNote.tsx says so. Never cleared: MapLibre does not ask for a failed source again. */
+export const basemapBlocked = signal(false);
+
+/** The map reported an error before its style came in: read the style here, and if nothing usable comes back (a blocker
+ * refusing the whole host, which "//" does not get around), the base map is blocked. One request, only on that error. */
+export async function checkStyle(url: string): Promise<void> {
+  try {
+    const res = await fetch(url);
+    const json = res.ok ? (JSON.parse((await res.text()) || "null") as { layers?: unknown } | null) : null;
+    if (Array.isArray(json?.layers)) return;
+  } catch { /* refused or unparseable: blocked */ }
+  basemapBlocked.value = true;
+}
 
 const asked = new Map<string, Promise<TileJson>>();
 
@@ -42,6 +59,7 @@ export function openMapTiles(url: string): Promise<TileJson> {
         }
       }
       asked.delete(path); // asked again next time (offline now, back later)
+      basemapBlocked.value = true;
       throw why;
     })();
     asked.set(path, p);

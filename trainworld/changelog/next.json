@@ -94,14 +94,14 @@
       "id": "c030",
       "text": "fixed roads and water missing from the map with some tracker blockers on",
       "edited": "fixed base map not loading with some adblocker settings",
-      "hidden": false,
+      "hidden": true,
       "task": "T-4275",
       "by": "roadsblock",
       "at": "2026-11-25T05:02:16Z",
-      "rev": 2,
+      "rev": 3,
       "area": "schematic",
       "fix": true,
-      "changed": "2026-11-25T14:53:29Z"
+      "changed": "2026-11-25T15:22:38Z"
     },
     {
       "id": "c029",
