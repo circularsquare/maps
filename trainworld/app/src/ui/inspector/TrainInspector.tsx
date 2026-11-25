@@ -16,6 +16,7 @@ import { following, toggleFollow } from "../../map/cameraFollow";
 import { Chip, Icon, Row } from "../widgets";
 import { OneRider } from "./OneRider";
 import { TrainStops } from "./TrainStops";
+import { Speedometer } from "./Speedometer";
 import { profileLine, profileRun } from "../../map/profiles";
 
 export function TrainInspector({ line, profile, dep }: { line: string; profile: number; dep: number }) {
@@ -48,12 +49,15 @@ export function TrainInspector({ line, profile, dep }: { line: string; profile: 
       </div>
       <div class="sub muted">{t("trainInspector.towards", { name: name.get(stops[head]) ?? "" })}</div>
       {at ? (
-        <ul class="rows">
-          <Row label={t("trainInspector.nextStop")}>{next >= 0 ? name.get(stops[next]) : t("trainInspector.terminus")}</Row>
-          <Row label={t("trainInspector.along")}>
-            {distanceOf(at.s, len)}
-          </Row>
-        </ul>
+        <>
+          <ul class="rows">
+            <Row label={t("trainInspector.nextStop")}>{next >= 0 ? name.get(stops[next]) : t("trainInspector.terminus")}</Row>
+            <Row label={t("trainInspector.along")}>
+              {distanceOf(at.s, len)}
+            </Row>
+          </ul>
+          <Speedometer profile={profile} dep={dep} />
+        </>
       ) : (
         <p class="muted">{t("trainInspector.finished", { vehicle: vehicleOf(st) })}</p>
       )}

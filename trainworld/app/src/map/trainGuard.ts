@@ -42,7 +42,7 @@ import { META_PER_LINE, profileLine, profileRun } from "./profiles";
 export const GUARD_GAP_M = 30;
 /** A held train makes up its lag at this many seconds a game second: drawn up to 30% faster than
  * its timetable until it is back on it. */
-const LAG_DECAY = 0.3;
+export const LAG_DECAY = 0.3;
 /** No train is held further behind its timetable than this, s: past it the timetable is too far
  * from what can be drawn (a pattern the following loss does not foresee) and it is let through. */
 const LAG_MAX = 1200;

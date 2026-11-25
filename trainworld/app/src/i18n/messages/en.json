@@ -2552,6 +2552,7 @@
   "trainInspector.state": "{state, select, empty {Empty} seats {Seats free} standing {Standing} crowded {Crowded} other {Full}}",
   "trainInspector.terminus": "Terminus",
   "trainInspector.title": "{name} {vehicle, select, train {train} tram {tram} bus {bus} other {boat}}",
+  "trainInspector.topSpeed": "Top speed {speed}",
   "trainInspector.towards": "Towards {name}",
   "trainInspector.typical": "Typical {vehicle, select, train {train} tram {tram} bus {bus} other {boat}} this hour",
   "trainInspector.unavailable": "Not available",

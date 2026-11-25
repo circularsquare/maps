@@ -70,7 +70,7 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
   inter-city and city bubbles, line widths and track colours, trains, stations, crowds, demand
   circles, capacity tags, and in the panels the purpose split, pie and timing bars, the trip
   explorer's bars, the complex map's platforms, the junction map's routes and the
-  train's load bar.
+  train's load bar and speed dial.
 
 ## The dock
 

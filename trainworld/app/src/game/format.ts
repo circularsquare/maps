@@ -230,8 +230,14 @@ export function shortDistance(m: number): string {
 
 /** 160 -> "160 km/h" or "99 mph"; `nearest` rounds in the shown unit (the speed key uses 5). */
 export function speed(kmh: number, nearest = 1): string {
+  const [v, unit] = speedParts(kmh, nearest);
+  return `${v} ${unit}`;
+}
+
+/** `speed`'s figure and unit apart, for the train panel's dial (T-4243): 160 -> ["160", "km/h"] or ["99", "mph"]. */
+export function speedParts(kmh: number, nearest = 1): [string, string] {
   const v = us() ? kmh / M_PER_MILE * 1000 : kmh;
-  return `${Math.round(v / nearest) * nearest} ${us() ? "mph" : "km/h"}`;
+  return [String(Math.round(v / nearest) * nearest), us() ? "mph" : "km/h"];
 }
 
 /** Round lengths a scale bar can show, shortest first, in metres with their labels. */

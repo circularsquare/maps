@@ -2834,20 +2834,46 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
 
 // ---------------------------------------------------------------- trains on the CPU
 
-/** Offset along a profile's run at trip time `tau`: the shader's arithmetic in float64. */
-export function profileS(n: NetworkBuffers, profile: number, tau: number): number {
-  const first = n.meta[profile * 4], count = n.meta[profile * 4 + 1];
-  if (!count) return 0;
+/** The phase of a profile's `count` phases from `first` that trip time `tau` is in: the last one starting by then, else the first. */
+function phaseAt(n: NetworkBuffers, first: number, count: number, tau: number): number {
   let lo = first, hi = first + count - 1;
   while (lo < hi) {
     const mid = (lo + hi + 1) >> 1;
     if (n.phases[mid * 4] <= tau) lo = mid;
     else hi = mid - 1;
   }
+  return lo;
+}
+
+/** Offset along a profile's run at trip time `tau`: the shader's arithmetic in float64. */
+export function profileS(n: NetworkBuffers, profile: number, tau: number): number {
+  const first = n.meta[profile * 4], count = n.meta[profile * 4 + 1];
+  if (!count) return 0;
+  const lo = phaseAt(n, first, count, tau);
   const t = n.phases[lo * 4], s = n.phases[lo * 4 + 1], v = n.phases[lo * 4 + 2], a = n.phases[lo * 4 + 3];
   let tt = Math.max(0, tau - t);
   if (a < 0) tt = Math.min(tt, v / -a);
   return s + v * tt + 0.5 * a * tt * tt;
+}
+
+/** T-4243: a profile's speed at trip time `tau`, m/s, as `profileS` moves it: none before it leaves or once at its last stop. */
+export function profileV(n: NetworkBuffers, profile: number, tau: number): number {
+  const first = n.meta[profile * 4], count = n.meta[profile * 4 + 1];
+  if (!count || tau < 0 || tau >= arriveS(n, profile)) return 0;
+  const k = phaseAt(n, first, count, tau);
+  const v = n.phases[k * 4 + 2], a = n.phases[k * 4 + 3];
+  return Math.max(0, v + a * Math.max(0, tau - n.phases[k * 4]));
+}
+
+/** T-4243: the fastest a profile's train runs, m/s: the top of each phase, at its start or where the next one starts. */
+export function profileTop(n: NetworkBuffers, profile: number): number {
+  const first = n.meta[profile * 4], count = n.meta[profile * 4 + 1], ph = n.phases;
+  let top = 0;
+  for (let k = first; k < first + count; k++) {
+    const v = ph[k * 4 + 2], a = ph[k * 4 + 3];
+    top = Math.max(top, v, k + 1 < first + count ? v + a * (ph[k * 4 + 4] - ph[k * 4]) : v);
+  }
+  return top;
 }
 
 /** T-2980: seconds into a profile's trip when it reaches its last stop (its turnaround is stood after

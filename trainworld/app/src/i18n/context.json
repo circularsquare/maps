@@ -2549,6 +2549,7 @@
   "trainInspector.state": "Word beside the load bar of a train view, how full the train is. state: empty, seats (seats free), standing, crowded or full.",
   "trainInspector.terminus": "Value of the Next stop row in a train view when the train is on its last stretch.",
   "trainInspector.title": "Title of a train view. name: the line's name, \"Line 4\"; vehicle: train, bus or boat.",
+  "trainInspector.topSpeed": "Hover tag on the speed dial in a train view: the fastest this train goes on its way to its last station. speed: a speed with its unit, \"112 km/h\" or \"70 mph\".",
   "trainInspector.towards": "Line under the title of a train view: the last station on the train's run. name: the station's name.",
   "trainInspector.typical": "Row label in a train view: riders on a typical vehicle of the line this hour. vehicle: train, bus or boat.",
   "trainInspector.unfollow": "Hover and screen-reader label of the same button while the map follows the vehicle; a click ends it.",
