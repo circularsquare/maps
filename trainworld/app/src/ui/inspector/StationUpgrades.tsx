@@ -65,9 +65,9 @@ export function StationUpgrades({ s, members }: { s: StationInput; members?: str
   return (
     <div class="upgrades" role="group" aria-label={t("stationUpgrades.group")}>
       {/* T-3332: a one-track station has no terminal and no passing tracks */}
-      {/* T-3574: a tram stop takes the terminal and passing tracks as a rail station does; park and ride is rail's */}
+      {/* T-3574: a tram stop takes the terminal and passing tracks as a rail station does; T-4247: and park and ride */}
       {/* T-4012: a BRT station has its waiting room built in, shown bought; a park and ride from an older save shows so it can be removed */}
-      {UPGRADE_TEXT.filter((u) => (s.brt ? u.bit === UPGRADE.waitingRoom || (u.bit === UPGRADE.parkRide && hasUpgrade(s.upgrades, u.bit)) : (!s.tram && !s.port) || u.bit === UPGRADE.waitingRoom || (s.tram && !s.port && (u.bit === UPGRADE.terminal || u.bit === UPGRADE.passing))) && (u.bit !== UPGRADE.passing || double || hasUpgrade(s.upgrades, u.bit))
+      {UPGRADE_TEXT.filter((u) => (s.brt ? u.bit === UPGRADE.waitingRoom || (u.bit === UPGRADE.parkRide && hasUpgrade(s.upgrades, u.bit)) : (!s.tram && !s.port) || u.bit === UPGRADE.waitingRoom || (s.tram && !s.port && (u.bit === UPGRADE.terminal || u.bit === UPGRADE.passing || u.bit === UPGRADE.parkRide))) && (u.bit !== UPGRADE.passing || double || hasUpgrade(s.upgrades, u.bit))
         && !(s.one && (u.bit === UPGRADE.terminal || u.bit === UPGRADE.passing) && !hasUpgrade(s.upgrades, u.bit))).map((u) => (
         <UpgradeButton s={s} u={u} price={prices?.[UPGRADE_BITS.indexOf(u.bit)] ?? 0} housed={housed} />
       ))}
