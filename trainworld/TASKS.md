@@ -218,6 +218,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4299: a state's money and lists are kept per record now, 24 to about 5.5 ms a state on your Asia save. Still whole: the track limits, with the fleet needs, markers and turn limits built on them (about 2 ms), and profile_meta's copy (0.4 ms). The capacity has no index from a line to the track it shares.
   - Goal: An index from each line to the track it shares, so an edit works out the limits of only the lines it touched; under 3 ms a state on Asia.
   - Other: notes/T-4299.md
+- T-4348 [P1] {L:edit-speed} Slow edits on a player's 44-year Poland save (taking, 2026-11-25, agent year44)
+  - Context: You, 11-25: "someone is having big editing issues still, they're wondering if it has to do with the fact that they're on year 44... if nothing pops up no need to chase forever". Their save: Downloads/trainsworld-polska-day-15922.save (day 15,922, 311 KB).
+  - Goal: Find whether anything an edit does grows with game days; fix it if small, else file it. About 1.5 h at most.
 - T-4272 [P1] {L:edit-speed} A click confirmed from what it touches (taking, 2026-11-25, agent buytrains)
   - Context: Your 11-25 yes is built (tree buytrains): stations and deletes on running lines' track are answered too, their trains bought right after. Your Asia save, four stations 0.3 s apart on a 3-line trunk: confirms 349, 271, 137, 81 ms. A click's own work is 9-21 ms; the rest is the worker busy with other pieces.
   - Goal: Every station and track delete confirmed within 100 ms on your Asia save, every click of a run.
