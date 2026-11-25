@@ -154,7 +154,8 @@ Web first, so it can be shared as a link.
   with the first rows or state, its cost with the first money, cash or state (a state held for its trips keeps its
   arrival place). **The map the tools click on is patched right after each edit** [T-4214 stage C]: with an edit's word the worker
   sends the records the edits since its last state read touched (`peek_touched`), read as that state will read them:
-  edge and node rows, each live edge's points and the ids gone (workers/clockPatch.ts; a few ms, at most `PATCH_MAX`
+  edge and node rows, each live edge's points and the ids gone, and any other station whose shown name they moved (a complex
+  joined, split or named after another station; T-4271) (workers/clockPatch.ts; a few ms, at most `PATCH_MAX`
   2,000 records). The page lays them on the map the tools pick on, which only the tools read: a world of
   its own (map/clickMap.ts `clickWorld`: the last state's rows with the patch in, its lines, money and marks as they
   were; workers/clockClient.ts `takePatch`) and the drawn network's edge points with their snap grid (`clickNet`; its

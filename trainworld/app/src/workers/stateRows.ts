@@ -225,6 +225,29 @@ function weekendOf(w: ArrayLike<number>): number[] {
   return w.length === 8 && (w[0] !== 100 || w[1] !== 0) ? Array.from(w) : [];
 }
 
+/** a station row, whose name folds with its complex's (`foldNames`; a port's never does) */
+const isStation = (r: ClockNode | undefined): r is ClockNode => !!r && r.platform > 0 && !r.port;
+
+/** the stations of each complex (`cx`) among `stations`, by complex */
+function complexGroups(stations: readonly ClockNode[], cx: Complexes | undefined): Map<number, ClockNode[]> {
+  const groups = new Map<number, ClockNode[]>();
+  if (cx) for (const r of stations) {
+    const c = cx.of.get(String(r.id));
+    if (c === undefined) continue;
+    const g = groups.get(c);
+    if (g) g.push(r);
+    else groups.set(c, [r]);
+  }
+  return groups;
+}
+
+/** T-3288, T-3759: the name station row `r` shows, and its complex's beside it where that is another (`hub`); `complex`: the
+ * name of its complex when that has more than one station (its name source's stored name) */
+function shows(r: ClockNode, complex: string | undefined): { name: string; hub: string | undefined } {
+  const name = r.own || complex || r.name;
+  return { name, hub: complex !== undefined && complex !== name ? complex : undefined };
+}
+
 function sameNumbers(a: ArrayLike<number>, b: ArrayLike<number>): boolean {
   if (a.length !== b.length) return false;
   for (let i = 0; i < a.length; i++) if (!Object.is(a[i], b[i])) return false;
@@ -310,6 +333,8 @@ export class StateRows {
     this.lastSets.clear();
     this.lastNodes = null;
     this.lastFoldKey = "";
+    this.lastStations = [];
+    this.nameSent.clear();
     this.namesMoved = [];
   }
 
@@ -378,6 +403,7 @@ export class StateRows {
     const ei = a.edges_info(), ni = a.nodes_info(), li = a.lines_info();
     a.set_line_stamps(StateRows.bounded);
     const touched = a.take_touched(), changed = a.take_changed_lines();
+    this.nameSent.clear();
     // every line again after a load or repricing; every edge and node after a load, the focus's first in a rows state
     const linesAll = touched[0] === ALL || (changed.length > 0 && changed[0] === ALL) || !this.lineKept.size;
     const all = !StateRows.bounded || touched[0] === ALL || !this.edgeRows.size;
@@ -624,16 +650,9 @@ export class StateRows {
    * a split complex gives each part's stations theirs back. The replaced rows are kept, so an unchanged
    * one is the same object as before. */
   private foldNames(out: ClockNode[], complexesOf: RowEnv["complexes"]) {
-    const stations = out.filter((r) => r.platform > 0 && !r.port);
+    const stations = out.filter(isStation);
     const cx = complexesOf?.(stations);
-    const groups = new Map<number, ClockNode[]>();
-    if (cx) for (const r of stations) {
-      const c = cx.of.get(String(r.id));
-      if (c === undefined) continue;
-      const g = groups.get(c);
-      if (g) g.push(r);
-      else groups.set(c, [r]);
-    }
+    const groups = complexGroups(stations, cx);
     const source = new Map<number, ClockNode>();
     this.complexNames.clear();
     this.heads.clear();
@@ -656,14 +675,13 @@ export class StateRows {
         if (r.named && !r.own && r !== s && r.name !== s.name) this.apart.push(r.id);
       }
     }
+    this.lastStations = stations;
     const seen = new Set<number>();
     for (let k = 0; k < out.length; k++) {
       const r = out[k];
-      if (r.platform <= 0 || r.port) continue;
+      if (!isStation(r)) continue;
       const c = cx?.of.get(String(r.id));
-      const complex = c === undefined ? undefined : source.get(c)?.name;
-      const name = r.own || complex || r.name;
-      const hub = complex !== undefined && complex !== name ? complex : undefined;
+      const { name, hub } = shows(r, c === undefined ? undefined : source.get(c)?.name);
       if (name === r.name && hub === undefined) continue;
       let f = this.folded.get(r.id);
       if (!f || f.from !== r || f.name !== name || f.hub !== hub) this.folded.set(r.id, (f = { from: r, name, hub, row: { ...r, name, ...(hub !== undefined ? { hub } : {}) } }));
@@ -674,10 +692,11 @@ export class StateRows {
   }
 
   /** T-4214: fresh rows for the live edges and nodes among `edgeIds` and `nodeIds` (workers/clockPatch.ts), made as `edges` and
-   * `nodes` make a record they read again, leaving everything this keeps for the next read as it is. A station shows the
-   * name the last read folded for it while its stored and own names are as then; a new one its own. */
+   * `nodes` make a record they read again, leaving the rows this keeps for the next read as they are. The stations show
+   * the names the next read folds for them, and the stations not among `nodeIds` whose shown names that read moves come
+   * after the nodes (`patchNames`). */
   touchedRows(a: TrackApi, env: RowEnv, edgeIds: Uint32Array, nodeIds: Uint32Array, ups: Map<number, number> = upgradesOf(a)): { edges: ClockEdge[]; nodes: ClockNode[] } {
-    const edges: ClockEdge[] = [], nodes: ClockNode[] = [];
+    const edges: ClockEdge[] = [], live: ClockNode[] = [];
     /** the touched edges' ends now, null when gone (a platform line is laid along the edges at its node) */
     const changed = new Map<number, readonly [number, number] | null>(Array.from(edgeIds, (id) => [id, null]));
     if (edgeIds.length) {
@@ -696,12 +715,44 @@ export class StateRows {
         const name = platform > 0 ? a.node_name(id) : "", own = platform > 0 && s.unbound.has(id) ? a.station_own(id) : "";
         const one: 0 | 1 | 2 = s.ones.get(id) ?? 0;
         const f = { stationOff: s.offStations.has(id), upgrades: ups.get(id) ?? 0, name, named: platform > 0 && s.namedStations.has(id), own, one, onePlatform: s.onePlatforms.has(id), fare: s.fares.get(id) ?? 0, upgradeUpkeep: s.upUpkeep.get(id) ?? 0 };
-        const r = StateRows.nodeRow(a, env, id, ni, i, f, StateRows.nodeOwnOf(a, env, id, ni, i, one, changed));
-        const fold = platform > 0 && !r.port ? this.folded.get(id) : undefined;
-        nodes.push(fold && fold.from.name === name && (fold.from.own ?? "") === own ? { ...r, name: fold.name, ...(fold.hub !== undefined ? { hub: fold.hub } : {}) } : r);
+        live.push(StateRows.nodeRow(a, env, id, ni, i, f, StateRows.nodeOwnOf(a, env, id, ni, i, one, changed)));
       }
     }
-    return { edges, nodes };
+    return { edges, nodes: this.patchNames(a, env, nodeIds, live) };
+  }
+
+  /** T-4271: `live` (the touched nodes' rows) with each station showing the name the next read folds for it (`foldNames`),
+   * then every other station whose shown name or complex name that read moves: a station added, moved, resized or removed,
+   * or a link, building or separated pair changed, can join or split a complex, or change the station it is named after,
+   * for members no edit touched. The complexes are those of the stations as the last read left them with the touched ones
+   * as they are now. A station sent so is sent in every patch until the next read: the page lays each on the last. */
+  private patchNames(a: TrackApi, env: RowEnv, nodeIds: Uint32Array, live: ClockNode[]): ClockNode[] {
+    const touched = live.some(isStation) || Array.from(nodeIds).some((id) => isStation(this.nodeRows.get(id)));
+    if (!touched && !this.nameSent.size && (env.complexKey?.(a) ?? "") === this.lastFoldKey) return live;
+    const ids = new Set(nodeIds), now = new Map(live.map((r) => [r.id, r]));
+    const stations: ClockNode[] = [];
+    for (const r of this.lastStations) {
+      if (!ids.has(r.id)) stations.push(r);
+      else { const t = now.get(r.id); if (isStation(t)) stations.push(t); }
+    }
+    let added = false;
+    for (const r of live) if (isStation(r) && !isStation(this.nodeRows.get(r.id))) { stations.push(r); added = true; }
+    // (in node order, as the next read lists them: the complexes' builder takes any other order as everything changed)
+    if (added) stations.sort((p, q) => p.id - q.id);
+    const cx = env.complexes?.(stations), complex = new Map<number, string>();
+    for (const [c, g] of complexGroups(stations, cx)) if (g.length > 1) complex.set(c, nameSource(g, (r) => r.id, (r) => !!r.named)!.name);
+    const fold = (r: ClockNode): ClockNode => {
+      const c = cx?.of.get(String(r.id));
+      const { name, hub } = shows(r, c === undefined ? undefined : complex.get(c));
+      return name === r.name && hub === undefined ? r : { ...r, name, ...(hub !== undefined ? { hub } : {}) };
+    };
+    const out = live.map((r) => (isStation(r) ? fold(r) : r));
+    for (const r of stations) {
+      if (ids.has(r.id)) continue;
+      const f = fold(r), was = this.folded.get(r.id);
+      if (this.nameSent.has(r.id) || f.name !== (was?.name ?? r.name) || f.hub !== was?.hub) { out.push(f); this.nameSent.add(r.id); }
+    }
+    return out;
   }
 
   /** The name a station shows when that is not its stored one (`foldNames`), if it does. */
@@ -877,6 +928,10 @@ export class StateRows {
   /** the last read's model nodes, folded, and whether this read changed any */
   private lastNodes: ClockNode[] | null = null;
   private lastFoldKey = "";
+  /** T-4271: the station rows the last fold folded (`foldNames`), unfolded, in node order */
+  private lastStations: ClockNode[] = [];
+  /** T-4271: stations a patch since the last read sent for their shown name alone (`patchNames`) */
+  private nameSent = new Set<number>();
 
   /** whether any of these points (x, y each) is in a region the read takes again */
   private reaches(t: Taken, pts: Float64Array): boolean {

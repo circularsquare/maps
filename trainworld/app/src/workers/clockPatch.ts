@@ -1,6 +1,7 @@
 // T-4214 stage C1: right after an edit is applied, the records the edits since the last state read touched, read as the
 // next state will read them, go to the page with the edit's word (workers/clock.worker.ts), a few ms and before the full
-// state, so the page patches the map its tools click on at once (game/mapPatch.ts). A line whose path the edits moved (a
+// state, so the page patches the map its tools click on at once (map/clickMap.ts), with any station whose shown name they
+// moved though none touched it (a complex joined or split, stateRows.ts `patchNames`). A line whose path the edits moved (a
 // station on its track splits an edge, track it runs over goes) has its paths in it, which say what runs on the touched
 // track; its other figures wait for the state. None when the page could not take them exactly: a line new, gone or
 // starting or stopping to run, more records than PATCH_MAX, everything touched (a load), or the page's network or draw
