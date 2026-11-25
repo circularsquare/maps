@@ -244,7 +244,7 @@ export const networkFigures = computed(() => {
 /** T-4150 stage 2: a running line's built stops as the corridors read them: each with the corridors whose start (bit k
  * of `from`, CORRIDORS[k]) or end it is in, kept while neither the line nor its stations change */
 type CorridorStop = { id: string; name: string; from: number; to: number };
-const corridorParts = new PerLine<{ ids: string[]; ends: CorridorStop[] }>();
+const corridorParts = new PerLine<{ ids: string[]; ends: CorridorStop[]; from: number; to: number }>();
 let corridorZl = NaN;
 function corridorPartOf(l: LineInput, byId: Map<string, StationInput>) {
   const ids: string[] = [], ends: CorridorStop[] = [];
@@ -258,7 +258,10 @@ function corridorPartOf(l: LineInput, byId: Map<string, StationInput>) {
     CORRIDORS.forEach((c, k) => { if (c.from(at)) from |= 1 << k; if (c.to(at)) to |= 1 << k; });
     if (from || to) ends.push({ id, name: s.name || (zone ? cityById(zone).name : ""), from, to });
   }
-  return { ids, ends };
+  // (T-4284: the corridors it has a start or an end of)
+  let from = 0, to = 0;
+  for (const e of ends) { from |= e.from; to |= e.to; }
+  return { ids, ends, from, to };
 }
 function corridorsMet(w: AchWorld, zl: number, cx: Complexes) {
   corridorParts.begin(w.w, zl === corridorZl);
@@ -268,6 +271,12 @@ function corridorsMet(w: AchWorld, zl: number, cx: Complexes) {
   const keyOf = (id: string) => { const c = cx.of.get(id); return c !== undefined ? c : (own.get(id) ?? own.set(id, n + own.size).get(id)!); };
   const parts = w.running.map(({ l }) => corridorParts.get(l.id, () => corridorPartOf(l, w.byId)));
   corridorParts.end();
+  const out = new Map<FirstId, Detail>();
+  // T-4284: only a corridor with a built station at each end on some line can be met; with none such, no network is joined
+  let from = 0, to = 0;
+  for (const p of parts) { from |= p.from; to |= p.to; }
+  const live = from & to;
+  if (!live) return { firsts: out };
   const up: number[] = [];
   const find = (k: number): number => { let r = k; while (up[r] !== r) r = up[r]; while (up[k] !== r) { const nx = up[k]; up[k] = r; k = nx; } return r; };
   for (const p of parts) {
@@ -278,11 +287,11 @@ function corridorsMet(w: AchWorld, zl: number, cx: Complexes) {
       if (first < 0) first = k; else { const a = find(k), b = find(first); if (a !== b) up[a] = b; }
     }
   }
-  const out = new Map<FirstId, Detail>();
   const ends = new Map<number, { from?: string; to?: string }>();
   CORRIDORS.forEach((c, k) => {
     ends.clear();
     const bit = 1 << k;
+    if (!(live & bit)) return;
     for (const p of parts) for (const s of p.ends) {
       if (!((s.from | s.to) & bit)) continue;
       const root = find(keyOf(s.id)), e = ends.get(root) ?? {};

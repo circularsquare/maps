@@ -320,9 +320,13 @@ export class PerLine<V> {
   private w: WorldView | null = null;
   /** the world the pass under way reads, kept as `w` once it ends (a pass that never ends leaves the last one's) */
   private at: WorldView | null = null;
-  private m = new Map<LineId, V>();
-  private next = new Map<LineId, V>();
+  /** each line's value, with the one input of its own it was made from (`kept`, `put`) */
+  private m = new Map<LineId, { v: V; dep: unknown }>();
+  private next = new Map<LineId, { v: V; dep: unknown }>();
   private reading: ReadonlySet<LineId> | null = null;
+  /** T-4284: the other inputs the last pass ended with (`start`), and those of the pass under way */
+  private ins: readonly unknown[] | null = null;
+  private insAt: readonly unknown[] | null = null;
   begin(w: WorldView, same = true) {
     if (fresh) return;
     this.reading = same && this.w ? worldDiff(this.w, w)?.reading ?? null : null;
@@ -331,16 +335,44 @@ export class PerLine<V> {
   }
   get(id: LineId, make: () => V): V {
     if (fresh) return make();
-    let v = this.reading && !this.reading.has(id) ? this.m.get(id) : undefined;
-    if (v === undefined) v = make();
-    this.next.set(id, v);
+    let e = this.reading && !this.reading.has(id) ? this.m.get(id) : undefined;
+    if (e === undefined) e = { v: make(), dep: undefined };
+    this.next.set(id, e);
+    return e.v;
+  }
+  /** T-4284: `begin`, every line made again when `ins` (the inputs other than the world, compared one by one) differ from
+   * the last pass's */
+  start(w: WorldView, ins: readonly unknown[]) {
+    if (fresh) return;
+    this.begin(w, !!this.ins && sameDeps(this.ins, ins));
+    this.insAt = ins;
+  }
+  /** T-4284: the value kept for line `id` when the pass need not make it again (counted as asked for), else undefined: the
+   * caller makes it and gives it to `put`. `dep`: the line's own input outside the world (its demand figures, which a new
+   * result changes line by line), compared by identity. No closure, for the readers that go over every line each pass. */
+  kept(id: LineId, dep?: unknown): V | undefined {
+    if (fresh || !this.reading || this.reading.has(id)) return undefined;
+    const e = this.m.get(id);
+    if (!e || e.dep !== dep) return undefined;
+    this.next.set(id, e);
+    return e.v;
+  }
+  put(id: LineId, v: V, dep?: unknown): V {
+    if (!fresh) this.next.set(id, { v, dep });
     return v;
   }
   end() {
     if (fresh) return;
     this.m = this.next;
     this.w = this.at;
+    this.ins = this.insAt;
   }
+}
+/** T-4284: a reader's `PerLine` for `k` (a kind of day: one demand view after another, each line's own figures its `dep`) */
+export function perLineOf<V>(by: Map<unknown, PerLine<V>>, k: unknown): PerLine<V> {
+  let p = by.get(k);
+  if (!p) by.set(k, (p = new PerLine()));
+  return p;
 }
 
 /** DEV: two built values the same, Maps and Sets by their entries (numbers exactly) */

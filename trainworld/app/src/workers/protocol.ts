@@ -377,13 +377,17 @@ export type ToClock =
   /** fare income in force, US$M per game hour for each of the five periods (from demand riders,
    * game/money.ts), one table per kind of day (T-260, game/days.ts `DayKind` order); `lines` the
    * same per line (T-293: each line's fares taken today) */
-  | { kind: "income"; perHour: number[][]; rides: number[][]; lines?: { line: number; perHour: number[][]; rides: number[][] }[] }
+  | { kind: "income"; perHour: number[][]; rides: number[][]; lines?: { line: number; perHour: number[][]; rides: number[][] }[];
+    /** T-4284: every line's number in order, `lines` holding only those whose entries changed since the last posted */
+    order?: number[] }
   /** T-531: each running line's fares, train rides and running cost by region, [region, share] pairs
    * (game/regionMoney.ts) */
   | { kind: "regionShares"; lines: { line: number; fare: [string, number][]; ride: [string, number][]; run: [string, number][] }[]; upkeep: [string, number][] }
   /** T-684: each running line's points per game hour by region, `[region, perHour[dayKind][period]]`
    * (game/points.ts) */
-  | { kind: "points"; lines: { line: number; regions: [string, number[][]][] }[] }
+  | { kind: "points"; lines: { line: number; regions: [string, number[][]][] }[];
+    /** T-4284: every line's number in order, `lines` holding only those whose entries changed since the last posted */
+    order?: number[] }
   /** T-685: region `zone`'s rail share has reached the star's mark, or with `share` (T-1437) that
    * higher goal; kept from the first time */
   | { kind: "star"; zone: string; share?: number }

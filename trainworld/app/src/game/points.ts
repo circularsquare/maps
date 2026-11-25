@@ -13,20 +13,21 @@
 // buy points. A trip's points sit on its boardings, so each leg takes its own line's cover.
 
 import { computed, effect, signal } from "@preact/signals";
-import { CITIES, type CityId } from "./cities";
+import { CITIES, zoneCountry, type CityId } from "./cities";
 import { AVERAGE_DAY, awayNear, DAY_KINDS, DEMAND_DAYS, kindMade, PLAIN_KIND, rushRun } from "./days";
-import { mainDemandByDay, demandHeld, demandUpdating, finalWorld, networkWorld, type DayDemand, type LineDemand } from "./demand";
-import { checkPatches, freshly, freshNow, PerRecord, sameBuilt } from "./worldDiff";
+import { mainDemandByDay, demandHeld, demandUpdating, finalWorld, networkWorld, type DayDemand, type DemandView, type LineDemand } from "./demand";
+import { checkPatches, freshly, freshNow, perLineOf, sameBuilt, type PerLine } from "./worldDiff";
 import { loadProgress } from "./loading";
 import { t } from "../i18n";
 import { compactOf, sig3 } from "./format";
 import { boatOf, boatRunKm } from "./boats";
-import { incomeByDay, keptFor, lineGeo, moneyState, moneyWorld, type LineGeo } from "./money";
+import { incomeByDay, lineGeo, moneyState, moneyWorld, type Income, type LineMoney } from "./money";
 import { PERIODS } from "./periods";
-import { lineRunFactor } from "./regionMoney";
+import { lineShares, type Shares } from "./regionMoney";
+import { runFactorOf } from "./income";
 import { stopsById } from "./world";
 import { zonesLoaded } from "./zones";
-import type { WorldView } from "./types";
+import type { LineInput, LineStats, WorldView } from "./types";
 import type { MoneyState } from "../workers/protocol";
 
 export const POINTS_PER_TRIP = 20;
@@ -81,39 +82,67 @@ function railTripsOf(d: DayDemand): Map<string, number> {
   return out;
 }
 
-/** Points per game hour of each running line on one kind of day, by region and period. */
-function dayPoints(w: WorldView, d: DayDemand): Map<number, Map<string, number[]>> {
+/** T-4284: what a running line gives one kind of day's points before its regions' trips a boarding, kept per line from the
+ * world last read (`PerLine`, one per demand view): its boardings a day by region (each summed in stop order, the regions
+ * as first met), and with both runs' stop positions its boardings by region (as first met with any) and period and each
+ * period's passenger-km a boarding (`local`; null: it earns none). `pbs` and `regs`: the trips a boarding of each of
+ * `local`'s regions its points were last made at, and those points. */
+type PointsLine = { board: [string, number][]; local: { zones: string[]; at: number[][]; kmEach: number[] } | null; pbs: number[]; regs: Map<string, number[]> | null };
+const pointsLinesBy = new Map<unknown, PerLine<PointsLine | null>>();
+
+/** Points per game hour of each running line on one kind of day, by region and period: each line's own terms, kept while
+ * the edit leaves it alone, and the trips a boarding of each region (its trips spread over its boardings), which any line's
+ * boardings move, applied to them in a second step. */
+function dayPoints(w: WorldView, d: DayDemand, kind: number): Map<number, Map<string, number[]>> {
   const out = new Map<number, Map<string, number[]>>();
   const dv = d.view;
   if (!dv) return out;
-  const byId = stopsById(w);
-  const running = w.save.lines.filter((l) => w.lineStats[l.id]?.status === "running" && l.stops.length >= 2 && dv.lines.has(l.id));
+  const kept = perLineOf(pointsLinesBy, kind);
+  kept.start(w, [zonesLoaded.peek()]);
+  const running: PointsLine[] = [], nums: number[] = [];
   // boardings a day at each region's stations, to spread its trips over
   const board = new Map<string, number>();
-  for (const l of running) {
-    const z = lineGeo(w, l, byId).zones, b = dv.lines.get(l.id)!.boardings;
-    for (let k = 0; k < b.length; k++) add(board, z[k] ?? "", b[k]);
+  for (const l of w.save.lines) {
+    const dm = dv.lines.get(l.id);
+    let e = kept.kept(l.id, dm);
+    if (e === undefined) e = kept.put(l.id, pointsLine(w, l, dv), dm);
+    if (!e) continue;
+    for (const [z, v] of e.board) add(board, z, v);
+    running.push(e);
+    nums.push(l.num);
   }
+  kept.end();
   const trips = railTripsByRegion(d);
   const perBoarding = new Map<string, number>();
   for (const [z, b] of board) if (b > 0) perBoarding.set(z, (trips.get(z) ?? 0) / b);
-  const kept = keptFor(pointsKeptBy, dv);
-  kept.trim(running.length);
-  for (const l of running) {
-    const st = w.lineStats[l.id], dm = dv.lines.get(l.id)!, n = l.stops.length;
-    if (st.stopS[0]?.length !== n || st.stopS[1]?.length !== n) continue;
-    const g = lineGeo(w, l, byId);
-    // T-4150: made again only when the line, its riders or the trips a boarding in one of its regions changed
-    const regs = kept.get(l.id, [l, st, dm, g, ...g.zones.map((z) => perBoarding.get(z) ?? 0)], () => linePointsOf(dm, n, g, perBoarding));
-    if (regs.size) out.set(l.num, regs);
+  for (let i = 0; i < running.length; i++) {
+    const e = running[i], loc = e.local;
+    if (!loc) continue;
+    let same = !!e.regs && !freshNow();
+    for (let j = 0; same && j < loc.zones.length; j++) if (e.pbs[j] !== (perBoarding.get(loc.zones[j]) ?? 0)) same = false;
+    if (!same) {
+      e.pbs = loc.zones.map((z) => perBoarding.get(z) ?? 0);
+      e.regs = regsOf(loc, e.pbs);
+    }
+    if (e.regs!.size) out.set(nums[i], e.regs!);
   }
   return out;
 }
 
-/** One line's points per game hour on a day, by region and period. */
-function linePointsOf(dm: LineDemand, n: number, g: LineGeo, perBoarding: Map<string, number>): Map<string, number[]> {
-  const at: number[] = [];
-  const { zones: z, kmAbs: km } = g;
+/** One running line's own terms in a kind of day's points (null: not running, or no figures). */
+function pointsLine(w: WorldView, l: LineInput, dv: DemandView): PointsLine | null {
+  const st = w.lineStats[l.id], dm = dv.lines.get(l.id), n = l.stops.length;
+  if (st?.status !== "running" || n < 2 || !dm) return null;
+  const g = lineGeo(w, l, stopsById(w)), z = g.zones, b = dm.boardings;
+  const board: [string, number][] = [];
+  for (let k = 0; k < b.length; k++) {
+    const zone = z[k] ?? "";
+    let e = board.find((x) => x[0] === zone);
+    if (!e) board.push((e = [zone, 0]));
+    e[1] += b[k];
+  }
+  if (st.stopS[0]?.length !== n || st.stopS[1]?.length !== n) return { board, local: null, pbs: [], regs: null };
+  const km = g.kmAbs;
   const pkm: number[] = [];
   for (const seg of dm.loads) {
     let a = 0;
@@ -122,29 +151,36 @@ function linePointsOf(dm: LineDemand, n: number, g: LineGeo, perBoarding: Map<st
   }
   let pkmAll = 0;
   for (const v of pkm) pkmAll += v;
-  const regs = new Map<string, number[]>();
+  const zones: string[] = [], at: number[][] = [], kmEach = PERIODS.map(() => 0), here: number[] = [];
   for (let p = 0; p < PERIODS.length; p++) {
     // boardings at each stop in the period: both runs' (stop k is node k on run 0, 2n - 1 - k on
     // run 1), or the day's spread by the period's passenger-km when the solve kept no periods
     const bp = dm.board?.[p], both = !!bp && bp.length === 2 * n;
     let all = 0;
     for (let k = 0; k < n; k++) {
-      at[k] = both ? bp![k] + bp![2 * n - 1 - k] : pkmAll > 0 ? dm.boardings[k] * pkm[p] / pkmAll : 0;
-      all += at[k];
+      here[k] = both ? bp![k] + bp![2 * n - 1 - k] : pkmAll > 0 ? dm.boardings[k] * pkm[p] / pkmAll : 0;
+      all += here[k];
     }
     if (!(all > 0)) continue;
-    const kmEach = (pkm[p] ?? 0) / all;
+    kmEach[p] = (pkm[p] ?? 0) / all;
     for (let k = 0; k < n; k++) {
-      const b = at[k];
-      if (!(b > 0)) continue;
-      let r = regs.get(z[k]);
-      if (!r) regs.set(z[k], (r = PERIODS.map(() => 0)));
-      r[p] += b * (POINTS_PER_TRIP * (perBoarding.get(z[k]) ?? 0) + POINTS_PER_KM * kmEach) / PERIOD_HOURS[p];
+      if (!(here[k] > 0)) continue;
+      let j = zones.indexOf(z[k]);
+      if (j < 0) { j = zones.push(z[k]) - 1; at.push(PERIODS.map(() => 0)); }
+      at[j][p] += here[k];
     }
   }
+  return { board, local: { zones, at, kmEach }, pbs: [], regs: null };
+}
+/** A line's points per game hour by region and period from its own terms and its regions' trips a boarding (`pbs`). */
+function regsOf(loc: NonNullable<PointsLine["local"]>, pbs: number[]): Map<string, number[]> {
+  const regs = new Map<string, number[]>();
+  loc.zones.forEach((z, j) => {
+    const at = loc.at[j];
+    regs.set(z, PERIODS.map((_, p) => (at[p] > 0 ? at[p] * (POINTS_PER_TRIP * pbs[j] + POINTS_PER_KM * loc.kmEach[p]) / PERIOD_HOURS[p] : 0)));
+  });
   return regs;
 }
-const pointsKeptBy = new WeakMap<object, PerRecord<string, Map<string, number[]>>>();
 
 type RunPrices = Pick<MoneyState, "runCostTrainKm" | "runCostCarKm" | "hsRunCostTrainKm" | "hsRunCostCarKm" | "runCostBusKm" | "runCostBoatKm" | "runCostSmallBoatKm" | "runCostLargeBoatKm" | "economy">;
 let runKey = "", runSame: RunPrices | null = null;
@@ -163,33 +199,52 @@ const runPrices = computed<RunPrices | null>(() => {
  * upkeep), at most 1; 1 with no running cost. A line run on both pairs of quad track and its hidden twin share one,
  * from the two together. */
 export const lineCover = computed<Map<number, number>>(() => {
-  const out = new Map<number, number>();
   const w = moneyWorld.value, r = runPrices.value, inc = incomeByDay.value[0], dv = mainDemandByDay.value[0]?.view;
-  if (!w || !r || !inc) return out;
+  if (!w || !r || !inc) return (coverLast = new Map(), new Map());
+  const shares = lineShares.value;
+  const out = coverFor(w, r, inc, dv, shares, coverLast);
+  coverLast = out.next;
+  if (checkPatches() && !sameBuilt(out.cover, coverFor(w, r, inc, dv, shares, null).cover)) console.error("T-4284 check: the lines' cover kept per line differs from a whole build");
+  return out.cover;
+});
+/** Each running line's cover from its fares and running cost, those of a line kept (`last`) while what they read is the
+ * same objects (T-4284). */
+function coverFor(w: WorldView, r: RunPrices, inc: Income, dv: DemandView | null | undefined, shares: ReadonlyMap<number, { run: Shares }>, last: ReadonlyMap<string, CoverLine> | null) {
+  const cover = new Map<number, number>();
   const pair = new Map<string, { fares: number; run: number; nums: number[] }>();
+  const next = new Map<string, CoverLine>();
   for (const l of w.save.lines) {
     const st = w.lineStats[l.id];
     if (!st || st.status !== "running") continue;
-    let fares = 0;
-    inc.lines.get(l.id)?.perHour.forEach((v, p) => { fares += v * PERIOD_HOURS[p] * 1e6; });
-    const dm = dv?.lines.get(l.id);
-    const tph = dm?.tph ?? l.tphP, cars = dm?.cars ?? st.cars;
-    const [train, car] = st.fast ? [r.hsRunCostTrainKm, r.hsRunCostCarKm] : [r.runCostTrainKm, r.runCostCarKm];
-    const perKm = st.bus?.ferry ? boatRunKm(r, boatOf(st.bus)) : st.bus ? r.runCostBusKm : train + cars * car;
-    let run = 0;
-    PERIODS.forEach((_, i) => { run += tph[i] * (st.oneWay ? 1 : 2) * st.km * perKm * r.economy * PERIOD_HOURS[i]; });
-    run *= lineRunFactor(l.num); // T-2669
+    const money = inc.lines.get(l.id), dm = dv?.lines.get(l.id), runShares = shares.get(l.num)?.run;
+    let e = last?.get(l.id);
+    if (!e || e.money !== money || e.dm !== dm || e.st !== st || e.l !== l || e.runShares !== runShares || e.r !== r) e = coverLine(l, st, money, dm, runShares, r);
+    next.set(l.id, e);
     const key = st.twinOf ?? l.id;
-    let e = pair.get(key);
-    if (!e) pair.set(key, (e = { fares: 0, run: 0, nums: [] }));
-    e.fares += fares; e.run += run; e.nums.push(l.num);
+    let p = pair.get(key);
+    if (!p) pair.set(key, (p = { fares: 0, run: 0, nums: [] }));
+    p.fares += e.fares; p.run += e.run; p.nums.push(l.num);
   }
   for (const { fares, run, nums } of pair.values()) {
     const c = run > 0 ? Math.max(0, Math.min(1, fares / run)) : 1;
-    for (const n of nums) out.set(n, c);
+    for (const n of nums) cover.set(n, c);
   }
-  return out;
-});
+  return { cover, next };
+}
+type CoverLine = { l: LineInput; st: LineStats; money: LineMoney | undefined; dm: LineDemand | undefined; runShares: Shares | undefined; r: RunPrices; fares: number; run: number };
+let coverLast = new Map<string, CoverLine>();
+/** One running line's fare income and running cost on the forecast weekday (`lineCover`). */
+function coverLine(l: LineInput, st: LineStats, money: LineMoney | undefined, dm: LineDemand | undefined, runShares: Shares | undefined, r: RunPrices): CoverLine {
+  let fares = 0;
+  money?.perHour.forEach((v, p) => { fares += v * PERIOD_HOURS[p] * 1e6; });
+  const tph = dm?.tph ?? l.tphP, cars = dm?.cars ?? st.cars;
+  const [train, car] = st.fast ? [r.hsRunCostTrainKm, r.hsRunCostCarKm] : [r.runCostTrainKm, r.runCostCarKm];
+  const perKm = st.bus?.ferry ? boatRunKm(r, boatOf(st.bus)) : st.bus ? r.runCostBusKm : train + cars * car;
+  let run = 0;
+  PERIODS.forEach((_, i) => { run += tph[i] * (st.oneWay ? 1 : 2) * st.km * perKm * r.economy * PERIOD_HOURS[i]; });
+  run *= runFactorOf(runShares, zoneCountry); // T-2669, as `lineRunFactor`
+  return { l, st, money, dm, runShares, r, fares, run };
+}
 
 type LinePoints = { line: number; regions: [string, number[][]][] }[];
 let pointsMemo: { w: WorldView; zl: number; days: DayDemand[]; per: Map<number, Map<string, number[]>>[]; out: LinePoints } | null = null;
@@ -205,11 +260,12 @@ export const fullPoints = computed<LinePoints>(() => {
   const days = DAY_KINDS.map((k) => mainDemandByDay.value[kindMade(k, near, rush) ? k : PLAIN_KIND[k]]);
   const was = pointsMemo, same = !!was && was.w === w && was.zl === zl;
   if (same && days.every((d, k) => sameDay(d, was.days[k]))) return was.out;
-  const own = days.map((d, k) => (!kindMade(k, near, rush) ? null : same && sameDay(d, was.days[k]) ? was.per[k] : dayPoints(w, d)));
-  if (checkPatches()) own.forEach((x, k) => { if (x && x !== was?.per[k] && !sameBuilt(x, freshly(() => dayPoints(w, days[k])))) console.error("T-4150 check: the points kept per line differ from a whole build"); });
+  const own = days.map((d, k) => (!kindMade(k, near, rush) ? null : same && sameDay(d, was.days[k]) ? was.per[k] : dayPoints(w, d, k)));
+  if (checkPatches()) own.forEach((x, k) => { if (x && x !== was?.per[k] && !sameBuilt(x, freshly(() => dayPoints(w, days[k], k)))) console.error("T-4150 check: the points kept per line differ from a whole build"); });
   const per = own.map((x, k) => x ?? own[PLAIN_KIND[k]]!);
   const base = days.findIndex((d) => d.view);
   const out = base < 0 ? [] : assemble(days, per, base);
+  if (checkPatches() && base >= 0 && !sameBuilt(out, freshly(() => assemble(days, per, base)))) console.error("T-4284 check: the points' entries kept per line differ from a whole build");
   pointsMemo = { w, zl, days, per, out };
   return out;
 });
@@ -217,34 +273,42 @@ export const fullPoints = computed<LinePoints>(() => {
  * as the clock worker settles them, times the line's cover (`lineCover`, the weekday's on every kind of day). A kind of
  * day not solved yet takes the weekday's. A day is redone only when its views, the network or the zone boundaries
  * change (T-1209). */
-const covered = new PerRecord<number, LinePoints[number]>();
+let coveredLast = new Map<number, { x: LinePoints[number]; c: number; out: LinePoints[number] }>();
 export const linePoints = computed<LinePoints>(() => {
   const cover = lineCover.value;
-  covered.begin();
+  const next = new Map<number, { x: LinePoints[number]; c: number; out: LinePoints[number] }>();
   const out = fullPoints.value.map((x) => {
     const c = cover.get(x.line) ?? 1;
     // T-4150: a line's entry kept while its points and cover are the same
-    return covered.get(x.line, [x, c], () => (c === 1 ? { line: x.line, regions: x.regions } : { line: x.line, regions: x.regions.map(([z, per]): [string, number[][]] => [z, per.map((d) => d.map((v) => v * c))]) }));
+    let e = coveredLast.get(x.line);
+    if (!e || e.x !== x || e.c !== c) e = { x, c, out: c === 1 ? { line: x.line, regions: x.regions } : { line: x.line, regions: x.regions.map(([z, per]): [string, number[][]] => [z, per.map((d) => d.map((v) => v * c))]) } };
+    next.set(x.line, e);
+    return e.out;
   });
-  covered.end();
+  coveredLast = next;
   return out;
 });
 
-/** T-4150: each line's entry, kept while its days' points are the same objects */
-const assembled = new PerRecord<number, LinePoints[number]>();
+/** T-4150: each line's entry, kept while its days' points are the same objects (T-4284: compared one by one) */
+let assembledLast = new Map<number, { base: number; has: boolean[]; per: (Map<string, number[]> | undefined)[]; out: LinePoints[number] }>();
 function assemble(days: DayDemand[], per: Map<number, Map<string, number[]>>[], base: number): LinePoints {
-  const lines = new Set(per.flatMap((m) => [...m.keys()]));
+  const lines = new Set<number>();
+  for (const m of per) for (const line of m.keys()) lines.add(line);
   const has = DAY_KINDS.map((k) => !!days[k].view);
-  assembled.begin();
-  const out = [...lines].map((line) => assembled.get(line, [base, ...has, ...per.map((m) => m.get(line))], () => {
-    const zones = new Set(per.flatMap((m) => [...(m.get(line)?.keys() ?? [])]));
-    const zero = PERIODS.map(() => 0);
-    return {
-      line,
-      regions: [...zones].map((z): [string, number[][]] => [z, DAY_KINDS.map((k) => (days[k].view ? per[k] : per[base]).get(line)?.get(z) ?? zero)]),
-    };
-  }));
-  assembled.end();
+  const fresh = freshNow(), next: typeof assembledLast = new Map(), out: LinePoints = [];
+  for (const line of lines) {
+    let e = fresh ? undefined : assembledLast.get(line);
+    let same = !!e && e.base === base;
+    for (let k = 0; same && k < per.length; k++) if (e!.per[k] !== per[k].get(line) || e!.has[k] !== has[k]) same = false;
+    if (!same) {
+      const zones = new Set(per.flatMap((m) => [...(m.get(line)?.keys() ?? [])]));
+      const zero = PERIODS.map(() => 0);
+      e = { base, has, per: per.map((m) => m.get(line)), out: { line, regions: [...zones].map((z): [string, number[][]] => [z, DAY_KINDS.map((k) => (days[k].view ? per[k] : per[base]).get(line)?.get(z) ?? zero)]) } };
+    }
+    next.set(line, e!);
+    out.push(e!.out);
+  }
+  if (!fresh) assembledLast = next;
   return out;
 }
 
@@ -265,16 +329,30 @@ export const pointsPast24h = computed<Map<string, number>>(() => {
 /** Each region's points a day at the riders now, per demand day (`DEMAND_DAYS`). */
 export const pointsPerDay = computed<Map<string, number[]>>(() => {
   const out = new Map<string, number[]>();
-  for (const { regions } of linePoints.value) {
-    for (const [z, per] of regions) {
+  for (const x of linePoints.value) {
+    // (T-4284: each line's sums a day per region, kept per entry, added in line order)
+    let sums = daySums.get(x);
+    if (!sums) daySums.set(x, (sums = x.regions.map(([z, per]): [string, number[]] => [z, DAY_KINDS.map((k) => per[k].reduce((a, v, p) => a + v * PERIOD_HOURS[p], 0))])));
+    for (const [z, s] of sums) {
       let r = out.get(z);
       if (!r) out.set(z, (r = DEMAND_DAYS.map(() => 0)));
-      for (const k of DAY_KINDS) r[k] += per[k].reduce((a, v, p) => a + v * PERIOD_HOURS[p], 0);
+      for (const k of DAY_KINDS) r[k] += s[k];
     }
   }
   for (const r of out.values()) r[AVERAGE_DAY] = (5 * r[0] + r[1] + r[2]) / 7;
+  if (checkPatches()) {
+    const whole = new Map<string, number[]>();
+    for (const { regions } of linePoints.peek()) for (const [z, per] of regions) {
+      let r = whole.get(z);
+      if (!r) whole.set(z, (r = DEMAND_DAYS.map(() => 0)));
+      for (const k of DAY_KINDS) r[k] += per[k].reduce((a, v, p) => a + v * PERIOD_HOURS[p], 0);
+    }
+    for (const r of whole.values()) r[AVERAGE_DAY] = (5 * r[0] + r[1] + r[2]) / 7;
+    if (!sameBuilt(out, whole)) console.error("T-4284 check: the regions' points a day kept per line differ from a whole build");
+  }
   return out;
 });
+const daySums = new WeakMap<LinePoints[number], [string, number[]][]>();
 
 /** T-3465: each region's points, the score shown and sent everywhere: its forecast weekday's, from the current solve, so an
  * edit moves it as soon as the solve answers and neither the clock, a weekend nor a holiday does. Until a solve exists,

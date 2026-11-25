@@ -30,7 +30,7 @@ import { addAllPassedSelected, constructBlueprints, newLineKey, toggleEditStopsS
 import { hideUiKey } from "./ui/hideUi";
 import { helpKey } from "./ui/HelpPanel";
 import { followCapsLock, keyIsTheirs, releaseSelectsAfterMousePick } from "./ui/keys";
-import { stationsById, stopsById, world } from "./game/world";
+import { stationsById, world } from "./game/world";
 import { aheadMapMoved } from "./map/aheadShow"; // T-4145: draws the edits waiting to show (game/pending.ts)
 import { pendingNetIn, pendingTaken } from "./game/pending";
 import { drawnEdgesOf } from "./map/lineAhead";
@@ -996,7 +996,7 @@ if (DEBUG) {
       const w = world.peek(), m = moneyState.peek();
       if (!w || !m) return null;
       const base = faresOf(m.fares, m.fares).base * m.economy;
-      return Object.fromEntries([...baseTrips(w, dv, m.fares, stopsById(w), byBoardings)].map(([id, t]) => [id, t * base]));
+      return Object.fromEntries([...baseTrips(w, dv, m.fares, "probe", byBoardings)].map(([id, t]) => [id, t * base]));
     },
     frame: () => { const f = getWorldFrame(); return { kind: f.kind, lon: f.lon, lat: f.lat }; }, packToLngLat, lngLatToPack,
     select: (s: unknown) => (selection.value = s as any),

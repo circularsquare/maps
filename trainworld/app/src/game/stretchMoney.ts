@@ -96,7 +96,7 @@ export function stretchMoneyOf(w: WorldView, t: MoneyTerms, dv: DemandView, shap
   }
   /** running rail lines with no demand figures for their stops yet (the game loading, a new line) */
   const dark = new Set<string>();
-  const based = baseTrips(shape, dv, t.fares, byId);
+  const based = baseTrips(shape, dv, t.fares, "stretches");
   const curves = new Map<Fares, Fares>();
   /** per rail line placed: each stretch between stops, its edges and their metres in it */
   const placed = new Map<string, [number, number][][]>();

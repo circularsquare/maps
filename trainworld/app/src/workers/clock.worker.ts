@@ -45,7 +45,7 @@ import { mapPatch, patchMiss } from "./clockPatch";
 import { routeEnded, runEnds } from "./clockRunEnds";
 import { nameArrived, nameOwed, nameOwedStations, placedNameless, withName } from "./clockNames";
 import { diagramOn, patchMode, postDiagram, posted, postWhole, putDiagramOn, putDiagramWhole, putPatchMode, sender } from "./clockPost";
-import { achievements, api, applyRunFactors, AUTOSAVE_MS, city, clk, copyOf, dayPinned, dayShift, demandBuilt, demandFine, diagramCities, emptyTrack, epoch, failInPlace, fares, frameSpec, freezeCheckpoint, freezePort, freezeTimer, goals, guide, guideWanted, heldCharges, home, hourLedger, initIncoming, ledger, ledgerDay, lineNotes, lineShapes, loadHolidays, loan, loanOp, messages, modded, mode, newLineCars, newLineHeadway, newLineWeekendShare, opened, outlinesGot, outlinesIn, outlinesRead, packLngLat, packLocal, pageModded, peakC, placeLineCountries, pricesOf, putAchievements, putClk, putCopyOf, putDemandBuilt, putDemandFine, putDiagramCities, putDiagramInside, putEmptyTrack, putEpoch, putFares, putFreezeMemory, putFreezePort, putFreezeTimer, putGoals, putGuide, putGuideWanted, putHiddenLines, putHome, putHourLedger, putIncomePerHour, putInitIncoming, putLedger, putLineIncome, putLineNotes, putLinePoints, putLineRides, putLineShapes, putLineShares, putLoan, putMessages, putMidLoad, putModded, putMoneyFrozen, putNewLineCars, putNewLineHeadway, putNewLineWeekendShare, putOpened, putOutlinesRead, putPageModded, putPrices, putRidesPerHour, putRowsSent, putStars, putTiming, putTrackVersion, putUpkeepRegions, send, setMode, setStartZone, stars, startZone, syncHolidays, timing, trackVersion, withModded } from "./clockState";
+import { achievements, api, applyRunFactors, AUTOSAVE_MS, city, clk, copyOf, dayPinned, dayShift, demandBuilt, demandFine, diagramCities, emptyTrack, epoch, failInPlace, fares, frameSpec, freezeCheckpoint, freezePort, freezeTimer, goals, guide, guideWanted, heldCharges, home, hourLedger, initIncoming, ledger, ledgerDay, lineIncome, lineNotes, linePoints, lineRides, lineShapes, loadHolidays, loan, loanOp, messages, modded, mode, newLineCars, newLineHeadway, newLineWeekendShare, opened, outlinesGot, outlinesIn, outlinesRead, packLngLat, packLocal, pageModded, peakC, placeLineCountries, pricesOf, putAchievements, putClk, putCopyOf, putDemandBuilt, putDemandFine, putDiagramCities, putDiagramInside, putEmptyTrack, putEpoch, putFares, putFreezeMemory, putFreezePort, putFreezeTimer, putGoals, putGuide, putGuideWanted, putHiddenLines, putHome, putHourLedger, putIncomePerHour, putInitIncoming, putLedger, putLineIncome, putLineNotes, putLinePoints, putLineRides, putLineShapes, putLineShares, putLoan, putMessages, putMidLoad, putModded, putMoneyFrozen, putNewLineCars, putNewLineHeadway, putNewLineWeekendShare, putOpened, putOutlinesRead, putPageModded, putPrices, putRidesPerHour, putRowsSent, putStars, putTiming, putTrackVersion, putUpkeepRegions, send, setMode, setStartZone, stars, startZone, syncHolidays, timing, trackVersion, withModded } from "./clockState";
 
 // T-3734: the save slot (slots.ts) and what it needs of the game in hand
 bindSlots({ api: () => api, game: () => game, send, gameNow, saveBytes, slotSummary, roomFor, outOfRoom, loadGame, inQueue: (f) => (putMessages(messages.then(f).catch((err) => send({ kind: "error", message: String(err) }))), messages), isPanic, panicLater, openFailed: failInPlace });
@@ -1131,16 +1131,20 @@ async function handleMessage(msg: ToClock) {
     putClk({ t: msg.t, rate: msg.rate, at: msg.at });
   } else if (msg.kind === "income") {
     putIncomePerHour(msg.perHour.map((p) => p.slice(0, PERIODS.length)));
-    putLineIncome(new Map((msg.lines ?? []).map((l) => [l.line, l.perHour])));
+    // T-4284: with `order`, only the lines whose entries changed came; the others stand as held
+    const got = new Map((msg.lines ?? []).map((l) => [l.line, l]));
+    const order = msg.order ?? (msg.lines ?? []).map((l) => l.line);
+    putLineIncome(new Map(order.map((id) => [id, got.get(id)?.perHour ?? lineIncome.get(id) ?? []])));
     putRidesPerHour(msg.rides.map((p) => p.slice(0, PERIODS.length)));
-    putLineRides(new Map((msg.lines ?? []).map((l) => [l.line, l.rides])));
+    putLineRides(new Map(order.map((id) => [id, got.get(id)?.rides ?? lineRides.get(id) ?? []])));
   } else if (msg.kind === "regionShares") {
     putLineShares(new Map(msg.lines.map((l) => [l.line, { fare: l.fare, ride: l.ride, run: l.run }])));
     putUpkeepRegions(msg.upkeep);
     // the money state carries the running cost an hour, which the factors move
     if (applyRunFactors()) sendMoney();
   } else if (msg.kind === "points") {
-    putLinePoints(new Map(msg.lines.map((l) => [l.line, l.regions])));
+    const got = new Map(msg.lines.map((l) => [l.line, l.regions]));
+    putLinePoints(msg.order ? new Map(msg.order.map((id) => [id, got.get(id) ?? linePoints.get(id) ?? []])) : got);
   } else if (msg.kind === "star" && msg.share !== undefined) {
     const g = goals.get(msg.zone) ?? {};
     if (g[msg.share] === undefined) {

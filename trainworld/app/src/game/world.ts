@@ -18,6 +18,7 @@ import { busPlaces } from "./busLinks";
 import { noteEdit } from "./editCap";
 import { asRun, sendingRun } from "./pending";
 import { checkPatches, freshly, freshNow, sameBuilt, worldDiff } from "./worldDiff";
+import { timed } from "./stepTimes";
 import type { Demand, LineId, LineInput, LineStats, RowFigs, Save, StationInput, WorldView } from "./types";
 import { DEMAND_INDEX, DEMANDS, loopHalves } from "./types";
 
@@ -1041,45 +1042,62 @@ function namedBus(w: WorldView, b: NonNullable<LineStats["bus"]>, plain: string)
 /** T-4150: the last world's bus stops by line, kept for a line while its route is the same and no station changed in its box */
 let lastBusNamed: { w: WorldView; lines: Map<string, BusNamed> } | null = null;
 
+/** more stations changed than this: a world's stops are made again from its lists */
+const STATIONS_LAID_MAX = 512;
+
 function stopsOf(w: WorldView) {
   let m = stopMemo.get(w);
   if (m) return m;
-  const byId = new Map<string, StationInput>(), names = new Map<string, string>();
-  for (const x of w.save.stations) { byId.set(x.id, x); names.set(x.id, x.name); }
-  const bus = new Map<string, StationInput>(), custom = new Map<string, string>();
   const was = freshNow() ? null : lastBusNamed, d = was ? worldDiff(was.w, w) : null;
   // where the stations that changed stand, before and after
   const moved: [number, number][] = [];
   if (d) for (const pair of d.stations.values()) for (const s of pair) if (s) moved.push([s.x, s.y]);
   const plain = t("world.busStop"), lines = new Map<string, BusNamed>();
+  let busKept = !!d && d.stations.size <= STATIONS_LAID_MAX;
   for (const [lid, st] of Object.entries(w.lineStats)) {
     if (!st.bus) continue;
     let e = d ? was!.lines.get(lid) : undefined;
-    if (!e || e.bus !== st.bus || e.plain !== plain || e.keeps !== w.save.keeps || moved.some(([x, y]) => x >= e!.box[0] && x <= e!.box[2] && y >= e!.box[1] && y <= e!.box[3])) e = namedBus(w, st.bus, plain);
+    if (!e || e.bus !== st.bus || e.plain !== plain || e.keeps !== w.save.keeps || moved.some(([x, y]) => x >= e!.box[0] && x <= e!.box[2] && y >= e!.box[1] && y <= e!.box[3])) { e = namedBus(w, st.bus, plain); busKept = false; }
     lines.set(lid, e);
-    for (const s of e.stops) {
+  }
+  // T-4284: the last world's stops with the stations its diff names laid in, while every bus line's stops are as they were
+  // (no bus stop came, went or was named again) and none has a name of its place's (T-4080): a copy of each map
+  const prev = busKept && lines.size === was!.lines.size ? stopMemo.get(was!.w) : undefined;
+  if (prev && !prev.custom.size && [...d!.stations].every(([id, [, s]]) => s || !w.nodes.get(Number(id))?.bus)) {
+    const byId = new Map(prev.byId), names = new Map(prev.names);
+    for (const [id, [, s]] of d!.stations) {
+      if (s) { byId.set(id, s); names.set(id, s.name); }
+      else { byId.delete(id); names.delete(id); }
+    }
+    m = { byId, names, bus: prev.bus, custom: prev.custom };
+  } else {
+    const byId = new Map<string, StationInput>(), names = new Map<string, string>();
+    for (const x of w.save.stations) { byId.set(x.id, x); names.set(x.id, x.name); }
+    const bus = new Map<string, StationInput>(), custom = new Map<string, string>();
+    for (const e of lines.values()) for (const s of e.stops) {
       if (byId.has(s.id)) continue;
       byId.set(s.id, s.stop);
       bus.set(s.id, s.stop);
       names.set(s.id, s.name);
       if (s.custom) custom.set(s.id, s.name);
     }
-  }
-  // T-4080: a stop with no name of its own, where another stop of its place has one, shows that one
-  if (custom.size) {
-    const p = busPlaces(w), at = new Map<number, string>();
-    for (const [id, name] of custom) {
-      const k = p.placeOf.get(Number(id));
-      if (k !== undefined && !at.has(k)) at.set(k, name);
+    // T-4080: a stop with no name of its own, where another stop of its place has one, shows that one
+    if (custom.size) {
+      const p = busPlaces(w), at = new Map<number, string>();
+      for (const [id, name] of custom) {
+        const k = p.placeOf.get(Number(id));
+        if (k !== undefined && !at.has(k)) at.set(k, name);
+      }
+      for (const [k, name] of at) for (const s of p.places[k].stops) if (s.station < 0 && bus.has(String(s.id)) && !custom.has(String(s.id))) { names.set(String(s.id), name); custom.set(String(s.id), name); }
     }
-    for (const [k, name] of at) for (const s of p.places[k].stops) if (s.station < 0 && bus.has(String(s.id)) && !custom.has(String(s.id))) { names.set(String(s.id), name); custom.set(String(s.id), name); }
+    m = { byId, names, bus, custom };
   }
   if (!freshNow()) lastBusNamed = { w, lines };
-  stopMemo.set(w, (m = { byId, names, bus, custom }));
+  stopMemo.set(w, m);
   if (checkPatches() && d && !sameBuilt(m, freshly(() => stopsOf({ ...w })))) console.error("T-4150 check: the bus stops kept differ from a whole build");
   return m;
 }
-export const stopsById = (w: WorldView) => stopsOf(w).byId;
+export const stopsById = (w: WorldView) => stopMemo.get(w)?.byId ?? timed("world.stops", () => stopsOf(w)).byId;
 /** Only the bus stops that are no station. */
 export const busStopsById = (w: WorldView) => stopsOf(w).bus;
 /** T-4080: the bus stops that show a name the player gave, by id (their own, or their place's) */
