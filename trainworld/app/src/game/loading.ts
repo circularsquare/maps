@@ -453,6 +453,11 @@ export const memoryResolve = signal(false);
 let downloadProbe: () => number | null = () => null;
 export function setDownloadProbe(f: () => number | null) { downloadProbe = f; }
 export const oldestDownload = () => downloadProbe();
+/** T-4343: the quiet the loading card's watchdog allows while a solving worker is inside one of a solve's periods,
+ * ms (0 when none is); the demand pool sets it */
+let unitQuietProbe: () => number = () => 0;
+export function setUnitQuietProbe(f: () => number) { unitQuietProbe = f; }
+export const unitQuietMs = () => unitQuietProbe();
 
 /** T-950: the demand pool's own stop (workers/demandClient.ts), so a failure found outside it ends
  * its work too */

@@ -567,7 +567,8 @@ Web first, so it can be shared as a link.
   before its first game (its init throws and posts `failed`, or its script errors) stops the pool
   too, as does an uncaught error in main.ts's setup before `setupDone()`; the loading gate's
   watchdog (ui/LoadingScreen.tsx, `markAlive` in game/loading.ts) stops a card quiet for 3 minutes,
-  10 with a bar.
+  10 with a bar; while a demand worker is inside a period (it says nothing until the period ends), 4 times the
+  longest period timed on the page, or 30 minutes before one of this solve's has ended [T-4343].
   `checks/every-pack-opens.mjs --broken` serves a broken city pack and market pack.
   `game/loading.ts`; timings in notes/T-172.md, frame times in notes/T-180.md.
 - **Freeze diagnostics** [T-3385]: `?diagnostics=1` opts this browser into a local recorder, kept on

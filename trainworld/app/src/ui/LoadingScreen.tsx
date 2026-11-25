@@ -9,7 +9,7 @@
 import { h, render } from "preact";
 import { clock } from "../game/clock";
 import { world } from "../game/world";
-import { cardEnding, choosing, clockStepNow, continueWithoutDemand, demandIdle, gameFailed, graphicsGone, lastAlive, loadCannotFinish, loadFailure, loadGraphicsGone, loadStepNow, loadStuck, loadProgress, noSimd, noWebgl2, startup } from "../game/loading";
+import { cardEnding, choosing, clockStepNow, continueWithoutDemand, demandIdle, gameFailed, graphicsGone, lastAlive, loadCannotFinish, loadFailure, loadGraphicsGone, loadStepNow, loadStuck, loadProgress, noSimd, noWebgl2, startup, unitQuietMs } from "../game/loading";
 import { contextsLost, freshContextWorks } from "../map/graphicsInfo";
 import { GL_LOST } from "../map/gl";
 import { leftText, STAGE_TEXT } from "../game/loadBar";
@@ -112,7 +112,8 @@ export function setupDone() {
 
 function startWatchdog() {
   const q = Number(new URLSearchParams(location.search).get("quietMs"));
-  const quietMs = (bar: boolean) => (q > 0 ? q : bar ? QUIET_BAR_MS : QUIET_MS);
+  // (T-4343: and while a demand worker is inside a period, as long as the periods here take; `?quietMs` stays exact)
+  const quietMs = (bar: boolean) => (q > 0 ? q : Math.max(bar ? QUIET_BAR_MS : QUIET_MS, unitQuietMs()));
   let from = performance.now(), lastCheck = from;
   const timer = setInterval(() => {
     const now = performance.now();

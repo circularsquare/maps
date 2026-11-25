@@ -88,7 +88,7 @@ import { outsideWasmBytes } from "./liveMemory";
 import { isMemoryFailure } from "../game/loadText";
 import { makeFrame } from "../game/frame";
 import { editLeftOf, editPrior, noteEditSolve } from "../game/editLeft";
-import { choosing, demandIdle, endCardFull, noteLoad, noteLoadWorkers, gameLoadArmed, gameLoadSeq, viewFiguresIn, gameWait, loadComplete, loadFailed, loadProgress, lastStep, markAlive, markStep, memoryResolve, onLoadStop, onLoadStuck, setDownloadProbe, solveLeft, startup, takeGameLoadHold, zoneFailures, zoneLoads, zoneSteps, type ZoneStep } from "../game/loading";
+import { choosing, demandIdle, endCardFull, noteLoad, noteLoadWorkers, gameLoadArmed, gameLoadSeq, viewFiguresIn, gameWait, loadComplete, loadFailed, loadProgress, lastStep, markAlive, markStep, memoryResolve, onLoadStop, onLoadStuck, setDownloadProbe, setUnitQuietProbe, solveLeft, startup, takeGameLoadHold, zoneFailures, zoneLoads, zoneSteps, type ZoneStep } from "../game/loading";
 import { barPlace, type BarPlace, CACHE_SHOW_MS, GAME_MS, GUESS_SHARES, LATER_GUESS, lastWait, loadPace, nextLeft, rememberPace, rememberWait, sameSize, type Pace, sharesOf, solveStage, STAGE_TEXT, stagedFraction, stageInHand, STEP_CAP, timeShare, type StageMs, zoneShare } from "../game/loadBar";
 import { linesSettled } from "../game/lineFigures";
 import { clock } from "../game/clock";
@@ -675,6 +675,10 @@ const SPLIT_EXTRA = 0.2 * 2 ** 30;
  * closing near the line never start and stop workers in turn */
 const GROW_ROOM = 0.95;
 const GROW_GAP_MS = 120_000;
+/** T-4343: a period may run this many times the longest one timed on the page before the card counts it stuck (a
+ * load's periods differ: one at twice the others' time on that laptop), and this long when none has ended yet */
+const UNIT_QUIET_SLACK = 4;
+const UNIT_QUIET_FIRST_MS = 30 * 60_000;
 const mb = (bytes: number) => Math.round(bytes / 2 ** 20);
 const sameBytes = (a: Uint8Array, b: Uint8Array) => a.length === b.length && a.every((v, i) => v === b[i]);
 const SOLVE_MS = { base: 1000, perStop: 3.5 };
@@ -1950,9 +1954,24 @@ class DemandClient {
   /** T-3781: each worker's last message (when, its kind), and the barrier solve period it started and has not
    * sent the result of; the status a failure replaced; when the stuck load's workers were restarted */
   private heard: ({ at: number; kind: string } | undefined)[] = [];
-  private inUnit: ({ round: number; period: number; at: number } | null | undefined)[] = [];
+  private inUnit: ({ version: number; round: number; period: number; at: number } | null | undefined)[] = [];
+  /** T-4343: the longest period any worker has solved on this page, start to result, ms, and the solve the last one
+   * to end was of */
+  private unitMsMax = 0;
+  private unitTimedIn = -1;
   private statusBefore = "";
   private stuckRestarted = 0;
+  /** T-4343: the quiet the loading card's watchdog allows while a solving worker is inside a period: a worker says
+   * nothing from a period's start to its result, and on a big save solved on one worker a period runs for minutes
+   * (past 8 on a 0.4.6 player's laptop), so a quiet that long is the work. UNIT_QUIET_SLACK times the longest period
+   * this page has timed once one of this solve's has ended (an earlier solve's may have taken a millisecond), else
+   * UNIT_QUIET_FIRST_MS; 0 when no worker is inside one of this solve's. */
+  unitQuietMs(): number {
+    const v = this.cur?.version;
+    if (!this.inUnit.some((u, i) => u && i < this.computeN && u.version === v)) return 0;
+    return this.unitTimedIn === v ? UNIT_QUIET_SLACK * this.unitMsMax : UNIT_QUIET_FIRST_MS;
+  }
+
   /** T-3313: where the pool stands, one line for a feedback report: the newest solve's age and how far it got,
    * the last step, the oldest download in flight and what is still being fetched (seconds) */
   diagnosis(): string {
@@ -4771,10 +4790,14 @@ class DemandClient {
     if (this.reply(i, msg)) return;
     markAlive(); // T-950: (not a query's answer, which an idle worker gives while another is stuck)
     markStep();
-    if (msg.kind === "unit") { this.inUnit[i] = { round: msg.round, period: msg.period, at: performance.now() }; return; }
+    if (msg.kind === "unit") { this.inUnit[i] = { version: msg.version, round: msg.round, period: msg.period, at: performance.now() }; return; }
     if (msg.kind === "shown") return this.shownIn(i, msg.version, msg.snap);
     if (msg.kind === "asidePlan" || msg.kind === "asideDone") return; // (a focus pool's alone)
-    if (msg.kind === "result") this.inUnit[i] = null;
+    if (msg.kind === "result") {
+      const u = this.inUnit[i];
+      if (u) { this.unitMsMax = Math.max(this.unitMsMax, performance.now() - u.at); this.unitTimedIn = u.version; }
+      this.inUnit[i] = null;
+    }
     if (msg.kind === "loads" && msg.to) {
       // T-3373 B: on to the cluster's other holders
       msg.to.forEach((j, k) => { if (j !== i && j < this.computeN) this.workers[j].postMessage(msg, k === msg.to!.length - 1 ? [msg.loads.buffer] : []); });
@@ -6894,6 +6917,7 @@ export function startDemand(city = HOME_CITY, newGame = false) {
   onLoadStop((why) => c.fail(why));
   onLoadStuck(() => c.restartStuck()); // T-3781
   setDownloadProbe(() => c.oldestDownload()); // T-2756
+  setUnitQuietProbe(() => c.unitQuietMs()); // T-4343
   setTripQuery((from, to, purpose) => c.trip(from, to, purpose)); // T-195
   setMarketTripQuery((end, cells, far, farGid, near) => c.marketTrip(end, cells, far, farGid, near)); // T-866, T-885
   setRowsSource((key, place) => c.corridorRows(key, place)); // T-2136
