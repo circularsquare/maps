@@ -515,14 +515,22 @@ impl TrackApi {
         if !net.line_ok(line) {
             return vec![];
         }
+        let mut memo = HopMemo::for_stop_scan(net, net.line_stops(line));
+        self.stop_tiers_with(line, &mut memo)
+    }
+
+    pub(super) fn stop_tiers_with(&self, line: u32, memo: &mut HopMemo) -> Vec<f64> {
+        let net = &self.w.net;
+        if !net.line_ok(line) {
+            return vec![];
+        }
         let Some(line_d) = net.line_data(line) else { return vec![] };
         let stops = net.line_stops(line);
         let old = net.line_path(line);
         let old_turns = turn_nodes(net, old);
         let reach = reachable_from(net, stops);
-        let mut memo = HopMemo::new();
-        let turn_at: Vec<u32> = turns(net, line, &mut memo).into_iter().map(|t| t.branch).collect();
-        let unturn_at = unturn_branch(net, line, &mut memo);
+        let turn_at: Vec<u32> = turns(net, line, memo).into_iter().map(|t| t.branch).collect();
+        let unturn_at = unturn_branch(net, line, memo);
         let mut out = vec![];
         for n in 0..net.node_count() as u32 {
             if !net.node_ok(n) || net.node_platform[n as usize] == 0 {
@@ -534,7 +542,7 @@ impl TrackApi {
                 (7.0, -1.0)
             } else if stops.first() == Some(&n) && closed(stops) {
                 (6.0, -1.0)
-            } else if (stops.first() == Some(&n) || stops.last() == Some(&n)) && close_path(net, line, &mut memo).is_some() {
+            } else if (stops.first() == Some(&n) || stops.last() == Some(&n)) && close_path(net, line, memo).is_some() {
                 (5.0, -1.0)
             } else if turn_at.contains(&n) {
                 (7.0, -1.0)
@@ -545,7 +553,8 @@ impl TrackApi {
             } else if !stops.is_empty() && !reach[n as usize] {
                 (3.0, -1.0)
             } else {
-                match best_insert(net, line, n, &mut memo) {
+                memo.try_station(n);
+                match best_insert(net, line, n, memo) {
                     None if self.train_kept_off(stops, n) => (9.0, -1.0),
                     None => (3.0, -1.0),
                     Some((_, path)) => match turn_nodes(net, &path).into_iter().find(|t| !old_turns.contains(t)) {

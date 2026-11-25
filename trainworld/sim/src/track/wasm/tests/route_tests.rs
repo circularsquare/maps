@@ -304,3 +304,55 @@ fn a_junction_passed_twice_is_one_mark() {
     assert_eq!(marks.len(), 6, "{marks:?}");
     assert_eq!((marks[0], marks[1]), (4.0, 1.0), "the junction, after the second stop");
 }
+
+/// T-4255: cached path-tree stop-marker scan matches the uncached scan on open, branching,
+/// reversing, and ring networks, both under the default budget and when capped to one line tree.
+#[test]
+fn stop_tiers_cached_matches_uncached() {
+    let mut a = api();
+    let route = |a: &mut TrackApi, ends: [f64; 10], pis: &[f64]| assert_eq!(a.add_route(&ends, pis, 2, false), 0, "{}", a.issues());
+    route(&mut a, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 9000.0, 0.0, 0.0], &[]);
+    let on_main = |a: &TrackApi, x: f64| (0..a.w.net.edge_count() as u32).find(|&e| a.w.net.edge_ok(e) && a.w.net.project(e, x, 0.0).1 < 0.01 && a.w.net.node_y[a.w.net.edge_a[e as usize] as usize] == 0.0 && a.w.net.node_y[a.w.net.edge_b[e as usize] as usize] == 0.0).unwrap() as f64;
+    let e1 = on_main(&a, 2000.0);
+    route(&mut a, [2.0, e1, 2000.0, 0.0, 0.0, 2.0, e1, 4000.0, 0.0, 0.0], &[3000.0, 800.0, 0.0, 0.0]);
+    let e = on_main(&a, 6000.0);
+    route(&mut a, [2.0, e, 6000.0, 0.0, 0.0, 0.0, 0.0, 7500.0, 1500.0, 0.0], &[]);
+    let e = on_main(&a, 4500.0);
+    route(&mut a, [2.0, e, 4500.0, 0.0, 0.0, 0.0, 0.0, 3500.0, -1500.0, 0.0], &[]);
+    route(&mut a, [0.0, 0.0, 0.0, 5000.0, 0.0, 0.0, 0.0, 7000.0, 5000.0, 0.0], &[]);
+    let nearest = |a: &TrackApi, x: f64, y: f64| (0..a.w.net.edge_count() as u32).filter(|&e| a.w.net.edge_ok(e)).min_by(|&p, &q| a.w.net.project(p, x, y).1.total_cmp(&a.w.net.project(q, x, y).1)).unwrap();
+    let station = |a: &mut TrackApi, x: f64, y: f64, name: &str| -> u32 {
+        let e = nearest(a, x, y);
+        assert_eq!(a.add_station(2, e, x, y, 200, name.into()), 0, "{name}: {}", a.issues());
+        let n = a.w.net.node_count() as u32;
+        (0..n).filter(|&k| a.w.net.node_ok(k) && a.w.net.node_platform[k as usize] > 0).min_by(|&p, &q| {
+            let d = |k: u32| (a.w.net.node_x[k as usize] - x).hypot(a.w.net.node_y[k as usize] - y);
+            d(p).total_cmp(&d(q))
+        }).unwrap()
+    };
+    let s1 = station(&mut a, 1000.0, 0.0, "A");
+    let s2 = station(&mut a, 3000.0, 0.0, "M");
+    let s3 = station(&mut a, 5000.0, 0.0, "B");
+    let _c = station(&mut a, 8000.0, 0.0, "C");
+    let _d = station(&mut a, 300.0, 0.0, "D");
+    let _s = station(&mut a, 3000.0, 650.0, "S");
+    let _y = station(&mut a, 7200.0, 1300.0, "Y");
+    let _z = station(&mut a, 3700.0, -1300.0, "Z");
+    let _e = station(&mut a, 6000.0, 5000.0, "E");
+    let id = a.new_line_id();
+    assert_eq!(a.set_line_with_trains(id, &[s1, s2, s3], 6, 4, 2, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    let cached = a.stop_tiers(id);
+    let uncached = a.stop_tiers_with(id, &mut HopMemo::new());
+    assert_eq!(cached, uncached, "cached scan matches uncached on open branching line");
+    let bytes_per_tree = (2 * a.w.net.edge_count() + 3 * a.w.net.node_count()) * std::mem::size_of::<u32>();
+    let mut capped_memo = HopMemo::for_stop_scan_budget(&a.w.net, a.w.net.line_stops(id), bytes_per_tree * 7);
+    let capped = a.stop_tiers_with(id, &mut capped_memo);
+    assert_eq!(capped, uncached, "capped tree scan matches uncached when falling back");
+    // Ring with 3 stops (tests closing hop + carry_worth with PathTree)
+    let mut b = api();
+    let (w, ns) = super::super::super::tests::ring_fixture();
+    b.w = w;
+    let rid = b.new_line_id();
+    assert_eq!(b.set_line_with_trains(rid, &ns[..3], 6, 4, 2, 30.0, 180.0, 0, 0, "R".into()), 0, "{}", b.issues());
+    assert_eq!(b.stop_tiers(rid), b.stop_tiers_with(rid, &mut HopMemo::new()), "cached scan matches uncached on ring");
+}

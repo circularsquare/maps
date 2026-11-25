@@ -218,6 +218,12 @@ impl Network {
 
     /// `route_legs` for a tram line or a train line (`tram`, T-3889).
     pub fn route_legs_t(&self, stops: &[u32], ones: &[(u32, u8)], tram: bool) -> Option<Vec<u32>> {
+        self.route_legs_with(stops, ones, |stops| self.route_hops_plain_t(stops, tram).ok())
+    }
+
+    pub(crate) fn route_legs_with(
+        &self, stops: &[u32], ones: &[(u32, u8)], mut route: impl FnMut(&[u32]) -> Option<Vec<u32>>,
+    ) -> Option<Vec<u32>> {
         let mut legs = self.legs(stops, ones);
         let nodes = |p: &[u32]| -> Vec<u32> { std::iter::once(self.path_nodes(p[0]).0).chain(p.iter().map(|&q| self.path_nodes(q).1)).collect() };
         let n = stops.len();
@@ -225,18 +231,18 @@ impl Network {
         let on = |p: &[u32], s: u32| self.path_serves(p, s, ones);
         while legs.contains(&true) {
             let through: Vec<u32> = (0..n).filter(|&j| !legs[j]).map(|j| stops[j]).collect();
-            let mut base = self.route_hops_plain_t(&through, tram).ok().filter(|p| !p.is_empty())?;
+            let mut base = route(&through).filter(|p| !p.is_empty())?;
             let back: Vec<u32> = through.iter().rev().copied().collect();
-            let mut back = self.route_hops_plain_t(&back, tram).ok().filter(|p| !p.is_empty())?;
+            let mut back = route(&back).filter(|p| !p.is_empty())?;
             // the ones served once that neither run passes yet, which a run then takes where it can
             let off: Vec<bool> = (0..n).map(|j| legs[j] && !on(&base, stops[j]) && !on(&back, stops[j])).collect();
             if off.contains(&true) {
-                base = self.leg_run(stops, &legs, &off, ones, tram)?;
+                base = self.leg_run(stops, &legs, &off, ones, &mut route)?;
                 let roff: Vec<bool> = off.iter().rev().copied().collect();
                 let rlegs: Vec<bool> = legs.iter().rev().copied().collect();
                 let still: Vec<bool> = (0..n).map(|j| roff[j] && !on(&base, stops[n - 1 - j])).collect();
                 if still.contains(&true) {
-                    back = self.leg_run(&rs, &rlegs, &still, ones, tram)?;
+                    back = self.leg_run(&rs, &rlegs, &still, ones, &mut route)?;
                 }
             }
             let (_, fwd) = self.match_run(&nodes(&base), stops, &self.stop_reversals(&base), ones, &base)?;
@@ -260,10 +266,13 @@ impl Network {
     /// back more often. The quickest route through the rest alone may pass none of them where faster
     /// track runs beside the legs (passing tracks between two side platforms), and then neither run
     /// would stop there.
-    fn leg_run(&self, stops: &[u32], legs: &[bool], want: &[bool], ones: &[(u32, u8)], tram: bool) -> Option<Vec<u32>> {
+    fn leg_run(
+        &self, stops: &[u32], legs: &[bool], want: &[bool], ones: &[(u32, u8)],
+        route: &mut impl FnMut(&[u32]) -> Option<Vec<u32>>,
+    ) -> Option<Vec<u32>> {
         let mut keep: Vec<bool> = legs.iter().map(|&l| !l).collect();
         let kept = |keep: &[bool]| -> Vec<u32> { stops.iter().zip(keep).filter(|x| *x.1).map(|x| *x.0).collect() };
-        let mut path = self.route_hops_plain_t(&kept(&keep), tram).ok().filter(|p| !p.is_empty())?;
+        let mut path = route(&kept(&keep)).filter(|p| !p.is_empty())?;
         let turns = self.path_reversals(&path).len();
         for j in 0..stops.len() {
             if !want[j] || self.path_serves(&path, stops[j], ones) {
@@ -271,7 +280,7 @@ impl Network {
             }
             keep[j] = true;
             // a one-way stop the player set only where the run arrives by its side (T-3711)
-            match self.route_hops_plain_t(&kept(&keep), tram).ok().filter(|p| !p.is_empty() && self.path_reversals(p).len() <= turns && self.path_serves(p, stops[j], ones)) {
+            match route(&kept(&keep)).filter(|p| !p.is_empty() && self.path_reversals(p).len() <= turns && self.path_serves(p, stops[j], ones)) {
                 Some(p) => path = p,
                 None => keep[j] = false,
             }

@@ -15,13 +15,14 @@ use super::bridge;
 use super::cost::{BlockIndex, ClassGrid, GeoMask, MaskSet, NoWater, RunMask, TransformedMask, UnionMask, WaterMask, WorldWater};
 use super::frame::FrameKind;
 use super::geom::{self, design_radii, GeomIssue, Pi, Ramps};
-use super::net::{CrossKind, EdgeData, GroupLook, Issue, OuterGroup, LineData, LoopKind, Network, NodeData, StationData, Weekend, SPLIT_ROOM};
+use super::net::{CrossKind, EdgeData, GroupLook, Issue, OuterGroup, LineData, LoopKind, Network, NodeData, PathTree, StationData, Weekend, SPLIT_ROOM};
 use super::params::*;
 use super::profile;
 use super::roads::{self, RoadTile, Roads};
 use super::save;
 use super::streets::StreetGrid;
 use super::world::{auto_trains, ChargeError, EditResult, Op, TrackWorld};
+use std::collections::{HashMap, HashSet};
 use std::f64::consts::PI;
 use std::sync::Arc;
 use wasm_bindgen::prelude::*;
@@ -1073,14 +1074,51 @@ fn vertex_kmh(f: &geom::Fit, i: usize, cap: f64) -> f64 {
     if rad > 0.0 && !slight { (A_LAT * rad).sqrt().min(cap) * 3.6 } else { cap * 3.6 }
 }
 
-/// Hops already searched while trying stops (T-237): `(from, to, side arrived on at from, 2 for
-/// none, tram)` to `Network::find_path_side`'s answer. Valid for one state of the network. `tram`:
-/// the stops tried are a tram line's even where they hold no tram stop themselves (part of the
-/// line's stops, T-3889).
+/// Hops already searched while trying stops (T-237): `(from, to, side arrived on at from, want
+/// arrival side at to, tram)` to `Network::find_path_side`'s answer. Valid for one state of the
+/// network. `tram`: the stops tried are a tram line's even where they hold no tram stop themselves
+/// (part of the line's stops, T-3889).
 #[derive(Default)]
 pub(super) struct HopMemo {
-    hops: std::collections::HashMap<(u32, u32, u8, u8, bool), Option<(Vec<u32>, u8)>>,
+    hops: HashMap<HopKey, Option<(Vec<u32>, u8)>>,
     tram: bool,
+    searches: Option<StopSearches>,
+}
+
+type HopKey = (u32, u32, Option<u8>, Option<u8>, bool);
+type SearchKey = (u32, Option<u8>, bool);
+
+/// T-4255: cap retained `PathTree` arrays during a stop-marker scan so track-worker WASM linear
+/// memory stays within the edit-speed memory budget on small devices (8 MiB vs PR 29's 32 MiB).
+const STOP_TREE_BUDGET: usize = 8 * 1024 * 1024;
+
+/// A marker scan asks many destinations of the same origin. Keep those trees for the
+/// line's stops across candidates, and the current candidate's trees only while it is tried.
+struct StopSearches {
+    stops: HashSet<u32>,
+    line: HashMap<SearchKey, PathTree>,
+    candidate: u32,
+    local: HashMap<SearchKey, PathTree>,
+    line_limit: usize,
+}
+
+impl StopSearches {
+    fn find(&mut self, net: &Network, (from, to, arrived, want, tram): HopKey) -> Option<(Vec<u32>, u8)> {
+        let key = (from, arrived, tram);
+        if let Some(tree) = self.line.get(&key) {
+            return tree.path(to, want);
+        }
+        if from == self.candidate {
+            return self.local.entry(key).or_insert_with(|| net.path_tree(from, arrived, tram)).path(to, want);
+        }
+        if self.line.len() < self.line_limit && self.stops.contains(&from) {
+            let tree = net.path_tree(from, arrived, tram);
+            let path = tree.path(to, want);
+            self.line.insert(key, tree);
+            return path;
+        }
+        net.find_path_side(from, to, arrived, want, tram)
+    }
 }
 
 impl HopMemo {
@@ -1090,6 +1128,44 @@ impl HopMemo {
     /// For a tram line's stops (`tram`) or a train line's.
     pub(super) fn of(tram: bool) -> Self {
         Self { tram, ..Self::default() }
+    }
+
+    fn for_stop_scan(net: &Network, stops: &[u32]) -> Self {
+        Self::for_stop_scan_budget(net, stops, STOP_TREE_BUDGET)
+    }
+
+    fn for_stop_scan_budget(net: &Network, stops: &[u32], budget: usize) -> Self {
+        // Allow for the candidate's six combinations of arrival side and tram access.
+        const LOCAL_TREES: usize = 6;
+        let bytes_per_tree = (2 * net.edge_count() + 3 * net.node_count()) * std::mem::size_of::<u32>();
+        let line_limit = (budget / bytes_per_tree.max(1)).saturating_sub(LOCAL_TREES);
+        let searches = (stops.len() > 2 && line_limit > 0).then(|| StopSearches {
+            stops: stops.iter().copied().collect(),
+            line: HashMap::new(),
+            candidate: u32::MAX,
+            local: HashMap::new(),
+            line_limit,
+        });
+        Self { searches, ..Self::default() }
+    }
+
+    fn try_station(&mut self, station: u32) {
+        if let Some(searches) = self.searches.as_mut() {
+            searches.candidate = station;
+            searches.local.clear();
+        }
+    }
+
+    fn hop(&mut self, net: &Network, key: HopKey) -> Option<&(Vec<u32>, u8)> {
+        let searches = &mut self.searches;
+        self.hops.entry(key).or_insert_with(|| {
+            if let Some(searches) = searches {
+                searches.find(net, key)
+            } else {
+                let (from, to, arrived, want, tram) = key;
+                net.find_path_side(from, to, arrived, want, tram)
+            }
+        }).as_ref()
     }
     /// Whether `stops` route as a tram line's.
     fn tram_for(&self, net: &Network, stops: &[u32]) -> bool {
@@ -1105,19 +1181,30 @@ fn route_memo(net: &Network, stops: &[u32], memo: &mut HopMemo, ones: &[(u32, u8
         return None;
     }
     let tram = memo.tram_for(net, stops);
-    if let Some(p) = net.route_legs_t(stops, ones, tram) {
+    if let Some(p) = net.route_legs_with(stops, ones, |s| route_plain_memo(net, s, memo, tram)) {
         return Some(p);
     }
+    route_plain_memo(net, stops, memo, tram)
+}
+
+fn route_plain_memo(net: &Network, stops: &[u32], memo: &mut HopMemo, tram: bool) -> Option<Vec<u32>> {
     let mut path = vec![];
     let mut side = None;
     let closes = stops.len() >= 3 && stops[0] == stops[stops.len() - 1];
     for (k, w) in stops.windows(2).enumerate() {
         let want = if closes && k + 2 == stops.len() { net.carry_on_side(&path) } else { None };
-        let key = |x: Option<u8>| (w[0], w[1], side.unwrap_or(2), x.unwrap_or(2), tram);
-        let found = |memo: &mut HopMemo, x: Option<u8>| memo.hops.entry(key(x)).or_insert_with(|| net.find_path_side(w[0], w[1], side, x, tram)).is_some();
-        let x = if want.is_some() && found(memo, want) && (!found(memo, None) || net.carry_worth(&path, &memo.hops[&key(want)].as_ref().unwrap().0, &memo.hops[&key(None)].as_ref().unwrap().0)) { want } else { None };
-        found(memo, x);
-        let (p, s) = memo.hops[&key(x)].as_ref()?;
+        let key = |want| (w[0], w[1], side, want, tram);
+        let hop = if want.is_some() {
+            memo.hop(net, key(want));
+            memo.hop(net, key(None));
+            match (memo.hops[&key(want)].as_ref(), memo.hops[&key(None)].as_ref()) {
+                (Some(carry), Some(plain)) if net.carry_worth(&path, &carry.0, &plain.0) => Some(carry),
+                (carry, plain) => plain.or(carry),
+            }
+        } else {
+            memo.hop(net, key(None))
+        };
+        let (p, s) = hop?;
         path.extend_from_slice(p);
         side = Some(*s);
     }
@@ -1235,8 +1322,8 @@ fn route_plain_close(net: &Network, stops: &[u32], memo: &mut HopMemo) -> Option
     let &last = path.last()?;
     let side = net.port_side(last >> 1, 1 - (last & 1));
     let tram = memo.tram_for(net, stops);
-    let hop = memo.hops.entry((stops[n - 2], stops[n - 1], side.unwrap_or(2), 2, tram)).or_insert_with(|| net.find_path_side(stops[n - 2], stops[n - 1], side, None, tram));
-    path.extend_from_slice(&hop.as_ref()?.0);
+    let hop = memo.hop(net, (stops[n - 2], stops[n - 1], side, None, tram))?;
+    path.extend_from_slice(&hop.0);
     Some(path)
 }
 
