@@ -186,7 +186,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Stage 2 in tree rowsedit (11-25): lines an edit re-times no longer each cost two passes over the whole network, and only lines that moved are drawn again. Your Asia save, the worker's rows: a station 615 to 266 ms, a stop click 519 to 131, undo 544 to 103.
   - Goal: Rows under 100 ms for any edit on Asia: a moved line redrawn only from the cut, bus lines kept when unmoved, trips per touched line.
   - Other: notes/T-4149.md
-- T-4284 [P1] {L:edit-speed} The page redoes only what an edit changed, stage 3
+- T-4284 [P1] {L:edit-speed} The page redoes only what an edit changed, stage 3 (taking, 2026-11-25, agent pagestage3)
   - Context: From T-4150 stage 2 on your Asia save: after a delete, the delete tool's hover reads the whole drawn network's snap grid (13-39 ms); the demand layers rebuild every line (9-48 ms); fare income, points and the station complexes still go over every line or station (5-12 ms together).
   - Goal: Under 20 ms of the page's own work for a station placed or removed on Asia.
   - Other: notes/T-4150.md "Left"
@@ -198,11 +198,11 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-25: "partition where we're currently editing from the rest of the network so that nothing scales with the save size". T-4144 (11-23) planned showing edits at the click; each stage since cut one step. Gemini's end-to-end read: artifacts/trainworld/gemini/ask-0226/editscale.md, unchecked.
   - Goal: A checked design with stages, to you before anything is built.
   - Other: a repeat (notes/repeats.md); notes/T-4267.md
-- T-4281 [P1] {L:edit-speed} Later clicks wait on the previous click's whole-save work (taking, 2026-11-25, agent followcut)
+- T-4281 [P1] {L:edit-speed} Later clicks wait on the previous click's whole-save work
   - Context: Stage 1 (11-25): a cut line's train samples are taken again only around the cut, so the first block after a click went 165 to 118 ms on your Asia save. Click run in my tree: first 199 ms, later 618, 1,538, 2,156. Later clicks still wait up to 1 s for the previous click's follow-up, mostly whole-save work.
   - Goal: Every follow-up step costs what the edit touched, so later clicks are answered like the first; measured with edit_bench's click run.
   - Other: notes/T-4281.md
-- T-4283 [P1] {L:solve-speed} {after:T-4281} Weekend held count kept after a weekend headway change
+- T-4283 [P1] {L:solve-speed} {after:T-4281} Weekend held count kept after a weekend headway change (taking, 2026-11-25, agent fixweekend)
   - Context: From the review of T-4239 (unpublished): after a weekend-only headway or percent change that keeps the weekend train count, the line's held weekend entry stays, so its weekend trains keep the old rate, through a reload too. The fix is in world.rs, followcut's while T-4281 runs.
   - Goal: Each day's held entries dropped by that day's own headways, with a Rust test beside T-4239's.
   - Other: the fix written out in notes/T-4282.md "For followcut"
