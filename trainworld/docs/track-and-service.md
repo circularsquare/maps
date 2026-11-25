@@ -2035,7 +2035,8 @@ is over `FARE_MAX`, curve US$1,000 (T-3303: a typed 90 billion once went into ev
   (high speed, Bus, BRT, each boat size) shows in the Money tab and Advanced fares only while one of its lines exists
   (`fareKindsInUse`; the Bus row for a bus line not on BRT; Advanced fares shows Medium's "Ferry" row with any ferry
   line). The fields are copied by one list, `KIND_FARE_KEYS`.
-  **A line's own multiple** [T-3567]: `Fares.lines` (line id to multiple, 0 to `LINE_FARE_MAX` 3 in hundredths,
+  **A line's own multiple** [T-3567, T-4253]: `Fares.lines` (line id to multiple, 0 to `LINE_FARE_MAX` 10 in hundredths,
+  refused when the line's base fare in its country or city times it is over `FARE_MAX` US$1,000; old saves keep theirs;
   only lines set off 1, saved in the header; an older save has none), set in the line's panel, times the line's
   kind's multiple in `lineFareMul`, so it rides the same path everywhere, and it scales the base too [T-3578]: a
   trip pays the base times the largest own multiple among its lines (`set_base_mul`, `Graph::rn_base_mul`, taken per

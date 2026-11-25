@@ -149,8 +149,8 @@ export function kindFares(f: Partial<Record<(typeof KIND_FARE_KEYS)[number], unk
   }
   return out;
 }
-/** T-3567: a line's own multiplier is 0 to this, in hundredths. */
-export const LINE_FARE_MAX = 3;
+/** T-3567, T-4253: a line's own multiplier is 0 to this, in hundredths (refused when its base fare times it is over `FARE_MAX`). */
+export const LINE_FARE_MAX = 10;
 /** A line's own multiplier the player typed or stepped to. */
 export function tidyLineFare(v: number): number {
   return Number.isFinite(v) ? Math.min(LINE_FARE_MAX, Math.max(0, Math.round(v * 100) / 100)) : 1;

@@ -1366,6 +1366,7 @@
   "lineMoney.fareZones": "Button in a line's Fares row: rides on this line pay the fare zone prices (the zones counted from the lowest to the highest the trip passes in one fare area).",
   "lineMoney.fareDistance": "Button in a line's Fares row: rides on this line pay by distance (the fare curve by km), outside the fare zones, as a metro left out of a commuter zone scheme.",
   "lineMoney.fareTip": "Hover on a line's Fare multiple row and its number: the multiple scales the fare for rides on this line, its distance part and its base fare too. The base is paid once a trip, at the highest multiple among the lines the trip rides.",
+  "lineMoney.fareCap": "Short red note under a line's Fare multiple row when the player tries a multiple that would push the line's base fare over the limit. max: the limit in the player's currency, e.g. \"$1,000\".",
   "lineMoney.fares": "First money line of the hover on a day's bar in a rail line's view, under the date. amount: money, e.g. \"$3,400\".",
   "lineMoney.title": "Section heading over a small bar chart at the bottom of a rail line's view: for each of the past 30 days a blue bar for the fares the line took and a red one for what running its trains cost. revenue: moneyHistory.revenue and expenses: moneyHistory.expenses, each coloured to match its bars.",
   "lineMoney.net": "Last line of the hover on a day's bars in a rail line's view: fares minus running cost. amount: money, negative when the line lost money, e.g. \"-$300\".",

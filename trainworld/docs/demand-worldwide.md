@@ -711,7 +711,7 @@ notes/T-420.md has the tables.
   a high-speed line a third of the riders 1.0 did (notes/T-3310.md). Why it may not carry
   over: where high-speed rail is priced near conventional rail (Spain's Avlo and other low-cost
   services) the default overcharges. Check: a country's high-speed fare a km against its ordinary one.
-  **A line's own fare multiple** (T-3567, T-3578): 0 to 3, default 1, set in the line's panel. It times that
+  **A line's own fare multiple** (T-3567, T-3578, T-4253): 0 to 10, default 1, set in the line's panel (refused when its base fare times it is over US$1,000). It times that
   line's multiplier above (high-speed, bus, ferry, else 1) on the fare above the base, by the trip's km on the
   line, and it scales the base too: a trip pays one base, times the largest own multiple among the lines it
   rides (Anita, 2026-11-17: "if a person's ride uses that line at all it gets charged the higher base"); the

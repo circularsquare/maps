@@ -2,13 +2,13 @@
 
 import { TrackApi } from "../wasm/track/sim"; // the track model only (T-051)
 import { CITIES, cityById, cityWithin, HOME_CITY, isCity } from "../game/cities";
-import { startNodes } from "../game/fareDefault";
+import { baseFareIn, startNodes } from "../game/fareDefault";
 import { areaOfCode, zonesOf } from "../game/fareZones";
-import { capTransfer, faresOf, kindFares, simpleNodes, START_FARE, START_NODES, tidyLineFare, tidyTransfer, type Fares } from "../game/fareCurve";
+import { capTransfer, FARE_MAX, faresOf, kindFares, simpleNodes, START_FARE, START_NODES, tidyLineFare, tidyTransfer, type Fares } from "../game/fareCurve";
 import { EVERY, FARE_BASELINE, FARE_E, incomeScale, keepOwn, OLD_FARE_E, oldCurveFactor, oldIncomeScale, scaleFromOld, START, startFromOld, tidyOwn } from "../game/income";
 import { type NewGameSpec, type SaveHeader } from "./saveFile";
 import type { EditOp } from "./protocol";
-import { firstBuiltAt } from "./clockMain";
+import { firstBuiltAt, lineFirstStops } from "./clockMain";
 import { api, fares, putFares } from "./clockState";
 
 const START_FARES: Fares = { ...faresOf({ nodes: START_NODES }, START_FARE), scales: {}, baseline: FARE_BASELINE, basis: "usd" };
@@ -82,6 +82,11 @@ export function setLineFare(a: TrackApi, line: number, mul: number): boolean {
     else if (a.line_twin_of(li[i]) === line) twins.push(li[i]);
   }
   if (!found) return false;
+  // T-4253: refuse a higher multiple that pushes the line's base fare over FARE_MAX (old saves keep theirs on load)
+  const cur = own[String(line)] ?? 1;
+  const p = lineFirstStops.get(line);
+  const base = baseFareIn(fares, p ? cityWithin(p[0], p[1]) : null);
+  if (v > cur && base * v > FARE_MAX + 1e-6) return false;
   for (const id of [line, ...twins]) { if (v === 1) delete own[String(id)]; else own[String(id)] = v; }
   const { lines: _, ...rest } = fares;
   putFares(Object.keys(own).length ? { ...rest, lines: own } : rest);

@@ -72,6 +72,11 @@ export const cityFareScales = (city: string | null | undefined, f: Parameters<ty
   countryFareScales(zoneCountry(city) ?? undefined, faresIn(f, city));
 /** T-3766: the fare scale in zone `city`, as `fareScale` gives a country's. */
 export const cityScale = (city: string | null | undefined, f: Scaled): number => fareScale(zoneCountry(city) ?? undefined, faresIn(f, city).scales);
+/** T-4253: the base fare charged in zone `city` (null: outside every zone), US$, as the Money tab shows it. */
+export function baseFareIn(f: Parameters<typeof countryFareScales>[1] & Scaled, city: string | null | undefined): number {
+  const country = zoneCountry(city) ?? undefined, here = faresIn(f, city);
+  return roundedDefault(here, country)?.base ?? (f.nodes?.[0]?.[1] ?? f.base) * fareScale(country, here.scales);
+}
 
 /** T-3766: the market's fare factors (`IntercityApi.set_fare_factors_by`): by country, and with fares by city each
  * city's that has a multiple of its own (the rest take their country's default). */

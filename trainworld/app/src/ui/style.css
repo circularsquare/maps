@@ -788,6 +788,7 @@ svg.junction-map { display: block; margin: 8px auto 2px; width: 112px; height: 1
 .complex-stations { margin-top: 6px; }
 .complex-stations .val { min-width: 40px; }
 .complex-stations .val.bad, .rows .val.bad { color: var(--bad); }
+.rows > li.line-fare-cap { color: var(--bad); font-size: 12px; min-height: 0; padding: 0 0 4px; }
 /* T-3154, T-3173: a station's row: name, a Lines column of up to 3 bullets and a "+", figures, terminal button */
 .rows.pick.complex-stations > li { padding-top: 1px; padding-bottom: 1px; }
 .complex-stations .terminal-slot { flex: none; width: 28px; display: inline-flex; justify-content: flex-end; }

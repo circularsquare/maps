@@ -200,7 +200,7 @@ only reach stations on it. The city panel counts these trips as "No route" until
   player's own; older saves keep their fares), paid once a trip; choosing
   between routes sees only its first stretch. On high-speed lines the fare above the base is 1.25
   times as much (or the player's multiplier), by the share of the trip's km on them, so riders weigh
-  the dearer fare. Each line also has its own fare multiple (0 to 3, 1 to start) that works the same way
+  the dearer fare. Each line also has its own fare multiple (0 to 10, 1 to start, capped at a $1,000 base fare) that works the same way
   on its km and scales the base too: a trip pays the base times the highest multiple among the lines it
   rides, so one at 1.5 and one at 2 pays twice the base. A transfer fare the player sets ($0 to start) is paid at each change of line,
   except a change between two zone rides in one fare area, which is free, times the country's scale too; people weigh it when picking a route and the train, and the line

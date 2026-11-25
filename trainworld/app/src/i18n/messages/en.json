@@ -1360,6 +1360,7 @@
   "lineMoney.fareBack": "Back to {value}",
   "lineMoney.fareLabel": "fare multiple",
   "lineMoney.fareTip": "Multiplies the fare for rides on this line, base included. A trip over several lines pays the highest base among them",
+  "lineMoney.fareCap": "Base fare can be at most {max}",
   "lineMoney.fareKind": "{kind, select, hsr {High speed} ferry {Ferry} bus {Bus} other {BRT}} {value}",
   "lineMoney.farePaid": "Riders on this line pay {value}",
   "lineMoney.fareMode": "Fares",
