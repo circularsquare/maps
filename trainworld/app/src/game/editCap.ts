@@ -97,7 +97,7 @@ function isQuiet(op: EditOp, w: WorldView): boolean {
 const NEUTRAL = new Set(["lineLook", "lineGroup", "groupMembers", "groupName", "groupLook", "borrow", "repay", "fareRef"]);
 /** T-2622: ops whose demand change shows on no running line's stops, trains, cars or times, so no line
  * reads "calculating..." for it (lineFigures.ts `linesPending`); every other op's does */
-const WIDE = new Set(["fares", "fareScale", "fareCityScale", "fareByCity", "fareHsr", "fareFerry", "fareTransfer", "fareLine", "lineFareDist", "fareZones", "stationFares", "removeLine", "link", "addBuilding", "reshapeBuilding", "removeBuilding", "undo", "redo"]);
+const WIDE = new Set(["fares", "fareScale", "fareCityScale", "fareByCity", "fareHsr", "fareFerry", "fareTransfer", "fareLine", "lineFareDist", "fareZones", "stationFares", "removeLine", "link", "separate", "addBuilding", "reshapeBuilding", "removeBuilding", "undo", "redo"]);
 
 /** The last edit noted, read when `editStamp` moves (game/editNote.ts, T-2125). */
 export let lastEdit: EditOp | null = null;

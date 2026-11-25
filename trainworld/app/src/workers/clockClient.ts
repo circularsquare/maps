@@ -442,7 +442,7 @@ function toWorld(s: ClockState, keep = true): WorldView {
       return m;
     }),
     turnLimits: turnLimitsOf(s.turnLimits),
-    save: { cash: s.cash * 1e6, stations, lines, links: pairsOf(s.links ?? []), ...(s.buildings?.length ? { buildings: s.buildings } : {}) },
+    save: { cash: s.cash * 1e6, stations, lines, links: pairsOf(s.links ?? []), ...(s.apart?.length ? { apart: pairsOf(s.apart) } : {}), ...(s.buildings?.length ? { buildings: s.buildings } : {}) },
     lineStats,
     twins,
     edges,

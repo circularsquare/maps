@@ -107,6 +107,8 @@ use super::bus::keep::{KeepLink, KeptStop};
 /// (count, then per connection 0 and a node index for a station, 1 and a kept stop's index here for a kept stop);
 /// without it there are none.
 /// A load then drops those no bus stop took (`Network::drop_keeps_except`).
+/// A trailing `LAP1` block (T-4048, level 41, after `LBK1`) gives the station pairs the player separated
+/// (`Network::apart`): count, then node pairs in the dense ids, as `LNK1`; without it none are.
 /// A trailing `LBO1` block (T-4013, level 38) gives the lines with boarding-only or getting-off-only stops
 /// (`LineData::only`): count, then per line its index, its count and per stop its place in the line's stops and
 /// its kind (1 boarding only, 2 getting off only); without it every stop lets riders on and off.
@@ -122,13 +124,13 @@ const MAGIC_TWT6: &[u8; 4] = b"TWT6";
 
 /// T-1826: the trailing blocks this build reads, in the order they are written. A block it does not
 /// know stops the decoder, which then reports the bytes left over (`decode_read`).
-pub const BLOCKS: [&[u8; 4]; 43] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1", b"LPS1", b"LWE1", b"LOS1", b"LPD1", b"LHR1", b"LFZ1", b"LSN1", b"LFD1", b"LGN1", b"LRA1", b"LWP1", b"LFB1", b"LBR1", b"LBT1", b"LBQ1", b"LBO1", b"LBE1", b"LBK1"];
+pub const BLOCKS: [&[u8; 4]; 44] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1", b"LPS1", b"LWE1", b"LOS1", b"LPD1", b"LHR1", b"LFZ1", b"LSN1", b"LFD1", b"LGN1", b"LRA1", b"LWP1", b"LFB1", b"LBR1", b"LBT1", b"LBQ1", b"LBO1", b"LBE1", b"LBK1", b"LAP1"];
 /// T-1826: the save level this build writes into the game header (`level`) and reads up to. Raised
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over, and refuses to open it (T-4014). Saves from before it have none, read
 /// as 0. The app keeps a copy (`SAVE_LEVEL`, app/src/workers/saveFile.ts; `the_app_knows_this_level`).
-pub const LEVEL: u32 = 40;
+pub const LEVEL: u32 = 41;
 /// T-3759: the last level from before stations could be unbound from their complex's name; a typed
 /// station there showed its own name, so loading one makes such a station unbound (the app's pass).
 pub const OLD_BOUND_NAMES: u32 = 26;
@@ -895,6 +897,16 @@ pub fn encode(net: &Network) -> Vec<u8> {
             }
         }
     }
+    // T-4048: after LBK1, only where the player separated stations: the pairs, as LNK1's
+    let apart: Vec<[u32; 2]> = net.apart_live().collect();
+    if !apart.is_empty() {
+        w.0.extend_from_slice(b"LAP1");
+        w.u(apart.len() as u64);
+        for [a, b] in apart {
+            w.u(node_id[a as usize] as u64);
+            w.u(node_id[b as usize] as u64);
+        }
+    }
     w.0
 }
 
@@ -982,6 +994,7 @@ pub fn convert_frame(bytes: &[u8], to: FrameKind) -> Result<Vec<u8>, String> {
     out.next_line_number = net.next_line_number;
     out.links = net.links.clone();
     out.keeps = net.keeps.iter().map(|k| k.as_ref().map(|k| { let (x, y) = at(k.x, k.y); KeptStop { x, y, ..k.clone() } })).collect();
+    out.apart = net.apart.clone();
     out.buildings = net.buildings.iter().map(|b| b.as_ref().map(|b| super::building::Building { name: b.name.clone(), corners: b.corners.iter().map(|p| { let (x, y) = at(p[0], p[1]); [x, y] }).collect() })).collect();
     Ok(encode(&out))
 }
@@ -1629,6 +1642,16 @@ fn decode_read_at(bytes: &[u8], level: u32) -> Result<(Network, usize), String> 
             net.set_keep(k as u32, Some(p)).map_err(|e| format!("{e:?}"))?;
         }
     }
+    if r.0.get(r.1..r.1 + 4) == Some(b"LAP1") {
+        r.1 += 4;
+        for _ in 0..r.u()? {
+            let (a, b) = (r.u()? as u32, r.u()? as u32);
+            // a pair naming no station is dropped rather than refusing the whole save
+            if net.is_station(a) && net.is_station(b) {
+                net.set_pair(true, [a, b], true);
+            }
+        }
+    }
     for l in manual {
         fold_manual(&mut net, l);
     }
@@ -1887,7 +1910,29 @@ mod tests {
         for tag in &written {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
-        assert_eq!((LEVEL, BLOCKS.len()), (40, 43), "a new block raises LEVEL: raise it, then update this pin");
+        assert_eq!((LEVEL, BLOCKS.len()), (41, 44), "a new block raises LEVEL: raise it, then update this pin");
+    }
+
+    /// T-4048 (level 41): the separated pairs' block follows the kept stops' (T-4080, level 40). A level 40 save
+    /// (kept stops, no pairs) loads whole at its level and at this one; one with both reads both and writes them again.
+    #[test]
+    fn separated_pairs_follow_kept_stops() {
+        let mut net = decode(&sample()).unwrap();
+        net.set_keep(0, Some(KeptStop { x: 10.0, y: 20.0, name: "Elm St".into(), links: vec![KeepLink::Station(0)] })).unwrap();
+        let forty = encode(&net);
+        assert!(forty.windows(4).any(|w| w == b"LBK1") && !forty.windows(4).any(|w| w == b"LAP1"));
+        for level in [40, LEVEL] {
+            let (back, unread) = decode_read_at(&forty, level).unwrap();
+            assert_eq!(unread, 0, "level {level}");
+            assert_eq!(encode(&back), forty, "level {level}");
+        }
+        net.set_pair(true, [1, 0], true);
+        let both = encode(&net);
+        assert_eq!(&both[..forty.len()], &forty[..], "LAP1 after LBK1");
+        let (back, unread) = decode_read(&both).unwrap();
+        assert_eq!(unread, 0);
+        assert!(back.is_apart(0, 1) && back.keep(0).is_some_and(|k| k.name == "Elm St"));
+        assert_eq!(encode(&back), both);
     }
 
     /// T-4014: the app refuses a save above its level without the track model, from its own copy of LEVEL.

@@ -2321,6 +2321,7 @@ async function run() {
           p.set_tram_lines(m.tram ?? new Uint8Array(0));
           p.set_stairs(m.pierLines ?? new Uint8Array(0), m.streetStops ?? new Uint8Array(0)); // T-3888, before set_network
           p.set_passages(m.passages ?? new Uint32Array(0));
+          p.set_apart(m.apart ?? new Uint32Array(0)); // T-4048
           p.set_span(m.span ?? new Float32Array(0));
           p.set_back_stops(m.back ?? new Uint32Array(0)); // T-3348, before set_network          // T-1277: riders weigh fares by their country's income and pay the curve times its scale;
           // the market takes the curve as set, at `marketFareWeight` (T-2670, T-3239: its route

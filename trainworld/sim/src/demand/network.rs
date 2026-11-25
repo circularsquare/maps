@@ -76,6 +76,9 @@ pub struct Network {
     /// Station pairs joined by a passage (T-1281), smaller first, sorted: a change between them
     /// walks the straight line at `PASSAGE_MPS` (`build_graph`). Empty: none.
     pub st_passage: Vec<[u32; 2]>,
+    /// Station pairs the player separated (T-4048), smaller first, sorted: no walk joins them
+    /// (`build_graph`). Empty: none.
+    pub st_apart: Vec<[u32; 2]>,
     /// Bus corridors (T-1464): per bus stop that is no train station, the stretch of its route whose
     /// homes walk to the route and ride from it (`Catch`). Empty: no buses.
     pub catches: Vec<Catch>,
@@ -282,6 +285,7 @@ pub fn synth_network() -> Network {
         span: vec![],
         st_ups: vec![],
         st_passage: vec![],
+        st_apart: vec![],
         catches: vec![],
         st_bus: vec![],
         st_tram: vec![],

@@ -1427,6 +1427,7 @@
   "links.built": "Notice after a passage between two stations is built. a, b: station names; cost: \"$15M\".",
   "links.added": "Notice after a passage between two blueprint stations is added. a, b: station names.",
   "links.removed": "Notice after a passage between two stations is removed. a, b: station names.",
+  "links.separated": "Notice after the player removes the automatic connection between two nearby stations (they stop being one station complex). a, b: station names.",
   "links.busStop": "Notice while linking stations with a passage, when the pick is a bus stop (not a station).",
   "listParts.near": "Hover on the distance column of the Lines and Stations lists. distance: a short distance, e.g. \"1.2 km\".",
   "listParts.noLines": "Hover on the place button above the Lines and Stations lists when the viewed place has no lines. name: a city or region, e.g. \"Osaka\".",

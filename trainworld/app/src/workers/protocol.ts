@@ -256,6 +256,9 @@ export type EditOp =
   | { op: "repay" }
   /** link two stations into one complex, or undo a link (T-197): node ids; not undoable, a setting */
   | { op: "link"; a: NodeId; b: NodeId; on: boolean }
+  /** T-4048: remove a connection, one undoable edit, free: the passage between `a` and `b` if any, and the
+   * complex distance rule kept from joining each pair of `apart` (node ids, flat) */
+  | { op: "separate"; a: NodeId; b: NodeId; apart: NodeId[] }
   /** T-2218: station buildings (game/buildings.ts), paid at once and not undoable, as passages are;
    * corners are pack x, y pairs, flat; a name "" takes the first built member's */
   | { op: "addBuilding"; corners: number[]; name: string }
@@ -908,6 +911,8 @@ export interface ClockState {
   checkRows?: { edges: ClockEdge[]; nodes: ClockNode[]; lines: ClockLine[] };
   /** stations the player linked into one complex (T-197): node id pairs, flat */
   links: number[];
+  /** T-4048: stations the player separated: node id pairs, flat */
+  apart?: number[];
   /** the station buildings (T-2217, game/buildings.ts) */
   buildings?: BuildingInput[];
   /** the clock worker only: each node's station complex (0xffffffff none), for drawing one waiting
@@ -1194,6 +1199,8 @@ export interface NetworkSnapshot {
   fare?: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number>; byCity?: boolean; cityScales?: Record<string, number>; zones?: FareArea[] };
   /** station pairs joined by a passage (T-1281), node ids; absent when there are none */
   passages?: [number, number][];
+  /** T-4048: station pairs the player separated, node ids; absent when there are none */
+  apart?: [number, number][];
 }
 
 export interface SnapshotStation {

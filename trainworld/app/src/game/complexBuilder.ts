@@ -5,7 +5,7 @@
 // those of the stations at the ends of a changed link. Single linkage means no other complex can gain
 // or lose a member. `?patch=check` (checks/t1380-complexes.mjs) compares it with a full build.
 
-import { DEMAND_MERGE_M, PLATFORM_GAP_M, buildComplexes, nearEnough, offsetsReach, platformOffsets, straightOffsets, type Complexes } from "./complexes";
+import { DEMAND_MERGE_M, NO_PAIRS, PLATFORM_GAP_M, buildComplexes, nearEnough, offsetsReach, pairKey, platformOffsets, straightOffsets, type Complexes } from "./complexes";
 import type { StationId, StationInput } from "./types";
 
 type Geo = Pick<StationInput, "id" | "x" | "y" | "heading" | "length" | "line">;
@@ -58,20 +58,29 @@ export class ComplexBuilder {
   private lastInput: readonly Geo[] | null = null;
   private linkKeys: string[] = [];
   private linkPairs: (readonly [StationId, StationId])[] = [];
+  /** T-4048: the pairs the distance rule does not join, as last given */
+  private apart: ReadonlySet<string> = NO_PAIRS;
   private calls = 0;
   private stamp = 0;
   private uids = 0;
   /** how the last update went, for the checks: stations worked out again, or -1 for a full build */
   lastWorked = -1;
 
-  /** The complexes of `stations` (in save order) and the player's `links`. `frameKey` names what
-   * `kAt` depends on besides y (the world frame's kind): a different one builds everything anew. */
-  update(stations: readonly Geo[], links: readonly (readonly [StationId, StationId])[], kAt: (y: number) => number, frameKey: string): Complexes {
+  /** The complexes of `stations` (in save order), the player's `links` and the pairs kept `apart`
+   * (`apartKeys`, T-4048). `frameKey` names what `kAt` depends on besides y (the world frame's kind):
+   * a different one builds everything anew. */
+  update(stations: readonly Geo[], links: readonly (readonly [StationId, StationId])[], kAt: (y: number) => number, frameKey: string, apart: ReadonlySet<string> = NO_PAIRS): Complexes {
     const n = stations.length;
     const call = ++this.calls;
     if (this.out && frameKey !== this.frameKey) this.reset();
     this.frameKey = frameKey;
     const linksChanged = this.diffLinks(links);
+    // T-4048: the ends of a pair kept apart or let join again are worked out again, as a link's
+    if (apart !== this.apart) {
+      for (const k of apart) if (!this.apart.has(k)) linksChanged.push(...(k.split("|") as StationId[]));
+      for (const k of this.apart) if (!apart.has(k)) linksChanged.push(...(k.split("|") as StationId[]));
+      this.apart = apart;
+    }
     // the very list as last time (the world keeps it while no station changes)
     if (this.out && stations === this.lastInput && !linksChanged.length) {
       this.lastWorked = 0;
@@ -92,7 +101,7 @@ export class ComplexBuilder {
         added.push(r);
       } else if (r.seen === call) {
         this.reset();
-        return this.fallback(stations, links, kAt);
+        return this.fallback(stations, links, kAt, apart);
       } else {
         survivors++;
         if (r.idx <= prevIdx) reordered = true;
@@ -108,7 +117,7 @@ export class ComplexBuilder {
     const dirty = added.length + changed.length + removed.length;
     if (reordered || (before > 0 && dirty * REBUILD_SHARE > n + REBUILD_SHARE)) {
       this.reset();
-      return this.update(stations, links, kAt, frameKey);
+      return this.update(stations, links, kAt, frameKey, apart);
     }
     if (!dirty && !linksChanged.length && this.out) {
       this.lastWorked = 0;
@@ -167,7 +176,7 @@ export class ComplexBuilder {
       for (let gx = cx - 1; gx <= cx + 1; gx++)
         for (let gy = cy - 1; gy <= cy + 1; gy++) {
           const bucket = this.grid.get(key(gx, gy));
-          if (bucket) for (const o of bucket) if (o.uid > r.uid && o.mark === stamp && (r.idx < o.idx ? linked(r, o) : linked(o, r))) union(r, o);
+          if (bucket) for (const o of bucket) if (o.uid > r.uid && o.mark === stamp && (r.idx < o.idx ? linked(r, o) : linked(o, r)) && !this.isApart(r, o)) union(r, o);
         }
     }
     for (const [a, b] of links) {
@@ -176,7 +185,7 @@ export class ComplexBuilder {
       if ((i.mark === stamp) !== (j.mark === stamp)) {
         // a link reaching out of the stations worked out again cannot happen; start over if it does
         this.reset();
-        return this.update(stations, links, kAt, frameKey);
+        return this.update(stations, links, kAt, frameKey, apart);
       }
       if (i.mark === stamp) union(i, j);
     }
@@ -213,12 +222,17 @@ export class ComplexBuilder {
     this.lastInput = null;
     this.linkKeys = [];
     this.linkPairs = [];
+    this.apart = NO_PAIRS;
   }
 
   /** The reference build, for a list this class cannot take (a station twice). */
-  private fallback(stations: readonly Geo[], links: readonly (readonly [StationId, StationId])[], kAt: (y: number) => number): Complexes {
+  private fallback(stations: readonly Geo[], links: readonly (readonly [StationId, StationId])[], kAt: (y: number) => number, apart: ReadonlySet<string>): Complexes {
     this.lastWorked = -1;
-    return buildComplexes(stations, links, kAt);
+    return buildComplexes(stations, links, kAt, apart);
+  }
+
+  private isApart(a: Rec, b: Rec): boolean {
+    return this.apart.size > 0 && this.apart.has(pairKey(a.id, b.id));
   }
 
   private make(s: Geo, kAt: (y: number) => number): Rec {
@@ -277,7 +291,7 @@ export class ComplexBuilder {
     for (let gx = cx - 1; gx <= cx + 1; gx++)
       for (let gy = cy - 1; gy <= cy + 1; gy++) {
         const bucket = this.grid.get(key(gx, gy));
-        if (bucket) for (const o of bucket) if (o !== r && (r.idx < o.idx ? linked(r, o) : linked(o, r))) take(o.comp);
+        if (bucket) for (const o of bucket) if (o !== r && (r.idx < o.idx ? linked(r, o) : linked(o, r)) && !this.isApart(r, o)) take(o.comp);
       }
   }
 

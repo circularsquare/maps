@@ -2150,6 +2150,10 @@ impl EverydayApi {
     pub fn set_passages(&mut self, pairs: &[u32]) {
         self.engine.set_passages(pairs);
     }
+    /// `DemandApi::set_apart` (T-4048).
+    pub fn set_apart(&mut self, pairs: &[u32]) {
+        self.engine.set_apart(pairs);
+    }
     /// `DemandApi::set_span` (T-842).
     pub fn set_span(&mut self, span: &[f32]) {
         self.engine.set_span(span);

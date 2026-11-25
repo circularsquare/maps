@@ -377,17 +377,19 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
         None => (net.st_x[b] - net.st_x[a]).powi(2) + (net.st_y[b] - net.st_y[a]).powi(2),
     };
     let mut near: Vec<Vec<u32>> = vec![vec![]; s];
+    // T-4048: two stations the player separated are no walk apart
+    let apart = |a: usize, b: u32| !net.st_apart.is_empty() && net.st_apart.binary_search(&[(a as u32).min(b), (a as u32).max(b)]).is_ok();
     if p.xfer_walk_m > 0.0 && s > 1 {
         let grid = StationGrid::new(net, p.xfer_walk_m, p.xfer_walk_m);
         for a in 0..s {
             grid.near(net.st_x[a], net.st_y[a], |b| {
-                if b as usize != a && !merged(a) && !merged(b as usize) && d2(a, b as usize) <= cut2(a, b as usize) {
+                if b as usize != a && !merged(a) && !merged(b as usize) && d2(a, b as usize) <= cut2(a, b as usize) && !apart(a, b) {
                     near[a].push(b);
                 }
             });
         }
         for (a, b) in bw.into_iter().flat_map(|w| w.pairs()) {
-            if d2(a as usize, b as usize) <= cut2(a as usize, b as usize) {
+            if d2(a as usize, b as usize) <= cut2(a as usize, b as usize) && !apart(a as usize, b) {
                 near[a as usize].push(b);
             }
         }
@@ -396,8 +398,9 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
         for members in complex_members(&net.st_group) {
             for &a in &members {
                 for &b in &members {
-                    // within the walk limit the edge is there already
-                    if a != b && (p.xfer_walk_m <= 0.0 || d2(a as usize, b as usize) > cut2(a as usize, b as usize)) {
+                    // any two of a complex walk once: the walk limit's edge where it gave one, else this one (T-4048:
+                    // a separated pair that a passage, a building or a third station joins again has none from it)
+                    if a != b && !near[a as usize].contains(&b) {
                         near[a as usize].push(b);
                     }
                 }

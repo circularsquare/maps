@@ -4,7 +4,7 @@
 // (T-313).
 
 import { computed, effect, signal } from "@preact/signals";
-import { buildComplexes, membersOf, type Complexes } from "./complexes";
+import { NO_PAIRS, apartKeys, buildComplexes, membersOf, type Complexes } from "./complexes";
 import { ComplexBuilder } from "./complexBuilder";
 import { withBuildingLinks } from "./buildings";
 import { PATCH_MODE } from "./patchMode";
@@ -27,19 +27,28 @@ let nearWholeKey = "";
 let nearWhole: Complexes = { of: new Map(), members: [] };
 const keyOf = (st: readonly StationInput[]) => getWorldFrame().kind + st.map((s) => `${s.id}:${s.x}:${s.y}:${s.heading}:${s.length}:${s.line ? Array.from(s.line).join(";") : ""}`).join("|");
 
+let apartKey = "", apartSet: ReadonlySet<string> = NO_PAIRS;
+/** T-4048: the pairs the player separated, as `pairKey`s; the same set while they stay the same */
+function apartNow(): ReadonlySet<string> {
+  const ap = world.value?.save.apart ?? [], k = ap.join("|");
+  if (k !== apartKey) { apartKey = k; apartSet = ap.length ? apartKeys(ap) : NO_PAIRS; }
+  return apartSet;
+}
+
 /** The world's complexes; the same object while no station moved, appeared or changed length and
- * no link (T-197) was made or undone. */
+ * no link (T-197) was made or undone, nor stations separated (T-4048). */
 export const complexes = computed<Complexes>(() => {
   const st = world.value?.save.stations ?? [];
   // T-2217: a station building joins its members as a link would
   const links = withBuildingLinks(world.value?.save.links ?? [], world.value?.save.buildings, st, groundScale);
+  const apart = apartNow();
   if (PATCH_MODE === "0") {
-    const k = keyOf(st) + "/" + links.join("|");
-    if (k !== wholeKey) { wholeKey = k; whole = buildComplexes(st, links, groundScale); }
+    const k = keyOf(st) + "/" + links.join("|") + "/" + apartKey;
+    if (k !== wholeKey) { wholeKey = k; whole = buildComplexes(st, links, groundScale, apart); }
     return whole;
   }
-  const out = builder.update(st, links, groundScale, getWorldFrame().kind);
-  if (PATCH_MODE === "check" && !same(out, buildComplexes(st, links, groundScale))) console.error("T-1380 check: the complexes patched from changes differ from a whole build");
+  const out = builder.update(st, links, groundScale, getWorldFrame().kind, apart);
+  if (PATCH_MODE === "check" && !same(out, buildComplexes(st, links, groundScale, apart))) console.error("T-1380 check: the complexes patched from changes differ from a whole build");
   return out;
 });
 
@@ -51,13 +60,14 @@ export const dotGroups = computed(() => {
   // with no links or buildings the two are the same grouping: built once (T-496)
   if (!(world.value?.save.links ?? []).length && !world.value?.save.buildings?.length) return complexes.value;
   const st = world.value?.save.stations ?? [];
+  const apart = apartNow();
   if (PATCH_MODE === "0") {
-    const k = keyOf(st);
-    if (k !== nearWholeKey) { nearWholeKey = k; nearWhole = buildComplexes(st, [], groundScale); }
+    const k = keyOf(st) + "/" + apartKey;
+    if (k !== nearWholeKey) { nearWholeKey = k; nearWhole = buildComplexes(st, [], groundScale, apart); }
     return nearWhole;
   }
-  const out = nearBuilder.update(st, [], groundScale, getWorldFrame().kind);
-  if (PATCH_MODE === "check" && !same(out, buildComplexes(st, [], groundScale))) console.error("T-1380 check: the distance groups patched from changes differ from a whole build");
+  const out = nearBuilder.update(st, [], groundScale, getWorldFrame().kind, apart);
+  if (PATCH_MODE === "check" && !same(out, buildComplexes(st, [], groundScale, apart))) console.error("T-1380 check: the distance groups patched from changes differ from a whole build");
   return out;
 });
 

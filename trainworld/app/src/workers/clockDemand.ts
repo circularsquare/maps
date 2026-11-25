@@ -7,7 +7,7 @@ import { headwaysFor, headwaysIn } from "../game/newLine";
 import { BOATS, MEDIUM, type Boat } from "../game/boats";
 import { NEIGHBOUR_FARE_M } from "../game/fareZones";
 import { assignBays, BAY_LOOKBACK_S, profileTimes } from "../map/terminalBays";
-import { buildComplexes, type Complexes } from "../game/complexes";
+import { NO_PAIRS, buildComplexes, pairKey, type Complexes } from "../game/complexes";
 import { ComplexBuilder } from "../game/complexBuilder";
 import { buildingMembers, buildingsFrom, withBuildingLinks } from "../game/buildings";
 import { BRT_STATION, IN_BUILDING } from "../game/upgrades";
@@ -310,13 +310,27 @@ export function nameOnly(op: EditOp): boolean {
     default: return false;
   }
 }
-/** The complexes of `geo` with the player's `links` and the station buildings' members (T-2217). */
+let apartFlat = "", apartKeys: ReadonlySet<string> = NO_PAIRS;
+/** T-4048: the pairs the player separated, as `pairKey`s; the same set while they stay the same */
+export function apartNow(a: TrackApi): ReadonlySet<string> {
+  const fl = a.station_apart(), k = fl.join();
+  if (k !== apartFlat) {
+    apartFlat = k;
+    const s = new Set<string>();
+    for (let i = 0; i + 1 < fl.length; i += 2) s.add(pairKey(String(fl[i]), String(fl[i + 1])));
+    apartKeys = s.size ? s : NO_PAIRS;
+  }
+  return apartKeys;
+}
+/** The complexes of `geo` with the player's `links`, the station buildings' members (T-2217) and the
+ * pairs the player separated (T-4048). */
 export function complexesOf(builder: ComplexBuilder, geo: StationGeo[], playerLinks: [string, string][]): Complexes {
   const links = withBuildingLinks(playerLinks, buildingsOf(api!), geo, groundK);
-  if (patchMode === "0") return buildComplexes(geo, links, groundK);
-  const cx = builder.update(geo, links, groundK, frame.kind);
+  const apart = apartNow(api!);
+  if (patchMode === "0") return buildComplexes(geo, links, groundK, apart);
+  const cx = builder.update(geo, links, groundK, frame.kind, apart);
   if (patchMode === "check") {
-    const full = buildComplexes(geo, links, groundK);
+    const full = buildComplexes(geo, links, groundK, apart);
     if (cx.of.size !== full.of.size || cx.members.length !== full.members.length || [...full.of].some(([id, c]) => cx.of.get(id) !== c) || full.members.some((m, i) => m.join() !== cx.members[i].join())) {
       console.error("T-1380 check: the complexes patched from changes differ from a whole build");
     }
@@ -363,6 +377,9 @@ export function buildSnapshot(): NetworkSnapshot {
   // T-1281: the links are passages, walked faster; between constructed stations only
   const built = new Set(geo.map((g) => g.id));
   const passages = links.filter(([p, q]) => built.has(p) && built.has(q)).map(([p, q]) => [Number(p), Number(q)] as [number, number]);
+  // T-4048: the pairs the player separated, between constructed stations only
+  const fa = a.station_apart(), apart: [number, number][] = [];
+  for (let k = 0; k + 1 < fa.length; k += 2) if (built.has(String(fa[k])) && built.has(String(fa[k + 1]))) apart.push([fa[k], fa[k + 1]]);
   const li = a.lines_info();
   const lines: NetworkSnapshot["lines"] = [];
   for (let i = 0; i < li.length; i += 22) {
@@ -406,7 +423,7 @@ export function buildSnapshot(): NetworkSnapshot {
   if (fz.size) busStopFares(stations);
   snapStations = stationsKey(ni);
   tidyLineFares(a);
-  return { version: ++snapVersion, city, frame: frameSpec(), stations, lines, fare: demandFares(), ...(passages.length ? { passages } : {}) };
+  return { version: ++snapVersion, city, frame: frameSpec(), stations, lines, fare: demandFares(), ...(passages.length ? { passages } : {}), ...(apart.length ? { apart } : {}) };
 }
 
 /** T-3740: a bus stop that is no station takes the fare zone of the nearest station with one within

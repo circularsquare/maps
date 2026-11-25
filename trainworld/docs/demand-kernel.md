@@ -283,9 +283,12 @@ levels:
    than one merged station: each keeps its own catchment and position, a long link is not a free
    teleport, and transfers stay counted platform to platform for the complex map (T-176). The
    trip explorer shows such a change as a walk between the two stations. The 100 m merge is single
-   linkage, so a chain of platforms is one demand station; complexes add walks only between
-   members more than 300 m apart (long platforms end to end, a long chained complex the player
-   builds, linked stations; the real New York save has none, notes/T-161.md).
+   linkage, so a chain of platforms is one demand station (two stations the player kept apart, T-4048,
+   `DemandApi::set_apart`, are never merged, not even through a third station near both, nor given the 300 m
+   walk); complexes add the walks between members the 300 m walk does not give: members more than 300 m apart
+   (long platforms end to end, a long chained complex the player builds, linked stations; the real New York
+   save has none, notes/T-161.md), and a pair kept apart that a passage, a building or a third station joins
+   into one complex again.
    Destination strategies and boarding frequencies
    are kept for loading. Each destination's search is independent, so only stations someone can
    end a rail trip at are searched towards (`egress_stations`: the walks of subzones with jobs, and

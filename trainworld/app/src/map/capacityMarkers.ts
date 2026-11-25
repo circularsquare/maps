@@ -206,6 +206,18 @@ export class CapacityMarkers {
     }
   }
 
+  /** T-4048: the dots shown, as boxes (left, top, right, bottom) in CSS px where they are this frame */
+  shownBoxes(): number[][] {
+    if (this.box.style.display === "none") return [];
+    const half = DOT / 2, out: number[][] = [];
+    for (const it of this.items) {
+      if (!it.shown) continue;
+      const [x, y] = this.overlay.toScreen(it.x, it.y);
+      if (Number.isFinite(x + y)) out.push([x - half, y - half, x + half, y + half]);
+    }
+    return out;
+  }
+
   private follow() {
     const half = DOT / 2;
     for (const it of this.items) {

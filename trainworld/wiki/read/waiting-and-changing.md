@@ -16,7 +16,7 @@ A boarding costs the wait for the first train worth taking, times the station's 
 
 **Changing trains** costs 2 minutes for the bother, plus the walk from one platform to the other, plus the wait for the next train. Inside a [station building](station-buildings.md) the bother is 50% of that. The walk counts extra, as in [perceived minutes](perceived-minutes.md).
 
-Stations within 300 m of each other are close enough to change on foot. A bus stop reaches only 150 m. A passage you build works over a longer distance, along a straight line at 2 m/s. Changing on foot at a bus stop or a BRT station takes 1 minute more than the walk, unless a passage joins the two. A trip can also start or end with that walk, with no bother and no transfer fare, so the way home is the way out reversed.
+Stations within 300 m of each other are close enough to change on foot. A bus stop reaches only 150 m. A passage you build works over a longer distance, along a straight line at 2 m/s. Two stations you take apart (the cross on their connection while placing a passage) are never a walk, however close. Changing on foot at a bus stop or a BRT station takes 1 minute more than the walk, unless a passage joins the two. A trip can also start or end with that walk, with no bother and no transfer fare, so the way home is the way out reversed.
 
 **Boarding only and disembarking only.** A stop of a line can be kept to one or the other. At a boarding-only stop people get on and never off, so nobody rides the line to it, in either direction, and nobody changes off the line there. At a disembarking-only stop it's the other way around. Trains still stop and wait the usual time. Other lines at the same station aren't affected.
 

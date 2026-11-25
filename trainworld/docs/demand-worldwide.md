@@ -1056,6 +1056,10 @@ notes/T-420.md has the tables.
   complex, at a walking transfer's cost, no change minutes or transfer fare; T-3718, Anita
   2026-11-18: "let trips start with walk"), so a commute's way home (its station pair reversed)
   can take its way out backwards, walk included, without a change its choice never saw.
+  Two stations the player kept apart (T-4048) are neither merged nor a walk unless something else (a passage, a
+  building, a third station) joins them into one complex again; the lie: riders could still walk the
+  street between them, and two stations on either side of the split that the distance rule did not link
+  (100-300 m apart) still are a walk.
 - **Complexes as transfer points** (T-161, with the player's links, T-197). Any two stations of a
   complex are a walking transfer however far apart, costed like every walk between stations:
   the distance between the platforms' centres (snapshot stations; within one demand station too,

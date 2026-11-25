@@ -31,6 +31,10 @@ impl IntercityApi {
     pub fn set_passages(&mut self, pairs: &[u32]) {
         self.passages_in = pairs.to_vec();
     }
+    /// `DemandApi::set_apart` (T-4048).
+    pub fn set_apart(&mut self, pairs: &[u32]) {
+        self.apart_in = pairs.to_vec();
+    }
     /// `DemandApi::set_span` (T-842): riders between cities read the same service span.
     pub fn set_span(&mut self, span: &[f32]) {
         self.span_in = span.to_vec();

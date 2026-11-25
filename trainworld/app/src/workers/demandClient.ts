@@ -297,6 +297,8 @@ interface Service {
   lines: { id: string; stops: string[]; back?: string[]; tph: number[]; hopS: number[][][]; hopKm?: number[][]; fast?: boolean; ferry?: boolean; boat?: 0 | 2; brt?: boolean; tram?: boolean; fareDist?: boolean; passFares?: number[][][]; dwellS: number[][][]; wrapS?: number; cars: number; span?: number[]; catches?: number[][] }[];
   /** station pairs joined by a passage (T-1281) */
   passages?: [string, string][];
+  /** T-4048: station pairs the player separated */
+  apart?: [string, string][];
   /** T-2410: stations no line stops at, left out of `stations`: their positions only reach zones
    * (opened ahead of a line on them); never in the key */
   alone?: [number, number][];
@@ -710,12 +712,14 @@ function serviceFromSnapshot(s: NetworkSnapshot): Service {
   const used = new Set(perfOff("alone") ? s.stations.map((st) => String(st.id)) : s.lines.flatMap((l) => [...l.stops, ...(l.backStops ?? [])].map(String)));
   const alone = s.stations.filter((st) => !used.has(String(st.id))).map((st): [number, number] => [st.x, st.y]);
   const passages = (s.passages ?? []).filter(([a, b]) => used.has(String(a)) && used.has(String(b)));
+  const apart = (s.apart ?? []).filter(([a, b]) => used.has(String(a)) && used.has(String(b)));
   return {
     frame: s.frame ?? LEGACY_FRAME,
     fare: s.fare ?? { base: 2, perKm: 0 }, // legacy fixed 6 perceived minutes
     stations: s.stations.filter((st) => used.has(String(st.id))).map((st) => ({ id: String(st.id), x: st.x, y: st.y, complex: st.complex, ...(st.level ? { level: st.level } : {}), ...(st.upgrades ? { upgrades: st.upgrades } : {}), ...(st.fare ? { fare: st.fare } : {}), ...(st.street ? { street: true } : {}) })),
     lines: s.lines.map((l) => ({ id: String(l.id), stops: l.stops.map(String), ...(l.backStops?.length === l.stops.length ? { back: l.backStops.map(String) } : {}), tph: l.tph, hopS: l.hopS, hopKm: l.hopKm, ...(l.fast ? { fast: true } : {}), ...(l.ferry ? { ferry: true } : {}), ...(l.boat !== undefined ? { boat: l.boat } : {}), ...(l.brt ? { brt: true } : {}), ...(l.tram ? { tram: true } : {}), ...(l.fareDist ? { fareDist: true } : {}), ...(l.passFares ? { passFares: l.passFares } : {}), dwellS: l.dwellS, ...(l.wrapS ? { wrapS: l.wrapS } : {}), cars: l.cars, ...(l.span ?{ span: l.span } : {}), ...(l.catches ? { catches: l.catches } : {}) })),
     ...(passages.length ? { passages: passages.map(([a, b]) => [String(a), String(b)] as [string, string]) } : {}),
+    ...(apart.length ? { apart: apart.map(([a, b]) => [String(a), String(b)] as [string, string]) } : {}),
     ...(alone.length ? { alone } : {}),
   };
 }
@@ -759,6 +763,7 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
     // T-3740: the stations' fare zones, only where the fares have areas and a station has one
     ...(svc.fare.zones?.length && svc.stations.some((s) => s.fare) ? { fz: Uint32Array.from(svc.stations, (s) => s.fare ?? 0) } : {}),
     ...(svc.passages?.length ? { passages: Uint32Array.from(svc.passages.filter(([p, q]) => index.has(p) && index.has(q)).flatMap(([p, q]) => [index.get(p)!, index.get(q)!])) } : {}),
+    ...(svc.apart?.length ? { apart: Uint32Array.from(svc.apart.filter(([p, q]) => index.has(p) && index.has(q)).flatMap(([p, q]) => [index.get(p)!, index.get(q)!])) } : {}),
     lineN: new Uint32Array(lines.map((l) => l.stops.length)),
     stops: new Uint32Array(nStops),
     times: new Float32Array(TIMES_PER_STOP * nStops),

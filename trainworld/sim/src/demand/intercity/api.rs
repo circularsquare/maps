@@ -196,6 +196,7 @@ pub struct IntercityApi {
     pub(super) ups_in: Vec<u8>,
     /// The passages of the next `set_network` (`set_passages`, T-1281).
     pub(super) passages_in: Vec<u32>,
+    pub(super) apart_in: Vec<u32>,
     /// `DemandApi::set_span` (T-842).
     pub(super) span_in: Vec<f32>,
     /// set_bus (T-1464)

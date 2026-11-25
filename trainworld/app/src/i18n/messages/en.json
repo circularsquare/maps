@@ -1426,6 +1426,7 @@
   "links.built": "Passage between {a} and {b} built for {cost}.",
   "links.added": "Passage between {a} and {b} added. It is built with the stations.",
   "links.removed": "Passage between {a} and {b} removed.",
+  "links.separated": "Connection between {a} and {b} removed.",
   "links.busStop": "Bus stops can't have passages.",
   "listParts.near": "{distance} from the center of the screen",
   "listParts.noLines": "No lines in {name} yet, so the whole world is shown",

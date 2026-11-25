@@ -519,6 +519,8 @@ function applyInner(op: EditOp): Applied {
       return { r: loanOp(op) };
     case "link":
       return { r: op.on ? a.link_stations(op.a, op.b) : a.unlink_stations(op.a, op.b) };
+    case "separate":
+      return { r: a.separate(op.a, op.b, new Uint32Array(op.apart)) };
     case "addBuilding":
       return { r: a.add_building(new Float64Array(op.corners), op.name) };
     case "reshapeBuilding":

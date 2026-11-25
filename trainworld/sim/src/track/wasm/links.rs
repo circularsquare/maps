@@ -45,6 +45,32 @@ impl TrackApi {
     pub fn station_links(&self) -> Vec<u32> {
         self.w.net.links_live().flatten().collect()
     }
+    /// T-4048: the pairs the player separated whose two ends are stations now: node pairs, flat, in order (the
+    /// demand caches' keys take them as they come).
+    pub fn station_apart(&self) -> Vec<u32> {
+        let mut v: Vec<[u32; 2]> = self.w.net.apart_live().collect();
+        v.sort_unstable();
+        v.into_iter().flatten().collect()
+    }
+    /// T-4048: remove a connection, free, as one undoable edit: the passage between `a` and `b` if
+    /// there is one, and the distance rule kept from joining each pair of `apart` (node pairs, flat).
+    /// 0 done; 1 if it changes nothing.
+    pub fn separate(&mut self, a: u32, b: u32, apart: &[u32]) -> u32 {
+        let net = &self.w.net;
+        let mut ops = vec![];
+        if net.links.contains(&[a.min(b), a.max(b)]) {
+            ops.push(Op::Link { pair: [a, b], on: false });
+        }
+        for p in apart.chunks_exact(2) {
+            if p[0] != p[1] && net.is_station(p[0]) && net.is_station(p[1]) && !net.is_apart(p[0], p[1]) && !ops.contains(&Op::Apart { pair: [p[0], p[1]], on: true }) {
+                ops.push(Op::Apart { pair: [p[0], p[1]], on: true });
+            }
+        }
+        if ops.is_empty() {
+            return 1;
+        }
+        self.run(Op::Batch(ops))
+    }
 
     /// Remove an edge, and nodes left with no track and no station. Lines using it reroute or
     /// break. Constructed: no refund, and undoable, the undo free (T-1649).

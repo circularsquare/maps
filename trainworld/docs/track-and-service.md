@@ -680,7 +680,14 @@ Full design, numbers and sources: `notes/T-008.md`.
   come within 50 m form a station complex, which a click on a station selects as one (T-249) and
   the station ridership circles show as one (8, T-146, T-1449); the player can join any two stations up to 1 km
   apart into one complex by a **passage** and remove it (T-197, T-1281; saved with the network as
-  `Network::links`, not in the undo history; links from older saves are passages, never charged).
+  `Network::links`; making one is outside the undo history, removing one is a free Ctrl+Z step; links from
+  older saves are passages, never charged). The player can also take apart stations the distance rules join
+  (T-4048, `Network::apart`, saved in a trailing `LAP1` block after `LBK1`, level 41; a Ctrl+Z step like a passage's removal): a pair
+  kept apart is no complex by distance, no demand station at 100 m (not through a third station near both
+  either) and no walk at 300 m; a passage, a building or a third station still joins it into one complex, and
+  then it walks as any two of a complex. Removing a passage between stations the rule joins keeps them apart
+  too. An edit that takes a pair out of joining range (a move) lets it go, inside the same edit. A station
+  removed takes its passages and pairs with it, inside the same edit.
   Riders change between any two stations of a complex on foot, however far apart (4.4, T-161),
   through a passage along the straight line at 2 m/s. A bus stop takes no passage (its stops place themselves again with every edit); a BRT station does, and there it saves the minute a change on foot without one takes (T-4079, demand-worldwide.md "Bus connections without a passage"). A **station building** joins stations too
   (below).

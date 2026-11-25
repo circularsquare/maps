@@ -1,8 +1,8 @@
 // T-1380: the complexes kept up to date from changed stations (game/complexBuilder.ts) against a
 // full build (game/complexes.ts `buildComplexes`), after random series of edits: stations added
 // (at the end and in the middle of the list), removed, moved by metres or far, resized, links made
-// and undone, a second builder for the same list with no links, a change of frame. Every step must
-// give the same numbering, not only the same grouping.
+// and undone, pairs kept apart and let go (T-4048), a second builder for the same list with no links,
+// a change of frame. Every step must give the same numbering, not only the same grouping.
 //   node trainworld/checks/t1380-complexes.mjs [seeds]      (from the maps root)
 import { loadApp } from './lib.mjs';
 
@@ -48,7 +48,7 @@ for (let seed = 1; seed <= SEEDS; seed++) {
     return lined({ id: String(nextId++), x: cl * 3000 + (rnd() - 0.5) * 700, y: (cl % 4) * 2500 + (rnd() - 0.5) * 700, heading: rnd() * Math.PI * 2, length: 60 + 20 * Math.floor(rnd() * 18) });
   };
   let st = Array.from({ length: 150 + Math.floor(rnd() * 400) }, make);
-  let links = [];
+  let links = [], apart = [];
   const full = new ComplexBuilder(), plain = new ComplexBuilder();
   const stepsN = 120;
   for (let step = 0; step < stepsN; step++) {
@@ -69,10 +69,18 @@ for (let seed = 1; seed <= SEEDS; seed++) {
       else if (q < 0.96) { st = st.map((s) => ({ ...s })); } // new objects, same values
       else { const m = Math.min(st.length - 1, 1 + Math.floor(rnd() * 30)); st = st.filter((_, j) => j >= m); } // many removed at once
     }
+    // T-4048: a station kept apart from its nearest, or a pair let go again
+    const qa = rnd();
+    if (qa < 0.15 && st.length > 2) {
+      const s = st[Math.floor(rnd() * st.length)];
+      const o = st.filter((x) => x !== s).sort((p, q) => Math.hypot(p.x - s.x, p.y - s.y) - Math.hypot(q.x - s.x, q.y - s.y))[0];
+      apart = [...apart, [s.id, o.id]];
+    } else if (qa < 0.22 && apart.length) apart = apart.filter((_, j) => j !== Math.floor(rnd() * apart.length));
+    const ak = new Set(apart.map(([a, b]) => (a < b ? `${a}|${b}` : `${b}|${a}`)));
     // fresh objects each step, as the world's are
     const input = st.map((s) => ({ ...s }));
-    const got = full.update(input, links, kAt, key), want = buildComplexes(input, links, kAt);
-    const got2 = plain.update(input, [], kAt, key), want2 = buildComplexes(input, [], kAt);
+    const got = full.update(input, links, kAt, key, ak), want = buildComplexes(input, links, kAt, ak);
+    const got2 = plain.update(input, [], kAt, key, ak), want2 = buildComplexes(input, [], kAt, ak);
     steps++;
     if (full.lastWorked >= 0) { worked += full.lastWorked; workedN++; }
     for (const [g, w, name] of [[got, want, 'links'], [got2, want2, 'plain']]) {

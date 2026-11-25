@@ -35,6 +35,8 @@ export interface DemandNetwork {
   ups?: Uint8Array;
   /** station pairs joined by a passage, flat (T-1281, `DemandApi.set_passages`), absent where none */
   passages?: Uint32Array;
+  /** station pairs the player separated, flat (T-4048, `DemandApi.set_apart`), absent where none */
+  apart?: Uint32Array;
   /** stops per line */
   lineN: Uint32Array;
   /** station index of every stop, line after line */

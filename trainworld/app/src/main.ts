@@ -81,6 +81,7 @@ import { FareZoneTool } from "./map/fareZoneTool";
 import { bpPicked, clearBpPicked, dropPicked, levelPicked, pickedState, removePicked, selectPicked } from "./game/blueprintPick";
 import { NodeDrag } from "./map/nodeDrag";
 import { EndMarkers } from "./map/endMarkers";
+import { JoinButtons } from "./map/joinButtons";
 import { hoverAbove } from "./map/demandHover";
 import { CapacityMarkers } from "./map/capacityMarkers";
 import { ReversalMarks } from "./map/reversalMarks";
@@ -549,6 +550,7 @@ effect(() => {
 
 const labels = new StationLabels(map.getContainer(), overlay, map);
 fareZoneTool.nameBoxes = () => labels.shownBoxes();
+const joinButtons = new JoinButtons(map, overlay); // T-4048
 effect(() => {
   const w = world.value;
   if (w && !SYNTH) labels.set(w);
@@ -563,6 +565,7 @@ effect(() => {
   if (w && !SYNTH) labels.set(w);
 });
 const capacity = new CapacityMarkers(map.getContainer(), overlay, map);
+joinButtons.nameBoxes = () => [...labels.shownBoxes(), ...capacity.shownBoxes()];
 capacity.demandClick = demandOnTop;
 effect(() => {
   const w = world.value;

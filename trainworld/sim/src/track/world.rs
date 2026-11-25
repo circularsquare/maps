@@ -43,6 +43,10 @@ pub enum Op {
     Split { edge: u32, s: f64, node: u32, new_edge: u32 },
     /// Remove an edge; each line using it is rerouted by the fastest path or left broken.
     DeleteEdge { id: u32 },
+    /// T-4048: set whether two stations are linked by a passage (`Network::links`).
+    Link { pair: [u32; 2], on: bool },
+    /// T-4048: set whether two stations are kept apart from the distance rule (`Network::apart`).
+    Apart { pair: [u32; 2], on: bool },
     Batch(Vec<Op>),
 }
 
@@ -178,6 +182,16 @@ fn op_lines(op: &Op) -> Option<Vec<u32>> {
         Op::TrainCounts { id, .. } | Op::AutoTrains { id, .. } | Op::Weekend { id, .. } | Op::Extra { id, .. } => Some(vec![*id]),
         Op::Batch(v) => v.iter().map(op_lines).collect::<Option<Vec<_>>>().map(|v| v.concat()),
         _ => None,
+    }
+}
+
+/// T-4048: `op` sets only links and separated pairs, each already as it would set it.
+fn pairs_as_set(net: &Network, op: &Op) -> bool {
+    match op {
+        Op::Link { pair, on } => net.links.contains(&[pair[0].min(pair[1]), pair[0].max(pair[1])]) == *on,
+        Op::Apart { pair, on } => net.is_apart(pair[0], pair[1]) == *on,
+        Op::Batch(v) => !v.is_empty() && v.iter().all(|o| pairs_as_set(net, o)),
+        _ => false,
     }
 }
 
@@ -1538,7 +1552,8 @@ impl TrackWorld {
         if redo {
             self.redo.last().is_some_and(|s| only_counts(&s.0 .0))
         } else {
-            self.undo.iter().rev().find(|b| b.again.is_none()).is_some_and(|b| only_counts(&b.step.0))
+            // past the steps an undo drops (`drop_done_steps`)
+            self.undo.iter().rev().filter(|b| b.again.is_none()).find(|b| !pairs_as_set(&self.net, &b.step.0)).is_some_and(|b| only_counts(&b.step.0))
         }
     }
 
@@ -1656,6 +1671,9 @@ impl TrackWorld {
     /// ones made since and makes them all again after the edit, on the state they were made on.
     /// The result covers all of it. On problems nothing changes.
     fn step(&mut self, redo: bool) -> Option<Result<EditResult, Vec<Issue>>> {
+        if !redo {
+            self.drop_done_steps();
+        }
         let base = if redo { self.redo.last()?.1 } else { self.undo.iter().rposition(|b| b.again.is_none())? + 1 };
         let mut all: Option<EditResult> = None;
         let mut again = vec![];
@@ -1694,6 +1712,24 @@ impl TrackWorld {
                 if redo { self.redo.push((step, base, after)) } else { self.undo.push(Back { step, again: None }) }
                 self.make_again(&mut all, again);
                 Some(Err(e))
+            }
+        }
+    }
+
+    /// T-4048: undo steps that would change nothing are dropped, so an undo takes the edit before them: a passage
+    /// removed and then paid for again (`link_stations`, off the history) leaves its removal's undo nothing to do.
+    /// Only links and separated pairs change off the history that way, and only by adding a link, which no redo
+    /// step puts back, so the redo stack needs no such care.
+    fn drop_done_steps(&mut self) {
+        while let Some(i) = self.undo.iter().rposition(|b| b.again.is_none()) {
+            if !pairs_as_set(&self.net, &self.undo[i].step.0) {
+                return;
+            }
+            self.undo.remove(i);
+            for r in &mut self.redo {
+                if r.1 > i {
+                    r.1 -= 1;
+                }
             }
         }
     }
@@ -2226,6 +2262,17 @@ impl TrackWorld {
                 inv = Op::Batch(vec![inv2, inv]);
             }
         }
+        // T-4048: a pair kept apart that the edit took out of joining range is let go in it, so the two brought
+        // near again later join as any two stations do
+        if rerouted && !self.net.apart.is_empty() {
+            let moved = |n: u32| t.nodes.contains(&n) || t.stations.contains(&n) || der.nodes.contains(&n);
+            let far: Vec<Op> = self.net.apart_live().filter(|&[a, b]| (moved(a) || moved(b)) && !self.net.near_enough(a, b)).map(|pair| Op::Apart { pair, on: false }).collect();
+            if !far.is_empty() {
+                if let Ok(inv2) = self.apply_raw(Op::Batch(far)) {
+                    inv = Op::Batch(vec![inv2, inv]);
+                }
+            }
+        }
         Ok((inv, t, der))
     }
 
@@ -2449,7 +2496,22 @@ impl TrackWorld {
         Ok(match op {
             Op::Node { id, data } => Op::Node { id, data: n.set_node(id, data)? },
             Op::Edge { id, data } => Op::Edge { id, data: n.set_edge(id, data)? },
-            Op::Station { node, data } => Op::Station { node, data: n.set_station(node, data)? },
+            Op::Station { node, data } => {
+                let gone = data.is_none();
+                let inv = Op::Station { node, data: n.set_station(node, data)? };
+                // T-4048: a station removed takes its links and separated pairs with it
+                let (links, apart) = if gone { n.take_pairs(node) } else { (vec![], vec![]) };
+                if links.is_empty() && apart.is_empty() {
+                    inv
+                } else {
+                    let mut back = vec![inv];
+                    back.extend(links.into_iter().map(|pair| Op::Link { pair, on: true }));
+                    back.extend(apart.into_iter().map(|pair| Op::Apart { pair, on: true }));
+                    Op::Batch(back)
+                }
+            }
+            Op::Link { pair, on } => Op::Link { pair, on: n.set_pair(false, pair, on) },
+            Op::Apart { pair, on } => Op::Apart { pair, on: n.set_pair(true, pair, on) },
             Op::Line { id, data } => Op::Line { id, data: n.set_line(id, data)? },
             Op::Keep { id, data } => Op::Keep { id, data: n.set_keep(id, data)? },
             Op::TrainCounts { id, trains, tph } => {

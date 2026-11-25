@@ -22,6 +22,8 @@ function soundOf(i: Intent): BuildSound | null {
   switch (i.op) {
     case "stationUpgrade": case "link":
       return i.on ? null : "pop"; // building one sounds when the worker accepts it (afterEditSound)
+    case "separate":
+      return "pop";
     case "stationProps": {
       // a new platform length changes the stop; a new name does not
       const s = world.peek()?.save.stations.find((x) => x.num === i.node);

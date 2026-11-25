@@ -144,7 +144,7 @@ impl Network {
     /// Whether two stations are one complex by distance, as game/complexes.ts `nearEnough` has it:
     /// centres within 100 m, or platforms (drawn centre lines, or the straight segment of the
     /// platform's length along the heading) within 50 m. Levels are ignored.
-    fn near_enough(&self, a: u32, b: u32) -> bool {
+    pub(crate) fn near_enough(&self, a: u32, b: u32) -> bool {
         let (i, j) = (a as usize, b as usize);
         let k = (self.k_at(self.node_y[i]) + self.k_at(self.node_y[j])) / 2.0;
         let d = (self.node_x[i] - self.node_x[j]).hypot(self.node_y[i] - self.node_y[j]);
@@ -165,7 +165,7 @@ impl Network {
     }
 
     /// The stations of station `n`'s complex, `n` first (game/complexes.ts, the rule the map's labels
-    /// and demand's transfers use): linked by distance (`near_enough`), by the player's links (T-197)
+    /// and demand's transfers use): linked by distance (`near_enough`, unless kept apart, T-4048), by the player's links (T-197)
     /// or by touching one station building (T-2217), directly or through others.
     pub fn complex_of(&self, n: u32) -> Vec<u32> {
         if !self.is_station(n) {
@@ -216,7 +216,7 @@ impl Network {
                 }
             }
             for &m in &stations {
-                if !out.contains(&m) && self.near_enough(a, m) {
+                if !out.contains(&m) && self.near_enough(a, m) && !self.is_apart(a, m) {
                     out.push(m);
                 }
             }

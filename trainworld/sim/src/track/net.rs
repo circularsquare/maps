@@ -840,6 +840,10 @@ pub struct Network {
     /// Not part of the undo history (a setting, like fares); a pair whose node is no longer a
     /// station is ignored (`links_live`) and not saved.
     pub links: Vec<[u32; 2]>,
+    /// Stations the player separated (T-4048): node pairs, smaller id first, that the distance rule
+    /// (`near_enough`) does not join; a link or a building still does. In the undo history
+    /// (`Op::Apart`); a pair whose node is no longer a station is ignored (`apart_live`) and not saved.
+    pub apart: Vec<[u32; 2]>,
     /// The station buildings (T-2217, `building.rs`) by id, None where one was removed. Outside the
     /// undo history, like the links; saved in `BLD1`, renumbered densely.
     pub buildings: Vec<Option<super::building::Building>>,

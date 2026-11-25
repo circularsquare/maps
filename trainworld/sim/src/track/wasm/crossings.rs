@@ -528,8 +528,8 @@ impl TrackApi {
     }
 
     /// Remove a station (and its node if no track is left there), as `delete_pieces` does.
-    /// Constructed: final, no refund. Its links (T-197) go with it, and undoing the removal does
-    /// not bring them back.
+    /// Constructed: final, no refund. Its links (T-197) and separated pairs (T-4048) go with it, inside
+    /// the edit, so undoing the removal brings them back.
     pub fn remove_station(&mut self, node: u32) -> u32 {
         if self.w.net.station_data(node).is_none() {
             return self.refuse(Issue::NoSuchNode { node });

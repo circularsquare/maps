@@ -1652,6 +1652,11 @@ button.save-add:hover { color: var(--text); }
 .grabbing, .grabbing * { cursor: grabbing !important; }
 .pi-mark.drag:hover::before { background: var(--tint); }
 .snap-ring { width: 16px; height: 16px; margin: -8px 0 0 -8px; border: 2px solid var(--accent); border-radius: 50%; }
+/* T-4048: a passage's or connection's remove button while a passage is placed (map/joinButtons.ts); hovered, the
+   delete tool's ring round a station about to go */
+.btn.icon.join-x { position: absolute; left: 0; top: 0; width: 18px; min-width: 18px; height: 18px; margin: -9px 0 0 -9px; pointer-events: auto; }
+.btn.icon.join-x svg { width: 12px; height: 12px; }
+.btn.icon.join-x:hover { background: var(--bg); outline: 2px solid var(--accent); outline-offset: 0; }
 /* T-1721: the track tool's point: branching off track, joining it, or running beside it */
 .snap-ring.branch, .snap-ring.join { width: 19px; height: 19px; margin: -9.5px 0 0 -9.5px; border-color: var(--bg); }
 .snap-ring.branch { background: var(--bad); }

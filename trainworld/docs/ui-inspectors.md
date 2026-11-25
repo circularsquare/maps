@@ -981,9 +981,16 @@ selection or a tool stops it. Refused with a notice, still picking: the same sta
 in this complex, one more than 1 km away centre to centre, or a bus stop ("Bus stops can't have passages.", T-4079). At a BRT station the icon's hover has "Saves 1 minute on transfers" under what it does. Between two constructed stations it
 is paid at once (US$10M plus US$90M a km, a notice), else it is built with the second of them.
 "Passages", after the closest stations, lists each passage touching the complex with its two stations,
-their chips, its length and Remove (nothing refunded once built). Only the player's passages can be
-removed: stations the distance rule groups cannot be split. Passages are not in the Ctrl+Z history
-(a setting, like fares); removing a station drops its passages. Demand counts a passage once both
+their chips, its length and Remove (nothing refunded once built). While a passage is being placed, from
+zoom 14, each join the map draws (a passage's or the distance rule's bridge, a BRT station's dashed join)
+has a small cross button (`map/joinButtons.ts`, T-4048): at the join's middle, else moved along it or just
+beside its middle, never over another button, a station's name or a capacity dot, and left out where
+none of those fit; hovered, it takes the delete tool's ring (2 px, the accent). A click removes the join and
+picking goes on: a passage goes (notice "Passage between A and B removed."); a join the distance rule makes
+splits the complex there, every pair the rule links across it kept apart (`cutPairs`; notice "Connection
+between A and B removed."); a passage between stations the rule joins does both. Remove in the list does
+just what the passage's button does. All are free and one Ctrl+Z step each; making a
+passage is not in the Ctrl+Z history (it is paid). Removing a station drops its passages and pairs. Demand counts a passage once both
 stations are constructed.
 
 ## Station buildings

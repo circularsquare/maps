@@ -5,7 +5,8 @@
 // Two stations are linked when their platforms come within PLATFORM_GAP_M of each other, when
 // their centres are within DEMAND_MERGE_M (the distance at which the demand model already counts
 // two stations as one, `station_merge_m` in sim/src/demand/kernel.rs), or when the player linked
-// them. A complex is everything linked, directly or through other stations (single linkage). A
+// them, unless the player separated them (`apart`, T-4048: the distance rule only; a link or building
+// still joins them). A complex is everything linked, directly or through other stations (single linkage). A
 // station on its own is a complex of one. The second rule keeps every demand station inside one
 // complex, so a complex's catchment is the sum of whole demand stations and never counts one twice
 // (workers/demandClient.ts). Demand lets riders change between any two stations of a complex
@@ -34,6 +35,7 @@ export const LINK_MAX_M = 1000;
 export const BOX_TOUCH_M = 16;
 
 type Geo = Pick<StationInput, "id" | "x" | "y" | "heading" | "length" | "line">;
+export const NO_PAIRS: ReadonlySet<string> = new Set();
 
 /** A station's platform as offsets from its node (x, y pairs, world units): its `line`, or the
  * straight segment of its length along its heading. */
@@ -106,11 +108,20 @@ export function segmentGap(p0x: number, p0y: number, p1x: number, p1y: number, q
   return Math.hypot(wx + s * ux - t * vx, wy + s * uy - t * vy);
 }
 
+/** T-4048: a station pair's key in a set of pairs, whichever way round. */
+export const pairKey = (a: StationId, b: StationId): string => (a < b ? `${a}|${b}` : `${b}|${a}`);
+
+/** T-4048: the keys of the pairs the player separated, for `buildComplexes` and `ComplexBuilder`. */
+export function apartKeys(apart: readonly (readonly [StationId, StationId])[]): ReadonlySet<string> {
+  return new Set(apart.map(([a, b]) => pairKey(a, b)));
+}
+
 /** Group stations into complexes; `links` are the player's pairs (a pair naming a station not in
- * the list is ignored). `kAt` is the world frame's metres per ground metre at a world y
+ * the list is ignored), `apart` the pairs the distance rule does not join (`apartKeys`, T-4048).
+ * `kAt` is the world frame's metres per ground metre at a world y
  * (`groundScale` in game/coords.ts; 1 outside the Mercator frame, T-306): platform lengths and
  * the distances above are ground metres. */
-export function buildComplexes(stations: readonly Geo[], links: readonly (readonly [StationId, StationId])[] = [], kAt: (y: number) => number = () => 1): Complexes {
+export function buildComplexes(stations: readonly Geo[], links: readonly (readonly [StationId, StationId])[] = [], kAt: (y: number) => number = () => 1, apart: ReadonlySet<string> = NO_PAIRS): Complexes {
   const n = stations.length;
   const parent = Array.from({ length: n }, (_, i) => i);
   const find = (i: number) => {
@@ -141,7 +152,7 @@ export function buildComplexes(stations: readonly Geo[], links: readonly (readon
           if (j <= i) continue;
           const a = stations[i], b = stations[j];
           const kk = (k[i] + k[j]) / 2;
-          if (!nearEnough(a, pts[i], seg[i], b, pts[j], seg[j], kk)) continue;
+          if (!nearEnough(a, pts[i], seg[i], b, pts[j], seg[j], kk) || (apart.size && apart.has(pairKey(a.id, b.id)))) continue;
           const ra = find(i), rb = find(j);
           if (ra !== rb) parent[Math.max(ra, rb)] = Math.min(ra, rb);
         }

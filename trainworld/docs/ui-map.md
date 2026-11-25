@@ -508,7 +508,7 @@ number) and shows n as its symbol.
   then every white, so overlapping dots have one outline. Dots that do not touch are joined by a
   **connector**: a straight band centre to centre with the dots' rim along both sides and white 30%
   of an ordinary dot's white radius either side of its middle, drawn in the same passes, so dots
-  and connectors are one white shape. Connectors join the stations the complex distance rule groups
+  and connectors are one white shape. Connectors join the stations the complex distance rule groups (less pairs the player kept apart, T-4048)
   (`dotGroups` in `game/complexView.ts`) by the shortest set of joins, and each player link between
   two groups [T-225]. A connector is blue like a blueprint station when either station is a blueprint. A BRT
   station's joins with no passage are none of these: the bus layer dashes them (above, T-4079).

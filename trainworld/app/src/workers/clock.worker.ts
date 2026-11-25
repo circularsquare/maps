@@ -1075,7 +1075,7 @@ async function handleMessage(msg: ToClock) {
       // T-3758: a line's fare mode changes no train's run, yet demand reads it; T-3892: nor need a boat size (its riders, fares);
       // T-3915: nor BRT on a route with no road in town (its fares); T-3944: which a Construct turns on
       const brtOn = (op.op === "constructLine" || op.op === "constructAll" || op.op === "construct") && charge > 0;
-      if (demand.length || op.op === "undo" || op.op === "redo" || op.op === "lineFareDist" || op.op === "ferryBoat" || op.op === "busBrt" || brtOn || stationsKey() !== snapStations) scheduleSnapshot();
+      if (demand.length || op.op === "undo" || op.op === "redo" || op.op === "separate" || op.op === "lineFareDist" || op.op === "ferryBoat" || op.op === "busBrt" || brtOn || stationsKey() !== snapStations) scheduleSnapshot();
       if (!answered) { answered = true; answer(); }
       keep();
       // Paid for something: keep it (T-029, autosave on construct).

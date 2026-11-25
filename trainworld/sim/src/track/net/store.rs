@@ -159,6 +159,7 @@ impl Network {
             stops: Pool::default(),
             paths: Pool::default(),
             links: vec![],
+            apart: vec![],
             buildings: vec![],
             keeps: vec![],
             keep_free: vec![],
@@ -321,6 +322,36 @@ impl Network {
         let n = self.links.len();
         self.links.retain(|&q| q != p);
         self.links.len() != n
+    }
+    /// T-4048: the separated pairs (`apart`) whose two ends are both stations now.
+    pub fn apart_live(&self) -> impl Iterator<Item = [u32; 2]> + '_ {
+        self.apart.iter().copied().filter(|&[a, b]| self.is_station(a) && self.is_station(b))
+    }
+    /// T-4048: whether the distance rule is kept from joining stations `a` and `b`.
+    pub fn is_apart(&self, a: u32, b: u32) -> bool {
+        !self.apart.is_empty() && self.apart.contains(&[a.min(b), a.max(b)])
+    }
+    /// T-4048: set whether `pair` is a link (`apart` false) or a separated pair (true); what it was.
+    pub fn set_pair(&mut self, apart: bool, pair: [u32; 2], on: bool) -> bool {
+        let p = [pair[0].min(pair[1]), pair[0].max(pair[1])];
+        let list = if apart { &mut self.apart } else { &mut self.links };
+        let was = list.contains(&p);
+        if on && !was && p[0] != p[1] {
+            list.push(p);
+        } else if !on && was {
+            list.retain(|&q| q != p);
+        }
+        was
+    }
+    /// T-4048: the links and separated pairs naming station `n`, taken off (a station removed takes
+    /// them with it inside its edit, so its undo brings them back and a node id used again starts clean).
+    pub fn take_pairs(&mut self, n: u32) -> (Vec<[u32; 2]>, Vec<[u32; 2]>) {
+        let named = |p: &[u32; 2]| p[0] == n || p[1] == n;
+        let links: Vec<[u32; 2]> = self.links.iter().copied().filter(named).collect();
+        let apart: Vec<[u32; 2]> = self.apart.iter().copied().filter(named).collect();
+        if !links.is_empty() { self.links.retain(|p| !named(p)); }
+        if !apart.is_empty() { self.apart.retain(|p| !named(p)); }
+        (links, apart)
     }
 
     /// A free node id for a new node (claimed when the op adding it is applied).

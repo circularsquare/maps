@@ -84,6 +84,22 @@ fn the_service_span_prices_stops_with_no_train_due() {
     assert_eq!(api.same, (1 << PERIODS) - 1 - 2);
 }
 
+/// T-4048: stations within the merge distance are one demand station, unless the player separated them.
+#[test]
+fn separated_stations_are_never_merged() {
+    let xy = [0.0, 0.0, 50.0, 0.0, 90.0, 0.0];
+    let (_, _, map) = merge_stations(&xy, &[0], &[], 100.0, &[]);
+    assert_eq!(map, vec![0, 0, 0]);
+    let (_, _, map) = merge_stations(&xy, &[0], &[], 100.0, &[1, 0, 2, 0]);
+    assert_eq!(map, vec![0, 1, 1], "0 kept from both; 1 and 2 still one");
+    // a third station within the merge distance of both (a bus stop between them, say) takes one of them, not both
+    let xy = [0.0, 0.0, 80.0, 0.0, 40.0, 0.0];
+    let (_, _, map) = merge_stations(&xy, &[0], &[], 100.0, &[]);
+    assert_eq!(map, vec![0, 0, 0]);
+    let (_, _, map) = merge_stations(&xy, &[0], &[], 100.0, &[0, 1]);
+    assert_eq!(map, vec![0, 1, 0], "the station between goes with the first, the other stays apart");
+}
+
 /// T-161: snapshot complexes carried to demand stations; a demand station in two complexes
 /// joins them; a list of the wrong length means none.
 #[test]
