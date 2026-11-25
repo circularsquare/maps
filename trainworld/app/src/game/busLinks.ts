@@ -229,12 +229,14 @@ export function busPlaces(w: WorldView): BusPlaces {
 export function brtJoins(w: WorldView, groups: readonly (readonly string[])[]): [StationInput, StationInput][] {
   const byId = new Map(w.save.stations.map((s) => [s.id, s]));
   const passage = new Set(w.save.links.map(([a, b]) => (a < b ? `${a}|${b}` : `${b}|${a}`)));
+  // T-4260: a separated pair is no join of the complex's tree
+  const apart = new Set((w.save.apart ?? []).map(([a, b]) => (a < b ? `${a}|${b}` : `${b}|${a}`)));
   const out: [StationInput, StationInput][] = [];
   for (const ids of groups) {
     const m = ids.map((id) => byId.get(id)).filter((s) => s !== undefined);
     if (m.length < 2 || !m.some((s) => s.brt)) continue;
     const joins: [number, number, number][] = [];
-    for (let a = 0; a < m.length; a++) for (let b = a + 1; b < m.length; b++) joins.push([groundM([m[a].lng, m[a].lat], [m[b].lng, m[b].lat]), a, b]);
+    for (let a = 0; a < m.length; a++) for (let b = a + 1; b < m.length; b++) if (!apart.has(m[a].id < m[b].id ? `${m[a].id}|${m[b].id}` : `${m[b].id}|${m[a].id}`)) joins.push([groundM([m[a].lng, m[a].lat], [m[b].lng, m[b].lat]), a, b]);
     joins.sort((p, q) => p[0] - q[0]);
     const up = m.map((_, i) => i);
     const top = (i: number): number => (up[i] === i ? i : (up[i] = top(up[i])));

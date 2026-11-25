@@ -837,10 +837,13 @@ export function syncGroups(rnd: NetworkRenderer, n: NetworkBuffers, groups: Stat
     const index = new Map(n.stationIds.map((id, i) => [id, i]));
     // T-4079: a BRT station's joins with no passage are the bus layer's dashed lines (`brtJoins`)
     brt = new Set((world.peek()?.save.stations ?? []).filter((s) => s.brt).map((s) => s.id));
+    // T-4260: no connector across a pair the player separated
+    const apart = new Set((world.peek()?.save.apart ?? []).map(([a, b]) => (a < b ? `${a}|${b}` : `${b}|${a}`)));
     groups.members.forEach((ids, k) => {
       const m = ids.map((id) => index.get(id)).filter((i): i is number => i !== undefined);
       for (const i of m) groupOf[i] = k;
-      for (const [a, b] of spanningPairs(m.map(mid))) if (!brt.has(n.stationIds[m[a]]) && !brt.has(n.stationIds[m[b]])) pairs.push(m[a], m[b]);
+      const sep = (a: number, b: number) => { const x = n.stationIds[m[a]], y = n.stationIds[m[b]]; return apart.has(x < y ? `${x}|${y}` : `${y}|${x}`); };
+      for (const [a, b] of spanningPairs(m.map(mid), apart.size ? sep : undefined)) if (!brt.has(n.stationIds[m[a]]) && !brt.has(n.stationIds[m[b]])) pairs.push(m[a], m[b]);
     });
   }
   const idx = n.stationLinkIdx;

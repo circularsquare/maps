@@ -611,12 +611,12 @@ async function loadMasks(ids: string[]) {
 async function masksBeforeLoad(net: Uint8Array) {
   askedAtLoad = new Set();
   if (trackFrameKind(net) !== NEW_GAME_FRAME.kind) return;
-  const pts = TrackApi.save_points(net);
-  if (!pts.length) return; // undecodable: the load says so
+  const pts = TrackApi.save_points(net), busPts = TrackApi.save_bus_points(net);
+  if (!pts.length && !busPts.length) return; // undecodable: the load says so (T-4260: a save of bus lines alone has no rail points)
   const shown = frame;
   putFrame(makeFrame(NEW_GAME_FRAME));
   const missing = zonesOfPoints(pts).filter((id) => !masksIn.has(id));
-  const streets = zonesOfPoints(TrackApi.save_bus_points(net)).filter((id) => !streetsIn.has(id));
+  const streets = zonesOfPoints(busPts).filter((id) => !streetsIn.has(id));
   putFrame(shown);
   if (!missing.length && !streets.length) return;
   for (const id of missing) askedAtLoad.add(id);

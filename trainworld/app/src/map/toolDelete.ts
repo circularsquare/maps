@@ -40,7 +40,7 @@ export function deletePick(tk: Tools, px: number, py: number): (Removable & { lx
   }
   // T-4214: a station placed since the drawn network was built has no box yet; the patched world has its node
   for (const node of w.nodes.values()) {
-    if (!(node.platform > 0) || node.bus || node.port) continue;
+    if (!(node.platform > 0) || node.bus || node.port || tk.overlay.renderer.stationStyle.hidden) continue; // (hidden stations are never picked, T-205, T-4260)
     const [lx, ly] = toLocal(node.lng, node.lat);
     const d = near(lx, ly, 12);
     if (d < best && !n.stationIds.some((id) => Number(id) === node.id)) [best, hit] = [d, { kind: "station", node: node.id, lx, ly }];

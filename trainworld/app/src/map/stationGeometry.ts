@@ -574,8 +574,9 @@ export function bridgeEnds(ax: number, ay: number, sa: PlatformShape, bx: number
 
 /** The shortest set of straight joins linking every point (x, y pairs): a minimum spanning tree,
  * as index pairs (T-313: zoomed out, the connectors between a complex's dots). Prim's, O(n²); fine
- * for the tens of stations of a complex. */
-export function spanningPairs(p: [number, number][]): [number, number][] {
+ * for the tens of stations of a complex. `skip` (T-4260): pairs that may not be joined (the player separated them);
+ * a point only they reach starts a tree of its own. */
+export function spanningPairs(p: [number, number][], skip?: (a: number, b: number) => boolean): [number, number][] {
   const n = p.length, out: [number, number][] = [];
   if (n < 2) return out;
   const best = new Float64Array(n).fill(Infinity), from = new Int32Array(n), done = new Uint8Array(n);
@@ -585,12 +586,12 @@ export function spanningPairs(p: [number, number][]): [number, number][] {
     let next = -1;
     for (let j = 0; j < n; j++) {
       if (done[j]) continue;
-      const d = Math.hypot(p[j][0] - p[cur][0], p[j][1] - p[cur][1]);
+      const d = skip?.(cur, j) ? Infinity : Math.hypot(p[j][0] - p[cur][0], p[j][1] - p[cur][1]);
       if (d < best[j]) [best[j], from[j]] = [d, cur];
       if (next < 0 || best[j] < best[next]) next = j;
     }
     done[next] = 1;
-    out.push([from[next], next]);
+    if (best[next] < Infinity) out.push([from[next], next]);
     cur = next;
   }
   return out;

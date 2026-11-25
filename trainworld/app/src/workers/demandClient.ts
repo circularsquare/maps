@@ -2918,7 +2918,9 @@ class DemandClient {
     if (!this.cacheOn || !this.cacheWrites || !slots.writable || !slots.active) return skip("off");
     const days = demandByDay.peek();
     if (days.some((d) => d.view?.version !== s.version)) return skip("days");
-    const local = !!s.endLocal && !!s.localHeld?.slice(0, this.computeN).some(Boolean);
+    // (T-4260: held local whether or not this solve ended local: another city's whole solve leaves the figures of one an
+    // edit left local as they are)
+    const local = !!s.localHeld?.slice(0, this.computeN).some(Boolean);
     const t0 = performance.now();
     const canon = canonical(s.svc), sent = s.sent ?? s;
     const stored = toStored(days, sent.cities, canon);
@@ -2930,7 +2932,7 @@ class DemandClient {
     const lk = this.loadKey;
     const ahead = lk?.snapshot && lk.svcKey === keyOf(s.svc) ? { save: lk.key, snapshot: lk.snapshot } : null;
     // the result shown at load is the same one, unless it can now add its bubbles or its network, or it stood in (T-4202)
-    if (hash === this.cachedHash && !this.cachedStandIn && (!this.cachedLocal || local) && (this.cachedModes || !cm) && (!ahead || this.cachedAhead === ahead.save)) return skip("same");
+    if (hash === this.cachedHash && !this.cachedStandIn && this.cachedLocal === local && (this.cachedModes || !cm) && (!ahead || this.cachedAhead === ahead.save)) return skip("same");
     const modes = cm && { city, data: concat([cm.homeRail, cm.homeWalk, cm.homeDrive, cm.workRail, cm.workWalk, cm.workDrive, cm.homeNone, cm.workNone]), ...(m!.day ? { day: m!.day } : {}) };
     const ms = performance.now() - t0;
     const bytes = storedSize(stored) + (modes?.data.byteLength ?? 0);
@@ -5798,7 +5800,11 @@ class DemandClient {
   private solveDone(s: Solve) {
     if (s !== this.cur) return;
     if (!s.localHeld?.slice(0, this.computeN).some(Boolean)) this.localEdits = 0;
-    else if (s.endLocal) this.localEdits++;
+    else {
+      if (s.endLocal) this.localEdits++;
+      // (T-4260: the final result may have been kept before this `done` said it holds local figures)
+      if (!this.cachedLocal && !this.waiting) void this.writeCache(s);
+    }
     this.refreshSoon();
   }
 
@@ -5813,9 +5819,9 @@ class DemandClient {
    * trips while paused" off waits for it to run, as an edit does (T-3427) */
   private refreshNow() {
     const s = this.cur;
-    if (!this.localEdits) return;
-    // (a network held, the clock held or a failed solve passes: try again, as a pause below does)
-    if (!s || s.published < ROUNDS || s.rough || this.waiting || this.hold || this.failed || (!display.peek().recalcWhilePaused && !clock.running.peek())) { this.refreshTimer = setTimeout(() => this.refreshNow(), REFRESH_IDLE_MS); return; }
+    if (!this.localEdits || this.failed) return; // (T-4260: a failed pool does not recover, so there is nothing to wait for)
+    // (a network held or the clock held passes: try again, as a pause below does)
+    if (!s || s.published < ROUNDS || s.rough || this.waiting || this.hold || (!display.peek().recalcWhilePaused && !clock.running.peek())) { this.refreshTimer = setTimeout(() => this.refreshNow(), REFRESH_IDLE_MS); return; }
     this.dispatch(s.svc, performance.now(), true);
   }
 

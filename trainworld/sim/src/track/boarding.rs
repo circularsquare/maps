@@ -511,6 +511,10 @@ pub struct Boarding {
     /// per kind of day, per line id
     pub riders: [Vec<Option<LineRiders>>; DAY_KINDS],
     generation: [u64; DAY_KINDS],
+    /// T-4260: per kind of day and line, an account dropped because its line stopped being drawable (paused, track broken,
+    /// a stop added). `ensure_service_some` makes it again once the line is back (an undo, an unpause); an account never made
+    /// yet is left to `ensure_some`.
+    lost: [Vec<bool>; DAY_KINDS],
     pub accounts: [Vec<Option<LineAccount>>; DAY_KINDS],
     /// lines worked out again since `take_redone`
     redone: usize,
@@ -657,6 +661,7 @@ impl Boarding {
             self.generation[d] += 1;
             self.riders[d].clear();
             self.accounts[d].clear();
+            self.lost[d].clear();
         }
         self.masks.clear();
         self.xfer.clear();
@@ -810,6 +815,7 @@ impl Boarding {
         for day in 0..DAY_KINDS {
             self.accounts[day].resize(nl, None);
             self.accounts[day].truncate(nl);
+            self.lost[day].resize(nl, false);
         }
         // T-2699: the scan goes on from where the last call stopped, wrapping round, so a round of
         // steps hashes each line about once (from the start every call it hashed lines squared);
@@ -826,7 +832,9 @@ impl Boarding {
             let lr = self.riders[day].get(l).and_then(|r| r.as_ref());
             let ok = ls.running && l < net.line_count() && lr.map_or(false, |r| r.n == ls.stops.len() && r.n >= 2);
             if !ok {
-                self.accounts[day][l] = None;
+                if self.accounts[day][l].take().is_some() {
+                    self.lost[day][l] = true;
+                }
                 continue;
             }
             let base = *svc_key[l].get_or_insert_with(|| Self::key(net, svc, l));
@@ -837,7 +845,7 @@ impl Boarding {
             };
             match &self.accounts[day][l] {
                 Some(a) if a.key == key || (service_only && a.base == base) => continue,
-                None if service_only => continue,
+                None if service_only && !self.lost[day][l] => continue,
                 _ => {}
             }
             if done == max_lines {
@@ -866,6 +874,7 @@ impl Boarding {
                 if a.leftover > 0.5 { simulate_with(net, svc, l, r, lr, &self.peak, true, m, row) } else { a }
             });
             self.made += 1;
+            self.lost[day][l] = false;
             self.accounts[day][l] = Some(LineAccount { key, base, id: self.made, shift: ls.shift, runs });
             self.redone += 1;
         }

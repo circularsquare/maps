@@ -1535,7 +1535,8 @@ impl TrackWorld {
     }
 
     pub fn can_undo(&self) -> bool {
-        self.undo.iter().any(|b| b.again.is_none())
+        // T-4260: not counting the steps an undo drops (`drop_done_steps`), which would leave the button on for nothing
+        self.undo.iter().any(|b| b.again.is_none() && !pairs_as_set(&self.net, &b.step.0))
     }
     pub fn can_redo(&self) -> bool {
         !self.redo.is_empty()

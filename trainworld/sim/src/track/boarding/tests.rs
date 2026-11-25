@@ -411,6 +411,26 @@ fn an_edits_steps_leave_new_riders_to_the_steps_after_them() {
     assert_eq!(bits(&kept), bits(&b.hour(&w.net, &w.svc, t)));
 }
 
+/// T-4260: a line paused or broken loses its account in an edit's steps; undoing that (or unpausing) must make it again
+/// at once, not leave it empty until new riders' steps reach it.
+#[test]
+fn an_undone_edit_gets_its_account_back_at_once() {
+    let bits = |v: &[f32]| v.iter().map(|x| x.to_bits()).collect::<Vec<_>>();
+    let (mut w, l) = setup(10.0);
+    let mut b = Boarding::default();
+    b.set_riders(&riders(l, [500.0, 200.0, 500.0, 200.0, 50.0]));
+    b.ensure(&w.net, &w.svc);
+    let t = 2.0 * DAY + 8.0 * 3600.0;
+    let before = b.hour(&w.net, &w.svc, t);
+    w.svc.lines[l as usize].running = false;
+    assert!(!b.ensure_service_some(&w.net, &w.svc, usize::MAX));
+    assert!(b.accounts[0][l as usize].is_none(), "a paused line has no account");
+    w.svc.lines[l as usize].running = true;
+    assert!(b.ensure_service_some(&w.net, &w.svc, 0), "the line is back and owes its account");
+    assert!(!b.ensure_service_some(&w.net, &w.svc, usize::MAX));
+    assert_eq!(bits(&b.hour_kept(&w.net, &w.svc, t)), bits(&before), "its loads, not empty ones");
+}
+
 #[test]
 fn period_totals_match_demand_with_the_busiest_hour_shapes() {
     let (w, l) = setup(12.0);

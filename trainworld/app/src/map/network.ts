@@ -413,7 +413,7 @@ export function lineDrawOrder<L extends { id: number; lengthM: number; trains: A
  * while its members, their station pieces (`NetCache.stations`, which hold their platform lines),
  * places and passages stay; a complex's joins depend on those alone, the player's passages joining
  * members of one complex (else everything is worked out again). */
-function complexPassages(st: readonly { id: number; lat: number }[], stations: Float32Array, stationLine: Float32Array, complexOf: ArrayLike<number>, links: readonly number[], pieces?: readonly object[], cache?: NetCache["passages"]): number[] {
+function complexPassages(st: readonly { id: number; lat: number }[], stations: Float32Array, stationLine: Float32Array, complexOf: ArrayLike<number>, links: readonly number[], pieces?: readonly object[], cache?: NetCache["passages"], apartIds: readonly number[] = []): number[] {
   const groups = new Map<number, number[]>();
   st.forEach((n, i) => {
     const c = complexOf[n.id];
@@ -434,6 +434,17 @@ function complexPassages(st: readonly { id: number; lat: number }[], stations: F
       else linksIn.set(c, [links[k], links[k + 1]]);
     }
   }
+  // T-4260: pairs the player separated are no join of a complex's tree (one rejoined another way would draw a bridge
+  // across them that no button can remove); per complex, so its cached joins stay for the same pairs
+  const cutIn = new Map<number, number[]>(), cut = new Set<string>();
+  for (let k = 0; k + 1 < apartIds.length; k += 2) {
+    const x = apartIds[k], y = apartIds[k + 1], c = complexOf[x];
+    if (c === undefined || c === 0xffffffff || c !== complexOf[y]) continue;
+    cut.add(x < y ? `${x}|${y}` : `${y}|${x}`);
+    const v = cutIn.get(c);
+    if (v) v.push(x, y);
+    else cutIn.set(c, [x, y]);
+  }
   if (apart || !pieces || !cache) cache = undefined;
   const parent = Int32Array.from({ length: st.length }, (_, i) => i);
   const find = (i: number) => {
@@ -447,11 +458,11 @@ function complexPassages(st: readonly { id: number; lat: number }[], stations: F
   const seen: NetCache["passages"] = new Map();
   for (const [c, m] of groups) {
     if (m.length < 2) continue;
-    const ln = linksIn.get(c) ?? [];
+    const ln = linksIn.get(c) ?? [], ct = cutIn.get(c) ?? [];
     let hit: PassageEntry | undefined;
     if (cache) {
       const e = cache.get(st[m[0]].id);
-      if (e && e.ids.length === m.length && e.links.length === ln.length && m.every((i, a) => e.ids[a] === st[i].id && e.pieces[a] === pieces![i] && e.xy[a * 2] === stations[i * 3] && e.xy[a * 2 + 1] === stations[i * 3 + 1]) && ln.every((i, k) => e.links[k] === st[i].id)) hit = e;
+      if (e && e.ids.length === m.length && e.links.length === ln.length && e.cut.length === ct.length && e.cut.every((x, k) => x === ct[k]) && m.every((i, a) => e.ids[a] === st[i].id && e.pieces[a] === pieces![i] && e.xy[a * 2] === stations[i * 3] && e.xy[a * 2 + 1] === stations[i * 3 + 1]) && ln.every((i, k) => e.links[k] === st[i].id)) hit = e;
     }
     if (hit) {
       for (const a of hit.joins) out.push(m[a]);
@@ -469,7 +480,7 @@ function complexPassages(st: readonly { id: number; lat: number }[], stations: F
         if (Math.hypot(ix - jx, iy - jy) > reach[a] + reach[b] + DEMAND_MERGE_M * perM) continue;
         const gap = polylineGap(ix, iy, line(i), jx, jy, line(j));
         if (gap <= BOX_TOUCH_M * perM) union(i, j);
-        else joins.push([gap, i, j]);
+        else if (!cut.has(st[i].id < st[j].id ? `${st[i].id}|${st[j].id}` : `${st[j].id}|${st[i].id}`)) joins.push([gap, i, j]);
       }
     joins.sort((p, q) => p[0] - q[0] || p[1] - q[1] || p[2] - q[2]);
     for (const [, i, j] of joins) if (find(i) !== find(j)) { union(i, j); out.push(i, j); }
@@ -477,7 +488,7 @@ function complexPassages(st: readonly { id: number; lat: number }[], stations: F
       const pos = new Map(m.map((i, a) => [i, a]));
       seen.set(st[m[0]].id, {
         ids: m.map((i) => st[i].id), pieces: m.map((i) => pieces![i]), xy: m.flatMap((i) => [stations[i * 3], stations[i * 3 + 1]]),
-        links: ln.map((i) => st[i].id), joins: out.slice(from).map((i) => pos.get(i)!),
+        links: ln.map((i) => st[i].id), cut: ct, joins: out.slice(from).map((i) => pos.get(i)!),
       });
     }
   }
@@ -489,7 +500,7 @@ function complexPassages(st: readonly { id: number; lat: number }[], stations: F
 }
 /** a complex's joins as last worked out (`complexPassages`): its members' ids, station pieces and
  * places, its passages' station ids in pairs, and the joins as member positions in pairs */
-interface PassageEntry { ids: number[]; pieces: object[]; xy: number[]; links: number[]; joins: number[] }
+interface PassageEntry { ids: number[]; pieces: object[]; xy: number[]; links: number[]; cut: number[]; joins: number[] }
 
 /** each line row's edges, once each, over its whole plan as it is drawn (T-3474) */
 const edgesOfRow = new WeakMap<object, number[]>();
@@ -2641,7 +2652,7 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
     linkEnds.push(...bridgeEnds(stations[i * 3], stations[i * 3 + 1], shapeAt(i), stations[j * 3], stations[j * 3 + 1], shapeAt(j)));
   }
   if (s.complexOf) {
-    const auto = complexPassages(st, stations, stationLine, s.complexOf, linkIdx, st.map((n) => stationsSeen.get(n.id)!), cache.passages);
+    const auto = complexPassages(st, stations, stationLine, s.complexOf, linkIdx, st.map((n) => stationsSeen.get(n.id)!), cache.passages, s.apart);
     for (let k = 0; k + 1 < auto.length; k += 2) {
       const i = auto[k], j = auto[k + 1];
       // T-4079: a BRT station's join with no passage is the bus layer's dashed line (`brtJoins`)

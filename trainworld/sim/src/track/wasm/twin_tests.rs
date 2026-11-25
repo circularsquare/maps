@@ -240,6 +240,23 @@ fn t4048_an_undo_passes_a_removal_a_new_passage_undid() {
     assert_eq!(a.station_links().len(), 2);
 }
 
+/// T-4260: with only that removal on the history, there is nothing to undo once its passage is paid for again.
+#[test]
+fn t4260_no_undo_is_offered_for_a_removal_a_new_passage_undid() {
+    let (mut a, _, stops) = quad_line();
+    let far = station(&mut a, 2400.0, QUAD_SPACING, "x");
+    assert_eq!(a.link_stations(stops[1], far), 0, "{}", a.issues());
+    // a load starts with no history
+    let bytes = a.save();
+    let mut a = TrackApi::new(-73.985, 40.758, true);
+    assert!(a.load(&bytes));
+    assert!(!a.w.can_undo());
+    assert_eq!(a.separate(stops[1], far, &[]), 0, "{}", a.issues());
+    assert!(a.w.can_undo(), "the removal can be undone");
+    assert_eq!(a.link_stations(stops[1], far), 0, "{}", a.issues());
+    assert!(!a.w.can_undo(), "its passage is back: nothing to undo");
+}
+
 /// T-4048: a separated pair that a move takes out of joining range is let go in that move (its undo keeps the
 /// pair); brought near again, the two join as any two stations do. A move that keeps them near keeps them apart.
 #[test]
