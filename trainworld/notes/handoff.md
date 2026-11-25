@@ -1,19 +1,19 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 74ece160-7d1e-4a7f-a351-88b3554e0a77, name maps-13 [f879aa], since 2026-11-25 07:18 UTC
-Updated: 2026-11-25 10:25 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-25 10:47 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
 0. Usage: Gemini's weekly quota ran out 10:24 UTC 11-25, back about 12-01 03:30 UTC (ask a-2026-11-25-6: upgrade?);
    meanwhile reviews and small code go to Sonnet. Stay light; review findings go to fix agents unread. Overnight: 2-4 agents.
-1. Edit speed, her main focus: ROOT CAUSE ONLY (DECISIONS T-4097, notes/repeats.md). T-4281 stage 2 landed 800843cf0:
-   Asia later clicks 144-360 ms (were 618-2,156; first 212); questions no longer force a pending follow-up whole.
-   Running: benchwhy (Opus, T-4293: NYC edit_bench rows rose over tonight's landings, station built 188 to 587-910 ms;
-   real, which landing, or noise; and whether pagestage3's held tree, T-4284 stage 3, is fit to land). Next, after
-   pagestage3 is settled (clockClient overlap): T-4291 (rows and post by what an edit touched, about 144 ms on Asia),
-   which also covers T-4149's rest. On her yes to a-2026-11-25-4: T-4272 rest (the train work before each answer).
-   Not edit speed: T-4080 s3 landed (bus stop names, c035); keepfix2 (Sonnet) on its s1-2 review fixes; then s6 labels.
+1. Edit speed, her main focus: ROOT CAUSE ONLY (DECISIONS T-4097, notes/repeats.md). Asia: later clicks 144-360 ms
+   (T-4281 s2), network build 190 ms (T-4153 s7), page 27 ms placed / 45 removed (T-4150 s2, T-4284 s3, all landed).
+   NYC "slower" was noise (T-4293: trees' lone samples are cold first edits; edit_bench now compares first with first).
+   editbench/baseline.json is 11-24's: take a fresh --baseline on master on a quiet machine. Next: T-4291 (rows and
+   post by what an edit touched, about 144 ms on Asia), which also covers T-4149's rest; T-4294 (Edit stops clicks
+   sending a question and no edit, P2). On her yes to a-2026-11-25-4: T-4272 rest (train work before each answer).
+   Not edit speed: T-4080 s3 and review fixes landed (36ebd2710); s6 labels next.
 2. aside6 (Opus, T-4220 stage 6, start and batch side jobs in play; results shown at stage 7). Stage 5 landed 4f27fcda6
    (checks/t4220-aside-equal.mjs: exact). Gemini batch18 review running done; fixes18 (Opus, T-4297) on it (finds in
    aside6's or keepfix's files come under "For ..." in its notes: pass them on). Briefs: my scratch <agent>/brief.md.

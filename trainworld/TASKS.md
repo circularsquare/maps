@@ -210,10 +210,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4281 stage 2: after any edit the worker reads every edge, node and line again for the rows (about 120 ms in Node on your Asia save) and the post compares every row and network array (about 24 ms), since each state carries whole lists that the network and the post compare.
   - Goal: Rows and post cost what the edit touched, the drawn network fed the same changes; under 20 ms together on Asia.
   - Other: notes/T-4281.md "Stage 2"
-- T-4293 [P1] {L:edit-speed} New York edit timings rose over tonight's landings (taking, 2026-11-25, agent benchwhy)
-  - Context: Tonight's edit_bench New York runs in agents' trees (DEV builds, one sample per action) read slower than master's 11-24 baseline: station built 188 to 340-614 ms, undo 133 to 612, stop reorder 168 to 457-538. pagestage3's tree: four shows rows at 46-83 ms against under 20 before.
-  - Goal: The cause named with the step and the code, fixed or filed; or shown to be noise.
-  - Other: notes/T-4293.md
+- T-4294 [P2] {L:stops} Stop clicks in Edit stops that send no edit
+  - Context: In 2 of 3 edit_bench New York runs on 11-25 (master 80cff39c2, pagestage3's tree), all six clicks on line 2's middle stop in Edit stops sent a question and no edit; the third run (800843cf0) and earlier runs took them. Cause not found: a missed press or a stop marker read as cut off.
+  - Goal: Cause found; a click on a line's own stop in Edit stops always takes it out or adds it, and edit_bench samples every stop click.
+  - Other: notes/T-4293.md "Stop clicks"
 - T-4272 [P1] {L:edit-speed} {waits:Anita} A click confirmed from what it touches
   - Need from Anita: A station on a running line's track can make headway lines need more trains. Buy them right after the confirm, cash dipping below zero if short? I'd say yes
   - Context: Stations and deletes on track no running line uses now skip the train work before their answer (16-72 ms of worker time on your Asia save; answers 95-207 ms in a run). On a running line's track they still wait 0.15-0.6 s for the trains they need.
@@ -303,9 +303,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4052 (11-24): the line hover's "riders who wanted a bus" is carried plus left behind, so a rider who boards a later bus counts twice (rail too). Fix: count everyone who came to the stops; shifts the issues row's 3% threshold a little.
   - Goal: The hover's share left behind counts each rider once.
   - Other: notes/T-4052.md
-- T-4080 [P2] {L:buses} Name and rename bus stops (taking, 2026-11-25, agent keepfix2)
-  - Context: Design approved 11-24 (named stops stay put, labels at street zoom). Stages 1-3 done 11-25: a bus stop's name is set in its panel, saved, and shown in its hover, stop lists and timetables. Left: the review's sim fixes, map labels; connections are T-4083. Your scratch pad, 11-23: "people keep requesting to be able to rename / name bus stops."
-  - Goal: Named bus stops labelled on the map at street zoom, with the stages 1-2 review's fixes in.
+- T-4080 [P2] {L:buses} Name and rename bus stops
+  - Context: Design approved 11-24 (named stops stay put, labels at street zoom). Stages 1-3 done 11-25: a bus stop's name is set in its panel, saved, and shown in its hover, stop lists and timetables. Left: map labels; connections are T-4083. Your scratch pad, 11-23: "people keep requesting to be able to rename / name bus stops."
+  - Goal: Named bus stops labelled on the map at street zoom.
   - Other: notes/T-4080-design.md (about 6 h in six stages, 4 left; also covers T-4083); notes/T-4080.md
 - T-4049 [P3] {L:achievements} Cities served counts only busy cities
   - Context: Your scratch pad, 11-22: "for "cities served" count for like achievements, lets only coutn cities with like >1000 rides or something".
