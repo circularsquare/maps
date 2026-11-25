@@ -10,10 +10,11 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
 2. Landed 11-25: T-4348, T-4351, T-4337, T-4349 (labels only; T-4356 filed), T-4354 (all 12 languages at 3303/3303;
    one pass plus own back-translation, my call; publish skill step 4 now translates missing and stale keys), T-4357
    (her "slowest limit"), T-4272 stage 2 and T-4339 (566aa52a5; review31 passed; T-4358 filed; T-4272 stays open
-   for its 100 ms goal). 8800 at 566aa52a; smoke on master running (scratchpad smoke2.log). No agents running.
-3. When she's back from her game (her 11-25 ~15:00): the quiet machine's `edit_bench.mjs --save asia,nyc --baseline`
-   (notes/T-4293.md), nothing else running; then edit-speed stages two at a time, biggest first: T-4149 s3 (Asia rows
-   266 ms a station, goal 100), T-4153 (cut stretch), then T-4281, T-4309, T-4314/T-4315. Up next: T-3160, T-3838.
+   for its 100 ms goal). 8800 at 566aa52a; smoke passed there (30 checks). No agents running.
+3. Edit bench baseline on master 65f0134b (11-25 20:31 UTC, quiet): Asia station built 341 ms, click run later 100;
+   NYC station 76. Running (Opus): rows3 (tree rows3, 6148, T-4149 s3: moved lines sampled from where they differ)
+   and netcut9 (tree netcut9, 6149, T-4153 s9: cut lines' bands near the cut). Next: T-4281, T-4309, T-4314/T-4315;
+   own review before landing (edits, the solve). Up next: T-3160, T-3838.
 5. Standby: maps-3a is the next cycle's (notes/standby.txt); none left: ask her relay session for one. Gemini's quota
    is out until about 11-30: Claude reviewers meanwhile.
 6. Resources 11-25: Resend over (her: nothing); R2 11-18b, 11-19 purged (her yes); Class A 91% of the free million

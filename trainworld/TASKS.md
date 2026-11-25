@@ -178,11 +178,11 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
   - Context: You, 11-25: "the game reworking the whole network after each edit is really the target here and everything else is kinda just flavor". 11-25 landed: Asia later clicks 144-360 ms (were 618-2,156), page and clickable map by change (T-4150, T-4214 done). Parts left: T-4153 (drawn network), T-4291, T-4299, T-4300 (worker), T-4272 (your answer).
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
-- T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line
+- T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line (taking, 2026-11-25, agent netcut9)
   - Context: You, 11-23: "this is the entire issue". Stage 8 (tree netcut8): stations, buildings, facilities, splits, band orders and corridors redo only what an edit changed. Your Asia save, Node, a station on a three-line trunk: network build about 190 to 150 ms (first click 260 to 185). Left: cut lines' bands (about 30 ms), train speeds (20), per-line passes (20).
   - Goal: A station on a line's track on Asia under 0.2 s of network build: a cut line's bands, strokes and speeds redone only near the cut.
   - Other: notes/T-4153.md stage 7 "What is left"
-- T-4149 [P1] {L:edit-speed} The checked version sooner, worker side, stage 2
+- T-4149 [P1] {L:edit-speed} The checked version sooner, worker side, stage 2 (taking, 2026-11-25, agent rows3)
   - Context: Stage 2 in tree rowsedit (11-25): lines an edit re-times no longer each cost two passes over the whole network, and only lines that moved are drawn again. Your Asia save, the worker's rows: a station 615 to 266 ms, a stop click 519 to 131, undo 544 to 103.
   - Goal: Rows under 100 ms for any edit on Asia: a moved line redrawn only from the cut, bus lines kept when unmoved, trips per touched line.
   - Other: notes/T-4149.md
