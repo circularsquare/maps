@@ -932,7 +932,7 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Goal: Know whether everyday trips have a tail of tiny pairs; if so, chunk them the same tunable way.
   - Other: notes/T-921.md
 - T-4220 [P2] {L:solve-speed} Quick figures for edits made during a whole re-solve
-  - Context: Design approved 11-24: 9 stages, 12-14 h. Stages 1-5 done: the snapshot of the figures on screen, read-only stand-ins, the side calculation's plan and solve (only a dev call starts it), and a check that it matches a normal local solve exactly. Next: stage 6, starting and batching it in play. You, 11-24: "edits made during remaining full passes should ideally get fast numbers".
+  - Context: Design approved 11-24: 9 stages, 12-14 h. Stages 1-5 done: the snapshot, stand-ins, the side calculation's plan and solve (a dev call starts it), and a check that it matches a normal solve exactly. Next: stage 6, starting and batching it in play. You, 11-24: "edits made during remaining full passes should ideally get fast numbers".
   - Goal: Those edits show their lines in about the touched-cities time; edits arriving together share one quick calculation.
   - Other: notes/T-4220.md ("For Anita" first)
 - T-2198 [P3] {L:passing-tracks} {after:T-3456} Mark where faster trains lose time
