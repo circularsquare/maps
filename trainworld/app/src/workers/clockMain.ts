@@ -14,7 +14,7 @@ import { PlatformLines } from "./platformLines";
 import type { ClockLine, ClockNode, ClockState } from "./protocol";
 import { publishSlots, saves } from "./slots";
 import { META_PER_LINE, profileOf } from "../map/profiles";
-import { buildSnapshot, busRow, complexesOf, complexOfNodes, groundK, loadsLater, nodeComplexes, putXferSet, sendTrips, shownBuildings, snapTimer, StationGeo } from "./clockDemand";
+import { buildSnapshot, busRow, complexesOf, complexOfNodes, forgetKeeps, groundK, loadsLater, namedKeeps, nodeComplexes, putXferSet, sendTrips, shownBuildings, snapTimer, StationGeo } from "./clockDemand";
 import { pinFareRef } from "./clockFares";
 import { moneyState } from "./clockMoney";
 import { keep } from "./clockPanic";
@@ -522,6 +522,7 @@ function buildState(rowsOnly = false): ClockState {
     links: Array.from(a.station_links()),
     apart: Array.from(a.station_apart()),
     buildings: timed("sBld", () => shownBuildings(a, nodes)),
+    keeps: namedKeeps(a),
     render: {
       edgeParts: drawn,
       edgeSpeedParts: speedParts,
@@ -557,6 +558,7 @@ export function sendHome() {
 /** After a load or a new game: the clock, fresh state, a new snapshot for demand. */
 export function restart(t: number, from: "autosave" | "file" | "new", reason?: "rebuilt") {
   putMidLoad(false);
+  forgetKeeps();
   putClk({ t, rate: clk.rate, at: wallNow() });
   game++;
   saves.edited = false;

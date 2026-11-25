@@ -412,6 +412,14 @@ function pairsKept(flat: number[], k: "links" | "apart", keep: boolean): [string
   if (keep) sameLists[k] = { flat, pairs };
   return pairs;
 }
+/** T-4080: the named bus stops as last given: the same array while the names and places are the same */
+let keepsLast: ClockState["keeps"];
+function keepsKept(k: ClockState["keeps"], keep: boolean): ClockState["keeps"] {
+  if (!k?.length) return undefined;
+  if (keepsLast && keepsLast.length === k.length && k.every((x, i) => x.id === keepsLast![i].id && x.x === keepsLast![i].x && x.y === keepsLast![i].y && x.name === keepsLast![i].name)) return keepsLast;
+  if (keep) keepsLast = k;
+  return k;
+}
 function buildingsKept(b: ClockState["buildings"], keep: boolean): ClockState["buildings"] {
   if (!b?.length) return undefined;
   if (sameLists.buildings && sameBuilt(sameLists.buildings, b)) return sameLists.buildings;
@@ -543,7 +551,7 @@ function toWorld(s: ClockState, keep = true): WorldView {
     capacity: s.markers,
     fullTrack: (s.fullTrack ?? []).map((v, p) => fullTrackKept(v, p, keep)),
     turnLimits: turnLimitsOf(s.turnLimits),
-    save: { cash: s.cash * 1e6, stations, lines, links: pairsKept(s.links ?? [], "links", keep), ...(s.apart?.length ? { apart: pairsKept(s.apart, "apart", keep) } : {}), ...(s.buildings?.length ? { buildings: buildingsKept(s.buildings, keep) } : {}) },
+    save: { cash: s.cash * 1e6, stations, lines, links: pairsKept(s.links ?? [], "links", keep), ...(s.apart?.length ? { apart: pairsKept(s.apart, "apart", keep) } : {}), ...(s.buildings?.length ? { buildings: buildingsKept(s.buildings, keep) } : {}), ...(s.keeps?.length ? { keeps: keepsKept(s.keeps, keep) } : {}) },
     lineStats,
     twins,
     edges,

@@ -40,7 +40,7 @@ import { SPEED_LEVEL, speedAt } from "./network";
 import { topSeg } from "./pick";
 import { hidden } from "./visibility";
 import { headingAtPlane } from "./halfDot";
-import { rightHand, stationsById } from "../game/world";
+import { namedBusStops, rightHand, stationsById } from "../game/world";
 import { factRow, headingChevron, lineBullet } from "./trackTagRows";
 import type { TipLine } from "./networkTips";
 import { ARROW_SPREAD, ARROW_ZOOM, ONE_WAY_STEP_M, oneWayEvery } from "./oneWayMarks";
@@ -1357,5 +1357,7 @@ export function busStopTip(w: WorldView, line: number, end: boolean, stop?: numb
   const way = l && stop !== undefined && stop >= 0 ? w.lineStats[l.id]?.oneWayAt[String(stop)] : undefined;
   const at = way !== undefined && ov ? l && w.lineStats[l.id]?.bus?.stops.find((x) => x.id === stop) : undefined;
   const others = stop !== undefined && stop >= 0 ? [...new Set(busPlaceOf(w, stop)?.stops.map((s) => s.line) ?? [])].filter((n) => n !== line) : [];
-  return [end ? t("busLayer.endOfLine") : t("busLayer.busStop"), nameRow(w, line, at && ov && way !== undefined ? headingAtPlane(ov, at.x, at.y, way) : null), ...others.map((n) => nameRow(w, n))];
+  // T-4080: a stop the player named shows its name where the tag says "Bus stop"
+  const own = !end && stop !== undefined && stop >= 0 ? namedBusStops(w).get(String(stop)) : undefined;
+  return [end ? t("busLayer.endOfLine") : own ?? t("busLayer.busStop"), nameRow(w, line, at && ov && way !== undefined ? headingAtPlane(ov, at.x, at.y, way) : null), ...others.map((n) => nameRow(w, n))];
 }

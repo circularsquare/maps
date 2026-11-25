@@ -8,7 +8,7 @@
 // model's frame); what the renderer draws comes back in local units (map/geo.ts). Money in
 // messages is US$M, as in the track model.
 
-import type { BuildingInput, EdgeId, Level, NodeId, OuterGroup } from "../game/types";
+import type { BuildingInput, EdgeId, KeepInput, Level, NodeId, OuterGroup } from "../game/types";
 import type { FrameSpec } from "../game/frame";
 import type { LineShape } from "../game/lineShape";
 import type { Loan } from "../game/loan";
@@ -116,6 +116,9 @@ export type EditOp =
   | { op: "renameStation"; node: NodeId; name: string }
   /** the line panel's Rename stations: each of `nodes` renamed to `names[i]` as `renameStation` does, one undo */
   | { op: "renameStations"; nodes: NodeId[]; names: string[] }
+  /** T-4080: name a bus stop (empty: clear it). `stops` are its place's plain stops, its own first; the name goes to the first
+   * one with a kept stop, else to a new one at (x, y), the first stop's place. */
+  | { op: "renameBusStop"; stops: number[]; x: number; y: number; name: string }
   /** T-3759: rename the complex station `node` is in (its unbound stations keep their names) */
   | { op: "renameComplex"; node: NodeId; name: string }
   /** T-3759: bind a station to its complex's name, or unbind it */
@@ -937,6 +940,8 @@ export interface ClockState {
   apart?: number[];
   /** the station buildings (T-2217, game/buildings.ts) */
   buildings?: BuildingInput[];
+  /** T-4080: the named bus stops (`namedKeeps`); absent when none */
+  keeps?: KeepInput[];
   /** the clock worker only: each node's station complex (0xffffffff none), for drawing one waiting
    * room and car park per complex (T-1528) */
   complexOf?: Uint32Array;

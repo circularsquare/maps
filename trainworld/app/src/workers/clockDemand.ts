@@ -13,6 +13,7 @@ import { buildingMembers, buildingsFrom, withBuildingLinks } from "../game/build
 import { BRT_STATION, IN_BUILDING } from "../game/upgrades";
 import { type NewHeadways } from "./saveFile";
 import { upgradesOf } from "./stateRows";
+import type { KeepInput } from "../game/types";
 import type { ClockBus, ClockNode, EditOp, FerryPortIn, FerryRow, NetworkSnapshot } from "./protocol";
 import { demandFares, tidyLineFares } from "./clockFares";
 import { followUp, putServiceEditMs, REST_MS, whenNoneWaits } from "./clockFollowUp";
@@ -316,11 +317,35 @@ export function renameStations(a: TrackApi, nodes: number[], names: string[]): n
   });
   return to.length ? a.rename_stations(new Uint32Array(to), as, new Uint8Array(kinds)) : 0;
 }
+const NO_KEEP = 0xffffffff;
+/** T-4080: name a bus stop as its panel does: the name goes to the kept stop its place already has (the first of `stops` with
+ * one), else a new one at (x, y); an empty name clears it. */
+export function renameBusStop(a: TrackApi, stops: number[], x: number, y: number, name: string): number {
+  const id = stops.map((s) => a.bus_stop_keep(s)).find((k) => k !== NO_KEEP);
+  return a.name_keep(id ?? NO_KEEP, x, y, name);
+}
+let keepsRead: { epoch: number; list: KeepInput[] } | null = null;
+/** T-4080: the kept stops that have a name, read again when the sim says the kept stops changed (`keep_epoch`, which a load
+ * starts over: `forgetKeeps`) */
+export function namedKeeps(a: TrackApi): KeepInput[] {
+  const epoch = a.keep_epoch();
+  if (keepsRead?.epoch === epoch) return keepsRead.list;
+  const flat = a.keeps(), list: KeepInput[] = [];
+  for (let k = 0; k + 2 < flat.length; k += 3) {
+    const name = a.keep_name(flat[k]);
+    if (name) list.push({ id: flat[k], x: flat[k + 1], y: flat[k + 2], name });
+  }
+  keepsRead = { epoch, list };
+  return list;
+}
+export const forgetKeeps = () => { keepsRead = null; };
 /** T-3793: an edit that changes only what a station or line is called (asked before it is applied): no train's run
  * changes, and the network drawn has no names in it. T-4147: and a new line with no stops. */
 export function nameOnly(op: EditOp): boolean {
   switch (op.op) {
     case "renameStation": case "renameComplex": case "renameStations": case "bindStation": case "bindAll": return true;
+    // T-4080: a name for a kept stop that exists moves no stop; making or clearing one can (lines near it are planned again)
+    case "renameBusStop": return !!op.name && op.stops.some((s) => api!.bus_stop_keep(s) !== NO_KEEP);
     case "stationProps": return op.platform === stateRows.nodeRow(op.node)?.platform;
     // T-4147: a line with no stops draws nothing and carries no train, so its list entry needs only the rows
     case "addLine": return op.stops.length === 0;

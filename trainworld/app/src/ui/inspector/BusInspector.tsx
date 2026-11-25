@@ -24,7 +24,7 @@ import { live } from "../../map/live";
 import { editBusRoute, editFerryRoute, toggleEditStops } from "../../game/lineActions";
 import { busDraft } from "../../map/busDraw";
 import { ferryDraft } from "../../map/ferryDraw";
-import { edit, fleetOf, linesById, say, stationNames, world } from "../../game/world";
+import { edit, fleetOf, linesById, namedBusStops, say, stationNames, world } from "../../game/world";
 import { Alert, Icon, Row, Segmented, Stepper, SwapLabel } from "../widgets";
 import { useLineQuote } from "../../game/quotes";
 import { nearestStation } from "../../game/places";
@@ -62,29 +62,41 @@ function along(route: number[], x: number, y: number): number {
 }
 
 /** One row of the stops list: an end or a station by its stop index, or a run of street stops. */
-type StopRow = { kind: "end" | "station"; i: number; station: string } | { kind: "street"; n: number; from: number };
+type StopRow = { kind: "end" | "station"; i: number; station: string } | { kind: "street"; n: number; from: number } | { kind: "named"; i: number };
 
 /** The ends and stations met, in order, each gap's street stops folded into one row: the stops
  * demand sees between them (kinds 2 and 3) and the drawn street stops. */
-function stopRows(bus: ClockBus): StopRow[] {
+function stopRows(bus: ClockBus, named: ReadonlyMap<string, string>): StopRow[] {
   const anchors = bus.stops.map((s, i) => ({ s, i })).filter((a) => a.s.kind < 2);
   const where = anchors.map((a) => along(bus.route, a.s.x, a.s.y));
-  const between = anchors.map(() => 0);
+  // T-4080: each gap's stops in order along the route: the street stops, and the ones the player named by their index
+  const gaps = anchors.map(() => [] as { pos: number; named: number }[]);
   const gapAt = (pos: number) => {
     let k = 0;
     while (k + 1 < anchors.length && where[k + 1] <= pos) k++;
     return k;
   };
   let k = -1;
-  bus.stops.forEach((s) => {
+  bus.stops.forEach((s, i) => {
     if (s.kind < 2) k++;
-    else if (anchors.length) between[Math.max(0, k)]++;
+    else if (anchors.length) gaps[Math.max(0, k)].push({ pos: along(bus.route, s.x, s.y), named: s.station < 0 && named.has(String(s.id)) ? i : -1 });
   });
-  for (let j = 0; j + 1 < bus.street.length; j += 2) if (anchors.length) between[gapAt(along(bus.route, bus.street[j], bus.street[j + 1]))]++;
+  for (let j = 0; j + 1 < bus.street.length; j += 2) if (anchors.length) {
+    const pos = along(bus.route, bus.street[j], bus.street[j + 1]);
+    gaps[gapAt(pos)].push({ pos, named: -1 });
+  }
   const rows: StopRow[] = [];
   anchors.forEach((a, k) => {
     rows.push({ kind: a.s.kind === 0 ? "end" : "station", i: a.i, station: a.s.station >= 0 ? String(a.s.station) : "" });
-    if (k + 1 < anchors.length && between[k] > 0) rows.push({ kind: "street", n: between[k], from: k });
+    if (k + 1 >= anchors.length) return;
+    let run = 0;
+    for (const g of gaps[k].sort((x, y) => x.pos - y.pos)) {
+      if (g.named < 0) { run++; continue; }
+      if (run) rows.push({ kind: "street", n: run, from: k });
+      run = 0;
+      rows.push({ kind: "named", i: g.named });
+    }
+    if (run) rows.push({ kind: "street", n: run, from: k });
   });
   return rows;
 }
@@ -425,7 +437,7 @@ export function BusInspector({ id }: { id: string }) {
   const names = stationNames(w);
 
   const times = st.fromStartByLevel[lev] ?? st.fromStartS;
-  const rows = stopRows(bus);
+  const rows = stopRows(bus, namedBusStops(w));
   const ferry = !!bus.ferry;
   const drawing = ferry ? tool.value === "ferry" && ferryDraft.value?.line === l.num : tool.value === "bus" && busDraft.value?.line === l.num;
   const editingStops = tool.value === "line" && lineDraft.value.line === l.num;
@@ -478,8 +490,9 @@ export function BusInspector({ id }: { id: string }) {
   const lap = mid.filter((s) => s.station >= 0).length * st.dwellS + (mid.filter((s) => s.station < 0).length + (bus.street.length >> 1)) * STREET_STAND_S;
   const standing = ferry ? undefined : st.loop ? lap + st.dwellS : 2 * lap;
   const between = (r: StopRow & { kind: "street" }) => {
-    const from = rows.filter((x) => x.kind !== "street")[r.from] as StopRow & { kind: "end" | "station" } | undefined;
-    const to = rows.filter((x) => x.kind !== "street")[r.from + 1] as StopRow & { kind: "end" | "station" } | undefined;
+    const anchored = rows.filter((x) => x.kind === "end" || x.kind === "station");
+    const from = anchored[r.from] as StopRow & { kind: "end" | "station" } | undefined;
+    const to = anchored[r.from + 1] as StopRow & { kind: "end" | "station" } | undefined;
     return from && to ? t("busInspector.streetBetween", { count: r.n, from: stopName(from), to: stopName(to) }) : t("busInspector.streetStops", { count: r.n });
   };
 
@@ -527,6 +540,14 @@ export function BusInspector({ id }: { id: string }) {
           <li class="street" data-tip={between(r)}>
             <i class="bs-mk" />
             <span class="grow muted">{t("busInspector.streetStops", { count: r.n })}</span>
+          </li>
+        ) : r.kind === "named" ? (
+          <li class="named">
+            <i class="bs-mk" />
+            <span class="grow">
+              <span class="stop-name" onClick={() => { const s = bus.stops[r.i]; selection.value = { kind: "busStop", stop: String(s.id), at: [s.lng, s.lat] }; }}>{names.get(String(bus.stops[r.i].id))}</span>
+              {stopTime(r.i)}
+            </span>
           </li>
         ) : (
           <li class={r.kind}>

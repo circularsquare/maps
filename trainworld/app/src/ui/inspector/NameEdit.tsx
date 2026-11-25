@@ -10,9 +10,9 @@ import { t } from "../../i18n";
 import { Icon } from "../widgets";
 import { keyIsTheirs } from "../keys";
 
-export function NameEdit({ name, onRename, prompt = false, onPrompted, control, hotkey, children }: {
+export function NameEdit({ name, onRename, prompt = false, onPrompted, control, hotkey, clearable = false, children }: {
   name: string;
-  /** called with the trimmed new name when it is not empty and differs; while a promise it returns is out, the
+  /** called with the trimmed new name when it is not empty (or `clearable`) and differs; while a promise it returns is out, the
    * new name is shown (T-3793) */
   onRename: (name: string) => unknown;
   /** open the editor now (a new line's name, say) */
@@ -22,6 +22,8 @@ export function NameEdit({ name, onRename, prompt = false, onPrompted, control, 
   control?: { open: boolean; set: (open: boolean) => void };
   /** a plain key (compared lowercase) that opens the editor, while it is not open and no text is being typed */
   hotkey?: string;
+  /** an emptied name is sent too (T-4080: a bus stop's own name taken off) */
+  clearable?: boolean;
   /** buttons before the pencil */
   children?: ComponentChildren;
 }) {
@@ -70,7 +72,7 @@ export function NameEdit({ name, onRename, prompt = false, onPrompted, control, 
   const commit = (close: boolean) => {
     if (done.current) return;
     const shown = kept ?? name, n = (draft ?? shown).trim();
-    if (n && n !== shown) {
+    if ((n || (clearable && draft !== null)) && n !== shown) {
       const out = onRename(n);
       if (out instanceof Promise) {
         setKept(n);

@@ -14,6 +14,7 @@ import { describeIssues, type Buys } from "./issues";
 import { vehicleOf, type Vehicle } from "./vehicle";
 import { tidyNodes, type FareNode } from "./fareCurve";
 import { groundDist, groundScale } from "./coords";
+import { busPlaces } from "./busLinks";
 import { noteEdit } from "./editCap";
 import { checkPatches, freshly, freshNow, sameBuilt, worldDiff } from "./worldDiff";
 import type { Demand, LineId, LineInput, LineStats, RowFigs, Save, StationInput, WorldView } from "./types";
@@ -978,7 +979,7 @@ function lookup<T>(w: WorldView, key: string, build: (s: Save) => T): T {
   return m.get(key) as T;
 }
 export const stationsById = (w: WorldView) => lookup(w, "stations", (s) => { const m = new Map<string, StationInput>(); for (const x of s.stations) m.set(x.id, x); return m; });
-const stopMemo = new WeakMap<WorldView, { byId: Map<string, StationInput>; names: Map<string, string>; bus: Map<string, StationInput> }>();
+const stopMemo = new WeakMap<WorldView, { byId: Map<string, StationInput>; names: Map<string, string>; bus: Map<string, StationInput>; custom: Map<string, string> }>();
 /** T-1464: the stations and a bus line's other stops (no station, no name of their own) by id: a stop's
  * place for the figures, its words for the panels. A bus stop is named for the station within 1 km
  * (the nearest), else "Bus stop". `stationsById` stays stations only. */
@@ -1005,7 +1006,9 @@ function namedNear(stations: readonly StationInput[], x: number, y: number, r: n
   return out.sort((a, b) => a - b).map((i) => stations[i]);
 }
 /** A bus line's stops that are no station, each with its name, and the box (world m) a station must be in to change one */
-type BusNamed = { bus: NonNullable<LineStats["bus"]>; plain: string; box: [number, number, number, number]; stops: { id: string; stop: StationInput; name: string }[] };
+type BusNamed = { bus: NonNullable<LineStats["bus"]>; plain: string; keeps: Save["keeps"]; box: [number, number, number, number]; stops: { id: string; stop: StationInput; name: string; custom: boolean }[] };
+/** T-4080: a bus stop takes the name of the nearest named kept stop this near (`bus::KEEP_M` in the sim), ground m */
+const KEEP_M = 50;
 function namedBus(w: WorldView, b: NonNullable<LineStats["bus"]>, plain: string): BusNamed {
   const stops: BusNamed["stops"] = [];
   const box: BusNamed["box"] = [Infinity, Infinity, -Infinity, -Infinity];
@@ -1014,15 +1017,24 @@ function namedBus(w: WorldView, b: NonNullable<LineStats["bus"]>, plain: string)
     const id = String(p.id);
     const stop: StationInput = { id, num: p.id, name: "", lng: p.lng, lat: p.lat, x: p.x, y: p.y, level: 0, length: 0, built: b.built, heading: 0 };
     const r = BUS_NAME_M * groundScale(p.y) * 1.1;
+    let kept = "", away = KEEP_M;
+    if (w.save.keeps) {
+      const rk = KEEP_M * groundScale(p.y) * 1.1;
+      for (const k of w.save.keeps) {
+        if (Math.abs(k.x - p.x) > rk || Math.abs(k.y - p.y) > rk) continue;
+        const d = groundDist(k.x, k.y, p.x, p.y);
+        if (d <= away) { away = d; kept = k.name; }
+      }
+    }
     let near = "", best = 1000;
-    for (const s of namedNear(w.save.stations, p.x, p.y, r)) {
+    if (!kept) for (const s of namedNear(w.save.stations, p.x, p.y, r)) {
       const d = groundDist(s.x, s.y, p.x, p.y);
       if (d < best) { best = d; near = s.name; }
     }
-    stops.push({ id, stop, name: near ? t("world.busStopNear", { name: near }) : plain });
+    stops.push({ id, stop, name: kept || (near ? t("world.busStopNear", { name: near }) : plain), custom: !!kept });
     box[0] = Math.min(box[0], p.x - r); box[1] = Math.min(box[1], p.y - r); box[2] = Math.max(box[2], p.x + r); box[3] = Math.max(box[3], p.y + r);
   }
-  return { bus: b, plain, box, stops };
+  return { bus: b, plain, keeps: w.save.keeps, box, stops };
 }
 /** T-4150: the last world's bus stops by line, kept for a line while its route is the same and no station changed in its box */
 let lastBusNamed: { w: WorldView; lines: Map<string, BusNamed> } | null = null;
@@ -1032,7 +1044,7 @@ function stopsOf(w: WorldView) {
   if (m) return m;
   const byId = new Map<string, StationInput>(), names = new Map<string, string>();
   for (const x of w.save.stations) { byId.set(x.id, x); names.set(x.id, x.name); }
-  const bus = new Map<string, StationInput>();
+  const bus = new Map<string, StationInput>(), custom = new Map<string, string>();
   const was = freshNow() ? null : lastBusNamed, d = was ? worldDiff(was.w, w) : null;
   // where the stations that changed stand, before and after
   const moved: [number, number][] = [];
@@ -1041,23 +1053,35 @@ function stopsOf(w: WorldView) {
   for (const [lid, st] of Object.entries(w.lineStats)) {
     if (!st.bus) continue;
     let e = d ? was!.lines.get(lid) : undefined;
-    if (!e || e.bus !== st.bus || e.plain !== plain || moved.some(([x, y]) => x >= e!.box[0] && x <= e!.box[2] && y >= e!.box[1] && y <= e!.box[3])) e = namedBus(w, st.bus, plain);
+    if (!e || e.bus !== st.bus || e.plain !== plain || e.keeps !== w.save.keeps || moved.some(([x, y]) => x >= e!.box[0] && x <= e!.box[2] && y >= e!.box[1] && y <= e!.box[3])) e = namedBus(w, st.bus, plain);
     lines.set(lid, e);
     for (const s of e.stops) {
       if (byId.has(s.id)) continue;
       byId.set(s.id, s.stop);
       bus.set(s.id, s.stop);
       names.set(s.id, s.name);
+      if (s.custom) custom.set(s.id, s.name);
     }
   }
+  // T-4080: a stop with no name of its own, where another stop of its place has one, shows that one
+  if (custom.size) {
+    const p = busPlaces(w), at = new Map<number, string>();
+    for (const [id, name] of custom) {
+      const k = p.placeOf.get(Number(id));
+      if (k !== undefined && !at.has(k)) at.set(k, name);
+    }
+    for (const [k, name] of at) for (const s of p.places[k].stops) if (s.station < 0 && bus.has(String(s.id)) && !custom.has(String(s.id))) { names.set(String(s.id), name); custom.set(String(s.id), name); }
+  }
   if (!freshNow()) lastBusNamed = { w, lines };
-  stopMemo.set(w, (m = { byId, names, bus }));
+  stopMemo.set(w, (m = { byId, names, bus, custom }));
   if (checkPatches() && d && !sameBuilt(m, freshly(() => stopsOf({ ...w })))) console.error("T-4150 check: the bus stops kept differ from a whole build");
   return m;
 }
 export const stopsById = (w: WorldView) => stopsOf(w).byId;
 /** Only the bus stops that are no station. */
 export const busStopsById = (w: WorldView) => stopsOf(w).bus;
+/** T-4080: the bus stops that show a name the player gave, by id (their own, or their place's) */
+export const namedBusStops = (w: WorldView) => stopsOf(w).custom;
 /** Every stop's name by id, a bus stop's included. */
 export const stationNames = (w: WorldView) => stopsOf(w).names;
 export const stationsByNum = (w: WorldView) => lookup(w, "stationNums", (s) => { const m = new Map<number, StationInput>(); for (const x of s.stations) m.set(x.num, x); return m; });

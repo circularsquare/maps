@@ -10,11 +10,12 @@ import { count, length } from "../../game/format";
 import type { LineInput, WorldView } from "../../game/types";
 import { selection } from "../../game/ui";
 import { today, useToday } from "../../game/today";
-import { linesById, stationNames, stationsById, world } from "../../game/world";
+import { busStopsById, edit, linesById, stationNames, stationsById, world } from "../../game/world";
 import { live } from "../../map/live";
 import { locateStation } from "../locate";
 import { Built, Chip, Icon } from "../widgets";
 import { BoardingsToday, Waiting } from "./StationInspector";
+import { NameEdit } from "./NameEdit";
 
 /** A stop placed again by an edit is found again this near where it was, ground m. */
 const REFIND_M = 60;
@@ -85,13 +86,17 @@ export function BusStopInspector({ stop, at }: { stop: string; at: [number, numb
   const stations = stationsById(w);
   const name = stationNames(w).get(stop) ?? t("world.busStop");
   const walks = pl.walks.slice(0, WALKS_SHOWN);
+  // T-4080: the name goes to the kept stop this place has, else a new one at this stop (its own place, so nothing moves)
+  const here = busStopsById(w).get(stop);
+  const rename = (n: string) => edit({ op: "renameBusStop", stops: [me.id, ...pl.stops.filter((s) => s.station < 0 && s.id !== me.id).map((s) => s.id)], x: here?.x ?? 0, y: here?.y ?? 0, name: n }).then((a) => a.ok);
   return (
     <>
       <div class="title">
-        <span class="name">{name}</span>
-        <button class="btn icon" data-tip={t("lineTitle.show")} aria-label={t("lineTitle.show")} onClick={() => locateStation(at[0], at[1])}>
-          <Icon.locate />
-        </button>
+        <NameEdit key={stop} name={name} onRename={rename} clearable={!!here}>
+          <button class="btn icon" data-tip={t("lineTitle.show")} aria-label={t("lineTitle.show")} onClick={() => locateStation(at[0], at[1])}>
+            <Icon.locate />
+          </button>
+        </NameEdit>
       </div>
       {(lines.length > 1 || pl.stations.length > 0) && (
         <div class="sub muted">
