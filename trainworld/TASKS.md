@@ -202,11 +202,19 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Stage 2 (11-25, tree followcut2): questions and timer trips no longer run the previous click's follow-up in one block. Click run on your Asia save: first 212 ms, later 360, 278, 144 (stage 1: 618, 1,538, 2,156). Left: each click's own apply (T-4272's question) and the page holding it until the one before is confirmed.
   - Goal: Every follow-up step costs what the edit touched, so later clicks are answered like the first; measured with edit_bench's click run.
   - Other: notes/T-4281.md
-- T-4291 [P1] {L:edit-speed} Rows and post sent by what an edit touched (taking, 2026-11-25, agent rowsdelta)
-  - Context: From T-4281 stage 2: after any edit the worker reads every edge, node and line again for the rows (about 120 ms in Node on your Asia save) and the post compares every row and network array (about 24 ms), since each state carries whole lists that the network and the post compare.
+- T-4291 [P1] {L:edit-speed} Rows and post sent by what an edit touched
+  - Context: Stage 1 in tree rowsdelta (11-25): the rows read and post only the records an edit touched. Your Asia save, Node: rows 120 to 45 ms, post 24 to 15. Left: the drawn network's arrays compared and copied whole in the post (about 12 ms) and the phase tables laid out whole; the model's passes are T-4299, the complexes T-4300.
   - Goal: Rows and post cost what the edit touched, the drawn network fed the same changes; under 20 ms together on Asia.
-  - Other: notes/T-4281.md "Stage 2"
-- T-4294 [P2] {L:stops} Stop clicks in Edit stops that send no edit
+  - Other: notes/T-4291.md
+- T-4299 [P1] {L:edit-speed} The track model's whole passes on every state
+  - Context: From T-4291: each state still has the model go over every line or record: the noted lines' stamps, each line's upkeep share, the upkeep and fleet needs (twice), the 15 lists the rows read and the costs, about 15 ms in Node on your Asia save.
+  - Goal: Each kept per record in the model and read by what an edit moved; under 3 ms a state on Asia.
+  - Other: notes/T-4291.md "Left"
+- T-4300 [P1] {L:edit-speed} Station complexes worked out by what changed
+  - Context: From T-4291: complexes are numbered by their first station in list order, which the network, line links and the page read, so any station edit renumbers over every station; with the names folded by them about 7 ms in Node on your Asia save.
+  - Goal: A numbering that holds when another complex changes, and names folded again only there; under 1 ms on Asia.
+  - Other: notes/T-4291.md "Left"
+- T-4294 [P2] {L:stops} Stop clicks in Edit stops that send no edit (taking, 2026-11-25, agent stopclick)
   - Context: In 2 of 3 edit_bench New York runs on 11-25 (master 80cff39c2, pagestage3's tree), all six clicks on line 2's middle stop in Edit stops sent a question and no edit; the third run (800843cf0) and earlier runs took them. Cause not found: a missed press or a stop marker read as cut off.
   - Goal: Cause found; a click on a line's own stop in Edit stops always takes it out or adds it, and edit_bench samples every stop click.
   - Other: notes/T-4293.md "Stop clicks"
@@ -931,6 +939,10 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: Design approved 11-24: 9 stages. Stages 1-7 done 11-25: an edit during a whole re-solve gets a quick side calculation for its cities, shown until the whole result replaces it (NYC: an edited line's figures in 17 s instead of 53). Left: stage 8, "Use more cores" on; stage 9, measuring on your Asia save.
   - Goal: Those edits show their lines in about the touched-cities time; edits arriving together share one quick calculation.
   - Other: notes/T-4220.md ("For Anita" first)
+- T-4307 [P1] {L:solve-speed} Fix the review's findings on quick figures during a re-solve (taking, 2026-11-25, agent fixes20)
+  - Context: A code review of T-4220 stages 6-7 (the quick side calculation for edits made during a whole re-solve) raised possible faults: an old edit's figures left on screen, the zone-in-view refine blocked, side figures read as final. Review: artifacts/trainworld/gemini/batch20/review.md.
+  - Goal: Every real finding a player could hit fixed at its cause; the rest answered with the reason.
+  - Other: notes/T-4307.md
 - T-2198 [P3] {L:passing-tracks} {after:T-3456} Mark where faster trains lose time
   - Context: A train can lose minutes behind slower ones, but it shows only in the line panel, never on the map or trouble list. You 2026-11-16: this goes in the detailed crowding panel when it is built.
   - Goal: The loss shows in the detailed crowding panel.
