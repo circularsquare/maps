@@ -1,28 +1,29 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session caa91e48-7288-4753-9895-c2b79ad5e3d9, name maps-c5 [fde5f5], since 2026-11-25 02:20 UTC
-Updated: 2026-11-25 02:50 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
-diary notes/handoff-log.md. Her time UTC-5. Core cap 10 since 00:52 UTC (her: "for a few hours", "be fairly aggressive
-about 10 core cap"); put it back to 14 around 04:00 UTC and tell her. Start more when agents + claimed cores / 2 < 8.
+Updated: 2026-11-25 03:19 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+diary notes/handoff-log.md. Her time UTC-5. Core cap 14 since 03:32 UTC (her word). Start more when agents + claimed cores / 2 < 8.
 
 ## Next
+- Gemini quota ran out 03:43 UTC, resets about 04:57: then rerun gemini_agent t3303fix (T-4233, tree kept) and the
+  T-4242 design draft (artifacts/trainworld/gemini/t4242/brief.md). Claude agents meanwhile.
 0. Usage (her 11-25): Claude runs out before Gemini. Claude agents take P1/P2 code work; small clear tasks and PR ports
    go to Gemini code agents (`tools/gemini_agent.py start <name> --brief <f> --task T-x --new-tree --cores 1`); reading
    and batch or design review go to `gemini_audit.py`. Stay light (notes/repeats.md): briefs in files, report heads only.
-1. Running (briefs in my scratch <agent>/brief.md): slowfocus (Opus, T-4263 why a focused city waits minutes; then T-4264
-   the bars, as a follow-up), fixes15 (Opus, T-4266 batch15 review findings), editdesign (Opus, T-4267 the edit design
-   for her; also her new-line/delete-line and PR 29 questions), tramparking (Sonnet, T-4247), Gemini pr34port (T-4258).
-   Adopted from maps-3e: cutstretch3 (T-4153 s6), uploadedit (T-4262), busrebuild (T-4249); multi-stage, `land` +
-   `remove`. No new edit-speed stages until her answer on T-4267's design.
-2. Landing queue: aside3 (T-4220 s3, `land`), pr29port (T-4255 finish --coauthor Leni-Vienne
-   <71212417+Leni-Vienne@users.noreply.github.com>), then PRs #29/#30 closed with her OK'd comments (chained in REPL).
-   rowsedit (T-4149 stage, `land` + `remove`) waits on Gemini's pre-landing review artifacts/trainworld/gemini/t4149/.
-   Landed today: T-4239 (3cc8c5a0d), T-4256 (b6b8bcfdd). Then rebuild 8800 (has a17111304; T-4150 s1 onward missing).
-3. Batch review over T-4239, T-4256, T-4255, T-4220 s3, T-4149 when landed; smoke on master after the batch.
+1. Running (briefs in my scratch <agent>/brief.md): slowfocus (Opus, T-4263; then T-4264 the bars as its follow-up),
+   fablereview (Fable at her ask, T-4267 design review to artifacts/trainworld/t4267-fable-review.md; its findings then go
+   to a fresh Opus agent: editdesign is at 411k), rowsmerge (Opus, merges master into tree rowsedit + Gemini's 3
+   findings, then `land rowsedit` + `remove`), smokefix (Sonnet, T-4270: t133, t144, t3192 fail on master), Gemini
+   pr34port (T-4258, NYC figure diff to her before landing). Adopted: cutstretch3 (T-4153 s6), uploadedit (T-4262),
+   busrebuild (T-4249): `land` + `remove`; they become T-4267's first steps.
+2. T-4267 design approved by her pending both reviews (Gemini's answered in its section 10; about 38 h, up to 55). After
+   Fable's is answered: tell her what changed, then start part 1's first stage (P1). No other edit-speed starts.
+3. 8800 = 57eb2dbdd (smoke failed: T-4270 and the wiki, rebuilt). Master fa9105102 + bookkeeping 140252c17, pushed.
+   Smoke again after T-4270 lands. Batch review due over T-4239, T-4256, T-4255, T-4220 s3, T-4266, T-4149 when landed.
 4. Next starts (not edit speed): T-4257 (bus routes by speed), T-4251 (busways), T-4243 speedometer, corridors3
    (T-4199 s2), T-4080 s3-6, T-4230, T-4187, T-3160, T-4233, T-4242 design. Gemini: T-4259 (UI, needs a screenshot).
 5. Waiting on her: a-2026-11-24-16 (PR #21/#24 comments); T-3742 after she asks; T-4250 (smooth fade); T-4248.
-6. Core cap 10 until about 04:00 UTC, then back to 14 (her "for a few hours") and tell her. reserve_cores: maps-3e's
+6. Core cap 14 (her 11-25 03:32). reserve_cores: maps-3e's
    loop still holds the mutex; start mine (`-All -Loop 30`) once its tab closes.
 
 ## Her words

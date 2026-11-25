@@ -162,6 +162,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-17 (Anita, T-028, T-631): Removing constructed track refunds nothing (was half) and cars a line stops needing stay in the depot unsold, since a partial refund would reward buying and selling; so the free undo of a removal (T-1649) cannot make money.
 
 ## Buses
+- 2026-11-25 (T-4257): The bus route tool takes the quickest road by the sim's bus speeds at its no-street-grid reference (streets 37.4 km/h, trunk and motorway 52.4, busways 60). Lie: in a dense centre a busway is 2.4x a street, the tool counts 1.6x. notes/T-4257.md
 
 - 2026-11-25 (Anita, T-4257): Bus routes take the quickest road by the sim's own bus speeds, not the shortest ("shouldnt we still make it take the fastest route rather than the shortest?"), replacing length plus turns.
 - 2026-11-25 (Anita, T-4251): Bus stops and BRT stations can be built on busways ("that should definitely be allowed").
@@ -181,8 +182,12 @@ artifacts/trainworld/T-4120/.
 - 2026-11-04 (Anita, T-2450): Ferries run 32 km/h in open water (was 25), on Anita's "a little faster lol": harbour ferries a little faster than real slow ones, well under real fast ferries. Old saves' routes move to the new curve.
 
 ## Map and UI
+- 2026-11-25 (T-4259): Rename stations (omi-key's PR 35) is an icon in a rail line's Stops heading, not a text button; the focused box's station takes a stop row's hover light. The PR's pulsing map ring and "Renamed N stations" notice were left out, for a small UI. notes/T-4259.md
+- 2026-11-25 (T-4262): After an edit the renderer keeps the last network's stroke buffers for 20 s and copies the next network into them: on her Asia save about 35 MB more GPU memory while editing, instead of allocating 35 MB per edit (most of the GPU's work after one). notes/T-4262.md
+- 2026-11-25 (Anita, T-4264): A loading bar goes past about half only on a remaining time we can bound (counted work or a measured pace); without one it stops at about 50%. Aim for a real time-left estimate. No creeping to look busy. notes/repeats.md
+- 2026-11-25 (T-4264): Bounded is the workers' time left with every unit still to run at this solve's own pace, none past it; rounds published, units done, the round model and remembered loads are guesses. Lie: where the bound lapses a bar above half holds (at most 4 s on New York). notes/T-4264.md
 
-- 2026-11-25 (T-4153): Bands: a line alone on its track has one recipe everywhere (no Traffic shift on any edge); knot places are unrounded, so a cut changes no later knot. Lie: pair-rule offsets are summed in 1/1024 m, so a pair's side can differ within 1 mm of the threshold.
+- 2026-11-25 (T-4153): Bands: one recipe for a line alone on its track; path metres on a 1/1024 m grid, so a cut moves later knots exactly. Lies: entry ends take the curve's value (at most 1.2% of a band step off the knots' line); pair offsets summed in 1/1024 m.
 - 2026-11-25 (Anita, T-4097): Edit speed works at the root cause, the game reworking the whole network after each edit ("everything else is kinda just flavor"): every step of an edit costs what it touched, not the whole map. Drawing results at the click is deprioritized. notes/T-4153.md
 - 2026-11-25 (T-4214, T-4249): The station ghost's check leaves the services as they are (a whole trial took 0.1-0.3 s on her Asia save). Lie: a station that makes running lines need more trains than the cash buys shows as placeable; its click is refused for the money. notes/T-4214.md
 - 2026-11-25 (T-4214): A station is sent at its click and named when its name lookup ends, outside the undo history; until then it has no name (labels and panels show it once the name is in). notes/T-4214.md
@@ -240,6 +245,8 @@ artifacts/trainworld/T-4120/.
 - 2026-10-10 (Anita, T-087): A train's fill is a gauge: half full when seats are taken, full at crush, red rim over, showing the busiest hour by default. Fill in proportion to crush and colouring trains by load were rejected.
 
 ## Saves and performance
+- 2026-11-25 (T-4265): While a whole solve runs, a zone's bubbles come from the bubble sums of the final on screen, kept on the page. Lie: figures from before the edit until it ends, and no trips with other places for a zone not drawn since the load (5.5% of Nanjing's legs on Asia). notes/T-4265.md
+- 2026-11-25 (T-4263): A loading save's demand pool is sized by the after-solve memory test on estimates, the aux worker counted (0.03 GB plus 0.15 MB per million trips), so it is not cut and solved again after its first final. Lie: an estimate miss still costs one whole re-solve. notes/T-4263.md
 - 2026-11-25 (Anita, T-4267): Edit speed is built to one design: the track model lists what each edit changed and every later layer redoes only that; answer first, the map in pieces, trips after. Approved pending Gemini's and Fable's adversarial reviews. notes/T-4267.md
 - 2026-11-25 (Anita, T-4255): Edit speed may cost memory up to about 30 MB in total on a big save (all edit-speed work together, contributors' ports included); past that it goes to Anita. So far: T-4153 stage 1 +6 MB on Asia, PR 29's path trees +8 MB on small devices.
 - 2026-11-24 (T-4240): An edit's state and trips wait only for the boarding accounts of lines whose service it changed. Lie: while new riders are worked through (a few seconds on Asia), other lines' trains show their last riders' loads, as they did before the edit.

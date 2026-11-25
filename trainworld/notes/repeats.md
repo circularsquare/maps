@@ -14,7 +14,15 @@ meanwhile.
   but its nothing about the cities themselves. any city can sometimes load fast and sometimes slow."
 - Claimed fixes: T-793 (10-21), T-884 (10-21), T-1195 (10-24), T-2552 (11-05), T-2638 (11-07), T-3876 (11-20),
   T-3881 (11-20), T-4051 (11-24), the half-bar shift (11-22, app/src/game/loadBarCore.ts). Open: T-344 [P4].
-- Why they didn't hold: Gemini's read, artifacts/trainworld/gemini/ask-0226/loadbar.md.
+- Why they didn't hold (T-4263, from her 11-25 diagnostics and the code): seven of them changed the bar's model, not
+  the wait; T-4051 sped up a zone with no figures. Her Shenyang wait was a whole recalculation no question can answer
+  from: 24 s after the load's first final the pool was cut 2 -> 1 (the load-time memory check left out the aux worker;
+  fixed in T-4263) and everything was solved again on one worker for 4-6 minutes. T-4204 had stopped the same re-solve
+  after a restart, not after a cut, and measured with "Use more cores" off, where this never fires; her tab had it on.
+  Her, 11-25: "i feel like that might not be the whole issue, but its a good find." Still open: after any edit on her joined-up Asia save, a city's bubbles wait for the whole solve (T-4265).
+  The bars themselves (T-4264): every bar ran a time guess into a 95-99% cap that the never-back rule then held, shown
+  at 83-91%; the top bar's "Loading data…" for bubbles had its own 3 s guess to 95%, never the half-bar shift, and
+  never looked at the running solve. Now a guess stops at half; past half only on the workers' own-pace time left.
 
 ## Edits on her Asia save take about a second
 

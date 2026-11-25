@@ -159,24 +159,13 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Other: notes/T-3659.md
 
 ## Demand
-- T-4259 [P2] {L:small-fixes} Port PR 35, rename a line's stations together
-  - Context: omi-key's PR 35 (11-24): rename every station of a rail line from its panel, pasting a list. You, 11-25: "lets port it but should keep the ui impact minimal". Gemini: Escape doesn't stop at the panel; a vanished station drops the edits; the header may crowd.
-  - Goal: Ported with credit and those fixed, one small control in the line panel; its strings to you.
-  - Other: notes/pr-survey-2026-11-25.md
 - T-4045 [P2] {L:small-fixes} {after:next week's usage} Adding stops to a line with many one-way stations is very slow
   - Context: A player, 11-22: a line with 21 one-way platforms is "extremely laggy", once 40 minutes for the stops to register. You: "dont have to spend a lot of time looking into this since we're doing a track rework but if we see an easy fix, would be interested". Tree onewaylag has a memo making stop_tiers 2.3x faster (uncommitted). Notes/T-4045.md.
   - Goal: The cause of the slow stop adding named; fixed if the fix is small, else a note of what it would take.
-- T-4257 [P2] {L:buses} Bus routes take the fastest road, not the shortest
-  - Context: xoaninc's PR 32 weights trunk roads and motorways at a flat 1.4x. You, 11-25: "it shouldnt be 1.4x cuz we changed the ratio, but shouldnt we still make it take the fastest route rather than the shortest?" Today a route follows streets by length plus a turn penalty; busways (60 km/h) count as plain streets.
-  - Goal: The route tool picks the quickest path by the sim's own bus speeds on each road, busways included; credit to xoaninc.
-  - Other: notes/pr-survey-2026-11-25.md
-- T-4251 [P2] {L:buses} Bus and BRT stations on busways
-  - Context: A player (via your scratch pad, 11-25): "bus stations cannot be built on busways"; you: "that should definitely be allowed". The same player: "when creating a BRT line, cant connect BRT stations" (unclear; read their report in tw-feedback).
-  - Goal: Bus stops and BRT stations can be placed on busways, and the second complaint named and fixed if it's a bug.
 - T-4091 [P3] {L:buses} Undoing a bus reroute leaves its stops where the reroute put them
   - Context: Seen by the T-4069 checker (notes/checkbns.md, case 3), not compared with master: undoing a busRoute reroute put the route back to 2 points but left stop 105 moved (-73.99374 to -73.99385). Reach: players who reroute a manual bus line and undo, a few metres off.
   - Goal: Undo puts the stops back where they were, or the cause named if it's older than T-4069.
-- T-4233 [P2] {L:checks} Fare-edit income check after quick city edits
+- T-4233 [P2] {L:checks} Fare-edit income check after quick city edits (taking, 2026-11-24, agent t3303fix)
   - Context: From T-2188 (11-24): checks/t3303 fails on master too: a fare edit's income spiked 278x for a moment (quickend fixes it in publishStep, now 1.16x), and the check still assumes a local stage that city edits no longer have.
   - Goal: t3303 checks the income after a fare edit under the new rule and passes.
   - Other: notes/T-2188.md
@@ -194,9 +183,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-25: "the game reworking the whole network after each edit is really the target here and everything else is kinda just flavor"; on your Asia save a station shows up in 1-3 s, a removal in about 4 s. Parts: T-4153 (drawn network), T-4214 (clickable map), T-4149 (worker rows), T-4150 (page).
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
 - T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line (taking, 2026-11-25, agent cutstretch3)
-  - Context: You, 11-23: "this is the entire issue". Stage 5 (tree cutstretch2): the bands follow only the edges an edit changed; a cut line's later strokes are copied. Asia network build in Node, CPU: a station on a long line's track 0.41 to 0.32 s, a line removed 0.23 to 0.12 s. Left: each cut line's bands worked out whole.
+  - Context: You, 11-23: "this is the entire issue". Stage 6 (tree cutstretch3): a cut line's bands are redone only near the cut (3 of 909 entries for a station on line 33). Asia network build, profiled: a station on a three-line trunk 315 to 242 ms. Left: cut lines' samples, speeds and whole-line band stages.
   - Goal: A station on a line's track on Asia under 0.2 s of network build: a cut line's bands, strokes and speeds redone only near the cut.
-  - Other: notes/T-4153.md stage 5 "What is left"
+  - Other: notes/T-4153.md stage 6 "What is left"
 - T-4149 [P1] {L:edit-speed} The checked version sooner, worker side, stage 2
   - Context: Stage 2 in tree rowsedit (11-25): lines an edit re-times no longer each cost two passes over the whole network, and only lines that moved are drawn again. Your Asia save, the worker's rows: a station 615 to 266 ms, a stop click 519 to 131, undo 544 to 103.
   - Goal: Rows under 100 ms for any edit on Asia: a moved line redrawn only from the cut, bus lines kept when unmoved, trips per touched line.
@@ -209,21 +198,18 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4196: changelog.py reword sets the same "edited" mark as your board edits, so agents' rewords (26 today, and c014 earlier) show as yours and get left alone as your wording.
   - Goal: The board marks only your edits; agents' rewords keep their own record.
   - Other: notes/T-4196.md
-- T-4267 [P1] {L:edit-speed} One design so no step of an edit scales with the save
+- T-4267 [P1] {L:edit-speed} One design so no step of an edit scales with the save (taking, 2026-11-24, agent editdesign2)
   - Context: You, 11-25: "partition where we're currently editing from the rest of the network so that nothing scales with the save size". T-4144 (11-23) planned showing edits at the click; each stage since cut one step. Gemini's end-to-end read: artifacts/trainworld/gemini/ask-0226/editscale.md, unchecked.
   - Goal: A checked design with stages, to you before anything is built.
   - Other: a repeat (notes/repeats.md); notes/T-4267.md
-- T-4270 [P1] {L:checks} Smoke fails three node checks on master
-  - Context: Smoke on 57eb2dbdd: t133-picking-check, t144-check and t3192-varyings exit with "errors: [Getter/Setter]"; all three passed on a17111304. Between: T-4150 stage 1, T-4239, T-4256, T-4220 stage 3, T-4255, T-4247, T-4266.
-  - Goal: The three pass on master, fixed at the cause.
-- T-4263 [P1] {L:loading} A focused city's trips wait minutes at 90% (taking, 2026-11-24, agent slowfocus)
-  - Context: You, 11-25: "fills to 90% and then stops ... i have to wait minutes for the demand", any city sometimes fast, sometimes slow, larger ones more. Caught on Shenyang in your Asia save, diagnostics in artifacts/trainworld/diag/shenyang-90-1125/. Gemini: the wait is a whole slow solve in every worker, picked by the state at that moment.
-  - Goal: Focusing a city never waits minutes for its trips; why the slow path was taken, from your diagnostics.
-  - Other: a repeat (notes/repeats.md); Gemini's read artifacts/trainworld/gemini/ask-0226/loadbar.md; notes/T-4263.md
-- T-4264 [P1] {L:loading} {after:T-4263} Loading bars that never sit still
-  - Context: Nine fixes since 10-21 kept one design: a time guess, a 95-99% cap and a bar that never backs up, so any wait the guess misses freezes it near 90%. The top bar's "Loading data" never got your 11-22 half-bar shift.
-  - Goal: Every bar moves only on counted work or creeps under a low cap; none sits still for minutes.
-  - Other: a repeat (notes/repeats.md); takes in T-344; Gemini's read artifacts/trainworld/gemini/ask-0226/loadbar.md
+- T-4271 [P2] {L:edit-speed} Patch check flags a hub node after a station on a line
+  - Context: Found by uploadedit (T-4262) with `?patch=check` on New York: "T-4214 check: ... nodes N: hub" after placing a station on a line, so the patched state may differ from a whole build there.
+  - Goal: The cause named; the patch matches a whole build, or the check's rule fixed if the patch is right.
+  - Other: notes/T-4262.md
+- T-4265 [P1] {L:loading} City bubbles wait for an edit's whole solve on big saves (taking, 2026-11-24, agent shownanswer)
+  - Context: After an edit on a joined-up save (your Asia one: one cluster of about 140 zones) the workers no longer hold the figures on screen, so a city whose bubbles were not drawn waits at "Loading data" for the edit's whole solve, 165-300 s.
+  - Goal: A city's bubbles and panels answer from the figures on screen while a whole solve runs.
+  - Other: found in T-4263; notes/T-4263.md
 - T-4199 [P2] {L:loading} {after:0.4.6} Corridors and corridor book built with the packs
   - Context: You, 11-24: no bit-exact rule, say when figures change, most riders within 1%. Stage 1 in tree corridors, not landed: Montana's trips wait 7.6 to 2.3 s; New York no gain; +32 MB demand memory on NYC unexplained.
   - Goal: Small games' trips about 70% faster on load, no memory rise; stage 2 about 2-3 h.
@@ -238,10 +224,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4261 [P2] {L:checks} Gemini agents can run play.mjs games
   - Context: From the second Gemini code run (11-25): play.mjs start's detached server is killed when agy's tool call ends (a Windows job), so play.mjs edits and do find no game; it fell back to a one-process check. Also a "|" inside a quoted git grep pattern is refused.
   - Goal: A Gemini agent can start a game with play.mjs and drive it across calls; grep with alternatives works or the brief says how.
-- T-4249 [P2] {L:edit-speed} Every bus line rebuilt for each station edit (taking, 2026-11-25, agent busrebuild)
-  - Context: The station check no longer runs a whole trial (T-4214 stage A, 11-25: 0.1-0.3 s down to about 20 ms on your Asia save). Left: any station edit rebuilds all 25 bus lines and 6 ways back, so its apply costs 0.1-0.25 s there and its trips are always sent again.
-  - Goal: A station edit rebuilds only the bus lines near it; trips not sent again when no line changed.
-  - Other: notes/T-4240.md
+- T-4249 [P2] {L:edit-speed} A station on free track rebuilds lines at its ends (taking, 2026-11-25, agent busrebuild)
+  - Context: Done (tree busrebuild, 11-25): edits rebuild only the bus lines they reach and the ways back they move, and send no trips when no line moved; 25-58 ms less per station edit on your Asia save. Left: a station on track no line uses still rebuilds the lines through that track's ends, and the settle then moves their neighbours.
+  - Goal: A station on track no line runs over rebuilds no line and sends no trips.
+  - Other: notes/T-4249.md
 - T-4214 [P1] {L:edit-speed} Track runs chain without waiting, drawings from the patched map
   - Context: Stages A and C done: a station is sent at its click, its name after it, and stations placed or removed on a line's track patch the clickable map too (tree stationclick, 11-25). You, 11-24: "something like a silo approach". Left: a track run's next segment waits on placing (D), drawings at the click (E).
   - Goal: No placing wait between a run's segments; what is drawn at the click is the patched map's.
@@ -269,7 +255,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-24: "if merging directionally biases things, would it make sense to undo that bias?", then "if its mostly not one directional its fine ... p4". T-4158 saw lines move both ways (Belgrade 704 +34%, 66 -29%) but Auto bus lines lose 1.2% overall.
   - Goal: Net shift by kind of line and trip length on Detroit and Belgrade; a simple correction proposed to you only where it is clearly one way.
   - Other: notes/T-4158.md
-- T-4230 [P2] {L:loading} The clock worker's first state sooner on load
+- T-4230 [P2] {L:loading} The clock worker's first state sooner on load (taking, 2026-11-24, agent firststate)
   - Context: From T-4225 (11-24): no regression in 0.4.6. On New York the clock worker's first full state is 3.7 of the map's 5.5 s, about 68% of the wait (2.9 s building the map's draw data), and runs while the demand workers open the pack on the same cores.
   - Goal: Measure that state with and without the pack opening beside it, then propose a cheaper first build or a later pack open; about 2 h.
   - Other: notes/T-4225.md
@@ -678,10 +664,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3654 [P3] {L:map-look} Draw on the map for planning
   - Context: Your pad, 2026-11-18, from Discord, "not high prio": "some people want draw on map tool for planning stuff. could add it in a discreet way, hideable".
   - Goal: A design to you first (what can be drawn, whether it saves and shares, where the hide control sits), then a first version.
-- T-4258 [P2] {L:line-rates} Port PR 34, capacity sections through one-way pairs (taking, 2026-11-24, agent pr34port)
-  - Context: xoaninc's PR 34 (11-24): a capacity section runs on through a one-way pair (and flat crossings with the same lines) instead of queueing again at each end. You, 11-25: "yes can look into it". Gemini: applies cleanly.
-  - Goal: Ported with credit after an NYC figure diff (total, lines that move most); a big shift goes to you first.
-  - Other: notes/pr-survey-2026-11-25.md
 - T-4021 [P3] {L:line-rates} Load's cap lowering can miss a line after an early edit
   - Context: Seen by fullspeed (T-3655), 11-21, on London's save: with a count edit about 2 s after the load's final, the load's cap lowering never reached Victoria for the whole session (368/136/7); an edit 10 s after, or a single edit right after, let it finish (37 lines lowered). Cause unknown; not from T-3655. Not started while usage is high.
   - Goal: The cause named, and the lowering always finishes whatever the edit timing.
