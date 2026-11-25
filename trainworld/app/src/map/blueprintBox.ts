@@ -17,7 +17,7 @@ import { bpHover } from "../game/blueprintStretches";
 import { rebuildQuote } from "../game/rebuild";
 import { bpPicked, dragNodes, onlyOneKind, pathTo, removePicked, runOf, togglePicked, unionPicked, withoutPicked, type BpPicked } from "../game/blueprintPick";
 import { SWITCH_PICK_KEY } from "../ui/toolKeys";
-import { designSpeed, selection, tool } from "../game/ui";
+import { designSpeed, selection, selectMode, tool } from "../game/ui";
 import { lngLatToPack } from "../game/coords";
 import { describeIssues } from "../game/issues";
 import { touchInput } from "./touch";
@@ -40,6 +40,9 @@ import { curveLabels, CurveLabelPool } from "./trackTagRows";
 
 /** A click, not a drag: the pointer moved less than this (px). */
 const CLICK_PX = 4;
+
+/** T-4330: the Select tool picks demand bubbles, so the left button and a finger are the bubbles' (map/commuterView.ts). */
+const pickingBubbles = () => tool.peek() === "blueprint" && selectMode.peek() === "demand";
 
 /** The part of an edge's polyline (x, y, z triples, a to b) within `frac` of its length from its a end
  * (`fromA`) or its b end. */
@@ -337,6 +340,7 @@ export class BlueprintBox {
 
   private onDown(e: PointerEvent) {
     if (tool.peek() !== "blueprint") return;
+    if (pickingBubbles() && (e.pointerType === "touch" || e.button === 0)) return;
     if (e.pointerType === "touch") return this.touchDown(e);
     if (this.drag || this.move) return;
     const [x, y] = this.point(e);
@@ -366,7 +370,7 @@ export class BlueprintBox {
     const d = this.drag;
     if (!d) {
       // the grab cursor over what a press would drag (T-474)
-      const over = tool.peek() === "blueprint" && e.buttons === 0 && e.target === this.map.getCanvas();
+      const over = tool.peek() === "blueprint" && !pickingBubbles() && e.buttons === 0 && e.target === this.map.getCanvas();
       if (over) {
         const c = this.grabAt(...this.point(e)) ? "grab" : "crosshair";
         if (this.map.getCanvas().style.cursor !== c) this.map.getCanvas().style.cursor = c;
@@ -493,7 +497,7 @@ export class BlueprintBox {
 
   /** T-1680: a double click on track picks its run, junction to junction (Shift adds it). */
   private onDblClick(e: MouseEvent) {
-    if (tool.peek() !== "blueprint" || e.button !== 0) return;
+    if (tool.peek() !== "blueprint" || e.button !== 0 || pickingBubbles()) return;
     const n = this.overlay.renderer.net;
     if (!n) return;
     // the track under the pointer, even where a station is drawn over it
@@ -562,8 +566,9 @@ export class BlueprintBox {
     }
     const [ti] = topSeg(this.overlay, n.track.seg, n.track.count, x, y, SLOP_PX * SLOP_PX + 1);
     if (ti >= 0) hits.push({ edges: [n.track.edge[ti]], stations: [] });
-    const bp = hits.map(onlyOneKind);
-    return bp.find((h) => !h.built && (h.edges.length || h.stations.length)) ?? bp[0] ?? none;
+    // a hit the mode leaves out (T-4330: blueprint under Built track only) is empty, so the next one under it counts
+    const bp = hits.map(onlyOneKind).filter((h) => h.edges.length || h.stations.length);
+    return bp.find((h) => !h.built) ?? bp[0] ?? none;
   }
 
   /** The E key: switch the pick on, or off when all of it is on (T-2338); Delete removes it (T-829). True if used. */

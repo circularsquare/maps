@@ -849,6 +849,17 @@ stations. Disabled blueprint is left out by Construct and the blueprint total, a
 ([ui-map.md](ui-map.md) "Lines and track"). It is a tool of its own because a plain drag on the map
 is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
 
+- **Modes** [T-4330, Anita's design; `ui/ToolBar.tsx` `SelectBar`, `game/ui.ts` `selectMode`]: the tool's bar at the
+  top centre, the station bar's look, holds three icon buttons, the choice remembered in the browser. **Blueprints, or
+  built track if there are none** (a track icon in the blueprint blue): the rule above, the default. **Built track
+  only** (a grey track icon): every pick (box, click, Shift+click, double click) keeps only constructed pieces, so
+  blueprint in the box or under the pointer is passed over. **Demand bubbles** (the purple bubble icon): a left drag
+  draws the demand box at once, as Shift+drag does while plain selecting (a plain drag replaces the bubbles
+  selected, Shift+drag adds or takes the far ends, as there); a click picks the bubble under it, Shift adds, a click on
+  none clears; a finger pans and a tap picks. Picking a mode drops the pick it would not make (all of it for Demand
+  bubbles), and Demand bubbles turns the bubbles on as last shown when they are off. While the tool is on the
+  selection bar sits under the bar (on a phone, over it).
+
 - **Dragging the pick** [T-475]: a left drag that starts on picked track or within 9 px of one
   of its nodes (a grab cursor there) moves every movable node of the pick by the same offset,
   previewed as a node drag is: the nodes a box held inside it (T-1898, Anita: "only move the

@@ -354,7 +354,7 @@ export function BlueprintBar() {
   const lengthTip = m ? `${t("blueprint.lengthTip")}\n${tipGrid([[t("trackInspector.upkeep"), t("inspector.perDay", { value: money(upkeep) })]])}` : t("blueprint.lengthTip");
   return (
     <>
-      <div class="blueprint-bar" role="group" aria-label={t("blueprint.selection")}>
+      <div class={"blueprint-bar" + (keys ? " under-bar" : "")} role="group" aria-label={t("blueprint.selection")}>
         <span class="count" data-tip={t("blueprint.selectedTip", { piece })}><span class="bp-ico"><Icon.marquee /></span><span class="bp-short">{tNumber(n)}</span><span class="bp-label">{t("blueprint.selected", { count: tNumber(n) })}</span></span>
         {s.edges > 0 && <span class="num" data-tip={lengthTip}>{distance(s.lengthM)}</span>}
         {canLevel && <div class="bp-levels"><LevelButtons value={chosenLevel} tip={levelTip} onPick={pickLevel} /></div>}

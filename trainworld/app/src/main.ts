@@ -20,7 +20,7 @@ import { clock, startClock } from "./game/clock";
 import { getWorldFrame, HOME_CITY } from "./game/cities";
 import { ZONE_LOAD_ZOOM } from "./game/zones";
 import { packToLngLat, lngLatToPack } from "./game/coords";
-import { ask, buildLevel, display, isBuildTool, mapShade, selection, shade, snapRealTram, snapRoads, snapStreets, stopEditing, tab, tool, tramTrack, VIDEO } from "./game/ui";
+import { ask, buildLevel, display, isBuildTool, mapShade, selection, selectMode, shade, snapRealTram, snapRoads, snapStreets, stopEditing, tab, tool, tramTrack, VIDEO } from "./game/ui";
 import { groupHover, lineGroups } from "./game/lineGroups";
 import { complexOf, dotGroups, inComplexView, openAlone, singleStation } from "./game/complexView";
 import { hot, onHot } from "./map/hovered";
@@ -635,6 +635,7 @@ effect(() => {
 // ---- picking and tools ----
 map.on("click", (e) => {
   if (tool.peek() === "trip") tripTool.click(e); // T-195
+  else if (pickingBubbles()) pickBubble(e.point.x, e.point.y, e.originalEvent.shiftKey);
   else if (tool.peek() === "blueprint" || tool.peek() === "fares") return; // their pointer handlers pick (map/blueprintBox.ts, map/fareZoneTool.ts)
   else if (tool.peek() !== "select") touchInput.peek() ? tools.tap(e) : tools.click(e);
   else selectAt(e.point.x, e.point.y, e.originalEvent.shiftKey);
@@ -675,6 +676,14 @@ function selectAt(x: number, y: number, add: boolean) {
   }
 }
 capacity.selectClick = selectAt;
+/** T-4330: the Select tool picks demand bubbles: a box drag is map/commuterView.ts's, a click is here. */
+const pickingBubbles = () => tool.peek() === "blueprint" && selectMode.peek() === "demand";
+/** A click with the Select tool on demand bubbles: the bubble under it, Shift adding; a click on none clears. */
+function pickBubble(x: number, y: number, add: boolean) {
+  const hit = demandClick?.(x, y, add);
+  if (hit) selection.value = hit;
+  else if (!add) selection.value = null;
+}
 const hasPick = () => bpPicked.peek().edges.length + bpPicked.peek().stations.length > 0;
 // T-3634, T-3746: a Shift press on track or a station with something picked is a click, not the start of
 // MapLibre's zoom box (which would swallow the click); elsewhere Shift+drag zooms as before
@@ -694,6 +703,11 @@ if (!SYNTH && !perfOff("hover")) // ?perfOff=hover: T-045 measurement only
     if (tool.peek() === "trip") {
       // a station under the pointer is picked as the trip's end (T-221)
       const c = tripTool.stationAt(e.point.x, e.point.y) ? "pointer" : "crosshair";
+      if (map.getCanvas().style.cursor !== c) map.getCanvas().style.cursor = c;
+      return;
+    }
+    if (pickingBubbles()) {
+      const c = demandHover?.(e.point.x, e.point.y) ? "pointer" : "crosshair";
       if (map.getCanvas().style.cursor !== c) map.getCanvas().style.cursor = c;
       return;
     }

@@ -74,6 +74,12 @@ const showEnd = (value: "none" | "home" | "work" | "both") => {
 
 const CYCLE = ["none", "home", "work", "both"] as const;
 
+/** T-4330: the bubbles back as they were last shown, when they are off (the Select tool's Demand bubbles mode). */
+export function showBubbles() {
+  const d = display.peek();
+  if (!d.commuters && demandReady()) showEnd(d.commuterEnd);
+}
+
 /** T-2338: the D key, None to Homes to Destinations to Total and round again. */
 export function cycleDemandEnd() {
   if (!demandReady()) return;

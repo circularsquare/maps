@@ -13,7 +13,9 @@ import { buildMode } from "../game/buildMode";
 import { linesByNum, world } from "../game/world";
 import { CAR_M, stepPlatform } from "../game/boarding";
 import { carsText } from "./inspector/schedule";
-import { autoRamp, buildAdvanced, buildLevel, buildPlatform, buildTramPlatform, clampDesign, DESIGN_SPEEDS, designSpeed, flyoverSpeed, keepPlacing, lineDraft, quadTrack, setDoubleTrack, setQuadTrack, setSingleTrack, setTrackType, singleTrack, shade, besideOn, snapBeside, snapReal, snapRealTram, snapRoads, snapStreets, stationChoice, stationKind, stationOnTram, stationOneTrack, TRAM_PLATFORM, tool, trackType, type StationChoice, type TrackType } from "../game/ui";
+import { autoRamp, buildAdvanced, buildLevel, buildPlatform, buildTramPlatform, clampDesign, DESIGN_SPEEDS, designSpeed, flyoverSpeed, keepPlacing, lineDraft, quadTrack, setDoubleTrack, setQuadTrack, setSingleTrack, setTrackType, singleTrack, shade, besideOn, snapBeside, snapReal, snapRealTram, snapRoads, snapStreets, selectMode, stationChoice, stationKind, stationOnTram, stationOneTrack, TRAM_PLATFORM, tool, trackType, type SelectMode, type StationChoice, type TrackType } from "../game/ui";
+import { bpPicked, clearBpPicked, onlyOneKind } from "../game/blueprintPick";
+import { showBubbles } from "./DemandSelector";
 import { costBackground } from "../map/trackTagRows";
 import { levelTip, multText, trackMult, unitPrice, upkeepAt } from "./trackPrice";
 import { Icon, LevelButtons, Segmented, Stepper, TrackCountButtons } from "./widgets";
@@ -231,7 +233,39 @@ export function PlatformTracks({ one, onPick, oneTip, bothTip, children }: { one
   );
 }
 
-/** The map's tool bar for the track and station tools, and the aura while a click does anything
+/** T-4330: what the Select tool picks, Anita's icons: track in the blueprint blue, track in grey, the purple demand bubble. */
+const selectModes = (): [SelectMode, string, () => JSX.Element][] => [["blueprint", t("toolBar.selectBlueprints"), Icon.track], ["track", t("toolBar.selectTrack"), Icon.track], ["demand", t("toolBar.selectBubbles"), Icon.bubble]];
+
+/** T-4330: a pick the new mode would not make goes (blueprint under Built track only, any under Demand bubbles); the
+ * bubbles show if they were off, so the box has something to pick. */
+function pickSelectMode(to: SelectMode) {
+  selectMode.value = to;
+  if (to === "demand") {
+    clearBpPicked();
+    showBubbles();
+    return;
+  }
+  const p = bpPicked.peek();
+  if (p.edges.length || p.stations.length) bpPicked.value = onlyOneKind(p);
+}
+
+/** T-4330: the Select tool's bar, its modes as the station bar's kinds; the selection bar sits under it. */
+function SelectBar() {
+  const m = selectMode.value;
+  return (
+    <div class="tool-bar select-bar" role="group" aria-label={t("toolKeys.select")} style={{ "--mode": CLICK_MODE_COLOURS.blueprint }}>
+      <div class="tb-row">
+        <div class="group tb-kind">
+          {selectModes().map(([k, label, I]) => (
+            <button class={`btn icon sm-${k}` + (m === k ? " on" : "")} aria-label={label} aria-pressed={m === k} data-tip={label} onClick={() => pickSelectMode(k)}><I /></button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** The map's tool bar for the track, station and Select tools, and the aura while a click does anything
  * but select (the selection bar is `BlueprintBar`). */
 export function MapToolBar() {
   const mode = clickMode.value;
@@ -239,7 +273,7 @@ export function MapToolBar() {
   return (
     <>
       {mode !== "select" && <div class="mode-aura" style={{ "--mode": clickColour(mode) }} />}
-      {tl === "track" ? <TrackBar /> : tl === "station" ? <StationBar /> : tl === "fares" ? <FareBar /> : null}
+      {tl === "track" ? <TrackBar /> : tl === "station" ? <StationBar /> : tl === "fares" ? <FareBar /> : tl === "blueprint" ? <SelectBar /> : null}
     </>
   );
 }

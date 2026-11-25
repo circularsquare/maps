@@ -26,7 +26,7 @@ import { compass, stationNameNear } from "../game/places";
 import { PURPOSE_CLASS, type PurposeFilter } from "../game/purposes";
 import { tripWords } from "../ui/inspector/tripText";
 import type { BubbleEnd, CommutersOneWay, Selection } from "../game/types";
-import { display, purposeFilter, selection, mapShade, shownDayPhrase, tool } from "../game/ui";
+import { display, purposeFilter, selection, mapShade, selectMode, shownDayPhrase, tool } from "../game/ui";
 import { world } from "../game/world";
 import { BUBBLE_DENSITY, DISC, RES_AREA_M2, type BubbleLevel, type Bubbles, type FromCommuters, type Moved, type Ready, type Summed, type ToCommuters } from "../workers/commutersProtocol";
 import { aggregate, applyFold, discs, foldedInto, foldSmall, recolour, type Groups } from "./bubbles";
@@ -941,7 +941,8 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   box.className = "demand-box";
   box.style.display = "none";
   map.getContainer().appendChild(box);
-  let press: { x: number; y: number; timer: number; on: boolean; add: boolean; far: boolean } | null = null;
+  // `ring`: armed by a long press
+  let press: { x: number; y: number; timer: number; on: boolean; add: boolean; far: boolean; ring: boolean } | null = null;
   const LONG_MS = 300, STILL_PX = 6, RING_PX = 16;
   const canvas = map.getCanvasContainer();
   const rel = (e: MouseEvent) => {
@@ -954,8 +955,8 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     map.getCanvas().style.cursor = "crosshair";
     box.style.display = "";
     // a long press arms with a ring at the pointer (T-908), until the drag draws the box
-    const r = p.add ? 0 : RING_PX / 2;
-    box.classList.toggle("armed", !p.add);
+    const r = p.ring ? RING_PX / 2 : 0;
+    box.classList.toggle("armed", p.ring);
     Object.assign(box.style, { left: p.x - r + "px", top: p.y - r + "px", width: 2 * r + "px", height: 2 * r + "px" });
   };
   const boxOff = () => {
@@ -965,7 +966,9 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     map.getCanvas().style.cursor = "";
   };
   // T-885: a selected city's view (zoomed out, no local bubbles) takes a Shift box over its other cities
-  const boxes = () => tool.peek() === "select" && display.peek().commuters && ((!!shown && !cityOverview.peek()) || selection.peek()?.kind === "city");
+  // T-4330: the Select tool's Demand bubbles mode draws the box at once, as Shift does
+  const bubblePick = () => tool.peek() === "blueprint" && selectMode.peek() === "demand";
+  const boxes = () => (tool.peek() === "select" || bubblePick()) && display.peek().commuters && ((!!shown && !cityOverview.peek()) || selection.peek()?.kind === "city");
   // MapLibre's own Shift-drag zoom (main.ts keeps it on in the select tool) is off from before its
   // handlers see the press (they listen on the canvas container too, registered first) until the
   // button is up
@@ -985,10 +988,11 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     if (cityOverview.peek() && !farBox) return;
     // Without Shift a box starts only on a visible city or selected bubble: a long press on a
     // train, station, empty map or a far disc keeps its ordinary interaction.
-    if (!onNear && !e.shiftKey) return;
-    const p = { x, y, on: false, add: e.shiftKey, far: farBox, timer: 0 };
+    const now = e.shiftKey || bubblePick();
+    if (!onNear && !now) return;
+    const p = { x, y, on: false, add: e.shiftKey, far: farBox, timer: 0, ring: !now };
     press = p;
-    if (e.shiftKey) boxOn(p);
+    if (now) boxOn(p);
     else p.timer = window.setTimeout(() => boxOn(p), LONG_MS);
   });
   // Escape drops a box being drawn and nothing changes (before main.ts's Escape clears the selection)

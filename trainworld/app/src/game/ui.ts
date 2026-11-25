@@ -211,7 +211,7 @@ export interface DockLayout {
  * saved the old default with everything else, so that setting is dropped once and the new default applies; 9 since the ramp's ends are lighter (T-1138); 10 since the track display starts on Line (T-1244); 11 since the station circles start off (T-1585); 12 since lines side by side are on (T-2346); 13 since everyone starts on High map detail (T-2840); 14 since the currency starts from the browser's region (T-2860). */
 const VERSION = 16;
 
-function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; ramp: boolean; tracks: 1 | 2 | 4; hsr: boolean; tram: boolean; busway: boolean; keep: boolean; snap: boolean; tramSnap: boolean; streets: boolean; roads: boolean; beside: boolean; design: number; fly: number; advanced: boolean; platform: number; tramPlatform: number; oneTrack: boolean; stationKind: StationChoice }>; guide: boolean; v: number }> {
+function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; ramp: boolean; tracks: 1 | 2 | 4; hsr: boolean; tram: boolean; busway: boolean; keep: boolean; snap: boolean; tramSnap: boolean; streets: boolean; roads: boolean; beside: boolean; design: number; fly: number; advanced: boolean; platform: number; tramPlatform: number; oneTrack: boolean; stationKind: StationChoice; selectMode: SelectMode }>; guide: boolean; v: number }> {
   try {
     return JSON.parse(localStorage.getItem(STORE) || "{}");
   } catch {
@@ -377,6 +377,10 @@ export type StationKind = "rail" | "tram" | "bus" | "port";
 /** T-4105: what the player picked: a kind, or "auto", which takes the kind from what is under the pointer (a browser that never picked starts on "rail"). */
 export type StationChoice = StationKind | "auto";
 export const stationChoice = signal<StationChoice>(["rail", "tram", "bus", "port"].includes(saved.build?.stationKind as string) ? (saved.build!.stationKind as StationKind) : saved.build?.stationKind === "auto" ? "auto" : "rail");
+/** T-4330: what the Select tool picks: blueprints, or built track where a box holds none (the default); built track
+ * only; or demand bubbles, a box drag picking them as Shift+drag does while plain selecting. Remembered in the browser. */
+export type SelectMode = "blueprint" | "track" | "demand";
+export const selectMode = signal<SelectMode>(saved.build?.selectMode === "track" || saved.build?.selectMode === "demand" ? saved.build.selectMode : "blueprint");
 /** T-4105: the kind "auto" has found under the pointer (map/stationAuto.ts) */
 export const autoKind = signal<StationKind>("rail");
 /** the kind the station tool places now: the pick, or under "auto" what the pointer is over */
@@ -582,7 +586,7 @@ if (typeof window !== "undefined") {
 void loadNunito().then(() => document.dispatchEvent?.(new Event("tw-fontchange")));
 effect(() => {
   if (VIDEO) return; // T-2774
-  const s = { tab: tab.value, theme:theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, ramp: autoRamp.value, hsr: highSpeed.value, tram: tramTrack.value, busway: buswayTrack.value, tracks: countPicked.value, keep: keepPlacing.value, snap: snapReal.value, tramSnap: snapRealTram.value, streets: snapStreets.value, roads: snapRoads.value, beside: snapBeside.value, design: designSpeed.value, fly: flyoverSpeed.value, advanced: buildAdvanced.value, platform: buildPlatform.value, tramPlatform: buildTramPlatform.value, oneTrack: stationOneTrack.value, stationKind: stationChoice.value }, guide: guideFinished.value, v: VERSION };
+  const s = { tab: tab.value, theme:theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, ramp: autoRamp.value, hsr: highSpeed.value, tram: tramTrack.value, busway: buswayTrack.value, tracks: countPicked.value, keep: keepPlacing.value, snap: snapReal.value, tramSnap: snapRealTram.value, streets: snapStreets.value, roads: snapRoads.value, beside: snapBeside.value, design: designSpeed.value, fly: flyoverSpeed.value, advanced: buildAdvanced.value, platform: buildPlatform.value, tramPlatform: buildTramPlatform.value, oneTrack: stationOneTrack.value, stationKind: stationChoice.value, selectMode: selectMode.value }, guide: guideFinished.value, v: VERSION };
   try {
     localStorage.setItem(STORE, JSON.stringify(s));
   } catch {

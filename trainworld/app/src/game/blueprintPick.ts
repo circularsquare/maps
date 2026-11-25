@@ -11,7 +11,7 @@ import { setOneWays } from "./oneWay";
 import { isBigDelete, lineEffects, removeQuestion } from "./remove";
 import type { Level, TrackEdge, WorldView } from "./types";
 import { checkPatches, sameBuilt, worldDiff } from "./worldDiff";
-import { ask, buildLevel, selection, setTrackType, tool } from "./ui";
+import { ask, buildLevel, selection, selectMode, setTrackType, tool } from "./ui";
 import { edit, say, stationsByNum, world } from "./world";
 import { t, tList } from "../i18n";
 
@@ -54,17 +54,21 @@ export const clearBpPicked = () => {
   if (bpPicked.peek().edges.length || bpPicked.peek().stations.length) bpPicked.value = NONE;
 };
 
-/** One kind only (Anita, T-829): any blueprint in it keeps only the blueprint, else constructed. */
+/** T-4330: the Select tool's Built track only mode is on; plain selecting keeps the usual rule. */
+const builtOnly = () => tool.peek() === "blueprint" && selectMode.peek() === "track";
+
+/** One kind only (Anita, T-829): any blueprint in it keeps only the blueprint, else constructed; in the Select
+ * tool's Built track only mode always constructed (T-4330). Every pick of the tool and of plain selecting passes here. */
 export function onlyOneKind(p: BpPicked): BpPicked {
   const w = world.peek();
   if (!w) return p;
   const builtEdge = new Set(w.edges.filter((e) => e.built).map((e) => e.id));
   const builtStation = new Set(w.save.stations.filter((s) => s.built).map((s) => s.num));
-  const bp = p.edges.some((e) => !builtEdge.has(e)) || p.stations.some((s) => !builtStation.has(s));
+  const bp = !builtOnly() && (p.edges.some((e) => !builtEdge.has(e)) || p.stations.some((s) => !builtStation.has(s)));
   const nodes = p.nodes ? { nodes: p.nodes } : {};
-  return trimNodes(bp
-    ? { edges: p.edges.filter((e) => !builtEdge.has(e)), stations: p.stations.filter((s) => !builtStation.has(s)), ...nodes }
-    : { edges: p.edges, stations: p.stations, built: p.edges.length + p.stations.length > 0, ...nodes });
+  if (bp) return trimNodes({ edges: p.edges.filter((e) => !builtEdge.has(e)), stations: p.stations.filter((s) => !builtStation.has(s)), ...nodes });
+  const edges = p.edges.filter((e) => builtEdge.has(e)), stations = p.stations.filter((s) => builtStation.has(s));
+  return trimNodes({ edges, stations, built: edges.length + stations.length > 0, ...nodes });
 }
 
 /** Merge two picks (shift adds), one kind kept. */

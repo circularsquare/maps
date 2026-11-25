@@ -1314,7 +1314,7 @@ body:has(.guide.open) .install-banner { display: none; }
 .demand-selector .hint-cell { flex: none; display: grid; place-items: center; width: 28px; height: 28px;
   border: 1px solid var(--rule); background: var(--bg); color: var(--text); }
 /* T-1835: no outline, a lighter purple */
-.hint-cell .bubble { fill: color-mix(in oklab, color-mix(in oklab, #ff4d4d, #4d4dff) 62%, #fff); stroke: none; }
+.hint-cell .bubble, .select-bar .bubble { fill: color-mix(in oklab, color-mix(in oklab, #ff4d4d, #4d4dff) 62%, #fff); stroke: none; }
 /* T-1851: the track row's icon has a yellow line along its lower right; the station row's has a small
    blue station circle on top (the entries blue of map/stationCircles.ts) */
 .hint-cell .yline { stroke: var(--yellow); stroke-width: 1.8; }
@@ -1590,6 +1590,12 @@ button.save-add:hover { color: var(--text); }
 .tool-bar .stepper.wide .v { min-width: 72px; }
 .tool-bar .btn.icon svg { width: 19px; height: 19px; }
 .tool-bar .tb-narrow, .tool-bar-pop { display: none; }
+/* T-4330: the Select tool's modes, her icons: track in the blueprint blue (game/shadeTable.ts markBlueprint), track in
+   grey, the purple bubble; the selection bar under the bar (its 28 px buttons, 6 px padding, 3 px of border, a 6 px gap) */
+.select-bar .sm-blueprint { color: #2f62b3; }
+:root[data-shade="dark"] .select-bar .sm-blueprint { color: #8db6ee; }
+.select-bar .sm-track { color: var(--muted); }
+.blueprint-bar.under-bar { margin-top: 49px; }
 /* T-2284: the click mode's colour round the map, full at the edge and gone 8 px in; nothing at the
    map's edges sits within it (the tool notes, the attribution, the phone bars are 10 px in) */
 .mode-aura { position: absolute; inset: 0; z-index: 6; pointer-events: none;
@@ -2219,6 +2225,7 @@ html.no-blueprints .stn-label.plan { display: none; }
   .sky-status .status-tag { width: max-content; max-width: calc(100cqw - 20px); }
   #map:has(.sky-status .status-tag) .guide { top: 66px; }
   .blueprint-bar { top: 178px; }
+  .blueprint-bar.under-bar { top: 148px; }
 }
 /* T-1868: with no room for the picture beside the demand row, the purpose filter goes first */
 @container map-column (max-width: 460px) {
@@ -2256,6 +2263,9 @@ html.no-blueprints .stn-label.plan { display: none; }
   .tool-bar-pop .btn.lv { min-width: calc(40px / var(--ui, 1)); }
   /* the tool notes (the mode's descriptor first) right above a bar */
   #main:has(.tool-bar, .blueprint-bar) #tools { bottom: calc(36px / var(--ui, 1) + 26px); }
+  /* T-4330: the selection bar over the Select tool's bar, the tool notes and the level choices over both */
+  .blueprint-bar.under-bar { top: auto; margin: 0 0 calc(36px / var(--ui, 1) + 17px); }
+  #main:has(.under-bar) #tools { bottom: calc(72px / var(--ui, 1) + 43px); }
   /* T-3516: the track bar's one row is about 500 px of buttons, so on a phone the snap buttons take a row of their own under the rest */
   @media (max-width: 540px) {
     .track-bar { flex-wrap: wrap; overflow-x: hidden; }
@@ -2275,6 +2285,7 @@ html.no-blueprints .stn-label.plan { display: none; }
   .blueprint-bar .btn.bp-level { display: inline-grid; }
   .blueprint-levels .btn.lv { min-width: calc(40px / var(--ui, 1)); }
   .blueprint-levels { display: block; position: absolute; left: 50%; bottom: calc(36px / var(--ui, 1) + 26px); transform: translateX(-50%); z-index: 4; }
+  .under-bar ~ .blueprint-levels { bottom: calc(72px / var(--ui, 1) + 43px); }
 }
 
 /* T-195: the trip explorer's inspector and its canvas over the demand views' */
