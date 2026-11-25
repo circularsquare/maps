@@ -279,6 +279,8 @@ struct Ahead {
     worked: [bool; SLOTS],
     /// T-3655: each line's fleet per level: its headway, or a count line's trains
     keys: Vec<Option<[(u32, Option<u32>); SLOTS]>>,
+    /// T-4283: each line's weekend headways per level, as the weekend settle reads them
+    keys_rest: Vec<Option<[Option<u32>; SLOTS]>>,
     /// T-752: a line switching between counts and headways, and the levels it had no trains at
     switch: Option<(u32, [bool; SLOTS])>,
     /// T-3542: the game's hours, which move every line (`reslot`)
@@ -289,6 +291,12 @@ struct Ahead {
 /// headway, and an edit setting it sends them anew).
 fn fleet_key(net: &Network, l: usize, s: usize) -> (u32, Option<u32>) {
     match net.auto_at(l, s) { Some(a) => (u32::MAX, Some(a)), None => (net.trains_key(l, s), None) }
+}
+
+/// T-4283: line `l`'s weekend headways per slot, as `swap_in_weekend` puts them in `line_auto`.
+fn rest_auto(net: &Network, l: usize) -> [Option<u32>; SLOTS] {
+    let a = net.weekend_auto(l);
+    std::array::from_fn(|s| a.map(|a| a[net.place(l, s)]))
 }
 
 impl Ahead {
@@ -2275,6 +2283,7 @@ impl TrackWorld {
         let had = (0..self.net.line_count()).map(|l| self.net.line_ok(l as u32).then(|| [WEEKDAYS, WEEKEND].map(|row| std::array::from_fn(|lev| self.net.line_tph_on(l, row, lev))))).collect();
         let worked = std::array::from_fn(|s| self.net.slot_worked(s));
         let keys = (0..self.net.line_count()).map(|l| self.net.line_ok(l as u32).then(|| std::array::from_fn(|s| fleet_key(&self.net, l, s)))).collect();
+        let keys_rest = (0..self.net.line_count()).map(|l| self.net.line_ok(l as u32).then(|| rest_auto(&self.net, l))).collect();
         // (T-3542: also inside a batch, as a line of four or five rows sets its midday and afternoon with it)
         let auto_op = op.and_then(|op| match op {
             Op::Batch(ops) => ops.iter().find(|o| matches!(o, Op::AutoTrains { .. })),
@@ -2286,7 +2295,7 @@ impl TrackWorld {
             }
             _ => None,
         };
-        Ahead { had, worked, keys, switch, hours_game }
+        Ahead { had, worked, keys, keys_rest, switch, hours_game }
     }
 
     /// The edit applied and derived; `checked`: refused for the problems it adds, nothing changed then. Problems
@@ -2322,19 +2331,24 @@ impl TrackWorld {
             self.net.settle_kept.retain(|k| !moved.contains(&k.0));
             self.net.settle_kept_rest.retain(|k| !moved.contains(&k.0));
         }
-        // T-4239: a line given another headway, or switched between counts and headways, runs other
-        // trains over the same round trip (`running_trains`): what a settle kept it by there no
-        // longer holds
+        // T-4239, T-4283: a line given another headway, or switched between counts and headways,
+        // runs other trains over the same round trip (`running_trains`): what a settle kept it by
+        // there no longer holds, each day by its own headways
         {
             let net = &self.net;
-            let gone: Vec<(u32, usize)> = net.settle_kept.iter().chain(&net.settle_kept_rest)
+            let gone: Vec<(u32, usize)> = net.settle_kept.iter()
                 .filter(|e| net.line_ok(e.0) && a.keys.get(e.0 as usize).copied().flatten().is_some_and(|k| k[e.1].1 != net.auto_at(e.0 as usize, e.1)))
                 .map(|e| (e.0, e.1))
                 .collect();
+            let gone_rest: Vec<(u32, usize)> = net.settle_kept_rest.iter()
+                .filter(|e| net.line_ok(e.0) && a.keys_rest.get(e.0 as usize).copied().flatten().is_some_and(|k| k[e.1] != rest_auto(net, e.0 as usize)[e.1]))
+                .map(|e| (e.0, e.1))
+                .collect();
             if !gone.is_empty() {
-                for kept in [&mut self.net.settle_kept, &mut self.net.settle_kept_rest] {
-                    kept.retain(|e| !gone.contains(&(e.0, e.1)));
-                }
+                self.net.settle_kept.retain(|e| !gone.contains(&(e.0, e.1)));
+            }
+            if !gone_rest.is_empty() {
+                self.net.settle_kept_rest.retain(|e| !gone_rest.contains(&(e.0, e.1)));
             }
         }
         // the game's hours move every line: worked out again as a periods switch is (London 0.9 s
@@ -3161,6 +3175,25 @@ mod circle_tests {
         w.apply(Op::AutoTrains { id: local, auto: Some(auto), trains }).unwrap();
         assert_eq!(w.net.line_trains[l], trains, "the same trains");
         assert!((w.net.line_tph[l][HIGH] - 3600.0 / 620.0).abs() < 1e-3, "{} tph", w.net.line_tph[l][HIGH]);
+    }
+
+    /// T-4283: a line a weekend settle kept off its fleet, given another weekend headway with the
+    /// same weekend trains, drops its weekend kept entry and runs the new weekend headway
+    #[test]
+    fn a_kept_weekend_line_given_another_headway_runs_it() {
+        let (mut w, _, local, _) = shinkansen();
+        let l = local as usize;
+        let trains = w.net.line_trains[l].unwrap();
+        let auto = w.net.line_auto[l].unwrap();
+        w.apply(Op::Weekend { id: local, weekend: Weekend { share: 100, counts: Some(trains), headways: [620, auto[1], auto[2]] } }).unwrap();
+        let tph = w.net.line_tph_rest[l][HIGH];
+        let trip = w.svc_rest.as_ref().unwrap().lines[l].round_trip[HIGH];
+        assert!((tph - 3600.0 / 620.0).abs() < 1e-3, "{tph} tph");
+        w.net.settle_kept_rest.push((local, HIGH, tph.to_bits(), trip.to_bits(), trains[0]));
+        w.apply(Op::Weekend { id: local, weekend: Weekend { share: 100, counts: Some(trains), headways: [640, auto[1], auto[2]] } }).unwrap();
+        assert!(!w.net.settle_kept_rest.iter().any(|e| e.0 == local && e.1 == HIGH), "weekend kept entry dropped");
+        assert!((w.net.line_tph_rest[l][HIGH] - 3600.0 / 640.0).abs() < 1e-3, "{} tph", w.net.line_tph_rest[l][HIGH]);
+        assert_eq!(w.net.line_tph[l][HIGH], 6.0);
     }
 }
 
