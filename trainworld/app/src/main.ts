@@ -61,6 +61,7 @@ import { stationIndexOf, tripAt } from "./map/network";
 import { cityOverview } from "./map/intercityView";
 import { Overlay } from "./map/overlay";
 import { carryGrids, pick } from "./map/pick";
+import { floorAt } from "./map/buildingFloors";
 import { carryEdgeGrid } from "./map/snapIndex";
 import { timed } from "./game/stepTimes";
 import { clickNetIn, clickPatched, clickWorld, patchClickNet } from "./map/clickMap";
@@ -672,7 +673,9 @@ function selectAt(x: number, y: number, add: boolean) {
       const members = complexOf(cur.station);
       if (members.length > 1 && members.includes(hit.station)) { openAlone(hit.station); live.overlay?.invalidate(); return; }
     }
-    selection.value = hit;
+    // T-4341: a floor pick() left is an empty building's (pick() stays without it for the hovers, the cursor and the build tools)
+    const floor = hit ? null : floorAt(overlay, x, y);
+    selection.value = hit ?? (floor ? { kind: "building", id: floor.id } : null);
   }
 }
 capacity.selectClick = selectAt;

@@ -421,6 +421,8 @@ export type Selection =
    * again on every edit, so the panel finds it again by place) */
   | { kind: "busStop"; stop: string; at: [number, number] }
   | { kind: "station"; station: StationId }
+  /** T-4341: a station building with no station inside, picked on its floor (one with stations picks their complex) */
+  | { kind: "building"; id: number }
   | { kind: "track"; edge: EdgeId }
   | { kind: "junction"; node: NodeId }
   /** a train: its profile (line, run, demand level) and departure, absolute game seconds */

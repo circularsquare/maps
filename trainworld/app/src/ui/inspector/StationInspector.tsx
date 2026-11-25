@@ -13,7 +13,7 @@ import { buildingMembersById, buildingOf, hallWaiting } from "../../game/buildin
 import { hallRoom } from "../../game/buildingLayout";
 import { platformOffsets } from "../../game/complexes";
 import { passagePrice } from "../../game/upgrades";
-import type { LineInput, StationInput } from "../../game/types";
+import type { BuildingInput, LineInput, StationInput } from "../../game/types";
 import { complexOf, inComplexView, openAlone } from "../../game/complexView";
 import { complexNow, waitToward, type ComplexNow } from "../../game/complexLive";
 import { LINK_MAX_M } from "../../game/complexes";
@@ -330,10 +330,21 @@ function StationLinks({ id, members }: { id: string; members: string[] }) {
   );
 }
 
-/** T-2218: the station building the complex belongs to: its name, floor, Edit outline and Remove building. */
+/** T-2218: the station building the complex belongs to. */
 function StationBuilding({ id, members }: { id: string; members: string[] }) {
   const b = buildingOf(members);
-  if (!b) return null;
+  return b ? <BuildingSection b={b} from={id} /> : null;
+}
+
+/** T-4341: a station building with no station inside, picked on its floor: the same section, so it can still be
+ * removed once its last station is gone. */
+export function BuildingInspector({ id }: { id: number }) {
+  const b = world.value?.save.buildings?.find((x) => x.id === id);
+  return b ? <BuildingSection b={b} from={null} /> : null;
+}
+
+/** A station building's name, floor, Edit outline and Remove building; `from` the station whose panel it is in. */
+function BuildingSection({ b, from }: { b: BuildingInput; from: string | null }) {
   const n = b.corners.length / 2;
   let my = 0;
   for (let i = 0; i < n; i++) my += b.corners[2 * i + 1] / n;
@@ -352,7 +363,7 @@ function StationBuilding({ id, members }: { id: string; members: string[] }) {
         {inside.length > 0 && <li><span class="grow">{tr("stationInspector.room")}</span><span class="val" data-tip={tr("stationInspector.roomTip")}>{tr("stationInspector.roomFigure", { figure: waiting >= 1 ? `${whole(waiting)}/${whole(room)}` : whole(room) })}</span></li>}
       </ul>
       <Actions>
-        <button class="btn text" onClick={() => live.tools?.building.begin(b.corners, b.id, id)}>{tr("stationInspector.editOutline")}</button>
+        <button class="btn text" onClick={() => live.tools?.building.begin(b.corners, b.id, from)}>{tr("stationInspector.editOutline")}</button>
         <button class="btn text danger" data-tip={tipMutedLine(tr("common.shiftSkip"))} onClick={(e) => void removeThing({ kind: "building", id: b.id }, e.shiftKey)}>{tr("stationInspector.removeBuilding")}</button>
       </Actions>
     </>

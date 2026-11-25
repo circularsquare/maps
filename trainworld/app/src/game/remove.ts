@@ -131,6 +131,7 @@ function selected(r: Removable): boolean {
   if (r.kind === "track") return s?.kind === "track" && s.edge === r.edge;
   if (r.kind === "station") return s?.kind === "station" && s.station === String(r.node);
   if (r.kind === "bus") return (s?.kind === "line" || s?.kind === "train") && linesByNum(clickWorld()!).get(r.line)?.id === s.line;
+  if (r.kind === "building") return s?.kind === "building" && s.id === r.id;
   return false;
 }
 

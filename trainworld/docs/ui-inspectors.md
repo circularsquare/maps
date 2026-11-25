@@ -1031,7 +1031,10 @@ stations are constructed.
   or "Built. Click to change its outline", or "Click to stop" while drawing.
 - **A closed outline** shows its corners as round handles and each edge's middle as a small one.
   Drag a corner to move it; right click a corner to delete it (3 at least); drag an edge's middle to
-  make a new corner there. The bar at the map's bottom left says "New station building: 4 corners"
+  make a new corner there. A finger does the same: drags a handle (18 px reach for a corner, 14 for a
+  middle), holds a corner half a second to delete it, and at 3 corners the hold says "A station building
+  has 3 to 24 corners." as a notice; the touch bar sits above the outline, clear of its handles
+  (T-4341). The bar at the map's bottom left says "New station building: 4 corners"
   (or "Station building outline") with Cancel (Esc) and Construct, or Save outline, (Enter).
 - **Drawing by hand**: Esc drops a new outline (a second Esc leaves the tool). Each click places a
   corner, a ghost edge follows the pointer, the outline so far is shaded closed through it; a click on
@@ -1056,7 +1059,8 @@ stations are constructed.
   "Area" and its floor, "Room" and the riders its hall holds once the platforms are full, to the
   nearest 100 ("36,700 riders"; while platform crowds are drawn and riders wait there, "4,200/36,700
   riders"; hover "Riders who can wait in the hall once the platforms are full") [T-2219], then Edit
-  outline and Remove building. Remove building, and the delete tool
+  outline and Remove building. A building with no station inside (its last one removed) is picked by
+  a click on its floor and the panel holds this section alone (T-4341). Remove building, and the delete tool
   on the floor ("Remove the Times Sq-42 St station building"), ask first: "Remove the Times Sq-42 St
   station building? Nothing is refunded." Neither is in the Ctrl+Z history.
 - **On the map**: [ui-map.md](ui-map.md) "Station buildings on the map" (one shape with its

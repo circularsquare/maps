@@ -10,7 +10,7 @@ import { GroupInspector } from "./GroupInspector";
 import { BusStopInspector } from "./BusStopInspector";
 import { TripInspector } from "./TripInspector";
 import { JunctionInspector } from "./JunctionInspector";
-import { StationInspector } from "./StationInspector";
+import { BuildingInspector, StationInspector } from "./StationInspector";
 import { TrackInspector } from "./TrackInspector";
 import { TrainInspector } from "./TrainInspector";
 import { effect } from "@preact/signals";
@@ -30,6 +30,7 @@ export function Inspector() {
   else if (s.kind === "group") body = <GroupInspector key={s.group} group={s.group} />;
   else if (s.kind === "busStop") body = <BusStopInspector stop={s.stop} at={s.at} />;
   else if (s.kind === "station") body = <StationInspector id={s.station} />;
+  else if (s.kind === "building") body = <BuildingInspector key={s.id} id={s.id} />;
   else if (s.kind === "train") body = <TrainInspector line={s.line} profile={s.profile} dep={s.dep} />;
   else if (s.kind === "track") body = <TrackInspector edge={s.edge} />;
   else if (s.kind === "junction") body = <JunctionInspector node={s.node} />;

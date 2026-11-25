@@ -223,6 +223,8 @@ mouse moving again takes it back).
   does) and stop (a red cross; the run ends and its track stays, or the placement is dropped; the
   tool stays on). The level and track type are the track bar's [T-1706, T-2282].
 - **Bus points** drag with a finger and are deleted by holding one (Drawing a bus line, T-1517).
+- **Station building** handles drag with a finger and a held corner is deleted, as bus points (ui-inspectors.md
+  "Station buildings", T-4341).
 - **Pinch and pan** work as always; a pan or pinch never places or moves a point. A tap that stops
   a fling is no tap (MapLibre's own rule).
 - **Select tool**: a one-finger drag pans; a tap adds the piece under it to the pick or takes it

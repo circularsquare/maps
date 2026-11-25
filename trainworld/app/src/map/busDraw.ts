@@ -41,7 +41,7 @@ import { keyIsTheirs } from "../ui/keys";
 import { BUS_KEY } from "../ui/toolKeys";
 import type { ClockClient } from "../workers/clockClient";
 import { metresBetween } from "../game/walks";
-import { SAME_TAP_PX, touchInput, type TouchCtl } from "./touch";
+import { LONG_PRESS_MS, SAME_TAP_PX, TOUCH_HANDLE_PX, TOUCH_SLOP_PX, touchInput, type TouchCtl } from "./touch";
 import type { Overlay } from "./overlay";
 import { BusRoads, SNAP_M, type BusRefusal, type Leg } from "./busRoads";
 import { setGrabbing } from "./nodeDrag";
@@ -67,14 +67,9 @@ const HANDLE_PX = 8;
 const NEAR_POINT_SQ_M = 12 * 12;
 /** a press on a handle becomes a drag once the pointer has moved this far, px (MapLibre's click tolerance) */
 const DRAG_PX = 3;
-/** a finger's reach to a handle, and how far it may wander (px) before the press is a drag, not a hold */
-const TOUCH_HANDLE_PX = 18;
-const TOUCH_SLOP_PX = 8;
 /** a press this close (px) to the route's path, between its points, drags a new point out of it (T-3366) */
 const PATH_PX = 7;
 const TOUCH_PATH_PX = 12;
-/** a finger held still on a handle this long (ms) deletes the point (T-1517) */
-const LONG_PRESS_MS = 500;
 
 /** a refusal as the tag over the pointer says it, and as the message after a click (T-2451) */
 const refusalTag = (r: BusRefusal) => t(r === "far" ? "busDraw.tagFar" : r === "path" ? "busDraw.tagPath" : "busDraw.tagLong");

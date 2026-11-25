@@ -49,3 +49,7 @@ export const touchActions = { confirm: () => {}, back: () => {}, stop: () => {},
 
 /** A tap within this of the point being previewed confirms it (px). */
 export const SAME_TAP_PX = 24;
+
+/** A finger's reach for a tool's handle and how far it moves before a press is a drag (px), and how long a
+ * press is held to do a right click's work (ms). */
+export const TOUCH_HANDLE_PX = 18, TOUCH_SLOP_PX = 8, LONG_PRESS_MS = 500;

@@ -46,7 +46,7 @@ import { setGrabbing } from "./nodeDrag";
 import type { FerryPortIn } from "../workers/protocol";
 import type { Overlay } from "./overlay";
 import { newStationName } from "./stationNames";
-import { touchInput, type TouchCtl } from "./touch";
+import { LONG_PRESS_MS, TOUCH_HANDLE_PX, TOUCH_SLOP_PX, touchInput, type TouchCtl } from "./touch";
 import { safeColour } from "./safeColour";
 import { halfFillVector, headingAtPlane } from "./halfDot";
 import { playBuild } from "./buildSound";
@@ -69,13 +69,9 @@ type Under = { kind: "handle"; i: number } | { kind: "way"; k: number; j: number
 
 /** a click this near (px) to a port's circle is on it; a port within `PORT_NEAR_M` of the click too */
 const HANDLE_PX = 10;
-const TOUCH_HANDLE_PX = 18;
 /** a press this near (px) to a waypoint is on it; it becomes a drag once the pointer has moved `DRAG_PX` */
 const WAY_PX = 8;
 const DRAG_PX = 3;
-/** a finger held still on a port this long (ms) does a right click's work there, as on the bus tool (T-1517) */
-const LONG_PRESS_MS = 500;
-const TOUCH_SLOP_PX = 8;
 const PORT_NEAR_M = 30;
 
 const farFromWater = () => t("ferryDraw.tagFar");

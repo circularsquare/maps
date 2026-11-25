@@ -5,6 +5,8 @@
 // outline, and clicks then place corners as the bus tool's points: a ghost edge follows the pointer, a
 // click on the first corner, a double click or Enter closes it, Backspace or a right click takes back the
 // last corner. Construct (Enter, or the bar's button) adds it; Save outline reshapes an existing one.
+// A finger (T-4341) drags the same handles through pointer events, and holds a corner to delete it: the
+// browser's own long press (Android's contextmenu) is ignored, as iOS sends none.
 //
 // The snap, a light one (Ctrl held: none): the first edge turns to the nearest platform's axis (a station
 // within 50 m of its first corner) within 10 degrees; every other edge to that axis or a right angle to it
@@ -31,7 +33,7 @@ import type { StationId } from "../game/types";
 import { queryClock } from "../workers/clockClient";
 import { setGrabbing } from "./nodeDrag";
 import type { Overlay } from "./overlay";
-import { touchInput, type TouchCtl } from "./touch";
+import { LONG_PRESS_MS, TOUCH_HANDLE_PX, TOUCH_SLOP_PX, touchInput, type TouchCtl } from "./touch";
 
 type Pt = { x: number; y: number };
 
@@ -43,6 +45,8 @@ const MID_PX = 7;
 const CLOSE_PX = 12;
 const LINE_PX = 8;
 const DRAG_PX = 4;
+/** an edge's middle handle under a finger (a corner's is TOUCH_HANDLE_PX) */
+const TOUCH_MID_PX = 14;
 const PLATFORM_NEAR_M = 50;
 /** three corners this near a right angle offer the fourth */
 const SQUARE_RAD = (1 * Math.PI) / 180;
@@ -64,7 +68,9 @@ export class BuildingDraw {
   private at: Pt | null = null;
   private under: Under = { kind: "free" };
   private noSnap = false;
-  private press: { i: number; mid: boolean; x: number; y: number } | null = null;
+  private press: { i: number; mid: boolean; x: number; y: number; touch?: boolean; timer?: number } | null = null;
+  /** the fingers on the map: a second one is a pinch */
+  private fingers = new Set<number>();
   private drag: { i: number; was: Pt[] } | null = null;
   private dragEnded = false;
   private busy = false;
@@ -80,6 +86,7 @@ export class BuildingDraw {
     map.on("contextmenu", (e) => {
       if (!this.active) return;
       e.originalEvent.preventDefault();
+      if (touchInput.peek()) return;
       const u = this.underAt(e.point.x, e.point.y);
       if (this.closed) {
         if (u.kind === "corner") this.removeCorner(u.i);
@@ -89,6 +96,10 @@ export class BuildingDraw {
     map.getContainer().addEventListener("mousedown", (e) => this.onDown(e), true);
     addEventListener("mousemove", (e) => this.onDrag(e));
     addEventListener("mouseup", () => this.onUp());
+    map.getContainer().addEventListener("pointerdown", (e) => this.onTouchDown(e), true);
+    addEventListener("pointermove", (e) => e.pointerType === "touch" && this.onDrag(e));
+    addEventListener("pointerup", (e) => this.onTouchEnd(e));
+    addEventListener("pointercancel", (e) => this.onTouchEnd(e));
   }
 
   get active() {
@@ -159,8 +170,8 @@ export class BuildingDraw {
 
   // ---------------------------------------------------------------- what is under the pointer
 
-  private underAt(px: number, py: number): Under {
-    let best = HANDLE_PX * HANDLE_PX, hit = { kind: "free" } as Under;
+  private underAt(px: number, py: number, handlePx = HANDLE_PX, midPx = MID_PX): Under {
+    let best = handlePx * handlePx, hit = { kind: "free" } as Under;
     this.pts.forEach((p, i) => {
       const [x, y] = this.toPx(p);
       const d = (x - px) ** 2 + (y - py) ** 2;
@@ -176,7 +187,7 @@ export class BuildingDraw {
       }
       return hit;
     }
-    best = MID_PX * MID_PX;
+    best = midPx * midPx;
     for (let i = 0; i < this.pts.length; i++) {
       const [x, y] = this.mid(i);
       const d = (x - px) ** 2 + (y - py) ** 2;
@@ -346,6 +357,45 @@ export class BuildingDraw {
     this.press = { i: u.i, mid: u.kind === "mid", x: px, y: py };
   }
 
+  /** A finger on a handle of the closed outline: it drags as the mouse does and does not pan the map; held still on
+   * a corner it deletes it. */
+  private onTouchDown(e: PointerEvent) {
+    if (e.pointerType !== "touch") return;
+    this.fingers.add(e.pointerId);
+    if (this.fingers.size > 1) return void this.cancelDrag();
+    if (!this.active || !this.closed || this.busy || e.target !== this.map.getCanvas() || this.press) return;
+    const r = this.map.getContainer().getBoundingClientRect();
+    const px = e.clientX - r.left, py = e.clientY - r.top;
+    const u = this.underAt(px, py, TOUCH_HANDLE_PX, TOUCH_MID_PX);
+    if (u.kind !== "corner" && u.kind !== "mid") return;
+    // before MapLibre's touchstart, which the pointerdown precedes
+    this.map.dragPan.disable();
+    const timer = u.kind === "corner" ? window.setTimeout(() => this.longPress(), LONG_PRESS_MS) : undefined;
+    this.press = { i: u.i, mid: u.kind === "mid", x: px, y: py, touch: true, timer };
+    this.under = u;
+    this.place();
+  }
+
+  private longPress() {
+    const p = this.press;
+    if (!p || this.drag) return;
+    this.endDrag();
+    navigator.vibrate?.(15);
+    // a finger has no tag to say why nothing went
+    if (this.pts.length > 3) this.removeCorner(p.i);
+    else say(describeIssue("BuildingCorners"), true);
+  }
+
+  private onTouchEnd(e: PointerEvent) {
+    if (e.pointerType !== "touch") return;
+    this.fingers.delete(e.pointerId);
+    if (!this.press && !this.drag) return;
+    if (e.type === "pointercancel") this.cancelDrag();
+    else this.onUp();
+    this.under = { kind: "free" };
+    this.place();
+  }
+
   private onDrag(e: MouseEvent) {
     const p = this.press;
     if (!p) return;
@@ -353,7 +403,8 @@ export class BuildingDraw {
     const px = e.clientX - r.left, py = e.clientY - r.top;
     this.noSnap = e.ctrlKey || e.metaKey;
     if (!this.drag) {
-      if (Math.hypot(px - p.x, py - p.y) < DRAG_PX) return;
+      if (Math.hypot(px - p.x, py - p.y) < (p.touch ? TOUCH_SLOP_PX : DRAG_PX)) return;
+      clearTimeout(p.timer);
       const was = this.pts.map((q) => ({ ...q }));
       let i = p.i;
       if (p.mid) {
@@ -391,6 +442,7 @@ export class BuildingDraw {
   }
 
   private endDrag() {
+    clearTimeout(this.press?.timer);
     if (this.drag) setGrabbing(false);
     if (this.press || this.drag) this.map.dragPan.enable();
     this.press = null;
@@ -413,9 +465,17 @@ export class BuildingDraw {
     return { confirm: this.closed ? !this.busy : this.pts.length >= 3 ? true : null, confirmTip: this.closed ? (this.id === null ? t("buildingDraw.construct") : t("buildingDraw.saveOutline")) : t("buildingDraw.closeOutline"), back: !this.closed, stopTip: t("buildingDraw.cancel") };
   }
 
+  /** Where the touch bar goes: by the last corner while drawing; above a closed outline, whose handles it
+   * would cover beside any one corner (T-4341). */
   touchPoint() {
     const p = this.pts[this.pts.length - 1];
     if (!p) return null;
+    if (this.closed) {
+      const xy = this.pts.map((q) => this.toPx(q));
+      const xs = xy.map((q) => q[0]), top = Math.min(...xy.map((q) => q[1]));
+      const ll = this.map.unproject([(Math.min(...xs) + Math.max(...xs)) / 2, top - TOUCH_HANDLE_PX]);
+      return { lng: ll.lng, lat: ll.lat };
+    }
     const [lng, lat] = packToLngLat(p.x, p.y);
     return { lng, lat };
   }
