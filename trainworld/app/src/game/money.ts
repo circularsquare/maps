@@ -278,15 +278,16 @@ const BASE_BY_BOARDINGS = 0.5;
  * the main thread: a short leg (a feeder bus) gets less than an even share and a long one more.
  * `byBoardings` 1 is the even share per boarding. T-3578: with a line's own fare multiple set, the pool also takes what the`r`n * multiples add past one base (demand's `LineDemand.baseX`), and each line's weights and cap are times its own multiple. */
 /** T-4150: the last `baseTrips` of each demand view (the fares' and the regions' figures both ask it of one world) */
-const baseLast = new WeakMap<DemandView, { w: WorldView; fares: MoneyTerms["fares"]; byId: Map<string, StationInput>; by: number; out: Map<string, number> }>();
+const baseLast = new WeakMap<DemandView, { w: WorldView; fares: MoneyTerms["fares"]; byId: Map<string, StationInput>; by: number; zl: number; out: Map<string, number> }>();
 /** T-4150: each line's own part of the base share (its terms in order, so the sums add as before) */
 const baseKeptBy = new WeakMap<object, PerRecord<string, { extra: number[]; pk: number; sc: number; b: number; own: number }>>();
 
 export function baseTrips(w: WorldView, dv: DemandView | null, fares: MoneyTerms["fares"], byId: Map<string, StationInput>, byBoardings = BASE_BY_BOARDINGS): Map<string, number> {
   const out = new Map<string, number>();
   if (!dv) return out;
-  const was = baseLast.get(dv);
-  if (was && !freshNow() && was.w === w && was.fares === fares && was.byId === byId && was.by === byBoardings) return new Map(was.out);
+  // (zone boundaries arriving re-place the stops, and with them their fare scales: `lineGeo`)
+  const was = baseLast.get(dv), zl = zonesLoaded.peek();
+  if (was && !freshNow() && was.w === w && was.fares === fares && was.byId === byId && was.by === byBoardings && was.zl === zl) return new Map(was.out);
   const boardingsAll = w.save.lines.reduce((a, l) => a + (dv.lines.get(l.id)?.ridersPerDay ?? 0), 0);
   const perBoarding = boardingsAll > 0 ? Math.min(1, dv.railTripsPerDay / boardingsAll) : 1;
   const ids: string[] = [], cap: number[] = [], byB: number[] = [], byKm: number[] = [], own: number[] = [];
@@ -339,7 +340,7 @@ export function baseTrips(w: WorldView, dv: DemandView | null, fares: MoneyTerms
     if (!more) { for (let i = 0; i < ids.length; i++) if (!held[i]) got[i] = c * wt[i]; break; }
   }
   ids.forEach((id, i) => out.set(id, got[i]));
-  if (!freshNow()) baseLast.set(dv, { w, fares, byId, by: byBoardings, out });
+  if (!freshNow()) baseLast.set(dv, { w, fares, byId, by: byBoardings, zl, out });
   return new Map(out);
 }
 

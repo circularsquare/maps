@@ -18,6 +18,7 @@ import { touchInput } from "./touch";
 import type { Snap } from "./toolParts";
 import type { Tools } from "./tools";
 import { ahead } from "../game/pending";
+import type { Naming } from "./stationTool";
 
 /** the piece runs this far past each platform end: the track model wants a metre clear, and room for a later route
  * to join without a short piece at the end */
@@ -136,7 +137,7 @@ export function freeGhost(tk: Tools, box: (lx: number, ly: number, ways: ArrayLi
 export const freeHint = () => tr(first ? "tools.freeTurn" : "tools.freeStart", { touch: touchInput.peek() });
 
 /** The second click: the station and its own piece of track, one edit. */
-export async function freeClick(tk: Tools, e: MapMouseEvent, nameLater: (px: number, py: number) => { ticket: number; name: Promise<string> }) {
+export async function freeClick(tk: Tools, e: MapMouseEvent, nameLater: (px: number, py: number) => Naming) {
   const h = firstAt();
   if (!h) return;
   tk.pointer = { px: e.point.x, py: e.point.y, lng: e.lngLat.lng, lat: e.lngLat.lat };
@@ -151,6 +152,7 @@ export async function freeClick(tk: Tools, e: MapMouseEvent, nameLater: (px: num
   // T-4214: sent at once, its name after it
   const naming = nameLater(...tk.screen(p.mid.lx, p.mid.ly));
   const r = await shown.send(() => edit({ op: "addStation", at: p.stationAt, platform: p.plat, name: "", ticket: naming.ticket }, true, true, "click"));
+  naming.placed(r.ok);
   if (r.ok) {
     tk.lastPlaced = toLngLat(p.mid.lx, p.mid.ly);
     void naming.name.then((name) => say(tr("tools.blueprintStation", { name })));

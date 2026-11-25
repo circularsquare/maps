@@ -153,6 +153,7 @@ export async function stationClick(tk: Tools, e: MapMouseEvent) {
     const hover = hoverName(tk, e), px = e.point.x, py = e.point.y;
     const naming = nameLater(tk, () => hover ?? nameFor(tk, px, py));
     const r = await shown.send(() => edit({ op: "addBrtStation", x: b.x, y: b.y, heading: b.heading, name: "", ticket: naming.ticket }, true, true, "click"));
+    naming.placed(r.ok);
     if (r.ok) placedSay(tk, toLngLat(b.lx, b.ly), naming.name);
     else if (r.issues.length) say(describeIssues(r.issues, undefined, undefined, true), true);
     return;
@@ -183,6 +184,7 @@ export async function stationClick(tk: Tools, e: MapMouseEvent) {
     return a.ok ? null : a.issues;
   }, (p) => roomSnap(tk, p), () => false);
   if (!r.spot) shown.drop();
+  naming.placed(!!r.spot);
   if (r.spot) placedSay(tk, toLngLat(r.spot.lx, r.spot.ly), naming.name);
   else if (r.issues.length) say(describeIssues(r.issues, undefined, undefined, true), true);
 }
@@ -206,22 +208,24 @@ let tickets = 0;
 /** lookups not yet sent: undo and redo wait for them (map/toolWait.ts), so a name never comes after its station's undo */
 let lookups = 0;
 export const namesPending = () => lookups;
-/** names sent and when, until the world has them: a station looked up meanwhile takes another */
-const namesOut = new Map<string, number>();
+/** names sent, when and for which ticket, until the world has them: a station looked up meanwhile takes another */
+const namesOut = new Map<string, { at: number; ticket: number }>();
 const NAME_OUT_MS = 60_000;
 
 /** The names in use for a new station to avoid: the tools' world's, and those sent and not yet in it. */
 export function takenNames(): Set<string> {
   const taken = new Set(clickWorld()?.save.stations.map((st) => st.name) ?? []), now = performance.now();
-  for (const [n, at] of namesOut) if (taken.has(n) || now - at > NAME_OUT_MS) namesOut.delete(n); else taken.add(n);
+  for (const [n, o] of namesOut) if (taken.has(n) || now - o.at > NAME_OUT_MS) namesOut.delete(n); else taken.add(n);
   return taken;
 }
 
 /** The name `look` finds, sent for the station edits that carry the returned ticket. The lookup starts after the next
  * paint: its first part runs at once and reads the basemap's tiles (tens of ms with none read yet), which would hold
  * back the edit's send and the station drawn at the click. A failed lookup takes the fallback "Station N", as
- * `newStationName` would. */
-export function nameLater(tk: Tools, look: () => Promise<string>): { ticket: number; name: Promise<string> } {
+ * `newStationName` would. `placed`, once the edits are answered: whether one placed a station; a name none took is not
+ * held from the next station. */
+export type Naming = { ticket: number; name: Promise<string>; placed: (ok: boolean) => void };
+export function nameLater(tk: Tools, look: () => Promise<string>): Naming {
   const ticket = ++tickets, game = gameStamp.peek();
   lookups++;
   const named = new Promise<string>((res) => {
@@ -237,13 +241,15 @@ export function nameLater(tk: Tools, look: () => Promise<string>): { ticket: num
     for (let k = 1; ; k++) if (!t.has(`Station ${k}`)) return `Station ${k}`;
   });
   void named.then((n) => {
-    namesOut.set(n, performance.now());
+    namesOut.set(n, { at: performance.now(), ticket });
     tk.client.post({ kind: "stationName", ticket, name: n, game });
   }).finally(() => {
     lookups--;
     clicksMoved();
   });
-  return { ticket, name: named };
+  // (after the hold above, which was asked first)
+  const placed = (ok: boolean) => { if (!ok) void named.then((n) => { if (namesOut.get(n)?.ticket === ticket) namesOut.delete(n); }); };
+  return { ticket, name: named, placed };
 }
 
 /** Ask for the legs of the demand shown, unless held or asked already (T-412). T-2430: an answer

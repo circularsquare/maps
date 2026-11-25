@@ -108,6 +108,7 @@ export async function portClick(tk: Tools, e: MapMouseEvent) {
   const naming = nameLater(tk, () => newStationName(tk.map, landing.lng, landing.lat, null, takenNames, false).catch(() => tr("ferryDraw.port")));
   const a = lngLatToPack(landing.lng, landing.lat), b = lngLatToPack(snap.berth[0], snap.berth[1]);
   const r = await edit({ op: "addPort", x: a.x, y: a.y, bx: b.x, by: b.y, name: "", ticket: naming.ticket }, true, true, "click");
+  naming.placed(r.ok);
   if (r.ok) placedSay(tk, [landing.lng, landing.lat], naming.name);
   else if (r.issues.length) say(describeIssues(r.issues, undefined, undefined, true), true);
 }

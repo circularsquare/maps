@@ -104,8 +104,11 @@ export class EndMarkers {
     const v = w?.version ?? -1, av = anchor().version;
     // the points are in local units, so they go stale when the draw anchor moves
     if (kind === this.kind && v === this.version && net === this.net && av === this.anchorV && hidden.v === this.hiddenV) return;
-    const d = w && kind === this.kind && av === this.anchorV && hidden.v === this.hiddenV ? worldDiff(this.from, w) : null;
     const netMoved = net !== this.net;
+    // a network built for an older world than this one has not drawn its edits yet (a state's world comes before its
+    // network, a staged state's network later still): what they changed is looked at again with the next network
+    const netHolds = this.overlay.renderer.netVersion >= v;
+    const d = w && kind === this.kind && av === this.anchorV && hidden.v === this.hiddenV && !(netMoved && this.wholeStale) ? worldDiff(this.from, w) : null;
     this.kind = kind;
     this.version = v;
     this.net = net;
@@ -118,12 +121,14 @@ export class EndMarkers {
       this.incident.clear();
       this.edgeBy.clear();
       this.stale.clear();
+      this.wholeStale = false;
       return;
     }
-    if (d && d.nodes.size + d.edges.size + this.stale.size <= PATCH_MAX) this.patchPts(kind, w, net, d, netMoved);
+    if (d && d.nodes.size + d.edges.size + this.stale.size <= PATCH_MAX) this.patchPts(kind, w, net, d, netMoved, netHolds);
     else {
       this.allPts(kind, w, net);
       this.stale.clear();
+      this.wholeStale = !netHolds;
     }
     // in the network's node order, as found whole
     this.pts = [...this.byNode].sort((a, b) => a[0] - b[0]).map(([, p]) => p);
@@ -140,9 +145,12 @@ export class EndMarkers {
   private byNode = new Map<number, Pt>();
   private incident = new Map<number, number[]>();
   private edgeBy = new Map<number, TrackEdge>();
-  /** the nodes worlds changed since the drawn network last changed: a world comes before its network, and a point is
-   * only where the network draws track, so they are looked at again when it comes */
+  /** the nodes worlds changed since the drawn network was last one built for the world in hand: a world comes before its
+   * network, and a point is only where the network draws track, so they are looked at again with each network until one
+   * holds them */
   private stale = new Set<number>();
+  /** the points were all found on a network not built for their world (none drawn yet, a load's): found again on the next */
+  private wholeStale = false;
 
   private allPts(kind: Kind, w: WorldView, net: NetworkBuffers | null) {
     this.byNode.clear();
@@ -155,7 +163,7 @@ export class EndMarkers {
     }
   }
 
-  private patchPts(kind: Kind, w: WorldView, net: NetworkBuffers | null, d: WorldDiff, netMoved: boolean) {
+  private patchPts(kind: Kind, w: WorldView, net: NetworkBuffers | null, d: WorldDiff, netMoved: boolean, netHolds: boolean) {
     const touched = new Set<number>(d.nodes.keys());
     for (const [id, [a, b]] of d.edges) {
       if (a) {
@@ -177,7 +185,7 @@ export class EndMarkers {
       if (p) this.byNode.set(id, p);
       else this.byNode.delete(id);
     }
-    if (netMoved) this.stale.clear();
+    if (netMoved && netHolds) this.stale.clear();
   }
 
   private addEdge(e: TrackEdge) {

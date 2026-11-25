@@ -27,7 +27,8 @@ export interface WorldDiff {
 }
 
 /** The records of `a` and `b` whose objects differ, or that only one has. Both lists in ascending id order (the model's)
- * are walked side by side; one that is not is gone through by id from where it breaks the order. */
+ * are walked side by side; one that is not is gone through by id from where it breaks the order, with the records the
+ * walk found in one list only (one of them can be in the other's rest). */
 function diffList<K extends string | number, T extends { id: K }>(a: Iterable<T>, b: Iterable<T>, out: Map<K, readonly [T | undefined, T | undefined]>): void {
   const ia = a[Symbol.iterator](), ib = b[Symbol.iterator]();
   let x = ia.next(), y = ib.next();
@@ -55,14 +56,21 @@ function diffList<K extends string | number, T extends { id: K }>(a: Iterable<T>
     }
   }
 }
-/** the rest of two lists by id */
+/** the rest of two lists by id, and the records `out` has from one list only */
 function byId<K, T extends { id: K }>(x: IteratorResult<T>, ia: Iterator<T>, y: IteratorResult<T>, ib: Iterator<T>, out: Map<K, readonly [T | undefined, T | undefined]>) {
-  const was = new Map<K, T>();
+  const was = new Map<K, T>(), now: T[] = [];
+  for (const [k, [p, q]] of out) {
+    if (p && q) continue;
+    if (p) was.set(k, p);
+    else now.push(q!);
+    out.delete(k);
+  }
   for (let r = x; !r.done; r = ia.next()) was.set(r.value.id, r.value);
-  for (let r = y; !r.done; r = ib.next()) {
-    const v = was.get(r.value.id);
-    if (v !== r.value) out.set(r.value.id, [v, r.value]);
-    was.delete(r.value.id);
+  for (let r = y; !r.done; r = ib.next()) now.push(r.value);
+  for (const r of now) {
+    const v = was.get(r.id);
+    if (v !== r) out.set(r.id, [v, r]);
+    was.delete(r.id);
   }
   for (const [k, v] of was) out.set(k, [v, undefined]);
 }

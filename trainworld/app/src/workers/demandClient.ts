@@ -1064,6 +1064,7 @@ class DemandClient {
   /** T-4202: it is another demand code's result standing in, so the fresh final is written over it */
   private cachedStandIn = false;
   private cachedLocal = false;
+  private cacheSeq = 0;
   /** what the last read and write did (window.twDemand.client.cacheLog with ?debug=1) */
   cacheLog: { at: number; ahead?: boolean; hash?: string; readMs?: number; miss?: string; standIn?: string; shownAt?: number; skip?: string; wrote?: { at: number; ms: number; bytes: number; ok: boolean; ahead?: boolean } } | null = null;
   /** every read's `cacheLog`, oldest first */
@@ -2918,6 +2919,8 @@ class DemandClient {
     if (!this.cacheOn || !this.cacheWrites || !slots.writable || !slots.active) return skip("off");
     const days = demandByDay.peek();
     if (days.some((d) => d.view?.version !== s.version)) return skip("days");
+    // (the last asked writes: one asked before it can finish its reads after it, T-4266)
+    const seq = ++this.cacheSeq;
     // (T-4260: held local whether or not this solve ended local: another city's whole solve leaves the figures of one an
     // edit left local as they are)
     const local = !!s.localHeld?.slice(0, this.computeN).some(Boolean);
@@ -2931,6 +2934,7 @@ class DemandClient {
     // T-1539: the network the loaded save worked out, so the next load of it shows this at once
     const lk = this.loadKey;
     const ahead = lk?.snapshot && lk.svcKey === keyOf(s.svc) ? { save: lk.key, snapshot: lk.snapshot } : null;
+    if (seq !== this.cacheSeq) return skip("newer");
     // the result shown at load is the same one, unless it can now add its bubbles or its network, or it stood in (T-4202)
     if (hash === this.cachedHash && !this.cachedStandIn && this.cachedLocal === local && (this.cachedModes || !cm) && (!ahead || this.cachedAhead === ahead.save)) return skip("same");
     const modes = cm && { city, data: concat([cm.homeRail, cm.homeWalk, cm.homeDrive, cm.workRail, cm.workWalk, cm.workDrive, cm.homeNone, cm.workNone]), ...(m!.day ? { day: m!.day } : {}) };

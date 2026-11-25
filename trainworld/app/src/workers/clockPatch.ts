@@ -43,7 +43,8 @@ export function mapPatch(api: TrackApi): MapPatch | undefined {
 /** The paths of the lines noted since the last state read (`peek_changed_lines`) that differ from those the page holds
  * (`posted.lines`), made as the state's rows make them (stateRows.ts `heavy`); why not, when a line is new, gone, starts
  * or stops counting (its whole track is read again then), changes between one path and a plan's and a run's, or stops
- * elsewhere (a tool reads the stops: the line tool's next click works from them). */
+ * elsewhere (a tool reads the stops: the line tool's next click works from them). A partly built line's run is its own
+ * path: constructing its plan's track moves the run and leaves the plan. */
 function movedPaths(api: TrackApi): PatchLine[] | string {
   const noted = api.peek_changed_lines();
   if (noted[0] === ALL) return "every line noted";
@@ -53,15 +54,18 @@ function movedPaths(api: TrackApi): PatchLine[] | string {
   for (const id of noted) {
     const row = posted.lines.get(id);
     if (!row) return `line ${id} new`;
-    const plan = api.line_path(id), back = api.line_back_path(id);
-    if (same(plan, row.planPath ?? row.path) && same(back, row.back ?? [])) continue;
+    const plan = api.line_path(id), back = api.line_back_path(id), at = api.line_part(id), part = at.length === 4;
+    const run = part ? api.line_run_path(id) : plan;
+    if (part === !!row.planPath && same(run, row.path) && (!part || same(plan, row.planPath!)) && same(back, row.back ?? [])) continue;
     if (!info) { info = new Map(); const li = api.lines_info(); for (let i = 0; i < li.length; i += 22) info.set(li[i], [li[i + 2], li[i + 3]]); }
-    const now = info.get(id), part = api.line_part(id).length === 4;
+    const now = info.get(id);
     if (!now) return `line ${id} gone`;
     if ((now[0] === 1) !== row.ok || (now[1] === 1) !== row.running) return `line ${id} starts or stops running`;
     if (part !== !!row.planPath) return `line ${id}'s plan`;
     if (!same(api.line_stops(id), row.planStops ?? row.stops) || !same(api.line_back_stops(id), row.backStops ?? [])) return `line ${id}'s stops`;
-    out.push({ id, path: [...(part ? api.line_run_path(id) : plan)], ...(part ? { planPath: [...plan] } : {}), ...(back.length ? { back: [...back] } : {}) });
+    // (the page reads a partly built line's run stops and where they start among its plan's, `toWorld`)
+    if (part && (!same(api.line_run_stops(id), row.stops) || at[0] !== row.stopStart)) return `line ${id}'s stops`;
+    out.push({ id, path: [...run], ...(part ? { planPath: [...plan] } : {}), ...(back.length ? { back: [...back] } : {}) });
   }
   return out;
 }
