@@ -99,7 +99,8 @@ function playwrightDriver(page, input) {
   };
 }
 
-const READY_MS = 300000;
+/** ms a game may take to open; TW_READY_MS for a save known to open slowly */
+const READY_MS = Number(process.env.TW_READY_MS) || 300000;
 
 /** a game in a new tab of `chrome` (launchChrome's); see openGame for the options */
 async function openIn(chrome, { url, city = null, save = null, saveVia = 'panel', mode = null, paused = true, ui = null, query = '', touch = false, lang = 'en', errorsIgnore } = {}) {

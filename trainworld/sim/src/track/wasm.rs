@@ -914,6 +914,19 @@ impl TrackApi {
         }
         out
     }
+    /// T-4193: a save's bus routes' points, x, y flat, read without deriving it, as `bus_route` gives them once loaded:
+    /// the clock worker puts the street speeds they meet in before the one real load, so it times its buses on them
+    /// and settles once. Empty if it does not decode or has no bus line.
+    pub fn save_bus_points(bytes: &[u8]) -> Vec<f64> {
+        let Ok(net) = save::decode(split_eras(bytes).0) else { return vec![] };
+        let mut out = vec![];
+        for l in net.bus_lines() {
+            if let Some(r) = &net.line_bus[l as usize] {
+                out.extend(r.points.iter().flat_map(|p| [p[0], p[1]]));
+            }
+        }
+        out
+    }
     /// T-889: a save's built stations as `nodes_info` lists them, read without deriving it: the
     /// frame (kind, origin lon, lat), then x, y per station in node order. The demand pool opens the
     /// zones they reach while the clock worker works the network out. Empty if it does not decode.

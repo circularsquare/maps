@@ -604,8 +604,10 @@ async function loadMasks(ids: string[]) {
 }
 
 /** Before a load (T-737): the masks of the zones the save's nodes and curve points fall in, so the
- * network is derived once (a load is about 3 s in WASM for Japan's 709 lines). `masksForLoaded`
- * still catches a zone only the drawn curves reach. */
+ * network is derived once (a load is about 3 s in WASM for Japan's 709 lines), and (T-4193) the street speeds of
+ * the zones its bus routes meet, so the load times its buses on them and settles once (each zone's speeds landing
+ * after it settle the whole network again: 13 minutes on a save with 92 bus lines in 19 zones, T-4188).
+ * `masksForLoaded` still catches a zone only the drawn curves reach. */
 async function masksBeforeLoad(net: Uint8Array) {
   askedAtLoad = new Set();
   if (trackFrameKind(net) !== NEW_GAME_FRAME.kind) return;
@@ -614,11 +616,18 @@ async function masksBeforeLoad(net: Uint8Array) {
   const shown = frame;
   putFrame(makeFrame(NEW_GAME_FRAME));
   const missing = zonesOfPoints(pts).filter((id) => !masksIn.has(id));
+  const streets = zonesOfPoints(TrackApi.save_bus_points(net)).filter((id) => !streetsIn.has(id));
   putFrame(shown);
-  if (!missing.length) return;
+  if (!missing.length && !streets.length) return;
   for (const id of missing) askedAtLoad.add(id);
+  // installed in the last game's network, they would rework its track and time its buses again
   api!.load(emptyTrack!);
-  await loadMasks(missing);
+  const speeds = ensureStreets(streets);
+  if (missing.length) await loadMasks(missing);
+  if (streets.length) {
+    loadStep(`street speeds for ${streets.length} zones`); // i18n-ignore
+    await speeds;
+  }
 }
 
 /** Put a network (in the world frame) in the track model, with the masks of the zones it meets. `level`: the
@@ -655,15 +664,16 @@ async function masksForLoaded(net: Uint8Array, level?: number) {
     const r = a.edge_render(ei[i]);
     for (let k = 0; k + 2 < r.length; k += 3) xy.push(r[k], r[k + 1]);
   }
-  // T-1577: the street speeds under the bus routes (their points are no track); T-2499: waited for,
-  // so the load's network is the save's alone (its buses timed on them), not whichever fetch won
+  // T-1577: the street speeds under the bus routes (their points are no track), in before the load unless a fetch
+  // failed or the save was in another frame; T-2499: waited for, so the load's network is the save's alone (its
+  // buses timed on them), not whichever fetch won
   const bus: number[] = [];
   for (const id of a.bus_lines()) {
     const r = a.bus_route(id);
     for (let k = 1; k + 2 < r.length; k += 3) bus.push(r[k], r[k + 1]);
   }
-  if (bus.length) {
-    const busZones = zonesOfPoints(bus);
+  const busZones = bus.length ? zonesOfPoints(bus).filter((id) => !streetsIn.has(id)) : [];
+  if (busZones.length) {
     loadStep(`street speeds for ${busZones.length} zones`); // i18n-ignore
     await ensureStreets(busZones);
   }

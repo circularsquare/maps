@@ -63,3 +63,42 @@ fn streets_landing_time_again_only_the_bus_lines_they_meet() {
     whole.w.rework_buses(None);
     assert_eq!(times(&a, &lines), times(&whole, &[n2, f2]));
 }
+
+/// T-4193: a save's bus routes' points, read without deriving it, are the loaded network's bus routes' points
+#[test]
+fn save_bus_points_are_the_loaded_bus_routes() {
+    let mut a = api();
+    bus(&mut a, 0.0);
+    let gone = bus(&mut a, 100_000.0);
+    bus(&mut a, 200_000.0);
+    a.remove_line(gone);
+    let bytes = a.save();
+    let mut b = api();
+    assert!(b.load(&bytes));
+    let routes: Vec<f64> = b.bus_lines().iter().flat_map(|&l| b.bus_route(l)[1..].chunks(3).flat_map(|p| [p[0], p[1]]).collect::<Vec<_>>()).collect();
+    assert_eq!(b.bus_lines().len(), 2);
+    assert_eq!(TrackApi::save_bus_points(&bytes), routes);
+    assert!(TrackApi::save_bus_points(&api().save()).is_empty(), "no bus line");
+    assert!(TrackApi::save_bus_points(b"not a save").is_empty());
+}
+
+/// T-4193: street speeds put in before a load time its buses in the load's one settle, to the figures the load
+/// and then the speeds give, where the settle holds still
+#[test]
+fn streets_before_a_load_give_the_figures_of_streets_after_it() {
+    let mut a = api();
+    let lines = [bus(&mut a, 0.0), bus(&mut a, 200_000.0)];
+    let bytes = a.save();
+    let tph = |a: &TrackApi| lines.iter().map(|&l| a.w.net.line_tph[l as usize]).collect::<Vec<_>>();
+    let mut plain = api();
+    assert!(plain.load(&bytes));
+    let mut after = api();
+    assert!(after.load(&bytes));
+    assert_eq!(grid(&mut after, -73.985, 40.758), 2, "the first speeds time every bus line again");
+    let mut before = api();
+    assert_eq!(grid(&mut before, -73.985, 40.758), 0, "an empty network has no bus to time");
+    assert!(before.load(&bytes));
+    assert_ne!(times(&before, &lines)[0], times(&plain, &lines)[0], "the load ran its buses at the speeds");
+    assert_eq!(times(&before, &lines), times(&after, &lines));
+    assert_eq!(tph(&before), tph(&after));
+}
