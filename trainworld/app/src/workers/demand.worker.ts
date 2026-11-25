@@ -103,21 +103,30 @@ const roundsHeld: number[] = [];
  */
 const sumsByRound = new Map<string, { mask: number; sums: Float32Array; everyday: Float32Array | null }>();
 type Sums = { mask: number; sums: Float32Array; everyday: Float32Array | null };
+/** T-4265: per commute population, the first and the last version it was set on since its layout (station access, its
+ * subzones) last changed: bubble sums of any version between map onto its cells as they are now */
+const layoutSpan = new WeakMap<DemandApi, { from: number; to: number }>();
+function layoutAt(a: DemandApi, version: number) {
+  const s = layoutSpan.get(a);
+  if (s && a.layout_kept()) s.to = version;
+  else layoutSpan.set(a, { from: version, to: version });
+}
 /** T-1904: the kind of day the page shows and the zones whose bubbles it draws (`view`) */
 let viewDay = 0;
 let viewZones = new Set<CityId>();
 /**
  * A city's bubble sums for `rounds` of a solve, kept for `subSums` and sent unasked with the last
- * round (`kept`: the weekday's, already worked out). The weekday's always; the day shown as well for
- * the zones on screen, since a day other than a
+ * round (`kept`: by day, already worked out). The day shown's always, since a day other than a
  * weekday is otherwise read from the live state, which is a round ahead by the time it is asked
- * (T-1904: the average day's bubbles waited a whole round, the cached result's for the final).
+ * (T-1904: the average day's bubbles waited a whole round, the cached result's for the final), and
+ * T-4265: the page keeps a final's while a whole solve after an edit leaves no worker holding them.
+ * The zones on screen the weekday's as well.
  */
-function keepSums(version: number, rounds: number[], id: CityId, a: DemandApi, kept?: Sums, local?: true) {
-  const days = viewDay !== 0 && viewZones.has(id) ? [0, viewDay] : [0];
+function keepSums(version: number, rounds: number[], id: CityId, a: DemandApi, kept?: Map<number, Sums>, local?: true) {
+  const days = viewDay !== 0 && viewZones.has(id) ? [0, viewDay] : [viewDay];
   for (const day of days) {
-    const k: Sums = day === 0 ? kept ?? { mask: a.solved_mask(), sums: a.sub_sums(), everyday: everydayModes(everyday.get(id), 0) }
-      : { mask: a.solved_mask(), sums: a.sub_sums_day(day), everyday: everydayModes(everyday.get(id), day) };
+    const k: Sums = kept?.get(day) ?? (day === 0 ? { mask: a.solved_mask(), sums: a.sub_sums(), everyday: everydayModes(everyday.get(id), 0) }
+      : { mask: a.solved_mask(), sums: a.sub_sums_day(day), everyday: everydayModes(everyday.get(id), day) });
     for (const r of rounds) sumsByRound.set(day === 0 ? `${id}:${r}` : `${id}:${r}:${day}`, k);
     const copy = k.sums.slice();
     const extra = k.everyday?.slice() ?? null;
@@ -1594,8 +1603,11 @@ function query(msg: Query) {
       sendMessage({ kind: "subSums", id: msg.id, version: msg.version, mask: copy ? copy.mask : live ? a!.solved_mask() : 0, sums, everyday: extra }, [...(sums ? [sums.buffer] : []), ...(extra ? [extra.buffer] : [])]);
     } else if (msg.kind === "cellModes") {
       // reads the network's subzones and the sums it is given, not any period's state, so it holds
-      // for the version whatever round this worker is in
-      const modes = a && sameNet ? withNone(a.cell_modes_day(msg.sums, day), a.cell_unreach_day(msg.sums, day)) : null;
+      // for the version whatever round this worker is in (T-4265: or for an older version whose subzones these are: the
+      // figures on screen, from the sums the page kept, while a whole solve after an edit runs)
+      const span = a ? layoutSpan.get(a) : undefined;
+      const subs = sameNet || (!!span && span.from <= msg.version && msg.version <= span.to);
+      const modes = a && subs ? withNone(a.cell_modes_day(msg.sums, day), a.cell_unreach_day(msg.sums, day)) : null;
       sendMessage({ kind: "cellModes", id: msg.id, version: msg.version, modes: modes && modes.length ? modes : null }, modes ? [modes.buffer] : []);
     } else if (msg.kind === "station") {
       const packed = live ? stationRiders(at!, cl, a!, msg.station, day) : null;
@@ -2518,7 +2530,9 @@ async function run() {
               cxy[k] = w.x; cxy[k + 1] = w.y;
             }
             p.set_bus(m.catchN ?? new Uint32Array(0), cxy);
-            setupMs += p.set_network(xy, m.lineN, m.stops, m.times, m.tph, m.cars);            p.set_ferry(m.ferry ?? new Uint8Array(0)); // T-2196, T-3892: the outings' fans and the commute's
+            setupMs += p.set_network(xy, m.lineN, m.stops, m.times, m.tph, m.cars);
+            if (p instanceof DemandApi) layoutAt(p, job.version);
+            p.set_ferry(m.ferry ?? new Uint8Array(0)); // T-2196, T-3892: the outings' fans and the commute's
           }
           p.set_fares(rounded ? rounded.base : m.fare.base * scale, rounded ? rounded.perKm : m.fare.perKm * scale, m.hopKm);
           p.set_fare_mul(m.fareW ?? new Float32Array(0));
@@ -2650,11 +2664,16 @@ async function run() {
       roundsHeld.fill(-1);
       // T-1609: in a solve where every cluster solved is a local refine, a zone it does not solve
       // keeps the last solve's bubbles' sums (working out all of China's took 5-6 s)
-      const keptSums = new Map<CityId, { mask: number; sums: Float32Array; everyday: Float32Array | null }>();
+      const keptSums = new Map<CityId, Map<number, Sums>>();
       // (T-2188: so does an edit's that ends at its local result, its touched zones solved)
       if (dirty.length && dirty.every((c) => localOf.has(c) || (ends && editOf.has(c)))) {
         const fresh = new Set([...[...localOf.keys()].flatMap(freshCities), ...(ends ? [...editOf].flatMap(([c, e]) => citiesOf(c, e.fresh)) : [])]);
-        for (const [id] of jobLocal) { const k = sumsByRound.get(`${id}:${job.rounds}`); if (k && !fresh.has(id)) keptSums.set(id, k); }
+        for (const [id] of jobLocal) {
+          if (fresh.has(id)) continue;
+          const k = new Map<number, Sums>();
+          for (const day of new Set([0, viewDay])) { const s = sumsByRound.get(day === 0 ? `${id}:${job.rounds}` : `${id}:${job.rounds}:${day}`); if (s) k.set(day, s); }
+          if (k.size) keptSums.set(id, k);
+        }
       }
       sumsByRound.clear();
       stageRound = -1;

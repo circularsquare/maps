@@ -130,6 +130,29 @@ fn complexes_follow_merged_stations() {
     assert_eq!(walks, plain + 4);
 }
 
+/// T-4265: the same network again with its stations' complex numbers moved (a station added anywhere renumbers the
+/// stations of no complex, `packService`) keeps the layout, so a zone's subzones stay those of the final shown; a
+/// station moved makes a new one.
+#[test]
+fn layout_kept_through_renumbered_complexes() {
+    let (mut api, xy, n, stops, times, tph, cars) = small();
+    let mut complex: Vec<u32> = (0..xy.len() as u32 / 2).map(|i| 100 + i).collect();
+    complex[16] = 100;
+    api.set_complexes(&complex);
+    api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+    assert!(!api.layout_kept(), "a first network is a new layout");
+    api.set_complexes(&complex.iter().map(|c| c + 7).collect::<Vec<_>>());
+    api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+    assert!(api.layout_kept(), "the same grouping under other numbers");
+    let slower: Vec<f32> = times.iter().map(|t| t * 1.1).collect();
+    api.set_network(&xy, &n, &stops, &slower, &tph, &cars).unwrap();
+    assert!(api.layout_kept(), "run times are no part of the layout");
+    let mut moved = xy.clone();
+    moved[2] += 50.0;
+    api.set_network(&moved, &n, &stops, &slower, &tph, &cars).unwrap();
+    assert!(!api.layout_kept(), "a station moved");
+}
+
 #[test]
 fn shared_crowding_uses_complete_loads_without_overwriting_own_assignment() {
     let (mut own, xy, n, stops, times, tph, cars) = small();

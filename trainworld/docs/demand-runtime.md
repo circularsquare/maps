@@ -144,7 +144,7 @@ reports nothing counts as 4 GB, `deviceGB`). A game's first fine set is
 the save's (`demandFine` in its header, kept current by the page), else every zone that fits the
 budget, the zone in view first, then the zones on screen, then the nearest. A level change is a
 close and reopen: the pack downloads again (the browser's cache) and each solving worker opens it at
-its new level, one whose solve in hand covers the zone once that solve ends; the shown figures stay
+its new level (the aux worker keeps its copy, so the zone's cells are kept and asked of it meanwhile, T-4265), one whose solve in hand covers the zone once that solve ends; the shown figures stay
 until a solve covers it at its new level (`flush` sends one as for a zone newly opened), the zone
 counting as open for the loading bar meanwhile. Zones changed in one check reopen together, so one
 solve covers them. That solve is a **local refine** (T-1609, notes/T-1609.md):
@@ -223,10 +223,10 @@ periods had that round and ahead of its last result for it; the client adds them
 round is published. Before a solve's last round only the zones on screen's go (`view`; T-2596: all 82
 of a big save's took each worker about 4 s a round), at the last round every zone's, so a zone panned
 into view mid-solve gets its bubbles a round later (`?perfOff=allSums`: every zone each round). They
-are a weekday's; for the zone in view and the nearby zones (`view`, sent
-by the page whenever they or the day shown change) the day shown's too (`sub_sums_day`, T-1904),
-since the average day is the default and without them its bubbles waited a round behind the
-figures (notes/T-1904.md). The commuters by mode per cell (`cell_modes`) read only those sums and the
+are the day shown's (`sub_sums_day`, the average day by default, T-1904, notes/T-1904.md), and for the
+zone in view and the nearby zones (`view`, sent by the page whenever they or the day shown change)
+the weekday's too. The page keeps each zone's sums of the final it shows until a newer final of
+that zone is shown (T-4265, `keepShownSums`), the solve's own rounds beside them. The commuters by mode per cell (`cell_modes`) read only those sums and the
 network's subzones, so the worker with no periods answers them whatever round the others are in.
 Stations, selections, transfers, trips and longer-trip queries read a period's state, so a worker
 answers them only at a round all its periods hold; a selection's far end spread (`flows`) reads
@@ -248,6 +248,14 @@ asked for at once, so each publish finds its answer waiting, and the final repla
 A worker already past the round asked about answers nothing and the question goes to the newer
 round. After an edit questions about a zone being solved wait for its final (the workers hold a
 network the map does not show yet); others are answered at once ("Clusters" below). T-327, notes/T-327.md.
+Its bubbles do not wait (T-4265, notes/T-4265.md): they are drawn from the sums the page kept of the
+final it shows, and the aux worker maps those onto cells while the zone's network has the subzones of
+that final (every network it was set on since its layout last changed, `layoutSpan`, Rust
+`layout_kept`; else the bubbles wait as before). Their trips with other places are the last answered
+for the zone and day (`lastReg`), none for a zone not drawn since the game loaded, and the airport
+trips across the zone line are left out, since the workers' market no longer holds that final either
+(the solving workers are not asked: an answer would wait behind a pass and come back empty). A
+station's riders, a bubble selection, a zone's trips by length and one purpose's bubbles still wait.
 
 ## Clusters
 

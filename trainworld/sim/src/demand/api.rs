@@ -1659,6 +1659,12 @@ impl DemandApi {
         Ok(now_ms() - t0)
     }
 
+    /// T-4265: the last `set_network` kept the layout (`Service::same_layout`), so station access and the subzones
+    /// are the network's before it: bubble sums worked out on that one map onto this one's cells as they did there.
+    pub fn layout_kept(&self) -> bool {
+        self.layout_same
+    }
+
     /// Set the player's price. Base is paid once per trip, including transfers; distance is
     /// charged on ride edges, so route choice and mode choice both see the actual route's fare.
     /// `hop_km` follows route nodes: each line's forward stops then reverse stops, 0 at ends.

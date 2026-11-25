@@ -326,6 +326,15 @@ type Query = WithoutCity<QueryMessage>;
 interface Target { version: number; round: number; view: number; wait: boolean; solve?: Solve; shown?: number }
 /** A question about a round in hand, answered for the view `view` */
 const shownTarget = (version: number, round: number, view = version): Target => ({ version, round, view, wait: false });
+/** T-4265: bubble sums' parts holding every period exactly once */
+function everyPeriodOnce(parts: { mask: number }[]): boolean {
+  let m = 0;
+  for (const p of parts) {
+    if (m & p.mask) return false;
+    m |= p.mask;
+  }
+  return m === ALL_PERIODS;
+}
 /** `into[k] += from[k]` for every k of `into` */
 function addInto(into: Float32Array | Float64Array, from: ArrayLike<number>) {
   for (let k = 0; k < into.length; k++) into[k] += from[k];
@@ -524,6 +533,8 @@ interface Solve {
   /** T-2188: the idle refresh, a whole solve of the network shown: quiet (no status, no clock cap) until an edit
    * waits on it (`shown`); the zones its lead worker solves (`plan.solving`), for the status once shown */
   refresh?: { shown: boolean; solving?: CityId[] };
+  /** T-4265: the zones its lead worker's plan solves: no worker holds their figures on screen past their clusters' set-up */
+  solving?: Set<CityId>;
   /** T-1790: local cluster results shown so far, and (T-1734) when the first was */
   localShown?: number;
   localShownAt?: number;
@@ -926,7 +937,8 @@ class DemandClient {
   private holds(i: number, item: string): boolean {
     return i === this.auxAt || this.solvingHolders(item).includes(i);
   }
-  /** every worker's sums for a round of the newest solve, sent unasked (T-119): `version:round:city` */
+  /** every worker's bubble sums for a round of the newest solve, sent unasked (T-119): `version:round:city:day`; and
+   * (T-4265) each zone's of the final it shows, until a newer final of it (`keepShownSums`) */
   private pushed = new Map<string, { mask: number; sums: Float32Array; everyday: Float32Array | null }[]>();
   private ready = 0;
   /** demand_periods() from the first worker: PERIOD_STRIDE numbers per period */
@@ -1626,7 +1638,10 @@ class DemandClient {
       this.opened.delete(id);
       this.unack(id);
       this.packAcks.delete(id);
-      this.dropCells(id);
+      // (T-4265: the aux worker keeps its copy, fine at every level, and the cells come from it: only the squares, from a
+      // solving worker's, go)
+      if (this.auxShared) this.dropCells(id);
+      else this.zsq.delete(id);
       this.fetchCity(id, "full");
     }
     this.lodShown();
@@ -2391,7 +2406,7 @@ class DemandClient {
     this.rough = { svc, id };
     const { net, layout, ids } = packService(svc);
     const version = ++this.version;
-    this.pushed.clear();
+    this.keepShownSums(null);
     const now = performance.now();
     // T-2793: its figures are this zone's riders alone: over a final result they are for the zone's own view, no line's
     const onFinal = !!demandView.peek()?.final;
@@ -3128,6 +3143,7 @@ class DemandClient {
     this.cacheSolve = null;
     this.endFocus();
     this.shownSnap.clear(this.version); // (T-4220)
+    this.pushed.clear();
     zoneLoads.value = new Map();
     console.error("demand:", why);
     loadFailed(why);
@@ -4128,7 +4144,8 @@ class DemandClient {
       const key = `${msg.version}:${msg.round}:${msg.city}:${msg.day ?? 0}${msg.local ? ":local" : ""}`;
       const list = this.pushed.get(key);
       if (list) list.push({ mask: msg.mask, sums: msg.sums, everyday: msg.everyday });
-      else if (this.cur && msg.version === this.cur.version) this.pushed.set(key, [{ mask: msg.mask, sums: msg.sums, everyday: msg.everyday }]);
+      // (T-4265: or the final shown's, as a zone off screen's come after its results, when the next solve went at that final)
+      else if (this.cur && (msg.version === this.cur.version || (msg.round >= ROUNDS && msg.version === this.shownOf(msg.city)))) this.pushed.set(key, [{ mask: msg.mask, sums: msg.sums, everyday: msg.everyday }]);
       return;
     }
     if (msg.kind === "ready") {
@@ -4236,6 +4253,7 @@ class DemandClient {
     }
     if (msg.kind === "plan") {
       if (i === (s.lead ?? 0)) {
+        s.solving = new Set(msg.solving.flat());
         if (s.refresh) s.refresh.solving = msg.solving.flat();
         if (!s.refresh || s.refresh.shown) demandSolving.value = new Set(msg.solving.flat());
         if (msg.ahead) s.ahead = { cities: msg.ahead, key: msg.ahead.join(",") };
@@ -4397,7 +4415,7 @@ class DemandClient {
     // T-2045: the focus pool is a game load's; an edit's network ends it
     if (!gameLoad) this.endFocus();
     else if (svc.stations.length) this.startFocus();
-    if (gameLoad) this.shownSnap.clear(this.version); // (T-4220: another game's figures)
+    if (gameLoad) { this.shownSnap.clear(this.version); this.pushed.clear(); } // (T-4220, T-4265: another game's figures)
     demandUpdating.value = true;
     demandStep.value = { done: 0, of: 1 }; // T-1790: no count until the solve's own steps are known
     // T-1223: a game loaded with no stations ahead makes its fine set afresh; an edit marks its zones
@@ -4520,7 +4538,7 @@ class DemandClient {
     // a zone opened bare needs none)
     const need = this.solveNeed(svc);
     if (this.job && this.jobNeedsSolve(this.job) && this.job.cities.every((id) => cities.includes(id) || (need !== null && !need.has(id)))) this.job.version = version;
-    this.pushed.clear();
+    this.keepShownSums(null);
     // T-232: a re-solve after an edit keeps the last final result shown until its own final round,
     // so the figures never step through the rounds; estimates show only where nothing final is
     // shown yet: before the first final result or after a whole-game load. T-2793: a zone just opened
@@ -4762,7 +4780,10 @@ class DemandClient {
     const other = zone !== undefined && zone !== activeCity.peek() ? zone : undefined;
     // T-2045: a zone the focus pool holds and the main pool has not opened yet: its cells from there
     const viaFocus = (id: CityId) => !this.opened.has(id) && !!this.fpool?.open.includes(id);
-    const load = (id: CityId) => (viaFocus(id) ? Promise.resolve(true) : this.whenOpen(id)).then(async (ok): Promise<CityCells | null> => {
+    // (T-4265: a zone opening again at another level is held by the aux worker as before meanwhile, which a solving worker's
+    // solve in hand may hold up for minutes)
+    const held = (id: CityId) => viaFocus(id) || (this.releveling.has(id) && !this.auxShared);
+    const load = (id: CityId) => (held(id) ? Promise.resolve(true) : this.whenOpen(id)).then(async (ok): Promise<CityCells | null> => {
       if (!ok) return null;
       const [r] = viaFocus(id) ? await this.askFocusAux((q) => ({ kind: "cells", id: q, frame: frameOf() }), other) : await this.ask((q) => ({ kind: "cells", id: q, frame: frameOf() }), [this.auxAt], [], other);
       if (r?.kind !== "cells" || r.xy.length === 0) return null;
@@ -4910,7 +4931,8 @@ class DemandClient {
    * terminals by the Airport purpose's legs. */
   private async withRegional(modes: Float32Array, city: CityId, version: number, other: CityId | undefined, t: Target, everydayToo: boolean): Promise<void> {
     await this.regionalInto(modes, city, version, other, t, everydayToo ? REG_ALL : REG_COMMUTES);
-    if (!everydayToo || AIRPORT_KIND < 0) return;
+    // (T-4265: none while the workers solve the zone again: their airport legs would come back empty after a pass)
+    if (!everydayToo || AIRPORT_KIND < 0 || this.gone(city, version)) return;
     const [air, cells] = await Promise.all([this.purposeModes("airport", other), this.cityCells(other)]);
     if (!air || !cells) return;
     const w = concat([air.homeRail, air.homeWalk, air.homeDrive, air.workRail, air.workWalk, air.workDrive, air.homeNone, air.workNone]);
@@ -4919,14 +4941,16 @@ class DemandClient {
 
   /** T-3503: each zone's 600 m squares and its cells' shares of them (static for a pack's cells). */
   private zsq = new Map<CityId, Promise<ZoneSq | null>>();
-  private zoneSq(city: CityId, version: number, other: CityId | undefined): Promise<ZoneSq | null> {
+  private zoneSq(city: CityId, version: number, other: CityId | undefined, auxFirst = false): Promise<ZoneSq | null> {
     let p = this.zsq.get(city);
     if (!p) {
       const ask = async (w: number) => {
         const [r] = await this.ask((id) => ({ kind: "zoneSquares", id, version }), [w], [], other);
         return r?.kind === "zoneSquares" && r.xy && r.sq && r.share ? { xy: r.xy, sq: r.sq, share: r.share } : null;
       };
-      const q: Promise<ZoneSq | null> = (async () => (await ask(this.isBare(city) ? this.auxAt : 0)) ?? (await ask(this.isBare(city) ? 0 : this.auxAt)))();
+      // (`auxFirst`, T-4265: the aux worker, never busy, while the solving workers solve the zone again)
+      const aux = this.isBare(city) || auxFirst;
+      const q: Promise<ZoneSq | null> = (async () => (await ask(aux ? this.auxAt : 0)) ?? (await ask(aux ? 0 : this.auxAt)))();
       this.zsq.set(city, (p = q));
       q.then((v) => { if (!v && this.zsq.get(city) === q) this.zsq.delete(city); });
     }
@@ -4946,15 +4970,19 @@ class DemandClient {
    */
   private async regionalInto(modes: Float32Array, city: CityId, version: number, other: CityId | undefined, t: Target | undefined, kinds: number): Promise<void> {
     const n = modes.length / 8;
-    let z = await this.zoneSq(city, version, other);
+    // T-4265: while the workers solve the zone again, the last answer alone (none for a zone not asked about before): they
+    // no longer hold the market's figures of `version`, and the question would wait behind a pass for nothing
+    const gone = this.gone(city, version);
+    if (gone && !this.lastReg.has(`${city}:${kinds}:${shownDay.peek()}`)) return;
+    let z = await this.zoneSq(city, version, other, gone);
     if (z && z.sq.length !== n) {
       // the zone was opened again with another set of cells (demandLod.ts)
       this.zsq.delete(city);
-      z = await this.zoneSq(city, version, other);
+      z = await this.zoneSq(city, version, other, gone);
     }
     if (!z || z.sq.length !== n) return;
     const m = z.xy.length / 2, xy = z.xy;
-    const replies = await this.ask((id) => ({ kind: "regLegs", id, version, xy, kinds }), undefined, [], other, t);
+    const replies = gone ? [] : await this.ask((id) => ({ kind: "regLegs", id, version, xy, kinds }), undefined, [], other, t);
     const key = `${city}:${kinds}:${shownDay.peek()}`;
     let sum: Float64Array | undefined = new Float64Array(6 * m), mask = 0;
     for (const r of byMask(replies)) {
@@ -5074,6 +5102,41 @@ class DemandClient {
     return t?.wait && t.version === at.version && t.round > at.round ? t : at;
   }
 
+  /** T-4265: the solve whose figures zone `id` shows: its cluster's final (T-392), else the view's */
+  private shownOf(id: CityId): number | undefined {
+    return this.cityVersion.get(id) ?? demandView.peek()?.version;
+  }
+  /**
+   * T-4265: the bubble sums kept: every round's of the solve `running` (T-2485 drops its old rounds), and each zone's of
+   * the final it shows. A whole solve after an edit sets every population of the clusters it solves on the new network,
+   * after which no worker holds those zones' figures on screen: their bubbles are drawn from these until its final.
+   */
+  private keepShownSums(running: number | null) {
+    for (const [k, parts] of [...this.pushed]) {
+      const [v, r, id] = k.split(":");
+      if (Number(v) === running) continue;
+      if (!(Number(r) >= ROUNDS && Number(v) === this.shownOf(id as CityId))) this.pushed.delete(k);
+      // (added up as `cellModes` adds them, in period order, so the bubbles are the same to the bit: one worker's
+      // memory however many solving workers sent them)
+      else if (parts.length > 1 && everyPeriodOnce(parts)) {
+        let mask = 0, sums: Float32Array | null = null, everyday: Float32Array | null = null;
+        for (const p of [...parts].sort((a, b) => a.mask - b.mask)) {
+          mask |= p.mask;
+          if (!sums) sums = p.sums.slice();
+          else addInto(sums, p.sums);
+          if (p.everyday) { if (!everyday) everyday = p.everyday.slice(); else addInto(everyday, p.everyday); }
+        }
+        this.pushed.set(k, [{ mask, sums: sums!, everyday }]);
+      }
+    }
+  }
+  /** T-4265: no worker holds zone `id`'s figures of solve `version` any more: the newer solve in hand solves its cluster.
+   * A question about them would wait behind a worker's pass and come back empty. */
+  private gone(id: CityId, version: number): boolean {
+    const s = this.cur;
+    return !!s && version < s.version && !!s.solving?.has(id);
+  }
+
   /** T-2508: which solve `cellModes` reads a zone's legs from: the focus pool's (and whether settled), a
    * cluster's final (T-392), or the view's. The bubbles are asked again when it changes, also while the
    * view keeps its version (a game load's or an edit's figures put into the result shown before). */
@@ -5116,9 +5179,8 @@ class DemandClient {
       // zones on screen when the round was solved (T-1904)
       // (T-2532: an edit's local result's, until its whole solve's are all in)
       // (T-3373 B: under the split, the zone's solving holders alone send theirs)
-      const plan = f ? undefined : this.log.find((x) => x.version === at.version)?.plan;
-      const senders = f ? this.fpool!.n : plan ? plan.cities.filter((c) => c.id === city).length : this.computeN;
-      const full = (k: string) => { const l = (f ? this.fpushed : this.pushed).get(k); return l && l.length === senders ? l : undefined; };
+      // (T-4265: whole when they hold every period once: a final's kept since may be of a pool of another size)
+      const full = (k: string) => { const l = (f ? this.fpushed : this.pushed).get(k); return l && everyPeriodOnce(l) ? l : undefined; };
       const sent = full(`${at.version}:${at.round}:${city}:${day}`) ?? full(`${at.version}:${at.round}:${city}:${day}:local`);
       const parts: { mask: number; sums: Float32Array | null; everyday: Float32Array | null }[] = sent ? sent : (await this.ask((id) => ({ kind: "subSums", id, version: at.version }), undefined, [], other, other === undefined ? this.liveAt(at) : at)).map((r) => (r.kind === "subSums" ? r : { mask: 0, sums: null, everyday: null }));
       // in worker (period) order, not arrival order, so the same result gives the same bubbles to
@@ -5726,6 +5788,7 @@ class DemandClient {
         this.aheadP.clear();
         this.cityVersion.clear();
         this.shownSnap.dropTo(s.version); // (T-4220: what was on screen before this final)
+        this.keepShownSums(this.cur !== s ? this.cur?.version ?? null : null);
         if (s === this.cur) {
           // T-4055: a pack that began opening during the solve (a zone at another level, a market) makes it stale:
           // its figures show, and its network waits to be solved again once the pack is open, that solve the final
@@ -6050,6 +6113,7 @@ class DemandClient {
       this.lodShown(c.cities, this.shownCoarse(s));
       if (final) {
         for (const id of c.cities) this.cityVersion.set(id, s.version);
+        this.keepShownSums(s.version);
         if (s.barrier) this.askTurn(); // T-2453: its zones' questions now go to its final
         // T-2045: a cluster's own final beats the focus pool's figures of its zones (T-2605: not one solved coarse
         // over the zone refined aside)
