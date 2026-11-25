@@ -230,7 +230,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Done (tree busrebuild, 11-25): edits rebuild only the bus lines they reach and the ways back they move, and send no trips when no line moved; 25-58 ms less per station edit on your Asia save. Left: a station on track no line uses still rebuilds the lines through that track's ends, and the settle then moves their neighbours.
   - Goal: A station on track no line runs over rebuilds no line and sends no trips.
   - Other: notes/T-4249.md
-- T-4214 [P1] {L:edit-speed} Track runs chain without waiting, drawings from the patched map
+- T-4214 [P1] {L:edit-speed} Track runs chain without waiting, drawings from the patched map (taking, 2026-11-25, agent trackrun)
   - Context: Stages A and C done: a station is sent at its click, its name after it, and stations placed or removed on a line's track patch the clickable map too (tree stationclick, 11-25). You, 11-24: "something like a silo approach". Left: a track run's next segment waits on placing (D), drawings at the click (E).
   - Goal: No placing wait between a run's segments; what is drawn at the click is the patched map's.
   - Other: notes/T-4214.md
@@ -927,7 +927,7 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: T-921 deals commute pairs under 1 person a day in chunks (about 7% of New York's calculation); 2 a day gained nothing more. Everyday trips are solved from sampled destinations, so they may lack the same tail of tiny pairs. You, 11-24: file as P3.
   - Goal: Know whether everyday trips have a tail of tiny pairs; if so, chunk them the same tunable way.
   - Other: notes/T-921.md
-- T-4220 [P2] {L:solve-speed} Quick figures for edits made during a whole re-solve
+- T-4220 [P2] {L:solve-speed} Quick figures for edits made during a whole re-solve (taking, 2026-11-25, agent aside7)
   - Context: Design approved 11-24: 9 stages, 12-14 h. Stages 1-5 done: the snapshot, stand-ins, the side calculation's plan and solve (a dev call starts it), and a check that it matches a normal solve exactly. Next: stage 6, starting and batching it in play. You, 11-24: "edits made during remaining full passes should ideally get fast numbers".
   - Goal: Those edits show their lines in about the touched-cities time; edits arriving together share one quick calculation.
   - Other: notes/T-4220.md ("For Anita" first)
