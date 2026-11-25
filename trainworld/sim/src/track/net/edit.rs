@@ -127,6 +127,11 @@ impl Network {
                 }
                 self.claim_node(id);
                 let i = id as usize;
+                // T-4249: a station moved (a blueprint's node) is seen by the bus lines near where it was and is
+                if old.is_some() && self.node_platform[i] > 0 && (self.node_x[i], self.node_y[i]) != (d.x, d.y) {
+                    let built = self.node_built[i];
+                    self.touch.station_places.extend([([self.node_x[i], self.node_y[i]], built), ([d.x, d.y], built)]);
+                }
                 self.node_alive[i] = true;
                 self.node_x[i] = d.x;
                 self.node_y[i] = d.y;
@@ -285,6 +290,9 @@ impl Network {
 
     pub fn set_line(&mut self, id: u32, data: Option<LineData>) -> Result<Option<LineData>, Issue> {
         let old = self.line_data(id);
+        // T-4249: a bus route as other bus lines' stops read it (`bus::plan_by`'s crossings), as it was and as it is
+        let (was, now) = (old.as_ref().and_then(|o| o.bus.as_ref()), data.as_ref().and_then(|d| d.bus.as_ref()));
+        let routes: Vec<Vec<[f64; 2]>> = if was != now { [was, now].into_iter().flatten().map(|r| r.points.clone()).collect() } else { vec![] };
         match data {
             Some(mut d) => {
                 if let Some((stops, path)) = self.branch_end(&d) {
@@ -361,6 +369,7 @@ impl Network {
             }
         }
         self.touch.lines.push(id);
+        self.touch.bus_routes.extend(routes);
         self.touch.paths_changed = true;
         Ok(old)
     }

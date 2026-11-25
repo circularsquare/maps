@@ -348,6 +348,46 @@ fn crossings(a: &Poly, b: &Poly) -> Vec<(f64, f64)> {
     out
 }
 
+/// T-4249: the bus lines whose stops or pace an edit can have moved, by what it touched (`Touch`): those a station
+/// changed within `STATION_REACH_M` of (`reach`'s; a constructed line sees only constructed stations), and every bus
+/// line crossing one of those (where two cross, each reads the stations the other reaches, `plan_by`'s `theirs`);
+/// those crossing a bus route set, as it was or is; those a kept stop changed within `KEEP_M` of (T-4080); every one
+/// when a busway changed (T-3378).
+pub fn lines_touched(net: &Network, t: &super::net::Touch) -> Vec<u32> {
+    let lines = net.bus_lines();
+    if t.busways || lines.is_empty() {
+        return lines;
+    }
+    if t.station_places.is_empty() && t.bus_routes.is_empty() && t.keeps.is_empty() {
+        return vec![];
+    }
+    let polys: Vec<Poly> = lines.iter().map(|&l| net.line_bus[l as usize].as_ref().map_or_else(|| Poly::new(net, &[], &[]), |r| Poly::new(net, &r.points, &r.kinds))).collect();
+    let within = |poly: &Poly, places: &[[f64; 2]], m: f64| {
+        let bb = poly.bbox();
+        places.iter().any(|p| {
+            let pad = m * net.k_at(p[1]) * 1.1 + 1.0;
+            p[0] >= bb[0] - pad && p[0] <= bb[2] + pad && p[1] >= bb[1] - pad && p[1] <= bb[3] + pad && poly.project_passes(net, p[0], p[1]).iter().any(|c| c.1 <= m + 1e-6)
+        })
+    };
+    let places: Vec<[f64; 2]> = t.station_places.iter().map(|s| s.0).collect();
+    let built_places: Vec<[f64; 2]> = t.station_places.iter().filter(|s| s.1).map(|s| s.0).collect();
+    let built = |i: usize| net.line_bus[lines[i] as usize].as_ref().is_some_and(|r| r.built);
+    // (a metre past the reach, so a station on its edge is never missed)
+    let reached: Vec<bool> = (0..lines.len()).map(|i| within(&polys[i], if built(i) { &built_places } else { &places }, STATION_REACH_M + 1.0)).collect();
+    let set: Vec<Poly> = t.bus_routes.iter().map(|pts| Poly::new(net, pts, &[])).collect();
+    let meets = |a: &Poly, b: &Poly| a.pts.len() >= 2 && b.pts.len() >= 2 && !crossings(a, b).is_empty();
+    (0..lines.len())
+        .filter(|&i| {
+            let p = &polys[i];
+            reached[i]
+                || within(p, &t.keeps, keep::KEEP_M)
+                || set.iter().any(|s| meets(p, s))
+                || (0..lines.len()).any(|j| j != i && reached[j] && meets(p, &polys[j]))
+        })
+        .map(|i| lines[i])
+        .collect()
+}
+
 /// The stations within `STATION_REACH_M` of a route, as (road m along it, node, ground m off it), in
 /// road order; of two within `STATION_GAP_M` along the road, the one nearer the route. `built_only`:
 /// constructed stations only. `brt`: the line is on BRT; only such a line stops at a BRT station (T-3378).

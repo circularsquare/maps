@@ -42,6 +42,8 @@ pub struct TrackApi {
     last: Option<EditResult>,
     /// T-4113: what the edits since `take_touched` touched
     touched: touched::Touched,
+    /// T-4249: an edit since `take_service_moved` rebuilt, rescheduled or re-timed some line's service
+    service_moved: bool,
     /// T-4113: each line's stamp as `take_changed_lines` last took it (`TrackApi::stamped`)
     stamps: Vec<Option<u64>>,
     stamps_off: bool,
@@ -404,6 +406,7 @@ impl TrackApi {
             w: TrackWorld::new(Network::new(origin_lon, origin_lat, right_hand)),
             last: None,
             touched: Default::default(),
+            service_moved: true,
             stamps: vec![],
             stamps_off: false,
             issues: vec![],
@@ -2521,6 +2524,9 @@ mod realwater_tests;
 mod bus_tests;
 #[cfg(test)]
 mod keeps_tests;
+/// T-4249: an edit rebuilds the bus lines and ways back it reaches.
+#[cfg(test)]
+mod scope_tests;
 #[cfg(test)]
 mod loop_tests;
 #[cfg(test)]

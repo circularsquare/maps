@@ -1,7 +1,7 @@
 //! T-4080: the kept bus stops (`bus::keep`): ids, the setter `Op::Keep` applies, and the reads.
 
 use super::*;
-use super::bus::keep::{KeepLink, KeptStop, KEEP_M};
+use super::bus::keep::{KeepLink, KeptStop};
 
 impl Network {
     pub fn keep(&self, id: u32) -> Option<&KeptStop> {
@@ -89,26 +89,6 @@ impl Network {
     pub fn keep_near(&self, x: f64, y: f64) -> Option<u32> {
         let ids: Vec<u32> = self.keep_ids().collect();
         bus::keep::nearest_of(self, &ids, x, y)
-    }
-
-    /// The bus lines whose route passes within `KEEP_M` of one of `places` (where kept stops were made, moved
-    /// or removed): their stops are placed again.
-    pub fn bus_lines_near(&self, places: &[[f64; 2]]) -> Vec<u32> {
-        if places.is_empty() {
-            return vec![];
-        }
-        self.bus_lines()
-            .into_iter()
-            .filter(|&l| {
-                let Some(r) = self.line_bus[l as usize].as_ref() else { return false };
-                let poly = bus::Poly::new(self, &r.points, &r.kinds);
-                let bb = poly.bbox();
-                places.iter().any(|p| {
-                    let pad = KEEP_M * self.k_at(p[1]) * 1.1 + 1.0;
-                    p[0] >= bb[0] - pad && p[0] <= bb[2] + pad && p[1] >= bb[1] - pad && p[1] <= bb[3] + pad && poly.project_passes(self, p[0], p[1]).iter().any(|c| c.1 <= KEEP_M + 1e-6)
-                })
-            })
-            .collect()
     }
 
     /// T-4080: at a load, after every line's stops are placed: the kept stops no bus stop took (`taken`) go, with

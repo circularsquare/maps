@@ -72,6 +72,10 @@ impl Network {
         }
         let old = self.station_data(node);
         let i = node as usize;
+        // T-4249: what a bus line's stops read of a station (`bus::reach`): there, constructed, a BRT station
+        let seen = |s: Option<&StationData>| s.filter(|d| d.platform > 0).map(|d| (d.built, d.road));
+        let bus_sees = seen(old.as_ref()) != seen(data.as_ref());
+        let built = [&old, &data].iter().any(|s| seen(s.as_ref()).is_some_and(|x| x.0));
         match data {
             None => {
                 for l in 0..self.line_count() as u32 {
@@ -118,6 +122,9 @@ impl Network {
             }
         }
         self.touch.stations.push(node);
+        if bus_sees {
+            self.touch.station_places.push(([self.node_x[i], self.node_y[i]], built));
+        }
         if self.names_changed.len() > 1 << 20 {
             self.names_changed.clear();
             self.names_all = true;

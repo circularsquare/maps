@@ -125,6 +125,18 @@ impl TrackApi {
 
 #[wasm_bindgen]
 impl TrackApi {
+    /// T-4249: whether an edit since the last call rebuilt, rescheduled or re-timed any line's service (the edits of one
+    /// player action all count); false: no train runs otherwise, so the trips and the boarding account stand.
+    pub fn take_service_moved(&mut self) -> bool {
+        std::mem::take(&mut self.service_moved)
+    }
+
+    /// T-4249: true makes every edit rebuild every bus line and way back, as before edits took only those they reached
+    /// (to time and compare against).
+    pub fn set_rebuild_all(&mut self, on: bool) {
+        self.w.rebuild_all = on;
+    }
+
     /// T-4113: false hands `take_changed_lines` every line the model noted, stamped or not (`?patch=walk`, to time
     /// against).
     pub fn set_line_stamps(&mut self, on: bool) {

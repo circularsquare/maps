@@ -20,6 +20,8 @@ impl TrackApi {
         match r {
             Ok(r) => {
                 self.touched.note(&r.dirty);
+                let s = &r.dirty.service;
+                self.service_moved |= !(r.dirty.lines.is_empty() && s.rebuilt.is_empty() && s.recomputed.is_empty() && s.shared.is_empty() && s.demand.is_empty());
                 self.last = Some(r);
                 self.issues.clear();
                 0

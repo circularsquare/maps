@@ -422,6 +422,9 @@ pub struct TrackWorld {
     /// T-3521: a load keeps the save's weekend rates as they are (`reload`), to the bit, and the
     /// weekend service is worked out at the first edit that settles them.
     weekend_as_saved: bool,
+    /// T-4249: every edit rebuilds every bus line and way back, as before `lines_touched` took only those it
+    /// reached (tests and timings compare with it).
+    pub rebuild_all: bool,
     /// T-3388: per line and level, what `pace_merges` last paced it from. Not saved: a load takes
     /// the saved pacing as it is.
     pace_in: Vec<[PaceIn; SLOTS]>,
@@ -440,7 +443,7 @@ pub enum ChargeError {
 
 impl TrackWorld {
     pub fn new(net: Network) -> TrackWorld {
-        let mut w = TrackWorld { net, svc: Service::default(), undo: vec![], redo: vec![], restore_to: None, switching: None, settle_scope: None, settle_edited: vec![], settle_edited_rest: vec![], settle_reshare: vec![], settle_reshare_rest: vec![], off_history: false, svc_rest: None, weekend_as_saved: false, pace_in: vec![], pace_in_rest: vec![] };
+        let mut w = TrackWorld { net, svc: Service::default(), undo: vec![], redo: vec![], restore_to: None, switching: None, settle_scope: None, settle_edited: vec![], settle_edited_rest: vec![], settle_reshare: vec![], settle_reshare_rest: vec![], off_history: false, svc_rest: None, weekend_as_saved: false, rebuild_all: false, pace_in: vec![], pace_in_rest: vec![] };
         w.reload();
         w
     }
@@ -2172,7 +2175,7 @@ impl TrackWorld {
             let charge = if built_after - built_before > 1e-9 { built_after - built_before } else { 0.0 };
             return Ok((EditResult { dirty, cost_before, cost_after, built_before, built_after, charge }, inv));
         }
-        let lines = self.lines_touched(&t, &der);
+        let lines = self.lines_touched(&t, &der, true);
         let junction_touched = der.nodes.iter().any(|&n| self.net.node_ok(n) && self.net.node_ports[n as usize].n >= 3);
         // A station touched with no line stopping there still changes passing lines' platforms.
         let cap_dirty = !der.crossings.is_empty() || junction_touched || !t.stations.is_empty();
@@ -2322,13 +2325,17 @@ impl TrackWorld {
         Ok((r, inv))
     }
 
-    /// Lines to rebuild after an edit: set directly, on touched track, or stopping at a touched station.
-    fn lines_touched(&self, t: &super::net::Touch, der: &super::net::Derived) -> Vec<u32> {
+    /// Lines to rebuild after an edit: set directly, on touched track, stopping at a touched station, and the bus lines and
+    /// ways back it reached. T-4249: a bus line's stops follow the stations near its route and the routes it crosses
+    /// (T-1464), the kept stops near it (T-4080), its speed the constructed busways (T-3378): `bus::lines_touched`. A
+    /// way back of its own (`back_lines`) is found by a search over the track, not on `lines_on_edge`: rebuilt where a
+    /// rebuild would give it other runs or the edit touched track they run on (`back_moved`); `rebuild` false (what
+    /// `note_lines` notes) takes every one, sparing the search.
+    fn lines_touched(&self, t: &super::net::Touch, der: &super::net::Derived, rebuild: bool) -> Vec<u32> {
         let mut lines: Vec<u32> = t.lines.clone();
         for &e in &der.edges {
             lines.extend_from_slice(self.net.lines_on_edge(e));
         }
-        lines.extend(self.net.back_lines());
         if !t.stations.is_empty() {
             for l in 0..self.net.line_count() as u32 {
                 if self.net.line_ok(l) && self.net.line_stops(l).iter().any(|s| t.stations.binary_search(s).is_ok()) {
@@ -2336,17 +2343,45 @@ impl TrackWorld {
                 }
             }
         }
-        // a bus line's stops follow the stations near its route and the routes it crosses (T-1464)
-        // T-3378: and a bus line's speed follows the constructed busways it runs on
-        if !t.stations.is_empty() || !t.lines.is_empty() || t.busways {
+        if self.rebuild_all && (!t.stations.is_empty() || !t.lines.is_empty()) {
             lines.extend(self.net.bus_lines());
-        } else {
-            // T-4080: and the kept stops near its route
-            lines.extend(self.net.bus_lines_near(&t.keeps));
         }
+        lines.extend(super::bus::lines_touched(&self.net, t));
         lines.sort_unstable();
         lines.dedup();
+        for l in self.net.back_lines() {
+            if lines.binary_search(&l).is_err() && (self.rebuild_all || !rebuild || self.back_moved(l, der)) {
+                lines.push(l);
+            }
+        }
+        lines.sort_unstable();
         lines
+    }
+
+    /// T-4249: whether way back line `l`'s service is not what a rebuild would make now: its runs' platforms (T-3348),
+    /// its way back (T-3094), whether its loop runs once (T-3835), or track they run on that the edit touched.
+    fn back_moved(&self, l: u32, der: &super::net::Derived) -> bool {
+        let net = &self.net;
+        let Some(ls) = self.svc.lines.get(l as usize) else { return true };
+        if !ls.ok || ls.part.is_some() || net.line_broken[l as usize] {
+            return true;
+        }
+        let (stops, path, ones) = (net.line_stops(l), net.line_path(l), net.line_ones(l));
+        if ls.one_way != net.runs_once(l, stops, path) {
+            return true;
+        }
+        let at = |r: usize| (0..ls.runs[r].stop_idx.len()).map(|k| ls.stop_node(r, k)).collect::<Option<Vec<u32>>>();
+        let fwd = net.fwd_stops_of(stops, path, ones);
+        if at(0).as_ref() != Some(&fwd) {
+            return true;
+        }
+        // (a loop with no way back runs its way out again, `build_on`)
+        let (back_stops, back) = match net.back_run_of(stops, path, ones) {
+            Some(b) => b,
+            None if ls.one_way => (fwd, ls.runs[0].segs.clone()),
+            None => return true,
+        };
+        at(1) != Some(back_stops) || ls.runs[1].segs != back || back.iter().any(|&p| der.edges.binary_search(&path_edge(p)).is_ok())
     }
 
     /// T-1382: what the net was changed under these lines, whether or not their service is rebuilt
@@ -2379,7 +2414,7 @@ impl TrackWorld {
     }
 
     fn note_lines(&mut self, t: &super::net::Touch, der: &super::net::Derived) {
-        let lines = self.lines_touched(t, der);
+        let lines = self.lines_touched(t, der, false);
         self.svc.note_changed(&lines);
         // T-4231: a line whose weekend setting changed (percent or manual flag) must be re-read even
         // when its weekend rates and phases stay the same (e.g. small fleets whose rounded-up counts match).
@@ -2841,7 +2876,10 @@ fn merge_derived(t: &mut super::net::Touch, der: &mut super::net::Derived, t2: s
         v.dedup();
     }
     t.paths_changed |= t2.paths_changed;
+    t.busways |= t2.busways;
     t.keeps.extend(t2.keeps);
+    t.station_places.extend(t2.station_places);
+    t.bus_routes.extend(t2.bus_routes);
     der.crossings.extend(der2.crossings);
 }
 

@@ -308,8 +308,9 @@ Full design, numbers and sources: `notes/T-008.md`.
   one-way piece takes **its own way back**: `Network::back_path_of` routes the stops in reverse order
   when the reversed path runs against a one-way piece, and `build_run` builds the return run from it (a
   loop that runs one way has no return run and needs none). A line with no way back is broken
-  (`check_line`), and `Network::back_lines` has every line with such a return rebuilt and checked after any
-  edit, because its way back is not on `lines_on_edge`. Setting the flag also moves the **forward** path of
+  (`check_line`), and `Network::back_lines` has every line with such a return checked after any edit, because
+  its way back is not on `lines_on_edge`; it is rebuilt where a rebuild would give its runs another way back or
+  other platforms, or the edit touched track they run on (T-4249, `TrackWorld::back_moved`). Setting the flag also moves the **forward** path of
   every line that ran against it, through its same stops (`route_hops_turn`), in the same edit (a Batch);
   the app asks first, listing the lines whose way changes ("{line} takes another way", `oneway_effects`),
   and the edit is refused (`OneWayNoWay`) when a line has no other way. A line already on its way keeps it. A line
@@ -1215,8 +1216,8 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   their own track running roughly its way (within 60 degrees), not already a stop of the line (`way_stops`). The
   line still lists one stop; its return run goes round by the other station (`back_run_of`, which the T-3094 way
   back now is); ends and stops where trains turn back keep their own. Run 0 takes another station only where its
-  path passes it. Nothing is saved: an edit works it out again (lines with such a stop are rebuilt on every
-  edit, `back_lines`). Capacity, boarding, money and the stop ways read each run's own stations; a stop served
+  path passes it. Nothing is saved: every edit works it out again (`back_lines`), and rebuilds the line where it
+  moved. Capacity, boarding, money and the stop ways read each run's own stations; a stop served
   both ways this way has no half dot. A click adding a station that serves one way (`best_slot`) also tries the
   others of its group that do, and keeps the one whose route costs least (the clicked one on a tie), so a click on
   either leg of a split adds the one the line runs out along. Demand follows: the snapshot
@@ -2196,7 +2197,8 @@ for undo); the worker answers with the new state, then the edit's answer (or the
 refused). The alignment being drawn is previewed by the worker as a trial edit, applied, measured
 and rolled back, so the preview knows everything an edit would refuse (timings in notes/T-025.md);
 the trial leaves the services alone (`TrackWorld::trial`, T-1779), as no preview shows a train's
-run. A blueprint route that changes no line for demand sends no new trips or boarding hour (T-1780). The
+run. An edit that rebuilds, reschedules or re-times no line (a station on track no line runs over), and a blueprint
+route that changes no line for demand, sends no new trips or boarding hour (T-1780, T-4249). The
 worker sends the whole network state after an edit, with the renderer's buffers already built;
 the main thread uploads them. Both sides redo only what the edit changed (T-496): the worker keeps
 each edge's, line's and station's piece of the buffers from the last build and reuses any whose
@@ -2390,8 +2392,10 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   the same two lines within 200 m of each other along both are one, the first along the lower-numbered
   line. A line with its own spacing or stops by hand keeps its own stops (below); a line crossing it
   still stops at the crossing, where a hand stop placed at it is shared.
-  Any edit to a station or a line places every bus line's stops again (a kept stop made, moved or removed: those of the
-  lines passing within 50 m of it). Every stop is on the route
+  An edit places again the stops of the bus lines it can move (T-4249, `bus::lines_touched`): those within 200 m of a
+  station made, removed, constructed, made a BRT station or moved (a constructed line: of a constructed station only),
+  and every bus line crossing one of those (each reads the stations the other reaches); those crossing a bus route
+  set, as it was and as it is; those within 50 m of a kept stop made, moved or removed. Every stop is on the route
   (T-2982): a station's stop where the route passes nearest the station, never on the station's
   centre (`BusStop::x`, `y`). Its id is still the station's node, so riders change between bus and
   train there as at the station itself: the walk from the route to the station is not counted.

@@ -1004,7 +1004,9 @@ async function handleMessage(msg: ToClock) {
     }
     msg.op = withName(msg.op, game);
     const before = wordBefore(api, msg.op, posted);
+    api.take_service_moved(); // T-4249: what the previews asked meanwhile moved and put back does not count
     const applied = apply(msg.op);
+    const moved = api.take_service_moved();
     const { r, fault, line, node, skipped, charge: charged, trainCharge, why } = applied;
     refusedLast = r === 0 ? -1 : msg.seq;
     api.set_edit_lead(0); // a refused edit leaves it set
@@ -1041,8 +1043,9 @@ async function handleMessage(msg: ToClock) {
     const demand = api.dirty_demand_lines();
     // T-1780: blueprint track changes no train's run, so the trips and boarding account stand
     // (about 60 ms on New York's real save, more on shared track); T-1805: nor does the
-    // junction it pays for when it branches off constructed track
-    const trips = !((op.op === "route" || bpRemove || named) && !demand.length);
+    // junction it pays for when it branches off constructed track; T-4249: nor any edit that
+    // rebuilt, rescheduled or re-timed no line (a station on track no line runs over)
+    const trips = moved && !((op.op === "route" || bpRemove || named) && !demand.length);
     const effectiveAt = service ? api.edit_time() : undefined;
     // T-1407: the track tool's free segment is answered now (its next ghost needs only the model),
     // its state a moment later (a junction it pays for has its money's split read off that state)

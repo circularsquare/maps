@@ -621,6 +621,12 @@ pub struct Touch {
     pub busways: bool,
     /// T-4080: where kept bus stops were made, moved or removed: the bus lines passing near place their stops again
     pub keeps: Vec<[f64; 2]>,
+    /// T-4249: where a station was made or removed, built, made a BRT station or moved (from and to), and whether it
+    /// was constructed before or after: what a bus line's stops read of it (`bus::lines_touched`)
+    pub station_places: Vec<([f64; 2], bool)>,
+    /// T-4249: the routes of bus lines set, as they were and as they are, where the route or its stops' rules
+    /// changed or the line came or went: the bus lines crossing one place their stops again
+    pub bus_routes: Vec<Vec<[f64; 2]>>,
 }
 
 /// What `derive` rebuilt.
