@@ -1358,6 +1358,8 @@ onmessage = (e: MessageEvent<ToDemand>) => {
     // (T-4220: a side job's snapshot is held as it comes, though a newer job may supersede the side job)
     if (msg.aside?.shown) holdSnap(msg.aside.gen, msg.aside.shown);
     const job = msg.aside?.shown ? { ...msg, aside: { gen: msg.aside.gen, cities: msg.aside.cities } } : msg;
+    // (T-4297: a side job this supersedes before it began still answers, so the page is not left waiting for it)
+    if (pending?.aside) sendMessage({ kind: "asideDone", version: pending.version, gen: pending.aside.gen, plan: { fresh: [], clusters: [], periods: [], ms: null, planMs: 0 }, ms: 0, stale: true });
     // (a `freshParts` not yet taken up carries over to the solve that supersedes it)
     pending = pending?.freshParts && !job.freshParts ? { ...job, freshParts: true } : job;
     wake?.();

@@ -80,7 +80,7 @@ import {
   demandHeld,
 } from "../game/demand";
 import { FOCUS_WORKERS, FocusPool } from "./demandFocus";
-import { ASIDE_MAX_ZONES, SNAP_MAX_BYTES, ShownStore, type AsideAnswer, type Snapshot } from "./demandShown";
+import { ASIDE_MAX_ZONES, SNAP_MAX_BYTES, ShownStore, type AsideAnswer, type AsideShown, type Snapshot } from "./demandShown";
 import { tracing } from "../game/freezeTrace";
 import { demandNote, startDemandTrace } from "./demandTrace";
 import { addressLimited, deviceGB, heapStep, memBudget, mobileDevice, phoneLoad, smallDevice } from "./deviceMemory";
@@ -95,13 +95,13 @@ import { clock } from "../game/clock";
 import { PERIODS, TIMES_PER_STOP, periodsMatch } from "../game/periods";
 import { EVERYDAY_KEYS, membersOf, type PurposeFilter } from "../game/purposes";
 import { perfOff } from "../perfFlags";
-import { LEVEL, marketZonesNear } from "./demandClusters";
+import { cityReach, LEVEL, marketZonesNear } from "./demandClusters";
 import { citiesReached, footprintOf, loadFootprints, REACH_M, zonesNearStations, type Footprint } from "./cityReach";
 import { nearbyZones, zoneAt, zonesLoadForView } from "../game/zones";
 import { packToLngLat } from "../game/coords";
 import { addOpened, reportDemandFine } from "../game/openedZones";
 import { memoryNeed } from "../game/memoryCheck";
-import { builtKeep, firstFine, LEFT_ALONE_MS, LOD_COARSE, LOD_FINE, lodBudgetGB, lodMode, planFine, VIEW_SETTLE_MS, EDIT_KEEP_MS, zonesGB } from "./demandLod";
+import { builtKeep, firstFine, LEFT_ALONE_MS, LOD_COARSE, LOD_FINE, lodBudgetGB, lodMode, planFine, VIEW_SETTLE_MS, EDIT_KEEP_MS, zoneGB, zonesGB } from "./demandLod";
 import { stopsById, world } from "../game/world";
 import { stopFareScales } from "../game/money";
 import { trackZones } from "../game/trackZones";
@@ -583,6 +583,20 @@ interface Solve {
 /** When one item (a city or the market) was asked for, downloaded and open in every worker:
  * performance.now() (window.twDemand.start.loads with ?debug=1). */
 interface LoadLog { item: string; requestedAt: number; downloadedAt?: number; openedAt?: number; bare?: boolean; closedAt?: number }
+/** T-4220 (?debug=1, `twDemand.client.asideLog`): a side job decided. `version` its own, `on` the running whole solve's,
+ * `held` whether its network was held behind that solve (else that solve's own); `at` and `endAt` performance.now() */
+interface AsideLog {
+  version: number; on: number; gen: number; held: boolean; at: number; endAt?: number;
+  refused?: string; why?: string; superseded?: boolean; stale?: boolean; done?: boolean;
+  fresh?: CityId[]; periods?: number[]; results?: number; sums?: CityId[];
+  /** stage 7: its clusters put on screen, or why none was */
+  shown?: number; notShown?: string;
+  /** expected, ms: the plan's solve, its zones' opening, the main pool's to the edit's lines; then as they took */
+  expMs?: number | null; openExp?: number; mainMs?: number | null; planMs?: number; openMs?: number; workerMs?: number;
+}
+/** T-4220: one cluster of a side job's figures on screen (`sideOver`): its zones, the fresh ones, its lines, those a fresh
+ * zone's population reaches (`seen`, as its view on the network takes them), and its views of every kind of day */
+interface SideCluster { zones: CityId[]; fresh: CityId[]; all: Solve["layout"]; seen: Set<string>; ests: DayDemand[] }
 /** One file being downloaded, for the loading percentage (T-149). */
 interface Download { got: number; total: number; at: number; end?: number }
 /**
@@ -772,6 +786,14 @@ const HOLD_QUIET_MS = 10000;
  * the held edit's local result on top of the running final shows its lines sooner than a restarted whole solve,
  * which has no local stage (on the NA save, notes/T-3925.md) */
 const RESTART_SHARE = 0.4;
+/** T-4220 (notes/T-4220.md, "The pick" 5): an edit made during a whole solve is solved aside this long after the last
+ * edit, so edits arriving together share one side job */
+const ASIDE_QUIET_MS = 1000;
+/** T-4220: a side job starts only where its expected time is under this share of the main pool's to the edit's lines
+ * (first guess) */
+const ASIDE_GAIN = 0.7;
+/** T-4220: the side pool's start, before its plan can be asked for (0.5 s on New York, stage 3; a guess for slower machines) */
+const ASIDE_START_MS = 1500;
 
 /** Pack a service for the workers; lines naming a station that is not in the list are left out. */
 function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"]; ids: { lines: string[]; stations: string[] } } {
@@ -1141,6 +1163,7 @@ class DemandClient {
       const v = this.viewMsg();
       for (const w of this.workers) w.postMessage(v);
       this.fpool?.postAll(v);
+      this.apool?.postAll(v);
     });
     // T-1533: a game load's first figures for the zone in view show the map behind the card
     effect(() => {
@@ -1226,6 +1249,8 @@ class DemandClient {
     queueMicrotask(() => this.releaseView()); // after the camera's move to the save's view, which follows this call
     if (this.failed || xy.length < 2) return;
     this.endFocus(); // (a game picked while another loaded)
+    this.endAside();
+    this.dropSide();
     this.startFocus();
     const stations: Service["stations"] = [];
     for (let k = 0; k + 1 < xy.length; k += 2) stations.push({ id: "", x: xy[k], y: xy[k + 1] });
@@ -2304,6 +2329,7 @@ class DemandClient {
         }
         if (s.refresh) this.showRefresh(s);
         else if (editHeld.peek()?.sentAt !== s.sentAt) editHeld.value = { sentAt: s.sentAt };
+        this.asideSoon(); // T-4220: held behind a whole solve
       }
       this.refineAside();
       return;
@@ -2940,7 +2966,7 @@ class DemandClient {
       const version = ++this.version;
       for (const w of this.workers) w.postMessage({ kind: "solve", version, ...(({ net, ids }) => ({ net, ids }))(packService(this.cur.svc)), rounds: ROUNDS, only: [] } satisfies ToDemand);
     }
-    demandByDay.value = days;
+    this.days = days;
     this.lodShown(cities, cities.filter((id) => this.levelFor(id) === LOD_COARSE));
     this.addBareViews();
     demandUpdating.value = true;
@@ -2951,7 +2977,7 @@ class DemandClient {
 
   /** The figures shown are the cache's. */
   private cacheShown(): boolean {
-    return demandByDay.peek()[0]?.view?.version === CACHE_VERSION;
+    return this.days[0]?.view?.version === CACHE_VERSION;
   }
 
   /** A final result landed: keep it beside the save (not from a test page or a tab without the slot). */
@@ -2959,7 +2985,7 @@ class DemandClient {
     const slots = saveSlotsState.peek();
     const skip = (why: string) => void ((this.cacheLog ??= { at: performance.now() }).skip = why);
     if (!this.cacheOn || !this.cacheWrites || !slots.writable || !slots.active) return skip("off");
-    const days = demandByDay.peek();
+    const days = this.days;
     if (days.some((d) => d.view?.version !== s.version)) return skip("days");
     // (the last asked writes: one asked before it can finish its reads after it, T-4266)
     const seq = ++this.cacheSeq;
@@ -3157,6 +3183,8 @@ class DemandClient {
     this.hold = null;
     this.cacheSolve = null;
     this.endFocus();
+    this.endAside();
+    this.dropSide();
     this.shownSnap.clear(this.version); // (T-4220)
     this.pushed.clear();
     zoneLoads.value = new Map();
@@ -3215,6 +3243,7 @@ class DemandClient {
     const aux = this.computeN, n = Math.max(1, Math.floor(aux / 2));
     console.warn(`demand: worker ${i} ran out of memory, ${aux} solving workers to ${n}: ${why}`); // i18n-ignore
     this.endFocus();
+    this.endAside();
     rememberPoolCap(n);
     const again = new Set([...this.respawn.keys(), i]);
     this.respawn.clear();
@@ -3347,6 +3376,7 @@ class DemandClient {
     this.lastTrouble = `stuck, workers restarted: ${quiet}`.slice(0, 600); // i18n-ignore
     console.warn("demand: nothing moved while loading, restarting the workers:", quiet); // i18n-ignore
     this.endFocus();
+    this.endAside();
     this.endQueries();
     for (let i = 0; i < this.workers.length; i++) {
       this.respawn.set(i, { left: null, solving: false, planned: true });
@@ -3367,6 +3397,7 @@ class DemandClient {
     if (this.failed || !this.workers.length) return;
     console.warn("demand: a save found no memory; the workers are replaced"); // i18n-ignore
     this.endFocus();
+    this.endAside();
     this.endQueries();
     if (this.computeN > 1 && !this.respawn.size) {
       const n = Math.floor(this.computeN / 2);
@@ -3384,56 +3415,491 @@ class DemandClient {
     if (demandView.peek()?.final) memoryResolve.value = true;
   }
 
-  /** T-4220, dev server only: the focus pool the side job's dev calls ask (`asidePlan`, `aside`), kept between them so
-   * the zones a side job opened stay open (`fpool` is T-2605's; nothing in play starts a side job yet, stage 6): the
-   * call in hand's taker of its messages, the zones it is opening, the level each zone was posted at */
-  private devPool: FocusPool | null = null;
-  private devTake: ((msg: FromDemand | null) => void) | null = null;
-  private devOpening = new Map<CityId, () => void>();
-  private devLevel = new Map<CityId, number>();
-  private devAsidePool(): FocusPool {
-    if (this.devPool?.alive) return this.devPool;
-    this.devLevel.clear();
-    const woken = () => { for (const r of this.devOpening.values()) r(); this.devOpening.clear(); };
-    return (this.devPool = new FocusPool(1, [periodsOfWorker(0, 1)], {
-      message: (_, msg) => this.devTake?.(msg),
-      opened: (id) => { this.devOpening.get(id)?.(); this.devOpening.delete(id); },
-      failed: (why) => { console.warn(`T4220 aside: ${why}`); this.devTake?.(null); woken(); }, // i18n-ignore
+  // --- T-4220: an edit made during a whole solve, solved aside against the figures on screen ----------
+
+  /**
+   * T-4220 (notes/T-4220.md, "The pick" 5): the side job's pool, one worker holding up to `ASIDE_MAX_ZONES` zones. Never
+   * alive beside `fpool` (T-2045's and T-2605's): it ends a refine aside as it starts, and a refine waits while it lives.
+   * An edit does not end it: its zones and its copy of the snapshot stay for the next edit made during the same whole
+   * solve. A side job ending, or a final shown, with no whole solve running or no zone held there ends it (`asideIdle`),
+   * as does the main pool showing the last side job's network or a newer one (`sideCovered`). It answers no question: a
+   * side job leaves its zones' populations there on its own network (T-4297).
+   */
+  private apool: FocusPool | null = null;
+  /** the level each zone was posted to it at, and those opening there */
+  private alevel = new Map<CityId, number>();
+  private aopening = new Map<CityId, () => void>();
+  /** the exchange in hand with it: each of its messages goes here until it answers (null: the pool ended) */
+  private atake: ((msg: FromDemand | null) => void) | null = null;
+  /** the side job in hand, or a dev call's: one at a time */
+  private asideJob: { svc: Service; gen: number } | null = null;
+  /** the snapshot generation each network's side job was decided on (started or refused): once a generation */
+  private asideDecided = new WeakMap<Service, number>();
+  /** the pool failed: none starts again until a whole snapshot comes after */
+  private asideBroken = false;
+  /** a side job waits for the running solve's time left (`unitsLeft`), looked at again at its next `work` */
+  private asideWaitsLeft = false;
+  private asideTimer = 0;
+  /** ?debug=1: each side job decided, oldest first */
+  asideLog: AsideLog[] = [];
+
+  /** T-4220: the network a side job is wanted for and the running whole solve it would beat: (a) a network held behind
+   * that solve (`firm`; not one taken to go at its local result, `quickHold`), or (b) that solve's own network when it
+   * has no local stage (started again after T-3925's cut, or an edit solved whole at once) */
+  private asideWanted(): { svc: Service; s: Solve; held: boolean } | null {
+    const s = this.cur;
+    if (!s || s.barrier !== false || s.rough || s.published >= ROUNDS || this.hold || gameLoadArmed()) return null;
+    const w = this.waiting;
+    if (w) return w.svc !== s.svc && this.firm() && !this.quickHold(s) ? { svc: w.svc, s, held: true } : null;
+    if (s.refresh) return null;
+    const plans = Array.from({ length: this.computeN }, (_, k) => s.localPlans?.[k]);
+    return plans.every((v) => v === 0) ? { svc: s.svc, s, held: false } : null;
+  }
+
+  /** T-4220: why no side job may run here now, or null */
+  private asideOff(): string | null {
+    if (perfOff("editAside") || perfOff("focus")) return "off";
+    if (smallDevice() || addressLimited()) return "device";
+    // (`?split=1`: T-3373 B's solves are all whole, round by round, with no snapshot)
+    if (this.holding) return "split";
+    if (this.failed || this.asideBroken) return "pool";
+    return null;
+  }
+
+  /** T-4220: look for a side job once the edits have been quiet `ASIDE_QUIET_MS` */
+  private asideSoon() {
+    clearTimeout(this.asideTimer);
+    this.asideTimer = 0;
+    if (this.asideJob || !this.asideWanted()) return;
+    const wait = this.editAt + ASIDE_QUIET_MS - performance.now();
+    if (wait > 0) this.asideTimer = window.setTimeout(() => this.asideSoon(), wait + 5);
+    else this.asideGo();
+  }
+
+  /** T-4220: the zones the main pool's solve of `svc` would cover, in the registry's order: those open and those it
+   * needs (one not open yet is refused by the plan, as one opened since the snapshot); null while its reach is not known */
+  private asideCities(svc: Service): CityId[] | null {
+    const need = this.solveNeed(svc);
+    return need && CITIES.map((c) => c.id).filter((id) => this.opened.has(id) || need.has(id));
+  }
+
+  /**
+   * T-4220: a side job for the network wanted now, decided once per network and snapshot generation: once the running
+   * solve's snapshot is in from every solving worker and whole on the page, and that solve's time left is known. Refused
+   * on the page (`asideOff`, the fares changed since the figures on screen, the side pool's memory, too little left to
+   * gain), else planned in the side pool; solved there if the plan has fresh zones held at the main pool's levels now,
+   * they fit in memory too, and the side job's expected time is under `ASIDE_GAIN` of the main pool's (`asideRun`).
+   */
+  private asideGo() {
+    const want = this.asideWanted();
+    if (!want || this.asideJob) return;
+    const { svc, s, held } = want;
+    // (`shownIn` looks again once the running solve's snapshot is in, the next `work` once its time left is known)
+    if (this.shownSnap.sent(s.version).size < this.computeN) return;
+    const shown = this.shownSnap.forAside(), gen = shown?.gen ?? -1;
+    if (this.asideDecided.get(svc) === gen) return;
+    const left = unitsLeft(s, this.computeN, performance.now());
+    if (left === null) { this.asideWaitsLeft = true; return; }
+    this.asideDecided.set(svc, gen);
+    const ent: AsideLog = { version: ++this.version, on: s.version, gen, held, at: performance.now(), mainMs: left };
+    this.asideLog.push(ent);
+    if (this.asideLog.length > 50) this.asideLog.shift();
+    const no = (refused: string, why: string) => this.asideEnd(ent, { refused, why });
+    const off = this.asideOff(), cities = this.asideCities(svc);
+    // i18n-ignore (the dev log's)
+    if (off) return no(off, off === "off" ? "?perfOff=editAside or focus" : off === "device" ? "a small or address-limited device" : off === "split" ? "?split=1" : "the side pool failed; none until the next snapshot");
+    if (!shown) return no("snapshot", "no whole snapshot held"); // i18n-ignore
+    if (!cities) return no("zones", "the network's reach is not known yet"); // i18n-ignore
+    // (the fare test the plan makes, on the page: a fare edit never starts the pool to be refused there)
+    const shownSvc = this.log.find((x) => x.version === demandView.peek()?.version)?.svc;
+    if (shownSvc && JSON.stringify(shownSvc.fare) !== JSON.stringify(svc.fare)) return no("fares", "the fares changed since the figures on screen"); // i18n-ignore
+    if (!this.asideFits([])) return no("memory", "the side pool and the snapshot would pass the memory budget"); // i18n-ignore
+    if (ASIDE_GAIN * left <= (this.apool?.alive ? 0 : ASIDE_START_MS)) return no("slower", `the main pool's ${Math.round(left)} ms left`); // i18n-ignore
+    this.asideJob = { svc, gen };
+    void this.asideRun(ent, svc, s, held, shown, cities).catch((err) => no("error", String(err))).finally(() => {
+      this.asideJob = null;
+      this.asideIdle();
+      this.asideSoon();
+    });
+  }
+
+  /** T-4220: a side job's plan, its zones opened and its solve, as `asideGo` decides (its results are not shown yet:
+   * stage 7) */
+  private async asideRun(ent: AsideLog, svc: Service, s: Solve, held: boolean, shown: AsideShown, cities: CityId[]) {
+    const { version, gen } = ent;
+    const no = (refused: string, why: string) => this.asideEnd(ent, { refused, why });
+    const s1 = (ms: number) => `${(ms / 1000).toFixed(1)} s`; // i18n-ignore
+    const pool = this.asidePool(), { net, ids } = packService(svc);
+    const plan = await this.asideAsk(pool, (p) => p.aside({ kind: "aside", version, net, ids, rounds: ROUNDS, cities, gen, shown, ...(perfOff("periods") ? { fresh: true } : {}) }), (m) => (m.kind === "asidePlan" && m.version === version ? m.plan : undefined));
+    ent.planMs = performance.now() - ent.at;
+    if (!plan) return no("pool", "the side pool ended"); // i18n-ignore
+    if (!plan.refused) this.sideFresh(svc, plan);
+    if (plan.refused) return no(plan.refused, plan.why ?? "");
+    ent.fresh = plan.fresh.map((z) => z.id);
+    ent.periods = plan.periods;
+    ent.expMs = plan.ms;
+    if (!plan.fresh.length) return no("nothing", "no zone's view moved"); // i18n-ignore
+    if (plan.ms === null) return no("time", "a fresh population's pass times are not known"); // i18n-ignore
+    const level = plan.fresh.filter((z) => (this.levelPosted.get(z.id) ?? LOD_FINE) !== z.level);
+    if (level.length) return no("level", `${level.map((z) => z.id).join(",")} held at another level now`); // i18n-ignore
+    if (!this.asideFits(plan.fresh)) return no("memory", `with ${ent.fresh.join(",")} open there the side pool would pass the memory budget`); // i18n-ignore
+    const openExp = this.asideOpenMs(plan.fresh), main = this.asideMainMs(s, held, plan);
+    ent.openExp = openExp;
+    ent.mainMs = main;
+    if (main === null || !(plan.ms + openExp < ASIDE_GAIN * main)) return no("slower", `${s1(plan.ms + openExp)} against the main pool's ${main === null ? "not known" : s1(main)}`); // i18n-ignore
+    // (the newest network and the newest snapshot win: a side job for an older one is never solved)
+    const still = () => this.asideWanted()?.svc === svc && this.shownSnap.forAside()?.gen === gen;
+    if (!still()) return this.asideEnd(ent, { superseded: true });
+    const t0 = performance.now();
+    if (!(await this.asideOpen(plan.fresh))) return no("pool", "the side pool ended while its zones opened"); // i18n-ignore
+    ent.openMs = performance.now() - t0;
+    const now = this.shownSnap.forAside();
+    if (!still() || !now) return this.asideEnd(ent, { superseded: true });
+    let results = 0;
+    // (each cluster's periods, by its zones)
+    const got = new Map<string, (Result | undefined)[]>();
+    this.asideSeq = this.netSeq.get(svc) ?? -1;
+    const done = await this.asideAsk(pool, (p) => p.asideSolve({ kind: "solve", version, net, ids, rounds: ROUNDS, ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("farChunks") ? { nearChunks: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), aside: { gen, cities, shown: now } }), (m) => {
+      if (m.kind === "asideDone" && m.version === version) return m;
+      if (m.kind === "result" && m.version === version && m.cluster?.aside) {
+        results++;
+        const k = m.cluster.cities.join();
+        if (!got.has(k)) got.set(k, PERIODS.map(() => undefined));
+        got.get(k)![m.period] = m;
+      }
+      return undefined;
+    });
+    if (!done) return no("pool", "the side pool ended while it solved"); // i18n-ignore
+    ent.workerMs = done.ms;
+    ent.results = results;
+    ent.sums = done.sums;
+    if (done.plan.refused) return no(done.plan.refused, done.plan.why ?? "");
+    if (done.stale) return this.asideEnd(ent, { stale: true });
+    const not = await this.asideShow(ent, svc, now, done.plan, got);
+    this.asideEnd(ent, not ? { done: true, notShown: not } : { done: true });
+  }
+
+  /** T-4220: a side job decided, its log entry ended (on the dev server, the console's line) */
+  private asideEnd(ent: AsideLog, more: Partial<AsideLog>) {
+    Object.assign(ent, more, { endAt: performance.now() });
+    if (!import.meta.env.DEV) return;
+    const s1 = (ms: number | null | undefined) => (ms === null || ms === undefined ? "not known" : `${(ms / 1000).toFixed(1)} s`); // i18n-ignore
+    const head = `T4220 aside v${ent.version} (${ent.held ? "held behind" : "the network of"} v${ent.on}, snapshot gen ${ent.gen})`; // i18n-ignore
+    const fresh = ent.fresh ? `${ent.fresh.join(",")} fresh, periods ${ent.periods?.join(",") || "none"}` : ""; // i18n-ignore
+    // i18n-ignore
+    console.info(ent.refused ? `${head}: refused, ${ent.refused}: ${ent.why}${fresh ? ` (${fresh})` : ""}` : ent.superseded ? `${head}: a newer network or snapshot came before its solve${fresh ? ` (${fresh})` : ""}` : `${head}: ${fresh}; ${ent.stale ? "stale (a newer job came first)" : `${ent.results} results, ${ent.notShown ? `not shown (${ent.notShown})` : `${ent.shown} clusters shown`}`}; ${s1(ent.endAt! - ent.at)} in all: plan ${s1(ent.planMs)}, opening ${s1(ent.openMs)}, worker ${s1(ent.workerMs)}; expected ${s1(ent.expMs)} and ${s1(ent.openExp)} opening against the main pool's ${s1(ent.mainMs)}`);
+  }
+
+  // --- T-4220 stage 7: a side job's figures shown over the main pool's ---
+
+  /** a network's place in the order networks came in (`submitNetwork`), for "the side job's network or a newer one" */
+  private netSeq = new WeakMap<Service, number>();
+  private netCount = 0;
+  /** T-4220 (notes/T-4220.md, "Stage 7"): the figures every publish merges into and writes, the main pool's (with T-2045's
+   * and T-2605's put in). What is shown is these with a side job's over them (`sideOver`), so a side job's figures never
+   * become the main pool's and go the moment they stop being wanted. */
+  private mainDays: DayDemand[] = demandByDay.peek();
+  private get days(): DayDemand[] {
+    return this.mainDays;
+  }
+  private set days(days: DayDemand[]) {
+    this.mainDays = days;
+    demandByDay.value = this.sideOver(days);
+  }
+  /** the side job's figures on screen, by cluster (`game`: the `gameLoadSeq` they are of; `removed`: lines on screen its
+   * network no longer has), until the main pool shows its network or a newer one there (`sideCovered`), a later side
+   * job's replace them, or a newer network's plan finds one of its fresh zones as on screen (`sideFresh`) */
+  private side: { svc: Service; seq: number; game: number; version: number; removed: Set<string>; clusters: SideCluster[] } | null = null;
+  /** per zone, the newest network (`netSeq`) a final of the main pool has been shown for; `coveredAll`: a whole final's */
+  private coveredAt = new Map<CityId, number>();
+  private coveredAll = -1;
+  /** the network order of the last side job solved: once the main pool shows it or a newer one, the side pool ends */
+  private asideSeq = Infinity;
+
+  /**
+   * T-4220 (notes/T-4220.md, "The pick" 6, "Stage 7"): a side job's figures put on screen over the main pool's, in place
+   * of any earlier side job's. Not when its network is no longer the newest (an undo or another edit came meanwhile, which
+   * the next side job covers), another game came, or the main pool has shown a final of its network or a newer one in the
+   * cluster (a held edit's own local result, which races it once the running solve's final is in). Its lines read as
+   * worked out (`linesSettled`); questions, the bubbles, the level of detail and "Calculating trips" stay the main
+   * pool's. Resolves why nothing was shown, or "".
+   */
+  private asideShow(ent: AsideLog, svc: Service, shown: AsideShown, plan: AsideAnswer, got: Map<string, (Result | undefined)[]>): Promise<string> {
+    const seq = this.netSeq.get(svc) ?? -1, game = gameLoadSeq.peek();
+    const { net, layout } = packService(svc);
+    return new Promise<string>((done) => this.inOrder(async () => {
+      let why = "";
+      try {
+        // i18n-ignore (the dev log's)
+        const gone = () => (game !== gameLoadSeq.peek() ? "another game" : this.latest() !== svc ? "a newer network came" : !this.days[0]?.view ? "nothing on screen" : "");
+        if ((why = gone())) return;
+        const off = new Uint32Array(net.lineN.length + 1);
+        for (let l = 0; l < net.lineN.length; l++) off[l + 1] = off[l] + net.lineN[l];
+        const wide = shown.flags.wide || shown.flags.whole;
+        const clusters: SideCluster[] = [];
+        for (const c of plan.clusters) {
+          // (a side job's results name the cluster's fresh zones, `sideJob`)
+          const res = got.get(c.fresh.join());
+          if (!res || res.some((r) => !r) || this.coveredFrom(c.zones) >= seq) continue;
+          const idx = Array.from(res[0]!.cluster!.lines), all = idx.map((l) => layout[l]).filter(Boolean);
+          // (a city's population sees the cluster's lines with a stop it reaches, `reachView`; with `wide` or `whole`, all)
+          const reach = wide ? [] : c.fresh.map((id) => cityReach(net, id, shown.zones.find((z) => z.id === id)?.box ?? null));
+          const sees = (l: number) => wide || reach.some((r) => { for (let k = off[l]; k < off[l + 1]; k++) if (r[net.stops[k]]) return true; return false; });
+          const seen = new Set(idx.filter(sees).map((l) => layout[l]?.id).filter((id): id is string => !!id));
+          const ests = await this.daysOf({ version: ent.version, svc }, all, ROUNDS, true, res as Result[], true);
+          clusters.push({ zones: c.zones, fresh: c.fresh, all, seen, ests });
+        }
+        if ((why = gone())) return;
+        const keep = clusters.filter((c) => this.coveredFrom(c.zones) < seq);
+        // i18n-ignore
+        if (!keep.length) return void (why = clusters.length ? "the main pool showed its network first" : "no cluster whole");
+        const ids = new Set(layout.map((l) => l.id));
+        this.side = { svc, seq, game, version: ent.version, removed: new Set([...this.days[0].view!.lines.keys()].filter((id) => !ids.has(id))), clusters: keep };
+        this.days = this.mainDays;
+        const under = this.mainDays[0].view!;
+        linesSettled(keep.flatMap((c) => (c.ests[0].view ? [...this.sideTakes(c, under, c.ests[0].view)] : [])), this.netWorld.get(svc) ?? -1);
+        ent.shown = keep.length;
+      } finally {
+        done(why);
+      }
+    }));
+  }
+
+  /** `days` with the side job's figures over them: in each cluster the lines it takes (`sideTakes`) with their stations and
+   * purpose entries, and its fresh zones' views; lines its network removed go. The totals, the market's figures, the other
+   * zones, lines and stations, the bubbles and the view's version, round and final flag stay as `days` has them. */
+  private sideOver(days: DayDemand[]): DayDemand[] {
+    const o = this.side;
+    if (!o) return days;
+    if (o.game !== gameLoadSeq.peek()) {
+      this.side = null;
+      return days;
+    }
+    // (kinds of day standing in for another share their views: put over once)
+    const made = new Map<DayDemand, { ests: DayDemand[]; out: DayDemand }[]>();
+    return days.map((d, k) => {
+      const under = d.view;
+      if (!under) return d;
+      const ests = o.clusters.map((c) => c.ests[k]);
+      const was = made.get(d)?.find((m) => m.ests.every((e, i) => e === ests[i]));
+      if (was) return was.out;
+      const lines = new Map(under.lines), stations = new Map(under.stations);
+      for (const id of o.removed) lines.delete(id);
+      let purposes = under.purposes;
+      const zones: [CityId, DemandView][] = [];
+      o.clusters.forEach((c, i) => {
+        const est = ests[i]?.view;
+        if (!est) return;
+        const take = this.sideTakes(c, under, est), at = new Set<string>();
+        for (const l of c.all) if (take.has(l.id)) for (const id of [...l.stops, ...(l.back ?? [])]) if (est.stations.has(id)) at.add(id);
+        for (const id of take) lines.set(id, est.lines.get(id)!);
+        for (const id of at) stations.set(id, est.stations.get(id)!);
+        if (est.purposes) {
+          purposes = new Map(purposes);
+          for (const [key, p] of est.purposes) {
+            const old = purposes.get(key);
+            const pl = new Map(old?.lines), ps = new Map(old?.stations);
+            for (const id of take) { const l = p.lines.get(id); if (l) pl.set(id, l); }
+            for (const id of at) { const v = p.stations.get(id); if (v) ps.set(id, v); }
+            purposes.set(key, { lines: pl, stations: ps });
+          }
+        }
+        for (const id of c.fresh) { const v = ests[i].cities.get(id); if (v) zones.push([id, v]); }
+      });
+      const view = { ...under, lines, stations, purposes };
+      const cities = new Map<CityId, DemandView>();
+      for (const [id, v] of d.cities) cities.set(id, { ...v, lines, stations, purposes });
+      for (const [id, v] of zones) cities.set(id, { ...view, tripsPerDay: v.tripsPerDay, railTripsPerDay: v.railTripsPerDay, trainShareByPeriod: v.trainShareByPeriod, split: v.split });
+      const out: DayDemand = { view, cities, intercity: d.intercity };
+      made.set(d, [...(made.get(d) ?? []), { ests, out }]);
+      return out;
+    });
+  }
+
+  /** the lines of side cluster `c` that take its figures over `under`'s: those a fresh zone's population sees, and those
+   * `under` has no figures for on their stops, trains and cars (added or changed since); never one `under` shows at
+   * other fares (T-3303) */
+  private sideTakes(c: SideCluster, under: DemandView, est: DemandView): Set<string> {
+    const out = new Set<string>();
+    for (const l of c.all) {
+      const got = est.lines.get(l.id);
+      if (!got) continue;
+      const was = under.lines.get(l.id);
+      const fits = !!was && was.stops?.join() === got.stops?.join() && was.tph?.join() === got.tph?.join() && was.cars === got.cars;
+      if ((c.seen.has(l.id) || !fits) && takesMarketless(was, got)) out.add(l.id);
+    }
+    return out;
+  }
+
+  /** T-4220: the main pool shows a final of `s` for `zones` (null: its whole final). The side job's figures there of
+   * `s`'s network or an older one go; once it is the last side job's network or a newer one, the side pool ends too
+   * (`asideIdle` keeps it through an older final, for an edit made during the next whole solve). */
+  private sideCovered(s: Solve, zones: readonly CityId[] | null) {
+    const seq = this.netSeq.get(s.svc) ?? -1;
+    if (!zones) this.coveredAll = Math.max(this.coveredAll, seq);
+    else for (const id of zones) this.coveredAt.set(id, Math.max(this.coveredAt.get(id) ?? -1, seq));
+    const o = this.side;
+    if (o && seq >= o.seq) {
+      const z = zones && new Set(zones);
+      o.clusters = z ? o.clusters.filter((c) => !c.zones.some((id) => z.has(id))) : [];
+      for (const l of s.layout) o.removed.delete(l.id);
+      if (!o.clusters.length) this.side = null;
+    }
+    if (seq >= this.asideSeq && !this.asideJob) this.endAside();
+  }
+  /** the newest network a final of the main pool has been shown for in any of `zones` */
+  private coveredFrom(zones: readonly CityId[]): number {
+    return Math.max(this.coveredAll, ...zones.map((id) => this.coveredAt.get(id) ?? -1));
+  }
+
+  /** T-4220: a newer network's plan. A cluster of the side job's figures on screen with a fresh zone the plan finds as on
+   * screen (the edit there undone) is of an edit the player no longer has: it goes, and the main pool's figures show */
+  private sideFresh(svc: Service, plan: AsideAnswer) {
+    const o = this.side;
+    if (!o || (this.netSeq.get(svc) ?? -1) <= o.seq) return;
+    const fresh = new Set(plan.fresh.map((z) => z.id));
+    const keep = o.clusters.filter((c) => c.fresh.every((id) => fresh.has(id)));
+    if (keep.length === o.clusters.length) return;
+    o.clusters = keep;
+    if (!keep.length) this.side = null;
+    this.days = this.mainDays;
+  }
+
+  /** T-4220: another game: the side job's figures and what the main pool has shown go */
+  private dropSide() {
+    this.coveredAt.clear();
+    this.coveredAll = -1;
+    this.asideSeq = Infinity;
+    if (!this.side) return;
+    this.side = null;
+    this.days = this.mainDays;
+  }
+
+  /** T-4220: the side pool, started if it is not running (T-2605's refine aside ends: its zone's figures stay shown until
+   * the next result) */
+  private asidePool(): FocusPool {
+    if (this.apool?.alive) return this.apool;
+    this.endFocus();
+    this.alevel.clear();
+    return (this.apool = new FocusPool(1, [periodsOfWorker(0, 1)], {
+      message: (_, msg) => this.atake?.(msg),
+      opened: (id) => { this.aopening.get(id)?.(); this.aopening.delete(id); },
+      // i18n-ignore
+      failed: (why) => { console.warn(`demand: the side pool stopped (${why})`); this.lastTrouble = `side pool stopped: ${why}`; this.asideBroken = true; this.endAside(); },
     }, this.viewMsg(), false, ASIDE_MAX_ZONES));
   }
-  /** a dev call's exchange with that pool: `send`, then every message to `take` until it answers (null: the pool failed) */
-  private devAsk<T>(send: (p: FocusPool) => void, take: (msg: FromDemand) => T | undefined): Promise<T | null> {
-    const pool = this.devAsidePool();
+
+  /** T-4220: the side pool's workers go; an exchange or an opening waiting on it ends */
+  private endAside() {
+    const p = this.apool;
+    if (!p) return;
+    this.apool = null;
+    p.end();
+    this.alevel.clear();
+    for (const r of this.aopening.values()) r();
+    this.aopening.clear();
+    this.atake?.(null);
+    // (T-2605's relevel aside waited for it)
+    queueMicrotask(() => this.refineAside());
+  }
+
+  /** T-4220: the side pool ends unless a whole solve runs that an edit could still be made during and it holds a zone */
+  private asideIdle() {
+    const p = this.apool, s = this.cur;
+    if (!p || this.asideJob) return;
+    if (!p.open.length || !s || s.barrier !== false || s.rough || s.published >= ROUNDS) this.endAside();
+  }
+
+  /** an exchange with the side pool: `send`, then each of its messages to `take` until it answers (null: the pool ended) */
+  private asideAsk<T>(pool: FocusPool, send: (p: FocusPool) => void, take: (msg: FromDemand) => T | undefined): Promise<T | null> {
+    if (this.apool !== pool || !pool.alive) return Promise.resolve(null);
+    this.atake?.(null); // (one at a time: an earlier exchange still waiting is answered as ended, T-4297)
     return new Promise<T | null>((done) => {
-      this.devTake = (msg) => {
+      this.atake = (msg) => {
         const v = msg ? take(msg) : null;
         if (v === undefined) return;
-        this.devTake = null;
+        this.atake = null;
         done(v);
       };
       send(pool);
     });
   }
+
+  /** T-4220: `zones` open in the side pool at their levels (false: it ended meanwhile, or a pack did not download). Past its
+   * cap the oldest of its other zones close first, so the pool never closes one of these to open another */
+  private async asideOpen(zones: { id: CityId; level: number }[]): Promise<boolean> {
+    const pool = this.apool;
+    if (!pool?.alive) return false;
+    const want = new Set(zones.map((z) => z.id));
+    const go = zones.filter(({ id, level }) => !(pool.open.includes(id) && this.alevel.get(id) === level));
+    for (const { id } of go) if (pool.holds(id)) pool.close(id);
+    for (const id of [...pool.open, ...pool.opening]) if (!want.has(id) && pool.open.length + pool.opening.size + go.length > ASIDE_MAX_ZONES) pool.close(id);
+    try {
+      await Promise.all(go.map(async ({ id, level }) => {
+        const [header, bin] = await this.downloadPack(id);
+        if (this.apool !== pool) return;
+        this.aopening.get(id)?.();
+        const opened = new Promise<void>((r) => this.aopening.set(id, r));
+        this.alevel.set(id, level);
+        const own = bin.byteOffset === 0 && bin.byteLength === bin.buffer.byteLength ? bin.buffer as ArrayBuffer : bin.slice().buffer;
+        pool.post({ id, header: new TextDecoder().decode(header), bin: own, level });
+        await opened;
+      }));
+    } catch (err) {
+      console.warn(`demand: a side job's zone did not download (${String(err)})`); // i18n-ignore
+      return false;
+    }
+    return this.apool === pool && zones.every(({ id }) => pool.open.includes(id));
+  }
+
+  /** T-4220: the ms to open `zones` in the side pool where not open there at their levels, as the load's model has a city
+   * pack (`OPEN_CITY_MS`, `OPEN_MS_PER_MB`), one after another in its one worker */
+  private asideOpenMs(zones: { id: CityId; level: number }[]): number {
+    const p = this.apool;
+    return zones.reduce((ms, { id, level }) => (p?.open.includes(id) && this.alevel.get(id) === level ? ms : ms + OPEN_CITY_MS + OPEN_MS_PER_MB.city * (this.bytes.get(id) ?? GUESS_BYTES) / 1e6), 0);
+  }
+
+  /** T-4220: the main pool's expected ms to the edit's lines: the running whole solve's time left, and for a network held
+   * behind it, its local stage after that, the plan's periods dealt over the solving workers as the main pool deals them */
+  private asideMainMs(s: Solve, held: boolean, plan: AsideAnswer): number | null {
+    const left = unitsLeft(s, this.computeN, performance.now());
+    if (left === null || !held || plan.ms === null || !plan.periods.length) return left;
+    const most = Math.max(...this.periodsOf.slice(0, this.computeN).map((qs) => plan.periods.filter((q) => qs.includes(q)).length));
+    return left + plan.ms * most / plan.periods.length;
+  }
+
+  /** T-4220: the side pool with `zones` open there too fits the memory budget as `memShort` counts the page: a worker's JS
+   * (`MEM_WORKER`), its WASM (as last reported, else a start's), the snapshot copied there, and each zone not open there at
+   * its level by `zoneGB` */
+  private asideFits(zones: { id: CityId; level: number }[]): boolean {
+    const p = this.apool?.alive ? this.apool : null;
+    let add = MEM_WORKER + this.shownSnap.bytes() + (p?.mem.length ? p.mem.reduce((a, b) => a + (b ?? 0), 0) : MEM_BASE);
+    for (const { id, level } of zones) if (!(p?.open.includes(id) && this.alevel.get(id) === level)) add += zoneGB(id, level === LOD_COARSE) * 2 ** 30;
+    return this.memHeld() + add <= GROW_ROOM * memBudget();
+  }
+
   /** the newest network and the snapshot a side job's dev call goes against, or null (logged) */
   private devAsideOn(what: string) {
-    const svc = this.latest(), shown = this.shownSnap.forAside();
+    const svc = this.latest(), shown = this.shownSnap.forAside(), cities = svc && this.asideCities(svc);
     // i18n-ignore
-    if (!svc || !shown) { console.info(`T4220 ${what}: no whole snapshot held`); return null; }
-    return { ...packService(svc), shown, version: this.version, cities: CITIES.map((c) => c.id).filter((id) => this.opened.has(id)) };
+    if (!svc || !shown || !cities || this.asideJob) { console.info(`T4220 ${what}: ${this.asideJob ? "a side job is in hand" : "no whole snapshot held"}`); return null; }
+    return { ...packService(svc), svc, shown, version: ++this.version, cities };
   }
 
   /**
    * T-4220 stage 3, dev server only (`?debug=1`, `twDemand.client.asidePlan()`): the side job's plan for the newest
-   * network against the snapshot held, logged and returned.
+   * network against the snapshot held, in the side pool, logged and returned.
    */
   async asidePlan(): Promise<AsideAnswer | null> {
     if (!import.meta.env.DEV) return null;
     const on = this.devAsideOn("aside plan"); // i18n-ignore
-    return on && this.devPlan(on);
+    if (!on) return null;
+    this.asideJob = { svc: on.svc, gen: on.shown.gen };
+    try { return await this.devPlan(on); } finally { this.asideJob = null; this.asideIdle(); }
   }
   private async devPlan(on: NonNullable<ReturnType<DemandClient["devAsideOn"]>>): Promise<AsideAnswer | null> {
     const { net, ids, cities, version, shown } = on, t0 = performance.now();
-    const plan = await this.devAsk((p) => p.aside({ kind: "aside", version, net, ids, rounds: ROUNDS, cities, gen: shown.gen, shown, ...(perfOff("periods") ? { fresh: true } : {}) }), (m) => (m.kind === "asidePlan" ? m.plan : undefined));
+    const plan = await this.asideAsk(this.asidePool(), (p) => p.aside({ kind: "aside", version, net, ids, rounds: ROUNDS, cities, gen: shown.gen, shown, ...(perfOff("periods") ? { fresh: true } : {}) }), (m) => (m.kind === "asidePlan" && m.version === version ? m.plan : undefined));
     if (!plan) return null;
     const qs = (m: number) => PERIODS.map((_, q) => q).filter((q) => m & (1 << q)).join(",") || "none";
     const s = (ms: number | null) => (ms === null ? "not known" : `${(ms / 1000).toFixed(1)} s`); // i18n-ignore
@@ -3444,35 +3910,30 @@ class DemandClient {
 
   /**
    * T-4220 stage 4, dev server only (`?debug=1`, `twDemand.client.aside()`): a side job for the newest network against the
-   * snapshot held, in the dev pool: planned, its fresh zones opened there at the level the snapshot's solve held them
-   * (refused when the main pool holds one at another level now), then solved. Logs `T4220 aside ...` and returns the
-   * plan, its end (`asideDone`), its results by period and bubble sums, and from those results by the page's own reduction
-   * (`dayViews`, the weekday) each of its clusters' lines' riders and stations' boardings, for stage 5 to set beside a
-   * main-pool solve of the same network.
+   * snapshot held, in the side pool: planned, its fresh zones opened there at the level the snapshot's solve held them
+   * (refused when the main pool holds one at another level now), then solved, whatever the start rule would say. Logs
+   * `T4220 aside ...` and returns the plan, its end (`asideDone`), its results by period and bubble sums, and from those
+   * results by the page's own reduction (`dayViews`, the weekday) each of its clusters' lines' riders and stations'
+   * boardings, to set beside a main-pool solve of the same network.
    */
   async aside(): Promise<{ plan: AsideAnswer; done?: Extract<FromDemand, { kind: "asideDone" }>; results?: Result[]; sums?: Extract<FromDemand, { kind: "sums" }>[]; lines?: Record<string, number>; stations?: Record<string, number>; openMs?: number; ms?: number } | null> {
     if (!import.meta.env.DEV) return null;
     const on = this.devAsideOn("aside"); // i18n-ignore
     if (!on) return null;
+    this.asideJob = { svc: on.svc, gen: on.shown.gen };
+    try { return await this.devAside(on); } finally { this.asideJob = null; this.asideIdle(); }
+  }
+  private async devAside(on: NonNullable<ReturnType<DemandClient["devAsideOn"]>>) {
     const t0 = performance.now(), plan = await this.devPlan(on);
     if (!plan || plan.refused) return plan && { plan };
-    const { net, ids, layout, cities, version, shown } = on, pool = this.devAsidePool();
+    const { net, ids, layout, cities, version, shown } = on;
     const off = plan.fresh.filter((z) => (this.levelPosted.get(z.id) ?? LOD_FINE) !== z.level);
     // i18n-ignore
-    if (off.length) { console.info(`T4220 aside v${version}: refused, level: ${off.map((z) => z.id).join(",")} held at another level now`); return { plan: { ...plan, refused: "level", why: off.map((z) => z.id).join(",") } }; }
-    const tOpen = performance.now();
-    await Promise.all(plan.fresh.map(async ({ id, level }) => {
-      if (pool.open.includes(id) && this.devLevel.get(id) === level) return;
-      if (pool.holds(id)) pool.close(id);
-      const [header, bin] = await this.downloadPack(id);
-      if (!pool.alive) return;
-      const opened = new Promise<void>((r) => this.devOpening.set(id, r));
-      this.devLevel.set(id, level);
-      pool.post({ id, header: new TextDecoder().decode(header), bin: bin.slice().buffer as ArrayBuffer, level });
-      await opened;
-    }));
+    if (off.length) { console.info(`T4220 aside v${version}: refused, level: ${off.map((z) => z.id).join(",")} held at another level now`); return { plan: { ...plan, refused: "level" as const, why: off.map((z) => z.id).join(",") } }; }
+    const tOpen = performance.now(), pool = this.apool;
+    if (!pool || !(await this.asideOpen(plan.fresh))) return { plan };
     const openMs = performance.now() - tOpen, results: Result[] = [], sums: Extract<FromDemand, { kind: "sums" }>[] = [];
-    const done = await this.devAsk((p) => p.asideSolve({ kind: "solve", version, net, ids, rounds: ROUNDS, ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("farChunks") ? { nearChunks: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), aside: { gen: shown.gen, cities, shown } }), (m) => {
+    const done = await this.asideAsk(pool, (p) => p.asideSolve({ kind: "solve", version, net, ids, rounds: ROUNDS, ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("farChunks") ? { nearChunks: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), aside: { gen: shown.gen, cities, shown } }), (m) => {
       if (m.kind === "asideDone") return m;
       if (m.kind === "result" && m.cluster?.aside) results.push(m);
       else if (m.kind === "sums" && m.aside) sums.push(m);
@@ -3570,6 +4031,10 @@ class DemandClient {
    * budget, the line the pool grows to. The share of the solving workers (`SOLVING_SHARE`) is not asked: it sizes the
    * pool by need, which a restart does not change. */
   private memShort(): boolean {
+    return this.memHeld() > GROW_ROOM * memBudget();
+  }
+  /** what `memShort` counts the page as holding: the rest of the page, and each worker's WASM and JS */
+  private memHeld(): number {
     const js = this.pageOther === null ? MEM_WORKER : 0;
     // (the rest of the page grows with the network, which a worker's need stands for: its WASM over that is the
     // allocator's high water, which `otherGuess` would count again outside)
@@ -3578,7 +4043,7 @@ class DemandClient {
     for (let i = 0; i < this.computeN; i++) first = Math.max(first, size(i));
     let held = this.pageOther ?? Math.max(MEM_OTHER, outsideWasmBytes(first, size(this.computeN)));
     for (let i = 0; i < this.workers.length; i++) held += (this.mem[i]?.wasm ?? 0) + js;
-    return held > GROW_ROOM * memBudget();
+    return held;
   }
 
   /** a solve's rounds are still out with the solving workers */
@@ -3831,16 +4296,15 @@ class DemandClient {
    * T-2605: the zone in view went fine while a whole solve without the barrier runs, which solves it coarse; the
    * main pool's refine of it waits for that solve's final (`firm`), a minute or more on a big game. So a focus
    * pool solves the zone alone at fine level meanwhile, and its figures and bubbles stand for the zone (its lines
-   * keep the shown ones) until a solve of the main pool covers it fine. `?perfOff=refineAside` off.
+   * keep the shown ones) until a solve of the main pool covers it fine. `?perfOff=refineAside` off. T-4220: an edit
+   * held behind that solve is the side job's, and this waits while the side pool runs.
    */
   private refineAside() {
     const id = activeCity.peek(), s = this.cur, svc = this.latest();
-    if (this.lod !== "auto" || this.failed || this.hold || gameLoadArmed() || (this.fpool?.alive && !this.frefine)) return;
+    if (this.lod !== "auto" || this.failed || this.hold || gameLoadArmed() || this.apool || (this.fpool?.alive && !this.frefine)) return;
     if (!s || !svc || !this.firm() || !this.solveNeed(svc)?.has(id)) return;
-    // the zone gone fine, which the solve in hand covers coarse; or an edit of the zone held behind that solve
-    const relevel = this.levelPosted.has(id) && this.levelFor(id) === LOD_FINE && s.cities.includes(id) && this.coarseIn(s, id);
-    const edit = svc !== s.svc && (this.edited.get(id) ?? -Infinity) > Date.now() - (performance.now() - s.arrivedAt);
-    if (!relevel && !edit) return;
+    // the zone gone fine, which the solve in hand covers coarse
+    if (!(this.levelPosted.has(id) && this.levelFor(id) === LOD_FINE && s.cities.includes(id) && this.coarseIn(s, id))) return;
     if (this.fpool?.alive && this.frefine === id && (this.fsolve?.svc ?? svc) === svc) return;
     this.endFocus();
     this.startFocus();
@@ -4073,13 +4537,13 @@ class DemandClient {
       if (!this.fpool || (!final && w && !w.rough && w.svc === s.svc && w.published > round) || (w && this.cityVersion.get(id) === w.version)) return void this.retireFocus();
       const ests = await this.daysOf(s, lines, round, false, res, true);
       if (!this.fpool) return;
-      const shown = demandByDay.peek()[0].view;
+      const shown = this.days[0].view;
       const alone = !shown || (shown.version === s.version);
-      const days = alone ? await this.daysOf(s, s.layout, round, false, res) : this.withZone(demandByDay.peek(), ests, [id], false, new Set(s.layout.map((l) => l.id)));
+      const days = alone ? await this.daysOf(s, s.layout, round, false, res) : this.withZone(this.days, ests, [id], false, new Set(s.layout.map((l) => l.id)));
       if (!this.fpool) return;
       // (before the figures go out: the bubbles' effect asks at once where they come from, T-2508)
       this.fshown.set(id, { s, ests, round });
-      demandByDay.value = days;
+      this.days = days;
       focusZones.value = new Map(focusZones.peek()).set(id, final);
       if (!alone) this.askTurn(); // T-2453
       const l = this.flog.find((x) => x.version === s.version);
@@ -4097,7 +4561,7 @@ class DemandClient {
   private publishRefine(s: Solve, round: number, res: Result[]) {
     const id = s.cities[0], final = round >= ROUNDS;
     this.inOrder(async () => {
-      if (this.frefine !== id || !demandByDay.peek()[0]?.view) return;
+      if (this.frefine !== id || !this.days[0]?.view) return;
       // (the main pool's own solve of the network, sent since, has shown the zone)
       const w = this.cur;
       if (w && w.svc === s.svc && w.version > s.version && (this.cityVersion.get(id) === w.version || w.published >= ROUNDS)) return void this.endFocus();
@@ -4109,7 +4573,7 @@ class DemandClient {
       if (this.frefine !== id) return;
       const ests = lines.length ? days : days.map((d) => (d.view ? { ...d, view: { ...d.view, lines: new Map(), stations: new Map(), purposes: new Map() } } : d));
       this.fshown.set(id, { s, ests, round });
-      demandByDay.value = this.withZone(demandByDay.peek(), ests, [id], false, new Set(s.layout.map((l) => l.id)), true);
+      this.days = this.withZone(this.days, ests, [id], false, new Set(s.layout.map((l) => l.id)), true);
       focusZones.value = new Map(focusZones.peek()).set(id, final);
       this.askTurn();
       const l = this.flog.find((x) => x.version === s.version);
@@ -4184,6 +4648,9 @@ class DemandClient {
   private shownIn(i: number, version: number, snap: Snapshot) {
     if (i >= this.computeN) return;
     const got = this.shownSnap.merge(version, i, snap);
+    if (got === "held" && !snap.again) this.asideBroken = false;
+    // (a side job waited for the running solve's snapshot from every solving worker)
+    if (this.shownSnap.sent(version).size >= this.computeN) this.asideSoon();
     if (!import.meta.env.DEV) return;
     const mb = (b: number) => Math.round(b / 2 ** 20);
     // i18n-ignore
@@ -4352,6 +4819,8 @@ class DemandClient {
       if (DEBUG_LOD) (s.workLog ??= []).push({ i, ...w[i] });
       for (let k = 0; k < this.computeN; k++) if (!w[k]) return;
       if (s === this.cur && (!s.refresh || s.refresh.shown)) demandWork.value = w.slice(0, this.computeN);
+      // (T-4220: a side job waited for this solve's time left)
+      if (this.asideWaitsLeft) { this.asideWaitsLeft = false; this.asideSoon(); }
       return;
     }
     if (msg.kind === "plan") {
@@ -4371,6 +4840,8 @@ class DemandClient {
       const n = this.computeN, all = plans.slice(0, n);
       // T-3616: a network held while the plans came in: now it is known whether it goes at the local result
       if (all.filter((v) => v !== undefined).length === n && this.waiting && s === this.cur) setTimeout(() => { if (this.cur === s) this.flush(); }, 0);
+      // (T-4220: a solve with no local stage, its own network solved aside)
+      if (all.filter((v) => v !== undefined).length === n) this.asideSoon();
       if (all.filter((v) => v !== undefined).length === n && all.some((v) => v > 0)) {
         if (all.some((v) => !v)) this.wholeGo(s);
         else {
@@ -4507,6 +4978,7 @@ class DemandClient {
     }
     this.lastKey = key;
     this.netWorld.set(svc, wv);
+    this.netSeq.set(svc, ++this.netCount); // (T-4220)
     // T-2560: an edit after the cache's card went is an edit like any other
     this.cacheSolve = null;
     this.lastStir = performance.now();
@@ -4515,9 +4987,9 @@ class DemandClient {
     else this.uncovered.push({ svc, minute: clock.minute.peek() });
     if (this.uncovered.length > 50) this.uncovered.splice(1, 1); // (the oldest's minute is what counts)
     demandBehindFrom.value = this.uncovered[0]?.minute ?? null;
-    // T-2045: the focus pool is a game load's; an edit's network ends it
+    // T-2045: the focus pool is a game load's; an edit's network ends it (T-4220: the side pool stays for the edit)
     if (!gameLoad) this.endFocus();
-    else if (svc.stations.length) this.startFocus();
+    else { this.endAside(); this.dropSide(); if (svc.stations.length) this.startFocus(); }
     if (gameLoad) { this.shownSnap.clear(this.version); this.pushed.clear(); } // (T-4220, T-4265: another game's figures)
     demandUpdating.value = true;
     demandStep.value = { done: 0, of: 1 }; // T-1790: no count until the solve's own steps are known
@@ -4613,7 +5085,7 @@ class DemandClient {
     this.cachedModes = null;
     this.cachedStandIn = false;
     this.cachedLocal = false;
-    demandByDay.value = DEMAND_DAYS.map(() => ({ view: null, cities: new Map(), intercity: null }));
+    this.days = DEMAND_DAYS.map(() => ({ view: null, cities: new Map(), intercity: null }));
   }
 
   /** Solve the current network again under a new version (timing runs). */
@@ -5778,7 +6250,7 @@ class DemandClient {
 
   /** T-1208: a solve's views of every kind of day for the lines of `layout`, worked out in the sums
    * worker (here where it fails), with the zones open bare among the cities and the corridors' table. */
-  private async daysOf(s: Solve, layout: Solve["layout"], round: number, final: boolean, res: Result[], noCorridors = false): Promise<DayDemand[]> {
+  private async daysOf(s: Pick<Solve, "version" | "svc">, layout: Solve["layout"], round: number, final: boolean, res: Result[], noCorridors = false): Promise<DayDemand[]> {
     // T-1373: the going-out and coming-back days only while one is near; meanwhile each is the
     // ordinary day's it stands in for (`PLAIN_KIND`). The away day is always made (T-1372).
     const made = madeDays();
@@ -5824,15 +6296,15 @@ class DemandClient {
   private refreshDays() {
     const key = madeDays().join();
     if (!this.madeKey || key === this.madeKey) return;
-    const shown = demandByDay.peek()[0].view;
+    const shown = this.days[0].view;
     const s = shown?.final ? this.log.find((x) => x.version === shown.version) : undefined;
     const res = s?.results;
     if (!s || !shown || !res?.length || res.some((r) => !r)) return;
     this.madeKey = key;
     const round = shown.round;
     this.inOrder(async () => {
-      if (demandByDay.peek()[0].view !== shown) return;
-      demandByDay.value = await this.daysOf(s, s.layout, round, true, res as Result[]);
+      if (this.days[0].view !== shown) return;
+      this.days = await this.daysOf(s, s.layout, round, true, res as Result[]);
     });
   }
 
@@ -5875,12 +6347,14 @@ class DemandClient {
       const days = await this.daysOf(s, s.layout, round, final, res);
       // a cache of the same network shown meanwhile (T-328) holds its estimates back
       if (!final && !s.showEstimates) return;
+      if (final) this.sideCovered(s, null); // (T-4220)
       // T-2045: the zones the focus pool has as far on keep its figures until this solve's final
-      demandByDay.value = this.withFocus(days, s, round, final);
+      this.days = this.withFocus(days, s, round, final);
       if (final) finalWorld.value = this.netWorld.get(s.svc) ?? -1;
       this.lodShown(s.cities, this.shownCoarse(s));
       if (final && s === this.cur && !this.refineKept(s)) this.endFocus();
       else this.retireFocus();
+      if (final) this.asideIdle(); // (T-4220)
       if (final) {
         s.refinedAt = performance.now();
         // T-3599: the next edit's time left starts from this one's pace and tail
@@ -5936,7 +6410,7 @@ class DemandClient {
    */
   private publishNewLines(s: Solve, res: Result[], cluster?: Uint32Array) {
     this.inOrder(async () => {
-      const shown = demandByDay.peek()[0].view;
+      const shown = this.days[0].view;
       const base = this.log.find((x) => x.version === shown?.version);
       if (!base || !shown) return;
       const had = new Map(base.layout.map((l) => [l.id, l.stops.join(",")]));
@@ -5950,7 +6424,7 @@ class DemandClient {
       s.earlyAt = performance.now();
       s.earlyLines = fresh.map((l) => l.id);
       const ests = await this.daysOf(s, fresh, 0, false, res, true);
-      demandByDay.value = demandByDay.peek().map((d, k) => {
+      this.days = this.days.map((d, k) => {
         if (!d.view) return d;
         const est = ests[k].view!;
         const lines = new Map(d.view.lines), stations = new Map(d.view.stations);
@@ -5982,7 +6456,7 @@ class DemandClient {
       if (s !== this.cur) return;
       const filled = (s.filled ??= new Set());
       let any = false;
-      const next = demandByDay.peek().map((d, k) => {
+      const next = this.days.map((d, k) => {
         if (!d.view) return d;
         let cities = d.cities;
         for (const id of s.cities) {
@@ -5996,7 +6470,7 @@ class DemandClient {
         return cities === d.cities ? d : { ...d, cities };
       });
       if (!any) return;
-      demandByDay.value = next;
+      this.days = next;
       this.lodShown([...filled], s.coarse);
     });
   }
@@ -6084,7 +6558,7 @@ class DemandClient {
     if (s !== this.cur) return;
     const now = want().filter((id) => ids.includes(id) && this.cityVersion.get(id) !== s.version);
     if (!now.length) return;
-    demandByDay.value = demandByDay.peek().map((d, k) => {
+    this.days = this.days.map((d, k) => {
       if (!d.view) return d;
       const cities = new Map(d.cities);
       for (const id of now) {
@@ -6125,14 +6599,14 @@ class DemandClient {
     st.asked.push(performance.now());
     const fresh = Array.from(c.lines, (l) => s.layout[l]).filter(Boolean);
     this.inOrder(async () => {
-      const shown = demandByDay.peek()[0].view;
+      const shown = this.days[0].view;
       if (s !== this.cur || off() || e.published >= ROUNDS || !shown || shown.version === s.version) return;
       const t0 = performance.now();
       // (the unsolved periods' places hold a solved one's figures, which `localStep` never reads)
       const ests = await this.daysOf(s, fresh, ROUNDS, false, full, true);
       if (s !== this.cur || off() || e.published >= ROUNDS) return;
       const t1 = performance.now();
-      const base = (st.base ??= demandByDay.peek());
+      const base = (st.base ??= this.days);
       const was = this.log.find((x) => x.version === base[0].view?.version)?.layout ?? [];
       const layoutWas = new Map(was.map((l) => [l.id, l])), layoutNow = new Map(fresh.map((l) => [l.id, l]));
       const levels = PERIODS.map((p) => p.demand), ids = fresh.map((l) => l.id);
@@ -6142,7 +6616,7 @@ class DemandClient {
       const keep = (id: string) => !held.has(id);
       // (kinds of day standing in for another share its views: merged once)
       const made = new Map<DayDemand, [DayDemand, DayDemand, DayDemand]>();
-      const merged = demandByDay.peek().map((d, k) => {
+      const merged = this.days.map((d, k) => {
         const m = made.get(ests[k]);
         if (m && m[0] === d && m[1] === base[k]) return m[2];
         const out = localStep(d, base[k], ests[k], solved, levels, ids, layoutNow, layoutWas, keep);
@@ -6150,7 +6624,7 @@ class DemandClient {
         return out;
       });
       const t2 = performance.now();
-      demandByDay.value = this.refineOver(merged, s);
+      this.days = this.refineOver(merged, s);
       st.shown.push(performance.now());
       // i18n-ignore
       if (import.meta.env.DEV) console.info(`T2624 v${s.version} step ${st.shown.length} of ${c.cities.slice(0, 4).join(",")}: periods ${solved.flatMap((v, q) => (v ? [q] : [])).join(",")}, views ${Math.round(t1 - t0)} ms, merged ${Math.round(t2 - t1)} ms, shown ${Math.round(performance.now() - t2)} ms`);
@@ -6169,22 +6643,23 @@ class DemandClient {
     if (s.barrier && !final) this.askTurn();
     const fresh = Array.from(c.lines, (l) => s.layout[l]).filter(Boolean);
     this.inOrder(async () => {
-      const shown = demandByDay.peek()[0].view;
+      const shown = this.days[0].view;
       // T-402: with nothing shown yet, or only this solve's own figures of the cluster, a view of the
       // cluster alone, which the solve's own results replace (its totals are the cluster's, so never
       // the solve's final); its rounds before the last only where the solve's estimates are shown
       const alone = !shown || shown.version === s.version;
       if (!final && s.showEstimates && !alone) return this.selectedRound(s, res, c.cities, round);
       if (!final && (!s.showEstimates || !alone)) return;
+      if (final) this.sideCovered(s, c.cities); // (T-4220)
       // (a final's zones are its version's before the figures go out: the bubbles' effect asks at once where they
       // come from, T-2508)
       const settle = () => { if (final) for (const id of c.cities) this.cityVersion.set(id, s.version); };
-      if (alone) { const days = await this.daysOf(s, fresh, round, false, res); settle(); demandByDay.value = this.refineOver(days, s); }
+      if (alone) { const days = await this.daysOf(s, fresh, round, false, res); settle(); this.days = this.refineOver(days, s); }
       else {
         const ests = await this.daysOf(s, fresh, round, final, res, !c.market);
         const ids = new Set(s.layout.map((l) => l.id));
         settle();
-        const merged = demandByDay.peek().map((d, k) => {
+        const merged = this.days.map((d, k) => {
           if (!d.view) return d;
           const est = ests[k];
           const lines = new Map(d.view.lines), stations = new Map(d.view.stations);
@@ -6215,7 +6690,7 @@ class DemandClient {
           }
           return { view, cities, intercity: c.market ? est.intercity : d.intercity };
         });
-        demandByDay.value = this.refineOver(merged, s);
+        this.days = this.refineOver(merged, s);
       }
       this.lodShown(c.cities, this.shownCoarse(s));
       if (final) {
@@ -6280,7 +6755,7 @@ class DemandClient {
 
   /** T-325: zones opened bare since the shown result join its city views at once (no solve). */
   private addBareViews() {
-    const days = demandByDay.peek();
+    const days = this.days;
     let changed = false;
     const next = days.map((d, k) => {
       if (!d.view) return d;
@@ -6291,7 +6766,7 @@ class DemandClient {
       for (const id of add) cities.set(id, this.bareView(id, k as DemandDay, d.view));
       return { ...d, cities };
     });
-    if (changed) demandByDay.value = next;
+    if (changed) this.days = next;
   }
 
 

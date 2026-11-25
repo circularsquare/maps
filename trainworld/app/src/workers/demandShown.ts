@@ -263,10 +263,13 @@ export class ShownStore {
     }
     if (!snap.again && version >= this.metaAt) {
       this.metaAt = version;
-      this.zones = snap.zones ?? [];
-      this.marketZones = snap.marketZones ?? null;
-      this.flags = snap.flags ?? this.flags;
-      changed = true;
+      const zones = snap.zones ?? [], mz = snap.marketZones ?? null, flags = snap.flags ?? this.flags;
+      // (a solve started again after T-3925's cut sends the same zones and flags: no new generation, so the side pool's
+      // copy stands and a side job planned on it goes on)
+      if (JSON.stringify(zones) !== JSON.stringify(this.zones) || !(mz === this.marketZones || (!!mz && !!this.marketZones && sameArr(mz, this.marketZones))) || JSON.stringify(flags) !== JSON.stringify(this.flags)) changed = true;
+      this.zones = zones;
+      this.marketZones = mz;
+      this.flags = flags;
     }
     if (changed) this.gen++;
     // (each worker's is capped, the page holds them all)
