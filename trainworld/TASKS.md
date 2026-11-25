@@ -299,7 +299,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4052 (11-24): the line hover's "riders who wanted a bus" is carried plus left behind, so a rider who boards a later bus counts twice (rail too). Fix: count everyone who came to the stops; shifts the issues row's 3% threshold a little.
   - Goal: The hover's share left behind counts each rider once.
   - Other: notes/T-4052.md
-- T-4080 [P2] {L:buses} Name and rename bus stops
+- T-4080 [P2] {L:buses} Name and rename bus stops (taking, 2026-11-25, agent busnames3)
   - Context: Design approved 11-24 (named stops stay put, connections free, labels at street zoom; DECISIONS). Stages 1-2 built 11-24: the game remembers, saves and holds named stops; the panel, riders using connections and labels are left. Your scratch pad, 11-23: "people keep requesting to be able to rename / name bus stops." Also a player 11-20: "バスの停留所も名前を変えれるようにしたい".
   - Goal: A bus stop's name can be set in its panel like a station's, saved, and shown wherever the stop's name shows.
   - Other: notes/T-4080-design.md (about 6 h in six stages, 4 left; also covers T-4083); notes/T-4080.md
@@ -931,8 +931,8 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: T-921 deals commute pairs under 1 person a day in chunks (about 7% of New York's calculation); 2 a day gained nothing more. Everyday trips are solved from sampled destinations, so they may lack the same tail of tiny pairs. You, 11-24: file as P3.
   - Goal: Know whether everyday trips have a tail of tiny pairs; if so, chunk them the same tunable way.
   - Other: notes/T-921.md
-- T-4220 [P2] {L:solve-speed} Quick figures for edits made during a whole re-solve (taking, 2026-11-25, agent aside5)
-  - Context: Design approved 11-24: 9 stages, 12-14 h. Stages 1-4 done: a snapshot of the figures on screen, read-only stand-ins for untouched cities, the side calculation's plan and the calculation itself, started only by a dev call; figures unchanged. Next: stage 5, the equality check. You, 11-24: "edits made during remaining full passes should ideally get fast numbers".
+- T-4220 [P2] {L:solve-speed} Quick figures for edits made during a whole re-solve
+  - Context: Design approved 11-24: 9 stages, 12-14 h. Stages 1-5 done: the snapshot of the figures on screen, read-only stand-ins, the side calculation's plan and solve (only a dev call starts it), and a check that it matches a normal local solve exactly. Next: stage 6, starting and batching it in play. You, 11-24: "edits made during remaining full passes should ideally get fast numbers".
   - Goal: Those edits show their lines in about the touched-cities time; edits arriving together share one quick calculation.
   - Other: notes/T-4220.md ("For Anita" first)
 - T-2198 [P3] {L:passing-tracks} {after:T-3456} Mark where faster trains lose time

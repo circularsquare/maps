@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 74ece160-7d1e-4a7f-a351-88b3554e0a77, name maps-13 [f879aa], since 2026-11-25 07:18 UTC
-Updated: 2026-11-25 10:07 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-25 10:11 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
@@ -14,12 +14,12 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
    pagestage3 is settled (clockClient overlap): T-4291 (rows and post by what an edit touched, about 144 ms on Asia),
    which also covers T-4149's rest. On her yes to a-2026-11-25-4: T-4272 rest (the train work before each answer).
    Also running, not edit speed: busnames3 (Sonnet, T-4080 stage 3, bus stop names).
-2. aside5 (Gemini, T-4220 stage 5, the Node equality check), restarted 10:01 after Gemini's quota ran out at 09:11
-   (if it hits the quota again: `gemini_agent.py start aside5 --brief <my scratch>/aside5/brief.md --task T-4220`). Its checks/INDEX.md
-   edit needs the patch dance at landing. Briefs: my scratch <agent>/brief.md.
+2. aside6 (Opus, T-4220 stage 6, start and batch side jobs in play; results shown at stage 7). Stage 5 landed 4f27fcda6
+   (checks/t4220-aside-equal.mjs: exact). Gemini batch18 review running (artifacts/trainworld/gemini/batch18/review.md:
+   T-4283, T-4220 s4, T-4285, T-4153 s7, T-4281 s2); findings to a fix agent. Briefs: my scratch <agent>/brief.md.
 3. Landed tonight (mine): T-4282, T-4276 (ask a-2026-11-25-5), T-4150 s2, T-4281 s1, T-4283, T-4220 s4, T-4285,
-   T-4153 s7, T-4281 s2 (c034). 8800 = 73160a08f, smoke passed 08:37; rebuild + smoke once benchwhy answers. Next batch review: T-4283,
-   T-4220 s4, T-4285, T-4153 s7, T-4281 s2, and pagestage3 once landed (after aside5, to spare Gemini quota).
+   T-4153 s7, T-4281 s2 (c034). 8800 = 73160a08f, smoke passed 08:37; rebuild + smoke once benchwhy answers. pagestage3 gets its own review once
+   landed.
 4. Waiting on her: asks.py list. T-4275 roads hotfix on 8800, ready when she says publish. T-3742 after she asks.
 5. Next: T-4080 s3 (Sonnet, now pageedit2 is done), T-4153 rest and T-4149 rest after followcut's step table, T-4199
    s2, T-3160, T-4187.
