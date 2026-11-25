@@ -12,7 +12,8 @@ import { boatsText, busesText, count, money } from "../game/format";
 import { DEMAND_INDEX, type Demand, type LineInput, type LineStats } from "../game/types";
 import { lineSort, selection, uiScale } from "../game/ui";
 import { busStopsById, listedLines, edit, renameLine, stationsById } from "../game/world";
-import { closedGroups, groupName, groupTree, lineGroups, toggleGroup } from "../game/lineGroups";
+import { closedGroups, groupName, groupTree, lineGroups, setAllGroups, toggleGroup } from "../game/lineGroups";
+import "../game/groupsClosed";
 import { byHand, handOrder, setHandOrder } from "../game/handOrder";
 import { GroupPill } from "./GroupPill";
 import { trainsNowAt } from "../game/lineRunning";
@@ -509,8 +510,9 @@ export function LinesTab() {
         <li class={"group-row" + (on ? " on" : "") + dp.cls + (it.ls.every((l) => hid.has(l.id)) ? " hidden-line" : "") + (marks.get(drop) ?? "") + (drag?.on && drag.id === drop ? " dragged" : "")} style={dp.style} data-drop={drop} onPointerDown={(e) => pointerDown(e, drop)}
           onClick={() => { if (!dragged.current) selection.value = { kind: "group", group: it.g }; }} onDblClick={() => locateLine(it.ls.flatMap((l) => l.stops))}>
           {eyes && <VisToggle ids={it.ls.map((l) => l.id)} group />}
-          <button class={"btn icon mini chevron" + (isOpen ? " open" : "")} data-tip={isOpen ? t("linesTab.closeGroup") : t("linesTab.openGroup")} aria-label={isOpen ? t("linesTab.closeGroup") : t("linesTab.openGroup")}
-            aria-expanded={isOpen} onClick={(e) => { e.stopPropagation(); toggleGroup(it.g); }} onDblClick={(e) => e.stopPropagation()}><Icon.chevron /></button>
+          <button class={"btn icon mini chevron" + (isOpen ? " open" : "")} data-tip={isOpen ? t("linesTab.closeGroupTip") : t("linesTab.openGroupTip")} aria-label={isOpen ? t("linesTab.closeGroup") : t("linesTab.openGroup")}
+            aria-expanded={isOpen} onClick={(e) => { e.stopPropagation(); if (e.detail < 2) toggleGroup(it.g); }}
+            onDblClick={(e) => { e.stopPropagation(); setAllGroups(closedGroups.peek().has(it.g) ? tree.keys() : null); }}><Icon.chevron /></button>
           <GroupPill ls={it.ls} g={it.g} tip={it.ls.map((l) => l.name).join("\n")} />
           {renaming === it.g ? (
             <input class="name-edit grow" value={it.name} aria-label={t("linesTab.groupName")} ref={(el) => { if (el && document.activeElement !== el) { el.focus(); el.select(); } }}

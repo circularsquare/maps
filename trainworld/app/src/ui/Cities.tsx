@@ -22,6 +22,7 @@ import { live } from "../map/live";
 import type { DayLedger, MoneyState } from "../workers/protocol";
 import type { JSX } from "preact";
 import { goalWhen } from "./GoalTicks";
+import { profitPercentRow } from "./MoneyText";
 import { locateAllCities, playerMovedCamera } from "./locate";
 import { Icon, SortHead, TransitSegs } from "./widgets";
 import { citiesTransit, zoneTransit } from "../game/transitModes";
@@ -59,6 +60,7 @@ export function moneyTip(name: string, f: { d: DayLedger; yesterday: boolean }):
     t("cities.fares", { money: money(d.fares * 1e6) }),
     t("cities.running", { money: money(-d.running * 1e6) }),
     t("cities.upkeep", { money: money(-(d.upkeep ?? 0) * 1e6) }),
+    ...profitPercentRow(d.fares, d.running + (d.upkeep ?? 0)),
   ];
   if (d.trains) rows.push(t("cities.newTrains", { money: money(-d.trains * 1e6) }));
   if (d.build) rows.push(t("cities.construction", { money: money(-d.build * 1e6) }));

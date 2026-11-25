@@ -90,6 +90,9 @@ export const groupAllStops = signal(false);
 /** The groups the player closed in the Lines tab, kept while the page is open; the rest show open (T-1818). */
 export const closedGroups = signal<ReadonlySet<number>>(new Set());
 
+/** T-4329: close every group of `ids`, or (null) open them all. */
+export function setAllGroups(ids: Iterable<number> | null) { closedGroups.value = new Set(ids ?? []); }
+
 export function toggleGroup(g: number) {
   const s = new Set(closedGroups.peek());
   if (!s.delete(g)) s.add(g);
