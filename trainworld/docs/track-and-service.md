@@ -868,7 +868,9 @@ lines is plain track for capacity: a branch no train uses yet does not cut the s
 **Resources and utilisation.** Everything shared has an occupancy `s` per train, and per period
 `rho = sum(trains per hour x s) / 3600` from the scheduled frequencies:
 
-- track section (a run with the same set of lines), per direction: `s = 70 s + v / 0.6 m/s²`
+- track section (a run with the same set of lines, on through a junction where the same trains come in
+  and go on, as where double track parts into a track each way and meets again: no queue starts
+  there), per direction: `s = 70 s + v / 0.6 m/s²`
   (v the top speed reached on it), so at most 41 trains/h at 40 km/h, 34 at 80, 29 at 120, 25 at
   160, 16 at 320 (T-517). Tram track (both kinds) holds 60 s + v / 0.6 (41 an hour at the street
   tram's 60 km/h), its platform dwell + 60 s (40 an hour at the 30 s dwell), its own crossings

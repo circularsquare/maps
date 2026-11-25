@@ -234,6 +234,48 @@ fn t3565_three_and_one_three_and_none() {
     }
 }
 
+/// The incremental capacity pass against the global one (as `capacity::tests`).
+fn cap_matches_global(a: &TrackApi, what: &str) {
+    let mut g = crate::track::service::Service::default();
+    g.update_all(&a.w.net);
+    assert_eq!(a.w.svc.cap.canonical(), g.cap.canonical(), "{what}: resources");
+}
+
+/// A one-way pair carries double track's queue on through: on `pair_track` two lines alike from P to Q
+/// and one from Q to P (both legs on lines' plans, so three tracks in use at each junction), each way of
+/// each line passes one section from end to end, as on double track all the way, before and after a
+/// station is added on a leg. A section stopped at each junction though the same trains come in and go on,
+/// so every train queued again at each end of the pair.
+#[test]
+fn a_one_way_pair_starts_no_queue_of_its_own() {
+    for right_hand in [true, false] {
+        let what = format!("right hand {right_hand}");
+        let mut a = pair_track(right_hand, 250.0);
+        let (p, q) = (end_station(&mut a, 0.0, 0.0), end_station(&mut a, 6000.0, 0.0));
+        let lines = [new_line(&mut a, &[p, q]), new_line(&mut a, &[p, q]), new_line(&mut a, &[q, p])];
+        assert_eq!(a.construct_all(), 0, "{what}: {}", a.issues());
+        let net = &a.w.net;
+        let legs: Vec<u32> = (0..net.edge_count() as u32).filter(|&e| net.edge_ok(e) && net.edge_tracks[e as usize] == 1).collect();
+        assert!(legs.iter().all(|&e| !net.lines_on_edge(e).is_empty()), "{what}: both legs on a plan");
+        let sections = |a: &TrackApi, l: u32, r: u8| {
+            let cap = &a.w.svc.cap;
+            (0..cap.res.len()).filter(|&x| cap.res[x].kind == crate::track::capacity::ResKind::Section && cap.users_of(x).iter().any(|u| u.line == l && u.run == r)).count()
+        };
+        for stage in ["built", "a station on the north leg"] {
+            if stage != "built" {
+                station_near(&mut a, 3000.0, 250.0);
+                cap_matches_global(&a, &format!("{what}, {stage}"));
+            }
+            for &l in &lines {
+                assert!(a.w.svc.lines[l as usize].running, "{what}, {stage}");
+                for r in 0..2 {
+                    assert_eq!(sections(&a, l, r), 1, "{what}, {stage}: line {l} run {r}");
+                }
+            }
+        }
+    }
+}
+
 /// Orders of `set`: every permutation when there are at most 7, else `sample` drawn with a fixed
 /// seed, plus the set as given and reversed.
 fn orders(set: &[u32], sample: usize) -> Vec<Vec<u32>> {

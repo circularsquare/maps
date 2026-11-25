@@ -523,17 +523,19 @@ fn build_sections(net: &Network, lines: &[LineSvc], cand: &[u32], in_k: &dyn Fn(
             let ns = run.segs.len();
             for i in 0..if wrap { ns } else { ns.saturating_sub(1) } {
                 let node = run.nodes[i + 1] as usize;
-                if net.node_ports[node].n != 2 && live_ports(net, lines, node as u32) != 2 {
-                    continue;
-                }
+                let parts = net.node_ports[node].n != 2 && live_ports(net, lines, node as u32) != 2;
                 let (p, q) = (run.segs[i], run.segs[(i + 1) % ns]);
                 if net.turns_back(p, q) {
                     continue;
                 }
                 let (Some(a), Some(b)) = (kidx(key_of(net, p)), kidx(key_of(net, q))) else { continue };
                 let (te, tf) = (directed(net, path_edge(p)), directed(net, path_edge(q)));
-                // (single track runs on through a station with no passing loop, T-3332)
-                let join = if te && tf { sig[a as usize] == sig[b as usize] } else { !te && !tf && (net.node_platform[node] == 0 || net.no_passing(node as u32)) };
+                // (single track runs on through a station with no passing loop, T-3332.) Directed track
+                // runs on through a junction too where the same trains come in and go on: where double
+                // track parts into a track each way and meets again (a one-way pair, T-3565) no train
+                // joins or leaves the others, so no queue starts there; a merge or a parting changes the
+                // set, and single track stops at any junction.
+                let join = if te && tf { sig[a as usize] == sig[b as usize] } else { !parts && !te && !tf && (net.node_platform[node] == 0 || net.no_passing(node as u32)) };
                 if join {
                     uf.union(a, b);
                 }
