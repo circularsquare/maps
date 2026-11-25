@@ -7,23 +7,23 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
 ## Next
 1. 0.4.7 published 18:42 UTC (R2 version 2026-11-25, website 0497af6, export b89a791; bench marked published). Live
    smoke passed. Player reports since: none new on 0.4.7 (checked 19:15 UTC).
-2. T-4348 done (year44): not the game's age; autosave grows 60-100 ms by year 44 (filed T-4350, P3, after T-4272); the
-   slow part is reworking running lines. Tell her, for the player; only she answers players.
-3. Running: upgradetr (Sonnet, tree upgradetr, port 6143, T-4351: a Turkish player's station upgrades in English; all 12
-   languages) and groupsopen (Sonnet, tree groupsopen, port 6144, T-4337). 4 agents = her week's max.
-   Running: buyfix (Opus, tree buytrains, port 6141): review30's findings 1, 2, 4, 7 and a notice for trains bought
-   after a click (her yes); 5 and 6 go to notes/T-4272.md "Left" for me to file. Then land T-4272 and T-4339 (own review
-   first: money and saves). Review: artifacts/trainworld/reviews/review30-buytrains.md.
+2. Landed 11-25: T-4348 (year44: not the game's age; T-4350 filed), T-4351 (72678ae68, 8 upgrade keys in 12 languages;
+   T-4354, T-4355 filed). Rebuild 8800 and smoke after this round (buyfix, slopespeed, groupsopen).
+3. Running (4 = her week's max): groupsopen (Sonnet, tree groupsopen, 6144, T-4337), sent back to test a new game's own
+   group 1 (its record keys on line 0's defaults). tr117a (Sonnet, tree tr117a, 6145, T-4354 stage 1: ja, zh-Hans,
+   zh-TW, ko; one pass plus own back-translation, my call); stages 2-3: de, fr, es, pt; tr, ru, ca, id; then the
+   publish skill's step 4 covers missing and stale keys.
+   buyfix done (tree buytrains, unlanded): review30's 1, 2, 4, 7 fixed (F1 by settle, not the review's fix), notice
+   "More trains bought for {price}." (her "text ack", 11-25). Running: review31 (Opus, read-only) on those fixes,
+   artifacts/trainworld/reviews/review31-buyfix.md; land T-4272 and T-4339 after it passes (review30's 5, 6 filed).
    Running: slopespeed (Opus, tree slopespeed, port 6142, T-4349): her 11-25 report, a tight curve on a ramp shows the
    ramp's higher limit; fix to the lowest of the two, figure diff on NYC if trains run differently.
 4. Then on the quiet machine `edit_bench.mjs --save asia,nyc --baseline` (T-4293). Edit-speed stages (T-4309, T-4314/T-4315, T-4153, T-4149 s3, T-4281), T-4220 s9, T-4230, T-3160 wait for
    her return. Up next: T-3160, T-3838.
 5. Standby: maps-3a is the next cycle's (notes/standby.txt); none left: ask her relay session for one. Gemini's quota
    is out until about 11-30: Claude reviewers meanwhile.
-6. Resources 11-25: Resend over (her: nothing), R2: 2026-11-18b and 2026-11-19 purged on her yes
-   (11-25 14:14 her time); 11-20, 11-24, 11-25 left. Class A 91% of the free million projected. Class B and the repo size are known to
-   her. Cloudflare visitor stats: kept for her site; her Configuration Rule (URI path starts with /trainsworld, Disable RUM)
-   leaves the game out, checked 11-25: no beacon on the game page, still on / and privacy.html.
+6. Resources 11-25: Resend over (her: nothing); R2 11-18b, 11-19 purged (her yes); Class A 91% of the free million
+   projected; Class B, repo size known to her. Cloudflare stats: her Configuration Rule leaves /trainsworld out (checked).
 
 ## Her words
 - 11-25 ~12:50: "ok, ship." 0.4.7 (via standby maps-d6, after Belgrade setup +23% over her one-time 20% threshold).

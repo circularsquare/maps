@@ -226,6 +226,14 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4281: the stop clicks' rows (`rowsOwed`) skip working out what a station or delete on unused track owes, unlike other rows answering an edit. Only reachable when such a click gets no map patch between a stop click and its rows; a planned line's figures lag a few tasks.
   - Goal: Those rows work out owed services first, as `standAside`'s do; for whoever has T-4272's files.
   - Other: notes/T-4281.md
+- T-4352 [P3] {L:edit-speed} {after:T-4272} Trains vanish during fast clicking at top speed
+  - Context: From review30 of T-4272: the game's new hour waits for a click's follow-up, so clicking nonstop for 3 s or more at the fastest clock holds the hour up to 5 s, over a game hour; trains vanish until its trips come.
+  - Goal: The hour turns on time however fast the player clicks.
+  - Other: notes/T-4272.md "Left"
+- T-4353 [P4] {L:edit-speed} {after:T-4272} Trains bought after a click booked to the right mode's lines
+  - Context: From review30 of T-4272: a purchase is shared by value between every line whose cars rose, across fleets, so part of a bus purchase can be booked to a rail line's regions. The total is right.
+  - Goal: Each mode's purchase booked only to lines of that mode.
+  - Other: notes/T-4272.md "Left"
 - T-4350 [P3] {L:edit-speed} {after:T-4272} Autosaves on old games cost an edit less
   - Context: From T-4348: a 44-year save is 1.6 MB, 1.46 MB of it the regions' day ledgers, so each autosave takes 60-100 ms more than a new game's; a click landing on it waits. At most about 5% of an edit's wait.
   - Goal: Autosave waits for a quiet moment or gzips off the clock worker (about 1-2 h); smaller ledgers later.
@@ -487,9 +495,14 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: You, 11-25: "lets just wait to see whether it still leaves players blocked yeah, i think that plus the alert should be sufficient". Draft done (Worker, cost, an email to OpenFreeMap first); used only when both addresses fail.
   - Goal: A blocked player's roads and water load through data.anita.garden/ofm; nobody else uses it.
   - Other: notes/T-4328.md
-- T-4351 [P2] {L:translations} Station upgrade panel partly in English (taking, 2026-11-25, agent upgradetr)
-  - Context: A Turkish player on 0.4.6.1, 11-25: "There are parts in the station upgrade section that are not in Turkish." Likely the same in other languages.
-  - Goal: Every string in the station upgrades shown in each of the 12 languages; any other stale or untranslated keys found on the way done too.
+- T-4354 [P2] {L:translations} 117 keys showing English in every language (taking, 2026-11-25, agent tr117a)
+  - Context: From T-4351: 109 keys are missing in each of the 12 languages (BRT, bookmarks, report save, the time help, install banner, memory warnings) and 8 are stale. A release translates only its update notes, so new keys pile up.
+  - Goal: Every key translated in all 12 languages, and the publish skill's translate step covers missing and stale keys.
+  - Other: notes/T-4351.md
+- T-4355 [P3] {L:translations} English written into the code without t()
+  - Context: From T-4351: 174 English strings sit in app/src outside `t()` (game 98, map 31, workers 29, interface 13); some are only for diagnostics.
+  - Goal: Every one a player can see goes through `t()` and is translated.
+  - Other: notes/T-4351.md
 - T-4327 [P3] {L:translations} Key hints in Japanese and Chinese hovers
   - Context: Found while adding R to the station rename hover (11-25): ja, zh-Hans and zh-TW write a hover's key in full-width brackets ("バス路線を描く（U）"). The hover styles only ASCII brackets, so those keys are not lettered in the accent, and on phones they stay although there is no keyboard.
   - Goal: Full-width bracketed keys get the same hint styling, and go on phones, as ASCII ones.

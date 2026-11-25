@@ -1,0 +1,18 @@
+{
+  "release": "next",
+  "line": "",
+  "items": [
+    {
+      "id": "c001",
+      "text": "fixed station upgrade hovers showing in English in other languages",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4351",
+      "by": "upgradetr",
+      "at": "2026-11-25T19:24:46Z",
+      "rev": 1,
+      "area": "other",
+      "fix": true
+    }
+  ]
+}
