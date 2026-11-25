@@ -3,6 +3,31 @@
   "line": "",
   "items": [
     {
+      "id": "c037",
+      "text": "trips are calculated about 2x faster when a small game loads",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4199",
+      "by": "corridors2",
+      "at": "2026-11-25T14:36:12Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
+    },
+    {
+      "id": "c036",
+      "text": "fixed clicking a line in the list opening the wrong line while trips are calculated",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4306",
+      "by": "linerows",
+      "at": "2026-11-25T14:14:39Z",
+      "rev": 2,
+      "area": "scheduling",
+      "fix": true,
+      "changed": "2026-11-25T14:14:53Z"
+    },
+    {
       "id": "c035",
       "text": "named bus stops: rename one in its panel, and the name shows in the stop's hover and its line's stop list",
       "edited": "added names for bus stops, set in the stop's panel and shown on the map",
@@ -68,14 +93,15 @@
     {
       "id": "c030",
       "text": "fixed roads and water missing from the map with some tracker blockers on",
-      "edited": null,
+      "edited": "fixed base map not loading with some adblocker settings",
       "hidden": false,
       "task": "T-4275",
       "by": "roadsblock",
       "at": "2026-11-25T05:02:16Z",
-      "rev": 1,
+      "rev": 2,
       "area": "schematic",
-      "fix": true
+      "fix": true,
+      "changed": "2026-11-25T14:53:29Z"
     },
     {
       "id": "c029",

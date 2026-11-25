@@ -1,28 +1,33 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session 74ece160-7d1e-4a7f-a351-88b3554e0a77, name maps-13 [f879aa], since 2026-11-25 07:18 UTC
-Updated: 2026-11-25 13:20 UTC (cycling at 500k). Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Orchestrator: session 5930d0ed-8c43-4146-931e-316bd8ffe75e, name maps-76 [78c9fa], since 2026-11-25 13:21 UTC
+Updated: 2026-11-25 15:13 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
-0. Usage: Gemini's weekly quota ran out 10:24 UTC 11-25, back about 12-01 03:30 UTC (ask a-2026-11-25-6: upgrade?);
-   meanwhile reviews (a fresh Sonnet reviewer per risky landing, read-only) and small code go to Sonnet. Review
-   findings go to a fix agent unread. Briefs: maps-13's scratch <agent>/brief.md (copy a recent one as a template).
-1. Edit speed, her main focus: ROOT CAUSE ONLY (DECISIONS T-4097, notes/repeats.md). Asia now: later clicks 144-360 ms
-   (T-4281), network build 190 ms (T-4153 s7), page 27 ms placed / 45 removed, worker rows 59 ms (T-4291). Running:
-   modelpass (Opus, T-4299: the track model's whole passes per state, about 15 ms, plus review21's three lows on
-   T-4291). Then T-4300 (complex numbering, about 7 ms; shares clockDemand.ts with modelpass, so after it). On her yes
-   to a-2026-11-25-4: T-4272 rest (train work before each answer). Don't ask her to test edit speed yet (her 11-24).
-2. Owed on a quiet machine: `node trainworld/tools/edit_bench.mjs --save asia,nyc --baseline` on master (11-24's
-   baseline has no stop rows; trees' lone samples are cold first edits, T-4293).
-3. Running, not edit speed: aside8 (Opus, T-4220 stage 8: quick figures with Use more cores on; stage 9, measuring on
-   her Asia save, after); drawmem (Opus, T-4187: draw caches on phones, exact). Each landing gets a Sonnet review.
-4. 8800 = d56bb9594 = master, smoke passed 13:1x; every review finding from tonight is fixed on master. T-4275 roads
-   hotfix ready when she says publish (never ask). Waiting on her: asks.py list.
-5. Next starts: T-4199 s2 (corridors tree, stage 1 unlanded), T-3160 (phone memory), T-4306 (P3), T-3742 after she asks.
+0. Usage: Gemini out until about 12-01 03:30 UTC (she: "gemini will wait"); reviews go to a fresh Sonnet reviewer per
+   risky landing, findings to a fix agent unread. Briefs: maps-76's scratch <agent>/brief.md.
+1. Edit speed, her main focus, T-4267's plan (her 11-25 10:0x: "a big improvement... keep going and finish the plan").
+   Running: buytrains (Opus, T-4272 rest, her yes to buying trains after the confirm), complexnum (Opus, T-4300),
+   netfix8 (Sonnet, review27's fixes on T-4153 s8: buildings ignore new track). Left after: T-4309 (track limits),
+   T-4314/T-4315 (page), T-4153 rest (~50 ms), T-4149 s3, T-4281 rest; review28's lows go with T-4284's next stage.
+2. Owed: edit_bench NYC on master (batch: modelpass's lone samples read slower) once corrfix lands; Asia baseline on a
+   quiet machine (`edit_bench.mjs --save asia,nyc --baseline`, T-4293).
+3. 0.4.6.1 hotfix: her yes and text given (asks.jsonl); hotfix461 (Opus) building it from 0.4.6 + 9b4573876 + the
+   dismissable notice; I judge the notice screenshot (her 11-25: get it out faster), then deploy (no changelog
+   review, playtest list or perf_bench: one fallback fix). Master then gets the notice and the v0.4.6.1 updates.ts entry; c030 marked shipped.
+4. Also running: renameui (Opus: (R) on the rename tooltip, bulk-rename hover text, next stop name below with the speed
+   dial right of Next stop; screenshots to her), ofmproxy (Sonnet, research only: OpenFreeMap terms, a Worker draft;
+   her "only in cases we actually need to"), caprise (Sonnet: shonei-server MaxTwAccountBytes 64 to 128 MiB,
+   committed 493e582, deploy waits for her word; shonei-server's save check is level 39 = live 0.4.6, master is 41
+   (LBK1, LAP1): bump it before the next full release). ofmproxy done: notes/T-4328.md. corrfix landing.
+5. Then: T-4220 s9 (Asia measuring + review24's findings, demand worker now free), T-3160 phone memory, T-4230.
 6. reserve_cores: maps-3e's loop holds the mutex; start one (`-All -Loop 30`) if it dies.
 
 ## Her words
+- 11-25 10:0x her time: edit speed "a big improvement... keep going and finish the plan"; buy trains after the confirm,
+  cash may go negative; proxy "only in cases we actually need to"; weekend solve after loads are faster; plays with
+  Use more cores off; Resend: nothing; account cap 128 MB yes; Gemini waits; PRs 21, 24 closed with comments.
 - 11-24 evening her time: edit speed's root cause is the main focus ("we should *only be targeting the root cause*",
   "please dont overindex on what i've said"); away overnight, keep going calmly; usage not high this week. Speed dial
   smaller (landed). 35 MB GPU copy OK. Use more cores: she plays off; test off, both after big loading changes. Bars:
@@ -35,9 +40,7 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
   first. Gemini code agents may run commands unattended in their tree; first 3 rounds asked about permissions (done).
   No terminal windows from anything we start (CLAUDE.md Shell). Airports later, P3, "dont reinvent the wheel". 180th
   meridian: "if people want to build it, they should ideally be able to". T-3742 after settlestop (my call).
-- 11-24 22:4x: "you guys get a lot more mileage by thinking about actual code than by trying to test" (CLAUDE.md).
-- 11-24 18:5x: shipped 0.4.6; root causes over surface fixes (DECISIONS T-4097). She says when to publish (never ask);
-  asianita save is a stress test only; no "less memory" items when memory is up overall; keep cores 0-1 free.
+- 11-24 18:5x: shipped 0.4.6. She says when to publish (never ask); no "less memory" items when memory is up overall.
 - 11-23: answer her first; agents 2-8 by load; tasks about an hour; you don't investigate, agents do; cycle at 500k;
   no drafted player replies; times as percent of the wait.
 - 11-19: "player complaints take precedent over other new features"; full playtest list before every publish.
@@ -49,7 +52,7 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
   (`git diff --output=<f> -- <files>`, checkout, land, `git apply --3way <f>`, `git reset -- <files>`).
 - Uncommitted on purpose: TODO.md (hers), notes/asks-log.jsonl, notes/board-live.json, changelog/roadmap.json,
   maps .claude/settings.json, notes/T-3397.md, tools/ops/archive_bad_saves.py.
-- Trees kept: _track (tw/track), tracksnap (snaptrack.py), _seed (Rust cache seed), corridors (T-4199 stage 1),
+- Trees kept: _track (tw/track), tracksnap (snaptrack.py), _seed (Rust cache seed), corridors (corridors3),
   settlestop (settlefix working in it).
 - reserve_cores: maps-3e's retry loop (task b19u3mylb; powershell PID 29592) follows the ledger's cap and pins Gemini
   runners; it dies with maps-3e's tab: the successor starts its own (a second copy waits on the mutex).

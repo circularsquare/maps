@@ -178,18 +178,26 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
   - Context: You, 11-25: "the game reworking the whole network after each edit is really the target here and everything else is kinda just flavor". 11-25 landed: Asia later clicks 144-360 ms (were 618-2,156), page and clickable map by change (T-4150, T-4214 done). Parts left: T-4153 (drawn network), T-4291, T-4299, T-4300 (worker), T-4272 (your answer).
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
-- T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line
-  - Context: You, 11-23: "this is the entire issue". Stage 7 (tree netcut): cut lines' samples and band samples kept by entry. Your Asia save, Node, a station on a three-line trunk: network build about 255 to 190 ms (first click 350 to 280), lines block 140 to 80. Left: cut lines' runs and steps, corridors, train speeds, whole-save passes.
+- T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line (taking, 2026-11-25, agent netfix8)
+  - Context: You, 11-23: "this is the entire issue". Stage 8 (tree netcut8): stations, buildings, facilities, splits, band orders and corridors redo only what an edit changed. Your Asia save, Node, a station on a three-line trunk: network build about 190 to 150 ms (first click 260 to 185). Left: cut lines' bands (about 30 ms), train speeds (20), per-line passes (20).
   - Goal: A station on a line's track on Asia under 0.2 s of network build: a cut line's bands, strokes and speeds redone only near the cut.
   - Other: notes/T-4153.md stage 7 "What is left"
 - T-4149 [P1] {L:edit-speed} The checked version sooner, worker side, stage 2
   - Context: Stage 2 in tree rowsedit (11-25): lines an edit re-times no longer each cost two passes over the whole network, and only lines that moved are drawn again. Your Asia save, the worker's rows: a station 615 to 266 ms, a stop click 519 to 131, undo 544 to 103.
   - Goal: Rows under 100 ms for any edit on Asia: a moved line redrawn only from the cut, bus lines kept when unmoved, trips per touched line.
   - Other: notes/T-4149.md
-- T-4284 [P1] {L:edit-speed} The page redoes only what an edit changed, stage 3
-  - Context: Stage 3 (tree pagestage3) cut a removal's page work on your Asia save from about 125 to about 45 ms: the delete tool's hover, the demand layers, the snap and pick grids and the tools' map cost what an edit changed. Left: the figures go over every line (23 ms), each world's edges (3 ms), the trains' fill (2-3 ms).
+- T-4284 [P1] {L:edit-speed} The page redoes only what an edit changed, stage 5
+  - Context: Stage 4 (tree pagestage4): each line's money and points terms kept and added again in line order; the take's rows, edges and posts laid by ids. Your Asia save: a removal's page work about 45 to 41 ms, an undo 40 to 31. Left: fare income 3-5 ms, complexes (T-4300), the take's own 5, hovers and layers.
   - Goal: Under 20 ms of the page's own work for a station placed or removed on Asia.
-  - Other: notes/T-4150.md "Stage 3" and "Left"
+  - Other: notes/T-4150.md "Stage 4" and "Left"
+- T-4314 [P1] {L:edit-speed} Station reach and trains' fill by what changed
+  - Context: From T-4284: after each edit the renderer compares every station's platform for the delete tool's reach (2-4 ms on your Asia save) and the demand layers copy every line row of the trains' fill (2-4 ms, 30 when trips land). The network patch names neither the stations nor the rows it changed.
+  - Goal: Both cost what the edit changed, under 1 ms each on Asia.
+  - Other: notes/T-4150.md "Left"
+- T-4315 [P2] {L:edit-speed} Upkeep shares worked out by what an edit changed
+  - Context: From T-4284: after each edit, in idle time, the page's upkeep shares go over every edge, station and bus route point (3.5-6.3 ms on your Asia save), and the region shares post their whole table.
+  - Goal: Under 0.5 ms an edit on Asia.
+  - Other: notes/T-4150.md "Left"
 - T-4198 [P3] {L:checks} Changelog edited mark only for your edits
   - Context: From T-4196: changelog.py reword sets the same "edited" mark as your board edits, so agents' rewords (26 today, and c014 earlier) show as yours and get left alone as your wording.
   - Goal: The board marks only your edits; agents' rewords keep their own record.
@@ -206,23 +214,18 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Stage 1 in tree rowsdelta (11-25): the rows read and post only the records an edit touched. Your Asia save, Node: rows 120 to 45 ms, post 24 to 15. Left: the drawn network's arrays compared and copied whole in the post (about 12 ms) and the phase tables laid out whole; the model's passes are T-4299, the complexes T-4300.
   - Goal: Rows and post cost what the edit touched, the drawn network fed the same changes; under 20 ms together on Asia.
   - Other: notes/T-4291.md
-- T-4299 [P1] {L:edit-speed} The track model's whole passes on every state (taking, 2026-11-25, agent modelpass)
-  - Context: From T-4291: each state still has the model go over every line or record: the noted lines' stamps, each line's upkeep share, the upkeep and fleet needs (twice), the 15 lists the rows read and the costs, about 15 ms in Node on your Asia save.
-  - Goal: Each kept per record in the model and read by what an edit moved; under 3 ms a state on Asia.
-  - Other: notes/T-4291.md "Left"
-- T-4300 [P1] {L:edit-speed} Station complexes worked out by what changed
+- T-4309 [P2] {L:edit-speed} Track limits worked out by the lines an edit moved
+  - Context: From T-4299: a state's money and lists are kept per record now, 24 to about 5.5 ms a state on your Asia save. Still whole: the track limits, with the fleet needs, markers and turn limits built on them (about 2 ms), and profile_meta's copy (0.4 ms). The capacity has no index from a line to the track it shares.
+  - Goal: An index from each line to the track it shares, so an edit works out the limits of only the lines it touched; under 3 ms a state on Asia.
+  - Other: notes/T-4299.md
+- T-4300 [P1] {L:edit-speed} Station complexes worked out by what changed (taking, 2026-11-25, agent complexnum)
   - Context: From T-4291: complexes are numbered by their first station in list order, which the network, line links and the page read, so any station edit renumbers over every station; with the names folded by them about 7 ms in Node on your Asia save.
   - Goal: A numbering that holds when another complex changes, and names folded again only there; under 1 ms on Asia.
   - Other: notes/T-4291.md "Left"
-- T-4272 [P1] {L:edit-speed} {waits:Anita} A click confirmed from what it touches
-  - Need from Anita: A station on a running line's track can make headway lines need more trains. Buy them right after the confirm, cash dipping below zero if short? I'd say yes
-  - Context: Stations and deletes on track no running line uses now skip the train work before their answer (16-72 ms of worker time on your Asia save; answers 95-207 ms in a run). On a running line's track they still wait 0.15-0.6 s for the trains they need.
+- T-4272 [P1] {L:edit-speed} A click confirmed from what it touches (taking, 2026-11-25, agent buytrains)
+  - Context: You, 11-25: yes, buy them after the confirm, cash may go negative. Stations and deletes on track no running line uses skip the train work before their answer (answers 95-207 ms in a run on your Asia save); on a running line's track they still wait 0.15-0.6 s for their trains.
   - Goal: Every station and track delete confirmed within 100 ms on your Asia save, every click of a run.
   - Other: DECISIONS T-4097; notes/T-4267.md; notes/T-4272.md
-- T-4199 [P2] {L:loading} {after:0.4.6} Corridors and corridor book built with the packs
-  - Context: You, 11-24: no bit-exact rule, say when figures change, most riders within 1%. Stage 1 in tree corridors, not landed: Montana's trips wait 7.6 to 2.3 s; New York no gain; +32 MB demand memory on NYC unexplained.
-  - Goal: Small games' trips about 70% faster on load, no memory rise; stage 2 about 2-3 h.
-  - Other: notes/T-4199.md (in tree corridors)
 - T-4211 [P3] {L:loading} Loading time left right from the start
   - Context: T-4209's display fix (11-24) shows no time left until the solve's own time is known, then only counts down (asianita: none until 138 s, then 7 min down; final at 523 s). You: "then do the actual underlying fix later."
   - Goal: An estimate from the start, within about 30% of the real wait on asianita and NYC.
@@ -367,9 +370,8 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-4244 [P3] {L:airports} Airport rail rides against real counts
   - Context: Players keep asking for more airport demand (tw-feedback, 11-24). You, 11-25: later, P3; recent airport work exists (T-2896, T-3502, T-3485, T-3501, T-4020), so build on it, "make sure we dont reinvent the wheel". A change to the numbers is yours.
   - Goal: Our rides beside published counts for 5-10 airports, and a proposal to you.
-- T-4242 [P2] {L:timetables} {waits:Anita} Weekend riders follow weekend trains
-  - Need from Anita: Build a weekend solve (notes/T-4242.md)? It reverses "no second solve" and makes cut weekend trains lose fares; loads about 45-55% longer where weekends differ. Your call.
-  - Context: A player, via tw-feedback (11-24): a short-turn copy with 0 weekday trains at midday and 2 on weekends runs, but almost nobody rides it; everyone stays on the full line. Weekend riders are scaled from the weekday solve (T-2335). You, 11-24: "p2 at least, its quite visible for some people."
+- T-4242 [P2] {L:timetables} {after:loads are faster} Weekend riders follow weekend trains
+  - Context: You, 11-25: decide once loads are faster (it makes loads 45-55% longer where weekends differ). A player, 11-24: a short-turn copy with 0 weekday trains at midday and 2 on weekends runs, but almost nobody rides it. Weekend riders are scaled from the weekday solve (T-2335). You, 11-24: "p2 at least, its quite visible for some people."
   - Goal: A design for weekend riders that follow the weekend's own trains, with its cost in calculating time; to you before building.
 - T-4250 [P2] {L:route-choice} {waits:Anita} A short line beside a crowded long one stays empty
   - Need from Anita: Try a smooth fade of the dearer line's share in place of today's cliff, judged on an NYC figure diff? I'd say yes.
@@ -433,10 +435,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: On the Tokyo real-network start on an emulated iPhone the solving worker's WASM is now 261 MB (330 before stage 6, figures identical). Left: the page (about 200), the clock worker (170) and the worker's held results (142). You, 2026-11-16: "lots of people are unable to really play properly cuz tehy dont have enoguh ram. especially on phones."
   - Goal: The next biggest of those cut, rail trips unchanged, measured on a production build on an emulated iPhone.
   - Other: notes/T-3160.md, stage 6.
-- T-4187 [P2] {L:memory} {after:T-4153 stage 2 lands} The clock worker's drawing cache on big player networks (taking, 2026-11-25, agent drawmem)
-  - Context: From T-4184: on a Community Tokyo save (t9gksxmu, 375 MB clock worker on a phone) the extra is the drawing state for the player's track: draw cache 46 MB, line bands' memo and orders 25, posted 14. The cuts (about 20-25 MB, exact) touch code editnetwork changes.
-  - Goal: Those cuts made with figures identical, measured on t9gksxmu on an emulated iPhone.
-  - Other: notes/T-4184.md
+- T-4310 [P3] {L:memory} The bands' kept work as typed columns
+  - Context: After T-4187 the bands' memo is the biggest drawing holder left in the clock worker on t9gksxmu: 27 MB in Node, about half that on a phone, mostly JS objects (each line's sample memo 5.8, recipes with their text keys 5.4, each edge's ribbons 3.6).
+  - Goal: Those as typed columns, the drawn map identical, measured on t9gksxmu on an emulated iPhone.
+  - Other: notes/T-4187.md
 - T-2762 [P3] {L:solve-speed} Faster longer-trips answer for a bubble
   - Context: On North America a bubble answer still takes about 300 ms per worker (NYC 60 ms) after T-2747.
   - Goal: Bring the North America answer close to NYC.
@@ -471,10 +473,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-1200.md and notes/T-1211.md.
 
 ## Interface
-- T-4306 [P3] {L:small-fixes} Lines list rows that change line under the pointer
-  - Context: While trips are calculated the Lines tab sorts again by riders, and each row stays put while the line in it changes, so a click begun on one line can open its neighbour. edit_bench opened the Q for the 2 this way (776k and 789k riders/day).
-  - Goal: A click opens the line it began on: rows move with their lines when the list sorts again.
-  - Other: notes/T-4294.md "Could a player hit it?"
+- T-4328 [P2] {L:map-look} OpenFreeMap through our own address as a last route
+  - Context: You, 11-25: "can investigate proxying, but we should only do this in cases we actually need to i think". Used only when both OpenFreeMap addresses fail, before the notice. Draft done.
+  - Goal: A blocked player's roads and water load through data.anita.garden/ofm; nobody else uses it.
+  - Other: notes/T-4328.md
 - T-4246 [P3] {L:map-look} Tram wires look rough at corners in thickness mode
   - Context: You, 11-24: "trams and their two white wires look a little ugly in demand thickness mode, when they turn around corners. not sure if we could improve this easily."
   - Goal: Tram wires follow corners cleanly at every width.
@@ -931,10 +933,10 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: T-921 deals commute pairs under 1 person a day in chunks (about 7% of New York's calculation); 2 a day gained nothing more. Everyday trips are solved from sampled destinations, so they may lack the same tail of tiny pairs. You, 11-24: file as P3.
   - Goal: Know whether everyday trips have a tail of tiny pairs; if so, chunk them the same tunable way.
   - Other: notes/T-921.md
-- T-4220 [P2] {L:solve-speed} Quick figures for edits made during a whole re-solve (taking, 2026-11-25, agent aside8)
-  - Context: Design approved 11-24: 9 stages. Stages 1-7 done 11-25: an edit during a whole re-solve gets a quick side calculation for its cities, shown until the whole result replaces it (NYC: an edited line's figures in 17 s instead of 53). Left: stage 8, "Use more cores" on; stage 9, measuring on your Asia save.
+- T-4220 [P2] {L:solve-speed} Quick figures for edits made during a whole re-solve
+  - Context: Design approved 11-24: 9 stages. Stages 1-8 done 11-25: an edit during a whole re-solve gets a quick side calculation for its cities, shown until the whole result replaces it (NYC: an edited line's figures in 17 s instead of 53; with "Use more cores" on, 11 s instead of 27). Left: stage 9, measuring on your Asia save.
   - Goal: Those edits show their lines in about the touched-cities time; edits arriving together share one quick calculation.
-  - Other: notes/T-4220.md ("For Anita" first)
+  - Other: stage 9 also takes review24's findings on stage 8 (the copy's cost with several workers, the restore's narrow condition): artifacts/trainworld/gemini/batch23/review-T-4220-s8.md; notes/T-4220.md ("For Anita" first)
 - T-2198 [P3] {L:passing-tracks} {after:T-3456} Mark where faster trains lose time
   - Context: A train can lose minutes behind slower ones, but it shows only in the line panel, never on the map or trouble list. You 2026-11-16: this goes in the detailed crowding panel when it is built.
   - Goal: The loss shows in the detailed crowding panel.
