@@ -1,5 +1,5 @@
 {
-  "release": "next",
+  "release": "v0.4.7",
   "line": "update v0.4.7: edit speed improvements",
   "items": [
     {
@@ -578,5 +578,6 @@
       "fix": false,
       "changed": "2026-11-25T16:47:57Z"
     }
-  ]
+  ],
+  "published": "2026-11-25T17:51:35Z"
 }
