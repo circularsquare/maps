@@ -129,13 +129,18 @@ Web first, so it can be shared as a link.
   past 2 s it is drawn without loads until they come). A full state is built
   a piece a task outside the message queue, about 0.1 s each on the biggest saves (`stateSteps`,
   `networkSteps`: the rows, the network in a few pieces, then its post with the trips, never split),
-  previews answered between them; any other message, trips sent from a timer, or a full state sent
-  when fetched ground or streets reprice the blueprint, runs what is left first (for that state, begun
-  again on the new model; a held one stays held), so nothing else sees the model ahead of its state and
-  an edit's answer comes with the first world holding it (the page splits a paid edit's charge by it). **Every
-  message kind has its answer to a waiting follow-up** [T-4272]: the page's money figures (income, points, region
-  shares, a charge's split) and the clock pass it; demand's riders and transfers wait, in order, until no follow-up
-  waits (`keepUntilState`; dropped if another game opened meanwhile); the rest run it first, as above. **An edit goes ahead** [T-3803]: one of
+  previews answered between them; any other message, or a full state sent when fetched ground or streets reprice the
+  blueprint, runs what is left first (for that state, begun again on the new model; a held one stays held), so nothing
+  else sees the model ahead of its state and an edit's answer comes with the first world holding it (the page splits a
+  paid edit's charge by it). **Every message kind has its answer to a waiting follow-up** [T-4272, T-4281]: the page's
+  money figures (income, points, region shares, a charge's split) and the clock pass it; demand's riders and transfers,
+  and every question but the previews' and the delete question's (a panel's figures, a quote: the page reads them
+  against the world it holds), wait, in order, until no follow-up waits (`keepUntilState`; a question from a game no
+  longer in hand is answered empty, riders are dropped); trips from a timer (the boarding account's last step, the
+  next hour) go after its state (`whenNoneWaits`); a held follow-up keeps its own passes and the rest end it; anything
+  else runs it first, as above (the page's `epoch` each game hour while the clock runs, a state sent from outside, an edit
+  5 s after the follow-up's first, a question that is no pass under a hold). Each edit's answer names the blocks run
+  whole since the edit before it and what ran each (`ms["forced:…"]`). **An edit goes ahead** [T-3803]: one of
   the main path that changes no service, coming before or between the pieces of a follow-up that
   builds the network (`goesAhead`, `standAside`). An edit in that follow-up still waiting for a world
   holding it (its answer, or the page's split of an early answer's money) gets the rows built so far,
@@ -417,8 +422,9 @@ Web first, so it can be shared as a link.
   about 0.2 s on the biggest saves (the 2,647-station save in notes/T-3801.md), or split so edits can come between
   its parts. The hour turning sends only what is new, the next hour's slice, its trips and its boarding hour a task
   each, and never works out the boarding account there: an account out of date goes on in its steps (T-3804). Known to
-  miss it there: one `today` answer, one boarding step of three big lines (up to 0.3 s), and for any message but an
-  edit the rest of an edit's full state (edits come between its pieces, T-3803).
+  miss it there: one `today` answer while the clock runs (every line's past day read again, up to 0.45 s on her Asia
+  save), one boarding step of three big lines (up to 0.3 s), and for a message that is neither an edit nor a question
+  the rest of an edit's full state (edits come between its pieces, T-3803; questions wait for it, T-4281).
 - **The demand pool** [T-149, T-173, `workers/demandClient.ts`][T-381]: 3 solving workers on 12 or more
   logical threads, 2 on 6 to 11, 1 on fewer; then a phone or tablet (by its user agent), or a device
   of 4 GB or less, gets 1 (T-2794 adds the same check's lean ways: pixel ratio at most 2, coarse outlines held only near the view; notes/T-2794.md; T-2802: the WASM memories grow 8 MB at a time, not 32, notes/T-2802.md; a phone or tablet by user agent, not a 4 GB desktop, also has no demand cache; no device opens market packs (trips between zones) while "Calculate intercity trips" is off, which is its default on a phone or tablet only, T-2833, T-2838, T-3630; a device reporting 4 GB or less gets a note at the bottom of the map, T-2839, `ui/DeviceNote.tsx`) (`workers/deviceMemory.ts` `smallDevice`, T-2122: a phone's tab holds far

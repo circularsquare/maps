@@ -125,7 +125,7 @@ function INSTALL() {
   const tw = window.tw, c = tw.client, r = tw.renderer;
   if (typeof c.post === 'function') {
     const post = c.post.bind(c);
-    c.post = (msg, tr) => { if (msg.kind !== 'epoch') push('post', { kind: msg.kind, op: msg.op?.op, seq: msg.seq }); return post(msg, tr); };
+    c.post = (msg, tr) => { if (msg.kind !== 'epoch') push('post', { kind: msg.kind, op: msg.op?.op, seq: msg.seq, q: msg.q?.what }); return post(msg, tr); };
   }
   if (typeof c.arrive === 'function') {
     const arrive = c.arrive.bind(c);
@@ -334,7 +334,11 @@ function clickRunOf(ev, presses) {
     const ans = ev.find((e) => e.k === 'arrive' && e.kind === 'edited' && e.seq === p.seq);
     const word = ev.find((e) => e.k === 'arrive' && e.kind === 'applied' && e.seq === p.seq);
     const confirm = word ?? ans;
-    return { post: p.t - t0, confirm: confirm ? confirm.t - t0 : null, answer: ans ? ans.t - t0 : null, ok: ans?.ok ?? null };
+    // T-4281: the follow-ups the worker ran whole in one block since the edit before (what ran each, ms), and the questions
+    // the page asked since the press before
+    const forced = Object.fromEntries(Object.entries(ans?.ms ?? {}).filter(([k]) => k.startsWith('forced:')).map(([k, v]) => [k.slice(7), Math.round(v)]));
+    const asked = ev.filter((e) => e.k === 'post' && e.kind === 'query' && e.t >= (i ? presses[i - 1] : t0 - 1000) && e.t <= p.t).map((e) => e.q);
+    return { post: p.t - t0, confirm: confirm ? confirm.t - t0 : null, answer: ans ? ans.t - t0 : null, ok: ans?.ok ?? null, forced, asked };
   });
 }
 

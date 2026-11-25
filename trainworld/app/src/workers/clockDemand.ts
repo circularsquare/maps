@@ -15,7 +15,7 @@ import { type NewHeadways } from "./saveFile";
 import { upgradesOf } from "./stateRows";
 import type { ClockBus, ClockNode, EditOp, FerryPortIn, FerryRow, NetworkSnapshot } from "./protocol";
 import { demandFares, tidyLineFares } from "./clockFares";
-import { followUp, putServiceEditMs, REST_MS, runFollowUp } from "./clockFollowUp";
+import { followUp, putServiceEditMs, REST_MS, whenNoneWaits } from "./clockFollowUp";
 import { platformLineOf, stateRows, termEnds, version } from "./clockMain";
 import { dayEntry, gameNow, hourEntry, moneyNow, putTodayGen, regionEntries, shapeHour, todayGen } from "./clockMoney";
 import { patchMode } from "./clockPost";
@@ -115,9 +115,13 @@ const sentHours = new Set<number>();
  * being worked out (its last step sends both hours); begun again if an edit or a state came between the two */
 function nextHourLater() {
   clearTimeout(nextHourTimer);
+  // (T-4281: as `sendTrips`, after a waiting follow-up's state; an edit between the two tasks starts again here)
+  const waits = () => !!followUp && !followUp.held;
+  if (waits()) return whenNoneWaits(nextHourLater);
   const e = epoch, h = e + 3600;
   const due = () => !!api && e === epoch && !sentHours.has(h) && !accountStale();
   nextHourTimer = setTimeout(() => {
+    if (waits()) return whenNoneWaits(nextHourLater);
     if (!due() || !tripsPrelude()) return;
     const at = [version, trackVersion], s = sliceTrips(h, rawTrips(), bayTimes());
     nextHourTimer = setTimeout(() => {
@@ -156,6 +160,9 @@ function accountStale(): boolean {
  * York); dropped if the trips are sent again or riders come before it. `withBoard` false: no boarding hour, even with
  * riders (T-3804: the account is not up to date). */
 export function sendTrips(split = false, hours?: number[], withBoard = true) {
+  // T-1407: never trips of the model ahead of the state they are drawn on; T-4281: so while a follow-up waits they go after
+  // its state (the account's last step sent them ahead of a click's, and ran that state whole first, 0.4-1 s on her Asia save)
+  if (followUp && !followUp.held) return whenNoneWaits(() => sendTrips(split, hours, withBoard));
   if (!tripsPrelude()) return;
   if (!hours) sentHours.clear();
   if (split && !hours) nextHourLater();
@@ -164,9 +171,7 @@ export function sendTrips(split = false, hours?: number[], withBoard = true) {
 }
 /** what comes before any hour's slice; false if there is none to send */
 function tripsPrelude(): boolean {
-  // T-1407: never trips of the model ahead of the state they are drawn on; T-2404: a held
-  // follow-up's blueprint changes no line's run, so its trips are the same
-  if (followUp && !followUp.held) runFollowUp();
+  // (T-2404: a held follow-up's blueprint changes no line's run, so its trips are the same; any other waits, `sendTrips`)
   clearTimeout(nextHourTimer);
   if (!api || !Number.isFinite(epoch)) return false;
   putTodayGen(todayGen + 1);

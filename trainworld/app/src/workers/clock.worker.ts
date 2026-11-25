@@ -34,7 +34,7 @@ import { rowsFirst } from "./clockWordLines";
 import { bookCharge, buildSnapshot, busQuoteLL, complexOfNodes, editSteps, nameOnly, putPreviewAt, putXferSet, sameFloats, scheduleSnapshot, sendTrips, snapStations, stationsKey, stepBoarding, turnHour, xferSet } from "./clockDemand";
 import { apply, buildingQuoteAnswer, designOf, doubleUpAnswer, DROP_REFUSED, freeEnds, INSERT_REFUSED, issues, newLineShape, ORDER_REFUSED, paidFor, pisArr, rebuildQuoteAnswer, routeArgs, savedHidden, savedShapes } from "./clockEdits";
 import { goneLineFares, loadFares, newLineFare, pinFareRef, startFares, tidyLineFares, tidyStationFares } from "./clockFares";
-import { EARLY_WAIT_MS, followTimer, followUp, goesAhead, guardedFollowUp, heldEdges, HOLD_MS, holdOn, isPreview, isServiceOp, jumpsAhead, keepUntilState, later, passesFollowUp, passesHeld, previewStaleSeq, putPreviewStaleSeq, sendStale, settleOwedNow, stale, standAside, startNow, stepThenRun, waitsFollowUp, Waiting, whenStateWent } from "./clockFollowUp";
+import { EARLY_WAIT_MS, followTimer, followUp, goesAhead, guardedFollowUp, heldEdges, HOLD_MS, holdOn, isPreview, isServiceOp, jumpsAhead, keepUntilState, later, passesFollowUp, passesHeld, previewStaleSeq, putPreviewStaleSeq, sendStale, settleOwedNow, stale, standAside, startNow, stepThenRun, takeForced, waitsFollowUp, Waiting, whenStateWent } from "./clockFollowUp";
 import { putLoadMaskWait } from "./clockGround";
 import { blocksIn, blueprintPolylines, ensureBlocks, ensureMasks, ensureStreets, fetchWater, groundForBlueprint, masksComplete, masksIn, nodePoints, openNetwork, pumpBlocks, putPackBase, putTerrainBase, putViewBlocks, putViewZones, retryGroundNow, roadFeed, roadsUnder, routePoints, terrainIndexIntoModel, tintSent, VIEW_MARGIN_M, VIEW_SPAN_M, viewBlocks, viewZones, wakeStale, WaterRaster, withMasks, worldWaterIntoModel, zonesOfPoints } from "./clockGround";
 import { anchorMoves, drawnEdge, drawnLine, edgeDrawn, forget, forgetDrawn, game, hex, previewMarkRows, putAnchorMoves, putConvertedOnLoad, putShiftFrom, putShiftWas, putView, restart, rowsCanGo, sendHome, sendOpened, sendRows, sendState, SHIFT_REACH, shiftFrom, SHIFTS_EXACT } from "./clockMain";
@@ -494,7 +494,8 @@ function rowsOwed() {
 }
 // T-4272: demand's results kept while a follow-up waited go into the queue, in order, once none waits; one from a game no
 // longer in hand is dropped (the message that ran the follow-up may open another, whose restart clears riders)
-whenStateWent((msgs) => { for (const k of msgs) putMessages(messages.then(() => k.game === game ? processMessage(k.m) : undefined).then(pumpBlocks).catch((err) => send({ kind: "error", message: String(err) }))); });
+// (T-4281: a question kept so is answered empty, as one the model cannot answer is)
+whenStateWent((msgs) => { for (const k of msgs) putMessages(messages.then(() => k.game === game ? processMessage(k.m) : failAnswer(k.m, [])).then(pumpBlocks).catch((err) => send({ kind: "error", message: String(err) }))); });
 onmessage = (e: MessageEvent<ToClock>) => {
   const msg = e.data;
   if (msg.kind === "freezeTrace") {
@@ -734,11 +735,11 @@ async function processMessage(msg: ToClock) {
   // still comes at most then (T-2404, T-2766) however quickly edits keep coming
   const due = !!followUp && msg.kind === "edit" && performance.now() - followUp.ask.at >= HOLD_MS;
   // T-4272: demand's results wait for the state; the page's money figures and the clock pass
-  if (followUp && waitsFollowUp(msg) && !(followUp.held && passesHeld(msg, followUp.held))) return keepUntilState(msg);
+  if (followUp && waitsFollowUp(msg, followUp) && !(followUp.held && passesHeld(msg, followUp.held))) return keepUntilState(msg);
   if (followUp && !jumpsAhead(msg) && !passesFollowUp(msg) && !(followUp.held && passesHeld(msg, followUp.held) && !due)) {
     // T-3803: an edit goes ahead of a follow-up's state still to come or between its pieces
     if (!due && api && !modelDown && goesAhead(msg, followUp)) standAside(followUp);
-    else await guardedFollowUp();
+    else await guardedFollowUp(due ? "due" : msg.kind === "query" ? "query:" + msg.q.what : msg.kind);
   }
   if (msg.kind === "release") return;
   if (msg.kind === "leave") return await leave(msg);
@@ -993,7 +994,7 @@ async function handleMessage(msg: ToClock) {
       const missing = await parkedOn(groundForBlueprint());
       if (missing) return void send({ kind: "edited", seq: msg.seq, ok: false, issues: [missing], charge: 0 });
     }
-    const tA = performance.now();
+    const tA = performance.now(), forced = takeForced();
     // T-2763: blueprint track taken out carries no train, as a segment put in (T-1780)
     const bpRemove = msg.op.op === "removeEdge" && posted.edges.get(msg.op.edge)?.built === false;
     // T-1071: a train count takes effect a moment ahead, once its trips are on screen
@@ -1024,7 +1025,7 @@ async function handleMessage(msg: ToClock) {
     // an op of two edits (T-1899) says what both charged
     const charge = r === 0 ? charged ?? api.last_charge() : 0;
     const op = msg.op, seq = msg.seq;
-    const answer = (early?: boolean, held?: Float32Array[]) => send({ kind: "edited", seq, ok: r === 0, issues: r === 0 ? why ?? [] : r === INSERT_REFUSED ? ["InsertStop"] : r === DROP_REFUSED ? ["DropStop"] : r === ORDER_REFUSED && fault ? [`StopOrder:${fault.join(":")}`] : issues(), charge, line, node, paid: paidFor(op), skipped, ms: { apply: tB - tA, ...timing, total: performance.now() - tA }, early, held }); // i18n-ignore
+    const answer = (early?: boolean, held?: Float32Array[]) => send({ kind: "edited", seq, ok: r === 0, issues: r === 0 ? why ?? [] : r === INSERT_REFUSED ? ["InsertStop"] : r === DROP_REFUSED ? ["DropStop"] : r === ORDER_REFUSED && fault ? [`StopOrder:${fault.join(":")}`] : issues(), charge, line, node, paid: paidFor(op), skipped, ms: { apply: tB - tA, ...timing, ...forced, total: performance.now() - tA }, early, held }); // i18n-ignore
     if (r !== 0) return answer();
     placedNameless(api, msg.op, game);
     // T-4145: what the page can show of the edit, before its rows and network (a stop click's line path, T-4114)
