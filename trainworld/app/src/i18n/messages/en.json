@@ -1665,7 +1665,7 @@
   "moneyTab.transferFare": "Transfer fare",
   "moneyTab.transferFareLabel": "transfer fare",
   "moneyTab.transferTip": "Paid each time a trip changes lines. At most the base fare.",
-  "moneyTab.upgradesUpkeep": "Station upgrades {share} of their price per day",
+  "moneyTab.upgradesUpkeep": "Station upgrades {share} of their price per day, waiting rooms {room}",
   "moneyTab.upkeep": "Upkeep",
   "moneyTab.yesterday": "Yesterday",
   "moneyText.fares": "Fares {amount}",

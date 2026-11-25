@@ -22,9 +22,9 @@ import { ahead } from "../../game/pending";
 import { shownStation } from "../../map/stationAhead";
 
 /** T-3922: the hover's price line and, once the money has come, its upkeep line under it. */
-function priceLines(price: number): string {
+function priceLines(price: number, bit: number): string {
   const m = moneyState.value, costs = t("stationUpgrades.costs", { price: money(price * 1e6) });
-  return m ? `${costs}\n${t("common.upkeepDay", { amount: money(upgradeUpkeep(price, m)) })}` : costs;
+  return m ? `${costs}\n${t("common.upkeepDay", { amount: money(upgradeUpkeep(price, m, bit)) })}` : costs;
 }
 
 const ICONS: Record<number, () => preact.JSX.Element> = {
@@ -106,7 +106,7 @@ ${t("stationUpgrades.brtBuiltIn")}`}>
   );
   return (
     <button class={"btn icon upgrade" + state} aria-label={u.name} aria-pressed={on}
-      data-tip={`${u.name}\n${u.does(s.tram, !!s.port)}\n${priceLines(price)}\n${act}`}
+      data-tip={`${u.name}\n${u.does(s.tram, !!s.port)}\n${priceLines(price, u.bit)}\n${act}`}
       onClick={() => void toggle()}>
       <Ic />
     </button>
@@ -177,7 +177,7 @@ function ComplexUpgrade({ u, members, price }: { u: UpgradeText; members: string
   };
   return (
     <button class={"btn icon upgrade" + state} aria-label={u.name} aria-pressed={all}
-      data-tip={`${u.name}\n${u.doesAll!(allTram)}\n${priceLines(cost)}\n${act}`} onClick={() => void click()}>
+      data-tip={`${u.name}\n${u.doesAll!(allTram)}\n${priceLines(cost, u.bit)}\n${act}`} onClick={() => void click()}>
       <Ic />
     </button>
   );

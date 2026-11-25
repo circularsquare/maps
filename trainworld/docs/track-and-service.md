@@ -748,7 +748,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   them, and drop bit 7, passing tracks), on `StationData::upgrades`, so undo, renames and platform
   changes keep them. Upkeep (T-3922, Anita 2026-11-21): each constructed upgrade, passage and station building pays
   `upgrades::UPKEEP_SHARE` (0.2%) of its price at today's prices a game day (twice a port's ratio and ground
-  track's); a passage half at each end, a building evenly over its constructed members; counted with the station
+  track's), a waiting room's `upgrades::WAITING_ROOM_UPKEEP_FACTOR` (half, 0.1%, T-4342); a passage half at each end, a building evenly over its constructed members; counted with the station
   (its Upkeep row, its lines' shares, its region; a port's waiting room with the port). The buy buttons' hovers give
   it under the price ("Upkeep $5k per day").
   - **Terminal** (turnback sidings): a train turning at the station (a line's end or a reversal
@@ -1897,7 +1897,7 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   the dearer step a level, 6.4 "Stations") and US$50k at grade or above (T-2619), either one times
   `UPKEEP_ONE_PLATFORM_SHARE` (0.6, Anita 2026-11-13) when its platform is on one track only: a one way
   station, or a stop on single track without a passing loop (`Network::one_platform`; the app reads the set
-  from `one_platform_stations`); what is bought on a station 0.2% of its price ("Station upgrades", T-3922; the
+  from `one_platform_stations`); what is bought on a station 0.2% of its price, a waiting room 0.1% ("Station upgrades", T-3922, T-4342; the
   app reads each station's from `station_upgrade_upkeep`); crossovers, junctions and flyovers
   nothing on top; blueprint nothing (`UPKEEP_GROUND_KM`, `UPKEEP_VIADUCT_KM`, `UPKEEP_CUT_KM`,
   `UPKEEP_BORED_KM`, `UPKEEP_STATION`, `UPKEEP_STATION_UNDER`, real US$350, 500, 1,000, 1,300, 500 and

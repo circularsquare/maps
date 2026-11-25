@@ -361,13 +361,18 @@ impl Network {
         self.station_upgrades_price(n as u32, ups, self.water_mask.is_water(self.node_x[n], self.node_y[n]))
     }
 
+    /// A station's upgrades' price at `UPKEEP_SHARE`, US$M (`upgrades::upkept_price`).
+    pub fn upkept_upgrades_cost(&self, n: usize) -> f64 {
+        super::upgrades::upkept_price(self.node_upgrades[n], self.upgrades_cost(n))
+    }
+
     /// T-3922: what is bought on stations and pays upkeep, US$M: `[the constructed stations' own upgrades, the
     /// constructed ports', the constructed passages, the buildings]` (`upgrades::UPKEEP_SHARE`).
     pub fn upkept_upgrades_value(&self) -> [f64; 4] {
         let (mut st, mut ports) = (0.0, 0.0);
         for n in 0..self.node_count() {
             if self.node_alive[n] && self.node_platform[n] > 0 && self.node_built[n] && self.node_upgrades[n] != 0 {
-                if self.node_berth[n].is_some() { ports += self.upgrades_cost(n) } else { st += self.upgrades_cost(n) }
+                if self.node_berth[n].is_some() { ports += self.upkept_upgrades_cost(n) } else { st += self.upkept_upgrades_cost(n) }
             }
         }
         [st, ports, self.passages_cost(true), super::building::value(self)]
@@ -380,7 +385,7 @@ impl Network {
         let mut v = vec![0.0; self.node_count()];
         for (n, x) in v.iter_mut().enumerate() {
             if self.node_alive[n] && self.node_platform[n] > 0 {
-                *x = self.upgrades_cost(n);
+                *x = self.upkept_upgrades_cost(n);
             }
         }
         for ([a, b], price) in self.passages() {

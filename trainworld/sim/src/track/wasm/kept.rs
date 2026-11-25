@@ -208,8 +208,8 @@ fn node_now(n: &Network, i: usize) -> NodeK {
     let kind = if upkept_station(n, i) { 1 } else if upkept_port(n, i) { 2 } else { 0 };
     let station = if kind == 1 { Fx::of(station_upkeep(n, i)) } else { Fx::default() };
     let with_ups = n.node_platform[i] > 0 && n.node_built[i] && n.node_upgrades[i] != 0;
-    let ups = if with_ups { Fx::of(n.upgrades_cost(i)) } else { Fx::default() };
-    let own = if n.node_platform[i] > 0 { n.upgrades_cost(i) } else { 0.0 };
+    let ups = if with_ups { Fx::of(n.upkept_upgrades_cost(i)) } else { Fx::default() };
+    let own = if n.node_platform[i] > 0 { n.upkept_upgrades_cost(i) } else { 0.0 };
     let (t, b) = n.node_cost_parts(i);
     let sum = |v: [f64; 3]| {
         let mut s = Fx::default();

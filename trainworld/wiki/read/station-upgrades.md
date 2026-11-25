@@ -1,6 +1,6 @@
 # Station upgrades
 
-A station has four things you can add, from the row of icons in its panel. You buy them with a blueprint station (they are built with it) or pay at once on a built one. Once built, each one's [upkeep](upkeep.md) is 0.2% of its price a day, so a waiting room is US$10k a day. Taking one away refunds nothing.
+A station has four things you can add, from the row of icons in its panel. You buy them with a blueprint station (they are built with it) or pay at once on a built one. Once built, each one's [upkeep](upkeep.md) is 0.2% of its price a day, except a waiting room, which is 0.1%, US$5k a day. Taking one away refunds nothing.
 
 **Terminal.** Trains turning here, at the end of a line or reversing partway, use both platforms. Without one they use a single platform, and the next train waits for the one there to leave. It costs 1 km of double track at the station's level, which is US$37.5M on the ground ([levels and tunnels](levels-and-tunnels.md)). See [line capacity](line-capacity.md) for what it does to trains an hour.
 

@@ -55,9 +55,19 @@ pub const BUILDING_PER_M2: f64 = 0.002;
 
 /// T-3922 (Anita 2026-11-21, to stop free spamming): the upkeep a game day of everything bought on a station (the
 /// four upgrades, passages, buildings) over its price: 0.1% matched a port's ratio (US$10k a game day on US$10M)
-/// and ground track's (US$35k on US$37.5M a km); Anita raised it to 0.2%. Prices stay real and upkeep is a game day's, so this is the game's
+/// and ground track's (US$35k on US$37.5M a km); Anita raised it to 0.2%. A waiting room's is half (below). Prices stay real and upkeep is a game day's, so this is the game's
 /// ratio as the player sees it, not a real figure times `ECONOMY`.
 pub const UPKEEP_SHARE: f64 = 0.002;
+
+/// T-4342: a waiting room pays this share of `UPKEEP_SHARE` (0.1% of its price): a real shelter or small hall
+/// costs a tenth of what the share gives a car park or track.
+pub const WAITING_ROOM_UPKEEP_FACTOR: f64 = 0.5;
+
+/// The part of `cost` US$M, a station's upgrades `bits`' price, that pays upkeep at `UPKEEP_SHARE`: all of it but
+/// a waiting room's other half. Every upgrade upkeep sum takes its prices through this.
+pub fn upkept_price(bits: u8, cost: f64) -> f64 {
+    if bits & WAITING_ROOM != 0 { cost - WAITING_ROOM_COST * (1.0 - WAITING_ROOM_UPKEEP_FACTOR) } else { cost }
+}
 
 /// The upkeep a game day, US$M, of upgrades that cost `price` US$M.
 pub fn upkeep(price: f64) -> f64 {

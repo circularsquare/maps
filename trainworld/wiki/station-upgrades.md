@@ -1,6 +1,6 @@
 # Station upgrades
 
-A station has four things you can add, from the row of icons in its panel. You buy them with a blueprint station (they are built with it) or pay at once on a built one. Once built, each one's [[upkeep]] is {{sim/src/track/upgrades.rs:UPKEEP_SHARE*100}}% of its price a day, so a waiting room is US${{sim/src/track/upgrades.rs:WAITING_ROOM_COST*UPKEEP_SHARE*1000|0}}k a day. Taking one away refunds nothing.
+A station has four things you can add, from the row of icons in its panel. You buy them with a blueprint station (they are built with it) or pay at once on a built one. Once built, each one's [[upkeep]] is {{sim/src/track/upgrades.rs:UPKEEP_SHARE*100}}% of its price a day, except a waiting room, which is {{sim/src/track/upgrades.rs:UPKEEP_SHARE*WAITING_ROOM_UPKEEP_FACTOR*100}}%, US${{sim/src/track/upgrades.rs:WAITING_ROOM_COST*UPKEEP_SHARE*WAITING_ROOM_UPKEEP_FACTOR*1000|0}}k a day. Taking one away refunds nothing.
 
 **Terminal.** Trains turning here, at the end of a line or reversing partway, use both platforms. Without one they use a single platform, and the next train waits for the one there to leave. It costs {{sim/src/track/upgrades.rs:TERMINAL_KM}} km of double track at the station's level, which is US${{sim/src/track/upgrades.rs:TERMINAL_KM*BASE_COST_PER_KM*LEVEL_MULT[3]|1}}M on the ground ([[levels-and-tunnels]]). See [[line-capacity]] for what it does to trains an hour.
 

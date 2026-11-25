@@ -25,6 +25,7 @@ import { advancedFares, FareButtons, FareGraph, FareNodeRows, farePreview } from
 import { MoneyHistory } from "./MoneyHistory";
 import { ScopeToggle } from "./listParts";
 import { t, tCountry, tNumber } from "../i18n";
+import { WAITING_ROOM_UPKEEP_FACTOR } from "../game/upgrades";
 
 /** two decimals, in the language's digits */
 const fix2 = (v: number) => tNumber(v, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -35,7 +36,8 @@ const ledgerNet = (d: DayLedger) => d.fares - d.running - (d.upkeep ?? 0) - (d.l
 function upkeepTip(m: MoneyState): string {
   // T-1838: Anita's lines, nothing else; T-3922: and station upgrades' share of their price
   const share = tNumber(m.upkeepUpgradeShare ?? 0, { style: "percent", maximumSignificantDigits: 2 });
-  return `${upkeepLines(m)}\n${t("moneyTab.upgradesUpkeep", { share })}`;
+  const room = tNumber((m.upkeepUpgradeShare ?? 0) * WAITING_ROOM_UPKEEP_FACTOR, { style: "percent", maximumSignificantDigits: 2 });
+  return `${upkeepLines(m)}\n${t("moneyTab.upgradesUpkeep", { share, room })}`;
 }
 
 /** The New trains row's hover once the network has buses or boats (T-1464, T-2194). */
