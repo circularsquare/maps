@@ -38,7 +38,7 @@ import { warmStreetNames } from "./stationNames";
 import { loadRealStationsAt } from "./realStations";
 import { pointerLocal } from "./pick";
 import { edgesNear, nodesNear } from "./snapIndex";
-import { clickNet, clickWorld } from "./clickMap";
+import { clickNet, clickWorld, patchFresh } from "./clickMap";
 import { hidden, levelHidden } from "./visibility";
 import { afterStopEdits, edit, queueStopEdit, say, sendStopEdit, stopsQueued, world } from "../game/world";
 import { hideBusy, showBusy } from "../game/busy";
@@ -49,7 +49,7 @@ import { kAtY, toLngLat, toLocal } from "./geo";
 import { laneState } from "./renderer";
 import { planStopsOf, type Level } from "../game/types";
 import { endHeading } from "./curveCircle";
-import { ahead, asRun, type Ahead } from "../game/pending";
+import { ahead, asRun, editsSentCount, lastSentSeq, type Ahead, type Show } from "../game/pending";
 import { ghostTangent, LOCAL_PX, sameLine, warmGhostLocal, type TangentSpec } from "./ghostLocal";
 import { ghostChevrons, joinedGhost, strokesFromPreview, TAPER_M, type Strokes } from "./network";
 import { type PlatformShape } from "./stationGeometry";
@@ -81,8 +81,11 @@ export class Tools {
   start: Placed | null = null;
   /** the starts of the segments placed with Shift, for Backspace (T-418) */
   chain: Placed[] = [];
-  /** a segment's edit in flight: clicks wait for it */
+  /** a segment being worked out before it is sent (a real or street route found first), or one sent on a refused ghost
+   * until its answer: clicks wait for it */
   placing = false;
+  /** T-4214 stage D: the run's segments sent and not yet answered, where each lies as drawn: a click on one waits for it */
+  flying: { seq: number; pts: Float32Array }[] = [];
   /** T-4214: map clicks waiting for the map to hold every edit sent before them, in order (map/toolWait.ts) */
   waitingClicks: WaitingClick[] = [];
   waitTimer = 0;
@@ -879,7 +882,7 @@ export class Tools {
 
   /** A node was dragged (T-734): a route drawn from it starts at its old place, so it is dropped. */
   nodeMoved(node: number) {
-    const at = (p: Placed) => p.end.kind === "node" && p.end.node === node;
+    const at = (p: Placed) => endNode(p.end) === node;
     if (this.start && (at(this.start) || this.chain.some(at))) this.reset();
     else if (this.start) this.requestPreview();
   }
@@ -897,6 +900,11 @@ export class Tools {
       this.held = [];
       this.client.placedNow();
       this.carrying(this.heldLanded().then(() => this.trackClick(e)));
+      return;
+    }
+    // T-4214 stage D: a click on a segment of this run still to be answered waits for it (at most 3 s), so its snap finds it
+    if (this.flying.length && this.nearPts(this.flying.map((f) => f.pts), e.point.x, e.point.y)) {
+      this.carrying(this.flyingLanded().then(() => this.trackClick(e)));
       return;
     }
     let s = this.snap(e.point.x, e.point.y, e.lngLat);
@@ -929,14 +937,15 @@ export class Tools {
   }
 
   /** Place the segment from the start to this click; with Shift held or keepPlacing on, the next
-   * starts at its end. */
+   * starts at its end. T-4214 stage D: the next one starts there at once, named to the worker as the end of this edit
+   * (`endOf`, workers/clockRunEnds.ts), so a run's segments go one per click with no wait for the answer before. */
   async segmentClick(e: MapMouseEvent, s: Snap) {
     const from = this.start;
     if (!from || this.placing) return;
     // T-707: a click on the start ends the run, as a double click does, or drops a start with no
     // segment yet; a segment can never end where it starts, so a loop's end is never this point
     const [sx, sy] = this.screen(...toLocal(from.lng, from.lat)), se = this.endOf(s);
-    if (Math.hypot(sx - e.point.x, sy - e.point.y) < 6 || (from.end.kind === "node" && se.kind === "node" && se.node === from.end.node)) {
+    if (Math.hypot(sx - e.point.x, sy - e.point.y) < 6 || (se.kind === "node" && se.node === endNode(from.end))) {
       this.reset();
       return;
     }
@@ -947,8 +956,19 @@ export class Tools {
     this.placing = true;
     this.waitFrom(true);
     this.endRun = false;
-    let rc: RealClick, sc: StreetClick = null, p: PreviewAnswer | null, a: Awaited<ReturnType<typeof edit>>, by: { edge: number } | null = null, mark: Ahead | null = null;
-    let ow: NonNullable<Tools["clicked"]>["onward"] = null;
+    let rc: RealClick, sc: StreetClick = null, p: PreviewAnswer | null = null, sent: Promise<Awaited<ReturnType<typeof edit>>> | null = null, by: { edge: number } | null = null, mark: Ahead | null = null;
+    let ow: NonNullable<Tools["clicked"]>["onward"] = null, exact = false, pts: Float32Array | null = null, seq = -1;
+    /** the run goes on from this segment's end before its answer (stage D); `hold`: the run waits for the answer as before
+     * (a segment sent on a ghost already refused, which the worker will most likely refuse too) */
+    let onward = false, hold = false, mapped = false;
+    // T-4214 stage E: from its word on, the segment is drawn as the tools' map has it (its patch's new edges, by id), so an
+    // edit after it (a delete, a station cutting it) draws on it at once
+    const fromMap = (laid: number): Show | null => {
+      const f = laid >= 0 ? patchFresh(laid) : null;
+      if (!f?.size) return null;
+      mapped = true;
+      return { track: [], pieces: new Map(f) };
+    };
     // T-1001: whatever happens to this click, later clicks are not ignored
     try {
       // T-727d: near real track at both clicks, the real route (waited for if still being found)
@@ -976,71 +996,136 @@ export class Tools {
       p = this.previewKey === JSON.stringify(req) ? this.lastPreview : null;
       // T-1474: heard at the click, not at the worker's answer; not when the ghost already shows a refusal
       if (p?.ok !== false) playBuild("snap");
+      // (where it lies as drawn, for a click on it before its answer: `flying`)
+      pts = p?.pts ?? this.startLocal(s)?.a.pts ?? this.shownPreview?.pts ?? null;
       // T-4208: shown placed at the click, the ghost going on from its end; a ghost already refused stays as it is
-      // (a real or street route's ghost is its snap's own, drawn from the start it leaves until the answer)
       if (p?.ok !== false && !rc && !sc && !this.snapped) {
         const stamp = this.clickAhead(p, s, chain, s.kind === "free" && !by);
-        mark = stamp ? ahead({ track: [stamp] }) : null;
+        exact = this.stampExact;
+        mark = stamp ? ahead({ track: [stamp] }, { atWord: fromMap }) : null;
         ow = this.clicked?.onward ?? null;
+      } else if (p?.ok !== false && (rc || sc)) {
+        // T-4214 stage D: a real or street route's ghost as its snap shows it, the run going on from its end at once
+        const st = this.overlay.renderer.previewSrc;
+        mark = st?.count ? ahead({ track: [{ ...st, marks: undefined, chevrons: undefined }] }, { atWord: fromMap }) : null;
       }
       // T-1407: answered before its state, so the next ghost is asked at once
       const go = () => asRun(run, () => edit({ op: "route", ...req }, false, true, true));
-      a = await (mark ? mark.send(go) : go());
+      const n0 = editsSentCount();
+      sent = mark ? mark.send(go) : go();
+      if (editsSentCount() > n0) seq = lastSentSeq();
+      onward = chain && !this.endRun && seq >= 0 && p?.ok !== false;
+      hold = chain && !onward && !this.endRun;
     } finally {
-      this.placing = false;
+      this.placing = hold;
       this.clicked = null;
       this.place();
-      // T-4214: a click waiting for this answer goes after the rest of this one (the run's new start)
-      queueMicrotask(() => tryClicks(this));
+      // T-4214: a click waiting for this one goes after the rest of it (the run's new start)
+      if (!hold) queueMicrotask(() => tryClicks(this));
     }
-    // T-4208: the stand-in kept at the click goes with a refusal. T-4210: otherwise it stays until the network holding the
-    // segment is drawn (game/pending.ts takes it in that frame, never with an earlier edit's network); a click that beat
-    // its answer, with nothing laid on the page, has it swapped for the worker's own edges now (the ghost as shown was bent)
-    if (mark && !a.ok) mark.drop();
-    if (mark && a.ok && a.early && !this.stampExact && a.held?.length) {
-      mark.set({ track: a.held.map((pts) => strokesFromPreview(pts, false, undefined, true, undefined, singleTrack.peek() ? 0 : 255, highSpeed.peek(), tramTrack.peek())) });
-    }
-    // T-1407: until the state lands, the ghost just placed stands in for the blueprint it made
-    if (a.ok && a.early) {
-      // T-2404: its state held while the pointer moves, its edges stand in where no ghost of it can
-      // (the ghost as this very answer drew it, not bent to a pointer that moved on meanwhile)
-      if (mark) { /* the stand-in kept at the click stays (above) */ }
-      else if (p) {
-        this.overlay.renderer.setPreview(p.pts.length >= 6 ? this.ghostStrokes(p) : null);
-        this.bent = null;
-        this.overlay.renderer.keepPreviewAsPlaced();
+    const chainWas = this.chain.slice();
+    const next = onward ? this.goOn(from, { kind: "endOf", seq }, s, rc, sc, ow, p, by, e) : null;
+    // the run ends at this segment (T-445, T-1811): at once, and back as it was if the segment is refused
+    if (!onward && !hold) this.reset();
+    if (next && pts) this.flying.push({ seq, pts });
+    // (the click is done once sent: a touch confirm waits only for this, stage D; a run waiting for the answer waits for it)
+    const answered = async () => {
+      let a: Awaited<ReturnType<typeof edit>>;
+      try {
+        a = await sent;
+      } finally {
+        this.flying = this.flying.filter((f) => f.seq !== seq);
+        if (hold) {
+          this.placing = false;
+          queueMicrotask(() => tryClicks(this));
+        }
       }
-      else for (const pts of a.held ?? []) this.overlay.renderer.addPlaced(strokesFromPreview(pts, false, undefined, true, undefined, singleTrack.peek() ? 0 : 255, highSpeed.peek(), tramTrack.peek()));
-      if (a.held) this.held.push(...a.held);
-      if (a.node !== undefined) this.earlyNode = a.node;
-    }
-    if (!a.ok || this.start !== from) {
-      // T-4208: a refused click's run goes on from where it was
-      if (mark && this.start === from) {
-        this.requestPreview();
-        this.drawGhost();
+      if (a.ok && a.node !== undefined && seq >= 0) noteRunNode(seq, a.node);
+      // T-4208: the stand-in kept at the click goes with a refusal. T-4210: otherwise it stays until the network holding the
+      // segment is drawn (game/pending.ts takes it in that frame, never with an earlier edit's network); a click that beat
+      // its answer, with nothing laid on the page, has it swapped for the worker's own edges now (the ghost as shown was bent)
+      if (mark && !a.ok) mark.drop();
+      if (mark && a.ok && a.early && !exact && !mapped && a.held?.length) {
+        mark.set({ track: a.held.map((pts) => strokesFromPreview(pts, false, undefined, true, undefined, singleTrack.peek() ? 0 : 255, highSpeed.peek(), tramTrack.peek())) });
       }
-      return;
-    }
-    say(p ? tr("tools.blueprintCost", { distance: distance(p.lengthM), cost: money(p.cost * 1e6) }) : tr("tools.blueprint"));
-    if (!chain || this.endRun || a.node === undefined) {
-      this.reset();
-      return;
-    }
+      // T-1407: until the state lands, the ghost just placed stands in for the blueprint it made
+      if (a.ok && a.early && this.run === run) {
+        // T-2404: its state held while the pointer moves, its edges stand in where no ghost of it can
+        // (the ghost as this very answer drew it, not bent to a pointer that moved on meanwhile)
+        if (mark) { /* the stand-in kept at the click stays (above) */ }
+        else if (p && p.pts.length >= 6) this.overlay.renderer.addPlaced(this.ghostStrokes(p));
+        else for (const pts of a.held ?? []) this.overlay.renderer.addPlaced(strokesFromPreview(pts, false, undefined, true, undefined, singleTrack.peek() ? 0 : 255, highSpeed.peek(), tramTrack.peek()));
+        this.overlay.invalidate();
+        if (a.held) this.held.push(...a.held);
+        if (a.node !== undefined) this.earlyNode = a.node;
+      }
+      const inRun = (st: Placed | null) => !!st && (this.start === st || this.chain.includes(st));
+      if (!a.ok) {
+        if (this.run !== run || tool.peek() !== "track") return;
+        // T-4208: a refused click's run goes on from where it was; stage D: the segments sent on from it are refused with it
+        // (the worker refuses a run end of a refused edit), so the run goes back to its start
+        if (next && inRun(next)) {
+          const i = this.chain.indexOf(from);
+          if (i >= 0) this.chain.length = i;
+          this.backTo(from);
+        } else if (!next && !hold && !this.start) {
+          this.chain = chainWas;
+          this.backTo(from);
+        } else if (mark && this.start === from) {
+          this.requestPreview();
+          this.drawGhost();
+        }
+        return;
+      }
+      say(p ? tr("tools.blueprintCost", { distance: distance(p.lengthM), cost: money(p.cost * 1e6) }) : tr("tools.blueprint"));
+      if (next) {
+        // (a route the worker took with no end node: the segments from it are refused, so the run ends here)
+        if (a.node === undefined && inRun(next)) this.reset();
+        return;
+      }
+      if (!hold || this.start !== from) return;
+      if (this.endRun || a.node === undefined) {
+        this.reset();
+        return;
+      }
+      this.goOn(from, { kind: "node", node: a.node }, s, rc, sc, ow, p, by, e);
+    };
+    if (hold) return answered();
+    void answered();
+  }
+
+  /** The run goes on from the end of the segment just placed from `from` (T-445), `end` naming it to the worker. */
+  private goOn(from: Placed, end: RouteEnd, s: Snap, rc: RealClick, sc: StreetClick, ow: NonNullable<Tools["clicked"]>["onward"], p: PreviewAnswer | null, by: { edge: number } | null, e: MapMouseEvent): Placed {
     this.chain.push(from);
     const [ex, ey] = this.clickEnd(s, rc, sc);
-    this.start = placedAt({ kind: "node", node: a.node }, ex, ey, rc ? rc.route.last : snapping.peek() ? this.real.ring(e.point.x, e.point.y) : null);
-    this.start.beside = by?.edge ?? null; // a run beside track carries on beside it
+    const st = placedAt(end, ex, ey, rc?.kind === "route" ? rc.route.last : snapping.peek() ? this.real.ring(e.point.x, e.point.y) : null);
+    st.beside = by?.edge ?? null; // a run beside track carries on beside it
     // T-4210: the heading (and bare end) the ghost from the click took, so nothing jumps as the answer lands
     const eh = !ow?.dir && p ? endHeading(p.verts, p.pts, p.arc, toLngLat, toLocal) : null;
-    this.start.dir = ow?.dir ?? (eh ? [eh.ux, eh.uy] : undefined);
-    this.start.tangent = ow?.tangent;
-    this.real.begin(this.start.ring);
-    this.street.begin([this.start.lng, this.start.lat]);
+    st.dir = ow?.dir ?? (eh ? [eh.ux, eh.uy] : undefined);
+    st.tangent = ow?.tangent;
+    st.z = ow?.z;
+    this.start = st;
+    this.real.begin(st.ring);
+    this.street.begin([st.lng, st.lat]);
     this.lastPreview = null;
     this.previewKey = this.wantKey = "";
     this.clearPreview();
     this.requestPreview();
+    this.place();
+    return st;
+  }
+
+  /** T-4214 stage D: the run drawn on from `st` again (a segment refused, and those sent on from it with it). */
+  private backTo(st: Placed) {
+    this.start = st;
+    this.real.begin(st.ring);
+    this.street.begin([st.lng, st.lat]);
+    this.lastPreview = null;
+    this.previewKey = this.wantKey = "";
+    this.clearPreview();
+    this.requestPreview();
+    this.drawGhost();
     this.place();
   }
 
@@ -1124,11 +1209,11 @@ export class Tools {
   /** Ask for the ghost of a segment from the start to the pointer; true if asked. */
   requestPreview(): boolean {
     if (!this.start || this.snapped || this.clicked) return false;
-    const se = this.start.end;
+    const sn = endNode(this.start.end);
     const nodes = clickWorld()?.nodes;
     if (this.earlyNode >= 0 && nodes?.has(this.earlyNode)) this.earlyNode = -1;
-    // undone meanwhile; a segment's end answered ahead of its state (T-1407) is not in yet
-    if (se.kind === "node" && se.node !== this.earlyNode && !nodes?.has(se.node)) return this.reset(), false;
+    // undone meanwhile; a segment's end answered ahead of its state (T-1407) is not in yet, nor one not yet answered (stage D)
+    if (sn !== undefined && sn !== this.earlyNode && !nodes?.has(sn)) return this.reset(), false;
     const h = this.hover;
     if (!h) return false;
     // Nothing to show while the pointer is on the start.
@@ -1202,7 +1287,7 @@ export class Tools {
     const g = this.startLocal(h);
     if (g) return this.drawLaid(g.a);
     const st = this.start!, [sx, sy] = toLocal(st.lng, st.lat);
-    this.standIn(sx, sy, h, st.dir ?? this.trackHeading(st, sx, sy, h), this.heightOf(st.end, sx, sy));
+    this.standIn(sx, sy, h, st.dir ?? this.trackHeading(st, sx, sy, h), st.z ?? this.heightOf(st.end, sx, sy));
   }
   /** the stand-in ghost from (sx, sy), leaving along `dir` when given, at height `z` (m), to the pointer's `h` */
   standIn(sx: number, sy: number, h: Snap, dir: [number, number] | undefined, z: number) {
@@ -1277,7 +1362,8 @@ export class Tools {
   }
   /** a route end's height as the page knows it, m: a node's level, the track's height at (lx, ly), the level picked */
   heightOf(e: RouteEnd, lx: number, ly: number): number {
-    if (e.kind === "node") return (clickWorld()?.nodes.get(e.node)?.level ?? this.freeLevel()) * 8;
+    const node = endNode(e);
+    if (node !== undefined) return (clickWorld()?.nodes.get(node)?.level ?? this.freeLevel()) * 8;
     const n = this.pickNet;
     if (e.kind === "edge" && n) {
       let best = Infinity, z = this.freeLevel() * 8;
@@ -1324,12 +1410,16 @@ export class Tools {
       this.held = [];
       return false;
     }
+    return this.nearPts(this.held, px, py);
+  }
+  /** whether one of the polylines `lines` (local x, y, z) is within HELD_NEAR_PX of (px, py), away from the start */
+  nearPts(lines: Float32Array[], px: number, py: number): boolean {
     if (this.start) {
       const [sx, sy] = this.screen(...toLocal(this.start.lng, this.start.lat));
       if (Math.hypot(sx - px, sy - py) < HELD_START_PX) return false;
     }
     const r2 = HELD_NEAR_PX * HELD_NEAR_PX;
-    for (const pts of this.held)
+    for (const pts of lines)
       for (let k = 0; k + 5 < pts.length; k += 3) {
         const [x0, y0] = this.screen(pts[k], pts[k + 1]), [x1, y1] = this.screen(pts[k + 3], pts[k + 4]);
         const dx = x1 - x0, dy = y1 - y0, l2 = dx * dx + dy * dy;
@@ -1342,6 +1432,13 @@ export class Tools {
   async heldLanded() {
     const node = this.earlyNode, until = performance.now() + 3000;
     while (node >= 0 && !clickWorld()?.nodes.has(node) && performance.now() < until) await new Promise((r) => setTimeout(r, 16));
+  }
+  /** T-4214 stage D: the run's segments sent so far answered (at most 3 s), and so in the tools' map (each answer comes
+   * after its patch) */
+  async flyingLanded() {
+    const until = performance.now() + 3000;
+    while (this.flying.length && performance.now() < until) await new Promise((r) => setTimeout(r, 16));
+    await this.heldLanded();
   }
 
   /** T-4208: the camera moved: a track or station ghost's end follows the still pointer to the map spot now under it */
@@ -1621,6 +1718,8 @@ export class Tools {
 
   /** T-2763: the box of the ghost last drawn, kept for a click to stand in for the station it places */
   lastBox: { lx: number; ly: number; ways: ArrayLike<number>[]; perM: number; plat: number; side: number; tram: boolean; mid: boolean } | null = null;
+  /** T-4214 stage E: the spot `lastBox` was laid at (a station clicked before its ghost's verdict is drawn from it) */
+  lastBoxAt: Snap | null = null;
   /** T-2763: stations clicked and not yet in the world (the worker takes 0.3 to 3 s on a big network),
    * drawn where they were clicked; the worker's answer takes them away, and a refusal leaves none */
   pendingSt: { b: NonNullable<Tools["lastBox"]>; el: SVGSVGElement }[] = [];
@@ -1698,6 +1797,17 @@ export class Tools {
   bandKey = "";
 }
 
+
+/** T-4214 stage D: the node each of this session's route edits ended at, by seq, once answered (the newest 64) */
+const runNodes = new Map<number, number>();
+function noteRunNode(seq: number, node: number) {
+  runNodes.set(seq, node);
+  if (runNodes.size > 64) runNodes.delete(runNodes.keys().next().value!);
+}
+/** a route end's node: its own, or the node the edit it names ended at once that edit is answered */
+function endNode(e: RouteEnd): number | undefined {
+  return e.kind === "node" ? e.node : e.kind === "endOf" ? runNodes.get(e.seq) : undefined;
+}
 
 function sameStops(a: readonly number[], b: readonly number[]) {
   return a.length === b.length && a.every((s, i) => s === b[i]);

@@ -225,8 +225,12 @@ Web first, so it can be shared as a link.
   `editsOut`, map/toolWait.ts); waiting clicks go in order, each after the edits the one before sent. Every edit sent arms it (panels, drags and keys too, which never wait themselves); a click counts from the moment
   it is made until its tool has sent (a delete's question); a refusal ends the wait, and so does a
   word saying no network follows (a service edit, a rename, a fare or loan edit). A waiting click asks the worker for a
-  network held for the pointer's rest. A track run's next segment waits only for the answer to the one before (it starts
-  from the node the worker answered), and stop clicks never count. A tool switch the player makes meanwhile (the
+  network held for the pointer's rest. **A track run's next segment never waits** [T-4214 stage D]: it is sent at its
+  own click from the end of the one before, named by that edit (`RouteEnd` "endOf"), which the worker reads at the apply
+  as the node that edit's route ended at (workers/clockRunEnds.ts; edits apply in arrival order); a segment from the end
+  of an edit refused or never applied is refused with nothing to say, and the page draws the run on from the refused
+  segment's start. Only a click on one of the run's own segments still unanswered waits for it (at most 3 s). Stop
+  clicks never count. A tool switch the player makes meanwhile (the
   toolbar, its keys, a panel's tool button, leaving a tool) waits its turn behind the waiting clicks, so each click goes
   with the tool it was made with (game/ui.ts `inClickOrder`). A waiting click is dropped when its spot has left the
   screen, on Escape or a load, and carried out on the map as it is after 5 s. Undo and redo wait for it as
@@ -235,7 +239,15 @@ Web first, so it can be shared as a link.
   "stationName" once found; the worker gives it to the station edit if that is still queued, else names the stations
   that edit placed outside the undo history, in the state its follow-up sends (workers/clockNames.ts). Undo and redo
   wait for names still being looked up. The station tool's check and the delete question's trial of a removal leave
-  the services as they are (`trial_light`), and the removal's trial goes ahead of a follow-up as previews do. The renderer draws the list (map/lineAhead.ts): a line drawn ahead on its own segments it keeps and
+  the services as they are (`trial_light`), and the removal's trial goes ahead of a follow-up as previews do.
+  **What is drawn ahead is the tools' map's** [T-4214 stage E]: at its word (its patch laid first) a track segment's
+  stand-in becomes the patch's new edges, by id, drawn with the look their rows give (`Show.pieces`), and a station's box
+  is laid on its node in that map as its ghost's is (map/stationTool.ts `placedBox`; a station clicked before its ghost's
+  verdict shows the ghost's box until then). An edge hidden ahead that the drawn network, or a piece drawn ahead, holds
+  only as part of an edge since cut (the far half of an edge a station just split, a piece trimmed or joined) hides that
+  whole edge and draws the tools' map's edges lying on it that stay (map/clickMap.ts `openUnder`: within 1.5 m and 3 m
+  of height of it; a piece gone from that map is opened the same way). The lines on an edge so opened are not drawn
+  until the network. The renderer draws the list (map/lineAhead.ts): a line drawn ahead on its own segments it keeps and
   the track's in its colour on the edges it gained, its network strokes off by a per-line texture; edges off by a
   per-edge texture, or redrawn with their new look; station boxes by a second draw of the station shader; a deleted
   line's colour transparent (a new line's colour drawn opaque past the network's ones). **Pieces** [T-4148]: a track type

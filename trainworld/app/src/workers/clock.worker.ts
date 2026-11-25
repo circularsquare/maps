@@ -42,6 +42,7 @@ import { gameNow, lineDays, linesPeriods, loadLineDays, loadRegions, mergeLedger
 import { afterLoadPanic, downTold, EDIT_UNDONE, kept, putDownTold, isPanic, keep, MODEL_DOWN, MODEL_RESTORED, modelDown, newModel, openFailReason, panicAfterEdit, panicLater, panicNow, panicOnLoad, panicWhy, putModelDown, putPanicAfterEdit, putPanicOnLoad, recover, SAVE_PANIC } from "./clockPanic";
 import { wordAfter, wordBefore } from "./clockWord";
 import { mapPatch, patchMiss } from "./clockPatch";
+import { routeEnded, runEnds } from "./clockRunEnds";
 import { nameArrived, nameOwed, nameOwedStations, placedNameless, withName } from "./clockNames";
 import { diagramOn, patchMode, postDiagram, posted, postWhole, putDiagramOn, putDiagramWhole, putPatchMode, sender } from "./clockPost";
 import { achievements, api, applyRunFactors, AUTOSAVE_MS, city, clk, copyOf, dayPinned, dayShift, demandBuilt, demandFine, diagramCities, emptyTrack, epoch, failInPlace, fares, frameSpec, freezeCheckpoint, freezePort, freezeTimer, goals, guide, guideWanted, heldCharges, home, hourLedger, initIncoming, ledger, ledgerDay, lineNotes, lineShapes, loadHolidays, loan, loanOp, messages, modded, mode, newLineCars, newLineHeadway, newLineWeekendShare, opened, outlinesGot, outlinesIn, outlinesRead, packLngLat, packLocal, pageModded, peakC, placeLineCountries, pricesOf, putAchievements, putClk, putCopyOf, putDemandBuilt, putDemandFine, putDiagramCities, putDiagramInside, putEmptyTrack, putEpoch, putFares, putFreezeMemory, putFreezePort, putFreezeTimer, putGoals, putGuide, putGuideWanted, putHiddenLines, putHome, putHourLedger, putIncomePerHour, putInitIncoming, putLedger, putLineIncome, putLineNotes, putLinePoints, putLineRides, putLineShapes, putLineShares, putLoan, putMessages, putMidLoad, putModded, putMoneyFrozen, putNewLineCars, putNewLineHeadway, putNewLineWeekendShare, putOpened, putOutlinesRead, putPageModded, putPrices, putRidesPerHour, putRowsSent, putStars, putTiming, putTrackVersion, putUpkeepRegions, send, setMode, setStartZone, stars, startZone, syncHolidays, timing, trackVersion, withModded } from "./clockState";
@@ -988,6 +989,16 @@ async function handleMessage(msg: ToClock) {
       send({ kind: "edited", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : issues(), charge, node });
       return;
     }
+    // T-4214 stage D: a track run's segment sent on from the one before starts at that one's end node
+    if (msg.op.op === "route") {
+      const r = runEnds(msg.op);
+      if (!r) {
+        routeEnded(msg.seq, undefined);
+        refusedLast = msg.seq;
+        return void send({ kind: "edited", seq: msg.seq, ok: false, issues: [], charge: 0 });
+      }
+      msg.op = r;
+    }
     await parkedOn(worldWaterIntoModel());
     await parkedOn(masksFor(msg.op));
     if (msg.op.op === "construct" || msg.op.op === "constructAll" || msg.op.op === "constructLine" || msg.op.op === "rebuild") {
@@ -1018,6 +1029,7 @@ async function handleMessage(msg: ToClock) {
     const moved = api.take_service_moved();
     const { r, fault, line, node, skipped, charge: charged, trainCharge, why } = applied;
     refusedLast = r === 0 ? -1 : msg.seq;
+    if (msg.op.op === "route") routeEnded(msg.seq, r === 0 ? node : undefined);
     api.set_edit_lead(0); // a refused edit leaves it set
     if (import.meta.env.DEV && panicAfterEdit) { putPanicAfterEdit(false); panicNow(); }
     const tB = performance.now();
@@ -1296,12 +1308,15 @@ async function handleMessage(msg: ToClock) {
     else sendStale(msg.seq);
   } else if (msg.kind === "preview" || msg.kind === "previewEdge") {
     const a = api;
-    const out = await parkedOn(withMasks(() => msg.kind === "preview"
-      ? a.preview_route(...routeArgs(a, msg))
-      : (a.set_design_speed(designOf(msg)), a.preview_edge(msg.edge, pisArr(msg.pis))), routePoints, msg.seq));
+    // T-4214 stage D: a ghost from a run's end still to be answered, read as that end's node (none from a refused one)
+    const m = msg.kind === "preview" ? runEnds(msg) : msg;
+    if (!m) return sendStale(msg.seq);
+    const out = await parkedOn(withMasks(() => m.kind === "preview"
+      ? a.preview_route(...routeArgs(a, m))
+      : (a.set_design_speed(designOf(m)), a.preview_edge(m.edge, pisArr(m.pis))), routePoints, msg.seq));
     if (!out) return sendStale(msg.seq);
     void roadsUnder(routePoints(out));
-    if (msg.kind === "preview") maskedRoute = masksComplete ? routeKey(msg) : "";
+    if (m.kind === "preview") maskedRoute = masksComplete ? routeKey(m) : "";
     let arc: Float64Array | undefined;
     const ra = msg.kind === "preview" ? a.route_arc() : null;
     if (ra?.length === 3) {

@@ -284,7 +284,9 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   start. A segment may turn
   up to 350 degrees, so a loop or hairpin is one click [T-442]. A click whose segment cannot be
   built (a curve under 100 m, a click straight behind the start, water, too little room for a
-  ramp) is refused by the edit, its reason at the bottom left; the ghost was red already. A
+  ramp) is refused by the edit, its reason at the bottom left; the ghost was red already. No click
+  waits for the segment before it to be answered: a refused segment takes the segments clicked on from it with it,
+  and the run draws on from its start [T-4214]. A
   free-drawn segment reaches 500 km at most, straight line between its ends: past that no ghost is
   drawn, the tag says so and a click is refused, so a run left open in one city never lays track to
   the next one the player pans to (real routes, T-727, are not capped) [T-1020]. While

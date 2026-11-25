@@ -44,6 +44,9 @@ export interface Show {
   /** bus and ferry lines drawn on a new route in the bus layer (map/busAhead.ts), until the rows that hold them: a part
    * of the panel's kind */
   buses?: Map<number, BusAhead>;
+  /** T-4214 stage E: edges of the map the tools pick on drawn as track, by id with their points (local units), with the
+   * look their rows there give: a segment's stand-in once its patch is in (map/aheadShow.ts) */
+  pieces?: Map<number, Float32Array>;
 }
 
 /** The edits drawn ahead, composed: every entry's map part, later edits over earlier ones. */
@@ -59,6 +62,9 @@ export interface Composed {
   hideLines: Set<number>;
   rawStations: RawStations[];
   buses: Map<number, BusAhead>;
+  /** the pieces drawn (later edits' over earlier ones'), and those a later edit hides, which map/aheadShow.ts opens */
+  pieces: Map<number, Float32Array>;
+  opened: Map<number, Float32Array>;
 }
 
 interface Entry {
@@ -77,6 +83,9 @@ interface Entry {
    * goes after a while (`changed`) */
   at: number;
   tries: boolean;
+  /** T-4214 stage E: what it draws read off the tools' map at its word (`ahead`'s `atWord`; `laid`: the word's arrival order
+   * when its patch is laid, else -1) */
+  atWord?: (laid: number) => Show | null;
 }
 
 /** A guess never sent (a caller that never sent its edit) goes after this, ms */
@@ -123,12 +132,12 @@ let doubled = 0, swept = 0;
 /** (an empty list draws nothing, and an entry with only that would wait for a network that may never come) */
 const some = (x: Iterable<unknown> | undefined) => !!x && !x[Symbol.iterator]().next().done;
 /** what the network draws (an entry waits for the network that holds it) */
-const hasDrawn = (s: Show) => !!(s.lines?.size || some(s.hideEdges) || s.edges?.size || some(s.hideStations) || s.stations?.length || s.colours?.size || s.track?.length || s.lineStrokes?.length || some(s.hideLines) || s.rawStations?.length);
+const hasDrawn = (s: Show) => !!(s.lines?.size || some(s.hideEdges) || s.edges?.size || some(s.hideStations) || s.stations?.length || s.colours?.size || s.track?.length || s.lineStrokes?.length || some(s.hideLines) || s.rawStations?.length || s.pieces?.size);
 /** anything drawn at the click: the network's, or the bus layer's */
 const hasMap = (s: Show) => hasDrawn(s) || !!s.buses?.size;
 
 function compose(): Composed {
-  const c: Composed = { lines: new Map(), hideEdges: new Set(), edges: new Map(), hideStations: new Set(), stations: [], colours: new Map(), track: [], lineStrokes: [], hideLines: new Set(), rawStations: [], buses: new Map() };
+  const c: Composed = { lines: new Map(), hideEdges: new Set(), edges: new Map(), hideStations: new Set(), stations: [], colours: new Map(), track: [], lineStrokes: [], hideLines: new Set(), rawStations: [], buses: new Map(), pieces: new Map(), opened: new Map() };
   for (const e of [...entries].sort((a, b) => a.t - b.t)) {
     // (the bus layer's routes come from the world, so they go with the rows, not the network)
     if (e.panel) for (const [l, b] of e.show.buses ?? []) c.buses.set(l, b);
@@ -140,7 +149,10 @@ function compose(): Composed {
       c.hideEdges.add(x);
       c.edges.delete(x);
       for (const edges of c.lines.values()) edges?.delete(x);
+      const p = c.pieces.get(x);
+      if (p) { c.pieces.delete(x); c.opened.set(x, p); }
     }
+    for (const [x, pts] of s.pieces ?? []) { c.pieces.set(x, pts); c.opened.delete(x); }
     for (const [x, look] of s.edges ?? []) c.edges.set(x, { ...c.edges.get(x), ...look });
     for (const x of s.hideStations ?? []) c.hideStations.add(x);
     c.stations.push(...(s.stations ?? []));
@@ -165,10 +177,11 @@ export interface Ahead {
 }
 
 /** Show an edit at the click. `tries`: a refusal leaves it shown, unkeyed, until `drop()` or the next `send` (an edit
- * sent several ways until one is taken). */
-export function ahead(show: Show, opts: { tries?: boolean } = {}): Ahead {
+ * sent several ways until one is taken). `atWord` (T-4214 stage E): parts read off the map the tools pick on when the
+ * edit's word comes, its patch laid by then (workers/clockClient.ts), in place of the same parts drawn at the click. */
+export function ahead(show: Show, opts: { tries?: boolean; atWord?: (laid: number) => Show | null } = {}): Ahead {
   const now = performance.now();
-  const e: Entry = { seq: -1, show, armed: -1, map: true, panel: true, money: true, t: now, at: now, tries: !!opts.tries };
+  const e: Entry = { seq: -1, show, armed: -1, map: true, panel: true, money: true, t: now, at: now, tries: !!opts.tries, atWord: opts.atWord };
   entries.push(e);
   changed(hasMap(show));
   return {
@@ -203,7 +216,7 @@ function drop(e: Entry) {
 /** Two shows as one: `b`'s parts over `a`'s where both say something of the same record, lists joined. */
 export function mergeShow(a: Show, b: Show): Show {
   const out: Show = { ...a, ...b };
-  const maps = ["lines", "edges", "colours", "buses"] as const;
+  const maps = ["lines", "edges", "colours", "buses", "pieces"] as const;
   for (const k of maps) if (a[k] && b[k]) (out as Record<string, unknown>)[k] = new Map<number, unknown>([...a[k]!, ...b[k]!]);
   if (a.fields && b.fields) {
     const f = new Map(a.fields);
@@ -218,6 +231,9 @@ export function mergeShow(a: Show, b: Show): Show {
 /** T-4097: edits sent so far: a read of the track model asked after the nth is of the model holding the first n */
 let sentCount = 0;
 export const editsSentCount = () => sentCount;
+/** T-4214 stage D: the seq of the edit sent last (a track run's next segment names the end of the one before by it) */
+let lastSeq = -1;
+export const lastSentSeq = () => lastSeq;
 
 let opGuess: ((op: EditOp) => Show | null) | null = null;
 /** the cash now and whether every price is paid (a sandbox), the cash's units */
@@ -256,6 +272,7 @@ export function pendingSent(seq: number, op: EditOp, quiet: boolean, stop = fals
   if (entries.filter((x) => x.seq === seq).length > 1) { doubled++; console.error("T-4170: two entries for one edit", seq, op.op); }
   // (after the guess, which reads whether any edit went since its read)
   sentCount++;
+  lastSeq = seq;
 }
 
 /** Whether an edit's show can stand, its price made right first: a price is shown only for an edit sent with no other
@@ -321,8 +338,9 @@ function noteEdit(seq: number, op: EditOp, quiet: boolean) {
   last = !drawnOffHistory(op) && quiet && was && !entries.some((e) => e.armed >= 0 && e.map) ? { seq, was, ok: false, word: -1, netIn: false } : null;
 }
 
-/** The worker's word for `seq`, the `order`th message to arrive; `noNet`: no network follows it. */
-export function pendingWord(seq: number, word: EditWord, order: number, noNet = false) {
+/** The worker's word for `seq`, the `order`th message to arrive; `noNet`: no network follows it; `laid`: its patch is laid on
+ * the map the tools pick on (T-4214). */
+export function pendingWord(seq: number, word: EditWord, order: number, noNet = false, laid = false) {
   const o = out.find((x) => x.seq === seq);
   if (o && noNet) outGone((x) => x === o);
   else if (o) o.word = order;
@@ -330,6 +348,9 @@ export function pendingWord(seq: number, word: EditWord, order: number, noNet = 
   if (last?.seq === seq) { if (word.noUndo) last = null; else last.word = order; }
   let e = entries.find((x) => x.seq === seq);
   const fromWord = wordShow(word);
+  let late: Show | null = null;
+  try { late = e?.atWord?.(laid ? order : -1) ?? null; } catch (err) { console.error("T-4214: an edit's drawing from the tools' map failed", err); }
+  if (late) Object.assign(fromWord, late);
   // (a one-way word names no end nodes: the guess's are the same edges')
   if (fromWord.edges && e?.show.edges) for (const [id, look] of fromWord.edges) { const ends = e.show.edges.get(id)?.ends; if (look.oneWay !== undefined && ends) look.ends = ends; }
   if (!e) {

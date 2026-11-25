@@ -14,8 +14,10 @@ import { newStationName, trackDirection } from "./stationNames";
 import { clicksMoved, edit, rightHand, say, stationNames, world } from "../game/world";
 import { gameStamp } from "../workers/clockClient";
 import { clickWorld } from "./clickMap";
-import { type ClockEdge, type ClockNode } from "../workers/protocol";
-import { toLngLat, toLocal } from "./geo";
+import { type ClockEdge, type ClockNode, type StationBox } from "../workers/protocol";
+import { kAtY, toLngLat, toLocal } from "./geo";
+import { nodesNear } from "./snapIndex";
+import { oneSideAlong } from "./network";
 import { type TrackEdge } from "../game/types";
 import { circleOnScreen } from "./curveCircle";
 import { stationOutside } from "./stationSide";
@@ -166,10 +168,12 @@ export async function stationClick(tk: Tools, e: MapMouseEvent) {
   const v = tk.verdict();
   // T-1474: heard at the click, not when the edit is answered; not when the ghost shows a refusal
   if (!(v && !v.ok && !v.held)) playBuild("station");
-  // T-4146: the station drawn at the click from its ghost, through every spot tried, gone if none is taken; a spot other
-  // than the ghost's is drawn once the network has it
-  const box = v?.ok && !v.held && tk.hover && tk.hover.kind !== "free" ? tk.lastBox : null;
-  const shown = ahead(box ? { stations: [box] } : {}, { tries: true });
+  // T-4146: the station drawn at the click from its ghost, through every spot tried, gone if none is taken. T-4214 stage E:
+  // the ghost's box as drawn, checked or not yet (none for a ghost shown refused), then at the edit's word the box from
+  // the tools' map holding it, at the spot taken
+  const box = !(v && !v.ok) && tk.hover && tk.hover.kind !== "free" && tk.lastBoxAt && tk.lastBoxAt === (v ? v.spot : tk.hover) ? tk.lastBox : null;
+  let trying: Exclude<Snap, { kind: "free" }> | null = null;
+  const shown = ahead(box ? { stations: [box] } : {}, { tries: true, atWord: (laid) => { const b = laid >= 0 && trying ? placedBox(tk, trying) : null; return b ? { stations: [b] } : null; } });
   let tried = 0;
   const tries = [...(v?.ok && v.spot && !v.held ? [v.spot] : []), ...tk.alts];
   // T-4214: sent at once, its name after it (`nameLater`)
@@ -180,6 +184,7 @@ export async function stationClick(tk: Tools, e: MapMouseEvent) {
   const stationAt1 = (p: Exclude<Snap, { kind: "free" }>) => { const o = stationAt(p); return { ...o, at: { ...o.at, ...one } }; };
   const r = await firstAccepted(tries, async (p) => {
     if (tried++ === 1) shown.set({});
+    trying = p;
     const a = await shown.send(() => edit(stationAt1(p), true, true, "click"));
     return a.ok ? null : a.issues;
   }, (p) => roomSnap(tk, p), () => false);
@@ -392,8 +397,48 @@ export function ghostPath(tk: Tools, el: SVGPathElement, shape: StationShape) {
 }
 
 export function stationGhost(tk: Tools, h: Exclude<Snap,{kind:"free"}>) {
+  const b=boxParts(tk, h);
+  tk.lastBoxAt=b?h:null;
+  if (!b) return;
+  boxGhost(tk, h.lx,h.ly,b.ways,b.perM,tk.verdict()?.ok===false,null,undefined,b.double,b.outside);
+}
+
+/** T-4214 stage E: the station the tools' map holds at spot `p` (a station edit there patched in), boxed as its ghost was but
+ * on its own node, platform and one-track side; null where the map does not hold one yet */
+export function placedBox(tk: Tools, p: Exclude<Snap,{kind:"free"}>): StationBox | null {
+  const w=clickWorld();
+  if (!w) return null;
+  let node=p.kind==="node"?w.nodes.get(p.node):undefined;
+  if (p.kind==="edge") {
+    // (placed where the spot lies along the track, a station node new to the edge)
+    let best=PLACED_NEAR_M*kAtY(p.ly);
+    for (const n of nodesNear(w,p.lx,p.ly,best,"pick") ?? []) {
+      if (!(n.platform>0)) continue;
+      const [x,y]=toLocal(n.lng,n.lat), d=Math.hypot(x-p.lx,y-p.ly);
+      if (d<best) [best,node]=[d,n];
+    }
+  }
+  if (!node || !(node.platform>0) || node.bus || node.port) return null;
+  const [lx,ly]=toLocal(node.lng,node.lat);
+  const b=boxParts(tk,{kind:"node",node:node.id,lx,ly});
+  if (!b) return null;
+  // the node as its track's end lays it, as network.ts places a station (exact)
+  const at=b.ways[0], x=at.length>=2?at[0]:lx, y=at.length>=2?at[1]:ly;
+  const sh=platformShape(b.ways,0,node.platform/2*b.perM);
+  const st=w.save.stations.find((s)=>s.num===node!.id);
+  const one=st?.one===1 && st.oneHeading!==undefined ? oneSideAlong(st.oneHeading,rightHand.peek()===false,sh.ax,sh.ay) : 0;
+  const side=one||b.outside?.(sh)||0;
+  return {lx:x,ly:y,ways:b.ways,perM:b.perM,plat:node.platform,side,tram:!!node.kind||!!node.brtStation,mid:!one&&side!==0};
+}
+
+/** How far from its spot a station placed on an edge may be found on the tools' map, m */
+const PLACED_NEAR_M = 5;
+
+/** What a station's box at spot `h` is laid along on the tools' map: the track either way from it, whether it is double,
+ * and its outside side on single track; null where the map has no track there */
+function boxParts(tk: Tools, h: Exclude<Snap,{kind:"free"}>): { ways: ArrayLike<number>[]; perM: number; double: boolean; outside: ((sh: PlatformShape) => number) | null } | null {
   const n=tk.pickNet,w=clickWorld();
-  if (!n || !w) return;
+  if (!n || !w) return null;
   const candidates=h.kind==="edge"?[h.edge]:w.edges.filter(e=>e.a===h.node||e.b===h.node).map(e=>e.id);
   const usage=new Map<number,Set<number>>();
   for (let i=0;i<n.lines.count;i++) {
@@ -416,10 +461,10 @@ export function stationGhost(tk: Tools, h: Exclude<Snap,{kind:"free"}>) {
   // network.ts's `single`: every track under the platform is single and not a crossover
   const ends=candidates.map((id)=>w.edges.find((x)=>x.id===id));
   // a snap made before an undo can name track the undo took away: no ghost until the next snap
-  if (!ends.length||!ends.every((e):e is TrackEdge=>!!e)) return;
+  if (!ends.length||!ends.every((e):e is TrackEdge=>!!e)) return null;
   const single=!double&&ends.every((e)=>e.tracks===1&&!e.crossover);
   const outside=single?(sh:PlatformShape)=>outsideSide(tk, h,ends,ways,sh):null;
-  boxGhost(tk, h.lx,h.ly,ways,perM,tk.verdict()?.ok===false,null,undefined,double,outside);
+  return {ways,perM,double,outside};
 }
 
 /** The side of its platform a station on one-way single track (or single track joining double) draws its one bar, from the same `stationOutside` a

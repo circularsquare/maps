@@ -31,7 +31,7 @@ import { hideUiKey } from "./ui/hideUi";
 import { helpKey } from "./ui/HelpPanel";
 import { followCapsLock, keyIsTheirs, releaseSelectsAfterMousePick } from "./ui/keys";
 import { stationsById, stopsById, world } from "./game/world";
-import "./map/aheadShow"; // T-4145: draws the edits waiting to show (game/pending.ts)
+import { aheadMapMoved } from "./map/aheadShow"; // T-4145: draws the edits waiting to show (game/pending.ts)
 import { pendingNetIn, pendingTaken } from "./game/pending";
 import { drawnEdgesOf } from "./map/lineAhead";
 import type { NetworkBuffers } from "./map/network";
@@ -389,6 +389,8 @@ if (SYNTH) {
     const n = renderer.net;
     if (!n || (n.anchor?.version ?? 0) !== at) return false;
     patchClickNet(n, order, set, gone);
+    // (stage E: what is drawn ahead from that map, once the patch's rows are laid too)
+    queueMicrotask(aheadMapMoved);
     return true;
   };
   client.onState = (s) => {
@@ -405,6 +407,7 @@ if (SYNTH) {
         timed("net.grids", () => { carryGrids(was, s.net!, renderer.checkPatch); carryEdgeGrid(was, s.net!, renderer.checkPatch); }); // T-1030
         // T-4214: the patches of the edits it holds go from the map the tools pick on, later ones are laid on it again
         timed("net.clickNetIn", () => clickNetIn(s.net!, client.orderOf(s)));
+        aheadMapMoved();
         // T-4214: the map clicks pick on holds these edits now (a click waiting for them goes, map/toolWait.ts)
         pendingNetIn(client.orderOf(s));
         // T-1047; T-1021: a task of its own right after, so a big network's first state is two tasks

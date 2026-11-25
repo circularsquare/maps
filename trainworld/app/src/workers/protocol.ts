@@ -34,11 +34,13 @@ export interface PiInput {
   radius?: number;
 }
 
-/** Where a drawn route starts or ends: a new node, an existing node, or splitting an edge. */
+/** Where a drawn route starts or ends: a new node, an existing node, splitting an edge, or (T-4214 stage D) the node route
+ * edit `seq` ended at, for a track run's next segment sent before that edit's answer (workers/clockRunEnds.ts). */
 export type RouteEnd =
   | { kind: "free"; x: number; y: number; level: Level }
   | { kind: "node"; node: NodeId }
-  | { kind: "edge"; edge: EdgeId; x: number; y: number };
+  | { kind: "edge"; edge: EdgeId; x: number; y: number }
+  | { kind: "endOf"; seq: number };
 
 /** Where a station goes: on a node, splitting an edge near a point, or on open ground with a
  * straight piece of new track from (x0, y0) to (x1, y1) under it (T-794). */

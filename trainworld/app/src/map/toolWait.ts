@@ -4,8 +4,9 @@
 // meanwhile waits its turn behind them (game/ui.ts `inClickOrder`), so each click goes with the tool it was made with.
 // Dropped if the spot has left the screen, on Escape or a load; after CLICK_WAIT_MAX_MS it is carried out on the map as it
 // is. The next
-// segment of a track run waits only for the answer to the one before (it starts from the node the worker answered), and
-// the line tool's stop clicks never count as edits out (T-4114). A click counts as out from the moment it is made, so
+// segment of a track run never waits (stage D: it starts from the end of the one before, which the worker reads as that
+// edit's end node), but for a click on one of the run's own segments still unanswered (`Tools.flying`), and the line
+// tool's stop clicks never count as edits out (T-4114). A click counts as out from the moment it is made, so
 // one whose tool awaits before it sends (a delete's question) holds the clicks after it too; a station sends at once and
 // its name after it (stage A).
 // notes/T-4214.md "Waiting clicks".

@@ -22,6 +22,8 @@ import { api, fares, freezeCheckpoint, hiddenLines, lineShapes, loanOp, newLineC
 function endArr(e: RouteEnd): number[] {
   if (e.kind === "free") return [0, 0, e.x, e.y, e.level];
   if (e.kind === "node") return [1, e.node, 0, 0, 0];
+  // (read as a node before any route reaches the model, clockRunEnds.ts)
+  if (e.kind === "endOf") throw new Error("T-4214: a run end not read as a node");
   return [2, e.edge, e.x, e.y, 0];
 }
 export function freeEnds(at: Extract<StationAt, { kind: "free" }>): Float64Array {

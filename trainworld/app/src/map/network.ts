@@ -631,6 +631,19 @@ export function strokesFromPieces(pieces: readonly { edge: number; pts: Float32A
   return b.build();
 }
 
+/** T-4214 stage E: pieces of the map the tools pick on drawn in place of the drawn edges they replace (map/clickMap.ts
+ * `openUnder`), with the look network.ts lays an edge with (built or blueprint, switched off, high speed, tram, busway, its
+ * tracks); `pts` are local units, x, y, z each. Its junction tapers and single-track splits wait for the network. */
+export function strokesFromRows(pieces: readonly { pts: Float32Array; row: { id: number; built: boolean; off?: boolean; hsr?: boolean; kind?: number; tracks: 1 | 2 } }[]): Strokes {
+  const b = new StrokeBuilder(false, MIN_SEG_M);
+  for (const { pts, row: e } of pieces) {
+    const flags = (e.built ? 0 : F_BLUEPRINT | (e.off ? F_OFF : 0)) | (e.hsr ? F_HSR : 0) | (e.kind ? F_TRAM : 0) | (e.kind === 4 ? F_BUSWAY : 0);
+    const lp = lanePoints(pts.slice(), e.kind === 4 ? 0 : e.tracks === 2 ? 1 : 0);
+    b.add(lp.lpts, TRACK, e.id, flags, false, 0, undefined, lp.lane);
+  }
+  return b.build();
+}
+
 /** Several edges' local polylines (x, y, z triples) as one stroke set, for the drag-selected
  * blueprint's highlight band (T-333). */
 export function strokesFromEdges(lines: Float32Array[]): Strokes {
@@ -1078,7 +1091,7 @@ function turnbackStrokes(s: ClockState, lines: NetCache["lines"], endCount: { ge
 /** T-3332: which side of a platform's axis (ax, ay), local units with y down, a one-track station's track
  * is on, from its trains' heading (rad, counter-clockwise from east) and the running side: 1 the + side
  * ((-ay, ax)), where trains along the axis keep right, -1 the other. */
-function oneSideAlong(heading: number, left: boolean, ax: number, ay: number): number {
+export function oneSideAlong(heading: number, left: boolean, ax: number, ay: number): number {
   const along = Math.cos(heading) * ax - Math.sin(heading) * ay >= 0;
   return along !== left ? 1 : -1;
 }

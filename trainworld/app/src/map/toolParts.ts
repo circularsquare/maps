@@ -75,6 +75,8 @@ export interface Placed {
   /** T-4210: the bare end of the segment this run placed last, on open ground, at this build level: a segment from here
    * onto open ground is the tangent route, laid on the page (map/ghostLocal.ts) */
   tangent?: { level: number };
+  /** T-4214 stage D: its height (m) as the segment placed last drew it, for a start whose node is not answered yet */
+  z?: number;
 }
 
 /** The longest piece of free-drawn track one click lays, straight-line km between its ends (T-1020:

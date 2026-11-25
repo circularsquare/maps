@@ -1855,12 +1855,15 @@ export class ClockClient {
         // T-4214 stage A: stations named after their edit: the tools' map takes their rows (the state's names follow)
         if (!(msg.patch && this.takePatch(msg.patch, this.orderOf(msg)))) this.patchLog.push({ order: this.orderOf(msg), p: null });
         break;
-      case "applied":
-        pendingWord(msg.seq, msg.word, this.orderOf(msg), !!msg.noNet);
-        // T-4214: the map the tools click on holds the edit now, so the clicks waiting for it go
-        if (msg.patch && this.takePatch(msg.patch, this.orderOf(msg))) pendingPatchIn(msg.seq);
+      case "applied": {
+        // T-4214: the map the tools click on holds the edit now, so the clicks waiting for it go; laid before the word is
+        // read, which may draw from that map (stage E, game/pending.ts `atWord`)
+        const laid = !!msg.patch && this.takePatch(msg.patch, this.orderOf(msg));
+        pendingWord(msg.seq, msg.word, this.orderOf(msg), !!msg.noNet, laid);
+        if (laid) pendingPatchIn(msg.seq);
         else if (!msg.noNet) this.patchLog.push({ order: this.orderOf(msg), p: null });
         break;
+      }
       case "edited": {
         // T-4145: what it showed ahead goes in the frame a refusal lands (before the notice, which waits for the promise)
         pendingAnswer(msg.seq, msg.ok, this.orderOf(msg));
