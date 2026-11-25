@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 74ece160-7d1e-4a7f-a351-88b3554e0a77, name maps-13 [f879aa], since 2026-11-25 07:18 UTC
-Updated: 2026-11-25 12:23 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-25 12:25 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
@@ -10,7 +10,7 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
 1. Edit speed, her main focus: ROOT CAUSE ONLY (DECISIONS T-4097, notes/repeats.md). Asia: later clicks 144-360 ms
    (T-4281 s2), network build 190 ms (T-4153 s7), page 27 ms placed / 45 removed (T-4150 s2, T-4284 s3, all landed).
    NYC "slower" was noise (T-4293: trees' lone samples are cold first edits; edit_bench now compares first with first).
-   editbench/baseline.json is 11-24's: take a fresh --baseline on master on a quiet machine. Next: T-4291 (rows and
+   Owed on a quiet machine: `node trainworld/tools/edit_bench.mjs --save asia,nyc --baseline` on master (11-24's has no stop rows). Next: T-4291 (rows and
    post: landed 755b1278f, Asia 144 to 59 ms; review21: 3 lows; modelpass (Opus,
    T-4299 + those lows) running; T-4300 next); T-4214 done (D-E landed 4a2ab2d37, review22 Sonnet on it); T-4294 (Edit stops clicks
    sending a question and no edit, P2). On her yes to a-2026-11-25-4: T-4272 rest (train work before each answer).

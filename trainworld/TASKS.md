@@ -214,10 +214,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4291: complexes are numbered by their first station in list order, which the network, line links and the page read, so any station edit renumbers over every station; with the names folded by them about 7 ms in Node on your Asia save.
   - Goal: A numbering that holds when another complex changes, and names folded again only there; under 1 ms on Asia.
   - Other: notes/T-4291.md "Left"
-- T-4294 [P2] {L:stops} Stop clicks in Edit stops that send no edit (taking, 2026-11-25, agent stopclick)
-  - Context: In 2 of 3 edit_bench New York runs on 11-25 (master 80cff39c2, pagestage3's tree), all six clicks on line 2's middle stop in Edit stops sent a question and no edit; the third run (800843cf0) and earlier runs took them. Cause not found: a missed press or a stop marker read as cut off.
-  - Goal: Cause found; a click on a line's own stop in Edit stops always takes it out or adds it, and edit_bench samples every stop click.
-  - Other: notes/T-4293.md "Stop clicks"
 - T-4272 [P1] {L:edit-speed} {waits:Anita} A click confirmed from what it touches
   - Need from Anita: A station on a running line's track can make headway lines need more trains. Buy them right after the confirm, cash dipping below zero if short? I'd say yes
   - Context: Stations and deletes on track no running line uses now skip the train work before their answer (16-72 ms of worker time on your Asia save; answers 95-207 ms in a run). On a running line's track they still wait 0.15-0.6 s for the trains they need.
@@ -475,6 +471,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-1200.md and notes/T-1211.md.
 
 ## Interface
+- T-4306 [P3] {L:small-fixes} Lines list rows that change line under the pointer
+  - Context: While trips are calculated the Lines tab sorts again by riders, and each row stays put while the line in it changes, so a click begun on one line can open its neighbour. edit_bench opened the Q for the 2 this way (776k and 789k riders/day).
+  - Goal: A click opens the line it began on: rows move with their lines when the list sorts again.
+  - Other: notes/T-4294.md "Could a player hit it?"
 - T-4246 [P3] {L:map-look} Tram wires look rough at corners in thickness mode
   - Context: You, 11-24: "trams and their two white wires look a little ugly in demand thickness mode, when they turn around corners. not sure if we could improve this easily."
   - Goal: Tram wires follow corners cleanly at every width.
