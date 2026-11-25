@@ -29,14 +29,15 @@
     {
       "id": "c001",
       "text": "fixed station upgrade hovers showing in English in other languages",
-      "edited": null,
+      "edited": "fixed hovers, help and menus showing in English in other languages",
       "hidden": false,
       "task": "T-4351",
       "by": "upgradetr",
       "at": "2026-11-25T19:24:46Z",
-      "rev": 1,
+      "rev": 2,
       "area": "other",
-      "fix": true
+      "fix": true,
+      "changed": "2026-11-25T19:46:21Z"
     }
   ]
 }

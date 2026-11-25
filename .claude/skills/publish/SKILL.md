@@ -51,7 +51,9 @@ changelog (T-3424):
 3. `changelog.py publish --version vX.Y.Z --dry-run`, then without `--dry-run`. It writes her wording, hidden items
    left out, sorted by area, groups' items under them. It refuses an item with no area: `changelog.py set <id>
    --area ...`.
-4. Translate the new `updates.vXYZ*` keys.
+4. Translate the new `updates.vXYZ*` keys, and every key `node trainworld/checks/i18n.mjs --stale` lists as missing
+   or stale in any language (docs/localization.md "Translating"); otherwise new interface text ships in English
+   (T-4354 found 117 keys a language).
 5. deploy.py. Its rclone can saturate her Wi-Fi upload and slow her game.
 
 ## Wiki pages for the website (T-3447)

@@ -7,16 +7,13 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
 ## Next
 1. 0.4.7 published 18:42 UTC (R2 version 2026-11-25, website 0497af6, export b89a791; bench marked published). Live
    smoke passed. Player reports since: none new on 0.4.7 (checked 19:15 UTC).
-2. Landed 11-25: T-4348 (year44: not the game's age; T-4350 filed), T-4351 (72678ae68, 8 upgrade keys in 12 languages;
-   T-4354, T-4355 filed), T-4337 (a1bd74dc2). Rebuild 8800 and smoke after buyfix and slopespeed land.
-3. Running (her week's max is 4): tr117a (Sonnet, tree tr117a, 6145, T-4354 stage 1: ja, zh-Hans,
-   zh-TW, ko; one pass plus own back-translation, my call); tr117b (tree tr117b, 6146): de, fr, es, pt; then tr, ru, ca, id; then the
-   publish skill's step 4 covers missing and stale keys.
-   buyfix done (tree buytrains, unlanded): review30's 1, 2, 4, 7 fixed (F1 by settle, not the review's fix), notice
-   "More trains bought for {price}." (her "text ack", 11-25). Running: review31 (Opus, read-only) on those fixes,
-   artifacts/trainworld/reviews/review31-buyfix.md; land T-4272 and T-4339 after it passes (review30's 5, 6 filed).
-   Running: slopespeed (Opus, tree slopespeed, port 6142, T-4349): her 11-25 report, a tight curve on a ramp shows the
-   ramp's higher limit; fix to the lowest of the two, figure diff on NYC if trains run differently.
+2. Landed 11-25: T-4348, T-4351, T-4337, T-4349 (labels only; T-4356, T-4357 filed), T-4354 stages 1-2 (ja, zh, ko,
+   de, fr, es, pt). 8800 rebuild at 22a3efd23 and smoke on master running (scratchpad snapbuild.log, smoke.log).
+3. Running: tr117c (Sonnet, tree tr117c, 6147, T-4354 stage 3: tr, ru, ca, id, glossary excepts for "boardings");
+   then I edit the publish skill's step 4 to translate missing and stale keys, and close T-4354 (one pass plus own
+   back-translation, my call). review31 (Opus, read-only) on buyfix (tree buytrains, unlanded: review30's 1, 2, 4, 7
+   fixed, notice "More trains bought for {price}.", her "text ack"). review31 says land (artifacts/trainworld/reviews/
+   review31-buyfix.md); buyfix resumed for its findings 1, 2, 4 (3 filed, T-4358); then land T-4272, T-4339, 8800.
 4. Then on the quiet machine `edit_bench.mjs --save asia,nyc --baseline` (T-4293). Edit-speed stages (T-4309, T-4314/T-4315, T-4153, T-4149 s3, T-4281), T-4220 s9, T-4230, T-3160 wait for
    her return. Up next: T-3160, T-3838.
 5. Standby: maps-3a is the next cycle's (notes/standby.txt); none left: ask her relay session for one. Gemini's quota

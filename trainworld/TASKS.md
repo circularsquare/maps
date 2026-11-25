@@ -226,6 +226,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4281: the stop clicks' rows (`rowsOwed`) skip working out what a station or delete on unused track owes, unlike other rows answering an edit. Only reachable when such a click gets no map patch between a stop click and its rows; a planned line's figures lag a few tasks.
   - Goal: Those rows work out owed services first, as `standAside`'s do; for whoever has T-4272's files.
   - Other: notes/T-4281.md
+- T-4358 [P3] {L:edit-speed} {after:T-4272} Trips dropped when an edit settles a click's services
+  - Context: From review31 of T-4272: a track segment, blueprint delete or rename that comes before a station click's services are worked out settles them, and `settle` clears `settled_running`, so those lines' trips aren't sent. Narrow.
+  - Goal: Trips are sent for those lines whichever edit settles them.
+  - Other: artifacts/trainworld/reviews/review31-buyfix.md
 - T-4352 [P3] {L:edit-speed} {after:T-4272} Trains vanish during fast clicking at top speed
   - Context: From review30 of T-4272: the game's new hour waits for a click's follow-up, so clicking nonstop for 3 s or more at the fastest clock holds the hour up to 5 s, over a game hour; trains vanish until its trips come.
   - Goal: The hour turns on time however fast the player clicks.
@@ -492,10 +496,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: You, 11-25: "lets just wait to see whether it still leaves players blocked yeah, i think that plus the alert should be sufficient". Draft done (Worker, cost, an email to OpenFreeMap first); used only when both addresses fail.
   - Goal: A blocked player's roads and water load through data.anita.garden/ofm; nobody else uses it.
   - Other: notes/T-4328.md
-- T-4354 [P2] {L:translations} 117 keys showing English in every language (taking, 2026-11-25, agent tr117a)
-  - Context: From T-4351: 109 keys are missing in each of the 12 languages (BRT, bookmarks, report save, the time help, install banner, memory warnings) and 8 are stale. A release translates only its update notes, so new keys pile up.
-  - Goal: Every key translated in all 12 languages, and the publish skill's translate step covers missing and stale keys.
-  - Other: notes/T-4351.md
 - T-4355 [P3] {L:translations} English written into the code without t()
   - Context: From T-4351: 174 English strings sit in app/src outside `t()` (game 98, map 31, workers 29, interface 13); some are only for diagnostics.
   - Goal: Every one a player can see goes through `t()` and is translated.
@@ -1075,10 +1075,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-4356 [P3] {L:track-speed} Ramp speed labels while dragging and in the blueprint box
   - Context: From T-4349: node drags, the blueprint box and an idle selected stretch show curve labels but no ramp labels. Missing, not wrong; the drawing tool shows both.
   - Goal: Every place that labels a curve's limit also labels a ramp that is the lowest limit.
-  - Other: notes/T-4349.md
-- T-4357 [P3] {L:track-speed} {waits:Anita} Track panel's Slowest curve can be a ramp
-  - Need from Anita: Rename the track panel's "Slowest curve" row to "Slowest limit", since the figure can be a ramp's? I'd rename it.
-  - Context: From T-4349: the row shows the piece's lowest limit, which is a ramp's when the ramp is slower than every curve.
   - Other: notes/T-4349.md
 - T-4345 [P3] {L:fares} A fee to use a station's park and ride
   - Context: You, 11-25: "i think there probably also are some people having issues with parking lots with non tram lines. but yeah we can just do this for now. can maybe file like charging a fee to use parking lot as a task, could be fun". A rail station's lot costs US$40k a day and earns nothing.
