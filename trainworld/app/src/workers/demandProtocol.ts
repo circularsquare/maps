@@ -190,11 +190,11 @@ export type ToDemand =
    * aux worker, which never opens one, gets empty bytes). `bare` (T-325, aux worker only): a zone
    * no station reaches, opened for its bubbles and city figures alone (no rail, so no solve needs
    * it); a later `open` of the same pack without `bare` adds it to the solves as well. `drives`
-   * (T-279): the routed drives (market-drives.bin), with the rows. `first` (T-1533): the zone in
+   * (T-279): the routed drives (market-drives.bin), with the rows, and `corridors` (T-4199) the corridor file. `first` (T-1533): the zone in
    * view's pack, opened ahead of the opens waiting and on its own. A pack's `level` (T-1223, `lod::COARSE` 1;
    * fine when absent): a solving worker holding the zone at another level opens it again at this one
    * (once the solve in hand ends, if it covers the zone); the aux worker opens every zone fine */
-  | { kind: "open"; packs: { id: CityId; header: string; bin: ArrayBuffer; level?: number }[]; intercity?: MarketPack[]; rows?: MarketRows; drives?: Uint8Array; bare?: boolean; first?: boolean }
+  | { kind: "open"; packs: { id: CityId; header: string; bin: ArrayBuffer; level?: number }[]; intercity?: MarketPack[]; rows?: MarketRows; drives?: Uint8Array; corridors?: Uint8Array; bare?: boolean; first?: boolean }
   /** T-301: close city packs and zones' market packs (`markets`) no longer needed, freeing their
    * WASM memory for the next pack; `bare`: the aux worker's bare copies. A pack the solve in hand
    * covers closes when that solve ends, unless an `open` of it comes first. Answered by `closed`. */

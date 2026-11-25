@@ -155,7 +155,7 @@ impl IntercityApi {
         self.per(q).map_or(vec![], |s| {
             let m = &self.m;
             let mut out: Vec<f64> = m.each_corridor().flat_map(|(a, b)| [a as f64, b as f64, 0., 0.]).collect();
-            for (c, t) in m.cw.with_trips() {
+            for (c, t) in m.table().with_trips() {
                 out[4 * c + 2] = t * SHARES[q] as f64;
             }
             for (k, c) in m.open_corridors() {
@@ -232,7 +232,7 @@ impl IntercityApi {
         let np = self.m.places.len();
         let commute: &[(u32, f64)] = if cw.commuters > 0. { &cw.commute } else { &[] };
         // (a: the first place of the corridor last given)
-        let (mut trips, mut kc, mut a) = (cw.with_trips().peekable(), 0, 0);
+        let (mut trips, mut kc, mut a) = (self.m.table().with_trips().peekable(), 0, 0);
         std::iter::from_fn(move || loop {
             let ti = trips.peek().map_or(usize::MAX, |e| e.0);
             let ci = commute.get(kc).map_or(usize::MAX, |e| e.0 as usize);
@@ -258,6 +258,7 @@ impl IntercityApi {
         let np = self.m.places.len();
         let commute: &[(u32, f64)] = if cw.commuters > 0. { &cw.commute } else { &[] };
         // (a: the first place of the corridor last given)
+        let table = self.m.table();
         let (mut kc, mut kt, mut a) = (0usize, 0usize, 0usize);
         let mut row = |i: usize, t: f64, c: f64| {
             if t > 0. || c > 0. {
@@ -267,12 +268,12 @@ impl IntercityApi {
                 f(i, a, a + i - tri(np, a, a), t, c);
             }
         };
-        for (k, &w) in cw.has_trips.iter().enumerate() {
+        for (k, &w) in table.has_trips.iter().enumerate() {
             let mut w = w;
             while w != 0 {
                 let i = 64 * k + w.trailing_zeros() as usize;
                 w &= w - 1;
-                let t = cw.trips[kt] as f64;
+                let t = table.trips[kt] as f64;
                 kt += 1;
                 while kc < commute.len() && (commute[kc].0 as usize) < i {
                     row(commute[kc].0 as usize, 0., commute[kc].1);

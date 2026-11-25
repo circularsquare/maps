@@ -25,7 +25,9 @@ city's everyday purposes (timings: notes/demand-measurements.md). A zone's **mar
 solving workers once the zone is reached, a built station lies within 30 km of its box (T-396's
 rule, per zone), or the zone is selected (a zone selection, or a bubble selection in it); never for
 viewing alone (T-801: tens of MB in every solving worker); before that no solve waits for it or covers it,
-and a solve sent without a market pack open since is sent again. The workers compose the market
+and a solve sent without a market pack open since is sent again. While a game load's network is on its way no solve
+is sent (T-4199): the network in hand is the last game's, and a solve of it with the packs opened ahead ended the
+load's focus pool at its final; the load's own solve covers them. The workers compose the market
 from the packs they hold (`MarketPacks.market`) whenever packs open or close: since T-1204 a
 composition is 15-90 ms natively for one to seven packs (the first a worker composes 0.3 s more),
 and the page still sends the

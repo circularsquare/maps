@@ -29,12 +29,24 @@ pair** (T-1204, T-1558): a composition keeps the rules of the pairs between two 
 table of the open places by the open places); any other pair's is worked out when asked, as
 `corridor_modes`, the trip explorer and the rows' near lists do. The corridors' figures that depend on the places alone (each
 place pair's longer trips and commutes a day, kept for the pairs with any, the departures to places with no zone, the totals:
-`Corridors`) are worked out at a worker's first composition, about 0.3 s natively, and kept by
-`MarketPacks` for every later one, since with the world's rows they are the same whichever packs
-are open; the market's parts and compositions share them (`corridors_id`). The book the worker sums the
-corridor table up into is made once per composition (T-1354), since its shares flying and on two lands are
-the open packs' (a pair of open places from the table, `apart` from the open zones): so it depends on the
-packs open, never on the order they arrived in (about 3.6 s a book on the real save, 8,523 places). The table is the corridors with longer trips or commutes (`table_rows`, 8.5M
+`Corridors`) are the same whichever packs are open, given the world's rows. A worker works them out at its first composition (about 1.2 s natively, 3 s in a
+worker), unless the page sends it the market's corridor file, `app/src/game/market-corridors.bin` (T-4199:
+`tools/corridor_file.mjs` works them and the book below out once in the demand WASM). The file is keyed by the
+world as `marketWorld` gives it (rows, rule, frame, the fare weights and income groups it adds), the drives and the
+sim's sources, and a load also works out 1,024 corridors' trips and modes against it; on any difference it is not
+used. Each demand WASM build makes the file (app/package.json `wasm:demand`, `tools/snap_wasm.py`), as do `freeze.py
+build` for the freeze's rows and drives and a world run's join (`@corridors`); it is gitignored. `marketWorld`'s fare
+weights and income groups use JS `**`, whose last bits differ between engines, so they are `game/fareBits.json`'s,
+worked out in Chrome (`tools/fare_bits.mjs`), wherever that is within rounding of the engine's own: every engine
+gives the same world, and one file serves them all. `MarketPacks` keeps them for every
+later composition; the market's parts and compositions share them (`corridors_id`). Each corridor's trips are
+worked out alone when a view asks for a few rows (`Market::trips_alone`, the table's own sum to the bit), and the
+whole table (48 MB) only for a caller wanting every corridor. The book the worker sums the corridor table up into
+is the composition's (T-1354), since its shares flying and on two lands are the open packs' (a pair of open places
+from the table, `apart` from the open zones). It is the book with no zone on two lands (the file's, made with no zone
+open, or a walk of the table, about 3.6 s on the real save, 8,523 places), then each row whose modes the open zones on
+two lands change (`apart`'s corridors, 22 on the New York save) moved to its own plane share, corridor
+ascending: the same bits either way. It depends on the packs open, never on the order they arrived in. The table is the corridors with longer trips or commutes (`table_rows`, 8.5M
 of the world's place pairs on 2026-11-18), never made whole (T-2136): `table_summary` walks it once for the
 page's book, `place_rows` gives a few places' rows when the page asks, `rows_at` the rows with rail; its
 split by plane and car included, worked out for those rows alone: what a pair's two ways share (the car,

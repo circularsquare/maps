@@ -262,9 +262,19 @@ def step_main(argv):
     if not name.startswith("@"):
         return run_main(name, args)
     out = {"@read_extract": read_extract, "@groups": groups_of,
-           "@preview": preview}[name](args)
+           "@preview": preview, "@corridors": corridors_file}[name](args)
     if out is not None:
         print("RESULT " + json.dumps(out))
+
+
+def corridors_file(args):
+    """T-4199: the market's corridor file (tools/corridor_file.mjs) over the run root's rows, drives and demand WASM."""
+    root = Path(os.environ.get("TW_RUN_ROOT") or REAL)
+    flags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
+    r = subprocess.run(["node", str(root / "tools/corridor_file.mjs"), "--strict", *args], cwd=str(root.parent),
+                       stdout=sys.stdout, stderr=subprocess.STDOUT, creationflags=flags)
+    if r.returncode:
+        raise SystemExit(r.returncode)
 
 
 def step_help(name):
@@ -272,7 +282,7 @@ def step_help(name):
     or running it. Whatever flags the step parses itself, it never gets to see the help flag."""
     print(f"world_run.py step {name} [args...]")
     if name.startswith("@"):
-        print("a runner piece (@read_extract, @groups, @preview); see its function in world_run.py")
+        print("a runner piece (@read_extract, @groups, @preview, @corridors); see its function in world_run.py")
         return
     path = next((p for d in (HERE, REAL / "checks") for p in [d / (name + ".py")] if p.exists()), None)
     if path is None:
@@ -1515,6 +1525,11 @@ class Run:
         if not ok:
             self.report.setdefault("problems", []).append(
                 f"routed drives not rebuilt, so the new zones take the drive rule (again: world_run.py step market_drives build): {str(tail)[-300:]}")
+        # T-4199: the market's corridor file for the rows and drives now (a stale one only makes loads slower)
+        ok, _, tail = self.step("@corridors", [], f"{L}.corridors.log", threads=1, limit=600)
+        if not ok:
+            self.report.setdefault("problems", []).append(
+                f"market corridor file not made, so loads work the corridors out (again: world_run.py step @corridors): {str(tail)[-300:]}")
 
     def market_only(self):
         """T-2777: a failed join's market and trips step again, on its own. The ids are the join's own

@@ -20,7 +20,8 @@ refuses while a run is live, unless --force. The newest KEEP freezes stay. A reg
 missing a file stops the freeze (it would not be a good state).
 
 `build`: in the tree (default maps/.tw-snap, the snapshot of a commit) the freeze's four game files
-are laid over the tree's for the build only (`git checkout` puts the tree's back), then Vite builds
+are laid over the tree's for the build only (`git checkout` puts the tree's back), and the market's
+corridor file made for them and the freeze's drives (T-4199, the tree's own put back after), then Vite builds
 with TW_PACKS=<freeze>/packs into --out (default artifacts/trainworld/publish/<stamp>/dist), which
 gets `frozen.json` naming the freeze and the tree; `tools/deploy.py --dist <out>` publishes that.
 The tree's wasm must be built already (its last `npm run build` made it).
@@ -178,14 +179,24 @@ def build(path, tree, out):
         sys.exit(f"{app} lacks node_modules or its wasm: run its `npm run build` once first")
     commit = subprocess.run(["git", "-C", str(tree), "rev-parse", "--short", "HEAD"], capture_output=True, text=True).stdout.strip()
     t0 = time.time()
+    corridors = app / "src/game/market-corridors.bin"
+    own = corridors.read_bytes() if corridors.is_file() else None
     try:
         for g in GAME:
             if (path / "game" / g).exists():
                 shutil.copyfile(path / "game" / g, app / "src/game" / g)
+        # T-4199: the market's corridor file for the freeze's rows and drives (the tree's own put back after)
+        subprocess.run(["node", str(tree / "trainworld/tools/corridor_file.mjs")], cwd=str(app),
+                       env=dict(os.environ, TW_MARKET_DRIVES=str(path / "packs/market-drives.bin")),
+                       creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
         p = subprocess.run(["node", str(vite), "build", "--outDir", str(out), "--emptyOutDir"], cwd=str(app),
                            env=dict(os.environ, TW_PACKS=str(path / "packs")))
     finally:
         subprocess.run(["git", "-C", str(tree), "checkout", "--", *rels], check=True)
+        if own is None:
+            corridors.unlink(missing_ok=True)
+        else:
+            corridors.write_bytes(own)
     if p.returncode:
         sys.exit(f"vite build failed ({p.returncode})")
     bad = check(path)

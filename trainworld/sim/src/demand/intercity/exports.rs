@@ -624,28 +624,79 @@ impl IntercityApi {
     }
     /// T-2136: the table (`corridor_rows`) summed up for the page, which keeps no table: its row
     /// count, its key (FNV-1a over each row's corridor and the bits of its trips, commute legs and
-    /// shares, as u32 words, then each place's own-row share on two lands that is not 0), then three numbers per place below `limit` over the rows between it
+    /// shares with no zone on two lands, as u32 words, then each row with zones on two lands' corridor and
+    /// shares, then each place's own-row share on two lands that is not 0), then three numbers per place below `limit` over the rows between it
     /// and another place below `limit` (game/demand.ts `CorridorBook`): the longer trips, the commute
     /// legs, and the longer trips times the share flying in steps of 1 / 65534 (game/corridorShares.ts
-    /// `shareCode`), each added in row order as the page did; then (T-3509) two numbers per place
+    /// `shareCode`), each added in row order (T-4199: with no zone on two lands, then each row with zones on
+    /// two lands moved to its share, corridor ascending); then (T-3509) two numbers per place
     /// below `limit` from its own row (between its own zones): the longer trips and the commute legs;
     /// then (T-2216) one per place below `limit`: the share of its own row's trips that are between
     /// zones on two lands, which have no car (`Market::apart`), 0 for most places.
     /// Nothing the size of the table is made.
     pub fn table_summary(&self, limit: u32) -> Vec<f64> {
         let (m, lim) = (&self.m, limit as usize);
-        let directs = Directs::of(&m.places);
         let mut out = vec![0f64; 2 + 6 * lim];
         for (&p, &f) in &m.apart().own {
             if (p as usize) < lim {
                 out[2 + 5 * lim + p as usize] = f as f64;
             }
         }
+        // T-4199: the book as if no zone were on two lands, from the market's corridor file (made with no zone
+        // open) or worked out, then the rows whose modes this composition's zones on two lands change, moved to
+        // their modes: so the book is the same bits by either path
+        let (n, mut h) = match &m.cw.book {
+            Some(b) if lim == m.places.len() => {
+                out[2..2 + 5 * lim].copy_from_slice(&b.sums);
+                (b.n, b.key)
+            }
+            _ => self.book_rows(lim, &mut out),
+        };
+        let word = |h: &mut u32, w: u32| *h = (*h ^ w).wrapping_mul(0x01000193);
+        let mut cross: Vec<u32> = m.apart().cross.keys().copied().collect();
+        cross.sort_unstable();
+        let directs = Directs::of(&m.places);
+        for c in cross {
+            let (a, b) = m.corridor_ends(c as usize);
+            let t = m.trips_at(c as usize, a, b);
+            if !(t > 0. || m.cw.commute_of(c as usize).1) {
+                continue;
+            }
+            let (was, now) = (m.corridor_mode_with(&directs, a, b, false), m.corridor_mode(&directs, a, b));
+            word(&mut h, c);
+            word(&mut h, now[0].to_bits());
+            word(&mut h, now[1].to_bits());
+            if a < lim && b < lim && a != b {
+                let d = t * share_step(now[0]) - t * share_step(was[0]);
+                for p in [a, b] {
+                    out[2 + 3 * p + 2] += d;
+                }
+            }
+        }
+        // (the own rows' shares on two lands are the composition's as the shares are, and no row's
+        // shares carry them, so the key holds them too: T-1354)
+        for p in 0..lim {
+            let v = out[2 + 5 * lim + p];
+            if v != 0. {
+                word(&mut h, p as u32);
+                word(&mut h, (v as f32).to_bits());
+            }
+        }
+        out[0] = n as f64;
+        out[1] = h as f64;
+        out
+    }
+    /// `table_summary`'s pass over the rows, every row's modes as with no zone on two lands: its row count
+    /// and its key over them, and its sums into `out` (laid out as `table_summary`'s, the own rows' shares on
+    /// two lands left as they are).
+    pub(super) fn book_rows(&self, lim: usize, out: &mut [f64]) -> (usize, u32) {
+        let m = &self.m;
+        let directs = Directs::of(&m.places);
         let (mut h, mut n) = (0x811c9dc5u32, 0usize);
         let word = |h: &mut u32, w: u32| *h = (*h ^ w).wrapping_mul(0x01000193);
         self.each_table_row(|i, a, b, t, c| {
             n += 1;
-            let [air, car] = m.corridor_mode(&directs, a, b);
+            let [air, car] = m.corridor_mode_with(&directs, a, b, false);
             word(&mut h, i as u32);
             for x in [t, c] {
                 let v = x.to_bits();
@@ -670,18 +721,7 @@ impl IntercityApi {
                 s[2] += f;
             }
         });
-        // (the own rows' shares on two lands are the composition's as the shares are, and no row's
-        // shares carry them, so the key holds them too: T-1354)
-        for p in 0..lim {
-            let v = out[2 + 5 * lim + p];
-            if v != 0. {
-                word(&mut h, p as u32);
-                word(&mut h, (v as f32).to_bits());
-            }
-        }
-        out[0] = n as f64;
-        out[1] = h as f64;
-        out
+        (n, h)
     }
     /// T-2136: the table rows touching any of places `ps`, corridor ascending, seven numbers each:
     /// the corridor, its two places, and its figures as the `corridor_rows_*` columns give them
@@ -722,9 +762,8 @@ impl IntercityApi {
         out
     }
     fn row_of(&self, directs: &Directs, c: usize, a: usize, b: usize) -> Option<[f64; 6]> {
-        let cw = &*self.m.cw;
-        let t = cw.trips_of(c);
-        let (cm, has_c) = cw.commute_of(c);
+        let t = self.m.trips_at(c, a, b);
+        let (cm, has_c) = self.m.cw.commute_of(c);
         if !(t > 0. || has_c) {
             return None;
         }
@@ -739,7 +778,7 @@ impl IntercityApi {
     /// T-1008: per corridor, its longer trips a day; period `q`'s are these times `corridor_shares(q)[0]`.
     pub fn corridor_trips(&self) -> Vec<f64> {
         let mut out = vec![0f64; self.m.n_corridors()];
-        for (c, t) in self.m.cw.with_trips() {
+        for (c, t) in self.m.table().with_trips() {
             out[c] = t;
         }
         out

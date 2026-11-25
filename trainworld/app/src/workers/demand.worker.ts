@@ -57,8 +57,9 @@ const everyday = new Map<CityId, EverydayApi>();
 let marketPacks: MarketPacks | null = null;
 /** T-776: the world market's rows until `marketPacks` is made from them */
 let marketRows: MarketRows | null = null;
-/** T-279: the routed drives that came with them */
+/** T-279: the routed drives that came with them, and (T-4199) the corridor file */
 let marketDrives: Uint8Array | null = null;
+let corridorFile: Uint8Array | null = null;
 let intercity: IntercityApi | null = null;
 /** T-409: the market's parts by `Cluster.marketKey`, one per cluster the market reaches, each on its
  * cluster's network alone (`IntercityApi.beside`). A part keeps the composition it was made from
@@ -1015,7 +1016,8 @@ function openPacks(packs: { id: CityId; header: string; bin: ArrayBuffer; level?
         if (isPanic(err)) throw err;
         console.warn("market drives:", err); // the rule's drives everywhere
       }
-      marketRows = marketDrives = null;
+      if (corridorFile) marketPacks.set_corridors(corridorFile);
+      marketRows = marketDrives = corridorFile = null;
     }
     const have = new Set(marketPacks.places());
     const added: CityId[] = [];
@@ -1168,7 +1170,14 @@ function recompose() {
   const same = key ? [...marketParts.values()].find((p) => composedOf.get(p) === key) : undefined;
   intercity = same ?? (key ? marketPacks!.market() : null);
   if (intercity && !same) composedOf.set(intercity, key);
+  // T-4199: a corridor file that was given and not used: the corridors were worked out here, slower
+  const cs = marketPacks?.corridors_state() ?? 0;
+  if (cs > 1 && !corridorsWarned) {
+    corridorsWarned = true;
+    console.warn(`market corridor file not used (${["", "", "other rows or drives", "another sim build", "unreadable", "samples differ"][cs]}): tools/corridor_file.mjs makes it again`); // i18n-ignore
+  }
 }
+let corridorsWarned = false;
 /** T-1198: the market packs (places, in order) each composition and its parts were made of */
 const composedOf = new WeakMap<IntercityApi, string>();
 
@@ -1271,7 +1280,7 @@ function openQueued(epoch: number): Promise<void> {
     if (!started || dead) return;
     try {
       const t0 = performance.now();
-      for (const m of batch) if (m.rows && !marketPacks) [marketRows, marketDrives] = [m.rows, m.drives ?? null];
+      for (const m of batch) if (m.rows && !marketPacks) [marketRows, marketDrives, corridorFile] = [m.rows, m.drives ?? null, m.corridors ?? null];
       const packs = batch.flatMap((m) => m.packs), market = batch.flatMap((m) => m.intercity ?? []);
       const rejected: OpenRejected[] = [];
       const cityInfo = openPacks(packs, market, isBare, rejected);

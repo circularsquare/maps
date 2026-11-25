@@ -205,7 +205,9 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
   moved over the rows it wrote: each place's searches are cached in `data/work/market_drives/sources/`, so only new
   places and their partners within 400 km are routed (2 s for New Zealand's 6 zones, about 5 minutes for 540 places).
   A failure is a report problem that parks nothing and does not stop the freeze: the old table stays, and a zone missing
-  from it takes the drive rule. A new zone needs no terrain step: track is priced from the world's terrain blocks
+  from it takes the drive rule. Then `@corridors` (T-4199, `tools/corridor_file.mjs`; log `join.corridors.log`, about
+  10 s) makes the market's corridor file for the rows and drives now; a failure is a report problem, and loads work the
+  corridors out themselves until a demand WASM build makes it. A new zone needs no terrain step: track is priced from the world's terrain blocks
   (`data/terrain-world-v2/`, T-2901), which hold all land. Then a check that every file `vite.config.ts` copies into a
   production build exists for each shipped pack (it copies the registry's packs, so nothing more
   needs listing). Last, `zone_outlines.py` rewrites `data/packs/outlines.json`, the coarse outline of

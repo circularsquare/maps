@@ -207,7 +207,7 @@ fn set_lands_off(off: bool) {
 /// `world_packs`, place 0's second zone (10 km east of its first) on an island of its own: a part
 /// not reaching the grid's edge on the main part's world landmass, as Salamis. Its people commute
 /// to place 1 and run errands to place 0's first zone (a third walking).
-fn zone_island_packs() -> Vec<String> {
+pub(super) fn zone_island_packs() -> Vec<String> {
     let mut packs = world_packs();
     let mut v: serde_json::Value = serde_json::from_str(&packs[0]).unwrap();
     let add = [

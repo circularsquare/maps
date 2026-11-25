@@ -5,10 +5,10 @@
   "scripts": {
     "wasm": "npm run wasm:track && npm run wasm:demand",
     "wasm:track": "wasm-pack build ../sim --target web --profile wasm --out-dir ../app/src/wasm/track --out-name sim",
-    "wasm:demand": "wasm-pack build ../sim --target web --profile wasm --out-dir ../app/src/wasm/demand --out-name sim -- --no-default-features --features demand",
+    "wasm:demand": "wasm-pack build ../sim --target web --profile wasm --out-dir ../app/src/wasm/demand --out-name sim -- --no-default-features --features demand && node ../tools/corridor_file.mjs",
     "wasm:agent": "npm run wasm:agent:track && npm run wasm:agent:demand",
     "wasm:agent:track": "wasm-pack build ../sim --target web --profile agent --out-dir ../app/src/wasm/track --out-name sim",
-    "wasm:agent:demand": "wasm-pack build ../sim --target web --profile agent --out-dir ../app/src/wasm/demand --out-name sim -- --no-default-features --features demand",
+    "wasm:agent:demand": "wasm-pack build ../sim --target web --profile agent --out-dir ../app/src/wasm/demand --out-name sim -- --no-default-features --features demand && node ../tools/corridor_file.mjs",
     "dev": "vite",
     "build": "npm run wasm && tsc --noEmit && vite build",
     "check": "tsc --noEmit"

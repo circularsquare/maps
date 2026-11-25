@@ -83,12 +83,13 @@ pub(super) fn compose(c: ComposeIn) -> Result<Built, String> {
 }
 
 pub(super) fn build(b: Built) -> Result<Market, String> {
-    build_for(b, None, None)
+    build_for(b, None, None, None)
 }
 /// `build`, with the near totals added up only for pairs of places with an end in `near_for`
 /// (indexed by place), and only those places' commutes (T-929: the rows of those places alone).
-/// `reuse`: the corridors' figures of an earlier composition of the same world with rows.
-pub(super) fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>) -> Result<Market, String> {
+/// `reuse`: the corridors' figures of an earlier composition of the same world with rows; else `file`'s
+/// (T-4199: the market's corridor file) where its samples agree.
+pub(super) fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Corridors>>, file: Option<&CorridorFile>) -> Result<Market, String> {
     let Built { mut zones, rule, out, places: np, rows, world, closed, legacy_commutes, drives, attractions } = b;
     let out_frame = match &out {
         Some(f) => Some(make_frame(f)?),
@@ -505,7 +506,7 @@ pub(super) fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Co
         e_home: (vec![], vec![]),
         e_act: (vec![], vec![]),
         e_base: vec![],
-        cw: Rc::new(Corridors { id: 0, has_trips: vec![], trips: vec![], commute: vec![], commuters: 0., leaving_by: vec![], daily: 0., leaving: 0., place_pairs: 0, rows: Default::default(), rank: Default::default() }),
+        cw: Rc::new(Corridors { id: 0, table: Default::default(), book: None, prep: Default::default(), commute: vec![], commuters: 0., leaving_by: vec![], daily: 0., leaving: 0., place_pairs: 0, rows: Default::default() }),
     };
     for (c, z) in m.zones.iter().enumerate() {
         m.comp_of_gid[z.gid as usize] = c as u32;
@@ -646,7 +647,10 @@ pub(super) fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Co
     // ---- the corridors' figures: with rows the same for every composition, so kept (T-1204)
     m.cw = match reuse {
         Some(c) if from_rows => c,
-        _ => Rc::new(m.corridors_of(from_rows.then_some(&commute_rows[..]))),
+        _ => match file.filter(|_| from_rows).and_then(|f| m.corridors_from(f, &commute_rows)) {
+            Some(c) => Rc::new(c),
+            None => Rc::new(m.corridors_of(from_rows.then_some(&commute_rows[..]))),
+        },
     };
     // ---- each 600 m square's site
     let site_key = SiteKeys::of((0..m.n_sites()).map(|s| m.site_key_of(s)));
@@ -664,18 +668,21 @@ pub struct MarketPacks {
     /// the others (with rows they depend on the places alone)
     pub(super) corridors: RefCell<Option<Rc<Corridors>>>,
     pub(super) drives: Rc<Drives>,
+    /// T-4199: the market's corridor file, and the keys it is checked against
+    pub(super) held: FileHeld,
 }
 #[wasm_bindgen]
 impl MarketPacks {
     /// `world`: the registry's market frame, rule, place count and rows.
     #[wasm_bindgen(constructor)]
     pub fn new(world: &str) -> Result<MarketPacks, String> {
+        let key = world_key(world);
         let world: WorldIn = serde_json::from_str(world).map_err(|e| e.to_string())?;
         if !world.rule.ok() {
             return Err("invalid market rule".into());
         }
         make_frame(&world.frame)?;
-        Ok(MarketPacks { world, zones: BTreeMap::new(), corridors: RefCell::new(None), drives: Rc::default() })
+        Ok(MarketPacks { world, zones: BTreeMap::new(), corridors: RefCell::new(None), drives: Rc::default(), held: FileHeld { world: key, ..FileHeld::default() } })
     }
     /// T-279: the routed drives between places (`market-drives.bin`, pipeline/market_drives.py),
     /// for the compositions after; the pairs placed. Without them every drive is the rule's.
@@ -685,6 +692,7 @@ impl MarketPacks {
         let d = Drives::decode(bytes, &place_of, self.world.places)?;
         let n = d.len() as u32;
         self.drives = Rc::new(d);
+        self.held.drives = hash64(bytes);
         Ok(n)
     }
     /// Add (or replace) a place's pack; its place.
@@ -713,7 +721,16 @@ impl MarketPacks {
         let w = self.world.clone();
         let rows = w.rows.is_some();
         let b = Built { zones: self.zones.values().cloned().collect(), rule: w.rule, out: Some(w.frame), places: w.places, rows: w.rows, world: true, closed: false, legacy_commutes: vec![], drives: self.drives.clone(), attractions: w.attractions };
-        let m = build_for(b, None, self.corridors.borrow().clone())?;
+        let reuse = self.corridors.borrow().clone();
+        let file = if reuse.is_none() && rows { self.held.usable(true) } else { None };
+        let m = build_for(b, None, reuse, file.as_deref())?;
+        if file.is_some() {
+            if m.cw.book.is_some() {
+                self.held.state.set(FILE_USED);
+            } else {
+                self.held.refuse(FILE_DIFFERS);
+            }
+        }
         if rows {
             *self.corridors.borrow_mut() = Some(m.cw.clone());
         }
@@ -748,7 +765,7 @@ pub fn world_rows_for(header: &str, only: Option<&[bool]>) -> Result<Vec<Row>, S
     if only.is_some_and(|f| f.len() != b.places) {
         return Err("rows wanted for a place list of another length".into());
     }
-    let m = build_for(b, only, None)?;
+    let m = build_for(b, only, None, None)?;
     if m.from_rows {
         return Err("the composition carries rows already".into());
     }

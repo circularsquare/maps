@@ -2,7 +2,7 @@
 
     python trainworld/tools/snap_wasm.py <track target dir> <demand target dir>     run from trainworld/app
 
-Same wasm-pack commands as app/package.json (wasm:track, wasm:demand). Each module's compile is one rustc process on
+Same wasm-pack commands as app/package.json (wasm:track, wasm:demand), then the market's corridor file (T-4199) as wasm:demand makes it. Each module's compile is one rustc process on
 one core (one codegen unit, LTO), and the two share a Cargo target dir only by taking turns, so each gets its own.
 A demand target dir that does not exist yet starts as a copy of the track one (its dependencies are built already).
 CARGO_BUILD_JOBS stays 2 each. Output is printed per module when both are done; exit 1 if either failed.
@@ -51,7 +51,9 @@ def main():
         print(f"===== wasm {name}: exit {rc} =====")
         print(log.read())
         ok = ok and rc == 0
-    print(f"wasm built in {time.time() - t0:.0f} s ({'ok' if ok else 'FAILED'})")
+    print(f"wasm built in {time.time() - t0:.0f} s ({'ok' if ok else 'FAILED'})", flush=True)
+    if ok:  # T-4199: the market's corridor file, as wasm:demand makes it (a failure only warns)
+        subprocess.run(["node", "../tools/corridor_file.mjs"], creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
     sys.exit(0 if ok else 1)
 
 

@@ -1,6 +1,8 @@
 node_modules/
 sim/target/
 app/src/wasm/
+# T-4199: made by tools/corridor_file.mjs with each demand WASM build
+app/src/game/market-corridors.bin
 app/dist/
 data/raw/
 data/packs/

@@ -1032,25 +1032,34 @@ struct Rules {
 struct Corridors {
     /// distinct for each set worked out (`IntercityApi::corridors_id`)
     id: u32,
-    /// the corridors with longer trips, a bit each of the world's corridors (T-2496: 2 MB where their
-    /// indices took 31), and their trips a day in corridor order, as f32 (T-2496: 31 MB less, the
-    /// figures within 1e-7 of the f64 sum; T-2122 made them dense, 8 bytes for each of the world's
-    /// 12.7M corridors before)
-    has_trips: Vec<u64>,
-    trips: Vec<f32>,
     commute: Vec<(u32, f64)>,
     commuters: f64,
     leaving_by: Vec<f64>,
     daily: f64,
     leaving: f64,
     place_pairs: usize,
+    /// each corridor's longer trips, worked out with the totals, or (T-4199: the totals from the market's
+    /// corridor file) when first asked for all of them (`Market::table`)
+    table: std::cell::OnceCell<Table>,
+    /// T-4199: the corridor book (`IntercityApi::table_summary`) as the corridor file holds it
+    book: Option<Book>,
+    /// T-4199: what one corridor's trips are worked out from, alone (`Market::trips_alone`)
+    prep: std::cell::OnceCell<TripPrep>,
     /// T-1849: how many corridors have trips or commutes (`IntercityApi::table_rows`), once counted
     rows: std::cell::OnceCell<usize>,
+}
+/// Each corridor's longer trips a day both ways: the corridors with any, a bit each of the world's
+/// corridors (T-2496: 2 MB where their indices took 31), and their trips in corridor order, as f32
+/// (T-2496: 31 MB less, the figures within 1e-7 of the f64 sum; T-2122 made them dense, 8 bytes for
+/// each of the world's 12.7M corridors before).
+struct Table {
+    has_trips: Vec<u64>,
+    trips: Vec<f32>,
     /// T-2136: per word of `has_trips`, the corridors with trips before it (`trips_of`), made when first asked
     rank: std::cell::OnceCell<Vec<u32>>,
 }
 
-impl Corridors {
+impl Table {
     /// T-2136: corridor `c`'s longer trips a day as `with_trips` gives them, 0 without.
     fn trips_of(&self, c: usize) -> f64 {
         let (k, b) = (c / 64, c % 64);
@@ -1064,17 +1073,6 @@ impl Corridors {
         });
         self.trips[(rank[k] + (w & ((1u64 << b) - 1)).count_ones()) as usize] as f64
     }
-    /// T-2136: corridor `c`'s commute legs a day as `corridor_rows_commutes` gives them (0 without,
-    /// or with no commuters), and whether they make it a table row (`IntercityApi::table_rows`).
-    fn commute_of(&self, c: usize) -> (f64, bool) {
-        if self.commuters <= 0. {
-            return (0., false);
-        }
-        match self.commute.binary_search_by_key(&(c as u32), |e| e.0) {
-            Ok(k) => (self.commute[k].1, self.commute[k].1 > 0.),
-            Err(_) => (0., false),
-        }
-    }
     /// The corridors with longer trips, ascending, and their trips a day.
     fn with_trips(&self) -> impl Iterator<Item = (usize, f64)> + '_ {
         self.has_trips.iter().enumerate().flat_map(|(k, &w)| {
@@ -1087,6 +1085,19 @@ impl Corridors {
                 })
             })
         }).zip(self.trips.iter().map(|&t| t as f64))
+    }
+}
+impl Corridors {
+    /// T-2136: corridor `c`'s commute legs a day as `corridor_rows_commutes` gives them (0 without,
+    /// or with no commuters), and whether they make it a table row (`IntercityApi::table_rows`).
+    fn commute_of(&self, c: usize) -> (f64, bool) {
+        if self.commuters <= 0. {
+            return (0., false);
+        }
+        match self.commute.binary_search_by_key(&(c as u32), |e| e.0) {
+            Ok(k) => (self.commute[k].1, self.commute[k].1 > 0.),
+            Err(_) => (0., false),
+        }
     }
 }
 
@@ -1166,6 +1177,8 @@ mod setup;
 mod exports;
 mod mem;
 mod selection;
+mod corridor_file;
+use corridor_file::*;
 use logsum::*;
 pub use costs::*;
 pub use build::*;
@@ -1177,3 +1190,5 @@ mod tests;
 mod t2652;
 #[cfg(test)]
 mod t2216;
+#[cfg(test)]
+mod t4199;

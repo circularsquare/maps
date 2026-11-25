@@ -692,6 +692,11 @@ const MARKET = "market:";
 const marketItem = (id: CityId) => MARKET + id;
 /** T-776: the world market's rows, beside the registry index the app bundles (a hashed file in a build) */
 const MARKET_ROWS = new URL("../game/market-rows.json", import.meta.url).href;
+/** T-4199: the market's corridors and corridor book, worked out once (tools/corridor_file.mjs); a build without it works them out */
+const MARKET_CORRIDORS = new URL("../game/market-corridors.bin", import.meta.url).href;
+/** the corridor file's bytes, null where there is none (any other answer is the worker's to refuse) */
+const fetchCorridorFile = (): Promise<Uint8Array | null> =>
+  fetch(MARKET_CORRIDORS).then((r) => (r.ok ? r.arrayBuffer() : null), () => null).then((b) => (b ? new Uint8Array(b) : null), () => null);
 const isMarket = (item: string) => item.startsWith(MARKET);
 const marketZone = (item: string) => item.slice(MARKET.length) as CityId;
 /**
@@ -2033,11 +2038,13 @@ class DemandClient {
       const own = <T extends Uint8Array>(b: T) => (i === this.computeN ? new Uint8Array(0) : i === lastSolving ? b : b.slice());
       const ms = open.intercity?.map((m) => ({ id: m.id, pack: own(m.bytes) })), r = rows && own(rows);
       const dr = r?.byteLength && this.drives ? this.drives.slice() : undefined;
-      const msg: ToDemand = { kind: "open", packs: pack ? [pack] : [], ...(ms ? { intercity: ms } : {}), ...(r?.byteLength ? { rows: r } : {}), ...(dr ? { drives: dr } : {}) };
+      const cf = r?.byteLength && this.corridorFile ? this.corridorFile.slice() : undefined;
+      const msg: ToDemand = { kind: "open", packs: pack ? [pack] : [], ...(ms ? { intercity: ms } : {}), ...(r?.byteLength ? { rows: r } : {}), ...(dr ? { drives: dr } : {}), ...(cf ? { corridors: cf } : {}) };
       const transfer: Transferable[] = pack ? [pack.bin] : [];
       for (const m of ms ?? []) if (m.pack.byteLength) transfer.push(m.pack.buffer as ArrayBuffer);
       if (r?.byteLength) transfer.push(r.buffer as ArrayBuffer);
       if (dr) transfer.push(dr.buffer as ArrayBuffer);
+      if (cf) transfer.push(cf.buffer as ArrayBuffer);
       // T-1533: the zone in view's pack as it is sent (a held one may go seconds later), T-2453: or the selected zone's
       const send = () => w.postMessage(pack && this.firstZones().includes(pack.id) ? { ...msg, first: true } : msg, transfer);
       if (pack && i > 0 && i < this.computeN && this.held) this.held.push(send);
@@ -2161,10 +2168,13 @@ class DemandClient {
    * them (12 MB), downloaded again for a replacement worker; `drivesSha` keys the cache. */
   private drives: Uint8Array | null = null;
   private drivesSha: Promise<string> | null = null;
+  /** T-4199: the corridor file (about 420 KB), in with the rows, kept for a replacement worker */
+  private corridorFile: Uint8Array | null = null;
   private marketRows(): Promise<Uint8Array> {
-    return (this.rows ??= Promise.all([this.download(MARKET_ROWS), fetchMarketDrives()])
-      .then(([rows, drives]) => {
+    return (this.rows ??= Promise.all([this.download(MARKET_ROWS), fetchMarketDrives(), fetchCorridorFile()])
+      .then(([rows, drives, corridors]) => {
         this.drives = drives;
+        this.corridorFile = corridors;
         if (drives && this.cacheOn) this.drivesSha = sha256(drives as Uint8Array<ArrayBuffer>);
         return rows;
       })
@@ -2339,6 +2349,9 @@ class DemandClient {
       return;
     }
     this.closeStrays();
+    // T-4199: nothing is sent while a game load's network is on its way: the network in hand or waiting is the last
+    // game's (a solve of it with the packs opened ahead of the load ended the load's focus pool with its final)
+    if (gameLoadArmed()) return;
     // T-325: a solve waits for, and covers, the cities stations reach and those opened in every
     // worker; a zone opened bare is never waited for and starts no solve
     if (this.waiting) {
@@ -3329,7 +3342,8 @@ class DemandClient {
       const bares = barePacks.filter((p) => this.fetchingBare.has(p.id));
       r.left = new Set([...full.map((p) => p.id as string), ...mk.map((m) => marketItem(m.id)), ...bares.map((p) => p.id as string)]);
       const w = this.workers[i];
-      if (full.length || mk.length) w.postMessage({ kind: "open", packs: full, ...(mk.length ? { intercity: mk, rows, ...(drives ? { drives } : {}) } : {}) } satisfies ToDemand, [...full.map((p) => p.bin), ...mk.map((m) => m.pack.buffer as ArrayBuffer), ...(mk.length && rows ? [rows.buffer as ArrayBuffer] : []), ...(mk.length && drives ? [drives.buffer as ArrayBuffer] : [])]);
+      const corridors = mk.length && this.corridorFile ? this.corridorFile.slice() : undefined;
+      if (full.length || mk.length) w.postMessage({ kind: "open", packs: full, ...(mk.length ? { intercity: mk, rows, ...(drives ? { drives } : {}), ...(corridors ? { corridors } : {}) } : {}) } satisfies ToDemand, [...full.map((p) => p.bin), ...mk.map((m) => m.pack.buffer as ArrayBuffer), ...(mk.length && rows ? [rows.buffer as ArrayBuffer] : []), ...(mk.length && drives ? [drives.buffer as ArrayBuffer] : []), ...(corridors ? [corridors.buffer as ArrayBuffer] : [])]);
       if (bares.length) w.postMessage({ kind: "open", packs: bares, bare: true } satisfies ToDemand, bares.map((p) => p.bin));
       if (!r.left.size) this.reopened(i);
     } catch (err) {
@@ -3357,6 +3371,8 @@ class DemandClient {
     // parts of older compositions (their corridor tables then differ): all make theirs afresh
     this.freshParts = true;
     if (this.waiting) this.flush(true);
+    // (T-4199: a game load's network on its way is solved when it comes, as `flush` sends nothing until then)
+    else if (gameLoadArmed()) this.releaseRespawnWaits();
     // (T-3373 B: a shrink moves packs, which open again before the solve can cover them)
     else if (this.cur && this.holding) { this.waiting = { svc: this.cur.svc, arrivedAt: performance.now() }; this.flush(true); }
     else if (this.cur) this.dispatch(this.cur.svc, performance.now());
@@ -5025,7 +5041,8 @@ class DemandClient {
       // nothing demand reads changed: the solve in hand (or waiting) is the loaded game's; stations
       // built or removed on no line may reach other zones (T-2410)
       const held = this.latest();
-      if (held && held !== svc && this.setAlone(held, svc.alone)) this.ensure();
+      // (a game load of the network in hand: also what opened ahead of it, which `flush` left while it was on its way)
+      if ((held && held !== svc && this.setAlone(held, svc.alone)) || gameLoad) this.ensure();
       if (this.hold && !this.waiting) this.hold.version = this.cur?.version;
       this.checkHold();
       return;
@@ -6571,7 +6588,7 @@ class DemandClient {
     const s = this.cur;
     if (!this.localEdits || this.failed) return; // (T-4260: a failed pool does not recover, so there is nothing to wait for)
     // (a network held or the clock held passes: try again, as a pause below does)
-    if (!s || s.published < ROUNDS || s.rough || this.waiting || this.hold || (!display.peek().recalcWhilePaused && !clock.running.peek())) { this.refreshTimer = setTimeout(() => this.refreshNow(), REFRESH_IDLE_MS); return; }
+    if (!s || s.published < ROUNDS || s.rough || this.waiting || this.hold || gameLoadArmed() || (!display.peek().recalcWhilePaused && !clock.running.peek())) { this.refreshTimer = setTimeout(() => this.refreshNow(), REFRESH_IDLE_MS); return; }
     this.dispatch(s.svc, performance.now(), true);
   }
 

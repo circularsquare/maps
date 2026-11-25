@@ -47,7 +47,7 @@ impl Market {
         r.add(format!("{at}commutes (+ by home, by work)"), vb(&self.commutes) + csr(&self.c_home) + csr(&self.c_work));
         r.add(format!("{at}everyday pairs (+ by home, by activity)"), vb(&self.everyday) + csr(&self.e_home) + csr(&self.e_act) + vb(&self.e_base));
         let cw = &self.cw;
-        r.add(format!("{at}corridors: longer trips (has_trips, trips; shared with MarketPacks)"), vb(&cw.has_trips) + vb(&cw.trips));
+        r.add(format!("{at}corridors: longer trips (has_trips, trips; shared with MarketPacks)"), cw.table.get().map_or(0, |t| vb(&t.has_trips) + vb(&t.trips)));
         r.add(format!("{at}corridors: commutes, leaving_by"), vb(&cw.commute) + vb(&cw.leaving_by));
         r.add(format!("{at}drives (shared with MarketPacks)"), self.drives.heap_bytes());
     }

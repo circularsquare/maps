@@ -13,6 +13,7 @@
 // every saved curve charges the US what it did.
 
 import table from "./countryIncome.json";
+import fareBits from "./fareBits.json";
 
 export const FARE_W_REF = 4.4;
 export const FARE_Y_REF = 90000;
@@ -54,8 +55,19 @@ export function runFactorOf(shares: readonly [string, number][] | undefined, cou
   return t > 0 ? f / t : 1;
 }
 
+// T-4199: JS `**` gives other last bits in other engines (Chrome and Node differ on a few hundred market rows),
+// and the market's corridor file is keyed by the fare figures `marketWorld` gives the demand workers. So the
+// figures below that use it are fareBits.json's (worked out in Chrome by tools/fare_bits.mjs) wherever that is
+// within rounding of this engine's own, the same bits in every engine; else (its inputs changed since) the engine's.
+const BITS = fareBits as { eps: number; fw: Record<string, number>; fg: Record<string, number[]> };
+const kept = (bits: number | undefined, own: number): number => (bits !== undefined && Math.abs(bits - own) <= 1e-12 * Math.abs(own) ? bits : own);
+const gdpKey = (country: string | undefined): string => (country && GDP[country] ? country : FARE_BASELINE);
+const fareWeightOwn = (country: string): number => FARE_W_REF * (GDP[country] / FARE_Y_REF) ** -FARE_E;
 /** Perceived minutes a fare dollar costs a rider from `country`. */
-export const fareWeight = (country: string | undefined): number => FARE_W_REF * (gdpOf(country) / FARE_Y_REF) ** -FARE_E;
+export const fareWeight = (country: string | undefined): number => {
+  const k = gdpKey(country);
+  return kept(BITS.fw[k], fareWeightOwn(k));
+};
 /** The fare scale a country's income gives: a save from before T-1906 charges it where the player
  * set none. T-2670: the US's 11.6 times (its income over the US's)^`FARE_E`, in tenths (India 2.0,
  * Mexico 4.6, Japan 7.3). */
@@ -170,10 +182,16 @@ export interface IncomeGroup {
   share: number;
   factor: number;
 }
+const quintKey = (country: string | undefined): string => (country && QUINT[country] ? country : FARE_BASELINE);
 /** `country`'s income groups, each one's income over the mean from the quintiles' Lorenz curve
  * (income even within a quintile); `eps` the market rule's. One group with no table. */
 export function incomeGroups(country: string | undefined, eps: number): IncomeGroup[] {
-  const q = (country && QUINT[country]) || QUINT[FARE_BASELINE];
+  const k = quintKey(country), own = incomeGroupsOwn(k, eps);
+  const bits = eps === BITS.eps ? BITS.fg[k] : undefined;
+  return bits?.length === 2 * own.length ? own.map((g, i) => ({ share: kept(bits[2 * i], g.share), factor: kept(bits[2 * i + 1], g.factor) })) : own;
+}
+function incomeGroupsOwn(country: string, eps: number): IncomeGroup[] {
+  const q = QUINT[country];
   if (!q || q.length !== 5) return [{ share: 1, factor: LONG_TRIP_MONEY }];
   const sum = q.reduce((a, b) => a + b, 0);
   const lorenz = (p: number) => {
@@ -187,4 +205,21 @@ export function incomeGroups(country: string | undefined, eps: number): IncomeGr
   const trips = rel.map((y) => y ** eps);
   const total = trips.reduce((a, b) => a + b, 0);
   return rel.map((y, k) => ({ share: trips[k] / total, factor: LONG_TRIP_MONEY * y ** -GROUP_E }));
+}
+
+/** T-4199: fareBits.json as this engine works it out (tools/fare_bits.mjs runs it in Chrome); `eps` the market rule's. */
+export function fareBitsOwn(eps: number): { eps: number; fw: Record<string, number>; fg: Record<string, number[]> } {
+  const fw: Record<string, number> = {}, fg: Record<string, number[]> = {};
+  for (const k of Object.keys(GDP).sort()) if (GDP[k]) fw[k] = fareWeightOwn(k);
+  for (const k of Object.keys(QUINT).sort()) fg[k] = incomeGroupsOwn(k, eps).flatMap((g) => [g.share, g.factor]);
+  return { eps, fw, fg };
+}
+/** T-4199: the countries whose fare figures here are this engine's own, not fareBits.json's (its inputs changed since
+ * it was made, or it lacks them): the corridor file made from them is only for this engine. */
+export function fareBitsStale(eps: number): string[] {
+  const own = fareBitsOwn(eps), out = new Set<string>();
+  if (eps !== BITS.eps) return ["eps"];
+  for (const [k, v] of Object.entries(own.fw)) if (kept(BITS.fw[k], v) !== BITS.fw[k]) out.add(k);
+  for (const [k, v] of Object.entries(own.fg)) if (BITS.fg[k]?.length !== v.length || v.some((x, i) => kept(BITS.fg[k][i], x) !== BITS.fg[k][i])) out.add(k);
+  return [...out].sort();
 }

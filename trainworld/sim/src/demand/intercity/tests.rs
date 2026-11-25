@@ -653,7 +653,7 @@ fn zone_distances_are_on_the_ground_when_the_pack_names_its_frame() {
 
 // ---- T-377: the world market
 
-const RULE: &str = r#"{"R":0.107,"A":2.37,"onset_km":[25,50],"d0_km":25,"eps":0.7,"G":0.703,"D1_km":171.2,"TH":0.75,"eps_t":1.0,"THo":0.503,"tail_onset_km":[300,700],"border_eps":1.503,"u_mean_us":1.2413,"u_ref_people":100000,"border":0.26,"y_us":76931.3,"Rt":0.00473,"near_km":250,"min_trips":0.01}"#;
+pub(super) const RULE: &str = r#"{"R":0.107,"A":2.37,"onset_km":[25,50],"d0_km":25,"eps":0.7,"G":0.703,"D1_km":171.2,"TH":0.75,"eps_t":1.0,"THo":0.503,"tail_onset_km":[300,700],"border_eps":1.503,"u_mean_us":1.2413,"u_ref_people":100000,"border":0.26,"y_us":76931.3,"Rt":0.00473,"near_km":250,"min_trips":0.01}"#;
 /// A place's pack: sites at (km east, km north, people, jobs) of its own equirect origin, each
 /// 6 km square a zone, made-up normalisers.
 fn zpack(place: usize, (lon0, lat0): (f64, f64), country: &str, inc: f64, road: i64, sites: &[(f64, f64, f64, f64)]) -> String {
