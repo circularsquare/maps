@@ -15,7 +15,7 @@
 // successor is merged (`planStrokes`).
 
 import { BAND_STRIDE } from "./lineBands";
-import type { Strokes } from "./network";
+import type { Strokes, TrackStrokes } from "./network";
 
 export type StrokeKind = "track" | "lines";
 export type StrokeMode = "whole" | "same" | "patch";
@@ -31,13 +31,17 @@ const FIELDS: Record<StrokeKind, readonly Field[]> = {
 const make = (f: Field, n: number): TypedArray => (f === "colour" || f === "edge" ? new Uint32Array(n) : f === "lane" ? new Uint8Array(n) : f === "band" ? new Int16Array(n) : new Float32Array(n));
 
 /** One edge's or line's piece of a set: its strokes, and for track the speed limit and fastest train
- * speed of each of its segments. */
+ * speed of each of its segments (`train` empty: -1 at each). T-4187: strokes with no `colour`, `edge` or `flags` (a kept
+ * piece of track or line, map/network.ts `TrackStrokes`, `LineStrokes`) have the piece's one value at every segment. */
 export interface StrokePiece {
-  strokes: Strokes;
+  strokes: TrackStrokes;
   speed?: Float32Array;
   train?: Float32Array;
+  colour?: number;
+  edge?: number;
+  flags?: number;
 }
-const arrayOf = (p: StrokePiece, f: Field): TypedArray | undefined => (f === "speed" ? p.speed : f === "trainSpeed" ? p.train : p.strokes[f]);
+const arrayOf = (p: StrokePiece, f: Field): TypedArray | undefined => (f === "speed" ? p.speed : f === "trainSpeed" ? p.train : (p.strokes as Partial<Strokes>)[f]);
 
 /** Arrays for `cap` segments, the first `count` of them in the Strokes returned: views of the
  * arrays, so those on the page keep the room for later edits. */
@@ -56,8 +60,10 @@ function put(kind: StrokeKind, out: Record<string, TypedArray>, p: StrokePiece, 
   const n = p.strokes.count;
   for (const f of FIELDS[kind]) {
     const a = arrayOf(p, f);
-    if (a) out[f].set(a, to * WIDTH[f]);
+    if (f === "trainSpeed" && a?.length === 0) out[f].fill(-1, to, to + n);
+    else if (a) out[f].set(a, to * WIDTH[f]);
     else if (f === "lane") out[f].fill(255, to * 2, (to + n) * 2);
+    else if (f === "colour" || f === "edge" || f === "flags") out[f].fill(p[f] ?? 0, to, to + n);
   }
 }
 

@@ -17,7 +17,8 @@ import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { loadApp, REAL_SAVE, ARTIFACTS } from './lib.mjs';
 
-globalThis.postMessage = () => {};
+// (what a post transfers is detached, as in the worker: an array the worker keeps and posts by mistake shows up, T-4187)
+globalThis.postMessage = (m, o) => { for (const b of o?.transfer ?? []) if (b instanceof ArrayBuffer && !b.detached && b.byteLength) b.transfer(); };
 globalThis.self ??= globalThis;
 globalThis.location ??= { search: '', hash: '', href: 'http://localhost/' };
 const app = await loadApp("export * from '@app/src/workers/clockMain.ts'; export { putApi, syncFrame, frame } from '@app/src/workers/clockState.ts'; export { putPatchMode, posted, sender } from '@app/src/workers/clockPost.ts'; export { setAnchor, makeAnchor, anchor } from '@app/src/map/geo.ts'; export { setBandCheck, bandSelfTest, spliceSelfTest, bandWork } from '@app/src/map/lineBands.ts'; export { netWork, netSelfTest } from '@app/src/map/network.ts'; export { default as initSim, TrackApi } from '@app/src/wasm/track/sim.js';");

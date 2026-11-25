@@ -42,7 +42,7 @@ export const CHEVRON_STRIDE = 11;
 /** A one-way train line's chevrons, from its strokes (`edgeUses`: how often its path runs each
  * edge; `stops`: its stops' places, local units; strokes with a `skipFlags` flag get none),
  * appended to `out`. */
-export function trainChevrons(s: Strokes, line: number, edgeUses: ReadonlyMap<number, number>, stops: readonly (readonly [number, number])[], width: number, skipFlags: number, out: number[]) {
+export function trainChevrons(s: Omit<Strokes, "colour">, line: number, edgeUses: ReadonlyMap<number, number>, stops: readonly (readonly [number, number])[], width: number, skipFlags: number, out: number[]) {
   if (!s.count) return;
   const k = kAtY(s.seg[1]), step = CHEVRON_STEP_M * k;
   const B = s.band, S = 1 / 32767;
@@ -87,7 +87,7 @@ export function oneWayTrackChevrons(s: Strokes, way: 1 | 2, stops: readonly (rea
 }
 
 /** One one-way edge of the network, for `oneWayTrackRuns`: its end nodes, `way` 1 running a to b and 2 b to a. */
-export interface OneWayEdge { a: number; b: number; way: 1 | 2; strokes: Strokes }
+export interface OneWayEdge { a: number; b: number; way: 1 | 2; strokes: Pick<Strokes, "seg" | "dist" | "count"> }
 
 /** One-way track's chevrons (T-3607) by distance along a run of connected one-way edges, carried across
  * the pieces (a street-snapped run is many short ones): a run goes on through a node where exactly one

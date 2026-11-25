@@ -117,7 +117,8 @@ export interface LineBands {
   order: Map<number, number[]>;
   /** the pairwise rule on an edge between two of its lines (checks/t1799-bands.mjs): < 0 the first on the left in a to b */
   rule: (edge: number, x: number, y: number) => number;
-  /** the Traffic view's recipe for every knot (`trafficBands`), made into one array to post */
+  /** the Traffic view's recipe for every knot (`trafficBands`), made into one array to post. T-4187: the bands' own, kept
+   * and read by later calls (each line's records are views of it), so it is posted as a copy, never changed or transferred */
   corridor: Float32Array;
 }
 
@@ -167,7 +168,7 @@ export function lineBands(lines: readonly BandLine[], edges: readonly BandEdge[]
     let whole: LineBands | null = null;
     const rule = (edge: number, x: number, y: number) => (whole ??= bands(rail, fresh(), ends, pts, { ...o, fresh: true })).rule(edge, x, y);
     last = { ...last, pts, ends, rail };
-    return { ...last.out, rule, corridor: last.corridor.slice() };
+    return { ...last.out, rule };
   }
   // (T-3939: `rule` is asked of a kept result by one whole pass, on this call's points)
   let whole: LineBands | null = null;
@@ -180,9 +181,8 @@ export function lineBands(lines: readonly BandLine[], edges: readonly BandEdge[]
     const bad = bandsDiffer(out, bands(rail, fresh(), ends, pts, { ...o, fresh: true, beside: newBesideState() }));
     if (bad) console.error(`T-2238 check: bands worked out again for an edit differ from a whole pass: ${bad}`);
   }
-  // (a copy: the clock worker transfers the array it posts.) T-3939: kept without `rule`, whose closure holds the
-  // whole of `bands`' working set (18 MB on a 13-zone Tokyo game)
-  last = { pts, ends, rail, mode, out: { of: out.of, own: out.own, order: out.order, rule, corridor: out.corridor }, corridor: out.corridor.slice() };
+  // T-3939: kept without `rule`, whose closure holds the whole of `bands`' working set (18 MB on a 13-zone Tokyo game)
+  last = { pts, ends, rail, mode, out: { of: out.of, own: out.own, order: out.order, rule, corridor: out.corridor } };
   return out;
 }
 
@@ -260,7 +260,7 @@ export function sameCorridor(a: Float32Array, b: Float32Array): boolean {
 }
 
 /** the last call: the maps it was given, its lines and what it gave */
-interface LastBands { pts: ReadonlyMap<number, Float32Array>; ends: ReadonlyMap<number, BandEdge>; rail: readonly BandLine[]; mode: string; out: LineBands; corridor: Float32Array }
+interface LastBands { pts: ReadonlyMap<number, Float32Array>; ends: ReadonlyMap<number, BandEdge>; rail: readonly BandLine[]; mode: string; out: LineBands }
 type OnEdge = { line: BandLine; k: number };
 /** T-4153: per edge the lines on it, as `linesOn` lays them out, and the rows they are of, by id */
 interface KeptOn { on: Map<number, OnEdge[]>; rows: Map<number, BandLine> }
@@ -404,7 +404,8 @@ interface LineMemo {
   recs: Float32Array;
   recPos: Int32Array;
   nRecords: number;
-  /** T-4153: its recipes' numbers in the network's table (`BandMemo.net`), and its profile and records numbered so;
+  /** T-4153: its recipes' numbers in the network's table (`BandMemo.net`), and its profile and records numbered so (the
+   * records a view of the last table made, T-4187);
    * `netWas`: the numbers its recipes had, which a line worked out again keeps (its own numbers are kept too) */
   net?: { map: Int32Array; profile: Float32Array | null; recs: Float32Array };
   netWas?: Int32Array;
@@ -720,7 +721,8 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
       continue;
     }
     if (keepOrders) orderReads = [];
-    const m = v.length, nPairs = (m * (m - 1)) / 2, sign = new Int8Array(nPairs), walks = new Int32Array(2 * nPairs);
+    // (T-4187: the two in one buffer, as most edges have a few pairs and an array of its own costs more than its numbers)
+    const m = v.length, nPairs = (m * (m - 1)) / 2, pairBuf = new ArrayBuffer(9 * nPairs), walks = new Int32Array(pairBuf, 0, 2 * nPairs), sign = new Int8Array(pairBuf, 8 * nPairs, nPairs);
     // per line, where it is in the kept order (-1: not there, or its pairs walked again) and how its path changed
     const from = new Int32Array(m).fill(-1), dif: (PathDiff | null)[] = new Array(m).fill(null);
     if (!fresh) for (let i = 0, o = 0; i < m; i++) {
@@ -1824,11 +1826,9 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
         profile = lm.profile.slice();
         for (let i = 2 + profile[0] + 3; i < profile.length; i += KNOT) if (profile[i] >= 0) profile[i] = map[profile[i]];
       }
-      const recs = lm.recs.slice();
-      for (const x of lm.recPos) recs[x] = map[lm.recs[x]];
-      lm.net = nt = { map, profile, recs };
+      lm.net = nt = { map, profile, recs: netRecords(lm, map) };
       lm.netWas = undefined;
-    }
+    } else if (nt.recs.length !== lm.recs.length) nt.recs = netRecords(lm, nt.map);
     if (nt.profile) {
       of.set(l.id, nt.profile);
       ownOf.set(l.id, lm.profile!);
@@ -1844,14 +1844,23 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
   corridor[1 + rb.length] = reg.nRec;
   corridor.set(rr, 2 + rb.length);
   corridor[2 + rb.length + rr.length] = nRecords;
+  // (T-4187: each line's records are then a view of the table, kept with it; one whose buffer went, which nothing should
+  // transfer, is made again from its own above)
   let at = base;
   for (const l of rail) {
-    const r = mm.lines.get(l.id)!.net!.recs;
-    corridor.set(r, at);
-    at += r.length;
+    const nt = mm.lines.get(l.id)!.net!;
+    corridor.set(nt.recs, at);
+    nt.recs = corridor.subarray(at, (at += nt.recs.length));
   }
   blap("table");
   return { of, own: ownOf, order, rule, corridor };
+}
+
+/** a line's Traffic records with its recipes numbered as the network's table numbers them (`map`) */
+function netRecords(lm: LineMemo, map: Int32Array): Float32Array {
+  const recs = lm.recs.slice();
+  for (const x of lm.recPos) recs[x] = map[lm.recs[x]];
+  return recs;
 }
 
 /** T-4153: numbers pushed one at a time or copied a block at a time (a line's knots and records lent from its last

@@ -75,7 +75,7 @@ export interface FacilityCache {
   /** each segment's x0, y0, x1, y1, owner (an edge id, or -1 - a station's id), by id; `free`: ids to reuse */
   seg: number[];
   free: number[];
-  grid: Map<number, number[]>;
+  grid: CellLists;
   edges: Map<number, { pts: Float32Array; segs: number[] }>;
   /** the network's points map `edges` was made from (map/network.ts keeps it while no edge changed) */
   edgePts: Map<number, Float32Array> | null;
@@ -97,7 +97,53 @@ interface Placed {
   lot: { rect: Rect; bays: number; flags: number; park0: number; parks: number } | null;
 }
 
-export const newFacilityCache = (): FacilityCache => ({ perM: NaN, nearOf: [], near: new Map(), seg: [], free: [], grid: new Map(), edges: new Map(), edgePts: null, stations: new Map(), outlines: [], complexes: new Map() });
+export const newFacilityCache = (): FacilityCache => ({ perM: NaN, nearOf: [], near: new Map(), seg: [], free: [], grid: new CellLists(), edges: new Map(), edgePts: null, stations: new Map(), outlines: [], complexes: new Map() });
+
+/** T-4187: the grid's segments by cell, each cell a list through two pooled arrays (an entry's segment and the next entry,
+ * -1 at the end), by `cellKey`, as an array a cell held a few ids in room for 17. A cell's segments come in no set order:
+ * every read of one takes them as a set (`placeOne`). */
+class CellLists {
+  private head = new Map<number, number>();
+  /** per entry: its segment, and the cell's next entry */
+  seg = new Int32Array(1024);
+  next = new Int32Array(1024);
+  private used = 0;
+  private free = -1;
+  /** the cell's first entry, -1 none */
+  first(key: number): number {
+    return this.head.get(key) ?? -1;
+  }
+  add(key: number, k: number) {
+    let e = this.free;
+    if (e >= 0) this.free = this.next[e];
+    else {
+      e = this.used++;
+      if (e === this.seg.length) {
+        const seg = new Int32Array(e * 2), next = new Int32Array(e * 2);
+        seg.set(this.seg);
+        next.set(this.next);
+        this.seg = seg;
+        this.next = next;
+      }
+    }
+    this.seg[e] = k;
+    this.next[e] = this.head.get(key) ?? -1;
+    this.head.set(key, e);
+  }
+  remove(key: number, k: number) {
+    let e = this.head.get(key)!, before = -1;
+    while (this.seg[e] !== k) {
+      before = e;
+      e = this.next[e];
+    }
+    const after = this.next[e];
+    if (before >= 0) this.next[before] = after;
+    else if (after >= 0) this.head.set(key, after);
+    else this.head.delete(key);
+    this.next[e] = this.free;
+    this.free = e;
+  }
+}
 
 const sameNums = (a: readonly number[], b: readonly number[]) => a.length === b.length && a.every((v, i) => Object.is(v, b[i]));
 const cellKey = (cx: number, cy: number) => cx * 1_000_003 + cy;
@@ -157,7 +203,7 @@ export function placeFacilities(
         }
       }
     }
-    Object.assign(cache, { perM, nearOf, near, seg: [], free: [], grid: new Map(), edges: new Map(), edgePts: null, stations: new Map() });
+    Object.assign(cache, { perM, nearOf, near, seg: [], free: [], grid: new CellLists(), edges: new Map(), edgePts: null, stations: new Map() });
     cache.complexes.clear();
     allDirty = true;
   }
@@ -179,22 +225,14 @@ export function placeFacilities(
     const k = cache.free.pop() ?? seg.length / 5;
     seg[k * 5] = x0; seg[k * 5 + 1] = y0; seg[k * 5 + 2] = x1; seg[k * 5 + 3] = y1; seg[k * 5 + 4] = owner;
     const c = cellsOf(k);
-    for (let cx = c[0]; cx <= c[2]; cx++) for (let cy = c[1]; cy <= c[3]; cy++) {
-      const g = grid.get(cellKey(cx, cy));
-      if (g) g.push(k); else grid.set(cellKey(cx, cy), [k]);
-    }
+    for (let cx = c[0]; cx <= c[2]; cx++) for (let cy = c[1]; cy <= c[3]; cy++) grid.add(cellKey(cx, cy), k);
     if (!allDirty) changed.push(...c);
     into.push(k);
   };
   const drop = (segs: number[]) => {
     for (const k of segs) {
       const c = cellsOf(k);
-      for (let cx = c[0]; cx <= c[2]; cx++) for (let cy = c[1]; cy <= c[3]; cy++) {
-        const key = cellKey(cx, cy), g = grid.get(key)!, at = g.indexOf(k);
-        g[at] = g[g.length - 1];
-        g.pop();
-        if (!g.length) grid.delete(key);
-      }
+      for (let cx = c[0]; cx <= c[2]; cx++) for (let cy = c[1]; cy <= c[3]; cy++) grid.remove(cellKey(cx, cy), k);
       changed.push(...c);
       cache.free.push(k);
     }
@@ -306,7 +344,7 @@ interface PlaceCtx {
   perM: number;
   cell: number;
   seg: number[];
-  grid: Map<number, number[]>;
+  grid: CellLists;
   /** the lots and rooms placed so far this build */
   lotRects: ShapeGrid<Rect>;
   rooms: ShapeGrid<Rect>;
@@ -377,8 +415,10 @@ function placeOne(ctx: PlaceCtx, members: number[], inputs: number[], home: LotO
     const stamp = ++ctx.stamp;
     for (let cx = cx0; cx <= cx1; cx++)
       for (let cy = cy0; cy <= cy1; cy++) {
-        const list = grid.get(cellKey(cx, cy));
-        if (list) for (const k of list) if (seen[k] !== stamp) { seen[k] = stamp; found.push(k); }
+        for (let e = grid.first(cellKey(cx, cy)); e >= 0; e = grid.next[e]) {
+          const k = grid.seg[e];
+          if (seen[k] !== stamp) { seen[k] = stamp; found.push(k); }
+        }
       }
     return found;
   };
@@ -411,8 +451,8 @@ function placeOne(ctx: PlaceCtx, members: number[], inputs: number[], home: LotO
           const cx = Math.floor(px / cell), cy = Math.floor(py / cell);
           read(cx - 1, cy - 1, cx + 1, cy + 1);
           cover(px, py, 0);
-          for (let u = -1; u <= 1; u++) for (let v = -1; v <= 1; v++) for (const k of grid.get(cellKey(cx + u, cy + v)) ?? []) {
-            const owner = seg[k * 5 + 4];
+          for (let u = -1; u <= 1; u++) for (let v = -1; v <= 1; v++) for (let e = grid.first(cellKey(cx + u, cy + v)); e >= 0; e = grid.next[e]) {
+            const k = grid.seg[e], owner = seg[k * 5 + 4];
             if (owner === mine || own.has(owner)) continue;
             const d = distSeg(px, py, seg[k * 5], seg[k * 5 + 1], seg[k * 5 + 2], seg[k * 5 + 3]) / perM;
             if (owner < 0 && d < ROOM_NEAR_M) worst = 2;

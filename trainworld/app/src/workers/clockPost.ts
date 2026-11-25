@@ -225,12 +225,14 @@ export function sameBytes(a: ArrayBufferView | undefined, b: ArrayBufferView): b
 export function keepPosted(k: string, v: ArrayBufferView) {
   posted.arrays.set(k, (v as Float32Array).slice());
 }
-/** the phase tables of the rows (`StateRows.phases`) are kept by reference, since the rows never
- * change that array, and a copy is posted */
+/** arrays kept by reference and posted as a copy: their makers keep them as they are, never changed in place, and hand
+ * out the same array while unchanged: the rows' phase tables (`StateRows.phases`) and the bands' Traffic table (T-4187,
+ * `LineBands.corridor`, which the bands read again) */
+const BY_REFERENCE: ReadonlySet<SameField> = new Set(["phases", "corridor"]);
 function keepPostedField(out: NetworkBuffers, k: SameField, v: ArrayBufferView) {
-  if (k !== "phases") return keepPosted(k, v);
+  if (!BY_REFERENCE.has(k)) return keepPosted(k, v);
   posted.arrays.set(k, v);
-  out.phases = (v as Float32Array).slice();
+  (out as Record<SameField, unknown>)[k] = (v as Float32Array).slice();
 }
 /** the phase tables of a state that does not use them (the network's are posted as changes) */
 export const NO_PHASES = new Float32Array(0);
@@ -283,6 +285,8 @@ export function netForPost(n: NetworkBuffers, scratch?: NetworkBuffers): Network
       if (k === "phases" ? posted.arrays.get(k) === v : sameBytes(posted.arrays.get(k), v)) {
         patch.same.push(k);
         (out as Record<SameField, unknown>)[k] = undefined;
+        // (T-4187: the maker's new array alike, held in place of the last, which it no longer keeps)
+        if (BY_REFERENCE.has(k)) posted.arrays.set(k, v);
       } else keepPostedField(out, k, v);
     }
     timing.pSame = performance.now() - ts0;
