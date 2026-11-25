@@ -4,7 +4,7 @@ import { clock } from "../../game/clock";
 import { demandView, lineDemand } from "../../game/demand";
 import { loadFailure, tripsOff } from "../../game/loading";
 import { PERIODS, periodAt } from "../../game/periods";
-import { distanceOf, exact } from "../../game/format";
+import { exact } from "../../game/format";
 import { lowerWord, t } from "../../i18n";
 import type { LineInput } from "../../game/types";
 import { linesById, stationNames, world } from "../../game/world";
@@ -34,7 +34,6 @@ export function TrainInspector({ line, profile, dep }: { line: string; profile: 
   const stops = run === 0 ? l.stops : [...l.stops].reverse();
   const stopS = st.stopS[run] ?? [];
   const next = at ? stopS.findIndex((s) => s > at.s + 1) : -1;
-  const len = net.meta[profile * 4 + 3];
   const head = stops.length - 1;
   return (
     <>
@@ -52,9 +51,6 @@ export function TrainInspector({ line, profile, dep }: { line: string; profile: 
         <>
           <ul class="rows">
             <Row label={t("trainInspector.nextStop")}>{next >= 0 ? name.get(stops[next]) : t("trainInspector.terminus")}</Row>
-            <Row label={t("trainInspector.along")}>
-              {distanceOf(at.s, len)}
-            </Row>
           </ul>
           <Speedometer profile={profile} dep={dep} />
         </>

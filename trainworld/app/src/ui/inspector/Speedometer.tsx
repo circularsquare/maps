@@ -14,23 +14,18 @@ import { profileTop, profileV } from "../../map/network";
 import { LAG_DECAY } from "../../map/trainGuard";
 
 /** The dial, CSS px: its width, the rim's outer and inner radius, the centre circle's and the needle's reach. */
-const D = 112, C = D / 2, RIM_OUT = C, RIM_IN = C - 8, HUB = 22, TIP = RIM_IN - 4;
+const D = 68, C = D / 2, RIM_OUT = C, RIM_IN = C - 3, HUB = 16, TIP = RIM_IN - 3;
 /** Degrees the rim sweeps, from its slow end at the lower left (degrees clockwise from east), the gap at the bottom. */
 const SWEEP = 270, START = 135;
-/** Down to the rim's ends and the unit under the centre circle, px. */
-const H = Math.ceil(C + Math.sin((45 * Math.PI) / 180) * RIM_OUT + (RIM_OUT - RIM_IN) / 2);
+/** The unit's baseline under the centre circle, and the dial's height, down to the unit, px. */
+const UNIT_Y = C + HUB + 12, H = UNIT_Y + 3;
 const LAST = SPEED_STOPS.length - 1;
-/** The rim: the speed colours' stops evenly spaced along it, blended between as `speedColour` blends them. */
-const RIM = `conic-gradient(from ${START + 90}deg, ${SPEED_STOPS.map(([, c], k) => `${c} ${(k * SWEEP) / LAST}deg`).join(", ")}, transparent 0)`;
-
-/** Where `kmh` sits along the rim, 0-1: each colour stop an equal step, so a metro's speeds take about half the
- * rim and high-speed track's 320 km/h the end. */
-function dialAt(kmh: number): number {
-  const s = SPEED_STOPS;
-  if (!(kmh > s[0][0])) return 0;
-  for (let k = 1; k <= LAST; k++) if (kmh <= s[k][0]) return (k - 1 + (kmh - s[k - 1][0]) / (s[k][0] - s[k - 1][0])) / LAST;
-  return 1;
-}
+/** The speed at the rim's end, km/h: high-speed track's; the rim is linear up to it (DECISIONS, Map and UI). */
+const TOP = SPEED_STOPS[LAST][0];
+/** Where `kmh` sits along the rim, 0-1. */
+const dialAt = (kmh: number): number => Math.min(1, Math.max(0, kmh / TOP));
+/** The rim: each speed colour at its own speed, blended between as `speedColour` blends them. */
+const RIM = `conic-gradient(from ${START + 90}deg, ${SPEED_STOPS.map(([v, c]) => `${c} ${dialAt(v) * SWEEP}deg`).join(", ")}, transparent 0)`;
 
 /** A point `r` from the centre at `deg` along the rim. */
 const rimPoint = (deg: number, r: number): [number, number] => {
@@ -102,7 +97,7 @@ export function Speedometer({ profile, dep }: { profile: number; dep: number }) 
         <line ref={needle} class="speedo-needle" x1={C} y1={C} x2={C + TIP} y2={C} transform={`rotate(${START} ${C} ${C})`} />
         <circle class="speedo-hub" cx={C} cy={C} r={HUB} />
         <text ref={fig} class="speedo-fig" x={C} y={C} />
-        <text class="speedo-unit" x={C} y={C + HUB + 14}>{speedParts(0)[1]}</text>
+        <text class="speedo-unit" x={C} y={UNIT_Y}>{speedParts(0)[1]}</text>
       </svg>
     </div>
   );

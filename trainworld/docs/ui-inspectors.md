@@ -749,15 +749,15 @@ places the stops again (the stop nearest where it was, within 60 m, the same id 
 station's panel once it is a station's stop).
 ## Trains
 
-- **The speed dial** [T-4243, `ui/inspector/Speedometer.tsx`]: under Next stop and Along the line, a running train's
-  speed on a round dial as wide as the junction map (112 px). The rim is the Speed view's colours (`SPEED_STOPS`, maroon at
-  a standstill to purple at 320 km/h), each colour stop an equal step along its 270 degrees with the gap at the bottom
-  (DECISIONS 2026-11-24); the needle turns around a centre circle holding the speed in the units setting, in the
-  speed's colour kept readable on the shade (`legibleOn`), the unit under it. It reads the speed the train is drawn
-  at: its run profile's, none while it stands, and where the guard draws it behind its timetable (T-1965) that speed
-  times one minus the rate its lag grows (still while held, faster while catching up). Hover: "Top speed 160 km/h",
-  the fastest on its way to its last stop. It moves from a frame loop of its own while the clock runs, writing to the
-  page only when the needle (to a quarter degree) or the figure changes.
+- **The speed dial** [T-4243, `ui/inspector/Speedometer.tsx`]: under Next stop, at the panel's right, a running
+  train's speed on a round dial 68 px wide. The rim, 3 px thick, is the Speed view's colours (`SPEED_STOPS`, maroon at a
+  standstill to purple at 320 km/h), linear from 0 to 320 km/h along its 270 degrees with the gap at the bottom, each
+  colour at its own speed (DECISIONS 2026-11-24); the needle turns around a centre circle holding the speed in the
+  units setting, in the speed's colour kept readable on the shade (`legibleOn`), the unit under it. It reads the
+  speed the train is drawn at: its run profile's, none while it stands, and where the guard draws it behind its
+  timetable (T-1965) that speed times one minus the rate its lag grows (still while held, faster while catching up).
+  Hover: "Top speed 160 km/h", the fastest on its way to its last stop. It moves from a frame loop of its own while
+  the clock runs, writing to the page only when the needle (to a quarter degree) or the figure changes.
 - **The train inspector's "On board"** [T-083, T-164, T-230]: this train's own riders on the stretch
   it is running, from the boarding account ([track-and-service.md](track-and-service.md) 6.6),
   against seats and crush: a bar running to crush (240 a car, 150%), with a tick at the seats and

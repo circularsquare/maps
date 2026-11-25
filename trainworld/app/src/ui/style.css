@@ -802,12 +802,12 @@ svg.junction-map { display: block; margin: 8px auto 2px; width: 112px; height: 1
 .board-bar .fill.over { background: var(--warn); }
 .board-bar .seats { position: absolute; top: -3px; bottom: -3px; width: 1px; background: var(--text); }
 /* T-4243: the train panel's speed dial (ui/inspector/Speedometer.tsx); the rim is a conic gradient under the svg */
-.speedo { position: relative; margin: 10px auto 2px; overflow: hidden; }
+.speedo { position: relative; margin: 6px 0 2px auto; overflow: hidden; }
 .speedo-rim { position: absolute; left: 0; top: 0; border-radius: 50%; }
 .speedo svg { position: relative; display: block; width: 100%; height: 100%; overflow: visible; stroke: none; }
-.speedo-needle { stroke: var(--text); stroke-width: 3; stroke-linecap: round; }
+.speedo-needle { stroke: var(--text); stroke-width: 2; stroke-linecap: round; }
 .speedo-hub { fill: var(--bg); stroke: var(--rule); }
-.speedo-fig { font-size: 18px; font-weight: 700; text-anchor: middle; dominant-baseline: central; font-variant-numeric: tabular-nums; }
+.speedo-fig { font-size: 14px; font-weight: 700; text-anchor: middle; dominant-baseline: central; font-variant-numeric: tabular-nums; }
 .speedo-unit { font-size: 12px; fill: var(--muted); text-anchor: middle; }
 .rows .grow.chip-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
 .moves .what { display: flex; flex-direction: column; gap: 1px; }

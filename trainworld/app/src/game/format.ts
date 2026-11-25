@@ -183,12 +183,6 @@ export function bigDistance(m: number): string {
   return `${tNumber(v, { maximumFractionDigits: v >= 100 ? 0 : 1 })} ${us() ? "mi" : "km"}`;
 }
 
-/** A position along something and its whole length: "1.2 of 5.4 km". */
-export function distanceOf(part: number, whole: number): string {
-  const u = us() ? M_PER_MILE : 1000;
-  return t("format.distanceOf", { part: (part / u).toFixed(1), whole: `${(whole / u).toFixed(1)} ${us() ? "mi" : "km"}` });
-}
-
 /** A limit in a rule: 1000 -> "1 km" or "0.62 mi". */
 export function roughDistance(m: number): string {
   return us() ? `${trim(m / M_PER_MILE, 2)} mi` : `${trim(m / 1000, 1)} km`;
