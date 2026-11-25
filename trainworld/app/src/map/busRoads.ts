@@ -9,6 +9,7 @@ import type { Map as MlMap } from "maplibre-gl";
 import { EXTENT, MOTORWAY, RoadGraph, TRUNK, WORLD, gxOf, gyOf, joinRoads, latOf, lngOf, metresPerUnit, thin, thinFlagged, type Snap } from "./roadGraph";
 import { DRIVE_CLASSES, PEDESTRIAN, decodeRoads, type RoadKeep, type RoadLines } from "./roadTiles";
 import { patientFetch } from "../workers/patientFetch";
+import { isRoutedTileJson, openMapTiles } from "./openMapTiles";
 
 /** The roads a bus or tram drives (T-3172: any road in the data): `DRIVE_CLASSES` (streets, service ways of
  * every kind, tracks, bus guideways), pedestrian streets, and motorways (T-2469: most long bridges and
@@ -107,7 +108,7 @@ export async function roadTileTemplate(map: MlMap): Promise<string | null> {
     if (tiles?.length) return tiles[0];
     const url = live?.url ?? spec?.url;
     if (!url) return null;
-    const json = await (await patientFetch(url)).json();
+    const json = isRoutedTileJson(url) ? await openMapTiles(url) : await (await patientFetch(url)).json();
     return json.tiles?.[0] ?? null;
   } catch {
     return null;

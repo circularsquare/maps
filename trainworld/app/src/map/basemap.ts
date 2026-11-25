@@ -19,8 +19,9 @@ import { busRoadFilter, fastRoadExpr, railRoadFilter } from "./busRoads";
 import { townGeometry } from "./townArea";
 import { demBytes, flattenDem, onRedraw } from "./demFlat";
 import { canvasReadsTrue } from "./canvasRead";
+import { OPENFREEMAP, TILEJSON_PROTOCOL, checkStyle, openMapTiles, routedTileJson } from "./openMapTiles";
 
-const POSITRON = "https://tiles.openfreemap.org/styles/positron";
+const POSITRON = `${OPENFREEMAP}styles/positron`;
 /** The one font stack every basemap label uses: Regular only, Zen Maru has no italic. */
 const FONT = ["Zen Maru Gothic Regular", "Noto Sans Regular"];
 const RTL_PLUGIN = "rtl/mapbox-gl-rtl-text.min.js";
@@ -83,6 +84,12 @@ const TERRAIN_CREDIT = '<a href="https://github.com/tilezen/joerd/blob/master/do
 const USGS_PROTOCOL = "twusgs";
 const USGS_TILES = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile";
 const USGS_BLANK_BYTES = 3000;
+let tileJsonProtocolAdded = false;
+function addTileJsonProtocol() {
+  if (tileJsonProtocolAdded) return;
+  tileJsonProtocolAdded = true;
+  maplibregl.addProtocol(TILEJSON_PROTOCOL, async (params) => ({ data: await openMapTiles(params.url) }));
+}
 let usgsProtocolAdded = false;
 function addUsgsProtocol() {
   if (usgsProtocolAdded) return;
@@ -285,6 +292,7 @@ export function loadBasemap(map: maplibregl.Map) {
   demMap = map;
   addDemProtocol();
   addUsgsProtocol();
+  addTileJsonProtocol();
   onRedraw((tiles) => { if (styleUp(map) && map.getSource(DEM)) map.refreshTiles(DEM, tiles); });
   const key = (c: { z: number; x: number; y: number }) => `${c.z}/${c.x}/${c.y}`;
   map.on("sourcedataloading", (e) => {
@@ -294,6 +302,13 @@ export function loadBasemap(map: maplibregl.Map) {
   });
   map.on("idle", () => checkBasemapWait(map));
   map.on("error", () => checkBasemapWait(map));
+  // T-4275: an error before the style is in may be a blocker refusing OpenFreeMap's whole host (ui/BasemapNote.tsx)
+  let styleChecked = false;
+  map.on("error", () => {
+    if (styleChecked || styleUp(map)) return;
+    styleChecked = true;
+    void checkStyle(POSITRON);
+  });
   map.on("sourcedata", (e) => {
     if (e.sourceId !== VECTOR_SOURCE) return;
     checkBasemapWait(map);
@@ -331,6 +346,9 @@ let shadeAs: [Shade, number] = ["light", 1];
 function restyle(style: maplibregl.StyleSpecification): maplibregl.StyleSpecification {
   // Absolute, from the page's own URL, so it works under /trainworld/ and on any host.
   style.glyphs = new URL("fonts/", document.baseURI).href + "{fontstack}/{range}.pbf";
+  // T-4275: the vector tiles by whichever route a tracker list leaves open (openMapTiles.ts)
+  const vector = style.sources[VECTOR_SOURCE];
+  if (vector?.type === "vector" && vector.url) vector.url = routedTileJson(vector.url);
   basemapSymbols = [];
   themed = [];
   missed = false;

@@ -105,6 +105,7 @@ import { figuresPeaks, figuresStopped, watchFigures } from "./game/figuresStoppe
 import { ModelStopped } from "./ui/ModelStopped";
 import { DeviceNote, deviceNoteApplies } from "./ui/DeviceNote";
 import { RetryNote } from "./ui/RetryNote";
+import { BasemapNote } from "./ui/BasemapNote";
 import { InstallBanner, installBannerApplies } from "./ui/InstallBanner";
 import { retryDiedLoad, retryLoadsInPage } from "./game/oomRetry";
 import { MapSky, TopBar } from "./ui/TopBar";
@@ -246,6 +247,10 @@ if (deviceNoteApplies()) {
   map.getContainer().appendChild(noMarketRoot);
   render(h(DeviceNote, null), noMarketRoot);
 }
+// T-4275: the base map's style or tiles refused (an ad blocker): said once the game is ready, until closed
+const basemapNoteRoot = document.createElement("div");
+map.getContainer().appendChild(basemapNoteRoot);
+render(h(BasemapNote, null), basemapNoteRoot);
 // T-4106: on a phone or tablet after 2 hours of play, how to install the game as an app
 if (installBannerApplies()) {
   const installRoot = document.createElement("div");

@@ -235,7 +235,7 @@ def preflight(dist, allow_dirty, app=None, r2_version=None):
     for r, s in data:
         if s > 100 * MB:
             warnings.append(f"packs/{r} is {s / MB:.0f} MB")
-    return problems, warnings, {"commit": head, "repo": repo, "zones": len(ids), "site": site, "data": data, "frozen": frozen}
+    return problems, warnings, {"commit": head, "repo": repo, "app": app, "zones": len(ids), "site": site, "data": data, "frozen": frozen}
 
 
 def summary(info):
@@ -350,12 +350,13 @@ def published_builds(dest, stamp):
     return [stamp] + [b for b in old if isinstance(b, str) and b != stamp][:BUILDS_KEPT - 1]
 
 
-def record_release(dist, dry):
+def record_release(dist, app, dry):
     """T-3770: tools/feedback-inbox/builds.json says which release each build id is (the feedback inbox shows "v0.4.1
-    (mwlo7xyt)"). The release is the newest one in updates.ts, which `changelog.py publish` wrote before the build."""
+    (mwlo7xyt)"). The release is the newest one in the build's own updates.ts (`app`: a hotfix tree's or a freeze's,
+    not this tree's), which `changelog.py publish` wrote before the build."""
     stamp = build_stamp(dist)
     try:
-        ts = open(os.path.join(TW, "app", "src", "ui", "updates.ts"), encoding="utf-8").read()
+        ts = open(os.path.join(app, "src", "ui", "updates.ts"), encoding="utf-8").read()
         release = re.search(r'^    version: "(v[\d.]+)"', ts, re.M).group(1)
     except (OSError, AttributeError):
         release = None
@@ -695,7 +696,7 @@ def main():
     print("\nwebsite")
     copy_site(a.dist, os.path.join(WEBSITE, SITE_DIR), f"{PUBLIC}/{v}/", a.dry_run)
     write_redirects(os.path.join(WEBSITE, OLD_DIR), a.dry_run)
-    record_release(a.dist, a.dry_run)
+    record_release(a.dist, info["app"], a.dry_run)
 
     if not a.dry_run and not a.skip_data:
         print("\nverifying the data")

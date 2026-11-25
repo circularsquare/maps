@@ -1,0 +1,19 @@
+{
+  "release": "v0.4.6.1",
+  "line": "update v0.4.6.1: fixed base map not loading with some adblocker settings",
+  "items": [
+    {
+      "id": "hotfix461-1",
+      "text": "fixed base map not loading with some adblocker settings",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4275",
+      "by": "hotfix461",
+      "at": "2026-11-25T14:59:08Z",
+      "rev": 1,
+      "area": "schematic",
+      "fix": true
+    }
+  ],
+  "published": "2026-11-25T14:59:27Z"
+}
