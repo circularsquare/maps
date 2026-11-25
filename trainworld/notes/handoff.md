@@ -16,7 +16,8 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
    fault). On her yes to a-2026-11-25-4: T-4272 rest (train work before each answer).
    Not edit speed: T-4080 bus stop names done and archived (081dcb203); connections are T-4083.
 2. T-4220 stages 6-7 landed together 4ffd70e86 (NYC edited line's figures 17 s instead of 53); review20 fixed (T-4307,
-   landed). Until fixes22 lands: no publish from master; 8800 stays on 6c1cfb8ac. Left: stage 8 (Use more cores on), 9.
+   landed). Until fixes22 lands: no publish from master; 8800 stays on 6c1cfb8ac. aside8 (Opus) on stage 8 (Use more
+   cores on); 9 after.
    rowsdelta (Opus, T-4291). Briefs: my scratch <agent>/brief.md.
 3. Landed tonight (mine): T-4282, T-4276 (ask a-2026-11-25-5), T-4150 s2, T-4281 s1-2, T-4283, T-4220 s4-5, T-4285,
    T-4153 s7, T-4080 s3 + review fixes, T-4293, T-4284 s3, T-4297. 8800 = 6c1cfb8ac, smoke passed 11:3x.
