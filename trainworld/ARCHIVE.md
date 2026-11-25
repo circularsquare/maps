@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4349 [P2] {L:track-speed} A ramp's speed limit shown over a tighter curve's (2026-11-25): labels only: ramp labels only where the ramp is the lowest limit for 10 m+, curve labels take a slower ramp, slower label wins overlaps; trains unchanged. notes/T-4349.md.
 - T-4337 [P3] {L:small-fixes} A new game can open with old groups closed (2026-11-25): closed groups keyed by the oldest line's number and first stop position; a new game in the slot opens all groups; renames keep them. notes/T-4337.md.
 - T-4351 [P2] {L:translations} Station upgrade panel partly in English (2026-11-25): 8 keys missing in all 12 languages (upgrade hovers, upkeep lines, BRT) translated; 109 more keys missing per language and 8 stale filed as T-4354. notes/T-4351.md.
 - T-4348 [P1] {L:edit-speed} Slow edits on a player's 44-year Poland save (2026-11-25): not the game's age: autosave grows 60-100 ms by year 44 (at most about 5% of an edit's wait); the slow part is reworking running lines, T-4272/T-4097 work. notes/T-4348.md.

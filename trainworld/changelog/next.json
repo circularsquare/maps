@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c003",
+      "text": "fixed speed labels on a curve on a ramp showing the higher of the two limits",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4349",
+      "by": "slopespeed",
+      "at": "2026-11-25T19:33:17Z",
+      "rev": 1,
+      "area": "track",
+      "fix": true
+    },
+    {
       "id": "c002",
       "text": "fixed a new game opening with some line groups closed",
       "edited": null,

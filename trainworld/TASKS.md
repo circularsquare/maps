@@ -1072,9 +1072,14 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your TODO.md, 11-20, from player suggestions: "station logo?? paint it?" Design for you first.
 
 ## Track and trains
-- T-4349 [P2] {L:track-speed} A ramp's speed limit shown over a tighter curve's (taking, 2026-11-25, agent slopespeed)
-  - Context: You, 11-25: "if i have a tight curve thats limited by curvature to 80kph but its limited by slope to like 150kph itll show 150, i think." The ramp limit is T-3027's rule.
-  - Goal: Track shows, and trains run at, the lowest of its curve and slope limits.
+- T-4356 [P3] {L:track-speed} Ramp speed labels while dragging and in the blueprint box
+  - Context: From T-4349: node drags, the blueprint box and an idle selected stretch show curve labels but no ramp labels. Missing, not wrong; the drawing tool shows both.
+  - Goal: Every place that labels a curve's limit also labels a ramp that is the lowest limit.
+  - Other: notes/T-4349.md
+- T-4357 [P3] {L:track-speed} {waits:Anita} Track panel's Slowest curve can be a ramp
+  - Need from Anita: Rename the track panel's "Slowest curve" row to "Slowest limit", since the figure can be a ramp's? I'd rename it.
+  - Context: From T-4349: the row shows the piece's lowest limit, which is a ramp's when the ramp is slower than every curve.
+  - Other: notes/T-4349.md
 - T-4345 [P3] {L:fares} A fee to use a station's park and ride
   - Context: You, 11-25: "i think there probably also are some people having issues with parking lots with non tram lines. but yeah we can just do this for now. can maybe file like charging a fee to use parking lot as a task, could be fun". A rail station's lot costs US$40k a day and earns nothing.
   - Goal: A design for a parking fee that earns money and puts some drivers off, shown to you before it is built.

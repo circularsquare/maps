@@ -10,7 +10,7 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
 2. Landed 11-25: T-4348 (year44: not the game's age; T-4350 filed), T-4351 (72678ae68, 8 upgrade keys in 12 languages;
    T-4354, T-4355 filed), T-4337 (a1bd74dc2). Rebuild 8800 and smoke after buyfix and slopespeed land.
 3. Running (her week's max is 4): tr117a (Sonnet, tree tr117a, 6145, T-4354 stage 1: ja, zh-Hans,
-   zh-TW, ko; one pass plus own back-translation, my call); stages 2-3: de, fr, es, pt; tr, ru, ca, id; then the
+   zh-TW, ko; one pass plus own back-translation, my call); tr117b (tree tr117b, 6146): de, fr, es, pt; then tr, ru, ca, id; then the
    publish skill's step 4 covers missing and stale keys.
    buyfix done (tree buytrains, unlanded): review30's 1, 2, 4, 7 fixed (F1 by settle, not the review's fix), notice
    "More trains bought for {price}." (her "text ack", 11-25). Running: review31 (Opus, read-only) on those fixes,
