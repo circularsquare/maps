@@ -78,9 +78,32 @@ fn main() {
         if c.is_empty() { bytes } else { c }
     };
     let mut a = TrackApi::new(-73.985, 40.758, true);
+    // T-4239: the settle rounds (each a service update of every line) behind each timing
+    let rounds = || trainworld_sim::track::world::SETTLE_UPDATES.with(|c| c.get());
     let t = Instant::now();
     assert!(a.load(&bytes), "not a save");
-    eprintln!("load {:.0} ms", t.elapsed().as_secs_f64() * 1e3);
+    eprintln!("load {:.0} ms, {} settle rounds", t.elapsed().as_secs_f64() * 1e3, rounds());
+    // T-4239: `TW_BUS_ZONES=<n>`: then n times the bus rework a zone's street speeds start (`add_pack_streets`),
+    // here over every bus line with no streets, timed with their settle rounds
+    if let Some(z) = std::env::var("TW_BUS_ZONES").ok().and_then(|s| s.parse::<u32>().ok()) {
+        let (t, r0) = (Instant::now(), rounds());
+        for _ in 0..z {
+            a.rework_all_buses();
+        }
+        eprintln!("bus rework x{z} {:.0} ms, {} settle rounds", t.elapsed().as_secs_f64() * 1e3, rounds() - r0);
+    }
+    // T-4239: the lines a settle keeps off their fleet, and by how much of their trains
+    let kept = |a: &TrackApi, when: &str| {
+        let k = a.settle_kept_offsets();
+        let mut share: Vec<f64> = k.iter().map(|e| e.2 / e.3.max(1e-9)).collect();
+        share.sort_by(f64::total_cmp);
+        let over = k.iter().filter(|e| e.2 < 0.0).count();
+        eprintln!("kept {when}: {} line levels, {over} over their fleet; off by {:.2}% to {:.2}% of their trains", k.len(), 100.0 * share.first().copied().unwrap_or(0.0), 100.0 * share.last().copied().unwrap_or(0.0));
+        if std::env::var("TW_KEPT").is_ok() {
+            for e in &k { eprintln!("KEPT {when} line {} level {} short {:.4} of {:.2} trains", e.0, e.1, e.2, e.3); }
+        }
+    };
+    kept(&a, "after the load");
     a.set_unlimited(true);
     a.set_now(clock);
     let info = a.lines_info();
@@ -92,10 +115,10 @@ fn main() {
         // the clock runs between edits, as in the game
         now += 30.0;
         a.set_now(now);
-        let t = Instant::now();
+        let (t, r0) = (Instant::now(), rounds());
         let r = f(a);
         let ms = t.elapsed().as_secs_f64() * 1e3;
-        eprintln!("{what:<28} {ms:>8.1} ms  r={r}  trains {:?}", trains(a, best));
+        eprintln!("{what:<28} {ms:>8.1} ms  {:>4} rounds  r={r}  trains {:?}", rounds() - r0, trains(a, best));
         ms
     };
     if let Ok(path) = std::env::var("TW_DUMP") {
@@ -176,7 +199,6 @@ fn main() {
     // T-4194: `TW_STOPS=1`: the line on headways (trains bought as its length changes), then a
     // middle stop removed and put back, each timed with the settle rounds it ran
     if std::env::var("TW_STOPS").is_ok() {
-        let rounds = || trainworld_sim::track::world::SETTLE_UPDATES.with(|c| c.get());
         // T-4194: the line whose last stop comes off cleanly and has the most trains
         let mut best = best;
         let mut top = 0.0;
@@ -247,6 +269,7 @@ fn main() {
             std::fs::write(format!("{path}.reload.figs"), figures(&b, &lines)).unwrap();
         }
     }
+    kept(&a, "after the edits");
     let mean = all.iter().sum::<f64>() / all.len() as f64;
     let mut s = all.clone();
     s.sort_by(f64::total_cmp);

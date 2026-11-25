@@ -319,3 +319,24 @@ impl TrackApi {
         out.extend([k as f64, n.node_x[i], n.node_y[i], n.node_level[i] as f64, n.node_ports[i].n as f64, n.built_ports(k) as f64, flags as f64, n.node_platform[i] as f64, n.node_built[i] as u8 as f64, n.node_heading[i]]);
     }
 }
+
+/// T-4239: what `add_pack_streets` runs once a zone's street speeds are in, over every bus line, for
+/// bin/edit_bench to time a load's street speeds natively (native builds only, not in the WASM interface).
+#[cfg(not(target_arch = "wasm32"))]
+impl TrackApi {
+    pub fn rework_all_buses(&mut self) -> i32 {
+        self.w.rework_buses(None) as i32
+    }
+
+    /// T-4239: per line and level a settle keeps off its fleet (`settle_kept`, weekdays), its trains
+    /// short of the fleet's rate (negative: over it) and its running trains, for bin/edit_bench.
+    pub fn settle_kept_offsets(&self) -> Vec<(u32, usize, f64, f64)> {
+        let (n, s) = (&self.w.net, &self.w.svc);
+        n.settle_kept.iter().filter(|e| (e.0 as usize) < n.line_count() && (e.0 as usize) < s.lines.len()).map(|e| {
+            let (l, lev) = (e.0 as usize, e.1);
+            let trip = s.lines[l].round_trip[lev];
+            let runs = n.running_trains(l, lev, trip);
+            (e.0, lev, runs - n.line_tph[l][lev] as f64 * trip / 3600.0, runs)
+        }).collect()
+    }
+}

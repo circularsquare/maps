@@ -1453,11 +1453,21 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   steps ask for trains at every level); bus lines start with buses at every level; zero means no new departures. The panel shows the integer allocation and resulting headway.
   Frequency is derived from the capacity-adjusted round trip, with a bounded solve on edits (at
   most 80 rounds, ending at the first round that changes no rate or round trip, T-747, or, where
-  the rounds come back to a state of 1-4 rounds before, at the round the cap would end on, T-3233; a line
-  within 0.05 trains of its fleet whose shortfall has changed sign three times without halving,
-  as where its round trip jumps when a hold comes and goes, is settled on the side with trains to
-  spare and stays so while its rate and round trip are unchanged, T-1283);
-  extending track or changing congestion adjusts the headway while preserving the allocation.
+  the rounds come back to a state seen before, at the round the cap would end on, T-3233, T-4194).
+  A line whose round trip jumps as its rate passes a threshold (a hold, a wait at a passing station
+  or a following loss coming and going) has no rate its fleet fits, and its shortfall circles. One
+  within 0.05 trains of its fleet (0.25 on headways) that has changed sign three times without
+  halving is settled on the side with trains to spare (T-1283). One whose circle reaches past that,
+  within 3% of its trains (under one train on headways), whose shortfall has turned to one side
+  three times at 80% or more of the first of them (a converging swing shrinks below that within a
+  turn or two) is settled there (T-4239): on counts on the side its fleet falls short, the longer
+  round trip, whose waits a circling local's trains need on their own timetables; on headways on
+  the side with trains to spare, where the next settle buys it no train. Lines sharing track are
+  settled this way one at a time, and settling one lets those settled before it (once a settle) show
+  whether they still circle. Either stays so while its rate, round trip, trains, headway and pace
+  (and where its hours mix rows, its other slots' rates) are unchanged; a circle wider than both
+  still runs to the cap.
+  Extending track or changing congestion adjusts the headway while preserving the allocation.
   It never exceeds what the line's track can carry (6.2): trains beyond that wait at the ends.
   **In step at a merge** (T-2973, `TrackWorld::pace_merges`, Anita 2026-11-10): lines set by count
   that meet at a merge (directly or through other merges) and whose headways (round trip over

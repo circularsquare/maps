@@ -94,13 +94,107 @@ fn repeat_period<S: PartialEq>(seen: &std::collections::VecDeque<S>, now: &S) ->
 }
 /// Within this many trains of its fleet, a line whose shortfall keeps turning is settled (T-1283).
 const SWING_NEAR: f64 = 0.05;
-/// T-4194: the same, in the settle's rounds. A line whose round trip jumps as its rate passes a
-/// threshold turns 0.05-0.19 trains from its fleet on big networks, so the closer bound never fired;
-/// a circling line on headways is kept up to this many trains under its fleet. A line on train
-/// counts keeps `SWING_NEAR`: a wider bound moved its timetable (T-3931's test). One constant to move.
+/// T-4194: the same for a line on headways, in the settle's rounds.
 const SETTLE_SWING_NEAR: f64 = 0.25;
-/// Turns that do not shrink the shortfall by half before it counts as circling (T-1283).
+/// Turns that do not shrink the shortfall by half before it counts as circling (T-1283), and turns
+/// to one side at `SWING_SAME` of the first of them before a wider circle does (T-4239).
 const SWING_TURNS: u8 = 3;
+/// T-4239: a wider circle is settled within this share of the line's trains. A passing-track wait
+/// or a following loss (`overtake`) steps as the rates pass a threshold, so a round trip jumps by a
+/// share of itself (0.4-3% on Tokyo's trunks) and its fleet turns that share of its trains about
+/// its fit (0.2 of 14), past `SWING_NEAR`.
+const SWING_SHARE: f64 = 0.03;
+/// T-4239: a turn to a side counts toward a wider circle when its shortfall is at least this share
+/// of the first turn there since the count began; a smaller one begins it again. A circle comes
+/// back to each side at the size it left. A swing that converges shrinks, and fails this within a
+/// turn or two unless it shrinks by under a tenth a turn there, too slowly to settle before the cap.
+/// Halving alone (T-1283) also counts a slow overshoot, which is harmless only within `SWING_NEAR`.
+const SWING_SAME: f64 = 0.8;
+/// T-4239: a line on headways is held this many trains under its need at most: `trim_auto` drops
+/// the whole trains a line has to spare.
+const SWING_SPARE_MAX: f64 = 1.0;
+
+/// T-1283, T-4239: what a settle keeps of one line's shortfall at one level from round to round,
+/// for its two catches of a line no rate fits.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+struct Swing {
+    /// the sign the shortfall last had (0 before it had one)
+    sign: i8,
+    /// T-1283: the turns within its bound that did not shrink by half, and the size at the last
+    near_turns: u8,
+    near_size: f64,
+    /// T-4239: the size at the last turn, either side
+    last: f64,
+    /// T-4239, per side (fleet short, trains to spare): the size at the first turn of the count
+    /// there, and the turns there since at `SWING_SAME` of it or more, that one included
+    first: [f64; 2],
+    turns: [u8; 2],
+    /// T-4239: held by the wider catch, and freed once a settle by a line sharing its track
+    /// (`hold_circles`)
+    held: bool,
+    freed: bool,
+}
+
+impl Swing {
+    /// The round's shortfall `short`, with T-1283's bound `near` and T-4239's `wide` (trains).
+    /// The side (0 fleet short, 1 trains to spare) a turn came back to for the `SWING_TURNS`th
+    /// time at the size it left, where the wider catch may hold the line.
+    fn turn(&mut self, short: f64, near: f64, wide: f64) -> Option<usize> {
+        let sign = if short >= SETTLED { 1 } else if short <= -SETTLED { -1 } else { 0 };
+        let turned = sign != 0 && self.sign != 0 && sign != self.sign;
+        let size = short.abs();
+        if size >= near {
+            (self.near_turns, self.near_size) = (0, 0.0);
+        } else if turned {
+            // counted only up to the test below, so a repeat is seen (T-3233)
+            if size >= 0.5 * self.near_size { self.near_turns = (self.near_turns + 1).min(SWING_TURNS); }
+            self.near_size = size;
+        }
+        if sign != 0 { self.sign = sign; }
+        if size >= wide {
+            (self.last, self.first, self.turns, self.held) = (0.0, [0.0; 2], [0; 2], false);
+            return None;
+        }
+        if !turned { return None; }
+        let side = (sign > 0) as usize;
+        let mut back = None;
+        // a swing within `near` on both sides is T-1283's
+        if size.max(self.last) >= near {
+            if self.first[side] > 0.0 && size >= SWING_SAME * self.first[side] {
+                self.turns[side] = (self.turns[side] + 1).min(SWING_TURNS);
+            } else {
+                (self.first[side], self.turns[side]) = (size, 1);
+            }
+            if self.turns[side] >= SWING_TURNS { back = Some(side); }
+        }
+        self.last = size;
+        back
+    }
+}
+
+/// T-4239: of the lines whose wider circles came back this round (`back`: index, level, share of
+/// its trains), the widest first (then by index), each is held where none of the lines sharing
+/// track with it (`mates`, sorted) was held this round: two lines circling each other are held
+/// one at a time, as the second's circle may have been the first's doing. For the same reason a
+/// hold frees the lines sharing its track held before it, each once a settle, so holds end.
+fn hold_circles(swings: &mut [[Swing; SLOTS]], mut back: Vec<(usize, usize, f64)>, mates: impl Fn(usize) -> Vec<usize>) {
+    back.sort_by(|a, b| b.2.total_cmp(&a.2).then(a.0.cmp(&b.0)).then(a.1.cmp(&b.1)));
+    let mut now: Vec<(usize, usize)> = vec![];
+    for (j, lev, _) in back {
+        let m = mates(j);
+        if now.iter().any(|&(k, l)| l == lev && m.binary_search(&k).is_ok()) {
+            continue;
+        }
+        swings[j][lev].held = true;
+        now.push((j, lev));
+        for &k in &m {
+            let s = &mut swings[k][lev];
+            if s.held && !s.freed {
+                (s.held, s.freed) = (false, true);
+            }
+        }
+    }
+}
 
 /// Most rounds of "count from round trip, settle" a headway line's counts get per edit (T-625).
 const AUTO_ROUNDS: usize = 5;
@@ -876,6 +970,9 @@ impl TrackWorld {
         if adopt || was == pace {
             return false;
         }
+        // T-4239: a line paced otherwise runs other trains over the same round trip
+        // (`running_trains`): what a settle kept it by at that level no longer holds
+        self.net.settle_kept.retain(|e| was.get(e.0 as usize).zip(pace.get(e.0 as usize)).map_or(true, |(a, b)| a[e.1] == b[e.1]));
         self.net.line_pace = pace;
         true
     }
@@ -1218,14 +1315,13 @@ impl TrackWorld {
             let seeds = std::mem::take(&mut self.settle_reshare);
             self.reshare_full(&ids, &seeds, &mut affected);
         }
-        // T-1283: per line and level, the sign its shortfall last had, how often it has turned
-        // without shrinking by half, and its size at the last turn
-        let mut swings: Vec<[(i8, u8, f64); SLOTS]> = vec![[(0, 0, 0.0); SLOTS]; ids.len()];
+        // T-1283, T-4239: per line and level, how its shortfall has turned
+        let mut swings: Vec<[Swing; SLOTS]> = vec![[Swing::default(); SLOTS]; ids.len()];
         let mut kept_now = vec![[false; SLOTS]; ids.len()];
         // T-3233: a round is a function of the rates, round trips and swings it starts from, so a
         // state seen `p` rounds before comes round every `p` rounds to the cap; the settle then runs
         // only the rounds that end it in the cap's state, to the bit
-        let mut seen: std::collections::VecDeque<(Vec<[f32; SLOTS]>, Vec<[f64; SLOTS]>, Vec<[(i8, u8, f64); SLOTS]>)> = Default::default();
+        let mut seen: std::collections::VecDeque<(Vec<[f32; SLOTS]>, Vec<[f64; SLOTS]>, Vec<[Swing; SLOTS]>)> = Default::default();
         let mut stop_at: Option<usize> = None;
         let mut last_rates: Option<Vec<[f32; SLOTS]>> = None;
         for round in 0..SETTLE_ROUNDS {
@@ -1251,9 +1347,14 @@ impl TrackWorld {
             keep.iter_mut().for_each(|k| *k = [false; SLOTS]);
             let worst = self.svc.cap.bottlenecks(self.net.line_count());
             let scope = self.settle_scope.as_deref();
+            // per line and level: its shortfall, its sign, and whether full track holds it
+            let mut at = vec![[(0.0f64, 0i8, false); SLOTS]; ids.len()];
+            // T-4239: the lines whose wider circles came back this round: index, level, share of its trains
+            let mut back: Vec<(usize, usize, f64)> = vec![];
             for (j, &id) in ids.iter().enumerate() {
                 for lev in self.net.slots() {
-                    let short = self.net.running_trains(id as usize, lev, trips[j][lev]) - rates[j][lev] as f64 * trips[j][lev] / 3600.0;
+                    let runs = self.net.running_trains(id as usize, lev, trips[j][lev]);
+                    let short = runs - rates[j][lev] as f64 * trips[j][lev] / 3600.0;
                     // T-517: a line short of its fleet's rate is settled when a track it uses is full.
                     // T-3526: not single track it alone runs over past full: only its own rate can
                     // overfill that (a lone train's rate, T-3201, when a second train comes), so it is
@@ -1267,18 +1368,38 @@ impl TrackWorld {
                     // and going) has no rate that fits the fleet exactly, and the steps below circle
                     // it to the cap, each a pass over every line. Near the fit, a shortfall that
                     // keeps turning without shrinking is settled on its side with trains to spare.
+                    // T-4239: a wider circle, back at a side three times at the size it left, is
+                    // settled there: a line on train counts on the side its fleet falls short, the
+                    // longer round trip, as with the shorter waits of the other a circling local's
+                    // trains on their own timetables (`timing`) have an express run through them
+                    // (T-3931's test); a line on headways on the side with trains to spare, as
+                    // T-1283's, where `auto_counts` buys it no train the next settle.
                     let sign = if short >= SETTLED { 1 } else if short <= -SETTLED { -1 } else { 0 };
+                    let auto = self.net.line_auto[id as usize].is_some();
+                    let near = if auto { SETTLE_SWING_NEAR } else { SWING_NEAR };
+                    let (wide, side) = if auto { ((SWING_SHARE * runs).min(SWING_SPARE_MAX), 1) } else { (SWING_SHARE * runs, 0) };
                     let sw = &mut swings[j][lev];
-                    if short.abs() >= if self.net.line_auto[id as usize].is_some() { SETTLE_SWING_NEAR } else { SWING_NEAR } {
-                        *sw = (0, 0, 0.0);
-                    } else if sign != 0 && sw.0 != 0 && sign != sw.0 {
-                        // counted only up to the test below, so a repeat is seen (T-3233)
-                        if short.abs() >= 0.5 * sw.2 { sw.1 = (sw.1 + 1).min(SWING_TURNS); }
-                        sw.2 = short.abs();
+                    let came = sw.turn(short, near, wide);
+                    sw.held &= if side == 0 { short < 0.0 } else { short > 0.0 };
+                    if came == Some(side) && !sw.held && scope.map_or(true, |s| s[id as usize]) {
+                        back.push((j, lev, short.abs() / runs));
                     }
-                    if sign != 0 { sw.0 = sign; }
-                    let left = (id, lev, rates[j][lev].to_bits(), trips[j][lev].to_bits(), self.net.trains_key(id as usize, lev));
-                    keep[j][lev] = (sw.1 >= SWING_TURNS && short > 0.0) || self.net.settle_kept.contains(&left);
+                    at[j][lev] = (short, sign, held);
+                }
+            }
+            if !back.is_empty() {
+                let mut who: Vec<usize> = back.iter().map(|b| b.0).collect();
+                who.sort_unstable();
+                who.dedup();
+                let mates = self.sharing_mates(&ids, &who);
+                hold_circles(&mut swings, back, |j| who.binary_search(&j).map_or(vec![], |q| mates[q].clone()));
+            }
+            for (j, &id) in ids.iter().enumerate() {
+                for lev in self.net.slots() {
+                    let (short, sign, held) = at[j][lev];
+                    let sw = &swings[j][lev];
+                    let left = (id, lev, rates[j][lev].to_bits(), trips[j][lev].to_bits(), self.net.kept_key(id as usize, lev));
+                    keep[j][lev] = (sw.near_turns >= SWING_TURNS && short > 0.0) || sw.held || self.net.settle_kept.contains(&left);
                     // T-1787: on an edit a settled line is left as it is, not probed and stepped
                     // with the rest of its level: on shared track each line moved re-times its
                     // neighbours. A held line is stepped, as the fill shares full track by what each
@@ -1344,7 +1465,7 @@ impl TrackWorld {
         self.net.settle_kept.clear();
         for (j, &id) in ids.iter().enumerate() {
             for lev in (0..SLOTS).filter(|&lev| kept_now[j][lev]) {
-                self.net.settle_kept.push((id, lev, self.net.line_tph[id as usize][lev].to_bits(), self.svc.lines[id as usize].round_trip[lev].to_bits(), self.net.trains_key(id as usize, lev)));
+                self.net.settle_kept.push((id, lev, self.net.line_tph[id as usize][lev].to_bits(), self.svc.lines[id as usize].round_trip[lev].to_bits(), self.net.kept_key(id as usize, lev)));
             }
         }
         affected.extend(ids.into_iter().filter(|&id| before[id as usize] != self.net.line_tph[id as usize]));
@@ -1360,6 +1481,25 @@ impl TrackWorld {
         let cap = &self.svc.cap;
         let own_over = wr > 1.0 + 1e-9 && wres != u32::MAX && cap.res[wres as usize].kind == ResKind::SingleTrack && cap.users_of(wres as usize).iter().all(|u| u.line == id);
         wr >= FULL_RHO && !own_over
+    }
+
+    /// T-4239: per line of `who` (indices in `ids`), the others sharing a resource with it, sorted.
+    fn sharing_mates(&self, ids: &[u32], who: &[usize]) -> Vec<Vec<usize>> {
+        let cap = &self.svc.cap;
+        let mut mates: Vec<Vec<usize>> = vec![vec![]; who.len()];
+        for r in 0..cap.res.len() {
+            let us = cap.users_of(r);
+            for (q, &j) in who.iter().enumerate() {
+                if us.iter().any(|u| u.line == ids[j]) {
+                    mates[q].extend(us.iter().filter_map(|u| ids.binary_search(&u.line).ok()).filter(|&k| k != j));
+                }
+            }
+        }
+        for m in &mut mates {
+            m.sort_unstable();
+            m.dedup();
+        }
+        mates
     }
 
     /// T-3655: a line the edit gave other trains or another headway (`seeds`) on full track takes
@@ -1390,7 +1530,7 @@ impl TrackWorld {
         for pass in 0..=RESHARE_PASSES {
             let worst = self.svc.cap.bottlenecks(n);
             // as `settle_counts` keeps it (T-1283)
-            let kept = |w: &TrackWorld, i: usize, lev: usize, trip: f64| w.net.settle_kept.contains(&(i as u32, lev, w.net.line_tph[i][lev].to_bits(), trip.to_bits(), w.net.trains_key(i, lev)));
+            let kept = |w: &TrackWorld, i: usize, lev: usize, trip: f64| w.net.settle_kept.contains(&(i as u32, lev, w.net.line_tph[i][lev].to_bits(), trip.to_bits(), w.net.kept_key(i, lev)));
             let mut new = vec![[false; SLOTS]; n];
             // what each line could run with the others' rates as they stand (T-679)
             let most = if pass == 0 { self.svc.cap.line_limits(&self.net) } else { vec![] };
@@ -1497,7 +1637,7 @@ impl TrackWorld {
         let off = |w: &TrackWorld, worst: &[[(f64, u32); SLOTS]], i: usize, lev: usize| -> Option<(f64, f64)> {
             let t = w.svc.lines[i].round_trip[lev];
             let short = w.net.running_trains(i, lev, t) - w.net.line_tph[i][lev] as f64 * t / 3600.0;
-            let kept = w.net.settle_kept.contains(&(i as u32, lev, w.net.line_tph[i][lev].to_bits(), t.to_bits(), w.net.trains_key(i, lev)));
+            let kept = w.net.settle_kept.contains(&(i as u32, lev, w.net.line_tph[i][lev].to_bits(), t.to_bits(), w.net.kept_key(i, lev)));
             (settled[i] && levels[lev] && short.abs() >= SETTLED && !(short > 0.0 && w.on_full_track(worst, i as u32, lev)) && !kept).then_some((short, t))
         };
         // (a few times: a round trip can still grow a little as others' rates fall, through the
@@ -1528,7 +1668,7 @@ impl TrackWorld {
             let i = id as usize;
             for lev in self.net.slots() {
                 if let Some((_, t)) = off(self, &worst, i, lev).filter(|x| x.0 > 0.0 && x.0 < if turned[i][lev] >= SWING_TURNS { RESHARE_JUMP } else { RESHARE_NEAR }) {
-                    self.net.settle_kept.push((id, lev, self.net.line_tph[i][lev].to_bits(), t.to_bits(), self.net.trains_key(i, lev)));
+                    self.net.settle_kept.push((id, lev, self.net.line_tph[i][lev].to_bits(), t.to_bits(), self.net.kept_key(i, lev)));
                 }
             }
         }
@@ -1994,6 +2134,21 @@ impl TrackWorld {
         if !moved.is_empty() {
             self.net.settle_kept.retain(|k| !moved.contains(&k.0));
             self.net.settle_kept_rest.retain(|k| !moved.contains(&k.0));
+        }
+        // T-4239: a line given another headway, or switched between counts and headways, runs other
+        // trains over the same round trip (`running_trains`): what a settle kept it by there no
+        // longer holds
+        if service {
+            let net = &self.net;
+            let gone: Vec<(u32, usize)> = net.settle_kept.iter().chain(&net.settle_kept_rest)
+                .filter(|e| net.line_ok(e.0) && keys.get(e.0 as usize).copied().flatten().is_some_and(|k| k[e.1].1 != net.auto_at(e.0 as usize, e.1)))
+                .map(|e| (e.0, e.1))
+                .collect();
+            if !gone.is_empty() {
+                for kept in [&mut self.net.settle_kept, &mut self.net.settle_kept_rest] {
+                    kept.retain(|e| !gone.contains(&(e.0, e.1)));
+                }
+            }
         }
         // the game's hours move every line: worked out again as a periods switch is (London 0.9 s
         // natively against 1.8-6.8 s as an edit of every line's schedule)
@@ -2731,5 +2886,152 @@ mod settle_repeat_tests {
         let seen: VecDeque<u32> = [7, 1, 7, 2, 3].into_iter().collect();
         assert_eq!(repeat_period(&seen, &7), Some(3));
         assert_eq!(repeat_period(&seen, &9), None);
+    }
+}
+
+/// T-4239: a local whose round trip steps as its rate passes a threshold (its waits at the passing
+/// stations) has no rate its fleet fits: the settle circled with its express for 35 rounds, to land
+/// where the 80-round cap would.
+#[cfg(test)]
+mod circle_tests {
+    use super::*;
+    use crate::track::overtake::tests::{set_passing, shinkansen};
+
+    #[test]
+    fn a_local_circling_at_its_passing_waits_settles_where_its_fleet_falls_short() {
+        let (mut w, n, local, express) = shinkansen();
+        for (id, k) in [(local, 10u32), (express, 12)] {
+            w.apply(Op::AutoTrains { id, auto: None, trains: Some([k, k, 0]) }).unwrap();
+        }
+        let rounds = || SETTLE_UPDATES.with(|c| c.get());
+        let r0 = rounds();
+        set_passing(&mut w, &n[1..6], true);
+        let ran = rounds() - r0;
+        let l = local as usize;
+        let trip = w.svc.lines[l].round_trip[HIGH];
+        let runs = w.net.running_trains(l, HIGH, trip);
+        let short = runs - w.net.line_tph[l][HIGH] as f64 * trip / 3600.0;
+        eprintln!("{ran} settle rounds; local {} tph, round trip {trip:.0} s, {short:.3} of {runs} trains", w.net.line_tph[l][HIGH]);
+        assert!(short < -SWING_NEAR && short > -SWING_SHARE * runs, "the local is kept just over its fleet: {short}");
+        assert!(ran <= 20, "{ran} settle rounds");
+        // the express circled with it, and settles to its fleet once the local is held
+        let x = express as usize;
+        let t = w.svc.lines[x].round_trip[HIGH];
+        let off = w.net.running_trains(x, HIGH, t) - w.net.line_tph[x][HIGH] as f64 * t / 3600.0;
+        assert!(off.abs() < SETTLED, "the express runs its fleet: {off}");
+    }
+
+    /// T-4239: a save of a line held on its circle loads with the rates, round trips and trains
+    /// it was saved with, the hold included
+    #[test]
+    fn a_saved_line_held_on_its_circle_loads_as_it_was() {
+        let (mut w, n, local, express) = shinkansen();
+        for (id, k) in [(local, 10u32), (express, 12)] {
+            w.apply(Op::AutoTrains { id, auto: None, trains: Some([k, k, 0]) }).unwrap();
+        }
+        set_passing(&mut w, &n[1..6], true);
+        assert!(w.net.settle_kept.iter().any(|e| e.0 == local && e.1 == HIGH), "the local is held");
+        let back = TrackWorld::new(crate::track::save::decode(&crate::track::save::encode(&w.net)).unwrap());
+        for l in [local, express] {
+            let l = l as usize;
+            assert_eq!(back.net.line_trains[l], w.net.line_trains[l], "line {l} trains");
+            for lev in w.net.slots() {
+                assert_eq!(back.net.line_tph[l][lev].to_bits(), w.net.line_tph[l][lev].to_bits(), "line {l} level {lev} rate");
+                assert_eq!(back.svc.lines[l].round_trip[lev].to_bits(), w.svc.lines[l].round_trip[lev].to_bits(), "line {l} level {lev} round trip");
+            }
+        }
+        assert_eq!(back.net.settle_kept, w.net.settle_kept);
+    }
+
+    /// T-4239: a line a settle kept off its fleet, given another headway with the same trains, runs
+    /// the new headway: what kept it held the old one
+    #[test]
+    fn a_kept_line_given_another_headway_runs_it() {
+        let (mut w, _, local, _) = shinkansen();
+        let l = local as usize;
+        let trip = w.svc.lines[l].round_trip[HIGH];
+        assert_eq!(w.net.line_tph[l][HIGH], 6.0);
+        w.net.settle_kept.push((local, HIGH, w.net.line_tph[l][HIGH].to_bits(), trip.to_bits(), w.net.kept_key(l, HIGH)));
+        let trains = w.net.line_trains[l];
+        let mut auto = w.net.line_auto[l].unwrap();
+        auto[0] = 620;
+        w.apply(Op::AutoTrains { id: local, auto: Some(auto), trains }).unwrap();
+        assert_eq!(w.net.line_trains[l], trains, "the same trains");
+        assert!((w.net.line_tph[l][HIGH] - 3600.0 / 620.0).abs() < 1e-3, "{} tph", w.net.line_tph[l][HIGH]);
+    }
+}
+
+/// T-4239: the wider catch on shortfalls, round by round (`Swing::turn`), and its holds
+/// (`hold_circles`)
+#[cfg(test)]
+mod swing_tests {
+    use super::*;
+
+    /// the round a line's shortfalls (`(round, trains)`, none for a round within `SETTLED`)
+    /// first come back to `side` for the wider catch
+    fn back_at(short: &[(usize, f64)], near: f64, wide: f64, side: usize) -> Option<usize> {
+        let mut sw = Swing::default();
+        (0..SETTLE_ROUNDS).find(|&round| sw.turn(short.iter().find(|e| e.0 == round).map_or(0.0, |e| e.1), near, wide) == Some(side))
+    }
+
+    /// a swing about the fit of 14 trains, short of it by `a` and over by `b` at first, each
+    /// side shrinking by `k` a turn there
+    fn swing(a: f64, b: f64, k: f64) -> Vec<(usize, f64)> {
+        (0..SETTLE_ROUNDS).map(|r| (r, if r % 2 == 0 { -a } else { b } * k.powi((r / 2) as i32))).collect()
+    }
+
+    #[test]
+    fn a_swing_that_converges_is_not_held() {
+        let s = swing(0.3, 0.25, 0.85);
+        assert_eq!(back_at(&s, SWING_NEAR, SWING_SHARE * 14.0, 0), None);
+        assert_eq!(back_at(&s, SWING_NEAR, SWING_SHARE * 14.0, 1), None);
+    }
+
+    #[test]
+    fn a_steady_circle_is_held_on_its_third_return() {
+        let s = swing(0.2, 0.2, 1.0);
+        assert_eq!(back_at(&s, SWING_NEAR, SWING_SHARE * 14.0, 0), Some(6));
+        // wider than the catch: never
+        assert_eq!(back_at(&s, SWING_NEAR, 0.2, 0), None);
+    }
+
+    /// the load of the community save jwxidghd (Tokyo) on the settle before T-4239 (T-4194's trace)
+    #[test]
+    fn the_circles_of_a_tokyo_save_are_held() {
+        let wide = SWING_SHARE * 14.0;
+        // line 16, a local, and line 19, Toyoko Line F Liner: 14 trains each, a circle of period 5
+        let l16 = [(0, -0.029138416016822433), (1, 0.13767238641842638), (2, -0.0591691093401856), (3, -0.058514943417209864), (4, 0.13642487968159323), (5, -0.04774635764796287), (6, 0.1191283560058718), (7, -0.06453085224600308)];
+        let l19 = [(0, -0.03656131388962791), (1, 0.17039711142815506), (2, -0.08981431755659841), (3, -0.02126123002555147), (4, 0.16225166942267322), (5, -0.10116887156207888), (6, 0.1621730521332001), (7, -0.1052717453564469)];
+        assert_eq!(back_at(&l16, SWING_NEAR, wide, 0), Some(7));
+        assert_eq!(back_at(&l19, SWING_NEAR, wide, 0), Some(7));
+        // line 7, 14 trains, circling with line 198 and never repeating
+        let l7 = [(1, 0.0014640157338892124), (2, 0.04007258572628558), (3, -0.011588226628260756), (4, -0.019740295916053086), (5, -0.003236105774320208), (6, 0.022008339341581973), (7, 0.0025542623688163957), (8, -0.05743129737185093), (9, 0.004932342161446002), (10, 0.04546251128869727), (11, 0.07165340778283458), (12, -0.03873270828916198), (13, -0.061135596421451055), (14, 0.015395969046331004), (15, 0.06714894461918419), (16, -0.10622837994728407), (17, 0.07169872852496084), (18, 0.03361923774602893), (19, 0.031286575230014435), (20, -0.0033203874800040722), (21, -0.025899082963684705), (22, 0.027173859730579508), (23, 0.016380441226010234), (24, -0.13580057578977645), (25, 0.045773309792661365), (26, 0.07043510843807432), (27, 0.0866191795252167), (28, 0.030459111128827487), (29, 0.010789906565502605), (30, -0.1232272238980947)];
+        assert_eq!(back_at(&l7, SWING_NEAR, wide, 0), Some(30));
+        // line 0, 22 trains: short of its fleet less each time, within T-1283's bound, until held
+        // on full track with trains to spare
+        let l0 = [(0, 0.017467063294340335), (1, 0.012842944666321188), (2, -0.030169990804218116), (3, 0.01842577020852687), (4, 0.006675251658059267), (5, -0.013056160043266374), (6, 0.016134822429485496), (7, -0.008478655816908542), (8, 0.023704356933350823), (9, -0.0015511771042753253), (10, 0.03226904160472088), (11, 0.048813478593753956), (12, 0.009332955940934085), (13, 0.018962253908529902), (14, -0.007263355423244633), (15, 0.01722203854406601), (16, -0.0061977241980528675), (17, 0.019521647598509162), (18, 0.02929297086178906), (19, 0.002389198185458241), (20, 0.02281706315120502), (21, -0.0006079569355996739), (22, 0.019980123459284016), (23, 0.029757487961205698), (24, 0.002861900217933311), (25, 0.02329063114626706), (26, -0.00013188418588327977), (27, 0.020071599207316382), (28, 0.02985831424243557), (29, 0.002964167673834339), (30, 0.023393037963874264)];
+        assert_eq!(back_at(&l0, SWING_NEAR, SWING_SHARE * 22.0, 0), None);
+    }
+
+    /// lines 0 and 1 share track; line 2 shares none with them
+    #[test]
+    fn two_lines_circling_each_other_are_held_one_at_a_time() {
+        let mates = |j: usize| match j { 0 => vec![1], 1 => vec![0], _ => vec![] };
+        let mut sw = vec![[Swing::default(); SLOTS]; 3];
+        let held = |sw: &[[Swing; SLOTS]]| [0, 1, 2].map(|j| sw[j][HIGH].held);
+        // all come back at once: the wider of the two, and the third
+        hold_circles(&mut sw, vec![(0, HIGH, 0.01), (1, HIGH, 0.02), (2, HIGH, 0.01)], mates);
+        assert_eq!(held(&sw), [false, true, true]);
+        // the other comes back still circling: held, and the first freed to show whether it does
+        hold_circles(&mut sw, vec![(0, HIGH, 0.01)], mates);
+        assert_eq!(held(&sw), [true, false, true]);
+        // it does: held, freeing the second, once each
+        hold_circles(&mut sw, vec![(1, HIGH, 0.02)], mates);
+        assert_eq!(held(&sw), [false, true, true]);
+        hold_circles(&mut sw, vec![(0, HIGH, 0.01)], mates);
+        assert_eq!(held(&sw), [true, true, true]);
+        // another level is another track's
+        hold_circles(&mut sw, vec![(0, LOW, 0.01)], mates);
+        assert_eq!(held(&sw), [true, true, true]);
     }
 }

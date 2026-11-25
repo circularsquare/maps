@@ -190,6 +190,17 @@ impl Network {
             _ => self.trains_at(l, s),
         }
     }
+    /// T-4239: `trains_key` as `settle_kept` holds it: where line `l`'s hours mix places in slot
+    /// `s`, with the rates of its other slots, which its borrowed hours are held to
+    /// (`running_borrowed`), so another rate there is another state.
+    pub fn kept_key(&self, l: usize, s: usize) -> u32 {
+        let key = self.trains_key(l, s);
+        if self.mixed(l, s).is_none() {
+            return key;
+        }
+        let tph = self.line_tph.get(l).copied().unwrap_or([0.0; SLOTS]);
+        self.slots().filter(|&t| t != s && self.mixed(l, t).is_none()).fold(key, |h, t| (h ^ tph[t].to_bits()).wrapping_mul(0x01000193))
+    }
     /// T-3542: line `l`'s fleet per slot: each slot's most trains of the places it runs there
     /// (`trains_most`), 0 in the slots not worked out.
     pub fn slot_trains(&self, l: usize) -> [u32; SLOTS] {
