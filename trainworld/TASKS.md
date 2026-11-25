@@ -300,8 +300,8 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Goal: The hover's share left behind counts each rider once.
   - Other: notes/T-4052.md
 - T-4080 [P2] {L:buses} Name and rename bus stops
-  - Context: Design approved 11-24 (named stops stay put, labels at street zoom). Stages 1-3 done 11-25: a bus stop's name is set in its panel, saved, and shown in its hover, stop lists and timetables. Left: map labels; connections are T-4083. Your scratch pad, 11-23: "people keep requesting to be able to rename / name bus stops."
-  - Goal: Named bus stops labelled on the map at street zoom.
+  - Context: Design approved 11-24 (named stops stay put, labels at street zoom). Done 11-25: a bus stop's name is set in its panel, saved, shown in its hover, stop lists, timetables and on the map from zoom 14. Left: small sim fixes; connections are T-4083. Your scratch pad, 11-23: "people keep requesting to be able to rename / name bus stops."
+  - Goal: The second review's findings 2-4 fixed (artifacts/trainworld/gemini/batch19/review.md), then this closes.
   - Other: notes/T-4080-design.md (about 6 h in six stages, 4 left; also covers T-4083); notes/T-4080.md
 - T-4049 [P3] {L:achievements} Cities served counts only busy cities
   - Context: Your scratch pad, 11-22: "for "cities served" count for like achievements, lets only coutn cities with like >1000 rides or something".

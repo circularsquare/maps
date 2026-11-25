@@ -5,15 +5,15 @@
     {
       "id": "c035",
       "text": "named bus stops: rename one in its panel, and the name shows in the stop's hover and its line's stop list",
-      "edited": "added names for bus stops, set in the stop's panel like a station's",
+      "edited": "added names for bus stops, set in the stop's panel and shown on the map",
       "hidden": false,
       "task": "T-4080",
       "by": "busnames3",
       "at": "2026-11-25T10:13:50Z",
-      "rev": 2,
+      "rev": 3,
       "area": "track",
       "fix": false,
-      "changed": "2026-11-25T10:14:48Z"
+      "changed": "2026-11-25T11:02:47Z"
     },
     {
       "id": "c034",

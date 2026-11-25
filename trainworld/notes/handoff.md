@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 74ece160-7d1e-4a7f-a351-88b3554e0a77, name maps-13 [f879aa], since 2026-11-25 07:18 UTC
-Updated: 2026-11-25 10:58 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-25 11:04 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
@@ -13,16 +13,16 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
    editbench/baseline.json is 11-24's: take a fresh --baseline on master on a quiet machine. Next: T-4291 (rows and
    post by what an edit touched, about 144 ms on Asia), which also covers T-4149's rest; T-4294 (Edit stops clicks
    sending a question and no edit, P2). On her yes to a-2026-11-25-4: T-4272 rest (train work before each answer).
-   Not edit speed: T-4080 s3 and review fixes landed (36ebd2710); s6 labels next.
+   Not edit speed: T-4080 bus stop names all landed (s3, s6 labels, review fixes); keepfix3 on the second review.
 2. aside7 (Opus, T-4220 stage 7, show and retire) works in tree aside6, where stage 6 sits unlanded: stage 6 removed
    T-2605's early figures, so 6 and 7 land together (never publish 6 alone). It has fixes18's three side-job findings;
    aside6's DECISIONS entry sits uncommitted in the main tree until then.
-   rowsdelta (Opus, T-4291). review19 (Sonnet; Gemini out): gemini/batch19/review.md over T-4080 s3 + fixes (saves),
-   T-4284 s3, T-4297; findings to a fix agent. Briefs: my scratch <agent>/brief.md.
+   rowsdelta (Opus, T-4291). review19 done (gemini/batch19/review.md: no save or rebuild issue;
+   keepfix3, Sonnet, on its findings 2-4). Briefs: my scratch <agent>/brief.md.
 3. Landed tonight (mine): T-4282, T-4276 (ask a-2026-11-25-5), T-4150 s2, T-4281 s1-2, T-4283, T-4220 s4-5, T-4285,
    T-4153 s7, T-4080 s3 + review fixes, T-4293, T-4284 s3, T-4297. 8800 = 623bac647 (before T-4297), smoke passed 10:55.
 4. Waiting on her: asks.py list. T-4275 roads hotfix on 8800, ready when she says publish. T-3742 after she asks.
-5. Next (not edit speed): T-4080 s6 labels (Sonnet), T-4199 s2, T-3160, T-4187.
+5. Next (not edit speed): T-4199 s2, T-3160, T-4187, T-4294 (Edit stops clicks lost).
 6. reserve_cores: maps-3e's loop holds the mutex; start one (`-All -Loop 30`) if it dies.
 
 ## Her words
