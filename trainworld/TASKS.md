@@ -176,7 +176,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Goal: Both kept per line and refreshed only when the line moves; about 2-3.5 h.
   - Other: notes/T-4131.md
 - T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
-  - Context: You, 11-25: "the game reworking the whole network after each edit is really the target here and everything else is kinda just flavor"; on your Asia save a station shows up in 1-3 s, a removal in about 4 s. Parts: T-4153 (drawn network), T-4214 (clickable map), T-4149 (worker rows), T-4150 (page).
+  - Context: You, 11-25: "the game reworking the whole network after each edit is really the target here and everything else is kinda just flavor". 11-25 landed: Asia later clicks 144-360 ms (were 618-2,156), page and clickable map by change (T-4150, T-4214 done). Parts left: T-4153 (drawn network), T-4291, T-4299, T-4300 (worker), T-4272 (your answer).
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
 - T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line
   - Context: You, 11-23: "this is the entire issue". Stage 7 (tree netcut): cut lines' samples and band samples kept by entry. Your Asia save, Node, a station on a three-line trunk: network build about 255 to 190 ms (first click 350 to 280), lines block 140 to 80. Left: cut lines' runs and steps, corridors, train speeds, whole-save passes.
@@ -206,7 +206,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Stage 1 in tree rowsdelta (11-25): the rows read and post only the records an edit touched. Your Asia save, Node: rows 120 to 45 ms, post 24 to 15. Left: the drawn network's arrays compared and copied whole in the post (about 12 ms) and the phase tables laid out whole; the model's passes are T-4299, the complexes T-4300.
   - Goal: Rows and post cost what the edit touched, the drawn network fed the same changes; under 20 ms together on Asia.
   - Other: notes/T-4291.md
-- T-4299 [P1] {L:edit-speed} The track model's whole passes on every state
+- T-4299 [P1] {L:edit-speed} The track model's whole passes on every state (taking, 2026-11-25, agent modelpass)
   - Context: From T-4291: each state still has the model go over every line or record: the noted lines' stamps, each line's upkeep share, the upkeep and fleet needs (twice), the 15 lists the rows read and the costs, about 15 ms in Node on your Asia save.
   - Goal: Each kept per record in the model and read by what an edit moved; under 3 ms a state on Asia.
   - Other: notes/T-4291.md "Left"
@@ -238,10 +238,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Done (tree busrebuild, 11-25): edits rebuild only the bus lines they reach and the ways back they move, and send no trips when no line moved; 25-58 ms less per station edit on your Asia save. Left: a station on track no line uses still rebuilds the lines through that track's ends, and the settle then moves their neighbours.
   - Goal: A station on track no line runs over rebuilds no line and sends no trips.
   - Other: notes/T-4249.md
-- T-4214 [P1] {L:edit-speed} Track runs chain without waiting, drawings from the patched map (taking, 2026-11-25, agent trackrun)
-  - Context: Stages A and C done: a station is sent at its click, its name after it, and stations placed or removed on a line's track patch the clickable map too (tree stationclick, 11-25). You, 11-24: "something like a silo approach". Left: a track run's next segment waits on placing (D), drawings at the click (E).
-  - Goal: No placing wait between a run's segments; what is drawn at the click is the patched map's.
-  - Other: notes/T-4214.md
 - T-4154 [P2] {L:checks} Agent browsers run past their core claim
   - Context: 11-24 at cap 10: three agent games (play.mjs on 6151 and 6168, a smoke) ran on 14 cores with no claim in the ledger, and the edit bench's renderer used 8 cores on a 4-core claim.
   - Goal: Every agent browser stays on its claimed cores for its whole life, or stops when its claim ends.

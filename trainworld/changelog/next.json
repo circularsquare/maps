@@ -311,14 +311,15 @@
     {
       "id": "c010",
       "text": "a click right after placing or deleting track no longer waits for it to show up",
-      "edited": null,
+      "edited": "clicks right after placing or deleting track no longer wait, and deletes show up at once",
       "hidden": false,
       "task": "T-4214",
       "by": "mapcfix",
       "at": "2026-11-24T22:54:58Z",
-      "rev": 1,
+      "rev": 2,
       "area": "performance",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-25T12:22:24Z"
     },
     {
       "id": "c009",

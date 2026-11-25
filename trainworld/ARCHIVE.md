@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4214 [P1] {L:edit-speed} Track runs chain without waiting, drawings from the patched map (2026-11-25): Stations sent at their click (A), patched clickable map (C), a run's segments sent at their clicks from the edit before (D), and drawings at the click from the patched map: a split far half, new or undone segment gone at its click (E). notes/T-4214.md.
 - T-4080 [P2] {L:buses} Name and rename bus stops (2026-11-25): Bus stops are named in their panel, saved, shown in hover, stop lists, timetables and on the map from zoom 14; two review rounds fixed; connections stay T-4083. notes/T-4080.md.
 - T-4297 [P1] {L:checks} Fix the review's findings on the batch18 landings (2026-11-25): Two real fixed (shared-slot rows' held rate, with a Rust test; guardedAfter for held trips); three T-4220 findings passed to aside7; the rest answered in notes. notes/T-4297.md.
 - T-4293 [P1] {L:edit-speed} New York edit timings rose over tonight's landings (2026-11-25): Noise: trees' single samples are cold first edits; master 800843cf0 station built 108 ms median (baseline 188), undo 131 (133); edit_bench compare fixed; pagestage3 fit to land; T-4294 filed. notes/T-4293.md.

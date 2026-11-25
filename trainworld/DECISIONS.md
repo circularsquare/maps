@@ -183,6 +183,8 @@ artifacts/trainworld/T-4120/.
 - 2026-11-04 (Anita, T-2450): Ferries run 32 km/h in open water (was 25), on Anita's "a little faster lol": harbour ferries a little faster than real slow ones, well under real fast ferries. Old saves' routes move to the new curve.
 
 ## Map and UI
+- 2026-11-25 (T-4214): A track run's next segment is sent at its click from the previous one's end as the worker will have it, never after that one's answer; a refused segment refuses those clicked on from it, and the run draws on from its start. notes/T-4214.md
+- 2026-11-25 (T-4214): Track hidden at a click that the drawn network holds only inside a longer edge (a just-split far half) hides that whole edge and redraws what stays from the tools' map. Lie: lines on it vanish until the network. notes/T-4214.md
 - 2026-11-25 (T-4281): A cut on a line's track samples its trains' path again only around it; past it samples are kept, off by the cut's few mm, until those reach 5 cm and the line is sampled whole. Lie: a train up to 5 cm off along its track. notes/T-4281.md
 - 2026-11-25 (T-4276): A group's timetable lists each station of its lines once; a train shows "|" at a station between two of its stops that a line stopping at both also serves, never on another branch. Lie: an express on its own track reads as passing the local's stations. notes/T-4276.md
 - 2026-11-25 (T-4274): The trains' tables keep a slot per line on the GPU, phase slots with an eighth more and the tables room for their largest line; the zoomed-out copy in view keeps a sixteenth of room. On her Asia save about 3 MB more GPU memory. notes/T-4274.md
