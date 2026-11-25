@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c033",
+      "text": "a line group's timetable lists every station of its lines, branches included",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4276",
+      "by": "grouptt",
+      "at": "2026-11-25T08:08:05Z",
+      "rev": 1,
+      "area": "scheduling",
+      "fix": false
+    },
+    {
       "id": "c032",
       "text": "placing stations and deleting new track respond faster on big networks",
       "edited": null,

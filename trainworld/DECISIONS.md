@@ -183,6 +183,7 @@ artifacts/trainworld/T-4120/.
 - 2026-11-04 (Anita, T-2450): Ferries run 32 km/h in open water (was 25), on Anita's "a little faster lol": harbour ferries a little faster than real slow ones, well under real fast ferries. Old saves' routes move to the new curve.
 
 ## Map and UI
+- 2026-11-25 (T-4276): A group's timetable lists each station of its lines once, in the group view's order; a train shows "|" where it passes a station, or where a line stopping at both its neighbouring stops also stops; never on another branch. Lie: an express on its own track reads as passing the local's stations. notes/T-4276.md
 - 2026-11-25 (T-4274): The trains' tables keep a slot per line on the GPU, phase slots with an eighth more and the tables room for their largest line; the zoomed-out copy in view keeps a sixteenth of room. On her Asia save about 3 MB more GPU memory. notes/T-4274.md
 - 2026-11-25 (T-4275): When a tracker list blocks OpenFreeMap's `/planet` (EasyPrivacy, 11-24), the game reads the same tiles as `//planet`, which such a rule misses; unblocked players stay on `/planet` and OpenFreeMap's cache. A proxy on our own host is the durable route. notes/T-4275.md
 - 2026-11-24 (Anita, T-4243): The train panel's speed dial is 68 px wide, right-aligned, its rim 3 px thick and linear from 0 to 320 km/h, each speed colour at its own speed; replaced even steps per colour stop, which spread the slow speeds. notes/T-4243.md

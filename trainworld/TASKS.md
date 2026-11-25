@@ -198,9 +198,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-25: "partition where we're currently editing from the rest of the network so that nothing scales with the save size". T-4144 (11-23) planned showing edits at the click; each stage since cut one step. Gemini's end-to-end read: artifacts/trainworld/gemini/ask-0226/editscale.md, unchecked.
   - Goal: A checked design with stages, to you before anything is built.
   - Other: a repeat (notes/repeats.md); notes/T-4267.md
-- T-4276 [P2] {L:timetables} Timetable for a whole line group
-  - Context: A player (X, 11-24): "Currently, the timetable only displays one route at a time. I'd like to be able to display all the routes in a group together." You, 11-24: file it.
-  - Goal: A line group's panel shows one timetable with every line of the group, each line's trains told apart.
 - T-4281 [P1] {L:edit-speed} Later clicks wait on the previous click's whole-save work (taking, 2026-11-25, agent followcut)
   - Context: Click run on your Asia save on 8800 (ff532d4e9, 11-25): first station confirmed 558 ms after the press, later ones 2.2 s (p90 2.9 s). Each waits for the click before it, whose follow-up redoes whole-save steps in blocks of 0.4-2.5 s (notes/T-4267-measure.md).
   - Goal: Every follow-up step costs what the edit touched, so later clicks are answered like the first; measured with edit_bench's click run.

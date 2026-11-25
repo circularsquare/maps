@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 74ece160-7d1e-4a7f-a351-88b3554e0a77, name maps-13 [f879aa], since 2026-11-25 07:18 UTC
-Updated: 2026-11-25 07:27 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-25 07:28 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
@@ -13,13 +13,16 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
    8800 ff532d4e9: first 558 ms, later 2.2 s (edit_bench --save asia --only clickrun). Landed tonight: T-4149, T-4249,
    T-4153 s6, T-4262 s1-2, T-4274, T-4280, T-4272 stage. Her answer pending a-2026-11-25-4 (buy trains after the confirm):
    on yes, line-track stations confirm locally (T-4272 rest). Then measure the click run again and report yes/no per edit.
-2. fixes16a (Opus, T-4282: batch16a review findings, avoiding followcut's files; findings there go under "For followcut"
-   in its notes: pass them on). Batch review due over T-4272, T-4274, T-4280, T-4281 when landed.
+2. fixes16a landed (2a6a45584). Its one real finding is T-4283 (world.rs, after followcut; the fix is written out in
+   notes/T-4282.md "For followcut"; fits a Gemini code agent). Batch review (Gemini) due over T-4272, T-4274, T-4280,
+   T-4281, T-4282 once T-4281 lands.
 3. 8800 = dc01ef413 (master), smoke passed 07:25 UTC. T-4275 roads fix is on
    8800: tell her it's ready for the hotfix publish when she's back (publish skill; her word).
 4. Waiting on her: asks.py list (weekend solve T-4242, OpenFreeMap proxy, buy trains after confirm, rename and
    speedometer text, Asia load on fewer workers, PR #21/#24 comments). T-3742 after she asks; T-4250; T-4248.
-5. Next starts (not edit speed): T-4276 group timetable, T-4080 s3-6, T-4199 s2, T-3160, T-4187.
+5. Running: grouptt (Opus, T-4276 group timetable, three-version sheet first; my scratch grouptt/brief.md). Next:
+   T-4080 s3 after pageedit2 (both touch stopsOf), T-4153 rest and T-4149 rest after followcut's step table (same
+   follow-up steps), T-4199 s2, T-3160, T-4187.
 6. reserve_cores: maps-3e's loop (its tab) holds the mutex (mine exited 07:18); start one (`-All -Loop 30`) if it dies.
 
 ## Her words
