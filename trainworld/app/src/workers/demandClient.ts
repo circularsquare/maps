@@ -3109,6 +3109,7 @@ class DemandClient {
     this.hold = null;
     this.cacheSolve = null;
     this.endFocus();
+    this.shownSnap.clear(this.version); // (T-4220)
     zoneLoads.value = new Map();
     console.error("demand:", why);
     loadFailed(why);
@@ -4016,11 +4017,13 @@ class DemandClient {
   /** T-4220: a solving worker's snapshot of the figures on screen */
   private shownIn(i: number, version: number, snap: Snapshot) {
     if (i >= this.computeN) return;
-    const ok = this.shownSnap.merge(version, i, snap);
+    const got = this.shownSnap.merge(version, i, snap);
     if (!import.meta.env.DEV) return;
     const mb = (b: number) => Math.round(b / 2 ** 20);
     // i18n-ignore
-    if (!ok) return console.info(`T4220 snapshot v${version}: worker ${i}'s past ${mb(SNAP_MAX_BYTES)} MB, none held`);
+    if (got === "over") return console.info(`T4220 snapshot v${version}: past ${mb(SNAP_MAX_BYTES)} MB with worker ${i}'s, none held until a final`);
+    // i18n-ignore
+    if (got === "ignored") return console.info(`T4220 snapshot v${version}, worker ${i}: not taken (older than the final on screen, or the figures on screen are not all known)`);
     // i18n-ignore
     if (snap.again) return console.info(`T4220 snapshot v${version} again, worker ${i}: ${snap.pops.length} populations, ${mb(snap.bytes)} MB, ${Math.round(snap.ms)} ms`);
     const sent = [...this.shownSnap.sent(version).values()];
@@ -4342,7 +4345,7 @@ class DemandClient {
     // T-2045: the focus pool is a game load's; an edit's network ends it
     if (!gameLoad) this.endFocus();
     else if (svc.stations.length) this.startFocus();
-    if (gameLoad) this.shownSnap.clear(); // (T-4220: another game's figures)
+    if (gameLoad) this.shownSnap.clear(this.version); // (T-4220: another game's figures)
     demandUpdating.value = true;
     demandStep.value = { done: 0, of: 1 }; // T-1790: no count until the solve's own steps are known
     // T-1223: a game loaded with no stations ahead makes its fine set afresh; an edit marks its zones

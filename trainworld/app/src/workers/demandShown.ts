@@ -6,6 +6,7 @@
 import type { CityId } from "../game/cities";
 import { PERIODS } from "../game/periods";
 import type { Box, PopView } from "./demandClusters";
+import { sameView } from "./demandView";
 
 /** A snapshot is not sent past this (the design's first guess; Asia's was estimated at 60-90 MB) */
 export const SNAP_MAX_BYTES = 120 * 2 ** 20;
@@ -88,6 +89,61 @@ export interface Snapshot {
   over?: boolean;
 }
 
+const NO32 = new Float32Array(0), NO64 = new Float64Array(0);
+function sameArr(a: ArrayLike<number>, b: ArrayLike<number>): boolean {
+  if (a.length !== b.length) return false;
+  for (let k = 0; k < a.length; k++) if (a[k] !== b[k]) return false;
+  return true;
+}
+/** Two periods' figures solved on the same route nodes: in one cluster, a city's on views of the same inputs (`sameView`), the
+ * market's on the same nodes of one network */
+function sameOn(a: SnapOn, b: SnapOn): boolean {
+  if (a === b) return true;
+  if (a.marketKey !== b.marketKey || a.zones.length !== b.zones.length || a.zones.some((id, k) => id !== b.zones[k])) return false;
+  if (a.view || b.view) return !!a.view && !!b.view && sameView(a.view, b.view);
+  if (!a.nodes || !b.nodes || !a.ids || !b.ids) return false;
+  const x = a.ids, y = b.ids;
+  return sameArr(a.nodes, b.nodes) && sameArr(x.lineN, y.lineN) && sameArr(x.stops, y.stops) && x.lines.join("\n") === y.lines.join("\n") && x.stations.join("\n") === y.stations.join("\n");
+}
+
+/**
+ * T-4220 stage 2: a population as a snapshot holds it, standing in for it in a cluster's figures: it answers the calls that
+ * read a population (`seg` ... `lean_loads`, `solved_mask`, `purpose_count`) as the WASM population did when the snapshot
+ * was taken, a period it does not hold with empty arrays as they do. It returns the snapshot's own arrays: read them, never
+ * write or transfer them. Never set up or solved.
+ */
+export class ShownPop {
+  readonly kind: SnapPop["kind"];
+  /** a city population's zone, a market part's key */
+  readonly key: string;
+  /** what its periods' figures were solved on, when they all agree (`sameOn`); else null: it cannot stand in */
+  readonly on: SnapOn | null;
+  constructor(readonly pop: SnapPop) {
+    this.kind = pop.kind;
+    this.key = pop.key;
+    const ons = pop.periods.flatMap((at) => (at ? [at.on] : []));
+    this.on = ons.length && ons.every((o) => sameOn(ons[0], o)) ? ons[0] : null;
+  }
+  private at(q: number): SnapPeriod | null { return this.pop.periods[q] ?? null; }
+  solved_mask(): number { return this.pop.periods.reduce((m, at, q) => (at ? m | (1 << q) : m), 0); }
+  /** `heldQ`'s period signature ("" none) */
+  psig(q: number): string { return this.at(q)?.psig ?? ""; }
+  purpose_count(): number { return this.pop.purposes ?? 0; }
+  seg(q: number): Float32Array { return this.at(q)?.seg ?? NO32; }
+  board(q: number): Float32Array { return this.at(q)?.board ?? NO32; }
+  alight(q: number): Float32Array { return this.at(q)?.alight ?? NO32; }
+  load_of_crush(q: number): Float32Array { return this.at(q)?.loadOfCrush ?? NO32; }
+  fare_extra(q: number): Float32Array { return this.at(q)?.fareX ?? NO32; }
+  base_extra(q: number): Float32Array { return this.at(q)?.baseX ?? NO32; }
+  transfers_in(q: number): Float32Array { return this.at(q)?.xferIn ?? NO32; }
+  summary(q: number): Float64Array { return this.at(q)?.summary ?? NO64; }
+  kind_totals(q: number): Float64Array { return this.at(q)?.kinds ?? NO64; }
+  part_loads(q: number): Float32Array { return this.at(q)?.partLoads ?? NO32; }
+  commute_loads(q: number): Float32Array { return this.at(q)?.commute ?? NO32; }
+  everyday_loads(q: number): Float32Array { return this.at(q)?.everyday ?? NO32; }
+  lean_loads(q: number): Float32Array { return this.at(q)?.lean ?? NO32; }
+}
+
 /** The typed arrays' bytes of a view (its network's and its maps) */
 export function viewBytes(v: PopView): number {
   let n = v.stLocal.byteLength + v.nodeGlobal.byteLength + v.pads.byteLength;
@@ -112,7 +168,8 @@ function periodBytes(at: SnapPeriod, seen: Set<object>): number {
 /**
  * The page's store of the workers' snapshots: per population (`kind:key`) its periods, each with the version of the
  * solve whose snapshot sent it. A solve cut short and started again (T-3925) sends only what it still holds as shown,
- * so the rest stays as the snapshot before had it; a final shown drops every period sent before it.
+ * so the rest stays as the snapshot before had it; a final shown drops every period sent before it. A period is never
+ * replaced by one from an older solve, and nothing older than the final on screen is taken.
  */
 export class ShownStore {
   readonly pops = new Map<string, { pop: SnapPop; from: number[] }>();
@@ -122,41 +179,70 @@ export class ShownStore {
   flags: Snapshot["flags"] = { whole: false, oneMarket: false, wide: false };
   /** per version, each solving worker's whole snapshot's ms and bytes, as it came */
   private got = new Map<number, Map<number, { ms: number; bytes: number }>>();
+  /** no snapshot of this version or older is taken: a final of it is shown, or the store was emptied after it */
+  private floor = -1;
+  /** from this version on, what is on screen is not all known (a worker's snapshot or the merged store past the cap):
+   * nothing is taken until a final of it or later is shown, since a solve started again sends only what it still holds */
+  private lostFrom: number | null = null;
+  /** the version `zones`, `marketZones` and `flags` are from */
+  private metaAt = -1;
 
-  /** worker `i`'s snapshot for solve `version`; false when it was over the cap (everything held dropped) */
-  merge(version: number, i: number, snap: Snapshot): boolean {
+  /** worker `i`'s snapshot for solve `version`: "over" when it or the merged store passed the cap (everything held
+   * dropped), "ignored" when it is older than what is on screen or what is on screen is not all known */
+  merge(version: number, i: number, snap: Snapshot): "held" | "over" | "ignored" {
     if (!snap.again) {
       const g = this.got.get(version) ?? new Map<number, { ms: number; bytes: number }>();
       g.set(i, { ms: snap.ms, bytes: snap.bytes });
       this.got.set(version, g);
       for (const v of this.got.keys()) if (v < version - 8) this.got.delete(v);
     }
+    if (version <= this.floor) return "ignored";
     // (what is on screen is then not all known: a side job would stand on a hole)
-    if (snap.over) { this.clear(); return false; }
+    if (snap.over) return this.lose(version);
+    if (this.lostFrom !== null && version >= this.lostFrom) return "ignored";
     for (const p of snap.pops) {
       const key = `${p.kind}:${p.key}`, had = this.pops.get(key);
       if (!had) { this.pops.set(key, { pop: p, from: p.periods.map((x) => (x ? version : -1)) }); continue; }
-      had.pop = { ...p, periods: PERIODS.map((_, q) => p.periods[q] ?? had.pop.periods[q] ?? null) };
-      p.periods.forEach((x, q) => { if (x) had.from[q] = version; });
+      const take = PERIODS.map((_, q) => !!p.periods[q] && had.from[q] <= version);
+      if (!take.some(Boolean)) continue;
+      had.pop = { ...p, periods: PERIODS.map((_, q) => (take[q] ? p.periods[q] : had.pop.periods[q]) ?? null) };
+      take.forEach((t, q) => { if (t) had.from[q] = version; });
     }
-    if (!snap.again) {
+    if (!snap.again && version >= this.metaAt) {
+      this.metaAt = version;
       this.zones = snap.zones ?? [];
       this.marketZones = snap.marketZones ?? null;
       this.flags = snap.flags ?? this.flags;
     }
-    return true;
+    // (each worker's is capped, the page holds them all)
+    return this.bytes() > SNAP_MAX_BYTES ? this.lose(version) : "held";
+  }
+
+  private lose(version: number): "over" {
+    this.empty();
+    this.lostFrom = Math.min(this.lostFrom ?? version, version);
+    return "over";
   }
 
   /** a final of `version` is shown: every period sent with it or before goes */
   dropTo(version: number) {
+    this.floor = Math.max(this.floor, version);
+    if (this.lostFrom !== null && version >= this.lostFrom) this.lostFrom = null;
     for (const [key, e] of this.pops) {
       e.from.forEach((v, q) => { if (v >= 0 && v <= version) { e.from[q] = -1; e.pop.periods[q] = null; } });
       if (e.from.every((v) => v < 0)) this.pops.delete(key);
     }
-    if (!this.pops.size) this.clear();
+    if (!this.pops.size) this.empty();
   }
 
-  clear() {
+  /** everything goes (another game, or demand stopped), and no snapshot of solve `upTo` or older is taken after */
+  clear(upTo: number) {
+    this.empty();
+    this.floor = Math.max(this.floor, upTo);
+    this.lostFrom = null;
+  }
+
+  private empty() {
     this.pops.clear();
     this.zones = [];
     this.marketZones = null;
