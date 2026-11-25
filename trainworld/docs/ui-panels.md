@@ -1539,11 +1539,15 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   table's direction in front and the other direction dimmed behind, every line of a group alike (another line's way
   by most of the track it shares). Hovering a train, its column or its path, lights it in both and fades the rest (a
   veil over the table, the chart's trains at 35%).
-- **A group's**: from the group view's chart icon, for a group with two or more running rail lines. Heading the
-  group's pill and name, then "schedule"; the body is the timetable and chart at the panel's width, the longest line
-  (by length) down the side, each other line's trains in the table at the stations it shares with it, a station's
-  complex counting as the station (a line sharing fewer than two is left out of the table), and in the chart drawn at full strength in their colours where
-  they share its track (T-2660's mapping); the other lines toggle adds lines outside the group as the line chart does.
+- **A group's**: from the group view's timetable icon (the line panel's, hover "Detailed schedule"), for a group with two or more running rail lines. Heading the
+  group's pill and name, then "schedule"; the body is the timetable and chart at the panel's width. The table's rows
+  are every station its lines stop at, each once (a station's complex counting as the station), in the group view's
+  order (T-4276, `groupRows`): the longest line's (by length) stops, each other line's own stations a block where it
+  leaves and rejoins them (a branch), a line sharing none below. Every train of the group is a column under its
+  line's bullet, its times in its colour. A train shows "|" at a station it passes, or where another line stopping
+  at both its stops either side stops (an express beside a local), and nothing on another branch. The chart draws the
+  longest line, the others at full strength in their colours where they share its track (T-2660's mapping); the
+  other lines toggle adds lines outside the group on the longest line's rows, as the line chart does.
 
 ## Start menu
 

@@ -1977,7 +1977,6 @@
   "schedule.weekends": "Weekends",
   "schedule.weekendsTip": "Weekends and public holidays",
   "schedulePanel.departures": "Departures",
-  "schedulePanel.groupChart": "Timetable chart",
   "schedulePanel.joinAskGame": "{rows} will run the most trains of the {count, select, 2 {two} other {three}} on every line without its own periods.",
   "schedulePanel.joinAskHeadway": "{rows} will run every {headway}, the shortest of the {count, select, 2 {two} other {three}}.",
   "schedulePanel.joinAskTrains": "{rows} will run {trains}, the most of the {count, select, 2 {two} other {three}}.",

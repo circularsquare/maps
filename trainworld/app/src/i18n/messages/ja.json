@@ -1977,7 +1977,6 @@
   "schedule.weekends": "休日",
   "schedule.weekendsTip": "週末と祝日",
   "schedulePanel.departures": "発車案内",
-  "schedulePanel.groupChart": "ダイヤグラムを開く",
   "schedulePanel.joinAskGame": "時間帯を個別に設定していないすべての路線で、{rows}は{count, select, 2 {2つ} other {3つ}}のうち一番多い本数で運転します。",
   "schedulePanel.joinAskHeadway": "{rows}は、{count, select, 2 {2つ} other {3つ}}のうち一番短い{headway}間隔で運転します。",
   "schedulePanel.joinAskTrains": "{rows}は、{count, select, 2 {2つ} other {3つ}}のうち一番多い{trains}で運転します。",

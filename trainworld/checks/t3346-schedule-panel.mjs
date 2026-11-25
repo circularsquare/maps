@@ -211,8 +211,8 @@ try {
     console.log('group', JSON.stringify(g), 'shared km', (pick.pair.len / 1000).toFixed(1));
     check(g.group !== null, `lines ${g.a} and ${g.b} grouped`);
     await S(({ tw }, group) => { tw.selection.value = { kind: 'group', group }; }, g.group);
-    await page.waitForSelector('button[data-tip="Timetable chart"]', { timeout: 30000 });
-    await page.click('button[data-tip="Timetable chart"]');
+    await page.waitForSelector('#inspector button.related-toggle[data-tip="Detailed schedule"]', { timeout: 30000 });
+    await page.click('#inspector button.related-toggle[data-tip="Detailed schedule"]');
     await page.waitForSelector('dialog.sched-panel[open] .marey-chart canvas', { timeout: 30000 });
     await page.waitForFunction(() => window.__mareyRuns?.own > 0 && window.__mareyRuns?.group > 0, undefined, { timeout: 30000 }).catch(() => {});
     await page.waitForTimeout(1500);

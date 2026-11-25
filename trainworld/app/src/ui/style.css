@@ -330,6 +330,16 @@ svg .stroke2 { stroke-width: 2; }
 .tt-scroll.dragging, .tt-scroll.dragging *, .tt-chart:active { cursor: grabbing; }
 /* T-3817: over a drawn column the hovered one lands on, the table's own background */
 .tt-cover { position: absolute; top: 0; bottom: 0; z-index: 1; background-color: var(--bg); background-image: inherit; pointer-events: none; }
+/* T-4276: a group's looks b and c, each line on rows of its own: a column's border and hover only where it has a time */
+.tt-body.lanes { background-image: none; }
+.tt-body.lanes .tt-col { border-left: none; pointer-events: none; }
+.tt-body.lanes .tt-col span:not(:empty) { border-left: 1px solid var(--shade); pointer-events: auto; }
+.tt-rule { position: absolute; left: 0; right: 0; z-index: 2; height: 1px; background: var(--rule); pointer-events: none; }
+.tt-rule.faint { background: var(--shade); }
+.tt-names span.ln { display: flex; justify-content: flex-end; align-items: center; gap: 4px; }
+.tt-names span.ln.band { justify-content: flex-start; padding-left: 2px; font-weight: 700; }
+.tt-names span.ln > .nm { height: auto; min-width: 0; padding: 0; line-height: inherit; }
+.tt-names span.tt-lane { flex: none; height: 11px; min-width: 11px; padding: 0 2px; border-radius: 3px; background: var(--c); color: var(--ct); font-weight: 700; line-height: 11px; text-align: center; overflow: visible; }
 .help-panel dl { display: grid; grid-template-columns: 170px 1fr; gap: 3px 12px; margin: 0; }
 .help-panel dt { color: var(--muted); }
 .help-panel dd { margin: 0; }

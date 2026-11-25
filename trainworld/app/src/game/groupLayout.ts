@@ -115,25 +115,28 @@ function place(want: (number | null)[], w: number[], gap: number[]): number[] {
   return out;
 }
 
-export function groupLayout(lines: GroupLineIn[], o: GroupOpts = {}): GroupLayout {
-  const n = lines.length, all = !!o.all;
-  const none: GroupLayout = { rows: [], xs: [], spans: [], paths: [], bullets: [], width: 2 * MARGIN, height: 2 * PAD, together: () => false, xAt: () => NaN };
-  if (!n) return none;
-  const ps = lines.map((l) => onceRound(l.places));
+/** A row of places before the diagram is laid out: its place and each line's cell there (null where it has none). */
+export interface PlaceRow { key: string; cells: (GroupCell | null)[] }
 
-  // ---- rows: one place each, every line down them in its path order, each line's own places a block
-  type Node = { key: string; cells: (GroupCell | null)[] };
-  const seq: Node[] = [];
-  const mk = (k: number, p: PathPlace): Node => {
+/** The diagram's rows before naming and layout (the file's head): one place each, every line down them in its path
+ * order, each line's own places a block, a loop's places once round. They start from line `spine`, by default the
+ * one with most stops, last place first when `reversed` says so. The group's timetable lists its stations by them
+ * too (T-4276). */
+export function groupRows(lines: readonly GroupLineIn[], reversed?: (k: number) => boolean, spine?: number): PlaceRow[] {
+  const n = lines.length;
+  const ps = lines.map((l) => onceRound(l.places));
+  const seq: PlaceRow[] = [];
+  if (!n) return seq;
+  const mk = (k: number, p: PathPlace): PlaceRow => {
     const cells = Array<GroupCell | null>(n).fill(null);
     cells[k] = { station: p.station, stop: p.stop, index: p.index, key: p.key, named: false };
     return { key: p.key, cells };
   };
   const nStops = (k: number) => ps[k].filter((p) => p.stop).length;
-  const spine = ps.reduce((b, _, k) => (nStops(k) > nStops(b) ? k : b), 0);
-  seq.push(...(o.reversed?.(spine) ? [...ps[spine]].reverse() : ps[spine]).map((p) => mk(spine, p)));
+  const sp = spine ?? ps.reduce((b, _, k) => (nStops(k) > nStops(b) ? k : b), 0);
+  seq.push(...(reversed?.(sp) ? [...ps[sp]].reverse() : ps[sp]).map((p) => mk(sp, p)));
   for (let k = 0; k < n; k++) {
-    if (k === spine) continue;
+    if (k === sp) continue;
     let pl = ps[k];
     const first = (p: PathPlace) => seq.findIndex((s) => s.key === p.key);
     const hits = pl.map(first).filter((r) => r >= 0);
@@ -158,6 +161,15 @@ export function groupLayout(lines: GroupLineIn[], o: GroupOpts = {}): GroupLayou
     const rest = seq.length - last - 1;
     block(pending.length <= rest ? last + 1 : seq.length);
   }
+  return seq;
+}
+
+export function groupLayout(lines: GroupLineIn[], o: GroupOpts = {}): GroupLayout {
+  const n = lines.length, all = !!o.all;
+  const none: GroupLayout = { rows: [], xs: [], spans: [], paths: [], bullets: [], width: 2 * MARGIN, height: 2 * PAD, together: () => false, xAt: () => NaN };
+  if (!n) return none;
+  // ---- rows: one place each, every line down them in its path order, each line's own places a block
+  const seq = groupRows(lines, o.reversed);
   const cell = (k: number, r: number) => seq[r].cells[k];
   const stopAt = (k: number, r: number) => !!seq[r].cells[k]?.stop;
   const pk = (a: number, b: number) => (a < b ? a * n + b : b * n + a);
@@ -201,7 +213,7 @@ export function groupLayout(lines: GroupLineIn[], o: GroupOpts = {}): GroupLayou
   // ---- branches side by side share rows where both have only ticks (Anita, T-1817): a tick row
   // moves up into the first tick row after its lines' previous places, beside lines apart from them
   if (!all) {
-    const named = (s: Node) => s.cells.some((c) => c?.named);
+    const named = (s: PlaceRow) => s.cells.some((c) => c?.named);
     const at0 = seq.map((_, r) => r); // each row's index in the analysis above
     for (let r = 1; r < seq.length; r++) {
       const s = seq[r];

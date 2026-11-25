@@ -1977,7 +1977,6 @@
   "schedule.weekends": "Wochenende",
   "schedule.weekendsTip": "Wochenenden und Feiertage",
   "schedulePanel.departures": "Abfahrten",
-  "schedulePanel.groupChart": "Bildfahrplan",
   "schedulePanel.joinAskGame": "{rows} bekommen auf jeder Linie ohne eigene Tageszeiten die höchste Zugzahl der {count, select, 2 {beiden} other {drei}}.",
   "schedulePanel.joinAskHeadway": "{rows} bekommen einen Takt von {headway}, den kürzesten der {count, select, 2 {beiden} other {drei}}.",
   "schedulePanel.joinAskTrains": "{rows} bekommen {trains}, die meisten der {count, select, 2 {beiden} other {drei}}.",

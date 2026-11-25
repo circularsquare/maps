@@ -1953,7 +1953,6 @@
   "schedule.vehicles": "{vehicle, select, train {{count, plural, one {# train} other {# trains}}} tram {{count, plural, one {# tram} other {# trams}}} bus {{count, plural, one {# bus} other {# buses}}} other {{count, plural, one {# boat} other {# boats}}}}",
   "schedule.waitingDemand": "Waiting for demand to load",
   "schedulePanel.departures": "Departures",
-  "schedulePanel.groupChart": "Timetable chart",
   "schedulePanel.label": "{line} schedule",
   "schedulePanel.noDepartures": "No departures",
   "schedulePanel.open": "Detailed schedule",

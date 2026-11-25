@@ -1,8 +1,8 @@
 // T-3346 stage 1: the schedule panel, centred like Community (notes/T-3346.md). A line's, opened
 // from its panel's schedule heading: the schedule in Simple mode on the left (the line panel's own
 // table, steppers and dots), its departures board and timetable chart on the right. A group's,
-// opened from the group view: the group's chart, the longest line's stops down its side and the
-// others drawn where they share its track. A bus or ferry line's (T-3703) is the left side without the board.
+// opened from the group view: a timetable of every station of its lines (T-4276) over the chart of
+// the longest line, the others drawn where they share its track. A bus or ferry line's (T-3703) is the left side without the board.
 // docs/ui-panels.md "Schedule panel".
 
 import { signal } from "@preact/signals";
@@ -342,10 +342,11 @@ export function ScheduleButton({ l, st }: { l: LineInput; st: LineStats }) {
   return <button class="btn icon mini sched-open" aria-label={tip} data-tip={tip} onClick={() => (scheduleShown.value = { kind: "line", line: l.id })}><Icon.timetable /></button>;
 }
 
-/** The group view's icon: the group's chart, for a group of two or more running rail lines. */
+/** The group view's icon: the group's timetable and chart, for a group of two or more running rail lines; the
+ * line panel's icon and hover, so it is found where a line's is (T-4276). */
 export function GroupChartButton({ ls }: { ls: readonly LineInput[] }) {
   const w = world.value;
   if (!w || ls.filter((l) => charted(w.lineStats[l.id], l)).length < 2 || !ls[0].group) return null;
-  const tip = t("schedulePanel.groupChart");
-  return <button class="btn icon mini related-toggle" aria-label={tip} data-tip={tip} onClick={() => (scheduleShown.value = { kind: "group", group: ls[0].group! })}><Icon.marey /></button>;
+  const tip = t("schedulePanel.open");
+  return <button class="btn icon mini related-toggle" aria-label={tip} data-tip={tip} onClick={() => (scheduleShown.value = { kind: "group", group: ls[0].group! })}><Icon.timetable /></button>;
 }

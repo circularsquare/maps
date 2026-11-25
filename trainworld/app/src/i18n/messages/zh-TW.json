@@ -1977,7 +1977,6 @@
   "schedule.weekends": "週末",
   "schedule.weekendsTip": "週末和國定假日",
   "schedulePanel.departures": "發車表",
-  "schedulePanel.groupChart": "時刻表運行圖",
   "schedulePanel.joinAskGame": "在所有沒有自訂時段的路線上，{rows}會依{count, select, 2 {兩個} other {三個}}時段中最多的列車數行駛。",
   "schedulePanel.joinAskHeadway": "{rows}會依{count, select, 2 {兩個} other {三個}}時段中最短的班距行駛，每{headway}一班。",
   "schedulePanel.joinAskTrains": "{rows}會行駛{trains}，也就是{count, select, 2 {兩個} other {三個}}時段中最多的。",

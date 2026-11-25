@@ -1977,7 +1977,6 @@
   "schedule.weekends": "Выходные",
   "schedule.weekendsTip": "Выходные и праздничные дни",
   "schedulePanel.departures": "Отправления",
-  "schedulePanel.groupChart": "График расписания",
   "schedulePanel.joinAskGame": "{rows}: на всех линиях без своих периодов останется наибольшее число поездов из {count, select, 2 {двух} other {трёх}} периодов.",
   "schedulePanel.joinAskHeadway": "{rows}: интервал {headway}, самый короткий из {count, select, 2 {двух} other {трёх}}.",
   "schedulePanel.joinAskTrains": "{rows}: {trains}, наибольшее число из {count, select, 2 {двух} other {трёх}}.",

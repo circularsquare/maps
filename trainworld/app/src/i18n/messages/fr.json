@@ -1977,7 +1977,6 @@
   "schedule.weekends": "Week-end",
   "schedule.weekendsTip": "Week-ends et jours fériés",
   "schedulePanel.departures": "Départs",
-  "schedulePanel.groupChart": "Graphique horaire",
   "schedulePanel.joinAskGame": "{rows} prendront, sur chaque ligne sans périodes propres, le plus grand nombre de trains des {count, select, 2 {deux} other {trois}}.",
   "schedulePanel.joinAskHeadway": "{rows} auront un passage toutes les {headway}, l’intervalle le plus court des {count, select, 2 {deux} other {trois}}.",
   "schedulePanel.joinAskTrains": "{rows} auront {trains}, le plus grand nombre des {count, select, 2 {deux} other {trois}}.",

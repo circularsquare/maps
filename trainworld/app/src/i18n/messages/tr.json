@@ -1977,7 +1977,6 @@
   "schedule.weekends": "Hafta sonu",
   "schedule.weekendsTip": "Hafta sonları ve resmî tatiller",
   "schedulePanel.departures": "Kalkışlar",
-  "schedulePanel.groupChart": "Sefer planı grafiği",
   "schedulePanel.joinAskGame": "{rows} için, kendi dönemi olmayan her hatta {count, select, 2 {ikisindeki} other {üçündeki}} en yüksek tren sayısı kullanılacak.",
   "schedulePanel.joinAskHeadway": "{rows} için {count, select, 2 {ikisindeki} other {üçündeki}} en kısa sefer aralığı kullanılacak: {headway}.",
   "schedulePanel.joinAskTrains": "{rows} için {count, select, 2 {ikisindeki} other {üçündeki}} en yüksek sayı kullanılacak: {trains}.",

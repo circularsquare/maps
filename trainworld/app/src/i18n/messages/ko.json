@@ -1977,7 +1977,6 @@
   "schedule.weekends": "주말",
   "schedule.weekendsTip": "주말과 공휴일",
   "schedulePanel.departures": "출발 안내",
-  "schedulePanel.groupChart": "시간표 운행도",
   "schedulePanel.joinAskGame": "자체 시간대가 없는 모든 노선에서 {rows} 시간대는 {count, select, 2 {둘} other {셋}} 중 가장 많은 열차 수로 운행해요.",
   "schedulePanel.joinAskHeadway": "{rows} 시간대는 {count, select, 2 {둘} other {셋}} 중 가장 짧은 {headway} 간격으로 운행해요.",
   "schedulePanel.joinAskTrains": "{rows} 시간대는 {count, select, 2 {둘} other {셋}} 중 가장 많은 쪽에 맞춰 {trains} 운행해요.",

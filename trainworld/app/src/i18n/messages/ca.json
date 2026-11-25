@@ -1977,7 +1977,6 @@
   "schedule.weekends": "Caps de setmana",
   "schedule.weekendsTip": "Caps de setmana i festius",
   "schedulePanel.departures": "Sortides",
-  "schedulePanel.groupChart": "Gràfic d’horaris",
   "schedulePanel.joinAskGame": "{rows} tindran el nombre més alt de trens dels {count, select, 2 {dos} other {tres}} a cada línia sense períodes propis.",
   "schedulePanel.joinAskHeadway": "{rows} tindran un tren cada {headway}, l’interval més curt dels {count, select, 2 {dos} other {tres}}.",
   "schedulePanel.joinAskTrains": "{rows} tindran {trains}, el màxim dels {count, select, 2 {dos} other {tres}}.",

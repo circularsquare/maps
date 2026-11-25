@@ -1977,7 +1977,6 @@
   "schedule.weekends": "Akhir pekan",
   "schedule.weekendsTip": "Akhir pekan dan hari libur nasional",
   "schedulePanel.departures": "Keberangkatan",
-  "schedulePanel.groupChart": "Grafik jadwal",
   "schedulePanel.joinAskGame": "{rows} akan menjalankan kereta terbanyak dari {count, select, 2 {keduanya} other {ketiganya}} di setiap lini yang tidak punya periode sendiri.",
   "schedulePanel.joinAskHeadway": "{rows} akan berjalan tiap {headway}, selang terpendek dari {count, select, 2 {keduanya} other {ketiganya}}.",
   "schedulePanel.joinAskTrains": "{rows} akan menjalankan {trains}, yang terbanyak dari {count, select, 2 {keduanya} other {ketiganya}}.",

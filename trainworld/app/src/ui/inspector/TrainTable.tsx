@@ -11,7 +11,6 @@ import { signal, type Signal } from "@preact/signals";
 import type { ComponentChildren, VNode } from "preact";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
 import { clock } from "../../game/clock";
-import { stopKey } from "../../game/complexView";
 import { drawnReversed } from "../../game/northUp";
 import { inkOn, legibleOn } from "../../game/palette";
 import { decodeRelated, type RelatedGroup } from "../../game/relatedLines";
@@ -28,6 +27,7 @@ import { Chip, Segmented } from "../widgets";
 import { GUTTER, MareyBody, PAD_R, type Links } from "./MareyChart";
 import type { Shared } from "./mareyShare";
 import { ONLY_TIP, OnlyIcon } from "./stopOnly";
+import { groupLook, groupTable, lineRows, type TtLayout } from "./ttRows";
 
 const DAY = 86400, HOUR = 3600;
 /** a column's width, a row's height and the head's height, px */
@@ -86,11 +86,11 @@ function stopTimes(net: NetworkBuffers, p: number, offs: number[]): Float64Array
 }
 
 /** A line whose trains get columns: its bullet's line (a T-3333 twin shows its parent's), each of
- * its stops' row on the axis line (run 0 order, -1 off it), whether its run 0 goes the axis's
- * run 1 way, and its rank (0: the axis line and its group's; 1: a related line, T-3818). `fill`: the
- * axis rows (run 0 order) its trains may run through, where it runs beside the axis; every row
- * without it. */
-interface Src { line: LineInput; bullet: LineInput; st: LineStats; rowOf: number[]; flipped: boolean; rank: number; fill?: Uint8Array }
+ * its stops' row in each direction's table (-1 off it), whether its run 0 goes up the table, its rank (0:
+ * the axis line and its group's; 1: a related line, T-3818) and its lane (looks b and c: its own rows,
+ * whose columns are picked apart from the others'). `fill`: per direction, the rows its trains may run
+ * through without stopping; every row between a train's first and last without it. */
+interface Src { line: LineInput; bullet: LineInput; st: LineStats; rowOf: [number[], number[]]; flipped: boolean; rank: number; lane: number; fill: [Uint8Array, Uint8Array] | null }
 
 /** A line related to the table's line (T-3818, T-3846): a line the line panel's related lines draw beside it
  * (`lineRelated`, kind beside) that passes `isRelated`, its stops' rows on the table's line where both stop, the rows it runs
@@ -167,32 +167,31 @@ export function useRelated(l: LineInput, st: LineStats, links: Links | null, ski
   }, [groups, links, w.version, skipKey]);
 }
 
-/** The columns' lines: the axis line, then each other line by the stations it shares with the
- * axis (two at least, which set its direction; a station's complex counts as the station), each
- * with its hidden quad twin, then the related lines. */
-function sourcesOf(axis: LineInput, others: readonly LineInput[], related: readonly Related[]): Src[] {
+/** The columns' lines: the table's lines (`lay`'s, the axis line first), each with its hidden quad twin, then the
+ * related lines on the axis line's rows. */
+function sourcesOf(lay: TtLayout, lines: readonly LineInput[], related: readonly Related[]): Src[] {
   const w = world.value!;
   const byId = linesById(w);
-  const index = new Map<string, number>();
-  axis.stops.forEach((s, i) => { const k = stopKey(s); if (!index.has(k)) index.set(k, i); });
   const out: Src[] = [];
-  const add = (l: LineInput, rowOf: number[], flipped: boolean, rank: number, fill?: Uint8Array) => {
+  const add = (l: LineInput, rowOf: [number[], number[]], flipped: boolean, rank: number, lane: number, fill: [Uint8Array, Uint8Array] | null) => {
     const st = w.lineStats[l.id];
     if (!st || st.bus) return;
-    out.push({ line: l, bullet: l, st, rowOf, flipped, rank, fill });
+    out.push({ line: l, bullet: l, st, rowOf, flipped, rank, lane, fill });
     const twin = st.twin ? byId.get(st.twin) : undefined;
     const tst = twin ? w.lineStats[twin.id] : undefined;
-    if (twin && tst && twin.stops.length === l.stops.length) out.push({ line: twin, bullet: l, st: tst, rowOf, flipped, rank, fill });
+    if (twin && tst && twin.stops.length === l.stops.length) out.push({ line: twin, bullet: l, st: tst, rowOf, flipped, rank, lane, fill });
   };
-  const flippedOf = (rowOf: number[]) => { const on = rowOf.filter((r) => r >= 0); return on[on.length - 1] < on[0]; };
-  add(axis, axis.stops.map((_, i) => i), false, 0);
-  for (const o of others) {
-    const rowOf = o.stops.map((s) => index.get(stopKey(s)) ?? -1);
-    if (new Set(rowOf.filter((r) => r >= 0)).size < 2) continue;
-    add(o, rowOf, flippedOf(rowOf), 0);
-  }
+  lines.forEach((l, k) => add(l, lay.rowOf[k], lay.flipped[k], 0, lay.lanes ? k : 0, lay.fill[k]));
   const have = new Set(out.map((s) => s.line.num));
-  for (const r of related) if (!have.has(r.line.num)) add(r.line, r.rowOf, flippedOf(r.rowOf), 1, r.fill);
+  // a related line's stops and stretch beside it are counted on the axis line's stops
+  const ax = lay.rowOf[0];
+  for (const r of related) {
+    if (have.has(r.line.num)) continue;
+    const rowOf = [0, 1].map((d) => r.rowOf.map((i) => (i < 0 ? -1 : ax[d][i]))) as [number[], number[]];
+    const fill = [0, 1].map((d) => { const m = new Uint8Array(lay.rows[d].length); r.fill.forEach((v, i) => { if (v && ax[d][i] >= 0) m[ax[d][i]] = 1; }); return m; }) as [Uint8Array, Uint8Array];
+    const on = r.rowOf.filter((x) => x >= 0);
+    add(r.line, rowOf, on[on.length - 1] < on[0], 1, 0, fill);
+  }
   return out;
 }
 
@@ -200,8 +199,8 @@ function sourcesOf(axis: LineInput, others: readonly LineInput[], related: reado
 const trainKey = (line: number, p: number, dep: number) => `${line}@${p}@${dep}`;
 
 /** One train's column: its bullet, its time at the first row it has, its cells by row shown (NaN
- * blank, PASS run through), and its source's rank. */
-interface Col { bullet: LineInput; t: number; cells: Float64Array; key: string; rank: number }
+ * blank, PASS run through) from its first row `lo` to its last `hi`, and its source's rank and lane. */
+interface Col { bullet: LineInput; t: number; cells: Float64Array; lo: number; hi: number; key: string; rank: number; lane: number }
 
 /** The trips the table and the chart ask for: from two hours before the day, for trains that set off
  * then and reach the axis after it starts. One question for both, so the clock worker answers it once. */
@@ -248,22 +247,22 @@ function useColumns(srcs: Src[], rows: number, day0: number): [Col[], Col[]] | n
         let tt = times.get(p);
         if (!tt) times.set(p, (tt = stopTimes(net, p, src.st.stopS[run] ?? [])));
         const dir = (run === 1) !== src.flipped ? 1 : 0;
+        const rowOf = src.rowOf[dir];
         const cells = new Float64Array(rows).fill(NaN);
         let lo = rows, hi = -1;
         for (let k = 0; k < tt.length; k++) {
-          const r = src.rowOf[run === 0 ? k : n - 1 - k];
-          if (r === undefined || r < 0 || !Number.isFinite(tt[k])) continue;
-          const row = dir === 0 ? r : rows - 1 - r;
+          const row = rowOf[run === 0 ? k : n - 1 - k];
+          if (row === undefined || row < 0 || !Number.isFinite(tt[k])) continue;
           if (Number.isFinite(cells[row])) continue;
           cells[row] = dep + tt[k];
           lo = Math.min(lo, row); hi = Math.max(hi, row);
         }
         if (hi < 0) continue;
-        const fill = src.fill;
-        for (let r = lo + 1; r < hi; r++) if (!Number.isFinite(cells[r]) && (!fill || fill[dir === 0 ? r : rows - 1 - r])) cells[r] = PASS;
+        const fill = src.fill?.[dir];
+        for (let r = lo + 1; r < hi; r++) if (!Number.isFinite(cells[r]) && (!fill || fill[r])) cells[r] = PASS;
         const t0 = cells[lo];
         if (t0 < day0 || t0 >= day0 + DAY) continue;
-        out[dir].push({ bullet: src.bullet, t: t0, cells, key: trainKey(src.line.num, p, dep), rank: src.rank });
+        out[dir].push({ bullet: src.bullet, t: t0, cells, lo, hi, key: trainKey(src.line.num, p, dep), rank: src.rank, lane: src.lane });
       }
     });
     for (const cs of out) cs.sort((a, b) => a.t - b.t);
@@ -312,6 +311,19 @@ function pickLevels(cols: Col[]): Uint8Array[] {
   return out;
 }
 
+/** `pickLevels` lane by lane: columns in rows of their own (looks b and c) never crowd another lane's. */
+function pickLanes(cols: Col[]): Uint8Array[] {
+  const lanes = [...new Set(cols.map((c) => c.lane))];
+  if (lanes.length < 2) return pickLevels(cols);
+  const out = GAPS.map(() => new Uint8Array(cols.length));
+  for (const ln of lanes) {
+    const idx: number[] = [];
+    cols.forEach((c, i) => { if (c.lane === ln) idx.push(i); });
+    pickLevels(idx.map((i) => cols[i])).forEach((m, j) => idx.forEach((i, q) => { if (m[q]) out[j][i] = 1; }));
+  }
+  return out;
+}
+
 /** The opening zoom, px per game second: the coarsest level that draws nearly every column of the line's
  * own (rank 0; related lines never change it), just past the scale at which its columns stand a column's
  * width apart. */
@@ -353,21 +365,28 @@ function Bullet({ l }: { l: LineInput }) {
   return <span class="tt-strip" style={{ "--c": l.colour, "--ct": inkOn(l.colour) }}>{[...l.letter].slice(0, STRIP_MAX).map((ch) => <span>{ch}</span>)}</span>;
 }
 
-/** A train's times down its column, made once and kept as the column moves with the zoom. */
-function Cells({ c, shift }: { c: Col; shift: number }) {
-  return <>{Array.from(c.cells, (v) => <span class={v === PASS ? "pass" : undefined}>{v === PASS ? "|" : Number.isFinite(v) ? printed(v, shift) : ""}</span>)}</>;
+/** A line's letter on its colour, small enough for a row: the line of a band or lane (looks b and c). */
+function Lane({ l }: { l: LineInput }) {
+  return <span class="tt-lane" style={{ "--c": l.colour, "--ct": inkOn(l.colour) }}>{l.letter}</span>;
 }
 
-/** A train's column of times, its centre `x` px from the table's left; `cells` its `Cells`. */
-function Column({ c, x, cls, cells, dark }: { c: Col; x: number; cls: string; cells: ComponentChildren; dark: boolean }) {
-  return <div class={"tt-col" + cls} data-k={c.key} style={{ left: x - COL / 2 + "px", width: COL + "px", "--ink": legibleOn(c.bullet.colour, dark) }}>{cells}</div>;
+/** A train's times down its column from its first row to its last, made once and kept as the column moves with the zoom. */
+function Cells({ c, shift }: { c: Col; shift: number }) {
+  return <>{Array.from(c.cells.subarray(c.lo, c.hi + 1), (v) => <span class={v === PASS ? "pass" : undefined}>{v === PASS ? "|" : Number.isFinite(v) ? printed(v, shift) : ""}</span>)}</>;
+}
+
+/** A train's column of times, its centre `x` px from the table's left; `cells` its `Cells`. It stands the table's
+ * height, its times from its first row; in lanes (looks b and c) only from its first row to its last. */
+function Column({ c, x, cls, cells, dark, lanes }: { c: Col; x: number; cls: string; cells: ComponentChildren; dark: boolean; lanes: boolean }) {
+  const at = lanes ? { top: c.lo * ROW + "px" } : { bottom: 0, paddingTop: c.lo * ROW + "px" };
+  return <div class={"tt-col" + cls} data-k={c.key} style={{ left: x - COL / 2 + "px", ...at, width: COL + "px", "--ink": legibleOn(c.bullet.colour, dark) }}>{cells}</div>;
 }
 
 /** The hovered train, over a veil that fades the rest: its bullet (`part` "head"), or its times with
  * covers over the drawn columns it lands on (a train not drawn at this zoom shows the same way). One
  * element's change per hover, whatever the number of columns. */
-function Lit({ part, hot, at, cols, drawn, scale, x0, shift, dark, now }: {
-  part: "head" | "body"; hot: Signal<string | null>; at: Map<string, number>; cols: Col[]; drawn: Uint8Array; scale: number; x0: number; shift: number; dark: boolean; now: number;
+function Lit({ part, hot, at, cols, drawn, scale, x0, shift, dark, now, lanes }: {
+  part: "head" | "body"; hot: Signal<string | null>; at: Map<string, number>; cols: Col[]; drawn: Uint8Array; scale: number; x0: number; shift: number; dark: boolean; now: number; lanes: boolean;
 }) {
   const i = hot.value === null ? undefined : at.get(hot.value);
   if (i === undefined) return null;
@@ -381,12 +400,12 @@ function Lit({ part, hot, at, cols, drawn, scale, x0, shift, dark, now }: {
     );
   }
   const covers: number[] = [];
-  for (const d of [-1, 1]) for (let j = i + d; j >= 0 && j < cols.length && Math.abs(cols[j].t - c.t) * scale < COL; j += d) if (drawn[j]) covers.push(j);
+  for (const d of [-1, 1]) for (let j = i + d; j >= 0 && j < cols.length && Math.abs(cols[j].t - c.t) * scale < COL; j += d) if (drawn[j] && (!lanes || cols[j].lane === c.lane)) covers.push(j);
   return (
     <>
-      {covers.map((j) => <span class="tt-cover" style={{ left: x0 + cols[j].t * scale - COL / 2 - 1 + "px", width: COL + 2 + "px" }} />)}
+      {covers.map((j) => <span class="tt-cover" style={{ left: x0 + cols[j].t * scale - COL / 2 - 1 + "px", width: COL + 2 + "px", ...(lanes ? { top: cols[j].lo * ROW + "px", bottom: "auto", height: (cols[j].hi - cols[j].lo + 1) * ROW + "px" } : {}) }} />)}
       <div class="tt-veil" />
-      <Column c={c} x={x} cls={" on" + colClass(c, now)} cells={<Cells c={c} shift={shift} />} dark={dark} />
+      <Column c={c} x={x} cls={" on" + colClass(c, now)} cells={<Cells c={c} shift={shift} />} dark={dark} lanes={lanes} />
     </>
   );
 }
@@ -405,9 +424,9 @@ function Chart({ hot, ...rest }: { hot: Signal<string | null> } & Omit<Parameter
 /** The element's CSS zoom (the panels are zoomed by the UI scale): pointer offsets are divided by it. */
 const zoomOf = (el: HTMLElement) => (el as HTMLElement & { currentCSSZoom?: number }).currentCSSZoom ?? 1;
 
-/** The timetable of `axis` (its stops as rows) with `others`' trains where they run on its
- * stations, `related`'s behind them while other lines are shown (T-3818), and the chart of `axis`
- * under it. `tools` sit at the end of its direction choice. */
+/** The timetable of `axis` (its stops as rows), or with `others` (a group's, T-4276) every station of theirs too
+ * laid out by `groupLook`; `related`'s trains behind on the axis line's rows while other lines are shown
+ * (T-3818), and the chart of `axis` under it. `tools` sit at the end of its direction choice. */
 export function TrainTable({ axis, st, others = [], related = [], links, group, plotH, tools }: {
   axis: LineInput; st: LineStats; others?: readonly LineInput[]; related?: readonly Related[]; links: Links | null; group?: ReadonlySet<number>; plotH: number; tools?: ComponentChildren;
 }) {
@@ -422,15 +441,18 @@ export function TrainTable({ axis, st, others = [], related = [], links, group, 
   const otherKey = others.map((o) => o.num).join(",");
   const rel = display.value.chartOtherLines ? related : [];
   const relKey = rel.map((r) => r.line.num).join(",");
-  const srcs = useMemo(() => sourcesOf(axis, others, rel), [axis.num, otherKey, relKey, w.version]);
-  const both = useColumns(srcs, n, day0);
+  const look = groupLook.value;
+  const lay = useMemo(() => (others.length ? groupTable(w, [axis, ...others], look) : lineRows(axis)), [axis.num, otherKey, look, w.version]);
+  const lanes = lay.lanes;
+  const srcs = useMemo(() => sourcesOf(lay, [axis, ...others], rel), [lay, relKey]);
+  const both = useColumns(srcs, lay.rows[0].length, day0);
   // the chart's top-to-bottom way first, so the rows read in its order
   const down = drawnReversed(byId.get(axis.stops[0]), byId.get(axis.stops[n - 1]), !!st.loop) ? 1 : 0;
   const [pick, setPick] = useState<number | null>(null);
   const dir = pick ?? down;
   const cols = both?.[dir] ?? [];
   const times = useMemo(() => Float64Array.from(cols, (c) => c.t), [cols]);
-  const levels = useMemo(() => pickLevels(cols), [cols]);
+  const levels = useMemo(() => pickLanes(cols), [cols]);
   const opening = useMemo(() => openingScale(levels, cols), [levels]);
 
   const scroller = useRef<HTMLDivElement>(null);
@@ -626,7 +648,8 @@ export function TrainTable({ axis, st, others = [], related = [], links, group, 
   const bullet = (c: Col, cls: string) => <span key={c.key} class={"tt-bullet" + cls + (c.rank ? " rel" : "")} style={{ left: x0 + c.t * scale - COL / 2 + "px", width: COL + "px", top: MARK_H + (c.rank ? REL_DROP : 0) + "px" }}>{bulletOf(c.bullet)}</span>;
   // back to front: related lines' bullets behind the line's own, the drawn columns' in front of both
   const backs: VNode[] = [], fronts: VNode[] = [];
-  for (const rank of [1, 0]) {
+  // looks b and c head no column: each line's rows name it
+  for (const rank of lanes ? [] : [1, 0]) {
     // related bullets behind: one per REL_THIN px of the day (by the day's px, so a pan never changes which)
     let last = -Infinity;
     for (let i = a; i < b; i++) {
@@ -640,12 +663,19 @@ export function TrainTable({ axis, st, others = [], related = [], links, group, 
   }
   if (DEBUG) (window as unknown as { __tt?: unknown }).__tt = { cols: cols.length, rel: cols.reduce((s, c) => s + (c.rank ? 1 : 0), 0), relDrawn: shown.reduce((s, i) => s + (cols[i].rank ? 1 : 0), 0), hourPx: scale * HOUR, level, drawn: drawn.reduce((s, v) => s + v, 0), shown: shown.length, h0: ((Math.round((day0 + shift) / HOUR) % 24) + 24) % 24 };
 
-  const rowIds = Array.from({ length: n }, (_, i) => axis.stops[dir === 0 ? i : n - 1 - i]);
-  // T-4013: a stop the line's riders only board or only get off at carries its mark
-  const rowNames = rowIds.map((id) => {
-    const only = st.stopOnly?.[id];
-    return <>{names.get(id) ?? ""}{only && <span class="stop-only" data-tip={t(ONLY_TIP[only])}><OnlyIcon kind={only} /></span>}</>;
+  const ls = [axis, ...others];
+  const rowsNow = lay.rows[dir];
+  // T-4013: a stop the line's riders only board or only get off at carries its mark (a merged table's, the axis line's)
+  const rowNames = rowsNow.map((r) => {
+    const l = r.lane >= 0 ? ls[r.lane] : axis;
+    if (r.station === null) return <span class="ln band"><Lane l={l} />{l.name !== l.letter && <span class="nm">{l.name}</span>}</span>;
+    const only = w.lineStats[l.id]?.stopOnly?.[r.station];
+    const mark = only && <span class="stop-only" data-tip={t(ONLY_TIP[only])}><OnlyIcon kind={only} /></span>;
+    if (!lanes || look !== "c") return <span>{names.get(r.station) ?? ""}{mark}</span>;
+    return <span class="ln"><span class="nm">{r.first ? names.get(r.station) ?? "" : ""}</span>{mark}<Lane l={l} /></span>;
   });
+  // a rule between bands (b) or stations (c, fainter); a merged table's every 5 rows (its background)
+  const rules = lanes ? rowsNow.flatMap((r, j) => (j && r.first ? [{ y: j * ROW - 1, faint: r.station !== null }] : [])) : [];
   const label = (d: number) => st.loop
     ? t("schedulePanel.via", { station: names.get(axis.stops[d === 0 ? 1 : n - 2]) ?? "" })
     : t("schedulePanel.to", { station: names.get(axis.stops[d === 0 ? n - 1 : 0]) ?? "" });
@@ -654,9 +684,9 @@ export function TrainTable({ axis, st, others = [], related = [], links, group, 
   const step = (MARK_MIN.find((m) => m * 60 * scale >= 52) ?? 240) * 60;
   const marks: number[] = [];
   for (let s = Math.ceil(Math.max(0, left / scale - step) / step) * step; s <= DAY && s * scale < left + plotW + 60; s += step) marks.push(s);
-  const rowsH = n * ROW;
+  const rowsH = rowsNow.length * ROW;
   const tallest = Math.max(1, ...srcs.map((s) => (fits(s.bullet) ? 1 : Math.min(STRIP_MAX, [...s.bullet.letter].length))));
-  const HEAD = MARK_H + (tallest > 1 ? tallest * STRIP_CH + 6 : 20) + (srcs.some((s) => s.rank) ? REL_DROP : 0);
+  const HEAD = lanes ? MARK_H + 4 : MARK_H + (tallest > 1 ? tallest * STRIP_CH + 6 : 20) + (srcs.some((s) => s.rank) ? REL_DROP : 0);
   const win = useMemo(() => windowOf(day0), [day0]);
   return (
     <div class="tt">
@@ -666,21 +696,22 @@ export function TrainTable({ axis, st, others = [], related = [], links, group, 
       </div>
       <div class="tt-scroll" ref={scroller} onScroll={onScroll} {...grab} style={{ marginRight: PAD_R + "px", maxHeight: `min(${rowsH + HEAD + 14}px, 44vh)` }}>
         <div class="tt-inner" style={{ width: GUTTER + width + "px", height: HEAD + rowsH + "px" }} onPointerOver={onOver} onPointerLeave={onOut}>
-          <div class="tt-head" style={{ height: HEAD + "px" }} data-tip="" onPointerMove={onHeadMove}>
+          <div class="tt-head" style={{ height: HEAD + "px" }} data-tip="" onPointerMove={lanes ? undefined : onHeadMove}>
             <div class="tt-corner" style={{ width: GUTTER + "px" }} />
             {marks.map((s) => (
               <span class={"tt-hour" + (s % HOUR ? "" : " full")} style={{ left: GUTTER + s * scale + "px" }}>{markText(h0, s)}</span>
             ))}
             {backs}
             {fronts}
-            <Lit part="head" hot={hot} at={colAt} cols={cols} drawn={drawn} scale={scale} x0={x0} shift={shift} dark={dark} now={now} />
+            {!lanes && <Lit part="head" hot={hot} at={colAt} cols={cols} drawn={drawn} scale={scale} x0={x0} shift={shift} dark={dark} now={now} lanes={lanes} />}
           </div>
-          <div class="tt-body" style={{ height: rowsH + "px", "--row": ROW + "px" }}>
-            <div class="tt-names" style={{ width: GUTTER + "px" }}>{rowNames.map((s) => <span>{s}</span>)}</div>
+          <div class={"tt-body" + (lanes ? " lanes" : "")} style={{ height: rowsH + "px", "--row": ROW + "px" }}>
+            <div class="tt-names" style={{ width: GUTTER + "px" }}>{rowNames}</div>
+            {rules.map((r) => <span class={"tt-rule" + (r.faint ? " faint" : "")} style={{ top: r.y + "px" }} />)}
             <span class="tt-now" style={{ left: GUTTER + (now - day0) * scale + "px" }} />
             {marks.map((s) => <span class={"tt-hour-rule" + (s % HOUR ? "" : " full")} style={{ left: GUTTER + s * scale + "px" }} />)}
-            {shown.map((i) => <Column key={cols[i].key} c={cols[i]} x={x0 + cols[i].t * scale} cls={colClass(cols[i], now)} cells={cellsOf(cols[i])} dark={dark} />)}
-            <Lit part="body" hot={hot} at={colAt} cols={cols} drawn={drawn} scale={scale} x0={x0} shift={shift} dark={dark} now={now} />
+            {shown.map((i) => <Column key={cols[i].key} c={cols[i]} x={x0 + cols[i].t * scale} cls={colClass(cols[i], now)} cells={cellsOf(cols[i])} dark={dark} lanes={lanes} />)}
+            <Lit part="body" hot={hot} at={colAt} cols={cols} drawn={drawn} scale={scale} x0={x0} shift={shift} dark={dark} now={now} lanes={lanes} />
           </div>
         </div>
       </div>

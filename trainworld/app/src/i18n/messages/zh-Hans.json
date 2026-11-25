@@ -1977,7 +1977,6 @@
   "schedule.weekends": "周末",
   "schedule.weekendsTip": "周末和节假日",
   "schedulePanel.departures": "发车表",
-  "schedulePanel.groupChart": "时刻表运行图",
   "schedulePanel.joinAskGame": "在所有没有单独设置时段的线路上，{rows}会按{count, select, 2 {两个} other {三个}}时段中最多的列车数运行。",
   "schedulePanel.joinAskHeadway": "{rows}会按{count, select, 2 {两个} other {三个}}时段中最短的间隔运行，每{headway}一班。",
   "schedulePanel.joinAskTrains": "{rows}会开行{trains}，即{count, select, 2 {两个} other {三个}}时段中最多的。",
